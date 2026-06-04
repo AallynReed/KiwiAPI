@@ -25,9 +25,6 @@ FLUXION_INTERVAL = timedelta(days=7)
 FIRST_WEEK_BUFF = datetime(2020, 3, 23, tzinfo=UTC)
 FIRST_CORRUXION = datetime(2024, 3, 8, tzinfo=UTC)
 FIRST_FLUXION = datetime(2023, 7, 18, tzinfo=UTC)
-INVASION_INTERVAL = timedelta(hours=27)
-INVASION_DURATION = timedelta(hours=3)
-FIRST_INVASION = datetime(2026, 3, 24, 9, tzinfo=UTC)
 
 
 @lru_cache(maxsize=8)
@@ -117,44 +114,6 @@ def fluxion_timer(now: datetime | None = None) -> dict:
     return _timer(active, start, start + DRAGON_DURATION, t, state=state)
 
 
-# --- Merchant: Invasion (27h/3h cycle, gated to 6-day windows every 28 days) -
-
-def _invasion_cycle(t: datetime) -> tuple[int, int]:
-    return divmod(int((t - FIRST_INVASION).total_seconds()), int(INVASION_INTERVAL.total_seconds()))
-
-
-def _is_invasion_week(inv_start: datetime) -> bool:
-    cycle, active = 28 * 24 * 3600, 6 * 24 * 3600
-    return ((inv_start - FIRST_INVASION).total_seconds() % cycle) < active
-
-
-def _is_invasion_active(t: datetime) -> bool:
-    completed, current = _invasion_cycle(t)
-    inv_start = FIRST_INVASION + completed * INVASION_INTERVAL
-    return _is_invasion_week(inv_start) and current < INVASION_DURATION.total_seconds()
-
-
-def _next_invasion(t: datetime) -> datetime:
-    completed, _ = _invasion_cycle(t)
-    cycle = completed + 1
-    while True:
-        start = FIRST_INVASION + cycle * INVASION_INTERVAL
-        if _is_invasion_week(start):
-            return start
-        cycle += 1
-
-
-def invasion_timer(now: datetime | None = None) -> dict:
-    t = trove_now(now)
-    active = _is_invasion_active(t)
-    if active:
-        completed, _ = _invasion_cycle(t)
-        start = FIRST_INVASION + completed * INVASION_INTERVAL
-    else:
-        start = _next_invasion(t)
-    return _timer(active, start, start + INVASION_DURATION, t)
-
-
 # --- Server-time primitive + the full home-page snapshot -------------------
 
 def _next_daily_reset(real_now: datetime) -> datetime:
@@ -188,6 +147,5 @@ def calendar_snapshot(now: datetime | None = None) -> dict:
         "merchants": {
             "corruxion": corruxion_timer(real),
             "fluxion": fluxion_timer(real),
-            "invasion": invasion_timer(real),
         },
     }

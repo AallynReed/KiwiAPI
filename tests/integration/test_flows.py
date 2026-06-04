@@ -191,7 +191,7 @@ async def test_trove_calendar_and_news(client):
     assert r.status_code == 200, r.text
     cal = r.json()
     assert set(cal) == {"server_time", "daily", "weekly", "merchants"}
-    assert set(cal["merchants"]) == {"corruxion", "fluxion", "invasion"}
+    assert set(cal["merchants"]) == {"corruxion", "fluxion"}
     assert isinstance(cal["merchants"]["corruxion"]["active"], bool)
     assert cal["server_time"]["trove_day"]  # a weekday name
 

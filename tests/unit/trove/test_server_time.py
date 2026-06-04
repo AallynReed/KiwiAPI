@@ -53,16 +53,10 @@ def test_fluxion_phases():
     assert selling["active"] is True and selling["state"] == "selling"
 
 
-def test_invasion_active_at_anchor():
-    t = st.invasion_timer(st.FIRST_INVASION + st.TROVE_OFFSET)
-    assert t["active"] is True
-    assert t["ends_at"] - t["starts_at"] == 3 * 3600  # 3-hour window
-
-
 def test_calendar_snapshot_shape():
     snap = st.calendar_snapshot(datetime(2024, 6, 1, 12, 0, tzinfo=UTC))
     assert set(snap) == {"server_time", "daily", "weekly", "merchants"}
-    assert set(snap["merchants"]) == {"corruxion", "fluxion", "invasion"}
+    assert set(snap["merchants"]) == {"corruxion", "fluxion"}
     for m in snap["merchants"].values():
         assert {"active", "starts_at", "ends_at", "seconds_remaining"} <= set(m)
         assert m["ends_at"] >= m["starts_at"] and m["seconds_remaining"] >= 0

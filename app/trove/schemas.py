@@ -23,7 +23,7 @@ class CalendarResponse(BaseModel):
     server_time: ServerTimeInfo
     daily: dict[str, Any]             # today's daily buff (raw game data)
     weekly: dict[str, Any]            # this week's weekly buff (raw game data)
-    merchants: dict[str, MerchantTimer]  # keys: corruxion, fluxion, invasion
+    merchants: dict[str, MerchantTimer]  # keys: corruxion, fluxion
 
 
 class TroveNewsItem(BaseModel):

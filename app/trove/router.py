@@ -13,7 +13,7 @@ async def get_calendar(
     ctx: TokenContext = Depends(require_scope("trove:read")),
 ) -> CalendarResponse:
     """Current Trove server time, today's daily + weekly bonuses, and the live
-    merchant timers (Corruxion, Fluxion, Invasion) — the home-page snapshot.
+    merchant timers (Corruxion, Fluxion) — the home-page snapshot.
 
     Timer timestamps are real-UTC unix seconds; `seconds_remaining` counts down to
     the merchant leaving (when `active`) or arriving (when not).

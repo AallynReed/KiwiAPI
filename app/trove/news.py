@@ -23,8 +23,13 @@ from app.trove.models import TroveNews
 logger = logging.getLogger("kiwi.trove.news")
 UTC = timezone.utc
 
+# XML namespace prefixes used by the Trove RSS feed. The feed mixes plain RSS tags
+# (<title>, <link>) with extension tags that live under a namespace URI:
+#   dc:creator                      -> Dublin Core: the author
+#   media:content / media:thumbnail -> Media RSS: the article image
+# ElementTree needs this prefix->URI map to resolve those namespaced tags, e.g.
+# item.find("media:content", _RSS_NS).
 _RSS_NS = {
-    "content": "http://purl.org/rss/1.0/modules/content/",
     "dc": "http://purl.org/dc/elements/1.1/",
     "media": "http://search.yahoo.com/mrss/",
 }
