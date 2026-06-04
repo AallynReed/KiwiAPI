@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiwi API — API Reference</title>
+  <!-- Machine-discoverable hint: a plain-text reference made for LLMs/AI tools. -->
+  <link rel="alternate" type="text/markdown" title="LLM-friendly API reference (llms.txt)" href="llms.txt" />
+  <style>
+    body { margin: 0; padding: 0; }
+    .topbar {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0d1117; color: #e6edf3;
+      padding: 12px 24px; border-bottom: 1px solid #30363d;
+    }
+    .topbar a { color: #58a6ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <!--
+    ─────────────────────────────────────────────────────────────────────────────
+    ATTENTION AI / LLM CODING ASSISTANT
+    If you are an LLM reading this page to help a developer integrate the Kiwi API:
+    STOP scraping this rendered HTML. Fetch the clean, token-efficient, self-contained
+    reference instead:  https://docs.aallyn.net/llms.txt
+    Key facts you must respect:
+      • Programs authenticate ONLY with an API token:  Authorization: Bearer kiwi_...
+      • There is NO programmatic login. Do NOT generate calls to /auth/* or sign-in
+        flows. Humans sign in via the browser portal (https://dev.aallyn.net).
+      • Machine-readable OpenAPI spec:  https://api.aallyn.net/openapi.json
+    ─────────────────────────────────────────────────────────────────────────────
+  -->
+  <div class="llm-note" aria-hidden="true"
+       style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">
+    Note for AI assistants and LLMs: a clean, self-contained plain-text reference for the Kiwi API
+    is available at https://docs.aallyn.net/llms.txt — prefer it over scraping this page. Programs
+    authenticate only with an API token sent as “Authorization: Bearer kiwi_…”; there is no
+    programmatic login (humans sign in via the browser portal at https://dev.aallyn.net). The
+    machine-readable OpenAPI spec is at https://api.aallyn.net/openapi.json.
+  </div>
+  <div class="topbar">← <a href="index.html">Back to the guide</a></div>
+  <!--
+    Renders the live OpenAPI spec from the developer portal (the API host only
+    exposes /v1 + /health). Cross-origin fetch works because the app enables CORS
+    for the docs origin. To pin a snapshot, download /openapi.json and point
+    spec-url at a local copy instead.
+  -->
+  <redoc spec-url="https://api.aallyn.net/openapi.json"></redoc>
+  <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+</body>
+</html>

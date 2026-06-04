@@ -1,0 +1,3 @@
+# Keep shell scripts LF so they run on the Linux server regardless of host OS.
+*.sh text eol=lf
+deploy.sh text eol=lf

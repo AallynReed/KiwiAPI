@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.venv-check/
+.env
+
+# Local AI-assistant / editor tooling
+.claude/
+.idea/
+.vscode/
+
+# Local Mongo data folder (bind mount target)
+data/
+
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Internal living spec + audit — local reference, not shipped artefacts
+PROJECT_SPEC.md
+SECURITY_AUDIT.md
+
+# Database backups (never commit data dumps)
+backups/
+
+# Syncthing per-machine state / in-flight temp files
+.stfolder/
+~syncthing~*
+*.tmp

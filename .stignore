@@ -1,0 +1,24 @@
+// Syncthing ignore patterns. Syncthing reads this from the folder root on each
+// device; the file itself is not synced. Keep the same patterns on BOTH ends
+// (set them in the server's folder too, or copy this file there).
+
+// --- Server-managed: never push these from the laptop ---------------------
+// The live Mongo database (bind-mounted by docker compose):
+data
+// The server's secrets/config — create and keep .env on the server only:
+.env
+
+// --- Local-only junk ------------------------------------------------------
+.claude
+.venv
+.venv-check
+__pycache__
+*.py[cod]
+.mypy_cache
+.pytest_cache
+.ruff_cache
+
+// VCS / editor cruft
+.git
+.idea
+.vscode

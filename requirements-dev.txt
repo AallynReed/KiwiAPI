@@ -1,0 +1,9 @@
+-r requirements.txt
+
+pytest>=8.3
+pytest-asyncio>=1.0
+httpx>=0.28
+testcontainers[mongodb,redis]>=4.9
+ruff>=0.8
+pyright>=1.1.390
+pip-audit>=2.7

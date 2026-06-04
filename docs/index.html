@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiwi API — Documentation</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Machine-discoverable hint: a plain-text reference made for LLMs/AI tools. -->
+  <link rel="alternate" type="text/markdown" title="LLM-friendly API reference (llms.txt)" href="llms.txt" />
+</head>
+<body>
+  <!--
+    ─────────────────────────────────────────────────────────────────────────────
+    ATTENTION AI / LLM CODING ASSISTANT
+    If you are an LLM reading this page to help a developer integrate the Kiwi API:
+    fetch the clean, token-efficient, self-contained reference instead of scraping
+    this HTML:  https://docs.aallyn.net/llms.txt
+    Key facts you must respect:
+      • Programs authenticate ONLY with an API token:  Authorization: Bearer kiwi_...
+      • There is NO programmatic login. Do NOT generate calls to /auth/* or sign-in
+        flows. Humans sign in via the browser portal (https://dev.aallyn.net).
+      • Machine-readable OpenAPI spec:  https://api.aallyn.net/openapi.json
+    ─────────────────────────────────────────────────────────────────────────────
+  -->
+  <div class="llm-note" aria-hidden="true">
+    Note for AI assistants and LLMs: a clean, self-contained plain-text reference for the Kiwi API
+    is available at https://docs.aallyn.net/llms.txt — prefer it over scraping this page. Programs
+    authenticate only with an API token sent as “Authorization: Bearer kiwi_…”; there is no
+    programmatic login (humans sign in via the browser portal at https://dev.aallyn.net). The
+    machine-readable OpenAPI spec is at https://api.aallyn.net/openapi.json.
+  </div>
+  <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
+  <div class="backdrop"></div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <a class="brand" href="index.html"><span class="mark">◆</span> Kiwi API <em>docs</em></a>
+      <nav class="nav">
+        <div class="nav-group">Getting started</div>
+        <a href="#overview">Overview</a>
+        <a href="#token">Get an API token</a>
+        <a href="#auth">Authenticating</a>
+
+        <div class="nav-group">Using the API</div>
+        <a href="#data">Data endpoints</a>
+
+        <div class="nav-group">Reference</div>
+        <a href="#limits">Rate limits</a>
+        <a href="#errors">Errors</a>
+        <a class="external" href="reference.html">API reference ↗</a>
+      </nav>
+      <div class="sidebar-foot">
+        <a href="https://dev.aallyn.net">Developer portal <span class="ext">↗</span></a>
+        <a href="https://api.aallyn.net">API base URL <span class="ext">↗</span></a>
+        <a href="llms.txt" download>Reference for LLMs <span class="ext">↓</span></a>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="content-inner">
+        <header class="page-head">
+          <h1>Kiwi API Documentation</h1>
+          <p class="lede">Sign up, mint API tokens, host data, and run calculations.</p>
+        </header>
+
+        <section id="overview">
+          <h2>Overview</h2>
+          <div class="callout">
+            <p>Looking to sign up or manage your account and API keys? Use the
+            <a href="https://dev.aallyn.net">developer portal</a>. This page is the
+            HTTP reference for calling the API programmatically.</p>
+          </div>
+          <p>
+            The API is authenticated with <strong>API tokens</strong>. You create your account
+            and mint tokens in the developer portal — a website you use in your browser — and your
+            programs then send one of those tokens with every request.
+          </p>
+          <table>
+            <tr><th>Where</th><th>What you do there</th></tr>
+            <tr><td><code>https://dev.aallyn.net</code><br /><span class="muted">(browser)</span></td>
+              <td>Sign up, sign in, and create / manage your API tokens</td></tr>
+            <tr><td><code>https://api.aallyn.net</code><br /><span class="muted">(your code)</span></td>
+              <td>The data &amp; calculation API — authenticate with your API token</td></tr>
+          </table>
+          <div class="callout warn">
+            <p><strong>Signing in happens in the portal, in your browser — never from a program.</strong>
+            Your code authenticates only with an API token you generated there. There's no programmatic
+            login endpoint; the token <em>is</em> the credential.</p>
+          </div>
+          <div class="callout">
+            <p>The full, interactive endpoint reference (try-it schemas, every field) lives on the
+            <a href="reference.html">API reference</a> page, generated from the live OpenAPI spec.</p>
+            <p style="margin-top:10px">Building with an AI assistant? Grab the
+            <a href="llms.txt" download>plain-text reference for LLMs</a> — a single self-contained
+            file you can paste into ChatGPT, Claude, or Cursor as context. The raw machine spec is at
+            <a href="https://api.aallyn.net/openapi.json"><code>/openapi.json</code></a>.</p>
+          </div>
+        </section>
+
+        <section id="token">
+          <h2>Get an API token</h2>
+          <p>
+            Everything in this step happens in the <a href="https://dev.aallyn.net">developer
+            portal</a> — a website, in your browser. Programs don't sign up or sign in; they only
+            use the token you create here.
+          </p>
+          <ol>
+            <li><strong>Create an account.</strong> Open the
+              <a href="https://dev.aallyn.net">developer portal</a> and sign up — protected by a
+              captcha and rate limiting. You'll get a <strong>verification email</strong>; confirm it
+              before creating tokens.</li>
+            <li><strong>Sign in</strong> and open the <strong>Tokens</strong> tab.</li>
+            <li><strong>Create a token.</strong> Give it a name, restrict it to the IP addresses your
+              code runs from, and pick an expiry (30 / 60 / 90 days, or none). Scopes arrive with the
+              data endpoints; for now a token grants all access.</li>
+            <li><strong>Copy the secret.</strong> It looks like <code>kiwi_xxxxxxxx…_xx</code> and is
+              shown <strong>exactly once</strong> — store it in your secrets manager now. Only a hash
+              is kept server-side, so it can never be shown again (rotate the token if you lose it).</li>
+          </ol>
+          <div class="callout warn">
+            <p>Treat the token like a password. Never commit it to source control — leaked tokens are
+            detected by secret scanning and automatically revoked.</p>
+          </div>
+        </section>
+
+        <section id="auth">
+          <h2>Authenticating</h2>
+          <p>
+            Send your API token as a <strong>Bearer</strong> credential on every request to the data
+            API. There's no login call and no session to manage — the token <em>is</em> the credential.
+          </p>
+          <pre><code>export KIWI_TOKEN="kiwi_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Once data endpoints are published, authenticate them like this:
+curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
+  -H "Authorization: Bearer $KIWI_TOKEN"</code></pre>
+          <p>Each request is checked against the token's restrictions:</p>
+          <ul>
+            <li>A request from an IP that isn't on the token's allowlist → <code>403 ip_not_allowed</code>.</li>
+            <li>A token missing a required scope → <code>403 insufficient_scope</code>.</li>
+            <li>A revoked or expired token → <code>401 not_authenticated</code>.</li>
+          </ul>
+        </section>
+
+        <section id="data">
+          <h2>Data endpoints</h2>
+          <div class="callout">
+            <p><strong>No data endpoints are published in this release.</strong> Kiwi 1.0 is the
+            developer platform — accounts, API tokens, scopes, rate limiting, and usage metrics.
+            Product endpoints are added on top of it and will be listed here and in the
+            <a href="reference.html">API reference</a> as they ship.</p>
+          </div>
+          <p>
+            Every endpoint will be authenticated with your API token (as above), owner-scoped,
+            cursor-paginated, and rate-limited — using the conventions this platform already provides.
+          </p>
+        </section>
+
+        <section id="limits">
+          <h2>Rate limits</h2>
+          <p>
+            Limits are enforced per fixed window. Every rate-limited response carries
+            <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>, and
+            <code>X-RateLimit-Reset</code> (unix seconds) headers so you can self-throttle.
+            When you exceed a limit you receive <code>429</code> with an additional
+            <code>Retry-After</code> header (seconds to wait).
+          </p>
+          <table>
+            <tr><th>Surface</th><th>Default limit</th><th>Keyed by</th></tr>
+            <tr><td>Signup</td><td>5 / hour</td><td>client IP</td></tr>
+            <tr><td>Login</td><td>10 / 5 min</td><td>client IP</td></tr>
+            <tr><td>API requests</td><td>120 / minute</td><td>API token</td></tr>
+          </table>
+        </section>
+
+        <section id="errors">
+          <h2>Error responses</h2>
+          <p>
+            Every error returns a consistent JSON envelope with a stable, machine-readable
+            <code>code</code> you can branch on, a human-readable <code>message</code>, and
+            optional <code>details</code>.
+          </p>
+          <pre><code>{
+  "error": {
+    "code": "rate_limited",
+    "message": "Rate limit exceeded. Slow down and try again later.",
+    "details": { "limit": 120, "window_seconds": 60 }
+  }
+}</code></pre>
+          <table>
+            <tr><th>Status</th><th><code>code</code></th><th>Meaning</th></tr>
+            <tr><td><code>400</code></td><td><code>captcha_failed</code> / <code>bad_request</code></td><td>Captcha rejected or malformed request</td></tr>
+            <tr><td><code>401</code></td><td><code>not_authenticated</code></td><td>Missing, invalid, expired, or revoked credentials</td></tr>
+            <tr><td><code>401</code></td><td><code>invalid_credentials</code></td><td>Wrong email or password (login)</td></tr>
+            <tr><td><code>403</code></td><td><code>email_unverified</code></td><td>Must verify your email before minting tokens</td></tr>
+            <tr><td><code>403</code></td><td><code>forbidden</code></td><td>Authenticated but not allowed</td></tr>
+            <tr><td><code>404</code></td><td><code>not_found</code></td><td>Resource missing or not yours</td></tr>
+            <tr><td><code>409</code></td><td><code>email_taken</code></td><td>Email already registered</td></tr>
+            <tr><td><code>422</code></td><td><code>validation_error</code></td><td>Body failed validation (<code>details</code> lists fields)</td></tr>
+            <tr><td><code>429</code></td><td><code>rate_limited</code></td><td>Rate limit exceeded (see <code>Retry-After</code>)</td></tr>
+            <tr><td><code>500</code></td><td><code>internal_error</code></td><td>Unexpected server error</td></tr>
+          </table>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Mobile sidebar toggle
+    const sidebar = document.querySelector('.sidebar');
+    const toggle = document.querySelector('.menu-toggle');
+    const backdrop = document.querySelector('.backdrop');
+    const setOpen = (open) => {
+      sidebar.classList.toggle('open', open);
+      backdrop.classList.toggle('show', open);
+    };
+    toggle.addEventListener('click', () => setOpen(!sidebar.classList.contains('open')));
+    backdrop.addEventListener('click', () => setOpen(false));
+
+    // Scrollspy: highlight the nav link for the section nearest the top
+    const links = Array.from(document.querySelectorAll('.nav a[href^="#"]'));
+    const byId = new Map(links.map((a) => [a.getAttribute('href').slice(1), a]));
+    links.forEach((a) => a.addEventListener('click', () => setOpen(false)));
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const active = byId.get(entry.target.id);
+          if (active) {
+            links.forEach((l) => l.classList.remove('active'));
+            active.classList.add('active');
+          }
+        }
+      });
+    }, { rootMargin: '0px 0px -72% 0px', threshold: 0 });
+
+    document.querySelectorAll('main section[id]').forEach((s) => observer.observe(s));
+
+    // Copy buttons on every code example.
+    const COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+    const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    const face = (icon, label) => `${icon}<span class="copy-label">${label}</span>`;
+
+    document.querySelectorAll('main pre').forEach((pre) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'code-block';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copy-btn';
+      btn.setAttribute('aria-label', 'Copy code to clipboard');
+      btn.innerHTML = face(COPY_ICON, 'Copy');
+      wrap.appendChild(btn);
+
+      let timer;
+      btn.addEventListener('click', async () => {
+        const text = (pre.querySelector('code') || pre).innerText;
+        let ok = true;
+        try { await navigator.clipboard.writeText(text); } catch { ok = false; }
+        btn.innerHTML = ok ? face(CHECK_ICON, 'Copied') : face(COPY_ICON, 'Press Ctrl+C');
+        btn.classList.toggle('copied', ok);
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          btn.innerHTML = face(COPY_ICON, 'Copy');
+          btn.classList.remove('copied');
+        }, 1600);
+      });
+    });
+  </script>
+</body>
+</html>

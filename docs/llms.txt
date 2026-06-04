@@ -1,0 +1,88 @@
+# Kiwi API
+
+> Kiwi is an HTTP API platform. This file is a self-contained reference written for
+> LLM coding assistants — paste it in as context when generating Kiwi client code.
+> The authoritative machine spec is at https://api.aallyn.net/openapi.json
+>
+> STATUS: This is the 1.0 platform release. It ships accounts, API tokens, rate
+> limiting, and usage metrics, but NO data endpoints yet — product endpoints are
+> added on top. Until then there is nothing under `/v1/*` to call.
+>
+> IMPORTANT: Programs authenticate ONLY with an API token. Account sign-up,
+> sign-in, and token creation are done by a human in the browser developer portal
+> (https://dev.aallyn.net). There is NO programmatic login endpoint — never call
+> `/auth/*` from code, and don't generate sign-in/sign-up requests. The API token
+> is the only credential a program uses.
+
+## Base URLs
+
+- `https://api.aallyn.net` — the data API (`/v1/*` once published, `/health`). This is what your code calls.
+- `https://dev.aallyn.net` — the developer portal (a website). Humans use it to sign up and manage tokens; programs do not call it.
+
+## Authentication
+
+1. A human creates an account and an **API token** in the portal (browser).
+2. The token (`kiwi_<43 base62>_<checksum>`, regex `kiwi_[A-Za-z0-9]{43}_[A-Za-z0-9]{1,6}`)
+   is shown once at creation; store it securely.
+3. Programs send it as a bearer credential on every request:
+   `Authorization: Bearer kiwi_...`
+
+Tokens are scoped and IP-restricted, and may expire. Enforcement per request:
+- IP not on the token's allowlist → `403 ip_not_allowed`
+- token missing a required scope → `403 insufficient_scope`
+- revoked/expired token → `401 not_authenticated`
+
+There is no refresh, no session, no login round-trip — the token is the credential.
+
+## Conventions
+
+- All request/response bodies are JSON (`Content-Type: application/json`).
+- **Errors** always use this envelope (branch on `code`, not `message`):
+  ```json
+  { "error": { "code": "rate_limited", "message": "…", "details": { } } }
+  ```
+- **Rate limits**: responses carry `X-RateLimit-Limit`, `X-RateLimit-Remaining`,
+  `X-RateLimit-Reset` (unix seconds). A `429` adds `Retry-After` (seconds).
+- Default data-API limit: **120 requests / minute / token**.
+
+## Error codes
+
+| HTTP | code | meaning |
+|------|------|---------|
+| 400 | `bad_request` | malformed request |
+| 401 | `not_authenticated` | missing/invalid/expired/revoked API token |
+| 403 | `insufficient_scope` | token lacks the required scope |
+| 403 | `ip_not_allowed` | request IP not in the token's allowlist |
+| 403 | `forbidden` | authenticated but not allowed |
+| 404 | `not_found` | resource missing or not yours |
+| 422 | `validation_error` | body validation failed (`details` lists fields) |
+| 429 | `rate_limited` | rate limit exceeded (see `Retry-After`) |
+| 500 | `internal_error` | unexpected server error |
+
+## Scopes (bitmask)
+
+A token carries a bitmask of scopes named `<resource>:<action>`. `0` = all scopes
+(present + future). This 1.0 base defines NO scopes yet — they arrive with the data
+endpoints — so tokens are created with the `0` (all) mask for now.
+
+## Endpoints — Data (base: https://api.aallyn.net, auth: API token)
+
+No data endpoints are published in this release. When they ship, they'll appear in
+`GET /openapi.json` and follow the conventions above (token auth, owner-scoped,
+cursor pagination with `{items, next_cursor, has_more}`, `Idempotency-Key` on writes).
+
+## Meta
+
+- `GET /health` → `{ "status": "ok" }`
+- `GET /openapi.json` → full machine-readable OpenAPI spec
+
+---
+
+## Example (how a program authenticates, once endpoints exist)
+
+```bash
+export KIWI_TOKEN="kiwi_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"   # created in the portal
+
+curl https://api.aallyn.net/v1/<endpoint> \
+  -H "Authorization: Bearer $KIWI_TOKEN"
+```
