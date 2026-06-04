@@ -35,8 +35,9 @@ class Scope:
 
 
 # Permanent bit registry. NEVER renumber or reuse a bit; append new ones.
-# Empty in the base: scopes arrive with the real endpoints.
-_REGISTRY: tuple[Scope, ...] = ()
+_REGISTRY: tuple[Scope, ...] = (
+    Scope("trove:read", 1 << 0, "trove", "Read Trove game data — server time, bonuses, and news"),
+)
 
 ALL_SCOPES = 0  # sentinel mask meaning "every scope, present and future"
 

@@ -7,26 +7,29 @@ from app.core.scopes import (
     mask_grants,
 )
 
-# The 1.0 base ships with NO scopes — they arrive with the real endpoints.
-# These tests pin the empty-registry behaviour so the mechanism stays correct.
+# Scopes are `<resource>:<action>`; bits are permanent. The base now defines the
+# first real scope, trove:read (bit 1), alongside the Trove data endpoints.
 
 
-def test_registry_is_empty():
-    assert SCOPE_BITS == {}
-    assert catalog() == []
+def test_trove_scope_registered():
+    assert SCOPE_BITS == {"trove:read": 1}
     assert ALL_SCOPES == 0
+    assert catalog()[0]["resource"] == "trove"
+    assert all(":" in c["key"] for c in catalog())  # naming convention
 
 
-def test_mask_zero_grants_everything():
-    assert mask_grants(0, "anything:read")          # 0 = all, present + future
-    assert not mask_grants(1, "anything:read")      # no scope registered for bit 1
+def test_mask_grants():
+    assert mask_grants(0, "trove:read")        # 0 = all (present + future)
+    assert mask_grants(1, "trove:read")
+    assert not mask_grants(2, "trove:read")    # bit 2 isn't trove:read
+    assert not mask_grants(1, "unknown:scope")
 
 
-def test_only_all_mask_is_valid_without_scopes():
-    assert is_valid_mask(0)
-    assert not is_valid_mask(1)                      # no known bits yet
+def test_is_valid_mask():
+    assert is_valid_mask(0) and is_valid_mask(1)
+    assert not is_valid_mask(2)                # bit 2 not assigned
 
 
-def test_decode_is_empty():
+def test_decode():
     assert decode(0) == []
-    assert decode(7) == []
+    assert decode(1) == ["trove:read"]

@@ -173,6 +173,39 @@ async def test_admin_events_pagination(client):
     assert filtered["items"] and all(e["status_code"] == 429 for e in filtered["items"])
 
 
+async def test_trove_calendar_and_news(client):
+    from app.core.utils import utcnow
+    from app.trove.models import TroveNews
+
+    h = await _signup_login(client, "trove@b.com")
+    # A token with the trove:read scope (bit 1).
+    tok = (
+        await client.post(
+            "/tokens", headers=h, json={"name": "t", "scopes": 1, "allowed_ips": ["1.2.3.4"]}
+        )
+    ).json()["token"]
+    th = {"Authorization": f"Bearer {tok}"}
+
+    # Calendar: server time + buffs + the three merchant timers.
+    r = await client.get("/v1/trove/calendar", headers=th)
+    assert r.status_code == 200, r.text
+    cal = r.json()
+    assert set(cal) == {"server_time", "daily", "weekly", "merchants"}
+    assert set(cal["merchants"]) == {"corruxion", "fluxion", "invasion"}
+    assert isinstance(cal["merchants"]["corruxion"]["active"], bool)
+    assert cal["server_time"]["trove_day"]  # a weekday name
+
+    # News: seed a cached article directly, then fetch via the API.
+    await TroveNews(
+        url="https://trovegame.com/news/x", title="Big Patch", published_at=utcnow()
+    ).insert()
+    r2 = await client.get("/v1/trove/news?limit=10", headers=th)
+    assert r2.status_code == 200
+    body = r2.json()
+    assert body["count"] >= 1
+    assert any(i["url"] == "https://trovegame.com/news/x" for i in body["items"])
+
+
 async def test_secret_scanning_auto_revokes(client, monkeypatch):
     from app.core.config import settings
 

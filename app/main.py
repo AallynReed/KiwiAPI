@@ -26,6 +26,8 @@ from app.core.scopes import catalog as scope_catalog
 from app.scanning.router import router as scanning_router
 from app.tokens.router import router as tokens_router
 from app.tokens.schemas import REVOKE_REASONS
+from app.trove.news import start_news_refresher, stop_news_refresher
+from app.trove.router import router as trove_router
 from app.usage.middleware import add_usage_middleware
 from app.usage.recorder import start_usage_recorder, stop_usage_recorder
 
@@ -51,9 +53,11 @@ async def lifespan(app: FastAPI):
     await bootstrap_admin()
     start_usage_recorder()
     start_email_worker()
+    start_news_refresher()
     maintenance_task = asyncio.create_task(maintenance_loop())
     yield
     maintenance_task.cancel()
+    await stop_news_refresher()
     await stop_email_worker()
     await stop_usage_recorder()
     await close_redis()
@@ -130,6 +134,8 @@ app.include_router(oauth_router, include_in_schema=False)
 app.include_router(tokens_router, include_in_schema=False)
 app.include_router(admin_router, include_in_schema=False)
 app.include_router(scanning_router, include_in_schema=False)
+# First real data surface (token-authenticated, documented in the public reference).
+app.include_router(trove_router)
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)

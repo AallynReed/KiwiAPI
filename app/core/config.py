@@ -145,6 +145,11 @@ class Settings(BaseSettings):
     # Block minting API tokens until the account's email is verified.
     require_verified_for_tokens: bool = True
 
+    # --- Trove game data (server-time + news relay) ---
+    trove_news_feed_url: str = "https://trovegame.com/feed"
+    trove_news_refresh_seconds: int = 1800  # background refresh cadence (30 min)
+    trove_news_keep: int = 50               # max cached articles retained
+
     # --- Rate-limit alerting (daily digest email to the admin) ---
     rate_limit_alert_email: str | None = "aallyn@aallyn.net"
     rate_limit_alert_threshold: int = 20  # only email if >= this many 429s in the window
