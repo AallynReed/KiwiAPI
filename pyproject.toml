@@ -4,6 +4,9 @@
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "-q"
+# Put the repo root on sys.path so `import app` works when pytest is invoked as
+# the bare console script (CI), not just via `python -m pytest`.
+pythonpath = ["."]
 markers = [
     "integration: tests that need a real Mongo/Redis (spun up via testcontainers)",
 ]
