@@ -5,6 +5,8 @@
 // --- Server-managed: never push these from the laptop ---------------------
 // The live Mongo database (bind-mounted by docker compose):
 data
+// The game-file version archive (content-addressed blobs — many GB, server-only):
+.game_updates
 // The server's secrets/config — create and keep .env on the server only:
 .env
 

@@ -5,6 +5,7 @@ __pycache__/
 .venv/
 venv/
 data/
+.game_updates/
 .env
 README.md
 .dockerignore

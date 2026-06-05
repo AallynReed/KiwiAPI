@@ -2,11 +2,12 @@
 
 Ported and cleaned from BetterTroveTools. Trove's "day" rolls over at 11:00 UTC,
 so the game's internal clock is real UTC minus 11h — the "trove-time" frame. The
-event anchors below (``FIRST_*``) are expressed in that trove-time frame; to turn
-a trove-time instant back into a real wall-clock UTC timestamp, add the offset.
+event anchors below (``FIRST_*``) are in that frame; to turn a trove-time instant
+back into real wall-clock UTC, add the offset.
 
-Every public function takes an explicit ``now`` (real UTC), defaulting to the
-real clock — so the logic is deterministic and unit-testable.
+Every public function takes an explicit ``now`` (real UTC), defaulting to the real
+clock — so the logic is deterministic and unit-testable. Returned timestamps are
+real-UTC unix seconds.
 """
 
 import json
@@ -17,14 +18,16 @@ from pathlib import Path
 UTC = timezone.utc
 TROVE_OFFSET = timedelta(hours=11)
 _DATA_DIR = Path(__file__).parent / "gamedata"
+DAY = 86400
 
-# --- Event cycle constants + anchors (anchors are in the TROVE-TIME frame) ---
+# --- Cycle constants + anchors (anchors are in the TROVE-TIME frame) --------
 DRAGON_DURATION = timedelta(days=3)
 DRAGON_INTERVAL = timedelta(days=14)
 FLUXION_INTERVAL = timedelta(days=7)
 FIRST_WEEK_BUFF = datetime(2020, 3, 23, tzinfo=UTC)
 FIRST_CORRUXION = datetime(2024, 3, 8, tzinfo=UTC)
 FIRST_FLUXION = datetime(2023, 7, 18, tzinfo=UTC)
+FIRST_GARDENING = datetime(2025, 5, 23, tzinfo=UTC)
 
 
 @lru_cache(maxsize=8)
@@ -49,72 +52,7 @@ def _real_unix(trove_dt: datetime) -> int:
     return int((trove_dt + TROVE_OFFSET).timestamp())
 
 
-def _timer(active: bool, start: datetime, end: datetime, t: datetime, state: str | None = None) -> dict:
-    remaining = (end - t) if active else (start - t)
-    out = {
-        "active": active,
-        "starts_at": _real_unix(start),
-        "ends_at": _real_unix(end),
-        "seconds_remaining": max(0, int(remaining.total_seconds())),
-    }
-    if state is not None:
-        out["state"] = state
-    return out
-
-
-# --- Daily / weekly buffs --------------------------------------------------
-
-def current_daily_buff(now: datetime | None = None) -> dict:
-    return _load("daily_buffs.json").get(str(trove_now(now).weekday()), {})
-
-
-def _week_index(t: datetime) -> int:
-    weeks = (t.timestamp() - FIRST_WEEK_BUFF.timestamp()) // (7 * 24 * 3600)
-    return int(weeks % 4)
-
-
-def current_weekly_buff(now: datetime | None = None) -> dict:
-    return _load("weekly_buffs.json").get(str(_week_index(trove_now(now))), {})
-
-
-# --- Merchant: Corruxion (a 14-day / 3-day "dragon" cycle) ------------------
-
-def _dragon_calc(first: datetime, t: datetime) -> tuple[int, datetime, int]:
-    completed, current = divmod(
-        int((t - first).total_seconds()), int(DRAGON_INTERVAL.total_seconds())
-    )
-    next_dragon = first + (completed + 1) * DRAGON_INTERVAL
-    return completed, next_dragon, current
-
-
-def corruxion_timer(now: datetime | None = None) -> dict:
-    t = trove_now(now)
-    _, next_dragon, current = _dragon_calc(FIRST_CORRUXION, t)
-    active = current < DRAGON_DURATION.total_seconds()
-    start = (next_dragon - DRAGON_INTERVAL) if active else next_dragon
-    return _timer(active, start, start + DRAGON_DURATION, t)
-
-
-# --- Merchant: Fluxion (voting/selling phases within the dragon cycle) ------
-
-def _fluxion_calc(t: datetime) -> tuple[float, float, float, datetime]:
-    delta = t.timestamp() - FIRST_FLUXION.timestamp()
-    completed, current = divmod(delta, DRAGON_INTERVAL.total_seconds())
-    phase, current = divmod(current, FLUXION_INTERVAL.total_seconds())
-    next_phase = FIRST_FLUXION + (completed * 2 + (phase + 1)) * FLUXION_INTERVAL
-    return completed, phase, current, next_phase
-
-
-def fluxion_timer(now: datetime | None = None) -> dict:
-    t = trove_now(now)
-    _, phase, current, next_phase = _fluxion_calc(t)
-    active = current < DRAGON_DURATION.total_seconds()
-    state = ("voting" if phase == 0 else "selling") if active else "away"
-    start = (next_phase - FLUXION_INTERVAL) if active else next_phase
-    return _timer(active, start, start + DRAGON_DURATION, t, state=state)
-
-
-# --- Server-time primitive + the full home-page snapshot -------------------
+# --- Server time -----------------------------------------------------------
 
 def _next_daily_reset(real_now: datetime) -> datetime:
     today = real_now.replace(hour=11, minute=0, second=0, microsecond=0)
@@ -131,21 +69,144 @@ def server_time(now: datetime | None = None) -> dict:
     real = now or real_utc_now()
     return {
         "now_unix": int(real.timestamp()),
+        "now_iso": real.isoformat(),
         "trove_day": trove_now(real).strftime("%A"),
         "daily_reset_at": int(_next_daily_reset(real).timestamp()),
         "weekly_reset_at": int(_next_weekly_reset(real).timestamp()),
     }
 
 
-def calendar_snapshot(now: datetime | None = None) -> dict:
-    """Everything the home page shows: server time, current buffs, merchant timers."""
-    real = now or real_utc_now()
+# --- Daily / weekly buffs --------------------------------------------------
+
+def daily_buffs(now: datetime | None = None) -> dict:
+    data = _load("daily_buffs.json")
+    current = data.get(str(trove_now(now).weekday()), {})
+    week = [data[str(i)] for i in range(7) if str(i) in data]   # Monday..Sunday
+    return {"current": current, "week": week}
+
+
+def _week_index(t: datetime) -> int:
+    weeks = (t.timestamp() - FIRST_WEEK_BUFF.timestamp()) // (7 * DAY)
+    return int(weeks % 4)
+
+
+def weekly_buffs(now: datetime | None = None) -> dict:
+    data = _load("weekly_buffs.json")
+    current = data.get(str(_week_index(trove_now(now))), {})
+    rotation = [data[str(i)] for i in range(4) if str(i) in data]
+    return {"current": current, "rotation": rotation}
+
+
+# --- Merchant: Corruxion (14-day / 3-day cycle) ----------------------------
+
+def _dragon_calc(first: datetime, t: datetime) -> tuple[int, datetime, int]:
+    completed, current = divmod(
+        int((t - first).total_seconds()), int(DRAGON_INTERVAL.total_seconds())
+    )
+    next_dragon = first + (completed + 1) * DRAGON_INTERVAL
+    return completed, next_dragon, current
+
+
+def corruxion(now: datetime | None = None, count: int = 8) -> dict:
+    t = trove_now(now)
+    _, next_dragon, current = _dragon_calc(FIRST_CORRUXION, t)
+    active = current < DRAGON_DURATION.total_seconds()
+    first_start = (next_dragon - DRAGON_INTERVAL) if active else next_dragon
+    end = first_start + DRAGON_DURATION
+    remaining = (end - t) if active else (first_start - t)
+    schedule = [
+        {
+            "starts_at": _real_unix(first_start + i * DRAGON_INTERVAL),
+            "ends_at": _real_unix(first_start + i * DRAGON_INTERVAL + DRAGON_DURATION),
+        }
+        for i in range(count)
+    ]
     return {
-        "server_time": server_time(real),
-        "daily": current_daily_buff(real),
-        "weekly": current_weekly_buff(real),
-        "merchants": {
-            "corruxion": corruxion_timer(real),
-            "fluxion": fluxion_timer(real),
-        },
+        "active": active,
+        "starts_at": _real_unix(first_start),
+        "ends_at": _real_unix(end),
+        "seconds_remaining": max(0, int(remaining.total_seconds())),
+        "schedule": schedule,
+    }
+
+
+# --- Merchant: Fluxion (voting/selling, 7 days apart, 3-day windows) --------
+
+def _fluxion_calc(t: datetime) -> tuple[float, float, float, datetime]:
+    delta = t.timestamp() - FIRST_FLUXION.timestamp()
+    completed, current = divmod(delta, DRAGON_INTERVAL.total_seconds())
+    phase, current = divmod(current, FLUXION_INTERVAL.total_seconds())
+    next_phase = FIRST_FLUXION + (completed * 2 + (phase + 1)) * FLUXION_INTERVAL
+    return completed, phase, current, next_phase
+
+
+def _fluxion_state(window_start: datetime) -> str:
+    # Each 7-day window flips phase, starting with voting at FIRST_FLUXION.
+    k = round((window_start - FIRST_FLUXION).total_seconds() / FLUXION_INTERVAL.total_seconds())
+    return "voting" if int(k) % 2 == 0 else "selling"
+
+
+def fluxion(now: datetime | None = None, count: int = 8) -> dict:
+    t = trove_now(now)
+    _, _, current, next_phase = _fluxion_calc(t)
+    active = current < DRAGON_DURATION.total_seconds()
+    first_start = (next_phase - FLUXION_INTERVAL) if active else next_phase
+    end = first_start + DRAGON_DURATION
+    remaining = (end - t) if active else (first_start - t)
+    schedule = [
+        {
+            "starts_at": _real_unix(first_start + i * FLUXION_INTERVAL),
+            "ends_at": _real_unix(first_start + i * FLUXION_INTERVAL + DRAGON_DURATION),
+            "state": _fluxion_state(first_start + i * FLUXION_INTERVAL),
+        }
+        for i in range(count)
+    ]
+    return {
+        "active": active,
+        "state": _fluxion_state(first_start) if active else "away",
+        "starts_at": _real_unix(first_start),
+        "ends_at": _real_unix(end),
+        "seconds_remaining": max(0, int(remaining.total_seconds())),
+        "schedule": schedule,
+    }
+
+
+# --- Gardening (plant harvest windows) -------------------------------------
+
+def gardening(now: datetime | None = None) -> dict:
+    real = now or real_utc_now()
+    base = FIRST_GARDENING + TROVE_OFFSET          # real-UTC anchor (11:00 UTC)
+    now_ts = real.timestamp()
+
+    def harvest(cycle_days: int, ripe_after: int) -> tuple[datetime, datetime, datetime]:
+        cycles = int((real - base).total_seconds() // (cycle_days * DAY))
+        cycle_start = base + timedelta(days=cycles * cycle_days)
+        h_start = cycle_start + timedelta(days=ripe_after)
+        return cycle_start, h_start, h_start + timedelta(days=1)
+
+    c2, h2s, h2e = harvest(2, 1)                    # 2-day plants ripen day 1->2
+    c3, h3s, h3e = harvest(3, 2)                    # 3-day plants ripen day 2->3
+
+    def win(name: str, s: datetime, e: datetime) -> dict:
+        return {
+            "name": name,
+            "active": s.timestamp() <= now_ts < e.timestamp(),
+            "starts_at": int(s.timestamp()),
+            "ends_at": int(e.timestamp()),
+        }
+
+    upcoming: list[dict] = []
+    for i in range(8):
+        s2 = c2 + timedelta(days=i * 2 + 1)
+        if s2.timestamp() > now_ts:
+            upcoming.append(win("2-day plants", s2, s2 + timedelta(days=1)))
+        s3 = c3 + timedelta(days=i * 3 + 2)
+        if s3.timestamp() > now_ts:
+            upcoming.append(win("3-day plants", s3, s3 + timedelta(days=1)))
+    upcoming.sort(key=lambda x: x["starts_at"])
+
+    return {
+        "two_day": win("2-day plants", h2s, h2e),
+        "three_day": win("3-day plants", h3s, h3e),
+        "upcoming": upcoming[:10],
     }

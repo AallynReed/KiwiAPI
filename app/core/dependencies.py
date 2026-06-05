@@ -13,7 +13,7 @@ from app.core.limits import endpoint_limit_for
 from app.core.ratelimit import check_rate_limit, rate_limit_headers
 from app.core.scopes import mask_grants
 from app.core.security import decode_access_token, hash_token, verify_token_checksum
-from app.core.utils import utcnow
+from app.core.utils import client_ip, utcnow
 from app.tokens.models import ApiToken
 from app.tokens.usage import record_token_use
 
@@ -94,11 +94,6 @@ class TokenContext:
     token: ApiToken
 
 
-def _client_ip(request: Request) -> str:
-    # uvicorn runs with --proxy-headers, so this reflects the real client.
-    return request.client.host if request.client else ""
-
-
 def _ip_allowed(client_ip: str, allowed: list[str]) -> bool:
     """True if client_ip falls within any allowed exact IP or CIDR."""
     try:
@@ -148,7 +143,7 @@ async def get_token_context(
 
     # IP allowlist — enforced whenever the token pins source IPs (always, for
     # tokens minted after this feature; older keys with no IPs are unrestricted).
-    if token.allowed_ips and not _ip_allowed(_client_ip(request), token.allowed_ips):
+    if token.allowed_ips and not _ip_allowed(client_ip(request) or "", token.allowed_ips):
         raise APIError(
             status_code=403,
             code=ErrorCode.ip_not_allowed,
@@ -171,7 +166,7 @@ async def get_token_context(
         await check_rate_limit(f"ep:{getattr(route, 'path', '')}:{token.id}", *extra)
 
     # Usage accounting — coalesced into ~one write per interval when Redis is up.
-    await record_token_use(token, _client_ip(request) or None)
+    await record_token_use(token, client_ip(request))
 
     return TokenContext(user=user, token=token)
 

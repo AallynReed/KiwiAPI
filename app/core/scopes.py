@@ -35,8 +35,24 @@ class Scope:
 
 
 # Permanent bit registry. NEVER renumber or reuse a bit; append new ones.
+# Scopes are organized by FUNCTION (not by game), since most endpoints are Trove.
 _REGISTRY: tuple[Scope, ...] = (
-    Scope("trove:read", 1 << 0, "trove", "Read Trove game data — server time, bonuses, and news"),
+    Scope("rotations:read", 1 << 0, "rotations",
+          "Read rotation/timer data — server time, bonuses, merchants, biomes"),
+    Scope("feeds:read", 1 << 1, "feeds",
+          "Read relayed feeds — Trove news, Twitch/YouTube/Bilibili"),
+    Scope("stats:read", 1 << 2, "stats",
+          "Read raw game-stat data — stat tables (power rank / magic find / light) and classes"),
+    Scope("gems:read", 1 << 3, "gems",
+          "Use the gem tools — simulator (generate/augment), evaluator, and build optimizer"),
+    Scope("misc:read", 1 << 4, "misc",
+          "Misc tools — third-party modding software list and the time converter"),
+    Scope("mods:read", 1 << 5, "mods",
+          "Mod tools — decompile a .tmod file and build a .tmod from files"),
+    Scope("updates:read", 1 << 6, "updates",
+          "Browse archived game files — versions, directory structure, and single-file download"),
+    Scope("codexes:read", 1 << 7, "codexes",
+          "Read parsed game codexes — allies, mounts, dragons, mementos, recipes, items, fish, badges"),
 )
 
 ALL_SCOPES = 0  # sentinel mask meaning "every scope, present and future"

@@ -15,10 +15,13 @@ _API_CSP = (
 
 def add_security_middleware(app: FastAPI) -> None:
     """Reject oversized bodies early and attach security headers to every response."""
-    max_body = settings.max_request_body_bytes
+    default_max_body = settings.max_request_body_bytes
+    mods_max_body = settings.mods_max_request_body_bytes
 
     @app.middleware("http")
     async def security(request: Request, call_next):
+        # The mod tools exchange whole .tmod files, so they get a larger body cap.
+        max_body = mods_max_body if request.url.path.startswith("/v1/mods/") else default_max_body
         content_length = request.headers.get("content-length")
         if content_length is not None:
             try:

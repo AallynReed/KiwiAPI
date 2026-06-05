@@ -43,7 +43,7 @@ from app.core.security import (
     password_fingerprint,
     verify_password,
 )
-from app.core.utils import utcnow
+from app.core.utils import client_ip, utcnow
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -61,12 +61,6 @@ def _html_page(title: str, body: str, status_code: int = 200) -> HTMLResponse:
         f"</style></head><body><div class='card'><h1>{title}</h1>{body}</div></body></html>",
         status_code=status_code,
     )
-
-
-def _client_ip(request: Request) -> str:
-    # uvicorn runs with --proxy-headers, so request.client reflects the real
-    # client once the reverse proxy forwards X-Forwarded-For.
-    return request.client.host if request.client else "unknown"
 
 
 def _to_public(user: User) -> UserPublic:
@@ -89,7 +83,7 @@ async def signup(
     request: Request,
     background_tasks: BackgroundTasks,
 ) -> UserPublic:
-    ip = _client_ip(request)
+    ip = client_ip(request) or "unknown"
 
     # Anti-spam: cap signups per IP, then require a valid captcha solution.
     await check_rate_limit(
@@ -134,7 +128,7 @@ async def signup(
 async def login(
     payload: LoginRequest, request: Request, background_tasks: BackgroundTasks
 ) -> TokenResponse:
-    ip = _client_ip(request)
+    ip = client_ip(request) or "unknown"
     email = payload.email.lower()
     await check_rate_limit(
         f"login:{ip}",
@@ -242,7 +236,7 @@ async def resend_verification(
 ) -> MessageResponse:
     # Unauthenticated + enumeration-safe, so it works from the login screen when
     # verified-email-before-login blocks the user from signing in.
-    await check_rate_limit(f"resend:{_client_ip(request)}", 5, 3600)  # 5 / hour / IP
+    await check_rate_limit(f"resend:{client_ip(request) or 'unknown'}", 5, 3600)  # 5 / hour / IP
     user = await User.find_one(User.email == payload.email.lower())
     if user is not None and user.is_active and not user.is_verified:
         background_tasks.add_task(send_verification_email, user)
@@ -352,7 +346,7 @@ async def forgot_password(
     request: Request,
     background_tasks: BackgroundTasks,
 ) -> MessageResponse:
-    ip = _client_ip(request)
+    ip = client_ip(request) or "unknown"
     await check_rate_limit(
         f"forgot:{ip}",
         settings.forgot_password_rate_limit_max,

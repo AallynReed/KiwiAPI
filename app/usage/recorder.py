@@ -25,12 +25,16 @@ class _UsageRecorder:
         self._buffer: list[UsageEvent] = []
         self._task: asyncio.Task | None = None
         self._wake = asyncio.Event()
+        self._direct: set[asyncio.Task] = set()  # keep fire-and-forget writes alive
 
     def record(self, event: UsageEvent) -> None:
         """Queue an event (cheap, non-blocking). Started-or-not, never raises."""
         if self._task is None:
             # Recorder not running (e.g. unit context) — best-effort direct write.
-            asyncio.ensure_future(self._direct_insert(event))
+            # Hold a reference until done, else the task can be GC'd mid-flight.
+            task = asyncio.ensure_future(self._direct_insert(event))
+            self._direct.add(task)
+            task.add_done_callback(self._direct.discard)
             return
         self._buffer.append(event)
         if len(self._buffer) > _MAX_BUFFER:

@@ -82,6 +82,10 @@ services:
       # "Sign in with GitHub" (optional). Leave blank to disable.
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      # Game-file version archiver. OFF by default — set to true ONLY when the
+      # blob disk (./.game_updates) has room; the first sync pulls multi-GB.
+      TROVE_UPDATE_ENABLED: ${TROVE_UPDATE_ENABLED:-false}
+      TROVE_UPDATE_STORE_DIR: ${TROVE_UPDATE_STORE_DIR:-/data/updates}
     depends_on:
       mongo:
         condition: service_healthy
@@ -94,9 +98,15 @@ services:
     # (Production override docker-compose.prod.yml swaps --reload for --workers.)
     volumes:
       - ./app:/app/app
+      # Content-addressed blob store for the game-file archive (host: ./.game_updates).
+      # Many GB once enabled — kept out of git/Syncthing/the image build context.
+      - ./.game_updates:/data/updates
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
               "--proxy-headers", "--forwarded-allow-ips", "*", "--reload"]
-    mem_limit: 512m
+    # Headroom for the update archiver: it decompresses several .tfa archives
+    # concurrently (each held whole in RAM), which the old 512m couldn't fit.
+    # If a single giant archive still OOMs, lower TROVE_UPDATE_CONCURRENCY instead.
+    mem_limit: 2g
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
@@ -122,5 +132,7 @@ services:
     ports:
       - "127.0.0.1:25468:80"
     # Static docs served straight from the local ./docs folder (read-only bind mount).
+    # docs-nginx.conf gives clean URLs (/reference instead of /reference.html).
     volumes:
       - ./docs:/usr/share/nginx/html:ro
+      - ./docs-nginx.conf:/etc/nginx/conf.d/default.conf:ro

@@ -13,6 +13,9 @@ venv/
 # Local Mongo data folder (bind mount target)
 data/
 
+# Game-file version archive — content-addressed blob store (bind mount target, many GB)
+.game_updates/
+
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/

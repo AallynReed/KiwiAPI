@@ -147,9 +147,7 @@ async def token_activity(
     user: User = Depends(get_current_user),
 ) -> ActivitySummary:
     """Aggregate API usage for one of your tokens."""
-    token = await ApiToken.get(token_id)
-    if token is None or token.user_id != user.id:
-        raise APIError(status_code=404, code=ErrorCode.not_found, message="Token not found")
+    token = await _owned_token(token_id, user)
     return await aggregate_activity({"token_id": token.id}, days)
 
 

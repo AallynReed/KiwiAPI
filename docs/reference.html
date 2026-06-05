@@ -38,14 +38,15 @@
     programmatic login (humans sign in via the browser portal at https://dev.aallyn.net). The
     machine-readable OpenAPI spec is at https://api.aallyn.net/openapi.json.
   </div>
-  <div class="topbar">← <a href="index.html">Back to the guide</a></div>
+  <div class="topbar">← <a href="/">Back to the guide</a></div>
   <!--
-    Renders the live OpenAPI spec from the developer portal (the API host only
-    exposes /v1 + /health). Cross-origin fetch works because the app enables CORS
-    for the docs origin. To pin a snapshot, download /openapi.json and point
-    spec-url at a local copy instead.
+    Renders the live OpenAPI spec. Served same-origin at /openapi.json by this
+    docs site's nginx, which reverse-proxies to the `api` container internally
+    (see docs-nginx.conf). That avoids cross-origin/CORS and doesn't depend on
+    the public api.aallyn.net proxy, which only routes /v1 + /health. To pin a
+    snapshot instead, drop an openapi.json file next to this page.
   -->
-  <redoc spec-url="https://api.aallyn.net/openapi.json"></redoc>
+  <redoc spec-url="/openapi.json"></redoc>
   <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
 </body>
 </html>

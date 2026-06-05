@@ -1,14 +1,14 @@
 # Kiwi API
 
 **Kiwi 1.0 is a developer-API platform.** Developers sign up in a browser portal,
-mint scoped, IP-restricted, rate-limited **API tokens**, and (once you add them)
-authenticate data endpoints with those tokens. A master/admin oversees every
-account, token, and request.
+mint scoped, IP-restricted, rate-limited **API tokens**, and authenticate data
+endpoints with those tokens. A master/admin oversees every account, token, and
+request.
 
-> **This 1.0 release ships the whole platform but _no data endpoints yet_.**
-> Accounts, tokens, scopes, rate limiting, usage metrics, email, admin, and
-> observability are all here and battle-tested — the product `/v1/*` surface is
-> built on top of this foundation. Until then there's nothing under `/v1/*` to call.
+> Built as a reusable platform (accounts, tokens, scopes, rate limiting, usage
+> metrics, email, admin, observability) with product endpoints added on top. The
+> first data surface is live: **Trove game data** under `/v1/rotations/*` (server time,
+> bonuses, merchant timers, and a news relay). `GET /openapi.json` is always current.
 
 Fully dockerized; Mongo and Redis persist to **local folders** via bind mounts
 (no Docker named volumes). Includes a developer-portal SPA and a static docs site.
@@ -42,11 +42,134 @@ Fully dockerized; Mongo and Redis persist to **local folders** via bind mounts
   `Idempotency-Key` replay safety, request-id correlation (`X-Request-ID`) + structured logs,
   consistent error envelope.
 
+## Data endpoints (`/v1` — API token)
+
+Live Trove game data, ported from BetterTroveTools, **grouped by function** (most of the API is
+Trove, so it's organized by what the data is, not the game). All `GET`, read-only; timestamps are
+real-UTC unix seconds. Full schema in `/openapi.json`.
+
+**`rotations` category — scope `rotations:read`**
+
+| Endpoint | Returns |
+|---|---|
+| `/v1/rotations/server-time` | server time, in-game day, next daily + weekly resets |
+| `/v1/rotations/daily-buffs` | today's daily buff + full Mon→Sun rotation |
+| `/v1/rotations/weekly-buffs` | this week's weekly buff + 4-week rotation |
+| `/v1/rotations/corruxion` | Corruxion merchant: live timer + upcoming schedule |
+| `/v1/rotations/fluxion` | Fluxion merchant: voting/selling timer + schedule |
+| `/v1/rotations/gardening` | 2-day / 3-day plant harvest windows |
+| `/v1/rotations/biomes` | 3-hour adventure biome rotation (current + upcoming) |
+| `/v1/rotations/wild-mana` | weekly Wild Mana biome rotation |
+| `/v1/rotations/stampy` | weekly Stampy event biome (48h) |
+
+**`feeds` category — scope `feeds:read`** (relayed from upstream + cached in Mongo)
+
+| Endpoint | Returns |
+|---|---|
+| `/v1/feeds/news?limit=` | Trove news relayed from `trovegame.com/feed` |
+| `/v1/feeds/twitch` | live Trove Twitch streams |
+| `/v1/feeds/youtube` | recent Trove YouTube videos |
+| `/v1/feeds/bilibili` | recent Trove Bilibili videos |
+| `/v1/feeds/events` | ongoing Trovesaurus events (filter `?category=`) |
+| `/v1/feeds/events/categories` | distinct event categories (discovered dynamically) |
+| `/v1/feeds/events/upcoming` · `/history` | events not yet started / already ended |
+
+(Twitch/YouTube/Bilibili are relayed from the trovesaurus bot, which already fetches them — no
+upstream credentials needed in Kiwi.) Events are relayed from `trovesaurus.com/calendar/feed` and
+**stored** (kept after they leave the upstream feed) so history/upcoming work; `status` is
+`upcoming`/`ongoing`/`ended`, categories are free-form and discovered via a distinct query.
+
+**`stats` category — scope `stats:read`** (raw game data, transmitted as-is — no calculation)
+
+| Endpoint | Returns |
+|---|---|
+| `/v1/stats/power-rank` | Power Rank stat table — each source and the PR it contributes |
+| `/v1/stats/magic-find` | Magic Find stat table |
+| `/v1/stats/light` | Light stat table (`step` / `permanent` per source) |
+| `/v1/stats/classes` | all 18 classes as full objects, keyed by `tech_name` |
+| `/v1/stats/classes/{tech_name}` | one class by its `tech_name` token (e.g. `knight`) |
+
+Each class carries a stable `tech_name` token (the canonical id — display `name` differs, e.g.
+`adventurer` → "Boomeranger"); store it and look the class up by that token later.
+
+**`gems` category — scope `gems:read`** (stateless calculators — gem objects round-trip through the client)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/gems/lookups` | every valid gem field value (tiers, types, elements, stats, augments, abilities) |
+| `POST /v1/gems/generate` | roll a gem (omit any field for random) → a gem object |
+| `POST /v1/gems/augment` | apply a focus augment to a stat by position → updated gem |
+| `POST /v1/gems/spark` · `/flare` | reroll a stat type / move a proc, by stat position → updated gem |
+| `POST /v1/gems/level-up` · `/set-level` | raise or set a gem's level → updated gem |
+| `POST /v1/gems/evaluate` | score a typed-in gem: quality %, Power Rank, cost to perfect |
+| `GET /v1/gems/stat-range` | plausible (min, max) value a stat can roll at |
+| `GET /v1/gems/builds/options` | valid build-config field values (classes, allies, foods, flags) |
+| `POST /v1/gems/builds/calculate` | top gem proc layouts for a build, ranked by damage coefficient |
+
+The simulator is stateless: `generate` returns a gem object, the client holds it and POSTs it back to
+an action endpoint with a `stat_position` (0/1/2) to mutate it. Nothing gem-related is stored server-side.
+
+**`misc` category — scope `misc:read`**
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/misc/software` | third-party Trove modding software, grouped by category |
+| `GET /v1/misc/timezones` | timezones supported by the converter and clocks |
+| `GET /v1/misc/time/now` | current time across every zone, incl. Trove server (reset) time |
+| `POST /v1/misc/time/convert` | convert a time + zone (or a unix) → every zone + Discord timestamp codes |
+
+Trove "server"/reset time is a fixed **UTC−11**. The converter takes a naive `datetime` interpreted in
+the given `timezone` (`trove` / `UTC` / any IANA id) or an absolute `unix`, and returns the instant in
+every zone plus Discord `<t:unix:style>` codes.
+
+**`mods` category — scope `mods:read`** (stateless `.tmod` tooling — 20 MB body cap on `/v1/mods/*`)
+
+| Endpoint | Returns |
+|---|---|
+| `POST /v1/mods/read` | decompile a `.tmod` (POST raw bytes) → header properties + file table; `?metadata_only=` omits contents |
+| `POST /v1/mods/build` | build a `.tmod` from header fields + files (base64) → raw bytes |
+
+The `.tmod` binary format (little-endian header + LEB128 + zlib file stream + Trove's FNV-1a-variant
+checksum) is ported in pure Python (`app/trove/tmod.py`) — no native lib. `build` stamps the `modLoader`
+header `KiwiAPI` (where BetterTroveTools uses `BTT`); nothing is stored — built in memory and discarded
+after sending.
+
+**`updates` category — scope `updates:read`** (browse the archived game files — latest version)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/updates/branches` | tracked branches (`live-us`, `pts`) with current version + file count |
+| `GET /v1/updates/{branch}/versions` | captured version history, newest first |
+| `GET /v1/updates/{branch}/tree?prefix=` | one directory level (ls-style); empty prefix = root |
+| `GET /v1/updates/{branch}/file?path=` | a single file's bytes, streamed from the blob store (`/file/meta` for hash+size) |
+
+Kiwi mirrors Trove's update CDN into a content-addressed, deduped store (see "Game-file archive" below);
+these endpoints serve the latest captured version. Loose files and TFA-extracted files are browsed
+identically. Historical-version querying is the next layer.
+
+**`codexes` category — scope `codexes:read`** (structured game data parsed from the archive)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/codexes/types` | the codex types present for a branch, each with its entry count |
+| `GET /v1/codexes/{type}?search=&limit=&offset=` | entries of one type, name-sorted, searchable + paginated |
+| `GET /v1/codexes/{type}/entry?path=` | a single entry by its source prefab path |
+
+Eight typed datasets — `ally`, `mount`, `dragon`, `memento`, `recipe`, `item`, `fish`, `badge` — parsed
+from Trove's `prefabs/*.binfab` files (a protobuf-like wire format) with names/descriptions resolved via
+the `languages/` locale tables. The indexer runs after each archive sync: a full build the first time,
+then only the changed prefabs (driven by the version delta), so a routine patch never re-parses the rest
+of the game. All endpoints default to the `live-us` branch (`?branch=pts` for PTS). v1 is identity-level
+(name, category, description, tradability); richer per-type fields (stats, mastery, models) fill the
+`data` object incrementally.
+
+More are added following the conventions in "Adding the real endpoints" below.
+
 ## Hosts
 
 | Public domain             | Local target        | What it is                                              |
 |---------------------------|---------------------|--------------------------------------------------------|
-| `https://api.aallyn.net`  | `127.0.0.1:15546`   | Production API: `/v1/*` (none yet) + `/health`          |
+| `https://api.aallyn.net`  | `127.0.0.1:15546`   | Production API: `/v1/*` (e.g. `/v1/rotations/*`) + `/health` |
 | `https://dev.aallyn.net`  | `127.0.0.1:25470`   | **Developer portal** SPA (login, tokens, activity, account, admin) |
 | `https://docs.aallyn.net` | `127.0.0.1:25468`   | Static documentation site                              |
 
@@ -121,13 +244,18 @@ All services bind to `127.0.0.1`; the proxy enforces the api/dev split (only
 ```nginx
 server {  # production API — only /v1 + /health
   server_name api.aallyn.net;
+  client_max_body_size 8m;                 # default cap (matches the app)
   location /v1/      { proxy_pass http://127.0.0.1:15546; }
+  location /v1/mods/ { client_max_body_size 20m; proxy_pass http://127.0.0.1:15546; }  # .tmod tools
   location = /health { proxy_pass http://127.0.0.1:15546; }
   location /         { return 404; }
 }
 server { server_name dev.aallyn.net;  location / { proxy_pass http://127.0.0.1:25470; } }
 server { server_name docs.aallyn.net; location / { proxy_pass http://127.0.0.1:25468; } }
 ```
+
+The app caps request bodies at 8 MB, except `/v1/mods/*` at 20 MB (the `.tmod` tools). The proxy must
+allow at least as much on those paths or it rejects large uploads before they reach the app.
 
 ## Errors & rate limits
 

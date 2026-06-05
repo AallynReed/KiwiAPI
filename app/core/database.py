@@ -7,12 +7,24 @@ from app.auth.models import Session, User
 from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
 from app.tokens.models import ApiToken
-from app.trove.models import TroveNews
+from app.trove.codexes.models import CodexEntry
+from app.trove.models import FeedCache, TroveEvent, TroveNews
+from app.trove.updates.models import (
+    UpdateBranch,
+    UpdateChange,
+    UpdateManifestEntry,
+    UpdateState,
+    UpdateVersion,
+)
 from app.usage.models import UsageEvent
 
 # Every Beanie Document must be registered here so init_beanie can bind it.
 # Models live in their feature packages; this is the one place that aggregates them.
-DOCUMENT_MODELS = [User, Session, ApiToken, UsageEvent, OutboxEmail, TroveNews]
+DOCUMENT_MODELS = [
+    User, Session, ApiToken, UsageEvent, OutboxEmail, TroveNews, FeedCache, TroveEvent,
+    UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
+    CodexEntry,
+]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).
 _client: AsyncMongoClient | None = None

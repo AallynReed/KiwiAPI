@@ -15,13 +15,9 @@ from app.core.config import settings
 from app.core.dependencies import AuthContext, get_auth_context, get_current_user
 from app.core.errors import APIError, ErrorCode
 from app.core.security import create_access_token, generate_refresh_token, hash_token
-from app.core.utils import utcnow
+from app.core.utils import client_ip, utcnow
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-def _client_ip(request: Request) -> str | None:
-    return request.client.host if request.client else None
 
 
 def _user_agent(request: Request) -> str | None:
@@ -36,7 +32,7 @@ async def issue_tokens(user: User, request: Request) -> TokenResponse:
     session = Session(
         user_id=user.id,
         refresh_token_hash=refresh_hash,
-        ip=_client_ip(request),
+        ip=client_ip(request),
         user_agent=_user_agent(request),
         expires_at=utcnow() + timedelta(days=settings.refresh_token_expire_days),
     )
@@ -91,7 +87,7 @@ async def refresh(payload: RefreshRequest, request: Request) -> TokenResponse:
     new_refresh, new_hash = generate_refresh_token()
     session.refresh_token_hash = new_hash
     session.last_used_at = now
-    session.ip = _client_ip(request)
+    session.ip = client_ip(request)
     session.user_agent = _user_agent(request)
     await session.save()
 

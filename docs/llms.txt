@@ -4,9 +4,9 @@
 > LLM coding assistants — paste it in as context when generating Kiwi client code.
 > The authoritative machine spec is at https://api.aallyn.net/openapi.json
 >
-> STATUS: This is the 1.0 platform release. It ships accounts, API tokens, rate
-> limiting, and usage metrics, but NO data endpoints yet — product endpoints are
-> added on top. Until then there is nothing under `/v1/*` to call.
+> STATUS: 1.0 platform (accounts, API tokens, rate limiting, usage metrics) with
+> the first data endpoints live: Trove game data under `/v1/rotations/*`. More product
+> endpoints are added on top over time — `GET /openapi.json` is always current.
 >
 > IMPORTANT: Programs authenticate ONLY with an API token. Account sign-up,
 > sign-in, and token creation are done by a human in the browser developer portal
@@ -62,14 +62,112 @@ There is no refresh, no session, no login round-trip — the token is the creden
 ## Scopes (bitmask)
 
 A token carries a bitmask of scopes named `<resource>:<action>`. `0` = all scopes
-(present + future). This 1.0 base defines NO scopes yet — they arrive with the data
-endpoints — so tokens are created with the `0` (all) mask for now.
+(present + future); otherwise OR the bits you need. Currently defined:
+- `rotations:read` (bit 1) — server time, bonuses, merchants, biomes
+- `feeds:read` (bit 2) — news, Twitch streams, YouTube/Bilibili videos, Trovesaurus event calendar
+- `stats:read` (bit 4) — raw stat tables (power rank / magic find / light) and class definitions
+- `gems:read` (bit 8) — gem simulator (generate/augment), evaluator, and build optimizer
+- `misc:read` (bit 16) — third-party modding-software list and the time converter
+- `mods:read` (bit 32) — decompile a `.tmod` file and build a `.tmod` from files
+- `updates:read` (bit 64) — browse archived game files: versions, directory tree, single-file download
+- `codexes:read` (bit 128) — read parsed game codexes (allies, mounts, dragons, mementos, recipes, items, fish, badges)
 
 ## Endpoints — Data (base: https://api.aallyn.net, auth: API token)
 
-No data endpoints are published in this release. When they ship, they'll appear in
-`GET /openapi.json` and follow the conventions above (token auth, owner-scoped,
-cursor pagination with `{items, next_cursor, has_more}`, `Idempotency-Key` on writes).
+Grouped by function. Rotations/feeds/stats are GET, read-only (timestamps real-UTC **unix seconds**);
+the gem/misc tools add POST calculators. Full field schema in `/openapi.json`. `/v1/rotations/*` need
+`rotations:read`; `/v1/feeds/*` need `feeds:read`; `/v1/stats/*` need `stats:read`; `/v1/gems/*` need
+`gems:read`; `/v1/misc/*` need `misc:read`; `/v1/mods/*` need `mods:read`; `/v1/updates/*` need
+`updates:read`; `/v1/codexes/*` need `codexes:read`.
+
+- `GET /v1/rotations/server-time` → `{ now_unix, now_iso, trove_day, daily_reset_at, weekly_reset_at }`
+- `GET /v1/rotations/daily-buffs` → `{ current: Buff, week: [Buff x7] }` where Buff =
+  `{ name, color, weekday, emoji, normal_buffs[], premium_buffs[], icon, banner }`
+- `GET /v1/rotations/weekly-buffs` → `{ current: Buff, rotation: [Buff x4] }` where Buff =
+  `{ name, color, weekday, emoji, buffs[], banner }`
+- `GET /v1/rotations/corruxion` → `{ active, starts_at, ends_at, seconds_remaining, schedule: [{starts_at, ends_at}] }`
+- `GET /v1/rotations/fluxion` → like corruxion plus `state` (`voting`|`selling`|`away`); each schedule item has `state`
+- `GET /v1/rotations/gardening` → `{ two_day: W, three_day: W, upcoming: [W] }`, W = `{ name, active, starts_at, ends_at }`
+- `GET /v1/rotations/biomes` → `{ current: R | null, upcoming: [R] }`, R = `{ starts_at, ends_at, biomes: [{name, final_name, icon}] }` (3-hour d15 rotation, 3 biomes)
+- `GET /v1/rotations/wild-mana` → same shape as /v1/rotations/biomes (weekly, 3 biomes)
+- `GET /v1/rotations/stampy` → same shape (weekly, 48h window, 1 biome)
+- `GET /v1/feeds/news?limit=20` (1–50) → `{ items: [{ title, url, author, summary, category, categories[], image, published_at }], count }`
+- `GET /v1/feeds/twitch` → `{ items: [{ channel, login, url, title, viewers, game, started_at, thumbnail }], count, fetched_at }` (live streams)
+- `GET /v1/feeds/youtube` → `{ items: [{ title, url, channel, video_id, published_at, thumbnail_url }], count, fetched_at }`
+- `GET /v1/feeds/bilibili` → same shape as youtube
+- `GET /v1/feeds/events[?category=&limit=]` → `{ items: [Event], count }` — events happening **now**. Event =
+  `{ event_id, name, url, category, image, icon, lookup, starts_at, ends_at, status, seconds_until }` (unix seconds, real UTC)
+- `GET /v1/feeds/events/categories` → `{ categories: [string], count }` — distinct categories (dynamic; new ones appear as events arrive)
+- `GET /v1/feeds/events/upcoming[?category=&limit=]` → events not yet started (soonest first); `status="upcoming"`
+- `GET /v1/feeds/events/history[?category=&limit=]` → events already ended (most recently ended first); `status="ended"`
+- `GET /v1/stats/power-rank` → `{ stat, label, sources: [Source], count }`, Source = `{ name, value, type, percentage, step, permanent }`
+- `GET /v1/stats/magic-find` → same shape (Magic Find sources)
+- `GET /v1/stats/light` → same shape (Light sources; `step`/`permanent` populated)
+- `GET /v1/stats/classes` → `{ items: [Class], count }` — all 18 classes, each carrying its `tech_name`
+- `GET /v1/stats/classes/{tech_name}` → one Class by token, e.g. `knight`, `adventurer` (404 `not_found` if unknown). Class =
+  `{ tech_name, name, shorts[], damage_type, weapons[], attributes[], stats: [{name,value,percentage}], bonuses: […], subclass: {name, description, level: {"1":[…]…}, power: {…}}, abilities: [{name,icon,type,stages:[{name,base,multiplier}]}] }`
+
+For merchants, `seconds_remaining` counts down to leaving (when `active`) or arriving (when not).
+Feeds (news/twitch/youtube/bilibili) are relayed from upstream + cached server-side. Events are stored
+(kept after they leave the upstream feed) so history/upcoming work; `status` is `upcoming`|`ongoing`|`ended`
+and `seconds_until` counts down to start (upcoming) or end (ongoing).
+Stats are raw game data (no calculation): stat tables list each source and how much it gives;
+`tech_name` is the stable token to reference a class by (display `name` differs, e.g. `adventurer`→"Boomeranger").
+
+### Gems (`gems:read`) — stateless; gem objects round-trip through the client
+
+A gem is a JSON object `{id, tier, type, element, restriction?, ability?, level, stats:[…], augmentation?,
++ computed: gem_name, quality, power_rank, stat_values, …}`. A stat is `{type, locked, containers:[{base,
+augments:[{type,count}]}]}`. Nothing is stored server-side — you hold the gem and POST it back to mutate it.
+Use `GET /v1/gems/lookups` for all valid ids (tiers 1-4, types 1 Lesser/2 Empowered, elements 1-4, stat
+types 1-9, augments 1 Rough/2 Precise/3 Superior).
+
+- `POST /v1/gems/generate` body `{tier?, type?, element?, restriction?, level?, augmentation?}` (omit→random) → a gem object
+- `POST /v1/gems/augment` body `{gem, stat_position (0-2), augment_type (1-3)}` → `{applied, gem}` (applied=false if the stat is already maxed)
+- `POST /v1/gems/spark` · `flare` body `{gem, stat_position}` → `{applied, gem}` (reroll stat type / move a proc)
+- `POST /v1/gems/level-up` body `{gem}` · `set-level` body `{gem, level}` → `{applied, gem}`
+- `POST /v1/gems/evaluate` body `{tier, type, level, stats:[{type,value,extra_containers}]×3, auto_guess_procs?}` → `{quality_percent, calculated_power_rank, stats[], focus_totals, headline_cost, …}`
+- `GET /v1/gems/stat-range?tier&type&stat_type&level&extra_containers[&element]` → `{min_value, max_value, thresholds, …}`
+- `GET /v1/gems/builds/options` → valid build-config values (classes, allies, foods, flags)
+- `POST /v1/gems/builds/calculate` body BuildConfig `{build_type, character, subclass, food, ally, critical_damage_count, no_face, light, subclass_active, litany, berserker_battler, star_chart?}` → `{results:[{rank, layout, coefficient, …}], count}` (top 200 by damage coefficient)
+
+### Misc (`misc:read`)
+
+- `GET /v1/misc/software` → `{categories:[{key, description, software:[{name, free, url, description}]}], count}` (Trove modding tools)
+- `GET /v1/misc/timezones` → `{items:[{id, name}], count}` — supported zones (`trove`, `UTC`, IANA ids)
+- `GET /v1/misc/time/now` → `{unix, zones:[{id, name, datetime, date, time}]}` — current time in every zone (Trove "server" time = UTC−11)
+- `POST /v1/misc/time/convert` body `{datetime?: "2026-06-05T14:30", timezone: "trove"|"UTC"|IANA, unix?: int}` →
+  `{unix, iso_utc, zones:[{id, name, datetime, date, time}], discord:[{style, label, code:"<t:unix:f>"}]}`.
+  Give a naive `datetime` interpreted in `timezone`, or an absolute `unix` (timezone ignored). Discord codes
+  render in each viewer's own local time.
+
+### Mods (`mods:read`) — .tmod decompile + build (stateless; up to 20 MB body)
+
+- `POST /v1/mods/read` — body is the **raw .tmod bytes** (`application/octet-stream`), query `?metadata_only=true|false`.
+  Returns `{version, header_size, properties:{modLoader, title, author, …}, file_count, files:[{path, index,
+  offset, size, checksum, content_base64?}], metadata_only}`. `metadata_only` omits `content_base64`. `checksum`
+  is Trove's FNV-1a-variant (32-bit). Files/paths are lowercase posix.
+- `POST /v1/mods/build` — JSON `{version?: 1, properties: {title, author, modVersion, notes, tags, …},
+  files: [{path, content_base64}]}` → **raw .tmod bytes** (`application/octet-stream`, `Content-Disposition`
+  attachment). Built in memory and discarded after sending. The `modLoader` header is always stamped `KiwiAPI`
+  (any client-sent value is overridden).
+
+### Updates (`updates:read`) — archived game files (latest version)
+
+Kiwi mirrors Trove's update CDN and stores each version's files content-addressed (deduped). Browse them:
+- `GET /v1/updates/branches` → `{ items: [{ branch, current_version, current_ordinal, last_probe_at, status, file_count }], count }` (branches: `live-us`, `pts`)
+- `GET /v1/updates/{branch}/versions[?limit=&offset=]` → `{ items: [{ ordinal, version_tag, captured_at, files_added, files_modified, files_removed, bytes_added }], count, total }`
+- `GET /v1/updates/{branch}/tree[?prefix=]` → `{ branch, prefix, entries: [{ name, path, is_dir, file_count, size }], count }` — one directory level (prefix `prefabs/` lists its children); empty prefix = root
+- `GET /v1/updates/{branch}/file/meta?path=` → `{ path, content_sha256, size, archive, archive_index }`
+- `GET /v1/updates/{branch}/file?path=` → the raw file bytes (`application/octet-stream`, streamed). Works for loose and TFA-extracted files alike.
+
+### Codexes (`codexes:read`) — structured game data parsed from the archive
+
+Eight typed datasets parsed from `prefabs/*.binfab`, names resolved via the `languages/` locale tables. Re-indexed after each archive sync (full build once, then only the changed prefabs). All default to branch `live-us` (`?branch=pts` for PTS). v1 is identity-level; richer per-type fields fill `data` over time.
+- `GET /v1/codexes/types[?branch=]` → `{ branch, items: [{ type, count }], count }` — types present: `ally`, `mount`, `dragon`, `memento`, `recipe`, `item`, `fish`, `badge`
+- `GET /v1/codexes/{type}[?branch=&search=&limit=&offset=]` → `{ branch, type, items: [Entry], count, total }`; `search` is a case-insensitive name substring
+- `GET /v1/codexes/{type}/entry?path=[&branch=]` → one `Entry` by its source prefab path
+- `Entry` = `{ type, path, name, category, description, tradable, blueprint, data, indexed_at }` (`path` is the stable id; `data` holds type-specific rich fields)
 
 ## Meta
 
@@ -78,11 +176,11 @@ cursor pagination with `{items, next_cursor, has_more}`, `Idempotency-Key` on wr
 
 ---
 
-## Example (how a program authenticates, once endpoints exist)
+## Example
 
 ```bash
 export KIWI_TOKEN="kiwi_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"   # created in the portal
 
-curl https://api.aallyn.net/v1/<endpoint> \
+curl https://api.aallyn.net/v1/rotations/server-time \
   -H "Authorization: Bearer $KIWI_TOKEN"
 ```

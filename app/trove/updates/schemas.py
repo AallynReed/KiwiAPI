@@ -1,0 +1,61 @@
+"""Response models for the `updates:read` (archived game files) endpoints."""
+
+from datetime import datetime
+
+from pydantic import BaseModel
+
+
+class BranchInfo(BaseModel):
+    branch: str                       # "live-us" | "pts"
+    current_version: str | None
+    current_ordinal: int
+    last_probe_at: datetime | None
+    status: str                       # idle | syncing | error
+    file_count: int                   # logical files in the latest tree
+
+
+class BranchList(BaseModel):
+    items: list[BranchInfo]
+    count: int
+
+
+class VersionInfo(BaseModel):
+    branch: str
+    ordinal: int
+    version_tag: str
+    captured_at: datetime
+    completed_at: datetime | None
+    files_added: int
+    files_modified: int
+    files_removed: int
+    bytes_added: int
+
+
+class VersionList(BaseModel):
+    items: list[VersionInfo]
+    count: int                        # returned this page
+    total: int                        # all complete versions for the branch
+
+
+class TreeEntry(BaseModel):
+    name: str                         # immediate child name
+    path: str                         # full path (dirs end with "/")
+    is_dir: bool
+    file_count: int                   # files under it (1 for a file)
+    size: int                         # total bytes under it
+
+
+class TreeListing(BaseModel):
+    branch: str
+    prefix: str
+    entries: list[TreeEntry]
+    count: int
+
+
+class FileMeta(BaseModel):
+    branch: str
+    path: str
+    content_sha256: str
+    size: int
+    archive: str | None = None        # source TFI directory (null for loose files)
+    archive_index: int | None = None

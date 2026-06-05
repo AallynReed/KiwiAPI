@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     # Max request body accepted by the app (defence in depth; the proxy should
     # also cap, e.g. nginx `client_max_body_size 8m`).
     max_request_body_bytes: int = 8 * 1024 * 1024  # 8 MB
+    # The mod tools accept/return whole .tmod files, so they get a larger cap. Set
+    # the proxy's client_max_body_size to match (>= 20m) on the /v1/mods/ paths.
+    mods_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
 
     # Public URLs (used for docs links / CORS).
     # api_url  -> production data API surface (/v1, /health)
@@ -149,6 +152,31 @@ class Settings(BaseSettings):
     trove_news_feed_url: str = "https://trovegame.com/feed"
     trove_news_refresh_seconds: int = 1800  # background refresh cadence (30 min)
     trove_news_keep: int = 50               # max cached articles retained
+
+    # --- Relayed feeds (twitch / youtube / bilibili) ---
+    # We don't re-fetch from Twitch/YouTube/Bilibili ourselves — the trovesaurus
+    # bot already does (with its own credentials) and exposes the results. We relay
+    # + cache. Switch to http://host.docker.internal:19501 for the on-box bot.
+    trovesaurus_base_url: str = "https://trovesaurus.aallyn.net"
+    trove_feeds_refresh_seconds: int = 300  # relay refresh cadence (5 min)
+
+    # --- Trovesaurus events (community/in-game event calendar) ---
+    # Fetched from the public Trovesaurus calendar feed; stored so we keep history
+    # (events persist after they drop off the upstream feed). Categories are
+    # free-form and discovered dynamically (served via a distinct query).
+    trove_events_feed_url: str = "https://trovesaurus.com/calendar/feed"
+    trove_events_refresh_seconds: int = 900   # background refresh cadence (15 min)
+    trove_events_history_days: int = 365      # prune events whose end is older than this
+
+    # --- Game-file version archiver (Trion update CDN) ---
+    # OFF by default: enabling it triggers a multi-GB first sync against Trion's CDN.
+    # Turn on deliberately (per box) once the blob store path/disk is ready.
+    trove_update_enabled: bool = False
+    trove_update_base_url: str = "http://trove-update.dyn.triongames.com"
+    trove_update_prefix: str = "/kiwi-live-client-patch/"  # yields an intentional // when joined
+    trove_update_store_dir: str = "data/updates"           # content-addressed blob store (bind-mounted)
+    trove_update_probe_seconds: int = 1200                 # per-branch probe cadence (20 min)
+    trove_update_concurrency: int = 6                      # parallel file downloads
 
     # --- Rate-limit alerting (daily digest email to the admin) ---
     rate_limit_alert_email: str | None = "aallyn@aallyn.net"

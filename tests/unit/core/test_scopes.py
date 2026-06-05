@@ -7,29 +7,43 @@ from app.core.scopes import (
     mask_grants,
 )
 
-# Scopes are `<resource>:<action>`; bits are permanent. The base now defines the
-# first real scope, trove:read (bit 1), alongside the Trove data endpoints.
+# Scopes by function: rotations(1) feeds(2) stats(4) gems(8) misc(16) mods(32)
+# updates(64) codexes(128).
 
 
-def test_trove_scope_registered():
-    assert SCOPE_BITS == {"trove:read": 1}
+def test_scopes_registered():
+    assert SCOPE_BITS == {
+        "rotations:read": 1, "feeds:read": 2, "stats:read": 4,
+        "gems:read": 8, "misc:read": 16, "mods:read": 32, "updates:read": 64,
+        "codexes:read": 128,
+    }
     assert ALL_SCOPES == 0
-    assert catalog()[0]["resource"] == "trove"
+    assert {c["resource"] for c in catalog()} == {
+        "rotations", "feeds", "stats", "gems", "misc", "mods", "updates", "codexes",
+    }
     assert all(":" in c["key"] for c in catalog())  # naming convention
 
 
 def test_mask_grants():
-    assert mask_grants(0, "trove:read")        # 0 = all (present + future)
-    assert mask_grants(1, "trove:read")
-    assert not mask_grants(2, "trove:read")    # bit 2 isn't trove:read
-    assert not mask_grants(1, "unknown:scope")
+    assert mask_grants(0, "rotations:read") and mask_grants(0, "updates:read")   # 0 = all
+    assert mask_grants(1, "rotations:read") and not mask_grants(1, "feeds:read")
+    assert mask_grants(32, "mods:read") and not mask_grants(32, "misc:read")
+    assert mask_grants(64, "updates:read") and not mask_grants(64, "mods:read")
+    assert mask_grants(128, "codexes:read") and not mask_grants(128, "updates:read")
+    assert mask_grants(255, "rotations:read") and mask_grants(255, "codexes:read")  # 1|…|128
 
 
 def test_is_valid_mask():
-    assert is_valid_mask(0) and is_valid_mask(1)
-    assert not is_valid_mask(2)                # bit 2 not assigned
+    assert all(is_valid_mask(m) for m in (0, 1, 2, 4, 8, 16, 32, 63, 64, 127, 128, 255))
+    assert not is_valid_mask(256)  # bit 9 unassigned
 
 
 def test_decode():
     assert decode(0) == []
-    assert decode(1) == ["trove:read"]
+    assert decode(1) == ["rotations:read"]
+    assert decode(64) == ["updates:read"]
+    assert decode(128) == ["codexes:read"]
+    assert sorted(decode(255)) == [
+        "codexes:read", "feeds:read", "gems:read", "misc:read", "mods:read",
+        "rotations:read", "stats:read", "updates:read",
+    ]
