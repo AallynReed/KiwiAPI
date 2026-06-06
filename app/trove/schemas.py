@@ -72,6 +72,75 @@ class Fluxion(BaseModel):
     schedule: list[MerchantWindow]
 
 
+# --- Chaos Chest (weekly featured-item rotation) ---------------------------
+
+
+class ChaosChestItem(BaseModel):
+    name: str                     # featured item display name
+    identifier: str | None = None  # game path identifier (forward-slashed)
+    blueprint: str | None = None   # blueprint path (lowercased)
+
+
+class ChaosChest(BaseModel):
+    active: bool                  # within the current weekly window
+    starts_at: int                # window start, unix seconds
+    ends_at: int                  # window end, unix seconds
+    seconds_remaining: int        # to the window end
+    item: ChaosChestItem | None   # featured item (None if upstream unavailable)
+    fetched_at: datetime | None   # when the item was last relayed
+
+
+# --- Yearly calendar (all rotations as one ±365-day timeline) --------------
+
+
+class CalendarBiome(BaseModel):
+    name: str
+    icon: str
+
+
+class CalendarEvent(BaseModel):
+    type: str                     # weekly_buff | corruxion | fluxion | gardening_2/3 | stampy | mana
+    name: str
+    starts_at: int
+    ends_at: int
+    color: str | None = None      # hex (no #) for buff / fluxion / gardening entries
+    state: str | None = None      # fluxion only: "voting" | "selling"
+    biomes: list[CalendarBiome] | None = None  # stampy / mana entries
+
+
+class YearlyCalendar(BaseModel):
+    starts_at: int                # window start (now − 365d), unix seconds
+    ends_at: int                  # window end (now + 365d), unix seconds
+    generated_at: int             # the "now" the window was centered on
+    count: int
+    events: list[CalendarEvent]   # flat, sorted by starts_at
+
+
+# --- Delve rotations (weekly community delve data, relayed from an external source) ---
+
+
+class DelveWeekInfo(BaseModel):
+    week: int
+    total: int                    # source-reported total
+    count: int                    # stored floor records
+    fetched_at: datetime
+
+
+class DelveWeekList(BaseModel):
+    current_week: int             # the live week id right now
+    items: list[DelveWeekInfo]    # available weeks, newest first
+    count: int
+
+
+class DelveRotationOut(BaseModel):
+    week: int
+    is_current: bool              # whether this is the live week
+    total: int
+    count: int
+    fetched_at: datetime | None
+    depths: list[dict]            # floor records, passed through from the source
+
+
 # --- Gardening (plant harvest windows) -------------------------------------
 
 
@@ -125,6 +194,70 @@ class TroveNewsItem(BaseModel):
 class TroveNewsList(BaseModel):
     items: list[TroveNewsItem]
     count: int
+
+
+class TroveNewsHistory(BaseModel):
+    items: list[TroveNewsItem]
+    count: int                    # returned this page
+    total: int                    # all archived articles (for paging)
+
+
+# --- BetterTroveTools releases (drives in-app update checks) ----------------
+
+
+class BttAsset(BaseModel):
+    name: str                     # the asset filename
+    url: str                      # the raw download URL (browser_download_url)
+    size: int                     # bytes
+    content_type: str | None = None
+    download_count: int = 0
+
+
+class BttReleaseMeta(BaseModel):
+    """Release-level metadata WITHOUT the asset list — used inside per-platform views."""
+    release_id: int
+    tag_name: str                 # e.g. "v1.2.3"
+    name: str                     # release title
+    body: str                     # release notes (markdown)
+    html_url: str                 # the GitHub release page
+    prerelease: bool
+    channel: str                  # "release" | "beta" (derived from prerelease)
+    published_at: datetime
+    fetched_at: datetime
+
+
+class BttReleaseInfo(BttReleaseMeta):
+    """Full release — meta + every asset on the release. Used in the listing endpoint."""
+    assets: list[BttAsset]
+
+
+class BttReleaseList(BaseModel):
+    channel: str | None = None    # the channel filter, if any
+    items: list[BttReleaseInfo]
+    count: int                    # returned this page
+    total: int                    # all matching releases (for paging)
+
+
+class BttPlatformLatest(BaseModel):
+    """The latest release that ships an asset for a given platform on a channel."""
+    platform: str                 # windows | linux | android
+    release: BttReleaseMeta
+    assets: list[BttAsset]        # platform-matching assets only, sorted by priority
+
+
+class BttLatestPerPlatform(BaseModel):
+    channel: str                  # "release" | "beta"
+    platforms: dict[str, BttPlatformLatest | None]  # one per known platform; null if none
+
+
+class BttUpdateCheck(BaseModel):
+    """Server-side "is there an update?" check — the client just reads `update_available`."""
+    installed: str                # echoed back from the query
+    channel: str                  # "release" | "beta"
+    platform: str                 # windows | linux | android
+    update_available: bool        # True iff `installed` is older than `latest.release.tag_name`
+    comparable: bool              # False if either side couldn't be parsed as a version
+    latest: BttPlatformLatest | None  # the latest release for this platform/channel, or null
 
 
 # --- Events (Trovesaurus calendar) -----------------------------------------

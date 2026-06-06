@@ -1,18 +1,34 @@
 import base64
 import re
 
+import httpx
 from fastapi import APIRouter, Body, Depends, Query, Response
 from fastapi.responses import FileResponse
 
 from app.core.config import settings
-from app.core.dependencies import TokenContext, require_scope
+from app.core.dependencies import AccessContext, TokenContext, public_scope, require_scope
 from app.core.errors import APIError, ErrorCode
 from app.core.utils import utcnow
-from app.trove import misc, relays, rotations, server_time, stats, tmod
+from app.trove import (
+    btt_releases,
+    chaos,
+    delves,
+    misc,
+    news,
+    relays,
+    rotations,
+    server_time,
+    stats,
+    tmod,
+)
+from app.trove import calendar as trove_calendar
 from app.trove.codexes import read as codexes_read
 from app.trove.codexes.schemas import (
+    CodexCategoryInfo,
+    CodexCategoryList,
     CodexEntryOut,
     CodexEntryPage,
+    CodexSearchPage,
     CodexTypeInfo,
     CodexTypeList,
 )
@@ -46,9 +62,20 @@ from app.trove.misc import (
 from app.trove.models import TroveEvent, TroveNews
 from app.trove.schemas import (
     BiomeRotationFeed,
+    BttAsset,
+    BttLatestPerPlatform,
+    BttPlatformLatest,
+    BttReleaseInfo,
+    BttReleaseList,
+    BttReleaseMeta,
+    BttUpdateCheck,
+    ChaosChest,
     ClassList,
     Corruxion,
     DailyBuffs,
+    DelveRotationOut,
+    DelveWeekInfo,
+    DelveWeekList,
     EventCategoryList,
     Fluxion,
     Gardening,
@@ -57,6 +84,7 @@ from app.trove.schemas import (
     TroveClass,
     TroveEventItem,
     TroveEventList,
+    TroveNewsHistory,
     TroveNewsItem,
     TroveNewsList,
     TwitchStream,
@@ -64,6 +92,7 @@ from app.trove.schemas import (
     Video,
     Videos,
     WeeklyBuffs,
+    YearlyCalendar,
 )
 from app.trove.tmod import TmodBuildRequest, TmodReadResponse
 from app.trove.updates import read as updates_read
@@ -90,15 +119,26 @@ misc_router = APIRouter(prefix="/v1/misc", tags=["misc"])
 mods_router = APIRouter(prefix="/v1/mods", tags=["mods"])
 updates_router = APIRouter(prefix="/v1/updates", tags=["updates"])
 codexes_router = APIRouter(prefix="/v1/codexes", tags=["codexes"])
+btt_router = APIRouter(prefix="/v1/btt", tags=["btt"])
 
-_ROT = Depends(require_scope("rotations:read"))
-_FEED = Depends(require_scope("feeds:read"))
+# rotations + feeds are PUBLIC: usable without a token at a stricter per-IP rate
+# limit; a token carrying the scope lifts the caller to the full per-token limit.
+_ROT = Depends(public_scope("rotations:read"))
+_FEED = Depends(public_scope("feeds:read"))
+# The Bilibili thumbnail proxy is hit once per <img> on a feed render, so it gets
+# its own widened bucket (won't starve the shared feeds budget).
+_FEED_IMG = Depends(public_scope("feeds:read", rate_multiplier=settings.bilibili_image_rate_limit_multiplier))
 _STAT = Depends(require_scope("stats:read"))
 _GEM = Depends(require_scope("gems:read"))
 _MISC = Depends(require_scope("misc:read"))
 _MODS = Depends(require_scope("mods:read"))
 _UPD = Depends(require_scope("updates:read"))
-_CODEX = Depends(require_scope("codexes:read"))
+# Codexes are PUBLIC too (game reference data): usable without a token, and at a
+# wider rate budget (5× by default) on both the anonymous and authenticated paths.
+_CODEX = Depends(public_scope("codexes:read", rate_multiplier=settings.codexes_rate_limit_multiplier))
+# BTT releases are PUBLIC: the desktop app needs to poll them on every launch
+# to drive update notifications, so no token is required.
+_BTT = Depends(public_scope("btt:read"))
 
 # The codex serves the primary timeline by default; PTS is opt-in via ?branch=.
 _DEFAULT_CODEX_BRANCH = "live-us"
@@ -107,86 +147,131 @@ _DEFAULT_CODEX_BRANCH = "live-us"
 # --- Rotations / timers (scope: rotations:read) ----------------------------
 
 @rotations_router.get("/server-time", response_model=ServerTime)
-async def get_server_time(ctx: TokenContext = _ROT) -> ServerTime:
+async def get_server_time(ctx: AccessContext = _ROT) -> ServerTime:
     """Current Trove server time, current in-game day, and the next daily / weekly resets."""
     return ServerTime(**server_time.server_time())
 
 
 @rotations_router.get("/daily-buffs", response_model=DailyBuffs)
-async def get_daily_buffs(ctx: TokenContext = _ROT) -> DailyBuffs:
+async def get_daily_buffs(ctx: AccessContext = _ROT) -> DailyBuffs:
     """Today's daily buff plus the full Monday→Sunday rotation."""
     return DailyBuffs(**server_time.daily_buffs())
 
 
 @rotations_router.get("/weekly-buffs", response_model=WeeklyBuffs)
-async def get_weekly_buffs(ctx: TokenContext = _ROT) -> WeeklyBuffs:
+async def get_weekly_buffs(ctx: AccessContext = _ROT) -> WeeklyBuffs:
     """This week's weekly buff plus the full 4-week rotation."""
     return WeeklyBuffs(**server_time.weekly_buffs())
 
 
 @rotations_router.get("/corruxion", response_model=Corruxion)
-async def get_corruxion(ctx: TokenContext = _ROT) -> Corruxion:
+async def get_corruxion(ctx: AccessContext = _ROT) -> Corruxion:
     """Corruxion merchant: live timer + upcoming schedule (14-day / 3-day cycle)."""
     return Corruxion(**server_time.corruxion())
 
 
 @rotations_router.get("/fluxion", response_model=Fluxion)
-async def get_fluxion(ctx: TokenContext = _ROT) -> Fluxion:
+async def get_fluxion(ctx: AccessContext = _ROT) -> Fluxion:
     """Fluxion merchant: live timer (voting/selling) + upcoming schedule."""
     return Fluxion(**server_time.fluxion())
 
 
 @rotations_router.get("/gardening", response_model=Gardening)
-async def get_gardening(ctx: TokenContext = _ROT) -> Gardening:
+async def get_gardening(ctx: AccessContext = _ROT) -> Gardening:
     """Gardening harvest windows: current 2-day and 3-day plant windows + what's next."""
     return Gardening(**server_time.gardening())
 
 
+@rotations_router.get("/chaos-chest", response_model=ChaosChest)
+async def get_chaos_chest(ctx: AccessContext = _ROT) -> ChaosChest:
+    """The weekly Chaos Chest: current featured item (relayed) + window + countdown."""
+    return ChaosChest(**await chaos.get_chaos_chest())
+
+
+@rotations_router.get("/calendar", response_model=YearlyCalendar)
+async def get_calendar(ctx: AccessContext = _ROT) -> YearlyCalendar:
+    """The full yearly event calendar (±365 days): every recurring rotation —
+    weekly buffs, Corruxion/Fluxion, gardening, Wild Mana, Stampy — as one flat,
+    start-sorted timeline. (Invasion is excluded.)"""
+    return YearlyCalendar(**trove_calendar.yearly_calendar())
+
+
+@rotations_router.get("/delves/weeks", response_model=DelveWeekList)
+async def list_delve_weeks(ctx: AccessContext = _ROT) -> DelveWeekList:
+    """The delve weeks available (metadata only), newest first, plus the live week id."""
+    weeks = await delves.list_weeks()
+    return DelveWeekList(
+        current_week=delves.current_week_id(),
+        items=[DelveWeekInfo(**w) for w in weeks],
+        count=len(weeks),
+    )
+
+
+@rotations_router.get("/delves", response_model=DelveRotationOut)
+async def get_delves(
+    ctx: AccessContext = _ROT,
+    week: int | None = Query(default=None, description="Week id; defaults to the current week"),
+) -> DelveRotationOut:
+    """A week's delve rotation — its floor records (relayed from an external source).
+    Defaults to the current week; pass `?week=` for history (see `/delves/weeks`)."""
+    current = delves.current_week_id()
+    wk = week if week is not None else current
+    doc = await delves.get_week(wk)
+    if doc is None:
+        if week is not None:
+            raise APIError(status_code=404, code=ErrorCode.not_found,
+                           message=f"No delve data for week {week}")
+        # Current week not captured yet — return an empty rotation for it.
+        return DelveRotationOut(week=wk, is_current=True, total=0, count=0,
+                                fetched_at=None, depths=[])
+    return DelveRotationOut(
+        week=doc.week, is_current=(doc.week == current), total=doc.total,
+        count=doc.depth_count, fetched_at=doc.fetched_at, depths=doc.depths,
+    )
+
+
 @rotations_router.get("/biomes", response_model=BiomeRotationFeed)
-async def get_biomes(ctx: TokenContext = _ROT) -> BiomeRotationFeed:
+async def get_biomes(ctx: AccessContext = _ROT) -> BiomeRotationFeed:
     """The 3-hour adventure-world biome rotation (d15): current + upcoming."""
     return BiomeRotationFeed(**rotations.biome_rotation())
 
 
 @rotations_router.get("/wild-mana", response_model=BiomeRotationFeed)
-async def get_wild_mana(ctx: TokenContext = _ROT) -> BiomeRotationFeed:
+async def get_wild_mana(ctx: AccessContext = _ROT) -> BiomeRotationFeed:
     """The weekly Wild Mana biome rotation: current + upcoming."""
     return BiomeRotationFeed(**rotations.wild_mana())
 
 
 @rotations_router.get("/stampy", response_model=BiomeRotationFeed)
-async def get_stampy(ctx: TokenContext = _ROT) -> BiomeRotationFeed:
+async def get_stampy(ctx: AccessContext = _ROT) -> BiomeRotationFeed:
     """The weekly Stampy event biome (48-hour window): current + upcoming."""
     return BiomeRotationFeed(**rotations.stampy())
 
 
 # --- Feeds (scope: feeds:read) ---------------------------------------------
 
+def _news_item(d: TroveNews) -> TroveNewsItem:
+    return TroveNewsItem(
+        title=d.title, url=d.url, author=d.author, summary=d.summary,
+        category=d.category, categories=d.categories, image=d.image,
+        published_at=d.published_at,
+    )
+
+
 @feeds_router.get("/news", response_model=TroveNewsList)
 async def list_news(
-    ctx: TokenContext = _FEED,
+    ctx: AccessContext = _FEED,
     limit: int = Query(default=20, ge=1, le=50),
 ) -> TroveNewsList:
-    """Latest Trove news, relayed from trovegame.com and cached server-side, newest first."""
-    docs = await TroveNews.find().sort("-published_at").limit(limit).to_list()
-    items = [
-        TroveNewsItem(
-            title=d.title,
-            url=d.url,
-            author=d.author,
-            summary=d.summary,
-            category=d.category,
-            categories=d.categories,
-            image=d.image,
-            published_at=d.published_at,
-        )
-        for d in docs
-    ]
+    """Latest Trove news, relayed from trovegame.com and cached server-side, newest
+    first. Small + live; the full archive is at /v1/misc/news-history."""
+    docs = await news.latest_news(limit)
+    items = [_news_item(d) for d in docs]
     return TroveNewsList(items=items, count=len(items))
 
 
 @feeds_router.get("/twitch", response_model=TwitchStreams)
-async def get_twitch(ctx: TokenContext = _FEED) -> TwitchStreams:
+async def get_twitch(ctx: AccessContext = _FEED) -> TwitchStreams:
     """Live Twitch streams for Trove, relayed + cached from the trovesaurus bot."""
     items, fetched_at = await relays.get_feed("twitch")
     return TwitchStreams(
@@ -195,17 +280,44 @@ async def get_twitch(ctx: TokenContext = _FEED) -> TwitchStreams:
 
 
 @feeds_router.get("/youtube", response_model=Videos)
-async def get_youtube(ctx: TokenContext = _FEED) -> Videos:
+async def get_youtube(ctx: AccessContext = _FEED) -> Videos:
     """Recent Trove YouTube videos, relayed + cached from the trovesaurus bot."""
     items, fetched_at = await relays.get_feed("youtube")
     return Videos(items=[Video(**i) for i in items], count=len(items), fetched_at=fetched_at)
 
 
 @feeds_router.get("/bilibili", response_model=Videos)
-async def get_bilibili(ctx: TokenContext = _FEED) -> Videos:
+async def get_bilibili(ctx: AccessContext = _FEED) -> Videos:
     """Recent Trove Bilibili videos, relayed + cached from the trovesaurus bot."""
     items, fetched_at = await relays.get_feed("bilibili")
     return Videos(items=[Video(**i) for i in items], count=len(items), fetched_at=fetched_at)
+
+
+@feeds_router.get("/bilibili/image")
+async def proxy_bilibili_image(
+    url: str = Query(..., description="Absolute https hdslb.com thumbnail URL to proxy"),
+    ctx: AccessContext = _FEED_IMG,
+) -> Response:
+    """Proxy a Bilibili thumbnail so browsers and WebViews can display it.
+
+    Bilibili's CDN blocks hotlinking unless a bilibili.com Referer is sent, which
+    an <img> tag can't do — clients point <img src> here and we refetch with the
+    Referer. Cross-origin <img> loads aren't subject to CORS, so this serves the
+    hosted web build and the Android WebView identically (and replaces the local
+    proxy the desktop/web_server builds carry).
+    """
+    try:
+        content, content_type = await relays.fetch_bilibili_image(url)
+    except ValueError as exc:
+        raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(exc))
+    except httpx.HTTPError as exc:
+        raise APIError(status_code=502, code=ErrorCode.internal_error,
+                       message=f"upstream thumbnail fetch failed: {exc}")
+    return Response(
+        content=content,
+        media_type=content_type,
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 # --- Events: Trovesaurus calendar, relayed + stored (scope: feeds:read) -----
@@ -229,7 +341,7 @@ def _event_item(ev: TroveEvent, now: int) -> TroveEventItem:
 
 @feeds_router.get("/events", response_model=TroveEventList)
 async def list_ongoing_events(
-    ctx: TokenContext = _FEED,
+    ctx: AccessContext = _FEED,
     category: str | None = Query(default=None, description="Filter by category (see /events/categories)"),
     limit: int = Query(default=100, ge=1, le=500),
 ) -> TroveEventList:
@@ -244,7 +356,7 @@ async def list_ongoing_events(
 
 
 @feeds_router.get("/events/categories", response_model=EventCategoryList)
-async def list_event_categories(ctx: TokenContext = _FEED) -> EventCategoryList:
+async def list_event_categories(ctx: AccessContext = _FEED) -> EventCategoryList:
     """The distinct event categories currently stored — discovered dynamically, sorted."""
     rows = await TroveEvent.aggregate(
         [{"$group": {"_id": "$category"}}, {"$sort": {"_id": 1}}]
@@ -255,7 +367,7 @@ async def list_event_categories(ctx: TokenContext = _FEED) -> EventCategoryList:
 
 @feeds_router.get("/events/upcoming", response_model=TroveEventList)
 async def list_upcoming_events(
-    ctx: TokenContext = _FEED,
+    ctx: AccessContext = _FEED,
     category: str | None = Query(default=None),
     limit: int = Query(default=100, ge=1, le=500),
 ) -> TroveEventList:
@@ -271,7 +383,7 @@ async def list_upcoming_events(
 
 @feeds_router.get("/events/history", response_model=TroveEventList)
 async def list_event_history(
-    ctx: TokenContext = _FEED,
+    ctx: AccessContext = _FEED,
     category: str | None = Query(default=None),
     limit: int = Query(default=100, ge=1, le=500),
 ) -> TroveEventList:
@@ -446,7 +558,19 @@ async def calculate_builds(req: BuildConfigRequest, ctx: TokenContext = _GEM) ->
     return BuildResponse(results=[BuildResult(**r) for r in results], count=len(results))
 
 
-# --- Misc: modding software + time converter (scope: misc:read) -------------
+# --- Misc: modding software + time converter + news archive (scope: misc:read) --
+
+
+@misc_router.get("/news-history", response_model=TroveNewsHistory)
+async def get_news_history(
+    ctx: TokenContext = _MISC,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> TroveNewsHistory:
+    """The full Trove news archive (never pruned), newest first, paginated. The
+    small live view is /v1/feeds/news."""
+    docs, total = await news.news_history(limit, offset)
+    return TroveNewsHistory(items=[_news_item(d) for d in docs], count=len(docs), total=total)
 
 
 @misc_router.get("/software", response_model=ModdingSoftware)
@@ -637,14 +761,25 @@ def _check_codex_type(codex_type: str) -> None:
 def _codex_out(d) -> CodexEntryOut:
     return CodexEntryOut(
         type=d.codex_type, path=d.path, name=d.name, category=d.category,
-        description=d.description, tradable=d.tradable, blueprint=d.blueprint,
-        data=d.data, indexed_at=d.indexed_at,
+        description=d.description, tradable=d.tradable, mastery=d.mastery,
+        blueprint=d.blueprint, data=d.data, indexed_at=d.indexed_at,
     )
+
+
+_SORT_DESC = "Sort order: " + ", ".join(codexes_read.SORTS)
+
+
+def _check_sort(sort: str) -> None:
+    if sort not in codexes_read.SORTS:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message=f"Invalid sort '{sort}' (allowed: {', '.join(codexes_read.SORTS)})",
+        )
 
 
 @codexes_router.get("/types", response_model=CodexTypeList)
 async def list_codex_types(
-    ctx: TokenContext = _CODEX,
+    ctx: AccessContext = _CODEX,
     branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
 ) -> CodexTypeList:
     """The codex types present for a branch, each with its entry count."""
@@ -655,20 +790,53 @@ async def list_codex_types(
     )
 
 
+@codexes_router.get("/search", response_model=CodexSearchPage)
+async def search_codexes(
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    q: str | None = Query(default=None, description="Case-insensitive name/description substring"),
+    type: str | None = Query(default=None, description="Restrict to one codex type"),
+    category: str | None = Query(default=None, description="Exact category match"),
+    tradable: bool | None = Query(default=None, description="Filter by tradability"),
+    sort: str = Query(default="name", description=_SORT_DESC),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> CodexSearchPage:
+    """Search/filter across ALL codex types at once (the unified search surface).
+    Every filter is optional and ANDed; each result carries its own `type`."""
+    _check_branch(branch)
+    if type is not None:
+        _check_codex_type(type)
+    _check_sort(sort)
+    docs, total = await codexes_read.query_entries(
+        branch, codex_type=type, search=q, category=category, tradable=tradable,
+        sort=sort, limit=limit, offset=offset,
+    )
+    return CodexSearchPage(
+        branch=branch, type=type, query=q,
+        items=[_codex_out(d) for d in docs], count=len(docs), total=total,
+    )
+
+
 @codexes_router.get("/{codex_type}", response_model=CodexEntryPage)
 async def list_codex_entries(
     codex_type: str,
-    ctx: TokenContext = _CODEX,
+    ctx: AccessContext = _CODEX,
     branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
-    search: str | None = Query(default=None, description="Case-insensitive name substring"),
+    search: str | None = Query(default=None, description="Case-insensitive name/description substring"),
+    category: str | None = Query(default=None, description="Exact category match (see /{type}/categories)"),
+    tradable: bool | None = Query(default=None, description="Filter by tradability"),
+    sort: str = Query(default="name", description=_SORT_DESC),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ) -> CodexEntryPage:
-    """Entries of one codex type, name-sorted; searchable by name and paginated."""
+    """Entries of one codex type — filterable (search/category/tradable), sortable, paged."""
     _check_branch(branch)
     _check_codex_type(codex_type)
-    docs, total = await codexes_read.list_entries(
-        branch, codex_type, search=search, limit=limit, offset=offset,
+    _check_sort(sort)
+    docs, total = await codexes_read.query_entries(
+        branch, codex_type=codex_type, search=search, category=category,
+        tradable=tradable, sort=sort, limit=limit, offset=offset,
     )
     return CodexEntryPage(
         branch=branch, type=codex_type,
@@ -676,11 +844,27 @@ async def list_codex_entries(
     )
 
 
+@codexes_router.get("/{codex_type}/categories", response_model=CodexCategoryList)
+async def list_codex_categories(
+    codex_type: str,
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> CodexCategoryList:
+    """Distinct categories (+ counts) within a type — for building filter dropdowns."""
+    _check_branch(branch)
+    _check_codex_type(codex_type)
+    rows = await codexes_read.list_categories(branch, codex_type)
+    return CodexCategoryList(
+        branch=branch, type=codex_type,
+        items=[CodexCategoryInfo(**r) for r in rows], count=len(rows),
+    )
+
+
 @codexes_router.get("/{codex_type}/entry", response_model=CodexEntryOut)
 async def get_codex_entry(
     codex_type: str,
     path: str = Query(..., description="The entry's source prefab path (its stable id)"),
-    ctx: TokenContext = _CODEX,
+    ctx: AccessContext = _CODEX,
     branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
 ) -> CodexEntryOut:
     """A single codex entry by its source prefab path."""
@@ -690,3 +874,135 @@ async def get_codex_entry(
     if doc is None:
         raise APIError(status_code=404, code=ErrorCode.not_found, message=f"No {codex_type} entry '{path}'")
     return _codex_out(doc)
+
+
+# --- BTT: BetterTroveTools releases relay (scope: btt:read, public) ---------
+# Drives the desktop app's update-check loop: the app polls these endpoints (no
+# token required) and emits local push notifications when a newer version ships.
+
+
+def _release_meta(d) -> BttReleaseMeta:
+    return BttReleaseMeta(
+        release_id=d.release_id, tag_name=d.tag_name, name=d.name, body=d.body,
+        html_url=d.html_url, prerelease=d.prerelease,
+        channel="beta" if d.prerelease else "release",
+        published_at=d.published_at, fetched_at=d.fetched_at,
+    )
+
+
+def _release_info(d) -> BttReleaseInfo:
+    return BttReleaseInfo(**_release_meta(d).model_dump(),
+                          assets=[BttAsset(**a) for a in d.assets])
+
+
+def _check_btt_channel(channel: str) -> None:
+    if channel not in btt_releases.CHANNELS:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message=f"channel must be one of: {', '.join(btt_releases.CHANNELS)}",
+        )
+
+
+@btt_router.get("/releases", response_model=BttReleaseList)
+async def list_btt_releases(
+    ctx: AccessContext = _BTT,
+    channel: str | None = Query(default=None, description="release | beta (default: both)"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> BttReleaseList:
+    """Recent BetterTroveTools GitHub releases, newest first. Optional channel filter."""
+    if channel is not None:
+        _check_btt_channel(channel)
+    docs, total = await btt_releases.list_releases(channel, limit, offset)
+    return BttReleaseList(
+        channel=channel, items=[_release_info(d) for d in docs],
+        count=len(docs), total=total,
+    )
+
+
+@btt_router.get("/latest", response_model=BttLatestPerPlatform)
+async def get_btt_latest(
+    ctx: AccessContext = _BTT,
+    channel: str = Query(default="release", description="release | beta"),
+) -> BttLatestPerPlatform:
+    """The latest BetterTroveTools version per platform (windows/linux/android) on
+    a channel. Each platform walks the channel newest-first independently to the
+    most recent release that actually ships an asset for it — so a release with
+    no Windows build doesn't suppress Windows updates."""
+    _check_btt_channel(channel)
+    per = await btt_releases.latest_per_platform(channel)
+    out: dict[str, BttPlatformLatest | None] = {}
+    for platform, found in per.items():
+        if found is None:
+            out[platform] = None
+            continue
+        release, matched = found
+        out[platform] = BttPlatformLatest(
+            platform=platform, release=_release_meta(release),
+            assets=[BttAsset(**a) for a in matched],
+        )
+    return BttLatestPerPlatform(channel=channel, platforms=out)
+
+
+def _check_btt_platform(platform: str) -> None:
+    if platform not in btt_releases.PLATFORMS:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"unknown platform '{platform}' (known: {', '.join(btt_releases.PLATFORMS)})",
+        )
+
+
+@btt_router.get("/check", response_model=BttUpdateCheck)
+async def check_btt_update(
+    ctx: AccessContext = _BTT,
+    installed: str = Query(..., min_length=1, description="The version tag the client has installed (e.g. 'v1.2.3')"),
+    platform: str = Query(..., description="windows | linux | android"),
+    channel: str = Query(default="release", description="release | beta"),
+) -> BttUpdateCheck:
+    """Server-side "is there an update?" — saves the client doing version math.
+    Compares `installed` against the latest tag the channel has for `platform`
+    (the same walk-back logic as `/latest`) and returns a boolean. `comparable`
+    flags malformed tags so a client can decide how to treat the result."""
+    _check_btt_platform(platform)
+    _check_btt_channel(channel)
+    per = await btt_releases.latest_per_platform(channel)
+    found = per[platform]
+    if found is None:
+        return BttUpdateCheck(
+            installed=installed, channel=channel, platform=platform,
+            update_available=False, comparable=False, latest=None,
+        )
+    release, matched = found
+    cmp = btt_releases.compare_versions(installed, release.tag_name)
+    return BttUpdateCheck(
+        installed=installed, channel=channel, platform=platform,
+        update_available=(cmp is not None and cmp < 0),
+        comparable=(cmp is not None),
+        latest=BttPlatformLatest(
+            platform=platform, release=_release_meta(release),
+            assets=[BttAsset(**a) for a in matched],
+        ),
+    )
+
+
+@btt_router.get("/latest/{platform}", response_model=BttPlatformLatest)
+async def get_btt_latest_for_platform(
+    platform: str,
+    ctx: AccessContext = _BTT,
+    channel: str = Query(default="release", description="release | beta"),
+) -> BttPlatformLatest:
+    """Latest BetterTroveTools version for a single platform on a channel."""
+    _check_btt_platform(platform)
+    _check_btt_channel(channel)
+    per = await btt_releases.latest_per_platform(channel)
+    found = per[platform]
+    if found is None:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"no {channel} release carries a {platform} asset yet",
+        )
+    release, matched = found
+    return BttPlatformLatest(
+        platform=platform, release=_release_meta(release),
+        assets=[BttAsset(**a) for a in matched],
+    )

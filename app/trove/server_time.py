@@ -171,6 +171,20 @@ def fluxion(now: datetime | None = None, count: int = 8) -> dict:
     }
 
 
+# --- Chaos Chest (weekly window) -------------------------------------------
+# The featured item comes from Trovesaurus (relayed), but the 7-day window is
+# deterministic — anchored to the fluxion epoch in real UTC, exactly as BTT does
+# (first_fluxion + 11h). Used as the fallback whenever upstream gives no times.
+
+def chaos_chest_window(now: datetime | None = None) -> dict:
+    real = now or real_utc_now()
+    base = FIRST_FLUXION + TROVE_OFFSET  # trove-frame anchor -> real-UTC anchor
+    intervals = int((real - base).total_seconds() // (7 * DAY))
+    start = base + timedelta(days=intervals * 7)
+    end = start + timedelta(days=7)
+    return {"starts_at": int(start.timestamp()), "ends_at": int(end.timestamp())}
+
+
 # --- Gardening (plant harvest windows) -------------------------------------
 
 def gardening(now: datetime | None = None) -> dict:

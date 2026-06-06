@@ -98,7 +98,12 @@ def parse_feed(xml_text: str) -> list[dict]:
 
 async def refresh_news() -> int:
     """Fetch the feed and upsert items into Mongo (by url). Returns items processed."""
-    async with httpx.AsyncClient(timeout=15, headers={"User-Agent": "KiwiAPI/1.0"}) as client:
+    # follow_redirects: trovegame.com/feed 301s to /feed/. httpx doesn't follow by
+    # default and raise_for_status() ignores 3xx, so without this we'd parse the
+    # redirect page instead of the RSS and silently relay nothing.
+    async with httpx.AsyncClient(
+        timeout=15, follow_redirects=True, headers={"User-Agent": "KiwiAPI/1.0"}
+    ) as client:
         resp = await client.get(settings.trove_news_feed_url)
         resp.raise_for_status()
         items = parse_feed(resp.text)
@@ -118,17 +123,23 @@ async def refresh_news() -> int:
         existing.updated_at = utcnow()
         await existing.save()
 
-    await _prune()
     return len(items)
 
 
-async def _prune() -> None:
-    """Keep only the newest `trove_news_keep` articles."""
-    keep = settings.trove_news_keep
-    newest = await TroveNews.find().sort("-published_at").limit(keep).to_list()
-    keep_ids = {n.id for n in newest}
-    if keep_ids:
-        await TroveNews.find({"_id": {"$nin": list(keep_ids)}}).delete()
+# --- Read helpers -----------------------------------------------------------
+# Nothing is pruned — `trove_news` is the durable archive. The live feed serves
+# the newest few; the history endpoint pages through everything.
+
+async def latest_news(limit: int) -> list[TroveNews]:
+    """The newest `limit` articles (the small, live view)."""
+    return await TroveNews.find().sort("-published_at").limit(limit).to_list()
+
+
+async def news_history(limit: int, offset: int) -> tuple[list[TroveNews], int]:
+    """A page of the full archive (newest first) + the total article count."""
+    total = await TroveNews.find().count()
+    docs = await TroveNews.find().sort("-published_at").skip(offset).limit(limit).to_list()
+    return docs, total
 
 
 # --- Background refresher ---------------------------------------------------

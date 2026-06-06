@@ -145,7 +145,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
         <section id="data">
           <h2>Data endpoints</h2>
           <p>
-            Live <strong>Trove game data</strong>, grouped by function into seven categories, each with
+            Live <strong>Trove game data</strong>, grouped by function into nine categories, each with
             its own scope: <strong>rotations</strong> (<code>rotations:read</code>) — server time,
             bonuses, merchants, biomes; <strong>feeds</strong> (<code>feeds:read</code>) — news,
             Twitch streams, YouTube / Bilibili videos, and the Trovesaurus event calendar; <strong>stats</strong>
@@ -155,11 +155,21 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <strong>mods</strong> (<code>mods:read</code>) — decompile and build <code>.tmod</code> files;
             <strong>updates</strong> (<code>updates:read</code>) — browse the archived game files
             (versions, directory tree, single-file download);
-            and <strong>codexes</strong> (<code>codexes:read</code>) — structured game data
-            (allies, mounts, dragons, mementos, recipes, items, fish, badges) parsed from the archive.
+            <strong>codexes</strong> (<code>codexes:read</code>) — structured game data
+            (allies, mounts, dragons, mementos, recipes, items, fish, badges) parsed from the archive;
+            and <strong>btt</strong> (<code>btt:read</code>) — BetterTroveTools releases
+            (latest version per platform, per channel) for in-app update checks.
             Rotations, feeds and stats are <code>GET</code>, read-only (timestamps are
             <strong>real-UTC unix seconds</strong>); the gem and mod tools add <code>POST</code> calculators.
             The <a href="reference">API reference</a> has the full field-level schema for each.
+          </p>
+          <p class="field-help">
+            <strong>rotations</strong>, <strong>feeds</strong>, <strong>codexes</strong> and
+            <strong>btt</strong> are <strong>public</strong> — callable with no token at a stricter
+            per-IP rate limit (30&nbsp;req/min/IP by default). Send a token carrying the scope to lift it to the full
+            per-token limit (120&nbsp;req/min). <strong>codexes</strong> gets 5× both budgets
+            (150&nbsp;req/min/IP anonymous, 600&nbsp;req/min/token). Every other category requires a
+            token with the matching scope.
           </p>
           <table>
             <tr><th>Endpoint</th><th>Scope</th><th>Returns</th></tr>
@@ -169,10 +179,13 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>/v1/rotations/corruxion</code></td><td><code>rotations:read</code></td><td>Corruxion merchant: live timer + upcoming schedule</td></tr>
             <tr><td><code>/v1/rotations/fluxion</code></td><td><code>rotations:read</code></td><td>Fluxion merchant: voting/selling timer + schedule</td></tr>
             <tr><td><code>/v1/rotations/gardening</code></td><td><code>rotations:read</code></td><td>2-day / 3-day plant harvest windows + what's next</td></tr>
+            <tr><td><code>/v1/rotations/chaos-chest</code></td><td><code>rotations:read</code></td><td>Weekly Chaos Chest: featured item (relayed from Trovesaurus) + window + countdown</td></tr>
+            <tr><td><code>/v1/rotations/calendar</code></td><td><code>rotations:read</code></td><td>Yearly calendar: all recurring rotations (buffs, merchants, gardening, biomes) as one ±365-day timeline</td></tr>
+            <tr><td><code>/v1/rotations/delves?week=</code></td><td><code>rotations:read</code></td><td>A week's delve rotation — floor records relayed from a community delve source (default current week; <code>/delves/weeks</code> lists weeks)</td></tr>
             <tr><td><code>/v1/rotations/biomes</code></td><td><code>rotations:read</code></td><td>The 3-hour adventure-world biome rotation (current + upcoming)</td></tr>
             <tr><td><code>/v1/rotations/wild-mana</code></td><td><code>rotations:read</code></td><td>Weekly Wild Mana biome rotation</td></tr>
             <tr><td><code>/v1/rotations/stampy</code></td><td><code>rotations:read</code></td><td>Weekly Stampy event biome (48-hour window)</td></tr>
-            <tr><td><code>/v1/feeds/news?limit=</code></td><td><code>feeds:read</code></td><td>Latest Trove news relayed from trovegame.com (1–50, default 20)</td></tr>
+            <tr><td><code>/v1/feeds/news?limit=</code></td><td><code>feeds:read</code></td><td>Latest Trove news relayed from trovegame.com (1–50, default 20); full archive at <code>/v1/misc/news-history</code></td></tr>
             <tr><td><code>/v1/feeds/twitch</code></td><td><code>feeds:read</code></td><td>Live Trove Twitch streams (channel, title, viewers, thumbnail)</td></tr>
             <tr><td><code>/v1/feeds/youtube</code></td><td><code>feeds:read</code></td><td>Recent Trove YouTube videos</td></tr>
             <tr><td><code>/v1/feeds/bilibili</code></td><td><code>feeds:read</code></td><td>Recent Trove Bilibili videos</td></tr>
@@ -193,6 +206,11 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>GET /v1/gems/stat-range</code></td><td><code>gems:read</code></td><td>Plausible (min, max) value a stat can roll at</td></tr>
             <tr><td><code>GET /v1/gems/builds/options</code></td><td><code>gems:read</code></td><td>Valid build-config field values (classes, allies, foods, flags)</td></tr>
             <tr><td><code>POST /v1/gems/builds/calculate</code></td><td><code>gems:read</code></td><td>Top gem proc layouts for a build, ranked by damage coefficient</td></tr>
+            <tr><td><code>GET /v1/misc/news-history?limit=&offset=</code></td><td><code>misc:read</code></td><td>Full Trove news archive (never pruned), newest first, paginated</td></tr>
+            <tr><td><code>GET /v1/btt/releases?channel=&limit=&offset=</code></td><td><code>btt:read</code></td><td>BetterTroveTools GitHub releases (newest first; filter by <code>release</code> / <code>beta</code> channel)</td></tr>
+            <tr><td><code>GET /v1/btt/latest?channel=</code></td><td><code>btt:read</code></td><td>Latest BTT version per platform (windows/linux/android); each platform walks back to find an asset</td></tr>
+            <tr><td><code>GET /v1/btt/latest/{platform}?channel=</code></td><td><code>btt:read</code></td><td>Latest BTT version for one platform</td></tr>
+            <tr><td><code>GET /v1/btt/check?installed=&platform=&channel=</code></td><td><code>btt:read</code></td><td><strong>"Is there an update?"</strong> server-side version compare; returns <code>{ update_available, latest }</code> so the client just reads a bool</td></tr>
             <tr><td><code>GET /v1/misc/software</code></td><td><code>misc:read</code></td><td>Third-party Trove modding software, grouped by category</td></tr>
             <tr><td><code>GET /v1/misc/timezones</code></td><td><code>misc:read</code></td><td>Timezones supported by the converter and clocks</td></tr>
             <tr><td><code>GET /v1/misc/time/now</code></td><td><code>misc:read</code></td><td>Current time across every zone, incl. Trove server (reset) time</td></tr>
@@ -204,7 +222,9 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>GET /v1/updates/{branch}/tree?prefix=</code></td><td><code>updates:read</code></td><td>Directory listing, one level at a time (latest version)</td></tr>
             <tr><td><code>GET /v1/updates/{branch}/file?path=</code></td><td><code>updates:read</code></td><td>Download a single archived game file (streamed); <code>/file/meta</code> for hash + size</td></tr>
             <tr><td><code>GET /v1/codexes/types</code></td><td><code>codexes:read</code></td><td>Codex types present (ally, mount, dragon, memento, recipe, item, fish, badge) with counts</td></tr>
-            <tr><td><code>GET /v1/codexes/{type}?search=</code></td><td><code>codexes:read</code></td><td>Entries of one type — name-sorted, searchable, paginated (<code>?branch=</code> for PTS)</td></tr>
+            <tr><td><code>GET /v1/codexes/search?q=&type=&category=&tradable=&sort=</code></td><td><code>codexes:read</code></td><td>Cross-type search/filter — the unified search surface; each result carries its <code>type</code></td></tr>
+            <tr><td><code>GET /v1/codexes/{type}?search=&category=&tradable=&sort=</code></td><td><code>codexes:read</code></td><td>Entries of one type — filter (name/description, category, tradable), sort, paginate</td></tr>
+            <tr><td><code>GET /v1/codexes/{type}/categories</code></td><td><code>codexes:read</code></td><td>Distinct categories (+ counts) in a type, for filter dropdowns</td></tr>
             <tr><td><code>GET /v1/codexes/{type}/entry?path=</code></td><td><code>codexes:read</code></td><td>One codex entry by its source prefab path</td></tr>
           </table>
           <p class="field-help">News, streams, videos, and events are relayed from upstream sources and

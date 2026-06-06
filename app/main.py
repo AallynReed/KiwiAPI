@@ -26,10 +26,17 @@ from app.core.scopes import catalog as scope_catalog
 from app.scanning.router import router as scanning_router
 from app.tokens.router import router as tokens_router
 from app.tokens.schemas import REVOKE_REASONS
+from app.trove.btt_releases import (
+    start_btt_releases_refresher,
+    stop_btt_releases_refresher,
+)
+from app.trove.chaos import start_chaos_refresher, stop_chaos_refresher
+from app.trove.delves import start_delve_refresher, stop_delve_refresher
 from app.trove.events import start_events_refresher, stop_events_refresher
 from app.trove.news import start_news_refresher, stop_news_refresher
 from app.trove.relays import start_feeds_refresher, stop_feeds_refresher
 from app.trove.router import (
+    btt_router,
     codexes_router,
     feeds_router,
     gems_router,
@@ -68,11 +75,17 @@ async def lifespan(app: FastAPI):
     start_news_refresher()
     start_feeds_refresher()
     start_events_refresher()
+    start_chaos_refresher()
+    start_delve_refresher()
+    start_btt_releases_refresher()
     start_update_archiver()  # off unless trove_update_enabled
     maintenance_task = asyncio.create_task(maintenance_loop())
     yield
     maintenance_task.cancel()
     await stop_update_archiver()
+    await stop_btt_releases_refresher()
+    await stop_delve_refresher()
+    await stop_chaos_refresher()
     await stop_events_refresher()
     await stop_feeds_refresher()
     await stop_news_refresher()
@@ -107,6 +120,11 @@ app = FastAPI(
     debug=settings.debug,
     lifespan=lifespan,
     responses=COMMON_ERROR_RESPONSES,
+    # Declare the canonical API host so the reference page (Redoc) shows request
+    # URLs as api.aallyn.net. Without this, the spec has no `servers` and Redoc
+    # falls back to the page's own origin — docs.aallyn.net, since the docs site
+    # proxies /openapi.json same-origin.
+    servers=[{"url": settings.api_url, "description": "Production"}],
 )
 
 register_error_handlers(app)
@@ -129,6 +147,7 @@ add_request_context_middleware(app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -161,6 +180,7 @@ app.include_router(misc_router)
 app.include_router(mods_router)
 app.include_router(updates_router)
 app.include_router(codexes_router)
+app.include_router(btt_router)
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)

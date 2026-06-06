@@ -3,8 +3,11 @@ and identity extraction. Real prefabs only exist in the server's archive, so we
 hand-build synthetic `.binfab` wire data here (the format is self-describing).
 """
 
-from app.trove.codexes import binfab
-from app.trove.codexes.extract import extract_entry
+import re
+
+from app.trove.codexes import binfab, mastery
+from app.trove.codexes import read as codexes_read
+from app.trove.codexes.extract import extract_entry, refine_mount
 from app.trove.codexes.types import classify
 
 # --- wire builders ----------------------------------------------------------
@@ -104,8 +107,7 @@ def test_classify_each_type():
         "prefabs/item/fish/cod.binfab": "fish",
         "prefabs/item/unlocker/memento_glow.binfab": "memento",
         "prefabs/collections/pet/wolf.binfab": "ally",
-        "prefabs/collections/mount/horse.binfab": "mount",
-        "prefabs/collections/dragon/ember.binfab": "dragon",
+        "prefabs/collections/mount/horse.binfab": "mount",  # dragons split off later, by category
         "prefabs/collections/badge/founder.binfab": "badge",
         "prefabs/recipes/forge.binfab": "recipe",
         "prefabs/item/sword.binfab": "item",
@@ -144,3 +146,106 @@ def test_extract_entry_falls_back_to_filename():
     entry = extract_entry("item", "prefabs/item/fancy_sword.binfab", b"\x00\x01", {})
     assert entry["name"] == "Fancy Sword"
     assert entry["description"] == ""
+
+
+# --- dragons: split out of the mount tree by collection category ------------
+
+def _collection_table(*strings: str) -> bytes:
+    # parse_collection_table harvests strings in order: a bare category name, then
+    # $CollectionName_…, then collections/… members of that group.
+    return b"".join(_str_field(1, s) for s in strings)
+
+
+def test_collection_category_map_groups_mounts():
+    table = _collection_table(
+        "Dragons", "$CollectionName_Dragons", "collections/mount/ember",
+        "Mounts", "$CollectionName_Mounts", "collections/mount/horse",
+    )
+    m = binfab.collection_category_map(table)
+    assert m["collections/mount/ember"] == "Dragons"
+    assert m["collections/mount/horse"] == "Mounts"
+
+
+def test_refine_mount_reclassifies_dragons_by_table():
+    cats = {"collections/mount/ember": "Dragons", "collections/mount/horse": "Mounts"}
+    dragon = refine_mount({"codex_type": "mount", "category": ""}, "collections/mount/ember", cats)
+    assert dragon["codex_type"] == "dragon" and dragon["category"] == "Dragons"
+    mount = refine_mount({"codex_type": "mount", "category": ""}, "collections/mount/horse", cats)
+    assert mount["codex_type"] == "mount" and mount["category"] == "Mounts"
+
+
+def test_refine_mount_falls_back_to_inprefab_category():
+    # No table entry -> keep the in-prefab category, still detecting 'dragon' in it.
+    d = refine_mount({"codex_type": "mount", "category": "Fire Dragon"}, "collections/mount/x", {})
+    assert d["codex_type"] == "dragon"
+    m = refine_mount({"codex_type": "mount", "category": "Cool Mount"}, "collections/mount/y", {})
+    assert m["codex_type"] == "mount"
+
+
+# --- search filter query builder --------------------------------------------
+
+def test_filter_ands_every_field():
+    q = codexes_read._filter("live-us", codex_type="ally", search="wolf",
+                             category="Pets", tradable=True)
+    assert q["branch"] == "live-us"
+    assert q["codex_type"] == "ally"
+    assert q["category"] == "Pets"
+    assert q["tradable"] is True
+    # search matches name OR description
+    assert q["$or"] == [
+        {"name": {"$regex": "wolf", "$options": "i"}},
+        {"description": {"$regex": "wolf", "$options": "i"}},
+    ]
+
+
+def test_filter_escapes_regex_and_omits_unset():
+    q = codexes_read._filter("live-us", codex_type=None, search="a.b*[",
+                             category=None, tradable=None)
+    assert q == {"branch": "live-us", "$or": [
+        {"name": {"$regex": re.escape("a.b*["), "$options": "i"}},
+        {"description": {"$regex": re.escape("a.b*["), "$options": "i"}},
+    ]}
+
+
+def test_filter_tradable_false_is_kept():
+    q = codexes_read._filter("live-us", codex_type="item", search=None,
+                             category=None, tradable=False)
+    assert q["tradable"] is False and "$or" not in q
+
+
+# --- mastery (meta/multipliers.binfab) --------------------------------------
+
+def test_infer_mastery_base_rules():
+    assert mastery.infer_mastery_base("collections/mount/ember") == ("collections/mount/ember", 50)
+    assert mastery.infer_mastery_base("collections/pet/wolf") == ("collections/pet/wolf", 10)
+    assert mastery.infer_mastery_base("collections/badge/x") == ("collections/badge/x", 20)
+    assert mastery.infer_mastery_base("item/fish/cod") == ("item/fish/cod", 5)
+    assert mastery.infer_mastery_base("collections\\mount\\x") == ("collections/mount/x", 50)
+    assert mastery.infer_mastery_base("loneword") == ("collections/skin/loneword", 35)  # bare -> skin
+    assert mastery.infer_mastery_base("item/sword") == ("item/sword", 0)
+
+
+def _mult_group(identifier: str) -> bytes:
+    # marker + count(1) + pattern(index1 = varint(4)) + \x00 + 2 skip bytes + len + id
+    return (b"\xBE\x01\xAE" + _uleb(1) + _uleb(4) + b"\x00" + b"\x00\x00"
+            + _uleb(len(identifier)) + identifier.encode())
+
+
+def test_parse_multipliers_maps_groups_to_multipliers():
+    blob = (b"\x00" * 9
+            + _mult_group("collections/pet/wolf")        # 1st group -> ×0
+            + _mult_group("collections/badge/founder")   # 2nd group -> ×2
+            + _mult_group("collections/mount/horse")     # 3rd group -> ×3
+            + _mult_group("collections/mount/ember"))    # 4th group -> ×5
+    rows = mastery.parse_multipliers(blob)
+    assert rows["collections/pet/wolf"]["predicted"] == 0       # 10 × 0
+    assert rows["collections/badge/founder"]["predicted"] == 40  # 20 × 2
+    assert rows["collections/mount/horse"]["predicted"] == 150   # 50 × 3
+    assert rows["collections/mount/ember"]["predicted"] == 250   # 50 × 5
+
+
+def test_mastery_for_uses_map_then_base():
+    m = {"collections/mount/ember": {"multiplier": 5, "base": 50, "predicted": 250}}
+    assert mastery.mastery_for("collections/mount/ember", m) == 250
+    assert mastery.mastery_for("collections/mount/horse", m) == 50   # absent -> type base
+    assert mastery.mastery_for("item/sword", m) is None              # base 0 -> None

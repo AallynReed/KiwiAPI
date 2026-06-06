@@ -88,6 +88,20 @@ class Settings(BaseSettings):
     # API queries: per-token throughput cap (protects compute-heavy endpoints).
     api_rate_limit_max: int = 120
     api_rate_limit_window_seconds: int = 60  # 120 requests / minute / token
+    # Public (unauthenticated) access to the read-only `rotations` + `feeds`
+    # scopes: allowed without a token, but at a stricter per-IP budget than an
+    # authenticated token gets. Send a token with the scope for the full limit.
+    public_anon_rate_limit_max: int = 30
+    public_anon_rate_limit_window_seconds: int = 60  # 30 requests / minute / IP
+    # Codexes are lightweight reference reads, so they get a wider budget (this ×
+    # the base anon/per-token caps) metered in their own bucket. Default 5×:
+    # 150 req/min/IP anonymous, 600 req/min/token authenticated.
+    codexes_rate_limit_multiplier: int = 5
+    # Bilibili thumbnail proxy: one feed-page render fires a burst of <img> loads,
+    # so give the image proxy its own widened bucket (× the base anon/per-token
+    # caps) rather than letting it exhaust the shared feeds budget. Default 10×:
+    # 300 req/min/IP anonymous.
+    bilibili_image_rate_limit_multiplier: int = 10
 
     # Minimum password length enforced at signup.
     password_min_length: int = 8
@@ -149,9 +163,10 @@ class Settings(BaseSettings):
     require_verified_for_tokens: bool = True
 
     # --- Trove game data (server-time + news relay) ---
+    # News is relayed into the durable `trove_news` archive (never pruned): the
+    # feeds endpoint serves the newest few, the misc endpoint pages the full history.
     trove_news_feed_url: str = "https://trovegame.com/feed"
     trove_news_refresh_seconds: int = 1800  # background refresh cadence (30 min)
-    trove_news_keep: int = 50               # max cached articles retained
 
     # --- Relayed feeds (twitch / youtube / bilibili) ---
     # We don't re-fetch from Twitch/YouTube/Bilibili ourselves — the trovesaurus
@@ -159,6 +174,32 @@ class Settings(BaseSettings):
     # + cache. Switch to http://host.docker.internal:19501 for the on-box bot.
     trovesaurus_base_url: str = "https://trovesaurus.aallyn.net"
     trove_feeds_refresh_seconds: int = 300  # relay refresh cadence (5 min)
+
+    # --- BetterTroveTools releases relay (drives in-app update checks) ---
+    # Polls the GitHub releases of the configured repo and stores them so the API
+    # can serve "latest version per platform" without re-hitting GitHub each call.
+    # GitHub allows 60 unauthenticated req/hr; 30-min cadence stays well below it.
+    # Set BTT_RELEASES_TOKEN (a GitHub PAT) to lift the cap to 5000/hr if needed.
+    btt_releases_repo: str = "AallynReed/BetterTroveTools"
+    btt_releases_refresh_seconds: int = 1800
+    btt_releases_token: str | None = None
+
+    # --- Delve rotations (weekly community delve data, relayed from an external source) ---
+    # The current week's floor data accumulates as players submit; a background task
+    # refreshes it (on startup, hourly on the delve-Monday, then once daily at the
+    # Trove reset) and stores one document per week. History is imported once (see
+    # app/trove/delve_import.py). Set the source URL in the environment — the
+    # refresher stays OFF until it's configured (the endpoints still serve imported
+    # data either way).
+    trove_delve_source_url: str = ""      # week-based delve-history source; set via env
+    trove_delve_source_referer: str = ""  # optional Referer the source expects (sent with ?week=)
+
+    # --- Chaos Chest (weekly featured-item rotation) ---
+    # The featured item is relayed from Trovesaurus + cached; the weekly window is
+    # also computed from server time as a deterministic fallback (served under the
+    # rotations scope). Refreshed in the background so requests never hit upstream.
+    trove_chaos_chest_url: str = "https://trovesaurus.com/api/chaos-chest"
+    trove_chaos_refresh_seconds: int = 1800  # 30 min (the chest rotates weekly)
 
     # --- Trovesaurus events (community/in-game event calendar) ---
     # Fetched from the public Trovesaurus calendar feed; stored so we keep history
@@ -196,6 +237,13 @@ class Settings(BaseSettings):
         "http://localhost:15546",
         "http://127.0.0.1:15546",
     ]
+    # Regex for additional allowed browser origins: any aallyn.net subdomain (the
+    # Better Trove Tools hosted web build calls /v1/feeds, /v1/rotations, etc.
+    # directly from the browser) plus local dev servers on any port. The Android
+    # build uses native HTTP (no CORS), so it doesn't rely on this.
+    cors_origin_regex: str = (
+        r"https://([a-z0-9-]+\.)?aallyn\.net|http://(localhost|127\.0\.0\.1)(:\d+)?"
+    )
 
 
 settings = Settings()

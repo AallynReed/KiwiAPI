@@ -47,6 +47,15 @@ from app.core.utils import client_ip, utcnow
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# Appended to every "we sent you a link" message. While the sending domain's
+# reputation is still warming up, deliverability is shaky — this nudges users to
+# rescue the mail from spam and train their provider (marking "Not spam" is the
+# fastest reputation signal). Kept identical to the portal's signup toast.
+EMAIL_SPAM_NOTICE = (
+    "Don't see it? Check your spam folder and mark it 'Not spam' so future "
+    "emails reach your inbox."
+)
+
 
 def _html_page(title: str, body: str, status_code: int = 200) -> HTMLResponse:
     return HTMLResponse(
@@ -240,7 +249,9 @@ async def resend_verification(
     user = await User.find_one(User.email == payload.email.lower())
     if user is not None and user.is_active and not user.is_verified:
         background_tasks.add_task(send_verification_email, user)
-    return MessageResponse(message="If that account exists and isn't verified, a new link is on its way.")
+    return MessageResponse(
+        message=f"If that account exists and isn't verified, a new link is on its way. {EMAIL_SPAM_NOTICE}"
+    )
 
 
 # --- Account management (authenticated) ------------------------------------
@@ -295,7 +306,7 @@ async def change_email(
         )
     # The change only takes effect once the new address is confirmed.
     background_tasks.add_task(send_email_change_verification, user, new_email)
-    return MessageResponse(message=f"A confirmation link was sent to {new_email}.")
+    return MessageResponse(message=f"A confirmation link was sent to {new_email}. {EMAIL_SPAM_NOTICE}")
 
 
 @router.get("/verify-email-change", response_class=HTMLResponse, include_in_schema=False)
@@ -358,7 +369,9 @@ async def forgot_password(
     if user is not None and user.is_active:
         background_tasks.add_task(send_password_reset_email, user)
     # Always identical response — never reveal whether an account exists.
-    return MessageResponse(message="If that email is registered, a reset link is on its way.")
+    return MessageResponse(
+        message=f"If that email is registered, a reset link is on its way. {EMAIL_SPAM_NOTICE}"
+    )
 
 
 @router.post("/reset-password", response_model=MessageResponse)

@@ -18,12 +18,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from dataclasses import dataclass
 
 from pymongo import DeleteOne, UpdateOne
 
 from app.core.utils import utcnow
-from app.trove.codexes import binfab
-from app.trove.codexes.extract import extract_entry
+from app.trove.codexes import binfab, mastery
+from app.trove.codexes.extract import extract_entry, refine_mount
 from app.trove.codexes.models import CodexEntry
 from app.trove.codexes.types import LOCALE_ROOT, PREFABS_ROOT, classify
 from app.trove.updates.cas import ContentStore
@@ -32,8 +33,21 @@ from app.trove.updates.models import UpdateChange, UpdateState
 logger = logging.getLogger("kiwi.trove.codexes")
 
 _FLUSH_AT = 1000
+# The collection table that groups mounts (incl. dragons) by category.
+_MOUNT_TABLE = PREFABS_ROOT + "collections/collection_mount.binfab"
+# Per-item mastery multipliers (covers every collection type).
+_MULTIPLIERS = PREFABS_ROOT + "meta/multipliers.binfab"
 
 WriteOp = UpdateOne | DeleteOne
+
+
+@dataclass
+class _Maps:
+    """The lookup tables an extraction pass needs (loaded once per reindex)."""
+
+    loc: dict[str, str]
+    mount_categories: dict[str, str]
+    multipliers: dict[str, dict]
 
 
 def _prefix_query(branch: str, prefix: str) -> dict:
@@ -56,14 +70,40 @@ async def _load_locale_map(branch: str, store: ContentStore) -> dict[str, str]:
     return loc
 
 
+async def _load_file(branch: str, store: ContentStore, path: str) -> bytes | None:
+    """Fetch one archived file's bytes by logical path (None if absent)."""
+    doc = await UpdateState.find_one({"branch": branch, "path": path})
+    if doc is None:
+        return None
+    return await asyncio.to_thread(store.get, doc.content_sha256)
+
+
+async def _load_maps(branch: str, store: ContentStore) -> _Maps:
+    """Load every lookup table the extractors need for `branch`."""
+    mount_table = await _load_file(branch, store, _MOUNT_TABLE)
+    multipliers = await _load_file(branch, store, _MULTIPLIERS)
+    maps = _Maps(
+        loc=await _load_locale_map(branch, store),
+        mount_categories=binfab.collection_category_map(mount_table) if mount_table else {},
+        multipliers=mastery.parse_multipliers(multipliers) if multipliers else {},
+    )
+    logger.info("codexes[%s]: %d mount categories, %d mastery rows",
+                branch, len(maps.mount_categories), len(maps.multipliers))
+    return maps
+
+
 async def _flush(ops: list[WriteOp]) -> None:
     if ops:
         await CodexEntry.get_pymongo_collection().bulk_write(ops, ordered=False)
 
 
 def _upsert_op(branch: str, path: str, sha: str, ctype: str, content: bytes,
-               loc_map: dict[str, str], now) -> UpdateOne:
-    entry = extract_entry(ctype, path, content, loc_map)
+               maps: _Maps, now) -> UpdateOne:
+    entry = extract_entry(ctype, path, content, maps.loc)
+    rel = path[len(PREFABS_ROOT):].removesuffix(".binfab")
+    if ctype == "mount":  # split dragons out by their collection category
+        refine_mount(entry, rel, maps.mount_categories)
+    entry["mastery"] = mastery.mastery_for(rel, maps.multipliers)
     return UpdateOne(
         {"branch": branch, "path": path},
         {"$set": {**entry, "branch": branch, "content_sha256": sha, "indexed_at": now}},
@@ -73,7 +113,7 @@ def _upsert_op(branch: str, path: str, sha: str, ctype: str, content: bytes,
 
 async def reindex(branch: str, store: ContentStore) -> dict:
     """Full (re)build for `branch`, skipping prefabs whose bytes are unchanged."""
-    loc_map = await _load_locale_map(branch, store)
+    maps = await _load_maps(branch, store)
 
     # path -> current source sha, to skip unchanged prefabs and prune removed ones.
     existing: dict[str, str] = {}
@@ -105,7 +145,7 @@ async def reindex(branch: str, store: ContentStore) -> dict:
         if content is None:
             counts["missing_blob"] += 1
             continue
-        ops.append(_upsert_op(branch, path, sha, ctype, content, loc_map, now))
+        ops.append(_upsert_op(branch, path, sha, ctype, content, maps, now))
         counts["indexed"] += 1
         if len(ops) >= _FLUSH_AT:
             await _flush(ops)
@@ -137,10 +177,10 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
     if not touched:
         return counts
 
-    # The locale map is only needed to (re)parse prefabs — skip the load for a
+    # The lookup tables are only needed to (re)parse prefabs — skip the loads for a
     # delta that's pure removals.
     needs_parse = any(r["type"] != "removed" and r.get("content_sha256") for r in touched)
-    loc_map = await _load_locale_map(branch, store) if needs_parse else {}
+    maps = await _load_maps(branch, store) if needs_parse else _Maps({}, {}, {})
     now = utcnow()
     ops: list[WriteOp] = []
 
@@ -155,7 +195,7 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
         if content is None:
             counts["missing_blob"] += 1
             continue
-        ops.append(_upsert_op(branch, path, sha, classify(path), content, loc_map, now))  # type: ignore[arg-type]
+        ops.append(_upsert_op(branch, path, sha, classify(path), content, maps, now))  # type: ignore[arg-type]
         counts["indexed"] += 1
         if len(ops) >= _FLUSH_AT:
             await _flush(ops)

@@ -67,7 +67,9 @@ _FEEDS = {
 
 async def refresh_feed(feed: str) -> int:
     path, normalize = _FEEDS[feed]
-    async with httpx.AsyncClient(timeout=15, headers={"User-Agent": "KiwiAPI/1.0"}) as client:
+    async with httpx.AsyncClient(
+        timeout=15, follow_redirects=True, headers={"User-Agent": "KiwiAPI/1.0"}
+    ) as client:
         resp = await client.get(settings.trovesaurus_base_url + path)
         resp.raise_for_status()
         items = normalize(resp.json())
@@ -94,6 +96,46 @@ async def refresh_all_feeds() -> None:
 async def get_feed(feed: str) -> tuple[list[dict], datetime | None]:
     doc = await FeedCache.find_one(FeedCache.feed == feed)
     return (doc.items, doc.fetched_at) if doc else ([], None)
+
+
+# --- Bilibili thumbnail proxy ----------------------------------------------
+# hdslb.com (Bilibili's CDN) blocks hotlinking unless the request carries a
+# bilibili.com Referer, which an <img> tag can't set. Clients point <img src> at
+# the API and we refetch with the Referer, streaming the bytes back.
+
+_BILIBILI_REFERER = "https://www.bilibili.com/"
+_BILIBILI_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+)
+
+
+def _is_hdslb(url: str) -> bool:
+    parsed = httpx.URL(url)
+    host = (parsed.host or "").lower()
+    return parsed.scheme == "https" and (host == "hdslb.com" or host.endswith(".hdslb.com"))
+
+
+async def fetch_bilibili_image(url: str) -> tuple[bytes, str]:
+    """Proxy a Bilibili (hdslb.com) thumbnail, injecting the Referer its hotlink
+    protection requires. Returns (bytes, content_type).
+
+    Raises ValueError if the URL isn't an https hdslb.com image (guards against
+    using the proxy as an open SSRF relay). httpx errors propagate to the caller.
+    """
+    if not _is_hdslb(url):
+        raise ValueError("only https hdslb.com images may be proxied")
+    async with httpx.AsyncClient(
+        timeout=10,
+        follow_redirects=True,
+        headers={"Referer": _BILIBILI_REFERER, "User-Agent": _BILIBILI_UA},
+    ) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        content_type = resp.headers.get("content-type", "image/jpeg")
+        if not content_type.startswith("image/"):
+            content_type = "image/jpeg"
+        return resp.content, content_type
 
 
 # --- Background refresher ---------------------------------------------------

@@ -8,18 +8,18 @@ from app.core.scopes import (
 )
 
 # Scopes by function: rotations(1) feeds(2) stats(4) gems(8) misc(16) mods(32)
-# updates(64) codexes(128).
+# updates(64) codexes(128) btt(256).
 
 
 def test_scopes_registered():
     assert SCOPE_BITS == {
         "rotations:read": 1, "feeds:read": 2, "stats:read": 4,
         "gems:read": 8, "misc:read": 16, "mods:read": 32, "updates:read": 64,
-        "codexes:read": 128,
+        "codexes:read": 128, "btt:read": 256,
     }
     assert ALL_SCOPES == 0
     assert {c["resource"] for c in catalog()} == {
-        "rotations", "feeds", "stats", "gems", "misc", "mods", "updates", "codexes",
+        "rotations", "feeds", "stats", "gems", "misc", "mods", "updates", "codexes", "btt",
     }
     assert all(":" in c["key"] for c in catalog())  # naming convention
 
@@ -30,12 +30,13 @@ def test_mask_grants():
     assert mask_grants(32, "mods:read") and not mask_grants(32, "misc:read")
     assert mask_grants(64, "updates:read") and not mask_grants(64, "mods:read")
     assert mask_grants(128, "codexes:read") and not mask_grants(128, "updates:read")
-    assert mask_grants(255, "rotations:read") and mask_grants(255, "codexes:read")  # 1|…|128
+    assert mask_grants(256, "btt:read") and not mask_grants(256, "codexes:read")
+    assert mask_grants(511, "rotations:read") and mask_grants(511, "btt:read")  # 1|…|256
 
 
 def test_is_valid_mask():
-    assert all(is_valid_mask(m) for m in (0, 1, 2, 4, 8, 16, 32, 63, 64, 127, 128, 255))
-    assert not is_valid_mask(256)  # bit 9 unassigned
+    assert all(is_valid_mask(m) for m in (0, 1, 2, 4, 8, 16, 32, 63, 64, 127, 128, 255, 256, 511))
+    assert not is_valid_mask(512)  # bit 10 unassigned
 
 
 def test_decode():
@@ -43,7 +44,8 @@ def test_decode():
     assert decode(1) == ["rotations:read"]
     assert decode(64) == ["updates:read"]
     assert decode(128) == ["codexes:read"]
-    assert sorted(decode(255)) == [
-        "codexes:read", "feeds:read", "gems:read", "misc:read", "mods:read",
+    assert decode(256) == ["btt:read"]
+    assert sorted(decode(511)) == [
+        "btt:read", "codexes:read", "feeds:read", "gems:read", "misc:read", "mods:read",
         "rotations:read", "stats:read", "updates:read",
     ]

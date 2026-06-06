@@ -23,6 +23,7 @@ class CodexEntryOut(BaseModel):
     category: str = ""
     description: str = ""
     tradable: bool | None = None
+    mastery: int | None = None        # collectible mastery (None for non-collectibles)
     blueprint: str | None = None
     data: dict = {}                   # type-specific rich fields (populated incrementally)
     indexed_at: datetime
@@ -34,3 +35,24 @@ class CodexEntryPage(BaseModel):
     items: list[CodexEntryOut]
     count: int                        # returned this page
     total: int                        # all matching entries (for paging)
+
+
+class CodexSearchPage(BaseModel):
+    branch: str
+    type: str | None = None           # the type filter, if one was given (else cross-type)
+    query: str | None = None          # the search term, if any
+    items: list[CodexEntryOut]        # each carries its own `type`
+    count: int                        # returned this page
+    total: int                        # all matching entries (for paging)
+
+
+class CodexCategoryInfo(BaseModel):
+    category: str
+    count: int
+
+
+class CodexCategoryList(BaseModel):
+    branch: str
+    type: str | None = None           # the type these categories belong to (None = all)
+    items: list[CodexCategoryInfo]    # distinct categories, A→Z
+    count: int

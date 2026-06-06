@@ -94,6 +94,20 @@ class TokenContext:
     token: ApiToken
 
 
+@dataclass
+class AccessContext:
+    """Result of a *public* scope dependency: an authenticated caller (token +
+    user set) or an anonymous one (both None). `ip` is the resolved client IP."""
+
+    user: User | None
+    token: ApiToken | None
+    ip: str | None
+
+    @property
+    def authenticated(self) -> bool:
+        return self.token is not None
+
+
 def _ip_allowed(client_ip: str, allowed: list[str]) -> bool:
     """True if client_ip falls within any allowed exact IP or CIDR."""
     try:
@@ -109,14 +123,8 @@ def _ip_allowed(client_ip: str, allowed: list[str]) -> bool:
     return False
 
 
-async def get_token_context(
-    request: Request,
-    response: Response,
-    creds: HTTPAuthorizationCredentials | None = Depends(_api_scheme),
-) -> TokenContext:
-    if creds is None:
-        raise _not_authenticated("API token required")
-
+async def _resolve_token(creds: HTTPAuthorizationCredentials) -> tuple[User, ApiToken]:
+    """Validate a presented API token. Raises a 401 on any problem."""
     # Reject tokens whose self-validating checksum fails — no DB hit needed.
     # (None = legacy/unknown shape, so fall through to the database lookup.)
     if verify_token_checksum(creds.credentials) is False:
@@ -128,14 +136,24 @@ async def get_token_context(
     if token is None or token.revoked:
         raise _not_authenticated("Invalid or revoked API token")
 
-    now = utcnow()
-    if token.expires_at is not None and token.expires_at < now:
+    if token.expires_at is not None and token.expires_at < utcnow():
         raise _not_authenticated("API token has expired")
 
     user = await User.get(token.user_id)
     if user is None or not user.is_active:
         raise _not_authenticated("Account is inactive or no longer exists")
+    return user, token
 
+
+async def _enforce_token_limits(
+    request: Request, response: Response, user: User, token: ApiToken,
+    *, multiplier: int = 1, bucket: str | None = None,
+) -> None:
+    """IP allowlist + per-token / per-endpoint rate limits + usage accounting.
+
+    `multiplier`/`bucket` let a scope opt into a wider cap in its OWN bucket (a
+    scaled limit on the shared `token:{id}` bucket would be checked inconsistently
+    across endpoints, so the wider scope is metered separately)."""
     # Identify this request to the usage-recording middleware (set before the
     # rate-limit check so throttled 429s are captured in activity metrics too).
     request.state.usage_user_id = user.id
@@ -151,9 +169,10 @@ async def get_token_context(
         )
 
     # Per-token throughput cap — protects compute-heavy endpoints from one key.
+    key = f"token:{bucket}:{token.id}" if bucket else f"token:{token.id}"
     info = await check_rate_limit(
-        f"token:{token.id}",
-        settings.api_rate_limit_max,
+        key,
+        settings.api_rate_limit_max * multiplier,
         settings.api_rate_limit_window_seconds,
     )
     # Surface limit state on every successful response so clients self-throttle.
@@ -168,6 +187,30 @@ async def get_token_context(
     # Usage accounting — coalesced into ~one write per interval when Redis is up.
     await record_token_use(token, client_ip(request))
 
+
+async def _enforce_anonymous_limit(
+    request: Request, response: Response, *, multiplier: int = 1, bucket: str | None = None,
+) -> None:
+    """Stricter per-IP budget for unauthenticated access to public scopes."""
+    ip = client_ip(request) or "unknown"
+    key = f"public:{bucket}:{ip}" if bucket else f"public:{ip}"
+    info = await check_rate_limit(
+        key,
+        settings.public_anon_rate_limit_max * multiplier,
+        settings.public_anon_rate_limit_window_seconds,
+    )
+    response.headers.update(rate_limit_headers(info))
+
+
+async def get_token_context(
+    request: Request,
+    response: Response,
+    creds: HTTPAuthorizationCredentials | None = Depends(_api_scheme),
+) -> TokenContext:
+    if creds is None:
+        raise _not_authenticated("API token required")
+    user, token = await _resolve_token(creds)
+    await _enforce_token_limits(request, response, user, token)
     return TokenContext(user=user, token=token)
 
 
@@ -186,5 +229,42 @@ def require_scope(scope: str):
                 message=f"This token is missing the required scope: {scope}",
             )
         return ctx
+
+    return checker
+
+
+def public_scope(scope: str, *, rate_multiplier: int = 1):
+    """Dependency factory: a scope that's readable WITHOUT a token, throttled.
+
+    - No token → anonymous, allowed at the stricter per-IP budget.
+    - Valid token carrying `scope` (or all-scopes) → authenticated, full per-token
+      limit + usage accounting (sending the scope is what earns the higher limit).
+    - Valid token without `scope` → gracefully treated as anonymous (it's public,
+      so don't 403).
+    - Malformed / revoked / expired token → 401 (a broken credential is surfaced,
+      not silently downgraded).
+
+    `rate_multiplier` widens both budgets (anon + per-token) for this scope; when
+    set, the scope is metered in its own bucket so the wider cap stays isolated.
+    """
+    # Wider scopes meter in their own bucket so the scaled limit isn't applied to
+    # the shared bucket inconsistently. 1x scopes keep sharing the default bucket.
+    bucket = scope if rate_multiplier != 1 else None
+
+    async def checker(
+        request: Request,
+        response: Response,
+        creds: HTTPAuthorizationCredentials | None = Depends(_api_scheme),
+    ) -> AccessContext:
+        if creds is not None:
+            user, token = await _resolve_token(creds)  # 401 on a bad token
+            if mask_grants(token.scopes, scope):
+                await _enforce_token_limits(request, response, user, token,
+                                            multiplier=rate_multiplier, bucket=bucket)
+                return AccessContext(user=user, token=token, ip=client_ip(request))
+            # Valid token, but it doesn't carry this scope — fall through to anon.
+        await _enforce_anonymous_limit(request, response,
+                                       multiplier=rate_multiplier, bucket=bucket)
+        return AccessContext(user=None, token=None, ip=client_ip(request))
 
     return checker

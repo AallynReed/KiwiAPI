@@ -12,17 +12,21 @@ PREFABS_ROOT = "prefabs/"
 LOCALE_ROOT = "languages/en/"
 
 # (type, prefix-under-prefabs/, excluded-stem-suffixes), specific -> general.
+# NOTE: dragons are NOT path-classified — they live under `collections/mount/`
+# alongside regular mounts and are split out by their collection category in the
+# indexer (a category containing "dragon" => dragon), so there's no entry here.
 CODEX_TYPES: list[tuple[str, str, tuple[str, ...]]] = [
     ("fish", "item/fish/", ()),
     ("memento", "item/unlocker/", ()),
     ("ally", "collections/pet/", ("_npc",)),
     ("mount", "collections/mount/", ()),
-    ("dragon", "collections/dragon/", ()),
     ("badge", "collections/badge/", ()),
     ("recipe", "recipes/", ()),
     ("item", "item/", ()),  # catch-all for remaining item/* prefabs
 ]
-ALL_TYPES: list[str] = [t[0] for t in CODEX_TYPES]
+# Every codex type the API serves — the path-classified ones plus `dragon`
+# (derived from mounts). Used to validate `/v1/codexes/{type}`.
+ALL_TYPES: list[str] = [t[0] for t in CODEX_TYPES] + ["dragon"]
 
 
 def classify(path: str) -> str | None:

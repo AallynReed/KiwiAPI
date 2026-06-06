@@ -68,6 +68,50 @@ class TroveEvent(Document):
         ]
 
 
+class DelveRotation(Document):
+    """One week's delve rotation, relayed from an external source (``<week>.json``).
+
+    ``depths`` holds the floor records passed through from the source as-is (rich,
+    nested — boss/enemies/objective/etc.). A background task refreshes the current
+    week as community submissions accumulate; past weeks are static once imported.
+    """
+
+    week: int  # week id (rolls over Monday 11:00 UTC) — unique
+    depths: list[dict] = Field(default_factory=list)  # floor records, source shape
+    total: int = 0        # source-reported total
+    depth_count: int = 0  # stored floor records (cheap to list without loading depths)
+    fetched_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "delve_rotations"
+        indexes = [IndexModel([("week", ASCENDING)], unique=True)]
+
+
+class BttRelease(Document):
+    """A GitHub release of BetterTroveTools (the companion desktop app).
+
+    Stored as the source of truth so the API doesn't hit GitHub on every request
+    and a brief outage there doesn't break update checks. The background relayer
+    upserts on each cycle; nothing is pruned (release history is small)."""
+
+    release_id: int                # the GitHub release id — unique
+    tag_name: str                  # the git tag (e.g. "v1.2.3")
+    name: str = ""                 # the release title
+    body: str = ""                 # release notes (markdown)
+    html_url: str                  # the GitHub release page
+    prerelease: bool = False       # True = beta channel; False = release channel
+    published_at: datetime
+    assets: list[dict] = Field(default_factory=list)  # [{name, url, size, content_type, download_count}]
+    fetched_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "btt_releases"
+        indexes = [
+            IndexModel([("release_id", ASCENDING)], unique=True),
+            IndexModel([("prerelease", ASCENDING), ("published_at", DESCENDING)]),
+        ]
+
+
 class FeedCache(Document):
     """Cached payload for a relayed feed (twitch / youtube / bilibili).
 

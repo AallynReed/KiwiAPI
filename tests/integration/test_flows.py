@@ -210,6 +210,197 @@ async def test_rotations_and_feeds(client):
     assert any(i["url"] == "https://trovegame.com/news/x" for i in news["items"])
 
 
+async def test_btt_releases(client):
+    from datetime import timedelta
+
+    from app.core.utils import utcnow
+    from app.trove.models import BttRelease
+
+    now = utcnow()
+
+    def asset(name: str) -> dict:
+        return {"name": name, "url": f"https://dl/{name}", "size": 1,
+                "content_type": None, "download_count": 0}
+
+    # v3 release: android + linux only (no windows -> windows must walk back).
+    await BttRelease(release_id=3, tag_name="v3", name="3", html_url="https://gh/3",
+                     prerelease=False, published_at=now,
+                     assets=[asset("BTT-3.apk"), asset("BTT-3.deb")]).insert()
+    # v2 release: windows (msi + exe).
+    await BttRelease(release_id=2, tag_name="v2", name="2", html_url="https://gh/2",
+                     prerelease=False, published_at=now - timedelta(days=1),
+                     assets=[asset("BTT-2.msi"), asset("BTT-2.exe")]).insert()
+    # v9 BETA prerelease, all platforms.
+    await BttRelease(release_id=9, tag_name="v9-beta", name="beta", html_url="https://gh/9",
+                     prerelease=True, published_at=now,
+                     assets=[asset("BTT-9.msi"), asset("BTT-9.AppImage"), asset("BTT-9.apk")]).insert()
+
+    # BTT endpoints are PUBLIC (no token) — the desktop app polls without auth.
+    # List with channel filters.
+    rel = (await client.get("/v1/btt/releases?channel=release")).json()
+    assert rel["total"] == 2 and rel["items"][0]["tag_name"] == "v3"
+    beta = (await client.get("/v1/btt/releases?channel=beta")).json()
+    assert beta["total"] == 1 and beta["items"][0]["tag_name"] == "v9-beta"
+
+    # Public response carries rate-limit headers (the per-IP budget).
+    raw = await client.get("/v1/btt/latest?channel=release")
+    assert raw.status_code == 200 and "X-RateLimit-Limit" in raw.headers
+    latest = raw.json()
+    plats = latest["platforms"]
+    # Latest per platform on the release channel — Windows MUST walk back to v2.
+    assert plats["windows"]["release"]["tag_name"] == "v2"      # walked back
+    assert plats["windows"]["assets"][0]["name"] == "BTT-2.msi"  # msi prioritized over exe
+    assert plats["linux"]["release"]["tag_name"] == "v3"        # newest with .deb
+    assert plats["android"]["release"]["tag_name"] == "v3"
+
+    # On beta, every platform resolves to v9-beta.
+    beta_latest = (await client.get("/v1/btt/latest?channel=beta")).json()
+    assert all(p and p["release"]["tag_name"] == "v9-beta"
+               for p in beta_latest["platforms"].values())
+
+    # Single-platform endpoint.
+    win = (await client.get("/v1/btt/latest/windows?channel=release")).json()
+    assert win["release"]["tag_name"] == "v2" and win["assets"][0]["name"] == "BTT-2.msi"
+
+    # Errors: unknown platform (404), bad channel (400), no asset for platform.
+    assert (await client.get("/v1/btt/latest/macos")).status_code == 404
+    assert (await client.get("/v1/btt/latest?channel=nope")).status_code == 400
+
+    # /check — server-side version comparison so the client just reads a bool.
+    # Windows latest on release channel is v2 (walked back from v3).
+    older = (await client.get(
+        "/v1/btt/check?installed=v1.0.0&platform=windows&channel=release"
+    )).json()
+    assert older["update_available"] is True and older["comparable"] is True
+    assert older["latest"]["release"]["tag_name"] == "v2"
+
+    same = (await client.get(
+        "/v1/btt/check?installed=v2&platform=windows&channel=release"
+    )).json()
+    assert same["update_available"] is False  # already on v2
+
+    newer = (await client.get(
+        "/v1/btt/check?installed=v9.9.9&platform=windows&channel=release"
+    )).json()
+    assert newer["update_available"] is False  # client is ahead of the channel
+
+    # Unparseable installed -> comparable=false, update_available=false.
+    nightly = (await client.get(
+        "/v1/btt/check?installed=nightly&platform=windows&channel=release"
+    )).json()
+    assert nightly["comparable"] is False and nightly["update_available"] is False
+    assert nightly["latest"]["release"]["tag_name"] == "v2"  # still served as info
+
+    # Errors on /check: bad platform (404), bad channel (400), empty installed (422).
+    assert (await client.get("/v1/btt/check?installed=v1&platform=macos")).status_code == 404
+    assert (await client.get("/v1/btt/check?installed=v1&platform=windows&channel=nope")).status_code == 400
+    assert (await client.get("/v1/btt/check?installed=&platform=windows")).status_code == 422
+
+    # A fresh DB with no releases at all -> a platform-specific 404, not a crash.
+    await BttRelease.find().delete()
+    assert (await client.get("/v1/btt/latest/windows?channel=release")).status_code == 404
+    # /check on empty DB: returns latest=null + update_available=false (don't 404 here:
+    # the client should still get a clean answer that says "no update for you").
+    empty = (await client.get(
+        "/v1/btt/check?installed=v1&platform=windows&channel=release"
+    )).json()
+    assert empty["latest"] is None and empty["update_available"] is False
+
+
+async def test_news_live_and_history(client):
+    from datetime import timedelta
+
+    from app.core.utils import utcnow
+    from app.trove.models import TroveNews
+
+    now = utcnow()
+    for i in range(3):
+        await TroveNews(url=f"https://trovegame.com/news/{i}", title=f"Patch {i}",
+                        published_at=now - timedelta(days=i)).insert()
+
+    # Live feed is public + small, newest first.
+    feed = (await client.get("/v1/feeds/news?limit=2")).json()
+    assert feed["count"] == 2 and feed["items"][0]["title"] == "Patch 0"
+
+    # Full archive lives under the misc scope (token-gated), paged with a total.
+    h = await _signup_login(client, "newshist@b.com")
+    tok = (await client.post(
+        "/tokens", headers=h, json={"name": "m", "scopes": 16, "allowed_ips": ["1.2.3.4"]}
+    )).json()["token"]
+    mh = {"Authorization": f"Bearer {tok}"}
+    p1 = (await client.get("/v1/misc/news-history?limit=2&offset=0", headers=mh)).json()
+    assert p1["total"] == 3 and p1["count"] == 2 and p1["items"][0]["title"] == "Patch 0"
+    p2 = (await client.get("/v1/misc/news-history?limit=2&offset=2", headers=mh)).json()
+    assert p2["count"] == 1 and p2["total"] == 3 and p2["items"][0]["title"] == "Patch 2"
+
+    # Not public — requires the misc scope.
+    assert (await client.get("/v1/misc/news-history")).status_code == 401
+
+
+async def test_chaos_chest(client):
+    from app.core.utils import utcnow
+    from app.trove.models import FeedCache
+
+    now = int(utcnow().timestamp())
+    await FeedCache(feed="chaos_chest", items=[{
+        "name": "Shadow Dragon", "identifier": "prefabs/collections/dragon/shadow",
+        "blueprint": "blueprints/shadow.blueprint", "start": now - 100, "end": now + 10_000,
+    }], fetched_at=utcnow()).insert()
+
+    # Public (rotations scope) — reachable with no token.
+    r = await client.get("/v1/rotations/chaos-chest")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["active"] is True
+    assert body["ends_at"] == now + 10_000
+    assert body["item"]["name"] == "Shadow Dragon"
+    assert body["item"]["blueprint"] == "blueprints/shadow.blueprint"
+    assert body["fetched_at"] is not None
+
+
+async def test_delve_rotations(client):
+    from app.core.utils import utcnow
+    from app.trove.models import DelveRotation
+
+    await DelveRotation(
+        week=17, total=2, count=2, fetched_at=utcnow(),
+        depths=[{"id": 1, "depth": 110, "biome": "Flakbeard's Hideaway"},
+                {"id": 2, "depth": 111, "biome": "Pure Midnight"}],
+    ).insert()
+
+    # Public (rotations scope) — reachable with no token.
+    r = await client.get("/v1/rotations/delves?week=17")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["week"] == 17 and body["count"] == 2 and len(body["depths"]) == 2
+    assert body["depths"][0]["biome"] == "Flakbeard's Hideaway"
+
+    # Week list is metadata-only (no depths) and reports the live week id.
+    weeks = (await client.get("/v1/rotations/delves/weeks")).json()
+    assert weeks["count"] == 1 and weeks["items"][0]["week"] == 17
+    assert "depths" not in weeks["items"][0] and weeks["current_week"] >= 1
+
+    # Unknown explicit week -> 404; current (unseeded) week -> empty rotation.
+    assert (await client.get("/v1/rotations/delves?week=999")).status_code == 404
+    cur = (await client.get("/v1/rotations/delves")).json()
+    assert cur["is_current"] is True and cur["depths"] == []
+
+
+async def test_yearly_calendar(client):
+    # Public (rotations scope) — reachable with no token; pure compute, no seeding.
+    r = await client.get("/v1/rotations/calendar")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["count"] == len(body["events"]) and body["count"] > 0
+    assert body["starts_at"] < body["generated_at"] < body["ends_at"]
+    types = {e["type"] for e in body["events"]}
+    assert {"weekly_buff", "corruxion", "fluxion", "stampy", "mana"} <= types
+    assert "invasion" not in types
+    # sorted by start
+    starts = [e["starts_at"] for e in body["events"]]
+    assert starts == sorted(starts)
+
+
 async def test_relayed_feeds(client):
     from app.core.utils import utcnow
     from app.trove.models import FeedCache
@@ -566,23 +757,42 @@ async def test_codexes_index_and_browse(client, monkeypatch, tmp_path):
     def locale(key, value) -> bytes:
         return key.encode() + bytes([0x18]) + uleb(len(value.encode())) + value.encode()
 
+    def mult_group(identifier: str) -> bytes:  # one multipliers.binfab group
+        return (b"\xBE\x01\xAE" + uleb(1) + uleb(4) + b"\x00" + b"\x00\x00"
+                + uleb(len(identifier)) + identifier.encode())
+
     monkeypatch.setattr(settings, "trove_update_store_dir", str(tmp_path))
     store = ContentStore(str(tmp_path))
+    # multipliers: wolf in the ×2 group (pet base 10 → 20), ember in ×5 (mount 50 → 250).
+    mult_sha, _ = store.put(b"\x00" * 9 + mult_group("zero") + mult_group("collections/pet/wolf")
+                            + mult_group("three") + mult_group("collections/mount/ember"))
     wolf_sha, _ = store.put(prefab("$wolf_name", "Pets", "$wolf_desc", True))
     sword_sha, _ = store.put(prefab("$sword_name", "Weapons", "$sword_desc", False))
+    # A mount prefab + the collection table that marks it a dragon (category "Dragons").
+    ember_sha, _ = store.put(prefab("$ember_name", "Mounts", "$ember_desc", True))
+    table_sha, _ = store.put(
+        strf(1, "Dragons") + strf(1, "$CollectionName_Dragons") + strf(1, "collections/mount/ember")
+    )
     loc_sha, _ = store.put(locale("$wolf_name", "Dire Wolf") + locale("$wolf_desc", "A loyal companion.")
-                           + locale("$sword_name", "Iron Sword") + locale("$sword_desc", "A basic blade."))
+                           + locale("$sword_name", "Iron Sword") + locale("$sword_desc", "A basic blade.")
+                           + locale("$ember_name", "Ember Drake") + locale("$ember_desc", "A fiery dragon."))
 
     await UpdateState(branch="live-us", path="prefabs/collections/pet/wolf.binfab",
                       content_sha256=wolf_sha, size=1).insert()
     await UpdateState(branch="live-us", path="prefabs/item/sword.binfab",
                       content_sha256=sword_sha, size=1).insert()
+    await UpdateState(branch="live-us", path="prefabs/collections/mount/ember.binfab",
+                      content_sha256=ember_sha, size=1).insert()
+    await UpdateState(branch="live-us", path="prefabs/collections/collection_mount.binfab",
+                      content_sha256=table_sha, size=1).insert()
+    await UpdateState(branch="live-us", path="prefabs/meta/multipliers.binfab",
+                      content_sha256=mult_sha, size=1).insert()
     await UpdateState(branch="live-us", path="languages/en/strings.binfab",
                       content_sha256=loc_sha, size=1).insert()
     await UpdateState(branch="live-us", path="Trove_x64.exe", content_sha256="1" * 64, size=1).insert()
 
     counts = await reindex("live-us", store)
-    assert counts["indexed"] == 2  # the two prefabs; locale table + exe ignored
+    assert counts["indexed"] == 3  # wolf, sword, ember; locale + collection table + exe ignored
 
     h = await _signup_login(client, "codex@b.com")
     tok = (await client.post(
@@ -590,19 +800,50 @@ async def test_codexes_index_and_browse(client, monkeypatch, tmp_path):
     )).json()["token"]
     th = {"Authorization": f"Bearer {tok}"}
 
-    types = (await client.get("/v1/codexes/types", headers=th)).json()
+    types_resp = await client.get("/v1/codexes/types", headers=th)
+    # Authenticated codexes get 5× the base per-token cap (120 → 600).
+    assert types_resp.headers.get("X-RateLimit-Limit") == "600"
+    types = types_resp.json()
     by_type = {t["type"]: t["count"] for t in types["items"]}
-    assert by_type == {"ally": 1, "item": 1}
+    # ember is a mount split into the dragon codex by its collection category.
+    assert by_type == {"ally": 1, "item": 1, "dragon": 1}
+    dragons = (await client.get("/v1/codexes/dragon", headers=th)).json()
+    assert dragons["total"] == 1 and dragons["items"][0]["name"] == "Ember Drake"
+    assert dragons["items"][0]["category"] == "Dragons"
+    assert dragons["items"][0]["mastery"] == 250  # mount base 50 × ×5 group
 
     allies = (await client.get("/v1/codexes/ally", headers=th)).json()
     assert allies["total"] == 1
     wolf = allies["items"][0]
     assert wolf["name"] == "Dire Wolf" and wolf["category"] == "Pets" and wolf["tradable"] is True
     assert wolf["description"] == "A loyal companion."
+    assert wolf["mastery"] == 20  # pet base 10 × ×2 group
+    # Items carry no mastery.
+    assert (await client.get("/v1/codexes/item", headers=th)).json()["items"][0]["mastery"] is None
 
     # Search by name (case-insensitive substring) and lookup by path.
     assert (await client.get("/v1/codexes/item?search=iron", headers=th)).json()["total"] == 1
     assert (await client.get("/v1/codexes/item?search=zzz", headers=th)).json()["total"] == 0
+
+    # Filters: category (exact), tradable, and search now matches description too.
+    assert (await client.get("/v1/codexes/item?category=Weapons", headers=th)).json()["total"] == 1
+    assert (await client.get("/v1/codexes/ally?tradable=true", headers=th)).json()["total"] == 1
+    assert (await client.get("/v1/codexes/ally?tradable=false", headers=th)).json()["total"] == 0
+    # "dragon" hits the ember entry via its description ("A fiery dragon.").
+    assert (await client.get("/v1/codexes/dragon?search=fiery", headers=th)).json()["total"] == 1
+
+    # Category listing (for filter dropdowns).
+    cats = (await client.get("/v1/codexes/ally/categories", headers=th)).json()
+    assert cats["items"] == [{"category": "Pets", "count": 1}]
+
+    # Cross-type search surface.
+    s_wolf = (await client.get("/v1/codexes/search?q=wolf", headers=th)).json()
+    assert s_wolf["total"] == 1 and s_wolf["items"][0]["type"] == "ally"
+    s_trade = (await client.get("/v1/codexes/search?tradable=true", headers=th)).json()
+    assert s_trade["total"] == 2  # wolf + ember, across types
+    assert (await client.get("/v1/codexes/search?type=item&q=blade", headers=th)).json()["total"] == 1
+    assert (await client.get("/v1/codexes/search?type=bogus", headers=th)).status_code == 404
+    assert (await client.get("/v1/codexes/item?sort=nope", headers=th)).status_code == 400
     one = (await client.get(
         "/v1/codexes/ally/entry?path=prefabs/collections/pet/wolf.binfab", headers=th
     )).json()
@@ -612,28 +853,62 @@ async def test_codexes_index_and_browse(client, monkeypatch, tmp_path):
     assert (await client.get("/v1/codexes/bogus", headers=th)).status_code == 404      # bad type
     assert (await client.get("/v1/codexes/ally?branch=nope", headers=th)).status_code == 404  # bad branch
 
-    # A token without codexes:read (bit 128) is denied.
+    # Codexes are PUBLIC: reachable with no token at all, and a token lacking
+    # codexes:read (bit 128) is served via the anonymous path (not 403).
+    anon_resp = await client.get("/v1/codexes/types")
+    # Anonymous codexes get 5× the base per-IP cap (30 → 150).
+    assert anon_resp.headers.get("X-RateLimit-Limit") == "150"
+    anon = anon_resp.json()
+    assert {t["type"] for t in anon["items"]} == {"ally", "item", "dragon"}
     other = (await client.post(
         "/tokens", headers=h, json={"name": "o", "scopes": 64, "allowed_ips": ["1.2.3.4"]}
     )).json()["token"]
-    denied = await client.get("/v1/codexes/types", headers={"Authorization": f"Bearer {other}"})
-    assert denied.status_code == 403 and denied.json()["error"]["code"] == "insufficient_scope"
+    ok = await client.get("/v1/codexes/types", headers={"Authorization": f"Bearer {other}"})
+    assert ok.status_code == 200
 
 
 async def test_scope_separation(client):
     h = await _signup_login(client, "scopesep@b.com")
-    # rotations:read only (bit 1) — can read rotations, not feeds.
-    rot_only = (
+    # stats:read only (bit 4) — can read stats, not gems. (rotations/feeds are
+    # public now, so a still-token-gated pair is used to test scope isolation.)
+    stats_only = (
         await client.post(
-            "/tokens", headers=h, json={"name": "r", "scopes": 1, "allowed_ips": ["1.2.3.4"]}
+            "/tokens", headers=h, json={"name": "s", "scopes": 4, "allowed_ips": ["1.2.3.4"]}
         )
     ).json()["token"]
-    th = {"Authorization": f"Bearer {rot_only}"}
+    th = {"Authorization": f"Bearer {stats_only}"}
 
-    assert (await client.get("/v1/rotations/server-time", headers=th)).status_code == 200
-    denied = await client.get("/v1/feeds/news", headers=th)
+    assert (await client.get("/v1/stats/power-rank", headers=th)).status_code == 200
+    denied = await client.get("/v1/gems/lookups", headers=th)
     assert denied.status_code == 403
     assert denied.json()["error"]["code"] == "insufficient_scope"
+
+
+async def test_public_scopes_anonymous_access(client):
+    from app.core.utils import utcnow
+    from app.trove.models import TroveNews
+
+    # rotations + feeds are reachable with NO Authorization header (anonymous),
+    # and the response carries rate-limit headers (the per-IP budget).
+    r = await client.get("/v1/rotations/server-time")
+    assert r.status_code == 200 and "X-RateLimit-Limit" in r.headers
+
+    await TroveNews(url="https://trovegame.com/news/pub", title="Pub", published_at=utcnow()).insert()
+    f = await client.get("/v1/feeds/news")
+    assert f.status_code == 200 and f.json()["count"] >= 1
+
+    # A still-gated scope is NOT public — anonymous access is rejected.
+    assert (await client.get("/v1/stats/power-rank")).status_code == 401
+
+    # A token WITHOUT the (now-public) scope still gets in via the anonymous path.
+    h = await _signup_login(client, "pubtok@b.com")
+    misc_only = (
+        await client.post(
+            "/tokens", headers=h, json={"name": "m", "scopes": 16, "allowed_ips": ["1.2.3.4"]}
+        )
+    ).json()["token"]
+    th = {"Authorization": f"Bearer {misc_only}"}
+    assert (await client.get("/v1/rotations/server-time", headers=th)).status_code == 200
 
 
 async def test_secret_scanning_auto_revokes(client, monkeypatch):

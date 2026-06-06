@@ -18,6 +18,7 @@ class CodexEntry(Document):
     category: str = ""                # in-prefab display category
     description: str = ""             # resolved description
     tradable: bool | None = None
+    mastery: int | None = None        # collectible mastery (None for non-collectibles)
     name_key: str | None = None       # the $loc key (handy for debugging / re-resolve)
     desc_key: str | None = None
     blueprint: str | None = None      # 3D model path, when resolvable

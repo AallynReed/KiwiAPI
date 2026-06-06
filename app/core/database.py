@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
 from app.tokens.models import ApiToken
 from app.trove.codexes.models import CodexEntry
-from app.trove.models import FeedCache, TroveEvent, TroveNews
+from app.trove.models import BttRelease, DelveRotation, FeedCache, TroveEvent, TroveNews
 from app.trove.updates.models import (
     UpdateBranch,
     UpdateChange,
@@ -22,6 +22,7 @@ from app.usage.models import UsageEvent
 # Models live in their feature packages; this is the one place that aggregates them.
 DOCUMENT_MODELS = [
     User, Session, ApiToken, UsageEvent, OutboxEmail, TroveNews, FeedCache, TroveEvent,
+    DelveRotation, BttRelease,
     UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
     CodexEntry,
 ]

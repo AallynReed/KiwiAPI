@@ -47,7 +47,9 @@ def parse_events(raw: list[dict]) -> list[dict]:
 
 async def refresh_events() -> int:
     """Fetch the calendar feed and upsert events into Mongo (by event_id). Returns count."""
-    async with httpx.AsyncClient(timeout=15, headers={"User-Agent": "KiwiAPI/1.0"}) as client:
+    async with httpx.AsyncClient(
+        timeout=15, follow_redirects=True, headers={"User-Agent": "KiwiAPI/1.0"}
+    ) as client:
         resp = await client.get(settings.trove_events_feed_url)
         resp.raise_for_status()
         raw = resp.json()

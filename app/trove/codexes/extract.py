@@ -18,6 +18,21 @@ def _name_from_path(path: str) -> str:
     return stem.replace("_", " ").strip().title() or stem
 
 
+def refine_mount(entry: dict, rel_path: str, mount_categories: dict[str, str]) -> dict:
+    """Split dragons out of the mount tree (mutates + returns `entry`).
+
+    Mounts and dragons both live under `collections/mount/`; the `collection_mount`
+    table assigns each a category, and a category containing "dragon" marks a
+    dragon (matching BTT's `category.includes('dragon')` rule). The table category
+    is preferred over the in-prefab one; if absent, the in-prefab category stands.
+    """
+    category = mount_categories.get(rel_path.lower()) or entry.get("category") or ""
+    entry["category"] = category
+    if "dragon" in category.lower():
+        entry["codex_type"] = "dragon"
+    return entry
+
+
 def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str, str]) -> dict:
     """Identity-level codex entry from a prefab's bytes + the resolved locale map."""
     ident = binfab.decode_identity(content) or {}

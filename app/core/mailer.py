@@ -1,5 +1,6 @@
 import logging
 from email.message import EmailMessage
+from email.utils import formatdate, make_msgid
 
 import aiosmtplib
 
@@ -23,6 +24,12 @@ def _build_message(to: str, subject: str, text_body: str, html_body: str | None)
     message["From"] = f"{settings.mail_from_name} <{settings.mail_from}>"
     message["To"] = to
     message["Subject"] = subject
+    # Date + Message-ID are required by RFC 5322 and expected by every real mail
+    # client. aiosmtplib won't add them and Postfix isn't either, so without these
+    # Gmail synthesizes them (SMTPIN_ADDED_MISSING) and docks the spam score. The
+    # Message-ID domain matches the From domain for good alignment.
+    message["Date"] = formatdate(localtime=True)
+    message["Message-ID"] = make_msgid(domain=settings.mail_from.rsplit("@", 1)[-1])
     message.set_content(text_body)
     if html_body:
         message.add_alternative(html_body, subtype="html")

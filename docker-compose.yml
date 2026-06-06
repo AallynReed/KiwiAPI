@@ -86,6 +86,12 @@ services:
       # blob disk (./.game_updates) has room; the first sync pulls multi-GB.
       TROVE_UPDATE_ENABLED: ${TROVE_UPDATE_ENABLED:-false}
       TROVE_UPDATE_STORE_DIR: ${TROVE_UPDATE_STORE_DIR:-/data/updates}
+      # Delve-rotation source (week-based). Refresher stays off until the URL is set.
+      TROVE_DELVE_SOURCE_URL: ${TROVE_DELVE_SOURCE_URL:-}
+      TROVE_DELVE_SOURCE_REFERER: ${TROVE_DELVE_SOURCE_REFERER:-}
+      # BTT release relay: optional GitHub PAT (lifts 60/hr unauth -> 5000/hr).
+      BTT_RELEASES_REPO: ${BTT_RELEASES_REPO:-AallynReed/BetterTroveTools}
+      BTT_RELEASES_TOKEN: ${BTT_RELEASES_TOKEN:-}
     depends_on:
       mongo:
         condition: service_healthy

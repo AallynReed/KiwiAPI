@@ -264,7 +264,10 @@ function renderSignup() {
         email: f.email.value, password: f.password.value,
         display_name: f.display_name.value || null, captcha_token: captcha.token,
       } });
-      toast("Account created — check your email to verify it.", "ok");
+      // Mirrors EMAIL_SPAM_NOTICE in app/auth/router.py — signup returns the user
+      // object (no message), so the spam guidance is added here on the portal side.
+      toast("Account created — verify your email to finish signing up. Don't see it? "
+        + "Check your spam folder and mark it 'Not spam' so future emails reach your inbox.", "ok");
       renderAuth("login");
     } catch (ex) { err.textContent = ex.message; resetCaptcha(); btn.disabled = false; }
   });

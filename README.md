@@ -48,7 +48,14 @@ Live Trove game data, ported from BetterTroveTools, **grouped by function** (mos
 Trove, so it's organized by what the data is, not the game). All `GET`, read-only; timestamps are
 real-UTC unix seconds. Full schema in `/openapi.json`.
 
-**`rotations` category — scope `rotations:read`**
+> **`rotations`, `feeds`, `codexes` and `btt` are public** — callable with **no token** at a stricter
+> per-IP rate limit (30 req/min/IP by default). Send a token carrying the scope to get the full per-token
+> limit (120 req/min). **`codexes` gets 5× both budgets** (150 req/min/IP anonymous, 600 req/min/token)
+> since it's lightweight reference data. A revoked/malformed token still 401s; a valid token lacking the
+> scope falls back to the anonymous per-IP budget. Every other category still requires a token with the
+> matching scope.
+
+**`rotations` category — scope `rotations:read`** (public — token optional, see above)
 
 | Endpoint | Returns |
 |---|---|
@@ -58,15 +65,18 @@ real-UTC unix seconds. Full schema in `/openapi.json`.
 | `/v1/rotations/corruxion` | Corruxion merchant: live timer + upcoming schedule |
 | `/v1/rotations/fluxion` | Fluxion merchant: voting/selling timer + schedule |
 | `/v1/rotations/gardening` | 2-day / 3-day plant harvest windows |
+| `/v1/rotations/chaos-chest` | weekly Chaos Chest: featured item (relayed from Trovesaurus) + window + countdown |
+| `/v1/rotations/calendar` | yearly calendar: all recurring rotations (buffs, merchants, gardening, biomes) as one ±365-day timeline |
+| `/v1/rotations/delves?week=` | a week's delve rotation — floor records relayed from a community delve source (default current week; `/delves/weeks` lists available weeks) |
 | `/v1/rotations/biomes` | 3-hour adventure biome rotation (current + upcoming) |
 | `/v1/rotations/wild-mana` | weekly Wild Mana biome rotation |
 | `/v1/rotations/stampy` | weekly Stampy event biome (48h) |
 
-**`feeds` category — scope `feeds:read`** (relayed from upstream + cached in Mongo)
+**`feeds` category — scope `feeds:read`** (public — token optional; relayed from upstream + cached in Mongo)
 
 | Endpoint | Returns |
 |---|---|
-| `/v1/feeds/news?limit=` | Trove news relayed from `trovegame.com/feed` |
+| `/v1/feeds/news?limit=` | latest Trove news relayed from `trovegame.com/feed` (small live view; full archive at `/v1/misc/news-history`) |
 | `/v1/feeds/twitch` | live Trove Twitch streams |
 | `/v1/feeds/youtube` | recent Trove YouTube videos |
 | `/v1/feeds/bilibili` | recent Trove Bilibili videos |
@@ -113,6 +123,7 @@ an action endpoint with a `stat_position` (0/1/2) to mutate it. Nothing gem-rela
 
 | Endpoint | Returns |
 |---|---|
+| `GET /v1/misc/news-history?limit=&offset=` | the full Trove news archive (never pruned), newest first, paginated |
 | `GET /v1/misc/software` | third-party Trove modding software, grouped by category |
 | `GET /v1/misc/timezones` | timezones supported by the converter and clocks |
 | `GET /v1/misc/time/now` | current time across every zone, incl. Trove server (reset) time |
@@ -121,6 +132,20 @@ an action endpoint with a `stat_position` (0/1/2) to mutate it. Nothing gem-rela
 Trove "server"/reset time is a fixed **UTC−11**. The converter takes a naive `datetime` interpreted in
 the given `timezone` (`trove` / `UTC` / any IANA id) or an absolute `unix`, and returns the instant in
 every zone plus Discord `<t:unix:style>` codes.
+
+**`btt` category — scope `btt:read`** (public — token optional; drives BetterTroveTools' in-app update checks)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/btt/releases?channel=&limit=&offset=` | BetterTroveTools GitHub releases, newest first; optional `?channel=release\|beta` filter |
+| `GET /v1/btt/latest?channel=` | latest BTT version **per platform** (windows/linux/android) on a channel; each platform walks back independently until a release ships an asset for it |
+| `GET /v1/btt/latest/{platform}?channel=` | latest BTT version for a single platform |
+| `GET /v1/btt/check?installed=&platform=&channel=` | **"is there an update?"** — server-side version compare; returns `{ update_available, comparable, latest }` so the client just reads a bool |
+
+A background relayer polls the configured GitHub repo every 30 min and stores releases in Mongo, so the
+endpoints serve from cache. Channels are detected from GitHub's `prerelease` flag (`release`/`beta`).
+Platform assets are detected by file extension — `.msi`/`.exe` for windows (msi prioritized), `.AppImage`/
+`.deb`/`.rpm`/`.tar.gz` for linux, `.apk` for android.
 
 **`mods` category — scope `mods:read`** (stateless `.tmod` tooling — 20 MB body cap on `/v1/mods/*`)
 
@@ -147,21 +172,24 @@ Kiwi mirrors Trove's update CDN into a content-addressed, deduped store (see "Ga
 these endpoints serve the latest captured version. Loose files and TFA-extracted files are browsed
 identically. Historical-version querying is the next layer.
 
-**`codexes` category — scope `codexes:read`** (structured game data parsed from the archive)
+**`codexes` category — scope `codexes:read`** (public — token optional; structured game data parsed from the archive)
 
 | Endpoint | Returns |
 |---|---|
 | `GET /v1/codexes/types` | the codex types present for a branch, each with its entry count |
-| `GET /v1/codexes/{type}?search=&limit=&offset=` | entries of one type, name-sorted, searchable + paginated |
+| `GET /v1/codexes/search?q=&type=&category=&tradable=&sort=` | cross-type search/filter (the unified search surface); each result carries its `type` |
+| `GET /v1/codexes/{type}?search=&category=&tradable=&sort=&limit=&offset=` | entries of one type — filterable, sortable, paginated |
+| `GET /v1/codexes/{type}/categories` | distinct categories (+ counts) in a type, for filter dropdowns |
 | `GET /v1/codexes/{type}/entry?path=` | a single entry by its source prefab path |
 
 Eight typed datasets — `ally`, `mount`, `dragon`, `memento`, `recipe`, `item`, `fish`, `badge` — parsed
 from Trove's `prefabs/*.binfab` files (a protobuf-like wire format) with names/descriptions resolved via
 the `languages/` locale tables. The indexer runs after each archive sync: a full build the first time,
 then only the changed prefabs (driven by the version delta), so a routine patch never re-parses the rest
-of the game. All endpoints default to the `live-us` branch (`?branch=pts` for PTS). v1 is identity-level
-(name, category, description, tradability); richer per-type fields (stats, mastery, models) fill the
-`data` object incrementally.
+of the game. All endpoints default to the `live-us` branch (`?branch=pts` for PTS). Each entry carries
+identity (name, category, description, tradability) plus `mastery` (collectible mastery, from
+`meta/multipliers.binfab`); richer per-type fields (power rank, stats, models) fill the `data` object
+incrementally.
 
 More are added following the conventions in "Adding the real endpoints" below.
 
