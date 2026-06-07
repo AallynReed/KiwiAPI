@@ -71,7 +71,7 @@
          Inter as the system body fallback (already in our font stack). -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.css?v=20260607e">
+    <link rel="stylesheet" href="/static/style.css?v=20260607h">
 
     <!-- Graceful fallback for screenshots that haven't been captured yet.
          Same hook the previous design used, unchanged so any feature-card
@@ -118,7 +118,7 @@
 
             <nav class="nav-links" id="nav-links" aria-label="Primary">
                 <a class="nav-cta" href="https://btt.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span data-i18n>Web App</span></a>
-                <a data-i18n href="/documentation"><i class="fa-solid fa-book"></i> <span data-i18n>User Guide</span></a>
+                <a href="/documentation"><i class="fa-solid fa-book"></i> <span data-i18n>User Guide</span></a>
                 <!-- NEW: developer-facing entry points. Both open same-tab
                      (they're subdomains of the same brand) so back-button
                      behaviour matches the user guide link above. -->
@@ -212,11 +212,14 @@
                                 </div>
                                 <i class="fa-solid fa-arrow-down download-item-arrow" aria-hidden="true"></i>
                             </a>
+                            <!-- Inline error block (no retry button — click the
+                                 trigger again to retry; that's what app.js
+                                 wires under the hood and the panel's own
+                                 close+reopen feels less alarming than a
+                                 dedicated "Try again" CTA next to working
+                                 platforms.) -->
                             <div class="download-status" id="download-status" hidden>
                                 <p class="download-status-msg" id="download-status-msg"></p>
-                                <button type="button" class="download-retry" id="download-retry">
-                                    <i class="fa-solid fa-rotate-right"></i> Try again
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -584,8 +587,8 @@
         </p>
     </footer>
 
-    <script src="/static/app.js?v=20260607e"></script>
-    <script src="/static/i18n.js?v=20260607e"></script>
-    <script src="/static/landing.js?v=20260607e" defer></script>
+    <script src="/static/app.js?v=20260607h"></script>
+    <script src="/static/i18n.js?v=20260607h"></script>
+    <script src="/static/landing.js?v=20260607h" defer></script>
 </body>
 </html>
