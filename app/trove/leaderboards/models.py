@@ -106,10 +106,11 @@ class Leaderboard(Document):
 class LeaderboardEntry(Document):
     """HOT collection: one player's slot on one board at one dump.
 
-    Holds the last ``LEADERBOARD_HOT_RETENTION_DAYS`` worth of entries. Older
-    rows are MOVED (not deleted) to ``LeaderboardEntryArchive`` at the tail of
-    each insert, so the hot collection stays small enough for fast top-N reads
-    while history is preserved.
+    Holds the last ``leaderboards_hot_retention_days`` worth of entries (runtime
+    tunable; default 3 days). Older rows are MOVED (not deleted) to
+    ``LeaderboardEntryArchive`` at the tail of each insert, so the hot
+    collection stays small enough for fast top-N reads while history is
+    preserved.
 
     ``score`` is a float because some boards expose decimals (delve depth times,
     paragon multipliers); integer-only boards store as ``1234.0`` which JSON

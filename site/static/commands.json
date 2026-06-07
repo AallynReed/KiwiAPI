@@ -1,0 +1,1167 @@
+{
+  "_comment": "Trove in-game slash commands reference. Source: wikiwiki.jp/trove/コマンド plus first-party experience. Edit this file to add/correct commands; commands.html fetches it on load and re-renders client-side when the language switches. Every command needs syntax + category + description.{lang}. aliases / note are optional.",
+
+  "intro": {
+    "title": {
+      "en": "Trove commands",
+      "fr": "Commandes Trove",
+      "de": "Trove-Befehle",
+      "pt-PT": "Comandos Trove",
+      "ru": "Команды Trove",
+      "ja": "Troveコマンド",
+      "zh-CN": "Trove 命令"
+    },
+    "subtitle": {
+      "en": "Every slash command, categorised and searchable. Type into the chat window starting with /.",
+      "fr": "Toutes les commandes slash, classées et cherchables. À taper dans la fenêtre de chat en commençant par /.",
+      "de": "Alle Slash-Befehle, kategorisiert und durchsuchbar. Ins Chat-Fenster eingeben, beginnend mit /.",
+      "pt-PT": "Todos os comandos slash, categorizados e pesquisáveis. Digite na janela de chat começando por /.",
+      "ru": "Все slash-команды, разбитые по категориям и с поиском. Введите в окно чата, начиная с /.",
+      "ja": "Troveには様々なコマンドが存在し、ゲーム設定や情報の表示からキャラクター状態なども変える事ができます。チャットウィンドウにて入力し、\"/\"から入力する必要があります。",
+      "zh-CN": "Trove 的所有斜杠命令，分类并可搜索。在聊天窗口中以 / 开头输入。"
+    },
+    "rules": {
+      "en": [
+        "Each command has a 0.5-second cooldown — can't be used during the cooldown or while loading.",
+        "<text> means you type the value directly. Don't include the <>.  Example: /join <channel> → /join trovejp",
+        "If a <value> contains spaces, wrap it in double quotes. Example: /setsign \"Welcome home\"  ·  /renameworld \"My Awesome World\"",
+        "[a|b|c] means pick ONE of the listed options. Don't include the [] or |.  Example: /zonerestrict [nobody|officer|architect|member] → /zonerestrict nobody",
+        "[1|0] toggles: 1 = on, 0 = off. [true|false] toggles: 0 = false, any other integer = true.",
+        "Some commands have aliases — the alias does the same thing.",
+        "Type /help <command> in-game to see the in-game help text for that command."
+      ],
+      "fr": [
+        "Chaque commande a un délai de 0,5 seconde — inutilisable pendant le délai ou pendant un chargement.",
+        "<texte> : à remplacer directement par la valeur. Ne pas inclure les <>.  Exemple : /join <canal> → /join trovejp",
+        "Si une <valeur> contient des espaces, entourez-la de guillemets doubles. Exemple : /setsign \"Bienvenue à la maison\"  ·  /renameworld \"Mon Monde Génial\"",
+        "[a|b|c] : choisir UNE des options. Ne pas inclure les [] ou |.  Exemple : /zonerestrict [nobody|officer|architect|member] → /zonerestrict nobody",
+        "[1|0] active/désactive : 1 = activé, 0 = désactivé. [true|false] : 0 = false, tout autre entier = true.",
+        "Certaines commandes ont des alias — l'alias fait la même chose.",
+        "Tapez /help <commande> en jeu pour voir l'aide intégrée."
+      ],
+      "de": [
+        "Jeder Befehl hat 0,5 s Cooldown — nicht nutzbar während Cooldown oder Ladebildschirm.",
+        "<text> : direkt durch den Wert ersetzen. Die <> NICHT mitschreiben.  Beispiel: /join <kanal> → /join trovejp",
+        "Wenn ein <Wert> Leerzeichen enthält, in Anführungszeichen setzen. Beispiel: /setsign \"Willkommen zu Hause\"  ·  /renameworld \"Meine tolle Welt\"",
+        "[a|b|c] : EINE der Optionen wählen. Die [] und | NICHT mitschreiben.  Beispiel: /zonerestrict [nobody|officer|architect|member] → /zonerestrict nobody",
+        "[1|0] schaltet um: 1 = an, 0 = aus. [true|false]: 0 = false, jede andere Zahl = true.",
+        "Einige Befehle haben Aliase — der Alias macht das Gleiche.",
+        "Tippe /help <befehl> im Spiel für die ingame-Hilfe."
+      ],
+      "pt-PT": [
+        "Cada comando tem 0,5s de cooldown — não pode ser usado durante cooldown ou ecrã de carregamento.",
+        "<texto> : substituir directamente pelo valor. Não incluir os <>.  Exemplo: /join <canal> → /join trovejp",
+        "Se um <valor> contiver espaços, envolva-o em aspas duplas. Exemplo: /setsign \"Bem-vindo a casa\"  ·  /renameworld \"O Meu Mundo Espectacular\"",
+        "[a|b|c] : escolher UMA das opções. Não incluir os [] ou |.  Exemplo: /zonerestrict [nobody|officer|architect|member] → /zonerestrict nobody",
+        "[1|0] alterna: 1 = ligado, 0 = desligado. [true|false]: 0 = false, qualquer outro inteiro = true.",
+        "Alguns comandos têm aliases — o alias faz a mesma coisa.",
+        "Digite /help <comando> no jogo para ver a ajuda integrada."
+      ],
+      "ru": [
+        "У каждой команды 0,5-секундный кулдаун — нельзя использовать во время кулдауна или загрузки.",
+        "<текст>: замените значением напрямую. Скобки <> писать НЕ нужно.  Пример: /join <канал> → /join trovejp",
+        "Если <значение> содержит пробелы, заключите его в двойные кавычки. Пример: /setsign \"Добро пожаловать\"  ·  /renameworld \"Мой Крутой Мир\"",
+        "[a|b|c]: выберите ОДИН вариант. Скобки [] и | писать НЕ нужно.  Пример: /zonerestrict [nobody|officer|architect|member] → /zonerestrict nobody",
+        "[1|0] переключатель: 1 = вкл, 0 = выкл. [true|false]: 0 = false, любое другое целое = true.",
+        "У некоторых команд есть алиасы — алиас делает то же самое.",
+        "В игре введите /help <команда> для встроенной справки."
+      ],
+      "ja": [
+        "各コマンドは0.5秒間のクールタイムがあり、クールタイム中やロード画面中は使用できません。",
+        "<>で囲われた部分は目的に応じて、直接入力する部分です。<>や|自体を入力する必要はありません。 例:/join <チャンネル名> → /join trovejp",
+        "<値>にスペースが含まれる場合は、ダブルクォートで囲んでください。 例: /setsign \"おかえりなさい\"  ·  /renameworld \"私の素晴らしい世界\"",
+        "[]で囲われた部分は目的に合わせて、選択した文字列を入力する部分です。[]や|自体を入力する必要はありません。 例:/zonerestrict [nobody|officer|architect|member] → /zonerestrict nobody",
+        "有効判定があるものは1と0で切り替えます。[true|false]で切り替えるものは0でfalse、それ以外の整数値でtrueとして扱われます。",
+        "コマンドの中には別名を持っているものもあります。",
+        "ゲーム内で/help <コマンド名>と入力すればコマンドの詳細が表示されます。"
+      ],
+      "zh-CN": [
+        "每个命令有 0.5 秒冷却 — 冷却中或加载画面中无法使用。",
+        "<文本> 表示直接输入值。不要包含 <>。  例：/join <频道> → /join trovejp",
+        "如果 <值> 包含空格，请用双引号括起来。例：/setsign \"欢迎回家\"  ·  /renameworld \"我的超棒世界\"",
+        "[a|b|c] 表示从列出的选项中选一个。不要包含 [] 或 |。  例：/zonerestrict [nobody|officer|architect|member] → /zonerestrict nobody",
+        "[1|0] 切换：1 = 开，0 = 关。[true|false]：0 = false，其他整数 = true。",
+        "部分命令有别名 — 别名作用相同。",
+        "游戏内输入 /help <命令> 查看该命令的内置帮助。"
+      ]
+    },
+    "search_placeholder": {
+      "en": "Search commands…",
+      "fr": "Rechercher des commandes…",
+      "de": "Befehle suchen…",
+      "pt-PT": "Pesquisar comandos…",
+      "ru": "Поиск команд…",
+      "ja": "コマンドを検索…",
+      "zh-CN": "搜索命令…"
+    },
+    "placeholder_warning": {
+      "en": "This command takes a <value> — if your value contains spaces, wrap it in double quotes (e.g. \"hello world\").",
+      "fr": "Cette commande prend une <valeur> — si elle contient des espaces, entourez-la de guillemets doubles (ex. \"bonjour monde\").",
+      "de": "Dieser Befehl erwartet einen <Wert> — wenn er Leerzeichen enthält, in Anführungszeichen setzen (z.B. \"hallo welt\").",
+      "pt-PT": "Este comando aceita um <valor> — se contiver espaços, envolva-o em aspas duplas (ex. \"olá mundo\").",
+      "ru": "Эта команда принимает <значение> — если в нём есть пробелы, заключите его в двойные кавычки (например \"привет мир\").",
+      "ja": "このコマンドは<値>を取ります — スペースを含む場合はダブルクォートで囲んでください (例:\"hello world\")。",
+      "zh-CN": "此命令需要一个 <值> — 如果包含空格，请用双引号括起来（例：\"hello world\"）。"
+    },
+    "source_note": {
+      "en": "Source: wikiwiki.jp/trove/コマンド (Japanese Trove wiki, CC-BY) + first-party verification.",
+      "fr": "Source : wikiwiki.jp/trove/コマンド (wiki japonais de Trove, CC-BY) + vérification de première main.",
+      "de": "Quelle: wikiwiki.jp/trove/コマンド (japanisches Trove-Wiki, CC-BY) + eigene Überprüfung.",
+      "pt-PT": "Fonte: wikiwiki.jp/trove/コマンド (wiki japonesa de Trove, CC-BY) + verificação própria.",
+      "ru": "Источник: wikiwiki.jp/trove/コマンド (японская Trove-вики, CC-BY) + собственная проверка.",
+      "ja": "出典:wikiwiki.jp/trove/コマンド (CC-BY) + 一次検証。",
+      "zh-CN": "来源：wikiwiki.jp/trove/コマンド（日文 Trove wiki，CC-BY）+ 第一方验证。"
+    }
+  },
+
+  "categories": [
+    {
+      "key": "chat",
+      "name": { "en": "Chat", "fr": "Chat", "de": "Chat", "pt-PT": "Chat", "ru": "Чат", "ja": "チャット", "zh-CN": "聊天" }
+    },
+    {
+      "key": "info",
+      "name": { "en": "Information display", "fr": "Affichage d'infos", "de": "Info-Anzeige", "pt-PT": "Informações", "ru": "Информация", "ja": "情報表示", "zh-CN": "信息显示" }
+    },
+    {
+      "key": "emote",
+      "name": { "en": "Emotes", "fr": "Emotes", "de": "Emotes", "pt-PT": "Emotes", "ru": "Эмоции", "ja": "エモート", "zh-CN": "表情" }
+    },
+    {
+      "key": "other",
+      "name": { "en": "Other gameplay", "fr": "Autres", "de": "Sonstige", "pt-PT": "Outros", "ru": "Прочее", "ja": "その他", "zh-CN": "其他" }
+    },
+    {
+      "key": "club",
+      "name": { "en": "Club", "fr": "Club", "de": "Club", "pt-PT": "Clube", "ru": "Клуб", "ja": "クラブ", "zh-CN": "俱乐部" }
+    },
+    {
+      "key": "screenshot",
+      "name": { "en": "Screenshots", "fr": "Captures d'écran", "de": "Screenshots", "pt-PT": "Capturas de ecrã", "ru": "Скриншоты", "ja": "スクリーンショット", "zh-CN": "截图" }
+    },
+    {
+      "key": "mods",
+      "name": { "en": "Mods", "fr": "Mods", "de": "Mods", "pt-PT": "Mods", "ru": "Моды", "ja": "Mod関連", "zh-CN": "Mod 相关" }
+    },
+    {
+      "key": "metaforge",
+      "name": { "en": "Meta Forge (creator tools)", "fr": "Meta Forge (créateurs)", "de": "Meta Forge (Erstell-Tools)", "pt-PT": "Meta Forge (criadores)", "ru": "Meta Forge (инструменты создателей)", "ja": "Meta Forge (制作ツール)", "zh-CN": "Meta Forge（创作工具）" }
+    },
+    {
+      "key": "graphics",
+      "name": { "en": "Graphics", "fr": "Graphismes", "de": "Grafik", "pt-PT": "Gráficos", "ru": "Графика", "ja": "グラフィック", "zh-CN": "图形" }
+    }
+  ],
+
+  "commands": [
+
+    { "syntax": "/1", "category": "chat",
+      "description": {
+        "en": "Global chat (all users on the server).",
+        "fr": "Chat global (tous les joueurs sur le serveur).",
+        "de": "Globaler Chat (alle Spieler auf dem Server).",
+        "pt-PT": "Chat global (todos os jogadores no servidor).",
+        "ru": "Глобальный чат (все игроки на сервере).",
+        "ja": "グローバルチャット (サーバ内の全ユーザー)。",
+        "zh-CN": "全局聊天（服务器内所有玩家）。"
+      } },
+
+    { "syntax": "/2", "category": "chat",
+      "description": {
+        "en": "World chat (all users in the area).",
+        "fr": "Chat de monde (tous les joueurs de la zone).",
+        "de": "Welt-Chat (alle Spieler im Gebiet).",
+        "pt-PT": "Chat do mundo (todos os jogadores na área).",
+        "ru": "Чат мира (все игроки в зоне).",
+        "ja": "ワールドチャット (エリア内の全ユーザー)。",
+        "zh-CN": "世界聊天（区域内所有玩家）。"
+      } },
+
+    { "syntax": "/say <message>", "aliases": ["/s"], "category": "chat",
+      "description": {
+        "en": "Local chat — visible to players within 40 blocks.",
+        "fr": "Chat local — visible aux joueurs dans un rayon de 40 blocs.",
+        "de": "Lokaler Chat — sichtbar für Spieler in 40 Blöcken Umkreis.",
+        "pt-PT": "Chat local — visível a jogadores num raio de 40 blocos.",
+        "ru": "Локальный чат — виден игрокам в радиусе 40 блоков.",
+        "ja": "40ブロック範囲内にいる近くのユーザーに向けたチャット。",
+        "zh-CN": "本地聊天 — 40 个方块范围内的玩家可见。"
+      } },
+
+    { "syntax": "/whisper <player> <message>", "aliases": ["/w", "/tell", "/t"], "category": "chat",
+      "description": {
+        "en": "Private message to a specific online player.",
+        "fr": "Message privé à un joueur en ligne précis.",
+        "de": "Private Nachricht an einen bestimmten online-Spieler.",
+        "pt-PT": "Mensagem privada a um jogador online específico.",
+        "ru": "Личное сообщение конкретному онлайн-игроку.",
+        "ja": "オンライン状態の特定ユーザーに向けたチャット。",
+        "zh-CN": "向特定在线玩家发送私聊。"
+      } },
+
+    { "syntax": "/reply <message>", "aliases": ["/r"], "category": "chat",
+      "description": {
+        "en": "Quick reply to the last person who whispered you.",
+        "fr": "Réponse rapide à la dernière personne qui vous a chuchoté.",
+        "de": "Schnelle Antwort an die letzte Person, die dir geflüstert hat.",
+        "pt-PT": "Resposta rápida à última pessoa que sussurrou consigo.",
+        "ru": "Быстрый ответ последнему, кто шептал вам.",
+        "ja": "最後にささやきしてきたユーザーへの簡易返信。",
+        "zh-CN": "快速回复最后一个私聊你的玩家。"
+      } },
+
+    { "syntax": "/join <channel>", "category": "chat",
+      "description": {
+        "en": "Open or join a custom chat channel.",
+        "fr": "Ouvrir ou rejoindre un canal de chat personnalisé.",
+        "de": "Eigenen Chat-Kanal öffnen oder beitreten.",
+        "pt-PT": "Abrir ou entrar num canal de chat personalizado.",
+        "ru": "Открыть пользовательский канал чата или войти в него.",
+        "ja": "カスタムチャットチャンネルの開設or入室。",
+        "zh-CN": "创建或加入自定义聊天频道。"
+      },
+      "note": {
+        "en": "A channel holds up to 127 members; once full it splits into a new channel with the same name. Popular channels: trade, delve, dragon, levi (Leviathan), trovejp (Japanese), sky.",
+        "fr": "Un canal contient jusqu'à 127 membres ; une fois plein, il se scinde en un nouveau canal du même nom. Canaux populaires : trade, delve, dragon, levi (Leviathan), trovejp (japonais), sky.",
+        "de": "Ein Kanal fasst bis zu 127 Mitglieder; bei Überschreitung wird ein neuer Kanal mit demselben Namen eröffnet. Beliebte Kanäle: trade, delve, dragon, levi (Leviathan), trovejp (japanisch), sky.",
+        "pt-PT": "Um canal aceita até 127 membros; quando cheio divide-se num novo canal com o mesmo nome. Canais populares: trade, delve, dragon, levi (Leviathan), trovejp (japonês), sky.",
+        "ru": "В канале до 127 человек; при переполнении создаётся новый канал с тем же именем. Популярные: trade, delve, dragon, levi (Leviathan), trovejp (японский), sky.",
+        "ja": "カスタムチャットチャンネルは一つに付き127名までしか入れない。上限を超えると全く同じチャンネル名で別のチャンネルに分離する。 主な人気チャンネル: trade, delve, dragon, levi (Leviathan), trovejp (日本語), sky。",
+        "zh-CN": "每个频道最多 127 人；超出后会拆分成同名的新频道。常用频道：trade、delve、dragon、levi（Leviathan）、trovejp（日语）、sky。"
+      } },
+
+    { "syntax": "/leave <channel|chat-number>", "category": "chat",
+      "description": {
+        "en": "Leave a custom chat channel.",
+        "fr": "Quitter un canal de chat personnalisé.",
+        "de": "Eigenen Chat-Kanal verlassen.",
+        "pt-PT": "Sair de um canal de chat personalizado.",
+        "ru": "Покинуть пользовательский канал чата.",
+        "ja": "そのカスタムチャットチャンネルから退室。",
+        "zh-CN": "离开自定义聊天频道。"
+      } },
+
+    { "syntax": "/chatlist <channel|chat-number>", "category": "chat",
+      "description": {
+        "en": "Show the list of members in a channel.",
+        "fr": "Afficher la liste des membres d'un canal.",
+        "de": "Mitgliederliste eines Kanals anzeigen.",
+        "pt-PT": "Mostrar a lista de membros num canal.",
+        "ru": "Показать список участников канала.",
+        "ja": "そのチャット内にいるメンバーの表示。",
+        "zh-CN": "显示频道内成员列表。"
+      } },
+
+    { "syntax": "/c1 … /c5", "category": "chat",
+      "description": {
+        "en": "Switch to club chat 1–5.",
+        "fr": "Basculer vers le chat de club 1 à 5.",
+        "de": "Zu Club-Chat 1–5 wechseln.",
+        "pt-PT": "Mudar para o chat do clube 1–5.",
+        "ru": "Переключиться на чат клуба 1–5.",
+        "ja": "クラブチャットの切替。",
+        "zh-CN": "切换到俱乐部聊天 1–5。"
+      } },
+
+    { "syntax": "/loc", "category": "info",
+      "description": {
+        "en": "Show your current XYZ coordinates in chat.",
+        "fr": "Afficher vos coordonnées XYZ actuelles dans le chat.",
+        "de": "Aktuelle XYZ-Koordinaten im Chat anzeigen.",
+        "pt-PT": "Mostrar as suas coordenadas XYZ actuais no chat.",
+        "ru": "Показать ваши XYZ-координаты в чате.",
+        "ja": "XYZ座標をチャットに表示。",
+        "zh-CN": "在聊天中显示当前 XYZ 坐标。"
+      } },
+
+    { "syntax": "/who", "category": "info",
+      "description": {
+        "en": "Show the usernames of players in the same world.",
+        "fr": "Afficher les noms des joueurs du même monde.",
+        "de": "Spielernamen in derselben Welt anzeigen.",
+        "pt-PT": "Mostrar nomes de jogadores no mesmo mundo.",
+        "ru": "Показать имена игроков в том же мире.",
+        "ja": "同一ワールドにいるユーザー名を表示。",
+        "zh-CN": "显示同一世界中的玩家名。"
+      } },
+
+    { "syntax": "/xp", "category": "info",
+      "description": {
+        "en": "Show your current level and XP to the next.",
+        "fr": "Afficher votre niveau actuel et l'XP pour le suivant.",
+        "de": "Aktuelles Level + EXP bis zum nächsten anzeigen.",
+        "pt-PT": "Mostrar o seu nível actual e XP até ao próximo.",
+        "ru": "Показать текущий уровень и опыт до следующего.",
+        "ja": "現在のレベルと、次までの必要経験値の表示。",
+        "zh-CN": "显示当前等级和升级所需经验。"
+      } },
+
+    { "syntax": "/gettomexp", "aliases": ["/tomexp"], "category": "info",
+      "description": {
+        "en": "Show the XP needed to complete the current Tome.",
+        "fr": "Afficher l'XP nécessaire pour terminer le Tome actuel.",
+        "de": "EXP für die aktuelle Tome anzeigen.",
+        "pt-PT": "Mostrar XP necessária para completar o Tome actual.",
+        "ru": "Показать опыт, нужный для завершения текущего Tome.",
+        "ja": "Tome(学術書・トーム)の必要経験値の表示。",
+        "zh-CN": "显示完成当前 Tome（典籍）所需经验。"
+      } },
+
+    { "syntax": "/stats", "category": "info",
+      "description": {
+        "en": "Show your current stats and total badge counts.",
+        "fr": "Afficher vos stats actuelles et le total des badges.",
+        "de": "Aktuelle Stats und Abzeichen-Gesamtzahl anzeigen.",
+        "pt-PT": "Mostrar as suas stats actuais e total de emblemas.",
+        "ru": "Показать ваши текущие статы и общее число значков.",
+        "ja": "現行ステータスやバッジ等の総合数確認。",
+        "zh-CN": "查看当前属性和徽章总数。"
+      } },
+
+    { "syntax": "/mastery", "category": "info",
+      "description": {
+        "en": "Show Trove mastery by category and total mastery points.",
+        "fr": "Afficher la maîtrise Trove par catégorie et les points totaux.",
+        "de": "Trove-Meisterschaft pro Kategorie und Gesamt-Punkte anzeigen.",
+        "pt-PT": "Mostrar a maestria Trove por categoria e pontos totais.",
+        "ru": "Показать мастерство Trove по категориям и общие очки.",
+        "ja": "各種類別のTroveマスタリー確認と、累計Troveマスタリーポイントの表示。",
+        "zh-CN": "查看分类的 Trove 精通和累计精通点。"
+      } },
+
+    { "syntax": "/geodemastery", "category": "info",
+      "description": {
+        "en": "Show Geode mastery by category and total points.",
+        "fr": "Afficher la maîtrise Geode par catégorie et les points totaux.",
+        "de": "Geode-Meisterschaft pro Kategorie und Punkte anzeigen.",
+        "pt-PT": "Mostrar a maestria Geode por categoria e pontos totais.",
+        "ru": "Показать мастерство Geode по категориям и общие очки.",
+        "ja": "各種類別のジオードマスタリー確認と、累計ジオードマスタリーポイントの表示。",
+        "zh-CN": "查看分类的 Geode 精通和累计精通点。"
+      } },
+
+    { "syntax": "/getworldid", "category": "info",
+      "description": {
+        "en": "Show the current world's ID and copy it to clipboard.",
+        "fr": "Afficher l'ID du monde actuel et le copier dans le presse-papier.",
+        "de": "Welt-ID anzeigen und in die Zwischenablage kopieren.",
+        "pt-PT": "Mostrar o ID do mundo actual e copiá-lo para a área de transferência.",
+        "ru": "Показать ID текущего мира и скопировать в буфер обмена.",
+        "ja": "今いるワールドのID表示とクリップボードへのコピー。",
+        "zh-CN": "显示当前世界的 ID 并复制到剪贴板。"
+      } },
+
+    { "syntax": "/getbattleworldid", "category": "info",
+      "description": {
+        "en": "Show the ID of the world a PvP world was based on, and copy it.",
+        "fr": "Afficher l'ID du monde d'origine d'un monde PvP et le copier.",
+        "de": "ID der zugrunde liegenden Welt eines PvP-Worlds anzeigen und kopieren.",
+        "pt-PT": "Mostrar o ID do mundo original em que um mundo PvP se baseia, e copiá-lo.",
+        "ru": "Показать ID мира, на котором основан PvP-мир, и скопировать.",
+        "ja": "PvPワールドの元になったワールドのID表示とクリップボードへのコピー。",
+        "zh-CN": "显示 PvP 世界对应的源世界 ID 并复制。"
+      } },
+
+    { "syntax": "/region", "category": "info",
+      "description": {
+        "en": "Show the current server region.",
+        "fr": "Afficher la région du serveur actuel.",
+        "de": "Aktuelle Server-Region anzeigen.",
+        "pt-PT": "Mostrar a região do servidor actual.",
+        "ru": "Показать регион текущего сервера.",
+        "ja": "今いるサーバーの表示。",
+        "zh-CN": "显示当前服务器所在区域。"
+      } },
+
+    { "syntax": "/debugtext", "aliases": ["/debug_text"], "category": "info",
+      "description": {
+        "en": "Show FPS, ping, and XYZ in the top-left. Reset on game close — re-run after each launch.",
+        "fr": "Afficher FPS, ping et XYZ en haut à gauche. Réinitialisé à la fermeture — relancer à chaque démarrage.",
+        "de": "FPS, Ping und XYZ oben links anzeigen. Bei Spiel-Schließung zurückgesetzt — nach jedem Start neu eingeben.",
+        "pt-PT": "Mostrar FPS, ping e XYZ no canto superior esquerdo. Reposto ao fechar o jogo — voltar a digitar a cada arranque.",
+        "ru": "Показать FPS, пинг и XYZ в левом верхнем углу. Сбрасывается при выходе — введите снова после запуска.",
+        "ja": "FPS、Ping、XYZ座標を画面左上側に表示(ゲーム終了で非表示。見たい場合は起動後毎回打つこと)。",
+        "zh-CN": "在左上角显示 FPS、Ping 和 XYZ。游戏关闭后重置，需要每次启动后重新输入。"
+      } },
+
+    { "syntax": "/metrics", "category": "info",
+      "description": {
+        "en": "Show various gameplay metrics.",
+        "fr": "Afficher diverses statistiques de jeu.",
+        "de": "Verschiedene Spiel-Statistiken anzeigen.",
+        "pt-PT": "Mostrar várias estatísticas de jogo.",
+        "ru": "Показать различные игровые метрики.",
+        "ja": "各種ゲームプレイ統計情報の表示。",
+        "zh-CN": "显示各类游戏统计信息。"
+      } },
+
+    { "syntax": "/adventurerewards", "category": "info",
+      "description": {
+        "en": "Show remaining reward counts for adventure quests.",
+        "fr": "Afficher le nombre de récompenses restantes pour les quêtes d'aventure.",
+        "de": "Verbleibende Belohnungs-Zahlen für Adventure-Quests anzeigen.",
+        "pt-PT": "Mostrar contagens restantes de recompensas para missões de aventura.",
+        "ru": "Показать оставшееся число наград для adventure-квестов.",
+        "ja": "各種アドベンチャークエストの残り報酬獲得可能数の表示。",
+        "zh-CN": "显示各类冒险任务的剩余可领奖励次数。"
+      } },
+
+    { "syntax": "/setchattimestamp [1|0]", "category": "info",
+      "description": {
+        "en": "Show timestamps (system time) in chat. 1 = on, 0 = off.",
+        "fr": "Afficher les horodatages (heure système) dans le chat. 1 = activé, 0 = désactivé.",
+        "de": "Zeitstempel (Systemzeit) im Chat anzeigen. 1 = an, 0 = aus.",
+        "pt-PT": "Mostrar timestamps (hora do sistema) no chat. 1 = ligado, 0 = desligado.",
+        "ru": "Показывать временные метки (системное время) в чате. 1 = вкл, 0 = выкл.",
+        "ja": "チャットにタイムスタンプ(システム時刻基準)を表示する。1で有効、0で無効。",
+        "zh-CN": "在聊天显示时间戳（系统时间）。1 = 开，0 = 关。"
+      } },
+
+    { "syntax": "/getgemboxinfo", "aliases": ["/getgbi"], "category": "info",
+      "description": {
+        "en": "Show how many Lustrous Gem Boxes you've earned this Wednesday bonus cycle. Cap is 3 (even with Patron). Only shows on days when they're earnable.",
+        "fr": "Affiche le nombre de Lustrous Gem Boxes obtenus pendant le bonus du mercredi. Plafond à 3 (même avec Patron). Visible uniquement les jours où elles s'obtiennent.",
+        "de": "Zeigt die Anzahl an Lustrous Gem Boxes dieses Mittwochs-Bonus. Max 3 (auch mit Patron). Nur an Tagen sichtbar, an denen sie verdient werden.",
+        "pt-PT": "Mostra quantas Lustrous Gem Boxes obteve no bónus de quarta-feira. Máximo 3 (mesmo com Patron). Só aparece em dias em que se podem ganhar.",
+        "ru": "Показывает, сколько Lustrous Gem Box получено в среду-бонус. Максимум 3 (даже с Patron). Видна только в дни, когда их можно получить.",
+        "ja": "水曜日ボーナスのLustrous Gem Box(光沢のジェムボックス)の取得回数の表示。回数なのでパトロンありでも最大3。入手できない曜日では表示されない。",
+        "zh-CN": "显示本周三奖励中已获得的 Lustrous Gem Box 次数。上限为 3（即使有 Patron）。仅在可获得当天显示。"
+      } },
+
+    { "syntax": "/played", "category": "info",
+      "description": {
+        "en": "Show your total time logged in.",
+        "fr": "Afficher votre temps total de connexion.",
+        "de": "Gesamte Login-Zeit anzeigen.",
+        "pt-PT": "Mostrar o seu tempo total ligado.",
+        "ru": "Показать общее время в игре.",
+        "ja": "累計ログイン時間の表示。",
+        "zh-CN": "显示累计登录时长。"
+      } },
+
+    { "syntax": "/exportmetrics", "category": "info",
+      "description": {
+        "en": "Export various stats and character info to exportMetrics.txt in the Trove install folder. Not available on console.",
+        "fr": "Exporter diverses stats et infos perso vers exportMetrics.txt dans le dossier d'installation de Trove. Indisponible sur console.",
+        "de": "Verschiedene Stats und Charakter-Infos in exportMetrics.txt im Trove-Installationsordner exportieren. Nicht auf Konsole verfügbar.",
+        "pt-PT": "Exportar várias estatísticas e info de personagem para exportMetrics.txt na pasta de instalação de Trove. Indisponível em consola.",
+        "ru": "Экспортировать различные статы и инфо персонажа в exportMetrics.txt в папке установки Trove. Недоступно на консолях.",
+        "ja": "様々な統計情報やプレイヤーキャラの情報をファイルに出力する。保存先はTrove本体のインストール先にexportMetrics.txtというファイル名で出力される。(コンシューマ版では利用不可)",
+        "zh-CN": "将各种统计和角色信息导出到 Trove 安装目录下的 exportMetrics.txt。主机版不可用。"
+      } },
+
+    { "syntax": "/stuck", "category": "info",
+      "description": {
+        "en": "Show a message useful when you're stuck and can't move.",
+        "fr": "Afficher un message utile quand vous êtes bloqué et ne pouvez plus bouger.",
+        "de": "Hilfetext anzeigen, wenn du irgendwo feststeckst.",
+        "pt-PT": "Mostrar uma mensagem útil quando está preso e não consegue mexer-se.",
+        "ru": "Показать сообщение, полезное когда вы застряли.",
+        "ja": "スタック(引っかかって抜け出せない)時に役立つメッセージを表示します。",
+        "zh-CN": "卡住时显示有用的提示信息。"
+      } },
+
+    { "syntax": "/logstarbarinfo", "category": "info",
+      "description": {
+        "en": "Show star bar info. `ui set to hidden` = bar shown(0) / hidden(1). `numRewards` = max bar count. `remainingStarBar` = remaining count. `hasStarBarUI` = unknown.",
+        "fr": "Afficher les infos de barre d'étoiles. `ui set to hidden` = barre affichée(0)/masquée(1). `numRewards` = nombre max. `remainingStarBar` = restant. `hasStarBarUI` = inconnu.",
+        "de": "Star-Bar-Infos anzeigen. `ui set to hidden` = sichtbar(0)/versteckt(1). `numRewards` = Max-Anzahl. `remainingStarBar` = verbleibend. `hasStarBarUI` = unbekannt.",
+        "pt-PT": "Mostrar info da barra de estrelas. `ui set to hidden` = visível(0)/escondida(1). `numRewards` = máximo. `remainingStarBar` = restante. `hasStarBarUI` = desconhecido.",
+        "ru": "Показать инфо star bar. `ui set to hidden` = видна(0)/скрыта(1). `numRewards` = макс. `remainingStarBar` = осталось. `hasStarBarUI` = неизвестно.",
+        "ja": "スターバーの情報表示。ui set to hidden:はスターバーの表示(0)・非表示(1)状況。numRewards:はスターバーの最大数。remainingStarBar:は残り数。hasStarBarUI:は不明。",
+        "zh-CN": "显示星条信息。ui set to hidden：星条显示(0)/隐藏(1)。numRewards：最大数。remainingStarBar：剩余数。hasStarBarUI：未知。"
+      } },
+
+    { "syntax": "/fxstats", "category": "info",
+      "description": {
+        "en": "Show VFX particle stats.",
+        "fr": "Afficher les stats des particules VFX.",
+        "de": "VFX-Partikel-Statistiken anzeigen.",
+        "pt-PT": "Mostrar estatísticas das partículas VFX.",
+        "ru": "Показать статистику VFX-частиц.",
+        "ja": "VFXパーティクルの情報表示。",
+        "zh-CN": "显示 VFX 粒子统计信息。"
+      } },
+
+    { "syntax": "/sit", "category": "emote",
+      "description": {
+        "en": "Make your character sit.",
+        "fr": "Faire asseoir votre personnage.",
+        "de": "Charakter setzt sich.",
+        "pt-PT": "Faz a sua personagem sentar-se.",
+        "ru": "Персонаж садится.",
+        "ja": "キャラクターを座らせます。",
+        "zh-CN": "让角色坐下。"
+      } },
+
+    { "syntax": "/pose", "aliases": ["/dramatic"], "category": "emote",
+      "description": {
+        "en": "Strike a cool pose (wings open too).",
+        "fr": "Prendre une pose cool (les ailes s'ouvrent aussi).",
+        "de": "Coole Pose einnehmen (Flügel öffnen sich auch).",
+        "pt-PT": "Pose dramática (asas abertas também).",
+        "ru": "Принять крутую позу (крылья тоже раскрываются).",
+        "ja": "かっこいいポーズ！（ウィングも開くぞ！）",
+        "zh-CN": "酷炫姿势！（翅膀也会展开！）"
+      } },
+
+    { "syntax": "/epicpose", "category": "emote",
+      "description": {
+        "en": "Strike a cool pose while mounted.",
+        "fr": "Prendre une pose cool en monture.",
+        "de": "Coole Pose auf dem Reittier.",
+        "pt-PT": "Pose dramática em montaria.",
+        "ru": "Крутая поза верхом.",
+        "ja": "マウントに乗ってかっこいいポーズ！",
+        "zh-CN": "骑乘时摆出酷炫姿势！"
+      } },
+
+    { "syntax": "/zzz", "aliases": ["/sleep"], "category": "emote",
+      "description": {
+        "en": "Make your character sleep (same as the 2-min AFK emote).",
+        "fr": "Faire dormir votre personnage (identique à l'emote AFK de 2 min).",
+        "de": "Charakter schläft (gleiche Emote wie nach 2 min AFK).",
+        "pt-PT": "Faz a personagem dormir (mesma emote dos 2 min AFK).",
+        "ru": "Персонаж засыпает (та же эмоция, что и через 2 минуты AFK).",
+        "ja": "キャラクターを眠らせます (2分間AFKした時のエモートと同じ)。",
+        "zh-CN": "让角色入睡（与 AFK 2 分钟时的表情相同）。"
+      } },
+
+    { "syntax": "/wave", "category": "emote",
+      "description": { "en": "Wave.", "fr": "Saluer de la main.", "de": "Winken.", "pt-PT": "Acenar.", "ru": "Помахать.", "ja": "キャラクターに手を振らせます。", "zh-CN": "挥手。" } },
+
+    { "syntax": "/dance", "category": "emote",
+      "description": { "en": "Dance.", "fr": "Danser.", "de": "Tanzen.", "pt-PT": "Dançar.", "ru": "Танцевать.", "ja": "キャラクターを踊らせます。", "zh-CN": "跳舞。" } },
+
+    { "syntax": "/laugh", "category": "emote",
+      "description": { "en": "Laugh.", "fr": "Rire.", "de": "Lachen.", "pt-PT": "Rir.", "ru": "Смеяться.", "ja": "キャラクターを笑わせます。", "zh-CN": "大笑。" } },
+
+    { "syntax": "/cry", "category": "emote",
+      "description": { "en": "Cry.", "fr": "Pleurer.", "de": "Weinen.", "pt-PT": "Chorar.", "ru": "Плакать.", "ja": "キャラクターを泣かせます。", "zh-CN": "哭泣。" } },
+
+    { "syntax": "/shrug", "category": "emote",
+      "description": { "en": "Shrug.", "fr": "Hausser les épaules.", "de": "Achseln zucken.", "pt-PT": "Encolher os ombros.", "ru": "Пожать плечами.", "ja": "キャラクターが肩をすくめます。", "zh-CN": "耸肩。" } },
+
+    { "syntax": "/bow", "category": "emote",
+      "description": { "en": "Bow.", "fr": "S'incliner.", "de": "Verbeugen.", "pt-PT": "Vénia.", "ru": "Поклониться.", "ja": "キャラクターにお辞儀をさせます。", "zh-CN": "鞠躬。" } },
+
+    { "syntax": "/stomp", "category": "emote",
+      "description": {
+        "en": "Mount stomps. Princey McEvilface only.",
+        "fr": "La monture trépigne. Princey McEvilface uniquement.",
+        "de": "Reittier stampft. Nur Princey McEvilface.",
+        "pt-PT": "Montaria pisa o chão. Apenas Princey McEvilface.",
+        "ru": "Маунт топает. Только Princey McEvilface.",
+        "ja": "マウントが踏み鳴らします。Princey McEvilface(プリンシー・マッケビルフェイス)のみ利用可。",
+        "zh-CN": "坐骑跺脚。仅 Princey McEvilface 可用。"
+      } },
+
+    { "syntax": "/prance", "category": "emote",
+      "description": {
+        "en": "Mount prances. Only Princess Prancy Prance, Kazarin (Dancer in the Clouds), Lunaclipsia.",
+        "fr": "La monture caracole. Uniquement Princess Prancy Prance, Kazarin (Dancer in the Clouds), Lunaclipsia.",
+        "de": "Reittier tänzelt. Nur Princess Prancy Prance, Kazarin (Dancer in the Clouds), Lunaclipsia.",
+        "pt-PT": "Montaria saltita. Apenas Princess Prancy Prance, Kazarin (Dancer in the Clouds), Lunaclipsia.",
+        "ru": "Маунт танцует. Только Princess Prancy Prance, Kazarin (Dancer in the Clouds), Lunaclipsia.",
+        "ja": "マウントが踊り跳ねます。Princess Prancy Prance(プランシープランス姫)・Kazarin, Dancer in the Clouds(雲の中のダンサー、カザリン)・Lunaclipsia(ルナクリプシア)のみ利用可。",
+        "zh-CN": "坐骑跃动。仅 Princess Prancy Prance、Kazarin（Dancer in the Clouds）、Lunaclipsia 可用。"
+      } },
+
+    { "syntax": "//", "category": "other",
+      "description": {
+        "en": "Reuse the last command you typed.",
+        "fr": "Réutiliser la dernière commande tapée.",
+        "de": "Letzten Befehl erneut ausführen.",
+        "pt-PT": "Reutilizar o último comando digitado.",
+        "ru": "Повторить последнюю введённую команду.",
+        "ja": "前回使用したコマンドの再使用。",
+        "zh-CN": "重复上一条命令。"
+      } },
+
+    { "syntax": "/friendlist", "category": "other",
+      "description": {
+        "en": "Show the friend list (O key works too).",
+        "fr": "Afficher la liste d'amis (touche O aussi).",
+        "de": "Freundesliste anzeigen (auch über die O-Taste).",
+        "pt-PT": "Mostrar a lista de amigos (tecla O também serve).",
+        "ru": "Показать список друзей (клавиша O тоже).",
+        "ja": "フレンドリストの表示 (Oキーで代用可)。",
+        "zh-CN": "显示好友列表（O 键亦可）。"
+      } },
+
+    { "syntax": "/ignore <player>", "category": "other",
+      "description": {
+        "en": "Add a player to the ignore list (currently you can also right-click their chat message → Ignore).",
+        "fr": "Ajouter un joueur à la liste des ignorés (vous pouvez aussi clic-droit sur son message → Ignore).",
+        "de": "Spieler zur Ignorierliste hinzufügen (alternativ Rechtsklick auf seine Chatnachricht → Ignore).",
+        "pt-PT": "Adicionar um jogador à lista de ignorados (também clique-direito na mensagem → Ignore).",
+        "ru": "Добавить игрока в список игнорирования (можно также правый клик по его сообщению → Ignore).",
+        "ja": "対象のプレイヤーを無視リスト入り（現在はチャット欄にてその人のチャットを右クリックしてIgoneで代用可）。",
+        "zh-CN": "将玩家加入忽略列表（也可以右键聊天消息 → Ignore）。"
+      } },
+
+    { "syntax": "/respawn", "category": "other",
+      "description": {
+        "en": "Forced respawn — counts as a death (same as being killed by an enemy).",
+        "fr": "Réapparition forcée — compte comme une mort (équivalent à être tué par un ennemi).",
+        "de": "Erzwungenes Respawn — zählt als Tod (wie von einem Gegner getötet).",
+        "pt-PT": "Respawn forçado — conta como morte (igual a ser morto por um inimigo).",
+        "ru": "Принудительный респаун — засчитывается как смерть.",
+        "ja": "強制リスポーン。実際には敵に倒されたときと同様に死亡する。",
+        "zh-CN": "强制复活 — 实际上等同于被敌人击杀。"
+      } },
+
+    { "syntax": "/quit", "aliases": ["/q"], "category": "other",
+      "description": { "en": "Quit the game.", "fr": "Quitter le jeu.", "de": "Spiel beenden.", "pt-PT": "Sair do jogo.", "ru": "Выйти из игры.", "ja": "ゲーム終了。", "zh-CN": "退出游戏。" } },
+
+    { "syntax": "/joinworld <id>", "aliases": ["/gotoworld"], "category": "other",
+      "description": {
+        "en": "Join the world with the given ID. Example: /joinworld 6629",
+        "fr": "Rejoindre le monde avec l'ID donné. Exemple : /joinworld 6629",
+        "de": "Welt mit der angegebenen ID betreten. Beispiel: /joinworld 6629",
+        "pt-PT": "Entrar no mundo com o ID indicado. Exemplo: /joinworld 6629",
+        "ru": "Войти в мир с указанным ID. Пример: /joinworld 6629",
+        "ja": "指定したIDのワールドに参加する (例) /joinworld 6629",
+        "zh-CN": "进入指定 ID 的世界。例：/joinworld 6629"
+      } },
+
+    { "syntax": "/joinme <player>", "category": "other",
+      "description": {
+        "en": "Invite a player to your world.",
+        "fr": "Inviter un joueur dans votre monde.",
+        "de": "Spieler in deine Welt einladen.",
+        "pt-PT": "Convidar um jogador para o seu mundo.",
+        "ru": "Пригласить игрока в ваш мир.",
+        "ja": "自分のいるワールドへプレイヤーを招待する。",
+        "zh-CN": "邀请玩家进入你所在的世界。"
+      } },
+
+    { "syntax": "/tutorial", "category": "other",
+      "description": { "en": "Go to the tutorial world.", "fr": "Aller au monde du tutoriel.", "de": "Zur Tutorial-Welt gehen.", "pt-PT": "Ir para o mundo do tutorial.", "ru": "Перейти в обучающий мир.", "ja": "チュートリアルワールドへの移動。", "zh-CN": "前往教程世界。" } },
+
+    { "syntax": "/tutorial2", "category": "other",
+      "description": {
+        "en": "Go to the tutorial world, starting from part 2.",
+        "fr": "Aller au monde du tutoriel, à partir de la partie 2.",
+        "de": "Zur Tutorial-Welt gehen, ab Teil 2.",
+        "pt-PT": "Ir para o mundo do tutorial, começando na parte 2.",
+        "ru": "Перейти в обучающий мир, начиная с части 2.",
+        "ja": "チュートリアルワールドへの移動。パート2のワールドから始まる。",
+        "zh-CN": "前往教程世界，从第二部分开始。"
+      } },
+
+    { "syntax": "/kick <player>", "category": "other",
+      "description": {
+        "en": "In a Shadow Tower, the player who opened the portal can kick a disruptive player.",
+        "fr": "Dans une Shadow Tower, le joueur qui a ouvert le portail peut éjecter un joueur problématique.",
+        "de": "In einem Shadow Tower kann der Portalöffner einen Störenfried hinauswerfen.",
+        "pt-PT": "Numa Shadow Tower, o jogador que abriu o portal pode expulsar um jogador problemático.",
+        "ru": "В Shadow Tower игрок, открывший портал, может выкинуть нежелательного.",
+        "ja": "Shadow Towerにてポータルを開いた人が悪質なプレイヤーをキック出来る。",
+        "zh-CN": "在 Shadow Tower 中，开启传送门的玩家可以踢出捣乱者。"
+      } },
+
+    { "syntax": "/clearcornerstone", "category": "other",
+      "description": {
+        "en": "Wipe everything inside your Cornerstone. Placed items are NOT recoverable — a confirmation prompt appears.",
+        "fr": "Vider entièrement votre Cornerstone. Les objets placés ne sont PAS récupérables — une confirmation apparaît.",
+        "de": "Komplette Cornerstone leeren. Platzierte Objekte sind NICHT wiederherstellbar — eine Bestätigung erscheint.",
+        "pt-PT": "Limpar tudo dentro do seu Cornerstone. Os itens colocados NÃO se recuperam — aparece uma confirmação.",
+        "ru": "Полностью очистить ваш Cornerstone. Размещённые объекты НЕ восстанавливаются — появится подтверждение.",
+        "ja": "Cornerstone内の完全削除。内部に設置したものは全て戻ってこないため本当に削除するか質問ウィンドウが出て承諾がいる。",
+        "zh-CN": "完全清空 Cornerstone。已放置的物品无法恢复 — 会出现确认窗口。"
+      } },
+
+    { "syntax": "/uiscale <size>", "category": "other",
+      "description": {
+        "en": "Change the UI scale. Provide a multiplier (1.0 is standard at 16:9). No argument = show current scale.",
+        "fr": "Modifier l'échelle de l'UI. Donner un multiplicateur (1,0 = standard en 16:9). Sans argument = afficher l'échelle actuelle.",
+        "de": "UI-Skalierung ändern. Multiplikator angeben (1,0 = Standard bei 16:9). Ohne Argument = aktuelle Skalierung anzeigen.",
+        "pt-PT": "Alterar a escala da UI. Indicar um multiplicador (1,0 = padrão em 16:9). Sem argumento = mostra a escala actual.",
+        "ru": "Изменить масштаб UI. Укажите множитель (1.0 = стандарт при 16:9). Без аргумента = показать текущий.",
+        "ja": "UIのスケーリングサイズ変更。<size>に倍率を記入する。<size>を入力しない場合は現在のスケールサイズが表示される。ウインドウのアスペクト比によって変化するが16:9では1.0が標準。",
+        "zh-CN": "调整 UI 缩放。输入倍率（16:9 下 1.0 为标准）。不输入参数则显示当前缩放。"
+      } },
+
+    { "syntax": "/retromode", "category": "other",
+      "description": { "en": "Switch the play screen to the classic look.", "fr": "Basculer l'écran de jeu en style classique.", "de": "Spielbildschirm in den klassischen Look schalten.", "pt-PT": "Mudar o ecrã de jogo para o estilo clássico.", "ru": "Переключить экран в классический вид.", "ja": "プレイ画面をクラシック風にする。", "zh-CN": "将游戏画面切换为经典风格。" } },
+
+    { "syntax": "/dnd", "category": "other",
+      "description": {
+        "en": "Toggle do-not-disturb. Ignores /joinme, friend requests, etc. coming TO you. Your outgoing actions still work; Rally Blade joins still happen. Whispers are blocked and the sender is told you're in DND.",
+        "fr": "Activer/désactiver le mode ne-pas-déranger. Ignore les /joinme, demandes d'ami, etc. entrants. Vos actions sortantes fonctionnent toujours ; les arrivées via Rally Blade restent possibles. Les chuchotements sont bloqués et l'envoyeur est informé.",
+        "de": "Bitte-nicht-stören-Modus umschalten. Ignoriert eingehende /joinme, Freundesanfragen usw. Eigene Aktionen funktionieren weiter; Rally-Blade-Beitritte ebenfalls. Whispers werden blockiert und der Sender erfährt davon.",
+        "pt-PT": "Alternar modo não-perturbar. Ignora /joinme, pedidos de amigo, etc. recebidos. As suas acções enviadas continuam; entradas via Rally Blade também. Whispers são bloqueados e o remetente fica a saber.",
+        "ru": "Переключить режим «не беспокоить». Игнорирует входящие /joinme, заявки в друзья и т.д. Ваши исходящие действия работают; вход через Rally Blade тоже. Шёпот блокируется, отправителю сообщается.",
+        "ja": "do not disturb(邪魔しないで)モードの切替。dndモード中はjoinmeコマンドやフレンド申請など、他人から自身へ向けた動作を無視する。自身から相手に向けたものや、Rally Blade(ラリーブレード)による参加はされるので要注意。相手からのwhisper(ささやき)は相手にdndモードであることが伝えられて送信されない。",
+        "zh-CN": "切换勿扰模式。忽略他人发起的 /joinme、好友申请等。自身发起的动作仍然有效；Rally Blade 的参加也仍可生效。私聊会被阻挡并告知发送者你处于 DND。"
+      } },
+
+    { "syntax": "/sortinventory", "category": "other",
+      "description": {
+        "en": "Sort your inventory. A confirmation prompt appears first.",
+        "fr": "Trier l'inventaire. Une confirmation apparaît d'abord.",
+        "de": "Inventar sortieren. Eine Bestätigung erscheint zuerst.",
+        "pt-PT": "Ordenar o inventário. Surge primeiro uma confirmação.",
+        "ru": "Отсортировать инвентарь. Сначала появится подтверждение.",
+        "ja": "インベントリのソート。入力するとソートしていいかどうか確認画面がでる。",
+        "zh-CN": "整理背包。会先弹出确认窗口。"
+      } },
+
+    { "syntax": "/exportaccount", "category": "other",
+      "description": {
+        "en": "Request a copy of your account to the PTS server. Takes a bit to propagate. Live server only.",
+        "fr": "Demander une copie de votre compte vers le serveur PTS. Propagation après un délai. Serveur Live uniquement.",
+        "de": "Account-Kopie zum PTS-Server anfordern. Übertragung nach kurzer Zeit. Nur auf dem Live-Server.",
+        "pt-PT": "Pedir cópia da sua conta para o servidor PTS. Demora algum tempo a propagar. Apenas no servidor Live.",
+        "ru": "Запросить копию аккаунта на сервер PTS. Применяется не сразу. Только на Live.",
+        "ja": "PTSサーバーへアカウントデータのコピーを要請する。しばらくすると反映される。※Liveサーバーのみ",
+        "zh-CN": "将账号数据复制到 PTS 服务器。等待片刻才会生效。仅限 Live 服务器。"
+      } },
+
+    { "syntax": "/cornerstonedamageable [0|1]", "category": "other",
+      "description": {
+        "en": "Enable/disable damage to your Cornerstone from bombs and player attacks. 0 = invulnerable, 1 = damageable.",
+        "fr": "Activer/désactiver les dégâts à votre Cornerstone (bombes, attaques joueurs). 0 = invulnérable, 1 = vulnérable.",
+        "de": "Schaden an deinem Cornerstone durch Bomben/Spielerangriffe an/aus. 0 = unverwundbar, 1 = verwundbar.",
+        "pt-PT": "Activar/desactivar dano ao Cornerstone (bombas, ataques de jogadores). 0 = invulnerável, 1 = vulnerável.",
+        "ru": "Вкл/выкл урон вашему Cornerstone от бомб и атак игроков. 0 = неуязвимый, 1 = уязвимый.",
+        "ja": "爆弾やプレイヤーの攻撃などによるCornerstoneへのダメージを有効化する。0で無効(破壊できなくなる)、1で有効(破壊できるようになる)。",
+        "zh-CN": "启用/禁用 Cornerstone 受炸弹和玩家攻击的伤害。0 = 无敌，1 = 可破坏。"
+      } },
+
+    { "syntax": "/stringid [0|1]", "category": "other",
+      "description": { "en": "Show string identifiers. 1 = on, 0 = off (normal display).", "fr": "Afficher les identifiants de chaîne. 1 = activé, 0 = désactivé (normal).", "de": "String-Identifier anzeigen. 1 = an, 0 = aus (Normalanzeige).", "pt-PT": "Mostrar identificadores de string. 1 = ligado, 0 = desligado (normal).", "ru": "Показать строковые идентификаторы. 1 = вкл, 0 = выкл (обычно).", "ja": "文字列識別子の表示。1で有効、0で無効(通常表示)。", "zh-CN": "显示字符串标识符。1 = 开，0 = 关（常规显示）。" } },
+
+    { "syntax": "/acceptallfriends", "category": "other",
+      "description": { "en": "Accept all pending friend requests.", "fr": "Accepter toutes les demandes d'ami en attente.", "de": "Alle offenen Freundesanfragen annehmen.", "pt-PT": "Aceitar todos os pedidos de amigo pendentes.", "ru": "Принять все ожидающие заявки в друзья.", "ja": "返事待ちになっているフレンド申請をすべて受け入れる。", "zh-CN": "接受所有待处理的好友申请。" } },
+
+    { "syntax": "/smartplacement [0|1]", "category": "other",
+      "description": {
+        "en": "Toggle smart placement (placing blocks on the BACK face at a block edge). No arg = toggle; 1 = on, 0 = off.",
+        "fr": "Activer/désactiver le placement intelligent (placer un bloc sur la face arrière d'un bord). Sans arg = bascule ; 1 = activé, 0 = désactivé.",
+        "de": "Smart Placement umschalten (Block auf der Rückseite einer Block-Kante platzieren). Ohne Arg = umschalten; 1 = an, 0 = aus.",
+        "pt-PT": "Alternar smart placement (colocar bloco na face traseira de uma aresta). Sem arg = alterna; 1 = on, 0 = off.",
+        "ru": "Переключить smart placement (ставить блок на заднюю грань по краю). Без аргумента = переключение; 1 = вкл, 0 = выкл.",
+        "ja": "スマート設置(ブロック端で裏側の面へブロックを設置できる機能)の切り替え。引数を入力しなかった場合は有効/無効が切りかわり、入力した場合は1で有効、0で無効になる。",
+        "zh-CN": "切换智能放置（在方块边缘的背面放置方块）。不带参数 = 切换；1 = 开，0 = 关。"
+      } },
+
+    { "syntax": "/setsign <text>", "category": "other",
+      "description": { "en": "Change the message on the sign you're looking at.", "fr": "Modifier le message du panneau que vous regardez.", "de": "Text auf dem angeschauten Schild ändern.", "pt-PT": "Alterar a mensagem do letreiro a que está a olhar.", "ru": "Изменить сообщение на табличке, на которую смотрите.", "ja": "視点を向けている看板のメッセージを入力した内容に変更する。", "zh-CN": "把你正看着的告示牌的文本改成输入内容。" } },
+
+    { "syntax": "/break_mouse", "category": "other",
+      "description": { "en": "Set mouse Y-axis to normal (non-inverted).", "fr": "Régler l'axe Y de la souris en normal (non-inversé).", "de": "Maus-Y-Achse normal (nicht invertiert).", "pt-PT": "Definir eixo Y do rato como normal (não invertido).", "ru": "Установить ось Y мыши в нормальное (не инвертированное) положение.", "ja": "マウスのY軸を正転に変更。", "zh-CN": "鼠标 Y 轴改为正向。" } },
+
+    { "syntax": "/fix_mouse", "category": "other",
+      "description": { "en": "Set mouse Y-axis to inverted.", "fr": "Régler l'axe Y de la souris en inversé.", "de": "Maus-Y-Achse invertieren.", "pt-PT": "Definir eixo Y do rato como invertido.", "ru": "Установить ось Y мыши в инвертированное положение.", "ja": "マウスのY軸を反転に変更。", "zh-CN": "鼠标 Y 轴改为反向。" } },
+
+    { "syntax": "/gtadd", "category": "other", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+    { "syntax": "/gtcomplete", "category": "other", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+    { "syntax": "/gtreset", "category": "other", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+    { "syntax": "/gttrack", "category": "other", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+
+    { "syntax": "/club", "category": "club",
+      "description": { "en": "Show the list of /club subcommands.", "fr": "Afficher la liste des sous-commandes /club.", "de": "Liste der /club-Unterbefehle anzeigen.", "pt-PT": "Mostrar a lista de subcomandos /club.", "ru": "Показать список подкоманд /club.", "ja": "クラブコマンド一覧表示。", "zh-CN": "显示 /club 子命令列表。" } },
+
+    { "syntax": "/club invite <player> <club>", "category": "club",
+      "description": { "en": "Invite a player to a club.", "fr": "Inviter un joueur dans un club.", "de": "Spieler in einen Club einladen.", "pt-PT": "Convidar um jogador para um clube.", "ru": "Пригласить игрока в клуб.", "ja": "クラブへの招待。", "zh-CN": "邀请玩家加入俱乐部。" } },
+
+    { "syntax": "/club list", "category": "club",
+      "description": { "en": "Show the list of clubs you're in.", "fr": "Afficher la liste de vos clubs.", "de": "Liste deiner Clubs anzeigen.", "pt-PT": "Mostrar a lista dos seus clubes.", "ru": "Показать список ваших клубов.", "ja": "クラブリストの表示。", "zh-CN": "显示你加入的俱乐部列表。" } },
+
+    { "syntax": "/club leave <club>", "category": "club",
+      "description": { "en": "Leave a club.", "fr": "Quitter un club.", "de": "Club verlassen.", "pt-PT": "Sair de um clube.", "ru": "Покинуть клуб.", "ja": "クラブからの脱会。", "zh-CN": "退出俱乐部。" } },
+
+    { "syntax": "/club promote <player> <club>", "category": "club",
+      "description": {
+        "en": "Promote a member's rank. Requires Promote permission for the club; can't promote above your own rank.",
+        "fr": "Promouvoir le rang d'un membre. Permission Promote requise ; ne peut pas dépasser votre propre rang.",
+        "de": "Mitglieder-Rang erhöhen. Promote-Recht im Club nötig; nicht über den eigenen Rang.",
+        "pt-PT": "Promover o rank de um membro. Requer permissão Promote; não pode promover acima do seu próprio rank.",
+        "ru": "Повысить ранг участника. Нужно право Promote; не выше вашего ранга.",
+        "ja": "指定したクラブメンバーのRank(ランク)の昇格。変更にはそのクラブでのPromote(昇格)権限が必要。自身より高いRank(ランク)へは昇格できない。",
+        "zh-CN": "提升成员的等级。需要该俱乐部的 Promote 权限；不能高于自己的等级。"
+      } },
+
+    { "syntax": "/club demote <player> <club>", "category": "club",
+      "description": {
+        "en": "Demote a member's rank. Requires Demote permission; can only demote members of lower rank than yours, or yourself.",
+        "fr": "Rétrograder le rang d'un membre. Permission Demote requise ; uniquement des membres de rang inférieur, ou vous-même.",
+        "de": "Mitglieder-Rang senken. Demote-Recht nötig; nur Mitglieder unter deinem Rang oder dich selbst.",
+        "pt-PT": "Despromover o rank de um membro. Requer permissão Demote; só membros de rank inferior ou si próprio.",
+        "ru": "Понизить ранг участника. Нужно право Demote; только участников с рангом ниже вашего, или себя.",
+        "ja": "指定したクラブメンバーのRank(ランク)の降格。変更にはそのクラブでのDemote(降格)権限が必要。自身より低いRank(ランク)のメンバーと、自分自身のみ降格ができる。",
+        "zh-CN": "降低成员的等级。需要 Demote 权限；只能降低比自己低的成员或自己。"
+      } },
+
+    { "syntax": "/club setrank <player> <rank> <club>", "category": "club",
+      "description": {
+        "en": "Set a member's rank directly. Useful for two-step changes that would need multiple /club promote / demote calls. Same caveats as those two.",
+        "fr": "Définir directement le rang d'un membre. Pratique pour des changements en deux étapes. Mêmes contraintes que /club promote / demote.",
+        "de": "Mitglieder-Rang direkt setzen. Praktisch für Zwei-Stufen-Änderungen. Gleiche Einschränkungen wie promote/demote.",
+        "pt-PT": "Definir directamente o rank de um membro. Útil para mudanças de dois passos. Mesmas restrições que promote/demote.",
+        "ru": "Установить ранг напрямую. Удобно для двухступенчатых изменений. Те же ограничения, что у promote/demote.",
+        "ja": "指定したクラブメンバーのRank(ランク)を指定したものに変更する。2段階変更する場合において/club promoteや/club demoteのように複数回入力する必要がない。注意点などは/club promoteや/club demoteを参照。",
+        "zh-CN": "直接设置成员等级。适用于二级跳变更，无需多次 promote/demote。注意事项同 promote/demote。"
+      } },
+
+    { "syntax": "/club kick <player> <club>", "category": "club",
+      "description": { "en": "Force a player out of a club.", "fr": "Éjecter un joueur du club.", "de": "Spieler aus dem Club werfen.", "pt-PT": "Expulsar um jogador do clube.", "ru": "Принудительно выгнать игрока из клуба.", "ja": "そのプレイヤーを強制脱会。", "zh-CN": "将该玩家强制踢出俱乐部。" } },
+
+    { "syntax": "/zonerestrict [nobody|expert|standard|basic]", "category": "club",
+      "description": {
+        "en": "Set crafting permission in a club world. `nobody` = locked. `[officer|architect|member]` works as aliases for `[expert|standard|basic]`.",
+        "fr": "Définir la permission de craft dans un monde de club. `nobody` = verrouillé. `[officer|architect|member]` sont des alias de `[expert|standard|basic]`.",
+        "de": "Crafting-Berechtigung in einer Club-Welt setzen. `nobody` = gesperrt. `[officer|architect|member]` = Aliase für `[expert|standard|basic]`.",
+        "pt-PT": "Definir permissão de craft num mundo de clube. `nobody` = bloqueado. `[officer|architect|member]` = aliases de `[expert|standard|basic]`.",
+        "ru": "Установить право крафта в клубном мире. `nobody` = заблокировано. `[officer|architect|member]` — синонимы для `[expert|standard|basic]`.",
+        "ja": "クラブワールド内のクラフト可能権限の設定。nobodyは変更不可の保護状態にする。[expert|standard|basic]の代わりに[officer|architect|member]も利用できる。",
+        "zh-CN": "设置俱乐部世界的制作权限。nobody = 锁定。[officer|architect|member] 等同于 [expert|standard|basic]。"
+      } },
+
+    { "syntax": "/club getzonedamageable", "category": "club",
+      "description": {
+        "en": "Show the destructible state of the current zone in a club world.",
+        "fr": "Afficher l'état destructible de la zone courante dans un monde de club.",
+        "de": "Zerstörbarkeits-Status der aktuellen Zone in einer Club-Welt anzeigen.",
+        "pt-PT": "Mostrar o estado destrutível da zona actual num mundo de clube.",
+        "ru": "Показать разрушаемость текущей зоны в клубном мире.",
+        "ja": "クラブワールド内でこれを実行した区域の爆弾やクラスのスキル等によるブロック破壊の有効/無効状態を取得・表示する。",
+        "zh-CN": "在俱乐部世界中显示当前区域是否可被炸弹或职业技能破坏。"
+      } },
+
+    { "syntax": "/club setzonedamageable [0|1]", "category": "club",
+      "description": {
+        "en": "Set the destructible state of the current zone. 1 = destructible, 0 = locked.",
+        "fr": "Définir l'état destructible de la zone courante. 1 = destructible, 0 = verrouillé.",
+        "de": "Zerstörbarkeits-Status der Zone setzen. 1 = zerstörbar, 0 = gesperrt.",
+        "pt-PT": "Definir o estado destrutível da zona actual. 1 = destrutível, 0 = bloqueado.",
+        "ru": "Установить разрушаемость текущей зоны. 1 = можно ломать, 0 = заблокировано.",
+        "ja": "クラブワールド内でこれを実行した区域の爆弾やクラスのスキル等によるブロック破壊の有効/無効状態を設定する。1で有効、0で無効。",
+        "zh-CN": "设置当前区域是否可被破坏。1 = 可破坏，0 = 锁定。"
+      } },
+
+    { "syntax": "/club makeprimary <club>", "category": "club",
+      "description": { "en": "Set your primary club.", "fr": "Définir votre club principal.", "de": "Primären Club festlegen.", "pt-PT": "Definir o clube primário.", "ru": "Сделать клуб основным.", "ja": "プライマリクラブを設定する。", "zh-CN": "设置主俱乐部。" } },
+
+    { "syntax": "/club getprimary", "category": "club",
+      "description": { "en": "Show your current primary club.", "fr": "Afficher votre club principal actuel.", "de": "Aktuellen primären Club anzeigen.", "pt-PT": "Mostrar o clube primário actual.", "ru": "Показать ваш текущий основной клуб.", "ja": "現在のプライマリクラブの確認。", "zh-CN": "显示当前的主俱乐部。" } },
+
+    { "syntax": "/club log <club>", "category": "club",
+      "description": { "en": "Show the club's audit log (changes etc.).", "fr": "Afficher le journal d'audit du club (modifications, etc.).", "de": "Audit-Log des Clubs anzeigen (Änderungen usw.).", "pt-PT": "Mostrar o log de auditoria do clube (alterações, etc.).", "ru": "Показать журнал изменений клуба.", "ja": "クラブで行われた変更などのログを一覧表示する。", "zh-CN": "显示俱乐部的变更日志。" } },
+
+    { "syntax": "/club fixtureautopay [0|1]", "category": "club",
+      "description": {
+        "en": "Toggle club fixture auto-pay. 1 = on, 0 = off. Use inside the club world you want to change. Requires FixturePurchaseUpgrade permission.",
+        "fr": "Activer/désactiver le paiement auto des fixtures du club. 1 = activé, 0 = désactivé. À utiliser dans le monde du club. Permission FixturePurchaseUpgrade requise.",
+        "de": "Auto-Bezahlung der Club-Fixtures umschalten. 1 = an, 0 = aus. In der Club-Welt eingeben. FixturePurchaseUpgrade-Recht nötig.",
+        "pt-PT": "Alternar pagamento automático das fixtures do clube. 1 = on, 0 = off. Use dentro do mundo do clube a alterar. Requer permissão FixturePurchaseUpgrade.",
+        "ru": "Вкл/выкл автооплату клубных Fixture. 1 = вкл, 0 = выкл. Использовать в мире клуба. Нужно право FixturePurchaseUpgrade.",
+        "ja": "クラブFixture(備品)の自動支払の切り替え。1で有効、0で無効。切り替えたいクラブワールド内で使用する。変更にはそのクラブでのFixturePurchaseUpgrade(備品 購入とアップグレード)権限が必要。",
+        "zh-CN": "切换俱乐部 Fixture（备品）自动支付。1 = 开，0 = 关。在要变更的俱乐部世界中使用。需要 FixturePurchaseUpgrade 权限。"
+      } },
+
+    { "syntax": "/renameworld <new name>", "category": "club",
+      "description": {
+        "en": "Rename the club's world. The club name itself isn't changed. Vault-club worlds can't be renamed.",
+        "fr": "Renommer le monde du club. Le nom du club lui-même reste inchangé. Les mondes du Vault club ne peuvent pas être renommés.",
+        "de": "Welt des Clubs umbenennen. Der Clubname selbst bleibt. Vault-Club-Welten können nicht umbenannt werden.",
+        "pt-PT": "Mudar o nome do mundo do clube. O nome do clube em si não muda. Mundos do clube Vault não podem ser renomeados.",
+        "ru": "Переименовать мир клуба. Имя самого клуба не меняется. Миры Vault-клуба переименовать нельзя.",
+        "ja": "クラブのワールド名を変更する。クラブ名は変更されない。Vaultクラブのワールド名は変更不可。",
+        "zh-CN": "重命名俱乐部的世界。俱乐部名本身不变。Vault 俱乐部的世界无法重命名。"
+      } },
+
+    { "syntax": "/club getrankpermissions <club|id> [president|vp|officer|captain|member]", "category": "club",
+      "description": {
+        "en": "Show permissions for the given rank in the club. Requires EditPermissions to view/change.",
+        "fr": "Afficher les permissions du rang dans le club. Permission EditPermissions requise.",
+        "de": "Berechtigungen des Rangs im Club anzeigen. EditPermissions-Recht nötig.",
+        "pt-PT": "Mostrar permissões do rank no clube. Requer EditPermissions.",
+        "ru": "Показать права для ранга в клубе. Нужно право EditPermissions.",
+        "ja": "指定したクラブの指定したRank(ランク)の権限を表示する。変更にはそのクラブでのEditPermissions(編集 権限)権限が必要。",
+        "zh-CN": "显示俱乐部指定等级的权限。需要 EditPermissions 权限以查看/修改。"
+      } },
+
+    { "syntax": "/club addrankpermissions <club|id> [president|vp|officer|captain|member] <perm…>", "category": "club",
+      "description": {
+        "en": "Add permission(s) to a rank. Names roughly match the club UI but with no spaces. Separate multiple perms by spaces. Requires EditPermissions.",
+        "fr": "Ajouter une (ou plusieurs) permission(s) à un rang. Noms proches de l'UI club, sans espaces. Plusieurs perms séparées par des espaces. Permission EditPermissions requise.",
+        "de": "Recht(e) zu einem Rang hinzufügen. Namen wie in der Club-UI, ohne Leerzeichen. Mehrere Rechte mit Leerzeichen trennen. EditPermissions-Recht nötig.",
+        "pt-PT": "Adicionar permissão(ões) a um rank. Nomes praticamente como na UI do clube, sem espaços. Várias separadas por espaços. Requer EditPermissions.",
+        "ru": "Добавить право(а) к рангу. Имена как в UI клуба, без пробелов. Несколько — через пробел. Нужно право EditPermissions.",
+        "ja": "指定したクラブの指定したRank(ランク)に付与されている権限を追加する。追加できる権限名はクラブUIでの権限とほぼ同じだがスペースは入れない。同時に複数の権限を設定する場合は末尾にスペースで区切って追記していく。変更にはそのクラブでのEditPermissions(編集 権限)権限が必要。",
+        "zh-CN": "为某等级添加权限。名称大致与俱乐部 UI 相同，但不含空格。多个权限用空格分隔。需要 EditPermissions 权限。"
+      } },
+
+    { "syntax": "/club clearrankpermissions <club|id> [president|vp|officer|captain|member]", "category": "club",
+      "description": {
+        "en": "Reset all permissions on a rank back to default. Requires EditPermissions.",
+        "fr": "Réinitialiser toutes les permissions d'un rang aux valeurs par défaut. Permission EditPermissions requise.",
+        "de": "Alle Rechte eines Rangs auf Standard zurücksetzen. EditPermissions-Recht nötig.",
+        "pt-PT": "Repor todas as permissões de um rank para o padrão. Requer EditPermissions.",
+        "ru": "Сбросить все права ранга на стандартные. Нужно право EditPermissions.",
+        "ja": "指定したクラブの指定したRank(ランク)に付与されている権限を初期状態にリセットする。変更にはそのクラブでのEditPermissions(編集 権限)権限が必要。",
+        "zh-CN": "将指定等级的权限重置为默认。需要 EditPermissions 权限。"
+      } },
+
+    { "syntax": "/club removerankpermissions <club|id> [president|vp|officer|captain|member] <perm…>", "category": "club",
+      "description": {
+        "en": "Remove permission(s) from a rank. Same name convention as addrankpermissions. Requires EditPermissions.",
+        "fr": "Retirer une ou plusieurs permissions d'un rang. Mêmes conventions que addrankpermissions. Permission EditPermissions requise.",
+        "de": "Recht(e) von einem Rang entfernen. Gleiche Konvention wie addrankpermissions. EditPermissions-Recht nötig.",
+        "pt-PT": "Remover permissão(ões) de um rank. Mesma convenção de nomes que addrankpermissions. Requer EditPermissions.",
+        "ru": "Удалить право(а) у ранга. Имена как у addrankpermissions. Нужно право EditPermissions.",
+        "ja": "指定したクラブの指定したRank(ランク)に付与されている権限を削除する。削除できる権限名はクラブUIでの権限とほぼ同じだがスペースは入れない。同時に複数の権限を設定する場合は末尾にスペースで区切って追記していく。変更にはそのクラブでのEditPermissions(編集 権限)権限が必要。",
+        "zh-CN": "移除指定等级的权限。命名规则与 addrankpermissions 相同。需要 EditPermissions 权限。"
+      } },
+
+    { "syntax": "/club setworldtextid <club>", "category": "club", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+    { "syntax": "/club rename <club>", "category": "club", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+
+    { "syntax": "/club acceptinvite <club>", "category": "club",
+      "description": { "en": "Accept a pending club invite. No-op if no invite exists.", "fr": "Accepter une invitation de club en attente. Sans effet sans invitation.", "de": "Offene Club-Einladung annehmen. No-op ohne Einladung.", "pt-PT": "Aceitar um convite de clube pendente. Sem efeito se não houver convite.", "ru": "Принять ожидающее приглашение в клуб. Без приглашения — без эффекта.", "ja": "招待されているクラブの招待を受け入れる。招待されていない場合は無効。", "zh-CN": "接受待处理的俱乐部邀请。无邀请时无效。" } },
+
+    { "syntax": "/club disband <club>", "category": "club",
+      "description": { "en": "Disband the club. ⚠ Not currently functioning.", "fr": "Dissoudre le club. ⚠ Ne fonctionne pas correctement actuellement.", "de": "Club auflösen. ⚠ Funktioniert derzeit nicht.", "pt-PT": "Dissolver o clube. ⚠ Não funciona correctamente actualmente.", "ru": "Распустить клуб. ⚠ Сейчас не работает.", "ja": "クラブの解散。※正常に動作していない", "zh-CN": "解散俱乐部。⚠ 当前未能正常运作。" } },
+
+    { "syntax": "/club newworld <club>", "category": "club", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+    { "syntax": "/club joinbyid <id>", "category": "club", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+    { "syntax": "/club new <club>", "category": "club", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+    { "syntax": "/club join <club>", "category": "club", "description": { "en": "Unknown.", "fr": "Inconnu.", "de": "Unbekannt.", "pt-PT": "Desconhecido.", "ru": "Неизвестно.", "ja": "不明。", "zh-CN": "未知。" } },
+
+    { "syntax": "/clublog <args>", "category": "club", "description": { "en": "Older form of /club log <club>; takes positional args.", "fr": "Forme ancienne de /club log <club> ; arguments positionnels.", "de": "Ältere Form von /club log <club>; positionelle Argumente.", "pt-PT": "Forma antiga de /club log <club>; argumentos posicionais.", "ru": "Старая форма /club log <club>; позиционные аргументы.", "ja": "/club log の古い形式。位置引数を取る。", "zh-CN": "/club log <club> 的旧形式；使用位置参数。" } },
+
+    { "syntax": "/hideplayer", "category": "screenshot",
+      "description": { "en": "Hide your character (for clean screenshots).", "fr": "Masquer votre personnage (pour des captures propres).", "de": "Charakter ausblenden (für saubere Screenshots).", "pt-PT": "Esconder a sua personagem (para capturas limpas).", "ru": "Скрыть персонажа (для чистых скриншотов).", "ja": "自キャラの非表示。", "zh-CN": "隐藏自己的角色（拍干净的截图）。" } },
+
+    { "syntax": "/showplayer", "category": "screenshot",
+      "description": { "en": "Show your character again after /hideplayer.", "fr": "Réafficher votre personnage après /hideplayer.", "de": "Charakter nach /hideplayer wieder einblenden.", "pt-PT": "Voltar a mostrar a personagem após /hideplayer.", "ru": "Снова показать персонажа после /hideplayer.", "ja": "非表示後の再表示用。", "zh-CN": "/hideplayer 后重新显示自己的角色。" } },
+
+    { "syntax": "/screenshot", "category": "screenshot",
+      "description": { "en": "Take a screenshot (saved to \\Users\\<you>\\Documents).", "fr": "Prendre une capture d'écran (enregistrée dans \\Users\\<vous>\\Documents).", "de": "Screenshot machen (gespeichert unter \\Users\\<du>\\Documents).", "pt-PT": "Tirar uma captura (guardada em \\Users\\<o-seu-utilizador>\\Documents).", "ru": "Сделать скриншот (сохраняется в \\Users\\<вы>\\Documents).", "ja": "スクリーンショット（\\Users\\ユーザー名\\Documents　に保存される)。", "zh-CN": "截图（保存在 \\Users\\<你>\\Documents）。" } },
+
+    { "syntax": "/large_screenshot", "category": "screenshot",
+      "description": { "en": "Take a 2× screenshot. Output is split into 4 files.", "fr": "Capture 2×. Le fichier est découpé en 4.", "de": "2×-Screenshot. Ausgabe ist in 4 Dateien aufgeteilt.", "pt-PT": "Captura 2×. Resultado dividido em 4 ficheiros.", "ru": "Скриншот 2×. Делится на 4 файла.", "ja": "2倍のサイズでスクリーンショット。ファイルは4つに分割される。", "zh-CN": "2 倍尺寸的截图。输出会分成 4 个文件。" } },
+
+    { "syntax": "/large_screenshot <x> <y>", "category": "screenshot",
+      "description": {
+        "en": "Take a screenshot scaled by <x> horizontally and <y> vertically. Different x/y values warp the image.",
+        "fr": "Capture multipliée par <x> en largeur et <y> en hauteur. Des valeurs différentes déforment l'image.",
+        "de": "Screenshot mit <x>× Breite und <y>× Höhe. Unterschiedliche Werte verzerren das Bild.",
+        "pt-PT": "Captura multiplicada por <x> em largura e <y> em altura. Valores diferentes distorcem a imagem.",
+        "ru": "Скриншот, увеличенный по горизонтали в <x>, по вертикали в <y> раз. Разные значения искажают изображение.",
+        "ja": "縦横指定した倍のサイズでスクリーンショット。<x>に横方向の分割数(倍数)、<y>に縦方向の分割数(倍数)を入力する。縦横の分割数が同じではない場合は画像が歪む。",
+        "zh-CN": "按横向 <x> 倍、纵向 <y> 倍的尺寸截图。x/y 不一致会扭曲图像。"
+      } },
+
+    { "syntax": "/timelapse <seconds>", "category": "screenshot",
+      "description": {
+        "en": "Take a screenshot every <seconds> seconds. Range 5–20. Controlled by the timelapse* commands below.",
+        "fr": "Prendre une capture toutes les <secondes> secondes. Intervalle 5–20. Contrôlé par les commandes timelapse* ci-dessous.",
+        "de": "Alle <seconds> Sekunden einen Screenshot. Bereich 5–20. Wird über die timelapse*-Befehle unten gesteuert.",
+        "pt-PT": "Tirar uma captura a cada <seconds> segundos. Intervalo 5–20. Controlado pelos comandos timelapse* abaixo.",
+        "ru": "Скриншот каждые <seconds> секунд. От 5 до 20. Управляется командами timelapse* ниже.",
+        "ja": "<seconds>で指定した秒間隔ごとにスクリーンショットを撮り続ける。間隔は5～20秒まで。開始した連続スクリーンショットは後述のコマンドで操作する。",
+        "zh-CN": "每 <seconds> 秒截图一次。范围 5–20。通过下方 timelapse* 命令控制。"
+      } },
+
+    { "syntax": "/timelapseend", "category": "screenshot",
+      "description": { "en": "Stop a timelapse started with /timelapse.", "fr": "Arrêter un timelapse démarré avec /timelapse.", "de": "Mit /timelapse gestartete Aufnahme stoppen.", "pt-PT": "Parar um timelapse iniciado com /timelapse.", "ru": "Остановить таймлапс, начатый /timelapse.", "ja": "/timelapseコマンドで開始した連続スクリーンショットを停止する。", "zh-CN": "停止用 /timelapse 启动的连续截图。" } },
+
+    { "syntax": "/timelapsepause", "category": "screenshot",
+      "description": { "en": "Pause a timelapse. Resume with /timelapseresume.", "fr": "Mettre en pause. Reprise avec /timelapseresume.", "de": "Aufnahme pausieren. Mit /timelapseresume fortsetzen.", "pt-PT": "Pausar timelapse. Continuar com /timelapseresume.", "ru": "Поставить таймлапс на паузу. Возобновить /timelapseresume.", "ja": "/timelapseコマンドで開始した連続スクリーンショットを一時停止する。/timelapseresumeコマンドで再開可能。", "zh-CN": "暂停连续截图。可用 /timelapseresume 继续。" } },
+
+    { "syntax": "/timelapseresume", "category": "screenshot",
+      "description": { "en": "Resume a paused timelapse.", "fr": "Reprendre un timelapse en pause.", "de": "Pausierte Aufnahme fortsetzen.", "pt-PT": "Continuar um timelapse pausado.", "ru": "Возобновить приостановленный таймлапс.", "ja": "/timelapsepauseコマンドで一時停止した連続スクリーンショットを再開する。", "zh-CN": "继续被 /timelapsepause 暂停的连续截图。" } },
+
+    { "syntax": "/showui [1|0]", "category": "screenshot",
+      "description": { "en": "Show/hide the UI. 1 = shown, 0 = hidden. (Default F7 also works.)", "fr": "Afficher/masquer l'UI. 1 = affichée, 0 = masquée. (F7 par défaut fonctionne aussi.)", "de": "UI ein/aus. 1 = sichtbar, 0 = ausgeblendet. (Standard-F7 funktioniert auch.)", "pt-PT": "Mostrar/esconder UI. 1 = visível, 0 = escondida. (F7 também serve.)", "ru": "Показать/скрыть UI. 1 = видна, 0 = скрыта. (F7 по умолчанию тоже работает.)", "ja": "UIの表示切り替え。1で表示、0で非表示。（デフォルトF7キーで代用可）", "zh-CN": "切换 UI 显示。1 = 显示，0 = 隐藏。（默认 F7 也可用）" } },
+
+    { "syntax": "/freeze_companion [true|false]", "category": "screenshot",
+      "description": {
+        "en": "Freeze pets/companions in place for photos. true = freeze, false = unfreeze. Club world only.",
+        "fr": "Figer les compagnons/animaux pour les photos. true = figé, false = libéré. Monde de club uniquement.",
+        "de": "Gefährten für Fotos einfrieren. true = eingefroren, false = frei. Nur Club-Welt.",
+        "pt-PT": "Congelar pets/companheiros para fotos. true = congelado, false = libertado. Apenas em mundo de clube.",
+        "ru": "Заморозить питомцев/спутников для съёмки. true = заморозить, false = разморозить. Только клубные миры.",
+        "ja": "撮影用にペットなどを動かないように固定します。trueで固定、falseで解除。クラブワールドでのみ利用可。",
+        "zh-CN": "用于拍照时把宠物/同伴固定。true = 固定，false = 解除。仅限俱乐部世界。"
+      } },
+
+    { "syntax": "/listmods", "category": "mods",
+      "description": {
+        "en": "List the currently-recognised mods. A legend explaining the listing format is printed at the top.",
+        "fr": "Lister les mods actuellement reconnus. Une légende du format est affichée en tête.",
+        "de": "Aktuell erkannte Mods auflisten. Eine Erklärung des Anzeige-Formats steht oben.",
+        "pt-PT": "Listar os mods actualmente reconhecidos. Uma legenda do formato é mostrada no topo.",
+        "ru": "Показать распознанные сейчас моды. В начале выводится легенда формата.",
+        "ja": "現在認識されているMod一覧が表示される。最初(文頭)に一覧表示の見方説明が表示される。",
+        "zh-CN": "列出当前识别到的 mod。开头会显示列表格式说明。"
+      } },
+
+    { "syntax": "/mods enable", "category": "mods", "description": { "en": "Enable a mod.", "fr": "Activer un mod.", "de": "Mod aktivieren.", "pt-PT": "Activar um mod.", "ru": "Включить мод.", "ja": "Modを有効化する。", "zh-CN": "启用一个 mod。" } },
+    { "syntax": "/mods disable", "category": "mods", "description": { "en": "Disable a mod.", "fr": "Désactiver un mod.", "de": "Mod deaktivieren.", "pt-PT": "Desactivar um mod.", "ru": "Отключить мод.", "ja": "Modを無効化する。", "zh-CN": "禁用一个 mod。" } },
+    { "syntax": "/mods list", "category": "mods", "description": { "en": "List mods.", "fr": "Lister les mods.", "de": "Mods auflisten.", "pt-PT": "Listar mods.", "ru": "Список модов.", "ja": "Mod一覧を表示。", "zh-CN": "列出 mod。" } },
+    { "syntax": "/mods info", "category": "mods", "description": { "en": "Show details for a mod.", "fr": "Afficher les détails d'un mod.", "de": "Details zu einem Mod anzeigen.", "pt-PT": "Mostrar detalhes de um mod.", "ru": "Показать сведения о моде.", "ja": "Modの詳細表示。", "zh-CN": "显示某个 mod 的详情。" } },
+    { "syntax": "/mods listconfig", "category": "mods", "description": { "en": "List a mod's configuration values.", "fr": "Lister la configuration d'un mod.", "de": "Konfiguration eines Mods auflisten.", "pt-PT": "Listar a configuração de um mod.", "ru": "Показать конфиг мода.", "ja": "Modの設定値を一覧表示。", "zh-CN": "列出某个 mod 的配置。" } },
+    { "syntax": "/mods setconfig", "category": "mods", "description": { "en": "Set one of a mod's configuration values.", "fr": "Définir une valeur de configuration d'un mod.", "de": "Konfigurationswert eines Mods setzen.", "pt-PT": "Definir um valor de configuração de um mod.", "ru": "Изменить значение конфига мода.", "ja": "Modの設定値を変更。", "zh-CN": "设置某个 mod 的配置值。" } },
+    { "syntax": "/mods resetconfig", "category": "mods", "description": { "en": "Reset a mod's configuration to defaults.", "fr": "Réinitialiser la configuration d'un mod aux valeurs par défaut.", "de": "Mod-Konfiguration auf Standard zurücksetzen.", "pt-PT": "Repor a configuração de um mod para os valores padrão.", "ru": "Сбросить конфиг мода к значениям по умолчанию.", "ja": "Modの設定を初期値にリセット。", "zh-CN": "将 mod 配置重置为默认。" } },
+
+    { "syntax": "/workshop upload title=<mod name> changes=<changelog>", "category": "mods",
+      "description": {
+        "en": "Upload a mod to Valve's Steam Workshop. Requires the game to be launched via Steam.",
+        "fr": "Envoyer un mod sur le Steam Workshop de Valve. Le jeu doit être lancé via Steam.",
+        "de": "Mod auf Valves Steam Workshop hochladen. Spiel muss über Steam gestartet sein.",
+        "pt-PT": "Enviar um mod para a Steam Workshop da Valve. Necessário ter o jogo iniciado via Steam.",
+        "ru": "Загрузить мод в Steam Workshop. Игра должна быть запущена через Steam.",
+        "ja": "ValveのSteamWorkshopにModをアップロードするためのコマンド。Steam経由でゲームを起動しておく必要がある。",
+        "zh-CN": "将 mod 上传到 Valve 的 Steam Workshop。需通过 Steam 启动游戏。"
+      } },
+
+    { "syntax": "/mf", "category": "metaforge",
+      "description": { "en": "Travel to the Meta Forge (creator sandbox).", "fr": "Aller au Meta Forge (atelier créateur).", "de": "Zum Meta Forge (Creator-Sandbox) reisen.", "pt-PT": "Ir para o Meta Forge (sandbox de criadores).", "ru": "Перейти в Meta Forge (песочница создателей).", "ja": "Meta Forgeへ移動。", "zh-CN": "前往 Meta Forge（创作沙盒）。" } },
+
+    { "syntax": "/showchunk", "category": "metaforge",
+      "description": { "en": "Show the chunk coordinates of your current location.", "fr": "Afficher les coordonnées de chunk de votre position actuelle.", "de": "Chunk-Koordinaten deiner aktuellen Position anzeigen.", "pt-PT": "Mostrar as coordenadas de chunk da posição actual.", "ru": "Показать координаты текущего чанка.", "ja": "現在いる場所のチャンク座標の表示。", "zh-CN": "显示当前所在的区块（chunk）坐标。" } },
+
+    { "syntax": "/undo", "category": "metaforge",
+      "description": { "en": "Undo the last block operation.", "fr": "Annuler la dernière opération de bloc.", "de": "Letzte Block-Operation rückgängig machen.", "pt-PT": "Desfazer a última operação de bloco.", "ru": "Отменить последнюю операцию с блоком.", "ja": "ブロックの操作を一つ戻す。", "zh-CN": "撤销上一步方块操作。" } },
+
+    { "syntax": "/redo", "category": "metaforge",
+      "description": { "en": "Redo a previously-undone block operation.", "fr": "Rétablir une opération de bloc annulée.", "de": "Rückgängig gemachte Block-Operation wiederherstellen.", "pt-PT": "Refazer uma operação de bloco anteriormente desfeita.", "ru": "Повторить отменённую операцию.", "ja": "ブロックの操作を一つやり直す。", "zh-CN": "重做被撤销的方块操作。" } },
+
+    { "syntax": "/replaceblock", "category": "metaforge",
+      "description": { "en": "Replace the block in your crosshair with the one selected in the hotbar.", "fr": "Remplacer le bloc visé par celui sélectionné dans la barre.", "de": "Anvisierten Block durch den in der Hotbar gewählten ersetzen.", "pt-PT": "Substituir o bloco a que está a mirar pelo seleccionado na hotbar.", "ru": "Заменить блок в прицеле выбранным в хотбаре.", "ja": "視点の先にあるブロックを、ホットバーで選択中のブロックと置き換える。", "zh-CN": "把视线指向的方块替换为快捷栏选中的方块。" } },
+
+    { "syntax": "/weaponpreview <blueprint>", "aliases": ["/wp"], "category": "metaforge",
+      "description": { "en": "Preview a weapon blueprint in-game.", "fr": "Prévisualiser un blueprint d'arme en jeu.", "de": "Waffen-Blueprint im Spiel ansehen.", "pt-PT": "Pré-visualizar um blueprint de arma em jogo.", "ru": "Предпросмотр чертежа оружия в игре.", "ja": "武器ブループリントのゲーム内プレビュー。", "zh-CN": "在游戏内预览武器蓝图。" } },
+
+    { "syntax": "/hairpreview <blueprint>", "category": "metaforge",
+      "description": { "en": "Preview a hair creation.", "fr": "Prévisualiser une création de coiffure.", "de": "Haar-Erstellung ansehen.", "pt-PT": "Pré-visualizar uma criação de cabelo.", "ru": "Предпросмотр причёски.", "ja": "ヘア作品のプレビュー。", "zh-CN": "预览发型创作。" } },
+
+    { "syntax": "/hatpreview <blueprint>", "category": "metaforge",
+      "description": { "en": "Preview a hat creation.", "fr": "Prévisualiser une création de chapeau.", "de": "Hut-Erstellung ansehen.", "pt-PT": "Pré-visualizar uma criação de chapéu.", "ru": "Предпросмотр шляпы.", "ja": "ハット作品のプレビュー。", "zh-CN": "预览帽子创作。" } },
+
+    { "syntax": "/facepreview <blueprint>", "category": "metaforge",
+      "description": { "en": "Preview a face decoration creation.", "fr": "Prévisualiser une création de décoration faciale.", "de": "Gesichts-Deko-Erstellung ansehen.", "pt-PT": "Pré-visualizar uma criação de decoração facial.", "ru": "Предпросмотр украшения лица.", "ja": "フェイス装飾作品のプレビュー。", "zh-CN": "预览面部装饰创作。" } },
+
+    { "syntax": "/decopreview <blueprint>", "category": "metaforge",
+      "description": { "en": "Preview a cornerstone decoration creation.", "fr": "Prévisualiser une création de décoration de cornerstone.", "de": "Cornerstone-Deko-Erstellung ansehen.", "pt-PT": "Pré-visualizar uma decoração de cornerstone.", "ru": "Предпросмотр декорации Cornerstone.", "ja": "Cornerstone装飾作品のプレビュー。", "zh-CN": "预览 Cornerstone 装饰创作。" } },
+
+    { "syntax": "/headpreview", "category": "metaforge", "description": { "en": "Preview a head creation.", "fr": "Prévisualiser une création de tête.", "de": "Kopf-Erstellung ansehen.", "pt-PT": "Pré-visualizar uma criação de cabeça.", "ru": "Предпросмотр головы.", "ja": "ヘッド作品のプレビュー。", "zh-CN": "预览头部创作。" } },
+    { "syntax": "/eyepreview", "category": "metaforge", "description": { "en": "Preview an eye creation.", "fr": "Prévisualiser une création d'œil.", "de": "Augen-Erstellung ansehen.", "pt-PT": "Pré-visualizar uma criação de olho.", "ru": "Предпросмотр глаза.", "ja": "アイ作品のプレビュー。", "zh-CN": "预览眼部创作。" } },
+    { "syntax": "/settargetselection", "category": "metaforge", "description": { "en": "Set the current selection as the target selection.", "fr": "Définir la sélection courante comme sélection cible.", "de": "Aktuelle Auswahl als Ziel-Auswahl setzen.", "pt-PT": "Definir a selecção actual como selecção alvo.", "ru": "Назначить текущее выделение целевым.", "ja": "現在の選択範囲をターゲット選択に設定。", "zh-CN": "把当前选区设为目标选区。" } },
+    { "syntax": "/settargetdestination", "category": "metaforge", "description": { "en": "Set the target destination point.", "fr": "Définir le point de destination cible.", "de": "Ziel-Punkt setzen.", "pt-PT": "Definir o ponto de destino alvo.", "ru": "Установить целевую точку назначения.", "ja": "ターゲットの目的地点を設定。", "zh-CN": "设置目标终点。" } },
+    { "syntax": "/expandselection", "category": "metaforge", "description": { "en": "Expand the current selection.", "fr": "Agrandir la sélection courante.", "de": "Aktuelle Auswahl erweitern.", "pt-PT": "Expandir a selecção actual.", "ru": "Расширить текущее выделение.", "ja": "現在の選択範囲を拡張。", "zh-CN": "扩展当前选区。" } },
+    { "syntax": "/clearselection", "category": "metaforge", "description": { "en": "Clear the current selection.", "fr": "Effacer la sélection courante.", "de": "Aktuelle Auswahl löschen.", "pt-PT": "Limpar a selecção actual.", "ru": "Очистить текущее выделение.", "ja": "現在の選択範囲をクリア。", "zh-CN": "清除当前选区。" } },
+    { "syntax": "/cleardestination", "category": "metaforge", "description": { "en": "Clear the destination point.", "fr": "Effacer le point de destination.", "de": "Ziel-Punkt löschen.", "pt-PT": "Limpar o ponto de destino.", "ru": "Очистить точку назначения.", "ja": "目的地点をクリア。", "zh-CN": "清除终点。" } },
+    { "syntax": "/shiftselected", "category": "metaforge", "description": { "en": "Shift the selected blocks.", "fr": "Décaler les blocs sélectionnés.", "de": "Markierte Blöcke verschieben.", "pt-PT": "Deslocar os blocos seleccionados.", "ru": "Сдвинуть выделенные блоки.", "ja": "選択中のブロックを移動。", "zh-CN": "平移已选方块。" } },
+    { "syntax": "/cutselected", "category": "metaforge", "description": { "en": "Cut the selected blocks.", "fr": "Couper les blocs sélectionnés.", "de": "Markierte Blöcke ausschneiden.", "pt-PT": "Cortar os blocos seleccionados.", "ru": "Вырезать выделенные блоки.", "ja": "選択中のブロックを切り取り。", "zh-CN": "剪切已选方块。" } },
+    { "syntax": "/copyselected", "category": "metaforge", "description": { "en": "Copy the selected blocks.", "fr": "Copier les blocs sélectionnés.", "de": "Markierte Blöcke kopieren.", "pt-PT": "Copiar os blocos seleccionados.", "ru": "Скопировать выделенные блоки.", "ja": "選択中のブロックをコピー。", "zh-CN": "复制已选方块。" } },
+    { "syntax": "/setselection", "category": "metaforge", "description": { "en": "Set the selection box.", "fr": "Définir la boîte de sélection.", "de": "Auswahl-Box setzen.", "pt-PT": "Definir a caixa de selecção.", "ru": "Установить рамку выделения.", "ja": "選択範囲を設定。", "zh-CN": "设置选区范围。" } },
+    { "syntax": "/setdestination", "category": "metaforge", "description": { "en": "Set the destination point.", "fr": "Définir le point de destination.", "de": "Ziel-Punkt setzen.", "pt-PT": "Definir o ponto de destino.", "ru": "Установить точку назначения.", "ja": "目的地点を設定。", "zh-CN": "设置终点。" } },
+
+    { "syntax": "/load <filename>", "category": "metaforge",
+      "description": { "en": "Load a blueprint. <filename> is the path to the blueprint file (e.g. /load D:\\Trove\\DungeonRoom1).", "fr": "Charger un blueprint. <filename> = chemin du fichier (ex. /load D:\\Trove\\DungeonRoom1).", "de": "Blueprint laden. <filename> = Pfad zur Blueprint-Datei (z.B. /load D:\\Trove\\DungeonRoom1).", "pt-PT": "Carregar um blueprint. <filename> = caminho do ficheiro (ex. /load D:\\Trove\\DungeonRoom1).", "ru": "Загрузить чертёж. <filename> — путь к файлу (например /load D:\\Trove\\DungeonRoom1).", "ja": "ブループリントを読み込む。<filename>はブループリントファイルのパス (例: /load D:\\Trove\\DungeonRoom1)。", "zh-CN": "加载蓝图。<filename> 为蓝图文件路径（例：/load D:\\Trove\\DungeonRoom1）。" } },
+
+    { "syntax": "/save <filename>", "category": "metaforge",
+      "description": { "en": "Save a blueprint. After a /load, plain /save overwrites the loaded file.", "fr": "Sauvegarder un blueprint. Après un /load, un /save sans argument écrase le fichier chargé.", "de": "Blueprint speichern. Nach einem /load überschreibt /save die geladene Datei.", "pt-PT": "Guardar um blueprint. Após /load, /save sem argumento sobrepõe o ficheiro carregado.", "ru": "Сохранить чертёж. После /load обычный /save перезаписывает загруженный файл.", "ja": "ブループリントを保存。/loadの後に /save と打つと、読み込んだファイルを上書きする。", "zh-CN": "保存蓝图。在 /load 之后直接 /save 会覆盖已加载的文件。" } },
+
+    { "syntax": "/wadd <prefab> [count]", "category": "metaforge",
+      "description": { "en": "Add a prefab to your inventory. Count optional (default 1). Prefabs live in <GameInstall>\\Prefabs.", "fr": "Ajouter un prefab à l'inventaire. Quantité optionnelle (1 par défaut). Prefabs dans <GameInstall>\\Prefabs.", "de": "Prefab ins Inventar legen. Anzahl optional (Standard 1). Prefabs in <GameInstall>\\Prefabs.", "pt-PT": "Adicionar um prefab ao inventário. Quantidade opcional (padrão 1). Prefabs em <GameInstall>\\Prefabs.", "ru": "Добавить prefab в инвентарь. Количество необязательно (по умолчанию 1). Prefab-ы лежат в <GameInstall>\\Prefabs.", "ja": "プリファブをインベントリに追加。数量は省略可(初期値は1)。プリファブは <GameInstall>\\Prefabs 配下にある。", "zh-CN": "把 prefab 添加到背包。数量可选（默认 1）。Prefab 位于 <GameInstall>\\Prefabs。" } },
+
+    { "syntax": "/dungeon <filename>", "category": "metaforge",
+      "description": { "en": "Preview a dungeon fully assembled.", "fr": "Prévisualiser un donjon entièrement assemblé.", "de": "Vollständig zusammengesetzten Dungeon ansehen.", "pt-PT": "Pré-visualizar uma dungeon totalmente montada.", "ru": "Предпросмотр полностью собранного подземелья.", "ja": "ダンジョンを完全に組み立てた状態でプレビュー。", "zh-CN": "完整组装地预览一个地下城。" } },
+
+    { "syntax": "/settime <hour>", "category": "metaforge",
+      "description": { "en": "Set the time of day (0-24).", "fr": "Régler l'heure du jour (0-24).", "de": "Tageszeit setzen (0-24).", "pt-PT": "Definir a hora do dia (0-24).", "ru": "Установить время суток (0-24).", "ja": "時刻を設定 (0〜24)。", "zh-CN": "设置一天中的时间（0–24）。" } },
+
+    { "syntax": "/timelapsedungeon <filename>", "category": "metaforge",
+      "description": { "en": "Show a dungeon being assembled (useful for troubleshooting).", "fr": "Afficher l'assemblage d'un donjon (debug).", "de": "Dungeon-Aufbau ansehen (Debug).", "pt-PT": "Mostrar a montagem de uma dungeon (debug).", "ru": "Показать сборку подземелья (для отладки).", "ja": "ダンジョンが組み立てられていく様子を表示(トラブルシューティング向け)。", "zh-CN": "展示地下城被装配的过程（排错用）。" } },
+
+    { "syntax": "/stoptimelapsedungeon", "category": "metaforge",
+      "description": { "en": "Cancel/stop a /timelapsedungeon run.", "fr": "Annuler/arrêter /timelapsedungeon.", "de": "/timelapsedungeon abbrechen.", "pt-PT": "Cancelar/parar /timelapsedungeon.", "ru": "Прервать /timelapsedungeon.", "ja": "/timelapsedungeon を中止・停止する。", "zh-CN": "取消/停止 /timelapsedungeon。" } },
+
+    { "syntax": "/floodfill", "category": "metaforge",
+      "description": { "en": "Replace all connected blocks of the type the cursor is on with the one equipped (like Paint's bucket).", "fr": "Remplacer tous les blocs connectés du type visé par celui équipé (comme le pot de peinture de Paint).", "de": "Alle verbundenen Blöcke des angeschauten Typs durch den ausgerüsteten ersetzen (wie Eimer in Paint).", "pt-PT": "Substituir todos os blocos ligados do tipo visado pelo bloco equipado (como o balde do Paint).", "ru": "Заменить все соединённые блоки того же типа на экипированный (как заливка в Paint).", "ja": "視点先と同じタイプの連結ブロックを、装備中のブロックでまとめて置き換える(ペイントの塗りつぶしと同じ)。", "zh-CN": "把视线指向的方块同类型连通区域，全部替换为已装备的方块（像 Paint 的油漆桶）。" } },
+
+    { "syntax": "/drawdistance <distance>", "category": "graphics",
+      "description": { "en": "Adjust Draw Distance. Range 32–210, default 128. No argument shows the current value.", "fr": "Régler la Draw Distance. Plage 32–210, défaut 128. Sans argument, affiche la valeur actuelle.", "de": "Sichtweite anpassen. Bereich 32–210, Standard 128. Ohne Argument: aktueller Wert.", "pt-PT": "Ajustar a Draw Distance. Intervalo 32–210, padrão 128. Sem argumento mostra o valor actual.", "ru": "Изменить Draw Distance. Диапазон 32–210, по умолчанию 128. Без аргумента — текущее значение.", "ja": "Draw Distance(描画距離)の調整。<描画距離>に数値を入力する。入力しなかった場合は現在の設定値が表示される。最短32〜最長210。初期は128。", "zh-CN": "调整 Draw Distance（绘制距离）。范围 32–210，默认 128。不输入参数显示当前值。" } },
+
+    { "syntax": "/loddistance <distance>", "category": "graphics",
+      "description": { "en": "Adjust Detail Distance. No argument shows the current value.", "fr": "Régler la Detail Distance. Sans argument, affiche la valeur actuelle.", "de": "Detail-Distanz anpassen. Ohne Argument: aktueller Wert.", "pt-PT": "Ajustar a Detail Distance. Sem argumento mostra o valor actual.", "ru": "Изменить Detail Distance. Без аргумента — текущее значение.", "ja": "Detail Distance(詳細距離)の調整。入力しなかった場合は現在の設定値が表示される。", "zh-CN": "调整 Detail Distance（细节距离）。不输入参数显示当前值。" } },
+
+    { "syntax": "/objdistance <distance>", "category": "graphics",
+      "description": { "en": "Adjust the draw distance for complex blocks (decorations). No argument shows the current value.", "fr": "Régler la distance d'affichage des blocs complexes (décorations). Sans argument, affiche la valeur actuelle.", "de": "Sichtweite für komplexe Blöcke (Dekorationen) anpassen. Ohne Argument: aktueller Wert.", "pt-PT": "Ajustar a distância de desenho para blocos complexos (decorações). Sem argumento mostra o valor actual.", "ru": "Изменить дальность отображения сложных блоков (декораций). Без аргумента — текущее значение.", "ja": "デコレーションブロックといった複雑なブロックの描画距離の調整。入力しなかった場合は現在の設定値が表示される。", "zh-CN": "调整装饰类等复杂方块的绘制距离。不输入参数显示当前值。" } },
+
+    { "syntax": "/fxenable [1|0]", "category": "graphics",
+      "description": {
+        "en": "VFX on/off. 1 = on, 0 = off (true counts as 0). Off also hides attack and portal VFX — not recommended.",
+        "fr": "VFX on/off. 1 = activé, 0 = désactivé (true compte comme 0). Off masque aussi les VFX d'attaque/portail — déconseillé.",
+        "de": "VFX an/aus. 1 = an, 0 = aus (true zählt als 0). Aus blendet auch Angriffs- und Portal-VFX aus — nicht empfohlen.",
+        "pt-PT": "VFX on/off. 1 = on, 0 = off (true conta como 0). Off também esconde VFX de ataques e portais — não recomendado.",
+        "ru": "VFX вкл/выкл. 1 = вкл, 0 = выкл (true считается как 0). Выкл также скрывает VFX атак и порталов — не рекомендуется.",
+        "ja": "VFX(ビジュアルエフェクト)のon/off。1で表示。0で非表示。trueでは0扱い。非表示設定は攻撃やポータルのVFXなども非表示になるため非推奨。",
+        "zh-CN": "VFX 开/关。1 = 显示，0 = 隐藏（true 视为 0）。关闭后攻击和传送门的 VFX 也会隐藏，不推荐。"
+      } },
+
+    { "syntax": "/msaa [1|0]", "category": "graphics",
+      "description": { "en": "MSAA on/off. ⚠ Not currently functioning.", "fr": "MSAA on/off. ⚠ Ne fonctionne pas actuellement.", "de": "MSAA an/aus. ⚠ Funktioniert derzeit nicht.", "pt-PT": "MSAA on/off. ⚠ Não funciona actualmente.", "ru": "MSAA вкл/выкл. ⚠ Сейчас не работает.", "ja": "MSAA(MultiSample Anti-Aliasing)のon/off。※動作していない", "zh-CN": "MSAA 开/关。⚠ 当前未生效。" } },
+
+    { "syntax": "/postfxaa", "category": "graphics",
+      "description": { "en": "Toggle FXAA (Fast Approximate Anti-Aliasing).", "fr": "Activer/désactiver le FXAA.", "de": "FXAA umschalten.", "pt-PT": "Alternar FXAA.", "ru": "Переключить FXAA.", "ja": "FXAA(Fast Approximate Anti-Aliasing)ことAnti-aliasing(アンチエイリアシング)のon/off。", "zh-CN": "切换 FXAA（快速近似抗锯齿）。" } },
+
+    { "syntax": "/postssao", "category": "graphics",
+      "description": { "en": "Toggle SSAO (screen-space ambient occlusion).", "fr": "Activer/désactiver le SSAO (occlusion ambiante en espace écran).", "de": "SSAO umschalten (Screen-Space Ambient Occlusion).", "pt-PT": "Alternar SSAO (oclusão ambiente em espaço de ecrã).", "ru": "Переключить SSAO.", "ja": "screen-space ambient occlusion(スクリーン空間環境遮蔽)ことSSAOのon/off。", "zh-CN": "切换 SSAO（屏幕空间环境光遮蔽）。" } },
+
+    { "syntax": "/postbloom", "category": "graphics", "description": { "en": "Toggle Bloom.", "fr": "Activer/désactiver le Bloom.", "de": "Bloom umschalten.", "pt-PT": "Alternar Bloom.", "ru": "Переключить Bloom.", "ja": "Bloom(ブルーム)効果のon/off。", "zh-CN": "切换 Bloom（泛光）。" } },
+    { "syntax": "/postdof", "category": "graphics", "description": { "en": "Toggle Depth of Field.", "fr": "Activer/désactiver la profondeur de champ.", "de": "Tiefenschärfe umschalten.", "pt-PT": "Alternar profundidade de campo.", "ru": "Переключить глубину резкости (DoF).", "ja": "Depth of Field(被写界深度)効果のon/off。", "zh-CN": "切换 Depth of Field（景深）。" } },
+    { "syntax": "/postedge [1|0]", "category": "graphics", "description": { "en": "Toggle the black edge-outline. ⚠ Not currently functioning.", "fr": "Activer/désactiver le contour noir. ⚠ Ne fonctionne pas actuellement.", "de": "Schwarze Outline umschalten. ⚠ Funktioniert derzeit nicht.", "pt-PT": "Alternar contorno preto. ⚠ Não funciona actualmente.", "ru": "Переключить чёрную обводку. ⚠ Сейчас не работает.", "ja": "黒枠線のon/off。※動作してない", "zh-CN": "切换黑色边缘描边。⚠ 当前未生效。" } },
+    { "syntax": "/postlensdistort", "category": "graphics", "description": { "en": "Toggle Lens Distortion.", "fr": "Activer/désactiver la distorsion d'objectif.", "de": "Lens Distortion umschalten.", "pt-PT": "Alternar distorção de lente.", "ru": "Переключить искажение объектива.", "ja": "Lens Distortion(レンズ歪)のon/off。", "zh-CN": "切换 Lens Distortion（镜头畸变）。" } },
+    { "syntax": "/postxray", "category": "graphics", "description": { "en": "Toggle the see-through outline shown for nearby players.", "fr": "Activer/désactiver le contour transparent des joueurs proches.", "de": "Durchscheinende Outline für nahe Spieler umschalten.", "pt-PT": "Alternar o contorno transparente para jogadores próximos.", "ru": "Переключить рентгеновский контур ближних игроков.", "ja": "近くにいる他のプレイヤーに表示される透視枠線のon/off。", "zh-CN": "切换附近其他玩家的透视描边。" } },
+
+    { "syntax": "/shadercomplexity <0-1>", "category": "graphics",
+      "description": { "en": "Adjust Shader Detail (0–1). No argument shows the current value.", "fr": "Régler le détail des shaders (0–1). Sans argument, affiche la valeur actuelle.", "de": "Shader-Detail anpassen (0–1). Ohne Argument: aktueller Wert.", "pt-PT": "Ajustar Shader Detail (0–1). Sem argumento mostra o valor actual.", "ru": "Изменить детализацию шейдеров (0–1). Без аргумента — текущее значение.", "ja": "Shader Detail(シェーダーの詳細)の調整。最小0〜最大1。入力しなかった場合は現在の設定値が表示される。", "zh-CN": "调整 Shader Detail（着色器细节，0–1）。不输入参数显示当前值。" } },
+
+    { "syntax": "/supersample <0-4>", "category": "graphics",
+      "description": {
+        "en": "Internal-resolution scale via SSAA. Standard 1 (100%), min 0 (50%), max 4 (200%). ⚠ Without an argument it resets to 1.",
+        "fr": "Échelle de résolution interne via SSAA. Standard 1 (100%), min 0 (50%), max 4 (200%). ⚠ Sans argument, réinitialise à 1.",
+        "de": "Interne Auflösungsskala via SSAA. Standard 1 (100%), min 0 (50%), max 4 (200%). ⚠ Ohne Argument: setzt zurück auf 1.",
+        "pt-PT": "Escala de resolução interna via SSAA. Padrão 1 (100%), mín 0 (50%), máx 4 (200%). ⚠ Sem argumento, repõe para 1.",
+        "ru": "Внутренний масштаб через SSAA. Стандарт 1 (100%), мин 0 (50%), макс 4 (200%). ⚠ Без аргумента сбрасывает в 1.",
+        "ja": "SSAA(SuperSample Anti-Aliasing)ことSupersamplingの内部解像度設定。<解像度>に数値を入力する。標準は1(100%)、最低0(50%)、最大4(200%)。<解像度>を入力しなかった場合は1(100%)に設定されてしまうので注意。",
+        "zh-CN": "通过 SSAA 设置内部分辨率。标准 1（100%），最低 0（50%），最高 4（200%）。⚠ 不输入参数会重置为 1。"
+      } },
+
+    { "syntax": "/fov <angle>", "category": "graphics",
+      "description": { "en": "Adjust Field of View. No argument shows the current value.", "fr": "Régler le champ de vision (FOV). Sans argument, affiche la valeur actuelle.", "de": "Sichtfeld (FOV) anpassen. Ohne Argument: aktueller Wert.", "pt-PT": "Ajustar Field of View. Sem argumento mostra o valor actual.", "ru": "Изменить Field of View. Без аргумента — текущее значение.", "ja": "Field of View(視野角)の調節。<視野角>に数値を入力する。入力しなかった場合は現在の設定値が表示される。", "zh-CN": "调整视野角度（Field of View）。不输入参数显示当前值。" } },
+
+    { "syntax": "/vsync [1|0]", "category": "graphics",
+      "description": { "en": "Display V-sync on/off. 1 = on, 0 = off (true counts as 0).", "fr": "V-sync écran on/off. 1 = activé, 0 = désactivé (true compte comme 0).", "de": "Display-V-Sync an/aus. 1 = an, 0 = aus (true zählt als 0).", "pt-PT": "V-sync do ecrã on/off. 1 = on, 0 = off (true conta como 0).", "ru": "Вертикальная синхронизация дисплея вкл/выкл. 1 = вкл, 0 = выкл (true считается как 0).", "ja": "ディスプレイの垂直同期ことV-syncのon/off。1でon。0でoff。trueでは0扱い。", "zh-CN": "显示器垂直同步（V-sync）开/关。1 = 开，0 = 关（true 视为 0）。" } },
+
+    { "syntax": "/frustumsphere <n>", "category": "graphics",
+      "description": {
+        "en": "Camera frustum test. Draws 8 lines for the frustum plus <n> random wireframe spheres — green = fully in, yellow = partial, red = out.",
+        "fr": "Test du frustum de caméra. Trace les 8 lignes du frustum et <n> sphères filaires aléatoires — vert = entièrement dedans, jaune = partiel, rouge = hors champ.",
+        "de": "Kamera-Frustum-Test. Zeichnet die 8 Linien des Frustums plus <n> zufällige Drahtgitter-Sphären — grün = vollständig drin, gelb = teilweise, rot = außen.",
+        "pt-PT": "Teste do frustum da câmara. Desenha as 8 linhas do frustum mais <n> esferas wireframe aleatórias — verde = dentro, amarelo = parcial, vermelho = fora.",
+        "ru": "Тест frustum-а камеры. Рисует 8 линий frustum-а и <n> случайных wireframe-сфер — зелёные внутри, жёлтые частично, красные снаружи.",
+        "ja": "カメラの視錐台(視界)テスト。視錐台が8本の線で表示される。また、<数値>で指定した数だけワイヤーフレームの球体をランダムで表示し、完全に範囲内であれば緑、部分的に入っている場合は黄色、範囲外の場合は赤で表示される。",
+        "zh-CN": "摄像机视锥体测试。绘制视锥体的 8 条线，并随机显示 <n> 个线框球 — 完全在视锥内为绿色，部分在内为黄色，在外为红色。"
+      } },
+
+    { "syntax": "/frustumaabb", "category": "graphics",
+      "description": {
+        "en": "Same as /frustumsphere but with random axis-aligned boxes instead of spheres.",
+        "fr": "Identique à /frustumsphere mais avec des boîtes alignées sur les axes au lieu de sphères.",
+        "de": "Wie /frustumsphere, aber mit achsenparallelen Boxen statt Sphären.",
+        "pt-PT": "Igual a /frustumsphere mas com caixas alinhadas aos eixos em vez de esferas.",
+        "ru": "То же, что /frustumsphere, но вместо сфер — выровненные по осям коробки.",
+        "ja": "/frustumsphereと同じだが、球体の代わりに軸並行のワイヤーフレームボックスを表示する。",
+        "zh-CN": "与 /frustumsphere 相同，但用随机的轴对齐线框盒代替球体。"
+      } }
+  ]
+}

@@ -140,28 +140,47 @@ def test_contest_type_for():
 # pin the relative-to-now semantics, not the threshold value.
 
 
-def test_is_archive_query_uses_configured_threshold():
+def test_is_archive_query_uses_configured_threshold(monkeypatch):
+    """``archive_query_cutoff`` / ``is_archive_query`` are now async and
+    read the threshold via ``runtime_config.get_setting``. That helper
+    would hit Beanie in a real call; we don't want a Mongo dependency
+    in a unit test, so we monkeypatch the registry lookup to return a
+    fixed integer.
+
+    The test still pins the relative-to-now semantics (the cutoff is
+    roughly ``days`` ago) — value of the threshold is the one we feed
+    the monkeypatched stub."""
+    import asyncio
     from datetime import UTC, datetime, timedelta
 
-    from app.core.config import settings
+    from app.admin import runtime_config
     from app.trove.leaderboards.service import (
         archive_query_cutoff,
         is_archive_query,
     )
 
-    days = settings.leaderboards_archive_query_threshold_days
-    now = int(datetime.now(UTC).timestamp())
-    cutoff = archive_query_cutoff()
+    FAKE_DAYS = 3  # mirrors current registry default; arbitrary for the test
 
-    # The cutoff sits roughly `days` ago (within a couple-second slop for the
-    # two now() calls — once here, once inside the helper).
-    expected = int((datetime.now(UTC) - timedelta(days=days)).timestamp())
-    assert abs(cutoff - expected) <= 2
+    async def fake_get_setting(key):
+        assert key == "leaderboards_archive_query_threshold_days"
+        return FAKE_DAYS
+    monkeypatch.setattr(runtime_config, "get_setting", fake_get_setting)
 
-    # A recent anchor (yesterday) is NOT an archive query.
-    yesterday = now - 86400
-    assert is_archive_query(yesterday) is False
+    async def run():
+        now = int(datetime.now(UTC).timestamp())
+        cutoff = await archive_query_cutoff()
 
-    # An anchor 1 day past the threshold IS an archive query.
-    past_cutoff = now - (days + 1) * 86400
-    assert is_archive_query(past_cutoff) is True
+        # The cutoff sits roughly `FAKE_DAYS` ago (within a couple-second
+        # slop for the two now() calls — one here, one inside the helper).
+        expected = int((datetime.now(UTC) - timedelta(days=FAKE_DAYS)).timestamp())
+        assert abs(cutoff - expected) <= 2
+
+        # An anchor an hour ago is NOT an archive query (way under threshold).
+        recent = now - 3600
+        assert await is_archive_query(recent) is False
+
+        # An anchor 1 day past the threshold IS an archive query.
+        past_cutoff = now - (FAKE_DAYS + 1) * 86400
+        assert await is_archive_query(past_cutoff) is True
+
+    asyncio.run(run())

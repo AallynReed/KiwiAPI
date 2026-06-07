@@ -71,7 +71,7 @@
          Inter as the system body fallback (already in our font stack). -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.min.css?v=20260607l">
+    <link rel="stylesheet" href="/static/style.min.css?v=20260608b">
 
     <!-- Graceful fallback for screenshots that haven't been captured yet.
          Same hook the previous design used, unchanged so any feature-card
@@ -119,11 +119,38 @@
             <nav class="nav-links" id="nav-links" aria-label="Primary">
                 <a class="nav-cta" href="https://btt.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span data-i18n>Web App</span></a>
                 <a href="/documentation"><i class="fa-solid fa-book"></i> <span data-i18n>User Guide</span></a>
-                <!-- NEW: developer-facing entry points. Both open same-tab
-                     (they're subdomains of the same brand) so back-button
-                     behaviour matches the user guide link above. -->
-                <a href="https://dev.aallyn.net"><i class="fa-solid fa-code"></i> <span data-i18n>Dev Portal</span></a>
-                <a href="https://docs.aallyn.net"><i class="fa-solid fa-terminal"></i> <span data-i18n>API Docs</span></a>
+
+                <!-- Pages dropdown — any future sister page (commands,
+                     calendars, etc.) goes inside this menu. -->
+                <div class="nav-dropdown">
+                    <button type="button" class="nav-dropdown-trigger"
+                            aria-haspopup="true" aria-expanded="false"
+                            aria-controls="nav-pages-panel">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span data-i18n>Pages</span>
+                        <i class="fa-solid fa-chevron-down nav-dropdown-caret" aria-hidden="true"></i>
+                    </button>
+                    <div class="nav-dropdown-panel" id="nav-pages-panel" role="menu">
+                        <a href="/commands" role="menuitem"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>
+                    </div>
+                </div>
+
+                <!-- Developers dropdown — Dev Portal + API Docs, both
+                     visible above the fold on every page they appear on. -->
+                <div class="nav-dropdown">
+                    <button type="button" class="nav-dropdown-trigger"
+                            aria-haspopup="true" aria-expanded="false"
+                            aria-controls="nav-devs-panel">
+                        <i class="fa-solid fa-code"></i>
+                        <span data-i18n>Developers</span>
+                        <i class="fa-solid fa-chevron-down nav-dropdown-caret" aria-hidden="true"></i>
+                    </button>
+                    <div class="nav-dropdown-panel" id="nav-devs-panel" role="menu">
+                        <a href="https://dev.aallyn.net" role="menuitem"><i class="fa-solid fa-key"></i> <span data-i18n>Dev Portal</span></a>
+                        <a href="https://docs.aallyn.net" role="menuitem"><i class="fa-solid fa-terminal"></i> <span data-i18n>API Docs</span></a>
+                    </div>
+                </div>
+
                 <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> <span data-i18n>GitHub</span></a>
                 <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> <span data-i18n>Discord</span></a>
                 <span class="lang-picker">
@@ -564,6 +591,7 @@
                 <a href="https://btt.aallyn.net" target="_blank" rel="noopener" data-i18n>Web App</a>
                 <a href="#features" data-i18n>Features</a>
                 <a href="/documentation" data-i18n>User Guide</a>
+                <a href="/commands" data-i18n>Commands</a>
             </div>
 
             <div class="footer-col">
@@ -587,8 +615,37 @@
         </p>
     </footer>
 
-    <script src="/static/app.min.js?v=20260607l"></script>
-    <script src="/static/i18n.min.js?v=20260607l"></script>
-    <script src="/static/landing.min.js?v=20260607l" defer></script>
+    <!-- ─── Support widget ──────────────────────────────────────────────
+         Sticky bottom-right pill that expands into the three donation
+         links. Same component as on docs.aallyn.net (reference.html);
+         styled in style.css under `.support-*`, wired up by landing.js. -->
+    <div class="support-widget" id="support-widget" aria-label="Support the project">
+        <button type="button" class="support-trigger" id="support-trigger"
+                aria-expanded="false" aria-controls="support-panel">
+            <i class="fa-solid fa-heart" aria-hidden="true"></i>
+            <span data-i18n>Support</span>
+        </button>
+        <div class="support-panel" id="support-panel" role="menu" hidden>
+            <p class="support-headline" data-i18n>
+                Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.
+            </p>
+            <a href="https://paypal.me/waterin" target="_blank" rel="noopener" class="support-link support-paypal" role="menuitem">
+                <i class="fa-brands fa-paypal" aria-hidden="true"></i>
+                <span>PayPal</span>
+            </a>
+            <a href="https://ko-fi.com/aallyn" target="_blank" rel="noopener" class="support-link support-kofi" role="menuitem">
+                <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+                <span>Ko-fi</span>
+            </a>
+            <a href="https://buymeacoffee.com/aallyn" target="_blank" rel="noopener" class="support-link support-bmac" role="menuitem">
+                <i class="fa-solid fa-mug-saucer" aria-hidden="true"></i>
+                <span>Buy Me a Coffee</span>
+            </a>
+        </div>
+    </div>
+
+    <script src="/static/app.min.js?v=20260608b"></script>
+    <script src="/static/i18n.min.js?v=20260608b"></script>
+    <script src="/static/landing.min.js?v=20260608b" defer></script>
 </body>
 </html>

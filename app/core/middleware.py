@@ -31,7 +31,7 @@ _SITE_CSP = (
 def _is_site_path(path: str) -> bool:
     """Showcase-site routes (everything served from `site_router` in app/site/)."""
     return path == "/" or path in {
-        "/documentation", "/unlock_debug", "/unlock_fps",
+        "/documentation", "/commands", "/unlock_debug", "/unlock_fps",
     } or path.startswith("/static/")
 
 

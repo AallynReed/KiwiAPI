@@ -44,6 +44,14 @@ async def documentation(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "docs.html", {})
 
 
+@router.get("/commands", response_class=HTMLResponse)
+async def commands(request: Request) -> HTMLResponse:
+    """In-game Trove slash-command reference. Page shell + JS only —
+    actual command data lives in ``site/static/commands.json`` and is
+    fetched + rendered client-side so language switches don't reload."""
+    return _TEMPLATES.TemplateResponse(request, "commands.html", {})
+
+
 @router.get("/site/screenshots.json", response_class=JSONResponse)
 async def hero_screenshots() -> JSONResponse:
     """List of Trove screenshots for the landing-page hero slideshow.

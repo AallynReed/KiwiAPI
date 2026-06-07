@@ -159,15 +159,17 @@ every zone plus Discord `<t:unix:style>` codes.
 | `GET /v1/leaderboards/players/{name}/history?uuid=&limit=` | recent appearances of one player across boards |
 | `POST /v1/leaderboards/insert?timestamp=` | **master-only ingest**: multipart `file` field with the raw `LeaderBot.cfg` text. Idempotent for a given anchor; `timestamp` is optional and only used for back-fills |
 
-The bot dumps the game's `LeaderBot.cfg` once a day around the 11:00 UTC reset and POSTs the file. **Full
-history is preserved**: entries older than the hot retention window (default 30 days) are moved into a
-cold `leaderboard_entries_archive` collection at the tail of each insert. The read endpoints route old
-anchors straight to the archive, so the hot collection stays small/fast while historical queries still work
-(slower per-row but unaffected by the hot index footprint). `/timestamps` unions both, deduped.
+The bot dumps the game's `LeaderBot.cfg` hourly and POSTs the file. **Full history is preserved**: entries
+older than `leaderboards_hot_retention_days` (default **3 days**; runtime-tunable from the master admin
+panel) are moved into a cold `leaderboard_entries_archive` collection at the tail of each insert. The read
+endpoints route old anchors straight to the archive, so the hot collection stays small/fast while
+historical queries still work (slower per-row but unaffected by the hot index footprint). `/timestamps`
+unions both, deduped.
 
 **Archive rate limit** — queries with `?created_at=` older than `leaderboards_archive_query_threshold_days`
-(default **90**, separate from the 30-day storage split) pay a SECOND, tighter per-token bucket (default
-10 req/min) on top of the standard per-token cap. The bucket's state is surfaced via
+(default **3** — same window as hot retention by convention, so "served from cold" and "pays archive
+rate limit" line up; runtime-tunable from the master admin panel) pay a SECOND, tighter per-token bucket
+(default 10 req/min) on top of the standard per-token cap. The bucket's state is surfaced via
 `X-RateLimit-Archive-Limit` / `X-RateLimit-Archive-Remaining` / `X-RateLimit-Archive-Reset` response headers
 so clients can self-throttle. Recent queries (≤ threshold) cost only the standard cap.
 

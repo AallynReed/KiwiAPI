@@ -52,6 +52,52 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // --- 0b. NAV DROPDOWNS ("Developers", "Pages") ---
+    // Each .nav-dropdown is a trigger button + a panel. Click trigger to
+    // toggle .open on the wrapper, click-outside or Escape to close.
+    // Opening one auto-closes any others (single-dropdown UX). Selecting a
+    // link inside also closes (so the hamburger drawer doesn't linger).
+    function closeAllDropdowns() {
+        document.querySelectorAll('.nav-dropdown.open').forEach((dd) => {
+            dd.classList.remove('open');
+            const trig = dd.querySelector('.nav-dropdown-trigger');
+            if (trig) trig.setAttribute('aria-expanded', 'false');
+        });
+    }
+    document.querySelectorAll('.nav-dropdown').forEach((dd) => {
+        const trigger = dd.querySelector('.nav-dropdown-trigger');
+        const panel   = dd.querySelector('.nav-dropdown-panel');
+        if (!trigger || !panel) return;
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const willOpen = !dd.classList.contains('open');
+            closeAllDropdowns();
+            if (willOpen) {
+                dd.classList.add('open');
+                trigger.setAttribute('aria-expanded', 'true');
+            }
+        });
+        panel.addEventListener('click', (e) => {
+            // Clicking a link inside closes the dropdown so the user doesn't
+            // have to dismiss it after navigating.
+            if (e.target.closest('a')) closeAllDropdowns();
+        });
+    });
+    document.addEventListener('click', (e) => {
+        // Click anywhere outside any open dropdown closes it.
+        if (!e.target.closest('.nav-dropdown')) closeAllDropdowns();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const open = document.querySelector('.nav-dropdown.open');
+            if (open) {
+                closeAllDropdowns();
+                open.querySelector('.nav-dropdown-trigger')?.focus();
+            }
+        }
+    });
+
     // --- 1. KIWI API: per-platform release fetch + render ---
     // We hit the Kiwi API instead of GitHub directly: one call returns every
     // platform's latest build (with walk-back if a release skipped a platform),

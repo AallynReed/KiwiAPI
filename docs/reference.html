@@ -179,6 +179,132 @@
     and patch the spots the theme object doesn't cover.
   -->
   <div id="redoc"></div>
+
+  <!-- ─── Support widget ───────────────────────────────────────────────
+       Sticky bottom-right pill that expands into the three donation links
+       on click. Pinned to viewport (position:fixed), high z-index so it
+       sits above Redoc's overlays. Click-outside + Escape both close.
+       Brand colours match the recipient platforms (PayPal blue, Ko-fi
+       red, BMC yellow) so the buttons read as real CTAs to users who
+       already recognise the platforms. -->
+  <style>
+    .support-widget {
+      position: fixed; bottom: 20px; right: 20px;
+      z-index: 9000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .support-trigger {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px;
+      background: linear-gradient(135deg, #ff6f91, #ff8a3d);
+      color: #fff; border: none; border-radius: 999px;
+      font: 600 0.95rem inherit; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(255, 111, 145, .35);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .support-trigger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 111, 145, .55);
+    }
+    .support-trigger:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    /* Subtle heart pulse to invite the eye — slow, not flashy. */
+    .support-trigger i { animation: support-pulse 2.4s ease-in-out infinite; }
+    @keyframes support-pulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.18); }
+    }
+    .support-panel {
+      position: absolute; bottom: calc(100% + 12px); right: 0;
+      width: 300px; padding: 16px;
+      background: #161b22; border: 1px solid #30363d; border-radius: 14px;
+      box-shadow: 0 12px 50px rgba(0, 0, 0, .5);
+      display: grid; gap: 10px;
+      opacity: 0; transform: translateY(8px) scale(.96);
+      transition: opacity .18s, transform .22s;
+      pointer-events: none;
+    }
+    .support-widget.open .support-panel {
+      opacity: 1; transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .support-headline {
+      color: #e6edf3; font-size: .85rem; line-height: 1.5;
+      margin: 0 0 4px;
+    }
+    .support-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px;
+      background: #1a212c; border: 1px solid #30363d; border-radius: 10px;
+      color: #e6edf3; text-decoration: none;
+      font-weight: 500; font-size: .95rem;
+      transition: background .15s, border-color .15s, transform .15s;
+    }
+    .support-link:hover { background: #20272f; transform: translateX(2px); }
+    .support-paypal:hover { border-color: #00457c; }
+    .support-kofi:hover   { border-color: #ff5e5b; }
+    .support-bmac:hover   { border-color: #ffdd00; }
+    .support-link i { font-size: 1.3rem; width: 24px; text-align: center; }
+    .support-paypal i { color: #009cde; }
+    .support-kofi i   { color: #ff5e5b; }
+    .support-bmac i   { color: #ffdd00; }
+    @media (prefers-reduced-motion: reduce) {
+      .support-trigger i, .support-trigger, .support-link, .support-panel { animation: none; transition: none; }
+    }
+    @media (max-width: 480px) {
+      .support-widget { bottom: 16px; right: 16px; }
+      .support-trigger { padding: 8px 14px; font-size: .88rem; }
+      .support-panel { width: calc(100vw - 32px); max-width: 320px; }
+    }
+  </style>
+  <div class="support-widget" id="support-widget" aria-label="Support the project">
+    <button type="button" class="support-trigger" id="support-trigger"
+            aria-expanded="false" aria-controls="support-panel">
+      <i class="fa-solid fa-heart" aria-hidden="true"></i>
+      <span>Support</span>
+    </button>
+    <div class="support-panel" id="support-panel" role="menu" hidden>
+      <p class="support-headline">
+        Kiwi API + Better Trove Tools are free &amp; open source.
+        If they save you time, a tip helps keep them running.
+      </p>
+      <a href="https://paypal.me/waterin" target="_blank" rel="noopener" class="support-link support-paypal" role="menuitem">
+        <i class="fa-brands fa-paypal" aria-hidden="true"></i>
+        <span>PayPal</span>
+      </a>
+      <a href="https://ko-fi.com/aallyn" target="_blank" rel="noopener" class="support-link support-kofi" role="menuitem">
+        <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+        <span>Ko-fi</span>
+      </a>
+      <a href="https://buymeacoffee.com/aallyn" target="_blank" rel="noopener" class="support-link support-bmac" role="menuitem">
+        <i class="fa-solid fa-mug-saucer" aria-hidden="true"></i>
+        <span>Buy Me a Coffee</span>
+      </a>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var widget  = document.getElementById('support-widget');
+      var trigger = document.getElementById('support-trigger');
+      var panel   = document.getElementById('support-panel');
+      if (!widget || !trigger || !panel) return;
+      function setOpen(open) {
+        widget.classList.toggle('open', open);
+        trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        panel.hidden = !open;
+      }
+      trigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setOpen(!widget.classList.contains('open'));
+      });
+      document.addEventListener('click', function (e) {
+        if (!widget.contains(e.target) && widget.classList.contains('open')) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && widget.classList.contains('open')) {
+          setOpen(false); trigger.focus();
+        }
+      });
+    })();
+  </script>
   <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
   <script>
     Redoc.init("/openapi.json", {

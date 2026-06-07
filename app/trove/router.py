@@ -1506,7 +1506,7 @@ async def _enforce_lb_archive_limit(
     bucket caps them at ``settings.leaderboards_archive_rate_limit_max`` per
     window. ``X-RateLimit-Archive-*`` headers expose the bucket state alongside
     the standard ``X-RateLimit-*`` headers (which describe the wider limit)."""
-    if not leaderboards_service.is_archive_query(anchor):
+    if not await leaderboards_service.is_archive_query(anchor):
         return
     from app.admin import runtime_config
     lb_max, lb_window = await runtime_config.get_rate_limit("leaderboards_archive_rate_limit")

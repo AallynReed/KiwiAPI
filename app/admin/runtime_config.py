@@ -257,15 +257,45 @@ REGISTRY: dict[str, TunableSetting] = {
     ),
 
     # ── Archive-query rate limits (extra cap on cold-data trawls) ─────
+    "leaderboards_hot_retention_days": _t(
+        key="leaderboards_hot_retention_days",
+        default=settings.leaderboards_hot_retention_days,
+        type="int",
+        category="archive_rate_limits",
+        description=(
+            "Storage tier cutoff: rows older than this many days are "
+            "moved from the fast LeaderboardEntry collection into "
+            "LeaderboardEntryArchive at the tail of each insert. With "
+            "hourly captures, 3 days = ~72 anchors per board kept hot. "
+            "Lower values keep the hot collection's index footprint "
+            "small; higher values keep more reads on the fast path."
+        ),
+        min_value=1, max_value=3650,
+    ),
+    "leaderboards_archive_query_threshold_days": _t(
+        key="leaderboards_archive_query_threshold_days",
+        default=settings.leaderboards_archive_query_threshold_days,
+        type="int",
+        category="archive_rate_limits",
+        description=(
+            "Age (in days) past which a leaderboard query counts as an "
+            "ARCHIVE read and pays the extra rate limit below. Conventionally "
+            "matches leaderboards_hot_retention_days so the \"is this a "
+            "hot or cold collection lookup\" question and the \"do you pay "
+            "the archive rate limit\" question have the same answer."
+        ),
+        min_value=1, max_value=3650,
+    ),
     "leaderboards_archive_rate_limit_max": _t(
         key="leaderboards_archive_rate_limit_max",
         default=settings.leaderboards_archive_rate_limit_max,
         type="int",
         category="archive_rate_limits",
         description=(
-            "Per-token cap for leaderboard ARCHIVE queries (anchors >90 "
-            "days old). Applied IN ADDITION to the standard token cap "
-            "above, so a tight value here doesn't slow down hot reads."
+            "Per-token cap for leaderboard ARCHIVE queries (anchors older "
+            "than leaderboards_archive_query_threshold_days). Applied IN "
+            "ADDITION to the standard token cap, so a tight value here "
+            "doesn't slow down hot reads."
         ),
         min_value=1, max_value=10000,
     ),

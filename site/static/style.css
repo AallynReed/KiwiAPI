@@ -251,6 +251,78 @@ canvas.bg-fx {
   cursor: pointer;
 }
 
+/* Nav dropdowns — used by "Developers" and "Pages" in the navbar.
+   Desktop: trigger button shows a floating panel beneath it (absolute,
+   bg-card surface, scale-up animation). Mobile (the hamburger drawer):
+   trigger expands inline as a sub-list below itself (no floating panel
+   would have nowhere to escape to in a column layout). */
+.nav-dropdown { position: relative; }
+.nav-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: var(--text-mute);
+  background: transparent;
+  border: none;
+  font: 500 .94rem inherit;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color .15s, background .15s;
+}
+.nav-dropdown-trigger:hover { color: var(--text); background: var(--bg-card); }
+.nav-dropdown-trigger .nav-dropdown-caret {
+  font-size: .7rem;
+  transition: transform .2s var(--ease-out);
+}
+.nav-dropdown.open .nav-dropdown-caret { transform: rotate(180deg); }
+
+.nav-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px) scale(.96);
+  min-width: 220px;
+  padding: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s, transform .22s var(--ease-spring);
+  z-index: 80;
+}
+.nav-dropdown.open .nav-dropdown-panel {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+  pointer-events: auto;
+}
+.nav-dropdown-panel a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: .92rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.nav-dropdown-panel a:hover {
+  background: var(--bg-card-hi);
+  color: var(--accent-blue);
+}
+.nav-dropdown-panel a i {
+  width: 16px;
+  text-align: center;
+  color: var(--text-mute);
+}
+.nav-dropdown-panel a:hover i { color: var(--accent-blue); }
+
 
 /* ─── 4. Hero ─────────────────────────────────────────────────────────── */
 
@@ -1243,6 +1315,37 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   .nav-links a.nav-cta { justify-content: center; }
   .lang-picker { justify-content: center; }
 
+  /* Nav dropdowns inside the mobile drawer — expand inline as a sub-list
+     instead of floating above the column. The trigger gets the same
+     padding/treatment as a normal nav link; the panel sits below it,
+     indented, no border or shadow. */
+  .nav-dropdown { width: 100%; }
+  .nav-dropdown-trigger {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+  .nav-dropdown-trigger .nav-dropdown-caret { margin-left: auto; }
+  .nav-dropdown-panel {
+    position: static;
+    transform: none;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 4px 0 4px 20px;
+    margin-top: 2px;
+    width: 100%;
+    min-width: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .25s var(--ease-out), opacity .2s;
+  }
+  .nav-dropdown.open .nav-dropdown-panel {
+    transform: none;
+    max-height: 320px;
+  }
+
   .hero { padding-top: 60px; padding-bottom: 80px; }
   .hero-actions, .hero-pills { width: 100%; }
   .hero-actions .btn, .download-dropdown { width: 100%; }
@@ -1282,4 +1385,110 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   .spotlight .spot-inner { opacity: 1; transform: none; }
   .spotlight .spot-bg img { opacity: .9; transform: none; }
   .bento-tile { opacity: 1; transform: none; }
+  .support-trigger i { animation: none !important; }
+  .support-trigger, .support-link, .support-panel { transition: none !important; }
+}
+
+
+/* ─── 18. Support widget ─────────────────────────────────────────────────
+   Sticky bottom-right pill that expands into the three donation links
+   (PayPal / Ko-fi / Buy Me a Coffee). Same component lives inline in
+   docs/reference.html for the API reference page — keep the styles
+   structurally aligned so a fix here can be copy-pasted there. */
+
+.support-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9000;
+}
+.support-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #ff6f91, #ff8a3d);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font: 600 .95rem inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 111, 145, .35);
+  transition: transform .2s, box-shadow .2s;
+}
+.support-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255, 111, 145, .55);
+}
+.support-trigger i {
+  /* Slow heart pulse to invite the eye without being annoying. */
+  animation: support-pulse 2.4s ease-in-out infinite;
+}
+@keyframes support-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
+
+.support-panel {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  width: 300px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: 14px;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, .5);
+  display: grid;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(8px) scale(.96);
+  transition: opacity .18s, transform .22s var(--ease-spring);
+  pointer-events: none;
+}
+.support-widget.open .support-panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.support-headline {
+  color: var(--text);
+  font-size: .85rem;
+  line-height: 1.5;
+  margin: 0 0 4px;
+}
+.support-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-card-hi);
+  border: 1px solid var(--bg-line);
+  border-radius: 10px;
+  color: var(--text);
+  font-weight: 500;
+  font-size: .95rem;
+  transition: background .15s, border-color .15s, transform .15s;
+}
+.support-link:hover {
+  background: color-mix(in oklab, var(--bg-card-hi) 80%, white);
+  transform: translateX(2px);
+  color: var(--text);
+}
+.support-paypal:hover { border-color: #009cde; }
+.support-kofi:hover   { border-color: #ff5e5b; }
+.support-bmac:hover   { border-color: #ffdd00; }
+.support-link i {
+  font-size: 1.3rem;
+  width: 24px;
+  text-align: center;
+}
+.support-paypal i { color: #009cde; }
+.support-kofi i   { color: #ff5e5b; }
+.support-bmac i   { color: #ffdd00; }
+
+@media (max-width: 480px) {
+  .support-widget { bottom: 16px; right: 16px; }
+  .support-trigger { padding: 8px 14px; font-size: .88rem; }
+  .support-panel { width: calc(100vw - 32px); max-width: 320px; }
 }

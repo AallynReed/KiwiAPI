@@ -112,6 +112,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "Community": "Communauté",
         "Free &amp; open source. By the community, for the community.": "Libre &amp; open source. Par la communauté, pour la communauté.",
         "No telemetry. No ads. No paywalls.": "Sans télémétrie. Sans pub. Sans paywall.",
+        "Support": "Soutenir",
+        "Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.": "Better Trove Tools est libre &amp; open source. S'il vous fait gagner du temps, un pourboire aide à le faire tourner.",
+        "Commands": "Commandes",
+        "Pages": "Pages",
+        "Trove Commands": "Commandes Trove",
     },
 
     # ============================== GERMAN ==============================
@@ -210,6 +215,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "Community": "Community",
         "Free &amp; open source. By the community, for the community.": "Frei &amp; quelloffen. Von der Community, für die Community.",
         "No telemetry. No ads. No paywalls.": "Keine Telemetrie. Keine Werbung. Keine Paywalls.",
+        "Support": "Unterstützen",
+        "Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.": "Better Trove Tools ist frei &amp; quelloffen. Wenn es dir Zeit spart, hilft ein Trinkgeld dabei, es am Laufen zu halten.",
+        "Commands": "Befehle",
+        "Pages": "Seiten",
+        "Trove Commands": "Trove-Befehle",
     },
 
     # ============================ PORTUGUESE ============================
@@ -308,6 +318,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "Community": "Comunidade",
         "Free &amp; open source. By the community, for the community.": "Livre &amp; open source. Pela comunidade, para a comunidade.",
         "No telemetry. No ads. No paywalls.": "Sem telemetria. Sem anúncios. Sem paywalls.",
+        "Support": "Apoiar",
+        "Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.": "O Better Trove Tools é livre &amp; open source. Se lhe poupa tempo, uma ajuda mantém-no a funcionar.",
+        "Commands": "Comandos",
+        "Pages": "Páginas",
+        "Trove Commands": "Comandos Trove",
     },
 
     # ============================== RUSSIAN ==============================
@@ -406,6 +421,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "Community": "Сообщество",
         "Free &amp; open source. By the community, for the community.": "Бесплатно &amp; открытый код. От сообщества, для сообщества.",
         "No telemetry. No ads. No paywalls.": "Без телеметрии. Без рекламы. Без paywall.",
+        "Support": "Поддержать",
+        "Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.": "Better Trove Tools — бесплатное и с открытым кодом. Если оно экономит вам время, чаевые помогают поддерживать проект.",
+        "Commands": "Команды",
+        "Pages": "Страницы",
+        "Trove Commands": "Команды Trove",
     },
 
     # ============================== JAPANESE ==============================
@@ -504,6 +524,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "Community": "コミュニティ",
         "Free &amp; open source. By the community, for the community.": "無料 &amp; オープンソース。コミュニティによる、コミュニティのための。",
         "No telemetry. No ads. No paywalls.": "テレメトリなし。広告なし。ペイウォールなし。",
+        "Support": "サポート",
+        "Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.": "Better Trove Tools は無料 &amp; オープンソースです。時間の節約になったら、寄付が運営の助けになります。",
+        "Commands": "コマンド",
+        "Pages": "ページ",
+        "Trove Commands": "Troveコマンド",
     },
 
     # ============================== CHINESE ==============================
@@ -602,6 +627,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "Community": "社区",
         "Free &amp; open source. By the community, for the community.": "免费 &amp; 开源。由社区，为社区。",
         "No telemetry. No ads. No paywalls.": "无遥测。无广告。无付费墙。",
+        "Support": "支持",
+        "Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.": "Better Trove Tools 是免费 &amp; 开源的。如果它为你节省了时间，一份小费有助于让它持续运行。",
+        "Commands": "命令",
+        "Pages": "页面",
+        "Trove Commands": "Trove 命令",
     },
 }
 

@@ -40,7 +40,12 @@ logger = logging.getLogger(__name__)
 # tightly-indexed collection). Older rows are moved to
 # ``LeaderboardEntryArchive`` at the tail of each insert. Board metadata is
 # never archived — it doesn't grow unbounded.
-LEADERBOARD_HOT_RETENTION_DAYS = 30
+#
+# The actual value is runtime-tunable via
+# ``runtime_config.get_setting("leaderboards_hot_retention_days")``. Default
+# is in settings.py. Reads go through ``_hot_cutoff()`` below — no module-
+# level constant any more, so an admin tweak in the panel takes effect on
+# the next insert without a redeploy.
 
 # How many entries to insert per bulk write (caps memory + bulk-op size).
 _BULK_BATCH = 1000
@@ -100,28 +105,42 @@ async def _upsert_board(parsed: ParsedBoard, created_at: int) -> Leaderboard:
     return lb
 
 
-def _hot_cutoff() -> int:
-    """Unix-seconds boundary: rows with ``created_at < this`` belong in archive."""
-    return int(
-        (datetime.now(UTC) - timedelta(days=LEADERBOARD_HOT_RETENTION_DAYS)).timestamp()
-    )
+async def _hot_cutoff() -> tuple[int, int]:
+    """Unix-seconds boundary + the days value that produced it.
+
+    Returns ``(cutoff_unix, days)`` — the days are surfaced for logging
+    only (``_move_to_archive`` reports them so an operator knows what
+    cutoff was applied). Threshold read from runtime config so admin
+    panel edits take effect on the next call (5-second cache TTL).
+    """
+    from app.admin import runtime_config
+
+    days = await runtime_config.get_setting("leaderboards_hot_retention_days")
+    cutoff = int((datetime.now(UTC) - timedelta(days=days)).timestamp())
+    return cutoff, days
 
 
-def archive_query_cutoff() -> int:
+async def archive_query_cutoff() -> int:
     """Unix-seconds boundary: reads for anchors below this count as "archive
     queries" and pay the tighter rate-limit bucket.
 
     Distinct from ``_hot_cutoff`` — hot retention (storage tier) and archive
-    rate-limit threshold (user-facing policy) move independently. A query for
-    days 30–90 hits the cold collection but uses the normal per-token limit;
-    a query for >90 days pays the archive limit on top.
+    rate-limit threshold (user-facing policy) move independently. A query
+    for an anchor in the cold collection but younger than the threshold
+    pays only the standard per-token limit; older than the threshold pays
+    the archive limit on top.
+
+    The threshold is runtime-tunable from the master admin panel so it
+    can move without a redeploy as capture cadence changes.
     """
-    days = settings.leaderboards_archive_query_threshold_days
+    from app.admin import runtime_config
+
+    days = await runtime_config.get_setting("leaderboards_archive_query_threshold_days")
     return int((datetime.now(UTC) - timedelta(days=days)).timestamp())
 
 
-def is_archive_query(anchor: int) -> bool:
-    return anchor < archive_query_cutoff()
+async def is_archive_query(anchor: int) -> bool:
+    return anchor < await archive_query_cutoff()
 
 
 async def _move_to_archive() -> int:
@@ -131,7 +150,7 @@ async def _move_to_archive() -> int:
     months of history are eligible at once) doesn't load everything into memory.
     Returns the number of rows moved.
     """
-    cutoff = _hot_cutoff()
+    cutoff, days = await _hot_cutoff()
     moved = 0
     while True:
         # Take a chunk of the oldest hot rows below cutoff.
@@ -160,7 +179,7 @@ async def _move_to_archive() -> int:
         moved += len(chunk)
     if moved:
         logger.info("leaderboards: moved %d entries older than %d days into archive",
-                    moved, LEADERBOARD_HOT_RETENTION_DAYS)
+                    moved, days)
     return moved
 
 
@@ -225,9 +244,11 @@ async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
 
 # --- read -------------------------------------------------------------------
 
-def _entries_collection_for(created_at: int):
-    """Hot or cold? Returns the right Beanie Document class for an anchor."""
-    return LeaderboardEntry if created_at >= _hot_cutoff() else LeaderboardEntryArchive
+async def _entries_collection_for(created_at: int):
+    """Hot or cold? Returns the right Beanie Document class for an anchor.
+    Async because the cutoff is now runtime-tunable (Mongo lookup, cached)."""
+    cutoff, _days = await _hot_cutoff()
+    return LeaderboardEntry if created_at >= cutoff else LeaderboardEntryArchive
 
 
 async def list_timestamps(limit: int = 60, *, include_archive: bool = True) -> list[int]:
@@ -261,7 +282,7 @@ async def list_boards_at(created_at: int) -> list[dict]:
     Routes to hot or archive based on the anchor's age — old anchors go straight
     to the archive collection so the hot collection's index footprint stays
     small."""
-    coll = _entries_collection_for(created_at)
+    coll = await _entries_collection_for(created_at)
     uuids = await coll.distinct("leaderboard", {"created_at": created_at})
     if not uuids:
         return []
@@ -313,7 +334,7 @@ async def list_entries(
     (cold) based on the anchor's age — the read never spans both collections,
     so the planner picks the same composite index either way.
     """
-    coll = _entries_collection_for(created_at)
+    coll = await _entries_collection_for(created_at)
     query = {"leaderboard": uuid, "created_at": created_at}
     total = await coll.find(query).count()
     docs = (

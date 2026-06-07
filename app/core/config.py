@@ -35,7 +35,17 @@ class Settings(BaseSettings):
     # cheap individually but a malicious caller could trawl the whole archive
     # with a tight loop, so apply a much tighter per-token limit on top of the
     # standard one. The standard cap stays in force; this is additive.
-    leaderboards_archive_query_threshold_days: int = 90
+    # Hot retention: rows newer than this stay in the fast LeaderboardEntry
+    # collection. Older rows get moved to LeaderboardEntryArchive at the
+    # tail of each insert. With hourly captures, 3 days = ~72 anchors per
+    # board kept hot — matches the archive-query threshold below so the
+    # "what the user pays standard rate for" and "what's physically hot"
+    # windows are identical, simpler to reason about.
+    leaderboards_hot_retention_days: int = 3
+    # Anchors older than this count as "archive" reads and pay the extra
+    # per-token rate-limit bucket. Same 3-day window as hot retention so a
+    # query that hits the cold collection ALSO pays the archive limit.
+    leaderboards_archive_query_threshold_days: int = 3
     leaderboards_archive_rate_limit_max: int = 10
     leaderboards_archive_rate_limit_window_seconds: int = 60
 
