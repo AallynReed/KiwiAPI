@@ -9,6 +9,11 @@ from app.admin.schemas import (
     AdminTokenView,
     AdminUsageEvent,
     AdminUserSummary,
+    InterestItemAddRequest,
+    InterestItemAdminView,
+    InterestItemBulkReplaceRequest,
+    InterestItemBulkReplaceResponse,
+    InterestItemListAdmin,
     TopUser,
 )
 from app.auth.models import User
@@ -18,6 +23,8 @@ from app.core.pagination import Page, paginate_newest_first
 from app.core.scopes import decode
 from app.core.utils import utcnow
 from app.tokens.models import ApiToken
+from app.trove.market import service as market_service
+from app.trove.market.models import MarketInterestItem
 from app.usage.models import UsageEvent
 from app.usage.schemas import ActivitySummary
 from app.usage.service import ERROR_COND, RATE_LIMITED_COND, aggregate_activity
@@ -37,13 +44,12 @@ def _token_view(token: ApiToken) -> AdminTokenView:
         prefix=token.prefix,
         scopes=token.scopes,
         scope_names=decode(token.scopes),
-        allowed_ips=token.allowed_ips,
+        allowed_ip_count=len(token.allowed_ip_hashes),
         revoked=token.revoked,
         revoked_at=token.revoked_at,
         revoke_reason=token.revoke_reason,
         created_at=token.created_at,
         last_used_at=token.last_used_at,
-        last_used_ip=token.last_used_ip,
         rotated_at=token.rotated_at,
         expires_at=token.expires_at,
         request_count=token.request_count,
@@ -285,3 +291,74 @@ async def activity_overview(
             for r in top_rows
         ],
     )
+
+
+# --- Market interest-items (admin) -----------------------------------------
+# The bot scrapes the in-game marketplace; only items on THIS list are
+# persisted (everything else is dropped at ingest). Editable from the master
+# panel so the scrape footprint can change without a redeploy. The list is
+# served tokenless via /v1/misc/interest-items.
+
+
+def _item_view(d: MarketInterestItem) -> InterestItemAdminView:
+    return InterestItemAdminView(
+        name=d.name,
+        added_by=str(d.added_by) if d.added_by is not None else None,
+        added_at=d.added_at,
+    )
+
+
+@router.get("/market/interest-items", response_model=InterestItemListAdmin)
+async def list_interest_items_admin() -> InterestItemListAdmin:
+    """Every interest item with admin metadata (who added it, when)."""
+    docs = await market_service.admin_list_interest_items()
+    return InterestItemListAdmin(
+        items=[_item_view(d) for d in docs],
+        count=len(docs),
+    )
+
+
+@router.post("/market/interest-items", response_model=InterestItemAdminView,
+             status_code=201)
+async def add_interest_item_admin(
+    req: InterestItemAddRequest,
+    admin: User = Depends(get_current_superuser),
+) -> InterestItemAdminView:
+    """Add one item to the bot's scan allow-list."""
+    try:
+        doc = await market_service.admin_add_interest_item(
+            req.name, added_by=admin.id,
+        )
+    except ValueError as e:
+        # Empty name → 400; dup → 409 (let the message distinguish).
+        msg = str(e)
+        if "already exists" in msg:
+            raise APIError(status_code=409, code=ErrorCode.conflict, message=msg)
+        raise APIError(status_code=400, code=ErrorCode.bad_request, message=msg)
+    return _item_view(doc)
+
+
+@router.delete("/market/interest-items/{name}", status_code=204)
+async def remove_interest_item_admin(name: str) -> None:
+    """Drop one item from the allow-list."""
+    removed = await market_service.admin_remove_interest_item(name)
+    if not removed:
+        raise APIError(status_code=404, code=ErrorCode.not_found,
+                       message=f"No interest item named '{name}'")
+
+
+@router.put("/market/interest-items", response_model=InterestItemBulkReplaceResponse)
+async def replace_interest_items_admin(
+    req: InterestItemBulkReplaceRequest,
+    admin: User = Depends(get_current_superuser),
+) -> InterestItemBulkReplaceResponse:
+    """Atomic-ish bulk replace: drop everything stored, then insert the new
+    list (de-duped, trimmed, sorted server-side). Refuses an empty list — to
+    delete every item, use the per-item DELETE endpoint."""
+    try:
+        summary = await market_service.admin_replace_interest_items(
+            req.items, added_by=admin.id,
+        )
+    except ValueError as e:
+        raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(e))
+    return InterestItemBulkReplaceResponse(**summary)

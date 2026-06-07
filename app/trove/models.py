@@ -112,6 +112,69 @@ class BttRelease(Document):
         ]
 
 
+class BttChangelog(Document):
+    """The pre-built BetterTroveTools changelog: commits grouped by tag.
+
+    A singleton per tracked repo. The relayer fetches `/tags` + `/commits` from
+    GitHub on the same cadence as releases and stores the built groups so every
+    client hitting `/v1/btt/changelog` reads from Mongo instead of GitHub — no
+    risk of users tripping the 60/hr unauth rate limit on their own."""
+
+    repo: str                       # "AallynReed/BetterTroveTools" — unique
+    groups: list[dict] = Field(default_factory=list)
+    # Each group: { version, commits: [{sha, short_sha, message, url, type}] }
+    rate_limited: bool = False     # True if GitHub returned a 403 rate-limit error
+    fetched_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "btt_changelogs"
+        indexes = [IndexModel([("repo", ASCENDING)], unique=True)]
+
+
+class ChaosChestCapture(Document):
+    """One captured chaos-chest item per weekly window.
+
+    The bot dumps the in-game ``WelcomeLog.cfg`` shortly after the Tue 11:00 UTC
+    reset; the API anchors the dump to that week's start (unix seconds, matches
+    ``server_time.chaos_chest_window``). Upsert by ``week_anchor`` — a re-run on
+    the same week replaces the row rather than duplicating it."""
+
+    week_anchor: int   # unix seconds at Tue 11:00 UTC (the week's start)
+    name: str          # the captured item's display name
+    captured_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "chaos_chest_captures"
+        indexes = [
+            IndexModel([("week_anchor", DESCENDING)], unique=True),
+        ]
+
+
+class ChallengeCapture(Document):
+    """One captured hourly-challenge name per 20-minute active window.
+
+    Challenges run for 20 minutes on the hour (regular days) or on the half-hour
+    (trove Fridays). Each window is uniquely identified by its ``window_anchor``
+    (the window's start time in unix seconds). Upsert by anchor — a re-run on
+    the same window replaces the row.
+
+    ``is_friday_window`` is informational: tells consumers whether THIS row
+    sits in the half-hourly Friday cadence vs the hourly weekday cadence,
+    without re-running the time math."""
+
+    window_anchor: int      # unix seconds at the window's start
+    window_ends_at: int     # window_anchor + 20 min, denormalized for cheap reads
+    name: str
+    is_friday_window: bool
+    captured_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "challenge_captures"
+        indexes = [
+            IndexModel([("window_anchor", DESCENDING)], unique=True),
+        ]
+
+
 class FeedCache(Document):
     """Cached payload for a relayed feed (twitch / youtube / bilibili).
 

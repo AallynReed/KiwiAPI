@@ -8,7 +8,22 @@ from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
 from app.tokens.models import ApiToken
 from app.trove.codexes.models import CodexEntry
-from app.trove.models import BttRelease, DelveRotation, FeedCache, TroveEvent, TroveNews
+from app.trove.leaderboards.models import (
+    Leaderboard,
+    LeaderboardEntry,
+    LeaderboardEntryArchive,
+)
+from app.trove.market.models import MarketInterestItem, MarketListing
+from app.trove.models import (
+    BttChangelog,
+    BttRelease,
+    ChallengeCapture,
+    ChaosChestCapture,
+    DelveRotation,
+    FeedCache,
+    TroveEvent,
+    TroveNews,
+)
 from app.trove.updates.models import (
     UpdateBranch,
     UpdateChange,
@@ -22,9 +37,12 @@ from app.usage.models import UsageEvent
 # Models live in their feature packages; this is the one place that aggregates them.
 DOCUMENT_MODELS = [
     User, Session, ApiToken, UsageEvent, OutboxEmail, TroveNews, FeedCache, TroveEvent,
-    DelveRotation, BttRelease,
+    DelveRotation, BttRelease, BttChangelog,
     UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
     CodexEntry,
+    Leaderboard, LeaderboardEntry, LeaderboardEntryArchive,
+    MarketListing, MarketInterestItem,
+    ChaosChestCapture, ChallengeCapture,
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).
@@ -39,7 +57,11 @@ RATE_LIMIT_COLLECTION = "rate_limit_buckets"
 async def init_db() -> None:
     """Open the Mongo connection, bind Beanie models, ensure extra indexes."""
     global _client, _db
-    _client = AsyncMongoClient(settings.mongo_uri)
+    # tz_aware=True is mandatory — without it, PyMongo decodes BSON datetimes as
+    # NAIVE UTC, and comparing them against `utcnow()` (tz-aware) anywhere in the
+    # codebase raises TypeError. The auth path's `token.expires_at < utcnow()`
+    # tripped this and 500'd every token-bearing request that had an expiry set.
+    _client = AsyncMongoClient(settings.mongo_uri, tz_aware=True)
     _db = _client[settings.mongo_db]
     await init_beanie(database=_db, document_models=DOCUMENT_MODELS)
 

@@ -65,7 +65,12 @@ real-UTC unix seconds. Full schema in `/openapi.json`.
 | `/v1/rotations/corruxion` | Corruxion merchant: live timer + upcoming schedule |
 | `/v1/rotations/fluxion` | Fluxion merchant: voting/selling timer + schedule |
 | `/v1/rotations/gardening` | 2-day / 3-day plant harvest windows |
-| `/v1/rotations/chaos-chest` | weekly Chaos Chest: featured item (relayed from Trovesaurus) + window + countdown |
+| `/v1/rotations/chaos-chest` | weekly Chaos Chest: featured item (bot-captured ▸ falls back to Trovesaurus relay) + window + countdown |
+| `/v1/rotations/chaos-chest/history?limit=&offset=` | past chaos-chest captures, newest week first |
+| `POST /v1/rotations/chaos-chest/insert` | **master-only** body `{name}` — bot ingest, server anchors to current Tue-11:00-UTC week |
+| `/v1/rotations/challenge/current` | hourly challenge active right now (or last window during a gap); cadence drops to half-hourly on trove Fridays |
+| `/v1/rotations/challenge/history?limit=&offset=` | past challenge captures, newest window first |
+| `POST /v1/rotations/challenge/insert` | **master-only** body `{name}` — bot ingest, server anchors to the active 20-min window |
 | `/v1/rotations/calendar` | yearly calendar: all recurring rotations (buffs, merchants, gardening, biomes) as one ±365-day timeline |
 | `/v1/rotations/delves?week=` | a week's delve rotation — floor records relayed from a community delve source (default current week; `/delves/weeks` lists available weeks) |
 | `/v1/rotations/biomes` | 3-hour adventure biome rotation (current + upcoming) |
@@ -141,6 +146,71 @@ every zone plus Discord `<t:unix:style>` codes.
 | `GET /v1/btt/latest?channel=` | latest BTT version **per platform** (windows/linux/android) on a channel; each platform walks back independently until a release ships an asset for it |
 | `GET /v1/btt/latest/{platform}?channel=` | latest BTT version for a single platform |
 | `GET /v1/btt/check?installed=&platform=&channel=` | **"is there an update?"** — server-side version compare; returns `{ update_available, comparable, latest }` so the client just reads a bool |
+| `GET /v1/btt/changelog?limit_groups=&commits_per_group=` | commits grouped by tag (mirrors BTT's "Show changelog" button), newest first, `"Unreleased"` group leads when there are post-tag commits |
+
+**`leaderboards` category — scope `leaderboards:read`** (read side; `POST /insert` is **master-only**, requires a superuser API token)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/leaderboards/timestamps?limit=60` | recent dump anchors (unix seconds at 11:00 UTC), newest first |
+| `GET /v1/leaderboards?created_at=` | boards present at that anchor; each carries `contest_type` for THIS anchor + `reset_kind` / `player_board` flags |
+| `GET /v1/leaderboards/{uuid}` | one board's metadata + full `contests` list |
+| `GET /v1/leaderboards/{uuid}/entries?created_at=&limit=&offset=` | top-N entries for one board at one anchor, ranked |
+| `GET /v1/leaderboards/players/{name}/history?uuid=&limit=` | recent appearances of one player across boards |
+| `POST /v1/leaderboards/insert?timestamp=` | **master-only ingest**: multipart `file` field with the raw `LeaderBot.cfg` text. Idempotent for a given anchor; `timestamp` is optional and only used for back-fills |
+
+The bot dumps the game's `LeaderBot.cfg` once a day around the 11:00 UTC reset and POSTs the file. **Full
+history is preserved**: entries older than the hot retention window (default 30 days) are moved into a
+cold `leaderboard_entries_archive` collection at the tail of each insert. The read endpoints route old
+anchors straight to the archive, so the hot collection stays small/fast while historical queries still work
+(slower per-row but unaffected by the hot index footprint). `/timestamps` unions both, deduped.
+
+**Archive rate limit** — queries with `?created_at=` older than `leaderboards_archive_query_threshold_days`
+(default **90**, separate from the 30-day storage split) pay a SECOND, tighter per-token bucket (default
+10 req/min) on top of the standard per-token cap. The bucket's state is surfaced via
+`X-RateLimit-Archive-Limit` / `X-RateLimit-Archive-Remaining` / `X-RateLimit-Archive-Reset` response headers
+so clients can self-throttle. Recent queries (≤ threshold) cost only the standard cap.
+
+**`market` category — scope `market:read`** (read side; `POST /insert` is **master-only**)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/market/listings?name=&price_min=&price_max=&last_seen_after=&hide_expired=true&sort=&limit=&offset=` | paginated marketplace listings (default sort newest-`last_seen` first; `hide_expired` filters past 7d / stale 3h+) |
+| `GET /v1/market/items` | item names that currently have a stored listing (sorted) |
+| `GET /v1/misc/interest-items` | (lives under misc, **tokenless**) the full allow-list of items the bot tracks; admin-managed via the master panel at `/admin/market/interest-items` |
+| `GET /v1/market/items/{name}/summary` | min/max/avg/median price-each + listing count for one item |
+| `POST /v1/market/insert?timestamp=` | **master-only ingest**: multipart `file` with the raw `GrainusMod.cfg` text. Listings upserted by UUID — re-scrapes bump `last_seen`, never duplicate |
+
+Bot scrapes the in-game marketplace hourly. Each listing's UUID v1 is the document `_id`; `created_at` is
+decoded from the UUID's timestamp (so it matches when the player posted in-game); `last_seen` is bumped on
+every re-scrape. Only items on `gamedata/market_items.json` are persisted; the rest are dropped at ingest.
+
+**Archive rate limit** — passing `hide_expired=false` on `/listings` (i.e. asking for the historical
+tail past the 7-day in-game lifetime) pays a SECOND, tighter per-token bucket (default 10 req/min) on
+top of the standard per-token cap. Same `X-RateLimit-Archive-*` headers as the leaderboards archive
+throttle. Market doesn't use a day-count threshold because the 7-day listing lifetime already defines
+fresh-vs-historical; the limit fires on the opt-in flag instead.
+
+## BetterTroveTools showcase site (`trove.aallyn.net`)
+
+The api container ALSO serves the BTT marketing/manual site out of `site/`
+(templates + static + ~20 MB of screenshots). Routes:
+
+| Path | Returns |
+|---|---|
+| `GET /` | the BTT landing page (index.html) |
+| `GET /documentation` | the user manual |
+| `GET /unlock_debug` · `POST /unlock_debug` | upload Trove.exe → byte-patched build with the debug console enabled |
+| `GET /unlock_fps` · `POST /unlock_fps` | same shape; removes the FPS cap |
+| `GET /static/*` | site assets (bind-mounted from `site/static/`) |
+| `GET /api-info` | the old developer-card landing (lives here so `/` is free for the site) |
+
+Point your reverse proxy: `trove.aallyn.net` → the api container's `:15546`,
+forward all paths. `api.aallyn.net` keeps its existing filter to `/v1/*` +
+`/health`. The site's CSP is broader than the API's (loads FontAwesome + GSAP
+from CDN, calls `api.aallyn.net` for release data) — middleware picks the right
+CSP per path. `/unlock_*` accepts a ~100 MB body (Trove.exe size); set your
+proxy's `client_max_body_size` to match.
 
 A background relayer polls the configured GitHub repo every 30 min and stores releases in Mongo, so the
 endpoints serve from cache. Channels are detected from GitHub's `prerelease` flag (`release`/`beta`).

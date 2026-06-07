@@ -1,15 +1,23 @@
 import pytest
 
-from app.core.dependencies import _ip_allowed, get_current_superuser, require_scope
+from app.core.dependencies import get_current_superuser, require_scope
 from app.core.errors import APIError
+from app.core.ip_hash import hash_ip, ip_allowed, make_ip_salt
 
 
-def test_ip_allowed_exact_and_cidr():
-    assert _ip_allowed("1.2.3.4", ["1.2.3.4"])
-    assert _ip_allowed("1.2.3.4", ["1.2.3.0/24"])
-    assert not _ip_allowed("9.9.9.9", ["1.2.3.0/24"])
-    assert not _ip_allowed("1.2.3.4", ["bogus"])
-    assert not _ip_allowed("not-an-ip", ["1.2.3.4"])
+def test_ip_allowed_via_hash():
+    # CIDR support was dropped along with plaintext storage — exact IPs only.
+    # The check rehashes the client IP with the token's salt and looks for a
+    # match in the stored hash list.
+    salt = make_ip_salt()
+    hashes = [hash_ip(salt, "1.2.3.4"), hash_ip(salt, "10.0.0.5")]
+    assert ip_allowed("1.2.3.4", salt, hashes)
+    assert ip_allowed("10.0.0.5", salt, hashes)
+    assert not ip_allowed("9.9.9.9", salt, hashes)
+    # Bogus client input never matches.
+    assert not ip_allowed("not-an-ip", salt, hashes)
+    # Wrong salt never matches even if the hashes look right.
+    assert not ip_allowed("1.2.3.4", make_ip_salt(), hashes)
 
 
 class _Token:

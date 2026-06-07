@@ -16,7 +16,12 @@ class ApiToken(Document):
     hashed_token: str
 
     scopes: int = 0  # bitmask of granted scopes; 0 = all scopes (current + future)
-    allowed_ips: list[str] = Field(default_factory=list)  # exact IPs and/or CIDRs
+    # Per-token salt + HMAC-SHA256 hashes of pinned IPs. Hashed like passwords
+    # so neither admins nor a DB breach reveal which IPs are pinned. Empty list
+    # means "no IP restriction" — the allowlist is opt-in (see `core/ip_hash.py`).
+    # CIDRs are NOT supported — a hash can't range-match.
+    ip_salt: str | None = None                             # urlsafe-b64; minted with the token
+    allowed_ip_hashes: list[str] = Field(default_factory=list)
     revoked: bool = False
     revoked_at: datetime | None = None
     revoke_reason: str | None = None
@@ -27,7 +32,12 @@ class ApiToken(Document):
 
     created_at: datetime = Field(default_factory=utcnow)
     last_used_at: datetime | None = None
-    last_used_ip: str | None = None
+    # NOTE: ``last_used_ip`` was removed. Storing the most-recent IP in plaintext
+    # was the only remaining leak after we started hashing the allowlist; hashing
+    # it would deprive the OWNER of the ability to compare against a known IP
+    # (defeating the field's purpose). The user-facing "is this me?" check is
+    # better served by a dedicated endpoint that takes a candidate IP and
+    # answers yes/no after hashing — to be built when needed.
     rotated_at: datetime | None = None
     request_count: int = 0
 

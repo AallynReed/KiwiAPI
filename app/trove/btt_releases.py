@@ -24,7 +24,7 @@ import httpx
 
 from app.core.config import settings
 from app.core.utils import utcnow
-from app.trove.models import BttRelease
+from app.trove.models import BttChangelog, BttRelease
 
 logger = logging.getLogger("kiwi.trove.btt_releases")
 
@@ -161,8 +161,7 @@ def normalize_release(raw: dict) -> dict | None:
     }
 
 
-async def fetch_releases() -> list[dict]:
-    """The newest 100 releases (raw GitHub payload) for the configured repo."""
+def _gh_headers() -> dict[str, str]:
     headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
@@ -170,11 +169,36 @@ async def fetch_releases() -> list[dict]:
     }
     if settings.btt_releases_token:
         headers["Authorization"] = f"Bearer {settings.btt_releases_token}"
-    url = f"{_GITHUB}/repos/{settings.btt_releases_repo}/releases?per_page=100"
-    async with httpx.AsyncClient(timeout=15, follow_redirects=True, headers=headers) as client:
+    return headers
+
+
+async def _gh_get(path: str):
+    """GET a GitHub API path under the configured repo. Returns the parsed JSON,
+    which for our endpoints is either a list (success) or a dict (rate-limit
+    body); callers handle both shapes."""
+    url = f"{_GITHUB}/repos/{settings.btt_releases_repo}/{path}"
+    async with httpx.AsyncClient(timeout=15, follow_redirects=True, headers=_gh_headers()) as client:
         resp = await client.get(url)
         resp.raise_for_status()
         return resp.json()
+
+
+async def fetch_releases() -> list[dict]:
+    """The newest 100 releases (raw GitHub payload) for the configured repo."""
+    out = await _gh_get("releases?per_page=100")
+    return out if isinstance(out, list) else []
+
+
+async def fetch_tags() -> list[dict]:
+    """All git tags for the configured repo (raw GitHub payload)."""
+    out = await _gh_get("tags?per_page=100")
+    return out if isinstance(out, list) else []
+
+
+async def fetch_commits(per_page: int = 100):
+    """The newest commits (raw GitHub payload). Returns the dict body verbatim on
+    a rate-limit response so the caller can detect it."""
+    return await _gh_get(f"commits?per_page={per_page}")
 
 
 async def refresh_releases() -> int:
@@ -196,6 +220,97 @@ async def refresh_releases() -> int:
             await existing.save()
         stored += 1
     return stored
+
+
+# --- Changelog: commits grouped by tag (pure logic) -------------------------
+# Mirrors the BetterTroveTools desktop "Show changelog" button: walks commits
+# newest-first and starts a new group every time a commit sha matches a tag —
+# so each group is "everything that landed between this tag and the previous".
+# Commits after the last tag go into a leading "Unreleased" group.
+
+_CONVENTIONAL_PREFIX_RE = re.compile(r"^([a-zA-Z]+)(?:\([^)]+\))?:")
+UNRELEASED = "Unreleased"
+
+
+def parse_conventional_prefix(message: str) -> str | None:
+    """`'feat(api): add X'` -> `'feat'`; None if the message doesn't carry one."""
+    if not message:
+        return None
+    m = _CONVENTIONAL_PREFIX_RE.match(message.strip())
+    return m.group(1).lower() if m else None
+
+
+def build_changelog_groups(tags: list[dict], commits: list[dict]) -> list[dict]:
+    """GitHub tags + commits -> [{ version, commits: [{sha, short_sha, message,
+    type, url}] }], newest first, mirroring BTT's grouping. Pure."""
+    tag_map: dict[str, str] = {}
+    for tag in tags or []:
+        sha = ((tag or {}).get("commit") or {}).get("sha")
+        name = (tag or {}).get("name")
+        if sha and name:
+            tag_map[sha] = name
+
+    groups: list[dict] = [{"version": UNRELEASED, "commits": []}]
+    current = groups[-1]
+    for c in commits or []:
+        if not isinstance(c, dict):
+            continue
+        sha = c.get("sha")
+        commit_obj = c.get("commit") or {}
+        raw_msg = (commit_obj.get("message") or "").strip()
+        if not (sha and raw_msg):
+            continue
+        # A tag attached to this commit starts the next version group.
+        if sha in tag_map:
+            current = {"version": tag_map[sha], "commits": []}
+            groups.append(current)
+        first_line = raw_msg.split("\n", 1)[0].strip()
+        current["commits"].append({
+            "sha": sha,
+            "short_sha": sha[:7],
+            "message": first_line,
+            "type": parse_conventional_prefix(first_line),
+            "url": c.get("html_url") or "",
+        })
+    return [g for g in groups if g["commits"]]
+
+
+async def refresh_changelog() -> dict:
+    """Pull GitHub tags + commits, build the grouped changelog, store the singleton.
+
+    On a rate-limit response (GitHub returns `{"message": "API rate limit ..."}`
+    as the COMMITS body) we keep any existing cached groups, just flip the
+    `rate_limited` flag so clients can surface a hint."""
+    try:
+        tags = await fetch_tags()
+    except httpx.HTTPStatusError:
+        tags = []
+    raw_commits: object = await fetch_commits(per_page=100)
+    rate_limited = (
+        isinstance(raw_commits, dict)
+        and "rate limit" in str(raw_commits.get("message", "")).lower()
+    )
+    commits = raw_commits if isinstance(raw_commits, list) else []
+    groups = build_changelog_groups(tags if isinstance(tags, list) else [], commits)
+    repo = settings.btt_releases_repo
+    now = utcnow()
+    existing = await BttChangelog.find_one(BttChangelog.repo == repo)
+    if existing is None:
+        await BttChangelog(
+            repo=repo, groups=groups, rate_limited=rate_limited, fetched_at=now,
+        ).insert()
+    else:
+        # Preserve previously-good groups if this cycle was rate-limited.
+        if not (rate_limited and not groups and existing.groups):
+            existing.groups = groups
+        existing.rate_limited = rate_limited
+        existing.fetched_at = now
+        await existing.save()
+    return {"groups": len(groups), "rate_limited": rate_limited}
+
+
+async def get_changelog() -> BttChangelog | None:
+    return await BttChangelog.find_one(BttChangelog.repo == settings.btt_releases_repo)
 
 
 # --- Read helpers -----------------------------------------------------------
@@ -237,6 +352,16 @@ async def _loop() -> None:
             raise
         except Exception:
             logger.warning("BTT releases refresh failed", exc_info=True)
+        try:
+            # Changelog refresh is isolated — a tags/commits failure must not
+            # derail the releases cycle, and vice versa.
+            info = await refresh_changelog()
+            logger.info("BTT changelog refreshed: %d group(s)%s",
+                        info["groups"], " (rate-limited)" if info["rate_limited"] else "")
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.warning("BTT changelog refresh failed", exc_info=True)
         try:
             await asyncio.sleep(settings.btt_releases_refresh_seconds)
         except asyncio.CancelledError:

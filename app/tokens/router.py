@@ -1,4 +1,3 @@
-import ipaddress
 from datetime import timedelta
 
 from beanie import PydanticObjectId
@@ -9,6 +8,7 @@ from app.auth.models import User
 from app.core.config import settings
 from app.core.dependencies import get_current_user
 from app.core.errors import APIError, ErrorCode
+from app.core.ip_hash import hash_ip, make_ip_salt, normalize_ip
 from app.core.ratelimit import check_rate_limit
 from app.core.scopes import decode, is_valid_mask
 from app.core.security import generate_api_token
@@ -34,44 +34,41 @@ def _to_public(token: ApiToken) -> TokenPublic:
         prefix=token.prefix,
         scopes=token.scopes,
         scope_names=decode(token.scopes),
-        allowed_ips=token.allowed_ips,
+        allowed_ip_count=len(token.allowed_ip_hashes),
         revoked=token.revoked,
         revoked_at=token.revoked_at,
         revoke_reason=token.revoke_reason,
         created_at=token.created_at,
         last_used_at=token.last_used_at,
-        last_used_ip=token.last_used_ip,
         rotated_at=token.rotated_at,
         expires_at=token.expires_at,
         request_count=token.request_count,
     )
 
 
-def _normalize_ips(ips: list[str]) -> list[str]:
-    """Validate + normalize exact IPs and CIDRs; raise 400 on anything invalid."""
-    out: list[str] = []
+def _hash_pinned_ips(ips: list[str], salt: str) -> list[str]:
+    """Validate, dedupe, and hash the pinned-IP list. Raises 400 on anything
+    invalid. An empty list is valid — IP pinning is opt-in. CIDRs are rejected
+    here (the underlying ``normalize_ip`` does the check) since hashes can't
+    range-match; the error message says so."""
+    hashes: list[str] = []
+    seen: set[str] = set()
     for raw in ips:
         entry = raw.strip()
         if not entry:
             continue
         try:
-            if "/" in entry:
-                out.append(str(ipaddress.ip_network(entry, strict=False)))
-            else:
-                out.append(str(ipaddress.ip_address(entry)))
-        except ValueError:
+            canon = normalize_ip(entry)
+        except ValueError as e:
             raise APIError(
-                status_code=400,
-                code=ErrorCode.bad_request,
-                message=f"Invalid IP or CIDR: {entry}",
-            )
-    if not out:
-        raise APIError(
-            status_code=400,
-            code=ErrorCode.bad_request,
-            message="At least one valid allowed IP is required",
-        )
-    return out
+                status_code=400, code=ErrorCode.bad_request,
+                message=str(e) if "CIDR" in str(e) else f"Invalid IP: {entry}",
+            ) from e
+        if canon in seen:
+            continue
+        seen.add(canon)
+        hashes.append(hash_ip(salt, canon))
+    return hashes
 
 
 @router.post("", response_model=TokenCreatedResponse, status_code=status.HTTP_201_CREATED)
@@ -98,7 +95,11 @@ async def create_token(
             message="Invalid scope bitmask — it sets bits that aren't real scopes",
         )
 
-    allowed_ips = _normalize_ips(payload.allowed_ips)
+    # Generate the per-token salt up-front so the field is always set — even
+    # for tokens with no pinned IPs today, a later PATCH that adds IPs will
+    # reuse this salt without a separate migration.
+    salt = make_ip_salt()
+    allowed_ip_hashes = _hash_pinned_ips(payload.allowed_ips, salt)
 
     full_token, hashed, prefix = generate_api_token()
     expires_at = None
@@ -112,7 +113,8 @@ async def create_token(
         prefix=prefix,
         hashed_token=hashed,
         scopes=payload.scopes,
-        allowed_ips=allowed_ips,
+        ip_salt=salt,
+        allowed_ip_hashes=allowed_ip_hashes,
         expires_at=expires_at,
     )
     await token.insert()
@@ -172,7 +174,11 @@ async def edit_token(
     if payload.name is not None:
         token.name = payload.name
     if payload.allowed_ips is not None:
-        token.allowed_ips = _normalize_ips(payload.allowed_ips)
+        # Backfill salt for legacy tokens (created before the hash migration
+        # but never patched since). Brand-new tokens have one minted on insert.
+        if not token.ip_salt:
+            token.ip_salt = make_ip_salt()
+        token.allowed_ip_hashes = _hash_pinned_ips(payload.allowed_ips, token.ip_salt)
     await token.save()
     return _to_public(token)
 
@@ -198,7 +204,6 @@ async def rotate_token(
     token.prefix = prefix
     token.rotated_at = utcnow()
     token.last_used_at = None
-    token.last_used_ip = None
     token.expiry_warned = False
     await token.save()
 

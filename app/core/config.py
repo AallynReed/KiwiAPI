@@ -21,6 +21,37 @@ class Settings(BaseSettings):
     # The mod tools accept/return whole .tmod files, so they get a larger cap. Set
     # the proxy's client_max_body_size to match (>= 20m) on the /v1/mods/ paths.
     mods_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
+    # The leaderboards ingest endpoint accepts the bot's raw LeaderBot.cfg upload.
+    # A single dump can easily be several MB (many boards × ~1000 entries each).
+    # Master-only via superuser API token, so this isn't an open spigot.
+    leaderboards_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
+    # Same shape as leaderboards: master-only ingest of the bot's GrainusMod.cfg
+    # market dump. Capped at 20 MB; in practice a dump is well under 5 MB but
+    # we leave headroom for a wider interest list down the road.
+    market_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
+
+    # Leaderboards archive throttle. Queries for an anchor older than the
+    # threshold (default 90 days) hit the archive collection — those reads are
+    # cheap individually but a malicious caller could trawl the whole archive
+    # with a tight loop, so apply a much tighter per-token limit on top of the
+    # standard one. The standard cap stays in force; this is additive.
+    leaderboards_archive_query_threshold_days: int = 90
+    leaderboards_archive_rate_limit_max: int = 10
+    leaderboards_archive_rate_limit_window_seconds: int = 60
+
+    # Market archive throttle. Market listings expire after 7 days (in-game),
+    # so the "archive surface" here is anyone passing hide_expired=false on
+    # /v1/market/listings — they're explicitly opting into the historical tail.
+    # Tight per-token bucket; the standard cap stays in force.
+    market_archive_rate_limit_max: int = 10
+    market_archive_rate_limit_window_seconds: int = 60
+    # The site's /unlock_* tools accept the whole Trove.exe upload, which is ~100 MB.
+    # Set the proxy's client_max_body_size to match on those paths as well.
+    site_max_request_body_bytes: int = 110 * 1024 * 1024  # 110 MB
+
+    # Where the BetterTroveTools showcase site (templates + static + assets) lives.
+    # Bind-mounted into the api container from `./site` in the project root.
+    site_root: str = "site"
 
     # Public URLs (used for docs links / CORS).
     # api_url  -> production data API surface (/v1, /health)

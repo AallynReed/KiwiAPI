@@ -6,6 +6,7 @@ __pycache__/
 venv/
 data/
 .game_updates/
+site/static/assets/
 .env
 README.md
 .dockerignore

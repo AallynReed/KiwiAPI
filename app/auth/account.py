@@ -31,7 +31,9 @@ async def export_account(user: User = Depends(get_current_user)) -> JSONResponse
         "api_tokens": [
             {
                 "id": str(t.id), "name": t.name, "prefix": t.prefix, "scopes": t.scopes,
-                "allowed_ips": t.allowed_ips, "revoked": t.revoked, "created_at": t.created_at,
+                # Pinned IPs are hashed — only the count is exposed.
+                "allowed_ip_count": len(t.allowed_ip_hashes),
+                "revoked": t.revoked, "created_at": t.created_at,
                 "last_used_at": t.last_used_at, "expires_at": t.expires_at,
                 "request_count": t.request_count,
             }

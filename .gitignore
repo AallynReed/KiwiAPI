@@ -16,9 +16,17 @@ data/
 # Game-file version archive — content-addressed blob store (bind mount target, many GB)
 .game_updates/
 
+# BetterTroveTools showcase site — binary assets are ~20 MB of screenshots,
+# shipped to the server via Syncthing rather than git. Templates + CSS + JS are tracked.
+site/static/assets/
+
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+
+# Local mobile-preview dir — symlinked copy of site/templates + static junction,
+# served by `python -m http.server` for fast viewport iteration.
+_preview/
 
 # Internal living spec + audit — local reference, not shipped artefacts
 PROJECT_SPEC.md

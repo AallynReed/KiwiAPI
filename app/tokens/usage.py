@@ -40,13 +40,18 @@ return -1
 
 
 async def record_token_use(token: ApiToken, ip: str | None) -> None:
+    # ``ip`` is accepted for backwards compatibility with existing call sites
+    # but intentionally NOT persisted — see ``app/tokens/models.py`` for the
+    # reasoning (plaintext IPs leak; hashing them defeats the field's purpose).
+    del ip  # explicitly ignored
+
     redis: Any = get_redis()  # Any: redis-py's command stubs aren't async-typed
     now = utcnow()
 
     if redis is None:
         await token.update(
             Inc({ApiToken.request_count: 1}),
-            Set({ApiToken.last_used_at: now, ApiToken.last_used_ip: ip}),
+            Set({ApiToken.last_used_at: now}),
         )
         return
 
@@ -69,5 +74,5 @@ async def record_token_use(token: ApiToken, ip: str | None) -> None:
     if delta > 0:
         await token.update(
             Inc({ApiToken.request_count: delta}),
-            Set({ApiToken.last_used_at: now, ApiToken.last_used_ip: ip}),
+            Set({ApiToken.last_used_at: now}),
         )

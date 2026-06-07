@@ -460,17 +460,23 @@ function openRevokeToken(token, after) {
 }
 
 function openEditToken(token, after) {
+  // Pinned IPs are stored HASHED — we can't show what's currently set, only
+  // the count. Submitting REPLACES the whole list; submitting an empty box
+  // drops every IP restriction on the token.
+  const pinHint = token.allowed_ip_count
+    ? `<span class="muted">${token.allowed_ip_count} pinned (hidden — IPs are hashed server-side)</span>`
+    : `<span class="muted">none pinned</span>`;
   modal("Edit token", `
     <label>Name</label>
     <input id="edit-name" value="${esc(token.name)}" maxlength="80">
-    <label>Allowed IPs <span class="muted">(one per line — exact IP or CIDR)</span></label>
-    <textarea id="edit-ips" rows="3">${esc(token.allowed_ips.join("\n"))}</textarea>
+    <label>Allowed IPs <span class="muted">(optional — one per line. Replaces the whole list; leave empty to drop all pinning.)</span></label>
+    <p class="field-help">Current: ${pinHint}</p>
+    <textarea id="edit-ips" rows="3" placeholder="203.0.113.4"></textarea>
     <p class="field-help">The secret and scopes can't be changed.</p>
   `, async () => {
     const name = document.getElementById("edit-name").value.trim();
     const ips = document.getElementById("edit-ips").value.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
     if (!name) throw new Error("Name can't be empty.");
-    if (ips.length === 0) throw new Error("At least one allowed IP is required.");
     await API.call(`/tokens/${token.id}`, { method: "PATCH", body: { name, allowed_ips: ips } });
     toast("Token updated.", "ok");
     after();
@@ -548,7 +554,7 @@ async function renderTokens() {
       <td class="mono">${esc(t.prefix)}…</td>
       <td>${scopeBadge(t)}</td>
       <td>${t.request_count}</td>
-      <td class="muted">${fmt(t.last_used_at)}${t.last_used_ip ? `<br><span class="mono" style="font-size:.78rem">${esc(t.last_used_ip)}</span>` : ""}</td>
+      <td class="muted">${fmt(t.last_used_at)}</td>
       <td class="muted">${t.expires_at ? fmtDay(t.expires_at) : "never"}</td>
       <td>${expired ? '<span class="badge warn">expired</span>' : '<span class="badge ok">active</span>'}</td>
       <td style="white-space:nowrap">
@@ -585,8 +591,8 @@ async function renderTokens() {
           <span class="muted">grant every scope, including ones added later (mask 0)</span></label>
         <p class="field-help" id="mask-preview"></p>
 
-        <label>Allowed IPs <span class="muted">(one per line — exact IP or CIDR; required)</span></label>
-        <textarea name="ips" rows="2" placeholder="203.0.113.4&#10;10.0.0.0/24" ${unverified ? "disabled" : ""}></textarea>
+        <label>Allowed IPs <span class="muted">(optional — one exact IP per line. Stored hashed; you won't be able to see them again.)</span></label>
+        <textarea name="ips" rows="2" placeholder="203.0.113.4" ${unverified ? "disabled" : ""}></textarea>
 
         <label>Expires</label>
         <select name="expiry" ${unverified ? "disabled" : ""}>
@@ -682,7 +688,6 @@ async function renderTokens() {
       const mask = computeMask();
       const allowed_ips = f.ips.value.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
       if (!all_scopes && mask === 0) { err.textContent = "Pick at least one scope, or enable All scopes."; return; }
-      if (allowed_ips.length === 0) { err.textContent = "Add at least one allowed IP."; return; }
       const expiry = f.expiry.value;
       const body = {
         name: f.name.value, scopes: mask, allowed_ips,
@@ -1055,7 +1060,7 @@ async function renderAdminUser(userId, days = 30) {
       <td>${esc(t.name)}</td>
       <td class="mono">${esc(t.prefix)}…</td>
       <td>${adminScope(t)}</td>
-      <td class="mono">${t.allowed_ips.map(esc).join("<br>") || '<span class="muted">any</span>'}</td>
+      <td>${t.allowed_ip_count > 0 ? `${t.allowed_ip_count} pinned <span class="muted">(hashed)</span>` : '<span class="muted">any</span>'}</td>
       <td>${t.request_count}</td>
       <td>${t.revoked ? '<span class="badge off">revoked</span>' : '<span class="badge ok">active</span>'}</td>
       <td>${t.revoked ? "" : `<button class="btn small danger" data-revoke="${t.id}">Revoke</button>`}</td>

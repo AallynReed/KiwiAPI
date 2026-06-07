@@ -1,0 +1,507 @@
+:root {
+    --bg-dark: #12161c;
+    --bg-panel: #1d232b;
+    --border-color: #444c5e;
+    --text-main: #ffffff;
+    --text-muted: #a3adc2;
+    --accent-blue: #5ec6ff;
+    --accent-orange: #ff9800;
+    --accent-yellow: #fbc02d;
+    --discord-blurple: #5865F2;
+}
+
+body, html {
+    margin: 0; padding: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow-x: hidden;
+}
+
+/* Skip-to-content link — visually hidden until focused with the Tab key, then
+   slides into view at the top-left. Lets keyboard / screen-reader users jump
+   past the navbar straight to the page content. */
+.skip-link {
+    position: fixed; top: -40px; left: 12px;
+    z-index: 1100;
+    background: var(--accent-blue);
+    color: #06131c;
+    font-weight: 700; font-size: 0.9rem;
+    padding: 8px 14px; border-radius: 0 0 8px 8px;
+    text-decoration: none;
+    transition: top 0.18s ease;
+}
+.skip-link:focus { top: 0; outline: 2px solid #fff; outline-offset: 2px; }
+
+.highlight-blue { color: var(--accent-blue); }
+.highlight-orange { color: var(--accent-orange); }
+.highlight-yellow { color: var(--accent-yellow); }
+
+/* --- NAVIGATION --- */
+.navbar {
+    position: fixed; top: 0; left: 0; width: 100%;
+    height: 60px; display: flex; align-items: center;
+    background: rgba(18, 22, 28, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 1000;
+}
+.nav-container {
+    width: 100%; max-width: 1400px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+/* favicon.png has ~10% transparent padding around its artwork, so a height
+   of 24px makes the actual visible icon only ~19-20px and reads as small/cut
+   next to the wordmark. Render at 32px so the icon and text align visually. */
+.nav-logo img { height: 32px; width: auto; }
+.nav-links { display: flex; align-items: center; gap: 8px; }
+.nav-links a {
+    color: var(--text-muted); text-decoration: none; font-size: 0.9rem;
+    font-weight: 600; transition: 0.2s; padding: 8px 14px; border-radius: 8px;
+    display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.nav-links a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+
+/* Language switcher */
+.lang-picker { position: relative; display: inline-flex; align-items: center; }
+.lang-picker-icon {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    font-size: 0.8rem; color: var(--accent-blue); pointer-events: none;
+}
+.lang-select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    background-color: rgba(255,255,255,0.05); color: #fff;
+    border: 1px solid var(--border-color); border-radius: 8px;
+    padding: 8px 32px 8px 32px;
+    font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: inherit;
+    outline: none; transition: 0.2s;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3adc2' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat; background-position: right 11px center;
+}
+.lang-select:hover { background-color: rgba(255,255,255,0.1); border-color: var(--accent-blue); }
+.lang-select:focus-visible { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(94,198,255,0.25); }
+.lang-picker:hover .lang-picker-icon { color: #7ad2ff; }
+.lang-select option { background: var(--bg-panel); color: #fff; }
+
+/* Hamburger toggle button — hidden on desktop, becomes the only nav control
+   on phones/tablets. The .nav-links panel slides down below the navbar when
+   .navbar.open is set (handled by app.js). */
+.nav-toggle {
+    display: none;  /* shown via the mobile @media block below */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: #fff;
+    width: 42px; height: 42px;
+    border-radius: 8px;
+    cursor: pointer; padding: 0;
+    align-items: center; justify-content: center;
+    font-size: 1.05rem;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.nav-toggle:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--accent-blue); }
+.nav-toggle i { transition: transform 0.2s ease; }
+/* When open, rotate + swap the bars icon to an X via CSS content trick:
+   font-awesome glyph swap is done by toggling classes in JS, but we can also
+   spin the bars 90deg as a visual cue without the swap. We do BOTH — JS swaps
+   the class, this rule animates the rotation if classes change in flight. */
+.navbar.open .nav-toggle { background: rgba(94, 198, 255, 0.12); border-color: var(--accent-blue); }
+
+@media (max-width: 768px) {
+    .nav-toggle { display: inline-flex; }
+
+    /* Collapse the inline nav into a slide-down panel anchored under the
+       navbar. The navbar itself is position:fixed (60px tall), so absolute
+       positioning here is relative to the navbar — top:100% sits the panel
+       flush with the navbar's bottom edge across the full viewport width. */
+    .nav-links {
+        position: absolute;
+        top: 100%; left: 0; right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        padding: 12px 14px 14px;
+        background: rgba(18, 22, 28, 0.98);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border-color);
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        transform: translateY(-8px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .navbar.open .nav-links {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .nav-links a {
+        padding: 12px 14px;
+        font-size: 1rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        justify-content: flex-start;
+    }
+    /* Re-show the link labels inside the panel (they're worth their width here
+       since the row is now a full-width column, not a cramped horizontal bar). */
+    .nav-links a span,
+    .nav-links a .label { display: inline; }
+    .nav-links a.nav-cta { background: var(--accent-orange); color: #1a1205; }
+
+    /* Language picker becomes a full-width row at the bottom of the panel. */
+    .lang-picker {
+        margin-top: 6px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+    }
+    .lang-picker-icon { display: inline; left: 14px; }
+    .lang-select {
+        width: 100%;
+        padding: 12px 32px 12px 34px;
+        font-size: 0.95rem;
+    }
+
+    .nav-container { padding: 0 14px; }
+}
+
+/* --- BUTTONS --- */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 12px 24px; border-radius: 8px; font-weight: bold;
+    text-decoration: none; transition: 0.3s;
+    min-width: 180px;
+    box-sizing: border-box;  /* without this, max-width:300px on phones gets +48px from padding -> horizontal scroll */
+}
+.btn-primary { background: var(--accent-blue); color: #000; }
+.btn-secondary { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color); }
+.btn-discord { background: var(--discord-blurple); color: #fff; }
+.btn-web { background: var(--accent-orange); color: #1a1205; }
+.btn:hover { transform: translateY(-2px); opacity: 0.9; }
+
+/* Highlighted "Web App" link in the navbar */
+.nav-links a.nav-cta { color: #1a1205; background: var(--accent-orange); }
+.nav-links a.nav-cta:hover { color: #1a1205; background: #ffb24d; }
+
+/* "Last updated" release line under the hero buttons */
+.release-info {
+    margin-top: 16px; min-height: 1.1em;
+    font-size: 0.9rem; color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    opacity: 0; transition: opacity 0.4s ease;
+}
+.release-info.show { opacity: 1; }
+.release-info strong { color: #fff; font-weight: 700; }
+.release-info .ok { color: #46d39a; }
+.release-info a { color: var(--accent-blue); text-decoration: none; }
+.release-info a:hover { text-decoration: underline; }
+
+/* Download dropdown — one trigger that opens a panel listing every platform.
+   Populated from /v1/btt/latest. The trigger shows the user's-platform version;
+   the panel shows ALL platforms with their (potentially different) versions. */
+.download-dropdown { position: relative; display: inline-block; }
+.download-trigger {
+    display: inline-flex; align-items: center; gap: 10px;
+    cursor: pointer; border: none;
+    /* Reuse .btn / .btn-primary base — set on the element directly in HTML. */
+}
+.download-trigger:disabled { opacity: 0.6; cursor: wait; }
+.download-caret {
+    margin-left: -2px; transition: transform 0.2s ease;
+    font-size: 0.85em;
+}
+.download-dropdown.open .download-caret { transform: rotate(180deg); }
+
+.download-panel {
+    position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    min-width: 260px;
+    background: #161b22;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 30;
+    opacity: 0; transform-origin: top center;
+    transform: translateX(-50%) translateY(-6px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    pointer-events: none;
+}
+.download-panel[hidden] { display: none; }
+.download-dropdown.open .download-panel {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+.download-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 7px;
+    text-decoration: none; color: var(--text-main);
+    transition: background 0.15s ease;
+}
+.download-item:hover, .download-item:focus-visible {
+    background: rgba(31, 111, 235, 0.15);
+    outline: none;
+}
+.download-item[hidden] { display: none; }
+.download-item-icon { font-size: 1.4rem; color: var(--accent-blue); width: 22px; text-align: center; }
+.download-item-text { display: flex; flex-direction: column; flex: 1; }
+.download-item-text strong { font-weight: 700; color: #fff; }
+.download-item-version {
+    font-size: 0.78rem; color: var(--text-muted);
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+}
+.download-item-arrow { font-size: 0.85rem; color: var(--text-muted); opacity: 0.7; }
+.download-item:hover .download-item-arrow { color: var(--accent-blue); opacity: 1; }
+
+/* Hero "Supported platforms" row — a single line of icon chips sitting
+   just below the "No install needed" microcopy. */
+.hero-platforms {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    justify-content: center;
+    margin-top: 18px;
+}
+.plat-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    font-size: 0.95rem; font-weight: 600;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    line-height: 1;
+}
+.plat-badge i { font-size: 1.5rem; }
+/* Platform-tinted accents: a subtle hue per badge so the row reads at a glance. */
+.plat-badge.plat-windows i { color: #4ea1ff; }
+.plat-badge.plat-linux   i { color: #ffb04e; }
+.plat-badge.plat-android i { color: #6cc94f; }
+.plat-badge.plat-web     i { color: var(--accent-orange); }
+
+/* Inline error block inside the dropdown panel (shown when the API is
+   unreachable / has no usable builds). Never replaces the dropdown with a
+   redirect — the user always stays on the page. */
+.download-status {
+    padding: 12px 14px 8px;
+    text-align: center;
+    color: var(--text-muted);
+}
+.download-status[hidden] { display: none; }
+.download-status-msg { margin: 0 0 10px; font-size: 0.85rem; line-height: 1.45; }
+.download-retry {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 6px;
+    background: rgba(31, 111, 235, 0.15);
+    color: var(--accent-blue);
+    border: 1px solid var(--border-color);
+    font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.download-retry:hover {
+    background: rgba(31, 111, 235, 0.25);
+    border-color: var(--accent-blue);
+}
+
+/* Microcopy under the hero buttons */
+.hero-note {
+    margin-top: 12px; color: var(--text-muted); font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.hero-note i { color: var(--accent-blue); }
+
+/* Online-CTA eyebrow + subnote (reused from the old "Try it online" panel). */
+.feat-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--accent-orange); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 12px;
+}
+.feat-subnote { color: var(--text-muted); font-size: 0.92rem; margin-top: 12px; opacity: 0.85; }
+
+/* --- HERO --- */
+.hero {
+    height: 100vh; display: flex; align-items: center; justify-content: center;
+    text-align: center; background: radial-gradient(circle at center, #1d232b 0%, #12161c 100%);
+    padding: 20px; box-sizing: border-box;
+}
+.hero-main-logo { width: 100px; margin-bottom: 15px; }
+.hero h1 { font-size: clamp(2rem, 8vw, 4rem); margin-bottom: 0.5rem; }
+.hero-subtitle { font-size: 1.1rem; color: var(--text-muted); margin: 0 auto 2rem; max-width: 600px; }
+.hero-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+
+/* --- ONLINE CTA --- (was a pinned-scroll panel; now a banner between hero
+   and feature grid). Single-column, centered, with the Web App orange-button
+   borrowed from the hero. */
+.online-cta {
+    padding: 80px 20px 40px;
+    background: linear-gradient(180deg, transparent 0%, rgba(255, 152, 0, 0.04) 100%);
+}
+.online-cta-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+}
+.online-cta h2 { font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0 0 14px; line-height: 1.2; }
+.online-cta p { font-size: 1.05rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 12px; }
+.online-cta-btn { margin-top: 18px; }
+
+/* --- FEATURE GRID --- replaces the GSAP showcase. Each section is a category
+   with a responsive auto-fit grid of cards inside. */
+.features-section {
+    padding: 48px 20px 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+.features-section + .features-section { padding-top: 24px; }
+.features-section h2 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    margin: 0 0 6px;
+    text-align: center;
+    line-height: 1.2;
+}
+.features-section-sub {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin: 0 0 28px;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+}
+.feature-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+.feature-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent-blue);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+.feature-card img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    display: block;
+    background: #0f1216;
+    border-bottom: 1px solid var(--border-color);
+}
+.feature-card-body { padding: 16px 18px 20px; }
+.feature-card-body h3 {
+    font-size: 1.1rem;
+    margin: 0 0 8px;
+    line-height: 1.3;
+}
+.feature-card-body p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Native smooth-scroll for the anchor-click handler in app.js. */
+html { scroll-behavior: smooth; }
+
+/* Fallback shown when a screenshot file hasn't been captured yet. */
+.shot-placeholder {
+    width: min(620px, 100%);
+    min-height: 340px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    padding: 40px; box-sizing: border-box;
+    border: 2px dashed var(--border-color); border-radius: 12px;
+    background: rgba(255,255,255,0.02); text-align: center;
+}
+.shot-placeholder i { font-size: 2.6rem; color: var(--accent-blue); opacity: 0.55; }
+.shot-placeholder span { font-size: 1.1rem; font-weight: 600; color: #fff; }
+.shot-placeholder code {
+    font-size: 0.8rem; color: var(--text-muted);
+    background: rgba(0,0,0,0.35); padding: 3px 8px; border-radius: 6px;
+}
+
+/* --- MOBILE FIXES --- */
+@media (max-width: 768px) {
+    /* The navbar is position:fixed at the top, so any section starting at the
+       very top of the page renders BEHIND it. On desktop the hero is tall
+       enough that flex-centering shifts the content down past the 60px navbar
+       naturally; on mobile (smaller viewport, taller stacked content) flex
+       centering pulls everything up and the hero-main-logo ends up partially
+       hidden under the navbar. Reserve 80px of top space and let the hero
+       grow vertically so all the stacked content has room. */
+    .hero {
+        height: auto;
+        min-height: 100vh;
+        padding: 80px 20px 40px;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Phone-sized feature grid: single column with tighter card spacing. */
+    .features-section { padding: 36px 16px 20px; }
+    .feature-grid { gap: 14px; }
+    .feature-card-body { padding: 14px 16px 16px; }
+
+    .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    /* The download-dropdown is a <div> wrapper, not a .btn — so the column-
+       stack rule above wouldn't size it like the sibling buttons. Make it
+       behave like the others. */
+    .download-dropdown { display: block; width: 100%; max-width: 300px; }
+    .download-trigger { width: 100%; }
+
+    /* Re-anchor the panel to the dropdown wrapper (not the trigger's center)
+       so it doesn't shoot off the side on a narrow viewport. */
+    .download-panel {
+        left: 0; right: 0; transform: translateY(-6px);
+        min-width: 0; width: 100%;
+        max-width: 100%;
+    }
+    .download-dropdown.open .download-panel { transform: translateY(0); }
+}
+
+/* Hero platform badges — the bigger size I set is fine on desktop but four of
+   them total ~475 px, which wraps to two rows below 480 px. Shrink them so they
+   stay on a single row on phones. */
+@media (max-width: 480px) {
+    .hero-platforms { gap: 6px; margin-top: 14px; }
+    .plat-badge { padding: 5px 9px; font-size: 0.72rem; gap: 6px; }
+    .plat-badge i { font-size: 1rem; }
+}
+
+/* Tightest phones (≤360 px, e.g. Galaxy S8/S20): drop the label text from
+   the badges so they fit as icon-only chips — the title attribute keeps the
+   accessibility hint intact. */
+@media (max-width: 360px) {
+    .plat-badge > span { display: none; }
+    .plat-badge { padding: 6px 9px; }
+    .plat-badge i { font-size: 1.1rem; }
+}
+
+/* Footer */
+.footer-cta {
+    min-height: 40vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    background: var(--bg-panel); padding: 40px 20px;
+}
+.opensource-notice { margin-top: 10px; color: var(--text-muted); font-size: 0.9rem; max-width: 520px; }
+.footer-links {
+    display: flex; flex-wrap: wrap; gap: 10px 22px;
+    justify-content: center; margin-top: 22px;
+}
+.footer-links a {
+    color: var(--text-muted); text-decoration: none; font-size: 0.92rem; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
+}
+.footer-links a:hover { color: #fff; }
+.footer-links a i { color: var(--accent-blue); }

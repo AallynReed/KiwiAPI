@@ -55,6 +55,10 @@ _REGISTRY: tuple[Scope, ...] = (
           "Read parsed game codexes — allies, mounts, dragons, mementos, recipes, items, fish, badges"),
     Scope("btt:read", 1 << 8, "btt",
           "Read BetterTroveTools releases — latest version per platform and channel"),
+    Scope("leaderboards:read", 1 << 9, "leaderboards",
+          "Read Trove in-game leaderboards — boards, entries, timestamps"),
+    Scope("market:read", 1 << 10, "market",
+          "Read Trove marketplace listings — listings, items, interest list, price history"),
 )
 
 ALL_SCOPES = 0  # sentinel mask meaning "every scope, present and future"

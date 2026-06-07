@@ -307,6 +307,91 @@ async def test_btt_releases(client):
     assert empty["latest"] is None and empty["update_available"] is False
 
 
+async def test_btt_changelog(client):
+    from app.core.config import settings
+    from app.core.utils import utcnow
+    from app.trove.models import BttChangelog
+
+    # Seed two groups: an "Unreleased" with one conventional commit + a tagged
+    # release with two. Slicing knobs trim what comes back.
+    groups = [
+        {"version": "Unreleased", "commits": [
+            {"sha": "a"*40, "short_sha": "a"*7, "message": "feat: new thing",
+             "type": "feat", "url": "https://gh/a"},
+        ]},
+        {"version": "v1.0.0", "commits": [
+            {"sha": "b"*40, "short_sha": "b"*7, "message": "fix(x): bug",
+             "type": "fix", "url": "https://gh/b"},
+            {"sha": "c"*40, "short_sha": "c"*7, "message": "initial",
+             "type": None, "url": "https://gh/c"},
+        ]},
+    ]
+    await BttChangelog(repo=settings.btt_releases_repo, groups=groups,
+                       rate_limited=False, fetched_at=utcnow()).insert()
+
+    # Public — no token required.
+    r = await client.get("/v1/btt/changelog")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["repo"] == settings.btt_releases_repo
+    assert body["rate_limited"] is False
+    assert [g["version"] for g in body["groups"]] == ["Unreleased", "v1.0.0"]
+    assert body["groups"][0]["commits"][0]["type"] == "feat"
+    assert body["groups"][1]["commits"][1]["type"] is None
+
+    # Slicing knobs.
+    one_group = (await client.get("/v1/btt/changelog?limit_groups=1")).json()
+    assert [g["version"] for g in one_group["groups"]] == ["Unreleased"]
+    one_per = (await client.get("/v1/btt/changelog?commits_per_group=1")).json()
+    assert all(len(g["commits"]) == 1 for g in one_per["groups"])
+
+    # Empty-DB case: returns an empty payload (not 404) so the client renders "loading".
+    await BttChangelog.find().delete()
+    empty = (await client.get("/v1/btt/changelog")).json()
+    assert empty["groups"] == [] and empty["rate_limited"] is False
+
+
+async def test_site_routes(client):
+    # The BTT showcase site lives in `site/` and is mounted at /, /documentation,
+    # /unlock_debug, /unlock_fps, with assets at /static/*. The api container
+    # serves trove.aallyn.net out of this.
+
+    # Landing page renders the BTT index.html (we just check a known string is in it).
+    r = await client.get("/")
+    assert r.status_code == 200
+    assert "Better Trove Tools" in r.text
+    assert "download-dropdown" in r.text  # the new platform dropdown is wired in
+    assert "hero-platforms" in r.text     # supported-platforms row is in the hero
+
+    # Documentation page.
+    r = await client.get("/documentation")
+    assert r.status_code == 200 and "Trove Tools" in r.text
+
+    # Static files (css) — content-type and a known rule should both be served.
+    r = await client.get("/static/style.css")
+    assert r.status_code == 200 and "btn-primary" in r.text
+
+    # Byte-patcher: GET form, then POST a fake exe that contains the find-pattern.
+    r = await client.get("/unlock_debug")
+    assert r.status_code == 200
+
+    # The /unlock_debug payload looks for bytes 7C 39 68 E0 02 00 00 and replaces
+    # the leading 7C 39 with 90 90. Send 8 bytes of which 7 match the pattern.
+    needle = bytes.fromhex("7C 39 68 E0 02 00 00")
+    expect = bytes.fromhex("90 90 68 E0 02 00 00")
+    fake_exe = b"prefix" + needle + b"suffix"
+    files = {"trove_exe": ("Trove.exe", fake_exe, "application/octet-stream")}
+    r = await client.post("/unlock_debug", files=files)
+    assert r.status_code == 200
+    assert r.content == b"prefix" + expect + b"suffix"
+    # No upload at all -> 400.
+    assert (await client.post("/unlock_debug")).status_code == 400
+
+    # The old API landing card moved to /api-info and still renders.
+    r = await client.get("/api-info")
+    assert r.status_code == 200 and "Programmatic API" in r.text
+
+
 async def test_news_live_and_history(client):
     from datetime import timedelta
 

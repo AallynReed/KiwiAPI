@@ -1,0 +1,590 @@
+/* =========================================================================
+   Better Trove Tools — Documentation styles
+   Shares the brand palette with the landing page (style.css).
+   ========================================================================= */
+
+:root {
+    --bg-dark: #12161c;
+    --bg-panel: #1d232b;
+    --bg-elev: #232a34;
+    --bg-code: #0d1117;
+    --border-color: #2d3542;
+    --border-soft: #232a34;
+    --text-main: #ffffff;
+    --text-muted: #a3adc2;
+    --text-dim: #79839a;
+    --accent-blue: #5ec6ff;
+    --accent-orange: #ff9800;
+    --accent-yellow: #fbc02d;
+    --accent-green: #46d39a;
+    --accent-purple: #b794f6;
+    --accent-red: #ff6b6b;
+    --discord-blurple: #5865F2;
+    --sidebar-w: 280px;
+    --navbar-h: 60px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body, html {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.65;
+}
+
+a { color: var(--accent-blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.highlight-blue { color: var(--accent-blue); }
+.highlight-orange { color: var(--accent-orange); }
+.highlight-yellow { color: var(--accent-yellow); }
+
+/* ---------------------------------------------------------------- Navbar */
+.navbar {
+    position: fixed; top: 0; left: 0; width: 100%;
+    height: var(--navbar-h);
+    display: flex; align-items: center;
+    background: rgba(18, 22, 28, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 1000;
+}
+.nav-container {
+    width: 100%; max-width: 1500px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 20px; gap: 16px;
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+/* See style.css note — favicon.png has transparent padding; bump to 32px so
+   the actual visible artwork matches the wordmark height instead of reading
+   as a small/cropped icon. */
+.nav-logo img { height: 32px; width: auto; }
+.nav-actions { display: flex; align-items: center; gap: 8px; }
+.nav-link {
+    color: var(--text-muted); font-size: 0.9rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 8px; transition: 0.18s; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 8px;
+}
+.nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); text-decoration: none; }
+.nav-link.primary { background: var(--accent-blue); color: #06131c; }
+.nav-link.primary:hover { background: #7ad2ff; }
+.nav-link.discord { background: var(--discord-blurple); color: #fff; }
+.nav-link.discord:hover { background: #6b76f4; }
+
+.mobile-menu-btn {
+    display: none; background: transparent; border: 1px solid var(--border-color);
+    color: var(--text-main); width: 40px; height: 40px; border-radius: 8px;
+    font-size: 1.1rem; cursor: pointer;
+}
+
+/* Language switcher */
+.lang-picker { position: relative; display: inline-flex; align-items: center; }
+.lang-picker-icon {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    font-size: 0.8rem; color: var(--accent-blue); pointer-events: none;
+}
+.lang-select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    background-color: var(--bg-panel); color: #fff;
+    border: 1px solid var(--border-color); border-radius: 8px;
+    padding: 8px 32px 8px 32px;
+    font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit;
+    outline: none; transition: 0.2s;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3adc2' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat; background-position: right 11px center;
+}
+.lang-select:hover { background-color: var(--bg-elev); border-color: var(--accent-blue); }
+.lang-select:focus-visible { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(94,198,255,0.25); }
+.lang-picker:hover .lang-picker-icon { color: #7ad2ff; }
+.lang-select option { background: var(--bg-panel); color: #fff; }
+
+/* ----------------------------------------------------------- Page layout */
+.docs-layout {
+    display: flex;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding-top: var(--navbar-h);
+}
+
+/* --------------------------------------------------------------- Sidebar */
+.sidebar {
+    position: sticky;
+    top: var(--navbar-h);
+    align-self: flex-start;
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    height: calc(100vh - var(--navbar-h));
+    overflow-y: auto;
+    padding: 24px 16px 60px;
+    border-right: 1px solid var(--border-color);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 8px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 8px; }
+
+.sidebar-search {
+    position: relative; margin-bottom: 20px;
+}
+.sidebar-search i {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--text-dim); font-size: 0.85rem; pointer-events: none;
+}
+.sidebar-search input {
+    width: 100%; padding: 10px 12px 10px 34px;
+    background: var(--bg-code); border: 1px solid var(--border-color);
+    border-radius: 8px; color: var(--text-main); font-size: 0.9rem;
+    outline: none; transition: border-color 0.18s;
+}
+.sidebar-search input:focus { border-color: var(--accent-blue); }
+.sidebar-search input::placeholder { color: var(--text-dim); }
+
+.nav-group { margin-bottom: 22px; }
+.nav-group-title {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.2px; color: var(--text-dim);
+    padding: 0 12px 8px; display: flex; align-items: center; gap: 8px;
+}
+.nav-group ul { list-style: none; margin: 0; padding: 0; }
+.nav-group li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 8px;
+    color: var(--text-muted); font-size: 0.92rem; font-weight: 500;
+    transition: 0.15s; border-left: 2px solid transparent;
+}
+.nav-group li a i { width: 18px; text-align: center; font-size: 0.85rem; color: var(--text-dim); transition: 0.15s; }
+.nav-group li a:hover {
+    color: #fff; background: rgba(255,255,255,0.04); text-decoration: none;
+}
+.nav-group li a.active {
+    color: var(--accent-blue); background: rgba(94, 198, 255, 0.10);
+    border-left-color: var(--accent-blue);
+}
+.nav-group li a.active i { color: var(--accent-blue); }
+.nav-empty {
+    display: none; padding: 12px; color: var(--text-dim); font-size: 0.85rem; text-align: center;
+}
+
+/* --------------------------------------------------------------- Content */
+.content {
+    flex: 1;
+    min-width: 0;
+    padding: 40px 48px 120px;
+    max-width: 980px;
+}
+
+.docs-hero {
+    margin-bottom: 48px;
+    padding-bottom: 36px;
+    border-bottom: 1px solid var(--border-color);
+}
+.docs-hero .eyebrow {
+    color: var(--accent-blue); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 10px;
+}
+.docs-hero h1 { font-size: clamp(2rem, 5vw, 2.8rem); margin: 0 0 14px; line-height: 1.15; }
+.docs-hero p { color: var(--text-muted); font-size: 1.12rem; margin: 0; max-width: 720px; }
+
+.hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--bg-panel); border: 1px solid var(--border-color);
+    padding: 8px 14px; border-radius: 999px; font-size: 0.85rem; color: var(--text-muted);
+}
+.hero-badge i { color: var(--accent-blue); }
+
+/* Section */
+.doc-section { scroll-margin-top: calc(var(--navbar-h) + 20px); margin-bottom: 28px; }
+.section-heading {
+    display: flex; align-items: center; gap: 14px;
+    margin: 56px 0 8px; padding-top: 8px;
+}
+.section-heading:first-of-type { margin-top: 0; }
+.section-heading .sec-icon {
+    flex-shrink: 0; width: 46px; height: 46px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; background: var(--bg-panel);
+    border: 1px solid var(--border-color); color: var(--accent-blue);
+}
+.section-heading h2 { font-size: 1.75rem; margin: 0; }
+.section-lead { color: var(--text-muted); font-size: 1.05rem; margin: 0 0 24px 60px; }
+@media (max-width: 600px) { .section-lead { margin-left: 0; } }
+
+/* Feature card */
+.feature-block {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 24px;
+}
+.feature-head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.feature-head .f-icon {
+    width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+    background: var(--bg-elev); border: 1px solid var(--border-color);
+}
+.feature-head .kicker {
+    margin: 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--accent-purple);
+}
+.feature-head h3 { margin: 2px 0 0; font-size: 1.3rem; }
+.feature-block > p { color: var(--text-muted); }
+.feature-block > p:first-of-type { margin-top: 14px; }
+
+/* Callouts */
+.callout {
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-left: 4px solid var(--accent-blue);
+    background: rgba(94, 198, 255, 0.06);
+}
+.callout h4 {
+    margin: 0 0 10px; font-size: 1rem; color: var(--accent-blue);
+    display: flex; align-items: center; gap: 8px;
+}
+.callout ol, .callout ul { margin: 0; padding-left: 22px; }
+.callout li { margin-bottom: 8px; }
+.callout li:last-child { margin-bottom: 0; }
+.callout p { margin: 8px 0 0; }
+.callout p:first-child { margin-top: 0; }
+
+.callout.tip { border-left-color: var(--accent-green); background: rgba(70, 211, 154, 0.07); }
+.callout.tip h4 { color: var(--accent-green); }
+.callout.warn { border-left-color: var(--accent-orange); background: rgba(255, 152, 0, 0.07); }
+.callout.warn h4 { color: var(--accent-orange); }
+.callout.danger { border-left-color: var(--accent-red); background: rgba(255, 107, 107, 0.08); }
+.callout.danger h4 { color: var(--accent-red); }
+
+/* Inline UI references */
+.ui-btn {
+    background: var(--bg-code); padding: 2px 9px; border: 1px solid var(--border-color);
+    border-radius: 6px; font-family: 'Consolas', monospace; color: #fff; font-size: 0.88em;
+    white-space: nowrap;
+}
+kbd {
+    background: var(--bg-elev); border: 1px solid var(--border-color);
+    border-bottom-width: 2px; border-radius: 6px; padding: 2px 8px;
+    font-family: 'Consolas', monospace; font-size: 0.85em; color: #fff; white-space: nowrap;
+}
+code {
+    background: var(--bg-code); border: 1px solid var(--border-soft);
+    padding: 1px 6px; border-radius: 5px; font-family: 'Consolas', monospace;
+    font-size: 0.88em; color: var(--accent-orange);
+}
+
+/* Screenshot */
+.shot { margin: 22px 0 4px; }
+.shot img {
+    width: 100%; height: auto; display: block;
+    border-radius: 12px; border: 1px solid var(--border-color);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+}
+.shot figcaption { margin-top: 10px; color: var(--text-dim); font-size: 0.85rem; text-align: center; }
+
+/* Feature pill list */
+.pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--bg-elev); border: 1px solid var(--border-color);
+    border-radius: 999px; padding: 6px 13px; font-size: 0.85rem; color: var(--text-muted);
+}
+.pill i { color: var(--accent-blue); font-size: 0.8rem; }
+
+/* Beta / tag chip */
+.tag {
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.5px;
+    padding: 2px 7px; border-radius: 5px; text-transform: uppercase;
+    background: rgba(183, 148, 246, 0.18); color: var(--accent-purple);
+    border: 1px solid rgba(183, 148, 246, 0.35); vertical-align: middle;
+}
+.tag.exp { background: rgba(255, 152, 0, 0.16); color: var(--accent-orange); border-color: rgba(255,152,0,0.35); }
+
+/* Grid of mini-cards (e.g. codex list, calculators) */
+.mini-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px; margin: 18px 0;
+}
+.mini-card {
+    background: var(--bg-elev); border: 1px solid var(--border-color);
+    border-radius: 10px; padding: 16px;
+}
+.mini-card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 9px; }
+.mini-card h4 i { color: var(--accent-blue); }
+.mini-card p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
+
+/* FAQ */
+.faq details {
+    background: var(--bg-panel); border: 1px solid var(--border-color);
+    border-radius: 10px; padding: 0; margin-bottom: 12px; overflow: hidden;
+}
+.faq summary {
+    cursor: pointer; padding: 16px 20px; font-weight: 600; list-style: none;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "\f078"; font-family: "Font Awesome 6 Free"; font-weight: 900; color: var(--text-dim); font-size: 0.8rem; transition: 0.2s; }
+.faq details[open] summary::after { transform: rotate(180deg); }
+.faq details[open] summary { border-bottom: 1px solid var(--border-color); color: var(--accent-blue); }
+.faq .faq-body { padding: 16px 20px; color: var(--text-muted); }
+.faq .faq-body p { margin: 0; }
+
+/* Footer */
+.docs-footer {
+    border-top: 1px solid var(--border-color);
+    margin-top: 60px; padding-top: 28px;
+    color: var(--text-dim); font-size: 0.9rem;
+    display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center;
+}
+.docs-footer a { color: var(--text-muted); }
+
+/* Back-to-top */
+#to-top {
+    position: fixed; right: 24px; bottom: 24px; z-index: 900;
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--accent-blue); color: #06131c; border: none;
+    font-size: 1rem; cursor: pointer; display: none;
+    align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45); transition: transform 0.18s;
+}
+#to-top:hover { transform: translateY(-3px); }
+#to-top.show { display: flex; }
+
+/* Sidebar backdrop (mobile) */
+.sidebar-backdrop {
+    display: none; position: fixed; inset: var(--navbar-h) 0 0 0;
+    background: rgba(0,0,0,0.5); z-index: 800;
+}
+
+/* ------------------------------------------------------------ Responsive */
+@media (max-width: 980px) {
+    .content { padding: 32px 28px 100px; }
+}
+
+@media (max-width: 860px) {
+    .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; }
+    .nav-actions .nav-link.label-only { display: none; }
+
+    .sidebar {
+        position: fixed; top: var(--navbar-h); left: 0; bottom: 0;
+        width: 290px; max-width: 85vw; height: auto;
+        background: var(--bg-dark); z-index: 850;
+        transform: translateX(-100%); transition: transform 0.25s ease;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-backdrop.show { display: block; }
+    .content { padding: 28px 20px 90px; max-width: 100%; }
+    .feature-block { padding: 20px; }
+}
+
+/* ----------------------------------------------------------------------------
+   Mobile navbar (≤768px): drop every desktop nav item and reduce the navbar
+   to logo + ONE hamburger. The hamburger:
+   - on docs.html → opens the sidebar drawer, which has been augmented with
+     site nav links + lang picker at its top so it's the unified mobile menu
+   - on unlock_*.html → opens a slide-down `.unlock-nav-panel` with site links
+   Both pages share the same `.mobile-menu-btn` styling.
+   ---------------------------------------------------------------------------- */
+@media (max-width: 860px) {
+    /* The hamburger (.mobile-menu-btn) already becomes visible at this same
+       breakpoint above; hide the desktop nav items here so logo + hamburger
+       is the only thing on the bar — no orphan tablet zone where the items
+       disappear but no hamburger has shown up yet. */
+    .nav-container { padding: 0 14px; gap: 10px; }
+    .nav-actions > .nav-link,
+    .nav-actions > .lang-picker { display: none !important; }
+    .nav-actions { gap: 0; }
+}
+
+/* Sidebar header on mobile — site nav + language picker injected ABOVE the
+   doc-section nav so the sidebar drawer is the complete mobile menu. */
+.sidebar-mobile-nav { display: none; }  /* hidden on desktop */
+@media (max-width: 860px) {
+    .sidebar-mobile-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 4px 0 14px;
+        margin-bottom: 14px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .sidebar-mobile-nav a {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 12px; border-radius: 8px;
+        color: var(--text-muted); font-size: 0.95rem; font-weight: 600;
+        background: rgba(255, 255, 255, 0.03);
+        text-decoration: none; transition: 0.15s;
+    }
+    .sidebar-mobile-nav a:hover { color: #fff; background: rgba(255, 255, 255, 0.07); }
+    .sidebar-mobile-nav a i { width: 18px; text-align: center; color: var(--accent-blue); }
+    .sidebar-mobile-nav a.primary { background: var(--accent-blue); color: #06131c; }
+    .sidebar-mobile-nav a.primary i { color: #06131c; }
+    .sidebar-mobile-nav a.discord { background: var(--discord-blurple); color: #fff; }
+    .sidebar-mobile-nav a.discord i { color: #fff; }
+    .sidebar-mobile-nav .sidebar-lang {
+        margin-top: 8px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-color);
+    }
+    .sidebar-mobile-nav .sidebar-lang .lang-select {
+        width: 100%; padding: 10px 32px 10px 34px; font-size: 0.9rem;
+    }
+}
+
+/* Slide-down nav panel for the unlock_* pages — same shape as the home page's
+   .nav-links panel but tied to docs.css's .navbar (which is the only navbar on
+   those pages). Toggled by .navbar.open via inline JS in the templates. */
+.unlock-nav-panel {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 12px 14px 14px;
+    background: rgba(18, 22, 28, 0.98);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    transform: translateY(-8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 950;
+}
+.navbar.open .unlock-nav-panel {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+.unlock-nav-panel a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: 8px;
+    color: var(--text-muted); font-size: 1rem; font-weight: 600;
+    background: rgba(255, 255, 255, 0.03);
+    text-decoration: none;
+}
+.unlock-nav-panel a:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.unlock-nav-panel a i { width: 18px; text-align: center; color: var(--accent-blue); }
+
+/* On desktop the unlock pages hide the slide-down panel and the hamburger;
+   the nav-actions items show inline as normal. Threshold matches the
+   .mobile-menu-btn visibility cutoff above (≤860px). */
+@media (min-width: 861px) {
+    .unlock-nav-panel { display: none; }
+}
+
+/* ----------------------------------------------------------------------------
+   Drop-zone for the unlock pages: replaces the default <input type="file">
+   chrome with a clickable / drag-and-drop area that shows the chosen file's
+   name + size after pick. The <input> stays in the DOM (form submits it) but
+   is visually hidden inside the label.
+   ---------------------------------------------------------------------------- */
+.drop-zone {
+    display: block;
+    position: relative;
+    margin: 18px 0;
+    padding: 28px 20px;
+    background: var(--bg-code);
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    color: var(--text-main);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.12s ease;
+}
+.drop-zone:hover { border-color: var(--accent-blue); background: rgba(94, 198, 255, 0.04); }
+.drop-zone.dragover {
+    border-color: var(--accent-blue);
+    background: rgba(94, 198, 255, 0.10);
+    transform: scale(1.01);
+}
+.drop-zone.has-file { border-style: solid; border-color: var(--accent-blue); background: rgba(94, 198, 255, 0.05); }
+.drop-zone input[type="file"] {
+    position: absolute;
+    width: 1px; height: 1px;
+    opacity: 0; overflow: hidden;
+    pointer-events: none;
+}
+.drop-zone-icon {
+    font-size: 2rem;
+    color: var(--accent-blue);
+    margin-bottom: 8px;
+    display: block;
+}
+.drop-zone-title { font-weight: 700; color: #fff; font-size: 1rem; line-height: 1.4; word-break: break-word; }
+.drop-zone-hint  { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+.drop-zone-clear {
+    position: absolute; top: 8px; right: 8px;
+    width: 30px; height: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: 0.15s;
+}
+.drop-zone-clear:hover { background: rgba(255, 255, 255, 0.12); color: #fff; border-color: var(--accent-blue); }
+
+/* Submit button on the unlock pages — was using .nav-link.primary (too small
+   and visually wrong for a primary action). This is a proper full-width
+   primary button. */
+.btn-action {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%;
+    padding: 14px 20px;
+    background: var(--accent-blue);
+    color: #06131c;
+    border: none; border-radius: 10px;
+    font-weight: 700; font-size: 0.98rem; font-family: inherit;
+    cursor: pointer;
+    transition: 0.18s;
+    box-sizing: border-box;
+}
+.btn-action:hover { background: #7ad2ff; transform: translateY(-1px); }
+.btn-action:active { transform: translateY(0); }
+.btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ----------------------------------------------------------------------------
+   Shared docs footer — appears on docs.html and the unlock_* pages. Matches
+   the home page footer-cta in spirit but slimmer since these pages aren't
+   landing pages.
+   ---------------------------------------------------------------------------- */
+.docs-footer {
+    margin-top: 80px;
+    padding: 28px 20px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.02);
+    text-align: center;
+}
+.docs-footer .docs-footer-links {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 8px 22px;
+    margin-bottom: 10px;
+}
+.docs-footer .docs-footer-links a {
+    color: var(--text-muted); text-decoration: none;
+    font-size: 0.9rem; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.docs-footer .docs-footer-links a:hover { color: #fff; }
+.docs-footer .docs-footer-links i { color: var(--accent-blue); }
+.docs-footer .docs-footer-meta { font-size: 0.82rem; color: var(--text-dim); }
+
+/* Skip-to-content link — see style.css for the full rationale. Hidden until
+   focused, then slides down so keyboard users can bypass the navbar. */
+.skip-link {
+    position: fixed; top: -40px; left: 12px;
+    z-index: 1100;
+    background: var(--accent-blue);
+    color: #06131c;
+    font-weight: 700; font-size: 0.9rem;
+    padding: 8px 14px; border-radius: 0 0 8px 8px;
+    text-decoration: none;
+    transition: top 0.18s ease;
+}
+.skip-link:focus { top: 0; outline: 2px solid #fff; outline-offset: 2px; }

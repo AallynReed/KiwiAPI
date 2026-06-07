@@ -2,15 +2,23 @@ import base64
 import re
 
 import httpx
-from fastapi import APIRouter, Body, Depends, Query, Response
+from fastapi import APIRouter, Body, Depends, File, Query, Request, Response, UploadFile
 from fastapi.responses import FileResponse
 
 from app.core.config import settings
-from app.core.dependencies import AccessContext, TokenContext, public_scope, require_scope
+from app.core.dependencies import (
+    AccessContext,
+    TokenContext,
+    get_superuser_token_context,
+    public_scope,
+    require_scope,
+)
 from app.core.errors import APIError, ErrorCode
+from app.core.ratelimit import check_rate_limit, rate_limit_headers
 from app.core.utils import utcnow
 from app.trove import (
     btt_releases,
+    captures,
     chaos,
     delves,
     misc,
@@ -23,6 +31,8 @@ from app.trove import (
 )
 from app.trove import calendar as trove_calendar
 from app.trove.codexes import read as codexes_read
+from app.trove.leaderboards import service as leaderboards_service
+from app.trove.market import service as market_service
 from app.trove.codexes.schemas import (
     CodexCategoryInfo,
     CodexCategoryList,
@@ -63,13 +73,23 @@ from app.trove.models import TroveEvent, TroveNews
 from app.trove.schemas import (
     BiomeRotationFeed,
     BttAsset,
+    BttChangelogGroup,
+    BttChangelogOut,
+    BttCommit,
     BttLatestPerPlatform,
     BttPlatformLatest,
     BttReleaseInfo,
     BttReleaseList,
     BttReleaseMeta,
     BttUpdateCheck,
+    CaptureInsertRequest,
+    CaptureInsertResponse,
+    ChallengeCaptureOut,
+    ChallengeCurrentOut,
+    ChallengeHistoryPage,
     ChaosChest,
+    ChaosChestCaptureOut,
+    ChaosChestHistoryPage,
     ClassList,
     Corruxion,
     DailyBuffs,
@@ -79,6 +99,20 @@ from app.trove.schemas import (
     EventCategoryList,
     Fluxion,
     Gardening,
+    LeaderboardBoardOut,
+    LeaderboardEntriesPage,
+    LeaderboardEntryOut,
+    LeaderboardInfo,
+    LeaderboardInsertResponse,
+    LeaderboardListOut,
+    LeaderboardPlayerEntry,
+    LeaderboardPlayerHistory,
+    LeaderboardTimestamps,
+    MarketInsertResponse,
+    MarketItemList,
+    MarketItemSummary,
+    MarketListingOut,
+    MarketListingsPage,
     ServerTime,
     StatTable,
     TroveClass,
@@ -120,6 +154,8 @@ mods_router = APIRouter(prefix="/v1/mods", tags=["mods"])
 updates_router = APIRouter(prefix="/v1/updates", tags=["updates"])
 codexes_router = APIRouter(prefix="/v1/codexes", tags=["codexes"])
 btt_router = APIRouter(prefix="/v1/btt", tags=["btt"])
+leaderboards_router = APIRouter(prefix="/v1/leaderboards", tags=["leaderboards"])
+market_router = APIRouter(prefix="/v1/market", tags=["market"])
 
 # rotations + feeds are PUBLIC: usable without a token at a stricter per-IP rate
 # limit; a token carrying the scope lifts the caller to the full per-token limit.
@@ -131,6 +167,10 @@ _FEED_IMG = Depends(public_scope("feeds:read", rate_multiplier=settings.bilibili
 _STAT = Depends(require_scope("stats:read"))
 _GEM = Depends(require_scope("gems:read"))
 _MISC = Depends(require_scope("misc:read"))
+# Tokenless slice of misc — the bot's interest-items list is public so dashboards
+# / wikis can render it without a key. A token carrying misc:read still earns the
+# wider per-token rate budget; anon callers pay the stricter per-IP cap.
+_MISC_PUBLIC = Depends(public_scope("misc:read"))
 _MODS = Depends(require_scope("mods:read"))
 _UPD = Depends(require_scope("updates:read"))
 # Codexes are PUBLIC too (game reference data): usable without a token, and at a
@@ -139,6 +179,13 @@ _CODEX = Depends(public_scope("codexes:read", rate_multiplier=settings.codexes_r
 # BTT releases are PUBLIC: the desktop app needs to poll them on every launch
 # to drive update notifications, so no token is required.
 _BTT = Depends(public_scope("btt:read"))
+# Leaderboards read-side is token-gated (the data is bulky + opinionated). The
+# write-side has its own dep — see /v1/leaderboards/insert below.
+_LB = Depends(require_scope("leaderboards:read"))
+_LB_MASTER = Depends(get_superuser_token_context)
+# Same shape: read gated by scope, write gated by superuser API token.
+_MKT = Depends(require_scope("market:read"))
+_MKT_MASTER = Depends(get_superuser_token_context)
 
 # The codex serves the primary timeline by default; PTS is opt-in via ?branch=.
 _DEFAULT_CODEX_BRANCH = "live-us"
@@ -184,8 +231,114 @@ async def get_gardening(ctx: AccessContext = _ROT) -> Gardening:
 
 @rotations_router.get("/chaos-chest", response_model=ChaosChest)
 async def get_chaos_chest(ctx: AccessContext = _ROT) -> ChaosChest:
-    """The weekly Chaos Chest: current featured item (relayed) + window + countdown."""
+    """The weekly Chaos Chest: current featured item + window + countdown.
+
+    Source preference: the bot-captured item for the current week wins (it's
+    read straight from the in-game cfg). Falls back to the Trovesaurus relay
+    when the bot hasn't reported this week yet — e.g., immediately after a Tue
+    11:00 UTC reset."""
     return ChaosChest(**await chaos.get_chaos_chest())
+
+
+@rotations_router.post("/chaos-chest/insert", response_model=CaptureInsertResponse,
+                       summary="Insert chaos chest data")
+async def insert_chaos_chest(
+    req: CaptureInsertRequest,
+    ctx: TokenContext = Depends(get_superuser_token_context),
+) -> CaptureInsertResponse:
+    """Persist the bot-captured chaos-chest item for the current weekly window.
+
+    **Master only**: requires an API token owned by a superuser account. The
+    server infers the week anchor (Tue 11:00 UTC) from "now" — the bot just
+    sends ``{name}``. Idempotent: re-submitting the same week replaces the row.
+    """
+    try:
+        doc, was_new = await captures.insert_chaos_chest(req.name)
+    except ValueError as e:
+        raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(e))
+    return CaptureInsertResponse(
+        anchor=doc.week_anchor, name=doc.name, refreshed=not was_new,
+    )
+
+
+@rotations_router.get("/chaos-chest/history", response_model=ChaosChestHistoryPage)
+async def list_chaos_chest_history(
+    ctx: AccessContext = _ROT,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> ChaosChestHistoryPage:
+    """Past chaos-chest captures, newest week first. Public under
+    ``rotations:read`` (the read-side is tokenless via the standard public
+    rate limit; submitting requires master)."""
+    docs, total = await captures.list_chaos_chest_history(limit=limit, offset=offset)
+    items = [
+        ChaosChestCaptureOut(
+            week_anchor=d.week_anchor,
+            week_ends_at=d.week_anchor + 7 * 86400,
+            name=d.name,
+            captured_at=d.captured_at,
+        )
+        for d in docs
+    ]
+    return ChaosChestHistoryPage(items=items, count=len(items), total=total)
+
+
+@rotations_router.get("/challenge/current", response_model=ChallengeCurrentOut)
+async def get_current_challenge(ctx: AccessContext = _ROT) -> ChallengeCurrentOut:
+    """The hourly challenge active right now (or the most-recent window when
+    we're in the gap between challenges).
+
+    Cadence: one challenge per hour on most days; on trove Fridays
+    (real-UTC Fri 11:00 → Sat 11:00) it's two per hour — :00 and :30 — and
+    ``is_friday_window`` is set. Each window lasts 20 minutes; ``active``
+    distinguishes the live window from the gap that follows.
+    """
+    return ChallengeCurrentOut(**await captures.get_current_challenge())
+
+
+@rotations_router.post("/challenge/insert", response_model=CaptureInsertResponse,
+                       summary="Insert challenge data")
+async def insert_challenge(
+    req: CaptureInsertRequest,
+    ctx: TokenContext = Depends(get_superuser_token_context),
+) -> CaptureInsertResponse:
+    """Persist the bot-captured challenge name for the active 20-minute window.
+
+    **Master only**. The server infers the window anchor from "now"; the bot
+    just sends ``{name}``. Idempotent at the (anchor) level. ``name`` of
+    ``"none"`` (or empty) is rejected — the bot is expected to skip those
+    submissions client-side, so seeing one here surfaces as a 400.
+    """
+    try:
+        doc, was_new = await captures.insert_challenge(req.name)
+    except ValueError as e:
+        raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(e))
+    return CaptureInsertResponse(
+        anchor=doc.window_anchor, name=doc.name, refreshed=not was_new,
+    )
+
+
+@rotations_router.get("/challenge/history", response_model=ChallengeHistoryPage)
+async def list_challenge_history(
+    ctx: AccessContext = _ROT,
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+) -> ChallengeHistoryPage:
+    """Past challenge captures, newest window first. Public under
+    ``rotations:read`` (tokenless via the standard public rate limit)."""
+    docs, total = await captures.list_challenge_history(limit=limit, offset=offset)
+    items = [
+        ChallengeCaptureOut(
+            window_anchor=d.window_anchor,
+            window_ends_at=d.window_ends_at,
+            name=d.name,
+            type=captures.classify_challenge(d.name),
+            is_friday_window=d.is_friday_window,
+            captured_at=d.captured_at,
+        )
+        for d in docs
+    ]
+    return ChallengeHistoryPage(items=items, count=len(items), total=total)
 
 
 @rotations_router.get("/calendar", response_model=YearlyCalendar)
@@ -601,6 +754,17 @@ async def convert_time(req: TimeConvertRequest, ctx: TokenContext = _MISC) -> Ti
     return TimeConvertResponse(**out)
 
 
+@misc_router.get("/interest-items", response_model=MarketItemList)
+async def get_interest_items(ctx: AccessContext = _MISC_PUBLIC) -> MarketItemList:
+    """The full allow-list of item names the market scraper bot tracks.
+
+    Tokenless: anyone (the bot, dashboards, wikis) can read this list. Managed
+    via the master admin panel (/admin/market/interest-items). Sorted by name.
+    """
+    items = await market_service.interest_items_list()
+    return MarketItemList(items=items, count=len(items))
+
+
 # --- Mods: .tmod decompile + build (scope: mods:read) -----------------------
 # Stateless: read parses an uploaded tmod; build serializes one and returns the
 # bytes, then discards it. /v1/mods/* gets a 20 MB body cap (security middleware).
@@ -1006,3 +1170,360 @@ async def get_btt_latest_for_platform(
         platform=platform, release=_release_meta(release),
         assets=[BttAsset(**a) for a in matched],
     )
+
+
+@btt_router.get("/changelog", response_model=BttChangelogOut)
+async def get_btt_changelog(
+    ctx: AccessContext = _BTT,
+    limit_groups: int = Query(default=0, ge=0, le=50,
+        description="Limit returned groups to the newest N (0 = all)"),
+    commits_per_group: int = Query(default=0, ge=0, le=100,
+        description="Limit commits per group to the newest N (0 = all)"),
+) -> BttChangelogOut:
+    """The BetterTroveTools changelog — commits from GitHub grouped by tag,
+    newest first; commits since the last tag live under `"Unreleased"`. Cached
+    server-side so users don't blow through GitHub's 60/hr unauth rate limit
+    when they open the changelog panel in the desktop app. Use `limit_groups`
+    / `commits_per_group` to trim down what comes back."""
+    from app.core.config import settings as _s
+    doc = await btt_releases.get_changelog()
+    if doc is None:
+        # Refresher hasn't run yet (very early after boot). Return empty rather
+        # than 404 so the client UI can render "loading" instead of an error.
+        return BttChangelogOut(
+            repo=_s.btt_releases_repo, groups=[], rate_limited=False, fetched_at=utcnow(),
+        )
+    groups = doc.groups
+    if limit_groups:
+        groups = groups[:limit_groups]
+    if commits_per_group:
+        groups = [{**g, "commits": g["commits"][:commits_per_group]} for g in groups]
+    return BttChangelogOut(
+        repo=doc.repo,
+        groups=[BttChangelogGroup(version=g["version"],
+                                  commits=[BttCommit(**c) for c in g["commits"]])
+                for g in groups],
+        rate_limited=doc.rate_limited,
+        fetched_at=doc.fetched_at,
+    )
+
+
+# --- Leaderboards: in-game leaderboards ingest + read -----------------------
+# READ side (scope: leaderboards:read) — anyone with the scope can query.
+# WRITE side (insert) — gated by a superuser API token. The bot script POSTs a
+# raw LeaderBot.cfg dump as a multipart file, the parser explodes it into the
+# Leaderboard / LeaderboardEntry collections, then prunes anything older than
+# the retention window.
+
+
+async def _enforce_lb_archive_limit(
+    response: Response, ctx: TokenContext, anchor: int,
+) -> None:
+    """Tight per-token throttle for anchors older than the archive threshold.
+
+    Applied IN ADDITION to the standard per-token cap from ``_enforce_token_limits``.
+    No-op when the queried anchor is within the threshold (normal hot/cold-30-day
+    queries pay only the standard limit). Wide-open queries for old data are
+    cheap per-row but a malicious caller could trawl the whole archive — this
+    bucket caps them at ``settings.leaderboards_archive_rate_limit_max`` per
+    window. ``X-RateLimit-Archive-*`` headers expose the bucket state alongside
+    the standard ``X-RateLimit-*`` headers (which describe the wider limit)."""
+    if not leaderboards_service.is_archive_query(anchor):
+        return
+    info = await check_rate_limit(
+        f"lb_archive:{ctx.token.id}",
+        settings.leaderboards_archive_rate_limit_max,
+        settings.leaderboards_archive_rate_limit_window_seconds,
+    )
+    # Don't clobber the standard X-RateLimit-* headers — surface this bucket
+    # under a parallel namespace so clients can tell the two apart.
+    for k, v in rate_limit_headers(info).items():
+        response.headers[k.replace("X-RateLimit-", "X-RateLimit-Archive-")] = v
+
+
+def _lb_timestamp(created_at: int | None) -> int:
+    """Normalize a query ``created_at``; 404-style 400 if it's not on the 11:00
+    UTC anchor (or its midnight alias)."""
+    if created_at is None or created_at <= 0:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message="Missing or invalid 'created_at' (unix seconds at 11:00 UTC).",
+        )
+    anchor = leaderboards_service.normalize_timestamp(created_at)
+    if anchor == -1:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message="created_at must align to a Trove reset (11:00 UTC; 00:00 UTC also accepted).",
+        )
+    return anchor
+
+
+@leaderboards_router.get("/timestamps", response_model=LeaderboardTimestamps)
+async def list_leaderboard_timestamps(
+    ctx: TokenContext = _LB,
+    limit: int = Query(default=60, ge=1, le=365,
+                       description="Number of recent timestamps to return (newest first)"),
+) -> LeaderboardTimestamps:
+    """The dump anchors that currently have stored entries, newest first.
+
+    Each entry is a unix-seconds value at 11:00 UTC (Trove's daily reset). Pass
+    one of these as ``?created_at=`` to the other endpoints to query a specific
+    day's dump.
+    """
+    items = await leaderboards_service.list_timestamps(limit)
+    return LeaderboardTimestamps(items=items, count=len(items))
+
+
+@leaderboards_router.get("", response_model=LeaderboardListOut)
+async def list_leaderboards(
+    response: Response,
+    ctx: TokenContext = _LB,
+    created_at: int = Query(..., description="Anchor in unix seconds (11:00 UTC)"),
+) -> LeaderboardListOut:
+    """Every board that has stored entries at ``created_at``.
+
+    ``contest_type`` is set on a board iff the dump at THIS anchor flagged it as
+    a Daily/Weekly contest window; it's ``null`` otherwise. Anchors older than
+    ``leaderboards_archive_query_threshold_days`` pay the archive rate-limit
+    bucket on top of the standard per-token cap."""
+    anchor = _lb_timestamp(created_at)
+    await _enforce_lb_archive_limit(response, ctx, anchor)
+    rows = await leaderboards_service.list_boards_at(anchor)
+    items = [LeaderboardInfo(**r) for r in rows]
+    return LeaderboardListOut(created_at=anchor, items=items, count=len(items))
+
+
+@leaderboards_router.get("/{uuid}", response_model=LeaderboardBoardOut)
+async def get_leaderboard(uuid: int, ctx: TokenContext = _LB) -> LeaderboardBoardOut:
+    """A single board's metadata (no entries) — handy for resolving a uuid to a
+    human name. ``contests`` lists every anchor at which the board was observed
+    in a contest window."""
+    row = await leaderboards_service.get_board(uuid)
+    if row is None:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"No leaderboard with uuid {uuid}",
+        )
+    return LeaderboardBoardOut(**row)
+
+
+@leaderboards_router.get("/{uuid}/entries", response_model=LeaderboardEntriesPage)
+async def list_leaderboard_entries(
+    uuid: int,
+    response: Response,
+    ctx: TokenContext = _LB,
+    created_at: int = Query(..., description="Anchor in unix seconds (11:00 UTC)"),
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+) -> LeaderboardEntriesPage:
+    """Ranked entries for one board at one anchor — top-N with pagination.
+
+    Anchors older than ``leaderboards_archive_query_threshold_days`` pay the
+    archive rate-limit bucket on top of the standard per-token cap (the data
+    lives in the cold collection at that point, and historical trawling is the
+    intended target of the tighter throttle)."""
+    anchor = _lb_timestamp(created_at)
+    await _enforce_lb_archive_limit(response, ctx, anchor)
+    items, total = await leaderboards_service.list_entries(
+        uuid, anchor, limit=limit, offset=offset,
+    )
+    return LeaderboardEntriesPage(
+        uuid=uuid, created_at=anchor,
+        items=[LeaderboardEntryOut(**i) for i in items],
+        count=len(items), total=total,
+    )
+
+
+@leaderboards_router.get("/players/{player_name}/history",
+                         response_model=LeaderboardPlayerHistory)
+async def get_player_history(
+    player_name: str,
+    ctx: TokenContext = _LB,
+    uuid: int | None = Query(default=None,
+                             description="Restrict to a single board (optional)"),
+    limit: int = Query(default=50, ge=1, le=500),
+) -> LeaderboardPlayerHistory:
+    """Recent dump appearances for ``player_name`` (most recent first).
+
+    Useful for a player profile: their last N ranks across whatever boards they
+    were on, optionally pinned to a single board with ``?uuid=``.
+    """
+    rows = await leaderboards_service.player_history(
+        player_name, limit=limit, uuid=uuid,
+    )
+    return LeaderboardPlayerHistory(
+        player_name=player_name,
+        items=[LeaderboardPlayerEntry(**r) for r in rows],
+        count=len(rows),
+    )
+
+
+@leaderboards_router.post("/insert", response_model=LeaderboardInsertResponse,
+                          status_code=200,
+                          summary="Insert leaderboard data")
+async def insert_leaderboards(
+    file: UploadFile = File(..., description="The raw LeaderBot.cfg dump (text)"),
+    timestamp: int | None = Query(
+        default=None,
+        description=("Override the 'as-of' anchor in unix seconds (11:00 UTC). "
+                     "Defaults to the latest 11:00 UTC reset — pass this only for back-fills."),
+    ),
+    ctx: TokenContext = _LB_MASTER,
+) -> LeaderboardInsertResponse:
+    """Ingest a leaderboard dump.
+
+    **Master only**: requires an API token owned by a superuser account. Submit
+    the raw cfg text as a multipart file (the bot reads the game's
+    ``LeaderBot.cfg`` and POSTs it verbatim). The dump is idempotent for a given
+    anchor — re-running the same dump on the same timestamp converges.
+    """
+    raw = await file.read()
+    if not raw:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message="Empty upload — POST the raw cfg text as a multipart 'file' field.",
+        )
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        # Some scrapes have stray bytes; replace rather than reject so a single
+        # bad row doesn't kill the whole dump.
+        text = raw.decode("utf-8", errors="replace")
+    summary = await leaderboards_service.insert_dump(text, timestamp=timestamp)
+    return LeaderboardInsertResponse(**summary)
+
+
+# --- Market: in-game marketplace listings ingest + read ---------------------
+# READ side (scope: market:read) — anyone with the scope can query.
+# WRITE side (insert) — superuser API token only. The bot script POSTs the raw
+# GrainusMod.cfg dump as a multipart file; the parser pulls one row per
+# listing, the service upserts by UUID (bumping last_seen on re-scrape).
+
+
+async def _enforce_market_archive_limit(
+    response: Response, ctx: TokenContext, hide_expired: bool,
+) -> None:
+    """Tight per-token throttle when a caller asks for expired market listings.
+
+    Market's "archive surface" is implicit — any listing older than 7 days is
+    expired (the in-game lifetime), so ``hide_expired=false`` is the request
+    for historical data. Same shape as the leaderboards archive limit:
+    additive on top of the standard per-token cap, exposed via
+    ``X-RateLimit-Archive-*`` headers."""
+    if hide_expired:
+        return
+    info = await check_rate_limit(
+        f"mkt_archive:{ctx.token.id}",
+        settings.market_archive_rate_limit_max,
+        settings.market_archive_rate_limit_window_seconds,
+    )
+    for k, v in rate_limit_headers(info).items():
+        response.headers[k.replace("X-RateLimit-", "X-RateLimit-Archive-")] = v
+
+
+@market_router.get("/listings", response_model=MarketListingsPage)
+async def list_market_listings(
+    response: Response,
+    ctx: TokenContext = _MKT,
+    name: str | None = Query(default=None, description="Exact item name match"),
+    price_min: float | None = Query(default=None, ge=0,
+        description="Minimum price-each (flux)"),
+    price_max: float | None = Query(default=None, ge=0,
+        description="Maximum price-each (flux)"),
+    last_seen_after: int | None = Query(default=None, ge=0,
+        description="Only listings re-seen at or after this unix-seconds anchor"),
+    hide_expired: bool = Query(default=True,
+        description="Drop listings past their 7-day lifetime or stale >3h"),
+    sort: str = Query(default="-last_seen",
+        description="Beanie sort string: e.g. '+price_each', '-last_seen'"),
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+) -> MarketListingsPage:
+    """Paginated marketplace listings with the usual filters.
+
+    ``hide_expired=true`` (the default) hides anything past its in-game lifetime
+    or that hasn't been re-seen for 3+ hours; pass ``hide_expired=false`` to
+    include the historical tail — which pays the archive rate-limit bucket on
+    top of the standard per-token cap.
+    """
+    if price_min is not None and price_max is not None and price_min > price_max:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message="price_min cannot be greater than price_max",
+        )
+    await _enforce_market_archive_limit(response, ctx, hide_expired)
+    items, total = await market_service.list_listings(
+        name=name, price_min=price_min, price_max=price_max,
+        last_seen_after=last_seen_after, hide_expired=hide_expired,
+        sort=sort, limit=limit, offset=offset,
+    )
+    return MarketListingsPage(
+        items=[MarketListingOut(**i) for i in items],
+        count=len(items), total=total,
+    )
+
+
+@market_router.get("/items", response_model=MarketItemList)
+async def list_market_items(ctx: TokenContext = _MKT) -> MarketItemList:
+    """Item names that currently have at least one stored listing (sorted).
+
+    The output is a strict subset of ``/v1/market/interest_items`` — anything
+    the bot tracks but hasn't seen on the market shows up there but not here.
+    """
+    items = await market_service.list_distinct_items()
+    return MarketItemList(items=items, count=len(items))
+
+
+# NOTE: the interest-items list moved to /v1/misc/interest-items so it's
+# tokenless (the bot + dashboards / wikis can fetch it without an API key).
+# Look in the misc router below for the new endpoint.
+
+
+@market_router.get("/items/{name}/summary", response_model=MarketItemSummary)
+async def get_market_item_summary(
+    name: str, ctx: TokenContext = _MKT,
+) -> MarketItemSummary:
+    """Aggregate min/max/avg/median price-each + listing count for one item.
+
+    Computed across active listings only (expired ones are excluded).
+    """
+    summary = await market_service.item_summary(name)
+    if summary is None:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"No active market listings for '{name}'",
+        )
+    return MarketItemSummary(**summary)
+
+
+@market_router.post("/insert", response_model=MarketInsertResponse,
+                    status_code=200,
+                    summary="Insert market data")
+async def insert_market_listings(
+    file: UploadFile = File(..., description="The raw GrainusMod.cfg dump (text)"),
+    timestamp: int | None = Query(
+        default=None,
+        description=("Override the 'last_seen' anchor in unix seconds. Defaults "
+                     "to now() — pass this only for back-fills."),
+    ),
+    ctx: TokenContext = _MKT_MASTER,
+) -> MarketInsertResponse:
+    """Ingest a marketplace scrape.
+
+    **Master only**: requires an API token owned by a superuser account. Submit
+    the raw cfg text as a multipart file (the bot reads the game's
+    ``GrainusMod.cfg`` and POSTs it verbatim). Idempotent at the listing level
+    — same listing UUID re-scraped just bumps ``last_seen``, never duplicates.
+    """
+    raw = await file.read()
+    if not raw:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message="Empty upload — POST the raw cfg text as a multipart 'file' field.",
+        )
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        text = raw.decode("utf-8", errors="replace")
+    summary = await market_service.insert_dump(text, timestamp=timestamp)
+    return MarketInsertResponse(**summary)

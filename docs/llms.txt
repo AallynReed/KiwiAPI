@@ -67,11 +67,13 @@ A token carries a bitmask of scopes named `<resource>:<action>`. `0` = all scope
 - `feeds:read` (bit 2) — news, Twitch streams, YouTube/Bilibili videos, Trovesaurus event calendar — **public**
 - `stats:read` (bit 4) — raw stat tables (power rank / magic find / light) and class definitions
 - `gems:read` (bit 8) — gem simulator (generate/augment), evaluator, and build optimizer
-- `misc:read` (bit 16) — third-party modding-software list and the time converter
+- `misc:read` (bit 16) — third-party modding-software list, time converter, news archive, and the market interest-items list (`/v1/misc/interest-items` is **public** — no token needed)
 - `mods:read` (bit 32) — decompile a `.tmod` file and build a `.tmod` from files
 - `updates:read` (bit 64) — browse archived game files: versions, directory tree, single-file download
 - `codexes:read` (bit 128) — read parsed game codexes (allies, mounts, dragons, mementos, recipes, items, fish, badges) — **public**
 - `btt:read` (bit 256) — read BetterTroveTools releases (latest version per platform, per channel) — **public**
+- `leaderboards:read` (bit 512) — read Trove in-game leaderboards (boards, entries, timestamps, player history)
+- `market:read` (bit 1024) — read Trove marketplace listings (active listings, distinct items, interest list, per-item summary)
 
 ## Endpoints — Data (base: https://api.aallyn.net, auth: API token)
 
@@ -84,7 +86,9 @@ get the full per-token limit (120 req/min). **`/v1/codexes/*` gets 5× both budg
 600 req/min/token). A malformed/revoked token still 401s; a valid token without the scope is served on
 the anonymous per-IP budget. All other surfaces require a token with the matching scope:
 `/v1/stats/*` need `stats:read`; `/v1/gems/*` need `gems:read`; `/v1/misc/*` need `misc:read`;
-`/v1/mods/*` need `mods:read`; `/v1/updates/*` need `updates:read`.
+`/v1/mods/*` need `mods:read`; `/v1/updates/*` need `updates:read`; `/v1/leaderboards/*` need `leaderboards:read`
+and `/v1/market/*` need `market:read` (read sides; both have a `/insert` endpoint that is **master-only**
+— it requires a superuser API token).
 
 - `GET /v1/rotations/server-time` → `{ now_unix, now_iso, trove_day, daily_reset_at, weekly_reset_at }`
 - `GET /v1/rotations/daily-buffs` → `{ current: Buff, week: [Buff x7] }` where Buff =
@@ -94,7 +98,12 @@ the anonymous per-IP budget. All other surfaces require a token with the matchin
 - `GET /v1/rotations/corruxion` → `{ active, starts_at, ends_at, seconds_remaining, schedule: [{starts_at, ends_at}] }`
 - `GET /v1/rotations/fluxion` → like corruxion plus `state` (`voting`|`selling`|`away`); each schedule item has `state`
 - `GET /v1/rotations/gardening` → `{ two_day: W, three_day: W, upcoming: [W] }`, W = `{ name, active, starts_at, ends_at }`
-- `GET /v1/rotations/chaos-chest` → `{ active, starts_at, ends_at, seconds_remaining, item: { name, identifier, blueprint } | null, fetched_at }` — weekly featured item relayed from Trovesaurus (item null if upstream unavailable; window is always computed)
+- `GET /v1/rotations/chaos-chest` → `{ active, starts_at, ends_at, seconds_remaining, item: { name, identifier, blueprint } | null, fetched_at }` — weekly featured item. Source preference: the bot-captured item for the current week (read from the in-game cfg) wins; falls back to the Trovesaurus relay when the bot hasn't reported the current week yet.
+- `GET /v1/rotations/chaos-chest/history?limit=50&offset=0` → `{ items: [{ week_anchor, week_ends_at, name, captured_at }], count, total }` — past chaos-chest captures, newest week first.
+- `POST /v1/rotations/chaos-chest/insert` body `{ name }` — **master only** (superuser API token). Server infers the week anchor (Tue 11:00 UTC) from now; idempotent on the (week) level.
+- `GET /v1/rotations/challenge/current` → `{ starts_at, ends_at, active, is_friday_window, seconds_remaining, name | null, type | null, captured_at | null }` — the hourly challenge active right now. Cadence: one per hour on most days; on trove Fridays (real-UTC Fri 11:00 → Sat 11:00) it's two per hour (:00 and :30). Each window lasts 20 minutes; `active=false` during the gap that follows. `name` is null when the bot hasn't reported this window yet. `type` is server-derived from `name` using literal case-sensitive matches: `"collection"` (name == `"Collection Challenge"`), `"rampage"` (name == `"RAMPAGE ALERT!"`), `"racing"` (name == `"Racing Challenge"`), `"target"` (name == `"Target Challenge"`), or `"dungeon"` (anything else — every other captured string is a biome-themed Dungeon Challenge).
+- `GET /v1/rotations/challenge/history?limit=50&offset=0` → `{ items: [{ window_anchor, window_ends_at, name, type, is_friday_window, captured_at }], count, total }` — past challenge captures, newest window first. Same `type` classification as `/challenge/current`.
+- `POST /v1/rotations/challenge/insert` body `{ name }` — **master only**. Server infers the 20-min window anchor from now; `"none"` / empty name returns 400 (the bot is expected to skip those client-side).
 - `GET /v1/rotations/calendar` → `{ starts_at, ends_at, generated_at, count, events: [E] }`, E = `{ type, name, starts_at, ends_at, color?, state?, biomes?:[{name,icon}] }` — every recurring rotation (weekly_buff / corruxion / fluxion / gardening_2 / gardening_3 / stampy / mana) flattened across ±365 days, sorted by start. Invasion excluded.
 - `GET /v1/rotations/delves[?week=]` → `{ week, is_current, total, count, fetched_at, depths: [floor] }` — a week's delve rotation, floor records relayed from a community delve source (passed through; rich `{ id, depth, biome, zone, boss, enemies, objective, … }`). Defaults to the current week.
 - `GET /v1/rotations/delves/weeks` → `{ current_week, items: [{ week, total, count, fetched_at }], count }` — available weeks (metadata only), newest first.
@@ -147,6 +156,7 @@ types 1-9, augments 1 Rough/2 Precise/3 Superior).
 - `GET /v1/misc/software` → `{categories:[{key, description, software:[{name, free, url, description}]}], count}` (Trove modding tools)
 - `GET /v1/misc/timezones` → `{items:[{id, name}], count}` — supported zones (`trove`, `UTC`, IANA ids)
 - `GET /v1/misc/time/now` → `{unix, zones:[{id, name, datetime, date, time}]}` — current time in every zone (Trove "server" time = UTC−11)
+- `GET /v1/misc/interest-items` → `{items:[<name>], count}` — sorted allow-list of item names the market scraper bot tracks. **Public** (tokenless OK; a token carrying `misc:read` still earns the wider per-token rate budget). DB-backed; managed via `/admin/market/interest-items` (superuser session, master panel). Seeded from `gamedata/market_items.json` on first boot.
 - `POST /v1/misc/time/convert` body `{datetime?: "2026-06-05T14:30", timezone: "trove"|"UTC"|IANA, unix?: int}` →
   `{unix, iso_utc, zones:[{id, name, datetime, date, time}], discord:[{style, label, code:"<t:unix:f>"}]}`.
   Give a naive `datetime` interpreted in `timezone`, or an absolute `unix` (timezone ignored). Discord codes
@@ -189,6 +199,26 @@ Relayed every 30 min from the GitHub releases of `AallynReed/BetterTroveTools` a
 - `GET /v1/btt/latest?channel=release` → `{ channel, platforms: { windows: PlatformLatest|null, linux: …, android: … } }`, PlatformLatest = `{ platform, release: BttReleaseMeta, assets:[Asset] }` (BttReleaseMeta = BttRelease minus `assets`). Each platform walks the channel newest-first to the first release that ships an asset for it — so a release without (say) a Windows build doesn't suppress Windows updates.
 - `GET /v1/btt/latest/{platform}?channel=release` → one `PlatformLatest`. 404 if no release on that channel carries an asset for the platform yet.
 - `GET /v1/btt/check?installed=<tag>&platform=<windows|linux|android>&channel=release` → `{ installed, channel, platform, update_available: bool, comparable: bool, latest: PlatformLatest|null }`. Server-side version comparison — the client just reads `update_available`. Accepts `v1.2.3` / `1.2.3` / `1.2.3-beta.1`; release > prerelease at the same numeric core. `comparable: false` means a tag couldn't be parsed (treat carefully). `latest: null` when no release on that channel ships an asset for the platform yet (returns false; doesn't 404).
+- `GET /v1/btt/changelog[?limit_groups=&commits_per_group=]` → `{ repo, groups: [{version, commits: [{sha, short_sha, message, type, url}]}], rate_limited, fetched_at }`. Mirrors BTT's "Show changelog" button: commits from `GET /commits?per_page=100` grouped by git tag (`GET /tags`), newest first; commits since the latest tag live under `"Unreleased"`. `type` is the parsed conventional-commit prefix (feat/fix/docs/…) lowercased, or null. Cached server-side (30-min cadence) so users don't trip GitHub's 60/hr unauth rate limit. Returns an empty payload (not 404) before the first refresh completes.
+
+### Leaderboards (`leaderboards:read`) — Trove in-game leaderboards
+
+Ingested from an external bot that periodically reads the game's `LeaderBot.cfg` file and POSTs the raw text to `/v1/leaderboards/insert`. The bot anchors each dump to the most recent 11:00 UTC reset (Trove's daily-reset hour); reads filter by that exact anchor. Entries older than 90 days are pruned on each insert (boards/metadata are kept forever). The `/insert` endpoint is **master-only** — it requires an API token belonging to a superuser account; the read endpoints take any token carrying `leaderboards:read`.
+- `GET /v1/leaderboards/timestamps[?limit=60]` → `{ items: [<unix_seconds>], count }` — recent dump anchors, newest first. Each value is a unix-seconds timestamp at 11:00 UTC.
+- `GET /v1/leaderboards?created_at=<unix>` → `{ created_at, items: [Board], count }`, Board = `{ uuid, name_id, name, category_id, category, contest_type, reset_kind, player_board }`. `contest_type` is `"daily"`/`"weekly"`/`null` for THIS anchor; `reset_kind` describes the BOARD's cycle (`daily`/`weekly`/`default`); `player_board=false` for server-tally boards (1100, 21012). `created_at` may also be the 00:00 UTC alias for that day (normalized to 11:00).
+- `GET /v1/leaderboards/{uuid}` → one `Board` plus its full `contests` list (`[{time, type}]`). 404 if no such board has ever been seen.
+- `GET /v1/leaderboards/{uuid}/entries?created_at=<unix>[&limit=100&offset=0]` → `{ uuid, created_at, items: [{ rank, player_name, score }], count, total }` — top-N entries for one board at one anchor, ranked. `total` is the full row count (independent of the window).
+- `GET /v1/leaderboards/players/{player_name}/history[?uuid=&limit=50]` → `{ player_name, items: [{ rank, player_name, score, leaderboard, created_at }], count }` — recent appearances of a player across boards (optionally filtered to one board), newest first.
+- `POST /v1/leaderboards/insert[?timestamp=<unix>]` (multipart `file`) — **master only**. Submit the raw cfg text as a multipart `file` field. Idempotent for a given anchor: re-running the same dump on the same timestamp converges. `timestamp` is optional and only used for back-fills; omit it for a normal scrape. Returns `{ boards, entries, cleared_before_insert, archived_old, created_at }`. **Full-history storage**: entries older than the hot retention window (default 30 days) are *moved* (not deleted) into `leaderboard_entries_archive` at the tail of each insert; read endpoints transparently route old anchors there. Recent reads stay O(index seek) on the small hot collection; historical reads cost the archive's lookup. Use `/timestamps?limit=` to enumerate ALL stored anchors (hot ∪ archive, deduped). **Archive rate limit**: queries with a `?created_at=` older than `leaderboards_archive_query_threshold_days` (default 90) pay a SECOND, tighter per-token bucket (default 10 req/min) on top of the standard cap — surfaced via `X-RateLimit-Archive-Limit` / `-Remaining` / `-Reset` response headers. Applies to `/v1/leaderboards?created_at=` and `/v1/leaderboards/{uuid}/entries?created_at=`; queries within the threshold pay only the standard cap. Burns out a malicious archive-trawl loop without affecting normal-cadence callers.
+
+### Market (`market:read`) — Trove marketplace listings
+
+Ingested from the same bot that submits leaderboards. Every hour or so the bot reads the game's `GrainusMod.cfg` and POSTs the raw text to `/v1/market/insert`. Each line is `<uuid>;<name>;<type>;<stack>;<price>` with the UUID v1 of the in-game listing; we use that UUID as the document `_id`, decode its timestamp into `created_at` (when the player posted the listing), and bump `last_seen` on every re-scrape (so re-seeing the same listing never duplicates). Only items on the interest list (`gamedata/market_items.json`) are persisted — anything else is dropped at ingest. Listings expire 7 days after `created_at` OR after 3 hours with no re-scrape; `hide_expired=true` (default on reads) filters those out. `/insert` is **master-only**.
+- `GET /v1/market/listings[?name=&price_min=&price_max=&last_seen_after=&hide_expired=true&sort=-last_seen&limit=100&offset=0]` → `{ items: [Listing], count, total }`, Listing = `{ id, name, type, stack, price, price_each, last_seen, created_at, expires_at, expired }`. Default sort newest-`last_seen` first; pass `+price_each` to sort cheapest-first. `id` is the game's UUID v1 stringified. **Archive rate limit**: passing `hide_expired=false` (asking for expired/historical listings) pays a SECOND, tighter per-token bucket (default 10 req/min) on top of the standard cap — surfaced via `X-RateLimit-Archive-Limit` / `-Remaining` / `-Reset` response headers. The default `hide_expired=true` pays only the standard cap. (Market doesn't need a "90-day" threshold like leaderboards; the in-game 7-day listing lifetime already defines fresh-vs-historical, so the archive limit fires on the opt-in flag instead of an anchor age.)
+- `GET /v1/market/items` → `{ items: [<name>], count }` — item names with at least one stored listing (sorted).
+- For the bot's scan allow-list see `GET /v1/misc/interest-items` (moved out of market — it's tokenless so dashboards / wikis can fetch it without a key). Admin-managed via `/admin/market/interest-items` (master panel).
+- `GET /v1/market/items/{name}/summary` → `{ name, count, total_price, total_stack, min_each, max_each, avg_each, median_each }` — aggregate stats across active (non-expired) listings of one item. 404 when no active listings exist.
+- `POST /v1/market/insert[?timestamp=<unix>]` (multipart `file`) — **master only**. Submit the raw cfg text. Returns `{ parsed, imported, ignored_not_in_list, last_seen }`. `timestamp` overrides the `last_seen` anchor (only for back-fills). Listings are upserted by UUID — same listing re-scraped bumps `last_seen`, never duplicates.
 
 ## Meta
 

@@ -1,10 +1,12 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.admin.router import router as admin_router
 from app.auth.account import router as account_router
@@ -24,6 +26,7 @@ from app.core.observability import add_request_context_middleware, configure_log
 from app.core.redis import close_redis, init_redis
 from app.core.scopes import catalog as scope_catalog
 from app.scanning.router import router as scanning_router
+from app.site.router import router as site_router
 from app.tokens.router import router as tokens_router
 from app.tokens.schemas import REVOKE_REASONS
 from app.trove.btt_releases import (
@@ -40,6 +43,8 @@ from app.trove.router import (
     codexes_router,
     feeds_router,
     gems_router,
+    leaderboards_router,
+    market_router,
     misc_router,
     mods_router,
     rotations_router,
@@ -70,6 +75,12 @@ async def lifespan(app: FastAPI):
     await init_db()
     await init_redis()
     await bootstrap_admin()
+    # Seed the market interest-items collection from gamedata/market_items.json
+    # if it's empty (first boot). After this admins manage the list via the
+    # /admin/market/interest-items endpoints; the JSON file is only a seed +
+    # offline fallback.
+    from app.trove.market.service import seed_interest_items_if_empty
+    await seed_interest_items_if_empty()
     start_usage_recorder()
     start_email_worker()
     start_news_refresher()
@@ -181,10 +192,26 @@ app.include_router(mods_router)
 app.include_router(updates_router)
 app.include_router(codexes_router)
 app.include_router(btt_router)
+app.include_router(leaderboards_router)
+app.include_router(market_router)
+
+# BetterTroveTools showcase site (trove.aallyn.net). The site router owns "/",
+# "/documentation", "/unlock_debug", "/unlock_fps"; the proxy can put this
+# container on both api.aallyn.net (filtering to /v1 + /health) and
+# trove.aallyn.net (everything else). Templates + assets live in ./site
+# (bind-mounted, so 19 MB of screenshots don't bake into the image).
+_SITE_ROOT = Path(settings.site_root)
+if (_SITE_ROOT / "static").is_dir():
+    app.mount("/static", StaticFiles(directory=str(_SITE_ROOT / "static")), name="site_static")
+if (_SITE_ROOT / "templates").is_dir():
+    app.include_router(site_router)
 
 
-@app.get("/", response_class=HTMLResponse, include_in_schema=False)
-async def root() -> HTMLResponse:
+# Fallback API-card landing for `/api-info`, served at api.aallyn.net for
+# developers (the site router owns the real "/"). HTMLResponse kept inline so
+# the file is self-contained.
+@app.get("/api-info", response_class=HTMLResponse, include_in_schema=False)
+async def api_info() -> HTMLResponse:
     return HTMLResponse(
         f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">

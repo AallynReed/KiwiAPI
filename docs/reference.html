@@ -7,13 +7,139 @@
   <!-- Machine-discoverable hint: a plain-text reference made for LLMs/AI tools. -->
   <link rel="alternate" type="text/markdown" title="LLM-friendly API reference (llms.txt)" href="llms.txt" />
   <style>
-    body { margin: 0; padding: 0; }
+    /* Dark page chrome so there's no white flash before Redoc mounts. The theme
+       config in Redoc.init below also styles the API panel; the rules under
+       "Redoc overrides" are leak-fixes verified live against the rendered DOM. */
+    html, body { margin: 0; padding: 0; background: #0d1117; color: #e6edf3; }
     .topbar {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #0d1117; color: #e6edf3;
       padding: 12px 24px; border-bottom: 1px solid #30363d;
     }
     .topbar a { color: #58a6ff; text-decoration: none; }
+    /* Loading screen Redoc shows while fetching the spec. */
+    #redoc { min-height: 80vh; }
+
+    /* ─── Redoc overrides ─────────────────────────────────────────────────────
+       Redoc's theme object doesn't reach every internal element — several still
+       default to light colors that read at contrast 1-2.5 on dark. Every rule
+       below was discovered by live contrast scanning the rendered page.
+       styled-components hashes change between Redoc builds, so we target stable
+       structural selectors and well-known classes (.operation-type, .http-verb,
+       .token.*) only. */
+
+    /* Middle panel: sections, cards, headers default to white bg. */
+    #redoc [data-section-id],
+    .api-info,
+    .api-info-header,
+    .api-info-header + div,
+    .menu-content {
+      background: transparent !important;
+      color: #e6edf3 !important;
+    }
+
+    /* Server URL dropdown + listbox widgets render with white bg / dark text. */
+    #redoc [class*="ServersOverlay"],
+    #redoc [class*="ServerItem"],
+    #redoc [class*="ServerUrl"],
+    #redoc [role="combobox"],
+    #redoc [role="listbox"] {
+      background-color: #161b22 !important;
+      color: #e6edf3 !important;
+      border-color: #30363d !important;
+    }
+
+    /* Buttons and <summary> across the panel: content-type dropdowns, response
+       selectors, expand toggles. The "* color: inherit" pulls deep content-type
+       pills along; #redoc-scoped .operation-type / .http-verb rules below win
+       specificity over it so verb badges keep their dark-on-color treatment. */
+    #redoc button,
+    #redoc summary {
+      background: #161b22 !important;
+      border-color: #30363d !important;
+      color: #e6edf3 !important;
+    }
+    #redoc button *,
+    #redoc summary * { color: inherit !important; }
+    #redoc button strong { color: revert !important; }  /* preserve 2xx/4xx colors */
+
+    /* Section labels (AUTHORIZATIONS, QUERY PARAMETERS, RESPONSE SCHEMA, etc.)
+       default to #263238 — invisible on dark. */
+    #redoc h5,
+    #redoc h5 > span { color: #9aa4b2 !important; }
+    /* Content-type pills inside h5 (application/json, application/octet-stream). */
+    #redoc h5 span[class] { color: #e6edf3 !important; background: transparent !important; }
+
+    /* Request body / response tabs strip ("Payload", "Examples"). */
+    #redoc ul[role="tablist"] { background: transparent !important; border-color: #30363d !important; }
+    #redoc [role="tab"] { color: #9aa4b2 !important; background: transparent !important; }
+    #redoc [role="tab"][aria-selected="true"] { color: #e6edf3 !important; border-color: #58a6ff !important; }
+    #redoc [role="tabpanel"] { background: #161b22 !important; color: #e6edf3 !important; }
+
+    /* Parameter tables. */
+    #redoc table { background: transparent !important; color: #e6edf3 !important; }
+    #redoc table th { color: #9aa4b2 !important; }
+    #redoc table td { border-color: #30363d !important; }
+
+    /* Hardcoded black text fallbacks (inline-style guards). */
+    #redoc [style*="color: rgb(0, 0, 0)"],
+    #redoc [style*="color:#000"],
+    #redoc [style*="color: #000"] { color: #e6edf3 !important; }
+
+    /* HTTP verb badges — both the sidebar TOC (.operation-type) and the
+       middle-panel operation header (.http-verb). White text on saturated bg
+       reads at ~2:1; dark text on the same colored bg jumps to ~7:1 and matches
+       GitHub / Stripe docs convention. Doubled class + #redoc prefix gives
+       specificity (1,2,0) higher than my earlier `#redoc button *` (1,0,1). */
+    #redoc .operation-type.operation-type,
+    #redoc .http-verb.http-verb {
+      color: #0d1117 !important;
+      font-weight: 700 !important;
+    }
+
+    /* Prism syntax highlighting in code samples — brighter palette so tokens
+       pass WCAG AA on the dark #161b22 code background. */
+    #redoc .token.boolean,
+    #redoc .token.number,
+    #redoc .token.null,
+    #redoc .token.constant,
+    #redoc .token.keyword,
+    #redoc .token.operator { color: #ff7b72 !important; }
+    #redoc .token.string,
+    #redoc .token.attr-value { color: #a5d6ff !important; }
+    #redoc .token.property,
+    #redoc .token.attr-name,
+    #redoc .token.tag { color: #79c0ff !important; }
+    #redoc .token.comment,
+    #redoc .token.punctuation { color: #8b949e !important; }
+
+    /* NOTE ON LIGHT-BG LEAKS (URL "Production" overlay, AUTHORIZATIONS
+       expansion box, sample-row backgrounds, etc.):
+       Redoc's styled-components inject rules like ``.jLxaiG { background:
+       #fafafa }`` where the leading class is a build-specific HASH that
+       changes on every Redoc release. The targets ALSO have no stable
+       ``role`` / ``data-*`` / ``aria-*`` hook for a structural selector to
+       grab. CSS targeting is therefore doomed — any rule you write here
+       breaks at the next CDN bump. The actual fix lives in the runtime
+       patcher at the bottom of the page: it computed-style-scans every
+       descendant of #redoc and flips near-white surfaces dark. Don't add
+       more class-substring rules here; extend the JS patcher instead. */
+
+    /* SVG icons — Redoc renders most icons with the SVG default `fill: black`
+       so on the dark page bg they sit at ~1.2 contrast (effectively invisible:
+       the AUTHORIZATIONS chevron, sidebar arrows, JSON-sample +/- toggles,
+       search icon, etc.). Most inner paths use no explicit color, so setting
+       `color: #e6edf3` + `fill: currentColor` on the drawing elements lights
+       up every icon at once without touching ones that hardcode a color. */
+    #redoc svg { color: #e6edf3 !important; }
+    #redoc svg [fill="black"],
+    #redoc svg [fill="#000"],
+    #redoc svg [fill="#000000"],
+    #redoc svg path:not([fill="none"]),
+    #redoc svg circle,
+    #redoc svg rect:not([fill="none"]),
+    #redoc svg polygon { fill: currentColor !important; }
+    #redoc svg [stroke]:not([stroke="none"]) { stroke: currentColor !important; }
   </style>
 </head>
 <body>
@@ -40,13 +166,170 @@
   </div>
   <div class="topbar">← <a href="/">Back to the guide</a></div>
   <!--
-    Renders the live OpenAPI spec. Served same-origin at /openapi.json by this
-    docs site's nginx, which reverse-proxies to the `api` container internally
-    (see docs-nginx.conf). That avoids cross-origin/CORS and doesn't depend on
-    the public api.aallyn.net proxy, which only routes /v1 + /health. To pin a
-    snapshot instead, drop an openapi.json file next to this page.
+    Renders the live OpenAPI spec via Redoc. The spec is served same-origin at
+    /openapi.json by this docs site's nginx, which reverse-proxies to the `api`
+    container internally (see docs-nginx.conf). That avoids cross-origin/CORS and
+    doesn't depend on the public api.aallyn.net proxy, which only routes /v1 + /health.
+
+    Initialized programmatically with Redoc.init() so we can pass a full theme.
+    Redoc has no built-in dark mode — the colors below mirror the rest of the
+    site's GitHub-dark palette (background #0d1117, cards #161b22, text #e6edf3,
+    accent #58a6ff). The widget renders to light DOM (despite older Redoc docs
+    suggesting Shadow DOM), so the override stylesheet in <head> can reach it
+    and patch the spots the theme object doesn't cover.
   -->
-  <redoc spec-url="/openapi.json"></redoc>
+  <div id="redoc"></div>
   <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+  <script>
+    Redoc.init("/openapi.json", {
+      // Hide the Schemes/Server selector — there's only one (api.aallyn.net).
+      hideHostname: false,
+      expandResponses: "200,201",
+      // Use the path as the tag heading rather than auto-generated.
+      pathInMiddlePanel: true,
+      theme: {
+        colors: {
+          primary: { main: "#58a6ff" },
+          text: { primary: "#e6edf3", secondary: "#9aa4b2" },
+          border: { dark: "#30363d", light: "#232a33" },
+          tonalOffset: 0.2,
+          responses: {
+            success:  { color: "#3fb950", backgroundColor: "rgba(63, 185, 80, 0.12)" },
+            error:    { color: "#f85149", backgroundColor: "rgba(248, 81, 73, 0.12)" },
+            redirect: { color: "#d29922", backgroundColor: "rgba(210, 153, 34, 0.12)" },
+            info:     { color: "#58a6ff", backgroundColor: "rgba(88, 166, 255, 0.12)" }
+          },
+          http: {
+            get:     "#58a6ff",
+            post:    "#3fb950",
+            put:     "#d29922",
+            patch:   "#d29922",
+            options: "#9aa4b2",
+            delete:  "#f85149",
+            basic:   "#9aa4b2",
+            link:    "#58a6ff",
+            head:    "#a5a5ff"
+          }
+        },
+        sidebar: {
+          backgroundColor: "#161b22",
+          textColor: "#e6edf3",
+          activeTextColor: "#58a6ff",
+          width: "300px"
+        },
+        rightPanel: {
+          backgroundColor: "#0d1117",
+          textColor: "#e6edf3"
+        },
+        schema: {
+          nestedBackground: "#161b22",
+          linesColor: "#30363d",
+          typeNameColor: "#9aa4b2",
+          typeTitleColor: "#e6edf3",
+          requireLabelColor: "#f85149"
+        },
+        codeBlock: {
+          backgroundColor: "#161b22"
+        },
+        typography: {
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+          fontSize: "15px",
+          lineHeight: "1.55",
+          headings: {
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+            fontWeight: "600"
+          },
+          code: {
+            color: "#e6edf3",
+            backgroundColor: "#161b22",
+            fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+            fontSize: "13px"
+          },
+          links: {
+            color: "#58a6ff",
+            visited: "#58a6ff",
+            hover: "#79b8ff",
+            textDecoration: "none"
+          }
+        }
+      }
+    }, document.getElementById("redoc"));
+
+    // ─── Light-background patcher ────────────────────────────────────────
+    // Redoc's styled-components inject hash-class rules (`.jLxaiG { background:
+    // #fafafa }`) on a handful of surfaces — the URL "Production" overlay,
+    // the AUTHORIZATIONS expansion box, schema-row stripes, etc. — that
+    // assume a light theme. The class hashes change between Redoc releases
+    // and the elements carry no stable role/data hook, so CSS targeting is
+    // a moving target. This runtime patcher scans #redoc once on mount and
+    // again whenever Redoc lazy-renders new nodes (it streams sections in on
+    // scroll), flips any near-white background to the dark surface, and
+    // bumps near-black text to the page foreground. A WeakSet guarantees one
+    // patch per element across the whole session (cheap on memory, no work
+    // re-done when the MutationObserver re-fires).
+    (function patchRedocLightSurfaces() {
+      const SEEN = new WeakSet();
+      const DARK_BG    = "#161b22";
+      const LIGHT_TEXT = "#e6edf3";
+
+      function fix(root) {
+        if (!root || typeof root.querySelectorAll !== "function") return;
+        const els = root.matches
+          ? [root, ...root.querySelectorAll("*")]
+          : [...root.querySelectorAll("*")];
+        for (const el of els) {
+          if (SEEN.has(el)) continue;
+          const cs = getComputedStyle(el);
+          const m  = cs.backgroundColor.match(
+            /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+          if (!m) continue;
+          const r = +m[1], g = +m[2], b = +m[3];
+          const a = m[4] === undefined ? 1 : +m[4];
+          // Sum > 720 catches #f0f0f0 and whiter, which is every leak Redoc
+          // ships today. The alpha check skips fully-transparent fills (the
+          // 'rgba(0,0,0,0)' default browser bg).
+          if (a > 0.1 && r + g + b > 720) {
+            el.style.setProperty("background-color", DARK_BG, "important");
+            const t = cs.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            if (t && +t[1] + +t[2] + +t[3] < 300) {
+              // Only bump text when it was near-black — leave already-coloured
+              // text (link blue, http-verb badges, etc.) alone.
+              el.style.setProperty("color", LIGHT_TEXT, "important");
+            }
+            SEEN.add(el);
+          }
+        }
+      }
+
+      function start() {
+        const root = document.getElementById("redoc");
+        // Wait until Redoc has rendered at least one section before sweeping.
+        if (!root || !root.querySelector("[data-section-id]")) {
+          setTimeout(start, 250);
+          return;
+        }
+        fix(root);
+        // Redoc streams content in as the user scrolls; observe + re-patch.
+        // We only watch childList (NOT attributes) so our own .style writes
+        // can't trigger a re-fire and re-entrant loop. A rAF debounce makes
+        // a burst of mutations (e.g. expanding a big schema tree) cost one
+        // patch pass instead of dozens.
+        let pending = null;
+        const mo = new MutationObserver(() => {
+          if (pending) return;
+          pending = requestAnimationFrame(() => {
+            pending = null;
+            fix(root);
+          });
+        });
+        mo.observe(root, { childList: true, subtree: true });
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start);
+      } else {
+        start();
+      }
+    })();
+  </script>
 </body>
 </html>

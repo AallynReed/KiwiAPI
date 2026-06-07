@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unlock Debug — Better Trove Tools</title>
+    <meta name="description" content="Upload your Trove.exe to enable the in-client debug console, then download the patched file.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Unlock Debug — Better Trove Tools">
+    <meta property="og:description" content="Patch Trove.exe to enable the in-client debug console.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
+    <meta property="og:url" content="https://trove.aallyn.net/unlock_debug">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Unlock Debug — Better Trove Tools">
+    <meta name="twitter:description" content="Patch Trove.exe to enable the in-client debug console.">
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/docs.css?v=20260606h">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<nav class="navbar" id="navbar">
+    <div class="nav-container">
+        <a class="nav-logo" href="/" style="color:inherit;">
+            <img src="/static/assets/favicon.png" alt="Logo">
+            <span>Better <span class="highlight-blue">Trove</span> Tools</span>
+        </a>
+        <div class="nav-actions">
+            <a class="nav-link" href="/"><i class="fa-solid fa-house"></i> Home</a>
+            <a class="nav-link" href="/documentation"><i class="fa-solid fa-book"></i> Docs</a>
+            <button type="button" class="mobile-menu-btn" id="navToggle"
+                    aria-label="Toggle navigation" aria-expanded="false" aria-controls="unlockNavPanel">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </div>
+    <!-- Slide-down menu (mobile only — CSS hides it ≥769px). -->
+    <div class="unlock-nav-panel" id="unlockNavPanel" role="menu" aria-label="Site navigation">
+        <a href="/" role="menuitem"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="/documentation" role="menuitem"><i class="fa-solid fa-book"></i> Documentation</a>
+        <a href="https://btt.aallyn.net" target="_blank" rel="noopener" role="menuitem"><i class="fa-solid fa-globe"></i> Web App</a>
+        <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" role="menuitem"><i class="fa-brands fa-github"></i> GitHub</a>
+        <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" role="menuitem"><i class="fa-brands fa-discord"></i> Discord</a>
+    </div>
+</nav>
+<script>
+// Slim toggle for the unlock-page hamburger. Mirrors the home page's pattern:
+// click to toggle, click outside / Escape / resize-to-desktop to close.
+(function () {
+    var navbar = document.getElementById('navbar');
+    var btn = document.getElementById('navToggle');
+    if (!navbar || !btn) return;
+    function set(open) {
+        navbar.classList.toggle('open', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        var i = btn.querySelector('i');
+        if (i) { i.classList.toggle('fa-bars', !open); i.classList.toggle('fa-xmark', open); }
+    }
+    btn.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        set(!navbar.classList.contains('open'));
+    });
+    document.addEventListener('click', function (e) {
+        if (navbar.classList.contains('open') && !navbar.contains(e.target)) set(false);
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && navbar.classList.contains('open')) { set(false); btn.focus(); }
+    });
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 860 && navbar.classList.contains('open')) set(false);
+    });
+})();
+
+// Drop-zone: drag-and-drop + click-to-pick + filename/size preview.
+// Wrapped in DOMContentLoaded because the <script> sits right after the
+// navbar — the form below hasn't been parsed when this runs otherwise.
+document.addEventListener('DOMContentLoaded', function () {
+    var zone = document.getElementById('dropZone');
+    var input = document.getElementById('trove_exe');
+    var emptyEl = zone && zone.querySelector('.drop-zone-empty');
+    var readyEl = zone && zone.querySelector('.drop-zone-ready');
+    var nameEl = document.getElementById('dropName');
+    var sizeEl = document.getElementById('dropSize');
+    var clearBtn = document.getElementById('dropClear');
+    if (!zone || !input) return;
+
+    function humanSize(bytes) {
+        if (!bytes) return '';
+        var u = ['B', 'KB', 'MB', 'GB'], i = 0;
+        while (bytes >= 1024 && i < u.length - 1) { bytes /= 1024; i++; }
+        return bytes.toFixed(bytes >= 10 || i === 0 ? 0 : 1) + ' ' + u[i];
+    }
+    function renderFile(file) {
+        if (!file) {
+            zone.classList.remove('has-file');
+            emptyEl.hidden = false; readyEl.hidden = true;
+            return;
+        }
+        nameEl.textContent = file.name;
+        sizeEl.textContent = humanSize(file.size);
+        zone.classList.add('has-file');
+        emptyEl.hidden = true; readyEl.hidden = false;
+    }
+    input.addEventListener('change', function () {
+        renderFile(input.files && input.files[0]);
+    });
+    if (clearBtn) clearBtn.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        input.value = ''; renderFile(null);
+    });
+
+    // Drag-and-drop handlers — the zone is also the <label for=input>, so a
+    // plain click already opens the picker; we just paint hover/drag state
+    // and accept dropped files.
+    ['dragenter', 'dragover'].forEach(function (ev) {
+        zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        zone.addEventListener(ev, function (e) {
+            if (ev === 'dragleave' && zone.contains(e.relatedTarget)) return;
+            e.preventDefault(); zone.classList.remove('dragover');
+        });
+    });
+    zone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            renderFile(input.files[0]);
+        }
+    });
+});
+</script>
+
+<main id="main" class="content" style="margin: 0 auto; padding-top: calc(var(--navbar-h) + 48px);">
+    <div class="docs-hero" style="border:none; margin-bottom: 24px;">
+        <p class="eyebrow"><i class="fa-solid fa-terminal"></i> Web Tool</p>
+        <h1>Unlock <span class="highlight-blue">Debug</span></h1>
+        <p>Upload your Trove executable to enable the in-client debug console, then download the patched file.</p>
+    </div>
+
+    <div class="callout warn">
+        <h4><i class="fa-solid fa-triangle-exclamation"></i> Before you start</h4>
+        <ul>
+            <li>Make a backup of your original <code>Trove.exe</code> first.</li>
+            <li>Close the game completely before replacing the file.</li>
+            <li>This edits the executable directly and is intended for advanced/modding use — use at your own discretion.</li>
+        </ul>
+    </div>
+
+    <form class="feature-block" method="post" action="/unlock_debug" enctype="multipart/form-data" style="max-width: 560px;">
+        <div class="feature-head">
+            <div class="f-icon"><i class="fa-solid fa-upload"></i></div>
+            <div><p class="kicker">Step 1</p><h3>Choose your Trove executable</h3></div>
+        </div>
+        <p>Select <code>Trove.exe</code> (or <code>Trove_x64.exe</code>) from your game folder.</p>
+
+        <!-- Styled drop-zone: a label wraps the hidden file input and a visible
+             "drop-zone" div, so clicking the zone, dragging-and-dropping onto
+             it, or pressing Enter while focused all open the file picker. The
+             JS below paints a "ready" state once a file is chosen. -->
+        <label class="drop-zone" id="dropZone" for="trove_exe">
+            <input type="file" id="trove_exe" name="trove_exe" accept=".exe" required>
+            <div class="drop-zone-empty">
+                <i class="fa-solid fa-cloud-arrow-up drop-zone-icon"></i>
+                <div class="drop-zone-title">Drop your Trove.exe here</div>
+                <div class="drop-zone-hint">or click to choose a file</div>
+            </div>
+            <div class="drop-zone-ready" hidden>
+                <i class="fa-solid fa-file-circle-check drop-zone-icon"></i>
+                <div class="drop-zone-title" id="dropName"></div>
+                <div class="drop-zone-hint" id="dropSize"></div>
+                <button type="button" class="drop-zone-clear" id="dropClear" aria-label="Remove file">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </label>
+
+        <button type="submit" class="btn-action">
+            <i class="fa-solid fa-terminal"></i> Unlock Debug &amp; Download
+        </button>
+    </form>
+</main>
+
+<footer class="docs-footer">
+    <div class="docs-footer-links">
+        <a href="/"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="/documentation"><i class="fa-solid fa-book"></i> Documentation</a>
+        <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> GitHub</a>
+        <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> Discord</a>
+    </div>
+    <div class="docs-footer-meta">Better Trove Tools — community project, not affiliated with the official Trove team.</div>
+</footer>
+
+</body>
+</html>

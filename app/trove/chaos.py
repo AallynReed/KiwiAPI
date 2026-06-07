@@ -119,7 +119,29 @@ async def refresh_chaos_chest() -> bool:
 
 
 async def get_chaos_chest(now: datetime | None = None) -> dict:
-    """The current chaos chest (cached item + computed window), ready to serve."""
+    """The current chaos chest (cached item + computed window), ready to serve.
+
+    Source preference: the bot-captured item for the current week (see
+    ``captures.get_chaos_chest_for_week``) wins, since it's read from the
+    actual in-game cfg. Falls back to the Trovesaurus relay when the bot
+    hasn't reported the current week yet (e.g., immediately after a reset).
+    """
+    # Imported lazily — captures.py imports server_time too and we'd loop otherwise.
+    from app.trove.captures import get_chaos_chest_for_week
+
+    real = now or server_time.real_utc_now()
+    week = server_time.chaos_chest_window(real)
+    capture = await get_chaos_chest_for_week(week["starts_at"])
+    if capture is not None:
+        cached = {
+            "name": capture.name,
+            "identifier": None,
+            "blueprint": None,
+            "start": week["starts_at"],
+            "end": week["ends_at"],
+        }
+        return build_response(cached, capture.captured_at, now)
+
     doc = await FeedCache.find_one(FeedCache.feed == _FEED)
     cached = doc.items[0] if doc and doc.items else None
     fetched_at = doc.fetched_at if doc else None

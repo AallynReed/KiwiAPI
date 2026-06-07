@@ -52,6 +52,53 @@ def _real_unix(trove_dt: datetime) -> int:
     return int((trove_dt + TROVE_OFFSET).timestamp())
 
 
+def is_trove_friday(now: datetime | None = None) -> bool:
+    """True if the given real-UTC instant falls inside a trove-time Friday.
+
+    A trove Friday begins at trove 00:00 = real UTC Fri 11:00 and lasts a full
+    24h, so it spans roughly half of real-UTC Friday plus half of real-UTC
+    Saturday. Used to decide whether the hourly-challenge cycle drops to its
+    half-hourly Friday cadence.
+    """
+    return trove_now(now).weekday() == 4
+
+
+# Each in-game challenge has a 20-minute active window — the rest of the cycle
+# is "next challenge in N minutes" downtime.
+CHALLENGE_DURATION = timedelta(minutes=20)
+
+
+def challenge_window(now: datetime | None = None) -> dict:
+    """The most-recent challenge window's start/end, plus whether it's currently
+    active and whether it falls inside a trove-Friday (half-hourly cycle).
+
+    Regular days: one challenge per hour, starting at :00 (UTC + Trove agree
+    on minutes since the offset is whole hours).
+    Trove Friday: two challenges per hour, starting at :00 and :30.
+
+    The function always returns the LAST window-start whether or not we're
+    still inside its 20-minute active span — so a query made during the gap
+    between challenges still resolves to a sensible "what was the last one?"
+    answer. ``active`` distinguishes the two cases.
+    """
+    real = (now or real_utc_now()).replace(second=0, microsecond=0)
+    friday = is_trove_friday(real)
+    if friday:
+        window_minute = 0 if real.minute < 30 else 30
+    else:
+        window_minute = 0
+    start = real.replace(minute=window_minute)
+    end = start + CHALLENGE_DURATION
+    real_full = now or real_utc_now()
+    return {
+        "starts_at": int(start.timestamp()),
+        "ends_at": int(end.timestamp()),
+        "active": start <= real_full < end,
+        "is_friday_window": friday,
+        "seconds_remaining": max(0, int(end.timestamp()) - int(real_full.timestamp())),
+    }
+
+
 # --- Server time -----------------------------------------------------------
 
 def _next_daily_reset(real_now: datetime) -> datetime:

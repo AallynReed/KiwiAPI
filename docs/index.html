@@ -211,6 +211,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>GET /v1/btt/latest?channel=</code></td><td><code>btt:read</code></td><td>Latest BTT version per platform (windows/linux/android); each platform walks back to find an asset</td></tr>
             <tr><td><code>GET /v1/btt/latest/{platform}?channel=</code></td><td><code>btt:read</code></td><td>Latest BTT version for one platform</td></tr>
             <tr><td><code>GET /v1/btt/check?installed=&platform=&channel=</code></td><td><code>btt:read</code></td><td><strong>"Is there an update?"</strong> server-side version compare; returns <code>{ update_available, latest }</code> so the client just reads a bool</td></tr>
+            <tr><td><code>GET /v1/btt/changelog?limit_groups=&commits_per_group=</code></td><td><code>btt:read</code></td><td>Commits grouped by git tag (mirrors BTT's "Show changelog" button); newest first with an <code>"Unreleased"</code> group leading; cached so users don't trip GitHub's 60/hr unauth rate limit</td></tr>
             <tr><td><code>GET /v1/misc/software</code></td><td><code>misc:read</code></td><td>Third-party Trove modding software, grouped by category</td></tr>
             <tr><td><code>GET /v1/misc/timezones</code></td><td><code>misc:read</code></td><td>Timezones supported by the converter and clocks</td></tr>
             <tr><td><code>GET /v1/misc/time/now</code></td><td><code>misc:read</code></td><td>Current time across every zone, incl. Trove server (reset) time</td></tr>

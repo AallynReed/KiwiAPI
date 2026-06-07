@@ -1,0 +1,156 @@
+/* =========================================================================
+   Better Trove Tools — docs/landing i18n
+   English is the source of truth (lives in the HTML). Each non-English
+   locale ships a JSON map of { normalizedEnglishHTML: translatedHTML }.
+   Only strings present in the locale map are swapped, so anything not
+   translated (buttons, menus, headings) gracefully stays English.
+   ========================================================================= */
+(function () {
+    "use strict";
+
+    // endonyms — language names shown in their own language (never translated)
+    const LANGS = [
+        ["en", "English"],
+        ["fr", "Français"],
+        ["de", "Deutsch"],
+        ["pt-PT", "Português"],
+        ["ru", "Русский"],
+        ["ja", "日本語"],
+        ["zh-CN", "简体中文"],
+    ];
+    const SUPPORTED = new Set(LANGS.map((l) => l[0]));
+    const STORAGE_KEY = "btt_docs_lang";
+
+    const originals = new WeakMap(); // element -> original innerHTML
+    const changed = new Set();       // elements currently showing a translation
+    let dict = {};                    // active locale: normEnglish -> translated
+    let current = "en";
+
+    const norm = (s) => s.replace(/\s+/g, " ").trim();
+
+    const phOriginals = new WeakMap(); // element -> original placeholder
+    const phChanged = new Set();
+
+    function cacheOriginals() {
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+            if (!originals.has(el)) originals.set(el, el.innerHTML);
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+            if (!phOriginals.has(el)) phOriginals.set(el, el.getAttribute("placeholder") || "");
+        });
+    }
+
+    // Restore every element we previously translated back to its English source.
+    function restoreAll() {
+        changed.forEach((el) => {
+            const orig = originals.get(el);
+            if (orig != null) el.innerHTML = orig;
+        });
+        changed.clear();
+        phChanged.forEach((el) => {
+            const orig = phOriginals.get(el);
+            if (orig != null) el.setAttribute("placeholder", orig);
+        });
+        phChanged.clear();
+    }
+
+    // Apply the active dictionary. CRUCIAL: only elements that actually have a
+    // translation are touched — untranslated elements (sidebar menu, buttons,
+    // headings) are left completely alone so their event listeners survive.
+    function applyDict() {
+        restoreAll();
+        if (current === "en") return;
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+            const orig = originals.get(el);
+            if (orig == null) return;
+            const translated = dict[norm(orig)];
+            if (translated != null && translated !== "") {
+                el.innerHTML = translated;
+                changed.add(el);
+            }
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+            const orig = phOriginals.get(el);
+            if (orig == null) return;
+            const translated = dict[norm(orig)];
+            if (translated != null && translated !== "") {
+                el.setAttribute("placeholder", translated);
+                phChanged.add(el);
+            }
+        });
+    }
+
+    async function loadLocale(lang) {
+        if (lang === "en") { dict = {}; return; }
+        try {
+            const res = await fetch(`/static/locales/${lang}.json`, { cache: "no-cache" });
+            dict = res.ok ? await res.json() : {};
+        } catch (e) {
+            console.warn("i18n: failed to load locale", lang, e);
+            dict = {};
+        }
+    }
+
+    async function setLanguage(lang) {
+        if (!SUPPORTED.has(lang)) lang = "en";
+        current = lang;
+        try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
+        document.documentElement.setAttribute("lang", lang);
+        await loadLocale(lang);
+        applyDict();
+        // Multiple .lang-select instances may exist (e.g. one in the navbar and
+        // one in the mobile sidebar) — sync all of them to the active language.
+        document.querySelectorAll(".lang-select").forEach(sel => {
+            if (sel.value !== lang) sel.value = lang;
+        });
+        // let other scripts (e.g. the release-info line in app.js) re-render
+        document.dispatchEvent(new CustomEvent("btt-lang-changed", { detail: { lang } }));
+    }
+
+    function pickInitialLanguage() {
+        let saved = null;
+        try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+        if (saved && SUPPORTED.has(saved)) return saved;
+        // best-effort match on the browser language
+        const nav = (navigator.language || "").toLowerCase();
+        if (nav.startsWith("zh")) return "zh-CN";
+        if (nav.startsWith("ja")) return "ja";
+        if (nav.startsWith("ru")) return "ru";
+        if (nav.startsWith("pt")) return "pt-PT";
+        if (nav.startsWith("fr")) return "fr";
+        if (nav.startsWith("de")) return "de";
+        return "en";
+    }
+
+    function buildSwitcher() {
+        // Populate every .lang-select on the page (navbar + sidebar etc.) so
+        // a duplicate switcher in the mobile drawer stays in sync.
+        const selects = document.querySelectorAll(".lang-select");
+        if (!selects.length) return;
+        selects.forEach(sel => {
+            sel.innerHTML = "";
+            LANGS.forEach(([code, label]) => {
+                const opt = document.createElement("option");
+                opt.value = code;
+                opt.textContent = label;
+                sel.appendChild(opt);
+            });
+            sel.addEventListener("change", () => setLanguage(sel.value));
+        });
+    }
+
+    function init() {
+        cacheOriginals();
+        buildSwitcher();
+        setLanguage(pickInitialLanguage());
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+
+    // expose for debugging / external triggers
+    window.BTTi18n = { setLanguage };
+})();

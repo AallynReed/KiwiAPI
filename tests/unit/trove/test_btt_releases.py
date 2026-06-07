@@ -69,6 +69,24 @@ def test_walk_latest_returns_none_when_no_platform_match():
     assert btt.walk_latest(releases, "android") is None
 
 
+def test_walk_latest_skips_release_with_empty_assets():
+    # Common race: a fresh tag is published but the CI build hasn't uploaded its
+    # binaries yet, so the latest release has assets=[]. Walk back to the
+    # previous release that actually shipped a build. (This is exactly what the
+    # "go to second-latest when latest has no binaries" UX needs.)
+    releases = [
+        _release("v3", []),                                  # latest, tag-only, no binaries yet
+        _release("v2", [_asset("BTT-2.msi"), _asset("BTT-2.apk")]),
+        _release("v1", [_asset("BTT-1.msi")]),
+    ]
+    for platform in ("windows", "android"):
+        release, _assets = btt.walk_latest(releases, platform)
+        assert release["tag_name"] == "v2", f"{platform} should walk back to v2"
+    # Linux had no asset on either v3 OR v2, so it walks to v1 — wait, v1
+    # ships .msi, not Linux. So Linux walks past all three and returns None.
+    assert btt.walk_latest(releases, "linux") is None
+
+
 def test_walk_latest_uses_newest_when_it_has_the_platform():
     releases = [
         _release("v3", [_asset("BTT-3.msi"), _asset("BTT-3.exe")]),
@@ -145,6 +163,69 @@ def test_compare_versions_returns_none_on_garbage():
     assert btt.compare_versions("v1.2.3", "nightly") is None
     assert btt.compare_versions("rolling", "v1.2.3") is None
     assert btt.compare_versions("", "v1.0.0") is None
+
+
+# --- changelog: conventional-commit parse + tag grouping --------------------
+
+def test_parse_conventional_prefix():
+    assert btt.parse_conventional_prefix("feat: add update check") == "feat"
+    assert btt.parse_conventional_prefix("fix(api): handle nulls") == "fix"
+    assert btt.parse_conventional_prefix("Feat: capitalized") == "feat"  # lowercased
+    assert btt.parse_conventional_prefix("docs(readme): tweak") == "docs"
+    assert btt.parse_conventional_prefix("Merge pull request #42 from x") is None
+    assert btt.parse_conventional_prefix("") is None
+    assert btt.parse_conventional_prefix("just a sentence") is None
+
+
+def _commit(sha: str, message: str) -> dict:
+    return {"sha": sha, "commit": {"message": message},
+            "html_url": f"https://github.com/x/y/commit/{sha}"}
+
+
+def _tag(name: str, sha: str) -> dict:
+    return {"name": name, "commit": {"sha": sha}}
+
+
+def test_build_changelog_groups_unreleased_then_tags():
+    tags = [_tag("v1.1.0", "bbbbbbb"), _tag("v1.0.0", "ddddddd")]
+    commits = [
+        _commit("aaaaaaa", "feat: post-v1.1 work"),  # since v1.1 -> Unreleased
+        _commit("bbbbbbb", "release v1.1.0"),         # tagged v1.1.0 — starts v1.1.0 group
+        _commit("ccccccc", "fix: a bug fixed in 1.1"),
+        _commit("ddddddd", "v1.0.0 release"),         # tagged v1.0.0 — starts v1.0.0 group
+        _commit("eeeeeee", "initial commit"),
+    ]
+    groups = btt.build_changelog_groups(tags, commits)
+    assert [g["version"] for g in groups] == ["Unreleased", "v1.1.0", "v1.0.0"]
+    assert [c["short_sha"] for c in groups[0]["commits"]] == ["aaaaaaa"]
+    assert [c["short_sha"] for c in groups[1]["commits"]] == ["bbbbbbb", "ccccccc"]
+    assert [c["short_sha"] for c in groups[2]["commits"]] == ["ddddddd", "eeeeeee"]
+    # Conventional-commit type passed through.
+    assert groups[0]["commits"][0]["type"] == "feat"
+    assert groups[1]["commits"][1]["type"] == "fix"
+    assert groups[2]["commits"][1]["type"] is None  # "initial commit"
+
+
+def test_build_changelog_groups_drops_empty_groups():
+    # No commits since the latest tag — the "Unreleased" group should NOT appear.
+    tags = [_tag("v1.0.0", "aaaaaaa")]
+    commits = [_commit("aaaaaaa", "release v1.0.0"), _commit("bbbbbbb", "feat: start")]
+    groups = btt.build_changelog_groups(tags, commits)
+    assert [g["version"] for g in groups] == ["v1.0.0"]
+    assert len(groups[0]["commits"]) == 2
+
+
+def test_build_changelog_groups_message_first_line_only():
+    commits = [_commit("aaaaaaa", "feat: headline\n\nlong body\nmore body")]
+    groups = btt.build_changelog_groups([], commits)
+    assert groups[0]["commits"][0]["message"] == "feat: headline"
+
+
+def test_build_changelog_groups_defensive_on_garbage():
+    # Junk shapes mixed in shouldn't crash; they're just skipped.
+    assert btt.build_changelog_groups(None, None) == []
+    assert btt.build_changelog_groups([{"junk": 1}], [{"missing": "sha"}]) == []
+    assert btt.build_changelog_groups([], ["not a dict"]) == []
 
 
 def test_normalize_release_drops_malformed_assets():

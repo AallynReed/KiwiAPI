@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Better Trove Tools — User Manual</title>
+    <meta name="description" content="The complete user manual for Better Trove Tools: home dashboard, gem builds, calculators, codexes, mod manager, modder tools, and settings.">
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Better Trove Tools — User Manual">
+    <meta property="og:description" content="The complete user manual for Better Trove Tools: home dashboard, gem builds, calculators, codexes, mod manager, modder tools, and settings.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
+    <meta property="og:url" content="https://trove.aallyn.net/documentation">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Better Trove Tools — User Manual">
+    <meta name="twitter:description" content="The complete user manual for Better Trove Tools.">
+    <meta name="twitter:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/docs.css?v=20260606h">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<!-- ============================ NAVBAR ============================ -->
+<nav class="navbar">
+    <div class="nav-container">
+        <a class="nav-logo" href="/" style="color:inherit;">
+            <img src="/static/assets/favicon.png" alt="Logo">
+            <span>Better <span class="highlight-blue">Trove</span> Tools</span>
+        </a>
+        <div class="nav-actions">
+            <a data-i18n class="nav-link label-only" href="/"><i class="fa-solid fa-house"></i> Home</a>
+            <a data-i18n class="nav-link label-only" href="https://btt.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> Web App</a>
+            <a data-i18n class="nav-link label-only" href="https://github.com/AallynReed/BetterTroveTools" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a>
+            <a data-i18n class="nav-link discord label-only" href="https://discord.gg/Y7P2k99zAz" target="_blank"><i class="fa-brands fa-discord"></i> Discord</a>
+            <a data-i18n class="nav-link primary" href="/#hero"><i class="fa-solid fa-download"></i> Download</a>
+            <span class="lang-picker">
+                <i class="fa-solid fa-globe lang-picker-icon"></i>
+                <select id="langSelect" class="lang-select" aria-label="Language"></select>
+            </span>
+            <button class="mobile-menu-btn" id="menuBtn" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
+        </div>
+    </div>
+</nav>
+
+<div class="sidebar-backdrop" id="backdrop"></div>
+
+<div class="docs-layout">
+    <!-- ============================ SIDEBAR ============================ -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Mobile-only site nav at the top of the sidebar. On phones the
+             whole top bar collapses to logo + hamburger; the hamburger opens
+             this sidebar, so it has to carry both the site links AND the
+             doc-section nav. Hidden on desktop where the navbar shows these. -->
+        <div class="sidebar-mobile-nav" aria-label="Site navigation">
+            <a href="/"><i class="fa-solid fa-house"></i> <span data-i18n>Home</span></a>
+            <a href="https://btt.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span data-i18n>Web App</span></a>
+            <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> GitHub</a>
+            <a class="discord" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> Discord</a>
+            <a class="primary" href="/#hero"><i class="fa-solid fa-download"></i> <span data-i18n>Download</span></a>
+            <span class="sidebar-lang lang-picker">
+                <i class="fa-solid fa-globe lang-picker-icon"></i>
+                <select id="langSelectMobile" class="lang-select" aria-label="Language"></select>
+            </span>
+        </div>
+
+        <div class="sidebar-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="navSearch" data-i18n-placeholder placeholder="Search the manual..." autocomplete="off">
+        </div>
+
+        <nav id="sideNav">
+            <div class="nav-group">
+                <div data-i18n class="nav-group-title"><i class="fa-solid fa-flag-checkered"></i> Start here</div>
+                <ul>
+                    <li data-i18n><a data-i18n href="#getting-started"><i class="fa-solid fa-rocket"></i> Getting Started</a></li>
+                    <li data-i18n><a data-i18n href="#interface"><i class="fa-solid fa-table-columns"></i> The Interface</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <div data-i18n class="nav-group-title"><i class="fa-solid fa-house"></i> Daily play</div>
+                <ul>
+                    <li data-i18n><a data-i18n href="#home"><i class="fa-solid fa-gauge-high"></i> Home Dashboard</a></li>
+                    <li data-i18n><a data-i18n href="#server-time"><i class="fa-solid fa-clock"></i> Server Time & Clocks</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <div data-i18n class="nav-group-title"><i class="fa-solid fa-gem"></i> Builds & math</div>
+                <ul>
+                    <li data-i18n><a data-i18n href="#gem-builds"><i class="fa-solid fa-dice-five"></i> Gem Builds</a></li>
+                    <li data-i18n><a data-i18n href="#star-chart"><i class="fa-solid fa-star"></i> Star Chart</a></li>
+                    <li data-i18n><a data-i18n href="#gem-evaluator"><i class="fa-solid fa-magnifying-glass-chart"></i> Gem Evaluator</a></li>
+                    <li data-i18n><a data-i18n href="#gem-simulator"><i class="fa-solid fa-flask"></i> Gem Simulator</a></li>
+                    <li data-i18n><a data-i18n href="#calculators"><i class="fa-solid fa-calculator"></i> Calculators</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <div data-i18n class="nav-group-title"><i class="fa-solid fa-book"></i> Reference</div>
+                <ul>
+                    <li data-i18n><a data-i18n href="#codexes"><i class="fa-solid fa-paw"></i> Codexes</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <div data-i18n class="nav-group-title"><i class="fa-solid fa-cubes"></i> Mods</div>
+                <ul>
+                    <li data-i18n><a data-i18n href="#mod-manager"><i class="fa-solid fa-cubes"></i> Mod Manager</a></li>
+                    <li data-i18n><a data-i18n href="#modder-tools"><i class="fa-solid fa-toolbox"></i> Modder Tools</a></li>
+                    <li data-i18n><a data-i18n href="#file-explorer"><i class="fa-solid fa-folder-tree"></i> File Explorer</a></li>
+                    <li data-i18n><a data-i18n href="#update-tracker"><i class="fa-solid fa-satellite-dish"></i> Update Tracker</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <div data-i18n class="nav-group-title"><i class="fa-solid fa-gear"></i> App</div>
+                <ul>
+                    <li data-i18n><a data-i18n href="#settings"><i class="fa-solid fa-sliders"></i> Settings & FPS</a></li>
+                    <li data-i18n><a data-i18n href="#power-features"><i class="fa-solid fa-bolt"></i> Power Features</a></li>
+                    <li data-i18n><a data-i18n href="#troubleshooting"><i class="fa-solid fa-life-ring"></i> Troubleshooting</a></li>
+                </ul>
+            </div>
+            <div class="nav-empty" id="navEmpty">No matching topics.</div>
+        </nav>
+    </aside>
+
+    <!-- ============================ CONTENT ============================ -->
+    <main id="main" class="content">
+        <header class="docs-hero">
+            <p class="eyebrow" data-i18n>User Manual</p>
+            <h1 data-i18n>Everything you can do with <span class="highlight-blue">Better Trove Tools</span></h1>
+            <p data-i18n>A friendly, complete walkthrough of every tool in the app — from tracking daily resets and planning gem builds to mining unreleased game files and packaging your own mods.</p>
+            <div class="hero-badges">
+                <span class="hero-badge" data-i18n><i class="fa-solid fa-bolt"></i> Local-first &amp; fast</span>
+                <span class="hero-badge" data-i18n><i class="fa-solid fa-wifi"></i> Transparent network use</span>
+                <span class="hero-badge" data-i18n><i class="fa-solid fa-language"></i> 9 languages</span>
+                <span class="hero-badge" data-i18n><i class="fa-brands fa-windows"></i> Windows + WebView2</span>
+            </div>
+        </header>
+
+        <!-- ========================= GETTING STARTED ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-rocket"></i></div>
+            <h2 id="getting-started" class="doc-section" data-i18n>Getting Started</h2>
+        </div>
+        <p class="section-lead" data-i18n>Install once and the app takes care of the rest — it finds your game, keeps itself updated, and runs entirely on your machine.</p>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">⬇️</div>
+                <div><p class="kicker" data-i18n>Install &amp; launch</p><h3 data-i18n>Up and running in a minute</h3></div>
+            </div>
+            <p data-i18n>Better Trove Tools is a desktop app for Windows. It renders inside the <strong>Microsoft Edge WebView2</strong> runtime (preinstalled on Windows 11), so the download stays small and the engine is automatically security-patched.</p>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-list-ol"></i> First-time setup</h4>
+                <ol>
+                    <li data-i18n>Download the installer from the <a href="/#hero">home page</a> or the <a href="https://github.com/AallynReed/BetterTroveTools/releases" target="_blank">GitHub releases</a> page and run it.</li>
+                    <li data-i18n>Launch the app — it automatically detects your <strong>Glyph</strong> and <strong>Steam</strong> Trove installations (Live, PTS, and any custom installs).</li>
+                    <li data-i18n>That's it. The dashboard loads with live data and the app checks for updates in the background.</li>
+                </ol>
+            </div>
+            <div class="callout tip">
+                <h4 data-i18n><i class="fa-solid fa-cloud-arrow-down"></i> Automatic updates</h4>
+                <p data-i18n>When a newer release is available, an update button appears in the sidebar. One click downloads the installer, applies it, and relaunches the app for you — no manual reinstalling.</p>
+            </div>
+            <div class="callout warn">
+                <h4 data-i18n><i class="fa-solid fa-triangle-exclamation"></i> Missing WebView2?</h4>
+                <p data-i18n>On older Windows builds the runtime may be absent. If the app reports it as missing, install the free <a href="https://developer.microsoft.com/microsoft-edge/webview2/" target="_blank">Evergreen WebView2 Runtime</a> from Microsoft and relaunch.</p>
+            </div>
+        </div>
+
+        <!-- ========================= INTERFACE ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-table-columns"></i></div>
+            <h2 id="interface" class="doc-section" data-i18n>The Interface</h2>
+        </div>
+        <p class="section-lead" data-i18n>A quick tour of the bits that are always on screen, no matter which tool you're using.</p>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">🧭</div>
+                <div><p class="kicker" data-i18n>Always available</p><h3 data-i18n>Sidebar, search, and status</h3></div>
+            </div>
+            <div class="pill-row">
+                <span class="pill" data-i18n><i class="fa-solid fa-bars"></i> Collapsible sidebar</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-magnifying-glass"></i> Quick Open (Ctrl+K)</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-clock"></i> Live server clock</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-globe"></i> Language switcher</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-list-check"></i> Job queue</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-wifi"></i> Request tracker</span>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-compass"></i> Finding your way around</h4>
+                <ul>
+                    <li data-i18n>Use the <strong>left sidebar</strong> to switch between Home, Mod Manager, Modder Tools, Gems &amp; Builds, Calculators, Codexes, Settings, and About. Hit the <span class="ui-btn">☰</span> burger to collapse it for more room.</li>
+                    <li data-i18n>The <strong>server clock</strong> near the bottom shows live Trove server time — click it for world clocks and a time converter.</li>
+                    <li data-i18n>Press <kbd>Ctrl</kbd> + <kbd>K</kbd> anywhere to open <strong>Quick Open</strong> and jump straight to any tool or action.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ========================= HOME DASHBOARD ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <h2 id="home" class="doc-section" data-i18n>Home Dashboard</h2>
+        </div>
+        <p class="section-lead" data-i18n>Your daily briefing. The dashboard talks to the Trove servers and community APIs so you know what's happening without logging in.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/home_dashboard.webp" alt="Home Dashboard" loading="lazy">
+            <figcaption data-i18n>The Home dashboard with rotations, merchants, and community content.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">📅</div>
+                <div><p class="kicker" data-i18n>Live tracking</p><h3 data-i18n>Rotations, merchants &amp; biomes</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-hand-pointer"></i> What you can do here</h4>
+                <ul>
+                    <li data-i18n><strong>Daily &amp; weekly buffs</strong> — see today's active bonuses at a glance. <strong>Click any buff card</strong> to open a schedule of what's coming the rest of the week.</li>
+                    <li data-i18n><strong>Merchants</strong> — track Luxion, Corruxion, and Fluxion, plus biome-based merchant schedules. Cards show whether they're active now or exactly how long until they arrive. <strong>Click a merchant</strong> for its upcoming schedule.</li>
+                    <li data-i18n><strong>Community content</strong> — carousels of current YouTube, Twitch, and BiliBili creators. Click a card to open the stream or video.</li>
+                    <li data-i18n><strong>Official news</strong> — the live Trove news feed with category filtering and a collapse control.</li>
+                    <li data-i18n><strong>Events</strong> — active Trovesaurus community events with live countdown timers.</li>
+                </ul>
+            </div>
+            <div class="callout tip">
+                <h4 data-i18n><i class="fa-solid fa-wand-magic-sparkles"></i> Make it yours</h4>
+                <p data-i18n>Reorder dashboard sections by dragging them, collapse the ones you don't use, and pin your most-used tools to the <strong>Quick Tools</strong> tray (automatic "most visited" or fully manual). Toggle community/news sections off entirely in Settings for a calmer page.</p>
+            </div>
+        </div>
+
+        <!-- ========================= SERVER TIME ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-clock"></i></div>
+            <h2 id="server-time" class="doc-section" data-i18n>Server Time &amp; Clocks</h2>
+        </div>
+        <p class="section-lead" data-i18n>Never miss a reset or mistime an event across timezones again.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/server_time.webp" alt="Server Time & Converter" loading="lazy">
+            <figcaption data-i18n>World clocks plus a converter that outputs Discord timestamps.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">🕐</div>
+                <div><p class="kicker" data-i18n>Time tools</p><h3 data-i18n>World clocks &amp; Discord timestamps</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-hand-pointer"></i> How to use it</h4>
+                <ul>
+                    <li data-i18n>Click the <strong>server clock</strong> in the sidebar to open the time panel.</li>
+                    <li data-i18n>Compare Trove server time side-by-side with major world timezones.</li>
+                    <li data-i18n>Pick a date/time, choose its timezone, and the converter shows the equivalent Trove time.</li>
+                    <li data-i18n>Copy a ready-to-paste <strong>Discord timestamp</strong> in any format (short time, relative, full date, etc.) to share event times that auto-adjust to each viewer's local zone.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ========================= GEM BUILDS ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-dice-five"></i></div>
+            <h2 id="gem-builds" class="doc-section" data-i18n>Gem Builds</h2>
+        </div>
+        <p class="section-lead" data-i18n>Trove's gem system is notoriously fiddly. This tool crunches thousands of combinations and hands you the optimal layout.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/gem_builds.webp" alt="Gem Builds planner" loading="lazy">
+            <figcaption data-i18n>The Gem Builds optimizer with a full layout breakdown.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">💎</div>
+                <div><p class="kicker" data-i18n>Min-max your damage</p><h3 data-i18n>Optimal build engine</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-list-ol"></i> How to use it</h4>
+                <ol>
+                    <li data-i18n>Select your <strong>class</strong> and <strong>subclass</strong>.</li>
+                    <li data-i18n>Enter your target <strong>Light</strong> stat.</li>
+                    <li data-i18n>Toggle the buffs you actually run (food, Berserker Battler, and so on).</li>
+                    <li data-i18n>Press <span class="ui-btn">Calculate</span>.</li>
+                </ol>
+                <p data-i18n>The engine lists the top builds. The <strong>Best</strong> row's "Layout" column tells you exactly how many boosts to put on Physical/Magic Damage vs. Critical Damage for the highest output — click the layout to copy it.</p>
+            </div>
+            <div class="callout tip">
+                <h4 data-i18n><i class="fa-solid fa-star"></i> Pair it with your Star Chart</h4>
+                <p data-i18n>Paste a Star Chart <strong>build code</strong> (see below) into the build engine to factor your astral stats into the calculation for a truly personalized result.</p>
+            </div>
+        </div>
+
+        <!-- ========================= STAR CHART ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-star"></i></div>
+            <h2 id="star-chart" class="doc-section" data-i18n>Star Chart</h2>
+        </div>
+        <p class="section-lead" data-i18n>An interactive, zoomable map of the Trove Star Chart for planning your astral knowledge paths before spending in-game.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/star_chart.webp" alt="Star Chart builder" loading="lazy">
+            <figcaption data-i18n>Plan, save, and share Star Chart builds.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">✨</div>
+                <div><p class="kicker" data-i18n>Plan your path</p><h3 data-i18n>Star Chart visualizer</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-list-ol"></i> How to use it</h4>
+                <ol>
+                    <li data-i18n>Click any node to activate it — just like in-game, you must own the connecting nodes first.</li>
+                    <li data-i18n><strong>Double-click</strong> a major node to auto-fill the entire branch leading up to it.</li>
+                    <li data-i18n><strong>Pan</strong> by dragging the empty background and <strong>zoom</strong> with the scroll wheel to navigate the map.</li>
+                    <li data-i18n>The summary panel aggregates every stat, ability, and obtainable item you've unlocked and enforces the node limit.</li>
+                </ol>
+            </div>
+            <div class="callout tip">
+                <h4 data-i18n><i class="fa-solid fa-share-nodes"></i> Save &amp; share</h4>
+                <p data-i18n>The text box holds your <strong>build code</strong>. Copy it to send to a friend, save it as a reusable template, or paste it into the Gem Builds engine. Saved templates appear in a dropdown for instant loading.</p>
+            </div>
+        </div>
+
+        <!-- ========================= GEM EVALUATOR ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+            <h2 id="gem-evaluator" class="doc-section" data-i18n>Gem Evaluator</h2>
+        </div>
+        <p class="section-lead" data-i18n>Should you keep this gem, reroll it, or toss it? The evaluator answers that for you.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/gem_evaluator.webp" alt="Gem Evaluator" loading="lazy">
+            <figcaption data-i18n>Rate a gem's quality and rolls before spending materials on it.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">🔬</div>
+                <div><p class="kicker" data-i18n>Judge any gem</p><h3 data-i18n>Quality &amp; decision helper</h3></div>
+            </div>
+            <p data-i18n>Enter a gem's stats and the evaluator rates its quality and rolls, helping you decide whether it's worth your flux and rare materials to level, reroll, or replace. Use it before committing resources to anything in-game.</p>
+        </div>
+
+        <!-- ========================= GEM SIMULATOR ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-flask"></i></div>
+            <h2 id="gem-simulator" class="doc-section" data-i18n>Gem Simulator</h2>
+        </div>
+        <p class="section-lead" data-i18n>Leveling and rerolling gems in-game costs millions of flux. The simulator lets you experiment for free.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/gem_simulator.webp" alt="Gem Simulator" loading="lazy">
+            <figcaption data-i18n>A free sandbox for leveling, sparking, and flaring gems.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">🧪</div>
+                <div><p class="kicker" data-i18n>Test before you spend</p><h3 data-i18n>Gem forge sandbox</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-list-ol"></i> How to use it</h4>
+                <ol>
+                    <li data-i18n>Use <strong>Generate Gem</strong> to create a base gem (Stellar, Fire, Empowered, …) — it lands in your inventory.</li>
+                    <li data-i18n>Select the gem, then <span class="ui-btn">Level Up</span> to simulate leveling it to 25 or 30.</li>
+                    <li data-i18n><strong>Flare</strong> — move a boost ("pearl") onto a chosen stat.</li>
+                    <li data-i18n><strong>Spark</strong> — reroll a stat into a different one.</li>
+                    <li data-i18n><strong>Augment</strong> — apply augmentation outcomes to push stats further.</li>
+                    <li data-i18n><strong>Drag and drop</strong> gems into the equipped slots — the app totals your Power Rank and stats, automatically applying the 10% Primordial Dragon buffs.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- ========================= CALCULATORS ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-calculator"></i></div>
+            <h2 id="calculators" class="doc-section" data-i18n>Calculators</h2>
+        </div>
+        <p class="section-lead" data-i18n>Fast, focused calculators for the four numbers Trove players care about most.</p>
+
+        <div class="mini-grid">
+            <div class="mini-card">
+                <h4 data-i18n><i class="fa-solid fa-gauge"></i> Power Rank</h4>
+                <p data-i18n>See your full PR potential with a breakdown of contributions from equipment, dragons, gems, and mastery.</p>
+            </div>
+            <div class="mini-card">
+                <h4 data-i18n><i class="fa-solid fa-trophy"></i> Mastery</h4>
+                <p data-i18n>Plan Trove and Geode mastery, with real-time tracking of PR, Light, and Magic Find gains as ranks climb.</p>
+            </div>
+            <div class="mini-card">
+                <h4 data-i18n><i class="fa-solid fa-clover"></i> Magic Find</h4>
+                <p data-i18n>Optimize loot drops by combining Patron, dragons, and weekly buffs — with optional Star Chart integration.</p>
+            </div>
+            <div class="mini-card">
+                <h4 data-i18n><i class="fa-solid fa-sun"></i> Light</h4>
+                <p data-i18n>Work out your Light total from gear, gems, mastery, and other sources.</p>
+            </div>
+        </div>
+
+        <figure class="shot">
+            <img src="/static/assets/calc_pr.webp" alt="Power Rank calculator" loading="lazy">
+            <figcaption data-i18n>The Power Rank calculator with a contribution breakdown.</figcaption>
+        </figure>
+
+        <!-- ========================= CODEXES ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-paw"></i></div>
+            <h2 id="codexes" class="doc-section" data-i18n>Codexes <span class="tag">Beta</span></h2>
+        </div>
+        <p class="section-lead" data-i18n>Searchable encyclopedias built <em>live</em> from your installed game files — so they stay current with your build instead of relying on bundled static data.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/ally_codex.webp" alt="Ally Codex" loading="lazy">
+            <figcaption data-i18n>The Ally Codex — filter and sort every companion.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">📖</div>
+                <div><p class="kicker" data-i18n>Decoded from game data</p><h3 data-i18n>Eight built-in catalogs</h3></div>
+            </div>
+            <div class="mini-grid">
+                <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-paw"></i> Allies</h4><p data-i18n>Category, stats, abilities, mastery, geode mastery, designer, blueprint, and decoded power rank.</p></div>
+                <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-horse"></i> Mounts</h4><p data-i18n>Category, movement stats, mastery, designer, and blueprint data.</p></div>
+                <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-dragon"></i> Dragons</h4><p data-i18n>The dragon-category mounts, broken out for quick reference.</p></div>
+                <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-scroll"></i> Mementos</h4><p data-i18n>Category, mastery, and source context — biome, boss, or creature origin when available.</p></div>
+                <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-book"></i> Recipes</h4><p data-i18n>Decoded outputs, ingredient counts, category grouping, and output prefab metadata.</p></div>
+                <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-box"></i> Items</h4><p data-i18n>A searchable catalog of decoded game items.</p></div>
+                <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-fish"></i> Fish</h4><p data-i18n>Every catchable fish with rarity, source, and weight info.</p></div>
+                <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-shield-halved"></i> Badges</h4><p data-i18n>The badge catalog decoded from game data.</p></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-hand-pointer"></i> How to use it</h4>
+                <ul>
+                    <li data-i18n>Pick the <strong>game installation</strong> to read from at the top of the codex.</li>
+                    <li data-i18n>Switch tabs between the eight catalogs; each loads on demand and is cached for instant reopening.</li>
+                    <li data-i18n>Use the search box and filters to narrow by category, stat, source, and more.</li>
+                    <li data-i18n>Hit <strong>Refresh</strong> after a game update to rebuild a codex from the latest files.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ========================= MOD MANAGER ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-cubes"></i></div>
+            <h2 id="mod-manager" class="doc-section" data-i18n>Mod Manager</h2>
+        </div>
+        <p class="section-lead" data-i18n>A built-in app store for mods plus full control over what's installed — no manual file shuffling.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/mod_manager.webp" alt="Mod Manager" loading="lazy">
+            <figcaption data-i18n>Manage installed mods per Trove installation.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">🛒</div>
+                <div><p class="kicker" data-i18n>One-click installs</p><h3 data-i18n>Trovesaurus browser</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-hand-pointer"></i> Browsing &amp; installing</h4>
+                <ul>
+                    <li data-i18n>Open the <strong>Trovesaurus</strong> tab, search any mod, or filter by category.</li>
+                    <li data-i18n>Click install on a mod — it downloads and drops into the correct game folder automatically.</li>
+                    <li data-i18n>When an installed mod gets a website update, an update icon appears so you can refresh it in place.</li>
+                    <li data-i18n>Preview images and links to the mod's Trovesaurus and author pages are right there in the app.</li>
+                </ul>
+            </div>
+            <div class="callout tip">
+                <h4 data-i18n><i class="fa-solid fa-link"></i> <code>btt://</code> deep links</h4>
+                <p data-i18n>Install buttons on the web can hand off to the app through <code>btt://</code> links for true one-click installs straight from your browser.</p>
+            </div>
+        </div>
+
+        <figure class="shot">
+            <img src="/static/assets/trovesaurus.webp" alt="Trovesaurus Browser" loading="lazy">
+            <figcaption data-i18n>Browse, install, and update mods from Trovesaurus without leaving the app.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">🎚️</div>
+                <div><p class="kicker" data-i18n>Local control</p><h3 data-i18n>Your installed mods</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-hand-pointer"></i> Managing what's installed</h4>
+                <ul>
+                    <li data-i18n>The <strong>My Mods</strong> tab lists everything installed for the selected Trove install.</li>
+                    <li data-i18n>Toggle mods on and off without deleting them; update or remove with a click.</li>
+                    <li data-i18n>Use <span class="ui-btn">Fix Names</span> to rename local files to match their internal titles.</li>
+                    <li data-i18n>Search, filter, and quick-jump through long lists.</li>
+                </ul>
+            </div>
+            <div class="callout warn">
+                <h4 data-i18n><i class="fa-solid fa-triangle-exclamation"></i> Conflict detection</h4>
+                <p data-i18n>A warning marker means two enabled mods overwrite the <em>same</em> game file — only one will actually load in-game. Disable one of the conflicting mods to resolve it.</p>
+            </div>
+        </div>
+
+        <!-- ========================= MODDER TOOLS ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-toolbox"></i></div>
+            <h2 id="modder-tools" class="doc-section" data-i18n>Modder Tools</h2>
+        </div>
+        <p class="section-lead" data-i18n>A full development studio for creating, editing, and packaging mods — it hides the confusing file structures and compilation steps.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/modder_tools_build.webp" alt="Build .tmod" loading="lazy">
+            <figcaption data-i18n>Building a <code>.tmod</code> package from loose files.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">🛠️</div>
+                <div><p class="kicker" data-i18n>From files to .tmod</p><h3 data-i18n>The standard modding workflow</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-list-ol"></i> Build a mod step by step</h4>
+                <ol>
+                    <li data-i18n>In the <strong>Projects</strong> tab, create a project and point it at a folder. Each project keeps versioned workspaces (e.g. <code>v1.0</code>).</li>
+                    <li data-i18n>Drop your edited game files into the version folder.</li>
+                    <li data-i18n>Click <span class="ui-btn">Auto-Structure</span> — the app scans Trove's file dictionary, figures out where each file belongs, and arranges the folder hierarchy for you.</li>
+                    <li data-i18n>Click <span class="ui-btn">Place Overrides</span> to copy the structured files into the live game so you can <strong>Test in Game</strong> instantly. Click <span class="ui-btn">Remove Overrides</span> when you're done.</li>
+                    <li data-i18n>Fill in the mod title, author, and a preview image.</li>
+                    <li data-i18n>Click <span class="ui-btn">Compile</span> to package everything into a <code>.tmod</code>, ready to upload to Trovesaurus.</li>
+                </ol>
+            </div>
+            <div class="pill-row">
+                <span class="pill" data-i18n><i class="fa-solid fa-hammer"></i> Build TMod</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-box-open"></i> Extract TMod</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-pen-to-square"></i> Edit TMod</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-diagram-project"></i> Projects</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-computer"></i> Third-party software</span>
+            </div>
+            <p style="margin-top:16px;"><strong>Extract</strong> and <strong>Edit</strong> let you open existing <code>.tmod</code> files to inspect, modify in memory, and recompile them with clean title-based naming. The <strong>third-party software directory</strong> links out to the common external tools modders use.</p>
+        </div>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">🧊</div>
+                <div><p class="kicker" data-i18n>Voxel preview</p><h3 data-i18n>Blueprint Editor <span class="tag exp">Experimental</span></h3></div>
+            </div>
+            <p data-i18n>Open <code>.qb</code> files and Trove <code>.blueprint</code> packages, browse their internal voxel assets, inspect them in 3D, and export back to Qubicle Binary format.</p>
+            <figure class="shot">
+                <img src="/static/assets/blueprint_editor.webp" alt="Blueprint Editor" loading="lazy">
+                <figcaption data-i18n>Inspecting a voxel asset in the experimental Blueprint Editor.</figcaption>
+            </figure>
+            <div class="callout warn">
+                <h4 data-i18n><i class="fa-solid fa-flask"></i> Preview only</h4>
+                <p data-i18n>The Blueprint Editor is an early preview and is provided for demonstration — treat its output as experimental rather than production-ready.</p>
+            </div>
+        </div>
+
+        <!-- ========================= FILE EXPLORER ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-folder-tree"></i></div>
+            <h2 id="file-explorer" class="doc-section" data-i18n>File Explorer</h2>
+        </div>
+        <p class="section-lead" data-i18n>Trove hides its assets inside large compressed binary archives. The Explorer turns them into a normal, searchable folder tree.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/game_file_manager.webp" alt="Game File Manager" loading="lazy">
+            <figcaption data-i18n>Browse and extract directly from Trove's archives.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">📂</div>
+                <div><p class="kicker" data-i18n>Browse game assets</p><h3 data-i18n>Archive explorer</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-hand-pointer"></i> How to use it</h4>
+                <ol>
+                    <li data-i18n>Pick a game install and load its archive tree — the app reads the <code>.tfi</code> indexes and <code>.tfa</code> archives directly.</li>
+                    <li data-i18n>Browse the game's internal UI, textures, sounds, and blueprints in a familiar tree view.</li>
+                    <li data-i18n>Right-click any file to extract it to your computer.</li>
+                    <li data-i18n>Select a folder and use the mass-extraction tools to pull out everything at once.</li>
+                </ol>
+            </div>
+            <div class="callout tip">
+                <h4 data-i18n><i class="fa-solid fa-bolt"></i> Fast by design</h4>
+                <p data-i18n>Archive reading, hashing, and extraction run in parallel across your CPU cores, and previously-loaded trees are cached — so loads and bulk extracts stay quick even on the full game.</p>
+            </div>
+        </div>
+
+        <!-- ========================= UPDATE TRACKER ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+            <h2 id="update-tracker" class="doc-section" data-i18n>Update Tracker</h2>
+        </div>
+        <p class="section-lead" data-i18n>Developers hide upcoming mounts, dragons, and UI changes in the game files weeks before release. The tracker shows you exactly what each patch added or changed.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/update_tracker.webp" alt="Update Tracker" loading="lazy">
+            <figcaption data-i18n>Diff a patch against your baseline to surface every new and changed file.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">🔍</div>
+                <div><p class="kicker" data-i18n>Find hidden content</p><h3 data-i18n>Patch-to-patch diffing</h3></div>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-list-ol"></i> How to track updates</h4>
+                <ol>
+                    <li data-i18n>In the Update Tracker panel, choose a tracking folder where extracted files will be saved.</li>
+                    <li data-i18n>Click <span class="ui-btn">Build Baseline Cache</span>. The app fingerprints the game's tens of thousands of files into a "snapshot." <em>This takes a moment, but only needs doing once.</em></li>
+                    <li data-i18n>Wait for Trove to release a patch.</li>
+                    <li data-i18n>Come back and click <span class="ui-btn">Scan for Updates</span>.</li>
+                </ol>
+            </div>
+            <div class="callout tip">
+                <h4 data-i18n><i class="fa-solid fa-gears"></i> What happens next</h4>
+                <p data-i18n>The app compares the game to your baseline, isolates every new or changed file, extracts them into your folder, and writes a text summary of every change. Enable <strong>Auto-Generate Blueprint Previews</strong> to also render 2D images of new 3D models. A fast stat-based check means routine rescans skip unchanged files automatically.</p>
+            </div>
+        </div>
+
+        <!-- ========================= SETTINGS ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-sliders"></i></div>
+            <h2 id="settings" class="doc-section" data-i18n>Settings &amp; FPS</h2>
+        </div>
+        <p class="section-lead" data-i18n>Tailor the app to your taste and manage your game installations from one place.</p>
+
+        <figure class="shot">
+            <img src="/static/assets/settings.webp" alt="Settings & FPS" loading="lazy">
+            <figcaption data-i18n>Theming, language, game installs, and the per-install FPS cap patcher.</figcaption>
+        </figure>
+
+        <div class="feature-block">
+            <div class="feature-head">
+                <div class="f-icon">⚙️</div>
+                <div><p class="kicker" data-i18n>Make it yours</p><h3 data-i18n>Appearance &amp; installs</h3></div>
+            </div>
+            <div class="pill-row">
+                <span class="pill" data-i18n><i class="fa-solid fa-palette"></i> Accent color</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-font"></i> App font</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-language"></i> 9 languages</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-eye-slash"></i> Home toggles</span>
+                <span class="pill" data-i18n><i class="fa-solid fa-folder-plus"></i> Custom directories</span>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-hand-pointer"></i> What you can change</h4>
+                <ul>
+                    <li data-i18n><strong>Custom Trove directories</strong> — add Live, PTS, or any custom install so every tool can target it.</li>
+                    <li data-i18n><strong>Accent color &amp; app font</strong> — restyle the whole interface.</li>
+                    <li data-i18n><strong>Language</strong> — switch between 9 supported languages at any time.</li>
+                    <li data-i18n><strong>Home content toggles</strong> — hide community content or news for a quieter dashboard.</li>
+                </ul>
+            </div>
+            <div class="callout">
+                <h4 data-i18n><i class="fa-solid fa-gauge-high"></i> FPS cap patcher</h4>
+                <p data-i18n>Set the Trove client's frame-rate cap per installation — choose from <strong>60, 90, 120, 144, 165, 180, 200, 240, 360, 540 FPS, or uncapped</strong>. The app edits the cap directly in the executable, keeps an automatic pristine backup, and flags an install for repair if the value can't be located.</p>
+            </div>
+            <div class="callout warn">
+                <h4 data-i18n><i class="fa-solid fa-triangle-exclamation"></i> Heads up</h4>
+                <p data-i18n>Changing the FPS cap modifies the game executable. The app backs up the original first, but always make sure the game isn't running when you apply a change.</p>
+            </div>
+        </div>
+
+        <!-- ========================= POWER FEATURES ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-bolt"></i></div>
+            <h2 id="power-features" class="doc-section" data-i18n>Power Features</h2>
+        </div>
+        <p class="section-lead" data-i18n>Small touches that make the app faster to drive once you know they're there.</p>
+
+        <div class="mini-grid">
+            <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-magnifying-glass"></i> Quick Open</h4><p data-i18n>Press <kbd>Ctrl</kbd>+<kbd>K</kbd> to fuzzy-search every tool and action and jump straight there.</p></div>
+            <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-list-check"></i> Job queue</h4><p data-i18n>Long jobs like extraction and scanning run in the background with live progress you can monitor.</p></div>
+            <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-wifi"></i> Request tracker</h4><p data-i18n>Every external network call the app makes is logged and visible — full transparency, local-first.</p></div>
+            <div class="mini-card"><h4 data-i18n><i class="fa-solid fa-cloud-arrow-down"></i> Self-update</h4><p data-i18n>New releases are detected automatically and installed with one click.</p></div>
+        </div>
+
+        <!-- ========================= TROUBLESHOOTING ========================= -->
+        <div class="section-heading">
+            <div class="sec-icon"><i class="fa-solid fa-life-ring"></i></div>
+            <h2 id="troubleshooting" class="doc-section" data-i18n>Troubleshooting &amp; FAQ</h2>
+        </div>
+        <p class="section-lead" data-i18n>Quick answers to the things people ask most.</p>
+
+        <div class="faq">
+            <details>
+                <summary data-i18n>The app says my Trove installation can't be found</summary>
+                <div class="faq-body"><p data-i18n>Open <strong>Settings</strong> and add your install under custom directories — point it at the folder containing <code>Trove.exe</code> / <code>Trove_x64.exe</code>. Glyph and Steam installs are normally detected automatically; a custom directory covers anything unusual.</p></div>
+            </details>
+            <details>
+                <summary data-i18n>A codex is empty or out of date</summary>
+                <div class="faq-body"><p data-i18n>Codexes are built from your installed game files and cached. Make sure the correct install is selected at the top of the codex, then use <strong>Refresh</strong> to rebuild it from the latest files after a patch.</p></div>
+            </details>
+            <details>
+                <summary data-i18n>An installed mod isn't showing up in-game</summary>
+                <div class="faq-body"><p data-i18n>Check the Mod Manager for a conflict warning — if two enabled mods overwrite the same file, only one loads. Disable the conflicting mod. Also confirm the mod is enabled for the <em>specific</em> Trove install you're launching.</p></div>
+            </details>
+            <details>
+                <summary data-i18n>Building the baseline cache is slow</summary>
+                <div class="faq-body"><p data-i18n>The first baseline fingerprints the entire game, so it takes a while — but only once. The work is spread across your CPU cores, and future scans skip unchanged files automatically, so they're much faster.</p></div>
+            </details>
+            <details>
+                <summary data-i18n>Does the app need to be online?</summary>
+                <div class="faq-body"><p data-i18n>It's local-first. Tools that read your game files, manage mods, and run calculations work offline. Internet is only used for live community/news content, downloading mods, and update checks — and every external request is shown in the request tracker.</p></div>
+            </details>
+        </div>
+
+        <footer class="docs-footer">
+            <span data-i18n>Better Trove Tools — community project, not affiliated with the official Trove team.</span>
+            <span>
+                <a data-i18n href="/">Home</a> ·
+                <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank">GitHub</a> ·
+                <a href="https://discord.gg/Y7P2k99zAz" target="_blank">Discord</a>
+            </span>
+        </footer>
+    </main>
+</div>
+
+<button id="to-top" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+
+<script>
+(function () {
+    const sidebar   = document.getElementById('sidebar');
+    const backdrop  = document.getElementById('backdrop');
+    const menuBtn   = document.getElementById('menuBtn');
+    const navLinks  = Array.from(document.querySelectorAll('#sideNav a'));
+    const search    = document.getElementById('navSearch');
+    const navEmpty  = document.getElementById('navEmpty');
+    const toTop     = document.getElementById('to-top');
+
+    // ---- Mobile sidebar toggle ----
+    const openSidebar  = () => { sidebar.classList.add('open'); backdrop.classList.add('show'); };
+    const closeSidebar = () => { sidebar.classList.remove('open'); backdrop.classList.remove('show'); };
+    if (menuBtn) menuBtn.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+    backdrop.addEventListener('click', closeSidebar);
+
+    // ---- Smooth scroll + close drawer on click ----
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const id = link.getAttribute('href');
+            const target = document.querySelector(id);
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                history.replaceState(null, '', id);
+                closeSidebar();
+            }
+        });
+    });
+
+    // ---- Sidebar search filter ----
+    search.addEventListener('input', () => {
+        const q = search.value.trim().toLowerCase();
+        let anyVisible = false;
+        document.querySelectorAll('#sideNav .nav-group').forEach(group => {
+            let groupVisible = false;
+            group.querySelectorAll('li').forEach(li => {
+                const match = li.textContent.toLowerCase().includes(q);
+                li.style.display = match ? '' : 'none';
+                if (match) { groupVisible = true; anyVisible = true; }
+            });
+            group.style.display = groupVisible ? '' : 'none';
+        });
+        navEmpty.style.display = anyVisible ? 'none' : 'block';
+    });
+
+    // ---- Scroll-spy (highlight current section) ----
+    const sections = navLinks
+        .map(l => document.querySelector(l.getAttribute('href')))
+        .filter(Boolean);
+    const linkFor = (id) => navLinks.find(l => l.getAttribute('href') === '#' + id);
+
+    const spy = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const link = linkFor(entry.target.id);
+                if (!link) return;
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-80px 0px -65% 0px', threshold: 0 });
+    sections.forEach(s => spy.observe(s));
+
+    // ---- Back to top ----
+    window.addEventListener('scroll', () => {
+        toTop.classList.toggle('show', window.scrollY > 600);
+    }, { passive: true });
+    toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // ---- Cmd/Ctrl+K to focus the search ----
+    // Standard shortcut on most modern doc sites. On mobile we also open the
+    // drawer so the search is visible before we focus it.
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            if (window.innerWidth <= 860 && !sidebar.classList.contains('open')) openSidebar();
+            search.focus();
+            search.select();
+        }
+    });
+})();
+</script>
+
+<script src="/static/i18n.js?v=20260606h"></script>
+
+</body>
+</html>

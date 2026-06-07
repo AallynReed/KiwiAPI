@@ -1,6 +1,16 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel
+
+# Category a captured challenge falls into. Computed from the raw display name
+# by ``app.trove.captures.classify_challenge`` so consumers don't have to
+# memorise which strings are special-cased; see that helper for the rules.
+# Field name ``type`` shadows the Python builtin at attribute level but
+# Pydantic handles it fine — chose ``type`` because the old API used
+# ``challenge_type`` and consumers reading the renamed `kind` would have
+# broken. ``ChallengeType`` (the alias) is the public name.
+ChallengeType = Literal["collection", "rampage", "racing", "target", "dungeon"]
 
 # --- Server time -----------------------------------------------------------
 
@@ -260,6 +270,26 @@ class BttUpdateCheck(BaseModel):
     latest: BttPlatformLatest | None  # the latest release for this platform/channel, or null
 
 
+class BttCommit(BaseModel):
+    sha: str                      # full commit SHA
+    short_sha: str                # first 7 chars (display id)
+    message: str                  # first line of the commit message
+    type: str | None = None       # conventional-commit prefix (feat/fix/docs/...) or null
+    url: str                      # the GitHub commit page
+
+
+class BttChangelogGroup(BaseModel):
+    version: str                  # tag name (e.g. "v1.2.3") or "Unreleased"
+    commits: list[BttCommit]
+
+
+class BttChangelogOut(BaseModel):
+    repo: str                     # "AallynReed/BetterTroveTools"
+    groups: list[BttChangelogGroup]  # newest first; "Unreleased" leads when present
+    rate_limited: bool            # True if the last fetch hit GitHub's rate limit
+    fetched_at: datetime          # when the changelog was last (successfully) refreshed
+
+
 # --- Events (Trovesaurus calendar) -----------------------------------------
 
 
@@ -386,3 +416,191 @@ class TroveClass(BaseModel):
 class ClassList(BaseModel):
     items: list[TroveClass]
     count: int
+
+
+# --- Leaderboards ----------------------------------------------------------
+# ``created_at`` is unix seconds anchored at 11:00 UTC (Trove's daily reset),
+# matching the bot's dump cadence. ``contest_type`` is ``"daily"`` / ``"weekly"``
+# / ``None``; ``reset_kind`` describes the BOARD (daily/weekly/default) while
+# ``contest_type`` describes whether THIS dump captured a contest window.
+
+
+class LeaderboardContest(BaseModel):
+    time: int     # unix seconds — the anchor this contest was observed at
+    type: str     # "daily" | "weekly"
+
+
+class LeaderboardInfo(BaseModel):
+    uuid: int
+    name_id: str
+    name: str
+    category_id: str
+    category: str
+    contest_type: str | None = None    # contest type at the queried anchor
+    reset_kind: str                    # "daily" | "weekly" | "default"
+    player_board: bool                 # False for server-tally boards
+
+
+class LeaderboardBoardOut(LeaderboardInfo):
+    contests: list[LeaderboardContest] = []
+
+
+class LeaderboardListOut(BaseModel):
+    created_at: int
+    items: list[LeaderboardInfo]
+    count: int
+
+
+class LeaderboardEntryOut(BaseModel):
+    rank: int
+    player_name: str
+    score: float
+
+
+class LeaderboardEntriesPage(BaseModel):
+    uuid: int
+    created_at: int
+    items: list[LeaderboardEntryOut]
+    count: int
+    total: int
+
+
+class LeaderboardTimestamps(BaseModel):
+    items: list[int]
+    count: int
+
+
+class LeaderboardInsertResponse(BaseModel):
+    boards: int
+    entries: int
+    cleared_before_insert: int
+    archived_old: int   # rows moved hot → archive at the tail of this insert
+    created_at: int | None
+
+
+class LeaderboardPlayerEntry(LeaderboardEntryOut):
+    leaderboard: int
+    created_at: int
+
+
+class LeaderboardPlayerHistory(BaseModel):
+    player_name: str
+    items: list[LeaderboardPlayerEntry]
+    count: int
+
+
+# --- Market ---------------------------------------------------------------
+# One ``MarketListingOut`` per in-game listing (UUID v1 from the game is the id).
+# ``expired`` is True when the listing is past its 7-day lifetime OR hasn't been
+# re-scraped for >3h; the read endpoints hide these by default and surface them
+# only when the caller opts in.
+
+
+class MarketListingOut(BaseModel):
+    id: str          # the game's UUID v1, stringified
+    name: str
+    type: str | None
+    stack: int
+    price: int
+    price_each: float
+    last_seen: int   # unix seconds (real UTC)
+    created_at: int  # unix seconds (real UTC) — decoded from the UUID
+    expires_at: int  # created_at + 7d
+    expired: bool
+
+
+class MarketListingsPage(BaseModel):
+    items: list[MarketListingOut]
+    count: int      # rows returned in this page
+    total: int      # rows matching the filter (independent of pagination)
+
+
+class MarketItemList(BaseModel):
+    items: list[str]
+    count: int
+
+
+class MarketItemSummary(BaseModel):
+    name: str
+    count: int          # number of active listings
+    total_price: int    # sum of `price` across active listings
+    total_stack: int    # sum of `stack`
+    min_each: float
+    max_each: float
+    avg_each: float
+    median_each: float
+
+
+class MarketInsertResponse(BaseModel):
+    parsed: int                # rows the parser recognised
+    imported: int              # rows persisted (matched the interest list)
+    ignored_not_in_list: int   # parsed but not in the interest list
+    last_seen: int | None      # the anchor stamped on every persisted row
+
+
+# --- Captured rotations (chaos chest + hourly challenge) -------------------
+# Both share a "POST a name, GET current + history" shape. The server computes
+# the time anchor; the bot just sends the captured display name.
+
+
+class CaptureInsertRequest(BaseModel):
+    name: str  # the captured item / challenge display name (verbatim from cfg)
+
+
+class ChaosChestCaptureOut(BaseModel):
+    week_anchor: int     # unix seconds at Tue 11:00 UTC (the week's start)
+    week_ends_at: int    # week_anchor + 7 days
+    name: str
+    captured_at: datetime
+
+
+class ChaosChestHistoryPage(BaseModel):
+    items: list[ChaosChestCaptureOut]
+    count: int
+    total: int
+
+
+class ChallengeWindow(BaseModel):
+    """Pure window math (no name) — the shape ``server_time.challenge_window`` returns."""
+    starts_at: int
+    ends_at: int
+    active: bool
+    is_friday_window: bool
+    seconds_remaining: int
+
+
+class ChallengeCurrentOut(ChallengeWindow):
+    """The current window + the captured challenge for it, if any.
+
+    ``name`` is None when the bot hasn't reported this window yet (or during
+    the gap between two windows — though ``starts_at`` / ``ends_at`` still
+    describe the most-recent window in that case). ``type`` mirrors that
+    nullability since it's derived from ``name``.
+    """
+    name: str | None = None
+    type: ChallengeType | None = None
+    captured_at: datetime | None = None
+
+
+class ChallengeCaptureOut(BaseModel):
+    window_anchor: int
+    window_ends_at: int
+    name: str
+    # Server-side classification of ``name`` (collection/rampage/racing/target/dungeon)
+    # so consumers don't have to maintain the special-case table themselves.
+    type: ChallengeType
+    is_friday_window: bool
+    captured_at: datetime
+
+
+class ChallengeHistoryPage(BaseModel):
+    items: list[ChallengeCaptureOut]
+    count: int
+    total: int
+
+
+class CaptureInsertResponse(BaseModel):
+    """Shared response shape for the two master-only ingest endpoints."""
+    anchor: int      # the time anchor the server inferred from "now"
+    name: str        # the value persisted (post-trim)
+    refreshed: bool  # False on first sighting of this anchor, True on re-submit

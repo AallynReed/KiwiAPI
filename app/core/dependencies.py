@@ -1,4 +1,3 @@
-import ipaddress
 from dataclasses import dataclass
 
 import jwt
@@ -9,6 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.auth.models import User
 from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
+from app.core.ip_hash import ip_allowed as _ip_hash_allowed
 from app.core.limits import endpoint_limit_for
 from app.core.ratelimit import check_rate_limit, rate_limit_headers
 from app.core.scopes import mask_grants
@@ -108,19 +108,11 @@ class AccessContext:
         return self.token is not None
 
 
-def _ip_allowed(client_ip: str, allowed: list[str]) -> bool:
-    """True if client_ip falls within any allowed exact IP or CIDR."""
-    try:
-        addr = ipaddress.ip_address(client_ip)
-    except ValueError:
-        return False
-    for entry in allowed:
-        try:
-            if addr in ipaddress.ip_network(entry, strict=False):
-                return True
-        except ValueError:
-            continue
-    return False
+# The runtime IP check uses HMAC-SHA256(salt, ip) on the inbound client IP and
+# looks for that hash in the token's stored ``allowed_ip_hashes``. The plaintext
+# IP never crosses any data boundary — admins/DB breach see only hashes. See
+# ``app/core/ip_hash.py`` for the design notes (incl. why CIDRs aren't supported
+# and the IPv4-bruteforce caveat).
 
 
 async def _resolve_token(creds: HTTPAuthorizationCredentials) -> tuple[User, ApiToken]:
@@ -159,9 +151,12 @@ async def _enforce_token_limits(
     request.state.usage_user_id = user.id
     request.state.usage_token_id = token.id
 
-    # IP allowlist — enforced whenever the token pins source IPs (always, for
-    # tokens minted after this feature; older keys with no IPs are unrestricted).
-    if token.allowed_ips and not _ip_allowed(client_ip(request) or "", token.allowed_ips):
+    # IP allowlist — opt-in defence-in-depth for the token owner. Hashes are
+    # stored, so the check rehashes the inbound IP with this token's salt and
+    # looks for a match. An empty list means "no IP restriction".
+    if token.allowed_ip_hashes and not _ip_hash_allowed(
+        client_ip(request) or "", token.ip_salt, token.allowed_ip_hashes,
+    ):
         raise APIError(
             status_code=403,
             code=ErrorCode.ip_not_allowed,
@@ -212,6 +207,25 @@ async def get_token_context(
     user, token = await _resolve_token(creds)
     await _enforce_token_limits(request, response, user, token)
     return TokenContext(user=user, token=token)
+
+
+async def get_superuser_token_context(
+    ctx: TokenContext = Depends(get_token_context),
+) -> TokenContext:
+    """Master-only API-token gate for ingest endpoints (e.g. /v1/leaderboards/insert).
+
+    Validates the API token through the normal pipeline (rate limit + usage
+    accounting) and then requires the token's owner to be a superuser. The
+    session-cookie equivalent is ``get_current_superuser`` — this one is for
+    bots that authenticate with an API token.
+    """
+    if not ctx.user.is_superuser:
+        raise APIError(
+            status_code=403,
+            code=ErrorCode.forbidden,
+            message="This endpoint requires a superuser API token.",
+        )
+    return ctx
 
 
 def require_scope(scope: str):

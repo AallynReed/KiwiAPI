@@ -107,6 +107,10 @@ services:
       # Content-addressed blob store for the game-file archive (host: ./.game_updates).
       # Many GB once enabled — kept out of git/Syncthing/the image build context.
       - ./.game_updates:/data/updates
+      # BetterTroveTools showcase site (templates + static + ~20 MB of screenshots).
+      # Bind-mounted so the heavy binary assets don't bake into the image; the
+      # api container serves trove.aallyn.net out of this directory.
+      - ./site:/app/site:ro
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
               "--proxy-headers", "--forwarded-allow-ips", "*", "--reload"]
     # Headroom for the update archiver: it decompresses several .tfa archives
