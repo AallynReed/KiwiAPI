@@ -161,6 +161,7 @@ types 1-9, augments 1 Rough/2 Precise/3 Superior).
   `{unix, iso_utc, zones:[{id, name, datetime, date, time}], discord:[{style, label, code:"<t:unix:f>"}]}`.
   Give a naive `datetime` interpreted in `timezone`, or an absolute `unix` (timezone ignored). Discord codes
   render in each viewer's own local time.
+- `POST /v1/misc/feedback` — **multipart/form-data** with fields `message` (5..2000 chars, required), `contact?` (≤200 chars), `category?` (`"bug"|"feature"|"general"`, default `"general"`), `app_version?` (≤64 chars, useful for desktop/3rd-party clients), and up to 4 image `attachments` (each ≤5 MB, MIME `image/png|jpeg|webp|gif`). Returns `{ok: true, received_at}`. **Public, tokenless**, rate-limited per-IP + globally (runtime-tunable, defaults 3 / hour / IP and 60 / hour globally). 429 with `Retry-After` + `X-RateLimit-*` headers on per-IP excess; global cap fails silently. The submitter IP is never persisted; only the message, contact, category, app_version, parsed OS + client (from User-Agent), and the attachment metadata (filename/type/size — bytes go to Discord, not Mongo). On success the entry + attachments are POSTed to the Discord webhook in `feedback.discord_webhook` (runtime config) as a fire-and-forget background task — webhook failures don't fail the submission.
 
 ### Mods (`mods:read`) — .tmod decompile + build (stateless; up to 20 MB body)
 

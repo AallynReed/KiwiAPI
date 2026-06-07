@@ -109,8 +109,13 @@ async def daily_rate_limit_digest() -> bool:
     if not settings.rate_limit_alert_email:
         return False
 
+    # Threshold + digest window are runtime-tunable (master admin panel).
+    from app.admin import runtime_config
+    hours = await runtime_config.get_setting("rate_limit_digest_window_hours")
+    threshold = await runtime_config.get_setting("rate_limit_alert_threshold")
+
     now = utcnow()
-    window = timedelta(hours=settings.rate_limit_digest_window_hours)
+    window = timedelta(hours=hours)
     last = await _get_state_time("rate_limit_digest")
     if last is not None and (now - last) < window * 0.9:
         return False  # already processed this window
@@ -135,7 +140,7 @@ async def daily_rate_limit_digest() -> bool:
     await _set_state_time("rate_limit_digest", now)
 
     total = sum(r["count"] for r in rows)
-    if total < settings.rate_limit_alert_threshold:
+    if total < threshold:
         return False
 
     user_ids = list({r["user_id"] for r in rows})
@@ -145,8 +150,6 @@ async def daily_rate_limit_digest() -> bool:
         t.id: (t.name, t.prefix)
         for t in await ApiToken.find({"_id": {"$in": token_ids}}).to_list()
     }
-
-    hours = settings.rate_limit_digest_window_hours
 
     def email_for(r):
         return emails.get(r["user_id"], "unknown")

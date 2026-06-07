@@ -164,12 +164,13 @@ async def _enforce_token_limits(
         )
 
     # Per-token throughput cap — protects compute-heavy endpoints from one key.
+    # Limit + window are runtime-tunable from the master admin panel; cached
+    # for 5s in runtime_config so the hot path stays cheap.
+    from app.admin import runtime_config
+
     key = f"token:{bucket}:{token.id}" if bucket else f"token:{token.id}"
-    info = await check_rate_limit(
-        key,
-        settings.api_rate_limit_max * multiplier,
-        settings.api_rate_limit_window_seconds,
-    )
+    api_max, api_window = await runtime_config.get_rate_limit("api_rate_limit")
+    info = await check_rate_limit(key, api_max * multiplier, api_window)
     # Surface limit state on every successful response so clients self-throttle.
     response.headers.update(rate_limit_headers(info))
 
@@ -186,14 +187,14 @@ async def _enforce_token_limits(
 async def _enforce_anonymous_limit(
     request: Request, response: Response, *, multiplier: int = 1, bucket: str | None = None,
 ) -> None:
-    """Stricter per-IP budget for unauthenticated access to public scopes."""
+    """Stricter per-IP budget for unauthenticated access to public scopes.
+    Limit + window are runtime-tunable (master admin panel)."""
+    from app.admin import runtime_config
+
     ip = client_ip(request) or "unknown"
     key = f"public:{bucket}:{ip}" if bucket else f"public:{ip}"
-    info = await check_rate_limit(
-        key,
-        settings.public_anon_rate_limit_max * multiplier,
-        settings.public_anon_rate_limit_window_seconds,
-    )
+    anon_max, anon_window = await runtime_config.get_rate_limit("public_anon_rate_limit")
+    info = await check_rate_limit(key, anon_max * multiplier, anon_window)
     response.headers.update(rate_limit_headers(info))
 
 

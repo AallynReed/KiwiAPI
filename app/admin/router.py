@@ -4,6 +4,7 @@ from beanie import PydanticObjectId
 from beanie.operators import Set
 from fastapi import APIRouter, Depends, Query
 
+from app.admin import runtime_config
 from app.admin.schemas import (
     ActivityOverview,
     AdminTokenView,
@@ -14,6 +15,9 @@ from app.admin.schemas import (
     InterestItemBulkReplaceRequest,
     InterestItemBulkReplaceResponse,
     InterestItemListAdmin,
+    RuntimeConfigItem,
+    RuntimeConfigList,
+    RuntimeConfigUpdate,
     TopUser,
 )
 from app.auth.models import User
@@ -362,3 +366,89 @@ async def replace_interest_items_admin(
     except ValueError as e:
         raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(e))
     return InterestItemBulkReplaceResponse(**summary)
+
+
+# --- Runtime configuration -------------------------------------------------
+# Master-only knobs that take effect immediately (5-second cache invalidation
+# on the read side). Surfaces ALL registered settings, even unchanged ones,
+# so the admin UI can render the full landscape from one call.
+
+
+@router.get("/config", response_model=RuntimeConfigList)
+async def list_runtime_config(
+    admin: User = Depends(get_current_superuser),
+) -> RuntimeConfigList:
+    """Every known runtime tunable + its currently effective value.
+
+    Items that haven't been overridden show ``is_default: true`` and
+    ``updated_at: null``. Items the master has changed carry the override
+    value, when it was set, and which superuser set it.
+    """
+    items = await runtime_config.list_all()
+    return RuntimeConfigList(
+        items=[RuntimeConfigItem(**item) for item in items],
+        count=len(items),
+    )
+
+
+@router.put("/config/{key}", response_model=RuntimeConfigItem)
+async def update_runtime_config(
+    key: str,
+    req: RuntimeConfigUpdate,
+    admin: User = Depends(get_current_superuser),
+) -> RuntimeConfigItem:
+    """Set or replace the override for one tunable.
+
+    The value is type-checked + range-checked against the registry
+    declaration before persisting; a wrong type or out-of-range value
+    returns 400 with the specific reason. Cache for this key is
+    invalidated so the next read picks up the change within milliseconds.
+    """
+    try:
+        await runtime_config.set_setting(key, req.value, updated_by=admin.id)
+    except runtime_config.UnknownSettingError:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"Unknown setting key '{key}'.",
+        )
+    except runtime_config.InvalidSettingError as e:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request, message=str(e),
+        )
+    # Echo back the post-update view so the UI can refresh inline without
+    # a follow-up list call.
+    items = await runtime_config.list_all()
+    for item in items:
+        if item["key"] == key:
+            return RuntimeConfigItem(**item)
+    raise APIError(
+        status_code=500, code=ErrorCode.internal_error,
+        message="Setting saved but not found on readback — registry mismatch.",
+    )
+
+
+@router.delete("/config/{key}", response_model=RuntimeConfigItem)
+async def reset_runtime_config(
+    key: str,
+    admin: User = Depends(get_current_superuser),
+) -> RuntimeConfigItem:
+    """Drop the override → next read returns the code default.
+
+    Idempotent: deleting a key that has no override succeeds and returns
+    the default-state view. The key must still be registered (404 if not).
+    """
+    try:
+        await runtime_config.reset_setting(key)
+    except runtime_config.UnknownSettingError:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"Unknown setting key '{key}'.",
+        )
+    items = await runtime_config.list_all()
+    for item in items:
+        if item["key"] == key:
+            return RuntimeConfigItem(**item)
+    raise APIError(
+        status_code=500, code=ErrorCode.internal_error,
+        message="Setting reset but not found on readback — registry mismatch.",
+    )

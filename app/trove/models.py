@@ -189,3 +189,59 @@ class FeedCache(Document):
     class Settings:
         name = "feed_cache"
         indexes = [IndexModel([("feed", ASCENDING)], unique=True)]
+
+
+class FeedbackAttachmentInfo(Document):
+    """NOT a separate collection — embedded inside FeedbackEntry.attachments.
+    Stored as Beanie's BaseModel form (no _id, no own collection) because
+    only the parent FeedbackEntry needs lookup; we never query attachments
+    standalone. Kept as a Document subclass purely so Beanie picks up the
+    type for serialisation — Pydantic equivalent works the same."""
+
+    filename: str         # original client-provided name (sanitised)
+    content_type: str     # validated against an image MIME allowlist
+    size: int             # bytes (post-validation)
+
+    class Settings:
+        name = "_feedback_attachments_embed"  # never created; embed-only
+
+
+class FeedbackEntry(Document):
+    """A single piece of user-submitted feedback from the showcase site.
+
+    Posted through ``POST /v1/misc/feedback`` — tokenless, but rate-limited
+    per IP at the router. We deliberately do NOT persist the submitter's
+    IP (privacy first; the per-IP limit happens via the rate limiter's
+    key and never touches Mongo).
+
+    ``user_agent`` is the raw header (truncated) — kept as a forensic
+    fallback. The friendlier ``os`` / ``client`` / ``app_version`` fields
+    are what the Discord webhook surfaces, parsed at submit time so the
+    embed is readable instead of a 200-char UA string:
+      - ``os``: "Windows 11" / "macOS 15" / "Android 14" / "iOS 17" / "Linux"
+      - ``client``: "Chrome 130" / "Firefox 121" / "Safari 17" /
+                    "BetterTroveTools 2026.06.07" (desktop app's UA)
+      - ``app_version``: optional explicit BTT/3rd-party app version
+                         from the request body (more authoritative than UA)
+
+    ``attachments`` records every image relayed to Discord (filename +
+    type + size only — the BYTES live on Discord, not Mongo). At most 4,
+    per endpoint policy. ``read`` lets an admin mark entries handled."""
+
+    message: str
+    contact: str | None = None
+    category: str  # "bug" | "feature" | "general" — validated upstream
+    app_version: str | None = None
+    os: str | None = None
+    client: str | None = None
+    user_agent: str | None = None
+    attachments: list[FeedbackAttachmentInfo] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=utcnow)
+    read: bool = False
+
+    class Settings:
+        name = "feedback_entries"
+        indexes = [
+            # Admin queue: unread feedback, newest first.
+            IndexModel([("read", ASCENDING), ("created_at", DESCENDING)]),
+        ]

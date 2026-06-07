@@ -40,9 +40,11 @@
   --accent-soft:    color-mix(in oklab, var(--accent) 28%, transparent);
 
   /* Type scale — clamp() makes every heading fluid across mobile→4k
-     without separate breakpoints. Body sticks at 16-17px. */
-  --type-display: clamp(2.6rem, 6vw + 1rem, 6rem);
-  --type-h2:      clamp(2rem,   4vw + 0.8rem, 3.6rem);
+     without separate breakpoints. Body sticks at 16-17px.
+     --type-display sized for a BOLD landing hero: caps at 10rem (160px) on
+     wide displays, scales down to a still-impactful 48px on phones. */
+  --type-display: clamp(3rem,    9vw + 1rem, 10rem);
+  --type-h2:      clamp(2rem,    4vw + 0.8rem, 3.6rem);
   --type-h3:      clamp(1.15rem, 1vw + 0.9rem, 1.5rem);
   --type-lead:    clamp(1.05rem, 0.6vw + 0.95rem, 1.3rem);
   --type-body:    1.0625rem;

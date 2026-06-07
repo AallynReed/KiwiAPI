@@ -6,6 +6,7 @@ from pymongo.errors import OperationFailure
 from app.auth.models import Session, User
 from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
+from app.admin.runtime_config import RuntimeConfig
 from app.tokens.models import ApiToken
 from app.trove.codexes.models import CodexEntry
 from app.trove.leaderboards.models import (
@@ -20,6 +21,7 @@ from app.trove.models import (
     ChallengeCapture,
     ChaosChestCapture,
     DelveRotation,
+    FeedbackEntry,
     FeedCache,
     TroveEvent,
     TroveNews,
@@ -43,6 +45,8 @@ DOCUMENT_MODELS = [
     Leaderboard, LeaderboardEntry, LeaderboardEntryArchive,
     MarketListing, MarketInterestItem,
     ChaosChestCapture, ChallengeCapture,
+    FeedbackEntry,
+    RuntimeConfig,
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).

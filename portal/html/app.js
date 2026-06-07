@@ -299,7 +299,7 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "activity", "account", "admin"];
+const TABS = ["tokens", "activity", "account", "admin", "config"];
 
 function tabFromHash() {
   const h = location.hash.replace(/^#/, "");
@@ -319,8 +319,8 @@ function renderDashboard() {
   const verified = u.is_verified
     ? '<span class="badge ok">verified</span>'
     : '<span class="badge warn">unverified</span>';
-  // A non-admin landing on a stale "admin" tab falls back to tokens.
-  if (state.tab === "admin" && !u.is_superuser) state.tab = "tokens";
+  // Non-admins landing on a master-only tab fall back to tokens.
+  if ((state.tab === "admin" || state.tab === "config") && !u.is_superuser) state.tab = "tokens";
   if (!TABS.includes(state.tab)) state.tab = "tokens";
 
   app.innerHTML = `
@@ -335,6 +335,7 @@ function renderDashboard() {
         <button data-tab="activity" role="tab">Activity</button>
         <button data-tab="account" role="tab">Account</button>
         ${u.is_superuser ? '<button data-tab="admin" role="tab">Admin</button>' : ""}
+        ${u.is_superuser ? '<button data-tab="config" role="tab">Configuration</button>' : ""}
       </div>
       <div id="tab-body"></div>
     </div>`;
@@ -365,6 +366,7 @@ function selectTab() {
   if (state.tab === "tokens") renderTokens();
   else if (state.tab === "activity") renderActivity();
   else if (state.tab === "admin") renderAdmin();
+  else if (state.tab === "config") renderConfigTab();
   else renderAccount();
 }
 
@@ -1042,6 +1044,187 @@ async function renderAdmin(days = 30) {
   evStatus.addEventListener("change", () => loadEvents(true));
   loadEvents(true);
 }
+
+// ─── Configuration tab (master-only) ─────────────────────────────────────
+// Dedicated tab — keeps Admin focused on users/activity and Configuration
+// focused on every runtime-tunable knob (rate limits, webhooks, alerts).
+// Settings are grouped by category server-side so adding a new category is
+// just a registry entry on the backend; the UI requires no change.
+
+const CONFIG_CATEGORY_LABELS = {
+  feedback: "Feedback endpoint",
+  api_rate_limits: "API rate limits",
+  auth_rate_limits: "Auth flow rate limits",
+  archive_rate_limits: "Archive-query rate limits",
+  scope_multipliers: "Per-scope rate-limit multipliers",
+  rate_limit_alerts: "Rate-limit alert digest",
+};
+
+async function renderConfigTab() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Runtime configuration</h2>
+        <span class="muted" style="font-size:12px">master-only · changes apply within 5s</span>
+      </div>
+      <p class="hint">
+        Tunables that don't require an env-var edit or container restart.
+        Edit applies on the next request (5 s cache). Reset clears the override
+        so the code default takes effect again. Settings flagged with ⚠
+        require an API container restart because they're bound into the
+        FastAPI dependency tree at startup.
+      </p>
+      <div id="config-body"><div class="loading">Loading config…</div></div>
+    </div>`;
+  renderConfigCard();
+}
+
+async function renderConfigCard() {
+  const bodyEl = document.getElementById("config-body");
+  if (!bodyEl) return;
+  let data;
+  try {
+    data = await API.call("/admin/config");
+  } catch (ex) {
+    bodyEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    return;
+  }
+
+  // Group by category — preserve server-side ordering within each category.
+  const byCategory = {};
+  for (const item of data.items) {
+    (byCategory[item.category] ||= []).push(item);
+  }
+
+  const renderValue = (item) => {
+    if (item.secret) {
+      // Mask: show ●●● + the last 4 of the value if any, blank if empty.
+      const v = String(item.value ?? "");
+      return v ? `<span class="mono">●●● ${esc(v.slice(-4))}</span>`
+               : `<span class="muted">(not set)</span>`;
+    }
+    if (item.value === null || item.value === undefined || item.value === "") {
+      return `<span class="muted">(empty)</span>`;
+    }
+    return `<span class="mono">${esc(String(item.value))}</span>`;
+  };
+
+  const renderRow = (item) => {
+    const stateBadge = item.is_default
+      ? '<span class="badge muted">default</span>'
+      : '<span class="badge ok">overridden</span>';
+    return `
+      <tr data-key="${esc(item.key)}">
+        <td>
+          <code>${esc(item.key)}</code> ${stateBadge}
+          <div class="muted" style="font-size:12px;margin-top:4px;max-width:560px">${esc(item.description)}</div>
+        </td>
+        <td>${renderValue(item)}</td>
+        <td class="muted" style="white-space:nowrap">${item.updated_at ? fmt(item.updated_at) : "—"}</td>
+        <td style="white-space:nowrap">
+          <button class="btn small" data-act="edit">Edit</button>
+          <button class="btn small" data-act="reset"${item.is_default ? " disabled" : ""}>Reset</button>
+        </td>
+      </tr>`;
+  };
+
+  const html = Object.entries(byCategory).map(([category, items]) => {
+    const label = CONFIG_CATEGORY_LABELS[category] || category;
+    return `
+      <h3 style="margin:24px 0 8px;font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-mute)">${esc(label)}</h3>
+      <table>
+        <thead><tr>
+          <th>Setting</th><th>Value</th><th>Updated</th><th></th>
+        </tr></thead>
+        <tbody>${items.map(renderRow).join("")}</tbody>
+      </table>
+    `;
+  }).join("");
+  bodyEl.innerHTML = html || `<p class="muted">No tunables registered.</p>`;
+
+  // Wire row actions.
+  bodyEl.querySelectorAll("[data-key]").forEach((tr) => {
+    const key = tr.dataset.key;
+    const item = data.items.find((i) => i.key === key);
+    tr.querySelector('[data-act="edit"]').addEventListener("click", () => editSetting(item));
+    const rb = tr.querySelector('[data-act="reset"]');
+    if (rb && !rb.disabled) rb.addEventListener("click", () => resetSetting(item));
+  });
+}
+
+
+function editSetting(item) {
+  // Type-appropriate input. For ints/floats we use type=number with
+  // step/min/max from the registry; for bools a select; for strings
+  // (incl. secrets) a textarea (handles long URLs cleanly).
+  let inputHtml;
+  if (item.type === "bool") {
+    const v = String(!!item.value);
+    inputHtml = `
+      <select id="cfg-input" style="width:100%">
+        <option value="true"${v === "true" ? " selected" : ""}>true</option>
+        <option value="false"${v === "false" ? " selected" : ""}>false</option>
+      </select>`;
+  } else if (item.type === "int" || item.type === "float") {
+    const step = item.type === "int" ? "1" : "any";
+    const min = item.min_value != null ? ` min="${item.min_value}"` : "";
+    const max = item.max_value != null ? ` max="${item.max_value}"` : "";
+    inputHtml = `<input id="cfg-input" type="number" step="${step}"${min}${max} value="${esc(String(item.value ?? ""))}" style="width:100%">`;
+  } else {
+    // String (and secrets): textarea handles long values + word-wrap.
+    // For secrets we DON'T pre-fill — master must paste the value in fresh,
+    // which is safer than echoing it on every edit.
+    const placeholder = item.secret
+      ? "Paste new value (current value is hidden for security)"
+      : "Value";
+    const val = item.secret ? "" : esc(String(item.value ?? ""));
+    inputHtml = `<textarea id="cfg-input" rows="3" placeholder="${placeholder}" style="width:100%;font-family:inherit">${val}</textarea>`;
+  }
+  const rangeHint = (item.min_value != null || item.max_value != null)
+    ? `<p class="hint">Range: ${item.min_value ?? "–∞"} to ${item.max_value ?? "+∞"}</p>` : "";
+  const defaultHint = `<p class="hint">Code default: <code>${esc(String(item.default))}</code></p>`;
+
+  modal(
+    `Edit ${item.key}`,
+    `<p>${esc(item.description)}</p>${inputHtml}${rangeHint}${defaultHint}`,
+    async () => {
+      const raw = document.getElementById("cfg-input").value;
+      let value;
+      if (item.type === "bool")        value = (raw === "true");
+      else if (item.type === "int")    value = parseInt(raw, 10);
+      else if (item.type === "float")  value = parseFloat(raw);
+      else                              value = raw;  // string
+      try {
+        await API.call(`/admin/config/${encodeURIComponent(item.key)}`, {
+          method: "PUT", body: { value },
+        });
+        await renderConfigCard();
+      } catch (ex) {
+        alert("Save failed: " + ex.message);
+      }
+    },
+    "Save",
+  );
+}
+
+
+function resetSetting(item) {
+  modal(
+    `Reset ${item.key}?`,
+    `<p>The override will be dropped and the code default (<code>${esc(String(item.default))}</code>) will take effect again within 5 seconds.</p>`,
+    async () => {
+      try {
+        await API.call(`/admin/config/${encodeURIComponent(item.key)}`, { method: "DELETE" });
+        await renderConfigCard();
+      } catch (ex) {
+        alert("Reset failed: " + ex.message);
+      }
+    },
+    "Reset to default",
+  );
+}
+
 
 async function renderAdminUser(userId, days = 30) {
   const body = document.getElementById("tab-body");

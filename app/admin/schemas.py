@@ -99,3 +99,37 @@ class InterestItemBulkReplaceRequest(BaseModel):
 class InterestItemBulkReplaceResponse(BaseModel):
     removed: int   # rows deleted before insert
     added: int     # rows inserted (after de-dup + trim)
+
+
+# --- Runtime configuration -------------------------------------------------
+# Sparse Mongo overrides on top of declared registry defaults. The list
+# endpoint always returns every REGISTERED key (so the admin UI doesn't
+# have to know what's available — it just renders what the server reports).
+
+
+class RuntimeConfigItem(BaseModel):
+    """One known tunable + its currently effective value."""
+    key: str                          # e.g. "feedback.discord_webhook"
+    category: str                     # "feedback" | "rate_limits" | ...
+    type: str                         # "str" | "int" | "bool" | "float"
+    description: str
+    secret: bool                      # UI masks the value by default
+    default: object                   # code default
+    value: object                     # effective value (override or default)
+    is_default: bool                  # True when no override exists
+    min_value: int | float | None = None
+    max_value: int | float | None = None
+    choices: list[str] | None = None
+    updated_at: datetime | None = None
+    updated_by_user_id: str | None = None
+
+
+class RuntimeConfigList(BaseModel):
+    items: list[RuntimeConfigItem]
+    count: int
+
+
+class RuntimeConfigUpdate(BaseModel):
+    """Body for ``PUT /admin/config/{key}``. Type-checked + range-checked
+    server-side against the registry spec for that key."""
+    value: object

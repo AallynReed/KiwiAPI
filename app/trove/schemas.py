@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Category a captured challenge falls into. Computed from the raw display name
 # by ``app.trove.captures.classify_challenge`` so consumers don't have to
@@ -604,3 +604,19 @@ class CaptureInsertResponse(BaseModel):
     anchor: int      # the time anchor the server inferred from "now"
     name: str        # the value persisted (post-trim)
     refreshed: bool  # False on first sighting of this anchor, True on re-submit
+
+
+# --- Feedback (POST /v1/misc/feedback) -------------------------------------
+# Endpoint accepts multipart/form-data — Form() + UploadFile validation
+# happens at the FastAPI layer (see router.post_feedback). FeedbackCategory
+# stays here as the documented enum surface.
+
+FeedbackCategory = Literal["bug", "feature", "general"]
+
+
+class FeedbackAck(BaseModel):
+    """Response to a successful feedback submission — minimal on purpose
+    (no echo of the message, no internal id). Empty 200-OK was tempting
+    but a client UI usually wants SOMETHING to confirm the write."""
+    ok: bool = True
+    received_at: datetime

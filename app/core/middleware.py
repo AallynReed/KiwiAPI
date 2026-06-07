@@ -55,6 +55,11 @@ def add_security_middleware(app: FastAPI) -> None:
             max_body = leaderboards_max_body
         elif path == "/v1/market/insert":
             max_body = market_max_body
+        elif path == "/v1/misc/feedback":
+            # 4 attachments × 5 MB + form fields. The endpoint also caps
+            # per-file size + count itself, so this is a generous gate
+            # that lets a valid 22 MB submission through.
+            max_body = 24 * 1024 * 1024
         elif path.startswith("/unlock_"):
             max_body = site_max_body
         else:

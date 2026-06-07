@@ -95,11 +95,10 @@ async def signup(
     ip = client_ip(request) or "unknown"
 
     # Anti-spam: cap signups per IP, then require a valid captcha solution.
-    await check_rate_limit(
-        f"signup:{ip}",
-        settings.signup_rate_limit_max,
-        settings.signup_rate_limit_window_seconds,
-    )
+    # Limit + window are runtime-tunable from the admin panel.
+    from app.admin import runtime_config
+    sup_max, sup_window = await runtime_config.get_rate_limit("signup_rate_limit")
+    await check_rate_limit(f"signup:{ip}", sup_max, sup_window)
     if not await verify_captcha(payload.captcha_token, remote_ip=ip):
         raise APIError(
             status_code=400,
@@ -139,11 +138,9 @@ async def login(
 ) -> TokenResponse:
     ip = client_ip(request) or "unknown"
     email = payload.email.lower()
-    await check_rate_limit(
-        f"login:{ip}",
-        settings.login_rate_limit_max,
-        settings.login_rate_limit_window_seconds,
-    )
+    from app.admin import runtime_config
+    log_max, log_window = await runtime_config.get_rate_limit("login_rate_limit")
+    await check_rate_limit(f"login:{ip}", log_max, log_window)
     if not await verify_captcha(payload.captcha_token, remote_ip=ip):
         raise APIError(
             status_code=400,
@@ -357,12 +354,10 @@ async def forgot_password(
     request: Request,
     background_tasks: BackgroundTasks,
 ) -> MessageResponse:
+    from app.admin import runtime_config
     ip = client_ip(request) or "unknown"
-    await check_rate_limit(
-        f"forgot:{ip}",
-        settings.forgot_password_rate_limit_max,
-        settings.forgot_password_rate_limit_window_seconds,
-    )
+    fp_max, fp_window = await runtime_config.get_rate_limit("forgot_password_rate_limit")
+    await check_rate_limit(f"forgot:{ip}", fp_max, fp_window)
     if not await verify_captcha(payload.captcha_token, remote_ip=ip):
         raise APIError(status_code=400, code=ErrorCode.captcha_failed, message="Captcha verification failed")
     user = await User.find_one(User.email == payload.email.lower())

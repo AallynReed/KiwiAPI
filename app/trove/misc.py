@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime, timedelta, timezone
 from functools import cache
 from pathlib import Path
@@ -198,3 +199,148 @@ def time_now(now: datetime | None = None) -> dict:
     instant = now or datetime.now(UTC)
     unix = int(instant.timestamp())
     return {"unix": unix, "zones": _all_zones(unix)}
+
+
+# --- Feedback ingest -------------------------------------------------------
+#
+# parse_user_agent decomposes a UA string into the two fields that ACTUALLY
+# matter for triage ("what OS am I on?", "what browser/app sent this?") so
+# the Discord webhook can render them as clean key/value pairs instead of a
+# 200-char hieroglyph. We do NOT use a UA-parsing library because:
+#   - the input space is small (we only care about ~5 OSes and ~5 clients)
+#   - the libraries that DO this well are heavyweight (~50KB+ of regex tables)
+#   - falling back to "Unknown" is fine — UA is a hint, not a contract
+#
+# UA conventions for the BTT first-party apps:
+#   Desktop (Windows/Linux/macOS):
+#     BetterTroveTools/<version> (<OS-token>)
+#       e.g. "BetterTroveTools/2026.06.07 (Windows NT 10.0)"
+#            "BetterTroveTools/2026.06.07 (X11; Linux x86_64)"
+#            "BetterTroveTools/2026.06.07 (Macintosh; Mac OS X 14_0)"
+#   Mobile (Android):
+#     BetterTroveTools/<version> (Android <version>; <device>)
+#       e.g. "BetterTroveTools/2026.06.07 (Android 14; Pixel 8)"
+#     The "(Android)" parenthetical is the IMPORTANT bit — without it the
+#     webhook embed can't tell the desktop and mobile build apart, since
+#     the BetterTroveTools/<ver> token by itself doesn't carry a platform.
+#   Web (browser):
+#     Whatever the browser sends — we never touch it client-side.
+
+
+# OS markers, in detection priority order. We check Android BEFORE Linux
+# because Android UAs always say "Linux; Android 14" — Linux first would
+# steal them. Same for Windows-on-WSL2 (we still want Windows). The
+# version capture group is OPTIONAL because the BTT Android app may ship
+# a terse UA like "BetterTroveTools/X.Y.Z (Android)" without an OS
+# version; we still want the OS row to read "Android" instead of None.
+_OS_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("iOS",      re.compile(r"\b(?:iPhone|iPad|iPod)(?:.*?OS\s+(\d+(?:[._]\d+)?))?", re.I)),
+    ("Android",  re.compile(r"\bAndroid(?:\s+(\d+(?:\.\d+)?))?", re.I)),
+    ("Windows",  re.compile(r"\bWindows NT\s+(\d+(?:\.\d+)?)", re.I)),
+    ("macOS",    re.compile(r"\bMac OS X\s+(\d+(?:[._]\d+)?)", re.I)),
+    ("Linux",    re.compile(r"\bLinux\b", re.I)),
+)
+
+# Map Windows NT major.minor -> consumer-facing Windows version.
+_WINDOWS_NT_TO_NAME = {
+    "10.0": "10/11",  # Win11 still reports NT 10.0, can't disambiguate
+    "6.3":  "8.1",
+    "6.2":  "8",
+    "6.1":  "7",
+}
+
+# Browser / app markers, also in priority order. We check Edge / OPR /
+# our own BetterTroveTools BEFORE Chrome because all three Chromium
+# children carry "Chrome/X" in their UA — Chrome-first would steal them.
+_CLIENT_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("BetterTroveTools",
+     re.compile(r"\bBetterTroveTools/(\d+(?:\.\d+){1,3})", re.I)),
+    ("Edge",     re.compile(r"\bEdg(?:e|A|iOS)?/(\d+(?:\.\d+)?)", re.I)),
+    ("Opera",    re.compile(r"\bOPR/(\d+(?:\.\d+)?)", re.I)),
+    ("Brave",    re.compile(r"\bBrave/(\d+(?:\.\d+)?)", re.I)),
+    ("Firefox",  re.compile(r"\bFirefox/(\d+(?:\.\d+)?)", re.I)),
+    ("Chrome",   re.compile(r"\bChrome/(\d+(?:\.\d+)?)", re.I)),
+    ("Safari",   re.compile(r"\bVersion/(\d+(?:\.\d+)?).*?Safari", re.I)),
+)
+
+
+def parse_user_agent(ua: str | None) -> tuple[str | None, str | None]:
+    """Return ``(os_label, client_label)`` extracted from a user-agent
+    string. Either component falls back to ``None`` if no rule matched."""
+    if not ua:
+        return None, None
+    s = ua[:500]  # cap before regex — long UAs are usually trash
+
+    os_label: str | None = None
+    for name, pattern in _OS_RULES:
+        m = pattern.search(s)
+        if not m:
+            continue
+        # Capture group 1 = version when present. Linux rule has no group;
+        # Android/iOS rules have an OPTIONAL group, which may not capture
+        # anything for terse UAs like "BetterTroveTools/X.Y.Z (Android)".
+        # Inspect .groups() length so we never IndexError on the Linux rule.
+        ver = m.group(1) if m.groups() else None
+        if name == "Windows":
+            friendly = _WINDOWS_NT_TO_NAME.get(ver, ver) if ver else None
+            os_label = f"Windows {friendly}" if friendly else "Windows"
+        elif name == "macOS":
+            os_label = f"macOS {ver.replace('_', '.')}" if ver else "macOS"
+        elif name == "iOS":
+            os_label = f"iOS {ver.replace('_', '.')}" if ver else "iOS"
+        elif name == "Android":
+            os_label = f"Android {ver}" if ver else "Android"
+        else:
+            os_label = name
+        break
+
+    client_label: str | None = None
+    for name, pattern in _CLIENT_RULES:
+        m = pattern.search(s)
+        if not m:
+            continue
+        client_label = f"{name} {m.group(1)}"
+        break
+    return os_label, client_label
+
+
+async def insert_feedback(
+    message: str,
+    contact: str | None,
+    category: str,
+    app_version: str | None,
+    user_agent: str | None,
+    attachments: list[dict] | None,
+) -> "FeedbackEntry":
+    """Persist one feedback submission. Inputs are already validated by
+    the router (length, file count, MIME types). We do one extra trim
+    here because Pydantic's ``max_length`` doesn't strip whitespace, and
+    a ``"   \\n\\n   "`` message would otherwise survive the >=5-char
+    minimum check via padding."""
+    # Lazy import — see existing comment in earlier version of this fn.
+    from app.trove.models import FeedbackAttachmentInfo, FeedbackEntry
+
+    msg = message.strip()
+    if len(msg) < 5:
+        raise MiscError("Message must be at least 5 non-whitespace characters.")
+    contact_clean = (contact.strip() if contact else None) or None
+    app_version_clean = (app_version.strip() if app_version else None) or None
+    ua = (user_agent or "")[:300] or None  # raw fallback
+    os_label, client_label = parse_user_agent(ua)
+    attachment_infos = [
+        FeedbackAttachmentInfo(
+            filename=a["filename"], content_type=a["content_type"], size=a["size"],
+        )
+        for a in (attachments or [])
+    ]
+    doc = FeedbackEntry(
+        message=msg,
+        contact=contact_clean,
+        category=category,
+        app_version=app_version_clean,
+        os=os_label,
+        client=client_label,
+        user_agent=ua,
+        attachments=attachment_infos,
+    )
+    return await doc.insert()

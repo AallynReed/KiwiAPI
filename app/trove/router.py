@@ -1,8 +1,13 @@
 import base64
+import json
+import logging
 import re
 
 import httpx
-from fastapi import APIRouter, Body, Depends, File, Query, Request, Response, UploadFile
+from fastapi import (
+    APIRouter, BackgroundTasks, Body, Depends, File, Form, Query, Request,
+    Response, UploadFile,
+)
 from fastapi.responses import FileResponse
 
 from app.core.config import settings
@@ -15,7 +20,7 @@ from app.core.dependencies import (
 )
 from app.core.errors import APIError, ErrorCode
 from app.core.ratelimit import check_rate_limit, rate_limit_headers
-from app.core.utils import utcnow
+from app.core.utils import client_ip, utcnow
 from app.trove import (
     btt_releases,
     captures,
@@ -97,6 +102,7 @@ from app.trove.schemas import (
     DelveWeekInfo,
     DelveWeekList,
     EventCategoryList,
+    FeedbackAck,
     Fluxion,
     Gardening,
     LeaderboardBoardOut,
@@ -173,6 +179,9 @@ _MISC = Depends(require_scope("misc:read"))
 _MISC_PUBLIC = Depends(public_scope("misc:read"))
 _MODS = Depends(require_scope("mods:read"))
 _UPD = Depends(require_scope("updates:read"))
+
+# Used by the feedback webhook helper for "best-effort, log on failure".
+logger = logging.getLogger("kiwi.trove.router")
 # Codexes are PUBLIC too (game reference data): usable without a token, and at a
 # wider rate budget (5× by default) on both the anonymous and authenticated paths.
 _CODEX = Depends(public_scope("codexes:read", rate_multiplier=settings.codexes_rate_limit_multiplier))
@@ -765,6 +774,240 @@ async def get_interest_items(ctx: AccessContext = _MISC_PUBLIC) -> MarketItemLis
     return MarketItemList(items=items, count=len(items))
 
 
+# ── Feedback ingest ───────────────────────────────────────────────────────
+# Public, tokenless, rate-limited. Two stacked buckets + per-attachment
+# size/count limits. All caps + the Discord webhook URL are runtime-tunable
+# from the master admin panel (see app/admin/runtime_config.py).
+#
+# Wire format is multipart/form-data so up to 4 image attachments can ride
+# along. The bytes are streamed straight to Discord (not persisted on our
+# disk or Mongo); we keep only the metadata (filename + type + size) in the
+# entry. On webhook failure we still have the message + metadata.
+
+
+_FEEDBACK_MAX_ATTACHMENTS = 4
+_FEEDBACK_MAX_FILE_BYTES = 5 * 1024 * 1024  # 5 MB per file
+_FEEDBACK_ALLOWED_MIME = {
+    "image/png", "image/jpeg", "image/webp", "image/gif",
+}
+
+
+def _sanitise_filename(name: str | None) -> str:
+    """Strip anything that could mean a path. Discord ignores paths
+    anyway, but Mongo will see this string in the admin queue and we
+    don't want raw user input to ever look like a path or shell glob."""
+    if not name:
+        return "image"
+    base = re.sub(r"[^\w.\-]", "_", name.rsplit("/", 1)[-1].rsplit("\\", 1)[-1])
+    return base[:80] or "image"
+
+
+async def _post_feedback_webhook(
+    *,
+    doc_id: str,
+    category: str,
+    message: str,
+    contact: str | None,
+    app_version: str | None,
+    os_label: str | None,
+    client_label: str | None,
+    files: list[tuple[str, bytes, str]],
+) -> None:
+    """Send one feedback entry to the configured Discord webhook.
+
+    Reads the URL from runtime config on every call (cheap — cached for 5s
+    by ``runtime_config.get_setting``). Empty URL → no-op. Any HTTP error,
+    timeout, or DNS failure is logged and swallowed; we never want webhook
+    flakiness to cascade into 5xx on the public POST.
+
+    ``files`` is a list of ``(filename, bytes, content_type)`` tuples that
+    get attached as Discord uploads. Empty list → JSON-only POST."""
+    from app.admin import runtime_config
+
+    url = (await runtime_config.get_setting("feedback.discord_webhook")) or ""
+    if not url.strip():
+        return  # webhook disabled
+
+    # Truncate the message for Discord (their hard cap on embed description
+    # is 4096 chars; we go shorter so it stays readable). Keep the full
+    # original in Mongo regardless.
+    msg_display = message if len(message) <= 1500 else (message[:1500] + " …")
+    color = {"bug": 0xf85149, "feature": 0xd29922, "general": 0x58a6ff}.get(
+        category, 0x58a6ff,
+    )
+
+    # Inline fields fit two per row on Discord's mobile layout; we send
+    # OS / Client / App version / Contact as inlines so they don't waste
+    # vertical space and the user sees them at a glance.
+    fields: list[dict] = []
+    if os_label:
+        fields.append({"name": "OS", "value": os_label, "inline": True})
+    if client_label:
+        fields.append({"name": "Client", "value": client_label, "inline": True})
+    if app_version:
+        fields.append({"name": "App version", "value": app_version[:256], "inline": True})
+    if contact:
+        fields.append({"name": "Contact", "value": contact[:1024], "inline": False})
+
+    embed = {
+        "title": f"New {category} feedback",
+        "description": msg_display,
+        "color": color,
+        "fields": fields,
+        "footer": {"text": f"id {doc_id}"},
+        "timestamp": utcnow().isoformat(),
+    }
+    payload = {"embeds": [embed]}
+
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            if files:
+                # Discord multipart: payload_json carries the embed,
+                # files[N] are the attachments. ``files=`` in httpx
+                # accepts the (name, (filename, content, content_type))
+                # form even when ``data=`` also has fields, so the same
+                # call sends both.
+                multipart = {
+                    f"files[{i}]": (fname, content, ctype)
+                    for i, (fname, content, ctype) in enumerate(files)
+                }
+                r = await client.post(
+                    url,
+                    data={"payload_json": json.dumps(payload)},
+                    files=multipart,
+                )
+            else:
+                r = await client.post(url, json=payload)
+            r.raise_for_status()
+    except Exception as e:  # noqa: BLE001 — webhook is best-effort
+        logger.warning("feedback webhook POST failed: %s", e)
+
+
+@misc_router.post("/feedback", response_model=FeedbackAck,
+                  summary="Submit feedback")
+async def post_feedback(
+    request: Request,
+    response: Response,
+    background: BackgroundTasks,
+    message: str = Form(..., min_length=5, max_length=2000),
+    contact: str | None = Form(default=None, max_length=200),
+    category: str = Form(default="general"),
+    app_version: str | None = Form(default=None, max_length=64),
+    attachments: list[UploadFile] = File(default=[]),
+) -> FeedbackAck:
+    """Submit a piece of feedback (bug report / feature idea / general note).
+
+    **Tokenless** — anyone can submit. Wire format is ``multipart/form-data``
+    so attachments can ride along; a JSON-only client just omits the file
+    fields and works the same.
+
+    **Rate limits** (runtime-tunable from the admin panel):
+      - ``feedback.per_ip_max`` / ``feedback.per_ip_window_seconds`` —
+        burst from one source. Hit returns 429 with ``X-RateLimit-*`` +
+        ``Retry-After``.
+      - ``feedback.global_max`` / ``feedback.global_window_seconds`` —
+        silent global backstop.
+
+    **Body fields**:
+      - ``message`` (required, 5-2000 chars)
+      - ``contact`` (optional, ≤200 chars) — reply channel, free text
+      - ``category`` (``bug`` / ``feature`` / ``general``; default ``general``)
+      - ``app_version`` (optional, ≤64 chars) — for desktop / 3rd-party
+        clients; rendered alongside parsed-from-UA OS + client name
+      - ``attachments`` (optional, up to 4 images; max 5 MB each;
+        ``image/png|jpeg|webp|gif``)
+
+    **Privacy**: no IP is persisted (only used as the rate-limit key).
+    The User-Agent is kept raw as a forensic fallback but the human-
+    readable OS + client name (parsed at submit time) are what surface
+    on the Discord webhook embed.
+
+    **Webhook**: on success, the entry + attachments are POSTed to
+    ``feedback.discord_webhook`` (if set) as a fire-and-forget
+    BackgroundTask. Webhook failures are logged but never fail the
+    submission.
+    """
+    from app.admin import runtime_config
+
+    # ── 1. Validate category (Form() doesn't accept Literal directly) ──
+    if category not in {"bug", "feature", "general"}:
+        raise _bad_request(
+            "category must be one of 'bug', 'feature', 'general'."
+        )
+
+    # ── 2. Rate-limit buckets ──────────────────────────────────────────
+    per_ip_max     = await runtime_config.get_setting("feedback.per_ip_max")
+    per_ip_window  = await runtime_config.get_setting("feedback.per_ip_window_seconds")
+    global_max     = await runtime_config.get_setting("feedback.global_max")
+    global_window  = await runtime_config.get_setting("feedback.global_window_seconds")
+
+    ip = client_ip(request) or "unknown"
+    info = await check_rate_limit(f"feedback_ip:{ip}", per_ip_max, per_ip_window)
+    response.headers.update(rate_limit_headers(info))
+    await check_rate_limit("feedback_global", global_max, global_window)
+
+    # ── 3. Validate attachments — count, MIME, size — and read bytes ──
+    # We read every file into memory because (a) they're capped at 5 MB,
+    # so worst case is 20 MB transient and (b) the Discord webhook expects
+    # the full bytes in the multipart body anyway.
+    if len(attachments) > _FEEDBACK_MAX_ATTACHMENTS:
+        raise _bad_request(
+            f"At most {_FEEDBACK_MAX_ATTACHMENTS} attachments allowed."
+        )
+    files_for_webhook: list[tuple[str, bytes, str]] = []
+    attachment_metadata: list[dict] = []
+    for f in attachments:
+        ctype = (f.content_type or "").lower()
+        if ctype not in _FEEDBACK_ALLOWED_MIME:
+            raise _bad_request(
+                f"Attachment '{f.filename}' has unsupported type "
+                f"'{ctype or '?'}'. Allowed: PNG, JPEG, WebP, GIF."
+            )
+        content = await f.read()
+        if len(content) == 0:
+            continue  # browsers occasionally send empty file slots
+        if len(content) > _FEEDBACK_MAX_FILE_BYTES:
+            raise _bad_request(
+                f"Attachment '{f.filename}' exceeds 5 MB."
+            )
+        safe_name = _sanitise_filename(f.filename)
+        files_for_webhook.append((safe_name, content, ctype))
+        attachment_metadata.append({
+            "filename": safe_name,
+            "content_type": ctype,
+            "size": len(content),
+        })
+
+    # ── 4. Persist ─────────────────────────────────────────────────────
+    ua = request.headers.get("user-agent")
+    try:
+        doc = await misc.insert_feedback(
+            message=message,
+            contact=contact,
+            category=category,
+            app_version=app_version,
+            user_agent=ua,
+            attachments=attachment_metadata,
+        )
+    except misc.MiscError as e:
+        raise _bad_request(str(e)) from e
+
+    # ── 5. Webhook (fire-and-forget) ───────────────────────────────────
+    background.add_task(
+        _post_feedback_webhook,
+        doc_id=str(doc.id),
+        category=doc.category,
+        message=doc.message,
+        contact=doc.contact,
+        app_version=doc.app_version,
+        os_label=doc.os,
+        client_label=doc.client,
+        files=files_for_webhook,
+    )
+
+    return FeedbackAck(ok=True, received_at=doc.created_at)
+
+
 # --- Mods: .tmod decompile + build (scope: mods:read) -----------------------
 # Stateless: read parses an uploaded tmod; build serializes one and returns the
 # bytes, then discards it. /v1/mods/* gets a 20 MB body cap (security middleware).
@@ -1230,11 +1473,9 @@ async def _enforce_lb_archive_limit(
     the standard ``X-RateLimit-*`` headers (which describe the wider limit)."""
     if not leaderboards_service.is_archive_query(anchor):
         return
-    info = await check_rate_limit(
-        f"lb_archive:{ctx.token.id}",
-        settings.leaderboards_archive_rate_limit_max,
-        settings.leaderboards_archive_rate_limit_window_seconds,
-    )
+    from app.admin import runtime_config
+    lb_max, lb_window = await runtime_config.get_rate_limit("leaderboards_archive_rate_limit")
+    info = await check_rate_limit(f"lb_archive:{ctx.token.id}", lb_max, lb_window)
     # Don't clobber the standard X-RateLimit-* headers — surface this bucket
     # under a parallel namespace so clients can tell the two apart.
     for k, v in rate_limit_headers(info).items():
@@ -1412,11 +1653,9 @@ async def _enforce_market_archive_limit(
     ``X-RateLimit-Archive-*`` headers."""
     if hide_expired:
         return
-    info = await check_rate_limit(
-        f"mkt_archive:{ctx.token.id}",
-        settings.market_archive_rate_limit_max,
-        settings.market_archive_rate_limit_window_seconds,
-    )
+    from app.admin import runtime_config
+    mk_max, mk_window = await runtime_config.get_rate_limit("market_archive_rate_limit")
+    info = await check_rate_limit(f"mkt_archive:{ctx.token.id}", mk_max, mk_window)
     for k, v in rate_limit_headers(info).items():
         response.headers[k.replace("X-RateLimit-", "X-RateLimit-Archive-")] = v
 
