@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from beanie import Document
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymongo import ASCENDING, DESCENDING, IndexModel
 
 from app.core.utils import utcnow
@@ -191,19 +191,17 @@ class FeedCache(Document):
         indexes = [IndexModel([("feed", ASCENDING)], unique=True)]
 
 
-class FeedbackAttachmentInfo(Document):
-    """NOT a separate collection — embedded inside FeedbackEntry.attachments.
-    Stored as Beanie's BaseModel form (no _id, no own collection) because
-    only the parent FeedbackEntry needs lookup; we never query attachments
-    standalone. Kept as a Document subclass purely so Beanie picks up the
-    type for serialisation — Pydantic equivalent works the same."""
+class FeedbackAttachmentInfo(BaseModel):
+    """Embedded inside ``FeedbackEntry.attachments`` as a plain BSON
+    subdocument — NO own collection, NO ``_id``. Must inherit from
+    Pydantic's ``BaseModel`` (not Beanie's ``Document``); a ``Document``
+    subclass that isn't registered in ``init_beanie()`` raises
+    ``CollectionWasNotInitialized`` the first time the parent doc gets
+    serialised. Embedded value objects = ``BaseModel``."""
 
     filename: str         # original client-provided name (sanitised)
     content_type: str     # validated against an image MIME allowlist
     size: int             # bytes (post-validation)
-
-    class Settings:
-        name = "_feedback_attachments_embed"  # never created; embed-only
 
 
 class FeedbackEntry(Document):

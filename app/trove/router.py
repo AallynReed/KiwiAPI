@@ -820,8 +820,14 @@ async def _post_feedback_webhook(
     timeout, or DNS failure is logged and swallowed; we never want webhook
     flakiness to cascade into 5xx on the public POST.
 
-    ``files`` is a list of ``(filename, bytes, content_type)`` tuples that
-    get attached as Discord uploads. Empty list → JSON-only POST."""
+    Attachments are rendered INSIDE the embed (not as separate file blocks
+    underneath). Discord groups multiple embeds with the same ``url`` field
+    into a single visual card, so we use one anchor URL (the feedback id)
+    across N embeds, each carrying one image. The first embed also holds
+    the title / description / fields; the rest are image-only siblings.
+    Files are renamed to ``<index>_<sanitised>`` in the multipart so the
+    ``attachment://`` reference is unambiguous even when the user uploaded
+    two files with the same original name."""
     from app.admin import runtime_config
 
     url = (await runtime_config.get_setting("feedback.discord_webhook")) or ""
@@ -849,7 +855,22 @@ async def _post_feedback_webhook(
     if contact:
         fields.append({"name": "Contact", "value": contact[:1024], "inline": False})
 
-    embed = {
+    # Rename incoming files with a numeric prefix so the attachment://
+    # references can never collide (two screenshots called "image.png"
+    # would otherwise both resolve to the same one in the embed).
+    relabeled = [
+        (f"{i}_{fname}", content, ctype)
+        for i, (fname, content, ctype) in enumerate(files)
+    ]
+
+    # Gallery URL — arbitrary but must be identical across every embed
+    # in the message and must look like a real URL. Discord groups embeds
+    # that share a `url` into one card; that's how we get N images
+    # inside ONE embed instead of N stacked embeds. The URL doesn't need
+    # to resolve — it's just the grouping key.
+    gallery_url = f"https://api.aallyn.net/feedback/{doc_id}"
+
+    main_embed: dict = {
         "title": f"New {category} feedback",
         "description": msg_display,
         "color": color,
@@ -857,19 +878,33 @@ async def _post_feedback_webhook(
         "footer": {"text": f"id {doc_id}"},
         "timestamp": utcnow().isoformat(),
     }
-    payload = {"embeds": [embed]}
+    if relabeled:
+        main_embed["url"] = gallery_url
+        main_embed["image"] = {"url": f"attachment://{relabeled[0][0]}"}
+
+    embeds = [main_embed]
+    # Additional image-only sibling embeds — each just an image with the
+    # same `url`, no title/description (Discord renders them as extra
+    # images in the SAME card as the main embed).
+    for fname, _content, _ctype in relabeled[1:]:
+        embeds.append({
+            "url": gallery_url,
+            "image": {"url": f"attachment://{fname}"},
+        })
+
+    payload = {"embeds": embeds}
 
     try:
         async with httpx.AsyncClient(timeout=20) as client:
-            if files:
-                # Discord multipart: payload_json carries the embed,
-                # files[N] are the attachments. ``files=`` in httpx
-                # accepts the (name, (filename, content, content_type))
-                # form even when ``data=`` also has fields, so the same
-                # call sends both.
+            if relabeled:
+                # Multipart with payload_json + the files keyed as
+                # files[N]. The (filename, content, content_type) tuple
+                # must exactly match what we wrote into the `attachment://`
+                # references above — that's why we used the relabeled
+                # names everywhere.
                 multipart = {
                     f"files[{i}]": (fname, content, ctype)
-                    for i, (fname, content, ctype) in enumerate(files)
+                    for i, (fname, content, ctype) in enumerate(relabeled)
                 }
                 r = await client.post(
                     url,
