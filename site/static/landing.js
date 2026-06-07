@@ -218,7 +218,7 @@
         };
 
         const start = () => { if (rafId === null) rafId = requestAnimationFrame(tick); };
-        const stop  = () => { if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; } };
+        const stop = () => { if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; } };
 
         window.addEventListener('resize', () => { resize(); }, { passive: true });
         document.addEventListener('visibilitychange', () => {

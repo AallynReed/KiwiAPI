@@ -71,7 +71,7 @@
          Inter as the system body fallback (already in our font stack). -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.css?v=20260607h">
+    <link rel="stylesheet" href="/static/style.min.css?v=20260607k">
 
     <!-- Graceful fallback for screenshots that haven't been captured yet.
          Same hook the previous design used, unchanged so any feature-card
@@ -539,7 +539,7 @@
         <!-- ═══════════════ FINAL CTA ═══════════════ -->
         <section class="final-cta" aria-label="Get started">
             <div class="final-cta-inner">
-                <img src="/static/assets/favicon.png" alt="" class="final-logo">
+                <img src="/static/assets/favicon.png" alt="" class="final-logo" loading="lazy" decoding="async">
                 <h2 data-i18n>Two ways in. <span class="grad">Pick yours.</span></h2>
                 <p data-i18n>Install the desktop app for the full suite, or fire up the browser version for the parts you can run without a local game install.</p>
                 <div class="final-actions">
@@ -553,7 +553,7 @@
     <footer class="site-footer" role="contentinfo">
         <div class="footer-grid">
             <div class="footer-col footer-brand">
-                <img src="/static/assets/favicon.png" alt="" class="footer-logo">
+                <img src="/static/assets/favicon.png" alt="" class="footer-logo" loading="lazy" decoding="async">
                 <strong>Better <span class="highlight-blue">Trove</span> Tools</strong>
                 <p class="footer-tagline" data-i18n>Free &amp; open source. By the community, for the community.</p>
             </div>
@@ -587,8 +587,8 @@
         </p>
     </footer>
 
-    <script src="/static/app.js?v=20260607h"></script>
-    <script src="/static/i18n.js?v=20260607h"></script>
-    <script src="/static/landing.js?v=20260607h" defer></script>
+    <script src="/static/app.min.js?v=20260607k"></script>
+    <script src="/static/i18n.min.js?v=20260607k"></script>
+    <script src="/static/landing.min.js?v=20260607k" defer></script>
 </body>
 </html>
