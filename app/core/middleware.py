@@ -12,13 +12,16 @@ _API_CSP = (
     "connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
 )
 
-# The BetterTroveTools showcase site pulls FontAwesome CSS + GSAP from CDN and
-# calls the Kiwi API for release data, so its CSP is broader than the API's.
+# The BetterTroveTools showcase site pulls FontAwesome CSS from cdnjs, Space
+# Grotesk + Inter from Google Fonts (their CSS lives on fonts.googleapis.com,
+# the actual font files on fonts.gstatic.com — both need to be allowed or the
+# page falls back to system fonts and the bold display look breaks), and calls
+# the Kiwi API for release data. CSP is correspondingly broader than the API's.
 _SITE_CSP = (
     "default-src 'self'; "
     "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
-    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
-    "font-src 'self' https://cdnjs.cloudflare.com data:; "
+    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+    "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; "
     "img-src 'self' data:; "
     "connect-src 'self' https://api.aallyn.net; "
     "base-uri 'none'; frame-ancestors 'none'"

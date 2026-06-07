@@ -18,10 +18,14 @@ from io import BytesIO
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
+
+# Filename extensions accepted as Trove screenshots for the hero slideshow.
+# Anything else in the folder (READMEs, .DS_Store, etc.) is silently skipped.
+_SCREENSHOT_EXTS = {".webp", ".png", ".jpg", ".jpeg", ".gif"}
 
 _TEMPLATES = Jinja2Templates(directory=str(Path(settings.site_root) / "templates"))
 
@@ -38,6 +42,34 @@ async def home(request: Request) -> HTMLResponse:
 async def documentation(request: Request) -> HTMLResponse:
     """The user manual."""
     return _TEMPLATES.TemplateResponse(request, "docs.html", {})
+
+
+@router.get("/site/screenshots.json", response_class=JSONResponse)
+async def hero_screenshots() -> JSONResponse:
+    """List of Trove screenshots for the landing-page hero slideshow.
+
+    Reads ``site/static/trove-screens/`` and returns every image (by file
+    extension whitelist) sorted alphabetically. Lets the user drop new
+    screenshots into the folder and have them appear on the next page
+    load without an HTML edit. Filenames are exposed as URLs only — full
+    paths never leak.
+
+    Empty list (folder missing, no recognised images) is a clean OK that
+    the landing-page JS treats as "no slideshow"; the orbs + grid stay.
+    """
+    folder = Path(settings.site_root) / "static" / "trove-screens"
+    files: list[str] = []
+    if folder.is_dir():
+        for path in sorted(folder.iterdir()):
+            if path.is_file() and path.suffix.lower() in _SCREENSHOT_EXTS:
+                files.append(f"/static/trove-screens/{path.name}")
+    # 60-second client cache: long enough that a back-button hit doesn't
+    # re-list the folder, short enough that adding a new screenshot shows
+    # up within a minute without a hard refresh.
+    return JSONResponse(
+        {"screenshots": files, "count": len(files)},
+        headers={"Cache-Control": "public, max-age=60"},
+    )
 
 
 # --- byte-patcher tools -----------------------------------------------------

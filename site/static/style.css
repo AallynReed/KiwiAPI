@@ -1,507 +1,1283 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Better Trove Tools — landing page stylesheet (full redesign, 2026-06-07)
+   ───────────────────────────────────────────────────────────────────────
+   Bold, animated, full-bleed. Uses modern CSS exclusively (no preprocessor):
+   custom properties, container queries, :has(), :is()/:where(), conic +
+   radial gradients, backdrop-filter glass, CSS scroll-snap, view-transition
+   primitives, prefers-reduced-motion, prefers-color-scheme.
+
+   Index.html is the only page that loads this file (docs.html ships its
+   own docs.css), so the rules are unscoped — every selector here is a
+   landing-page selector and can't collide with another surface.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+
+/* ─── 0. Reset + design tokens ───────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-    --bg-dark: #12161c;
-    --bg-panel: #1d232b;
-    --border-color: #444c5e;
-    --text-main: #ffffff;
-    --text-muted: #a3adc2;
-    --accent-blue: #5ec6ff;
-    --accent-orange: #ff9800;
-    --accent-yellow: #fbc02d;
-    --discord-blurple: #5865F2;
+  /* Palette — deep midnight base with three accent hues used per-section
+     (data-theme on spotlights re-binds --accent for that block). */
+  --bg-base:        #06080d;
+  --bg-deep:        #0a0e14;
+  --bg-card:        #131922;
+  --bg-card-hi:    #1a212c;
+  --bg-line:        #1f2733;
+  --text:           #e6edf3;
+  --text-mute:      #9aa4b2;
+  --text-soft:      #6e7785;
+
+  --accent-blue:    #58a6ff;
+  --accent-orange:  #ff8a3d;
+  --accent-yellow:  #ffd166;
+  --accent-purple:  #a371f7;
+  --accent-green:   #3fb950;
+  --accent-red:     #f85149;
+
+  /* Per-section accent — gets re-bound on .spotlight[data-theme=…]. */
+  --accent:         var(--accent-blue);
+  --accent-soft:    color-mix(in oklab, var(--accent) 28%, transparent);
+
+  /* Type scale — clamp() makes every heading fluid across mobile→4k
+     without separate breakpoints. Body sticks at 16-17px. */
+  --type-display: clamp(2.6rem, 6vw + 1rem, 6rem);
+  --type-h2:      clamp(2rem,   4vw + 0.8rem, 3.6rem);
+  --type-h3:      clamp(1.15rem, 1vw + 0.9rem, 1.5rem);
+  --type-lead:    clamp(1.05rem, 0.6vw + 0.95rem, 1.3rem);
+  --type-body:    1.0625rem;
+
+  --radius-sm: 10px;
+  --radius:    18px;
+  --radius-lg: 28px;
+
+  --shadow-soft: 0 4px 30px rgba(0,0,0,.35);
+  --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent),
+                 0 12px 50px color-mix(in oklab, var(--accent) 18%, transparent);
+
+  /* Easing curves — used everywhere so the page feels coordinated. */
+  --ease-out:    cubic-bezier(.22,.61,.36,1);
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);
 }
 
-body, html {
-    margin: 0; padding: 0;
-    background-color: var(--bg-dark);
-    color: var(--text-main);
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    overflow-x: hidden;
+html {
+  scroll-behavior: smooth;
+  /* When users tab through anchor links / scroll-cue, the navbar shouldn't
+     cover the destination. Sized to match navbar height + a 12px breath. */
+  scroll-padding-top: 84px;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
-/* Skip-to-content link — visually hidden until focused with the Tab key, then
-   slides into view at the top-left. Lets keyboard / screen-reader users jump
-   past the navbar straight to the page content. */
-.skip-link {
-    position: fixed; top: -40px; left: 12px;
-    z-index: 1100;
-    background: var(--accent-blue);
-    color: #06131c;
-    font-weight: 700; font-size: 0.9rem;
-    padding: 8px 14px; border-radius: 0 0 8px 8px;
-    text-decoration: none;
-    transition: top 0.18s ease;
+body.landing {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: var(--type-body);
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg-base);
+  /* The hero canvas + orbs live behind everything; reserve the stacking
+     context so nothing escapes into the body's flow. */
+  position: relative;
+  overflow-x: hidden;
+  /* Subtle ambient washes — kills banding on the dark gradients without
+     shipping a raster background image. */
+  background-image:
+    radial-gradient(1200px 800px at 50% -10%, rgba(88,166,255,.06), transparent 60%),
+    radial-gradient(800px 600px at 90% 30%, rgba(255,138,61,.04), transparent 60%);
 }
-.skip-link:focus { top: 0; outline: 2px solid #fff; outline-offset: 2px; }
 
-.highlight-blue { color: var(--accent-blue); }
+img, picture, video, canvas, svg { max-width: 100%; display: block; }
+a { color: var(--accent-blue); text-decoration: none; }
+a:hover { color: color-mix(in oklab, var(--accent-blue) 80%, white); }
+
+h1, h2, h3 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+/* The three accent-colored emphasis spans used throughout the copy. Kept
+   for backwards-compat with translation strings that already wrap brand
+   words in these classes. */
+.highlight-blue   { color: var(--accent-blue);   }
 .highlight-orange { color: var(--accent-orange); }
 .highlight-yellow { color: var(--accent-yellow); }
 
-/* --- NAVIGATION --- */
+/* The big animated gradient applied to spotlight titles + the brand word
+   in the hero. background-clip:text needs the -webkit- prefix for Safari
+   even today; keep both.
+
+   Palindrome stops (blue → orange → yellow → orange → blue) so the wrap
+   point at the end of one cycle matches the start of the next — without
+   this, the visible "yellow|blue" seam from background-repeat snapped
+   harshly through the text mid-animation. The seam is now blue|blue,
+   invisible. */
+.grad {
+  background: linear-gradient(110deg,
+    var(--accent-blue)   0%,
+    var(--accent-orange) 25%,
+    var(--accent-yellow) 50%,
+    var(--accent-orange) 75%,
+    var(--accent-blue)   100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* 12s (was 8s) — the palindrome means twice the colour journey per
+     cycle, so a slightly slower pan keeps each colour readable. */
+  animation: grad-pan 12s linear infinite;
+}
+@keyframes grad-pan {
+  to { background-position: 200% 0; }
+}
+
+
+/* ─── 1. Skip link + a11y essentials ─────────────────────────────────── */
+
+.skip-link {
+  position: absolute;
+  top: 0; left: 0;
+  padding: 10px 16px;
+  background: var(--accent-blue);
+  color: #06080d;
+  font-weight: 600;
+  z-index: 9999;
+  transform: translateY(-100%);
+  transition: transform .15s var(--ease-out);
+}
+.skip-link:focus { transform: translateY(0); }
+
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+
+/* ─── 2. Background canvas + ambient FX ──────────────────────────────── */
+
+canvas.bg-fx {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  pointer-events: none;
+  /* Fades from opaque at the top to transparent further down so spotlight
+     images dominate as the user scrolls past the hero. */
+  mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 100%);
+}
+
+
+/* ─── 3. Navbar (sticky, glass) ──────────────────────────────────────── */
+
 .navbar {
-    position: fixed; top: 0; left: 0; width: 100%;
-    height: 60px; display: flex; align-items: center;
-    background: rgba(18, 22, 28, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-color);
-    z-index: 1000;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* Glassmorphism — backdrop-filter is well-supported now except on older
+     Firefox Android. The bg fallback colour keeps it legible there too. */
+  background: color-mix(in oklab, var(--bg-deep) 70%, transparent);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--bg-line);
+  transition: background .25s var(--ease-out);
 }
+.navbar.scrolled {
+  background: color-mix(in oklab, var(--bg-deep) 88%, transparent);
+}
+
 .nav-container {
-    width: 100%; max-width: 1400px; margin: 0 auto;
-    display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 28px;
 }
-.nav-logo { display: flex; align-items: center; gap: 10px; font-weight: bold; }
-/* favicon.png has ~10% transparent padding around its artwork, so a height
-   of 24px makes the actual visible icon only ~19-20px and reads as small/cut
-   next to the wordmark. Render at 32px so the icon and text align visually. */
-.nav-logo img { height: 32px; width: auto; }
-.nav-links { display: flex; align-items: center; gap: 8px; }
+
+.nav-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+.nav-logo img { width: 30px; height: 30px; border-radius: 6px; }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .nav-links a {
-    color: var(--text-muted); text-decoration: none; font-size: 0.9rem;
-    font-weight: 600; transition: 0.2s; padding: 8px 14px; border-radius: 8px;
-    display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: var(--text-mute);
+  font-weight: 500;
+  font-size: .94rem;
+  border-radius: 999px;
+  transition: color .15s, background .15s;
 }
-.nav-links a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+.nav-links a:hover { color: var(--text); background: var(--bg-card); }
+.nav-links a.nav-cta {
+  color: #06080d;
+  background: linear-gradient(135deg, var(--accent-blue), color-mix(in oklab, var(--accent-blue) 60%, var(--accent-orange)));
+  font-weight: 600;
+}
+.nav-links a.nav-cta:hover {
+  background: linear-gradient(135deg, color-mix(in oklab, var(--accent-blue) 80%, white), var(--accent-orange));
+}
 
-/* Language switcher */
-.lang-picker { position: relative; display: inline-flex; align-items: center; }
-.lang-picker-icon {
-    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
-    font-size: 0.8rem; color: var(--accent-blue); pointer-events: none;
-}
-.lang-select {
-    appearance: none; -webkit-appearance: none; -moz-appearance: none;
-    background-color: rgba(255,255,255,0.05); color: #fff;
-    border: 1px solid var(--border-color); border-radius: 8px;
-    padding: 8px 32px 8px 32px;
-    font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: inherit;
-    outline: none; transition: 0.2s;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3adc2' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-    background-repeat: no-repeat; background-position: right 11px center;
-}
-.lang-select:hover { background-color: rgba(255,255,255,0.1); border-color: var(--accent-blue); }
-.lang-select:focus-visible { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(94,198,255,0.25); }
-.lang-picker:hover .lang-picker-icon { color: #7ad2ff; }
-.lang-select option { background: var(--bg-panel); color: #fff; }
-
-/* Hamburger toggle button — hidden on desktop, becomes the only nav control
-   on phones/tablets. The .nav-links panel slides down below the navbar when
-   .navbar.open is set (handled by app.js). */
 .nav-toggle {
-    display: none;  /* shown via the mobile @media block below */
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: #fff;
-    width: 42px; height: 42px;
-    border-radius: 8px;
-    cursor: pointer; padding: 0;
-    align-items: center; justify-content: center;
-    font-size: 1.05rem;
-    transition: background 0.15s ease, border-color 0.15s ease;
-}
-.nav-toggle:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--accent-blue); }
-.nav-toggle i { transition: transform 0.2s ease; }
-/* When open, rotate + swap the bars icon to an X via CSS content trick:
-   font-awesome glyph swap is done by toggling classes in JS, but we can also
-   spin the bars 90deg as a visual cue without the swap. We do BOTH — JS swaps
-   the class, this rule animates the rotation if classes change in flight. */
-.navbar.open .nav-toggle { background: rgba(94, 198, 255, 0.12); border-color: var(--accent-blue); }
-
-@media (max-width: 768px) {
-    .nav-toggle { display: inline-flex; }
-
-    /* Collapse the inline nav into a slide-down panel anchored under the
-       navbar. The navbar itself is position:fixed (60px tall), so absolute
-       positioning here is relative to the navbar — top:100% sits the panel
-       flush with the navbar's bottom edge across the full viewport width. */
-    .nav-links {
-        position: absolute;
-        top: 100%; left: 0; right: 0;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 4px;
-        padding: 12px 14px 14px;
-        background: rgba(18, 22, 28, 0.98);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--border-color);
-        max-height: calc(100vh - 60px);
-        overflow-y: auto;
-        transform: translateY(-8px);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.18s ease, transform 0.18s ease;
-    }
-    .navbar.open .nav-links {
-        transform: translateY(0);
-        opacity: 1;
-        pointer-events: auto;
-    }
-    .nav-links a {
-        padding: 12px 14px;
-        font-size: 1rem;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.03);
-        justify-content: flex-start;
-    }
-    /* Re-show the link labels inside the panel (they're worth their width here
-       since the row is now a full-width column, not a cramped horizontal bar). */
-    .nav-links a span,
-    .nav-links a .label { display: inline; }
-    .nav-links a.nav-cta { background: var(--accent-orange); color: #1a1205; }
-
-    /* Language picker becomes a full-width row at the bottom of the panel. */
-    .lang-picker {
-        margin-top: 6px;
-        padding-top: 10px;
-        border-top: 1px solid var(--border-color);
-        display: flex;
-    }
-    .lang-picker-icon { display: inline; left: 14px; }
-    .lang-select {
-        width: 100%;
-        padding: 12px 32px 12px 34px;
-        font-size: 0.95rem;
-    }
-
-    .nav-container { padding: 0 14px; }
+  display: none;
+  background: transparent;
+  border: 1px solid var(--bg-line);
+  color: var(--text);
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
 }
 
-/* --- BUTTONS --- */
+
+/* ─── 4. Hero ─────────────────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 80px 24px 120px;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ─── Hero screenshot slideshow ──────────────────────────────────────
+   Sits at the very back of the hero stack (orbs + grid + particles
+   layer on top via DOM source order). landing.js fetches the file
+   list from /site/screenshots.json and appends <img> children here
+   with .active on whichever one is currently showing.
+
+   Crossfade is opacity-only (cheap, compositor-driven, no layout).
+   Each image runs a slow ken-burns zoom for cinematic feel without
+   shipping a video. ::after is a dark vignette that always sits over
+   the slideshow so the hero text stays readable on top — the dim
+   compounds with the orbs' brightness rather than fighting it. */
+.hero-screens {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.hero-screens img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  /* Bigger than container + a slow drift towards the centre so each
+     image breathes during its visible window. The active class toggles
+     the keyframe via animation: ken-burns ... below. */
+  transform: scale(1.12);
+  transition: opacity 1.2s var(--ease-out);
+  will-change: opacity, transform;
+  /* The screenshots are full-colour Trove world; bringing them down to
+     ~30 % opacity keeps the hero text readable when foreground content
+     paints on top. The vignette ::after also helps; both compound. */
+  filter: brightness(.7) saturate(.9);
+}
+.hero-screens img.active {
+  opacity: .35;
+  animation: ken-burns 14s linear infinite alternate;
+}
+@keyframes ken-burns {
+  0%   { transform: scale(1.08) translate(0, 0); }
+  100% { transform: scale(1.22) translate(-1.5%, -1%); }
+}
+.hero-screens::after {
+  /* Dark vignette / falloff at the edges so the screens fade into the
+     hero's deep background rather than ending in a hard rectangle.
+     Stays on top of every image (pointer-events:none so doesn't block
+     anything). */
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% 40%, transparent 0%, rgba(6, 8, 13, .55) 70%, rgba(6, 8, 13, .95) 100%);
+}
+
+/* Three giant blurred orbs that drift slowly via keyframes. Conic
+   gradients give a richer, prismatic look than radial; the blur smears
+   the bands into soft colour washes. */
+.orb {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  max-width: 900px;
+  max-height: 900px;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: .55;
+  will-change: transform;
+  animation: orb-drift 24s ease-in-out infinite;
+}
+.orb-1 {
+  top: -10%; left: -10%;
+  background: conic-gradient(from 90deg, var(--accent-blue), transparent 50%);
+}
+.orb-2 {
+  bottom: -20%; right: -10%;
+  background: conic-gradient(from 270deg, var(--accent-orange), transparent 55%);
+  animation-delay: -8s;
+}
+.orb-3 {
+  top: 30%; left: 40%;
+  background: conic-gradient(from 0deg, var(--accent-yellow), transparent 60%);
+  animation-delay: -16s;
+  opacity: .35;
+}
+@keyframes orb-drift {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  33%      { transform: translate3d(4vw, 3vh, 0) scale(1.08); }
+  66%      { transform: translate3d(-3vw, -2vh, 0) scale(0.94); }
+}
+
+/* Faint cyan grid behind the orbs — gives the dark base a "build mode"
+   feel and adds depth when the canvas particles drift in front. */
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--accent-blue) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--accent-blue) 8%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(60% 50% at 50% 35%, black, transparent 80%);
+  -webkit-mask-image: radial-gradient(60% 50% at 50% 35%, black, transparent 80%);
+  opacity: .35;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  width: 100%;
+  text-align: center;
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  border: 1px solid var(--bg-line);
+  background: color-mix(in oklab, var(--bg-card) 60%, transparent);
+  border-radius: 999px;
+  font-size: .82rem;
+  color: var(--text-mute);
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.hero-eyebrow .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 12px var(--accent-green);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.hero-eyebrow .sep { color: var(--bg-line); }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .35; }
+}
+
+.hero-title {
+  font-size: var(--type-display);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25em;
+}
+.hero-title .word {
+  display: inline-block;
+  /* Stagger the entry: each word starts further down + transparent, then
+     settles. The delays are picked in HTML order so "Better" arrives first.
+     Triggered with .ready on body so the FOUC frame doesn't flash. */
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity .6s var(--ease-out), transform .8s var(--ease-spring);
+}
+body.ready .hero-title .word { opacity: 1; transform: translateY(0); }
+body.ready .hero-title .word:nth-child(2) { transition-delay: .12s; }
+body.ready .hero-title .word:nth-child(3) { transition-delay: .24s; }
+
+.hero-sub {
+  font-size: var(--type-lead);
+  color: var(--text-mute);
+  max-width: 720px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .6s var(--ease-out) .36s, transform .6s var(--ease-out) .36s;
+}
+body.ready .hero-sub { opacity: 1; transform: translateY(0); }
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
 .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-    padding: 12px 24px; border-radius: 8px; font-weight: bold;
-    text-decoration: none; transition: 0.3s;
-    min-width: 180px;
-    box-sizing: border-box;  /* without this, max-width:300px on phones gets +48px from padding -> horizontal scroll */
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform .18s var(--ease-out), background .18s, border-color .18s, box-shadow .18s;
+  text-decoration: none;
+  white-space: nowrap;
 }
-.btn-primary { background: var(--accent-blue); color: #000; }
-.btn-secondary { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color); }
-.btn-discord { background: var(--discord-blurple); color: #fff; }
-.btn-web { background: var(--accent-orange); color: #1a1205; }
-.btn:hover { transform: translateY(-2px); opacity: 0.9; }
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
 
-/* Highlighted "Web App" link in the navbar */
-.nav-links a.nav-cta { color: #1a1205; background: var(--accent-orange); }
-.nav-links a.nav-cta:hover { color: #1a1205; background: #ffb24d; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-blue), color-mix(in oklab, var(--accent-blue) 50%, var(--accent-orange)));
+  color: #06080d;
+  box-shadow: 0 10px 30px color-mix(in oklab, var(--accent-blue) 25%, transparent);
+}
+.btn-primary:hover {
+  box-shadow: 0 14px 40px color-mix(in oklab, var(--accent-blue) 40%, transparent);
+}
 
-/* "Last updated" release line under the hero buttons */
+.btn-ghost {
+  background: color-mix(in oklab, var(--bg-card) 55%, transparent);
+  border-color: var(--bg-line);
+  color: var(--text);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.btn-ghost:hover { border-color: var(--accent-blue); background: var(--bg-card); }
+
 .release-info {
-    margin-top: 16px; min-height: 1.1em;
-    font-size: 0.9rem; color: var(--text-muted);
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    opacity: 0; transition: opacity 0.4s ease;
+  margin-top: 4px;
+  font-size: .9rem;
+  color: var(--text-mute);
+  opacity: 0;
+  transition: opacity .3s;
+  min-height: 1.4em;
 }
 .release-info.show { opacity: 1; }
-.release-info strong { color: #fff; font-weight: 700; }
-.release-info .ok { color: #46d39a; }
-.release-info a { color: var(--accent-blue); text-decoration: none; }
-.release-info a:hover { text-decoration: underline; }
+.release-info .ok { color: var(--accent-green); }
 
-/* Download dropdown — one trigger that opens a panel listing every platform.
-   Populated from /v1/btt/latest. The trigger shows the user's-platform version;
-   the panel shows ALL platforms with their (potentially different) versions. */
-.download-dropdown { position: relative; display: inline-block; }
-.download-trigger {
-    display: inline-flex; align-items: center; gap: 10px;
-    cursor: pointer; border: none;
-    /* Reuse .btn / .btn-primary base — set on the element directly in HTML. */
+.hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 6px;
 }
-.download-trigger:disabled { opacity: 0.6; cursor: wait; }
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--bg-card) 50%, transparent);
+  border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+  font-size: .88rem;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: color .15s, border-color .15s, background .15s, transform .15s;
+}
+.pill:hover {
+  color: var(--text);
+  border-color: var(--accent-blue);
+  transform: translateY(-1px);
+}
+.pill-accent {
+  /* New pills (Dev Portal + API Docs) get a brighter look so they read as
+     a "new thing for you to try" rather than blending into the row. */
+  color: var(--text);
+  border-color: color-mix(in oklab, var(--accent-orange) 50%, var(--bg-line));
+  background: color-mix(in oklab, var(--accent-orange) 8%, var(--bg-card));
+}
+
+.hero-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.plat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+  font-size: .82rem;
+  font-weight: 500;
+}
+.plat-badge i { color: var(--accent-blue); }
+.plat-android i { color: var(--accent-green); }
+.plat-linux i   { color: var(--accent-yellow); }
+.plat-web i     { color: var(--accent-orange); }
+
+.scroll-cue {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-mute);
+  font-size: .82rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.scroll-cue i { animation: cue-bounce 2s ease-in-out infinite; }
+@keyframes cue-bounce {
+  0%, 100% { transform: translateY(0); opacity: .5; }
+  50%      { transform: translateY(8px); opacity: 1; }
+}
+
+
+/* ─── 5. Download dropdown (preserves app.js bindings) ───────────────── */
+
+.download-dropdown { position: relative; }
 .download-caret {
-    margin-left: -2px; transition: transform 0.2s ease;
-    font-size: 0.85em;
+  margin-left: 4px;
+  transition: transform .2s var(--ease-out);
 }
 .download-dropdown.open .download-caret { transform: rotate(180deg); }
 
 .download-panel {
-    position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-    min-width: 260px;
-    background: #161b22;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 6px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.3);
-    z-index: 30;
-    opacity: 0; transform-origin: top center;
-    transform: translateX(-50%) translateY(-6px);
-    transition: opacity 0.18s ease, transform 0.18s ease;
-    pointer-events: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px) scale(.98);
+  width: min(360px, 90vw);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius);
+  padding: 8px;
+  box-shadow: var(--shadow-soft), 0 0 0 1px rgba(255,255,255,.03) inset;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s var(--ease-out), transform .22s var(--ease-spring);
 }
-.download-panel[hidden] { display: none; }
 .download-dropdown.open .download-panel {
-    opacity: 1; transform: translateX(-50%) translateY(0);
-    pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
 }
+
 .download-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 14px; border-radius: 7px;
-    text-decoration: none; color: var(--text-main);
-    transition: background 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  color: var(--text);
+  transition: background .15s;
 }
-.download-item:hover, .download-item:focus-visible {
-    background: rgba(31, 111, 235, 0.15);
-    outline: none;
-}
-.download-item[hidden] { display: none; }
-.download-item-icon { font-size: 1.4rem; color: var(--accent-blue); width: 22px; text-align: center; }
-.download-item-text { display: flex; flex-direction: column; flex: 1; }
-.download-item-text strong { font-weight: 700; color: #fff; }
-.download-item-version {
-    font-size: 0.78rem; color: var(--text-muted);
-    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-}
-.download-item-arrow { font-size: 0.85rem; color: var(--text-muted); opacity: 0.7; }
-.download-item:hover .download-item-arrow { color: var(--accent-blue); opacity: 1; }
+.download-item:hover { background: var(--bg-card-hi); }
+.download-item-icon { font-size: 1.4rem; color: var(--accent-blue); width: 32px; text-align: center; }
+.download-item[data-platform="linux"]   .download-item-icon { color: var(--accent-yellow); }
+.download-item[data-platform="android"] .download-item-icon { color: var(--accent-green); }
+.download-item-text { flex: 1; display: grid; gap: 2px; }
+.download-item-text strong { font-size: .98rem; }
+.download-item-version { font-size: .8rem; color: var(--text-mute); }
+.download-item-arrow { color: var(--text-soft); }
 
-/* Hero "Supported platforms" row — a single line of icon chips sitting
-   just below the "No install needed" microcopy. */
-.hero-platforms {
-    display: flex; flex-wrap: wrap; gap: 12px;
-    justify-content: center;
-    margin-top: 18px;
-}
-.plat-badge {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 9px 18px;
-    border-radius: 999px;
-    font-size: 0.95rem; font-weight: 600;
-    background: rgba(255, 255, 255, 0.04);
-    color: var(--text-muted);
-    border: 1px solid var(--border-color);
-    line-height: 1;
-}
-.plat-badge i { font-size: 1.5rem; }
-/* Platform-tinted accents: a subtle hue per badge so the row reads at a glance. */
-.plat-badge.plat-windows i { color: #4ea1ff; }
-.plat-badge.plat-linux   i { color: #ffb04e; }
-.plat-badge.plat-android i { color: #6cc94f; }
-.plat-badge.plat-web     i { color: var(--accent-orange); }
-
-/* Inline error block inside the dropdown panel (shown when the API is
-   unreachable / has no usable builds). Never replaces the dropdown with a
-   redirect — the user always stays on the page. */
 .download-status {
-    padding: 12px 14px 8px;
-    text-align: center;
-    color: var(--text-muted);
+  padding: 16px;
+  text-align: center;
+  display: grid;
+  gap: 12px;
 }
-.download-status[hidden] { display: none; }
-.download-status-msg { margin: 0 0 10px; font-size: 0.85rem; line-height: 1.45; }
+.download-status-msg { color: var(--text-mute); font-size: .9rem; }
 .download-retry {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 12px; border-radius: 6px;
-    background: rgba(31, 111, 235, 0.15);
-    color: var(--accent-blue);
-    border: 1px solid var(--border-color);
-    font-size: 0.82rem; font-weight: 600; cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+  background: transparent;
+  border: 1px solid var(--bg-line);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font: inherit;
+  cursor: pointer;
+  justify-self: center;
 }
-.download-retry:hover {
-    background: rgba(31, 111, 235, 0.25);
-    border-color: var(--accent-blue);
+.download-retry:hover { border-color: var(--accent-blue); }
+
+
+/* ─── 6. Live strip ──────────────────────────────────────────────────── */
+
+.live-strip {
+  position: relative;
+  padding: 60px 28px 30px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+.live-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .85rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  margin-bottom: 18px;
+}
+.live-eyebrow .live-pulse {
+  color: var(--accent-red);
+  font-size: .65rem;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.live-eyebrow .live-link {
+  margin-left: auto;
+  color: var(--accent-blue);
+  text-transform: none;
+  letter-spacing: 0;
 }
 
-/* Microcopy under the hero buttons */
-.hero-note {
-    margin-top: 12px; color: var(--text-muted); font-size: 0.9rem;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
+.live-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
 }
-.hero-note i { color: var(--accent-blue); }
+.live-card {
+  position: relative;
+  padding: 22px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--bg-card) 80%, transparent), var(--bg-card));
+  border: 1px solid var(--bg-line);
+  display: grid;
+  gap: 6px;
+  /* overflow:hidden is REQUIRED so the ::before stripe clips to the card's
+     rounded corners. Without it, the stripe (top:0; left:0; right:0; 2px)
+     extends past the card's 18px border-radius into transparent space and
+     reads as a rectangular ribbon awkwardly stuck onto a rounded card. */
+  overflow: hidden;
+  transition: border-color .25s, transform .25s var(--ease-out);
+}
+.live-card::before {
+  /* Animated gradient stripe across the top — telegraphs "this is updating
+     in real time" without needing motion on the text itself. The card's
+     overflow:hidden above clips us to the rounded shape; the now-redundant
+     own border-radius is removed (it never could do anything on a 2px-tall
+     element anyway — radius gets clamped to half the height). */
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+  background-size: 200% 100%;
+  animation: stripe 3s linear infinite;
+}
+@keyframes stripe { to { background-position: 200% 0; } }
 
-/* Online-CTA eyebrow + subnote (reused from the old "Try it online" panel). */
-.feat-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    color: var(--accent-orange); font-weight: 700; font-size: 0.8rem;
-    text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 12px;
+.live-card:hover { transform: translateY(-3px); border-color: var(--accent-blue); }
+.live-card .live-label { font-size: .8rem; color: var(--text-mute); text-transform: uppercase; letter-spacing: .1em; }
+.live-card .live-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
-.feat-subnote { color: var(--text-muted); font-size: 0.92rem; margin-top: 12px; opacity: 0.85; }
-
-/* --- HERO --- */
-.hero {
-    height: 100vh; display: flex; align-items: center; justify-content: center;
-    text-align: center; background: radial-gradient(circle at center, #1d232b 0%, #12161c 100%);
-    padding: 20px; box-sizing: border-box;
-}
-.hero-main-logo { width: 100px; margin-bottom: 15px; }
-.hero h1 { font-size: clamp(2rem, 8vw, 4rem); margin-bottom: 0.5rem; }
-.hero-subtitle { font-size: 1.1rem; color: var(--text-muted); margin: 0 auto 2rem; max-width: 600px; }
-.hero-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-
-/* --- ONLINE CTA --- (was a pinned-scroll panel; now a banner between hero
-   and feature grid). Single-column, centered, with the Web App orange-button
-   borrowed from the hero. */
-.online-cta {
-    padding: 80px 20px 40px;
-    background: linear-gradient(180deg, transparent 0%, rgba(255, 152, 0, 0.04) 100%);
-}
-.online-cta-inner {
-    max-width: 720px;
-    margin: 0 auto;
-    text-align: center;
-}
-.online-cta h2 { font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0 0 14px; line-height: 1.2; }
-.online-cta p { font-size: 1.05rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 12px; }
-.online-cta-btn { margin-top: 18px; }
-
-/* --- FEATURE GRID --- replaces the GSAP showcase. Each section is a category
-   with a responsive auto-fit grid of cards inside. */
-.features-section {
-    padding: 48px 20px 24px;
-    max-width: 1280px;
-    margin: 0 auto;
-}
-.features-section + .features-section { padding-top: 24px; }
-.features-section h2 {
-    font-size: clamp(1.6rem, 4vw, 2.4rem);
-    margin: 0 0 6px;
-    text-align: center;
-    line-height: 1.2;
-}
-.features-section-sub {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 1rem;
-    margin: 0 0 28px;
+.live-card .live-sub { font-size: .85rem; color: var(--text-mute); }
+.live-card.flash { animation: flash .6s var(--ease-out); }
+@keyframes flash {
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent-blue) 50%, transparent); }
+  100% { box-shadow: 0 0 0 16px transparent; }
 }
 
-.feature-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 18px;
-}
-.feature-card {
-    background: var(--bg-panel);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    overflow: hidden;
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    display: flex;
-    flex-direction: column;
-}
-.feature-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--accent-blue);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-}
-.feature-card img {
-    width: 100%;
-    aspect-ratio: 16 / 10;
-    object-fit: cover;
-    display: block;
-    background: #0f1216;
-    border-bottom: 1px solid var(--border-color);
-}
-.feature-card-body { padding: 16px 18px 20px; }
-.feature-card-body h3 {
-    font-size: 1.1rem;
-    margin: 0 0 8px;
-    line-height: 1.3;
-}
-.feature-card-body p {
-    color: var(--text-muted);
-    font-size: 0.92rem;
-    line-height: 1.5;
-    margin: 0;
+
+/* ─── 7. Story / spotlights ──────────────────────────────────────────── */
+
+.story {
+  display: grid;
+  /* Each spotlight is its own grid row; scroll-snap makes them feel
+     deliberate without forcing the user into them. */
+  scroll-snap-type: y proximity;
 }
 
-/* Native smooth-scroll for the anchor-click handler in app.js. */
-html { scroll-behavior: smooth; }
+.spotlight {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 80px 28px;
+  scroll-snap-align: start;
+  overflow: hidden;
+}
+/* Per-theme accent re-binding — picks the spotlight's headline gradient
+   stop and the .grad word colour without touching the body. */
+.spotlight[data-theme="blue"]   { --accent: var(--accent-blue); }
+.spotlight[data-theme="orange"] { --accent: var(--accent-orange); }
+.spotlight[data-theme="yellow"] { --accent: var(--accent-yellow); }
+.spotlight[data-theme="purple"] { --accent: var(--accent-purple); }
 
-/* Fallback shown when a screenshot file hasn't been captured yet. */
+.spot-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.spot-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Slight scale on entry so the parallax-y zoom is a real motion cue,
+     not just opacity. */
+  transform: scale(1.12);
+  transition: transform 1.6s var(--ease-out), opacity .8s var(--ease-out);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.spot-veil {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(80% 60% at 50% 40%, transparent 0%, color-mix(in oklab, var(--bg-base) 75%, transparent) 60%, var(--bg-base) 100%),
+    linear-gradient(to bottom, transparent 0%, color-mix(in oklab, var(--bg-base) 50%, transparent) 70%, var(--bg-base) 100%);
+}
+
+.spotlight.in-view .spot-bg img {
+  transform: scale(1);
+  opacity: .9;
+}
+
+.spot-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+  display: grid;
+  gap: 16px;
+  text-align: center;
+  /* Glassmorphic backdrop — the centered title would otherwise sit on
+     whatever's brightest in the spotlight image (YouTube thumbnails, UI
+     buttons, white panels) and read at WCAG ~2:1. The dark glass panel
+     gives every spotlight the same controlled reading surface; the image
+     still shows around its edges (handled by .spot-veil's vignette + the
+     spotlight's overflow), so the showcase aesthetic stays. */
+  padding: clamp(28px, 4vw, 48px) clamp(22px, 4vw, 56px);
+  border-radius: var(--radius-lg);
+  /* 55%/68% alpha (down from 78%/88%) lets the spotlight image breathe
+     through the panel — you can see the colour wash of whatever's behind
+     the text, which sells the "real glass over a real image" feel. The
+     stronger blur (20px sat 160%) compensates for the lower alpha so
+     text contrast stays well above WCAG AA on every spotlight. */
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--bg-base) 55%, transparent),
+      color-mix(in oklab, var(--bg-base) 68%, transparent));
+  border: 1px solid color-mix(in oklab, var(--accent) 24%, var(--bg-line));
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, .42),
+    0 0 0 1px rgba(255, 255, 255, .02) inset;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity .6s var(--ease-out) .15s, transform .8s var(--ease-out) .15s;
+}
+.spotlight.in-view .spot-inner { opacity: 1; transform: translateY(0); }
+
+/* Belt + suspenders: a faint dark text-shadow on the title so the gradient
+   word ("Head out.", "thousands", etc.) still pops even right at the edge
+   of the glass panel where the backdrop blur fades. Cheap, no layout cost. */
+.spot-title {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .55);
+}
+
+.spot-eyebrow {
+  display: inline-block;
+  align-self: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--accent) 15%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+  color: var(--accent);
+  font-size: .8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+.spot-title {
+  font-size: var(--type-h2);
+}
+.spot-body {
+  color: var(--text-mute);
+  font-size: var(--type-lead);
+  max-width: 600px;
+  margin: 0 auto;
+}
+.spot-bullets {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  margin: 12px auto 0;
+  max-width: 540px;
+  font-size: 1rem;
+  color: var(--text);
+}
+.spot-bullets li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--bg-card) 60%, transparent);
+  border: 1px solid var(--bg-line);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.spot-bullets li::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  flex-shrink: 0;
+}
+
+
+/* ─── 8. Section headers (shared) ────────────────────────────────────── */
+
+.section-head {
+  max-width: 900px;
+  margin: 0 auto 50px;
+  text-align: center;
+  display: grid;
+  gap: 12px;
+}
+.section-eyebrow {
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-size: .85rem;
+  font-weight: 600;
+}
+.section-title { font-size: var(--type-h2); }
+.section-sub  { color: var(--text-mute); font-size: var(--type-lead); }
+
+
+/* ─── 9. Bento grid ──────────────────────────────────────────────────── */
+
+.bento {
+  padding: 100px 28px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  /* perspective on the container so the per-tile rotateX on hover renders
+     as a true 3D tilt, not a flat scale. */
+  perspective: 1200px;
+}
+.bento-tile {
+  position: relative;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .5s var(--ease-out), transform .5s var(--ease-out),
+              border-color .2s, box-shadow .25s;
+  will-change: transform, opacity;
+}
+.bento-tile.in-view { opacity: 1; transform: translateY(0); }
+.bento-tile:hover {
+  border-color: color-mix(in oklab, var(--accent-blue) 60%, var(--bg-line));
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-4px);
+}
+.bento-tile.span-2 { grid-column: span 2; }
+
+.bento-tile img,
+.bento-tile .shot-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-bottom: 1px solid var(--bg-line);
+}
+.bento-body { padding: 18px 20px 22px; display: grid; gap: 6px; }
+.bento-body h3 { font-size: var(--type-h3); }
+.bento-body p  { color: var(--text-mute); font-size: .95rem; }
+.bento-body p em { color: var(--accent-yellow); font-style: normal; font-weight: 600; font-size: .85rem; }
+
+
+/* ─── 10. Stats counters ─────────────────────────────────────────────── */
+
+.stats {
+  padding: 60px 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 24px;
+  text-align: center;
+}
+.stat {
+  padding: 24px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--bg-line);
+  background: color-mix(in oklab, var(--bg-card) 50%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: grid;
+  gap: 8px;
+}
+.stat-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-orange));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  color: var(--text-mute);
+  font-size: .9rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+
+/* ─── 11. Developer CTA ──────────────────────────────────────────────── */
+
+.dev-cta {
+  padding: 120px 28px;
+  position: relative;
+}
+.dev-cta::before {
+  /* Subtle pinkish glow under the whole section to set it apart from the
+     bento above and the final CTA below. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 50% at 50% 50%, color-mix(in oklab, var(--accent-purple) 12%, transparent), transparent 80%);
+  pointer-events: none;
+}
+.dev-cta-inner {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+  display: grid;
+  gap: 20px;
+}
+.dev-cta-inner > .section-eyebrow { color: var(--accent-purple); }
+
+.dev-cards {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  text-align: left;
+}
+.dev-card {
+  padding: 28px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--bg-card) 90%, transparent), var(--bg-card));
+  border: 1px solid var(--bg-line);
+  color: var(--text);
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  transition: border-color .2s, transform .25s var(--ease-out), box-shadow .25s;
+  position: relative;
+  overflow: hidden;
+}
+.dev-card::before {
+  /* Sweeping highlight on hover — picks up the per-card hue. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, color-mix(in oklab, var(--accent-purple) 18%, transparent) 100%);
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+}
+.dev-card:hover {
+  border-color: var(--accent-purple);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 50px color-mix(in oklab, var(--accent-purple) 18%, transparent);
+}
+.dev-card:hover::before { opacity: 1; }
+.dev-card-icon {
+  width: 48px; height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--accent-purple) 20%, var(--bg-card));
+  color: var(--accent-purple);
+  font-size: 1.3rem;
+}
+.dev-card h3 { font-size: var(--type-h3); }
+.dev-card p  { color: var(--text-mute); font-size: .95rem; }
+.dev-card p code {
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: .85em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--bg-base);
+  color: var(--accent-blue);
+}
+.dev-card-cta {
+  color: var(--accent-blue);
+  font-weight: 600;
+  font-size: .9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+
+/* ─── 12. Final CTA ──────────────────────────────────────────────────── */
+
+.final-cta {
+  padding: 120px 28px;
+  position: relative;
+}
+.final-cta-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+  display: grid;
+  gap: 20px;
+  padding: 60px 40px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--bg-line);
+  background:
+    radial-gradient(60% 80% at 50% 0%, color-mix(in oklab, var(--accent-blue) 14%, transparent), transparent 70%),
+    color-mix(in oklab, var(--bg-card) 80%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.final-logo { width: 64px; height: 64px; margin: 0 auto 4px; border-radius: 14px; }
+.final-cta h2 { font-size: var(--type-h2); }
+.final-cta p  { color: var(--text-mute); font-size: var(--type-lead); }
+.final-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+
+/* ─── 13. Footer ─────────────────────────────────────────────────────── */
+
+.site-footer {
+  padding: 60px 28px 30px;
+  border-top: 1px solid var(--bg-line);
+  background: color-mix(in oklab, var(--bg-deep) 60%, transparent);
+}
+.footer-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 40px 30px;
+}
+.footer-brand strong {
+  display: block;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  margin: 8px 0 6px;
+  color: var(--text);
+}
+.footer-logo { width: 36px; height: 36px; border-radius: 8px; }
+.footer-tagline { color: var(--text-mute); font-size: .9rem; }
+.footer-col h3 {
+  font-size: .85rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--text-mute);
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+.footer-col a {
+  display: block;
+  padding: 4px 0;
+  color: var(--text);
+  font-size: .94rem;
+}
+.footer-col a:hover { color: var(--accent-blue); }
+.footer-fineprint {
+  max-width: 1200px;
+  margin: 40px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--bg-line);
+  color: var(--text-soft);
+  font-size: .82rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.footer-fineprint .sep { color: var(--bg-line); }
+
+
+/* ─── 14. Language picker (used in nav) ──────────────────────────────── */
+
+.lang-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+  color: var(--text-mute);
+}
+.lang-select {
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  font-size: .88rem;
+  outline: none;
+  cursor: pointer;
+}
+.lang-select option { background: var(--bg-card); color: var(--text); }
+
+
+/* ─── 15. Image fallback placeholder ─────────────────────────────────── */
+
 .shot-placeholder {
-    width: min(620px, 100%);
-    min-height: 340px;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 12px;
-    padding: 40px; box-sizing: border-box;
-    border: 2px dashed var(--border-color); border-radius: 12px;
-    background: rgba(255,255,255,0.02); text-align: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-card-hi));
+  border: 1px dashed var(--bg-line);
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  color: var(--text-mute);
+  font-size: .85rem;
 }
-.shot-placeholder i { font-size: 2.6rem; color: var(--accent-blue); opacity: 0.55; }
-.shot-placeholder span { font-size: 1.1rem; font-weight: 600; color: #fff; }
+.shot-placeholder i { font-size: 1.8rem; color: var(--text-soft); }
 .shot-placeholder code {
-    font-size: 0.8rem; color: var(--text-muted);
-    background: rgba(0,0,0,0.35); padding: 3px 8px; border-radius: 6px;
+  font-size: .72rem;
+  color: var(--text-soft);
+  font-family: SFMono-Regular, Consolas, monospace;
 }
 
-/* --- MOBILE FIXES --- */
+
+/* ─── 16. Mobile breakpoints ─────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .bento-grid { grid-template-columns: repeat(2, 1fr); }
+  .bento-tile.span-2 { grid-column: span 2; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+
 @media (max-width: 768px) {
-    /* The navbar is position:fixed at the top, so any section starting at the
-       very top of the page renders BEHIND it. On desktop the hero is tall
-       enough that flex-centering shifts the content down past the 60px navbar
-       naturally; on mobile (smaller viewport, taller stacked content) flex
-       centering pulls everything up and the hero-main-logo ends up partially
-       hidden under the navbar. Reserve 80px of top space and let the hero
-       grow vertically so all the stacked content has room. */
-    .hero {
-        height: auto;
-        min-height: 100vh;
-        padding: 80px 20px 40px;
-    }
+  /* Hamburger nav: hide the inline link list, show the toggle, slide the
+     panel down from below the header when .open. */
+  .nav-toggle { display: inline-flex; align-items: center; justify-content: center; }
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0; right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    background: var(--bg-deep);
+    border-bottom: 1px solid var(--bg-line);
+    padding: 12px 20px 18px;
+    gap: 4px;
+    transform: translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .25s var(--ease-out);
+  }
+  .navbar.open .nav-links { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .nav-links a { padding: 12px 14px; border-radius: 10px; }
+  .nav-links a.nav-cta { justify-content: center; }
+  .lang-picker { justify-content: center; }
 
-    .hero-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
+  .hero { padding-top: 60px; padding-bottom: 80px; }
+  .hero-actions, .hero-pills { width: 100%; }
+  .hero-actions .btn, .download-dropdown { width: 100%; }
+  .hero-actions .btn { justify-content: center; }
+  .download-trigger { width: 100%; justify-content: center; }
+  .download-panel { width: min(420px, 96vw); }
 
-    /* Phone-sized feature grid: single column with tighter card spacing. */
-    .features-section { padding: 36px 16px 20px; }
-    .feature-grid { gap: 14px; }
-    .feature-card-body { padding: 14px 16px 16px; }
+  .bento-grid { grid-template-columns: 1fr; }
+  .bento-tile.span-2 { grid-column: auto; }
 
-    .btn {
-        width: 100%;
-        max-width: 300px;
-    }
-
-    /* The download-dropdown is a <div> wrapper, not a .btn — so the column-
-       stack rule above wouldn't size it like the sibling buttons. Make it
-       behave like the others. */
-    .download-dropdown { display: block; width: 100%; max-width: 300px; }
-    .download-trigger { width: 100%; }
-
-    /* Re-anchor the panel to the dropdown wrapper (not the trigger's center)
-       so it doesn't shoot off the side on a narrow viewport. */
-    .download-panel {
-        left: 0; right: 0; transform: translateY(-6px);
-        min-width: 0; width: 100%;
-        max-width: 100%;
-    }
-    .download-dropdown.open .download-panel { transform: translateY(0); }
+  .footer-grid { grid-template-columns: 1fr; }
 }
 
-/* Hero platform badges — the bigger size I set is fine on desktop but four of
-   them total ~475 px, which wraps to two rows below 480 px. Shrink them so they
-   stay on a single row on phones. */
 @media (max-width: 480px) {
-    .hero-platforms { gap: 6px; margin-top: 14px; }
-    .plat-badge { padding: 5px 9px; font-size: 0.72rem; gap: 6px; }
-    .plat-badge i { font-size: 1rem; }
+  .hero-eyebrow { font-size: .75rem; padding: 6px 12px; flex-wrap: wrap; justify-content: center; }
+  .hero-eyebrow .sep { display: none; }
+  .stat-num { font-size: 2.2rem; }
+  .live-strip { padding-left: 18px; padding-right: 18px; }
+  .live-card { padding: 18px; }
 }
 
-/* Tightest phones (≤360 px, e.g. Galaxy S8/S20): drop the label text from
-   the badges so they fit as icon-only chips — the title attribute keeps the
-   accessibility hint intact. */
-@media (max-width: 360px) {
-    .plat-badge > span { display: none; }
-    .plat-badge { padding: 6px 9px; }
-    .plat-badge i { font-size: 1.1rem; }
-}
 
-/* Footer */
-.footer-cta {
-    min-height: 40vh; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; text-align: center;
-    background: var(--bg-panel); padding: 40px 20px;
+/* ─── 17. Reduced motion ─────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .orb { animation: none; }
+  .grad { animation: none; background-position: 0 0; }
+  /* Surface everything that animates in — otherwise reduced-motion users
+     would see the page in its "starting" state forever. */
+  .hero-title .word, .hero-sub { opacity: 1; transform: none; }
+  .spotlight .spot-inner { opacity: 1; transform: none; }
+  .spotlight .spot-bg img { opacity: .9; transform: none; }
+  .bento-tile { opacity: 1; transform: none; }
 }
-.opensource-notice { margin-top: 10px; color: var(--text-muted); font-size: 0.9rem; max-width: 520px; }
-.footer-links {
-    display: flex; flex-wrap: wrap; gap: 10px 22px;
-    justify-content: center; margin-top: 22px;
-}
-.footer-links a {
-    color: var(--text-muted); text-decoration: none; font-size: 0.92rem; font-weight: 600;
-    display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
-}
-.footer-links a:hover { color: #fff; }
-.footer-links a i { color: var(--accent-blue); }
