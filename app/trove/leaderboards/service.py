@@ -19,6 +19,7 @@ Reads are simple Beanie queries; everything is filtered by exact-equality on
 from __future__ import annotations
 
 import logging
+import re
 from datetime import UTC, datetime, timedelta
 
 from beanie.odm.bulk import BulkWriter
@@ -212,21 +213,20 @@ async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
         await _upsert_board(board, created_at)
         if not board.entries:
             continue
-        async with BulkWriter() as bw:
-            for ent in board.entries:
-                await LeaderboardEntry.insert_one(
-                    LeaderboardEntry(
-                        player_name=ent.player_name,
-                        rank=ent.rank,
-                        score=ent.score,
-                        leaderboard=board.uuid,
-                        created_at=created_at,
-                    ),
-                    bulk_writer=bw,
-                )
-                entries_total += 1
-                if entries_total % _BULK_BATCH == 0:
-                    await bw.commit()
+        # insert_many handles batching internally — avoid manual BulkWriter
+        # commits since BulkWriter.commit() doesn't clear its op queue.
+        docs = [
+            LeaderboardEntry(
+                player_name=ent.player_name,
+                rank=ent.rank,
+                score=ent.score,
+                leaderboard=board.uuid,
+                created_at=created_at,
+            )
+            for ent in board.entries
+        ]
+        await LeaderboardEntry.insert_many(docs)
+        entries_total += len(docs)
 
     archived = await _move_to_archive()
     logger.info(
@@ -357,11 +357,23 @@ async def player_history(
 ) -> list[dict]:
     """Most recent dumps that featured a player. Optional board filter.
 
-    Queries hot first and falls through to archive only if we haven't filled
-    the requested ``limit`` yet — recent activity is the common case, so most
-    calls never touch the cold collection.
+    Match is case-insensitive: players type with whatever casing they
+    remember and the captured ``player_name`` is whatever Trove stored.
+    Implemented as an anchored ``$regex`` with the ``i`` option. This
+    bypasses the ``(player_name, created_at)`` prefix index for the name
+    component, but the secondary sort key still pages efficiently and
+    the limit caps the result set; the hot collection is 3 days small.
+
+    Queries hot first and falls through to archive only if we haven't
+    filled the requested ``limit`` yet — recent activity is the common
+    case, so most calls never touch the cold collection.
     """
-    query: dict = {"player_name": player_name}
+    name = player_name.strip()
+    # Anchored regex with the ``i`` option for case-insensitive equality.
+    # ``re.escape`` so names containing regex metacharacters (dots,
+    # parens, etc.) match literally.
+    ci_match = {"$regex": f"^{re.escape(name)}$", "$options": "i"}
+    query: dict = {"player_name": ci_match}
     if uuid is not None:
         query["leaderboard"] = uuid
 

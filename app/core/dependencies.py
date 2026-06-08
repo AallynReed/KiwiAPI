@@ -229,6 +229,42 @@ async def get_superuser_token_context(
     return ctx
 
 
+async def require_master_ingest(
+    request: Request,
+    response: Response,
+    creds: HTTPAuthorizationCredentials | None = Depends(_api_scheme),
+) -> User:
+    """Master-only gate for the bot-ingest endpoints (leaderboards / market /
+    challenge / chaos-chest). Accepts EITHER:
+
+    - A superuser-owned API token — the bot path, with the normal rate-limit
+      + usage-accounting pipeline applied so token caps still hold.
+    - A superuser session JWT — the portal Ingest tab, where the master is
+      already authenticated and we don't want them to mint+paste an API token
+      just to replay a captured cfg.
+
+    Routes by shape: a JWT has exactly two ``.``-separated segments (header,
+    payload, signature) and an API token uses ``_`` separators with no dots,
+    so the dispatch is unambiguous and avoids trying both validators on every
+    request."""
+    if creds is None:
+        raise _not_authenticated("Authentication required")
+
+    if creds.credentials.count(".") == 2:
+        user, _ = await _authenticate(creds)
+    else:
+        user, token = await _resolve_token(creds)
+        await _enforce_token_limits(request, response, user, token)
+
+    if not user.is_superuser:
+        raise APIError(
+            status_code=403,
+            code=ErrorCode.forbidden,
+            message="Master account required for ingest endpoints.",
+        )
+    return user
+
+
 def require_scope(scope: str):
     """Dependency factory: guard an endpoint behind a scope.
 

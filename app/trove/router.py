@@ -11,10 +11,11 @@ from fastapi import (
 from fastapi.responses import FileResponse
 
 from app.core.config import settings
+from app.auth.models import User
 from app.core.dependencies import (
     AccessContext,
     TokenContext,
-    get_superuser_token_context,
+    require_master_ingest,
     public_scope,
     require_scope,
 )
@@ -191,10 +192,10 @@ _BTT = Depends(public_scope("btt:read"))
 # Leaderboards read-side is token-gated (the data is bulky + opinionated). The
 # write-side has its own dep — see /v1/leaderboards/insert below.
 _LB = Depends(require_scope("leaderboards:read"))
-_LB_MASTER = Depends(get_superuser_token_context)
+_LB_MASTER = Depends(require_master_ingest)
 # Same shape: read gated by scope, write gated by superuser API token.
 _MKT = Depends(require_scope("market:read"))
-_MKT_MASTER = Depends(get_superuser_token_context)
+_MKT_MASTER = Depends(require_master_ingest)
 
 # The codex serves the primary timeline by default; PTS is opt-in via ?branch=.
 _DEFAULT_CODEX_BRANCH = "live-us"
@@ -253,7 +254,7 @@ async def get_chaos_chest(ctx: AccessContext = _ROT) -> ChaosChest:
                        summary="Insert chaos chest data")
 async def insert_chaos_chest(
     req: CaptureInsertRequest,
-    ctx: TokenContext = Depends(get_superuser_token_context),
+    _user: User = Depends(require_master_ingest),
 ) -> CaptureInsertResponse:
     """Persist the bot-captured chaos-chest item for the current weekly window.
 
@@ -309,7 +310,7 @@ async def get_current_challenge(ctx: AccessContext = _ROT) -> ChallengeCurrentOu
                        summary="Insert challenge data")
 async def insert_challenge(
     req: CaptureInsertRequest,
-    ctx: TokenContext = Depends(get_superuser_token_context),
+    _user: User = Depends(require_master_ingest),
 ) -> CaptureInsertResponse:
     """Persist the bot-captured challenge name for the active 20-minute window.
 
@@ -1644,7 +1645,7 @@ async def insert_leaderboards(
         description=("Override the 'as-of' anchor in unix seconds (11:00 UTC). "
                      "Defaults to the latest 11:00 UTC reset — pass this only for back-fills."),
     ),
-    ctx: TokenContext = _LB_MASTER,
+    _user: User = _LB_MASTER,
 ) -> LeaderboardInsertResponse:
     """Ingest a leaderboard dump.
 
@@ -1780,7 +1781,7 @@ async def insert_market_listings(
         description=("Override the 'last_seen' anchor in unix seconds. Defaults "
                      "to now() — pass this only for back-fills."),
     ),
-    ctx: TokenContext = _MKT_MASTER,
+    _user: User = _MKT_MASTER,
 ) -> MarketInsertResponse:
     """Ingest a marketplace scrape.
 

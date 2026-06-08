@@ -31,8 +31,8 @@ _SITE_CSP = (
 def _is_site_path(path: str) -> bool:
     """Showcase-site routes (everything served from `site_router` in app/site/)."""
     return path == "/" or path in {
-        "/documentation", "/commands", "/unlock_debug", "/unlock_fps",
-    } or path.startswith("/static/")
+        "/documentation", "/commands", "/leaderboards", "/unlock_debug", "/unlock_fps",
+    } or path.startswith("/static/") or path.startswith("/site/leaderboards/")
 
 
 def add_security_middleware(app: FastAPI) -> None:

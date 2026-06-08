@@ -268,6 +268,20 @@ tr.clickable:hover td { background: var(--panel-2); }
 .pw-meter-bar span { display: block; height: 100%; width: 0; background: var(--red); transition: width .15s ease, background .15s ease; }
 .pw-meter-label { font-size: .76rem; color: var(--muted); margin-top: 4px; min-height: 1em; }
 
+/* --- Ingest tab ----------------------------------------------------------- */
+
+.ingest-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.ingest-card { margin: 0; }
+.ingest-filename { font-size: .85rem; margin-left: 10px; flex: 1; align-self: center; min-width: 0; word-break: break-all; }
+.ingest-result { margin-top: 12px; font-size: .85rem; min-height: 1em; word-break: break-word; }
+.ingest-result code { background: var(--panel-2); padding: 2px 6px; border-radius: 4px; font-size: .8rem; }
+.ingest-result.ok { color: var(--green); }
+.ingest-result.err { color: var(--red); }
+
+@media (max-width: 720px) {
+  .ingest-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 560px) {
   .stat-grid { grid-template-columns: 1fr; }
   .container { padding: 20px 16px 60px; }

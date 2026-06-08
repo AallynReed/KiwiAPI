@@ -151,6 +151,37 @@
         init();
     }
 
+    // Translate a single English string at runtime — for content built in JS
+    // (the [data-i18n] sweep only covers strings that already exist in the
+    // DOM at apply time).
+    function translate(s) {
+        if (current === "en") return s;
+        const hit = dict[norm(s)];
+        return (hit != null && hit !== "") ? hit : s;
+    }
+
+    // Re-cache + re-apply translations. Call this after injecting markup
+    // with [data-i18n] / [data-i18n-placeholder] nodes so they pick up the
+    // active language without a full reload.
+    function refresh() {
+        cacheOriginals();
+        applyDict();
+    }
+
+    // Drop an element from all internal tracking. Use this when a node
+    // that USED to hold a chrome string is repurposed to hold runtime
+    // data (e.g. a board name), so the next applyDict's restoreAll
+    // doesn't clobber the runtime text by resetting to the cached
+    // English original. The caller is responsible for also removing
+    // the [data-i18n] attribute before assigning the new content.
+    function untrack(el) {
+        if (!el) return;
+        originals.delete(el);
+        changed.delete(el);
+        phOriginals.delete(el);
+        phChanged.delete(el);
+    }
+
     // expose for debugging / external triggers
-    window.BTTi18n = { setLanguage };
+    window.BTTi18n = { setLanguage, t: translate, refresh, untrack };
 })();

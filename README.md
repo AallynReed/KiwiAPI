@@ -347,6 +347,8 @@ server {  # production API — only /v1 + /health
   client_max_body_size 8m;                 # default cap (matches the app)
   location /v1/      { proxy_pass http://127.0.0.1:15546; }
   location /v1/mods/ { client_max_body_size 20m; proxy_pass http://127.0.0.1:15546; }  # .tmod tools
+  location = /v1/leaderboards/insert { client_max_body_size 20m; proxy_pass http://127.0.0.1:15546; }  # bot cfg dump
+  location = /v1/market/insert       { client_max_body_size 20m; proxy_pass http://127.0.0.1:15546; }  # bot cfg dump
   location = /health { proxy_pass http://127.0.0.1:15546; }
   location /         { return 404; }
 }
@@ -354,7 +356,8 @@ server { server_name dev.aallyn.net;  location / { proxy_pass http://127.0.0.1:2
 server { server_name docs.aallyn.net; location / { proxy_pass http://127.0.0.1:25468; } }
 ```
 
-The app caps request bodies at 8 MB, except `/v1/mods/*` at 20 MB (the `.tmod` tools). The proxy must
+The app caps request bodies at 8 MB, except `/v1/mods/*`, `/v1/leaderboards/insert`, and
+`/v1/market/insert` at 20 MB (the `.tmod` tools and the bot's raw cfg dumps). The proxy must
 allow at least as much on those paths or it rejects large uploads before they reach the app.
 
 ## Errors & rate limits

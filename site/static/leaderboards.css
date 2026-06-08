@@ -1,0 +1,595 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /leaderboards — page-specific styles
+   ───────────────────────────────────────────────────────────────────────
+   Loaded on top of style.css. Sidebar (board list) + entries pane on
+   desktop; on mobile the sidebar collapses behind a "Choose board"
+   trigger that opens a slide-down panel.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.leaderboards-page main { padding-top: 0; }
+
+.lb-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 28px 80px;
+}
+
+
+/* ─── Hero ──────────────────────────────────────────────────────────── */
+
+.lb-hero {
+  padding: 60px 0 28px;
+  text-align: center;
+}
+.lb-hero-inner {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+}
+.lb-eyebrow {
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: .9rem;
+  color: var(--accent-blue);
+  letter-spacing: .04em;
+}
+.lb-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: clamp(2.2rem, 5vw + .5rem, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.lb-subtitle {
+  color: var(--text-mute);
+  font-size: 1.05rem;
+  max-width: 64ch;
+  margin: 0;
+  line-height: 1.55;
+}
+
+
+/* ─── Toolbar (day picker + player search) ──────────────────────────── */
+
+.lb-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(240px, 1fr);
+  gap: 14px;
+  width: 100%;
+  max-width: 720px;
+  margin-top: 14px;
+}
+/* Variant: stack vertically so the 7-day picker gets the full width. */
+.lb-toolbar.lb-toolbar-stack {
+  grid-template-columns: 1fr;
+  max-width: 900px;
+}
+.lb-toolbar-field {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+.lb-toolbar-label {
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  font-weight: 600;
+}
+.lb-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-family: inherit;
+  font-size: .95rem;
+  width: 100%;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23a8b1c2'><path d='M3 5l5 6 5-6z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  padding-right: 36px;
+}
+.lb-select:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ─── 7-day picker ─────────────────────────────────────────────────── */
+
+.lb-day-picker {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+.lb-day-loading {
+  grid-column: 1 / -1;
+  color: var(--text-mute);
+  font-size: .9rem;
+  padding: 16px;
+  text-align: center;
+}
+.lb-day {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 10px 8px 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: background .12s ease, border-color .12s ease, transform .08s ease;
+}
+.lb-day:hover {
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.18);
+}
+.lb-day:active { transform: scale(.97); }
+.lb-day.active {
+  background: rgba(120,180,255,.16);
+  border-color: rgba(120,180,255,.55);
+  color: var(--accent-blue);
+  box-shadow: 0 0 0 1px rgba(120,180,255,.25) inset;
+}
+.lb-day-empty {
+  cursor: not-allowed;
+  opacity: .42;
+}
+.lb-day-empty:hover {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.1);
+}
+.lb-day-rel {
+  font-size: .68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-mute);
+}
+.lb-day.active .lb-day-rel { color: var(--accent-blue); opacity: .9; }
+.lb-day-date {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: .92rem;
+  font-weight: 600;
+  margin-top: 1px;
+}
+.lb-day-meta {
+  font-size: .72rem;
+  color: var(--text-mute);
+  font-family: SFMono-Regular, Consolas, monospace;
+  margin-top: 4px;
+}
+.lb-day.active .lb-day-meta { color: rgba(120,180,255,.85); }
+
+.lb-search-wrap {
+  position: relative;
+  display: block;
+}
+.lb-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-mute);
+  font-size: .9rem;
+  pointer-events: none;
+}
+.lb-search-input {
+  width: 100%;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 11px 14px 11px 38px;
+  font-family: inherit;
+  font-size: .95rem;
+}
+.lb-search-input:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+
+/* ─── Player history panel ──────────────────────────────────────────── */
+
+.lb-player-panel {
+  margin: 8px 0 24px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+.lb-player-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.lb-player-title {
+  margin: 0;
+  font-size: 1.1rem;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lb-player-title i { color: var(--accent-blue); }
+.lb-player-close {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text-mute);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: .85rem;
+}
+.lb-player-close:hover {
+  color: var(--text);
+  border-color: rgba(255,255,255,.25);
+}
+.lb-player-body { display: grid; gap: 8px; }
+.lb-player-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 8px;
+}
+.lb-player-row .lb-ph-board {
+  font-weight: 600;
+  font-size: .92rem;
+}
+.lb-player-row .lb-ph-when {
+  font-size: .8rem;
+  color: var(--text-mute);
+}
+.lb-player-row .lb-ph-rank {
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .85rem;
+  padding: 2px 8px;
+  background: rgba(120,180,255,.12);
+  color: var(--accent-blue);
+  border-radius: 999px;
+}
+.lb-player-row .lb-ph-score {
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .9rem;
+  color: var(--text);
+}
+
+
+/* ─── Layout: sidebar + entries ─────────────────────────────────────── */
+
+.lb-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  gap: 22px;
+  margin-top: 8px;
+  align-items: start;
+}
+
+.lb-mobile-trigger {
+  display: none;  /* shown only on mobile */
+  width: 100%;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  align-items: center;
+  gap: 12px;
+  font-family: inherit;
+}
+.lb-mobile-trigger .lb-mobile-label {
+  flex: 1;
+  text-align: left;
+  display: grid;
+  gap: 2px;
+}
+.lb-mobile-prefix {
+  font-size: .68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+#lb-mobile-selected { font-size: .95rem; font-weight: 600; }
+
+
+/* ─── Sidebar (boards) ──────────────────────────────────────────────── */
+
+.lb-sidebar {
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.lb-sidebar-head {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.lb-board-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 4px 12px;
+}
+.lb-board-list::-webkit-scrollbar { width: 8px; }
+.lb-board-list::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.08);
+  border-radius: 4px;
+}
+.lb-board-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.15); }
+
+.lb-category {
+  margin: 12px 0 4px;
+  padding: 0 14px;
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  font-weight: 700;
+}
+.lb-category:first-child { margin-top: 4px; }
+
+.lb-board {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .92rem;
+  border-radius: 6px;
+  margin: 1px 6px;
+  width: calc(100% - 12px);
+}
+.lb-board:hover {
+  background: rgba(255,255,255,.04);
+}
+.lb-board.active {
+  background: rgba(120,180,255,.12);
+  color: var(--accent-blue);
+}
+.lb-board .lb-board-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-board .lb-contest-tag {
+  font-size: .65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255,180,80,.15);
+  color: #ffc878;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.lb-board-empty {
+  padding: 20px 14px;
+  text-align: center;
+  color: var(--text-mute);
+  font-size: .9rem;
+}
+
+
+/* ─── Entries pane ──────────────────────────────────────────────────── */
+
+.lb-entries {
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 22px 24px;
+  min-height: 320px;
+}
+.lb-entries-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.lb-entries-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.lb-entries-meta {
+  margin: 6px 0 0;
+  font-size: .85rem;
+  color: var(--text-mute);
+}
+
+.lb-entries-table {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 0;
+}
+.lb-entries-table > .lb-th,
+.lb-entries-table > .lb-td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  font-size: .92rem;
+}
+.lb-entries-table > .lb-th {
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.lb-rank {
+  font-family: SFMono-Regular, Consolas, monospace;
+  color: var(--text-mute);
+  text-align: right;
+}
+.lb-rank-top {
+  color: #ffd472;
+  font-weight: 700;
+}
+.lb-rank-top-2 { color: #d8e0e8; font-weight: 700; }
+.lb-rank-top-3 { color: #c89878; font-weight: 700; }
+.lb-player {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text);
+}
+.lb-player:hover { color: var(--accent-blue); }
+.lb-player-icon {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  opacity: .6;
+}
+.lb-score {
+  font-family: SFMono-Regular, Consolas, monospace;
+  text-align: right;
+  color: var(--text);
+}
+
+.lb-entries-foot {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+/* ``display: flex`` overrides the UA-default ``display: none`` for the
+   [hidden] attribute, so reinstate it explicitly. */
+.lb-entries-foot[hidden] { display: none; }
+.lb-load-more {
+  background: rgba(120,180,255,.1);
+  color: var(--accent-blue);
+  border: 1px solid rgba(120,180,255,.25);
+  border-radius: 10px;
+  padding: 10px 24px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+}
+.lb-load-more:hover {
+  background: rgba(120,180,255,.18);
+}
+.lb-load-more:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.lb-loading, .lb-hint {
+  text-align: center;
+  color: var(--text-mute);
+  padding: 40px 20px;
+  font-size: .95rem;
+}
+.lb-error {
+  color: #ff8a80;
+  background: rgba(255,80,80,.08);
+  border: 1px solid rgba(255,80,80,.2);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: .9rem;
+}
+
+.lb-source {
+  margin: 36px auto 0;
+  max-width: 720px;
+  text-align: center;
+  color: var(--text-mute);
+  font-size: .82rem;
+  line-height: 1.6;
+}
+
+
+/* ─── Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 880px) {
+  .lb-toolbar { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  /* Collapse the picker into a horizontal scroller so each chip stays
+     legible on phones. */
+  .lb-day-picker {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(96px, 1fr);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 6px;
+  }
+  .lb-day { scroll-snap-align: start; }
+  .lb-day-date { font-size: .85rem; }
+}
+
+@media (max-width: 760px) {
+  .lb-main { padding: 0 18px 60px; }
+  .lb-hero { padding: 36px 0 20px; }
+  .lb-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .lb-mobile-trigger { display: flex; }
+  .lb-sidebar {
+    position: static;
+    max-height: 0;
+    border: none;
+    background: transparent;
+    overflow: hidden;
+    transition: max-height .2s ease;
+  }
+  .lb-sidebar.open {
+    max-height: 70vh;
+    background: rgba(255,255,255,.025);
+    border: 1px solid rgba(255,255,255,.08);
+    overflow: hidden;
+  }
+  .lb-entries { padding: 18px 16px; }
+  .lb-entries-title { font-size: 1.15rem; }
+  .lb-entries-table {
+    grid-template-columns: 44px 1fr auto;
+  }
+  .lb-entries-table > .lb-th,
+  .lb-entries-table > .lb-td {
+    padding: 8px 8px;
+    font-size: .85rem;
+  }
+  .lb-player-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "board rank"
+      "when score";
+  }
+  .lb-player-row .lb-ph-board { grid-area: board; }
+  .lb-player-row .lb-ph-rank { grid-area: rank; }
+  .lb-player-row .lb-ph-when { grid-area: when; }
+  .lb-player-row .lb-ph-score { grid-area: score; text-align: right; }
+}

@@ -25,10 +25,12 @@ STATIC = ROOT / "site" / "static"
 
 # Files to minify: (source, minified output).
 PAIRS = [
-    (STATIC / "style.css",   STATIC / "style.min.css"),
-    (STATIC / "app.js",      STATIC / "app.min.js"),
-    (STATIC / "landing.js",  STATIC / "landing.min.js"),
-    (STATIC / "i18n.js",     STATIC / "i18n.min.js"),
+    (STATIC / "style.css",         STATIC / "style.min.css"),
+    (STATIC / "app.js",            STATIC / "app.min.js"),
+    (STATIC / "landing.js",        STATIC / "landing.min.js"),
+    (STATIC / "i18n.js",           STATIC / "i18n.min.js"),
+    (STATIC / "leaderboards.css",  STATIC / "leaderboards.min.css"),
+    (STATIC / "leaderboards.js",   STATIC / "leaderboards.min.js"),
 ]
 
 

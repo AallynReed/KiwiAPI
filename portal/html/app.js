@@ -63,6 +63,41 @@ const API = {
 
   call(path, opts = {}) { return this._call(path, opts, true); },
 
+  // Multipart upload — separate from `call` because file ingest endpoints
+  // (leaderboards, market) take a `file` field, and FormData mustn't be
+  // JSON-serialised. Mirrors `_call`'s auth-refresh-on-401 behaviour.
+  multipart(path, formData, opts = {}) { return this._multipart(path, formData, opts, true); },
+
+  async _multipart(path, formData, { query = null } = {}, allowRefresh = true) {
+    const headers = {};
+    if (this.token) headers["Authorization"] = "Bearer " + this.token;
+    let url = API_BASE + path;
+    if (query) {
+      const qs = new URLSearchParams();
+      for (const [k, v] of Object.entries(query)) {
+        if (v != null && v !== "") qs.set(k, String(v));
+      }
+      const s = qs.toString();
+      if (s) url += "?" + s;
+    }
+    // Don't set Content-Type — fetch derives the multipart boundary itself.
+    const res = await fetch(url, { method: "POST", headers, body: formData });
+    let data = null;
+    try { data = await res.json(); } catch (_) { /* no body */ }
+    if (res.status === 401 && allowRefresh) {
+      if (await this._tryRefresh()) return this._multipart(path, formData, { query }, false);
+      this.clear();
+      const wasLoggedIn = !!state.user;
+      state.user = null;
+      location.hash = "";
+      renderAuth("login");
+      if (wasLoggedIn) toast("Your session expired — please log in again.", "err");
+      throw { code: "session_expired", message: "Session expired" };
+    }
+    if (!res.ok) throw (data && data.error) || { code: String(res.status), message: `HTTP ${res.status}` };
+    return data;
+  },
+
   async _call(path, { method = "GET", body = null, auth = true } = {}, allowRefresh = true) {
     const headers = {};
     if (body) headers["Content-Type"] = "application/json";
@@ -299,7 +334,7 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "activity", "account", "admin", "config"];
+const TABS = ["tokens", "activity", "account", "admin", "config", "ingest"];
 
 function tabFromHash() {
   const h = location.hash.replace(/^#/, "");
@@ -320,7 +355,7 @@ function renderDashboard() {
     ? '<span class="badge ok">verified</span>'
     : '<span class="badge warn">unverified</span>';
   // Non-admins landing on a master-only tab fall back to tokens.
-  if ((state.tab === "admin" || state.tab === "config") && !u.is_superuser) state.tab = "tokens";
+  if ((state.tab === "admin" || state.tab === "config" || state.tab === "ingest") && !u.is_superuser) state.tab = "tokens";
   if (!TABS.includes(state.tab)) state.tab = "tokens";
 
   app.innerHTML = `
@@ -336,6 +371,7 @@ function renderDashboard() {
         <button data-tab="account" role="tab">Account</button>
         ${u.is_superuser ? '<button data-tab="admin" role="tab">Admin</button>' : ""}
         ${u.is_superuser ? '<button data-tab="config" role="tab">Configuration</button>' : ""}
+        ${u.is_superuser ? '<button data-tab="ingest" role="tab">Ingest</button>' : ""}
       </div>
       <div id="tab-body"></div>
     </div>`;
@@ -367,6 +403,7 @@ function selectTab() {
   else if (state.tab === "activity") renderActivity();
   else if (state.tab === "admin") renderAdmin();
   else if (state.tab === "config") renderConfigTab();
+  else if (state.tab === "ingest") renderIngest();
   else renderAccount();
 }
 
@@ -1305,6 +1342,165 @@ async function renderAdminUser(userId, days = 30) {
       } catch (ex) { toast(ex.message, "err"); }
     }));
 }
+
+// --- Ingest tab (master-only) ---------------------------------------------
+// Manual cfg replay UI for the four bot-cfg endpoints. Same data shapes the
+// bot uses: leaderboards/market take the raw .cfg as a multipart `file`,
+// rotations/challenge + rotations/chaos-chest take `{name}` parsed from
+// QuestLog.cfg / WelcomeLog.cfg respectively.
+
+const INGEST_KINDS = [
+  {
+    key: "leaderboards",
+    title: "Leaderboards",
+    cfg: "LeaderBot.cfg",
+    description: "Replay a LeaderBot.cfg dump through /v1/leaderboards/insert. Idempotent on the anchor.",
+    mode: "multipart",
+    endpoint: "/v1/leaderboards/insert",
+    timestampField: true,
+  },
+  {
+    key: "market",
+    title: "Market",
+    cfg: "GrainusMod.cfg",
+    description: "Replay a GrainusMod.cfg dump through /v1/market/insert. Listings upsert by UUID.",
+    mode: "multipart",
+    endpoint: "/v1/market/insert",
+  },
+  {
+    key: "challenge",
+    title: "Challenge",
+    cfg: "QuestLog.cfg",
+    description: "Parse the `challenge = …` line and POST {name} to /v1/rotations/challenge/insert. The server infers the 20-min window anchor from now.",
+    mode: "parse-name",
+    endpoint: "/v1/rotations/challenge/insert",
+    parseKey: "challenge",
+  },
+  {
+    key: "chaoschest",
+    title: "Chaos Chest",
+    cfg: "WelcomeLog.cfg",
+    description: "Parse the `chaoschest = …` line and POST {name} to /v1/rotations/chaos-chest/insert. The server infers the weekly anchor from now.",
+    mode: "parse-name",
+    endpoint: "/v1/rotations/chaos-chest/insert",
+    parseKey: "chaoschest",
+  },
+];
+
+async function renderIngest() {
+  const body = document.getElementById("tab-body");
+  const cardHtml = INGEST_KINDS.map((k) => `
+    <div class="card ingest-card" data-kind="${esc(k.key)}">
+      <h3 style="margin:0 0 4px">${esc(k.title)}</h3>
+      <p class="hint" style="margin:0 0 10px">${esc(k.description)}</p>
+      <p class="hint" style="margin:0 0 14px"><strong>Source:</strong> <code>${esc(k.cfg)}</code></p>
+      <div class="row" style="align-items:center">
+        <label class="btn small" style="flex:0 0 auto;margin:0;cursor:pointer">
+          Choose .cfg…
+          <input type="file" accept=".cfg,.txt,text/plain" style="display:none" data-act="file">
+        </label>
+        <span class="muted ingest-filename" data-act="filename">No file chosen</span>
+      </div>
+      ${k.timestampField ? `
+        <label style="display:block;margin-top:12px">
+          <span class="muted" style="font-size:.78rem;display:block;margin-bottom:4px">
+            Anchor override (unix seconds, optional — for back-fills)
+          </span>
+          <input type="number" data-act="timestamp" placeholder="e.g. 1780830000" style="width:100%">
+        </label>` : ""}
+      <div class="row" style="margin-top:14px;justify-content:flex-end">
+        <button class="btn primary small" data-act="submit" disabled>Insert</button>
+      </div>
+      <div data-act="result" class="ingest-result"></div>
+    </div>
+  `).join("");
+
+  body.innerHTML = `
+    <div class="card">
+      <h2 style="margin:0 0 6px">Manual cfg ingest</h2>
+      <p class="hint" style="margin:0">
+        Replay a captured cfg through the same ingest path the bot uses.
+        Useful for back-fills, recovering missed captures, or testing the
+        server side without running the bot. Every endpoint here is
+        master-only and your session token is used directly.
+      </p>
+    </div>
+    <div class="ingest-grid">${cardHtml}</div>`;
+
+  for (const card of body.querySelectorAll("[data-kind]")) {
+    const kind = INGEST_KINDS.find((k) => k.key === card.dataset.kind);
+    wireIngestCard(card, kind);
+  }
+}
+
+function wireIngestCard(card, kind) {
+  const fileInput = card.querySelector('[data-act="file"]');
+  const filenameEl = card.querySelector('[data-act="filename"]');
+  const submitBtn = card.querySelector('[data-act="submit"]');
+  const resultEl = card.querySelector('[data-act="result"]');
+  const tsInput = card.querySelector('[data-act="timestamp"]');
+
+  let file = null;
+  fileInput.addEventListener("change", () => {
+    file = fileInput.files[0] || null;
+    filenameEl.textContent = file ? `${file.name} (${formatBytes(file.size)})` : "No file chosen";
+    submitBtn.disabled = !file;
+    resultEl.innerHTML = "";
+    resultEl.className = "ingest-result";
+  });
+
+  submitBtn.addEventListener("click", async () => {
+    if (!file) return;
+    submitBtn.disabled = true;
+    resultEl.className = "ingest-result";
+    resultEl.innerHTML = `<span class="muted">Uploading…</span>`;
+    try {
+      let result;
+      if (kind.mode === "multipart") {
+        const fd = new FormData();
+        fd.append("file", file);
+        const query = tsInput && tsInput.value ? { timestamp: tsInput.value } : null;
+        result = await API.multipart(kind.endpoint, fd, { query });
+      } else {
+        const name = await parseCfgValue(file, kind.parseKey);
+        if (!name) {
+          resultEl.className = "ingest-result err";
+          resultEl.innerHTML = `Cfg did not contain a usable <code>${esc(kind.parseKey)} = …</code> line (saw nothing or <code>none</code>).`;
+          submitBtn.disabled = false;
+          return;
+        }
+        result = await API.call(kind.endpoint, { method: "POST", body: { name } });
+      }
+      resultEl.className = "ingest-result ok";
+      resultEl.innerHTML = `<strong>✓ Inserted.</strong> <code>${esc(JSON.stringify(result))}</code>`;
+    } catch (ex) {
+      resultEl.className = "ingest-result err";
+      resultEl.innerHTML = esc(ex.message || String(ex));
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+async function parseCfgValue(file, key) {
+  const text = await file.text();
+  const prefix = key + " = ";
+  for (const line of text.split(/\r?\n/)) {
+    if (line.startsWith(prefix)) {
+      const v = line.slice(prefix.length).trim();
+      if (!v || v === "none") return null;
+      return v;
+    }
+  }
+  return null;
+}
+
+function formatBytes(n) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 
 // --- Boot ------------------------------------------------------------------
 

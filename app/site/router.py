@@ -17,11 +17,13 @@ Jinja2Templates without a custom url-builder.
 from io import BytesIO
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request, UploadFile
+from fastapi import APIRouter, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
+from app.admin import runtime_config
 from app.core.config import settings
+from app.trove.leaderboards import service as leaderboards_service
 
 # Filename extensions accepted as Trove screenshots for the hero slideshow.
 # Anything else in the folder (READMEs, .DS_Store, etc.) is silently skipped.
@@ -50,6 +52,94 @@ async def commands(request: Request) -> HTMLResponse:
     actual command data lives in ``site/static/commands.json`` and is
     fetched + rendered client-side so language switches don't reload."""
     return _TEMPLATES.TemplateResponse(request, "commands.html", {})
+
+
+@router.get("/leaderboards", response_class=HTMLResponse)
+async def leaderboards(request: Request) -> HTMLResponse:
+    """Trove leaderboards browser — public site read of the same data the
+    ``/v1/leaderboards/*`` API exposes. The page hits dedicated JSON
+    endpoints under ``/site/leaderboards/*`` (see below) which bypass the
+    public API's token/scope/rate-limit pipeline and call the service
+    layer directly. The data is public anyway, so the bypass costs us
+    nothing and avoids subjecting site browsers to per-token caps."""
+    return _TEMPLATES.TemplateResponse(request, "leaderboards.html", {})
+
+
+# --- /leaderboards JSON endpoints ------------------------------------------
+# These mirror the four read-side helpers from app/trove/router.py but skip
+# the TokenContext dep + archive-rate-limit. They're intentionally NOT
+# include_in_schema (the router already opts out) — the public surface is
+# still /v1/leaderboards/*, this is just a site convenience.
+
+@router.get("/site/leaderboards/config", response_class=JSONResponse)
+async def site_lb_config() -> JSONResponse:
+    """Runtime tunables the leaderboards page needs to render its chrome.
+
+    Currently only the hot-retention window (so the subtitle's "N-day
+    live retention" line tracks master-panel changes within the 5s
+    runtime_config cache window)."""
+    days = await runtime_config.get_setting("leaderboards_hot_retention_days")
+    return JSONResponse(
+        {"hot_retention_days": int(days)},
+        headers={"Cache-Control": "public, max-age=30"},
+    )
+
+
+@router.get("/site/leaderboards/timestamps", response_class=JSONResponse)
+async def site_lb_timestamps(
+    limit: int = Query(default=60, ge=1, le=365),
+) -> JSONResponse:
+    items = await leaderboards_service.list_timestamps(limit)
+    return JSONResponse(
+        {"items": items, "count": len(items)},
+        headers={"Cache-Control": "public, max-age=30"},
+    )
+
+
+@router.get("/site/leaderboards/boards", response_class=JSONResponse)
+async def site_lb_boards(
+    created_at: int = Query(..., description="Anchor in unix seconds"),
+) -> JSONResponse:
+    rows = await leaderboards_service.list_boards_at(created_at)
+    return JSONResponse(
+        {"created_at": created_at, "items": rows, "count": len(rows)},
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
+@router.get("/site/leaderboards/{uuid}/entries", response_class=JSONResponse)
+async def site_lb_entries(
+    uuid: int,
+    created_at: int = Query(..., description="Anchor in unix seconds"),
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+) -> JSONResponse:
+    items, total = await leaderboards_service.list_entries(
+        uuid, created_at, limit=limit, offset=offset,
+    )
+    return JSONResponse(
+        {
+            "uuid": uuid, "created_at": created_at,
+            "items": items, "count": len(items), "total": total,
+        },
+        headers={"Cache-Control": "public, max-age=30"},
+    )
+
+
+@router.get("/site/leaderboards/players/{player_name}/history",
+            response_class=JSONResponse)
+async def site_lb_player_history(
+    player_name: str,
+    limit: int = Query(default=50, ge=1, le=500),
+    uuid: int | None = Query(default=None),
+) -> JSONResponse:
+    rows = await leaderboards_service.player_history(
+        player_name, limit=limit, uuid=uuid,
+    )
+    return JSONResponse(
+        {"player_name": player_name, "items": rows, "count": len(rows)},
+        headers={"Cache-Control": "public, max-age=30"},
+    )
 
 
 @router.get("/site/screenshots.json", response_class=JSONResponse)
