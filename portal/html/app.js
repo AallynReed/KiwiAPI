@@ -362,6 +362,7 @@ function renderDashboard() {
     <div class="topbar">
       <div class="brand"><span class="mark">◆</span> ${esc(state.config?.app_name || "Kiwi API")}</div>
       <div class="who">${esc(u.email)} ${verified} ${themeBtn()}
+        <a class="portal-support" href="https://trove.aallyn.net/support" target="_blank" rel="noopener" title="Support the project" aria-label="Support">♥</a>
         <button class="btn small" id="logout">Log out</button></div>
     </div>
     <div class="container">
@@ -1029,10 +1030,30 @@ async function renderAdmin(days = 30) {
         <tbody id="ev-rows"></tbody>
       </table>
       <button class="btn small" id="ev-more" style="margin-top:12px;display:none">Load more</button>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Leaderboard reset cadences</h2>
+        <input id="lb-board-search" placeholder="Search board…" style="max-width:240px;flex:0 0 auto">
+      </div>
+      <p class="hint">
+        Master-only. Override how a board's reset cadence is treated by
+        cheater detection. <code>none</code> = the board never resets
+        (lifetime accumulating stat); detection on these boards skips
+        score-outlier + rank-gap and uses ONLY velocity.
+        <code>auto</code> falls back to the hardcoded mapping in
+        <code>models.py</code>. Changes apply within a few seconds —
+        the cheaters cache is invalidated + the warmer is kicked.
+      </p>
+      <div id="lb-boards-rows"><div class="loading">Loading boards…</div></div>
     </div>`;
 
   const sel = document.getElementById("admin-days"); sel.value = String(days);
   sel.addEventListener("change", () => renderAdmin(Number(sel.value)));
+  // Leaderboards table lives at the bottom of the admin tab; we render
+  // it after the rest is wired up so a slow boards query doesn't block
+  // first paint of the users / events sections above.
+  renderLeaderboardsBoardsTable();
 
   // Users: client-side email search + row click-through.
   const userRowsEl = document.getElementById("user-rows");
@@ -1082,6 +1103,119 @@ async function renderAdmin(days = 30) {
   loadEvents(true);
 }
 
+
+// ─── Leaderboard reset-cadence table (lives inside the Admin tab) ────────
+// Lists every captured board with an inline dropdown to pin its reset
+// cadence to daily / weekly / none / auto. PATCHes /admin/leaderboards/
+// boards/{uuid} on change; on success bumps the row's cached state +
+// re-paints just that row's badges. Search filter is client-side over
+// the cached list — no round-trip per keystroke.
+let _lbBoards = [];
+
+async function renderLeaderboardsBoardsTable() {
+  const host = document.getElementById("lb-boards-rows");
+  if (!host) return;
+  try {
+    const data = await API.call("/admin/leaderboards/boards");
+    _lbBoards = data.items || [];
+  } catch (ex) {
+    host.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    return;
+  }
+  if (!_lbBoards.length) {
+    host.innerHTML = `<p class="muted">No leaderboards captured yet.</p>`;
+    return;
+  }
+  paintLeaderboardsBoards("");
+  const search = document.getElementById("lb-board-search");
+  if (search) {
+    search.addEventListener("input", (e) => {
+      paintLeaderboardsBoards(e.target.value.trim().toLowerCase());
+    });
+  }
+}
+
+function paintLeaderboardsBoards(q) {
+  const host = document.getElementById("lb-boards-rows");
+  if (!host) return;
+  const list = q
+    ? _lbBoards.filter((b) =>
+        b.name.toLowerCase().includes(q) ||
+        b.category.toLowerCase().includes(q) ||
+        String(b.uuid).includes(q))
+    : _lbBoards;
+  if (!list.length) {
+    host.innerHTML = `<p class="muted">No matching boards.</p>`;
+    return;
+  }
+  const cadenceBadge = (effective) => {
+    if (effective === "daily")  return '<span class="badge ok">daily</span>';
+    if (effective === "weekly") return '<span class="badge ok">weekly</span>';
+    // "none" + "default" are both lifetime semantically; surface them
+    // distinctly so the admin knows whether they pinned it explicitly.
+    if (effective === "none") return '<span class="badge warn">none</span>';
+    return '<span class="badge muted">default</span>';
+  };
+  const overrideValue = (b) =>
+    b.reset_kind_override === null || b.reset_kind_override === undefined
+      ? "" : b.reset_kind_override;
+  const row = (b) => `
+    <tr data-uuid="${b.uuid}">
+      <td><code>${b.uuid}</code></td>
+      <td>${esc(b.name)}</td>
+      <td class="muted">${esc(b.category)}</td>
+      <td>${cadenceBadge(b.effective_reset_kind)}</td>
+      <td>
+        <select data-act="set-cadence" style="max-width:140px">
+          <option value=""${overrideValue(b) === "" ? " selected" : ""}>auto</option>
+          <option value="daily"${overrideValue(b) === "daily" ? " selected" : ""}>daily</option>
+          <option value="weekly"${overrideValue(b) === "weekly" ? " selected" : ""}>weekly</option>
+          <option value="none"${overrideValue(b) === "none" ? " selected" : ""}>none</option>
+        </select>
+      </td>
+    </tr>`;
+  host.innerHTML = `
+    <table>
+      <thead><tr><th>UUID</th><th>Board</th><th>Category</th><th>Effective</th><th>Override</th></tr></thead>
+      <tbody>${list.map(row).join("")}</tbody>
+    </table>`;
+
+  host.querySelectorAll("[data-uuid]").forEach((tr) => {
+    const uuid = Number(tr.dataset.uuid);
+    const select = tr.querySelector('[data-act="set-cadence"]');
+    select.addEventListener("change", async () => {
+      const next = select.value === "" ? null : select.value;
+      select.disabled = true;
+      try {
+        const updated = await API.call(`/admin/leaderboards/boards/${uuid}`, {
+          method: "PATCH",
+          body: { reset_kind_override: next },
+        });
+        // Refresh the cached row so subsequent renders / filter changes
+        // reflect the new state without a full re-fetch.
+        const idx = _lbBoards.findIndex((b) => b.uuid === uuid);
+        if (idx >= 0) _lbBoards[idx] = updated;
+        // Repaint just this row's effective badge — selecting a value
+        // already shows in the dropdown, so we only need to update the
+        // visible cadence column.
+        const effCell = tr.querySelector("td:nth-child(4)");
+        if (effCell) {
+          effCell.innerHTML =
+            updated.effective_reset_kind === "daily"  ? '<span class="badge ok">daily</span>' :
+            updated.effective_reset_kind === "weekly" ? '<span class="badge ok">weekly</span>' :
+            updated.effective_reset_kind === "none"   ? '<span class="badge warn">none</span>' :
+                                                        '<span class="badge muted">default</span>';
+        }
+        toast(`Saved ${updated.name} → ${updated.effective_reset_kind}`, "ok");
+      } catch (ex) {
+        toast(`Failed: ${ex.message}`, "err");
+      } finally {
+        select.disabled = false;
+      }
+    });
+  });
+}
+
 // ─── Configuration tab (master-only) ─────────────────────────────────────
 // Dedicated tab — keeps Admin focused on users/activity and Configuration
 // focused on every runtime-tunable knob (rate limits, webhooks, alerts).
@@ -1095,6 +1229,7 @@ const CONFIG_CATEGORY_LABELS = {
   archive_rate_limits: "Archive-query rate limits",
   scope_multipliers: "Per-scope rate-limit multipliers",
   rate_limit_alerts: "Rate-limit alert digest",
+  cheater_detection: "Cheater detection",
 };
 
 async function renderConfigTab() {
@@ -1117,6 +1252,14 @@ async function renderConfigTab() {
   renderConfigCard();
 }
 
+const CONFIG_SUBTAB_KEY = "kiwi_config_subtab";
+function readConfigSubtab() {
+  try { return localStorage.getItem(CONFIG_SUBTAB_KEY); } catch (_) { return null; }
+}
+function writeConfigSubtab(v) {
+  try { localStorage.setItem(CONFIG_SUBTAB_KEY, v); } catch (_) {}
+}
+
 async function renderConfigCard() {
   const bodyEl = document.getElementById("config-body");
   if (!bodyEl) return;
@@ -1128,11 +1271,19 @@ async function renderConfigCard() {
     return;
   }
 
-  // Group by category — preserve server-side ordering within each category.
+  // Group by category — preserve server-side ordering within each.
   const byCategory = {};
   for (const item of data.items) {
     (byCategory[item.category] ||= []).push(item);
   }
+  const categories = Object.keys(byCategory);
+  if (!categories.length) {
+    bodyEl.innerHTML = `<p class="muted">No tunables registered.</p>`;
+    return;
+  }
+  // Pick active sub-tab: stored value if still valid, else first.
+  const stored = readConfigSubtab();
+  const active = (stored && categories.includes(stored)) ? stored : categories[0];
 
   const renderValue = (item) => {
     if (item.secret) {
@@ -1166,21 +1317,46 @@ async function renderConfigCard() {
       </tr>`;
   };
 
-  const html = Object.entries(byCategory).map(([category, items]) => {
-    const label = CONFIG_CATEGORY_LABELS[category] || category;
+  // Sub-tab strip — one chip per category, badge with count.
+  const subtabs = categories.map((cat) => {
+    const label = CONFIG_CATEGORY_LABELS[cat] || cat;
+    const count = byCategory[cat].length;
+    const overridden = byCategory[cat].filter((i) => !i.is_default).length;
+    const overrideBadge = overridden
+      ? `<span class="badge ok" style="margin-left:6px">${overridden}</span>`
+      : "";
     return `
-      <h3 style="margin:24px 0 8px;font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-mute)">${esc(label)}</h3>
-      <table>
-        <thead><tr>
-          <th>Setting</th><th>Value</th><th>Updated</th><th></th>
-        </tr></thead>
-        <tbody>${items.map(renderRow).join("")}</tbody>
-      </table>
-    `;
+      <button type="button" class="config-subtab${cat === active ? " active" : ""}"
+              data-subtab="${esc(cat)}">
+        ${esc(label)}
+        <span class="muted" style="margin-left:8px;font-size:11px">${count}</span>
+        ${overrideBadge}
+      </button>`;
   }).join("");
-  bodyEl.innerHTML = html || `<p class="muted">No tunables registered.</p>`;
 
-  // Wire row actions.
+  // Single-table body for the active sub-tab. Switching sub-tabs
+  // re-renders ONLY this region, not the whole tab.
+  const activeItems = byCategory[active] || [];
+  const tableHtml = `
+    <table>
+      <thead><tr><th>Setting</th><th>Value</th><th>Updated</th><th></th></tr></thead>
+      <tbody>${activeItems.map(renderRow).join("")}</tbody>
+    </table>`;
+
+  bodyEl.innerHTML = `
+    <div class="config-subtabs" role="tablist">${subtabs}</div>
+    <div id="config-subtab-body">${tableHtml}</div>`;
+
+  bodyEl.querySelectorAll("[data-subtab]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const next = btn.dataset.subtab;
+      if (next === active) return;
+      writeConfigSubtab(next);
+      renderConfigCard();  // re-render with the new active sub-tab
+    });
+  });
+
+  // Wire row actions on the visible sub-tab only.
   bodyEl.querySelectorAll("[data-key]").forEach((tr) => {
     const key = tr.dataset.key;
     const item = data.items.find((i) => i.key === key);
@@ -1425,12 +1601,121 @@ async function renderIngest() {
         master-only and your session token is used directly.
       </p>
     </div>
-    <div class="ingest-grid">${cardHtml}</div>`;
+    <div class="ingest-grid">${cardHtml}</div>
+    <div class="card" id="ingest-log-card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Recent submissions</h2>
+        <button type="button" class="btn small" data-act="refresh-ingest-log">Refresh</button>
+      </div>
+      <p class="hint" style="margin:0 0 14px">
+        Last 20 ingest calls (both bot and master submissions) — endpoint,
+        when, who, and a summary of what landed. 30-day rolling history.
+      </p>
+      <div id="ingest-log-body"><div class="loading">Loading…</div></div>
+    </div>`;
 
   for (const card of body.querySelectorAll("[data-kind]")) {
     const kind = INGEST_KINDS.find((k) => k.key === card.dataset.kind);
     wireIngestCard(card, kind);
   }
+  document.querySelector('[data-act="refresh-ingest-log"]')
+    .addEventListener("click", renderIngestLog);
+  renderIngestLog();
+}
+
+const INGEST_ENDPOINT_LABELS = {
+  "/v1/leaderboards/insert": { label: "Leaderboards", cls: "ingest-log-lb" },
+  "/v1/market/insert":       { label: "Market",       cls: "ingest-log-mkt" },
+  "/v1/rotations/challenge/insert":   { label: "Challenge",   cls: "ingest-log-chl" },
+  "/v1/rotations/chaos-chest/insert": { label: "Chaos Chest", cls: "ingest-log-cc" },
+};
+
+function fmtIngestSummary(endpoint, summary) {
+  // Endpoint-specific short rendering. Falls through to a JSON dump for
+  // unknown shapes so a future ingest type doesn't disappear silently.
+  if (!summary) return "";
+  switch (endpoint) {
+    case "/v1/leaderboards/insert": {
+      const parts = [];
+      if (summary.boards != null)  parts.push(`${summary.boards} board(s)`);
+      if (summary.entries != null) parts.push(`${summary.entries.toLocaleString()} entries`);
+      if (summary.anchor)          parts.push(`anchor ${fmt(new Date(summary.anchor * 1000).toISOString())}`);
+      if (summary.bytes != null)   parts.push(`${(summary.bytes / 1024).toFixed(0)} KB`);
+      return parts.join(" · ");
+    }
+    case "/v1/market/insert": {
+      const parts = [];
+      if (summary.parsed != null)              parts.push(`parsed ${summary.parsed}`);
+      if (summary.imported != null)            parts.push(`imported ${summary.imported}`);
+      if (summary.ignored_not_in_list != null) parts.push(`skipped ${summary.ignored_not_in_list}`);
+      if (summary.bytes != null)               parts.push(`${(summary.bytes / 1024).toFixed(0)} KB`);
+      return parts.join(" · ");
+    }
+    case "/v1/rotations/challenge/insert":
+    case "/v1/rotations/chaos-chest/insert": {
+      const parts = [];
+      if (summary.name) parts.push(`name = ${summary.name}`);
+      if (summary.refreshed != null) parts.push(summary.refreshed ? "refreshed" : "new");
+      return parts.join(" · ");
+    }
+    default:
+      return `<code class="mono">${esc(JSON.stringify(summary))}</code>`;
+  }
+}
+
+async function renderIngestLog() {
+  const bodyEl = document.getElementById("ingest-log-body");
+  if (!bodyEl) return;
+  bodyEl.innerHTML = `<div class="loading">Loading…</div>`;
+  let rows;
+  try {
+    rows = await API.call("/admin/ingest/log?limit=20");
+  } catch (ex) {
+    bodyEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    return;
+  }
+  if (!rows.length) {
+    bodyEl.innerHTML = `<p class="muted">No submissions yet — try uploading a cfg above.</p>`;
+    return;
+  }
+  bodyEl.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>When</th><th>Endpoint</th><th>By</th><th>Summary</th><th>Status</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map((r) => {
+          const ep = INGEST_ENDPOINT_LABELS[r.endpoint] || { label: r.endpoint, cls: "" };
+          const status = r.success
+            ? `<span class="badge ok">OK</span>`
+            : `<span class="badge off" title="${esc(r.error || "")}">FAIL</span>`;
+          const summaryRendered = fmtIngestSummary(r.endpoint, r.summary);
+          // Auth-method indicator: small pill next to the email so an
+          // operator can tell at a glance whether the bot pushed this
+          // row or whether the master submitted through the portal.
+          // Token submissions also include the token name (e.g. the
+          // bot's "trove-bot") so multiple tokens can be distinguished.
+          let authPill = "";
+          if (r.auth_via === "token") {
+            const label = r.token_name ? `bot: ${r.token_name}` : "bot";
+            authPill = `<span class="badge ingest-log-via-token" title="Submitted via API token">${esc(label)}</span>`;
+          } else {
+            authPill = `<span class="badge muted" title="Submitted via portal session">portal</span>`;
+          }
+          return `
+            <tr>
+              <td class="muted" style="white-space:nowrap">${fmt(r.timestamp)}</td>
+              <td><span class="badge ${ep.cls}">${esc(ep.label)}</span></td>
+              <td style="font-size:.85rem">
+                <div class="muted">${esc(r.user_email)}</div>
+                <div style="margin-top:3px">${authPill}</div>
+              </td>
+              <td style="font-size:.85rem">${summaryRendered}</td>
+              <td>${status}</td>
+            </tr>`;
+        }).join("")}
+      </tbody>
+    </table>`;
 }
 
 function wireIngestCard(card, kind) {
@@ -1473,6 +1758,10 @@ function wireIngestCard(card, kind) {
       }
       resultEl.className = "ingest-result ok";
       resultEl.innerHTML = `<strong>✓ Inserted.</strong> <code>${esc(JSON.stringify(result))}</code>`;
+      // Reflect the new row in the Recent submissions table without a
+      // page reload — fire-and-forget so a render hiccup doesn't mask
+      // the success ack the user just got.
+      renderIngestLog();
     } catch (ex) {
       resultEl.className = "ingest-result err";
       resultEl.innerHTML = esc(ex.message || String(ex));

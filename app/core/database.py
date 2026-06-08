@@ -4,8 +4,10 @@ from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import OperationFailure
 
 from app.auth.models import Session, User
+from app.site_auth.models import SiteSession, SiteUser
 from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
+from app.admin.ingest_log import IngestLogEntry
 from app.admin.runtime_config import RuntimeConfig
 from app.tokens.models import ApiToken
 from app.trove.codexes.models import CodexEntry
@@ -38,7 +40,8 @@ from app.usage.models import UsageEvent
 # Every Beanie Document must be registered here so init_beanie can bind it.
 # Models live in their feature packages; this is the one place that aggregates them.
 DOCUMENT_MODELS = [
-    User, Session, ApiToken, UsageEvent, OutboxEmail, TroveNews, FeedCache, TroveEvent,
+    User, Session, SiteUser, SiteSession,
+    ApiToken, UsageEvent, OutboxEmail, TroveNews, FeedCache, TroveEvent,
     DelveRotation, BttRelease, BttChangelog,
     UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
     CodexEntry,
@@ -47,6 +50,7 @@ DOCUMENT_MODELS = [
     ChaosChestCapture, ChallengeCapture,
     FeedbackEntry,
     RuntimeConfig,
+    IngestLogEntry,
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).

@@ -380,6 +380,87 @@ REGISTRY: dict[str, TunableSetting] = {
         ),
         min_value=1, max_value=168,
     ),
+
+    # ── Cheater detection (/v1/leaderboards/cheaters) ────────────────
+    "cheaters_z_threshold": _t(
+        key="cheaters_z_threshold",
+        default=settings.cheaters_z_threshold,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Modified Z-score cutoff (MAD-based, Iglewicz & Hoaglin 1993). "
+            "A player whose score exceeds the board's median by more than "
+            "this many robust-z-scores is flagged. 3.5 = standard 'strong "
+            "outlier' line. Raise to be stricter (fewer false positives); "
+            "lower to be more aggressive."
+        ),
+        min_value=1.0, max_value=20.0,
+    ),
+    "cheaters_velocity_multiplier": _t(
+        key="cheaters_velocity_multiplier",
+        default=settings.cheaters_velocity_multiplier,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Velocity check: a player's score-gain rate (Δscore/Δtime) "
+            "must exceed the board's peer 95th-percentile rate by at least "
+            "this multiplier to flag. 10× is conservative; 5× is moderate."
+        ),
+        min_value=2.0, max_value=100.0,
+    ),
+    "cheaters_min_board_size": _t(
+        key="cheaters_min_board_size",
+        default=settings.cheaters_min_board_size,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Skip boards with fewer than this many entries. Small samples "
+            "produce unreliable median/MAD/p95 statistics."
+        ),
+        min_value=5, max_value=500,
+    ),
+    "cheaters_cache_ttl_seconds": _t(
+        key="cheaters_cache_ttl_seconds",
+        default=settings.cheaters_cache_ttl_seconds,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "TTL of the in-memory result cache for /v1/leaderboards/cheaters. "
+            "Bot writes hourly so 1800s (30 min) is at most one capture "
+            "behind. Lower for fresher results at the cost of compute."
+        ),
+        min_value=60, max_value=86400,
+    ),
+    "cheaters_excluded_board_uuids": _t(
+        key="cheaters_excluded_board_uuids",
+        default=settings.cheaters_excluded_board_uuids,
+        type="str",
+        category="cheater_detection",
+        description=(
+            "Comma-separated board UUIDs to skip during cheater detection. "
+            "Useful for boards where statistical detection is noisy by "
+            "design (e.g. server-tally boards like 1100/21012). Whitespace "
+            "is ignored. Empty = analyse every board. Example: "
+            "'1100, 21012, 5001'."
+        ),
+    ),
+    "cheaters_elite_cohort_pct": _t(
+        key="cheaters_elite_cohort_pct",
+        default=settings.cheaters_elite_cohort_pct,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Elite-cohort size for the score-outlier check, as a fraction "
+            "of the board's population (or top 50, whichever is larger). "
+            "0.05 = top 5%. The cohort defines the baseline distribution "
+            "against which a player's outlier-ness is measured; for "
+            "heavy-tailed leaderboards, measuring against the FULL "
+            "population produces false positives because every top player "
+            "is mathematically far from the median. Lower = stricter "
+            "(smaller cohort, harder to be an outlier within it)."
+        ),
+        min_value=0.01, max_value=0.5,
+    ),
 }
 
 

@@ -49,15 +49,48 @@ class Settings(BaseSettings):
     leaderboards_archive_rate_limit_max: int = 10
     leaderboards_archive_rate_limit_window_seconds: int = 60
 
+    # Cheater detection (/v1/leaderboards/cheaters). All four numbers are
+    # runtime-tunable; defaults below are the seed values.
+    #   * z_threshold: Modified Z-score cutoff (Iglewicz & Hoaglin 1993).
+    #     3.5 is the standard "strong outlier" line.
+    #   * velocity_multiplier: a player's score-gain rate must exceed the
+    #     board's peer 95th-percentile rate by this much to flag.
+    #   * min_board_size: skip statistical analysis on boards with fewer
+    #     than this many entries (sample too small to be meaningful).
+    #   * cache_ttl_seconds: TTL of the in-memory result cache. Bot writes
+    #     hourly so 1800s (30 min) is at most one capture behind.
+    # Bumped from 3.5 to 5.0 with the move to elite-cohort MAD-Z: the
+    # cohort is much tighter than the full board, so 3.5 was too loose
+    # and produced thousands of false positives on heavy-tailed boards.
+    # 5.0 is "strong outlier *within* the top players" territory.
+    cheaters_z_threshold: float = 5.0
+    cheaters_velocity_multiplier: float = 10.0
+    cheaters_min_board_size: int = 20
+    cheaters_cache_ttl_seconds: int = 1800
+    # Comma-separated board UUIDs to exclude from cheater detection.
+    # Empty string = analyse every board. Used for boards where the
+    # statistical model has high false-positive rate (e.g. server-tally
+    # boards like 1100/21012 where there's only one "player" anyway).
+    cheaters_excluded_board_uuids: str = ""
+    # Elite-cohort size as a fraction of the board's population. 0.05 =
+    # top 5 % (or top 50, whichever is larger). Score-outlier check uses
+    # this cohort as the baseline instead of the whole board — Trove
+    # leaderboards are heavy-tailed and "above the population median"
+    # describes every top-100 player, not just cheaters.
+    cheaters_elite_cohort_pct: float = 0.05
+
     # Market archive throttle. Market listings expire after 7 days (in-game),
     # so the "archive surface" here is anyone passing hide_expired=false on
     # /v1/market/listings — they're explicitly opting into the historical tail.
     # Tight per-token bucket; the standard cap stays in force.
     market_archive_rate_limit_max: int = 10
     market_archive_rate_limit_window_seconds: int = 60
-    # The site's /unlock_* tools accept the whole Trove.exe upload, which is ~100 MB.
-    # Set the proxy's client_max_body_size to match on those paths as well.
-    site_max_request_body_bytes: int = 110 * 1024 * 1024  # 110 MB
+    # Historical: the /unlock_* byte-patcher tools accepted a ~100 MB
+    # Trove.exe upload here. Routes removed 2026-06 after anti-cheat
+    # shipped — this knob is kept defined (rather than ripped out) so a
+    # stale deployment config or override file referencing it doesn't
+    # crash settings parsing. Free to delete after one full release.
+    site_max_request_body_bytes: int = 110 * 1024 * 1024  # 110 MB (unused)
 
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
     # Bind-mounted into the api container from `./site` in the project root.
@@ -67,9 +100,12 @@ class Settings(BaseSettings):
     # api_url  -> production data API surface (/v1, /health)
     # dev_url  -> developer portal: login, API-key management, Swagger
     # docs_url -> static documentation site
+    # app_url  -> BetterTroveTools showcase site (the public user-facing pages —
+    #             /leaderboards, /updates, /market, /login, /dashboard, etc.)
     api_url: str = "https://api.aallyn.net"
     dev_url: str = "https://dev.aallyn.net"
     docs_url: str = "https://docs.aallyn.net"
+    app_url: str = "https://trove.aallyn.net"
 
     # Mongo connection — inside Docker the host is the compose service name.
     mongo_uri: str = "mongodb://localhost:27017"

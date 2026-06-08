@@ -1,0 +1,395 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /dashboard — page logic
+   ───────────────────────────────────────────────────────────────────────
+   Depends on site_auth.js (window.BTTAuth). Renders the profile + Trove
+   player name claim card; if a name is claimed, fetches the user's
+   leaderboard appearances and renders a small inline chart-or-table.
+
+   Client-side login gate: if no token / /me returns null, redirect to
+   /login?next=/dashboard. No server-side gate so the page can serve
+   from the static cache.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+(function () {
+  'use strict';
+
+  const Auth = window.BTTAuth;
+  if (!Auth) { console.error('[dashboard] site_auth.js missing'); return; }
+
+  // ─── DOM refs ──────────────────────────────────────────────────────
+  const $ = (id) => document.getElementById(id);
+  const $loading = $('dash-loading');
+  const $body = $('dash-body');
+  const $title = $('dash-title');
+  const $sub = $('dash-sub');
+  const $verifyBanner = $('dash-verify-banner');
+  const $resendVerify = $('dash-resend-verify');
+  const $profUsername = $('prof-username');
+  const $profEmail = $('prof-email');
+  const $profDisplayName = $('prof-display-name');
+  const $profEditName = $('prof-edit-name');
+  const $profCreated = $('prof-created');
+  const $changePw = $('dash-change-password');
+  const $logout = $('dash-logout');
+  const $troveTagUnverified = $('trove-tag-unverified');
+  const $troveTagVerified = $('trove-tag-verified');
+  const $claimState = $('trove-claim-state');
+  const $claimForm = $('trove-claim-form');
+  const $claimInput = $('trove-name-input');
+  const $claimError = $('trove-claim-error');
+  const $claimedState = $('trove-claimed-state');
+  const $claimedName = $('trove-claimed-name');
+  const $claimedWhen = $('trove-claimed-when');
+  const $unclaim = $('trove-unclaim');
+  const $verifyBlock = $('trove-verify-block');
+  const $verifyBtn = $('trove-verify-btn');
+  const $verifyBaseline = $('trove-verify-baseline');
+  const $verifyWhen = $('trove-verify-when');
+  const $verifyResult = $('trove-verify-result');
+  const $stats = $('dash-stats');
+  const $statsMeta = $('dash-stats-meta');
+  const $statsBody = $('dash-stats-body');
+
+  // ─── Boot ──────────────────────────────────────────────────────────
+  boot().catch((err) => {
+    console.error('[dashboard] boot failed', err);
+    showError(err);
+  });
+
+  async function boot() {
+    // Client-side gate. If we have no token, go to /login.
+    if (!Auth.tokens.access) { redirectToLogin(); return; }
+    const user = await Auth.getMe({ force: true });
+    if (!user) { redirectToLogin(); return; }
+    renderUser(user);
+    if (user.claimed_trove_name) await loadTroveStats();
+  }
+
+  function redirectToLogin() {
+    location.href = '/login?next=/dashboard';
+  }
+
+  function showError(err) {
+    if ($loading) $loading.innerHTML = `<p class="dash-error">${esc(t('Failed to load'))}: ${esc((err && err.message) || String(err))}</p>`;
+  }
+
+  // ─── Render the main body ──────────────────────────────────────────
+  function renderUser(user) {
+    if ($loading) $loading.hidden = true;
+    if ($body) $body.hidden = false;
+
+    if ($title) $title.textContent = t('Welcome back, {n}').replace('{n}', user.display_name || user.username);
+    if ($sub)   $sub.textContent = user.is_verified
+      ? t('Your account is verified and ready to go.')
+      : t('Confirm your email to unlock the dashboard’s features.');
+
+    // Profile fields
+    if ($profUsername)    $profUsername.textContent = user.username;
+    if ($profEmail)       $profEmail.textContent = user.email;
+    if ($profDisplayName) $profDisplayName.textContent = user.display_name || t('(none set)');
+    if ($profCreated)     $profCreated.textContent = formatDate(user.created_at);
+
+    // Verify banner
+    if ($verifyBanner) $verifyBanner.hidden = user.is_verified;
+
+    // Trove claim state — two visual modes.
+    if (user.claimed_trove_name) {
+      $claimState.hidden = true;
+      $claimedState.hidden = false;
+      $claimedName.textContent = user.claimed_trove_display || user.claimed_trove_name;
+      $claimedWhen.textContent = user.claimed_at
+        ? t('Claimed {when}').replace('{when}', formatDate(user.claimed_at))
+        : '';
+      renderVerifyBlock(user);
+      if ($stats) $stats.hidden = false;
+    } else {
+      $claimState.hidden = false;
+      $claimedState.hidden = true;
+      if ($troveTagUnverified) $troveTagUnverified.hidden = true;
+      if ($troveTagVerified)   $troveTagVerified.hidden = true;
+      if ($verifyBlock)        $verifyBlock.hidden = true;
+      if ($stats)              $stats.hidden = true;
+    }
+
+    wireActions(user);
+  }
+
+  // ─── Verification block rendering ──────────────────────────────────
+  function renderVerifyBlock(user) {
+    if (!$verifyBlock) return;
+    $verifyBlock.hidden = false;
+    const verified = !!user.claim_verified;
+    $verifyBlock.dataset.state = verified ? 'verified' : 'unverified';
+
+    // Swap the heading tag (unverified amber pill vs verified green pill).
+    if ($troveTagUnverified) $troveTagUnverified.hidden = verified;
+    if ($troveTagVerified)   $troveTagVerified.hidden = !verified;
+
+    // Body content: one of two inline blocks. Use class-targeting
+    // children instead of separate IDs since both live in the same
+    // wrapper and only one renders at a time.
+    const $unv = $verifyBlock.querySelector('.dash-verify-unverified');
+    const $ver = $verifyBlock.querySelector('.dash-verify-verified');
+    if ($unv) $unv.hidden = verified;
+    if ($ver) $ver.hidden = !verified;
+
+    if (verified) {
+      if ($verifyWhen) {
+        $verifyWhen.textContent = user.claim_verified_at
+          ? t('Verified {when}').replace('{when}', formatDate(user.claim_verified_at))
+          : '';
+      }
+    } else {
+      if ($verifyBaseline) {
+        const n = user.claim_baseline_board_count || 0;
+        $verifyBaseline.textContent = n > 0
+          ? t('We have a baseline on {n} board(s) — score on any of them to verify.').replace('{n}', String(n))
+          : t("We didn't capture any leaderboard data for that name at claim time. Play a bit, then click Verify to re-check.");
+      }
+    }
+    // Result toast (success or failure) only shows after a manual check.
+    if ($verifyResult) $verifyResult.hidden = true;
+  }
+
+  // ─── Action wiring ─────────────────────────────────────────────────
+  function wireActions(user) {
+    if ($resendVerify) {
+      $resendVerify.onclick = async () => {
+        $resendVerify.disabled = true;
+        const r = await Auth.callJSON('/v1/site-auth/resend-verification', {
+          method: 'POST', json: { email: user.email }, auth: false,
+        });
+        $resendVerify.textContent = r.ok ? t('Sent — check your inbox') : t('Failed to send');
+      };
+    }
+
+    if ($profEditName) {
+      $profEditName.onclick = async () => {
+        const next = prompt(t('New display name (blank to clear):'), user.display_name || '');
+        if (next === null) return;
+        const r = await Auth.callJSON('/v1/site-auth/me', {
+          method: 'PATCH', json: { display_name: next.trim() || null },
+        });
+        if (r.ok && r.data) renderUser(r.data);
+      };
+    }
+
+    if ($changePw) {
+      $changePw.onclick = async () => {
+        const current = prompt(t('Current password:'));
+        if (!current) return;
+        const next = prompt(t('New password (min 8 chars):'));
+        if (!next) return;
+        const r = await Auth.callJSON('/v1/site-auth/change-password', {
+          method: 'POST',
+          json: { current_password: current, new_password: next },
+        });
+        if (r.ok && r.data) {
+          // change-password rolls a fresh session — store the new tokens.
+          Auth.tokens.save(r.data.access_token, r.data.refresh_token);
+          alert(t('Password updated.'));
+        } else {
+          alert(Auth.errorMessage(r.data) || t('Failed to change password.'));
+        }
+      };
+    }
+
+    if ($logout) {
+      $logout.onclick = async () => {
+        await Auth.logout();
+        location.href = '/';
+      };
+    }
+
+    if ($claimForm) {
+      $claimForm.onsubmit = async (e) => {
+        e.preventDefault();
+        $claimError.hidden = true;
+        const name = ($claimInput.value || '').trim();
+        if (!name) return;
+        const r = await Auth.callJSON('/v1/site-auth/me/claim-trove-name', {
+          method: 'POST', json: { trove_name: name },
+        });
+        if (!r.ok) {
+          $claimError.textContent = Auth.errorMessage(r.data) || t('Failed to claim that name.');
+          $claimError.hidden = false;
+          return;
+        }
+        renderUser(r.data);
+        await loadTroveStats();
+      };
+    }
+
+    if ($unclaim) {
+      $unclaim.onclick = async () => {
+        if (!confirm(t('Release this Trove name? You can re-claim later.'))) return;
+        const r = await Auth.callJSON('/v1/site-auth/me/claim-trove-name', {
+          method: 'DELETE',
+        });
+        if (r.ok && r.data) renderUser(r.data);
+      };
+    }
+
+    if ($verifyBtn) {
+      $verifyBtn.onclick = async () => {
+        $verifyBtn.disabled = true;
+        const prevLabel = $verifyBtn.textContent;
+        $verifyBtn.textContent = t('Checking…');
+        try {
+          const r = await Auth.callJSON('/v1/site-auth/me/verify-trove-claim', {
+            method: 'POST',
+          });
+          if (!r.ok) {
+            if ($verifyResult) {
+              $verifyResult.textContent =
+                Auth.errorMessage(r.data) || t('Verification failed.');
+              $verifyResult.dataset.tone = 'error';
+              $verifyResult.hidden = false;
+            }
+            return;
+          }
+          // Refresh the user payload so the badge + stats flip in one
+          // render pass. The endpoint returns {verified, detail, user}.
+          if (r.data.user) renderUser(r.data.user);
+          if ($verifyResult) {
+            $verifyResult.textContent = r.data.detail || '';
+            $verifyResult.dataset.tone = r.data.verified ? 'success' : 'info';
+            $verifyResult.hidden = false;
+          }
+        } finally {
+          $verifyBtn.disabled = false;
+          // Restore the label even if the render didn't reach this btn
+          // (e.g. claim verified → block hides the unverified body).
+          $verifyBtn.textContent = prevLabel;
+        }
+      };
+    }
+  }
+
+  // ─── Trove stats (leaderboard appearances) ─────────────────────────
+  async function loadTroveStats() {
+    $statsBody.innerHTML = `<p class="dash-loading" data-i18n>${t('Crunching the latest capture — first paint can take a moment while we warm the caches.')}</p>`;
+    const r = await Auth.callJSON('/v1/site-auth/me/trove-stats');
+    if (!r.ok || !r.data) {
+      $statsBody.innerHTML = `<p class="dash-error">${esc(t('Could not load your stats right now.'))}</p>`;
+      return;
+    }
+    const items = r.data.items || [];
+    const series = r.data.series || null;
+
+    if (!items.length) {
+      $statsBody.innerHTML = `
+        <p class="dash-empty">${esc(t('No recent leaderboard appearances for this player name yet. The bot captures hourly — check back after the next sweep, or pick a different name.'))}</p>`;
+      $statsMeta.textContent = '';
+      return;
+    }
+
+    if ($statsMeta) {
+      $statsMeta.textContent = t('{n} recent appearance(s)').replace('{n}', items.length);
+    }
+
+    // Compact table — board name, rank, score, when. Keep it readable
+    // on mobile by stacking via CSS grid below the 600px breakpoint.
+    const rows = items.slice(0, 25).map((it) => `
+      <div class="dash-stat-row">
+        <span class="dash-stat-board">${esc(t('Board') + ' #' + it.leaderboard)}</span>
+        <span class="dash-stat-rank">#${it.rank}</span>
+        <span class="dash-stat-score">${esc(formatScore(it.score))}</span>
+        <span class="dash-stat-when">${esc(formatWhen(it.created_at))}</span>
+      </div>`).join('');
+
+    let chartHTML = '';
+    if (series && (series.series || []).length) {
+      // Cap the chart at the top 6 boards (the API returned them sorted
+      // by best-rank; the rest tend to be noise on this size of card).
+      const lines = series.series.slice(0, 6).map((s) => ({
+        label: s.name,
+        bestRank: s.best_rank,
+        points: s.points,
+      }));
+      chartHTML = `
+        <div class="dash-chart" id="dash-chart-host">${renderInlineChart(series.anchors, lines)}</div>
+        <ul class="dash-chart-legend">
+          ${lines.map((l, i) => `
+            <li>
+              <span class="dash-chart-swatch" style="background:${chartColor(i)}"></span>
+              <span class="dash-chart-name" title="${esc(l.label)}">${esc(l.label)}</span>
+              <span class="dash-chart-best">${esc(t('best #' + l.bestRank))}</span>
+            </li>`).join('')}
+        </ul>`;
+    }
+
+    $statsBody.innerHTML = `
+      ${chartHTML}
+      <div class="dash-stat-table" role="table">${rows}</div>`;
+  }
+
+  // ─── Tiny dependency-free SVG line chart ───────────────────────────
+  // Same vocabulary as leaderboards.js but stripped to the essentials:
+  // no tooltip, fixed height, label list rendered as a separate <ul>.
+  function renderInlineChart(anchors, series) {
+    if (!anchors || anchors.length < 2 || !series.length) return '';
+    const W = 720, H = 180, PAD = 28;
+    const xMin = anchors[0], xMax = anchors[anchors.length - 1];
+    const xRange = Math.max(1, xMax - xMin);
+    let yMin = Infinity, yMax = -Infinity;
+    for (const s of series) for (const p of s.points) {
+      if (p.score < yMin) yMin = p.score;
+      if (p.score > yMax) yMax = p.score;
+    }
+    if (!isFinite(yMin) || !isFinite(yMax)) return '';
+    if (yMin === yMax) { yMin -= 1; yMax += 1; }
+    const pad = (yMax - yMin) * 0.08;
+    yMin -= pad; yMax += pad;
+    const yRange = yMax - yMin;
+    const x = (t) => PAD + ((t - xMin) / xRange) * (W - PAD * 2);
+    const y = (v) => PAD + (1 - (v - yMin) / yRange) * (H - PAD * 2);
+
+    const polylines = series.map((s, i) => {
+      const pts = s.points.map((p) => `${x(p.created_at).toFixed(1)},${y(p.score).toFixed(1)}`).join(' ');
+      return `<polyline fill="none" stroke="${chartColor(i)}" stroke-width="2" stroke-linejoin="round" points="${pts}"></polyline>`;
+    }).join('');
+
+    return `
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img">
+        ${polylines}
+      </svg>`;
+  }
+
+  const CHART_COLORS = [
+    '#4cc9f0', '#f72585', '#43aa8b', '#f8961e', '#b5179e',
+    '#4361ee', '#f9c74f', '#7209b7',
+  ];
+  function chartColor(i) { return CHART_COLORS[i % CHART_COLORS.length]; }
+
+  // ─── Formatting helpers ────────────────────────────────────────────
+  function formatScore(score) {
+    return Number.isInteger(score)
+      ? score.toLocaleString()
+      : Number(score).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  }
+
+  function formatWhen(unix) {
+    const d = new Date(unix * 1000);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+  }
+
+  function t(s) {
+    return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s;
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+})();

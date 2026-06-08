@@ -489,6 +489,126 @@ class LeaderboardPlayerHistory(BaseModel):
     count: int
 
 
+# --- History timeseries (charts) ----------------------------------------------
+# Two endpoints drive the public leaderboards page charts: per-board (one
+# line per top-player) and per-player (one line per board they appear on).
+# Same shape both times — list of {created_at, rank, score} points sorted
+# ascending — wrapped in a series object that carries the line's label.
+
+class HistoryPoint(BaseModel):
+    """One score sample at one anchor."""
+    created_at: int
+    rank: int
+    score: float
+
+
+class BoardHistorySeries(BaseModel):
+    """One line on the per-board chart — points are this player's scores
+    on the board over the requested window, ascending."""
+    player_name: str
+    current_rank: int | None  # rank at the most-recent anchor in window
+    points: list[HistoryPoint]
+
+
+class BoardHistoryResponse(BaseModel):
+    uuid: int
+    days: int
+    window_start: int   # unix seconds — inclusive lower bound
+    window_end: int     # unix seconds — "now" at request time
+    anchors: list[int]  # every distinct created_at in window (ascending)
+    series: list[BoardHistorySeries]
+
+
+class PlayerHistorySeriesItem(BaseModel):
+    """One line on the per-player chart — points are this player's
+    scores on one board they appear on, over the requested window."""
+    uuid: int
+    name: str
+    best_rank: int
+    points: list[HistoryPoint]
+
+
+class PlayerHistorySeriesResponse(BaseModel):
+    player_name: str
+    canonical_name: str
+    days: int
+    window_start: int
+    window_end: int
+    anchors: list[int]
+    series: list[PlayerHistorySeriesItem]
+
+
+# --- Cheater detection ----------------------------------------------------
+# The /v1/leaderboards/cheaters endpoint flags players with statistically
+# anomalous scores. The full methodology lives in
+# app/trove/leaderboards/detection.py — schemas here document the response
+# shape for the OpenAPI surface.
+
+class CheaterEvidence(BaseModel):
+    """One piece of evidence — produced by ONE of the three checks."""
+    type: Literal["score_outlier", "rank_gap", "velocity_outlier"]
+    summary: str           # human-readable interpretation, safe to render verbatim
+    measurements: dict     # type-specific numbers: raw value + peer baseline + magnitude
+    confidence: float      # per-evidence confidence in [0.5, 0.99]; sigmoid on magnitude/threshold
+
+
+class CheaterBoardEntry(BaseModel):
+    """A board on which a player was flagged. Carries the player's
+    current standing on it plus the evidence list."""
+    uuid: int
+    name: str
+    category: str
+    contest_type: str | None
+    rank: int
+    score: float
+    evidence: list[CheaterEvidence]
+    confidence: float = 0.0  # per-board confidence (max of evidence confidences on this board)
+
+
+class CheaterPlayer(BaseModel):
+    player_name: str
+    leaderboards: list[CheaterBoardEntry]
+    confidence: float  # overall confidence in [0.0, 1.0] — max-within-board, noisy-OR across boards
+
+
+class CheatersConfig(BaseModel):
+    """The thresholds the analysis was run with. Surfaced so the caller
+    can correlate a flag to the active config and reproduce locally."""
+    z_threshold: float
+    velocity_multiplier: float
+    min_board_size: int
+
+
+class ActivityBoardCount(BaseModel):
+    uuid: int
+    name: str
+    category: str
+    active_players: int  # distinct players with score increase on THIS board in the window
+
+
+class ActivityResponse(BaseModel):
+    """Estimated active players via leaderboard score deltas."""
+    window_start: int | None  # unix seconds — earlier of the two anchors
+    window_end: int | None    # unix seconds — later (more recent) anchor
+    duration_hours: float | None
+    estimate: int | None      # distinct active players (union across all tracked boards); None = data unavailable
+    by_board: list[ActivityBoardCount]
+    boards_analyzed: int
+    methodology: str
+    computed_at: int
+
+
+class CheatersResponse(BaseModel):
+    players: list[CheaterPlayer]
+    computed_at: int          # unix seconds when the analysis ran
+    anchor: int | None        # capture timestamp the analysis is based on
+    method: str               # short description of the methodology
+    config: CheatersConfig    # active thresholds (echoed for transparency)
+    total_flagged: int
+    boards_analyzed: int
+    boards_excluded: int = 0  # how many boards the operator opted out via cheaters_excluded_board_uuids
+
+
 # --- Market ---------------------------------------------------------------
 # One ``MarketListingOut`` per in-game listing (UUID v1 from the game is the id).
 # ``expired`` is True when the listing is past its 7-day lifetime OR hasn't been

@@ -1,0 +1,543 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /login, /signup, /dashboard — page-specific styles
+   ───────────────────────────────────────────────────────────────────────
+   Two distinct surfaces sharing one stylesheet:
+
+     .acc-* — auth pages (login / signup). Single centered card.
+     .dash-* — dashboard. Hero + grid of profile / Trove / stats cards.
+
+   Both build on style.css's navbar + footer chrome (icon-only Discord
+   /GitHub, red-heart Support, nav-account widget).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.account-page main,
+.dashboard-page main { padding-top: 0; }
+
+
+/* ─── Auth pages (login + signup) ────────────────────────────────────
+   Single centered card. Background is left transparent so the page's
+   ambient gradient comes through. */
+
+.acc-main {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 60px 24px 80px;
+}
+.acc-card {
+  padding: 36px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.4);
+}
+.acc-title {
+  margin: 0 0 10px;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.acc-sub {
+  margin: 0 0 22px;
+  color: var(--text-mute, #8a93a3);
+  font-size: .95rem;
+  line-height: 1.55;
+}
+
+.acc-form {
+  display: grid;
+  gap: 16px;
+}
+.acc-field {
+  display: grid;
+  gap: 6px;
+}
+.acc-field-optional .acc-label { color: var(--text-mute, #8a93a3); }
+.acc-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  color: var(--text-fg, #e8ecf3);
+}
+.acc-optional {
+  font-size: .72rem;
+  font-weight: 500;
+  color: var(--text-mute, #8a93a3);
+}
+.acc-field input {
+  padding: 11px 14px;
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+  color: var(--text-fg, #e8ecf3);
+  font: inherit;
+  font-size: .95rem;
+}
+.acc-field input:focus {
+  outline: none;
+  border-color: var(--accent-blue, #4cc9f0);
+  background: rgba(0,0,0,.40);
+}
+.acc-hint {
+  font-size: .76rem;
+  color: var(--text-mute, #8a93a3);
+  line-height: 1.45;
+}
+.acc-error {
+  margin: 0;
+  padding: 10px 12px;
+  background: rgba(248,113,113,.10);
+  border: 1px solid rgba(248,113,113,.30);
+  border-radius: 8px;
+  color: #fed1d1;
+  font-size: .85rem;
+  line-height: 1.5;
+}
+.acc-success {
+  margin: 0;
+  padding: 10px 12px;
+  background: rgba(93,208,120,.10);
+  border: 1px solid rgba(93,208,120,.30);
+  border-radius: 8px;
+  color: #c4f5d0;
+  font-size: .85rem;
+  line-height: 1.5;
+}
+.acc-alt-sep {
+  color: var(--text-mute, #8a93a3);
+  margin: 0 6px;
+}
+/* Captcha widget mount. The provider's iframe is fixed-width
+   (Turnstile is ~300×65, hCaptcha ~302×76); center it inside the
+   form so it looks balanced regardless of which one is rendered.
+   The container itself is invisible until the provider injects
+   its iframe — collapses cleanly when captcha is disabled. */
+.acc-captcha {
+  display: flex;
+  justify-content: center;
+}
+.acc-captcha:empty { display: none; }
+.acc-captcha iframe { max-width: 100%; }
+
+.acc-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: var(--accent-blue, #4cc9f0);
+  color: #06080d;
+  border: none;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .12s ease, transform .15s ease;
+}
+.acc-submit:hover {
+  background: #6fd5f4;
+  transform: translateY(-1px);
+}
+.acc-submit:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.acc-alt {
+  margin: 22px 0 0;
+  font-size: .88rem;
+  color: var(--text-mute, #8a93a3);
+  text-align: center;
+}
+.acc-alt a {
+  color: var(--accent-blue, #4cc9f0);
+  text-decoration: none;
+  margin-left: 4px;
+}
+.acc-alt a:hover { text-decoration: underline; }
+.acc-alt-mini {
+  margin-top: 8px;
+  font-size: .78rem;
+}
+
+
+/* ─── Dashboard ─────────────────────────────────────────────────────── */
+
+.dash-main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 28px 80px;
+}
+
+.dash-hero {
+  padding: 50px 0 20px;
+  text-align: left;
+}
+.dash-hero-inner { display: grid; gap: 8px; }
+.dash-eyebrow {
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .85rem;
+  color: var(--accent-blue, #4cc9f0);
+  letter-spacing: .04em;
+  margin: 0;
+}
+.dash-title {
+  margin: 0;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.8rem, 3vw + 1rem, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.dash-sub {
+  margin: 0;
+  color: var(--text-mute, #8a93a3);
+  font-size: 1rem;
+}
+
+/* Unverified-email banner */
+.dash-banner {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  margin: 0 0 22px;
+  background: rgba(249,199,79,.08);
+  border: 1px solid rgba(249,199,79,.30);
+  border-radius: 12px;
+  color: #f9c74f;
+}
+.dash-banner > i { font-size: 1.4rem; }
+.dash-banner-title {
+  margin: 0 0 2px;
+  font-weight: 700;
+  font-size: .92rem;
+}
+.dash-banner-text {
+  margin: 0;
+  color: rgba(249,199,79,.85);
+  font-size: .85rem;
+  line-height: 1.45;
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 0 0 24px;
+}
+.dash-card {
+  padding: 22px 24px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+}
+.dash-card-wide { grid-column: 1 / -1; }
+.dash-card-title {
+  margin: 0 0 14px;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.dash-card-sub {
+  margin: 0 0 14px;
+  font-size: .88rem;
+  color: var(--text-mute, #8a93a3);
+  line-height: 1.55;
+}
+.dash-card-sub-mini {
+  margin: 0;
+  font-size: .78rem;
+  color: var(--text-mute, #8a93a3);
+}
+.dash-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.dash-card-meta {
+  color: var(--text-mute, #8a93a3);
+  font-size: .82rem;
+}
+.dash-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dash-fields {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.dash-field {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(255,255,255,.06);
+}
+.dash-field:last-child { border-bottom: none; }
+.dash-field dt {
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-mute, #8a93a3);
+  font-weight: 600;
+}
+.dash-field dd {
+  margin: 0;
+  font-size: .92rem;
+  color: var(--text-fg, #e8ecf3);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.dash-mono {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .88rem;
+}
+.dash-link {
+  background: transparent;
+  border: none;
+  color: var(--accent-blue, #4cc9f0);
+  font: inherit;
+  font-size: .78rem;
+  cursor: pointer;
+  padding: 0;
+}
+.dash-link:hover { text-decoration: underline; }
+
+.dash-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--accent-blue, #4cc9f0);
+  color: #06080d;
+  border: none;
+  border-radius: 9px;
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .12s ease;
+}
+.dash-btn:hover { background: #6fd5f4; }
+.dash-btn-mini {
+  padding: 7px 12px;
+  font-size: .82rem;
+}
+.dash-btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.10);
+  color: var(--text-fg, #e8ecf3);
+}
+.dash-btn-ghost:hover {
+  background: rgba(255,255,255,.05);
+}
+
+.dash-inline-form {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.dash-inline-form input {
+  flex: 1;
+  padding: 10px 14px;
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+  color: var(--text-fg, #e8ecf3);
+  font: inherit;
+  font-size: .92rem;
+  min-width: 0;
+}
+.dash-inline-form input:focus {
+  outline: none;
+  border-color: var(--accent-blue, #4cc9f0);
+}
+
+.dash-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.dash-tag-unverified {
+  background: rgba(249,199,79,.12);
+  color: #f9c74f;
+}
+.dash-tag-verified {
+  background: rgba(93,208,120,.14);
+  color: #5dd078;
+}
+
+/* Verification block — unverified → green call-to-action button + amber
+   "why verify" copy. Verified → green badge with verified-at timestamp. */
+.dash-verify {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+}
+.dash-verify[data-state="verified"] {
+  background: rgba(93,208,120,.06);
+  border-color: rgba(93,208,120,.20);
+}
+.dash-verify-unverified .dash-card-sub-mini {
+  margin: 0 0 10px;
+}
+.dash-verify-baseline {
+  margin: 8px 0 0;
+  color: var(--text-mute, #8a93a3);
+  font-size: .72rem;
+}
+.dash-verify-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: #5dd078;
+}
+.dash-verify-badge i { font-size: 1.1rem; }
+.dash-verify-result {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: .8rem;
+  line-height: 1.5;
+}
+.dash-verify-result[data-tone="success"] {
+  background: rgba(93,208,120,.10);
+  border: 1px solid rgba(93,208,120,.30);
+  color: #c4f5d0;
+}
+.dash-verify-result[data-tone="info"] {
+  background: rgba(249,199,79,.10);
+  border: 1px solid rgba(249,199,79,.30);
+  color: #f9c74f;
+}
+.dash-verify-result[data-tone="error"] {
+  background: rgba(248,113,113,.10);
+  border: 1px solid rgba(248,113,113,.30);
+  color: #fed1d1;
+}
+
+.dash-claimed-name {
+  margin: 0 0 6px;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-fg, #e8ecf3);
+  letter-spacing: -0.01em;
+  word-break: break-all;
+}
+
+.dash-error {
+  margin: 12px 0 0;
+  font-size: .85rem;
+  color: #fed1d1;
+}
+.dash-loading,
+.dash-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-mute, #8a93a3);
+  font-size: .92rem;
+  line-height: 1.55;
+}
+
+/* Stats list */
+.dash-stat-table {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+}
+.dash-stat-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 100px 1fr;
+  gap: 10px;
+  padding: 9px 12px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .78rem;
+}
+.dash-stat-rank { color: var(--accent-blue, #4cc9f0); font-weight: 700; }
+.dash-stat-score { text-align: right; }
+.dash-stat-when, .dash-stat-board { color: var(--text-mute, #8a93a3); }
+
+/* Inline chart */
+.dash-chart {
+  width: 100%;
+  margin: 0 0 14px;
+}
+.dash-chart svg {
+  width: 100%;
+  height: 180px;
+  display: block;
+}
+.dash-chart-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.dash-chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  font-size: .72rem;
+}
+.dash-chart-swatch {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+}
+.dash-chart-best {
+  color: var(--text-mute, #8a93a3);
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+}
+
+@media (max-width: 720px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .dash-field { grid-template-columns: 110px 1fr; }
+  .dash-stat-row {
+    grid-template-columns: 60px 1fr;
+    grid-template-areas:
+      "rank board"
+      "score when";
+  }
+  .dash-stat-row .dash-stat-rank { grid-area: rank; }
+  .dash-stat-row .dash-stat-board { grid-area: board; }
+  .dash-stat-row .dash-stat-score { grid-area: score; text-align: left; }
+  .dash-stat-row .dash-stat-when { grid-area: when; text-align: right; }
+  .acc-main { padding: 32px 16px 60px; }
+  .acc-card { padding: 24px; }
+}

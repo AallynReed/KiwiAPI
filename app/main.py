@@ -14,6 +14,7 @@ from app.auth.oauth import router as oauth_router
 from app.auth.router import router as auth_router
 from app.auth.schemas import PublicConfig, ScopeInfo
 from app.auth.sessions import router as sessions_router
+from app.site_auth.router import router as site_auth_router
 from app.core.bootstrap import bootstrap_admin
 from app.core.config import settings
 from app.core.database import close_db, init_db
@@ -36,6 +37,10 @@ from app.trove.btt_releases import (
 from app.trove.chaos import start_chaos_refresher, stop_chaos_refresher
 from app.trove.delves import start_delve_refresher, stop_delve_refresher
 from app.trove.events import start_events_refresher, stop_events_refresher
+from app.trove.leaderboards.detection import (
+    start_cheaters_warmer,
+    stop_cheaters_warmer,
+)
 from app.trove.news import start_news_refresher, stop_news_refresher
 from app.trove.relays import start_feeds_refresher, stop_feeds_refresher
 from app.trove.router import (
@@ -90,9 +95,14 @@ async def lifespan(app: FastAPI):
     start_delve_refresher()
     start_btt_releases_refresher()
     start_update_archiver()  # off unless trove_update_enabled
+    # Cheater-detection cache warmer: runs detection at boot + every
+    # cheaters_cache_ttl_seconds so the /v1/leaderboards/cheaters
+    # endpoint always serves a fresh cached result instantly.
+    start_cheaters_warmer()
     maintenance_task = asyncio.create_task(maintenance_loop())
     yield
     maintenance_task.cancel()
+    await stop_cheaters_warmer()
     await stop_update_archiver()
     await stop_btt_releases_refresher()
     await stop_delve_refresher()
@@ -179,6 +189,10 @@ app.include_router(auth_router, include_in_schema=False)
 app.include_router(sessions_router, include_in_schema=False)
 app.include_router(account_router, include_in_schema=False)
 app.include_router(oauth_router, include_in_schema=False)
+# Public-facing user system (trove.aallyn.net signups, dashboard). Lives
+# in a separate Beanie collection from the dev portal's `User` — see
+# app/site_auth/__init__.py for the rationale.
+app.include_router(site_auth_router, include_in_schema=False)
 app.include_router(tokens_router, include_in_schema=False)
 app.include_router(admin_router, include_in_schema=False)
 app.include_router(scanning_router, include_in_schema=False)
@@ -195,11 +209,12 @@ app.include_router(btt_router)
 app.include_router(leaderboards_router)
 app.include_router(market_router)
 
-# BetterTroveTools showcase site (trove.aallyn.net). The site router owns "/",
-# "/documentation", "/unlock_debug", "/unlock_fps"; the proxy can put this
-# container on both api.aallyn.net (filtering to /v1 + /health) and
-# trove.aallyn.net (everything else). Templates + assets live in ./site
-# (bind-mounted, so 19 MB of screenshots don't bake into the image).
+# BetterTroveTools showcase site (trove.aallyn.net). The site router owns
+# "/", "/documentation", "/commands", "/leaderboards", "/updates",
+# "/support" plus the same-origin "/site/*" JSON proxies. The proxy can
+# put this container on both api.aallyn.net (filtering to /v1 + /health)
+# and trove.aallyn.net (everything else). Templates + assets live in
+# ./site (bind-mounted, so 19 MB of screenshots don't bake into the image).
 _SITE_ROOT = Path(settings.site_root)
 if (_SITE_ROOT / "static").is_dir():
     app.mount("/static", StaticFiles(directory=str(_SITE_ROOT / "static")), name="site_static")

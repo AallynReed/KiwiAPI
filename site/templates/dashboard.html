@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dashboard — Better Trove Tools</title>
+    <meta name="description" content="Your Better Trove Tools dashboard — claim a Trove player name, view your leaderboard ranks, manage your account.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://trove.aallyn.net/dashboard">
+    <meta name="robots" content="noindex"><!-- private to the user -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css?v=20260608f">
+    <link rel="stylesheet" href="/static/account.min.css?v=20260608f">
+</head>
+<body class="landing dashboard-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="navbar" role="banner">
+        <div class="nav-container">
+            <a class="nav-logo" href="/" aria-label="Better Trove Tools home">
+                <img src="/static/assets/favicon.png" alt="">
+                <span>Better <span class="highlight-blue">Trove</span> Tools</span>
+            </a>
+            <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-links"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
+            <nav class="nav-links" id="nav-links" aria-label="Primary">
+                <a class="nav-cta" href="https://btt.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span data-i18n>Web App</span></a>
+                <a href="/documentation"><i class="fa-solid fa-book"></i> <span data-i18n>User Guide</span></a>
+                <div class="nav-dropdown">
+                    <button type="button" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-pages-panel"><i class="fa-solid fa-layer-group"></i> <span data-i18n>Pages</span> <i class="fa-solid fa-chevron-down nav-dropdown-caret" aria-hidden="true"></i></button>
+                    <div class="nav-dropdown-panel" id="nav-pages-panel" role="menu">
+                        <a href="/commands" role="menuitem"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>
+                        <a href="/leaderboards" role="menuitem"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>
+                        <a href="/updates" role="menuitem"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>
+                        <a href="/market" role="menuitem"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta">Beta</span></a>
+                    </div>
+                </div>
+                <a class="nav-icon" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                <a class="nav-icon" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                <a class="nav-support" href="/support" aria-label="Support" title="Support the project"><i class="fa-solid fa-heart"></i></a>
+                <span id="nav-account" class="nav-account" data-state="loading"></span>
+                <span class="lang-picker">
+                    <i class="fa-solid fa-globe lang-picker-icon"></i>
+                    <select id="langSelect" class="lang-select" aria-label="Language"></select>
+                </span>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main" class="dash-main">
+
+        <!-- Login-gate fallback. The JS replaces this with the real
+             dashboard once /me resolves; if the user has no token or
+             it's expired, JS redirects to /login. The fallback covers
+             the noscript case too. -->
+        <noscript>
+            <section class="dash-card">
+                <p>This dashboard needs JavaScript. <a href="/login">Sign in here</a>.</p>
+            </section>
+        </noscript>
+
+        <section class="dash-card" id="dash-loading">
+            <p class="dash-loading" data-i18n>Loading your dashboard…</p>
+        </section>
+
+        <!-- Real dashboard body. Hidden until JS confirms the user is
+             signed in; populated by site_auth.js / dashboard.js. -->
+        <div id="dash-body" hidden>
+            <!-- Hero header -->
+            <section class="dash-hero">
+                <div class="dash-hero-inner">
+                    <p class="dash-eyebrow">/dashboard</p>
+                    <h1 class="dash-title" id="dash-title" data-i18n>Welcome back</h1>
+                    <p class="dash-sub" id="dash-sub"></p>
+                </div>
+            </section>
+
+            <!-- Unverified-email banner. Shown only when is_verified=false. -->
+            <section class="dash-banner" id="dash-verify-banner" hidden>
+                <i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i>
+                <div class="dash-banner-body">
+                    <p class="dash-banner-title" data-i18n>Confirm your email</p>
+                    <p class="dash-banner-text" data-i18n>We sent a verification link to your inbox. Confirm it to claim your Trove name and unlock the rest of the dashboard.</p>
+                </div>
+                <button type="button" class="dash-btn dash-btn-mini" id="dash-resend-verify" data-i18n>Resend link</button>
+            </section>
+
+            <!-- Profile + Trove name cards side by side. -->
+            <section class="dash-grid">
+
+                <!-- Profile card -->
+                <article class="dash-card">
+                    <h2 class="dash-card-title" data-i18n>Profile</h2>
+                    <dl class="dash-fields">
+                        <div class="dash-field">
+                            <dt data-i18n>Username</dt>
+                            <dd class="dash-mono" id="prof-username"></dd>
+                        </div>
+                        <div class="dash-field">
+                            <dt data-i18n>Email</dt>
+                            <dd id="prof-email"></dd>
+                        </div>
+                        <div class="dash-field">
+                            <dt data-i18n>Display name</dt>
+                            <dd>
+                                <span id="prof-display-name"></span>
+                                <button type="button" class="dash-link" id="prof-edit-name" data-i18n>Edit</button>
+                            </dd>
+                        </div>
+                        <div class="dash-field">
+                            <dt data-i18n>Member since</dt>
+                            <dd id="prof-created"></dd>
+                        </div>
+                    </dl>
+                    <div class="dash-card-actions">
+                        <button type="button" class="dash-btn dash-btn-mini" id="dash-change-password" data-i18n>Change password</button>
+                        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" id="dash-logout" data-i18n>Sign out</button>
+                    </div>
+                </article>
+
+                <!-- Trove player name card. Two visual states:
+                     unclaimed (input + claim button) or claimed (badge
+                     + release button). -->
+                <article class="dash-card">
+                    <h2 class="dash-card-title">
+                        <span data-i18n>Trove player name</span>
+                        <span class="dash-tag dash-tag-unverified" id="trove-tag-unverified" hidden data-i18n>unverified</span>
+                        <span class="dash-tag dash-tag-verified" id="trove-tag-verified" hidden data-i18n>verified</span>
+                    </h2>
+
+                    <div id="trove-claim-state">
+                        <p class="dash-card-sub" data-i18n>Claim your in-game name to surface your leaderboard ranks below. Anyone can claim any name in v1 — verification is coming.</p>
+                        <form id="trove-claim-form" class="dash-inline-form">
+                            <input type="text" id="trove-name-input" placeholder="In-game player name" maxlength="80" autocomplete="off" spellcheck="false">
+                            <button type="submit" class="dash-btn">
+                                <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                                <span data-i18n>Claim</span>
+                            </button>
+                        </form>
+                        <p class="dash-error" id="trove-claim-error" hidden></p>
+                    </div>
+
+                    <div id="trove-claimed-state" hidden>
+                        <p class="dash-card-sub" data-i18n>You currently have this name claimed:</p>
+                        <p class="dash-claimed-name" id="trove-claimed-name"></p>
+                        <p class="dash-card-sub-mini" id="trove-claimed-when"></p>
+
+                        <!-- Verification block. Two states swap via the
+                             ``data-state`` attribute on the wrapper:
+                             "unverified" shows the call-to-verify, and
+                             "verified" shows the green confirmation. -->
+                        <div class="dash-verify" id="trove-verify-block" data-state="unverified" hidden>
+                            <div class="dash-verify-unverified">
+                                <p class="dash-card-sub-mini" data-i18n>This claim is unverified — anyone can claim any name until they prove ownership. Score on any board you appear on, then click below.</p>
+                                <button type="button" class="dash-btn dash-btn-mini" id="trove-verify-btn">
+                                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                    <span data-i18n>Verify now</span>
+                                </button>
+                                <p class="dash-card-sub-mini dash-verify-baseline" id="trove-verify-baseline"></p>
+                            </div>
+                            <div class="dash-verify-verified" hidden>
+                                <p class="dash-verify-badge">
+                                    <i class="fa-solid fa-shield-check" aria-hidden="true"></i>
+                                    <span data-i18n>Ownership verified</span>
+                                </p>
+                                <p class="dash-card-sub-mini" id="trove-verify-when"></p>
+                            </div>
+                            <p class="dash-card-sub-mini dash-verify-result" id="trove-verify-result" hidden></p>
+                        </div>
+
+                        <div class="dash-card-actions">
+                            <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" id="trove-unclaim" data-i18n>Release name</button>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <!-- Trove stats — leaderboard appearances + chart. Hidden
+                 until a name is claimed AND stats land. -->
+            <section class="dash-card dash-card-wide" id="dash-stats" hidden>
+                <div class="dash-card-head">
+                    <h2 class="dash-card-title" data-i18n>Your leaderboard appearances</h2>
+                    <span class="dash-card-meta" id="dash-stats-meta"></span>
+                </div>
+                <div class="dash-stats-body" id="dash-stats-body">
+                    <p class="dash-loading" data-i18n>Crunching the latest capture — first paint can take a moment while we warm the caches.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-grid">
+            <div class="footer-col footer-brand">
+                <img src="/static/assets/favicon.png" alt="" class="footer-logo" loading="lazy" decoding="async">
+                <strong>Better <span class="highlight-blue">Trove</span> Tools</strong>
+                <p class="footer-tagline">Free &amp; open source. By the community, for the community.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Product</h3>
+                <a href="/">Home</a>
+                <a href="https://btt.aallyn.net" target="_blank" rel="noopener">Web App</a>
+                <a href="/documentation">User Guide</a>
+                <a href="/commands">Commands</a>
+                <a href="/leaderboards">Leaderboards</a>
+                <a href="/updates">Updates</a>
+            </div>
+            <div class="footer-col">
+                <h3>Developers</h3>
+                <a href="https://dev.aallyn.net">Developer Portal</a>
+                <a href="https://docs.aallyn.net">API Reference</a>
+                <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener">GitHub</a>
+            </div>
+            <div class="footer-col">
+                <h3>Community</h3>
+                <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a>
+                <a href="/support">Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/app.min.js?v=20260608f"></script>
+    <script src="/static/i18n.min.js?v=20260608f"></script>
+    <script src="/static/site_auth.min.js?v=20260608f"></script>
+    <script src="/static/dashboard.min.js?v=20260608f"></script>
+</body>
+</html>

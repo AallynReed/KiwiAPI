@@ -30,6 +30,7 @@ from app.trove.leaderboards.models import (
     LeaderboardEntry,
     LeaderboardEntryArchive,
     contest_type_for,
+    effective_reset_kind,
     is_player_board,
     reset_kind,
 )
@@ -70,17 +71,31 @@ def _trove_day_anchor(now: datetime | None = None) -> int:
 def normalize_timestamp(ts: int | None) -> int:
     """Validate/normalize a user-supplied ``created_at`` query.
 
-    Accepts either the canonical 11:00 UTC anchor or 00:00 UTC (which we translate
-    to that day's 11:00). Anything else returns ``None``-equivalent (-1) so the
-    caller can decide how to respond.
+    Accepts any minute-aligned unix timestamp within roughly the recent
+    window — back-fills are bounded so a clock-skewed or malicious
+    caller can't dump entries at an arbitrary past or future anchor.
+
+    Legacy aliases preserved: 00:00 UTC is still translated to the
+    same day's 11:00 UTC so old back-fills continue to work.
+    Out-of-window or zero values return -1 so the caller can decide.
     """
     if ts is None or ts <= 0:
         return -1
-    parsed = datetime.fromtimestamp(ts, UTC).replace(minute=0, second=0, microsecond=0)
-    if parsed.hour == 0:
-        parsed = parsed.replace(hour=11)
-    elif parsed.hour != 11:
+    parsed = datetime.fromtimestamp(ts, UTC).replace(second=0, microsecond=0)
+    now = datetime.now(UTC).replace(second=0, microsecond=0)
+
+    # Clock-skew + abuse guard. 5 min forward catches mild bot skew;
+    # 14 d backward covers reasonable back-fills (most data falls off
+    # to archive after the hot retention window anyway).
+    if parsed > now + timedelta(minutes=5):
         return -1
+    if parsed < now - timedelta(days=14):
+        return -1
+
+    # Legacy alias: 00:00 UTC of a day is treated as that day's 11:00.
+    if parsed.hour == 0 and parsed.minute == 0:
+        parsed = parsed.replace(hour=11)
+
     return int(parsed.timestamp())
 
 
@@ -301,7 +316,11 @@ async def list_boards_at(created_at: int) -> list[dict]:
             "category_id": d.category_id,
             "category": d.category,
             "contest_type": contest_type,
-            "reset_kind": reset_kind(d.uuid),
+            # ``effective_reset_kind`` prefers the per-doc admin override
+            # over the hardcoded mapping, so a board flipped to "none"
+            # in the portal flows through here for detection / activity.
+            "reset_kind": effective_reset_kind(d, d.uuid),
+            "reset_kind_override": d.reset_kind_override,
             "player_board": is_player_board(d.uuid),
         })
     out.sort(key=lambda b: (b["category"], b["name"]))
@@ -319,7 +338,8 @@ async def get_board(uuid: int) -> dict | None:
         "name": d.name,
         "category_id": d.category_id,
         "category": d.category,
-        "reset_kind": reset_kind(d.uuid),
+        "reset_kind": effective_reset_kind(d, d.uuid),
+        "reset_kind_override": d.reset_kind_override,
         "player_board": is_player_board(d.uuid),
         "contests": list(d.contests),
     }
@@ -406,3 +426,184 @@ async def player_history(
             for d in cold_docs
         )
     return out
+
+
+async def board_history(
+    uuid: int, *, days: int = 7, top: int = 5,
+) -> dict:
+    """Score-vs-time trajectories for the current top-``top`` players on a
+    board over the last ``days`` days of hourly captures. Drives the
+    per-board chart on the public leaderboards page.
+
+    "Current top" is defined as the top ``top`` ranks at the *most recent*
+    anchor in the window — gives the chart a coherent story (the players
+    you can see on the entries table today, plus where they were yesterday
+    and the day before). A player who briefly cracked the top-N then
+    dropped off won't appear; we accept that to keep the chart legible.
+
+    Routing: spans hot and archive transparently. Hot retention is 3 days
+    by default and the window is 7, so most queries hit both collections.
+    The composite ``(leaderboard, created_at, rank)`` index covers the
+    board+window predicate; the ``player_name`` filter then narrows in
+    memory across at most ``top * 168`` rows (7 days × 24 hourly anchors).
+
+    Returns ``{uuid, days, window_start, window_end, anchors, series}``
+    where ``anchors`` is every distinct ``created_at`` in the window,
+    ascending, and ``series`` is one entry per top-player with their
+    sorted ``points`` (``{created_at, rank, score}`` triples — missing
+    anchors mean the player wasn't in that capture's stored slice and the
+    chart should leave a gap).
+    """
+    days = max(1, min(days, 30))   # clamp — sanity, archive is the limit
+    top = max(1, min(top, 20))     # 20 lines is already a busy chart
+    now = int(datetime.now(UTC).timestamp())
+    window_start = now - days * 86400
+
+    # 1) Distinct anchors in window for this board, hot ∪ archive.
+    pipeline = [
+        {"$match": {"leaderboard": uuid, "created_at": {"$gte": window_start}}},
+        {"$group": {"_id": "$created_at"}},
+        {"$sort": {"_id": -1}},
+    ]
+    hot_anchors = {r["_id"] for r in await LeaderboardEntry.aggregate(pipeline).to_list()}
+    cold_anchors = {r["_id"] for r in await LeaderboardEntryArchive.aggregate(pipeline).to_list()}
+    anchors = sorted(hot_anchors | cold_anchors)   # ascending for the chart
+    if not anchors:
+        return {
+            "uuid": uuid, "days": days,
+            "window_start": window_start, "window_end": now,
+            "anchors": [], "series": [],
+        }
+
+    # 2) Latest anchor → its top-N players define the chart's line set.
+    latest = anchors[-1]
+    latest_coll = await _entries_collection_for(latest)
+    top_docs = (
+        await latest_coll.find({"leaderboard": uuid, "created_at": latest})
+        .sort("+rank")
+        .limit(top)
+        .to_list()
+    )
+    if not top_docs:
+        return {
+            "uuid": uuid, "days": days,
+            "window_start": window_start, "window_end": now,
+            "anchors": anchors, "series": [],
+        }
+    names = [d.player_name for d in top_docs]
+    current_rank = {d.player_name: d.rank for d in top_docs}
+
+    # 3) All (player, created_at, rank, score) rows for those players in
+    # window, from both collections. ``name in names`` reuses the
+    # canonical casing from step 2 — Trove keeps player_name stable per
+    # account so cross-anchor exact-match is reliable. Small set; one
+    # round-trip per collection is enough.
+    row_query = {
+        "leaderboard": uuid,
+        "created_at": {"$gte": window_start},
+        "player_name": {"$in": names},
+    }
+    hot_rows = await LeaderboardEntry.find(row_query).to_list()
+    cold_rows = await LeaderboardEntryArchive.find(row_query).to_list()
+
+    # 4) Bucket by player_name → ascending points by created_at.
+    per_player: dict[str, list[dict]] = {n: [] for n in names}
+    for d in hot_rows + cold_rows:
+        per_player.setdefault(d.player_name, []).append(
+            {"created_at": d.created_at, "rank": d.rank, "score": d.score},
+        )
+    for pts in per_player.values():
+        pts.sort(key=lambda p: p["created_at"])
+
+    series = [
+        {
+            "player_name": n,
+            "current_rank": current_rank.get(n),
+            "points": per_player[n],
+        }
+        for n in names   # preserve rank order from step 2
+    ]
+    return {
+        "uuid": uuid, "days": days,
+        "window_start": window_start, "window_end": now,
+        "anchors": anchors, "series": series,
+    }
+
+
+async def player_history_series(
+    player_name: str, *, days: int = 7,
+) -> dict:
+    """Score-vs-time trajectories for ONE player, grouped per board, over
+    the last ``days`` days of captures. Drives the per-player chart on
+    the public leaderboards page.
+
+    Differs from ``player_history`` in two ways:
+      • bounded by a time window, not a row-count limit (full coverage
+        of the chart range, not "the 50 most recent rows");
+      • grouped by ``leaderboard`` so the caller can draw one line per
+        board the player appears on, rather than a flat row list.
+
+    Case-insensitive name match — same convention as ``player_history``.
+    Returns ``{player_name, canonical_name, days, window_start,
+    window_end, anchors, series}``. ``anchors`` is every distinct
+    ``created_at`` the player has rows for in the window. ``series`` is
+    one entry per board they appeared on, each with its sorted
+    ``points`` and resolved board ``name`` (when known).
+    """
+    days = max(1, min(days, 30))
+    now = int(datetime.now(UTC).timestamp())
+    window_start = now - days * 86400
+
+    name = player_name.strip()
+    ci_match = {"$regex": f"^{re.escape(name)}$", "$options": "i"}
+    query = {"player_name": ci_match, "created_at": {"$gte": window_start}}
+
+    hot_rows = await LeaderboardEntry.find(query).to_list()
+    cold_rows = await LeaderboardEntryArchive.find(query).to_list()
+    all_rows = hot_rows + cold_rows
+
+    if not all_rows:
+        return {
+            "player_name": name, "canonical_name": name, "days": days,
+            "window_start": window_start, "window_end": now,
+            "anchors": [], "series": [],
+        }
+
+    # Canonical name: whichever casing the most-recent row has. Same
+    # principle as the cheaters panel — Trove's stored casing wins over
+    # whatever the user typed.
+    canonical = max(all_rows, key=lambda d: d.created_at).player_name
+
+    by_board: dict[int, list[dict]] = {}
+    anchors: set[int] = set()
+    for d in all_rows:
+        by_board.setdefault(d.leaderboard, []).append(
+            {"created_at": d.created_at, "rank": d.rank, "score": d.score},
+        )
+        anchors.add(d.created_at)
+    for pts in by_board.values():
+        pts.sort(key=lambda p: p["created_at"])
+
+    # Resolve board names. One round-trip with $in keeps it cheap even
+    # for a prolific player.
+    board_docs = await Leaderboard.find({"uuid": {"$in": list(by_board.keys())}}).to_list()
+    board_name = {b.uuid: b.name for b in board_docs}
+
+    series = []
+    for uuid_, pts in by_board.items():
+        # Sort series by "best rank achieved this window" so the most
+        # competitive board renders first in the chart legend.
+        best_rank = min(p["rank"] for p in pts)
+        series.append({
+            "uuid": uuid_,
+            "name": board_name.get(uuid_, f"Board #{uuid_}"),
+            "best_rank": best_rank,
+            "points": pts,
+        })
+    series.sort(key=lambda s: s["best_rank"])
+
+    return {
+        "player_name": name, "canonical_name": canonical, "days": days,
+        "window_start": window_start, "window_end": now,
+        "anchors": sorted(anchors), "series": series,
+    }

@@ -11,6 +11,7 @@ from fastapi import (
 from fastapi.responses import FileResponse
 
 from app.core.config import settings
+from app.admin import ingest_log
 from app.auth.models import User
 from app.core.dependencies import (
     AccessContext,
@@ -37,6 +38,8 @@ from app.trove import (
 )
 from app.trove import calendar as trove_calendar
 from app.trove.codexes import read as codexes_read
+from app.trove.leaderboards import activity as leaderboards_activity
+from app.trove.leaderboards import detection as leaderboards_detection
 from app.trove.leaderboards import service as leaderboards_service
 from app.trove.market import service as market_service
 from app.trove.codexes.schemas import (
@@ -95,7 +98,9 @@ from app.trove.schemas import (
     ChallengeHistoryPage,
     ChaosChest,
     ChaosChestCaptureOut,
+    ActivityResponse,
     ChaosChestHistoryPage,
+    CheatersResponse,
     ClassList,
     Corruxion,
     DailyBuffs,
@@ -115,6 +120,8 @@ from app.trove.schemas import (
     LeaderboardPlayerEntry,
     LeaderboardPlayerHistory,
     LeaderboardTimestamps,
+    BoardHistoryResponse,
+    PlayerHistorySeriesResponse,
     MarketInsertResponse,
     MarketItemList,
     MarketItemSummary,
@@ -137,12 +144,21 @@ from app.trove.schemas import (
 )
 from app.trove.tmod import TmodBuildRequest, TmodReadResponse
 from app.trove.updates import read as updates_read
+from app.trove.updates import compare as updates_compare
 from app.trove.updates.cas import ContentStore
 from app.trove.updates.cdn import BRANCHES as UPDATE_BRANCHES
 from app.trove.updates.schemas import (
     BranchInfo,
     BranchList,
+    ChangeEntry,
+    ChangeList,
+    DiffHunk,
+    DiffHunkLine,
+    FileCompareResponse,
+    FileHistoryEntry,
+    FileHistoryList,
     FileMeta,
+    FileVersionInfo,
     TreeEntry,
     TreeListing,
     VersionInfo,
@@ -192,6 +208,10 @@ _BTT = Depends(public_scope("btt:read"))
 # Leaderboards read-side is token-gated (the data is bulky + opinionated). The
 # write-side has its own dep — see /v1/leaderboards/insert below.
 _LB = Depends(require_scope("leaderboards:read"))
+# Public, tokenless surface for the cheater-detection endpoint — same
+# reasoning as e.g. rotations: it's anti-cheat data the wider community
+# benefits from, no reason to gate it behind an API token.
+_LB_PUBLIC = Depends(public_scope("leaderboards:read"))
 _LB_MASTER = Depends(require_master_ingest)
 # Same shape: read gated by scope, write gated by superuser API token.
 _MKT = Depends(require_scope("market:read"))
@@ -254,7 +274,7 @@ async def get_chaos_chest(ctx: AccessContext = _ROT) -> ChaosChest:
                        summary="Insert chaos chest data")
 async def insert_chaos_chest(
     req: CaptureInsertRequest,
-    _user: User = Depends(require_master_ingest),
+    _auth = Depends(require_master_ingest),
 ) -> CaptureInsertResponse:
     """Persist the bot-captured chaos-chest item for the current weekly window.
 
@@ -265,7 +285,20 @@ async def insert_chaos_chest(
     try:
         doc, was_new = await captures.insert_chaos_chest(req.name)
     except ValueError as e:
+        await ingest_log.record(
+            endpoint="/v1/rotations/chaos-chest/insert",
+            user=_auth.user, token=_auth.token,
+            summary={"name": req.name}, success=False, error=str(e),
+        )
         raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(e))
+    await ingest_log.record(
+        endpoint="/v1/rotations/chaos-chest/insert",
+        user=_auth.user, token=_auth.token,
+        summary={
+            "name": doc.name, "anchor": doc.week_anchor,
+            "refreshed": not was_new,
+        },
+    )
     return CaptureInsertResponse(
         anchor=doc.week_anchor, name=doc.name, refreshed=not was_new,
     )
@@ -310,7 +343,7 @@ async def get_current_challenge(ctx: AccessContext = _ROT) -> ChallengeCurrentOu
                        summary="Insert challenge data")
 async def insert_challenge(
     req: CaptureInsertRequest,
-    _user: User = Depends(require_master_ingest),
+    _auth = Depends(require_master_ingest),
 ) -> CaptureInsertResponse:
     """Persist the bot-captured challenge name for the active 20-minute window.
 
@@ -322,7 +355,20 @@ async def insert_challenge(
     try:
         doc, was_new = await captures.insert_challenge(req.name)
     except ValueError as e:
+        await ingest_log.record(
+            endpoint="/v1/rotations/challenge/insert",
+            user=_auth.user, token=_auth.token,
+            summary={"name": req.name}, success=False, error=str(e),
+        )
         raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(e))
+    await ingest_log.record(
+        endpoint="/v1/rotations/challenge/insert",
+        user=_auth.user, token=_auth.token,
+        summary={
+            "name": doc.name, "anchor": doc.window_anchor,
+            "refreshed": not was_new,
+        },
+    )
     return CaptureInsertResponse(
         anchor=doc.window_anchor, name=doc.name, refreshed=not was_new,
     )
@@ -1143,6 +1189,42 @@ async def list_update_versions(
     return VersionList(items=items, count=len(items), total=total)
 
 
+_CHANGE_TYPES = ("added", "modified", "removed")
+
+
+@updates_router.get("/{branch}/changes", response_model=ChangeList)
+async def list_update_changes(
+    branch: str,
+    ctx: TokenContext = _UPD,
+    ordinal: int | None = Query(default=None, description="Version ordinal; omit to use the latest"),
+    version: str | None = Query(default=None, description="Version tag, e.g. TEST-103-3325-A-336166 (alternative to ordinal)"),
+    type: str | None = Query(default=None, description=f"Filter to one change type: {', '.join(_CHANGE_TYPES)}"),
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+) -> ChangeList:
+    """The per-file changes a version introduced (added / modified / removed paths).
+
+    Identifies the version by `version` tag, by `ordinal`, or — both omitted — the
+    branch's latest. The change-log holds every version, so older versions work too.
+    """
+    _check_branch(branch)
+    if type is not None and type not in _CHANGE_TYPES:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message=f"Invalid type '{type}' (allowed: {', '.join(_CHANGE_TYPES)})",
+        )
+    ver = await updates_read.resolve_version(branch, ordinal, version)
+    if ver is None:
+        raise APIError(status_code=404, code=ErrorCode.not_found, message="No matching version for that branch")
+    docs, total = await updates_read.list_changes(branch, ver.ordinal, type, limit, offset)
+    return ChangeList(
+        branch=branch, ordinal=ver.ordinal, version_tag=ver.version_tag,
+        entries=[ChangeEntry(path=d.path, type=d.type, content_sha256=d.content_sha256, size=d.size) for d in docs],
+        count=len(docs), total=total,
+        files_added=ver.files_added, files_modified=ver.files_modified, files_removed=ver.files_removed,
+    )
+
+
 @updates_router.get("/{branch}/tree", response_model=TreeListing)
 async def list_update_tree(
     branch: str,
@@ -1186,6 +1268,127 @@ async def download_update_file(
         raise APIError(status_code=404, code=ErrorCode.not_found, message="Blob missing from the store")
     filename = path.rsplit("/", 1)[-1] or "file"
     return FileResponse(blob, media_type="application/octet-stream", filename=filename)
+
+
+@updates_router.get("/{branch}/file/history", response_model=FileHistoryList)
+async def get_update_file_history(
+    branch: str,
+    path: str = Query(..., description="Logical path (no leading slash)"),
+    ctx: TokenContext = _UPD,
+) -> FileHistoryList:
+    """Every version that touched ``path`` on this branch, newest first.
+
+    Drives the per-file timeline on the public ``/updates`` page. Each
+    entry carries the change type, the resulting blob sha + size, and
+    the version's ``captured_at`` (joined from ``UpdateVersion``) so the
+    client doesn't have to issue one fetch per row.
+    """
+    _check_branch(branch)
+    rows = await updates_read.file_history(branch, path)
+    if not rows:
+        # 404 — file never existed on this branch. Empty history would
+        # otherwise be indistinguishable from a typo'd path.
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"No history for '{path}' on branch '{branch}'",
+        )
+    return FileHistoryList(
+        branch=branch, path=path,
+        items=[FileHistoryEntry(**r) for r in rows],
+        count=len(rows),
+    )
+
+
+@updates_router.get("/{branch}/file/compare", response_model=FileCompareResponse)
+async def compare_update_file(
+    branch: str,
+    path: str = Query(..., description="Logical path (no leading slash)"),
+    from_: int = Query(..., alias="from", description="'from' ordinal"),
+    to: int = Query(..., description="'to' ordinal"),
+    ctx: TokenContext = _UPD,
+) -> FileCompareResponse:
+    """Compare two versions of one file. Returns a structured unified
+    diff for text files (rendered server-side, capped at 1 MiB/side) or
+    a metadata-only response for binaries / over-budget files.
+
+    The "from" and "to" ordinals refer to the same UpdateVersion ordering
+    used elsewhere in this module. They don't have to be adjacent — any
+    two complete versions on the branch are valid. Either side may
+    return ``None`` content_sha256 (the path didn't exist yet, or had
+    already been removed at that ordinal); the diff still computes
+    against an empty side."""
+    _check_branch(branch)
+
+    # Resolve both side's versions for the metadata header.
+    v_from = await updates_read.resolve_version(branch, ordinal=from_)
+    v_to = await updates_read.resolve_version(branch, ordinal=to)
+    if v_from is None or v_to is None:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message="One of the requested ordinals doesn't exist on this branch",
+        )
+
+    # Resolve each side's blob coordinates (sha + size). Missing → empty.
+    a = await updates_read.resolve_file_at_version(branch, path, from_)
+    b = await updates_read.resolve_file_at_version(branch, path, to)
+
+    a_info = FileVersionInfo(
+        ordinal=v_from.ordinal, version_tag=v_from.version_tag,
+        captured_at=v_from.captured_at,
+        content_sha256=a["content_sha256"] if a else None,
+        size=a["size"] if a else 0,
+    )
+    b_info = FileVersionInfo(
+        ordinal=v_to.ordinal, version_tag=v_to.version_tag,
+        captured_at=v_to.captured_at,
+        content_sha256=b["content_sha256"] if b else None,
+        size=b["size"] if b else 0,
+    )
+
+    # Trivial paths: identical or both-missing.
+    if (a_info.content_sha256 or "") == (b_info.content_sha256 or "") and a_info.content_sha256 is not None:
+        return FileCompareResponse(
+            branch=branch, path=path,
+            **{"from": a_info, "to": b_info},
+            identical=True, is_text=True, hunks=[],
+        )
+    if a is None and b is None:
+        return FileCompareResponse(
+            branch=branch, path=path,
+            **{"from": a_info, "to": b_info},
+            identical=True, is_text=True, hunks=[],
+            reason="file did not exist at either side",
+        )
+
+    # Fetch both blobs (None when the side didn't exist).
+    store = ContentStore(settings.trove_update_store_dir)
+    a_bytes = store.get(a["content_sha256"]) if a else None
+    b_bytes = store.get(b["content_sha256"]) if b else None
+
+    a_dec = updates_compare.decode_blob(a_bytes)
+    b_dec = updates_compare.decode_blob(b_bytes)
+
+    if not (a_dec.is_text and b_dec.is_text):
+        reason = a_dec.reason or b_dec.reason or "binary"
+        return FileCompareResponse(
+            branch=branch, path=path,
+            **{"from": a_info, "to": b_info},
+            identical=False, is_text=False, reason=reason, hunks=[],
+        )
+
+    hunks_raw = updates_compare.make_hunks(a_dec.lines, b_dec.lines)
+    hunks = [
+        DiffHunk(
+            left_start=h["left_start"], right_start=h["right_start"],
+            lines=[DiffHunkLine(**ln) for ln in h["lines"]],
+        )
+        for h in hunks_raw
+    ]
+    return FileCompareResponse(
+        branch=branch, path=path,
+        **{"from": a_info, "to": b_info},
+        identical=False, is_text=True, hunks=hunks,
+    )
 
 
 # --- Codexes: parsed game data from the archive (scope: codexes:read) --------
@@ -1535,6 +1738,74 @@ def _lb_timestamp(created_at: int | None) -> int:
     return anchor
 
 
+@leaderboards_router.get(
+    "/activity", response_model=ActivityResponse,
+    summary="Estimated active players via leaderboard score deltas",
+)
+async def get_activity_estimate(
+    response: Response,
+    _ctx: AccessContext = _LB_PUBLIC,
+) -> ActivityResponse:
+    """**Tokenless.** Estimates how many players were active between
+    the two most recent leaderboard captures, by counting distinct
+    players whose score increased on any lifetime-accumulating
+    (``reset_kind=default``) board.
+
+    Returns a lower-bound count of "leaderboard-eligible active
+    players" — casual players who never made any board's top-N don't
+    contribute. ``estimate`` is ``null`` until at least two captures
+    are stored (bot needs to send unique timestamps, not just the
+    daily anchor). Cached in-process for the same TTL as the cheater
+    detection — a new hourly capture invalidates automatically."""
+    payload = await leaderboards_activity.estimate_active_players()
+    from app.admin import runtime_config
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return ActivityResponse(**payload)
+
+
+@leaderboards_router.get(
+    "/cheaters", response_model=CheatersResponse,
+    summary="Flag possible cheaters via statistical outlier detection",
+)
+async def list_possible_cheaters(
+    response: Response,
+    _ctx: AccessContext = _LB_PUBLIC,
+) -> CheatersResponse:
+    """**Tokenless.** Flag players with statistically anomalous scores on
+    the most-recent captured anchor. Runs three independent checks and
+    surfaces the raw evidence per player per board so callers can decide
+    how strict to be (a player flagged by multiple checks, or across
+    multiple boards, is higher confidence than one with a single flag).
+
+    Checks:
+
+    - **Modified Z-score (MAD-based)** — robust outlier vs the board's
+      *median*. Threshold default 3.5 (Iglewicz & Hoaglin 1993, "strong
+      outlier"). MAD instead of stddev means a cheater can't pollute
+      their own baseline.
+    - **Rank-gap ratio** — the score gap from rank N to N+1 compared
+      against the typical between-rank gap on the same board. Catches
+      lone-wolf patterns at the top.
+    - **Velocity** — score-gain rate (Δscore / Δtime) vs the board's
+      peer p95 rate, using the player's previous historical capture.
+      Degrades gracefully when archive history is thin.
+
+    All thresholds + the cache TTL are runtime-tunable from the master
+    panel (``cheaters_*`` keys). The response echoes the active config
+    so a flag is reproducible. Cached in-process for
+    ``cheaters_cache_ttl_seconds`` (default 30 min) keyed by
+    ``(anchor, config)``; a config change invalidates immediately.
+    """
+    payload = await leaderboards_detection.detect_possible_cheaters()
+    # Surface a matching Cache-Control to CDN / browsers. The server-side
+    # cache TTL dominates, but a public CDN cache cuts noise even further.
+    from app.admin import runtime_config
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return CheatersResponse(**payload)
+
+
 @leaderboards_router.get("/timestamps", response_model=LeaderboardTimestamps)
 async def list_leaderboard_timestamps(
     ctx: TokenContext = _LB,
@@ -1635,6 +1906,55 @@ async def get_player_history(
     )
 
 
+@leaderboards_router.get("/{uuid}/history", response_model=BoardHistoryResponse)
+async def get_board_history(
+    uuid: int,
+    response: Response,
+    ctx: TokenContext = _LB,
+    days: int = Query(default=7, ge=1, le=30,
+                      description="Window size in days (default 7)"),
+    top: int = Query(default=5, ge=1, le=20,
+                     description="Lines to plot — top N at most-recent anchor"),
+) -> BoardHistoryResponse:
+    """Score-vs-time trajectories for the current top-``top`` players on
+    ``uuid`` over the last ``days`` days of hourly captures.
+
+    Drives the per-board chart on the public leaderboards page; also
+    callable directly for clients that want their own visualisation. The
+    7-day default spans both hot and archive collections — the older end
+    of the window pays the archive rate-limit if it crosses the archive
+    query threshold."""
+    # Archive-window check: if the window's lower bound is in archive
+    # territory, charge the archive cap. Detection module + entries
+    # endpoint use the same primitive.
+    await _enforce_lb_archive_limit(
+        response, ctx, int(utcnow().timestamp()) - days * 86400,
+    )
+    payload = await leaderboards_service.board_history(uuid, days=days, top=top)
+    return BoardHistoryResponse(**payload)
+
+
+@leaderboards_router.get("/players/{player_name}/series",
+                         response_model=PlayerHistorySeriesResponse)
+async def get_player_history_series(
+    player_name: str,
+    response: Response,
+    ctx: TokenContext = _LB,
+    days: int = Query(default=7, ge=1, le=30,
+                      description="Window size in days (default 7)"),
+) -> PlayerHistorySeriesResponse:
+    """Score-vs-time trajectories for ONE player, grouped per board they
+    appear on, over the last ``days`` days. Drives the per-player chart
+    in the leaderboards page's history side-panel."""
+    await _enforce_lb_archive_limit(
+        response, ctx, int(utcnow().timestamp()) - days * 86400,
+    )
+    payload = await leaderboards_service.player_history_series(
+        player_name, days=days,
+    )
+    return PlayerHistorySeriesResponse(**payload)
+
+
 @leaderboards_router.post("/insert", response_model=LeaderboardInsertResponse,
                           status_code=200,
                           summary="Insert leaderboard data")
@@ -1645,7 +1965,7 @@ async def insert_leaderboards(
         description=("Override the 'as-of' anchor in unix seconds (11:00 UTC). "
                      "Defaults to the latest 11:00 UTC reset — pass this only for back-fills."),
     ),
-    _user: User = _LB_MASTER,
+    _auth = _LB_MASTER,
 ) -> LeaderboardInsertResponse:
     """Ingest a leaderboard dump.
 
@@ -1667,6 +1987,25 @@ async def insert_leaderboards(
         # bad row doesn't kill the whole dump.
         text = raw.decode("utf-8", errors="replace")
     summary = await leaderboards_service.insert_dump(text, timestamp=timestamp)
+    await ingest_log.record(
+        endpoint="/v1/leaderboards/insert",
+        user=_auth.user, token=_auth.token,
+        summary={
+            "boards": summary.get("boards"),
+            "entries": summary.get("entries"),
+            "anchor": summary.get("created_at"),
+            "cleared_before_insert": summary.get("cleared_before_insert"),
+            "archived_old": summary.get("archived_old"),
+            "bytes": len(raw),
+        },
+    )
+    # Wake the background warmer so the new anchor's heavy queries
+    # (cheaters detection, activity estimate, boards listing) start
+    # recomputing immediately — instead of the next visitor paying
+    # the multi-second cold-cache tax. The previous anchor's cache
+    # entries remain available as the "last known good" fallback
+    # while the new ones land. See leaderboards/detection.py.
+    leaderboards_detection.trigger_warmer()
     return LeaderboardInsertResponse(**summary)
 
 
@@ -1781,7 +2120,7 @@ async def insert_market_listings(
         description=("Override the 'last_seen' anchor in unix seconds. Defaults "
                      "to now() — pass this only for back-fills."),
     ),
-    _user: User = _MKT_MASTER,
+    _auth = _MKT_MASTER,
 ) -> MarketInsertResponse:
     """Ingest a marketplace scrape.
 
@@ -1801,4 +2140,15 @@ async def insert_market_listings(
     except UnicodeDecodeError:
         text = raw.decode("utf-8", errors="replace")
     summary = await market_service.insert_dump(text, timestamp=timestamp)
+    await ingest_log.record(
+        endpoint="/v1/market/insert",
+        user=_auth.user, token=_auth.token,
+        summary={
+            "parsed": summary.get("parsed"),
+            "imported": summary.get("imported"),
+            "ignored_not_in_list": summary.get("ignored_not_in_list"),
+            "last_seen": summary.get("last_seen"),
+            "bytes": len(raw),
+        },
+    )
     return MarketInsertResponse(**summary)

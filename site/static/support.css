@@ -1,0 +1,230 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /support — page-specific styles
+   ───────────────────────────────────────────────────────────────────────
+   Loaded on top of style.css. Hero + three donation cards + two text
+   sections + a footer thanks line. Matches the visual vocabulary of
+   /leaderboards and /updates (same hero, .sp-* namespace).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.support-page main { padding-top: 0; }
+
+.sp-main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 28px 80px;
+}
+
+
+/* ─── Hero ──────────────────────────────────────────────────────────── */
+
+.sp-hero {
+  padding: 60px 0 28px;
+  text-align: center;
+}
+.sp-hero-inner {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+.sp-eyebrow {
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: .9rem;
+  color: var(--accent-blue);
+  letter-spacing: .04em;
+}
+.sp-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: clamp(2.2rem, 5vw + .5rem, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.sp-subtitle {
+  color: var(--text-mute);
+  font-size: 1.05rem;
+  max-width: 64ch;
+  margin: 0;
+  line-height: 1.6;
+}
+
+
+/* ─── Donation cards ────────────────────────────────────────────────── */
+
+.sp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 28px 0 56px;
+}
+.sp-card {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 22px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  color: var(--text-fg, #e8ecf3);
+  text-decoration: none;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+.sp-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,.05);
+}
+.sp-card-paypal:hover { border-color: #009cde; }
+.sp-card-kofi:hover   { border-color: #ff5e5b; }
+.sp-card-bmac:hover   { border-color: #ffdd00; }
+.sp-card-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.30);
+  font-size: 1.8rem;
+}
+.sp-card-paypal .sp-card-icon { color: #009cde; }
+.sp-card-kofi   .sp-card-icon { color: #ff5e5b; }
+.sp-card-bmac   .sp-card-icon { color: #ffdd00; }
+.sp-card-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.sp-card-name {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.sp-card-desc {
+  color: var(--text-mute);
+  font-size: .88rem;
+  line-height: 1.45;
+}
+.sp-card-arrow {
+  color: var(--text-mute);
+  font-size: 1rem;
+  transition: transform .15s ease, color .15s ease;
+}
+.sp-card:hover .sp-card-arrow {
+  transform: translateX(4px);
+  color: var(--accent-blue, #4cc9f0);
+}
+
+
+/* ─── Sections (where-it-goes + free help) ──────────────────────────── */
+
+.sp-section {
+  margin: 0 0 48px;
+}
+.sp-section-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 18px;
+  color: var(--text-fg, #e8ecf3);
+}
+
+/* "Where the money goes" — icon | (title + paragraph) grid */
+.sp-bullets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+.sp-bullet {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 14px;
+  padding: 18px 20px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+}
+.sp-bullet > i {
+  font-size: 1.5rem;
+  color: var(--accent-blue, #4cc9f0);
+  padding-top: 2px;
+}
+.sp-bullet h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-fg, #e8ecf3);
+  letter-spacing: -0.01em;
+}
+.sp-bullet p {
+  margin: 0;
+  font-size: .88rem;
+  line-height: 1.55;
+  color: var(--text-mute);
+}
+
+/* "Free ways to help" — flatter cards, big icon on the left */
+.sp-free {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.sp-free-card {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+  color: var(--text-fg, #e8ecf3);
+  text-decoration: none;
+  transition: border-color .12s ease, background .12s ease;
+}
+.sp-free-card:hover {
+  border-color: rgba(76,201,240,.30);
+  background: rgba(255,255,255,.04);
+}
+.sp-free-card > i {
+  font-size: 1.6rem;
+  color: var(--accent-blue, #4cc9f0);
+}
+.sp-free-card span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.sp-free-card strong {
+  font-size: .92rem;
+  font-weight: 700;
+}
+.sp-free-card span span {
+  font-size: .82rem;
+  color: var(--text-mute);
+  line-height: 1.45;
+}
+
+.sp-thanks {
+  text-align: center;
+  font-size: 1.05rem;
+  color: var(--text-mute);
+  margin: 40px 0 0;
+}
+
+
+/* ─── Mobile ────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .sp-main { padding: 0 16px 60px; }
+  .sp-hero { padding: 40px 0 20px; }
+  .sp-card {
+    grid-template-columns: 50px 1fr auto;
+    padding: 16px;
+    gap: 12px;
+  }
+  .sp-card-icon { width: 50px; height: 50px; font-size: 1.5rem; }
+  .sp-section-title { font-size: 1.25rem; }
+}
+
+

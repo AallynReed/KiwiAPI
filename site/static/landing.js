@@ -381,32 +381,9 @@
     if (!document.hidden) refreshLive();
   });
 
-  // ── 7. Support widget ─────────────────────────────────────────────
-  // Sticky bottom-right pill; click to expand the donation panel,
-  // click-outside or Escape to close. Same wiring as the inline
-  // version on docs/reference.html — keep them in sync if the IDs
-  // ever change.
-  (function () {
-    const widget  = document.getElementById('support-widget');
-    const trigger = document.getElementById('support-trigger');
-    const panel   = document.getElementById('support-panel');
-    if (!widget || !trigger || !panel) return;
-    const setOpen = (open) => {
-      widget.classList.toggle('open', open);
-      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
-      panel.hidden = !open;
-    };
-    trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      setOpen(!widget.classList.contains('open'));
-    });
-    document.addEventListener('click', (e) => {
-      if (!widget.contains(e.target) && widget.classList.contains('open')) setOpen(false);
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && widget.classList.contains('open')) {
-        setOpen(false); trigger.focus();
-      }
-    });
-  })();
+  // The support widget used to be wired up here, but the markup ships
+  // on every page (leaderboards/commands/updates/index/support) and
+  // landing.js only loads on /. Moved into app.js — see section 7
+  // there. Keeping this comment as a breadcrumb for the next person
+  // who greps for "support-widget" in landing.js.
 })();

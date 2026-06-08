@@ -352,9 +352,10 @@ async def test_btt_changelog(client):
 
 
 async def test_site_routes(client):
-    # The BTT showcase site lives in `site/` and is mounted at /, /documentation,
-    # /unlock_debug, /unlock_fps, with assets at /static/*. The api container
-    # serves trove.aallyn.net out of this.
+    # The BTT showcase site lives in `site/` and is mounted at /,
+    # /documentation, /commands, /leaderboards, /updates, /support, with
+    # assets at /static/*. The api container serves trove.aallyn.net out
+    # of this.
 
     # Landing page renders the BTT index.html (we just check a known string is in it).
     r = await client.get("/")
@@ -371,21 +372,13 @@ async def test_site_routes(client):
     r = await client.get("/static/style.css")
     assert r.status_code == 200 and "btn-primary" in r.text
 
-    # Byte-patcher: GET form, then POST a fake exe that contains the find-pattern.
-    r = await client.get("/unlock_debug")
-    assert r.status_code == 200
-
-    # The /unlock_debug payload looks for bytes 7C 39 68 E0 02 00 00 and replaces
-    # the leading 7C 39 with 90 90. Send 8 bytes of which 7 match the pattern.
-    needle = bytes.fromhex("7C 39 68 E0 02 00 00")
-    expect = bytes.fromhex("90 90 68 E0 02 00 00")
-    fake_exe = b"prefix" + needle + b"suffix"
-    files = {"trove_exe": ("Trove.exe", fake_exe, "application/octet-stream")}
-    r = await client.post("/unlock_debug", files=files)
-    assert r.status_code == 200
-    assert r.content == b"prefix" + expect + b"suffix"
-    # No upload at all -> 400.
-    assert (await client.post("/unlock_debug")).status_code == 400
+    # /unlock_debug and /unlock_fps were removed 2026-06 after Trove
+    # shipped anti-cheat. Both routes should now 404 — any future
+    # reintroduction should be a deliberate decision, not a silent
+    # ride-along. Same for the deprecated POST handler.
+    assert (await client.get("/unlock_debug")).status_code == 404
+    assert (await client.get("/unlock_fps")).status_code == 404
+    assert (await client.post("/unlock_debug")).status_code in (404, 405)
 
     # The old API landing card moved to /api-info and still renders.
     r = await client.get("/api-info")

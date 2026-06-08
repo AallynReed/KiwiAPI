@@ -16,39 +16,59 @@ _API_CSP = (
 # Grotesk + Inter from Google Fonts (their CSS lives on fonts.googleapis.com,
 # the actual font files on fonts.gstatic.com — both need to be allowed or the
 # page falls back to system fonts and the bold display look breaks), and calls
-# the Kiwi API for release data. CSP is correspondingly broader than the API's.
+# the Kiwi API for release data. The /login + /signup + /forgot-password pages
+# also render a captcha widget (Turnstile or hCaptcha), whichever the API
+# is configured for — both host their script + iframe under their own
+# domains, so script-src + frame-src cover the union of providers so a
+# toggle from one to the other doesn't require a CSP edit.
 _SITE_CSP = (
     "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
-    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+    "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com "
+        "https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
+    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com "
+        "https://fonts.googleapis.com https://hcaptcha.com https://*.hcaptcha.com; "
     "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; "
     "img-src 'self' data:; "
-    "connect-src 'self' https://api.aallyn.net; "
+    "connect-src 'self' https://api.aallyn.net "
+        "https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
+    "frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
     "base-uri 'none'; frame-ancestors 'none'"
 )
 
 
 def _is_site_path(path: str) -> bool:
-    """Showcase-site routes (everything served from `site_router` in app/site/)."""
+    """Showcase-site routes (everything served from `site_router` in app/site/).
+
+    Page routes are exact-matched; ``/static/*`` and ``/site/*`` subtrees get
+    the relaxed CSP wholesale, so newly-added JSON proxies and assets don't
+    need to be enumerated one-by-one as new pages land. Forgetting one of
+    these wires up an API-CSP page that refuses to apply its own stylesheets
+    — see /updates regression in 2026-06.
+    """
     return path == "/" or path in {
-        "/documentation", "/commands", "/leaderboards", "/unlock_debug", "/unlock_fps",
-    } or path.startswith("/static/") or path.startswith("/site/leaderboards/")
+        "/documentation", "/commands", "/leaderboards", "/updates",
+        "/support", "/login", "/signup", "/dashboard", "/market",
+        "/forgot-password", "/reset-password",
+    } or path.startswith("/static/") or path.startswith("/site/")
 
 
 def add_security_middleware(app: FastAPI) -> None:
     """Reject oversized bodies early and attach security headers to every response."""
     default_max_body = settings.max_request_body_bytes
     mods_max_body = settings.mods_max_request_body_bytes
-    site_max_body = settings.site_max_request_body_bytes
+    # site_max_request_body_bytes used to govern /unlock_debug + /unlock_fps
+    # uploads; those routes were removed 2026-06 after Trove shipped
+    # anti-cheat. Setting is still defined in settings.py for parity but
+    # not bound here so the middleware closure stays clean.
     leaderboards_max_body = settings.leaderboards_max_request_body_bytes
     market_max_body = settings.market_max_request_body_bytes
 
     @app.middleware("http")
     async def security(request: Request, call_next):
         path = request.url.path
-        # Per-surface body caps: mod tools accept .tmod uploads, the leaderboards
-        # + market ingests accept the bot's raw cfg dumps, and the site's
-        # /unlock_* tools accept the whole Trove.exe (~100 MB).
+        # Per-surface body caps: mod tools accept .tmod uploads, the
+        # leaderboards + market ingests accept the bot's raw cfg dumps,
+        # everything else uses the default.
         if path.startswith("/v1/mods/"):
             max_body = mods_max_body
         elif path == "/v1/leaderboards/insert":
@@ -60,8 +80,6 @@ def add_security_middleware(app: FastAPI) -> None:
             # per-file size + count itself, so this is a generous gate
             # that lets a valid 22 MB submission through.
             max_body = 24 * 1024 * 1024
-        elif path.startswith("/unlock_"):
-            max_body = site_max_body
         else:
             max_body = default_max_body
         content_length = request.headers.get("content-length")

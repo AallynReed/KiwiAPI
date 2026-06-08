@@ -53,6 +53,13 @@ async def _authenticate(creds: HTTPAuthorizationCredentials | None) -> tuple[Use
     except (jwt.PyJWTError, KeyError):
         raise _not_authenticated("Invalid or expired session token")
 
+    # Site-user tokens carry ``kind=site``; reject them here so a
+    # casual showcase-site account can never be presented to the dev
+    # portal or the API surface. The symmetric check lives in
+    # ``app.site_auth.dependencies.get_current_site_user``.
+    if payload.get("kind") == "site":
+        raise _not_authenticated("Wrong-audience token")
+
     user = await User.get(PydanticObjectId(user_id))
     if user is None or not user.is_active:
         raise _not_authenticated("Account is inactive or no longer exists")
@@ -229,19 +236,30 @@ async def get_superuser_token_context(
     return ctx
 
 
+@dataclass
+class IngestAuth:
+    """Master-ingest auth context. ``token`` is set when the caller
+    authenticated via an API token (the bot path) and ``None`` when via
+    a session JWT (the portal Ingest tab) — lets the route handler
+    record WHICH auth method was used (bot vs master in the audit log)."""
+    user: User
+    token: ApiToken | None
+
+
 async def require_master_ingest(
     request: Request,
     response: Response,
     creds: HTTPAuthorizationCredentials | None = Depends(_api_scheme),
-) -> User:
+) -> IngestAuth:
     """Master-only gate for the bot-ingest endpoints (leaderboards / market /
     challenge / chaos-chest). Accepts EITHER:
 
     - A superuser-owned API token — the bot path, with the normal rate-limit
-      + usage-accounting pipeline applied so token caps still hold.
+      + usage-accounting pipeline applied so token caps still hold. Returns
+      the ``ApiToken`` alongside the user so the route can record it.
     - A superuser session JWT — the portal Ingest tab, where the master is
       already authenticated and we don't want them to mint+paste an API token
-      just to replay a captured cfg.
+      just to replay a captured cfg. Returns ``token=None``.
 
     Routes by shape: a JWT has exactly two ``.``-separated segments (header,
     payload, signature) and an API token uses ``_`` separators with no dots,
@@ -250,6 +268,7 @@ async def require_master_ingest(
     if creds is None:
         raise _not_authenticated("Authentication required")
 
+    token: ApiToken | None = None
     if creds.credentials.count(".") == 2:
         user, _ = await _authenticate(creds)
     else:
@@ -262,7 +281,7 @@ async def require_master_ingest(
             code=ErrorCode.forbidden,
             message="Master account required for ingest endpoints.",
         )
-    return user
+    return IngestAuth(user=user, token=token)
 
 
 def require_scope(scope: str):

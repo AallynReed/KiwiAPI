@@ -87,6 +87,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "commands.html", "text/html")
         if path == "/leaderboards":
             return self._send_file(TEMPLATES / "leaderboards.html", "text/html")
+        if path == "/updates":
+            return self._send_file(TEMPLATES / "updates.html", "text/html")
 
         # Static.
         if path.startswith("/static/"):
@@ -98,6 +100,148 @@ class Handler(SimpleHTTPRequestHandler):
             # the local preview (prod would normally serve 3 from the
             # runtime_config default).
             return self._send_json({"hot_retention_days": 5})
+        if path == "/site/leaderboards/activity":
+            # 1.0h window with a realistic count so the hero pill renders.
+            return self._send_json({
+                "window_start": STUB_ANCHOR - 3600,
+                "window_end": STUB_ANCHOR,
+                "duration_hours": 1.0,
+                "estimate": 4231,
+                "by_board": [
+                    {"uuid": 10, "name": "FLUX EARNED",      "category": "STATS", "active_players": 2847},
+                    {"uuid": 15, "name": "LOOT COLLECTED",   "category": "STATS", "active_players": 2143},
+                    {"uuid": 3,  "name": "ENEMIES DEFEATED", "category": "STATS", "active_players": 1908},
+                ],
+                "boards_analyzed": 11,
+                "methodology": "Distinct top-5000 leaderboard players whose score increased on at least one lifetime-accumulating board between the two most recent captures.",
+                "computed_at": 1780890000,
+            })
+        if path == "/site/leaderboards/cheaters":
+            # Three synthetic flagged players spanning the confidence
+            # range — so the page's filter slider has something to
+            # show + hide as the threshold moves. Confidence values
+            # mirror what the real detection module would compute.
+            return self._send_json({
+                "players": [
+                    {
+                        "player_name": "Cheater1",
+                        "confidence": 0.998,  # 2 strong boards, noisy-OR
+                        "leaderboards": [
+                            {
+                                "uuid": 1012, "name": "GLYPH KICKER",
+                                "category": "CONTESTS", "contest_type": "daily",
+                                "rank": 1, "score": 99999, "confidence": 0.99,
+                                "evidence": [
+                                    {
+                                        "type": "score_outlier",
+                                        "summary": "Score 99,999 is 42.0 robust z-scores above this board's median of 50,000 (threshold: 3.5). The MAD-based check is resistant to cheaters inflating their own baseline.",
+                                        "measurements": {
+                                            "player_score": 99999, "peer_median": 50000,
+                                            "peer_mad": 1200, "modified_z_score": 42.0,
+                                            "threshold": 3.5, "higher_is_better": True,
+                                            "board_size": 5000,
+                                        },
+                                        "confidence": 0.99,
+                                    },
+                                    {
+                                        "type": "rank_gap",
+                                        "summary": "Rank-1 score 99,999 is 27x the typical between-rank gap on this board (49% vs typical 1.8%). Next-rank score: 51,000.",
+                                        "measurements": {
+                                            "player_rank": 1, "player_score": 99999,
+                                            "next_rank": 2, "next_rank_score": 51000,
+                                            "gap_fraction": 0.49, "typical_gap_fraction": 0.018,
+                                            "gap_multiplier": 27.2,
+                                            "threshold_multiplier": 10.0,
+                                        },
+                                        "confidence": 0.94,
+                                    },
+                                ],
+                            },
+                            {
+                                "uuid": 20, "name": "GEODE MASTERY POINTS",
+                                "category": "CONTESTS", "contest_type": "weekly",
+                                "rank": 1, "score": 875000, "confidence": 0.99,
+                                "evidence": [
+                                    {
+                                        "type": "velocity_outlier",
+                                        "summary": "Score gained 800,000 in 1.0h (rate 800,000/h). This board's peer p95 rate is 500/h — this player is 1,600x faster.",
+                                        "measurements": {
+                                            "score_delta": 800000, "duration_hours": 1.0,
+                                            "rate_per_hour": 800000, "peer_p95_rate_per_hour": 500,
+                                            "rate_multiplier": 1600,
+                                            "threshold_multiplier": 10.0,
+                                            "previous_anchor": 1780743600,
+                                            "previous_score": 75000,
+                                        },
+                                        "confidence": 0.99,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "player_name": "noa00__00",
+                        "confidence": 0.81,  # one decent board flag
+                        "leaderboards": [
+                            {
+                                "uuid": 2004, "name": "CHALLENGE: Deepest (WEEKLY)",
+                                "category": "CONTESTS", "contest_type": "weekly",
+                                "rank": 1, "score": 9999, "confidence": 0.81,
+                                "evidence": [
+                                    {
+                                        "type": "score_outlier",
+                                        "summary": "Score 9,999 is 7.0 robust z-scores above this board's median of 142 (threshold: 3.5).",
+                                        "measurements": {
+                                            "player_score": 9999, "peer_median": 142,
+                                            "peer_mad": 18, "modified_z_score": 7.0,
+                                            "threshold": 3.5, "higher_is_better": True,
+                                            "board_size": 250,
+                                        },
+                                        "confidence": 0.816,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        # Borderline player — flagged but right at the
+                        # threshold. Confidence 0.5; default filter
+                        # (0.9) should hide this one.
+                        "player_name": "BorderlineBob",
+                        "confidence": 0.5,
+                        "leaderboards": [
+                            {
+                                "uuid": 33001, "name": "HART-A-PHONES RECEIVED",
+                                "category": "CONTESTS", "contest_type": "weekly",
+                                "rank": 4, "score": 800, "confidence": 0.5,
+                                "evidence": [
+                                    {
+                                        "type": "score_outlier",
+                                        "summary": "Score 800 is 3.5 robust z-scores above this board's median of 220 (threshold: 3.5).",
+                                        "measurements": {
+                                            "player_score": 800, "peer_median": 220,
+                                            "peer_mad": 110, "modified_z_score": 3.55,
+                                            "threshold": 3.5, "higher_is_better": True,
+                                            "board_size": 80,
+                                        },
+                                        "confidence": 0.5,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+                "computed_at": 1780870000,
+                "anchor": STUB_ANCHOR,
+                "method": "Three independent statistical checks: Modified Z-score (MAD-based, Iglewicz & Hoaglin 1993), rank-gap ratio, and velocity vs peer p95.",
+                "config": {
+                    "z_threshold": 3.5,
+                    "velocity_multiplier": 10.0,
+                    "min_board_size": 20,
+                },
+                "total_flagged": 3,
+                "boards_analyzed": 25,
+            })
         if path == "/site/leaderboards/timestamps":
             return self._send_json({"items": STUB_TIMESTAMPS, "count": len(STUB_TIMESTAMPS)})
         if path == "/site/leaderboards/boards":

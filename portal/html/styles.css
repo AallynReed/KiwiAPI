@@ -119,6 +119,53 @@ a:hover { text-decoration: underline; }
 }
 .nav-tabs button.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
 
+/* Configuration sub-tabs — horizontal chip strip categorizing the
+   runtime tunables. Wraps on narrow screens so all categories stay
+   reachable without a scroller. */
+.config-subtabs {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin: 6px 0 18px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+.config-subtab {
+  padding: 7px 14px; border: 1px solid var(--border); background: var(--bg);
+  color: var(--muted); font-size: .85rem; border-radius: 999px;
+  cursor: pointer; font-family: inherit;
+  display: inline-flex; align-items: center;
+  transition: color .12s ease, border-color .12s ease, background .12s ease;
+}
+.config-subtab:hover { color: var(--text); border-color: var(--accent); }
+.config-subtab.active {
+  color: var(--text); border-color: var(--accent);
+  background: var(--panel-2); font-weight: 600;
+}
+.config-subtab .badge {
+  font-size: 10px; padding: 1px 6px; border-radius: 999px;
+}
+
+/* Long-value wrap in the runtime-config table. A long CSV like
+   ``cheaters_excluded_board_uuids = "1100, 21012, 5001, 33001, …"``
+   used to blow out the column width; constrain the value cell and
+   let ``.mono`` break on any character so the table stays aligned. */
+#config-subtab-body td:nth-child(2) {
+  max-width: 320px;
+}
+#config-subtab-body td:nth-child(2) .mono {
+  display: inline-block;
+  max-width: 100%;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  vertical-align: top;
+}
+/* Setting key + description column: cap the description width and
+   wrap long URLs / paths cleanly. */
+#config-subtab-body td:first-child > div {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
 .card {
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 12px; padding: 22px; margin-bottom: 20px;
@@ -162,6 +209,28 @@ textarea:focus { outline: none; border-color: var(--accent); }
 .btn.danger:hover { border-color: var(--red); }
 .btn.small { padding: 6px 12px; font-size: .85rem; }
 .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Heart-Support link in the topbar — opens the showcase site's
+   /support page in a new tab. Matches the main site's red-heart
+   treatment so it reads as the same call-to-action. */
+.portal-support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: #ff5e7e;
+  font-size: 1.1rem;
+  line-height: 1;
+  text-decoration: none;
+  transition: background .12s ease, transform .15s ease;
+}
+.portal-support:hover {
+  background: rgba(255,94,126,.12);
+  color: #ff7d96;
+  transform: scale(1.08);
+}
 .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
 .row > * { flex: 1; }
 .row .btn { flex: 0 0 auto; }
@@ -183,6 +252,19 @@ tr.clickable:hover td { background: var(--panel-2); }
 .badge.ok { background: rgba(63,185,80,.15); color: var(--green); }
 .badge.warn { background: rgba(210,153,34,.15); color: var(--amber); }
 .badge.off { background: rgba(248,81,73,.15); color: var(--red); }
+.badge.muted { background: rgba(154,164,178,.12); color: var(--muted); }
+/* Per-endpoint colours for the ingest-log table — accent-only, no
+   background, so the rows stay scannable. */
+.badge.ingest-log-lb  { background: rgba( 88,166,255,.14); color: var(--accent); }
+.badge.ingest-log-mkt { background: rgba(255,184,107,.14); color: #ffb86b; }
+.badge.ingest-log-chl { background: rgba(255, 92,128,.14); color: #ff9bb0; }
+.badge.ingest-log-cc  { background: rgba(168,128,255,.14); color: #c4a5ff; }
+/* Per-row auth-method pill: bot (API token) is highlighted; portal
+   (session JWT) stays muted so the bot rows are scannable. */
+.badge.ingest-log-via-token {
+  background: rgba(63,185,80,.12); color: var(--green);
+  font-family: "SFMono-Regular", Consolas, monospace; font-size: .68rem;
+}
 
 .banner {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;

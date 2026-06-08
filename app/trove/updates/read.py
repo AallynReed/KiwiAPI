@@ -8,7 +8,7 @@ never dumped at once.
 
 from __future__ import annotations
 
-from app.trove.updates.models import UpdateBranch, UpdateState, UpdateVersion
+from app.trove.updates.models import UpdateBranch, UpdateChange, UpdateState, UpdateVersion
 
 
 def directory_listing(entries: list[dict], prefix: str) -> list[dict]:
@@ -59,6 +59,30 @@ async def list_versions(branch: str, limit: int, offset: int) -> tuple[list[Upda
     return docs, total
 
 
+async def resolve_version(
+    branch: str, ordinal: int | None = None, version_tag: str | None = None,
+) -> UpdateVersion | None:
+    """Pin a version for a branch: by tag, by ordinal, or (both omitted) the latest complete one."""
+    if version_tag:
+        return await UpdateVersion.find_one({"branch": branch, "version_tag": version_tag})
+    if ordinal is not None:
+        return await UpdateVersion.find_one({"branch": branch, "ordinal": ordinal})
+    latest = await UpdateVersion.find({"branch": branch, "status": "complete"}).sort("-ordinal").limit(1).to_list()
+    return latest[0] if latest else None
+
+
+async def list_changes(
+    branch: str, ordinal: int, type_filter: str | None, limit: int, offset: int,
+) -> tuple[list[UpdateChange], int]:
+    """The change-log entries for one version, sorted by type then path. Optionally filtered by type."""
+    q: dict = {"branch": branch, "ordinal": ordinal}
+    if type_filter:
+        q["type"] = type_filter
+    total = await UpdateChange.find(q).count()
+    docs = await UpdateChange.find(q).sort("+type", "+path").skip(offset).limit(limit).to_list()
+    return docs, total
+
+
 async def list_directory(branch: str, prefix: str) -> list[dict]:
     query: dict = {"branch": branch}
     if prefix:
@@ -74,3 +98,64 @@ async def get_file_meta(branch: str, path: str) -> dict | None:
         return None
     return {"path": d.path, "content_sha256": d.content_sha256, "size": d.size,
             "archive": d.archive, "archive_index": d.archive_index}
+
+
+# --- File history + per-version resolution ---------------------------------
+# The change-log holds every (branch, path, ordinal) triple, so a file's
+# history is a prefix range scan on the (branch, path, ordinal) index; the
+# version metadata (tag, captured_at) is joined client-side from a small
+# parallel fetch of the relevant UpdateVersion rows.
+
+async def file_history(branch: str, path: str) -> list[dict]:
+    """Every change to ``path`` on ``branch``, newest version first.
+
+    Each row carries the change type ("added" | "modified" | "removed"),
+    the resulting ``content_sha256`` + ``size`` (None / 0 for removed), the
+    version ordinal + tag, and the version's ``captured_at`` timestamp so
+    a chart / timeline can render without an extra round-trip per row.
+    """
+    docs = await UpdateChange.find({"branch": branch, "path": path}).sort("-ordinal").to_list()
+    if not docs:
+        return []
+    ordinals = sorted({d.ordinal for d in docs})
+    versions = await UpdateVersion.find(
+        {"branch": branch, "ordinal": {"$in": ordinals}},
+    ).to_list()
+    by_ord = {v.ordinal: v for v in versions}
+    out: list[dict] = []
+    for d in docs:
+        v = by_ord.get(d.ordinal)
+        out.append({
+            "ordinal": d.ordinal,
+            "version_tag": v.version_tag if v else "",
+            "captured_at": v.captured_at if v else None,
+            "type": d.type,
+            "content_sha256": d.content_sha256,
+            "size": d.size,
+        })
+    return out
+
+
+async def resolve_file_at_version(
+    branch: str, path: str, ordinal: int,
+) -> dict | None:
+    """Resolve a file's blob coordinates AT a historical version.
+
+    Walks back through the change-log to find the most recent
+    non-``removed`` change for ``path`` at or before ``ordinal``. Returns
+    ``None`` if the path never existed at that point or had been removed
+    before it.
+    """
+    docs = await UpdateChange.find(
+        {"branch": branch, "path": path, "ordinal": {"$lte": ordinal}},
+    ).sort("-ordinal").limit(1).to_list()
+    if not docs:
+        return None
+    last = docs[0]
+    if last.type == "removed":
+        return None
+    return {
+        "ordinal": last.ordinal,
+        "content_sha256": last.content_sha256,
+        "size": last.size,
+    }

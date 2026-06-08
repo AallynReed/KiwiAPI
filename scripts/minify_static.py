@@ -31,6 +31,15 @@ PAIRS = [
     (STATIC / "i18n.js",           STATIC / "i18n.min.js"),
     (STATIC / "leaderboards.css",  STATIC / "leaderboards.min.css"),
     (STATIC / "leaderboards.js",   STATIC / "leaderboards.min.js"),
+    (STATIC / "updates.css",       STATIC / "updates.min.css"),
+    (STATIC / "updates.js",        STATIC / "updates.min.js"),
+    (STATIC / "support.css",       STATIC / "support.min.css"),
+    (STATIC / "account.css",       STATIC / "account.min.css"),
+    (STATIC / "site_auth.js",      STATIC / "site_auth.min.js"),
+    (STATIC / "dashboard.js",      STATIC / "dashboard.min.js"),
+    (STATIC / "market.css",        STATIC / "market.min.css"),
+    (STATIC / "market.js",         STATIC / "market.min.js"),
+    (STATIC / "password_reset.js", STATIC / "password_reset.min.js"),
 ]
 
 

@@ -45,12 +45,54 @@ _WEEKLY_RESET_UUIDS = {
 
 
 def reset_kind(uuid: int) -> str:
-    """Return one of ``"daily"`` / ``"weekly"`` / ``"default"`` for a board uuid."""
+    """Return one of ``"daily"`` / ``"weekly"`` / ``"default"`` for a board uuid.
+
+    This is the HARDCODED FALLBACK only — production code should prefer the
+    per-document override (see ``effective_reset_kind`` below) which the
+    admin panel can edit at runtime.
+    """
     if uuid in _DAILY_RESET_UUIDS:
         return "daily"
     if uuid in _WEEKLY_RESET_UUIDS:
         return "weekly"
     return "default"
+
+
+# Reset cadences valid in the per-document override.
+RESET_KIND_VALUES = ("daily", "weekly", "none")
+
+
+def effective_reset_kind(doc: "Leaderboard | None", uuid: int) -> str:
+    """Resolve the canonical reset cadence for a board.
+
+    Precedence:
+      1. ``doc.reset_kind_override`` if set to a valid string (admin pinned)
+      2. ``reset_kind(uuid)`` — the hardcoded mapping at the top of this file
+      3. ``"default"`` as a last-resort fallback (also returned by step 2
+         when the uuid isn't in either hardcoded set)
+
+    The override wins over the hardcoded mapping because the user has
+    explicitly told us how the board behaves; the mapping is just a
+    convenience for boards we haven't reviewed yet.
+    """
+    if doc is not None:
+        override = getattr(doc, "reset_kind_override", None)
+        if isinstance(override, str) and override in RESET_KIND_VALUES:
+            return override
+    return reset_kind(uuid)
+
+
+def is_lifetime_kind(rk: str) -> bool:
+    """True for cadences that accumulate forever rather than resetting.
+
+    ``"default"`` is the implicit lifetime tag (any board not in the
+    hardcoded daily/weekly sets); ``"none"`` is the explicit one the
+    admin sets via the override. Cheater detection on these boards
+    skips score-outlier + rank-gap because rank-1 will always look
+    like an outlier on a 5-year-old stat — only velocity (score change
+    over time) is a valid signal.
+    """
+    return rk in ("default", "none")
 
 
 # Boards that aren't a leaderboard of PLAYERS (e.g. server-level tallies).
@@ -84,6 +126,20 @@ class Leaderboard(Document):
     ``contests`` is a small append-only list of ``{time, type}`` records — every
     timestamp where the board was dumped while flagged as a contest. The list is
     bounded by how often contests occur and is fine to keep in-document.
+
+    ``reset_kind_override`` lets the master admin pin a board's reset cadence
+    explicitly from the portal — overrides the hardcoded ``_DAILY_RESET_UUIDS``
+    / ``_WEEKLY_RESET_UUIDS`` mapping below. Three values matter:
+
+      * ``"daily"`` / ``"weekly"`` — resetting boards. Cheater detection runs
+        all three checks (score outlier, rank gap, velocity).
+      * ``"none"`` — lifetime accumulating (e.g. ENEMIES DEFEATED, FLUX EARNED).
+        Cheater detection on these boards skips score-outlier and rank-gap
+        because peak rank-1 score on a 5-year-old stat will always look
+        like an outlier; ONLY velocity (score progression over time) is a
+        valid anti-cheat signal here.
+      * ``None`` (default) — fall through to the hardcoded mapping in the
+        ``reset_kind()`` helper below, which keeps backward-compatibility.
     """
 
     uuid: int                 # the game's leaderboard id — unique
@@ -93,6 +149,8 @@ class Leaderboard(Document):
     category: str             # human-readable category
     # [{time: int (unix seconds), type: "daily" | "weekly"}, ...]
     contests: list[dict] = Field(default_factory=list)
+    # Admin override; None = use hardcoded reset_kind() fallback below.
+    reset_kind_override: str | None = None
 
     class Settings:
         name = "leaderboards"

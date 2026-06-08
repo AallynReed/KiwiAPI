@@ -26,8 +26,8 @@
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.min.css?v=20260608c">
-    <link rel="stylesheet" href="/static/leaderboards.min.css?v=20260608c">
+    <link rel="stylesheet" href="/static/style.min.css?v=20260608d">
+    <link rel="stylesheet" href="/static/leaderboards.min.css?v=20260608d">
 </head>
 <body class="landing leaderboards-page">
 
@@ -60,6 +60,8 @@
                     <div class="nav-dropdown-panel" id="nav-pages-panel" role="menu">
                         <a href="/commands" role="menuitem"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>
                         <a href="/leaderboards" class="active" role="menuitem"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>
+                        <a href="/updates" role="menuitem"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>
+                        <a href="/market" role="menuitem"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta">Beta</span></a>
                     </div>
                 </div>
 
@@ -77,8 +79,10 @@
                     </div>
                 </div>
 
-                <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> GitHub</a>
-                <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> Discord</a>
+                <a class="nav-icon" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                <a class="nav-icon" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                <a class="nav-support" href="/support" aria-label="Support" title="Support the project"><i class="fa-solid fa-heart"></i></a>
+                <span id="nav-account" class="nav-account" data-state="loading"></span>
                 <span class="lang-picker">
                     <i class="fa-solid fa-globe lang-picker-icon"></i>
                     <select id="langSelect" class="lang-select" aria-label="Language"></select>
@@ -100,19 +104,15 @@
                      /site/leaderboards/config fetch fails. -->
                 <p class="lb-subtitle" id="lb-subtitle">Top players per board, ranked. Hourly captures, 3-day live retention, full archive beyond.</p>
 
-                <!-- 7-day picker (trove-day = real UTC minus 11h, so a
-                     trove-day starts at real UTC 11:00). Each chip is
-                     one trove-day; the JS fetches the timestamp list
-                     and resolves each chip to the LATEST anchor stored
-                     within that day's [11:00 UTC, next-day 11:00 UTC).
-                     Empty days render disabled. -->
+                <!-- JS-owned, hidden until /site/leaderboards/activity
+                     returns a non-null estimate. Filled in by
+                     renderActivity() once the page boots. -->
+                <p class="lb-activity" id="lb-activity" hidden></p>
+
+                <!-- Player search is hero-level (shared across tabs)
+                     so it works whether the user is browsing boards or
+                     reviewing the cheaters list. -->
                 <div class="lb-toolbar lb-toolbar-stack">
-                    <div class="lb-toolbar-field">
-                        <span class="lb-toolbar-label" data-i18n>Day</span>
-                        <div class="lb-day-picker" id="lb-day-picker" role="tablist" aria-label="Trove day">
-                            <span class="lb-day-loading" data-i18n>Loading…</span>
-                        </div>
-                    </div>
                     <label class="lb-toolbar-field lb-toolbar-search">
                         <span class="lb-toolbar-label" data-i18n>Player history</span>
                         <span class="lb-search-wrap">
@@ -126,6 +126,27 @@
                 </div>
             </div>
         </section>
+
+        <!-- ═══════════════ TAB STRIP ═══════════════
+             Two tabs: the boards browser (default) and the cheaters
+             analysis. URL hash carries `tab=cheaters` for deep-link +
+             back-button support. The cheaters fetch is LAZY — only
+             fires the first time the tab is activated. -->
+        <nav class="lb-tabs" role="tablist" aria-label="Leaderboards view">
+            <button type="button" class="lb-tab active" role="tab"
+                    id="lb-tab-boards" data-tab="boards"
+                    aria-selected="true" aria-controls="lb-pane-boards">
+                <i class="fa-solid fa-table-list" aria-hidden="true"></i>
+                <span data-i18n>Leaderboards</span>
+            </button>
+            <button type="button" class="lb-tab" role="tab"
+                    id="lb-tab-cheaters" data-tab="cheaters"
+                    aria-selected="false" aria-controls="lb-pane-cheaters">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                <span data-i18n>Possible cheaters</span>
+                <span class="lb-tab-badge" id="lb-tab-cheaters-badge" hidden>0</span>
+            </button>
+        </nav>
 
         <!-- ═══════════════ PLAYER HISTORY PANEL ═══════════════
              Hidden until a search is performed. Renders the player's
@@ -141,63 +162,139 @@
                     <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
+            <!-- Per-player chart: one line per board they appear on,
+                 last 7 days. JS owns the contents; the outer figure
+                 stays hidden until the player series payload returns
+                 at least one board. -->
+            <figure class="lb-chart-wrap" id="lb-player-chart-wrap" hidden>
+                <figcaption class="lb-chart-caption">
+                    <span data-i18n>Score across boards (last 7 days)</span>
+                    <span class="lb-chart-meta" id="lb-player-chart-meta"></span>
+                </figcaption>
+                <div class="lb-chart" id="lb-player-chart"
+                     role="img" aria-label="Per-board score trajectories"></div>
+                <div class="lb-chart-legend" id="lb-player-chart-legend"></div>
+            </figure>
             <div class="lb-player-body" id="lb-player-body">
                 <p class="lb-loading" data-i18n>Loading…</p>
             </div>
         </section>
 
-        <!-- ═══════════════ MAIN LAYOUT ═══════════════
-             Two-pane: sidebar of boards (search + categorised) on the
-             left, entries table for the selected board on the right.
-             Mobile collapses the sidebar to a "Choose board" button
-             that opens a slide-in panel. -->
-        <section class="lb-layout">
+        <!-- ═══════════════ TAB: LEADERBOARDS ═══════════════
+             Day picker + sidebar/entries pane. Default tab. -->
+        <section class="lb-tab-pane active" id="lb-pane-boards"
+                 role="tabpanel" aria-labelledby="lb-tab-boards">
 
-            <!-- Mobile-only trigger: shows the currently-selected board
-                 and opens the sidebar drawer. -->
-            <button type="button" class="lb-mobile-trigger" id="lb-mobile-trigger"
-                    aria-expanded="false" aria-controls="lb-sidebar">
-                <i class="fa-solid fa-list" aria-hidden="true"></i>
-                <span class="lb-mobile-label">
-                    <span class="lb-mobile-prefix" data-i18n>Board</span>
-                    <span id="lb-mobile-selected" data-i18n>Choose a board…</span>
-                </span>
-                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-            </button>
-
-            <aside class="lb-sidebar" id="lb-sidebar" aria-label="Boards">
-                <div class="lb-sidebar-head">
-                    <span class="lb-search-wrap">
-                        <i class="fa-solid fa-magnifying-glass lb-search-icon" aria-hidden="true"></i>
-                        <input type="search" id="lb-board-search"
-                               class="lb-search-input"
-                               data-i18n-placeholder placeholder="Filter boards…"
-                               autocomplete="off" spellcheck="false">
-                    </span>
-                </div>
-                <nav class="lb-board-list" id="lb-board-list" aria-label="Board list">
-                    <p class="lb-loading" data-i18n>Loading…</p>
-                </nav>
-            </aside>
-
-            <article class="lb-entries" id="lb-entries">
-                <div class="lb-entries-head">
-                    <div>
-                        <h2 class="lb-entries-title" id="lb-entries-title" data-i18n>Pick a board to see entries</h2>
-                        <p class="lb-entries-meta" id="lb-entries-meta"></p>
+            <!-- 7-day picker (trove-day = real UTC minus 11h). Each chip
+                 is one trove-day; JS fetches the timestamp list and
+                 resolves each chip to the LATEST anchor stored within
+                 that day's [11:00 UTC, next-day 11:00 UTC) window. -->
+            <div class="lb-toolbar lb-toolbar-stack">
+                <div class="lb-toolbar-field">
+                    <span class="lb-toolbar-label" data-i18n>Day</span>
+                    <div class="lb-day-picker" id="lb-day-picker" role="tablist" aria-label="Trove day">
+                        <span class="lb-day-loading" data-i18n>Loading…</span>
                     </div>
                 </div>
-                <div class="lb-entries-body" id="lb-entries-body">
-                    <p class="lb-hint" data-i18n>Choose a board on the left to load its ranked entries.</p>
-                </div>
-                <div class="lb-entries-foot" id="lb-entries-foot" hidden>
-                    <button type="button" class="lb-load-more" id="lb-load-more" data-i18n>Load more</button>
-                </div>
-            </article>
+            </div>
+
+            <!-- Two-pane: sidebar of boards (search + categorised) on
+                 the left, entries table for the selected board on the
+                 right. Mobile collapses the sidebar to a "Choose board"
+                 button that opens a slide-in panel. -->
+            <section class="lb-layout">
+
+                <!-- Mobile-only trigger: shows the currently-selected
+                     board and opens the sidebar drawer. -->
+                <button type="button" class="lb-mobile-trigger" id="lb-mobile-trigger"
+                        aria-expanded="false" aria-controls="lb-sidebar">
+                    <i class="fa-solid fa-list" aria-hidden="true"></i>
+                    <span class="lb-mobile-label">
+                        <span class="lb-mobile-prefix" data-i18n>Board</span>
+                        <span id="lb-mobile-selected" data-i18n>Choose a board…</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                </button>
+
+                <aside class="lb-sidebar" id="lb-sidebar" aria-label="Boards">
+                    <div class="lb-sidebar-head">
+                        <span class="lb-search-wrap">
+                            <i class="fa-solid fa-magnifying-glass lb-search-icon" aria-hidden="true"></i>
+                            <input type="search" id="lb-board-search"
+                                   class="lb-search-input"
+                                   data-i18n-placeholder placeholder="Filter boards…"
+                                   autocomplete="off" spellcheck="false">
+                        </span>
+                    </div>
+                    <nav class="lb-board-list" id="lb-board-list" aria-label="Board list">
+                        <p class="lb-loading" data-i18n>Loading…</p>
+                    </nav>
+                </aside>
+
+                <article class="lb-entries" id="lb-entries">
+                    <div class="lb-entries-head">
+                        <div>
+                            <h2 class="lb-entries-title" id="lb-entries-title" data-i18n>Pick a board to see entries</h2>
+                            <p class="lb-entries-meta" id="lb-entries-meta"></p>
+                        </div>
+                    </div>
+                    <!-- Per-board chart: top-5 players' score trajectories
+                         over the last 7 days. JS owns the contents; the
+                         outer figure stays hidden until a board is
+                         selected AND the chart payload returns data. -->
+                    <figure class="lb-chart-wrap" id="lb-board-chart-wrap" hidden>
+                        <figcaption class="lb-chart-caption">
+                            <span data-i18n>Top players over the last 7 days</span>
+                            <span class="lb-chart-meta" id="lb-board-chart-meta"></span>
+                        </figcaption>
+                        <div class="lb-chart" id="lb-board-chart"
+                             role="img" aria-label="Score trajectories chart"></div>
+                        <div class="lb-chart-legend" id="lb-board-chart-legend"></div>
+                    </figure>
+                    <div class="lb-entries-body" id="lb-entries-body">
+                        <p class="lb-hint" data-i18n>Choose a board on the left to load its ranked entries.</p>
+                    </div>
+                    <div class="lb-entries-foot" id="lb-entries-foot" hidden>
+                        <button type="button" class="lb-load-more" id="lb-load-more" data-i18n>Load more</button>
+                    </div>
+                </article>
+            </section>
+        </section>
+
+        <!-- ═══════════════ TAB: POSSIBLE CHEATERS ═══════════════
+             Hidden by default. The cheaters fetch is LAZY — fires only
+             the first time the user activates this tab. Server-side
+             cache is kept warm by a background task so the response
+             is instant. -->
+        <section class="lb-tab-pane lb-cheaters" id="lb-pane-cheaters"
+                 role="tabpanel" aria-labelledby="lb-tab-cheaters" hidden>
+            <!-- Confidence threshold slider. Filters out players whose
+                 overall confidence is below the selected value. Default
+                 0.9, persisted in localStorage so a user's chosen
+                 strictness sticks across visits. -->
+            <div class="lb-cheaters-filter">
+                <label class="lb-cheaters-filter-label" for="lb-cheaters-min">
+                    <span data-i18n>Min confidence</span>
+                    <span class="lb-cheaters-filter-value" id="lb-cheaters-min-value">0.90</span>
+                </label>
+                <input type="range" class="lb-cheaters-filter-range"
+                       id="lb-cheaters-min" min="0" max="1" step="0.05" value="0.9">
+                <span class="lb-cheaters-filter-hint" id="lb-cheaters-filter-hint"></span>
+            </div>
+            <!-- JS owns this line. No data-i18n attr — i18n.refresh()
+                 would otherwise restore "Loading…" over the JS content. -->
+            <p class="lb-cheaters-meta" id="lb-cheaters-meta">Loading…</p>
+            <div class="lb-cheaters-body" id="lb-cheaters-body">
+                <p class="lb-cheaters-empty" data-i18n>Checking the latest capture…</p>
+            </div>
+            <details class="lb-cheaters-method">
+                <summary data-i18n>How is this computed?</summary>
+                <p data-i18n>Three independent statistical checks per board: Modified Z-score (median-based, robust to cheaters polluting their own baseline), rank-gap ratio (a player's lead over the next rank vs the board's typical between-rank step), and velocity (score gain rate vs the board's peer p95). A player flagged by multiple checks, or across multiple boards, is higher confidence.</p>
+            </details>
         </section>
 
         <p class="lb-source" data-i18n>
-            Captures come from an in-game scraping bot every hour. Boards reset on the same cadence Trove does (daily 11:00 UTC; weekly contests roll Tuesdays).
+            Captures come from an in-game scraping bot every hour. Boards reset on the same cadence Trove does (daily 11:00 UTC; weekly contests roll Mondays).
         </p>
     </main>
 
@@ -254,8 +351,9 @@
         </div>
     </div>
 
-    <script src="/static/app.min.js?v=20260608c"></script>
-    <script src="/static/i18n.min.js?v=20260608c"></script>
-    <script src="/static/leaderboards.min.js?v=20260608c" defer></script>
+    <script src="/static/app.min.js?v=20260608d"></script>
+    <script src="/static/i18n.min.js?v=20260608d"></script>
+    <script src="/static/site_auth.min.js?v=20260608f" defer></script>
+    <script src="/static/leaderboards.min.js?v=20260608d" defer></script>
 </body>
 </html>

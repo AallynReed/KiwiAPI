@@ -365,4 +365,59 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
+
+    // --- 7. SUPPORT WIDGET (fixed bottom-right donation pill) ---
+    // Lives in app.js (not landing.js) so it works on EVERY page that
+    // includes the markup, not just the landing page. Older copies on
+    // /leaderboards, /commands, /updates used to render the markup
+    // without any wiring — the button looked clickable but silently did
+    // nothing because the listener was scoped to the landing page.
+    //
+    // Wiring is deliberately tolerant: if the markup IDs aren't present
+    // (e.g. on a page that omits the widget by design) we just return
+    // without throwing.
+    (function () {
+        const widget  = document.getElementById('support-widget');
+        const trigger = document.getElementById('support-trigger');
+        const panel   = document.getElementById('support-panel');
+        if (!widget || !trigger || !panel) return;
+        // Remove the inline ``hidden`` attribute the template ships
+        // with. Without this the panel starts with ``display: none``,
+        // and the opacity transition from .open → opened can't run
+        // (a transition from display: none never advances — the
+        // browser hasn't computed the "before" state). Visibility is
+        // already handled by ``opacity`` + ``pointer-events: none``
+        // on the closed state, plus ``aria-hidden`` below for screen
+        // readers; the ``hidden`` attribute was redundant AND broke
+        // the animation on every page except the landing one (where
+        // landing.js's older wiring took a different code path).
+        panel.removeAttribute('hidden');
+        const setOpen = (open) => {
+            widget.classList.toggle('open', open);
+            trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+            // ``aria-hidden`` instead of the ``hidden`` attribute so
+            // we keep screen readers from announcing the donation
+            // links when the panel's closed, without flipping
+            // ``display: none`` and breaking the opacity transition.
+            panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+        };
+        // Initial state: closed but visible-to-CSS. The CSS rule
+        // ``.support-panel { opacity: 0; pointer-events: none; }``
+        // keeps the panel invisible and click-through; the .open
+        // class on .support-widget makes it appear.
+        setOpen(false);
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setOpen(!widget.classList.contains('open'));
+        });
+        document.addEventListener('click', (e) => {
+            if (!widget.contains(e.target) && widget.classList.contains('open')) setOpen(false);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && widget.classList.contains('open')) {
+                setOpen(false);
+                trigger.focus();
+            }
+        });
+    })();
 });

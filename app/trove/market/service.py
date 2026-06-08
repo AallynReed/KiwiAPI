@@ -357,3 +357,190 @@ async def item_summary(name: str) -> dict | None:
         "avg_each": round(r["avg_each"], 3) if r["avg_each"] is not None else 0.0,
         "median_each": median,
     }
+
+
+# Default modified-Z cutoff used by the price-history outlier filter.
+# Iglewicz & Hoaglin (1993) suggest |z| > 3.5 as the canonical threshold;
+# we keep it here so a future tweak doesn't have to chase three call
+# sites. In log-price space this catches a ~10× deviation from the
+# median given a typical MAD of 0.3-0.5 — which is exactly the
+# "1 listing at 50M when median is 20k" shape we're trying to drop.
+_PRICE_OUTLIER_Z_THRESHOLD = 3.5
+# Minimum sample size before we attempt outlier filtering. Below this,
+# MAD is too noisy to be reliable and we'd drop legitimate data.
+_PRICE_OUTLIER_MIN_SAMPLES = 5
+
+
+def _filter_price_outliers(
+    points: list[dict],
+    z_threshold: float = _PRICE_OUTLIER_Z_THRESHOLD,
+) -> tuple[list[dict], list[dict]]:
+    """Modified-Z outlier filter on ``log10(price_each)``.
+
+    Returns ``(kept, dropped)``. Operates in log-space because market
+    prices are log-normally distributed — a stray 50,000,000 flux post
+    looks like a 4-sigma outlier on the raw scale, but in log-space it's
+    a clean ~3.5σ that any test recognises. Uses median + MAD because
+    both are themselves robust to the outliers we're trying to flag,
+    so the threshold doesn't drift when the outlier is present.
+
+    Returns ``(points, [])`` unchanged when the sample is too small or
+    the MAD is degenerate (all prices identical) — better to show the
+    raw cloud in that case than to risk dropping every legitimate
+    point on a thin item.
+    """
+    import math
+
+    if len(points) < _PRICE_OUTLIER_MIN_SAMPLES:
+        return points, []
+    log_prices: list[float] = []
+    for p in points:
+        v = p.get("price_each")
+        if v is None or v <= 0:
+            continue
+        log_prices.append(math.log10(float(v)))
+    if len(log_prices) < _PRICE_OUTLIER_MIN_SAMPLES:
+        return points, []
+
+    log_prices.sort()
+    median = log_prices[len(log_prices) // 2]
+    deviations = sorted(abs(x - median) for x in log_prices)
+    mad = deviations[len(deviations) // 2]
+    if mad < 1e-9:
+        # Every price identical (or near enough) — no outliers possible.
+        return points, []
+
+    kept: list[dict] = []
+    dropped: list[dict] = []
+    for p in points:
+        v = p.get("price_each")
+        # Keep zero/negative-price entries on the "kept" side; they're
+        # unusual enough that the caller should see them.
+        if v is None or v <= 0:
+            kept.append(p)
+            continue
+        z = 0.6745 * abs(math.log10(float(v)) - median) / mad
+        if z > z_threshold:
+            dropped.append(p)
+        else:
+            kept.append(p)
+    return kept, dropped
+
+
+async def price_history(
+    name: str,
+    *,
+    days: int = 7,
+    include_expired: bool = False,
+    keep_outliers: bool = False,
+    limit: int = 5000,
+) -> dict:
+    """Per-listing price-vs-time points for the price-evolution chart.
+
+    Each point is a (``created_at``, ``price_each``) pair — one row per
+    listing that matches the window. The page draws these as a scatter
+    so the user can read the cloud directly; we also surface a small
+    set of aggregates the client uses to compute axis ranges and the
+    median-trend overlay without a second round-trip.
+
+    ``include_expired=False`` (the default) applies the same active-
+    listing predicate that ``list_listings``/``item_summary`` use:
+      • re-seen within ``LISTING_STALE_SECONDS`` (3h)
+      • created within ``LISTING_LIFETIME_SECONDS`` (7d, the in-game TTL)
+
+    ``include_expired=True`` widens the lookup to the user-supplied
+    ``days`` window only — so a 7d chart on an item that just rolled
+    over still shows the slope across the last live cycle, including
+    posts that have since timed out. Caps the result at ``limit`` rows
+    (sorted oldest-first) to bound the payload size.
+    """
+    days = max(1, min(int(days), 30))
+    limit = max(1, min(int(limit), 10_000))
+    now = _now()
+    window_start = now - days * 86_400
+
+    query: dict = {"name": name, "created_at": {"$gte": window_start}}
+    if not include_expired:
+        # Mirror the summary's active-listing definition: drop rows that
+        # haven't been re-seen recently OR whose 7d TTL is already up.
+        # Both bounds are stricter than the user's window so this AND
+        # composes cleanly.
+        query["last_seen"] = {"$gte": now - LISTING_STALE_SECONDS}
+        # Re-clamp created_at to the live-lifetime cutoff in case the
+        # user-supplied window is wider than 7d.
+        ttl_cutoff = now - LISTING_LIFETIME_SECONDS
+        if query["created_at"]["$gte"] < ttl_cutoff:
+            query["created_at"]["$gte"] = ttl_cutoff
+
+    coll = MarketListing.get_pymongo_collection()
+    cursor = (
+        coll.find(
+            query,
+            {"_id": 0, "created_at": 1, "price_each": 1, "last_seen": 1,
+             "stack": 1, "price": 1},
+        )
+        .sort("created_at", 1)
+        .limit(limit)
+    )
+    points: list[dict] = []
+    async for d in cursor:
+        # ``last_seen`` makes the client-side tooltip useful (the user
+        # can spot a listing posted ages ago but only just expired).
+        # ``stack`` + ``price`` let it show "12,000 ×8 = 96,000" without
+        # a second lookup.
+        points.append({
+            "created_at": d["created_at"],
+            "price_each": d["price_each"],
+            "last_seen":  d.get("last_seen"),
+            "stack":      d.get("stack"),
+            "price":      d.get("price"),
+        })
+
+    truncated = len(points) >= limit
+
+    # ── Outlier filtering ──────────────────────────────────────────
+    # Defaults to ON because the cloud is much more readable when a
+    # lone "I typed 1,000,000 instead of 1,000" listing isn't dragging
+    # the y-axis through the ceiling. Caller can pass ``keep_outliers
+    # =True`` to see the raw data — the metadata always reports what
+    # we found so the page can surface it either way.
+    raw_count = len(points)
+    if keep_outliers:
+        outliers_excluded = 0
+        outliers_min_price: float | None = None
+        outliers_max_price: float | None = None
+    else:
+        kept, dropped = _filter_price_outliers(points)
+        points = kept
+        outliers_excluded = len(dropped)
+        # Surface the *price range* of the excluded outliers so the UI
+        # can say "Excluded 3 outliers between 41M and 50M flux" — much
+        # more useful than a bare count when the user is deciding
+        # whether to re-include them.
+        if dropped:
+            extremes = [
+                d["price_each"] for d in dropped
+                if d.get("price_each") is not None
+            ]
+            outliers_min_price = min(extremes) if extremes else None
+            outliers_max_price = max(extremes) if extremes else None
+        else:
+            outliers_min_price = None
+            outliers_max_price = None
+
+    return {
+        "name": name,
+        "days": days,
+        "include_expired": include_expired,
+        "keep_outliers": keep_outliers,
+        "window_start": window_start,
+        "window_end": now,
+        "points": points,
+        "count": len(points),
+        "raw_count": raw_count,
+        "outliers_excluded": outliers_excluded,
+        "outliers_min_price": outliers_min_price,
+        "outliers_max_price": outliers_max_price,
+        "outliers_threshold_z": _PRICE_OUTLIER_Z_THRESHOLD,
+        "truncated": truncated,
+    }

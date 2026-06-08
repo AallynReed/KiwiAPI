@@ -62,6 +62,8 @@
                     <div class="nav-dropdown-panel" id="nav-pages-panel" role="menu">
                         <a href="/commands" class="active" role="menuitem"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>
                         <a href="/leaderboards" role="menuitem"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>
+                        <a href="/updates" role="menuitem"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>
+                        <a href="/market" role="menuitem"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta">Beta</span></a>
                     </div>
                 </div>
 
@@ -79,8 +81,10 @@
                     </div>
                 </div>
 
-                <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> GitHub</a>
-                <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> Discord</a>
+                <a class="nav-icon" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                <a class="nav-icon" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                <a class="nav-support" href="/support" aria-label="Support" title="Support the project"><i class="fa-solid fa-heart"></i></a>
+                <span id="nav-account" class="nav-account" data-state="loading"></span>
                 <span class="lang-picker">
                     <i class="fa-solid fa-globe lang-picker-icon"></i>
                     <select id="langSelect" class="lang-select" aria-label="Language"></select>
@@ -184,6 +188,7 @@
 
     <script src="/static/app.min.js?v=20260608b"></script>
     <script src="/static/i18n.min.js?v=20260608b"></script>
+    <script src="/static/site_auth.min.js?v=20260608f" defer></script>
     <script src="/static/commands.js?v=20260608b" defer></script>
 </body>
 </html>

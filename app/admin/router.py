@@ -4,7 +4,7 @@ from beanie import PydanticObjectId
 from beanie.operators import Set
 from fastapi import APIRouter, Depends, Query
 
-from app.admin import runtime_config
+from app.admin import ingest_log, runtime_config
 from app.admin.schemas import (
     ActivityOverview,
     AdminTokenView,
@@ -15,6 +15,9 @@ from app.admin.schemas import (
     InterestItemBulkReplaceRequest,
     InterestItemBulkReplaceResponse,
     InterestItemListAdmin,
+    LeaderboardBoardAdminList,
+    LeaderboardBoardAdminView,
+    LeaderboardBoardResetUpdate,
     RuntimeConfigItem,
     RuntimeConfigList,
     RuntimeConfigUpdate,
@@ -368,6 +371,104 @@ async def replace_interest_items_admin(
     return InterestItemBulkReplaceResponse(**summary)
 
 
+# --- Leaderboards: per-board reset cadence override -----------------------
+# The hardcoded ``_DAILY_RESET_UUIDS`` / ``_WEEKLY_RESET_UUIDS`` sets in
+# ``app/trove/leaderboards/models.py`` are the fallback when an admin
+# hasn't pinned a board. These two endpoints expose the per-doc override
+# so the master can flip cadence from the portal without a code push —
+# important because cheater detection on lifetime boards needs to skip
+# score-outlier + rank-gap and rely on velocity alone.
+
+
+@router.get(
+    "/leaderboards/boards", response_model=LeaderboardBoardAdminList,
+)
+async def list_leaderboards_admin_boards() -> LeaderboardBoardAdminList:
+    """Every captured leaderboard, oldest → newest by category + name,
+    with its current effective reset cadence and any admin override."""
+    from app.trove.leaderboards.models import (
+        Leaderboard, effective_reset_kind, is_lifetime_kind,
+    )
+    docs = await Leaderboard.find().to_list()
+    items: list[LeaderboardBoardAdminView] = []
+    for d in docs:
+        eff = effective_reset_kind(d, d.uuid)
+        items.append(LeaderboardBoardAdminView(
+            uuid=d.uuid,
+            name=d.name,
+            name_id=d.name_id,
+            category=d.category,
+            category_id=d.category_id,
+            effective_reset_kind=eff,
+            reset_kind_override=d.reset_kind_override,
+            has_periodic_reset=not is_lifetime_kind(eff),
+        ))
+    # Sort by category then name so the table reads naturally and
+    # similar boards group together. Stable secondary sort on uuid so
+    # boards sharing a name don't shuffle between calls.
+    items.sort(key=lambda b: (b.category, b.name, b.uuid))
+    return LeaderboardBoardAdminList(items=items, count=len(items))
+
+
+@router.patch(
+    "/leaderboards/boards/{uuid}", response_model=LeaderboardBoardAdminView,
+)
+async def set_leaderboard_board_reset_kind(
+    uuid: int,
+    payload: LeaderboardBoardResetUpdate,
+) -> LeaderboardBoardAdminView:
+    """Set or clear the reset cadence override for a single board.
+
+    Pass ``"daily"`` / ``"weekly"`` / ``"none"`` to pin; pass ``null`` (or
+    omit the field) to clear and fall back to the hardcoded mapping.
+    Invalidates the cheaters cache so the next visitor sees a result
+    that reflects the new gating; the warmer's wake-event is also fired
+    so the new value lands in the cached payload within seconds, not
+    after the next TTL boundary."""
+    from app.trove.leaderboards import detection as lb_detection
+    from app.trove.leaderboards.models import (
+        Leaderboard, RESET_KIND_VALUES, effective_reset_kind, is_lifetime_kind,
+    )
+
+    new_value = payload.reset_kind_override
+    if new_value is not None and new_value not in RESET_KIND_VALUES:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message=(
+                f"reset_kind_override must be one of "
+                f"{', '.join(RESET_KIND_VALUES)} or null; got {new_value!r}"
+            ),
+        )
+
+    doc = await Leaderboard.find_one(Leaderboard.uuid == uuid)
+    if doc is None:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"No leaderboard with uuid={uuid}",
+        )
+    doc.reset_kind_override = new_value
+    await doc.save()
+
+    # Detection's per-anchor cache keys don't include the per-board
+    # reset_kind, so a stale payload would survive the flip. Nuke the
+    # cache and wake the warmer to backfill so the next visitor sees
+    # accurate flags.
+    lb_detection.invalidate_cache()
+    lb_detection.trigger_warmer()
+
+    eff = effective_reset_kind(doc, doc.uuid)
+    return LeaderboardBoardAdminView(
+        uuid=doc.uuid,
+        name=doc.name,
+        name_id=doc.name_id,
+        category=doc.category,
+        category_id=doc.category_id,
+        effective_reset_kind=eff,
+        reset_kind_override=doc.reset_kind_override,
+        has_periodic_reset=not is_lifetime_kind(eff),
+    )
+
+
 # --- Runtime configuration -------------------------------------------------
 # Master-only knobs that take effect immediately (5-second cache invalidation
 # on the read side). Surfaces ALL registered settings, even unchanged ones,
@@ -452,3 +553,36 @@ async def reset_runtime_config(
         status_code=500, code=ErrorCode.internal_error,
         message="Setting reset but not found on readback — registry mismatch.",
     )
+
+
+# --- Ingest log (master-only) -----------------------------------------------
+# Surfaces the small audit trail written by the four master-only ingest
+# endpoints (/v1/leaderboards/insert, /v1/market/insert,
+# /v1/rotations/chaos-chest/insert, /v1/rotations/challenge/insert). The
+# portal's Ingest tab uses this to render "Recent submissions" so the
+# operator can see when the last bot push landed and what shape it had.
+
+@router.get("/ingest/log")
+async def list_ingest_log(
+    limit: int = Query(default=20, ge=1, le=200),
+    endpoint: str | None = Query(
+        default=None,
+        description="Optional filter: only entries for this route path.",
+    ),
+) -> list[dict]:
+    """Recent rows from the ingest log, newest first. Master-only via
+    the router-level dep."""
+    rows = await ingest_log.recent(limit=limit, endpoint=endpoint)
+    return [
+        {
+            "endpoint": r.endpoint,
+            "timestamp": r.timestamp.isoformat(),
+            "user_email": r.user_email,
+            "success": r.success,
+            "summary": r.summary,
+            "error": r.error,
+            "auth_via": r.auth_via,
+            "token_name": r.token_name,
+        }
+        for r in rows
+    ]

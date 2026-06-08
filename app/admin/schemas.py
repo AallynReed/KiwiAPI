@@ -101,6 +101,46 @@ class InterestItemBulkReplaceResponse(BaseModel):
     added: int     # rows inserted (after de-dup + trim)
 
 
+# --- Leaderboard per-board admin (reset-kind override) ---------------------
+# The admin panel lists every captured board so the master can pin its
+# reset cadence (daily / weekly / none). The hardcoded set in
+# app/trove/leaderboards/models.py is the fallback when no override has
+# been set. Editing here also matters for cheater detection: lifetime
+# boards skip score-outlier + rank-gap and only use velocity.
+
+class LeaderboardBoardAdminView(BaseModel):
+    uuid: int
+    name: str
+    name_id: str
+    category: str
+    category_id: str
+    # The cadence currently in effect for this board. One of "daily",
+    # "weekly", "default" (hardcoded fallback when uuid isn't in either
+    # hardcoded set), or "none" (admin pinned).
+    effective_reset_kind: str
+    # The admin override if set, else None.
+    reset_kind_override: str | None = None
+    # ``True`` for daily / weekly. The portal uses this to colour-code
+    # rows so the admin can see at a glance which boards will run all
+    # three cheater checks vs. velocity-only.
+    has_periodic_reset: bool
+
+
+class LeaderboardBoardAdminList(BaseModel):
+    items: list[LeaderboardBoardAdminView]
+    count: int
+
+
+class LeaderboardBoardResetUpdate(BaseModel):
+    """Body for ``PATCH /admin/leaderboards/boards/{uuid}``.
+
+    ``reset_kind_override`` is one of ``"daily"`` / ``"weekly"`` /
+    ``"none"`` to pin the cadence, or ``None`` to clear the override
+    and fall back to the hardcoded mapping.
+    """
+    reset_kind_override: str | None = None
+
+
 # --- Runtime configuration -------------------------------------------------
 # Sparse Mongo overrides on top of declared registry defaults. The list
 # endpoint always returns every REGISTERED key (so the admin UI doesn't

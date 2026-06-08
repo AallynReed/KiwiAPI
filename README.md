@@ -156,7 +156,8 @@ every zone plus Discord `<t:unix:style>` codes.
 | `GET /v1/leaderboards?created_at=` | boards present at that anchor; each carries `contest_type` for THIS anchor + `reset_kind` / `player_board` flags |
 | `GET /v1/leaderboards/{uuid}` | one board's metadata + full `contests` list |
 | `GET /v1/leaderboards/{uuid}/entries?created_at=&limit=&offset=` | top-N entries for one board at one anchor, ranked |
-| `GET /v1/leaderboards/players/{name}/history?uuid=&limit=` | recent appearances of one player across boards |
+| `GET /v1/leaderboards/players/{name}/history?uuid=&limit=` | recent appearances of one player across boards (case-insensitive on `name`) |
+| `GET /v1/leaderboards/cheaters` | **tokenless** statistical-outlier flagging: MAD-Z + rank-gap + velocity. Per-evidence + per-player confidence; cached 30 min; pre-warmed at boot |
 | `POST /v1/leaderboards/insert?timestamp=` | **master-only ingest**: multipart `file` field with the raw `LeaderBot.cfg` text. Idempotent for a given anchor; `timestamp` is optional and only used for back-fills |
 
 The bot dumps the game's `LeaderBot.cfg` hourly and POSTs the file. **Full history is preserved**: entries
@@ -202,17 +203,23 @@ The api container ALSO serves the BTT marketing/manual site out of `site/`
 |---|---|
 | `GET /` | the BTT landing page (index.html) |
 | `GET /documentation` | the user manual |
-| `GET /unlock_debug` · `POST /unlock_debug` | upload Trove.exe → byte-patched build with the debug console enabled |
-| `GET /unlock_fps` · `POST /unlock_fps` | same shape; removes the FPS cap |
+| `GET /commands` | searchable in-game slash-command reference |
+| `GET /leaderboards` | hourly in-game leaderboard browser (charts, cheaters, activity) |
+| `GET /updates` | per-server (Live US / PTS) game-update file explorer + version diff |
+| `GET /support` | "support the project" landing for the navbar heart icon |
 | `GET /static/*` | site assets (bind-mounted from `site/static/`) |
+| `GET /site/*` | page-side JSON proxies (leaderboards, updates) — same-origin, no token |
 | `GET /api-info` | the old developer-card landing (lives here so `/` is free for the site) |
 
 Point your reverse proxy: `trove.aallyn.net` → the api container's `:15546`,
 forward all paths. `api.aallyn.net` keeps its existing filter to `/v1/*` +
-`/health`. The site's CSP is broader than the API's (loads FontAwesome + GSAP
-from CDN, calls `api.aallyn.net` for release data) — middleware picks the right
-CSP per path. `/unlock_*` accepts a ~100 MB body (Trove.exe size); set your
-proxy's `client_max_body_size` to match.
+`/health`. The site's CSP is broader than the API's (loads FontAwesome + Google
+Fonts from CDN, calls `api.aallyn.net` for release data) — middleware picks
+the right CSP per path.
+
+> **Removed 2026-06:** `/unlock_debug` and `/unlock_fps` byte-patcher routes
+> were deleted after Trion shipped anti-cheat. Any binary tampering is now
+> grounds for a ban; the tools shouldn't exist anymore.
 
 A background relayer polls the configured GitHub repo every 30 min and stores releases in Mongo, so the
 endpoints serve from cache. Channels are detected from GitHub's `prerelease` flag (`release`/`beta`).
@@ -237,6 +244,7 @@ after sending.
 |---|---|
 | `GET /v1/updates/branches` | tracked branches (`live-us`, `pts`) with current version + file count |
 | `GET /v1/updates/{branch}/versions` | captured version history, newest first |
+| `GET /v1/updates/{branch}/changes?version=&ordinal=&type=` | per-file diff a version introduced (added/modified/removed paths); latest if unpinned |
 | `GET /v1/updates/{branch}/tree?prefix=` | one directory level (ls-style); empty prefix = root |
 | `GET /v1/updates/{branch}/file?path=` | a single file's bytes, streamed from the blob store (`/file/meta` for hash+size) |
 

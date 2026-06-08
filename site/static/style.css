@@ -240,6 +240,179 @@ canvas.bg-fx {
   background: linear-gradient(135deg, color-mix(in oklab, var(--accent-blue) 80%, white), var(--accent-orange));
 }
 
+/* Icon-only nav items (Discord, GitHub). Square 36×36 hit target with
+   no text label — frees room on the navbar for the heart-Support link
+   without crowding. Uses the same hover treatment as text links. */
+.nav-links a.nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  color: var(--text-mute);
+}
+.nav-links a.nav-icon:hover {
+  background: var(--bg-card);
+  color: var(--text);
+}
+/* Red-heart Support link. Sits between the social icons and the
+   language picker; pulses to invite the eye without being noisy. */
+.nav-links a.nav-support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  font-size: 1.15rem;
+  color: #ff5e7e;
+  background: transparent;
+  transition: background .12s ease, color .12s ease, transform .15s ease;
+}
+.nav-links a.nav-support:hover {
+  background: rgba(255,94,126,.10);
+  color: #ff7d96;
+  transform: scale(1.08);
+}
+.nav-links a.nav-support.active {
+  background: rgba(255,94,126,.14);
+  color: #ff7d96;
+}
+.nav-links a.nav-support i {
+  /* Match the floating widget's slow pulse — the user reads them as
+     the same call-to-action regardless of which one they spot first. */
+  animation: support-pulse 2.4s ease-in-out infinite;
+}
+
+/* ─── Navbar account widget ──────────────────────────────────────────
+   The signed-out and signed-in states are rendered by site_auth.js;
+   these rules style both. The widget sits between the support heart
+   and the language picker on every site page. */
+.nav-account {
+  display: inline-flex;
+  align-items: center;
+}
+.nav-account[data-state="loading"] {
+  /* Reserve a stable footprint so the navbar doesn't reflow once
+     site_auth.js paints either "Sign in" or the avatar. ~88px is the
+     width of "Sign in"; close enough to the avatar pill for either
+     state to settle without jank. */
+  min-width: 88px;
+  min-height: 36px;
+}
+.nav-account-signin {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(76,201,240,.10);
+  border: 1px solid rgba(76,201,240,.30);
+  color: var(--accent-blue, #4cc9f0);
+  font-size: .9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .12s ease, color .12s ease;
+}
+.nav-account-signin:hover {
+  background: rgba(76,201,240,.20);
+  color: #6fd5f4;
+}
+
+/* Signed-in: avatar + name button that pops a dropdown. */
+.nav-account-menu { position: relative; }
+.nav-account-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text, #e8ecf3);
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease;
+}
+.nav-account-trigger:hover {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(76,201,240,.30);
+}
+.nav-account-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4cc9f0, #7209b7);
+  color: #06080d;
+  font-weight: 700;
+  font-size: .85rem;
+  letter-spacing: .02em;
+}
+.nav-account-name {
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-account-trigger i {
+  font-size: .7rem;
+  color: var(--text-mute);
+}
+.nav-account-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  padding: 6px;
+  background: var(--bg-card, #161b22);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  display: grid;
+  gap: 2px;
+  z-index: 100;
+}
+/* The explicit ``display: grid`` above OVERRIDES the user-agent's
+   ``[hidden] { display: none }`` default, so setting ``panel.hidden = true``
+   in JS does nothing on its own. Re-assert ``display: none`` here so the
+   panel actually disappears when closed. Same trap the leaderboards
+   sidebar already pays attention to. */
+.nav-account-panel[hidden] { display: none; }
+.nav-account-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text, #e8ecf3);
+  font: inherit;
+  font-size: .88rem;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.nav-account-item:hover { background: rgba(255,255,255,.06); }
+.nav-account-item i {
+  color: var(--text-mute);
+  width: 14px;
+  text-align: center;
+}
+.nav-account-item-danger { color: #ff8a8a; }
+.nav-account-item-danger:hover { background: rgba(255,90,90,.10); }
+.nav-account-item-danger i { color: #ff8a8a; }
+
 .nav-toggle {
   display: none;
   background: transparent;
