@@ -191,6 +191,31 @@ class FeedCache(Document):
         indexes = [IndexModel([("feed", ASCENDING)], unique=True)]
 
 
+class TroveStatusEvent(Document):
+    """One segment of an environment's status timeline. The status prober
+    opens a new segment whenever an environment (live / pts) changes
+    status, closing the prior one. A continuous chain of segments per env
+    lets the /status page draw an uptime/downtime history and compute
+    uptime %.
+
+    ``ended_at`` is None while the segment is the current (ongoing) state.
+    Timestamps are unix seconds (same convention as the rest of the
+    trove scope)."""
+
+    env: str               # "live" | "pts"
+    status: str            # "online" | "maintenance" | "down"
+    online: bool           # convenience: was the game socket reachable
+    started_at: int        # unix seconds this state began
+    ended_at: int | None = None   # unix seconds it ended (None = ongoing)
+
+    class Settings:
+        name = "trove_status_events"
+        indexes = [
+            # Newest segment per env (the open one) + history range scans.
+            IndexModel([("env", ASCENDING), ("started_at", DESCENDING)]),
+        ]
+
+
 class FeedbackAttachmentInfo(BaseModel):
     """Embedded inside ``FeedbackEntry.attachments`` as a plain BSON
     subdocument — NO own collection, NO ``_id``. Must inherit from

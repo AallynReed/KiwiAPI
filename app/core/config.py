@@ -179,6 +179,15 @@ class Settings(BaseSettings):
     # caps) rather than letting it exhaust the shared feeds budget. Default 10×:
     # 300 req/min/IP anonymous.
     bilibili_image_rate_limit_multiplier: int = 10
+    # Ingest cooldown: per-token, per-endpoint backstop against a misbehaving
+    # bot resubmitting the same dump over and over. Applies ONLY when the
+    # caller authenticates via API token (the bot path); a master replaying a
+    # captured cfg through the portal "Manual cfg ingest" card uses session-
+    # JWT auth and bypasses this cap so back-fills aren't blocked. Each
+    # ingest endpoint has its own bucket: a leaderboards push doesn't share
+    # a budget with a market push. Returned as 429 with Retry-After.
+    ingest_cooldown_max: int = 1
+    ingest_cooldown_window_seconds: int = 300  # 1 submit / 5 min / endpoint / token
 
     # Minimum password length enforced at signup.
     password_min_length: int = 8
@@ -245,12 +254,18 @@ class Settings(BaseSettings):
     trove_news_feed_url: str = "https://trovegame.com/feed"
     trove_news_refresh_seconds: int = 1800  # background refresh cadence (30 min)
 
-    # --- Relayed feeds (twitch / youtube / bilibili) ---
-    # We don't re-fetch from Twitch/YouTube/Bilibili ourselves — the trovesaurus
-    # bot already does (with its own credentials) and exposes the results. We relay
-    # + cache. Switch to http://host.docker.internal:19501 for the on-box bot.
-    trovesaurus_base_url: str = "https://trovesaurus.aallyn.net"
-    trove_feeds_refresh_seconds: int = 300  # relay refresh cadence (5 min)
+    # --- Community feeds (twitch / youtube / bilibili) ---
+    # Fetched at source by app/trove/relays.py (NOT relayed from the trovesaurus
+    # bot any more): Twitch via a client-credentials app token + Helix, YouTube
+    # via the Data API, Bilibili via an HTML scrape. Credentials come from the
+    # environment with the SAME names the bot used, so values copy across 1:1.
+    # The per-feed filter knobs (search query, excluded channels, cutoff, limits)
+    # are runtime_config tunables (category "community_feeds"), not settings here.
+    twitch_client_id: str | None = None      # env TWITCH_CLIENT_ID
+    twitch_client_secret: str | None = None  # env TWITCH_CLIENT_SECRET
+    yt_api_key: str | None = None            # env YT_API_KEY (YouTube Data API)
+    twitch_game_id: str = "412756"           # Trove's Twitch category id (stable)
+    trove_feeds_refresh_seconds: int = 300   # background fetch cadence (5 min)
 
     # --- BetterTroveTools releases relay (drives in-app update checks) ---
     # Polls the GitHub releases of the configured repo and stores them so the API
@@ -295,6 +310,36 @@ class Settings(BaseSettings):
     trove_update_store_dir: str = "data/updates"           # content-addressed blob store (bind-mounted)
     trove_update_probe_seconds: int = 1200                 # per-branch probe cadence (20 min)
     trove_update_concurrency: int = 6                      # parallel file downloads
+
+    # --- Trove server status prober ---
+    # Auth tier: HTTPS liveness of the shared account-auth gateway
+    # (auth.trionworlds.com). A structured HTTP response (<500) with valid
+    # TLS = reachable; timeout / refused / TLS error / 5xx = down. Catches
+    # full outages but stays up during world-only maintenance (Akamai).
+    # Game tier (per environment): TCP-connect probe of the glsserver port
+    # (6560) on the live / PTS game hosts — captured from pcap; port 6560 is
+    # the stable login-to-game entry (world-instance ports like :3701x are
+    # ephemeral). Accepted = playable; refused/timeout while auth up =
+    # maintenance. Hosts/ports are also runtime-tunable (admin panel).
+    trove_status_auth_url: str = "https://auth.trionworlds.com/auth"
+    trove_status_probe_interval_seconds: int = 60          # probe cadence
+    trove_status_timeout_seconds: float = 8.0              # per-probe timeout
+    # Two public Live regions + PTS. The probe target is the REGIONAL
+    # glsserver (login-to-game) box on :6560, captured from per-region
+    # pcaps — EU = Amsterdam (ams-*), US = Dallas (dal-*), both shaped
+    # {dc}-cXX-bYY.{dc}.triongames.com. NOTE: the trove-pc-live-*-game-N
+    # .trovegame.com hosts are WORLD shards and do NOT listen on 6560 —
+    # probing one is a permanent false "maintenance" (the bug this fixes).
+    # These dal-/ams- boxes may be pool-assigned (adjacent IPs seen:
+    # EU 51.77.91.79/.80, US 51.79.8.229), so all host/port pairs are
+    # runtime-tunable from the admin panel — retarget without a redeploy
+    # if a box rotates out.
+    trove_status_eu_host: str = "ams-c12-b05.ams.triongames.com"
+    trove_status_eu_port: int = 6560
+    trove_status_us_host: str = "dal-c35-b05.dal.triongames.com"
+    trove_status_us_port: int = 6560
+    trove_status_pts_host: str = "trove-pc-pts-us-game-1.trovegame.com"
+    trove_status_pts_port: int = 6560
 
     # --- Rate-limit alerting (daily digest email to the admin) ---
     rate_limit_alert_email: str | None = "aallyn@aallyn.net"

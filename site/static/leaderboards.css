@@ -48,13 +48,20 @@
 }
 
 /* Compact live-engagement metric beneath the subtitle. The icon
-   pulse-glows so the eye picks it up as "this is a live number". */
+   pulse-glows so the eye picks it up as "this is a live number".
+   Renders as a <button> — clickable to toggle the activity-trend
+   sparkline below. Inherits cleanly because button defaults are
+   reset to match the surrounding text style. */
 .lb-activity {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   margin: 4px 0 0;
   padding: 6px 14px;
+  font: inherit;
+  font-family: inherit;
+  text-align: left;
+  /* Reset button styling beyond what the existing pill rule sets */
   background: rgba(63,185,80,.10);
   border: 1px solid rgba(63,185,80,.25);
   border-radius: 999px;
@@ -79,6 +86,127 @@
   font-weight: 700;
   color: #8ee5a0;
 }
+/* Caret on the right edge of the pill — rotates when the trend chart
+   is open so the affordance is obvious. Suppressed in the inert state
+   (no history available yet to expand into). */
+.lb-activity-caret {
+  font-size: .68rem;
+  margin-left: 4px;
+  opacity: 0.65;
+  transition: transform .18s ease, opacity .18s ease;
+}
+.lb-activity.open .lb-activity-caret { transform: rotate(180deg); opacity: 1; }
+.lb-activity:hover .lb-activity-caret { opacity: 1; }
+/* Hover lift: subtle scale + brighter border so the pill looks
+   actionable. Suppressed in inert state. */
+.lb-activity:hover:not(.lb-activity--inert) {
+  background: rgba(93, 208, 120, 0.18);
+  border-color: rgba(93, 208, 120, 0.5);
+}
+.lb-activity:focus-visible {
+  outline: 2px solid rgba(93, 208, 120, 0.6);
+  outline-offset: 2px;
+}
+/* Empty state inside the trend container — shown when the activity
+   history endpoint returned 0 or 1 points (typical right after a
+   fresh deploy or container restart while estimates re-populate). */
+.lb-activity-trend-empty {
+  padding: 14px 8px;
+  text-align: center;
+  font-size: .82rem;
+  color: var(--text-mute);
+  line-height: 1.5;
+}
+
+/* Activity-trend sparkline. Sits inline with the current-hour pill —
+   compact, dim by default, gets a slight glow on hover. Plots
+   estimate_per_hour so missed-capture gaps don't manifest as spikes.
+   ``display: flex`` overrides the user-agent ``[hidden] { display: none }``
+   default, so we re-assert it here (same pattern as .nav-account-panel
+   — see 2026-06 always-open-profile-menu fix). */
+.lb-activity-trend {
+  margin: 10px auto 0;
+  max-width: 340px;
+  padding: 10px 12px 8px;
+  background: rgba(93, 208, 120, 0.045);
+  border: 1px solid rgba(93, 208, 120, 0.18);
+  border-radius: 10px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lb-activity-trend[hidden] { display: none; }
+.lb-activity-trend-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: .72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.lb-activity-trend-label { font-weight: 700; }
+.lb-activity-trend-range {
+  font-size: .68rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.lb-activity-trend-chart {
+  height: 56px;
+  position: relative;
+}
+.lb-activity-trend-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+.lb-activity-trend-line {
+  stroke: #5dd078;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(93, 208, 120, 0.35));
+}
+.lb-activity-trend-area {
+  fill: url(#lb-activity-grad);
+  fill: rgba(93, 208, 120, 0.16);
+}
+.lb-activity-trend-dot {
+  fill: #fff;
+  stroke: #5dd078;
+  stroke-width: 1.6;
+  pointer-events: none;
+  transition: opacity .12s ease;
+}
+.lb-activity-trend-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  background: var(--surface, #1a1f2e);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: .76rem;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  z-index: 5;
+}
+/* ``display: flex`` above overrides the user-agent ``[hidden] {
+   display: none }`` default, so the tooltip would stay visible (empty
+   or with stale text) whenever the JS toggles its hidden attribute.
+   Re-assert. Same class of bug as .nav-account-panel / .lb-activity-trend. */
+.lb-activity-trend-tip[hidden] { display: none; }
+.lb-activity-trend-tip strong { color: #8ee5a0; font-weight: 700; }
+.lb-activity-trend-tip-sub  { font-size: .68rem; color: var(--text-mute); }
+.lb-activity-trend-tip-when { font-size: .68rem; color: var(--text-mute); }
 
 
 /* ─── Toolbar (day picker + player search) ──────────────────────────── */
@@ -655,6 +783,254 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 .lb-cheaters-method p {
   margin: 8px 0 0;
   line-height: 1.55;
+}
+
+/* ─── Cheaters coverage (analyzed + skipped boards) ───────────────────
+   Mirrors the .lb-cheaters-method <details> visual so the two
+   collapsibles stack cleanly. Lives between the meta line and the
+   flagged-players body — closed by default; a one-click open reveals
+   exactly which boards the analysis scanned. */
+.lb-cheaters-coverage {
+  margin: 6px 0 12px;
+  font-size: .85rem;
+  border: 1px solid var(--border-soft, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+  background: var(--surface-2, rgba(255, 255, 255, 0.02));
+}
+.lb-cheaters-coverage > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.lb-cheaters-coverage > summary::-webkit-details-marker { display: none; }
+.lb-cheaters-coverage > summary::before {
+  content: "▸";
+  font-size: .75em;
+  transition: transform .15s ease;
+  display: inline-block;
+  color: var(--text-mute);
+}
+.lb-cheaters-coverage[open] > summary::before { transform: rotate(90deg); }
+.lb-cheaters-coverage-count {
+  color: var(--text-mute);
+  font-weight: 500;
+  font-size: .82rem;
+  margin-left: auto;
+}
+.lb-cheaters-coverage-body { padding: 4px 14px 14px; }
+
+/* Per-cadence palette as CSS variables — kept in one place so the
+   stats strip + row accents stay in lock-step if we re-tune later. */
+.lb-cheaters-coverage {
+  --cov-daily:    #4cc9f0;
+  --cov-weekly:   #c79bff;
+  --cov-lifetime: #fbd182;
+  --cov-admin:    #f72585;
+  --cov-small:    #9aa4b2;
+}
+
+/* ── Stats strip ──────────────────────────────────────────────────
+   Three big-number tiles, one per cadence bucket. Bars share the
+   analyzed total as denominator so widths are honestly comparable. */
+.lb-cov-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 8px 0 18px;
+}
+.lb-cov-stats--skipped {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin: 6px 0 14px;
+}
+.lb-cov-stat {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lb-cov-stat-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.lb-cov-stat-count {
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.lb-cov-stat-label {
+  font-size: .72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  font-weight: 600;
+}
+.lb-cov-stat-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.lb-cov-stat-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .25s ease;
+  min-width: 2px;
+}
+.lb-cov-stat--daily    .lb-cov-stat-count { color: var(--cov-daily); }
+.lb-cov-stat--weekly   .lb-cov-stat-count { color: var(--cov-weekly); }
+.lb-cov-stat--lifetime .lb-cov-stat-count { color: var(--cov-lifetime); }
+.lb-cov-stat--daily    .lb-cov-stat-bar-fill { background: var(--cov-daily); }
+.lb-cov-stat--weekly   .lb-cov-stat-bar-fill { background: var(--cov-weekly); }
+.lb-cov-stat--lifetime .lb-cov-stat-bar-fill { background: var(--cov-lifetime); }
+.lb-cov-stat--admin_excluded .lb-cov-stat-count    { color: var(--cov-admin); }
+.lb-cov-stat--admin_excluded .lb-cov-stat-bar-fill { background: var(--cov-admin); }
+.lb-cov-stat--below_min_size .lb-cov-stat-count    { color: var(--cov-small); }
+.lb-cov-stat--below_min_size .lb-cov-stat-bar-fill { background: var(--cov-small); }
+
+/* ── Category groups ───────────────────────────────────────────── */
+.lb-cov-group + .lb-cov-group { margin-top: 14px; }
+.lb-cov-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.lb-cov-group-rule {
+  flex: 1 1 auto;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.lb-cov-group-count {
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .7rem;
+  letter-spacing: 0.02em;
+}
+.lb-cov-group-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2px 12px;
+}
+
+/* ── Single board row ──────────────────────────────────────────── */
+.lb-cov-row {
+  display: grid;
+  grid-template-columns: 4px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 0;
+  border-radius: 4px;
+  font-size: .85rem;
+  min-width: 0;
+  background-image: linear-gradient(
+    90deg,
+    var(--row-bleed, transparent) 0%,
+    transparent 45%
+  );
+  transition: background-color .12s ease;
+  position: relative;
+}
+.lb-cov-row:hover { background-color: rgba(255, 255, 255, 0.03); }
+.lb-cov-row-dot {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  background: var(--row-accent, var(--text-mute));
+}
+.lb-cov-row-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-cov-row-meta {
+  flex: 0 0 auto;
+  font-size: .72rem;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.lb-cov-row-entries::after {
+  content: "";
+  display: inline;
+}
+/* Cadence accent — left bar color + soft gradient bleed across the row */
+.lb-cov-row.kind-daily {
+  --row-accent: var(--cov-daily);
+  --row-bleed: rgba(76, 201, 240, 0.10);
+}
+.lb-cov-row.kind-weekly {
+  --row-accent: var(--cov-weekly);
+  --row-bleed: rgba(199, 155, 255, 0.10);
+}
+.lb-cov-row.kind-lifetime {
+  --row-accent: var(--cov-lifetime);
+  --row-bleed: rgba(251, 209, 130, 0.10);
+}
+/* Skipped rows: name muted, accent color tracks the REASON not cadence */
+.lb-cov-row.skipped {
+  opacity: 0.85;
+}
+.lb-cov-row.skipped .lb-cov-row-name { color: var(--text-mute); }
+.lb-cov-row.skipped.rsn-admin_excluded {
+  --row-accent: var(--cov-admin);
+  --row-bleed: rgba(247, 37, 133, 0.10);
+}
+.lb-cov-row.skipped.rsn-below_min_size {
+  --row-accent: var(--cov-small);
+  --row-bleed: rgba(154, 164, 178, 0.08);
+}
+.lb-cov-row-reason {
+  color: var(--row-accent, var(--text-mute));
+}
+
+/* ── Skipped section wrapper ───────────────────────────────────── */
+.lb-cov-skipped {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.lb-cov-skipped-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.lb-cov-skipped-rule {
+  flex: 1 1 auto;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.10);
+}
+.lb-cov-skipped-count {
+  font-variant-numeric: tabular-nums;
+  background: rgba(247, 37, 133, 0.14);
+  color: #f6a4cb;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .72rem;
 }
 
 @media (max-width: 640px) {

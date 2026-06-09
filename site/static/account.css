@@ -212,6 +212,11 @@
   border-radius: 12px;
   color: #f9c74f;
 }
+/* ``display: grid`` above overrides the user-agent ``[hidden] {
+   display: none }`` rule, so a verified user's banner would never
+   hide (JS sets ``.hidden = true`` but the grid wins). Re-assert it so
+   the banner actually disappears once the email is confirmed. */
+.dash-banner[hidden] { display: none; }
 .dash-banner > i { font-size: 1.4rem; }
 .dash-banner-title {
   margin: 0 0 2px;
@@ -381,6 +386,11 @@
   letter-spacing: .04em;
   text-transform: uppercase;
 }
+/* ``display: inline-flex`` overrides the user-agent ``[hidden] {
+   display: none }`` default — without this re-assert BOTH the
+   verified and unverified pills render at once (the "Schrödinger"
+   tag), since JS only toggles the ``hidden`` attribute. */
+.dash-tag[hidden] { display: none; }
 .dash-tag-unverified {
   background: rgba(249,199,79,.12);
   color: #f9c74f;

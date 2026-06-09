@@ -89,6 +89,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "leaderboards.html", "text/html")
         if path == "/updates":
             return self._send_file(TEMPLATES / "updates.html", "text/html")
+        if path == "/status":
+            return self._send_file(TEMPLATES / "status.html", "text/html")
 
         # Static.
         if path.startswith("/static/"):
@@ -100,6 +102,46 @@ class Handler(SimpleHTTPRequestHandler):
             # the local preview (prod would normally serve 3 from the
             # runtime_config default).
             return self._send_json({"hot_retention_days": 5})
+        if path == "/site/trove-status":
+            # Multi-env stub: Live in maintenance, PTS online (matches the
+            # real-world state we observed). Auth up.
+            import time as _t
+            return self._send_json({
+                "overall": "maintenance",
+                "auth": {"online": True, "http_status": 405, "latency_ms": 120.0, "error": None},
+                "environments": {
+                    "live": {"status": "maintenance", "online": False,
+                             "game": {"online": False, "host": "trove-pc-live-us-game-1.trovegame.com", "port": 6560, "latency_ms": 3000.0, "error": "TimeoutError"}},
+                    "pts": {"status": "online", "online": True,
+                            "game": {"online": True, "host": "trove-pc-pts-us-game-1.trovegame.com", "port": 6560, "latency_ms": 95.0, "error": None}},
+                },
+                "checked_at": int(_t.time()),
+            })
+        if path == "/site/trove-status/history":
+            # Synthetic 30-day timeline with a couple of outages so the
+            # graphic + outage log render in preview.
+            import time as _t
+            now = int(_t.time()); day = 86400
+            qs = parse_qs(url.query); env = (qs.get("env", ["live"])[0])
+            start = now - 30 * day
+            segs = [
+                {"status": "online", "online": True, "started_at": start, "ended_at": now - 9*day, "duration_seconds": 21*day},
+                {"status": "maintenance", "online": False, "started_at": now - 9*day, "ended_at": now - 9*day + 7200, "duration_seconds": 7200},
+                {"status": "online", "online": True, "started_at": now - 9*day + 7200, "ended_at": now - 2*day, "duration_seconds": 7*day - 7200},
+                {"status": "down", "online": False, "started_at": now - 2*day, "ended_at": now - 2*day + 1800, "duration_seconds": 1800},
+            ]
+            if env == "live":
+                segs.append({"status": "maintenance", "online": False, "started_at": now - 4*3600, "ended_at": None, "duration_seconds": 4*3600})
+            else:
+                segs.append({"status": "online", "online": True, "started_at": now - 2*day + 1800, "ended_at": None, "duration_seconds": 2*day - 1800})
+            covered = sum(s["duration_seconds"] for s in segs)
+            up = sum(s["duration_seconds"] for s in segs if s["status"] == "online")
+            outages = [{"status": s["status"], "started_at": s["started_at"], "ended_at": s["ended_at"], "duration_seconds": s["duration_seconds"]} for s in segs if s["status"] != "online"]
+            return self._send_json({
+                "env": env, "days": 30, "window_start": start, "window_end": now,
+                "uptime": round(up/covered, 5), "covered_seconds": covered,
+                "segments": segs, "outages": outages,
+            })
         if path == "/site/leaderboards/activity":
             # 1.0h window with a realistic count so the hero pill renders.
             return self._send_json({

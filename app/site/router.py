@@ -22,6 +22,7 @@ from fastapi.templating import Jinja2Templates
 from app.admin import runtime_config
 from app.core.config import settings
 from app.trove.leaderboards import activity as leaderboards_activity
+from app.trove import status as trove_status
 from app.trove.leaderboards import detection as leaderboards_detection
 from app.trove.leaderboards import service as leaderboards_service
 from app.trove.updates import compare as updates_compare
@@ -65,6 +66,14 @@ async def support(request: Request) -> HTMLResponse:
     every page; this one gives a richer pitch for visitors who want a
     full read on what the donations actually fund."""
     return _TEMPLATES.TemplateResponse(request, "support.html", {})
+
+
+@router.get("/status", response_class=HTMLResponse)
+async def status_page(request: Request) -> HTMLResponse:
+    """Dedicated Trove server-status page — live Live/PTS state plus a
+    downtime-history timeline. Page shell + JS; data comes from
+    ``/site/trove-status`` + ``/site/trove-status/history``."""
+    return _TEMPLATES.TemplateResponse(request, "status.html", {})
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -255,6 +264,67 @@ async def site_lb_boards(
     )
 
 
+# LITERAL-prefix routes must come BEFORE the ``/{uuid}/...`` catch-alls
+# below — FastAPI matches in declaration order, and a path-param int
+# validator on "activity" / "cheaters" would 422 (not fall through) if
+# the catch-all matched first. Same dance as ``/players/{name}/...`` —
+# put the named segments above the parameterised ones.
+@router.get("/site/leaderboards/activity", response_class=JSONResponse)
+async def site_lb_activity() -> JSONResponse:
+    """Same payload as `/v1/leaderboards/activity` but served same-origin
+    so the page can fetch without CORS."""
+    payload = await leaderboards_activity.estimate_active_players()
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
+
+
+@router.get("/site/leaderboards/activity/history", response_class=JSONResponse)
+async def site_lb_activity_history(days: int = 7) -> JSONResponse:
+    """Same payload as ``/v1/leaderboards/activity/history`` — same-origin
+    proxy so the showcase page can fetch without CORS / token gymnastics.
+    Returns a time-series of activity estimates with both raw counts
+    and per-hour rates, the latter being what the chart line plots so
+    missed-capture gaps don't show as spikes."""
+    days = max(1, min(int(days), 30))
+    payload = await leaderboards_activity.estimate_active_players_history(days=days)
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
+
+
+@router.get("/site/trove-status", response_class=JSONResponse)
+async def site_trove_status() -> JSONResponse:
+    """Live Trove server status (Live + PTS) — same payload as
+    ``/v1/misc/trove-status``, served same-origin so the landing + status
+    pages can fetch it without CORS."""
+    payload = trove_status.get_status()
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=30"})
+
+
+@router.get("/site/trove-status/history", response_class=JSONResponse)
+async def site_trove_status_history(env: str = "live", days: int = 30) -> JSONResponse:
+    """Status-timeline history for the /status page (same payload as
+    ``/v1/misc/trove-status/history``). ``env`` ∈ live / pts."""
+    env = env if env in ("live", "pts") else "live"
+    days = max(1, min(int(days), 90))
+    payload = await trove_status.get_history(env, days)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/leaderboards/cheaters", response_class=JSONResponse)
+async def site_lb_cheaters() -> JSONResponse:
+    """Possible-cheaters analysis for the leaderboards page. Same payload
+    as the public ``GET /v1/leaderboards/cheaters`` endpoint — served
+    here so the page can fetch same-origin (no CORS dance from
+    trove.aallyn.net). The detection module itself caches the result
+    for ``cheaters_cache_ttl_seconds`` so this is cheap to call."""
+    payload = await leaderboards_detection.detect_possible_cheaters()
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    return JSONResponse(
+        payload,
+        headers={"Cache-Control": f"public, max-age={ttl}"},
+    )
+
+
 @router.get("/site/leaderboards/{uuid}/entries", response_class=JSONResponse)
 async def site_lb_entries(
     uuid: int,
@@ -316,30 +386,6 @@ async def site_lb_player_series(
         player_name, days=days,
     )
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=30"})
-
-
-@router.get("/site/leaderboards/activity", response_class=JSONResponse)
-async def site_lb_activity() -> JSONResponse:
-    """Same payload as `/v1/leaderboards/activity` but served same-origin
-    so the page can fetch without CORS."""
-    payload = await leaderboards_activity.estimate_active_players()
-    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
-    return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
-
-
-@router.get("/site/leaderboards/cheaters", response_class=JSONResponse)
-async def site_lb_cheaters() -> JSONResponse:
-    """Possible-cheaters analysis for the leaderboards page. Same payload
-    as the public ``GET /v1/leaderboards/cheaters`` endpoint — served
-    here so the page can fetch same-origin (no CORS dance from
-    trove.aallyn.net). The detection module itself caches the result
-    for ``cheaters_cache_ttl_seconds`` so this is cheap to call."""
-    payload = await leaderboards_detection.detect_possible_cheaters()
-    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
-    return JSONResponse(
-        payload,
-        headers={"Cache-Control": f"public, max-age={ttl}"},
-    )
 
 
 @router.get("/updates", response_class=HTMLResponse)

@@ -39,6 +39,8 @@ PAIRS = [
     (STATIC / "dashboard.js",      STATIC / "dashboard.min.js"),
     (STATIC / "market.css",        STATIC / "market.min.css"),
     (STATIC / "market.js",         STATIC / "market.min.js"),
+    (STATIC / "status.css",        STATIC / "status.min.css"),
+    (STATIC / "status.js",         STATIC / "status.min.js"),
     (STATIC / "password_reset.js", STATIC / "password_reset.min.js"),
 ]
 

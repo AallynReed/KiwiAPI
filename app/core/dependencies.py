@@ -281,6 +281,27 @@ async def require_master_ingest(
             code=ErrorCode.forbidden,
             message="Master account required for ingest endpoints.",
         )
+
+    # Per-token, per-endpoint cooldown. ONLY enforced on the API-token
+    # branch — a misbehaving bot resubmitting the same dump on a tight
+    # loop is the spam shape this catches (see ingest_log for duplicate-
+    # anchor spam history). Session-JWT calls bypass this so the master
+    # can replay back-fills through the portal "Manual cfg ingest" card
+    # without waiting out the window. Each ingest endpoint buckets
+    # independently — leaderboards/market/challenge/chaos-chest don't
+    # share budgets.
+    if token is not None:
+        from app.admin import runtime_config
+
+        route = request.scope.get("route")
+        route_path = getattr(route, "path", "") or ""
+        if route_path:
+            cool_max, cool_window = await runtime_config.get_rate_limit(
+                "ingest_cooldown"
+            )
+            await check_rate_limit(
+                f"ingest:{route_path}:{token.id}", cool_max, cool_window,
+            )
     return IngestAuth(user=user, token=token)
 
 

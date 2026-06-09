@@ -71,7 +71,7 @@
          Inter as the system body fallback (already in our font stack). -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.min.css?v=20260608b">
+    <link rel="stylesheet" href="/static/style.min.css?v=20260609b">
 
     <!-- Graceful fallback for screenshots that haven't been captured yet.
          Same hook the previous design used, unchanged so any feature-card
@@ -103,68 +103,7 @@
     <!-- Glass-blurred sticky nav. ID/class names match what app.js binds to
          (nav-toggle, nav-links, .navbar, .open) so the hamburger logic
          keeps working without changes. -->
-    <header class="navbar" role="banner">
-        <div class="nav-container">
-            <a class="nav-logo" href="#hero" aria-label="Better Trove Tools home">
-                <img src="/static/assets/favicon.png" alt="">
-                <span data-i18n>Better <span class="highlight-blue">Trove</span> Tools</span>
-            </a>
-
-            <button type="button" class="nav-toggle" id="nav-toggle"
-                    aria-label="Toggle navigation menu" aria-expanded="false"
-                    aria-controls="nav-links">
-                <i class="fa-solid fa-bars" aria-hidden="true"></i>
-            </button>
-
-            <nav class="nav-links" id="nav-links" aria-label="Primary">
-                <a class="nav-cta" href="https://btt.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span data-i18n>Web App</span></a>
-                <a href="/documentation"><i class="fa-solid fa-book"></i> <span data-i18n>User Guide</span></a>
-
-                <!-- Pages dropdown — any future sister page (commands,
-                     calendars, etc.) goes inside this menu. -->
-                <div class="nav-dropdown">
-                    <button type="button" class="nav-dropdown-trigger"
-                            aria-haspopup="true" aria-expanded="false"
-                            aria-controls="nav-pages-panel">
-                        <i class="fa-solid fa-layer-group"></i>
-                        <span data-i18n>Pages</span>
-                        <i class="fa-solid fa-chevron-down nav-dropdown-caret" aria-hidden="true"></i>
-                    </button>
-                    <div class="nav-dropdown-panel" id="nav-pages-panel" role="menu">
-                        <a href="/commands" role="menuitem"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>
-                        <a href="/leaderboards" role="menuitem"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>
-                        <a href="/updates" role="menuitem"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>
-                        <a href="/market" role="menuitem"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta">Beta</span></a>
-                    </div>
-                </div>
-
-                <!-- Developers dropdown — Dev Portal + API Docs, both
-                     visible above the fold on every page they appear on. -->
-                <div class="nav-dropdown">
-                    <button type="button" class="nav-dropdown-trigger"
-                            aria-haspopup="true" aria-expanded="false"
-                            aria-controls="nav-devs-panel">
-                        <i class="fa-solid fa-code"></i>
-                        <span data-i18n>Developers</span>
-                        <i class="fa-solid fa-chevron-down nav-dropdown-caret" aria-hidden="true"></i>
-                    </button>
-                    <div class="nav-dropdown-panel" id="nav-devs-panel" role="menu">
-                        <a href="https://dev.aallyn.net" role="menuitem"><i class="fa-solid fa-key"></i> <span data-i18n>Dev Portal</span></a>
-                        <a href="https://docs.aallyn.net" role="menuitem"><i class="fa-solid fa-terminal"></i> <span data-i18n>API Docs</span></a>
-                    </div>
-                </div>
-
-                <a class="nav-icon" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
-                <a class="nav-icon" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
-                <a class="nav-support" href="/support" aria-label="Support" title="Support the project"><i class="fa-solid fa-heart"></i></a>
-                <span id="nav-account" class="nav-account" data-state="loading"></span>
-                <span class="lang-picker">
-                    <i class="fa-solid fa-globe lang-picker-icon"></i>
-                    <select id="langSelect" class="lang-select" aria-label="Language"></select>
-                </span>
-            </nav>
-        </div>
-    </header>
+    {% include "partials/navbar.html" %}
 
     <main id="main">
 
@@ -280,6 +219,19 @@
                     <span class="plat-badge plat-android" title="Android"><i class="fa-brands fa-android" aria-hidden="true"></i><span>Android</span></span>
                     <span class="plat-badge plat-web"     title="Web app"><i class="fa-solid fa-globe"   aria-hidden="true"></i><span>Web app</span></span>
                 </div>
+
+                <!-- Trove SERVER status — deliberately placed below the
+                     platform badges so it reads as a distinct, Trove-game
+                     signal rather than a Better Trove Tools status. A link
+                     to the full /status page. JS-owned (landing.js), hidden
+                     until /site/trove-status resolves. -->
+                <a class="trove-status" id="trove-status" href="/status" hidden role="status" aria-live="polite">
+                    <span class="trove-status-dot" aria-hidden="true"></span>
+                    <span class="trove-status-label" data-i18n>Trove servers</span>
+                    <span class="trove-status-sep" aria-hidden="true">·</span>
+                    <span class="trove-status-text"></span>
+                    <i class="fa-solid fa-arrow-right trove-status-arrow" aria-hidden="true"></i>
+                </a>
             </div>
 
             <a class="scroll-cue" href="#live" aria-label="Scroll to live data">
@@ -582,43 +534,7 @@
         </section>
     </main>
 
-    <footer class="site-footer" role="contentinfo">
-        <div class="footer-grid">
-            <div class="footer-col footer-brand">
-                <img src="/static/assets/favicon.png" alt="" class="footer-logo" loading="lazy" decoding="async">
-                <strong>Better <span class="highlight-blue">Trove</span> Tools</strong>
-                <p class="footer-tagline" data-i18n>Free &amp; open source. By the community, for the community.</p>
-            </div>
-
-            <div class="footer-col">
-                <h3 data-i18n>Product</h3>
-                <a href="#hero" data-i18n>Download</a>
-                <a href="https://btt.aallyn.net" target="_blank" rel="noopener" data-i18n>Web App</a>
-                <a href="#features" data-i18n>Features</a>
-                <a href="/documentation" data-i18n>User Guide</a>
-                <a href="/commands" data-i18n>Commands</a>
-            </div>
-
-            <div class="footer-col">
-                <h3 data-i18n>Developers</h3>
-                <a href="https://dev.aallyn.net">Developer Portal</a>
-                <a href="https://docs.aallyn.net">API Reference</a>
-                <a href="https://docs.aallyn.net/llms.txt">llms.txt</a>
-                <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener">GitHub</a>
-            </div>
-
-            <div class="footer-col">
-                <h3 data-i18n>Community</h3>
-                <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a>
-                <a href="https://trovesaurus.com" target="_blank" rel="noopener">Trovesaurus</a>
-            </div>
-        </div>
-        <p class="footer-fineprint">
-            <span>© Aallyn Reed</span>
-            <span class="sep">·</span>
-            <span data-i18n>No telemetry. No ads. No paywalls.</span>
-        </p>
-    </footer>
+    {% include "partials/footer.html" %}
 
     <!-- ─── Support widget ──────────────────────────────────────────────
          Sticky bottom-right pill that expands into the three donation
@@ -649,9 +565,9 @@
         </div>
     </div>
 
-    <script src="/static/app.min.js?v=20260608b"></script>
-    <script src="/static/i18n.min.js?v=20260608b"></script>
+    <script src="/static/app.min.js?v=20260609b"></script>
+    <script src="/static/i18n.min.js?v=20260609b"></script>
     <script src="/static/site_auth.min.js?v=20260608f" defer></script>
-    <script src="/static/landing.min.js?v=20260608b" defer></script>
+    <script src="/static/landing.min.js?v=20260609b" defer></script>
 </body>
 </html>

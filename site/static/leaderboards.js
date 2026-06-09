@@ -97,6 +97,12 @@
   const $cheatersFilter = document.getElementById('lb-cheaters-min');
   const $cheatersFilterValue = document.getElementById('lb-cheaters-min-value');
   const $cheatersFilterHint = document.getElementById('lb-cheaters-filter-hint');
+  // Coverage <details> — populated whenever a cheaters payload renders;
+  // tells the user exactly which boards were scanned vs skipped + why,
+  // so they can verify the analysis covered what they care about.
+  const $cheatersCoverage = document.getElementById('lb-cheaters-coverage');
+  const $cheatersCoverageCount = document.getElementById('lb-cheaters-coverage-count');
+  const $cheatersCoverageBody = document.getElementById('lb-cheaters-coverage-body');
   const $tabBoardsBtn = document.getElementById('lb-tab-boards');
   const $tabCheatersBtn = document.getElementById('lb-tab-cheaters');
   const $tabCheatersBadge = document.getElementById('lb-tab-cheaters-badge');
@@ -130,21 +136,42 @@
     // the user activates that tab (see ensureCheatersLoaded). Activity
     // estimate is tiny and goes inline in the hero, so it ships with
     // the eager batch.
-    const [stamps, config, activity] = await Promise.all([
+    const [stamps, config, activity, activityHistory] = await Promise.all([
       fetchJSON('/site/leaderboards/timestamps'),
       fetchJSON('/site/leaderboards/config').catch(() => null),
       fetchJSON('/site/leaderboards/activity').catch(() => null),
+      // History feeds the sparkline next to the current-hour pill.
+      // ?days=7 covers a full week of hourly captures (~168 points);
+      // missing the chart entirely is fine on a fresh deploy so a
+      // failure here is silenced.
+      fetchJSON('/site/leaderboards/activity/history?days=7').catch(() => null),
     ]);
     state.anchors = stamps.items || [];
     if (config && Number.isFinite(config.hot_retention_days)) {
       state.hotRetentionDays = config.hot_retention_days;
     }
     state.activity = activity;
+    state.activityHistory = activityHistory;
+    // Open/closed state is sticky across visits — honour whatever the
+    // user chose last time. The trend section starts hidden in the HTML
+    // so a false here just leaves it that way.
+    state.activityTrendOpen = readActivityTrendOpen();
     renderSubtitle();
     renderActivity();
+    if (state.activityTrendOpen) setActivityTrendOpen(true);
 
     buildDays();
     renderDayPicker();
+
+    // Keep the "Today" chip's relative "Xm ago" label fresh if the page
+    // sits open. Re-rendering the whole (tiny) picker every 60s is cheap
+    // and reattaches its click handlers harmlessly. Guarded so we only
+    // ever install one interval.
+    if (!state._dayTicker) {
+      state._dayTicker = setInterval(() => {
+        if (state.days && state.days.length) renderDayPicker();
+      }, 60_000);
+    }
 
     if (!state.days.some((d) => d.anchor != null)) {
       $boardList.innerHTML = `<p class="lb-board-empty" data-i18n>No leaderboard data has been captured yet. Check back later.</p>`;
@@ -311,6 +338,11 @@
       $cheatersMeta.textContent = t('No capture available yet to analyse.');
     }
 
+    // Coverage section — list which boards the analysis touched. Always
+    // worth showing when we have an anchor (transparency), even when zero
+    // players are flagged so the user can see WHICH boards passed clean.
+    renderCheatersCoverage(data);
+
     if (!visible.length) {
       $cheatersBody.innerHTML = `<p class="lb-cheaters-empty" data-i18n>No suspicious activity flagged.</p>`;
       rerunI18n();
@@ -398,6 +430,194 @@
     return 'lb-confidence-low';
   }
 
+  // ─── Cheaters coverage (analyzed + skipped boards) ────────────────
+  // The collapsible coverage panel under the cheaters tab meta line.
+  // Design intent: at a glance, the reader sees (1) WHAT FRACTION of
+  // analyzable boards landed in each cadence bucket (the stats strip up
+  // top, where the bar widths are proportional to count), and (2) WHICH
+  // boards specifically were touched, grouped by category and accented
+  // by cadence via a left-edge color stripe. Skipped boards live in a
+  // separate section below with the reason rendered as its own bucket
+  // strip so the count of operator-excluded vs below-min-size is
+  // scannable without reading the per-row labels. Backward compatible:
+  // older API payloads (pre-analyzed_boards) just hide the element.
+  function renderCheatersCoverage(data) {
+    if (!$cheatersCoverage) return;
+    const analyzed = (data && data.analyzed_boards) || [];
+    const excluded = (data && data.excluded_boards) || [];
+    if (analyzed.length === 0 && excluded.length === 0) {
+      $cheatersCoverage.hidden = true;
+      return;
+    }
+    $cheatersCoverage.hidden = false;
+    if ($cheatersCoverageCount) {
+      const a = analyzed.length, s = excluded.length;
+      $cheatersCoverageCount.textContent = s > 0
+        ? t('{a} analyzed · {s} skipped').replace('{a}', a).replace('{s}', s)
+        : t('{a} analyzed').replace('{a}', a);
+    }
+    if (!$cheatersCoverageBody) return;
+
+    const parts = [];
+    if (analyzed.length) {
+      parts.push(renderCoverageStats(analyzed));
+      parts.push(renderCoverageGroups(analyzed, false));
+    }
+    if (excluded.length) {
+      parts.push(renderCoverageSkipped(excluded));
+    }
+    $cheatersCoverageBody.innerHTML = parts.join('');
+    rerunI18n();
+  }
+
+  // Stats strip — three big-number tiles, one per cadence bucket, each
+  // with a proportional bar underneath. The bars share a denominator
+  // (analyzed total) so visual width comparisons across buckets are
+  // honest. Zero-count buckets still render so the reader sees the
+  // absence — "0 weekly" is information.
+  function renderCoverageStats(analyzed) {
+    const by = { daily: 0, weekly: 0, lifetime: 0 };
+    for (const b of analyzed) by[cadenceBucket(b)]++;
+    const total = analyzed.length || 1;
+    const tile = (key, label) => {
+      const n = by[key];
+      const pct = (n / total) * 100;
+      return `
+        <div class="lb-cov-stat lb-cov-stat--${key}">
+          <div class="lb-cov-stat-head">
+            <span class="lb-cov-stat-count">${n}</span>
+            <span class="lb-cov-stat-label">${esc(label)}</span>
+          </div>
+          <div class="lb-cov-stat-bar">
+            <div class="lb-cov-stat-bar-fill" style="width:${pct.toFixed(1)}%"></div>
+          </div>
+        </div>`;
+    };
+    return `
+      <div class="lb-cov-stats">
+        ${tile('daily', t('daily'))}
+        ${tile('weekly', t('weekly'))}
+        ${tile('lifetime', t('lifetime'))}
+      </div>`;
+  }
+
+  // Grouped board rows, one section per category. Each row carries a
+  // cadence-tinted left bar + soft gradient bleed into the surface;
+  // entry count is right-aligned in a tabular figure so the columns
+  // line up vertically when names truncate.
+  function renderCoverageGroups(boards, isSkipped) {
+    const groups = new Map();
+    for (const b of boards) {
+      const cat = b.category || '—';
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(b);
+    }
+    const out = [];
+    for (const [cat, items] of groups) {
+      out.push(`
+        <div class="lb-cov-group">
+          <div class="lb-cov-group-head">
+            <span class="lb-cov-group-name">${esc(cat)}</span>
+            <span class="lb-cov-group-rule"></span>
+            <span class="lb-cov-group-count">${items.length}</span>
+          </div>
+          <div class="lb-cov-group-body">
+            ${items.map((b) => renderCoverageRow(b, isSkipped)).join('')}
+          </div>
+        </div>`);
+    }
+    return out.join('');
+  }
+
+  function renderCoverageRow(b, isSkipped) {
+    const bucket = cadenceBucket(b);
+    // Classname carries the bucket so the left-edge accent + gradient
+    // tint can vary per row without inline style. ``rsn-*`` adds a
+    // second class when skipped so the muted state is independent.
+    const classes = ['lb-cov-row', `kind-${bucket}`];
+    if (isSkipped) classes.push('skipped', `rsn-${b.reason || 'unknown'}`);
+    // Right column shows entries (analyzed) or reason (skipped). For
+    // skipped rows the reason text is short and acts as the visual
+    // sorting cue.
+    let right;
+    if (isSkipped) {
+      const reasonText = b.reason === 'admin_excluded'
+        ? t('opted out')
+        : b.reason === 'below_min_size'
+          ? (typeof b.entries === 'number'
+              ? t('only {n}').replace('{n}', b.entries)
+              : t('too few'))
+          : (b.reason || '');
+      right = `<span class="lb-cov-row-meta lb-cov-row-reason">${esc(reasonText)}</span>`;
+    } else {
+      const entries = typeof b.entries === 'number' ? b.entries : null;
+      right = entries == null
+        ? ''
+        : `<span class="lb-cov-row-meta lb-cov-row-entries">${entries.toLocaleString()}</span>`;
+    }
+    // Tooltip: always full name + entries when relevant, so truncation
+    // never loses information.
+    const tipParts = [b.name];
+    if (typeof b.entries === 'number') {
+      tipParts.push(t('{n} entries').replace('{n}', b.entries));
+    }
+    const tip = tipParts.join(' · ');
+    return `
+      <div class="${classes.join(' ')}" title="${esc(tip)}">
+        <span class="lb-cov-row-dot" aria-hidden="true"></span>
+        <span class="lb-cov-row-name">${esc(b.name)}</span>
+        ${right}
+      </div>`;
+  }
+
+  // Skipped section: own heading + reason-breakdown tiles, then the
+  // grouped rows (reuses renderCoverageGroups with skipped=true).
+  function renderCoverageSkipped(excluded) {
+    const byReason = { admin_excluded: 0, below_min_size: 0 };
+    for (const b of excluded) {
+      if (b.reason === 'admin_excluded' || b.reason === 'below_min_size') {
+        byReason[b.reason]++;
+      }
+    }
+    const total = excluded.length || 1;
+    const reasonTile = (key, label) => {
+      const n = byReason[key];
+      if (n === 0) return '';
+      const pct = (n / total) * 100;
+      return `
+        <div class="lb-cov-stat lb-cov-stat--${key}">
+          <div class="lb-cov-stat-head">
+            <span class="lb-cov-stat-count">${n}</span>
+            <span class="lb-cov-stat-label">${esc(label)}</span>
+          </div>
+          <div class="lb-cov-stat-bar">
+            <div class="lb-cov-stat-bar-fill" style="width:${pct.toFixed(1)}%"></div>
+          </div>
+        </div>`;
+    };
+    return `
+      <div class="lb-cov-skipped">
+        <div class="lb-cov-skipped-head">
+          <span class="lb-cov-skipped-label" data-i18n>Skipped boards</span>
+          <span class="lb-cov-skipped-rule"></span>
+          <span class="lb-cov-skipped-count">${excluded.length}</span>
+        </div>
+        <div class="lb-cov-stats lb-cov-stats--skipped">
+          ${reasonTile('admin_excluded', t('opted out by operator'))}
+          ${reasonTile('below_min_size', t('too few entries'))}
+        </div>
+        ${renderCoverageGroups(excluded, true)}
+      </div>`;
+  }
+
+  // "daily" / "weekly" / "lifetime" — the bucket the row gets tinted by.
+  function cadenceBucket(b) {
+    const rk = b.reset_kind || 'default';
+    if (rk === 'default' || rk === 'none') return 'lifetime';
+    if (rk === 'weekly') return 'weekly';
+    return 'daily';
+  }
+
   function renderCheaterBoard(b) {
     const meta = [
       t('Rank') + ' #' + b.rank,
@@ -482,6 +702,18 @@
   // captures. Renders as a small pill under the subtitle. Stays hidden
   // when the API can't compute one yet (e.g. only one anchor in the DB,
   // typical right after the bot starts sending unique timestamps).
+  // localStorage key so the user's open/closed preference for the
+  // activity trend chart persists across visits.
+  const ACTIVITY_TREND_OPEN_KEY = 'btt_lb_activity_trend_open';
+  function readActivityTrendOpen() {
+    try { return localStorage.getItem(ACTIVITY_TREND_OPEN_KEY) === '1'; }
+    catch (_) { return false; }
+  }
+  function writeActivityTrendOpen(open) {
+    try { localStorage.setItem(ACTIVITY_TREND_OPEN_KEY, open ? '1' : '0'); }
+    catch (_) { /* private mode / blocked storage — fail soft */ }
+  }
+
   function renderActivity() {
     const el = document.getElementById('lb-activity');
     if (!el) return;
@@ -497,9 +729,202 @@
     const text = tmpl
       .replace('{n}', `<span class="lb-activity-count">${Number(data.estimate).toLocaleString()}</span>`)
       .replace('{h}', hours.toFixed(1));
-    el.innerHTML = `<span class="lb-activity-dot" aria-hidden="true"></span>${text}`;
+    // Caret icon on the right tells the user this is a toggle. Rotated
+    // via CSS when the parent carries .open. Always shown — the
+    // expandable section renders an empty-state hint if no points are
+    // available yet (e.g. fresh deploy), so clicking is never wasted.
+    el.innerHTML =
+      `<span class="lb-activity-dot" aria-hidden="true"></span>` +
+      `<span class="lb-activity-text">${text}</span>` +
+      `<i class="fa-solid fa-chevron-down lb-activity-caret" aria-hidden="true"></i>`;
     el.title = data.methodology || '';
     el.hidden = false;
+
+    // Wire the click toggle ONCE — guard against re-binding on
+    // language changes (renderActivity re-runs on i18n refresh).
+    if (!el.dataset.toggleWired) {
+      el.addEventListener('click', () => {
+        const open = !state.activityTrendOpen;
+        setActivityTrendOpen(open);
+      });
+      el.dataset.toggleWired = '1';
+    }
+  }
+
+  // Open/close the activity trend chart. Renders the SVG on first
+  // open (chart can be heavy) and remembers the choice in localStorage.
+  function setActivityTrendOpen(open) {
+    const pill = document.getElementById('lb-activity');
+    const wrap = document.getElementById('lb-activity-trend');
+    state.activityTrendOpen = !!open;
+    writeActivityTrendOpen(state.activityTrendOpen);
+    if (pill) {
+      pill.classList.toggle('open', state.activityTrendOpen);
+      pill.setAttribute('aria-expanded', String(state.activityTrendOpen));
+    }
+    if (wrap) wrap.hidden = !state.activityTrendOpen;
+    if (!state.activityTrendOpen) return;
+
+    // If we don't have history yet (initial fetch failed or returned
+    // empty), retry once now so re-opening later actually loads data
+    // that may have been ingested since first paint.
+    const cached = state.activityHistory;
+    const haveData = cached && cached.points && cached.points.length >= 2;
+    if (!haveData) {
+      renderActivityTrend();   // paint the empty-state placeholder
+      fetchJSON('/site/leaderboards/activity/history?days=7')
+        .then((d) => { state.activityHistory = d; renderActivityTrend(); })
+        .catch(() => { /* leave empty-state in place */ });
+      return;
+    }
+    renderActivityTrend();
+  }
+
+  // ─── Activity history sparkline ───────────────────────────────────
+  // Tiny inline-SVG line chart of activity ESTIMATES over the last 7
+  // days. Plots ``estimate_per_hour`` rather than the raw estimate —
+  // that flattens spikes caused by missed captures (a 2h window would
+  // otherwise show roughly 2× the count of a healthy 1h window). The
+  // chart is decorative — no axes, no labels — but a hover indicator
+  // surfaces (when, raw count, duration). Hidden when fewer than 2
+  // points are available (fresh deploy with no history yet).
+  function renderActivityTrend() {
+    const wrap = document.getElementById('lb-activity-trend');
+    const host = document.getElementById('lb-activity-trend-chart');
+    const range = document.getElementById('lb-activity-trend-range');
+    const tip = document.getElementById('lb-activity-trend-tip');
+    if (!wrap || !host) return;
+    // Visibility is owned by setActivityTrendOpen; this function only
+    // paints the contents.
+
+    const data = state.activityHistory;
+    const points = (data && data.points) || [];
+    if (points.length < 2) {
+      // Empty state — explain why the chart isn't here yet without
+      // wasting the click. The pill stays clickable; if the user
+      // re-opens later when data has accumulated, it'll paint.
+      if (range) range.textContent = '';
+      host.innerHTML =
+        `<div class="lb-activity-trend-empty" data-i18n>` +
+          t('Captures every hour — chart appears once 2+ are stored.') +
+        `</div>`;
+      if (tip) tip.hidden = true;
+      rerunI18n();
+      return;
+    }
+
+    // Range label (e.g. "last 7d · 42 captures") — gives the user a
+    // sense of how much of the window is filled in.
+    if (range) {
+      const days = data.days || 7;
+      const captures = points.length;
+      range.textContent = t('last {d}d · {n} captures')
+        .replace('{d}', days).replace('{n}', captures);
+    }
+
+    // SVG geometry — fixed pixel size so the line shape is consistent
+    // across viewports. Width fills the hero column; height is fixed
+    // so the hero doesn't shift on chart load.
+    const W = 320, H = 56;
+    const padX = 4, padT = 4, padB = 8;
+    const plotW = W - padX * 2, plotH = H - padT - padB;
+
+    const xs = points.map((p) => p.window_end);
+    const ys = points.map((p) => p.estimate_per_hour || 0);
+    const xMin = xs[0], xMax = xs[xs.length - 1];
+    const xRange = Math.max(1, xMax - xMin);
+    let yMax = Math.max(...ys, 1);
+    const yMin = 0;             // anchor at zero so the line shape is honest
+    const yRange = Math.max(1, yMax - yMin);
+    const xToPx = (t) => padX + ((t - xMin) / xRange) * plotW;
+    const yToPx = (v) => padT + (1 - (v - yMin) / yRange) * plotH;
+
+    // Build path + an area fill underneath for visual weight.
+    const linePts = points.map(
+      (p, i) => `${i === 0 ? 'M' : 'L'}${xToPx(p.window_end).toFixed(1)},${yToPx(p.estimate_per_hour).toFixed(1)}`,
+    ).join(' ');
+    const areaPts = linePts +
+      ` L${xToPx(xMax).toFixed(1)},${(padT + plotH).toFixed(1)}` +
+      ` L${xToPx(xMin).toFixed(1)},${(padT + plotH).toFixed(1)} Z`;
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('class', 'lb-activity-trend-svg');
+    svg.setAttribute('role', 'img');
+    // Area fill
+    const area = document.createElementNS(svgNS, 'path');
+    area.setAttribute('class', 'lb-activity-trend-area');
+    area.setAttribute('d', areaPts);
+    svg.appendChild(area);
+    // Line on top
+    const line = document.createElementNS(svgNS, 'path');
+    line.setAttribute('class', 'lb-activity-trend-line');
+    line.setAttribute('d', linePts);
+    line.setAttribute('fill', 'none');
+    svg.appendChild(line);
+    // Hover dot (initially hidden)
+    const dot = document.createElementNS(svgNS, 'circle');
+    dot.setAttribute('class', 'lb-activity-trend-dot');
+    dot.setAttribute('r', '3');
+    dot.style.opacity = '0';
+    svg.appendChild(dot);
+    // Mouse overlay
+    const overlay = document.createElementNS(svgNS, 'rect');
+    overlay.setAttribute('x', padX);
+    overlay.setAttribute('y', padT);
+    overlay.setAttribute('width', plotW);
+    overlay.setAttribute('height', plotH);
+    overlay.setAttribute('fill', 'transparent');
+    svg.appendChild(overlay);
+
+    host.innerHTML = '';
+    host.appendChild(svg);
+
+    // Hover: find the point nearest the cursor's x, populate the tip.
+    function onMove(evt) {
+      const r = svg.getBoundingClientRect();
+      const sx = ((evt.clientX - r.left) / r.width) * W;
+      const ratio = Math.max(0, Math.min(1, (sx - padX) / plotW));
+      const targetT = xMin + ratio * xRange;
+      let best = 0, bestDist = Infinity;
+      for (let i = 0; i < points.length; i++) {
+        const d = Math.abs(points[i].window_end - targetT);
+        if (d < bestDist) { bestDist = d; best = i; }
+      }
+      const p = points[best];
+      dot.setAttribute('cx', xToPx(p.window_end).toFixed(1));
+      dot.setAttribute('cy', yToPx(p.estimate_per_hour).toFixed(1));
+      dot.style.opacity = '1';
+      if (!tip) return;
+      const when = new Date(p.window_end * 1000);
+      const windowLabel = p.duration_hours && p.duration_hours > 1.1
+        ? t('over {h}h window (gap)').replace('{h}', p.duration_hours.toFixed(1))
+        : t('1h window');
+      tip.innerHTML = `
+        <strong>${Number(p.estimate).toLocaleString()}</strong>
+        <span class="lb-activity-trend-tip-sub">${esc(windowLabel)}</span>
+        <span class="lb-activity-trend-tip-when">${esc(when.toLocaleString(undefined, {
+          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+        }))}</span>`;
+      tip.hidden = false;
+    }
+    function onLeave() {
+      dot.style.opacity = '0';
+      if (tip) tip.hidden = true;
+    }
+    overlay.addEventListener('mousemove', onMove);
+    overlay.addEventListener('mouseleave', onLeave);
+    overlay.addEventListener('touchstart', (e) => {
+      if (e.touches[0]) onMove(e.touches[0]);
+    }, {passive: true});
+    overlay.addEventListener('touchend', onLeave);
+
+    // a11y: SVG title summarising the latest data point
+    const lastP = points[points.length - 1];
+    svg.setAttribute('aria-label', t('Activity trend, latest ~{n} active players per hour')
+      .replace('{n}', Math.round(lastP.estimate_per_hour || 0)));
   }
 
 
@@ -575,7 +1000,7 @@
           <span class="lb-day-date">${dayCalendarLabel(d.troveDate)}</span>
           ${d.anchor == null
             ? `<span class="lb-day-meta" data-i18n>No data</span>`
-            : `<span class="lb-day-meta">${formatTroveTime(d.anchor)}</span>`}
+            : `<span class="lb-day-meta" title="${esc(captureTitle(d.anchor))}">${esc(formatCaptureTime(d.anchor, d.relative))}</span>`}
         </button>`;
     }).join('');
     rerunI18n();
@@ -599,11 +1024,36 @@
     return `${days[troveDate.getUTCDay()]} ${months[troveDate.getUTCMonth()]} ${troveDate.getUTCDate()}`;
   }
 
-  function formatTroveTime(unixAnchor) {
-    // "Last pull" time in trove-time. Trove-time = real UTC - 11h.
-    const trove = new Date((unixAnchor - TROVE_OFFSET_SECONDS) * 1000);
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${pad(trove.getUTCHours())}:${pad(trove.getUTCMinutes())}`;
+  function formatCaptureTime(unixAnchor, relativeDay) {
+    // "Last capture" meta on each day chip. UTC anchors are confusing to
+    // read directly, so:
+    //   • Today (relativeDay 0): a relative "Xm ago" / "Xh ago" — the
+    //     most intuitive read for "how fresh is this?".
+    //   • Older days: the capture clock time converted to the USER'S
+    //     LOCAL timezone (not UTC, not trove-time) so it matches the
+    //     clock on their wall.
+    if (relativeDay === 0) {
+      const now = Math.floor(Date.now() / 1000);
+      const diff = Math.max(0, now - unixAnchor);
+      if (diff < 60) return t('just now');
+      if (diff < 3600) return t('{n}m ago').replace('{n}', Math.round(diff / 60));
+      return t('{n}h ago').replace('{n}', Math.round(diff / 3600));
+    }
+    // Local wall-clock time. ``new Date(unix*1000)`` is already in the
+    // browser's timezone; toLocaleTimeString formats it per the user's
+    // locale (24h vs 12h handled for us).
+    return new Date(unixAnchor * 1000).toLocaleTimeString(undefined, {
+      hour: '2-digit', minute: '2-digit',
+    });
+  }
+
+  function captureTitle(unixAnchor) {
+    // Hover detail: full local date + time so the short label above is
+    // never ambiguous regardless of which branch produced it.
+    return new Date(unixAnchor * 1000).toLocaleString(undefined, {
+      weekday: 'short', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
   }
 
   async function selectDay(idx) {
@@ -1188,7 +1638,13 @@
       key: `p:${s.player_name}`,
       label: s.player_name,
       color: CHART_COLORS[i % CHART_COLORS.length],
-      points: s.points.map((p) => ({ x: p.created_at, y: p.score, rank: p.rank })),
+      // Pass ``synthetic`` through to the renderer. Server-injected
+      // reset-zero markers carry synthetic=true; the chart draws them
+      // into the line path (so the cliff is visible) but skips the
+      // hover-dot + tooltip on them (so they don't pretend to be data).
+      points: s.points.map((p) => ({
+        x: p.created_at, y: p.score, rank: p.rank, synthetic: !!p.synthetic,
+      })),
     }));
     drawLineChart($chart, $legend, {
       anchors: data.anchors,
@@ -1251,7 +1707,10 @@
       key: `b:${s.uuid}`,
       label: s.name,
       color: CHART_COLORS[i % CHART_COLORS.length],
-      points: s.points.map((p) => ({ x: p.created_at, y: p.score, rank: p.rank })),
+      // See drawBoardChart for why ``synthetic`` is forwarded.
+      points: s.points.map((p) => ({
+        x: p.created_at, y: p.score, rank: p.rank, synthetic: !!p.synthetic,
+      })),
     }));
     drawLineChart($chart, $legend, {
       anchors: data.anchors,
@@ -1373,6 +1832,12 @@
     }
     for (const s of series) {
       for (const p of s.points) {
+        // Synthetic reset-zero markers live IN the polyline (so the cliff
+        // is visible) but get no dot — they're not data, and a dot at
+        // (R, 0) would imply we have a capture at the exact reset moment.
+        // Tooltip skips them naturally because their x isn't in
+        // ``data.anchors``.
+        if (p.synthetic) continue;
         const c = document.createElementNS(svgNS, 'circle');
         c.setAttribute('class', 'lb-series-point');
         c.setAttribute('cx', xToPx(p.x).toFixed(1));

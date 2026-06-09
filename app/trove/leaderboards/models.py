@@ -215,3 +215,32 @@ class LeaderboardEntryArchive(Document):
             IndexModel([("leaderboard", ASCENDING), ("created_at", ASCENDING), ("rank", ASCENDING)]),
             IndexModel([("player_name", ASCENDING), ("created_at", DESCENDING)]),
         ]
+
+
+class LeaderboardActivityEstimate(Document):
+    """One point on the activity time-series. Persisted once per consecutive
+    anchor pair so the activity graph survives container restarts AND so the
+    read endpoint doesn't pay the per-board scan cost on every request.
+
+    ``window_end`` is the unique key: the late anchor of the pair. Each row
+    represents "distinct active players in the (window_start, window_end]
+    interval". Stored as a unix-seconds int (same shape as the rest of the
+    leaderboards scope).
+
+    The chart consumer plots ``estimate / duration_hours`` (active players
+    per hour) so a 2h or 3h window from a missed-capture gap doesn't show
+    up as a spike — the per-hour rate stays honest across irregular window
+    sizes. Raw ``estimate`` is kept for tooltips + reproducibility."""
+
+    window_end: int          # late anchor, unix seconds — the unique key
+    window_start: int        # early anchor, unix seconds
+    duration_hours: float    # (window_end - window_start) / 3600
+    estimate: int            # distinct active players in the window
+    boards_analyzed: int     # how many lifetime boards contributed
+    computed_at: int         # when this row was written, unix seconds
+
+    class Settings:
+        name = "leaderboard_activity_estimates"
+        indexes = [
+            IndexModel([("window_end", ASCENDING)], unique=True),
+        ]

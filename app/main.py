@@ -35,6 +35,7 @@ from app.trove.btt_releases import (
     stop_btt_releases_refresher,
 )
 from app.trove.chaos import start_chaos_refresher, stop_chaos_refresher
+from app.trove.status import start_status_prober, stop_status_prober
 from app.trove.delves import start_delve_refresher, stop_delve_refresher
 from app.trove.events import start_events_refresher, stop_events_refresher
 from app.trove.leaderboards.detection import (
@@ -92,6 +93,7 @@ async def lifespan(app: FastAPI):
     start_feeds_refresher()
     start_events_refresher()
     start_chaos_refresher()
+    start_status_prober()  # Trove server status (auth + optional game socket), every 60s
     start_delve_refresher()
     start_btt_releases_refresher()
     start_update_archiver()  # off unless trove_update_enabled
@@ -107,6 +109,7 @@ async def lifespan(app: FastAPI):
     await stop_btt_releases_refresher()
     await stop_delve_refresher()
     await stop_chaos_refresher()
+    await stop_status_prober()
     await stop_events_refresher()
     await stop_feeds_refresher()
     await stop_news_refresher()

@@ -68,6 +68,125 @@ def _trove_day_anchor(now: datetime | None = None) -> int:
     return int(anchor.timestamp())
 
 
+# --- Reset boundaries (history-chart visualisation) -------------------------
+
+_RESET_HOUR_UTC = 11        # Trove daily/weekly resets at midnight UTC−11 == 11:00 UTC
+_WEEKLY_RESET_WEEKDAY = 0   # Monday (Python's weekday() convention)
+
+
+def reset_boundaries_for_kind(
+    kind: str, t_start: int, t_end: int,
+) -> list[int]:
+    """Unix-seconds reset moments for a board with the given effective
+    ``reset_kind`` strictly inside the half-open interval ``(t_start, t_end]``.
+
+    Daily boards reset every day at 11:00 UTC; weekly boards reset on Monday
+    at 11:00 UTC; lifetime cadences (``default`` / ``none``) never reset and
+    return an empty list. The half-open right side lets a real capture
+    anchored exactly at the reset moment still trigger the cliff (we render a
+    "hold-flat" point at R − 1s — see ``_inject_reset_zeros``)."""
+    if kind not in ("daily", "weekly") or t_end <= t_start:
+        return []
+
+    # Walk forward in day/week steps from the first reset *strictly after*
+    # t_start. ``candidate <= dt`` covers the equality case so a t_start that
+    # IS itself a reset moment doesn't get re-emitted.
+    dt = datetime.fromtimestamp(t_start, UTC)
+    candidate = dt.replace(
+        hour=_RESET_HOUR_UTC, minute=0, second=0, microsecond=0,
+    )
+    if candidate <= dt:
+        candidate += timedelta(days=1)
+
+    if kind == "weekly":
+        # Advance day-by-day until we land on Monday — same hour stays put.
+        while candidate.weekday() != _WEEKLY_RESET_WEEKDAY:
+            candidate += timedelta(days=1)
+        step = timedelta(days=7)
+    else:
+        step = timedelta(days=1)
+
+    out: list[int] = []
+    while True:
+        ts = int(candidate.timestamp())
+        # Half-open right side: include R == t_end so a real capture sitting
+        # exactly on the reset (anchored to 11:00 UTC) still gets the cliff
+        # point rendered just before it.
+        if ts > t_end:
+            break
+        out.append(ts)
+        candidate += step
+    return out
+
+
+def _inject_reset_zeros(
+    points: list[dict], kind: str,
+) -> list[dict]:
+    """Insert synthetic ``(rank=0, score=0, synthetic=True)`` points at each
+    reset boundary that falls between two real captures, so the per-player /
+    per-board history chart shows the line cliff-drop to 0 instead of a
+    misleading smooth descent across the reset moment.
+
+    For each reset R strictly between two consecutive real captures:
+
+      1. A "hold-flat" point at R − 1s carrying the LAST known score (so the
+         line stays at the pre-reset value right up to the boundary instead
+         of sloping down to 0 across the interval).
+      2. A zero point at R itself (skipped when the next real capture is
+         exactly at R — the real data already carries the post-reset state).
+
+    Lifetime boards (``default`` / ``none``) and series shorter than two
+    points are returned unchanged but with the ``synthetic`` flag set on each
+    point for shape consistency. Multiple resets between a single pair of
+    captures (bot missed a stretch) are handled correctly: after the first
+    reset the "last known score" becomes 0, so subsequent boundaries collapse
+    into a single flat zero segment rather than re-drawing redundant cliffs.
+    """
+    annotated = [{**p, "synthetic": False} for p in points]
+    if kind not in ("daily", "weekly") or len(annotated) < 2:
+        return annotated
+
+    out: list[dict] = []
+    for i, p in enumerate(annotated):
+        out.append(p)
+        if i + 1 >= len(annotated):
+            continue
+        nxt = annotated[i + 1]
+        boundaries = reset_boundaries_for_kind(
+            kind, p["created_at"], nxt["created_at"],
+        )
+        if not boundaries:
+            continue
+
+        # Track the score as it would actually be after each boundary so a
+        # multi-reset gap doesn't re-draw the pre-reset peak at every
+        # subsequent reset moment.
+        last_score = float(p["score"])
+        last_rank = int(p["rank"])
+        for r in boundaries:
+            if last_score > 0:
+                out.append({
+                    "created_at": r - 1,
+                    "rank": last_rank,
+                    "score": last_score,
+                    "synthetic": True,
+                })
+                # Skip the zero point itself when the next real capture IS
+                # at R — the real (created_at=R, score=…) data already
+                # represents the post-reset state and a duplicate at the
+                # same x would just overplot.
+                if r < nxt["created_at"]:
+                    out.append({
+                        "created_at": r,
+                        "rank": 0,
+                        "score": 0.0,
+                        "synthetic": True,
+                    })
+            last_score = 0.0
+            last_rank = 0
+    return out
+
+
 def normalize_timestamp(ts: int | None) -> int:
     """Validate/normalize a user-supplied ``created_at`` query.
 
@@ -515,11 +634,22 @@ async def board_history(
     for pts in per_player.values():
         pts.sort(key=lambda p: p["created_at"])
 
+    # 5) Look up the board's effective reset cadence so the chart can show
+    # the synthetic reset-zero cliffs (daily/weekly) or pass through cleanly
+    # (lifetime). One Mongo round-trip is fine here — the board doc is small.
+    board_doc = await Leaderboard.find_one(Leaderboard.uuid == uuid)
+    board_kind = (
+        effective_reset_kind(board_doc, board_doc.uuid)
+        if board_doc is not None else "default"
+    )
+
     series = [
         {
             "player_name": n,
             "current_rank": current_rank.get(n),
-            "points": per_player[n],
+            # Same injection as player_history_series — see the helper for the
+            # rules; resets are at 11:00 UTC daily / Monday 11:00 UTC weekly.
+            "points": _inject_reset_zeros(per_player[n], board_kind),
         }
         for n in names   # preserve rank order from step 2
     ]
@@ -584,21 +714,36 @@ async def player_history_series(
     for pts in by_board.values():
         pts.sort(key=lambda p: p["created_at"])
 
-    # Resolve board names. One round-trip with $in keeps it cheap even
-    # for a prolific player.
+    # Resolve board names + per-board reset cadence (effective override). The
+    # cadence drives the synthetic reset-zero injection below — daily/weekly
+    # boards need the visual cliff to look honest; lifetime boards must NOT
+    # cliff (score accumulates forever).
     board_docs = await Leaderboard.find({"uuid": {"$in": list(by_board.keys())}}).to_list()
-    board_name = {b.uuid: b.name for b in board_docs}
+    board_meta = {
+        b.uuid: {
+            "name": b.name,
+            "reset_kind": effective_reset_kind(b, b.uuid),
+        }
+        for b in board_docs
+    }
 
     series = []
     for uuid_, pts in by_board.items():
         # Sort series by "best rank achieved this window" so the most
         # competitive board renders first in the chart legend.
         best_rank = min(p["rank"] for p in pts)
+        meta = board_meta.get(uuid_, {"name": f"Board #{uuid_}", "reset_kind": "default"})
         series.append({
             "uuid": uuid_,
-            "name": board_name.get(uuid_, f"Board #{uuid_}"),
+            "name": meta["name"],
             "best_rank": best_rank,
-            "points": pts,
+            # Synthetic reset boundaries are injected here so every consumer
+            # (showcase chart, account-history widget, raw API caller) gets a
+            # chart-ready series without having to reimplement the cliff
+            # logic. Real captures carry ``synthetic=False``; injected points
+            # carry ``synthetic=True`` so a hover-dot renderer can suppress
+            # them on the chart without losing the line drop.
+            "points": _inject_reset_zeros(pts, meta["reset_kind"]),
         })
     series.sort(key=lambda s: s["best_rank"])
 

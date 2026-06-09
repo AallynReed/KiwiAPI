@@ -77,7 +77,7 @@ real-UTC unix seconds. Full schema in `/openapi.json`.
 | `/v1/rotations/wild-mana` | weekly Wild Mana biome rotation |
 | `/v1/rotations/stampy` | weekly Stampy event biome (48h) |
 
-**`feeds` category — scope `feeds:read`** (public — token optional; relayed from upstream + cached in Mongo)
+**`feeds` category — scope `feeds:read`** (public — token optional; fetched/relayed from upstream + cached in Mongo)
 
 | Endpoint | Returns |
 |---|---|
@@ -89,8 +89,11 @@ real-UTC unix seconds. Full schema in `/openapi.json`.
 | `/v1/feeds/events/categories` | distinct event categories (discovered dynamically) |
 | `/v1/feeds/events/upcoming` · `/history` | events not yet started / already ended |
 
-(Twitch/YouTube/Bilibili are relayed from the trovesaurus bot, which already fetches them — no
-upstream credentials needed in Kiwi.) Events are relayed from `trovesaurus.com/calendar/feed` and
+(Twitch/YouTube/Bilibili are fetched **at source** — Twitch Helix via a client-credentials app token,
+the YouTube Data API, and a Bilibili search-page scrape — then cached in `FeedCache`. Set
+`TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET`/`YT_API_KEY` in the env; the filter knobs (search query,
+excluded channels/titles, per-channel cap, cutoff, count) are admin runtime_config tunables under
+`community_feeds`.) Events are relayed from `trovesaurus.com/calendar/feed` and
 **stored** (kept after they leave the upstream feed) so history/upcoming work; `status` is
 `upcoming`/`ongoing`/`ended`, categories are free-form and discovered via a distinct query.
 
@@ -133,6 +136,10 @@ an action endpoint with a `stat_position` (0/1/2) to mutate it. Nothing gem-rela
 | `GET /v1/misc/timezones` | timezones supported by the converter and clocks |
 | `GET /v1/misc/time/now` | current time across every zone, incl. Trove server (reset) time |
 | `POST /v1/misc/time/convert` | convert a time + zone (or a unix) → every zone + Discord timestamp codes |
+| `GET /v1/misc/activity` | (**tokenless**) lower-bound count of active players in the most recent capture window; mirror of `/v1/leaderboards/activity` |
+| `GET /v1/misc/activity/history?days=` | (**tokenless**) time-series of activity estimates with per-hour normalisation; mirror of `/v1/leaderboards/activity/history` |
+| `GET /v1/misc/trove-status` | (**tokenless**) live Trove server status from a 60s background prober. `overall` rolls up the Live regions EU+US (`online`/`maintenance`/`down`/`unknown`). `auth` = HTTPS liveness of `auth.trionworlds.com`; `environments.{eu,us,pts}` each carry a `game` TCP probe of the glsserver port (6560). Auth-up + game-refused = `maintenance` |
+| `GET /v1/misc/trove-status/history?env=&days=` | (**tokenless**) status timeline for one environment (`eu`/`us`/`pts`, default eu; days 1–90) — `segments` (continuous status periods, open one has `ended_at=null`), `outages`, and an `uptime` fraction. Backs the `/status` page downtime history |
 
 Trove "server"/reset time is a fixed **UTC−11**. The converter takes a naive `datetime` interpreted in
 the given `timezone` (`trove` / `UTC` / any IANA id) or an absolute `unix`, and returns the instant in
@@ -158,7 +165,7 @@ every zone plus Discord `<t:unix:style>` codes.
 | `GET /v1/leaderboards/{uuid}/entries?created_at=&limit=&offset=` | top-N entries for one board at one anchor, ranked |
 | `GET /v1/leaderboards/players/{name}/history?uuid=&limit=` | recent appearances of one player across boards (case-insensitive on `name`) |
 | `GET /v1/leaderboards/cheaters` | **tokenless** statistical-outlier flagging: MAD-Z + rank-gap + velocity. Per-evidence + per-player confidence; cached 30 min; pre-warmed at boot |
-| `POST /v1/leaderboards/insert?timestamp=` | **master-only ingest**: multipart `file` field with the raw `LeaderBot.cfg` text. Idempotent for a given anchor; `timestamp` is optional and only used for back-fills |
+| `POST /v1/leaderboards/insert?timestamp=` | **master-only ingest**: multipart `file` field with the raw `LeaderBot.cfg` text. Idempotent for a given anchor; `timestamp` is optional and only used for back-fills. Subject to the **ingest cooldown** (see below) when called with an API token |
 
 The bot dumps the game's `LeaderBot.cfg` hourly and POSTs the file. **Full history is preserved**: entries
 older than `leaderboards_hot_retention_days` (default **3 days**; runtime-tunable from the master admin
@@ -182,7 +189,7 @@ so clients can self-throttle. Recent queries (≤ threshold) cost only the stand
 | `GET /v1/market/items` | item names that currently have a stored listing (sorted) |
 | `GET /v1/misc/interest-items` | (lives under misc, **tokenless**) the full allow-list of items the bot tracks; admin-managed via the master panel at `/admin/market/interest-items` |
 | `GET /v1/market/items/{name}/summary` | min/max/avg/median price-each + listing count for one item |
-| `POST /v1/market/insert?timestamp=` | **master-only ingest**: multipart `file` with the raw `GrainusMod.cfg` text. Listings upserted by UUID — re-scrapes bump `last_seen`, never duplicate |
+| `POST /v1/market/insert?timestamp=` | **master-only ingest**: multipart `file` with the raw `GrainusMod.cfg` text. Listings upserted by UUID — re-scrapes bump `last_seen`, never duplicate. Subject to the **ingest cooldown** (see below) when called with an API token |
 
 Bot scrapes the in-game marketplace hourly. Each listing's UUID v1 is the document `_id`; `created_at` is
 decoded from the UUID's timestamp (so it matches when the player posted in-game); `last_seen` is bumped on
@@ -193,6 +200,15 @@ tail past the 7-day in-game lifetime) pays a SECOND, tighter per-token bucket (d
 top of the standard per-token cap. Same `X-RateLimit-Archive-*` headers as the leaderboards archive
 throttle. Market doesn't use a day-count threshold because the 7-day listing lifetime already defines
 fresh-vs-historical; the limit fires on the opt-in flag instead.
+
+**Ingest cooldown (all `POST /insert` endpoints)** — backstop against a misbehaving bot
+resubmitting the same dump every few seconds. Per-token, per-endpoint bucket (default
+**1 submit per 5 min** — runtime-tunable as `ingest_cooldown_max` / `ingest_cooldown_window_seconds`
+in the master admin panel). Bucketed independently per endpoint — a leaderboards push doesn't share
+a budget with a market push. Returns 429 with `Retry-After` once exhausted. **API-token auth only**:
+session-JWT calls from the portal "Manual cfg ingest" card bypass this cap, so the master can replay
+captured cfgs / back-fills without waiting out the window. Bots should honor `Retry-After` and
+suppress duplicate-anchor submissions client-side.
 
 ## BetterTroveTools showcase site (`trove.aallyn.net`)
 
@@ -207,6 +223,7 @@ The api container ALSO serves the BTT marketing/manual site out of `site/`
 | `GET /leaderboards` | hourly in-game leaderboard browser (charts, cheaters, activity) |
 | `GET /updates` | per-server (Live US / PTS) game-update file explorer + version diff |
 | `GET /support` | "support the project" landing for the navbar heart icon |
+| `GET /status` | Trove server-status page — live EU/US/PTS state + downtime-history timeline |
 | `GET /static/*` | site assets (bind-mounted from `site/static/`) |
 | `GET /site/*` | page-side JSON proxies (leaderboards, updates) — same-origin, no token |
 | `GET /api-info` | the old developer-card landing (lives here so `/` is free for the site) |

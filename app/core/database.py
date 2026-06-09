@@ -13,6 +13,7 @@ from app.tokens.models import ApiToken
 from app.trove.codexes.models import CodexEntry
 from app.trove.leaderboards.models import (
     Leaderboard,
+    LeaderboardActivityEstimate,
     LeaderboardEntry,
     LeaderboardEntryArchive,
 )
@@ -27,6 +28,7 @@ from app.trove.models import (
     FeedCache,
     TroveEvent,
     TroveNews,
+    TroveStatusEvent,
 )
 from app.trove.updates.models import (
     UpdateBranch,
@@ -46,9 +48,11 @@ DOCUMENT_MODELS = [
     UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
     CodexEntry,
     Leaderboard, LeaderboardEntry, LeaderboardEntryArchive,
+    LeaderboardActivityEstimate,
     MarketListing, MarketInterestItem,
     ChaosChestCapture, ChallengeCapture,
     FeedbackEntry,
+    TroveStatusEvent,
     RuntimeConfig,
     IngestLogEntry,
 ]

@@ -652,13 +652,61 @@ canvas.bg-fx {
   animation: pulse 1.8s ease-in-out infinite;
 }
 .hero-eyebrow .sep { color: var(--bg-line); }
+
+/* Live Trove server-status pill. Same glassy chip styling as the
+   eyebrow; the dot + text colour vary by verdict class. ``[hidden]``
+   re-asserted because the pill is a flex container (else it'd show
+   while empty before the first fetch). */
+.trove-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 6px 14px 6px 13px;
+  border: 1px solid var(--bg-line);
+  background: color-mix(in oklab, var(--bg-card) 60%, transparent);
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--text-mute);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color .15s ease, background .15s ease;
+}
+.trove-status[hidden] { display: none; }
+.trove-status:hover { background: color-mix(in oklab, var(--bg-card) 80%, transparent); }
+.trove-status-label { color: var(--text-mute); }
+.trove-status-sep { color: var(--bg-line); }
+.trove-status-arrow {
+  font-size: .7rem; opacity: 0; margin-left: -2px;
+  transition: opacity .15s ease, transform .15s ease;
+}
+.trove-status:hover .trove-status-arrow { opacity: .7; transform: translateX(2px); }
+.trove-status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-mute);
+  flex: 0 0 auto;
+}
+.trove-status.is-up    { color: var(--accent-green); border-color: color-mix(in oklab, var(--accent-green) 40%, var(--bg-line)); }
+.trove-status.is-up    .trove-status-dot { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); animation: pulse 1.8s ease-in-out infinite; }
+.trove-status.is-maint { color: #f5b942; border-color: color-mix(in oklab, #f5b942 40%, var(--bg-line)); }
+.trove-status.is-maint .trove-status-dot { background: #f5b942; box-shadow: 0 0 10px #f5b942; }
+.trove-status.is-down  { color: #f0556a; border-color: color-mix(in oklab, #f0556a 40%, var(--bg-line)); }
+.trove-status.is-down  .trove-status-dot { background: #f0556a; box-shadow: 0 0 10px #f0556a; animation: pulse 1.8s ease-in-out infinite; }
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50%      { opacity: .35; }
 }
 
 .hero-title {
-  font-size: var(--type-display);
+  /* Bumped up from var(--type-display) — the title is the page's anchor
+     and was reading too small. Larger floor + ceiling, slightly tighter
+     line-height so the three words stay a tight block. */
+  font-size: clamp(3.6rem, 11vw + 1rem, 12rem);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

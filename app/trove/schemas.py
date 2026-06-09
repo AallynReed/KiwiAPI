@@ -496,10 +496,23 @@ class LeaderboardPlayerHistory(BaseModel):
 # ascending — wrapped in a series object that carries the line's label.
 
 class HistoryPoint(BaseModel):
-    """One score sample at one anchor."""
+    """One score sample at one anchor.
+
+    ``synthetic`` distinguishes real captures (False — what the bot dumped)
+    from server-injected reset boundary markers (True — see
+    ``app/trove/leaderboards/service.py::_inject_reset_zeros``). On
+    daily/weekly boards the service inserts a pair of synthetic points at
+    each reset moment that falls between two real captures: a hold-flat
+    point carrying the pre-reset score at R − 1s, then a zero point at R
+    itself. This lets the chart show an honest cliff at the reset boundary
+    instead of a misleading smooth descent across it. Renderers should
+    suppress hover dots / tooltips on synthetic points but DO include them
+    in the line path.
+    """
     created_at: int
     rank: int
     score: float
+    synthetic: bool = False
 
 
 class BoardHistorySeries(BaseModel):
@@ -598,6 +611,103 @@ class ActivityResponse(BaseModel):
     computed_at: int
 
 
+class ActivityHistoryPoint(BaseModel):
+    """One point on the activity time-series — distinct active players
+    in the window ``(window_start, window_end]``. Two numeric metrics:
+
+    * ``estimate`` — raw count; what the per-window pill shows.
+    * ``estimate_per_hour`` — count divided by window duration. This is
+      the "flattened" metric: a missed-capture gap makes the next
+      window span 2-3h instead of 1h, which naturally inflates the
+      raw count because more players had time to score. Dividing
+      restores the per-hour rate so the chart line stays smooth across
+      irregular window sizes.
+    """
+    window_end: int        # late anchor, unix seconds
+    window_start: int      # early anchor
+    duration_hours: float
+    estimate: int
+    estimate_per_hour: float
+
+
+class ActivityHistoryResponse(BaseModel):
+    """Time-series of activity estimates over the last ``days`` days,
+    one point per consecutive captured anchor pair. Sorted ascending by
+    ``window_end``. Empty ``points`` when fewer than two captures have
+    been stored — the consumer should hide the chart in that case."""
+    days: int
+    window_start: int
+    window_end: int
+    points: list[ActivityHistoryPoint]
+    methodology: str
+
+
+class TroveStatusResponse(BaseModel):
+    """Live Trove server status from the background prober.
+
+    ``overall`` is a rollup of the public Live regions — ``online`` when
+    every region is up, ``down`` when all are fully down, ``maintenance``
+    for any mixed/partial state (online / maintenance / down / unknown).
+    ``auth`` is the shared HTTPS liveness of the account-auth gateway.
+    ``environments`` carries a per-env dict (``eu`` / ``us`` / ``pts``),
+    each ``{status, online, game}`` where ``game`` is the TCP probe of the
+    glsserver port. Free-form dicts keep the wire stable as fields
+    evolve."""
+    overall: Literal["online", "maintenance", "down", "unknown"]
+    auth: dict | None              # {online, http_status, latency_ms, error}
+    environments: dict             # {eu: {status, online, game}, us: {...}, pts: {...}}
+    checked_at: int | None         # unix seconds of the last completed probe
+
+
+class TroveStatusHistoryResponse(BaseModel):
+    """Status-timeline history for one environment over ``days`` days.
+
+    ``segments`` is the continuous chain of status periods (clamped to the
+    window); the current/open one has ``ended_at=null``. ``outages`` is
+    the subset that isn't ``online``, for a readable incident log.
+    ``uptime`` is the online fraction over the covered span (null when no
+    data has been recorded yet)."""
+    env: str
+    days: int
+    window_start: int
+    window_end: int
+    uptime: float | None
+    covered_seconds: int
+    segments: list[dict]
+    outages: list[dict]
+
+
+class AnalyzedBoardInfo(BaseModel):
+    """One board the detector actually scanned in this run.
+
+    Surfaced so the showcase-site cheaters tab (and any API caller) can
+    show *which* boards the analysis covered, not just a count — the user
+    can verify the board they care about was in scope and see its effective
+    reset cadence + entry count without making a second request."""
+
+    uuid: int
+    name: str
+    category: str
+    reset_kind: str           # effective cadence: "daily" / "weekly" / "default" / "none"
+    contest_type: str | None  # contest active on THIS anchor, if any
+    entries: int              # how many entries the board had at this anchor
+
+
+class SkippedBoardInfo(BaseModel):
+    """One board the detector touched but did NOT analyze. ``reason``
+    explains why so a UI can group / explain the omission."""
+
+    uuid: int
+    name: str
+    category: str
+    reset_kind: str
+    contest_type: str | None
+    # "admin_excluded" = listed in cheaters_excluded_board_uuids
+    # "below_min_size" = entries < cheaters_min_board_size (sample too small)
+    reason: Literal["admin_excluded", "below_min_size"]
+    entries: int | None = None  # populated for "below_min_size", null otherwise
+
+
 class CheatersResponse(BaseModel):
     players: list[CheaterPlayer]
     computed_at: int          # unix seconds when the analysis ran
@@ -607,6 +717,12 @@ class CheatersResponse(BaseModel):
     total_flagged: int
     boards_analyzed: int
     boards_excluded: int = 0  # how many boards the operator opted out via cheaters_excluded_board_uuids
+    # Detailed coverage — what the analysis actually touched. ``analyzed_boards``
+    # carries one entry per scanned board; ``excluded_boards`` covers both
+    # operator-excluded and below-min-size skips. Both lists sort by
+    # (category, name) for stable rendering. Empty when no anchor available.
+    analyzed_boards: list[AnalyzedBoardInfo] = []
+    excluded_boards: list[SkippedBoardInfo] = []
 
 
 # --- Market ---------------------------------------------------------------

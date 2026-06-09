@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Trove server status — Better Trove Tools</title>
+    <meta name="description" content="Live Trove server status — EU, US and PTS login + game servers, probed every minute, with a downtime history timeline.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="canonical" href="https://trove.aallyn.net/status">
+
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Trove server status">
+    <meta property="og:description" content="EU, US & PTS server status, probed every minute, with downtime history.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css?v=20260609b">
+    <link rel="stylesheet" href="/static/status.min.css?v=20260609b">
+</head>
+<body class="landing status-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="st-main">
+        <section class="st-hero">
+            <p class="st-eyebrow">/status</p>
+            <h1 class="st-title" data-i18n>Trove server status</h1>
+            <p class="st-sub" data-i18n>Live monitoring of Trove's login and game servers — probed directly every minute. Independent and unofficial; not affiliated with Gamigo or Trion Worlds.</p>
+        </section>
+
+        <!-- Big overall banner — JS sets the class + headline. -->
+        <section class="st-banner" id="st-banner" hidden>
+            <span class="st-banner-dot" aria-hidden="true"></span>
+            <span class="st-banner-text"></span>
+            <span class="st-banner-checked" id="st-banner-checked"></span>
+        </section>
+
+        <!-- Per-environment + auth cards. JS-filled. -->
+        <section class="st-cards" id="st-cards" aria-live="polite">
+            <div class="st-loading" data-i18n>Checking servers…</div>
+        </section>
+
+        <!-- Downtime history -->
+        <section class="st-history">
+            <div class="st-history-head">
+                <h2 data-i18n>Downtime history</h2>
+                <div class="st-env-tabs" id="st-env-tabs" role="tablist" aria-label="Environment">
+                    <button type="button" data-env="eu" class="active" role="tab" aria-selected="true">EU</button>
+                    <button type="button" data-env="us" role="tab" aria-selected="false">US</button>
+                    <button type="button" data-env="pts" role="tab" aria-selected="false">PTS</button>
+                </div>
+            </div>
+            <div id="st-history-body"><div class="st-loading" data-i18n>Loading history…</div></div>
+        </section>
+
+        <p class="st-method" data-i18n>How this works: a background probe opens a TCP connection to each environment's game login server (glsserver, port 6560) and checks the shared account-auth gateway over HTTPS, once a minute. "Online" means the game login server accepted a connection; "Maintenance" means login is up but the game servers are refusing connections; "Offline" means even auth is unreachable.</p>
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js?v=20260609b"></script>
+    <script src="/static/i18n.min.js?v=20260609b"></script>
+    <script src="/static/site_auth.min.js?v=20260608f" defer></script>
+    <script src="/static/status.min.js?v=20260609d" defer></script>
+</body>
+</html>

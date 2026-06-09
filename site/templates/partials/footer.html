@@ -1,0 +1,51 @@
+{# ===========================================================================
+   Shared site footer — included by every standard page with
+   ``{% include "partials/footer.html" %}``.
+
+   Links are absolute so they resolve from any page (the old per-page copies
+   had drifted: different Product/Community link sets, some missing the
+   Server Status entry, some using landing-only #hero/#features anchors that
+   were dead links on sub-pages). docs.html keeps its own compact
+   ``.docs-footer`` and does NOT include this partial.
+   =========================================================================== #}
+<footer class="site-footer" role="contentinfo">
+        <div class="footer-grid">
+            <div class="footer-col footer-brand">
+                <img src="/static/assets/favicon.png" alt="" class="footer-logo" loading="lazy" decoding="async">
+                <strong>Better <span class="highlight-blue">Trove</span> Tools</strong>
+                <p class="footer-tagline" data-i18n>Free &amp; open source. By the community, for the community.</p>
+            </div>
+
+            <div class="footer-col">
+                <h3 data-i18n>Product</h3>
+                <a href="/" data-i18n>Home</a>
+                <a href="https://btt.aallyn.net" target="_blank" rel="noopener" data-i18n>Web App</a>
+                <a href="/documentation" data-i18n>User Guide</a>
+                <a href="/commands" data-i18n>Commands</a>
+                <a href="/leaderboards" data-i18n>Leaderboards</a>
+                <a href="/updates" data-i18n>Updates</a>
+                <a href="/market" data-i18n>Market</a>
+                <a href="/status" data-i18n>Server Status</a>
+            </div>
+
+            <div class="footer-col">
+                <h3 data-i18n>Developers</h3>
+                <a href="https://dev.aallyn.net">Developer Portal</a>
+                <a href="https://docs.aallyn.net">API Reference</a>
+                <a href="https://docs.aallyn.net/llms.txt">llms.txt</a>
+                <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener">GitHub</a>
+            </div>
+
+            <div class="footer-col">
+                <h3 data-i18n>Community</h3>
+                <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a>
+                <a href="https://trovesaurus.com" target="_blank" rel="noopener">Trovesaurus</a>
+                <a href="/support" data-i18n>Support</a>
+            </div>
+        </div>
+        <p class="footer-fineprint">
+            <span>© Aallyn Reed</span>
+            <span class="sep">·</span>
+            <span data-i18n>No telemetry. No ads. No paywalls.</span>
+        </p>
+    </footer>

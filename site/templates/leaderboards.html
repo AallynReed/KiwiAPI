@@ -26,70 +26,14 @@
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.min.css?v=20260608d">
-    <link rel="stylesheet" href="/static/leaderboards.min.css?v=20260608d">
+    <link rel="stylesheet" href="/static/style.min.css?v=20260609i">
+    <link rel="stylesheet" href="/static/leaderboards.min.css?v=20260609i">
 </head>
 <body class="landing leaderboards-page">
 
     <a class="skip-link" href="#main">Skip to main content</a>
 
-    <header class="navbar" role="banner">
-        <div class="nav-container">
-            <a class="nav-logo" href="/" aria-label="Better Trove Tools home">
-                <img src="/static/assets/favicon.png" alt="">
-                <span>Better <span class="highlight-blue">Trove</span> Tools</span>
-            </a>
-            <button type="button" class="nav-toggle" id="nav-toggle"
-                    aria-label="Toggle navigation menu" aria-expanded="false"
-                    aria-controls="nav-links">
-                <i class="fa-solid fa-bars" aria-hidden="true"></i>
-            </button>
-            <nav class="nav-links" id="nav-links" aria-label="Primary">
-                <a class="nav-cta" href="https://btt.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span data-i18n>Web App</span></a>
-                <a href="/documentation"><i class="fa-solid fa-book"></i> <span data-i18n>User Guide</span></a>
-
-                <!-- Pages dropdown — Leaderboards flagged active. -->
-                <div class="nav-dropdown">
-                    <button type="button" class="nav-dropdown-trigger active"
-                            aria-haspopup="true" aria-expanded="false"
-                            aria-controls="nav-pages-panel">
-                        <i class="fa-solid fa-layer-group"></i>
-                        <span data-i18n>Pages</span>
-                        <i class="fa-solid fa-chevron-down nav-dropdown-caret" aria-hidden="true"></i>
-                    </button>
-                    <div class="nav-dropdown-panel" id="nav-pages-panel" role="menu">
-                        <a href="/commands" role="menuitem"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>
-                        <a href="/leaderboards" class="active" role="menuitem"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>
-                        <a href="/updates" role="menuitem"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>
-                        <a href="/market" role="menuitem"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta">Beta</span></a>
-                    </div>
-                </div>
-
-                <div class="nav-dropdown">
-                    <button type="button" class="nav-dropdown-trigger"
-                            aria-haspopup="true" aria-expanded="false"
-                            aria-controls="nav-devs-panel">
-                        <i class="fa-solid fa-code"></i>
-                        <span data-i18n>Developers</span>
-                        <i class="fa-solid fa-chevron-down nav-dropdown-caret" aria-hidden="true"></i>
-                    </button>
-                    <div class="nav-dropdown-panel" id="nav-devs-panel" role="menu">
-                        <a href="https://dev.aallyn.net" role="menuitem"><i class="fa-solid fa-key"></i> <span data-i18n>Dev Portal</span></a>
-                        <a href="https://docs.aallyn.net" role="menuitem"><i class="fa-solid fa-terminal"></i> <span data-i18n>API Docs</span></a>
-                    </div>
-                </div>
-
-                <a class="nav-icon" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
-                <a class="nav-icon" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
-                <a class="nav-support" href="/support" aria-label="Support" title="Support the project"><i class="fa-solid fa-heart"></i></a>
-                <span id="nav-account" class="nav-account" data-state="loading"></span>
-                <span class="lang-picker">
-                    <i class="fa-solid fa-globe lang-picker-icon"></i>
-                    <select id="langSelect" class="lang-select" aria-label="Language"></select>
-                </span>
-            </nav>
-        </div>
-    </header>
+    {% include "partials/navbar.html" %}
 
     <main id="main" class="lb-main">
 
@@ -104,10 +48,31 @@
                      /site/leaderboards/config fetch fails. -->
                 <p class="lb-subtitle" id="lb-subtitle">Top players per board, ranked. Hourly captures, 3-day live retention, full archive beyond.</p>
 
-                <!-- JS-owned, hidden until /site/leaderboards/activity
-                     returns a non-null estimate. Filled in by
-                     renderActivity() once the page boots. -->
-                <p class="lb-activity" id="lb-activity" hidden></p>
+                <!-- Activity pill — clickable button that toggles the
+                     trend chart below. Hidden until /site/leaderboards/
+                     activity returns a non-null estimate. The aria-
+                     expanded + aria-controls attributes mirror the
+                     visible state of the chart so screen readers
+                     announce it correctly. -->
+                <button type="button" class="lb-activity" id="lb-activity"
+                        aria-expanded="false" aria-controls="lb-activity-trend" hidden>
+                </button>
+
+                <!-- Activity history sparkline. Collapsed by default;
+                     opened by clicking the pill above. JS plots
+                     ``estimate_per_hour`` (raw count divided by
+                     duration) so missed-capture gaps don't manifest as
+                     spikes. Tiny SVG, no axes, no legend — hover for a
+                     tooltip with the absolute number and window
+                     duration at that anchor. -->
+                <div class="lb-activity-trend" id="lb-activity-trend" hidden>
+                    <div class="lb-activity-trend-head">
+                        <span class="lb-activity-trend-label" data-i18n>Activity trend</span>
+                        <span class="lb-activity-trend-range" id="lb-activity-trend-range"></span>
+                    </div>
+                    <div class="lb-activity-trend-chart" id="lb-activity-trend-chart"></div>
+                    <div class="lb-activity-trend-tip" id="lb-activity-trend-tip" hidden></div>
+                </div>
 
                 <!-- Player search is hero-level (shared across tabs)
                      so it works whether the user is browsing boards or
@@ -284,6 +249,18 @@
             <!-- JS owns this line. No data-i18n attr — i18n.refresh()
                  would otherwise restore "Loading…" over the JS content. -->
             <p class="lb-cheaters-meta" id="lb-cheaters-meta">Loading…</p>
+            <!-- Coverage details: which boards the run actually scanned and
+                 which it skipped + why. Hidden by default; JS fills the body
+                 (or hides the whole element when no analysis is loaded yet). -->
+            <details class="lb-cheaters-coverage" id="lb-cheaters-coverage" hidden>
+                <summary>
+                    <span data-i18n>Boards analyzed</span>
+                    <span class="lb-cheaters-coverage-count"
+                          id="lb-cheaters-coverage-count"></span>
+                </summary>
+                <div class="lb-cheaters-coverage-body"
+                     id="lb-cheaters-coverage-body"></div>
+            </details>
             <div class="lb-cheaters-body" id="lb-cheaters-body">
                 <p class="lb-cheaters-empty" data-i18n>Checking the latest capture…</p>
             </div>
@@ -298,34 +275,7 @@
         </p>
     </main>
 
-    <footer class="site-footer" role="contentinfo">
-        <div class="footer-grid">
-            <div class="footer-col footer-brand">
-                <img src="/static/assets/favicon.png" alt="" class="footer-logo" loading="lazy" decoding="async">
-                <strong>Better <span class="highlight-blue">Trove</span> Tools</strong>
-                <p class="footer-tagline">Free &amp; open source. By the community, for the community.</p>
-            </div>
-            <div class="footer-col">
-                <h3>Product</h3>
-                <a href="/">Home</a>
-                <a href="https://btt.aallyn.net" target="_blank" rel="noopener">Web App</a>
-                <a href="/documentation">User Guide</a>
-                <a href="/commands">Commands</a>
-                <a href="/leaderboards">Leaderboards</a>
-            </div>
-            <div class="footer-col">
-                <h3>Developers</h3>
-                <a href="https://dev.aallyn.net">Developer Portal</a>
-                <a href="https://docs.aallyn.net">API Reference</a>
-                <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener">GitHub</a>
-            </div>
-            <div class="footer-col">
-                <h3>Community</h3>
-                <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a>
-                <a href="https://trovesaurus.com" target="_blank" rel="noopener">Trovesaurus</a>
-            </div>
-        </div>
-    </footer>
+    {% include "partials/footer.html" %}
 
     <!-- Reuse the same support widget from /. Markup-identical so the
          styles in style.min.css (defined under section 18) just apply. -->
@@ -351,9 +301,9 @@
         </div>
     </div>
 
-    <script src="/static/app.min.js?v=20260608d"></script>
-    <script src="/static/i18n.min.js?v=20260608d"></script>
+    <script src="/static/app.min.js?v=20260609i"></script>
+    <script src="/static/i18n.min.js?v=20260609i"></script>
     <script src="/static/site_auth.min.js?v=20260608f" defer></script>
-    <script src="/static/leaderboards.min.js?v=20260608d" defer></script>
+    <script src="/static/leaderboards.min.js?v=20260609i" defer></script>
 </body>
 </html>

@@ -1,0 +1,74 @@
+{# ===========================================================================
+   Shared site navbar — included by every standard page with
+   ``{% include "partials/navbar.html" %}``.
+
+   Active-state is derived from the request path: Starlette injects
+   ``request`` into every template context and ``{% include %}`` inherits it,
+   so a page only has to exist as a route — no per-template navbar copies to
+   keep in sync. Adding a link here adds it everywhere at once. (This is what
+   the old per-page copies got wrong: the Server Status link only ever made
+   it into status.html.)
+
+   NOTE: docs.html runs its own full-screen documentation chrome and does
+   NOT include this partial.
+   =========================================================================== #}
+{% set _p = request.url.path %}
+{% set _pages_active = _p in ['/commands', '/leaderboards', '/updates', '/market', '/status'] %}
+<header class="navbar" role="banner">
+        <div class="nav-container">
+            <a class="nav-logo" href="{{ '#hero' if _p == '/' else '/' }}" aria-label="Better Trove Tools home">
+                <img src="/static/assets/favicon.png" alt="">
+                <span>Better <span class="highlight-blue">Trove</span> Tools</span>
+            </a>
+            <button type="button" class="nav-toggle" id="nav-toggle"
+                    aria-label="Toggle navigation menu" aria-expanded="false"
+                    aria-controls="nav-links">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            <nav class="nav-links" id="nav-links" aria-label="Primary">
+                <a class="nav-cta" href="https://btt.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span data-i18n>Web App</span></a>
+                <a href="/documentation" class="{{ 'active' if _p == '/documentation' else '' }}"><i class="fa-solid fa-book"></i> <span data-i18n>User Guide</span></a>
+
+                <div class="nav-dropdown">
+                    <button type="button" class="nav-dropdown-trigger {{ 'active' if _pages_active else '' }}"
+                            aria-haspopup="true" aria-expanded="false"
+                            aria-controls="nav-pages-panel">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span data-i18n>Pages</span>
+                        <i class="fa-solid fa-chevron-down nav-dropdown-caret" aria-hidden="true"></i>
+                    </button>
+                    <div class="nav-dropdown-panel" id="nav-pages-panel" role="menu">
+                        <a href="/commands" role="menuitem" class="{{ 'active' if _p == '/commands' else '' }}"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>
+                        <a href="/leaderboards" role="menuitem" class="{{ 'active' if _p == '/leaderboards' else '' }}"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>
+                        <a href="/updates" role="menuitem" class="{{ 'active' if _p == '/updates' else '' }}"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>
+                        <a href="/market" role="menuitem" class="{{ 'active' if _p == '/market' else '' }}"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta">Beta</span></a>
+                        <a href="/status" role="menuitem" class="{{ 'active' if _p == '/status' else '' }}"><i class="fa-solid fa-signal"></i> <span data-i18n>Server Status</span> <span class="nav-pill nav-pill-beta">Beta</span></a>
+                    </div>
+                </div>
+
+                <div class="nav-dropdown">
+                    <button type="button" class="nav-dropdown-trigger"
+                            aria-haspopup="true" aria-expanded="false"
+                            aria-controls="nav-devs-panel">
+                        <i class="fa-solid fa-code"></i>
+                        <span data-i18n>Developers</span>
+                        <i class="fa-solid fa-chevron-down nav-dropdown-caret" aria-hidden="true"></i>
+                    </button>
+                    <div class="nav-dropdown-panel" id="nav-devs-panel" role="menu">
+                        <a href="https://dev.aallyn.net" role="menuitem"><i class="fa-solid fa-key"></i> <span data-i18n>Dev Portal</span></a>
+                        <a href="https://docs.aallyn.net" role="menuitem"><i class="fa-solid fa-terminal"></i> <span data-i18n>API Docs</span></a>
+                    </div>
+                </div>
+
+                <a class="nav-icon" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                <a class="nav-icon" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                <a class="nav-support {{ 'active' if _p == '/support' else '' }}" href="/support" aria-label="Support" data-i18n-title title="Support the project"><i class="fa-solid fa-heart"></i></a>
+                <span id="nav-account" class="nav-account" data-state="loading"></span>
+
+                <span class="lang-picker">
+                    <i class="fa-solid fa-globe lang-picker-icon"></i>
+                    <select id="langSelect" class="lang-select" aria-label="Language"></select>
+                </span>
+            </nav>
+        </div>
+    </header>

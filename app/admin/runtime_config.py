@@ -327,6 +327,43 @@ REGISTRY: dict[str, TunableSetting] = {
         min_value=10, max_value=86400,
     ),
 
+    # ── Ingest cooldown (per-token, per-endpoint) ─────────────────────
+    # Backstop against a misbehaving bot resubmitting the same dump every
+    # few seconds (see ingest_log for the kind of duplicate-anchor spam
+    # this catches). Only applies when the caller authenticates via API
+    # token (the bot path); session-JWT calls from the portal "Manual cfg
+    # ingest" card bypass it so the master can replay back-fills without
+    # waiting out the window. Each ingest endpoint is bucketed
+    # independently — submitting a leaderboards dump doesn't eat into the
+    # market dump's budget.
+    "ingest_cooldown_max": _t(
+        key="ingest_cooldown_max",
+        default=settings.ingest_cooldown_max,
+        type="int",
+        category="ingest_cooldown",
+        description=(
+            "Maximum successful ingest submissions per token per endpoint "
+            "per window. Default 1 (one submit per window). Returns 429 "
+            "with Retry-After once exhausted. Set to a higher integer if "
+            "you want the bot to be able to submit multiple captures in a "
+            "single window."
+        ),
+        min_value=1, max_value=1000,
+    ),
+    "ingest_cooldown_window_seconds": _t(
+        key="ingest_cooldown_window_seconds",
+        default=settings.ingest_cooldown_window_seconds,
+        type="int",
+        category="ingest_cooldown",
+        description=(
+            "Sliding-window length for the per-token per-endpoint ingest "
+            "cap, in seconds. Default 300 (5 minutes). Bot scrapes "
+            "leaderboards on the hour, so 300 is generous; market scrapes "
+            "are roughly every 5–10 min so this matches the natural cadence."
+        ),
+        min_value=10, max_value=86400,
+    ),
+
     # ── Per-scope multipliers (widen the standard caps for heavy reads) ─
     "codexes_rate_limit_multiplier": _t(
         key="codexes_rate_limit_multiplier",
@@ -460,6 +497,154 @@ REGISTRY: dict[str, TunableSetting] = {
             "(smaller cohort, harder to be an outlier within it)."
         ),
         min_value=0.01, max_value=0.5,
+    ),
+
+    # ── Trove server status — per-environment game endpoints ──────────
+    # The auth tier (auth.trionworlds.com HTTPS) needs no config. The game
+    # tier is a TCP-connect probe of the glsserver port (6560) per
+    # environment. Hosts/ports default to the captured trovegame.com
+    # hostnames in config.py; override here to track endpoint changes
+    # without a redeploy. Empty host / port 0 disables that environment's
+    # game probe (verdict falls back to auth-only for it).
+    "trove_status_eu_host": _t(
+        key="trove_status_eu_host",
+        default=settings.trove_status_eu_host,
+        type="str",
+        category="trove_status",
+        description=(
+            "Hostname/IP of the EU Live game glsserver to TCP-probe. The "
+            "stable port is 6560 (world-instance ports like :3701x are "
+            "ephemeral). Retarget here if EU's glsserver host changes."
+        ),
+    ),
+    "trove_status_eu_port": _t(
+        key="trove_status_eu_port",
+        default=settings.trove_status_eu_port,
+        type="int",
+        category="trove_status",
+        description="TCP port of the EU Live game glsserver (default 6560). 0 disables.",
+        min_value=0, max_value=65535,
+    ),
+    "trove_status_us_host": _t(
+        key="trove_status_us_host",
+        default=settings.trove_status_us_host,
+        type="str",
+        category="trove_status",
+        description=(
+            "Hostname/IP of the US Live game glsserver to TCP-probe. Default "
+            "is the Dallas glsserver seen in the US capture; if that box is "
+            "session-assigned, point this at a stable US host (e.g. "
+            "trove-pc-live-us-game-5.trovegame.com) or a raw IP."
+        ),
+    ),
+    "trove_status_us_port": _t(
+        key="trove_status_us_port",
+        default=settings.trove_status_us_port,
+        type="int",
+        category="trove_status",
+        description="TCP port of the US Live game glsserver (default 6560). 0 disables.",
+        min_value=0, max_value=65535,
+    ),
+    "trove_status_pts_host": _t(
+        key="trove_status_pts_host",
+        default=settings.trove_status_pts_host,
+        type="str",
+        category="trove_status",
+        description="Hostname/IP of the PTS game glsserver to TCP-probe.",
+    ),
+    "trove_status_pts_port": _t(
+        key="trove_status_pts_port",
+        default=settings.trove_status_pts_port,
+        type="int",
+        category="trove_status",
+        description="TCP port of the PTS game glsserver (default 6560). 0 disables.",
+        min_value=0, max_value=65535,
+    ),
+
+    # ── Community feeds (/v1/feeds/{youtube,bilibili,twitch}) ──────────
+    # Filter knobs for the natively-fetched video/stream feeds (see
+    # app/trove/relays.py). The list-shaped knobs are comma-separated
+    # strings (runtime_config has no list type) — whitespace ignored, case
+    # folded on parse, same convention as cheaters_excluded_board_uuids.
+    # Twitch needs no filter knobs (it just lists every live Trove stream);
+    # its category id + credentials live in settings.py / .env.
+    "feeds_youtube_query": _t(
+        key="feeds_youtube_query",
+        default="Trove game",
+        type="str",
+        category="community_feeds",
+        description=(
+            "Search query the YouTube Data API runs for the /v1/feeds/youtube "
+            "feed. Default 'Trove game' (the bare word 'Trove' pulls in too "
+            "much unrelated treasure-hunting content)."
+        ),
+    ),
+    "feeds_youtube_excluded_channels": _t(
+        key="feeds_youtube_excluded_channels",
+        default="scyushi,mikailstream,codelaunch,jmdeathpunchdd",
+        type="str",
+        category="community_feeds",
+        description=(
+            "Comma-separated YouTube channel names to drop from the feed "
+            "(case-insensitive exact match on channel title). Use for "
+            "off-topic or spammy channels that keep ranking for the query."
+        ),
+    ),
+    "feeds_youtube_excluded_title_terms": _t(
+        key="feeds_youtube_excluded_title_terms",
+        default="trinket trove",
+        type="str",
+        category="community_feeds",
+        description=(
+            "Comma-separated substrings; a YouTube video whose title contains "
+            "any of them (case-insensitive) is dropped. Default catches the "
+            "unrelated 'Trinket Trove' series."
+        ),
+    ),
+    "feeds_bilibili_keyword": _t(
+        key="feeds_bilibili_keyword",
+        default="宝藏世界trove",
+        type="str",
+        category="community_feeds",
+        description=(
+            "Search keyword scraped from search.bilibili.com for the "
+            "/v1/feeds/bilibili feed. Default is the Chinese name for Trove "
+            "(宝藏世界) plus 'trove'."
+        ),
+    ),
+    "feeds_video_cutoff_days": _t(
+        key="feeds_video_cutoff_days",
+        default=90,
+        type="int",
+        category="community_feeds",
+        description=(
+            "Drop YouTube/Bilibili videos older than this many days. Default "
+            "90 (~3 months) keeps the feed current without going stale-empty "
+            "during quiet stretches."
+        ),
+        min_value=1, max_value=365,
+    ),
+    "feeds_per_channel_max": _t(
+        key="feeds_per_channel_max",
+        default=3,
+        type="int",
+        category="community_feeds",
+        description=(
+            "Maximum videos kept per channel/creator before the global "
+            "newest-N trim, so one prolific uploader can't dominate the feed."
+        ),
+        min_value=1, max_value=20,
+    ),
+    "feeds_max_items": _t(
+        key="feeds_max_items",
+        default=10,
+        type="int",
+        category="community_feeds",
+        description=(
+            "Number of videos served per YouTube/Bilibili feed after "
+            "per-channel capping and newest-first sorting."
+        ),
+        min_value=1, max_value=50,
     ),
 }
 

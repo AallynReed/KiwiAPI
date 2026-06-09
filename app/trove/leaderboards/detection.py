@@ -69,7 +69,7 @@ _VELOCITY_PEER_TOP_N = 50
 _LAST_GOOD: dict | None = None
 
 
-async def detect_possible_cheaters() -> dict:
+async def detect_possible_cheaters(*, force: bool = False) -> dict:
     """Run all three checks against the most recent anchor in the hot
     collection. Cached behaviour:
 
@@ -84,6 +84,12 @@ async def detect_possible_cheaters() -> dict:
     3. Cold start (no cache, no last-good) — fall through to
        synchronous compute. Slow on the FIRST request after a fresh
        boot, never again because the result feeds ``_LAST_GOOD``.
+
+    ``force=True`` BYPASSES the stale shortcut in step 2 and recomputes
+    synchronously. This is the warmer's path — without it, the warmer
+    would call itself, see _LAST_GOOD, return that, and never actually
+    populate the new anchor's cache slot (so user requests would keep
+    returning the previous anchor's payload forever after a new ingest).
     """
     from app.admin import runtime_config
 
@@ -113,20 +119,29 @@ async def detect_possible_cheaters() -> dict:
         cohort_pct, tuple(sorted(excluded)),
     )
     now = time.time()
+    global _LAST_GOOD
+
+    # Both paths honour a fresh cache hit for the current anchor — no
+    # point recomputing if the slot is already valid. The difference is
+    # what happens on a miss: the user-facing path serves _LAST_GOOD
+    # (yesterday's payload) instantly, while the warmer (force=True)
+    # falls through to compute so the new anchor's slot actually fills.
     hit = _CACHE.get(cache_key)
     if hit is not None and now - hit[0] < cache_ttl:
-        global _LAST_GOOD
         _LAST_GOOD = hit[1]
         return hit[1]
 
-    # No cache for THIS anchor. If we have a last-good payload from an
-    # earlier anchor, serve that and let the warmer fill in the gap
-    # — never block the user on the recompute.
-    if _LAST_GOOD is not None:
+    if not force and _LAST_GOOD is not None:
+        # User-facing miss: serve yesterday's payload, kick the warmer
+        # so the new anchor's slot starts filling. Without ``not force``
+        # gating this branch, the warmer would itself short-circuit on
+        # _LAST_GOOD and the new anchor's slot would NEVER populate.
         trigger_warmer()
         return _LAST_GOOD
 
-    # Cold start. Compute synchronously, feed last-good for next time.
+    # Either a cold start (no _LAST_GOOD ever) or the warmer running
+    # with force=True against a stale cache. Compute synchronously,
+    # populate cache + last-good for subsequent requests.
     result = await _compute(
         anchor, z_threshold, velocity_multiplier, min_board_size,
         excluded, cohort_pct,
@@ -232,8 +247,13 @@ async def _warm_all() -> None:
     feeds the leaderboards page. Runs sequentially (not concurrently)
     because they hit overlapping Mongo collections and we'd rather not
     interleave their cursors."""
-    # cheaters detection — the slowest, run first so it's ready ASAP
-    await detect_possible_cheaters()
+    # cheaters detection — the slowest, run first so it's ready ASAP.
+    # ``force=True`` makes the call bypass the stale-payload shortcut so
+    # the NEW anchor's cache slot actually gets populated. Without this
+    # the warmer would see _LAST_GOOD (the previous anchor's payload)
+    # and return that without ever calling _compute() — and the user
+    # would be stuck looking at yesterday's flags forever.
+    await detect_possible_cheaters(force=True)
     # activity estimate — also a multi-board scan
     from app.trove.leaderboards import activity as lb_activity
     await lb_activity.estimate_active_players()
@@ -306,19 +326,46 @@ async def _compute(
     flagged: dict[str, dict[int, dict]] = {}
     boards_analyzed = 0
     boards_excluded = 0
+    # Full meta of every board the analysis touched. Surfaced in the response
+    # so the showcase site's /leaderboards cheaters tab can show exactly which
+    # boards were scanned (transparency: a reader can verify the analysis
+    # covered the boards they care about, instead of taking "N boards" on
+    # faith). Per-board ``reset_kind`` is the effective value (admin override
+    # already applied), so a board pinned to "none" via the admin panel shows
+    # up correctly even when the hardcoded mapping says daily/weekly.
+    analyzed_boards_meta: list[dict] = []
+    excluded_boards_meta: list[dict] = []
 
     from app.trove.leaderboards.models import is_lifetime_kind
+
+    def _board_meta(b: dict) -> dict:
+        return {
+            "uuid": b["uuid"],
+            "name": b.get("name") or b.get("name_id") or str(b["uuid"]),
+            "category": b.get("category") or b.get("category_id") or "",
+            "reset_kind": b.get("reset_kind", "default"),
+            "contest_type": b.get("contest_type"),
+        }
 
     for board in boards:
         if board["uuid"] in excluded:
             boards_excluded += 1
+            excluded_boards_meta.append({**_board_meta(board), "reason": "admin_excluded"})
             continue
         entries, _total = await lb_service.list_entries(
             board["uuid"], anchor, limit=_BOARD_FETCH_LIMIT, offset=0,
         )
         if len(entries) < min_board_size:
+            # Too few entries for robust statistics — skip but record so the UI
+            # can explain why a board the user expected to see is absent.
+            excluded_boards_meta.append({
+                **_board_meta(board),
+                "reason": "below_min_size",
+                "entries": len(entries),
+            })
             continue
         boards_analyzed += 1
+        analyzed_boards_meta.append({**_board_meta(board), "entries": len(entries)})
 
         higher_is_better = _detect_direction(entries)
 
@@ -349,6 +396,8 @@ async def _compute(
     return _format(
         flagged, anchor, z_threshold, velocity_multiplier,
         min_board_size, boards_analyzed, boards_excluded,
+        analyzed_boards=analyzed_boards_meta,
+        excluded_boards=excluded_boards_meta,
     )
 
 
@@ -704,6 +753,8 @@ def _format(
     flagged: dict, anchor: int | None,
     z: float, vm: float, mb: int, boards_analyzed: int,
     boards_excluded: int = 0,
+    analyzed_boards: list[dict] | None = None,
+    excluded_boards: list[dict] | None = None,
 ) -> dict:
     players = []
     for name, boards_map in flagged.items():
@@ -750,6 +801,17 @@ def _format(
         "total_flagged": len(players),
         "boards_analyzed": boards_analyzed,
         "boards_excluded": boards_excluded,
+        # Detailed lists, sorted by (category, name) for stable rendering on
+        # the showcase site. Empty arrays when the analysis didn't run (e.g.,
+        # no anchor available yet).
+        "analyzed_boards": sorted(
+            analyzed_boards or [],
+            key=lambda b: ((b.get("category") or "").lower(), (b.get("name") or "").lower()),
+        ),
+        "excluded_boards": sorted(
+            excluded_boards or [],
+            key=lambda b: ((b.get("category") or "").lower(), (b.get("name") or "").lower()),
+        ),
     }
 
 

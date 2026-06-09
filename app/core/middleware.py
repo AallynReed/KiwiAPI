@@ -48,7 +48,7 @@ def _is_site_path(path: str) -> bool:
     return path == "/" or path in {
         "/documentation", "/commands", "/leaderboards", "/updates",
         "/support", "/login", "/signup", "/dashboard", "/market",
-        "/forgot-password", "/reset-password",
+        "/forgot-password", "/reset-password", "/status",
     } or path.startswith("/static/") or path.startswith("/site/")
 
 

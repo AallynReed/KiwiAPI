@@ -367,18 +367,78 @@
     }
   }
 
+  // ─── Trove server status pill ──────────────────────────────────────
+  // Fetches /site/trove-status (same-origin proxy of the API prober) and
+  // paints the hero status pill. The prober runs server-side every ~60s;
+  // we poll a touch faster so the dot tracks it. Hidden until the first
+  // resolved fetch so it never flashes a wrong state.
+  const $status = document.getElementById('trove-status');
+  const $statusText = $status && $status.querySelector('.trove-status-text');
+  // Translate via the global i18n helper when present, else pass through
+  // the English source (landing.js's local `t` vars are animation/timer
+  // scratch, not the i18n function — hence this dedicated helper).
+  const tr = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
+
+  function paintStatus(data) {
+    if (!$status || !$statusText) return;
+    const overall = (data && data.overall) || 'unknown';
+    if (overall === 'unknown') { $status.hidden = true; return; }
+
+    // Map verdict → {class, label, title}. When worlds_checked is false
+    // we only verified the auth tier, so "online" is honest-but-partial;
+    // the title spells that out without cluttering the pill.
+    // The pill reads "Trove servers · <state>" (the prefix is static in
+    // the markup), so the JS only sets the state word + colour. Driven by
+    // the LIVE environment's verdict from the multi-env payload, falling
+    // back to the legacy flat ``overall`` shape for safety.
+    let cls, label, title;
+    if (overall === 'down') {
+      cls = 'is-down';
+      label = tr('Offline');
+      title = tr('The Trove login servers are unreachable.');
+    } else if (overall === 'maintenance') {
+      cls = 'is-maint';
+      label = tr('Maintenance');
+      title = tr('Login works but the game servers are refusing connections.');
+    } else { // online
+      cls = 'is-up';
+      label = tr('Online');
+      title = tr('Trove login and game servers are responding.');
+    }
+    $status.classList.remove('is-up', 'is-maint', 'is-down');
+    $status.classList.add(cls);
+    $statusText.textContent = label;
+    $status.title = title;
+    $status.hidden = false;
+  }
+
+  async function refreshStatus() {
+    try {
+      const ctrl = new AbortController();
+      const tm = setTimeout(() => ctrl.abort(), 8000);
+      const r = await fetch('/site/trove-status', { signal: ctrl.signal });
+      clearTimeout(tm);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      paintStatus(await r.json());
+    } catch (_) {
+      // Leave the pill in its previous state on a transient failure; if
+      // it was never shown, it stays hidden (no false signal).
+    }
+  }
+
   // Kick off + schedule. requestIdleCallback first (so we don't fight the
   // initial paint), then a normal interval. If the tab returns from hidden,
   // refresh immediately so a backgrounded tab snaps to current.
-  const kick = () => refreshLive();
+  const kick = () => { refreshLive(); refreshStatus(); };
   if ('requestIdleCallback' in window) {
     requestIdleCallback(kick, { timeout: 1500 });
   } else {
     setTimeout(kick, 300);
   }
   setInterval(refreshLive, 30_000);
+  setInterval(refreshStatus, 60_000);
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) refreshLive();
+    if (!document.hidden) { refreshLive(); refreshStatus(); }
   });
 
   // The support widget used to be wired up here, but the markup ships

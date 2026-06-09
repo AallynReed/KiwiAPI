@@ -1,22 +1,45 @@
-"""Relayed community feeds: Twitch streams, YouTube and Bilibili videos.
+"""Community feeds: Twitch streams, YouTube and Bilibili videos.
 
-The trovesaurus bot already fetches these (Twitch OAuth, the YouTube Data API,
-and a Bilibili scraper) and exposes the results. We relay + cache those rather
-than re-implementing the credentials/scraping here: a background task pulls each
-feed into Mongo (one ``FeedCache`` doc per feed) and the API serves from it.
+These used to be relayed from the trovesaurus bot's HTTP server; they are now
+fetched **at source**, porting the bot's own logic:
+
+  - Twitch   — client-credentials app token → Helix ``/streams`` for Trove.
+  - YouTube  — Data API v3 ``search``, then the bot's filters (excluded
+               channels / title terms, skip live+upcoming, ≤N newest per
+               channel, newest N overall).
+  - Bilibili — HTML scrape of the search page (hotlink-protected thumbnails
+               are served through the image proxy further down).
+
+A background task pulls each feed into Mongo (one ``FeedCache`` doc per feed) on
+a fixed cadence and the API serves from that cache, so request latency never
+depends on the upstreams and a transient upstream failure leaves the last good
+payload untouched (``refresh_all_feeds`` swallows per-feed errors).
+
+Credentials come from the environment (``TWITCH_CLIENT_ID`` /
+``TWITCH_CLIENT_SECRET`` / ``YT_API_KEY`` — the same names the bot used). The
+per-feed filter knobs are runtime_config tunables (category ``community_feeds``)
+so they tune from the admin panel without a redeploy.
 """
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
+from app.admin import runtime_config
 from app.core.config import settings
 from app.core.utils import utcnow
 from app.trove.models import FeedCache
 
 logger = logging.getLogger("kiwi.trove.relays")
+
+_UA = "KiwiAPI/1.0 (+https://api.aallyn.net)"
+
+_TWITCH_TOKEN_URL = "https://id.twitch.tv/oauth2/token"
+_TWITCH_STREAMS_URL = "https://api.twitch.tv/helix/streams"
+_YOUTUBE_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
+_BILIBILI_SEARCH_URL = "https://search.bilibili.com/all"
 
 
 def _normalize_twitch(raw) -> list[dict]:
@@ -57,23 +80,228 @@ def _normalize_videos(raw) -> list[dict]:
     return out
 
 
-# feed -> (upstream path on the trovesaurus bot, normalizer)
+def _csv_set(raw: str) -> set[str]:
+    """Lower-cased, whitespace-trimmed set from a comma-separated tunable.
+    Mirrors the ``cheaters_excluded_board_uuids`` convention — runtime_config
+    has no list type, so list-shaped knobs ride in a single string."""
+    return {p.strip().lower() for p in (raw or "").split(",") if p.strip()}
+
+
+# --- Twitch (client-credentials app token → Helix /streams) -----------------
+
+_twitch_token: str | None = None  # cached app access token; re-minted on 401
+
+
+async def _twitch_app_token(client: httpx.AsyncClient, *, force: bool = False) -> str:
+    """Cached Twitch app access token. Minted on first use and whenever
+    ``force`` is set (e.g. after a 401 — app tokens last ~60 days but expire,
+    and the old bot only ever fetched one at startup, so it would silently
+    serve stale-empty once that token died)."""
+    global _twitch_token
+    if _twitch_token and not force:
+        return _twitch_token
+    if not settings.twitch_client_id or not settings.twitch_client_secret:
+        raise RuntimeError("TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET not configured")
+    resp = await client.post(_TWITCH_TOKEN_URL, params={
+        "client_id": settings.twitch_client_id,
+        "client_secret": settings.twitch_client_secret,
+        "grant_type": "client_credentials",
+    })
+    resp.raise_for_status()
+    _twitch_token = resp.json()["access_token"]
+    return _twitch_token
+
+
+async def _fetch_twitch() -> list[dict]:
+    if not settings.twitch_client_id or not settings.twitch_client_secret:
+        raise RuntimeError("TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET not configured")
+    async with httpx.AsyncClient(timeout=15, headers={"User-Agent": _UA}) as client:
+        async def _get(tok: str) -> httpx.Response:
+            return await client.get(_TWITCH_STREAMS_URL, params={
+                "game_id": settings.twitch_game_id, "first": 100,
+            }, headers={
+                "Client-Id": settings.twitch_client_id,
+                "Authorization": f"Bearer {tok}",
+            })
+        resp = await _get(await _twitch_app_token(client))
+        if resp.status_code == 401:
+            resp = await _get(await _twitch_app_token(client, force=True))
+        resp.raise_for_status()
+        return _normalize_twitch(resp.json())
+
+
+# --- YouTube (Data API v3 search + the bot's filters) -----------------------
+
+async def _fetch_youtube() -> list[dict]:
+    if not settings.yt_api_key:
+        raise RuntimeError("YT_API_KEY not configured")
+
+    query           = await runtime_config.get_setting("feeds_youtube_query")
+    excluded_chans  = _csv_set(await runtime_config.get_setting("feeds_youtube_excluded_channels"))
+    excluded_terms  = _csv_set(await runtime_config.get_setting("feeds_youtube_excluded_title_terms"))
+    cutoff_days     = int(await runtime_config.get_setting("feeds_video_cutoff_days"))
+    per_channel_max = int(await runtime_config.get_setting("feeds_per_channel_max"))
+    max_items       = int(await runtime_config.get_setting("feeds_max_items"))
+
+    published_after = (utcnow() - timedelta(days=cutoff_days)).isoformat().replace("+00:00", "Z")
+    async with httpx.AsyncClient(timeout=15, headers={"User-Agent": _UA}) as client:
+        resp = await client.get(_YOUTUBE_SEARCH_URL, params={
+            "part": "snippet", "q": query, "type": "video", "order": "relevance",
+            "publishedAfter": published_after, "maxResults": "100",
+            "key": settings.yt_api_key,
+        })
+        resp.raise_for_status()
+        data = resp.json()
+
+    temp: list[dict] = []
+    for item in data.get("items", []):
+        snippet = item.get("snippet") or {}
+        vid = (item.get("id") or {}).get("videoId")
+        if not vid:
+            continue
+        channel = snippet.get("channelTitle", "")
+        title = snippet.get("title", "")
+        if channel.lower() in excluded_chans:
+            continue
+        low = title.lower()
+        if any(term in low for term in excluded_terms):
+            continue
+        if snippet.get("liveBroadcastContent") in ("live", "upcoming"):
+            continue
+        temp.append({
+            "title": title,
+            "video_id": vid,
+            "url": f"https://www.youtube.com/watch?v={vid}",
+            "channel": channel,
+            "published_at": snippet.get("publishedAt"),
+            "thumbnail_url": ((snippet.get("thumbnails") or {}).get("high") or {}).get("url"),
+        })
+
+    # ≤ per_channel_max newest per channel, then the newest max_items overall.
+    by_channel: dict[str, list[dict]] = {}
+    for v in temp:
+        by_channel.setdefault(v["channel"], []).append(v)
+    pool: list[dict] = []
+    for vids in by_channel.values():
+        vids.sort(key=lambda x: x["published_at"] or "", reverse=True)
+        pool.extend(vids[:per_channel_max])
+    pool.sort(key=lambda x: x["published_at"] or "", reverse=True)
+    return _normalize_videos(pool[:max_items])
+
+
+# --- Bilibili (HTML scrape of the search page) ------------------------------
+
+def _parse_bilibili_date(date_str: str, now: datetime) -> datetime:
+    """Port of the bot's date parser: absolute (MM-DD / YYYY-MM-DD) and the
+    Chinese relative forms (昨天 / N小时前 / N分钟前). Falls back to ``now`` on
+    anything unrecognised or malformed rather than dropping the card."""
+    s = (date_str or "").strip()
+    try:
+        if "-" in s:
+            parts = s.split("-")
+            if len(parts) == 2:  # MM-DD (current year, or last year if future)
+                d = datetime(now.year, int(parts[0]), int(parts[1]), tzinfo=timezone.utc)
+                return d.replace(year=now.year - 1) if d > now else d
+            if len(parts) == 3:  # YYYY-MM-DD
+                return datetime(int(parts[0]), int(parts[1]), int(parts[2]), tzinfo=timezone.utc)
+        elif "昨天" in s:        # yesterday
+            return now - timedelta(days=1)
+        elif "小时前" in s:       # N hours ago
+            return now - timedelta(hours=int(s.replace("小时前", "").strip()))
+        elif "分钟前" in s:       # N minutes ago
+            return now - timedelta(minutes=int(s.replace("分钟前", "").strip()))
+    except (ValueError, TypeError):
+        return now
+    return now
+
+
+async def _fetch_bilibili() -> list[dict]:
+    # Lazy import so a missing optional dep degrades to "bilibili feed fails,
+    # logged" rather than taking down the whole module (and Twitch/YouTube
+    # with it) at import time.
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError as exc:
+        raise RuntimeError(
+            "beautifulsoup4 is not installed (required for the Bilibili scraper)"
+        ) from exc
+
+    keyword         = await runtime_config.get_setting("feeds_bilibili_keyword")
+    cutoff_days     = int(await runtime_config.get_setting("feeds_video_cutoff_days"))
+    per_channel_max = int(await runtime_config.get_setting("feeds_per_channel_max"))
+    max_items       = int(await runtime_config.get_setting("feeds_max_items"))
+
+    async with httpx.AsyncClient(timeout=15, follow_redirects=True, headers={
+        "User-Agent": _BILIBILI_UA,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+    }) as client:
+        resp = await client.get(_BILIBILI_SEARCH_URL, params={"keyword": keyword})
+        resp.raise_for_status()
+        html = resp.text
+
+    soup = BeautifulSoup(html, "html.parser")
+    now = utcnow()
+    cutoff = now - timedelta(days=cutoff_days)
+    channel_counts: dict[str, int] = {}
+    videos: list[dict] = []
+
+    for card in soup.select(".bili-video-card"):
+        a_tag = card.select_one("a")
+        if not a_tag:
+            continue
+        href = a_tag.get("href", "")
+        if not href.startswith("//www.bilibili.com/video/"):
+            continue
+        bvid = href.split("/video/")[1].strip("/")
+
+        title_elem = card.select_one("h3.bili-video-card__info--tit")
+        title = title_elem.get("title", "") if title_elem else ""
+        author_elem = card.select_one(".bili-video-card__info--author")
+        author = author_elem.text.strip() if author_elem else ""
+        date_elem = card.select_one(".bili-video-card__info--date")
+        date_str = date_elem.text.replace("·", "").strip() if date_elem else ""
+
+        vid_date = _parse_bilibili_date(date_str, now)
+        if vid_date < cutoff:
+            continue
+        if channel_counts.get(author, 0) >= per_channel_max:
+            continue
+        channel_counts[author] = channel_counts.get(author, 0) + 1
+
+        pic_elem = card.select_one("picture source")
+        pic_url = pic_elem.get("srcset", "").split("@")[0] if pic_elem else ""
+        if pic_url.startswith("//"):
+            pic_url = f"https:{pic_url}"
+
+        videos.append({
+            "title": title,
+            "video_id": bvid,
+            "url": f"https:{href}",
+            "channel": author,
+            "published_at": vid_date.isoformat().replace("+00:00", "Z"),
+            "thumbnail_url": pic_url,
+        })
+        if len(videos) >= max_items:
+            break
+
+    videos.sort(key=lambda x: x["published_at"], reverse=True)
+    return _normalize_videos(videos)
+
+
+# feed -> native fetcher (each returns a normalized list[dict])
 _FEEDS = {
-    "twitch": ("/twitch_streams", _normalize_twitch),
-    "youtube": ("/youtube_videos", _normalize_videos),
-    "bilibili": ("/bilibili_videos", _normalize_videos),
+    "twitch": _fetch_twitch,
+    "youtube": _fetch_youtube,
+    "bilibili": _fetch_bilibili,
 }
 
 
 async def refresh_feed(feed: str) -> int:
-    path, normalize = _FEEDS[feed]
-    async with httpx.AsyncClient(
-        timeout=15, follow_redirects=True, headers={"User-Agent": "KiwiAPI/1.0"}
-    ) as client:
-        resp = await client.get(settings.trovesaurus_base_url + path)
-        resp.raise_for_status()
-        items = normalize(resp.json())
-
+    """Fetch one feed at source and upsert its FeedCache doc. Raises on fetch
+    failure (missing creds, upstream error) so ``refresh_all_feeds`` can log it
+    and leave the previously cached payload in place."""
+    items = await _FEEDS[feed]()
     existing = await FeedCache.find_one(FeedCache.feed == feed)
     if existing is None:
         await FeedCache(feed=feed, items=items, fetched_at=utcnow()).insert()

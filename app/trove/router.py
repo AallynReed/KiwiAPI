@@ -99,6 +99,9 @@ from app.trove.schemas import (
     ChaosChest,
     ChaosChestCaptureOut,
     ActivityResponse,
+    ActivityHistoryResponse,
+    TroveStatusResponse,
+    TroveStatusHistoryResponse,
     ChaosChestHistoryPage,
     CheatersResponse,
     ClassList,
@@ -481,7 +484,7 @@ async def list_news(
 
 @feeds_router.get("/twitch", response_model=TwitchStreams)
 async def get_twitch(ctx: AccessContext = _FEED) -> TwitchStreams:
-    """Live Twitch streams for Trove, relayed + cached from the trovesaurus bot."""
+    """Live Twitch streams for Trove (Helix, fetched at source) + cached."""
     items, fetched_at = await relays.get_feed("twitch")
     return TwitchStreams(
         items=[TwitchStream(**i) for i in items], count=len(items), fetched_at=fetched_at
@@ -490,14 +493,14 @@ async def get_twitch(ctx: AccessContext = _FEED) -> TwitchStreams:
 
 @feeds_router.get("/youtube", response_model=Videos)
 async def get_youtube(ctx: AccessContext = _FEED) -> Videos:
-    """Recent Trove YouTube videos, relayed + cached from the trovesaurus bot."""
+    """Recent Trove YouTube videos (Data API, fetched at source) + cached."""
     items, fetched_at = await relays.get_feed("youtube")
     return Videos(items=[Video(**i) for i in items], count=len(items), fetched_at=fetched_at)
 
 
 @feeds_router.get("/bilibili", response_model=Videos)
 async def get_bilibili(ctx: AccessContext = _FEED) -> Videos:
-    """Recent Trove Bilibili videos, relayed + cached from the trovesaurus bot."""
+    """Recent Trove Bilibili videos (search-page scrape, fetched at source) + cached."""
     items, fetched_at = await relays.get_feed("bilibili")
     return Videos(items=[Video(**i) for i in items], count=len(items), fetched_at=fetched_at)
 
@@ -819,6 +822,99 @@ async def get_interest_items(ctx: AccessContext = _MISC_PUBLIC) -> MarketItemLis
     """
     items = await market_service.interest_items_list()
     return MarketItemList(items=items, count=len(items))
+
+
+# ── Player activity ───────────────────────────────────────────────────────
+# Mirrors of the cheaper /v1/leaderboards/activity[/history] endpoints,
+# exposed under /v1/misc so third-party dashboards / wikis discover them
+# without having to read the leaderboards-scope docs. Same payloads, same
+# in-process cache, same per-anchor pre-population. Tokenless via
+# misc:read public scope.
+
+@misc_router.get(
+    "/activity", response_model=ActivityResponse,
+    summary="Estimated active players via leaderboard score deltas",
+)
+async def misc_get_activity(
+    response: Response,
+    ctx: AccessContext = _MISC_PUBLIC,
+) -> ActivityResponse:
+    """**Tokenless.** Mirror of ``/v1/leaderboards/activity`` exposed under
+    misc for discoverability. Returns a lower-bound count of active
+    players in the most recent window (distinct top-N leaderboard
+    players whose score increased on at least one tracked board between
+    the two latest captures). Cached for the cheater-detection TTL."""
+    from app.admin import runtime_config
+    payload = await leaderboards_activity.estimate_active_players()
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return ActivityResponse(**payload)
+
+
+@misc_router.get(
+    "/activity/history", response_model=ActivityHistoryResponse,
+    summary="Time-series of estimated active players over recent captures",
+)
+async def misc_get_activity_history(
+    response: Response,
+    days: int = Query(default=7, ge=1, le=30),
+    ctx: AccessContext = _MISC_PUBLIC,
+) -> ActivityHistoryResponse:
+    """**Tokenless.** Mirror of ``/v1/leaderboards/activity/history`` —
+    time-series of active-player estimates over the last ``days`` days,
+    one point per consecutive capture pair. See the leaderboards-scope
+    docs for the per-hour normalisation semantics (a missed capture
+    inflates the raw count because the window spans longer; the
+    ``estimate_per_hour`` field divides by duration so charts stay
+    honest)."""
+    from app.admin import runtime_config
+    payload = await leaderboards_activity.estimate_active_players_history(days=days)
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return ActivityHistoryResponse(**payload)
+
+
+@misc_router.get(
+    "/trove-status", response_model=TroveStatusResponse,
+    summary="Live Trove server status (auth + per-env game sockets)",
+)
+async def misc_trove_status(
+    response: Response,
+    ctx: AccessContext = _MISC_PUBLIC,
+) -> TroveStatusResponse:
+    """**Tokenless.** Live Trove server status from the background
+    prober (every ~60s). ``overall`` tracks LIVE (online / maintenance /
+    down / unknown). ``auth`` is the HTTPS liveness of
+    ``auth.trionworlds.com`` (catches full outages, stays up during
+    world maintenance); ``environments.{live,pts}`` each carry a
+    ``game`` TCP probe of the glsserver port (6560) — accepted =
+    worlds playable, refused while auth up = maintenance. Served from
+    cache; never blocks on a live probe."""
+    from app.trove import status as trove_status
+    payload = trove_status.get_status()
+    response.headers["Cache-Control"] = "public, max-age=30"
+    return TroveStatusResponse(**payload)
+
+
+@misc_router.get(
+    "/trove-status/history", response_model=TroveStatusHistoryResponse,
+    summary="Trove status timeline + uptime for one environment",
+)
+async def misc_trove_status_history(
+    response: Response,
+    env: str = Query(default="live", pattern="^(live|pts)$"),
+    days: int = Query(default=30, ge=1, le=90),
+    ctx: AccessContext = _MISC_PUBLIC,
+) -> TroveStatusHistoryResponse:
+    """**Tokenless.** Status-timeline history for ``env`` (live / pts)
+    over the last ``days`` days: ``segments`` (continuous status periods,
+    open one has ``ended_at=null``), ``outages`` (the non-online subset),
+    and an ``uptime`` fraction. Drives the downtime-history graphic on
+    the /status page."""
+    from app.trove import status as trove_status
+    payload = await trove_status.get_history(env, days)
+    response.headers["Cache-Control"] = "public, max-age=60"
+    return TroveStatusHistoryResponse(**payload)
 
 
 # ── Feedback ingest ───────────────────────────────────────────────────────
@@ -1762,6 +1858,37 @@ async def get_activity_estimate(
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
     response.headers["Cache-Control"] = f"public, max-age={ttl}"
     return ActivityResponse(**payload)
+
+
+@leaderboards_router.get(
+    "/activity/history", response_model=ActivityHistoryResponse,
+    summary="Time-series of estimated active players over recent captures",
+)
+async def get_activity_history(
+    response: Response,
+    days: int = Query(default=7, ge=1, le=30),
+    _ctx: AccessContext = _LB_PUBLIC,
+) -> ActivityHistoryResponse:
+    """**Tokenless.** Returns a time-series of activity estimates, one
+    point per consecutive captured anchor pair in the requested window.
+
+    Each point carries the raw ``estimate`` and a ``estimate_per_hour``
+    rate (= estimate / duration_hours) which is the right Y-axis for a
+    chart: when a capture is missed, the next window spans more than
+    an hour and the raw count is naturally higher because more players
+    had time to score. The per-hour rate normalises this out so the
+    chart line doesn't spike on irregular intervals.
+
+    Points are persisted on each new ingest (see
+    ``leaderboards.activity._compute``), so the series survives
+    container restarts and accumulates as captures land — the chart
+    won't be empty after a restart provided some history was stored
+    previously."""
+    from app.admin import runtime_config
+    payload = await leaderboards_activity.estimate_active_players_history(days=days)
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return ActivityHistoryResponse(**payload)
 
 
 @leaderboards_router.get(
