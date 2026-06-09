@@ -31,14 +31,14 @@ class Settings(BaseSettings):
     market_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
 
     # Leaderboards archive throttle. Queries for an anchor older than the
-    # threshold (default 90 days) hit the archive collection — those reads are
+    # threshold (default 90 days) hit the archive collection - those reads are
     # cheap individually but a malicious caller could trawl the whole archive
     # with a tight loop, so apply a much tighter per-token limit on top of the
     # standard one. The standard cap stays in force; this is additive.
     # Hot retention: rows newer than this stay in the fast LeaderboardEntry
     # collection. Older rows get moved to LeaderboardEntryArchive at the
     # tail of each insert. With hourly captures, 3 days = ~72 anchors per
-    # board kept hot — matches the archive-query threshold below so the
+    # board kept hot - matches the archive-query threshold below so the
     # "what the user pays standard rate for" and "what's physically hot"
     # windows are identical, simpler to reason about.
     leaderboards_hot_retention_days: int = 3
@@ -74,20 +74,20 @@ class Settings(BaseSettings):
     cheaters_excluded_board_uuids: str = ""
     # Elite-cohort size as a fraction of the board's population. 0.05 =
     # top 5 % (or top 50, whichever is larger). Score-outlier check uses
-    # this cohort as the baseline instead of the whole board — Trove
+    # this cohort as the baseline instead of the whole board - Trove
     # leaderboards are heavy-tailed and "above the population median"
     # describes every top-100 player, not just cheaters.
     cheaters_elite_cohort_pct: float = 0.05
 
     # Market archive throttle. Market listings expire after 7 days (in-game),
     # so the "archive surface" here is anyone passing hide_expired=false on
-    # /v1/market/listings — they're explicitly opting into the historical tail.
+    # /v1/market/listings - they're explicitly opting into the historical tail.
     # Tight per-token bucket; the standard cap stays in force.
     market_archive_rate_limit_max: int = 10
     market_archive_rate_limit_window_seconds: int = 60
     # Historical: the /unlock_* byte-patcher tools accepted a ~100 MB
     # Trove.exe upload here. Routes removed 2026-06 after anti-cheat
-    # shipped — this knob is kept defined (rather than ripped out) so a
+    # shipped - this knob is kept defined (rather than ripped out) so a
     # stale deployment config or override file referencing it doesn't
     # crash settings parsing. Free to delete after one full release.
     site_max_request_body_bytes: int = 110 * 1024 * 1024  # 110 MB (unused)
@@ -100,18 +100,18 @@ class Settings(BaseSettings):
     # api_url  -> production data API surface (/v1, /health)
     # dev_url  -> developer portal: login, API-key management, Swagger
     # docs_url -> static documentation site
-    # app_url  -> BetterTroveTools showcase site (the public user-facing pages —
+    # app_url  -> BetterTroveTools showcase site (the public user-facing pages -
     #             /leaderboards, /updates, /market, /login, /dashboard, etc.)
     api_url: str = "https://api.aallyn.net"
     dev_url: str = "https://dev.aallyn.net"
     docs_url: str = "https://docs.aallyn.net"
     app_url: str = "https://trove.aallyn.net"
 
-    # Mongo connection — inside Docker the host is the compose service name.
+    # Mongo connection - inside Docker the host is the compose service name.
     mongo_uri: str = "mongodb://localhost:27017"
     mongo_db: str = "kiwi"
 
-    # Redis — backs rate limiting + short-lived caches (Phase C). If unset, the
+    # Redis - backs rate limiting + short-lived caches (Phase C). If unset, the
     # app runs without it.
     redis_url: str | None = None
 
@@ -147,7 +147,7 @@ class Settings(BaseSettings):
     # Warn the owner by email this many days before a token expires.
     token_expiry_warning_days: int = 7
 
-    # --- Captcha (signup protection) — provider-agnostic ----------------------
+    # --- Captcha (signup protection) - provider-agnostic ----------------------
     # hCaptcha and Cloudflare Turnstile share the same verify contract, so the
     # only difference is the provider name (and the keys you supply).
     # If captcha_secret is empty, captcha verification is SKIPPED (dev only).
@@ -280,7 +280,7 @@ class Settings(BaseSettings):
     # The current week's floor data accumulates as players submit; a background task
     # refreshes it (on startup, hourly on the delve-Monday, then once daily at the
     # Trove reset) and stores one document per week. History is imported once (see
-    # app/trove/delve_import.py). Set the source URL in the environment — the
+    # app/trove/delve_import.py). Set the source URL in the environment - the
     # refresher stays OFF until it's configured (the endpoints still serve imported
     # data either way).
     trove_delve_source_url: str = ""      # week-based delve-history source; set via env
@@ -317,7 +317,7 @@ class Settings(BaseSettings):
     # TLS = reachable; timeout / refused / TLS error / 5xx = down. Catches
     # full outages but stays up during world-only maintenance (Akamai).
     # Game tier (per environment): TCP-connect probe of the glsserver port
-    # (6560) on the live / PTS game hosts — captured from pcap; port 6560 is
+    # (6560) on the live / PTS game hosts - captured from pcap; port 6560 is
     # the stable login-to-game entry (world-instance ports like :3701x are
     # ephemeral). Accepted = playable; refused/timeout while auth up =
     # maintenance. Hosts/ports are also runtime-tunable (admin panel).
@@ -326,13 +326,13 @@ class Settings(BaseSettings):
     trove_status_timeout_seconds: float = 8.0              # per-probe timeout
     # Two public Live regions + PTS. The probe target is the REGIONAL
     # glsserver (login-to-game) box on :6560, captured from per-region
-    # pcaps — EU = Amsterdam (ams-*), US = Dallas (dal-*), both shaped
+    # pcaps - EU = Amsterdam (ams-*), US = Dallas (dal-*), both shaped
     # {dc}-cXX-bYY.{dc}.triongames.com. NOTE: the trove-pc-live-*-game-N
-    # .trovegame.com hosts are WORLD shards and do NOT listen on 6560 —
+    # .trovegame.com hosts are WORLD shards and do NOT listen on 6560 -
     # probing one is a permanent false "maintenance" (the bug this fixes).
     # These dal-/ams- boxes may be pool-assigned (adjacent IPs seen:
     # EU 51.77.91.79/.80, US 51.79.8.229), so all host/port pairs are
-    # runtime-tunable from the admin panel — retarget without a redeploy
+    # runtime-tunable from the admin panel - retarget without a redeploy
     # if a box rotates out.
     trove_status_eu_host: str = "ams-c12-b05.ams.triongames.com"
     trove_status_eu_port: int = 6560

@@ -4,14 +4,14 @@ services:
     restart: unless-stopped
     # Auth is enabled automatically when these are set. The init script then
     # creates a least-privilege app user. NOTE: these only take effect on a FRESH
-    # data dir — to enable auth on an existing one, wipe ./data/mongo first.
+    # data dir - to enable auth on an existing one, wipe ./data/mongo first.
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set MONGO_ROOT_PASSWORD in .env}
       MONGO_INITDB_DATABASE: ${MONGO_DB:-kiwi}
       MONGO_APP_USER: ${MONGO_APP_USER:-kiwi_app}
       MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?set MONGO_APP_PASSWORD in .env}
-    # Bound to localhost only — the api reaches Mongo over the internal compose
+    # Bound to localhost only - the api reaches Mongo over the internal compose
     # network; this mapping is just for host-side admin access.
     ports:
       - "127.0.0.1:27017:27017"
@@ -34,7 +34,7 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     # Internal only (no host port). Password-protected, in-memory (no persistence
-    # needed — it backs rate-limit counters and short-lived caches).
+    # needed - it backs rate-limit counters and short-lived caches).
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}", "--save", "", "--appendonly", "no"]
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
@@ -59,12 +59,12 @@ services:
       MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
       MONGO_DB: ${MONGO_DB:-kiwi}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
-      # Override these in a .env file (see .env.example) — do NOT ship the defaults.
+      # Override these in a .env file (see .env.example) - do NOT ship the defaults.
       SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
       CAPTCHA_PROVIDER: ${CAPTCHA_PROVIDER:-turnstile}
       CAPTCHA_SECRET: ${CAPTCHA_SECRET:-}
       CAPTCHA_SITEKEY: ${CAPTCHA_SITEKEY:-}
-      # Master/admin account — created or promoted to superuser on startup.
+      # Master/admin account - created or promoted to superuser on startup.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       USAGE_RETENTION_DAYS: ${USAGE_RETENTION_DAYS:-30}
@@ -82,7 +82,7 @@ services:
       # "Sign in with GitHub" (optional). Leave blank to disable.
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-      # Game-file version archiver. OFF by default — set to true ONLY when the
+      # Game-file version archiver. OFF by default - set to true ONLY when the
       # blob disk (./.game_updates) has room; the first sync pulls multi-GB.
       TROVE_UPDATE_ENABLED: ${TROVE_UPDATE_ENABLED:-false}
       TROVE_UPDATE_STORE_DIR: ${TROVE_UPDATE_STORE_DIR:-/data/updates}
@@ -105,7 +105,7 @@ services:
     volumes:
       - ./app:/app/app
       # Content-addressed blob store for the game-file archive (host: ./.game_updates).
-      # Many GB once enabled — kept out of git/Syncthing/the image build context.
+      # Many GB once enabled - kept out of git/Syncthing/the image build context.
       - ./.game_updates:/data/updates
       # BetterTroveTools showcase site (templates + static + ~20 MB of screenshots).
       # Bind-mounted so the heavy binary assets don't bake into the image; the

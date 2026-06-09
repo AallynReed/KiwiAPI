@@ -1,11 +1,11 @@
 """Trion update-CDN client + the three plaintext layer parsers.
 
-Layers (all plain HTTP, no auth — see the protocol notes):
+Layers (all plain HTTP, no auth - see the protocol notes):
   1. bootstrap pointer  -> current version tag + content path        (per branch)
   2. versioned manifest -> the file set for that build (path, sha1, size)
   3. file               -> the on-disk bytes (write byte-for-byte; do NOT inflate)
 
-The manifest `sha1` is opaque (not recomputable) — we use it ONLY as a per-file
+The manifest `sha1` is opaque (not recomputable) - we use it ONLY as a per-file
 "did this change?" key, never as a content hash. URL joins reproduce Glyph's
 literal double slash after the prefix verbatim; the CDN accepts it.
 
@@ -20,7 +20,7 @@ import urllib.parse
 import httpx
 
 # The timelines we track -> each branch's bootstrap-pointer filename. (PTS is
-# region-less: kiwi-pts.txt, verified from a live capture — not kiwi-pts-us.txt.)
+# region-less: kiwi-pts.txt, verified from a live capture - not kiwi-pts-us.txt.)
 BRANCHES: dict[str, str] = {
     "live-us": "kiwi-live-us.txt",
     "pts": "kiwi-pts.txt",
@@ -38,7 +38,7 @@ def parse_pointer(text: str) -> dict:
     """Pipe-delimited bootstrap pointer -> {version, content_path, motd, fields}.
 
     Field 1 arrives as `content/patchkiwi-live-us01`, but the manifest/file URL
-    templates already carry their own `/content/` segment — so the bare path
+    templates already carry their own `/content/` segment - so the bare path
     (`patchkiwi-live-us01`) is what we keep, to avoid a doubled `/content/content/`.
     """
     fields = text.strip().split("|")

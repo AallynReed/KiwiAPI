@@ -4,7 +4,7 @@ from starlette.requests import Request
 
 
 def utcnow() -> datetime:
-    """Timezone-aware UTC now — use everywhere instead of datetime.utcnow()."""
+    """Timezone-aware UTC now - use everywhere instead of datetime.utcnow()."""
     return datetime.now(timezone.utc)
 
 

@@ -3,7 +3,7 @@
 Both are used across more than one Trove feature (`.tmod` mod files and the
 `.tfa`/`.tfi` archive format), so they live in one place. `calculate_hash` is
 verified byte-for-byte against the native `trove.dll` (golden values pinned in
-tests/unit/trove/test_tmod.py) — do NOT "simplify" the signed-char tail handling.
+tests/unit/trove/test_tmod.py) - do NOT "simplify" the signed-char tail handling.
 """
 
 _FNV_OFFSET = 2166136261

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /market — page logic (Beta)
+   /market - page logic (Beta)
    ───────────────────────────────────────────────────────────────────────
    Sidebar of items (filterable client-side), main pane with summary
    stats + paginated listings table for the selected item. Backed by
@@ -82,7 +82,7 @@
   // ─── Items sidebar ─────────────────────────────────────────────────
   function renderItems() {
     if (!state.items.length) {
-      $items.innerHTML = `<p class="mkt-items-empty" data-i18n>No market data captured yet — check back after the next hourly sweep.</p>`;
+      $items.innerHTML = `<p class="mkt-items-empty" data-i18n>No market data captured yet - check back after the next hourly sweep.</p>`;
       rerunI18n();
       return;
     }
@@ -97,7 +97,7 @@
       return;
     }
 
-    // Sort once on the client — the API returns these alphabetised
+    // Sort once on the client - the API returns these alphabetised
     // already, but the filter-rendered subset stays stable that way too.
     visible.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -143,7 +143,7 @@
     $detailTitle.textContent = name;
     $detailMeta.textContent = '';
     resetSummary();
-    $listingsBody.innerHTML = `<p class="mkt-loading" data-i18n>${t('Crunching the latest capture — first paint can take a moment while we warm the caches.')}</p>`;
+    $listingsBody.innerHTML = `<p class="mkt-loading" data-i18n>${t('Crunching the latest capture - first paint can take a moment while we warm the caches.')}</p>`;
     $listingsFoot.hidden = true;
 
     updateHash();
@@ -158,7 +158,7 @@
       if ($chartMeta) $chartMeta.textContent = '';
     }
 
-    // Three requests in parallel — summary is small, listings is
+    // Three requests in parallel - summary is small, listings is
     // paginated, chart-history is the heaviest (up to 5000 rows for
     // an active item). All independent so we kick them together.
     await Promise.all([
@@ -174,18 +174,18 @@
       state.summary = data;
       renderSummary();
     } catch (err) {
-      $sumCount.textContent = $sumMedian.textContent = $sumMin.textContent = $sumMax.textContent = '—';
-      // Surface the error inline only if the listings query also fails —
-      // a 404 from summary (no active listings) is just "—" four times.
+      $sumCount.textContent = $sumMedian.textContent = $sumMin.textContent = $sumMax.textContent = '-';
+      // Surface the error inline only if the listings query also fails -
+      // a 404 from summary (no active listings) is just "-" four times.
       console.warn('[market] summary fetch failed', err);
     }
   }
 
   function resetSummary() {
-    $sumCount.textContent = '—';
-    $sumMedian.textContent = '—';
-    $sumMin.textContent = '—';
-    $sumMax.textContent = '—';
+    $sumCount.textContent = '-';
+    $sumMedian.textContent = '-';
+    $sumMin.textContent = '-';
+    $sumMax.textContent = '-';
   }
 
   function renderSummary() {
@@ -193,7 +193,7 @@
     if (!s) return;
     // Service field names are ``min_each`` / ``max_each`` / ``median_each``
     // (NOT ``*_price_each``). Trips up the eye because the underlying row
-    // field IS ``price_each`` — the aggregation just doesn't carry the
+    // field IS ``price_each`` - the aggregation just doesn't carry the
     // prefix forward. See app/trove/market/service.py::item_summary.
     if (s.count != null) $sumCount.textContent = formatInt(s.count);
     if (s.median_each != null) $sumMedian.textContent = formatPrice(s.median_each);
@@ -292,7 +292,7 @@
     const p = state.chart.payload;
     if (!p || !p.points || !p.points.length) {
       // No chartable data. Hide the wrap entirely rather than showing
-      // an empty pane — the listings table below still gives the user
+      // an empty pane - the listings table below still gives the user
       // something useful.
       $chartWrap.hidden = true;
       return;
@@ -301,7 +301,7 @@
 
     drawScatterChart($chart, p.points);
 
-    // Meta line — count + window + truncation hint, plus an outlier
+    // Meta line - count + window + truncation hint, plus an outlier
     // sub-message when the filter dropped anything. The price-range
     // info ("between 41M and 50M") gives users a concrete handle on
     // what they're hiding before they decide to toggle outliers back
@@ -326,13 +326,13 @@
         : '';
       meta += ' · ' + t('{n} outlier(s) excluded ({range})')
         .replace('{n}', formatInt(p.outliers_excluded))
-        .replace('{range}', range || '—');
+        .replace('{range}', range || '-');
     }
     $chartMeta.textContent = meta;
   }
 
   // SVG scatter of (created_at, price_each) with a smoothed median
-  // trend line overlaid. No tooltip library — bare DOM + a hover
+  // trend line overlaid. No tooltip library - bare DOM + a hover
   // overlay that finds the nearest point and shows a small card.
   function drawScatterChart(container, points) {
     container.innerHTML = '';
@@ -385,7 +385,7 @@
       label.textContent = abbrevPrice(v);
       svg.appendChild(label);
     }
-    // X labels — 4 across the window.
+    // X labels - 4 across the window.
     const xLabelCount = 4;
     for (let i = 0; i < xLabelCount; i++) {
       const ratio = i / (xLabelCount - 1);
@@ -401,7 +401,7 @@
       svg.appendChild(txt);
     }
 
-    // Bucketed median trend line — split the window into N buckets,
+    // Bucketed median trend line - split the window into N buckets,
     // compute the median price_each per bucket, draw a polyline through
     // the bucket centers. Buckets with no points are skipped.
     const BUCKETS = 24;
@@ -425,7 +425,7 @@
       svg.appendChild(trend);
     }
 
-    // Scatter — small circle per listing. Recent points are brighter
+    // Scatter - small circle per listing. Recent points are brighter
     // (alpha curve from window_start..xMax) so the eye reads activity
     // direction without a separate legend.
     for (const p of points) {
@@ -442,7 +442,7 @@
 
     container.appendChild(svg);
 
-    // Hover guide + tooltip — same pattern as the leaderboards chart.
+    // Hover guide + tooltip - same pattern as the leaderboards chart.
     // Mouse-tracking rect resolves cursor → nearest point by squared
     // distance in viewBox space.
     const tooltip = document.createElement('div');
@@ -621,7 +621,7 @@
 
   function formatPrice(n) {
     n = Number(n || 0);
-    // Flux runs into the millions — abbreviate above 1k for table density,
+    // Flux runs into the millions - abbreviate above 1k for table density,
     // but keep the underlying value as title for hover.
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
     if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'k';

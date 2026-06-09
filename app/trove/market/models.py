@@ -2,9 +2,9 @@
 
 Two documents:
 
-- ``MarketListing``      — one per in-game listing (UUID v1 from the game is
+- ``MarketListing``      - one per in-game listing (UUID v1 from the game is
   the _id; re-scrapes bump ``last_seen`` so the row never duplicates).
-- ``MarketInterestItem`` — the allow-list of item names the bot scans for.
+- ``MarketInterestItem`` - the allow-list of item names the bot scans for.
   Editable via the master admin panel; seeded from ``gamedata/market_items.json``
   on first boot if the collection is empty.
 
@@ -25,7 +25,7 @@ from pymongo import ASCENDING, DESCENDING, IndexModel
 from app.core.utils import utcnow
 
 
-# 7 days — the in-game listing TTL.
+# 7 days - the in-game listing TTL.
 LISTING_LIFETIME_SECONDS = 7 * 86400
 # After 3h with no re-scrape we consider a listing "expired" for UI hint purposes.
 LISTING_STALE_SECONDS = 3 * 3600
@@ -48,7 +48,7 @@ class MarketInterestItem(Document):
 
     Editable via the master admin panel (/admin/market/interest-items). At
     ingest time the service builds a set of these for O(1) containment checks
-    — only items present here get persisted to ``MarketListing``.
+    - only items present here get persisted to ``MarketListing``.
     """
 
     name: str
@@ -76,8 +76,8 @@ class MarketListing(Document):
     stack: int                 # how many of the item in this listing
     price: int                 # total flux price for the whole stack
     price_each: float          # round(price / stack, 3)
-    last_seen: int             # unix seconds — last time the bot saw the listing
-    created_at: int = 0        # unix seconds — when the listing was posted in-game
+    last_seen: int             # unix seconds - last time the bot saw the listing
+    created_at: int = 0        # unix seconds - when the listing was posted in-game
 
     class Settings:
         name = "market_listings"

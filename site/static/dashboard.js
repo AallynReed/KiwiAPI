@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /dashboard — page logic
+   /dashboard - page logic
    ───────────────────────────────────────────────────────────────────────
    Depends on site_auth.js (window.BTTAuth). Renders the profile + Trove
    player name claim card; if a name is claimed, fetches the user's
@@ -92,7 +92,7 @@
     // Verify banner
     if ($verifyBanner) $verifyBanner.hidden = user.is_verified;
 
-    // Trove claim state — two visual modes.
+    // Trove claim state - two visual modes.
     if (user.claimed_trove_name) {
       $claimState.hidden = true;
       $claimedState.hidden = false;
@@ -143,7 +143,7 @@
       if ($verifyBaseline) {
         const n = user.claim_baseline_board_count || 0;
         $verifyBaseline.textContent = n > 0
-          ? t('We have a baseline on {n} board(s) — score on any of them to verify.').replace('{n}', String(n))
+          ? t('We have a baseline on {n} board(s) - score on any of them to verify.').replace('{n}', String(n))
           : t("We didn't capture any leaderboard data for that name at claim time. Play a bit, then click Verify to re-check.");
       }
     }
@@ -159,7 +159,7 @@
         const r = await Auth.callJSON('/v1/site-auth/resend-verification', {
           method: 'POST', json: { email: user.email }, auth: false,
         });
-        $resendVerify.textContent = r.ok ? t('Sent — check your inbox') : t('Failed to send');
+        $resendVerify.textContent = r.ok ? t('Sent - check your inbox') : t('Failed to send');
       };
     }
 
@@ -185,7 +185,7 @@
           json: { current_password: current, new_password: next },
         });
         if (r.ok && r.data) {
-          // change-password rolls a fresh session — store the new tokens.
+          // change-password rolls a fresh session - store the new tokens.
           Auth.tokens.save(r.data.access_token, r.data.refresh_token);
           alert(t('Password updated.'));
         } else {
@@ -268,7 +268,7 @@
 
   // ─── Trove stats (leaderboard appearances) ─────────────────────────
   async function loadTroveStats() {
-    $statsBody.innerHTML = `<p class="dash-loading" data-i18n>${t('Crunching the latest capture — first paint can take a moment while we warm the caches.')}</p>`;
+    $statsBody.innerHTML = `<p class="dash-loading" data-i18n>${t('Crunching the latest capture - first paint can take a moment while we warm the caches.')}</p>`;
     const r = await Auth.callJSON('/v1/site-auth/me/trove-stats');
     if (!r.ok || !r.data) {
       $statsBody.innerHTML = `<p class="dash-error">${esc(t('Could not load your stats right now.'))}</p>`;
@@ -279,7 +279,7 @@
 
     if (!items.length) {
       $statsBody.innerHTML = `
-        <p class="dash-empty">${esc(t('No recent leaderboard appearances for this player name yet. The bot captures hourly — check back after the next sweep, or pick a different name.'))}</p>`;
+        <p class="dash-empty">${esc(t('No recent leaderboard appearances for this player name yet. The bot captures hourly - check back after the next sweep, or pick a different name.'))}</p>`;
       $statsMeta.textContent = '';
       return;
     }
@@ -288,7 +288,7 @@
       $statsMeta.textContent = t('{n} recent appearance(s)').replace('{n}', items.length);
     }
 
-    // Compact table — board name, rank, score, when. Keep it readable
+    // Compact table - board name, rank, score, when. Keep it readable
     // on mobile by stacking via CSS grid below the 600px breakpoint.
     const rows = items.slice(0, 25).map((it) => `
       <div class="dash-stat-row">

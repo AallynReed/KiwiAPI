@@ -14,7 +14,7 @@ def test_backoff_is_exponential():
 
 async def test_queue_email_noop_when_smtp_disabled(monkeypatch):
     # With SMTP unconfigured, queue_email must short-circuit (log only) and never
-    # touch the database — so this runs without a Mongo connection.
+    # touch the database - so this runs without a Mongo connection.
     monkeypatch.setattr(settings, "smtp_host", None)
     assert await email_outbox.queue_email("a@b.com", "subj", "text") is None
 

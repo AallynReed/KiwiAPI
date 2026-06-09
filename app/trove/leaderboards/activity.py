@@ -2,7 +2,7 @@
 
 A player whose score went up on at least one leaderboard between two
 consecutive captures was active in that window. Restricting to
-``reset_kind == "default"`` boards (lifetime accumulating stats —
+``reset_kind == "default"`` boards (lifetime accumulating stats -
 ENEMIES DEFEATED, FLUX EARNED, LOOT COLLECTED, …) eliminates the
 "everyone reset to 0" noise that daily / weekly boards would otherwise
 inject as massive negative deltas.
@@ -12,7 +12,7 @@ total: it only sees players who scored on at least one tracked board
 *and* whose ranking was within the top of that board. A casual player
 who logged in for 20 minutes but never broke the top 5000 on any
 lifetime stat won't be counted. That's fine for a "how busy is Trove
-right now" UI — the trend is what matters, not the absolute number.
+right now" UI - the trend is what matters, not the absolute number.
 
 Cached in-process for ``cheaters_cache_ttl_seconds`` (we piggy-back
 on the same tunable) keyed by the (latest, previous) anchor pair, so
@@ -48,7 +48,7 @@ async def estimate_active_players() -> dict:
     by ``(latest_anchor, prev_anchor)``; falls back to ``_LAST_GOOD``
     when the newest pair hasn't been computed yet, so the user never
     waits on a fresh ingest. Returns a structured dict regardless of
-    data availability — a single-anchor or empty DB returns a 'no
+    data availability - a single-anchor or empty DB returns a 'no
     estimate' shape with ``estimate=None``.
     """
     from app.admin import runtime_config
@@ -77,7 +77,7 @@ async def estimate_active_players() -> dict:
     # already running on the same TTL and is also tripped by ingest
     # via ``detection.trigger_warmer()``, so a long miss is rare.
     if _LAST_GOOD is not None:
-        # No direct trigger here — the cheaters compute path in
+        # No direct trigger here - the cheaters compute path in
         # detection.py owns the warmer wake. If a caller hits THIS
         # function before that one (e.g. activity-only client), it
         # still benefits from the existing TTL re-runs.
@@ -103,7 +103,7 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
 
     Resetting boards (daily/weekly) need different handling than lifetime
     boards: their score zeroes at the reset moment, so a "score
-    increased" delta isn't valid across a reset crossing — a player's
+    increased" delta isn't valid across a reset crossing - a player's
     old high score becomes meaningless. Logic per board:
 
       * If a reset boundary falls between ``anchor_early`` and
@@ -116,7 +116,7 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
         weren't in early also count as active.
 
     Server-tally boards (``player_board=False``, e.g. CLUB POWER RANK)
-    are still skipped — those aggregate everyone's contributions and
+    are still skipped - those aggregate everyone's contributions and
     don't tell us about individual activity.
 
     Persists the result to ``LeaderboardActivityEstimate`` (upsert by
@@ -140,7 +140,7 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
             continue
 
         kind = board.get("reset_kind", "default")
-        # A reset boundary inside the window invalidates score deltas —
+        # A reset boundary inside the window invalidates score deltas -
         # everyone in late_entries necessarily scored AFTER the reset.
         crossed_reset = bool(lb_service.reset_boundaries_for_kind(
             kind, anchor_early, anchor_late,
@@ -176,7 +176,7 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
             "active_players": len(active_on_board),
         })
 
-    # Sort by per-board activity desc — the highest-engagement boards
+    # Sort by per-board activity desc - the highest-engagement boards
     # rise to the top of the breakdown.
     per_board.sort(key=lambda b: -b["active_players"])
 
@@ -186,9 +186,9 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
 
     # Persist the point so the history chart accumulates across restarts.
     # Upsert by window_end (the unique index) so re-runs converge instead
-    # of stacking. Direct motor-style update_one — Beanie's high-level
+    # of stacking. Direct motor-style update_one - Beanie's high-level
     # update API doesn't give us a clean upsert-on-unique-index pattern.
-    # Failure to persist is non-fatal — log and move on.
+    # Failure to persist is non-fatal - log and move on.
     try:
         from app.trove.leaderboards.models import LeaderboardActivityEstimate
         await LeaderboardActivityEstimate.get_pymongo_collection().update_one(
@@ -219,7 +219,7 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
             "is a positive score delta or first appearance. For "
             "daily/weekly boards where a reset crossed the window, any "
             "presence in the new cycle's top-N counts (they had to "
-            "score after the reset to be listed). Lower bound — players "
+            "score after the reset to be listed). Lower bound - players "
             "outside every board's top-N are not counted."
         ),
         "computed_at": now_ts,
@@ -233,7 +233,7 @@ async def backfill_history(*, window_days: int = 7, force: bool = False) -> dict
     hits Mongo with N×2 board queries plus a count() each), this loads
     every needed (board, anchor) entry list in ONE pre-pass, then
     computes pairs purely in Python. Per-board memory is bounded by
-    actual top-N size × 168 anchors × 80 boards — measured at ~50-100 MB
+    actual top-N size × 168 anchors × 80 boards - measured at ~50-100 MB
     in practice, which is fine inside the api container's 2GB cap.
     """
     from app.trove.leaderboards.models import (
@@ -250,7 +250,7 @@ async def backfill_history(*, window_days: int = 7, force: bool = False) -> dict
 
     # Build the pair list: every consecutive (early, late) where late
     # is within the window. The earliest "early" anchor we need is the
-    # one immediately before the first eligible "late" — we keep it
+    # one immediately before the first eligible "late" - we keep it
     # even if it falls outside the cutoff because the pair's early side
     # can predate the window.
     pairs: list[tuple[int, int]] = []
@@ -274,9 +274,9 @@ async def backfill_history(*, window_days: int = 7, force: bool = False) -> dict
     pairs_to_compute = [p for p in pairs if p[1] not in existing]
     if not pairs_to_compute:
         return {"computed": 0, "skipped": len(pairs), "failed": 0,
-                "total": len(pairs), "note": "all pairs already stored — use force=True to recompute"}
+                "total": len(pairs), "note": "all pairs already stored - use force=True to recompute"}
 
-    # Anchors we'll touch — union of every (early, late) in the to-do list.
+    # Anchors we'll touch - union of every (early, late) in the to-do list.
     needed_anchors = sorted(set(a for p in pairs_to_compute for a in p))
     earliest = needed_anchors[0]
 
@@ -294,7 +294,7 @@ async def backfill_history(*, window_days: int = 7, force: bool = False) -> dict
     logger.info("activity backfill: %d pairs to compute, %d boards in scope",
                 len(pairs_to_compute), len(boards))
 
-    # ONE query per board across the whole window — uses the
+    # ONE query per board across the whole window - uses the
     # (leaderboard, created_at, rank) composite index for an index-only
     # scan. Far cheaper than per-pair list_entries which does count() +
     # find() separately.
@@ -302,7 +302,7 @@ async def backfill_history(*, window_days: int = 7, force: bool = False) -> dict
     # Per-board, per-anchor: {player_name: score}
     by_board_anchor: dict[tuple[int, int], dict[str, float]] = {}
 
-    # Use raw pymongo cursors with a projection — Beanie's Document
+    # Use raw pymongo cursors with a projection - Beanie's Document
     # instantiation costs us ~5x on 2M+ rows. We only need three fields
     # per doc, so projection + dict access is the right shape here.
     needed_set = set(needed_anchors)
@@ -417,7 +417,7 @@ async def estimate_active_players_history(*, days: int = 7) -> dict:
     Each row carries both ``estimate`` (raw distinct-player count for its
     window) and ``estimate_per_hour`` (= estimate / duration_hours). The
     per-hour rate is the right Y-axis for a chart that should look
-    smooth across irregular window sizes — when a capture is missed and
+    smooth across irregular window sizes - when a capture is missed and
     the next window spans 2-3h instead of 1h, the raw count spikes
     because more players had time to score; the per-hour rate stays
     honest and the chart doesn't lie about the trend.
@@ -425,7 +425,7 @@ async def estimate_active_players_history(*, days: int = 7) -> dict:
     Bot captures hourly. New rows land each time the cheaters warmer
     fires ``estimate_active_players()`` (typically right after each
     ingest), so the series fills in naturally as captures arrive.
-    Empty / one-row collections return an empty series — the consumer
+    Empty / one-row collections return an empty series - the consumer
     just doesn't render the chart."""
     from app.trove.leaderboards.models import LeaderboardActivityEstimate
 
@@ -449,7 +449,7 @@ async def estimate_active_players_history(*, days: int = 7) -> dict:
             "window_start": r.window_start,
             "duration_hours": round(duration_h, 2),
             "estimate": r.estimate,
-            # Round to 1 dp — a chart never needs more precision than
+            # Round to 1 dp - a chart never needs more precision than
             # the integer underlying it has anyway.
             "estimate_per_hour": round(per_hour, 1),
         })

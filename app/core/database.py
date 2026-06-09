@@ -61,7 +61,7 @@ DOCUMENT_MODELS = [
 _client: AsyncMongoClient | None = None
 _db: AsyncDatabase | None = None
 
-# Collection backing the rate limiter — managed directly (not a Beanie Document)
+# Collection backing the rate limiter - managed directly (not a Beanie Document)
 # so we can do atomic upserts with $inc.
 RATE_LIMIT_COLLECTION = "rate_limit_buckets"
 
@@ -69,7 +69,7 @@ RATE_LIMIT_COLLECTION = "rate_limit_buckets"
 async def init_db() -> None:
     """Open the Mongo connection, bind Beanie models, ensure extra indexes."""
     global _client, _db
-    # tz_aware=True is mandatory — without it, PyMongo decodes BSON datetimes as
+    # tz_aware=True is mandatory - without it, PyMongo decodes BSON datetimes as
     # NAIVE UTC, and comparing them against `utcnow()` (tz-aware) anywhere in the
     # codebase raises TypeError. The auth path's `token.expires_at < utcnow()`
     # tripped this and 500'd every token-bearing request that had an expiry set.
@@ -86,7 +86,7 @@ async def init_db() -> None:
         _db["usage_events"], "created_at", settings.usage_retention_days * 86400
     )
 
-    # Outbox records (sent/bounced/failed/abandoned) are a transient log — expire
+    # Outbox records (sent/bounced/failed/abandoned) are a transient log - expire
     # them after the retention window so the collection stays small.
     await _ensure_ttl_index(
         _db["email_outbox"], "created_at", settings.email_outbox_retention_days * 86400
@@ -99,7 +99,7 @@ async def _ensure_ttl_index(collection, field: str, seconds: int) -> None:
     try:
         await collection.create_index(field, name=name, expireAfterSeconds=seconds)
     except OperationFailure:
-        # Index exists with a different TTL — adjust it in place.
+        # Index exists with a different TTL - adjust it in place.
         await collection.database.command(
             {
                 "collMod": collection.name,

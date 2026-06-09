@@ -168,7 +168,7 @@ from app.trove.updates.schemas import (
     VersionList,
 )
 
-# Organized by FUNCTION, not by game — most of the API is Trove, so grouping by
+# Organized by FUNCTION, not by game - most of the API is Trove, so grouping by
 # "trove" would lump everything together. Rotations/timers vs feeds are separate
 # categories (OpenAPI tags) with their own scopes.
 rotations_router = APIRouter(prefix="/v1/rotations", tags=["rotations"])
@@ -193,12 +193,18 @@ _FEED_IMG = Depends(public_scope("feeds:read", rate_multiplier=settings.bilibili
 _STAT = Depends(require_scope("stats:read"))
 _GEM = Depends(require_scope("gems:read"))
 _MISC = Depends(require_scope("misc:read"))
-# Tokenless slice of misc — the bot's interest-items list is public so dashboards
+# Tokenless slice of misc - the bot's interest-items list is public so dashboards
 # / wikis can render it without a key. A token carrying misc:read still earns the
 # wider per-token rate budget; anon callers pay the stricter per-IP cap.
 _MISC_PUBLIC = Depends(public_scope("misc:read"))
 _MODS = Depends(require_scope("mods:read"))
 _UPD = Depends(require_scope("updates:read"))
+# Raw file DOWNLOADS are tokenless so game files can be hot-linked directly
+# (desktop app / wikis / a plain browser link); anon callers still pay the
+# per-IP cap, and a token carrying updates:read still earns the wider
+# per-token budget. The browse endpoints (branches / versions / changes /
+# tree / file/meta) stay token-gated under _UPD.
+_UPD_PUBLIC = Depends(public_scope("updates:read"))
 
 # Used by the feedback webhook helper for "best-effort, log on failure".
 logger = logging.getLogger("kiwi.trove.router")
@@ -209,9 +215,9 @@ _CODEX = Depends(public_scope("codexes:read", rate_multiplier=settings.codexes_r
 # to drive update notifications, so no token is required.
 _BTT = Depends(public_scope("btt:read"))
 # Leaderboards read-side is token-gated (the data is bulky + opinionated). The
-# write-side has its own dep — see /v1/leaderboards/insert below.
+# write-side has its own dep - see /v1/leaderboards/insert below.
 _LB = Depends(require_scope("leaderboards:read"))
-# Public, tokenless surface for the cheater-detection endpoint — same
+# Public, tokenless surface for the cheater-detection endpoint - same
 # reasoning as e.g. rotations: it's anti-cheat data the wider community
 # benefits from, no reason to gate it behind an API token.
 _LB_PUBLIC = Depends(public_scope("leaderboards:read"))
@@ -268,7 +274,7 @@ async def get_chaos_chest(ctx: AccessContext = _ROT) -> ChaosChest:
 
     Source preference: the bot-captured item for the current week wins (it's
     read straight from the in-game cfg). Falls back to the Trovesaurus relay
-    when the bot hasn't reported this week yet — e.g., immediately after a Tue
+    when the bot hasn't reported this week yet - e.g., immediately after a Tue
     11:00 UTC reset."""
     return ChaosChest(**await chaos.get_chaos_chest())
 
@@ -282,7 +288,7 @@ async def insert_chaos_chest(
     """Persist the bot-captured chaos-chest item for the current weekly window.
 
     **Master only**: requires an API token owned by a superuser account. The
-    server infers the week anchor (Tue 11:00 UTC) from "now" — the bot just
+    server infers the week anchor (Tue 11:00 UTC) from "now" - the bot just
     sends ``{name}``. Idempotent: re-submitting the same week replaces the row.
     """
     try:
@@ -335,7 +341,7 @@ async def get_current_challenge(ctx: AccessContext = _ROT) -> ChallengeCurrentOu
     we're in the gap between challenges).
 
     Cadence: one challenge per hour on most days; on trove Fridays
-    (real-UTC Fri 11:00 → Sat 11:00) it's two per hour — :00 and :30 — and
+    (real-UTC Fri 11:00 → Sat 11:00) it's two per hour - :00 and :30 - and
     ``is_friday_window`` is set. Each window lasts 20 minutes; ``active``
     distinguishes the live window from the gap that follows.
     """
@@ -352,7 +358,7 @@ async def insert_challenge(
 
     **Master only**. The server infers the window anchor from "now"; the bot
     just sends ``{name}``. Idempotent at the (anchor) level. ``name`` of
-    ``"none"`` (or empty) is rejected — the bot is expected to skip those
+    ``"none"`` (or empty) is rejected - the bot is expected to skip those
     submissions client-side, so seeing one here surfaces as a 400.
     """
     try:
@@ -402,8 +408,8 @@ async def list_challenge_history(
 
 @rotations_router.get("/calendar", response_model=YearlyCalendar)
 async def get_calendar(ctx: AccessContext = _ROT) -> YearlyCalendar:
-    """The full yearly event calendar (±365 days): every recurring rotation —
-    weekly buffs, Corruxion/Fluxion, gardening, Wild Mana, Stampy — as one flat,
+    """The full yearly event calendar (±365 days): every recurring rotation -
+    weekly buffs, Corruxion/Fluxion, gardening, Wild Mana, Stampy - as one flat,
     start-sorted timeline. (Invasion is excluded.)"""
     return YearlyCalendar(**trove_calendar.yearly_calendar())
 
@@ -424,7 +430,7 @@ async def get_delves(
     ctx: AccessContext = _ROT,
     week: int | None = Query(default=None, description="Week id; defaults to the current week"),
 ) -> DelveRotationOut:
-    """A week's delve rotation — its floor records (relayed from an external source).
+    """A week's delve rotation - its floor records (relayed from an external source).
     Defaults to the current week; pass `?week=` for history (see `/delves/weeks`)."""
     current = delves.current_week_id()
     wk = week if week is not None else current
@@ -433,7 +439,7 @@ async def get_delves(
         if week is not None:
             raise APIError(status_code=404, code=ErrorCode.not_found,
                            message=f"No delve data for week {week}")
-        # Current week not captured yet — return an empty rotation for it.
+        # Current week not captured yet - return an empty rotation for it.
         return DelveRotationOut(week=wk, is_current=True, total=0, count=0,
                                 fetched_at=None, depths=[])
     return DelveRotationOut(
@@ -513,7 +519,7 @@ async def proxy_bilibili_image(
     """Proxy a Bilibili thumbnail so browsers and WebViews can display it.
 
     Bilibili's CDN blocks hotlinking unless a bilibili.com Referer is sent, which
-    an <img> tag can't do — clients point <img src> here and we refetch with the
+    an <img> tag can't do - clients point <img src> here and we refetch with the
     Referer. Cross-origin <img> loads aren't subject to CORS, so this serves the
     hosted web build and the Android WebView identically (and replaces the local
     proxy the desktop/web_server builds carry).
@@ -569,7 +575,7 @@ async def list_ongoing_events(
 
 @feeds_router.get("/events/categories", response_model=EventCategoryList)
 async def list_event_categories(ctx: AccessContext = _FEED) -> EventCategoryList:
-    """The distinct event categories currently stored — discovered dynamically, sorted."""
+    """The distinct event categories currently stored - discovered dynamically, sorted."""
     rows = await TroveEvent.aggregate(
         [{"$group": {"_id": "$category"}}, {"$sort": {"_id": 1}}]
     ).to_list()
@@ -610,7 +616,7 @@ async def list_event_history(
 
 
 # --- Stats: raw game data (scope: stats:read) ------------------------------
-# Pure data, no calculation — what each source/field is and how much it gives.
+# Pure data, no calculation - what each source/field is and how much it gives.
 
 
 @stats_router.get("/power-rank", response_model=StatTable)
@@ -651,7 +657,7 @@ async def get_class(tech_name: str, ctx: TokenContext = _STAT) -> TroveClass:
 
 
 # --- Gems: simulator + evaluator + builds (scope: gems:read) ----------------
-# Stateless compute — gem objects round-trip through the client; nothing stored.
+# Stateless compute - gem objects round-trip through the client; nothing stored.
 
 
 def _bad_request(message: str) -> APIError:
@@ -747,7 +753,7 @@ async def get_gem_stat_range(
     element: int | None = None,
     ctx: TokenContext = _GEM,
 ) -> GemStatRange:
-    """The plausible (min, max) value a stat can roll at — for inline input hints."""
+    """The plausible (min, max) value a stat can roll at - for inline input hints."""
     try:
         return GemStatRange(**gem_evaluator.gem_stat_range(tier, type, stat_type, level, extra_containers, element))
     except (ValueError, KeyError) as e:
@@ -860,7 +866,7 @@ async def misc_get_activity_history(
     days: int = Query(default=7, ge=1, le=30),
     ctx: AccessContext = _MISC_PUBLIC,
 ) -> ActivityHistoryResponse:
-    """**Tokenless.** Mirror of ``/v1/leaderboards/activity/history`` —
+    """**Tokenless.** Mirror of ``/v1/leaderboards/activity/history`` -
     time-series of active-player estimates over the last ``days`` days,
     one point per consecutive capture pair. See the leaderboards-scope
     docs for the per-hour normalisation semantics (a missed capture
@@ -887,7 +893,7 @@ async def misc_trove_status(
     down / unknown). ``auth`` is the HTTPS liveness of
     ``auth.trionworlds.com`` (catches full outages, stays up during
     world maintenance); ``environments.{live,pts}`` each carry a
-    ``game`` TCP probe of the glsserver port (6560) — accepted =
+    ``game`` TCP probe of the glsserver port (6560) - accepted =
     worlds playable, refused while auth up = maintenance. Served from
     cache; never blocks on a live probe."""
     from app.trove import status as trove_status
@@ -958,7 +964,7 @@ async def _post_feedback_webhook(
 ) -> None:
     """Send one feedback entry to the configured Discord webhook.
 
-    Reads the URL from runtime config on every call (cheap — cached for 5s
+    Reads the URL from runtime config on every call (cheap - cached for 5s
     by ``runtime_config.get_setting``). Empty URL → no-op. Any HTTP error,
     timeout, or DNS failure is logged and swallowed; we never want webhook
     flakiness to cascade into 5xx on the public POST.
@@ -1006,11 +1012,11 @@ async def _post_feedback_webhook(
         for i, (fname, content, ctype) in enumerate(files)
     ]
 
-    # Gallery URL — arbitrary but must be identical across every embed
+    # Gallery URL - arbitrary but must be identical across every embed
     # in the message and must look like a real URL. Discord groups embeds
     # that share a `url` into one card; that's how we get N images
     # inside ONE embed instead of N stacked embeds. The URL doesn't need
-    # to resolve — it's just the grouping key.
+    # to resolve - it's just the grouping key.
     gallery_url = f"https://api.aallyn.net/feedback/{doc_id}"
 
     main_embed: dict = {
@@ -1026,7 +1032,7 @@ async def _post_feedback_webhook(
         main_embed["image"] = {"url": f"attachment://{relabeled[0][0]}"}
 
     embeds = [main_embed]
-    # Additional image-only sibling embeds — each just an image with the
+    # Additional image-only sibling embeds - each just an image with the
     # same `url`, no title/description (Discord renders them as extra
     # images in the SAME card as the main embed).
     for fname, _content, _ctype in relabeled[1:]:
@@ -1043,7 +1049,7 @@ async def _post_feedback_webhook(
                 # Multipart with payload_json + the files keyed as
                 # files[N]. The (filename, content, content_type) tuple
                 # must exactly match what we wrote into the `attachment://`
-                # references above — that's why we used the relabeled
+                # references above - that's why we used the relabeled
                 # names everywhere.
                 multipart = {
                     f"files[{i}]": (fname, content, ctype)
@@ -1057,7 +1063,7 @@ async def _post_feedback_webhook(
             else:
                 r = await client.post(url, json=payload)
             r.raise_for_status()
-    except Exception as e:  # noqa: BLE001 — webhook is best-effort
+    except Exception as e:  # noqa: BLE001 - webhook is best-effort
         logger.warning("feedback webhook POST failed: %s", e)
 
 
@@ -1075,22 +1081,22 @@ async def post_feedback(
 ) -> FeedbackAck:
     """Submit a piece of feedback (bug report / feature idea / general note).
 
-    **Tokenless** — anyone can submit. Wire format is ``multipart/form-data``
+    **Tokenless** - anyone can submit. Wire format is ``multipart/form-data``
     so attachments can ride along; a JSON-only client just omits the file
     fields and works the same.
 
     **Rate limits** (runtime-tunable from the admin panel):
-      - ``feedback.per_ip_max`` / ``feedback.per_ip_window_seconds`` —
+      - ``feedback.per_ip_max`` / ``feedback.per_ip_window_seconds`` -
         burst from one source. Hit returns 429 with ``X-RateLimit-*`` +
         ``Retry-After``.
-      - ``feedback.global_max`` / ``feedback.global_window_seconds`` —
+      - ``feedback.global_max`` / ``feedback.global_window_seconds`` -
         silent global backstop.
 
     **Body fields**:
       - ``message`` (required, 5-2000 chars)
-      - ``contact`` (optional, ≤200 chars) — reply channel, free text
+      - ``contact`` (optional, ≤200 chars) - reply channel, free text
       - ``category`` (``bug`` / ``feature`` / ``general``; default ``general``)
-      - ``app_version`` (optional, ≤64 chars) — for desktop / 3rd-party
+      - ``app_version`` (optional, ≤64 chars) - for desktop / 3rd-party
         clients; rendered alongside parsed-from-UA OS + client name
       - ``attachments`` (optional, up to 4 images; max 5 MB each;
         ``image/png|jpeg|webp|gif``)
@@ -1124,7 +1130,7 @@ async def post_feedback(
     response.headers.update(rate_limit_headers(info))
     await check_rate_limit("feedback_global", global_max, global_window)
 
-    # ── 3. Validate attachments — count, MIME, size — and read bytes ──
+    # ── 3. Validate attachments - count, MIME, size - and read bytes ──
     # We read every file into memory because (a) they're capped at 5 MB,
     # so worst case is 20 MB transient and (b) the Discord webhook expects
     # the full bytes in the multipart body anyway.
@@ -1207,7 +1213,7 @@ async def read_tmod(
 ) -> TmodReadResponse:
     """Decompile a .tmod (POST the raw file bytes). Returns header properties + file table."""
     if not body:
-        raise _bad_request("Empty body — POST the raw .tmod file bytes.")
+        raise _bad_request("Empty body - POST the raw .tmod file bytes.")
     try:
         result = tmod.read_tmod(body, metadata_only=metadata_only)
     except tmod.TmodError as e:
@@ -1222,7 +1228,7 @@ async def read_tmod(
 async def build_tmod(req: TmodBuildRequest, ctx: TokenContext = _MODS) -> Response:
     """Build a .tmod from header fields + files (base64) and return the raw bytes.
 
-    `modLoader` is always stamped `KiwiAPI`. Nothing is stored — the file is built
+    `modLoader` is always stamped `KiwiAPI`. Nothing is stored - the file is built
     in memory and discarded once returned.
     """
     files: list[tuple[str, bytes]] = []
@@ -1300,7 +1306,7 @@ async def list_update_changes(
 ) -> ChangeList:
     """The per-file changes a version introduced (added / modified / removed paths).
 
-    Identifies the version by `version` tag, by `ordinal`, or — both omitted — the
+    Identifies the version by `version` tag, by `ordinal`, or - both omitted - the
     branch's latest. The change-log holds every version, so older versions work too.
     """
     _check_branch(branch)
@@ -1352,9 +1358,10 @@ async def get_update_file_meta(
 
 @updates_router.get("/{branch}/file")
 async def download_update_file(
-    branch: str, path: str = Query(...), ctx: TokenContext = _UPD,
+    branch: str, path: str = Query(...), ctx: AccessContext = _UPD_PUBLIC,
 ) -> FileResponse:
-    """Download a single file's bytes from the latest tree (streamed from the blob store)."""
+    """Download a single file's bytes from the latest tree (streamed from the
+    blob store). Tokenless (public) so files can be linked directly."""
     _check_branch(branch)
     meta = await updates_read.get_file_meta(branch, path)
     if meta is None:
@@ -1382,7 +1389,7 @@ async def get_update_file_history(
     _check_branch(branch)
     rows = await updates_read.file_history(branch, path)
     if not rows:
-        # 404 — file never existed on this branch. Empty history would
+        # 404 - file never existed on this branch. Empty history would
         # otherwise be indistinguishable from a typo'd path.
         raise APIError(
             status_code=404, code=ErrorCode.not_found,
@@ -1408,7 +1415,7 @@ async def compare_update_file(
     a metadata-only response for binaries / over-budget files.
 
     The "from" and "to" ordinals refer to the same UpdateVersion ordering
-    used elsewhere in this module. They don't have to be adjacent — any
+    used elsewhere in this module. They don't have to be adjacent - any
     two complete versions on the branch are valid. Either side may
     return ``None`` content_sha256 (the path didn't exist yet, or had
     already been removed at that ordinal); the diff still computes
@@ -1572,7 +1579,7 @@ async def list_codex_entries(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ) -> CodexEntryPage:
-    """Entries of one codex type — filterable (search/category/tradable), sortable, paged."""
+    """Entries of one codex type - filterable (search/category/tradable), sortable, paged."""
     _check_branch(branch)
     _check_codex_type(codex_type)
     _check_sort(sort)
@@ -1592,7 +1599,7 @@ async def list_codex_categories(
     ctx: AccessContext = _CODEX,
     branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
 ) -> CodexCategoryList:
-    """Distinct categories (+ counts) within a type — for building filter dropdowns."""
+    """Distinct categories (+ counts) within a type - for building filter dropdowns."""
     _check_branch(branch)
     _check_codex_type(codex_type)
     rows = await codexes_read.list_categories(branch, codex_type)
@@ -1669,7 +1676,7 @@ async def get_btt_latest(
 ) -> BttLatestPerPlatform:
     """The latest BetterTroveTools version per platform (windows/linux/android) on
     a channel. Each platform walks the channel newest-first independently to the
-    most recent release that actually ships an asset for it — so a release with
+    most recent release that actually ships an asset for it - so a release with
     no Windows build doesn't suppress Windows updates."""
     _check_btt_channel(channel)
     per = await btt_releases.latest_per_platform(channel)
@@ -1701,7 +1708,7 @@ async def check_btt_update(
     platform: str = Query(..., description="windows | linux | android"),
     channel: str = Query(default="release", description="release | beta"),
 ) -> BttUpdateCheck:
-    """Server-side "is there an update?" — saves the client doing version math.
+    """Server-side "is there an update?" - saves the client doing version math.
     Compares `installed` against the latest tag the channel has for `platform`
     (the same walk-back logic as `/latest`) and returns a boolean. `comparable`
     flags malformed tags so a client can decide how to treat the result."""
@@ -1758,7 +1765,7 @@ async def get_btt_changelog(
     commits_per_group: int = Query(default=0, ge=0, le=100,
         description="Limit commits per group to the newest N (0 = all)"),
 ) -> BttChangelogOut:
-    """The BetterTroveTools changelog — commits from GitHub grouped by tag,
+    """The BetterTroveTools changelog - commits from GitHub grouped by tag,
     newest first; commits since the last tag live under `"Unreleased"`. Cached
     server-side so users don't blow through GitHub's 60/hr unauth rate limit
     when they open the changelog panel in the desktop app. Use `limit_groups`
@@ -1787,8 +1794,8 @@ async def get_btt_changelog(
 
 
 # --- Leaderboards: in-game leaderboards ingest + read -----------------------
-# READ side (scope: leaderboards:read) — anyone with the scope can query.
-# WRITE side (insert) — gated by a superuser API token. The bot script POSTs a
+# READ side (scope: leaderboards:read) - anyone with the scope can query.
+# WRITE side (insert) - gated by a superuser API token. The bot script POSTs a
 # raw LeaderBot.cfg dump as a multipart file, the parser explodes it into the
 # Leaderboard / LeaderboardEntry collections, then prunes anything older than
 # the retention window.
@@ -1802,7 +1809,7 @@ async def _enforce_lb_archive_limit(
     Applied IN ADDITION to the standard per-token cap from ``_enforce_token_limits``.
     No-op when the queried anchor is within the threshold (normal hot/cold-30-day
     queries pay only the standard limit). Wide-open queries for old data are
-    cheap per-row but a malicious caller could trawl the whole archive — this
+    cheap per-row but a malicious caller could trawl the whole archive - this
     bucket caps them at ``settings.leaderboards_archive_rate_limit_max`` per
     window. ``X-RateLimit-Archive-*`` headers expose the bucket state alongside
     the standard ``X-RateLimit-*`` headers (which describe the wider limit)."""
@@ -1811,7 +1818,7 @@ async def _enforce_lb_archive_limit(
     from app.admin import runtime_config
     lb_max, lb_window = await runtime_config.get_rate_limit("leaderboards_archive_rate_limit")
     info = await check_rate_limit(f"lb_archive:{ctx.token.id}", lb_max, lb_window)
-    # Don't clobber the standard X-RateLimit-* headers — surface this bucket
+    # Don't clobber the standard X-RateLimit-* headers - surface this bucket
     # under a parallel namespace so clients can tell the two apart.
     for k, v in rate_limit_headers(info).items():
         response.headers[k.replace("X-RateLimit-", "X-RateLimit-Archive-")] = v
@@ -1848,11 +1855,11 @@ async def get_activity_estimate(
     (``reset_kind=default``) board.
 
     Returns a lower-bound count of "leaderboard-eligible active
-    players" — casual players who never made any board's top-N don't
+    players" - casual players who never made any board's top-N don't
     contribute. ``estimate`` is ``null`` until at least two captures
     are stored (bot needs to send unique timestamps, not just the
     daily anchor). Cached in-process for the same TTL as the cheater
-    detection — a new hourly capture invalidates automatically."""
+    detection - a new hourly capture invalidates automatically."""
     payload = await leaderboards_activity.estimate_active_players()
     from app.admin import runtime_config
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
@@ -1881,7 +1888,7 @@ async def get_activity_history(
 
     Points are persisted on each new ingest (see
     ``leaderboards.activity._compute``), so the series survives
-    container restarts and accumulates as captures land — the chart
+    container restarts and accumulates as captures land - the chart
     won't be empty after a restart provided some history was stored
     previously."""
     from app.admin import runtime_config
@@ -1907,14 +1914,14 @@ async def list_possible_cheaters(
 
     Checks:
 
-    - **Modified Z-score (MAD-based)** — robust outlier vs the board's
+    - **Modified Z-score (MAD-based)** - robust outlier vs the board's
       *median*. Threshold default 3.5 (Iglewicz & Hoaglin 1993, "strong
       outlier"). MAD instead of stddev means a cheater can't pollute
       their own baseline.
-    - **Rank-gap ratio** — the score gap from rank N to N+1 compared
+    - **Rank-gap ratio** - the score gap from rank N to N+1 compared
       against the typical between-rank gap on the same board. Catches
       lone-wolf patterns at the top.
-    - **Velocity** — score-gain rate (Δscore / Δtime) vs the board's
+    - **Velocity** - score-gain rate (Δscore / Δtime) vs the board's
       peer p95 rate, using the player's previous historical capture.
       Degrades gracefully when archive history is thin.
 
@@ -1970,7 +1977,7 @@ async def list_leaderboards(
 
 @leaderboards_router.get("/{uuid}", response_model=LeaderboardBoardOut)
 async def get_leaderboard(uuid: int, ctx: TokenContext = _LB) -> LeaderboardBoardOut:
-    """A single board's metadata (no entries) — handy for resolving a uuid to a
+    """A single board's metadata (no entries) - handy for resolving a uuid to a
     human name. ``contests`` lists every anchor at which the board was observed
     in a contest window."""
     row = await leaderboards_service.get_board(uuid)
@@ -1991,7 +1998,7 @@ async def list_leaderboard_entries(
     limit: int = Query(default=100, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
 ) -> LeaderboardEntriesPage:
-    """Ranked entries for one board at one anchor — top-N with pagination.
+    """Ranked entries for one board at one anchor - top-N with pagination.
 
     Anchors older than ``leaderboards_archive_query_threshold_days`` pay the
     archive rate-limit bucket on top of the standard per-token cap (the data
@@ -2041,14 +2048,14 @@ async def get_board_history(
     days: int = Query(default=7, ge=1, le=30,
                       description="Window size in days (default 7)"),
     top: int = Query(default=5, ge=1, le=20,
-                     description="Lines to plot — top N at most-recent anchor"),
+                     description="Lines to plot - top N at most-recent anchor"),
 ) -> BoardHistoryResponse:
     """Score-vs-time trajectories for the current top-``top`` players on
     ``uuid`` over the last ``days`` days of hourly captures.
 
     Drives the per-board chart on the public leaderboards page; also
     callable directly for clients that want their own visualisation. The
-    7-day default spans both hot and archive collections — the older end
+    7-day default spans both hot and archive collections - the older end
     of the window pays the archive rate-limit if it crosses the archive
     query threshold."""
     # Archive-window check: if the window's lower bound is in archive
@@ -2090,7 +2097,7 @@ async def insert_leaderboards(
     timestamp: int | None = Query(
         default=None,
         description=("Override the 'as-of' anchor in unix seconds (11:00 UTC). "
-                     "Defaults to the latest 11:00 UTC reset — pass this only for back-fills."),
+                     "Defaults to the latest 11:00 UTC reset - pass this only for back-fills."),
     ),
     _auth = _LB_MASTER,
 ) -> LeaderboardInsertResponse:
@@ -2099,13 +2106,13 @@ async def insert_leaderboards(
     **Master only**: requires an API token owned by a superuser account. Submit
     the raw cfg text as a multipart file (the bot reads the game's
     ``LeaderBot.cfg`` and POSTs it verbatim). The dump is idempotent for a given
-    anchor — re-running the same dump on the same timestamp converges.
+    anchor - re-running the same dump on the same timestamp converges.
     """
     raw = await file.read()
     if not raw:
         raise APIError(
             status_code=400, code=ErrorCode.bad_request,
-            message="Empty upload — POST the raw cfg text as a multipart 'file' field.",
+            message="Empty upload - POST the raw cfg text as a multipart 'file' field.",
         )
     try:
         text = raw.decode("utf-8")
@@ -2128,7 +2135,7 @@ async def insert_leaderboards(
     )
     # Wake the background warmer so the new anchor's heavy queries
     # (cheaters detection, activity estimate, boards listing) start
-    # recomputing immediately — instead of the next visitor paying
+    # recomputing immediately - instead of the next visitor paying
     # the multi-second cold-cache tax. The previous anchor's cache
     # entries remain available as the "last known good" fallback
     # while the new ones land. See leaderboards/detection.py.
@@ -2137,8 +2144,8 @@ async def insert_leaderboards(
 
 
 # --- Market: in-game marketplace listings ingest + read ---------------------
-# READ side (scope: market:read) — anyone with the scope can query.
-# WRITE side (insert) — superuser API token only. The bot script POSTs the raw
+# READ side (scope: market:read) - anyone with the scope can query.
+# WRITE side (insert) - superuser API token only. The bot script POSTs the raw
 # GrainusMod.cfg dump as a multipart file; the parser pulls one row per
 # listing, the service upserts by UUID (bumping last_seen on re-scrape).
 
@@ -2148,7 +2155,7 @@ async def _enforce_market_archive_limit(
 ) -> None:
     """Tight per-token throttle when a caller asks for expired market listings.
 
-    Market's "archive surface" is implicit — any listing older than 7 days is
+    Market's "archive surface" is implicit - any listing older than 7 days is
     expired (the in-game lifetime), so ``hide_expired=false`` is the request
     for historical data. Same shape as the leaderboards archive limit:
     additive on top of the standard per-token cap, exposed via
@@ -2184,7 +2191,7 @@ async def list_market_listings(
 
     ``hide_expired=true`` (the default) hides anything past its in-game lifetime
     or that hasn't been re-seen for 3+ hours; pass ``hide_expired=false`` to
-    include the historical tail — which pays the archive rate-limit bucket on
+    include the historical tail - which pays the archive rate-limit bucket on
     top of the standard per-token cap.
     """
     if price_min is not None and price_max is not None and price_min > price_max:
@@ -2208,7 +2215,7 @@ async def list_market_listings(
 async def list_market_items(ctx: TokenContext = _MKT) -> MarketItemList:
     """Item names that currently have at least one stored listing (sorted).
 
-    The output is a strict subset of ``/v1/market/interest_items`` — anything
+    The output is a strict subset of ``/v1/market/interest_items`` - anything
     the bot tracks but hasn't seen on the market shows up there but not here.
     """
     items = await market_service.list_distinct_items()
@@ -2245,7 +2252,7 @@ async def insert_market_listings(
     timestamp: int | None = Query(
         default=None,
         description=("Override the 'last_seen' anchor in unix seconds. Defaults "
-                     "to now() — pass this only for back-fills."),
+                     "to now() - pass this only for back-fills."),
     ),
     _auth = _MKT_MASTER,
 ) -> MarketInsertResponse:
@@ -2254,13 +2261,13 @@ async def insert_market_listings(
     **Master only**: requires an API token owned by a superuser account. Submit
     the raw cfg text as a multipart file (the bot reads the game's
     ``GrainusMod.cfg`` and POSTs it verbatim). Idempotent at the listing level
-    — same listing UUID re-scraped just bumps ``last_seen``, never duplicates.
+    - same listing UUID re-scraped just bumps ``last_seen``, never duplicates.
     """
     raw = await file.read()
     if not raw:
         raise APIError(
             status_code=400, code=ErrorCode.bad_request,
-            message="Empty upload — POST the raw cfg text as a multipart 'file' field.",
+            message="Empty upload - POST the raw cfg text as a multipart 'file' field.",
         )
     try:
         text = raw.decode("utf-8")

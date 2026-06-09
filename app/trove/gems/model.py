@@ -1,4 +1,4 @@
-"""The Gem object — the thing that round-trips between client and API.
+"""The Gem object - the thing that round-trips between client and API.
 
 Ported from BetterTroveTools `models/trove/gems.py`. The simulator generates a
 Gem, the client holds the JSON, and posts it back to apply an action. Actions
@@ -328,7 +328,7 @@ def gem_lookups() -> dict:
 
 
 class PartialGem(BaseModel):
-    """A gem known only by tier/type/level/PR — used to reverse-check a PR value."""
+    """A gem known only by tier/type/level/PR - used to reverse-check a PR value."""
 
     tier: GemTier
     type: GemType

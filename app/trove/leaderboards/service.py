@@ -7,7 +7,7 @@ The insert pipeline:
    via the ``timestamp`` field on the request for back-fills).
 3. Upsert one ``Leaderboard`` per board (creating + extending its ``contests``
    list if the board's category id marks the dump as a contest window).
-4. Wipe any prior rows for that ``created_at`` (idempotency — re-running the
+4. Wipe any prior rows for that ``created_at`` (idempotency - re-running the
    same dump on the same timestamp must converge), then insert all the entries
    for THIS dump.
 5. Prune entries older than ``LEADERBOARD_RETENTION_DAYS``.
@@ -41,11 +41,11 @@ logger = logging.getLogger(__name__)
 # Hot retention: rows newer than this stay in ``LeaderboardEntry`` (the fast,
 # tightly-indexed collection). Older rows are moved to
 # ``LeaderboardEntryArchive`` at the tail of each insert. Board metadata is
-# never archived — it doesn't grow unbounded.
+# never archived - it doesn't grow unbounded.
 #
 # The actual value is runtime-tunable via
 # ``runtime_config.get_setting("leaderboards_hot_retention_days")``. Default
-# is in settings.py. Reads go through ``_hot_cutoff()`` below — no module-
+# is in settings.py. Reads go through ``_hot_cutoff()`` below - no module-
 # level constant any more, so an admin tweak in the panel takes effect on
 # the next insert without a redeploy.
 
@@ -59,7 +59,7 @@ def _trove_day_anchor(now: datetime | None = None) -> int:
     """Today's Trove-day anchor in unix seconds: the most recent 11:00 UTC reset.
 
     Trove's daily reset is 11:00 UTC. The bot dumps shortly before each reset, so
-    the natural anchor is the 11:00 UTC stamp the dump describes — yesterday's
+    the natural anchor is the 11:00 UTC stamp the dump describes - yesterday's
     11:00 if we're before today's 11:00, otherwise today's 11:00.
     """
     real = (now or datetime.now(UTC)).replace(microsecond=0)
@@ -84,7 +84,7 @@ def reset_boundaries_for_kind(
     at 11:00 UTC; lifetime cadences (``default`` / ``none``) never reset and
     return an empty list. The half-open right side lets a real capture
     anchored exactly at the reset moment still trigger the cliff (we render a
-    "hold-flat" point at R − 1s — see ``_inject_reset_zeros``)."""
+    "hold-flat" point at R − 1s - see ``_inject_reset_zeros``)."""
     if kind not in ("daily", "weekly") or t_end <= t_start:
         return []
 
@@ -99,7 +99,7 @@ def reset_boundaries_for_kind(
         candidate += timedelta(days=1)
 
     if kind == "weekly":
-        # Advance day-by-day until we land on Monday — same hour stays put.
+        # Advance day-by-day until we land on Monday - same hour stays put.
         while candidate.weekday() != _WEEKLY_RESET_WEEKDAY:
             candidate += timedelta(days=1)
         step = timedelta(days=7)
@@ -133,7 +133,7 @@ def _inject_reset_zeros(
          line stays at the pre-reset value right up to the boundary instead
          of sloping down to 0 across the interval).
       2. A zero point at R itself (skipped when the next real capture is
-         exactly at R — the real data already carries the post-reset state).
+         exactly at R - the real data already carries the post-reset state).
 
     Lifetime boards (``default`` / ``none``) and series shorter than two
     points are returned unchanged but with the ``synthetic`` flag set on each
@@ -172,7 +172,7 @@ def _inject_reset_zeros(
                     "synthetic": True,
                 })
                 # Skip the zero point itself when the next real capture IS
-                # at R — the real (created_at=R, score=…) data already
+                # at R - the real (created_at=R, score=…) data already
                 # represents the post-reset state and a duplicate at the
                 # same x would just overplot.
                 if r < nxt["created_at"]:
@@ -191,7 +191,7 @@ def normalize_timestamp(ts: int | None) -> int:
     """Validate/normalize a user-supplied ``created_at`` query.
 
     Accepts any minute-aligned unix timestamp within roughly the recent
-    window — back-fills are bounded so a clock-skewed or malicious
+    window - back-fills are bounded so a clock-skewed or malicious
     caller can't dump entries at an arbitrary past or future anchor.
 
     Legacy aliases preserved: 00:00 UTC is still translated to the
@@ -243,7 +243,7 @@ async def _upsert_board(parsed: ParsedBoard, created_at: int) -> Leaderboard:
 async def _hot_cutoff() -> tuple[int, int]:
     """Unix-seconds boundary + the days value that produced it.
 
-    Returns ``(cutoff_unix, days)`` — the days are surfaced for logging
+    Returns ``(cutoff_unix, days)`` - the days are surfaced for logging
     only (``_move_to_archive`` reports them so an operator knows what
     cutoff was applied). Threshold read from runtime config so admin
     panel edits take effect on the next call (5-second cache TTL).
@@ -259,7 +259,7 @@ async def archive_query_cutoff() -> int:
     """Unix-seconds boundary: reads for anchors below this count as "archive
     queries" and pay the tighter rate-limit bucket.
 
-    Distinct from ``_hot_cutoff`` — hot retention (storage tier) and archive
+    Distinct from ``_hot_cutoff`` - hot retention (storage tier) and archive
     rate-limit threshold (user-facing policy) move independently. A query
     for an anchor in the cold collection but younger than the threshold
     pays only the standard per-token limit; older than the threshold pays
@@ -332,7 +332,7 @@ async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
     if timestamp is not None and timestamp > 0:
         created_at = normalize_timestamp(timestamp)
         if created_at == -1:
-            # Caller asked for an arbitrary stamp — fall back to the default day
+            # Caller asked for an arbitrary stamp - fall back to the default day
             # anchor so the dump still lands somewhere usable.
             created_at = _trove_day_anchor()
     else:
@@ -347,7 +347,7 @@ async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
         await _upsert_board(board, created_at)
         if not board.entries:
             continue
-        # insert_many handles batching internally — avoid manual BulkWriter
+        # insert_many handles batching internally - avoid manual BulkWriter
         # commits since BulkWriter.commit() doesn't clear its op queue.
         docs = [
             LeaderboardEntry(
@@ -413,7 +413,7 @@ async def list_boards_at(created_at: int) -> list[dict]:
     """All boards that have entries stored at ``created_at``, with each board's
     metadata + the contest type (if any) for THIS anchor.
 
-    Routes to hot or archive based on the anchor's age — old anchors go straight
+    Routes to hot or archive based on the anchor's age - old anchors go straight
     to the archive collection so the hot collection's index footprint stays
     small."""
     coll = await _entries_collection_for(created_at)
@@ -470,7 +470,7 @@ async def list_entries(
     """Top-N entries for a board at a given timestamp, ranked.
 
     Routes the query to ``LeaderboardEntry`` (hot) or ``LeaderboardEntryArchive``
-    (cold) based on the anchor's age — the read never spans both collections,
+    (cold) based on the anchor's age - the read never spans both collections,
     so the planner picks the same composite index either way.
     """
     coll = await _entries_collection_for(created_at)
@@ -504,7 +504,7 @@ async def player_history(
     the limit caps the result set; the hot collection is 3 days small.
 
     Queries hot first and falls through to archive only if we haven't
-    filled the requested ``limit`` yet — recent activity is the common
+    filled the requested ``limit`` yet - recent activity is the common
     case, so most calls never touch the cold collection.
     """
     name = player_name.strip()
@@ -555,7 +555,7 @@ async def board_history(
     per-board chart on the public leaderboards page.
 
     "Current top" is defined as the top ``top`` ranks at the *most recent*
-    anchor in the window — gives the chart a coherent story (the players
+    anchor in the window - gives the chart a coherent story (the players
     you can see on the entries table today, plus where they were yesterday
     and the day before). A player who briefly cracked the top-N then
     dropped off won't appear; we accept that to keep the chart legible.
@@ -569,11 +569,11 @@ async def board_history(
     Returns ``{uuid, days, window_start, window_end, anchors, series}``
     where ``anchors`` is every distinct ``created_at`` in the window,
     ascending, and ``series`` is one entry per top-player with their
-    sorted ``points`` (``{created_at, rank, score}`` triples — missing
+    sorted ``points`` (``{created_at, rank, score}`` triples - missing
     anchors mean the player wasn't in that capture's stored slice and the
     chart should leave a gap).
     """
-    days = max(1, min(days, 30))   # clamp — sanity, archive is the limit
+    days = max(1, min(days, 30))   # clamp - sanity, archive is the limit
     top = max(1, min(top, 20))     # 20 lines is already a busy chart
     now = int(datetime.now(UTC).timestamp())
     window_start = now - days * 86400
@@ -614,7 +614,7 @@ async def board_history(
 
     # 3) All (player, created_at, rank, score) rows for those players in
     # window, from both collections. ``name in names`` reuses the
-    # canonical casing from step 2 — Trove keeps player_name stable per
+    # canonical casing from step 2 - Trove keeps player_name stable per
     # account so cross-anchor exact-match is reliable. Small set; one
     # round-trip per collection is enough.
     row_query = {
@@ -636,7 +636,7 @@ async def board_history(
 
     # 5) Look up the board's effective reset cadence so the chart can show
     # the synthetic reset-zero cliffs (daily/weekly) or pass through cleanly
-    # (lifetime). One Mongo round-trip is fine here — the board doc is small.
+    # (lifetime). One Mongo round-trip is fine here - the board doc is small.
     board_doc = await Leaderboard.find_one(Leaderboard.uuid == uuid)
     board_kind = (
         effective_reset_kind(board_doc, board_doc.uuid)
@@ -647,7 +647,7 @@ async def board_history(
         {
             "player_name": n,
             "current_rank": current_rank.get(n),
-            # Same injection as player_history_series — see the helper for the
+            # Same injection as player_history_series - see the helper for the
             # rules; resets are at 11:00 UTC daily / Monday 11:00 UTC weekly.
             "points": _inject_reset_zeros(per_player[n], board_kind),
         }
@@ -673,7 +673,7 @@ async def player_history_series(
       • grouped by ``leaderboard`` so the caller can draw one line per
         board the player appears on, rather than a flat row list.
 
-    Case-insensitive name match — same convention as ``player_history``.
+    Case-insensitive name match - same convention as ``player_history``.
     Returns ``{player_name, canonical_name, days, window_start,
     window_end, anchors, series}``. ``anchors`` is every distinct
     ``created_at`` the player has rows for in the window. ``series`` is
@@ -700,7 +700,7 @@ async def player_history_series(
         }
 
     # Canonical name: whichever casing the most-recent row has. Same
-    # principle as the cheaters panel — Trove's stored casing wins over
+    # principle as the cheaters panel - Trove's stored casing wins over
     # whatever the user typed.
     canonical = max(all_rows, key=lambda d: d.created_at).player_name
 
@@ -715,7 +715,7 @@ async def player_history_series(
         pts.sort(key=lambda p: p["created_at"])
 
     # Resolve board names + per-board reset cadence (effective override). The
-    # cadence drives the synthetic reset-zero injection below — daily/weekly
+    # cadence drives the synthetic reset-zero injection below - daily/weekly
     # boards need the visual cliff to look honest; lifetime boards must NOT
     # cliff (score accumulates forever).
     board_docs = await Leaderboard.find({"uuid": {"$in": list(by_board.keys())}}).to_list()

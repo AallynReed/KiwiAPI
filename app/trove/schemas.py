@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 # by ``app.trove.captures.classify_challenge`` so consumers don't have to
 # memorise which strings are special-cased; see that helper for the rules.
 # Field name ``type`` shadows the Python builtin at attribute level but
-# Pydantic handles it fine — chose ``type`` because the old API used
+# Pydantic handles it fine - chose ``type`` because the old API used
 # ``challenge_type`` and consumers reading the renamed `kind` would have
 # broken. ``ChallengeType`` (the alias) is the public name.
 ChallengeType = Literal["collection", "rampage", "racing", "target", "dungeon"]
@@ -224,7 +224,7 @@ class BttAsset(BaseModel):
 
 
 class BttReleaseMeta(BaseModel):
-    """Release-level metadata WITHOUT the asset list — used inside per-platform views."""
+    """Release-level metadata WITHOUT the asset list - used inside per-platform views."""
     release_id: int
     tag_name: str                 # e.g. "v1.2.3"
     name: str                     # release title
@@ -237,7 +237,7 @@ class BttReleaseMeta(BaseModel):
 
 
 class BttReleaseInfo(BttReleaseMeta):
-    """Full release — meta + every asset on the release. Used in the listing endpoint."""
+    """Full release - meta + every asset on the release. Used in the listing endpoint."""
     assets: list[BttAsset]
 
 
@@ -261,7 +261,7 @@ class BttLatestPerPlatform(BaseModel):
 
 
 class BttUpdateCheck(BaseModel):
-    """Server-side "is there an update?" check — the client just reads `update_available`."""
+    """Server-side "is there an update?" check - the client just reads `update_available`."""
     installed: str                # echoed back from the query
     channel: str                  # "release" | "beta"
     platform: str                 # windows | linux | android
@@ -401,7 +401,7 @@ class Subclass(BaseModel):
 
 
 class TroveClass(BaseModel):
-    tech_name: str                # canonical token — reference a class by THIS
+    tech_name: str                # canonical token - reference a class by THIS
     name: str                     # display name
     shorts: list[str]             # abbreviations, e.g. ["BD"]
     damage_type: str              # "Physical" | "Magic"
@@ -426,7 +426,7 @@ class ClassList(BaseModel):
 
 
 class LeaderboardContest(BaseModel):
-    time: int     # unix seconds — the anchor this contest was observed at
+    time: int     # unix seconds - the anchor this contest was observed at
     type: str     # "daily" | "weekly"
 
 
@@ -492,14 +492,14 @@ class LeaderboardPlayerHistory(BaseModel):
 # --- History timeseries (charts) ----------------------------------------------
 # Two endpoints drive the public leaderboards page charts: per-board (one
 # line per top-player) and per-player (one line per board they appear on).
-# Same shape both times — list of {created_at, rank, score} points sorted
-# ascending — wrapped in a series object that carries the line's label.
+# Same shape both times - list of {created_at, rank, score} points sorted
+# ascending - wrapped in a series object that carries the line's label.
 
 class HistoryPoint(BaseModel):
     """One score sample at one anchor.
 
-    ``synthetic`` distinguishes real captures (False — what the bot dumped)
-    from server-injected reset boundary markers (True — see
+    ``synthetic`` distinguishes real captures (False - what the bot dumped)
+    from server-injected reset boundary markers (True - see
     ``app/trove/leaderboards/service.py::_inject_reset_zeros``). On
     daily/weekly boards the service inserts a pair of synthetic points at
     each reset moment that falls between two real captures: a hold-flat
@@ -516,7 +516,7 @@ class HistoryPoint(BaseModel):
 
 
 class BoardHistorySeries(BaseModel):
-    """One line on the per-board chart — points are this player's scores
+    """One line on the per-board chart - points are this player's scores
     on the board over the requested window, ascending."""
     player_name: str
     current_rank: int | None  # rank at the most-recent anchor in window
@@ -526,14 +526,14 @@ class BoardHistorySeries(BaseModel):
 class BoardHistoryResponse(BaseModel):
     uuid: int
     days: int
-    window_start: int   # unix seconds — inclusive lower bound
-    window_end: int     # unix seconds — "now" at request time
+    window_start: int   # unix seconds - inclusive lower bound
+    window_end: int     # unix seconds - "now" at request time
     anchors: list[int]  # every distinct created_at in window (ascending)
     series: list[BoardHistorySeries]
 
 
 class PlayerHistorySeriesItem(BaseModel):
-    """One line on the per-player chart — points are this player's
+    """One line on the per-player chart - points are this player's
     scores on one board they appear on, over the requested window."""
     uuid: int
     name: str
@@ -554,11 +554,11 @@ class PlayerHistorySeriesResponse(BaseModel):
 # --- Cheater detection ----------------------------------------------------
 # The /v1/leaderboards/cheaters endpoint flags players with statistically
 # anomalous scores. The full methodology lives in
-# app/trove/leaderboards/detection.py — schemas here document the response
+# app/trove/leaderboards/detection.py - schemas here document the response
 # shape for the OpenAPI surface.
 
 class CheaterEvidence(BaseModel):
-    """One piece of evidence — produced by ONE of the three checks."""
+    """One piece of evidence - produced by ONE of the three checks."""
     type: Literal["score_outlier", "rank_gap", "velocity_outlier"]
     summary: str           # human-readable interpretation, safe to render verbatim
     measurements: dict     # type-specific numbers: raw value + peer baseline + magnitude
@@ -581,7 +581,7 @@ class CheaterBoardEntry(BaseModel):
 class CheaterPlayer(BaseModel):
     player_name: str
     leaderboards: list[CheaterBoardEntry]
-    confidence: float  # overall confidence in [0.0, 1.0] — max-within-board, noisy-OR across boards
+    confidence: float  # overall confidence in [0.0, 1.0] - max-within-board, noisy-OR across boards
 
 
 class CheatersConfig(BaseModel):
@@ -601,8 +601,8 @@ class ActivityBoardCount(BaseModel):
 
 class ActivityResponse(BaseModel):
     """Estimated active players via leaderboard score deltas."""
-    window_start: int | None  # unix seconds — earlier of the two anchors
-    window_end: int | None    # unix seconds — later (more recent) anchor
+    window_start: int | None  # unix seconds - earlier of the two anchors
+    window_end: int | None    # unix seconds - later (more recent) anchor
     duration_hours: float | None
     estimate: int | None      # distinct active players (union across all tracked boards); None = data unavailable
     by_board: list[ActivityBoardCount]
@@ -612,11 +612,11 @@ class ActivityResponse(BaseModel):
 
 
 class ActivityHistoryPoint(BaseModel):
-    """One point on the activity time-series — distinct active players
+    """One point on the activity time-series - distinct active players
     in the window ``(window_start, window_end]``. Two numeric metrics:
 
-    * ``estimate`` — raw count; what the per-window pill shows.
-    * ``estimate_per_hour`` — count divided by window duration. This is
+    * ``estimate`` - raw count; what the per-window pill shows.
+    * ``estimate_per_hour`` - count divided by window duration. This is
       the "flattened" metric: a missed-capture gap makes the next
       window span 2-3h instead of 1h, which naturally inflates the
       raw count because more players had time to score. Dividing
@@ -634,7 +634,7 @@ class ActivityHistoryResponse(BaseModel):
     """Time-series of activity estimates over the last ``days`` days,
     one point per consecutive captured anchor pair. Sorted ascending by
     ``window_end``. Empty ``points`` when fewer than two captures have
-    been stored — the consumer should hide the chart in that case."""
+    been stored - the consumer should hide the chart in that case."""
     days: int
     window_start: int
     window_end: int
@@ -645,7 +645,7 @@ class ActivityHistoryResponse(BaseModel):
 class TroveStatusResponse(BaseModel):
     """Live Trove server status from the background prober.
 
-    ``overall`` is a rollup of the public Live regions — ``online`` when
+    ``overall`` is a rollup of the public Live regions - ``online`` when
     every region is up, ``down`` when all are fully down, ``maintenance``
     for any mixed/partial state (online / maintenance / down / unknown).
     ``auth`` is the shared HTTPS liveness of the account-auth gateway.
@@ -681,7 +681,7 @@ class AnalyzedBoardInfo(BaseModel):
     """One board the detector actually scanned in this run.
 
     Surfaced so the showcase-site cheaters tab (and any API caller) can
-    show *which* boards the analysis covered, not just a count — the user
+    show *which* boards the analysis covered, not just a count - the user
     can verify the board they care about was in scope and see its effective
     reset cadence + entry count without making a second request."""
 
@@ -717,7 +717,7 @@ class CheatersResponse(BaseModel):
     total_flagged: int
     boards_analyzed: int
     boards_excluded: int = 0  # how many boards the operator opted out via cheaters_excluded_board_uuids
-    # Detailed coverage — what the analysis actually touched. ``analyzed_boards``
+    # Detailed coverage - what the analysis actually touched. ``analyzed_boards``
     # carries one entry per scanned board; ``excluded_boards`` covers both
     # operator-excluded and below-min-size skips. Both lists sort by
     # (category, name) for stable rendering. Empty when no anchor available.
@@ -740,7 +740,7 @@ class MarketListingOut(BaseModel):
     price: int
     price_each: float
     last_seen: int   # unix seconds (real UTC)
-    created_at: int  # unix seconds (real UTC) — decoded from the UUID
+    created_at: int  # unix seconds (real UTC) - decoded from the UUID
     expires_at: int  # created_at + 7d
     expired: bool
 
@@ -797,7 +797,7 @@ class ChaosChestHistoryPage(BaseModel):
 
 
 class ChallengeWindow(BaseModel):
-    """Pure window math (no name) — the shape ``server_time.challenge_window`` returns."""
+    """Pure window math (no name) - the shape ``server_time.challenge_window`` returns."""
     starts_at: int
     ends_at: int
     active: bool
@@ -809,7 +809,7 @@ class ChallengeCurrentOut(ChallengeWindow):
     """The current window + the captured challenge for it, if any.
 
     ``name`` is None when the bot hasn't reported this window yet (or during
-    the gap between two windows — though ``starts_at`` / ``ends_at`` still
+    the gap between two windows - though ``starts_at`` / ``ends_at`` still
     describe the most-recent window in that case). ``type`` mirrors that
     nullability since it's derived from ``name``.
     """
@@ -843,7 +843,7 @@ class CaptureInsertResponse(BaseModel):
 
 
 # --- Feedback (POST /v1/misc/feedback) -------------------------------------
-# Endpoint accepts multipart/form-data — Form() + UploadFile validation
+# Endpoint accepts multipart/form-data - Form() + UploadFile validation
 # happens at the FastAPI layer (see router.post_feedback). FeedbackCategory
 # stays here as the documented enum surface.
 
@@ -851,7 +851,7 @@ FeedbackCategory = Literal["bug", "feature", "general"]
 
 
 class FeedbackAck(BaseModel):
-    """Response to a successful feedback submission — minimal on purpose
+    """Response to a successful feedback submission - minimal on purpose
     (no echo of the message, no internal id). Empty 200-OK was tempting
     but a client UI usually wants SOMETHING to confirm the write."""
     ok: bool = True

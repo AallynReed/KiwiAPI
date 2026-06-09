@@ -1,7 +1,7 @@
 """Pure tests for ``server_time.challenge_window`` + ``is_trove_friday``.
 
 The DB-side (capture insert/list) lives in integration tests; this module
-covers just the window-anchor logic — pure ``datetime`` math, no fixtures.
+covers just the window-anchor logic - pure ``datetime`` math, no fixtures.
 
 Time-zone discipline: all inputs are explicit aware-UTC datetimes. The
 function reads ``now.replace(second=0, microsecond=0)`` for the window math
@@ -42,7 +42,7 @@ def test_trove_friday_excludes_other_days():
 
 
 # --- challenge_window: weekday (hourly) cadence -----------------------------
-# A real-UTC Wednesday is trove-Wed for most of the day — strictly hourly.
+# A real-UTC Wednesday is trove-Wed for most of the day - strictly hourly.
 
 
 def test_weekday_window_anchors_to_hour_start():
@@ -62,7 +62,7 @@ def test_weekday_window_active_only_within_20_minutes():
 
 
 def test_weekday_window_in_gap_still_reports_last_anchor():
-    # XX:45 on a weekday — the :00 window expired at :20, the next is at :00
+    # XX:45 on a weekday - the :00 window expired at :20, the next is at :00
     # of the NEXT hour. The function returns the most-recent :00 anchor and
     # marks active=False.
     now = datetime(2026, 6, 3, 14, 45, tzinfo=UTC)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Mongo backup for Kiwi API. Run from anywhere — it cd's to the project root
+# Mongo backup for Kiwi API. Run from anywhere - it cd's to the project root
 # (the directory containing docker-compose.yml). Dumps the app database to a
 # gzipped archive and prunes old local backups.
 #
@@ -40,7 +40,7 @@ docker compose exec -T mongo sh -c \
 
 # Refuse to keep an empty/truncated dump (e.g. if the container was down).
 if [[ ! -s "$OUT" ]]; then
-  echo "[$(date -Is)] ERROR: backup is empty — removing and failing" >&2
+  echo "[$(date -Is)] ERROR: backup is empty - removing and failing" >&2
   rm -f "$OUT"
   exit 1
 fi

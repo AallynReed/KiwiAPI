@@ -2,7 +2,7 @@
 
 Each file is a source payload (``{depths, total, …}``) named by its week id.
 Lives under ``app/`` so it's available in the running container via the source
-bind-mount (no image rebuild). Run it where Mongo is reachable — easiest is inside
+bind-mount (no image rebuild). Run it where Mongo is reachable - easiest is inside
 the api container, which already has ``MONGO_URI`` wired:
 
     docker compose cp ./delves api:/tmp/delves          # get the files into the container
@@ -41,7 +41,7 @@ async def import_directory(directory: str) -> None:
             count = await store_week(week, payload)
             total += count
             print(f"week {week}: {count} depths")
-        print(f"Done — imported {len(files)} week(s), {total} depth records.")
+        print(f"Done - imported {len(files)} week(s), {total} depth records.")
     finally:
         await close_db()
 

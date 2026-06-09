@@ -2,11 +2,11 @@
 
 Two rotations, same shape:
 
-- **Chaos chest** — one captured item per weekly window (Tue 11:00 UTC anchor).
+- **Chaos chest** - one captured item per weekly window (Tue 11:00 UTC anchor).
   Used by ``chaos.get_chaos_chest`` as the primary source; the Trovesaurus
   relay stays as a fallback when the bot hasn't run yet for the current week.
 
-- **Hourly challenge** — one captured name per 20-minute active window. Two
+- **Hourly challenge** - one captured name per 20-minute active window. Two
   cadences: hourly on most days, half-hourly on trove Fridays. See
   ``server_time.challenge_window`` for the window-anchor logic.
 
@@ -34,7 +34,7 @@ async def insert_chaos_chest(
     name: str, *, now: datetime | None = None,
 ) -> tuple[ChaosChestCapture, bool]:
     """Persist one chaos-chest capture for the current weekly window. Upsert
-    by ``week_anchor`` — re-submitting the same week replaces the row.
+    by ``week_anchor`` - re-submitting the same week replaces the row.
 
     Returns ``(doc, was_new)`` so the caller can tell first-sighting from
     re-submit without an extra query."""
@@ -76,18 +76,18 @@ async def list_chaos_chest_history(
 
 
 # Every captured challenge falls into exactly one of five categories. The
-# in-game name (verbatim from QuestLog.cfg) disambiguates them — these
+# in-game name (verbatim from QuestLog.cfg) disambiguates them - these
 # comparison strings are LITERAL and case-sensitive, exactly as the old
 # RenewedTroveToolsAPI matched them. Changing any one of them breaks every
 # existing consumer that relied on `challenge_type` from that API.
 #
-#   - ``"Collection Challenge"`` (literal) — chaos chest contributor
-#   - ``"RAMPAGE ALERT!"``       (literal) — boss-rush event. The game DOES
+#   - ``"Collection Challenge"`` (literal) - chaos chest contributor
+#   - ``"RAMPAGE ALERT!"``       (literal) - boss-rush event. The game DOES
 #                                            ship the exclamation mark and
 #                                            the all-caps "ALERT!" suffix;
 #                                            matching plain "Rampage" misses
 #                                            every real capture.
-#   - ``"Racing Challenge"``     (literal) — racetrack rotation. The old API
+#   - ``"Racing Challenge"``     (literal) - racetrack rotation. The old API
 #                                            matched the all-caps ``"RACING"``
 #                                            instead, but the game actually
 #                                            ships the title-case "X Challenge"
@@ -95,16 +95,16 @@ async def list_chaos_chest_history(
 #                                            fired in practice (every real
 #                                            racing capture silently became
 #                                            "dungeon"). Fixed here.
-#   - ``"Target Challenge"``     (literal) — target-shooting event. NOT in
-#                                            the old API enum — added here
+#   - ``"Target Challenge"``     (literal) - target-shooting event. NOT in
+#                                            the old API enum - added here
 #                                            because the game ships it and
 #                                            otherwise it'd silently bucket
 #                                            into "dungeon" (wrong).
-#   - anything else                        — biome-themed Dungeon Challenge
+#   - anything else                        - biome-themed Dungeon Challenge
 #                                            (``"Cursed Vale"``, ``"Permafrost"``, …),
 #                                            INCLUDING the literal string
 #                                            ``"DUNGEON"`` that the old API
-#                                            also matched explicitly — the
+#                                            also matched explicitly - the
 #                                            fallthrough handles it the same way.
 #
 # The biome list drifts between Trove patches and Trovesaurus doesn't expose
@@ -136,7 +136,7 @@ async def insert_challenge(
     """Persist one challenge capture for the active 20-minute window. Upsert
     by ``window_anchor``. Returns ``(doc, was_new)``.
 
-    No "no challenge" sentinel is stored — the bot only POSTs when it captured
+    No "no challenge" sentinel is stored - the bot only POSTs when it captured
     a real name (the OLD bot dropped ``challenge == "none"``); empty names
     raise here so a misfire surfaces instead of polluting history."""
     name = name.strip()

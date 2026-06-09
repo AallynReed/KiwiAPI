@@ -1,6 +1,6 @@
 """Hashing for API-token IP allowlists.
 
-We store HMAC-SHA256(per-token salt, normalized IP) — same shape as password
+We store HMAC-SHA256(per-token salt, normalized IP) - same shape as password
 verifiers: an attacker (or admin) with full DB access can VERIFY a guessed
 IP against the hash, but can't trivially enumerate or recover the IPs the
 token's owner pinned. Per-token salts mean two tokens that pin the same IP
@@ -43,7 +43,7 @@ def normalize_ip(value: str) -> str:
     """Canonicalize an IP string (e.g. collapse IPv6 ``0:0:…:1`` → ``::1``).
 
     Raises ``ValueError`` for invalid IPs and for any input containing ``/``
-    (CIDRs are not supported — see module docstring).
+    (CIDRs are not supported - see module docstring).
     """
     value = value.strip()
     if "/" in value:
@@ -56,7 +56,7 @@ def normalize_ip(value: str) -> str:
 
 def hash_ip(salt: str, ip: str) -> str:
     """Hex digest of HMAC-SHA256(salt, normalized-ip). Constant-time-safe to
-    compare with ``hmac.compare_digest`` if the caller has a guess in hand —
+    compare with ``hmac.compare_digest`` if the caller has a guess in hand -
     most call sites just check ``hash_ip(salt, x) in allowed_hashes``."""
     return hmac.new(salt.encode("ascii"), ip.encode("ascii"), hashlib.sha256).hexdigest()
 
@@ -65,7 +65,7 @@ def ip_allowed(client_ip: str, salt: str | None, allowed_hashes: list[str]) -> b
     """True iff hashing ``client_ip`` with this token's salt lands in the
     allowed list. Falsy salt or empty client IP → False (the caller already
     checked the list is non-empty before calling, so a missing salt at that
-    point means a bug — defensive False rather than crashing the request)."""
+    point means a bug - defensive False rather than crashing the request)."""
     if not salt or not client_ip:
         return False
     try:

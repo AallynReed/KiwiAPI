@@ -71,12 +71,12 @@ async def lifespan(app: FastAPI):
     configure_logging(logging.DEBUG if settings.debug else logging.INFO)
     if settings.secret_key == DEFAULT_SECRET:
         logger.warning(
-            "SECRET_KEY is the insecure default — set a strong SECRET_KEY in "
+            "SECRET_KEY is the insecure default - set a strong SECRET_KEY in "
             "production (sessions are forgeable otherwise)."
         )
     if not settings.captcha_secret:
         logger.warning(
-            "CAPTCHA_SECRET is unset — signup captcha is DISABLED (dev mode)."
+            "CAPTCHA_SECRET is unset - signup captcha is DISABLED (dev mode)."
         )
     await init_db()
     await init_redis()
@@ -129,7 +129,7 @@ Sign up, mint API tokens, host data, and run calculations.
 ```
 
 `code` is a stable, machine-readable slug (e.g. `not_authenticated`,
-`insufficient_scope`, `ip_not_allowed`, `rate_limited`, `validation_error`) —
+`insufficient_scope`, `ip_not_allowed`, `rate_limited`, `validation_error`) -
 branch on it rather than the human-readable `message`.
 
 **Rate limits.** Responses carry `X-RateLimit-Limit`, `X-RateLimit-Remaining`
@@ -146,7 +146,7 @@ app = FastAPI(
     responses=COMMON_ERROR_RESPONSES,
     # Declare the canonical API host so the reference page (Redoc) shows request
     # URLs as api.aallyn.net. Without this, the spec has no `servers` and Redoc
-    # falls back to the page's own origin — docs.aallyn.net, since the docs site
+    # falls back to the page's own origin - docs.aallyn.net, since the docs site
     # proxies /openapi.json same-origin.
     servers=[{"url": settings.api_url, "description": "Production"}],
 )
@@ -182,24 +182,24 @@ app.add_middleware(
 # One router per endpoint-path group (feature module).
 #
 # Account, login, session, and token-management routes are driven by HUMANS in
-# the browser portal — programs never call them. So they're hidden from the
+# the browser portal - programs never call them. So they're hidden from the
 # public OpenAPI reference (`include_in_schema=False`); they still function
 # normally, they just don't appear in the docs that third-party developers read.
 #
-# This 1.0 base ships the full developer platform but NO data endpoints yet — the
+# This 1.0 base ships the full developer platform but NO data endpoints yet - the
 # token-authenticated `/v1/*` product surface is added on top of this foundation.
 app.include_router(auth_router, include_in_schema=False)
 app.include_router(sessions_router, include_in_schema=False)
 app.include_router(account_router, include_in_schema=False)
 app.include_router(oauth_router, include_in_schema=False)
 # Public-facing user system (trove.aallyn.net signups, dashboard). Lives
-# in a separate Beanie collection from the dev portal's `User` — see
+# in a separate Beanie collection from the dev portal's `User` - see
 # app/site_auth/__init__.py for the rationale.
 app.include_router(site_auth_router, include_in_schema=False)
 app.include_router(tokens_router, include_in_schema=False)
 app.include_router(admin_router, include_in_schema=False)
 app.include_router(scanning_router, include_in_schema=False)
-# Data surface — organized by function (token-authenticated, in the public reference).
+# Data surface - organized by function (token-authenticated, in the public reference).
 app.include_router(rotations_router)
 app.include_router(feeds_router)
 app.include_router(stats_router)

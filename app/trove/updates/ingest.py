@@ -147,8 +147,8 @@ async def _sync_directory(branch, directory, work, plan, old_manifest, cdn, stor
     ld = diff_logical(old_fnv, new_fnv)
 
     # Group changed logical files by the archive that holds them; only those archives
-    # need downloading (an archive whose manifest changed but holds nothing new — e.g.
-    # only a removal — is just a sidecar update, no download).
+    # need downloading (an archive whose manifest changed but holds nothing new - e.g.
+    # only a removal - is just a sidecar update, no download).
     changed_by_archive: dict[int, list[str]] = defaultdict(list)
     for path in ld["added"] + ld["modified"]:
         changed_by_archive[new_full[path].archive_index].append(path)

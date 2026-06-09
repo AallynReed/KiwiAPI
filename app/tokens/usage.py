@@ -41,7 +41,7 @@ return -1
 
 async def record_token_use(token: ApiToken, ip: str | None) -> None:
     # ``ip`` is accepted for backwards compatibility with existing call sites
-    # but intentionally NOT persisted — see ``app/tokens/models.py`` for the
+    # but intentionally NOT persisted - see ``app/tokens/models.py`` for the
     # reasoning (plaintext IPs leak; hashing them defeats the field's purpose).
     del ip  # explicitly ignored
 

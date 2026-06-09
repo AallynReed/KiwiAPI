@@ -5,7 +5,7 @@ request latency never depends on SMTP and transient failures are retried with
 exponential backoff. A hard 5xx rejection is treated as a bounce: the record is
 marked ``bounced`` and the recipient (if a user) is flagged so we stop mailing a
 dead address. (Asynchronous DSN/bounce-inbox processing is a mail-server concern
-and out of scope here — this handles synchronous SMTP rejections.)
+and out of scope here - this handles synchronous SMTP rejections.)
 """
 
 import asyncio
@@ -57,7 +57,7 @@ async def queue_email(to: str, subject: str, text: str, html: str | None = None)
     """Queue a message for the worker. No-op (logged) when SMTP isn't configured,
     and skipped for addresses we've already seen hard-bounce."""
     if not settings.email_enabled:
-        logger.warning("SMTP not configured — not queueing email to %s (%s)", to, subject)
+        logger.warning("SMTP not configured - not queueing email to %s (%s)", to, subject)
         logger.info("Email body (would send):\n%s", text)
         return
 

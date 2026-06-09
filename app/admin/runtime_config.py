@@ -3,11 +3,11 @@ no env-var edit or container restart needed.
 
 How it stacks:
 
-  ┌─ REGISTRY (this file) — declares the *known* keys with their defaults,
+  ┌─ REGISTRY (this file) - declares the *known* keys with their defaults,
   │  types, categories, descriptions. Static; adding a new tunable means
   │  adding an entry here and shipping a deploy.
   │
-  └─ RuntimeConfig collection in Mongo — sparse overrides. Only keys the
+  └─ RuntimeConfig collection in Mongo - sparse overrides. Only keys the
      master has explicitly set live here. ``get_setting(key)`` returns the
      override if present, else the registry default.
 
@@ -23,7 +23,7 @@ Adding a new tunable:
 Type discipline: every tunable declares its primitive type and (for
 numeric ones) a valid range. ``set_setting`` raises on invalid input
 BEFORE persisting, so the DB only ever holds valid values. Cache keeps
-strict types — int stays int, never a string from the JSON envelope.
+strict types - int stays int, never a string from the JSON envelope.
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ class RuntimeConfig(Document):
     and the cache, never by callers."""
 
     key: str  # registry key, e.g. "feedback.discord_webhook"
-    value: str  # JSON-encoded — decoded by get_setting()
+    value: str  # JSON-encoded - decoded by get_setting()
     updated_at: datetime = Field(default_factory=utcnow)
     updated_by_user_id: PydanticObjectId | None = None  # audit trail
 
@@ -70,7 +70,7 @@ SettingType = Literal["str", "int", "bool", "float"]
 
 @dataclass(frozen=True)
 class TunableSetting:
-    """One known tunable. Static metadata — values live in Mongo."""
+    """One known tunable. Static metadata - values live in Mongo."""
 
     key: str
     default: Any
@@ -227,7 +227,7 @@ REGISTRY: dict[str, TunableSetting] = {
         category="auth_rate_limits",
         description=(
             "Maximum login attempts per IP per window. Failed AND "
-            "successful both count — this is brute-force defence."
+            "successful both count - this is brute-force defence."
         ),
         min_value=1, max_value=1000,
     ),
@@ -334,7 +334,7 @@ REGISTRY: dict[str, TunableSetting] = {
     # token (the bot path); session-JWT calls from the portal "Manual cfg
     # ingest" card bypass it so the master can replay back-fills without
     # waiting out the window. Each ingest endpoint is bucketed
-    # independently — submitting a leaderboards dump doesn't eat into the
+    # independently - submitting a leaderboards dump doesn't eat into the
     # market dump's budget.
     "ingest_cooldown_max": _t(
         key="ingest_cooldown_max",
@@ -375,7 +375,7 @@ REGISTRY: dict[str, TunableSetting] = {
             "codexes:read. Codex pages are read-heavy (dozens of GETs per "
             "session); the default 5× lets normal browsing work without "
             "shoving everyone into a wider global default. "
-            "⚠ Requires an API container restart to take effect — the "
+            "⚠ Requires an API container restart to take effect - the "
             "multiplier is bound into the FastAPI dependency tree at startup."
         ),
         min_value=1, max_value=100,
@@ -499,7 +499,7 @@ REGISTRY: dict[str, TunableSetting] = {
         min_value=0.01, max_value=0.5,
     ),
 
-    # ── Trove server status — per-environment game endpoints ──────────
+    # ── Trove server status - per-environment game endpoints ──────────
     # The auth tier (auth.trionworlds.com HTTPS) needs no config. The game
     # tier is a TCP-connect probe of the glsserver port (6560) per
     # environment. Hosts/ports default to the captured trovegame.com
@@ -564,7 +564,7 @@ REGISTRY: dict[str, TunableSetting] = {
     # ── Community feeds (/v1/feeds/{youtube,bilibili,twitch}) ──────────
     # Filter knobs for the natively-fetched video/stream feeds (see
     # app/trove/relays.py). The list-shaped knobs are comma-separated
-    # strings (runtime_config has no list type) — whitespace ignored, case
+    # strings (runtime_config has no list type) - whitespace ignored, case
     # folded on parse, same convention as cheaters_excluded_board_uuids.
     # Twitch needs no filter knobs (it just lists every live Trove stream);
     # its category id + credentials live in settings.py / .env.
@@ -730,7 +730,7 @@ async def get_setting(key: str) -> Any:
         try:
             value = json.loads(doc.value)
         except json.JSONDecodeError:
-            # Bad row in DB shouldn't take down hot paths — fall back to
+            # Bad row in DB shouldn't take down hot paths - fall back to
             # default. ``set_setting`` validates before persisting so this
             # only fires if the DB was edited by hand.
             value = spec.default

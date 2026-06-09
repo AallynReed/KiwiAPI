@@ -26,7 +26,7 @@ class AdminTokenView(BaseModel):
     prefix: str
     scopes: int
     scope_names: list[str]
-    # IPs are hashed in the DB — even an admin can't read them back. The count
+    # IPs are hashed in the DB - even an admin can't read them back. The count
     # is all we expose. (0 = no IP restriction.)
     allowed_ip_count: int
     revoked: bool
@@ -34,7 +34,7 @@ class AdminTokenView(BaseModel):
     revoke_reason: str | None = None
     created_at: datetime
     last_used_at: datetime | None = None
-    # last_used_ip was removed — see app/tokens/models.py.
+    # last_used_ip was removed - see app/tokens/models.py.
     rotated_at: datetime | None = None
     expires_at: datetime | None = None
     request_count: int
@@ -144,7 +144,7 @@ class LeaderboardBoardResetUpdate(BaseModel):
 # --- Runtime configuration -------------------------------------------------
 # Sparse Mongo overrides on top of declared registry defaults. The list
 # endpoint always returns every REGISTERED key (so the admin UI doesn't
-# have to know what's available — it just renders what the server reports).
+# have to know what's available - it just renders what the server reports).
 
 
 class RuntimeConfigItem(BaseModel):

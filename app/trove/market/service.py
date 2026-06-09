@@ -5,10 +5,10 @@ Insert flow:
 2. Filter against the interest-items allow-list.
 3. Bulk-upsert by ``_id`` (the listing UUID). On first sighting we set every
    field; on a re-scrape we ONLY bump ``last_seen`` so ``created_at`` /
-   ``price`` / ``stack`` stay stable (those don't change on a real listing —
+   ``price`` / ``stack`` stay stable (those don't change on a real listing -
    if they did, the game would issue a new UUID).
 4. Old listings (>7 days since first sighting, or stale for >3h) are NOT
-   deleted — the read endpoints filter them out by default. Keeping them lets
+   deleted - the read endpoints filter them out by default. Keeping them lets
    us serve price-history aggregations on the cold tail without losing data.
 
 Reads are simple Beanie queries; the indexes (``name``, ``price_each``,
@@ -72,7 +72,7 @@ async def _interest_items_set() -> frozenset[str]:
     if docs:
         items = frozenset(d.name for d in docs)
     else:
-        # Empty collection — seed hasn't run yet OR an admin wiped without a
+        # Empty collection - seed hasn't run yet OR an admin wiped without a
         # replacement. Use the bundled list so ingest doesn't drop everything.
         items = frozenset(load_interest_items_from_file())
     _interest_cache_value = items
@@ -142,7 +142,7 @@ async def admin_replace_interest_items(
     """Atomic-ish bulk replace: drop everything currently stored, then insert
     the new list. Used for one-shot mass edits (e.g. paste in a fresh list).
 
-    Returns a small summary dict. Not transactional — Mongo replica-set
+    Returns a small summary dict. Not transactional - Mongo replica-set
     transactions are overkill for an admin-only edit on a small collection;
     if the insert fails, the admin re-runs.
     """
@@ -301,7 +301,7 @@ def _to_dict(d: MarketListing) -> dict:
 async def list_distinct_items() -> list[str]:
     """Item names that currently have at least one stored listing.
 
-    Useful for clients building filter dropdowns — pairs with
+    Useful for clients building filter dropdowns - pairs with
     ``interest_items()`` (the bot's full allow-list) for an "what's actually on
     the market" vs "what we track" comparison."""
     items = await MarketListing.distinct("name")
@@ -317,7 +317,7 @@ async def item_summary(name: str) -> dict | None:
     """Aggregate cheapest / median / count for one item across non-expired
     listings. Returns ``None`` if no active listings are stored for ``name``.
 
-    Median is approximated as the middle ``price_each`` after sort — accurate
+    Median is approximated as the middle ``price_each`` after sort - accurate
     on small N, "close enough" on large N where the Mongo planner can't
     easily compute a true median in one pass."""
     cutoff_stale = _now() - LISTING_STALE_SECONDS
@@ -363,7 +363,7 @@ async def item_summary(name: str) -> dict | None:
 # Iglewicz & Hoaglin (1993) suggest |z| > 3.5 as the canonical threshold;
 # we keep it here so a future tweak doesn't have to chase three call
 # sites. In log-price space this catches a ~10× deviation from the
-# median given a typical MAD of 0.3-0.5 — which is exactly the
+# median given a typical MAD of 0.3-0.5 - which is exactly the
 # "1 listing at 50M when median is 20k" shape we're trying to drop.
 _PRICE_OUTLIER_Z_THRESHOLD = 3.5
 # Minimum sample size before we attempt outlier filtering. Below this,
@@ -378,14 +378,14 @@ def _filter_price_outliers(
     """Modified-Z outlier filter on ``log10(price_each)``.
 
     Returns ``(kept, dropped)``. Operates in log-space because market
-    prices are log-normally distributed — a stray 50,000,000 flux post
+    prices are log-normally distributed - a stray 50,000,000 flux post
     looks like a 4-sigma outlier on the raw scale, but in log-space it's
     a clean ~3.5σ that any test recognises. Uses median + MAD because
     both are themselves robust to the outliers we're trying to flag,
     so the threshold doesn't drift when the outlier is present.
 
     Returns ``(points, [])`` unchanged when the sample is too small or
-    the MAD is degenerate (all prices identical) — better to show the
+    the MAD is degenerate (all prices identical) - better to show the
     raw cloud in that case than to risk dropping every legitimate
     point on a thin item.
     """
@@ -407,7 +407,7 @@ def _filter_price_outliers(
     deviations = sorted(abs(x - median) for x in log_prices)
     mad = deviations[len(deviations) // 2]
     if mad < 1e-9:
-        # Every price identical (or near enough) — no outliers possible.
+        # Every price identical (or near enough) - no outliers possible.
         return points, []
 
     kept: list[dict] = []
@@ -437,7 +437,7 @@ async def price_history(
 ) -> dict:
     """Per-listing price-vs-time points for the price-evolution chart.
 
-    Each point is a (``created_at``, ``price_each``) pair — one row per
+    Each point is a (``created_at``, ``price_each``) pair - one row per
     listing that matches the window. The page draws these as a scatter
     so the user can read the cloud directly; we also surface a small
     set of aggregates the client uses to compute axis ranges and the
@@ -449,7 +449,7 @@ async def price_history(
       • created within ``LISTING_LIFETIME_SECONDS`` (7d, the in-game TTL)
 
     ``include_expired=True`` widens the lookup to the user-supplied
-    ``days`` window only — so a 7d chart on an item that just rolled
+    ``days`` window only - so a 7d chart on an item that just rolled
     over still shows the slope across the last live cycle, including
     posts that have since timed out. Caps the result at ``limit`` rows
     (sorted oldest-first) to bound the payload size.
@@ -502,7 +502,7 @@ async def price_history(
     # Defaults to ON because the cloud is much more readable when a
     # lone "I typed 1,000,000 instead of 1,000" listing isn't dragging
     # the y-axis through the ceiling. Caller can pass ``keep_outliers
-    # =True`` to see the raw data — the metadata always reports what
+    # =True`` to see the raw data - the metadata always reports what
     # we found so the page can surface it either way.
     raw_count = len(points)
     if keep_outliers:
@@ -514,7 +514,7 @@ async def price_history(
         points = kept
         outliers_excluded = len(dropped)
         # Surface the *price range* of the excluded outliers so the UI
-        # can say "Excluded 3 outliers between 41M and 50M flux" — much
+        # can say "Excluded 3 outliers between 41M and 50M flux" - much
         # more useful than a bare count when the user is deciding
         # whether to re-include them.
         if dropped:

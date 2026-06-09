@@ -1,7 +1,7 @@
 """Read and build Trove ``.tmod`` mod files (binary format).
 
 Ported from BetterTroveTools (`models/trove/mod.py`, `trove.c`, `utils/functions.py`).
-Pure Python — the FNV-1a-variant checksum (BTT ships it as a C extension) is
+Pure Python - the FNV-1a-variant checksum (BTT ships it as a C extension) is
 reimplemented here so the API needs no native lib. Nothing is stored: read parses
 an uploaded tmod; build serializes one in memory and returns the bytes.
 
@@ -151,7 +151,7 @@ def build_tmod(version: int, properties: dict[str, str], files: list[tuple[str, 
         raise TmodError("a .tmod needs at least one file")
 
     props = dict(properties)
-    props["modLoader"] = mod_loader  # set or override — never trust a client-sent value
+    props["modLoader"] = mod_loader  # set or override - never trust a client-sent value
 
     file_stream = bytearray()
     files_table = bytearray()

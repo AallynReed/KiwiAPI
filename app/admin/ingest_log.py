@@ -12,7 +12,7 @@ records:
   anchor, …) that the portal's Ingest tab surfaces verbatim
 - whether the call succeeded; on failure, a short error message
 
-Rows are written from the route handlers themselves — wrapping them
+Rows are written from the route handlers themselves - wrapping them
 inside a helper keeps the route bodies clean. Kept for 30 days via a
 TTL index so the collection doesn't grow unbounded.
 """
@@ -46,7 +46,7 @@ class IngestLogEntry(Document):
     # Old rows default to "session" for back-compat with pre-migration
     # data.
     auth_via: Literal["token", "session"] = "session"
-    # Token name (the human-readable label set at mint time) — only set
+    # Token name (the human-readable label set at mint time) - only set
     # when auth_via == "token". Lets the UI display "By: bot@aallyn.net
     # (token: trove-bot)" vs the master submitting from the portal.
     token_name: str | None = None
@@ -54,7 +54,7 @@ class IngestLogEntry(Document):
     class Settings:
         name = "ingest_log"
         indexes = [
-            # Recent-first listing — the only read pattern.
+            # Recent-first listing - the only read pattern.
             IndexModel([("timestamp", DESCENDING)]),
             # Per-endpoint filtering for future "show me all leaderboards
             # ingests" tab variants.
@@ -70,7 +70,7 @@ async def record(
     success: bool = True, error: str | None = None,
 ) -> None:
     """Write one log row. Failure to write is logged but never re-raised
-    — the caller's primary work (the actual ingest) already succeeded
+    - the caller's primary work (the actual ingest) already succeeded
     and we don't want a logging hiccup to surface as a 500.
 
     ``token`` distinguishes bot (API token) from master (portal session

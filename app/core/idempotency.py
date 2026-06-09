@@ -1,8 +1,8 @@
 """Idempotency-Key support for unsafe requests.
 
 A client may send an ``Idempotency-Key`` header on a POST/PUT/PATCH/DELETE. If the
-same key is replayed for the same credential + method + path — e.g. after a
-network timeout where the client never saw the response — the original response
+same key is replayed for the same credential + method + path - e.g. after a
+network timeout where the client never saw the response - the original response
 is returned instead of performing the operation again.
 
 Backed by Redis and **fail-open**: if Redis is unavailable or anything goes wrong
@@ -78,7 +78,7 @@ def add_idempotency_middleware(app: FastAPI) -> None:
             logger.warning("idempotency lookup failed; proceeding without it", exc_info=True)
             return await call_next(request)
 
-        # We own the key — run the operation and capture its response.
+        # We own the key - run the operation and capture its response.
         response = await call_next(request)
         try:
             body = b"".join([chunk async for chunk in response.body_iterator])

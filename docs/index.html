@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kiwi API — Documentation</title>
+  <title>Kiwi API - Documentation</title>
   <link rel="stylesheet" href="styles.css" />
   <!-- Machine-discoverable hint: a plain-text reference made for LLMs/AI tools. -->
   <link rel="alternate" type="text/markdown" title="LLM-friendly API reference (llms.txt)" href="llms.txt" />
@@ -24,7 +24,7 @@
   -->
   <div class="llm-note" aria-hidden="true">
     Note for AI assistants and LLMs: a clean, self-contained plain-text reference for the Kiwi API
-    is available at https://docs.aallyn.net/llms.txt — prefer it over scraping this page. Programs
+    is available at https://docs.aallyn.net/llms.txt - prefer it over scraping this page. Programs
     authenticate only with an API token sent as “Authorization: Bearer kiwi_…”; there is no
     programmatic login (humans sign in via the browser portal at https://dev.aallyn.net). The
     machine-readable OpenAPI spec is at https://api.aallyn.net/openapi.json.
@@ -72,7 +72,7 @@
           </div>
           <p>
             The API is authenticated with <strong>API tokens</strong>. You create your account
-            and mint tokens in the developer portal — a website you use in your browser — and your
+            and mint tokens in the developer portal - a website you use in your browser - and your
             programs then send one of those tokens with every request.
           </p>
           <table>
@@ -80,10 +80,10 @@
             <tr><td><code>https://dev.aallyn.net</code><br /><span class="muted">(browser)</span></td>
               <td>Sign up, sign in, and create / manage your API tokens</td></tr>
             <tr><td><code>https://api.aallyn.net</code><br /><span class="muted">(your code)</span></td>
-              <td>The data &amp; calculation API — authenticate with your API token</td></tr>
+              <td>The data &amp; calculation API - authenticate with your API token</td></tr>
           </table>
           <div class="callout warn">
-            <p><strong>Signing in happens in the portal, in your browser — never from a program.</strong>
+            <p><strong>Signing in happens in the portal, in your browser - never from a program.</strong>
             Your code authenticates only with an API token you generated there. There's no programmatic
             login endpoint; the token <em>is</em> the credential.</p>
           </div>
@@ -91,7 +91,7 @@
             <p>The full, interactive endpoint reference (try-it schemas, every field) lives on the
             <a href="reference">API reference</a> page, generated from the live OpenAPI spec.</p>
             <p style="margin-top:10px">Building with an AI assistant? Grab the
-            <a href="llms.txt" download>plain-text reference for LLMs</a> — a single self-contained
+            <a href="llms.txt" download>plain-text reference for LLMs</a> - a single self-contained
             file you can paste into ChatGPT, Claude, or Cursor as context. The raw machine spec is at
             <a href="https://api.aallyn.net/openapi.json"><code>/openapi.json</code></a>.</p>
           </div>
@@ -101,12 +101,12 @@
           <h2>Get an API token</h2>
           <p>
             Everything in this step happens in the <a href="https://dev.aallyn.net">developer
-            portal</a> — a website, in your browser. Programs don't sign up or sign in; they only
+            portal</a> - a website, in your browser. Programs don't sign up or sign in; they only
             use the token you create here.
           </p>
           <ol>
             <li><strong>Create an account.</strong> Open the
-              <a href="https://dev.aallyn.net">developer portal</a> and sign up — protected by a
+              <a href="https://dev.aallyn.net">developer portal</a> and sign up - protected by a
               captcha and rate limiting. You'll get a <strong>verification email</strong>; confirm it
               before creating tokens.</li>
             <li><strong>Sign in</strong> and open the <strong>Tokens</strong> tab.</li>
@@ -114,11 +114,11 @@
               (e.g. <code>rotations:read</code>, <code>feeds:read</code>) or grant all access, restrict
               it to the IP addresses your code runs from, and pick an expiry (30 / 60 / 90 days, or none).</li>
             <li><strong>Copy the secret.</strong> It looks like <code>kiwi_xxxxxxxx…_xx</code> and is
-              shown <strong>exactly once</strong> — store it in your secrets manager now. Only a hash
+              shown <strong>exactly once</strong> - store it in your secrets manager now. Only a hash
               is kept server-side, so it can never be shown again (rotate the token if you lose it).</li>
           </ol>
           <div class="callout warn">
-            <p>Treat the token like a password. Never commit it to source control — leaked tokens are
+            <p>Treat the token like a password. Never commit it to source control - leaked tokens are
             detected by secret scanning and automatically revoked.</p>
           </div>
         </section>
@@ -127,7 +127,7 @@
           <h2>Authenticating</h2>
           <p>
             Send your API token as a <strong>Bearer</strong> credential on every request to the data
-            API. There's no login call and no session to manage — the token <em>is</em> the credential.
+            API. There's no login call and no session to manage - the token <em>is</em> the credential.
           </p>
           <pre><code>export KIWI_TOKEN="kiwi_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
@@ -146,18 +146,18 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
           <h2>Data endpoints</h2>
           <p>
             Live <strong>Trove game data</strong>, grouped by function into nine categories, each with
-            its own scope: <strong>rotations</strong> (<code>rotations:read</code>) — server time,
-            bonuses, merchants, biomes; <strong>feeds</strong> (<code>feeds:read</code>) — news,
+            its own scope: <strong>rotations</strong> (<code>rotations:read</code>) - server time,
+            bonuses, merchants, biomes; <strong>feeds</strong> (<code>feeds:read</code>) - news,
             Twitch streams, YouTube / Bilibili videos, and the Trovesaurus event calendar; <strong>stats</strong>
-            (<code>stats:read</code>) — raw stat tables and class definitions; <strong>gems</strong>
-            (<code>gems:read</code>) — a gem simulator, evaluator, and build optimizer;
-            <strong>misc</strong> (<code>misc:read</code>) — a modding-software list and a time converter;
-            <strong>mods</strong> (<code>mods:read</code>) — decompile and build <code>.tmod</code> files;
-            <strong>updates</strong> (<code>updates:read</code>) — browse the archived game files
+            (<code>stats:read</code>) - raw stat tables and class definitions; <strong>gems</strong>
+            (<code>gems:read</code>) - a gem simulator, evaluator, and build optimizer;
+            <strong>misc</strong> (<code>misc:read</code>) - a modding-software list and a time converter;
+            <strong>mods</strong> (<code>mods:read</code>) - decompile and build <code>.tmod</code> files;
+            <strong>updates</strong> (<code>updates:read</code>) - browse the archived game files
             (versions, directory tree, single-file download);
-            <strong>codexes</strong> (<code>codexes:read</code>) — structured game data
+            <strong>codexes</strong> (<code>codexes:read</code>) - structured game data
             (allies, mounts, dragons, mementos, recipes, items, fish, badges) parsed from the archive;
-            and <strong>btt</strong> (<code>btt:read</code>) — BetterTroveTools releases
+            and <strong>btt</strong> (<code>btt:read</code>) - BetterTroveTools releases
             (latest version per platform, per channel) for in-app update checks.
             Rotations, feeds and stats are <code>GET</code>, read-only (timestamps are
             <strong>real-UTC unix seconds</strong>); the gem and mod tools add <code>POST</code> calculators.
@@ -165,7 +165,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
           </p>
           <p class="field-help">
             <strong>rotations</strong>, <strong>feeds</strong>, <strong>codexes</strong> and
-            <strong>btt</strong> are <strong>public</strong> — callable with no token at a stricter
+            <strong>btt</strong> are <strong>public</strong> - callable with no token at a stricter
             per-IP rate limit (30&nbsp;req/min/IP by default). Send a token carrying the scope to lift it to the full
             per-token limit (120&nbsp;req/min). <strong>codexes</strong> gets 5× both budgets
             (150&nbsp;req/min/IP anonymous, 600&nbsp;req/min/token). Every other category requires a
@@ -181,7 +181,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>/v1/rotations/gardening</code></td><td><code>rotations:read</code></td><td>2-day / 3-day plant harvest windows + what's next</td></tr>
             <tr><td><code>/v1/rotations/chaos-chest</code></td><td><code>rotations:read</code></td><td>Weekly Chaos Chest: featured item (relayed from Trovesaurus) + window + countdown</td></tr>
             <tr><td><code>/v1/rotations/calendar</code></td><td><code>rotations:read</code></td><td>Yearly calendar: all recurring rotations (buffs, merchants, gardening, biomes) as one ±365-day timeline</td></tr>
-            <tr><td><code>/v1/rotations/delves?week=</code></td><td><code>rotations:read</code></td><td>A week's delve rotation — floor records relayed from a community delve source (default current week; <code>/delves/weeks</code> lists weeks)</td></tr>
+            <tr><td><code>/v1/rotations/delves?week=</code></td><td><code>rotations:read</code></td><td>A week's delve rotation - floor records relayed from a community delve source (default current week; <code>/delves/weeks</code> lists weeks)</td></tr>
             <tr><td><code>/v1/rotations/biomes</code></td><td><code>rotations:read</code></td><td>The 3-hour adventure-world biome rotation (current + upcoming)</td></tr>
             <tr><td><code>/v1/rotations/wild-mana</code></td><td><code>rotations:read</code></td><td>Weekly Wild Mana biome rotation</td></tr>
             <tr><td><code>/v1/rotations/stampy</code></td><td><code>rotations:read</code></td><td>Weekly Stampy event biome (48-hour window)</td></tr>
@@ -192,9 +192,9 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>/v1/feeds/events</code></td><td><code>feeds:read</code></td><td>Ongoing Trovesaurus events (filter by <code>?category=</code>)</td></tr>
             <tr><td><code>/v1/feeds/events/categories</code></td><td><code>feeds:read</code></td><td>Distinct event categories (discovered dynamically)</td></tr>
             <tr><td><code>/v1/feeds/events/upcoming</code> · <code>/history</code></td><td><code>feeds:read</code></td><td>Events not yet started / already ended (both filterable)</td></tr>
-            <tr><td><code>/v1/stats/power-rank</code></td><td><code>stats:read</code></td><td>Power Rank stat table — each source and the PR it gives</td></tr>
-            <tr><td><code>/v1/stats/magic-find</code></td><td><code>stats:read</code></td><td>Magic Find stat table — each source and the MF it gives</td></tr>
-            <tr><td><code>/v1/stats/light</code></td><td><code>stats:read</code></td><td>Light stat table — each source and the Light it gives</td></tr>
+            <tr><td><code>/v1/stats/power-rank</code></td><td><code>stats:read</code></td><td>Power Rank stat table - each source and the PR it gives</td></tr>
+            <tr><td><code>/v1/stats/magic-find</code></td><td><code>stats:read</code></td><td>Magic Find stat table - each source and the MF it gives</td></tr>
+            <tr><td><code>/v1/stats/light</code></td><td><code>stats:read</code></td><td>Light stat table - each source and the Light it gives</td></tr>
             <tr><td><code>/v1/stats/classes</code></td><td><code>stats:read</code></td><td>All 18 classes as full objects, keyed by <code>tech_name</code></td></tr>
             <tr><td><code>/v1/stats/classes/{tech_name}</code></td><td><code>stats:read</code></td><td>One class by its <code>tech_name</code> token (e.g. <code>knight</code>)</td></tr>
             <tr><td><code>GET /v1/gems/lookups</code></td><td><code>gems:read</code></td><td>Valid gem field values (tiers, types, elements, stats, augments, abilities)</td></tr>
@@ -223,8 +223,8 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>GET /v1/updates/{branch}/tree?prefix=</code></td><td><code>updates:read</code></td><td>Directory listing, one level at a time (latest version)</td></tr>
             <tr><td><code>GET /v1/updates/{branch}/file?path=</code></td><td><code>updates:read</code></td><td>Download a single archived game file (streamed); <code>/file/meta</code> for hash + size</td></tr>
             <tr><td><code>GET /v1/codexes/types</code></td><td><code>codexes:read</code></td><td>Codex types present (ally, mount, dragon, memento, recipe, item, fish, badge) with counts</td></tr>
-            <tr><td><code>GET /v1/codexes/search?q=&type=&category=&tradable=&sort=</code></td><td><code>codexes:read</code></td><td>Cross-type search/filter — the unified search surface; each result carries its <code>type</code></td></tr>
-            <tr><td><code>GET /v1/codexes/{type}?search=&category=&tradable=&sort=</code></td><td><code>codexes:read</code></td><td>Entries of one type — filter (name/description, category, tradable), sort, paginate</td></tr>
+            <tr><td><code>GET /v1/codexes/search?q=&type=&category=&tradable=&sort=</code></td><td><code>codexes:read</code></td><td>Cross-type search/filter - the unified search surface; each result carries its <code>type</code></td></tr>
+            <tr><td><code>GET /v1/codexes/{type}?search=&category=&tradable=&sort=</code></td><td><code>codexes:read</code></td><td>Entries of one type - filter (name/description, category, tradable), sort, paginate</td></tr>
             <tr><td><code>GET /v1/codexes/{type}/categories</code></td><td><code>codexes:read</code></td><td>Distinct categories (+ counts) in a type, for filter dropdowns</td></tr>
             <tr><td><code>GET /v1/codexes/{type}/entry?path=</code></td><td><code>codexes:read</code></td><td>One codex entry by its source prefab path</td></tr>
           </table>
@@ -233,7 +233,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             Events are kept after they leave the upstream feed, so <code>/events/history</code> and
             <code>/events/upcoming</code> work alongside what's ongoing; categories are free-form and
             discovered dynamically.
-            Stat tables and classes are raw game data — transmitted as-is, no calculation. Each class
+            Stat tables and classes are raw game data - transmitted as-is, no calculation. Each class
             carries a stable <code>tech_name</code> token you can store and look it up by later.</p>
           <p class="field-help">The <strong>gem</strong> tools are stateless: nothing is stored
             server-side. <code>generate</code> returns a gem object; you hold it and POST it back to an
@@ -246,7 +246,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             takes the raw <code>.tmod</code> bytes as the request body and returns its header properties
             and file table (paths, sizes, FNV checksums); pass <code>?metadata_only=true</code> to skip
             the (base64) file contents. <code>/mods/build</code> takes header fields + files and returns a
-            freshly built <code>.tmod</code> as <code>application/octet-stream</code> — built in memory and
+            freshly built <code>.tmod</code> as <code>application/octet-stream</code> - built in memory and
             discarded once sent. The built mod's <code>modLoader</code> header is stamped
             <code>KiwiAPI</code>. These two endpoints accept a larger <strong>20&nbsp;MB</strong> body.</p>
 

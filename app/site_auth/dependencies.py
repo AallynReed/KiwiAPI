@@ -54,7 +54,7 @@ async def _authenticate(
     # Discriminator: a dev-portal token has no ``kind`` claim. A
     # site-user token has ``kind="site"``. Mixing the two would let a
     # public-signup account read /v1/* surface meant for API consumers
-    # — we hard-reject anything that isn't site here.
+    # - we hard-reject anything that isn't site here.
     if payload.get("kind") != TOKEN_KIND:
         raise _not_authenticated("Wrong-audience token")
 

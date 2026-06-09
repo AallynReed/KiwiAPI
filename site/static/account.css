@@ -1,10 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /login, /signup, /dashboard — page-specific styles
+   /login, /signup, /dashboard - page-specific styles
    ───────────────────────────────────────────────────────────────────────
    Two distinct surfaces sharing one stylesheet:
 
-     .acc-* — auth pages (login / signup). Single centered card.
-     .dash-* — dashboard. Hero + grid of profile / Trove / stats cards.
+     .acc-* - auth pages (login / signup). Single centered card.
+     .dash-* - dashboard. Hero + grid of profile / Trove / stats cards.
 
    Both build on style.css's navbar + footer chrome (icon-only Discord
    /GitHub, red-heart Support, nav-account widget).
@@ -114,7 +114,7 @@
    (Turnstile is ~300×65, hCaptcha ~302×76); center it inside the
    form so it looks balanced regardless of which one is rendered.
    The container itself is invisible until the provider injects
-   its iframe — collapses cleanly when captcha is disabled. */
+   its iframe - collapses cleanly when captcha is disabled. */
 .acc-captcha {
   display: flex;
   justify-content: center;
@@ -387,7 +387,7 @@
   text-transform: uppercase;
 }
 /* ``display: inline-flex`` overrides the user-agent ``[hidden] {
-   display: none }`` default — without this re-assert BOTH the
+   display: none }`` default - without this re-assert BOTH the
    verified and unverified pills render at once (the "Schrödinger"
    tag), since JS only toggles the ``hidden`` attribute. */
 .dash-tag[hidden] { display: none; }
@@ -400,7 +400,7 @@
   color: #5dd078;
 }
 
-/* Verification block — unverified → green call-to-action button + amber
+/* Verification block - unverified → green call-to-action button + amber
    "why verify" copy. Verified → green badge with verified-at timestamp. */
 .dash-verify {
   margin: 14px 0 0;

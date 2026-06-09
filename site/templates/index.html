@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Better Trove Tools — the toolkit for Trove players & modders</title>
-    <meta name="description" content="Free, open-source companion suite for Trove. Mod manager, gem optimizer, star chart planner, calculators, code-decoded codexes — desktop or browser, no install required.">
+    <title>Better Trove Tools - the toolkit for Trove players & modders</title>
+    <meta name="description" content="Free, open-source companion suite for Trove. Mod manager, gem optimizer, star chart planner, calculators, code-decoded codexes - desktop or browser, no install required.">
     <meta name="keywords" content="Trove, Better Trove Tools, BTT, Trove mods, Trovesaurus, mod manager, .tmod, gem simulator, star chart, mastery calculator, power rank, magic find, Kiwi API">
     <meta name="author" content="Aallyn Reed">
     <meta name="robots" content="index, follow">
@@ -32,10 +32,10 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Better Trove Tools">
     <meta property="og:title" content="Better Trove Tools">
-    <meta property="og:description" content="Mod manager, gem optimizer, star chart planner, calculators, code-decoded codexes — desktop or browser, free & open source.">
+    <meta property="og:description" content="Mod manager, gem optimizer, star chart planner, calculators, code-decoded codexes - desktop or browser, free & open source.">
     <meta property="og:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
     <meta property="og:image:secure_url" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
-    <meta property="og:image:alt" content="Better Trove Tools — Home Dashboard">
+    <meta property="og:image:alt" content="Better Trove Tools - Home Dashboard">
     <meta property="og:locale" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Better Trove Tools">
@@ -94,7 +94,7 @@
 
     <a class="skip-link" href="#main">Skip to main content</a>
 
-    <!-- Animated background canvas — particles drift slowly across the
+    <!-- Animated background canvas - particles drift slowly across the
          viewport behind every other layer. Decorative, so aria-hidden;
          landing.js handles the rAF loop and pauses it when the tab is
          hidden or the user prefers reduced motion. -->
@@ -114,7 +114,7 @@
              that support it, with a JS fallback for the rest. -->
         <section class="hero" id="hero" tabindex="-1">
             <div class="hero-bg" aria-hidden="true">
-                <!-- Trove screenshot slideshow — landing.js fetches
+                <!-- Trove screenshot slideshow - landing.js fetches
                      /site/screenshots.json on load, builds <img> children
                      here, and cycles them with crossfade + ken-burns. Sits
                      UNDERNEATH the orbs and grid so the existing texture
@@ -143,14 +143,14 @@
                     <span class="word">Tools</span>
                 </h1>
 
-                <p class="hero-sub" data-i18n>The complete companion suite for Trove players, modders, and data miners. Plan your gems, browse decoded codexes, build .tmod packages — desktop, web, or both.</p>
+                <p class="hero-sub" data-i18n>The complete companion suite for Trove players, modders, and data miners. Plan your gems, browse decoded codexes, build .tmod packages - desktop, web, or both.</p>
 
                 <div class="hero-actions">
                     <!-- ⚠ Download dropdown HTML below preserves the IDs +
                          classes app.js binds to (download-dropdown, -trigger,
                          -panel, -icon, -label, -status, -status-msg, -retry,
                          .download-item with data-platform). Restyled, not
-                         re-engineered — the live release fetch keeps working. -->
+                         re-engineered - the live release fetch keeps working. -->
                     <div class="download-dropdown" id="download-dropdown">
                         <button type="button" class="btn btn-primary download-trigger" id="download-trigger"
                                 aria-haspopup="menu" aria-expanded="false" aria-controls="download-panel">
@@ -183,7 +183,7 @@
                                 </div>
                                 <i class="fa-solid fa-arrow-down download-item-arrow" aria-hidden="true"></i>
                             </a>
-                            <!-- Inline error block (no retry button — click the
+                            <!-- Inline error block (no retry button - click the
                                  trigger again to retry; that's what app.js
                                  wires under the hood and the panel's own
                                  close+reopen feels less alarming than a
@@ -220,7 +220,7 @@
                     <span class="plat-badge plat-web"     title="Web app"><i class="fa-solid fa-globe"   aria-hidden="true"></i><span>Web app</span></span>
                 </div>
 
-                <!-- Trove SERVER status — deliberately placed below the
+                <!-- Trove SERVER status - deliberately placed below the
                      platform badges so it reads as a distinct, Trove-game
                      signal rather than a Better Trove Tools status. A link
                      to the full /status page. JS-owned (landing.js), hidden
@@ -244,7 +244,7 @@
              Four mini cards that fetch from the Kiwi API on load and refresh
              every ~30s: server time, Trove day, current chaos chest item,
              active hourly challenge. Demonstrates the API the site sits on
-             top of — and doubles as a soft pitch for the API Docs link. -->
+             top of - and doubles as a soft pitch for the API Docs link. -->
         <section class="live-strip" id="live" aria-label="Live game data">
             <div class="live-eyebrow">
                 <i class="fa-solid fa-circle live-pulse"></i>
@@ -254,13 +254,13 @@
             <div class="live-inner">
                 <article class="live-card" data-live="server-time-card">
                     <span class="live-label" data-i18n>Server Time</span>
-                    <strong class="live-value" data-live="server-time">—:—:—</strong>
+                    <strong class="live-value" data-live="server-time">-:-:-</strong>
                     <span class="live-sub" data-live="server-date">UTC</span>
                 </article>
                 <article class="live-card" data-live="trove-day-card">
                     <span class="live-label" data-i18n>Trove Day</span>
-                    <strong class="live-value" data-live="trove-day">—</strong>
-                    <span class="live-sub" data-live="reset-in" data-i18n>daily reset in —</span>
+                    <strong class="live-value" data-live="trove-day">-</strong>
+                    <span class="live-sub" data-live="reset-in" data-i18n>daily reset in -</span>
                 </article>
                 <article class="live-card" data-live="chaos-card">
                     <span class="live-label" data-i18n>Chaos Chest</span>
@@ -291,7 +291,7 @@
                 <div class="spot-inner">
                     <p class="spot-eyebrow" data-i18n>Daily play</p>
                     <h2 class="spot-title" data-i18n>Open the app. Get your bearings. <span class="grad">Head out.</span></h2>
-                    <p class="spot-body" data-i18n>Daily &amp; weekly buffs, merchant tracking, community streams, and event countdowns — all on one live dashboard that already knows what's running right now.</p>
+                    <p class="spot-body" data-i18n>Daily &amp; weekly buffs, merchant tracking, community streams, and event countdowns - all on one live dashboard that already knows what's running right now.</p>
                     <ul class="spot-bullets">
                         <li data-i18n>Live daily &amp; weekly buff rotation</li>
                         <li data-i18n>Corruxion / Fluxion / Stampy countdowns</li>
@@ -309,7 +309,7 @@
                 <div class="spot-inner">
                     <p class="spot-eyebrow" data-i18n>Gems &amp; builds</p>
                     <h2 class="spot-title" data-i18n>Crunch <span class="grad">thousands</span> of gem combinations.</h2>
-                    <p class="spot-body" data-i18n>Tell the optimizer what you've got. Get back the highest-DPS, highest-PR, or highest-Light layout — per class, per light level, with active buffs accounted for.</p>
+                    <p class="spot-body" data-i18n>Tell the optimizer what you've got. Get back the highest-DPS, highest-PR, or highest-Light layout - per class, per light level, with active buffs accounted for.</p>
                     <ul class="spot-bullets">
                         <li data-i18n>Per-class gem build optimizer</li>
                         <li data-i18n>Gem Evaluator: keep, reroll, or scrap</li>
@@ -327,7 +327,7 @@
                 <div class="spot-inner">
                     <p class="spot-eyebrow" data-i18n>Calculators</p>
                     <h2 class="spot-title" data-i18n>Every stat. Every source. <span class="grad">No more spreadsheets.</span></h2>
-                    <p class="spot-body" data-i18n>Power Rank, Mastery, Light, Magic Find — each calculator shows you the per-source breakdown so you know <em>why</em> the number changed, not just what it is.</p>
+                    <p class="spot-body" data-i18n>Power Rank, Mastery, Light, Magic Find - each calculator shows you the per-source breakdown so you know <em>why</em> the number changed, not just what it is.</p>
                     <ul class="spot-bullets">
                         <li data-i18n>Power Rank: gear / dragons / gems / mastery</li>
                         <li data-i18n>Mastery: PR + Light + MF at every rank</li>
@@ -345,10 +345,10 @@
                 <div class="spot-inner">
                     <p class="spot-eyebrow" data-i18n>Codexes</p>
                     <h2 class="spot-title" data-i18n>Decoded <span class="grad">live</span> from your installed game.</h2>
-                    <p class="spot-body" data-i18n>Eight searchable, filterable catalogs — allies, mounts, dragons, mementos, recipes, items, fish, badges — each pulled fresh from the .tfi archives the moment you point BTT at your install.</p>
+                    <p class="spot-body" data-i18n>Eight searchable, filterable catalogs - allies, mounts, dragons, mementos, recipes, items, fish, badges - each pulled fresh from the .tfi archives the moment you point BTT at your install.</p>
                     <ul class="spot-bullets">
                         <li data-i18n>Filter by stat, ability, mastery, designer, category</li>
-                        <li data-i18n>Source context — biome, boss, creature origin</li>
+                        <li data-i18n>Source context - biome, boss, creature origin</li>
                         <li data-i18n>Recipe trees with ingredient counts</li>
                         <li data-i18n>No upstream scraping; data is yours</li>
                     </ul>
@@ -382,7 +382,7 @@
             <header class="section-head">
                 <p class="section-eyebrow" data-i18n>More inside</p>
                 <h2 class="section-title" data-i18n>Everything else <span class="grad">at a glance.</span></h2>
-                <p class="section-sub" data-i18n>Smaller tools, polish, language support — the parts that don't need their own spotlight but still matter every session.</p>
+                <p class="section-sub" data-i18n>Smaller tools, polish, language support - the parts that don't need their own spotlight but still matter every session.</p>
             </header>
 
             <div class="bento-grid">
@@ -390,7 +390,7 @@
                     <img src="/static/assets/server_time.webp" alt="Server Time" loading="lazy" onerror="shotFail(this)">
                     <div class="bento-body">
                         <h3 data-i18n>Server <span class="highlight-orange">Time</span></h3>
-                        <p data-i18n>Live server clock with world clocks and a Discord-timestamp converter — paste the result straight into chat.</p>
+                        <p data-i18n>Live server clock with world clocks and a Discord-timestamp converter - paste the result straight into chat.</p>
                     </div>
                 </article>
 
@@ -398,7 +398,7 @@
                     <img src="/static/assets/trovesaurus.webp" alt="Trovesaurus Browser" loading="lazy" onerror="shotFail(this)">
                     <div class="bento-body">
                         <h3 data-i18n>Trovesaurus <span class="highlight-yellow">Browser</span></h3>
-                        <p data-i18n>Built-in mod store. Search, filter, install, update — no browser tab needed.</p>
+                        <p data-i18n>Built-in mod store. Search, filter, install, update - no browser tab needed.</p>
                     </div>
                 </article>
 
@@ -406,7 +406,7 @@
                     <img src="/static/assets/mod_manager.webp" alt="Mod Manager" loading="lazy" onerror="shotFail(this)">
                     <div class="bento-body">
                         <h3 data-i18n>Mod <span class="highlight-orange">Manager</span></h3>
-                        <p data-i18n>Enable, disable, update, delete — per installation, with conflict detection.</p>
+                        <p data-i18n>Enable, disable, update, delete - per installation, with conflict detection.</p>
                     </div>
                 </article>
 
@@ -414,7 +414,7 @@
                     <img src="/static/assets/update_tracker.webp" alt="Update Tracker" loading="lazy" onerror="shotFail(this)">
                     <div class="bento-body">
                         <h3 data-i18n>Update <span class="highlight-orange">Tracker</span></h3>
-                        <p data-i18n>Snapshot the game, diff every patch — auto-extracted, summarized, with blueprint previews so you can see what actually changed.</p>
+                        <p data-i18n>Snapshot the game, diff every patch - auto-extracted, summarized, with blueprint previews so you can see what actually changed.</p>
                     </div>
                 </article>
 
@@ -430,7 +430,7 @@
                     <img src="/static/assets/calc_mastery.webp" alt="Mastery Calculator" loading="lazy" onerror="shotFail(this)">
                     <div class="bento-body">
                         <h3 data-i18n>Mastery <span class="highlight-yellow">Calc</span></h3>
-                        <p data-i18n>Plan Trove + Geode mastery — PR / Light / MF at every rank.</p>
+                        <p data-i18n>Plan Trove + Geode mastery - PR / Light / MF at every rank.</p>
                     </div>
                 </article>
 
@@ -446,7 +446,7 @@
                     <img src="/static/assets/modder_tools_projects.webp" alt="Project Manager" loading="lazy" onerror="shotFail(this)">
                     <div class="bento-body">
                         <h3 data-i18n>Project <span class="highlight-yellow">Manager</span></h3>
-                        <p data-i18n>Persistent versioned mod workspaces — organized, always ready.</p>
+                        <p data-i18n>Persistent versioned mod workspaces - organized, always ready.</p>
                     </div>
                 </article>
 
@@ -454,7 +454,7 @@
                     <img src="/static/assets/settings.webp" alt="Settings &amp; FPS" loading="lazy" onerror="shotFail(this)">
                     <div class="bento-body">
                         <h3 data-i18n>Settings <span class="highlight-blue">&amp; FPS unlock</span></h3>
-                        <p data-i18n>Theme, 9 languages, install management — plus an FPS cap that goes from 60 all the way to uncapped, with automatic backups so you can roll back any time.</p>
+                        <p data-i18n>Theme, 9 languages, install management - plus an FPS cap that goes from 60 all the way to uncapped, with automatic backups so you can roll back any time.</p>
                     </div>
                 </article>
             </div>
@@ -495,7 +495,7 @@
             <div class="dev-cta-inner">
                 <p class="section-eyebrow" data-i18n>For developers</p>
                 <h2 class="section-title" data-i18n>Build on the <span class="grad">Kiwi API.</span></h2>
-                <p class="section-sub" data-i18n>The same backend that powers Better Trove Tools is open to you. Live rotations, decoded gamedata, deltaed updates, marketplace history — all under a free tier with proper rate-limited scopes.</p>
+                <p class="section-sub" data-i18n>The same backend that powers Better Trove Tools is open to you. Live rotations, decoded gamedata, deltaed updates, marketplace history - all under a free tier with proper rate-limited scopes.</p>
 
                 <div class="dev-cards">
                     <a class="dev-card" href="https://dev.aallyn.net">
@@ -507,13 +507,13 @@
                     <a class="dev-card" href="https://docs.aallyn.net">
                         <div class="dev-card-icon"><i class="fa-solid fa-book-open"></i></div>
                         <h3 data-i18n>API Reference</h3>
-                        <p data-i18n>Full interactive OpenAPI reference. Every endpoint, every scope, every response shape — with a paste-and-go LLM-friendly version at <code>/llms.txt</code>.</p>
+                        <p data-i18n>Full interactive OpenAPI reference. Every endpoint, every scope, every response shape - with a paste-and-go LLM-friendly version at <code>/llms.txt</code>.</p>
                         <span class="dev-card-cta">docs.aallyn.net <i class="fa-solid fa-arrow-right"></i></span>
                     </a>
                     <a class="dev-card" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener">
                         <div class="dev-card-icon"><i class="fa-brands fa-github"></i></div>
                         <h3 data-i18n>Source code</h3>
-                        <p data-i18n>The BTT desktop / web app source. MIT-licensed. PRs welcome — read the contributing guide first.</p>
+                        <p data-i18n>The BTT desktop / web app source. MIT-licensed. PRs welcome - read the contributing guide first.</p>
                         <span class="dev-card-cta">github.com/AallynReed <i class="fa-solid fa-arrow-right"></i></span>
                     </a>
                 </div>

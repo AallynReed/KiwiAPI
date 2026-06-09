@@ -18,8 +18,8 @@ class ApiToken(Document):
     scopes: int = 0  # bitmask of granted scopes; 0 = all scopes (current + future)
     # Per-token salt + HMAC-SHA256 hashes of pinned IPs. Hashed like passwords
     # so neither admins nor a DB breach reveal which IPs are pinned. Empty list
-    # means "no IP restriction" — the allowlist is opt-in (see `core/ip_hash.py`).
-    # CIDRs are NOT supported — a hash can't range-match.
+    # means "no IP restriction" - the allowlist is opt-in (see `core/ip_hash.py`).
+    # CIDRs are NOT supported - a hash can't range-match.
     ip_salt: str | None = None                             # urlsafe-b64; minted with the token
     allowed_ip_hashes: list[str] = Field(default_factory=list)
     revoked: bool = False
@@ -37,7 +37,7 @@ class ApiToken(Document):
     # it would deprive the OWNER of the ability to compare against a known IP
     # (defeating the field's purpose). The user-facing "is this me?" check is
     # better served by a dedicated endpoint that takes a candidate IP and
-    # answers yes/no after hashing — to be built when needed.
+    # answers yes/no after hashing - to be built when needed.
     rotated_at: datetime | None = None
     request_count: int = 0
 

@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   Better Trove Tools — landing page enhancement layer
+   Better Trove Tools - landing page enhancement layer
    ───────────────────────────────────────────────────────────────────────
    Runs AFTER app.js (the download dropdown + nav-toggle logic) and i18n.js.
-   We deliberately don't touch the hamburger / dropdown wiring — those are
+   We deliberately don't touch the hamburger / dropdown wiring - those are
    already proven; this file owns the visual+data enhancements that are
    new in the 2026-06-07 redesign:
 
@@ -19,7 +19,7 @@
         glassmorphic opacity boost in CSS)
 
    Everything is guarded so missing DOM (e.g. if HTML is trimmed) just
-   silently no-ops — the rest of the page keeps working.
+   silently no-ops - the rest of the page keeps working.
    ═══════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -30,7 +30,7 @@
 
   // ── 1. ready flag (drives hero entry animation) ────────────────────
   // Wait one rAF after DOMContentLoaded so the initial styles have applied
-  // before the transition kicks off — otherwise the transition can fire
+  // before the transition kicks off - otherwise the transition can fire
   // mid-paint and skip the "from" state visually.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     document.body.classList.add('ready');
@@ -100,7 +100,7 @@
   // ── 4.5 Hero screenshot slideshow ──────────────────────────────────
   // Fetches /site/screenshots.json (served by app/site/router.py), builds
   // an <img> per screenshot inside .hero-screens, and cycles them with
-  // an opacity crossfade. The list is dynamic — drop a file in
+  // an opacity crossfade. The list is dynamic - drop a file in
   // site/static/trove-screens/ and it appears on next page load (the
   // endpoint caches for 60s).
   //
@@ -136,7 +136,7 @@
     });
 
     // First image visible immediately. requestAnimationFrame so the
-    // class flip happens after the elements are in the layout tree —
+    // class flip happens after the elements are in the layout tree -
     // otherwise the very first paint can skip the opacity transition.
     requestAnimationFrame(() => imgs[0].classList.add('active'));
 
@@ -151,7 +151,7 @@
       cur = next;
     };
     let timer = setInterval(advance, PERIOD);
-    // Pause the cycle when the tab isn't visible — saves a tiny bit of
+    // Pause the cycle when the tab isn't visible - saves a tiny bit of
     // CPU but mostly avoids a "skip many at once" jolt when the tab
     // returns from being backgrounded for an hour.
     document.addEventListener('visibilitychange', () => {
@@ -188,7 +188,7 @@
           }));
         };
         const resize = () => {
-          // clientWidth / clientHeight are READ-ONLY getters — you can't
+          // clientWidth / clientHeight are READ-ONLY getters - you can't
           // assign through them. The displayed size already comes from CSS
           // (canvas.bg-fx is width:100% height:100%); we only need to set
           // the backing-store size (canvas.width / .height in device px).
@@ -234,7 +234,7 @@
   }
 
   // ── 6. Live API data ───────────────────────────────────────────────
-  // Server time, trove day, chaos chest, hourly challenge — refreshed
+  // Server time, trove day, chaos chest, hourly challenge - refreshed
   // every 30 seconds. Server time itself ticks every second client-side
   // off a base offset so the second-hand doesn't only update on the API
   // poll. Failures keep the previous value rather than blanking the card.
@@ -268,7 +268,7 @@
     return `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
   }
   function fmtCountdown(seconds) {
-    if (seconds <= 0) return '—';
+    if (seconds <= 0) return '-';
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     if (h > 0) return `${h}h ${m}m`;
@@ -307,7 +307,7 @@
       return await r.json();
     } catch (e) {
       // Don't pollute the console with one expected error per refresh
-      // when the API is briefly unreachable — log only once per session.
+      // when the API is briefly unreachable - log only once per session.
       if (!safeFetch._warned) {
         console.warn('[landing] live data fetch failed:', e.message);
         safeFetch._warned = true;
@@ -376,7 +376,7 @@
   const $statusText = $status && $status.querySelector('.trove-status-text');
   // Translate via the global i18n helper when present, else pass through
   // the English source (landing.js's local `t` vars are animation/timer
-  // scratch, not the i18n function — hence this dedicated helper).
+  // scratch, not the i18n function - hence this dedicated helper).
   const tr = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
 
   function paintStatus(data) {
@@ -443,7 +443,7 @@
 
   // The support widget used to be wired up here, but the markup ships
   // on every page (leaderboards/commands/updates/index/support) and
-  // landing.js only loads on /. Moved into app.js — see section 7
+  // landing.js only loads on /. Moved into app.js - see section 7
   // there. Keeping this comment as a breadcrumb for the next person
   // who greps for "support-widget" in landing.js.
 })();

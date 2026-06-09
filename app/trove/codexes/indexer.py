@@ -1,11 +1,11 @@
-"""Build the codex from the archive for a branch — incrementally.
+"""Build the codex from the archive for a branch - incrementally.
 
 Two modes, both upserting ``CodexEntry`` (one per source prefab):
 
-- ``reindex`` — a full (re)build from the materialized tree (``UpdateState``). The
+- ``reindex`` - a full (re)build from the materialized tree (``UpdateState``). The
   bootstrap/repair path. Content-incremental too: a prefab whose source sha is
   unchanged is skipped, so re-running is cheap.
-- ``reindex_changes`` — the steady-state path. Reads just the ``UpdateChange``
+- ``reindex_changes`` - the steady-state path. Reads just the ``UpdateChange``
   rows for one new version (the delta) and touches only those entries, so a
   routine game patch never walks the other 99% of the game.
 
@@ -177,7 +177,7 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
     if not touched:
         return counts
 
-    # The lookup tables are only needed to (re)parse prefabs — skip the loads for a
+    # The lookup tables are only needed to (re)parse prefabs - skip the loads for a
     # delta that's pure removals.
     needs_parse = any(r["type"] != "removed" and r.get("content_sha256") for r in touched)
     maps = await _load_maps(branch, store) if needs_parse else _Maps({}, {}, {})

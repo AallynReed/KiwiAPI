@@ -6,7 +6,7 @@ as-is), and serve it. The current week's data accumulates as players submit
 floors, so a background task refreshes it on a cadence; past weeks are imported
 once (``delve_import.py``) and stay static. Weeks roll over Monday 11:00 UTC
 (midnight in UTC-11), anchored to the first delve week. The source URL is read
-from settings (env) — the refresher is off until it's set. Served under the
+from settings (env) - the refresher is off until it's set. Served under the
 (public) ``rotations`` scope.
 """
 
@@ -102,7 +102,7 @@ async def get_week(week: int) -> DelveRotation | None:
 
 
 async def list_weeks() -> list[dict]:
-    """Available weeks (metadata only — never loads the heavy depth lists)."""
+    """Available weeks (metadata only - never loads the heavy depth lists)."""
     coll = DelveRotation.get_pymongo_collection()
     rows = await coll.find(
         {}, {"week": 1, "total": 1, "depth_count": 1, "fetched_at": 1, "_id": 0}
@@ -155,7 +155,7 @@ async def _loop() -> None:
 def start_delve_refresher() -> None:
     global _task
     if not settings.trove_delve_source_url:
-        logger.info("delves: no source URL configured (set TROVE_DELVE_SOURCE_URL) — refresher off")
+        logger.info("delves: no source URL configured (set TROVE_DELVE_SOURCE_URL) - refresher off")
         return
     if _task is None:
         _task = asyncio.create_task(_loop())

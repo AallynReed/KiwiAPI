@@ -1,8 +1,8 @@
-"""Beanie-backed `UpdateRepo` — the production persistence for the archiver.
+"""Beanie-backed `UpdateRepo` - the production persistence for the archiver.
 
 The first sync touches tens of thousands of logical files, so the per-file writes
 (change-log / state / manifest sidecar) are BUFFERED and flushed in bulk via
-`bulk_write` — hundreds of round-trips instead of hundreds of thousands. All
+`bulk_write` - hundreds of round-trips instead of hundreds of thousands. All
 writes are idempotent upserts/deletes, so a crash + resume re-does at most one
 flush-batch with no duplicates. Reads (sidecar / state) happen before writes for
 the same key within a sync, so buffering is safe; `finish_version` flushes first.
@@ -103,7 +103,7 @@ class MongoUpdateRepo:
     async def _flush(self) -> None:
         # Swap buffers out BEFORE awaiting, so concurrent tasks append to fresh lists.
         # Order: changes + state first, manifest sidecar LAST (its update is the
-        # "done" marker — committing it last keeps resume safe).
+        # "done" marker - committing it last keeps resume safe).
         changes, self._changes = self._changes, []
         state_ops, self._state_ops = self._state_ops, []
         manifest_ops, self._manifest_ops = self._manifest_ops, []

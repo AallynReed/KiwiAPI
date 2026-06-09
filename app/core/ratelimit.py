@@ -58,7 +58,7 @@ async def check_rate_limit(
 #
 # A sorted set per key holds one member per request, scored by timestamp. Each
 # call trims members older than the window, adds itself, and counts what's left
-# — a true rolling window with no fixed-window edge bursts. The key self-expires.
+# - a true rolling window with no fixed-window edge bursts. The key self-expires.
 
 _SLIDING_WINDOW_LUA = """
 local key = KEYS[1]

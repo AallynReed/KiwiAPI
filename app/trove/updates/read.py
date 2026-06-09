@@ -1,6 +1,6 @@
 """Read side of the archive: branches, version history, directory browsing, file fetch.
 
-Latest-version only for now — the materialized `UpdateState` per branch *is* the
+Latest-version only for now - the materialized `UpdateState` per branch *is* the
 current tree, so listings/fetches are direct lookups (no change-log replay).
 Directory listings compute one level at a time (ls-style) so a 100k-file tree is
 never dumped at once.

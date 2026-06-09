@@ -48,7 +48,7 @@ def _to_public(token: ApiToken) -> TokenPublic:
 
 def _hash_pinned_ips(ips: list[str], salt: str) -> list[str]:
     """Validate, dedupe, and hash the pinned-IP list. Raises 400 on anything
-    invalid. An empty list is valid — IP pinning is opt-in. CIDRs are rejected
+    invalid. An empty list is valid - IP pinning is opt-in. CIDRs are rejected
     here (the underlying ``normalize_ip`` does the check) since hashes can't
     range-match; the error message says so."""
     hashes: list[str] = []
@@ -92,10 +92,10 @@ async def create_token(
         raise APIError(
             status_code=400,
             code=ErrorCode.bad_request,
-            message="Invalid scope bitmask — it sets bits that aren't real scopes",
+            message="Invalid scope bitmask - it sets bits that aren't real scopes",
         )
 
-    # Generate the per-token salt up-front so the field is always set — even
+    # Generate the per-token salt up-front so the field is always set - even
     # for tokens with no pinned IPs today, a later PATCH that adds IPs will
     # reuse this salt without a separate migration.
     salt = make_ip_salt()
@@ -123,7 +123,7 @@ async def create_token(
         background_tasks.add_task(send_token_created_email, user, token.name, token.prefix)
 
     public = _to_public(token)
-    # The secret is returned only here — it is never retrievable again.
+    # The secret is returned only here - it is never retrievable again.
     return TokenCreatedResponse(**public.model_dump(), token=full_token)
 
 

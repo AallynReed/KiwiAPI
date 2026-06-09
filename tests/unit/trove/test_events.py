@@ -6,8 +6,8 @@ def test_parse_events_normalizes():
         {"id": "986", "name": "Playful Kite", "url": "https://trovesaurus.com/giveaway=397",
          "startdate": "1780066800", "enddate": "1780671600", "category": "Giveaway",
          "image": "", "icon": "https://t/icon.png", "lookup": "giveaway=397"},
-        {"id": "", "name": "no id — skipped"},
-        {"id": "5", "name": "bad dates — skipped", "startdate": "x", "enddate": "y"},
+        {"id": "", "name": "no id - skipped"},
+        {"id": "5", "name": "bad dates - skipped", "startdate": "x", "enddate": "y"},
     ]
     out = parse_events(raw)
     assert len(out) == 1  # only the valid one survives

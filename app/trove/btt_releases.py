@@ -1,8 +1,8 @@
 """BetterTroveTools releases relay (drives the desktop app's update checks).
 
 Polls the GitHub releases API for the configured repo and stores releases in
-Mongo (``BttRelease``). Two channels — ``release`` (``prerelease=False``) and
-``beta`` (``prerelease=True``) — and three platforms detected by asset extension:
+Mongo (``BttRelease``). Two channels - ``release`` (``prerelease=False``) and
+``beta`` (``prerelease=True``) - and three platforms detected by asset extension:
 
   * ``windows``  → ``.msi`` (preferred) | ``.exe``
   * ``linux``    → ``.AppImage`` | ``.deb`` | ``.rpm`` | ``.tar.gz``
@@ -11,7 +11,7 @@ Mongo (``BttRelease``). Two channels — ``release`` (``prerelease=False``) and
 The "latest per platform" walks the channel's releases newest-first and returns
 the first release that actually carries an asset for that platform. So if the
 absolute latest release shipped no Windows build, ``/btt/latest`` still surfaces
-the most recent release that did — exactly the "next candidate" rule the desktop
+the most recent release that did - exactly the "next candidate" rule the desktop
 app needs to drive update prompts.
 """
 
@@ -224,7 +224,7 @@ async def refresh_releases() -> int:
 
 # --- Changelog: commits grouped by tag (pure logic) -------------------------
 # Mirrors the BetterTroveTools desktop "Show changelog" button: walks commits
-# newest-first and starts a new group every time a commit sha matches a tag —
+# newest-first and starts a new group every time a commit sha matches a tag -
 # so each group is "everything that landed between this tag and the previous".
 # Commits after the last tag go into a leading "Unreleased" group.
 
@@ -353,7 +353,7 @@ async def _loop() -> None:
         except Exception:
             logger.warning("BTT releases refresh failed", exc_info=True)
         try:
-            # Changelog refresh is isolated — a tags/commits failure must not
+            # Changelog refresh is isolated - a tags/commits failure must not
             # derail the releases cycle, and vice versa.
             info = await refresh_changelog()
             logger.info("BTT changelog refreshed: %d group(s)%s",

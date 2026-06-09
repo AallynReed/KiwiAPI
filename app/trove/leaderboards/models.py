@@ -2,14 +2,14 @@
 
 The dump from the bot is one big text blob; we explode it into two collections:
 
-- ``Leaderboard``       — per-board metadata (one doc per ``uuid``). Includes the
+- ``Leaderboard``       - per-board metadata (one doc per ``uuid``). Includes the
   list of contests it has appeared in (daily/weekly contest cycles).
-- ``LeaderboardEntry``  — per-(board, timestamp, rank) row. The hot read path is
+- ``LeaderboardEntry``  - per-(board, timestamp, rank) row. The hot read path is
   "show the top-N of board X at timestamp T", so we index on
   ``(leaderboard, created_at, rank)``.
 
 ``created_at`` is a unix-seconds int (the dump's "as-of" Trove-time anchor),
-NOT a datetime — every read filters by exact equality on the day's reset, so
+NOT a datetime - every read filters by exact equality on the day's reset, so
 ints are simpler than UTC datetime round-trips.
 """
 
@@ -47,7 +47,7 @@ _WEEKLY_RESET_UUIDS = {
 def reset_kind(uuid: int) -> str:
     """Return one of ``"daily"`` / ``"weekly"`` / ``"default"`` for a board uuid.
 
-    This is the HARDCODED FALLBACK only — production code should prefer the
+    This is the HARDCODED FALLBACK only - production code should prefer the
     per-document override (see ``effective_reset_kind`` below) which the
     admin panel can edit at runtime.
     """
@@ -67,7 +67,7 @@ def effective_reset_kind(doc: "Leaderboard | None", uuid: int) -> str:
 
     Precedence:
       1. ``doc.reset_kind_override`` if set to a valid string (admin pinned)
-      2. ``reset_kind(uuid)`` — the hardcoded mapping at the top of this file
+      2. ``reset_kind(uuid)`` - the hardcoded mapping at the top of this file
       3. ``"default"`` as a last-resort fallback (also returned by step 2
          when the uuid isn't in either hardcoded set)
 
@@ -89,7 +89,7 @@ def is_lifetime_kind(rk: str) -> bool:
     hardcoded daily/weekly sets); ``"none"`` is the explicit one the
     admin sets via the override. Cheater detection on these boards
     skips score-outlier + rank-gap because rank-1 will always look
-    like an outlier on a 5-year-old stat — only velocity (score change
+    like an outlier on a 5-year-old stat - only velocity (score change
     over time) is a valid signal.
     """
     return rk in ("default", "none")
@@ -123,26 +123,26 @@ def contest_type_for(category_id: str) -> str | None:
 class Leaderboard(Document):
     """One Trove leaderboard's metadata. Created on first sighting, then upserted.
 
-    ``contests`` is a small append-only list of ``{time, type}`` records — every
+    ``contests`` is a small append-only list of ``{time, type}`` records - every
     timestamp where the board was dumped while flagged as a contest. The list is
     bounded by how often contests occur and is fine to keep in-document.
 
     ``reset_kind_override`` lets the master admin pin a board's reset cadence
-    explicitly from the portal — overrides the hardcoded ``_DAILY_RESET_UUIDS``
+    explicitly from the portal - overrides the hardcoded ``_DAILY_RESET_UUIDS``
     / ``_WEEKLY_RESET_UUIDS`` mapping below. Three values matter:
 
-      * ``"daily"`` / ``"weekly"`` — resetting boards. Cheater detection runs
+      * ``"daily"`` / ``"weekly"`` - resetting boards. Cheater detection runs
         all three checks (score outlier, rank gap, velocity).
-      * ``"none"`` — lifetime accumulating (e.g. ENEMIES DEFEATED, FLUX EARNED).
+      * ``"none"`` - lifetime accumulating (e.g. ENEMIES DEFEATED, FLUX EARNED).
         Cheater detection on these boards skips score-outlier and rank-gap
         because peak rank-1 score on a 5-year-old stat will always look
         like an outlier; ONLY velocity (score progression over time) is a
         valid anti-cheat signal here.
-      * ``None`` (default) — fall through to the hardcoded mapping in the
+      * ``None`` (default) - fall through to the hardcoded mapping in the
         ``reset_kind()`` helper below, which keeps backward-compatibility.
     """
 
-    uuid: int                 # the game's leaderboard id — unique
+    uuid: int                 # the game's leaderboard id - unique
     name_id: str              # source-side string id (e.g. "Leaderboard_Game_Stats")
     name: str                 # human-readable name
     category_id: str          # source-side category id
@@ -198,7 +198,7 @@ class LeaderboardEntryArchive(Document):
     the hot retention window. Read endpoints transparently fall through to here
     when a query asks for an anchor older than the hot cutoff.
 
-    Indexes are tighter — the hot composite ``(leaderboard, created_at, rank)``
+    Indexes are tighter - the hot composite ``(leaderboard, created_at, rank)``
     is preserved so historical top-N reads stay O(index seek), but we drop the
     standalone ``(created_at desc)`` index (the hot version of timestamps stays
     authoritative; archive listing is union-deduped on the read side)."""
@@ -229,10 +229,10 @@ class LeaderboardActivityEstimate(Document):
 
     The chart consumer plots ``estimate / duration_hours`` (active players
     per hour) so a 2h or 3h window from a missed-capture gap doesn't show
-    up as a spike — the per-hour rate stays honest across irregular window
+    up as a spike - the per-hour rate stays honest across irregular window
     sizes. Raw ``estimate`` is kept for tooltips + reproducibility."""
 
-    window_end: int          # late anchor, unix seconds — the unique key
+    window_end: int          # late anchor, unix seconds - the unique key
     window_start: int        # early anchor, unix seconds
     duration_hours: float    # (window_end - window_start) / 3600
     estimate: int            # distinct active players in the window

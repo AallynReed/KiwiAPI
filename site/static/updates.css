@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /updates — page-specific styles
+   /updates - page-specific styles
    ───────────────────────────────────────────────────────────────────────
    Mirrors the leaderboards page's vocabulary (hero, tabs, sidebar + main)
    so the two pages feel like one product. Loaded on top of style.css.
@@ -52,7 +52,7 @@
   min-height: 1.2em; /* prevents layout shift while loading */
 }
 
-/* Branch toggle — Live US / PTS pills. Active gets the accent color. */
+/* Branch toggle - Live US / PTS pills. Active gets the accent color. */
 .up-branches {
   display: inline-flex;
   gap: 6px;
@@ -323,7 +323,7 @@
   border-color: var(--accent-blue, #4cc9f0);
 }
 
-/* Breadcrumbs above the tree — clicking a segment jumps back up.
+/* Breadcrumbs above the tree - clicking a segment jumps back up.
    Wraps gracefully when the path is deep. */
 .up-breadcrumbs {
   display: flex;
@@ -352,7 +352,7 @@
 }
 .up-crumb-sep { color: rgba(255,255,255,.25); padding: 2px 0; }
 
-/* Tree itself. Each row is a button — keyboard-traversable. */
+/* Tree itself. Each row is a button - keyboard-traversable. */
 .up-tree {
   display: grid;
   gap: 2px;
@@ -657,7 +657,7 @@
 }
 /* Two-row picker grid so each cell has room to breathe.
    Row 1: PATH spans the full width (it's the longest field).
-   Row 2: FROM, TO, and the Compare button share — FROM/TO get
+   Row 2: FROM, TO, and the Compare button share - FROM/TO get
    minmax(0, 1fr) each so they NEVER intrude into each other's
    columns even when a long version tag wants more space. */
 .up-compare-pickers {
@@ -677,7 +677,7 @@
   display: grid;
   gap: 4px;
   /* min-width 0 lets the field shrink below the select's natural
-     content width — without this a long <option> would force the
+     content width - without this a long <option> would force the
      whole column wider and break the adjacent column's layout. */
   min-width: 0;
 }

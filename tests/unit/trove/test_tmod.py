@@ -10,7 +10,7 @@ from app.trove import tmod
 def test_calculate_hash_matches_trove_dll():
     # Golden values captured from BetterTroveTools' native trove.dll (the real
     # Trove checksum). The high-byte tails (>=0x80) are the ones that exposed the
-    # signed-char sign-extension quirk in the C — keep them here as a regression
+    # signed-char sign-extension quirk in the C - keep them here as a regression
     # guard since the DLL isn't available in CI.
     golden = {
         b"": 2166136261,                       # offset basis

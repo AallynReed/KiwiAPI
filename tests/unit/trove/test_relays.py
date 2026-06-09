@@ -25,7 +25,7 @@ def test_normalize_videos_passthrough_and_skip():
     raw = [
         {"title": "V", "url": "https://yt/1", "channel": "Ch", "video_id": "1",
          "published_at": "2024-01-01T00:00:00Z", "thumbnail_url": "https://t/1.jpg"},
-        {"title": "no url"},  # skipped — no url
+        {"title": "no url"},  # skipped - no url
     ]
     out = _normalize_videos(raw)
     assert len(out) == 1

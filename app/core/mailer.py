@@ -11,7 +11,7 @@ logger = logging.getLogger("kiwi.mailer")
 
 class EmailDeliveryError(Exception):
     """Raised by :func:`deliver_email`. ``permanent`` distinguishes a hard bounce
-    (5xx — don't retry) from a transient failure (4xx / connection — retry)."""
+    (5xx - don't retry) from a transient failure (4xx / connection - retry)."""
 
     def __init__(self, message: str, *, permanent: bool, code: int | None = None) -> None:
         self.permanent = permanent
@@ -63,7 +63,7 @@ async def deliver_email(
             timeout=15,
         )
     except aiosmtplib.SMTPRecipientsRefused as exc:
-        # Every recipient was refused — treat as a hard bounce.
+        # Every recipient was refused - treat as a hard bounce.
         raise EmailDeliveryError(f"Recipients refused: {exc}", permanent=True) from exc
     except aiosmtplib.SMTPResponseException as exc:
         permanent = 500 <= (exc.code or 0) < 600
@@ -71,7 +71,7 @@ async def deliver_email(
             f"SMTP {exc.code}: {exc.message}", permanent=permanent, code=exc.code
         ) from exc
     except (aiosmtplib.SMTPException, OSError) as exc:
-        # Connection refused, timeout, disconnect, etc. — transient, retry later.
+        # Connection refused, timeout, disconnect, etc. - transient, retry later.
         raise EmailDeliveryError(f"Transient SMTP failure: {exc}", permanent=False) from exc
 
 
@@ -87,7 +87,7 @@ async def send_email(
     surfaces verification/reset links. Returns True only on a confirmed send.
     """
     if not settings.email_enabled:
-        logger.warning("SMTP not configured — not sending email to %s. Subject: %s", to, subject)
+        logger.warning("SMTP not configured - not sending email to %s. Subject: %s", to, subject)
         logger.info("Email body (would send):\n%s", text_body)
         return False
     try:

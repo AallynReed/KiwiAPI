@@ -2,8 +2,8 @@
 
 Offset/`skip` pagination degrades on large collections (the server walks and
 discards every skipped row) and can repeat or drop rows when data shifts between
-pages. Keyset pagination instead carries an opaque cursor — here the last
-ObjectId seen — and asks for "the next N after this id". ObjectIds are
+pages. Keyset pagination instead carries an opaque cursor - here the last
+ObjectId seen - and asks for "the next N after this id". ObjectIds are
 monotonic-ish and unique, so newest-first ordering is ``_id`` descending and the
 next page is ``_id < cursor``.
 """

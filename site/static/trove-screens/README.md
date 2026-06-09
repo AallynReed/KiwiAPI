@@ -1,7 +1,7 @@
-# Trove screenshots — hero slideshow
+# Trove screenshots - hero slideshow
 
 Drop screenshots of Trove gameplay here. The landing page picks them up
-**dynamically** via `GET /site/screenshots.json` — no HTML/JS edit needed
+**dynamically** via `GET /site/screenshots.json` - no HTML/JS edit needed
 when you add or remove one.
 
 ## Rules
@@ -13,7 +13,7 @@ when you add or remove one.
 - **Resolution:** aim for ≥1920×1080. The hero uses `object-fit: cover`, so
   smaller images will be upscaled; larger images cost bandwidth but display
   the same.
-- **Format:** `.webp` is strongly preferred — typically 30–50 % smaller than
+- **Format:** `.webp` is strongly preferred - typically 30–50 % smaller than
   the equivalent `.png` at the same visual quality. Use `cwebp -q 80` from
   the command line, or any half-decent online converter.
 - **Aspect:** wide landscape (16:9 or wider) reads best; the hero crops

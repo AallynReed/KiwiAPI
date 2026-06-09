@@ -3,11 +3,11 @@
 These used to be relayed from the trovesaurus bot's HTTP server; they are now
 fetched **at source**, porting the bot's own logic:
 
-  - Twitch   — client-credentials app token → Helix ``/streams`` for Trove.
-  - YouTube  — Data API v3 ``search``, then the bot's filters (excluded
+  - Twitch   - client-credentials app token → Helix ``/streams`` for Trove.
+  - YouTube  - Data API v3 ``search``, then the bot's filters (excluded
                channels / title terms, skip live+upcoming, ≤N newest per
                channel, newest N overall).
-  - Bilibili — HTML scrape of the search page (hotlink-protected thumbnails
+  - Bilibili - HTML scrape of the search page (hotlink-protected thumbnails
                are served through the image proxy further down).
 
 A background task pulls each feed into Mongo (one ``FeedCache`` doc per feed) on
@@ -16,7 +16,7 @@ depends on the upstreams and a transient upstream failure leaves the last good
 payload untouched (``refresh_all_feeds`` swallows per-feed errors).
 
 Credentials come from the environment (``TWITCH_CLIENT_ID`` /
-``TWITCH_CLIENT_SECRET`` / ``YT_API_KEY`` — the same names the bot used). The
+``TWITCH_CLIENT_SECRET`` / ``YT_API_KEY`` - the same names the bot used). The
 per-feed filter knobs are runtime_config tunables (category ``community_feeds``)
 so they tune from the admin panel without a redeploy.
 """
@@ -82,7 +82,7 @@ def _normalize_videos(raw) -> list[dict]:
 
 def _csv_set(raw: str) -> set[str]:
     """Lower-cased, whitespace-trimmed set from a comma-separated tunable.
-    Mirrors the ``cheaters_excluded_board_uuids`` convention — runtime_config
+    Mirrors the ``cheaters_excluded_board_uuids`` convention - runtime_config
     has no list type, so list-shaped knobs ride in a single string."""
     return {p.strip().lower() for p in (raw or "").split(",") if p.strip()}
 
@@ -94,7 +94,7 @@ _twitch_token: str | None = None  # cached app access token; re-minted on 401
 
 async def _twitch_app_token(client: httpx.AsyncClient, *, force: bool = False) -> str:
     """Cached Twitch app access token. Minted on first use and whenever
-    ``force`` is set (e.g. after a 401 — app tokens last ~60 days but expire,
+    ``force`` is set (e.g. after a 401 - app tokens last ~60 days but expire,
     and the old bot only ever fetched one at startup, so it would silently
     serve stale-empty once that token died)."""
     global _twitch_token

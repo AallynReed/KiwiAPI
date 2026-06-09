@@ -1,12 +1,12 @@
 """Trove server-time + event-cycle calculations.
 
 Ported and cleaned from BetterTroveTools. Trove's "day" rolls over at 11:00 UTC,
-so the game's internal clock is real UTC minus 11h — the "trove-time" frame. The
+so the game's internal clock is real UTC minus 11h - the "trove-time" frame. The
 event anchors below (``FIRST_*``) are in that frame; to turn a trove-time instant
 back into real wall-clock UTC, add the offset.
 
 Every public function takes an explicit ``now`` (real UTC), defaulting to the real
-clock — so the logic is deterministic and unit-testable. Returned timestamps are
+clock - so the logic is deterministic and unit-testable. Returned timestamps are
 real-UTC unix seconds.
 """
 
@@ -63,7 +63,7 @@ def is_trove_friday(now: datetime | None = None) -> bool:
     return trove_now(now).weekday() == 4
 
 
-# Each in-game challenge has a 20-minute active window — the rest of the cycle
+# Each in-game challenge has a 20-minute active window - the rest of the cycle
 # is "next challenge in N minutes" downtime.
 CHALLENGE_DURATION = timedelta(minutes=20)
 
@@ -77,7 +77,7 @@ def challenge_window(now: datetime | None = None) -> dict:
     Trove Friday: two challenges per hour, starting at :00 and :30.
 
     The function always returns the LAST window-start whether or not we're
-    still inside its 20-minute active span — so a query made during the gap
+    still inside its 20-minute active span - so a query made during the gap
     between challenges still resolves to a sensible "what was the last one?"
     answer. ``active`` distinguishes the two cases.
     """
@@ -220,7 +220,7 @@ def fluxion(now: datetime | None = None, count: int = 8) -> dict:
 
 # --- Chaos Chest (weekly window) -------------------------------------------
 # The featured item comes from Trovesaurus (relayed), but the 7-day window is
-# deterministic — anchored to the fluxion epoch in real UTC, exactly as BTT does
+# deterministic - anchored to the fluxion epoch in real UTC, exactly as BTT does
 # (first_fluxion + 11h). Used as the fallback whenever upstream gives no times.
 
 def chaos_chest_window(now: datetime | None = None) -> dict:

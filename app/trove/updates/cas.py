@@ -1,9 +1,9 @@
 """Content-addressed blob store on the filesystem.
 
-Blobs are keyed by SHA-256 of their bytes and stored raw (no compression — game
+Blobs are keyed by SHA-256 of their bytes and stored raw (no compression - game
 content is mostly already compressed, and reads stay fast) at
 ``<root>/objects/<sha[:2]>/<sha>``. Writes are atomic (temp + fsync + rename) and
-idempotent, so identical content — including across the Live and PTS timelines —
+idempotent, so identical content - including across the Live and PTS timelines -
 collapses to one copy. Sync I/O; call via ``asyncio.to_thread`` from the pipeline.
 """
 

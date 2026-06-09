@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from app.trove.codexes.binfab import read_uleb
 
-# (path fragment, base mastery), checked in order — first match wins.
+# (path fragment, base mastery), checked in order - first match wins.
 _BASE_RULES: tuple[tuple[str, int], ...] = (
     ("collections/mount", 50),
     ("collections/boat", 50),
@@ -85,7 +85,7 @@ def parse_multipliers(content: bytes) -> dict[str, dict]:
 
 def mastery_for(identifier: str, multipliers: dict[str, dict]) -> int | None:
     """Mastery for a collection identifier: the multipliers-file value if present,
-    else the type base (None when the type carries no mastery — items/recipes)."""
+    else the type base (None when the type carries no mastery - items/recipes)."""
     normalized, base = infer_mastery_base(identifier)
     row = multipliers.get(normalized)
     if row is not None:

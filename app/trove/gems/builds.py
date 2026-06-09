@@ -1,4 +1,4 @@
-"""Gem Builds — recommended gem proc layouts ranked by damage coefficient.
+"""Gem Builds - recommended gem proc layouts ranked by damage coefficient.
 
 Ported from BetterTroveTools `utils/gem_engine.py` (`StarChartParser` +
 `GemOptimizerEngine`) and `models/trove/builds.py`. Reads the build data files
@@ -370,7 +370,7 @@ def build_options() -> dict:
             "subclass": "Same options as character.",
             "ally": "Use 'boot_clown' for auto-optimal by damage type.",
             "food": "Use \"\" for none.",
-            "light": "Farm builds only — target base light; 0 disables light targeting.",
+            "light": "Farm builds only - target base light; 0 disables light targeting.",
             "star_chart": "Optional star-chart build code (SC:/v2: compact, or base64).",
         },
     }

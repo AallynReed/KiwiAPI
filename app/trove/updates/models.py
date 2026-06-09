@@ -1,12 +1,12 @@
 """Mongo models for the game-file version archive.
 
-- UpdateBranch        — one per timeline (live-us / pts-us): where it's at.
-- UpdateVersion       — one per detected build; `ordinal` orders the history.
-- UpdateChange        — append-only log of logical-file changes (source of truth).
-- UpdateState         — materialized current logical tree per branch (+ TFI baseline).
-- UpdateManifestEntry — last-seen opaque manifest sha1 per top-level file (the sidecar).
+- UpdateBranch        - one per timeline (live-us / pts-us): where it's at.
+- UpdateVersion       - one per detected build; `ordinal` orders the history.
+- UpdateChange        - append-only log of logical-file changes (source of truth).
+- UpdateState         - materialized current logical tree per branch (+ TFI baseline).
+- UpdateManifestEntry - last-seen opaque manifest sha1 per top-level file (the sidecar).
 
-Blob bytes live in the filesystem CAS, not here — these only hold metadata/hashes.
+Blob bytes live in the filesystem CAS, not here - these only hold metadata/hashes.
 """
 
 from datetime import datetime
@@ -19,7 +19,7 @@ from app.core.utils import utcnow
 
 
 class UpdateBranch(Document):
-    branch: str  # "live-us" | "pts-us" — unique
+    branch: str  # "live-us" | "pts-us" - unique
     content_path: str = ""
     current_version: str | None = None
     current_ordinal: int = 0
@@ -78,7 +78,7 @@ class UpdateChange(Document):
 
 class UpdateState(Document):
     branch: str
-    path: str                         # logical path — unique per branch
+    path: str                         # logical path - unique per branch
     content_sha256: str
     fnv_hash: int | None = None       # None for loose (non-archive) files
     size: int = 0
@@ -95,7 +95,7 @@ class UpdateState(Document):
 
 class UpdateManifestEntry(Document):
     branch: str
-    path: str                         # top-level manifest path — unique per branch
+    path: str                         # top-level manifest path - unique per branch
     sha1: str                         # opaque manifest hash (change key)
     size: int
 

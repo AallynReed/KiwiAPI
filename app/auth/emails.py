@@ -83,7 +83,7 @@ async def send_email_change_verification(user: User, new_email: str) -> None:
     )
     link = f"{settings.api_url}/auth/verify-email-change?token={token}"
     hours = settings.email_verification_expire_hours
-    # Sent TO the new address — that's what we're verifying.
+    # Sent TO the new address - that's what we're verifying.
     await _queue(
         new_email,
         f"Confirm your new {settings.app_name} email",
@@ -103,7 +103,7 @@ async def _security_notice(to: str, subject: str, heading: str, paragraphs: list
         heading,
         paragraphs,
         note=(
-            f"If this wasn't you, secure your {settings.app_name} account immediately — "
+            f"If this wasn't you, secure your {settings.app_name} account immediately - "
             "change your password and review your active sessions."
         ),
     )
@@ -173,7 +173,7 @@ async def send_token_compromised_email(user: User, token_name: str, prefix: str)
     await _security_notice(
         user.email,
         f"An API token was auto-revoked on your {settings.app_name} account",
-        "API token exposed — auto-revoked",
+        "API token exposed - auto-revoked",
         [
             f'Your API token "{token_name}" ({prefix}…) was found exposed publicly '
             "(detected by secret scanning) and has been automatically revoked.",

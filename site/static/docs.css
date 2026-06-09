@@ -1,5 +1,5 @@
 /* =========================================================================
-   Better Trove Tools — Documentation styles
+   Better Trove Tools - Documentation styles
    Shares the brand palette with the landing page (style.css).
    ========================================================================= */
 
@@ -60,7 +60,7 @@ a:hover { text-decoration: underline; }
     padding: 0 20px; gap: 16px;
 }
 .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
-/* See style.css note — favicon.png has transparent padding; bump to 32px so
+/* See style.css note - favicon.png has transparent padding; bump to 32px so
    the actual visible artwork matches the wordmark height instead of reading
    as a small/cropped icon. */
 .nav-logo img { height: 32px; width: auto; }
@@ -395,7 +395,7 @@ code {
 @media (max-width: 860px) {
     /* The hamburger (.mobile-menu-btn) already becomes visible at this same
        breakpoint above; hide the desktop nav items here so logo + hamburger
-       is the only thing on the bar — no orphan tablet zone where the items
+       is the only thing on the bar - no orphan tablet zone where the items
        disappear but no hamburger has shown up yet. */
     .nav-container { padding: 0 14px; gap: 10px; }
     .nav-actions > .nav-link,
@@ -403,7 +403,7 @@ code {
     .nav-actions { gap: 0; }
 }
 
-/* Sidebar header on mobile — site nav + language picker injected ABOVE the
+/* Sidebar header on mobile - site nav + language picker injected ABOVE the
    doc-section nav so the sidebar drawer is the complete mobile menu. */
 .sidebar-mobile-nav { display: none; }  /* hidden on desktop */
 @media (max-width: 860px) {
@@ -438,7 +438,7 @@ code {
     }
 }
 
-/* Slide-down nav panel for the unlock_* pages — same shape as the home page's
+/* Slide-down nav panel for the unlock_* pages - same shape as the home page's
    .nav-links panel but tied to docs.css's .navbar (which is the only navbar on
    those pages). Toggled by .navbar.open via inline JS in the templates. */
 .unlock-nav-panel {
@@ -530,7 +530,7 @@ code {
 }
 .drop-zone-clear:hover { background: rgba(255, 255, 255, 0.12); color: #fff; border-color: var(--accent-blue); }
 
-/* Submit button on the unlock pages — was using .nav-link.primary (too small
+/* Submit button on the unlock pages - was using .nav-link.primary (too small
    and visually wrong for a primary action). This is a proper full-width
    primary button. */
 .btn-action {
@@ -550,7 +550,7 @@ code {
 .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ----------------------------------------------------------------------------
-   Shared docs footer — appears on docs.html and the unlock_* pages. Matches
+   Shared docs footer - appears on docs.html and the unlock_* pages. Matches
    the home page footer-cta in spirit but slimmer since these pages aren't
    landing pages.
    ---------------------------------------------------------------------------- */
@@ -575,7 +575,7 @@ code {
 .docs-footer .docs-footer-links i { color: var(--accent-blue); }
 .docs-footer .docs-footer-meta { font-size: 0.82rem; color: var(--text-dim); }
 
-/* Skip-to-content link — see style.css for the full rationale. Hidden until
+/* Skip-to-content link - see style.css for the full rationale. Hidden until
    focused, then slides down so keyboard users can bypass the navbar. */
 .skip-link {
     position: fixed; top: -40px; left: 12px;

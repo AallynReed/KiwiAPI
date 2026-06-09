@@ -63,9 +63,9 @@ def decode_access_token(token: str) -> dict:
 # --- API tokens ------------------------------------------------------------
 #
 # Format:  <prefix>_<body>_<checksum>
-#   prefix   — settings.api_token_prefix (e.g. "kiwi")
-#   body     — 43 base62 chars (~256 bits of entropy), the actual secret
-#   checksum — base62 CRC32 of the body (<=6 chars), a self-validating tail
+#   prefix   - settings.api_token_prefix (e.g. "kiwi")
+#   body     - 43 base62 chars (~256 bits of entropy), the actual secret
+#   checksum - base62 CRC32 of the body (<=6 chars), a self-validating tail
 #
 # The checksum lets us (a) reject malformed tokens offline, before any DB hit,
 # and (b) publish a precise regex for secret-scanning tools (e.g. so a leaked
@@ -74,7 +74,7 @@ def decode_access_token(token: str) -> dict:
 # shape at all is treated as "unknown" and validated the slow way (DB lookup),
 # which keeps any pre-checksum legacy tokens working.
 
-_TOKEN_ALPHABET = string.ascii_letters + string.digits  # base62 — no "_" or "-"
+_TOKEN_ALPHABET = string.ascii_letters + string.digits  # base62 - no "_" or "-"
 _TOKEN_BODY_LEN = 43
 _TOKEN_CHECKSUM_MAX = 6  # base62 of a 32-bit CRC fits in 6 chars
 
@@ -119,7 +119,7 @@ def verify_token_checksum(token: str) -> bool | None:
 
     Returns ``True`` if the checksum matches, ``False`` if the token has our
     exact shape but a bad checksum (reject it without touching the database), or
-    ``None`` when the token isn't in the new shape at all — a legacy/unknown
+    ``None`` when the token isn't in the new shape at all - a legacy/unknown
     token that must be validated against the database.
     """
     m = _token_re().match(token)

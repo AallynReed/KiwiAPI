@@ -83,7 +83,7 @@ def test_decode_identity_not_tradable():
 
 
 def test_decode_identity_none_without_run():
-    # No identity component — just bare bytes, no markers.
+    # No identity component - just bare bytes, no markers.
     assert binfab.decode_identity(b"\x00\x01\x02\x03") is None
 
 

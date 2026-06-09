@@ -1,4 +1,4 @@
-"""Gem evaluator — score a typed-in gem and cost out perfecting it.
+"""Gem evaluator - score a typed-in gem and cost out perfecting it.
 
 Ported from BetterTroveTools `backend/gems_and_builds/gem_evaluator.py`. Pure
 calculation: given a tier/type/level and 3 stats (type + entered value + proc

@@ -1,7 +1,7 @@
 """Beanie documents for the site-side accounts.
 
 Mirrors ``app/auth/models.py`` but with:
-  - a username field (unique, lowercased) — the dev portal is email-only
+  - a username field (unique, lowercased) - the dev portal is email-only
   - a ``claimed_trove_name`` slot used by the dashboard to look up the
     user's leaderboard appearances
   - separate collections so a public signup can NEVER accidentally
@@ -46,7 +46,7 @@ class SiteUser(Document):
     # ── Trove-name verification ─────────────────────────────────────
     # v1 verification is score-progression: when the user claims a
     # name, we snapshot their current score on every (board, score)
-    # they appear on at that moment. The user goes plays Trove —
+    # they appear on at that moment. The user goes plays Trove -
     # raising at least one score on at least one lifetime-accumulating
     # board. On demand (Verify now button) we re-fetch their current
     # scores and compare; if any went up, the claim is verified.
@@ -87,7 +87,7 @@ class SiteUser(Document):
 
 class SiteSession(Document):
     """One login session for a SiteUser. Same refresh-rotation scheme as
-    ``app/auth/models.Session`` — hashed refresh token, single-use
+    ``app/auth/models.Session`` - hashed refresh token, single-use
     rotation, revoke flag, expiry timestamp."""
 
     site_user_id: PydanticObjectId

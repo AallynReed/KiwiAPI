@@ -1,5 +1,5 @@
 /* =========================================================================
-   Better Trove Tools — docs/landing i18n
+   Better Trove Tools - docs/landing i18n
    English is the source of truth (lives in the HTML). Each non-English
    locale ships a JSON map of { normalizedEnglishHTML: translatedHTML }.
    Only strings present in the locale map are swapped, so anything not
@@ -8,7 +8,7 @@
 (function () {
     "use strict";
 
-    // endonyms — language names shown in their own language (never translated)
+    // endonyms - language names shown in their own language (never translated)
     const LANGS = [
         ["en", "English"],
         ["fr", "Français"],
@@ -55,7 +55,7 @@
     }
 
     // Apply the active dictionary. CRUCIAL: only elements that actually have a
-    // translation are touched — untranslated elements (sidebar menu, buttons,
+    // translation are touched - untranslated elements (sidebar menu, buttons,
     // headings) are left completely alone so their event listeners survive.
     function applyDict() {
         restoreAll();
@@ -99,7 +99,7 @@
         await loadLocale(lang);
         applyDict();
         // Multiple .lang-select instances may exist (e.g. one in the navbar and
-        // one in the mobile sidebar) — sync all of them to the active language.
+        // one in the mobile sidebar) - sync all of them to the active language.
         document.querySelectorAll(".lang-select").forEach(sel => {
             if (sel.value !== lang) sel.value = lang;
         });
@@ -151,7 +151,7 @@
         init();
     }
 
-    // Translate a single English string at runtime — for content built in JS
+    // Translate a single English string at runtime - for content built in JS
     // (the [data-i18n] sweep only covers strings that already exist in the
     // DOM at apply time).
     function translate(s) {

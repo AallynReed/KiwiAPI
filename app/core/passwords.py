@@ -27,7 +27,7 @@ async def password_breach_count(password: str) -> int:
             resp.raise_for_status()
             text = resp.text
     except httpx.HTTPError:
-        logger.warning("HIBP lookup failed — allowing the password")
+        logger.warning("HIBP lookup failed - allowing the password")
         return 0
 
     for line in text.splitlines():
@@ -49,6 +49,6 @@ async def ensure_password_not_breached(password: str) -> None:
         raise APIError(
             status_code=400,
             code=ErrorCode.password_breached,
-            message="This password has appeared in known data breaches — please choose a different one.",
+            message="This password has appeared in known data breaches - please choose a different one.",
             details={"breach_count": count},
         )

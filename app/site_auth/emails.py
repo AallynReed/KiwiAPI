@@ -93,6 +93,6 @@ async def send_password_changed_email(user: SiteUser) -> None:
          "were signed out."],
         note=(
             f"If this wasn't you, secure your {settings.app_name} account "
-            "immediately — change your password and review your active sessions."
+            "immediately - change your password and review your active sessions."
         ),
     )

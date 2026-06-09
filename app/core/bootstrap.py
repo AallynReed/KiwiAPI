@@ -18,7 +18,7 @@ async def bootstrap_admin() -> None:
     both set.
 
     Note: this means the admin password is managed via ADMIN_PASSWORD, not the
-    portal — a portal-side change would be reset to ADMIN_PASSWORD on next boot.
+    portal - a portal-side change would be reset to ADMIN_PASSWORD on next boot.
     """
     if not settings.admin_email or not settings.admin_password:
         return

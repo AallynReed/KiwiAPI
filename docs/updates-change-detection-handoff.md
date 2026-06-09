@@ -1,7 +1,7 @@
-# Handoff — Trove Update Archiver & Change-Comparing System
+# Handoff - Trove Update Archiver & Change-Comparing System
 
 How to mirror Trove's update CDN, detect what changed between builds, and record
-that diff. The reference implementation lives in `app/trove/updates/` — but nothing
+that diff. The reference implementation lives in `app/trove/updates/` - but nothing
 here is tied to a particular web framework or host; it's the engine design.
 
 ---
@@ -16,7 +16,7 @@ log. The sync worker only runs when you switch it on.
 
 ---
 
-## 2. Getting updates — the 3-layer CDN protocol
+## 2. Getting updates - the 3-layer CDN protocol
 
 All plain HTTP, no auth. Base `http://trove-update.dyn.triongames.com`, prefix
 `/kiwi-live-client-patch/`. URL builders + parsers in `app/trove/updates/cdn.py`.
@@ -28,30 +28,30 @@ All plain HTTP, no auth. Base `http://trove-update.dyn.triongames.com`, prefix
 | **3. File** | `…/content/<content_path>/recovery/<path>?sha1=<sha1>` | raw bytes |
 
 Branch → pointer file: `live-us → kiwi-live-us.txt`, `pts → kiwi-pts.txt`
-(PTS is **region-less** — not `kiwi-pts-us.txt`).
+(PTS is **region-less** - not `kiwi-pts-us.txt`).
 
 **Quirks:**
 - The joined URL has an **intentional double slash** (`…patch//public/…`). The CDN
   accepts it; don't "fix" it.
-- The manifest `sha1` is **opaque** — used only as a per-file *"did this change?"*
+- The manifest `sha1` is **opaque** - used only as a per-file *"did this change?"*
   key, never as a content hash.
 - Layer-3 bytes are written **byte-for-byte**. A `.tfa` is itself a zlib stream we
   inflate later (at the archive layer), not here.
 
 ---
 
-## 3. Detecting & comparing changes — two-level diff
+## 3. Detecting & comparing changes - two-level diff
 
 Per probe, `sync_branch` in `app/trove/updates/ingest.py` runs:
 
-### Level A — manifest diff (`classify_manifest_diff`, `diff.py`)
+### Level A - manifest diff (`classify_manifest_diff`, `diff.py`)
 Compare the fresh manifest to our stored **sidecar** (`update_manifest`: the
 last-seen opaque sha1 per top-level file). Output: changed/removed **loose files**
 and which **archive directories** were touched.
 **If nothing changed → `touch_probe` and stop; no version row is created.** This is
 the normal every-20-min outcome.
 
-### Level B — logical diff inside archives (`diff_logical`, `diff.py` + `archive.py`)
+### Level B - logical diff inside archives (`diff_logical`, `diff.py` + `archive.py`)
 Most content is packed as `<dir>/index.tfi` + `archive0.tfa, archive1.tfa, …`
 (format + reader detailed in **Appendix A**).
 The `.tfi` is an index: each logical file → `(archive_index, offset, size,
@@ -65,30 +65,30 @@ FNV-1a hash)`. So we:
 
 Net: a 95-file update pulls a handful of archives, not the whole tree.
 
-**The change key is the TFI's per-file FNV-1a hash.** This is the crux — see §9.
+**The change key is the TFI's per-file FNV-1a hash.** This is the crux - see §9.
 
 ---
 
 ## 4. Verifying integrity & dedup
 
-- **Download size check** — `download_file` rejects any file whose byte length ≠ the
+- **Download size check** - `download_file` rejects any file whose byte length ≠ the
   manifest's declared size (`CdnError`).
-- **FNV-1a content hash** — the `.tfi`'s per-file Trove FNV-1a hash is both the change
+- **FNV-1a content hash** - the `.tfi`'s per-file Trove FNV-1a hash is both the change
   key and integrity signal; `verify_entry(entry, data)` (size + `calculate_hash`)
   re-confirms extracted bytes.
-- **Identity / dedup** — every stored blob is keyed by **SHA-256** in the CAS
+- **Identity / dedup** - every stored blob is keyed by **SHA-256** in the CAS
   (`cas.py`), written atomically (temp + fsync + rename). Identical content collapses
   to one copy **across Live and PTS**; `bytes_added` counts only genuinely-new blobs.
 
 ---
 
-## 5. What's persisted (Mongo — `models.py`)
+## 5. What's persisted (Mongo - `models.py`)
 
 | Collection | Role |
 |---|---|
 | `update_branches` | one per timeline: `current_version`, `current_ordinal`, `last_probe_at`, `status` (idle/syncing/error) |
 | `update_versions` | one per detected build: `ordinal`, `version_tag`, counts (`files_added/modified/removed`, `bytes_added`), `status` (in_progress/complete) |
-| `update_changes` | **append-only per-file change log** `(branch, ordinal, path) → type, content_sha256, fnv_hash, size`. **Source of truth for diffs** — what `/changes` reads |
+| `update_changes` | **append-only per-file change log** `(branch, ordinal, path) → type, content_sha256, fnv_hash, size`. **Source of truth for diffs** - what `/changes` reads |
 | `update_state` | materialized **current** logical tree per branch (`path → sha256, fnv, size, archive`). This *is* the latest tree `/tree` and `/file` serve |
 | `update_manifest` | the sidecar: last-seen opaque sha1 per top-level file (drives the Level-A diff) |
 
@@ -115,7 +115,7 @@ marker; `finish_version` flushes before marking `complete`.
 
 ## 7. Reading the results
 
-Everything you'd want to surface is a direct query over the collections in §5 — wrap
+Everything you'd want to surface is a direct query over the collections in §5 - wrap
 them in whatever interface you like (HTTP, CLI, a notebook). The natural reads:
 
 | Question | Query |
@@ -131,7 +131,7 @@ is retained). Raw bytes always come from the CAS, addressed by `content_sha256`.
 
 ---
 
-## 8. Worked example — PTS `TEST-103-3325-A-336166` (2026-06-08)
+## 8. Worked example - PTS `TEST-103-3325-A-336166` (2026-06-08)
 
 Probe at 14:54 UTC detected `…-335600` → `…-336166`: **7 added, 88 modified, 0
 removed**, ingested in ~2s. The change log showed a **Steam + XIGNCODE3 anti-cheat
@@ -149,13 +149,13 @@ extraction ✅.
 - The CDN double slash is deliberate.
 - A version row exists only when something changed; quiet probes just bump
   `last_probe_at`.
-- The network client (`CdnClient`) is exercised only on a live box — keep CI on the
+- The network client (`CdnClient`) is exercised only on a live box - keep CI on the
   **pure** parsers/diff (`parse_pointer/manifest/tfi`, `classify_manifest_diff`,
   `diff_logical`); they need no network and carry the correctness load.
 
 ---
 
-## Appendix A — TFA/TFI archive format & reader (deep dive)
+## Appendix A - TFA/TFI archive format & reader (deep dive)
 
 The pure-Python reader is `app/trove/updates/archive.py`; its binary primitives
 (`read_leb128`, `calculate_hash`) live in `app/trove/troveio.py` and are shared with
@@ -173,9 +173,9 @@ prefabs/plant/archive1.tfa     ← packed content blob 1
 …
 ```
 
-- **`.tfi` (Trove File Index)** — a flat list of logical-file entries. No bytes of
+- **`.tfi` (Trove File Index)** - a flat list of logical-file entries. No bytes of
   actual content; just *where each logical file lives* and *a hash of it*.
-- **`.tfa` (Trove File Archive)** — a single **zlib stream** whose inflated output is
+- **`.tfa` (Trove File Archive)** - a single **zlib stream** whose inflated output is
   the **concatenation of the decompressed bytes** of every logical file assigned to
   that archive. Files are addressed by `(offset, size)` into this inflated buffer.
 
@@ -192,12 +192,12 @@ Each entry, in order (`parse_tfi`):
 | `archive_index` | leb128 | which `archiveN.tfa` holds this file |
 | `offset` | leb128 | byte offset into that archive's **decompressed** content |
 | `size` | leb128 | logical file size in bytes |
-| `fnv_hash` | leb128 | Trove FNV-1a of the file's content — **the change key** |
+| `fnv_hash` | leb128 | Trove FNV-1a of the file's content - **the change key** |
 
 `parse_tfi` loops over the whole buffer producing frozen `TfiEntry(name,
 archive_index, offset, size, fnv_hash)` records. A truncated/garbled stream
 (`IndexError`/`UnicodeDecodeError`/`ValueError`) raises `ArchiveError("malformed
-.tfi: …")` — callers skip/400 rather than crash the sync.
+.tfi: …")` - callers skip/400 rather than crash the sync.
 
 ### A.3 Reading a `.tfa`
 
@@ -207,16 +207,16 @@ data    = content[entry.offset : entry.offset + entry.size]
 ```
 
 Because offsets index the **inflated** buffer, you must inflate the whole `.tfa`
-once and then slice — you cannot seek into the compressed stream. A bad stream
+once and then slice - you cannot seek into the compressed stream. A bad stream
 raises `ArchiveError("could not inflate .tfa: …")`. Helpers:
 
 - `entries_for_archive(entries, archive_index)` → the TFI entries in one archive.
 - `slice_entries(content, entries)` → yields `(entry, bytes)` by `offset:size`.
 - `extract_archive(tfa_raw, entries, archive_index)` → `{name: bytes}` for that
-  archive. **Needs only this `.tfa` + the parsed `.tfi`** — sibling archives are
+  archive. **Needs only this `.tfa` + the parsed `.tfi`** - sibling archives are
   never required.
 
-### A.4 Integrity check — `verify_entry`
+### A.4 Integrity check - `verify_entry`
 
 ```python
 verify_entry(entry, data) == (len(data) == entry.size
@@ -229,9 +229,9 @@ verified against `trove.dll` (golden values in
 
 - offset basis `2166136261`, prime `16777619`, all math `& 0xFFFFFFFF`;
 - full 4-byte words are folded **little-endian, unsigned**;
-- the trailing **1–3 bytes** are folded **big-endian and sign-extended** — a byte
+- the trailing **1–3 bytes** are folded **big-endian and sign-extended** - a byte
   `≥ 0x80` is treated as a signed `char` and fills the upper 24 bits with 1s
-  (the `_se` helper). **Do not "simplify" this tail handling** — it's what matches
+  (the `_se` helper). **Do not "simplify" this tail handling** - it's what matches
   the native DLL.
 
 This is the same hash the TFI stores per file, so an extracted slice can be
@@ -242,7 +242,7 @@ re-verified against its index entry end-to-end.
 Two properties (both confirmed against BetterTroveTools' reader):
 
 1. **Index-level diffing.** The TFI carries a per-file hash, so two TFI versions diff
-   by comparing `fnv_hash` per logical path — we learn *exactly which logical files
+   by comparing `fnv_hash` per logical path - we learn *exactly which logical files
    changed* **without inflating a single archive** (`diff_logical` in `diff.py`).
 2. **Per-archive extraction.** Every entry names its `archive_index`, so a single
    changed `archiveN.tfa` is fetched + inflated **alone** (download it + the `.tfi`;

@@ -13,7 +13,7 @@ async def init_redis() -> None:
     """Connect to Redis if configured. No-op (with a warning) if REDIS_URL is unset."""
     global _client
     if not settings.redis_url:
-        logger.warning("REDIS_URL unset — running without Redis")
+        logger.warning("REDIS_URL unset - running without Redis")
         return
     _client = redis.from_url(settings.redis_url, decode_responses=True)
     await _client.ping()

@@ -15,7 +15,7 @@ class TroveNews(Document):
     upstream feed directly.
     """
 
-    url: str  # canonical article link — unique
+    url: str  # canonical article link - unique
     title: str
     author: str = "Team Trove"
     summary: str = ""
@@ -41,11 +41,11 @@ class TroveEvent(Document):
     A background task upserts events here (keyed by ``event_id``). Events are kept
     after they leave the upstream feed so the API can serve **history** (ended) and
     **upcoming** (not started) alongside what's **ongoing**. ``category`` is a
-    free-form string — the set of categories is discovered dynamically (distinct).
+    free-form string - the set of categories is discovered dynamically (distinct).
     Times are unix seconds (real UTC), exactly as Trovesaurus provides them.
     """
 
-    event_id: str  # the Trovesaurus event id — unique
+    event_id: str  # the Trovesaurus event id - unique
     name: str
     url: str = ""
     category: str = "Event"
@@ -72,11 +72,11 @@ class DelveRotation(Document):
     """One week's delve rotation, relayed from an external source (``<week>.json``).
 
     ``depths`` holds the floor records passed through from the source as-is (rich,
-    nested — boss/enemies/objective/etc.). A background task refreshes the current
+    nested - boss/enemies/objective/etc.). A background task refreshes the current
     week as community submissions accumulate; past weeks are static once imported.
     """
 
-    week: int  # week id (rolls over Monday 11:00 UTC) — unique
+    week: int  # week id (rolls over Monday 11:00 UTC) - unique
     depths: list[dict] = Field(default_factory=list)  # floor records, source shape
     total: int = 0        # source-reported total
     depth_count: int = 0  # stored floor records (cheap to list without loading depths)
@@ -94,7 +94,7 @@ class BttRelease(Document):
     and a brief outage there doesn't break update checks. The background relayer
     upserts on each cycle; nothing is pruned (release history is small)."""
 
-    release_id: int                # the GitHub release id — unique
+    release_id: int                # the GitHub release id - unique
     tag_name: str                  # the git tag (e.g. "v1.2.3")
     name: str = ""                 # the release title
     body: str = ""                 # release notes (markdown)
@@ -117,10 +117,10 @@ class BttChangelog(Document):
 
     A singleton per tracked repo. The relayer fetches `/tags` + `/commits` from
     GitHub on the same cadence as releases and stores the built groups so every
-    client hitting `/v1/btt/changelog` reads from Mongo instead of GitHub — no
+    client hitting `/v1/btt/changelog` reads from Mongo instead of GitHub - no
     risk of users tripping the 60/hr unauth rate limit on their own."""
 
-    repo: str                       # "AallynReed/BetterTroveTools" — unique
+    repo: str                       # "AallynReed/BetterTroveTools" - unique
     groups: list[dict] = Field(default_factory=list)
     # Each group: { version, commits: [{sha, short_sha, message, url, type}] }
     rate_limited: bool = False     # True if GitHub returned a 403 rate-limit error
@@ -136,7 +136,7 @@ class ChaosChestCapture(Document):
 
     The bot dumps the in-game ``WelcomeLog.cfg`` shortly after the Tue 11:00 UTC
     reset; the API anchors the dump to that week's start (unix seconds, matches
-    ``server_time.chaos_chest_window``). Upsert by ``week_anchor`` — a re-run on
+    ``server_time.chaos_chest_window``). Upsert by ``week_anchor`` - a re-run on
     the same week replaces the row rather than duplicating it."""
 
     week_anchor: int   # unix seconds at Tue 11:00 UTC (the week's start)
@@ -155,7 +155,7 @@ class ChallengeCapture(Document):
 
     Challenges run for 20 minutes on the hour (regular days) or on the half-hour
     (trove Fridays). Each window is uniquely identified by its ``window_anchor``
-    (the window's start time in unix seconds). Upsert by anchor — a re-run on
+    (the window's start time in unix seconds). Upsert by anchor - a re-run on
     the same window replaces the row.
 
     ``is_friday_window`` is informational: tells consumers whether THIS row
@@ -182,7 +182,7 @@ class FeedCache(Document):
     refresh. We relay these from the trovesaurus bot rather than fetching the
     upstream services ourselves (it already has the credentials + scrapers)."""
 
-    feed: str  # "twitch" | "youtube" | "bilibili" — unique
+    feed: str  # "twitch" | "youtube" | "bilibili" - unique
     items: list[dict] = Field(default_factory=list)
     fetched_at: datetime = Field(default_factory=utcnow)
 
@@ -218,7 +218,7 @@ class TroveStatusEvent(Document):
 
 class FeedbackAttachmentInfo(BaseModel):
     """Embedded inside ``FeedbackEntry.attachments`` as a plain BSON
-    subdocument — NO own collection, NO ``_id``. Must inherit from
+    subdocument - NO own collection, NO ``_id``. Must inherit from
     Pydantic's ``BaseModel`` (not Beanie's ``Document``); a ``Document``
     subclass that isn't registered in ``init_beanie()`` raises
     ``CollectionWasNotInitialized`` the first time the parent doc gets
@@ -232,12 +232,12 @@ class FeedbackAttachmentInfo(BaseModel):
 class FeedbackEntry(Document):
     """A single piece of user-submitted feedback from the showcase site.
 
-    Posted through ``POST /v1/misc/feedback`` — tokenless, but rate-limited
+    Posted through ``POST /v1/misc/feedback`` - tokenless, but rate-limited
     per IP at the router. We deliberately do NOT persist the submitter's
     IP (privacy first; the per-IP limit happens via the rate limiter's
     key and never touches Mongo).
 
-    ``user_agent`` is the raw header (truncated) — kept as a forensic
+    ``user_agent`` is the raw header (truncated) - kept as a forensic
     fallback. The friendlier ``os`` / ``client`` / ``app_version`` fields
     are what the Discord webhook surfaces, parsed at submit time so the
     embed is readable instead of a 200-char UA string:
@@ -248,12 +248,12 @@ class FeedbackEntry(Document):
                          from the request body (more authoritative than UA)
 
     ``attachments`` records every image relayed to Discord (filename +
-    type + size only — the BYTES live on Discord, not Mongo). At most 4,
+    type + size only - the BYTES live on Discord, not Mongo). At most 4,
     per endpoint policy. ``read`` lets an admin mark entries handled."""
 
     message: str
     contact: str | None = None
-    category: str  # "bug" | "feature" | "general" — validated upstream
+    category: str  # "bug" | "feature" | "general" - validated upstream
     app_version: str | None = None
     os: str | None = None
     client: str | None = None

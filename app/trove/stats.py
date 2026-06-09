@@ -1,7 +1,7 @@
 """Raw game-stat data: the calculator stat tables + class definitions.
 
 This module only *transmits* BetterTroveTools' static JSON in a cleaned-up,
-typed shape — it runs none of the calculators. We expose what each source/field
+typed shape - it runs none of the calculators. We expose what each source/field
 is and how much it contributes, plus full class objects keyed by a stable
 ``tech_name`` token so a class can be referenced later by that token alone.
 

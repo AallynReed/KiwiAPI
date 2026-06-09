@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /support — page-specific styles
+   /support - page-specific styles
    ───────────────────────────────────────────────────────────────────────
    Loaded on top of style.css. Hero + three donation cards + two text
    sections + a footer thanks line. Matches the visual vocabulary of
@@ -129,7 +129,7 @@
   color: var(--text-fg, #e8ecf3);
 }
 
-/* "Where the money goes" — icon | (title + paragraph) grid */
+/* "Where the money goes" - icon | (title + paragraph) grid */
 .sp-bullets {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -163,7 +163,7 @@
   color: var(--text-mute);
 }
 
-/* "Free ways to help" — flatter cards, big icon on the left */
+/* "Free ways to help" - flatter cards, big icon on the left */
 .sp-free {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

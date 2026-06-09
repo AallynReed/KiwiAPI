@@ -70,7 +70,7 @@ def test_parse_dump_skips_invalid_uuids():
         "00000000-0000-0000-0000-000000000000;Glim;Material;100;5000",
     ])
     # The all-zeros UUID is valid UUID-syntax-wise but its decoded "created_at"
-    # is bogus (year 1582). The parser still accepts it — filtering by reasonable
+    # is bogus (year 1582). The parser still accepts it - filtering by reasonable
     # created_at is the caller's job (e.g. hide_expired in the read endpoint).
     listings = parse_dump(text)
     assert len(listings) == 1

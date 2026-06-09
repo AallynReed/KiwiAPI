@@ -97,7 +97,7 @@ async def github_callback(request: Request, code: str | None = None, state: str 
         return _back("oauth_error=github")
 
     github_id = gh_user.get("id")
-    # Only ever trust a *verified* email for sign-in/linking — never the public
+    # Only ever trust a *verified* email for sign-in/linking - never the public
     # profile email (which may be unverified). No verified email -> refuse.
     email = _pick_email(gh_emails)
     if github_id is None or not email:
@@ -145,7 +145,7 @@ async def _find_or_create(github_id: int, email: str, gh_user: dict) -> User:
     if user is not None:
         user.github_id = github_id
         user.is_verified = True
-        user.email_bounced = False  # GitHub-verified address — resume delivery
+        user.email_bounced = False  # GitHub-verified address - resume delivery
         await user.save()
         if settings.security_email_notifications:
             await send_github_linked_email(user)

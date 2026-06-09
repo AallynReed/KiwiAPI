@@ -6,7 +6,7 @@
  *   • per-environment + auth cards,
  *   • a downtime-history timeline bar + outage log (env-switchable).
  *
- * No build step / framework — same vanilla style as landing.js. i18n via
+ * No build step / framework - same vanilla style as landing.js. i18n via
  * the global window.BTTi18n when present, else English passthrough.
  */
 (() => {
@@ -128,7 +128,7 @@
     if (!body) return;
     const segments = (data && data.segments) || [];
     if (!segments.length) {
-      body.innerHTML = `<p class="st-empty">${esc(tr('No history recorded yet — the timeline fills in as the prober runs.'))}</p>`;
+      body.innerHTML = `<p class="st-empty">${esc(tr('No history recorded yet - the timeline fills in as the prober runs.'))}</p>`;
       return;
     }
 
@@ -137,9 +137,9 @@
 
     // Uptime summary.
     const uptimePct = data.uptime == null ? null : (data.uptime * 100);
-    const uptimeStr = uptimePct == null ? '—' : `${uptimePct.toFixed(uptimePct >= 99.95 ? 2 : 1)}%`;
+    const uptimeStr = uptimePct == null ? '-' : `${uptimePct.toFixed(uptimePct >= 99.95 ? 2 : 1)}%`;
 
-    // Proportional timeline bar — one block per segment, width by duration.
+    // Proportional timeline bar - one block per segment, width by duration.
     const blocks = segments.map((s) => {
       const left = ((s.started_at - winStart) / span) * 100;
       const end = (s.ended_at == null ? winEnd : s.ended_at);
@@ -149,7 +149,7 @@
       return `<span class="st-bar-seg ${m.cls}" style="left:${left.toFixed(3)}%;width:${width.toFixed(3)}%" title="${esc(title)}"></span>`;
     }).join('');
 
-    // Outage log — non-online segments, newest first.
+    // Outage log - non-online segments, newest first.
     const outages = (data.outages || []).slice().reverse();
     const outageRows = outages.length
       ? outages.map((o) => {

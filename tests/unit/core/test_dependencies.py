@@ -6,7 +6,7 @@ from app.core.ip_hash import hash_ip, ip_allowed, make_ip_salt
 
 
 def test_ip_allowed_via_hash():
-    # CIDR support was dropped along with plaintext storage — exact IPs only.
+    # CIDR support was dropped along with plaintext storage - exact IPs only.
     # The check rehashes the client IP with the token's salt and looks for a
     # match in the stored hash list.
     salt = make_ip_salt()

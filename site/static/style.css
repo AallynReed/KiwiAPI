@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   Better Trove Tools — landing page stylesheet (full redesign, 2026-06-07)
+   Better Trove Tools - landing page stylesheet (full redesign, 2026-06-07)
    ───────────────────────────────────────────────────────────────────────
    Bold, animated, full-bleed. Uses modern CSS exclusively (no preprocessor):
    custom properties, container queries, :has(), :is()/:where(), conic +
@@ -7,7 +7,7 @@
    primitives, prefers-reduced-motion, prefers-color-scheme.
 
    Index.html is the only page that loads this file (docs.html ships its
-   own docs.css), so the rules are unscoped — every selector here is a
+   own docs.css), so the rules are unscoped - every selector here is a
    landing-page selector and can't collide with another surface.
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -17,7 +17,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Palette — deep midnight base with three accent hues used per-section
+  /* Palette - deep midnight base with three accent hues used per-section
      (data-theme on spotlights re-binds --accent for that block). */
   --bg-base:        #06080d;
   --bg-deep:        #0a0e14;
@@ -35,11 +35,11 @@
   --accent-green:   #3fb950;
   --accent-red:     #f85149;
 
-  /* Per-section accent — gets re-bound on .spotlight[data-theme=…]. */
+  /* Per-section accent - gets re-bound on .spotlight[data-theme=…]. */
   --accent:         var(--accent-blue);
   --accent-soft:    color-mix(in oklab, var(--accent) 28%, transparent);
 
-  /* Type scale — clamp() makes every heading fluid across mobile→4k
+  /* Type scale - clamp() makes every heading fluid across mobile→4k
      without separate breakpoints. Body sticks at 16-17px.
      --type-display sized for a BOLD landing hero: caps at 10rem (160px) on
      wide displays, scales down to a still-impactful 48px on phones. */
@@ -57,7 +57,7 @@
   --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent),
                  0 12px 50px color-mix(in oklab, var(--accent) 18%, transparent);
 
-  /* Easing curves — used everywhere so the page feels coordinated. */
+  /* Easing curves - used everywhere so the page feels coordinated. */
   --ease-out:    cubic-bezier(.22,.61,.36,1);
   --ease-spring: cubic-bezier(.34,1.56,.64,1);
 }
@@ -81,7 +81,7 @@ body.landing {
      context so nothing escapes into the body's flow. */
   position: relative;
   overflow-x: hidden;
-  /* Subtle ambient washes — kills banding on the dark gradients without
+  /* Subtle ambient washes - kills banding on the dark gradients without
      shipping a raster background image. */
   background-image:
     radial-gradient(1200px 800px at 50% -10%, rgba(88,166,255,.06), transparent 60%),
@@ -112,7 +112,7 @@ h1, h2, h3 {
    even today; keep both.
 
    Palindrome stops (blue → orange → yellow → orange → blue) so the wrap
-   point at the end of one cycle matches the start of the next — without
+   point at the end of one cycle matches the start of the next - without
    this, the visible "yellow|blue" seam from background-repeat snapped
    harshly through the text mid-animation. The seam is now blue|blue,
    invisible. */
@@ -127,7 +127,7 @@ h1, h2, h3 {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  /* 12s (was 8s) — the palindrome means twice the colour journey per
+  /* 12s (was 8s) - the palindrome means twice the colour journey per
      cycle, so a slightly slower pan keeps each colour readable. */
   animation: grad-pan 12s linear infinite;
 }
@@ -180,7 +180,7 @@ canvas.bg-fx {
   position: sticky;
   top: 0;
   z-index: 100;
-  /* Glassmorphism — backdrop-filter is well-supported now except on older
+  /* Glassmorphism - backdrop-filter is well-supported now except on older
      Firefox Android. The bg fallback colour keeps it legible there too. */
   background: color-mix(in oklab, var(--bg-deep) 70%, transparent);
   backdrop-filter: saturate(180%) blur(14px);
@@ -241,7 +241,7 @@ canvas.bg-fx {
 }
 
 /* Icon-only nav items (Discord, GitHub). Square 36×36 hit target with
-   no text label — frees room on the navbar for the heart-Support link
+   no text label - frees room on the navbar for the heart-Support link
    without crowding. Uses the same hover treatment as text links. */
 .nav-links a.nav-icon {
   display: inline-flex;
@@ -285,7 +285,7 @@ canvas.bg-fx {
   color: #ff7d96;
 }
 .nav-links a.nav-support i {
-  /* Match the floating widget's slow pulse — the user reads them as
+  /* Match the floating widget's slow pulse - the user reads them as
      the same call-to-action regardless of which one they spot first. */
   animation: support-pulse 2.4s ease-in-out infinite;
 }
@@ -424,7 +424,7 @@ canvas.bg-fx {
   cursor: pointer;
 }
 
-/* Nav dropdowns — used by "Developers" and "Pages" in the navbar.
+/* Nav dropdowns - used by "Developers" and "Pages" in the navbar.
    Desktop: trigger button shows a floating panel beneath it (absolute,
    bg-card surface, scale-up animation). Mobile (the hamburger drawer):
    trigger expands inline as a sub-list below itself (no floating panel
@@ -524,7 +524,7 @@ canvas.bg-fx {
    Crossfade is opacity-only (cheap, compositor-driven, no layout).
    Each image runs a slow ken-burns zoom for cinematic feel without
    shipping a video. ::after is a dark vignette that always sits over
-   the slideshow so the hero text stays readable on top — the dim
+   the slideshow so the hero text stays readable on top - the dim
    compounds with the orbs' brightness rather than fighting it. */
 .hero-screens {
   position: absolute;
@@ -606,7 +606,7 @@ canvas.bg-fx {
   66%      { transform: translate3d(-3vw, -2vh, 0) scale(0.94); }
 }
 
-/* Faint cyan grid behind the orbs — gives the dark base a "build mode"
+/* Faint cyan grid behind the orbs - gives the dark base a "build mode"
    feel and adds depth when the canvas particles drift in front. */
 .grid-overlay {
   position: absolute;
@@ -701,7 +701,7 @@ canvas.bg-fx {
 }
 
 .hero-title {
-  /* Bumped up from var(--type-display) — the title is the page's anchor
+  /* Bumped up from var(--type-display) - the title is the page's anchor
      and was reading too small. Larger floor + ceiling, slightly tighter
      line-height so the three words stay a tight block. */
   font-size: clamp(3.6rem, 11vw + 1rem, 12rem);
@@ -992,11 +992,11 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   transition: border-color .25s, transform .25s var(--ease-out);
 }
 .live-card::before {
-  /* Animated gradient stripe across the top — telegraphs "this is updating
+  /* Animated gradient stripe across the top - telegraphs "this is updating
      in real time" without needing motion on the text itself. The card's
      overflow:hidden above clips us to the rounded shape; the now-redundant
      own border-radius is removed (it never could do anything on a 2px-tall
-     element anyway — radius gets clamped to half the height). */
+     element anyway - radius gets clamped to half the height). */
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; height: 2px;
@@ -1041,7 +1041,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   scroll-snap-align: start;
   overflow: hidden;
 }
-/* Per-theme accent re-binding — picks the spotlight's headline gradient
+/* Per-theme accent re-binding - picks the spotlight's headline gradient
    stop and the .grad word colour without touching the body. */
 .spotlight[data-theme="blue"]   { --accent: var(--accent-blue); }
 .spotlight[data-theme="orange"] { --accent: var(--accent-orange); }
@@ -1083,7 +1083,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   display: grid;
   gap: 16px;
   text-align: center;
-  /* Glassmorphic backdrop — the centered title would otherwise sit on
+  /* Glassmorphic backdrop - the centered title would otherwise sit on
      whatever's brightest in the spotlight image (YouTube thumbnails, UI
      buttons, white panels) and read at WCAG ~2:1. The dark glass panel
      gives every spotlight the same controlled reading surface; the image
@@ -1092,7 +1092,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   padding: clamp(28px, 4vw, 48px) clamp(22px, 4vw, 56px);
   border-radius: var(--radius-lg);
   /* 55%/68% alpha (down from 78%/88%) lets the spotlight image breathe
-     through the panel — you can see the colour wash of whatever's behind
+     through the panel - you can see the colour wash of whatever's behind
      the text, which sells the "real glass over a real image" feel. The
      stronger blur (20px sat 160%) compensates for the lower alpha so
      text contrast stays well above WCAG AA on every spotlight. */
@@ -1328,7 +1328,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   overflow: hidden;
 }
 .dev-card::before {
-  /* Sweeping highlight on hover — picks up the per-card hue. */
+  /* Sweeping highlight on hover - picks up the per-card hue. */
   content: '';
   position: absolute;
   inset: 0;
@@ -1536,7 +1536,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   .nav-links a.nav-cta { justify-content: center; }
   .lang-picker { justify-content: center; }
 
-  /* Nav dropdowns inside the mobile drawer — expand inline as a sub-list
+  /* Nav dropdowns inside the mobile drawer - expand inline as a sub-list
      instead of floating above the column. The trigger gets the same
      padding/treatment as a normal nav link; the panel sits below it,
      indented, no border or shadow. */
@@ -1600,7 +1600,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   }
   .orb { animation: none; }
   .grad { animation: none; background-position: 0 0; }
-  /* Surface everything that animates in — otherwise reduced-motion users
+  /* Surface everything that animates in - otherwise reduced-motion users
      would see the page in its "starting" state forever. */
   .hero-title .word, .hero-sub { opacity: 1; transform: none; }
   .spotlight .spot-inner { opacity: 1; transform: none; }
@@ -1614,7 +1614,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 /* ─── 18. Support widget ─────────────────────────────────────────────────
    Sticky bottom-right pill that expands into the three donation links
    (PayPal / Ko-fi / Buy Me a Coffee). Same component lives inline in
-   docs/reference.html for the API reference page — keep the styles
+   docs/reference.html for the API reference page - keep the styles
    structurally aligned so a fix here can be copy-pasted there. */
 
 .support-widget {

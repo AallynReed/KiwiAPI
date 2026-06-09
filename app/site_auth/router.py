@@ -1,4 +1,4 @@
-"""Site-side accounts router — public-facing user system.
+"""Site-side accounts router - public-facing user system.
 
 Mounted at ``/v1/site-auth/*`` on the API host and (via thin proxies in
 ``app/site/router.py``) at ``/site/auth/*`` for same-origin calls from
@@ -7,10 +7,10 @@ hashing, rate-limit + per-account lockout on login, JWT access tokens
 + rotated refresh tokens, email verification before privileged actions.
 
 What's deliberately NOT here (yet):
-  - captcha gates — added if abuse surfaces
-  - GitHub OAuth — the dev portal owns that flow; site users get
+  - captcha gates - added if abuse surfaces
+  - GitHub OAuth - the dev portal owns that flow; site users get
     email/password only for v1
-  - forgot/reset password — follow-up turn; signup + verify is the
+  - forgot/reset password - follow-up turn; signup + verify is the
     minimum surface area to ship usefully
 """
 import jwt
@@ -73,7 +73,7 @@ from app.site_auth.sessions import (
 router = APIRouter(prefix="/v1/site-auth", tags=["site-auth"])
 
 
-# Pinned at the top so a quick scan finds it — every "we sent you a
+# Pinned at the top so a quick scan finds it - every "we sent you a
 # link" message ends with this so a user can rescue the mail from spam.
 EMAIL_SPAM_NOTICE = (
     "Don't see it? Check your spam folder and mark it 'Not spam' so "
@@ -106,7 +106,7 @@ async def _build_claim_baseline(trove_name: str) -> dict[str, float]:
     up?" check the user passes to verify ownership.
 
     Pulls from the standard ``player_history`` helper so the lookup is
-    case-insensitive — same convention the public ``/v1/leaderboards``
+    case-insensitive - same convention the public ``/v1/leaderboards``
     endpoints use. Returns ``{board_uuid_str: score}``; keys are
     stringified because Mongo's BSON disallows numeric document keys.
     """
@@ -120,7 +120,7 @@ async def _build_claim_baseline(trove_name: str) -> dict[str, float]:
             continue
         key = str(uuid)
         # Keep the BEST score per board (highest seen during the
-        # baseline scan) — if we kept the most-recent we'd capture
+        # baseline scan) - if we kept the most-recent we'd capture
         # whatever the latest anchor stored, which can be lower than
         # the player's actual peak. Verification compares against the
         # baseline; a higher current value than the baseline implies
@@ -156,7 +156,7 @@ async def signup(
     request: Request,
     background_tasks: BackgroundTasks,
 ) -> SiteUserPublic:
-    """Create a new site account. Open signup — anyone can register.
+    """Create a new site account. Open signup - anyone can register.
     Email verification is required before privileged actions
     (currently: claiming a Trove name)."""
     ip = client_ip(request) or "unknown"
@@ -168,7 +168,7 @@ async def signup(
     sup_max, sup_window = await runtime_config.get_rate_limit("signup_rate_limit")
     await check_rate_limit(f"site-signup:{ip}", sup_max, sup_window)
 
-    # Captcha gate — ``verify_captcha`` is a no-op when the captcha
+    # Captcha gate - ``verify_captcha`` is a no-op when the captcha
     # keys aren't configured, so dev environments still work; once
     # ``CAPTCHA_SECRET`` + ``CAPTCHA_SITEKEY`` are set, a missing or
     # wrong token kills the signup with a clean 400.
@@ -213,14 +213,14 @@ async def login(
     payload: SiteLoginRequest, request: Request,
 ) -> SiteTokenResponse:
     """Login by username OR email + password. The discriminator on the
-    identifier is whether it contains an ``@`` — same heuristic most
+    identifier is whether it contains an ``@`` - same heuristic most
     UIs use."""
     ip = client_ip(request) or "unknown"
     from app.admin import runtime_config
     log_max, log_window = await runtime_config.get_rate_limit("login_rate_limit")
     await check_rate_limit(f"site-login:{ip}", log_max, log_window)
 
-    # Captcha gate. Same disable-when-unconfigured rule as signup —
+    # Captcha gate. Same disable-when-unconfigured rule as signup -
     # captcha widget on the page passes its token through and we
     # validate it before touching the password hash so a bot can't
     # use this endpoint as a free password-breach oracle.
@@ -284,7 +284,7 @@ async def login(
 
 @router.post("/refresh", response_model=SiteTokenResponse)
 async def refresh(payload: SiteRefreshRequest, request: Request) -> SiteTokenResponse:
-    """Rotate a refresh token. Single-use — the old token is dead after
+    """Rotate a refresh token. Single-use - the old token is dead after
     this returns. Same rotation pattern as the dev portal."""
     tokens = await rotate(payload.refresh_token, request)
     if tokens is None:
@@ -321,7 +321,7 @@ async def update_profile(
     payload: SiteUpdateProfileRequest,
     user: SiteUser = Depends(get_current_site_user),
 ) -> SiteUserPublic:
-    """v1 profile editor — just the display name. Username + email are
+    """v1 profile editor - just the display name. Username + email are
     immutable in this turn; change-email lives in a follow-up."""
     if payload.display_name is not None:
         user.display_name = payload.display_name.strip() or None
@@ -337,7 +337,7 @@ async def claim_trove_name(
 ) -> SiteUserPublic:
     """Self-claim an in-game Trove player name. Email verification is
     required so a single throwaway address can't squat on every popular
-    name in the database. v1 is self-attest — anybody can claim any
+    name in the database. v1 is self-attest - anybody can claim any
     name not already taken. Uniqueness enforced by a partial index on
     the model so two concurrent claims can't both succeed."""
     name = payload.trove_name.strip()
@@ -359,7 +359,7 @@ async def claim_trove_name(
     user.claimed_trove_name = lowered
     user.claimed_trove_display = name
     user.claimed_at = utcnow()
-    # Reset verification — a fresh claim starts unverified, with a new
+    # Reset verification - a fresh claim starts unverified, with a new
     # baseline anchored on the current leaderboard snapshot.
     user.claim_verified = False
     user.claim_verified_at = None
@@ -409,7 +409,7 @@ async def verify_trove_claim(
     if not user.claimed_trove_name:
         raise APIError(
             status_code=400, code=ErrorCode.bad_request,
-            message="No Trove name claimed — claim one first.",
+            message="No Trove name claimed - claim one first.",
         )
     if user.claim_verified:
         return SiteVerifyTroveClaimResponse(
@@ -452,14 +452,14 @@ async def verify_trove_claim(
             current[key] = float(score)
 
     # Look for any board where the current peak strictly exceeds the
-    # baseline. We don't require a minimum delta — a single score
+    # baseline. We don't require a minimum delta - a single score
     # increment is enough to prove control of the in-game character.
     proof_board: str | None = None
     proof_delta: float = 0.0
     for key, cur in current.items():
         base = baseline.get(key)
         if base is None:
-            # New board appearance entirely — counts as forward progress.
+            # New board appearance entirely - counts as forward progress.
             proof_board = key
             proof_delta = cur
             break
@@ -486,7 +486,7 @@ async def verify_trove_claim(
     return SiteVerifyTroveClaimResponse(
         verified=True,
         detail=(
-            f"Verified — score went up on board #{proof_board} "
+            f"Verified - score went up on board #{proof_board} "
             f"(delta ~{proof_delta:g})."
         ),
         user=_to_public(user),
@@ -604,7 +604,7 @@ async def forgot_password(
     request: Request,
     background_tasks: BackgroundTasks,
 ) -> SiteMessageResponse:
-    """Send a reset link to the address — IF an account with that email
+    """Send a reset link to the address - IF an account with that email
     exists. The response is always the same shape so a caller can't
     enumerate registered emails by probing for status differences."""
     from app.admin import runtime_config
@@ -612,7 +612,7 @@ async def forgot_password(
     fp_max, fp_window = await runtime_config.get_rate_limit("forgot_password_rate_limit")
     await check_rate_limit(f"site-forgot:{ip}", fp_max, fp_window)
 
-    # Captcha gate — same disable-when-unconfigured rule. Keeps a
+    # Captcha gate - same disable-when-unconfigured rule. Keeps a
     # spammer from using the forgot-password endpoint to flood the
     # outbox with reset emails to random addresses (the response is
     # enumeration-safe but the mail-send itself is real I/O).
@@ -658,7 +658,7 @@ async def reset_password(payload: SiteResetPasswordRequest) -> SiteMessageRespon
 
     await ensure_password_not_breached(payload.new_password)
     user.hashed_password = hash_password(payload.new_password)
-    # End every outstanding session — a reset implies the old password
+    # End every outstanding session - a reset implies the old password
     # may be compromised, so any device still holding tokens minted on
     # it shouldn't be trusted.
     await revoke_all_sessions(user)

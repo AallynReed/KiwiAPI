@@ -103,7 +103,7 @@ class FileHistoryList(BaseModel):
 
 
 class FileVersionInfo(BaseModel):
-    """One side of a compare result — identifies which version and blob."""
+    """One side of a compare result - identifies which version and blob."""
     ordinal: int
     version_tag: str
     captured_at: datetime | None
@@ -127,7 +127,7 @@ class DiffHunk(BaseModel):
 
 
 class FileCompareResponse(BaseModel):
-    """Note: the "from" version is exposed under that JSON key via alias —
+    """Note: the "from" version is exposed under that JSON key via alias -
     Python's ``from`` is a reserved word, so the attribute is named
     ``from_`` while ``populate_by_name`` lets the constructor still accept
     that.

@@ -63,7 +63,7 @@ const API = {
 
   call(path, opts = {}) { return this._call(path, opts, true); },
 
-  // Multipart upload — separate from `call` because file ingest endpoints
+  // Multipart upload - separate from `call` because file ingest endpoints
   // (leaderboards, market) take a `file` field, and FormData mustn't be
   // JSON-serialised. Mirrors `_call`'s auth-refresh-on-401 behaviour.
   multipart(path, formData, opts = {}) { return this._multipart(path, formData, opts, true); },
@@ -80,7 +80,7 @@ const API = {
       const s = qs.toString();
       if (s) url += "?" + s;
     }
-    // Don't set Content-Type — fetch derives the multipart boundary itself.
+    // Don't set Content-Type - fetch derives the multipart boundary itself.
     const res = await fetch(url, { method: "POST", headers, body: formData });
     let data = null;
     try { data = await res.json(); } catch (_) { /* no body */ }
@@ -91,7 +91,7 @@ const API = {
       state.user = null;
       location.hash = "";
       renderAuth("login");
-      if (wasLoggedIn) toast("Your session expired — please log in again.", "err");
+      if (wasLoggedIn) toast("Your session expired - please log in again.", "err");
       throw { code: "session_expired", message: "Session expired" };
     }
     if (!res.ok) throw (data && data.error) || { code: String(res.status), message: `HTTP ${res.status}` };
@@ -108,13 +108,13 @@ const API = {
 
     if (res.status === 401 && auth && allowRefresh) {
       if (await this._tryRefresh()) return this._call(path, { method, body, auth }, false);
-      // Refresh failed — the session is truly gone. Bounce to login gracefully.
+      // Refresh failed - the session is truly gone. Bounce to login gracefully.
       this.clear();
       const wasLoggedIn = !!state.user;
       state.user = null;
       location.hash = "";
       renderAuth("login");
-      if (wasLoggedIn) toast("Your session expired — please log in again.", "err");
+      if (wasLoggedIn) toast("Your session expired - please log in again.", "err");
       throw { code: "session_expired", message: "Session expired" };
     }
     if (!res.ok) throw (data && data.error) || { code: String(res.status), message: `HTTP ${res.status}` };
@@ -128,10 +128,10 @@ function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
-function fmt(iso) { return iso ? new Date(iso).toLocaleString() : "—"; }
-function fmtDay(iso) { return iso ? new Date(iso).toLocaleDateString() : "—"; }
+function fmt(iso) { return iso ? new Date(iso).toLocaleString() : "-"; }
+function fmtDay(iso) { return iso ? new Date(iso).toLocaleDateString() : "-"; }
 
-// Local password-strength heuristic (no network — the server still does the
+// Local password-strength heuristic (no network - the server still does the
 // authoritative HaveIBeenPwned breach check and rejects compromised passwords).
 function passwordStrength(pw) {
   if (!pw) return { score: 0, label: "", pct: 0 };
@@ -299,9 +299,9 @@ function renderSignup() {
         email: f.email.value, password: f.password.value,
         display_name: f.display_name.value || null, captcha_token: captcha.token,
       } });
-      // Mirrors EMAIL_SPAM_NOTICE in app/auth/router.py — signup returns the user
+      // Mirrors EMAIL_SPAM_NOTICE in app/auth/router.py - signup returns the user
       // object (no message), so the spam guidance is added here on the portal side.
-      toast("Account created — verify your email to finish signing up. Don't see it? "
+      toast("Account created - verify your email to finish signing up. Don't see it? "
         + "Check your spam folder and mark it 'Not spam' so future emails reach your inbox.", "ok");
       renderAuth("login");
     } catch (ex) { err.textContent = ex.message; resetCaptcha(); btn.disabled = false; }
@@ -500,16 +500,16 @@ function openRevokeToken(token, after) {
 }
 
 function openEditToken(token, after) {
-  // Pinned IPs are stored HASHED — we can't show what's currently set, only
+  // Pinned IPs are stored HASHED - we can't show what's currently set, only
   // the count. Submitting REPLACES the whole list; submitting an empty box
   // drops every IP restriction on the token.
   const pinHint = token.allowed_ip_count
-    ? `<span class="muted">${token.allowed_ip_count} pinned (hidden — IPs are hashed server-side)</span>`
+    ? `<span class="muted">${token.allowed_ip_count} pinned (hidden - IPs are hashed server-side)</span>`
     : `<span class="muted">none pinned</span>`;
   modal("Edit token", `
     <label>Name</label>
     <input id="edit-name" value="${esc(token.name)}" maxlength="80">
-    <label>Allowed IPs <span class="muted">(optional — one per line. Replaces the whole list; leave empty to drop all pinning.)</span></label>
+    <label>Allowed IPs <span class="muted">(optional - one per line. Replaces the whole list; leave empty to drop all pinning.)</span></label>
     <p class="field-help">Current: ${pinHint}</p>
     <textarea id="edit-ips" rows="3" placeholder="203.0.113.4"></textarea>
     <p class="field-help">The secret and scopes can't be changed.</p>
@@ -533,7 +533,7 @@ function openRotateToken(token, after) {
     const t = await API.call(`/tokens/${token.id}/rotate`, { method: "POST" });
     // Stash the one-time secret so it survives the list re-render below.
     state.lastRotated = { id: t.id, token: t.token };
-    toast("Token rotated — copy the new secret.", "ok");
+    toast("Token rotated - copy the new secret.", "ok");
     after();
   }, "Rotate");
 }
@@ -608,7 +608,7 @@ async function renderTokens() {
     <tr>
       <td>${esc(t.name)}</td>
       <td class="mono">${esc(t.prefix)}…</td>
-      <td class="muted">${esc(t.revoke_reason || "—")}</td>
+      <td class="muted">${esc(t.revoke_reason || "-")}</td>
       <td class="muted">${fmt(t.revoked_at)}</td>
     </tr>`).join("");
 
@@ -631,7 +631,7 @@ async function renderTokens() {
           <span class="muted">grant every scope, including ones added later (mask 0)</span></label>
         <p class="field-help" id="mask-preview"></p>
 
-        <label>Allowed IPs <span class="muted">(optional — one exact IP per line. Stored hashed; you won't be able to see them again.)</span></label>
+        <label>Allowed IPs <span class="muted">(optional - one exact IP per line. Stored hashed; you won't be able to see them again.)</span></label>
         <textarea name="ips" rows="2" placeholder="203.0.113.4" ${unverified ? "disabled" : ""}></textarea>
 
         <label>Expires</label>
@@ -656,7 +656,7 @@ async function renderTokens() {
     </div>
     <div class="card">
       <h2>Using your tokens</h2>
-      <p class="hint">Send the token as a Bearer credential — there's no login call, the token <em>is</em> the credential.</p>
+      <p class="hint">Send the token as a Bearer credential - there's no login call, the token <em>is</em> the credential.</p>
       <pre class="curl-block"><code>${esc(USAGE_SNIPPET)}</code></pre>
       <button class="btn small" id="copy-usage">Copy</button>
       <p class="field-help">Full HTTP reference at <a href="https://docs.aallyn.net" target="_blank" rel="noopener">docs.aallyn.net</a>.</p>
@@ -683,7 +683,7 @@ async function renderTokens() {
     const { token } = state.lastRotated;
     state.lastRotated = null;
     const slot = document.getElementById("new-token");
-    if (slot) revealSecret(slot, token, "Rotated secret — copy it now, it won't be shown again:");
+    if (slot) revealSecret(slot, token, "Rotated secret - copy it now, it won't be shown again:");
   }
 
   document.getElementById("copy-usage").addEventListener("click", () =>
@@ -711,7 +711,7 @@ async function renderTokens() {
     const updatePreview = () => {
       if (allBox.checked) { preview.textContent = "Mask: 0 (all scopes)"; return; }
       const m = computeMask();
-      preview.textContent = m === 0 ? "Mask: 0 — pick a scope, or enable All scopes" : `Mask: ${m}`;
+      preview.textContent = m === 0 ? "Mask: 0 - pick a scope, or enable All scopes" : `Mask: ${m}`;
     };
     // "All scopes" supersedes the individual picks.
     allBox.addEventListener("change", () => {
@@ -736,7 +736,7 @@ async function renderTokens() {
       try {
         const t = await API.call("/tokens", { method: "POST", body });
         revealSecret(document.getElementById("new-token"), t.token,
-          "New token — copy it now, it won't be shown again:");
+          "New token - copy it now, it won't be shown again:");
         f.reset();
         scopeBoxes().forEach((c) => { c.disabled = false; });  // re-enable after reset
         updatePreview();
@@ -768,7 +768,7 @@ async function renderActivity(days = 7) {
   body.innerHTML = `
     <div class="card">
       <div class="row" style="align-items:center;margin-bottom:6px">
-        <h2 style="flex:1;margin:0">Usage — last ${days} days</h2>
+        <h2 style="flex:1;margin:0">Usage - last ${days} days</h2>
         <button class="btn small" id="csv-btn" style="flex:0 0 auto">Download CSV</button>
         <select id="days" style="max-width:140px;flex:0 0 auto">
           <option value="1">24 hours</option><option value="7">7 days</option>
@@ -817,7 +817,7 @@ async function loadSessions() {
     <tbody>${sessions.map((s) => `
       <tr>
         <td>${esc((s.user_agent || "Unknown").slice(0, 48))} ${s.current ? '<span class="badge ok">this device</span>' : ""}</td>
-        <td class="mono">${esc(s.ip || "—")}</td>
+        <td class="mono">${esc(s.ip || "-")}</td>
         <td class="muted">${fmt(s.last_used_at)}</td>
         <td>${s.current ? "" : `<button class="btn small danger" data-session="${s.id}">Revoke</button>`}</td>
       </tr>`).join("")}</tbody>
@@ -840,7 +840,7 @@ function renderAccount() {
       <table>
         <tr><td class="muted">Email</td><td>${esc(u.email)} ${u.is_verified
           ? '<span class="badge ok">verified</span>' : '<span class="badge warn">unverified</span>'}</td></tr>
-        <tr><td class="muted">Display name</td><td>${esc(u.display_name || "—")}
+        <tr><td class="muted">Display name</td><td>${esc(u.display_name || "-")}
           <button class="btn small" id="edit-profile" style="margin-left:8px">Edit</button></td></tr>
         <tr><td class="muted">Member since</td><td>${fmtDay(u.created_at)}</td></tr>
         <tr><td class="muted">Last login</td><td>${fmt(u.last_login_at)}</td></tr>
@@ -912,7 +912,7 @@ function renderAccount() {
     e.preventDefault();
     const f = e.target; const err = document.getElementById("pw-err"); err.textContent = "";
     try {
-      // Returns fresh tokens — every other session was just logged out.
+      // Returns fresh tokens - every other session was just logged out.
       const r = await API.call("/auth/change-password", { method: "POST",
         body: { current_password: f.current.value, new_password: f.next.value } });
       API.setTokens(r.access_token, r.refresh_token);
@@ -993,7 +993,7 @@ async function renderAdmin(days = 30) {
   body.innerHTML = `
     <div class="card">
       <div class="row" style="align-items:center;margin-bottom:6px">
-        <h2 style="flex:1;margin:0">Overview — last ${days} days</h2>
+        <h2 style="flex:1;margin:0">Overview - last ${days} days</h2>
         <select id="admin-days" style="max-width:140px;flex:0 0 auto">
           <option value="1">24 hours</option><option value="7">7 days</option>
           <option value="30">30 days</option><option value="90">90 days</option>
@@ -1021,7 +1021,7 @@ async function renderAdmin(days = 30) {
         <h2 style="flex:1;margin:0">Recent events</h2>
         <select id="ev-status" style="max-width:170px;flex:0 0 auto">
           <option value="">All statuses</option>
-          <option value="429">429 — rate-limited</option>
+          <option value="429">429 - rate-limited</option>
           <option value="401">401</option><option value="403">403</option><option value="500">500</option>
         </select>
       </div>
@@ -1042,7 +1042,7 @@ async function renderAdmin(days = 30) {
         (lifetime accumulating stat); detection on these boards skips
         score-outlier + rank-gap and uses ONLY velocity.
         <code>auto</code> falls back to the hardcoded mapping in
-        <code>models.py</code>. Changes apply within a few seconds —
+        <code>models.py</code>. Changes apply within a few seconds -
         the cheaters cache is invalidated + the warmer is kicked.
       </p>
       <div id="lb-boards-rows"><div class="loading">Loading boards…</div></div>
@@ -1109,7 +1109,7 @@ async function renderAdmin(days = 30) {
 // cadence to daily / weekly / none / auto. PATCHes /admin/leaderboards/
 // boards/{uuid} on change; on success bumps the row's cached state +
 // re-paints just that row's badges. Search filter is client-side over
-// the cached list — no round-trip per keystroke.
+// the cached list - no round-trip per keystroke.
 let _lbBoards = [];
 
 async function renderLeaderboardsBoardsTable() {
@@ -1195,7 +1195,7 @@ function paintLeaderboardsBoards(q) {
         // reflect the new state without a full re-fetch.
         const idx = _lbBoards.findIndex((b) => b.uuid === uuid);
         if (idx >= 0) _lbBoards[idx] = updated;
-        // Repaint just this row's effective badge — selecting a value
+        // Repaint just this row's effective badge - selecting a value
         // already shows in the dropdown, so we only need to update the
         // visible cadence column.
         const effCell = tr.querySelector("td:nth-child(4)");
@@ -1217,7 +1217,7 @@ function paintLeaderboardsBoards(q) {
 }
 
 // ─── Configuration tab (master-only) ─────────────────────────────────────
-// Dedicated tab — keeps Admin focused on users/activity and Configuration
+// Dedicated tab - keeps Admin focused on users/activity and Configuration
 // focused on every runtime-tunable knob (rate limits, webhooks, alerts).
 // Settings are grouped by category server-side so adding a new category is
 // just a registry entry on the backend; the UI requires no change.
@@ -1271,7 +1271,7 @@ async function renderConfigCard() {
     return;
   }
 
-  // Group by category — preserve server-side ordering within each.
+  // Group by category - preserve server-side ordering within each.
   const byCategory = {};
   for (const item of data.items) {
     (byCategory[item.category] ||= []).push(item);
@@ -1309,7 +1309,7 @@ async function renderConfigCard() {
           <div class="muted" style="font-size:12px;margin-top:4px;max-width:560px">${esc(item.description)}</div>
         </td>
         <td>${renderValue(item)}</td>
-        <td class="muted" style="white-space:nowrap">${item.updated_at ? fmt(item.updated_at) : "—"}</td>
+        <td class="muted" style="white-space:nowrap">${item.updated_at ? fmt(item.updated_at) : "-"}</td>
         <td style="white-space:nowrap">
           <button class="btn small" data-act="edit">Edit</button>
           <button class="btn small" data-act="reset"${item.is_default ? " disabled" : ""}>Reset</button>
@@ -1317,7 +1317,7 @@ async function renderConfigCard() {
       </tr>`;
   };
 
-  // Sub-tab strip — one chip per category, badge with count.
+  // Sub-tab strip - one chip per category, badge with count.
   const subtabs = categories.map((cat) => {
     const label = CONFIG_CATEGORY_LABELS[cat] || cat;
     const count = byCategory[cat].length;
@@ -1386,7 +1386,7 @@ function editSetting(item) {
     inputHtml = `<input id="cfg-input" type="number" step="${step}"${min}${max} value="${esc(String(item.value ?? ""))}" style="width:100%">`;
   } else {
     // String (and secrets): textarea handles long values + word-wrap.
-    // For secrets we DON'T pre-fill — master must paste the value in fresh,
+    // For secrets we DON'T pre-fill - master must paste the value in fresh,
     // which is safer than echoing it on every edit.
     const placeholder = item.secret
       ? "Paste new value (current value is hidden for security)"
@@ -1580,7 +1580,7 @@ async function renderIngest() {
       ${k.timestampField ? `
         <label style="display:block;margin-top:12px">
           <span class="muted" style="font-size:.78rem;display:block;margin-bottom:4px">
-            Anchor override (unix seconds, optional — for back-fills)
+            Anchor override (unix seconds, optional - for back-fills)
           </span>
           <input type="number" data-act="timestamp" placeholder="e.g. 1780830000" style="width:100%">
         </label>` : ""}
@@ -1608,7 +1608,7 @@ async function renderIngest() {
         <button type="button" class="btn small" data-act="refresh-ingest-log">Refresh</button>
       </div>
       <p class="hint" style="margin:0 0 14px">
-        Last 20 ingest calls (both bot and master submissions) — endpoint,
+        Last 20 ingest calls (both bot and master submissions) - endpoint,
         when, who, and a summary of what landed. 30-day rolling history.
       </p>
       <div id="ingest-log-body"><div class="loading">Loading…</div></div>
@@ -1675,7 +1675,7 @@ async function renderIngestLog() {
     return;
   }
   if (!rows.length) {
-    bodyEl.innerHTML = `<p class="muted">No submissions yet — try uploading a cfg above.</p>`;
+    bodyEl.innerHTML = `<p class="muted">No submissions yet - try uploading a cfg above.</p>`;
     return;
   }
   bodyEl.innerHTML = `
@@ -1759,7 +1759,7 @@ function wireIngestCard(card, kind) {
       resultEl.className = "ingest-result ok";
       resultEl.innerHTML = `<strong>✓ Inserted.</strong> <code>${esc(JSON.stringify(result))}</code>`;
       // Reflect the new row in the Recent submissions table without a
-      // page reload — fire-and-forget so a render hiccup doesn't mask
+      // page reload - fire-and-forget so a render hiccup doesn't mask
       // the success ack the user just got.
       renderIngestLog();
     } catch (ex) {
@@ -1839,7 +1839,7 @@ async function handleOAuthRedirect() {
 }
 
 (async function init() {
-  // Never let a bad/blocked /config response leave state.config null — the whole
+  // Never let a bad/blocked /config response leave state.config null - the whole
   // SPA would crash. Always end up with a usable object.
   try {
     const cfg = await API.call("/config", { auth: false });

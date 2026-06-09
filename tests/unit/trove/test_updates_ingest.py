@@ -122,7 +122,7 @@ async def test_full_then_incremental_lifecycle(tmp_path):
     repo = FakeRepo()
     loose = {"Trove_x64.exe": b"exe-v1", "Trove.cfg": b"[cfg]"}
 
-    # --- v1: full first sync — everything is added ---
+    # --- v1: full first sync - everything is added ---
     manifest, files = make_game(loose, {"ui": [("a.bin", 0, b"alpha-content"), ("b.bin", 0, b"bravo-content")]})
     s1 = await sync_branch("live-us", "kiwi-live-us.txt", FakeCdn("V1", "cp", manifest, files), store, repo)
     assert s1["changed"] and s1["ordinal"] == 1

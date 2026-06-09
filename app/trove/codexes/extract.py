@@ -1,7 +1,7 @@
 """Per-prefab extraction → a codex entry dict. Pure (bytes + locale map in).
 
 v1 is identity-level: name/category/description (locale-resolved), tradability,
-and the source keys — which covers the entity prefabs (allies, mounts, dragons,
+and the source keys - which covers the entity prefabs (allies, mounts, dragons,
 badges, items, fish, mementos). Recipes and collection tables have no identity
 component, so they fall back to a filename-derived name until their typed
 extractors land. Rich per-type fields (stats, mastery, model, variants) populate

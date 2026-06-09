@@ -4,12 +4,12 @@ The bot emits one line per listing in the format::
 
     <uuid>;<name>;<type>;<stack>;<price>
 
-with a trailing comma (or end of buffer). UUIDs are UUID v1 — the game uses
+with a trailing comma (or end of buffer). UUIDs are UUID v1 - the game uses
 the timestamp portion of the UUID as the listing creation time, which we
 decode in ``listing_created_at``.
 
 Listings whose ``name`` isn't in the interest-items allow-list are dropped at
-the service layer (we still parse them here — keep this module pure).
+the service layer (we still parse them here - keep this module pure).
 """
 
 from __future__ import annotations
@@ -49,14 +49,14 @@ class ParsedListing(NamedTuple):
     stack: int
     price: int
     price_each: float
-    created_at: int    # unix seconds — decoded from the UUID's timestamp
+    created_at: int    # unix seconds - decoded from the UUID's timestamp
 
 
 def listing_created_at(uid: UUID) -> int:
     """Decode the listing's "posted at" time from its UUID v1 timestamp.
 
     Returns unix seconds in real UTC. UUIDs that aren't v1 will still produce
-    a number, just one that doesn't correspond to a real time — the caller
+    a number, just one that doesn't correspond to a real time - the caller
     should already have filtered those out.
     """
     posted = _UUID_EPOCH + timedelta(microseconds=uid.time / 10)

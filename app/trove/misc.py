@@ -23,7 +23,7 @@ _DATA_DIR = Path(__file__).parent / "gamedata"
 TROVE_OFFSET = timedelta(hours=11)
 _TROVE_TZ = timezone(-TROVE_OFFSET)
 
-# Supported zones for the converter/clocks — (id, display name), Trove first.
+# Supported zones for the converter/clocks - (id, display name), Trove first.
 # "local" from the app is dropped: server-side it's meaningless, clients pass a
 # real IANA id instead.
 TIMEZONES: list[tuple[str, str]] = [
@@ -40,7 +40,7 @@ TIMEZONES: list[tuple[str, str]] = [
     ("Australia/Sydney", "Australia (Sydney)"),
 ]
 
-# Discord <t:unix:style> codes — paste into Discord, it renders in each viewer's
+# Discord <t:unix:style> codes - paste into Discord, it renders in each viewer's
 # own local time (so we return the codes, not a misleading server-side preview).
 DISCORD_STYLES: list[tuple[str, str]] = [
     ("t", "Short time (16:20)"),
@@ -168,7 +168,7 @@ def timezones() -> dict:
 
 
 def convert_time(datetime_str: str | None, timezone_id: str, unix: int | None) -> dict:
-    """Convert a wall-clock time (in `timezone_id`) — or an absolute `unix` — to
+    """Convert a wall-clock time (in `timezone_id`) - or an absolute `unix` - to
     a unix instant rendered across every supported zone + Discord timestamp codes.
     """
     if unix is None:
@@ -179,7 +179,7 @@ def convert_time(datetime_str: str | None, timezone_id: str, unix: int | None) -
         except ValueError as e:
             raise MiscError(f"Invalid datetime '{datetime_str}': {e}") from e
         if naive.tzinfo is not None:
-            unix = int(naive.timestamp())  # explicit offset given — already absolute
+            unix = int(naive.timestamp())  # explicit offset given - already absolute
         else:
             unix = int(naive.replace(tzinfo=_tzinfo(timezone_id)).timestamp())
     instant = datetime.fromtimestamp(unix, UTC)
@@ -209,7 +209,7 @@ def time_now(now: datetime | None = None) -> dict:
 # 200-char hieroglyph. We do NOT use a UA-parsing library because:
 #   - the input space is small (we only care about ~5 OSes and ~5 clients)
 #   - the libraries that DO this well are heavyweight (~50KB+ of regex tables)
-#   - falling back to "Unknown" is fine — UA is a hint, not a contract
+#   - falling back to "Unknown" is fine - UA is a hint, not a contract
 #
 # UA conventions for the BTT first-party apps:
 #   Desktop (Windows/Linux/macOS):
@@ -220,15 +220,15 @@ def time_now(now: datetime | None = None) -> dict:
 #   Mobile (Android):
 #     BetterTroveTools/<version> (Android <version>; <device>)
 #       e.g. "BetterTroveTools/2026.06.07 (Android 14; Pixel 8)"
-#     The "(Android)" parenthetical is the IMPORTANT bit — without it the
+#     The "(Android)" parenthetical is the IMPORTANT bit - without it the
 #     webhook embed can't tell the desktop and mobile build apart, since
 #     the BetterTroveTools/<ver> token by itself doesn't carry a platform.
 #   Web (browser):
-#     Whatever the browser sends — we never touch it client-side.
+#     Whatever the browser sends - we never touch it client-side.
 
 
 # OS markers, in detection priority order. We check Android BEFORE Linux
-# because Android UAs always say "Linux; Android 14" — Linux first would
+# because Android UAs always say "Linux; Android 14" - Linux first would
 # steal them. Same for Windows-on-WSL2 (we still want Windows). The
 # version capture group is OPTIONAL because the BTT Android app may ship
 # a terse UA like "BetterTroveTools/X.Y.Z (Android)" without an OS
@@ -251,7 +251,7 @@ _WINDOWS_NT_TO_NAME = {
 
 # Browser / app markers, also in priority order. We check Edge / OPR /
 # our own BetterTroveTools BEFORE Chrome because all three Chromium
-# children carry "Chrome/X" in their UA — Chrome-first would steal them.
+# children carry "Chrome/X" in their UA - Chrome-first would steal them.
 _CLIENT_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("BetterTroveTools",
      re.compile(r"\bBetterTroveTools/(\d+(?:\.\d+){1,3})", re.I)),
@@ -269,7 +269,7 @@ def parse_user_agent(ua: str | None) -> tuple[str | None, str | None]:
     string. Either component falls back to ``None`` if no rule matched."""
     if not ua:
         return None, None
-    s = ua[:500]  # cap before regex — long UAs are usually trash
+    s = ua[:500]  # cap before regex - long UAs are usually trash
 
     os_label: str | None = None
     for name, pattern in _OS_RULES:
@@ -317,7 +317,7 @@ async def insert_feedback(
     here because Pydantic's ``max_length`` doesn't strip whitespace, and
     a ``"   \\n\\n   "`` message would otherwise survive the >=5-char
     minimum check via padding."""
-    # Lazy import — see existing comment in earlier version of this fn.
+    # Lazy import - see existing comment in earlier version of this fn.
     from app.trove.models import FeedbackAttachmentInfo, FeedbackEntry
 
     msg = message.strip()

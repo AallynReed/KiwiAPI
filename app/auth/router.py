@@ -48,7 +48,7 @@ from app.core.utils import client_ip, utcnow
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Appended to every "we sent you a link" message. While the sending domain's
-# reputation is still warming up, deliverability is shaky — this nudges users to
+# reputation is still warming up, deliverability is shaky - this nudges users to
 # rescue the mail from spam and train their provider (marking "Not spam" is the
 # fastest reputation signal). Kept identical to the portal's signup toast.
 EMAIL_SPAM_NOTICE = (
@@ -334,8 +334,8 @@ async def verify_email_change(token: str, background_tasks: BackgroundTasks) -> 
     old_email = user.email
     user.email = new_email
     user.is_verified = True
-    user.email_bounced = False  # fresh address — resume delivery
-    # Email change is security-sensitive — end all sessions.
+    user.email_bounced = False  # fresh address - resume delivery
+    # Email change is security-sensitive - end all sessions.
     await revoke_all_sessions(user)
     # Tell the OLD address the change happened (in case it wasn't them).
     if settings.security_email_notifications:
@@ -363,7 +363,7 @@ async def forgot_password(
     user = await User.find_one(User.email == payload.email.lower())
     if user is not None and user.is_active:
         background_tasks.add_task(send_password_reset_email, user)
-    # Always identical response — never reveal whether an account exists.
+    # Always identical response - never reveal whether an account exists.
     return MessageResponse(
         message=f"If that email is registered, a reset link is on its way. {EMAIL_SPAM_NOTICE}"
     )
@@ -388,7 +388,7 @@ async def reset_password(payload: ResetPasswordRequest) -> MessageResponse:
 
     await ensure_password_not_breached(payload.new_password)
     user.hashed_password = hash_password(payload.new_password)
-    # End every session — a reset implies the old password may be compromised.
+    # End every session - a reset implies the old password may be compromised.
     await revoke_all_sessions(user)
     return MessageResponse(message="Your password has been reset. You can now log in.")
 

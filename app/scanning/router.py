@@ -3,7 +3,7 @@
 When a Kiwi API token (``kiwi_<body>_<crc>``) is pushed to a public repository,
 a partner like GitHub detects it by its published regex and POSTs it here. We
 verify the request signature, confirm the token is really ours via its checksum +
-hash, and auto-revoke it — closing the window between a leak and an attacker.
+hash, and auto-revoke it - closing the window between a leak and an attacker.
 """
 
 import json
@@ -73,7 +73,7 @@ async def github_secret_scanning(
 
 
 async def _evaluate_and_revoke(token: str, background_tasks: BackgroundTasks) -> str:
-    # A failed checksum means it can't be one of our tokens — cheap reject.
+    # A failed checksum means it can't be one of our tokens - cheap reject.
     if verify_token_checksum(token) is False:
         return "false_positive"
 

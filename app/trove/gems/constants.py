@@ -1,7 +1,7 @@
 """Gem enums and the static pools/restrictions that drive generation & rerolls.
 
 Ported verbatim from BetterTroveTools `models/trove/gem_constants.py`. IntEnum
-values are the canonical wire format — a gem JSON uses the integers, not names.
+values are the canonical wire format - a gem JSON uses the integers, not names.
 """
 
 from enum import IntEnum

@@ -84,7 +84,7 @@ def test_accepts_within_window_back():
 
 def test_seconds_stripped_consistently():
     """Two timestamps within the same minute should normalize to the
-    same value — important so the bot can submit at HH:MM:00 vs
+    same value - important so the bot can submit at HH:MM:00 vs
     HH:MM:42 and land at the same anchor row."""
     base = datetime.now(UTC).replace(second=0, microsecond=0) - timedelta(hours=1)
     ts_a = int(base.timestamp())

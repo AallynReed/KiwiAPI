@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /commands — page logic
+   /commands - page logic
    ───────────────────────────────────────────────────────────────────────
    Loads commands.json on mount, renders the category sections + command
    rows, wires up search + chip jumps + sticky chip highlighting, and
    re-renders the localised text whenever i18n.js dispatches
    `btt-lang-changed`.
 
-   Single-page client-side render so language switching is instant — no
+   Single-page client-side render so language switching is instant - no
    reload, no flicker. The JSON is ~150 KB pretty-printed; gzip cuts it
    to ~40 KB on the wire.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -54,7 +54,7 @@
 
 
   // i18n.js dispatches this when the user switches languages. We just
-  // re-render the localised strings in place — no DOM rebuild.
+  // re-render the localised strings in place - no DOM rebuild.
   document.addEventListener('btt-lang-changed', (e) => {
     if (e && e.detail && e.detail.lang && SUPPORTED_LANGS.has(e.detail.lang)) {
       currentLang = e.detail.lang;
@@ -82,7 +82,7 @@
 
   function renderIntro() {
     // Translate title / subtitle / placeholder / rules from commands.json
-    // (these strings aren't in the locale JSON files i18n.js loads —
+    // (these strings aren't in the locale JSON files i18n.js loads -
     // they live in commands.json so the page is self-contained).
     document.querySelectorAll('[data-cmd-text]').forEach((el) => {
       const key = el.dataset.cmdText;
@@ -185,7 +185,7 @@
     descEl.textContent = desc;
     textCell.appendChild(descEl);
     // Yellow inline warning block for any command whose syntax has at
-    // least one <placeholder> — same visual treatment as .command-note
+    // least one <placeholder> - same visual treatment as .command-note
     // but yellow, so it reads as a usage caution. The regex matches
     // "<…>" but rejects nested angle brackets (we have none).
     if (/<[^<>]+>/.test(cmd.syntax)) {

@@ -4,7 +4,7 @@
 Not to be confused with ``app/trove/updates/diff.py`` (which classifies
 ingestion-time manifest changes). This module operates on two blob byte
 strings AFTER they've been pulled from the CAS and produces hunks ready
-to render as side-by-side / unified diff. Pure functions — no IO.
+to render as side-by-side / unified diff. Pure functions - no IO.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import difflib
 from dataclasses import dataclass
 
 # Decode budgets. Anything bigger than ``MAX_DIFF_BYTES`` on either side is
-# treated as binary regardless of contents — protects the response payload
+# treated as binary regardless of contents - protects the response payload
 # AND the page-side diff renderer from a multi-MB blob landing in the DOM.
 MAX_DIFF_BYTES = 1_024 * 1_024            # 1 MiB per side
 # Context lines kept around each hunk. 3 matches ``diff -u`` defaults.
@@ -49,10 +49,10 @@ def _escape_ctrl(text: str) -> str:
 def decode_blob(data: bytes | None) -> DecodedSide:
     """Decode ``data`` for diffing. Strategy:
       • ``None`` (path didn't exist at this side's version) → empty text side
-      • bytes > MAX_DIFF_BYTES → "too large" — refuse to diff inline so
+      • bytes > MAX_DIFF_BYTES → "too large" - refuse to diff inline so
         we don't ship a 100 MB JSON payload to the browser
       • otherwise: always decode as text (utf-8 first, latin-1 fallback
-        — latin-1 maps every byte unambiguously so decode never fails)
+        - latin-1 maps every byte unambiguously so decode never fails)
         and escape NUL + other C0 control bytes to visible ``\\xNN``
         markers so the diff renderer doesn't choke on them.
 
@@ -60,13 +60,13 @@ def decode_blob(data: bytes | None) -> DecodedSide:
     Two reasons:
       1. Trove's hybrid formats (``.binfab``, ``.blueprint``, archive
          tables) are mostly readable text wrapped around small packed
-         structs — they look "binary" by any cheap ratio heuristic but
+         structs - they look "binary" by any cheap ratio heuristic but
          the user wants to diff them and the result is actually useful.
       2. Structured binary formats (length-prefixed records, packed
          tag tables) have HIGHER control-byte ratios than random binary
          data does, so a ratio gate would flag exactly the formats we
          most want to expose. Better to render everything as text and
-         let truly binary content look like the noise it is — the user
+         let truly binary content look like the noise it is - the user
          can still see WHICH bytes changed, which is the whole point.
     """
     if data is None:
@@ -77,11 +77,11 @@ def decode_blob(data: bytes | None) -> DecodedSide:
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError:
-        # latin-1 maps every byte to a code point — always succeeds.
+        # latin-1 maps every byte to a code point - always succeeds.
         text = data.decode("latin-1")
 
     text = _escape_ctrl(text)
-    # splitlines drops trailing CR/LF — matches difflib expectations.
+    # splitlines drops trailing CR/LF - matches difflib expectations.
     return DecodedSide(text=text, lines=text.splitlines(), is_text=True)
 
 
@@ -92,7 +92,7 @@ def make_hunks(
 
     Returns a list of ``{left_start, right_start, lines}`` dicts.
     ``lines[*].kind`` is one of ``equal`` / ``remove`` / ``add``.
-    Identical files return ``[]`` — caller should set ``identical=True``.
+    Identical files return ``[]`` - caller should set ``identical=True``.
     """
     sm = difflib.SequenceMatcher(a=a_lines, b=b_lines, autojunk=False)
     opcodes = sm.get_opcodes()
@@ -170,7 +170,7 @@ def make_hunks(
                         "text": b_lines[oj1 + k],
                     })
             elif otag == "replace":
-                # Show removes first, then adds — familiar diff layout.
+                # Show removes first, then adds - familiar diff layout.
                 for k in range(oi2 - oi1):
                     lines.append({
                         "kind": "remove",

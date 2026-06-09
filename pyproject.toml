@@ -18,11 +18,11 @@ target-version = "py313"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "C4"]
 ignore = [
-    "E501",   # line length — long strings/urls are fine
+    "E501",   # line length - long strings/urls are fine
     "B008",   # Depends() in defaults is the standard FastAPI pattern
     "UP017",  # datetime.timezone.utc is fine; not churning to datetime.UTC
     "UP042",  # str+Enum is fine; not switching to StrEnum
-    "UP046",  # keep Generic[T] base — runs across 3.11–3.13 (PEP 695 is 3.12+ only)
+    "UP046",  # keep Generic[T] base - runs across 3.11–3.13 (PEP 695 is 3.12+ only)
     "B904",   # API error translation is intentional (can tighten with `from None` later)
 ]
 

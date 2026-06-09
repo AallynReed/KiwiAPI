@@ -53,7 +53,7 @@ async def documentation(request: Request) -> HTMLResponse:
 
 @router.get("/commands", response_class=HTMLResponse)
 async def commands(request: Request) -> HTMLResponse:
-    """In-game Trove slash-command reference. Page shell + JS only —
+    """In-game Trove slash-command reference. Page shell + JS only -
     actual command data lives in ``site/static/commands.json`` and is
     fetched + rendered client-side so language switches don't reload."""
     return _TEMPLATES.TemplateResponse(request, "commands.html", {})
@@ -61,7 +61,7 @@ async def commands(request: Request) -> HTMLResponse:
 
 @router.get("/support", response_class=HTMLResponse)
 async def support(request: Request) -> HTMLResponse:
-    """Dedicated 'Support the project' page — landing for the red-heart
+    """Dedicated 'Support the project' page - landing for the red-heart
     navbar link. The bottom-right floating widget is also rendered on
     every page; this one gives a richer pitch for visitors who want a
     full read on what the donations actually fund."""
@@ -70,7 +70,7 @@ async def support(request: Request) -> HTMLResponse:
 
 @router.get("/status", response_class=HTMLResponse)
 async def status_page(request: Request) -> HTMLResponse:
-    """Dedicated Trove server-status page — live Live/PTS state plus a
+    """Dedicated Trove server-status page - live Live/PTS state plus a
     downtime-history timeline. Page shell + JS; data comes from
     ``/site/trove-status`` + ``/site/trove-status/history``."""
     return _TEMPLATES.TemplateResponse(request, "status.html", {})
@@ -79,7 +79,7 @@ async def status_page(request: Request) -> HTMLResponse:
 @router.get("/login", response_class=HTMLResponse)
 async def login(request: Request) -> HTMLResponse:
     """Public-facing login form (username OR email + password). Auth
-    backend lives at /v1/site-auth/* — see app/site_auth/."""
+    backend lives at /v1/site-auth/* - see app/site_auth/."""
     return _TEMPLATES.TemplateResponse(request, "login.html", {})
 
 
@@ -93,7 +93,7 @@ async def signup(request: Request) -> HTMLResponse:
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request) -> HTMLResponse:
     """Logged-in user dashboard. Client-side checks for a stored token
-    and redirects to /login if absent — no server-side gate so the
+    and redirects to /login if absent - no server-side gate so the
     page can serve same-origin caches without varying on auth."""
     return _TEMPLATES.TemplateResponse(request, "dashboard.html", {})
 
@@ -101,7 +101,7 @@ async def dashboard(request: Request) -> HTMLResponse:
 @router.get("/forgot-password", response_class=HTMLResponse)
 async def forgot_password(request: Request) -> HTMLResponse:
     """Email-based password-reset request form. POSTs to
-    /v1/site-auth/forgot-password — enumeration-safe by design (the
+    /v1/site-auth/forgot-password - enumeration-safe by design (the
     response shape doesn't reveal whether the email is registered)."""
     return _TEMPLATES.TemplateResponse(request, "forgot_password.html", {})
 
@@ -118,12 +118,12 @@ async def reset_password(request: Request) -> HTMLResponse:
 async def market(request: Request) -> HTMLResponse:
     """In-game marketplace browser (Beta). Reads from the
     ``market_listings`` collection via the /site/market/* proxies
-    below — bypasses the public API's per-token caps."""
+    below - bypasses the public API's per-token caps."""
     return _TEMPLATES.TemplateResponse(request, "market.html", {})
 
 
-# --- /site/market/* — same-origin JSON proxies for the page ---------------
-# Same shape as /site/leaderboards/* and /site/updates/* — call the
+# --- /site/market/* - same-origin JSON proxies for the page ---------------
+# Same shape as /site/leaderboards/* and /site/updates/* - call the
 # service layer directly, skip the public API's auth + scope + rate-limit
 # pipeline. Same trade-off: data is already public, no reason to throttle
 # the same browsers we'd be happy to serve via api.aallyn.net anyway.
@@ -191,13 +191,13 @@ async def site_market_item_history(
         description="Skip the log-space outlier filter and return the raw cloud.",
     ),
 ) -> JSONResponse:
-    """Per-listing price-vs-time series for one item — drives the
+    """Per-listing price-vs-time series for one item - drives the
     price-evolution chart on the /market page.
 
     Toggles:
-      - ``include_expired`` — include posts that have aged out of the
+      - ``include_expired`` - include posts that have aged out of the
         in-game live cycle (3h stale / 7d TTL).
-      - ``keep_outliers`` — by default we run a log-space modified-Z
+      - ``keep_outliers`` - by default we run a log-space modified-Z
         filter (threshold 3.5) to drop extreme one-off listings that
         would otherwise stretch the y-axis through the roof. Pass
         ``true`` to see the raw cloud.
@@ -213,7 +213,7 @@ async def site_market_item_history(
 
 @router.get("/leaderboards", response_class=HTMLResponse)
 async def leaderboards(request: Request) -> HTMLResponse:
-    """Trove leaderboards browser — public site read of the same data the
+    """Trove leaderboards browser - public site read of the same data the
     ``/v1/leaderboards/*`` API exposes. The page hits dedicated JSON
     endpoints under ``/site/leaderboards/*`` (see below) which bypass the
     public API's token/scope/rate-limit pipeline and call the service
@@ -225,7 +225,7 @@ async def leaderboards(request: Request) -> HTMLResponse:
 # --- /leaderboards JSON endpoints ------------------------------------------
 # These mirror the four read-side helpers from app/trove/router.py but skip
 # the TokenContext dep + archive-rate-limit. They're intentionally NOT
-# include_in_schema (the router already opts out) — the public surface is
+# include_in_schema (the router already opts out) - the public surface is
 # still /v1/leaderboards/*, this is just a site convenience.
 
 @router.get("/site/leaderboards/config", response_class=JSONResponse)
@@ -265,9 +265,9 @@ async def site_lb_boards(
 
 
 # LITERAL-prefix routes must come BEFORE the ``/{uuid}/...`` catch-alls
-# below — FastAPI matches in declaration order, and a path-param int
+# below - FastAPI matches in declaration order, and a path-param int
 # validator on "activity" / "cheaters" would 422 (not fall through) if
-# the catch-all matched first. Same dance as ``/players/{name}/...`` —
+# the catch-all matched first. Same dance as ``/players/{name}/...`` -
 # put the named segments above the parameterised ones.
 @router.get("/site/leaderboards/activity", response_class=JSONResponse)
 async def site_lb_activity() -> JSONResponse:
@@ -280,7 +280,7 @@ async def site_lb_activity() -> JSONResponse:
 
 @router.get("/site/leaderboards/activity/history", response_class=JSONResponse)
 async def site_lb_activity_history(days: int = 7) -> JSONResponse:
-    """Same payload as ``/v1/leaderboards/activity/history`` — same-origin
+    """Same payload as ``/v1/leaderboards/activity/history`` - same-origin
     proxy so the showcase page can fetch without CORS / token gymnastics.
     Returns a time-series of activity estimates with both raw counts
     and per-hour rates, the latter being what the chart line plots so
@@ -293,7 +293,7 @@ async def site_lb_activity_history(days: int = 7) -> JSONResponse:
 
 @router.get("/site/trove-status", response_class=JSONResponse)
 async def site_trove_status() -> JSONResponse:
-    """Live Trove server status (Live + PTS) — same payload as
+    """Live Trove server status (Live + PTS) - same payload as
     ``/v1/misc/trove-status``, served same-origin so the landing + status
     pages can fetch it without CORS."""
     payload = trove_status.get_status()
@@ -313,7 +313,7 @@ async def site_trove_status_history(env: str = "live", days: int = 30) -> JSONRe
 @router.get("/site/leaderboards/cheaters", response_class=JSONResponse)
 async def site_lb_cheaters() -> JSONResponse:
     """Possible-cheaters analysis for the leaderboards page. Same payload
-    as the public ``GET /v1/leaderboards/cheaters`` endpoint — served
+    as the public ``GET /v1/leaderboards/cheaters`` endpoint - served
     here so the page can fetch same-origin (no CORS dance from
     trove.aallyn.net). The detection module itself caches the result
     for ``cheaters_cache_ttl_seconds`` so this is cheap to call."""
@@ -390,7 +390,7 @@ async def site_lb_player_series(
 
 @router.get("/updates", response_class=HTMLResponse)
 async def updates(request: Request) -> HTMLResponse:
-    """Trove updates browser — public site read of the same archive that
+    """Trove updates browser - public site read of the same archive that
     ``/v1/updates/*`` exposes. The page hits the JSON helpers below
     (``/site/updates/*``) which bypass the token/scope/rate-limit pipeline
     so site browsers don't get throttled by per-token caps."""
@@ -416,7 +416,7 @@ async def site_up_branches() -> JSONResponse:
     # ``list_branches`` returns ``last_probe_at`` as a ``datetime``; the v1
     # mirror runs that through a Pydantic ``BranchInfo`` which handles
     # ISO serialisation for us. ``JSONResponse`` uses plain ``json.dumps``,
-    # which would 500 on the datetime — convert manually here.
+    # which would 500 on the datetime - convert manually here.
     serialised = [
         {**b, "last_probe_at": b["last_probe_at"].isoformat() if b.get("last_probe_at") else None}
         for b in items
@@ -541,7 +541,7 @@ async def site_up_file_compare(
     to: int = Query(...),
 ) -> JSONResponse:
     """Diff two versions of a file. Same body shape as
-    ``/v1/updates/{branch}/file/compare`` — kept here so the page can
+    ``/v1/updates/{branch}/file/compare`` - kept here so the page can
     fetch same-origin and avoid the OpenAPI surface for what is, after
     all, a UI-driven request."""
     _site_check_branch(branch)
@@ -602,7 +602,7 @@ async def hero_screenshots() -> JSONResponse:
     Reads ``site/static/trove-screens/`` and returns every image (by file
     extension whitelist) sorted alphabetically. Lets the user drop new
     screenshots into the folder and have them appear on the next page
-    load without an HTML edit. Filenames are exposed as URLs only — full
+    load without an HTML edit. Filenames are exposed as URLs only - full
     paths never leak.
 
     Empty list (folder missing, no recognised images) is a clean OK that

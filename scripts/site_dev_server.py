@@ -29,7 +29,7 @@ STATIC = SITE_DIR / "static"
 #
 # Anchors are computed at module-import time relative to "now" so the
 # 7-day picker on the page shows recent trove-days. We seed FIVE of the
-# last 7 days so two slots render as "No data" — exercising the empty
+# last 7 days so two slots render as "No data" - exercising the empty
 # state. Each anchor is real UTC 11:00 of its trove-day (matches the
 # current API's daily-anchor model).
 import time as _time
@@ -37,7 +37,7 @@ _DAY = 86400
 _TROVE_OFFSET = 11 * 3600
 _now = int(_time.time())
 _today_trove_key = (_now - _TROVE_OFFSET) // _DAY
-# Days 0 (today), 1 (yesterday), 2, 4, 6 ago — skip 3 and 5 so the
+# Days 0 (today), 1 (yesterday), 2, 4, 6 ago - skip 3 and 5 so the
 # picker visibly shows two "No data" gaps.
 _seeded_days = {0, 1, 2, 4, 6}
 _anchors = sorted(
@@ -160,7 +160,7 @@ class Handler(SimpleHTTPRequestHandler):
             })
         if path == "/site/leaderboards/cheaters":
             # Three synthetic flagged players spanning the confidence
-            # range — so the page's filter slider has something to
+            # range - so the page's filter slider has something to
             # show + hide as the threshold moves. Confidence values
             # mirror what the real detection module would compute.
             return self._send_json({
@@ -206,7 +206,7 @@ class Handler(SimpleHTTPRequestHandler):
                                 "evidence": [
                                     {
                                         "type": "velocity_outlier",
-                                        "summary": "Score gained 800,000 in 1.0h (rate 800,000/h). This board's peer p95 rate is 500/h — this player is 1,600x faster.",
+                                        "summary": "Score gained 800,000 in 1.0h (rate 800,000/h). This board's peer p95 rate is 500/h - this player is 1,600x faster.",
                                         "measurements": {
                                             "score_delta": 800000, "duration_hours": 1.0,
                                             "rate_per_hour": 800000, "peer_p95_rate_per_hour": 500,
@@ -246,7 +246,7 @@ class Handler(SimpleHTTPRequestHandler):
                         ],
                     },
                     {
-                        # Borderline player — flagged but right at the
+                        # Borderline player - flagged but right at the
                         # threshold. Confidence 0.5; default filter
                         # (0.9) should hide this one.
                         "player_name": "BorderlineBob",

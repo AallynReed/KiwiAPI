@@ -28,7 +28,7 @@ _BOARD_RE = re.compile(
     re.MULTILINE,
 )
 
-# rank;player_name;score  — rank caps at 4 digits like in the source script.
+# rank;player_name;score  - rank caps at 4 digits like in the source script.
 # Player names and scores are allowed any non-``;`` chars (display names can
 # include unicode + spaces; scores can be ints or floats).
 _ENTRY_RE = re.compile(r"^(?P<rank>\d{1,4});(?P<player>[^;]+);(?P<score>[^;]+)$")
@@ -74,7 +74,7 @@ def _parse_entries(raw: str) -> list[ParsedEntry]:
 def parse_dump(text: str) -> list[ParsedBoard]:
     """Parse a full LeaderBot.cfg dump into a list of ``ParsedBoard``.
 
-    De-dupes by uuid (the bot sometimes emits the same board twice — first sighting
+    De-dupes by uuid (the bot sometimes emits the same board twice - first sighting
     wins). Boards under the ``FAVORITES`` category are dropped (per the old
     ingestion: it's a UI grouping, not a real leaderboard).
     """

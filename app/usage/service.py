@@ -6,14 +6,14 @@ from app.usage.schemas import ActivitySummary, DailyStat, EndpointStat
 
 # Count anything >= 400 as an error in metrics.
 ERROR_COND = {"$cond": [{"$gte": ["$status_code", 400]}, 1, 0]}
-# Count 429s specifically — rate-limit triggers.
+# Count 429s specifically - rate-limit triggers.
 RATE_LIMITED_COND = {"$cond": [{"$eq": ["$status_code", 429]}, 1, 0]}
 
 
 async def aggregate_activity(base_match: dict, days: int) -> ActivitySummary:
     """Aggregate usage events matching `base_match` over the last `days` days.
 
-    `base_match` scopes the query — e.g. {"user_id": ...} for a whole account or
+    `base_match` scopes the query - e.g. {"user_id": ...} for a whole account or
     {"token_id": ...} for a single token. Shared by the user and admin APIs.
     """
     since = utcnow() - timedelta(days=days)

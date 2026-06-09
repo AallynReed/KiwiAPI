@@ -1,4 +1,4 @@
-"""Session lifecycle for site users — issue / refresh / revoke.
+"""Session lifecycle for site users - issue / refresh / revoke.
 
 Cribs the dev-portal pattern (see ``app/auth/sessions.py``) but:
 
@@ -35,7 +35,7 @@ def create_site_access_token(
     subject: str, token_version: int, session_id: str | None = None,
 ) -> str:
     """Mint an access token for a SiteUser. Identical shape to the
-    dev-portal token EXCEPT for the ``kind=site`` claim — same secret,
+    dev-portal token EXCEPT for the ``kind=site`` claim - same secret,
     same algorithm, same exp window. The kind discriminator is what
     keeps the two surfaces from cross-contaminating."""
     now = utcnow()
@@ -116,7 +116,7 @@ async def rotate(refresh_token: str, request: Request) -> SiteTokenResponse | No
 
 
 async def revoke_by_refresh_token(refresh_token: str) -> None:
-    """End one session by its refresh token (idempotent — no-op if
+    """End one session by its refresh token (idempotent - no-op if
     already revoked or unknown)."""
     if not refresh_token:
         return

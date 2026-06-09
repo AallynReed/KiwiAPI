@@ -14,11 +14,11 @@ _API_CSP = (
 
 # The BetterTroveTools showcase site pulls FontAwesome CSS from cdnjs, Space
 # Grotesk + Inter from Google Fonts (their CSS lives on fonts.googleapis.com,
-# the actual font files on fonts.gstatic.com — both need to be allowed or the
+# the actual font files on fonts.gstatic.com - both need to be allowed or the
 # page falls back to system fonts and the bold display look breaks), and calls
 # the Kiwi API for release data. The /login + /signup + /forgot-password pages
 # also render a captcha widget (Turnstile or hCaptcha), whichever the API
-# is configured for — both host their script + iframe under their own
+# is configured for - both host their script + iframe under their own
 # domains, so script-src + frame-src cover the union of providers so a
 # toggle from one to the other doesn't require a CSP edit.
 _SITE_CSP = (
@@ -43,7 +43,7 @@ def _is_site_path(path: str) -> bool:
     the relaxed CSP wholesale, so newly-added JSON proxies and assets don't
     need to be enumerated one-by-one as new pages land. Forgetting one of
     these wires up an API-CSP page that refuses to apply its own stylesheets
-    — see /updates regression in 2026-06.
+    - see /updates regression in 2026-06.
     """
     return path == "/" or path in {
         "/documentation", "/commands", "/leaderboards", "/updates",

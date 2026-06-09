@@ -1,6 +1,6 @@
 """Request/response models for the gem endpoints.
 
-The `Gem` model itself (model.py) is the round-trip object — clients post back
+The `Gem` model itself (model.py) is the round-trip object - clients post back
 exactly what `generate` returned. These wrap it with action parameters and shape
 the evaluator/builds outputs.
 """
@@ -28,7 +28,7 @@ class GemActionResult(BaseModel):
 
 class AugmentRequest(BaseModel):
     gem: Gem
-    stat_position: int = Field(ge=0, description="0, 1 or 2 — which stat to augment")
+    stat_position: int = Field(ge=0, description="0, 1 or 2 - which stat to augment")
     augment_type: int = 1            # 1 Rough, 2 Precise, 3 Superior
 
 
@@ -114,7 +114,7 @@ class EvalStat(BaseModel):
     quality_percent: float
     estimated_pr_contribution: float
     is_within_range: bool
-    raw_progress: float              # unclamped — <0 or >1 flags an impossible value
+    raw_progress: float              # unclamped - <0 or >1 flags an impossible value
     threshold_progress: float
 
 

@@ -86,7 +86,7 @@ def test_score_outlier_does_not_flag_legitimate_top_player():
     player just because they're far from the median."""
     rng = random.Random(2026)
     entries = []
-    # 5000 players with a heavy-tailed power-law-ish distribution —
+    # 5000 players with a heavy-tailed power-law-ish distribution -
     # mirrors the FLUX EARNED / LOOT COLLECTED shape from real Trove
     # leaderboards: median ~17M, top1 ~4.3B, top-100 within 1 order of
     # magnitude of each other.
@@ -104,18 +104,18 @@ def test_score_outlier_does_not_flag_legitimate_top_player():
     # Old method flagged ~750 on this kind of data; the new method
     # (log-MAD-Z on the elite cohort) drops it to single-digit %% of
     # the cohort. Pareto α=1.5 is more extreme than typical Trove
-    # boards, so allow a modest non-zero count — what we're guarding
+    # boards, so allow a modest non-zero count - what we're guarding
     # against is the catastrophic-false-positive regression.
     assert len(flagged) <= 30, (
         f"Heavy-tailed distribution shouldn't produce many flags; got "
-        f"{len(flagged)} — the algorithm likely reverted to full-board "
+        f"{len(flagged)} - the algorithm likely reverted to full-board "
         f"linear MAD-Z."
     )
 
 
 def test_score_outlier_skips_inverted_direction():
     """A player who is bizarrely BELOW median on a higher-is-better
-    board (a noob) should NOT be flagged — we only care about good
+    board (a noob) should NOT be flagged - we only care about good
     outliers. Use a small board so the noob falls inside the cohort
     (otherwise the cohort cap excludes them on size alone)."""
     rng = random.Random(7)
@@ -261,7 +261,7 @@ def test_rank_gap_skips_undersized_boards():
 
 def test_evidence_confidence_borderline_is_half():
     """At the threshold (Z = 3.5 exactly), confidence should be 0.5
-    — the minimum 'just inside the flag zone' value."""
+    - the minimum 'just inside the flag zone' value."""
     ev = {
         "type": "score_outlier",
         "measurements": {"modified_z_score": 3.5, "threshold": 3.5},
@@ -271,7 +271,7 @@ def test_evidence_confidence_borderline_is_half():
 
 def test_evidence_confidence_strong_score_outlier_hits_ceiling():
     """Z = 40 should hit score_outlier's ceiling (0.60), not the
-    sigmoid's natural 0.99. score_outlier is the noisiest signal — by
+    sigmoid's natural 0.99. score_outlier is the noisiest signal - by
     itself, it never exceeds the per-check ceiling no matter how
     extreme the z-score."""
     ev = {
@@ -283,7 +283,7 @@ def test_evidence_confidence_strong_score_outlier_hits_ceiling():
 
 
 def test_evidence_confidence_strong_velocity_hits_high_ceiling():
-    """Velocity is the cleanest signal — its ceiling is 0.99."""
+    """Velocity is the cleanest signal - its ceiling is 0.99."""
     ev = {
         "type": "velocity_outlier",
         "measurements": {"rate_multiplier": 100, "threshold_multiplier": 10.0},
@@ -293,7 +293,7 @@ def test_evidence_confidence_strong_velocity_hits_high_ceiling():
 
 
 def test_evidence_confidence_rank_gap_ceiling_is_intermediate():
-    """rank_gap's ceiling is 0.85 — between score_outlier and velocity."""
+    """rank_gap's ceiling is 0.85 - between score_outlier and velocity."""
     ev = {
         "type": "rank_gap",
         "measurements": {"gap_multiplier": 100, "threshold_multiplier": 10.0},
@@ -325,7 +325,7 @@ def test_evidence_confidence_unknown_type_is_neutral():
 def test_player_confidence_single_weak_board_is_at_most_max():
     """One board with a single 0.5 evidence → player confidence = 0.5.
     Adding a second 0.5 evidence ON THE SAME BOARD must NOT compound
-    (they're correlated) — still 0.5."""
+    (they're correlated) - still 0.5."""
     boards_one = [{"evidence": [
         {"type": "score_outlier", "measurements": {"modified_z_score": 3.5, "threshold": 3.5}},
     ]}]
@@ -335,7 +335,7 @@ def test_player_confidence_single_weak_board_is_at_most_max():
         {"type": "score_outlier", "measurements": {"modified_z_score": 3.5, "threshold": 3.5}},
         {"type": "rank_gap", "measurements": {"gap_multiplier": 10, "threshold_multiplier": 10}},
     ]}]
-    # Both at the borderline; max within board = 0.5 — no inflation.
+    # Both at the borderline; max within board = 0.5 - no inflation.
     assert _player_confidence(boards_two_same) == 0.5
 
 
@@ -371,7 +371,7 @@ def test_player_confidence_multi_type_unlocks_full_aggregation():
 
 def test_player_confidence_velocity_only_can_be_high():
     """Velocity alone CAN reach high confidence (its ceiling is 0.99)
-    even though the diversity cap applies — because the cap IS the
+    even though the diversity cap applies - because the cap IS the
     ceiling for velocity."""
     boards = [{"evidence": [
         {"type": "velocity_outlier", "measurements": {"rate_multiplier": 100, "threshold_multiplier": 10}},
@@ -382,7 +382,7 @@ def test_player_confidence_velocity_only_can_be_high():
 
 def test_player_confidence_within_board_takes_max():
     """Three pieces of evidence on the SAME board at different
-    strengths — confidence equals the max, NOT the noisy-OR product
+    strengths - confidence equals the max, NOT the noisy-OR product
     (which would inflate the false-positive rate)."""
     one_strong_two_weak = [{"evidence": [
         {"type": "score_outlier", "measurements": {"modified_z_score": 20, "threshold": 3.5}},
@@ -394,7 +394,7 @@ def test_player_confidence_within_board_takes_max():
         {"type": "score_outlier", "measurements": {"modified_z_score": 20, "threshold": 3.5}},
     ]}]
     c_alone = _player_confidence(only_strong)
-    # Confidences should be EQUAL — within-board correlation handled.
+    # Confidences should be EQUAL - within-board correlation handled.
     assert c_combo == c_alone
 
 
@@ -484,7 +484,7 @@ def test_reset_boundary_daily_after_11_uses_same_day():
     """For an anchor AFTER today's 11:00 UTC, the boundary is today's
     11:00 UTC (not yesterday's)."""
     from datetime import UTC, datetime
-    # 2026-06-08 at 15:00 UTC — after today's reset.
+    # 2026-06-08 at 15:00 UTC - after today's reset.
     anchor = int(datetime(2026, 6, 8, 15, 0, 0, tzinfo=UTC).timestamp())
     boundary = _reset_boundary_before(anchor, "daily")
     b = datetime.fromtimestamp(boundary, UTC)
@@ -494,7 +494,7 @@ def test_reset_boundary_daily_after_11_uses_same_day():
 
 def test_reset_boundary_weekly_returns_most_recent_monday_11_utc():
     """Weekly boards reset every Monday at 11:00 UTC. For an anchor on
-    2026-06-08 (Monday) at 03:54 UTC — BEFORE today's 11:00 reset —
+    2026-06-08 (Monday) at 03:54 UTC - BEFORE today's 11:00 reset -
     the most recent Monday-11:00 was the *previous* Monday (2026-06-01)
     at 11:00 UTC."""
     anchor = 1780887263  # 2026-06-08 03:54 UTC (Monday, pre-11:00)
@@ -522,7 +522,7 @@ def test_reset_boundary_weekly_after_monday_uses_same_monday():
 
 def test_evidence_accumulates_across_checks():
     """A player flagged by BOTH score-outlier and rank-gap should have
-    both pieces of evidence stacked in one board entry — not two."""
+    both pieces of evidence stacked in one board entry - not two."""
     entries = [_entry("Cheater", 1, 100000)]
     score = 50
     for i in range(2, 60):
@@ -538,5 +538,5 @@ def test_evidence_accumulates_across_checks():
     types = {ev["type"] for ev in board_entry["evidence"]}
     assert "score_outlier" in types
     assert "rank_gap" in types
-    # Same board entry, two pieces of evidence — not two board entries.
+    # Same board entry, two pieces of evidence - not two board entries.
     assert len(flagged["Cheater"]) == 1

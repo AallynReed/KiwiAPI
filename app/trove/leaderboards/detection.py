@@ -2,21 +2,21 @@
 
 Three independent checks, each catching a different shape of "weird":
 
-1. **Modified Z-score (MAD-based)** — Within a single anchor's snapshot,
+1. **Modified Z-score (MAD-based)** - Within a single anchor's snapshot,
    how far is a player's score from the board's *median*? Uses Median
    Absolute Deviation instead of mean+stddev so a single cheater can't
    pollute their own baseline. Iglewicz & Hoaglin (1993) define a
    modified-Z of |M| > 3.5 as a "strong outlier"; we use that as the
    default and the value is runtime-tunable.
 
-2. **Rank-gap ratio** — The drop from rank N to rank N+1 within the
+2. **Rank-gap ratio** - The drop from rank N to rank N+1 within the
    top of a board. If rank 1 has 10× rank 2's score and the typical
    between-rank gap is < 5 %, that lone-wolf shape is highly unusual.
    Catches the case where MAD-Z is fooled because rank 1 is far enough
    from the median that *some* peers below them are also outliers,
    widening MAD; rank-gap looks at adjacency directly.
 
-3. **Velocity** — Score increase per unit time, computed from the
+3. **Velocity** - Score increase per unit time, computed from the
    player's previous historical capture. Compared against the board's
    peer-p95 velocity. Catches sudden jumps that wouldn't yet look
    anomalous against the *current* distribution but do against the
@@ -62,7 +62,7 @@ _VELOCITY_PEER_TOP_N = 50
 
 # Last successful computation, regardless of anchor. Survives anchor
 # changes so an on-the-fly cache miss can still serve "the previous good
-# answer" while the warmer is busy recomputing for the new anchor — the
+# answer" while the warmer is busy recomputing for the new anchor - the
 # alternative is a multi-second wait for the first visitor after each
 # leaderboard ingest. See the "stale-but-known-good" branch in
 # ``detect_possible_cheaters`` below.
@@ -74,19 +74,19 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
     collection. Cached behaviour:
 
     1. If the current (anchor, config) is in ``_CACHE`` within the TTL
-       window, return it instantly — this is the warmer's normal hit.
+       window, return it instantly - this is the warmer's normal hit.
     2. If the current key isn't cached BUT we have a ``_LAST_GOOD``
        payload from a previous anchor, return that immediately AND fire
        the background warmer so the new anchor lands in cache for the
        next request. This is the "don't invalidate old data until new
-       is ready" guarantee — the user keeps seeing yesterday's flags
+       is ready" guarantee - the user keeps seeing yesterday's flags
        instead of a multi-second spinner while detection re-runs.
-    3. Cold start (no cache, no last-good) — fall through to
+    3. Cold start (no cache, no last-good) - fall through to
        synchronous compute. Slow on the FIRST request after a fresh
        boot, never again because the result feeds ``_LAST_GOOD``.
 
     ``force=True`` BYPASSES the stale shortcut in step 2 and recomputes
-    synchronously. This is the warmer's path — without it, the warmer
+    synchronously. This is the warmer's path - without it, the warmer
     would call itself, see _LAST_GOOD, return that, and never actually
     populate the new anchor's cache slot (so user requests would keep
     returning the previous anchor's payload forever after a new ingest).
@@ -121,7 +121,7 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
     now = time.time()
     global _LAST_GOOD
 
-    # Both paths honour a fresh cache hit for the current anchor — no
+    # Both paths honour a fresh cache hit for the current anchor - no
     # point recomputing if the slot is already valid. The difference is
     # what happens on a miss: the user-facing path serves _LAST_GOOD
     # (yesterday's payload) instantly, while the warmer (force=True)
@@ -180,13 +180,13 @@ def invalidate_cache() -> None:
 # ─── Background warmer ────────────────────────────────────────────────
 # Pre-computes every heavy leaderboards-page query at app boot + on every
 # TTL boundary + immediately after a new ingest so the public endpoints
-# always return a cached result instantly — no caller ever waits for the
+# always return a cached result instantly - no caller ever waits for the
 # per-board scan + history queries to run synchronously.
 #
 # Three caches kept warm in lock-step:
-#   • detect_possible_cheaters         — cheaters tab
-#   • activity.estimate_active_players — live-pulse pill in the hero
-#   • lb_service.list_boards_at(latest) — sidebar of the boards tab
+#   • detect_possible_cheaters         - cheaters tab
+#   • activity.estimate_active_players - live-pulse pill in the hero
+#   • lb_service.list_boards_at(latest) - sidebar of the boards tab
 #
 # All three are tied to "the most recent anchor", so when the bot ingests
 # a new capture they ALL go stale at once. ``trigger_warmer()`` wakes the
@@ -230,7 +230,7 @@ async def _warmup_loop() -> None:
         # TTL + work_time. Floor at 30s so a flurry of post-ingest
         # triggers doesn't peg the worker on a tight loop.
         next_sleep = max(30.0, ttl - (time.time() - start))
-        # Sleep with an early-wake escape hatch — trigger_warmer() sets
+        # Sleep with an early-wake escape hatch - trigger_warmer() sets
         # the event when a new ingest lands so the new anchor's caches
         # start filling immediately instead of after a full TTL.
         try:
@@ -243,21 +243,21 @@ async def _warmup_loop() -> None:
 
 
 async def _warm_all() -> None:
-    """One iteration of the warmer — re-runs every heavy query that
+    """One iteration of the warmer - re-runs every heavy query that
     feeds the leaderboards page. Runs sequentially (not concurrently)
     because they hit overlapping Mongo collections and we'd rather not
     interleave their cursors."""
-    # cheaters detection — the slowest, run first so it's ready ASAP.
+    # cheaters detection - the slowest, run first so it's ready ASAP.
     # ``force=True`` makes the call bypass the stale-payload shortcut so
     # the NEW anchor's cache slot actually gets populated. Without this
     # the warmer would see _LAST_GOOD (the previous anchor's payload)
-    # and return that without ever calling _compute() — and the user
+    # and return that without ever calling _compute() - and the user
     # would be stuck looking at yesterday's flags forever.
     await detect_possible_cheaters(force=True)
-    # activity estimate — also a multi-board scan
+    # activity estimate - also a multi-board scan
     from app.trove.leaderboards import activity as lb_activity
     await lb_activity.estimate_active_players()
-    # boards-at-latest — cheap distinct(), but worth pre-running so the
+    # boards-at-latest - cheap distinct(), but worth pre-running so the
     # sidebar paint is instant even on a cold Mongo page cache
     stamps = await lb_service.list_timestamps(limit=1, include_archive=False)
     if stamps:
@@ -265,7 +265,7 @@ async def _warm_all() -> None:
 
 
 def trigger_warmer() -> None:
-    """Wake the warmer loop early — call after each successful
+    """Wake the warmer loop early - call after each successful
     leaderboard ingest so the new anchor's caches start filling
     immediately instead of after the TTL. No-op if the warmer hasn't
     been started yet."""
@@ -274,13 +274,13 @@ def trigger_warmer() -> None:
     try:
         _wake_event.set()
     except RuntimeError:
-        # event loop closed (during shutdown) — nothing to do
+        # event loop closed (during shutdown) - nothing to do
         pass
 
 
 def start_leaderboards_warmer() -> None:
     """Kick off the background warmer if it isn't already running.
-    Idempotent — safe to call multiple times."""
+    Idempotent - safe to call multiple times."""
     global _warmup_task
     if _warmup_task is not None and not _warmup_task.done():
         return
@@ -301,7 +301,7 @@ async def stop_leaderboards_warmer() -> None:
         pass
 
 
-# Back-compat aliases — the warmer used to only handle cheaters. Existing
+# Back-compat aliases - the warmer used to only handle cheaters. Existing
 # call sites in app/main.py (and any out-of-tree callers) keep working;
 # new code should reach for ``start_leaderboards_warmer`` directly.
 start_cheaters_warmer = start_leaderboards_warmer
@@ -356,7 +356,7 @@ async def _compute(
             board["uuid"], anchor, limit=_BOARD_FETCH_LIMIT, offset=0,
         )
         if len(entries) < min_board_size:
-            # Too few entries for robust statistics — skip but record so the UI
+            # Too few entries for robust statistics - skip but record so the UI
             # can explain why a board the user expected to see is absent.
             excluded_boards_meta.append({
                 **_board_meta(board),
@@ -370,11 +370,11 @@ async def _compute(
         higher_is_better = _detect_direction(entries)
 
         # Resetting vs. lifetime gating:
-        #   • Resetting boards (daily/weekly) — every cycle starts at
+        #   • Resetting boards (daily/weekly) - every cycle starts at
         #     zero, so a rank-1 score that's an order of magnitude
         #     above rank-2 is a meaningful anomaly. Score-outlier +
         #     rank-gap + velocity all carry signal.
-        #   • Lifetime boards (default / explicit "none") — score
+        #   • Lifetime boards (default / explicit "none") - score
         #     accumulates across the player's entire account history,
         #     so the top of the board is naturally orders of magnitude
         #     above mid-pack. Running score-outlier or rank-gap there
@@ -431,7 +431,7 @@ def _score_outlier_check(
     Two design choices, each fixing a class of false positive:
 
     1. **Elite cohort** instead of full board.
-       Trove leaderboards are heavy-tailed — the top 1 % typically
+       Trove leaderboards are heavy-tailed - the top 1 % typically
        scores 10–100× the median. Naive MAD-Z against the full
        population flags every dedicated top player as an "outlier"
        because that's what "top player" mathematically means in a
@@ -453,13 +453,13 @@ def _score_outlier_check(
 
     1. Sort by rank, take top ``max(50, board_size * cohort_pct)`` as
        the elite cohort.
-    2. Skip the board if the top 5 cohort scores are tied — that's a
+    2. Skip the board if the top 5 cohort scores are tied - that's a
        capped board (e.g. class boards at 59 731) where the elite has
        no spread to measure against.
     3. log10(score + 1) on the cohort. Compute median + MAD.
     4. Only check the **top half** of the cohort. Outside this slice
        a player can't be "the suspicious top score" by definition.
-    5. Flag in the board's "better" direction only — we don't care
+    5. Flag in the board's "better" direction only - we don't care
        about players who are unusually bad.
     """
     ranked = sorted(entries, key=lambda e: e["rank"])
@@ -495,7 +495,7 @@ def _score_outlier_check(
         if not better_outlier:
             continue
         # Express the magnitude as a multiplier vs. the cohort median
-        # — easier to read than "5.2 log-z-scores above log-median".
+        # - easier to read than "5.2 log-z-scores above log-median".
         ratio = e["score"] / median if median > 0 else float("inf")
         _add_evidence(flagged, e["player_name"], board, e, {
             "type": "score_outlier",
@@ -538,7 +538,7 @@ def _rank_gap_check(
         bigger = max(abs(a), abs(b))
         gaps.append(abs(a - b) / bigger if bigger > 0 else 0.0)
 
-    # Baseline: median of the tail gaps (after the top 3) — that's the
+    # Baseline: median of the tail gaps (after the top 3) - that's the
     # "typical between-rank step" without contamination from anomalies
     # at the very top.
     tail = gaps[3:] if len(gaps) > 3 else gaps
@@ -636,7 +636,7 @@ async def _velocity_check(
             "summary": (
                 f"Score gained {_fmt(delta_s)} in {delta_t_h:.1f}h "
                 f"(rate {_fmt(v)}/h). This board's peer p95 rate is "
-                f"{_fmt(peer_p95)}/h — this player is {v / peer_p95:.0f}× faster."
+                f"{_fmt(peer_p95)}/h - this player is {v / peer_p95:.0f}× faster."
             ),
             "measurements": {
                 "score_delta": _round(delta_s),
@@ -671,14 +671,14 @@ def _reset_boundary_before(anchor: int, reset_kind: str) -> int:
     Trove resets at **11:00 UTC**:
     - ``"daily"`` boards reset every day
     - ``"weekly"`` boards reset every Monday
-    - ``"default"`` boards don't reset (accumulate forever) — we
+    - ``"default"`` boards don't reset (accumulate forever) - we
       return 0 so any prior anchor passes the cycle-membership check.
 
     Critical for the velocity check: comparing a score across a reset
     boundary is meaningless. Pre-reset Δ-score is negative (already
     filtered) but post-reset "starting fresh and grinding hard" can
     masquerade as a velocity outlier vs a peer baseline that includes
-    pre-reset velocities — this guard prevents that.
+    pre-reset velocities - this guard prevents that.
     """
     if reset_kind == "default" or not reset_kind:
         return 0
@@ -695,7 +695,7 @@ def _reset_boundary_before(anchor: int, reset_kind: str) -> int:
         while eleven.weekday() != 0:
             eleven -= timedelta(days=1)
         return int(eleven.timestamp())
-    # Unknown reset_kind — fail safe by allowing any prior anchor.
+    # Unknown reset_kind - fail safe by allowing any prior anchor.
     return 0
 
 
@@ -760,7 +760,7 @@ def _format(
     for name, boards_map in flagged.items():
         boards = list(boards_map.values())
         # Per-evidence + per-board confidence. The board-level value is
-        # the max evidence confidence on THAT board — within a board,
+        # the max evidence confidence on THAT board - within a board,
         # multiple checks are correlated, so we don't compound them.
         # Across-board compounding happens in _player_confidence.
         for b in boards:
@@ -776,7 +776,7 @@ def _format(
             "confidence": _player_confidence(boards),
         })
     # Sort by confidence desc, then by total evidence count desc as a
-    # tiebreaker — most-suspicious-first.
+    # tiebreaker - most-suspicious-first.
     players.sort(
         key=lambda p: (
             -p["confidence"],
@@ -833,7 +833,7 @@ def _empty(anchor: int | None, z: float, vm: float, mb: int) -> dict:
 #     unusual but can be legitimate on niche boards. Trust it most of
 #     the way but don't push past 0.85 without corroboration.
 #   - score_outlier: noisiest signal. Even with log-MAD-Z on the elite
-#     cohort, 51 single-signal flags appeared on real data — the vast
+#     cohort, 51 single-signal flags appeared on real data - the vast
 #     majority were rank-1 to rank-5 players who are legitimately
 #     ahead of their cohort. Cap low so it can only contribute when
 #     another check confirms.
@@ -886,10 +886,10 @@ def _player_confidence(boards: list[dict]) -> float:
     Strategy:
 
     - **Within a board**: MAX evidence confidence. The three checks
-      are NOT independent at the per-board level — MAD-Z and rank-gap
+      are NOT independent at the per-board level - MAD-Z and rank-gap
       both light up when one player dominates, so multiplying would
       double-count the same anomaly.
-    - **Across boards**: noisy-OR. Independence is defensible — one
+    - **Across boards**: noisy-OR. Independence is defensible - one
       board's anomaly doesn't explain another's. Two boards each at
       0.95 → 1 − 0.05² = 0.9975.
     - **Check-type diversity cap**: if ALL the evidence the player has

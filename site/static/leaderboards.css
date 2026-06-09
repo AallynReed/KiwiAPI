@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /leaderboards — page-specific styles
+   /leaderboards - page-specific styles
    ───────────────────────────────────────────────────────────────────────
    Loaded on top of style.css. Sidebar (board list) + entries pane on
    desktop; on mobile the sidebar collapses behind a "Choose board"
@@ -49,7 +49,7 @@
 
 /* Compact live-engagement metric beneath the subtitle. The icon
    pulse-glows so the eye picks it up as "this is a live number".
-   Renders as a <button> — clickable to toggle the activity-trend
+   Renders as a <button> - clickable to toggle the activity-trend
    sparkline below. Inherits cleanly because button defaults are
    reset to match the surrounding text style. */
 .lb-activity {
@@ -86,7 +86,7 @@
   font-weight: 700;
   color: #8ee5a0;
 }
-/* Caret on the right edge of the pill — rotates when the trend chart
+/* Caret on the right edge of the pill - rotates when the trend chart
    is open so the affordance is obvious. Suppressed in the inert state
    (no history available yet to expand into). */
 .lb-activity-caret {
@@ -107,7 +107,7 @@
   outline: 2px solid rgba(93, 208, 120, 0.6);
   outline-offset: 2px;
 }
-/* Empty state inside the trend container — shown when the activity
+/* Empty state inside the trend container - shown when the activity
    history endpoint returned 0 or 1 points (typical right after a
    fresh deploy or container restart while estimates re-populate). */
 .lb-activity-trend-empty {
@@ -118,12 +118,12 @@
   line-height: 1.5;
 }
 
-/* Activity-trend sparkline. Sits inline with the current-hour pill —
+/* Activity-trend sparkline. Sits inline with the current-hour pill -
    compact, dim by default, gets a slight glow on hover. Plots
    estimate_per_hour so missed-capture gaps don't manifest as spikes.
    ``display: flex`` overrides the user-agent ``[hidden] { display: none }``
    default, so we re-assert it here (same pattern as .nav-account-panel
-   — see 2026-06 always-open-profile-menu fix). */
+   - see 2026-06 always-open-profile-menu fix). */
 .lb-activity-trend {
   margin: 10px auto 0;
   max-width: 340px;
@@ -419,7 +419,7 @@
 .lb-tab-pane { display: none; }
 .lb-tab-pane.active { display: block; }
 /* When the cheaters pane is in tab mode it doesn't need its own
-   chrome (border + padding) anymore — the tab strip provides the
+   chrome (border + padding) anymore - the tab strip provides the
    container. Keep the slider + body content; drop the section frame. */
 .lb-tab-pane.lb-cheaters {
   background: transparent;
@@ -687,7 +687,7 @@
   min-width: 0;
 }
 /* The same node renders as a clickable button when ``goto-board`` is
-   wired in — strip default button chrome so it visually matches the
+   wired in - strip default button chrome so it visually matches the
    plain-text variant, but add a hover affordance + arrow. */
 button.lb-cheater-board-name.lb-cheater-board-link {
   background: transparent;
@@ -788,7 +788,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 /* ─── Cheaters coverage (analyzed + skipped boards) ───────────────────
    Mirrors the .lb-cheaters-method <details> visual so the two
    collapsibles stack cleanly. Lives between the meta line and the
-   flagged-players body — closed by default; a one-click open reveals
+   flagged-players body - closed by default; a one-click open reveals
    exactly which boards the analysis scanned. */
 .lb-cheaters-coverage {
   margin: 6px 0 12px;
@@ -824,7 +824,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 }
 .lb-cheaters-coverage-body { padding: 4px 14px 14px; }
 
-/* Per-cadence palette as CSS variables — kept in one place so the
+/* Per-cadence palette as CSS variables - kept in one place so the
    stats strip + row accents stay in lock-step if we re-tune later. */
 .lb-cheaters-coverage {
   --cov-daily:    #4cc9f0;
@@ -972,7 +972,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   content: "";
   display: inline;
 }
-/* Cadence accent — left bar color + soft gradient bleed across the row */
+/* Cadence accent - left bar color + soft gradient bleed across the row */
 .lb-cov-row.kind-daily {
   --row-accent: var(--cov-daily);
   --row-bleed: rgba(76, 201, 240, 0.10);
@@ -1239,7 +1239,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   gap: 0;
 }
 /* When collapsed, hide the body but leave the header clickable. ``display: none``
-   over ``max-height: 0`` because the board buttons are simple — no need for the
+   over ``max-height: 0`` because the board buttons are simple - no need for the
    animation overhead, and screen readers correctly skip the hidden content. */
 .lb-category-group[data-collapsed="true"] .lb-category-body {
   display: none;
@@ -1410,7 +1410,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   font-size: .95rem;
 }
 
-/* "Crunching latest data…" placeholder — friendlier than a bare
+/* "Crunching latest data…" placeholder - friendlier than a bare
    "Loading…" for the first paint after a fresh boot or a brand-new
    anchor when the warmer hasn't finished its first iteration yet.
    Animated three-dot trail so the user can see it's alive. */
@@ -1445,7 +1445,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   pointer-events: none;
 }
 .lb-refreshing::after {
-  /* Thin spinning bar pinned to the top of the dimmed container — a
+  /* Thin spinning bar pinned to the top of the dimmed container - a
      unambiguous "work in progress" affordance without obscuring the
      content underneath. */
   content: '';
@@ -1592,7 +1592,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   height: 100%;
   overflow: visible;
 }
-/* Axis + grid lines — muted so they don't compete with the series. */
+/* Axis + grid lines - muted so they don't compete with the series. */
 .lb-chart .lb-chart-axis-line,
 .lb-chart .lb-chart-grid {
   stroke: rgba(255,255,255,.10);

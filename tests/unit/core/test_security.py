@@ -49,7 +49,7 @@ def test_token_checksum_validates_generated_tokens():
 def test_token_checksum_rejects_tampered_token():
     full, _, _ = generate_api_token()
     prefix, body, crc = full.split("_")
-    # Flip a character in the body — the checksum no longer matches.
+    # Flip a character in the body - the checksum no longer matches.
     flipped = body[:-1] + ("A" if body[-1] != "A" else "B")
     assert verify_token_checksum(f"{prefix}_{flipped}_{crc}") is False
 

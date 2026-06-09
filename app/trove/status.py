@@ -1,21 +1,21 @@
-"""Trove server status prober — EU / US / PTS, with persisted history.
+"""Trove server status prober - EU / US / PTS, with persisted history.
 
 Every ``trove_status_probe_interval_seconds`` a background loop probes:
 
-  • **auth** (shared) — HTTPS liveness of ``auth.trionworlds.com``, the
+  • **auth** (shared) - HTTPS liveness of ``auth.trionworlds.com``, the
     account-auth gateway. Structured HTTP response (< 500) + valid TLS =
     reachable; timeout / refused / TLS error / 5xx = down. Catches full
     outages but stays up during world-only maintenance (Akamai-fronted).
-  • **game per environment** (eu / us / pts) — TCP-connect probe of the
+  • **game per environment** (eu / us / pts) - TCP-connect probe of the
     glsserver port (6560) on each environment's game host. Accepted =
     that environment's worlds are playable; refused/timeout while auth is
     up = that environment is in maintenance.
 
 Per-environment verdict:
-  • ``down``        — auth gateway unreachable (can't even log in)
-  • ``maintenance`` — auth up, game socket refused
-  • ``online``      — auth up + game socket accepted
-  • ``unknown``     — no probe completed yet
+  • ``down``        - auth gateway unreachable (can't even log in)
+  • ``maintenance`` - auth up, game socket refused
+  • ``online``      - auth up + game socket accepted
+  • ``unknown``     - no probe completed yet
 
 Each environment's status timeline is persisted as ``TroveStatusEvent``
 segments (a new open segment opens on every status change, the prior one
@@ -62,7 +62,7 @@ async def _probe_auth() -> dict:
             "latency_ms": round(latency, 1),
             "error": None if online else f"HTTP {resp.status_code}",
         }
-    except Exception as e:  # noqa: BLE001 — any failure is "down"
+    except Exception as e:  # noqa: BLE001 - any failure is "down"
         latency = (time.monotonic() - t0) * 1000
         return {
             "online": False,
@@ -107,7 +107,7 @@ def _verdict(auth_online: bool, game_online: bool) -> str:
 
 
 # Public Live regions that roll up into the homepage pill's "overall"
-# status. PTS is excluded — it's a test server and shouldn't colour the
+# status. PTS is excluded - it's a test server and shouldn't colour the
 # public indicator.
 _LIVE_REGIONS = ("eu", "us")
 
@@ -170,7 +170,7 @@ async def probe_once() -> dict:
 
 async def _record_transition(env: str, status: str, online: bool) -> None:
     """Open a new status segment when ``env`` changes status, closing the
-    previous open one. No-op when the status is unchanged. Best-effort —
+    previous open one. No-op when the status is unchanged. Best-effort -
     persistence failure must not break probing."""
     try:
         from app.trove.models import TroveStatusEvent
@@ -181,7 +181,7 @@ async def _record_transition(env: str, status: str, online: bool) -> None:
             .first_or_none()
         )
         if last is not None and last.ended_at is None and last.status == status:
-            return  # unchanged — keep the open segment running
+            return  # unchanged - keep the open segment running
         if last is not None and last.ended_at is None:
             # Close the previous open segment.
             last.ended_at = now

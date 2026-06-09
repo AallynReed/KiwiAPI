@@ -127,7 +127,7 @@ async def refresh_news() -> int:
 
 
 # --- Read helpers -----------------------------------------------------------
-# Nothing is pruned — `trove_news` is the durable archive. The live feed serves
+# Nothing is pruned - `trove_news` is the durable archive. The live feed serves
 # the newest few; the history endpoint pages through everything.
 
 async def latest_news(limit: int) -> list[TroveNews]:

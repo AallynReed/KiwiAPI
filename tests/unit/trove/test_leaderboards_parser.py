@@ -46,7 +46,7 @@ def test_parse_dump_drops_favorites_category():
     text = _line("LB_F", "Cat_Fav", 9, "Faves", "FAVORITES",
                  _entries((1, "Alpha", 1)))
     assert parse_dump(text) == []
-    # Case-insensitive — the source enforces .upper() match.
+    # Case-insensitive - the source enforces .upper() match.
     text = _line("LB_F", "Cat_Fav", 9, "Faves", "Favorites",
                  _entries((1, "Alpha", 1)))
     assert parse_dump(text) == []
@@ -67,11 +67,11 @@ def test_parse_dump_dedupes_by_uuid():
 def test_parse_dump_skips_malformed_entries_keeps_good_ones():
     bad_entries = "|".join([
         "1;Alpha;5000",        # ok
-        "bogus",               # no semicolons — skipped
-        "2;Bravo;",            # empty score — skipped (float() fails)
+        "bogus",               # no semicolons - skipped
+        "2;Bravo;",            # empty score - skipped (float() fails)
         "3;Charlie;3000",      # ok
-        ";;;",                 # garbage — skipped
-        "4;Delta;notanumber",  # non-numeric score — skipped
+        ";;;",                 # garbage - skipped
+        "4;Delta;notanumber",  # non-numeric score - skipped
         "5;Echo;1500",         # ok
     ])
     text = _line("LB_A", "Cat_A", 100, "Board A", "Stats", bad_entries)
@@ -136,7 +136,7 @@ def test_contest_type_for():
 
 # --- archive cutoff helper -------------------------------------------------
 # Drives the X-RateLimit-Archive-* throttle on anchors older than the
-# configured threshold. The exact day count is a config knob — these tests
+# configured threshold. The exact day count is a config knob - these tests
 # pin the relative-to-now semantics, not the threshold value.
 
 
@@ -148,7 +148,7 @@ def test_is_archive_query_uses_configured_threshold(monkeypatch):
     fixed integer.
 
     The test still pins the relative-to-now semantics (the cutoff is
-    roughly ``days`` ago) — value of the threshold is the one we feed
+    roughly ``days`` ago) - value of the threshold is the one we feed
     the monkeypatched stub."""
     import asyncio
     from datetime import UTC, datetime, timedelta
@@ -171,7 +171,7 @@ def test_is_archive_query_uses_configured_threshold(monkeypatch):
         cutoff = await archive_query_cutoff()
 
         # The cutoff sits roughly `FAKE_DAYS` ago (within a couple-second
-        # slop for the two now() calls — one here, one inside the helper).
+        # slop for the two now() calls - one here, one inside the helper).
         expected = int((datetime.now(UTC) - timedelta(days=FAKE_DAYS)).timestamp())
         assert abs(cutoff - expected) <= 2
 

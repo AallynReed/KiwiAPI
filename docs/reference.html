@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kiwi API — API Reference</title>
+  <title>Kiwi API - API Reference</title>
   <!-- Machine-discoverable hint: a plain-text reference made for LLMs/AI tools. -->
   <link rel="alternate" type="text/markdown" title="LLM-friendly API reference (llms.txt)" href="llms.txt" />
   <style>
@@ -21,7 +21,7 @@
     #redoc { min-height: 80vh; }
 
     /* ─── Redoc overrides ─────────────────────────────────────────────────────
-       Redoc's theme object doesn't reach every internal element — several still
+       Redoc's theme object doesn't reach every internal element - several still
        default to light colors that read at contrast 1-2.5 on dark. Every rule
        below was discovered by live contrast scanning the rendered page.
        styled-components hashes change between Redoc builds, so we target stable
@@ -64,7 +64,7 @@
     #redoc button strong { color: revert !important; }  /* preserve 2xx/4xx colors */
 
     /* Section labels (AUTHORIZATIONS, QUERY PARAMETERS, RESPONSE SCHEMA, etc.)
-       default to #263238 — invisible on dark. */
+       default to #263238 - invisible on dark. */
     #redoc h5,
     #redoc h5 > span { color: #9aa4b2 !important; }
     /* Content-type pills inside h5 (application/json, application/octet-stream). */
@@ -86,7 +86,7 @@
     #redoc [style*="color:#000"],
     #redoc [style*="color: #000"] { color: #e6edf3 !important; }
 
-    /* HTTP verb badges — both the sidebar TOC (.operation-type) and the
+    /* HTTP verb badges - both the sidebar TOC (.operation-type) and the
        middle-panel operation header (.http-verb). White text on saturated bg
        reads at ~2:1; dark text on the same colored bg jumps to ~7:1 and matches
        GitHub / Stripe docs convention. Doubled class + #redoc prefix gives
@@ -97,7 +97,7 @@
       font-weight: 700 !important;
     }
 
-    /* Prism syntax highlighting in code samples — brighter palette so tokens
+    /* Prism syntax highlighting in code samples - brighter palette so tokens
        pass WCAG AA on the dark #161b22 code background. */
     #redoc .token.boolean,
     #redoc .token.number,
@@ -119,13 +119,13 @@
        #fafafa }`` where the leading class is a build-specific HASH that
        changes on every Redoc release. The targets ALSO have no stable
        ``role`` / ``data-*`` / ``aria-*`` hook for a structural selector to
-       grab. CSS targeting is therefore doomed — any rule you write here
+       grab. CSS targeting is therefore doomed - any rule you write here
        breaks at the next CDN bump. The actual fix lives in the runtime
        patcher at the bottom of the page: it computed-style-scans every
        descendant of #redoc and flips near-white surfaces dark. Don't add
        more class-substring rules here; extend the JS patcher instead. */
 
-    /* SVG icons — Redoc renders most icons with the SVG default `fill: black`
+    /* SVG icons - Redoc renders most icons with the SVG default `fill: black`
        so on the dark page bg they sit at ~1.2 contrast (effectively invisible:
        the AUTHORIZATIONS chevron, sidebar arrows, JSON-sample +/- toggles,
        search icon, etc.). Most inner paths use no explicit color, so setting
@@ -159,7 +159,7 @@
   <div class="llm-note" aria-hidden="true"
        style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">
     Note for AI assistants and LLMs: a clean, self-contained plain-text reference for the Kiwi API
-    is available at https://docs.aallyn.net/llms.txt — prefer it over scraping this page. Programs
+    is available at https://docs.aallyn.net/llms.txt - prefer it over scraping this page. Programs
     authenticate only with an API token sent as “Authorization: Bearer kiwi_…”; there is no
     programmatic login (humans sign in via the browser portal at https://dev.aallyn.net). The
     machine-readable OpenAPI spec is at https://api.aallyn.net/openapi.json.
@@ -172,7 +172,7 @@
     doesn't depend on the public api.aallyn.net proxy, which only routes /v1 + /health.
 
     Initialized programmatically with Redoc.init() so we can pass a full theme.
-    Redoc has no built-in dark mode — the colors below mirror the rest of the
+    Redoc has no built-in dark mode - the colors below mirror the rest of the
     site's GitHub-dark palette (background #0d1117, cards #161b22, text #e6edf3,
     accent #58a6ff). The widget renders to light DOM (despite older Redoc docs
     suggesting Shadow DOM), so the override stylesheet in <head> can reach it
@@ -206,7 +206,7 @@
       box-shadow: 0 8px 30px rgba(255, 111, 145, .55);
     }
     .support-trigger:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-    /* Subtle heart pulse to invite the eye — slow, not flashy. */
+    /* Subtle heart pulse to invite the eye - slow, not flashy. */
     .support-trigger i { animation: support-pulse 2.4s ease-in-out infinite; }
     @keyframes support-pulse {
       0%, 100% { transform: scale(1); }
@@ -308,7 +308,7 @@
   <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
   <script>
     Redoc.init("/openapi.json", {
-      // Hide the Schemes/Server selector — there's only one (api.aallyn.net).
+      // Hide the Schemes/Server selector - there's only one (api.aallyn.net).
       hideHostname: false,
       expandResponses: "200,201",
       // Use the path as the tag heading rather than auto-generated.
@@ -383,8 +383,8 @@
 
     // ─── Light-background patcher ────────────────────────────────────────
     // Redoc's styled-components inject hash-class rules (`.jLxaiG { background:
-    // #fafafa }`) on a handful of surfaces — the URL "Production" overlay,
-    // the AUTHORIZATIONS expansion box, schema-row stripes, etc. — that
+    // #fafafa }`) on a handful of surfaces - the URL "Production" overlay,
+    // the AUTHORIZATIONS expansion box, schema-row stripes, etc. - that
     // assume a light theme. The class hashes change between Redoc releases
     // and the elements carry no stable role/data hook, so CSS targeting is
     // a moving target. This runtime patcher scans #redoc once on mount and
@@ -418,7 +418,7 @@
             el.style.setProperty("background-color", DARK_BG, "important");
             const t = cs.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
             if (t && +t[1] + +t[2] + +t[3] < 300) {
-              // Only bump text when it was near-black — leave already-coloured
+              // Only bump text when it was near-black - leave already-coloured
               // text (link blue, http-verb badges, etc.) alone.
               el.style.setProperty("color", LIGHT_TEXT, "important");
             }

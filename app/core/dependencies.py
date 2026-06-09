@@ -117,14 +117,14 @@ class AccessContext:
 
 # The runtime IP check uses HMAC-SHA256(salt, ip) on the inbound client IP and
 # looks for that hash in the token's stored ``allowed_ip_hashes``. The plaintext
-# IP never crosses any data boundary — admins/DB breach see only hashes. See
+# IP never crosses any data boundary - admins/DB breach see only hashes. See
 # ``app/core/ip_hash.py`` for the design notes (incl. why CIDRs aren't supported
 # and the IPv4-bruteforce caveat).
 
 
 async def _resolve_token(creds: HTTPAuthorizationCredentials) -> tuple[User, ApiToken]:
     """Validate a presented API token. Raises a 401 on any problem."""
-    # Reject tokens whose self-validating checksum fails — no DB hit needed.
+    # Reject tokens whose self-validating checksum fails - no DB hit needed.
     # (None = legacy/unknown shape, so fall through to the database lookup.)
     if verify_token_checksum(creds.credentials) is False:
         raise _not_authenticated("Invalid or revoked API token")
@@ -158,7 +158,7 @@ async def _enforce_token_limits(
     request.state.usage_user_id = user.id
     request.state.usage_token_id = token.id
 
-    # IP allowlist — opt-in defence-in-depth for the token owner. Hashes are
+    # IP allowlist - opt-in defence-in-depth for the token owner. Hashes are
     # stored, so the check rehashes the inbound IP with this token's salt and
     # looks for a match. An empty list means "no IP restriction".
     if token.allowed_ip_hashes and not _ip_hash_allowed(
@@ -170,7 +170,7 @@ async def _enforce_token_limits(
             message="Requests from this IP are not allowed for this token",
         )
 
-    # Per-token throughput cap — protects compute-heavy endpoints from one key.
+    # Per-token throughput cap - protects compute-heavy endpoints from one key.
     # Limit + window are runtime-tunable from the master admin panel; cached
     # for 5s in runtime_config so the hot path stays cheap.
     from app.admin import runtime_config
@@ -187,7 +187,7 @@ async def _enforce_token_limits(
     if extra is not None:
         await check_rate_limit(f"ep:{getattr(route, 'path', '')}:{token.id}", *extra)
 
-    # Usage accounting — coalesced into ~one write per interval when Redis is up.
+    # Usage accounting - coalesced into ~one write per interval when Redis is up.
     await record_token_use(token, client_ip(request))
 
 
@@ -224,7 +224,7 @@ async def get_superuser_token_context(
 
     Validates the API token through the normal pipeline (rate limit + usage
     accounting) and then requires the token's owner to be a superuser. The
-    session-cookie equivalent is ``get_current_superuser`` — this one is for
+    session-cookie equivalent is ``get_current_superuser`` - this one is for
     bots that authenticate with an API token.
     """
     if not ctx.user.is_superuser:
@@ -240,7 +240,7 @@ async def get_superuser_token_context(
 class IngestAuth:
     """Master-ingest auth context. ``token`` is set when the caller
     authenticated via an API token (the bot path) and ``None`` when via
-    a session JWT (the portal Ingest tab) — lets the route handler
+    a session JWT (the portal Ingest tab) - lets the route handler
     record WHICH auth method was used (bot vs master in the audit log)."""
     user: User
     token: ApiToken | None
@@ -254,10 +254,10 @@ async def require_master_ingest(
     """Master-only gate for the bot-ingest endpoints (leaderboards / market /
     challenge / chaos-chest). Accepts EITHER:
 
-    - A superuser-owned API token — the bot path, with the normal rate-limit
+    - A superuser-owned API token - the bot path, with the normal rate-limit
       + usage-accounting pipeline applied so token caps still hold. Returns
       the ``ApiToken`` alongside the user so the route can record it.
-    - A superuser session JWT — the portal Ingest tab, where the master is
+    - A superuser session JWT - the portal Ingest tab, where the master is
       already authenticated and we don't want them to mint+paste an API token
       just to replay a captured cfg. Returns ``token=None``.
 
@@ -283,12 +283,12 @@ async def require_master_ingest(
         )
 
     # Per-token, per-endpoint cooldown. ONLY enforced on the API-token
-    # branch — a misbehaving bot resubmitting the same dump on a tight
+    # branch - a misbehaving bot resubmitting the same dump on a tight
     # loop is the spam shape this catches (see ingest_log for duplicate-
     # anchor spam history). Session-JWT calls bypass this so the master
     # can replay back-fills through the portal "Manual cfg ingest" card
     # without waiting out the window. Each ingest endpoint buckets
-    # independently — leaderboards/market/challenge/chaos-chest don't
+    # independently - leaderboards/market/challenge/chaos-chest don't
     # share budgets.
     if token is not None:
         from app.admin import runtime_config
@@ -353,7 +353,7 @@ def public_scope(scope: str, *, rate_multiplier: int = 1):
                 await _enforce_token_limits(request, response, user, token,
                                             multiplier=rate_multiplier, bucket=bucket)
                 return AccessContext(user=user, token=token, ip=client_ip(request))
-            # Valid token, but it doesn't carry this scope — fall through to anon.
+            # Valid token, but it doesn't carry this scope - fall through to anon.
         await _enforce_anonymous_limit(request, response,
                                        multiplier=rate_multiplier, bucket=bucket)
         return AccessContext(user=None, token=None, ip=client_ip(request))

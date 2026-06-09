@@ -9,7 +9,7 @@ class CreateTokenRequest(BaseModel):
     # Scope bitmask (OR of scope bits). 0 = all scopes, present and future.
     scopes: int = Field(default=0, ge=0)
     # Optional defence-in-depth for the TOKEN OWNER: if any IPs are supplied,
-    # requests from other IPs are rejected. Stored HASHED — neither admins
+    # requests from other IPs are rejected. Stored HASHED - neither admins
     # nor a DB breach can read them back; the API only ever knows whether a
     # candidate IP matches. CIDRs are NOT supported (hashes can't range-
     # match). Empty (the default) means no IP restriction.
@@ -32,7 +32,7 @@ class RevokeTokenRequest(BaseModel):
 
 
 class EditTokenRequest(BaseModel):
-    # Only the name and allowed IPs are editable — never the secret or scopes.
+    # Only the name and allowed IPs are editable - never the secret or scopes.
     # ``allowed_ips`` replaces the whole pinned list (we can't add/remove a
     # specific hash since the user only sees a count). Pass ``[]`` to drop
     # all pinning; pass ``None`` to leave the list alone.
@@ -46,7 +46,7 @@ class TokenPublic(BaseModel):
     prefix: str
     scopes: int  # the raw bitmask (0 = all)
     scope_names: list[str]  # decoded names of the set bits (empty when all)
-    # The pinned IPs are stored hashed — the owner can SEE how many they
+    # The pinned IPs are stored hashed - the owner can SEE how many they
     # pinned but can't read them back (same property as password storage).
     # 0 means no IP restriction on this token.
     allowed_ip_count: int
@@ -55,7 +55,7 @@ class TokenPublic(BaseModel):
     revoke_reason: str | None = None
     created_at: datetime
     last_used_at: datetime | None = None
-    # NOTE: last_used_ip was removed — keeping it plaintext leaked PII; hashing
+    # NOTE: last_used_ip was removed - keeping it plaintext leaked PII; hashing
     # it would render the field useless to the owner.
     rotated_at: datetime | None = None
     expires_at: datetime | None = None
@@ -63,5 +63,5 @@ class TokenPublic(BaseModel):
 
 
 class TokenCreatedResponse(TokenPublic):
-    # The full secret — returned exactly once, at creation (or rotation) time.
+    # The full secret - returned exactly once, at creation (or rotation) time.
     token: str

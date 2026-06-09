@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Trove leaderboards — Better Trove Tools</title>
+    <title>Trove leaderboards - Better Trove Tools</title>
     <meta name="description" content="Browse Trove's in-game leaderboards: top players per board, ranked, with a player history search.">
     <meta name="theme-color" content="#0a0e14">
     <meta name="color-scheme" content="dark">
@@ -48,7 +48,7 @@
                      /site/leaderboards/config fetch fails. -->
                 <p class="lb-subtitle" id="lb-subtitle">Top players per board, ranked. Hourly captures, 3-day live retention, full archive beyond.</p>
 
-                <!-- Activity pill — clickable button that toggles the
+                <!-- Activity pill - clickable button that toggles the
                      trend chart below. Hidden until /site/leaderboards/
                      activity returns a non-null estimate. The aria-
                      expanded + aria-controls attributes mirror the
@@ -62,7 +62,7 @@
                      opened by clicking the pill above. JS plots
                      ``estimate_per_hour`` (raw count divided by
                      duration) so missed-capture gaps don't manifest as
-                     spikes. Tiny SVG, no axes, no legend — hover for a
+                     spikes. Tiny SVG, no axes, no legend - hover for a
                      tooltip with the absolute number and window
                      duration at that anchor. -->
                 <div class="lb-activity-trend" id="lb-activity-trend" hidden>
@@ -95,7 +95,7 @@
         <!-- ═══════════════ TAB STRIP ═══════════════
              Two tabs: the boards browser (default) and the cheaters
              analysis. URL hash carries `tab=cheaters` for deep-link +
-             back-button support. The cheaters fetch is LAZY — only
+             back-button support. The cheaters fetch is LAZY - only
              fires the first time the tab is activated. -->
         <nav class="lb-tabs" role="tablist" aria-label="Leaderboards view">
             <button type="button" class="lb-tab active" role="tab"
@@ -227,7 +227,7 @@
         </section>
 
         <!-- ═══════════════ TAB: POSSIBLE CHEATERS ═══════════════
-             Hidden by default. The cheaters fetch is LAZY — fires only
+             Hidden by default. The cheaters fetch is LAZY - fires only
              the first time the user activates this tab. Server-side
              cache is kept warm by a background task so the response
              is instant. -->
@@ -246,7 +246,7 @@
                        id="lb-cheaters-min" min="0" max="1" step="0.05" value="0.9">
                 <span class="lb-cheaters-filter-hint" id="lb-cheaters-filter-hint"></span>
             </div>
-            <!-- JS owns this line. No data-i18n attr — i18n.refresh()
+            <!-- JS owns this line. No data-i18n attr - i18n.refresh()
                  would otherwise restore "Loading…" over the JS content. -->
             <p class="lb-cheaters-meta" id="lb-cheaters-meta">Loading…</p>
             <!-- Coverage details: which boards the run actually scanned and

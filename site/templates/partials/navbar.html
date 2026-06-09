@@ -1,10 +1,10 @@
 {# ===========================================================================
-   Shared site navbar — included by every standard page with
+   Shared site navbar - included by every standard page with
    ``{% include "partials/navbar.html" %}``.
 
    Active-state is derived from the request path: Starlette injects
    ``request`` into every template context and ``{% include %}`` inherits it,
-   so a page only has to exist as a route — no per-template navbar copies to
+   so a page only has to exist as a route - no per-template navbar copies to
    keep in sync. Adding a link here adds it everywhere at once. (This is what
    the old per-page copies got wrong: the Server Status link only ever made
    it into status.html.)

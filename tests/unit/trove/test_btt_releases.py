@@ -82,7 +82,7 @@ def test_walk_latest_skips_release_with_empty_assets():
     for platform in ("windows", "android"):
         release, _assets = btt.walk_latest(releases, platform)
         assert release["tag_name"] == "v2", f"{platform} should walk back to v2"
-    # Linux had no asset on either v3 OR v2, so it walks to v1 — wait, v1
+    # Linux had no asset on either v3 OR v2, so it walks to v1 - wait, v1
     # ships .msi, not Linux. So Linux walks past all three and returns None.
     assert btt.walk_latest(releases, "linux") is None
 
@@ -190,9 +190,9 @@ def test_build_changelog_groups_unreleased_then_tags():
     tags = [_tag("v1.1.0", "bbbbbbb"), _tag("v1.0.0", "ddddddd")]
     commits = [
         _commit("aaaaaaa", "feat: post-v1.1 work"),  # since v1.1 -> Unreleased
-        _commit("bbbbbbb", "release v1.1.0"),         # tagged v1.1.0 — starts v1.1.0 group
+        _commit("bbbbbbb", "release v1.1.0"),         # tagged v1.1.0 - starts v1.1.0 group
         _commit("ccccccc", "fix: a bug fixed in 1.1"),
-        _commit("ddddddd", "v1.0.0 release"),         # tagged v1.0.0 — starts v1.0.0 group
+        _commit("ddddddd", "v1.0.0 release"),         # tagged v1.0.0 - starts v1.0.0 group
         _commit("eeeeeee", "initial commit"),
     ]
     groups = btt.build_changelog_groups(tags, commits)
@@ -207,7 +207,7 @@ def test_build_changelog_groups_unreleased_then_tags():
 
 
 def test_build_changelog_groups_drops_empty_groups():
-    # No commits since the latest tag — the "Unreleased" group should NOT appear.
+    # No commits since the latest tag - the "Unreleased" group should NOT appear.
     tags = [_tag("v1.0.0", "aaaaaaa")]
     commits = [_commit("aaaaaaa", "release v1.0.0"), _commit("bbbbbbb", "feat: start")]
     groups = btt.build_changelog_groups(tags, commits)

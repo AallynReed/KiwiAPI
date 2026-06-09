@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   password_reset.js — wires /forgot-password and /reset-password
+   password_reset.js - wires /forgot-password and /reset-password
    ───────────────────────────────────────────────────────────────────────
    Loaded by both pages so the bundle is shared. Each form is wired
    only when its DOM is present, so the script is a no-op on the page
@@ -76,9 +76,9 @@
           return;
         }
         $ok.textContent = (r.data && r.data.message) ||
-          t("Check your inbox — if that email's registered, a reset link is on its way.");
+          t("Check your inbox - if that email's registered, a reset link is on its way.");
         $ok.hidden = false;
-        // Don't auto-redirect — the user needs to go to their email
+        // Don't auto-redirect - the user needs to go to their email
         // client next, not back to /login.
       } finally {
         $submit.disabled = false;

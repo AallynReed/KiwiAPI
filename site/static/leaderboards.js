@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /leaderboards — page logic
+   /leaderboards - page logic
    ───────────────────────────────────────────────────────────────────────
    Fetches anchors, boards, and entries from /site/leaderboards/* (which
    bypass the public API surface and read the database directly). Renders
@@ -20,7 +20,7 @@
   const PICKER_DAYS = 7;
 
   // Defined ABOVE `state` because state's initial value calls
-  // readMinConfidence(), which closes over this key — declaring it
+  // readMinConfidence(), which closes over this key - declaring it
   // later puts it in the temporal dead zone at first call and the
   // try/catch silently returns the default.
   const CHEATERS_MIN_KEY = 'btt_lb_cheaters_min';
@@ -73,16 +73,16 @@
     activeTab: 'boards',         // 'boards' | 'cheaters'
     cheatersLoaded: false,       // becomes true after the first lazy fetch
     cheatersLoading: false,      // guards against double-firing during fetch
-    boardChart: null,            // {uuid, data} — cached so resize/lang re-renders don't refetch
-    playerChart: null,           // {name, data} — same idea for the per-player chart
+    boardChart: null,            // {uuid, data} - cached so resize/lang re-renders don't refetch
+    playerChart: null,           // {name, data} - same idea for the per-player chart
     // Categories the user has manually collapsed. Persisted to
     // localStorage so the preference survives reloads. A category
     // missing from the set is treated as expanded (the friendly
-    // default — first-time visitors see all boards).
+    // default - first-time visitors see all boards).
     collapsedCategories: readCollapsedCategories(),
   };
 
-  // Chart palette — picked for readability on the dark theme. We cycle
+  // Chart palette - picked for readability on the dark theme. We cycle
   // through these in the order series come from the API (which is already
   // sorted by rank / best-rank, so line #1 is the most prominent player).
   const CHART_COLORS = [
@@ -97,7 +97,7 @@
   const $cheatersFilter = document.getElementById('lb-cheaters-min');
   const $cheatersFilterValue = document.getElementById('lb-cheaters-min-value');
   const $cheatersFilterHint = document.getElementById('lb-cheaters-filter-hint');
-  // Coverage <details> — populated whenever a cheaters payload renders;
+  // Coverage <details> - populated whenever a cheaters payload renders;
   // tells the user exactly which boards were scanned vs skipped + why,
   // so they can verify the analysis covered what they care about.
   const $cheatersCoverage = document.getElementById('lb-cheaters-coverage');
@@ -152,7 +152,7 @@
     }
     state.activity = activity;
     state.activityHistory = activityHistory;
-    // Open/closed state is sticky across visits — honour whatever the
+    // Open/closed state is sticky across visits - honour whatever the
     // user chose last time. The trend section starts hidden in the HTML
     // so a false here just leaves it that way.
     state.activityTrendOpen = readActivityTrendOpen();
@@ -240,7 +240,7 @@
 
   async function ensureCheatersLoaded() {
     if (state.cheatersLoaded || state.cheatersLoading) {
-      // Already loaded (or in flight) — just re-render to reflect any
+      // Already loaded (or in flight) - just re-render to reflect any
       // language-change or slider-change since the last render.
       renderCheaters();
       return;
@@ -249,11 +249,11 @@
     // Show the friendlier "Crunching…" placeholder immediately so the
     // tab isn't empty while the fetch resolves. textContent so a later
     // language switch can re-translate via renderCheaters(). The
-    // server-side warmer almost always has this cached — when it
+    // server-side warmer almost always has this cached - when it
     // doesn't (cold boot / brand new anchor), the wait is several
     // seconds and the user deserves to know SOMETHING is happening.
     if ($cheatersMeta) {
-      $cheatersMeta.textContent = t('Crunching the latest capture — first paint can take a moment while we warm the caches.');
+      $cheatersMeta.textContent = t('Crunching the latest capture - first paint can take a moment while we warm the caches.');
     }
     try {
       const payload = await fetchJSON('/site/leaderboards/cheaters');
@@ -282,7 +282,7 @@
     syncFilterUI();
 
     // If we've never fetched, leave the panel's seed "Loading…" /
-    // "Checking…" placeholder alone — the user hasn't opened the tab
+    // "Checking…" placeholder alone - the user hasn't opened the tab
     // yet and there's nothing meaningful to show.
     if (data == null) return;
 
@@ -303,7 +303,7 @@
     const min = state.cheatersMinConfidence;
     const visible = players.filter((p) => (p.confidence ?? 0) >= min);
 
-    // Tab-strip badge mirrors the visible count — what the user would
+    // Tab-strip badge mirrors the visible count - what the user would
     // see if they switched to this tab right now.
     if ($tabCheatersBadge) {
       if (visible.length > 0) {
@@ -327,18 +327,18 @@
     if (anchor) {
       const when = formatAnchor(anchor);
       $cheatersMeta.textContent = visible.length > 0
-        ? t('Flagged {n} player(s) across {b} board(s) — based on the capture from {when}.')
+        ? t('Flagged {n} player(s) across {b} board(s) - based on the capture from {when}.')
           .replace('{n}', visible.length).replace('{b}', boards).replace('{when}', when)
         : flaggedTotal > 0
-          ? t('All {f} flagged player(s) are below the current confidence threshold — slide left to see them.')
+          ? t('All {f} flagged player(s) are below the current confidence threshold - slide left to see them.')
             .replace('{f}', flaggedTotal)
-          : t('Scanned {b} board(s) from the capture at {when} — nothing anomalous.')
+          : t('Scanned {b} board(s) from the capture at {when} - nothing anomalous.')
             .replace('{b}', boards).replace('{when}', when);
     } else {
       $cheatersMeta.textContent = t('No capture available yet to analyse.');
     }
 
-    // Coverage section — list which boards the analysis touched. Always
+    // Coverage section - list which boards the analysis touched. Always
     // worth showing when we have an anchor (transparency), even when zero
     // players are flagged so the user can see WHICH boards passed clean.
     renderCheatersCoverage(data);
@@ -418,7 +418,7 @@
   }
 
   function formatConfidence(c) {
-    // Truncate (not round) so 0.998 renders as 0.99 — rounding would
+    // Truncate (not round) so 0.998 renders as 0.99 - rounding would
     // misleadingly display "1.00" for sub-1 confidences.
     if (c >= 1) return '1.00';
     return (Math.floor(c * 100) / 100).toFixed(2);
@@ -470,11 +470,11 @@
     rerunI18n();
   }
 
-  // Stats strip — three big-number tiles, one per cadence bucket, each
+  // Stats strip - three big-number tiles, one per cadence bucket, each
   // with a proportional bar underneath. The bars share a denominator
   // (analyzed total) so visual width comparisons across buckets are
   // honest. Zero-count buckets still render so the reader sees the
-  // absence — "0 weekly" is information.
+  // absence - "0 weekly" is information.
   function renderCoverageStats(analyzed) {
     const by = { daily: 0, weekly: 0, lifetime: 0 };
     for (const b of analyzed) by[cadenceBucket(b)]++;
@@ -508,7 +508,7 @@
   function renderCoverageGroups(boards, isSkipped) {
     const groups = new Map();
     for (const b of boards) {
-      const cat = b.category || '—';
+      const cat = b.category || '-';
       if (!groups.has(cat)) groups.set(cat, []);
       groups.get(cat).push(b);
     }
@@ -610,7 +610,7 @@
       </div>`;
   }
 
-  // "daily" / "weekly" / "lifetime" — the bucket the row gets tinted by.
+  // "daily" / "weekly" / "lifetime" - the bucket the row gets tinted by.
   function cadenceBucket(b) {
     const rk = b.reset_kind || 'default';
     if (rk === 'default' || rk === 'none') return 'lifetime';
@@ -632,7 +632,7 @@
       ? `<span class="lb-confidence ${confidenceClass(conf)}" title="${t('Confidence')}">${formatConfidence(conf)}</span>`
       : '';
     // Board name is a link that jumps to the Leaderboards tab and
-    // pre-selects this board at the analysis-snapshot anchor — so the
+    // pre-selects this board at the analysis-snapshot anchor - so the
     // user can verify the flag in context with one click.
     const tooltip = t('Open this board in the Leaderboards view');
     return `
@@ -654,7 +654,7 @@
     // Bring the user to the Leaderboards tab with the snapshot's
     // anchor and the target board selected. The cheaters analysis
     // anchor (state.cheaters.anchor) is the most recent capture, which
-    // is usually "Today" in the day picker — but we look it up to
+    // is usually "Today" in the day picker - but we look it up to
     // handle edge cases where the picker is offset by a missed cycle.
     switchTab('boards');
     const targetAnchor = state.cheaters && state.cheaters.anchor;
@@ -664,7 +664,7 @@
         await selectDay(idx);
       }
     }
-    // The board list may have just (re-)loaded — if our target board
+    // The board list may have just (re-)loaded - if our target board
     // isn't in this capture's board list, just bail. Otherwise select
     // it; selectBoard handles "already selected" early-out internally.
     const board = state.boards.find((b) => b.uuid === uuid);
@@ -686,7 +686,7 @@
       rank_gap: t('Rank gap'),
       velocity_outlier: t('Velocity'),
     }[ev.type] || ev.type;
-    // Summaries come from the API verbatim — they include dynamic
+    // Summaries come from the API verbatim - they include dynamic
     // numbers in English. Localising them would require structured
     // measurements + a templating pass; deferred for now.
     return `
@@ -711,7 +711,7 @@
   }
   function writeActivityTrendOpen(open) {
     try { localStorage.setItem(ACTIVITY_TREND_OPEN_KEY, open ? '1' : '0'); }
-    catch (_) { /* private mode / blocked storage — fail soft */ }
+    catch (_) { /* private mode / blocked storage - fail soft */ }
   }
 
   function renderActivity() {
@@ -730,7 +730,7 @@
       .replace('{n}', `<span class="lb-activity-count">${Number(data.estimate).toLocaleString()}</span>`)
       .replace('{h}', hours.toFixed(1));
     // Caret icon on the right tells the user this is a toggle. Rotated
-    // via CSS when the parent carries .open. Always shown — the
+    // via CSS when the parent carries .open. Always shown - the
     // expandable section renders an empty-state hint if no points are
     // available yet (e.g. fresh deploy), so clicking is never wasted.
     el.innerHTML =
@@ -740,7 +740,7 @@
     el.title = data.methodology || '';
     el.hidden = false;
 
-    // Wire the click toggle ONCE — guard against re-binding on
+    // Wire the click toggle ONCE - guard against re-binding on
     // language changes (renderActivity re-runs on i18n refresh).
     if (!el.dataset.toggleWired) {
       el.addEventListener('click', () => {
@@ -782,10 +782,10 @@
 
   // ─── Activity history sparkline ───────────────────────────────────
   // Tiny inline-SVG line chart of activity ESTIMATES over the last 7
-  // days. Plots ``estimate_per_hour`` rather than the raw estimate —
+  // days. Plots ``estimate_per_hour`` rather than the raw estimate -
   // that flattens spikes caused by missed captures (a 2h window would
   // otherwise show roughly 2× the count of a healthy 1h window). The
-  // chart is decorative — no axes, no labels — but a hover indicator
+  // chart is decorative - no axes, no labels - but a hover indicator
   // surfaces (when, raw count, duration). Hidden when fewer than 2
   // points are available (fresh deploy with no history yet).
   function renderActivityTrend() {
@@ -800,20 +800,20 @@
     const data = state.activityHistory;
     const points = (data && data.points) || [];
     if (points.length < 2) {
-      // Empty state — explain why the chart isn't here yet without
+      // Empty state - explain why the chart isn't here yet without
       // wasting the click. The pill stays clickable; if the user
       // re-opens later when data has accumulated, it'll paint.
       if (range) range.textContent = '';
       host.innerHTML =
         `<div class="lb-activity-trend-empty" data-i18n>` +
-          t('Captures every hour — chart appears once 2+ are stored.') +
+          t('Captures every hour - chart appears once 2+ are stored.') +
         `</div>`;
       if (tip) tip.hidden = true;
       rerunI18n();
       return;
     }
 
-    // Range label (e.g. "last 7d · 42 captures") — gives the user a
+    // Range label (e.g. "last 7d · 42 captures") - gives the user a
     // sense of how much of the window is filled in.
     if (range) {
       const days = data.days || 7;
@@ -822,7 +822,7 @@
         .replace('{d}', days).replace('{n}', captures);
     }
 
-    // SVG geometry — fixed pixel size so the line shape is consistent
+    // SVG geometry - fixed pixel size so the line shape is consistent
     // across viewports. Width fills the hero column; height is fixed
     // so the hero doesn't shift on chart load.
     const W = 320, H = 56;
@@ -931,7 +931,7 @@
   // ─── Subtitle (dynamic retention window) ───────────────────────────
   // The retention number in the subtitle tracks the runtime config
   // tunable ``leaderboards_hot_retention_days``. JS owns this node
-  // entirely (no [data-i18n] on it) — we translate the template via
+  // entirely (no [data-i18n] on it) - we translate the template via
   // BTTi18n.t(), substitute the actual number, and write it directly.
   // Re-runs on language change via the listener in wireEvents().
   function renderSubtitle() {
@@ -957,7 +957,7 @@
     const todayKey = troveDayKeyFor(now);
 
     // Index every stored anchor by its trove-day. We keep the MAX (the
-    // last capture of that day) — the only one we care about, per spec.
+    // last capture of that day) - the only one we care about, per spec.
     const byDay = new Map();
     for (const ts of state.anchors) {
       const key = troveDayKeyFor(ts);
@@ -1017,7 +1017,7 @@
   }
 
   function dayCalendarLabel(troveDate) {
-    // Trove-date as "Mon Jun 8" — the JS Date passed in is already at
+    // Trove-date as "Mon Jun 8" - the JS Date passed in is already at
     // trove-time midnight so getMonth/getDate are the trove-day fields.
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1027,7 +1027,7 @@
   function formatCaptureTime(unixAnchor, relativeDay) {
     // "Last capture" meta on each day chip. UTC anchors are confusing to
     // read directly, so:
-    //   • Today (relativeDay 0): a relative "Xm ago" / "Xh ago" — the
+    //   • Today (relativeDay 0): a relative "Xm ago" / "Xh ago" - the
     //     most intuitive read for "how fresh is this?".
     //   • Older days: the capture clock time converted to the USER'S
     //     LOCAL timezone (not UTC, not trove-time) so it matches the
@@ -1085,7 +1085,7 @@
 
   function formatAnchor(ts) {
     const d = new Date(ts * 1000);
-    // Show "YYYY-MM-DD HH:mm UTC" — readable, sortable, no surprise
+    // Show "YYYY-MM-DD HH:mm UTC" - readable, sortable, no surprise
     // local-time gotchas (the data is anchored in UTC).
     const pad = (n) => String(n).padStart(2, '0');
     return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
@@ -1099,14 +1099,14 @@
   //     keeps a usable UI while the new anchor's boards load.
   //   • If state.boards is empty (first paint, or a load error wiped
   //     them), show the "crunching latest data" placeholder so the
-  //     user knows the bot is processing — much friendlier than a
+  //     user knows the bot is processing - much friendlier than a
   //     bare "Loading…".
   async function loadBoards() {
     const previousBoards = state.boards;
     const hadBoards = previousBoards.length > 0;
     if (!hadBoards) {
       $boardList.innerHTML = `
-        <p class="lb-loading lb-loading-crunch" data-i18n>Crunching the latest capture — first paint can take a moment while we warm the caches.</p>`;
+        <p class="lb-loading lb-loading-crunch" data-i18n>Crunching the latest capture - first paint can take a moment while we warm the caches.</p>`;
       rerunI18n();
       resetEntries();
     } else {
@@ -1120,7 +1120,7 @@
       state.boards = fresh;
       if (hadBoards) resetEntries();   // clear the now-stale entries pane
     } catch (err) {
-      // Keep the previous list visible if we had one — failure to refresh
+      // Keep the previous list visible if we had one - failure to refresh
       // shouldn't make the page worse than it was.
       $boardList.classList.remove('lb-refreshing');
       if (!hadBoards) $boardList.innerHTML = errorHTML(err);
@@ -1159,7 +1159,7 @@
     }
 
     // When the user is filtering by text, override their collapsed
-    // preferences and show every matching group expanded — otherwise a
+    // preferences and show every matching group expanded - otherwise a
     // remembered-collapsed category could hide the match the user is
     // explicitly searching for. The persisted set is left untouched so
     // clearing the filter restores the user's original layout.
@@ -1236,7 +1236,7 @@
     state.entries = [];
     state.entriesTotal = 0;
     // Use data-i18n on the title + hint so the i18n sweep translates
-    // them on every language switch — the textContent path used to lose
+    // them on every language switch - the textContent path used to lose
     // the original English source after the first JS-set, and t() at
     // resolve time misses the async-loaded dict on first render.
     $entriesTitle.setAttribute('data-i18n', '');
@@ -1257,7 +1257,7 @@
 
     const board = state.boards.find((b) => b.uuid === uuid);
     if (board) {
-      // Drop data-i18n + untrack the node — otherwise i18n.refresh()'s
+      // Drop data-i18n + untrack the node - otherwise i18n.refresh()'s
       // restoreAll restores the cached English source ("Pick a board…")
       // back over the board name we're about to write.
       $entriesTitle.removeAttribute('data-i18n');
@@ -1274,7 +1274,7 @@
       btn.classList.toggle('active', Number(btn.dataset.uuid) === uuid);
     }
 
-    // Don't blank the entries pane between boards — show a subtle
+    // Don't blank the entries pane between boards - show a subtle
     // dimming overlay instead so the user keeps their place visually
     // while the next page fetches. The empty-state copy ("Loading…")
     // only shows on the very first paint.
@@ -1282,11 +1282,11 @@
       $entriesBody.classList.add('lb-refreshing');
     } else {
       $entriesBody.innerHTML = `
-        <p class="lb-loading lb-loading-crunch" data-i18n>Crunching the latest capture — first paint can take a moment while we warm the caches.</p>`;
+        <p class="lb-loading lb-loading-crunch" data-i18n>Crunching the latest capture - first paint can take a moment while we warm the caches.</p>`;
     }
     $entriesFoot.hidden = true;
     rerunI18n();
-    // Kick off the chart fetch in parallel with the entries — independent
+    // Kick off the chart fetch in parallel with the entries - independent
     // requests, no need to serialise. The chart's wrap stays hidden if
     // the payload doesn't yield a chartable window (<2 anchors).
     loadBoardChart(uuid).catch((err) => {
@@ -1311,7 +1311,7 @@
       renderEntries();
     } catch (err) {
       // Only blow away the body with an error message if we have
-      // nothing better on screen — a refresh failure on top of an
+      // nothing better on screen - a refresh failure on top of an
       // existing list should NOT erase the list.
       if (!state.entries.length) {
         $entriesBody.innerHTML = errorHTML(err);
@@ -1352,7 +1352,7 @@
       </div>`;
 
     // Re-translate the freshly-injected data-i18n nodes BEFORE setting
-    // the count meta — t('entries') reads the active dict and we want
+    // the count meta - t('entries') reads the active dict and we want
     // it stable across this render.
     rerunI18n();
 
@@ -1401,7 +1401,7 @@
     rerunI18n();
     $playerPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    // Per-board chart fetch fires in parallel with the flat history — the
+    // Per-board chart fetch fires in parallel with the flat history - the
     // chart wraps stays hidden if the payload has too few anchors to plot.
     loadPlayerChart(trimmed).catch((err) => {
       console.warn('[leaderboards] player chart failed', err);
@@ -1412,7 +1412,7 @@
       const data = await fetchJSON(
         `/site/leaderboards/players/${encodeURIComponent(trimmed)}/history?limit=50`,
       );
-      // Prefer the canonical name from the first matching row — the
+      // Prefer the canonical name from the first matching row - the
       // server returns whatever Trove stored, which may differ in case
       // from what the user typed. Falls back to the typed input when
       // there are no matches.
@@ -1482,7 +1482,7 @@
       $mobileTrigger.setAttribute('aria-expanded', String(open));
     });
 
-    // Tab strip — switch + lazy-load cheaters on first activation.
+    // Tab strip - switch + lazy-load cheaters on first activation.
     if ($tabBoardsBtn) {
       $tabBoardsBtn.addEventListener('click', () => switchTab('boards'));
     }
@@ -1490,7 +1490,7 @@
       $tabCheatersBtn.addEventListener('click', () => switchTab('cheaters'));
     }
 
-    // Confidence-filter slider. Live re-render as the slider drags —
+    // Confidence-filter slider. Live re-render as the slider drags -
     // dataset is small (handful of players) so this is cheap. Persists
     // to localStorage so the chosen strictness sticks across reloads.
     if ($cheatersFilter) {
@@ -1598,14 +1598,14 @@
     const $chart = document.getElementById('lb-board-chart');
     const $legend = document.getElementById('lb-board-chart-legend');
     if (!$wrap || !$chart) return;
-    // Optimistic show — give the user a "something is happening" cue
+    // Optimistic show - give the user a "something is happening" cue
     // while the fetch runs. drawBoardChart hides again on empty.
     $wrap.hidden = false;
     $chart.innerHTML = `<p class="lb-chart-empty" data-i18n>Loading…</p>`;
     rerunI18n();
     const data = await fetchJSON(`/site/leaderboards/${uuid}/history?days=7&top=5`);
     // The fetch could have completed after the user moved on to another
-    // board — bail if so.
+    // board - bail if so.
     if (state.selectedUuid !== uuid) return;
     state.boardChart = { uuid, data };
     drawBoardChart();
@@ -1619,7 +1619,7 @@
     if (!$wrap || !$chart || !state.boardChart) return;
     const { data } = state.boardChart;
     // Need ≥ 2 distinct anchors AND a series with ≥ 2 points to plot a
-    // line. Anything less is just a single dot — we'd rather hide the
+    // line. Anything less is just a single dot - we'd rather hide the
     // figure than render a chart that says nothing.
     const usableSeries = (data.series || []).filter((s) => (s.points || []).length >= 2);
     if (!data.anchors || data.anchors.length < 2 || !usableSeries.length) {
@@ -1699,7 +1699,7 @@
         .replace('{h}', data.anchors.length);
     }
 
-    // Per-board chart for a player can have many lines — cap legend
+    // Per-board chart for a player can have many lines - cap legend
     // chips at the first 8 (sorted by best-rank from the server). The
     // tooltip still surfaces the full set on hover.
     const limit = Math.min(usableSeries.length, 8);
@@ -1730,12 +1730,12 @@
 
   // ─── Generic SVG line-chart renderer ───────────────────────────────
   // Inputs:
-  //   container   — <div> that will host the <svg>
-  //   legendNode  — <div> for the legend chips
-  //   opts.anchors            — all unix timestamps in window (defines x range)
-  //   opts.series             — [{key, label, color, points:[{x, y, ...}]}]
-  //   opts.valueLabel         — y-axis label (currently embedded in tooltip)
-  //   opts.tooltipNameSuffix  — fn(series, point) → extra text after label
+  //   container   - <div> that will host the <svg>
+  //   legendNode  - <div> for the legend chips
+  //   opts.anchors            - all unix timestamps in window (defines x range)
+  //   opts.series             - [{key, label, color, points:[{x, y, ...}]}]
+  //   opts.valueLabel         - y-axis label (currently embedded in tooltip)
+  //   opts.tooltipNameSuffix  - fn(series, point) → extra text after label
   //
   // The chart is a fully-laid-out SVG with grid, axes, polylines, and a
   // single mouse-tracking overlay that resolves to the nearest anchor on
@@ -1783,7 +1783,7 @@
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.setAttribute('preserveAspectRatio', 'none');
 
-    // y-grid + labels — 4 horizontal lines.
+    // y-grid + labels - 4 horizontal lines.
     const yTicks = 4;
     for (let i = 0; i <= yTicks; i++) {
       const v = yMin + (yRange * i) / yTicks;
@@ -1802,7 +1802,7 @@
       svg.appendChild(label);
     }
 
-    // x-axis labels — 3 evenly-spaced anchors.
+    // x-axis labels - 3 evenly-spaced anchors.
     const xLabelCount = 3;
     for (let i = 0; i < xLabelCount; i++) {
       const ratio = i / (xLabelCount - 1);
@@ -1833,7 +1833,7 @@
     for (const s of series) {
       for (const p of s.points) {
         // Synthetic reset-zero markers live IN the polyline (so the cliff
-        // is visible) but get no dot — they're not data, and a dot at
+        // is visible) but get no dot - they're not data, and a dot at
         // (R, 0) would imply we have a capture at the exact reset moment.
         // Tooltip skips them naturally because their x isn't in
         // ``data.anchors``.
@@ -1858,7 +1858,7 @@
     guide.style.opacity = '0';
     svg.appendChild(guide);
 
-    // Mouse-tracking overlay — transparent rect covers the plot area
+    // Mouse-tracking overlay - transparent rect covers the plot area
     // and resolves cursor x → nearest anchor on mousemove.
     const overlay = document.createElementNS(svgNS, 'rect');
     overlay.setAttribute('x', padL);
@@ -1871,7 +1871,7 @@
 
     container.appendChild(svg);
 
-    // Tooltip — DOM, not SVG, so we can use CSS box-shadow etc.
+    // Tooltip - DOM, not SVG, so we can use CSS box-shadow etc.
     const tooltip = document.createElement('div');
     tooltip.className = 'lb-chart-tooltip';
     container.appendChild(tooltip);
@@ -1890,7 +1890,7 @@
     }
 
     function valueAt(s, anchor) {
-      // O(n) — n is at most ~168 per series, called once per hover.
+      // O(n) - n is at most ~168 per series, called once per hover.
       for (const p of s.points) if (p.x === anchor) return p;
       return null;
     }
@@ -1943,7 +1943,7 @@
         }
       }
 
-      // Tooltip body — anchor time on top, then each series with its value.
+      // Tooltip body - anchor time on top, then each series with its value.
       // Sort rows so the active line is on top (matches the highlight).
       rows.sort((a, b) => (a.s.key === bestKey ? -1 : b.s.key === bestKey ? 1 : 0));
       const lines = rows.map(({ s, p }) => {
@@ -1970,7 +1970,7 @@
 
     overlay.addEventListener('mousemove', onMove);
     overlay.addEventListener('mouseleave', () => {
-      // Don't fully clear if the cursor moved to a legend chip — that
+      // Don't fully clear if the cursor moved to a legend chip - that
       // chip's hover handler will take over the active-series state.
       clearHighlight();
       if (legendNode) {
@@ -2021,7 +2021,7 @@
   }
 
   function formatShortDate(unix) {
-    // x-axis labels: short form, e.g. "Jun 1 11:00" — same date math
+    // x-axis labels: short form, e.g. "Jun 1 11:00" - same date math
     // as the day picker (trove-day, real UTC - 11h).
     const d = new Date(unix * 1000);
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2040,7 +2040,7 @@
       if (state.playerChart) drawPlayerChart();
     }, 120);
   });
-  // Language switch re-render hooks into the existing dispatch — see
+  // Language switch re-render hooks into the existing dispatch - see
   // wireEvents()'s 'btt-lang-changed' listener (extended below).
   document.addEventListener('btt-lang-changed', () => {
     if (state.boardChart) drawBoardChart();

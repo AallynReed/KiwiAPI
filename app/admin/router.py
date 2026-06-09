@@ -360,7 +360,7 @@ async def replace_interest_items_admin(
     admin: User = Depends(get_current_superuser),
 ) -> InterestItemBulkReplaceResponse:
     """Atomic-ish bulk replace: drop everything stored, then insert the new
-    list (de-duped, trimmed, sorted server-side). Refuses an empty list — to
+    list (de-duped, trimmed, sorted server-side). Refuses an empty list - to
     delete every item, use the per-item DELETE endpoint."""
     try:
         summary = await market_service.admin_replace_interest_items(
@@ -375,7 +375,7 @@ async def replace_interest_items_admin(
 # The hardcoded ``_DAILY_RESET_UUIDS`` / ``_WEEKLY_RESET_UUIDS`` sets in
 # ``app/trove/leaderboards/models.py`` are the fallback when an admin
 # hasn't pinned a board. These two endpoints expose the per-doc override
-# so the master can flip cadence from the portal without a code push —
+# so the master can flip cadence from the portal without a code push -
 # important because cheater detection on lifetime boards needs to skip
 # score-outlier + rank-gap and rely on velocity alone.
 
@@ -524,7 +524,7 @@ async def update_runtime_config(
             return RuntimeConfigItem(**item)
     raise APIError(
         status_code=500, code=ErrorCode.internal_error,
-        message="Setting saved but not found on readback — registry mismatch.",
+        message="Setting saved but not found on readback - registry mismatch.",
     )
 
 
@@ -551,7 +551,7 @@ async def reset_runtime_config(
             return RuntimeConfigItem(**item)
     raise APIError(
         status_code=500, code=ErrorCode.internal_error,
-        message="Setting reset but not found on readback — registry mismatch.",
+        message="Setting reset but not found on readback - registry mismatch.",
     )
 
 

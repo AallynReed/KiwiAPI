@@ -119,7 +119,7 @@ a:hover { text-decoration: underline; }
 }
 .nav-tabs button.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
 
-/* Configuration sub-tabs — horizontal chip strip categorizing the
+/* Configuration sub-tabs - horizontal chip strip categorizing the
    runtime tunables. Wraps on narrow screens so all categories stay
    reachable without a scroller. */
 .config-subtabs {
@@ -210,7 +210,7 @@ textarea:focus { outline: none; border-color: var(--accent); }
 .btn.small { padding: 6px 12px; font-size: .85rem; }
 .btn:disabled { opacity: .55; cursor: not-allowed; }
 
-/* Heart-Support link in the topbar — opens the showcase site's
+/* Heart-Support link in the topbar - opens the showcase site's
    /support page in a new tab. Matches the main site's red-heart
    treatment so it reads as the same call-to-action. */
 .portal-support {
@@ -253,7 +253,7 @@ tr.clickable:hover td { background: var(--panel-2); }
 .badge.warn { background: rgba(210,153,34,.15); color: var(--amber); }
 .badge.off { background: rgba(248,81,73,.15); color: var(--red); }
 .badge.muted { background: rgba(154,164,178,.12); color: var(--muted); }
-/* Per-endpoint colours for the ingest-log table — accent-only, no
+/* Per-endpoint colours for the ingest-log table - accent-only, no
    background, so the rows stay scannable. */
 .badge.ingest-log-lb  { background: rgba( 88,166,255,.14); color: var(--accent); }
 .badge.ingest-log-mkt { background: rgba(255,184,107,.14); color: #ffb86b; }

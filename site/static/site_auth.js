@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   site_auth.js — public-facing user accounts client
+   site_auth.js - public-facing user accounts client
    ───────────────────────────────────────────────────────────────────────
    Loaded on EVERY site page (via the navbar widget) and is the active
    driver on /login + /signup. Wires up:
@@ -11,7 +11,7 @@
 
    The backend lives at https://api.aallyn.net/v1/site-auth/* and is
    CORS-allowlisted for *.aallyn.net (see app/core/config.py). The
-   page-side fetch path stays a single hop — no /site/auth/* proxy.
+   page-side fetch path stays a single hop - no /site/auth/* proxy.
    ═══════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -77,7 +77,7 @@
 
   // Render a captcha widget into ``$mount``, returning a getter that
   // yields the current token (or null if the widget isn't ready yet).
-  // No-op when captcha isn't configured — returns a getter that always
+  // No-op when captcha isn't configured - returns a getter that always
   // gives null, which the server treats as "no captcha required" given
   // its disable-when-unconfigured semantics.
   async function mountCaptcha($mount) {
@@ -237,7 +237,7 @@
   }
 
   // Synchronous best-guess from the cached /me snapshot. Useful for
-  // the navbar widget on first paint — avoids a flash of "Sign in"
+  // the navbar widget on first paint - avoids a flash of "Sign in"
   // for logged-in users between page nav and the /me fetch landing.
   function getCachedUser() {
     if (_meCache) return _meCache;
@@ -322,7 +322,7 @@
     const $captcha = document.getElementById('login-captcha');
 
     // Mount captcha (no-op when unconfigured). The returned getter
-    // gives the current token or null — we pass it to the server
+    // gives the current token or null - we pass it to the server
     // either way and let the server's verify_captcha decide.
     let getCaptchaToken = () => null;
     if ($captcha) {
@@ -358,7 +358,7 @@
       }
     });
 
-    // Inline resend-verification link — uses the email half of the
+    // Inline resend-verification link - uses the email half of the
     // identifier (if it looks like an email) for the resend call.
     const $resend = document.getElementById('resend-verify-link');
     if ($resend) {
@@ -419,12 +419,12 @@
           $err.hidden = false;
           return;
         }
-        // Account created — log them in immediately. The user can browse
+        // Account created - log them in immediately. The user can browse
         // the dashboard while their email verifies in the background.
         // The captcha token we just used is already consumed; the login
         // endpoint will skip the gate if captcha is fully disabled.
         // Otherwise we'd need a fresh token, which the user would have
-        // to solve again — for now we accept the corner case of an
+        // to solve again - for now we accept the corner case of an
         // immediate-after-signup auto-login bouncing on captcha and
         // having the user land on /login.
         const login = await callJSON('/v1/site-auth/login', {

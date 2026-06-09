@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /updates — page logic
+   /updates - page logic
    ───────────────────────────────────────────────────────────────────────
    Fetches branches, versions, tree, file history, and inline diffs from
    /site/updates/* (same-origin proxies that skip the public API's
@@ -27,7 +27,7 @@
     branch: null,            // active branch name
     versions: [],            // recent VersionInfo for the active branch
     versionsTotal: 0,
-    selectedVersion: null,   // ordinal — drives the "Changes" tab + tree badges
+    selectedVersion: null,   // ordinal - drives the "Changes" tab + tree badges
     activeTab: 'explorer',   // 'explorer' | 'changes' | 'compare'
 
     // Explorer tab
@@ -40,7 +40,7 @@
     fileHistory: null,       // {path, items}
     historyPicks: { a: null, b: null },  // ordinals chosen for inline compare-jump
 
-    // Per-version "touched paths" — used to badge tree rows that
+    // Per-version "touched paths" - used to badge tree rows that
     // changed in the selected version. Just the modified/added/removed
     // path set for fast lookups.
     versionTouched: null,    // { ordinal, byPath: Map<path, 'added'|'modified'|'removed'> }
@@ -115,7 +115,7 @@
     }
     renderBranchTabs();
 
-    // URL hash priority — pick branch + tab + path + version from the
+    // URL hash priority - pick branch + tab + path + version from the
     // hash if present, else default to the first branch / latest version.
     const hash = parseHash();
     const startBranch =
@@ -159,7 +159,7 @@
   async function selectBranch(branch, skipURL) {
     if (state.branch === branch) return;
     state.branch = branch;
-    // Reset every per-branch piece of state — they're not cross-branch.
+    // Reset every per-branch piece of state - they're not cross-branch.
     state.treeCache.clear();
     state.treePrefix = '';
     state.selectedPath = null;
@@ -176,7 +176,7 @@
     renderBranchTabs();
     if (!skipURL) updateHash();
 
-    // Three fetches in parallel — versions drive the strip + change-tab
+    // Three fetches in parallel - versions drive the strip + change-tab
     // default selection; tree drives the explorer.
     const [versionsRes, _t] = await Promise.all([
       fetchJSON(`/site/updates/${branch}/versions?limit=${VERSIONS_VISIBLE}`),
@@ -206,7 +206,7 @@
     const ago = last ? formatRelativeWhen(last) : t('never probed');
     $meta.textContent = t('{n} files · current version {tag} · last probe {when}')
       .replace('{n}', formatInt(meta.file_count))
-      .replace('{tag}', meta.current_version || '—')
+      .replace('{tag}', meta.current_version || '-')
       .replace('{when}', ago);
   }
 
@@ -263,7 +263,7 @@
     updateHash();
 
     const v = state.versions.find((x) => x.ordinal === ordinal);
-    // Pull this version's change list — drives the changes tab + the
+    // Pull this version's change list - drives the changes tab + the
     // touched-path overlay in the tree. Hard-cap at 5000 paths for
     // overlay purposes: very large versions still render correctly,
     // they just stop badging beyond that count.
@@ -326,7 +326,7 @@
     }
   }
 
-  // ─── Explorer — tree + breadcrumbs ─────────────────────────────────
+  // ─── Explorer - tree + breadcrumbs ─────────────────────────────────
   async function loadTree(prefix) {
     if (state.treeCache.has(prefix)) return state.treeCache.get(prefix);
     const data = await fetchJSON(
@@ -454,7 +454,7 @@
       if (up !== path) loadTree(up).catch(() => {});
       return;
     }
-    // File — navigate to its parent directory AND open it.
+    // File - navigate to its parent directory AND open it.
     const slash = path.lastIndexOf('/');
     const parent = slash >= 0 ? path.slice(0, slash + 1) : '';
     if (state.treePrefix !== parent) {
@@ -464,7 +464,7 @@
     await openFile(path);
   }
 
-  // ─── Explorer — file detail (history) ──────────────────────────────
+  // ─── Explorer - file detail (history) ──────────────────────────────
   async function openFile(path) {
     state.selectedPath = path;
     if ($mobileSelected) {
@@ -551,7 +551,7 @@
              data-ordinal="${it.ordinal}">
           <span class="up-history-type up-history-type-${esc(it.type)}">${esc(t(it.type))}</span>
           <span class="up-history-tag" title="${esc(it.version_tag)}">${esc(it.version_tag)}</span>
-          <span class="up-history-size">${it.type === 'removed' ? '—' : esc(formatBytes(it.size))}</span>
+          <span class="up-history-size">${it.type === 'removed' ? '-' : esc(formatBytes(it.size))}</span>
           <span class="up-history-when">${esc(formatWhen(new Date(it.captured_at)))}</span>
         </div>
       `).join('')}
@@ -620,7 +620,7 @@
       ? total
       : counts[filter] || 0;
     $changesMeta.textContent = t('Version {tag} · {n} change(s)')
-      .replace('{tag}', version_tag || '—').replace('{n}', formatInt(totalRender));
+      .replace('{tag}', version_tag || '-').replace('{n}', formatInt(totalRender));
 
     const filtered = filter === 'all'
       ? entries
@@ -637,7 +637,7 @@
       <div class="up-change-row" data-path="${esc(e.path)}" data-type="${esc(e.type)}">
         <span class="up-change-type up-change-type-${esc(e.type)}">${esc(t(e.type))}</span>
         <span class="up-change-path" title="${esc(e.path)}">${esc(e.path)}</span>
-        <span class="up-change-size">${e.type === 'removed' ? '—' : esc(formatBytes(e.size))}</span>
+        <span class="up-change-size">${e.type === 'removed' ? '-' : esc(formatBytes(e.size))}</span>
       </div>
     `).join('');
     rerunI18n();
@@ -752,7 +752,7 @@
       $compareBody.innerHTML = `${summary}
         <div class="up-diff-banner">
           <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-          ${esc(t('Binary file — inline diff skipped.'))} ${p.reason ? `(${esc(p.reason)})` : ''}
+          ${esc(t('Binary file - inline diff skipped.'))} ${p.reason ? `(${esc(p.reason)})` : ''}
         </div>`;
       return;
     }

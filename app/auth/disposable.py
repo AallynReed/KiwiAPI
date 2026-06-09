@@ -1,5 +1,5 @@
 """A curated blocklist of common disposable / throwaway email domains. Not
-exhaustive — extend as abuse appears. Catches the high-volume providers."""
+exhaustive - extend as abuse appears. Catches the high-volume providers."""
 
 DISPOSABLE_DOMAINS: frozenset[str] = frozenset(
     {

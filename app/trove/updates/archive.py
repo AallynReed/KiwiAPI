@@ -8,7 +8,7 @@ concatenated (decompressed) file bytes.
 
 Two properties make the version archiver cheap, both confirmed against
 BetterTroveTools' reader:
-  - The TFI carries a per-file hash, so two TFI versions diff at the index level —
+  - The TFI carries a per-file hash, so two TFI versions diff at the index level -
     we learn exactly which logical files changed without extracting anything.
   - Every entry names its `archive_index`, so a single changed `archiveN.tfa` can
     be extracted alone (download it + the `.tfi`; siblings aren't needed).
@@ -80,7 +80,7 @@ def slice_entries(content: bytes, entries: Iterable[TfiEntry]) -> Iterator[tuple
 def extract_archive(tfa_raw: bytes, entries: Iterable[TfiEntry], archive_index: int) -> dict[str, bytes]:
     """Decompress one archiveN.tfa and return {logical_name: bytes} for its entries.
 
-    Needs only this archive + the parsed TFI — sibling archives aren't required.
+    Needs only this archive + the parsed TFI - sibling archives aren't required.
     """
     content = decompress_tfa(tfa_raw)
     members = entries_for_archive(entries, archive_index)

@@ -126,7 +126,7 @@ async def get_chaos_chest(now: datetime | None = None) -> dict:
     actual in-game cfg. Falls back to the Trovesaurus relay when the bot
     hasn't reported the current week yet (e.g., immediately after a reset).
     """
-    # Imported lazily — captures.py imports server_time too and we'd loop otherwise.
+    # Imported lazily - captures.py imports server_time too and we'd loop otherwise.
     from app.trove.captures import get_chaos_chest_for_week
 
     real = now or server_time.real_utc_now()

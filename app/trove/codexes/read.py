@@ -1,6 +1,6 @@
 """Read side of the codexes: counts, filtered/sorted/paged search, lookup.
 
-Serves straight from the materialized ``CodexEntry`` collection — no archive or
+Serves straight from the materialized ``CodexEntry`` collection - no archive or
 CAS access on the hot path. ``query_entries`` is the one filter engine behind both
 the per-type listing and the cross-type search: optional type, name/description
 substring, exact category, tradability, with a whitelisted sort and paging.

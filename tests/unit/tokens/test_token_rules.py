@@ -25,7 +25,7 @@ def test_hash_pinned_ips_uses_salt_so_same_ip_different_salt_different_hash():
 
 def test_hash_pinned_ips_dedupes_canonical_form():
     salt = make_ip_salt()
-    # IPv6 has multiple textual forms — canonicalization happens before hashing,
+    # IPv6 has multiple textual forms - canonicalization happens before hashing,
     # so these are stored as one entry.
     hashes = _hash_pinned_ips(["::1", "0:0:0:0:0:0:0:1"], salt)
     assert len(hashes) == 1
@@ -38,7 +38,7 @@ def test_hash_pinned_ips_rejects_invalid():
 
 
 def test_hash_pinned_ips_rejects_cidrs():
-    # CIDRs were supported before — explicitly removed because hashes can't
+    # CIDRs were supported before - explicitly removed because hashes can't
     # range-match a single IP. The error message points the user there.
     salt = make_ip_salt()
     with pytest.raises(APIError) as e:

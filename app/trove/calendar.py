@@ -1,6 +1,6 @@
 """Yearly calendar: every recurring rotation as one flat ±365-day timeline.
 
-A "big aggregate" ported from BetterTroveTools — it expands all the deterministic
+A "big aggregate" ported from BetterTroveTools - it expands all the deterministic
 cycles (weekly buffs, the Corruxion/Fluxion merchants, gardening windows, and the
 Wild Mana / Stampy biome events) across a year either side of now. It reuses the
 exact anchors/lists from ``server_time`` and ``rotations`` so each entry lines up
@@ -28,7 +28,7 @@ def _occurrences(
     base: datetime, interval: timedelta, win_start: datetime, win_end: datetime
 ) -> Iterator[tuple[int, datetime]]:
     """Yield (index, start) for every `interval`-spaced occurrence of `base` that
-    could overlap the window — from one interval before it through its end."""
+    could overlap the window - from one interval before it through its end."""
     total = interval.total_seconds()
     k = int((win_start - base).total_seconds() // total) - 1
     while True:

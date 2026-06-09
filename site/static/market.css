@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /market — page-specific styles (Beta)
+   /market - page-specific styles (Beta)
    ───────────────────────────────────────────────────────────────────────
    Mirrors the leaderboards/updates layout vocabulary (hero, sidebar +
    detail pane) so the three browsable pages feel like siblings. Loaded
@@ -133,7 +133,7 @@
   gap: 2px;
   overflow-y: auto;
   /* Prevent the longest item name from forcing the whole sidebar to
-     scroll sideways — anything that would overflow horizontally gets
+     scroll sideways - anything that would overflow horizontally gets
      wrapped instead (see .mkt-item-name below). */
   overflow-x: hidden;
   padding-right: 4px;
@@ -173,7 +173,7 @@
 .mkt-item-name {
   /* Allow long names to wrap onto multiple lines. The earlier
      truncate-with-ellipsis rule made names like "Glittering Geode
-     of the Resplendent Coastal Lily" disappear behind "…" — users
+     of the Resplendent Coastal Lily" disappear behind "…" - users
      couldn't tell related items apart. ``overflow-wrap: anywhere``
      handles single-word names longer than the column too. */
   white-space: normal;
@@ -333,7 +333,7 @@
   font-size: 10px;
   font-family: 'Inter', system-ui, sans-serif;
 }
-/* The bucketed-median trend — a smooth orange polyline on top of the
+/* The bucketed-median trend - a smooth orange polyline on top of the
    scatter so the eye reads the price drift independent of the cloud's
    density. */
 .mkt-chart-trend {
@@ -414,7 +414,7 @@
   color: var(--text-mute);
 }
 
-/* Listings table — same grid pattern leaderboards uses. */
+/* Listings table - same grid pattern leaderboards uses. */
 .mkt-table {
   display: grid;
   grid-template-columns: 100px 90px 110px 1fr;

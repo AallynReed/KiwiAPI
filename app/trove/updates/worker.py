@@ -1,6 +1,6 @@
 """Background archiver: probe each branch every `trove_update_probe_seconds`.
 
-Off unless `trove_update_enabled` — turning it on triggers the multi-GB first sync.
+Off unless `trove_update_enabled` - turning it on triggers the multi-GB first sync.
 
 In production the API runs several uvicorn workers, and the lifespan (hence this
 loop) starts in each. A Redis leader lock ensures exactly ONE worker actually
@@ -54,7 +54,7 @@ async def _sync_all_branches(repo: MongoUpdateRepo, store: ContentStore) -> None
                 logger.info("updates[%s]: no change (%s)", branch, summary["version"])
             # Keep the codex current: full bootstrap if it's empty (first deploy
             # onto an already-synced archive), otherwise just this version's delta.
-            # Isolated — a codex failure must not derail the archiver.
+            # Isolated - a codex failure must not derail the archiver.
             try:
                 await ensure_codex_indexed(branch, store, summary)
             except asyncio.CancelledError:
@@ -65,9 +65,9 @@ async def _sync_all_branches(repo: MongoUpdateRepo, store: ContentStore) -> None
             raise
         except httpx.HTTPStatusError as e:
             # A 404 on the pointer means the branch isn't published right now
-            # (e.g. PTS is down) — that's expected, not an error worth alarming on.
+            # (e.g. PTS is down) - that's expected, not an error worth alarming on.
             if e.response.status_code == 404:
-                logger.info("updates[%s]: not published right now (404) — skipping", branch)
+                logger.info("updates[%s]: not published right now (404) - skipping", branch)
                 continue
             logger.warning("updates[%s] sync failed", branch, exc_info=True)
             try:
@@ -86,7 +86,7 @@ async def _heartbeat(redis, token: str, stop: asyncio.Event) -> None:
     while True:
         try:
             await asyncio.wait_for(stop.wait(), timeout=_RENEW_EVERY)
-            return  # stop set — cycle finished
+            return  # stop set - cycle finished
         except TimeoutError:
             pass
         try:
@@ -102,7 +102,7 @@ async def _heartbeat(redis, token: str, stop: asyncio.Event) -> None:
 async def _run_one_cycle(repo: MongoUpdateRepo, store: ContentStore) -> None:
     redis: Any = get_redis()  # untyped: redis-py types eval() for sync, breaking await
     if redis is None:
-        await _sync_all_branches(repo, store)  # dev / single worker — no lock needed
+        await _sync_all_branches(repo, store)  # dev / single worker - no lock needed
         return
     token = secrets.token_hex(16)
     if not await redis.set(_LOCK_KEY, token, nx=True, ex=_LOCK_TTL):

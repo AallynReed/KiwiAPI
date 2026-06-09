@@ -6,9 +6,9 @@ That endpoint is master-only (superuser API token). Read endpoints are gated by
 the ``leaderboards:read`` scope.
 
 Storage shape (see ``models``):
-- ``Leaderboard``       — one document per board (uuid is the stable id)
-- ``LeaderboardEntry``  — one document per (board, timestamp, rank) row
+- ``Leaderboard``       - one document per board (uuid is the stable id)
+- ``LeaderboardEntry``  - one document per (board, timestamp, rank) row
 
 Entries older than the retention window are pruned at the end of each insert
-(no separate archive collection — keeps things simple for v1).
+(no separate archive collection - keeps things simple for v1).
 """

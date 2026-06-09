@@ -235,7 +235,7 @@ async def test_btt_releases(client):
                      prerelease=True, published_at=now,
                      assets=[asset("BTT-9.msi"), asset("BTT-9.AppImage"), asset("BTT-9.apk")]).insert()
 
-    # BTT endpoints are PUBLIC (no token) — the desktop app polls without auth.
+    # BTT endpoints are PUBLIC (no token) - the desktop app polls without auth.
     # List with channel filters.
     rel = (await client.get("/v1/btt/releases?channel=release")).json()
     assert rel["total"] == 2 and rel["items"][0]["tag_name"] == "v3"
@@ -247,7 +247,7 @@ async def test_btt_releases(client):
     assert raw.status_code == 200 and "X-RateLimit-Limit" in raw.headers
     latest = raw.json()
     plats = latest["platforms"]
-    # Latest per platform on the release channel — Windows MUST walk back to v2.
+    # Latest per platform on the release channel - Windows MUST walk back to v2.
     assert plats["windows"]["release"]["tag_name"] == "v2"      # walked back
     assert plats["windows"]["assets"][0]["name"] == "BTT-2.msi"  # msi prioritized over exe
     assert plats["linux"]["release"]["tag_name"] == "v3"        # newest with .deb
@@ -266,7 +266,7 @@ async def test_btt_releases(client):
     assert (await client.get("/v1/btt/latest/macos")).status_code == 404
     assert (await client.get("/v1/btt/latest?channel=nope")).status_code == 400
 
-    # /check — server-side version comparison so the client just reads a bool.
+    # /check - server-side version comparison so the client just reads a bool.
     # Windows latest on release channel is v2 (walked back from v3).
     older = (await client.get(
         "/v1/btt/check?installed=v1.0.0&platform=windows&channel=release"
@@ -329,7 +329,7 @@ async def test_btt_changelog(client):
     await BttChangelog(repo=settings.btt_releases_repo, groups=groups,
                        rate_limited=False, fetched_at=utcnow()).insert()
 
-    # Public — no token required.
+    # Public - no token required.
     r = await client.get("/v1/btt/changelog")
     assert r.status_code == 200
     body = r.json()
@@ -368,12 +368,12 @@ async def test_site_routes(client):
     r = await client.get("/documentation")
     assert r.status_code == 200 and "Trove Tools" in r.text
 
-    # Static files (css) — content-type and a known rule should both be served.
+    # Static files (css) - content-type and a known rule should both be served.
     r = await client.get("/static/style.css")
     assert r.status_code == 200 and "btn-primary" in r.text
 
     # /unlock_debug and /unlock_fps were removed 2026-06 after Trove
-    # shipped anti-cheat. Both routes should now 404 — any future
+    # shipped anti-cheat. Both routes should now 404 - any future
     # reintroduction should be a deliberate decision, not a silent
     # ride-along. Same for the deprecated POST handler.
     assert (await client.get("/unlock_debug")).status_code == 404
@@ -411,7 +411,7 @@ async def test_news_live_and_history(client):
     p2 = (await client.get("/v1/misc/news-history?limit=2&offset=2", headers=mh)).json()
     assert p2["count"] == 1 and p2["total"] == 3 and p2["items"][0]["title"] == "Patch 2"
 
-    # Not public — requires the misc scope.
+    # Not public - requires the misc scope.
     assert (await client.get("/v1/misc/news-history")).status_code == 401
 
 
@@ -425,7 +425,7 @@ async def test_chaos_chest(client):
         "blueprint": "blueprints/shadow.blueprint", "start": now - 100, "end": now + 10_000,
     }], fetched_at=utcnow()).insert()
 
-    # Public (rotations scope) — reachable with no token.
+    # Public (rotations scope) - reachable with no token.
     r = await client.get("/v1/rotations/chaos-chest")
     assert r.status_code == 200
     body = r.json()
@@ -446,7 +446,7 @@ async def test_delve_rotations(client):
                 {"id": 2, "depth": 111, "biome": "Pure Midnight"}],
     ).insert()
 
-    # Public (rotations scope) — reachable with no token.
+    # Public (rotations scope) - reachable with no token.
     r = await client.get("/v1/rotations/delves?week=17")
     assert r.status_code == 200
     body = r.json()
@@ -465,7 +465,7 @@ async def test_delve_rotations(client):
 
 
 async def test_yearly_calendar(client):
-    # Public (rotations scope) — reachable with no token; pure compute, no seeding.
+    # Public (rotations scope) - reachable with no token; pure compute, no seeding.
     r = await client.get("/v1/rotations/calendar")
     assert r.status_code == 200
     body = r.json()
@@ -813,7 +813,7 @@ async def test_codexes_index_and_browse(client, monkeypatch, tmp_path):
     from app.trove.updates.cas import ContentStore
     from app.trove.updates.models import UpdateState
 
-    # Minimal .binfab builders (the format is self-describing — see test_codexes.py).
+    # Minimal .binfab builders (the format is self-describing - see test_codexes.py).
     def uleb(n: int) -> bytes:
         out = bytearray()
         while True:
@@ -947,7 +947,7 @@ async def test_codexes_index_and_browse(client, monkeypatch, tmp_path):
 
 async def test_scope_separation(client):
     h = await _signup_login(client, "scopesep@b.com")
-    # stats:read only (bit 4) — can read stats, not gems. (rotations/feeds are
+    # stats:read only (bit 4) - can read stats, not gems. (rotations/feeds are
     # public now, so a still-token-gated pair is used to test scope isolation.)
     stats_only = (
         await client.post(
@@ -975,7 +975,7 @@ async def test_public_scopes_anonymous_access(client):
     f = await client.get("/v1/feeds/news")
     assert f.status_code == 200 and f.json()["count"] >= 1
 
-    # A still-gated scope is NOT public — anonymous access is rejected.
+    # A still-gated scope is NOT public - anonymous access is rejected.
     assert (await client.get("/v1/stats/power-rank")).status_code == 401
 
     # A token WITHOUT the (now-public) scope still gets in via the anonymous path.
@@ -1045,7 +1045,7 @@ async def test_account_lockout(client):
     for _ in range(5):
         r = await client.post("/auth/login", json={"email": "lock@b.com", "password": "wrong-pass"})
         assert r.status_code == 401
-    # Locked now — even the correct password is refused.
+    # Locked now - even the correct password is refused.
     r = await client.post("/auth/login", json={"email": "lock@b.com", "password": "longpassword1"})
     assert r.status_code == 429
     assert r.json()["error"]["code"] == "account_locked"

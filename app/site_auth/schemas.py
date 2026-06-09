@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.core.config import settings
 
-# Username constraints — readable, URL-safe, no impersonation foot-guns.
+# Username constraints - readable, URL-safe, no impersonation foot-guns.
 USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_]{3,24}$")
 
 
@@ -37,7 +37,7 @@ class SiteSignupRequest(BaseModel):
 
 
 class SiteLoginRequest(BaseModel):
-    """Login by username OR email — the field is named ``identifier``
+    """Login by username OR email - the field is named ``identifier``
     so the same form on the page can accept either without dispatching
     on shape on the client. The server picks the right index lookup."""
     identifier: str = Field(min_length=3, max_length=120)
@@ -69,7 +69,7 @@ class SiteUpdateProfileRequest(BaseModel):
 
 
 class SiteClaimTroveNameRequest(BaseModel):
-    """Claim a Trove player name. v1 is self-attest — anybody can claim
+    """Claim a Trove player name. v1 is self-attest - anybody can claim
     any name. UI shows an 'unverified' badge. Future: prove ownership
     via captured-in-club-bio or similar."""
     trove_name: str = Field(min_length=1, max_length=80)
@@ -106,7 +106,7 @@ class SiteUserPublic(BaseModel):
     claimed_at: datetime | None = None
     claim_verified: bool = False
     claim_verified_at: datetime | None = None
-    # How many baseline boards are tracked at claim time — surfaced so
+    # How many baseline boards are tracked at claim time - surfaced so
     # the dashboard can render "We're watching N boards" without making
     # a second call to inspect ``claim_baseline``.
     claim_baseline_board_count: int = 0

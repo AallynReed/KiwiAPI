@@ -158,12 +158,12 @@ async def daily_rate_limit_digest() -> bool:
         return names.get(r["_id"], ("(deleted token)", ""))
 
     text_lines = [
-        f"{r['count']:>6}  {email_for(r)}  —  {token_for(r)[0]} ({token_for(r)[1]}…)"
+        f"{r['count']:>6}  {email_for(r)}  -  {token_for(r)[0]} ({token_for(r)[1]}…)"
         for r in rows
     ]
     text = (
         f"{total} rate-limit hits (429s) in the last {hours}h across {len(rows)} token(s).\n\n"
-        f"{'hits':>6}  account  —  token\n" + "\n".join(text_lines)
+        f"{'hits':>6}  account  -  token\n" + "\n".join(text_lines)
     )
 
     html_rows = "".join(
@@ -181,7 +181,7 @@ async def daily_rate_limit_digest() -> bool:
 
     await queue_email(
         settings.rate_limit_alert_email,
-        f"{settings.app_name} — rate-limit digest ({total} hits / {hours}h)",
+        f"{settings.app_name} - rate-limit digest ({total} hits / {hours}h)",
         text,
         html_body,
     )

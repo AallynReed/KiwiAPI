@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const releaseInfo = document.getElementById('release-info');
 
     // Download dropdown: one trigger that ALWAYS opens a panel with all platforms.
-    // Never redirects off-site — when the API fails, the panel shows an inline
+    // Never redirects off-site - when the API fails, the panel shows an inline
     // error + retry so the user stays on this page.
     const ddRoot     = document.getElementById('download-dropdown');
     const ddTrigger  = document.getElementById('download-trigger');
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return 'windows';  // sensible default for the BTT audience
     }
 
-    // First asset for the platform — the API already sorts by extension
+    // First asset for the platform - the API already sorts by extension
     // priority (.msi before .exe, .AppImage before .deb, etc.), so the first
     // match is the preferred installer.
     function bestAsset(platform, platformData) {
@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data && asset && data.release && data.release.tag_name) {
                 item.href = asset.url;
                 item.hidden = false;
-                item.title = `${asset.name} — ${data.release.tag_name}`;
+                item.title = `${asset.name} - ${data.release.tag_name}`;
                 if (versionEl) versionEl.textContent = data.release.tag_name;
                 any = true;
             } else {
@@ -253,9 +253,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 + `<strong>${headline.tag_name}</strong> &middot; ${t.updated} ${timeAgo(headline.published_at, t.locale)}`;
             releaseInfo.title = exact;
             releaseInfo.classList.add('show');
-            if (ddTrigger) ddTrigger.title = `${headline.tag_name} — ${exact}`;
+            if (ddTrigger) ddTrigger.title = `${headline.tag_name} - ${exact}`;
         } else {
-            // No usable data — leave the release line blank (the dropdown panel
+            // No usable data - leave the release line blank (the dropdown panel
             // owns the user-facing error). Never link off-site to GitHub: that's
             // what the Source Code button is for.
             releaseInfo.innerHTML = '';
@@ -272,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ddStatusMsg) ddStatusMsg.textContent = '';
     }
 
-    // Show an error block INSIDE the dropdown panel — never a redirect off-site.
+    // Show an error block INSIDE the dropdown panel - never a redirect off-site.
     // The trigger keeps being a dropdown; click again to dismiss, click "Try
     // again" to re-fetch.
     function showPanelError(message) {
@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Move the trigger from "Fetching Latest..." to the resting state. The
     // user-platform version is shown on the label when available; otherwise just
-    // "Download". The caret stays visible — this is ALWAYS a dropdown trigger.
+    // "Download". The caret stays visible - this is ALWAYS a dropdown trigger.
     function applyTriggerResting() {
         if (!ddIcon || !ddLabel) return;
         ddIcon.classList.remove('fa-spinner', 'fa-spin');
@@ -328,7 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (anyBuild) {
                 renderDropdownItems();
             } else {
-                // API responded but had no usable builds anywhere — keep the
+                // API responded but had no usable builds anywhere - keep the
                 // dropdown, show an explanation inside it.
                 showPanelError('No builds available right now. Please try again in a moment.');
             }
@@ -350,7 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- 2. SMOOTH SCROLL FOR IN-PAGE ANCHORS ---
     // The previous version used gsap.scrollTo; with GSAP removed we lean on the
     // native CSS smooth-scroll behavior (set on <html> via style.css) and just
-    // hand the rest to scrollIntoView. Only intercepts on-page anchors —
+    // hand the rest to scrollIntoView. Only intercepts on-page anchors -
     // external links and the special download-btn id are ignored.
     document.addEventListener('click', (e) => {
         const anchor = e.target.closest('a');
@@ -370,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Lives in app.js (not landing.js) so it works on EVERY page that
     // includes the markup, not just the landing page. Older copies on
     // /leaderboards, /commands, /updates used to render the markup
-    // without any wiring — the button looked clickable but silently did
+    // without any wiring - the button looked clickable but silently did
     // nothing because the listener was scoped to the landing page.
     //
     // Wiring is deliberately tolerant: if the markup IDs aren't present
@@ -384,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Remove the inline ``hidden`` attribute the template ships
         // with. Without this the panel starts with ``display: none``,
         // and the opacity transition from .open → opened can't run
-        // (a transition from display: none never advances — the
+        // (a transition from display: none never advances - the
         // browser hasn't computed the "before" state). Visibility is
         // already handled by ``opacity`` + ``pointer-events: none``
         // on the closed state, plus ``aria-hidden`` below for screen
