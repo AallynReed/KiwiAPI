@@ -1033,7 +1033,7 @@ async function renderAdmin(days = 30) {
     </div>
     <div class="card">
       <div class="row" style="align-items:center;margin-bottom:6px">
-        <h2 style="flex:1;margin:0">Leaderboard reset cadences</h2>
+        <h2 style="flex:1;margin:0">Leaderboard reset cadences <span id="lb-board-count" class="badge muted" style="font-size:.62em;vertical-align:middle;font-weight:normal"></span></h2>
         <input id="lb-board-search" placeholder="Search board…" style="max-width:240px;flex:0 0 auto">
       </div>
       <p class="hint">
@@ -1138,12 +1138,17 @@ async function renderLeaderboardsBoardsTable() {
 function paintLeaderboardsBoards(q) {
   const host = document.getElementById("lb-boards-rows");
   if (!host) return;
-  const list = q
+  const list = (q
     ? _lbBoards.filter((b) =>
         b.name.toLowerCase().includes(q) ||
         b.category.toLowerCase().includes(q) ||
         String(b.uuid).includes(q))
-    : _lbBoards;
+    : _lbBoards.slice()
+  ).sort((a, b) => a.uuid - b.uuid);   // order by board id (ascending)
+  const countEl = document.getElementById("lb-board-count");
+  if (countEl) countEl.textContent = q
+    ? `${list.length} / ${_lbBoards.length}`   // matched / total while searching
+    : `${_lbBoards.length}`;
   if (!list.length) {
     host.innerHTML = `<p class="muted">No matching boards.</p>`;
     return;

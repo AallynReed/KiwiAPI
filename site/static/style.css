@@ -1022,6 +1022,53 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   100% { box-shadow: 0 0 0 16px transparent; }
 }
 
+/* Timezone tooltip revealed by hovering/focusing the "Server Time" card
+   (Trove runs on UTC-11). Lives on <body> as position:fixed because the card
+   itself has overflow:hidden. JS places + toggles it (.show). */
+[data-live="server-time-card"] { cursor: help; }
+.tz-tip {
+  position: fixed;
+  z-index: 60;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  padding: 10px;
+  display: grid;
+  gap: 5px;
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--bg-card) 92%, black);
+  border: 1px solid var(--bg-line);
+  box-shadow: 0 14px 36px rgba(0,0,0,.5);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity .15s var(--ease-out), transform .15s var(--ease-out);
+  pointer-events: none;
+}
+.tz-tip.show { opacity: 1; transform: translateY(0); }
+.tz-tip[hidden] { display: none; }
+.tz-tip-head {
+  font-size: .68rem; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--text-mute); padding: 2px 6px 4px;
+}
+.tz-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 7px 9px; border-radius: 8px;
+  background: color-mix(in oklab, var(--text) 4%, transparent);
+  border: 1px solid transparent;
+}
+.tz-row.highlight {
+  background: color-mix(in oklab, var(--accent-blue) 13%, transparent);
+  border-color: color-mix(in oklab, var(--accent-blue) 45%, transparent);
+}
+.tz-name { font-size: .82rem; font-weight: 600; color: var(--text); }
+.tz-row.highlight .tz-name { color: var(--accent-blue); }
+.tz-right { text-align: right; }
+.tz-time {
+  font-family: 'Space Grotesk', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: .95rem; font-weight: 700; color: var(--text);
+}
+.tz-date { font-size: .68rem; color: var(--text-mute); margin-top: 1px; }
+
 
 /* ─── 7. Story / spotlights ──────────────────────────────────────────── */
 

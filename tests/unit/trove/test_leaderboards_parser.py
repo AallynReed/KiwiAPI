@@ -6,11 +6,10 @@ without any fixtures.
 """
 
 from app.trove.leaderboards.models import (
-    contest_type_for,
     is_player_board,
     reset_kind,
 )
-from app.trove.leaderboards.parser import parse_dump
+from app.trove.leaderboards.parser import contest_type_for, parse_dump
 
 
 # --- parser ----------------------------------------------------------------
@@ -62,6 +61,39 @@ def test_parse_dump_dedupes_by_uuid():
     # First sighting wins.
     assert boards[0].name == "Board A"
     assert boards[0].entries[0].player_name == "Alpha"
+
+
+def test_parse_dump_folds_contest_overlay_into_real_board():
+    # A board that's a contest this week is dumped twice - under its real
+    # category AND under a contest overlay, with identical standings. The parser
+    # keeps the real category and folds the overlay into a flag; "Contests" is
+    # never stored as a category. Overlay listed first to prove order-independence.
+    ents = _entries((1, "Alpha", 100), (2, "Bravo", 90))
+    text = "\n".join([
+        _line("LB_Harts", "Leaderboard_Category_Contests", 33002, "HARTS", "CONTESTS", ents),
+        _line("LB_Harts", "Leaderboard_Category_Stats", 33002, "HARTS", "STATS", ents),
+    ])
+    boards = parse_dump(text)
+    assert len(boards) == 1
+    b = boards[0]
+    assert b.uuid == 33002
+    assert b.category == "STATS" and b.category_id == "Leaderboard_Category_Stats"
+    assert b.contest == "weekly"
+    assert len(b.entries) == 2
+
+    # Daily overlay -> "daily"; real-line-first order also works.
+    text2 = "\n".join([
+        _line("LB_Lev", "Leaderboard_Category_Stats", 32000, "LEV", "STATS", ents),
+        _line("LB_Lev", "Leaderboard_Category_Contests_Daily", 32000, "LEV", "DAILY CONTESTS", ents),
+    ])
+    b2 = parse_dump(text2)[0]
+    assert b2.category == "STATS" and b2.contest == "daily"
+
+
+def test_parse_dump_non_contest_board_has_no_flag():
+    text = _line("LB_A", "Leaderboard_Category_Stats", 100, "A", "STATS",
+                 _entries((1, "Alpha", 5000)))
+    assert parse_dump(text)[0].contest is None
 
 
 def test_parse_dump_skips_malformed_entries_keeps_good_ones():

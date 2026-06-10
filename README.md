@@ -162,10 +162,10 @@ every zone plus Discord `<t:unix:style>` codes.
 | `GET /v1/leaderboards/timestamps?limit=60` | recent dump anchors (unix seconds at 11:00 UTC), newest first |
 | `GET /v1/leaderboards?created_at=` | boards present at that anchor; each carries `contest_type` for THIS anchor + `reset_kind` / `player_board` flags |
 | `GET /v1/leaderboards/{uuid}` | one board's metadata + full `contests` list |
-| `GET /v1/leaderboards/{uuid}/entries?created_at=&limit=&offset=` | top-N entries for one board at one anchor, ranked |
+| `GET /v1/leaderboards/{uuid}/entries?created_at=&limit=&offset=` | top-N entries for one board at one anchor, ranked, with day-over-day `rank_delta`/`score_delta` (when the board didn't reset since the prior snapshot) |
 | `GET /v1/leaderboards/players/{name}/history?uuid=&limit=` | recent appearances of one player across boards (case-insensitive on `name`) |
 | `GET /v1/leaderboards/cheaters` | **tokenless** statistical-outlier flagging: MAD-Z + rank-gap + velocity. Per-evidence + per-player confidence; cached 30 min; pre-warmed at boot |
-| `POST /v1/leaderboards/insert?timestamp=` | **master-only ingest**: multipart `file` field with the raw `LeaderBot.cfg` text. Idempotent for a given anchor; `timestamp` is optional and only used for back-fills. Subject to the **ingest cooldown** (see below) when called with an API token |
+| `POST /v1/leaderboards/insert?timestamp=` | **master-only ingest**: multipart `file` field with the raw `LeaderBot.cfg` text. Returns **202** immediately and parses/persists in the **background** (so a multi-second insert can't time out the bot); counts/errors land in the ingest log. Idempotent for a given anchor; `timestamp` is optional and only used for back-fills. Subject to the **ingest cooldown** (see below) when called with an API token |
 
 The bot dumps the game's `LeaderBot.cfg` hourly and POSTs the file. **Full history is preserved**: entries
 older than `leaderboards_hot_retention_days` (default **3 days**; runtime-tunable from the master admin
@@ -372,7 +372,7 @@ server {  # production API - only /v1 + /health
   client_max_body_size 8m;                 # default cap (matches the app)
   location /v1/      { proxy_pass http://127.0.0.1:15546; }
   location /v1/mods/ { client_max_body_size 20m; proxy_pass http://127.0.0.1:15546; }  # .tmod tools
-  location = /v1/leaderboards/insert { client_max_body_size 20m; proxy_pass http://127.0.0.1:15546; }  # bot cfg dump
+  location = /v1/leaderboards/insert { client_max_body_size 20m; proxy_pass http://127.0.0.1:15546; }  # bot cfg dump (~16 MB at ~20k entries/board)
   location = /v1/market/insert       { client_max_body_size 20m; proxy_pass http://127.0.0.1:15546; }  # bot cfg dump
   location = /health { proxy_pass http://127.0.0.1:15546; }
   location /         { return 404; }

@@ -104,17 +104,9 @@ def is_player_board(uuid: int) -> bool:
     return uuid not in _NON_PLAYER_BOARDS
 
 
-# Contest category-ids the bot emits. Anything else is a non-contest dump
-# (the board is being polled but its current window isn't a Daily/Weekly contest).
-_CONTEST_TYPES = {
-    "Leaderboard_Category_Contests_Daily": "daily",
-    "Leaderboard_Category_Contests": "weekly",
-}
-
-
-def contest_type_for(category_id: str) -> str | None:
-    """If the source line marks this dump as a contest window, return its kind."""
-    return _CONTEST_TYPES.get(category_id)
+# Contest-overlay detection (Leaderboard_Category_Contests[_Daily]) lives in
+# parser.py's ``contest_type_for``; the parser folds it into ParsedBoard.contest
+# so a board keeps its real category and carries a per-dump contest flag.
 
 
 # ---------------------------------------------------------------------------

@@ -563,7 +563,7 @@ REGISTRY: dict[str, TunableSetting] = {
 
     # ── Community feeds (/v1/feeds/{youtube,bilibili,twitch}) ──────────
     # Filter knobs for the natively-fetched video/stream feeds (see
-    # app/trove/relays.py). The list-shaped knobs are comma-separated
+    # app/trove/feeds.py). The list-shaped knobs are comma-separated
     # strings (runtime_config has no list type) - whitespace ignored, case
     # folded on parse, same convention as cheaters_excluded_board_uuids.
     # Twitch needs no filter knobs (it just lists every live Trove stream);
@@ -596,9 +596,56 @@ REGISTRY: dict[str, TunableSetting] = {
         type="str",
         category="community_feeds",
         description=(
-            "Comma-separated substrings; a YouTube video whose title contains "
-            "any of them (case-insensitive) is dropped. Default catches the "
-            "unrelated 'Trinket Trove' series."
+            "EXCLUDE list for the /v1/feeds/youtube relevance filter: comma-"
+            "separated whole-word terms; a video whose title/description/tags "
+            "contain any of them is dropped. Default catches the unrelated "
+            "'Trinket Trove' series."
+        ),
+    ),
+    "feeds_youtube_require_terms": _t(
+        key="feeds_youtube_require_terms",
+        default="trove",
+        type="str",
+        category="community_feeds",
+        description=(
+            "REQUIRE list for the /v1/feeds/youtube relevance filter: comma-"
+            "separated whole-word terms a video's title/description/tags must "
+            "ALL contain (case-insensitive). Default 'trove'. Leave blank to "
+            "require nothing (not recommended - the search alone is noisy)."
+        ),
+    ),
+    "feeds_youtube_relevance_terms": _t(
+        key="feeds_youtube_relevance_terms",
+        default=(
+            "trovesaurus,gamigo,trion,geode,delve,paragon,mastery,cornerstone,"
+            "chaos chest,shadow tower,club world,radiant,lunar lancer,"
+            "candy barbarian,neon ninja,shadow hunter,dino tamer,boomeranger,"
+            "dracolyte,vanguardian,chloromancer,fae trickster,pirate captain,"
+            "tomb raiser,solarion,gunslinger"
+        ),
+        type="str",
+        category="community_feeds",
+        description=(
+            "SIGNAL list for the /v1/feeds/youtube relevance filter: comma-"
+            "separated Trove-distinctive whole-word terms. A video is kept only "
+            "if its title/description/tags contain at least one of these OR it "
+            "sits in the gaming category (feeds_youtube_video_category_id). This "
+            "is the self-curated relevance model - tune it to widen/tighten what "
+            "counts as Trove. Leave blank to disable the signal gate."
+        ),
+    ),
+    "feeds_youtube_video_category_id": _t(
+        key="feeds_youtube_video_category_id",
+        default="20",
+        type="str",
+        category="community_feeds",
+        description=(
+            "YouTube video category id that counts as a relevance SIGNAL for "
+            "/v1/feeds/youtube (default '20' = Gaming). A video in this category "
+            "passes the relevance gate even without a feeds_youtube_relevance_terms "
+            "match. NOTE: it's the video's real (uploader-assigned) category from "
+            "videos.list, used as a soft signal - NOT a hard search filter (which "
+            "would drop legit miscategorised Trove videos). Blank to ignore category."
         ),
     ),
     "feeds_bilibili_keyword": _t(

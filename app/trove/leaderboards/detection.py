@@ -52,9 +52,10 @@ logger = logging.getLogger(__name__)
 # Cache: {cache_key: (stored_at_unix, payload)}.
 _CACHE: dict[tuple, tuple[float, dict]] = {}
 
-# Pull enough entries per board to cover the realistic upper bound
-# (Trove boards top out around 5000 visible entries; we round up).
-_BOARD_FETCH_LIMIT = 10000
+# Pull enough entries per board to cover the realistic upper bound. The bot's
+# dump now carries up to ~20k entries per board (was ~5k), so fetch past that to
+# analyse the FULL board rather than truncating cheater detection to the top.
+_BOARD_FETCH_LIMIT = 25000
 # Limit historical "peer" velocity computation to the top-N entries on
 # each board so a 5000-row board doesn't trigger 5000 archive queries.
 _VELOCITY_PEER_TOP_N = 50
@@ -70,28 +71,27 @@ _LAST_GOOD: dict | None = None
 
 
 async def detect_possible_cheaters(*, force: bool = False) -> dict:
-    """Run all three checks against the most recent anchor in the hot
-    collection. Cached behaviour:
+    """Run all three checks against a leaderboard snapshot.
 
-    1. If the current (anchor, config) is in ``_CACHE`` within the TTL
-       window, return it instantly - this is the warmer's normal hit.
-    2. If the current key isn't cached BUT we have a ``_LAST_GOOD``
-       payload from a previous anchor, return that immediately AND fire
-       the background warmer so the new anchor lands in cache for the
-       next request. This is the "don't invalidate old data until new
-       is ready" guarantee - the user keeps seeing yesterday's flags
-       instead of a multi-second spinner while detection re-runs.
-    3. Cold start (no cache, no last-good) - fall through to
-       synchronous compute. Slow on the FIRST request after a fresh
-       boot, never again because the result feeds ``_LAST_GOOD``.
+    Two modes:
 
-    ``force=True`` BYPASSES the stale shortcut in step 2 and recomputes
-    synchronously. This is the warmer's path - without it, the warmer
-    would call itself, see _LAST_GOOD, return that, and never actually
-    populate the new anchor's cache slot (so user requests would keep
-    returning the previous anchor's payload forever after a new ingest).
+    * **Serving** (``force=False``) returns the latest *published* anchor's
+      result - the one the page is showing (see ``cache.set_ready_anchor``) - so
+      the cheaters tab always matches the boards/entries on screen. Served from,
+      in order: the in-process cache, the persisted Redis snapshot (survives
+      restarts, so no cold scan), the last-good payload, then an empty
+      placeholder while the warmer fills in. Never blocks on the per-board scan.
+    * **Warming** (``force=True``, the background warmer) computes the RAW latest
+      anchor, writing the in-process cache + last-good + the persistent Redis
+      snapshot. It ADOPTS a fresh persisted snapshot for that anchor instead of
+      recomputing (e.g. right after a restart with no new capture), so boot
+      doesn't pay a cold full-board scan.
+
+    Without Redis configured, ``get_ready_anchor`` is None and this degrades to
+    the old "serve the raw latest, stale-but-good" behaviour.
     """
     from app.admin import runtime_config
+    from app.trove.leaderboards import cache as lb_cache
 
     z_threshold = float(await runtime_config.get_setting("cheaters_z_threshold"))
     velocity_multiplier = float(
@@ -106,48 +106,65 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
         await runtime_config.get_setting("cheaters_excluded_board_uuids")
     )
     excluded = _parse_excluded(excluded_csv)
-
-    timestamps = await lb_service.list_timestamps(limit=1, include_archive=False)
-    if not timestamps:
-        return _empty(None, z_threshold, velocity_multiplier, min_board_size)
-
-    anchor = timestamps[0]
-    # Cache key includes excluded set (as sorted tuple, since sets aren't
-    # hashable) so a master-panel edit invalidates immediately.
-    cache_key = (
-        anchor, z_threshold, velocity_multiplier, min_board_size,
-        cohort_pct, tuple(sorted(excluded)),
-    )
     now = time.time()
     global _LAST_GOOD
 
-    # Both paths honour a fresh cache hit for the current anchor - no
-    # point recomputing if the slot is already valid. The difference is
-    # what happens on a miss: the user-facing path serves _LAST_GOOD
-    # (yesterday's payload) instantly, while the warmer (force=True)
-    # falls through to compute so the new anchor's slot actually fills.
-    hit = _CACHE.get(cache_key)
-    if hit is not None and now - hit[0] < cache_ttl:
-        _LAST_GOOD = hit[1]
-        return hit[1]
+    def _key(anchor: int) -> tuple:
+        # Excluded set as a sorted tuple (sets aren't hashable) so a master-panel
+        # edit invalidates immediately.
+        return (anchor, z_threshold, velocity_multiplier, min_board_size,
+                cohort_pct, tuple(sorted(excluded)))
 
-    if not force and _LAST_GOOD is not None:
-        # User-facing miss: serve yesterday's payload, kick the warmer
-        # so the new anchor's slot starts filling. Without ``not force``
-        # gating this branch, the warmer would itself short-circuit on
-        # _LAST_GOOD and the new anchor's slot would NEVER populate.
+    if not force:
+        # Serve the latest PUBLISHED anchor (raw latest before the first publish
+        # / without Redis).
+        serve_anchor = await lb_cache.get_ready_anchor()
+        if serve_anchor is None:
+            ts = await lb_service.list_timestamps(limit=1, include_archive=False)
+            serve_anchor = ts[0] if ts else None
+        if serve_anchor is None:
+            return _empty(None, z_threshold, velocity_multiplier, min_board_size)
+
+        cache_key = _key(serve_anchor)
+        hit = _CACHE.get(cache_key)
+        if hit is not None and now - hit[0] < cache_ttl:
+            _LAST_GOOD = hit[1]
+            return hit[1]
+        # Persisted snapshot survives restarts - serve instantly + seed memory.
+        persisted = await lb_cache.get_cheaters(serve_anchor)
+        if persisted is not None:
+            _CACHE[cache_key] = (now, persisted)
+            _LAST_GOOD = persisted
+            return persisted
+        # Nothing for the published anchor yet - kick the warmer and serve the
+        # last-good payload (or an empty placeholder) instead of blocking.
         trigger_warmer()
-        return _LAST_GOOD
+        if _LAST_GOOD is not None:
+            return _LAST_GOOD
+        return _empty(serve_anchor, z_threshold, velocity_multiplier, min_board_size)
 
-    # Either a cold start (no _LAST_GOOD ever) or the warmer running
-    # with force=True against a stale cache. Compute synchronously,
-    # populate cache + last-good for subsequent requests.
+    # Warmer: compute (or adopt a fresh persisted snapshot for) the RAW latest.
+    timestamps = await lb_service.list_timestamps(limit=1, include_archive=False)
+    if not timestamps:
+        return _empty(None, z_threshold, velocity_multiplier, min_board_size)
+    anchor = timestamps[0]
+    cache_key = _key(anchor)
+
+    persisted = await lb_cache.get_cheaters(anchor)
+    if persisted is not None and now - persisted.get("computed_at", 0) < cache_ttl:
+        # Fresh processed snapshot already in Redis (restart, no new capture) -
+        # adopt it instead of a cold recompute.
+        _CACHE[cache_key] = (now, persisted)
+        _LAST_GOOD = persisted
+        return persisted
+
     result = await _compute(
         anchor, z_threshold, velocity_multiplier, min_board_size,
         excluded, cohort_pct,
     )
     _CACHE[cache_key] = (now, result)
     _LAST_GOOD = result
+    await lb_cache.set_cheaters(anchor, result)
     _prune_cache(now, cache_ttl)
     return result
 
@@ -253,15 +270,29 @@ async def _warm_all() -> None:
     # the warmer would see _LAST_GOOD (the previous anchor's payload)
     # and return that without ever calling _compute() - and the user
     # would be stuck looking at yesterday's flags forever.
-    await detect_possible_cheaters(force=True)
-    # activity estimate - also a multi-board scan
+    res = await detect_possible_cheaters(force=True)
+    # activity estimate - also a multi-board scan. NON-FATAL: it's the auxiliary
+    # "live pulse" pill, so a failure here must not abort the pass before the
+    # publish below (which would freeze the atomic snapshot switch). The pill
+    # falls back to last-good/empty and the next pass retries it.
     from app.trove.leaderboards import activity as lb_activity
-    await lb_activity.estimate_active_players()
-    # boards-at-latest - cheap distinct(), but worth pre-running so the
-    # sidebar paint is instant even on a cold Mongo page cache
-    stamps = await lb_service.list_timestamps(limit=1, include_archive=False)
-    if stamps:
-        await lb_service.list_boards_at(stamps[0])
+    try:
+        await lb_activity.estimate_active_players(force=True)
+    except Exception:
+        logger.exception("leaderboards warmer: activity estimate failed (non-fatal)")
+    # Refresh the Redis snapshot for the leaderboards page (anchor list + boards
+    # at the latest anchor + the first board's first page) so the page serves
+    # the latest capture with zero Mongo work and can switch to a new capture
+    # instantly. Without Redis this still warms Mongo's page cache as before.
+    from app.trove.leaderboards import cache as lb_cache
+    await lb_cache.warm()
+    # PUBLISH: advance the page's "latest" to this anchor only now that its
+    # cheaters + activity + boards/entries are all cached. Until this flips,
+    # get_timestamps hides the freshly-ingested anchor, so the page switches to
+    # a new capture atomically (never showing a half-processed snapshot).
+    anchor = res.get("anchor") if isinstance(res, dict) else None
+    if anchor is not None:
+        await lb_cache.set_ready_anchor(anchor)
 
 
 def trigger_warmer() -> None:

@@ -29,7 +29,6 @@ from app.trove.leaderboards.models import (
     Leaderboard,
     LeaderboardEntry,
     LeaderboardEntryArchive,
-    contest_type_for,
     effective_reset_kind,
     is_player_board,
     reset_kind,
@@ -232,7 +231,7 @@ async def _upsert_board(parsed: ParsedBoard, created_at: int) -> Leaderboard:
             category_id=parsed.category_id,
             category=parsed.category,
         ).insert()
-    ctype = contest_type_for(parsed.category_id)
+    ctype = parsed.contest
     if ctype is not None:
         if not any(c.get("time") == created_at for c in lb.contests):
             lb.contests.append({"time": created_at, "type": ctype})
@@ -318,6 +317,15 @@ async def _move_to_archive() -> int:
     return moved
 
 
+# Anchors with an insert currently in progress. Reads (``list_timestamps`` and
+# everything that keys off "the latest anchor" - cheaters / activity) skip these,
+# so the page never surfaces a half-written (delete-then-insert) anchor: it keeps
+# showing the last COMPLETE anchor until the new one fully lands. In-process is
+# enough - the insert runs as a background task in this same event loop, and a
+# crash mid-insert is self-healed by the next idempotent re-run.
+_inflight_anchors: set[int] = set()
+
+
 async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
     """Parse + persist a dump. Idempotent for a given ``created_at``: re-running
     the same dump on the same timestamp replaces the previous rows for it.
@@ -338,31 +346,38 @@ async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
     else:
         created_at = _trove_day_anchor()
 
-    # Replace any prior data for this anchor (idempotent re-run).
-    res = await LeaderboardEntry.find(LeaderboardEntry.created_at == created_at).delete()
-    cleared = getattr(res, "deleted_count", 0) or 0
+    # Hold this anchor "in flight" across the (non-atomic) delete-then-insert so
+    # reads keep serving the last COMPLETE anchor instead of a partial/empty one
+    # mid-write. Cleared in the finally once every row is in place.
+    _inflight_anchors.add(created_at)
+    try:
+        # Replace any prior data for this anchor (idempotent re-run).
+        res = await LeaderboardEntry.find(LeaderboardEntry.created_at == created_at).delete()
+        cleared = getattr(res, "deleted_count", 0) or 0
 
-    entries_total = 0
-    for board in boards:
-        await _upsert_board(board, created_at)
-        if not board.entries:
-            continue
-        # insert_many handles batching internally - avoid manual BulkWriter
-        # commits since BulkWriter.commit() doesn't clear its op queue.
-        docs = [
-            LeaderboardEntry(
-                player_name=ent.player_name,
-                rank=ent.rank,
-                score=ent.score,
-                leaderboard=board.uuid,
-                created_at=created_at,
-            )
-            for ent in board.entries
-        ]
-        await LeaderboardEntry.insert_many(docs)
-        entries_total += len(docs)
+        entries_total = 0
+        for board in boards:
+            await _upsert_board(board, created_at)
+            if not board.entries:
+                continue
+            # insert_many handles batching internally - avoid manual BulkWriter
+            # commits since BulkWriter.commit() doesn't clear its op queue.
+            docs = [
+                LeaderboardEntry(
+                    player_name=ent.player_name,
+                    rank=ent.rank,
+                    score=ent.score,
+                    leaderboard=board.uuid,
+                    created_at=created_at,
+                )
+                for ent in board.entries
+            ]
+            await LeaderboardEntry.insert_many(docs)
+            entries_total += len(docs)
 
-    archived = await _move_to_archive()
+        archived = await _move_to_archive()
+    finally:
+        _inflight_anchors.discard(created_at)
     logger.info(
         "leaderboards: ingested anchor=%d boards=%d entries=%d cleared=%d archived=%d",
         created_at, len(boards), entries_total, cleared, archived,
@@ -391,7 +406,15 @@ async def list_timestamps(limit: int = 60, *, include_archive: bool = True) -> l
     Unions hot + archive by default so callers see the full history. Set
     ``include_archive=False`` for a fast hot-only listing.
     """
-    pipeline = [
+    # Skip anchors with an insert in progress so a half-written (delete-then-
+    # insert) anchor never surfaces - callers keep seeing the last COMPLETE one.
+    # Filtered BEFORE the limit so excluding the newest in-flight anchor still
+    # yields ``limit`` complete ones.
+    match = (
+        [{"$match": {"created_at": {"$nin": list(_inflight_anchors)}}}]
+        if _inflight_anchors else []
+    )
+    pipeline = match + [
         {"$group": {"_id": "$created_at"}},
         {"$sort": {"_id": -1}},
         {"$limit": limit},
@@ -490,9 +513,144 @@ async def list_entries(
     return items, total
 
 
+def _trove_day_start(anchor: int) -> int:
+    """The 11:00-UTC reset that opens ``anchor``'s trove-day (unix seconds)."""
+    return ((anchor - _RESET_HOUR_UTC * 3600) // 86400) * 86400 + _RESET_HOUR_UTC * 3600
+
+
+async def _previous_day_anchor(uuid: int, created_at: int) -> int | None:
+    """The latest stored anchor for ``uuid`` from a strictly-earlier trove-day.
+
+    This is the "yesterday's latest snapshot" we diff today's standings against.
+    Unions hot + archive so the comparison keeps working across the retention
+    boundary. Returns None when the board has no earlier-day capture stored.
+    """
+    day_start = _trove_day_start(created_at)
+    best: int | None = None
+    for coll in (LeaderboardEntry, LeaderboardEntryArchive):
+        rows = (
+            await coll.find({"leaderboard": uuid, "created_at": {"$lt": day_start}})
+            .sort("-created_at")
+            .limit(1)
+            .to_list()
+        )
+        if rows and (best is None or rows[0].created_at > best):
+            best = rows[0].created_at
+    return best
+
+
+async def list_entries_with_deltas(
+    uuid: int, created_at: int, *, limit: int = 100, offset: int = 0,
+) -> tuple[list[dict], int, dict]:
+    """``list_entries`` plus per-player day-over-day rank/score deltas.
+
+    Each item gains ``prev_rank`` / ``prev_score`` / ``rank_delta`` /
+    ``score_delta`` / ``is_new`` when a COMPARABLE prior snapshot exists. A pair
+    is comparable iff the board did NOT reset between the previous-day snapshot
+    and this one - tested with ``reset_boundaries_for_kind`` against the board's
+    *effective* cadence (admin override included), which collapses to:
+
+      * lifetime (default/none): always comparable;
+      * weekly: comparable except across the Monday 11:00 UTC reset;
+      * daily: never comparable day-over-day (a reset always sits between two
+        different trove-days).
+
+    ``rank_delta`` is ``prev_rank - rank`` (positive = climbed); ``score_delta``
+    is ``score - prev_score`` (positive = gained). Returns
+    ``(items, total, comparison)`` where ``comparison`` is
+    ``{comparable, prev_anchor, reason}`` (reason: ok / no_prior_snapshot /
+    crossed_reset). Only the public + site entries endpoints use this; the hot
+    detection/activity paths keep calling the plain ``list_entries``.
+    """
+    items, total = await list_entries(uuid, created_at, limit=limit, offset=offset)
+
+    prev_anchor = await _previous_day_anchor(uuid, created_at)
+    if prev_anchor is None:
+        return items, total, {
+            "comparable": False, "prev_anchor": None, "reason": "no_prior_snapshot",
+        }
+
+    board = await Leaderboard.find_one(Leaderboard.uuid == uuid)
+    kind = effective_reset_kind(board, uuid)
+    if reset_boundaries_for_kind(kind, prev_anchor, created_at):
+        return items, total, {
+            "comparable": False, "prev_anchor": prev_anchor, "reason": "crossed_reset",
+        }
+
+    if items:
+        names = [it["player_name"] for it in items]
+        prev_coll = await _entries_collection_for(prev_anchor)
+        prev_rows = await prev_coll.find(
+            {"leaderboard": uuid, "created_at": prev_anchor,
+             "player_name": {"$in": names}},
+        ).to_list()
+        prev = {r.player_name: r for r in prev_rows}
+        for it in items:
+            p = prev.get(it["player_name"])
+            if p is None:
+                it.update(is_new=True, prev_rank=None, prev_score=None,
+                          rank_delta=None, score_delta=None)
+            else:
+                it.update(
+                    is_new=False, prev_rank=p.rank, prev_score=p.score,
+                    rank_delta=p.rank - it["rank"],
+                    score_delta=it["score"] - p.score,
+                )
+    return items, total, {"comparable": True, "prev_anchor": prev_anchor, "reason": "ok"}
+
+
+async def _attach_player_history_deltas(player_name: str, rows: list[dict]) -> None:
+    """In-place: add day-over-day rank/score deltas to player-history rows.
+
+    For each row (the player on board B at anchor A) we find the player's latest
+    appearance on B from a strictly-earlier trove-day and, when that pair is
+    comparable (no reset between - same rule as the entries table), attach
+    ``prev_rank`` / ``prev_score`` / ``rank_delta`` / ``score_delta``.
+
+    Done with ONE time-bounded query for the player's rows (independent of the
+    history ``limit``, so the prev-day row is reliably present) plus a board-doc
+    lookup for cadences - mirrors ``player_history_series``'s single-fetch shape.
+    Only rows inside the lookback window get deltas; older ones stay bare.
+    """
+    window_start = int(datetime.now(UTC).timestamp()) - 8 * 86400
+    name = player_name.strip()
+    ci_match = {"$regex": f"^{re.escape(name)}$", "$options": "i"}
+    q = {"player_name": ci_match, "created_at": {"$gte": window_start}}
+    docs = await LeaderboardEntry.find(q).to_list()
+    docs += await LeaderboardEntryArchive.find(q).to_list()
+
+    # board uuid -> appearances (created_at, rank, score), newest first.
+    by_board: dict[int, list[tuple[int, int, float]]] = {}
+    for d in docs:
+        by_board.setdefault(d.leaderboard, []).append((d.created_at, d.rank, d.score))
+    for series in by_board.values():
+        series.sort(reverse=True)
+
+    board_docs = await Leaderboard.find(
+        {"uuid": {"$in": list(by_board.keys())}},
+    ).to_list()
+    kinds = {b.uuid: effective_reset_kind(b, b.uuid) for b in board_docs}
+
+    for r in rows:
+        series = by_board.get(r["leaderboard"])
+        if not series:
+            continue
+        day = _trove_day_start(r["created_at"])
+        prev = next((p for p in series if p[0] < day), None)   # latest earlier-day
+        if prev is None:
+            continue
+        kind = kinds.get(r["leaderboard"], "default")
+        if reset_boundaries_for_kind(kind, prev[0], r["created_at"]):
+            continue
+        r["prev_rank"] = prev[1]
+        r["prev_score"] = prev[2]
+        r["rank_delta"] = prev[1] - r["rank"]
+        r["score_delta"] = r["score"] - prev[2]
+
+
 async def player_history(
     player_name: str, *, limit: int = 50, uuid: int | None = None,
-    include_archive: bool = True,
+    include_archive: bool = True, with_deltas: bool = False,
 ) -> list[dict]:
     """Most recent dumps that featured a player. Optional board filter.
 
@@ -544,6 +702,8 @@ async def player_history(
             }
             for d in cold_docs
         )
+    if with_deltas and out:
+        await _attach_player_history_deltas(name, out)
     return out
 
 

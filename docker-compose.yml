@@ -92,6 +92,11 @@ services:
       # BTT release relay: optional GitHub PAT (lifts 60/hr unauth -> 5000/hr).
       BTT_RELEASES_REPO: ${BTT_RELEASES_REPO:-AallynReed/BetterTroveTools}
       BTT_RELEASES_TOKEN: ${BTT_RELEASES_TOKEN:-}
+      # Community feeds: Twitch + YouTube credentials (Bilibili is credential-less).
+      # Leave blank to disable that feed (it just serves empty).
+      TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID:-}
+      TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET:-}
+      YT_API_KEY: ${YT_API_KEY:-}
     depends_on:
       mongo:
         condition: service_healthy

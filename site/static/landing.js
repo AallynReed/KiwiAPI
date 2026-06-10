@@ -263,6 +263,27 @@
   let serverEpochOffset = null;
   let dailyResetAt = null;  // unix seconds
 
+  // Trove's clock runs on UTC-11 (the daily reset is 11:00 UTC == midnight
+  // UTC-11), so the "Server Time" card shows UTC-11, and hovering it reveals
+  // the same instant across common player timezones. Ported from
+  // BetterTroveTools (web/js/main.js globalTimezones).
+  const TROVE_OFFSET_MS = 11 * 3600000;
+  const GLOBAL_TIMEZONES = [
+    { id: 'trove',               name: 'Trove Server (reset)' },
+    { id: 'local',               name: 'Local Time' },
+    { id: 'UTC',                 name: 'UTC' },
+    { id: 'America/Sao_Paulo',   name: 'Brazil (Brasilia)' },
+    { id: 'America/New_York',    name: 'US Eastern' },
+    { id: 'America/Los_Angeles', name: 'US Pacific' },
+    { id: 'Europe/Lisbon',       name: 'Portugal / UK' },
+    { id: 'Europe/Paris',        name: 'Central Europe (FR, DE, ES)' },
+    { id: 'Europe/Moscow',       name: 'Russia (Moscow)' },
+    { id: 'Asia/Shanghai',       name: 'China (Beijing)' },
+    { id: 'Asia/Tokyo',          name: 'Japan & South Korea' },
+    { id: 'Australia/Sydney',    name: 'Australia (Sydney)' },
+  ];
+  const tzT = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
+
   function fmtClock(date) {
     const pad = n => String(n).padStart(2, '0');
     return `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
@@ -284,18 +305,135 @@
   function tickClock() {
     if (fields.serverTime && serverEpochOffset !== null) {
       const now = new Date(performance.now() + serverEpochOffset);
-      fields.serverTime.textContent = fmtClock(now);
+      // Trove runs on UTC-11: shift the authoritative UTC instant back 11h and
+      // render it as UTC (fmtClock uses getUTC*), so the card shows Trove time.
+      const trove = new Date(now.getTime() - TROVE_OFFSET_MS);
+      fields.serverTime.textContent = fmtClock(trove);
       if (fields.serverDate) {
-        fields.serverDate.textContent = now.toUTCString().slice(5, 16) + ' UTC';
+        fields.serverDate.textContent = trove.toUTCString().slice(5, 16) + ' · UTC-11';
       }
       if (dailyResetAt) {
         const left = dailyResetAt - Math.floor(now.getTime() / 1000);
         if (fields.resetIn) fields.resetIn.textContent = `daily reset in ${fmtCountdown(left)}`;
       }
+      updateTzTooltip(now);
     }
     requestAnimationFrame(tickClock);
   }
   requestAnimationFrame(tickClock);
+
+  // ── Timezone tooltip on the "Server Time" card ────────────────────────
+  // On hover/focus, show the current instant across common player timezones
+  // (Trove highlighted). The card has overflow:hidden, so the tooltip lives on
+  // <body> as a position:fixed element placed just under the card.
+  let tzTip = null, tzRows = null, tzVisible = false, tzLastSec = -1;
+
+  function nowInstant() {
+    // Prefer the API's authoritative UTC; fall back to the local clock so a
+    // hover still works before the first server-time poll lands.
+    return serverEpochOffset !== null
+      ? new Date(performance.now() + serverEpochOffset)
+      : new Date();
+  }
+
+  function buildTzTip() {
+    if (tzTip || !cards.serverTime) return;
+    tzTip = document.createElement('div');
+    tzTip.className = 'tz-tip';
+    tzTip.setAttribute('role', 'tooltip');
+    tzTip.hidden = true;
+    const head = document.createElement('div');
+    head.className = 'tz-tip-head';
+    head.textContent = tzT('Times around the world');
+    tzTip.appendChild(head);
+    tzRows = GLOBAL_TIMEZONES.map((tz) => {
+      const row = document.createElement('div');
+      row.className = 'tz-row' + (tz.id === 'trove' ? ' highlight' : '');
+      const name = document.createElement('div');
+      name.className = 'tz-name';
+      name.textContent = tzT(tz.name);
+      const right = document.createElement('div');
+      right.className = 'tz-right';
+      const time = document.createElement('div');
+      time.className = 'tz-time';
+      const date = document.createElement('div');
+      date.className = 'tz-date';
+      right.append(time, date);
+      row.append(name, right);
+      tzTip.appendChild(row);
+      return { tz, time, date };
+    });
+    document.body.appendChild(tzTip);
+  }
+
+  function renderTz(utc) {
+    if (!tzRows) return;
+    const locale = (window.BTTi18n && window.BTTi18n.currentLocale)
+      ? window.BTTi18n.currentLocale.replace('_', '-') : undefined;
+    const tOpts = { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    const dOpts = { weekday: 'short', month: 'short', day: 'numeric' };
+    for (const { tz, time, date } of tzRows) {
+      try {
+        if (tz.id === 'trove') {
+          const trove = new Date(utc.getTime() - TROVE_OFFSET_MS);
+          time.textContent = trove.toLocaleTimeString(locale, { ...tOpts, timeZone: 'UTC' });
+          date.textContent = trove.toLocaleDateString(locale, { ...dOpts, timeZone: 'UTC' });
+        } else if (tz.id === 'local') {
+          time.textContent = utc.toLocaleTimeString(locale, tOpts);
+          date.textContent = utc.toLocaleDateString(locale, dOpts);
+        } else {
+          time.textContent = utc.toLocaleTimeString(locale, { ...tOpts, timeZone: tz.id });
+          date.textContent = utc.toLocaleDateString(locale, { ...dOpts, timeZone: tz.id });
+        }
+      } catch (e) {
+        time.textContent = '--:--:--';
+        date.textContent = '---';
+      }
+    }
+  }
+
+  function updateTzTooltip(utc) {
+    if (!tzVisible) return;
+    const sec = Math.floor(utc.getTime() / 1000);
+    if (sec === tzLastSec) return;   // displayed values only change each second
+    tzLastSec = sec;
+    renderTz(utc);
+  }
+
+  function positionTz() {
+    if (!tzTip || !cards.serverTime) return;
+    const r = cards.serverTime.getBoundingClientRect();
+    const w = tzTip.offsetWidth || 300;
+    const left = Math.max(12, Math.min(r.left, window.innerWidth - w - 12));
+    tzTip.style.left = Math.round(left) + 'px';
+    tzTip.style.top = Math.round(r.bottom + 10) + 'px';
+  }
+
+  function showTz() {
+    if (!cards.serverTime) return;
+    buildTzTip();
+    tzVisible = true;
+    tzLastSec = -1;
+    renderTz(nowInstant());
+    tzTip.hidden = false;
+    positionTz();
+    requestAnimationFrame(() => { if (tzTip) tzTip.classList.add('show'); });
+  }
+
+  function hideTz() {
+    tzVisible = false;
+    if (tzTip) { tzTip.classList.remove('show'); tzTip.hidden = true; }
+  }
+
+  if (cards.serverTime) {
+    cards.serverTime.tabIndex = 0;
+    cards.serverTime.addEventListener('mouseenter', showTz);
+    cards.serverTime.addEventListener('mouseleave', hideTz);
+    cards.serverTime.addEventListener('focus', showTz);
+    cards.serverTime.addEventListener('blur', hideTz);
+    window.addEventListener('scroll', () => { if (tzVisible) positionTz(); }, { passive: true });
+    window.addEventListener('resize', () => { if (tzVisible) positionTz(); });
+  }
 
   async function safeFetch(path) {
     try {

@@ -28,9 +28,9 @@ from app.trove import (
     captures,
     chaos,
     delves,
+    feeds,
     misc,
     news,
-    relays,
     rotations,
     server_time,
     stats,
@@ -115,6 +115,7 @@ from app.trove.schemas import (
     Fluxion,
     Gardening,
     LeaderboardBoardOut,
+    LeaderboardComparison,
     LeaderboardEntriesPage,
     LeaderboardEntryOut,
     LeaderboardInfo,
@@ -491,7 +492,7 @@ async def list_news(
 @feeds_router.get("/twitch", response_model=TwitchStreams)
 async def get_twitch(ctx: AccessContext = _FEED) -> TwitchStreams:
     """Live Twitch streams for Trove (Helix, fetched at source) + cached."""
-    items, fetched_at = await relays.get_feed("twitch")
+    items, fetched_at = await feeds.get_feed("twitch")
     return TwitchStreams(
         items=[TwitchStream(**i) for i in items], count=len(items), fetched_at=fetched_at
     )
@@ -500,14 +501,14 @@ async def get_twitch(ctx: AccessContext = _FEED) -> TwitchStreams:
 @feeds_router.get("/youtube", response_model=Videos)
 async def get_youtube(ctx: AccessContext = _FEED) -> Videos:
     """Recent Trove YouTube videos (Data API, fetched at source) + cached."""
-    items, fetched_at = await relays.get_feed("youtube")
+    items, fetched_at = await feeds.get_feed("youtube")
     return Videos(items=[Video(**i) for i in items], count=len(items), fetched_at=fetched_at)
 
 
 @feeds_router.get("/bilibili", response_model=Videos)
 async def get_bilibili(ctx: AccessContext = _FEED) -> Videos:
     """Recent Trove Bilibili videos (search-page scrape, fetched at source) + cached."""
-    items, fetched_at = await relays.get_feed("bilibili")
+    items, fetched_at = await feeds.get_feed("bilibili")
     return Videos(items=[Video(**i) for i in items], count=len(items), fetched_at=fetched_at)
 
 
@@ -525,7 +526,7 @@ async def proxy_bilibili_image(
     proxy the desktop/web_server builds carry).
     """
     try:
-        content, content_type = await relays.fetch_bilibili_image(url)
+        content, content_type = await feeds.fetch_bilibili_image(url)
     except ValueError as exc:
         raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(exc))
     except httpx.HTTPError as exc:
@@ -2000,19 +2001,28 @@ async def list_leaderboard_entries(
 ) -> LeaderboardEntriesPage:
     """Ranked entries for one board at one anchor - top-N with pagination.
 
+    Each item also carries day-over-day movement vs the previous trove-day's
+    latest snapshot: ``rank_delta`` (positive = climbed), ``score_delta``
+    (positive = gained), ``prev_rank``/``prev_score``, and ``is_new`` for a
+    player with no prior-day position. These are only populated when the page
+    ``comparison.comparable`` is true - the board must not have reset between the
+    two snapshots, so daily boards never carry deltas day-over-day, weekly boards
+    skip the Monday reset, and lifetime boards always compare.
+
     Anchors older than ``leaderboards_archive_query_threshold_days`` pay the
     archive rate-limit bucket on top of the standard per-token cap (the data
     lives in the cold collection at that point, and historical trawling is the
     intended target of the tighter throttle)."""
     anchor = _lb_timestamp(created_at)
     await _enforce_lb_archive_limit(response, ctx, anchor)
-    items, total = await leaderboards_service.list_entries(
+    items, total, comparison = await leaderboards_service.list_entries_with_deltas(
         uuid, anchor, limit=limit, offset=offset,
     )
     return LeaderboardEntriesPage(
         uuid=uuid, created_at=anchor,
         items=[LeaderboardEntryOut(**i) for i in items],
         count=len(items), total=total,
+        comparison=LeaderboardComparison(**comparison),
     )
 
 
@@ -2089,10 +2099,56 @@ async def get_player_history_series(
     return PlayerHistorySeriesResponse(**payload)
 
 
+async def _process_leaderboard_dump(
+    text: str, timestamp: int | None, user, token, nbytes: int,
+) -> None:
+    """Background half of POST /v1/leaderboards/insert.
+
+    Runs AFTER the 202 ack is sent, so the bot's HTTP client isn't held open
+    through the multi-second parse + persist (which was timing it out). Both
+    success and failure are written to the ingest log - the bot already has
+    its ack and never sees an exception raised from here.
+    """
+    try:
+        summary = await leaderboards_service.insert_dump(text, timestamp=timestamp)
+        await ingest_log.record(
+            endpoint="/v1/leaderboards/insert",
+            user=user, token=token,
+            summary={
+                "boards": summary.get("boards"),
+                "entries": summary.get("entries"),
+                "anchor": summary.get("created_at"),
+                "cleared_before_insert": summary.get("cleared_before_insert"),
+                "archived_old": summary.get("archived_old"),
+                "bytes": nbytes,
+            },
+        )
+        # Drop the Redis snapshot for this anchor so a re-insert / back-fill
+        # can't serve the pre-insert cached boards/entries; the warmer below
+        # re-warms the latest anchor's snapshot.
+        if summary.get("created_at"):
+            from app.trove.leaderboards import cache as leaderboards_cache
+            await leaderboards_cache.invalidate_anchor(summary["created_at"])
+        # Warm the new anchor's heavy queries (cheaters detection, activity
+        # estimate, boards listing + the Redis snapshot) so the first visitor
+        # doesn't pay the multi-second cold-cache tax. The previous anchor's
+        # cache entries remain the "last known good" fallback until the new
+        # ones land.
+        leaderboards_detection.trigger_warmer()
+    except Exception as exc:  # noqa: BLE001 - log + record; never re-raise (no client left to see it)
+        logger.exception("leaderboard ingest processing failed")
+        await ingest_log.record(
+            endpoint="/v1/leaderboards/insert",
+            user=user, token=token, success=False, error=str(exc)[:300],
+            summary={"bytes": nbytes, "anchor": timestamp},
+        )
+
+
 @leaderboards_router.post("/insert", response_model=LeaderboardInsertResponse,
-                          status_code=200,
+                          status_code=202,
                           summary="Insert leaderboard data")
 async def insert_leaderboards(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(..., description="The raw LeaderBot.cfg dump (text)"),
     timestamp: int | None = Query(
         default=None,
@@ -2101,12 +2157,17 @@ async def insert_leaderboards(
     ),
     _auth = _LB_MASTER,
 ) -> LeaderboardInsertResponse:
-    """Ingest a leaderboard dump.
+    """Ingest a leaderboard dump - accepted immediately, processed in the background.
 
     **Master only**: requires an API token owned by a superuser account. Submit
     the raw cfg text as a multipart file (the bot reads the game's
     ``LeaderBot.cfg`` and POSTs it verbatim). The dump is idempotent for a given
     anchor - re-running the same dump on the same timestamp converges.
+
+    Returns **202 Accepted** as soon as the upload is read; the parse + persist
+    (several seconds on a full dump) then runs in the background so the bot's
+    client isn't held open and timed out. The resulting boards/entries counts -
+    and any parse/DB error - are written to the master ingest log.
     """
     raw = await file.read()
     if not raw:
@@ -2120,27 +2181,18 @@ async def insert_leaderboards(
         # Some scrapes have stray bytes; replace rather than reject so a single
         # bad row doesn't kill the whole dump.
         text = raw.decode("utf-8", errors="replace")
-    summary = await leaderboards_service.insert_dump(text, timestamp=timestamp)
-    await ingest_log.record(
-        endpoint="/v1/leaderboards/insert",
-        user=_auth.user, token=_auth.token,
-        summary={
-            "boards": summary.get("boards"),
-            "entries": summary.get("entries"),
-            "anchor": summary.get("created_at"),
-            "cleared_before_insert": summary.get("cleared_before_insert"),
-            "archived_old": summary.get("archived_old"),
-            "bytes": len(raw),
-        },
+    # Hand the heavy parse+persist to a background task and ack now. Auth + the
+    # per-token ingest cooldown already ran in the dependency (so an over-eager
+    # bot still gets 429 before reaching here), and the dump text is fully
+    # buffered in memory - the task doesn't depend on the request staying open.
+    background_tasks.add_task(
+        _process_leaderboard_dump, text, timestamp, _auth.user, _auth.token, len(raw),
     )
-    # Wake the background warmer so the new anchor's heavy queries
-    # (cheaters detection, activity estimate, boards listing) start
-    # recomputing immediately - instead of the next visitor paying
-    # the multi-second cold-cache tax. The previous anchor's cache
-    # entries remain available as the "last known good" fallback
-    # while the new ones land. See leaderboards/detection.py.
-    leaderboards_detection.trigger_warmer()
-    return LeaderboardInsertResponse(**summary)
+    return LeaderboardInsertResponse(
+        accepted=True, bytes=len(raw),
+        message=("Dump accepted - parsing and persisting in the background; "
+                 "boards/entries counts land in the ingest log when done."),
+    )
 
 
 # --- Market: in-game marketplace listings ingest + read ---------------------

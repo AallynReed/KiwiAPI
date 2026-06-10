@@ -455,6 +455,26 @@ class LeaderboardEntryOut(BaseModel):
     rank: int
     player_name: str
     score: float
+    # Day-over-day change vs the previous comparable snapshot. All null when the
+    # page isn't comparable (see ``LeaderboardEntriesPage.comparison``) or, for a
+    # comparable page, when the player had no prior-day position (``is_new``).
+    prev_rank: int | None = None
+    prev_score: float | None = None
+    rank_delta: int | None = None      # prev_rank - rank: positive = climbed
+    score_delta: float | None = None   # score - prev_score: positive = gained
+    is_new: bool = False
+
+
+class LeaderboardComparison(BaseModel):
+    """Whether this page carries day-over-day deltas, and against what snapshot.
+
+    ``comparable`` is false when the board reset between the previous-day
+    snapshot and this one (daily boards always; weekly across the Monday reset)
+    or when there's no earlier snapshot stored yet.
+    """
+    comparable: bool
+    prev_anchor: int | None = None     # the snapshot deltas were computed against
+    reason: str                        # ok | no_prior_snapshot | crossed_reset
 
 
 class LeaderboardEntriesPage(BaseModel):
@@ -463,6 +483,7 @@ class LeaderboardEntriesPage(BaseModel):
     items: list[LeaderboardEntryOut]
     count: int
     total: int
+    comparison: LeaderboardComparison
 
 
 class LeaderboardTimestamps(BaseModel):
@@ -471,11 +492,16 @@ class LeaderboardTimestamps(BaseModel):
 
 
 class LeaderboardInsertResponse(BaseModel):
-    boards: int
-    entries: int
-    cleared_before_insert: int
-    archived_old: int   # rows moved hot → archive at the tail of this insert
-    created_at: int | None
+    """Acknowledgement that a dump was accepted for BACKGROUND processing.
+
+    The parse + persist is deferred to a background task so the bot's HTTP
+    client isn't held open through a multi-second insert (which was timing it
+    out). The real counts (boards / entries / archived) land in the master
+    ingest log when processing finishes; a parse/DB failure is recorded there
+    too (success=false)."""
+    accepted: bool = True
+    bytes: int
+    message: str
 
 
 class LeaderboardPlayerEntry(LeaderboardEntryOut):

@@ -22,8 +22,9 @@ class Settings(BaseSettings):
     # the proxy's client_max_body_size to match (>= 20m) on the /v1/mods/ paths.
     mods_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
     # The leaderboards ingest endpoint accepts the bot's raw LeaderBot.cfg upload.
-    # A single dump can easily be several MB (many boards × ~1000 entries each).
-    # Master-only via superuser API token, so this isn't an open spigot.
+    # At ~20k entries/board a full dump is ~16 MB, so 20 MB leaves modest headroom.
+    # Master-only via superuser API token, so this isn't an open spigot. (Keep the
+    # proxy's client_max_body_size on /v1/leaderboards/insert >= this.)
     leaderboards_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
     # Same shape as leaderboards: master-only ingest of the bot's GrainusMod.cfg
     # market dump. Capped at 20 MB; in practice a dump is well under 5 MB but
@@ -255,7 +256,7 @@ class Settings(BaseSettings):
     trove_news_refresh_seconds: int = 1800  # background refresh cadence (30 min)
 
     # --- Community feeds (twitch / youtube / bilibili) ---
-    # Fetched at source by app/trove/relays.py (NOT relayed from the trovesaurus
+    # Fetched at source by app/trove/feeds.py (NOT relayed from the trovesaurus
     # bot any more): Twitch via a client-credentials app token + Helix, YouTube
     # via the Data API, Bilibili via an HTML scrape. Credentials come from the
     # environment with the SAME names the bot used, so values copy across 1:1.

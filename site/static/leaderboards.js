@@ -137,7 +137,9 @@
     // estimate is tiny and goes inline in the hero, so it ships with
     // the eager batch.
     const [stamps, config, activity, activityHistory] = await Promise.all([
-      fetchJSON('/site/leaderboards/timestamps'),
+      // limit=365 (endpoint max) so the day-picker's PICKER_DAYS window is
+      // fully covered even at hourly captures; served from the Redis snapshot.
+      fetchJSON('/site/leaderboards/timestamps?limit=365'),
       fetchJSON('/site/leaderboards/config').catch(() => null),
       fetchJSON('/site/leaderboards/activity').catch(() => null),
       // History feeds the sparkline next to the current-hour pill.
@@ -557,7 +559,7 @@
     }
     // Tooltip: always full name + entries when relevant, so truncation
     // never loses information.
-    const tipParts = [b.name];
+    const tipParts = [titleizeName(b.name)];
     if (typeof b.entries === 'number') {
       tipParts.push(t('{n} entries').replace('{n}', b.entries));
     }
@@ -565,7 +567,7 @@
     return `
       <div class="${classes.join(' ')}" title="${esc(tip)}">
         <span class="lb-cov-row-dot" aria-hidden="true"></span>
-        <span class="lb-cov-row-name">${esc(b.name)}</span>
+        <span class="lb-cov-row-name">${esc(titleizeName(b.name))}</span>
         ${right}
       </div>`;
   }
@@ -622,7 +624,7 @@
     const meta = [
       t('Rank') + ' #' + b.rank,
       t('Score') + ' ' + formatScore(b.score),
-      b.contest_type ? esc(b.contest_type) : null,
+      b.contest_type ? t(b.contest_type === 'daily' ? 'Daily contest' : 'Weekly contest') : null,
     ].filter(Boolean).map((s) => `<span>${esc(s)}</span>`).join('');
     const evidence = (b.evidence || []).map(renderEvidence).join('');
     // Per-board confidence badge (falls back gracefully if older API
@@ -640,7 +642,7 @@
         <div class="lb-cheater-board-head">
           <button type="button" class="lb-cheater-board-name lb-cheater-board-link"
                   data-act="goto-board" data-uuid="${b.uuid}" title="${esc(tooltip)}">
-            ${esc(b.name)}
+            ${esc(titleizeName(b.name))}
             <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
           </button>
           ${confBadge}
@@ -1131,6 +1133,23 @@
     renderBoardList();
   }
 
+  // Some boards arrive SHOUTING ("WEEKLY ADVENTURES COMPLETED"). Normalize a
+  // fully-uppercase name to Title Case for display ("Weekly Adventures
+  // Completed"). Names that already carry any lowercase are left untouched, so
+  // intentional casing / acronyms (e.g. "CHALLENGE: Deepest") aren't mangled.
+  function titleizeName(name) {
+    const s = String(name == null ? '' : name);
+    if (/[a-z]/.test(s)) return s;             // already mixed-case - leave it
+    return s.replace(/[A-Za-z]+/g, (w) => w.charAt(0) + w.slice(1).toLowerCase());
+  }
+
+  // Split a trailing "(...)" off a board name so it renders as a pill, e.g.
+  // "CHALLENGE: Deepest (WEEKLY)" -> { base: "CHALLENGE: Deepest", pill: "WEEKLY" }.
+  function splitBoardName(name) {
+    const m = (name || '').match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+    return m ? { base: m[1], pill: m[2] } : { base: name || '', pill: null };
+  }
+
   function renderBoardList() {
     if (!state.boards.length) {
       $boardList.innerHTML = `<p class="lb-board-empty" data-i18n>No boards for this capture.</p>`;
@@ -1150,8 +1169,16 @@
       return;
     }
 
-    // Group by category, preserve server-side ordering within each.
+    // Group by category, preserve server-side ordering within each. The two
+    // contest groups are VIRTUAL tabs pinned to the top: they re-list the
+    // boards running as a contest this capture (each board still appears under
+    // its real category below), so "what's a contest right now" is visible at a
+    // glance instead of buried across categories.
     const groups = new Map();
+    const weeklyContests = visible.filter((b) => b.contest_type === 'weekly');
+    const dailyContests = visible.filter((b) => b.contest_type === 'daily');
+    if (weeklyContests.length) groups.set('Weekly Contests', weeklyContests);
+    if (dailyContests.length) groups.set('Daily Contests', dailyContests);
     for (const b of visible) {
       const cat = b.category || 'Other';
       if (!groups.has(cat)) groups.set(cat, []);
@@ -1176,27 +1203,35 @@
         && cat !== selectedCat
         && state.collapsedCategories.has(cat);
       const catKey = String(cat);
+      // Virtual contest tabs get a cadence-coloured header (weekly = purple,
+      // daily = blue) and a translatable label; real categories pass through.
+      const contestKind = cat === 'Weekly Contests' ? 'weekly'
+        : cat === 'Daily Contests' ? 'daily' : '';
+      const catLabel = contestKind ? t(cat) : cat;
       html.push(`
         <div class="lb-category-group" data-category="${esc(catKey)}"
              data-collapsed="${collapsed ? 'true' : 'false'}">
-          <button type="button" class="lb-category"
+          <button type="button" class="lb-category${contestKind ? ' contest-' + contestKind : ''}"
                   aria-expanded="${collapsed ? 'false' : 'true'}"
                   data-cat="${esc(catKey)}">
             <i class="fa-solid fa-chevron-down lb-category-caret" aria-hidden="true"></i>
-            <span class="lb-category-name">${esc(cat)}</span>
+            <span class="lb-category-name">${esc(catLabel)}</span>
             <span class="lb-category-count">${boards.length}</span>
           </button>
           <div class="lb-category-body">`);
       for (const b of boards) {
         const isActive = b.uuid === state.selectedUuid;
-        const tag = b.contest_type
-          ? `<span class="lb-contest-tag">${esc(b.contest_type)}</span>`
-          : '';
+        const { base, pill } = splitBoardName(b.name);
+        const namePill = pill ? `<span class="lb-name-pill">${esc(pill)}</span>` : '';
+        // Cadence is shown by the row's coloured accent (and the virtual
+        // "Weekly/Daily Contests" tab) - no redundant per-row text tag.
+        const contestCls = b.contest_type === 'weekly' ? ' contest-weekly'
+          : b.contest_type === 'daily' ? ' contest-daily' : '';
         html.push(`
-          <button type="button" class="lb-board${isActive ? ' active' : ''}"
-                  data-uuid="${b.uuid}" title="${esc(b.name)}">
-            <span class="lb-board-name">${esc(b.name)}</span>
-            ${tag}
+          <button type="button" class="lb-board${isActive ? ' active' : ''}${contestCls}"
+                  data-uuid="${b.uuid}" title="${esc(titleizeName(b.name))}">
+            <span class="lb-board-name">${esc(titleizeName(base))}</span>
+            ${namePill}
           </button>`);
       }
       html.push(`</div></div>`);
@@ -1235,6 +1270,7 @@
   function resetEntries() {
     state.entries = [];
     state.entriesTotal = 0;
+    state.entriesComparison = null;
     // Use data-i18n on the title + hint so the i18n sweep translates
     // them on every language switch - the textContent path used to lose
     // the original English source after the first JS-set, and t() at
@@ -1254,6 +1290,7 @@
     state.selectedUuid = uuid;
     state.entries = [];
     state.entriesTotal = 0;
+    state.entriesComparison = null;
 
     const board = state.boards.find((b) => b.uuid === uuid);
     if (board) {
@@ -1262,10 +1299,14 @@
       // back over the board name we're about to write.
       $entriesTitle.removeAttribute('data-i18n');
       if (window.BTTi18n && window.BTTi18n.untrack) window.BTTi18n.untrack($entriesTitle);
-      $entriesTitle.textContent = board.name;
+      // Prefix with the board's category, e.g. "Effort - Shadow Hunter".
+      const catLabel = board.category
+        ? board.category.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+        : '';
+      $entriesTitle.textContent = catLabel ? `${catLabel} - ${titleizeName(board.name)}` : titleizeName(board.name);
       $mobileSelected.removeAttribute('data-i18n');
       if (window.BTTi18n && window.BTTi18n.untrack) window.BTTi18n.untrack($mobileSelected);
-      $mobileSelected.textContent = board.name;
+      $mobileSelected.textContent = titleizeName(board.name);
     }
     updateHash();
 
@@ -1308,6 +1349,7 @@
       );
       state.entries = reset ? (data.items || []) : state.entries.concat(data.items || []);
       state.entriesTotal = data.total || 0;
+      state.entriesComparison = data.comparison || null;
       renderEntries();
     } catch (err) {
       // Only blow away the body with an error message if we have
@@ -1337,11 +1379,27 @@
       return;
     }
 
-    const rows = state.entries.map((e) => `
-      <div class="lb-td lb-rank ${rankClass(e.rank)}">${e.rank}</div>
+    // Day-over-day movement is only shown when the page is comparable - i.e.
+    // the board didn't reset since yesterday's latest snapshot (see backend).
+    const cmp = state.entriesComparison;
+    const showDelta = !!(cmp && cmp.comparable);
+
+    const rows = state.entries.map((e) => {
+      let rankExtra = '';
+      let scoreExtra = '';
+      if (showDelta) {
+        if (e.is_new) {
+          rankExtra = `<span class="lb-delta new">${t('NEW')}</span>`;
+        } else {
+          rankExtra = deltaBadge(e.rank_delta, null);
+          scoreExtra = deltaBadge(e.score_delta, formatScore);
+        }
+      }
+      return `
+      <div class="lb-td lb-rank ${rankClass(e.rank)}">${e.rank}${rankExtra}</div>
       <div class="lb-td"><span class="lb-player" data-player="${esc(e.player_name)}"><span class="lb-player-icon"></span>${esc(e.player_name)}</span></div>
-      <div class="lb-td lb-score">${esc(formatScore(e.score))}</div>
-    `).join('');
+      <div class="lb-td lb-score">${esc(formatScore(e.score))}${scoreExtra}</div>`;
+    }).join('');
 
     $entriesBody.innerHTML = `
       <div class="lb-entries-table">
@@ -1357,9 +1415,17 @@
     rerunI18n();
 
     const shown = state.entries.length;
-    $entriesMeta.textContent = state.entriesTotal > shown
+    const countText = state.entriesTotal > shown
       ? `${shown.toLocaleString()} / ${state.entriesTotal.toLocaleString()} ${t('entries')}`
       : `${shown.toLocaleString()} ${t('entries')}`;
+    // Tell the user what the movement is measured against, or why there's none.
+    let cmpText = '';
+    if (showDelta && cmp.prev_anchor) {
+      cmpText = ` · ${t('vs')} ${formatAnchor(cmp.prev_anchor)}`;
+    } else if (cmp && !cmp.comparable && cmp.reason === 'crossed_reset') {
+      cmpText = ` · ${t('No day-over-day change (board resets between captures)')}`;
+    }
+    $entriesMeta.textContent = countText + cmpText;
 
     $entriesFoot.hidden = shown >= state.entriesTotal;
 
@@ -1371,6 +1437,16 @@
         searchPlayer(name);
       });
     }
+  }
+
+  // Green/red movement chip, e.g. ▲2 / ▼70. ``fmt`` formats the magnitude
+  // (scores use formatScore; ranks pass null for a plain integer). Positive =
+  // up = green, negative = down = red; a zero/absent delta renders nothing.
+  function deltaBadge(delta, fmt) {
+    if (delta == null || delta === 0) return '';
+    const up = delta > 0;
+    const mag = fmt ? fmt(Math.abs(delta)) : Math.abs(delta).toLocaleString();
+    return `<span class="lb-delta ${up ? 'up' : 'down'}">${up ? '▲' : '▼'}${esc(String(mag))}</span>`;
   }
 
   function rankClass(rank) {
@@ -1433,14 +1509,16 @@
     // Resolve uuid→board name from the current anchor's list when we can.
     // (Falls through to "Board #UUID" if it's a board the player only appears
     // on in a different anchor than the one we've loaded boards for.)
-    const nameByUuid = new Map(state.boards.map((b) => [b.uuid, b.name]));
+    const nameByUuid = new Map(state.boards.map((b) => [b.uuid, titleizeName(b.name)]));
     $playerBody.innerHTML = items.map((it) => {
       const boardName = nameByUuid.get(it.leaderboard) || `Board #${it.leaderboard}`;
+      // Day-over-day movement on this board (server attaches it only when the
+      // pair is comparable - lifetime always, weekly off-Monday, daily never).
       return `
         <div class="lb-player-row">
           <div class="lb-ph-board">${esc(boardName)}</div>
-          <div class="lb-ph-rank">#${it.rank}</div>
-          <div class="lb-ph-score">${esc(formatScore(it.score))}</div>
+          <div class="lb-ph-rank">#${it.rank}${deltaBadge(it.rank_delta, null)}</div>
+          <div class="lb-ph-score">${esc(formatScore(it.score))}${deltaBadge(it.score_delta, formatScore)}</div>
           <div class="lb-ph-when">${esc(formatAnchor(it.created_at))}</div>
         </div>`;
     }).join('');
@@ -1705,7 +1783,7 @@
     const limit = Math.min(usableSeries.length, 8);
     const series = usableSeries.slice(0, limit).map((s, i) => ({
       key: `b:${s.uuid}`,
-      label: s.name,
+      label: titleizeName(s.name),
       color: CHART_COLORS[i % CHART_COLORS.length],
       // See drawBoardChart for why ``synthetic`` is forwarded.
       points: s.points.map((p) => ({

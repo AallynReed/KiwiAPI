@@ -1271,21 +1271,48 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 }
 .lb-board .lb-board-name {
   flex: 1;
+  min-width: 0;
+  /* Long names (e.g. "WEEKLY ADVENTURES COMPLETED") were ellipsised to a single
+     line and read as missing; clamp to two lines so the full label shows. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
 }
-.lb-board .lb-contest-tag {
-  font-size: .65rem;
+/* A trailing "(...)" in a board name (e.g. "(WEEKLY)", "(EXCLUDES QUESTS)")
+   is pulled out and shown as this neutral pill instead of inline text. */
+.lb-board .lb-name-pill {
+  flex-shrink: 0;
+  font-size: .58rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  text-transform: uppercase;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(255,180,80,.15);
-  color: #ffc878;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  font-weight: 700;
-  flex-shrink: 0;
+  background: rgba(255,255,255,.08);
+  color: var(--text-mute);
+  white-space: nowrap;
 }
+
+/* ── Contest cadence accents (sidebar) ──────────────────────────────
+   Mirrors the cheaters-coverage rows: a left bar whose COLOUR is the
+   cadence (weekly = purple, daily = blue), a soft bleed at rest, and the
+   contest tag recoloured to match. The accent survives hover/active
+   (box-shadow), the bleed only shows at rest so it doesn't fight them. */
+.lb-board.contest-weekly { box-shadow: inset 3px 0 0 var(--cov-weekly, #c79bff); }
+.lb-board.contest-daily  { box-shadow: inset 3px 0 0 var(--cov-daily, #4cc9f0); }
+.lb-board.contest-weekly:not(.active):not(:hover) {
+  background: linear-gradient(90deg, rgba(199,155,255,.08), transparent 42%);
+}
+.lb-board.contest-daily:not(.active):not(:hover) {
+  background: linear-gradient(90deg, rgba(76,201,240,.08), transparent 42%);
+}
+/* Virtual contest tab headers tinted to match their boards' cadence. */
+.lb-category.contest-weekly .lb-category-name,
+.lb-category.contest-weekly .lb-category-caret { color: #c79bff; }
+.lb-category.contest-daily .lb-category-name,
+.lb-category.contest-daily .lb-category-caret { color: #4cc9f0; }
 
 .lb-board-empty {
   padding: 20px 14px;
@@ -1327,7 +1354,8 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 
 .lb-entries-table {
   display: grid;
-  grid-template-columns: 60px 1fr auto;
+  /* Rank grows from its 60px floor so a "19999 ▲2" movement chip fits. */
+  grid-template-columns: minmax(60px, auto) 1fr auto;
   gap: 0;
 }
 .lb-entries-table > .lb-th,
@@ -1374,6 +1402,27 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   font-family: SFMono-Regular, Consolas, monospace;
   text-align: right;
   color: var(--text);
+}
+
+/* Day-over-day movement chips next to rank + score. Positive = up = green,
+   negative = down = red; "NEW" marks a player with no prior-day position. */
+.lb-delta {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: .72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+.lb-delta.up   { color: #4ade80; }
+.lb-delta.down { color: #f87171; }
+.lb-delta.new {
+  color: var(--text-mute);
+  background: rgba(255,255,255,.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: .6rem;
+  letter-spacing: .05em;
 }
 
 .lb-entries-foot {

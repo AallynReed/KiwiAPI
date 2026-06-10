@@ -25,6 +25,7 @@ from app.trove.leaderboards import activity as leaderboards_activity
 from app.trove import status as trove_status
 from app.trove.leaderboards import detection as leaderboards_detection
 from app.trove.leaderboards import service as leaderboards_service
+from app.trove.leaderboards import cache as leaderboards_cache
 from app.trove.updates import compare as updates_compare
 from app.trove.updates import read as updates_read
 from app.trove.updates.cas import ContentStore
@@ -246,7 +247,7 @@ async def site_lb_config() -> JSONResponse:
 async def site_lb_timestamps(
     limit: int = Query(default=60, ge=1, le=365),
 ) -> JSONResponse:
-    items = await leaderboards_service.list_timestamps(limit)
+    items = await leaderboards_cache.get_timestamps(limit)
     return JSONResponse(
         {"items": items, "count": len(items)},
         headers={"Cache-Control": "public, max-age=30"},
@@ -257,7 +258,7 @@ async def site_lb_timestamps(
 async def site_lb_boards(
     created_at: int = Query(..., description="Anchor in unix seconds"),
 ) -> JSONResponse:
-    rows = await leaderboards_service.list_boards_at(created_at)
+    rows = await leaderboards_cache.get_boards(created_at)
     return JSONResponse(
         {"created_at": created_at, "items": rows, "count": len(rows)},
         headers={"Cache-Control": "public, max-age=60"},
@@ -332,13 +333,14 @@ async def site_lb_entries(
     limit: int = Query(default=100, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
 ) -> JSONResponse:
-    items, total = await leaderboards_service.list_entries(
+    items, total, comparison = await leaderboards_cache.get_entries(
         uuid, created_at, limit=limit, offset=offset,
     )
     return JSONResponse(
         {
             "uuid": uuid, "created_at": created_at,
             "items": items, "count": len(items), "total": total,
+            "comparison": comparison,
         },
         headers={"Cache-Control": "public, max-age=30"},
     )
@@ -352,7 +354,7 @@ async def site_lb_player_history(
     uuid: int | None = Query(default=None),
 ) -> JSONResponse:
     rows = await leaderboards_service.player_history(
-        player_name, limit=limit, uuid=uuid,
+        player_name, limit=limit, uuid=uuid, with_deltas=True,
     )
     return JSONResponse(
         {"player_name": player_name, "items": rows, "count": len(rows)},

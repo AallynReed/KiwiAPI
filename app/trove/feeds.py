@@ -23,6 +23,7 @@ so they tune from the admin panel without a redeploy.
 
 import asyncio
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -32,13 +33,14 @@ from app.core.config import settings
 from app.core.utils import utcnow
 from app.trove.models import FeedCache
 
-logger = logging.getLogger("kiwi.trove.relays")
+logger = logging.getLogger("kiwi.trove.feeds")
 
 _UA = "KiwiAPI/1.0 (+https://api.aallyn.net)"
 
 _TWITCH_TOKEN_URL = "https://id.twitch.tv/oauth2/token"
 _TWITCH_STREAMS_URL = "https://api.twitch.tv/helix/streams"
 _YOUTUBE_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
+_YOUTUBE_VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
 _BILIBILI_SEARCH_URL = "https://search.bilibili.com/all"
 
 
@@ -87,6 +89,13 @@ def _csv_set(raw: str) -> set[str]:
     return {p.strip().lower() for p in (raw or "").split(",") if p.strip()}
 
 
+def _has_term(text: str, term: str) -> bool:
+    """Whole-word match of a lowercased ``term`` in already-lowercased ``text``
+    - so "trove" matches "Trove's Summer" but not "introvert", and a multi-word
+    term like "chaos chest" matches as a phrase."""
+    return re.search(r"\b" + re.escape(term) + r"\b", text) is not None
+
+
 # --- Twitch (client-credentials app token → Helix /streams) -----------------
 
 _twitch_token: str | None = None  # cached app access token; re-minted on 401
@@ -133,48 +142,91 @@ async def _fetch_twitch() -> list[dict]:
 # --- YouTube (Data API v3 search + the bot's filters) -----------------------
 
 async def _fetch_youtube() -> list[dict]:
+    """Broad relevance search, then OUR OWN relevance curation on the full video
+    text - because the Data API's ``search.list`` ranking is far blunter than
+    youtube.com's and lets ambiguous "Trove" noise (finance / treasure-hunting /
+    the news app) through that no query/category tuning can fully suppress.
+
+    Flow:
+      1. ``search.list`` for the query - broad, NO category hard-filter (recall
+         first; the filter is uploader-assigned and drops legit miscategorised
+         Trove videos).
+      2. ``videos.list`` (1 quota unit per 50 ids) to get the FULL description +
+         tags + real uploader category that ``search.list`` snippets don't carry.
+      3. Keep a video iff: it carries every ``require`` term (default "trove",
+         whole-word), no ``exclude`` term, isn't live/upcoming, AND shows at
+         least one Trove ``relevance`` signal term OR sits in the gaming
+         category. Every term list is admin-tunable - this is the curation.
+    """
     if not settings.yt_api_key:
         raise RuntimeError("YT_API_KEY not configured")
 
     query           = await runtime_config.get_setting("feeds_youtube_query")
     excluded_chans  = _csv_set(await runtime_config.get_setting("feeds_youtube_excluded_channels"))
-    excluded_terms  = _csv_set(await runtime_config.get_setting("feeds_youtube_excluded_title_terms"))
+    exclude_terms   = _csv_set(await runtime_config.get_setting("feeds_youtube_excluded_title_terms"))
+    require_terms   = _csv_set(await runtime_config.get_setting("feeds_youtube_require_terms"))
+    relevance_terms = _csv_set(await runtime_config.get_setting("feeds_youtube_relevance_terms"))
+    gaming_cat      = (await runtime_config.get_setting("feeds_youtube_video_category_id") or "").strip()
     cutoff_days     = int(await runtime_config.get_setting("feeds_video_cutoff_days"))
     per_channel_max = int(await runtime_config.get_setting("feeds_per_channel_max"))
     max_items       = int(await runtime_config.get_setting("feeds_max_items"))
 
     published_after = (utcnow() - timedelta(days=cutoff_days)).isoformat().replace("+00:00", "Z")
     async with httpx.AsyncClient(timeout=15, headers={"User-Agent": _UA}) as client:
+        # 1) Broad search - recall first; precision is done by us below.
+        #    (search.list caps maxResults at 50; a higher value 400s.)
         resp = await client.get(_YOUTUBE_SEARCH_URL, params={
             "part": "snippet", "q": query, "type": "video", "order": "relevance",
-            "publishedAfter": published_after, "maxResults": "100",
+            "publishedAfter": published_after, "maxResults": "50",
             "key": settings.yt_api_key,
         })
         resp.raise_for_status()
-        data = resp.json()
+        snippets = {
+            (it.get("id") or {}).get("videoId"): (it.get("snippet") or {})
+            for it in resp.json().get("items", [])
+        }
+        snippets.pop(None, None)
+        if not snippets:
+            return []
 
+        # 2) Enrich with the FULL description + tags + uploader category the
+        #    search snippet lacks - 1 quota unit for up to 50 ids.
+        vresp = await client.get(_YOUTUBE_VIDEOS_URL, params={
+            "part": "snippet", "id": ",".join(snippets), "maxResults": "50",
+            "key": settings.yt_api_key,
+        })
+        vresp.raise_for_status()
+        details = {v["id"]: (v.get("snippet") or {}) for v in vresp.json().get("items", [])}
+
+    # 3) Our relevance curation over title + description + tags.
     temp: list[dict] = []
-    for item in data.get("items", []):
-        snippet = item.get("snippet") or {}
-        vid = (item.get("id") or {}).get("videoId")
-        if not vid:
-            continue
-        channel = snippet.get("channelTitle", "")
-        title = snippet.get("title", "")
+    for vid, ssnip in snippets.items():
+        d = details.get(vid, {})
+        channel = d.get("channelTitle") or ssnip.get("channelTitle", "")
+        title = d.get("title") or ssnip.get("title", "")
         if channel.lower() in excluded_chans:
             continue
-        low = title.lower()
-        if any(term in low for term in excluded_terms):
+        if ssnip.get("liveBroadcastContent") in ("live", "upcoming"):
             continue
-        if snippet.get("liveBroadcastContent") in ("live", "upcoming"):
+        blob = " ".join((
+            title, d.get("description", ""), " ".join(d.get("tags") or []),
+        )).lower()
+        if any(_has_term(blob, t) for t in exclude_terms):
             continue
+        if not all(_has_term(blob, t) for t in require_terms):
+            continue
+        in_gaming = bool(gaming_cat) and d.get("categoryId") == gaming_cat
+        has_signal = any(_has_term(blob, t) for t in relevance_terms)
+        if relevance_terms and not (has_signal or in_gaming):
+            continue
+        thumbs = d.get("thumbnails") or ssnip.get("thumbnails") or {}
         temp.append({
             "title": title,
             "video_id": vid,
             "url": f"https://www.youtube.com/watch?v={vid}",
             "channel": channel,
-            "published_at": snippet.get("publishedAt"),
-            "thumbnail_url": ((snippet.get("thumbnails") or {}).get("high") or {}).get("url"),
+            "published_at": ssnip.get("publishedAt") or d.get("publishedAt"),
+            "thumbnail_url": (thumbs.get("high") or {}).get("url"),
         })
 
     # ≤ per_channel_max newest per channel, then the newest max_items overall.
@@ -316,9 +368,9 @@ async def refresh_all_feeds() -> None:
     for feed in _FEEDS:
         try:
             count = await refresh_feed(feed)
-            logger.info("Relayed feed %s: %d item(s)", feed, count)
+            logger.info("Refreshed feed %s: %d item(s)", feed, count)
         except Exception:
-            logger.warning("Feed relay '%s' failed", feed, exc_info=True)
+            logger.warning("Feed '%s' refresh failed", feed, exc_info=True)
 
 
 async def get_feed(feed: str) -> tuple[list[dict], datetime | None]:
@@ -378,7 +430,7 @@ async def _loop() -> None:
         except asyncio.CancelledError:
             raise
         except Exception:
-            logger.warning("Feed relay iteration failed", exc_info=True)
+            logger.warning("Feed refresh iteration failed", exc_info=True)
         try:
             await asyncio.sleep(settings.trove_feeds_refresh_seconds)
         except asyncio.CancelledError:

@@ -37,55 +37,75 @@ _CACHE: dict[tuple[int, int], tuple[float, dict]] = {}
 # immediately. Mirrors the same pattern in ``detection.py``.
 _LAST_GOOD: dict | None = None
 
-# Top-N entries per board to consider. Bigger = more players covered
-# but more rows fetched per board. 5000 matches the bot's typical dump
-# size, so we get the full per-board population in practice.
-_BOARD_FETCH_LIMIT = 10000
+# Top-N entries per board to consider. Bigger = more players covered but
+# more rows fetched per board. The bot now dumps up to ~20k entries per
+# board (was ~5k), so fetch past that to cover the full per-board population.
+_BOARD_FETCH_LIMIT = 25000
 
 
-async def estimate_active_players() -> dict:
+async def estimate_active_players(*, force: bool = False) -> dict:
     """Compute the activity estimate for the most-recent window. Cached
     by ``(latest_anchor, prev_anchor)``; falls back to ``_LAST_GOOD``
     when the newest pair hasn't been computed yet, so the user never
     waits on a fresh ingest. Returns a structured dict regardless of
     data availability - a single-anchor or empty DB returns a 'no
     estimate' shape with ``estimate=None``.
+
+    ``force=True`` (used by the warmer) bypasses BOTH the cache hit and the
+    _LAST_GOOD shortcut and recomputes + re-persists, so a re-ingest onto the
+    same anchor refreshes the estimate instead of serving the pre-ingest slot.
     """
     from app.admin import runtime_config
+    from app.trove.leaderboards import cache as lb_cache
 
     cache_ttl = float(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    now = time.time()
+    global _LAST_GOOD
 
-    # Need at least two anchors to compute a delta.
+    if not force:
+        # Serve the latest PUBLISHED anchor's estimate so the live-pulse matches
+        # the snapshot on screen; the persisted Redis copy survives restarts.
+        serve_anchor = await lb_cache.get_ready_anchor()
+        if serve_anchor is not None:
+            persisted = await lb_cache.get_activity(serve_anchor)
+            if persisted is not None:
+                _LAST_GOOD = persisted
+                return persisted
+        # No published/persisted estimate yet - fall back to the in-process
+        # cache / last-good (stale-but-good), else an empty placeholder.
+        stamps = await lb_service.list_timestamps(limit=2, include_archive=False)
+        if len(stamps) < 2:
+            return _empty()
+        hit = _CACHE.get((stamps[0], stamps[1]))
+        if hit is not None and now - hit[0] < cache_ttl:
+            _LAST_GOOD = hit[1]
+            return hit[1]
+        from app.trove.leaderboards import detection
+        detection.trigger_warmer()
+        if _LAST_GOOD is not None:
+            return _LAST_GOOD
+        return _empty()
+
+    # Warmer: compute (or adopt a fresh persisted snapshot for) the raw latest pair.
     stamps = await lb_service.list_timestamps(limit=2, include_archive=False)
     if len(stamps) < 2:
         return _empty()
     anchor_late, anchor_early = stamps[0], stamps[1]
     if anchor_late <= anchor_early:
         return _empty()
-
     cache_key = (anchor_late, anchor_early)
-    now = time.time()
-    hit = _CACHE.get(cache_key)
-    if hit is not None and now - hit[0] < cache_ttl:
-        global _LAST_GOOD
-        _LAST_GOOD = hit[1]
-        return hit[1]
 
-    # Same "stale-but-known-good" trick as the cheaters cache: when the
-    # current pair isn't computed yet, hand back the previous valid
-    # payload and let the warmer fill in the new one. The warmer is
-    # already running on the same TTL and is also tripped by ingest
-    # via ``detection.trigger_warmer()``, so a long miss is rare.
-    if _LAST_GOOD is not None:
-        # No direct trigger here - the cheaters compute path in
-        # detection.py owns the warmer wake. If a caller hits THIS
-        # function before that one (e.g. activity-only client), it
-        # still benefits from the existing TTL re-runs.
-        return _LAST_GOOD
+    persisted = await lb_cache.get_activity(anchor_late)
+    if persisted is not None and now - persisted.get("computed_at", 0) < cache_ttl:
+        # Fresh processed snapshot already in Redis (restart, no new capture).
+        _CACHE[cache_key] = (now, persisted)
+        _LAST_GOOD = persisted
+        return persisted
 
     payload = await _compute(anchor_late, anchor_early)
     _CACHE[cache_key] = (now, payload)
     _LAST_GOOD = payload
+    await lb_cache.set_activity(anchor_late, payload)
     _prune(now, cache_ttl)
     return payload
 

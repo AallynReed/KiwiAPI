@@ -43,7 +43,7 @@ from app.trove.leaderboards.detection import (
     stop_cheaters_warmer,
 )
 from app.trove.news import start_news_refresher, stop_news_refresher
-from app.trove.relays import start_feeds_refresher, stop_feeds_refresher
+from app.trove.feeds import start_feeds_refresher, stop_feeds_refresher
 from app.trove.router import (
     btt_router,
     codexes_router,
