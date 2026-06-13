@@ -10,9 +10,10 @@
 .commands-page main { padding-top: 0; }
 
 .commands-main {
-  max-width: 1100px;
+  width: 100%;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 0 28px 80px;
+  padding: 0 clamp(20px, 3vw, 48px) 80px;
 }
 
 

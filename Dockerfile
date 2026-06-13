@@ -7,6 +7,11 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# DejaVu TTF for the server-rendered OG card (Pillow ships no bundled font).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies first so they cache independently of source changes.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

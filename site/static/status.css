@@ -1,9 +1,10 @@
 /* Trove server status page (/status). Builds on style.css tokens. */
 
 .st-main {
-  max-width: 920px;
+  width: 100%;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 110px 22px 80px;
+  padding: 110px clamp(20px, 3vw, 48px) 80px;
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────── */

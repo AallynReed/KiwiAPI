@@ -6,16 +6,25 @@ Every ``trove_status_probe_interval_seconds`` a background loop probes:
     account-auth gateway. Structured HTTP response (< 500) + valid TLS =
     reachable; timeout / refused / TLS error / 5xx = down. Catches full
     outages but stays up during world-only maintenance (Akamai-fronted).
-  • **game per environment** (eu / us / pts) - TCP-connect probe of the
-    glsserver port (6560) on each environment's game host. Accepted =
-    that environment's worlds are playable; refused/timeout while auth is
-    up = that environment is in maintenance.
+  • **game per environment** (eu / us / pts) - probe of the glsserver port
+    (6560) on each environment's game host. A bare TCP connect is NOT enough:
+    a region in maintenance still completes the TCP handshake (and even answers
+    the glsserver hello) before dropping the connection, so connect-only reads
+    as a false "online" - seen directly in EU's maintenance capture (every
+    attempt got SYN/ACK, the server echoed its fixed hello, emitted empty frames
+    and sent FIN, and the client just retried). So the deep probe replays the
+    captured glsserver client hello and counts the region online only if the
+    server HOLDS the connection open (a playable session socket); a server that
+    drops right after the hello is maintenance. Refused/timeout while auth is up
+    is also maintenance. Any anomaly in the deep probe falls back to the
+    connect-only verdict, so it never does worse than the old check.
 
-Per-environment verdict:
-  • ``down``        - auth gateway unreachable (can't even log in)
-  • ``maintenance`` - auth up, game socket refused
-  • ``online``      - auth up + game socket accepted
-  • ``unknown``     - no probe completed yet
+Per-environment verdict (binary - the probe can't tell planned maintenance from
+an outage, so an unreachable server is simply "down", shown red):
+  • ``online``  - auth gateway reachable AND game socket alive
+  • ``down``    - anything else (login gateway unreachable, or game socket
+                  refused/dropped)
+  • ``unknown`` - no probe completed yet
 
 Each environment's status timeline is persisted as ``TroveStatusEvent``
 segments (a new open segment opens on every status change, the prior one
@@ -27,12 +36,14 @@ cache and never block on a live probe.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import time
 
 import httpx
 
 from app.core.config import settings
+from app.core.redis import get_redis
 
 logger = logging.getLogger("kiwi.trove.status")
 
@@ -44,6 +55,13 @@ _ENVIRONMENTS = ("eu", "us", "pts")
 # Cached snapshot; None until the first probe completes.
 _state: dict | None = None
 _task: asyncio.Task | None = None
+
+# Cross-process sharing: the prober runs only in the API process, so it mirrors each
+# snapshot to Redis. The bot process (no prober) reads this for the live board + the
+# status announcement via get_status_shared(). TTL a few probe intervals so a dead
+# prober's snapshot eventually expires to "unknown" rather than going stale forever.
+_REDIS_KEY = "kiwi:status:current"
+_REDIS_TTL = 600
 
 
 async def _probe_auth() -> dict:
@@ -72,38 +90,113 @@ async def _probe_auth() -> dict:
         }
 
 
-async def _probe_game(host: str, port: int) -> dict:
-    """TCP-connect liveness of one environment's game glsserver."""
+# Stop reading once the server has clearly engaged with a real session's worth
+# of data - it's online, no need to keep draining.
+_GLS_MAX_READ_BYTES = 32768
+# A clean close is the maintenance signal ONLY if the server sent ~nothing real
+# first (EU sent 39B: a 21B handshake + empty frames). If a server returns a
+# substantial reply and *then* closes, treat it as engaged/online - don't read a
+# data-bearing directory response as maintenance.
+_GLS_SUBSTANTIVE_BYTES = 256
+
+
+async def _glsserver_holds_session(reader, writer, hello: bytes, hold_seconds: float) -> bool | None:
+    """Send the glsserver ``hello`` and judge whether the server HOLDS the
+    connection (online) or drops it right after sending ~nothing (maintenance).
+
+    Returns ``True`` (online), ``False`` (maintenance), or ``None`` (inconclusive
+    → caller keeps the connect-only verdict).
+
+    Calibrated against three captures: a region in MAINTENANCE answers the hello
+    and sends FIN ~20-90ms later having emitted only a tiny (~39B, mostly empty)
+    reply (EU). A LIVE gateway keeps the socket open for SECONDS waiting for the
+    client to continue (US held 28s, PTS 6s) - so we hit the read timeout with no
+    EOF. Bias is toward online: only a clean, near-empty, fast close is
+    maintenance; a reset or a substantial reply is treated as online/inconclusive
+    (a maintenance gateway closes gracefully, it doesn't RST)."""
+    try:
+        writer.write(hello)
+        await writer.drain()
+    except Exception:
+        return None
+    total = 0
+    try:
+        while True:
+            chunk = await asyncio.wait_for(reader.read(4096), timeout=hold_seconds)
+            if chunk == b"":
+                # Server closed. Near-empty + fast close = maintenance (EU); a
+                # close after a real payload means it engaged → online.
+                return total > _GLS_SUBSTANTIVE_BYTES
+            total += len(chunk)
+            if total >= _GLS_MAX_READ_BYTES:
+                return True   # actively streaming a session → online
+    except asyncio.TimeoutError:
+        return True           # held the socket open past the window → online
+    except (ConnectionResetError, ConnectionError, BrokenPipeError):
+        # A reset is NOT the observed maintenance signature (that's a graceful
+        # FIN). Stay conservative - fall back to the connect-only verdict rather
+        # than flag a live region down on an abrupt/transient reset.
+        return None
+    except Exception:
+        return None           # anything else is inconclusive → fall back
+
+
+async def _probe_game(
+    host: str, port: int, *, deep: bool = False, hello_hex: str = "",
+    hold_seconds: float = 2.0,
+) -> dict:
+    """Liveness of one environment's game glsserver (see module docstring for why
+    a bare connect isn't enough)."""
     timeout = settings.trove_status_timeout_seconds
     t0 = time.monotonic()
-    writer = None
     if not host or port <= 0:
         return {"online": False, "host": host, "port": port,
                 "latency_ms": 0.0, "error": "not_configured"}
     try:
-        _reader, writer = await asyncio.wait_for(
+        reader, writer = await asyncio.wait_for(
             asyncio.open_connection(host, port), timeout=timeout,
         )
-        latency = (time.monotonic() - t0) * 1000
-        return {"online": True, "host": host, "port": port,
-                "latency_ms": round(latency, 1), "error": None}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:  # noqa: BLE001 - refused/timeout/dns = not reachable
         latency = (time.monotonic() - t0) * 1000
         return {"online": False, "host": host, "port": port,
                 "latency_ms": round(latency, 1), "error": type(e).__name__}
-    finally:
-        if writer is not None:
+    try:
+        hello = b""
+        if deep and hello_hex:
             try:
-                writer.close()
-                await writer.wait_closed()
-            except Exception:
-                pass
+                hello = bytes.fromhex(hello_hex.strip())
+            except ValueError:
+                hello = b""  # bad hex → skip the deep probe rather than misfire
+        if not hello:
+            # Connect-only (deep probe disabled / no hello): TCP accepted = online,
+            # exactly the old behaviour.
+            latency = (time.monotonic() - t0) * 1000
+            return {"online": True, "host": host, "port": port,
+                    "latency_ms": round(latency, 1), "error": None, "probe": "tcp"}
+        held = await _glsserver_holds_session(reader, writer, hello, hold_seconds)
+        latency = (time.monotonic() - t0) * 1000
+        if held is None:
+            # Inconclusive deep probe → keep the connect-only verdict (online) so
+            # we never regress below the old check.
+            return {"online": True, "host": host, "port": port,
+                    "latency_ms": round(latency, 1), "error": None, "probe": "tcp_fallback"}
+        return {"online": held, "host": host, "port": port,
+                "latency_ms": round(latency, 1),
+                "error": None if held else "glsserver_dropped",
+                "probe": "glsserver"}
+    finally:
+        try:
+            writer.close()
+            await writer.wait_closed()
+        except Exception:
+            pass
 
 
 def _verdict(auth_online: bool, game_online: bool) -> str:
-    if not auth_online:
-        return "down"
-    return "online" if game_online else "maintenance"
+    # Binary: online only when the login gateway is reachable AND the region's
+    # game socket is alive. Anything else is "down" (red). No "maintenance" state -
+    # an unreachable server is just down.
+    return "online" if (auth_online and game_online) else "down"
 
 
 # Public Live regions that roll up into the homepage pill's "overall"
@@ -113,21 +206,17 @@ _LIVE_REGIONS = ("eu", "us")
 
 
 def _overall(environments: dict) -> str:
-    """Roll the Live regions into one headline status for the homepage
-    pill: all regions online → ``online``; every region fully down →
-    ``down``; anything mixed/partial (e.g. EU in maintenance while US is
-    up) → ``maintenance``. The per-region cards on /status carry the
-    detail."""
+    """Roll the Live regions into one headline status for the homepage pill:
+    ``online`` only when every Live region is online; otherwise ``down`` (any
+    region unreachable). Consumers distinguish a full vs partial outage from the
+    per-region statuses (e.g. headline "partially down" when some regions are
+    still up). The per-region cards on /status carry the detail."""
     statuses = [
         environments[e]["status"] for e in _LIVE_REGIONS if e in environments
     ]
     if not statuses:
         return "unknown"
-    if all(s == "online" for s in statuses):
-        return "online"
-    if all(s == "down" for s in statuses):
-        return "down"
-    return "maintenance"
+    return "online" if all(s == "online" for s in statuses) else "down"
 
 
 async def _env_endpoints(env: str) -> tuple[str, int]:
@@ -143,10 +232,22 @@ async def probe_once() -> dict:
     update the in-process cache, and return the snapshot."""
     auth = await _probe_auth()
 
+    # Deep-probe knobs (live-tunable): replay the glsserver hello so a maintenance
+    # server that still accepts TCP doesn't read as a false "online". The hello is
+    # PER-ENVIRONMENT: EU/US are game glsservers that hold a hello-only probe open
+    # (deep probe works), but PTS's gateway drops it even when up, so PTS ships an
+    # empty hello → connect-only. An empty hello for an env = connect-only there.
+    from app.admin import runtime_config
+    deep = bool(await runtime_config.get_setting("trove_status_game_deep_probe"))
+    hold_seconds = float(await runtime_config.get_setting("trove_status_game_hold_seconds"))
+
     environments: dict[str, dict] = {}
     for env in _ENVIRONMENTS:
         host, port = await _env_endpoints(env)
-        game = await _probe_game(host, port)
+        hello_hex = str(await runtime_config.get_setting(f"trove_status_{env}_hello_hex") or "")
+        game = await _probe_game(
+            host, port, deep=deep, hello_hex=hello_hex, hold_seconds=hold_seconds,
+        )
         status = _verdict(auth["online"], game["online"])
         environments[env] = {
             "status": status,
@@ -165,6 +266,7 @@ async def probe_once() -> dict:
     }
     global _state
     _state = snapshot
+    await _publish_snapshot(snapshot)
     return snapshot
 
 
@@ -195,7 +297,10 @@ async def _record_transition(env: str, status: str, online: bool) -> None:
 
 
 def get_status() -> dict:
-    """Latest cached snapshot, or an 'unknown' shell before the first probe."""
+    """Latest cached snapshot, or an 'unknown' shell before the first probe.
+
+    In-process only - returns the prober's cache, which is populated ONLY in the
+    API process. Use ``get_status_shared`` from any other process (the bot)."""
     if _state is None:
         unknown_env = {"status": "unknown", "online": False, "game": None}
         return {
@@ -205,6 +310,34 @@ def get_status() -> dict:
             "checked_at": None,
         }
     return _state
+
+
+async def _publish_snapshot(snapshot: dict) -> None:
+    """Mirror the latest snapshot to Redis so other processes can read it. Best-effort."""
+    redis = get_redis()
+    if redis is None:
+        return
+    try:
+        await redis.set(_REDIS_KEY, json.dumps(snapshot, default=str), ex=_REDIS_TTL)
+    except Exception:
+        logger.warning("status: failed to cache snapshot in Redis", exc_info=True)
+
+
+async def get_status_shared() -> dict:
+    """Cross-process status snapshot: the prober's in-process cache when running in
+    the API, else the snapshot the prober mirrored to Redis (read by the bot), else
+    the 'unknown' shell. Use this anywhere outside the API process."""
+    if _state is not None:
+        return _state
+    redis = get_redis()
+    if redis is not None:
+        try:
+            raw = await redis.get(_REDIS_KEY)
+            if raw:
+                return json.loads(raw)
+        except Exception:
+            logger.warning("status: failed to read shared snapshot from Redis", exc_info=True)
+    return get_status()
 
 
 async def get_history(env: str, days: int) -> dict:
@@ -278,6 +411,13 @@ async def _loop() -> None:
                 r["environments"]["pts"]["status"],
                 r["auth"]["online"],
             )
+            # Push to the live event channel (SSE + the bot's status announcement).
+            # Dedup makes this a no-op unless the overall status changed.
+            try:
+                from app.events import bus
+                await bus.publish_type("server_status")
+            except Exception:
+                logger.warning("trove status: event publish failed", exc_info=True)
         except asyncio.CancelledError:
             raise
         except Exception:

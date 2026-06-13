@@ -23,6 +23,7 @@ from app.core.dependencies import (
 from app.core.errors import APIError, ErrorCode
 from app.core.ratelimit import check_rate_limit, rate_limit_headers
 from app.core.utils import client_ip, utcnow
+from app.events import bus as events_bus
 from app.trove import (
     btt_releases,
     captures,
@@ -39,6 +40,7 @@ from app.trove import (
 from app.trove import calendar as trove_calendar
 from app.trove.codexes import read as codexes_read
 from app.trove.leaderboards import activity as leaderboards_activity
+from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove.leaderboards import detection as leaderboards_detection
 from app.trove.leaderboards import service as leaderboards_service
 from app.trove.market import service as market_service
@@ -100,6 +102,9 @@ from app.trove.schemas import (
     ChaosChestCaptureOut,
     ActivityResponse,
     ActivityHistoryResponse,
+    ActivitySeriesResponse,
+    ClassActivityCurrentResponse,
+    ClassActivitySeriesResponse,
     TroveStatusResponse,
     TroveStatusHistoryResponse,
     ChaosChestHistoryPage,
@@ -183,6 +188,8 @@ codexes_router = APIRouter(prefix="/v1/codexes", tags=["codexes"])
 btt_router = APIRouter(prefix="/v1/btt", tags=["btt"])
 leaderboards_router = APIRouter(prefix="/v1/leaderboards", tags=["leaderboards"])
 market_router = APIRouter(prefix="/v1/market", tags=["market"])
+activity_router = APIRouter(prefix="/v1/activity", tags=["activity"])
+class_activity_router = APIRouter(prefix="/v1/class-activity", tags=["class-activity"])
 
 # rotations + feeds are PUBLIC: usable without a token at a stricter per-IP rate
 # limit; a token carrying the scope lifts the caller to the full per-token limit.
@@ -222,6 +229,10 @@ _LB = Depends(require_scope("leaderboards:read"))
 # reasoning as e.g. rotations: it's anti-cheat data the wider community
 # benefits from, no reason to gate it behind an API token.
 _LB_PUBLIC = Depends(public_scope("leaderboards:read"))
+# Player-activity estimates get their OWN public scope (activity:read) so
+# they're a first-class free endpoint family, not buried under leaderboards
+# or misc. Tokenless; a token carrying the scope just earns the wider budget.
+_ACTIVITY_PUBLIC = Depends(public_scope("activity:read"))
 _LB_MASTER = Depends(require_master_ingest)
 # Same shape: read gated by scope, write gated by superuser API token.
 _MKT = Depends(require_scope("market:read"))
@@ -309,6 +320,12 @@ async def insert_chaos_chest(
             "refreshed": not was_new,
         },
     )
+    # Push to live SSE subscribers immediately (dedup-guarded). Best-effort.
+    try:
+        await events_bus.publish_chaos()
+    except Exception:
+        logging.getLogger("kiwi.trove.router").warning(
+            "chaos event publish failed", exc_info=True)
     return CaptureInsertResponse(
         anchor=doc.week_anchor, name=doc.name, refreshed=not was_new,
     )
@@ -379,6 +396,13 @@ async def insert_challenge(
             "refreshed": not was_new,
         },
     )
+    # Push the update to live SSE subscribers immediately (dedup-guarded, so a
+    # re-POST of the same name is a no-op). Best-effort: never fail the ingest.
+    try:
+        await events_bus.publish_challenge()
+    except Exception:
+        logging.getLogger("kiwi.trove.router").warning(
+            "challenge event publish failed", exc_info=True)
     return CaptureInsertResponse(
         anchor=doc.window_anchor, name=doc.name, refreshed=not was_new,
     )
@@ -831,26 +855,30 @@ async def get_interest_items(ctx: AccessContext = _MISC_PUBLIC) -> MarketItemLis
     return MarketItemList(items=items, count=len(items))
 
 
-# ── Player activity ───────────────────────────────────────────────────────
-# Mirrors of the cheaper /v1/leaderboards/activity[/history] endpoints,
-# exposed under /v1/misc so third-party dashboards / wikis discover them
-# without having to read the leaderboards-scope docs. Same payloads, same
-# in-process cache, same per-anchor pre-population. Tokenless via
-# misc:read public scope.
+# ── Player activity (scope: activity:read) ────────────────────────────────
+# Free/public active-player estimates derived from the leaderboard captures,
+# in their OWN `activity:read` scope (tokenless; a token carrying the scope
+# just earns the wider per-token budget). The showcase /activity page is the
+# main consumer via the same-origin /site proxies, but these are documented,
+# stable endpoints for third-party dashboards / wikis too. This is the single
+# public home - the old /v1/leaderboards/activity* and /v1/misc/activity*
+# copies were folded into here.
 
-@misc_router.get(
-    "/activity", response_model=ActivityResponse,
+@activity_router.get(
+    "/current", response_model=ActivityResponse,
     summary="Estimated active players via leaderboard score deltas",
 )
-async def misc_get_activity(
+async def get_activity_current(
     response: Response,
-    ctx: AccessContext = _MISC_PUBLIC,
+    ctx: AccessContext = _ACTIVITY_PUBLIC,
 ) -> ActivityResponse:
-    """**Tokenless.** Mirror of ``/v1/leaderboards/activity`` exposed under
-    misc for discoverability. Returns a lower-bound count of active
-    players in the most recent window (distinct top-N leaderboard
-    players whose score increased on at least one tracked board between
-    the two latest captures). Cached for the cheater-detection TTL."""
+    """**Tokenless.** Lower-bound count of active players in the most recent
+    capture window - distinct top-N leaderboard players whose score increased
+    on at least one lifetime board (or who appear in the new cycle of a
+    daily/weekly board where a reset crossed the window) between the two
+    latest captures. Also carries distinct 24h / 7d rollups (`estimate_24h` /
+    `estimate_7d`). `estimate` is null until two captures exist. Cached for
+    the cheater-detection TTL; a new hourly capture invalidates it."""
     from app.admin import runtime_config
     payload = await leaderboards_activity.estimate_active_players()
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
@@ -858,27 +886,185 @@ async def misc_get_activity(
     return ActivityResponse(**payload)
 
 
-@misc_router.get(
-    "/activity/history", response_model=ActivityHistoryResponse,
+@activity_router.get(
+    "/history", response_model=ActivityHistoryResponse,
     summary="Time-series of estimated active players over recent captures",
 )
-async def misc_get_activity_history(
+async def get_activity_history(
     response: Response,
     days: int = Query(default=7, ge=1, le=30),
-    ctx: AccessContext = _MISC_PUBLIC,
+    ctx: AccessContext = _ACTIVITY_PUBLIC,
 ) -> ActivityHistoryResponse:
-    """**Tokenless.** Mirror of ``/v1/leaderboards/activity/history`` -
-    time-series of active-player estimates over the last ``days`` days,
-    one point per consecutive capture pair. See the leaderboards-scope
-    docs for the per-hour normalisation semantics (a missed capture
-    inflates the raw count because the window spans longer; the
-    ``estimate_per_hour`` field divides by duration so charts stay
-    honest)."""
+    """**Tokenless.** Time-series of active-player estimates over the last
+    ``days`` days, one point per consecutive capture pair. ``estimate_per_hour``
+    (= estimate / duration_hours) is the value a chart should plot - a missed
+    capture makes the next window span 2-3h and inflates the raw count because
+    more players had time to score; the per-hour rate normalises that out.
+    Points persist on each ingest, so the series survives restarts."""
     from app.admin import runtime_config
     payload = await leaderboards_activity.estimate_active_players_history(days=days)
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
     response.headers["Cache-Control"] = f"public, max-age={ttl}"
     return ActivityHistoryResponse(**payload)
+
+
+@activity_router.get(
+    "/series", response_model=ActivitySeriesResponse,
+    summary="Bucketed active-player series for a period (1d … all)",
+)
+async def get_activity_series(
+    response: Response,
+    period: str = Query(default="7d", description="1d / 7d / 1m / 3m / 6m / 1y / all"),
+    ctx: AccessContext = _ACTIVITY_PUBLIC,
+) -> ActivitySeriesResponse:
+    """**Tokenless.** Downsampled activity-level series for one period - the
+    data behind the Player Activity page's charts. Each bucket is the average
+    active-players-per-hour over the captures it spans (hourly for 1d up to
+    weekly for 1y/all, sized so the line stays readable); also returns the
+    period peak / average / latest level for stat cards."""
+    from app.admin import runtime_config
+    payload = await leaderboards_activity.activity_series(period=period)
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return ActivitySeriesResponse(**payload)
+
+
+@activity_router.post(
+    "/backfill", status_code=202,
+    summary="Backfill the activity history from the archive (master)",
+)
+async def backfill_activity_history(
+    background_tasks: BackgroundTasks,
+    total_days: int = Query(
+        default=400, ge=0, le=1000,
+        description="How far back to backfill (capped by how far the data reaches). 0 = ALL stored history.",
+    ),
+    chunk_days: int = Query(
+        default=14, ge=1, le=60,
+        description="Slice size - smaller keeps peak memory lower on huge ranges.",
+    ),
+    force: bool = Query(
+        default=False,
+        description="Recompute window_ends already stored (default skips them).",
+    ),
+    reset: bool = Query(
+        default=False,
+        description=("DESTRUCTIVE: wipe the whole activity_estimate table "
+                     "first, then recompute from scratch (implies force). Use to "
+                     "discard values from earlier miscalculated runs."),
+    ),
+    _auth=_LB_MASTER,
+) -> dict:
+    """**Master only.** Seed the activity history (the `/series` data) from the
+    stored Postgres captures so the multi-period charts have history
+    predating the hourly forward-fill. Accepted **202** immediately and run in
+    the BACKGROUND, walking the range newest-first in memory-bounded
+    ``chunk_days`` slices (a year of hourly anchors loaded at once would blow
+    the container's RAM cap). Coverage is capped by how far the archive
+    reaches; with ``force=false`` already-stored windows are skipped.
+
+    ``reset=true`` is **destructive**: it first DELETES every stored estimate
+    and recomputes the whole range from scratch (implies ``force``) - the right
+    move to flush miscalculations from older runs. The ``activity_estimate`` table
+    is fully derived data, so nothing irreplaceable is lost; the multi-period
+    charts just read empty until the rebuild lands. Progress + the final tally
+    (including ``reset_deleted``) land in the api logs."""
+    background_tasks.add_task(
+        leaderboards_activity.backfill_history_chunked,
+        total_days=total_days, chunk_days=chunk_days, force=force, reset=reset,
+    )
+    return {
+        "accepted": True,
+        "total_days": total_days,
+        "chunk_days": chunk_days,
+        "force": force or reset,
+        "reset": reset,
+        "message": (("RESET + backfill" if reset else "Backfill") +
+                    " started in the background; watch the api logs for "
+                    "'activity backfill (chunked) done' with the tally."),
+    }
+
+
+# --- Class activity (per-class active players from Effort/Paragon boards) ----
+
+
+@class_activity_router.get(
+    "/current", response_model=ClassActivityCurrentResponse,
+    summary="Per-class active players + player-share for the latest window",
+)
+async def get_class_activity_current(
+    response: Response,
+    ctx: AccessContext = _ACTIVITY_PUBLIC,
+) -> ClassActivityCurrentResponse:
+    """**Tokenless.** For the most recent capture window, the distinct active
+    players per Trove class - a player whose score rose on a class's Effort OR
+    Paragon board - plus each class's `share` of total class activity. `share`
+    sums to 1 across classes but counts a multi-class player in each, so it's
+    share-of-activity, not distinct players."""
+    from app.admin import runtime_config
+    payload = await leaderboards_class_activity.class_activity_current()
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return ClassActivityCurrentResponse(**payload)
+
+
+@class_activity_router.get(
+    "/series", response_model=ClassActivitySeriesResponse,
+    summary="Bucketed per-class active-player series for a period (1d … all)",
+)
+async def get_class_activity_series(
+    response: Response,
+    period: str = Query(default="7d", description="1d / 7d / 1m / 3m / 6m / 1y / all"),
+    ctx: AccessContext = _ACTIVITY_PUBLIC,
+) -> ClassActivitySeriesResponse:
+    """**Tokenless.** Downsampled per-class activity-level series for one period -
+    the data behind the Class Activity page's multi-line chart. `buckets` is the
+    shared time axis; each class line's `values` align to it (null where that
+    class had no measurable window in a bucket - e.g. across the weekly reset)."""
+    from app.admin import runtime_config
+    payload = await leaderboards_class_activity.class_activity_series(period=period)
+    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return ClassActivitySeriesResponse(**payload)
+
+
+@class_activity_router.post(
+    "/backfill", status_code=202,
+    summary="Backfill the per-class activity history (master)",
+)
+async def backfill_class_activity_history(
+    background_tasks: BackgroundTasks,
+    total_days: int = Query(
+        default=400, ge=0, le=1000,
+        description="How far back to backfill (capped by stored data). 0 = ALL stored history.",
+    ),
+    force: bool = Query(
+        default=False, description="Recompute window_ends already stored (default skips them).",
+    ),
+    reset: bool = Query(
+        default=False,
+        description=("DESTRUCTIVE: wipe the whole class_activity_estimate table "
+                     "first, then recompute from scratch (implies force)."),
+    ),
+    _auth=_LB_MASTER,
+) -> dict:
+    """**Master only.** Seed the per-class activity history from the stored
+    Postgres captures so the Class Activity charts have history. Accepted **202**
+    immediately and run in the BACKGROUND (memory-safe streaming; only the 36
+    Effort/Paragon boards load per anchor). `reset=true` wipes first."""
+    background_tasks.add_task(
+        leaderboards_class_activity.backfill_class_history_chunked,
+        total_days=total_days, force=force, reset=reset,
+    )
+    return {
+        "accepted": True,
+        "total_days": total_days,
+        "force": force or reset,
+        "reset": reset,
+        "message": (("RESET + backfill" if reset else "Backfill") +
+                    " started in the background; watch the api logs for "
+                    "'class activity backfill (chunked) done' with the tally."),
+    }
 
 
 @misc_router.get(
@@ -889,14 +1075,13 @@ async def misc_trove_status(
     response: Response,
     ctx: AccessContext = _MISC_PUBLIC,
 ) -> TroveStatusResponse:
-    """**Tokenless.** Live Trove server status from the background
-    prober (every ~60s). ``overall`` tracks LIVE (online / maintenance /
-    down / unknown). ``auth`` is the HTTPS liveness of
-    ``auth.trionworlds.com`` (catches full outages, stays up during
-    world maintenance); ``environments.{live,pts}`` each carry a
-    ``game`` TCP probe of the glsserver port (6560) - accepted =
-    worlds playable, refused while auth up = maintenance. Served from
-    cache; never blocks on a live probe."""
+    """**Tokenless.** Live Trove server status from the background prober
+    (every ~60s). Status is binary: ``online`` / ``down`` (+ ``unknown``
+    before the first probe). ``overall`` is online only when every LIVE
+    region is online, else down. ``auth`` is the HTTPS liveness of
+    ``auth.trionworlds.com``; ``environments.{eu,us,pts}`` each carry a
+    ``game`` probe of the glsserver port (6560) - reachable = online,
+    unreachable = down. Served from cache; never blocks on a live probe."""
     from app.trove import status as trove_status
     payload = trove_status.get_status()
     response.headers["Cache-Control"] = "public, max-age=30"
@@ -1798,8 +1983,8 @@ async def get_btt_changelog(
 # READ side (scope: leaderboards:read) - anyone with the scope can query.
 # WRITE side (insert) - gated by a superuser API token. The bot script POSTs a
 # raw LeaderBot.cfg dump as a multipart file, the parser explodes it into the
-# Leaderboard / LeaderboardEntry collections, then prunes anything older than
-# the retention window.
+# Postgres board/player/entry tables (entry is partitioned by anchor), and the
+# capture is also gzip-saved to the backlog for replay/cutover.
 
 
 async def _enforce_lb_archive_limit(
@@ -1842,61 +2027,11 @@ def _lb_timestamp(created_at: int | None) -> int:
     return anchor
 
 
-@leaderboards_router.get(
-    "/activity", response_model=ActivityResponse,
-    summary="Estimated active players via leaderboard score deltas",
-)
-async def get_activity_estimate(
-    response: Response,
-    _ctx: AccessContext = _LB_PUBLIC,
-) -> ActivityResponse:
-    """**Tokenless.** Estimates how many players were active between
-    the two most recent leaderboard captures, by counting distinct
-    players whose score increased on any lifetime-accumulating
-    (``reset_kind=default``) board.
-
-    Returns a lower-bound count of "leaderboard-eligible active
-    players" - casual players who never made any board's top-N don't
-    contribute. ``estimate`` is ``null`` until at least two captures
-    are stored (bot needs to send unique timestamps, not just the
-    daily anchor). Cached in-process for the same TTL as the cheater
-    detection - a new hourly capture invalidates automatically."""
-    payload = await leaderboards_activity.estimate_active_players()
-    from app.admin import runtime_config
-    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
-    response.headers["Cache-Control"] = f"public, max-age={ttl}"
-    return ActivityResponse(**payload)
-
-
-@leaderboards_router.get(
-    "/activity/history", response_model=ActivityHistoryResponse,
-    summary="Time-series of estimated active players over recent captures",
-)
-async def get_activity_history(
-    response: Response,
-    days: int = Query(default=7, ge=1, le=30),
-    _ctx: AccessContext = _LB_PUBLIC,
-) -> ActivityHistoryResponse:
-    """**Tokenless.** Returns a time-series of activity estimates, one
-    point per consecutive captured anchor pair in the requested window.
-
-    Each point carries the raw ``estimate`` and a ``estimate_per_hour``
-    rate (= estimate / duration_hours) which is the right Y-axis for a
-    chart: when a capture is missed, the next window spans more than
-    an hour and the raw count is naturally higher because more players
-    had time to score. The per-hour rate normalises this out so the
-    chart line doesn't spike on irregular intervals.
-
-    Points are persisted on each new ingest (see
-    ``leaderboards.activity._compute``), so the series survives
-    container restarts and accumulates as captures land - the chart
-    won't be empty after a restart provided some history was stored
-    previously."""
-    from app.admin import runtime_config
-    payload = await leaderboards_activity.estimate_active_players_history(days=days)
-    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
-    response.headers["Cache-Control"] = f"public, max-age={ttl}"
-    return ActivityHistoryResponse(**payload)
+# NOTE: the public player-activity reads (current / history / series) live on
+# their own `activity_router` (/v1/activity/*, scope activity:read) - see the
+# "Player activity" section earlier in this module. They used to be mirrored
+# here under leaderboards:read; that copy was removed when activity got its
+# own scope.
 
 
 @leaderboards_router.get(
@@ -1976,7 +2111,7 @@ async def list_leaderboards(
     return LeaderboardListOut(created_at=anchor, items=items, count=len(items))
 
 
-@leaderboards_router.get("/{uuid}", response_model=LeaderboardBoardOut)
+@leaderboards_router.get("/{uuid:int}", response_model=LeaderboardBoardOut)
 async def get_leaderboard(uuid: int, ctx: TokenContext = _LB) -> LeaderboardBoardOut:
     """A single board's metadata (no entries) - handy for resolving a uuid to a
     human name. ``contests`` lists every anchor at which the board was observed
@@ -1990,7 +2125,7 @@ async def get_leaderboard(uuid: int, ctx: TokenContext = _LB) -> LeaderboardBoar
     return LeaderboardBoardOut(**row)
 
 
-@leaderboards_router.get("/{uuid}/entries", response_model=LeaderboardEntriesPage)
+@leaderboards_router.get("/{uuid:int}/entries", response_model=LeaderboardEntriesPage)
 async def list_leaderboard_entries(
     uuid: int,
     response: Response,
@@ -2050,7 +2185,7 @@ async def get_player_history(
     )
 
 
-@leaderboards_router.get("/{uuid}/history", response_model=BoardHistoryResponse)
+@leaderboards_router.get("/{uuid:int}/history", response_model=BoardHistoryResponse)
 async def get_board_history(
     uuid: int,
     response: Response,
@@ -2065,16 +2200,19 @@ async def get_board_history(
 
     Drives the per-board chart on the public leaderboards page; also
     callable directly for clients that want their own visualisation. The
-    7-day default spans both hot and archive collections - the older end
-    of the window pays the archive rate-limit if it crosses the archive
-    query threshold."""
+    older end of a wide window pays the archive rate-limit if it crosses
+    the archive query threshold. Served from the Redis read-through cache
+    (the warmer pre-computes the default 7d/top-5 for every board each
+    ingest); the rate-limit is still charged regardless of cache hit."""
     # Archive-window check: if the window's lower bound is in archive
     # territory, charge the archive cap. Detection module + entries
-    # endpoint use the same primitive.
+    # endpoint use the same primitive. Charged BEFORE the cache read so a
+    # cache hit can't dodge the limit.
     await _enforce_lb_archive_limit(
         response, ctx, int(utcnow().timestamp()) - days * 86400,
     )
-    payload = await leaderboards_service.board_history(uuid, days=days, top=top)
+    from app.trove.leaderboards import cache as leaderboards_cache
+    payload = await leaderboards_cache.get_board_history(uuid, days, top)
     return BoardHistoryResponse(**payload)
 
 
@@ -2101,7 +2239,8 @@ async def get_player_history_series(
 
 async def _process_leaderboard_dump(
     text: str, timestamp: int | None, user, token, nbytes: int,
-) -> None:
+    *, allow_backfill: bool = False, warm: bool = True,
+) -> dict | None:
     """Background half of POST /v1/leaderboards/insert.
 
     Runs AFTER the 202 ack is sent, so the bot's HTTP client isn't held open
@@ -2110,7 +2249,9 @@ async def _process_leaderboard_dump(
     its ack and never sees an exception raised from here.
     """
     try:
-        summary = await leaderboards_service.insert_dump(text, timestamp=timestamp)
+        summary = await leaderboards_service.insert_dump(
+            text, timestamp=timestamp, allow_backfill=allow_backfill,
+        )
         await ingest_log.record(
             endpoint="/v1/leaderboards/insert",
             user=user, token=token,
@@ -2129,12 +2270,31 @@ async def _process_leaderboard_dump(
         if summary.get("created_at"):
             from app.trove.leaderboards import cache as leaderboards_cache
             await leaderboards_cache.invalidate_anchor(summary["created_at"])
+            # Save the raw dump to the server-side backlog (keyed by anchor) so the
+            # whole history can be re-ingested later from the admin panel with no
+            # upload. Best-effort; the re-ingest path calls insert_dump directly so
+            # it never re-saves (no loop).
+            from app.trove.leaderboards import backlog
+            await backlog.save(summary["created_at"], text)
+            # Relay a lightweight "new leaderboard data" event to the live channel
+            # (SSE subscribers can refetch). Best-effort; never fail the ingest.
+            try:
+                from app.events import bus as events_bus
+                await events_bus.publish(
+                    "leaderboard", str(summary["created_at"]),
+                    {"anchor": summary["created_at"], "boards": summary.get("boards"),
+                     "entries": summary.get("entries")},
+                )
+            except Exception:
+                logger.warning("leaderboard event publish failed", exc_info=True)
         # Warm the new anchor's heavy queries (cheaters detection, activity
         # estimate, boards listing + the Redis snapshot) so the first visitor
-        # doesn't pay the multi-second cold-cache tax. The previous anchor's
-        # cache entries remain the "last known good" fallback until the new
-        # ones land.
-        leaderboards_detection.trigger_warmer()
+        # doesn't pay the multi-second cold-cache tax. Skipped during a bulk
+        # back-fill (warm=False) - warming on every file would re-scan an
+        # ever-changing "latest"; the caller warms ONCE at the end instead.
+        if warm:
+            leaderboards_detection.trigger_warmer()
+        return summary
     except Exception as exc:  # noqa: BLE001 - log + record; never re-raise (no client left to see it)
         logger.exception("leaderboard ingest processing failed")
         await ingest_log.record(
@@ -2142,6 +2302,7 @@ async def _process_leaderboard_dump(
             user=user, token=token, success=False, error=str(exc)[:300],
             summary={"bytes": nbytes, "anchor": timestamp},
         )
+        return None
 
 
 @leaderboards_router.post("/insert", response_model=LeaderboardInsertResponse,
@@ -2149,11 +2310,29 @@ async def _process_leaderboard_dump(
                           summary="Insert leaderboard data")
 async def insert_leaderboards(
     background_tasks: BackgroundTasks,
+    response: Response,
     file: UploadFile = File(..., description="The raw LeaderBot.cfg dump (text)"),
     timestamp: int | None = Query(
         default=None,
         description=("Override the 'as-of' anchor in unix seconds (11:00 UTC). "
                      "Defaults to the latest 11:00 UTC reset - pass this only for back-fills."),
+    ),
+    backfill: bool = Query(
+        default=False,
+        description=("Master bulk re-seed: lift the 14-day anchor limit so a "
+                     "historical capture lands at its real (filename) anchor "
+                     "instead of falling back to today."),
+    ),
+    sync: bool = Query(
+        default=False,
+        description=("Process inline and return the real counts (200) instead of "
+                     "202-background. Use for bulk back-fill so the client's await "
+                     "paces ingestion - only one dump is in memory at a time."),
+    ),
+    warm: bool = Query(
+        default=True,
+        description=("Trigger the cache warmer after this insert. Set false during "
+                     "a bulk back-fill and warm once at the end (POST /leaderboards/warm)."),
     ),
     _auth = _LB_MASTER,
 ) -> LeaderboardInsertResponse:
@@ -2181,18 +2360,118 @@ async def insert_leaderboards(
         # Some scrapes have stray bytes; replace rather than reject so a single
         # bad row doesn't kill the whole dump.
         text = raw.decode("utf-8", errors="replace")
+    # A bulk re-seed (backfill) is a PURE insert: NEVER warm per file - cheaters
+    # + activity are recomputed ONCE at the end (POST /leaderboards/warm). Enforced
+    # server-side so a stray warm=true can't make every file launch a heavy
+    # calculation round (which is what was OOM-ing the box during mass ingest).
+    warm = warm and not backfill
     # Hand the heavy parse+persist to a background task and ack now. Auth + the
     # per-token ingest cooldown already ran in the dependency (so an over-eager
     # bot still gets 429 before reaching here), and the dump text is fully
     # buffered in memory - the task doesn't depend on the request staying open.
+    if sync:
+        # Backpressure for bulk back-fills: process inline so the client's await
+        # waits for this dump to finish before sending the next - only one ~18 MB
+        # dump is in memory at a time, instead of the client racing ahead and
+        # piling up background tasks until the container OOMs.
+        summary = await _process_leaderboard_dump(
+            text, timestamp, _auth.user, _auth.token, len(raw),
+            allow_backfill=backfill, warm=warm,
+        )
+        response.status_code = 200
+        if summary is None:
+            return LeaderboardInsertResponse(
+                accepted=False, bytes=len(raw),
+                message="Ingest failed - see the master ingest log for the error.",
+            )
+        return LeaderboardInsertResponse(
+            accepted=True, bytes=len(raw),
+            message=(f"Ingested anchor {summary.get('created_at')}: "
+                     f"{summary.get('boards')} boards, {summary.get('entries')} entries."),
+        )
+
     background_tasks.add_task(
         _process_leaderboard_dump, text, timestamp, _auth.user, _auth.token, len(raw),
+        allow_backfill=backfill, warm=warm,
     )
     return LeaderboardInsertResponse(
         accepted=True, bytes=len(raw),
         message=("Dump accepted - parsing and persisting in the background; "
                  "boards/entries counts land in the ingest log when done."),
     )
+
+
+@leaderboards_router.post("/warm", status_code=202,
+                          summary="Warm leaderboard caches (master)")
+async def warm_leaderboards(_auth = _LB_MASTER) -> dict:
+    """**Master only.** Wake the cache warmer to recompute the latest anchor's
+    cheaters + activity + page snapshots. Call once after a bulk back-fill (which
+    uploads with ``warm=false`` to avoid re-warming on every file)."""
+    leaderboards_detection.trigger_warmer()
+    return {"warming": True}
+
+
+@leaderboards_router.post("/reingest-backlog", status_code=202,
+                          summary="Re-ingest the leaderboard backlog (master)")
+async def reingest_backlog(
+    background_tasks: BackgroundTasks,
+    clear_first: bool = Query(
+        default=False,
+        description="Reset ALL leaderboard data first, then re-ingest from scratch.",
+    ),
+    _auth = _LB_MASTER,
+) -> dict:
+    """**Master only.** Replay every file in the server-side backlog folder
+    (``{backlog_dir}/leaderboards/<anchor>.cfg[.gz]``) oldest-first - a pure
+    server-side ingest (NO upload), one dump at a time, with the heavy
+    cheaters/activity compute run ONCE at the end. Returns immediately; poll
+    ``/reingest-status`` for live progress."""
+    from app.trove.leaderboards import backlog
+    files = backlog.list_files()
+    if not files:
+        return {"started": False, "files": 0,
+                "message": ("Backlog is empty - let the bot populate it, or drop "
+                            "<unix>.cfg files into the backlog folder.")}
+    background_tasks.add_task(backlog.reingest, clear_first=clear_first)
+    return {"started": True, "files": len(files), "clear_first": clear_first}
+
+
+@leaderboards_router.get("/reingest-status",
+                         summary="Backlog re-ingest progress (master)")
+async def reingest_status(_auth = _LB_MASTER) -> dict:
+    """**Master only.** Live progress of the backlog re-ingest (poll this) plus
+    the current backlog file count."""
+    from app.trove.leaderboards import backlog
+    status = await backlog.get_status()
+    status.update(backlog.info())   # backlog_dir + backlog_dir_exists + backlog_files
+    return status
+
+
+@leaderboards_router.post("/reset", status_code=200,
+                          summary="Reset all leaderboard data (master)")
+async def reset_leaderboards(
+    drop_boards: bool = Query(
+        default=False,
+        description=("Also delete board metadata + admin reset-cadence overrides. "
+                     "Off by default - those are config, re-used on re-ingest."),
+    ),
+    _auth = _LB_MASTER,
+) -> dict:
+    """**Master only. Destructive.** Wipe ALL leaderboard data + derived state for
+    a clean slate before a full re-ingest: every entry (hot + archive), every
+    stored activity estimate, and all cheater / activity / Redis caches + the
+    ready pointer. Board metadata (incl. admin reset-cadence overrides) is kept
+    unless ``drop_boards``. Returns the deletion tallies; logged at WARNING."""
+    summary = await leaderboards_service.reset_all(drop_boards=drop_boards)
+    await ingest_log.record(
+        endpoint="/v1/leaderboards/reset",
+        user=_auth.user, token=_auth.token, summary=summary,
+    )
+    return {"reset": True, **summary}
+
+
+# NOTE: the master activity backfill moved to `POST /v1/activity/backfill`
+# (on activity_router) so the whole activity family shares one prefix.
 
 
 # --- Market: in-game marketplace listings ingest + read ---------------------
@@ -2337,4 +2616,17 @@ async def insert_market_listings(
             "bytes": len(raw),
         },
     )
+    # Relay a lightweight "market refreshed" event to the live channel (SSE
+    # subscribers can refetch). Best-effort; never fail the ingest.
+    if summary.get("last_seen"):
+        try:
+            from app.events import bus as events_bus
+            await events_bus.publish(
+                "market", str(summary["last_seen"]),
+                {"last_seen": summary["last_seen"], "imported": summary.get("imported"),
+                 "parsed": summary.get("parsed")},
+            )
+        except Exception:
+            logging.getLogger("kiwi.trove.router").warning(
+                "market event publish failed", exc_info=True)
     return MarketInsertResponse(**summary)

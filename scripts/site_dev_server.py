@@ -74,6 +74,24 @@ STUB_ENTRIES = [
     {"player_name": "TestPlayer", "rank": 7, "score": 57000.0},
 ]
 
+# The 18 Trove classes in classes.json order (= Effort/Paragon board offset
+# order), for the Class Activity page stubs.
+_STUB_CLASSES = [
+    "Bard", "Boomeranger", "Candy Barbarian", "Chloromancer", "Dino Tamer",
+    "Dracolyte", "Fae Trickster", "Gunslinger", "Ice Sage", "Knight",
+    "Lunar Lancer", "Neon Ninja", "Pirate Captain", "Revenant", "Shadow Hunter",
+    "Solarion", "Tomb Raiser", "Vanguardian",
+]
+# qualified_name per class (classes.json order) → self-hosted icon path.
+_STUB_CLASS_QN = [
+    "bard", "adventurer", "candybarbarian", "chloromancer", "dinotamer",
+    "dracolyte", "faetrickster", "gunslinger", "icemage", "knight",
+    "lunarlancer", "neonninja", "piratelord", "spirittank", "shadowhunter",
+    "solarion", "tombraiser", "crimefighter",
+]
+def _stub_icon(ci):
+    return f"/static/class-icons/{_STUB_CLASS_QN[ci]}.png"
+
 
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -91,6 +109,24 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "updates.html", "text/html")
         if path == "/status":
             return self._send_file(TEMPLATES / "status.html", "text/html")
+        if path == "/giveaways":
+            return self._send_file(TEMPLATES / "giveaways.html", "text/html")
+        if path == "/clubs":
+            return self._send_file(TEMPLATES / "clubs.html", "text/html")
+        if path == "/activity":
+            return self._send_file(TEMPLATES / "activity.html", "text/html")
+        if path == "/market":
+            return self._send_file(TEMPLATES / "market.html", "text/html")
+        if path == "/support":
+            return self._send_file(TEMPLATES / "support.html", "text/html")
+        if path == "/documentation":
+            return self._send_file(TEMPLATES / "docs.html", "text/html")
+        if path == "/terms":
+            return self._send_file(TEMPLATES / "terms.html", "text/html")
+        if path == "/privacy":
+            return self._send_file(TEMPLATES / "privacy.html", "text/html")
+        if path == "/class-activity":
+            return self._send_file(TEMPLATES / "class-activity.html", "text/html")
 
         # Static.
         if path.startswith("/static/"):
@@ -103,42 +139,43 @@ class Handler(SimpleHTTPRequestHandler):
             # runtime_config default).
             return self._send_json({"hot_retention_days": 5})
         if path == "/site/trove-status":
-            # Multi-env stub: Live in maintenance, PTS online (matches the
-            # real-world state we observed). Auth up.
+            # Multi-env stub (eu/us/pts, binary online/down): EU down, US + PTS
+            # online - a partial outage, matching the real-world state observed.
             import time as _t
             return self._send_json({
-                "overall": "maintenance",
+                "overall": "down",
                 "auth": {"online": True, "http_status": 405, "latency_ms": 120.0, "error": None},
                 "environments": {
-                    "live": {"status": "maintenance", "online": False,
-                             "game": {"online": False, "host": "trove-pc-live-us-game-1.trovegame.com", "port": 6560, "latency_ms": 3000.0, "error": "TimeoutError"}},
+                    "eu": {"status": "down", "online": False,
+                           "game": {"online": False, "host": "ams-c12-b05.ams.triongames.com", "port": 6560, "latency_ms": 3000.0, "error": "glsserver_dropped"}},
+                    "us": {"status": "online", "online": True,
+                           "game": {"online": True, "host": "dal-c35-b05.dal.triongames.com", "port": 6560, "latency_ms": 88.0, "error": None}},
                     "pts": {"status": "online", "online": True,
-                            "game": {"online": True, "host": "trove-pc-pts-us-game-1.trovegame.com", "port": 6560, "latency_ms": 95.0, "error": None}},
+                            "game": {"online": True, "host": "auth-pcpts01.trovegame.com", "port": 6560, "latency_ms": 95.0, "error": None}},
                 },
                 "checked_at": int(_t.time()),
             })
         if path == "/site/trove-status/history":
-            # Synthetic 30-day timeline with a couple of outages so the
+            # Synthetic 7-day timeline with a couple of outages so the
             # graphic + outage log render in preview.
             import time as _t
             now = int(_t.time()); day = 86400
             qs = parse_qs(url.query); env = (qs.get("env", ["live"])[0])
-            start = now - 30 * day
+            start = now - 7 * day
             segs = [
-                {"status": "online", "online": True, "started_at": start, "ended_at": now - 9*day, "duration_seconds": 21*day},
-                {"status": "maintenance", "online": False, "started_at": now - 9*day, "ended_at": now - 9*day + 7200, "duration_seconds": 7200},
-                {"status": "online", "online": True, "started_at": now - 9*day + 7200, "ended_at": now - 2*day, "duration_seconds": 7*day - 7200},
-                {"status": "down", "online": False, "started_at": now - 2*day, "ended_at": now - 2*day + 1800, "duration_seconds": 1800},
+                {"status": "online", "online": True, "started_at": start, "ended_at": now - 3*day, "duration_seconds": 4*day},
+                {"status": "down", "online": False, "started_at": now - 3*day, "ended_at": now - 3*day + 5400, "duration_seconds": 5400},
+                {"status": "online", "online": True, "started_at": now - 3*day + 5400, "ended_at": now - 18*3600, "duration_seconds": 3*day - 5400 - 18*3600},
             ]
             if env == "live":
-                segs.append({"status": "maintenance", "online": False, "started_at": now - 4*3600, "ended_at": None, "duration_seconds": 4*3600})
+                segs.append({"status": "down", "online": False, "started_at": now - 18*3600, "ended_at": None, "duration_seconds": 18*3600})
             else:
-                segs.append({"status": "online", "online": True, "started_at": now - 2*day + 1800, "ended_at": None, "duration_seconds": 2*day - 1800})
+                segs.append({"status": "online", "online": True, "started_at": now - 18*3600, "ended_at": None, "duration_seconds": 18*3600})
             covered = sum(s["duration_seconds"] for s in segs)
             up = sum(s["duration_seconds"] for s in segs if s["status"] == "online")
             outages = [{"status": s["status"], "started_at": s["started_at"], "ended_at": s["ended_at"], "duration_seconds": s["duration_seconds"]} for s in segs if s["status"] != "online"]
             return self._send_json({
-                "env": env, "days": 30, "window_start": start, "window_end": now,
+                "env": env, "days": 7, "window_start": start, "window_end": now,
                 "uptime": round(up/covered, 5), "covered_seconds": covered,
                 "segments": segs, "outages": outages,
             })
@@ -149,6 +186,12 @@ class Handler(SimpleHTTPRequestHandler):
                 "window_end": STUB_ANCHOR,
                 "duration_hours": 1.0,
                 "estimate": 4231,
+                "estimate_24h": 18764,
+                "estimate_7d": 52310,
+                "window_24h_start": STUB_ANCHOR - 86400,
+                "window_7d_start": STUB_ANCHOR - 7 * 86400,
+                "span_24h_hours": 24.0,
+                "span_7d_hours": 168.0,
                 "by_board": [
                     {"uuid": 10, "name": "FLUX EARNED",      "category": "STATS", "active_players": 2847},
                     {"uuid": 15, "name": "LOOT COLLECTED",   "category": "STATS", "active_players": 2143},
@@ -157,6 +200,83 @@ class Handler(SimpleHTTPRequestHandler):
                 "boards_analyzed": 11,
                 "methodology": "Distinct top-5000 leaderboard players whose score increased on at least one lifetime-accumulating board between the two most recent captures.",
                 "computed_at": 1780890000,
+            })
+        if path == "/site/leaderboards/activity/series":
+            # Synthetic bucketed series so the /activity charts render. The
+            # period sets bucket size + count; a diurnal sine + slow drift
+            # gives a believable shape with a clear peak / quiet trough.
+            import math
+            qs = parse_qs(url.query)
+            period = (qs.get("period", ["7d"])[0]).lower()
+            spec = {
+                "1d":  (3600, 24), "7d": (3 * 3600, 56), "1m": (86400, 30),
+                "3m":  (86400, 90), "6m": (2 * 86400, 90), "1y": (7 * 86400, 52),
+                "all": (7 * 86400, 80),
+            }.get(period, (3 * 3600, 56))
+            bucket, count = spec
+            end = STUB_ANCHOR
+            start = end - bucket * count
+            points = []
+            for i in range(count):
+                ti = start + i * bucket
+                base = 3500 + 1500 * math.sin(i / 3.0) + (i * 12)
+                active = max(180, round(base))
+                points.append({"t": ti, "active": float(active),
+                               "peak": float(active + 420), "samples": 1})
+            peak = max(points, key=lambda p: p["active"])
+            avg = round(sum(p["active"] for p in points) / len(points), 1)
+            return self._send_json({
+                "period": period, "bucket_seconds": bucket,
+                "window_start": start, "window_end": end,
+                "points": points,
+                "peak": {"t": peak["t"], "active": peak["active"]},
+                "average": avg, "latest": points[-1]["active"],
+                "methodology": "stub series",
+            })
+        if path == "/site/leaderboards/class-activity/series":
+            # Synthetic per-class multi-line series: shared buckets + one values[]
+            # per class (a diurnal sine, phase-shifted per class so the lines
+            # spread out), with occasional nulls to mimic the weekly-reset gap.
+            import math
+            qs = parse_qs(url.query)
+            period = (qs.get("period", ["7d"])[0]).lower()
+            spec = {
+                "1d":  (3600, 24), "7d": (3 * 3600, 56), "1m": (86400, 30),
+                "3m":  (86400, 90), "6m": (2 * 86400, 90), "1y": (7 * 86400, 52),
+                "all": (7 * 86400, 80),
+            }.get(period, (3 * 3600, 56))
+            bucket, count = spec
+            end = STUB_ANCHOR
+            start = end - bucket * count
+            buckets = [start + i * bucket for i in range(count)]
+            classes = []
+            for ci, name in enumerate(_STUB_CLASSES):
+                vals = []
+                for i in range(count):
+                    base = 120 + 70 * math.sin(i / 3.0 + ci * 0.5) + (18 - ci) * 6
+                    # a couple of synthetic gaps (weekly reset look)
+                    vals.append(None if (i % 28 == 13) else max(2.0, round(base, 1)))
+                classes.append({"class_index": ci, "name": name, "icon": _stub_icon(ci), "values": vals})
+            return self._send_json({
+                "period": period, "bucket_seconds": bucket,
+                "window_start": start, "window_end": end,
+                "buckets": buckets, "classes": classes,
+                "methodology": "stub class series",
+            })
+        if path == "/site/leaderboards/class-activity/current":
+            # Synthetic per-class counts + sum-normalized share for the donut.
+            counts = [max(3, 320 - ci * 15 - (ci % 3) * 8) for ci in range(len(_STUB_CLASSES))]
+            total = sum(counts)
+            classes = [
+                {"class_index": ci, "name": _STUB_CLASSES[ci], "icon": _stub_icon(ci),
+                 "active_players": counts[ci], "share": round(counts[ci] / total, 4)}
+                for ci in range(len(_STUB_CLASSES))
+            ]
+            classes.sort(key=lambda c: -c["active_players"])
+            return self._send_json({
+                "window_start": STUB_ANCHOR - 3600, "window_end": STUB_ANCHOR,
+                "duration_hours": 1.0, "total_active": total, "classes": classes,
+                "methodology": "stub class current", "computed_at": STUB_ANCHOR,
             })
         if path == "/site/leaderboards/cheaters":
             # Three synthetic flagged players spanning the confidence
@@ -284,6 +404,25 @@ class Handler(SimpleHTTPRequestHandler):
                 "total_flagged": 3,
                 "boards_analyzed": 25,
             })
+        if path == "/site/giveaways":
+            import time as _t
+            from datetime import datetime, timezone
+            def _iso(off):
+                return datetime.fromtimestamp(int(_t.time()) + off, tz=timezone.utc).isoformat()
+            return self._send_json({"items": [
+                {"id": "1", "title": "Holiday code drop", "description": "A shiny Trove mount code for one lucky winner.",
+                 "prize_name": "Trove Mount Code", "status": "open",
+                 "starts_at": _iso(-86400), "ends_at": _iso(3 * 86400), "entry_count": 42, "winner_username": None},
+                {"id": "2", "title": "Next week's giveaway", "description": "Coming soon - a mystery Trove prize.",
+                 "prize_name": "Mystery Prize", "status": "scheduled",
+                 "starts_at": _iso(2 * 86400), "ends_at": _iso(5 * 86400), "entry_count": 0, "winner_username": None},
+                {"id": "3", "title": "Last month's draw", "description": "Already drawn + the code is on its way.",
+                 "prize_name": "Glim Pack", "status": "drawn",
+                 "starts_at": _iso(-10 * 86400), "ends_at": _iso(-3 * 86400), "entry_count": 118, "winner_username": "Aallyn"},
+                {"id": "4", "title": "Quiet one", "description": None,
+                 "prize_name": "Costume Code", "status": "closed",
+                 "starts_at": _iso(-20 * 86400), "ends_at": _iso(-15 * 86400), "entry_count": 0, "winner_username": None},
+            ]})
         if path == "/site/leaderboards/timestamps":
             return self._send_json({"items": STUB_TIMESTAMPS, "count": len(STUB_TIMESTAMPS)})
         if path == "/site/leaderboards/boards":

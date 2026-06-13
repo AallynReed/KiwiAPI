@@ -122,3 +122,53 @@ def all_classes() -> dict:
 def class_by_tech_name(tech_name: str) -> dict | None:
     """A single class looked up by its ``tech_name`` token, or None."""
     return _classes_index().get(tech_name)
+
+
+# --- Class ↔ leaderboard-board mapping (for the Class Activity feature) ------
+# The Effort and Paragon leaderboards live in two parallel ID ranges: board
+# ``4000+i`` (Effort) and ``5000+i`` (Paragon) both belong to class index ``i``,
+# matching classes.json source order (alphabetical: 0=Bard … 17=Vanguardian, the
+# order the in-game class list shows). So ``class_index = board_uuid % 1000``.
+# (If the game ever reorders these ranges, the per-class display NAMES would shift
+# - re-verify against the real board names if a class looks mislabelled.)
+_EFFORT_BASE = 4000
+_PARAGON_BASE = 5000
+
+
+@lru_cache(maxsize=1)
+def _classes_ordered() -> list[dict]:
+    return list(_classes_index().values())
+
+
+def class_count() -> int:
+    """Number of known classes (drives the board ranges + chart palette)."""
+    return len(_classes_ordered())
+
+
+def class_name(i: int) -> str:
+    """Display name for class index ``i`` (classes.json order); falls back to a
+    generic label if the index is out of range (e.g. a new class not yet in the
+    static data)."""
+    classes = _classes_ordered()
+    return classes[i]["name"] if 0 <= i < len(classes) else f"Class {i}"
+
+
+def class_index_for_board(uuid: int) -> int:
+    """Class index for an Effort (4000+i) / Paragon (5000+i) board uuid."""
+    return uuid % 1000
+
+
+def class_icon(i: int) -> str | None:
+    """Self-hosted class-icon URL for class index ``i``. The PNGs were downloaded
+    from trovesaurus (``ui_class_<qualified_name>.png``) into
+    ``site/static/class-icons/<qualified_name>.png`` so we serve them ourselves."""
+    classes = _classes_ordered()
+    if 0 <= i < len(classes):
+        return f"/static/class-icons/{classes[i]['tech_name']}.png"
+    return None
+
+
+def class_board_uuids() -> list[int]:
+    """Every Effort + Paragon board uuid for the known classes."""
+    n = class_count()
+    return [_EFFORT_BASE + i for i in range(n)] + [_PARAGON_BASE + i for i in range(n)]

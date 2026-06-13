@@ -9,14 +9,14 @@ from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
 from app.admin.ingest_log import IngestLogEntry
 from app.admin.runtime_config import RuntimeConfig
+from app.giveaways.models import Giveaway, GiveawayEntry, PrizeCode, VaultItem
+from app.bot.models import Club, GuildConfig, TrackedAnnouncement
+from app.supporters.models import Supporter
 from app.tokens.models import ApiToken
 from app.trove.codexes.models import CodexEntry
-from app.trove.leaderboards.models import (
-    Leaderboard,
-    LeaderboardActivityEstimate,
-    LeaderboardEntry,
-    LeaderboardEntryArchive,
-)
+# NOTE: the leaderboards domain (boards/entries/players/activity/cheaters/deltas)
+# lives in PostgreSQL now (app/trove/leaderboards/pg_store.py), NOT Beanie - there
+# are deliberately no leaderboard Documents to register here.
 from app.trove.market.models import MarketInterestItem, MarketListing
 from app.trove.models import (
     BttChangelog,
@@ -47,14 +47,17 @@ DOCUMENT_MODELS = [
     DelveRotation, BttRelease, BttChangelog,
     UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
     CodexEntry,
-    Leaderboard, LeaderboardEntry, LeaderboardEntryArchive,
-    LeaderboardActivityEstimate,
     MarketListing, MarketInterestItem,
     ChaosChestCapture, ChallengeCapture,
     FeedbackEntry,
     TroveStatusEvent,
     RuntimeConfig,
     IngestLogEntry,
+    VaultItem, Giveaway, GiveawayEntry, PrizeCode,
+    Supporter,
+    GuildConfig,
+    TrackedAnnouncement,
+    Club,
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).

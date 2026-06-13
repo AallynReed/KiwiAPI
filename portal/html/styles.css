@@ -119,6 +119,64 @@ a:hover { text-decoration: underline; }
 }
 .nav-tabs button.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
 
+/* --- Sidebar shell (dashboard) ------------------------------------------- */
+/* The signed-in dashboard is a full-height app shell: a fixed topbar with the
+   sidebar + main filling the rest of the viewport via flexbox (no magic
+   topbar-height number), each scrolling on its own. Scoped to body.app-shell
+   so the centered auth view keeps normal page flow. */
+body.app-shell #app { height: 100vh; display: flex; flex-direction: column; }
+.topbar { flex: 0 0 auto; }
+.shell { flex: 1 1 auto; min-height: 0; display: flex; align-items: stretch; }
+.sidebar {
+  width: 230px; flex: 0 0 230px;
+  border-right: 1px solid var(--border);
+  padding: 20px 12px 28px;
+  overflow-y: auto;          /* scrolls inside itself only if the nav is taller than the viewport */
+}
+.sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-group {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--faint); margin: 20px 8px 7px; display: flex; align-items: center; gap: 8px;
+}
+.nav-group:first-child { margin-top: 2px; }
+.nav-group .badge { text-transform: none; letter-spacing: 0; }
+.nav-subgroup {
+  font-size: .76rem; color: var(--faint); margin: 13px 8px 5px;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-subgroup svg { width: 14px; height: 14px; flex: 0 0 14px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 8px 11px; border: 1px solid transparent; border-radius: 8px;
+  background: none; color: var(--muted); font-size: .92rem; cursor: pointer; line-height: 1.2;
+}
+.nav-item:hover { background: var(--panel-2); color: var(--text); }
+.nav-item.active { background: rgba(88,166,255,.12); color: var(--accent); border-color: rgba(88,166,255,.28); }
+.nav-item svg { width: 16px; height: 16px; flex: 0 0 16px; }
+.nav-item.nav-sub { margin-left: 14px; padding: 7px 11px; font-size: .88rem; }
+.main { flex: 1 1 auto; min-width: 0; overflow-y: auto; padding: 26px 30px 80px; }
+.crumb { font-size: .82rem; color: var(--faint); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.crumb .crumb-sep { color: var(--border); }
+.crumb .cur { color: var(--text); }
+
+/* Narrow screens: drop the app shell, let the page scroll normally, and turn
+   the rail into a WRAPPING top strip (every item visible, never a horizontal
+   scroll). 720px keeps real laptops - even scaled ones - on the full sidebar. */
+@media (max-width: 720px) {
+  body.app-shell #app { height: auto; display: block; }
+  .shell { flex-direction: column; }
+  .sidebar {
+    width: auto; flex: 0 0 auto; overflow: visible;
+    border-right: 0; border-bottom: 1px solid var(--border);
+    padding: 10px 12px;
+  }
+  .sidebar nav { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .nav-group, .nav-subgroup { display: none; }
+  .nav-item { width: auto; white-space: nowrap; }
+  .nav-item.nav-sub { margin-left: 0; }
+  .main { overflow: visible; padding: 18px 16px 60px; }
+}
+
 /* Configuration sub-tabs - horizontal chip strip categorizing the
    runtime tunables. Wraps on narrow screens so all categories stay
    reachable without a scroller. */

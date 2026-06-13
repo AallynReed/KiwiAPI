@@ -216,6 +216,7 @@ function resetCaptcha() {
 // --- Auth views ------------------------------------------------------------
 
 function renderAuth(tab = "login") {
+  document.body.classList.remove("app-shell");  // auth view = centered card, normal page flow
   app.innerHTML = `
     <div class="auth-wrap">${themeBtn()}<div class="auth-card">
       <div class="brand"><span class="mark">◆</span> ${esc(state.config?.app_name || "Kiwi API")}</div>
@@ -334,10 +335,52 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "activity", "account", "admin", "config", "ingest"];
+const TABS = ["tokens", "activity", "account", "overview", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "botstats"];
+const MASTER_TABS = new Set(["overview", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "botstats"]);
+
+// Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
+const ICONS = {
+  tokens:       '<circle cx="8" cy="15" r="4"/><path d="M11 12.5 20 3.5M17.5 6l2 2M19.5 4l1.5 1.5"/>',
+  activity:     '<path d="M3 12h4l3 7 4-15 3 8h4"/>',
+  account:      '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>',
+  overview:     '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  events:       '<circle cx="4" cy="6" r="1.3"/><circle cx="4" cy="12" r="1.3"/><circle cx="4" cy="18" r="1.3"/><path d="M9 6h11M9 12h11M9 18h7"/>',
+  users:        '<circle cx="8.5" cy="8" r="3.2"/><path d="M3 19c0-3 2.4-4.7 5.5-4.7S14 16 14 19"/><path d="M15 5.2A3.2 3.2 0 0 1 15 12M16 14.6c2.6.3 4 1.9 4 4.4"/>',
+  config:       '<path d="M4 7h7M17.5 7H20M4 17h7M17.5 17H20"/><circle cx="14" cy="7" r="2.4"/><circle cx="14" cy="17" r="2.4"/>',
+  modules:      '<path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>',
+  leaderboards: '<rect x="3" y="11" width="5" height="9" rx="1"/><rect x="9.5" y="5" width="5" height="15" rx="1"/><rect x="16" y="14" width="5" height="6" rx="1"/>',
+  ingest:       '<path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
+  giveaways:    '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8S11 4 8.5 4a2 2 0 1 0 0 4H12zM12 8s1-4 3.5-4a2 2 0 1 1 0 4H12z"/>',
+  discord:      '<path d="M4 6h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/><circle cx="9.5" cy="11.5" r="1"/><circle cx="14.5" cy="11.5" r="1"/>',
+  supporters:   '<path d="M12 20.3 4.6 12.9a4.4 4.4 0 0 1 6.2-6.2l1.2 1.2 1.2-1.2a4.4 4.4 0 0 1 6.2 6.2L12 20.3Z"/>',
+  botstats:     '<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="14" width="3" height="3"/>',
+};
+function icon(name) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
+}
+
+// Per-tab metadata: sidebar label + breadcrumb group. The Admin-panel block
+// only renders for masters; "Modules" is a labelled subgroup so new per-feature
+// admin pages slot in without touching the shell.
+const TAB_META = {
+  tokens:       { group: "API management", label: "Tokens" },
+  activity:     { group: "API management", label: "Activity" },
+  account:      { group: "API management", label: "Account" },
+  overview:     { group: "Admin panel", label: "Overview" },
+  events:       { group: "Admin panel", label: "Events" },
+  users:        { group: "Admin panel", label: "Users" },
+  config:       { group: "Admin panel", label: "Configuration" },
+  leaderboards: { group: "Admin panel · Modules", label: "Leaderboards" },
+  ingest:       { group: "Admin panel · Modules", label: "Ingest" },
+  giveaways:    { group: "Admin panel · Modules", label: "Giveaways" },
+  discord:      { group: "Admin panel · Modules", label: "Discord" },
+  supporters:   { group: "Admin panel · Modules", label: "Supporters" },
+  botstats:     { group: "Admin panel · Modules", label: "Bot stats" },
+};
 
 function tabFromHash() {
-  const h = location.hash.replace(/^#/, "");
+  let h = location.hash.replace(/^#/, "");
+  if (h === "admin") h = "overview";  // legacy alias - old #admin deep-links
   return TABS.includes(h) ? h : null;
 }
 
@@ -350,13 +393,29 @@ async function loadDashboard() {
 }
 
 function renderDashboard() {
+  document.body.classList.add("app-shell");  // full-height app shell (sidebar + scrolling main)
   const u = state.user;
   const verified = u.is_verified
     ? '<span class="badge ok">verified</span>'
     : '<span class="badge warn">unverified</span>';
   // Non-admins landing on a master-only tab fall back to tokens.
-  if ((state.tab === "admin" || state.tab === "config" || state.tab === "ingest") && !u.is_superuser) state.tab = "tokens";
+  if (MASTER_TABS.has(state.tab) && !u.is_superuser) state.tab = "tokens";
   if (!TABS.includes(state.tab)) state.tab = "tokens";
+
+  const navItem = (tab, sub) =>
+    `<button class="nav-item${sub ? " nav-sub" : ""}" data-tab="${tab}" role="tab">${icon(tab)}<span>${TAB_META[tab].label}</span></button>`;
+  const adminNav = u.is_superuser ? `
+          <p class="nav-group">Admin panel <span class="badge muted">master</span></p>
+          ${navItem("overview")}
+          ${navItem("events")}
+          ${navItem("users")}
+          ${navItem("config")}
+          <p class="nav-subgroup">${icon("modules")}<span>Modules</span></p>
+          ${navItem("leaderboards", true)}
+          ${navItem("ingest", true)}
+          ${navItem("giveaways", true)}
+          ${navItem("discord", true)}
+          ${navItem("supporters", true)}` : "";
 
   app.innerHTML = `
     <div class="topbar">
@@ -365,23 +424,27 @@ function renderDashboard() {
         <a class="portal-support" href="https://trove.aallyn.net/support" target="_blank" rel="noopener" title="Support the project" aria-label="Support">♥</a>
         <button class="btn small" id="logout">Log out</button></div>
     </div>
-    <div class="container">
-      <div class="nav-tabs" role="tablist">
-        <button data-tab="tokens" role="tab">API tokens</button>
-        <button data-tab="activity" role="tab">Activity</button>
-        <button data-tab="account" role="tab">Account</button>
-        ${u.is_superuser ? '<button data-tab="admin" role="tab">Admin</button>' : ""}
-        ${u.is_superuser ? '<button data-tab="config" role="tab">Configuration</button>' : ""}
-        ${u.is_superuser ? '<button data-tab="ingest" role="tab">Ingest</button>' : ""}
-      </div>
-      <div id="tab-body"></div>
+    <div class="shell">
+      <aside class="sidebar">
+        <nav role="tablist">
+          <p class="nav-group">API management</p>
+          ${navItem("tokens")}
+          ${navItem("activity")}
+          ${navItem("account")}
+          ${adminNav}
+        </nav>
+      </aside>
+      <main class="main">
+        <div class="crumb" id="crumb"></div>
+        <div id="tab-body"></div>
+      </main>
     </div>`;
   document.getElementById("logout").addEventListener("click", async () => {
     try { await API.call("/auth/logout", { method: "POST", auth: false, body: { refresh_token: API.refresh } }); } catch (_) {}
     API.clear(); location.hash = ""; renderAuth("login");
   });
-  // Tab clicks navigate via the URL hash, so the back button moves between tabs.
-  app.querySelectorAll(".nav-tabs button").forEach((b) =>
+  // Nav clicks navigate via the URL hash, so the back button moves between tabs.
+  app.querySelectorAll(".nav-item").forEach((b) =>
     b.addEventListener("click", () => {
       if (location.hash.replace(/^#/, "") === b.dataset.tab) selectTab();  // same tab -> just refresh
       else location.hash = b.dataset.tab;
@@ -395,17 +458,31 @@ function renderDashboard() {
 function selectTab() {
   const bodyEl = document.getElementById("tab-body");
   if (!bodyEl) return;  // dashboard not mounted (e.g. logged out)
-  app.querySelectorAll(".nav-tabs button").forEach((b) => {
+  app.querySelectorAll(".nav-item").forEach((b) => {
     const on = b.dataset.tab === state.tab;
     b.classList.toggle("active", on);
     b.setAttribute("aria-selected", on ? "true" : "false");
   });
+  const meta = TAB_META[state.tab];
+  const crumb = document.getElementById("crumb");
+  if (crumb && meta) {
+    crumb.innerHTML =
+      `<span>${esc(meta.group)}</span><span class="crumb-sep">›</span><span class="cur">${esc(meta.label)}</span>`;
+  }
   if (state.tab === "tokens") renderTokens();
   else if (state.tab === "activity") renderActivity();
-  else if (state.tab === "admin") renderAdmin();
+  else if (state.tab === "account") renderAccount();
+  else if (state.tab === "overview") renderOverview();
+  else if (state.tab === "events") renderEvents();
+  else if (state.tab === "users") renderUsers();
   else if (state.tab === "config") renderConfigTab();
+  else if (state.tab === "leaderboards") renderLeaderboards();
   else if (state.tab === "ingest") renderIngest();
-  else renderAccount();
+  else if (state.tab === "giveaways") renderGiveaways();
+  else if (state.tab === "discord") renderDiscord();
+  else if (state.tab === "supporters") renderSupporters();
+  else if (state.tab === "botstats") renderBotStats();
+  else renderTokens();
 }
 
 // Browser back/forward (and manual hash edits) switch tabs when logged in.
@@ -967,18 +1044,41 @@ const adminScope = (t) => t.scopes === 0
   ? '<span class="badge ok">all</span>'
   : (t.scope_names.length ? t.scope_names.map((s) => `<code>${esc(s)}</code>`).join(" ") : `<code>${t.scopes}</code>`);
 
-async function renderAdmin(days = 30) {
+// Admin · Overview - at-a-glance KPIs for the selected window.
+async function renderOverview(days = 30) {
   const body = document.getElementById("tab-body");
-  body.innerHTML = `<div class="loading">Loading admin…</div>`;
-  let overview, users;
-  try {
-    [overview, users] = await Promise.all([
-      API.call(`/admin/activity?days=${days}`),
-      API.call(`/admin/users?days=${days}`),
-    ]);
-  } catch (ex) { body.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+  body.innerHTML = `<div class="loading">Loading overview…</div>`;
+  let overview;
+  try { overview = await API.call(`/admin/activity?days=${days}`); }
+  catch (ex) { body.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
 
-  const emailById = Object.fromEntries(users.map((u) => [u.id, u.email]));
+  body.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Overview - last ${days} days</h2>
+        <select id="ov-days" style="max-width:140px;flex:0 0 auto">
+          <option value="1">24 hours</option><option value="7">7 days</option>
+          <option value="30">30 days</option><option value="90">90 days</option>
+        </select>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="n">${overview.total_requests}</div><div class="l">Requests</div></div>
+        <div class="stat"><div class="n">${overview.error_count}</div><div class="l">Errors</div></div>
+        <div class="stat"><div class="n">${overview.rate_limited}</div><div class="l">Rate-limit hits</div></div>
+      </div>
+    </div>`;
+  const sel = document.getElementById("ov-days"); sel.value = String(days);
+  sel.addEventListener("change", () => renderOverview(Number(sel.value)));
+}
+
+// Admin · Users - searchable roster; click a row to drill into one account.
+async function renderUsers(days = 30) {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `<div class="loading">Loading users…</div>`;
+  let users;
+  try { users = await API.call(`/admin/users?days=${days}`); }
+  catch (ex) { body.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+
   const uRow = (u) => `
     <tr class="clickable" data-user="${u.id}">
       <td>${esc(u.email)}
@@ -993,69 +1093,23 @@ async function renderAdmin(days = 30) {
   body.innerHTML = `
     <div class="card">
       <div class="row" style="align-items:center;margin-bottom:6px">
-        <h2 style="flex:1;margin:0">Overview - last ${days} days</h2>
-        <select id="admin-days" style="max-width:140px;flex:0 0 auto">
+        <h2 style="flex:1;margin:0">Users (${users.length})</h2>
+        <input id="user-search" placeholder="Search email…" style="max-width:220px;flex:0 0 auto">
+        <select id="users-days" style="max-width:130px;flex:0 0 auto">
           <option value="1">24 hours</option><option value="7">7 days</option>
           <option value="30">30 days</option><option value="90">90 days</option>
         </select>
       </div>
-      <div class="stat-grid">
-        <div class="stat"><div class="n">${overview.total_requests}</div><div class="l">Requests</div></div>
-        <div class="stat"><div class="n">${overview.error_count}</div><div class="l">Errors</div></div>
-        <div class="stat"><div class="n">${overview.rate_limited}</div><div class="l">Rate-limit hits</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="row" style="align-items:center;margin-bottom:6px">
-        <h2 style="flex:1;margin:0">Users (${users.length})</h2>
-        <input id="user-search" placeholder="Search email…" style="max-width:220px;flex:0 0 auto">
-      </div>
-      <p class="hint">Click a user to see their tokens and activity.</p>
+      <p class="hint">Click a user to see their tokens and activity. Request / rate-limit counts are over the selected window.</p>
       <table>
         <thead><tr><th>User</th><th>Tokens</th><th>Requests</th><th>RL hits</th><th>Last used</th></tr></thead>
         <tbody id="user-rows"></tbody>
       </table>
-    </div>
-    <div class="card">
-      <div class="row" style="align-items:center;margin-bottom:6px">
-        <h2 style="flex:1;margin:0">Recent events</h2>
-        <select id="ev-status" style="max-width:170px;flex:0 0 auto">
-          <option value="">All statuses</option>
-          <option value="429">429 - rate-limited</option>
-          <option value="401">401</option><option value="403">403</option><option value="500">500</option>
-        </select>
-      </div>
-      <table>
-        <thead><tr><th>When</th><th>User</th><th>Method</th><th>Route</th><th>Status</th></tr></thead>
-        <tbody id="ev-rows"></tbody>
-      </table>
-      <button class="btn small" id="ev-more" style="margin-top:12px;display:none">Load more</button>
-    </div>
-    <div class="card">
-      <div class="row" style="align-items:center;margin-bottom:6px">
-        <h2 style="flex:1;margin:0">Leaderboard reset cadences <span id="lb-board-count" class="badge muted" style="font-size:.62em;vertical-align:middle;font-weight:normal"></span></h2>
-        <input id="lb-board-search" placeholder="Search board…" style="max-width:240px;flex:0 0 auto">
-      </div>
-      <p class="hint">
-        Master-only. Override how a board's reset cadence is treated by
-        cheater detection. <code>none</code> = the board never resets
-        (lifetime accumulating stat); detection on these boards skips
-        score-outlier + rank-gap and uses ONLY velocity.
-        <code>auto</code> falls back to the hardcoded mapping in
-        <code>models.py</code>. Changes apply within a few seconds -
-        the cheaters cache is invalidated + the warmer is kicked.
-      </p>
-      <div id="lb-boards-rows"><div class="loading">Loading boards…</div></div>
     </div>`;
 
-  const sel = document.getElementById("admin-days"); sel.value = String(days);
-  sel.addEventListener("change", () => renderAdmin(Number(sel.value)));
-  // Leaderboards table lives at the bottom of the admin tab; we render
-  // it after the rest is wired up so a slow boards query doesn't block
-  // first paint of the users / events sections above.
-  renderLeaderboardsBoardsTable();
+  const daysSel = document.getElementById("users-days"); daysSel.value = String(days);
+  daysSel.addEventListener("change", () => renderUsers(Number(daysSel.value)));
 
-  // Users: client-side email search + row click-through.
   const userRowsEl = document.getElementById("user-rows");
   const paintUsers = (q) => {
     const list = q ? users.filter((u) => u.email.toLowerCase().includes(q)) : users;
@@ -1068,8 +1122,36 @@ async function renderAdmin(days = 30) {
   paintUsers("");
   document.getElementById("user-search").addEventListener("input", (e) =>
     paintUsers(e.target.value.trim().toLowerCase()));
+}
 
-  // Events feed: cursor-paginated, optional status filter.
+// Admin · Events - cursor-paginated audit log across all users.
+async function renderEvents() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `<div class="loading">Loading events…</div>`;
+  let users;
+  // Fetch the roster once for the user_id -> email lookup the rows display.
+  try { users = await API.call(`/admin/users?days=90`); }
+  catch (ex) { body.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+  const emailById = Object.fromEntries(users.map((u) => [u.id, u.email]));
+
+  body.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Recent events</h2>
+        <select id="ev-status" style="max-width:170px;flex:0 0 auto">
+          <option value="">All statuses</option>
+          <option value="429">429 - rate-limited</option>
+          <option value="401">401</option><option value="403">403</option><option value="500">500</option>
+        </select>
+      </div>
+      <p class="hint">Audit log of recent API requests across all users. Filter by status; page with "Load more".</p>
+      <table>
+        <thead><tr><th>When</th><th>User</th><th>Method</th><th>Route</th><th>Status</th></tr></thead>
+        <tbody id="ev-rows"></tbody>
+      </table>
+      <button class="btn small" id="ev-more" style="margin-top:12px;display:none">Load more</button>
+    </div>`;
+
   const evRowsEl = document.getElementById("ev-rows");
   const evMore = document.getElementById("ev-more");
   const evStatus = document.getElementById("ev-status");
@@ -1101,6 +1183,358 @@ async function renderAdmin(days = 30) {
   evMore.addEventListener("click", () => loadEvents(false));
   evStatus.addEventListener("change", () => loadEvents(true));
   loadEvents(true);
+}
+
+// Admin · Modules · Leaderboards - reset-cadence overrides per board.
+async function renderLeaderboards() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Leaderboard reset cadences <span id="lb-board-count" class="badge muted" style="font-size:.62em;vertical-align:middle;font-weight:normal"></span></h2>
+        <input id="lb-board-search" placeholder="Search board…" style="max-width:240px;flex:0 0 auto">
+      </div>
+      <p class="hint">
+        Master-only. Override how a board's reset cadence is treated by
+        cheater detection. <code>none</code> = the board never resets
+        (lifetime accumulating stat); detection on these boards skips
+        score-outlier + rank-gap and uses ONLY velocity.
+        <code>auto</code> falls back to the hardcoded mapping in
+        <code>models.py</code>. Changes apply within a few seconds -
+        the cheaters cache is invalidated + the warmer is kicked.
+      </p>
+      <div id="lb-boards-rows"><div class="loading">Loading boards…</div></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px">Player &amp; Class activity data</h2>
+      <p class="hint" style="margin:0 0 14px">
+        The <a href="https://trove.aallyn.net/activity" target="_blank" rel="noopener">Player Activity</a>
+        and <a href="https://trove.aallyn.net/class-activity" target="_blank" rel="noopener">Class Activity</a>
+        charts read derived "active players per capture" histories rebuilt from the stored leaderboard
+        captures. These buttons recompute <strong>both</strong>. <strong>Reset &amp; recalculate</strong> wipes
+        the histories and recomputes from scratch with the current logic - use it to flush bad values from
+        earlier runs. <strong>Rebuild</strong> keeps existing rows and just (re)computes the range. Both run in
+        the background (a few minutes); the charts read empty/partial until it lands. Nothing irreplaceable is
+        lost - it's all derived from the captures.
+      </p>
+      <div class="row" style="align-items:flex-end;gap:12px;flex-wrap:wrap">
+        <label style="flex:0 0 auto">
+          <span class="muted" style="font-size:.78rem;display:block;margin-bottom:4px">Days back to recompute (0 = all history)</span>
+          <input type="number" id="act-bf-days" value="0" min="0" max="1000" style="width:140px">
+        </label>
+        <button class="btn small" id="act-bf-rebuild" type="button">Rebuild (keep existing)</button>
+        <button class="btn small danger" id="act-bf-reset" type="button">Reset &amp; recalculate</button>
+      </div>
+      <p class="hint" id="act-bf-result" style="margin:12px 0 0"></p>
+    </div>`;
+  renderLeaderboardsBoardsTable();
+  wireActivityBackfillCard();
+}
+
+// ── Admin · Modules · Leaderboards · activity-history rebuild ───────────────
+// Both buttons POST the master /v1/activity/backfill endpoint (session JWT is
+// accepted by require_master_ingest). `reset` wipes + recomputes; plain rebuild
+// just forces a recompute of the range. The work runs in the background, so the
+// response is a 202 ack - we surface its message and point at the logs.
+function wireActivityBackfillCard() {
+  const daysEl = document.getElementById("act-bf-days");
+  const resultEl = document.getElementById("act-bf-result");
+  if (!daysEl) return;
+  // 0 = ALL stored history (no lower bound); else clamp to [1, 1000] days.
+  const days = () => {
+    const v = parseInt(daysEl.value, 10);
+    if (!Number.isFinite(v) || v <= 0) return 0;
+    return Math.min(1000, v);
+  };
+  const rangeLabel = () => (days() === 0 ? "the entire stored history" : `the last <strong>${days()} days</strong>`);
+
+  async function backfill(reset) {
+    const qs = `total_days=${days()}` + (reset ? "&reset=true" : "&force=true");
+    // Recompute BOTH the player-activity and the per-class-activity histories
+    // (same captures + params) so one action fills both charts. Throws on !ok.
+    const [r] = await Promise.all([
+      API.call(`/v1/activity/backfill?${qs}`, { method: "POST" }),
+      API.call(`/v1/class-activity/backfill?${qs}`, { method: "POST" }),
+    ]);
+    return r;
+  }
+
+  document.getElementById("act-bf-rebuild").addEventListener("click", async () => {
+    try {
+      const r = await backfill(false);
+      resultEl.textContent = r.message || "Rebuild started in the background.";
+      toast("Activity rebuild started", "ok");
+    } catch (ex) { toast(ex.message || "Failed to start rebuild", "err"); }
+  });
+
+  document.getElementById("act-bf-reset").addEventListener("click", () => {
+    modal(
+      "Reset activity data?",
+      `<p>This <strong>deletes</strong> the stored player- and class-activity histories and recomputes ${rangeLabel()}
+       from the leaderboard captures. The
+       <code>/activity</code> and <code>/class-activity</code> charts read empty until the background rebuild finishes (a few minutes).</p>
+       <p class="hint">The data is fully derived from the captures, so nothing irreplaceable is lost.</p>`,
+      async () => {
+        const r = await backfill(true);   // throws -> modal shows the error, stays open
+        resultEl.textContent = r.message || "Reset + rebuild started in the background.";
+        toast("Activity reset + rebuild started", "ok");
+      },
+      "Reset & recalculate",
+    );
+  });
+}
+
+// ─── Admin · Modules · Giveaways ────────────────────────────────────────────
+// Two sub-tabs: "Giveaways" (create with date pickers + manage / draw / cancel)
+// and "Vault" (the prize-code pool). Backed by /admin/giveaways/* + /admin/vault/*.
+
+const GW_SUBTAB_KEY = "kiwi_gw_subtab";
+const GW_STATUS_BADGE = {
+  scheduled: '<span class="badge muted">scheduled</span>',
+  open:      '<span class="badge ok">open</span>',
+  drawn:     '<span class="badge ok">drawn</span>',
+  closed:    '<span class="badge warn">closed</span>',
+  cancelled: '<span class="badge off">cancelled</span>',
+};
+const CODE_STATUS_BADGE = {
+  available: '<span class="badge ok">available</span>',
+  reserved:  '<span class="badge warn">reserved</span>',
+  awarded:   '<span class="badge muted">awarded</span>',
+};
+
+// datetime-local <-> UTC ISO. The input is naive local time; toISOString() gives
+// UTC for the API, and we convert back to local to pre-fill the edit form.
+function toLocalInput(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function fromLocalInput(v) {
+  return v ? new Date(v).toISOString() : null;
+}
+
+async function renderGiveaways() {
+  const body = document.getElementById("tab-body");
+  const sub = localStorage.getItem(GW_SUBTAB_KEY) === "vault" ? "vault" : "giveaways";
+  body.innerHTML = `
+    <div class="config-subtabs">
+      <button class="config-subtab ${sub === "giveaways" ? "active" : ""}" data-gsub="giveaways">Giveaways</button>
+      <button class="config-subtab ${sub === "vault" ? "active" : ""}" data-gsub="vault">Vault</button>
+    </div>
+    <div id="gw-pane"><div class="loading">Loading…</div></div>`;
+  body.querySelectorAll("[data-gsub]").forEach((b) =>
+    b.addEventListener("click", () => { localStorage.setItem(GW_SUBTAB_KEY, b.dataset.gsub); renderGiveaways(); }));
+  if (sub === "vault") renderVaultPane();
+  else renderGiveawaysPane();
+}
+
+async function renderGiveawaysPane() {
+  const pane = document.getElementById("gw-pane");
+  let items;
+  try { items = await API.call("/admin/giveaways"); }
+  catch (ex) { pane.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+
+  const row = (g) => `
+    <tr>
+      <td>${esc(g.title)}<div class="muted" style="font-size:.82rem">${esc(g.prize_name)}</div></td>
+      <td>${GW_STATUS_BADGE[g.status] || esc(g.status)}</td>
+      <td class="muted" style="font-size:.84rem;white-space:nowrap">${fmt(g.starts_at)} →<br>${fmt(g.ends_at)}</td>
+      <td>${g.entry_count}</td>
+      <td>${g.winner_username ? esc(g.winner_username) : '<span class="muted">-</span>'}</td>
+      <td style="white-space:nowrap">${(g.status === "open" || g.status === "scheduled") ? `
+        <button class="btn small" data-edit="${g.id}">Edit</button>
+        <button class="btn small" data-draw="${g.id}">Draw</button>
+        <button class="btn small danger" data-cancel="${g.id}">Cancel</button>` : ""}</td>
+    </tr>`;
+
+  pane.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Giveaways (${items.length})</h2>
+        <button class="btn primary small" id="gw-new">+ New giveaway</button>
+      </div>
+      <p class="hint">Scheduled giveaways open + auto-draw on their dates (checked every minute). "Draw" forces an immediate draw; the winner is emailed their code automatically.</p>
+      ${items.length ? `<table>
+        <thead><tr><th>Giveaway</th><th>Status</th><th>Window</th><th>Entries</th><th>Winner</th><th></th></tr></thead>
+        <tbody>${items.map(row).join("")}</tbody>
+      </table>` : `<p class="muted">No giveaways yet. Add a prize code to the Vault, then create one.</p>`}
+    </div>`;
+
+  document.getElementById("gw-new").addEventListener("click", () => openGiveawayForm(null));
+  pane.querySelectorAll("[data-edit]").forEach((b) =>
+    b.addEventListener("click", () => openGiveawayForm(items.find((g) => g.id === b.dataset.edit))));
+  pane.querySelectorAll("[data-draw]").forEach((b) =>
+    b.addEventListener("click", () => confirmGiveawayAction(b.dataset.draw, "draw")));
+  pane.querySelectorAll("[data-cancel]").forEach((b) =>
+    b.addEventListener("click", () => confirmGiveawayAction(b.dataset.cancel, "cancel")));
+}
+
+async function openGiveawayForm(existing) {
+  let items;
+  try { items = await API.call("/admin/vault/items"); }
+  catch (ex) { toast(ex.message, "err"); return; }
+  // Drawers with an available code, plus this giveaway's current drawer (edit).
+  const selectable = items.filter((it) => it.available > 0 || (existing && it.id === existing.vault_item_id));
+  if (!selectable.length) {
+    toast("Add a drawer with codes to the Vault first.", "err");
+    localStorage.setItem(GW_SUBTAB_KEY, "vault"); renderGiveaways();
+    return;
+  }
+  const opts = selectable.map((it) =>
+    `<option value="${it.id}" ${existing && it.id === existing.vault_item_id ? "selected" : ""}>${esc(it.name)} (${it.available} available)</option>`).join("");
+
+  modal(existing ? "Edit giveaway" : "New giveaway", `
+    <label>Title <span class="muted">(the event, e.g. "Weekend Giveaway")</span></label>
+    <input id="gw-title" value="${existing ? esc(existing.title) : ""}" maxlength="160">
+    <label>Prize drawer <span class="muted">(one available code is reserved)</span></label>
+    <select id="gw-item">${opts}</select>
+    <label>Description <span class="muted">(optional - defaults to the drawer's)</span></label>
+    <textarea id="gw-desc" rows="3">${existing ? esc(existing.description || "") : ""}</textarea>
+    <div class="row" style="gap:12px">
+      <div style="flex:1"><label>Starts</label><input type="datetime-local" id="gw-start" style="width:100%" value="${existing ? toLocalInput(existing.starts_at) : ""}"></div>
+      <div style="flex:1"><label>Ends</label><input type="datetime-local" id="gw-end" style="width:100%" value="${existing ? toLocalInput(existing.ends_at) : ""}"></div>
+    </div>
+  `, async () => {
+    const body = {
+      title: document.getElementById("gw-title").value.trim(),
+      vault_item_id: document.getElementById("gw-item").value,
+      description: document.getElementById("gw-desc").value.trim() || null,
+      starts_at: fromLocalInput(document.getElementById("gw-start").value),
+      ends_at: fromLocalInput(document.getElementById("gw-end").value),
+    };
+    if (!body.title) throw new Error("Title is required.");
+    if (!body.starts_at || !body.ends_at) throw new Error("Start and end dates are required.");
+    if (existing) await API.call(`/admin/giveaways/${existing.id}`, { method: "PATCH", body });
+    else await API.call("/admin/giveaways", { method: "POST", body });
+    toast(existing ? "Giveaway updated." : "Giveaway created.", "ok");
+    renderGiveawaysPane();
+  }, existing ? "Save" : "Create");
+}
+
+function confirmGiveawayAction(id, action) {
+  const draw = action === "draw";
+  modal(draw ? "Draw the winner now?" : "Cancel this giveaway?",
+    `<p>${draw
+      ? "A random entrant is picked immediately and emailed the code. This can't be undone."
+      : "The giveaway is cancelled and its prize code returned to the vault."}</p>`,
+    async () => {
+      await API.call(`/admin/giveaways/${id}/${action}`, { method: "POST" });
+      toast(draw ? "Winner drawn + emailed." : "Giveaway cancelled.", "ok");
+      renderGiveawaysPane();
+    }, draw ? "Draw now" : "Cancel giveaway");
+}
+
+async function renderVaultPane() {
+  const pane = document.getElementById("gw-pane");
+  let items;
+  try { items = await API.call("/admin/vault/items"); }
+  catch (ex) { pane.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+
+  const drawer = (it) => `
+    <div class="card" data-drawer="${it.id}" style="margin-bottom:12px">
+      <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px">
+          <h3 style="margin:0">${esc(it.name)}</h3>
+          ${it.description ? `<div class="muted" style="font-size:.85rem">${esc(it.description)}</div>` : ""}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span class="badge ok">${it.available} available</span>
+          ${it.reserved ? `<span class="badge warn">${it.reserved} reserved</span>` : ""}
+          ${it.awarded ? `<span class="badge muted">${it.awarded} awarded</span>` : ""}
+          <button class="btn small primary" data-addcodes="${it.id}">+ Codes</button>
+          <button class="btn small" data-toggle="${it.id}">View codes</button>
+          <button class="btn small" data-editdrawer="${it.id}">Edit</button>
+          <button class="btn small danger" data-deldrawer="${it.id}">Delete</button>
+        </div>
+      </div>
+      <div id="codes-${it.id}" hidden></div>
+    </div>`;
+
+  pane.innerHTML = `
+    <div class="row" style="align-items:center;margin-bottom:10px">
+      <h2 style="flex:1;margin:0">Vault (${items.length} drawer${items.length === 1 ? "" : "s"})</h2>
+      <button class="btn primary small" id="drawer-new">+ New drawer</button>
+    </div>
+    <p class="hint">A drawer is a named prize (e.g. "Trove Radiant Mount"). Write the name + description <b>once</b>, then bulk-add codes to it - one per line. A giveaway draws one available code from a drawer.</p>
+    ${items.length ? items.map(drawer).join("") : `<p class="muted">No drawers yet. Create one, then add codes to it.</p>`}`;
+
+  document.getElementById("drawer-new").addEventListener("click", () => openDrawerForm(null));
+  pane.querySelectorAll("[data-editdrawer]").forEach((b) =>
+    b.addEventListener("click", () => openDrawerForm(items.find((i) => i.id === b.dataset.editdrawer))));
+  pane.querySelectorAll("[data-addcodes]").forEach((b) =>
+    b.addEventListener("click", () => openAddCodes(b.dataset.addcodes)));
+  pane.querySelectorAll("[data-deldrawer]").forEach((b) =>
+    b.addEventListener("click", () => modal("Delete drawer?",
+      "<p>Deletes the drawer and its unused codes. Drawers with reserved/awarded codes can't be deleted.</p>",
+      async () => {
+        await API.call(`/admin/vault/items/${b.dataset.deldrawer}`, { method: "DELETE" });
+        toast("Drawer deleted.", "ok"); renderVaultPane();
+      }, "Delete")));
+  pane.querySelectorAll("[data-toggle]").forEach((b) =>
+    b.addEventListener("click", () => toggleCodes(b.dataset.toggle, b)));
+}
+
+async function toggleCodes(itemId, btn) {
+  const host = document.getElementById("codes-" + itemId);
+  if (!host.hidden) { host.hidden = true; btn.textContent = "View codes"; return; }
+  host.hidden = false; btn.textContent = "Hide codes";
+  host.innerHTML = `<p class="muted" style="margin:10px 0 0">Loading…</p>`;
+  let codes;
+  try { codes = await API.call(`/admin/vault/items/${itemId}/codes`); }
+  catch (ex) { host.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+  if (!codes.length) { host.innerHTML = `<p class="muted" style="margin:10px 0 0">No codes in this drawer yet.</p>`; return; }
+  host.innerHTML = `
+    <table style="margin-top:12px">
+      <thead><tr><th>Code</th><th>Status</th><th>Awarded to</th><th></th></tr></thead>
+      <tbody>${codes.map((c) => `
+        <tr>
+          <td class="mono" style="word-break:break-all">${esc(c.code)}</td>
+          <td>${CODE_STATUS_BADGE[c.status] || esc(c.status)}</td>
+          <td class="muted" style="font-size:.84rem">${c.awarded_to_email ? esc(c.awarded_to_email) : "-"}</td>
+          <td>${c.status === "available" ? `<button class="btn small danger" data-delcode="${c.id}">Delete</button>` : ""}</td>
+        </tr>`).join("")}</tbody>
+    </table>`;
+  host.querySelectorAll("[data-delcode]").forEach((b) =>
+    b.addEventListener("click", () => modal("Delete code?",
+      "<p>Remove this code from the drawer.</p>",
+      async () => {
+        await API.call(`/admin/vault/codes/${b.dataset.delcode}`, { method: "DELETE" });
+        toast("Code deleted.", "ok"); renderVaultPane();
+      }, "Delete")));
+}
+
+function openDrawerForm(existing) {
+  modal(existing ? "Edit drawer" : "New drawer", `
+    <label>Name <span class="muted">(the prize, e.g. "Trove Radiant Mount")</span></label>
+    <input id="dr-name" value="${existing ? esc(existing.name) : ""}" maxlength="120">
+    <label>Description <span class="muted">(optional - shown to entrants + in the win email)</span></label>
+    <textarea id="dr-desc" rows="3">${existing ? esc(existing.description || "") : ""}</textarea>
+  `, async () => {
+    const body = {
+      name: document.getElementById("dr-name").value.trim(),
+      description: document.getElementById("dr-desc").value.trim() || null,
+    };
+    if (!body.name) throw new Error("Name is required.");
+    if (existing) await API.call(`/admin/vault/items/${existing.id}`, { method: "PATCH", body });
+    else await API.call("/admin/vault/items", { method: "POST", body });
+    toast(existing ? "Drawer updated." : "Drawer created.", "ok");
+    renderVaultPane();
+  }, existing ? "Save" : "Create");
+}
+
+function openAddCodes(itemId) {
+  modal("Add codes", `
+    <label>Codes <span class="muted">(one per line - paste as many as you like)</span></label>
+    <textarea id="ac-codes" rows="10" class="mono" placeholder="ABCD-1234-EFGH\nWXYZ-5678-IJKL\n…"></textarea>
+  `, async () => {
+    const codes = document.getElementById("ac-codes").value.split(/\r?\n/);
+    if (!codes.some((c) => c.trim())) throw new Error("Paste at least one code.");
+    const r = await API.call(`/admin/vault/items/${itemId}/codes`, { method: "POST", body: { codes } });
+    toast(`Added ${r.added} code${r.added === 1 ? "" : "s"}${r.skipped ? ` (${r.skipped} duplicate/blank skipped)` : ""}.`, "ok");
+    renderVaultPane();
+  }, "Add codes");
 }
 
 
@@ -1506,7 +1940,7 @@ async function renderAdminUser(userId, days = 30) {
       </table>
     </div>`;
 
-  document.getElementById("admin-back").addEventListener("click", () => renderAdmin());
+  document.getElementById("admin-back").addEventListener("click", () => renderUsers());
   document.getElementById("revoke-all").addEventListener("click", async () => {
     if (!confirm(`Revoke ALL active tokens for ${user.email}?`)) return;
     try {
@@ -1568,6 +2002,269 @@ const INGEST_KINDS = [
   },
 ];
 
+// --- Discord (master) ------------------------------------------------------
+// Slash commands are defined server-side (app/discord/commands.py) but Discord
+// only learns them via a PUT. This tab previews the local set and pushes it on
+// demand so there's no CLI step. Master-only (router-level superuser dep).
+async function renderDiscord() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <h2 style="margin:0 0 6px">Discord commands</h2>
+      <p class="hint" style="margin:0">
+        Slash commands are defined in the API code, but Discord only learns about
+        them when you push them here - editing a command and redeploying does
+        nothing on its own. Global pushes can take up to ~1 hour to appear in
+        clients; a guild push is instant (handy while testing).
+      </p>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Defined commands</h2>
+        <button type="button" class="btn small" data-act="refresh">Refresh</button>
+      </div>
+      <div id="discord-cmd-list"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
+      <h2 style="margin:0 0 6px">Push to Discord</h2>
+      <p class="hint" style="margin:0 0 14px">
+        Bulk-overwrites the app's registered slash commands with the set above,
+        using the configured bot token. Leave the guild id blank to push globally.
+      </p>
+      <div class="row" style="align-items:center">
+        <input type="text" id="discord-guild" placeholder="Guild id (optional · instant push)">
+        <button class="btn primary" data-act="push">Push to Discord</button>
+        <button class="btn" data-act="clear-guild">Clear guild commands</button>
+      </div>
+      <p class="hint" style="margin:10px 0 0">
+        Seeing each command <strong>twice</strong> in one server? That's a leftover
+        per-guild test push on top of the global commands. Put that server's id above
+        and click <strong>Clear guild commands</strong> - the global set then shows alone.
+      </p>
+      <div id="discord-push-result" class="ingest-result"></div>
+    </div>`;
+
+  const listEl = document.getElementById("discord-cmd-list");
+  async function loadCommands() {
+    listEl.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const data = await API.call("/admin/discord/commands");
+      listEl.innerHTML = data.count
+        ? data.commands.map((c) =>
+            `<div class="row" style="align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+               <code style="flex:0 0 auto">/${esc(c.name)}</code>
+               <span class="muted" style="flex:1">${esc(c.description || "")}</span>
+             </div>`).join("")
+        : `<p class="muted" style="margin:0">No commands defined.</p>`;
+    } catch (ex) {
+      listEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    }
+  }
+  body.querySelector('[data-act="refresh"]').addEventListener("click", loadCommands);
+  loadCommands();
+
+  const result = document.getElementById("discord-push-result");
+  body.querySelector('[data-act="push"]').addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const guild = document.getElementById("discord-guild").value.trim();
+    btn.disabled = true;
+    result.className = "ingest-result";
+    result.textContent = "Pushing…";
+    try {
+      const qs = guild ? `?guild_id=${encodeURIComponent(guild)}` : "";
+      const data = await API.call("/admin/discord/register-commands" + qs, { method: "POST" });
+      const where = data.scope === "guild" ? `to guild ${data.guild_id}` : "globally";
+      const note = data.scope === "global" ? " It can take up to ~1h to appear in clients." : "";
+      result.className = "ingest-result ok";
+      result.textContent = `Pushed ${data.count} command(s) ${where}.${note}`;
+      toast(`Pushed ${data.count} command(s) to Discord`, "ok");
+      loadCommands();
+    } catch (ex) {
+      result.className = "ingest-result err";
+      result.textContent = ex.message;
+      toast("Discord push failed", "err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  body.querySelector('[data-act="clear-guild"]').addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const guild = document.getElementById("discord-guild").value.trim();
+    if (!guild) {
+      result.className = "ingest-result err";
+      result.textContent = "Enter the guild id to clear its commands.";
+      return;
+    }
+    btn.disabled = true;
+    result.className = "ingest-result";
+    result.textContent = "Clearing…";
+    try {
+      const qs = `?guild_id=${encodeURIComponent(guild)}`;
+      await API.call("/admin/discord/clear-guild-commands" + qs, { method: "POST" });
+      result.className = "ingest-result ok";
+      result.textContent = `Cleared guild-scoped commands for ${guild}. The global commands remain.`;
+      toast("Cleared guild commands", "ok");
+    } catch (ex) {
+      result.className = "ingest-result err";
+      result.textContent = ex.message;
+      toast("Clear failed", "err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+// --- Bot stats (master) ----------------------------------------------------
+// Read-only view of the gateway bot's reach (servers + users it can see) and
+// slash-command usage. Written by the bot (presence) + the interactions endpoint
+// (per-command counts); served by GET /admin/bot/stats.
+function _statBlock(label, value) {
+  return `<div style="min-width:120px">
+      <div style="font-size:30px;font-weight:700;line-height:1.1">${value}</div>
+      <div class="muted" style="font-size:12px;margin-top:2px">${esc(label)}</div>
+    </div>`;
+}
+
+async function renderBotStats() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <h2 style="margin:0 0 6px">Bot statistics</h2>
+      <p class="hint" style="margin:0 0 12px">
+        Live reach of the Kiwi gateway bot and how often each slash command runs.
+        Presence is refreshed by the bot each minute; command counts persist in the database.
+      </p>
+      <button class="btn" data-act="refresh">Refresh</button>
+    </div>
+    <div id="botstats-body"><div class="loading">Loading…</div></div>`;
+
+  const el = document.getElementById("botstats-body");
+  const fmt = (n) => (typeof n === "number" ? n.toLocaleString() : "—");
+
+  async function load() {
+    el.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const data = await API.call("/admin/bot/stats");
+      const when = data.updated_at ? new Date(data.updated_at).toLocaleString() : "never";
+      const rows = (data.commands || []).length
+        ? data.commands.map((c) =>
+            `<div class="row" style="align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+               <code style="flex:0 0 auto">/${esc(c.name)}</code>
+               <span style="flex:1"></span>
+               <strong>${fmt(c.count)}</strong>
+             </div>`).join("")
+        : `<p class="muted" style="margin:0">No commands used yet.</p>`;
+      el.innerHTML = `
+        <div class="card">
+          <div class="row" style="gap:32px;flex-wrap:wrap">
+            ${_statBlock("Servers", fmt(data.guild_count))}
+            ${_statBlock("Users it can see", fmt(data.member_count))}
+            ${_statBlock("Commands used", fmt(data.total_commands))}
+          </div>
+          <p class="hint" style="margin:14px 0 0">Presence updated: ${esc(when)}</p>
+        </div>
+        <div class="card">
+          <h2 style="margin:0 0 10px">Command usage</h2>
+          ${rows}
+        </div>`;
+    } catch (ex) {
+      el.innerHTML = `<div class="card"><p class="err-text">${esc(ex.message)}</p></div>`;
+    }
+  }
+  body.querySelector('[data-act="refresh"]').addEventListener("click", load);
+  load();
+}
+
+
+// --- Supporters (master) ---------------------------------------------------
+// CRUD over the public credits list shown on /support and exposed tokenless at
+// /v1/misc/supporters. Master-only (router-level superuser dep).
+async function renderSupporters() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <h2 style="margin:0 0 6px">Supporters</h2>
+      <p class="hint" style="margin:0">
+        The credits list shown on
+        <a href="https://trove.aallyn.net/support" target="_blank" rel="noopener">trove.aallyn.net/support</a>
+        and exposed tokenless at <code>/v1/misc/supporters</code>. Names appear in the order you add them.
+      </p>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center">
+        <input type="text" id="supporter-name" placeholder="Supporter name" autocomplete="off" spellcheck="false">
+        <button class="btn primary" data-act="add">Add</button>
+      </div>
+      <div id="supporter-result" class="ingest-result"></div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Current list</h2>
+        <button type="button" class="btn small" data-act="refresh">Refresh</button>
+      </div>
+      <div id="supporter-list"><div class="loading">Loading…</div></div>
+    </div>`;
+
+  const listEl = document.getElementById("supporter-list");
+  const result = document.getElementById("supporter-result");
+  const input = document.getElementById("supporter-name");
+
+  async function load() {
+    listEl.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const data = await API.call("/admin/supporters");
+      if (!data.count) {
+        listEl.innerHTML = `<p class="muted" style="margin:0">No supporters yet — add one above.</p>`;
+        return;
+      }
+      listEl.innerHTML = data.items.map((s) =>
+        `<div class="row" style="align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+           <span style="flex:1;font-weight:600">${esc(s.name)}</span>
+           <button class="btn small" data-remove="${esc(s.name)}">Remove</button>
+         </div>`).join("");
+      listEl.querySelectorAll("[data-remove]").forEach((b) =>
+        b.addEventListener("click", () => remove(b.dataset.remove)));
+    } catch (ex) {
+      listEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    }
+  }
+
+  async function add() {
+    const name = input.value.trim();
+    if (!name) return;
+    result.className = "ingest-result";
+    result.textContent = "Adding…";
+    try {
+      await API.call("/admin/supporters", { method: "POST", body: { name } });
+      result.className = "ingest-result ok";
+      result.textContent = `Added ${name}.`;
+      input.value = "";
+      toast(`Added ${name}`, "ok");
+      load();
+    } catch (ex) {
+      result.className = "ingest-result err";
+      result.textContent = ex.message;
+    }
+  }
+
+  async function remove(name) {
+    if (!window.confirm(`Remove "${name}" from supporters?`)) return;
+    try {
+      await API.call(`/admin/supporters/${encodeURIComponent(name)}`, { method: "DELETE" });
+      toast(`Removed ${name}`, "ok");
+      load();
+    } catch (ex) {
+      toast(ex.message, "err");
+    }
+  }
+
+  document.querySelector('[data-act="add"]').addEventListener("click", add);
+  document.querySelector('[data-act="refresh"]').addEventListener("click", load);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
+  load();
+}
+
 async function renderIngest() {
   const body = document.getElementById("tab-body");
   const cardHtml = INGEST_KINDS.map((k) => `
@@ -1607,6 +2304,59 @@ async function renderIngest() {
       </p>
     </div>
     <div class="ingest-grid">${cardHtml}</div>
+    <div class="card" id="backlog-card">
+      <h2 style="margin:0 0 6px">Backlog re-ingest <span class="badge muted" style="font-weight:normal">no upload</span></h2>
+      <p class="hint" style="margin:0 0 12px">
+        Every dump the API receives is saved server-side (gzipped, keyed by anchor). Re-ingest the
+        whole backlog here — the <strong>server</strong> reads from disk and paces itself, so there's
+        no upload and no memory pile-up, and the heavy cheaters/activity compute runs <strong>once at
+        the end</strong>. You can also drop <code>&lt;unix&gt;.cfg</code> files straight into the
+        backlog folder on the host.
+      </p>
+      <div class="row" style="align-items:center;gap:12px;flex-wrap:wrap">
+        <span class="muted" id="backlog-count">…</span>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem">
+          <input type="checkbox" id="backlog-clear"> reset everything first
+        </label>
+        <button class="btn small" id="backlog-refresh" type="button" style="margin-left:auto">Refresh</button>
+        <button class="btn primary small" id="backlog-go" type="button">Re-ingest backlog</button>
+      </div>
+      <div id="backlog-progress" style="margin-top:12px"></div>
+    </div>
+    <div class="card" id="bulk-lb-card">
+      <h2 style="margin:0 0 6px">Bulk leaderboard back-fill</h2>
+      <p class="hint" style="margin:0 0 12px">
+        Select many LeaderBot cfg files at once — the anchor is read from each
+        <strong>filename</strong> (the bot saves backlog files as <code>&lt;unix&gt;.cfg</code>).
+        They're ingested oldest-first, one at a time, with the 14-day limit lifted so
+        historical captures land at their real anchor.
+      </p>
+      <div class="row" style="align-items:center;gap:10px">
+        <label class="btn small" style="flex:0 0 auto;margin:0;cursor:pointer">
+          Choose .cfg files…
+          <input type="file" accept=".cfg,.txt,text/plain" multiple style="display:none" id="bulk-lb-files">
+        </label>
+        <span class="muted" id="bulk-lb-count">No files chosen</span>
+        <button class="btn primary small" id="bulk-lb-go" disabled style="margin-left:auto">Ingest</button>
+      </div>
+      <div id="bulk-lb-list" style="margin-top:12px"></div>
+    </div>
+    <div class="card" id="lb-reset-card" style="border:1px solid rgba(248,113,113,.45)">
+      <h2 style="margin:0 0 6px;color:#f87171">Danger zone — reset leaderboards</h2>
+      <p class="hint" style="margin:0 0 12px">
+        Wipes <strong>all</strong> leaderboard entries (hot + archive), the activity history,
+        and every cheater/activity cache. Board reset-cadence overrides are kept. This is
+        irreversible — re-ingest from backlog to rebuild. Type <code>RESET</code> to enable.
+      </p>
+      <div class="row" style="align-items:center;gap:12px;flex-wrap:wrap">
+        <input type="text" id="lb-reset-confirm" placeholder="Type RESET" autocomplete="off" spellcheck="false" style="flex:0 0 auto">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem">
+          <input type="checkbox" id="lb-reset-drop-boards"> also drop board metadata
+        </label>
+        <button class="btn small danger" id="lb-reset-go" disabled style="margin-left:auto">Reset everything</button>
+      </div>
+      <div id="lb-reset-result" class="ingest-result"></div>
+    </div>
     <div class="card" id="ingest-log-card">
       <div class="row" style="align-items:center;margin-bottom:6px">
         <h2 style="flex:1;margin:0">Recent submissions</h2>
@@ -1623,9 +2373,247 @@ async function renderIngest() {
     const kind = INGEST_KINDS.find((k) => k.key === card.dataset.kind);
     wireIngestCard(card, kind);
   }
+  wireBulkLeaderboards();
+  wireBacklogReingest();
+  wireLeaderboardReset();
   document.querySelector('[data-act="refresh-ingest-log"]')
     .addEventListener("click", renderIngestLog);
   renderIngestLog();
+}
+
+// Bulk leaderboard back-fill: many cfg files at once, each anchored by the unix
+// timestamp in its filename (the bot's `backlog/<name>/<unix>.cfg`). Ingested
+// oldest-first, sequentially, with ?backfill=true so the 14-day anchor limit
+// is lifted for historical re-seeds. Each insert is 202-accepted; the actual
+// boards/entries land in the ingest log below.
+const _BULK_COL = { pending: "#9aa4b2", run: "#9aa4b2", ok: "#5dd078", err: "#f87171", skip: "#9aa4b2" };
+const _BULK_ICON = { pending: "·", run: "…", ok: "✓", err: "✗", skip: "⊘" };
+
+function parseAnchorFromName(name) {
+  // Take the first plausible 10-digit unix-seconds value (2020 .. 2035) in the
+  // filename - tolerates a prefix like `LeaderBot20k_1780830000.cfg`.
+  for (const m of (name.match(/\d{9,11}/g) || [])) {
+    const n = parseInt(m, 10);
+    if (n >= 1577836800 && n <= 2051222400) return n;
+  }
+  return null;
+}
+
+function fmtAnchor(unix) {
+  const d = new Date(unix * 1000);
+  if (isNaN(d.getTime())) return String(unix);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`;
+}
+
+function renderBulkList(listEl, entries) {
+  if (!entries.length) { listEl.innerHTML = ""; return; }
+  listEl.innerHTML = entries.map((e) => `
+    <div class="row" style="align-items:baseline;gap:10px;padding:4px 0;border-bottom:1px solid var(--border)">
+      <span style="flex:0 0 14px;color:${_BULK_COL[e.status]}">${_BULK_ICON[e.status]}</span>
+      <code style="flex:0 0 auto">${esc(e.file.name)}</code>
+      <span class="muted" style="flex:1">${e.anchor != null ? esc(fmtAnchor(e.anchor)) : "— no anchor"}</span>
+      <span style="flex:0 0 auto;color:${_BULK_COL[e.status]}">${esc(e.msg)}</span>
+    </div>`).join("");
+}
+
+function wireBulkLeaderboards() {
+  const filesInput = document.getElementById("bulk-lb-files");
+  const countEl = document.getElementById("bulk-lb-count");
+  const goBtn = document.getElementById("bulk-lb-go");
+  const listEl = document.getElementById("bulk-lb-list");
+  if (!filesInput) return;
+  let entries = [];
+
+  filesInput.addEventListener("change", () => {
+    entries = [...filesInput.files].map((file) => ({
+      file, anchor: parseAnchorFromName(file.name), status: "pending", msg: "",
+    }));
+    // Oldest-first so the warmer settles on the newest anchor at the end.
+    entries.sort((a, b) => (a.anchor || 0) - (b.anchor || 0));
+    const withAnchor = entries.filter((e) => e.anchor != null).length;
+    const skipped = entries.length - withAnchor;
+    countEl.textContent = entries.length
+      ? `${entries.length} file(s) · ${withAnchor} with anchor${skipped ? ` · ${skipped} skipped` : ""}`
+      : "No files chosen";
+    goBtn.disabled = withAnchor === 0;
+    goBtn.textContent = `Ingest ${withAnchor} file(s)`;
+    renderBulkList(listEl, entries);
+  });
+
+  goBtn.addEventListener("click", async () => {
+    filesInput.disabled = true;
+    goBtn.disabled = true;
+    for (const e of entries) {
+      if (e.anchor == null) { e.status = "skip"; e.msg = "no anchor in filename"; renderBulkList(listEl, entries); continue; }
+      e.status = "run"; e.msg = "ingesting…"; renderBulkList(listEl, entries);
+      try {
+        const fd = new FormData();
+        fd.append("file", e.file);
+        // sync=true → the request WAITS for the dump to fully persist, so the
+        // client paces itself (one dump in memory at a time - no OOM pile-up).
+        // warm=false → skip per-file warming; we warm once at the end.
+        const r = await API.multipart("/v1/leaderboards/insert", fd, {
+          query: { timestamp: String(e.anchor), backfill: "true", sync: "true", warm: "false" },
+        });
+        if (r && r.accepted === false) { e.status = "err"; e.msg = r.message || "failed"; }
+        else { e.status = "ok"; e.msg = (r && r.message) || "ingested"; }
+      } catch (ex) {
+        e.status = "err"; e.msg = (ex && ex.message) || String(ex);
+      }
+      renderBulkList(listEl, entries);
+    }
+    const ok = entries.filter((e) => e.status === "ok").length;
+    const failed = entries.filter((e) => e.status === "err").length;
+    // Every file was a PURE insert (no per-file calc). Run the deferred
+    // calculations ONCE now: warm the latest-anchor caches (cheaters + live
+    // activity + page snapshots) and recompute the player- AND class-activity
+    // histories from the re-seeded captures. All best-effort + background; don't
+    // block the ack.
+    if (ok) {
+      try { await API.call("/v1/leaderboards/warm", { method: "POST" }); } catch (_) {}
+      await Promise.allSettled([
+        API.call("/v1/activity/backfill?total_days=730&force=true", { method: "POST" }),
+        API.call("/v1/class-activity/backfill?total_days=730&force=true", { method: "POST" }),
+      ]);
+    }
+    filesInput.disabled = false;
+    goBtn.disabled = false;
+    toast(`Bulk back-fill: ${ok} ingested${failed ? `, ${failed} failed` : ""} · recomputing`, failed ? "err" : "ok");
+    renderIngestLog();
+  });
+}
+
+// Backlog re-ingest: server-side replay of the saved dumps (no upload). Poll the
+// status endpoint while it runs to show live progress; the poll auto-stops when
+// the tab changes (the progress element is gone) or the run finishes.
+let _backlogPoll = null;
+
+function stopBacklogPoll() {
+  if (_backlogPoll) { clearInterval(_backlogPoll); _backlogPoll = null; }
+}
+
+function renderBacklogProgress(s) {
+  const cnt = document.getElementById("backlog-count");
+  const el = document.getElementById("backlog-progress");
+  if (!el) { stopBacklogPoll(); return; }
+  if (cnt) cnt.textContent = `${s && s.backlog_files != null ? s.backlog_files : "?"} file(s) in backlog`;
+  if (!s || (!s.running && !s.total)) {
+    // Idle: surface WHERE the server is scanning so a missing bind-mount / wrong
+    // path is obvious instead of a silent empty list.
+    el.innerHTML = s && s.backlog_dir
+      ? `<p class="hint" style="margin:0;font-size:.78rem">Scanning <code>${esc(s.backlog_dir)}/leaderboards/</code>${
+          s.backlog_dir_exists ? "" : ` — <span class="err-text">folder not found in the container. Recreate the api container so the bind-mount + new code take effect (<code>./deploy.sh</code>).</span>`
+        }</p>`
+      : "";
+    return;
+  }
+  const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
+  const phase = s.running
+    ? (s.phase === "recomputing" ? "recomputing (warmer + activity)…" : "ingesting…")
+    : "done";
+  const errs = (s.errors || []).slice(0, 6).map((e) =>
+    `<div class="err-text" style="font-size:.78rem">anchor ${esc(String(e.anchor))}: ${esc(e.error)}</div>`).join("");
+  el.innerHTML = `
+    <div class="row" style="align-items:center;gap:10px">
+      <div style="flex:1;height:8px;background:var(--panel-2,#1b212b);border-radius:99px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--accent,#4cc9f0);transition:width .3s"></div>
+      </div>
+      <span class="muted" style="flex:0 0 auto">${s.done || 0}/${s.total || 0}</span>
+    </div>
+    <div class="muted" style="margin-top:6px;font-size:.82rem">
+      ${esc(phase)} · ${s.ok || 0} ok · ${s.failed || 0} failed${s.last_anchor ? ` · last ${esc(fmtAnchor(s.last_anchor))}` : ""}
+    </div>
+    ${errs}`;
+}
+
+async function pollBacklog() {
+  if (!document.getElementById("backlog-progress")) { stopBacklogPoll(); return; }
+  let s;
+  try { s = await API.call("/v1/leaderboards/reingest-status"); } catch (_) { return; }
+  renderBacklogProgress(s);
+  if (!s.running) {
+    stopBacklogPoll();
+    const go = document.getElementById("backlog-go");
+    if (go) go.disabled = false;
+  }
+}
+
+function startBacklogPoll() {
+  stopBacklogPoll();
+  _backlogPoll = setInterval(pollBacklog, 1500);
+  pollBacklog();
+}
+
+function wireBacklogReingest() {
+  const go = document.getElementById("backlog-go");
+  const refresh = document.getElementById("backlog-refresh");
+  const clearEl = document.getElementById("backlog-clear");
+  if (!go) return;
+
+  const loadOnce = async () => {
+    try {
+      const s = await API.call("/v1/leaderboards/reingest-status");
+      renderBacklogProgress(s);
+      if (s.running) { go.disabled = true; startBacklogPoll(); }
+    } catch (ex) {
+      const cnt = document.getElementById("backlog-count");
+      const el = document.getElementById("backlog-progress");
+      if (cnt) cnt.textContent = "status unavailable";
+      if (el) el.innerHTML = `<p class="err-text" style="font-size:.8rem">${esc((ex && ex.message) || "request failed")} — the endpoint may not be live yet; recreate the api container (<code>./deploy.sh</code>).</p>`;
+    }
+  };
+
+  go.addEventListener("click", async () => {
+    const clear = clearEl && clearEl.checked;
+    const msg = clear
+      ? "RESET all leaderboard data, then re-ingest the entire backlog from scratch?"
+      : "Re-ingest the entire backlog?";
+    if (!window.confirm(msg)) return;
+    go.disabled = true;
+    try {
+      const qs = clear ? "?clear_first=true" : "";
+      const r = await API.call("/v1/leaderboards/reingest-backlog" + qs, { method: "POST" });
+      if (!r.started) { toast(r.message || "Backlog is empty", "err"); go.disabled = false; return; }
+      toast(`Re-ingesting ${r.files} backlog file(s)…`, "ok");
+      startBacklogPoll();
+    } catch (ex) {
+      toast((ex && ex.message) || "Re-ingest failed to start", "err");
+      go.disabled = false;
+    }
+  });
+  refresh.addEventListener("click", loadOnce);
+  loadOnce();
+}
+
+function wireLeaderboardReset() {
+  const confirmEl = document.getElementById("lb-reset-confirm");
+  const dropEl = document.getElementById("lb-reset-drop-boards");
+  const goBtn = document.getElementById("lb-reset-go");
+  const resultEl = document.getElementById("lb-reset-result");
+  if (!confirmEl) return;
+  const armed = () => confirmEl.value.trim().toUpperCase() === "RESET";
+  confirmEl.addEventListener("input", () => { goBtn.disabled = !armed(); });
+  goBtn.addEventListener("click", async () => {
+    if (!window.confirm("Wipe ALL leaderboard data, activity history, and cheater caches? This cannot be undone.")) return;
+    goBtn.disabled = true;
+    resultEl.className = "ingest-result";
+    resultEl.textContent = "Resetting…";
+    try {
+      const qs = dropEl && dropEl.checked ? "?drop_boards=true" : "";
+      const r = await API.call("/v1/leaderboards/reset" + qs, { method: "POST" });
+      resultEl.className = "ingest-result ok";
+      resultEl.innerHTML = `<strong>✓ Reset.</strong> <code>${esc(JSON.stringify(r))}</code>`;
+      confirmEl.value = "";
+      toast("Leaderboards reset", "ok");
+      renderIngestLog();
+    } catch (ex) {
+      resultEl.className = "ingest-result err";
+      resultEl.textContent = (ex && ex.message) || String(ex);
+    } finally {
+      goBtn.disabled = !armed();
+    }
+  });
 }
 
 const INGEST_ENDPOINT_LABELS = {

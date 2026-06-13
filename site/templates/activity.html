@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Player Activity - Better Trove Tools</title>
+    <meta name="description" content="How busy is Trove? A live estimate of active players from the leaderboard captures, with trend charts from the last day to all-time.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="canonical" href="{{ og_page_url|default('https://trove.aallyn.net/activity') }}">
+
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:url" content="{{ og_page_url|default('https://trove.aallyn.net/activity') }}">
+    <meta property="og:title" content="{{ og_title|default('Trove Player Activity') }}">
+    <meta property="og:description" content="{{ og_desc|default('Live active-player estimate and trend charts (1D to all-time), from the leaderboard captures.') }}">
+    <meta property="og:image" content="{{ og_image_url|default('https://trove.aallyn.net/activity/og.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ og_title|default('Trove Player Activity') }}">
+    <meta name="twitter:description" content="{{ og_desc|default('Live active-player estimate over the last 24 hours, from the leaderboard captures.') }}">
+    <meta name="twitter:image" content="{{ og_image_url|default('https://trove.aallyn.net/activity/og.png') }}">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/activity.min.css">
+</head>
+<body class="landing activity-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="act-main">
+        <section class="act-hero">
+            <p class="act-eyebrow">/activity</p>
+            <h1 class="act-title" data-i18n>Player Activity</h1>
+            <p class="act-sub" data-i18n>How busy is Trove? A live, lower-bound estimate of active players derived from the hourly leaderboard captures - with trends from the last day to all-time.</p>
+        </section>
+
+        <!-- Live pulse: the most-recent-hour estimate, plus the distinct
+             24h / 7d rollups. Filled by JS from /site/leaderboards/activity;
+             hidden when the API can't compute one yet (needs 2+ captures). -->
+        <section class="act-live" id="act-live" hidden>
+            <div class="act-now">
+                <span class="act-now-dot" aria-hidden="true"></span>
+                <span class="act-now-num" id="act-now-num">—</span>
+                <span class="act-now-label" data-i18n>active players in the last hour</span>
+            </div>
+            <div class="act-rollups" id="act-rollups" hidden></div>
+        </section>
+
+        <!-- Trend chart with a period selector. JS swaps the series on
+             /site/leaderboards/activity/series?period=… per button. -->
+        <section class="act-chart-card">
+            <div class="act-chart-head">
+                <div class="act-periods" id="act-periods" role="tablist" aria-label="Time range">
+                    <button type="button" data-period="1d"  role="tab" aria-selected="false">1D</button>
+                    <button type="button" data-period="7d"  role="tab" class="active" aria-selected="true">7D</button>
+                    <button type="button" data-period="1m"  role="tab" aria-selected="false">1M</button>
+                    <button type="button" data-period="3m"  role="tab" aria-selected="false">3M</button>
+                    <button type="button" data-period="6m"  role="tab" aria-selected="false">6M</button>
+                    <button type="button" data-period="1y"  role="tab" aria-selected="false">1Y</button>
+                    <button type="button" data-period="all" role="tab" aria-selected="false" data-i18n>All</button>
+                </div>
+                <span class="act-chart-range" id="act-chart-range"></span>
+            </div>
+            <div class="act-chart" id="act-chart" aria-live="polite">
+                <div class="act-loading" data-i18n>Loading…</div>
+            </div>
+            <div class="act-chart-tip" id="act-chart-tip" hidden></div>
+        </section>
+
+        <!-- Stat cards scoped to the selected period (from the same series
+             payload). Peak / Average / Quietest active-players-per-hour. -->
+        <section class="act-stats" id="act-stats">
+            <div class="act-stat">
+                <span class="act-stat-label" data-i18n>Peak</span>
+                <span class="act-stat-num act-stat-peak" id="act-peak">—</span>
+                <span class="act-stat-sub" id="act-peak-when" data-i18n>active players / hour</span>
+            </div>
+            <div class="act-stat">
+                <span class="act-stat-label" data-i18n>Average</span>
+                <span class="act-stat-num" id="act-avg">—</span>
+                <span class="act-stat-sub" data-i18n>active players / hour</span>
+            </div>
+            <div class="act-stat">
+                <span class="act-stat-label" data-i18n>Quietest</span>
+                <span class="act-stat-num act-stat-low" id="act-low">—</span>
+                <span class="act-stat-sub" id="act-low-when" data-i18n>active players / hour</span>
+            </div>
+        </section>
+
+        <p class="act-method" data-i18n>How this works: each hourly capture counts the distinct top-leaderboard players whose score rose on at least one board since the previous capture - a lower bound on real active players (anyone outside every board's top ranks isn't seen). All boards count, but a board is skipped on the capture that crosses its reset (daily 11:00 UTC, weekly Monday 11:00 UTC) since its score zeroes there. The chart plots the average of that per-hour estimate inside each time bucket; longer ranges use coarser daily/weekly buckets so the line stays readable.</p>
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/activity.min.js" defer></script>
+</body>
+</html>

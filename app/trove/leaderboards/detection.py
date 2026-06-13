@@ -41,10 +41,6 @@ import time
 from datetime import UTC, datetime, timedelta
 
 from app.trove.leaderboards import service as lb_service
-from app.trove.leaderboards.models import (
-    LeaderboardEntry,
-    LeaderboardEntryArchive,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -194,6 +190,15 @@ def invalidate_cache() -> None:
     _CACHE.clear()
 
 
+def reset() -> None:
+    """Drop ALL in-process cheater state (the keyed cache + the last-good
+    fallback) for a full leaderboards reset, so nothing can serve a flag
+    computed against the wiped data."""
+    global _LAST_GOOD
+    _CACHE.clear()
+    _LAST_GOOD = None
+
+
 # ─── Background warmer ────────────────────────────────────────────────
 # Pre-computes every heavy leaderboards-page query at app boot + on every
 # TTL boundary + immediately after a new ingest so the public endpoints
@@ -280,6 +285,13 @@ async def _warm_all() -> None:
         await lb_activity.estimate_active_players(force=True)
     except Exception:
         logger.exception("leaderboards warmer: activity estimate failed (non-fatal)")
+    # Per-class activity (Class Activity page) - same non-fatal treatment; only
+    # the 36 Effort/Paragon boards load, so it's cheap.
+    from app.trove.leaderboards import class_activity as lb_class_activity
+    try:
+        await lb_class_activity.estimate_class_activity(force=True)
+    except Exception:
+        logger.exception("leaderboards warmer: class activity estimate failed (non-fatal)")
     # Refresh the Redis snapshot for the leaderboards page (anchor list + boards
     # at the latest anchor + the first board's first page) so the page serves
     # the latest capture with zero Mongo work and can switch to a new capture
@@ -293,6 +305,14 @@ async def _warm_all() -> None:
     anchor = res.get("anchor") if isinstance(res, dict) else None
     if anchor is not None:
         await lb_cache.set_ready_anchor(anchor)
+        # Pre-warm each board's default chart (7d / top-5) so selecting a board on
+        # the page paints from Redis. AFTER publish + non-fatal, so it never delays
+        # the atomic snapshot switch and a slow/failed warm doesn't freeze the page.
+        try:
+            warmed = await lb_cache.warm_board_histories(anchor)
+            logger.info("leaderboards warmer: pre-warmed %d board-history charts", warmed)
+        except Exception:
+            logger.exception("leaderboards warmer: board-history pre-warm failed (non-fatal)")
 
 
 def trigger_warmer() -> None:
@@ -352,6 +372,10 @@ async def _compute(
 ) -> dict:
     boards = await lb_service.list_boards_at(anchor)
     excluded = excluded or set()
+    # One projected query for the WHOLE anchor (plain dicts, no per-board
+    # round-trip, no count, no Beanie/Pydantic hydration) instead of a
+    # list_entries() call per board - the dominant cost on a million-row capture.
+    by_board = await lb_service.entries_by_board_at(anchor, [b["uuid"] for b in boards])
 
     # player_name → {board_uuid → board_entry_dict}
     flagged: dict[str, dict[int, dict]] = {}
@@ -383,9 +407,7 @@ async def _compute(
             boards_excluded += 1
             excluded_boards_meta.append({**_board_meta(board), "reason": "admin_excluded"})
             continue
-        entries, _total = await lb_service.list_entries(
-            board["uuid"], anchor, limit=_BOARD_FETCH_LIMIT, offset=0,
-        )
+        entries = by_board.get(board["uuid"], [])
         if len(entries) < min_board_size:
             # Too few entries for robust statistics - skip but record so the UI
             # can explain why a board the user expected to see is absent.
@@ -626,13 +648,20 @@ async def _velocity_check(
 
     ranked = sorted(entries, key=lambda x: x["rank"])
     reset_kind = board.get("reset_kind", "default")
+    peers = ranked[:_VELOCITY_PEER_TOP_N]
+    # Prefetch every needed previous-capture in ONE query per collection (the
+    # top-N peers that seed the baseline PLUS the flagged players themselves)
+    # instead of a find_one round-trip per name.
+    need = {e["player_name"] for e in peers} | flagged_on_board
+    prev_map = await _previous_captures_bulk(
+        list(need), board["uuid"], anchor, reset_kind,
+    )
+
     peer_velocities: list[float] = []
     # Build the peer baseline from the top-N entries that actually have
     # historical data IN THE SAME RESET CYCLE.
-    for e in ranked[:_VELOCITY_PEER_TOP_N]:
-        prev = await _previous_capture(
-            e["player_name"], board["uuid"], anchor, reset_kind,
-        )
+    for e in peers:
+        prev = prev_map.get(e["player_name"])
         if prev is None:
             continue
         prev_score, prev_anchor = prev
@@ -653,7 +682,7 @@ async def _velocity_check(
         e = next((x for x in ranked if x["player_name"] == name), None)
         if e is None:
             continue
-        prev = await _previous_capture(name, board["uuid"], anchor, reset_kind)
+        prev = prev_map.get(name)
         if prev is None:
             continue
         prev_score, prev_anchor = prev
@@ -730,32 +759,25 @@ def _reset_boundary_before(anchor: int, reset_kind: str) -> int:
     return 0
 
 
-async def _previous_capture(
-    player_name: str, board_uuid: int, current_anchor: int,
+async def _previous_captures_bulk(
+    player_names: list[str], board_uuid: int, current_anchor: int,
     reset_kind: str = "default",
-) -> tuple[float, int] | None:
-    """Most recent (score, anchor) for ``player_name`` on ``board_uuid``
-    strictly before ``current_anchor`` AND within the same reset cycle.
+) -> dict[str, tuple[float, int]]:
+    """Most recent ``(score, anchor)`` strictly before ``current_anchor`` AND
+    within the same reset cycle, for MANY players on one board at once.
 
-    Reset-cycle filtering: for daily/weekly boards we only consider
-    anchors after the most-recent reset moment, so velocity isn't
-    computed across a "everyone went back to zero" boundary.
-
-    Tries hot first, falls through to archive.
+    Reset-cycle filtering (daily/weekly only consider anchors after the most-
+    recent reset) keeps velocity from being computed across an "everyone went
+    back to zero" boundary. One Postgres query (``DISTINCT ON`` picks the newest
+    qualifying row per player).
     """
+    if not player_names:
+        return {}
+    from app.trove.leaderboards import pg_store
     cycle_start = _reset_boundary_before(current_anchor, reset_kind)
-    query = {
-        "player_name": player_name,
-        "leaderboard": board_uuid,
-        "created_at": {"$lt": current_anchor, "$gte": cycle_start},
-    }
-    doc = await LeaderboardEntry.find_one(query, sort=[("created_at", -1)])
-    if doc is not None:
-        return doc.score, doc.created_at
-    doc = await LeaderboardEntryArchive.find_one(query, sort=[("created_at", -1)])
-    if doc is not None:
-        return doc.score, doc.created_at
-    return None
+    return await pg_store.previous_captures_bulk(
+        player_names, board_uuid, current_anchor, cycle_start,
+    )
 
 
 # ─── Result assembly + helpers ─────────────────────────────────────────

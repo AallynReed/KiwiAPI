@@ -28,12 +28,21 @@ _SITE_CSP = (
     "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com "
         "https://fonts.googleapis.com https://hcaptcha.com https://*.hcaptcha.com; "
     "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; "
-    "img-src 'self' data:; "
+    "img-src 'self' data: https://cdn.discordapp.com; "
     "connect-src 'self' https://api.aallyn.net "
         "https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
     "frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
     "base-uri 'none'; frame-ancestors 'none'"
 )
+
+
+# Exact-matched showcase-site HTML page routes. (Everything else under the site
+# is the /static/* asset mount or the /site/* JSON proxies.)
+_PAGE_PATHS = frozenset({
+    "/", "/documentation", "/commands", "/leaderboards", "/updates",
+    "/support", "/login", "/dashboard", "/market", "/status", "/giveaways",
+    "/activity", "/class-activity", "/clubs", "/terms", "/privacy",
+})
 
 
 def _is_site_path(path: str) -> bool:
@@ -45,11 +54,7 @@ def _is_site_path(path: str) -> bool:
     these wires up an API-CSP page that refuses to apply its own stylesheets
     - see /updates regression in 2026-06.
     """
-    return path == "/" or path in {
-        "/documentation", "/commands", "/leaderboards", "/updates",
-        "/support", "/login", "/signup", "/dashboard", "/market",
-        "/forgot-password", "/reset-password", "/status",
-    } or path.startswith("/static/") or path.startswith("/site/")
+    return path in _PAGE_PATHS or path.startswith("/static/") or path.startswith("/site/")
 
 
 def add_security_middleware(app: FastAPI) -> None:
@@ -109,4 +114,10 @@ def add_security_middleware(app: FastAPI) -> None:
         h.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
         # The showcase site pulls FontAwesome / GSAP from CDN and needs a looser CSP.
         h.setdefault("Content-Security-Policy", _SITE_CSP if _is_site_path(path) else _API_CSP)
+        # Static assets + HTML pages always revalidate, so a deploy is picked up
+        # immediately without ``?v=`` cache-busting. StaticFiles' ETag /
+        # Last-Modified keep this to cheap 304s. The /site/ JSON proxies set
+        # their own max-age and are intentionally excluded.
+        if path.startswith("/static/") or path in _PAGE_PATHS:
+            h.setdefault("Cache-Control", "no-cache")
         return response

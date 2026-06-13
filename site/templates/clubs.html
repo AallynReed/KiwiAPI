@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Trove Clubs - Better Trove Tools</title>
+    <meta name="description" content="Public Trove clubs, ranked by the in-game club leaderboard. Find a club to join, with their Discord and website links.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="canonical" href="https://trove.aallyn.net/clubs">
+
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Trove Clubs">
+    <meta property="og:description" content="Public Trove clubs, ranked by the in-game club leaderboard.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/clubs.min.css">
+</head>
+<body class="landing clubs-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="cl-main">
+
+        <section class="cl-hero">
+            <h1 class="cl-title" data-i18n>Trove Clubs</h1>
+            <p class="cl-subtitle" data-i18n>Public clubs, ordered by their standing on the in-game club leaderboard.</p>
+        </section>
+
+        {% if clubs %}
+        <section class="cl-grid" aria-label="Clubs">
+            {% for c in clubs %}
+            <article class="cl-card">
+                {% if c.banner_url %}
+                <div class="cl-banner"><img src="{{ c.banner_url }}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>
+                {% endif %}
+                <div class="cl-body">
+                    <div class="cl-head">
+                        {% if c.avatar_url %}
+                        <img class="cl-avatar" src="{{ c.avatar_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        {% else %}
+                        <span class="cl-avatar cl-avatar-fb">{{ (c.name or '?')[0]|upper }}</span>
+                        {% endif %}
+                        <div class="cl-id">
+                            <h2 class="cl-name">{{ c.name }}</h2>
+                            {% if c.rank %}<span class="cl-rank">#{{ c.rank }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% if c.description %}<p class="cl-desc">{{ c.description }}</p>{% endif %}
+                    {% if c.discord_url or c.website_url %}
+                    <div class="cl-links">
+                        {% if c.discord_url %}<a class="cl-link" href="{{ c.discord_url }}" target="_blank" rel="noopener"><i class="fa-brands fa-discord" aria-hidden="true"></i> <span data-i18n>Discord</span></a>{% endif %}
+                        {% if c.website_url %}<a class="cl-link" href="{{ c.website_url }}" target="_blank" rel="noopener"><i class="fa-solid fa-globe" aria-hidden="true"></i> <span data-i18n>Website</span></a>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </section>
+        {% else %}
+        <p class="cl-empty" data-i18n>No public clubs yet. Server owners can publish their club from the Discord dashboard.</p>
+        {% endif %}
+
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+</body>
+</html>

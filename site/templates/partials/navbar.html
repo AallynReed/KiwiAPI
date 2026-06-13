@@ -13,7 +13,7 @@
    NOT include this partial.
    =========================================================================== #}
 {% set _p = request.url.path %}
-{% set _pages_active = _p in ['/commands', '/leaderboards', '/updates', '/market', '/status'] %}
+{% set _pages_active = _p in ['/commands', '/leaderboards', '/activity', '/class-activity', '/updates', '/market', '/status', '/clubs'] %}
 <header class="navbar" role="banner">
         <div class="nav-container">
             <a class="nav-logo" href="{{ '#hero' if _p == '/' else '/' }}" aria-label="Better Trove Tools home">
@@ -40,9 +40,13 @@
                     <div class="nav-dropdown-panel" id="nav-pages-panel" role="menu">
                         <a href="/commands" role="menuitem" class="{{ 'active' if _p == '/commands' else '' }}"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>
                         <a href="/leaderboards" role="menuitem" class="{{ 'active' if _p == '/leaderboards' else '' }}"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>
+                        <a href="/clubs" role="menuitem" class="{{ 'active' if _p == '/clubs' else '' }}"><i class="fa-solid fa-shield-halved"></i> <span data-i18n>Clubs</span></a>
+                        <a href="/activity" role="menuitem" class="{{ 'active' if _p == '/activity' else '' }}"><i class="fa-solid fa-chart-line"></i> <span data-i18n>Player Activity</span></a>
+                        <a href="/class-activity" role="menuitem" class="{{ 'active' if _p == '/class-activity' else '' }}"><i class="fa-solid fa-users"></i> <span data-i18n>Class Activity</span></a>
                         <a href="/updates" role="menuitem" class="{{ 'active' if _p == '/updates' else '' }}"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>
                         <a href="/market" role="menuitem" class="{{ 'active' if _p == '/market' else '' }}"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta">Beta</span></a>
                         <a href="/status" role="menuitem" class="{{ 'active' if _p == '/status' else '' }}"><i class="fa-solid fa-signal"></i> <span data-i18n>Server Status</span> <span class="nav-pill nav-pill-beta">Beta</span></a>
+                        <a href="/giveaways" role="menuitem" class="{{ 'active' if _p == '/giveaways' else '' }}"><i class="fa-solid fa-gift"></i> <span data-i18n>Giveaways</span></a>
                     </div>
                 </div>
 

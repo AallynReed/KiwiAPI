@@ -36,16 +36,15 @@ class Settings(BaseSettings):
     # cheap individually but a malicious caller could trawl the whole archive
     # with a tight loop, so apply a much tighter per-token limit on top of the
     # standard one. The standard cap stays in force; this is additive.
-    # Hot retention: rows newer than this stay in the fast LeaderboardEntry
-    # collection. Older rows get moved to LeaderboardEntryArchive at the
-    # tail of each insert. With hourly captures, 3 days = ~72 anchors per
-    # board kept hot - matches the archive-query threshold below so the
-    # "what the user pays standard rate for" and "what's physically hot"
-    # windows are identical, simpler to reason about.
+    # "Hot" window (days): the cache warmer pre-warms the latest capture of each
+    # of these recent days and the leaderboards page surfaces this window in its
+    # date picker. (All entries live in one partitioned Postgres table now - this
+    # is a warm-cache / UI depth knob, not a storage tier.) Matches the archive
+    # threshold below so "what's warm" and "what pays standard rate" line up.
     leaderboards_hot_retention_days: int = 3
     # Anchors older than this count as "archive" reads and pay the extra
-    # per-token rate-limit bucket. Same 3-day window as hot retention so a
-    # query that hits the cold collection ALSO pays the archive limit.
+    # per-token rate-limit bucket. Same 3-day window as the hot window so an
+    # old/cold lookup ALSO pays the archive limit.
     leaderboards_archive_query_threshold_days: int = 3
     leaderboards_archive_rate_limit_max: int = 10
     leaderboards_archive_rate_limit_window_seconds: int = 60
@@ -116,6 +115,17 @@ class Settings(BaseSettings):
     # app runs without it.
     redis_url: str | None = None
 
+    # Postgres - the high-volume LEADERBOARDS domain only (entries/boards/players/
+    # activity), partitioned by anchor + bulk-loaded via COPY. Everything else
+    # stays in Mongo. Unset = the PG-backed leaderboards features are disabled.
+    postgres_dsn: str | None = None
+    postgres_pool_min: int = 2
+    postgres_pool_max: int = 10
+
+    @property
+    def postgres_enabled(self) -> bool:
+        return bool(self.postgres_dsn)
+
     # --- Session auth (JWT issued at login, used to manage account + tokens) ---
     # MUST be overridden in production. Generate one with:
     #   python -c "import secrets; print(secrets.token_urlsafe(48))"
@@ -133,6 +143,43 @@ class Settings(BaseSettings):
     @property
     def github_oauth_enabled(self) -> bool:
         return bool(self.github_client_id and self.github_client_secret)
+
+    # --- Discord OAuth ("Sign in with Discord") + interactions ---
+    # client_id IS the Discord Application ID (public). public_key is the Ed25519
+    # key (hex) that verifies incoming interaction webhooks. Only the secret is
+    # sensitive - keep all three in .env, never in code.
+    discord_client_id: str | None = None
+    discord_client_secret: str | None = None
+    discord_public_key: str | None = None
+    # Bot token - NOT needed for OAuth login or the interactions webhook (those
+    # use the public key). Only required to REGISTER slash commands, or to run a
+    # gateway bot for real-time message/member/presence events. Optional.
+    discord_bot_token: str | None = None
+    # Reserved login scope/integration settings. The user-facing "Sign in with
+    # Discord" (app/site_auth/oauth.py) requests "identify email guilds" directly
+    # so the Dashboard can list the user's servers; these remain for future use.
+    discord_oauth_scope: str = "identify email guilds"
+    # Optional authorize ``integration_type`` ("1" = user-install). Empty/unset =
+    # plain login. applications.commands needs "1" to install cleanly (no guild
+    # picker). String (not int) so an empty compose value doesn't fail to parse.
+    discord_oauth_integration_type: str | None = None
+    # "Add to Discord" install link for the home page (separate from login). Set
+    # to the exact Install Link from discord.dev, or leave blank to auto-build the
+    # Discord-provided link from the client_id (which offers user- AND guild-
+    # install when both contexts are enabled in the app's Installation settings).
+    discord_install_url: str | None = None
+
+    @property
+    def discord_oauth_enabled(self) -> bool:
+        return bool(self.discord_client_id and self.discord_client_secret)
+
+    @property
+    def discord_install_link(self) -> str | None:
+        if self.discord_install_url:
+            return self.discord_install_url
+        if self.discord_client_id:
+            return f"https://discord.com/oauth2/authorize?client_id={self.discord_client_id}"
+        return None
 
     # --- API tokens (issued by users, used to authenticate API queries) ---
     api_token_prefix: str = "kiwi"
@@ -302,6 +349,15 @@ class Settings(BaseSettings):
     trove_events_refresh_seconds: int = 900   # background refresh cadence (15 min)
     trove_events_history_days: int = 365      # prune events whose end is older than this
 
+    # --- Live event stream (SSE: GET /v1/events/stream) ---
+    # Push model so consumers stop polling challenge/chaos-chest at the top of the
+    # hour. Events fan out across uvicorn workers via Redis pub/sub on this channel
+    # (exactly-once per change via a SET-with-GET dedup guard).
+    events_channel: str = "kiwi:events"
+    events_heartbeat_seconds: int = 20        # SSE keep-alive comment cadence
+    events_watch_seconds: int = 30            # safety-net poll that re-publishes on change
+    events_max_connections: int = 1000        # per-worker cap on concurrent stream clients
+
     # --- Game-file version archiver (Trion update CDN) ---
     # OFF by default: enabling it triggers a multi-GB first sync against Trion's CDN.
     # Turn on deliberately (per box) once the blob store path/disk is ready.
@@ -311,6 +367,21 @@ class Settings(BaseSettings):
     trove_update_store_dir: str = "data/updates"           # content-addressed blob store (bind-mounted)
     trove_update_probe_seconds: int = 1200                 # per-branch probe cadence (20 min)
     trove_update_concurrency: int = 6                      # parallel file downloads
+
+    # --- Ingest backlog (server-side replay store) ---
+    # Every leaderboard dump the API receives is gzip-saved here keyed by anchor
+    # (``<anchor>.cfg.gz``), so the whole history can be RE-INGESTED from the admin
+    # panel with no browser upload (server reads from disk + paces itself). Files
+    # dropped in manually on the host (``<unix>.cfg`` or ``.cfg.gz``) are picked up
+    # too. Bind-mounted (host ``./.backlog``). ``retention_days = 0`` keeps it all
+    # (each hourly dump is ~4 MB gzipped - set a limit if disk is tight).
+    backlog_enabled: bool = True
+    # ABSOLUTE so it always matches the bind-mount target (host ./.backlog ->
+    # container /data/backlog) even if the BACKLOG_DIR env didn't get applied -
+    # a relative "data/backlog" would resolve to /app/data/backlog (ephemeral,
+    # NOT the mount) and silently show an empty backlog.
+    backlog_dir: str = "/data/backlog"
+    backlog_retention_days: int = 0
 
     # --- Trove server status prober ---
     # Auth tier: HTTPS liveness of the shared account-auth gateway
@@ -339,8 +410,45 @@ class Settings(BaseSettings):
     trove_status_eu_port: int = 6560
     trove_status_us_host: str = "dal-c35-b05.dal.triongames.com"
     trove_status_us_port: int = 6560
-    trove_status_pts_host: str = "trove-pc-pts-us-game-1.trovegame.com"
+    trove_status_pts_host: str = "auth-pcpts01.trovegame.com"
     trove_status_pts_port: int = 6560
+    # Deep game probe. A region in maintenance STILL completes the TCP handshake
+    # on 6560 (and even answers the glsserver hello) before dropping the
+    # connection - observed directly in EU's maintenance traffic - so a
+    # connect-only check reports a false "online". When on, the probe replays the
+    # captured glsserver client hello and counts the region online ONLY if the
+    # server HOLDS the connection open (a playable session socket) instead of
+    # closing it right after the hello. Falls back to the connect-only verdict on
+    # any anomaly, so it never does worse than before.
+    trove_status_game_deep_probe: bool = True
+    # Captured glsserver client "hello" (hex), replayed by the deep probe, PER
+    # ENVIRONMENT. Empty = connect-only for that env (TCP-accept = online).
+    #
+    # EU + US are game glsservers (ams-/dal- *-game-* hosts): when up they HOLD a
+    # hello-only probe's socket open, so the deep probe works (hold=online,
+    # fast-FIN=maintenance). The same captured hello works for both (it's a
+    # per-client-run ECDH opener, portable across gateways - EU and US sent the
+    # byte-identical hello in the captures).
+    #
+    # PTS is an AUTH gateway (auth-pcpts01), NOT a game glsserver: even when UP it
+    # DROPS a hello-only probe (it expects the client to keep going, which a probe
+    # doesn't), so the deep probe can't tell PTS up from down. Hence PTS = "" =
+    # connect-only. Set a hello here only if PTS is ever pointed at a real
+    # *-game-* glsserver that holds the socket open.
+    trove_status_eu_hello_hex: str = (
+        "20000000003df232536bcb1518164c4685392572b843d0bcbb71be7f0abb098626e23accfb"
+    )
+    trove_status_us_hello_hex: str = (
+        "20000000003df232536bcb1518164c4685392572b843d0bcbb71be7f0abb098626e23accfb"
+    )
+    trove_status_pts_hello_hex: str = ""
+    # Seconds the server must hold the socket open after the hello to count as
+    # online. Measured gap is huge: a region in maintenance FINs ~20-90ms after
+    # the hello (EU capture), while a live gateway holds the socket open for
+    # seconds waiting for the client to continue (US/PTS captures held 6-28s). So
+    # ~1.5s sits comfortably between the two - long enough to see the maintenance
+    # FIN, short enough to never reach a live server's idle-close.
+    trove_status_game_hold_seconds: float = 1.5
 
     # --- Rate-limit alerting (daily digest email to the admin) ---
     rate_limit_alert_email: str | None = "aallyn@aallyn.net"

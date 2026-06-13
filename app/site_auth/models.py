@@ -20,15 +20,31 @@ class SiteUser(Document):
     """A registered showcase-site user. Username + email both unique
     and stored lower-cased so login lookups are O(index seek)."""
 
-    # Login identity.
+    # Login identity. Sign-in is Discord-only; there is no local password.
     username: str                              # canonical lowercase
-    email: EmailStr                            # canonical lowercase
-    hashed_password: str
+    email: EmailStr                            # canonical lowercase (from Discord)
 
     # Profile.
     display_name: str | None = None            # human-presented label
     is_active: bool = True
-    is_verified: bool = False                  # email-verified
+    is_verified: bool = False                  # Discord-verified email
+
+    # Linked Discord account id (snowflake; for "Sign in with Discord"). The
+    # sole identity for the account - every SiteUser is created via Discord.
+    discord_id: int | None = None
+
+    # Discord avatar hash. The API turns this into a cdn.discordapp.com URL
+    # (see _discord_avatar_url) so we display the user's avatar without ever
+    # hosting an image ourselves. Refreshed on each login; ``None`` = the user
+    # has no custom avatar and we fall back to Discord's default embed avatar.
+    discord_avatar: str | None = None
+
+    # Cached Discord guild list (id/name/icon/owner/permissions) from the
+    # `guilds` OAuth scope - powers the Dashboard's "Discord Bot" tab "your
+    # servers" view. None until the user signs in with the guilds scope;
+    # synced_at gates the "reconnect Discord" reprompt for older grants.
+    discord_guilds: list[dict] | None = None
+    discord_guilds_synced_at: datetime | None = None
 
     # Bumped on password / email change / logout-all so outstanding access
     # tokens lose their authority instantly. Same trick the dev portal
@@ -60,11 +76,6 @@ class SiteUser(Document):
     claim_baseline: dict[str, float] = Field(default_factory=dict)
     claim_verified_at: datetime | None = None
 
-    # Mirror dev-portal field so a hard-bounce can pause delivery without
-    # silently spamming a dead inbox. Cleared when the user verifies a
-    # new address.
-    email_bounced: bool = False
-
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     last_login_at: datetime | None = None
@@ -74,6 +85,11 @@ class SiteUser(Document):
         indexes = [
             IndexModel([("username", ASCENDING)], unique=True),
             IndexModel([("email", ASCENDING)], unique=True),
+            IndexModel(
+                [("discord_id", ASCENDING)],
+                unique=True,
+                partialFilterExpression={"discord_id": {"$type": "number"}},
+            ),
             # Partial: only enforce uniqueness on rows that actually claimed
             # a Trove name. Multiple ``None``s coexist fine; two users
             # claiming the same name don't.

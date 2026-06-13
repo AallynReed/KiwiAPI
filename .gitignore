@@ -16,6 +16,9 @@ data/
 # Game-file version archive - content-addressed blob store (bind mount target, many GB)
 .game_updates/
 
+# Server-side ingest backlog - gzipped dumps keyed by anchor (bind mount target, can grow large)
+.backlog/
+
 # BetterTroveTools showcase site - binary assets are ~20 MB of screenshots,
 # shipped to the server via Syncthing rather than git. Templates + CSS + JS are tracked.
 site/static/assets/

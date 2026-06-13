@@ -10,7 +10,6 @@
    /GitHub, red-heart Support, nav-account widget).
    ═══════════════════════════════════════════════════════════════════════ */
 
-.account-page main,
 .dashboard-page main { padding-top: 0; }
 
 
@@ -19,9 +18,15 @@
    ambient gradient comes through. */
 
 .acc-main {
+  width: 100%;
   max-width: 460px;
   margin: 0 auto;
-  padding: 60px 24px 80px;
+  padding: 48px 24px;
+  /* Centre the card in the space the sticky-footer layout gives <main>, so the
+     short login page sits balanced instead of clinging to the top. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .acc-card {
   padding: 36px;
@@ -142,6 +147,40 @@
   background: #6fd5f4;
   transform: translateY(-1px);
 }
+
+/* "or" divider + OAuth (Discord) sign-in button on the login card. */
+.acc-oauth-sep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 12px;
+  color: var(--text-mute, #8a93a3);
+  font-size: .85rem;
+}
+.acc-oauth-sep::before,
+.acc-oauth-sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, .10);
+}
+.acc-oauth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background .12s ease, transform .15s ease;
+}
+.acc-oauth-btn:hover { transform: translateY(-1px); }
+.acc-oauth-discord { background: #5865f2; color: #fff; }
+.acc-oauth-discord:hover { background: #4752c4; }
 .acc-submit:disabled {
   opacity: .55;
   cursor: not-allowed;
@@ -169,14 +208,27 @@
 /* ─── Dashboard ─────────────────────────────────────────────────────── */
 
 .dash-main {
-  max-width: 1120px;
+  width: 100%;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 0 28px 80px;
+  padding: 0 clamp(20px, 3vw, 48px) 80px;
 }
 
 .dash-hero {
   padding: 50px 0 20px;
   text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.dash-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .04);
 }
 .dash-hero-inner { display: grid; gap: 8px; }
 .dash-eyebrow {
@@ -197,6 +249,91 @@
   margin: 0;
   color: var(--text-mute, #8a93a3);
   font-size: 1rem;
+}
+
+/* ── Dashboard sidebar shell ─────────────────────────────────────────── */
+.dash-shell { display: flex; align-items: flex-start; gap: 28px; padding-top: 36px; }
+.dash-sidebar {
+  flex: 0 0 240px; position: sticky; top: 90px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.dash-side-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 4px 6px 16px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--bg-line);
+}
+.dash-side-head .dash-avatar { width: 46px; height: 46px; }
+.dash-side-id { min-width: 0; }
+.dash-side-name {
+  margin: 0; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dash-side-sub { margin: 0; font-size: .8rem; color: var(--text-soft); }
+
+.dash-nav { display: flex; flex-direction: column; gap: 3px; }
+.dash-nav-item {
+  display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+  padding: 10px 12px; border: 1px solid transparent; border-radius: 10px;
+  background: none; color: var(--text-mute); font-size: .95rem; font-weight: 500; cursor: pointer;
+}
+.dash-nav-item i { width: 18px; text-align: center; font-size: 1rem; }
+.dash-nav-item:hover { background: var(--bg-card); color: var(--text); }
+.dash-nav-item.active {
+  background: var(--accent-soft); color: var(--accent);
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent);
+}
+.dash-nav-badge {
+  margin-left: auto; min-width: 20px; text-align: center;
+  font-size: .72rem; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+  background: rgba(63,185,80,.18); color: var(--accent-green);
+}
+.dash-side-logout { margin-top: 14px; align-self: flex-start; }
+
+.dash-content { flex: 1; min-width: 0; }
+.dash-section-title {
+  margin: 0 0 16px;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.5rem, 2vw + 0.8rem, 2rem); font-weight: 700; letter-spacing: -0.02em;
+}
+.dash-section-sub { margin: -10px 0 18px; color: var(--text-mute); font-size: .98rem; }
+
+/* ── "My giveaways" cards ────────────────────────────────────────────── */
+.gw-my-card {
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: 14px; padding: 16px 18px; margin-bottom: 12px;
+}
+.gw-my-card.won {
+  border-color: color-mix(in oklab, var(--accent-green) 45%, var(--bg-line));
+  background: color-mix(in oklab, var(--accent-green) 7%, var(--bg-card));
+}
+.gw-my-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.gw-my-info { min-width: 0; }
+.gw-my-prize { margin: 0; font-weight: 600; font-size: 1.05rem; color: var(--text); }
+.gw-my-title { margin: 2px 0 0; font-size: .88rem; color: var(--text-mute); }
+.gw-my-status {
+  flex: 0 0 auto; font-size: .76rem; font-weight: 700; white-space: nowrap;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.06); color: var(--text-mute);
+}
+.gw-my-status.won { background: rgba(63,185,80,.18); color: var(--accent-green); }
+.gw-my-status.lost { background: rgba(255,255,255,.06); color: var(--text-soft); }
+.gw-my-status.pending { background: rgba(88,166,255,.16); color: var(--accent-blue); }
+.gw-my-code {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px;
+  padding: 12px 14px; background: var(--bg-deep);
+  border: 1px solid var(--bg-line); border-radius: 10px;
+}
+.gw-my-code code {
+  flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 1.05rem;
+  color: var(--accent-green); word-break: break-all;
+}
+
+@media (max-width: 760px) {
+  .dash-shell { flex-direction: column; gap: 18px; }
+  .dash-sidebar { position: static; flex: none; width: 100%; }
+  .dash-nav { flex-direction: row; flex-wrap: wrap; }
+  .dash-nav-item { width: auto; }
+  .dash-side-logout { margin-top: 6px; }
 }
 
 /* Unverified-email banner */
@@ -354,6 +491,12 @@
 .dash-btn-ghost:hover {
   background: rgba(255,255,255,.05);
 }
+.dash-btn-danger {
+  background: rgba(248,113,113,.16);
+  color: #fca5a5;
+  border: 1px solid rgba(248,113,113,.35);
+}
+.dash-btn-danger:hover { background: rgba(248,113,113,.26); }
 
 .dash-inline-form {
   display: flex;
@@ -550,4 +693,556 @@
   .dash-stat-row .dash-stat-when { grid-area: when; text-align: right; }
   .acc-main { padding: 32px 16px 60px; }
   .acc-card { padding: 24px; }
+}
+
+/* ─── Discord Bot tab ────────────────────────────────────────────────
+   Master-detail: a side-menu of servers the bot is in (selectable) + a
+   detail panel whose per-server config is split into tabs (Announcements,
+   Settings). Reuses the dash-card / dash-btn / dash-tag chrome; result
+   tones mirror .dash-verify-result. */
+.dash-discord-layout {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* ── Side-menu: confirmed servers + an "Add the bot" group ── */
+.dash-discord-servers {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.dash-discord-menu-head {
+  margin: 0 0 8px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--text-mute, #8a93a3);
+}
+.dash-discord-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dash-discord-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--text-mute, #8a93a3);
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+.dash-discord-menu-item:hover {
+  background: var(--bg-card, rgba(255,255,255,.04));
+  color: var(--text-fg, #e8ecf3);
+}
+.dash-discord-menu-item.active {
+  background: var(--accent-soft, rgba(76,201,240,.12));
+  color: var(--text-fg, #e8ecf3);
+  border-color: color-mix(in oklab, var(--accent-blue, #4cc9f0) 35%, transparent);
+}
+.dash-discord-menu-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Pulsing-green "this server is announcing" indicator. */
+.dash-discord-live {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: #5dd078;
+  box-shadow: 0 0 0 3px rgba(93,208,120,.16);
+}
+.dash-discord-add-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+.dash-discord-add .dash-btn-mini { margin-top: 10px; }
+.dash-discord-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  object-fit: cover;
+}
+.dash-discord-icon-fallback {
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,.06);
+  color: var(--text-fg, #e8ecf3);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: .85rem;
+}
+/* Neutral pill for the bare .dash-tag (off) - the verified/unverified
+   modifiers supply their own colours. */
+.dash-tag:not(.dash-tag-verified):not(.dash-tag-unverified) {
+  background: rgba(255,255,255,.06);
+  color: var(--text-mute, #8a93a3);
+}
+
+/* ── Detail panel: header + tab bar + the active tab's body ── */
+.dash-discord-detail { min-width: 0; }
+.dash-discord-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.dash-discord-detail-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.15rem;
+  color: var(--text-fg, #e8ecf3);
+  word-break: break-word;
+}
+.dash-discord-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 16px;
+}
+.dash-discord-tab {
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text-mute, #8a93a3);
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .12s ease, border-color .12s ease;
+}
+.dash-discord-tab:hover { color: var(--text-fg, #e8ecf3); }
+.dash-discord-tab.active {
+  color: var(--text-fg, #e8ecf3);
+  border-bottom-color: var(--accent-blue, #4cc9f0);
+}
+.dash-discord-card-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: var(--text-fg, #e8ecf3);
+}
+
+/* ── Shared config controls (Announcements + Settings) ── */
+.dash-discord-fields {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.dash-discord-field {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dash-discord-label {
+  font-size: .74rem;
+  color: var(--text-mute, #8a93a3);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.dash-discord-field select {
+  padding: 9px 12px;
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+  color: var(--text-fg, #e8ecf3);
+  font: inherit;
+  font-size: .9rem;
+}
+.dash-discord-field select:focus {
+  outline: none;
+  border-color: var(--accent-blue, #4cc9f0);
+}
+.dash-discord-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  color: var(--text-fg, #e8ecf3);
+  font-size: .9rem;
+}
+.dash-discord-result {
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: .8rem;
+  line-height: 1.5;
+}
+.dash-discord-result[hidden] { display: none; }
+.dash-discord-result[data-tone="success"] {
+  background: rgba(93,208,120,.10);
+  border: 1px solid rgba(93,208,120,.30);
+  color: #c4f5d0;
+}
+.dash-discord-result[data-tone="info"] {
+  background: rgba(249,199,79,.10);
+  border: 1px solid rgba(249,199,79,.30);
+  color: #f9c74f;
+}
+.dash-discord-result[data-tone="error"] {
+  background: rgba(248,113,113,.10);
+  border: 1px solid rgba(248,113,113,.30);
+  color: #fed1d1;
+}
+.dash-discord-cap { margin: 14px 0; }
+.dash-discord-cap-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-fg, #e8ecf3);
+  font-size: .9rem;
+}
+.dash-discord-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 14px 8px 0;
+  font-size: .85rem;
+  color: var(--text-fg, #e8ecf3);
+  cursor: pointer;
+}
+.dash-discord-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+/* Announcement type rows (Announcements tab) */
+.dash-ann-group { margin: 6px 0 4px; }
+.dash-ann-group + .dash-ann-group { margin-top: 18px; }
+.dash-ann-row {
+  padding: 12px 0;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.dash-ann-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.dash-ann-label { font-weight: 600; }
+.dash-ann-desc {
+  margin: 4px 0 8px;
+  color: var(--text-mute, #8a93a3);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+.dash-ann-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.dash-ann-controls .dash-discord-field { min-width: 180px; flex: 1 1 180px; }
+.dash-ann-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(248,113,113,.12);
+  border: 1px solid rgba(248,113,113,.34);
+  color: #fed1d1;
+  font-size: .72rem;
+  font-weight: 600;
+}
+.dash-ann-actions { margin-top: 16px; }
+.dash-autosave {
+  margin-left: auto;
+  font-size: .72rem;
+  color: var(--text-mute, #8a93a3);
+  white-space: nowrap;
+}
+.dash-autosave[data-state="saving"] { color: var(--accent-blue, #4cc9f0); }
+.dash-autosave[data-state="saved"] { color: #c4f5d0; }
+.dash-autosave[data-state="error"] { color: #fed1d1; }
+
+/* Chip / token multi-select (select2-style, vanilla) */
+.dash-ms { position: relative; }
+.dash-ms-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 10px;
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+  cursor: pointer;
+}
+.dash-ms-box:focus { outline: none; border-color: var(--accent-blue, #4cc9f0); }
+.dash-ms.is-disabled { opacity: .55; }
+.dash-ms.is-disabled .dash-ms-box { cursor: default; }
+.dash-ms-ph { color: var(--text-mute, #8a93a3); font-size: .85rem; }
+.dash-ms-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  font-size: .8rem;
+  color: var(--text-fg, #e8ecf3);
+}
+.dash-ms-x {
+  background: none;
+  border: none;
+  color: var(--text-mute, #8a93a3);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 3px;
+}
+.dash-ms-x:hover { color: #fed1d1; }
+.dash-ms-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.dash-ms-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #161b22;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 9px;
+  padding: 4px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.45);
+}
+.dash-ms-menu[hidden] { display: none; }
+.dash-ms-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: .85rem;
+  color: var(--text-fg, #e8ecf3);
+}
+.dash-ms-opt:hover { background: rgba(255,255,255,.06); }
+.dash-ms-opt.is-selected { color: var(--accent-blue, #4cc9f0); }
+.dash-ms-check { width: 14px; opacity: 0; flex: 0 0 auto; }
+.dash-ms-opt.is-selected .dash-ms-check { opacity: 1; }
+.dash-ms-empty { padding: 8px 10px; color: var(--text-mute, #8a93a3); font-size: .82rem; }
+
+/* Clubs */
+.dash-discord-field input {
+  padding: 9px 12px;
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+  color: var(--text-fg, #e8ecf3);
+  font: inherit;
+  font-size: .9rem;
+}
+.dash-discord-field input:focus { outline: none; border-color: var(--accent-blue, #4cc9f0); }
+.dash-club { border-left: 3px solid var(--accent-blue, #4cc9f0); }
+.dash-club-name {
+  flex: 1 1 200px;
+  min-width: 160px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+  color: var(--text-fg, #e8ecf3);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.dash-club-name:focus { outline: none; border-color: var(--accent-blue, #4cc9f0); }
+.dash-club-del {
+  background: none;
+  border: 1px solid rgba(248,113,113,.34);
+  color: #fed1d1;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: .78rem;
+  cursor: pointer;
+}
+.dash-club-del:hover { background: rgba(248,113,113,.12); }
+.dash-club-wide { width: 100%; margin-top: 10px; }
+.dash-club textarea {
+  padding: 9px 12px;
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+  color: var(--text-fg, #e8ecf3);
+  font: inherit;
+  font-size: .9rem;
+  resize: vertical;
+}
+.dash-club textarea:focus { outline: none; border-color: var(--accent-blue, #4cc9f0); }
+.dash-club-add { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* Club sub-tabs row (clubs left, "Add club" right) */
+.dash-club-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.dash-club-tablist { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; align-items: center; min-width: 0; }
+.dash-club-tab {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text-fg, #e8ecf3);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: .85rem;
+  cursor: pointer;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dash-club-tab:hover { background: rgba(255,255,255,.09); }
+.dash-club-tab.active {
+  background: var(--accent-soft, rgba(76,201,240,.14));
+  border-color: var(--accent-blue, #4cc9f0);
+}
+.dash-club-bar .dash-btn-mini { margin-left: auto; flex: 0 0 auto; }
+
+/* Club roster (collapsible category groups of member chips) */
+.dash-roster-group { border-top: 1px solid rgba(255,255,255,.06); }
+.dash-roster-cat {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  color: var(--text-fg, #e8ecf3);
+  padding: 11px 2px;
+  cursor: pointer;
+  font-size: .95rem;
+  font-weight: 600;
+  text-align: left;
+}
+.dash-roster-caret {
+  display: inline-block;
+  transition: transform .15s ease;
+  transform: rotate(90deg);
+  color: var(--text-mute, #8a93a3);
+  font-size: .8rem;
+}
+.dash-roster-group.collapsed .dash-roster-caret { transform: rotate(0deg); }
+.dash-roster-rank { flex: 1; }
+.dash-roster-count {
+  color: var(--text-mute, #8a93a3);
+  font-size: .78rem;
+  font-weight: 400;
+  background: rgba(255,255,255,.06);
+  border-radius: 999px;
+  padding: 1px 9px;
+}
+.dash-roster-members { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 2px 12px; }
+.dash-roster-group.collapsed .dash-roster-members { display: none; }
+.dash-roster-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,.05);
+  border-radius: 999px;
+  padding: 4px 6px 4px 4px;
+  font-size: .85rem;
+}
+.dash-roster-name { padding: 0 2px; }
+/* Promote / demote arrows - subtle until you hover the chip, then they light up */
+.dash-roster-acts { display: inline-flex; gap: 2px; margin-left: 2px; }
+.dash-roster-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-mute, #8a93a3);
+  font-size: .9rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: .35;
+  transition: background .12s ease, color .12s ease, opacity .12s ease;
+}
+.dash-roster-row:hover .dash-roster-act:not([disabled]) { opacity: 1; }
+.dash-roster-act:not([disabled]):hover { background: rgba(255,255,255,.10); }
+.dash-roster-act-promote:not([disabled]):hover { color: #6ee7a8; background: rgba(110,231,168,.14); }
+.dash-roster-act-demote:not([disabled]):hover { color: #fca5a5; background: rgba(248,113,113,.14); }
+.dash-roster-act[disabled] { opacity: .14; cursor: default; }
+.dash-roster-av { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
+.dash-roster-av-fb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft, rgba(76,201,240,.2));
+  color: var(--accent-blue, #4cc9f0);
+  font-size: .7rem;
+  font-weight: 700;
+}
+.dash-roster-empty { color: var(--text-mute, #8a93a3); font-size: .82rem; padding: 2px 0 12px; }
+
+/* Confirmation modal (promote / demote / delete club) */
+.dash-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(4,6,11,.66);
+  backdrop-filter: blur(2px);
+  animation: dash-modal-fade .12s ease;
+}
+.dash-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card-bg, #12161f);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.5);
+  animation: dash-modal-pop .14s ease;
+}
+.dash-modal-title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-fg, #e8ecf3);
+}
+.dash-modal-message {
+  margin: 0 0 18px;
+  font-size: .9rem;
+  line-height: 1.55;
+  color: var(--text-mute, #8a93a3);
+}
+.dash-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+@keyframes dash-modal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dash-modal-pop { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 720px) {
+  .dash-discord-layout { grid-template-columns: 1fr; }
 }

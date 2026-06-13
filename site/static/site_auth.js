@@ -2,10 +2,10 @@
    site_auth.js - public-facing user accounts client
    ───────────────────────────────────────────────────────────────────────
    Loaded on EVERY site page (via the navbar widget) and is the active
-   driver on /login + /signup. Wires up:
+   driver on /login. Sign-in is Discord-only. Wires up:
 
      • localStorage token storage with refresh-on-401
-     • Login + signup forms (when present on the page)
+     • The Discord OAuth return handler (#discord=<code> → site tokens)
      • The "Sign in" / signed-in avatar+dropdown in the navbar
      • A small global API (window.BTTAuth) the dashboard imports from
 
@@ -22,100 +22,6 @@
   const KEY_ACCESS = `${STORAGE_PREFIX}_access`;
   const KEY_REFRESH = `${STORAGE_PREFIX}_refresh`;
   const KEY_USER = `${STORAGE_PREFIX}_user`;        // cached /me snapshot
-
-  // Captcha provider config. Lazy-loaded on first use of getCaptchaConfig().
-  // /config is unauthenticated, so it's safe to fetch from any page.
-  let _captchaConfig = null;
-  let _captchaConfigPromise = null;
-  async function getCaptchaConfig() {
-    if (_captchaConfig) return _captchaConfig;
-    if (_captchaConfigPromise) return _captchaConfigPromise;
-    _captchaConfigPromise = (async () => {
-      try {
-        const r = await fetch(API + '/config');
-        if (!r.ok) return null;
-        const data = await r.json();
-        _captchaConfig = {
-          provider: data.captcha_provider || 'turnstile',
-          sitekey:  data.captcha_sitekey  || null,
-        };
-        return _captchaConfig;
-      } catch (_) { return null; }
-    })().finally(() => { _captchaConfigPromise = null; });
-    return _captchaConfigPromise;
-  }
-
-  // ─── Captcha widget loader ─────────────────────────────────────────
-  // Both hCaptcha and Turnstile expose the same widget primitive at
-  // ``window.hcaptcha`` / ``window.turnstile``: ``.render(container,
-  // {sitekey, callback, ...})`` returns a widget id, ``.reset(id)``
-  // recycles the token. The form code stores the most recent token in
-  // a closure and clears it on submit so each request gets a fresh one
-  // (both providers issue single-use tokens).
-  const _captchaScripts = {
-    hcaptcha:  'https://hcaptcha.com/1/api.js?render=explicit',
-    turnstile: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
-  };
-  let _captchaScriptLoaded = null;
-  async function loadCaptchaScript(provider) {
-    if (_captchaScriptLoaded === provider) return true;
-    if (_captchaScriptLoaded) return _captchaScriptLoaded === provider;
-    const src = _captchaScripts[provider];
-    if (!src) return false;
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.async = true;
-      s.defer = true;
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error('captcha script failed to load'));
-      document.head.appendChild(s);
-    });
-    _captchaScriptLoaded = provider;
-    return true;
-  }
-
-  // Render a captcha widget into ``$mount``, returning a getter that
-  // yields the current token (or null if the widget isn't ready yet).
-  // No-op when captcha isn't configured - returns a getter that always
-  // gives null, which the server treats as "no captcha required" given
-  // its disable-when-unconfigured semantics.
-  async function mountCaptcha($mount) {
-    const cfg = await getCaptchaConfig();
-    if (!cfg || !cfg.sitekey) return () => null;
-    try {
-      await loadCaptchaScript(cfg.provider);
-    } catch (_) { return () => null; }
-    let token = null;
-    let widgetId = null;
-    // Both providers' render API resolves the global as soon as the
-    // script tag's onload fires AND the provider's own ready callback
-    // has run. Poll briefly.
-    const globalName = cfg.provider === 'hcaptcha' ? 'hcaptcha' : 'turnstile';
-    for (let i = 0; i < 40 && !window[globalName]; i++) {
-      await new Promise((r) => setTimeout(r, 50));
-    }
-    const widget = window[globalName];
-    if (!widget) return () => null;
-    widgetId = widget.render($mount, {
-      sitekey: cfg.sitekey,
-      theme: 'dark',
-      callback: (t_) => { token = t_; },
-      'expired-callback': () => { token = null; },
-      'error-callback':   () => { token = null; },
-    });
-    return () => {
-      const out = token;
-      // Reset the widget so subsequent submits don't reuse a token.
-      // Providers refuse a second use anyway, but the widget would
-      // otherwise show a "checked" state after a failed call.
-      if (out && widget.reset && widgetId !== null) {
-        try { widget.reset(widgetId); } catch (_) {}
-        token = null;
-      }
-      return out;
-    };
-  }
 
   // ─── Token storage ─────────────────────────────────────────────────
   // localStorage rather than cookies so we don't need CSRF tokens on
@@ -265,11 +171,15 @@
     $el.dataset.state = 'in';
     const label = user.display_name || user.username || '?';
     const initials = (label.match(/[a-zA-Z0-9]/g) || ['?'])[0].toUpperCase();
+    // Prefer the user's Discord avatar; fall back to an initials chip.
+    const avatar = user.avatar_url
+      ? `<img class="nav-account-avatar" src="${esc(user.avatar_url)}" alt="" referrerpolicy="no-referrer">`
+      : `<span class="nav-account-avatar">${esc(initials)}</span>`;
     $el.innerHTML = `
       <div class="nav-account-menu">
         <button type="button" class="nav-account-trigger" id="nav-account-trigger"
                 aria-haspopup="true" aria-expanded="false" aria-controls="nav-account-panel">
-          <span class="nav-account-avatar">${esc(initials)}</span>
+          ${avatar}
           <span class="nav-account-name">${esc(label)}</span>
           <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
         </button>
@@ -313,134 +223,32 @@
     });
   }
 
-  // ─── Form wiring (login + signup) ──────────────────────────────────
-  function wireLoginForm() {
-    const $form = document.getElementById('login-form');
-    if (!$form) return;
-    const $err = document.getElementById('login-error');
-    const $submit = document.getElementById('login-submit');
-    const $captcha = document.getElementById('login-captcha');
+  // ─── Discord OAuth return ──────────────────────────────────────────
 
-    // Mount captcha (no-op when unconfigured). The returned getter
-    // gives the current token or null - we pass it to the server
-    // either way and let the server's verify_captcha decide.
-    let getCaptchaToken = () => null;
-    if ($captcha) {
-      mountCaptcha($captcha).then((fn) => { getCaptchaToken = fn; });
-    }
-
-    $form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      $err.hidden = true;
-      $submit.disabled = true;
-      const identifier = document.getElementById('login-identifier').value.trim();
-      const password = document.getElementById('login-password').value;
-      const captcha_token = getCaptchaToken();
-      try {
-        const r = await callJSON('/v1/site-auth/login', {
-          method: 'POST',
-          json: { identifier, password, captcha_token },
-          auth: false,
-        });
-        if (!r.ok) {
-          $err.textContent = errorMessage(r.data) || t('Sign-in failed.');
-          $err.hidden = false;
-          return;
-        }
-        tokens.save(r.data.access_token, r.data.refresh_token);
-        await getMe({ force: true });
-        // Redirect target: ?next=… if present (set by 401 handler),
-        // otherwise /dashboard.
-        const next = new URLSearchParams(location.search).get('next');
-        location.href = next && next.startsWith('/') ? next : '/dashboard';
-      } finally {
-        $submit.disabled = false;
-      }
-    });
-
-    // Inline resend-verification link - uses the email half of the
-    // identifier (if it looks like an email) for the resend call.
-    const $resend = document.getElementById('resend-verify-link');
-    if ($resend) {
-      $resend.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const raw = document.getElementById('login-identifier').value.trim();
-        if (raw.indexOf('@') < 0) {
-          $err.textContent = t('Enter your email above first, then click resend.');
-          $err.hidden = false;
-          return;
-        }
-        const r = await callJSON('/v1/site-auth/resend-verification', {
-          method: 'POST',
-          json: { email: raw },
-          auth: false,
-        });
-        $err.textContent = (r.data && r.data.message) || t('Verification email sent.');
-        $err.hidden = false;
+  // Complete a Discord OAuth return: the callback lands back on the site with
+  // #discord=<one-time-code> in the fragment. Swap it for site tokens, then go
+  // to the dashboard. Runs on every page load (no-op without the fragment) so
+  // it still fires when the password form is hidden (Discord-only mode).
+  async function handleOAuthReturn() {
+    const m = location.hash.match(/(?:^|[#&])discord=([^&]+)/);
+    if (!m) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    try {
+      const r = await callJSON('/v1/site-auth/oauth/exchange', {
+        method: 'POST', json: { code: decodeURIComponent(m[1]) }, auth: false,
       });
-    }
-  }
-
-  function wireSignupForm() {
-    const $form = document.getElementById('signup-form');
-    if (!$form) return;
-    const $err = document.getElementById('signup-error');
-    const $submit = document.getElementById('signup-submit');
-    const $captcha = document.getElementById('signup-captcha');
-
-    let getCaptchaToken = () => null;
-    if ($captcha) {
-      mountCaptcha($captcha).then((fn) => { getCaptchaToken = fn; });
-    }
-
-    $form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      $err.hidden = true;
-      $submit.disabled = true;
-      const username = document.getElementById('signup-username').value.trim();
-      const email = document.getElementById('signup-email').value.trim();
-      const password = document.getElementById('signup-password').value;
-      const displayName = (document.getElementById('signup-display-name').value || '').trim();
-      const captcha_token = getCaptchaToken();
-      try {
-        const r = await callJSON('/v1/site-auth/signup', {
-          method: 'POST',
-          json: {
-            username,
-            email,
-            password,
-            display_name: displayName || null,
-            captcha_token,
-          },
-          auth: false,
-        });
-        if (!r.ok) {
-          $err.textContent = errorMessage(r.data) || t('Sign-up failed.');
-          $err.hidden = false;
-          return;
-        }
-        // Account created - log them in immediately. The user can browse
-        // the dashboard while their email verifies in the background.
-        // The captcha token we just used is already consumed; the login
-        // endpoint will skip the gate if captcha is fully disabled.
-        // Otherwise we'd need a fresh token, which the user would have
-        // to solve again - for now we accept the corner case of an
-        // immediate-after-signup auto-login bouncing on captcha and
-        // having the user land on /login.
-        const login = await callJSON('/v1/site-auth/login', {
-          method: 'POST',
-          json: { identifier: username, password, captcha_token: null },
-          auth: false,
-        });
-        if (login.ok) {
-          tokens.save(login.data.access_token, login.data.refresh_token);
-          await getMe({ force: true });
-        }
-        location.href = '/dashboard';
-      } finally {
-        $submit.disabled = false;
+      if (!r.ok) throw new Error('exchange');
+      tokens.save(r.data.access_token, r.data.refresh_token);
+      await getMe({ force: true });
+      const next = new URLSearchParams(location.search).get('next');
+      location.href = next && next.startsWith('/') ? next : '/dashboard';
+    } catch (_) {
+      const $err = document.getElementById('login-error');
+      if ($err) {
+        $err.textContent = t('Discord sign-in failed. Please try again.');
+        $err.hidden = false;
       }
-    });
+    }
   }
 
   // ─── i18n helpers ──────────────────────────────────────────────────
@@ -492,8 +300,7 @@
 
   function boot() {
     bootNav();
-    wireLoginForm();
-    wireSignupForm();
+    handleOAuthReturn();
     // Re-render the navbar on language change so localized strings refresh.
     document.addEventListener('btt-lang-changed', () => {
       renderNav(getCachedUser());
@@ -517,7 +324,5 @@
     tokens,
     API,
     errorMessage,
-    mountCaptcha,
-    getCaptchaConfig,
   };
 })();

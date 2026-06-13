@@ -34,6 +34,7 @@ class ErrorCode(str, Enum):
     ip_not_allowed = "ip_not_allowed"
     rate_limited = "rate_limited"
     method_not_allowed = "method_not_allowed"
+    service_unavailable = "service_unavailable"
     internal_error = "internal_error"
 
 
@@ -133,6 +134,7 @@ _STATUS_TO_CODE: dict[int, ErrorCode] = {
     409: ErrorCode.conflict,
     422: ErrorCode.validation_error,
     429: ErrorCode.rate_limited,
+    503: ErrorCode.service_unavailable,
 }
 
 

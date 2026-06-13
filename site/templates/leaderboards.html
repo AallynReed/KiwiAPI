@@ -26,8 +26,8 @@
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.min.css?v=20260609i">
-    <link rel="stylesheet" href="/static/leaderboards.min.css?v=20260609i">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/leaderboards.min.css">
 </head>
 <body class="landing leaderboards-page">
 
@@ -48,31 +48,9 @@
                      /site/leaderboards/config fetch fails. -->
                 <p class="lb-subtitle" id="lb-subtitle">Top players per board, ranked. Hourly captures, 3-day live retention, full archive beyond.</p>
 
-                <!-- Activity pill - clickable button that toggles the
-                     trend chart below. Hidden until /site/leaderboards/
-                     activity returns a non-null estimate. The aria-
-                     expanded + aria-controls attributes mirror the
-                     visible state of the chart so screen readers
-                     announce it correctly. -->
-                <button type="button" class="lb-activity" id="lb-activity"
-                        aria-expanded="false" aria-controls="lb-activity-trend" hidden>
-                </button>
-
-                <!-- Activity history sparkline. Collapsed by default;
-                     opened by clicking the pill above. JS plots
-                     ``estimate_per_hour`` (raw count divided by
-                     duration) so missed-capture gaps don't manifest as
-                     spikes. Tiny SVG, no axes, no legend - hover for a
-                     tooltip with the absolute number and window
-                     duration at that anchor. -->
-                <div class="lb-activity-trend" id="lb-activity-trend" hidden>
-                    <div class="lb-activity-trend-head">
-                        <span class="lb-activity-trend-label" data-i18n>Activity trend</span>
-                        <span class="lb-activity-trend-range" id="lb-activity-trend-range"></span>
-                    </div>
-                    <div class="lb-activity-trend-chart" id="lb-activity-trend-chart"></div>
-                    <div class="lb-activity-trend-tip" id="lb-activity-trend-tip" hidden></div>
-                </div>
+                <!-- The live active-player pulse + activity trend charts now
+                     live on their own /activity ("Player Activity") page so
+                     this hero stays focused on the boards. -->
 
                 <!-- Player search is hero-level (shared across tabs)
                      so it works whether the user is browsing boards or
@@ -301,9 +279,9 @@
         </div>
     </div>
 
-    <script src="/static/app.min.js?v=20260609i"></script>
-    <script src="/static/i18n.min.js?v=20260609i"></script>
-    <script src="/static/site_auth.min.js?v=20260608f" defer></script>
-    <script src="/static/leaderboards.min.js?v=20260609i" defer></script>
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/leaderboards.min.js" defer></script>
 </body>
 </html>

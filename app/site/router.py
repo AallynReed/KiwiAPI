@@ -13,15 +13,19 @@ at ``/static`` in ``app/main.py``), so the templates render straight
 through Jinja2Templates without a custom url-builder.
 """
 
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
+
+logger = logging.getLogger("kiwi.site.router")
 
 from app.admin import runtime_config
 from app.core.config import settings
 from app.trove.leaderboards import activity as leaderboards_activity
+from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove import status as trove_status
 from app.trove.leaderboards import detection as leaderboards_detection
 from app.trove.leaderboards import service as leaderboards_service
@@ -43,7 +47,9 @@ router = APIRouter(tags=["site"], include_in_schema=False)
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> HTMLResponse:
     """The BetterTroveTools landing page."""
-    return _TEMPLATES.TemplateResponse(request, "index.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "index.html", {"discord_install_url": settings.discord_install_link},
+    )
 
 
 @router.get("/documentation", response_class=HTMLResponse)
@@ -65,8 +71,12 @@ async def support(request: Request) -> HTMLResponse:
     """Dedicated 'Support the project' page - landing for the red-heart
     navbar link. The bottom-right floating widget is also rendered on
     every page; this one gives a richer pitch for visitors who want a
-    full read on what the donations actually fund."""
-    return _TEMPLATES.TemplateResponse(request, "support.html", {})
+    full read on what the donations actually fund. Renders the supporters
+    credits list (managed via /admin/supporters)."""
+    from app.supporters import service as supporters_service
+    return _TEMPLATES.TemplateResponse(
+        request, "support.html", {"supporters": await supporters_service.list_public()},
+    )
 
 
 @router.get("/status", response_class=HTMLResponse)
@@ -77,18 +87,81 @@ async def status_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "status.html", {})
 
 
+@router.get("/terms", response_class=HTMLResponse)
+async def terms(request: Request) -> HTMLResponse:
+    """Terms of Service - reachable from the footer fine print (no navbar link)."""
+    return _TEMPLATES.TemplateResponse(request, "terms.html", {})
+
+
+@router.get("/privacy", response_class=HTMLResponse)
+async def privacy(request: Request) -> HTMLResponse:
+    """Privacy Policy - reachable from the footer fine print (no navbar link)."""
+    return _TEMPLATES.TemplateResponse(request, "privacy.html", {})
+
+
+@router.get("/status/og.png")
+async def status_og_image() -> Response:
+    """OG / Twitter card image: the live EU/US/PTS server-status card as a
+    1200x630 PNG so a shared ``/status`` link previews the current state.
+    Cached ~45s; falls back to the favicon if a render ever fails."""
+    from app.site import og_image
+    try:
+        png = await og_image.render_status_og()
+    except Exception:  # noqa: BLE001 - never let a render error break the card
+        logger.exception("status OG image render failed")
+        return RedirectResponse("/static/assets/favicon.png", status_code=302)
+    return Response(
+        content=png, media_type="image/png",
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
+@router.get("/board.png")
+async def board_image(v: str | None = None) -> Response:
+    """The live 'Trove Now' board as a 1200x630 PNG - the image the Discord bot's
+    board feature embeds. Rendered at most once per minute and cached in Redis, so
+    100 guilds (and every API worker) share a single render. ``v`` is the bot's
+    per-minute cache-buster (so Discord refetches each minute); the render itself
+    is keyed by the minute server-side. Falls back to the favicon on a render error."""
+    from app.site import og_image
+    try:
+        png = await og_image.render_board_image()
+    except Exception:  # noqa: BLE001 - never let a render error break the board
+        logger.exception("board image render failed")
+        return RedirectResponse("/static/assets/favicon.png", status_code=302)
+    return Response(
+        content=png, media_type="image/png",
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
+@router.get("/announce.png")
+async def announcement_image(kind: str, v: str | None = None) -> Response:
+    """A single announcement's banner PNG (used by the Discord bot's image
+    announcements). Rendered once per minute and cached in Redis per (kind, minute),
+    so 100 guilds share one render; ``v`` is the bot's countdown-scaled cache-buster.
+    Falls back to the favicon on a render error."""
+    from app.site import og_image
+    try:
+        png = await og_image.render_announcement_image(kind)
+    except Exception:  # noqa: BLE001 - never let a render error break the announcement
+        logger.exception("announcement image render failed for %s", kind)
+        return RedirectResponse("/static/assets/favicon.png", status_code=302)
+    return Response(
+        content=png, media_type="image/png",
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
 @router.get("/login", response_class=HTMLResponse)
 async def login(request: Request) -> HTMLResponse:
-    """Public-facing login form (username OR email + password). Auth
+    """Public-facing sign-in page. Discord-only - the page just hosts the
+    "Sign in with Discord" button and finishes the OAuth round-trip. Auth
     backend lives at /v1/site-auth/* - see app/site_auth/."""
-    return _TEMPLATES.TemplateResponse(request, "login.html", {})
-
-
-@router.get("/signup", response_class=HTMLResponse)
-async def signup(request: Request) -> HTMLResponse:
-    """Public-facing signup form (username + email + password). Open
-    signup; email verification gates the dashboard's Trove-name claim."""
-    return _TEMPLATES.TemplateResponse(request, "signup.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "login.html",
+        {"discord_oauth_enabled": settings.discord_oauth_enabled},
+    )
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
@@ -99,28 +172,87 @@ async def dashboard(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "dashboard.html", {})
 
 
-@router.get("/forgot-password", response_class=HTMLResponse)
-async def forgot_password(request: Request) -> HTMLResponse:
-    """Email-based password-reset request form. POSTs to
-    /v1/site-auth/forgot-password - enumeration-safe by design (the
-    response shape doesn't reveal whether the email is registered)."""
-    return _TEMPLATES.TemplateResponse(request, "forgot_password.html", {})
-
-
-@router.get("/reset-password", response_class=HTMLResponse)
-async def reset_password(request: Request) -> HTMLResponse:
-    """Landing for the reset link in the email. Reads ``?token=...``
-    client-side, prompts for the new password, POSTs to
-    /v1/site-auth/reset-password."""
-    return _TEMPLATES.TemplateResponse(request, "reset_password.html", {})
-
-
 @router.get("/market", response_class=HTMLResponse)
 async def market(request: Request) -> HTMLResponse:
     """In-game marketplace browser (Beta). Reads from the
     ``market_listings`` collection via the /site/market/* proxies
     below - bypasses the public API's per-token caps."""
     return _TEMPLATES.TemplateResponse(request, "market.html", {})
+
+
+@router.get("/giveaways", response_class=HTMLResponse)
+async def giveaways(request: Request) -> HTMLResponse:
+    """Public giveaways page. Lists open / upcoming / past draws (data from
+    the /site/giveaways proxy); entering needs a signed-in site user."""
+    return _TEMPLATES.TemplateResponse(request, "giveaways.html", {})
+
+
+@router.get("/clubs", response_class=HTMLResponse)
+async def clubs_page_view(request: Request) -> HTMLResponse:
+    """Public clubs directory - clubs marked public in the Discord dashboard,
+    ordered by their rank on the in-game club leaderboard (board 1100)."""
+    from app.site import clubs_page
+    return _TEMPLATES.TemplateResponse(
+        request, "clubs.html", {"clubs": await clubs_page.public_clubs_ordered()},
+    )
+
+
+# Period-keyed social cards: a shared `/activity?period=1y` link previews the
+# 1Y graph. `period` MUST be a query param (or path) - URL #fragments never
+# reach the server/scrapers, so they can't drive a per-period embed.
+_OG_PERIODS = ("1d", "7d", "1m", "3m", "6m", "1y", "all")
+_OG_PERIOD_LABEL = {
+    "1d": "Last 24 hours", "7d": "Last 7 days", "1m": "Last 30 days",
+    "3m": "Last 3 months", "6m": "Last 6 months", "1y": "Last 12 months",
+    "all": "All time",
+}
+
+
+@router.get("/activity", response_class=HTMLResponse)
+async def activity_page(request: Request, period: str | None = None) -> HTMLResponse:
+    """Player Activity page - the live active-player pulse plus multi-period
+    trend charts (1D … all-time). An optional ``?period=`` selects the graph
+    AND drives the OG/Twitter card so each period previews its own chart."""
+    p = (period or "").lower()
+    p = p if p in _OG_PERIODS else ""        # "" = default (bare URL → 1d card)
+    qs = f"?period={p}" if p else ""
+    label = _OG_PERIOD_LABEL.get(p)
+    title = f"Trove Player Activity · {label}" if label else "Trove Player Activity"
+    desc = (f"Live active-player count over {label.lower()}, from the leaderboard "
+            "captures." if label
+            else "Live active-player estimate and trend charts (1D to all-time), "
+                 "from the leaderboard captures.")
+    return _TEMPLATES.TemplateResponse(request, "activity.html", {
+        "og_title": title,
+        "og_desc": desc,
+        "og_image_url": f"https://trove.aallyn.net/activity/og.png{qs}",
+        "og_page_url": f"https://trove.aallyn.net/activity{qs}",
+    })
+
+
+@router.get("/class-activity", response_class=HTMLResponse)
+async def class_activity_page(request: Request) -> HTMLResponse:
+    """Class Activity page - per-class active players over time (multi-line) plus
+    a class player-share donut, derived from the Effort/Paragon leaderboards."""
+    return _TEMPLATES.TemplateResponse(request, "class-activity.html", {})
+
+
+@router.get("/activity/og.png")
+async def activity_og_image(period: str = "1d") -> Response:
+    """OG / Twitter card image: the activity chart for ``period`` (default 1d)
+    rendered to a 1200x630 PNG so a shared ``/activity?period=…`` link previews
+    that graph. Cached in-process per period; falls back to the favicon if a
+    render ever fails so the meta tag never 500s."""
+    from app.site import og_image
+    try:
+        png = await og_image.render_activity_og(period)
+    except Exception:  # noqa: BLE001 - never let a render error break the card
+        logger.exception("activity OG image render failed")
+        return RedirectResponse("/static/assets/favicon.png", status_code=302)
+    return Response(
+        content=png, media_type="image/png",
+        headers={"Cache-Control": "public, max-age=600"},
+    )
 
 
 # --- /site/market/* - same-origin JSON proxies for the page ---------------
@@ -136,6 +268,18 @@ async def site_market_items() -> JSONResponse:
     return JSONResponse(
         {"items": items, "count": len(items)},
         headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
+@router.get("/site/giveaways", response_class=JSONResponse)
+async def site_giveaways() -> JSONResponse:
+    """Public giveaway list for the /giveaways page (open, upcoming, recent).
+    Short cache - entry counts move as people enter."""
+    from app.giveaways import service as giveaways_service
+    items = await giveaways_service.list_public()
+    return JSONResponse(
+        {"items": [i.model_dump(mode="json") for i in items]},
+        headers={"Cache-Control": "public, max-age=15"},
     )
 
 
@@ -272,24 +416,51 @@ async def site_lb_boards(
 # put the named segments above the parameterised ones.
 @router.get("/site/leaderboards/activity", response_class=JSONResponse)
 async def site_lb_activity() -> JSONResponse:
-    """Same payload as `/v1/leaderboards/activity` but served same-origin
-    so the page can fetch without CORS."""
+    """Same payload as the public `/v1/activity/current` but served
+    same-origin so the page can fetch without CORS."""
     payload = await leaderboards_activity.estimate_active_players()
-    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
-    return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
+    # no-cache: the chart must reflect a new capture / a master Reset+rebuild
+    # immediately, not 30 min later. The query is a cheap indexed read.
+    return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
 
 
 @router.get("/site/leaderboards/activity/history", response_class=JSONResponse)
 async def site_lb_activity_history(days: int = 7) -> JSONResponse:
-    """Same payload as ``/v1/leaderboards/activity/history`` - same-origin
+    """Same payload as the public ``/v1/activity/history`` - same-origin
     proxy so the showcase page can fetch without CORS / token gymnastics.
     Returns a time-series of activity estimates with both raw counts
     and per-hour rates, the latter being what the chart line plots so
     missed-capture gaps don't show as spikes."""
     days = max(1, min(int(days), 30))
     payload = await leaderboards_activity.estimate_active_players_history(days=days)
-    ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
-    return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
+    return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/leaderboards/activity/series", response_class=JSONResponse)
+async def site_lb_activity_series(period: str = "7d") -> JSONResponse:
+    """Bucketed activity-level series for the Player Activity page's charts.
+
+    ``period`` is one of 1d / 7d / 1m / 3m / 6m / 1y / all. Returns the
+    downsampled points plus period peak / average / latest so the page
+    paints a chart and its stat cards from a single request."""
+    payload = await leaderboards_activity.activity_series(period=period)
+    return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/leaderboards/class-activity/current", response_class=JSONResponse)
+async def site_lb_class_activity_current() -> JSONResponse:
+    """Same payload as `/v1/class-activity/current`, served same-origin for the
+    Class Activity page (no-cache so a new capture / master rebuild shows at once)."""
+    payload = await leaderboards_class_activity.class_activity_current()
+    return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/leaderboards/class-activity/series", response_class=JSONResponse)
+async def site_lb_class_activity_series(period: str = "7d") -> JSONResponse:
+    """Per-class bucketed series for the Class Activity multi-line chart
+    (`period` = 1d / 7d / 1m / 3m / 6m / 1y / all)."""
+    payload = await leaderboards_class_activity.class_activity_series(period=period)
+    return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
 
 
 @router.get("/site/trove-status", response_class=JSONResponse)
@@ -302,7 +473,7 @@ async def site_trove_status() -> JSONResponse:
 
 
 @router.get("/site/trove-status/history", response_class=JSONResponse)
-async def site_trove_status_history(env: str = "live", days: int = 30) -> JSONResponse:
+async def site_trove_status_history(env: str = "live", days: int = 7) -> JSONResponse:
     """Status-timeline history for the /status page (same payload as
     ``/v1/misc/trove-status/history``). ``env`` ∈ live / pts."""
     env = env if env in ("live", "pts") else "live"
@@ -370,8 +541,9 @@ async def site_lb_board_history(
 ) -> JSONResponse:
     """Score-vs-time trajectories for the current top-``top`` players on
     a board over the last ``days`` days. Drives the per-board chart on
-    the leaderboards page."""
-    payload = await leaderboards_service.board_history(uuid, days=days, top=top)
+    the leaderboards page. Served from the Redis read-through cache (the
+    warmer pre-computes the default 7d/top-5 for every board each ingest)."""
+    payload = await leaderboards_cache.get_board_history(uuid, days, top)
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
 
 

@@ -16,8 +16,8 @@
     <link rel="apple-touch-icon" href="/static/assets/favicon.png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.min.css?v=20260608f">
-    <link rel="stylesheet" href="/static/account.min.css?v=20260608f">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/account.min.css">
 </head>
 <body class="landing account-page">
 
@@ -28,48 +28,27 @@
     <main id="main" class="acc-main">
         <section class="acc-card">
             <h1 class="acc-title" data-i18n>Sign in</h1>
-            <p class="acc-sub" data-i18n>Welcome back. Sign in with your username or email.</p>
+            <p class="acc-sub" data-i18n>Sign in with your Discord account.</p>
 
-            <form id="login-form" class="acc-form" autocomplete="on">
-                <label class="acc-field">
-                    <span class="acc-label" data-i18n>Username or email</span>
-                    <input type="text" id="login-identifier" name="identifier" required autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">
-                </label>
-                <label class="acc-field">
-                    <span class="acc-label" data-i18n>Password</span>
-                    <input type="password" id="login-password" name="password" required autocomplete="current-password">
-                </label>
+            <!-- Kept (even with no password form) so site_auth.js can surface
+                 a failed OAuth round-trip here. -->
+            <p class="acc-error" id="login-error" hidden></p>
 
-                <p class="acc-error" id="login-error" hidden></p>
-
-                <!-- Captcha mount. site_auth.js fetches /config to see
-                     which provider is configured (hCaptcha / Turnstile)
-                     and renders the widget here. Disappears entirely
-                     when the API isn't configured for captcha. -->
-                <div class="acc-captcha" id="login-captcha"></div>
-
-                <button type="submit" class="acc-submit" id="login-submit">
-                    <span data-i18n>Sign in</span>
-                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                </button>
-            </form>
-
-            <p class="acc-alt">
-                <span data-i18n>No account yet?</span>
-                <a href="/signup" data-i18n>Create one</a>
-            </p>
-            <p class="acc-alt acc-alt-mini">
-                <a href="/forgot-password" data-i18n>Forgot your password?</a>
-                <span class="acc-alt-sep">·</span>
-                <a href="#" id="resend-verify-link" data-i18n>Resend verification email</a>
-            </p>
+            {% if discord_oauth_enabled %}
+            <a class="acc-oauth-btn acc-oauth-discord" href="https://api.aallyn.net/v1/site-auth/oauth/discord/start">
+                <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                <span data-i18n>Sign in with Discord</span>
+            </a>
+            {% else %}
+            <p class="acc-sub" data-i18n>Sign-in is temporarily unavailable. Please check back soon.</p>
+            {% endif %}
         </section>
     </main>
 
     {% include "partials/footer.html" %}
 
-    <script src="/static/app.min.js?v=20260608f"></script>
-    <script src="/static/i18n.min.js?v=20260608f"></script>
-    <script src="/static/site_auth.min.js?v=20260608f"></script>
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js"></script>
 </body>
 </html>

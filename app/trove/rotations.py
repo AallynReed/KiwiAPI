@@ -18,7 +18,7 @@ from app.trove.server_time import UTC, _load, real_utc_now
 DAY = 86400
 
 # d15 rotation: three parallel sub-biome lists indexed by the same 3-hour offset.
-_D15_EPOCH = datetime.fromtimestamp(1718708400, UTC)   # 2024-06-18 11:00 UTC
+_D15_EPOCH = datetime(2024, 6, 18, 14, 0, 0, tzinfo=UTC)   # 2024-06-18 14:00 UTC
 _D15_INTERVAL = timedelta(hours=3)
 _BIOME1 = [
     "Sundered Uplands", "Cerise Sandsea", "Deep Forest", "Alkali Flats",

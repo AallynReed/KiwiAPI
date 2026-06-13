@@ -631,6 +631,16 @@ class ActivityResponse(BaseModel):
     window_end: int | None    # unix seconds - later (more recent) anchor
     duration_hours: float | None
     estimate: int | None      # distinct active players (union across all tracked boards); None = data unavailable
+    # Wider rollups: distinct active players over the last 24h / 7d (same
+    # late anchor, earlier endpoint). None until enough history exists to
+    # reach back that far. ``span_*_hours`` is the window actually covered
+    # (shorter than the nominal 24/168 right after a fresh deploy).
+    estimate_24h: int | None = None
+    estimate_7d: int | None = None
+    window_24h_start: int | None = None
+    window_7d_start: int | None = None
+    span_24h_hours: float | None = None
+    span_7d_hours: float | None = None
     by_board: list[ActivityBoardCount]
     boards_analyzed: int
     methodology: str
@@ -668,17 +678,94 @@ class ActivityHistoryResponse(BaseModel):
     methodology: str
 
 
+class ActivitySeriesPoint(BaseModel):
+    """One bucket on the multi-period activity chart. ``active`` is the
+    average active-players-per-hour across the windows that fell in the
+    bucket; ``peak`` is the busiest single window in it."""
+    t: int            # bucket start, unix seconds
+    active: float     # avg active players / hour in the bucket
+    peak: float       # busiest hour in the bucket
+    samples: int      # number of captures aggregated into the bucket
+
+
+class ActivitySeriesPeak(BaseModel):
+    t: int            # bucket start of the period's busiest bucket
+    active: float
+
+
+class ActivitySeriesResponse(BaseModel):
+    """Bucketed activity-level series for one period (1d … all). Buckets
+    are sized to the period so the line stays readable; ``peak`` /
+    ``average`` / ``latest`` summarise it for stat cards. Empty ``points``
+    when the estimate collection has nothing in range."""
+    period: str
+    bucket_seconds: int
+    window_start: int
+    window_end: int
+    points: list[ActivitySeriesPoint]
+    peak: ActivitySeriesPeak | None = None
+    average: float | None = None
+    latest: float | None = None
+    methodology: str
+
+
+# --- Class activity (per-class active players from Effort/Paragon boards) ----
+
+
+class ClassActivityItem(BaseModel):
+    class_index: int       # classes.json index (= Effort/Paragon board uuid % 1000)
+    name: str              # class display name
+    icon: str | None       # self-hosted icon URL (/static/class-icons/<qualified_name>.png)
+    active_players: int    # distinct players active on this class's boards in the window
+    share: float           # 0..1, share of total class activity (NOT distinct players)
+
+
+class ClassActivityCurrentResponse(BaseModel):
+    """Latest capture window's per-class active-player counts + player-share.
+
+    ``share`` is share OF CLASS ACTIVITY: a player active on several classes is
+    counted in each, so ``total_active`` is Σ class counts (the share
+    denominator), not a distinct headcount."""
+    window_start: int | None
+    window_end: int | None
+    duration_hours: float | None
+    total_active: int | None
+    classes: list[ClassActivityItem]
+    methodology: str
+    computed_at: int
+
+
+class ClassActivitySeriesLine(BaseModel):
+    class_index: int
+    name: str
+    icon: str | None            # self-hosted icon URL (/static/class-icons/<qualified_name>.png)
+    values: list[float | None]  # avg active/hr per bucket, aligned to `buckets`; null = no data
+
+
+class ClassActivitySeriesResponse(BaseModel):
+    """Per-class bucketed series for the Class Activity chart. ``buckets`` is the
+    shared x-axis (one timestamp per bucket); each line's ``values`` align to it,
+    with ``null`` where that class had no measurable window in the bucket."""
+    period: str
+    bucket_seconds: int
+    window_start: int
+    window_end: int
+    buckets: list[int]
+    classes: list[ClassActivitySeriesLine]
+    methodology: str
+
+
 class TroveStatusResponse(BaseModel):
     """Live Trove server status from the background prober.
 
-    ``overall`` is a rollup of the public Live regions - ``online`` when
-    every region is up, ``down`` when all are fully down, ``maintenance``
-    for any mixed/partial state (online / maintenance / down / unknown).
-    ``auth`` is the shared HTTPS liveness of the account-auth gateway.
-    ``environments`` carries a per-env dict (``eu`` / ``us`` / ``pts``),
-    each ``{status, online, game}`` where ``game`` is the TCP probe of the
-    glsserver port. Free-form dicts keep the wire stable as fields
-    evolve."""
+    Status is binary: ``online`` (reachable) or ``down`` (anything
+    unreachable). ``overall`` is ``online`` only when every public Live region
+    is online, else ``down`` (consumers read full-vs-partial from the per-region
+    detail). ``auth`` is the shared HTTPS liveness of the account-auth gateway.
+    ``environments`` carries a per-env dict (``eu`` / ``us`` / ``pts``), each
+    ``{status, online, game}`` where ``game`` is the glsserver probe. (The
+    legacy ``maintenance`` value is still accepted on the wire so a stale cached
+    snapshot validates, but the prober no longer emits it.)"""
     overall: Literal["online", "maintenance", "down", "unknown"]
     auth: dict | None              # {online, http_status, latency_ms, error}
     environments: dict             # {eu: {status, online, game}, us: {...}, pts: {...}}

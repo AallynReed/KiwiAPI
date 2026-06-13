@@ -106,7 +106,9 @@ a:hover { text-decoration: underline; }
 /* ----------------------------------------------------------- Page layout */
 .docs-layout {
     display: flex;
-    max-width: 1500px;
+    /* Match the site-wide ~92% content width (style.css --content-max) so the
+       sidebar + content use ≥80% of the desktop instead of a 1500px column. */
+    max-width: 92vw;
     margin: 0 auto;
     padding-top: var(--navbar-h);
 }
@@ -175,7 +177,9 @@ a:hover { text-decoration: underline; }
     flex: 1;
     min-width: 0;
     padding: 40px 48px 120px;
-    max-width: 980px;
+    /* Fill the space beside the sidebar (was capped at 980px) so the page uses
+       the full ≥80% layout width. */
+    max-width: none;
 }
 
 .docs-hero {

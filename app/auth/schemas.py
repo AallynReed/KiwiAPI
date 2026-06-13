@@ -76,6 +76,7 @@ class PublicConfig(BaseModel):
     token_creation_daily_limit: int
     revoke_reasons: list[str] = []
     github_oauth_enabled: bool = False
+    discord_oauth_enabled: bool = False
 
 
 class TokenResponse(BaseModel):

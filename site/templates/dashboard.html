@@ -17,8 +17,8 @@
     <link rel="apple-touch-icon" href="/static/assets/favicon.png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.min.css?v=20260608f">
-    <link rel="stylesheet" href="/static/account.min.css?v=20260609c">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/account.min.css">
 </head>
 <body class="landing dashboard-page">
 
@@ -45,134 +45,143 @@
         <!-- Real dashboard body. Hidden until JS confirms the user is
              signed in; populated by site_auth.js / dashboard.js. -->
         <div id="dash-body" hidden>
-            <!-- Hero header -->
-            <section class="dash-hero">
-                <div class="dash-hero-inner">
-                    <p class="dash-eyebrow">/dashboard</p>
-                    <h1 class="dash-title" id="dash-title" data-i18n>Welcome back</h1>
-                    <p class="dash-sub" id="dash-sub"></p>
-                </div>
-            </section>
+            <div class="dash-shell">
 
-            <!-- Unverified-email banner. Shown only when is_verified=false. -->
-            <section class="dash-banner" id="dash-verify-banner" hidden>
-                <i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i>
-                <div class="dash-banner-body">
-                    <p class="dash-banner-title" data-i18n>Confirm your email</p>
-                    <p class="dash-banner-text" data-i18n>We sent a verification link to your inbox. Confirm it to claim your Trove name and unlock the rest of the dashboard.</p>
-                </div>
-                <button type="button" class="dash-btn dash-btn-mini" id="dash-resend-verify" data-i18n>Resend link</button>
-            </section>
-
-            <!-- Profile + Trove name cards side by side. -->
-            <section class="dash-grid">
-
-                <!-- Profile card -->
-                <article class="dash-card">
-                    <h2 class="dash-card-title" data-i18n>Profile</h2>
-                    <dl class="dash-fields">
-                        <div class="dash-field">
-                            <dt data-i18n>Username</dt>
-                            <dd class="dash-mono" id="prof-username"></dd>
+                <!-- Sidebar: identity + section nav + sign out. -->
+                <aside class="dash-sidebar">
+                    <div class="dash-side-head">
+                        <img class="dash-avatar" id="dash-avatar" alt="" referrerpolicy="no-referrer" hidden>
+                        <div class="dash-side-id">
+                            <p class="dash-side-name" id="dash-side-name"></p>
+                            <p class="dash-side-sub" data-i18n>Signed in with Discord</p>
                         </div>
-                        <div class="dash-field">
-                            <dt data-i18n>Email</dt>
-                            <dd id="prof-email"></dd>
-                        </div>
-                        <div class="dash-field">
-                            <dt data-i18n>Display name</dt>
-                            <dd>
-                                <span id="prof-display-name"></span>
-                                <button type="button" class="dash-link" id="prof-edit-name" data-i18n>Edit</button>
-                            </dd>
-                        </div>
-                        <div class="dash-field">
-                            <dt data-i18n>Member since</dt>
-                            <dd id="prof-created"></dd>
-                        </div>
-                    </dl>
-                    <div class="dash-card-actions">
-                        <button type="button" class="dash-btn dash-btn-mini" id="dash-change-password" data-i18n>Change password</button>
-                        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" id="dash-logout" data-i18n>Sign out</button>
                     </div>
-                </article>
+                    <nav class="dash-nav" role="tablist" aria-label="Dashboard sections">
+                        <button type="button" class="dash-nav-item" data-section="profile" role="tab">
+                            <i class="fa-solid fa-user" aria-hidden="true"></i> <span data-i18n>Profile</span>
+                        </button>
+                        <button type="button" class="dash-nav-item" data-section="giveaways" role="tab">
+                            <i class="fa-solid fa-gift" aria-hidden="true"></i> <span data-i18n>Giveaways</span>
+                            <span class="dash-nav-badge" id="dash-won-badge" hidden></span>
+                        </button>
+                        <button type="button" class="dash-nav-item" data-section="leaderboard" role="tab">
+                            <i class="fa-solid fa-ranking-star" aria-hidden="true"></i> <span data-i18n>Leaderboard</span>
+                        </button>
+                        <button type="button" class="dash-nav-item" data-section="discord" role="tab">
+                            <i class="fa-brands fa-discord" aria-hidden="true"></i> <span data-i18n>Discord Bot</span>
+                        </button>
+                    </nav>
+                    <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost dash-side-logout" id="dash-logout" data-i18n>Sign out</button>
+                </aside>
 
-                <!-- Trove player name card. Two visual states:
-                     unclaimed (input + claim button) or claimed (badge
-                     + release button). -->
-                <article class="dash-card">
-                    <h2 class="dash-card-title">
-                        <span data-i18n>Trove player name</span>
-                        <span class="dash-tag dash-tag-unverified" id="trove-tag-unverified" hidden data-i18n>unverified</span>
-                        <span class="dash-tag dash-tag-verified" id="trove-tag-verified" hidden data-i18n>verified</span>
-                    </h2>
+                <!-- Content panes (one visible at a time). -->
+                <div class="dash-content">
 
-                    <div id="trove-claim-state">
-                        <p class="dash-card-sub" data-i18n>Claim your in-game name to surface your leaderboard ranks below. Anyone can claim any name in v1 - verification is coming.</p>
-                        <form id="trove-claim-form" class="dash-inline-form">
-                            <input type="text" id="trove-name-input" placeholder="In-game player name" maxlength="80" autocomplete="off" spellcheck="false">
-                            <button type="submit" class="dash-btn">
-                                <i class="fa-solid fa-flag" aria-hidden="true"></i>
-                                <span data-i18n>Claim</span>
-                            </button>
-                        </form>
-                        <p class="dash-error" id="trove-claim-error" hidden></p>
-                    </div>
+                    <!-- ── Profile ── -->
+                    <section class="dash-section" data-pane="profile">
+                        <h1 class="dash-section-title" data-i18n>Profile</h1>
+                        <article class="dash-card">
+                            <dl class="dash-fields">
+                                <div class="dash-field"><dt data-i18n>Username</dt><dd class="dash-mono" id="prof-username"></dd></div>
+                                <div class="dash-field"><dt data-i18n>Email</dt><dd id="prof-email"></dd></div>
+                                <div class="dash-field"><dt data-i18n>Display name</dt>
+                                    <dd><span id="prof-display-name"></span>
+                                        <button type="button" class="dash-link" id="prof-edit-name" data-i18n>Edit</button></dd></div>
+                                <div class="dash-field"><dt data-i18n>Member since</dt><dd id="prof-created"></dd></div>
+                            </dl>
+                        </article>
+                    </section>
 
-                    <div id="trove-claimed-state" hidden>
-                        <p class="dash-card-sub" data-i18n>You currently have this name claimed:</p>
-                        <p class="dash-claimed-name" id="trove-claimed-name"></p>
-                        <p class="dash-card-sub-mini" id="trove-claimed-when"></p>
+                    <!-- ── Giveaways ── -->
+                    <section class="dash-section" data-pane="giveaways" hidden>
+                        <h1 class="dash-section-title" data-i18n>Your giveaways</h1>
+                        <p class="dash-section-sub" data-i18n>Every giveaway you've entered. Won prizes show your code right here - available any time, even if you lose the email.</p>
+                        <div id="dash-gw-list"><p class="dash-loading" data-i18n>Loading…</p></div>
+                    </section>
 
-                        <!-- Verification block. Two states swap via the
-                             ``data-state`` attribute on the wrapper:
-                             "unverified" shows the call-to-verify, and
-                             "verified" shows the green confirmation. -->
-                        <div class="dash-verify" id="trove-verify-block" data-state="unverified" hidden>
-                            <div class="dash-verify-unverified">
-                                <p class="dash-card-sub-mini" data-i18n>This claim is unverified - anyone can claim any name until they prove ownership. Score on any board you appear on, then click below.</p>
-                                <button type="button" class="dash-btn dash-btn-mini" id="trove-verify-btn">
-                                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                                    <span data-i18n>Verify now</span>
-                                </button>
-                                <p class="dash-card-sub-mini dash-verify-baseline" id="trove-verify-baseline"></p>
+                    <!-- ── Leaderboard ── -->
+                    <section class="dash-section" data-pane="leaderboard" hidden>
+                        <h1 class="dash-section-title" data-i18n>Leaderboard</h1>
+
+                        <!-- Trove player name card: unclaimed (input) or claimed (badge + verify). -->
+                        <article class="dash-card">
+                            <h2 class="dash-card-title">
+                                <span data-i18n>Trove player name</span>
+                                <span class="dash-tag dash-tag-unverified" id="trove-tag-unverified" hidden data-i18n>unverified</span>
+                                <span class="dash-tag dash-tag-verified" id="trove-tag-verified" hidden data-i18n>verified</span>
+                            </h2>
+
+                            <div id="trove-claim-state">
+                                <p class="dash-card-sub" data-i18n>Claim your in-game name to surface your leaderboard ranks below. Anyone can claim any name in v1 - verification is coming.</p>
+                                <form id="trove-claim-form" class="dash-inline-form">
+                                    <input type="text" id="trove-name-input" placeholder="In-game player name" maxlength="80" autocomplete="off" spellcheck="false">
+                                    <button type="submit" class="dash-btn">
+                                        <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                                        <span data-i18n>Claim</span>
+                                    </button>
+                                </form>
+                                <p class="dash-error" id="trove-claim-error" hidden></p>
                             </div>
-                            <div class="dash-verify-verified" hidden>
-                                <p class="dash-verify-badge">
-                                    <i class="fa-solid fa-shield-check" aria-hidden="true"></i>
-                                    <span data-i18n>Ownership verified</span>
-                                </p>
-                                <p class="dash-card-sub-mini" id="trove-verify-when"></p>
+
+                            <div id="trove-claimed-state" hidden>
+                                <p class="dash-card-sub" data-i18n>You currently have this name claimed:</p>
+                                <p class="dash-claimed-name" id="trove-claimed-name"></p>
+                                <p class="dash-card-sub-mini" id="trove-claimed-when"></p>
+
+                                <div class="dash-verify" id="trove-verify-block" data-state="unverified" hidden>
+                                    <div class="dash-verify-unverified">
+                                        <p class="dash-card-sub-mini" data-i18n>This claim is unverified - anyone can claim any name until they prove ownership. Score on any board you appear on, then click below.</p>
+                                        <button type="button" class="dash-btn dash-btn-mini" id="trove-verify-btn">
+                                            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                            <span data-i18n>Verify now</span>
+                                        </button>
+                                        <p class="dash-card-sub-mini dash-verify-baseline" id="trove-verify-baseline"></p>
+                                    </div>
+                                    <div class="dash-verify-verified" hidden>
+                                        <p class="dash-verify-badge">
+                                            <i class="fa-solid fa-shield-check" aria-hidden="true"></i>
+                                            <span data-i18n>Ownership verified</span>
+                                        </p>
+                                        <p class="dash-card-sub-mini" id="trove-verify-when"></p>
+                                    </div>
+                                    <p class="dash-card-sub-mini dash-verify-result" id="trove-verify-result" hidden></p>
+                                </div>
+
+                                <div class="dash-card-actions">
+                                    <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" id="trove-unclaim" data-i18n>Release name</button>
+                                </div>
                             </div>
-                            <p class="dash-card-sub-mini dash-verify-result" id="trove-verify-result" hidden></p>
-                        </div>
+                        </article>
 
-                        <div class="dash-card-actions">
-                            <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" id="trove-unclaim" data-i18n>Release name</button>
-                        </div>
-                    </div>
-                </article>
-            </section>
+                        <!-- Trove stats - leaderboard appearances + chart. -->
+                        <section class="dash-card dash-card-wide" id="dash-stats" hidden>
+                            <div class="dash-card-head">
+                                <h2 class="dash-card-title" data-i18n>Your leaderboard appearances</h2>
+                                <span class="dash-card-meta" id="dash-stats-meta"></span>
+                            </div>
+                            <div class="dash-stats-body" id="dash-stats-body">
+                                <p class="dash-loading" data-i18n>Crunching the latest capture - first paint can take a moment while we warm the caches.</p>
+                            </div>
+                        </section>
+                    </section>
 
-            <!-- Trove stats - leaderboard appearances + chart. Hidden
-                 until a name is claimed AND stats land. -->
-            <section class="dash-card dash-card-wide" id="dash-stats" hidden>
-                <div class="dash-card-head">
-                    <h2 class="dash-card-title" data-i18n>Your leaderboard appearances</h2>
-                    <span class="dash-card-meta" id="dash-stats-meta"></span>
+                    <!-- ── Discord Bot ── -->
+                    <section class="dash-section" data-pane="discord" hidden>
+                        <h1 class="dash-section-title" data-i18n>Discord Bot</h1>
+                        <p class="dash-section-sub" data-i18n>Control the Kiwi bot in your Discord servers. It can announce each new hourly challenge to a channel you choose. Manage servers you own or have Manage Server on where the bot has been added.</p>
+                        <div id="dash-discord-body"><p class="dash-loading" data-i18n>Loading…</p></div>
+                    </section>
+
                 </div>
-                <div class="dash-stats-body" id="dash-stats-body">
-                    <p class="dash-loading" data-i18n>Crunching the latest capture - first paint can take a moment while we warm the caches.</p>
-                </div>
-            </section>
+            </div>
         </div>
     </main>
 
     {% include "partials/footer.html" %}
 
-    <script src="/static/app.min.js?v=20260608f"></script>
-    <script src="/static/i18n.min.js?v=20260608f"></script>
-    <script src="/static/site_auth.min.js?v=20260608f"></script>
-    <script src="/static/dashboard.min.js?v=20260608f"></script>
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js"></script>
+    <script src="/static/dashboard.min.js"></script>
 </body>
 </html>

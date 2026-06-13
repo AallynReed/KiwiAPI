@@ -59,6 +59,12 @@ _REGISTRY: tuple[Scope, ...] = (
           "Read Trove in-game leaderboards - boards, entries, timestamps"),
     Scope("market:read", 1 << 10, "market",
           "Read Trove marketplace listings - listings, items, interest list, price history"),
+    Scope("activity:read", 1 << 11, "activity",
+          "Read Trove player-activity estimates - live active-player count and multi-period trend series"),
+    Scope("giveaways:read", 1 << 12, "giveaways",
+          "Read public giveaways - ongoing draws, prizes, entry counts"),
+    Scope("events:read", 1 << 13, "events",
+          "Subscribe to the live event stream (SSE) - real-time challenge + chaos-chest push updates"),
 )
 
 ALL_SCOPES = 0  # sentinel mask meaning "every scope, present and future"

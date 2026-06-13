@@ -53,6 +53,13 @@
   --radius:    18px;
   --radius-lg: 28px;
 
+  /* Shared content-page width: ALWAYS use ~92% of the viewport (so ≥80% on
+     every desktop, scaling with the monitor - a fixed px cap goes under 80% on
+     big screens), with just an 8% gutter so it's never literally edge-to-edge.
+     Used by the *-main containers (leaderboards / market / updates / activity /
+     commands / giveaways). Tune this one value to widen/narrow every page. */
+  --content-max: 92vw;
+
   --shadow-soft: 0 4px 30px rgba(0,0,0,.35);
   --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent),
                  0 12px 50px color-mix(in oklab, var(--accent) 18%, transparent);
@@ -81,12 +88,20 @@ body.landing {
      context so nothing escapes into the body's flow. */
   position: relative;
   overflow-x: hidden;
+  /* Sticky-footer column: <main> grows to fill so the footer always sits on
+     the bottom edge, even on short pages (e.g. login) - nothing below it. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   /* Subtle ambient washes - kills banding on the dark gradients without
      shipping a raster background image. */
   background-image:
     radial-gradient(1200px 800px at 50% -10%, rgba(88,166,255,.06), transparent 60%),
     radial-gradient(800px 600px at 90% 30%, rgba(255,138,61,.04), transparent 60%);
 }
+/* Fill the gap between navbar and footer so the footer is pinned to the bottom
+   on short pages (the navbar + footer are the other two flex-column children). */
+body.landing > main { flex: 1 0 auto; }
 
 img, picture, video, canvas, svg { max-width: 100%; display: block; }
 a { color: var(--accent-blue); text-decoration: none; }
@@ -357,6 +372,11 @@ canvas.bg-fx {
   font-size: .85rem;
   letter-spacing: .02em;
 }
+/* When it's a real Discord avatar <img> rather than an initials chip. */
+img.nav-account-avatar {
+  object-fit: cover;
+  background: none;
+}
 .nav-account-name {
   max-width: 14ch;
   overflow: hidden;
@@ -495,6 +515,23 @@ canvas.bg-fx {
   color: var(--text-mute);
 }
 .nav-dropdown-panel a:hover i { color: var(--accent-blue); }
+
+/* Beta pill - lives in the nav dropdown (Market link), so it belongs in the
+   SHARED stylesheet to render its background on every page, not just /market. */
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  margin-left: 8px;
+  border-radius: 999px;
+  font: 700 .62rem 'Inter', system-ui, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.nav-pill-beta {
+  background: linear-gradient(135deg, #f8961e, #ff5e7e);
+  color: #1a0c0c;
+}
 
 
 /* ─── 4. Hero ─────────────────────────────────────────────────────────── */
@@ -945,8 +982,8 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 
 .live-strip {
   position: relative;
-  padding: 60px 28px 30px;
-  max-width: 1320px;
+  padding: 60px clamp(20px, 3vw, 48px) 30px;
+  max-width: var(--content-max);
   margin: 0 auto;
 }
 .live-eyebrow {
@@ -1242,8 +1279,8 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 /* ─── 9. Bento grid ──────────────────────────────────────────────────── */
 
 .bento {
-  padding: 100px 28px;
-  max-width: 1320px;
+  padding: 100px clamp(20px, 3vw, 48px);
+  max-width: var(--content-max);
   margin: 0 auto;
 }
 
@@ -1293,8 +1330,8 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 /* ─── 10. Stats counters ─────────────────────────────────────────────── */
 
 .stats {
-  padding: 60px 28px;
-  max-width: 1100px;
+  padding: 60px clamp(20px, 3vw, 48px);
+  max-width: var(--content-max);
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1504,6 +1541,8 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   justify-content: center;
 }
 .footer-fineprint .sep { color: var(--bg-line); }
+.footer-fineprint a { color: var(--text-soft); text-decoration: underline; text-underline-offset: 2px; }
+.footer-fineprint a:hover { color: var(--accent-blue); }
 
 
 /* ─── 14. Language picker (used in nav) ──────────────────────────────── */

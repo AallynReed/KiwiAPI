@@ -8,8 +8,16 @@ argon2-cffi==25.1.0
 httpx==0.28.1
 aiosmtplib==5.1.1
 redis==5.2.1
+asyncpg==0.30.0
 jinja2==3.1.6
 python-multipart==0.0.20
 cryptography==46.0.3
 tzdata==2025.2
 beautifulsoup4==4.12.3
+pillow==11.3.0
+discord.py==2.4.0
+# discord.py imports the stdlib `audioop` module at import time (for voice, which
+# we don't use). Python 3.13 REMOVED audioop from the stdlib, so on the 3.13 bot
+# image `import discord` raises ModuleNotFoundError and the gateway bot crash-loops.
+# audioop-lts is the maintained backport that restores it on 3.13+.
+audioop-lts==0.2.1; python_version >= "3.13"

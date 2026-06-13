@@ -1,67 +1,7 @@
 """Request + response models for the site-side auth endpoints."""
-import re
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
-
-from app.core.config import settings
-
-# Username constraints - readable, URL-safe, no impersonation foot-guns.
-USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_]{3,24}$")
-
-
-def _validate_username(v: str) -> str:
-    """Lowercase the username and enforce the alpha-num + underscore
-    shape. Called from request models so a bad signup is rejected with
-    a clear 422 rather than leaking into the DB layer."""
-    if not isinstance(v, str):
-        raise ValueError("username must be a string")
-    if not USERNAME_PATTERN.match(v):
-        raise ValueError(
-            "username must be 3–24 chars, letters/digits/underscore only",
-        )
-    return v.lower()
-
-
-class SiteSignupRequest(BaseModel):
-    username: str
-    email: EmailStr
-    password: str = Field(min_length=settings.password_min_length, max_length=256)
-    display_name: str | None = Field(default=None, max_length=80)
-    captcha_token: str | None = Field(default=None, description="Captcha response token")
-
-    @field_validator("username", mode="before")
-    @classmethod
-    def _username_shape(cls, v: str) -> str:
-        return _validate_username(v)
-
-
-class SiteLoginRequest(BaseModel):
-    """Login by username OR email - the field is named ``identifier``
-    so the same form on the page can accept either without dispatching
-    on shape on the client. The server picks the right index lookup."""
-    identifier: str = Field(min_length=3, max_length=120)
-    password: str
-    captcha_token: str | None = Field(default=None, description="Captcha response token")
-
-
-class SiteForgotPasswordRequest(BaseModel):
-    email: EmailStr
-    captcha_token: str | None = Field(default=None, description="Captcha response token")
-
-
-class SiteResendVerificationRequest(BaseModel):
-    email: EmailStr
-
-
-class SiteResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str = Field(min_length=settings.password_min_length, max_length=256)
-
-
-class SiteChangePasswordRequest(BaseModel):
-    current_password: str
-    new_password: str = Field(min_length=settings.password_min_length, max_length=256)
+from pydantic import BaseModel, EmailStr, Field
 
 
 class SiteUpdateProfileRequest(BaseModel):
@@ -73,10 +13,6 @@ class SiteClaimTroveNameRequest(BaseModel):
     any name. UI shows an 'unverified' badge. Future: prove ownership
     via captured-in-club-bio or similar."""
     trove_name: str = Field(min_length=1, max_length=80)
-
-
-class SiteMessageResponse(BaseModel):
-    message: str
 
 
 class SiteTokenResponse(BaseModel):
@@ -99,6 +35,10 @@ class SiteUserPublic(BaseModel):
     username: str
     email: EmailStr
     display_name: str | None = None
+    # Ready-to-use Discord CDN avatar URL (built server-side from the stored
+    # hash). Always populated for Discord accounts - falls back to Discord's
+    # default avatar - so the UI can render a picture without hosting one.
+    avatar_url: str | None = None
     is_active: bool
     is_verified: bool
     claimed_trove_name: str | None = None

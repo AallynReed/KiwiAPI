@@ -263,12 +263,12 @@ REGISTRY: dict[str, TunableSetting] = {
         type="int",
         category="archive_rate_limits",
         description=(
-            "Storage tier cutoff: rows older than this many days are "
-            "moved from the fast LeaderboardEntry collection into "
-            "LeaderboardEntryArchive at the tail of each insert. With "
-            "hourly captures, 3 days = ~72 anchors per board kept hot. "
-            "Lower values keep the hot collection's index footprint "
-            "small; higher values keep more reads on the fast path."
+            "How many recent days count as \"hot\": the cache warmer "
+            "pre-warms the latest capture of each of these days, and the "
+            "leaderboards page surfaces this window in its date picker. "
+            "(The data all lives in one partitioned Postgres table now - "
+            "this is a warm-cache / UI depth knob, not a storage tier.) "
+            "Higher values pre-warm more anchors; lower values warm fewer."
         ),
         min_value=1, max_value=3650,
     ),
@@ -280,9 +280,9 @@ REGISTRY: dict[str, TunableSetting] = {
         description=(
             "Age (in days) past which a leaderboard query counts as an "
             "ARCHIVE read and pays the extra rate limit below. Conventionally "
-            "matches leaderboards_hot_retention_days so the \"is this a "
-            "hot or cold collection lookup\" question and the \"do you pay "
-            "the archive rate limit\" question have the same answer."
+            "matches leaderboards_hot_retention_days so the \"is this an "
+            "old/cold lookup\" question and the \"do you pay the archive "
+            "rate limit\" question have the same answer."
         ),
         min_value=1, max_value=3650,
     ),
@@ -559,6 +559,67 @@ REGISTRY: dict[str, TunableSetting] = {
         category="trove_status",
         description="TCP port of the PTS game glsserver (default 6560). 0 disables.",
         min_value=0, max_value=65535,
+    ),
+    "trove_status_game_deep_probe": _t(
+        key="trove_status_game_deep_probe",
+        default=settings.trove_status_game_deep_probe,
+        type="bool",
+        category="trove_status",
+        description=(
+            "Deep game probe. OFF = connect-only (a down server that still accepts "
+            "TCP on 6560 reads as a false 'online'). ON = after connecting, replay "
+            "the glsserver hello and call the region online only if the server HOLDS "
+            "the socket open; a server that drops right after the hello is flagged "
+            "down. Any anomaly falls back to the connect-only verdict. Toggle OFF "
+            "instantly if it ever misflags a live region."
+        ),
+    ),
+    "trove_status_eu_hello_hex": _t(
+        key="trove_status_eu_hello_hex",
+        default=settings.trove_status_eu_hello_hex,
+        type="str",
+        category="trove_status",
+        description=(
+            "Captured glsserver client hello (hex) the deep probe replays for EU. "
+            "Empty = connect-only for EU. EU/US are game glsservers that hold a "
+            "hello-only probe open when up, so the deep probe works there. "
+            "Re-capture a real client's first :6560 packet if Trove changes it."
+        ),
+    ),
+    "trove_status_us_hello_hex": _t(
+        key="trove_status_us_hello_hex",
+        default=settings.trove_status_us_hello_hex,
+        type="str",
+        category="trove_status",
+        description=(
+            "Captured glsserver client hello (hex) the deep probe replays for US. "
+            "Empty = connect-only. The EU hello works here too (portable opener)."
+        ),
+    ),
+    "trove_status_pts_hello_hex": _t(
+        key="trove_status_pts_hello_hex",
+        default=settings.trove_status_pts_hello_hex,
+        type="str",
+        category="trove_status",
+        description=(
+            "Captured glsserver client hello (hex) for PTS. Default EMPTY = "
+            "connect-only, because the PTS endpoint (auth-pcpts01) is an AUTH "
+            "gateway that DROPS a hello-only probe even when up, so the deep probe "
+            "would false-flag maintenance. Set a hello only if PTS points at a real "
+            "*-game-* glsserver that holds the socket open."
+        ),
+    ),
+    "trove_status_game_hold_seconds": _t(
+        key="trove_status_game_hold_seconds",
+        default=settings.trove_status_game_hold_seconds,
+        type="float",
+        category="trove_status",
+        description=(
+            "Seconds the server must hold the socket open after the hello to count "
+            "as online. A maintenance server drops within a beat; a playable one "
+            "keeps the session socket open. Kept well under the per-probe timeout."
+        ),
+        min_value=0.2, max_value=10.0,
     ),
 
     # ── Community feeds (/v1/feeds/{youtube,bilibili,twitch}) ──────────

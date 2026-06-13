@@ -20,7 +20,7 @@ from app.site_auth.sessions import TOKEN_KIND
 
 _jwt_scheme = HTTPBearer(
     scheme_name="SiteSessionJWT",
-    description="JWT from /v1/site-auth/login",
+    description="JWT from Discord sign-in (/v1/site-auth/oauth/*)",
     auto_error=False,
 )
 

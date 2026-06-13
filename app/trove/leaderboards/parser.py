@@ -76,24 +76,32 @@ class ParsedEntry(NamedTuple):
 
 
 def _parse_entries(raw: str) -> list[ParsedEntry]:
-    """Split the ``|``-joined entry string and parse each triple. Bad rows are
-    dropped (don't fail the whole board on a single weird line)."""
+    """Split the ``|``-joined entry string and parse each ``rank;player;score``
+    triple. Bad rows are dropped (don't fail the whole board on a single weird
+    line).
+
+    Uses ``str.split(';')`` rather than a regex match per entry - on a ~20k-row
+    board (and ~730k rows across a full dump) the split is meaningfully cheaper
+    and the format is rigid: rank is digits, player has no ``;`` (so exactly two
+    separators), score is an int/float. Equivalent output to the old ``_ENTRY_RE``
+    on real dumps (verified byte-identical)."""
     out: list[ParsedEntry] = []
+    append = out.append
     for chunk in raw.split("|"):
         chunk = chunk.strip()
         if not chunk:
             continue
-        m = _ENTRY_RE.match(chunk)
-        if not m:
+        parts = chunk.split(";")
+        if len(parts) != 3:
+            continue
+        rank_s, player, score_s = parts
+        if not rank_s.isdigit():
             continue
         try:
-            out.append(ParsedEntry(
-                rank=int(m["rank"]),
-                player_name=m["player"],
-                score=float(m["score"]),
-            ))
+            score = float(score_s)
         except ValueError:
             continue
+        append(ParsedEntry(rank=int(rank_s), player_name=player, score=score))
     return out
 
 

@@ -71,7 +71,7 @@
          Inter as the system body fallback (already in our font stack). -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.min.css?v=20260610a">
+    <link rel="stylesheet" href="/static/style.min.css">
 
     <!-- Graceful fallback for screenshots that haven't been captured yet.
          Same hook the previous design used, unchanged so any feature-card
@@ -211,6 +211,7 @@
                     <a class="pill pill-accent" href="https://docs.aallyn.net"><i class="fa-solid fa-terminal"></i> <span data-i18n>API Reference</span></a>
                     <a class="pill" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> <span data-i18n>Source</span></a>
                     <a class="pill" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> <span data-i18n>Discord</span></a>
+                    {% if discord_install_url %}<a class="pill pill-accent" href="{{ discord_install_url }}" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> <span data-i18n>Add to Discord</span></a>{% endif %}
                 </div>
 
                 <div class="hero-platforms" aria-label="Supported platforms">
@@ -565,9 +566,9 @@
         </div>
     </div>
 
-    <script src="/static/app.min.js?v=20260609b"></script>
-    <script src="/static/i18n.min.js?v=20260609b"></script>
-    <script src="/static/site_auth.min.js?v=20260608f" defer></script>
-    <script src="/static/landing.min.js?v=20260610a" defer></script>
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/landing.min.js" defer></script>
 </body>
 </html>

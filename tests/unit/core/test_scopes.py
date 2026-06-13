@@ -8,7 +8,8 @@ from app.core.scopes import (
 )
 
 # Scopes by function: rotations(1) feeds(2) stats(4) gems(8) misc(16) mods(32)
-# updates(64) codexes(128) btt(256) leaderboards(512) market(1024).
+# updates(64) codexes(128) btt(256) leaderboards(512) market(1024) activity(2048)
+# giveaways(4096) events(8192).
 
 
 def test_scopes_registered():
@@ -16,12 +17,13 @@ def test_scopes_registered():
         "rotations:read": 1, "feeds:read": 2, "stats:read": 4,
         "gems:read": 8, "misc:read": 16, "mods:read": 32, "updates:read": 64,
         "codexes:read": 128, "btt:read": 256, "leaderboards:read": 512,
-        "market:read": 1024,
+        "market:read": 1024, "activity:read": 2048, "giveaways:read": 4096,
+        "events:read": 8192,
     }
     assert ALL_SCOPES == 0
     assert {c["resource"] for c in catalog()} == {
         "rotations", "feeds", "stats", "gems", "misc", "mods", "updates", "codexes", "btt",
-        "leaderboards", "market",
+        "leaderboards", "market", "activity", "giveaways", "events",
     }
     assert all(":" in c["key"] for c in catalog())  # naming convention
 
@@ -35,12 +37,15 @@ def test_mask_grants():
     assert mask_grants(256, "btt:read") and not mask_grants(256, "codexes:read")
     assert mask_grants(512, "leaderboards:read") and not mask_grants(512, "btt:read")
     assert mask_grants(1024, "market:read") and not mask_grants(1024, "leaderboards:read")
-    assert mask_grants(2047, "rotations:read") and mask_grants(2047, "market:read")  # 1|…|1024
+    assert mask_grants(2048, "activity:read") and not mask_grants(2048, "market:read")
+    assert mask_grants(4096, "giveaways:read") and not mask_grants(4096, "activity:read")
+    assert mask_grants(8192, "events:read") and not mask_grants(8192, "giveaways:read")
+    assert mask_grants(16383, "rotations:read") and mask_grants(16383, "events:read")  # 1|…|8192
 
 
 def test_is_valid_mask():
-    assert all(is_valid_mask(m) for m in (0, 1, 2, 4, 8, 16, 32, 63, 64, 127, 128, 255, 256, 511, 512, 1023, 1024, 2047))
-    assert not is_valid_mask(2048)  # bit 12 unassigned
+    assert all(is_valid_mask(m) for m in (0, 1, 2, 4, 8, 16, 32, 63, 64, 127, 128, 255, 256, 511, 512, 1023, 1024, 2047, 2048, 4095, 4096, 8191, 8192, 16383))
+    assert not is_valid_mask(16384)  # bit 15 unassigned
 
 
 def test_decode():

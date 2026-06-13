@@ -136,10 +136,9 @@ an action endpoint with a `stat_position` (0/1/2) to mutate it. Nothing gem-rela
 | `GET /v1/misc/timezones` | timezones supported by the converter and clocks |
 | `GET /v1/misc/time/now` | current time across every zone, incl. Trove server (reset) time |
 | `POST /v1/misc/time/convert` | convert a time + zone (or a unix) → every zone + Discord timestamp codes |
-| `GET /v1/misc/activity` | (**tokenless**) lower-bound count of active players in the most recent capture window; mirror of `/v1/leaderboards/activity` |
-| `GET /v1/misc/activity/history?days=` | (**tokenless**) time-series of activity estimates with per-hour normalisation; mirror of `/v1/leaderboards/activity/history` |
-| `GET /v1/misc/trove-status` | (**tokenless**) live Trove server status from a 60s background prober. `overall` rolls up the Live regions EU+US (`online`/`maintenance`/`down`/`unknown`). `auth` = HTTPS liveness of `auth.trionworlds.com`; `environments.{eu,us,pts}` each carry a `game` TCP probe of the glsserver port (6560). Auth-up + game-refused = `maintenance` |
+| `GET /v1/misc/trove-status` | (**tokenless**) live Trove server status from a 60s background prober. `overall` rolls up the Live regions EU+US (`online`/`maintenance`/`down`/`unknown`). `auth` = HTTPS liveness of `auth.trionworlds.com`; `environments.{eu,us,pts}` each carry a `game` probe of the glsserver port (6560). The probe is **deep**: a region in maintenance still completes the TCP handshake (and answers the glsserver hello) before dropping the connection, so connect-only would read a false `online`; instead it replays the captured glsserver hello and counts the region online only if the server **holds the connection open**, flagging `maintenance` when the server drops right after the hello (or refuses/times out). Live-tunable + degrades to connect-only on any anomaly (`trove_status_game_deep_probe`) |
 | `GET /v1/misc/trove-status/history?env=&days=` | (**tokenless**) status timeline for one environment (`eu`/`us`/`pts`, default eu; days 1–90) - `segments` (continuous status periods, open one has `ended_at=null`), `outages`, and an `uptime` fraction. Backs the `/status` page downtime history |
+| `GET /v1/misc/supporters` | (**tokenless**) the project's supporters credits list `{supporters:[name], count}`, in display order. Same list shown on `/support`; admin-managed via `/admin/supporters` (master panel) |
 
 Trove "server"/reset time is a fixed **UTC−11**. The converter takes a naive `datetime` interpreted in
 the given `timezone` (`trove` / `UTC` / any IANA id) or an absolute `unix`, and returns the instant in
@@ -165,21 +164,57 @@ every zone plus Discord `<t:unix:style>` codes.
 | `GET /v1/leaderboards/{uuid}/entries?created_at=&limit=&offset=` | top-N entries for one board at one anchor, ranked, with day-over-day `rank_delta`/`score_delta` (when the board didn't reset since the prior snapshot) |
 | `GET /v1/leaderboards/players/{name}/history?uuid=&limit=` | recent appearances of one player across boards (case-insensitive on `name`) |
 | `GET /v1/leaderboards/cheaters` | **tokenless** statistical-outlier flagging: MAD-Z + rank-gap + velocity. Per-evidence + per-player confidence; cached 30 min; pre-warmed at boot |
-| `POST /v1/leaderboards/insert?timestamp=` | **master-only ingest**: multipart `file` field with the raw `LeaderBot.cfg` text. Returns **202** immediately and parses/persists in the **background** (so a multi-second insert can't time out the bot); counts/errors land in the ingest log. Idempotent for a given anchor; `timestamp` is optional and only used for back-fills. Subject to the **ingest cooldown** (see below) when called with an API token |
+| `POST /v1/leaderboards/insert?timestamp=&backfill=&sync=&warm=` | **master-only ingest**: multipart `file` with the raw `LeaderBot.cfg` text. Default returns **202** and parses/persists in the **background** (so a multi-second insert can't time out the bot); counts/errors land in the ingest log. The parsed snapshot is bulk-loaded into **Postgres** via `COPY` → staging temp table → player-upsert → `INSERT…SELECT` (sub-second for ~720k rows); the row lands in the anchor's partition. Idempotent for a given anchor (delete-by-anchor then reload). `backfill=true` lifts the 14-day anchor limit (bulk re-seed from saved `<unix>.cfg` files). `sync=true` processes **inline → 200 with real counts** (backpressure: one dump in memory at a time). `warm=false` defers cache-warming. Subject to the **ingest cooldown** when called with an API token |
+| `POST /v1/leaderboards/reset?drop_boards=` | **master-only, destructive**: `TRUNCATE … RESTART IDENTITY` the Postgres entry/player/activity tables (not row-by-row), and drop every cheater/activity/Redis cache + the ready pointer — a clean slate before a full re-ingest. Board metadata (incl. admin reset-cadence overrides) is kept unless `drop_boards=true`. Returns the deletion tallies; logged at WARNING |
+| `POST /v1/leaderboards/warm` | **master-only**: wake the cache warmer to recompute the latest anchor's cheaters + activity + page snapshots. Call once after a bulk back-fill (which uploads with `warm=false`) |
+| `POST /v1/leaderboards/reingest-backlog?clear_first=` | **master-only**: replay the **server-side backlog** — every dump the API received is auto-gzip-saved to `{backlog_dir}/leaderboards/<anchor>.cfg.gz`, so this re-ingests the whole history with **no upload**, server-paced one dump at a time, heavy compute run **once at the end**. `clear_first=true` resets first. Drop `<unix>.cfg` files into the folder to seed it by hand. Poll `/reingest-status` for progress |
+| `GET /v1/leaderboards/reingest-status` | **master-only**: live re-ingest progress `{running, total, done, ok, failed, last_anchor, phase, errors[], backlog_files}` for the admin poll |
 
-The bot dumps the game's `LeaderBot.cfg` hourly and POSTs the file. **Full history is preserved**: entries
-older than `leaderboards_hot_retention_days` (default **3 days**; runtime-tunable from the master admin
-panel) are moved into a cold `leaderboard_entries_archive` collection at the tail of each insert. The read
-endpoints route old anchors straight to the archive, so the hot collection stays small/fast while
-historical queries still work (slower per-row but unaffected by the hot index footprint). `/timestamps`
-unions both, deduped.
+The bot dumps the game's `LeaderBot.cfg` hourly and POSTs the file. **Full history is preserved** in a
+dedicated **PostgreSQL** database (separate from the app's Mongo): the `entry` table is RANGE-partitioned
+by anchor (one partition per trove-day, 11:00-UTC boundary), so old data is just old partitions — no
+hot/cold collection split. Partitioned-parent indexes `(board_uuid, anchor, rank)` and `(player_id, anchor)`
+serve board-at-time and player-over-time reads; player names are normalised into a `player` dimension table.
+`leaderboards_hot_retention_days` (default **3 days**; runtime-tunable from the master admin panel) now just
+controls how many recent days the warmer pre-warms and the page surfaces.
 
 **Archive rate limit** - queries with `?created_at=` older than `leaderboards_archive_query_threshold_days`
-(default **3** - same window as hot retention by convention, so "served from cold" and "pays archive
+(default **3** - same window as the hot/warm window by convention, so "old/cold lookup" and "pays archive
 rate limit" line up; runtime-tunable from the master admin panel) pay a SECOND, tighter per-token bucket
 (default 10 req/min) on top of the standard per-token cap. The bucket's state is surfaced via
 `X-RateLimit-Archive-Limit` / `X-RateLimit-Archive-Remaining` / `X-RateLimit-Archive-Reset` response headers
 so clients can self-throttle. Recent queries (≤ threshold) cost only the standard cap.
+
+**`activity` category - scope `activity:read`** (public - token optional; the reads are free/tokenless. Derived from the leaderboard captures; the showcase `/activity` page is the main consumer)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/activity/current` | (**tokenless**) lower-bound active-player count in the most recent capture window + distinct `estimate_24h` / `estimate_7d` rollups. `estimate` null until two captures exist |
+| `GET /v1/activity/history?days=` | (**tokenless**) time-series of activity estimates, one point per capture pair, with `estimate_per_hour` normalisation so missed-capture gaps don't spike the line |
+| `GET /v1/activity/series?period=` | (**tokenless**) bucketed activity-level series for one period (`1d`/`7d`/`1m`/`3m`/`6m`/`1y`/`all`) with `peak`/`average`/`latest` - backs the `/activity` page charts |
+| `POST /v1/activity/backfill?total_days=&chunk_days=&force=&reset=` | **master-only**: seeds the `/series` history from all stored Postgres captures so the multi-period charts have data before the hourly forward-fill. `total_days=0` rebuilds **ALL** stored history (no lower bound); else the trailing N days. **202** + runs in the background, streaming one capture at a time (memory-safe regardless of range); coverage capped by stored history depth. The gap cutoff (windows that span a missed capture, skipped from the per-hour series) is derived from the **actual median capture cadence**, not a hardcoded 1h, so a non-hourly/jittery archive isn't dropped. **`reset=true` is destructive** - wipes the `activity_estimate` table and recomputes from scratch (implies `force`), to flush miscalculations from older runs |
+
+**`class-activity` category - scope `activity:read`** (public - token optional. Per-Trove-class activity from the Effort `4000+i` / Paragon `5000+i` leaderboards, `class_index = uuid % 1000`; the showcase `/class-activity` page is the main consumer)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/class-activity/current` | (**tokenless**) latest capture window's distinct active players **per class** (a player whose score rose on a class's Effort OR Paragon board, deduped) + each class's `share` of total class activity. `share` sums to 1 but counts a multi-class player in each class (share-of-activity, not distinct players) |
+| `GET /v1/class-activity/series?period=` | (**tokenless**) bucketed per-class activity series for one period (`1d`…`all`) - a shared `buckets` x-axis + one `values[]` per class aligned to it (null where a class had no measurable window, e.g. across the weekly reset). Backs the `/class-activity` multi-line chart |
+| `POST /v1/class-activity/backfill?total_days=&force=&reset=` | **master-only**: seeds the per-class history from the stored captures (same memory-safe streaming as `/v1/activity/backfill`; only the 36 Effort/Paragon boards load per anchor). `total_days=0` = all history; `reset=true` wipes the `class_activity_estimate` table first. **202** + background |
+
+**`giveaways` category - scope `giveaways:read`** (public - token optional; the showcase `/giveaways` page is the main consumer. Entering is a signed-in site-user action, not part of the public API)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/giveaways/ongoing` | (**tokenless**) currently-open giveaways (accepting entries), soonest-ending first: `[{ id, title, description, prize_name, status, starts_at, ends_at, entry_count, winner_username }]`. `winner_username` is null until drawn; the prize code is never exposed. Compute odds from `entry_count`. Cached 30s |
+| `GET /v1/giveaways/upcoming` | (**tokenless**) scheduled giveaways not yet open, soonest-starting first (same shape; `status="scheduled"`, `entry_count` 0 until it opens). Cached 30s |
+| `GET /v1/giveaways/ended?days=` | (**tokenless**) giveaways ended in the last `days` days (default 7, max 30), most-recently-ended first (same shape; `status` `"drawn"`/`"closed"`, cancelled excluded). Cached 30s |
+
+**`events` category - scope `events:read`** (public - token optional). A **push** stream so consumers stop polling challenge/chaos at the top of the hour.
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/events/stream` | (**tokenless**) a long-lived `text/event-stream` (SSE). On connect: a snapshot of the current `challenge` + `chaos` state; then one message per change the instant a capture lands. Each message is `event: <type>` + JSON `data: {type, data, ts}` (`type` ∈ `challenge`/`chaos`; `data` = the matching `/challenge/current` or `/chaos-chest` body). `: ping` keep-alive ~20s. Fans out across uvicorn workers via Redis pub/sub; exactly-once via a SET-GET dedup guard |
 
 **`market` category - scope `market:read`** (read side; `POST /insert` is **master-only**)
 
@@ -220,7 +255,8 @@ The api container ALSO serves the BTT marketing/manual site out of `site/`
 | `GET /` | the BTT landing page (index.html) |
 | `GET /documentation` | the user manual |
 | `GET /commands` | searchable in-game slash-command reference |
-| `GET /leaderboards` | hourly in-game leaderboard browser (charts, cheaters, activity) |
+| `GET /leaderboards` | hourly in-game leaderboard browser (charts, cheaters) |
+| `GET /activity` | Player Activity - live active-player estimate + multi-period trend charts (1D…all-time) |
 | `GET /updates` | per-server (Live US / PTS) game-update file explorer + version diff |
 | `GET /support` | "support the project" landing for the navbar heart icon |
 | `GET /status` | Trove server-status page - live EU/US/PTS state + downtime-history timeline |

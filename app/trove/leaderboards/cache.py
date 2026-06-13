@@ -15,6 +15,7 @@ invalidates the exact anchor it touched, so a re-insert / back-fill can't serve
 the pre-insert snapshot.
 """
 
+import asyncio
 import json
 import logging
 
@@ -116,6 +117,33 @@ async def get_entries(
     return items, total, comparison
 
 
+# Default per-board chart params the leaderboards page requests (leaderboards.js
+# fetches `/history?days=7&top=5`). The warmer pre-computes EVERY board's chart at
+# these params after each ingest, so selecting a board paints straight from Redis;
+# other params are cache-aside (computed on a miss, then cached).
+BHIST_DEFAULT_DAYS = 7
+BHIST_DEFAULT_TOP = 5
+_BHIST_WARM_CONCURRENCY = 6
+
+
+def _bhist_key(uuid: int, days: int, top: int) -> str:
+    return f"{_PREFIX}bhist:{uuid}:{days}:{top}"
+
+
+async def get_board_history(uuid: int, days: int, top: int) -> dict:
+    """Read-through cache for the per-board score-vs-time chart."""
+    cached = await _rget(_bhist_key(uuid, days, top))
+    if cached is not None:
+        return cached
+    fresh = await lb_service.board_history(uuid, days=days, top=top)
+    await _rset(_bhist_key(uuid, days, top), fresh, ttl=await _retention_seconds())
+    return fresh
+
+
+async def set_board_history(uuid: int, days: int, top: int, payload: dict) -> None:
+    await _rset(_bhist_key(uuid, days, top), payload, ttl=await _retention_seconds())
+
+
 # --- warm + invalidate (used by the warmer + the ingest path) ---------------
 
 async def _retention_days() -> int:
@@ -168,6 +196,36 @@ async def warm() -> None:
             )
 
 
+async def warm_board_histories(anchor: int) -> int:
+    """Pre-compute the DEFAULT per-board chart (7d / top-5) for every board at
+    ``anchor`` and cache it, so selecting any board on the page paints from Redis
+    with zero DB work. Bounded concurrency (the Postgres pool is shared with live
+    reads). Best-effort: one board's failure doesn't abort the batch. Returns how
+    many boards were warmed. No-op without Redis (nothing to serve later)."""
+    if get_redis() is None:
+        return 0
+    boards = await get_boards(anchor)
+    if not boards:
+        return 0
+    sem = asyncio.Semaphore(_BHIST_WARM_CONCURRENCY)
+    warmed = 0
+
+    async def _one(uuid: int) -> None:
+        nonlocal warmed
+        async with sem:
+            try:
+                payload = await lb_service.board_history(
+                    uuid, days=BHIST_DEFAULT_DAYS, top=BHIST_DEFAULT_TOP,
+                )
+                await set_board_history(uuid, BHIST_DEFAULT_DAYS, BHIST_DEFAULT_TOP, payload)
+                warmed += 1
+            except Exception:  # noqa: BLE001 - cache warming must never break the cycle
+                logger.warning("lb cache: warm board history uuid=%s failed", uuid, exc_info=True)
+
+    await asyncio.gather(*(_one(b["uuid"]) for b in boards))
+    return warmed
+
+
 # --- published "ready" pointer + persisted derived snapshots ----------------
 # The page reads the latest PUBLISHED anchor; the warmer flips it (set_ready_anchor)
 # only after that anchor's entries + cheaters + activity are all cached, so the
@@ -215,6 +273,76 @@ async def get_activity(anchor: int) -> dict | None:
 
 async def set_activity(anchor: int, payload: dict) -> None:
     await _rset(_activity_key(anchor), payload, ttl=await _retention_seconds())
+
+
+# Bucketed activity-chart series (the Player Activity page). Keyed by period;
+# short TTL since a new capture lands ~hourly and the chart tolerates being a
+# few minutes stale. Read-through from activity.activity_series().
+_ACTIVITY_SERIES_TTL = 300
+
+
+def _activity_series_key(period: str) -> str:
+    return f"{_PREFIX}activity_series:{period}"
+
+
+async def get_activity_series(period: str) -> dict | None:
+    return await _rget(_activity_series_key(period))
+
+
+async def set_activity_series(period: str, payload: dict) -> None:
+    await _rset(_activity_series_key(period), payload, ttl=_ACTIVITY_SERIES_TTL)
+
+
+# Per-class bucketed series (the Class Activity page). Same TTL. Keyed with an
+# ``activity*`` prefix so ``invalidate_all_activity`` sweeps it too.
+def _class_activity_series_key(period: str) -> str:
+    return f"{_PREFIX}activity_class_series:{period}"
+
+
+async def get_class_activity_series(period: str) -> dict | None:
+    return await _rget(_class_activity_series_key(period))
+
+
+async def set_class_activity_series(period: str, payload: dict) -> None:
+    await _rset(_class_activity_series_key(period), payload, ttl=_ACTIVITY_SERIES_TTL)
+
+
+async def invalidate_all_activity() -> int:
+    """Drop EVERY activity cache key (``lb:cache:activity:*`` snapshots AND
+    ``lb:cache:activity_series:*`` chart buckets).
+
+    Used by the master activity reset so neither the live "current" number nor
+    the chart can keep serving a pre-reset value out of Redis (the per-window
+    history lives in Mongo and is wiped separately). Returns keys dropped."""
+    r = get_redis()
+    if r is None:
+        return 0
+    try:
+        keys = [k async for k in r.scan_iter(match=f"{_PREFIX}activity*")]
+        if keys:
+            await r.delete(*keys)
+        return len(keys)
+    except Exception:  # noqa: BLE001 - best-effort; warmer will repopulate anyway
+        logger.warning("lb cache: invalidate all activity failed", exc_info=True)
+        return 0
+
+
+async def reset_all() -> int:
+    """Drop EVERY leaderboards cache key (``lb:cache:*``): the ready pointer,
+    cheaters + activity snapshots, board/entry snapshots, and the cached
+    timestamp list. Used by the master full-reset so no stale derived value
+    survives the wipe. Returns how many keys were dropped."""
+    r = get_redis()
+    if r is None:
+        return 0
+    try:
+        keys = [k async for k in r.scan_iter(match=f"{_PREFIX}*")]
+        if keys:
+            await r.delete(*keys)
+        return len(keys)
+    except Exception:  # noqa: BLE001 - best-effort; warmer/reads repopulate anyway
+        logger.warning("lb cache: reset_all failed", exc_info=True)
+        return 0
 
 
 async def invalidate_anchor(anchor: int) -> None:

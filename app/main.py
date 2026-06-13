@@ -11,10 +11,21 @@ from fastapi.staticfiles import StaticFiles
 from app.admin.router import router as admin_router
 from app.auth.account import router as account_router
 from app.auth.oauth import router as oauth_router
+from app.discord.router import router as discord_router
 from app.auth.router import router as auth_router
 from app.auth.schemas import PublicConfig, ScopeInfo
 from app.auth.sessions import router as sessions_router
+from app.site_auth.oauth import router as site_oauth_router
 from app.site_auth.router import router as site_auth_router
+from app.giveaways.admin import router as giveaways_admin_router
+from app.giveaways.router import router as giveaways_router
+from app.giveaways.router import public_router as giveaways_public_router
+from app.giveaways.worker import start_giveaway_worker, stop_giveaway_worker
+from app.supporters.router import public_router as supporters_public_router
+from app.bot.router import router as discord_bot_router
+from app.events.bus import start_event_bus, stop_event_bus
+from app.events.router import router as events_router
+from app.events.scheduler import start_event_scheduler, stop_event_scheduler
 from app.core.bootstrap import bootstrap_admin
 from app.core.config import settings
 from app.core.database import close_db, init_db
@@ -25,6 +36,7 @@ from app.core.maintenance import maintenance_loop
 from app.core.middleware import add_security_middleware
 from app.core.observability import add_request_context_middleware, configure_logging
 from app.core.redis import close_redis, init_redis
+from app.core.postgres import init_postgres, close_postgres
 from app.core.scopes import catalog as scope_catalog
 from app.scanning.router import router as scanning_router
 from app.site.router import router as site_router
@@ -46,6 +58,8 @@ from app.trove.news import start_news_refresher, stop_news_refresher
 from app.trove.feeds import start_feeds_refresher, stop_feeds_refresher
 from app.trove.router import (
     btt_router,
+    activity_router,
+    class_activity_router,
     codexes_router,
     feeds_router,
     gems_router,
@@ -80,6 +94,7 @@ async def lifespan(app: FastAPI):
         )
     await init_db()
     await init_redis()
+    await init_postgres()  # leaderboards datastore (entries/boards/players/activity)
     await bootstrap_admin()
     # Seed the market interest-items collection from gamedata/market_items.json
     # if it's empty (first boot). After this admins manage the list via the
@@ -87,6 +102,8 @@ async def lifespan(app: FastAPI):
     # offline fallback.
     from app.trove.market.service import seed_interest_items_if_empty
     await seed_interest_items_if_empty()
+    from app.supporters.service import seed_supporters_if_empty
+    await seed_supporters_if_empty()
     start_usage_recorder()
     start_email_worker()
     start_news_refresher()
@@ -101,9 +118,15 @@ async def lifespan(app: FastAPI):
     # cheaters_cache_ttl_seconds so the /v1/leaderboards/cheaters
     # endpoint always serves a fresh cached result instantly.
     start_cheaters_warmer()
+    start_giveaway_worker()  # auto-opens scheduled giveaways + draws ended ones (60s)
+    start_event_bus()  # live SSE event stream: per-worker Redis fan-out + safety-net watcher
+    start_event_scheduler()  # time-driven rotation events -> Redis (SSE + bot react)
     maintenance_task = asyncio.create_task(maintenance_loop())
     yield
     maintenance_task.cancel()
+    await stop_event_scheduler()
+    await stop_event_bus()
+    await stop_giveaway_worker()
     await stop_cheaters_warmer()
     await stop_update_archiver()
     await stop_btt_releases_refresher()
@@ -116,6 +139,7 @@ async def lifespan(app: FastAPI):
     await stop_email_worker()
     await stop_usage_recorder()
     await close_redis()
+    await close_postgres()
     await close_db()
 
 
@@ -192,12 +216,19 @@ app.include_router(auth_router, include_in_schema=False)
 app.include_router(sessions_router, include_in_schema=False)
 app.include_router(account_router, include_in_schema=False)
 app.include_router(oauth_router, include_in_schema=False)
+app.include_router(discord_router, include_in_schema=False)
 # Public-facing user system (trove.aallyn.net signups, dashboard). Lives
 # in a separate Beanie collection from the dev portal's `User` - see
 # app/site_auth/__init__.py for the rationale.
 app.include_router(site_auth_router, include_in_schema=False)
+app.include_router(site_oauth_router, include_in_schema=False)
 app.include_router(tokens_router, include_in_schema=False)
 app.include_router(admin_router, include_in_schema=False)
+app.include_router(giveaways_admin_router, include_in_schema=False)
+app.include_router(giveaways_router, include_in_schema=False)
+app.include_router(giveaways_public_router)   # public giveaways:read - in schema
+app.include_router(supporters_public_router)  # public misc:read (tokenless) - in schema
+app.include_router(discord_bot_router, include_in_schema=False)  # User Dashboard "Discord Bot" tab (site_auth)
 app.include_router(scanning_router, include_in_schema=False)
 # Data surface - organized by function (token-authenticated, in the public reference).
 app.include_router(rotations_router)
@@ -211,6 +242,9 @@ app.include_router(codexes_router)
 app.include_router(btt_router)
 app.include_router(leaderboards_router)
 app.include_router(market_router)
+app.include_router(activity_router)
+app.include_router(class_activity_router)
+app.include_router(events_router)  # live SSE event stream (events:read)
 
 # BetterTroveTools showcase site (trove.aallyn.net). The site router owns
 # "/", "/documentation", "/commands", "/leaderboards", "/updates",
@@ -267,6 +301,7 @@ async def public_config() -> PublicConfig:
         token_creation_daily_limit=settings.token_creation_daily_limit,
         revoke_reasons=REVOKE_REASONS,
         github_oauth_enabled=settings.github_oauth_enabled,
+        discord_oauth_enabled=settings.discord_oauth_enabled,
     )
 
 

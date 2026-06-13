@@ -529,19 +529,22 @@
     // the markup), so the JS only sets the state word + colour. Driven by
     // the LIVE environment's verdict from the multi-env payload, falling
     // back to the legacy flat ``overall`` shape for safety.
+    // Binary verdict: online (green) or down (red). 'maintenance' is a legacy
+    // value from older snapshots → treated as down. A partial outage (some Live
+    // region still up) is spelled out in the title.
     let cls, label, title;
-    if (overall === 'down') {
-      cls = 'is-down';
-      label = tr('Offline');
-      title = tr('The Trove login servers are unreachable.');
-    } else if (overall === 'maintenance') {
-      cls = 'is-maint';
-      label = tr('Maintenance');
-      title = tr('Login works but the game servers are refusing connections.');
-    } else { // online
+    if (overall === 'online') {
       cls = 'is-up';
       label = tr('Online');
       title = tr('Trove login and game servers are responding.');
+    } else {
+      const envs = (data && data.environments) || {};
+      const anyLiveUp = ['eu', 'us'].some(k => envs[k] && envs[k].status === 'online');
+      cls = 'is-down';
+      label = tr('Down');
+      title = anyLiveUp
+        ? tr('Some Trove servers are unreachable.')
+        : tr('Trove servers are unreachable.');
     }
     $status.classList.remove('is-up', 'is-maint', 'is-down');
     $status.classList.add(cls);

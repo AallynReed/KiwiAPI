@@ -68,7 +68,6 @@
     loadingEntries: false,
     hotRetentionDays: 3,    // pulled from /site/leaderboards/config; subtitle reflects it
     cheaters: null,         // cached payload from /site/leaderboards/cheaters
-    activity: null,         // cached payload from /site/leaderboards/activity
     cheatersMinConfidence: readMinConfidence(),  // slider value, persisted
     activeTab: 'boards',         // 'boards' | 'cheaters'
     cheatersLoaded: false,       // becomes true after the first lazy fetch
@@ -133,34 +132,18 @@
   async function init() {
     // Only the boards-tab data is fetched eagerly so the first paint
     // is fast. The cheaters analysis is lazy-loaded the first time
-    // the user activates that tab (see ensureCheatersLoaded). Activity
-    // estimate is tiny and goes inline in the hero, so it ships with
-    // the eager batch.
-    const [stamps, config, activity, activityHistory] = await Promise.all([
+    // the user activates that tab (see ensureCheatersLoaded).
+    const [stamps, config] = await Promise.all([
       // limit=365 (endpoint max) so the day-picker's PICKER_DAYS window is
       // fully covered even at hourly captures; served from the Redis snapshot.
       fetchJSON('/site/leaderboards/timestamps?limit=365'),
       fetchJSON('/site/leaderboards/config').catch(() => null),
-      fetchJSON('/site/leaderboards/activity').catch(() => null),
-      // History feeds the sparkline next to the current-hour pill.
-      // ?days=7 covers a full week of hourly captures (~168 points);
-      // missing the chart entirely is fine on a fresh deploy so a
-      // failure here is silenced.
-      fetchJSON('/site/leaderboards/activity/history?days=7').catch(() => null),
     ]);
     state.anchors = stamps.items || [];
     if (config && Number.isFinite(config.hot_retention_days)) {
       state.hotRetentionDays = config.hot_retention_days;
     }
-    state.activity = activity;
-    state.activityHistory = activityHistory;
-    // Open/closed state is sticky across visits - honour whatever the
-    // user chose last time. The trend section starts hidden in the HTML
-    // so a false here just leaves it that way.
-    state.activityTrendOpen = readActivityTrendOpen();
     renderSubtitle();
-    renderActivity();
-    if (state.activityTrendOpen) setActivityTrendOpen(true);
 
     buildDays();
     renderDayPicker();
@@ -698,238 +681,6 @@
       </div>`;
   }
 
-  // ─── Activity estimate (active player count) ──────────────────────
-  // Live count of distinct top-leaderboard players who scored on at
-  // least one lifetime-accumulating board between the two most recent
-  // captures. Renders as a small pill under the subtitle. Stays hidden
-  // when the API can't compute one yet (e.g. only one anchor in the DB,
-  // typical right after the bot starts sending unique timestamps).
-  // localStorage key so the user's open/closed preference for the
-  // activity trend chart persists across visits.
-  const ACTIVITY_TREND_OPEN_KEY = 'btt_lb_activity_trend_open';
-  function readActivityTrendOpen() {
-    try { return localStorage.getItem(ACTIVITY_TREND_OPEN_KEY) === '1'; }
-    catch (_) { return false; }
-  }
-  function writeActivityTrendOpen(open) {
-    try { localStorage.setItem(ACTIVITY_TREND_OPEN_KEY, open ? '1' : '0'); }
-    catch (_) { /* private mode / blocked storage - fail soft */ }
-  }
-
-  function renderActivity() {
-    const el = document.getElementById('lb-activity');
-    if (!el) return;
-    const data = state.activity;
-    if (!data || data.estimate == null || !data.window_end) {
-      el.hidden = true;
-      return;
-    }
-    const hours = data.duration_hours || 0;
-    const tmpl = hours >= 0.95 && hours <= 1.05
-      ? t('~{n} active players in the last hour')
-      : t('~{n} active players in the last {h}h');
-    const text = tmpl
-      .replace('{n}', `<span class="lb-activity-count">${Number(data.estimate).toLocaleString()}</span>`)
-      .replace('{h}', hours.toFixed(1));
-    // Caret icon on the right tells the user this is a toggle. Rotated
-    // via CSS when the parent carries .open. Always shown - the
-    // expandable section renders an empty-state hint if no points are
-    // available yet (e.g. fresh deploy), so clicking is never wasted.
-    el.innerHTML =
-      `<span class="lb-activity-dot" aria-hidden="true"></span>` +
-      `<span class="lb-activity-text">${text}</span>` +
-      `<i class="fa-solid fa-chevron-down lb-activity-caret" aria-hidden="true"></i>`;
-    el.title = data.methodology || '';
-    el.hidden = false;
-
-    // Wire the click toggle ONCE - guard against re-binding on
-    // language changes (renderActivity re-runs on i18n refresh).
-    if (!el.dataset.toggleWired) {
-      el.addEventListener('click', () => {
-        const open = !state.activityTrendOpen;
-        setActivityTrendOpen(open);
-      });
-      el.dataset.toggleWired = '1';
-    }
-  }
-
-  // Open/close the activity trend chart. Renders the SVG on first
-  // open (chart can be heavy) and remembers the choice in localStorage.
-  function setActivityTrendOpen(open) {
-    const pill = document.getElementById('lb-activity');
-    const wrap = document.getElementById('lb-activity-trend');
-    state.activityTrendOpen = !!open;
-    writeActivityTrendOpen(state.activityTrendOpen);
-    if (pill) {
-      pill.classList.toggle('open', state.activityTrendOpen);
-      pill.setAttribute('aria-expanded', String(state.activityTrendOpen));
-    }
-    if (wrap) wrap.hidden = !state.activityTrendOpen;
-    if (!state.activityTrendOpen) return;
-
-    // If we don't have history yet (initial fetch failed or returned
-    // empty), retry once now so re-opening later actually loads data
-    // that may have been ingested since first paint.
-    const cached = state.activityHistory;
-    const haveData = cached && cached.points && cached.points.length >= 2;
-    if (!haveData) {
-      renderActivityTrend();   // paint the empty-state placeholder
-      fetchJSON('/site/leaderboards/activity/history?days=7')
-        .then((d) => { state.activityHistory = d; renderActivityTrend(); })
-        .catch(() => { /* leave empty-state in place */ });
-      return;
-    }
-    renderActivityTrend();
-  }
-
-  // ─── Activity history sparkline ───────────────────────────────────
-  // Tiny inline-SVG line chart of activity ESTIMATES over the last 7
-  // days. Plots ``estimate_per_hour`` rather than the raw estimate -
-  // that flattens spikes caused by missed captures (a 2h window would
-  // otherwise show roughly 2× the count of a healthy 1h window). The
-  // chart is decorative - no axes, no labels - but a hover indicator
-  // surfaces (when, raw count, duration). Hidden when fewer than 2
-  // points are available (fresh deploy with no history yet).
-  function renderActivityTrend() {
-    const wrap = document.getElementById('lb-activity-trend');
-    const host = document.getElementById('lb-activity-trend-chart');
-    const range = document.getElementById('lb-activity-trend-range');
-    const tip = document.getElementById('lb-activity-trend-tip');
-    if (!wrap || !host) return;
-    // Visibility is owned by setActivityTrendOpen; this function only
-    // paints the contents.
-
-    const data = state.activityHistory;
-    const points = (data && data.points) || [];
-    if (points.length < 2) {
-      // Empty state - explain why the chart isn't here yet without
-      // wasting the click. The pill stays clickable; if the user
-      // re-opens later when data has accumulated, it'll paint.
-      if (range) range.textContent = '';
-      host.innerHTML =
-        `<div class="lb-activity-trend-empty" data-i18n>` +
-          t('Captures every hour - chart appears once 2+ are stored.') +
-        `</div>`;
-      if (tip) tip.hidden = true;
-      rerunI18n();
-      return;
-    }
-
-    // Range label (e.g. "last 7d · 42 captures") - gives the user a
-    // sense of how much of the window is filled in.
-    if (range) {
-      const days = data.days || 7;
-      const captures = points.length;
-      range.textContent = t('last {d}d · {n} captures')
-        .replace('{d}', days).replace('{n}', captures);
-    }
-
-    // SVG geometry - fixed pixel size so the line shape is consistent
-    // across viewports. Width fills the hero column; height is fixed
-    // so the hero doesn't shift on chart load.
-    const W = 320, H = 56;
-    const padX = 4, padT = 4, padB = 8;
-    const plotW = W - padX * 2, plotH = H - padT - padB;
-
-    const xs = points.map((p) => p.window_end);
-    const ys = points.map((p) => p.estimate_per_hour || 0);
-    const xMin = xs[0], xMax = xs[xs.length - 1];
-    const xRange = Math.max(1, xMax - xMin);
-    let yMax = Math.max(...ys, 1);
-    const yMin = 0;             // anchor at zero so the line shape is honest
-    const yRange = Math.max(1, yMax - yMin);
-    const xToPx = (t) => padX + ((t - xMin) / xRange) * plotW;
-    const yToPx = (v) => padT + (1 - (v - yMin) / yRange) * plotH;
-
-    // Build path + an area fill underneath for visual weight.
-    const linePts = points.map(
-      (p, i) => `${i === 0 ? 'M' : 'L'}${xToPx(p.window_end).toFixed(1)},${yToPx(p.estimate_per_hour).toFixed(1)}`,
-    ).join(' ');
-    const areaPts = linePts +
-      ` L${xToPx(xMax).toFixed(1)},${(padT + plotH).toFixed(1)}` +
-      ` L${xToPx(xMin).toFixed(1)},${(padT + plotH).toFixed(1)} Z`;
-
-    const svgNS = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(svgNS, 'svg');
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svg.setAttribute('preserveAspectRatio', 'none');
-    svg.setAttribute('class', 'lb-activity-trend-svg');
-    svg.setAttribute('role', 'img');
-    // Area fill
-    const area = document.createElementNS(svgNS, 'path');
-    area.setAttribute('class', 'lb-activity-trend-area');
-    area.setAttribute('d', areaPts);
-    svg.appendChild(area);
-    // Line on top
-    const line = document.createElementNS(svgNS, 'path');
-    line.setAttribute('class', 'lb-activity-trend-line');
-    line.setAttribute('d', linePts);
-    line.setAttribute('fill', 'none');
-    svg.appendChild(line);
-    // Hover dot (initially hidden)
-    const dot = document.createElementNS(svgNS, 'circle');
-    dot.setAttribute('class', 'lb-activity-trend-dot');
-    dot.setAttribute('r', '3');
-    dot.style.opacity = '0';
-    svg.appendChild(dot);
-    // Mouse overlay
-    const overlay = document.createElementNS(svgNS, 'rect');
-    overlay.setAttribute('x', padX);
-    overlay.setAttribute('y', padT);
-    overlay.setAttribute('width', plotW);
-    overlay.setAttribute('height', plotH);
-    overlay.setAttribute('fill', 'transparent');
-    svg.appendChild(overlay);
-
-    host.innerHTML = '';
-    host.appendChild(svg);
-
-    // Hover: find the point nearest the cursor's x, populate the tip.
-    function onMove(evt) {
-      const r = svg.getBoundingClientRect();
-      const sx = ((evt.clientX - r.left) / r.width) * W;
-      const ratio = Math.max(0, Math.min(1, (sx - padX) / plotW));
-      const targetT = xMin + ratio * xRange;
-      let best = 0, bestDist = Infinity;
-      for (let i = 0; i < points.length; i++) {
-        const d = Math.abs(points[i].window_end - targetT);
-        if (d < bestDist) { bestDist = d; best = i; }
-      }
-      const p = points[best];
-      dot.setAttribute('cx', xToPx(p.window_end).toFixed(1));
-      dot.setAttribute('cy', yToPx(p.estimate_per_hour).toFixed(1));
-      dot.style.opacity = '1';
-      if (!tip) return;
-      const when = new Date(p.window_end * 1000);
-      const windowLabel = p.duration_hours && p.duration_hours > 1.1
-        ? t('over {h}h window (gap)').replace('{h}', p.duration_hours.toFixed(1))
-        : t('1h window');
-      tip.innerHTML = `
-        <strong>${Number(p.estimate).toLocaleString()}</strong>
-        <span class="lb-activity-trend-tip-sub">${esc(windowLabel)}</span>
-        <span class="lb-activity-trend-tip-when">${esc(when.toLocaleString(undefined, {
-          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-        }))}</span>`;
-      tip.hidden = false;
-    }
-    function onLeave() {
-      dot.style.opacity = '0';
-      if (tip) tip.hidden = true;
-    }
-    overlay.addEventListener('mousemove', onMove);
-    overlay.addEventListener('mouseleave', onLeave);
-    overlay.addEventListener('touchstart', (e) => {
-      if (e.touches[0]) onMove(e.touches[0]);
-    }, {passive: true});
-    overlay.addEventListener('touchend', onLeave);
-
-    // a11y: SVG title summarising the latest data point
-    const lastP = points[points.length - 1];
-    svg.setAttribute('aria-label', t('Activity trend, latest ~{n} active players per hour')
-      .replace('{n}', Math.round(lastP.estimate_per_hour || 0)));
-  }
-
-
   // ─── Subtitle (dynamic retention window) ───────────────────────────
   // The retention number in the subtitle tracks the runtime config
   // tunable ``leaderboards_hot_retention_days``. JS owns this node
@@ -1396,9 +1147,9 @@
         }
       }
       return `
-      <div class="lb-td lb-rank ${rankClass(e.rank)}">${e.rank}${rankExtra}</div>
+      <div class="lb-td lb-rank ${rankClass(e.rank)}">${rankExtra}${e.rank}</div>
       <div class="lb-td"><span class="lb-player" data-player="${esc(e.player_name)}"><span class="lb-player-icon"></span>${esc(e.player_name)}</span></div>
-      <div class="lb-td lb-score">${esc(formatScore(e.score))}${scoreExtra}</div>`;
+      <div class="lb-td lb-score">${scoreExtra}${esc(formatScore(e.score))}</div>`;
     }).join('');
 
     $entriesBody.innerHTML = `
@@ -1601,7 +1352,6 @@
     // the API in English and don't re-localise.)
     document.addEventListener('btt-lang-changed', () => {
       renderSubtitle();
-      renderActivity();
       renderDayPicker();
       renderCheaters();
       if (state.selectedUuid) renderEntries();

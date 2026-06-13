@@ -18,8 +18,9 @@
 
   const STATUS_META = {
     online:      { cls: 'is-up',    label: 'Online' },
-    maintenance: { cls: 'is-maint', label: 'Maintenance' },
-    down:        { cls: 'is-down',  label: 'Offline' },
+    down:        { cls: 'is-down',  label: 'Down' },
+    // Legacy value from older history/snapshots → render as red "Down" too.
+    maintenance: { cls: 'is-down',  label: 'Down' },
     unknown:     { cls: 'is-unk',   label: 'Checking…' },
   };
 
@@ -62,11 +63,15 @@
     const overall = (data && data.overall) || 'unknown';
     const meta = STATUS_META[overall] || STATUS_META.unknown;
 
-    // Banner headline mirrors the LIVE environment.
-    const headline = overall === 'online'      ? tr('All Trove servers operational')
-                   : overall === 'maintenance' ? tr('Trove is under maintenance')
-                   : overall === 'down'        ? tr('Trove is offline')
-                   :                             tr('Checking Trove status…');
+    // Banner headline mirrors the LIVE environments. "down" overall is split into
+    // "partially down" (some Live region still up) vs fully "down" for the wording.
+    const liveEnvs = ['eu', 'us'];
+    const anyLiveUp = liveEnvs.some(k => (data && data.environments && data.environments[k]
+                                          && data.environments[k].status === 'online'));
+    const headline = overall === 'online'  ? tr('All Trove servers operational')
+                   : overall === 'unknown' ? tr('Checking Trove status…')
+                   : anyLiveUp             ? tr('Trove is partially down')
+                   :                         tr('Trove is down');
     banner.className = 'st-banner ' + meta.cls;
     if (bannerText) bannerText.textContent = headline;
     if (bannerChecked) {
@@ -83,10 +88,9 @@
       const game = e.game || {};
       const latency = (typeof game.latency_ms === 'number' && e.online)
         ? `<span class="st-card-latency">${Math.round(game.latency_ms)} ms</span>` : '';
-      const sub = e.status === 'online'      ? tr('Game servers accepting connections')
-                : e.status === 'maintenance' ? tr('Login up · game servers refusing')
-                : e.status === 'down'        ? tr('Login servers unreachable')
-                :                              tr('Awaiting first probe');
+      const sub = e.status === 'online' ? tr('Game servers accepting connections')
+                : (e.status === 'down' || e.status === 'maintenance') ? tr('Servers unreachable')
+                : tr('Awaiting first probe');
       return `
         <article class="st-card ${m.cls}">
           <div class="st-card-head">
@@ -96,7 +100,6 @@
           </div>
           <p class="st-card-sub">${esc(sub)}</p>
           <div class="st-card-foot">
-            ${game.host ? `<code class="st-card-host">${esc(game.host)}:${esc(game.port)}</code>` : ''}
             ${latency}
           </div>
         </article>`;
@@ -188,7 +191,7 @@
   async function loadHistory() {
     const body = document.getElementById('st-history-body');
     try {
-      const r = await fetch(`/site/trove-status/history?env=${historyEnv}&days=30`);
+      const r = await fetch(`/site/trove-status/history?env=${historyEnv}&days=7`);
       if (!r.ok) throw new Error(r.status);
       renderHistory(await r.json());
     } catch (_) {

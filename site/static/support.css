@@ -9,9 +9,10 @@
 .support-page main { padding-top: 0; }
 
 .sp-main {
-  max-width: 1120px;
+  width: 100%;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 0 28px 80px;
+  padding: 0 clamp(20px, 3vw, 48px) 80px;
 }
 
 
@@ -210,6 +211,40 @@
   font-size: 1.05rem;
   color: var(--text-mute);
   margin: 40px 0 0;
+}
+
+
+/* ─── Supporters ────────────────────────────────────────────────────── */
+
+.sp-supporters-lead {
+  color: var(--text-mute);
+  font-size: .95rem;
+  margin: 0 0 20px;
+}
+.sp-supporters-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.sp-supporter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 999px;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--text-fg, #e8ecf3);
+}
+.sp-supporter::before {
+  content: "\2665";              /* heart */
+  color: var(--accent-blue, #4cc9f0);
+  font-size: .85rem;
 }
 
 

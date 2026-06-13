@@ -152,6 +152,10 @@ async def _loop() -> None:
         try:
             count = await refresh_news()
             logger.info("Trove news refreshed: %d item(s)", count)
+            # Push to the live event channel (SSE + the bot's news announcement).
+            # Dedup makes this a no-op unless the newest article changed.
+            from app.events import bus
+            await bus.publish_type("trove_news")
         except asyncio.CancelledError:
             raise
         except Exception:

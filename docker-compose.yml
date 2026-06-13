@@ -46,6 +46,33 @@ services:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
+  # Dedicated store for the high-volume leaderboards domain (entries, boards,
+  # players, activity estimates) - partitioned by anchor + bulk-loaded via COPY.
+  # Everything else stays in Mongo. Internal only; host port for admin access.
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kiwi_lb}
+      POSTGRES_USER: ${POSTGRES_USER:-kiwi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kiwi} -d ${POSTGRES_DB:-kiwi_lb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Size for the leaderboards working set - bump as it grows (the whole point of
+    # the move off the 1g-capped Mongo). shm_size for big sorts/hashes/COPY.
+    mem_limit: 4g
+    shm_size: 1g
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
   api:
     build: .
     restart: unless-stopped
@@ -59,6 +86,8 @@ services:
       MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
       MONGO_DB: ${MONGO_DB:-kiwi}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      # Postgres - the leaderboards domain only (entries/boards/players/activity).
+      POSTGRES_DSN: ${POSTGRES_DSN:-postgresql://${POSTGRES_USER:-kiwi}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-kiwi_lb}}
       # Override these in a .env file (see .env.example) - do NOT ship the defaults.
       SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
       CAPTCHA_PROVIDER: ${CAPTCHA_PROVIDER:-turnstile}
@@ -82,10 +111,21 @@ services:
       # "Sign in with GitHub" (optional). Leave blank to disable.
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      # "Sign in with Discord" + Discord interactions (optional). Leave blank to disable.
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+      DISCORD_PUBLIC_KEY: ${DISCORD_PUBLIC_KEY:-}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      DISCORD_OAUTH_SCOPE: ${DISCORD_OAUTH_SCOPE:-identify email guilds}
+      DISCORD_OAUTH_INTEGRATION_TYPE: ${DISCORD_OAUTH_INTEGRATION_TYPE:-}
+      DISCORD_INSTALL_URL: ${DISCORD_INSTALL_URL:-}
       # Game-file version archiver. OFF by default - set to true ONLY when the
       # blob disk (./.game_updates) has room; the first sync pulls multi-GB.
       TROVE_UPDATE_ENABLED: ${TROVE_UPDATE_ENABLED:-false}
       TROVE_UPDATE_STORE_DIR: ${TROVE_UPDATE_STORE_DIR:-/data/updates}
+      # Server-side ingest backlog (gzipped dumps keyed by anchor; re-ingestable
+      # from the admin panel). Bind-mounted below; drop <unix>.cfg files in too.
+      BACKLOG_DIR: ${BACKLOG_DIR:-/data/backlog}
       # Delve-rotation source (week-based). Refresher stays off until the URL is set.
       TROVE_DELVE_SOURCE_URL: ${TROVE_DELVE_SOURCE_URL:-}
       TROVE_DELVE_SOURCE_REFERER: ${TROVE_DELVE_SOURCE_REFERER:-}
@@ -102,6 +142,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     # Lets the container reach the host's Postfix as host.docker.internal.
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -112,16 +154,53 @@ services:
       # Content-addressed blob store for the game-file archive (host: ./.game_updates).
       # Many GB once enabled - kept out of git/Syncthing/the image build context.
       - ./.game_updates:/data/updates
+      # Ingest backlog: every leaderboard dump the API receives is gzip-saved here
+      # keyed by anchor, so the whole history can be re-ingested from the admin
+      # panel with no upload. Drop <unix>.cfg files in by hand too. Kept out of
+      # git/Syncthing (can grow large).
+      - ./.backlog:/data/backlog
       # BetterTroveTools showcase site (templates + static + ~20 MB of screenshots).
       # Bind-mounted so the heavy binary assets don't bake into the image; the
       # api container serves trove.aallyn.net out of this directory.
       - ./site:/app/site:ro
+    # NOTE: no --reload. It's a dev-only flag - it restarts the worker on any
+    # .py change (Syncthing/deploy touch those constantly), which kills in-flight
+    # leaderboard ingests + the cache warmer mid-pass. Use ./deploy.sh (it
+    # recreates the container) to pick up code changes instead.
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
-              "--proxy-headers", "--forwarded-allow-ips", "*", "--reload"]
+              "--proxy-headers", "--forwarded-allow-ips", "*"]
     # Headroom for the update archiver: it decompresses several .tfa archives
     # concurrently (each held whole in RAM), which the old 512m couldn't fit.
     # If a single giant archive still OOMs, lower TROVE_UPDATE_CONCURRENCY instead.
     mem_limit: 2g
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # Kiwi gateway bot (discord.py): a separate always-on process sharing the same
+  # image + Mongo as the api. Handles proactive Discord work (hourly-challenge
+  # announcements now; guild/role events later). Slash commands still go to the
+  # api's HTTP interactions endpoint - this is the gateway side only.
+  bot:
+    build: .
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
+      MONGO_DB: ${MONGO_DB:-kiwi}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Bind-mount source like the api so a deploy = sync + recreate.
+    volumes:
+      - ./app:/app/app
+    command: ["python", "-m", "app.bot.runner"]
+    mem_limit: 512m
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }

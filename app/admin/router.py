@@ -29,6 +29,14 @@ from app.core.errors import APIError, ErrorCode
 from app.core.pagination import Page, paginate_newest_first
 from app.core.scopes import decode
 from app.core.utils import utcnow
+from app.supporters import service as supporters_service
+from app.supporters.schemas import (
+    SupporterAddRequest,
+    SupporterAdminList,
+    SupporterAdminView,
+    SupporterBulkReplaceRequest,
+    SupporterBulkReplaceResponse,
+)
 from app.tokens.models import ApiToken
 from app.trove.market import service as market_service
 from app.trove.market.models import MarketInterestItem
@@ -386,21 +394,23 @@ async def replace_interest_items_admin(
 async def list_leaderboards_admin_boards() -> LeaderboardBoardAdminList:
     """Every captured leaderboard, oldest → newest by category + name,
     with its current effective reset cadence and any admin override."""
+    from app.trove.leaderboards import pg_store
     from app.trove.leaderboards.models import (
-        Leaderboard, effective_reset_kind, is_lifetime_kind,
+        RESET_KIND_VALUES, is_lifetime_kind, reset_kind,
     )
-    docs = await Leaderboard.find().to_list()
+    docs = await pg_store.admin_list_boards()
     items: list[LeaderboardBoardAdminView] = []
     for d in docs:
-        eff = effective_reset_kind(d, d.uuid)
+        ov = d["reset_kind_override"]
+        eff = ov if (isinstance(ov, str) and ov in RESET_KIND_VALUES) else reset_kind(d["uuid"])
         items.append(LeaderboardBoardAdminView(
-            uuid=d.uuid,
-            name=d.name,
-            name_id=d.name_id,
-            category=d.category,
-            category_id=d.category_id,
+            uuid=d["uuid"],
+            name=d["name"],
+            name_id=d["name_id"],
+            category=d["category"],
+            category_id=d["category_id"],
             effective_reset_kind=eff,
-            reset_kind_override=d.reset_kind_override,
+            reset_kind_override=ov,
             has_periodic_reset=not is_lifetime_kind(eff),
         ))
     # Sort by category then name so the table reads naturally and
@@ -426,8 +436,9 @@ async def set_leaderboard_board_reset_kind(
     so the new value lands in the cached payload within seconds, not
     after the next TTL boundary."""
     from app.trove.leaderboards import detection as lb_detection
+    from app.trove.leaderboards import pg_store
     from app.trove.leaderboards.models import (
-        Leaderboard, RESET_KIND_VALUES, effective_reset_kind, is_lifetime_kind,
+        RESET_KIND_VALUES, is_lifetime_kind, reset_kind,
     )
 
     new_value = payload.reset_kind_override
@@ -440,31 +451,29 @@ async def set_leaderboard_board_reset_kind(
             ),
         )
 
-    doc = await Leaderboard.find_one(Leaderboard.uuid == uuid)
-    if doc is None:
+    d = await pg_store.set_reset_kind_override(uuid, new_value)
+    if d is None:
         raise APIError(
             status_code=404, code=ErrorCode.not_found,
             message=f"No leaderboard with uuid={uuid}",
         )
-    doc.reset_kind_override = new_value
-    await doc.save()
 
-    # Detection's per-anchor cache keys don't include the per-board
-    # reset_kind, so a stale payload would survive the flip. Nuke the
-    # cache and wake the warmer to backfill so the next visitor sees
-    # accurate flags.
+    # Detection's per-anchor cache keys don't include the per-board reset_kind,
+    # so a stale payload would survive the flip. Nuke the cache and wake the
+    # warmer to backfill so the next visitor sees accurate flags.
     lb_detection.invalidate_cache()
     lb_detection.trigger_warmer()
 
-    eff = effective_reset_kind(doc, doc.uuid)
+    ov = d["reset_kind_override"]
+    eff = ov if (isinstance(ov, str) and ov in RESET_KIND_VALUES) else reset_kind(uuid)
     return LeaderboardBoardAdminView(
-        uuid=doc.uuid,
-        name=doc.name,
-        name_id=doc.name_id,
-        category=doc.category,
-        category_id=doc.category_id,
+        uuid=d["uuid"],
+        name=d["name"],
+        name_id=d["name_id"],
+        category=d["category"],
+        category_id=d["category_id"],
         effective_reset_kind=eff,
-        reset_kind_override=doc.reset_kind_override,
+        reset_kind_override=ov,
         has_periodic_reset=not is_lifetime_kind(eff),
     )
 
@@ -586,3 +595,130 @@ async def list_ingest_log(
         }
         for r in rows
     ]
+
+
+# --- Discord: push slash commands -----------------------------------------
+# Discord only learns about our slash commands when we PUT them to its API -
+# editing app/discord/commands.py does nothing on its own. These let a
+# superuser preview the local command set and push it from the panel (no CLI).
+# Global pushes take up to ~1h to propagate; pass ?guild_id= for an instant
+# per-server push while testing.
+
+@router.get("/discord/commands")
+async def discord_commands_preview() -> dict:
+    """The slash commands defined locally - i.e. what 'Push to Discord' sends."""
+    from app.discord.commands import COMMAND_DEFS
+    return {
+        "count": len(COMMAND_DEFS),
+        "commands": [
+            {"name": c["name"], "description": c.get("description", "")}
+            for c in COMMAND_DEFS
+        ],
+    }
+
+
+@router.post("/discord/register-commands")
+async def discord_register_commands(
+    guild_id: str | None = Query(
+        default=None,
+        description="Optional guild id for an instant per-server push (else global).",
+    ),
+) -> dict:
+    """Bulk-overwrite the slash commands on Discord. Master-only via the
+    router-level dep; uses the configured bot token."""
+    from app.discord.registration import DiscordRegistrationError, register_commands
+    try:
+        cmds = await register_commands(guild_id)
+    except DiscordRegistrationError as exc:
+        raise APIError(400, ErrorCode.bad_request, str(exc))
+    return {
+        "scope": "guild" if guild_id else "global",
+        "guild_id": guild_id,
+        "count": len(cmds),
+        "commands": [
+            {"name": c.get("name"), "description": c.get("description", "")}
+            for c in cmds
+        ],
+    }
+
+
+@router.get("/bot/stats")
+async def bot_stats() -> dict:
+    """Bot usage for the Dev Portal: servers + users it can see (gateway-reported),
+    and per-command slash usage counts. Master-only via the router-level dep."""
+    from app.bot import stats
+    return await stats.get_stats()
+
+
+@router.post("/discord/clear-guild-commands")
+async def discord_clear_guild_commands(
+    guild_id: str = Query(..., description="Guild whose guild-scoped commands to clear."),
+) -> dict:
+    """Remove a guild's guild-scoped slash commands (bulk-overwrite with an empty
+    set). Fixes commands that show twice in one server - the leftover of an instant
+    per-guild test push layered on top of the global commands. The global command
+    set is untouched. Master-only via the router-level dep."""
+    from app.discord.registration import DiscordRegistrationError, clear_guild_commands
+    try:
+        await clear_guild_commands(guild_id)
+    except DiscordRegistrationError as exc:
+        raise APIError(400, ErrorCode.bad_request, str(exc))
+    return {"cleared": True, "guild_id": guild_id}
+
+
+# --- Supporters: the public credits list -----------------------------------
+# Mirrors the interest-items pattern. Master-only (router-level dep). The list
+# renders on /support and is exposed tokenless at /v1/misc/supporters.
+
+def _supporter_view(doc) -> SupporterAdminView:
+    return SupporterAdminView(
+        name=doc.name,
+        added_by=str(doc.added_by) if doc.added_by else None,
+        created_at=doc.created_at,
+    )
+
+
+@router.get("/supporters", response_model=SupporterAdminList)
+async def list_supporters_admin() -> SupporterAdminList:
+    """Every supporter with admin metadata (who added it, when)."""
+    docs = await supporters_service.admin_list()
+    return SupporterAdminList(items=[_supporter_view(d) for d in docs], count=len(docs))
+
+
+@router.post("/supporters", response_model=SupporterAdminView, status_code=201)
+async def add_supporter_admin(
+    req: SupporterAddRequest,
+    admin: User = Depends(get_current_superuser),
+) -> SupporterAdminView:
+    """Add one name to the supporters list."""
+    try:
+        doc = await supporters_service.add(req.name, added_by=admin.id)
+    except ValueError as e:
+        msg = str(e)
+        if "already exists" in msg:
+            raise APIError(status_code=409, code=ErrorCode.conflict, message=msg)
+        raise APIError(status_code=400, code=ErrorCode.bad_request, message=msg)
+    return _supporter_view(doc)
+
+
+@router.delete("/supporters/{name}", status_code=204)
+async def remove_supporter_admin(name: str) -> None:
+    """Remove one name from the supporters list."""
+    removed = await supporters_service.remove(name)
+    if not removed:
+        raise APIError(status_code=404, code=ErrorCode.not_found,
+                       message=f"No supporter named '{name}'")
+
+
+@router.put("/supporters", response_model=SupporterBulkReplaceResponse)
+async def replace_supporters_admin(
+    req: SupporterBulkReplaceRequest,
+    admin: User = Depends(get_current_superuser),
+) -> SupporterBulkReplaceResponse:
+    """Bulk replace: drop everything, then insert the de-duped, trimmed list.
+    Refuses an empty list - use the per-name DELETE to remove individually."""
+    try:
+        summary = await supporters_service.replace(req.names, added_by=admin.id)
+    except ValueError as e:
+        raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(e))
+    return SupporterBulkReplaceResponse(**summary)

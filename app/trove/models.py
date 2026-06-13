@@ -202,8 +202,8 @@ class TroveStatusEvent(Document):
     Timestamps are unix seconds (same convention as the rest of the
     trove scope)."""
 
-    env: str               # "live" | "pts"
-    status: str            # "online" | "maintenance" | "down"
+    env: str               # "eu" | "us" | "pts"
+    status: str            # "online" | "down"  ("maintenance" only in legacy rows)
     online: bool           # convenience: was the game socket reachable
     started_at: int        # unix seconds this state began
     ended_at: int | None = None   # unix seconds it ended (None = ongoing)

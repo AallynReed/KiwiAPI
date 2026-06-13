@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Trove server status - Better Trove Tools</title>
-    <meta name="description" content="Live Trove server status - EU, US and PTS login + game servers, probed every minute, with a downtime history timeline.">
+    <title>Trove PC server status - Better Trove Tools</title>
+    <meta name="description" content="Live Trove PC server status - EU, US and PTS login + game servers, probed every minute, with a downtime history timeline.">
     <meta name="theme-color" content="#0a0e14">
     <meta name="color-scheme" content="dark">
 
@@ -20,14 +20,22 @@
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Better Trove Tools">
-    <meta property="og:title" content="Trove server status">
+    <meta property="og:url" content="https://trove.aallyn.net/status">
+    <meta property="og:title" content="Trove PC server status">
     <meta property="og:description" content="EU, US & PTS server status, probed every minute, with downtime history.">
-    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <meta property="og:image" content="https://trove.aallyn.net/status/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Trove PC server status">
+    <meta name="twitter:description" content="Live EU, US & PTS server status, probed every minute.">
+    <meta name="twitter:image" content="https://trove.aallyn.net/status/og.png">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.min.css?v=20260609b">
-    <link rel="stylesheet" href="/static/status.min.css?v=20260609b">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/status.min.css">
 </head>
 <body class="landing status-page">
 
@@ -38,7 +46,7 @@
     <main id="main" class="st-main">
         <section class="st-hero">
             <p class="st-eyebrow">/status</p>
-            <h1 class="st-title" data-i18n>Trove server status</h1>
+            <h1 class="st-title" data-i18n>Trove PC server status</h1>
             <p class="st-sub" data-i18n>Live monitoring of Trove's login and game servers - probed directly every minute. Independent and unofficial; not affiliated with Gamigo or Trion Worlds.</p>
         </section>
 
@@ -67,14 +75,14 @@
             <div id="st-history-body"><div class="st-loading" data-i18n>Loading history…</div></div>
         </section>
 
-        <p class="st-method" data-i18n>How this works: a background probe opens a TCP connection to each environment's game login server (glsserver, port 6560) and checks the shared account-auth gateway over HTTPS, once a minute. "Online" means the game login server accepted a connection; "Maintenance" means login is up but the game servers are refusing connections; "Offline" means even auth is unreachable.</p>
+        <p class="st-method" data-i18n>How this works: once a minute, a background probe opens a TCP connection to the game's login server and checks account auth over HTTPS. "Online" means the login server accepted the connection; "Maintenance" means login is up but the game servers are refusing connections; "Offline" means even auth is unreachable.</p>
     </main>
 
     {% include "partials/footer.html" %}
 
-    <script src="/static/app.min.js?v=20260609b"></script>
-    <script src="/static/i18n.min.js?v=20260609b"></script>
-    <script src="/static/site_auth.min.js?v=20260608f" defer></script>
-    <script src="/static/status.min.js?v=20260609d" defer></script>
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/status.min.js" defer></script>
 </body>
 </html>

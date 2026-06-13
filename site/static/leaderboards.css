@@ -9,9 +9,13 @@
 .leaderboards-page main { padding-top: 0; }
 
 .lb-main {
-  max-width: 1280px;
+  /* width:100% is REQUIRED: body is a flex column, and margin:0 auto on a
+     flex item disables stretch, so without it this shrink-wraps to content
+     width (~900px) and max-width never engages. */
+  width: 100%;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 0 28px 80px;
+  padding: 0 clamp(20px, 3vw, 48px) 80px;
 }
 
 
@@ -46,168 +50,6 @@
   margin: 0;
   line-height: 1.55;
 }
-
-/* Compact live-engagement metric beneath the subtitle. The icon
-   pulse-glows so the eye picks it up as "this is a live number".
-   Renders as a <button> - clickable to toggle the activity-trend
-   sparkline below. Inherits cleanly because button defaults are
-   reset to match the surrounding text style. */
-.lb-activity {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 4px 0 0;
-  padding: 6px 14px;
-  font: inherit;
-  font-family: inherit;
-  text-align: left;
-  /* Reset button styling beyond what the existing pill rule sets */
-  background: rgba(63,185,80,.10);
-  border: 1px solid rgba(63,185,80,.25);
-  border-radius: 999px;
-  color: #5dd078;
-  font-size: .88rem;
-  font-weight: 500;
-  cursor: help;
-}
-.lb-activity-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #5dd078;
-  box-shadow: 0 0 8px rgba(93,208,120,.7);
-  animation: lb-activity-pulse 2s ease-in-out infinite;
-}
-@keyframes lb-activity-pulse {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1.0; }
-}
-.lb-activity-count {
-  font-family: SFMono-Regular, Consolas, monospace;
-  font-weight: 700;
-  color: #8ee5a0;
-}
-/* Caret on the right edge of the pill - rotates when the trend chart
-   is open so the affordance is obvious. Suppressed in the inert state
-   (no history available yet to expand into). */
-.lb-activity-caret {
-  font-size: .68rem;
-  margin-left: 4px;
-  opacity: 0.65;
-  transition: transform .18s ease, opacity .18s ease;
-}
-.lb-activity.open .lb-activity-caret { transform: rotate(180deg); opacity: 1; }
-.lb-activity:hover .lb-activity-caret { opacity: 1; }
-/* Hover lift: subtle scale + brighter border so the pill looks
-   actionable. Suppressed in inert state. */
-.lb-activity:hover:not(.lb-activity--inert) {
-  background: rgba(93, 208, 120, 0.18);
-  border-color: rgba(93, 208, 120, 0.5);
-}
-.lb-activity:focus-visible {
-  outline: 2px solid rgba(93, 208, 120, 0.6);
-  outline-offset: 2px;
-}
-/* Empty state inside the trend container - shown when the activity
-   history endpoint returned 0 or 1 points (typical right after a
-   fresh deploy or container restart while estimates re-populate). */
-.lb-activity-trend-empty {
-  padding: 14px 8px;
-  text-align: center;
-  font-size: .82rem;
-  color: var(--text-mute);
-  line-height: 1.5;
-}
-
-/* Activity-trend sparkline. Sits inline with the current-hour pill -
-   compact, dim by default, gets a slight glow on hover. Plots
-   estimate_per_hour so missed-capture gaps don't manifest as spikes.
-   ``display: flex`` overrides the user-agent ``[hidden] { display: none }``
-   default, so we re-assert it here (same pattern as .nav-account-panel
-   - see 2026-06 always-open-profile-menu fix). */
-.lb-activity-trend {
-  margin: 10px auto 0;
-  max-width: 340px;
-  padding: 10px 12px 8px;
-  background: rgba(93, 208, 120, 0.045);
-  border: 1px solid rgba(93, 208, 120, 0.18);
-  border-radius: 10px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.lb-activity-trend[hidden] { display: none; }
-.lb-activity-trend-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: .72rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-mute);
-}
-.lb-activity-trend-label { font-weight: 700; }
-.lb-activity-trend-range {
-  font-size: .68rem;
-  letter-spacing: 0.02em;
-  text-transform: none;
-}
-.lb-activity-trend-chart {
-  height: 56px;
-  position: relative;
-}
-.lb-activity-trend-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  cursor: crosshair;
-}
-.lb-activity-trend-line {
-  stroke: #5dd078;
-  stroke-width: 1.6;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 4px rgba(93, 208, 120, 0.35));
-}
-.lb-activity-trend-area {
-  fill: url(#lb-activity-grad);
-  fill: rgba(93, 208, 120, 0.16);
-}
-.lb-activity-trend-dot {
-  fill: #fff;
-  stroke: #5dd078;
-  stroke-width: 1.6;
-  pointer-events: none;
-  transition: opacity .12s ease;
-}
-.lb-activity-trend-tip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 6px);
-  transform: translateX(-50%);
-  background: var(--surface, #1a1f2e);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  padding: 6px 9px;
-  font-size: .76rem;
-  white-space: nowrap;
-  pointer-events: none;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  z-index: 5;
-}
-/* ``display: flex`` above overrides the user-agent ``[hidden] {
-   display: none }`` default, so the tooltip would stay visible (empty
-   or with stale text) whenever the JS toggles its hidden attribute.
-   Re-assert. Same class of bug as .nav-account-panel / .lb-activity-trend. */
-.lb-activity-trend-tip[hidden] { display: none; }
-.lb-activity-trend-tip strong { color: #8ee5a0; font-weight: 700; }
-.lb-activity-trend-tip-sub  { font-size: .68rem; color: var(--text-mute); }
-.lb-activity-trend-tip-when { font-size: .68rem; color: var(--text-mute); }
-
 
 /* ─── Toolbar (day picker + player search) ──────────────────────────── */
 
@@ -1408,7 +1250,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
    negative = down = red; "NEW" marks a player with no prior-day position. */
 .lb-delta {
   display: inline-block;
-  margin-left: 6px;
+  margin-right: 6px;
   font-size: .72rem;
   font-weight: 700;
   white-space: nowrap;

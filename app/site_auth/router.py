@@ -1,69 +1,35 @@
 """Site-side accounts router - public-facing user system.
 
-Mounted at ``/v1/site-auth/*`` on the API host and (via thin proxies in
-``app/site/router.py``) at ``/site/auth/*`` for same-origin calls from
-trove.aallyn.net. Mirrors ``app/auth/router.py`` patterns: argon2
-hashing, rate-limit + per-account lockout on login, JWT access tokens
-+ rotated refresh tokens, email verification before privileged actions.
+Mounted at ``/v1/site-auth/*`` on the API host. Sign-in is Discord-only
+(see ``app/site_auth/oauth.py``); this router owns what happens AFTER a
+session exists: JWT access tokens + rotated refresh tokens, the profile /
+session-management surface, and the Trove-name claim + verification flow.
 
-What's deliberately NOT here (yet):
-  - captcha gates - added if abuse surfaces
-  - GitHub OAuth - the dev portal owns that flow; site users get
-    email/password only for v1
-  - forgot/reset password - follow-up turn; signup + verify is the
-    minimum surface area to ship usefully
+There is no password login here - accounts are created and identified
+solely through "Sign in with Discord". The dev portal (``app/auth/*``) is
+a separate system and keeps its own email/password + GitHub flows.
 """
-import jwt
 from beanie import PydanticObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Request, status
 
-from app.auth.disposable import is_disposable_email
-from app.core import lockout
-from app.core.captcha import verify_captcha
-from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
-from app.core.passwords import ensure_password_not_breached
-from app.core.ratelimit import check_rate_limit
-from app.core.security import (
-    decode_email_token,
-    hash_password,
-    password_fingerprint,
-    verify_password,
-)
-from app.core.utils import client_ip, utcnow
+from app.core.utils import utcnow
 
-from app.site_auth.emails import (
-    SITE_RESET_PURPOSE,
-    SITE_VERIFY_PURPOSE,
-    send_password_changed_email,
-    send_password_reset_email,
-    send_verification_email,
-)
 from app.site_auth.dependencies import (
     get_current_site_user,
     get_current_verified_site_user,
 )
 from app.site_auth.models import SiteSession, SiteUser
 from app.site_auth.schemas import (
-    SiteChangePasswordRequest,
     SiteClaimTroveNameRequest,
-    SiteForgotPasswordRequest,
-    SiteLoginRequest,
     SiteLogoutRequest,
-    SiteMessageResponse,
     SiteRefreshRequest,
-    SiteResendVerificationRequest,
-    SiteResetPasswordRequest,
-    SiteSignupRequest,
     SiteTokenResponse,
     SiteUpdateProfileRequest,
     SiteUserPublic,
     SiteVerifyTroveClaimResponse,
-    _validate_username,
 )
 from app.site_auth.sessions import (
-    issue_tokens,
     revoke_all_sessions,
     revoke_by_refresh_token,
     rotate,
@@ -73,12 +39,20 @@ from app.site_auth.sessions import (
 router = APIRouter(prefix="/v1/site-auth", tags=["site-auth"])
 
 
-# Pinned at the top so a quick scan finds it - every "we sent you a
-# link" message ends with this so a user can rescue the mail from spam.
-EMAIL_SPAM_NOTICE = (
-    "Don't see it? Check your spam folder and mark it 'Not spam' so "
-    "future emails reach your inbox."
-)
+_DISCORD_CDN = "https://cdn.discordapp.com"
+
+
+def _discord_avatar_url(user: SiteUser) -> str | None:
+    """Build a Discord CDN avatar URL from the stored hash. Falls back to the
+    account's default Discord embed avatar when there's no custom one, so the
+    UI always has a picture to show. ``None`` only if no Discord id is linked."""
+    if user.discord_id is None:
+        return None
+    if user.discord_avatar:
+        ext = "gif" if user.discord_avatar.startswith("a_") else "png"
+        return f"{_DISCORD_CDN}/avatars/{user.discord_id}/{user.discord_avatar}.{ext}?size=128"
+    # Default avatar - the new (pomelo) username scheme indexes by (id >> 22) % 6.
+    return f"{_DISCORD_CDN}/embed/avatars/{(user.discord_id >> 22) % 6}.png"
 
 
 def _to_public(user: SiteUser) -> SiteUserPublic:
@@ -87,6 +61,7 @@ def _to_public(user: SiteUser) -> SiteUserPublic:
         username=user.username,
         email=user.email,
         display_name=user.display_name,
+        avatar_url=_discord_avatar_url(user),
         is_active=user.is_active,
         is_verified=user.is_verified,
         claimed_trove_name=user.claimed_trove_name,
@@ -129,155 +104,6 @@ async def _build_claim_baseline(trove_name: str) -> dict[str, float]:
         if prev is None or score > prev:
             out[key] = float(score)
     return out
-
-
-def _html_page(title: str, body: str, status_code: int = 200) -> HTMLResponse:
-    """Tiny inline HTML page used for verify-email landings. Same style
-    as the dev portal's so the brand reads consistently across both
-    flows."""
-    return HTMLResponse(
-        f"<!doctype html><html><head><meta charset='utf-8'><title>{title}</title>"
-        "<style>body{font-family:system-ui,sans-serif;background:#0a0e14;color:#e8ecf3;"
-        "display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}"
-        ".card{max-width:480px;padding:32px;border:1px solid rgba(255,255,255,.10);"
-        "border-radius:14px;background:rgba(255,255,255,.03)}"
-        "h1{font-size:1.5rem;margin:0 0 12px;font-family:'Space Grotesk',sans-serif}"
-        "a{color:#4cc9f0}p{line-height:1.55}</style></head><body>"
-        f"<div class='card'><h1>{title}</h1>{body}</div></body></html>",
-        status_code=status_code,
-    )
-
-
-# --- Signup / login --------------------------------------------------------
-
-@router.post("/signup", response_model=SiteUserPublic, status_code=status.HTTP_201_CREATED)
-async def signup(
-    payload: SiteSignupRequest,
-    request: Request,
-    background_tasks: BackgroundTasks,
-) -> SiteUserPublic:
-    """Create a new site account. Open signup - anyone can register.
-    Email verification is required before privileged actions
-    (currently: claiming a Trove name)."""
-    ip = client_ip(request) or "unknown"
-
-    # Reuse the dev-portal signup-rate-limit tunable so a single knob
-    # governs both flows. Easier than carrying two parallel sets of
-    # values in the runtime config.
-    from app.admin import runtime_config
-    sup_max, sup_window = await runtime_config.get_rate_limit("signup_rate_limit")
-    await check_rate_limit(f"site-signup:{ip}", sup_max, sup_window)
-
-    # Captcha gate - ``verify_captcha`` is a no-op when the captcha
-    # keys aren't configured, so dev environments still work; once
-    # ``CAPTCHA_SECRET`` + ``CAPTCHA_SITEKEY`` are set, a missing or
-    # wrong token kills the signup with a clean 400.
-    if not await verify_captcha(payload.captcha_token, remote_ip=ip):
-        raise APIError(
-            status_code=400, code=ErrorCode.captcha_failed,
-            message="Captcha verification failed",
-        )
-
-    email = payload.email.lower()
-    if settings.disposable_email_check and is_disposable_email(email):
-        raise APIError(
-            status_code=400, code=ErrorCode.disposable_email,
-            message="Disposable email addresses aren't allowed",
-        )
-    # Username is already lowercased + shape-validated by the schema.
-    if await SiteUser.find_one(SiteUser.username == payload.username) is not None:
-        raise APIError(
-            status_code=409, code=ErrorCode.bad_request,
-            message="That username is taken",
-        )
-    if await SiteUser.find_one(SiteUser.email == email) is not None:
-        raise APIError(
-            status_code=409, code=ErrorCode.email_taken,
-            message="An account with this email already exists",
-        )
-    await ensure_password_not_breached(payload.password)
-
-    user = SiteUser(
-        username=payload.username,
-        email=email,
-        hashed_password=hash_password(payload.password),
-        display_name=payload.display_name,
-    )
-    await user.insert()
-    background_tasks.add_task(send_verification_email, user)
-    return _to_public(user)
-
-
-@router.post("/login", response_model=SiteTokenResponse)
-async def login(
-    payload: SiteLoginRequest, request: Request,
-) -> SiteTokenResponse:
-    """Login by username OR email + password. The discriminator on the
-    identifier is whether it contains an ``@`` - same heuristic most
-    UIs use."""
-    ip = client_ip(request) or "unknown"
-    from app.admin import runtime_config
-    log_max, log_window = await runtime_config.get_rate_limit("login_rate_limit")
-    await check_rate_limit(f"site-login:{ip}", log_max, log_window)
-
-    # Captcha gate. Same disable-when-unconfigured rule as signup -
-    # captcha widget on the page passes its token through and we
-    # validate it before touching the password hash so a bot can't
-    # use this endpoint as a free password-breach oracle.
-    if not await verify_captcha(payload.captcha_token, remote_ip=ip):
-        raise APIError(
-            status_code=400, code=ErrorCode.captcha_failed,
-            message="Captcha verification failed",
-        )
-
-    raw_id = (payload.identifier or "").strip()
-    lookup_key: str
-    if "@" in raw_id:
-        lookup_key = raw_id.lower()
-        # Per-account lockout keyed on the email so a brute-force on a
-        # known account doesn't get reset by changing the identifier
-        # shape between requests.
-        locked = await lockout.lock_ttl(f"site:{lookup_key}")
-        if locked:
-            raise APIError(
-                status_code=429, code=ErrorCode.account_locked,
-                message="Too many failed attempts. Try again later.",
-                headers={"Retry-After": str(locked)},
-            )
-        user = await SiteUser.find_one(SiteUser.email == lookup_key)
-    else:
-        # Validate the shape so we can short-circuit obviously-invalid
-        # IDs without hitting the DB. Re-uses the same regex as signup.
-        try:
-            lookup_key = _validate_username(raw_id)
-        except ValueError:
-            raise APIError(
-                status_code=401, code=ErrorCode.invalid_credentials,
-                message="Incorrect username or password",
-            )
-        locked = await lockout.lock_ttl(f"site:{lookup_key}")
-        if locked:
-            raise APIError(
-                status_code=429, code=ErrorCode.account_locked,
-                message="Too many failed attempts. Try again later.",
-                headers={"Retry-After": str(locked)},
-            )
-        user = await SiteUser.find_one(SiteUser.username == lookup_key)
-
-    # Constant-time-ish: verify even on missing user so a timing attacker
-    # can't enumerate usernames by response latency.
-    valid = user is not None and verify_password(payload.password, user.hashed_password)
-    if user is None or not valid or not user.is_active:
-        await lockout.record_failure(f"site:{lookup_key}")
-        raise APIError(
-            status_code=401, code=ErrorCode.invalid_credentials,
-            message="Incorrect username or password",
-        )
-
-    await lockout.clear(f"site:{lookup_key}")
-    user.last_login_at = utcnow()
-    await user.save()
-    return await issue_tokens(user, request)
 
 
 # --- Tokens / session lifecycle --------------------------------------------
@@ -516,155 +342,6 @@ async def my_trove_stats(
         "items": history,
         "series": chart,
     }
-
-
-@router.post("/change-password", response_model=SiteTokenResponse)
-async def change_password(
-    payload: SiteChangePasswordRequest,
-    request: Request,
-    background_tasks: BackgroundTasks,
-    user: SiteUser = Depends(get_current_site_user),
-) -> SiteTokenResponse:
-    if not verify_password(payload.current_password, user.hashed_password):
-        raise APIError(
-            status_code=401, code=ErrorCode.invalid_credentials,
-            message="Current password is incorrect",
-        )
-    await ensure_password_not_breached(payload.new_password)
-    user.hashed_password = hash_password(payload.new_password)
-    # Log out everywhere, then hand the current device a fresh session.
-    await revoke_all_sessions(user)
-    if settings.security_email_notifications:
-        background_tasks.add_task(send_password_changed_email, user)
-    return await issue_tokens(user, request)
-
-
-# --- Email verification ----------------------------------------------------
-
-@router.get("/verify-email", response_class=HTMLResponse, include_in_schema=False)
-async def verify_email(token: str) -> HTMLResponse:
-    """Land here when the user clicks the link in their verification
-    email. Marks ``is_verified=True`` and shows a small landing page
-    that points back to /dashboard on the showcase site."""
-    try:
-        payload = decode_email_token(token, SITE_VERIFY_PURPOSE)
-        user = await SiteUser.get(PydanticObjectId(payload["sub"]))
-    except (jwt.PyJWTError, KeyError):
-        user = None
-
-    if user is None:
-        return _html_page(
-            "Verification failed",
-            "<p>This link is invalid or has expired. Request a new one "
-            "from the sign-in page.</p>",
-            status_code=400,
-        )
-
-    if not user.is_verified:
-        user.is_verified = True
-        user.updated_at = utcnow()
-        await user.save()
-
-    return _html_page(
-        "Email verified",
-        f"<p>Your email is confirmed. You can now sign in and claim "
-        f"your Trove player name.</p>"
-        f"<p><a href='https://trove.aallyn.net/dashboard'>Open the dashboard →</a></p>",
-    )
-
-
-@router.post("/resend-verification", response_model=SiteMessageResponse)
-async def resend_verification(
-    payload: SiteResendVerificationRequest,
-    request: Request,
-    background_tasks: BackgroundTasks,
-) -> SiteMessageResponse:
-    """Enumeration-safe resend. Tight per-IP cap so a spammer can't
-    flood the outbox by submitting random addresses."""
-    await check_rate_limit(
-        f"site-resend:{client_ip(request) or 'unknown'}", 5, 3600,
-    )
-    user = await SiteUser.find_one(SiteUser.email == payload.email.lower())
-    if user is not None and user.is_active and not user.is_verified:
-        background_tasks.add_task(send_verification_email, user)
-    return SiteMessageResponse(
-        message=(
-            f"If that account exists and isn't verified, a new link is "
-            f"on its way. {EMAIL_SPAM_NOTICE}"
-        ),
-    )
-
-
-# --- Password reset --------------------------------------------------------
-
-
-@router.post("/forgot-password", response_model=SiteMessageResponse)
-async def forgot_password(
-    payload: SiteForgotPasswordRequest,
-    request: Request,
-    background_tasks: BackgroundTasks,
-) -> SiteMessageResponse:
-    """Send a reset link to the address - IF an account with that email
-    exists. The response is always the same shape so a caller can't
-    enumerate registered emails by probing for status differences."""
-    from app.admin import runtime_config
-    ip = client_ip(request) or "unknown"
-    fp_max, fp_window = await runtime_config.get_rate_limit("forgot_password_rate_limit")
-    await check_rate_limit(f"site-forgot:{ip}", fp_max, fp_window)
-
-    # Captcha gate - same disable-when-unconfigured rule. Keeps a
-    # spammer from using the forgot-password endpoint to flood the
-    # outbox with reset emails to random addresses (the response is
-    # enumeration-safe but the mail-send itself is real I/O).
-    if not await verify_captcha(payload.captcha_token, remote_ip=ip):
-        raise APIError(
-            status_code=400, code=ErrorCode.captcha_failed,
-            message="Captcha verification failed",
-        )
-
-    user = await SiteUser.find_one(SiteUser.email == payload.email.lower())
-    if user is not None and user.is_active:
-        background_tasks.add_task(send_password_reset_email, user)
-    # Constant response regardless of whether the lookup hit.
-    return SiteMessageResponse(
-        message=(
-            f"If that email is registered, a reset link is on its way. "
-            f"{EMAIL_SPAM_NOTICE}"
-        ),
-    )
-
-
-@router.post("/reset-password", response_model=SiteMessageResponse)
-async def reset_password(payload: SiteResetPasswordRequest) -> SiteMessageResponse:
-    """Validate the reset token from the email link and set the new
-    password. Single-use: the token embeds a fingerprint of the
-    CURRENT password hash, so once the password changes (via this
-    very call) any other outstanding reset links for the same account
-    immediately stop working."""
-    invalid = APIError(
-        status_code=400, code=ErrorCode.bad_request,
-        message="This reset link is invalid or has expired.",
-    )
-    try:
-        claims = decode_email_token(payload.token, SITE_RESET_PURPOSE)
-        user = await SiteUser.get(PydanticObjectId(claims["sub"]))
-    except (jwt.PyJWTError, KeyError):
-        raise invalid
-
-    # Fingerprint mismatch ⇒ already used OR password changed via another
-    # path since the link was issued. Either way, refuse.
-    if user is None or claims.get("fp") != password_fingerprint(user.hashed_password):
-        raise invalid
-
-    await ensure_password_not_breached(payload.new_password)
-    user.hashed_password = hash_password(payload.new_password)
-    # End every outstanding session - a reset implies the old password
-    # may be compromised, so any device still holding tokens minted on
-    # it shouldn't be trusted.
-    await revoke_all_sessions(user)
-    return SiteMessageResponse(
-        message="Your password has been reset. You can now sign in.",
-    )
 
 
 # --- Session listing -------------------------------------------------------
