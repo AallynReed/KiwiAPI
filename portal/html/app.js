@@ -1207,39 +1207,62 @@ async function renderLeaderboards() {
     </div>
 
     <div class="card">
-      <h2 style="margin:0 0 6px">Player &amp; Class activity data</h2>
+      <h2 style="margin:0 0 6px">Recompute / reset derived data</h2>
       <p class="hint" style="margin:0 0 14px">
-        The <a href="https://trove.aallyn.net/activity" target="_blank" rel="noopener">Player Activity</a>
-        and <a href="https://trove.aallyn.net/class-activity" target="_blank" rel="noopener">Class Activity</a>
-        charts read derived "active players per capture" histories rebuilt from the stored leaderboard
-        captures. These buttons recompute <strong>both</strong>. <strong>Reset &amp; recalculate</strong> wipes
-        the histories and recomputes from scratch with the current logic - use it to flush bad values from
-        earlier runs. <strong>Rebuild</strong> keeps existing rows and just (re)computes the range. Both run in
-        the background (a few minutes); the charts read empty/partial until it lands. Nothing irreplaceable is
-        lost - it's all derived from the captures.
+        Every leaderboards-derived dataset can be reset &amp; recalculated on its own, so a quick fix doesn't
+        rerun the slow ones. <strong>Player</strong> (<a href="https://trove.aallyn.net/activity" target="_blank" rel="noopener">/activity</a>)
+        and <strong>Class</strong> (<a href="https://trove.aallyn.net/class-activity" target="_blank" rel="noopener">/class-activity</a>)
+        activity are the slow rebuilds - they replay every stored capture (a few minutes, background);
+        <strong>Cheaters</strong> and <strong>Views</strong> only recompute the latest capture (seconds, inline).
+        Everything here is derived from the captures, so nothing irreplaceable is lost.
+        <strong>Rebuild</strong> keeps existing rows; <strong>Reset &amp; recalculate</strong> wipes first.
       </p>
-      <div class="row" style="align-items:flex-end;gap:12px;flex-wrap:wrap">
+      <div class="row" style="align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px">
         <label style="flex:0 0 auto">
-          <span class="muted" style="font-size:.78rem;display:block;margin-bottom:4px">Days back to recompute (0 = all history)</span>
-          <input type="number" id="act-bf-days" value="0" min="0" max="1000" style="width:140px">
+          <span class="muted" style="font-size:.78rem;display:block;margin-bottom:4px">Days back for the activity rebuilds (0 = all history)</span>
+          <input type="number" id="rc-days" value="0" min="0" max="1000" style="width:140px">
         </label>
-        <button class="btn small" id="act-bf-rebuild" type="button">Rebuild (keep existing)</button>
-        <button class="btn small danger" id="act-bf-reset" type="button">Reset &amp; recalculate</button>
       </div>
-      <p class="hint" id="act-bf-result" style="margin:12px 0 0"></p>
+      <div style="display:grid;gap:10px">
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Player activity</strong> <span class="muted" style="font-size:.78rem">— /activity history</span></span>
+          <button class="btn small" id="rc-act-rebuild" type="button">Rebuild</button>
+          <button class="btn small danger" id="rc-act-reset" type="button">Reset &amp; recalculate</button>
+        </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Class activity</strong> <span class="muted" style="font-size:.78rem">— /class-activity history (raw + clean)</span></span>
+          <button class="btn small" id="rc-cls-rebuild" type="button">Rebuild</button>
+          <button class="btn small danger" id="rc-cls-reset" type="button">Reset &amp; recalculate</button>
+        </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Cheaters</strong> <span class="muted" style="font-size:.78rem">— flag detection, latest capture</span></span>
+          <button class="btn small danger" id="rc-cheat-reset" type="button">Reset &amp; recalculate</button>
+        </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Leaderboard views</strong> <span class="muted" style="font-size:.78rem">— page snapshot caches</span></span>
+          <button class="btn small danger" id="rc-views-reset" type="button">Reset &amp; recalculate</button>
+        </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border,#2a2f3a);padding-top:10px">
+          <span style="flex:1 1 200px"><strong>Everything</strong> <span class="muted" style="font-size:.78rem">— all four in one go</span></span>
+          <button class="btn small danger" id="rc-all-reset" type="button">Reset &amp; recalculate all</button>
+        </div>
+      </div>
+      <p class="hint" id="rc-result" style="margin:14px 0 0"></p>
     </div>`;
   renderLeaderboardsBoardsTable();
-  wireActivityBackfillCard();
+  wireRecomputeCard();
 }
 
-// ── Admin · Modules · Leaderboards · activity-history rebuild ───────────────
-// Both buttons POST the master /v1/activity/backfill endpoint (session JWT is
-// accepted by require_master_ingest). `reset` wipes + recomputes; plain rebuild
-// just forces a recompute of the range. The work runs in the background, so the
-// response is a 202 ack - we surface its message and point at the logs.
-function wireActivityBackfillCard() {
-  const daysEl = document.getElementById("act-bf-days");
-  const resultEl = document.getElementById("act-bf-result");
+// ── Admin · Modules · Leaderboards · recompute / reset ──────────────────────
+// Each leaderboards-derived dataset gets its OWN reset & recalculate so a quick
+// fix doesn't rerun the slow activity backfills. Player + class activity replay
+// the stored captures (master /v1/{activity,class-activity}/backfill, 202 +
+// background); cheaters + views only recompute the latest capture
+// (/v1/leaderboards/{cheaters,views}/recompute, inline). All accept the session
+// JWT via require_master_ingest. "Everything" fires all four at once.
+function wireRecomputeCard() {
+  const daysEl = document.getElementById("rc-days");
+  const resultEl = document.getElementById("rc-result");
   if (!daysEl) return;
   // 0 = ALL stored history (no lower bound); else clamp to [1, 1000] days.
   const days = () => {
@@ -1248,41 +1271,76 @@ function wireActivityBackfillCard() {
     return Math.min(1000, v);
   };
   const rangeLabel = () => (days() === 0 ? "the entire stored history" : `the last <strong>${days()} days</strong>`);
+  const qs = (reset) => `total_days=${days()}` + (reset ? "&reset=true" : "&force=true");
+  const show = (msg) => { resultEl.textContent = msg; };
 
-  async function backfill(reset) {
-    const qs = `total_days=${days()}` + (reset ? "&reset=true" : "&force=true");
-    // Recompute BOTH the player-activity and the per-class-activity histories
-    // (same captures + params) so one action fills both charts. Throws on !ok.
-    const [r] = await Promise.all([
-      API.call(`/v1/activity/backfill?${qs}`, { method: "POST" }),
-      API.call(`/v1/class-activity/backfill?${qs}`, { method: "POST" }),
-    ]);
-    return r;
-  }
+  const postActivity = (reset) => API.call(`/v1/activity/backfill?${qs(reset)}`, { method: "POST" });
+  const postClass = (reset) => API.call(`/v1/class-activity/backfill?${qs(reset)}`, { method: "POST" });
+  const postCheaters = () => API.call("/v1/leaderboards/cheaters/recompute", { method: "POST" });
+  const postViews = () => API.call("/v1/leaderboards/views/recompute", { method: "POST" });
 
-  document.getElementById("act-bf-rebuild").addEventListener("click", async () => {
-    try {
-      const r = await backfill(false);
-      resultEl.textContent = r.message || "Rebuild started in the background.";
-      toast("Activity rebuild started", "ok");
-    } catch (ex) { toast(ex.message || "Failed to start rebuild", "err"); }
-  });
+  // Non-destructive rebuilds (force): no confirmation needed.
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); };
+  const rebuild = (label, post) => async () => {
+    try { const r = await post(false); show(r.message || `${label} rebuild started.`); toast(`${label} rebuild started`, "ok"); }
+    catch (ex) { toast(ex.message || "Failed to start rebuild", "err"); }
+  };
+  on("rc-act-rebuild", rebuild("Player activity", postActivity));
+  on("rc-cls-rebuild", rebuild("Class activity", postClass));
 
-  document.getElementById("act-bf-reset").addEventListener("click", () => {
-    modal(
-      "Reset activity data?",
-      `<p>This <strong>deletes</strong> the stored player- and class-activity histories and recomputes ${rangeLabel()}
-       from the leaderboard captures. The
-       <code>/activity</code> and <code>/class-activity</code> charts read empty until the background rebuild finishes (a few minutes).</p>
-       <p class="hint">The data is fully derived from the captures, so nothing irreplaceable is lost.</p>`,
-      async () => {
-        const r = await backfill(true);   // throws -> modal shows the error, stays open
-        resultEl.textContent = r.message || "Reset + rebuild started in the background.";
-        toast("Activity reset + rebuild started", "ok");
-      },
-      "Reset & recalculate",
-    );
-  });
+  // Destructive resets: confirm in a modal (onConfirm throws -> stays open on error).
+  const onReset = (id, title, bodyHtml, fn) =>
+    on(id, () => modal(title, bodyHtml, fn, "Reset & recalculate"));
+
+  onReset(
+    "rc-act-reset", "Reset player activity?",
+    `<p>Deletes the stored <code>/activity</code> history and recomputes ${rangeLabel()} from the captures.
+     Runs in the background (a few minutes); the chart reads empty until it lands.</p>
+     <p class="hint">Fully derived from the captures - nothing irreplaceable is lost.</p>`,
+    async () => { const r = await postActivity(true); show(r.message || "Player-activity reset + rebuild started."); toast("Player-activity reset started", "ok"); },
+  );
+  onReset(
+    "rc-cls-reset", "Reset class activity?",
+    `<p>Deletes the stored <code>/class-activity</code> history (raw + clean views) and recomputes ${rangeLabel()}
+     from the captures. Runs in the background; the chart reads empty until it lands.</p>
+     <p class="hint">Fully derived from the captures - nothing irreplaceable is lost.</p>`,
+    async () => { const r = await postClass(true); show(r.message || "Class-activity reset + rebuild started."); toast("Class-activity reset started", "ok"); },
+  );
+  onReset(
+    "rc-cheat-reset", "Reset cheater detection?",
+    `<p>Clears the cached cheater flags (in-process + Redis) and recomputes the latest capture from scratch.
+     Inline - a few seconds.</p>`,
+    async () => {
+      const r = await postCheaters();
+      show(`Cheaters recomputed: ${r.total_flagged ?? "?"} flagged across ${r.boards_analyzed ?? "?"} boards (anchor ${r.anchor ?? "n/a"}).`);
+      toast("Cheaters recomputed", "ok");
+    },
+  );
+  onReset(
+    "rc-views-reset", "Reset leaderboard views?",
+    `<p>Clears the page snapshot caches (anchor list, board lists, entry pages, board-history charts) and
+     re-warms the latest captures. Inline - a few seconds.</p>`,
+    async () => {
+      const r = await postViews();
+      show(`Views recomputed: ${r.keys_cleared ?? "?"} keys cleared, ${r.board_charts_warmed ?? "?"} board charts re-warmed.`);
+      toast("Views recomputed", "ok");
+    },
+  );
+  onReset(
+    "rc-all-reset", "Reset EVERYTHING?",
+    `<p>Resets &amp; recalculates <strong>all four</strong>: player activity, class activity, cheaters, and views,
+     covering ${rangeLabel()} for the activity rebuilds. The two activity rebuilds run in the background;
+     cheaters + views complete inline.</p>
+     <p class="hint">All derived from the captures - nothing irreplaceable is lost.</p>`,
+    async () => {
+      const results = await Promise.allSettled([postActivity(true), postClass(true), postCheaters(), postViews()]);
+      const failed = results.filter((r) => r.status === "rejected").length;
+      if (failed === results.length) throw new Error("All four failed - check the api logs.");
+      show(failed ? `${results.length - failed}/${results.length} started; ${failed} failed - check the api logs.`
+                  : "All four reset + recompute started (activity in the background).");
+      toast(failed ? `${failed} of ${results.length} failed` : "All reset + recompute started", failed ? "err" : "ok");
+    },
+  );
 }
 
 // ─── Admin · Modules · Giveaways ────────────────────────────────────────────
@@ -1669,6 +1727,7 @@ const CONFIG_CATEGORY_LABELS = {
   scope_multipliers: "Per-scope rate-limit multipliers",
   rate_limit_alerts: "Rate-limit alert digest",
   cheater_detection: "Cheater detection",
+  class_activity: "Class activity",
 };
 
 async function renderConfigTab() {

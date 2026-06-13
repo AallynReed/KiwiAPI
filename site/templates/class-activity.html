@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Class Activity - Better Trove Tools</title>
-    <meta name="description" content="Which Trove classes are most actively played? Per-class active-player trends and player share, derived from the Effort & Paragon leaderboards.">
+    <meta name="description" content="Which Trove classes are most actively played? Per-class active-player trends and player share, derived from the Effort leaderboards.">
     <meta name="theme-color" content="#0a0e14">
     <meta name="color-scheme" content="dark">
 
@@ -22,11 +22,11 @@
     <meta property="og:site_name" content="Better Trove Tools">
     <meta property="og:url" content="https://trove.aallyn.net/class-activity">
     <meta property="og:title" content="Trove Class Activity">
-    <meta property="og:description" content="Which Trove classes are most actively played - per-class activity trends + player share, from the Effort & Paragon leaderboards.">
+    <meta property="og:description" content="Which Trove classes are most actively played - per-class activity trends + player share, from the Effort leaderboards.">
     <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Trove Class Activity">
-    <meta name="twitter:description" content="Per-class activity trends + player share, from the Effort & Paragon leaderboards.">
+    <meta name="twitter:description" content="Per-class activity trends + player share, from the Effort leaderboards.">
     <meta name="twitter:image" content="https://trove.aallyn.net/static/assets/favicon.png">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
@@ -44,8 +44,20 @@
         <section class="cact-hero">
             <p class="cact-eyebrow">/class-activity</p>
             <h1 class="cact-title" data-i18n>Class Activity</h1>
-            <p class="cact-sub" data-i18n>Which classes are people actually playing? A per-class, lower-bound estimate of active players derived from the Effort &amp; Paragon leaderboards - trends over time and each class's share of activity.</p>
+            <p class="cact-sub" data-i18n>Which classes are people actually playing? A per-class, lower-bound estimate of active players derived from the Effort leaderboards - trends over time and each class's player share.</p>
         </section>
+
+        <!-- Player filter: "Established" (default) keeps only players whose Power
+             Rank on the class clears the configured threshold (filters newbies +
+             alts); "All" counts everyone. Applies to BOTH the chart and donut.
+             JS toggles the dataset client-side (no refetch). -->
+        <div class="cact-viewbar">
+            <div class="cact-views" id="cact-views" role="tablist" aria-label="Player filter">
+                <button type="button" data-view="clean" role="tab" class="active" aria-selected="true" data-i18n>Established</button>
+                <button type="button" data-view="raw" role="tab" aria-selected="false" data-i18n>All</button>
+            </div>
+            <span class="cact-view-hint" id="cact-view-hint"></span>
+        </div>
 
         <!-- Per-class trend chart with a period selector + a toggleable legend.
              JS swaps the series on /site/leaderboards/class-activity/series?period=… -->
@@ -73,14 +85,14 @@
              /site/leaderboards/class-activity/current. -->
         <section class="cact-share-card">
             <h2 class="cact-share-title" data-i18n>Class player share</h2>
-            <p class="cact-share-sub" id="cact-share-sub" data-i18n>Share of class activity in the most recent capture window.</p>
+            <p class="cact-share-sub" id="cact-share-sub" data-i18n>Share of players on each class in the latest leaderboard snapshot.</p>
             <div class="cact-share-body">
                 <div class="cact-donut" id="cact-donut"></div>
                 <ol class="cact-share-legend" id="cact-share-legend"></ol>
             </div>
         </section>
 
-        <p class="cact-method" data-i18n>How this works: each class has an Effort and a Paragon leaderboard. A player counts as active on a class when their score rose (or they first appear) on either of those boards between two consecutive captures. Both boards reset weekly (Monday 11:00 UTC), so the lines break across the reset rather than dropping to a false zero. The chart plots the average per-hour estimate per class inside each time bucket. "Share" is share of class activity - a player who plays several classes counts in each, so the slices sum to 100% but aren't distinct players. It's a lower bound: anyone outside a board's top ranks isn't seen.</p>
+        <p class="cact-method" data-i18n>How this works: each class is measured by its Effort leaderboard (the related Paragon board is left out - its scores are ambiguous). For the time chart, a player counts toward a class when their Effort score rose (or they first appear) between two consecutive captures; the share donut instead counts everyone present on the class's Effort board in the latest capture. The default "Established" view keeps only players who clear both a Power Rank and an Effort threshold on that class - filtering out brand-new characters and throwaway alts; the "All" view counts everyone. Effort resets weekly (Monday 11:00 UTC), so the chart's lines break across the reset rather than dropping to a false zero. Each line shows the class's share of activity over time (hover for the underlying player count); the donut shows each class's share of players in the latest snapshot. "Share" counts a player who plays several classes in each, so the slices sum to 100% but aren't distinct players. It's a lower bound: anyone outside a board's top ranks isn't seen.</p>
     </main>
 
     {% include "partials/footer.html" %}

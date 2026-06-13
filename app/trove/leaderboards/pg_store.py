@@ -507,24 +507,30 @@ async def delete_all_estimates() -> int:
 
 async def upsert_class_estimates(rows: list[dict]) -> None:
     """Batch-upsert one window's per-class rows (≤ one per class). Each row:
-    {class_index, window_end, window_start, duration_hours, estimate, computed_at}."""
+    {class_index, window_end, window_start, duration_hours, estimate,
+    estimate_clean (int|None), computed_at}. ``estimate_clean`` is the
+    Power-Rank-filtered count (NULL when that view is unmeasurable)."""
     if not rows:
         return
     async with acquire() as con:
         await con.executemany(
             "INSERT INTO class_activity_estimate "
-            "(class_index, window_end, window_start, duration_hours, estimate, computed_at) "
-            "VALUES ($1, $2, $3, $4, $5, $6) "
+            "(class_index, window_end, window_start, duration_hours, estimate, "
+            " estimate_clean, computed_at) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7) "
             "ON CONFLICT (class_index, window_end) DO UPDATE SET "
             "window_start = EXCLUDED.window_start, duration_hours = EXCLUDED.duration_hours, "
-            "estimate = EXCLUDED.estimate, computed_at = EXCLUDED.computed_at",
+            "estimate = EXCLUDED.estimate, estimate_clean = EXCLUDED.estimate_clean, "
+            "computed_at = EXCLUDED.computed_at",
             [(r["class_index"], r["window_end"], r["window_start"],
-              r["duration_hours"], r["estimate"], r["computed_at"]) for r in rows],
+              r["duration_hours"], r["estimate"], r.get("estimate_clean"),
+              r["computed_at"]) for r in rows],
         )
 
 
 async def get_class_estimates(window_start: int | None = None) -> list[dict]:
-    cols = "class_index, window_end, window_start, duration_hours, estimate, computed_at"
+    cols = ("class_index, window_end, window_start, duration_hours, estimate, "
+            "estimate_clean, computed_at")
     async with acquire() as con:
         if window_start is None:
             rows = await con.fetch(
@@ -541,7 +547,8 @@ async def get_class_estimates(window_start: int | None = None) -> list[dict]:
 
 async def latest_class_estimates() -> list[dict]:
     """All per-class rows for the most recent stored window (for /current)."""
-    cols = "class_index, window_end, window_start, duration_hours, estimate, computed_at"
+    cols = ("class_index, window_end, window_start, duration_hours, estimate, "
+            "estimate_clean, computed_at")
     async with acquire() as con:
         rows = await con.fetch(
             f"SELECT {cols} FROM class_activity_estimate "

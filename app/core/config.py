@@ -79,6 +79,16 @@ class Settings(BaseSettings):
     # describes every top-100 player, not just cheaters.
     cheaters_elite_cohort_pct: float = 0.05
 
+    # Class activity (/class-activity). Counts are based on the Effort boards only
+    # (4000+i); Paragon (5000+i) is excluded as ambiguous. The "clean" (established)
+    # view keeps only players who clear BOTH floors below, snapshot at the window
+    # end - a way to exclude brand-new characters and throwaway alts so the trend
+    # reflects established players. Power Rank lives on the 1000+i leaderboard,
+    # Effort on 4000+i. Both are runtime-tunable and take effect on the next
+    # recompute. Set either to 0 to drop that gate.
+    class_activity_power_rank_threshold: int = 25000
+    class_activity_effort_threshold: int = 50
+
     # Market archive throttle. Market listings expire after 7 days (in-game),
     # so the "archive surface" here is anyone passing hide_expired=false on
     # /v1/market/listings - they're explicitly opting into the historical tail.

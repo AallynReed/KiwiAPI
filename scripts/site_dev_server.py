@@ -15,7 +15,7 @@ http://localhost:8913/leaderboards.
 from __future__ import annotations
 
 import json
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
@@ -251,31 +251,45 @@ class Handler(SimpleHTTPRequestHandler):
             buckets = [start + i * bucket for i in range(count)]
             classes = []
             for ci, name in enumerate(_STUB_CLASSES):
-                vals = []
+                vals, vals_clean = [], []
                 for i in range(count):
                     base = 120 + 70 * math.sin(i / 3.0 + ci * 0.5) + (18 - ci) * 6
                     # a couple of synthetic gaps (weekly reset look)
-                    vals.append(None if (i % 28 == 13) else max(2.0, round(base, 1)))
-                classes.append({"class_index": ci, "name": name, "icon": _stub_icon(ci), "values": vals})
+                    raw = None if (i % 28 == 13) else max(2.0, round(base, 1))
+                    vals.append(raw)
+                    # "clean" view ≈ 55-65% of raw, with an extra synthetic gap
+                    # so it exercises the per-line null handling independently.
+                    if raw is None or (i % 23 == 7):
+                        vals_clean.append(None)
+                    else:
+                        vals_clean.append(max(1.0, round(raw * (0.55 + 0.1 * ((ci % 3) / 2)), 1)))
+                classes.append({"class_index": ci, "name": name, "icon": _stub_icon(ci),
+                                "values": vals, "values_clean": vals_clean})
             return self._send_json({
                 "period": period, "bucket_seconds": bucket,
                 "window_start": start, "window_end": end,
+                "power_rank_threshold": 25000,
                 "buckets": buckets, "classes": classes,
                 "methodology": "stub class series",
             })
         if path == "/site/leaderboards/class-activity/current":
             # Synthetic per-class counts + sum-normalized share for the donut.
             counts = [max(3, 320 - ci * 15 - (ci % 3) * 8) for ci in range(len(_STUB_CLASSES))]
+            clean = [max(1, int(counts[ci] * (0.55 + 0.1 * ((ci % 3) / 2)))) for ci in range(len(_STUB_CLASSES))]
             total = sum(counts)
+            total_clean = sum(clean)
             classes = [
                 {"class_index": ci, "name": _STUB_CLASSES[ci], "icon": _stub_icon(ci),
-                 "active_players": counts[ci], "share": round(counts[ci] / total, 4)}
+                 "active_players": counts[ci], "share": round(counts[ci] / total, 4),
+                 "active_players_clean": clean[ci],
+                 "share_clean": round(clean[ci] / total_clean, 4)}
                 for ci in range(len(_STUB_CLASSES))
             ]
-            classes.sort(key=lambda c: -c["active_players"])
+            classes.sort(key=lambda c: -c["active_players_clean"])
             return self._send_json({
                 "window_start": STUB_ANCHOR - 3600, "window_end": STUB_ANCHOR,
-                "duration_hours": 1.0, "total_active": total, "classes": classes,
+                "duration_hours": 1.0, "total_active": total, "total_active_clean": total_clean,
+                "power_rank_threshold": 25000, "classes": classes,
                 "methodology": "stub class current", "computed_at": STUB_ANCHOR,
             })
         if path == "/site/leaderboards/cheaters":
@@ -503,4 +517,8 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     print("[site-dev] http://localhost:8913/leaderboards")
-    HTTPServer(("127.0.0.1", 8913), Handler).serve_forever()
+    # ThreadingHTTPServer (not the single-threaded HTTPServer): the browser
+    # preview opens several keep-alive connections at once, which would wedge a
+    # single-threaded server mid-request. Each request is independent stub data,
+    # so threading is safe here.
+    ThreadingHTTPServer(("127.0.0.1", 8913), Handler).serve_forever()

@@ -1,7 +1,10 @@
-"""Class Activity: class↔board mapping, per-class union/dedup, share, series shape.
+"""Class Activity: class↔board mapping, per-class dedup, the "clean"
+(established) filter (Power Rank + Effort floors; Effort-only basis, Paragon
+excluded), share normalization, and series shape (raw + clean).
 
 No DB - the compute primitives are pure (maps in, dicts out); the one async test
-monkeypatches the pg_store/cache reads. Mirrors test_activity_compute.py."""
+monkeypatches the pg_store/cache reads + the threshold lookup. Mirrors
+test_activity_compute.py."""
 import datetime as _dt
 import time
 
@@ -51,7 +54,28 @@ def test_class_board_mapping():
     assert {4000, 4017, 5000, 5017} <= boards
 
 
-# --- _class_counts: union + dedup -------------------------------------------
+def test_power_rank_board_mapping():
+    # Power Rank boards are the 1000+i parallel range (the clean-view gate).
+    assert stats.class_pr_board_uuid(0) == 1000
+    assert stats.class_pr_board_uuid(17) == 1017
+    prs = stats.class_pr_board_uuids()
+    assert len(prs) == 18
+    assert prs[0] == 1000 and prs[-1] == 1017
+    assert stats.class_index_for_board(1002) == 2   # uuid % 1000 still holds
+
+
+def test_effort_board_mapping():
+    # Effort (4000+i) is the sole basis for class-activity counts; the Effort-only
+    # board list backs every load. (Paragon mapping still exists but is unused.)
+    assert stats.class_effort_board_uuid(0) == 4000
+    assert stats.class_effort_board_uuid(17) == 4017
+    eff = stats.class_effort_board_uuids()
+    assert len(eff) == 18 and eff[0] == 4000 and eff[-1] == 4017
+    assert all(4000 <= u <= 4017 for u in eff)        # no Paragon (5000+i) in the list
+    assert stats.class_paragon_board_uuid(0) == 5000  # helper kept, but not used in counts
+
+
+# --- _class_counts: union + dedup (raw) -------------------------------------
 
 def test_class_counts_unions_and_dedups_two_boards():
     early, late = _non_reset_window()
@@ -67,7 +91,8 @@ def test_class_counts_unions_and_dedups_two_boards():
     counts = ca._class_counts(early_maps, late_maps, early, late)
     # Both (rose on both → counted once), OnlyEffort (rose), OnlyParagon (new).
     # Flat is unchanged → not active. → 3 distinct for class 2; no other class.
-    assert counts == {2: 3}
+    # No pr_maps passed → clean is unmeasurable (None).
+    assert counts == {2: {"raw": 3, "clean": None}}
 
 
 def test_player_active_on_multiple_classes_counts_in_each():
@@ -76,7 +101,8 @@ def test_player_active_on_multiple_classes_counts_in_each():
     early_maps = {4000: {"X": 5.0}, 4001: {"X": 5.0}, 4002: {"X": 5.0}}
     # The same player counts toward EACH class - share is share-of-activity,
     # not distinct players.
-    assert ca._class_counts(early_maps, late_maps, early, late) == {0: 1, 1: 1, 2: 1}
+    out = ca._class_counts(early_maps, late_maps, early, late)
+    assert {i: c["raw"] for i, c in out.items()} == {0: 1, 1: 1, 2: 1}
 
 
 def test_reset_crossing_window_yields_no_counts():
@@ -89,24 +115,160 @@ def test_reset_crossing_window_yields_no_counts():
     assert ca._class_counts(early_maps, late_maps, early, late) == {}
 
 
-# --- share normalization ----------------------------------------------------
+# --- _class_counts: the Power-Rank "clean" filter ---------------------------
 
-def test_build_current_share_sums_to_one_and_sorts_desc():
-    cur = ca._build_current(1000, 4600, 1.0, {0: 30, 5: 20, 9: 50}, 9999)
+def test_class_counts_clean_filters_by_power_rank():
+    early, late = _non_reset_window()
+    # Class 2: three players rise on Effort 4002.
+    late_maps = {4002: {"Vet": 100.0, "Whale": 80.0, "Newbie": 50.0}}
+    early_maps = {4002: {"Vet": 90.0, "Whale": 70.0, "Newbie": 49.0}}
+    # Power Rank board 1002: Vet + Whale clear 25k; Newbie (5k) does not.
+    pr_maps = {1002: {"Vet": 40000.0, "Whale": 26000.0, "Newbie": 5000.0}}
+    c = ca._class_counts(early_maps, late_maps, early, late, pr_maps=pr_maps, threshold=25000)
+    assert c[2]["raw"] == 3
+    assert c[2]["clean"] == 2       # Newbie filtered out of the clean count
+
+    # A player absent from the PR board counts as 0 PR → filtered.
+    pr_missing_player = {1002: {"Vet": 40000.0}}
+    c2 = ca._class_counts(early_maps, late_maps, early, late,
+                          pr_maps=pr_missing_player, threshold=25000)
+    assert c2[2]["clean"] == 1      # only Vet
+
+    # PR board absent for the class → clean unmeasurable (None, the line gaps).
+    c3 = ca._class_counts(early_maps, late_maps, early, late, pr_maps={}, threshold=25000)
+    assert c3[2]["clean"] is None
+
+    # threshold 0 → clean == raw (no filtering).
+    c4 = ca._class_counts(early_maps, late_maps, early, late, pr_maps=pr_maps, threshold=0)
+    assert c4[2]["clean"] == 3
+
+
+def test_class_counts_clean_filters_by_power_rank_and_effort():
+    early, late = _non_reset_window()
+    # Class 2: four players all RISE on Effort 4002 (raw = 4). No Paragon board is
+    # loaded any more - counts and the clean gate are Effort-only.
+    late_maps = {4002: {"A": 100.0, "B": 40.0, "C": 100.0, "D": 100.0}}
+    early_maps = {4002: {"A": 90.0, "B": 30.0, "C": 90.0, "D": 90.0}}   # all rose
+    pr_maps = {1002: {"A": 40000.0, "B": 40000.0, "C": 40000.0, "D": 5000.0}}
+    c = ca._class_counts(early_maps, late_maps, early, late, pr_maps=pr_maps,
+                         threshold=25000, effort_threshold=50)
+    assert c[2]["raw"] == 4
+    # A + C clear both floors; B fails Effort (40<50); D fails Power Rank (5000<25000).
+    assert c[2]["clean"] == 2
+
+    # Effort floor at 0 -> Power-Rank-only: B (good PR) re-enters, only D is filtered.
+    c2 = ca._class_counts(early_maps, late_maps, early, late, pr_maps=pr_maps,
+                          threshold=25000, effort_threshold=0)
+    assert c2[2]["clean"] == 3   # A, B, C (PR>=25k); D excluded
+
+
+# --- share normalization + clean view ---------------------------------------
+
+def test_build_current_raw_and_clean_views():
+    counts = {
+        0: {"raw": 30, "clean": 10},
+        5: {"raw": 20, "clean": None},   # clean unmeasurable for this class
+        9: {"raw": 50, "clean": 40},
+    }
+    cur = ca._build_current(1000, 4600, 1.0, counts, 9999, 25000, 50)
     assert cur["total_active"] == 100
+    assert cur["total_active_clean"] == 50          # 10 + 40 (class 5 excluded)
+    assert cur["power_rank_threshold"] == 25000
+    assert cur["effort_threshold"] == 50
+    assert "paragon_threshold" not in cur           # Paragon removed from the pipeline
+
+    # Default ordering is the clean view: clean desc, classes w/ None clean last.
+    assert [c["class_index"] for c in cur["classes"]] == [9, 0, 5]
+    top = cur["classes"][0]
+    assert top["class_index"] == 9
+    assert top["active_players"] == 50
+    assert top["active_players_clean"] == 40
+    assert abs(top["share"] - 0.5) < 1e-6            # raw share
+    assert abs(top["share_clean"] - 40 / 50) < 1e-6  # clean share
+
+    # Raw shares sum to 1; clean shares (over measurable classes) sum to 1.
     assert abs(sum(c["share"] for c in cur["classes"]) - 1.0) < 1e-6
-    assert [c["class_index"] for c in cur["classes"]] == [9, 0, 5]   # by active desc
-    assert cur["classes"][0]["name"] == stats.class_name(9)
-    assert cur["classes"][0]["share"] == 0.5
+    clean_shares = [c["share_clean"] for c in cur["classes"] if c["share_clean"] is not None]
+    assert abs(sum(clean_shares) - 1.0) < 1e-6
+
+    # Class 5: clean None → both clean fields None.
+    c5 = next(c for c in cur["classes"] if c["class_index"] == 5)
+    assert c5["active_players_clean"] is None
+    assert c5["share_clean"] is None
+
     # self-hosted icon URL per class
-    assert cur["classes"][0]["icon"] == "/static/class-icons/knight.png"
+    assert top["icon"] == "/static/class-icons/knight.png"
     assert stats.class_icon(0) == "/static/class-icons/bard.png"
 
 
 def test_build_current_empty_counts():
-    cur = ca._build_current(None, None, None, {}, 9999)
+    cur = ca._build_current(None, None, None, {}, 9999, 25000)
     assert cur["total_active"] is None
+    assert cur["total_active_clean"] is None
     assert cur["classes"] == []
+
+
+# --- the donut: a direct snapshot headcount (no activity delta) --------------
+
+def test_snapshot_counts_presence_and_floors():
+    # A single snapshot: who is PRESENT on each class's EFFORT board, not who rose.
+    effort_maps = {
+        4000: {"A": 100.0, "B": 40.0},   # class 0 Effort scores
+        4002: {"X": 200.0},              # class 2 Effort
+    }
+    pr = {1000: {"A": 40000.0, "B": 40000.0}}   # no 1002 -> class 2 PR absent
+    c = ca._snapshot_counts(effort_maps, pr, 25000, 50)
+    assert c[0]["raw"] == 2              # A, B present on class 0's Effort board
+    # established: A clears both floors; B fails Effort (40<50).
+    assert c[0]["clean"] == 1
+    assert c[2]["raw"] == 1              # X present on class 2
+    assert c[2]["clean"] is None         # class 2's Power Rank board absent -> unmeasurable
+    assert 5 not in c                    # a class with no players is omitted (no slice)
+
+
+async def test_current_donut_is_direct_snapshot(monkeypatch):
+    from app.trove.leaderboards import activity as _act
+    from app.trove.leaderboards import cache as lb_cache
+    from app.trove.leaderboards import service as lb_service
+
+    anchor = 1_700_000_000
+
+    async def fake_stamps(limit=1, include_archive=True):
+        return [anchor]
+
+    async def fake_thresholds():
+        return (25000, 50)
+
+    async def fake_load(a, board_uuids):
+        # PR boards vs Effort boards, by which range was requested (no Paragon).
+        if 1000 in set(board_uuids):
+            return {1000: {"A": 40000.0, "B": 40000.0}}
+        return {4000: {"A": 100.0, "B": 40.0}}
+
+    async def fake_cache_get():
+        return None
+
+    async def fake_cache_set(payload):
+        return None
+
+    monkeypatch.setattr(lb_service, "list_timestamps", fake_stamps)
+    monkeypatch.setattr(ca, "_clean_thresholds", fake_thresholds)
+    monkeypatch.setattr(_act, "_load_anchor_maps", fake_load)
+    monkeypatch.setattr(lb_cache, "get_class_activity_current", fake_cache_get)
+    monkeypatch.setattr(lb_cache, "set_class_activity_current", fake_cache_set)
+
+    cur = await ca.class_activity_current()
+    # snapshot, not a window: both bounds are the anchor, no duration.
+    assert cur["window_start"] == anchor and cur["window_end"] == anchor
+    assert cur["duration_hours"] is None
+    assert cur["total_active"] == 2          # A + B present on class 0's Effort board
+    assert cur["total_active_clean"] == 1    # only A clears both floors
+    assert (cur["power_rank_threshold"], cur["effort_threshold"]) == (25000, 50)
+    assert "paragon_threshold" not in cur
+    assert "snapshot" in cur["methodology"].lower()
+    c0 = next(c for c in cur["classes"] if c["class_index"] == 0)
+    assert c0["active_players"] == 2 and c0["active_players_clean"] == 1
+    assert abs(c0["share"] - 1.0) < 1e-9     # class 0 is the only one with players
 
 
 # --- series bucketing shape (async, monkeypatched reads) --------------------
@@ -119,11 +281,11 @@ async def test_series_shared_buckets_and_aligned_values(monkeypatch):
     we1, we2 = now - 7200, now - 3600   # two hourly windows → two 3600s buckets
     rows = [
         {"class_index": 0, "window_end": we1, "window_start": we1 - 3600,
-         "duration_hours": 1.0, "estimate": 10, "computed_at": now},
+         "duration_hours": 1.0, "estimate": 10, "estimate_clean": 6, "computed_at": now},
         {"class_index": 1, "window_end": we1, "window_start": we1 - 3600,
-         "duration_hours": 1.0, "estimate": 5, "computed_at": now},
+         "duration_hours": 1.0, "estimate": 5, "estimate_clean": None, "computed_at": now},
         {"class_index": 0, "window_end": we2, "window_start": we2 - 3600,
-         "duration_hours": 1.0, "estimate": 20, "computed_at": now},
+         "duration_hours": 1.0, "estimate": 20, "estimate_clean": 12, "computed_at": now},
         # class 1 absent in we2 (its value there must be null)
     ]
 
@@ -136,19 +298,30 @@ async def test_series_shared_buckets_and_aligned_values(monkeypatch):
     async def fake_cache_set(period, payload):
         return None
 
+    async def fake_thresholds():
+        return (25000, 50)
+
     monkeypatch.setattr(pg_store, "get_class_estimates", fake_get)
     monkeypatch.setattr(lb_cache, "get_class_activity_series", fake_cache_get)
     monkeypatch.setattr(lb_cache, "set_class_activity_series", fake_cache_set)
+    monkeypatch.setattr(ca, "_clean_thresholds", fake_thresholds)
 
     out = await ca.class_activity_series("1d")
     nb = len(out["buckets"])
     assert nb == 2
+    assert out["power_rank_threshold"] == 25000
+    assert out["effort_threshold"] == 50
+    assert "paragon_threshold" not in out
     # All classes present for a stable legend; every line aligns to `buckets`.
     assert len(out["classes"]) == stats.class_count()
     for c in out["classes"]:
         assert len(c["values"]) == nb
+        assert len(c["values_clean"]) == nb
     by_idx = {c["class_index"]: c for c in out["classes"]}
-    assert all(c["icon"] for c in out["classes"])               # every line carries an icon URL
-    assert all(v is not None for v in by_idx[0]["values"])      # class 0 in both buckets
-    assert by_idx[1]["values"].count(None) == 1                 # class 1 in one bucket only
-    assert all(v is None for v in by_idx[5]["values"])          # class 5 never present
+    assert all(c["icon"] for c in out["classes"])                 # every line carries an icon URL
+    assert all(v is not None for v in by_idx[0]["values"])        # class 0 raw in both buckets
+    assert all(v is not None for v in by_idx[0]["values_clean"])  # class 0 clean in both buckets
+    assert by_idx[1]["values"].count(None) == 1                  # class 1 raw in one bucket only
+    # class 1's only stored window had estimate_clean=None → clean line all gaps.
+    assert all(v is None for v in by_idx[1]["values_clean"])
+    assert all(v is None for v in by_idx[5]["values"])           # class 5 never present

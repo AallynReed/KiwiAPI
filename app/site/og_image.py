@@ -577,9 +577,16 @@ async def _announcement_content(kind: str) -> tuple[str, tuple, list[str]]:
     elif kind in ("longshade", "wild_mana"):
         from app.trove.rotations import biome_rotation, wild_mana
         cur = (biome_rotation() if kind == "longshade" else wild_mana()).get("current") or {}
-        names = [b.get("final_name") or b.get("name") for b in (cur.get("biomes") or [])]
-        lines = [n for n in names if n] or ["—"]
-        lines.append(f"Rotates {_rel(cur.get('ends_at'))}")
+        names = [n for b in (cur.get("biomes") or [])
+                 if (n := b.get("final_name") or b.get("name"))]
+        rotate = f"Rotates {_rel(cur.get('ends_at'))}"
+        if kind == "longshade":
+            # Eyebrow "Long Shade Rotation", a static "D15 Biomes" headline, then all
+            # three biomes listed in white below it (the headline is no longer a biome).
+            title = "Long Shade Rotation"
+            lines = ["D15 Biomes", *(names or ["—"]), rotate]
+        else:
+            lines = [*(names or ["—"]), rotate]
     elif kind == "stampy":
         from app.trove.rotations import stampy
         cur = stampy().get("current") or {}

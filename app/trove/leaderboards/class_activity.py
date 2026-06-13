@@ -33,15 +33,66 @@ _KIND = "weekly"
 # Last good /current payload, kept across anchors so a fresh-but-uncomputed or
 # reset-crossing latest window still serves the previous result. Mirrors activity.
 _LAST_GOOD: dict | None = None
+# Same idea for the donut, which is computed directly from the latest snapshot
+# (see class_activity_current); a transient empty capture still serves the last good.
+_LAST_GOOD_DONUT: dict | None = None
 
 _METHODOLOGY = (
-    "Per class, distinct top-N leaderboard players whose score rose (or who first "
-    "appear) on its Effort OR Paragon board between two consecutive captures, "
-    "deduped. Both boards reset weekly (Mon 11:00 UTC); a window crossing the "
-    "reset is unmeasurable and contributes no point. 'Share' is share of class "
-    "activity (a player active on several classes counts in each), not distinct "
-    "players. Lower bound: players outside a board's top-N aren't seen."
+    "Per class, distinct top-N players whose score rose (or who first appear) on "
+    "its Effort board between two consecutive captures. (Paragon boards are "
+    "excluded as ambiguous - counts are Effort-only.) The default 'clean' "
+    "(established) view keeps only players who, snapshot at the window end, clear "
+    "both configured floors - Power Rank (1000+i board) and Effort (4000+i) - "
+    "filtering new characters and throwaway alts; the 'All' view counts everyone. "
+    "Effort boards reset weekly (Mon 11:00 UTC); a window crossing the reset is "
+    "unmeasurable and contributes no point. 'Share' is share of class activity (a "
+    "player active on several classes counts in each), not distinct players. Lower "
+    "bound: players outside a board's top-N aren't seen."
 )
+
+# The donut is computed differently from the series above: it's a direct headcount
+# of the LATEST snapshot, with no activity (score-rose) condition at all.
+_DONUT_METHODOLOGY = (
+    "Per-class player share from the latest leaderboard snapshot - a direct "
+    "headcount, NOT the activity pipeline. RAW counts the players present on a "
+    "class's Effort board at the most recent capture (Paragon is excluded as "
+    "ambiguous); the 'established' view keeps only those clearing both floors - "
+    "Power Rank (1000+i) and Effort (4000+i). 'Share' is a class's count divided by "
+    "the total across classes (a player on several classes counts in each), so "
+    "shares sum to 100% but aren't distinct players. Lower bound: players outside a "
+    "board's top-N aren't seen."
+)
+
+
+async def _setting_int(key: str, fallback: int) -> int:
+    """A runtime-tunable int setting (master config), falling back to the static
+    default if the config lookup fails - a config hiccup must never break compute."""
+    from app.admin import runtime_config
+    try:
+        return int(await runtime_config.get_setting(key))
+    except Exception:  # noqa: BLE001
+        return int(fallback)
+
+
+async def _power_rank_threshold() -> int:
+    """Power-Rank floor for the clean (established) view."""
+    from app.core.config import settings
+    return await _setting_int("class_activity_power_rank_threshold",
+                              settings.class_activity_power_rank_threshold)
+
+
+async def _effort_threshold() -> int:
+    """Effort floor for the clean (established) view."""
+    from app.core.config import settings
+    return await _setting_int("class_activity_effort_threshold",
+                              settings.class_activity_effort_threshold)
+
+
+async def _clean_thresholds() -> tuple[int, int]:
+    """The two runtime-tunable floors that define an "established" player:
+    ``(power_rank, effort)``. A player counts toward a class's clean estimate only
+    when they clear BOTH on that class. (Paragon is not used - it's ambiguous.)"""
+    return (await _power_rank_threshold(), await _effort_threshold())
 
 
 def _class_counts(
@@ -49,14 +100,29 @@ def _class_counts(
     late_maps: dict[int, dict[str, float]],
     early_ts: int,
     late_ts: int,
-) -> dict[int, int]:
-    """``{class_index: distinct_active_players}`` for one (early, late) pair.
+    *,
+    pr_maps: dict[int, dict[str, float]] | None = None,
+    threshold: float = 0,
+    effort_threshold: float = 0,
+) -> dict[int, dict]:
+    """``{class_index: {"raw": int, "clean": int|None}}`` for one (early, late) pair.
 
-    Unions a class's two boards and dedups players. A class is OMITTED (no key)
-    when neither of its boards is measurable for the window (reset crossed / no
-    early snapshot) - so the caller stores nothing for it and the series gaps
-    instead of plotting a false 0. A measurable class with no active players
-    keeps a 0 (genuinely quiet)."""
+    RAW is the class's Effort active set (``late_maps`` holds Effort boards only;
+    Paragon is excluded as ambiguous). CLEAN (the "established" view) keeps only
+    active players who, snapshot at the LATE anchor, clear BOTH per-class floors:
+    Power Rank (board ``1000+i`` from ``pr_maps``) ``>= threshold`` and Effort
+    (board ``4000+i`` from ``late_maps``) ``>= effort_threshold`` - filtering out
+    new characters and throwaway alts. A floor of 0 is a no-op gate. A player
+    missing from a board reads as 0 there.
+
+    ``clean`` is ``None`` (unmeasurable, stored as NULL → the clean line gaps
+    rather than plotting a false 0) when no Power Rank snapshot is available for
+    the class (``pr_maps`` is None, or that board is absent at the anchor).
+
+    A class is OMITTED entirely (no key) when its Effort board isn't measurable for
+    the window (reset crossed / no early snapshot) - so the caller stores nothing
+    and the series gaps. A measurable class with no active players keeps
+    ``{"raw": 0, "clean": 0|None}`` (genuinely quiet)."""
     by_class: dict[int, set[str]] = {}
     for uuid, late in late_maps.items():
         if not late:
@@ -65,7 +131,21 @@ def _class_counts(
         if s is None:
             continue  # reset crossed or no early data for this board
         by_class.setdefault(stats.class_index_for_board(uuid), set()).update(s)
-    return {i: len(players) for i, players in by_class.items()}
+
+    out: dict[int, dict] = {}
+    for i, players in by_class.items():
+        clean: int | None = None
+        if pr_maps is not None:
+            pr = pr_maps.get(stats.class_pr_board_uuid(i))
+            if pr is not None:
+                effort = late_maps.get(stats.class_effort_board_uuid(i), {})
+                clean = sum(
+                    1 for p in players
+                    if pr.get(p, 0.0) >= threshold
+                    and effort.get(p, 0.0) >= effort_threshold
+                )
+        out[i] = {"raw": len(players), "clean": clean}
+    return out
 
 
 # ─── warmer + /current ──────────────────────────────────────────────────────
@@ -90,60 +170,132 @@ async def estimate_class_activity(*, force: bool = False) -> dict:
     if _act._is_gap(duration_h, gap_threshold):
         return _LAST_GOOD or _empty()  # missed capture - withhold
 
-    board_uuids = stats.class_board_uuids()
+    pr_thr, effort_thr = await _clean_thresholds()
+    board_uuids = stats.class_effort_board_uuids()   # Effort only (Paragon excluded)
     late_maps = await _act._load_anchor_maps(anchor_late, board_uuids)
     early_maps = await _act._load_anchor_maps(anchor_early, board_uuids)
-    counts = _class_counts(early_maps, late_maps, anchor_early, anchor_late)
+    # Power Rank snapshot at the window END gates the clean view (one extra query;
+    # Effort scores come from late_maps, already loaded above).
+    pr_maps = await _act._load_anchor_maps(anchor_late, stats.class_pr_board_uuids())
+    counts = _class_counts(early_maps, late_maps, anchor_early, anchor_late,
+                           pr_maps=pr_maps, threshold=pr_thr, effort_threshold=effort_thr)
 
     now_ts = int(time.time())
     if counts:
         from app.trove.leaderboards import pg_store
         rows = [
             {"class_index": i, "window_end": anchor_late, "window_start": anchor_early,
-             "duration_hours": round(duration_h, 2), "estimate": n, "computed_at": now_ts}
-            for i, n in counts.items()
+             "duration_hours": round(duration_h, 2), "estimate": c["raw"],
+             "estimate_clean": c["clean"], "computed_at": now_ts}
+            for i, c in counts.items()
         ]
         try:
             await pg_store.upsert_class_estimates(rows)
         except Exception:
             logger.exception("class activity: persist failed for window_end=%d", anchor_late)
 
-    payload = _build_current(anchor_early, anchor_late, duration_h, counts, now_ts)
+    payload = _build_current(anchor_early, anchor_late, duration_h, counts, now_ts,
+                             pr_thr, effort_thr)
     if counts:
         _LAST_GOOD = payload
     return payload
 
 
+def _snapshot_counts(
+    effort_maps: dict[int, dict[str, float]],
+    pr_maps: dict[int, dict[str, float]],
+    pr_threshold: float, effort_threshold: float,
+) -> dict[int, dict]:
+    """``{class_index: {"raw", "clean"}}`` from ONE snapshot's presence - no
+    activity (score-rose) condition. RAW = players present on a class's Effort board
+    (Paragon is excluded as ambiguous); CLEAN (established) = those clearing both
+    floors (Power Rank, Effort). ``clean`` is None if that class's Power Rank board
+    is absent in the snapshot; classes with no players are omitted entirely."""
+    out: dict[int, dict] = {}
+    for i in range(stats.class_count()):
+        effort = effort_maps.get(stats.class_effort_board_uuid(i), {})
+        players = set(effort)
+        if not players:
+            continue
+        clean: int | None = None
+        pr = pr_maps.get(stats.class_pr_board_uuid(i))
+        if pr is not None:
+            clean = sum(
+                1 for p in players
+                if pr.get(p, 0.0) >= pr_threshold
+                and effort.get(p, 0.0) >= effort_threshold
+            )
+        out[i] = {"raw": len(players), "clean": clean}
+    return out
+
+
 async def class_activity_current() -> dict:
-    """Latest stored window's per-class counts + sum-normalized share, read from
-    the DB (cheap MAX(window_end) query). Falls back to the warmer's last-good or
+    """Per-class player share for the DONUT, computed DIRECTLY from the latest
+    leaderboard snapshot - a real headcount, with NO activity (score-rose) step.
+    RAW = players present on a class's Effort board at the newest capture (Paragon
+    excluded); the established view applies the Power-Rank + Effort floors.
+    Read-through Redis cache (the short series TTL); falls back to last good /
     an empty shell."""
-    from app.trove.leaderboards import pg_store
-    rows = await pg_store.latest_class_estimates()
-    if not rows:
-        return _LAST_GOOD or _empty()
-    we = rows[0]["window_end"]
-    ws = rows[0]["window_start"]
-    dur = rows[0]["duration_hours"]
-    counts = {r["class_index"]: r["estimate"] for r in rows}
-    return _build_current(ws, we, dur, counts, rows[0]["computed_at"])
+    global _LAST_GOOD_DONUT
+    from app.trove.leaderboards import cache as lb_cache
+    cached = await lb_cache.get_class_activity_current()
+    if cached is not None:
+        return cached
+
+    stamps = await lb_service.list_timestamps(limit=1, include_archive=True)
+    if not stamps:
+        return _LAST_GOOD_DONUT or _empty()
+    anchor = stamps[0]
+    pr_thr, effort_thr = await _clean_thresholds()
+    effort_maps = await _act._load_anchor_maps(anchor, stats.class_effort_board_uuids())
+    pr_maps = await _act._load_anchor_maps(anchor, stats.class_pr_board_uuids())
+    counts = _snapshot_counts(effort_maps, pr_maps, pr_thr, effort_thr)
+    if not counts:
+        return _LAST_GOOD_DONUT or _empty()
+
+    payload = _build_current(anchor, anchor, None, counts, int(time.time()),
+                             pr_thr, effort_thr, methodology=_DONUT_METHODOLOGY)
+    _LAST_GOOD_DONUT = payload
+    await lb_cache.set_class_activity_current(payload)
+    return payload
 
 
-def _build_current(window_start, window_end, duration_h, counts: dict[int, int], computed_at: int) -> dict:
-    total = sum(counts.values())
-    classes = [
-        {"class_index": i, "name": stats.class_name(i), "icon": stats.class_icon(i),
-         "active_players": n, "share": round(n / total, 4) if total else 0.0}
-        for i, n in counts.items()
-    ]
-    classes.sort(key=lambda c: (-c["active_players"], c["class_index"]))
+def _build_current(window_start, window_end, duration_h, counts: dict[int, dict],
+                   computed_at: int, threshold: int,
+                   effort_threshold: int = 0,
+                   methodology: str = _METHODOLOGY) -> dict:
+    raw_total = sum(c["raw"] for c in counts.values())
+    clean_present = [c["clean"] for c in counts.values() if c["clean"] is not None]
+    clean_total = sum(clean_present) if clean_present else None
+    classes = []
+    for i, c in counts.items():
+        raw, clean = c["raw"], c["clean"]
+        classes.append({
+            "class_index": i, "name": stats.class_name(i), "icon": stats.class_icon(i),
+            "active_players": raw,
+            "share": round(raw / raw_total, 4) if raw_total else 0.0,
+            "active_players_clean": clean,
+            "share_clean": (round(clean / clean_total, 4)
+                            if (clean is not None and clean_total)
+                            else (0.0 if clean is not None else None)),
+        })
+    # Default page view is "clean": order by clean desc (classes with a clean
+    # value first, None last), then by raw - so the donut/legend match the view.
+    classes.sort(key=lambda c: (
+        0 if c["active_players_clean"] is not None else 1,
+        -(c["active_players_clean"] or 0),
+        -c["active_players"], c["class_index"],
+    ))
     return {
         "window_start": window_start,
         "window_end": window_end,
         "duration_hours": round(duration_h, 2) if duration_h is not None else None,
-        "total_active": total if counts else None,
+        "total_active": raw_total if counts else None,
+        "total_active_clean": clean_total,
+        "power_rank_threshold": threshold,
+        "effort_threshold": effort_threshold,
         "classes": classes,
-        "methodology": _METHODOLOGY,
+        "methodology": methodology,
         "computed_at": computed_at,
     }
 
@@ -151,14 +303,17 @@ def _build_current(window_start, window_end, duration_h, counts: dict[int, int],
 def _empty() -> dict:
     return {
         "window_start": None, "window_end": None, "duration_hours": None,
-        "total_active": None, "classes": [], "methodology": _METHODOLOGY,
+        "total_active": None, "total_active_clean": None,
+        "power_rank_threshold": 0, "effort_threshold": 0,
+        "classes": [], "methodology": _METHODOLOGY,
         "computed_at": int(time.time()),
     }
 
 
 def reset_caches() -> None:
-    global _LAST_GOOD
+    global _LAST_GOOD, _LAST_GOOD_DONUT
     _LAST_GOOD = None
+    _LAST_GOOD_DONUT = None
 
 
 # ─── backfill ─────────────────────────────────────────────────────────────────
@@ -198,7 +353,9 @@ async def backfill_class_history(
         return {"computed": 0, "skipped": len(pairs), "gap_skipped": 0, "failed": 0,
                 "total": len(pairs), "note": "all pairs already stored - use force=True"}
 
-    board_uuids = stats.class_board_uuids()
+    board_uuids = stats.class_effort_board_uuids()   # Effort only (Paragon excluded)
+    pr_board_uuids = stats.class_pr_board_uuids()
+    pr_thr, effort_thr = await _clean_thresholds()
     needed = sorted(set(a for pr in todo for a in pr))
     early_of = {late: early for early, late in todo}
 
@@ -229,13 +386,18 @@ async def backfill_class_history(
                 try:
                     early_maps = prev_maps if (early == prev_anchor and prev_maps is not None) \
                         else await _act._load_anchor_maps(early, board_uuids)
-                    counts = _class_counts(early_maps, cur_maps, early, anchor)
+                    # Power Rank snapshot at the window END gates the clean view.
+                    pr_maps = await _act._load_anchor_maps(anchor, pr_board_uuids)
+                    counts = _class_counts(early_maps, cur_maps, early, anchor,
+                                           pr_maps=pr_maps, threshold=pr_thr,
+                                           effort_threshold=effort_thr)
                     now_ts = int(time.time())
                     rows = [
                         {"class_index": i, "window_end": anchor, "window_start": early,
                          "duration_hours": round((anchor - early) / 3600.0, 2),
-                         "estimate": n, "computed_at": now_ts}
-                        for i, n in counts.items()
+                         "estimate": c["raw"], "estimate_clean": c["clean"],
+                         "computed_at": now_ts}
+                        for i, c in counts.items()
                     ]
                     if rows:
                         await pg_store.upsert_class_estimates(rows)
@@ -332,13 +494,16 @@ async def class_activity_series(period: str = "7d") -> dict:
         sorted({r["duration_hours"] for r in rows})
     )
 
-    # bucket -> {t_sum, t_n, classes: {i: {sum, n}}}
+    # bucket -> {t_sum, t_n, classes: {i: {raw_sum, raw_n, clean_sum, clean_n}}}.
+    # Raw + clean (Power-Rank-filtered) per-hour rates are averaged independently;
+    # clean_n only counts rows that HAD a clean value (NULL = unmeasurable, so the
+    # clean line gaps there even when the raw line has a point).
     agg: dict[int, dict] = {}
     for r in rows:
         dur = r["duration_hours"] or 0.0
         if _act._is_gap(dur, gap_threshold):
             continue
-        ph = (r["estimate"] / dur) if dur > 0 else 0.0
+        raw_ph = (r["estimate"] / dur) if dur > 0 else 0.0
         b = (r["window_end"] // bucket) * bucket
         bd = agg.get(b)
         if bd is None:
@@ -347,26 +512,39 @@ async def class_activity_series(period: str = "7d") -> dict:
         bd["t_n"] += 1
         c = bd["classes"].get(r["class_index"])
         if c is None:
-            c = bd["classes"][r["class_index"]] = {"sum": 0.0, "n": 0}
-        c["sum"] += ph
-        c["n"] += 1
+            c = bd["classes"][r["class_index"]] = {
+                "raw_sum": 0.0, "raw_n": 0, "clean_sum": 0.0, "clean_n": 0,
+            }
+        c["raw_sum"] += raw_ph
+        c["raw_n"] += 1
+        cl = r["estimate_clean"]
+        if cl is not None:
+            c["clean_sum"] += (cl / dur) if dur > 0 else 0.0
+            c["clean_n"] += 1
 
     sorted_b = sorted(agg)
     buckets = [round(agg[b]["t_sum"] / agg[b]["t_n"]) for b in sorted_b]
     classes = []
     for i in range(stats.class_count()):
-        values = []
+        values, values_clean = [], []
         for b in sorted_b:
             c = agg[b]["classes"].get(i)
-            values.append(round(c["sum"] / c["n"], 1) if c else None)
+            values.append(round(c["raw_sum"] / c["raw_n"], 1) if (c and c["raw_n"]) else None)
+            values_clean.append(
+                round(c["clean_sum"] / c["clean_n"], 1) if (c and c["clean_n"]) else None
+            )
         classes.append({"class_index": i, "name": stats.class_name(i),
-                        "icon": stats.class_icon(i), "values": values})
+                        "icon": stats.class_icon(i),
+                        "values": values, "values_clean": values_clean})
 
+    pr_thr, effort_thr = await _clean_thresholds()
     payload = {
         "period": period,
         "bucket_seconds": bucket,
         "window_start": window_start,
         "window_end": now_ts,
+        "power_rank_threshold": pr_thr,
+        "effort_threshold": effort_thr,
         "buckets": buckets,
         "classes": classes,
         "methodology": _METHODOLOGY,

@@ -990,17 +990,19 @@ async def backfill_activity_history(
 
 @class_activity_router.get(
     "/current", response_model=ClassActivityCurrentResponse,
-    summary="Per-class active players + player-share for the latest window",
+    summary="Per-class player counts + player-share from the latest snapshot",
 )
 async def get_class_activity_current(
     response: Response,
     ctx: AccessContext = _ACTIVITY_PUBLIC,
 ) -> ClassActivityCurrentResponse:
-    """**Tokenless.** For the most recent capture window, the distinct active
-    players per Trove class - a player whose score rose on a class's Effort OR
-    Paragon board - plus each class's `share` of total class activity. `share`
-    sums to 1 across classes but counts a multi-class player in each, so it's
-    share-of-activity, not distinct players."""
+    """**Tokenless.** A direct headcount from the most recent leaderboard snapshot
+    (NOT the activity pipeline): the players present on each Trove class's Effort
+    board (Paragon is excluded as ambiguous), plus each class's `share` of that
+    total. The clean fields apply the established floors (Power Rank + Effort).
+    `share` sums to 1 across classes but counts a multi-class player in each, so
+    it's share-of-players, not distinct players. (The time-series endpoint stays
+    activity-based - score rose between captures.)"""
     from app.admin import runtime_config
     payload = await leaderboards_class_activity.class_activity_current()
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
@@ -2409,6 +2411,53 @@ async def warm_leaderboards(_auth = _LB_MASTER) -> dict:
     uploads with ``warm=false`` to avoid re-warming on every file)."""
     leaderboards_detection.trigger_warmer()
     return {"warming": True}
+
+
+@leaderboards_router.post("/cheaters/recompute", status_code=200,
+                          summary="Reset + recompute cheater detection (master)")
+async def recompute_cheaters(_auth = _LB_MASTER) -> dict:
+    """**Master only.** Drop the cached cheater-detection results (in-process +
+    the persisted Redis snapshots) and recompute the latest anchor from scratch -
+    independent of the activity / class-activity histories, so a cheater-config
+    tweak can be re-evaluated without rerunning the long backfills. Cheap
+    (latest-anchor only); runs inline and returns the new flag count."""
+    from app.trove.leaderboards import cache as leaderboards_cache
+    cleared = await leaderboards_cache.invalidate_cheaters()
+    leaderboards_detection.reset()
+    result = await leaderboards_detection.detect_possible_cheaters(force=True)
+    return {
+        "recomputed": True,
+        "redis_snapshots_cleared": cleared,
+        "anchor": result.get("anchor") if isinstance(result, dict) else None,
+        "total_flagged": result.get("total_flagged") if isinstance(result, dict) else None,
+        "boards_analyzed": result.get("boards_analyzed") if isinstance(result, dict) else None,
+    }
+
+
+@leaderboards_router.post("/views/recompute", status_code=200,
+                          summary="Reset + re-warm the page view caches (master)")
+async def recompute_views(_auth = _LB_MASTER) -> dict:
+    """**Master only.** Drop the leaderboards page-VIEW caches (anchor list, board
+    lists, entry pages, per-board history charts, ready pointer) and re-warm the
+    latest captures + every board's default chart - independent of the cheaters /
+    activity data. Use after a cache hiccup or to force the page snapshots to
+    rebuild. Runs inline (a few seconds); returns how many keys were cleared +
+    charts re-warmed."""
+    from app.trove.leaderboards import cache as leaderboards_cache
+    cleared = await leaderboards_cache.invalidate_views()
+    await leaderboards_cache.warm()
+    ts = await leaderboards_service.list_timestamps(limit=1, include_archive=False)
+    warmed = 0
+    anchor = ts[0] if ts else None
+    if anchor is not None:
+        warmed = await leaderboards_cache.warm_board_histories(anchor)
+        await leaderboards_cache.set_ready_anchor(anchor)
+    return {
+        "recomputed": True,
+        "keys_cleared": cleared,
+        "anchor": anchor,
+        "board_charts_warmed": warmed,
+    }
 
 
 @leaderboards_router.post("/reingest-backlog", status_code=202,

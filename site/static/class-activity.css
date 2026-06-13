@@ -94,6 +94,51 @@
   outline: 2px solid color-mix(in oklab, var(--accent-purple) 60%, transparent);
   outline-offset: 2px;
 }
+
+/* Player-filter toggle (Established / All) - global control above the cards. */
+.cact-viewbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 4px 0 18px;
+}
+.cact-views {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--bg-card-hi);
+  border: 1px solid color-mix(in oklab, var(--text-mute) 18%, transparent);
+  border-radius: 999px;
+  padding: 4px;
+}
+.cact-views button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-mute);
+  font: inherit;
+  font-weight: 600;
+  font-size: .85rem;
+  letter-spacing: .02em;
+  padding: 6px 15px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.cact-views button:hover { color: var(--text); }
+.cact-views button.active {
+  background: linear-gradient(135deg, #3fb950, #2ea043);
+  color: #fff;
+}
+.cact-views button:focus-visible {
+  outline: 2px solid color-mix(in oklab, #3fb950 60%, transparent);
+  outline-offset: 2px;
+}
+.cact-view-hint {
+  color: var(--text-mute);
+  font-size: .82rem;
+  line-height: 1.4;
+}
 .cact-chart-range {
   color: var(--text-mute);
   font-size: .82rem;
@@ -150,6 +195,7 @@
 .cact-tip-sw { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 auto; }
 .cact-tip-name { color: var(--text); flex: 1; }
 .cact-tip-val { color: var(--text); font-weight: 700; font-family: SFMono-Regular, Consolas, monospace; }
+.cact-tip-count { color: var(--text-mute); font-weight: 400; }   /* raw player count in (parens) */
 
 /* ─── Legend (toggle classes) ───────────────────────────────────────── */
 .cact-legend {
@@ -225,6 +271,7 @@
 .cact-share-icon { width: 22px; height: 22px; border-radius: 50%; border: 2px solid; object-fit: cover; background: var(--bg-base); flex: 0 0 auto; }
 .cact-share-name { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cact-share-pct { color: var(--text-mute); font-family: SFMono-Regular, Consolas, monospace; font-weight: 600; }
+.cact-share-count { font-weight: 400; opacity: .72; }   /* real player count in (parens) */
 
 .cact-method {
   color: var(--text-mute);

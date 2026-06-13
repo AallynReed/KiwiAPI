@@ -499,6 +499,39 @@ REGISTRY: dict[str, TunableSetting] = {
         min_value=0.01, max_value=0.5,
     ),
 
+    # ── Class activity (/class-activity) ──────────────────────────────
+    "class_activity_power_rank_threshold": _t(
+        key="class_activity_power_rank_threshold",
+        default=settings.class_activity_power_rank_threshold,
+        type="int",
+        category="class_activity",
+        description=(
+            "Power-Rank floor for the Class Activity \"clean\" (established) view "
+            "(the page default). A player counts toward a class's clean estimate "
+            "only when their Power Rank on that class (the 1000+i leaderboard) is at "
+            "least this value - one of two gates (with the Effort floor) that filter "
+            "out brand-new characters and throwaway alts. Set to 0 to drop this "
+            "gate. The \"All\" toggle on the page is unaffected. Takes effect on the "
+            "next class-activity recompute (latest window each capture; full history "
+            "on a backfill)."
+        ),
+        min_value=0, max_value=10_000_000,
+    ),
+    "class_activity_effort_threshold": _t(
+        key="class_activity_effort_threshold",
+        default=settings.class_activity_effort_threshold,
+        type="int",
+        category="class_activity",
+        description=(
+            "Effort floor for the Class Activity \"clean\" (established) view. A "
+            "player counts toward a class's clean estimate only when their Effort on "
+            "that class (the 4000+i leaderboard) is at least this value. Combined "
+            "with the Power-Rank floor (both must pass). Set to 0 to drop this gate. "
+            "Takes effect on the next class-activity recompute."
+        ),
+        min_value=0, max_value=10_000_000,
+    ),
+
     # ── Trove server status - per-environment game endpoints ──────────
     # The auth tier (auth.trionworlds.com HTTPS) needs no config. The game
     # tier is a TCP-connect probe of the glsserver port (6560) per

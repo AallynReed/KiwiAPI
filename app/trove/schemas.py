@@ -716,20 +716,36 @@ class ClassActivityItem(BaseModel):
     class_index: int       # classes.json index (= Effort/Paragon board uuid % 1000)
     name: str              # class display name
     icon: str | None       # self-hosted icon URL (/static/class-icons/<qualified_name>.png)
-    active_players: int    # distinct players active on this class's boards in the window
-    share: float           # 0..1, share of total class activity (NOT distinct players)
+    active_players: int     # RAW: players present on this class's Effort board (Paragon excluded)
+    share: float            # 0..1, share of the snapshot's total players (NOT distinct players)
+    # CLEAN view: same headcount filtered to players clearing the established floors
+    # (Power Rank + Effort). ``null`` when unmeasurable for this class (the Power
+    # Rank board is absent in the snapshot).
+    active_players_clean: int | None = None
+    share_clean: float | None = None
 
 
 class ClassActivityCurrentResponse(BaseModel):
-    """Latest capture window's per-class active-player counts + player-share.
+    """Per-class player share from the LATEST leaderboard snapshot - a direct
+    headcount, NOT the activity pipeline (no score-rose step).
 
-    ``share`` is share OF CLASS ACTIVITY: a player active on several classes is
-    counted in each, so ``total_active`` is Σ class counts (the share
-    denominator), not a distinct headcount."""
+    Two views: RAW (``active_players`` / ``share`` / ``total_active``) counts every
+    player present on a class's Effort board at the newest capture (Paragon is
+    excluded as ambiguous); CLEAN (``*_clean``), the "established" page default,
+    keeps only players who clear BOTH per-class floors - ``power_rank_threshold``
+    (1000+i board) and ``effort_threshold`` (4000+i) - filtering newbies + alts (a
+    floor of 0 disables that gate). ``share`` is a class's count over the total
+    across classes: a player on several classes is counted in each, so the total is
+    Σ class counts (the share denominator), not a distinct headcount.
+    ``window_start``/``window_end`` are both the snapshot anchor; ``duration_hours``
+    is null (there's no window). The time-series endpoint stays activity-based."""
     window_start: int | None
     window_end: int | None
     duration_hours: float | None
     total_active: int | None
+    total_active_clean: int | None = None
+    power_rank_threshold: int = 0
+    effort_threshold: int = 0
     classes: list[ClassActivityItem]
     methodology: str
     computed_at: int
@@ -739,17 +755,24 @@ class ClassActivitySeriesLine(BaseModel):
     class_index: int
     name: str
     icon: str | None            # self-hosted icon URL (/static/class-icons/<qualified_name>.png)
-    values: list[float | None]  # avg active/hr per bucket, aligned to `buckets`; null = no data
+    values: list[float | None]  # RAW avg active/hr per bucket, aligned to `buckets`; null = no data
+    # CLEAN (Power-Rank-filtered) avg active/hr per bucket, aligned to `buckets`;
+    # null where that view had no measurable window in the bucket.
+    values_clean: list[float | None] = []
 
 
 class ClassActivitySeriesResponse(BaseModel):
     """Per-class bucketed series for the Class Activity chart. ``buckets`` is the
-    shared x-axis (one timestamp per bucket); each line's ``values`` align to it,
-    with ``null`` where that class had no measurable window in the bucket."""
+    shared x-axis (one timestamp per bucket); each line's ``values`` (raw) and
+    ``values_clean`` (the clean/established view) align to it, with ``null`` where
+    that class had no measurable window in the bucket. ``power_rank_threshold`` /
+    ``effort_threshold`` are the current clean-view floors (for display)."""
     period: str
     bucket_seconds: int
     window_start: int
     window_end: int
+    power_rank_threshold: int = 0
+    effort_threshold: int = 0
     buckets: list[int]
     classes: list[ClassActivitySeriesLine]
     methodology: str

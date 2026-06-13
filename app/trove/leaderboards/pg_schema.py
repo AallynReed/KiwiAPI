@@ -76,10 +76,15 @@ CREATE TABLE IF NOT EXISTS class_activity_estimate (
     window_start   BIGINT  NOT NULL,
     duration_hours DOUBLE PRECISION NOT NULL,
     estimate       INTEGER NOT NULL,
+    estimate_clean INTEGER,
     computed_at    BIGINT  NOT NULL,
     PRIMARY KEY (class_index, window_end)
 );
 CREATE INDEX IF NOT EXISTS class_activity_we ON class_activity_estimate (window_end);
+-- ``estimate_clean`` (the Power-Rank-filtered "clean" view) was added after the
+-- table shipped; ADD it idempotently so an existing deploy gains the column.
+-- NULL = clean unmeasurable for that window (no Power Rank board snapshot).
+ALTER TABLE class_activity_estimate ADD COLUMN IF NOT EXISTS estimate_clean INTEGER;
 """
 
 

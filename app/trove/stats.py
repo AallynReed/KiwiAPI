@@ -133,6 +133,10 @@ def class_by_tech_name(tech_name: str) -> dict | None:
 # - re-verify against the real board names if a class looks mislabelled.)
 _EFFORT_BASE = 4000
 _PARAGON_BASE = 5000
+# Power Rank leaderboards live in a third parallel range: board ``1000+i`` is
+# class ``i``'s Power Rank board. Used by the Class Activity "clean" view to gate
+# the active set to players whose Power Rank on that class clears a threshold.
+_POWER_RANK_BASE = 1000
 
 
 @lru_cache(maxsize=1)
@@ -172,3 +176,30 @@ def class_board_uuids() -> list[int]:
     """Every Effort + Paragon board uuid for the known classes."""
     n = class_count()
     return [_EFFORT_BASE + i for i in range(n)] + [_PARAGON_BASE + i for i in range(n)]
+
+
+def class_effort_board_uuids() -> list[int]:
+    """Every Effort board uuid - the sole basis for class-activity counts. Paragon
+    (5000+i) is intentionally excluded: its scores are ambiguous, so we neither
+    count nor filter on it."""
+    return [_EFFORT_BASE + i for i in range(class_count())]
+
+
+def class_effort_board_uuid(i: int) -> int:
+    """Effort board uuid for class index ``i`` (= 4000+i)."""
+    return _EFFORT_BASE + i
+
+
+def class_paragon_board_uuid(i: int) -> int:
+    """Paragon board uuid for class index ``i`` (= 5000+i)."""
+    return _PARAGON_BASE + i
+
+
+def class_pr_board_uuid(i: int) -> int:
+    """Power Rank board uuid for class index ``i`` (= 1000+i)."""
+    return _POWER_RANK_BASE + i
+
+
+def class_pr_board_uuids() -> list[int]:
+    """Every Power Rank board uuid for the known classes (the clean-view gate)."""
+    return [_POWER_RANK_BASE + i for i in range(class_count())]

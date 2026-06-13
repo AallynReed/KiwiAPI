@@ -307,6 +307,21 @@ async def set_class_activity_series(period: str, payload: dict) -> None:
     await _rset(_class_activity_series_key(period), payload, ttl=_ACTIVITY_SERIES_TTL)
 
 
+# Latest-snapshot per-class player share (the Class Activity donut). Computed
+# directly from the newest capture (not the activity pipeline); same TTL, and the
+# ``activity*`` prefix lets ``invalidate_all_activity`` sweep it too.
+def _class_activity_current_key() -> str:
+    return f"{_PREFIX}activity_class_current"
+
+
+async def get_class_activity_current() -> dict | None:
+    return await _rget(_class_activity_current_key())
+
+
+async def set_class_activity_current(payload: dict) -> None:
+    await _rset(_class_activity_current_key(), payload, ttl=_ACTIVITY_SERIES_TTL)
+
+
 async def invalidate_all_activity() -> int:
     """Drop EVERY activity cache key (``lb:cache:activity:*`` snapshots AND
     ``lb:cache:activity_series:*`` chart buckets).
@@ -324,6 +339,44 @@ async def invalidate_all_activity() -> int:
         return len(keys)
     except Exception:  # noqa: BLE001 - best-effort; warmer will repopulate anyway
         logger.warning("lb cache: invalidate all activity failed", exc_info=True)
+        return 0
+
+
+async def invalidate_cheaters() -> int:
+    """Drop every persisted cheaters snapshot (``lb:cache:cheaters:*``) so a
+    master 'recompute cheaters' forces a true recompute instead of the warmer
+    adopting a still-fresh persisted result. Returns keys dropped."""
+    r = get_redis()
+    if r is None:
+        return 0
+    try:
+        keys = [k async for k in r.scan_iter(match=f"{_PREFIX}cheaters:*")]
+        if keys:
+            await r.delete(*keys)
+        return len(keys)
+    except Exception:  # noqa: BLE001 - best-effort; warmer repopulates anyway
+        logger.warning("lb cache: invalidate cheaters failed", exc_info=True)
+        return 0
+
+
+async def invalidate_views() -> int:
+    """Drop the page-VIEW snapshots only - the cached anchor list, board lists,
+    entry pages, per-board history charts, and the ready pointer
+    (``boards:*`` / ``entries:*`` / ``bhist:*`` / ``timestamps`` / ``ready_anchor``).
+    Leaves the cheaters + activity snapshots intact, so a 'recompute views' can run
+    independently of those. Returns keys dropped."""
+    r = get_redis()
+    if r is None:
+        return 0
+    try:
+        keys: list[str] = [_TS_KEY, _READY_KEY]
+        for pat in (f"{_PREFIX}boards:*", f"{_PREFIX}entries:*", f"{_PREFIX}bhist:*"):
+            keys += [k async for k in r.scan_iter(match=pat)]
+        if keys:
+            await r.delete(*keys)
+        return len(keys)
+    except Exception:  # noqa: BLE001 - best-effort; the warmer/reads repopulate
+        logger.warning("lb cache: invalidate views failed", exc_info=True)
         return 0
 
 
