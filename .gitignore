@@ -27,6 +27,11 @@ site/static/assets/
 .pytest_cache/
 .ruff_cache/
 
+# Tests are kept LOCAL only (run with `pytest tests/unit`), not pushed to the
+# remote. Deployment is via Syncthing and the Docker image only COPYs `app/`,
+# so the shipped artifact never included them anyway.
+tests/
+
 # Local mobile-preview dir - symlinked copy of site/templates + static junction,
 # served by `python -m http.server` for fast viewport iteration.
 _preview/
