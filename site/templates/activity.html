@@ -70,10 +70,6 @@
                     <button type="button" data-period="1d"  role="tab" aria-selected="false">1D</button>
                     <button type="button" data-period="7d"  role="tab" class="active" aria-selected="true">7D</button>
                     <button type="button" data-period="1m"  role="tab" aria-selected="false">1M</button>
-                    <button type="button" data-period="3m"  role="tab" aria-selected="false">3M</button>
-                    <button type="button" data-period="6m"  role="tab" aria-selected="false">6M</button>
-                    <button type="button" data-period="1y"  role="tab" aria-selected="false">1Y</button>
-                    <button type="button" data-period="all" role="tab" aria-selected="false" data-i18n>All</button>
                 </div>
                 <span class="act-chart-range" id="act-chart-range"></span>
             </div>
@@ -103,7 +99,7 @@
             </div>
         </section>
 
-        <p class="act-method" data-i18n>How this works: each hourly capture counts the distinct top-leaderboard players whose score rose on at least one board since the previous capture - a lower bound on real active players (anyone outside every board's top ranks isn't seen). All boards count, but a board is skipped on the capture that crosses its reset (daily 11:00 UTC, weekly Monday 11:00 UTC) since its score zeroes there. The chart plots the average of that per-hour estimate inside each time bucket; longer ranges use coarser daily/weekly buckets so the line stays readable.</p>
+        <p class="act-method" data-i18n>How this works: each capture counts the distinct top-leaderboard players whose score rose on at least one board since the previous capture, or who newly appear with a non-zero score - a lower bound on real active players (anyone outside every board's top ranks isn't seen). A reset isn't counted as activity (the score drops, it doesn't rise). The 24h and 7d figures are the distinct <strong>union</strong> of every capture's active players across the period. The chart plots the average per-hour estimate inside each time bucket.</p>
     </main>
 
     {% include "partials/footer.html" %}

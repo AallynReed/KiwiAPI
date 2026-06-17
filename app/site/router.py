@@ -100,13 +100,13 @@ async def privacy(request: Request) -> HTMLResponse:
 
 
 @router.get("/status/og.png")
-async def status_og_image() -> Response:
+async def status_og_image(lang: str = "en") -> Response:
     """OG / Twitter card image: the live EU/US/PTS server-status card as a
     1200x630 PNG so a shared ``/status`` link previews the current state.
     Cached ~45s; falls back to the favicon if a render ever fails."""
     from app.site import og_image
     try:
-        png = await og_image.render_status_og()
+        png = await og_image.render_status_og(lang)
     except Exception:  # noqa: BLE001 - never let a render error break the card
         logger.exception("status OG image render failed")
         return RedirectResponse("/static/assets/favicon.png", status_code=302)
@@ -117,7 +117,7 @@ async def status_og_image() -> Response:
 
 
 @router.get("/board.png")
-async def board_image(v: str | None = None) -> Response:
+async def board_image(v: str | None = None, lang: str = "en") -> Response:
     """The live 'Trove Now' board as a 1200x630 PNG - the image the Discord bot's
     board feature embeds. Rendered at most once per minute and cached in Redis, so
     100 guilds (and every API worker) share a single render. ``v`` is the bot's
@@ -125,7 +125,7 @@ async def board_image(v: str | None = None) -> Response:
     is keyed by the minute server-side. Falls back to the favicon on a render error."""
     from app.site import og_image
     try:
-        png = await og_image.render_board_image()
+        png = await og_image.render_board_image(lang)
     except Exception:  # noqa: BLE001 - never let a render error break the board
         logger.exception("board image render failed")
         return RedirectResponse("/static/assets/favicon.png", status_code=302)
@@ -136,14 +136,14 @@ async def board_image(v: str | None = None) -> Response:
 
 
 @router.get("/announce.png")
-async def announcement_image(kind: str, v: str | None = None) -> Response:
+async def announcement_image(kind: str, v: str | None = None, lang: str = "en") -> Response:
     """A single announcement's banner PNG (used by the Discord bot's image
     announcements). Rendered once per minute and cached in Redis per (kind, minute),
     so 100 guilds share one render; ``v`` is the bot's countdown-scaled cache-buster.
     Falls back to the favicon on a render error."""
     from app.site import og_image
     try:
-        png = await og_image.render_announcement_image(kind)
+        png = await og_image.render_announcement_image(kind, lang)
     except Exception:  # noqa: BLE001 - never let a render error break the announcement
         logger.exception("announcement image render failed for %s", kind)
         return RedirectResponse("/static/assets/favicon.png", status_code=302)

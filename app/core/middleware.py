@@ -67,6 +67,7 @@ def add_security_middleware(app: FastAPI) -> None:
     # not bound here so the middleware closure stays clean.
     leaderboards_max_body = settings.leaderboards_max_request_body_bytes
     market_max_body = settings.market_max_request_body_bytes
+    ocr_max_body = settings.ocr_max_request_body_bytes
 
     @app.middleware("http")
     async def security(request: Request, call_next):
@@ -80,6 +81,8 @@ def add_security_middleware(app: FastAPI) -> None:
             max_body = leaderboards_max_body
         elif path == "/v1/market/insert":
             max_body = market_max_body
+        elif path == "/v1/ocr/character":
+            max_body = ocr_max_body
         elif path == "/v1/misc/feedback":
             # 4 attachments × 5 MB + form fields. The endpoint also caps
             # per-file size + count itself, so this is a generous gate

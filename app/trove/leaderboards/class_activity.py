@@ -59,8 +59,10 @@ _DONUT_METHODOLOGY = (
     "ambiguous); the 'established' view keeps only those clearing both floors - "
     "Power Rank (1000+i) and Effort (4000+i). 'Share' is a class's count divided by "
     "the total across classes (a player on several classes counts in each), so "
-    "shares sum to 100% but aren't distinct players. Lower bound: players outside a "
-    "board's top-N aren't seen."
+    "shares sum to 100% but aren't distinct players. Each class also carries the "
+    "Effort ADDED in the latest hour (this capture vs the previous) - the sum of "
+    "positive score gains over players on its Effort board, per view; skipped right "
+    "after a weekly reset. Lower bound: players outside a board's top-N aren't seen."
 )
 
 
@@ -229,6 +231,42 @@ def _snapshot_counts(
     return out
 
 
+def _effort_deltas(
+    effort_late: dict[int, dict[str, float]],
+    effort_early: dict[int, dict[str, float]],
+    pr_maps: dict[int, dict[str, float]],
+    pr_threshold: float, effort_threshold: float,
+) -> dict[int, dict]:
+    """Per-class Effort ADDED over the latest capture pair: Σ max(0, late - early)
+    over players on the class's Effort board in BOTH snapshots. ``raw`` = all such
+    players; ``clean`` = those also clearing the Power-Rank + Effort floors at the
+    late snapshot (None if the class's PR board is absent). New entrants are
+    excluded - their hour's gain is unmeasurable on a weekly-accumulating board."""
+    out: dict[int, dict] = {}
+    for i in range(stats.class_count()):
+        late = effort_late.get(stats.class_effort_board_uuid(i), {})
+        if not late:
+            continue
+        early = effort_early.get(stats.class_effort_board_uuid(i), {})
+        pr = pr_maps.get(stats.class_pr_board_uuid(i))
+        raw = 0.0
+        clean = 0.0 if pr is not None else None
+        for p, lv in late.items():
+            ev = early.get(p)
+            if ev is None:
+                continue                       # new entrant - hour gain unknown
+            gain = lv - ev
+            if gain <= 0:
+                continue
+            raw += gain
+            if (clean is not None
+                    and pr.get(p, 0.0) >= pr_threshold and lv >= effort_threshold):
+                clean += gain
+        out[i] = {"raw": int(round(raw)),
+                  "clean": int(round(clean)) if clean is not None else None}
+    return out
+
+
 async def class_activity_current() -> dict:
     """Per-class player share for the DONUT, computed DIRECTLY from the latest
     leaderboard snapshot - a real headcount, with NO activity (score-rose) step.
@@ -242,16 +280,27 @@ async def class_activity_current() -> dict:
     if cached is not None:
         return cached
 
-    stamps = await lb_service.list_timestamps(limit=1, include_archive=True)
+    stamps = await lb_service.list_timestamps(limit=2, include_archive=True)
     if not stamps:
         return _LAST_GOOD_DONUT or _empty()
     anchor = stamps[0]
     pr_thr, effort_thr = await _clean_thresholds()
-    effort_maps = await _act._load_anchor_maps(anchor, stats.class_effort_board_uuids())
+    effort_boards = stats.class_effort_board_uuids()
+    effort_maps = await _act._load_anchor_maps(anchor, effort_boards)
     pr_maps = await _act._load_anchor_maps(anchor, stats.class_pr_board_uuids())
     counts = _snapshot_counts(effort_maps, pr_maps, pr_thr, effort_thr)
     if not counts:
         return _LAST_GOOD_DONUT or _empty()
+
+    # Effort added in the latest hour (this capture vs the previous), per view.
+    # Skip when the pair crosses a weekly reset (scores zeroed → not "added").
+    if (len(stamps) >= 2
+            and not lb_service.reset_boundaries_for_kind("weekly", stamps[1], anchor)):
+        early_maps = await _act._load_anchor_maps(stamps[1], effort_boards)
+        for i, d in _effort_deltas(effort_maps, early_maps, pr_maps, pr_thr, effort_thr).items():
+            if i in counts:
+                counts[i]["effort_raw"] = d["raw"]
+                counts[i]["effort_clean"] = d["clean"]
 
     payload = _build_current(anchor, anchor, None, counts, int(time.time()),
                              pr_thr, effort_thr, methodology=_DONUT_METHODOLOGY)
@@ -267,6 +316,11 @@ def _build_current(window_start, window_end, duration_h, counts: dict[int, dict]
     raw_total = sum(c["raw"] for c in counts.values())
     clean_present = [c["clean"] for c in counts.values() if c["clean"] is not None]
     clean_total = sum(clean_present) if clean_present else None
+    # Effort added this hour (donut only; absent on the activity-warmer payload).
+    eff_raw = [c.get("effort_raw") for c in counts.values() if c.get("effort_raw") is not None]
+    eff_clean = [c.get("effort_clean") for c in counts.values() if c.get("effort_clean") is not None]
+    total_effort_added = sum(eff_raw) if eff_raw else None
+    total_effort_added_clean = sum(eff_clean) if eff_clean else None
     classes = []
     for i, c in counts.items():
         raw, clean = c["raw"], c["clean"]
@@ -278,6 +332,8 @@ def _build_current(window_start, window_end, duration_h, counts: dict[int, dict]
             "share_clean": (round(clean / clean_total, 4)
                             if (clean is not None and clean_total)
                             else (0.0 if clean is not None else None)),
+            "effort_added": c.get("effort_raw"),
+            "effort_added_clean": c.get("effort_clean"),
         })
     # Default page view is "clean": order by clean desc (classes with a clean
     # value first, None last), then by raw - so the donut/legend match the view.
@@ -292,6 +348,8 @@ def _build_current(window_start, window_end, duration_h, counts: dict[int, dict]
         "duration_hours": round(duration_h, 2) if duration_h is not None else None,
         "total_active": raw_total if counts else None,
         "total_active_clean": clean_total,
+        "total_effort_added": total_effort_added,
+        "total_effort_added_clean": total_effort_added_clean,
         "power_rank_threshold": threshold,
         "effort_threshold": effort_threshold,
         "classes": classes,
@@ -304,6 +362,7 @@ def _empty() -> dict:
     return {
         "window_start": None, "window_end": None, "duration_hours": None,
         "total_active": None, "total_active_clean": None,
+        "total_effort_added": None, "total_effort_added_clean": None,
         "power_rank_threshold": 0, "effort_threshold": 0,
         "classes": [], "methodology": _METHODOLOGY,
         "computed_at": int(time.time()),

@@ -34,6 +34,9 @@ _preview/
 # Internal living spec + audit - local reference, not shipped artefacts
 PROJECT_SPEC.md
 SECURITY_AUDIT.md
+# Internal handoff docs (engine/design write-ups) - local reference, not shipped.
+# docs/ otherwise holds the public API-reference site, so ignore only handoffs.
+*-handoff.md
 
 # Database backups (never commit data dumps)
 backups/

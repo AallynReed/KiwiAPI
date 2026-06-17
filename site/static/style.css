@@ -588,11 +588,14 @@ img.nav-account-avatar {
 }
 .hero-screens img.active {
   opacity: .35;
-  animation: ken-burns 14s linear infinite alternate;
+  animation: ken-burns 28s linear infinite alternate;
 }
 @keyframes ken-burns {
-  0%   { transform: scale(1.08) translate(0, 0); }
-  100% { transform: scale(1.22) translate(-1.5%, -1%); }
+  /* Smaller scale delta over a 2× longer cycle. The old 1.08→1.22 sweep
+     re-rasterised this full-viewport image hard every frame; a 1.1→1.16
+     drift keeps the slow "breathing" feel at a fraction of the fill cost. */
+  0%   { transform: scale(1.1) translate(0, 0); }
+  100% { transform: scale(1.16) translate(-1%, -0.8%); }
 }
 .hero-screens::after {
   /* Dark vignette / falloff at the edges so the screens fade into the
@@ -617,10 +620,10 @@ img.nav-account-avatar {
   max-width: 900px;
   max-height: 900px;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(60px);
   opacity: .55;
   will-change: transform;
-  animation: orb-drift 24s ease-in-out infinite;
+  animation: orb-drift 40s ease-in-out infinite;
 }
 .orb-1 {
   top: -10%; left: -10%;
@@ -638,9 +641,13 @@ img.nav-account-avatar {
   opacity: .35;
 }
 @keyframes orb-drift {
-  0%, 100% { transform: translate3d(0,0,0) scale(1); }
-  33%      { transform: translate3d(4vw, 3vh, 0) scale(1.08); }
-  66%      { transform: translate3d(-3vw, -2vh, 0) scale(0.94); }
+  /* Translate-only: animating scale on a blurred layer forced the compositor
+     to re-rasterise the blur every frame (the expensive bit). A pure
+     translate3d is a cheap GPU transform on the already-rasterised layer, so
+     the drift now costs almost nothing. Slightly smaller travel to match. */
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  33%      { transform: translate3d(3vw, 2vh, 0); }
+  66%      { transform: translate3d(-2vw, -1.5vh, 0); }
 }
 
 /* Faint cyan grid behind the orbs - gives the dark base a "build mode"
@@ -1146,7 +1153,9 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   transform: scale(1.12);
   transition: transform 1.6s var(--ease-out), opacity .8s var(--ease-out);
   opacity: 0;
-  will-change: transform, opacity;
+  /* No will-change: this is a one-shot entry transition, not a loop. Pinning
+     it kept a promoted GPU layer alive for all 5 spotlights for the life of
+     the page; without it the browser reclaims each layer after the fade-in. */
 }
 .spot-veil {
   position: absolute; inset: 0;

@@ -51,3 +51,24 @@ def test_class_by_tech_name():
 
 def test_class_by_tech_name_unknown_is_none():
     assert stats.class_by_tech_name("not_a_class") is None
+
+
+# --- Coefficient -----------------------------------------------------------
+
+def test_compute_coefficient_matches_real_sheets():
+    # Verified against real in-game stat sheets (the game truncates).
+    assert stats.compute_coefficient(799894, 14300, 3438.3) == (28302649, "physical")
+    assert stats.compute_coefficient(1285094, 10440, 4582.5) == (60174526, "physical")
+
+
+def test_compute_coefficient_uses_higher_damage():
+    # Mage: magic damage is higher, so it drives the coefficient.
+    assert stats.compute_coefficient(1000, 500000, 1000.0) == (5500000, "magic")
+    # Only one damage stat present -> that one is used.
+    assert stats.compute_coefficient(None, 500000, 1000.0) == (5500000, "magic")
+    assert stats.compute_coefficient(200000, None, 0.0) == (200000, "physical")
+
+
+def test_compute_coefficient_none_without_inputs():
+    assert stats.compute_coefficient(None, None, 100.0) is None       # no damage
+    assert stats.compute_coefficient(799894, 14300, None) is None     # no crit damage

@@ -96,11 +96,19 @@ def test_delete_returns_false_on_transient_error():
 # ── image refresh cadence (edit only when the displayed countdown bucket changes) ──
 
 def test_refresh_token_scales_to_the_countdown():
+    # The token IS the displayed countdown bucket (countdown_bucket), so the bot
+    # re-edits exactly when the shown value changes: per-minute <1h, per-hour <1d,
+    # per-day beyond. It's stable while the banner reads the same value.
     now = 1_000_000
-    assert announcer._refresh_token(now + 1800, now) == str(now // 60)      # <1h -> minute
-    assert announcer._refresh_token(now + 7200, now) == str(now // 3600)    # <1d -> hour
-    assert announcer._refresh_token(now + 200_000, now) == str(now // 86400)  # >1d -> day
-    assert announcer._refresh_token(None, now) == str(now // 60)            # no expiry -> minute
+    assert announcer._refresh_token(now + 30 * 60, now) == "m30"        # <1h -> "30m"
+    assert announcer._refresh_token(now + 2 * 3600, now) == "h2"        # <1d -> "2h"
+    assert announcer._refresh_token(now + 200_000, now) == "d2"         # >1d -> "2d"
+    assert announcer._refresh_token(None, now) == "none0"               # no expiry
+    # holds across the hour, then ticks down (one edit/hour, not per-minute)
+    target = now + 2 * 3600 + 13 * 60
+    assert announcer._refresh_token(target, now) == "h2"
+    assert announcer._refresh_token(target, now + 12 * 60) == "h2"      # unchanged
+    assert announcer._refresh_token(target, now + 14 * 60) == "h1"      # crossed 2h
 
 
 # ── clock-aligned loop timing (edits at :55, deletes at :00) ─────────────────

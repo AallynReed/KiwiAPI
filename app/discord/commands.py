@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 
+from app import i18n
 from app.discord.embeds import (
     ACTIVITY_LABELS,
     activity_embed,
@@ -35,6 +36,7 @@ from app.discord.embeds import (
     web_embed,
     wild_mana_embed,
 )
+from app.i18n import t
 
 logger = logging.getLogger("kiwi.discord")
 
@@ -136,7 +138,15 @@ async def handle(interaction: dict) -> dict:
     as "the application did not respond".
     """
     if interaction.get("type") != _TYPE_APPLICATION_COMMAND:
-        return _message("🥝 Unsupported interaction.")
+        return _message(t("🥝 Unsupported interaction."))
+
+    # Speak the server's configured bot language (dashboard setting), falling back
+    # to the user's Discord locale, then English. Set once - the embed builders
+    # read it via the i18n context.
+    i18n.set_current_language(await i18n.guild_language(
+        interaction.get("guild_id"),
+        interaction.get("guild_locale") or interaction.get("locale"),
+    ))
 
     name = (interaction.get("data") or {}).get("name")
     try:
@@ -182,6 +192,6 @@ async def handle(interaction: dict) -> dict:
             return _embed(await ping_embed())
     except Exception:
         logger.exception("discord command /%s failed", name)
-        return _message(f"🥝 Sorry, `/{name}` hit a snag. Try again in a moment.")
+        return _message(t("🥝 Sorry, `/{name}` hit a snag. Try again in a moment.", name=name))
 
-    return _message(f"🥝 Unknown command: {name}")
+    return _message(t("🥝 Unknown command: {name}", name=name))

@@ -73,6 +73,10 @@
   function viewShare(c) {
     return state.view === 'clean' ? c.share_clean : c.share;
   }
+  // Per-class Effort ADDED this hour for the active view (null = unmeasurable).
+  function viewEffort(c) {
+    return state.view === 'clean' ? c.effort_added_clean : c.effort_added;
+  }
 
   // ─── i18n + fetch + util ───────────────────────────────────────────
   function t(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
@@ -346,6 +350,15 @@
     if (sub && cur.window_end) {
       sub.textContent = t('Share of players on each class, latest snapshot ({when}).').replace('{when}', fmtFull(cur.window_end, '7d'));
     }
+    // Total Effort added across all classes in the latest hour (active view).
+    const totalEl = document.getElementById('cact-share-total');
+    if (totalEl) {
+      const te = state.view === 'clean' ? cur.total_effort_added_clean : cur.total_effort_added;
+      totalEl.hidden = (te == null);
+      if (te != null) {
+        totalEl.textContent = t('Effort added this hour: +{n}').replace('{n}', intl(te));
+      }
+    }
 
     const size = 240, cx = size / 2, cy = size / 2, r = 92, sw = 30;
     const C = 2 * Math.PI * r;
@@ -383,10 +396,16 @@
         const badge = cls.icon
           ? `<img class="cact-share-icon" src="${esc(cls.icon)}" alt="" loading="lazy" style="border-color:${color(cls.class_index)}" onerror="this.remove()">`
           : `<span class="cact-share-sw" style="background:${color(cls.class_index)}"></span>`;
+        const eff = viewEffort(cls);
+        const delta = (eff == null) ? ''
+          : `<span class="cact-share-delta">+${intl(eff)} ${esc(t('effort'))}</span>`;
         return `<li class="cact-share-row">${badge}` +
           `<span class="cact-share-name">${esc(cls.name)}</span>` +
+          `<span class="cact-share-stat">` +
           `<span class="cact-share-pct">${((viewShare(cls) || 0) * 100).toFixed(1)}% ` +
-          `<span class="cact-share-count">(${intl(viewCount(cls))})</span></span></li>`;
+          `<span class="cact-share-count">(${intl(viewCount(cls))})</span></span>` +
+          delta +
+          `</span></li>`;
       }).join('');
     }
   }

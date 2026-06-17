@@ -74,6 +74,7 @@
     cheatersLoading: false,      // guards against double-firing during fetch
     boardChart: null,            // {uuid, data} - cached so resize/lang re-renders don't refetch
     playerChart: null,           // {name, data} - same idea for the per-player chart
+    player: null,                // currently-open player name (mirrored into the URL hash for sharing)
     // Categories the user has manually collapsed. Persisted to
     // localStorage so the preference survives reloads. A category
     // missing from the set is treated as expanded (the friendly
@@ -182,6 +183,13 @@
     if (initialBoard) selectBoard(initialBoard.uuid);
 
     wireEvents();
+
+    // Deep-link: reopen a shared player-history panel (#player=…). After boards
+    // load so renderPlayerHistory can resolve board names; fire-and-forget.
+    if (hash.player) {
+      $playerSearch.value = hash.player;
+      searchPlayer(hash.player);
+    }
 
     // Activate the requested tab AFTER boards are wired so the boards
     // view is ready to render (or stay hidden) regardless of which tab
@@ -1218,10 +1226,16 @@
   async function searchPlayer(name) {
     const trimmed = (name || '').trim();
     if (!trimmed) {
+      state.player = null;
+      updateHash();
       $playerPanel.hidden = true;
       hidePlayerChart();
       return;
     }
+    // Mirror the open player into the URL hash so the panel is shareable +
+    // survives back/forward (replaceState, so this doesn't re-fire hashchange).
+    state.player = trimmed;
+    updateHash();
     $playerPanel.hidden = false;
     $playerName.textContent = trimmed;
     $playerBody.innerHTML = `<p class="lb-loading" data-i18n>Loading…</p>`;
@@ -1290,7 +1304,7 @@
       clearTimeout(searchTimer);
       const val = $playerSearch.value.trim();
       // Hide the panel immediately if cleared; otherwise debounce 350ms.
-      if (!val) { $playerPanel.hidden = true; return; }
+      if (!val) { $playerPanel.hidden = true; state.player = null; updateHash(); return; }
       searchTimer = setTimeout(() => searchPlayer(val), 350);
     });
     $playerSearch.addEventListener('keydown', (e) => {
@@ -1304,6 +1318,8 @@
       $playerPanel.hidden = true;
       $playerSearch.value = '';
       hidePlayerChart();
+      state.player = null;
+      updateHash();
     });
 
     $mobileTrigger.addEventListener('click', () => {
@@ -1344,6 +1360,18 @@
         const exists = state.boards.find((b) => b.uuid === hash.board);
         if (exists) selectBoard(hash.board);
       }
+      // Player history panel: open/replace or close to match the URL.
+      if ((hash.player || null) !== (state.player || null)) {
+        if (hash.player) {
+          $playerSearch.value = hash.player;
+          searchPlayer(hash.player);
+        } else {
+          $playerPanel.hidden = true;
+          $playerSearch.value = '';
+          hidePlayerChart();
+          state.player = null;
+        }
+      }
     });
 
     // Re-render the entries pane + day picker + subtitle + cheaters
@@ -1362,13 +1390,15 @@
 
   // ─── URL hash helpers ──────────────────────────────────────────────
   function parseHash() {
-    const out = { anchor: null, board: null, tab: null };
+    const out = { anchor: null, board: null, tab: null, player: null };
     const raw = location.hash.replace(/^#/, '');
     if (!raw) return out;
     const params = new URLSearchParams(raw);
     if (params.has('anchor')) out.anchor = Number(params.get('anchor')) || null;
     if (params.has('board')) out.board = Number(params.get('board')) || null;
     if (params.has('tab')) out.tab = params.get('tab');
+    // URLSearchParams.get decodes percent-encoding, so spaces/symbols come back intact.
+    if (params.has('player')) out.player = params.get('player') || null;
     return out;
   }
 
@@ -1381,6 +1411,9 @@
     }
     if (state.anchor) parts.push(`anchor=${state.anchor}`);
     if (state.selectedUuid != null) parts.push(`board=${state.selectedUuid}`);
+    // Open player is shareable too - encode it (names can carry spaces/symbols,
+    // and =/& would otherwise break the hash's key=value parsing).
+    if (state.player) parts.push(`player=${encodeURIComponent(state.player)}`);
     const next = parts.length ? '#' + parts.join('&') : location.pathname;
     history.replaceState(null, '', next);
   }

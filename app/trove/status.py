@@ -12,12 +12,21 @@ Every ``trove_status_probe_interval_seconds`` a background loop probes:
     the glsserver hello) before dropping the connection, so connect-only reads
     as a false "online" - seen directly in EU's maintenance capture (every
     attempt got SYN/ACK, the server echoed its fixed hello, emitted empty frames
-    and sent FIN, and the client just retried). So the deep probe replays the
-    captured glsserver client hello and counts the region online only if the
-    server HOLDS the connection open (a playable session socket); a server that
-    drops right after the hello is maintenance. Refused/timeout while auth is up
-    is also maintenance. Any anomaly in the deep probe falls back to the
-    connect-only verdict, so it never does worse than the old check.
+    and sent FIN, and the client just retried). So the deep probe sends a
+    well-formed glsserver opener and counts the region online only if the server
+    HOLDS the connection open (a playable session socket); a server that drops
+    right after the opener is maintenance. Refused/timeout while auth is up is
+    also maintenance. Any anomaly in the deep probe falls back to the connect-only
+    verdict, so it never does worse than the old check.
+
+    The opener is a FRESH RANDOM ephemeral key each probe (see ``_random_opener``):
+    Frida on the live client proved the real opener's 32-byte body is regenerated
+    per connection, and a live glsserver holds the socket for any well-formed
+    opener - so a random one behaves like a real client and never goes stale on a
+    Trove protocol update. (The legacy mode, replaying a captured hello, is kept
+    behind ``trove_status_game_random_opener=False`` but goes stale: the server
+    starts rejecting an old captured opener as old-protocol, which once made a live
+    EU read as down.)
 
 Per-environment verdict (binary - the probe can't tell planned maintenance from
 an outage, so an unreachable server is simply "down", shown red):
@@ -38,6 +47,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import time
 
 import httpx
@@ -99,6 +109,23 @@ _GLS_MAX_READ_BYTES = 32768
 # data-bearing directory response as maintenance.
 _GLS_SUBSTANTIVE_BYTES = 256
 
+# glsserver opener = a 0x20-length-prefixed frame: 5-byte header + 32-byte body.
+_GLS_OPENER_HEADER = b"\x20\x00\x00\x00\x00"
+
+
+def _random_opener() -> bytes:
+    """A fresh, well-formed glsserver opener: the frame header + 32 random bytes.
+
+    Frida on the live client proved the real opener's 32-byte body is a
+    per-connection RANDOM ephemeral key (a fresh X25519 pubkey every connection) -
+    there is no fixed hello to capture. A live glsserver HOLDS the socket for ANY
+    well-formed opener (verified live, EU+US), while a maintenance gateway drops it.
+    So sending our own random opener is a liveness probe that behaves like a real
+    client and NEVER goes stale on a protocol update - unlike replaying a captured
+    hello, which the server eventually rejects as old-protocol (the bug that made a
+    live EU read as down)."""
+    return _GLS_OPENER_HEADER + os.urandom(32)
+
 
 async def _glsserver_holds_session(reader, writer, hello: bytes, hold_seconds: float) -> bool | None:
     """Send the glsserver ``hello`` and judge whether the server HOLDS the
@@ -143,7 +170,7 @@ async def _glsserver_holds_session(reader, writer, hello: bytes, hold_seconds: f
 
 async def _probe_game(
     host: str, port: int, *, deep: bool = False, hello_hex: str = "",
-    hold_seconds: float = 2.0,
+    hold_seconds: float = 2.0, random_opener: bool = False,
 ) -> dict:
     """Liveness of one environment's game glsserver (see module docstring for why
     a bare connect isn't enough)."""
@@ -161,19 +188,30 @@ async def _probe_game(
         return {"online": False, "host": host, "port": port,
                 "latency_ms": round(latency, 1), "error": type(e).__name__}
     try:
-        hello = b""
+        opener = b""
+        opener_mode = None
+        # A non-empty hello_hex ENABLES the deep probe for this env (PTS leaves it
+        # empty → connect-only). With random_opener on we send a FRESH random opener
+        # each probe - the real client uses a per-connection random ephemeral key,
+        # so this behaves like a real client and never goes stale on a protocol
+        # update. With it off we replay the captured hex (legacy; goes stale).
         if deep and hello_hex:
-            try:
-                hello = bytes.fromhex(hello_hex.strip())
-            except ValueError:
-                hello = b""  # bad hex → skip the deep probe rather than misfire
-        if not hello:
+            if random_opener:
+                opener = _random_opener()
+                opener_mode = "random"
+            else:
+                try:
+                    opener = bytes.fromhex(hello_hex.strip())
+                    opener_mode = "replay"
+                except ValueError:
+                    opener = b""  # bad hex → skip the deep probe rather than misfire
+        if not opener:
             # Connect-only (deep probe disabled / no hello): TCP accepted = online,
             # exactly the old behaviour.
             latency = (time.monotonic() - t0) * 1000
             return {"online": True, "host": host, "port": port,
                     "latency_ms": round(latency, 1), "error": None, "probe": "tcp"}
-        held = await _glsserver_holds_session(reader, writer, hello, hold_seconds)
+        held = await _glsserver_holds_session(reader, writer, opener, hold_seconds)
         latency = (time.monotonic() - t0) * 1000
         if held is None:
             # Inconclusive deep probe → keep the connect-only verdict (online) so
@@ -183,7 +221,7 @@ async def _probe_game(
         return {"online": held, "host": host, "port": port,
                 "latency_ms": round(latency, 1),
                 "error": None if held else "glsserver_dropped",
-                "probe": "glsserver"}
+                "probe": "glsserver", "opener": opener_mode}
     finally:
         try:
             writer.close()
@@ -240,6 +278,7 @@ async def probe_once() -> dict:
     from app.admin import runtime_config
     deep = bool(await runtime_config.get_setting("trove_status_game_deep_probe"))
     hold_seconds = float(await runtime_config.get_setting("trove_status_game_hold_seconds"))
+    random_opener = bool(await runtime_config.get_setting("trove_status_game_random_opener"))
 
     environments: dict[str, dict] = {}
     for env in _ENVIRONMENTS:
@@ -247,6 +286,7 @@ async def probe_once() -> dict:
         hello_hex = str(await runtime_config.get_setting(f"trove_status_{env}_hello_hex") or "")
         game = await _probe_game(
             host, port, deep=deep, hello_hex=hello_hex, hold_seconds=hold_seconds,
+            random_opener=random_opener,
         )
         status = _verdict(auth["online"], game["online"])
         environments[env] = {

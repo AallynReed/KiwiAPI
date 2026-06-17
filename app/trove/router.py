@@ -44,6 +44,8 @@ from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove.leaderboards import detection as leaderboards_detection
 from app.trove.leaderboards import service as leaderboards_service
 from app.trove.market import service as market_service
+from app.trove.ocr import engine as ocr_engine
+from app.trove.ocr import service as ocr_service
 from app.trove.codexes.schemas import (
     CodexCategoryInfo,
     CodexCategoryList,
@@ -110,12 +112,15 @@ from app.trove.schemas import (
     ChaosChestHistoryPage,
     CheatersResponse,
     ClassList,
+    CoefficientRequest,
+    CoefficientResponse,
     Corruxion,
     DailyBuffs,
     DelveRotationOut,
     DelveWeekInfo,
     DelveWeekList,
     EventCategoryList,
+    CharacterStatsOcr,
     FeedbackAck,
     Fluxion,
     Gardening,
@@ -190,6 +195,7 @@ leaderboards_router = APIRouter(prefix="/v1/leaderboards", tags=["leaderboards"]
 market_router = APIRouter(prefix="/v1/market", tags=["market"])
 activity_router = APIRouter(prefix="/v1/activity", tags=["activity"])
 class_activity_router = APIRouter(prefix="/v1/class-activity", tags=["class-activity"])
+ocr_router = APIRouter(prefix="/v1/ocr", tags=["ocr"])
 
 # rotations + feeds are PUBLIC: usable without a token at a stricter per-IP rate
 # limit; a token carrying the scope lifts the caller to the full per-token limit.
@@ -199,6 +205,10 @@ _FEED = Depends(public_scope("feeds:read"))
 # its own widened bucket (won't starve the shared feeds budget).
 _FEED_IMG = Depends(public_scope("feeds:read", rate_multiplier=settings.bilibili_image_rate_limit_multiplier))
 _STAT = Depends(require_scope("stats:read"))
+# The Coefficient calculator is a tokenless slice of stats:read - pure stateless
+# math the companion app / wikis can call without a key (anon per-IP budget; a
+# token carrying stats:read still earns the wider per-token limit).
+_STAT_PUBLIC = Depends(public_scope("stats:read"))
 _GEM = Depends(require_scope("gems:read"))
 _MISC = Depends(require_scope("misc:read"))
 # Tokenless slice of misc - the bot's interest-items list is public so dashboards
@@ -237,6 +247,9 @@ _LB_MASTER = Depends(require_master_ingest)
 # Same shape: read gated by scope, write gated by superuser API token.
 _MKT = Depends(require_scope("market:read"))
 _MKT_MASTER = Depends(require_master_ingest)
+# Character-stat OCR is token-gated: it's CPU-heavy (runs an OCR model) so it
+# isn't a tokenless freebie, but it needs no special privilege beyond its scope.
+_OCR = Depends(require_scope("ocr:read"))
 
 # The codex serves the primary timeline by default; PTS is opt-in via ?branch=.
 _DEFAULT_CODEX_BRANCH = "live-us"
@@ -681,6 +694,29 @@ async def get_class(tech_name: str, ctx: TokenContext = _STAT) -> TroveClass:
     return TroveClass(**cls)
 
 
+@stats_router.post("/coefficient", response_model=CoefficientResponse,
+                   summary="Calculate the character Coefficient")
+async def calc_coefficient(req: CoefficientRequest, ctx: AccessContext = _STAT_PUBLIC) -> CoefficientResponse:
+    """Compute the in-game character **Coefficient** (effective damage including crit)
+    from a build's damage + crit damage:
+
+        coefficient = floor(max(physical_damage, magic_damage) * (1 + critical_damage / 100))
+
+    The higher of physical / magic damage is used (`damage_used` says which). Provide
+    `critical_damage` (a percent, e.g. `3438.3`) and at least one of the two damage
+    stats. **Tokenless** - pure math, no key needed. This is the same formula the OCR
+    extractor (`POST /v1/ocr/character`) derives Coefficient with."""
+    result = stats.compute_coefficient(req.physical_damage, req.magic_damage, req.critical_damage)
+    if result is None:
+        raise _bad_request(
+            "Provide critical_damage and at least one of physical_damage / magic_damage."
+        )
+    coefficient, damage_used = result
+    return CoefficientResponse(
+        coefficient=coefficient, damage_used=damage_used, formula=stats.COEFFICIENT_FORMULA,
+    )
+
+
 # --- Gems: simulator + evaluator + builds (scope: gems:read) ----------------
 # Stateless compute - gem objects round-trip through the client; nothing stored.
 
@@ -817,25 +853,25 @@ async def get_news_history(
 
 
 @misc_router.get("/software", response_model=ModdingSoftware)
-async def get_modding_software(ctx: TokenContext = _MISC) -> ModdingSoftware:
+async def get_modding_software(ctx: AccessContext = _MISC_PUBLIC) -> ModdingSoftware:
     """Third-party Trove modding software, grouped by category (blueprints, vfx, ui, sound, textures)."""
     return ModdingSoftware(**misc.modding_software())
 
 
 @misc_router.get("/timezones", response_model=TimezoneList)
-async def get_timezones(ctx: TokenContext = _MISC) -> TimezoneList:
+async def get_timezones(ctx: AccessContext = _MISC_PUBLIC) -> TimezoneList:
     """The timezones supported by the converter and the clocks."""
     return TimezoneList(**misc.timezones())
 
 
 @misc_router.get("/time/now", response_model=TimeNow)
-async def get_time_now(ctx: TokenContext = _MISC) -> TimeNow:
+async def get_time_now(ctx: AccessContext = _MISC_PUBLIC) -> TimeNow:
     """Current time across every supported zone, including Trove server (reset) time."""
     return TimeNow(**misc.time_now())
 
 
 @misc_router.post("/time/convert", response_model=TimeConvertResponse)
-async def convert_time(req: TimeConvertRequest, ctx: TokenContext = _MISC) -> TimeConvertResponse:
+async def convert_time(req: TimeConvertRequest, ctx: AccessContext = _MISC_PUBLIC) -> TimeConvertResponse:
     """Convert a wall-clock time in a timezone (or an absolute unix) to every zone + Discord codes."""
     try:
         out = misc.convert_time(req.datetime, req.timezone, req.unix)
@@ -1256,7 +1292,11 @@ async def _post_feedback_webhook(
 
 
 @misc_router.post("/feedback", response_model=FeedbackAck,
-                  summary="Submit feedback")
+                  summary="Submit feedback",
+                  # Fully open (no scope dependency at all), so the OpenAPI customizer
+                  # can't infer it from a public_scope marker - flag it explicitly so
+                  # it still gets the 🔓 tokenless treatment in the reference.
+                  openapi_extra={"x-tokenless": True})
 async def post_feedback(
     request: Request,
     response: Response,
@@ -1378,6 +1418,52 @@ async def post_feedback(
     )
 
     return FeedbackAck(ok=True, received_at=doc.created_at)
+
+
+# --- Character-stat OCR (scope: ocr:read) -----------------------------------
+# Stateless: OCR a stat-sheet screenshot into recognized stats, then discard the
+# bytes. /v1/ocr/character gets a 12 MB body cap (security middleware).
+
+_OCR_ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp"}
+
+
+@ocr_router.post("/character", response_model=CharacterStatsOcr,
+                 summary="Read character stats from a screenshot")
+async def ocr_character(
+    file: UploadFile = File(..., description="Screenshot of the in-game character stat sheet"),
+    ctx: TokenContext = _OCR,
+) -> CharacterStatsOcr:
+    """Recognize Trove character stats from a stat-sheet screenshot - self-hosted.
+
+    The in-game UI is moddable (themes, fonts, columns, language), so each
+    recognized label is matched against a CLOSED multilingual vocabulary and every
+    value is sanity-checked: a garbled or translated label still resolves to the
+    right stat, and an implausible read is flagged (``in_range`` / ``type_match``)
+    rather than silently returned. English + French clients are supported.
+
+    Upload one image (``multipart/form-data``, field ``file``; PNG / JPEG / WebP /
+    GIF / BMP, ≤12 MB). Returns the recognized stats keyed by canonical key, plus
+    the raw OCR lines for transparency. No external service is used; the image is
+    processed in memory and never stored.
+    """
+    ctype = (file.content_type or "").lower()
+    if ctype and ctype not in _OCR_ALLOWED_MIME:
+        raise _bad_request(
+            f"Unsupported image type '{ctype}'. Allowed: PNG, JPEG, WebP, GIF, BMP."
+        )
+    data = await file.read()
+    if not data:
+        raise _bad_request("Empty upload - attach a screenshot in the 'file' field.")
+    try:
+        result = await ocr_service.extract_from_image(data)
+    except ocr_engine.OcrUnavailable as e:
+        raise APIError(
+            status_code=503, code=ErrorCode.service_unavailable,
+            message="OCR engine is not available on this server.",
+        ) from e
+    except ValueError as e:
+        raise _bad_request(str(e)) from e
+    return CharacterStatsOcr(**result)
 
 
 # --- Mods: .tmod decompile + build (scope: mods:read) -----------------------

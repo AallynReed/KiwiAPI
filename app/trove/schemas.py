@@ -371,6 +371,24 @@ class StatTable(BaseModel):
     count: int
 
 
+# --- Stats: Coefficient calculator (POST /v1/stats/coefficient) ------------
+# Stateless: the in-game Coefficient (effective damage incl. crit) from a build's
+# damage + crit-damage. Same formula the OCR extractor derives with.
+
+
+class CoefficientRequest(BaseModel):
+    physical_damage: float | None = Field(default=None, ge=0, description="Physical Damage stat")
+    magic_damage: float | None = Field(default=None, ge=0, description="Magic Damage stat")
+    critical_damage: float = Field(..., ge=0,
+                                   description="Critical Damage as a percent (e.g. 3438.3 for 3,438.3%)")
+
+
+class CoefficientResponse(BaseModel):
+    coefficient: int = Field(..., description="floor(max(physical, magic) damage * (1 + critical_damage/100))")
+    damage_used: Literal["physical", "magic"] = Field(..., description="Which damage stat was higher and used")
+    formula: str = Field(..., description="The exact formula applied")
+
+
 # --- Stats: classes --------------------------------------------------------
 
 
@@ -723,6 +741,12 @@ class ClassActivityItem(BaseModel):
     # Rank board is absent in the snapshot).
     active_players_clean: int | None = None
     share_clean: float | None = None
+    # Effort ADDED to this class's leaderboard in the latest hour (this capture vs
+    # the previous) - Σ positive per-player score gains. RAW = all players; CLEAN =
+    # those clearing the established floors. ``null`` when unmeasurable (no previous
+    # capture, or the pair crosses the weekly reset).
+    effort_added: int | None = None
+    effort_added_clean: int | None = None
 
 
 class ClassActivityCurrentResponse(BaseModel):
@@ -744,6 +768,10 @@ class ClassActivityCurrentResponse(BaseModel):
     duration_hours: float | None
     total_active: int | None
     total_active_clean: int | None = None
+    # Total Effort added across all classes in the latest hour (raw / established);
+    # null when unmeasurable (no previous capture, or pair crosses a weekly reset).
+    total_effort_added: int | None = None
+    total_effort_added_clean: int | None = None
     power_rank_threshold: int = 0
     effort_threshold: int = 0
     classes: list[ClassActivityItem]
@@ -992,3 +1020,33 @@ class FeedbackAck(BaseModel):
     but a client UI usually wants SOMETHING to confirm the write."""
     ok: bool = True
     received_at: datetime
+
+
+# --- Character-stat OCR (POST /v1/ocr/character) ---------------------------
+# Self-hosted OCR of the in-game character stat sheet. Labels are matched
+# against a closed multilingual vocabulary and each value sanity-checked, so a
+# garbled or translated label still resolves and an implausible read is flagged
+# rather than silently returned. See app/trove/ocr/.
+
+
+class OcrStatValue(BaseModel):
+    """One recognized stat. ``value`` is an integer for count stats and a float
+    for percent stats. ``in_range`` / ``type_match`` flag a read that parsed but
+    looks implausible for this stat (e.g. a percent value on an integer stat);
+    ``confidence`` (0-1) folds label-match quality with those checks."""
+    value: int | float = Field(..., description="Numeric value; int for counts, float for percents")
+    unit: Literal["count", "percent"]
+    raw: str = Field(..., description="The number exactly as OCR read it (pre-normalization); empty when derived")
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    in_range: bool = Field(..., description="Value sits within the stat's plausible range")
+    type_match: bool = Field(..., description="Value's percent/integer kind matches the stat")
+    derived: bool = Field(default=False, description="True if computed rather than read - Coefficient = floor(max(physical,magic) damage * (1 + critical_damage/100)) when it isn't on the sheet")
+
+
+class CharacterStatsOcr(BaseModel):
+    """Stats recognized from a character-sheet screenshot, keyed by canonical
+    stat key (e.g. ``physical_damage``, ``critical_hit``)."""
+    stats: dict[str, OcrStatValue]
+    matched: int = Field(..., description="How many known stats were recognized")
+    total_known: int = Field(..., description="Size of the known-stat vocabulary")
+    lines: list[str] = Field(..., description="Raw text lines the OCR produced (transparency)")

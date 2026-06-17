@@ -97,7 +97,7 @@ excluded channels/titles, per-channel cap, cutoff, count) are admin runtime_conf
 **stored** (kept after they leave the upstream feed) so history/upcoming work; `status` is
 `upcoming`/`ongoing`/`ended`, categories are free-form and discovered via a distinct query.
 
-**`stats` category - scope `stats:read`** (raw game data, transmitted as-is - no calculation)
+**`stats` category - scope `stats:read`** (raw game data, transmitted as-is - the tables do no calculation)
 
 | Endpoint | Returns |
 |---|---|
@@ -106,9 +106,11 @@ excluded channels/titles, per-channel cap, cutoff, count) are admin runtime_conf
 | `/v1/stats/light` | Light stat table (`step` / `permanent` per source) |
 | `/v1/stats/classes` | all 18 classes as full objects, keyed by `tech_name` |
 | `/v1/stats/classes/{tech_name}` | one class by its `tech_name` token (e.g. `knight`) |
+| `POST /v1/stats/coefficient` | (**tokenless**) stateless calculator → `{ coefficient, damage_used, formula }`. Body `{ physical_damage?, magic_damage?, critical_damage }`. Computes the in-game **Coefficient** = `floor(max(physical, magic) damage * (1 + critical_damage/100))` (the higher damage stat is used). Needs `critical_damage` + ≥1 damage stat (else 400). Shares one formula with the OCR Coefficient derivation |
 
 Each class carries a stable `tech_name` token (the canonical id - display `name` differs, e.g.
-`adventurer` → "Boomeranger"); store it and look the class up by that token later.
+`adventurer` → "Boomeranger"); store it and look the class up by that token later. The Coefficient
+calculator and OCR derivation call the same `app.trove.stats.compute_coefficient`, so they can't drift.
 
 **`gems` category - scope `gems:read`** (stateless calculators - gem objects round-trip through the client)
 
@@ -132,10 +134,10 @@ an action endpoint with a `stat_position` (0/1/2) to mutate it. Nothing gem-rela
 | Endpoint | Returns |
 |---|---|
 | `GET /v1/misc/news-history?limit=&offset=` | the full Trove news archive (never pruned), newest first, paginated |
-| `GET /v1/misc/software` | third-party Trove modding software, grouped by category |
-| `GET /v1/misc/timezones` | timezones supported by the converter and clocks |
-| `GET /v1/misc/time/now` | current time across every zone, incl. Trove server (reset) time |
-| `POST /v1/misc/time/convert` | convert a time + zone (or a unix) → every zone + Discord timestamp codes |
+| `GET /v1/misc/software` | (**tokenless**) third-party Trove modding software, grouped by category |
+| `GET /v1/misc/timezones` | (**tokenless**) timezones supported by the converter and clocks |
+| `GET /v1/misc/time/now` | (**tokenless**) current time across every zone, incl. Trove server (reset) time |
+| `POST /v1/misc/time/convert` | (**tokenless**) convert a time + zone (or a unix) → every zone + Discord timestamp codes |
 | `GET /v1/misc/trove-status` | (**tokenless**) live Trove server status from a 60s background prober. `overall` rolls up the Live regions EU+US (`online`/`maintenance`/`down`/`unknown`). `auth` = HTTPS liveness of `auth.trionworlds.com`; `environments.{eu,us,pts}` each carry a `game` probe of the glsserver port (6560). The probe is **deep**: a region in maintenance still completes the TCP handshake (and answers the glsserver hello) before dropping the connection, so connect-only would read a false `online`; instead it replays the captured glsserver hello and counts the region online only if the server **holds the connection open**, flagging `maintenance` when the server drops right after the hello (or refuses/times out). Live-tunable + degrades to connect-only on any anomaly (`trove_status_game_deep_probe`) |
 | `GET /v1/misc/trove-status/history?env=&days=` | (**tokenless**) status timeline for one environment (`eu`/`us`/`pts`, default eu; days 1–90) - `segments` (continuous status periods, open one has `ended_at=null`), `outages`, and an `uptime` fraction. Backs the `/status` page downtime history |
 | `GET /v1/misc/supporters` | (**tokenless**) the project's supporters credits list `{supporters:[name], count}`, in display order. Same list shown on `/support`; admin-managed via `/admin/supporters` (master panel) |
@@ -191,7 +193,7 @@ so clients can self-throttle. Recent queries (≤ threshold) cost only the stand
 
 | Endpoint | Returns |
 |---|---|
-| `GET /v1/activity/current` | (**tokenless**) lower-bound active-player count in the most recent capture window + distinct `estimate_24h` / `estimate_7d` rollups. `estimate` null until two captures exist |
+| `GET /v1/activity/current` | (**tokenless**) lower-bound active-player count in the most recent capture window + distinct `estimate_24h` / `estimate_7d` rollups. "Active" = a player whose score **rose** on some board vs the previous capture, or who newly appears with a non-zero score (a reset drop isn't a rise). Each capture's active set is **materialized** (`activity_active` table) once, so the 24h/7d figures are an indexed `COUNT(DISTINCT)` UNION of the windows in range - the true distinct union, monotonic (`7d ⊇ 24h ⊇ 1h`), not a re-scan. `estimate` null until two captures exist |
 | `GET /v1/activity/history?days=` | (**tokenless**) time-series of activity estimates, one point per capture pair, with `estimate_per_hour` normalisation so missed-capture gaps don't spike the line |
 | `GET /v1/activity/series?period=` | (**tokenless**) bucketed activity-level series for one period (`1d`/`7d`/`1m`/`3m`/`6m`/`1y`/`all`) with `peak`/`average`/`latest` - backs the `/activity` page charts |
 | `POST /v1/activity/backfill?total_days=&chunk_days=&force=&reset=` | **master-only**: seeds the `/series` history from all stored Postgres captures so the multi-period charts have data before the hourly forward-fill. `total_days=0` rebuilds **ALL** stored history (no lower bound); else the trailing N days. **202** + runs in the background, streaming one capture at a time (memory-safe regardless of range); coverage capped by stored history depth. The gap cutoff (windows that span a missed capture, skipped from the per-hour series) is derived from the **actual median capture cadence**, not a hardcoded 1h, so a non-hourly/jittery archive isn't dropped. **`reset=true` is destructive** - wipes the `activity_estimate` table and recomputes from scratch (implies `force`), to flush miscalculations from older runs |
@@ -200,7 +202,7 @@ so clients can self-throttle. Recent queries (≤ threshold) cost only the stand
 
 | Endpoint | Returns |
 |---|---|
-| `GET /v1/class-activity/current` | (**tokenless**) **direct headcount of the latest snapshot** (NOT the activity pipeline — no score-rose step): players **present** on a class's Effort board at the newest capture (Paragon excluded as ambiguous). Both views: `active_players`/`share`/`total_active` (raw) + `active_players_clean`/`share_clean`/`total_active_clean` (established: clears both floors) + `power_rank_threshold`/`effort_threshold`. `share` sums to 1 but counts a multi-class player in each class (share-of-players, not distinct). `window_start`=`window_end`=snapshot anchor, `duration_hours` null. (Powers the donut; the time-series below stays activity-based.) |
+| `GET /v1/class-activity/current` | (**tokenless**) **direct headcount of the latest snapshot** (NOT the activity pipeline — no score-rose step): players **present** on a class's Effort board at the newest capture (Paragon excluded as ambiguous). Both views: `active_players`/`share`/`total_active` (raw) + `active_players_clean`/`share_clean`/`total_active_clean` (established: clears both floors) + `power_rank_threshold`/`effort_threshold`. Each class also carries `effort_added`/`effort_added_clean` (+ totals `total_effort_added`/`total_effort_added_clean`) — Effort added to that board in the **latest hour** (this capture vs the previous; Σ positive per-player gains, per view; `null` when no previous capture or the pair crosses the weekly reset). `share` sums to 1 but counts a multi-class player in each class (share-of-players, not distinct). `window_start`=`window_end`=snapshot anchor, `duration_hours` null. (Powers the donut; the time-series below stays activity-based.) |
 | `GET /v1/class-activity/series?period=` | (**tokenless**) bucketed per-class series for one period (`1d`…`all`) - a shared `buckets` x-axis + per class `values[]` (raw) and `values_clean[]` (established) aligned to it (null where that view had no measurable window, e.g. across the weekly reset) + `power_rank_threshold`/`effort_threshold`. Backs the `/class-activity` multi-line chart + its Established/All toggle |
 | `POST /v1/class-activity/backfill?total_days=&force=&reset=` | **master-only**: seeds the per-class history (raw + clean) from the stored captures (same memory-safe streaming as `/v1/activity/backfill`; the 18 Effort boards + 18 Power Rank boards load per anchor). `total_days=0` = all history; `reset=true` wipes the `class_activity_estimate` table first. **202** + background. Run after changing either clean-view threshold to apply it to history (the warmer applies it to the latest window automatically) |
 
@@ -246,6 +248,29 @@ a budget with a market push. Returns 429 with `Retry-After` once exhausted. **AP
 session-JWT calls from the portal "Manual cfg ingest" card bypass this cap, so the master can replay
 captured cfgs / back-fills without waiting out the window. Bots should honor `Retry-After` and
 suppress duplicate-anchor submissions client-side.
+
+**`ocr` category - scope `ocr:read`** (token required - the OCR model is CPU-heavy, so it isn't a tokenless freebie)
+
+| Endpoint | Returns |
+|---|---|
+| `POST /v1/ocr/character` | reads the in-game character stat sheet from a screenshot (multipart `file`; PNG/JPEG/WebP/GIF/BMP, ≤12 MB) → `{ stats: { <key>: { value, unit, raw, confidence, in_range, type_match, derived } }, matched, total_known, lines }`. `stats` keyed by canonical key (`physical_damage`, `critical_hit`, `power_rank`, …); `value` int for counts / float for percents. `derived:true` = computed, not read. Returns **503** if the OCR engine isn't installed, **400** on an unreadable image |
+
+Self-hosted OCR (**RapidOCR / ONNX - no external service, no LLM**). The moddable UI varies wildly
+(themes, fonts, columns, language), so raw OCR text isn't trusted: every recognized label is fuzzy-matched
+against a CLOSED multilingual vocabulary (English + French — `app/trove/gamedata/character_stats.json`) so a
+garbled or translated label still snaps to the right stat, and every value is sanity-checked against the
+stat's expected type (int vs percent) + plausible range. `in_range`/`type_match` flag a value that parsed
+but looks implausible (don't trust a stat with either `false`); `confidence` folds match-quality with those
+checks. Labels whose value renders on a separate line (Power Rank in the equipment view, a detached
+Coefficient) are paired across lines within a small window. **Coefficient** is special: it's often not shown,
+so it's derived from the game's own formula — `floor(max(physical, magic) damage * (1 + critical_damage/100))` —
+and `derived:true` marks a computed value; a shown Coefficient that agrees is a confirmed read, one that
+contradicts the formula is surfaced but flagged low-confidence (a cheap consistency check on the damage reads).
+The accuracy core (`app/trove/ocr/parse.py` + `vocabulary.py`) is engine-agnostic and unit-tested
+without any OCR dependency — the engine (`engine.py`) just turns pixels into the text lines it consumes, and
+is swappable (Tesseract/EasyOCR) behind the same interface. The image is processed in memory, never stored.
+The engine import is guarded, so the app still boots without the optional `rapidocr-onnxruntime` dependency
+(the endpoint then returns 503); the Docker image installs it plus the `libgl1`/`libglib2.0-0` runtime libs.
 
 ## BetterTroveTools showcase site (`trove.aallyn.net`)
 

@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  const PERIODS = ['1d', '7d', '1m', '3m', '6m', '1y', 'all'];
+  const PERIODS = ['1d', '7d', '1m'];   // longer ranges (3m/6m/1y/all) removed
   const state = {
     period: '7d',
     series: {},          // period -> payload cache

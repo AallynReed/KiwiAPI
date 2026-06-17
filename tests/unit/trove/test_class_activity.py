@@ -176,6 +176,9 @@ def test_build_current_raw_and_clean_views():
     assert cur["power_rank_threshold"] == 25000
     assert cur["effort_threshold"] == 50
     assert "paragon_threshold" not in cur           # Paragon removed from the pipeline
+    # No effort deltas in these counts → effort fields are null, not 0.
+    assert cur["total_effort_added"] is None and cur["total_effort_added_clean"] is None
+    assert cur["classes"][0]["effort_added"] is None
 
     # Default ordering is the clean view: clean desc, classes w/ None clean last.
     assert [c["class_index"] for c in cur["classes"]] == [9, 0, 5]
@@ -226,6 +229,26 @@ def test_snapshot_counts_presence_and_floors():
     assert 5 not in c                    # a class with no players is omitted (no slice)
 
 
+def test_effort_deltas_added_per_view():
+    # Effort added this hour = Σ positive per-player gains over players in BOTH snaps.
+    late = {4000: {"A": 1100.0, "B": 600.0, "N": 500.0}}   # N is a new entrant
+    early = {4000: {"A": 1000.0, "B": 550.0}}              # N absent last hour
+    pr = {1000: {"A": 40000.0, "B": 5000.0, "N": 40000.0}}
+    d = ca._effort_deltas(late, early, pr, 25000, 50)
+    assert d[0]["raw"] == 150            # A +100, B +50; N excluded (new entrant)
+    assert d[0]["clean"] == 100          # only A clears PR (B's PR 5000 < 25000)
+    assert 1 not in d                    # class with no late board omitted
+
+    # PR board absent for the class → clean unmeasurable (None), raw still measured.
+    d2 = ca._effort_deltas(late, early, {}, 25000, 50)
+    assert d2[0]["raw"] == 150 and d2[0]["clean"] is None
+
+    # A negative/flat gain is clamped to 0 (data corrections never subtract).
+    d3 = ca._effort_deltas({4000: {"A": 900.0}}, {4000: {"A": 1000.0}},
+                           {1000: {"A": 40000.0}}, 0, 0)
+    assert d3[0]["raw"] == 0
+
+
 async def test_current_donut_is_direct_snapshot(monkeypatch):
     from app.trove.leaderboards import activity as _act
     from app.trove.leaderboards import cache as lb_cache
@@ -269,6 +292,50 @@ async def test_current_donut_is_direct_snapshot(monkeypatch):
     c0 = next(c for c in cur["classes"] if c["class_index"] == 0)
     assert c0["active_players"] == 2 and c0["active_players_clean"] == 1
     assert abs(c0["share"] - 1.0) < 1e-9     # class 0 is the only one with players
+    # Only one stamp → no previous capture → effort deltas are null (not 0).
+    assert cur["total_effort_added"] is None and c0["effort_added"] is None
+
+
+async def test_current_donut_effort_added(monkeypatch):
+    from app.trove.leaderboards import activity as _act
+    from app.trove.leaderboards import cache as lb_cache
+    from app.trove.leaderboards import service as lb_service
+
+    late, early = 1_700_003_600, 1_700_000_000   # two consecutive captures
+
+    async def fake_stamps(limit=2, include_archive=True):
+        return [late, early]
+
+    async def fake_thresholds():
+        return (25000, 50)
+
+    async def fake_load(a, board_uuids):
+        if 1000 in set(board_uuids):                       # PR boards (loaded at `late`)
+            return {1000: {"A": 40000.0, "B": 5000.0, "N": 40000.0}}
+        if a == late:
+            return {4000: {"A": 1100.0, "B": 600.0, "N": 500.0}}   # N is new this hour
+        return {4000: {"A": 1000.0, "B": 550.0}}                   # early (N absent)
+
+    async def fake_cache_get():
+        return None
+
+    async def fake_cache_set(payload):
+        return None
+
+    monkeypatch.setattr(lb_service, "list_timestamps", fake_stamps)
+    monkeypatch.setattr(lb_service, "reset_boundaries_for_kind", lambda kind, e, l: [])
+    monkeypatch.setattr(ca, "_clean_thresholds", fake_thresholds)
+    monkeypatch.setattr(_act, "_load_anchor_maps", fake_load)
+    monkeypatch.setattr(lb_cache, "get_class_activity_current", fake_cache_get)
+    monkeypatch.setattr(lb_cache, "set_class_activity_current", fake_cache_set)
+
+    cur = await ca.class_activity_current()
+    c0 = next(c for c in cur["classes"] if c["class_index"] == 0)
+    # Effort added: A +100, B +50 (raw 150); only A clears PR -> clean 100. N excluded.
+    assert c0["effort_added"] == 150
+    assert c0["effort_added_clean"] == 100
+    assert cur["total_effort_added"] == 150
+    assert cur["total_effort_added_clean"] == 100
 
 
 # --- series bucketing shape (async, monkeypatched reads) --------------------

@@ -60,6 +60,31 @@ def stat_table(table: str) -> dict | None:
     return {"stat": table, "label": label, "sources": sources, "count": len(sources)}
 
 
+# --- Coefficient (derived damage metric) -----------------------------------
+
+# The in-game character "Coefficient": effective damage folding in crit. Shared by
+# the OCR derivation (app/trove/ocr/parse.py) and POST /v1/stats/coefficient so the
+# two can never drift. The game TRUNCATES (floors) the result.
+COEFFICIENT_FORMULA = "floor(max(physical_damage, magic_damage) * (1 + critical_damage / 100))"
+
+
+def compute_coefficient(
+    physical_damage: float | None,
+    magic_damage: float | None,
+    critical_damage: float | None,
+) -> tuple[int, str] | None:
+    """Coefficient = ``floor(D * (1 + critical_damage / 100))`` where ``D`` is the
+    HIGHER of physical / magic damage. ``critical_damage`` is a percent (e.g.
+    ``3438.3`` for 3,438.3%). Returns ``(coefficient, "physical" | "magic")``, or
+    ``None`` if there's no damage value or no crit damage to compute from."""
+    candidates = [(v, name) for v, name in
+                  ((physical_damage, "physical"), (magic_damage, "magic")) if v is not None]
+    if not candidates or critical_damage is None:
+        return None
+    base, which = max(candidates, key=lambda c: c[0])
+    return int(round(base * (1 + critical_damage / 100), 6)), which
+
+
 # --- Classes ---------------------------------------------------------------
 
 

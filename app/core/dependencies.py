@@ -305,6 +305,11 @@ async def require_master_ingest(
     return IngestAuth(user=user, token=token)
 
 
+# Marker so the OpenAPI customizer (app.main.custom_openapi) flags master-only
+# operations with ⭐ in the reference.
+require_master_ingest._master_only = True  # type: ignore[attr-defined]
+
+
 def require_scope(scope: str):
     """Dependency factory: guard an endpoint behind a scope.
 
@@ -358,4 +363,8 @@ def public_scope(scope: str, *, rate_multiplier: int = 1):
                                        multiplier=rate_multiplier, bucket=bucket)
         return AccessContext(user=None, token=None, ip=client_ip(request))
 
+    # Marker so the OpenAPI customizer (app.main.custom_openapi) can detect which
+    # operations are tokenless and flag them (🔓 + note + optional auth) in the
+    # reference. The value is the scope, for potential per-scope messaging.
+    checker._tokenless_scope = scope  # type: ignore[attr-defined]
     return checker

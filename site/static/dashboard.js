@@ -535,6 +535,30 @@
 
   // Per-server config panel: header + tab bar + the active tab's body. New
   // config categories slot in as additional tabs before Settings.
+  // The bot's per-server output language (announcements, board, slash replies).
+  function botLangPicker(detail) {
+    const opts = (detail.languages || []).map((l) =>
+      `<option value="${esc(l.code)}" ${l.code === detail.language ? 'selected' : ''}>${esc(l.label)}</option>`).join('');
+    return `<label class="dash-bot-lang" data-i18n-title title="${esc(t('Language the bot speaks in this server'))}">
+        <i class="fa-solid fa-language" aria-hidden="true"></i>
+        <select class="dash-bot-lang-select" data-act="bot-lang" aria-label="${esc(t('Bot language'))}">${opts}</select>
+      </label>`;
+  }
+  function wireBotLangPicker(panel, guildId, detail) {
+    const sel = panel.querySelector('[data-act="bot-lang"]');
+    if (!sel) return;
+    sel.addEventListener('change', async () => {
+      const prev = detail.language;
+      sel.disabled = true;
+      const r = await Auth.callJSON(
+        `/v1/site-auth/discord/guilds/${encodeURIComponent(guildId)}/language`,
+        { method: 'PUT', json: { language: sel.value } });
+      sel.disabled = false;
+      if (r.ok) detail.language = sel.value;
+      else { sel.value = prev; }
+    });
+  }
+
   function renderServerDetail(panel, guildId, detail, meta) {
     const on = !!detail.announcing;
     panel.innerHTML = `
@@ -542,6 +566,7 @@
         ${guildIcon(meta, 40)}
         <strong class="dash-discord-detail-name">${esc(meta.name)}</strong>
         <span class="dash-tag${on ? ' dash-tag-verified' : ''}" data-act="enabled-badge">${esc(on ? t('announcing') : t('off'))}</span>
+        ${detail.can_manage_announcements ? botLangPicker(detail) : ''}
       </div>
       <div class="dash-discord-tabs" role="tablist">
         <button type="button" class="dash-discord-tab active" data-tab="announcements" role="tab">${esc(t('Announcements'))}</button>
@@ -549,6 +574,7 @@
         <button type="button" class="dash-discord-tab" data-tab="settings" role="tab">${esc(t('Settings'))}</button>
       </div>
       <div class="dash-discord-tabbody" id="dash-discord-tabbody"></div>`;
+    wireBotLangPicker(panel, guildId, detail);
     const body = panel.querySelector('#dash-discord-tabbody');
     const tabs = panel.querySelectorAll('.dash-discord-tab');
     const show = (name) => {

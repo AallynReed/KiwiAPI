@@ -607,16 +607,31 @@ REGISTRY: dict[str, TunableSetting] = {
             "instantly if it ever misflags a live region."
         ),
     ),
+    "trove_status_game_random_opener": _t(
+        key="trove_status_game_random_opener",
+        default=settings.trove_status_game_random_opener,
+        type="bool",
+        category="trove_status",
+        description=(
+            "Send a FRESH RANDOM ephemeral opener each deep probe instead of replaying "
+            "a captured hello. The real client's opener is a per-connection random key "
+            "(proven via live instrumentation), and a live glsserver holds the socket "
+            "for any well-formed opener - so a random one behaves like a real client "
+            "and NEVER goes stale on a Trove protocol update. Off = legacy replay of "
+            "trove_status_{env}_hello_hex (goes stale → false 'down'). Leave on."
+        ),
+    ),
     "trove_status_eu_hello_hex": _t(
         key="trove_status_eu_hello_hex",
         default=settings.trove_status_eu_hello_hex,
         type="str",
         category="trove_status",
         description=(
-            "Captured glsserver client hello (hex) the deep probe replays for EU. "
-            "Empty = connect-only for EU. EU/US are game glsservers that hold a "
-            "hello-only probe open when up, so the deep probe works there. "
-            "Re-capture a real client's first :6560 packet if Trove changes it."
+            "Per-env deep-probe ENABLE flag for EU: non-empty = run the deep probe, "
+            "empty = connect-only. With trove_status_game_random_opener on (default) "
+            "the content is NOT sent (a fresh random opener is used); the string only "
+            "needs to be non-empty. The captured hex is kept as the legacy-replay "
+            "fallback (random off) - but a captured opener goes stale, so leave random on."
         ),
     ),
     "trove_status_us_hello_hex": _t(
@@ -625,8 +640,9 @@ REGISTRY: dict[str, TunableSetting] = {
         type="str",
         category="trove_status",
         description=(
-            "Captured glsserver client hello (hex) the deep probe replays for US. "
-            "Empty = connect-only. The EU hello works here too (portable opener)."
+            "Per-env deep-probe ENABLE flag for US: non-empty = run the deep probe, "
+            "empty = connect-only. Same semantics as the EU flag (random opener by "
+            "default; the hex content is only replayed in legacy mode)."
         ),
     ),
     "trove_status_pts_hello_hex": _t(

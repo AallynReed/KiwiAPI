@@ -176,7 +176,11 @@
         let w = 0, h = 0, rafId = null;
 
         const seed = () => {
-          const count = Math.min(80, Math.floor((w * h) / 22000));
+          // Roughly halved vs. the old (80 cap / 22000 divisor): the
+          // particle layer is the only thing redrawing on the main thread
+          // every frame, so fewer dots is the cheapest lever. Still dense
+          // enough to read as drifting depth behind the orbs.
+          const count = Math.min(45, Math.floor((w * h) / 42000));
           parts = Array.from({ length: count }, () => ({
             x: Math.random() * w,
             y: Math.random() * h,
@@ -318,9 +322,13 @@
       }
       updateTzTooltip(now);
     }
-    requestAnimationFrame(tickClock);
   }
-  requestAnimationFrame(tickClock);
+  // The clock + tz tooltip only change once per second, so drive this from a
+  // 1s interval instead of a recursive rAF. The old rAF woke the main thread
+  // ~60×/s just to re-set identical text 59 times out of 60. setInterval keeps
+  // ticking (browser-throttled) while the tab is hidden, which is fine here.
+  setInterval(tickClock, 1000);
+  tickClock();
 
   // ── Timezone tooltip on the "Server Time" card ────────────────────────
   // On hover/focus, show the current instant across common player timezones

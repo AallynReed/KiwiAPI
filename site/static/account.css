@@ -814,6 +814,25 @@
   color: var(--text-fg, #e8ecf3);
   word-break: break-word;
 }
+/* Bot output-language picker (top-right of the server detail head) */
+.dash-bot-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  color: var(--text-mute, #8a93a3);
+  font-size: .9rem;
+}
+.dash-bot-lang-select {
+  background: rgba(255,255,255,.04);
+  color: var(--text-fg, #e8ecf3);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+}
 .dash-discord-tabs {
   display: flex;
   gap: 4px;

@@ -26,6 +26,7 @@ from beanie.operators import In
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from app import i18n
 from app.bot import discord_rest
 from app.bot.announcements import ANNOUNCEMENT_TYPES, TYPES_BY_KEY
 from app.bot.discord_rest import (
@@ -124,6 +125,10 @@ class PermissionsUpdate(BaseModel):
     permissions: dict[str, list[str]]        # capability -> [role id strings]
 
 
+class LanguageUpdate(BaseModel):
+    language: str                            # a code from app.i18n.SUPPORTED
+
+
 # ── permission helpers ──────────────────────────────────────────────────────
 
 async def _member_ctx(guild_id: int, user: SiteUser) -> dict:
@@ -211,6 +216,8 @@ def _detail_payload(guild_id: int, ctx: dict, cfg: GuildConfig | None, snap: dic
         "can_manage_announcements": can_manage,
         "can_manage_ping_roles": can_ping,
         "can_manage_clubs": can_clubs,
+        "language": (cfg.language if cfg and cfg.language in i18n.SUPPORTED else "en"),
+        "languages": [{"code": c, "label": label} for c, label in i18n.LANGS],
         "channels": discord_rest.text_channels(raw_channels),
         "roles": discord_rest.assignable_roles(raw_roles, guild_id),
         "announcements": announcements,
@@ -402,6 +409,34 @@ async def set_announcements(
         await cfg.save()
     else:
         await cfg.insert()
+    return _detail_payload(guild_id, ctx, cfg, snap)
+
+
+@router.put("/guilds/{guild_id}/language")
+async def set_language(
+    guild_id: int, body: LanguageUpdate, user: SiteUser = Depends(get_current_site_user),
+) -> dict:
+    """Set the language the bot speaks in this server (announcements, the live
+    board, and slash replies invoked here). Needs ``manage_announcements`` (or
+    admin). Returns the freshly-assembled detail."""
+    ctx = await _member_ctx(guild_id, user)
+    existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
+    if not _has_capability(ctx, existing.config_perms if existing else {}, "manage_announcements"):
+        raise APIError(403, ErrorCode.forbidden,
+                       "You don't have permission to configure the bot in this server.")
+    if body.language not in i18n.SUPPORTED:
+        raise APIError(400, ErrorCode.bad_request, "Unsupported language.")
+
+    cfg = existing or GuildConfig(guild_id=guild_id)
+    cfg.migrate_legacy()
+    cfg.language = body.language
+    cfg.updated_by = user.discord_id
+    cfg.updated_at = utcnow()
+    if existing:
+        await cfg.save()
+    else:
+        await cfg.insert()
+    snap = await _snapshot(guild_id)
     return _detail_payload(guild_id, ctx, cfg, snap)
 
 

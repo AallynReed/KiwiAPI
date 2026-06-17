@@ -270,8 +270,15 @@
 .cact-share-sw { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
 .cact-share-icon { width: 22px; height: 22px; border-radius: 50%; border: 2px solid; object-fit: cover; background: var(--bg-base); flex: 0 0 auto; }
 .cact-share-name { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cact-share-stat { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; flex: 0 0 auto; }
 .cact-share-pct { color: var(--text-mute); font-family: SFMono-Regular, Consolas, monospace; font-weight: 600; }
 .cact-share-count { font-weight: 400; opacity: .72; }   /* real player count in (parens) */
+/* Effort added to this class's board in the latest hour (per view). */
+.cact-share-delta { font-size: .7rem; font-family: SFMono-Regular, Consolas, monospace; color: #6ee7a8; opacity: .85; white-space: nowrap; }
+
+/* Total effort added across all classes this hour. */
+.cact-share-total { color: var(--text-mute); font-size: .85rem; margin: -2px 0 8px; }
+.cact-share-total[hidden] { display: none; }
 
 .cact-method {
   color: var(--text-mute);

@@ -15,6 +15,14 @@ cryptography==46.0.3
 tzdata==2025.2
 beautifulsoup4==4.12.3
 pillow==11.3.0
+# Self-hosted OCR engine for the character-stat extractor (/v1/ocr/character).
+# RapidOCR (PaddleOCR models) - accurate on stylized game fonts + multilingual,
+# pip-only (no system OCR binary, no torch). The `rapidocr` package supports
+# Python 3.13 (the legacy `rapidocr-onnxruntime` caps at <3.13) but does NOT pull
+# an inference engine, so onnxruntime is pinned explicitly. Needs libgl1/
+# libglib2.0-0 (Dockerfile); models are baked into the image at build time.
+rapidocr==3.8.4
+onnxruntime==1.26.0
 discord.py==2.4.0
 # discord.py imports the stdlib `audioop` module at import time (for voice, which
 # we don't use). Python 3.13 REMOVED audioop from the stdlib, so on the 3.13 bot

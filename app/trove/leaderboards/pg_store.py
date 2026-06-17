@@ -114,8 +114,8 @@ async def reset_all(*, drop_boards: bool = False) -> dict:
         estimates = await con.fetchval("SELECT count(*) FROM activity_estimate")
         async with con.transaction():
             await con.execute(
-                "TRUNCATE entry, player, activity_estimate, class_activity_estimate "
-                "RESTART IDENTITY"
+                "TRUNCATE entry, player, activity_estimate, activity_active, "
+                "class_activity_estimate RESTART IDENTITY"
             )
             boards = 0
             if drop_boards:
@@ -248,6 +248,51 @@ async def anchor_maps(anchor: int, board_uuids: list[int]) -> dict[int, dict[str
     for r in rows:
         out.setdefault(r["board_uuid"], {})[r["player_name"]] = r["score"]
     return out
+
+
+# ── per-window active-player set (the 24h/7d rollup source) ───────────────────
+
+async def record_active_window(window_end: int, names) -> None:
+    """Materialize one capture window's DISTINCT active players (lower-cased names).
+    Idempotent: replaces any existing rows for ``window_end`` (a re-ingest onto the
+    same anchor converges). Called once per capture by the warmer + the backfill."""
+    rows = sorted({n.lower() for n in names if n})
+    async with acquire() as con:
+        async with con.transaction():
+            await con.execute("DELETE FROM activity_active WHERE window_end = $1", window_end)
+            if rows:
+                await con.executemany(
+                    "INSERT INTO activity_active (window_end, player_lower) VALUES ($1, $2) "
+                    "ON CONFLICT DO NOTHING",
+                    [(window_end, n) for n in rows],
+                )
+
+
+async def count_active_since(early: int, late: int) -> int:
+    """Distinct active players across every materialized window in ``(early, late]``
+    - the true distinct UNION over the period, as a single indexed COUNT(DISTINCT).
+    ``early`` (the window-start anchor) is excluded; ``late`` is included."""
+    async with acquire() as con:
+        val = await con.fetchval(
+            "SELECT COUNT(DISTINCT player_lower) FROM activity_active "
+            "WHERE window_end > $1 AND window_end <= $2",
+            early, late,
+        )
+    return int(val or 0)
+
+
+async def prune_active_windows(cutoff: int) -> int:
+    """Drop materialized windows older than ``cutoff`` (rolling retention). The 7d
+    rollup never reads further back, so anything older is dead weight."""
+    async with acquire() as con:
+        res = await con.execute("DELETE FROM activity_active WHERE window_end < $1", cutoff)
+    return int(res.split()[-1]) if res.startswith("DELETE") else 0
+
+
+async def delete_all_active_windows() -> int:
+    async with acquire() as con:
+        res = await con.execute("DELETE FROM activity_active")
+    return int(res.split()[-1]) if res.startswith("DELETE") else 0
 
 
 async def previous_day_anchor(uuid: int, anchor: int) -> int | None:

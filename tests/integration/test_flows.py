@@ -351,6 +351,27 @@ async def test_btt_changelog(client):
     assert empty["groups"] == [] and empty["rate_limited"] is False
 
 
+async def test_stats_coefficient_calculator(client):
+    # Tokenless stateless calculator: the in-game Coefficient from damage + crit.
+    r = await client.post("/v1/stats/coefficient", json={
+        "physical_damage": 799894, "magic_damage": 14300, "critical_damage": 3438.3,
+    })
+    assert r.status_code == 200, r.text
+    assert "X-RateLimit-Limit" in r.headers          # public -> per-IP budget headers
+    body = r.json()
+    assert body["coefficient"] == 28302649 and body["damage_used"] == "physical"
+
+    # Higher of physical/magic is used (mage build).
+    mage = (await client.post("/v1/stats/coefficient", json={
+        "physical_damage": 1000, "magic_damage": 500000, "critical_damage": 1000,
+    })).json()
+    assert mage["coefficient"] == 5500000 and mage["damage_used"] == "magic"
+
+    # Needs at least one damage stat -> 400.
+    bad = await client.post("/v1/stats/coefficient", json={"critical_damage": 100})
+    assert bad.status_code == 400
+
+
 async def test_site_routes(client):
     # The BTT showcase site lives in `site/` and is mounted at /,
     # /documentation, /commands, /leaderboards, /updates, /support, with
@@ -686,13 +707,18 @@ async def test_misc_tools(client):
     assert trove["time"] == "13:00:00"  # UTC - 11h
     assert len(conv["discord"]) == 7
 
-    # A gems-only token (bit 8) cannot use misc.
+    # software / timezones / time/* are PUBLIC (tokenless) - work with no token.
+    anon = await client.get("/v1/misc/software")
+    assert anon.status_code == 200 and anon.json()["count"] >= 5
+
+    # A scope-gated misc endpoint (news-history) still requires misc:read - a
+    # gems-only token (bit 8) is rejected.
     gem_tok = (
         await client.post(
             "/tokens", headers=h, json={"name": "g", "scopes": 8, "allowed_ips": ["1.2.3.4"]}
         )
     ).json()["token"]
-    denied = await client.get("/v1/misc/software", headers={"Authorization": f"Bearer {gem_tok}"})
+    denied = await client.get("/v1/misc/news-history", headers={"Authorization": f"Bearer {gem_tok}"})
     assert denied.status_code == 403 and denied.json()["error"]["code"] == "insufficient_scope"
 
 

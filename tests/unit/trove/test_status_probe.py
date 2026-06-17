@@ -103,6 +103,79 @@ async def test_empty_hello_falls_back_to_connect_only():
     assert res["probe"] == "tcp"
 
 
+def test_random_opener_is_well_formed_and_fresh():
+    """The opener is a 5-byte frame header + 32 random bytes, regenerated each call
+    (the real client uses a fresh per-connection ephemeral key, proven via Frida)."""
+    a = status._random_opener()
+    b = status._random_opener()
+    assert len(a) == 37 and a[:5] == b"\x20\x00\x00\x00\x00"
+    assert len(b) == 37 and b[:5] == b"\x20\x00\x00\x00\x00"
+    assert a != b  # fresh random body each time
+
+
+async def test_random_opener_holds_is_online_and_sends_fresh_37b():
+    """random_opener mode: send a fresh well-formed opener; a holding server (live)
+    reads online, and the bytes on the wire are a 37-byte 0x20-framed opener -
+    never the (stale-prone) captured hex."""
+    received = []
+
+    async def handler(reader, writer):
+        received.append(await reader.read(64))
+        try:
+            await asyncio.sleep(5)            # hold open => live
+        except asyncio.CancelledError:
+            pass
+
+    server, port = await _serve(handler)
+    async with server:
+        res = await status._probe_game(
+            "127.0.0.1", port, deep=True, hello_hex="deadbeef",  # content ignored
+            hold_seconds=0.3, random_opener=True,
+        )
+    assert res["online"] is True
+    assert res["probe"] == "glsserver"
+    assert res["opener"] == "random"
+    assert len(received) == 1
+    assert received[0][:5] == b"\x20\x00\x00\x00\x00" and len(received[0]) == 37
+    assert received[0].hex() != "deadbeef"   # the hex content was NOT replayed
+
+
+async def test_random_opener_dropped_is_offline():
+    """A maintenance server (near-empty reply then FIN) still reads down under the
+    random opener."""
+    async def handler(reader, writer):
+        await reader.read(64)
+        writer.write(b"\x10\x00\x00\x00")
+        await writer.drain()
+        writer.close()
+
+    server, port = await _serve(handler)
+    async with server:
+        res = await status._probe_game(
+            "127.0.0.1", port, deep=True, hello_hex="20", hold_seconds=0.5,
+            random_opener=True,
+        )
+    assert res["online"] is False
+    assert res["error"] == "glsserver_dropped"
+
+
+async def test_random_opener_empty_flag_is_connect_only():
+    """An empty hello_hex disables the deep probe for that env (the PTS convention),
+    even in random mode → connect-only."""
+    async def handler(reader, writer):
+        await reader.read(64)
+        writer.close()
+
+    server, port = await _serve(handler)
+    async with server:
+        res = await status._probe_game(
+            "127.0.0.1", port, deep=True, hello_hex="", hold_seconds=0.3,
+            random_opener=True,
+        )
+    assert res["online"] is True
+    assert res["probe"] == "tcp"
+
+
 def test_verdict_is_binary_online_or_down():
     """No 'maintenance' state: online only when auth AND game are up, else down."""
     from app.trove.status import _verdict

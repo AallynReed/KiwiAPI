@@ -48,12 +48,12 @@ if [ ! -f .env ]; then
   echo "WARNING: no .env found - using compose defaults (insecure SECRET_KEY, no admin, no email)." >&2
 fi
 
-# Update code from git if this is a checkout (skip with SKIP_GIT=1).
-if [ -d .git ] && [ "${SKIP_GIT:-0}" != "1" ]; then
-  # Fresh server / root running a repo checked out by another user: git refuses
-  # with "dubious ownership". Mark it safe (idempotent) so the pull works.
+# NOTE: deploy is Syncthing-based - the source is already synced to this host, so
+# we build straight from the local tree and do NOT touch git. (Set FETCH_GIT=1 to
+# opt back into a 'git pull' if you ever run this on a plain git checkout.)
+if [ -d .git ] && [ "${FETCH_GIT:-0}" = "1" ]; then
   git config --global --add safe.directory "$(pwd)" 2>/dev/null || true
-  echo ">> git pull"
+  echo ">> git pull (FETCH_GIT=1)"
   git pull --ff-only || echo "   (git pull skipped/failed; continuing with local code)"
 fi
 

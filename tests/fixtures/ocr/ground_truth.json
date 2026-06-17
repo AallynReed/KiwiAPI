@@ -1,0 +1,62 @@
+{
+  "_comment": "Hand-labeled ground truth for scripts/ocr_eval.py. Keyed by screenshot FILENAME; the images themselves are NOT committed (they contain player usernames + are large), only the anonymized stat values. `complete: true` = the listed stats are ALL stats visible on that sheet (extras the OCR finds count as false positives); `false` = a partial label (e.g. an equipment view showing only Power Rank), where extras aren't penalised. Percent stats are stored as the displayed number without the % sign. Extend this by adding entries for more screenshots; re-run `python scripts/ocr_eval.py --images-dir <folder>` (needs the OCR engine, i.e. the deployed image).",
+  "2026-06-15_1515969672875479101_2026-06-15_154100.png": {
+    "complete": true,
+    "note": "Clean English full stat sheet (Shadow Hunter). Two-column VALUE-after / LABEL-after mix. Values verified against a 5x-upscaled crop (the 412px source was too small to eyeball reliably).",
+    "stats": {
+      "physical_damage": 799894,
+      "magic_damage": 14300,
+      "maximum_health": 3239060,
+      "maximum_energy": 127,
+      "health_regen": 4237,
+      "energy_regen": 177,
+      "stability": 145,
+      "movement_speed": 132,
+      "attack_speed": 204.0,
+      "jump": 74,
+      "critical_hit": 114.8,
+      "critical_damage": 3438.3,
+      "superstition": 0,
+      "magic_find": 14253,
+      "lasermancy": 450,
+      "flask_capacity": 28,
+      "experience_gain": 221,
+      "battle_factor": 6,
+      "light": 13185,
+      "chaos_factor": 11,
+      "coefficient": 28302649,
+      "power_rank": 50033
+    }
+  },
+  "2026-05-14_1504582718074257488_Capture_decran_2026-05-14_223315.png": {
+    "complete": false,
+    "note": "English game on a French OS, VALUE-before-LABEL layout, with header junk (Total MR / Geode MR) that must be ignored. Values verified against upscaled crops; the initial hand-transcription from the 390px thumbnail had 5 errors (physical_damage, critical_hit, coefficient, energy_regen[was Stability's value], attack_speed) - all of which the OCR had read correctly.",
+    "stats": {
+      "physical_damage": 1285094,
+      "magic_damage": 10440,
+      "maximum_health": 4681163,
+      "maximum_energy": 0,
+      "health_regen": 10356,
+      "energy_regen": 0,
+      "stability": 213,
+      "movement_speed": 115,
+      "attack_speed": 283.0,
+      "jump": 74,
+      "critical_hit": 118.0,
+      "critical_damage": 4582.5,
+      "lasermancy": 650,
+      "flask_capacity": 23,
+      "light": 13502,
+      "chaos_factor": 7,
+      "coefficient": 60174526,
+      "power_rank": 54227
+    }
+  },
+  "2026-05-11_1503525595345326150_Capture_decran_2026-05-12_003110.png": {
+    "complete": false,
+    "note": "French client EQUIPMENT view (not the stat sheet) - only Power Rank is shown (Rg de pouvoir). Tests the French power_rank synonym + that no other label is hallucinated.",
+    "stats": {
+      "power_rank": 50613
+    }
+  }
+}

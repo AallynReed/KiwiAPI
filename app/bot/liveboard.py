@@ -12,6 +12,7 @@ import logging
 
 import discord
 
+from app import i18n
 from app.bot.models import GuildConfig
 from app.core.utils import utcnow
 from app.discord.embeds import live_board_embed
@@ -72,7 +73,10 @@ async def _sync_board(bot: discord.Client, cfg: GuildConfig, embed: discord.Embe
 
 
 async def refresh_boards(bot: discord.Client) -> None:
-    """Update every enabled live board to the current state (build the embed once)."""
+    """Update every enabled live board to the current state. The board is an image
+    (localized server-side) wrapped in a thin embed; build ONE embed per distinct
+    guild language and reuse it, so a French server's board points at the French
+    render (and stays French on every edit), not English."""
     async with _lock:
         configs = await GuildConfig.find_all().to_list()
         boards = [
@@ -81,12 +85,17 @@ async def refresh_boards(bot: discord.Client) -> None:
         ]
         if not boards:
             return
-        try:
-            embed = discord.Embed.from_dict(await live_board_embed())
-        except Exception:
-            logger.warning("liveboard: embed build failed", exc_info=True)
-            return
+        embeds_by_lang: dict[str, discord.Embed] = {}
         for cfg in boards:
-            if await _sync_board(bot, cfg, embed):
+            lang = i18n.normalize_lang(getattr(cfg, "language", None))
+            if lang not in embeds_by_lang:
+                i18n.set_current_language(lang)   # live_board_embed reads it for the &lang image URL
+                try:
+                    embeds_by_lang[lang] = discord.Embed.from_dict(await live_board_embed())
+                except Exception:
+                    logger.warning("liveboard: embed build failed (%s)", lang, exc_info=True)
+                    continue
+            embed = embeds_by_lang.get(lang)
+            if embed is not None and await _sync_board(bot, cfg, embed):
                 cfg.updated_at = utcnow()
                 await cfg.save()

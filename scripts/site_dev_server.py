@@ -208,10 +208,9 @@ class Handler(SimpleHTTPRequestHandler):
             import math
             qs = parse_qs(url.query)
             period = (qs.get("period", ["7d"])[0]).lower()
+            # /activity only exposes up to 1 month (longer ranges removed).
             spec = {
                 "1d":  (3600, 24), "7d": (3 * 3600, 56), "1m": (86400, 30),
-                "3m":  (86400, 90), "6m": (2 * 86400, 90), "1y": (7 * 86400, 52),
-                "all": (7 * 86400, 80),
             }.get(period, (3 * 3600, 56))
             bucket, count = spec
             end = STUB_ANCHOR

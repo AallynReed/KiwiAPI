@@ -7,14 +7,25 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# DejaVu TTF for the server-rendered OG card (Pillow ships no bundled font).
+# Fonts for the server-rendered images (Pillow ships no bundled font): DejaVu for
+# Latin + Cyrillic, Noto Sans CJK for Japanese/Chinese (localized board/announcement
+# banners). Without the CJK font, JA/ZH glyphs render as tofu boxes.
+# Fonts (above) plus the OpenCV runtime libs RapidOCR/onnxruntime need for the
+# self-hosted character-stat OCR (libGL + glib); without them the import fails with
+# "libGL.so.1: cannot open shared object file".
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends fonts-dejavu-core \
+    && apt-get install -y --no-install-recommends \
+        fonts-dejavu-core fonts-noto-cjk libgl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies first so they cache independently of source changes.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Bake the RapidOCR models into the image so the OCR endpoint needs no network
+# (and no writable cache) at runtime - otherwise the first /v1/ocr/character call
+# would download ~15 MB of ONNX models. Constructing RapidOCR() fetches them.
+RUN python -c "from rapidocr import RapidOCR; RapidOCR()"
 
 COPY app ./app
 

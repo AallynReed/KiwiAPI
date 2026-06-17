@@ -67,6 +67,7 @@ from app.trove.router import (
     market_router,
     misc_router,
     mods_router,
+    ocr_router,
     rotations_router,
     stats_router,
     updates_router,
@@ -158,6 +159,14 @@ branch on it rather than the human-readable `message`.
 
 **Rate limits.** Responses carry `X-RateLimit-Limit`, `X-RateLimit-Remaining`
 and `X-RateLimit-Reset`; a `429` also includes `Retry-After`.
+
+**Authorization.** Most endpoints need an API token
+(`Authorization: Bearer kiwi_…`). Endpoints marked 🔓 are **tokenless** - they work
+with no token at all, but anonymous callers share a tighter per-IP rate limit;
+send a token carrying the endpoint's scope to earn the higher per-token limit (and
+usage accounting). Tokenless endpoints show their auth as *optional* under
+**Authorizations**. Endpoints marked ⭐ are **master-only** - they require a
+superuser-owned token.
 """
 
 
@@ -245,6 +254,7 @@ app.include_router(market_router)
 app.include_router(activity_router)
 app.include_router(class_activity_router)
 app.include_router(events_router)  # live SSE event stream (events:read)
+app.include_router(ocr_router)     # self-hosted character-stat OCR (ocr:read)
 
 # BetterTroveTools showcase site (trove.aallyn.net). The site router owns
 # "/", "/documentation", "/commands", "/leaderboards", "/updates",
@@ -257,6 +267,103 @@ if (_SITE_ROOT / "static").is_dir():
     app.mount("/static", StaticFiles(directory=str(_SITE_ROOT / "static")), name="site_static")
 if (_SITE_ROOT / "templates").is_dir():
     app.include_router(site_router)
+
+
+# ── OpenAPI: flag tokenless (🔓) + master-only (⭐) endpoints in the reference ──
+# In the raw spec, a ``public_scope`` (tokenless) endpoint references the APIToken
+# scheme exactly like a token-required one, and a master-only endpoint looks like
+# any other token endpoint - so the Redoc reference can't tell them apart. This
+# post-processes the generated schema to mark them in the summary (shows in the
+# sidebar + header) + a description note; tokenless ops also get optional auth so
+# "Authorizations" renders the token as not-required.
+_TOKENLESS_NOTE = (
+    "\n\n> 🔓 **No token required.** This endpoint works without an API token - "
+    "anonymous callers are allowed but share a tighter per-IP rate limit; send a "
+    "token carrying this scope for the higher per-token limit (and usage accounting)."
+)
+_TOKENLESS_MARKER = "🔓 **No token required"   # distinct sentinel (prose already says "Tokenless")
+_MASTER_NOTE = (
+    "\n\n> ⭐ **Master only.** Requires a superuser-owned API token (or a master "
+    "session in the dev portal); a normal token gets 403."
+)
+_MASTER_MARKER = "⭐ **Master only"
+
+_HTTP_METHODS = ("get", "post", "put", "patch", "delete", "options", "head", "trace")
+
+
+def _ops_with_marker(attr: str) -> set[tuple[str, str]]:
+    """``{(path, http_method_lower)}`` for every in-schema operation whose dependant
+    tree contains a callable tagged with ``attr`` (e.g. ``_tokenless_scope`` set by
+    ``public_scope`` / ``_master_only`` set on ``require_master_ingest``)."""
+    from fastapi.routing import APIRoute
+
+    def _walk(dep):
+        yield dep
+        for sub in dep.dependencies:
+            yield from _walk(sub)
+
+    out: set[tuple[str, str]] = set()
+    for route in app.routes:
+        if not isinstance(route, APIRoute) or not route.include_in_schema:
+            continue
+        if any(getattr(d.call, attr, None) is not None for d in _walk(route.dependant)):
+            for method in (route.methods or set()):
+                out.add((route.path_format, method.lower()))
+    return out
+
+
+def custom_openapi() -> dict:
+    if app.openapi_schema:
+        return app.openapi_schema
+    from fastapi.openapi.utils import get_openapi
+
+    schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        openapi_version=app.openapi_version,
+        description=app.description,
+        routes=app.routes,
+        tags=app.openapi_tags,
+        servers=app.servers,
+    )
+    tokenless = _ops_with_marker("_tokenless_scope")
+    master = _ops_with_marker("_master_only")
+    for path, methods in schema.get("paths", {}).items():
+        for method, op in methods.items():
+            if method not in _HTTP_METHODS or not isinstance(op, dict):
+                continue
+            # Tokenless: public_scope (marker) OR an endpoint flagged x-tokenless
+            # (fully-open routes with no scope dependency, e.g. /v1/misc/feedback).
+            if (path, method) in tokenless or op.get("x-tokenless") is True:
+                summary = op.get("summary") or ""
+                if not summary.startswith("🔓"):
+                    op["summary"] = f"🔓 {summary}".rstrip()
+                if _TOKENLESS_MARKER not in (op.get("description") or ""):
+                    op["description"] = (op.get("description") or "") + _TOKENLESS_NOTE
+                # Prepend the empty requirement so the token reads as OPTIONAL
+                # (FastAPI lists the scheme even when auto_error=False).
+                sec = op.get("security")
+                if isinstance(sec, list) and {} not in sec:
+                    op["security"] = [{}, *sec]
+            # Master-only: superuser token required.
+            elif (path, method) in master:
+                summary = op.get("summary") or ""
+                if not summary.startswith("⭐"):
+                    op["summary"] = f"⭐ {summary}".rstrip()
+                if _MASTER_MARKER not in (op.get("description") or ""):
+                    op["description"] = (op.get("description") or "") + _MASTER_NOTE
+    # Explain the 🔓 / ⭐ conventions on the APIToken scheme itself (Redoc auth UI).
+    scheme = schema.get("components", {}).get("securitySchemes", {}).get("APIToken")
+    if scheme and "🔓" not in (scheme.get("description") or ""):
+        scheme["description"] = ((scheme.get("description") or "").rstrip()
+                                 + " Endpoints marked 🔓 are tokenless (callable "
+                                   "without this token at a tighter per-IP rate limit); "
+                                   "endpoints marked ⭐ require a superuser token.").strip()
+    app.openapi_schema = schema
+    return schema
+
+
+app.openapi = custom_openapi
 
 
 # Fallback API-card landing for `/api-info`, served at api.aallyn.net for

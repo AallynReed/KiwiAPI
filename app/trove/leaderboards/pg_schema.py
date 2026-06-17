@@ -70,6 +70,18 @@ CREATE TABLE IF NOT EXISTS activity_estimate (
     computed_at     BIGINT NOT NULL
 );
 
+-- Per-window distinct ACTIVE players (the names that strictly increased a score
+-- this capture, scores above the cap excluded). The 24h / 7d "active players"
+-- rollups are COUNT(DISTINCT player_lower) over the windows in range - the true
+-- distinct union, materialized incrementally (one small write per capture) so the
+-- rollups are an indexed count, never a re-scan of days of entries. Rolling ~8-day
+-- retention (pruned by the warmer); fully derived from the captures.
+CREATE TABLE IF NOT EXISTS activity_active (
+    window_end   BIGINT NOT NULL,
+    player_lower TEXT   NOT NULL,
+    PRIMARY KEY (window_end, player_lower)
+);
+
 CREATE TABLE IF NOT EXISTS class_activity_estimate (
     class_index    INTEGER NOT NULL,
     window_end     BIGINT  NOT NULL,

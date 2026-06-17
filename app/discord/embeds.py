@@ -13,6 +13,7 @@ from __future__ import annotations
 import time
 from datetime import datetime, timezone
 
+from app.i18n import current_language, t
 from app.trove.btt_releases import PLATFORMS, get_changelog, latest_per_platform
 from app.trove.captures import get_current_challenge
 from app.trove.chaos import get_chaos_chest
@@ -80,7 +81,7 @@ async def status_embed() -> dict:
     for key, label in _REGIONS:
         env = envs.get(key) or {}
         st = env.get("status", "unknown")
-        value = f"{_dot(st)} {_ENV_LABEL.get(st, 'Unknown')}"
+        value = f"{_dot(st)} {t(_ENV_LABEL.get(st, 'Unknown'))}"
         latency = (env.get("game") or {}).get("latency_ms")
         if st == "online" and isinstance(latency, (int, float)):
             value += f" · {round(latency)} ms"
@@ -88,22 +89,22 @@ async def status_embed() -> dict:
 
     auth = snap.get("auth")
     if auth is None:
-        auth_value = f"{_dot('unknown')} Checking…"
+        auth_value = f"{_dot('unknown')} {t('Checking…')}"
     elif auth.get("online"):
-        auth_value = f"{_dot('online')} Reachable"
+        auth_value = f"{_dot('online')} {t('Reachable')}"
     else:
-        auth_value = f"{_dot('down')} Unreachable"
-    fields.append({"name": "Account auth", "value": auth_value, "inline": False})
+        auth_value = f"{_dot('down')} {t('Unreachable')}"
+    fields.append({"name": t("Account auth"), "value": auth_value, "inline": False})
 
     # "down" overall → "Partial outage" when some Live region is still up.
     if overall == "down" and any(
         (envs.get(k) or {}).get("status") == "online" for k in ("eu", "us")
     ):
-        overall_text = "Partial outage"
+        overall_text = t("Partial outage")
     else:
-        overall_text = _OVERALL.get(overall, _OVERALL["unknown"])
+        overall_text = t(_OVERALL.get(overall, _OVERALL["unknown"]))
     embed = {
-        "title": "Trove server status",
+        "title": t("Trove server status"),
         "url": f"{SITE}/status",
         "color": _COLOR.get(overall, _COLOR["unknown"]),
         "description": f"{_dot(overall)}  **{overall_text}**",
@@ -132,30 +133,30 @@ async def activity_embed(period: str = "7d") -> dict:
     """Player-activity headline numbers + the rendered trend chart for ``period``."""
     if period not in ACTIVITY_LABELS:
         period = "7d"
-    label = ACTIVITY_LABELS[period]
+    label = t(ACTIVITY_LABELS[period])
     live = await estimate_active_players()
     series = await activity_series(period)
 
     fields = [
-        {"name": "Active now", "value": _num(live.get("estimate")), "inline": True},
-        {"name": "Last 24h", "value": _num(live.get("estimate_24h")), "inline": True},
-        {"name": "Last 7d", "value": _num(live.get("estimate_7d")), "inline": True},
+        {"name": t("Active now"), "value": _num(live.get("estimate")), "inline": True},
+        {"name": t("Last 24h"), "value": _num(live.get("estimate_24h")), "inline": True},
+        {"name": t("Last 7d"), "value": _num(live.get("estimate_7d")), "inline": True},
     ]
     peak = series.get("peak") or {}
     if isinstance(peak.get("active"), (int, float)):
         when = f" ({_ts(peak['t'], 'd')})" if peak.get("t") else ""
-        fields.append({"name": f"Peak · {label.lower()}", "value": f"{round(peak['active']):,}/h{when}", "inline": True})
+        fields.append({"name": t("Peak · {label}", label=label), "value": f"{round(peak['active']):,}/h{when}", "inline": True})
     if isinstance(series.get("average"), (int, float)):
-        fields.append({"name": "Average", "value": f"{round(series['average']):,}/h", "inline": True})
+        fields.append({"name": t("Average"), "value": f"{round(series['average']):,}/h", "inline": True})
 
     # Cache-bust the chart image by the data's compute time so Discord refreshes
     # it when new captures land (it caches embed images by URL otherwise).
     cb = live.get("computed_at") or series.get("window_end") or 0
     return {
-        "title": f"Player activity — {label}",
+        "title": t("Player activity — {label}", label=label),
         "url": f"{SITE}/activity?period={period}",
         "color": 0x4CC9F0,
-        "description": "Estimated distinct active players, from hourly leaderboard captures.",
+        "description": t("Estimated distinct active players, from hourly leaderboard captures."),
         "fields": fields,
         "image": {"url": f"{SITE}/activity/og.png?period={period}&v={cb}"},
         "footer": {"text": "trove.aallyn.net/activity · Trove server time (UTC−11)"},
@@ -169,17 +170,17 @@ async def chaos_embed() -> dict:
     c = await get_chaos_chest()
     item = c.get("item") or {}
     name = item.get("name")
-    desc = (f"This week's featured item: **{name}**" if name
-            else "No item has been relayed for this week's chest yet.")
+    desc = (t("This week's featured item: **{name}**", name=name) if name
+            else t("No item has been relayed for this week's chest yet."))
     return {
-        "title": "🎁 Chaos Chest",
+        "title": t("🎁 Chaos Chest"),
         "color": 0xB794F6,
         "description": desc,
         "fields": [
-            {"name": "Rotates", "value": f"{_ts(c['ends_at'], 'R')}\n{_ts(c['ends_at'], 'f')}", "inline": True},
-            {"name": "This week", "value": f"{_ts(c['starts_at'], 'd')} → {_ts(c['ends_at'], 'd')}", "inline": True},
+            {"name": t("Rotates"), "value": f"{_ts(c['ends_at'], 'R')}\n{_ts(c['ends_at'], 'f')}", "inline": True},
+            {"name": t("This week"), "value": f"{_ts(c['starts_at'], 'd')} → {_ts(c['ends_at'], 'd')}", "inline": True},
         ],
-        "footer": {"text": "Trove Chaos Chest · rotates weekly (Tue 11:00 UTC)"},
+        "footer": {"text": t("Trove Chaos Chest · rotates weekly (Tue 11:00 UTC)")},
     }
 
 
@@ -191,15 +192,15 @@ def servertime_embed() -> dict:
     now = s["now_unix"]
     server_str = trove_now().strftime("%A, %d %b %Y · %H:%M")
     return {
-        "title": "🕙 Trove server time",
+        "title": t("🕙 Trove server time"),
         "color": 0x5EC6FF,
-        "description": f"Trove runs on **UTC−11**. Right now it's **{server_str}** in server time.",
+        "description": t("Trove runs on **UTC−11**. Right now it's **{server}** in server time.", server=server_str),
         "fields": [
-            {"name": "Your local time", "value": f"{_ts(now, 'F')}\n{_ts(now, 'R')}", "inline": False},
-            {"name": "Daily reset", "value": f"{_ts(s['daily_reset_at'], 'R')}\n{_ts(s['daily_reset_at'], 'f')}", "inline": True},
-            {"name": "Weekly reset", "value": f"{_ts(s['weekly_reset_at'], 'R')}\n{_ts(s['weekly_reset_at'], 'f')}", "inline": True},
+            {"name": t("Your local time"), "value": f"{_ts(now, 'F')}\n{_ts(now, 'R')}", "inline": False},
+            {"name": t("Daily reset"), "value": f"{_ts(s['daily_reset_at'], 'R')}\n{_ts(s['daily_reset_at'], 'f')}", "inline": True},
+            {"name": t("Weekly reset"), "value": f"{_ts(s['weekly_reset_at'], 'R')}\n{_ts(s['weekly_reset_at'], 'f')}", "inline": True},
         ],
-        "footer": {"text": "Daily reset 11:00 UTC · weekly Monday 11:00 UTC"},
+        "footer": {"text": t("Daily reset 11:00 UTC · weekly Monday 11:00 UTC")},
     }
 
 
@@ -216,7 +217,7 @@ def bonuses_embed() -> dict:
 
     daily_val = _bullets(d.get("normal_buffs"))
     if d.get("premium_buffs"):
-        daily_val += f"\n*Patron:* {', '.join(d['premium_buffs'])}"
+        daily_val += "\n" + t("*Patron:* {buffs}", buffs=', '.join(d['premium_buffs']))
 
     color = 0xFFB86B
     try:
@@ -226,15 +227,16 @@ def bonuses_embed() -> dict:
         pass
 
     embed = {
-        "title": "✨ Trove bonuses",
+        "title": t("✨ Trove bonuses"),
         "color": color,
         "fields": [
-            {"name": f"{d.get('emoji', '📅')} Daily — {d.get('name', '?')} ({d.get('weekday', '')})",
+            {"name": t("{emoji} Daily — {name} ({weekday})",
+                       emoji=d.get('emoji', '📅'), name=d.get('name', '?'), weekday=d.get('weekday', '')),
              "value": daily_val, "inline": False},
-            {"name": f"{w.get('emoji', '🗓️')} Weekly — {w.get('name', '?')}",
+            {"name": t("{emoji} Weekly — {name}", emoji=w.get('emoji', '🗓️'), name=w.get('name', '?')),
              "value": _bullets(w.get("buffs")), "inline": False},
         ],
-        "footer": {"text": "Daily resets 11:00 UTC · weekly Monday"},
+        "footer": {"text": t("Daily resets 11:00 UTC · weekly Monday")},
     }
     if d.get("icon"):
         embed["thumbnail"] = {"url": d["icon"]}
@@ -251,17 +253,19 @@ async def challenge_embed() -> dict:
         cur_val = f"**{cur['name']}**"
         if cur.get("type"):
             cur_val += f" · {cur['type'].title()}"
-        cur_val += (f"\nEnds {_ts(cur['ends_at'], 'R')}" if cur.get("active")
-                    else f"\nNext window {_ts(cur['starts_at'], 'R')}")
+        cur_val += ("\n" + t("Ends {when}", when=_ts(cur['ends_at'], 'R')) if cur.get("active")
+                    else "\n" + t("Next window {when}", when=_ts(cur['starts_at'], 'R')))
     else:
-        cur_val = f"No challenge captured for this window.\nWindow {_ts(cur['starts_at'], 't')} → {_ts(cur['ends_at'], 't')}"
+        cur_val = (t("No challenge captured for this window.") + "\n"
+                   + t("Window {start} → {end}",
+                       start=_ts(cur['starts_at'], 't'), end=_ts(cur['ends_at'], 't')))
 
     return {
-        "title": "⚔️ Hourly challenge",
+        "title": t("⚔️ Hourly challenge"),
         "color": 0xFF9800,
-        "description": "Trove's hourly challenge - 20 minutes at the top of each hour.",
-        "fields": [{"name": "Current", "value": cur_val, "inline": False}],
-        "footer": {"text": "Times shown in your local zone"},
+        "description": t("Trove's hourly challenge - 20 minutes at the top of each hour."),
+        "fields": [{"name": t("Current"), "value": cur_val, "inline": False}],
+        "footer": {"text": t("Times shown in your local zone")},
     }
 
 
@@ -279,18 +283,18 @@ def longshade_embed() -> dict:
     nxt = upcoming[0] if upcoming else None
 
     fields = [
-        {"name": "Current biomes", "value": _biomes_str(cur), "inline": True},
-        {"name": "Rotates", "value": _ts(cur.get("ends_at", 0), "R"), "inline": True},
+        {"name": t("Current biomes"), "value": _biomes_str(cur), "inline": True},
+        {"name": t("Rotates"), "value": _ts(cur.get("ends_at", 0), "R"), "inline": True},
     ]
     if nxt:
-        fields.append({"name": f"Up next ({_ts(nxt['starts_at'], 't')})", "value": _biomes_str(nxt), "inline": False})
+        fields.append({"name": t("Up next ({when})", when=_ts(nxt['starts_at'], 't')), "value": _biomes_str(nxt), "inline": False})
 
     return {
-        "title": "🌑 Depth 15 biomes",
+        "title": t("🌑 Depth 15 biomes"),
         "color": 0x9B8AFB,
-        "description": "Current Depth-15 adventure biome rotation (long shade).",
+        "description": t("Current Depth-15 adventure biome rotation (long shade)."),
         "fields": fields,
-        "footer": {"text": "Rotates every 3 hours · Trove server time (UTC−11)"},
+        "footer": {"text": t("Rotates every 3 hours · Trove server time (UTC−11)")},
     }
 
 
@@ -301,7 +305,7 @@ def _gw_section(items, fmt, empty: str, cap: int = 5) -> str:
         return empty
     out = "\n\n".join(fmt(g) for g in items[:cap])
     if len(items) > cap:
-        out += f"\n…and {len(items) - cap} more"
+        out += "\n" + t("…and {n} more", n=len(items) - cap)
     return out
 
 
@@ -314,26 +318,28 @@ async def giveaways_embed() -> dict:
     ended = await service.list_ended(days=7)
 
     def fmt_open(g):
-        return f"**{g.title}** — {g.prize_name}\nEnds {_ts(_unix(g.ends_at), 'R')} · {g.entry_count} entered"
+        return f"**{g.title}** — {g.prize_name}\n" + t("Ends {when} · {n} entered",
+                                                       when=_ts(_unix(g.ends_at), 'R'), n=g.entry_count)
 
     def fmt_upcoming(g):
-        return f"**{g.title}** — {g.prize_name}\nStarts {_ts(_unix(g.starts_at), 'R')}"
+        return f"**{g.title}** — {g.prize_name}\n" + t("Starts {when}", when=_ts(_unix(g.starts_at), 'R'))
 
     def fmt_ended(g):
-        won = f" · won by {g.winner_username}" if g.winner_username else ""
-        return f"**{g.title}** — {g.prize_name}\nEnded {_ts(_unix(g.ends_at), 'R')}{won}"
+        won = (" · " + t("won by {name}", name=g.winner_username)) if g.winner_username else ""
+        return (f"**{g.title}** — {g.prize_name}\n"
+                + t("Ended {when}", when=_ts(_unix(g.ends_at), 'R')) + won)
 
     return {
-        "title": "🎉 Giveaways",
+        "title": t("🎉 Giveaways"),
         "url": f"{SITE}/giveaways",
         "color": 0xFF5C80,
         "fields": [
-            {"name": f"🟢 Open now ({len(ongoing)})",
-             "value": _gw_section(ongoing, fmt_open, "None right now."), "inline": False},
-            {"name": f"🔜 Upcoming ({len(upcoming)})",
-             "value": _gw_section(upcoming, fmt_upcoming, "Nothing scheduled."), "inline": False},
-            {"name": f"🏁 Ended · last 7 days ({len(ended)})",
-             "value": _gw_section(ended, fmt_ended, "None in the last 7 days."), "inline": False},
+            {"name": t("🟢 Open now ({n})", n=len(ongoing)),
+             "value": _gw_section(ongoing, fmt_open, t("None right now.")), "inline": False},
+            {"name": t("🔜 Upcoming ({n})", n=len(upcoming)),
+             "value": _gw_section(upcoming, fmt_upcoming, t("Nothing scheduled.")), "inline": False},
+            {"name": t("🏁 Ended · last 7 days ({n})", n=len(ended)),
+             "value": _gw_section(ended, fmt_ended, t("None in the last 7 days.")), "inline": False},
         ],
         "footer": {"text": "trove.aallyn.net/giveaways"},
     }
@@ -345,21 +351,23 @@ def corruxion_embed() -> dict:
     """The Corruxion merchant: whether it's here now, or when it next arrives."""
     c = corruxion()
     if c["active"]:
-        desc = f"**Corruxion is here!**\nLeaves {_ts(c['ends_at'], 'R')} · {_ts(c['ends_at'], 'f')}"
+        desc = (t("**Corruxion is here!**") + "\n"
+                + t("Leaves {when}", when=_ts(c['ends_at'], 'R')) + f" · {_ts(c['ends_at'], 'f')}")
     else:
-        desc = (f"Corruxion is away.\nArrives {_ts(c['starts_at'], 'R')} · {_ts(c['starts_at'], 'f')}\n"
-                f"Stays until {_ts(c['ends_at'], 'f')}")
+        desc = (t("Corruxion is away.") + "\n"
+                + t("Arrives {when}", when=_ts(c['starts_at'], 'R')) + f" · {_ts(c['starts_at'], 'f')}\n"
+                + t("Stays until {when}", when=_ts(c['ends_at'], 'f')))
     fields = []
     upcoming = (c.get("schedule") or [])[1:5]
     if upcoming:
         lines = [f"{_ts(w['starts_at'], 'd')} → {_ts(w['ends_at'], 'd')}" for w in upcoming]
-        fields.append({"name": "Upcoming visits", "value": "\n".join(lines), "inline": False})
+        fields.append({"name": t("Upcoming visits"), "value": "\n".join(lines), "inline": False})
     return {
-        "title": "🐲 Corruxion",
+        "title": t("🐲 Corruxion"),
         "color": 0x9B5DE5,
         "description": desc,
         "fields": fields,
-        "footer": {"text": "Corruxion merchant · 14-day cycle, 3-day visits"},
+        "footer": {"text": t("Corruxion merchant · 14-day cycle, 3-day visits")},
     }
 
 
@@ -369,24 +377,26 @@ def fluxion_embed() -> dict:
     """The Fluxion merchant: its current voting/selling stage, or the next one."""
     f = fluxion()
     if f["active"]:
-        desc = (f"**Fluxion is here** — currently in the **{f['state']}** stage.\n"
-                f"Leaves {_ts(f['ends_at'], 'R')} · {_ts(f['ends_at'], 'f')}")
+        desc = (t("**Fluxion is here** — currently in the **{state}** stage.", state=f['state']) + "\n"
+                + t("Leaves {when}", when=_ts(f['ends_at'], 'R')) + f" · {_ts(f['ends_at'], 'f')}")
     else:
         nxt = (f.get("schedule") or [{}])[0]
         stage = nxt.get("state", "?")
-        desc = (f"Fluxion is away.\nNext up: the **{stage}** stage, {_ts(f['starts_at'], 'R')} · "
-                f"{_ts(f['starts_at'], 'f')}\nRuns until {_ts(f['ends_at'], 'f')}")
+        desc = (t("Fluxion is away.") + "\n"
+                + t("Next up: the **{stage}** stage, {when}", stage=stage, when=_ts(f['starts_at'], 'R'))
+                + f" · {_ts(f['starts_at'], 'f')}\n"
+                + t("Runs until {when}", when=_ts(f['ends_at'], 'f')))
     fields = []
     upcoming = (f.get("schedule") or [])[1:5]
     if upcoming:
         lines = [f"{_ts(w['starts_at'], 'd')} → {_ts(w['ends_at'], 'd')} · {w['state']}" for w in upcoming]
-        fields.append({"name": "Upcoming stages", "value": "\n".join(lines), "inline": False})
+        fields.append({"name": t("Upcoming stages"), "value": "\n".join(lines), "inline": False})
     return {
-        "title": "💧 Fluxion",
+        "title": t("💧 Fluxion"),
         "color": 0x4CC9F0,
         "description": desc,
         "fields": fields,
-        "footer": {"text": "Fluxion merchant · alternates voting / selling"},
+        "footer": {"text": t("Fluxion merchant · alternates voting / selling")},
     }
 
 
@@ -397,26 +407,26 @@ def stampy_embed() -> dict:
     s = stampy()
     cur = s.get("current")
     if not cur:
-        return {"title": "🐘 Stampy", "color": 0xFFB86B,
-                "description": "No upcoming Stampy event scheduled.",
-                "footer": {"text": "Stampy event · weekly, 48-hour window"}}
+        return {"title": t("🐘 Stampy"), "color": 0xFFB86B,
+                "description": t("No upcoming Stampy event scheduled."),
+                "footer": {"text": t("Stampy event · weekly, 48-hour window")}}
     now = int(time.time())
     biome = (cur.get("biomes") or [{}])[0]
     bname = biome.get("final_name") or biome.get("name") or "?"
     if cur["starts_at"] <= now < cur["ends_at"]:
-        state = f"**Active now** — ends {_ts(cur['ends_at'], 'R')}"
+        state = t("**Active now** — ends {when}", when=_ts(cur['ends_at'], 'R'))
     else:
-        state = f"Starts {_ts(cur['starts_at'], 'R')} · {_ts(cur['starts_at'], 'f')}"
+        state = t("Starts {when}", when=_ts(cur['starts_at'], 'R')) + f" · {_ts(cur['starts_at'], 'f')}"
     fields = [
-        {"name": "Biome", "value": bname, "inline": True},
-        {"name": "Window", "value": f"{_ts(cur['starts_at'], 'd')} → {_ts(cur['ends_at'], 'd')}", "inline": True},
+        {"name": t("Biome"), "value": bname, "inline": True},
+        {"name": t("Window"), "value": f"{_ts(cur['starts_at'], 'd')} → {_ts(cur['ends_at'], 'd')}", "inline": True},
     ]
     return {
-        "title": "🐘 Stampy",
+        "title": t("🐘 Stampy"),
         "color": 0xFFB86B,
         "description": state,
         "fields": fields,
-        "footer": {"text": "Stampy event · 48-hour window"},
+        "footer": {"text": t("Stampy event · 48-hour window")},
     }
 
 
@@ -429,17 +439,17 @@ def wild_mana_embed() -> dict:
     upcoming = w.get("upcoming") or []
     nxt = upcoming[0] if upcoming else None
     fields = [
-        {"name": "This week's biomes", "value": _biomes_str(cur), "inline": True},
-        {"name": "Rotates", "value": _ts(cur.get("ends_at", 0), "R"), "inline": True},
+        {"name": t("This week's biomes"), "value": _biomes_str(cur), "inline": True},
+        {"name": t("Rotates"), "value": _ts(cur.get("ends_at", 0), "R"), "inline": True},
     ]
     if nxt:
-        fields.append({"name": f"Next week ({_ts(nxt['starts_at'], 'd')})", "value": _biomes_str(nxt), "inline": False})
+        fields.append({"name": t("Next week ({when})", when=_ts(nxt['starts_at'], 'd')), "value": _biomes_str(nxt), "inline": False})
     return {
-        "title": "🌿 Wild Mana",
+        "title": t("🌿 Wild Mana"),
         "color": 0x46D39A,
-        "description": "Weekly Wild Mana biome rotation.",
+        "description": t("Weekly Wild Mana biome rotation."),
         "fields": fields,
-        "footer": {"text": "Rotates weekly · Trove server time (UTC−11)"},
+        "footer": {"text": t("Rotates weekly · Trove server time (UTC−11)")},
     }
 
 
@@ -449,20 +459,20 @@ async def trove_news_embed() -> dict:
     """The latest Trove news (relayed from the official feed)."""
     items = await latest_news(5)
     if not items:
-        return {"title": "📰 Trove news", "color": 0x5EC6FF,
-                "description": "No news cached yet — check back shortly."}
+        return {"title": t("📰 Trove news"), "color": 0x5EC6FF,
+                "description": t("No news cached yet — check back shortly.")}
     top = items[0]
     fields = []
     for n in items[1:5]:
         when = f" · {_ts(_unix(n.published_at), 'R')}" if n.published_at else ""
-        fields.append({"name": n.title[:250], "value": f"[Read more]({n.url}){when}", "inline": False})
+        fields.append({"name": n.title[:250], "value": f"[{t('Read more')}]({n.url}){when}", "inline": False})
     embed = {
         "title": f"📰 {top.title}"[:256],
         "url": top.url,
         "color": 0x5EC6FF,
         "description": (top.summary or "")[:600],
         "fields": fields,
-        "footer": {"text": "Latest from trovegame.com"},
+        "footer": {"text": t("Latest from trovegame.com")},
     }
     if getattr(top, "image", None):
         embed["image"] = {"url": top.image}
@@ -492,11 +502,11 @@ async def download_embed() -> dict:
         url = assets[0]["url"] if assets else rel.html_url
         fields.append({"name": label, "value": f"[{rel.tag_name}]({url})", "inline": True})
     return {
-        "title": "⬇️ Download Better Trove Tools",
+        "title": t("⬇️ Download Better Trove Tools"),
         "url": releases_page or "https://github.com/AallynReed/BetterTroveTools/releases",
         "color": 0x4CC9F0,
-        "description": "Latest desktop build per platform. Prefer the browser? Use the web app: "
-                       "**https://btt.aallyn.net**",
+        "description": t("Latest desktop build per platform. Prefer the browser? Use the web app: "
+                         "**https://btt.aallyn.net**"),
         "fields": fields,
         "footer": {"text": "github.com/AallynReed/BetterTroveTools/releases"},
     }
@@ -507,14 +517,14 @@ async def download_embed() -> dict:
 def web_embed() -> dict:
     """Where to use Better Trove Tools in the browser."""
     return {
-        "title": "🌐 Better Trove Tools — Web App",
+        "title": t("🌐 Better Trove Tools — Web App"),
         "url": "https://btt.aallyn.net",
         "color": 0x4CC9F0,
         "description": (
-            "Use Better Trove Tools right in your browser — no install needed.\n\n"
+            t("Use Better Trove Tools right in your browser — no install needed.") + "\n\n"
             "**→ https://btt.aallyn.net**\n\n"
-            "Gem builds, star chart, calculators, codexes and more. For the full suite "
-            "(mod manager, file explorer), grab the desktop app with `/download`."
+            + t("Gem builds, star chart, calculators, codexes and more. For the full suite "
+                "(mod manager, file explorer), grab the desktop app with `/download`.")
         ),
         "footer": {"text": "btt.aallyn.net"},
     }
@@ -526,8 +536,8 @@ async def changelog_embed() -> dict:
     """Recent Better Trove Tools changes, grouped by version."""
     cl = await get_changelog()
     if cl is None or not cl.groups:
-        return {"title": "📝 BTT changelog", "color": 0x8A93A3,
-                "description": "No changelog cached yet."}
+        return {"title": t("📝 BTT changelog"), "color": 0x8A93A3,
+                "description": t("No changelog cached yet.")}
     fields = []
     for group in cl.groups:
         commits = group.get("commits") or []
@@ -535,19 +545,19 @@ async def changelog_embed() -> dict:
             continue
         lines = [f"• {(c.get('message') or '').splitlines()[0][:100]}" for c in commits[:6]]
         if len(commits) > 6:
-            lines.append(f"…and {len(commits) - 6} more")
-        fields.append({"name": group.get("version") or "Unreleased", "value": "\n".join(lines), "inline": False})
+            lines.append(t("…and {n} more", n=len(commits) - 6))
+        fields.append({"name": group.get("version") or t("Unreleased"), "value": "\n".join(lines), "inline": False})
         if len(fields) >= 4:
             break
     embed = {
-        "title": "📝 Better Trove Tools — changelog",
+        "title": t("📝 Better Trove Tools — changelog"),
         "url": "https://github.com/AallynReed/BetterTroveTools/releases",
         "color": 0xB794F6,
         "fields": fields,
         "footer": {"text": "Recent changes · github.com/AallynReed/BetterTroveTools"},
     }
     if cl.rate_limited:
-        embed["description"] = "⚠️ GitHub rate-limited the last refresh — this may be slightly behind."
+        embed["description"] = t("⚠️ GitHub rate-limited the last refresh — this may be slightly behind.")
     return embed
 
 
@@ -561,12 +571,14 @@ async def live_board_embed() -> dict:
     Discord refetch the image each minute."""
     overall = (await get_status_shared()).get("overall", "unknown")
     minute = int(time.time() // 60)
+    lang = current_language()
+    suffix = f"&lang={lang}" if lang != "en" else ""
     return {
-        "title": "🥝 Trove Now",
+        "title": t("🥝 Trove Now"),
         "url": SITE,
         "color": _COLOR.get(overall, 0x46D39A),
-        "image": {"url": f"{SITE}/board.png?v={minute}"},
-        "footer": {"text": "Live · updates every minute · trove.aallyn.net"},
+        "image": {"url": f"{SITE}/board.png?v={minute}{suffix}"},
+        "footer": {"text": t("Live · updates every minute · trove.aallyn.net")},
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -580,27 +592,27 @@ async def ping_embed() -> dict:
 
     fields = []
     try:
-        t = time.perf_counter()
+        t0 = time.perf_counter()
         await get_db().command("ping")
-        fields.append({"name": "MongoDB", "value": f"🟢 {(time.perf_counter() - t) * 1000:.0f} ms", "inline": True})
+        fields.append({"name": "MongoDB", "value": f"🟢 {(time.perf_counter() - t0) * 1000:.0f} ms", "inline": True})
     except Exception:
-        fields.append({"name": "MongoDB", "value": "🔴 unreachable", "inline": True})
+        fields.append({"name": "MongoDB", "value": f"🔴 {t('unreachable')}", "inline": True})
 
     r = get_redis()
     if r is None:
-        fields.append({"name": "Redis", "value": "⚪ not configured", "inline": True})
+        fields.append({"name": "Redis", "value": f"⚪ {t('not configured')}", "inline": True})
     else:
         try:
-            t = time.perf_counter()
+            t0 = time.perf_counter()
             await r.ping()
-            fields.append({"name": "Redis", "value": f"🟢 {(time.perf_counter() - t) * 1000:.0f} ms", "inline": True})
+            fields.append({"name": "Redis", "value": f"🟢 {(time.perf_counter() - t0) * 1000:.0f} ms", "inline": True})
         except Exception:
-            fields.append({"name": "Redis", "value": "🔴 unreachable", "inline": True})
+            fields.append({"name": "Redis", "value": f"🔴 {t('unreachable')}", "inline": True})
 
     return {
-        "title": "🏓 Pong",
+        "title": t("🏓 Pong"),
         "color": 0x46D39A,
-        "description": "Kiwi API is online.",
+        "description": t("Kiwi API is online."),
         "fields": fields,
         "footer": {"text": "api.aallyn.net/health"},
     }

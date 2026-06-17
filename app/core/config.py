@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     # market dump. Capped at 20 MB; in practice a dump is well under 5 MB but
     # we leave headroom for a wider interest list down the road.
     market_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
+    # The OCR endpoint accepts one screenshot upload. A high-res PNG of the stat
+    # sheet is typically 1-3 MB; 12 MB leaves room for a 4K lossless grab while
+    # still rejecting obvious abuse. The endpoint also caps per-file size itself.
+    ocr_max_request_body_bytes: int = 12 * 1024 * 1024  # 12 MB
 
     # Leaderboards archive throttle. Queries for an anchor older than the
     # threshold (default 90 days) hit the archive collection - those reads are
@@ -431,25 +435,37 @@ class Settings(BaseSettings):
     # closing it right after the hello. Falls back to the connect-only verdict on
     # any anomaly, so it never does worse than before.
     trove_status_game_deep_probe: bool = True
-    # Captured glsserver client "hello" (hex), replayed by the deep probe, PER
-    # ENVIRONMENT. Empty = connect-only for that env (TCP-accept = online).
+    # Send a FRESH RANDOM ephemeral opener each deep probe instead of replaying a
+    # captured hello. Frida on the live client proved the real opener's 32-byte body
+    # is regenerated per connection (a random X25519 pubkey), and a live glsserver
+    # holds the socket for any well-formed opener (verified live, EU+US) - so a
+    # random opener behaves like a real client and NEVER goes stale on a Trove
+    # protocol update. Off = legacy replay of trove_status_{env}_hello_hex (goes
+    # stale: the server rejects an old captured opener, which made a live EU read
+    # as down). Leave on.
+    trove_status_game_random_opener: bool = True
+    # Per-ENV deep-probe enable flag. NON-EMPTY = run the deep probe for that env;
+    # EMPTY = connect-only (TCP-accept = online). With trove_status_game_random_opener
+    # on (the default), the deep probe sends a FRESH RANDOM opener and the hex CONTENT
+    # below is NOT sent - the string just needs to be non-empty to enable deep here.
+    # (The content is only replayed in legacy mode, random_opener=False.)
     #
-    # EU + US are game glsservers (ams-/dal- *-game-* hosts): when up they HOLD a
-    # hello-only probe's socket open, so the deep probe works (hold=online,
-    # fast-FIN=maintenance). The same captured hello works for both (it's a
-    # per-client-run ECDH opener, portable across gateways - EU and US sent the
-    # byte-identical hello in the captures).
+    # EU + US are game glsservers (ams-/dal- *-game-* hosts): when up they HOLD the
+    # opener's socket open (hold=online, fast-FIN=maintenance), so the deep probe
+    # works. PTS is an AUTH gateway (auth-pcpts01), NOT a game glsserver: it DROPS
+    # the opener even when UP, so the deep probe can't tell PTS up from down → PTS
+    # stays "" = connect-only. Set a value here only if PTS is ever pointed at a
+    # real *-game-* glsserver that holds the socket open.
     #
-    # PTS is an AUTH gateway (auth-pcpts01), NOT a game glsserver: even when UP it
-    # DROPS a hello-only probe (it expects the client to keep going, which a probe
-    # doesn't), so the deep probe can't tell PTS up from down. Hence PTS = "" =
-    # connect-only. Set a hello here only if PTS is ever pointed at a real
-    # *-game-* glsserver that holds the socket open.
+    # The retained hex is a real captured opener (kept as the legacy-replay fallback
+    # and as a non-empty enable flag). NOTE: a captured opener goes STALE - Frida on
+    # the live client proved the real opener is a per-connection RANDOM ephemeral key,
+    # so don't rely on replay; leave random_opener on.
     trove_status_eu_hello_hex: str = (
-        "20000000003df232536bcb1518164c4685392572b843d0bcbb71be7f0abb098626e23accfb"
+        "20000000003df232536bcb1518164c4685392572b843d0bcbb71be7c06bb098626e23accfb"
     )
     trove_status_us_hello_hex: str = (
-        "20000000003df232536bcb1518164c4685392572b843d0bcbb71be7f0abb098626e23accfb"
+        "20000000003df232536bcb1518164c4685392572b843d0bcbb71be7c06bb098626e23accfb"
     )
     trove_status_pts_hello_hex: str = ""
     # Seconds the server must hold the socket open after the hello to count as

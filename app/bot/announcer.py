@@ -22,37 +22,42 @@ import time
 
 import discord
 
+from app import i18n
 from app.bot.announcements import ANNOUNCEMENT_TYPES, TYPES_BY_KEY
 from app.bot.models import GuildConfig, TrackedAnnouncement
-from app.core.utils import utcnow
+from app.core.utils import countdown_bucket, utcnow
 from app.discord.embeds import SITE
 
 logger = logging.getLogger("kiwi.bot.announcer")
 
 
-def _image_embed_dict(kind: str, token: str) -> dict:
+def _image_embed_dict(kind: str, token: str, lang: str = "en") -> dict:
     """A bare image embed pointing at the API's per-kind announcement banner. ``token``
-    is the cache-buster (countdown-scaled) so Discord refetches when it changes."""
-    return {"image": {"url": f"{SITE}/announce.png?kind={kind}&v={token}"}}
+    is the cache-buster (countdown-scaled) so Discord refetches when it changes.
+    ``lang`` selects the localized render (omitted for English so existing URLs +
+    the per-(kind,minute) image cache are unchanged)."""
+    suffix = f"&lang={lang}" if lang != "en" else ""
+    return {"image": {"url": f"{SITE}/announce.png?kind={kind}&v={token}{suffix}"}}
 
 
 def _refresh_token(expires_at: int | None, now: int) -> str:
-    """The image ``?v`` token, scaled to the countdown so we don't edit constantly:
-    per-minute under 1h to expiry, per-hour under a day, per-day beyond."""
-    remaining = (expires_at - now) if expires_at else 0
-    if not expires_at or remaining <= 3600:
-        return str(now // 60)
-    if remaining <= 86400:
-        return str(now // 3600)
-    return str(now // 86400)
+    """The image ``?v`` token = the DISPLAYED countdown bucket (``countdown_bucket``),
+    so Discord refetches and we re-edit EXACTLY when the shown value changes - "16h"
+    holds for the whole hour (one edit/hour), per-minute only under 1h, per-day
+    beyond. Sharing the bucket with the image renderer keeps the token and the drawn
+    text from drifting (no re-edit while the banner is visually identical)."""
+    unit, val = countdown_bucket(expires_at, now)
+    return f"{unit}{val}"
 
 # Serializes announcement passes (event-driven vs poll backstop) so they never
 # read the same last_anchor and double-post.
 _lock = asyncio.Lock()
 
 
-async def _build_embed(build_fn) -> dict:
-    """Embed builders are a mix of sync and async; normalise to a dict."""
+async def _build_embed(build_fn, lang: str = "en") -> dict:
+    """Embed builders are a mix of sync and async; normalise to a dict. Sets the
+    i18n context language first so the builder's ``t(...)`` calls localize."""
+    i18n.set_current_language(lang)
     result = build_fn()
     return await result if inspect.isawaitable(result) else result
 
@@ -207,23 +212,31 @@ async def _announce_one(bot: discord.Client, atype, configs: list[GuildConfig]) 
     if not pending:
         return
     # Managed types post a generated image (the API renders + Redis-caches it per
-    # minute); everything else posts its rich text embed. Build the embed once and
-    # fan it out - every guild references the same per-(kind,minute) image URL.
+    # minute); everything else posts its rich text embed. Build ONE embed per
+    # distinct guild language among the pending guilds and fan each out to the
+    # guilds that speak it (image types reference a per-(kind,minute,lang) URL).
+    langs = {i18n.normalize_lang(getattr(c, "language", None)) for c in pending}
     expires: int | None = None
     token = ""
+    embeds_by_lang: dict[str, discord.Embed] = {}
     try:
         if atype.auto_manage:
             if atype.expiry is not None:
                 expires = await atype.expiry()
             token = _refresh_token(expires, int(time.time()))
-            embed = discord.Embed.from_dict(_image_embed_dict(atype.key, token))
+            for lang in langs:
+                embeds_by_lang[lang] = discord.Embed.from_dict(
+                    _image_embed_dict(atype.key, token, lang))
         else:
-            embed = discord.Embed.from_dict(await _build_embed(atype.build_embed))
+            for lang in langs:
+                embeds_by_lang[lang] = discord.Embed.from_dict(
+                    await _build_embed(atype.build_embed, lang))
     except Exception:
         logger.warning("embed build failed for %s", atype.key, exc_info=True)
         return
     for cfg in pending:
         setting = cfg.announcements[atype.key]
+        embed = embeds_by_lang[i18n.normalize_lang(getattr(cfg, "language", None))]
         message_id = await _post(bot, cfg.guild_id, setting, embed, atype.key)
         if message_id is not None:
             setting.last_anchor = anchor
@@ -270,7 +283,10 @@ async def refresh_tracked(bot: discord.Client) -> None:
         token = _refresh_token(t.expires_at, now)
         if token == t.refresh_v:
             continue                          # displayed countdown unchanged - skip the edit
-        embed = discord.Embed.from_dict(_image_embed_dict(t.kind, token))
+        # Keep the guild's language on the re-edit, or the refresh reverts the
+        # image to English a minute after posting.
+        lang = await i18n.guild_language(t.guild_id)
+        embed = discord.Embed.from_dict(_image_embed_dict(t.kind, token, lang))
         result = await _edit_message(bot, t.channel_id, t.message_id, embed)
         if result == "ok":
             t.refresh_v = token

@@ -45,6 +45,10 @@ _LAST_GOOD: dict | None = None
 # board (was ~5k), so fetch past that to cover the full per-board population.
 _BOARD_FETCH_LIMIT = 25000
 
+# Retention for the materialized per-window active sets (the 24h/7d rollup source).
+# > 7d so the weekly rollup always has its windows; older windows are pruned.
+_ACTIVE_RETENTION_SECONDS = 8 * 86400
+
 # A consecutive capture pair spans roughly one capture interval. A window MUCH
 # longer than that means a capture was MISSED (a gap): the distinct-active count
 # over a multi-hour gap can't be turned into an honest per-hour rate - the same
@@ -179,16 +183,15 @@ def reset_caches() -> None:
 def _pick_early_anchor(
     stamps_desc: list[int], anchor_late: int, seconds_back: int,
 ) -> int | None:
-    """Pick the stored capture that best anchors a "last N seconds" window
-    ending at ``anchor_late``.
+    """Pick the stored capture that best anchors a "last N seconds" window ending
+    at ``anchor_late``.
 
-    ``stamps_desc`` is the full anchor list, newest first. We want the
-    NEWEST anchor that is at-or-before ``anchor_late - seconds_back`` so
-    the window spans at least the requested duration. If no anchor is that
-    old yet (early in a deploy, sparse history) we fall back to the OLDEST
-    anchor strictly before ``anchor_late`` - the widest window the data can
-    honestly support. Returns ``None`` when there's no earlier anchor at
-    all (single capture)."""
+    ``stamps_desc`` is the full anchor list, newest first. We want the NEWEST anchor
+    at-or-before ``anchor_late - seconds_back`` so the window spans at least the
+    requested duration. If no anchor is that old yet (early in a deploy, sparse
+    history) we fall back to the OLDEST anchor strictly before ``anchor_late`` - the
+    widest window the data can honestly support. Returns ``None`` when there's no
+    earlier anchor at all (single capture)."""
     target = anchor_late - seconds_back
     oldest_before: int | None = None
     for s in stamps_desc:               # newest -> oldest
@@ -231,6 +234,27 @@ def _active_set(
     return active
 
 
+def _board_active_names(
+    late_scores: dict[str, float],
+    early_scores: dict[str, float],
+) -> set[str]:
+    """Players active on ONE board between two captures: their score ROSE vs the
+    previous capture, OR they newly appear with a non-zero score
+    (``score > prev``, treating an absent previous as 0). No score ceilings, no
+    board filters. A reset needs no special-casing - the post-reset score is LOWER
+    than the pre-reset one, so it isn't a rise (the player is counted on the
+    captures where they actually climb). Pure (no I/O)."""
+    if not early_scores:
+        return set()
+    out: set[str] = set()
+    for name, score in late_scores.items():
+        prev = early_scores.get(name)
+        baseline = prev if prev is not None else 0
+        if score > baseline:
+            out.add(name)
+    return out
+
+
 async def _compute(anchor_late: int, anchor_early: int) -> dict:
     """Iterate EVERY player_board, fetch entries at both anchors, count
     distinct players with a positive activity signal.
@@ -253,16 +277,19 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
     boards = await lb_service.list_boards_at(anchor_late)
     duration_h = (anchor_late - anchor_early) / 3600.0
 
-    # Wider rollups share the SAME late anchor; only the early endpoint
-    # moves back. The distinct-active count between (late-24h, late) and
-    # (late-7d, late) is an honest lower bound on "players active in the
-    # last 24h / 7d" - no double-counting, unlike summing hourly windows.
+    # 1h = the distinct players who rose (or appeared with a non-zero score) this
+    # capture. 24h / 7d = the distinct UNION of those per-capture active sets across
+    # the period, read from the materialized ``activity_active`` table (each capture
+    # stores its own set once - see record_active_window - so a rollup is an indexed
+    # COUNT(DISTINCT), not a re-scan of days of entries). Naturally monotonic
+    # (7d ⊇ 24h ⊇ 1h: the 1h window is one of the windows counted).
+    from app.trove.leaderboards import pg_store as _pg
     stamps_desc = await lb_service.list_timestamps(limit=500, include_archive=True)
     early_24h = _pick_early_anchor(stamps_desc, anchor_late, 86400)
     early_7d = _pick_early_anchor(stamps_desc, anchor_late, 7 * 86400)
 
     # Gap cutoff from the ACTUAL recent cadence (median spacing), not a hardcoded
-    # 1h. A pair markedly longer than the median is a missed capture: its estimate
+    # 1h. A pair markedly longer than the median is a missed capture: its 1h estimate
     # would be a miscalculation, so we withhold it (None) and store nothing.
     gap_threshold = _gap_threshold_hours(_intervals_hours(stamps_desc))
     gapped = _is_gap(duration_h, gap_threshold)
@@ -273,46 +300,25 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
     board_uuids = [b["uuid"] for b in player_boards]
     meta_by_uuid = {b["uuid"]: b for b in player_boards}
 
-    # Load each DISTINCT anchor ONCE as {uuid: {player: score}} via a single
-    # projected query (no per-board round-trip, no Pydantic) instead of the old
-    # ~one-list_entries-per-board-per-window. Late + up to three earlier
-    # endpoints (1h / 24h / 7d) = at most four queries for the whole estimate.
+    # Load the late + 1h-early anchors as {uuid: {player: score}} for the live 1h
+    # pulse + the per-board breakdown.
     late_maps = await _load_anchor_maps(anchor_late, board_uuids)
-    early_maps: dict[int, dict[int, dict[str, float]]] = {}
+    early_map: dict[int, dict[str, float]] = {}
     if not gapped:
         # 1h early is the core estimate - unguarded (a failure should make the
         # warmer retry rather than publish a bogus 0).
-        early_maps[anchor_early] = await _load_anchor_maps(anchor_early, board_uuids)
-    # Wider early anchors are guarded so a slow/absent deep-archive read can
-    # never abort the core 1h estimate or the warmer's publish.
-    for ea in (early_24h, early_7d):
-        if ea is None or ea in early_maps:
-            continue
-        try:
-            early_maps[ea] = await _load_anchor_maps(ea, board_uuids)
-        except Exception:
-            logger.exception("activity: failed loading wide early anchor %d", ea)
-            early_maps[ea] = {}
+        early_map = await _load_anchor_maps(anchor_early, board_uuids)
 
     active_union: set[str] = set()      # 1h window (drives the live pulse)
-    active_24h: set[str] = set()
-    active_7d: set[str] = set()
     per_board: list[dict] = []
 
-    for uuid in board_uuids:
-        late = late_maps.get(uuid)
-        if not late:
-            continue
-        kind = meta_by_uuid[uuid].get("reset_kind", "default")
-
-        # 1h window - the live pulse plus the per-board breakdown. Skipped on a
-        # gap (the 1h estimate is withheld until consecutive captures resume).
-        if not gapped:
-            s = _active_set(
-                late, early_maps.get(anchor_early, {}).get(uuid, {}),
-                kind, anchor_early, anchor_late,
-            )
-            if s is not None:
+    if not gapped:
+        for uuid in board_uuids:
+            late = late_maps.get(uuid)
+            if not late:
+                continue
+            s = _board_active_names(late, early_map.get(uuid, {}))
+            if s:
                 active_union.update(s)
                 meta = meta_by_uuid[uuid]
                 per_board.append({
@@ -322,26 +328,38 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
                     "active_players": len(s),
                 })
 
-        # Wider windows - aggregate counts only, no per-board breakdown.
-        for early_w, bucket in ((early_24h, active_24h), (early_7d, active_7d)):
-            if early_w is None:
-                continue
-            s = _active_set(
-                late, early_maps.get(early_w, {}).get(uuid, {}), kind, early_w, anchor_late,
-            )
-            if s:
-                bucket.update(s)
-
     # Sort by per-board activity desc - the highest-engagement boards
     # rise to the top of the breakdown.
     per_board.sort(key=lambda b: -b["active_players"])
 
     now_ts = int(time.time())
     estimate_count = None if gapped else len(active_union)
+
+    # Materialize this window's active set (idempotent), then prune the rolling
+    # retention. Non-fatal: a storage hiccup must not abort the live estimate.
+    if not gapped:
+        try:
+            await _pg.record_active_window(anchor_late, active_union)
+            await _pg.prune_active_windows(anchor_late - _ACTIVE_RETENTION_SECONDS)
+        except Exception:
+            logger.exception("activity: failed to record active window late=%d", anchor_late)
+
+    # Rollups: indexed COUNT(DISTINCT) over the materialized windows in range.
+    estimate_24h = estimate_7d = None
+    if early_24h is not None:
+        try:
+            estimate_24h = await _pg.count_active_since(early_24h, anchor_late)
+        except Exception:
+            logger.exception("activity: 24h rollup failed for late=%d", anchor_late)
+    if early_7d is not None:
+        try:
+            estimate_7d = await _pg.count_active_since(early_7d, anchor_late)
+        except Exception:
+            logger.exception("activity: 7d rollup failed for late=%d", anchor_late)
+
     boards_count = len(per_board)
-    # Span (in hours) the wide rollups actually covered - lets the UI label
-    # them honestly ("7d" really means "since the oldest capture" until a
-    # full week of history exists). None when the window had no anchor.
+    # Span (in hours) the rollups actually cover - lets the UI label them honestly
+    # ("7d" really means "since the oldest capture" until a full week exists).
     span_24h = round((anchor_late - early_24h) / 3600.0, 1) if early_24h is not None else None
     span_7d = round((anchor_late - early_7d) / 3600.0, 1) if early_7d is not None else None
 
@@ -370,10 +388,12 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
         # True when this pair spans a missed capture: the 1h estimate is withheld
         # (None) and nothing is stored for the graph until consecutive captures resume.
         "gapped": gapped,
-        # Distinct active players over the wider rollups (same late anchor,
-        # earlier endpoint). None when there isn't an earlier anchor yet.
-        "estimate_24h": (len(active_24h) if early_24h is not None else None),
-        "estimate_7d": (len(active_7d) if early_7d is not None else None),
+        # Distinct active players over the wider rollups - the union of every
+        # capture's active set in the period (materialized table, indexed
+        # COUNT(DISTINCT)), monotonic by construction (7d ⊇ 24h ⊇ 1h). None until an
+        # earlier anchor exists.
+        "estimate_24h": estimate_24h,
+        "estimate_7d": estimate_7d,
         "window_24h_start": early_24h,
         "window_7d_start": early_7d,
         "span_24h_hours": span_24h,
@@ -381,15 +401,14 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
         "by_board": per_board,
         "boards_analyzed": boards_count,
         "methodology": (
-            "Distinct top-N leaderboard players whose score increased (or who "
-            "first appear) on at least one board between the two most recent "
-            "captures. All boards count, except a board is ignored on any "
-            "window that crosses its reset (daily 11:00 UTC, weekly Monday "
-            "11:00 UTC, lifetime never) - its score zeroes there so a delta "
-            "would be meaningless. A window that spans a missed capture (markedly "
-            "longer than the median capture cadence) is skipped entirely - such a "
-            "gap can't be normalized to an honest per-hour rate. Lower bound: "
-            "players outside every board's top-N aren't seen."
+            "Distinct top-N leaderboard players whose score rose on at least one board "
+            "since the previous capture (or who newly appear with a non-zero score). A "
+            "reset isn't counted as activity (the score drops, it doesn't rise). A "
+            "window that spans a missed capture (markedly longer than the median "
+            "cadence) is skipped. The 24h / 7d figures are the distinct UNION of each "
+            "capture's active set over the period, so they grow with time and never "
+            "drop below the hour. Lower bound: players outside every board's top-N "
+            "aren't seen."
         ),
         "computed_at": now_ts,
     }
@@ -411,33 +430,24 @@ def _pair_estimate(
     boards: dict[int, dict],
     early_ts: int,
     late_ts: int,
-) -> tuple[int, int]:
-    """Distinct active players + boards-analyzed for one ``(early, late)`` pair
-    from the two anchors' pre-loaded score maps. Same rule as ``_compute``: a
-    board whose reset falls inside the window is IGNORED for that window (its
-    score zeroed, so a delta is meaningless); otherwise a positive score delta
-    (or first appearance) vs the early snapshot. Daily resets every day 11:00
-    UTC, weekly Monday 11:00 UTC, lifetime never."""
+) -> tuple[set[str], int]:
+    """Distinct active player NAMES + boards-analyzed for one ``(early, late)`` pair
+    from the two anchors' pre-loaded score maps. SAME rule as the live 1h compute
+    (``_board_active_names``): a player counts on a board if their score rose there
+    (or they appear with a non-zero score). Returns the SET so the backfill can
+    both store the count (chart) and materialize the names (rollup table)."""
     active_union: set[str] = set()
     boards_analyzed = 0
-    for uuid, meta in boards.items():
+    for uuid in boards:
         late = late_maps.get(uuid)
         if not late:
             continue
-        crossed = bool(lb_service.reset_boundaries_for_kind(
-            meta["reset_kind"], early_ts, late_ts,
-        ))
-        if crossed:
-            continue   # board reset inside this window -> ignore it here
         early = early_maps.get(uuid)
         if not early:
             continue
-        for name, score in late.items():
-            prev = early.get(name)
-            if prev is None or score > prev:
-                active_union.add(name)
+        active_union |= _board_active_names(late, early)
         boards_analyzed += 1
-    return len(active_union), boards_analyzed
+    return active_union, boards_analyzed
 
 
 async def backfill_history(
@@ -521,6 +531,8 @@ async def backfill_history(
         median_interval or 0.0, gap_threshold, span_days, len(stamps_asc),
     )
     started = time.time()
+    # Only windows within the rolling retention feed the 24h/7d rollup table.
+    active_floor = int(time.time()) - _ACTIVE_RETENTION_SECONDS
     computed = failed = gap_skipped = 0
     prev_anchor: int | None = None
     prev_maps: dict[int, dict[str, float]] | None = None
@@ -543,11 +555,16 @@ async def backfill_history(
                         early_maps = prev_maps
                     else:
                         early_maps = await _load_anchor_maps(early, board_uuids)
-                    est, nboards = _pair_estimate(early_maps, cur_maps, boards, early, anchor)
+                    active_names, nboards = _pair_estimate(
+                        early_maps, cur_maps, boards, early, anchor)
                     await pg_store.upsert_estimate(
                         anchor, early, round((anchor - early) / 3600.0, 2),
-                        est, nboards, int(time.time()),
+                        len(active_names), nboards, int(time.time()),
                     )
+                    # Seed the rollup table for windows still in the retention window
+                    # so 24h/7d are correct immediately after a Reset & recalculate.
+                    if anchor >= active_floor:
+                        await pg_store.record_active_window(anchor, active_names)
                     computed += 1
                 except Exception:
                     failed += 1
@@ -590,12 +607,13 @@ async def reset_estimates() -> int:
     from app.trove.leaderboards import pg_store
     from app.trove.leaderboards import cache as lb_cache
     deleted = await pg_store.delete_all_estimates()
+    active_deleted = await pg_store.delete_all_active_windows()
     invalidate_cache()
     global _LAST_GOOD
     _LAST_GOOD = None
     redis_cleared = await lb_cache.invalidate_all_activity()
-    logger.warning("activity: RESET cleared %d stored estimates, %d redis snapshots",
-                   deleted, redis_cleared)
+    logger.warning("activity: RESET cleared %d stored estimates, %d active-window rows, "
+                   "%d redis snapshots", deleted, active_deleted, redis_cleared)
     return deleted
 
 
@@ -712,6 +730,10 @@ _SERIES_PERIODS: dict[str, tuple[int | None, int | None]] = {
     "all": (None, None),        # dynamic bucket, ~120 points
 }
 
+# The Player Activity page + API only expose up to 1 month; the longer ranges
+# (3m/6m/1y/all) were removed from /activity (class-activity still offers them).
+_ACTIVITY_PERIODS = ("1d", "7d", "1m")
+
 
 async def activity_series(period: str = "7d") -> dict:
     """Bucketed activity-level time-series for the Player Activity page.
@@ -731,7 +753,7 @@ async def activity_series(period: str = "7d") -> dict:
     from app.trove.leaderboards import cache as lb_cache
 
     period = (period or "7d").lower()
-    if period not in _SERIES_PERIODS:
+    if period not in _ACTIVITY_PERIODS:   # 3m/6m/1y/all were removed from /activity
         period = "7d"
     # Read-through Redis cache: the chart is identical for every visitor and only
     # shifts when a new capture lands (~hourly), so a short-TTL cache keeps the

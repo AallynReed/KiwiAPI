@@ -52,6 +52,12 @@ class GuildConfig(Document):
     # --- Live "Trove Now" board (one self-updating message) ---
     live_board: LiveBoard = Field(default_factory=LiveBoard)
 
+    # --- Bot output language ---
+    # BCP-ish code from app.i18n.SUPPORTED (en/fr/de/pt-PT/ru/ja/zh-CN). The bot
+    # speaks this language in THIS server: announcements, the live board, and slash
+    # replies invoked here. Default English; validated against SUPPORTED on save.
+    language: str = "en"
+
     # --- Role-based config permissions ---
     # capability -> [discord role ids] allowed to set it. The guild owner / admins
     # always have full control regardless. Roles are validated against the live
