@@ -21,6 +21,8 @@ from app.admin.schemas import (
     RuntimeConfigItem,
     RuntimeConfigList,
     RuntimeConfigUpdate,
+    SiteClaimAdminList,
+    SiteClaimAdminView,
     TopUser,
 )
 from app.auth.models import User
@@ -29,6 +31,7 @@ from app.core.errors import APIError, ErrorCode
 from app.core.pagination import Page, paginate_newest_first
 from app.core.scopes import decode
 from app.core.utils import utcnow
+from app.site_auth.models import SiteUser
 from app.supporters import service as supporters_service
 from app.supporters.schemas import (
     SupporterAddRequest,
@@ -396,7 +399,9 @@ async def list_leaderboards_admin_boards() -> LeaderboardBoardAdminList:
     with its current effective reset cadence and any admin override."""
     from app.trove.leaderboards import pg_store
     from app.trove.leaderboards.models import (
-        RESET_KIND_VALUES, is_lifetime_kind, reset_kind,
+        RESET_KIND_VALUES,
+        is_lifetime_kind,
+        reset_kind,
     )
     docs = await pg_store.admin_list_boards()
     items: list[LeaderboardBoardAdminView] = []
@@ -438,7 +443,9 @@ async def set_leaderboard_board_reset_kind(
     from app.trove.leaderboards import detection as lb_detection
     from app.trove.leaderboards import pg_store
     from app.trove.leaderboards.models import (
-        RESET_KIND_VALUES, is_lifetime_kind, reset_kind,
+        RESET_KIND_VALUES,
+        is_lifetime_kind,
+        reset_kind,
     )
 
     new_value = payload.reset_kind_override
@@ -708,6 +715,65 @@ async def remove_supporter_admin(name: str) -> None:
     if not removed:
         raise APIError(status_code=404, code=ErrorCode.not_found,
                        message=f"No supporter named '{name}'")
+
+
+def _site_claim_view(u: SiteUser) -> SiteClaimAdminView:
+    return SiteClaimAdminView(
+        user_id=str(u.id), username=u.username, display_name=u.display_name,
+        discord_id=u.discord_id, claimed_trove_name=u.claimed_trove_name,
+        claimed_trove_display=u.claimed_trove_display, claimed_at=u.claimed_at,
+        claim_verified=u.claim_verified, claim_verified_at=u.claim_verified_at,
+    )
+
+
+async def _get_claimant(user_id: str) -> SiteUser:
+    """Load a SiteUser by id, 404 on a bad id or no pending claim."""
+    try:
+        oid = PydanticObjectId(user_id)
+    except Exception:
+        raise APIError(status_code=404, code=ErrorCode.not_found, message="No such user.")
+    u = await SiteUser.get(oid)
+    if u is None or not u.claimed_trove_name:
+        raise APIError(status_code=404, code=ErrorCode.not_found,
+                       message="No Trove-name claim for that user.")
+    return u
+
+
+@router.get("/site-claims", response_model=SiteClaimAdminList)
+async def list_site_claims(pending_only: bool = Query(default=True)) -> SiteClaimAdminList:
+    """Trove-name claims for master review. ``pending_only`` (default) shows just the
+    unverified ones awaiting approval; set it false to see every claimed name."""
+    query: dict = {"claimed_trove_name": {"$ne": None}}
+    if pending_only:
+        query["claim_verified"] = False
+    docs = await SiteUser.find(query).sort("+claimed_at").to_list()
+    return SiteClaimAdminList(items=[_site_claim_view(u) for u in docs], count=len(docs))
+
+
+@router.post("/site-claims/{user_id}/approve", response_model=SiteClaimAdminView)
+async def approve_site_claim(user_id: str) -> SiteClaimAdminView:
+    """Manually verify a user's claimed Trove name (master ownership approval)."""
+    u = await _get_claimant(user_id)
+    u.claim_verified = True
+    u.claim_verified_at = utcnow()
+    u.updated_at = utcnow()
+    await u.save()
+    return _site_claim_view(u)
+
+
+@router.post("/site-claims/{user_id}/reject", response_model=SiteClaimAdminView)
+async def reject_site_claim(user_id: str) -> SiteClaimAdminView:
+    """Reject a claim and release the name so someone else can claim it."""
+    u = await _get_claimant(user_id)
+    u.claimed_trove_name = None
+    u.claimed_trove_display = None
+    u.claimed_at = None
+    u.claim_verified = False
+    u.claim_verified_at = None
+    u.claim_baseline = {}
+    u.updated_at = utcnow()
+    await u.save()
+    return _site_claim_view(u)
 
 
 @router.put("/supporters", response_model=SupporterBulkReplaceResponse)

@@ -616,13 +616,20 @@ _ANN_TITLE = {
     "daily_bonuses": "Daily Bonus", "longshade": "Depth-15 Biomes",
     "wild_mana": "Wild Mana", "stampy": "Stampy Event",
     "corruxion": "Corruxion Merchant", "fluxion": "Fluxion Merchant",
-    "server_status": "Trove Server Status",
+    "server_status": "Trove Server Status", "game_update": "Trove Update",
+    "challenge_collection": "Collection Challenge", "challenge_rampage": "Rampage Alert",
+    "challenge_racing": "Racing Challenge", "challenge_target": "Target Challenge",
+    "challenge_dungeon": "Dungeon Challenge",
 }
 _ANN_ACCENT = {
     "hourly_challenge": (255, 152, 0), "chaos_chest": (183, 148, 246),
     "daily_bonuses": (255, 184, 107), "longshade": (155, 138, 251),
     "wild_mana": (70, 211, 154), "stampy": (255, 184, 107),
     "corruxion": (155, 93, 229), "fluxion": (76, 201, 240),
+    "game_update": (94, 198, 255),
+    "challenge_collection": (255, 193, 7), "challenge_rampage": (244, 67, 54),
+    "challenge_racing": (33, 150, 243), "challenge_target": (156, 39, 176),
+    "challenge_dungeon": (255, 152, 0),
 }
 
 
@@ -633,7 +640,7 @@ async def _announcement_content(kind: str) -> tuple[str, tuple, list[str]]:
     accent = _ANN_ACCENT.get(kind, GREEN)
     lines: list[str] = []
 
-    if kind == "hourly_challenge":
+    if kind == "hourly_challenge" or kind.startswith("challenge_"):
         from app.trove.captures import get_current_challenge
         c = await get_current_challenge()
         sub = (t("Ends {when}", when=_rel_coarse(c.get('ends_at'))) if c.get("active")
@@ -692,6 +699,15 @@ async def _announcement_content(kind: str) -> tuple[str, tuple, list[str]]:
         lines = [t(_ST_OVERALL.get(overall, "Status unknown"))]
         lines += [f"{lbl}: {t(_ST_LABEL.get((envs.get(k) or {}).get('status', 'unknown'), 'Unknown'))}"
                   for lbl, k in (("EU", "eu"), ("US", "us"), ("PTS", "pts"))]
+    elif kind == "game_update":
+        from app.trove.updates import read as updates_read
+        v = await updates_read.latest_version("live-us")
+        if v is None:
+            lines = [t("No update archived yet")]
+        else:
+            lines = [v.version_tag,
+                     t("{a} added, {m} modified, {r} removed",
+                       a=v.files_added, m=v.files_modified, r=v.files_removed)]
     return title, accent, lines
 
 

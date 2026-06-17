@@ -1,31 +1,33 @@
 """Build the codex from the archive for a branch - incrementally.
 
-Two modes, both upserting ``CodexEntry`` (one per source prefab):
+The archive (``UpdateState`` + CAS) stays in Mongo; the parsed codex is written to
+the Postgres ``codex_entry`` table (``pg_store``), one row per source prefab. Two
+modes:
 
 - ``reindex`` - a full (re)build from the materialized tree (``UpdateState``). The
   bootstrap/repair path. Content-incremental too: a prefab whose source sha is
-  unchanged is skipped, so re-running is cheap.
+  unchanged (vs. the stored row) is skipped, so re-running is cheap.
 - ``reindex_changes`` - the steady-state path. Reads just the ``UpdateChange``
-  rows for one new version (the delta) and touches only those entries, so a
-  routine game patch never walks the other 99% of the game.
+  rows for one new version (the delta) and touches only those rows, so a routine
+  game patch never walks the other 99% of the game.
 
-``ensure_indexed`` picks between them after a sync: full build if the codex is
-empty (e.g. first deploy onto an already-synced archive), otherwise the delta.
-Names/descriptions resolve through the merged ``languages/`` locale tables.
+``ensure_indexed`` picks between them after a sync: full build if the branch's
+codex table is empty (e.g. first deploy, or after switching to Postgres),
+otherwise the delta. Names/descriptions resolve through the merged ``languages/``
+locale tables. The whole codex is disposable - rebuildable from the archive.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from pymongo import DeleteOne, UpdateOne
-
+from app.core.config import settings
 from app.core.utils import utcnow
-from app.trove.codexes import binfab, mastery
+from app.trove.codexes import binfab, geode, mastery, pg_store
 from app.trove.codexes.extract import extract_entry, refine_mount
-from app.trove.codexes.models import CodexEntry
+from app.trove.codexes.models import to_row
 from app.trove.codexes.types import LOCALE_ROOT, PREFABS_ROOT, classify
 from app.trove.updates.cas import ContentStore
 from app.trove.updates.models import UpdateChange, UpdateState
@@ -37,17 +39,21 @@ _FLUSH_AT = 1000
 _MOUNT_TABLE = PREFABS_ROOT + "collections/collection_mount.binfab"
 # Per-item mastery multipliers (covers every collection type).
 _MULTIPLIERS = PREFABS_ROOT + "meta/multipliers.binfab"
-
-WriteOp = UpdateOne | DeleteOne
+# Geode-mode mastery multipliers + the geode companion membership table.
+_GEODE_MULTIPLIERS = PREFABS_ROOT + "meta/geode_multipliers.binfab"
+_GEODE_TABLE = PREFABS_ROOT + "collections/collection_geodecompanion.binfab"
 
 
 @dataclass
 class _Maps:
     """The lookup tables an extraction pass needs (loaded once per reindex)."""
 
-    loc: dict[str, str]
-    mount_categories: dict[str, str]
-    multipliers: dict[str, dict]
+    loc: dict[str, str] = field(default_factory=dict)
+    mount_categories: dict[str, str] = field(default_factory=dict)
+    multipliers: dict[str, dict] = field(default_factory=dict)
+    geode_multipliers: dict[str, dict] = field(default_factory=dict)
+    geode_members: dict[str, str] = field(default_factory=dict)
+    upgrade_trees: dict[str, bytes] = field(default_factory=dict)
 
 
 def _prefix_query(branch: str, prefix: str) -> dict:
@@ -78,56 +84,92 @@ async def _load_file(branch: str, store: ContentStore, path: str) -> bytes | Non
     return await asyncio.to_thread(store.get, doc.content_sha256)
 
 
+async def _load_upgrade_trees(branch: str, store: ContentStore) -> dict[str, bytes]:
+    """Geode companion upgrade-tree binfabs, keyed by stem (e.g.
+    `gleemur_common_upgrade_tree`). Empty when the archive carries none."""
+    coll = UpdateState.get_pymongo_collection()
+    rows = await coll.find(
+        {"branch": branch, "path": {"$regex": r"_upgrade_tree[^/]*\.binfab$"}},
+        {"path": 1, "content_sha256": 1, "_id": 0},
+    ).to_list(length=None)
+    trees: dict[str, bytes] = {}
+    for row in rows:
+        content = await asyncio.to_thread(store.get, row["content_sha256"])
+        if content:
+            trees[row["path"].rsplit("/", 1)[-1].removesuffix(".binfab")] = content
+    return trees
+
+
 async def _load_maps(branch: str, store: ContentStore) -> _Maps:
     """Load every lookup table the extractors need for `branch`."""
     mount_table = await _load_file(branch, store, _MOUNT_TABLE)
     multipliers = await _load_file(branch, store, _MULTIPLIERS)
+    geode_multipliers = await _load_file(branch, store, _GEODE_MULTIPLIERS)
+    geode_table = await _load_file(branch, store, _GEODE_TABLE)
+    geode_members = geode.geode_companion_members(geode_table) if geode_table else {}
     maps = _Maps(
         loc=await _load_locale_map(branch, store),
         mount_categories=binfab.collection_category_map(mount_table) if mount_table else {},
         multipliers=mastery.parse_multipliers(multipliers) if multipliers else {},
+        geode_multipliers=mastery.parse_geode_multipliers(geode_multipliers) if geode_multipliers else {},
+        geode_members=geode_members,
+        upgrade_trees=await _load_upgrade_trees(branch, store) if geode_members else {},
     )
-    logger.info("codexes[%s]: %d mount categories, %d mastery rows",
-                branch, len(maps.mount_categories), len(maps.multipliers))
+    logger.info("codexes[%s]: %d mount categories, %d mastery rows, %d geode rows, "
+                "%d geode members, %d upgrade trees", branch, len(maps.mount_categories),
+                len(maps.multipliers), len(maps.geode_multipliers),
+                len(maps.geode_members), len(maps.upgrade_trees))
     return maps
 
 
-async def _flush(ops: list[WriteOp]) -> None:
-    if ops:
-        await CodexEntry.get_pymongo_collection().bulk_write(ops, ordered=False)
+async def _flush(rows: list[tuple]) -> None:
+    if rows:
+        await pg_store.upsert_entries(rows)
 
 
-def _upsert_op(branch: str, path: str, sha: str, ctype: str, content: bytes,
-               maps: _Maps, now) -> UpdateOne:
+def _attach_geode_companion(entry: dict, rel: str, content: bytes, maps: _Maps) -> None:
+    """For an `item/companion/…` prefab, attach `data.geode_companion`: its rarity,
+    upgrade-tree ref, and (when the tree binfab is in the archive) per-level bonuses."""
+    ref = geode.find_upgrade_tree_ref(content)
+    rarity = maps.geode_members.get(rel.lower())
+    if not ref and not rarity:
+        return
+    tree = maps.upgrade_trees.get(ref) if ref else None
+    entry.setdefault("data", {})["geode_companion"] = {
+        "upgrade_tree": ref,
+        "rarity": rarity,
+        "levels": geode.parse_upgrade_tree(tree) if tree else [],
+    }
+
+
+def _entry_row(branch: str, path: str, sha: str, ctype: str, content: bytes,
+               maps: _Maps, now) -> tuple:
+    """Parse one prefab into a `codex_entry` row tuple (pg_store INSERT order)."""
     entry = extract_entry(ctype, path, content, maps.loc)
     rel = path[len(PREFABS_ROOT):].removesuffix(".binfab")
     if ctype == "mount":  # split dragons out by their collection category
         refine_mount(entry, rel, maps.mount_categories)
     entry["mastery"] = mastery.mastery_for(rel, maps.multipliers)
-    return UpdateOne(
-        {"branch": branch, "path": path},
-        {"$set": {**entry, "branch": branch, "content_sha256": sha, "indexed_at": now}},
-        upsert=True,
-    )
+    entry["mastery_geode"] = mastery.geode_mastery_for(rel, maps.geode_multipliers)
+    if rel.lower().startswith("item/companion/"):
+        _attach_geode_companion(entry, rel, content, maps)
+    return to_row(entry, branch, sha, now)
 
 
 async def reindex(branch: str, store: ContentStore) -> dict:
     """Full (re)build for `branch`, skipping prefabs whose bytes are unchanged."""
     maps = await _load_maps(branch, store)
+    # (postgres_enabled is checked by the ensure_indexed entry point.)
 
     # path -> current source sha, to skip unchanged prefabs and prune removed ones.
-    existing: dict[str, str] = {}
-    async for doc in CodexEntry.get_pymongo_collection().find(
-        {"branch": branch}, {"path": 1, "content_sha256": 1, "_id": 0}
-    ):
-        existing[doc["path"]] = doc["content_sha256"]
+    existing = await pg_store.existing_shas(branch)
 
     coll = UpdateState.get_pymongo_collection()
     cursor = coll.find(
         _prefix_query(branch, PREFABS_ROOT), {"path": 1, "content_sha256": 1, "_id": 0}
     )
 
-    ops: list[WriteOp] = []
+    rows: list[tuple] = []
     counts = {"indexed": 0, "unchanged": 0, "missing_blob": 0, "removed": 0}
     seen: set[str] = set()
     now = utcnow()
@@ -145,18 +187,16 @@ async def reindex(branch: str, store: ContentStore) -> dict:
         if content is None:
             counts["missing_blob"] += 1
             continue
-        ops.append(_upsert_op(branch, path, sha, ctype, content, maps, now))
+        rows.append(_entry_row(branch, path, sha, ctype, content, maps, now))
         counts["indexed"] += 1
-        if len(ops) >= _FLUSH_AT:
-            await _flush(ops)
-            ops = []
-    await _flush(ops)
+        if len(rows) >= _FLUSH_AT:
+            await _flush(rows)
+            rows = []
+    await _flush(rows)
 
     stale = [p for p in existing if p not in seen]
     if stale:
-        await CodexEntry.find(
-            CodexEntry.branch == branch, {"path": {"$in": stale}}
-        ).delete()
+        await pg_store.delete_entries(branch, stale)
         counts["removed"] = len(stale)
 
     logger.info(
@@ -180,14 +220,15 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
     # The lookup tables are only needed to (re)parse prefabs - skip the loads for a
     # delta that's pure removals.
     needs_parse = any(r["type"] != "removed" and r.get("content_sha256") for r in touched)
-    maps = await _load_maps(branch, store) if needs_parse else _Maps({}, {}, {})
+    maps = await _load_maps(branch, store) if needs_parse else _Maps()
     now = utcnow()
-    ops: list[WriteOp] = []
+    rows: list[tuple] = []
+    removed: list[str] = []
 
     for r in touched:
         path = r["path"]
         if r["type"] == "removed":
-            ops.append(DeleteOne({"branch": branch, "path": path}))
+            removed.append(path)
             counts["removed"] += 1
             continue
         sha = r.get("content_sha256")
@@ -195,12 +236,13 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
         if content is None:
             counts["missing_blob"] += 1
             continue
-        ops.append(_upsert_op(branch, path, sha, classify(path), content, maps, now))  # type: ignore[arg-type]
+        rows.append(_entry_row(branch, path, sha, classify(path), content, maps, now))  # type: ignore[arg-type]
         counts["indexed"] += 1
-        if len(ops) >= _FLUSH_AT:
-            await _flush(ops)
-            ops = []
-    await _flush(ops)
+        if len(rows) >= _FLUSH_AT:
+            await _flush(rows)
+            rows = []
+    await _flush(rows)
+    await pg_store.delete_entries(branch, removed)
 
     logger.info(
         "codexes[%s]: delta ordinal=%s indexed=%d removed=%d missing_blob=%d",
@@ -211,8 +253,10 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
 
 async def ensure_indexed(branch: str, store: ContentStore, summary: dict) -> dict:
     """Post-sync hook: full bootstrap if the codex is empty, else apply the delta."""
-    has_any = await CodexEntry.find_one(CodexEntry.branch == branch) is not None
-    if not has_any:
+    if not settings.postgres_enabled:
+        logger.warning("codexes[%s]: Postgres disabled - skipping index", branch)
+        return {"indexed": 0, "removed": 0, "missing_blob": 0}
+    if not await pg_store.has_any(branch):
         return await reindex(branch, store)
     ordinal = summary.get("ordinal")
     if summary.get("changed") and ordinal is not None:

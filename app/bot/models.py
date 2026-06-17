@@ -41,6 +41,29 @@ class LiveBoard(BaseModel):
     channel_missing: bool = False                # configured channel was deleted
 
 
+class MarketWatchItem(BaseModel):
+    """One watched marketplace item. Alerts when the cheapest active listing's
+    per-unit price is at/under ``max_price_each`` (or whenever it's listed at all,
+    when that's None). ``last_alert_sig`` edge-triggers: the cheapest price we last
+    alerted for, so the same deal isn't re-posted on every hourly refresh."""
+
+    name: str
+    max_price_each: float | None = None
+    last_alert_sig: str | None = None
+
+
+class MarketWatch(BaseModel):
+    """Per-guild marketplace watch: one channel + ping roles, plus a watchlist of
+    items. Checked when new market data lands (the hourly ingest 'market' event);
+    see app/bot/market_watch.py."""
+
+    enabled: bool = False
+    channel_id: int | None = None
+    ping_role_ids: list[int] = Field(default_factory=list)
+    channel_missing: bool = False                # configured channel was deleted
+    items: list[MarketWatchItem] = Field(default_factory=list)
+
+
 class GuildConfig(Document):
     guild_id: int                                       # Discord guild id - unique
 
@@ -51,6 +74,9 @@ class GuildConfig(Document):
 
     # --- Live "Trove Now" board (one self-updating message) ---
     live_board: LiveBoard = Field(default_factory=LiveBoard)
+
+    # --- Marketplace watch (one channel + a watchlist of items) ---
+    market_watch: MarketWatch = Field(default_factory=MarketWatch)
 
     # --- Bot output language ---
     # BCP-ish code from app.i18n.SUPPORTED (en/fr/de/pt-PT/ru/ja/zh-CN). The bot
@@ -99,6 +125,22 @@ class GuildConfig(Document):
             self.hourly_challenge_enabled = False
             self.announce_channel_id = None
             self.last_announced_challenge_anchor = None
+            changed = True
+        # Split the single hourly-challenge type into per-category types, carrying
+        # the channel / ping roles / last anchor across so an upgraded guild keeps
+        # announcing (now once per category). Idempotent: the pop no-ops afterwards.
+        legacy_ch = self.announcements.pop("hourly_challenge", None)
+        if legacy_ch is not None:
+            for cat in ("collection", "rampage", "racing", "target", "dungeon"):
+                key = f"challenge_{cat}"
+                if key not in self.announcements:
+                    self.announcements[key] = AnnouncementSetting(
+                        enabled=legacy_ch.enabled,
+                        channel_id=legacy_ch.channel_id,
+                        ping_role_ids=list(legacy_ch.ping_role_ids),
+                        last_anchor=legacy_ch.last_anchor,
+                        channel_missing=legacy_ch.channel_missing,
+                    )
             changed = True
         # Single ping role -> the multi list.
         for s in self.announcements.values():

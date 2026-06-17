@@ -157,7 +157,7 @@ async def _glsserver_holds_session(reader, writer, hello: bytes, hold_seconds: f
             total += len(chunk)
             if total >= _GLS_MAX_READ_BYTES:
                 return True   # actively streaming a session → online
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return True           # held the socket open past the window → online
     except (ConnectionResetError, ConnectionError, BrokenPipeError):
         # A reset is NOT the observed maintenance signature (that's a graceful

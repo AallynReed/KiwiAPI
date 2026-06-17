@@ -39,10 +39,13 @@ from app.core.utils import utcnow
 
 logger = logging.getLogger("kiwi.bot")
 
-# Redis event type -> announcement registry key. Rotation event types already match
-# their announcement key; only challenge/chaos use the SSE-legacy names.
-_EVENT_TO_ANNOUNCEMENT: dict[str, str] = {
-    "challenge": "hourly_challenge",
+# Redis event type -> announcement registry key(s). Rotation event types already
+# match their announcement key; only challenge/chaos use the SSE-legacy names. The
+# single "challenge" event fans out to every per-category challenge type (only the
+# live category's anchor actually fires).
+_EVENT_TO_ANNOUNCEMENT: dict[str, str | tuple[str, ...]] = {
+    "challenge": ("challenge_collection", "challenge_rampage", "challenge_racing",
+                  "challenge_target", "challenge_dungeon"),
     "chaos": "chaos_chest",
     "corruxion": "corruxion",
     "fluxion": "fluxion",
@@ -54,6 +57,7 @@ _EVENT_TO_ANNOUNCEMENT: dict[str, str] = {
     "server_status": "server_status",
     "trove_news": "trove_news",
     "giveaways": "giveaways",
+    "game_update": "game_update",
 }
 
 
@@ -118,12 +122,20 @@ class KiwiBot(discord.Client):
                 except (ValueError, TypeError):
                     continue
                 event_type = payload.get("type")
-                key = _EVENT_TO_ANNOUNCEMENT.get(event_type)
-                if key:
+                mapped = _EVENT_TO_ANNOUNCEMENT.get(event_type)
+                keys = (mapped,) if isinstance(mapped, str) else (mapped or ())
+                for key in keys:
                     try:
                         await run_announcement_type(self, key)
                     except Exception:
                         logger.exception("event-driven announce failed for %s", key)
+                # The hourly market refresh drives the per-guild marketplace watch.
+                if event_type == "market":
+                    try:
+                        from app.bot.market_watch import run_market_watch
+                        await run_market_watch(self)
+                    except Exception:
+                        logger.exception("market_watch run failed")
                 # Refresh the live board the instant a board-relevant event lands; the
                 # :55 clock loop also refreshes it so the periodic countdowns stay synced.
                 if event_type in liveboard.BOARD_EVENTS:

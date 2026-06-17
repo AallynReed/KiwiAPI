@@ -20,7 +20,6 @@ from app.core.utils import client_ip, utcnow
 from app.site_auth.models import SiteSession, SiteUser
 from app.site_auth.schemas import SiteTokenResponse
 
-
 # Distinguishes site-user access tokens from dev-portal ones. Read by the
 # ``get_current_site_user`` dependency; missing or wrong = 401.
 TOKEN_KIND = "site"

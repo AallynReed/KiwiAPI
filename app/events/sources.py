@@ -224,6 +224,32 @@ def _giveaways_sig(d: dict) -> str | None:
     return str(n["created_at"]) if n else None
 
 
+# ── state-change driven: game updates (a new build is mirrored) ─────────────
+# Scoped to the live (US) branch - the public "patch is live" signal. Published
+# by the archiver when it finishes a version (app/trove/updates/repo.py); PTS
+# builds don't move this source's signature, so they stay quiet here.
+
+_GAME_UPDATE_BRANCH = "live-us"
+
+
+async def _game_update_data() -> dict:
+    from app.trove.updates import read as updates_read
+    v = await updates_read.latest_version(_GAME_UPDATE_BRANCH)
+    if v is None:
+        return {"version": None}
+    return {"version": {
+        "branch": v.branch, "ordinal": v.ordinal, "version_tag": v.version_tag,
+        "files_added": v.files_added, "files_modified": v.files_modified,
+        "files_removed": v.files_removed, "bytes_added": v.bytes_added,
+        "completed_at": v.completed_at.isoformat() if v.completed_at else None,
+    }}
+
+
+def _game_update_sig(d: dict) -> str | None:
+    v = d.get("version")
+    return f"{v['branch']}:{v['ordinal']}" if v else None
+
+
 # ── registry ────────────────────────────────────────────────────────────────
 
 SOURCES: tuple[EventSource, ...] = (
@@ -240,6 +266,7 @@ SOURCES: tuple[EventSource, ...] = (
     EventSource("server_status", _status_data, _status_sig, None),
     EventSource("trove_news", _news_data, _news_sig, None),
     EventSource("giveaways", _giveaways_data, _giveaways_sig, None),
+    EventSource("game_update", _game_update_data, _game_update_sig, None),
 )
 
 SOURCES_BY_TYPE: dict[str, EventSource] = {s.type: s for s in SOURCES}

@@ -191,11 +191,18 @@ services:
       SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      # Read Postgres-backed data (activity) from the API over the compose network -
+      # the bot has no Postgres. Points at the api service; depends_on it below.
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
     depends_on:
       mongo:
         condition: service_healthy
       redis:
         condition: service_healthy
+      # For the activity HTTP fallback. Soft dep (started, not healthy) - the
+      # internal_get calls fail gracefully if the API is briefly down.
+      api:
+        condition: service_started
     # Bind-mount source like the api so a deploy = sync + recreate.
     volumes:
       - ./app:/app/app

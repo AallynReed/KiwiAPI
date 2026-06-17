@@ -871,6 +871,51 @@
   flex-wrap: wrap;
   margin-top: 14px;
 }
+
+/* Market-watch watchlist editor (one row per watched item). */
+.dash-mw-items-head { margin: 16px 0 8px; }
+.dash-mw-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.dash-mw-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash-mw-item input {
+  padding: 8px 11px;
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+  color: var(--text-fg, #e8ecf3);
+  font: inherit;
+  font-size: .88rem;
+}
+.dash-mw-item .dash-mw-name { flex: 1 1 auto; min-width: 0; }
+.dash-mw-item .dash-mw-price { flex: 0 0 130px; width: 130px; }
+.dash-mw-item input:focus {
+  outline: none;
+  border-color: rgba(76,201,240,.5);
+}
+.dash-mw-remove {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(0,0,0,.20);
+  color: var(--text-mute, #8a93a3);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.dash-mw-remove:hover {
+  border-color: rgba(240,85,106,.45);
+  color: #f0556a;
+}
 .dash-discord-field {
   flex: 1;
   min-width: 200px;

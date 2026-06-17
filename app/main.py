@@ -11,21 +11,10 @@ from fastapi.staticfiles import StaticFiles
 from app.admin.router import router as admin_router
 from app.auth.account import router as account_router
 from app.auth.oauth import router as oauth_router
-from app.discord.router import router as discord_router
 from app.auth.router import router as auth_router
 from app.auth.schemas import PublicConfig, ScopeInfo
 from app.auth.sessions import router as sessions_router
-from app.site_auth.oauth import router as site_oauth_router
-from app.site_auth.router import router as site_auth_router
-from app.giveaways.admin import router as giveaways_admin_router
-from app.giveaways.router import router as giveaways_router
-from app.giveaways.router import public_router as giveaways_public_router
-from app.giveaways.worker import start_giveaway_worker, stop_giveaway_worker
-from app.supporters.router import public_router as supporters_public_router
 from app.bot.router import router as discord_bot_router
-from app.events.bus import start_event_bus, stop_event_bus
-from app.events.router import router as events_router
-from app.events.scheduler import start_event_scheduler, stop_event_scheduler
 from app.core.bootstrap import bootstrap_admin
 from app.core.config import settings
 from app.core.database import close_db, init_db
@@ -35,11 +24,22 @@ from app.core.idempotency import add_idempotency_middleware
 from app.core.maintenance import maintenance_loop
 from app.core.middleware import add_security_middleware
 from app.core.observability import add_request_context_middleware, configure_logging
+from app.core.postgres import close_postgres, init_postgres
 from app.core.redis import close_redis, init_redis
-from app.core.postgres import init_postgres, close_postgres
 from app.core.scopes import catalog as scope_catalog
+from app.discord.router import router as discord_router
+from app.events.bus import start_event_bus, stop_event_bus
+from app.events.router import router as events_router
+from app.events.scheduler import start_event_scheduler, stop_event_scheduler
+from app.giveaways.admin import router as giveaways_admin_router
+from app.giveaways.router import public_router as giveaways_public_router
+from app.giveaways.router import router as giveaways_router
+from app.giveaways.worker import start_giveaway_worker, stop_giveaway_worker
 from app.scanning.router import router as scanning_router
 from app.site.router import router as site_router
+from app.site_auth.oauth import router as site_oauth_router
+from app.site_auth.router import router as site_auth_router
+from app.supporters.router import public_router as supporters_public_router
 from app.tokens.router import router as tokens_router
 from app.tokens.schemas import REVOKE_REASONS
 from app.trove.btt_releases import (
@@ -47,18 +47,17 @@ from app.trove.btt_releases import (
     stop_btt_releases_refresher,
 )
 from app.trove.chaos import start_chaos_refresher, stop_chaos_refresher
-from app.trove.status import start_status_prober, stop_status_prober
 from app.trove.delves import start_delve_refresher, stop_delve_refresher
 from app.trove.events import start_events_refresher, stop_events_refresher
+from app.trove.feeds import start_feeds_refresher, stop_feeds_refresher
 from app.trove.leaderboards.detection import (
     start_cheaters_warmer,
     stop_cheaters_warmer,
 )
 from app.trove.news import start_news_refresher, stop_news_refresher
-from app.trove.feeds import start_feeds_refresher, stop_feeds_refresher
 from app.trove.router import (
-    btt_router,
     activity_router,
+    btt_router,
     class_activity_router,
     codexes_router,
     feeds_router,
@@ -72,6 +71,7 @@ from app.trove.router import (
     stats_router,
     updates_router,
 )
+from app.trove.status import start_status_prober, stop_status_prober
 from app.trove.updates.worker import start_update_archiver, stop_update_archiver
 from app.usage.middleware import add_usage_middleware
 from app.usage.recorder import start_usage_recorder, stop_usage_recorder

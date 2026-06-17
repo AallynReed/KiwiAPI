@@ -10,6 +10,7 @@ No ORM: raw ``asyncpg`` + ``COPY`` for bulk load. The pool is created at startup
 ``POSTGRES_DSN`` is unset the pool is ``None`` and the PG-backed leaderboards
 features are simply disabled (the app still boots - handy for local dev).
 """
+import json
 import logging
 
 import asyncpg
@@ -19,6 +20,14 @@ from app.core.config import settings
 logger = logging.getLogger("kiwi.postgres")
 
 _pool: asyncpg.Pool | None = None
+
+
+async def _init_connection(con: asyncpg.Connection) -> None:
+    """Per-connection setup: encode/decode ``jsonb`` as Python objects so the codex
+    ``data`` column round-trips as a dict without manual json.dumps/loads."""
+    await con.set_type_codec(
+        "jsonb", encoder=json.dumps, decoder=json.loads, schema="pg_catalog",
+    )
 
 
 async def init_postgres() -> None:
@@ -32,11 +41,16 @@ async def init_postgres() -> None:
         min_size=settings.postgres_pool_min,
         max_size=settings.postgres_pool_max,
         command_timeout=120,
+        init=_init_connection,
     )
+    from app.trove.codexes import pg_schema as codex_pg_schema
     from app.trove.leaderboards import pg_schema
+    from app.trove.market import pg_schema as market_pg_schema
     async with _pool.acquire() as con:
         await pg_schema.init(con)
-    logger.info("Postgres pool ready (leaderboards backend)")
+        await market_pg_schema.init(con)
+        await codex_pg_schema.init(con)
+    logger.info("Postgres pool ready (leaderboards + market + codexes backends)")
 
 
 async def close_postgres() -> None:

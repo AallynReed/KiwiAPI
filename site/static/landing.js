@@ -575,10 +575,36 @@
     }
   }
 
+  // ─── Latest Trove patch banner ─────────────────────────────────────
+  // Shows the newest archived live build (version tag + total files changed)
+  // and links to /updates. Hidden until the fetch resolves; silent on failure.
+  // Patches land rarely, so this fetches once on load (no polling).
+  async function refreshPatch() {
+    const el = document.getElementById('hero-patch');
+    if (!el) return;
+    let v = null;
+    try {
+      const r = await fetch('/site/updates/live-us/versions?limit=1', { cache: 'default' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      v = (data.items && data.items[0]) || null;
+    } catch (_) { return; }
+    if (!v) return;
+    const txt = el.querySelector('.hero-patch-text');
+    if (txt) {
+      const changed = (v.files_added || 0) + (v.files_modified || 0) + (v.files_removed || 0);
+      const tag = v.version_tag || '';
+      txt.textContent = changed
+        ? `${tag} · ${changed.toLocaleString()} ${tr('files changed')}`
+        : tag;
+    }
+    el.hidden = false;
+  }
+
   // Kick off + schedule. requestIdleCallback first (so we don't fight the
   // initial paint), then a normal interval. If the tab returns from hidden,
   // refresh immediately so a backgrounded tab snaps to current.
-  const kick = () => { refreshLive(); refreshStatus(); };
+  const kick = () => { refreshLive(); refreshStatus(); refreshPatch(); };
   if ('requestIdleCallback' in window) {
     requestIdleCallback(kick, { timeout: 1500 });
   } else {

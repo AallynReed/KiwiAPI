@@ -50,12 +50,21 @@ class AnnouncementType:
 # of cycles. Each returns the current anchor string, or None when there's nothing
 # live to announce.
 
-async def _challenge_anchor() -> str | None:
-    from app.trove.captures import get_current_challenge
-    cur = await get_current_challenge()
-    if cur.get("active") and cur.get("name"):
-        return str(cur["starts_at"])
-    return None
+# Hourly challenges are split per category so each can post to its own channel and
+# ping its own role. classify_challenge() (app/trove/captures.py) maps a captured
+# name to one of these tokens; an anchor fires only while THAT category is live.
+CHALLENGE_CATEGORIES: tuple[str, ...] = ("collection", "rampage", "racing", "target", "dungeon")
+
+
+def _challenge_category_anchor(category: str) -> AnchorFn:
+    """An anchor that fires only while the live hourly challenge is ``category``."""
+    async def _anchor() -> str | None:
+        from app.trove.captures import get_current_challenge
+        cur = await get_current_challenge()
+        if cur.get("active") and cur.get("name") and cur.get("type") == category:
+            return str(cur["starts_at"])
+        return None
+    return _anchor
 
 
 async def _chaos_anchor() -> str | None:
@@ -145,6 +154,14 @@ async def _status_anchor() -> str | None:
     return None if overall == "unknown" else f"status:{overall}"
 
 
+async def _game_update_anchor() -> str | None:
+    """Fires when a new live (US) build is archived. Anchored to branch:ordinal so
+    each new patch posts once; PTS builds don't move it."""
+    from app.trove.updates import read as updates_read
+    v = await updates_read.latest_version("live-us")
+    return f"{v.branch}:{v.ordinal}" if v else None
+
+
 # ── expiry: when the current occurrence becomes irrelevant (auto-delete time) ──
 # Mirror the anchors but return the occurrence's END (unix). The announcer reads
 # these only when it's posting (occurrence is current), so "current end" is right.
@@ -191,12 +208,28 @@ async def _fluxion_expiry() -> int | None:
 
 # ── the registry ─────────────────────────────────────────────────────────────
 
-ANNOUNCEMENT_TYPES: tuple[AnnouncementType, ...] = (
+# One announcement type per challenge category (replaces the old single
+# "hourly_challenge" type; migrate_legacy folds old configs into these). Each is
+# an image announcement like the original; only the live category's anchor fires,
+# so exactly one posts per window.
+_CHALLENGE_LABELS: dict[str, tuple[str, str]] = {
+    "collection": ("Hourly: Collection", "Post Collection hourly challenges only."),
+    "rampage": ("Hourly: Rampage", "Post Rampage Alert hourly challenges only."),
+    "racing": ("Hourly: Racing", "Post Racing hourly challenges only."),
+    "target": ("Hourly: Target", "Post Target hourly challenges only."),
+    "dungeon": ("Hourly: Dungeon", "Post Dungeon / biome hourly challenges only."),
+}
+
+_CHALLENGE_TYPES: tuple[AnnouncementType, ...] = tuple(
     AnnouncementType(
-        "hourly_challenge", "Hourly challenge",
-        "Post each new hourly challenge as its 20-minute window opens.",
-        "Rotations", embeds.challenge_embed, _challenge_anchor,
-        auto_manage=True, expiry=_challenge_expiry),
+        f"challenge_{cat}", _CHALLENGE_LABELS[cat][0], _CHALLENGE_LABELS[cat][1],
+        "Rotations", embeds.challenge_embed, _challenge_category_anchor(cat),
+        auto_manage=True, expiry=_challenge_expiry)
+    for cat in CHALLENGE_CATEGORIES
+)
+
+ANNOUNCEMENT_TYPES: tuple[AnnouncementType, ...] = (
+    *_CHALLENGE_TYPES,
     AnnouncementType(
         "chaos_chest", "Chaos Chest",
         "Post the week's featured Chaos Chest item at each Tuesday rotation.",
@@ -249,6 +282,10 @@ ANNOUNCEMENT_TYPES: tuple[AnnouncementType, ...] = (
         "Post when Trove's overall server status changes (online / down).",
         "Feeds", embeds.status_embed, _status_anchor,
         auto_manage=True, expiry=None),    # supersede-only: replaced on the next change
+    AnnouncementType(
+        "game_update", "Game updates",
+        "Post when a new Trove build goes live (file-change summary image + link).",
+        "Feeds", embeds.game_update_embed, _game_update_anchor),    # rich embed; stays as a record
     )
 
 TYPES_BY_KEY: dict[str, AnnouncementType] = {t.key: t for t in ANNOUNCEMENT_TYPES}

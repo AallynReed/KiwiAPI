@@ -23,7 +23,6 @@ a new hourly capture invalidates automatically.
 """
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
 
@@ -110,6 +109,19 @@ async def estimate_active_players(*, force: bool = False) -> dict:
     _LAST_GOOD shortcut and recomputes + re-persists, so a re-ingest onto the
     same anchor refreshes the estimate instead of serving the pre-ingest slot.
     """
+    # In the gateway bot (Mongo + Redis, no Postgres) fetch over HTTP instead of
+    # querying Postgres directly. The API process (postgres_enabled) computes it.
+    from app.core.config import settings
+    if not settings.postgres_enabled:
+        from app.core.internal_api import internal_get
+        data = await internal_get("/v1/activity/current")
+        return data if data is not None else {
+            "window_start": None, "window_end": None, "duration_hours": None,
+            "estimate": None, "estimate_24h": None, "estimate_7d": None,
+            "by_board": [], "boards_analyzed": 0, "methodology": "unavailable",
+            "computed_at": 0,
+        }
+
     from app.admin import runtime_config
     from app.trove.leaderboards import cache as lb_cache
 
@@ -513,7 +525,7 @@ async def backfill_history(
     # Pairs are CONSECUTIVE stamps, so a late anchor's early side is the
     # immediately-preceding streamed anchor - a 1-deep window (prev) covers
     # every pair with no reload (the defensive branch handles force=False gaps).
-    needed = sorted(set(a for pr in todo for a in pr))
+    needed = sorted({a for pr in todo for a in pr})
     early_of = {late: early for early, late in todo}
 
     # Gap cutoff from the FULL stored cadence (median spacing), so a non-hourly or
@@ -604,8 +616,8 @@ async def reset_estimates() -> int:
 
     (The same-origin ``/site/leaderboards/activity*`` proxies send ``no-cache``,
     so the page picks the recompute up immediately - no HTTP/CDN staleness.)"""
-    from app.trove.leaderboards import pg_store
     from app.trove.leaderboards import cache as lb_cache
+    from app.trove.leaderboards import pg_store
     deleted = await pg_store.delete_all_estimates()
     active_deleted = await pg_store.delete_all_active_windows()
     invalidate_cache()
@@ -749,8 +761,20 @@ async def activity_series(period: str = "7d") -> dict:
     Cheap: a single indexed range scan + in-Python bucketing, no per-board
     re-computation. Empty collection -> empty ``points`` (page hides the
     chart). Unknown ``period`` falls back to ``7d``."""
-    from app.trove.leaderboards import pg_store
+    # Bot process (no Postgres): fetch the bucketed series over HTTP instead.
+    from app.core.config import settings
+    if not settings.postgres_enabled:
+        from app.core.internal_api import internal_get
+        p = (period or "7d").lower()
+        data = await internal_get("/v1/activity/series", {"period": p})
+        return data if data is not None else {
+            "period": p, "bucket_seconds": 0, "window_start": 0, "window_end": 0,
+            "points": [], "peak": None, "average": None, "latest": None,
+            "methodology": "unavailable",
+        }
+
     from app.trove.leaderboards import cache as lb_cache
+    from app.trove.leaderboards import pg_store
 
     period = (period or "7d").lower()
     if period not in _ACTIVITY_PERIODS:   # 3m/6m/1y/all were removed from /activity

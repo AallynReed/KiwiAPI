@@ -415,7 +415,7 @@ async def backfill_class_history(
     board_uuids = stats.class_effort_board_uuids()   # Effort only (Paragon excluded)
     pr_board_uuids = stats.class_pr_board_uuids()
     pr_thr, effort_thr = await _clean_thresholds()
-    needed = sorted(set(a for pr in todo for a in pr))
+    needed = sorted({a for pr in todo for a in pr})
     early_of = {late: early for early, late in todo}
 
     intervals = _act._intervals_hours(stamps_asc)
@@ -491,8 +491,8 @@ async def backfill_class_history(
 
 
 async def reset_class_estimates() -> int:
-    from app.trove.leaderboards import pg_store
     from app.trove.leaderboards import cache as lb_cache
+    from app.trove.leaderboards import pg_store
     deleted = await pg_store.delete_all_class_estimates()
     reset_caches()
     await lb_cache.invalidate_all_activity()  # sweeps activity_class_series:* too
@@ -527,8 +527,8 @@ async def class_activity_series(period: str = "7d") -> dict:
     (``buckets``) + per-class ``values`` (avg active/hr in each bucket, null when
     a class had no data in that bucket), so the page draws one aligned line per
     class. Read-through Redis cache (short TTL)."""
-    from app.trove.leaderboards import pg_store
     from app.trove.leaderboards import cache as lb_cache
+    from app.trove.leaderboards import pg_store
 
     period = (period or "7d").lower()
     if period not in _act._SERIES_PERIODS:

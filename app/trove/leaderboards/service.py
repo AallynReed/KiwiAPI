@@ -287,6 +287,50 @@ async def player_history(
     return out
 
 
+async def _is_verified_trove_name(name: str) -> bool:
+    """True when a site account has claimed AND been approved for this Trove name
+    (ties the public profile to the manual master-approval claim flow)."""
+    try:
+        from app.site_auth.models import SiteUser
+        doc = await SiteUser.find_one(
+            {"claimed_trove_name": name.strip().lower(), "claim_verified": True}
+        )
+        return doc is not None
+    except Exception:
+        return False
+
+
+async def player_profile(name: str, *, limit: int = 200) -> dict:
+    """Public profile aggregate for one player: recent appearances (board names +
+    day-over-day deltas), a summary, and whether the name is a verified claimed
+    identity. ``recent`` is empty when the name has never been captured."""
+    name = name.strip()
+    rows = await player_history(name, limit=limit, with_deltas=True)
+    canonical = rows[0]["player_name"] if rows else name
+    uuids = sorted({r["leaderboard"] for r in rows})
+    meta = await pg_store.board_meta(uuids) if uuids else {}
+    recent = [
+        {**r, "board_name": (meta.get(r["leaderboard"]) or {}).get("name")}
+        for r in rows
+    ]
+    best_rank = min((r["rank"] for r in rows), default=None)
+    best = next((r for r in rows if r["rank"] == best_rank), None) if best_rank is not None else None
+    latest_anchor = max((r["created_at"] for r in rows), default=None)
+    return {
+        "player_name": canonical,
+        "verified": await _is_verified_trove_name(name),
+        "summary": {
+            "boards_appeared": len(uuids),
+            "appearances": len(rows),
+            "best_rank": best_rank,
+            "best_rank_board_uuid": best["leaderboard"] if best else None,
+            "best_rank_board_name": (meta.get(best["leaderboard"]) or {}).get("name") if best else None,
+            "latest_anchor": latest_anchor,
+        },
+        "recent": recent,
+    }
+
+
 async def board_history(uuid: int, *, days: int = 7, top: int = 5) -> dict:
     """Score-vs-time trajectories for the current top-``top`` players on a board
     over the last ``days`` days, with synthetic reset-zero cliffs."""
@@ -329,6 +373,90 @@ async def board_history(uuid: int, *, days: int = 7, top: int = 5) -> dict:
     ]
     return {"uuid": uuid, "days": days, "window_start": window_start,
             "window_end": now, "anchors": anchors, "series": series}
+
+
+# ── board health ─────────────────────────────────────────────────────────────
+
+def _median(xs: list[float]) -> float:
+    s = sorted(xs)
+    n = len(s)
+    if n == 0:
+        return 0.0
+    mid = n // 2
+    return s[mid] if n % 2 else (s[mid - 1] + s[mid]) / 2.0
+
+
+def _gini(xs: list[float]) -> float:
+    """Gini coefficient of non-negative values (0 = perfectly even, →1 = one player
+    dominates) - a "competitiveness" proxy over the top-N scores."""
+    s = sorted(x for x in xs if x >= 0)
+    n = len(s)
+    total = sum(s)
+    if n == 0 or total == 0:
+        return 0.0
+    cum = sum(i * x for i, x in enumerate(s, start=1))
+    return (2.0 * cum) / (n * total) - (n + 1) / n
+
+
+def compute_board_health(items: list[dict], *, comparable: bool) -> dict:
+    """Pure board-health metrics from a board's rank-ordered top-N entries.
+
+    ``items`` carry ``score`` and, when ``comparable``, the day-over-day
+    ``is_new`` / ``score_delta`` / ``prev_score`` fields produced by
+    ``list_entries_with_deltas``. Competitiveness always computes; turnover and
+    score inflation are null when the two snapshots aren't comparable (a reset
+    crossed, or no prior snapshot)."""
+    out = {
+        "leader_share": None, "p1_pn_ratio": None, "gini": None,
+        "turnover_rate": None, "new_entrants": None,
+        "median_score_gain": None, "median_score_gain_pct": None,
+    }
+    scores = [float(it["score"]) for it in items if it.get("score") is not None]
+    if scores:
+        total = sum(scores)
+        if total > 0:
+            out["leader_share"] = round(scores[0] / total, 4)
+        if scores[-1] > 0:
+            out["p1_pn_ratio"] = round(scores[0] / scores[-1], 4)
+        out["gini"] = round(_gini(scores), 4)
+    if comparable and items:
+        new_entrants = sum(1 for it in items if it.get("is_new"))
+        out["new_entrants"] = new_entrants
+        out["turnover_rate"] = round(new_entrants / len(items), 4)
+        gains = [float(it["score_delta"]) for it in items
+                 if not it.get("is_new") and it.get("score_delta") is not None]
+        if gains:
+            out["median_score_gain"] = round(_median(gains), 2)
+        pcts = [float(it["score_delta"]) / float(it["prev_score"]) for it in items
+                if not it.get("is_new") and it.get("prev_score")]
+        if pcts:
+            out["median_score_gain_pct"] = round(_median(pcts) * 100, 2)
+    return out
+
+
+async def board_health(uuid: int, *, top: int = 50) -> dict | None:
+    """Health summary for one board: roster turnover + day-over-day score inflation
+    (when the snapshots are comparable, i.e. no reset crossed) and competitiveness
+    (score concentration). None when the board has no stored entries."""
+    board = await get_board(uuid)
+    latest = await pg_store.latest_anchor_for_board(uuid)
+    if board is None or latest is None:
+        return None
+    items, total, comparison = await list_entries_with_deltas(uuid, latest, limit=top, offset=0)
+    comparable = bool(comparison.get("comparable"))
+    return {
+        "uuid": uuid,
+        "name": board.get("name"),
+        "category": board.get("category"),
+        "reset_kind": board.get("reset_kind"),
+        "anchor": latest,
+        "prev_anchor": comparison.get("prev_anchor"),
+        "comparable": comparable,
+        "comparison_reason": comparison.get("reason"),
+        "population": total,
+        "sample_size": len(items),
+        **compute_board_health(items, comparable=comparable),
+    }
 
 
 async def player_history_series(player_name: str, *, days: int = 7) -> dict:

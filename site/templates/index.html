@@ -145,6 +145,17 @@
 
                 <p class="hero-sub" data-i18n>The complete companion suite for Trove players, modders, and data miners. Plan your gems, browse decoded codexes, build .tmod packages - desktop, web, or both.</p>
 
+                <!-- Latest Trove patch banner: populated by landing.js from the
+                     /site/updates/live-us/versions proxy; stays hidden until a
+                     version resolves (and on any fetch error). -->
+                <div class="hero-patch-row">
+                    <a class="pill pill-accent" id="hero-patch" href="/updates" hidden>
+                        <i class="fa-solid fa-cube" aria-hidden="true"></i>
+                        <span class="hero-patch-badge" data-i18n>New Trove patch</span>
+                        <span class="hero-patch-text"></span>
+                    </a>
+                </div>
+
                 <div class="hero-actions">
                     <!-- ⚠ Download dropdown HTML below preserves the IDs +
                          classes app.js binds to (download-dropdown, -trigger,

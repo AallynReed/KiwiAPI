@@ -41,6 +41,7 @@ from app.bot.models import (
     AnnouncementSetting,
     Club,
     GuildConfig,
+    MarketWatchItem,
     demote_rank,
     promote_rank,
 )
@@ -108,6 +109,18 @@ class AnnouncementsUpdate(BaseModel):
 class LiveBoardUpdate(BaseModel):
     enabled: bool = False
     channel_id: str | None = None            # snowflake string, or null to clear
+
+
+class MarketWatchItemUpdate(BaseModel):
+    name: str
+    max_price_each: float | None = None      # per-unit flux ceiling; null = any listing
+
+
+class MarketWatchUpdate(BaseModel):
+    enabled: bool = False
+    channel_id: str | None = None            # snowflake string, or null to clear
+    ping_role_ids: list[str] = []            # snowflake strings; roles to @-mention
+    items: list[MarketWatchItemUpdate] = []
 
 
 class ClubUpdate(BaseModel):
@@ -209,6 +222,7 @@ def _detail_payload(guild_id: int, ctx: dict, cfg: GuildConfig | None, snap: dic
     board_channel = board.channel_id if board else None
     board_preflight = (discord_rest.preflight_for(guild, me, raw_channels, board_channel)
                        if board and board.enabled and board_channel else None)
+    mw = cfg.market_watch if cfg else None
 
     result = {
         "guild_id": str(guild_id),
@@ -227,6 +241,14 @@ def _detail_payload(guild_id: int, ctx: dict, cfg: GuildConfig | None, snap: dic
             "channel_id": str(board_channel) if board_channel else None,
             "channel_missing": bool(board and board.channel_missing),
             "preflight": board_preflight,
+        },
+        "market_watch": {
+            "enabled": bool(mw and mw.enabled),
+            "channel_id": str(mw.channel_id) if mw and mw.channel_id else None,
+            "ping_role_ids": [str(r) for r in (mw.ping_role_ids if mw else [])],
+            "channel_missing": bool(mw and mw.channel_missing),
+            "items": [{"name": it.name, "max_price_each": it.max_price_each}
+                      for it in (mw.items if mw else [])],
         },
     }
     if ctx["is_admin"]:
@@ -469,6 +491,69 @@ async def set_live_board(
     board.enabled = body.enabled
     board.channel_id = channel_id
     board.channel_missing = False
+    cfg.updated_by = user.discord_id
+    cfg.updated_at = utcnow()
+    if existing:
+        await cfg.save()
+    else:
+        await cfg.insert()
+    return _detail_payload(guild_id, ctx, cfg, snap)
+
+
+@router.put("/guilds/{guild_id}/market-watch")
+async def set_market_watch(
+    guild_id: int, body: MarketWatchUpdate, user: SiteUser = Depends(get_current_site_user),
+) -> dict:
+    """Enable/disable the marketplace watch + set its channel, ping roles, and the
+    watchlist (each item with an optional per-unit flux ceiling). Requires
+    ``manage_announcements``; the ping roles also need ``manage_ping_roles``."""
+    ctx = await _member_ctx(guild_id, user)
+    existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
+    config_perms = existing.config_perms if existing else {}
+    if not _has_capability(ctx, config_perms, "manage_announcements"):
+        raise APIError(403, ErrorCode.forbidden,
+                       "You don't have permission to configure the bot in this server.")
+
+    snap = await _snapshot(guild_id)
+    live_channel_ids = {int(c["id"]) for c in discord_rest.text_channels(snap["channels"])}
+    live_role_ids = {int(r["id"]) for r in discord_rest.assignable_roles(snap["roles"], guild_id)}
+    channel_id = (int(body.channel_id)
+                  if body.channel_id and str(body.channel_id).isdigit()
+                  and int(body.channel_id) in live_channel_ids else None)
+    if body.enabled and not channel_id:
+        raise APIError(400, ErrorCode.bad_request, "Pick a channel before enabling market watch.")
+
+    cfg = existing or GuildConfig(guild_id=guild_id)
+    cfg.migrate_legacy()
+    mw = cfg.market_watch
+    # Ping roles only change when the caller can manage them (else keep existing).
+    if _has_capability(ctx, config_perms, "manage_ping_roles"):
+        ping_role_ids = [int(r) for r in body.ping_role_ids
+                         if str(r).isdigit() and int(r) in live_role_ids]
+    else:
+        ping_role_ids = mw.ping_role_ids
+    # Normalize + de-dupe the watchlist (cap at 50). Preserve last_alert_sig for kept
+    # items so editing the list doesn't re-alert deals we've already posted.
+    prior = {it.name.lower(): it for it in mw.items}
+    items: list[MarketWatchItem] = []
+    seen: set[str] = set()
+    for raw in body.items[:50]:
+        nm = (raw.name or "").strip()
+        if not nm or nm.lower() in seen:
+            continue
+        seen.add(nm.lower())
+        prev = prior.get(nm.lower())
+        cap = (float(raw.max_price_each)
+               if raw.max_price_each is not None and raw.max_price_each > 0 else None)
+        items.append(MarketWatchItem(
+            name=nm, max_price_each=cap,
+            last_alert_sig=prev.last_alert_sig if prev else None,
+        ))
+    mw.enabled = body.enabled
+    mw.channel_id = channel_id
+    mw.ping_role_ids = ping_role_ids
+    mw.channel_missing = False
+    mw.items = items
     cfg.updated_by = user.discord_id
     cfg.updated_at = utcnow()
     if existing:

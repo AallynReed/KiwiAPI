@@ -173,3 +173,21 @@ class RuntimeConfigUpdate(BaseModel):
     """Body for ``PUT /admin/config/{key}``. Type-checked + range-checked
     server-side against the registry spec for that key."""
     value: object
+
+
+class SiteClaimAdminView(BaseModel):
+    """One Trove-name claim, for the master approval queue."""
+    user_id: str
+    username: str
+    display_name: str | None = None
+    discord_id: int | None = None
+    claimed_trove_name: str | None = None
+    claimed_trove_display: str | None = None
+    claimed_at: datetime | None = None
+    claim_verified: bool = False
+    claim_verified_at: datetime | None = None
+
+
+class SiteClaimAdminList(BaseModel):
+    items: list[SiteClaimAdminView]
+    count: int

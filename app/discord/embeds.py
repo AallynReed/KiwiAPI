@@ -616,3 +616,187 @@ async def ping_embed() -> dict:
         "fields": fields,
         "footer": {"text": "api.aallyn.net/health"},
     }
+
+
+# ── game_update (new Trove build announcement) ──────────────────────────────
+
+async def game_update_embed() -> dict:
+    """New-build announcement: a summary banner image + the file-change counts +
+    a link to the updates browser. Reads the latest live (US) version from Mongo."""
+    from app.trove.updates import read as updates_read
+
+    v = await updates_read.latest_version("live-us")
+    if v is None:
+        return {
+            "title": t("🧩 Trove update"),
+            "color": 0x5EC6FF,
+            "url": f"{SITE}/updates",
+            "description": t("No update has been archived yet."),
+            "footer": {"text": "trove.aallyn.net/updates"},
+        }
+    return {
+        "title": t("🧩 New Trove update — {version}", version=v.version_tag),
+        "color": 0x5EC6FF,
+        "url": f"{SITE}/updates",
+        "description": t("A new build is live on the US servers. See what changed:"),
+        "fields": [
+            {"name": t("Added"), "value": _num(v.files_added), "inline": True},
+            {"name": t("Modified"), "value": _num(v.files_modified), "inline": True},
+            {"name": t("Removed"), "value": _num(v.files_removed), "inline": True},
+        ],
+        "image": {"url": f"{SITE}/announce.png?kind=game_update&v={v.ordinal}"},
+        "footer": {"text": t("Browse the changed files at trove.aallyn.net/updates")},
+    }
+
+
+# ── /price ─────────────────────────────────────────────────────────────────
+
+def _flux(v) -> str:
+    """A flux amount with thousands separators (rounded to whole flux)."""
+    try:
+        return f"{round(float(v)):,}"
+    except (TypeError, ValueError):
+        return "—"
+
+
+async def price_embed(name: str) -> dict:
+    """Marketplace price summary for one item (cheapest / median / average / count).
+
+    Reads ``market_listings`` straight from Mongo (the bot shares the API's
+    database), so no API round-trip is needed."""
+    from app.trove.market import service as market_service
+
+    summary = await market_service.item_summary(name)
+    if summary is None:
+        return {
+            "title": t("💰 Market — {name}", name=name),
+            "color": 0xF0A500,
+            "url": f"{SITE}/market",
+            "description": t(
+                "No active listings found for **{name}**. Check the spelling, "
+                "or browse the market.", name=name),
+            "footer": {"text": "trove.aallyn.net/market"},
+        }
+    canonical = summary.get("name") or name
+    ea = t("flux ea.")
+    return {
+        "title": t("💰 Market — {name}", name=canonical),
+        "color": 0xF0A500,
+        "url": f"{SITE}/market",
+        "description": t(
+            "Cheapest **{price}** flux each, across **{count}** active listing(s).",
+            price=_flux(summary["min_each"]), count=summary["count"]),
+        "fields": [
+            {"name": t("Cheapest"), "value": f"{_flux(summary['min_each'])} {ea}", "inline": True},
+            {"name": t("Median"), "value": f"{_flux(summary['median_each'])} {ea}", "inline": True},
+            {"name": t("Average"), "value": f"{_flux(summary['avg_each'])} {ea}", "inline": True},
+            {"name": t("Highest"), "value": f"{_flux(summary['max_each'])} {ea}", "inline": True},
+            {"name": t("Listings"), "value": _num(summary["count"]), "inline": True},
+            {"name": t("In stock"), "value": _num(summary["total_stack"]), "inline": True},
+        ],
+        "footer": {"text": t("Trove marketplace · recently-seen player listings")},
+    }
+
+
+# ── market_watch (per-guild watchlist alert) ────────────────────────────────
+
+def market_watch_embed(name: str, summary: dict, max_price_each: float | None) -> dict:
+    """Alert that a watched marketplace item hit its target price. Sync (the caller
+    already fetched ``summary`` via market_service.item_summary)."""
+    cheapest = summary.get("min_each")
+    ea = t("flux ea.")
+    target = (t("dropped to {p} flux or less", p=_flux(max_price_each))
+              if max_price_each is not None else t("is now listed"))
+    return {
+        "title": t("🔔 Market watch — {name}", name=name),
+        "color": 0xF0A500,
+        "url": f"{SITE}/market",
+        "description": t("**{name}** {target}: cheapest **{price}** flux each.",
+                         name=name, target=target, price=_flux(cheapest)),
+        "fields": [
+            {"name": t("Cheapest"), "value": f"{_flux(cheapest)} {ea}", "inline": True},
+            {"name": t("Listings"), "value": _num(summary.get("count")), "inline": True},
+        ],
+        "footer": {"text": "trove.aallyn.net/market"},
+    }
+
+
+# ── /trove_uptime ──────────────────────────────────────────────────────────
+
+def _pct(fraction) -> str:
+    return f"{fraction * 100:.2f}%" if isinstance(fraction, (int, float)) else "—"
+
+
+async def uptime_embed(days: int = 7) -> dict:
+    """Trove server uptime % per region over the last ``days`` days.
+
+    Reads ``trove_status_events`` from Mongo via the status module (no API call)."""
+    from app.trove import status as status_mod
+
+    fields = []
+    for env, label in _REGIONS:
+        hist = await status_mod.get_history(env, days)
+        line = _pct(hist.get("uptime"))
+        outages = hist.get("outages") or []
+        if outages:
+            line += t(" · {n} outage(s)", n=len(outages))
+        fields.append({"name": label, "value": line, "inline": True})
+    return {
+        "title": t("📈 Trove uptime — last {days} days", days=days),
+        "url": f"{SITE}/status",
+        "color": 0x46D39A,
+        "description": t("Region uptime measured by Kiwi's status prober."),
+        "fields": fields,
+        "footer": {"text": "trove.aallyn.net/status · Trove server time (UTC−11)"},
+    }
+
+
+# ── /gem ───────────────────────────────────────────────────────────────────
+
+async def gem_embed(tier: int, type: int, level: int, stats: list[dict]) -> dict:
+    """Evaluate a typed-in gem: quality %, est. Power Rank, per-stat progress + cost.
+
+    Pure in-process compute (the evaluator hits no database). ``stats`` is a list
+    of three ``{"type": int, "value": float}`` dicts; procs are auto-guessed."""
+    from app.trove.gems.constants import GemTier, GemType
+    from app.trove.gems.evaluator import GemEvaluatorError, evaluate_gem
+
+    try:
+        out = evaluate_gem(tier, type, level, stats, auto_guess_procs=True)
+    except (GemEvaluatorError, ValueError, KeyError) as exc:
+        return {
+            "title": t("💎 Gem evaluator"),
+            "color": 0xF0556A,
+            "description": t("Couldn't evaluate that gem: {reason}", reason=str(exc)),
+            "footer": {"text": "trove.aallyn.net"},
+        }
+    r = out["result"]
+    tier_name = t(GemTier(int(tier)).display_name)
+    type_name = t(GemType(int(type)).display_name)
+    quality = f"{r['quality_percent']:.1f}"
+    pr = f"{r['calculated_power_rank']:,}"
+
+    fields = []
+    for s in r["stats"]:
+        flag = "" if s["is_within_range"] else " ⚠️"
+        fields.append({
+            "name": t(s["display_name"]),
+            "value": f"{s['entered_value']:g} · {s['quality_percent']:.1f}%{flag}",
+            "inline": True,
+        })
+    cost = r.get("headline_cost") or {}
+    embed = {
+        "title": t("💎 {tier} {type} Gem — Level {level}",
+                   tier=tier_name, type=type_name, level=int(level)),
+        "url": f"{SITE}/",
+        "color": 0x9B5DE5,
+        "description": t("**{quality}%** quality · est. Power Rank **{pr}**",
+                         quality=quality, pr=pr),
+        "fields": fields,
+        "footer": {"text": t("Cost to 100%: {precise} Precise + {rough} Rough focus",
+                             precise=cost.get("precise", 0), rough=cost.get("rough", 0))},
+    }
+    if r.get("has_issues"):
+        notes = "\n".join(f"• {t(i)}" for i in (r.get("issues") or [])[:3])
+        embed["fields"].append({"name": t("⚠️ Notes"), "value": notes, "inline": False})
+    return embed

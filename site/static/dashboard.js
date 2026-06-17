@@ -617,6 +617,7 @@
 
     body.innerHTML = `
       ${canManage ? liveBoardCard(detail) : ''}
+      ${canManage ? marketWatchCard(detail) : ''}
       <article class="dash-card" data-card="announcements">
         <div class="dash-ann-head">
           <h3 class="dash-discord-card-title">${esc(t('Announcements'))}</h3>
@@ -636,6 +637,7 @@
     card.addEventListener('change', schedule);     // enable checkboxes + channel selects
     card.addEventListener('ms-change', schedule);   // chip multi-select toggles
     wireBoardCard(body, guildId, detail);
+    wireMarketWatchCard(body, guildId, detail);
     _msEnsureOutsideClose();
   }
 
@@ -687,6 +689,95 @@
     if (!r.ok) { setStatus(status, t('Save failed'), 'error'); return; }
     Object.assign(detail, r.data);
     renderPreflightInto(card.querySelector('[data-act="board-preflight"]'), (detail.live_board || {}).preflight);
+    setStatus(status, t('Saved'), 'saved');
+  }
+
+  // ── Marketplace watch: one channel + ping roles + a watchlist of items ──
+  function mwItemRow(name, maxPrice) {
+    return `
+      <div class="dash-mw-item">
+        <input type="text" class="dash-mw-name" placeholder="${esc(t('Item name'))}"
+               value="${esc(name || '')}" maxlength="120" autocomplete="off" spellcheck="false">
+        <input type="number" class="dash-mw-price" placeholder="${esc(t('Max flux/ea'))}"
+               value="${maxPrice != null ? esc(maxPrice) : ''}" min="0" step="1">
+        <button type="button" class="dash-mw-remove" data-act="mw-remove" aria-label="${esc(t('Remove'))}">×</button>
+      </div>`;
+  }
+
+  function marketWatchCard(detail) {
+    const m = detail.market_watch || {};
+    const chOpts = `<option value="">${esc(t('— none —'))}</option>` +
+      (detail.channels || []).map((c) =>
+        `<option value="${esc(c.id)}" ${c.id === m.channel_id ? 'selected' : ''}>#${esc(c.name)}</option>`).join('');
+    const warn = m.channel_missing
+      ? `<span class="dash-ann-warn">⚠ ${esc(t('channel deleted'))}</span>` : '';
+    const itemRows = (m.items || []).map((it) => mwItemRow(it.name, it.max_price_each)).join('');
+    return `
+      <article class="dash-card" data-card="market-watch">
+        <div class="dash-ann-head">
+          <h3 class="dash-discord-card-title">${esc(t('Market watch'))}</h3>
+          ${warn}
+          <span class="dash-autosave" data-act="mw-status">${esc(t('Auto-saves'))}</span>
+        </div>
+        <p class="dash-card-sub-mini">${esc(t('Get pinged when a watched marketplace item drops to your target price. Checked each hour as new market data lands. Leave the price blank to alert on any listing.'))}</p>
+        <div class="dash-discord-fields">
+          <label class="dash-discord-field">
+            <span class="dash-discord-label">${esc(t('Alert channel'))}</span>
+            <select data-field="mw-channel">${chOpts}</select>
+          </label>
+          <label class="dash-discord-check">
+            <input type="checkbox" data-field="mw-enabled" ${m.enabled ? 'checked' : ''}>
+            <span>${esc(t('Enable market watch'))}</span>
+          </label>
+          <div class="dash-discord-field">
+            <span class="dash-discord-label">${esc(t('Ping roles'))}</span>
+            ${roleMultiSelect(detail.roles, m.ping_role_ids, false)}
+          </div>
+        </div>
+        <p class="dash-discord-label dash-mw-items-head">${esc(t('Watched items'))}</p>
+        <div class="dash-mw-items" data-act="mw-items">${itemRows}</div>
+        <button type="button" class="dash-btn dash-btn-mini" data-act="mw-add">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> <span>${esc(t('Add item'))}</span>
+        </button>
+      </article>`;
+  }
+
+  function wireMarketWatchCard(body, guildId, detail) {
+    const card = body.querySelector('[data-card="market-watch"]');
+    if (!card) return;
+    wireMultiSelects(card);
+    const status = card.querySelector('[data-act="mw-status"]');
+    const schedule = makeAutoSaver(() => doSaveMarketWatch(card, guildId, detail, status), status);
+    card.addEventListener('change', schedule);     // channel + enable
+    card.addEventListener('ms-change', schedule);   // ping-role chips
+    card.addEventListener('input', (e) => { if (e.target.closest('.dash-mw-item')) schedule(); });
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('[data-act="mw-add"]')) {
+        card.querySelector('[data-act="mw-items"]').insertAdjacentHTML('beforeend', mwItemRow('', null));
+        return;
+      }
+      const rm = e.target.closest('[data-act="mw-remove"]');
+      if (rm) { rm.closest('.dash-mw-item').remove(); schedule(); }
+    });
+  }
+
+  async function doSaveMarketWatch(card, guildId, detail, status) {
+    const channel = card.querySelector('[data-field="mw-channel"]').value || null;
+    const enabled = card.querySelector('[data-field="mw-enabled"]').checked;
+    const ms = card.querySelector('.dash-ms');
+    const ping_role_ids = ms
+      ? [...ms.querySelectorAll('.dash-ms-opt.is-selected')].map((o) => o.dataset.id) : [];
+    const items = [...card.querySelectorAll('.dash-mw-item')].map((row) => {
+      const name = row.querySelector('.dash-mw-name').value.trim();
+      const raw = row.querySelector('.dash-mw-price').value.trim();
+      const price = raw === '' ? null : Number(raw);
+      return { name, max_price_each: (price != null && isFinite(price) && price > 0) ? price : null };
+    }).filter((it) => it.name);
+    const r = await Auth.callJSON(`/v1/site-auth/discord/guilds/${encodeURIComponent(guildId)}/market-watch`, {
+      method: 'PUT', json: { enabled, channel_id: channel, ping_role_ids, items },
+    });
+    if (!r.ok) { setStatus(status, t('Save failed'), 'error'); return; }
+    Object.assign(detail, r.data);
     setStatus(status, t('Saved'), 'saved');
   }
 

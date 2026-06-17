@@ -63,7 +63,7 @@ class ParsedBoard(NamedTuple):
     uuid: int
     name: str
     category: str
-    entries: list["ParsedEntry"]
+    entries: list[ParsedEntry]
     # This dump's contest window for the board: "weekly" / "daily" / None.
     # Inferred from the contest overlay line (above); shown as a UI marker.
     contest: str | None = None
@@ -117,7 +117,7 @@ def parse_dump(text: str) -> list[ParsedBoard]:
     """
     # We can't decide a board until we've seen all its lines, because the real
     # line and the contest overlay can appear in either order.
-    real: dict[int, "re.Match[str]"] = {}   # uuid -> real-category line (first wins)
+    real: dict[int, re.Match[str]] = {}   # uuid -> real-category line (first wins)
     contest: dict[int, str] = {}            # uuid -> "weekly" | "daily"
     order: list[int] = []                   # uuids in first-seen order
     for m in _BOARD_RE.finditer(text):

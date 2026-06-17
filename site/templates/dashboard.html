@@ -103,8 +103,11 @@
                     <section class="dash-section" data-pane="leaderboard" hidden>
                         <h1 class="dash-section-title" data-i18n>Leaderboard</h1>
 
-                        <!-- Trove player name card: unclaimed (input) or claimed (badge + verify). -->
-                        <article class="dash-card">
+                        <!-- Trove player name card: HIDDEN for now — the claim flow is
+                             WIP (verification moved to manual master approval in the
+                             dev-portal admin panel "Trove claims" tab). Re-enable once
+                             that's finished. -->
+                        <article class="dash-card" id="trove-claim-card" hidden>
                             <h2 class="dash-card-title">
                                 <span data-i18n>Trove player name</span>
                                 <span class="dash-tag dash-tag-unverified" id="trove-tag-unverified" hidden data-i18n>unverified</span>

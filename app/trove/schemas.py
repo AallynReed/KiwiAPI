@@ -576,6 +576,64 @@ class BoardHistoryResponse(BaseModel):
     series: list[BoardHistorySeries]
 
 
+class BoardHealthResponse(BaseModel):
+    """Health summary for one board, from its latest snapshot vs the previous
+    trove-day. Turnover + score inflation are day-over-day (null when the two
+    snapshots aren't comparable, e.g. a daily board resets between them);
+    competitiveness is a same-snapshot concentration measure."""
+    uuid: int
+    name: str | None = None
+    category: str | None = None
+    reset_kind: str | None = None
+    anchor: int                              # latest snapshot analysed
+    prev_anchor: int | None = None           # the day-over-day comparison snapshot
+    comparable: bool                         # False when a reset crossed / no prior
+    comparison_reason: str | None = None
+    population: int                          # total entries on the board at ``anchor``
+    sample_size: int                         # top-N actually analysed
+    # Competitiveness (same-snapshot concentration of the top-N scores):
+    leader_share: float | None = None        # #1 score / Σ(top-N)
+    p1_pn_ratio: float | None = None         # #1 score / last-in-sample score
+    gini: float | None = None                # 0 even … →1 one player dominates
+    # Roster turnover + score inflation (day-over-day; null when not comparable):
+    turnover_rate: float | None = None       # new top-N entrants / sample
+    new_entrants: int | None = None
+    median_score_gain: float | None = None
+    median_score_gain_pct: float | None = None
+
+
+class PlayerProfileSummary(BaseModel):
+    boards_appeared: int                     # distinct boards in the recent window
+    appearances: int                         # total rows returned
+    best_rank: int | None = None
+    best_rank_board_uuid: int | None = None
+    best_rank_board_name: str | None = None
+    latest_anchor: int | None = None         # most recent capture the player was in
+
+
+class PlayerProfileEntry(BaseModel):
+    player_name: str
+    leaderboard: int
+    board_name: str | None = None
+    rank: int
+    score: float
+    created_at: int
+    prev_rank: int | None = None
+    prev_score: float | None = None
+    rank_delta: int | None = None
+    score_delta: float | None = None
+    is_new: bool | None = None
+
+
+class PlayerProfileResponse(BaseModel):
+    """Public player profile: leaderboard appearances + a verified-claim flag.
+    Powers the /player/<name> page and the Discord bot's rank link."""
+    player_name: str
+    verified: bool                           # a site account claimed + was approved
+    summary: PlayerProfileSummary
+    recent: list[PlayerProfileEntry]
+
+
 class PlayerHistorySeriesItem(BaseModel):
     """One line on the per-player chart - points are this player's
     scores on one board they appear on, over the requested window."""

@@ -145,6 +145,13 @@
                                 <span data-i18n>Latest</span>
                             </a>
                         </div>
+                        <!-- In-browser preview of small text files (populated by
+                             updates.js from /site/updates/<branch>/file/view). -->
+                        <div class="up-preview" id="up-preview" hidden>
+                            <h3 class="up-detail-subhead" data-i18n>Preview</h3>
+                            <pre class="up-preview-pre" id="up-preview-pre" hidden></pre>
+                            <p class="up-preview-note" id="up-preview-note" hidden></p>
+                        </div>
                         <h3 class="up-detail-subhead" data-i18n>Version history</h3>
                         <div class="up-history" id="up-history">
                             <p class="up-loading" data-i18n>Loading…</p>

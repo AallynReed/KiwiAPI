@@ -17,7 +17,6 @@ from app.core.security import decode_access_token
 from app.site_auth.models import SiteUser
 from app.site_auth.sessions import TOKEN_KIND
 
-
 _jwt_scheme = HTTPBearer(
     scheme_name="SiteSessionJWT",
     description="JWT from Discord sign-in (/v1/site-auth/oauth/*)",

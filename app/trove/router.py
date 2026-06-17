@@ -5,19 +5,26 @@ import re
 
 import httpx
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, File, Form, Query, Request,
-    Response, UploadFile,
+    APIRouter,
+    BackgroundTasks,
+    Body,
+    Depends,
+    File,
+    Form,
+    Query,
+    Request,
+    Response,
+    UploadFile,
 )
 from fastapi.responses import FileResponse
 
-from app.core.config import settings
 from app.admin import ingest_log
-from app.auth.models import User
+from app.core.config import settings
 from app.core.dependencies import (
     AccessContext,
     TokenContext,
-    require_master_ingest,
     public_scope,
+    require_master_ingest,
     require_scope,
 )
 from app.core.errors import APIError, ErrorCode
@@ -39,13 +46,6 @@ from app.trove import (
 )
 from app.trove import calendar as trove_calendar
 from app.trove.codexes import read as codexes_read
-from app.trove.leaderboards import activity as leaderboards_activity
-from app.trove.leaderboards import class_activity as leaderboards_class_activity
-from app.trove.leaderboards import detection as leaderboards_detection
-from app.trove.leaderboards import service as leaderboards_service
-from app.trove.market import service as market_service
-from app.trove.ocr import engine as ocr_engine
-from app.trove.ocr import service as ocr_service
 from app.trove.codexes.schemas import (
     CodexCategoryInfo,
     CodexCategoryList,
@@ -75,6 +75,11 @@ from app.trove.gems.schemas import (
     SetLevelRequest,
     StatPositionRequest,
 )
+from app.trove.leaderboards import activity as leaderboards_activity
+from app.trove.leaderboards import class_activity as leaderboards_class_activity
+from app.trove.leaderboards import detection as leaderboards_detection
+from app.trove.leaderboards import service as leaderboards_service
+from app.trove.market import service as market_service
 from app.trove.misc import (
     ModdingSoftware,
     TimeConvertRequest,
@@ -83,8 +88,15 @@ from app.trove.misc import (
     TimezoneList,
 )
 from app.trove.models import TroveEvent, TroveNews
+from app.trove.ocr import engine as ocr_engine
+from app.trove.ocr import service as ocr_service
 from app.trove.schemas import (
+    ActivityHistoryResponse,
+    ActivityResponse,
+    ActivitySeriesResponse,
     BiomeRotationFeed,
+    BoardHealthResponse,
+    BoardHistoryResponse,
     BttAsset,
     BttChangelogGroup,
     BttChangelogOut,
@@ -102,15 +114,11 @@ from app.trove.schemas import (
     ChallengeHistoryPage,
     ChaosChest,
     ChaosChestCaptureOut,
-    ActivityResponse,
-    ActivityHistoryResponse,
-    ActivitySeriesResponse,
+    ChaosChestHistoryPage,
+    CharacterStatsOcr,
+    CheatersResponse,
     ClassActivityCurrentResponse,
     ClassActivitySeriesResponse,
-    TroveStatusResponse,
-    TroveStatusHistoryResponse,
-    ChaosChestHistoryPage,
-    CheatersResponse,
     ClassList,
     CoefficientRequest,
     CoefficientResponse,
@@ -120,7 +128,6 @@ from app.trove.schemas import (
     DelveWeekInfo,
     DelveWeekList,
     EventCategoryList,
-    CharacterStatsOcr,
     FeedbackAck,
     Fluxion,
     Gardening,
@@ -134,13 +141,13 @@ from app.trove.schemas import (
     LeaderboardPlayerEntry,
     LeaderboardPlayerHistory,
     LeaderboardTimestamps,
-    BoardHistoryResponse,
-    PlayerHistorySeriesResponse,
     MarketInsertResponse,
     MarketItemList,
     MarketItemSummary,
     MarketListingOut,
     MarketListingsPage,
+    PlayerHistorySeriesResponse,
+    PlayerProfileResponse,
     ServerTime,
     StatTable,
     TroveClass,
@@ -149,6 +156,8 @@ from app.trove.schemas import (
     TroveNewsHistory,
     TroveNewsItem,
     TroveNewsList,
+    TroveStatusHistoryResponse,
+    TroveStatusResponse,
     TwitchStream,
     TwitchStreams,
     Video,
@@ -157,8 +166,8 @@ from app.trove.schemas import (
     YearlyCalendar,
 )
 from app.trove.tmod import TmodBuildRequest, TmodReadResponse
-from app.trove.updates import read as updates_read
 from app.trove.updates import compare as updates_compare
+from app.trove.updates import read as updates_read
 from app.trove.updates.cas import ContentStore
 from app.trove.updates.cdn import BRANCHES as UPDATE_BRANCHES
 from app.trove.updates.schemas import (
@@ -173,6 +182,7 @@ from app.trove.updates.schemas import (
     FileHistoryList,
     FileMeta,
     FileVersionInfo,
+    FileView,
     TreeEntry,
     TreeListing,
     VersionInfo,
@@ -1647,6 +1657,20 @@ async def download_update_file(
     return FileResponse(blob, media_type="application/octet-stream", filename=filename)
 
 
+@updates_router.get("/{branch}/file/view", response_model=FileView)
+async def view_update_file(
+    branch: str, path: str = Query(...), ctx: TokenContext = _UPD,
+) -> FileView:
+    """Preview a single small text file in the browser (UTF-8, <=512 KB). Larger or
+    binary files return ``viewable: false`` with a reason, so clients fall back to
+    the raw `/file` download instead of trying to render bytes."""
+    _check_branch(branch)
+    payload = await updates_read.read_file_text(branch, path)
+    if payload is None:
+        raise APIError(status_code=404, code=ErrorCode.not_found, message=f"No file '{path}'")
+    return FileView(**payload)
+
+
 @updates_router.get("/{branch}/file/history", response_model=FileHistoryList)
 async def get_update_file_history(
     branch: str,
@@ -1769,7 +1793,7 @@ async def compare_update_file(
 
 
 # --- Codexes: parsed game data from the archive (scope: codexes:read) --------
-# Served from the materialized CodexEntry collection (no archive access on the
+# Served from the materialized Postgres codex_entry table (no archive access on the
 # hot path). Eight typed datasets; entries are addressed by their source path.
 
 
@@ -1781,11 +1805,12 @@ def _check_codex_type(codex_type: str) -> None:
         )
 
 
-def _codex_out(d) -> CodexEntryOut:
+def _codex_out(d: dict) -> CodexEntryOut:
     return CodexEntryOut(
-        type=d.codex_type, path=d.path, name=d.name, category=d.category,
-        description=d.description, tradable=d.tradable, mastery=d.mastery,
-        blueprint=d.blueprint, data=d.data, indexed_at=d.indexed_at,
+        type=d["codex_type"], path=d["path"], name=d["name"], category=d["category"],
+        description=d["description"], tradable=d["tradable"], mastery=d["mastery"],
+        mastery_geode=d["mastery_geode"], power_rank=d["power_rank"],
+        blueprint=d["blueprint"], data=d["data"], indexed_at=d["indexed_at"],
     )
 
 
@@ -2273,6 +2298,20 @@ async def get_player_history(
     )
 
 
+@leaderboards_router.get("/players/{player_name}/profile",
+                         response_model=PlayerProfileResponse)
+async def get_player_profile(
+    player_name: str, _ctx: AccessContext = _LB_PUBLIC,
+) -> PlayerProfileResponse:
+    """**Tokenless.** Public profile for a player: recent leaderboard appearances
+    (board names + day-over-day deltas), summary stats (boards, best rank, last
+    seen), and whether the name is a verified claimed identity. Powers the
+    /player/<name> page and a future Discord ``/rank`` deep-link. Unknown names
+    return an empty profile rather than 404."""
+    payload = await leaderboards_service.player_profile(player_name)
+    return PlayerProfileResponse(**payload)
+
+
 @leaderboards_router.get("/{uuid:int}/history", response_model=BoardHistoryResponse)
 async def get_board_history(
     uuid: int,
@@ -2302,6 +2341,23 @@ async def get_board_history(
     from app.trove.leaderboards import cache as leaderboards_cache
     payload = await leaderboards_cache.get_board_history(uuid, days, top)
     return BoardHistoryResponse(**payload)
+
+
+@leaderboards_router.get("/{uuid:int}/health", response_model=BoardHealthResponse)
+async def get_board_health_endpoint(
+    uuid: int, ctx: TokenContext = _LB,
+) -> BoardHealthResponse:
+    """Health summary for one board: roster **turnover** + day-over-day **score
+    inflation** (when the snapshots are comparable - no reset crossed) and
+    **competitiveness** (top-N score concentration: leader share, #1/last ratio,
+    Gini). Computed from the latest snapshot vs the previous trove-day."""
+    payload = await leaderboards_service.board_health(uuid)
+    if payload is None:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"No leaderboard data for uuid {uuid}",
+        )
+    return BoardHealthResponse(**payload)
 
 
 @leaderboards_router.get("/players/{player_name}/series",

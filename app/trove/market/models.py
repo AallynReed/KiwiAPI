@@ -1,29 +1,27 @@
-"""Beanie documents for the market scope.
+"""Mongo models + constants for the market scope.
 
-Two documents:
+The high-volume ``MarketListing`` moved to **Postgres**
+(``app/trove/market/{pg_schema,pg_store}.py``); what stays here is Mongo:
 
-- ``MarketListing``      - one per in-game listing (UUID v1 from the game is
-  the _id; re-scrapes bump ``last_seen`` so the row never duplicates).
 - ``MarketInterestItem`` - the allow-list of item names the bot scans for.
   Editable via the master admin panel; seeded from ``gamedata/market_items.json``
   on first boot if the collection is empty.
 
-Service-layer code reads the interest list via ``service._interest_items_set``
-(DB-backed with a short TTL cache); the JSON file is now seed + offline fallback
-only.
+plus the listing-lifetime constants (still used by the service's active-listing
+cutoffs). Service-layer code reads the interest list via
+``service._interest_items_set`` (DB-backed with a short TTL cache); the JSON file
+is now seed + offline fallback only.
 """
 
 import json
 from datetime import datetime
 from pathlib import Path
-from uuid import UUID
 
 from beanie import Document, PydanticObjectId
 from pydantic import Field
-from pymongo import ASCENDING, DESCENDING, IndexModel
+from pymongo import ASCENDING, IndexModel
 
 from app.core.utils import utcnow
-
 
 # 7 days - the in-game listing TTL.
 LISTING_LIFETIME_SECONDS = 7 * 86400
@@ -59,33 +57,4 @@ class MarketInterestItem(Document):
         name = "market_interest_items"
         indexes = [
             IndexModel([("name", ASCENDING)], unique=True),
-        ]
-
-
-class MarketListing(Document):
-    """A single in-game marketplace listing.
-
-    The listing's UUID v1 from the game is the document _id; we bump
-    ``last_seen`` on every re-scrape but never change ``created_at`` (it's
-    decoded from the UUID's timestamp on first sighting and represents when
-    the player actually posted the listing in-game)."""
-
-    id: UUID = Field(default_factory=None, alias="_id")  # type: ignore[assignment]
-    name: str                  # the item's display name (from the interest list)
-    type: str | None = None    # the item's type/tier (free-form; can be empty)
-    stack: int                 # how many of the item in this listing
-    price: int                 # total flux price for the whole stack
-    price_each: float          # round(price / stack, 3)
-    last_seen: int             # unix seconds - last time the bot saw the listing
-    created_at: int = 0        # unix seconds - when the listing was posted in-game
-
-    class Settings:
-        name = "market_listings"
-        indexes = [
-            IndexModel([("name", ASCENDING)]),
-            IndexModel([("price_each", ASCENDING)]),
-            IndexModel([("last_seen", DESCENDING)]),
-            IndexModel([("created_at", DESCENDING)]),
-            # Compound for the common "this item in this time window" filter.
-            IndexModel([("name", ASCENDING), ("last_seen", DESCENDING)]),
         ]

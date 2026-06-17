@@ -20,23 +20,20 @@ from __future__ import annotations
 import logging
 import time as time_mod
 from datetime import UTC, datetime
+from urllib.parse import quote
 
 from beanie import PydanticObjectId
-from beanie.odm.bulk import BulkWriter
-from pymongo import UpdateOne
 
+from app.trove.market import pg_store
 from app.trove.market.models import (
     LISTING_LIFETIME_SECONDS,
     LISTING_STALE_SECONDS,
     MarketInterestItem,
-    MarketListing,
     load_interest_items_from_file,
 )
-from app.trove.market.parser import ParsedListing, parse_dump
+from app.trove.market.parser import parse_dump
 
 logger = logging.getLogger(__name__)
-
-_BULK_BATCH = 1000
 
 
 def _now() -> int:
@@ -175,42 +172,17 @@ async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
     last_seen = int(timestamp) if (timestamp is not None and timestamp > 0) else _now()
     interest = await _interest_items_set()
 
-    imported = 0
     ignored = 0
-    batch: list[UpdateOne] = []
-
-    coll = MarketListing.get_motor_collection()  # raw collection for batched upsert
-
-    async def flush(ops: list[UpdateOne]) -> None:
-        if ops:
-            await coll.bulk_write(ops, ordered=False)
-
+    rows: list[tuple] = []
     for entry in listings:
         if entry.name not in interest:
             ignored += 1
             continue
-        # Upsert by _id: on first insert, write everything; on re-scrape, only
-        # bump last_seen. The two-operator form lets one Mongo op cover both.
-        batch.append(UpdateOne(
-            {"_id": entry.id},
-            {
-                "$set": {"last_seen": last_seen},
-                "$setOnInsert": {
-                    "name": entry.name,
-                    "type": entry.type,
-                    "stack": entry.stack,
-                    "price": entry.price,
-                    "price_each": entry.price_each,
-                    "created_at": entry.created_at,
-                },
-            },
-            upsert=True,
-        ))
-        imported += 1
-        if len(batch) >= _BULK_BATCH:
-            await flush(batch)
-            batch = []
-    await flush(batch)
+        # (id, name, type, stack, price, price_each, created_at, last_seen). The PG
+        # upsert bumps only last_seen on conflict, like the old Mongo $setOnInsert.
+        rows.append((entry.id, entry.name, entry.type, entry.stack, entry.price,
+                     entry.price_each, entry.created_at, last_seen))
+    imported = await pg_store.upsert_listings(rows)
 
     logger.info(
         "market: ingested last_seen=%d parsed=%d imported=%d ignored=%d",
@@ -243,69 +215,47 @@ async def list_listings(
     ``hide_expired`` drops listings older than 7 days OR stale for >3 hours;
     pass ``False`` to include the historical tail (useful for archival reads).
     """
-    query: dict = {}
-    if name is not None:
-        query["name"] = name
-    if price_min is not None or price_max is not None:
-        pe: dict = {}
-        if price_min is not None:
-            pe["$gte"] = price_min
-        if price_max is not None:
-            pe["$lte"] = price_max
-        query["price_each"] = pe
-    if last_seen_after is not None:
-        query["last_seen"] = {"$gte": last_seen_after}
+    last_seen_floor = last_seen_after
+    created_at_floor = None
     if hide_expired:
-        cutoff_stale = _now() - LISTING_STALE_SECONDS
-        cutoff_lifetime = _now() - LISTING_LIFETIME_SECONDS
-        # NB: we need BOTH "still being seen" AND "not past lifetime".
-        query.setdefault("last_seen", {})
-        # If last_seen already constrained above, take the more restrictive bound.
-        if "$gte" in query["last_seen"]:
-            query["last_seen"]["$gte"] = max(query["last_seen"]["$gte"], cutoff_stale)
-        else:
-            query["last_seen"]["$gte"] = cutoff_stale
-        query["created_at"] = {"$gte": cutoff_lifetime}
-
-    total = await MarketListing.find(query).count()
-    docs = (
-        await MarketListing.find(query)
-        .sort(sort)
-        .skip(offset)
-        .limit(limit)
-        .to_list()
+        # Active = re-seen within 3h AND created within the 7-day in-game lifetime.
+        stale = _now() - LISTING_STALE_SECONDS
+        last_seen_floor = max(last_seen_floor, stale) if last_seen_floor is not None else stale
+        created_at_floor = _now() - LISTING_LIFETIME_SECONDS
+    rows, total = await pg_store.list_listings(
+        name=name, price_min=price_min, price_max=price_max,
+        last_seen_floor=last_seen_floor, created_at_floor=created_at_floor,
+        sort=sort, limit=limit, offset=offset,
     )
-    items = [_to_dict(d) for d in docs]
-    return items, total
+    return [_to_dict(r) for r in rows], total
 
 
-def _to_dict(d: MarketListing) -> dict:
+def _to_dict(d: dict) -> dict:
     now = _now()
+    created_at, last_seen = d["created_at"], d["last_seen"]
     return {
-        "id": str(d.id),
-        "name": d.name,
-        "type": d.type,
-        "stack": d.stack,
-        "price": d.price,
-        "price_each": d.price_each,
-        "last_seen": d.last_seen,
-        "created_at": d.created_at,
-        "expires_at": d.created_at + LISTING_LIFETIME_SECONDS,
+        "id": str(d["id"]),
+        "name": d["name"],
+        "type": d["type"],
+        "stack": d["stack"],
+        "price": d["price"],
+        "price_each": d["price_each"],
+        "last_seen": last_seen,
+        "created_at": created_at,
+        "expires_at": created_at + LISTING_LIFETIME_SECONDS,
         "expired": (
-            (now - d.created_at > LISTING_LIFETIME_SECONDS)
-            or (now - d.last_seen > LISTING_STALE_SECONDS)
+            (now - created_at > LISTING_LIFETIME_SECONDS)
+            or (now - last_seen > LISTING_STALE_SECONDS)
         ),
     }
 
 
 async def list_distinct_items() -> list[str]:
-    """Item names that currently have at least one stored listing.
+    """Item names that currently have at least one stored listing (sorted).
 
-    Useful for clients building filter dropdowns - pairs with
-    ``interest_items()`` (the bot's full allow-list) for an "what's actually on
-    the market" vs "what we track" comparison."""
-    items = await MarketListing.distinct("name")
-    return sorted(items)
+    Pairs with ``interest_items_list()`` (the bot's full allow-list) for a
+    "what's actually on the market" vs "what we track" comparison."""
+    return await pg_store.distinct_items()
 
 
 # NOTE: `interest_items_list()` (the DB-backed async version) lives above
@@ -314,49 +264,20 @@ async def list_distinct_items() -> list[str]:
 
 
 async def item_summary(name: str) -> dict | None:
-    """Aggregate cheapest / median / count for one item across non-expired
-    listings. Returns ``None`` if no active listings are stored for ``name``.
+    """Cheapest / median / average / count for one item across active listings.
+    ``None`` when no active listings are stored for ``name``.
 
-    Median is approximated as the middle ``price_each`` after sort - accurate
-    on small N, "close enough" on large N where the Mongo planner can't
-    easily compute a true median in one pass."""
-    cutoff_stale = _now() - LISTING_STALE_SECONDS
-    cutoff_lifetime = _now() - LISTING_LIFETIME_SECONDS
-    query = {
-        "name": name,
-        "last_seen": {"$gte": cutoff_stale},
-        "created_at": {"$gte": cutoff_lifetime},
-    }
-    pipeline = [
-        {"$match": query},
-        {"$sort": {"price_each": 1}},
-        {"$group": {
-            "_id": None,
-            "count": {"$sum": 1},
-            "total_price": {"$sum": "$price"},
-            "total_stack": {"$sum": "$stack"},
-            "min_each": {"$min": "$price_each"},
-            "max_each": {"$max": "$price_each"},
-            "avg_each": {"$avg": "$price_each"},
-            "all_each": {"$push": "$price_each"},
-        }},
-    ]
-    rows = await MarketListing.aggregate(pipeline).to_list()
-    if not rows:
-        return None
-    r = rows[0]
-    all_each = r["all_each"]
-    median = all_each[len(all_each) // 2] if all_each else 0.0
-    return {
-        "name": name,
-        "count": r["count"],
-        "total_price": r["total_price"],
-        "total_stack": r["total_stack"],
-        "min_each": r["min_each"],
-        "max_each": r["max_each"],
-        "avg_each": round(r["avg_each"], 3) if r["avg_each"] is not None else 0.0,
-        "median_each": median,
-    }
+    The API process queries Postgres directly (exact median via
+    ``percentile_cont``). The gateway bot (no Postgres) fetches it over HTTP from
+    the same-origin proxy - same shape, so ``/price`` + ``market_watch`` work
+    unchanged."""
+    from app.core.config import settings
+    if not settings.postgres_enabled:
+        from app.core.internal_api import internal_get
+        return await internal_get(f"/site/market/items/{quote(name, safe='')}/summary")
+    return await pg_store.item_summary(
+        name, _now() - LISTING_STALE_SECONDS, _now() - LISTING_LIFETIME_SECONDS,
+    )
 
 
 # Default modified-Z cutoff used by the price-history outlier filter.
@@ -459,42 +380,28 @@ async def price_history(
     now = _now()
     window_start = now - days * 86_400
 
-    query: dict = {"name": name, "created_at": {"$gte": window_start}}
+    created_at_floor = window_start
+    last_seen_floor = None
     if not include_expired:
-        # Mirror the summary's active-listing definition: drop rows that
-        # haven't been re-seen recently OR whose 7d TTL is already up.
-        # Both bounds are stricter than the user's window so this AND
-        # composes cleanly.
-        query["last_seen"] = {"$gte": now - LISTING_STALE_SECONDS}
-        # Re-clamp created_at to the live-lifetime cutoff in case the
-        # user-supplied window is wider than 7d.
+        # Mirror the summary's active-listing definition: re-seen recently AND
+        # within the 7d TTL. Both bounds are stricter than the user's window so
+        # this composes cleanly.
+        last_seen_floor = now - LISTING_STALE_SECONDS
         ttl_cutoff = now - LISTING_LIFETIME_SECONDS
-        if query["created_at"]["$gte"] < ttl_cutoff:
-            query["created_at"]["$gte"] = ttl_cutoff
+        if created_at_floor < ttl_cutoff:
+            created_at_floor = ttl_cutoff
 
-    coll = MarketListing.get_pymongo_collection()
-    cursor = (
-        coll.find(
-            query,
-            {"_id": 0, "created_at": 1, "price_each": 1, "last_seen": 1,
-             "stack": 1, "price": 1},
-        )
-        .sort("created_at", 1)
-        .limit(limit)
+    rows = await pg_store.price_history_rows(
+        name, created_at_floor=created_at_floor,
+        last_seen_floor=last_seen_floor, limit=limit,
     )
-    points: list[dict] = []
-    async for d in cursor:
-        # ``last_seen`` makes the client-side tooltip useful (the user
-        # can spot a listing posted ages ago but only just expired).
-        # ``stack`` + ``price`` let it show "12,000 ×8 = 96,000" without
-        # a second lookup.
-        points.append({
-            "created_at": d["created_at"],
-            "price_each": d["price_each"],
-            "last_seen":  d.get("last_seen"),
-            "stack":      d.get("stack"),
-            "price":      d.get("price"),
-        })
+    # ``last_seen`` makes the client tooltip useful; ``stack`` + ``price`` let it
+    # show "12,000 ×8 = 96,000" without a second lookup.
+    points: list[dict] = [
+        {"created_at": r["created_at"], "price_each": r["price_each"],
+         "last_seen": r["last_seen"], "stack": r["stack"], "price": r["price"]}
+        for r in rows
+    ]
 
     truncated = len(points) >= limit
 

@@ -335,8 +335,8 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "activity", "account", "overview", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "botstats"];
-const MASTER_TABS = new Set(["overview", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "botstats"]);
+const TABS = ["tokens", "activity", "account", "overview", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "botstats"];
+const MASTER_TABS = new Set(["overview", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "botstats"]);
 
 // Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
 const ICONS = {
@@ -353,6 +353,7 @@ const ICONS = {
   giveaways:    '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8S11 4 8.5 4a2 2 0 1 0 0 4H12zM12 8s1-4 3.5-4a2 2 0 1 1 0 4H12z"/>',
   discord:      '<path d="M4 6h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/><circle cx="9.5" cy="11.5" r="1"/><circle cx="14.5" cy="11.5" r="1"/>',
   supporters:   '<path d="M12 20.3 4.6 12.9a4.4 4.4 0 0 1 6.2-6.2l1.2 1.2 1.2-1.2a4.4 4.4 0 0 1 6.2 6.2L12 20.3Z"/>',
+  claims:       '<path d="M12 3 5 6v5c0 4 3 6.5 7 8 4-1.5 7-4 7-8V6l-7-3Z"/><path d="M9.5 12l2 2 3.5-3.5"/>',
   botstats:     '<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="14" width="3" height="3"/>',
 };
 function icon(name) {
@@ -375,6 +376,7 @@ const TAB_META = {
   giveaways:    { group: "Admin panel · Modules", label: "Giveaways" },
   discord:      { group: "Admin panel · Modules", label: "Discord" },
   supporters:   { group: "Admin panel · Modules", label: "Supporters" },
+  claims:       { group: "Admin panel · Modules", label: "Trove claims" },
   botstats:     { group: "Admin panel · Modules", label: "Bot stats" },
 };
 
@@ -481,6 +483,7 @@ function selectTab() {
   else if (state.tab === "giveaways") renderGiveaways();
   else if (state.tab === "discord") renderDiscord();
   else if (state.tab === "supporters") renderSupporters();
+  else if (state.tab === "claims") renderClaims();
   else if (state.tab === "botstats") renderBotStats();
   else renderTokens();
 }
@@ -2321,6 +2324,82 @@ async function renderSupporters() {
   document.querySelector('[data-act="add"]').addEventListener("click", add);
   document.querySelector('[data-act="refresh"]').addEventListener("click", load);
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
+  load();
+}
+
+async function renderClaims() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <h2 style="margin:0 0 6px">Trove name claims</h2>
+      <p class="hint" style="margin:0">
+        Players claim an in-game name on the
+        <a href="https://trove.aallyn.net/dashboard" target="_blank" rel="noopener">User Dashboard</a>.
+        Verification is <strong>manual</strong> — approve a claim here to mark it verified,
+        or reject it to release the name. There is no automatic ownership check.
+      </p>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:14px">
+        <h2 style="flex:1;margin:0">Pending claims</h2>
+        <label class="row" style="gap:6px;align-items:center;font-size:.85rem;margin:0">
+          <input type="checkbox" id="claims-show-all"> Show all
+        </label>
+        <button type="button" class="btn small" data-act="refresh">Refresh</button>
+      </div>
+      <div id="claims-list"><div class="loading">Loading…</div></div>
+    </div>`;
+
+  const listEl = document.getElementById("claims-list");
+  const showAll = document.getElementById("claims-show-all");
+
+  async function load() {
+    listEl.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const data = await API.call(`/admin/site-claims?pending_only=${showAll.checked ? "false" : "true"}`);
+      if (!data.count) {
+        listEl.innerHTML = `<p class="muted" style="margin:0">No ${showAll.checked ? "" : "pending "}claims.</p>`;
+        return;
+      }
+      listEl.innerHTML = data.items.map((c) => {
+        const when = c.claimed_at ? new Date(c.claimed_at).toLocaleString() : "—";
+        const status = c.claim_verified
+          ? `<span style="color:#5dd078;font-size:.74rem;font-weight:700">✓ verified</span>`
+          : `<span style="color:#f9c74f;font-size:.74rem;font-weight:700">pending</span>`;
+        const actions = c.claim_verified
+          ? `<button class="btn small" data-reject="${esc(c.user_id)}">Release</button>`
+          : `<button class="btn small primary" data-approve="${esc(c.user_id)}">Approve</button>
+             <button class="btn small" data-reject="${esc(c.user_id)}">Reject</button>`;
+        return `<div class="row" style="align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">${esc(c.claimed_trove_display || c.claimed_trove_name || "—")} &nbsp;${status}</div>
+              <div class="muted" style="font-size:.8rem">${esc(c.display_name || c.username)} · claimed ${esc(when)}</div>
+            </div>
+            ${actions}
+          </div>`;
+      }).join("");
+      listEl.querySelectorAll("[data-approve]").forEach((b) =>
+        b.addEventListener("click", () => act(b.dataset.approve, "approve")));
+      listEl.querySelectorAll("[data-reject]").forEach((b) =>
+        b.addEventListener("click", () => act(b.dataset.reject, "reject")));
+    } catch (ex) {
+      listEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    }
+  }
+
+  async function act(userId, kind) {
+    if (kind === "reject" && !window.confirm("Reject this claim and release the name?")) return;
+    try {
+      await API.call(`/admin/site-claims/${encodeURIComponent(userId)}/${kind}`, { method: "POST" });
+      toast(kind === "approve" ? "Claim approved" : "Claim released", "ok");
+      load();
+    } catch (ex) {
+      toast(ex.message, "err");
+    }
+  }
+
+  document.querySelector('[data-act="refresh"]').addEventListener("click", load);
+  showAll.addEventListener("change", load);
   load();
 }
 

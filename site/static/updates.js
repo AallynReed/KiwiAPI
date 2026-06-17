@@ -83,6 +83,9 @@
   const $detailMeta = $('up-detail-meta');
   const $detailDownload = $('up-detail-download');
   const $history = $('up-history');
+  const $preview = $('up-preview');
+  const $previewPre = $('up-preview-pre');
+  const $previewNote = $('up-preview-note');
 
   const $changesMeta = $('up-changes-meta');
   const $changesBody = $('up-changes-body');
@@ -498,6 +501,40 @@
     } catch (err) {
       if (state.selectedPath !== path) return;
       $history.innerHTML = errorHTML(err);
+    }
+    loadPreview(path);
+  }
+
+  // ─── Explorer - in-browser preview of small text files ─────────────
+  // Fetches the view endpoint (UTF-8 text under 512 KB). Large/binary/removed
+  // files just leave the pane hidden; the download link still covers them.
+  async function loadPreview(path) {
+    if (!$preview) return;
+    $preview.hidden = true;
+    $previewPre.hidden = true;
+    $previewNote.hidden = true;
+    let data;
+    try {
+      data = await fetchJSON(
+        `/site/updates/${state.branch}/file/view?path=${encodeURIComponent(path)}`,
+      );
+    } catch (err) {
+      return;   // 404 (removed/missing) etc → no preview, no error noise
+    }
+    if (state.selectedPath !== path) return;   // user clicked away mid-fetch
+    $preview.hidden = false;
+    if (data.viewable && typeof data.text === 'string') {
+      $previewPre.textContent = data.text;
+      $previewPre.hidden = false;
+    } else {
+      const note = data.reason === 'too_large'
+        ? t('Too large to preview ({size}) — download it to inspect.')
+            .replace('{size}', formatBytes(data.size))
+        : data.reason === 'binary'
+          ? t('Binary file — download it to inspect.')
+          : t('Preview unavailable.');
+      $previewNote.textContent = note;
+      $previewNote.hidden = false;
     }
   }
 

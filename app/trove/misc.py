@@ -13,9 +13,13 @@ import re
 from datetime import UTC, datetime, timedelta, timezone
 from functools import cache
 from pathlib import Path
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from app.trove.models import FeedbackEntry
 
 _DATA_DIR = Path(__file__).parent / "gamedata"
 
@@ -311,7 +315,7 @@ async def insert_feedback(
     app_version: str | None,
     user_agent: str | None,
     attachments: list[dict] | None,
-) -> "FeedbackEntry":
+) -> FeedbackEntry:
     """Persist one feedback submission. Inputs are already validated by
     the router (length, file count, MIME types). We do one extra trim
     here because Pydantic's ``max_length`` doesn't strip whitespace, and

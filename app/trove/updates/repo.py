@@ -10,6 +10,8 @@ the same key within a sync, so buffering is safe; `finish_version` flushes first
 
 from __future__ import annotations
 
+import logging
+
 from pymongo import DeleteOne, UpdateOne
 
 from app.core.utils import utcnow
@@ -20,6 +22,8 @@ from app.trove.updates.models import (
     UpdateState,
     UpdateVersion,
 )
+
+logger = logging.getLogger("kiwi.updates.repo")
 
 _FLUSH_THRESHOLD = 1000
 
@@ -132,6 +136,14 @@ class MongoUpdateRepo:
             branch, content_path=pointer.get("content_path", ""), current_version=version_tag,
             current_ordinal=ordinal, last_probe_at=utcnow(), status="idle",
         )
+        # Push a live "new build" event (SSE subscribers + the Discord bot). The
+        # game_update source reads the live-US latest version, so its signature only
+        # moves when that branch advances - PTS completions are deduped to no-ops.
+        try:
+            from app.events import bus as events_bus
+            await events_bus.publish_type("game_update")
+        except Exception:
+            logger.warning("game_update event publish failed", exc_info=True)
 
     async def touch_probe(self, branch: str, content_path: str, version_tag: str) -> None:
         await self._update_branch(

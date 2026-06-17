@@ -9,8 +9,9 @@ The interest-items list (``gamedata/market_items.json``) is the small allow-list
 of item names the bot scans for. The list is also exposed via
 ``GET /v1/market/interest_items`` so the bot can refresh it without redeploying.
 
-Storage shape (see ``models``):
-- ``MarketListing`` - one document per in-game listing (its UUID v1 is the _id).
-  ``last_seen`` is bumped every time the bot re-scrapes the same listing;
-  ``created_at`` is decoded from the UUID's timestamp the first time we see it.
+Storage: listings live in **Postgres** (``market_listing``, keyed by the in-game
+UUID; ``pg_schema`` + ``pg_store``) - the high-volume, data-heavy table, moved off
+Mongo for the same reasons leaderboards were. ``last_seen`` is bumped on every
+re-scrape (UPSERT); ``created_at`` is decoded from the UUID's timestamp on first
+sighting. The interest allow-list (``MarketInterestItem``) stays in Mongo.
 """

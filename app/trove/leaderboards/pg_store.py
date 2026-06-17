@@ -15,7 +15,9 @@ from __future__ import annotations
 from app.core.postgres import acquire
 from app.trove.leaderboards import pg_schema
 from app.trove.leaderboards.models import (
-    RESET_KIND_VALUES, is_player_board, reset_kind,
+    RESET_KIND_VALUES,
+    is_player_board,
+    reset_kind,
 )
 from app.trove.leaderboards.parser import ParsedBoard
 

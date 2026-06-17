@@ -165,6 +165,8 @@ every zone plus Discord `<t:unix:style>` codes.
 | `GET /v1/leaderboards/{uuid}` | one board's metadata + full `contests` list |
 | `GET /v1/leaderboards/{uuid}/entries?created_at=&limit=&offset=` | top-N entries for one board at one anchor, ranked, with day-over-day `rank_delta`/`score_delta` (when the board didn't reset since the prior snapshot) |
 | `GET /v1/leaderboards/players/{name}/history?uuid=&limit=` | recent appearances of one player across boards (case-insensitive on `name`) |
+| `GET /v1/leaderboards/players/{name}/profile` | (**tokenless**) public profile aggregate: recent appearances (board names + day-over-day deltas), a summary (boards, best rank, last seen), and a `verified` flag (true when a site account claimed + was master-approved for this name). Powers the `/player/<name>` page |
+| `GET /v1/leaderboards/{uuid}/health` | board health: roster **turnover** + day-over-day **score inflation** (when comparable - no reset crossed) + **competitiveness** (top-N score concentration: leader share, #1/last ratio, Gini), latest snapshot vs the previous trove-day |
 | `GET /v1/leaderboards/cheaters` | **tokenless** statistical-outlier flagging: MAD-Z + rank-gap + velocity. Per-evidence + per-player confidence; cached 30 min; pre-warmed at boot |
 | `POST /v1/leaderboards/insert?timestamp=&backfill=&sync=&warm=` | **master-only ingest**: multipart `file` with the raw `LeaderBot.cfg` text. Default returns **202** and parses/persists in the **background** (so a multi-second insert can't time out the bot); counts/errors land in the ingest log. The parsed snapshot is bulk-loaded into **Postgres** via `COPY` → staging temp table → player-upsert → `INSERT…SELECT` (sub-second for ~720k rows); the row lands in the anchor's partition. Idempotent for a given anchor (delete-by-anchor then reload). `backfill=true` lifts the 14-day anchor limit (bulk re-seed from saved `<unix>.cfg` files). `sync=true` processes **inline → 200 with real counts** (backpressure: one dump in memory at a time). `warm=false` defers cache-warming. Subject to the **ingest cooldown** when called with an API token |
 | `POST /v1/leaderboards/reset?drop_boards=` | **master-only, destructive**: `TRUNCATE … RESTART IDENTITY` the Postgres entry/player/activity tables (not row-by-row), and drop every cheater/activity/Redis cache + the ready pointer — a clean slate before a full re-ingest. Board metadata (incl. admin reset-cadence overrides) is kept unless `drop_boards=true`. Returns the deletion tallies; logged at WARNING |
@@ -214,11 +216,11 @@ so clients can self-throttle. Recent queries (≤ threshold) cost only the stand
 | `GET /v1/giveaways/upcoming` | (**tokenless**) scheduled giveaways not yet open, soonest-starting first (same shape; `status="scheduled"`, `entry_count` 0 until it opens). Cached 30s |
 | `GET /v1/giveaways/ended?days=` | (**tokenless**) giveaways ended in the last `days` days (default 7, max 30), most-recently-ended first (same shape; `status` `"drawn"`/`"closed"`, cancelled excluded). Cached 30s |
 
-**`events` category - scope `events:read`** (public - token optional). A **push** stream so consumers stop polling challenge/chaos at the top of the hour.
+**`events` category - scope `events:read`** (public - token optional). A **push** stream so consumers stop polling rotations at the top of the hour.
 
 | Endpoint | Returns |
 |---|---|
-| `GET /v1/events/stream` | (**tokenless**) a long-lived `text/event-stream` (SSE). On connect: a snapshot of the current `challenge` + `chaos` state; then one message per change the instant a capture lands. Each message is `event: <type>` + JSON `data: {type, data, ts}` (`type` ∈ `challenge`/`chaos`; `data` = the matching `/challenge/current` or `/chaos-chest` body). `: ping` keep-alive ~20s. Fans out across uvicorn workers via Redis pub/sub; exactly-once via a SET-GET dedup guard |
+| `GET /v1/events/stream` | (**tokenless**) a long-lived `text/event-stream` (SSE). On connect: a snapshot of the current state of every registered source; then one message per change the instant it happens. Each message is `event: <type>` + JSON `data: {type, data, ts}`. `type` ∈ `challenge`/`chaos`/`corruxion`/`fluxion`/`longshade`/`wild_mana`/`stampy`/`daily_bonuses`/`activity`/`server_status`/`trove_news`/`giveaways`/`game_update` (a new live build was mirrored). `: ping` keep-alive ~20s. Fans out across uvicorn workers via Redis pub/sub; exactly-once via a SET-GET dedup guard |
 
 **`market` category - scope `market:read`** (read side; `POST /insert` is **master-only**)
 
@@ -230,9 +232,11 @@ so clients can self-throttle. Recent queries (≤ threshold) cost only the stand
 | `GET /v1/market/items/{name}/summary` | min/max/avg/median price-each + listing count for one item |
 | `POST /v1/market/insert?timestamp=` | **master-only ingest**: multipart `file` with the raw `GrainusMod.cfg` text. Listings upserted by UUID - re-scrapes bump `last_seen`, never duplicate. Subject to the **ingest cooldown** (see below) when called with an API token |
 
-Bot scrapes the in-game marketplace hourly. Each listing's UUID v1 is the document `_id`; `created_at` is
-decoded from the UUID's timestamp (so it matches when the player posted in-game); `last_seen` is bumped on
-every re-scrape. Only items on `gamedata/market_items.json` are persisted; the rest are dropped at ingest.
+Bot scrapes the in-game marketplace hourly. Listings live in **Postgres** (`market_listing` table, alongside
+leaderboards); each listing's UUID v1 is the primary key; `created_at` is decoded from the UUID's timestamp
+(so it matches when the player posted in-game); `last_seen` is bumped on every re-scrape (UPSERT). Only items
+on `gamedata/market_items.json` are persisted; the rest are dropped at ingest. (The interest allow-list itself
+stays in Mongo.)
 
 **Archive rate limit** - passing `hide_expired=false` on `/listings` (i.e. asking for the historical
 tail past the 7-day in-game lifetime) pays a SECOND, tighter per-token bucket (default 10 req/min) on
@@ -284,7 +288,8 @@ The api container ALSO serves the BTT marketing/manual site out of `site/`
 | `GET /commands` | searchable in-game slash-command reference |
 | `GET /leaderboards` | hourly in-game leaderboard browser (charts, cheaters) |
 | `GET /activity` | Player Activity - live active-player estimate + multi-period trend charts (1D…all-time) |
-| `GET /updates` | per-server (Live US / PTS) game-update file explorer + version diff |
+| `GET /player/<name>` | public player profile - leaderboard appearances + verified-claim badge (consumes `/site/leaderboards/players/<name>/profile`) |
+| `GET /updates` | per-server (Live US / PTS) game-update file explorer + version diff + in-browser preview of small text files |
 | `GET /support` | "support the project" landing for the navbar heart icon |
 | `GET /status` | Trove server-status page - live EU/US/PTS state + downtime-history timeline |
 | `GET /static/*` | site assets (bind-mounted from `site/static/`) |
@@ -327,6 +332,7 @@ after sending.
 | `GET /v1/updates/{branch}/changes?version=&ordinal=&type=` | per-file diff a version introduced (added/modified/removed paths); latest if unpinned |
 | `GET /v1/updates/{branch}/tree?prefix=` | one directory level (ls-style); empty prefix = root |
 | `GET /v1/updates/{branch}/file?path=` | (**tokenless**) a single file's bytes, streamed from the blob store (`/file/meta` for hash+size) |
+| `GET /v1/updates/{branch}/file/view?path=` | preview payload for the in-browser viewer: UTF-8 `text` when the file is small (≤512 KB) + text-like, else `viewable:false` with a `reason` (`too_large`/`binary`/`missing`) so the client falls back to the raw `/file` download |
 
 Kiwi mirrors Trove's update CDN into a content-addressed, deduped store (see "Game-file archive" below);
 these endpoints serve the latest captured version. Loose files and TFA-extracted files are browsed
@@ -344,12 +350,16 @@ identically. Historical-version querying is the next layer.
 
 Eight typed datasets - `ally`, `mount`, `dragon`, `memento`, `recipe`, `item`, `fish`, `badge` - parsed
 from Trove's `prefabs/*.binfab` files (a protobuf-like wire format) with names/descriptions resolved via
-the `languages/` locale tables. The indexer runs after each archive sync: a full build the first time,
-then only the changed prefabs (driven by the version delta), so a routine patch never re-parses the rest
-of the game. All endpoints default to the `live-us` branch (`?branch=pts` for PTS). Each entry carries
-identity (name, category, description, tradability) plus `mastery` (collectible mastery, from
-`meta/multipliers.binfab`); richer per-type fields (power rank, stats, models) fill the `data` object
-incrementally.
+the `languages/` locale tables. Parsed rows live in **Postgres** (`codex_entry` table, alongside
+leaderboards/market), keyed by `(branch, path)` - the two modes (`live-us` + `pts`) are just rows with a
+different `branch`, and `content_sha256` ties each row back to the exact source binfab. The indexer runs
+after each archive sync: a full build the first time (or after switching to Postgres), then only the
+changed prefabs (driven by the version delta), so a routine patch never re-parses the rest of the game.
+The table is disposable - rebuildable from the archive at any time. All endpoints default to the `live-us`
+branch (`?branch=pts` for PTS). Each entry carries identity (name, category, description, tradability)
+plus decoded collectible bonuses: `mastery` (normal, from `meta/multipliers.binfab`), `mastery_geode`
+(geode-mode, from `meta/geode_multipliers.binfab`), `power_rank`, and a `data` JSONB object of numeric
+stat bonuses, visible/hidden ability refs, and (for geode companions) per-level upgrade-tree bonuses.
 
 More are added following the conventions in "Adding the real endpoints" below.
 

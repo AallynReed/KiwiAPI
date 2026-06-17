@@ -6,7 +6,6 @@ from fastapi import Depends, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.auth.models import User
-from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
 from app.core.ip_hash import ip_allowed as _ip_hash_allowed
 from app.core.limits import endpoint_limit_for

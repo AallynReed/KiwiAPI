@@ -20,20 +20,20 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-logger = logging.getLogger("kiwi.site.router")
-
 from app.admin import runtime_config
 from app.core.config import settings
-from app.trove.leaderboards import activity as leaderboards_activity
-from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove import status as trove_status
+from app.trove.leaderboards import activity as leaderboards_activity
+from app.trove.leaderboards import cache as leaderboards_cache
+from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove.leaderboards import detection as leaderboards_detection
 from app.trove.leaderboards import service as leaderboards_service
-from app.trove.leaderboards import cache as leaderboards_cache
 from app.trove.updates import compare as updates_compare
 from app.trove.updates import read as updates_read
 from app.trove.updates.cas import ContentStore
 from app.trove.updates.cdn import BRANCHES as UPDATE_BRANCHES
+
+logger = logging.getLogger("kiwi.site.router")
 
 # Filename extensions accepted as Trove screenshots for the hero slideshow.
 # Anything else in the folder (READMEs, .DS_Store, etc.) is silently skipped.
@@ -235,6 +235,20 @@ async def class_activity_page(request: Request) -> HTMLResponse:
     """Class Activity page - per-class active players over time (multi-line) plus
     a class player-share donut, derived from the Effort/Paragon leaderboards."""
     return _TEMPLATES.TemplateResponse(request, "class-activity.html", {})
+
+
+@router.get("/player/{name}", response_class=HTMLResponse)
+async def player_page(request: Request, name: str) -> HTMLResponse:
+    """Public player profile - leaderboard appearances + a verified-claim badge.
+    Shareable; the Discord bot's rank command can deep-link here. The page fetches
+    /site/leaderboards/players/<name>/profile client-side."""
+    title = f"{name} · Trove player profile"
+    return _TEMPLATES.TemplateResponse(request, "player.html", {
+        "player_name": name,
+        "og_title": title,
+        "og_desc": f"{name}'s Trove leaderboard ranks and recent appearances.",
+        "og_page_url": f"https://trove.aallyn.net/player/{name}",
+    })
 
 
 @router.get("/activity/og.png")
@@ -547,6 +561,25 @@ async def site_lb_board_history(
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
 
 
+@router.get("/site/leaderboards/{uuid}/health", response_class=JSONResponse)
+async def site_lb_board_health(uuid: int) -> JSONResponse:
+    """Board health summary (turnover / score inflation / competitiveness), served
+    same-origin for the leaderboards page. 404 when the board has no stored data."""
+    payload = await leaderboards_service.board_health(uuid)
+    if payload is None:
+        raise HTTPException(status_code=404, detail=f"No leaderboard data for uuid {uuid}")
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/leaderboards/players/{player_name}/profile",
+            response_class=JSONResponse)
+async def site_lb_player_profile(player_name: str) -> JSONResponse:
+    """Public player profile (appearances + verified-claim flag), same-origin for
+    the /player/<name> page."""
+    payload = await leaderboards_service.player_profile(player_name)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=30"})
+
+
 @router.get("/site/leaderboards/players/{player_name}/series",
             response_class=JSONResponse)
 async def site_lb_player_series(
@@ -684,6 +717,17 @@ async def site_up_file_meta(
         raise HTTPException(status_code=404, detail=f"No file '{path}'")
     return JSONResponse({"branch": branch, **meta},
                         headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/updates/{branch}/file/view", response_class=JSONResponse)
+async def site_up_file_view(
+    branch: str, path: str = Query(...),
+) -> JSONResponse:
+    _site_check_branch(branch)
+    payload = await updates_read.read_file_text(branch, path)
+    if payload is None:
+        raise HTTPException(status_code=404, detail=f"No file '{path}'")
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
 
 
 @router.get("/site/updates/{branch}/file/history", response_class=JSONResponse)

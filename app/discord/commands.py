@@ -26,17 +26,25 @@ from app.discord.embeds import (
     corruxion_embed,
     download_embed,
     fluxion_embed,
+    gem_embed,
     giveaways_embed,
     longshade_embed,
     ping_embed,
+    price_embed,
     servertime_embed,
     stampy_embed,
     status_embed,
     trove_news_embed,
+    uptime_embed,
     web_embed,
     wild_mana_embed,
 )
 from app.i18n import t
+from app.trove.gems.constants import (
+    GEM_STAT_TYPE_NAMES,
+    GEM_TIER_NAMES,
+    GEM_TYPE_NAMES,
+)
 
 logger = logging.getLogger("kiwi.discord")
 
@@ -48,8 +56,32 @@ _FLAG_EPHEMERAL = 64
 # Application-command + option types, and installation / usage contexts.
 _CMD_CHAT_INPUT = 1
 _OPT_STRING = 3
+_OPT_INTEGER = 4
+_OPT_NUMBER = 10
 _INTEGRATION_GUILD, _INTEGRATION_USER = 0, 1
 _CONTEXT_GUILD, _CONTEXT_BOT_DM, _CONTEXT_PRIVATE = 0, 1, 2
+
+# /gem choices, derived from the gem enums so they never drift from the evaluator.
+# Integer-typed options carry the IntEnum value straight back in the interaction.
+_GEM_TIER_CHOICES = [{"name": v, "value": k} for k, v in GEM_TIER_NAMES.items()]
+_GEM_TYPE_CHOICES = [{"name": v, "value": k} for k, v in GEM_TYPE_NAMES.items()]
+_GEM_STAT_CHOICES = [{"name": v, "value": k} for k, v in GEM_STAT_TYPE_NAMES.items()]
+
+
+def _gem_stat_opt(n: int) -> dict:
+    """A required stat-type picker for the gem's nth stat."""
+    return {
+        "name": f"stat{n}", "description": f"Stat {n} type", "type": _OPT_INTEGER,
+        "required": True, "choices": _GEM_STAT_CHOICES,
+    }
+
+
+def _gem_value_opt(n: int) -> dict:
+    """A required entered-value field for the gem's nth stat."""
+    return {
+        "name": f"value{n}", "description": f"Stat {n} value (as shown in-game)",
+        "type": _OPT_NUMBER, "required": True,
+    }
 
 # Period choices for /activity (value = the api period token; default 7d).
 _ACTIVITY_CHOICES = [
@@ -98,6 +130,24 @@ COMMAND_DEFS = [
     _cmd("stampy", "The Stampy event - current/next window and biome."),
     _cmd("wild_mana", "The weekly Wild Mana biome rotation."),
     _cmd("trove_news", "The latest Trove news."),
+    _cmd("price", "Show the marketplace price summary for an item.", options=[{
+        "name": "item",
+        "description": "Item name (case-insensitive)",
+        "type": _OPT_STRING,
+        "required": True,
+    }]),
+    _cmd("trove_uptime", "Show Trove server uptime % per region (last 7 days)."),
+    _cmd("gem", "Evaluate a gem: quality %, Power Rank, and cost to perfect.", options=[
+        {"name": "tier", "description": "Gem tier", "type": _OPT_INTEGER,
+         "required": True, "choices": _GEM_TIER_CHOICES},
+        {"name": "type", "description": "Lesser or Empowered", "type": _OPT_INTEGER,
+         "required": True, "choices": _GEM_TYPE_CHOICES},
+        {"name": "level", "description": "Gem level (1–30)", "type": _OPT_INTEGER,
+         "required": True, "min_value": 1, "max_value": 30},
+        _gem_stat_opt(1), _gem_value_opt(1),
+        _gem_stat_opt(2), _gem_value_opt(2),
+        _gem_stat_opt(3), _gem_value_opt(3),
+    ]),
     _cmd("download", "Download the latest Better Trove Tools (all platforms)."),
     _cmd("web", "Use Better Trove Tools in your browser."),
     _cmd("change_log", "Better Trove Tools changelog (recent changes)."),
@@ -182,6 +232,22 @@ async def handle(interaction: dict) -> dict:
             return _embed(wild_mana_embed())
         if name == "trove_news":
             return _embed(await trove_news_embed())
+        if name == "price":
+            item = (_option(interaction, "item", "") or "").strip()
+            if not item:
+                return _message(t("🥝 Please provide an item name."))
+            return _embed(await price_embed(item))
+        if name == "trove_uptime":
+            return _embed(await uptime_embed())
+        if name == "gem":
+            stats = [
+                {"type": _option(interaction, "stat1"), "value": _option(interaction, "value1")},
+                {"type": _option(interaction, "stat2"), "value": _option(interaction, "value2")},
+                {"type": _option(interaction, "stat3"), "value": _option(interaction, "value3")},
+            ]
+            return _embed(await gem_embed(
+                _option(interaction, "tier"), _option(interaction, "type"),
+                _option(interaction, "level"), stats))
         if name == "download":
             return _embed(await download_embed())
         if name == "web":

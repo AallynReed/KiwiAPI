@@ -111,7 +111,7 @@ def make_hunks(
             ctx_before = min(context, ei2 - ei1)
         else:
             ei1 = ei2 = opcodes[i][1]
-            ej1 = ej2 = opcodes[i][3]
+            ej2 = opcodes[i][3]
             ctx_before = 0
         left_start_idx = ei2 - ctx_before
         right_start_idx = ej2 - ctx_before

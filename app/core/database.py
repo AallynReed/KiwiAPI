@@ -3,21 +3,21 @@ from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import OperationFailure
 
-from app.auth.models import Session, User
-from app.site_auth.models import SiteSession, SiteUser
-from app.core.config import settings
-from app.core.email_outbox import OutboxEmail
 from app.admin.ingest_log import IngestLogEntry
 from app.admin.runtime_config import RuntimeConfig
-from app.giveaways.models import Giveaway, GiveawayEntry, PrizeCode, VaultItem
+from app.auth.models import Session, User
 from app.bot.models import Club, GuildConfig, TrackedAnnouncement
+from app.core.config import settings
+from app.core.email_outbox import OutboxEmail
+from app.giveaways.models import Giveaway, GiveawayEntry, PrizeCode, VaultItem
+from app.site_auth.models import SiteSession, SiteUser
 from app.supporters.models import Supporter
 from app.tokens.models import ApiToken
-from app.trove.codexes.models import CodexEntry
+
 # NOTE: the leaderboards domain (boards/entries/players/activity/cheaters/deltas)
-# lives in PostgreSQL now (app/trove/leaderboards/pg_store.py), NOT Beanie - there
-# are deliberately no leaderboard Documents to register here.
-from app.trove.market.models import MarketInterestItem, MarketListing
+# AND the codexes (codex_entry) live in PostgreSQL now (app/trove/*/pg_store.py),
+# NOT Beanie - there are deliberately no Documents for them to register here.
+from app.trove.market.models import MarketInterestItem
 from app.trove.models import (
     BttChangelog,
     BttRelease,
@@ -46,8 +46,7 @@ DOCUMENT_MODELS = [
     ApiToken, UsageEvent, OutboxEmail, TroveNews, FeedCache, TroveEvent,
     DelveRotation, BttRelease, BttChangelog,
     UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
-    CodexEntry,
-    MarketListing, MarketInterestItem,
+    MarketInterestItem,                  # MarketListing + CodexEntry moved to Postgres (pg_store)
     ChaosChestCapture, ChallengeCapture,
     FeedbackEntry,
     TroveStatusEvent,

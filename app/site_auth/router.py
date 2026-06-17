@@ -14,7 +14,6 @@ from fastapi import APIRouter, Depends, Request, status
 
 from app.core.errors import APIError, ErrorCode
 from app.core.utils import utcnow
-
 from app.site_auth.dependencies import (
     get_current_site_user,
     get_current_verified_site_user,
@@ -34,7 +33,6 @@ from app.site_auth.sessions import (
     revoke_by_refresh_token,
     rotate,
 )
-
 
 router = APIRouter(prefix="/v1/site-auth", tags=["site-auth"])
 
@@ -219,19 +217,10 @@ async def unclaim_trove_name(
 async def verify_trove_claim(
     user: SiteUser = Depends(get_current_verified_site_user),
 ) -> SiteVerifyTroveClaimResponse:
-    """On-demand verification check. Re-fetches the user's current
-    leaderboard appearances by the claimed name and compares to the
-    baseline captured at claim time. If ANY board's current score is
-    higher than the baseline, the claim is marked verified and a
-    detail string explains which board provided the proof.
-
-    The check is intentionally simple in v1: any forward progress on
-    any board proves "this account belongs to a player who has
-    control over the Trove account using this name." Future tightening
-    (require N points of progress, require it on a specific board,
-    require activity within a time window) can layer on top without
-    changing the storage shape.
-    """
+    """Report claim status. Verification is a MANUAL master approval done in the
+    dev-portal admin panel (Trove claims tab → Approve), so this endpoint no longer
+    self-verifies; it just echoes "pending review" until a master approves. The
+    dashboard claim UI is hidden while this flow is finished, so it's rarely hit."""
     if not user.claimed_trove_name:
         raise APIError(
             status_code=400, code=ErrorCode.bad_request,
@@ -242,79 +231,13 @@ async def verify_trove_claim(
             verified=True, detail="Already verified.", user=_to_public(user),
         )
 
-    baseline = user.claim_baseline or {}
-    if not baseline:
-        # No baseline rows means the player wasn't on any board at
-        # claim time. Re-snapshot and ask them to come back after
-        # they've appeared on a board.
-        new_baseline = await _build_claim_baseline(user.claimed_trove_display or user.claimed_trove_name)
-        user.claim_baseline = new_baseline
-        user.updated_at = utcnow()
-        await user.save()
-        return SiteVerifyTroveClaimResponse(
-            verified=False,
-            detail=(
-                "We didn't have any leaderboard data for that name at "
-                "claim time. We've taken a fresh baseline; come back "
-                "after you've played a bit and we'll re-check."
-            ),
-            user=_to_public(user),
-        )
-
-    from app.trove.leaderboards import service as lb_service
-    rows = await lb_service.player_history(
-        user.claimed_trove_display or user.claimed_trove_name, limit=500,
-    )
-    # current[board_uuid_str] = highest current score across captured anchors
-    current: dict[str, float] = {}
-    for r in rows:
-        uuid = r.get("leaderboard")
-        score = r.get("score")
-        if uuid is None or score is None:
-            continue
-        key = str(uuid)
-        prev = current.get(key)
-        if prev is None or score > prev:
-            current[key] = float(score)
-
-    # Look for any board where the current peak strictly exceeds the
-    # baseline. We don't require a minimum delta - a single score
-    # increment is enough to prove control of the in-game character.
-    proof_board: str | None = None
-    proof_delta: float = 0.0
-    for key, cur in current.items():
-        base = baseline.get(key)
-        if base is None:
-            # New board appearance entirely - counts as forward progress.
-            proof_board = key
-            proof_delta = cur
-            break
-        if cur > base:
-            proof_board = key
-            proof_delta = cur - base
-            break
-
-    if proof_board is None:
-        return SiteVerifyTroveClaimResponse(
-            verified=False,
-            detail=(
-                "No score progression detected yet. Play a bit and "
-                "score on any leaderboard you appeared on at claim "
-                "time, then try again."
-            ),
-            user=_to_public(user),
-        )
-
-    user.claim_verified = True
-    user.claim_verified_at = utcnow()
-    user.updated_at = utcnow()
-    await user.save()
+    # Verification is now a MANUAL master approval in the dev-portal admin panel
+    # (the old score-progression self-check was retired). There's nothing for the
+    # user to do here but wait for review; the claim stays unverified until a
+    # master approves it via POST /admin/site-claims/{id}/approve.
     return SiteVerifyTroveClaimResponse(
-        verified=True,
-        detail=(
-            f"Verified - score went up on board #{proof_board} "
-            f"(delta ~{proof_delta:g})."
-        ),
+        verified=False,
+        detail="Your claim is pending manual review by an admin.",
         user=_to_public(user),
     )
 

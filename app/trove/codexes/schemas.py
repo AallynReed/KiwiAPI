@@ -23,9 +23,11 @@ class CodexEntryOut(BaseModel):
     category: str = ""
     description: str = ""
     tradable: bool | None = None
-    mastery: int | None = None        # collectible mastery (None for non-collectibles)
+    mastery: int | None = None        # normal collectible mastery (None for non-collectibles)
+    mastery_geode: int | None = None  # geode-mode mastery (None unless geode-listed)
+    power_rank: int | None = None     # collectible Power Rank (None if absent)
     blueprint: str | None = None
-    data: dict = {}                   # type-specific rich fields (populated incrementally)
+    data: dict = {}                   # rich fields: stats, abilities, geode_companion levels
     indexed_at: datetime
 
 

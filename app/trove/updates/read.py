@@ -8,7 +8,15 @@ never dumped at once.
 
 from __future__ import annotations
 
+import asyncio
+
+from app.core.config import settings
+from app.trove.updates.cas import ContentStore
 from app.trove.updates.models import UpdateBranch, UpdateChange, UpdateState, UpdateVersion
+
+# Cap for the in-browser file viewer: only files at/under this size are read and
+# returned as text, so a click never dumps a huge blob into the page.
+VIEW_MAX_BYTES = 512 * 1024
 
 
 def directory_listing(entries: list[dict], prefix: str) -> list[dict]:
@@ -57,6 +65,44 @@ async def list_versions(branch: str, limit: int, offset: int) -> tuple[list[Upda
     total = await UpdateVersion.find(q).count()
     docs = await UpdateVersion.find(q).sort("-ordinal").skip(offset).limit(limit).to_list()
     return docs, total
+
+
+async def latest_version(branch: str) -> UpdateVersion | None:
+    """The newest completed version for a branch (highest ordinal), or None.
+
+    Used by the live-event ``game_update`` source, the Discord announcement, and
+    the homepage "latest patch" banner."""
+    docs = await (
+        UpdateVersion.find({"branch": branch, "status": "complete"})
+        .sort("-ordinal").limit(1).to_list()
+    )
+    return docs[0] if docs else None
+
+
+async def read_file_text(branch: str, path: str, max_bytes: int = VIEW_MAX_BYTES) -> dict | None:
+    """Viewer payload for one file: UTF-8 ``text`` when it's small + text-like, else
+    ``viewable: False`` with a ``reason`` ("too_large" / "binary" / "missing"). None
+    when the path isn't in the latest tree. Sync blob I/O is off-loaded to a thread."""
+    meta = await get_file_meta(branch, path)
+    if meta is None:
+        return None
+    base = {
+        "branch": branch, "path": path, "size": meta["size"],
+        "content_sha256": meta["content_sha256"], "truncated": False, "text": None,
+    }
+    if meta["size"] > max_bytes:
+        return {**base, "viewable": False, "reason": "too_large"}
+    blob = ContentStore(settings.trove_update_store_dir).path_for(meta["content_sha256"])
+    if not blob.is_file():
+        return {**base, "viewable": False, "reason": "missing"}
+    data = await asyncio.to_thread(blob.read_bytes)
+    if b"\x00" in data:                       # NUL byte -> treat as binary
+        return {**base, "viewable": False, "reason": "binary"}
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return {**base, "viewable": False, "reason": "binary"}
+    return {**base, "viewable": True, "reason": None, "text": text}
 
 
 async def resolve_version(

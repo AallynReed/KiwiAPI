@@ -257,7 +257,7 @@ async def _warmup_loop() -> None:
         # start filling immediately instead of after a full TTL.
         try:
             await asyncio.wait_for(_wake_event.wait(), timeout=next_sleep)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pass
         except asyncio.CancelledError:
             raise

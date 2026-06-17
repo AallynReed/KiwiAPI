@@ -1,16 +1,22 @@
 """Per-prefab extraction → a codex entry dict. Pure (bytes + locale map in).
 
-v1 is identity-level: name/category/description (locale-resolved), tradability,
-and the source keys - which covers the entity prefabs (allies, mounts, dragons,
-badges, items, fish, mementos). Recipes and collection tables have no identity
-component, so they fall back to a filename-derived name until their typed
-extractors land. Rich per-type fields (stats, mastery, model, variants) populate
-`data` later.
+Identity-level: name/category/description (locale-resolved), tradability, source
+keys - covering the entity prefabs (allies, mounts, dragons, badges, items, fish,
+mementos). On top of that, content-only bonus extraction: Power Rank, numeric stat
+records, and visible/hidden ability refs (into `data`). Mastery (normal + geode)
+and geode-companion upgrade-tree levels need lookup tables, so the indexer adds
+those. Recipes / collection tables have no identity component and fall back to a
+filename-derived name.
 """
 
 from __future__ import annotations
 
-from app.trove.codexes import binfab
+from app.trove.codexes import binfab, bonuses, powerrank
+
+# Types whose prefabs carry displayed stat/ability/Power-Rank bonuses (the handoff's
+# "collection prefabs"). `mount` covers dragons too (split out after extraction).
+# Geode companions are `item` and get their bonuses from the upgrade tree instead.
+_BONUS_TYPES = frozenset({"ally", "mount", "badge"})
 
 
 def _name_from_path(path: str) -> str:
@@ -40,6 +46,20 @@ def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str,
     desc_key = ident.get("desc_key")
     name = (loc_map.get(name_key) if name_key else None) or _name_from_path(path)
     description = (loc_map.get(desc_key) if desc_key else None) or ""
+
+    # Content-only collection bonuses, only for the types that carry them (mastery +
+    # geode-companion levels are added by the indexer, which has the lookup tables).
+    data: dict = {}
+    power_rank = None
+    if codex_type in _BONUS_TYPES:
+        stats = bonuses.extract_stat_bonuses(content)
+        abilities = bonuses.extract_abilities(content)
+        if stats:
+            data["stats"] = stats
+        if abilities:
+            data["abilities"] = abilities
+        power_rank = powerrank.decode_power_rank(content)
+
     return {
         "codex_type": codex_type,
         "path": path,
@@ -47,8 +67,10 @@ def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str,
         "category": ident.get("category") or "",
         "description": description,
         "tradable": ident.get("tradable"),
+        "mastery_geode": None,
+        "power_rank": power_rank,
         "name_key": name_key,
         "desc_key": desc_key,
         "blueprint": None,
-        "data": {},
+        "data": data,
     }

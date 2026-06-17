@@ -80,6 +80,20 @@ class FileMeta(BaseModel):
     archive_index: int | None = None
 
 
+class FileView(BaseModel):
+    """In-browser preview of one file. ``text`` is the UTF-8 content when the file
+    is small + text-like; otherwise ``viewable`` is false and ``reason`` says why
+    ("too_large" / "binary" / "missing") so the client falls back to the download."""
+    branch: str
+    path: str
+    size: int
+    content_sha256: str
+    viewable: bool
+    reason: str | None = None
+    truncated: bool = False
+    text: str | None = None
+
+
 # ── File history + compare ────────────────────────────────────────────────
 # History is "every UpdateChange touching this (branch, path)" with the
 # version's tag + capture time joined in. Compare resolves two versions of

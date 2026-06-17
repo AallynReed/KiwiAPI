@@ -155,8 +155,8 @@ async def reingest(*, clear_first: bool = False) -> None:
     """Background: ingest every backlog file oldest-first as a PURE insert (no
     per-file warm / archive move), then run the deferred compute ONCE. Single-
     flight guarded; publishes live progress."""
+    from app.trove.leaderboards import activity, class_activity, detection
     from app.trove.leaderboards import service as lb_service
-    from app.trove.leaderboards import detection, activity, class_activity
 
     r = get_redis()
     if r is not None:

@@ -121,6 +121,12 @@ class Settings(BaseSettings):
     docs_url: str = "https://docs.aallyn.net"
     app_url: str = "https://trove.aallyn.net"
 
+    # Internal (service-to-service) base URL for the API, used by the gateway bot
+    # to read Postgres-backed data (activity, and future leaderboard/cheater
+    # features) over the compose network - the bot container has Mongo + Redis but
+    # no Postgres. Defaults to the compose service name; override in dev if needed.
+    internal_api_url: str = "http://api:8000"
+
     # Mongo connection - inside Docker the host is the compose service name.
     mongo_uri: str = "mongodb://localhost:27017"
     mongo_db: str = "kiwi"
