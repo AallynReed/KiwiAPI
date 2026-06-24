@@ -1,0 +1,251 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /mods - Mods Hub listing (Beta)
+   ───────────────────────────────────────────────────────────────────────
+   Search + sort + tag filter over a paginated banner-card grid, backed by the
+   same-origin /site/mods/* proxies (tokenless). When a site user is signed in
+   (window.BTTAuth), the hero exposes "Create a mod" (POST to the /v1/mods/hub
+   write API) and "My mods". No login is needed to browse or download.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+(function () {
+  'use strict';
+
+  const PAGE_SIZE = 30;
+
+  const state = {
+    q: '', tag: '', sort: 'recent',
+    offset: 0, items: [], total: 0, loading: false,
+    facets: { categories: [], custom: [] },
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const $grid = $('mh-grid');
+  const $meta = $('mh-meta');
+  const $foot = $('mh-foot');
+  const $loadMore = $('mh-load-more');
+  const $search = $('mh-search');
+  const $sort = $('mh-sort');
+  const $tagbar = $('mh-tagbar');
+  const $tags = $('mh-tags');
+
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
+  // Mods are addressed as /mods/<owner_handle>/<slug>.
+  const modUrl = (m) => '/mods/' + encodeURIComponent(m.handle) + '/' + encodeURIComponent(m.slug);
+  const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
+  function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
+
+  // ─── Boot ──────────────────────────────────────────────────────────
+  init().catch((err) => {
+    console.error('[mods] boot failed', err);
+    $grid.innerHTML = `<p class="mh-error">${esc(t('Failed to load mods.'))}</p>`;
+    rerunI18n();
+  });
+
+  async function init() {
+    wireEvents();
+    wireAuth();
+    wireCreate();
+    await loadFacets();
+    await loadPage(true);
+  }
+
+  // Tag facets (counts) for the filter bar: categories first, then custom tags.
+  async function loadFacets() {
+    try {
+      const r = await fetch('/site/mods/tags');
+      if (r.ok) state.facets = await r.json();
+    } catch (_) { /* tagbar just stays hidden if this fails */ }
+  }
+
+  function wireEvents() {
+    let timer = null;
+    $search.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { state.q = $search.value.trim(); loadPage(true); }, 250);
+    });
+    $sort.addEventListener('change', () => { state.sort = $sort.value; loadPage(true); });
+    $loadMore.addEventListener('click', () => loadPage(false));
+  }
+
+  // Show "Create" / "My mods" for signed-in users, "Sign in" otherwise.
+  function wireAuth() {
+    const apply = (user) => {
+      const authed = !!user;
+      $('mh-create').hidden = !authed;
+      $('mh-mine').hidden = !authed;
+      $('mh-signin').hidden = authed;
+      $('mh-mine').setAttribute('href', '#');   // click handler routes dynamically
+    };
+    apply(window.BTTAuth && window.BTTAuth.getCachedUser ? window.BTTAuth.getCachedUser() : null);
+    if (window.BTTAuth && window.BTTAuth.getMe) {
+      window.BTTAuth.getMe().then(apply).catch(() => {});
+    }
+    // "My mods" routes to the user's most recent project (or the create modal).
+    $('mh-mine').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        const r = await fetch('/site/mods/me/projects', { headers: authHeader() });
+        const data = r.ok ? await r.json() : { items: [] };
+        if (data.items && data.items.length) {
+          location.href = modUrl(data.items[0]);
+        } else {
+          openCreate();
+        }
+      } catch (_) { openCreate(); }
+    });
+  }
+
+  function authHeader() {
+    const tok = window.BTTAuth && window.BTTAuth.tokens ? window.BTTAuth.tokens.access : null;
+    return tok ? { Authorization: 'Bearer ' + tok } : {};
+  }
+
+  // ─── Data ──────────────────────────────────────────────────────────
+  async function loadPage(reset) {
+    if (state.loading) return;
+    state.loading = true;
+    if (reset) { state.offset = 0; state.items = []; }
+    const params = new URLSearchParams({
+      sort: state.sort, limit: String(PAGE_SIZE), offset: String(state.offset),
+    });
+    if (state.q) params.set('q', state.q);
+    if (state.tag) params.set('tag', state.tag);
+    try {
+      const r = await fetch('/site/mods/projects?' + params.toString());
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      state.total = data.total || 0;
+      state.items = reset ? data.items : state.items.concat(data.items);
+      state.offset = state.items.length;
+      render();
+    } catch (err) {
+      console.error('[mods] load failed', err);
+      $grid.innerHTML = `<p class="mh-error">${esc(t('Failed to load mods.'))}</p>`;
+    } finally {
+      state.loading = false;
+    }
+  }
+
+  // ─── Render ────────────────────────────────────────────────────────
+  function render() {
+    renderTags();
+    if (!state.items.length) {
+      $grid.innerHTML = `<p class="mh-empty">${esc(t('No mods found. Be the first to publish one!'))}</p>`;
+      $meta.textContent = '';
+      $foot.hidden = true;
+      rerunI18n();
+      return;
+    }
+    $meta.textContent = t('Showing') + ' ' + state.items.length + ' / ' + state.total;
+    $grid.innerHTML = state.items.map(cardHTML).join('');
+    $foot.hidden = state.items.length >= state.total;
+    rerunI18n();
+  }
+
+  function renderTags() {
+    const cats = state.facets.categories || [];
+    const custom = state.facets.custom || [];
+    if (!cats.length && !custom.length) { $tagbar.hidden = true; return; }
+    $tagbar.hidden = false;
+    const cur = state.tag.toLowerCase();
+    const chip = (tg, n) =>
+      `<button type="button" class="mh-tag ${cur === tg.toLowerCase() ? 'active' : ''}" data-tag="${esc(tg)}">${esc(tg)} <span class="mh-tag-count">${Number(n).toLocaleString()}</span></button>`;
+    // "All" first, then the fixed categories, then a separator, then custom tags.
+    let html = `<button type="button" class="mh-tag ${state.tag ? '' : 'active'}" data-tag="">${esc(t('All'))}</button>`;
+    html += cats.map((c) => chip(c.tag, c.count)).join('');
+    if (custom.length) {
+      html += '<span class="mh-tag-sep" aria-hidden="true"></span>';
+      html += custom.map((c) => chip(c.tag, c.count)).join('');
+    }
+    $tags.innerHTML = html;
+    $tags.querySelectorAll('.mh-tag').forEach((b) => b.addEventListener('click', () => {
+      state.tag = b.getAttribute('data-tag');
+      loadPage(true);
+    }));
+  }
+
+  function cardHTML(p) {
+    // No banner? Fall back to the first preview image for the card thumbnail.
+    const cardSha = p.banner_sha || p.preview_sha || null;
+    const banner = cardSha
+      ? `<img class="mh-card-banner" src="${imageUrl(cardSha)}" alt="" loading="lazy">`
+      : `<div class="mh-card-banner placeholder"><i class="fa-solid fa-cube" aria-hidden="true"></i></div>`;
+    const tags = (p.tags || []).slice(0, 4)
+      .map((tg) => `<span class="mh-card-tag">${esc(tg)}</span>`).join('');
+    const badge = p.visibility === 'draft'
+      ? `<span class="mh-badge mh-badge-draft">${esc(t('Draft'))}</span>`
+      : p.visibility === 'unlisted'
+        ? `<span class="mh-badge mh-badge-unlisted">${esc(t('Unlisted'))}</span>` : '';
+    const lineage = p.forked_from
+      ? `<p class="mh-card-lineage"><i class="fa-solid fa-code-fork"></i> ${esc(t('Forked from'))} ${esc(p.forked_from.title || p.forked_from.slug)}</p>`
+      : p.inspired_by
+        ? `<p class="mh-card-lineage"><i class="fa-solid fa-lightbulb"></i> ${esc(t('Inspired by'))} ${esc(p.inspired_by.title || p.inspired_by.slug)}</p>` : '';
+    return `<a class="mh-card" href="${modUrl(p)}">
+      ${banner}
+      <div class="mh-card-body">
+        <h3 class="mh-card-title">${esc(p.title)} ${badge}</h3>
+        ${lineage}
+        ${p.summary ? `<p class="mh-card-summary">${esc(p.summary)}</p>` : ''}
+        ${tags ? `<div class="mh-card-tags">${tags}</div>` : ''}
+        <div class="mh-card-foot">
+          <span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> ${esc(p.owner_username)}</span>
+          <span class="mh-card-stats">
+            <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}</span>
+            <span class="mh-card-dl"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(p.star_count || 0).toLocaleString()}</span>
+          </span>
+        </div>
+      </div>
+    </a>`;
+  }
+
+  // ─── Create modal ──────────────────────────────────────────────────
+  function wireCreate() {
+    const modal = $('mh-create-modal');
+    $('mh-create').addEventListener('click', openCreate);
+    modal.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeCreate));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCreate(); });
+    $('mh-create-form').addEventListener('submit', submitCreate);
+  }
+
+  function openCreate() {
+    if (!(window.BTTAuth && window.BTTAuth.getCachedUser && window.BTTAuth.getCachedUser())) {
+      location.href = '/login';
+      return;
+    }
+    $('mh-create-modal').hidden = false;
+  }
+  function closeCreate() { $('mh-create-modal').hidden = true; }
+
+  async function submitCreate(e) {
+    e.preventDefault();
+    const form = e.target;
+    const err = $('mh-create-error');
+    err.hidden = true;
+    const tags = (form.tags.value || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const body = {
+      title: form.title.value.trim(),
+      summary: form.summary.value.trim(),
+      tags,
+      mode: form.mode.value,
+      visibility: form.visibility.value,
+    };
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+      const r = await window.BTTAuth.callJSON('/v1/mods/hub/projects', { json: body });
+      if (r.ok && r.data && r.data.slug) {
+        location.href = modUrl(r.data);
+        return;
+      }
+      err.textContent = (r.data && r.data.error && r.data.error.message) || t('Could not create the mod.');
+      err.hidden = false;
+    } catch (_) {
+      err.textContent = t('Could not create the mod.');
+      err.hidden = false;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+})();

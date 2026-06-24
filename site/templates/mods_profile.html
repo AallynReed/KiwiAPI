@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{{ page_title }}</title>
+    <meta name="description" content="{{ og_desc }}">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="{{ og_page_url }}">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+    <!-- Open Graph (per-modder, filled by app/site/router.py mods_profile_page) -->
+    <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="{{ og_title }}">
+    <meta property="og:description" content="{{ og_desc }}">
+    <meta property="og:url" content="{{ og_page_url }}">
+    <meta property="og:image" content="{{ og_image }}">
+    <meta property="og:image:alt" content="{{ og_image_alt }}">
+    {% if og_author %}<meta property="profile:username" content="{{ handle }}">{% endif %}
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="{{ twitter_card }}">
+    <meta name="twitter:title" content="{{ og_title }}">
+    <meta name="twitter:description" content="{{ og_desc }}">
+    <meta name="twitter:image" content="{{ og_image }}">
+    <meta name="twitter:image:alt" content="{{ og_image_alt }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/mods_project.min.css">
+    <link rel="stylesheet" href="/static/mods.min.css">
+    <link rel="stylesheet" href="/static/mods_profile.min.css">
+    <meta name="mh-handle" content="{{ handle }}">
+</head>
+<body class="landing mods-profile-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="mpf-main">
+        <a class="mp-back" href="/mods"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> <span data-i18n>Mods Hub</span></a>
+        <div id="mpf-root" class="mpf-root" aria-live="polite">
+            <p class="mp-loading" data-i18n>Loading…</p>
+        </div>
+    </main>
+
+    <!-- Modals are built into here by the page JS. -->
+    <div id="mpf-modal-root"></div>
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/md_render.min.js" defer></script>
+    <script src="/static/mods_profile.min.js" defer></script>
+</body>
+</html>

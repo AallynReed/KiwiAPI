@@ -89,6 +89,13 @@
                 <span data-i18n>Possible cheaters</span>
                 <span class="lb-tab-badge" id="lb-tab-cheaters-badge" hidden>0</span>
             </button>
+            <button type="button" class="lb-tab" role="tab"
+                    id="lb-tab-clusters" data-tab="clusters"
+                    aria-selected="false" aria-controls="lb-pane-clusters">
+                <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+                <span data-i18n>Alt clusters</span>
+                <span class="lb-tab-badge" id="lb-tab-clusters-badge" hidden>0</span>
+            </button>
         </nav>
 
         <!-- ═══════════════ PLAYER HISTORY PANEL ═══════════════
@@ -245,6 +252,37 @@
             <details class="lb-cheaters-method">
                 <summary data-i18n>How is this computed?</summary>
                 <p data-i18n>Three independent statistical checks per board: Modified Z-score (median-based, robust to cheaters polluting their own baseline), rank-gap ratio (a player's lead over the next rank vs the board's typical between-rank step), and velocity (score gain rate vs the board's peer p95). A player flagged by multiple checks, or across multiple boards, is higher confidence.</p>
+            </details>
+        </section>
+
+        <!-- ═══════════════ TAB: ALT CLUSTERS ═══════════════
+             Group-shaped detection: families of similarly-named accounts
+             sitting at near-identical scores (coordinated "alt armies").
+             Fed by the SAME payload as the cheaters tab (the /cheaters
+             endpoint returns both `players` and `clusters`), so the lazy
+             fetch is shared - activating either tab loads both. -->
+        <section class="lb-tab-pane lb-cheaters lb-clusters-pane" id="lb-pane-clusters"
+                 role="tabpanel" aria-labelledby="lb-tab-clusters" hidden>
+            <!-- Own confidence slider, persisted independently of the
+                 cheaters slider (localStorage btt_lb_clusters_min). -->
+            <div class="lb-cheaters-filter">
+                <label class="lb-cheaters-filter-label" for="lb-clusters-min">
+                    <span data-i18n>Min confidence</span>
+                    <span class="lb-cheaters-filter-value" id="lb-clusters-min-value">0.90</span>
+                </label>
+                <input type="range" class="lb-cheaters-filter-range"
+                       id="lb-clusters-min" min="0" max="1" step="0.05" value="0.9">
+                <span class="lb-cheaters-filter-hint" id="lb-clusters-filter-hint"></span>
+            </div>
+            <!-- JS owns this line (no data-i18n - see cheaters meta note). -->
+            <p class="lb-cheaters-meta" id="lb-clusters-meta">Loading…</p>
+            <p class="lb-clusters-blurb" data-i18n>Packs of similarly-named accounts sitting at near-identical scores - a coordinated multi-account pattern no single-player check can see.</p>
+            <div class="lb-clusters-body" id="lb-clusters-body">
+                <p class="lb-cheaters-empty" data-i18n>Checking the latest capture…</p>
+            </div>
+            <details class="lb-cheaters-method">
+                <summary data-i18n>How is this computed?</summary>
+                <p data-i18n>A fourth check looks for alt clusters: families of similarly-named accounts (shared name stem) sitting at near-identical scores - a coordinated multi-account pattern no single-player check can see. The tighter the scores, the more accounts, and the more boards they share, the higher the cluster's confidence.</p>
             </details>
         </section>
 

@@ -57,6 +57,8 @@ from app.trove.codexes.schemas import (
 )
 from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
 from app.trove.gems import builds as gem_builds
+from app.trove.render.service import render_blueprint_cached
+from app.trove.render.voxel import BlueprintError
 from app.trove.gems import evaluator as gem_evaluator
 from app.trove.gems.model import Gem, gem_lookups
 from app.trove.gems.schemas import (
@@ -1866,6 +1868,33 @@ async def search_codexes(
     )
 
 
+@codexes_router.get(
+    "/render",
+    responses={200: {"content": {"image/png": {}},
+                     "description": "Game-like PNG render of the blueprint (transparent bg)."}},
+)
+async def render_blueprint_image(
+    blueprint: str = Query(..., description="Blueprint logical name, e.g. 'equipment_weapon_1h_sword_001'"),
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    dim: int = Query(default=256, ge=32, le=512, description="Square output size in px"),
+) -> Response:
+    """Render a blueprint to a game-like image, emulating Trove's catalog tool
+    (perspective voxel render, flat lighting, glass transparency). Cached in Redis;
+    served as a transparent PNG."""
+    _check_branch(branch)
+    try:
+        png = await render_blueprint_cached(blueprint, dim=dim, branch=branch)
+    except BlueprintError as e:
+        raise APIError(status_code=422, code=ErrorCode.bad_request,
+                       message=f"Blueprint not renderable: {e}")
+    if png is None:
+        raise APIError(status_code=404, code=ErrorCode.not_found,
+                       message=f"No blueprint '{blueprint}' on branch '{branch}'")
+    return Response(content=png, media_type="image/png",
+                    headers={"Cache-Control": "public, max-age=86400"})
+
+
 @codexes_router.get("/{codex_type}", response_model=CodexEntryPage)
 async def list_codex_entries(
     codex_type: str,
@@ -2155,13 +2184,13 @@ async def list_possible_cheaters(
     response: Response,
     _ctx: AccessContext = _LB_PUBLIC,
 ) -> CheatersResponse:
-    """**Tokenless.** Flag players with statistically anomalous scores on
-    the most-recent captured anchor. Runs three independent checks and
-    surfaces the raw evidence per player per board so callers can decide
-    how strict to be (a player flagged by multiple checks, or across
-    multiple boards, is higher confidence than one with a single flag).
+    """**Tokenless.** Flag statistically anomalous play on the most-recent
+    captured anchor. Runs four independent checks and surfaces the raw
+    evidence so callers can decide how strict to be (a player flagged by
+    multiple checks, or across multiple boards, is higher confidence than
+    one with a single flag).
 
-    Checks:
+    Per-player checks (in ``players``):
 
     - **Modified Z-score (MAD-based)** - robust outlier vs the board's
       *median*. Threshold default 3.5 (Iglewicz & Hoaglin 1993, "strong
@@ -2173,6 +2202,14 @@ async def list_possible_cheaters(
     - **Velocity** - score-gain rate (Δscore / Δtime) vs the board's
       peer p95 rate, using the player's previous historical capture.
       Degrades gracefully when archive history is thin.
+
+    Group check (in ``clusters``):
+
+    - **Alt-cluster** - packs of similarly-named accounts (shared name
+      stem + small edit-distance, e.g. ``anana1 … anana20``) sitting at
+      near-identical scores. None of the per-player checks see this -
+      each alt is unremarkable alone; only the family is anomalous.
+      Confidence folds score tightness, family size, and board count.
 
     All thresholds + the cache TTL are runtime-tunable from the master
     panel (``cheaters_*`` keys). The response echoes the active config
@@ -2555,25 +2592,28 @@ async def warm_leaderboards(_auth = _LB_MASTER) -> dict:
     return {"warming": True}
 
 
-@leaderboards_router.post("/cheaters/recompute", status_code=200,
+@leaderboards_router.post("/cheaters/recompute", status_code=202,
                           summary="Reset + recompute cheater detection (master)")
 async def recompute_cheaters(_auth = _LB_MASTER) -> dict:
-    """**Master only.** Drop the cached cheater-detection results (in-process +
+    """**Master only.** Drop the cached cheater/alt-cluster results (in-process +
     the persisted Redis snapshots) and recompute the latest anchor from scratch -
-    independent of the activity / class-activity histories, so a cheater-config
-    tweak can be re-evaluated without rerunning the long backfills. Cheap
-    (latest-anchor only); runs inline and returns the new flag count."""
+    independent of the activity / class-activity histories.
+
+    Returns **202 immediately** - the actual recompute runs in the BACKGROUND
+    (the warmer loop), NOT inline. The detection pass loads every entry in the
+    capture, runs the per-board checks, and runs the alt-cluster pass; on a real
+    capture that can exceed a proxy/client timeout, so doing it inline would hang
+    the caller's request (which is exactly what it used to do). The per-player
+    and alt-cluster tabs share this one pass; reopen `/v1/leaderboards/cheaters`
+    (or the page) once it lands to see the fresh flags."""
     from app.trove.leaderboards import cache as leaderboards_cache
     cleared = await leaderboards_cache.invalidate_cheaters()
+    # Clear the in-process caches, then wake the (always-running) background
+    # warmer to recompute the latest anchor. With the Redis snapshot cleared,
+    # the warmer recomputes from scratch rather than adopting a stale snapshot.
     leaderboards_detection.reset()
-    result = await leaderboards_detection.detect_possible_cheaters(force=True)
-    return {
-        "recomputed": True,
-        "redis_snapshots_cleared": cleared,
-        "anchor": result.get("anchor") if isinstance(result, dict) else None,
-        "total_flagged": result.get("total_flagged") if isinstance(result, dict) else None,
-        "boards_analyzed": result.get("boards_analyzed") if isinstance(result, dict) else None,
-    }
+    leaderboards_detection.trigger_warmer()
+    return {"recomputing": True, "redis_snapshots_cleared": cleared}
 
 
 @leaderboards_router.post("/views/recompute", status_code=200,

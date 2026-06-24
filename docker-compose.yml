@@ -33,9 +33,20 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    # Internal only (no host port). Password-protected, in-memory (no persistence
-    # needed - it backs rate-limit counters and short-lived caches).
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}", "--save", "", "--appendonly", "no"]
+    # Internal only (no host port). Password-protected. PERSISTENT: RDB snapshots
+    # to the bind-mounted ./data/redis so the warmed page caches (leaderboards /
+    # cheaters / alt clusters) + the ready-anchor pointer SURVIVE a container
+    # recreate. A deploy / --force-recreate / image bump no longer wipes the
+    # cache, so users keep seeing the last snapshot (the warmer refreshes it in
+    # the background) - no cold "first visitor pays for it" gap, even mid-ingest.
+    # `--save 60 1` snapshots ~60s after any change (and Redis also saves on a
+    # graceful shutdown). maxmemory + allkeys-lru bounds it within mem_limit and
+    # evicts the OLDEST snapshots under pressure instead of failing writes.
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}",
+              "--save", "60 1", "--appendonly", "no",
+              "--maxmemory", "200mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - ./data/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
@@ -126,6 +137,9 @@ services:
       # Server-side ingest backlog (gzipped dumps keyed by anchor; re-ingestable
       # from the admin panel). Bind-mounted below; drop <unix>.cfg files in too.
       BACKLOG_DIR: ${BACKLOG_DIR:-/data/backlog}
+      # Mods Hub store: per-project git repos + images + compiled .tmod blobs.
+      # Bind-mounted below so mods survive a container rebuild.
+      MODS_STORE_DIR: ${MODS_STORE_DIR:-/data/mods}
       # Delve-rotation source (week-based). Refresher stays off until the URL is set.
       TROVE_DELVE_SOURCE_URL: ${TROVE_DELVE_SOURCE_URL:-}
       TROVE_DELVE_SOURCE_REFERER: ${TROVE_DELVE_SOURCE_REFERER:-}
@@ -159,6 +173,9 @@ services:
       # panel with no upload. Drop <unix>.cfg files in by hand too. Kept out of
       # git/Syncthing (can grow large).
       - ./.backlog:/data/backlog
+      # Mods Hub store: shared mods' git repos, uploaded images and compiled
+      # .tmod release artifacts. Kept out of git/Syncthing (user content, grows).
+      - ./.mods:/data/mods
       # BetterTroveTools showcase site (templates + static + ~20 MB of screenshots).
       # Bind-mounted so the heavy binary assets don't bake into the image; the
       # api container serves trove.aallyn.net out of this directory.

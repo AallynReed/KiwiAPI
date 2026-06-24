@@ -1,0 +1,128 @@
+/* ═══ Modpack page (/modpacks/<handle>/<slug>) ═══════════════════════════
+   Reuses the Mods Hub page styles (.mp-* from mods_project.css): banner, badges,
+   sections, markdown, buttons, modals, forms, toast. Only the modpack-specific
+   bits (header, variant tabs, mod-entry rows, mod search) live here. ════════════ */
+
+/* Filled-in gaps from mods_project.css the modpack page relies on. */
+.mp-btn-ghost { background: transparent; }
+.mp-warning {
+  display: flex; gap: 10px; align-items: flex-start; margin: 0 0 8px;
+  color: #ffd27d; background: rgba(255,193,93,.08);
+  border: 1px solid rgba(255,193,93,.25); border-radius: var(--radius);
+  padding: 10px 14px; font-size: .9rem;
+}
+.mp-warning:last-child { margin-bottom: 0; }
+.mp-warning i { margin-top: 2px; }
+.mp-check { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; color: var(--text-soft); cursor: pointer; }
+.mp-check input { margin-top: 3px; }
+
+/* ── Header ── */
+.mpk-header {
+  border: 1px solid var(--bg-line); border-radius: var(--radius-lg);
+  overflow: hidden; background: var(--bg-card); margin-bottom: 22px;
+}
+.mp-banner { height: clamp(140px, 24vw, 240px); width: 100%; object-fit: cover; display: block; }
+.mp-banner.placeholder {
+  display: grid; place-items: center; color: var(--text-mute); font-size: 3rem;
+  background: linear-gradient(135deg, rgba(86,156,255,.16), rgba(255,94,126,.10));
+}
+.mpk-head-body { padding: 18px 22px 20px; }
+.mpk-head-titlerow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mp-title { font: 700 clamp(1.5rem, 3vw, 2rem) 'Space Grotesk', 'Inter', sans-serif; margin: 0; letter-spacing: -.02em; }
+.mpk-head-by { color: var(--text-mute); font-size: .9rem; margin: 6px 0 0; }
+.mpk-head-by a { color: var(--accent-blue); text-decoration: none; }
+.mpk-head-by a:hover { text-decoration: underline; }
+.mpk-head-summary { color: var(--text-soft); margin: 10px 0 0; max-width: 70ch; }
+.mpk-head-stats { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+.mpk-stat { display: inline-flex; align-items: center; gap: 7px; color: var(--text-mute); font-size: .9rem; font-weight: 600; }
+.mpk-stat i { color: var(--accent-blue); }
+.mpk-like {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  border: 1px solid var(--bg-line); border-radius: 999px; background: var(--bg-deep);
+  padding: 6px 14px; font: 600 .85rem 'Inter', sans-serif; color: var(--text-soft);
+  transition: border-color .15s, color .15s, background .15s;
+}
+.mpk-like:hover { border-color: #ff6b81; color: #ff8fa0; }
+.mpk-like i { color: var(--text-mute); transition: color .15s; }
+.mpk-like:hover i, .mpk-like.active i { color: #ff6b81; }
+.mpk-like.active { border-color: rgba(255,107,129,.5); color: #ff8fa0; }
+.mpk-head-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.mp-takedown {
+  margin: 0; padding: 12px 22px; background: rgba(255,107,129,.1);
+  color: #ff8fa0; border-top: 1px solid rgba(255,107,129,.3); font-size: .9rem;
+}
+
+/* ── Variant tabs ── */
+.mpk-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.mpk-tab {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  border: 1px solid var(--bg-line); border-radius: 999px; background: var(--bg-deep);
+  padding: 7px 15px; font: 600 .85rem 'Inter', sans-serif; color: var(--text-soft);
+  transition: border-color .15s, color .15s, background .15s;
+}
+.mpk-tab:hover { border-color: var(--accent-blue); color: var(--text); }
+.mpk-tab.active { background: var(--accent-blue); border-color: var(--accent-blue); color: #06121f; }
+.mpk-tab-count { font-size: .72rem; opacity: .8; font-weight: 700; }
+.mpk-tab-add { border-style: dashed; color: var(--text-mute); }
+.mpk-default-star { font-size: .7rem; color: #ffce5b; }
+.mpk-tab.active .mpk-default-star { color: #06121f; }
+.mpk-variant-ctl { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+/* ── Included mods ── */
+.mpk-mods .mp-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.mpk-count {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 22px;
+  height: 22px; padding: 0 7px; border-radius: 999px; background: var(--bg-deep);
+  border: 1px solid var(--bg-line); font-size: .78rem; color: var(--text-soft); margin-left: 6px;
+}
+.mpk-dl { display: flex; gap: 8px; align-items: center; }
+
+.mpk-entries { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 0; }
+.mpk-entry {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--bg-line); border-radius: var(--radius);
+  background: var(--bg-deep); padding: 11px 14px;
+}
+.mpk-entry-warn { border-color: rgba(255,193,93,.35); background: rgba(255,193,93,.05); }
+.mpk-entry-main { min-width: 0; }
+.mpk-entry-titlerow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.mpk-entry-title { font-weight: 600; color: var(--text); text-decoration: none; }
+.mpk-entry-title:hover { color: var(--accent-blue); text-decoration: underline; }
+.mpk-entry-by { font-size: .82rem; color: var(--text-mute); }
+.mpk-entry-by a { color: var(--text-soft); text-decoration: none; }
+.mpk-entry-by a:hover { color: var(--accent-blue); text-decoration: underline; }
+.mpk-entry-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.mpk-badge {
+  display: inline-flex; align-items: center; gap: 5px; font-size: .75rem; font-weight: 600;
+  color: var(--text-soft); background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: 999px; padding: 2px 9px;
+}
+.mpk-badge i { font-size: .68rem; color: var(--accent-blue); }
+.mpk-locked { color: #ffce5b; } .mpk-locked i { color: #ffce5b; }
+.mpk-warn { color: #ffb04d; border-color: rgba(255,176,77,.4); } .mpk-warn i { color: #ffb04d; }
+.mpk-entry-ctl { display: flex; gap: 4px; flex: none; }
+.mpk-icon {
+  width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--bg-line); border-radius: var(--radius); background: var(--bg-card);
+  color: var(--text-soft); transition: border-color .15s, color .15s;
+}
+.mpk-icon:hover { border-color: var(--accent-blue); color: var(--text); }
+.mpk-icon:disabled { opacity: .4; cursor: default; }
+.mpk-icon-danger:hover { border-color: #ff6b81; color: #ff8fa0; }
+.mpk-empty { color: var(--text-mute); font-size: .9rem; padding: 10px 2px; }
+.mpk-add-mod { margin-top: 14px; }
+
+/* ── Add-mod search (inside the modal) ── */
+.mpk-search-results { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; margin-top: 4px; }
+.mpk-result {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 8px 12px; background: var(--bg-deep);
+}
+.mpk-result-main { display: flex; flex-direction: column; min-width: 0; }
+.mpk-result-title { font-weight: 600; color: var(--text); }
+.mpk-result-by { font-size: .78rem; color: var(--text-mute); }
+
+@media (max-width: 640px) {
+  .mpk-entry { flex-wrap: wrap; }
+  .mpk-mods .mp-section-head { flex-direction: column; align-items: flex-start; }
+}

@@ -335,8 +335,8 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "activity", "account", "overview", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "botstats"];
-const MASTER_TABS = new Set(["overview", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "botstats"]);
+const TABS = ["tokens", "activity", "account", "overview", "pageviews", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"];
+const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"]);
 
 // Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
 const ICONS = {
@@ -344,6 +344,7 @@ const ICONS = {
   activity:     '<path d="M3 12h4l3 7 4-15 3 8h4"/>',
   account:      '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>',
   overview:     '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  pageviews:    '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
   events:       '<circle cx="4" cy="6" r="1.3"/><circle cx="4" cy="12" r="1.3"/><circle cx="4" cy="18" r="1.3"/><path d="M9 6h11M9 12h11M9 18h7"/>',
   users:        '<circle cx="8.5" cy="8" r="3.2"/><path d="M3 19c0-3 2.4-4.7 5.5-4.7S14 16 14 19"/><path d="M15 5.2A3.2 3.2 0 0 1 15 12M16 14.6c2.6.3 4 1.9 4 4.4"/>',
   config:       '<path d="M4 7h7M17.5 7H20M4 17h7M17.5 17H20"/><circle cx="14" cy="7" r="2.4"/><circle cx="14" cy="17" r="2.4"/>',
@@ -355,6 +356,8 @@ const ICONS = {
   supporters:   '<path d="M12 20.3 4.6 12.9a4.4 4.4 0 0 1 6.2-6.2l1.2 1.2 1.2-1.2a4.4 4.4 0 0 1 6.2 6.2L12 20.3Z"/>',
   claims:       '<path d="M12 3 5 6v5c0 4 3 6.5 7 8 4-1.5 7-4 7-8V6l-7-3Z"/><path d="M9.5 12l2 2 3.5-3.5"/>',
   botstats:     '<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="14" width="3" height="3"/>',
+  mods:         '<path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>',
+  codexes:      '<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5Z"/><path d="M8 7h7M8 10h7"/>',
 };
 function icon(name) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
@@ -368,6 +371,7 @@ const TAB_META = {
   activity:     { group: "API management", label: "Activity" },
   account:      { group: "API management", label: "Account" },
   overview:     { group: "Admin panel", label: "Overview" },
+  pageviews:    { group: "Admin panel", label: "Site Analytics" },
   events:       { group: "Admin panel", label: "Events" },
   users:        { group: "Admin panel", label: "Users" },
   config:       { group: "Admin panel", label: "Configuration" },
@@ -377,6 +381,8 @@ const TAB_META = {
   discord:      { group: "Admin panel · Modules", label: "Discord" },
   supporters:   { group: "Admin panel · Modules", label: "Supporters" },
   claims:       { group: "Admin panel · Modules", label: "Trove claims" },
+  mods:         { group: "Admin panel · Modules", label: "Mods hub" },
+  codexes:      { group: "Admin panel · Modules", label: "Codexes" },
   botstats:     { group: "Admin panel · Modules", label: "Bot stats" },
 };
 
@@ -409,6 +415,7 @@ function renderDashboard() {
   const adminNav = u.is_superuser ? `
           <p class="nav-group">Admin panel <span class="badge muted">master</span></p>
           ${navItem("overview")}
+          ${navItem("pageviews")}
           ${navItem("events")}
           ${navItem("users")}
           ${navItem("config")}
@@ -417,7 +424,9 @@ function renderDashboard() {
           ${navItem("ingest", true)}
           ${navItem("giveaways", true)}
           ${navItem("discord", true)}
-          ${navItem("supporters", true)}` : "";
+          ${navItem("supporters", true)}
+          ${navItem("mods", true)}
+          ${navItem("codexes", true)}` : "";
 
   app.innerHTML = `
     <div class="topbar">
@@ -475,6 +484,7 @@ function selectTab() {
   else if (state.tab === "activity") renderActivity();
   else if (state.tab === "account") renderAccount();
   else if (state.tab === "overview") renderOverview();
+  else if (state.tab === "pageviews") renderPageviews();
   else if (state.tab === "events") renderEvents();
   else if (state.tab === "users") renderUsers();
   else if (state.tab === "config") renderConfigTab();
@@ -484,6 +494,8 @@ function selectTab() {
   else if (state.tab === "discord") renderDiscord();
   else if (state.tab === "supporters") renderSupporters();
   else if (state.tab === "claims") renderClaims();
+  else if (state.tab === "mods") renderModsModeration();
+  else if (state.tab === "codexes") renderCodexes();
   else if (state.tab === "botstats") renderBotStats();
   else renderTokens();
 }
@@ -1074,6 +1086,54 @@ async function renderOverview(days = 30) {
   sel.addEventListener("change", () => renderOverview(Number(sel.value)));
 }
 
+// Admin · Site Analytics - cookieless page views + unique visitors for the public
+// showcase site. Unique visitors are counted once per UTC day (IP+UA salted hash);
+// dynamic pages are grouped by route template (e.g. /player/{name}).
+async function renderPageviews(days = 30) {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `<div class="loading">Loading site analytics…</div>`;
+  let stats;
+  try { stats = await API.call(`/admin/pageviews?days=${days}`); }
+  catch (ex) { body.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+
+  const num = (n) => Number(n || 0).toLocaleString();
+  const pRow = (p) => `
+    <tr>
+      <td class="mono">${esc(p.path)}</td>
+      <td>${num(p.views)}</td>
+      <td>${num(p.unique_visitors)}</td>
+    </tr>`;
+
+  body.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Site analytics - last ${days} days</h2>
+        <select id="pv-days" style="max-width:140px;flex:0 0 auto">
+          <option value="1">24 hours</option><option value="7">7 days</option>
+          <option value="30">30 days</option><option value="90">90 days</option>
+        </select>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="n">${num(stats.total_views)}</div><div class="l">Page views</div></div>
+        <div class="stat"><div class="n">${num(stats.unique_visitors)}</div><div class="l">Unique visitors</div></div>
+        <div class="stat"><div class="n">${num(stats.views_today)}</div><div class="l">Views today</div></div>
+      </div>
+      <p class="hint">Public showcase-site page loads, one row per real page URL (each mod and player page individually), top ${stats.pages.length} by views. Unique visitors are counted once per day (cookieless IP+UA hash, no cookie stored); static assets and JSON proxies aren't counted.</p>
+      <table>
+        <thead><tr><th>Page</th><th>Views</th><th>Unique visitors</th></tr></thead>
+        <tbody id="pv-rows"></tbody>
+      </table>
+    </div>`;
+
+  const rowsEl = document.getElementById("pv-rows");
+  rowsEl.innerHTML = stats.pages.length
+    ? stats.pages.map(pRow).join("")
+    : `<tr><td colspan="3" class="muted">No page views in this window yet.</td></tr>`;
+
+  const sel = document.getElementById("pv-days"); sel.value = String(days);
+  sel.addEventListener("change", () => renderPageviews(Number(sel.value)));
+}
+
 // Admin · Users - searchable roster; click a row to drill into one account.
 async function renderUsers(days = 30) {
   const body = document.getElementById("tab-body");
@@ -1238,8 +1298,12 @@ async function renderLeaderboards() {
           <button class="btn small danger" id="rc-cls-reset" type="button">Reset &amp; recalculate</button>
         </div>
         <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
-          <span style="flex:1 1 200px"><strong>Cheaters</strong> <span class="muted" style="font-size:.78rem">— flag detection, latest capture</span></span>
+          <span style="flex:1 1 200px"><strong>Cheaters</strong> <span class="muted" style="font-size:.78rem">— per-player flag detection, latest capture</span></span>
           <button class="btn small danger" id="rc-cheat-reset" type="button">Reset &amp; recalculate</button>
+        </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Alt clusters</strong> <span class="muted" style="font-size:.78rem">— similar-name/near-score groups, latest capture (shares the cheaters pass)</span></span>
+          <button class="btn small danger" id="rc-cluster-reset" type="button">Reset &amp; recalculate</button>
         </div>
         <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
           <span style="flex:1 1 200px"><strong>Leaderboard views</strong> <span class="muted" style="font-size:.78rem">— page snapshot caches</span></span>
@@ -1312,11 +1376,25 @@ function wireRecomputeCard() {
   onReset(
     "rc-cheat-reset", "Reset cheater detection?",
     `<p>Clears the cached cheater flags (in-process + Redis) and recomputes the latest capture from scratch.
-     Inline - a few seconds.</p>`,
+     Runs in the <strong>background</strong> (returns immediately, so it can't hang the page); the
+     Cheaters + Alt-clusters tabs refresh within a minute. This single pass also rebuilds the alt clusters.</p>`,
     async () => {
       const r = await postCheaters();
-      show(`Cheaters recomputed: ${r.total_flagged ?? "?"} flagged across ${r.boards_analyzed ?? "?"} boards (anchor ${r.anchor ?? "n/a"}).`);
-      toast("Cheaters recomputed", "ok");
+      show(`Recompute started — ${r.redis_snapshots_cleared ?? 0} cached snapshot(s) cleared. `
+         + `The Cheaters + Alt-clusters tabs refresh within a minute.`);
+      toast("Recompute started", "ok");
+    },
+  );
+  onReset(
+    "rc-cluster-reset", "Reset alt-cluster detection?",
+    `<p>Recomputes the latest capture's <strong>alt clusters</strong> (similar-name accounts at near-identical scores).
+     Runs in the <strong>background</strong> (returns immediately).</p>
+     <p class="hint">Clusters and per-player cheater flags are computed in one pass, so this also refreshes the
+     Cheaters tab.</p>`,
+    async () => {
+      await postCheaters();
+      show("Alt-cluster recompute started (shares the cheaters pass). The Alt clusters tab refreshes within a minute.");
+      toast("Recompute started", "ok");
     },
   );
   onReset(
@@ -2177,6 +2255,101 @@ async function renderDiscord() {
   });
 }
 
+// --- Codexes module (master) ----------------------------------------------
+// The codex (parsed binfab game data) is materialized in Postgres from the update
+// archive and refreshes itself: a parser-code change bumps CODEX_PARSER_VERSION
+// and the next sync force-rebuilds the branch; a game update applies as a delta.
+// This tab shows the state and offers a manual force-rebuild to apply a parser
+// change immediately (every prefab re-parsed, UPSERTed in place - no empty window).
+async function renderCodexes() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Codexes</h2>
+        <select id="cdx-branch" style="max-width:160px">
+          <option value="live-us">Live (live-us)</option>
+          <option value="pts">PTS (pts)</option>
+        </select>
+      </div>
+      <p class="hint" style="margin:0 0 14px">
+        Parsed Trove game data materialized in Postgres. It rebuilds automatically
+        when the parser version advances (after a deploy) or a game update lands.
+        Force a rebuild here to apply a parser change right away instead of waiting
+        for the next sync - every prefab is re-parsed and upserted in place.
+      </p>
+      <div id="cdx-status"><div class="loading">Loading…</div></div>
+      <div class="row" style="align-items:center;margin-top:14px">
+        <button class="btn primary" data-act="rebuild">Rebuild now</button>
+        <button type="button" class="btn small" data-act="refresh">Refresh</button>
+      </div>
+      <div id="cdx-result" class="ingest-result"></div>
+    </div>`;
+
+  const branchSel = document.getElementById("cdx-branch");
+  const statusEl = document.getElementById("cdx-status");
+  const result = document.getElementById("cdx-result");
+  let pollTimer = null;
+  const stop = () => { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } };
+  const branch = () => branchSel.value;
+
+  function renderStatus(s) {
+    const rb = s.rebuild || {};
+    const stale = s.parser_version < s.current_parser_version;
+    const rows = [
+      ["Entries", Number(s.entry_count || 0).toLocaleString()],
+      ["Parser version", `${s.parser_version}${stale ? ` → ${s.current_parser_version} (rebuild pending on next sync)` : " · current"}`],
+    ];
+    if (rb.running) rows.push(["Rebuild", "running…"]);
+    else if (rb.error) rows.push(["Last rebuild", `failed: ${rb.error}`]);
+    else if (rb.counts) rows.push(["Last rebuild", `indexed ${Number(rb.counts.indexed || 0).toLocaleString()} · removed ${rb.counts.removed || 0}`]);
+    statusEl.innerHTML = rows.map(([k, v]) =>
+      `<div class="row" style="gap:10px;padding:5px 0;border-bottom:1px solid var(--border)">
+         <span class="muted" style="flex:0 0 130px">${esc(k)}</span><span style="flex:1">${esc(String(v))}</span></div>`).join("");
+    return !!rb.running;
+  }
+
+  async function loadStatus() {
+    if (!document.body.contains(statusEl)) return stop();  // left the tab
+    try {
+      const s = await API.call(`/admin/codexes/status?branch=${encodeURIComponent(branch())}`);
+      const running = renderStatus(s);
+      if (running && !pollTimer) pollTimer = setInterval(loadStatus, 3000);
+      if (!running) stop();
+    } catch (ex) {
+      statusEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+      stop();
+    }
+  }
+
+  branchSel.addEventListener("change", () => {
+    result.textContent = ""; result.className = "ingest-result"; stop(); loadStatus();
+  });
+  body.querySelector('[data-act="refresh"]').addEventListener("click", loadStatus);
+
+  body.querySelector('[data-act="rebuild"]').addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    result.className = "ingest-result";
+    result.textContent = "Starting rebuild…";
+    try {
+      const data = await API.call(`/admin/codexes/rebuild?branch=${encodeURIComponent(branch())}`, { method: "POST" });
+      result.className = "ingest-result ok";
+      result.textContent = data.message || (data.started ? "Rebuild started." : "Rebuild already running.");
+      toast(data.started ? "Codex rebuild started" : "Rebuild already running", "ok");
+      loadStatus();
+    } catch (ex) {
+      result.className = "ingest-result err";
+      result.textContent = ex.message;
+      toast("Rebuild failed to start", "err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  loadStatus();
+}
+
 // --- Bot stats (master) ----------------------------------------------------
 // Read-only view of the gateway bot's reach (servers + users it can see) and
 // slash-command usage. Written by the bot (presence) + the interactions endpoint
@@ -2401,6 +2574,279 @@ async function renderClaims() {
   document.querySelector('[data-act="refresh"]').addEventListener("click", load);
   showAll.addEventListener("change", load);
   load();
+}
+
+// --- Mods hub moderation (master) ------------------------------------------
+// Users report a shared mod from its /mods/{slug} page; masters triage the
+// reports here. "Take down" drops the project from all public listings + detail
+// reads (the owner still sees it, flagged); "Restore" reverses it. Backed by
+// /admin/mods/* (see app/admin/router.py).
+
+async function renderModsModeration() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <h2 style="margin:0 0 6px">Mods hub moderation</h2>
+      <p class="hint" style="margin:0">
+        Reports filed against shared mods on the
+        <a href="https://trove.aallyn.net/mods" target="_blank" rel="noopener">Mods Hub</a>.
+        <strong>Take down</strong> hides a project from all public listings and detail reads
+        (the owner still sees it, flagged); <strong>Restore</strong> reverses it.
+      </p>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:14px">
+        <h2 style="flex:1;margin:0">Open reports</h2>
+        <label class="row" style="gap:6px;align-items:center;font-size:.85rem;margin:0">
+          <input type="checkbox" id="mods-show-resolved"> Show resolved
+        </label>
+        <button type="button" class="btn small" data-act="refresh">Refresh</button>
+      </div>
+      <div id="mods-reports"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:10px">
+        <h2 style="flex:1;margin:0">All projects</h2>
+        <input type="text" id="mods-q" placeholder="Search title/tags" style="flex:1">
+        <input type="text" id="mods-owner" placeholder="Owner" style="width:130px">
+        <select id="mods-vis" style="width:120px">
+          <option value="">Any visibility</option>
+          <option value="public">Public</option>
+          <option value="unlisted">Unlisted</option>
+          <option value="draft">Draft</option>
+        </select>
+        <button type="button" class="btn small" data-act="search">Search</button>
+      </div>
+      <div id="mods-projects"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:10px">
+        <h2 style="flex:1;margin:0">Stray mod import</h2>
+        <button type="button" class="btn small" data-act="stray-refresh">Refresh</button>
+      </div>
+      <p class="hint" style="margin:0 0 10px">Import <strong>stray</strong> (unclaimed) mods.
+        <strong>Bulk import</strong> brings everything in, visible; <strong>Resync</strong> refreshes download
+        counts + changed files and queues any newly-found mods for approval below.</p>
+      <div id="stray-state" class="muted" style="font-size:.85rem;margin-bottom:8px">Loading…</div>
+      <div class="row" style="gap:8px">
+        <button type="button" class="btn small" data-act="stray-import">Bulk import</button>
+        <button type="button" class="btn small" data-act="stray-resync">Resync</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:10px">
+        <h2 style="flex:1;margin:0">Pending imported mods</h2>
+        <button type="button" class="btn small" data-act="stray-pending-refresh">Refresh</button>
+      </div>
+      <p class="hint" style="margin:0 0 8px">New mods found on a resync wait here until approved (then they appear in the public catalog).</p>
+      <div id="stray-pending"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:10px">
+        <h2 style="flex:1;margin:0">Mod claims</h2>
+        <button type="button" class="btn small" data-act="claims-refresh">Refresh</button>
+      </div>
+      <p class="hint" style="margin:0 0 8px">Users requesting to claim a stray mod. <strong>Approve</strong> hands the mod over (it becomes their regular mod).</p>
+      <div id="mod-claims"><div class="loading">Loading…</div></div>
+    </div>`;
+
+  const listEl = document.getElementById("mods-reports");
+  const showResolved = document.getElementById("mods-show-resolved");
+  const projEl = document.getElementById("mods-projects");
+
+  async function load() {
+    listEl.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const data = await API.call(`/admin/mods/reports?resolved=${showResolved.checked ? "true" : "false"}`);
+      if (!data.items || !data.items.length) {
+        listEl.innerHTML = `<p class="muted" style="margin:0">No ${showResolved.checked ? "resolved " : "open "}reports.</p>`;
+        return;
+      }
+      listEl.innerHTML = data.items.map((r) => {
+        const when = r.created_at ? new Date(r.created_at).toLocaleString() : "—";
+        return `<div class="row" style="align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">
+                <a href="https://trove.aallyn.net/mods/${encodeURIComponent(r.project_handle || "")}/${encodeURIComponent(r.project_slug)}" target="_blank" rel="noopener">${esc(r.project_slug)}</a>
+                ${r.resolved ? '<span style="color:#5dd078;font-size:.74rem;font-weight:700">· resolved</span>' : ''}
+              </div>
+              <div class="muted" style="font-size:.8rem">by ${esc(r.reporter_username)} · ${esc(when)}</div>
+              <div style="font-size:.86rem;margin-top:3px">${esc(r.reason)}</div>
+            </div>
+            <button class="btn small" data-takedown="${esc(r.project_id)}" data-label="${esc(r.project_slug)}">Take down</button>
+          </div>`;
+      }).join("");
+      listEl.querySelectorAll("[data-takedown]").forEach((b) =>
+        b.addEventListener("click", () => takedown(b.dataset.takedown, b.dataset.label)));
+    } catch (ex) {
+      listEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    }
+  }
+
+  async function takedown(id, label = "", reason = "") {
+    if (!window.confirm(`Take down "${label || id}"? It will disappear from public view.`)) return;
+    try {
+      await API.call(`/admin/mods/projects/${encodeURIComponent(id)}/takedown`,
+        { method: "POST", body: { reason } });
+      toast("Mod taken down", "ok");
+      load();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+
+  async function restore(id) {
+    try {
+      await API.call(`/admin/mods/projects/${encodeURIComponent(id)}/restore`, { method: "POST" });
+      toast("Mod restored", "ok");
+      load();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+
+  async function loadProjects() {
+    projEl.innerHTML = `<div class="loading">Loading…</div>`;
+    const params = new URLSearchParams();
+    const q = document.getElementById("mods-q").value.trim();
+    const owner = document.getElementById("mods-owner").value.trim();
+    const vis = document.getElementById("mods-vis").value;
+    if (q) params.set("q", q);
+    if (owner) params.set("owner", owner);
+    if (vis) params.set("visibility", vis);
+    try {
+      const data = await API.call(`/admin/mods/projects?${params.toString()}`);
+      if (!data.items || !data.items.length) {
+        projEl.innerHTML = `<p class="muted" style="margin:0">No projects.</p>`;
+        return;
+      }
+      projEl.innerHTML = `<p class="muted" style="margin:0 0 6px;font-size:.8rem">${data.total} total</p>` +
+        data.items.map((p) => {
+          const flags = `<span class="badge muted">${esc(p.visibility)}</span>` +
+            (p.taken_down ? ' <span class="badge warn">taken down</span>' : '');
+          const tdBtn = p.taken_down
+            ? `<button class="btn small" data-restore="${esc(p.id)}">Restore</button>`
+            : `<button class="btn small" data-takedown="${esc(p.id)}" data-label="${esc(p.slug)}">Take down</button>`;
+          return `<div class="row" style="align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600">
+                  <a href="https://trove.aallyn.net/mods/${encodeURIComponent(p.handle || "")}/${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">${esc(p.title)}</a> ${flags}
+                </div>
+                <div class="muted" style="font-size:.8rem">${esc(p.handle || "?")}/${esc(p.slug)} · by ${esc(p.owner_username)} · ${Number(p.download_count || 0)} downloads</div>
+              </div>
+              ${tdBtn}
+              <button class="btn small danger" data-delete="${esc(p.id)}" data-label="${esc(p.slug)}">Delete</button>
+            </div>`;
+        }).join("");
+      projEl.querySelectorAll("[data-takedown]").forEach((b) =>
+        b.addEventListener("click", () => takedown(b.dataset.takedown, b.dataset.label).then(loadProjects)));
+      projEl.querySelectorAll("[data-restore]").forEach((b) =>
+        b.addEventListener("click", () => restore(b.dataset.restore).then(loadProjects)));
+      projEl.querySelectorAll("[data-delete]").forEach((b) =>
+        b.addEventListener("click", () => deleteProject(b.dataset.delete, b.dataset.label)));
+    } catch (ex) {
+      projEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    }
+  }
+
+  async function deleteProject(id, label = "") {
+    if (!window.confirm(`Permanently delete "${label || id}"? This removes its branches, commits and releases.`)) return;
+    try {
+      await API.call(`/admin/mods/projects/${encodeURIComponent(id)}`, { method: "DELETE" });
+      toast("Project deleted", "ok");
+      loadProjects();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+
+  // ── Stray (imported) mods: catalog import + approval queue + claims ──
+  async function loadStrayState() {
+    const el = document.getElementById("stray-state");
+    try {
+      const s = await API.call("/admin/mods/stray/import");
+      const counts = `${s.processed}/${s.total} (imported ${s.imported}, updated ${s.updated}, pending ${s.pending_added}, failed ${s.failed})`;
+      if (s.running) el.innerHTML = `<strong>Running…</strong> ${esc(s.phase)} · ${counts}`;
+      else if (s.phase === "done") el.innerHTML = `Last run: done · ${counts}`;
+      else if (s.phase === "error") el.innerHTML = `<span class="err-text">Last run errored: ${esc(s.last_error || "")}</span>`;
+      else el.textContent = "Idle — no import run yet.";
+    } catch (ex) { el.innerHTML = `<span class="err-text">${esc(ex.message)}</span>`; }
+  }
+  async function startImport(resync) {
+    const msg = resync ? "Resync stray mods now?"
+      : "Bulk-import all stray mods now? This mirrors every mod file and may take a while.";
+    if (!window.confirm(msg)) return;
+    try {
+      const r = await API.call(`/admin/mods/stray/import?resync=${resync ? "true" : "false"}`, { method: "POST" });
+      toast(r.started ? "Import started" : (r.reason || "Already running"), r.started ? "ok" : "err");
+      loadStrayState();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+  async function loadPending() {
+    const el = document.getElementById("stray-pending");
+    el.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const data = await API.call("/admin/mods/stray?status=pending&limit=100");
+      if (!data.items || !data.items.length) { el.innerHTML = `<p class="muted" style="margin:0">No pending mods.</p>`; return; }
+      el.innerHTML = `<p class="muted" style="margin:0 0 6px;font-size:.8rem">${data.total} pending</p>` + data.items.map((p) => `
+        <div class="row" style="align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600">${esc(p.title)}</div>
+            <div class="muted" style="font-size:.8rem">by ${esc(p.author || "?")} · ${Number(p.download_count || 0)} downloads</div>
+          </div>
+          <button class="btn small" data-approve="${esc(p.id)}">Approve</button>
+          <button class="btn small danger" data-reject="${esc(p.id)}">Reject</button>
+        </div>`).join("");
+      el.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => strayAction(b.dataset.approve, "approve")));
+      el.querySelectorAll("[data-reject]").forEach((b) => b.addEventListener("click", () => strayAction(b.dataset.reject, "reject")));
+    } catch (ex) { el.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; }
+  }
+  async function strayAction(id, action) {
+    try {
+      await API.call(`/admin/mods/stray/${encodeURIComponent(id)}/${action}`, { method: "POST" });
+      toast(action === "approve" ? "Approved" : "Rejected", "ok");
+      loadPending();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+  async function loadClaims() {
+    const el = document.getElementById("mod-claims");
+    el.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const data = await API.call("/admin/mods/claims?status=pending");
+      if (!data.items || !data.items.length) { el.innerHTML = `<p class="muted" style="margin:0">No pending claims.</p>`; return; }
+      el.innerHTML = data.items.map((c) => {
+        const when = c.created_at ? new Date(c.created_at).toLocaleString() : "—";
+        return `<div class="row" style="align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">${esc(c.project_title || c.project_slug)}</div>
+              <div class="muted" style="font-size:.8rem">claimed by ${esc(c.claimant_username)} · ${esc(when)}</div>
+              ${c.message ? `<div style="font-size:.85rem;margin-top:3px">${esc(c.message)}</div>` : ""}
+            </div>
+            <button class="btn small" data-claim-approve="${esc(c.id)}">Approve</button>
+            <button class="btn small danger" data-claim-reject="${esc(c.id)}">Reject</button>
+          </div>`;
+      }).join("");
+      el.querySelectorAll("[data-claim-approve]").forEach((b) => b.addEventListener("click", () => claimAction(b.dataset.claimApprove, "approve")));
+      el.querySelectorAll("[data-claim-reject]").forEach((b) => b.addEventListener("click", () => claimAction(b.dataset.claimReject, "reject")));
+    } catch (ex) { el.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; }
+  }
+  async function claimAction(id, action) {
+    if (action === "approve" && !window.confirm("Approve this claim and hand the mod over to the user?")) return;
+    try {
+      await API.call(`/admin/mods/claims/${encodeURIComponent(id)}/${action}`, { method: "POST" });
+      toast(action === "approve" ? "Handed over" : "Claim rejected", "ok");
+      loadClaims();
+      loadProjects();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+
+  document.querySelector('[data-act="refresh"]').addEventListener("click", load);
+  document.querySelector('[data-act="search"]').addEventListener("click", loadProjects);
+  document.querySelector('[data-act="stray-refresh"]').addEventListener("click", loadStrayState);
+  document.querySelector('[data-act="stray-import"]').addEventListener("click", () => startImport(false));
+  document.querySelector('[data-act="stray-resync"]').addEventListener("click", () => startImport(true));
+  document.querySelector('[data-act="stray-pending-refresh"]').addEventListener("click", loadPending);
+  document.querySelector('[data-act="claims-refresh"]').addEventListener("click", loadClaims);
+  showResolved.addEventListener("change", load);
+  load();
+  loadProjects();
+  loadStrayState();
+  loadPending();
+  loadClaims();
 }
 
 async function renderIngest() {

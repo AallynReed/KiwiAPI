@@ -20,7 +20,23 @@ class Settings(BaseSettings):
     max_request_body_bytes: int = 8 * 1024 * 1024  # 8 MB
     # The mod tools accept/return whole .tmod files, so they get a larger cap. Set
     # the proxy's client_max_body_size to match (>= 20m) on the /v1/mods/ paths.
+    # This also governs the Mods Hub write surface (commit uploads, .tmod release
+    # uploads, banner/preview images) - they all live under /v1/mods/.
     mods_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
+
+    # --- Mods Hub (git-like mod sharing; see app/trove/mods_hub) -------------
+    mods_hub_enabled: bool = True
+    # Content-addressed blob store for the hub (file blobs + compiled .tmod +
+    # banner/preview images), reusing the update-archive CAS. Bind-mounted.
+    mods_store_dir: str = "data/mods"
+    mods_hub_max_file_bytes: int = 20 * 1024 * 1024     # per file in a commit
+    mods_image_max_bytes: int = 5 * 1024 * 1024         # per banner/preview image
+    mods_hub_max_files_per_commit: int = 500
+    # Git: per-project bare repos live under <mods_store_dir>/git; the
+    # authenticated smart-HTTP server is mounted at /git/mods/*. A push packfile
+    # can be large, so /git/* gets its own generous body cap.
+    mods_git_enabled: bool = True
+    mods_git_max_body_bytes: int = 100 * 1024 * 1024    # push packfile cap
     # The leaderboards ingest endpoint accepts the bot's raw LeaderBot.cfg upload.
     # At ~20k entries/board a full dump is ~16 MB, so 20 MB leaves modest headroom.
     # Master-only via superuser API token, so this isn't an open spigot. (Keep the
@@ -82,6 +98,94 @@ class Settings(BaseSettings):
     # leaderboards are heavy-tailed and "above the population median"
     # describes every top-100 player, not just cheaters.
     cheaters_elite_cohort_pct: float = 0.05
+    # Alt-cluster detection: flag packs of similarly-named accounts sitting
+    # at near-identical scores (coordinated "alt army"). A family needs at
+    # least this many accounts to be a cluster.
+    cheaters_cluster_min_size: int = 3
+    # Scores within this relative band count as "near-identical" - the
+    # band a family's densest near-score subset must fit inside. 0.02 = 2 %.
+    cheaters_cluster_score_band_pct: float = 0.02
+    # Max Levenshtein distance for merging near-identical name stems
+    # (catches typo'd variants like anana/anan/annna). 0 disables fuzzy
+    # merging (exact stems only).
+    cheaters_cluster_max_edit_distance: int = 2
+    # Family size at which the cluster's size-confidence term saturates to
+    # 1.0 (it ramps 0→1 from cluster_min_size up to this). 8+ alts = blatant.
+    cheaters_cluster_size_full: int = 8
+    # Comma-separated board UUIDs to skip during alt-cluster detection -
+    # INDEPENDENT of cheaters_excluded_board_uuids (the per-player blacklist).
+    # Empty = scan every board.
+    cheaters_cluster_excluded_board_uuids: str = ""
+
+    # ── Co-movement (the PRIMARY, name-agnostic alt/bot signal) ──────────
+    # Flags groups of accounts whose hourly score gains land in the same
+    # bucket in the same hours, across the captures since the last weekly
+    # reset - i.e. they progress in lockstep, regardless of name. Name
+    # similarity is only an optional confidence booster on top.
+    #
+    # Per-board candidate cap: only the top-N by rank get their per-hour
+    # series loaded (rings sit near the top). Bounds the multi-anchor load.
+    # 0 disables co-movement detection entirely.
+    cheaters_comovement_candidate_top_n: int = 400
+    # An hour "counts" for an account only if its score rose by at least
+    # this much that hour (filters idle/noise; idle-matching is not a signal).
+    cheaters_comovement_min_hourly_gain: float = 1.0
+    # AND its gain must be in the top (1 - percentile) of that board's gains
+    # that hour. Focuses co-movement on the anomalously-high gainers (where
+    # rings live) and is board-scale-agnostic, so a crowd all gaining a common
+    # rate (a popular event) drops out instead of clustering. 0.90 = top 10%.
+    cheaters_comovement_gain_percentile: float = 0.90
+    # Two hourly gains within this relative tolerance share a bucket (so
+    # "near-same delta" matches). 0.05 = within 5%.
+    cheaters_comovement_gain_tolerance_pct: float = 0.05
+    # Minimum number of matching hours (same hour, same gain bucket) before
+    # a pair/group is flagged as co-moving.
+    cheaters_comovement_min_matching_hours: int = 3
+    # AND those matches must be at least this FRACTION of the rarer account's
+    # active (top-percentile) hours. Stops a few coincidental matches across a
+    # long week from chaining the hardcore-grinder crowd into one giant fake
+    # "ring" - true alts match ~all their hours, legit pairs match a small
+    # fraction. 0.7 = the pair must move together >=70% of the time.
+    cheaters_comovement_min_match_ratio: float = 0.7
+    # A formed group is kept only if it's TIGHT: at least this fraction of all
+    # possible member-pairs are co-moving edges (else it's a loose transitive
+    # chain, not a coordinated ring). Loose hangers-on are peeled off the dense
+    # core. 1.0 = require a full clique; 0.6 tolerates a few missing edges.
+    cheaters_comovement_min_density: float = 0.6
+    # Minimum accounts in a co-moving group to flag it.
+    cheaters_comovement_min_group_size: int = 2
+    # Skip an (hour, gain-bucket) cell shared by more than this many accounts
+    # - that's a common-event spike (everyone grinding the new daily), not a
+    # ring. Bounds the co-occurrence cost AND sharpens the signal.
+    cheaters_comovement_max_cell_accounts: int = 40
+    # Co-movement changes slowly; recompute it at most this often (seconds),
+    # reusing the cached result across the more-frequent warm cycles.
+    cheaters_comovement_recompute_seconds: int = 3600
+
+    # ── Schedule correlation + signal fusion ─────────────────────────────
+    # Schedule: accounts active/idle in the SAME hours all week (same login/
+    # logout rhythm) - catches alts that grind DIFFERENT content but play
+    # together, which co-movement (gain-magnitude) misses. An account needs at
+    # least this many active hours to be schedule-clustered (else too little
+    # signal). 0 disables the schedule producer.
+    cheaters_schedule_min_active_hours: int = 6
+    # Two accounts link by schedule when the Jaccard overlap of their active-
+    # hour sets is at least this. 0.8 = 80% of their combined active hours
+    # coincide. Schedule ALONE is weak (lots of people play evenings), so it
+    # only reaches high confidence when fusion corroborates it.
+    cheaters_schedule_min_similarity: float = 0.8
+    # Fusion: each INDEPENDENT signal that agrees on a group beyond the first
+    # adds this much confidence (capped at 0.98). The whole point - a group
+    # flagged by co-movement AND schedule AND name is far more certain than one.
+    cheaters_fusion_corroboration_bonus: float = 0.06
+    # Board-footprint corroboration: a group's members count as sharing a
+    # footprint when their board-set Jaccard averages at least this.
+    cheaters_footprint_min_jaccard: float = 0.6
+    # Per-player WEEKLY uptime check: flag a player active (score rose) in at
+    # least this fraction of the captures since the weekly reset. No human plays
+    # 85%+ of every hour for days - that's a no-sleep bot. The last-hour velocity
+    # check can't see this (each individual hour looks normal). 0 disables it.
+    cheaters_weekly_uptime_fraction: float = 0.85
 
     # Class activity (/class-activity). Counts are based on the Effort boards only
     # (4000+i); Paragon (5000+i) is excluded as ambiguous. The "clean" (established)
@@ -279,6 +383,13 @@ class Settings(BaseSettings):
     # Per-request events are retained this many days, then auto-expired (TTL).
     usage_retention_days: int = 30
 
+    # --- Site page-view analytics ---
+    # Track showcase-site page loads (views + cookieless unique visitors) for the
+    # dev-portal "Site Analytics" admin tab. Raw page-view events auto-expire after
+    # the retention window (TTL); set enabled=False to turn tracking off entirely.
+    pageview_tracking_enabled: bool = True
+    pageview_retention_days: int = 90
+
     # --- Email (SMTP via the aallyn.net Postfix server) ---
     # If smtp_host is unset, email is DISABLED and links are logged instead.
     # For a local Postfix relay: host=host.docker.internal, port=25, no auth/TLS.
@@ -388,6 +499,11 @@ class Settings(BaseSettings):
     trove_update_probe_seconds: int = 1200                 # per-branch probe cadence (20 min)
     trove_update_concurrency: int = 6                      # parallel file downloads
 
+    # --- Blueprint image rendering (app/trove/render) ---
+    trove_render_branch: str = "live-us"       # archive branch blueprints are pulled from (matches codex/updates)
+    trove_local_game_dir: str = ""             # dev only: a local Trove install to read blueprints from
+    trove_render_cache_ttl: int = 86400        # Redis TTL for rendered PNGs (seconds)
+
     # --- Ingest backlog (server-side replay store) ---
     # Every leaderboard dump the API receives is gzip-saved here keyed by anchor
     # (``<anchor>.cfg.gz``), so the whole history can be RE-INGESTED from the admin
@@ -404,18 +520,28 @@ class Settings(BaseSettings):
     backlog_retention_days: int = 0
 
     # --- Trove server status prober ---
-    # Auth tier: HTTPS liveness of the shared account-auth gateway
-    # (auth.trionworlds.com). A structured HTTP response (<500) with valid
-    # TLS = reachable; timeout / refused / TLS error / 5xx = down. Catches
-    # full outages but stays up during world-only maintenance (Akamai).
+    # Auth tier: liveness of the shared account-LOGIN gateway. We POST the real
+    # Glyph login route (/auth/v1_2) with throwaway creds and read it reachable
+    # ONLY when the reply is Trion-shaped (an X-Trionworlds-* header or a
+    # "Signature:" ticket body). A bare "404 page not found" (the auth app not
+    # routing - i.e. logins erroring), a 5xx, or a connection failure = down.
+    # NOTE: a plain GET <500 check is NOT enough - when logins are down this host
+    # answers every path with a 404, which is <500 and falsely read as "Reachable".
     # Game tier (per environment): TCP-connect probe of the glsserver port
     # (6560) on the live / PTS game hosts - captured from pcap; port 6560 is
     # the stable login-to-game entry (world-instance ports like :3701x are
     # ephemeral). Accepted = playable; refused/timeout while auth up =
     # maintenance. Hosts/ports are also runtime-tunable (admin panel).
-    trove_status_auth_url: str = "https://auth.trionworlds.com/auth"
+    trove_status_auth_url: str = "https://auth.trionworlds.com/auth/v1_2"
     trove_status_probe_interval_seconds: int = 60          # probe cadence
     trove_status_timeout_seconds: float = 8.0              # per-probe timeout
+    # Forgiveness: a single failed scan can be a transient miss or a local network
+    # blip, so don't flip a server to "down" on the first failure. Each probe is
+    # retried back-to-back up to N times within the SAME cycle (not the full probe
+    # interval between tries) and counts online if ANY attempt succeeds; only N
+    # consecutive failures mark it down. Both runtime-tunable (admin panel).
+    trove_status_probe_attempts: int = 3                   # tries per probe before "down"
+    trove_status_probe_retry_delay_seconds: float = 2.0    # gap between back-to-back retries
     # Two public Live regions + PTS. The probe target is the REGIONAL
     # glsserver (login-to-game) box on :6560, captured from per-region
     # pcaps - EU = Amsterdam (ams-*), US = Dallas (dal-*), both shaped

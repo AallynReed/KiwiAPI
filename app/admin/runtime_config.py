@@ -94,6 +94,35 @@ def _t(**kw: Any) -> TunableSetting:
 # them in this order, grouped by category. Add new entries at the bottom
 # of their category block.
 REGISTRY: dict[str, TunableSetting] = {
+    # ── Feature toggles (hide a whole site feature, master-flippable) ─
+    # Turn a feature OFF and it vanishes: the navbar entry is hidden, its
+    # pages 404, and its API/site endpoints 404 - no code change or restart.
+    # Existing stored data is untouched and reappears when toggled back on.
+    "feature_mods_hub_enabled": _t(
+        key="feature_mods_hub_enabled",
+        default=settings.mods_hub_enabled,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Mods Hub. OFF hides the /mods pages + navbar "
+            "link and 404s every Mods-Hub endpoint (/v1/mods/hub/*, /site/mods/*, "
+            "the git server /git/mods/*) and the dashboard's My Mods tab. Stored "
+            "mods/repos are kept and return when toggled back ON."
+        ),
+    ),
+    "feature_market_enabled": _t(
+        key="feature_market_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Market. OFF hides the /market page + navbar "
+            "link and 404s the market endpoints (/v1/market/*, /site/market/*), "
+            "including the bot's ingest - re-enable before the next dump if you "
+            "want uninterrupted collection. Stored listings are kept."
+        ),
+    ),
+
     # ── Feedback (/v1/misc/feedback) ─────────────────────────────────
     "feedback.discord_webhook": _t(
         key="feedback.discord_webhook",
@@ -498,6 +527,284 @@ REGISTRY: dict[str, TunableSetting] = {
         ),
         min_value=0.01, max_value=0.5,
     ),
+    "cheaters_cluster_min_size": _t(
+        key="cheaters_cluster_min_size",
+        default=settings.cheaters_cluster_min_size,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Alt-cluster check: minimum number of similarly-named accounts "
+            "(shared name stem, e.g. anana1 … anana20) sitting at near-"
+            "identical scores before the family is flagged as a coordinated "
+            "'alt army'. 3 is sensitive; raise to only surface larger packs."
+        ),
+        min_value=2, max_value=50,
+    ),
+    "cheaters_cluster_score_band_pct": _t(
+        key="cheaters_cluster_score_band_pct",
+        default=settings.cheaters_cluster_score_band_pct,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Alt-cluster check: how close scores must be to count as "
+            "'near-identical', as a fraction of the score. 0.02 = within 2%. "
+            "The family's densest subset fitting inside this band is the "
+            "cluster; the tighter the actual spread, the higher the "
+            "confidence. Lower = stricter (only true near-ties cluster)."
+        ),
+        min_value=0.0001, max_value=0.25,
+    ),
+    "cheaters_cluster_max_edit_distance": _t(
+        key="cheaters_cluster_max_edit_distance",
+        default=settings.cheaters_cluster_max_edit_distance,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Alt-cluster check: max Levenshtein edit distance for merging "
+            "near-identical name stems into one family, catching typo'd "
+            "variants (anana / anan / annna). 0 disables fuzzy merging "
+            "(exact stems only). 2 is a good balance; higher risks merging "
+            "unrelated short names."
+        ),
+        min_value=0, max_value=4,
+    ),
+    "cheaters_cluster_size_full": _t(
+        key="cheaters_cluster_size_full",
+        default=settings.cheaters_cluster_size_full,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Alt-cluster check: family size at which the size component of "
+            "cluster confidence saturates to its max (it ramps from "
+            "cheaters_cluster_min_size up to this). 8 means an 8+-account "
+            "family gets full credit for size; closeness and board count "
+            "still modulate the final confidence."
+        ),
+        min_value=3, max_value=100,
+    ),
+    "cheaters_cluster_excluded_board_uuids": _t(
+        key="cheaters_cluster_excluded_board_uuids",
+        default=settings.cheaters_cluster_excluded_board_uuids,
+        type="str",
+        category="cheater_detection",
+        description=(
+            "Comma-separated board UUIDs to skip during ALT-CLUSTER detection "
+            "(both the name-stem and co-movement methods). INDEPENDENT of "
+            "cheaters_excluded_board_uuids (the per-player blacklist) - a board "
+            "can be excluded from one check and not the other. Useful for boards "
+            "where many accounts legitimately share a name stem at tied scores "
+            "(e.g. capped/server-tally boards). Whitespace ignored. Empty = scan "
+            "every board. Example: '1100, 21012, 5001'."
+        ),
+    ),
+    "cheaters_comovement_candidate_top_n": _t(
+        key="cheaters_comovement_candidate_top_n",
+        default=settings.cheaters_comovement_candidate_top_n,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Co-movement check (the PRIMARY, name-agnostic alt/bot signal): per "
+            "board, only the top-N accounts by rank get their per-hour score "
+            "series loaded across the week, then grouped by who gains in lockstep. "
+            "Rings sit near the top, and this caps the multi-capture load. "
+            "Set to 0 to DISABLE co-movement detection entirely."
+        ),
+        min_value=0, max_value=5000,
+    ),
+    "cheaters_comovement_min_hourly_gain": _t(
+        key="cheaters_comovement_min_hourly_gain",
+        default=settings.cheaters_comovement_min_hourly_gain,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Co-movement check: an hour only counts for an account if its score "
+            "rose by at least this much that hour. Filters idle/noise hours - two "
+            "accounts both sitting idle (gain 0) is not a signal. Raise on "
+            "large-score boards to ignore trivial ticks."
+        ),
+        min_value=0.0, max_value=1e12,
+    ),
+    "cheaters_comovement_gain_percentile": _t(
+        key="cheaters_comovement_gain_percentile",
+        default=settings.cheaters_comovement_gain_percentile,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Co-movement check: an account's hour only counts if its gain is in "
+            "the TOP (1 - this) of that board's gains that hour. 0.90 = only the "
+            "top 10% gainers each hour are considered, so a crowd all gaining a "
+            "common rate (a popular event) drops out instead of forming a fake "
+            "ring; rings live among the anomalously-high gainers. Board-scale-"
+            "agnostic. Raise toward 0.99 to focus on only the very top; lower to "
+            "cast a wider (noisier) net. 0 disables the percentile gate."
+        ),
+        min_value=0.0, max_value=0.999,
+    ),
+    "cheaters_comovement_gain_tolerance_pct": _t(
+        key="cheaters_comovement_gain_tolerance_pct",
+        default=settings.cheaters_comovement_gain_tolerance_pct,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Co-movement check: two accounts' hourly gains count as 'the same' "
+            "when within this relative tolerance (they land in the same bucket). "
+            "0.05 = within 5%. Lower = stricter (only near-exact matches co-move)."
+        ),
+        min_value=0.0, max_value=0.5,
+    ),
+    "cheaters_comovement_min_matching_hours": _t(
+        key="cheaters_comovement_min_matching_hours",
+        default=settings.cheaters_comovement_min_matching_hours,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Co-movement check: minimum number of matching hours (same hour, same "
+            "gain bucket) before accounts are flagged as co-moving. 3 = moderate. "
+            "Higher = fewer false positives (won't flag everyone grinding one "
+            "popular event), slower to catch a fresh ring."
+        ),
+        min_value=2, max_value=168,
+    ),
+    "cheaters_comovement_min_match_ratio": _t(
+        key="cheaters_comovement_min_match_ratio",
+        default=settings.cheaters_comovement_min_match_ratio,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Co-movement check: two accounts co-move only if their matching hours "
+            "are at least this FRACTION of the rarer one's active (top-percentile) "
+            "hours - not just an absolute count. This is the key guard against a "
+            "few coincidental matches over a long week chaining the whole "
+            "hardcore-grinder crowd into one giant false 'ring': true alts match "
+            "~all their hours, legit pairs match a small fraction. 0.7 = move "
+            "together >=70% of the time. Raise toward 1.0 to require near-perfect "
+            "lockstep."
+        ),
+        min_value=0.0, max_value=1.0,
+    ),
+    "cheaters_comovement_min_density": _t(
+        key="cheaters_comovement_min_density",
+        default=settings.cheaters_comovement_min_density,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Co-movement check: a formed group is kept only if it's TIGHT - at "
+            "least this fraction of all possible member-pairs are co-moving edges. "
+            "A loose transitive chain (A-B-C-D linked only by adjacent pairs) has "
+            "low density and is rejected; loose members are peeled off the dense "
+            "core. 1.0 = require a full clique (every member moves with every "
+            "other); 0.6 tolerates a few missing edges in a real ring."
+        ),
+        min_value=0.0, max_value=1.0,
+    ),
+    "cheaters_comovement_min_group_size": _t(
+        key="cheaters_comovement_min_group_size",
+        default=settings.cheaters_comovement_min_group_size,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Co-movement check: minimum number of lockstep accounts to flag the "
+            "group. 2 surfaces pairs; raise to only show larger rings."
+        ),
+        min_value=2, max_value=100,
+    ),
+    "cheaters_comovement_max_cell_accounts": _t(
+        key="cheaters_comovement_max_cell_accounts",
+        default=settings.cheaters_comovement_max_cell_accounts,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Co-movement check: ignore an (hour, gain-bucket) cell shared by more "
+            "than this many accounts - that's a common-event spike (everyone "
+            "grinding the new daily at once), not a coordinated ring. Also bounds "
+            "the pairwise-within-cell cost. Lower = stricter + cheaper."
+        ),
+        min_value=2, max_value=2000,
+    ),
+    "cheaters_comovement_recompute_seconds": _t(
+        key="cheaters_comovement_recompute_seconds",
+        default=settings.cheaters_comovement_recompute_seconds,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Co-movement check: recompute the (heavier, multi-capture) co-movement "
+            "pass at most this often. The result is cached by weekly-window and "
+            "reused across the more-frequent warm cycles, so a 30-min warm doesn't "
+            "re-scan the whole week each time. 3600 = once an hour."
+        ),
+        min_value=300, max_value=86400,
+    ),
+    "cheaters_schedule_min_active_hours": _t(
+        key="cheaters_schedule_min_active_hours",
+        default=settings.cheaters_schedule_min_active_hours,
+        type="int",
+        category="cheater_detection",
+        description=(
+            "Schedule correlation: an account needs at least this many active "
+            "(score-rose) hours this week to be schedule-clustered - below it "
+            "there's too little rhythm to compare. Schedule matching catches alts "
+            "that grind DIFFERENT content but log in/out together (which the "
+            "gain-magnitude co-movement check misses). 0 disables the schedule "
+            "producer."
+        ),
+        min_value=0, max_value=168,
+    ),
+    "cheaters_schedule_min_similarity": _t(
+        key="cheaters_schedule_min_similarity",
+        default=settings.cheaters_schedule_min_similarity,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Schedule correlation: two accounts link when the Jaccard overlap of "
+            "their active-hour sets is at least this (0.8 = 80% of their combined "
+            "active hours coincide). Schedule ALONE is a weak signal (many people "
+            "play the same evenings), so a schedule-only group stays low-confidence "
+            "unless fusion corroborates it with co-movement / name / footprint."
+        ),
+        min_value=0.0, max_value=1.0,
+    ),
+    "cheaters_fusion_corroboration_bonus": _t(
+        key="cheaters_fusion_corroboration_bonus",
+        default=settings.cheaters_fusion_corroboration_bonus,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Signal fusion: each INDEPENDENT signal that agrees on a group beyond "
+            "the first adds this much confidence (capped at 0.98). The core idea - "
+            "a group flagged by co-movement AND schedule AND a shared name is far "
+            "more certain than one flagged by a single signal. 0 disables the "
+            "corroboration bonus (each cluster keeps its single-signal confidence)."
+        ),
+        min_value=0.0, max_value=0.2,
+    ),
+    "cheaters_footprint_min_jaccard": _t(
+        key="cheaters_footprint_min_jaccard",
+        default=settings.cheaters_footprint_min_jaccard,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Signal fusion: a group counts as sharing a board FOOTPRINT (a "
+            "corroborating signal) when its members' board-set Jaccard averages at "
+            "least this. Alts grind the same content, so they tend to appear on the "
+            "same set of boards. 0.6 = their board lists overlap ~60%."
+        ),
+        min_value=0.0, max_value=1.0,
+    ),
+    "cheaters_weekly_uptime_fraction": _t(
+        key="cheaters_weekly_uptime_fraction",
+        default=settings.cheaters_weekly_uptime_fraction,
+        type="float",
+        category="cheater_detection",
+        description=(
+            "Per-player WEEKLY check (folded into the Possible-cheaters tab): flag "
+            "a player whose score rose in at least this FRACTION of the captures "
+            "since the weekly reset. No human plays 85%+ of every hour for days - "
+            "that's a no-sleep bot, which the last-hour velocity check can't see "
+            "(each hour looks normal on its own). Only applies once enough of the "
+            "week has elapsed (≥48 captures). 0 disables the weekly uptime check."
+        ),
+        min_value=0.0, max_value=1.0,
+    ),
 
     # ── Class activity (/class-activity) ──────────────────────────────
     "class_activity_power_rank_threshold": _t(
@@ -669,6 +976,34 @@ REGISTRY: dict[str, TunableSetting] = {
             "keeps the session socket open. Kept well under the per-probe timeout."
         ),
         min_value=0.2, max_value=10.0,
+    ),
+    "trove_status_probe_attempts": _t(
+        key="trove_status_probe_attempts",
+        default=settings.trove_status_probe_attempts,
+        type="int",
+        category="trove_status",
+        description=(
+            "Forgiveness: how many times to retry EACH probe (auth + each region's "
+            "game socket) back-to-back within one cycle before marking it down. A "
+            "probe counts ONLINE if any attempt succeeds (stops early on the first "
+            "success); only this many CONSECUTIVE failures flip it to down. Absorbs "
+            "a transient miss or a brief local network blip that would otherwise "
+            "show a false outage. Retries are immediate (see the retry-delay knob), "
+            "NOT one per minute. 1 = old behaviour (first failure = down)."
+        ),
+        min_value=1, max_value=10,
+    ),
+    "trove_status_probe_retry_delay_seconds": _t(
+        key="trove_status_probe_retry_delay_seconds",
+        default=settings.trove_status_probe_retry_delay_seconds,
+        type="float",
+        category="trove_status",
+        description=(
+            "Gap between the back-to-back retries above, in seconds (NOT the full "
+            "probe interval). A short pause lets a momentary glitch clear without "
+            "hammering. Default 2s; 0 = retry instantly."
+        ),
+        min_value=0.0, max_value=30.0,
     ),
 
     # ── Community feeds (/v1/feeds/{youtube,bilibili,twitch}) ──────────

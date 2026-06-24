@@ -28,7 +28,10 @@ _SITE_CSP = (
     "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com "
         "https://fonts.googleapis.com https://hcaptcha.com https://*.hcaptcha.com; "
     "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; "
-    "img-src 'self' data: https://cdn.discordapp.com; "
+    # Allow any https image so user-content READMEs render badges + screenshots
+    # (shields.io, github, imgur, …) like GitHub. Images can't execute, so this is
+    # low-risk; `data:` covers inline, `cdn.discordapp.com` is already https.
+    "img-src 'self' data: https:; "
     "connect-src 'self' https://api.aallyn.net "
         "https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
     "frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
@@ -40,21 +43,31 @@ _SITE_CSP = (
 # is the /static/* asset mount or the /site/* JSON proxies.)
 _PAGE_PATHS = frozenset({
     "/", "/documentation", "/commands", "/leaderboards", "/updates",
-    "/support", "/login", "/dashboard", "/market", "/status", "/giveaways",
-    "/activity", "/class-activity", "/clubs", "/terms", "/privacy",
+    "/support", "/login", "/dashboard", "/market", "/codexes", "/status", "/giveaways",
+    "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/mods", "/modpacks",
 })
+
+# Dynamic site page subtrees (parameterised routes like /mods/{slug},
+# /modpacks/{handle}/{slug} and /player/{name}). Matched by prefix so the slug/name
+# page gets the relaxed site CSP + no-cache, same as the bare listing pages above.
+_PAGE_PREFIXES = ("/mods/", "/modpacks/", "/player/")
 
 
 def _is_site_path(path: str) -> bool:
     """Showcase-site routes (everything served from `site_router` in app/site/).
 
-    Page routes are exact-matched; ``/static/*`` and ``/site/*`` subtrees get
-    the relaxed CSP wholesale, so newly-added JSON proxies and assets don't
-    need to be enumerated one-by-one as new pages land. Forgetting one of
-    these wires up an API-CSP page that refuses to apply its own stylesheets
-    - see /updates regression in 2026-06.
+    Page routes are exact-matched; ``/static/*``, ``/site/*`` and the dynamic
+    page subtrees in ``_PAGE_PREFIXES`` get the relaxed CSP wholesale, so newly-
+    added JSON proxies and assets don't need to be enumerated one-by-one as new
+    pages land. Forgetting one of these wires up an API-CSP page that refuses to
+    apply its own stylesheets - see /updates regression in 2026-06.
     """
-    return path in _PAGE_PATHS or path.startswith("/static/") or path.startswith("/site/")
+    return (
+        path in _PAGE_PATHS
+        or path.startswith("/static/")
+        or path.startswith("/site/")
+        or path.startswith(_PAGE_PREFIXES)
+    )
 
 
 def add_security_middleware(app: FastAPI) -> None:
@@ -68,6 +81,7 @@ def add_security_middleware(app: FastAPI) -> None:
     leaderboards_max_body = settings.leaderboards_max_request_body_bytes
     market_max_body = settings.market_max_request_body_bytes
     ocr_max_body = settings.ocr_max_request_body_bytes
+    git_max_body = settings.mods_git_max_body_bytes
 
     @app.middleware("http")
     async def security(request: Request, call_next):
@@ -75,7 +89,9 @@ def add_security_middleware(app: FastAPI) -> None:
         # Per-surface body caps: mod tools accept .tmod uploads, the
         # leaderboards + market ingests accept the bot's raw cfg dumps,
         # everything else uses the default.
-        if path.startswith("/v1/mods/"):
+        if path.startswith("/git/"):
+            max_body = git_max_body          # git push packfiles
+        elif path.startswith("/v1/mods/"):
             max_body = mods_max_body
         elif path == "/v1/leaderboards/insert":
             max_body = leaderboards_max_body
@@ -121,6 +137,6 @@ def add_security_middleware(app: FastAPI) -> None:
         # immediately without ``?v=`` cache-busting. StaticFiles' ETag /
         # Last-Modified keep this to cheap 304s. The /site/ JSON proxies set
         # their own max-age and are intentionally excluded.
-        if path.startswith("/static/") or path in _PAGE_PATHS:
+        if path.startswith("/static/") or path in _PAGE_PATHS or path.startswith(_PAGE_PREFIXES):
             h.setdefault("Cache-Control", "no-cache")
         return response

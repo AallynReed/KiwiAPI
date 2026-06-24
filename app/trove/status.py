@@ -2,10 +2,15 @@
 
 Every ``trove_status_probe_interval_seconds`` a background loop probes:
 
-  • **auth** (shared) - HTTPS liveness of ``auth.trionworlds.com``, the
-    account-auth gateway. Structured HTTP response (< 500) + valid TLS =
-    reachable; timeout / refused / TLS error / 5xx = down. Catches full
-    outages but stays up during world-only maintenance (Akamai-fronted).
+  • **auth** (shared) - liveness of the account-LOGIN gateway
+    (``auth.trionworlds.com``). We POST the *real* Glyph login route
+    (``/auth/v1_2``) with throwaway creds and count it reachable ONLY when the
+    reply is TRION-SHAPED (an ``X-Trionworlds-*`` header or a ``Signature:``
+    ticket body) - that proves the auth app actually processed a login. A bare
+    "404 page not found" (the app not routing → logins erroring), a 5xx, or a
+    connection failure = down. A plain ``GET``-and-check-``<500`` is NOT enough:
+    when logins are broken this host answers *every* path with a 404, which is
+    ``<500`` and was falsely read as "Reachable" while logins were erroring.
   • **game per environment** (eu / us / pts) - probe of the glsserver port
     (6560) on each environment's game host. A bare TCP connect is NOT enough:
     a region in maintenance still completes the TCP handshake (and even answers
@@ -74,21 +79,65 @@ _REDIS_KEY = "kiwi:status:current"
 _REDIS_TTL = 600
 
 
+# Glyph-style UA so the login route treats us like the real client (the auth app
+# doesn't gate routing on it, but it keeps the probe faithful to a real login).
+_AUTH_PROBE_UA = "Glyph (stable-251-1-a-335833)"
+
+
+def _auth_is_reachable(status_code: int, headers, body: str) -> tuple[bool, str | None]:
+    """Decide login-gateway health from one login-route response.
+
+    A healthy Trion auth app answers a login POST with a TRION-SHAPED reply: an
+    ``X-Trionworlds-*`` header (set on every auth outcome, *including* a rejected
+    login) and/or a ``Signature:`` ticket body. That's the trustworthy "logins are
+    being served" signal. When the service is broken the same route returns a bare
+    "404 page not found" (no Trion headers) - which is ``<500`` and is exactly what
+    the old check mis-read as reachable. So: Trion-shaped → up; a 404 (route gone)
+    or 5xx → down; any other structured 2xx/3xx/4xx (a throttle/redirect - the
+    server is up and talking) → up so a transient blip doesn't flap us to down."""
+    trion_shaped = (
+        any(k.lower().startswith("x-trionworlds") for k in headers)
+        or "Signature:" in (body or "")
+    )
+    if trion_shaped:
+        return True, None
+    if status_code == 404:
+        return False, "login_route_unavailable"  # auth app not routing → logins down
+    if status_code >= 500:
+        return False, f"HTTP {status_code}"
+    return True, None
+
+
 async def _probe_auth() -> dict:
-    """HTTPS liveness of the shared account-auth gateway."""
+    """Liveness of the shared account-LOGIN gateway (see module docstring).
+
+    POSTs the real Glyph login route with throwaway (empty) credentials - it
+    targets no account, just proves the auth app is routing and processing
+    logins - and judges health via :func:`_auth_is_reachable`."""
     url = settings.trove_status_auth_url
     timeout = settings.trove_status_timeout_seconds
     t0 = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
-            resp = await client.get(url, headers={"User-Agent": "KiwiAPI-status/1.0"})
+            resp = await client.post(
+                url,
+                data={
+                    "username": "", "password": "", "channel": "131",
+                    "includeStoreToken": "", "publicMachine": "0",
+                    "macAddr": "000000000000",
+                },
+                headers={
+                    "User-Agent": _AUTH_PROBE_UA,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            )
         latency = (time.monotonic() - t0) * 1000
-        online = resp.status_code < 500
+        online, error = _auth_is_reachable(resp.status_code, resp.headers, resp.text)
         return {
             "online": online,
             "http_status": resp.status_code,
             "latency_ms": round(latency, 1),
-            "error": None if online else f"HTTP {resp.status_code}",
+            "error": error,
         }
     except Exception as e:  # noqa: BLE001 - any failure is "down"
         latency = (time.monotonic() - t0) * 1000
@@ -265,17 +314,46 @@ async def _env_endpoints(env: str) -> tuple[str, int]:
     return host, port
 
 
+async def _probe_with_retries(make_probe, attempts: int, delay: float) -> dict:
+    """Run an async probe up to ``attempts`` times BACK-TO-BACK, returning the
+    first result that reports ``online: True``. If every attempt fails, return the
+    LAST result (→ verdict "down").
+
+    The point: a single failed scan is often a transient miss or a brief LOCAL
+    network blip, not a real outage - so we don't flip a server to "down" on the
+    first failure. Retries are immediate (a short ``delay`` between, NOT the full
+    probe interval); a probe needs ``attempts`` CONSECUTIVE failures to be marked
+    down, and stops early the moment one attempt succeeds. ``make_probe`` is a
+    zero-arg callable returning a fresh probe coroutine."""
+    result: dict = {"online": False, "error": "no_attempt"}
+    n = max(1, attempts)
+    for i in range(n):
+        result = await make_probe()
+        if result.get("online"):
+            return result
+        if i < n - 1 and delay > 0:
+            await asyncio.sleep(delay)
+    return result
+
+
 async def probe_once() -> dict:
     """Run auth + per-env game probes, persist any status transitions,
     update the in-process cache, and return the snapshot."""
-    auth = await _probe_auth()
+    from app.admin import runtime_config
+    # Forgiveness: each probe is retried back-to-back up to N times and counts
+    # online if ANY attempt succeeds, so a transient miss / local network blip
+    # doesn't flip a server to "down" (see _probe_with_retries). Only the FINAL
+    # verdict is persisted, so the history never flaps during the retries.
+    attempts = int(await runtime_config.get_setting("trove_status_probe_attempts"))
+    retry_delay = float(await runtime_config.get_setting("trove_status_probe_retry_delay_seconds"))
+
+    auth = await _probe_with_retries(_probe_auth, attempts, retry_delay)
 
     # Deep-probe knobs (live-tunable): replay the glsserver hello so a maintenance
     # server that still accepts TCP doesn't read as a false "online". The hello is
     # PER-ENVIRONMENT: EU/US are game glsservers that hold a hello-only probe open
     # (deep probe works), but PTS's gateway drops it even when up, so PTS ships an
     # empty hello → connect-only. An empty hello for an env = connect-only there.
-    from app.admin import runtime_config
     deep = bool(await runtime_config.get_setting("trove_status_game_deep_probe"))
     hold_seconds = float(await runtime_config.get_setting("trove_status_game_hold_seconds"))
     random_opener = bool(await runtime_config.get_setting("trove_status_game_random_opener"))
@@ -284,9 +362,12 @@ async def probe_once() -> dict:
     for env in _ENVIRONMENTS:
         host, port = await _env_endpoints(env)
         hello_hex = str(await runtime_config.get_setting(f"trove_status_{env}_hello_hex") or "")
-        game = await _probe_game(
-            host, port, deep=deep, hello_hex=hello_hex, hold_seconds=hold_seconds,
-            random_opener=random_opener,
+        game = await _probe_with_retries(
+            lambda h=host, p=port, hh=hello_hex: _probe_game(
+                h, p, deep=deep, hello_hex=hh, hold_seconds=hold_seconds,
+                random_opener=random_opener,
+            ),
+            attempts, retry_delay,
         )
         status = _verdict(auth["online"], game["online"])
         environments[env] = {

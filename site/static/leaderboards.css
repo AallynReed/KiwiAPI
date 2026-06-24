@@ -591,6 +591,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 .lb-evidence-type-score   { background: rgba(255,107,107,.18); color: #ff9b9b; }
 .lb-evidence-type-rank    { background: rgba(255,184,107,.18); color: #ffb86b; }
 .lb-evidence-type-velocity{ background: rgba(120,180,255,.18); color: #78b4ff; }
+.lb-evidence-type-weekly  { background: rgba(94,234,212,.18); color: #5eead4; }
 .lb-evidence-summary {
   color: var(--text);
   flex: 1;
@@ -601,6 +602,151 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   font-size: .9rem;
   padding: 22px 14px;
 }
+
+/* ─── Alt-clusters tab (coordinated multi-account detection) ───────── */
+/* A distinct accent (violet) so a cluster reads as a different KIND of
+   finding from the per-player cheater flags. */
+.lb-clusters-blurb {
+  margin: 0 0 12px;
+  font-size: .82rem;
+  line-height: 1.5;
+  color: var(--text-mute);
+}
+.lb-cluster-row {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(167,139,250,.16);
+  border-radius: 10px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+.lb-cluster-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lb-cluster-summary:hover { background: rgba(167,139,250,.06); }
+.lb-cluster-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 600;
+  font-size: .95rem;
+}
+.lb-cluster-title i { color: #a78bfa; flex-shrink: 0; }
+.lb-cluster-label {
+  font-family: SFMono-Regular, Consolas, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Detection-method badge. Co-movement (the primary signal) = violet,
+   name-only = muted blue, both = red (two signals corroborate). */
+.lb-cluster-method {
+  flex-shrink: 0;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.lb-cluster-method-co_movement { background: rgba(167,139,250,.18); color: #c4b5fd; }
+.lb-cluster-method-name_stem   { background: rgba(120,180,255,.14); color: var(--accent-blue); }
+.lb-cluster-method-schedule    { background: rgba(94,234,212,.16); color: #5eead4; }
+.lb-cluster-method-both        { background: rgba(255,107,107,.18); color: #ff9b9b; }
+/* Fusion: the independent signals that agree on a cluster. */
+.lb-cluster-corrob {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.lb-cluster-sig {
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.07);
+  color: var(--text-mute);
+}
+.lb-cluster-stats {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.lb-cluster-detail { padding: 0 14px 14px; display: none; }
+.lb-cluster-row.expanded .lb-cluster-detail { display: block; }
+.lb-cluster-summary-text {
+  margin: 0 0 10px;
+  font-size: .84rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+.lb-cluster-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.lb-cluster-chip {
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .72rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(167,139,250,.12);
+  color: #c4b5fd;
+}
+.lb-cluster-chip-more { background: rgba(255,255,255,.06); color: var(--text-mute); }
+.lb-cluster-boards { display: grid; gap: 6px; }
+.lb-cluster-board {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.lb-cluster-board-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lb-cluster-board-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+.lb-cluster-chart-toggle {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(167,139,250,.12);
+  color: #c4b5fd;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: .74rem;
+  cursor: pointer;
+}
+.lb-cluster-chart-toggle:hover { background: rgba(167,139,250,.2); }
+.lb-cluster-chart { margin-top: 8px; }
+.lb-cluster-chart-svg { height: 200px; }
 .lb-cheaters-method {
   margin-top: 14px;
   font-size: .82rem;

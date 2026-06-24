@@ -14,10 +14,17 @@ http://localhost:8913/leaderboards.
 """
 from __future__ import annotations
 
+import base64
 import json
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, unquote
+
+# An 8x8 slate PNG so stubbed image routes (banners/previews) render something
+# instead of leaving the <img> request hanging.
+_PLACEHOLDER_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR42mOwcYrCihiGlgQAEoM2AX8snL0AAAAASUVORK5CYII="
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE_DIR = ROOT / "site"
@@ -92,6 +99,93 @@ _STUB_CLASS_QN = [
 def _stub_icon(ci):
     return f"/static/class-icons/{_STUB_CLASS_QN[ci]}.png"
 
+# Mods Hub stub cards for the /mods + /mods/{slug} local preview.
+_STUB_MODS = [
+    {"slug": "neon-hud", "title": "Neon HUD Overhaul",
+     "summary": "A clean, high-contrast HUD retexture with neon accents.",
+     "tags": ["GUI", "Reskin", "hud"], "owner_username": "Aallyn",
+     "visibility": "public", "banner_sha": None, "download_count": 1280,
+     "updated_at": None, "created_at": None},
+    {"slug": "tiny-mounts", "title": "Tiny Mounts",
+     "summary": "Shrinks every mount to adorable proportions.",
+     "tags": ["mounts", "fun"], "owner_username": "Skill",
+     "visibility": "public", "banner_sha": None, "download_count": 642,
+     "updated_at": None, "created_at": None},
+    {"slug": "quiet-ui", "title": "Quiet UI",
+     "summary": "Removes screen clutter for cleaner screenshots.",
+     "tags": ["ui", "minimal"], "owner_username": "Bae",
+     "visibility": "public", "banner_sha": None, "download_count": 318,
+     "updated_at": None, "created_at": None,
+     "forked_from": {"slug": "neon-hud", "handle": "aallyn", "title": "Neon HUD Overhaul", "owner": "Aallyn"},
+     "inspired_by": None, "fork_count": 0},
+]
+for _m in _STUB_MODS:
+    _m.setdefault("forked_from", None)
+    _m.setdefault("inspired_by", None)
+    _m.setdefault("fork_count", 0)
+    _m.setdefault("mode", "files")
+    _m.setdefault("star_count", 0)
+    _m.setdefault("preview_sha", None)
+    _m.setdefault("handle", _m["owner_username"].lower())   # /mods/<handle>/<slug>
+_STUB_MODS[0]["preview_sha"] = "prevsha1"   # neon-hud: no banner -> card uses first preview
+_STUB_MODS[1]["mode"] = "releases"   # tiny-mounts is a releases-only mod
+_STUB_MODS[0]["star_count"] = 87
+_STUB_MODS[1]["star_count"] = 34
+_STUB_MODS[2]["star_count"] = 12
+_STUB_MODS[0]["fork_count"] = 1   # neon-hud has one fork (quiet-ui)
+
+# --- Modpack stubs (/site/modpacks/*) --------------------------------------
+_STUB_PACKS = [
+    {"slug": "starter-pack", "title": "Aallyn's Starter Pack", "handle": "aallyn",
+     "summary": "A clean HUD + quality-of-life bundle to get started.",
+     "tags": ["hud", "qol"], "owner_username": "Aallyn", "visibility": "public",
+     "banner_sha": None, "preview_sha": None, "download_count": 412, "star_count": 57,
+     "variant_count": 2, "mod_count": 2, "total_entries": 3,
+     "updated_at": None, "created_at": None},
+    {"slug": "pvp-pack", "title": "PvP Essentials", "handle": "skill",
+     "summary": "Minimal UI tuned for the arena.", "tags": ["pvp", "minimal"],
+     "owner_username": "Skill", "visibility": "public", "banner_sha": None,
+     "preview_sha": None, "download_count": 88, "star_count": 9, "variant_count": 1,
+     "mod_count": 1, "total_entries": 1, "updated_at": None, "created_at": None},
+]
+
+
+def _stub_entry(handle, slug, title, branch="main", version=None, locked=False,
+                available=True, reason=None, author=None):
+    return {"handle": handle, "slug": slug, "title": title,
+            "author": author or handle.title(), "branch": branch,
+            "version": version, "version_locked": locked,
+            "locked_tag": version if locked else None,
+            "available": available, "reason": reason}
+
+
+def _stub_pack_detail(handle, slug):
+    base = next((p for p in _STUB_PACKS if p["slug"] == slug), _STUB_PACKS[0])
+    variants = [
+        {"name": "default", "label": "Default", "mod_count": 3, "available_count": 2,
+         "entries": [
+             _stub_entry("aallyn", "neon-hud", "Neon HUD Overhaul", "main", "v1.2.0", author="Aallyn"),
+             _stub_entry("skill", "tiny-mounts", "Tiny Mounts", "main", "v0.9", locked=True, author="Skill"),
+             _stub_entry("bae", "quiet-ui", "Quiet UI", "main", available=False, reason="no build", author="Bae"),
+         ]},
+        {"name": "lite", "label": "Lite", "mod_count": 1, "available_count": 1,
+         "entries": [
+             _stub_entry("aallyn", "neon-hud", "Neon HUD Overhaul", "main", "v1.2.0", author="Aallyn"),
+         ]},
+    ]
+    return {
+        **base, "handle": handle, "starred": False,
+        "description": "A **sample** modpack for local preview.\n\n"
+        "Pick mods, group them into variants and lock versions. Downloads as a "
+        "`.zip` (web) or `.tpack` (API).",
+        "warnings": "Back up your mods folder first.<br>Some mods need the latest game build.",
+        "preview_shas": [], "discord_url": "https://discord.gg/example",
+        "website_url": "https://example.com", "donation_urls": [],
+        "default_variant": "default", "variants": variants,
+        "taken_down": False, "takedown_reason": None,
+        "is_owner": True,   # dev: show the owner editor controls
+    }
+
 
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -127,12 +221,208 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "privacy.html", "text/html")
         if path == "/class-activity":
             return self._send_file(TEMPLATES / "class-activity.html", "text/html")
+        if path == "/dashboard":
+            return self._send_file(TEMPLATES / "dashboard.html", "text/html")
+        if path == "/mods":
+            return self._send_file(TEMPLATES / "mods.html", "text/html")
+        if path.startswith("/mods/"):
+            # /mods/<handle> = modder profile; /mods/<handle>/<slug> = a mod.
+            segs = [s for s in path[len("/mods/"):].split("/") if s]
+            page = "mods_profile.html" if len(segs) == 1 else "mods_project.html"
+            return self._send_file(TEMPLATES / page, "text/html")
+        if path == "/modpacks":
+            return self._send_file(TEMPLATES / "modpacks.html", "text/html")
+        if path.startswith("/modpacks/"):
+            # /modpacks/<handle>/<slug> = a single modpack.
+            return self._send_file(TEMPLATES / "modpacks_project.html", "text/html")
 
-        # Static.
+        # Static. Templates reference the minified bundles (built by deploy.sh),
+        # which don't exist locally for brand-new pages. Fall back to the
+        # unminified source so local preview works without running the minifier.
         if path.startswith("/static/"):
-            return self._send_file(STATIC / path[len("/static/"):], None)
+            rel = path[len("/static/"):]
+            target = STATIC / rel
+            if not target.exists() and ".min." in rel:
+                source = STATIC / rel.replace(".min.", ".", 1)
+                if source.exists():
+                    target = source
+            return self._send_file(target, None)
 
         # Stub JSON endpoints.
+        # --- Modpacks (/site/modpacks/*) -----------------------------------
+        if path.startswith("/site/modpacks/for-mod/"):
+            # Which modpacks include this mod (the mod-page backlink). Pretend the
+            # first stub pack always includes whatever mod is asked about.
+            return self._send_json({"items": _STUB_PACKS[:1], "count": 1})
+        if path == "/site/modpacks/me/projects":
+            return self._send_json({"items": _STUB_PACKS})
+        if path == "/site/modpacks/projects":
+            return self._send_json({"items": _STUB_PACKS, "count": len(_STUB_PACKS),
+                                    "total": len(_STUB_PACKS)})
+        if path.startswith("/site/modpacks/projects/"):
+            rest = path[len("/site/modpacks/projects/"):]
+            parts = [s for s in rest.split("/") if s]
+            handle = parts[0] if parts else "aallyn"
+            slug = parts[1] if len(parts) > 1 else "starter-pack"
+            return self._send_json(_stub_pack_detail(handle, slug))
+
+        # --- Mods Hub (/site/mods/*) ---------------------------------------
+        if path == "/site/mods/me/projects":
+            return self._send_json({"items": []})
+        if path.startswith("/site/mods/profile/"):
+            handle = path[len("/site/mods/profile/"):]
+            mods = list(_STUB_MODS)   # several mods so reorder/highlight is testable
+            return self._send_json({
+                "handle": handle or "aallyn",
+                "display_name": "Aallyn",
+                "tagline": "Trove modder · HUD & retexture artist",
+                "readme": "## Hey!\n\nI make **clean HUD** mods. Check out my work below.\n\n"
+                "[![ko-fi](https://img.shields.io/badge/support-ko--fi-ff5e5b)](https://ko-fi.com/example)",
+                "avatar_url": "/site/mods/image/avatarsha",
+                "avatar_sha": "avatarsha",
+                "banner_url": "/site/mods/image/bannersha",
+                "banner_sha": "bannersha",
+                "discord_url": "https://discord.gg/example",
+                "website_url": "https://example.com",
+                "donation_urls": ["https://ko-fi.com/example"],
+                "is_owner": False,
+                "joined_at": "2025-01-15T00:00:00+00:00",
+                "page_url": f"https://trove.aallyn.net/mods/{handle}",
+                "mod_count": len(mods),
+                "mod_order": [m["slug"] for m in mods],
+                "featured_slug": mods[0]["slug"],
+                "featured": mods[0],
+                "mods": mods,
+            })
+        if path == "/site/mods/tags":
+            return self._send_json({
+                "categories": [{"tag": "GUI", "count": 7}, {"tag": "Dragons", "count": 3},
+                               {"tag": "Reskin", "count": 5}, {"tag": "Mounts", "count": 2}],
+                "custom": [{"tag": "retexture", "count": 4}, {"tag": "hud", "count": 2},
+                           {"tag": "fun", "count": 1}, {"tag": "minimal", "count": 1}],
+            })
+        if path == "/site/mods/projects":
+            return self._send_json({"items": _STUB_MODS, "count": len(_STUB_MODS),
+                                    "total": len(_STUB_MODS)})
+        if path.startswith("/site/mods/image/"):
+            return self._send_bytes(_PLACEHOLDER_PNG, "image/png")
+        if path.startswith("/site/mods/projects/"):
+            rest = path[len("/site/mods/projects/"):]
+            _parts = rest.split("/")
+            handle = _parts[0] if _parts else ""
+            slug = _parts[1] if len(_parts) > 1 else ""
+            sub = "/".join(_parts[2:])
+            base = next((m for m in _STUB_MODS if m["slug"] == slug), _STUB_MODS[0])
+            if (sub == "" or sub is None) and handle == "stray":
+                # Imported, unclaimed "stray" mod (uploaded via contributions).
+                return self._send_json({
+                    "slug": slug, "handle": "stray", "title": "Stray HUD Pack",
+                    "summary": "A community-contributed mod, not yet claimed.",
+                    "description": "Uploaded via contributions. The original author retains credit.",
+                    "readme_text": "", "warnings": "", "tags": ["interface", "hud"],
+                    "owner_username": "SomeModder", "author": "SomeModder",
+                    "visibility": "public", "mode": "releases", "source_visibility": "public",
+                    "banner_sha": None, "preview_sha": None, "preview_shas": [],
+                    "download_count": 102216, "star_count": 4,
+                    "is_stray": True,
+                    "taken_down": False, "takedown_reason": None, "is_owner": False,
+                    "starred": False, "discord_url": None, "website_url": None,
+                    "donation_urls": [], "default_branch": "main", "source_visible": False,
+                    "commit_count": 0, "clone_url": None, "branches": [],
+                    "hidden_release_branches": [], "branch_order": [],
+                    "forked_from": None, "inspired_by": None, "fork_count": 0,
+                    "releases": [
+                        {"id": "rel-stray", "tag": "12", "branch": "main", "title": "",
+                         "changelog": "", "status": "published", "tmod_filename": "Imported HUD Pack.tmod",
+                         "tmod_size": 51200, "download_count": 102216, "format": "tmod",
+                         "banner_sha": None, "published_at": None, "created_at": None},
+                    ],
+                })
+            if sub == "" or sub is None:
+                sv = base.get("mode", "files") == "files"   # public-source files mod
+                return self._send_json({
+                    **base, "description": "A **sample** mod for local preview.\n\n"
+                    "Files, branches and releases are stubbed by the dev server.",
+                    "readme_text": "## Sample README\n\n"
+                    "[![badge](https://img.shields.io/badge/build-passing-brightgreen)](https://example.com)\n\n"
+                    "<div align=\"center\">Centered HTML works.</div>\n\n"
+                    "| A | B |\n|---|---|\n| 1 | 2 |\n\n"
+                    "- bullet one\n- bullet two\n\n"
+                    "Saved on the project (releases-only mode). Normal **bold** + `code`.",
+                    "warnings": "Requires the latest game build.<br>Back up your mods folder first.",
+                    "default_branch": "main", "preview_shas": ["prevsha1", "prevsha2"], "taken_down": False,
+                    "takedown_reason": None, "is_owner": False, "starred": False,
+                    "discord_url": "https://discord.gg/example",
+                    "website_url": "https://example.com",
+                    "donation_urls": ["https://ko-fi.com/example", "https://paypal.me/example"],
+                    "handle": handle,
+                    "mode": base.get("mode", "files"), "source_visibility": "public",
+                    "source_visible": sv,
+                    "commit_count": 2 if sv else 0,
+                    "clone_url": f"https://api.aallyn.net/git/mods/{handle}/{slug}.git" if sv else None,
+                    "branches": [{"name": "main", "head_commit_id": "stub", "updated_at": None}] if sv else [],
+                    "hidden_release_branches": [], "branch_order": ["experimental", "main"],
+                    "releases": [
+                        {"id": "rel-main", "tag": "v1.2.0", "branch": "main",
+                         "title": "Stable", "changelog": "Latest stable build.",
+                         "status": "published", "tmod_filename": f"{slug}-v1.2.0.tmod",
+                         "tmod_size": 20480, "download_count": 142, "format": "tmod",
+                         "banner_sha": None, "published_at": None, "created_at": None},
+                        {"id": "rel-exp", "tag": "v1.3.0-beta", "branch": "experimental",
+                         "title": "Beta variant", "changelog": "Experimental features.",
+                         "status": "published", "tmod_filename": f"{slug}-v1.3.0.zip",
+                         "tmod_size": 30720, "download_count": 12, "format": "zip",
+                         "banner_sha": None, "published_at": None, "created_at": None},
+                        {"id": "rel-exp-tmod", "tag": "v1.3.0", "branch": "experimental",
+                         "title": "Experimental build", "changelog": "Bleeding-edge .tmod.",
+                         "status": "published", "tmod_filename": f"{slug}-v1.3.0.tmod",
+                         "tmod_size": 22000, "download_count": 30, "format": "tmod",
+                         "banner_sha": None, "published_at": None, "created_at": None},
+                    ],
+                })
+            if sub == "branches":
+                return self._send_json({"items": [
+                    {"name": "main", "head_commit_id": "stub", "updated_at": None}]})
+            if sub == "releases":
+                return self._send_json({"items": []})
+            if sub == "forks":
+                forks = [m for m in _STUB_MODS
+                         if (m.get("forked_from") or {}).get("slug") == slug]
+                return self._send_json({"items": forks})
+            if sub == "tree":
+                return self._send_json({"commit": {"id": "stub", "seq": 2}, "entries": [
+                    {"path": "readme.md", "blob_sha": "stub", "size": 180},
+                    {"path": "config/default.cfg", "blob_sha": "stub", "size": 128},
+                    {"path": "ui/icon.png", "blob_sha": "stub", "size": 4096}]})
+            if sub.startswith("raw/") and sub.lower().endswith("readme.md"):
+                return self._send_text(
+                    "# Sample Mod\n\nThis README is **rendered** from the repo's "
+                    "`readme.md`, GitHub-style.\n\n## Features\n\n- One cool thing\n"
+                    "- Another thing\n\n```\ninstall: drop the .tmod in your mods folder\n"
+                    "```\n\nSee the [Mods Hub](https://trove.aallyn.net/mods).\n")
+            if sub == "placement":
+                return self._send_json({
+                    "commit": {"id": "stub", "seq": 2}, "total": 5, "compilable_count": 2,
+                    "skipped": [
+                        {"path": "readme.txt",
+                         "reason": "root file (only files inside a Trove folder are compiled)"},
+                        {"path": "bin/tool.exe", "reason": "'bin' is not a Trove folder"},
+                    ],
+                    "misplaced": [
+                        {"path": "blueprints/foo.blueprint",
+                         "expected": "blueprints/equipment/foo.blueprint"},
+                    ],
+                    "fix_available": True, "game_index_available": True,
+                })
+            if sub == "commits":
+                return self._send_json({"items": [
+                    {"id": "c2", "seq": 2, "branch": "main", "author_username": "tester",
+                     "message": "Add icon", "file_count": 2, "created_at": None},
+                    {"id": "c1", "seq": 1, "branch": "main", "author_username": "tester",
+                     "message": "Initial commit", "file_count": 1, "created_at": None}],
+                    "count": 2, "total": 2})
+            return self._send_json({"items": []})
+
         if path == "/site/leaderboards/config":
             # Return a non-3 value so the subtitle change is visible in
             # the local preview (prod would normally serve 3 from the
@@ -356,12 +646,12 @@ class Handler(SimpleHTTPRequestHandler):
                     },
                     {
                         "player_name": "noa00__00",
-                        "confidence": 0.81,  # one decent board flag
+                        "confidence": 0.94,  # score-outlier + weekly-uptime (2 check types)
                         "leaderboards": [
                             {
                                 "uuid": 2004, "name": "CHALLENGE: Deepest (WEEKLY)",
                                 "category": "CONTESTS", "contest_type": "weekly",
-                                "rank": 1, "score": 9999, "confidence": 0.81,
+                                "rank": 1, "score": 9999, "confidence": 0.94,
                                 "evidence": [
                                     {
                                         "type": "score_outlier",
@@ -373,6 +663,15 @@ class Handler(SimpleHTTPRequestHandler):
                                             "board_size": 250,
                                         },
                                         "confidence": 0.816,
+                                    },
+                                    {
+                                        "type": "sustained_velocity",
+                                        "summary": "Score rose in 158 of the last 162 hourly captures since the weekly reset (98% uptime). No human plays 85%+ of every hour for days - this account essentially never stops, the signature of a no-sleep bot. Invisible to the per-hour check (each hour looks normal alone).",
+                                        "measurements": {
+                                            "active_hours": 158, "captures_since_reset": 162,
+                                            "uptime_fraction": 0.975, "threshold_fraction": 0.85,
+                                        },
+                                        "confidence": 0.94,
                                     },
                                 ],
                             },
@@ -406,9 +705,146 @@ class Handler(SimpleHTTPRequestHandler):
                         ],
                     },
                 ],
+                # Alt-clusters (group-shaped detection). Two clear families
+                # mirroring the real anana1..20 / Aan_1..7 pattern, plus a
+                # borderline trio below the default 0.9 filter.
+                "clusters": [
+                    {
+                        "stem": "anana", "label": "anana*",
+                        "member_count": 20,
+                        "members": [f"anana{i}" for i in range(1, 21)],
+                        "members_truncated": 0,
+                        "board_count": 2,
+                        "boards": [
+                            {
+                                "uuid": 4001, "name": "GEODE TOPSIDE U9",
+                                "category": "GEODE", "contest_type": None,
+                                "members": 20, "score_min": 240.79, "score_max": 240.8,
+                                "spread": 0.000042, "rank_min": 2, "rank_max": 17,
+                            },
+                            {
+                                "uuid": 4002, "name": "DELVE DEPTH",
+                                "category": "DELVE", "contest_type": "daily",
+                                "members": 14, "score_min": 1880, "score_max": 1881,
+                                "spread": 0.00053, "rank_min": 3, "rank_max": 22,
+                            },
+                        ],
+                        "confidence": 0.948,
+                        "summary": "20 similarly-named accounts (anana1, anana10, anana11, … anana9) cluster within 0.0042% of each other on 2 board(s). Coordinated multi-account ('alt army') pattern: near-identical scores under a shared name stem 'anana'.",
+                        "measurements": {
+                            "member_count": 20, "board_count": 2,
+                            "tightest_spread_pct": 0.0042, "score_band_pct": 2.0,
+                            "closeness": 0.998, "size_term": 1.0, "board_term": 0.75,
+                            "ceiling": 0.95,
+                        },
+                    },
+                    {
+                        "stem": "aan", "label": "aan*",
+                        "member_count": 7,
+                        "members": [f"Aan_{i}" for i in range(1, 8)],
+                        "members_truncated": 0,
+                        "board_count": 1,
+                        "boards": [
+                            {
+                                "uuid": 4001, "name": "GEODE TOPSIDE U9",
+                                "category": "GEODE", "contest_type": None,
+                                "members": 7, "score_min": 240.78, "score_max": 240.79,
+                                "spread": 0.000042, "rank_min": 8, "rank_max": 18,
+                            },
+                        ],
+                        "confidence": 0.904,
+                        "summary": "7 similarly-named accounts (Aan_1, Aan_2, Aan_3, … Aan_7) cluster within 0.0042% of each other on 1 board(s). Coordinated multi-account ('alt army') pattern: near-identical scores under a shared name stem 'aan'.",
+                        "measurements": {
+                            "member_count": 7, "board_count": 1,
+                            "tightest_spread_pct": 0.0042, "score_band_pct": 2.0,
+                            "closeness": 0.998, "size_term": 0.8, "board_term": 0.5,
+                            "ceiling": 0.95,
+                        },
+                    },
+                    {
+                        # Borderline: 3 accounts, loose band - below the 0.9
+                        # default filter so the slider has a cluster to hide.
+                        "stem": "dragon", "label": "dragon*",
+                        "member_count": 3,
+                        "members": ["Dragon", "Dragon2", "Dragon3"],
+                        "members_truncated": 0,
+                        "board_count": 1,
+                        "boards": [
+                            {
+                                "uuid": 5001, "name": "U10 POWER RANK",
+                                "category": "CLASS", "contest_type": None,
+                                "members": 3, "score_min": 30100, "score_max": 30600,
+                                "spread": 0.0163, "rank_min": 41, "rank_max": 58,
+                            },
+                        ],
+                        "confidence": 0.62,
+                        "summary": "3 similarly-named accounts (Dragon, Dragon2, Dragon3) cluster within 1.63% of each other on 1 board(s). Coordinated multi-account ('alt army') pattern: near-identical scores under a shared name stem 'dragon'.",
+                        "measurements": {
+                            "member_count": 3, "board_count": 1,
+                            "tightest_spread_pct": 1.63, "score_band_pct": 2.0,
+                            "closeness": 0.185, "size_term": 0.0, "board_term": 0.5,
+                            "ceiling": 0.95,
+                        },
+                    },
+                    {
+                        # Co-movement (primary, name-agnostic): distinct names, lockstep gains.
+                        "stem": "", "label": "xX_Reaper_Xx +2", "method": "co_movement",
+                        "corroborated_by": ["co_movement", "footprint"],
+                        "member_count": 3,
+                        "members": ["xX_Reaper_Xx", "moonpie42", "Vortex_Prime"],
+                        "members_truncated": 0,
+                        "board_count": 2,
+                        "boards": [
+                            {
+                                "uuid": 20, "name": "GEODE MASTERY POINTS",
+                                "category": "GEODE", "contest_type": None,
+                                "members": 3, "matching_hours": 6, "avg_hourly_gain": 48500000,
+                                "member_names": ["xX_Reaper_Xx", "moonpie42", "Vortex_Prime"],
+                            },
+                            {
+                                "uuid": 4002, "name": "DELVE DEPTH",
+                                "category": "DELVE", "contest_type": "daily",
+                                "members": 3, "matching_hours": 4, "avg_hourly_gain": 1920,
+                                "member_names": ["xX_Reaper_Xx", "moonpie42", "Vortex_Prime"],
+                            },
+                        ],
+                        "confidence": 0.93,
+                        "summary": "3 accounts gained in LOCKSTEP - matching hourly score deltas across 6 hour(s) since the weekly reset on 2 board(s) (Vortex_Prime, moonpie42, xX_Reaper_Xx). Avg matched gain ~290,000,000/hr. Coordinated alts/bots progress together regardless of name.",
+                        "measurements": {
+                            "matching_hours": 6, "group_size": 3, "board_count": 2,
+                            "avg_hourly_gain": 290000000, "name_corroborated": False,
+                            "name_stem": None, "matching_term": 0.87, "size_term": 0.75,
+                            "ceiling": 0.97,
+                        },
+                    },
+                    {
+                        # Co-movement + shared name stem -> method "both" (top confidence).
+                        "stem": "grindbot", "label": "grindbot*", "method": "both",
+                        "corroborated_by": ["co_movement", "schedule", "name_stem", "footprint"],
+                        "member_count": 5,
+                        "members": ["grindbot1", "grindbot2", "grindbot3", "grindbot4", "grindbot5"],
+                        "members_truncated": 0,
+                        "board_count": 1,
+                        "boards": [
+                            {
+                                "uuid": 20, "name": "GEODE MASTERY POINTS",
+                                "category": "GEODE", "contest_type": None,
+                                "members": 5, "matching_hours": 9, "avg_hourly_gain": 51000000,
+                            },
+                        ],
+                        "confidence": 0.97,
+                        "summary": "5 accounts gained in LOCKSTEP - matching hourly score deltas across 9 hour(s) since the weekly reset on 1 board(s) (grindbot1, grindbot2, grindbot3, … grindbot5). Avg matched gain ~459,000,000/hr. Coordinated alts/bots progress together regardless of name; this group also shares the name stem 'grindbot'.",
+                        "measurements": {
+                            "matching_hours": 9, "group_size": 5, "board_count": 1,
+                            "avg_hourly_gain": 459000000, "name_corroborated": True,
+                            "name_stem": "grindbot", "matching_term": 0.95, "size_term": 0.94,
+                            "ceiling": 0.97,
+                        },
+                    },
+                ],
                 "computed_at": 1780870000,
                 "anchor": STUB_ANCHOR,
-                "method": "Three independent statistical checks: Modified Z-score (MAD-based, Iglewicz & Hoaglin 1993), rank-gap ratio, and velocity vs peer p95.",
+                "method": "Four independent checks: Modified Z-score (MAD-based, Iglewicz & Hoaglin 1993), rank-gap ratio, and velocity vs peer p95 flag individual outliers; alt-cluster detection groups similarly-named accounts at near-identical scores.",
                 "config": {
                     "z_threshold": 3.5,
                     "velocity_multiplier": 10.0,
@@ -416,6 +852,7 @@ class Handler(SimpleHTTPRequestHandler):
                 },
                 "total_flagged": 3,
                 "boards_analyzed": 25,
+                "clusters_boards_scanned": 80,
             })
         if path == "/site/giveaways":
             import time as _t
@@ -458,7 +895,6 @@ class Handler(SimpleHTTPRequestHandler):
                 "items": page, "count": len(page), "total": len(STUB_ENTRIES),
             })
         if path.startswith("/site/leaderboards/players/") and path.endswith("/history"):
-            from urllib.parse import unquote
             queried = unquote(path.split("/")[4])
             # Mirror the prod case-insensitive match (service.py uses
             # an anchored ``$regex`` with ``i``). Return rows ONLY for
@@ -478,6 +914,34 @@ class Handler(SimpleHTTPRequestHandler):
                      "leaderboard": 20, "created_at": STUB_ANCHOR},
                 ],
                 "count": 2,
+            })
+
+        if path.startswith("/site/leaderboards/players/") and path.endswith("/series"):
+            # Synthetic per-board score series so the cluster progress chart
+            # renders. Members of the alt cluster (same gain rate, slight base
+            # offset) come out as parallel rising lines = visible lockstep.
+            name = unquote(path.split("/")[4])
+            _HR = 3600
+            sanchors = [STUB_ANCHOR - (11 - i) * _HR for i in range(12)]
+            seed = sum(ord(c) for c in name)
+
+            def _pts(base, rate):
+                out, cur = [], float(base)
+                for a in sanchors:
+                    out.append({"created_at": a, "score": round(cur, 2),
+                                "rank": 1 + (seed % 6), "synthetic": False})
+                    cur += rate
+                return out
+
+            return self._send_json({
+                "player_name": name, "canonical_name": name, "days": 7,
+                "anchors": sanchors,
+                "series": [
+                    {"uuid": 20, "name": "GEODE MASTERY POINTS",
+                     "points": _pts(1_000_000_000 + seed * 1000, 48_500_000)},
+                    {"uuid": 4002, "name": "DELVE DEPTH",
+                     "points": _pts(1880 + (seed % 10), 1920)},
+                ],
             })
 
         self.send_error(404)
@@ -505,6 +969,23 @@ class Handler(SimpleHTTPRequestHandler):
         data = json.dumps(obj).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _send_bytes(self, data: bytes, content_type: str):
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _send_text(self, text):
+        data = text.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()

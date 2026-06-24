@@ -1,0 +1,16 @@
+/* ═══ Modpacks listing (/modpacks) ═══════════════════════════════════════
+   Reuses the Mods Hub card/hero/modal/button styles (.mh-*, from mods.css);
+   only the pack-specific bits live here. ═══════════════════════════════════ */
+
+/* Mod-count / variant chips on a pack card. */
+.mhp-card-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 2px; }
+.mhp-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .78rem; font-weight: 600; color: var(--text-soft);
+  background: var(--bg-deep); border: 1px solid var(--bg-line);
+  border-radius: 999px; padding: 3px 10px;
+}
+.mhp-chip i { color: var(--accent-blue); font-size: .72rem; }
+
+/* The fa-box placeholder when a pack has no banner/preview. */
+.mh-card-banner.placeholder i { font-size: 2rem; }

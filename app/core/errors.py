@@ -5,13 +5,69 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.context import get_request_id
 
 logger = logging.getLogger("kiwi.errors")
+
+# Path prefixes that are data/API surfaces - a 404 there stays JSON even from a
+# browser, so the showcase HTML 404 page only ever shows for front-facing pages.
+_API_PREFIXES = ("/v1/", "/v1", "/admin", "/site/", "/git/", "/secret-scanning",
+                 "/openapi", "/.well-known", "/health", "/config", "/metrics")
+
+# Self-contained themed 404 for front-facing website pages (no template/context
+# dependency, so it can never itself error). Pulls in the site stylesheet for
+# fonts + palette and adds a small inline layout.
+_NOT_FOUND_HTML = """<!DOCTYPE html>
+<html lang="en" dir="ltr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found · Better Trove Tools</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a0e14"><meta name="color-scheme" content="dark">
+<link rel="icon" href="/static/assets/favicon.png" type="image/png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root{--bg:#0a0e14;--card:#11161f;--line:#222c3a;--text:#e6ebf2;--soft:#9aa6b8;--mute:#6b7688;--blue:#569cff}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;padding:32px;
+    background:radial-gradient(1200px 600px at 50% -10%,rgba(86,156,255,.10),transparent),var(--bg);
+    color:var(--text);font-family:'Inter',system-ui,sans-serif}
+  .nf{max-width:520px;text-align:center}
+  .nf-code{font:700 clamp(5rem,18vw,9rem)/1 'Space Grotesk','Inter',sans-serif;letter-spacing:-.04em;
+    background:linear-gradient(135deg,#569cff,#a06bff 60%,#ff5e7e);-webkit-background-clip:text;
+    background-clip:text;color:transparent;margin:0}
+  .nf-title{font:700 1.5rem 'Space Grotesk','Inter',sans-serif;margin:6px 0 10px}
+  .nf-text{color:var(--soft);line-height:1.6;margin:0 0 26px}
+  .nf-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .nf-btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;border-radius:10px;
+    padding:11px 20px;font-weight:600;font-size:.95rem;border:1px solid var(--line);
+    color:var(--text);background:var(--card);transition:border-color .15s,transform .12s}
+  .nf-btn:hover{border-color:var(--blue);transform:translateY(-1px)}
+  .nf-btn-primary{background:linear-gradient(135deg,#569cff,#4a7fe0);border-color:transparent;color:#04121f}
+  .nf-mark{color:var(--mute);font-size:.82rem;margin-top:30px;letter-spacing:.04em;text-transform:uppercase}
+</style></head>
+<body><main class="nf">
+  <p class="nf-code">404</p>
+  <h1 class="nf-title">This page wandered off</h1>
+  <p class="nf-text">The page you're looking for doesn't exist, moved, or never did. Let's get you back to solid ground.</p>
+  <div class="nf-actions">
+    <a class="nf-btn nf-btn-primary" href="/">&larr; Back home</a>
+    <a class="nf-btn" href="/mods">Browse the Mods Hub</a>
+  </div>
+  <p class="nf-mark">Better Trove Tools</p>
+</main></body></html>"""
+
+
+def _wants_html_page(request: Request) -> bool:
+    """A front-facing GET that a browser would navigate to (not an API/data path)."""
+    if request.method not in ("GET", "HEAD"):
+        return False
+    if request.url.path.startswith(_API_PREFIXES):
+        return False
+    return "text/html" in request.headers.get("accept", "")
 
 
 class ErrorCode(str, Enum):
@@ -148,7 +204,11 @@ async def _api_error_handler(request: Request, exc: APIError) -> JSONResponse:
 
 async def _http_exception_handler(
     request: Request, exc: StarletteHTTPException
-) -> JSONResponse:
+) -> JSONResponse | HTMLResponse:
+    # A 404 from a browser navigating to a front-facing page gets the friendly HTML
+    # page; data/API 404s (and everything programmatic) stay JSON.
+    if exc.status_code == 404 and _wants_html_page(request):
+        return HTMLResponse(_NOT_FOUND_HTML, status_code=404)
     code = _STATUS_TO_CODE.get(exc.status_code, ErrorCode.internal_error)
     return JSONResponse(
         status_code=exc.status_code,

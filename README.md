@@ -37,10 +37,14 @@ Fully dockerized; Mongo and Redis persist to **local folders** via bind mounts
   + `Retry-After` headers, daily admin digest of 429s.
 - **Usage metrics** - every token-authenticated request recorded (buffered), TTL-expired; per-user,
   per-token, and global activity aggregations; cursor-paginated raw event feed.
-- **Admin** - superuser-only (`/admin/*`), enforced server-side: users, tokens, usage, revoke-any.
+- **Site analytics** - showcase-site page views + cookieless unique visitors (daily-rotating IP+UA
+  salted hash, no cookie/PII stored), rolled up per page in the dev-portal "Site Analytics" admin
+  tab (`GET /admin/pageviews`); buffered recorder, TTL-expired like usage metrics.
+- **Admin** - superuser-only (`/admin/*`), enforced server-side: users, tokens, usage, site analytics, revoke-any.
 - **Platform plumbing for new endpoints** - cursor pagination + standard `Page` envelope,
   `Idempotency-Key` replay safety, request-id correlation (`X-Request-ID`) + structured logs,
-  consistent error envelope.
+  consistent error envelope. A 404 from a **browser page** request (GET, `Accept: text/html`, non-API path)
+  returns a themed HTML 404 page; data/API 404s stay JSON (`app/core/errors.py`).
 
 ## Data endpoints (`/v1` - API token)
 
@@ -167,7 +171,7 @@ every zone plus Discord `<t:unix:style>` codes.
 | `GET /v1/leaderboards/players/{name}/history?uuid=&limit=` | recent appearances of one player across boards (case-insensitive on `name`) |
 | `GET /v1/leaderboards/players/{name}/profile` | (**tokenless**) public profile aggregate: recent appearances (board names + day-over-day deltas), a summary (boards, best rank, last seen), and a `verified` flag (true when a site account claimed + was master-approved for this name). Powers the `/player/<name>` page |
 | `GET /v1/leaderboards/{uuid}/health` | board health: roster **turnover** + day-over-day **score inflation** (when comparable - no reset crossed) + **competitiveness** (top-N score concentration: leader share, #1/last ratio, Gini), latest snapshot vs the previous trove-day |
-| `GET /v1/leaderboards/cheaters` | **tokenless** statistical-outlier flagging: MAD-Z + rank-gap + velocity. Per-evidence + per-player confidence; cached 30 min; pre-warmed at boot |
+| `GET /v1/leaderboards/cheaters` | **tokenless** anti-cheat flagging. Per-player: MAD-Z + rank-gap + velocity (per-evidence + per-player confidence). Plus group-shaped **clusters** (separate array, each tagged `method`): **co-movement** (primary, name-agnostic — accounts whose hourly gains move in lockstep across the week), **name_stem** (similar names at near-identical scores), or **both**. Cached 30 min; co-movement throttled + off-thread; pre-warmed at boot |
 | `POST /v1/leaderboards/insert?timestamp=&backfill=&sync=&warm=` | **master-only ingest**: multipart `file` with the raw `LeaderBot.cfg` text. Default returns **202** and parses/persists in the **background** (so a multi-second insert can't time out the bot); counts/errors land in the ingest log. The parsed snapshot is bulk-loaded into **Postgres** via `COPY` → staging temp table → player-upsert → `INSERT…SELECT` (sub-second for ~720k rows); the row lands in the anchor's partition. Idempotent for a given anchor (delete-by-anchor then reload). `backfill=true` lifts the 14-day anchor limit (bulk re-seed from saved `<unix>.cfg` files). `sync=true` processes **inline → 200 with real counts** (backpressure: one dump in memory at a time). `warm=false` defers cache-warming. Subject to the **ingest cooldown** when called with an API token |
 | `POST /v1/leaderboards/reset?drop_boards=` | **master-only, destructive**: `TRUNCATE … RESTART IDENTITY` the Postgres entry/player/activity tables (not row-by-row), and drop every cheater/activity/Redis cache + the ready pointer — a clean slate before a full re-ingest. Board metadata (incl. admin reset-cadence overrides) is kept unless `drop_boards=true`. Returns the deletion tallies; logged at WARNING |
 | `POST /v1/leaderboards/warm` | **master-only**: wake the cache warmer to recompute the latest anchor's cheaters + activity + page snapshots. Call once after a bulk back-fill (which uploads with `warm=false`) |
@@ -292,6 +296,7 @@ The api container ALSO serves the BTT marketing/manual site out of `site/`
 | `GET /updates` | per-server (Live US / PTS) game-update file explorer + version diff + in-browser preview of small text files |
 | `GET /support` | "support the project" landing for the navbar heart icon |
 | `GET /status` | Trove server-status page - live EU/US/PTS state + downtime-history timeline |
+| `GET /mods` · `/mods/{handle}/{slug}` | Mods Hub - browse/download shared mods (public) + the signed-in studio to develop, version & publish them |
 | `GET /static/*` | site assets (bind-mounted from `site/static/`) |
 | `GET /site/*` | page-side JSON proxies (leaderboards, updates) - same-origin, no token |
 | `GET /api-info` | the old developer-card landing (lives here so `/` is free for the site) |
@@ -323,6 +328,221 @@ checksum) is ported in pure Python (`app/trove/tmod.py`) - no native lib. `build
 header `KiwiAPI` (where BetterTroveTools uses `BTT`); nothing is stored - built in memory and discarded
 after sending.
 
+**Mods Hub** (the stored, git-like mod-sharing hub - `app/trove/mods_hub`)
+
+Distinct from the stateless tools above: the Mods Hub *stores* mods. A *project* owns *releases* plus
+banner/preview images, **forking** (copy + credit), **inspired-by attribution** (pointer + credit) and
+**stars** (a logged-in user favourites a mod - `ModStar` + a denormalized `star_count`, with a "Most starred"
+sort and a Starred list on the dashboard) - the original work is always surfaced on derivatives. Each project
+has a **mode**:
+- **files** - full versioned workflow (git commits/branches/clone) + releases. A release is compiled
+  server-side from a commit into a chosen **format** - `.tmod` (via `build_tmod`) or `.zip` - or an uploaded
+  prebuilt build. When compiling a `.tmod`, the modder picks one of the project's **preview images** (or uploads
+  a new one) to embed as `ui/<slug>.<ext>` with a `previewPath` header property (the Trove convention - the
+  image lives only in the artifact, never committed to the repo), and can set the **author(s)** stamped into the
+  `.tmod` (`author` - comma-separated for several, default the owner's name). Can set **`source_visibility=private`**
+  to keep the files/git owner-only and expose just the releases (an internal-tool mode).
+- **releases** - releases-only: upload already-built `.tmod`/`.zip` files; no file history, git or files view.
+  No preview embedding (the build is already compiled) - previews still enrich the project page.
+
+**Trove file placement** (`app/trove/mods_hub/trove_layout.py`, ported from BetterTroveTools): only files inside
+one of Trove's 11 override folders (`blueprints/`, `ui/`, `prefabs/`, `models/`, `textures/`, …) are compiled -
+root files and non-Trove folders (`bin/` etc.) and non-content extensions are ignored. The project page shows a
+warning panel for skipped files, and for **misplaced** files (a file whose name matches a real game file but
+sits at the wrong path, looked up in the updates-archive game index) offers a one-click **Fix file placement**
+that commits the moves to the game's paths. The game-index check degrades to unavailable if the updates archive
+isn't running; the compile filter always applies.
+
+**Branches are variants.** Each release records its `branch`; the page groups releases per branch (latest of
+each surfaced, older collapsible) and the owner can hide chosen variants from the public
+(`hidden_release_branches`) and **set the order the variants display in** (`branch_order` - up/down controls on
+each variant head; branches not listed fall to the end alphabetically). **Each branch has its own version
+timeline** - release tags are unique per
+`(project, branch)`, so branch X and branch Y can both ship a `v1.0` (the unique index is
+`project_id+branch+tag`; the old project-wide `project_id+tag` index is dropped on startup). **Forking** copies
+the source, so it's allowed only when the source is visible to the forker - a **source-locked** mod (private
+source / releases-only) can't be forked, only credited as **inspiration** (`fork_project` raises 403; the UI
+swaps the Fork button for "Use as inspiration").
+
+**Addressing (`<handle>/<slug>`).** A mod is `/mods/<owner_handle>/<slug>` everywhere (page, `/v1/mods/*`,
+`/site/mods/*`, git). The **handle** is the owner's canonical `SiteUser.username` (denormalized to
+`ModProject.owner_handle`, resynced on owner writes + when they open My Mods), so **slugs only have to be unique
+per owner** - two modders can both own a `my-mod`. The unique index moved `slug` → `(owner_id, slug)` (old global
+`slug_1` dropped on startup; `backfill_owner_handles()` sets the handle on pre-existing mods). Renaming Discord
+changes a modder's mod URLs + git remotes (the create form warns about this). Master actions address by **project
+id** (not slug). `get_project(handle, slug)` resolves the handle → owner → `(owner_id, slug)`.
+
+**Download filename = the `.tmod`'s internal `title`.** Trove identifies a mod in-game by the `title` property
+baked into the `.tmod`, so `release_download_filename()` serves the artifact as `<internal title>.tmod` (not
+`slug-tag.tmod`) - a mismatch breaks the mod. Applied at download time (fixes old releases too) and stored on new
+releases; zips keep their `slug-tag.zip` name.
+
+**Owner links.** A project carries up to three kinds of owner-provided links shown as buttons under the title:
+a **Discord invite** (`discord_url`), a **website** (`website_url`) and up to **5 donation links**
+(`donation_urls` - the page auto-detects Ko-fi/Patreon/PayPal/Buy-me-a-coffee/GitHub-Sponsors for the icon +
+label). All are validated server-side (`http(s)` only, ≤300 chars) and editable from **Edit details**.
+
+**Project page (GitHub-style).** Wide two-column layout: file browser + rendered `README.md` on the left, an
+**About → Releases → commit history → clone** sidebar on the right. Owner actions are inline rather than a
+toolbar - **Edit details** + a **gear** sit beside the title, **Commit files** / **New release** / **Add
+previews** are right-aligned in their section headers, the **banner is clickable** to add/change it, and a new
+**branch** is created from the branch dropdown. The gear opens a **Settings** modal holding the structural
+options (`mode`, `source_visibility`) and a **Danger zone** with the **Delete** button (kept off the main page
+so deletion isn't a one-click slip).
+
+**Markdown rendering** (`mods_project.js`). READMEs/descriptions render GitHub-flavored markdown **plus a safe
+subset of raw HTML** (shields-style badges, `<div align>`, `<br>`, tables, blockquotes, …): markdown → HTML with
+raw HTML passed through, then the whole output runs through a **DOM allowlist sanitizer** (`sanitizeHTML` -
+tag/attribute allowlist, `javascript:`/`data:`/`on*` stripped, links forced `rel="noopener nofollow ugc"`), so
+author content renders richly with no XSS surface. In **releases-only** mode there's no `README.md`, so the
+owner edits a saved **`readme_text`** (rendered as the main content; **ignored** once the mod switches to files
+mode, which renders the repo's `README.md` instead). **Warnings** (`warnings`, edited under the description) show
+as highlighted yellow blocks below the description - **one block per `<br>`**.
+
+**Modder profiles** (`/mods/<handle>`). A profile **only exists once the modder has ≥1 public, non-taken-down
+mod** (nothing to showcase otherwise) — `profile_view` returns `None` and the page 404s until then. Each modder
+gets a customizable home page (`ModProfile`, lazily created on first edit): **avatar** (custom upload, else their Discord avatar), **banner**, display name, tagline, a
+markdown **README**, **socials** (Discord / website / up to 5 donation links), and a grid of their mods (owner
+sees drafts; others see public only). It's a **two-column** layout: README + the mods grid on the left, a
+sidebar on the right with an **About** section (socials + meta) and a single **Highlighted** mod. The owner sets
+the **mod order** (`mod_order` - up/down on each card) and **highlights one** (`featured_slug` - a pin on each
+card → shown in the sidebar). Edited via `/v1/mods/hub/me/profile` (+ `/avatar`, `/banner` uploads), read via
+`/v1/mods/hub/profile/{handle}` + the `/site/mods/profile/{handle}` proxy. The mod page's author name and the
+dashboard both link here, and the page emits per-modder OG/Twitter tags. The markdown renderer + DOM-allowlist
+sanitizer were extracted into a shared `md_render.js` (`window.BTTMarkdown`) so the mod + profile pages share
+**one** copy of the XSS-safe sanitizer. The renderer matches GitHub READMEs: single newlines are **soft breaks**
+(badge rows flow inline), and the site CSP's `img-src` allows **any https image** so shields-style badges +
+screenshots render.
+
+**Link unfurls.** The `/mods/{handle}/{slug}` page is client-rendered, but the route fetches the mod
+(anonymously) to emit **per-mod Open Graph + Twitter-card** tags - real title, summary and **banner image** -
+so a shared link unfurls properly in Discord/Twitter/etc. Drafts / private / not-found fall back to generic tags
+(nothing private leaks into an embed); the page still renders for the owner.
+
+The website-internal hub surface — the `/v1/mods/hub/*` reads, the site-auth-gated write API, and the
+same-origin `/site/mods/*` proxies — is **deliberately kept OUT of the public OpenAPI reference**
+(`include_in_schema=False`); the showcase `/mods` + `/mods/{handle}/{slug}` pages drive it. Browse + download are public;
+developing/submitting is a signed-in **site-user** action (Discord login on the User Dashboard - *not* the dev
+portal).
+
+**Documented public catalog API** (`mods_public_router`, in the OpenAPI reference, tokenless `mods:read`) is the
+app-facing surface — it returns **absolute** image / download / page URLs so external apps can consume it
+directly:
+- `GET /v1/mods` — list/browse published mods (filter by `q`/`tag`/`author`, `sort` ∈ recent|popular|downloads|stars|new|title).
+- `GET /v1/mods/{handle}/{slug}` — full metadata + published releases for one mod.
+- `GET /v1/mods/popular` — the **25 most popular** mods by a 0.0-1.0 `popularity_score`.
+- `POST /v1/mods/lookup` — resolve mod + release metadata from **one or many artifact hashes** (sha256 hex);
+  returns `results` keyed by hash plus an `unknown` list (an app can identify installed `.tmod` files).
+- `GET /v1/mods/categories` — the fixed category vocabulary + each category's bit value.
+
+**Categories** (`app/trove/mod_categories.py`). A fixed, append-only vocabulary (Allies, Banners, Boats and
+Sails, … Radar — 19 categories, each owning one bit). A mod's categories are stored **twice**: the natural Trove
+way as plain strings in the `tags` property, and as a compact integer **bitmask** in a `flags` header property
+(`flags=160` ⇒ Dragons|GUI), so a consumer recovers the exact set from one number instead of string-matching.
+`build_tmod` auto-derives `flags` from any category tags; `read_tmod` decodes `flags` back into `categories`.
+The public DTO exposes both `categories` (labels) and `flags` (number); the project page edits them as toggle
+chips merged into the tags. The browse page's **tag filter** is fed by `service.tag_facets()`
+(`GET /v1/mods/hub/tags` + the `/site/mods/tags` proxy) — per-tag **counts** across the public catalog, the fixed
+categories shown first, then custom tags by descending count.
+
+**Hash ownership.** Every release stores the artifact's **sha256 content hash** (`ModRelease.tmod_sha`) with a
+denormalized `owner_id`; a hash belongs to whoever first published it. Releasing an artifact whose exact hash is
+already owned by a **different** creator is rejected (409) — anti-reupload. The same owner may reuse their own
+artifact across branches/projects.
+
+**Popularity.** Each download logs a `ModDownloadEvent` (TTL-pruned to ~8 days). A periodically-refreshed
+(lazy, ≤10 min, no background job) recompute writes a per-project `downloads_7d` and a normalized 0.0-1.0
+`popularity_score` (a log-damped blend weighted toward the last 7 days of downloads, with stars + lifetime
+downloads as a floor, scaled so the top mod ≈ 1.0). `sort=popular` and `/v1/mods/popular` read the snapshot.
+
+**git as the source of truth.** Each project is a real bare git repo (pure-Python **dulwich**, no `git` binary)
+under `mods_store_dir` (`/data/mods`, bind-mounted). File content + history live in git - a web "Commit files"
+and a `git push` land in the **same** history; commits/branches/trees are read live from git (a push needs no
+DB sync). Releases compile a `.tmod` from a git tree; only release artifacts + images stay in the CAS.
+
+An **authenticated git smart-HTTP server** (`app/trove/mods_hub/git_http.py`) serves
+`git clone/pull/push https://api.aallyn.net/git/mods/<handle>/<slug>.git`. Auth is HTTP Basic with a **git access token**
+as the password (site login is Discord-only, no password) - users mint tokens from the studio's "Access tokens"
+panel (`/v1/mods/hub/me/git-tokens`). Public/unlisted repos clone anonymously; drafts require the owner; push
+requires the owner. Body cap on `/git/*` is `mods_git_max_body_bytes` (100 MB).
+
+**Stray (imported, unclaimed) mods** (`app/trove/mods_hub/strayimport.py`). A *stray* mod is a `ModProject` with
+`owner_id=None` + `is_stray=True`, mirrored from an external mod catalog and not yet attributed to a site user.
+They carry their original `author` + a single mirrored release, live at the reserved handle **`/mods/stray/<slug>`**
+(`STRAY_HANDLE`; `get_project` special-cases it), and appear in the normal public catalog once approved.
+**The external origin is an internal implementation detail - it is never named anywhere a user or admin can see
+it** (no UI text, no API field, no source link). The import flow:
+- **Bulk import** (admin) creates mods **approved/visible** and **mirrors every file** into the shared CAS; a
+  later **resync** refreshes download counts + re-mirrors changed files and adds newly-found mods as **pending**
+  (hidden) for **per-mod admin approval**. Throttled, resumable background job; idempotent by `(source, source_id)`;
+  progress in `StrayImportState`. Driven from the dev-portal "Mods hub" tab.
+- **Author** comes from the **`.tmod` header's `author`** property (multiple, comma-separated, supported); only
+  `.zip` mods (no header) fall back to the source-listed author. **Download counts carry over**.
+- **Claim → handover**: a signed-in user hits "This is my mod" (`POST …/projects/stray/<slug>/claim` →
+  `ModClaimRequest`); a master approves in the admin panel, which **hands the mod over** (`handover_stray`: assigns
+  the owner, clears `is_stray`, re-homes the slug to `/mods/<username>/<slug>`) - it's now an ordinary mod.
+- **Public copy is deliberately ambiguous**: the badge says **"Stray"**, the notice says the mod was "uploaded via
+  contributions", and the origin/source is **never exposed publicly** (`source`/`source_url` are stripped from the
+  public `project_card` + `public_mod_dto`; the mod page shows no source link). The real source is kept **admin-
+  only** (on `_stray_card`) for attribution + verifying claims. Models: `ModClaimRequest`, `StrayImportState`;
+  `ModProject.owner_id` + `ModImageAsset.owner_id` are optional (None for stray).
+
+**Master oversight** lives in the dev-portal master panel ("Mods hub" tab → `/admin/mods/*`): list **every**
+modder's project (drafts included), take down / restore a reported project, or force-delete any project. The same
+tab drives the **stray** import (`/admin/mods/stray/import`), the **pending approval queue**
+(`/admin/mods/stray` + `…/approve`/`…/reject`), and **mod claims** (`/admin/mods/claims` + `…/approve`/`…/reject`).
+
+**Hiding the whole feature.** The Mods Hub (and the Market) each have a master **feature toggle** -
+`feature_mods_hub_enabled` / `feature_market_enabled`, flippable from the dev-portal **Configuration** tab
+("features" category), no restart. OFF hides the navbar link + dashboard tab, 404s the pages and every endpoint
+(`/v1/…`, `/site/…`, and `/git/mods/*`), and leaves all stored data intact for when it's switched back ON. The
+gate is one runtime-config bool read via `app/core/features.py` (router-level dependency on the API side, a site-
+router dependency + Jinja context flag on the site side).
+
+**Modpacks** (user-curated bundles of hub mods - `app/trove/modpacks`)
+
+A *modpack* groups several published Mods Hub mods so a player can grab them all at once. It is a thin layer
+**over** the hub - it stores no mod content of its own, only **references** to mods - and rides the same master
+toggle (`feature_mods_hub_enabled`; meaningless without the hub). Pages live at `/modpacks` (browse) +
+`/modpacks/<handle>/<slug>` (one pack); the write API is `/v1/modpacks/hub/*` (site-login) with same-origin
+`/site/modpacks/*` proxies; banners/images **reuse the hub's CAS + `ModImageAsset`** (served via
+`/site/mods/image/<sha>` - one store). All hidden from the OpenAPI reference, same as the hub.
+
+- **No releases, but variants.** A pack has no per-version releases; instead it has **variants** - named
+  spin-offs (e.g. "Full" vs "Lite"), each its own ordered list of mod **entries**. One is the **default**
+  (`default_variant`); display order is the variant list order. A new variant can **copy** another's mods.
+- **Entries are references with a picked mod-variant + optional version lock.** Each `ModpackEntry` names a mod
+  by its **stable `project_id`** (survives the mod being renamed/re-handled; `handle`/`slug`/`title` are
+  denormalized + resynced on resolve), the **mod variant** (Mods Hub branch) to pull from, and a **version
+  lock**: **OFF by default** - the entry tracks the **latest published `.tmod`** of that branch - or **ON**,
+  pinning to a specific release tag (`locked_tag`) that never auto-updates even when the mod ships newer builds.
+  The pack page lists **all mods + variants + the version each resolves to** (latest → `vX`, or 🔒 `vX` when
+  locked), flagging any entry whose build is currently unavailable (mod removed/private, no published build).
+- **Artifacts are built on the fly at download time** (so unlocked entries always reflect the current latest):
+  the website downloads a **`.zip`** (each mod's `.tmod` under `mods/` + a `modpack.json` manifest), the API a
+  **`.tpack`** - the **same container format as a `.tmod`** (`tmod.build_tpack`; same `modLoader` marker) packing
+  each mod's `.tmod` as a "file", with the mod manifest carried in the header `manifest` property. Trove has no
+  native `.tpack`; it's our own format, structurally identical to a `.tmod` so the existing reader round-trips it
+  - a consumer tells a pack from a mod by the `.tpack` extension + the `manifest`/`packVersion` header properties.
+  In **both** formats every packed `.tmod` keeps its exact **`<internal title>.tmod`** filename (via
+  `release_download_filename`, case preserved - `build_tpack` passes `lowercase_paths=False`): **Trove validates a
+  mod's filename against the `title` baked into its header and rejects a mismatch**, so the name is never invented.
+- **Editing.** Owner-only inline editor on the pack page: edit details (title/summary/markdown description/
+  **warnings**/tags/visibility/links), upload a **banner**, manage variants (add/rename/delete/make-default), and
+  add/remove/reorder mods + set each one's branch + version lock. A variant's mod list is saved by **PUTting the
+  whole ordered list** (`PUT …/variants/{name}/entries`) - add/remove/reorder/lock in one write.
+- **Downloads + likes.** Each download bumps `download_count`; a signed-in user can **like** a pack (`ModpackStar`
+  + denormalized `star_count`, with a "Most liked" sort) - both surfaced on cards and the pack header. The included-
+  mods list shows each mod's **author** linked to their modder page (`/mods/<handle>`), and a mod's own page lists
+  the **modpacks that include it** (a reverse link queried by the embedded `variants.entries.project_id`).
+- **Documented app-facing catalog API** (`modpacks_public_router`, in the OpenAPI reference, tokenless `mods:read`),
+  mirroring `/v1/mods/*` - returns **absolute** image / page / download URLs so external apps (e.g. Better Trove
+  Tools) consume it directly: `GET /v1/modpacks` (browse cards; `q`/`tag`/`author`/`sort`∈recent|downloads|stars|new|title),
+  `GET /v1/modpacks/{handle}/{slug}` (full detail - every variant + the mods it bundles, each with `author`/`author_url`
+  + the version each resolves to + per-variant `download_url`/`zip_url`), `GET /v1/modpacks/{handle}/{slug}/download?variant=&format=tpack|zip`,
+  and `GET /v1/modpacks/for-mod/{handle}/{slug}` (the reverse link - packs including a given mod). The website-internal
+  `/v1/modpacks/hub/*` + `/site/modpacks/*` surface (incl. the `…/star` like endpoints) stays out of the reference.
+
 **`updates` category - scope `updates:read`** (browse the archived game files - latest version)
 
 | Endpoint | Returns |
@@ -338,7 +558,7 @@ Kiwi mirrors Trove's update CDN into a content-addressed, deduped store (see "Ga
 these endpoints serve the latest captured version. Loose files and TFA-extracted files are browsed
 identically. Historical-version querying is the next layer.
 
-**`codexes` category - scope `codexes:read`** (public - token optional; structured game data parsed from the archive)
+**`codexes` category - scope `codexes:read`** (public - token optional; structured game data parsed from the archive. The showcase `/codexes` page is the main consumer, reading these via same-origin `/site/codexes/*` proxies)
 
 | Endpoint | Returns |
 |---|---|
@@ -359,7 +579,10 @@ The table is disposable - rebuildable from the archive at any time. All endpoint
 branch (`?branch=pts` for PTS). Each entry carries identity (name, category, description, tradability)
 plus decoded collectible bonuses: `mastery` (normal, from `meta/multipliers.binfab`), `mastery_geode`
 (geode-mode, from `meta/geode_multipliers.binfab`), `power_rank`, and a `data` JSONB object of numeric
-stat bonuses, visible/hidden ability refs, and (for geode companions) per-level upgrade-tree bonuses.
+stat bonuses, visible/hidden ability refs, **recipe** structure (output + ingredients + requirements), and
+(for geode companions) per-level upgrade-tree bonuses. The `$…` localization keys those carry (stat/slot
+names, ability descriptions) and the referenced recipe item names are resolved at index time against the
+archived `languages/` locale tables + item prefabs - so the served strings are the real in-game text.
 
 More are added following the conventions in "Adding the real endpoints" below.
 
@@ -389,6 +612,7 @@ app/
 ├── auth/               # /auth/*  signup, login, sessions, oauth, account - owns User, Session
 ├── tokens/             # /tokens/*  mint/list/edit/rotate/revoke - owns ApiToken
 ├── usage/              # UsageEvent model + buffered recorder + aggregations
+├── pageviews/          # PageView model + buffered recorder + site page-view analytics
 ├── admin/              # /admin/*  superuser metrics + revoke + events feed
 └── scanning/           # /secret-scanning/github  partner webhook
 portal/                 # developer-portal SPA (nginx + static app.js/styles.css)

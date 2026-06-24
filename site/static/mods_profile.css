@@ -1,0 +1,93 @@
+/* ═══ Modder profile page (/mods/<handle>) ═══════════════════════════════
+   Reuses .mp-* (modal/form/btn/section/markdown/links) from mods_project.css
+   and .mh-* (cards/grid) from mods.css; only the profile-specific layout lives
+   here. ════════════════════════════════════════════════════════════════════ */
+
+.mpf-main { max-width: 1100px; margin: 0 auto; padding: 18px clamp(14px, 4vw, 40px) 80px; }
+.mpf-root { margin-top: 14px; }
+
+/* ── Header: banner + avatar + identity ── */
+.mpf-header {
+  border: 1px solid var(--bg-line); border-radius: var(--radius-lg);
+  overflow: hidden; background: var(--bg-card); margin-bottom: 22px;
+}
+.mpf-banner {
+  height: clamp(120px, 22vw, 210px); width: 100%; object-fit: cover; display: block;
+  background: linear-gradient(135deg, rgba(86,156,255,.16), rgba(255,94,126,.10));
+}
+.mpf-banner.placeholder { height: clamp(120px, 22vw, 210px); }
+.mpf-banner-wrap { position: relative; display: block; cursor: pointer; }
+.mpf-banner-wrap:hover .mp-banner-edit, .mpf-banner-wrap:focus-visible .mp-banner-edit { opacity: 1; }
+.mpf-banner-wrap:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: -2px; }
+
+.mpf-id { display: flex; gap: 18px; padding: 0 22px 18px; align-items: flex-end; margin-top: -44px; }
+.mpf-avatar-wrap { position: relative; flex: none; cursor: default; }
+.mpf-avatar {
+  width: clamp(84px, 14vw, 116px); height: clamp(84px, 14vw, 116px);
+  border-radius: 50%; object-fit: cover; display: block;
+  border: 4px solid var(--bg-card); background: var(--bg-deep);
+}
+.mpf-avatar.placeholder { display: grid; place-items: center; color: var(--text-mute); font-size: 2.2rem; }
+.mpf-avatar-wrap[id] { cursor: pointer; }
+.mpf-avatar-edit {
+  position: absolute; right: 2px; bottom: 2px; width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--accent-blue); color: #04121f;
+  border: 3px solid var(--bg-card); font-size: .8rem; opacity: 0; transition: opacity .15s var(--ease-out);
+}
+.mpf-avatar-wrap:hover .mpf-avatar-edit, .mpf-avatar-wrap:focus-visible .mpf-avatar-edit { opacity: 1; }
+
+.mpf-id-text { flex: 1; min-width: 0; padding-bottom: 4px; }
+.mpf-namerow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mpf-name { font: 700 clamp(1.5rem, 3vw, 2rem) 'Space Grotesk', 'Inter', sans-serif; margin: 0; letter-spacing: -.02em; }
+.mpf-namerow .mp-btn { margin-left: auto; }
+.mpf-handle { color: var(--accent-blue); font: 600 .9rem 'JetBrains Mono', monospace; margin-top: 2px; }
+/* Tagline sits in the header's normal flow BELOW the avatar/name row (not inside
+   the bottom-aligned .mpf-id-text) so adding one can't shove the name up into the
+   banner. Negative margin tucks it snug under the identity row. */
+.mpf-tagline { color: var(--text-soft); font-size: 1rem; margin: -10px 0 0; padding: 0 24px 18px; max-width: 70ch; }
+.mpf-meta { display: flex; flex-wrap: wrap; gap: 16px; color: var(--text-mute); font-size: .86rem; margin-top: 10px; }
+.mpf-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.mpf-id-text .mp-links { margin-top: 12px; }
+
+.mpf-section { margin-bottom: 22px; }
+
+/* ── Two-column body: main (README + mods) + sidebar (About + highlighted) ── */
+.mpf-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 22px; align-items: start; }
+.mpf-col-main { min-width: 0; }
+.mpf-col-side { min-width: 0; display: grid; gap: 22px; position: sticky; top: 14px; }
+.mpf-side-section { margin: 0; }
+.mpf-about-meta { display: grid; gap: 8px; color: var(--text-mute); font-size: .9rem; }
+.mpf-about-meta span { display: inline-flex; align-items: center; gap: 8px; }
+.mpf-side-links { flex-direction: column; align-items: stretch; margin-top: 14px; }
+.mpf-side-links .mp-linkbtn { justify-content: center; }
+/* In the sidebar a featured card sits full-width. */
+.mpf-col-side .mh-card { width: 100%; }
+
+/* Owner mod-card controls (reorder + highlight) - overlaid, outside the <a>. */
+.mpf-card-wrap { position: relative; }
+.mpf-card-ctl {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  display: flex; gap: 4px; padding: 3px; border-radius: 9px;
+  background: rgba(7, 11, 18, .82); border: 1px solid var(--bg-line); backdrop-filter: blur(3px);
+  opacity: 0; transition: opacity .15s var(--ease-out);
+}
+.mpf-card-wrap:hover .mpf-card-ctl, .mpf-card-ctl:focus-within { opacity: 1; }
+.mpf-cbtn {
+  width: 26px; height: 26px; display: grid; place-items: center; padding: 0; cursor: pointer;
+  border: 0; border-radius: 6px; background: transparent; color: var(--text-soft); font-size: .74rem;
+  transition: background .12s var(--ease-out), color .12s;
+}
+.mpf-cbtn:hover:not(:disabled) { background: rgba(255,255,255,.1); color: var(--text); }
+.mpf-cbtn:disabled { opacity: .35; cursor: default; }
+.mpf-cbtn.is-on { color: var(--accent-blue); }
+
+@media (max-width: 880px) {
+  .mpf-layout { grid-template-columns: 1fr; }
+  .mpf-col-side { position: static; }
+  .mpf-card-ctl { opacity: 1; }   /* touch: always visible */
+}
+
+@media (max-width: 640px) {
+  .mpf-id { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .mpf-namerow .mp-btn { margin-left: 0; }
+}

@@ -9,7 +9,14 @@
 #   ./deploy.sh --no-build        just recreate containers (skip image rebuild)
 #   ./deploy.sh --no-minify       skip the automatic CSS/JS minify step
 #   ./deploy.sh --pull            also pull newer base images (mongo, nginx) first
-#   ./deploy.sh --prune           remove dangling images afterwards
+#   ./deploy.sh --no-prune        keep old images + build cache (skip the post-deploy cleanup)
+#
+# After a successful (re)create, the script cleans up by default: it removes
+# DANGLING images (the old app image each rebuild leaves behind) and caps the
+# BuildKit cache so it can't balloon. It deliberately does NOT run
+# `docker system prune -a` - that would also delete images for any service not
+# currently running (adminer/mailpit/etc.), forcing re-pulls. The cleanup runs
+# only after the stack is up, so running images are always safe.
 #
 # Static assets are minified automatically (site/static/*.css|js -> *.min.*) using a
 # small tools venv at ~/.cache/trove-tools-venv (override with TOOLS_VENV=...), created
@@ -20,13 +27,14 @@ set -euo pipefail
 # Always run from the directory this script lives in.
 cd "$(dirname "$(readlink -f "$0")")"
 
-BUILD=1; FOLLOW=0; PULL=0; PRUNE=0; FORCE=0; MINIFY=1
+BUILD=1; FOLLOW=0; PULL=0; PRUNE=1; FORCE=0; MINIFY=1
 for arg in "$@"; do
   case "$arg" in
     --no-build)       BUILD=0 ;;
     --logs)           FOLLOW=1 ;;
     --pull)           PULL=1 ;;
-    --prune)          PRUNE=1 ;;
+    --prune)          PRUNE=1 ;;   # default; kept for back-compat
+    --no-prune)       PRUNE=0 ;;
     --force-recreate) FORCE=1 ;;
     --no-minify)      MINIFY=0 ;;
     -h|--help)        grep '^#' "$0" | sed 's/^#\{1,\} \{0,1\}//'; exit 0 ;;
@@ -109,8 +117,14 @@ if [ "$FORCE" -eq 1 ]; then UP_ARGS="$UP_ARGS --force-recreate"; fi
 $COMPOSE $UP_ARGS
 
 if [ "$PRUNE" -eq 1 ]; then
-  echo ">> pruning dangling images"
-  docker image prune -f >/dev/null || true
+  echo ">> cleaning up old images + build cache"
+  # Dangling images = the previous app image, left untagged by each rebuild.
+  # Safe: nothing references them once the new image is tagged + running.
+  docker image prune -f >/dev/null 2>&1 || true
+  # Cap the BuildKit cache so it can't balloon over time, but KEEP recent layers
+  # so the next rebuild stays fast (we don't nuke all cache every deploy). If the
+  # docker version predates --keep-storage, this no-ops (cache untouched).
+  docker builder prune -f --keep-storage=5GB >/dev/null 2>&1 || true
 fi
 
 echo

@@ -111,6 +111,28 @@ async def has_any(branch: str) -> bool:
         return bool(await con.fetchval("SELECT EXISTS (SELECT 1 FROM codex_entry WHERE branch = $1)", branch))
 
 
+async def branch_count(branch: str) -> int:
+    """Number of indexed entries for a branch."""
+    async with acquire() as con:
+        return int(await con.fetchval("SELECT count(*) FROM codex_entry WHERE branch = $1", branch) or 0)
+
+
+async def get_parser_version(branch: str) -> int:
+    """Parser version that last (re)built the branch (0 if never recorded)."""
+    async with acquire() as con:
+        return int(await con.fetchval("SELECT parser_version FROM codex_meta WHERE branch = $1", branch) or 0)
+
+
+async def set_parser_version(branch: str, version: int) -> None:
+    """Record the parser version that just (re)built the branch."""
+    async with acquire() as con:
+        await con.execute(
+            "INSERT INTO codex_meta (branch, parser_version, updated_at) VALUES ($1, $2, now()) "
+            "ON CONFLICT (branch) DO UPDATE SET parser_version = EXCLUDED.parser_version, updated_at = now()",
+            branch, version,
+        )
+
+
 # --- reads (router via read.py) ---------------------------------------------
 
 async def query_entries(

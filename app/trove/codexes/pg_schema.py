@@ -38,6 +38,15 @@ CREATE INDEX IF NOT EXISTS codex_entry_type_name ON codex_entry (branch, codex_t
 CREATE INDEX IF NOT EXISTS codex_entry_category  ON codex_entry (branch, codex_type, category);
 -- Source-hash lookups (invalidation / "which entries came from this blob").
 CREATE INDEX IF NOT EXISTS codex_entry_sha       ON codex_entry (content_sha256);
+
+-- Tracks which parser version last (re)built each branch. When the deployed parser
+-- is newer than this, the indexer force-rebuilds the branch on the next sync - so a
+-- parser change reaches the data without a game update or a manual rebuild.
+CREATE TABLE IF NOT EXISTS codex_meta (
+    branch         TEXT PRIMARY KEY,
+    parser_version INTEGER NOT NULL DEFAULT 0,
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 """
 
 

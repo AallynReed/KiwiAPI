@@ -36,6 +36,21 @@
     try { localStorage.setItem(CHEATERS_MIN_KEY, String(v)); } catch (_) {}
   }
 
+  // Alt-clusters tab has its own confidence threshold, persisted
+  // separately so the two tabs' strictness don't clobber each other.
+  const CLUSTERS_MIN_KEY = 'btt_lb_clusters_min';
+  function readClustersMinConfidence() {
+    try {
+      const raw = localStorage.getItem(CLUSTERS_MIN_KEY);
+      if (raw == null) return 0.9;
+      const v = Number(raw);
+      return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.9;
+    } catch (_) { return 0.9; }
+  }
+  function writeClustersMinConfidence(v) {
+    try { localStorage.setItem(CLUSTERS_MIN_KEY, String(v)); } catch (_) {}
+  }
+
   // Same TDZ note as readMinConfidence: declared above ``state`` so
   // its initial-value call doesn't hit an unset binding. Stores the
   // set of category names the user has collapsed; everything missing
@@ -67,10 +82,11 @@
     entriesTotal: 0,
     loadingEntries: false,
     hotRetentionDays: 3,    // pulled from /site/leaderboards/config; subtitle reflects it
-    cheaters: null,         // cached payload from /site/leaderboards/cheaters
-    cheatersMinConfidence: readMinConfidence(),  // slider value, persisted
-    activeTab: 'boards',         // 'boards' | 'cheaters'
-    cheatersLoaded: false,       // becomes true after the first lazy fetch
+    cheaters: null,         // cached payload from /site/leaderboards/cheaters (players + clusters)
+    cheatersMinConfidence: readMinConfidence(),  // cheaters slider value, persisted
+    clustersMinConfidence: readClustersMinConfidence(),  // clusters slider value, persisted
+    activeTab: 'boards',         // 'boards' | 'cheaters' | 'clusters'
+    cheatersLoaded: false,       // becomes true after the first lazy fetch (shared by both tabs)
     cheatersLoading: false,      // guards against double-firing during fetch
     boardChart: null,            // {uuid, data} - cached so resize/lang re-renders don't refetch
     playerChart: null,           // {name, data} - same idea for the per-player chart
@@ -103,11 +119,21 @@
   const $cheatersCoverage = document.getElementById('lb-cheaters-coverage');
   const $cheatersCoverageCount = document.getElementById('lb-cheaters-coverage-count');
   const $cheatersCoverageBody = document.getElementById('lb-cheaters-coverage-body');
+  // Alt-clusters tab - the group-shaped detection (coordinated alt
+  // armies). Own pane, slider, meta + badge; fed by the cheaters payload.
+  const $clustersBody = document.getElementById('lb-clusters-body');
+  const $clustersMeta = document.getElementById('lb-clusters-meta');
+  const $clustersFilter = document.getElementById('lb-clusters-min');
+  const $clustersFilterValue = document.getElementById('lb-clusters-min-value');
+  const $clustersFilterHint = document.getElementById('lb-clusters-filter-hint');
   const $tabBoardsBtn = document.getElementById('lb-tab-boards');
   const $tabCheatersBtn = document.getElementById('lb-tab-cheaters');
   const $tabCheatersBadge = document.getElementById('lb-tab-cheaters-badge');
+  const $tabClustersBtn = document.getElementById('lb-tab-clusters');
+  const $tabClustersBadge = document.getElementById('lb-tab-clusters-badge');
   const $paneBoards = document.getElementById('lb-pane-boards');
   const $paneCheaters = document.getElementById('lb-pane-cheaters');
+  const $paneClusters = document.getElementById('lb-pane-clusters');
   const $boardSearch = document.getElementById('lb-board-search');
   const $boardList = document.getElementById('lb-board-list');
   const $entriesTitle = document.getElementById('lb-entries-title');
@@ -195,67 +221,78 @@
     // view is ready to render (or stay hidden) regardless of which tab
     // the user lands on. If hash says cheaters, this triggers the
     // first fetch.
-    if (hash.tab === 'cheaters') {
-      switchTab('cheaters');
+    if (hash.tab === 'cheaters' || hash.tab === 'clusters') {
+      switchTab(hash.tab);
     }
   }
 
   // ─── Tabs ──────────────────────────────────────────────────────────
-  // Two tabs: 'boards' (default, all the board-browser machinery) and
-  // 'cheaters' (lazy-fetched on first activation). URL hash carries
-  // ``tab=cheaters`` for deep-link + back-button support.
+  // Three tabs: 'boards' (default, all the board-browser machinery),
+  // 'cheaters' and 'clusters' (both lazy-fetched on first activation -
+  // they share one /cheaters payload). URL hash carries ``tab=cheaters``
+  // / ``tab=clusters`` for deep-link + back-button support.
+  const TABS = ['boards', 'cheaters', 'clusters'];
+
   function switchTab(name) {
-    if (name !== 'boards' && name !== 'cheaters') name = 'boards';
+    if (!TABS.includes(name)) name = 'boards';
     if (state.activeTab === name) return;
     state.activeTab = name;
 
-    const boardsActive = name === 'boards';
-    if ($tabBoardsBtn) {
-      $tabBoardsBtn.classList.toggle('active', boardsActive);
-      $tabBoardsBtn.setAttribute('aria-selected', String(boardsActive));
-    }
-    if ($tabCheatersBtn) {
-      $tabCheatersBtn.classList.toggle('active', !boardsActive);
-      $tabCheatersBtn.setAttribute('aria-selected', String(!boardsActive));
-    }
-    if ($paneBoards) {
-      $paneBoards.classList.toggle('active', boardsActive);
-      $paneBoards.hidden = !boardsActive;
-    }
-    if ($paneCheaters) {
-      $paneCheaters.classList.toggle('active', !boardsActive);
-      $paneCheaters.hidden = boardsActive;
+    const tabEls = {
+      boards: { btn: $tabBoardsBtn, pane: $paneBoards },
+      cheaters: { btn: $tabCheatersBtn, pane: $paneCheaters },
+      clusters: { btn: $tabClustersBtn, pane: $paneClusters },
+    };
+    for (const key of TABS) {
+      const { btn, pane } = tabEls[key];
+      const active = key === name;
+      if (btn) {
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-selected', String(active));
+      }
+      if (pane) {
+        pane.classList.toggle('active', active);
+        pane.hidden = !active;
+      }
     }
     updateHash();
 
-    if (name === 'cheaters') ensureCheatersLoaded();
+    // Both anti-cheat tabs are served by the same payload.
+    if (name === 'cheaters' || name === 'clusters') ensureCheatersLoaded();
+  }
+
+  // Render both anti-cheat panes from the shared payload, so switching
+  // between the cheaters and clusters tabs is instant (no refetch).
+  function renderAntiCheat(payload) {
+    renderCheaters(payload);
+    renderClustersTab(payload);
   }
 
   async function ensureCheatersLoaded() {
     if (state.cheatersLoaded || state.cheatersLoading) {
       // Already loaded (or in flight) - just re-render to reflect any
       // language-change or slider-change since the last render.
-      renderCheaters();
+      renderAntiCheat();
       return;
     }
     state.cheatersLoading = true;
     // Show the friendlier "Crunching…" placeholder immediately so the
     // tab isn't empty while the fetch resolves. textContent so a later
-    // language switch can re-translate via renderCheaters(). The
-    // server-side warmer almost always has this cached - when it
-    // doesn't (cold boot / brand new anchor), the wait is several
-    // seconds and the user deserves to know SOMETHING is happening.
-    if ($cheatersMeta) {
-      $cheatersMeta.textContent = t('Crunching the latest capture - first paint can take a moment while we warm the caches.');
-    }
+    // language switch can re-translate. The server-side warmer almost
+    // always has this cached - when it doesn't (cold boot / brand new
+    // anchor), the wait is several seconds and the user deserves to know
+    // SOMETHING is happening.
+    const crunching = t('Crunching the latest capture - first paint can take a moment while we warm the caches.');
+    if ($cheatersMeta) $cheatersMeta.textContent = crunching;
+    if ($clustersMeta) $clustersMeta.textContent = crunching;
     try {
       const payload = await fetchJSON('/site/leaderboards/cheaters');
       state.cheaters = payload;
       state.cheatersLoaded = true;
-      renderCheaters(payload);
+      renderAntiCheat(payload);
     } catch (err) {
       state.cheaters = { _error: err };
-      renderCheaters(state.cheaters);
+      renderAntiCheat(state.cheaters);
     } finally {
       state.cheatersLoading = false;
     }
@@ -673,11 +710,13 @@
       score_outlier: 'lb-evidence-type-score',
       rank_gap: 'lb-evidence-type-rank',
       velocity_outlier: 'lb-evidence-type-velocity',
+      sustained_velocity: 'lb-evidence-type-weekly',
     }[ev.type] || '';
     const label = {
       score_outlier: t('Score outlier'),
       rank_gap: t('Rank gap'),
       velocity_outlier: t('Velocity'),
+      sustained_velocity: t('Weekly pace'),
     }[ev.type] || ev.type;
     // Summaries come from the API verbatim - they include dynamic
     // numbers in English. Localising them would require structured
@@ -687,6 +726,288 @@
         <span class="lb-evidence-type ${cls}">${esc(label)}</span>
         <span class="lb-evidence-summary">${esc(ev.summary || '')}</span>
       </div>`;
+  }
+
+  // ─── Alt-clusters tab (coordinated multi-account detection) ────────
+  // The group-shaped finding: families of similarly-named accounts at
+  // near-identical scores. Its own tab, fed by the cheaters payload's
+  // `clusters` array, with an independent confidence slider + badge.
+  function renderClustersTab(payload) {
+    if (payload && !payload._error && state.cheaters == null) {
+      state.cheaters = payload;
+    }
+    const data = state.cheaters;
+
+    // Always reflect the slider value, even before data lands.
+    syncClustersFilterUI();
+    if (!$clustersBody) return;
+    if (data == null) return;
+
+    if (data._error) {
+      if ($tabClustersBadge) $tabClustersBadge.hidden = true;
+      if ($clustersMeta) $clustersMeta.textContent = t('Failed to load') + '.';
+      $clustersBody.innerHTML = '';
+      return;
+    }
+
+    const all = data.clusters || [];
+    const min = state.clustersMinConfidence;
+    const visible = all.filter((c) => (c.confidence ?? 0) >= min);
+    // The cluster pass scans a DIFFERENT board set than the per-player checks
+    // (own blacklist, own min-size), so report its own count when present.
+    const boards = data.clusters_boards_scanned ?? data.boards_analyzed ?? 0;
+    const anchor = data.anchor;
+
+    // Tab-strip badge mirrors the visible cluster count.
+    if ($tabClustersBadge) {
+      if (visible.length > 0) {
+        $tabClustersBadge.hidden = false;
+        $tabClustersBadge.textContent = String(visible.length);
+      } else {
+        $tabClustersBadge.hidden = true;
+      }
+    }
+
+    // Filter hint.
+    const hiddenCount = all.length - visible.length;
+    if ($clustersFilterHint) {
+      $clustersFilterHint.textContent = hiddenCount > 0
+        ? t('hiding {n} below threshold').replace('{n}', hiddenCount)
+        : '';
+    }
+
+    // Meta line.
+    if ($clustersMeta) {
+      if (anchor) {
+        const when = formatAnchor(anchor);
+        $clustersMeta.textContent = visible.length > 0
+          ? t('Flagged {c} alt-cluster(s) across {b} board(s) - based on the capture from {when}.')
+            .replace('{c}', visible.length).replace('{b}', boards).replace('{when}', when)
+          : all.length > 0
+            ? t('All {f} alt-cluster(s) are below the current confidence threshold - slide left to see them.')
+              .replace('{f}', all.length)
+            : t('Scanned {b} board(s) from the capture at {when} - no alt clusters.')
+              .replace('{b}', boards).replace('{when}', when);
+      } else {
+        $clustersMeta.textContent = t('No capture available yet to analyse.');
+      }
+    }
+
+    if (!visible.length) {
+      $clustersBody.innerHTML = `<p class="lb-cheaters-empty" data-i18n>No alt clusters flagged.</p>`;
+      rerunI18n();
+      return;
+    }
+
+    $clustersBody.innerHTML = visible.map(renderClusterCard).join('');
+    rerunI18n();
+    // Wire expansion + go-to-board (board links stop-propagate so they
+    // don't also toggle the parent card).
+    for (const row of $clustersBody.querySelectorAll('[data-cidx]')) {
+      const summary = row.querySelector('[data-act="toggle-cluster"]');
+      summary.addEventListener('click', () => {
+        const expanded = row.classList.toggle('expanded');
+        summary.setAttribute('aria-expanded', String(expanded));
+      });
+      for (const link of row.querySelectorAll('[data-act="goto-board"]')) {
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
+          gotoBoard(Number(link.dataset.uuid));
+        });
+      }
+      for (const link of row.querySelectorAll('[data-act="cluster-chart"]')) {
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
+          loadClusterBoardChart(link);
+        });
+      }
+    }
+  }
+
+  function syncClustersFilterUI() {
+    if (!$clustersFilter) return;
+    const v = state.clustersMinConfidence;
+    if (Number($clustersFilter.value) !== v) $clustersFilter.value = String(v);
+    if ($clustersFilterValue) $clustersFilterValue.textContent = formatConfidence(v);
+  }
+
+  // Detection-method badge: the headline signal. `both`/multi shows the full
+  // corroboration set below.
+  function clusterMethodLabel(m) {
+    return {
+      co_movement: t('Lockstep'),
+      name_stem: t('Name match'),
+      schedule: t('Schedule'),
+      both: t('Multi-signal'),
+    }[m] || m;
+  }
+
+  // Short label for one corroborating signal (fusion).
+  function signalLabel(s) {
+    return {
+      co_movement: t('lockstep'),
+      schedule: t('schedule'),
+      name_stem: t('name'),
+      footprint: t('footprint'),
+    }[s] || s;
+  }
+
+  function renderClusterCard(c, idx) {
+    const conf = c.confidence ?? 0;
+    const method = c.method || 'name_stem';
+    const memberCount = c.member_count ?? (c.members || []).length;
+    const boardCount = c.board_count ?? (c.boards || []).length;
+    const memberLabel = t('{n} account(s)').replace('{n}', memberCount);
+    const boardLabel = t('{n} board(s)').replace('{n}', boardCount);
+    // Lockstep/both lead with a pulse icon; pure name match keeps the group icon.
+    const icon = (method === 'name_stem') ? 'fa-people-group' : 'fa-wave-square';
+    const methodBadge = `<span class="lb-cluster-method lb-cluster-method-${esc(method)}">${esc(clusterMethodLabel(method))}</span>`;
+    // Fusion: show every INDEPENDENT signal that agreed (the more, the stronger).
+    const corrob = c.corroborated_by || [];
+    const corrobChips = corrob.length > 1
+      ? `<span class="lb-cluster-corrob" title="${esc(t('Independent signals that agree'))}">${
+          corrob.map((s) => `<span class="lb-cluster-sig">${esc(signalLabel(s))}</span>`).join('')}</span>`
+      : '';
+    const chips = (c.members || [])
+      .map((m) => `<span class="lb-cluster-chip">${esc(m)}</span>`).join('');
+    const moreNote = (c.members_truncated > 0)
+      ? `<span class="lb-cluster-chip lb-cluster-chip-more">${
+          esc(t('+{n} more').replace('{n}', c.members_truncated))}</span>`
+      : '';
+    const boards = (c.boards || []).map(renderClusterBoard).join('');
+    return `
+      <div class="lb-cluster-row" data-cidx="${idx}">
+        <button type="button" class="lb-cluster-summary"
+                aria-expanded="false" data-act="toggle-cluster">
+          <span class="lb-cluster-title">
+            <i class="fa-solid ${icon}" aria-hidden="true"></i>
+            <span class="lb-cluster-label">${esc(c.label || c.stem || '')}</span>
+            ${methodBadge}
+            ${corrobChips}
+          </span>
+          <span class="lb-cluster-stats">
+            <span class="lb-confidence ${confidenceClass(conf)}" title="${t('Confidence')}">${formatConfidence(conf)}</span>
+            <span class="lb-stat-pill danger">${esc(memberLabel)}</span>
+            <span class="lb-stat-pill">${esc(boardLabel)}</span>
+          </span>
+          <i class="fa-solid fa-chevron-down lb-cheater-caret" aria-hidden="true"></i>
+        </button>
+        <div class="lb-cluster-detail">
+          <p class="lb-cluster-summary-text">${esc(c.summary || '')}</p>
+          <div class="lb-cluster-members">${chips}${moreNote}</div>
+          <div class="lb-cluster-boards">${boards}</div>
+        </div>
+      </div>`;
+  }
+
+  function renderClusterBoard(b) {
+    const tooltip = t('Open this board in the Leaderboards view');
+    let parts;
+    if (b.matching_hours != null || b.avg_hourly_gain != null) {
+      // Co-movement board: matching hours + avg matched hourly gain.
+      parts = [
+        t('{n} account(s)').replace('{n}', b.members),
+        t('{n} matching hour(s)').replace('{n}', b.matching_hours ?? 0),
+        (b.avg_hourly_gain != null) ? ('~' + formatScore(b.avg_hourly_gain) + '/hr') : null,
+      ];
+    } else {
+      // Name-stem board: score range + spread + rank range.
+      const range = (b.score_min === b.score_max)
+        ? formatScore(b.score_min)
+        : `${formatScore(b.score_min)} – ${formatScore(b.score_max)}`;
+      const spreadPct = (typeof b.spread === 'number') ? b.spread * 100 : null;
+      parts = [
+        t('{n} account(s)').replace('{n}', b.members),
+        t('Ranks') + ' ' + b.rank_min + '–' + b.rank_max,
+        t('Score') + ' ' + range,
+        spreadPct != null
+          ? 'Δ ' + (spreadPct < 0.01 ? spreadPct.toFixed(4) : spreadPct.toFixed(2)) + '%'
+          : null,
+      ];
+    }
+    const meta = parts.filter(Boolean).map((s) => `<span>${esc(s)}</span>`).join('');
+    // Which accounts on THIS board (the per-board subset, not the whole family).
+    const names = b.member_names || [];
+    const memberChips = names.length
+      ? `<div class="lb-cluster-board-members">${
+          names.map((m) => `<span class="lb-cluster-chip">${esc(m)}</span>`).join('')}</div>`
+      : '';
+    // On-demand progress chart of those accounts' score on this board over the
+    // week (lazy - only fetches when the user asks, so a 33-board cluster
+    // doesn't fire hundreds of requests up front).
+    const chartCtl = names.length >= 2
+      ? `<button type="button" class="lb-cluster-chart-toggle" data-act="cluster-chart"
+                 data-uuid="${b.uuid}" data-members="${esc(JSON.stringify(names.slice(0, 8)))}">
+           <i class="fa-solid fa-chart-line" aria-hidden="true"></i> ${esc(t('Show progress'))}
+         </button>
+         <div class="lb-cluster-chart" hidden></div>`
+      : '';
+    return `
+      <div class="lb-cluster-board">
+        <div class="lb-cluster-board-head">
+          <button type="button" class="lb-cheater-board-name lb-cheater-board-link"
+                  data-act="goto-board" data-uuid="${b.uuid}" title="${esc(tooltip)}">
+            ${esc(titleizeName(b.name))}
+            <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+          </button>
+          <span class="lb-cheater-board-meta">${meta}</span>
+        </div>
+        ${memberChips}
+        ${chartCtl}
+      </div>`;
+  }
+
+  // Lazy per-board progress chart: fetch each member's score series, pull this
+  // board's line, and overlay them - visually confirms (or refutes) lockstep.
+  async function loadClusterBoardChart(btn) {
+    const uuid = Number(btn.dataset.uuid);
+    let names;
+    try { names = JSON.parse(btn.dataset.members || '[]'); } catch (_) { names = []; }
+    const wrap = btn.parentElement.querySelector('.lb-cluster-chart');
+    if (!wrap) return;
+    if (!wrap.hidden) {  // toggle off
+      wrap.hidden = true;
+      btn.innerHTML = `<i class="fa-solid fa-chart-line" aria-hidden="true"></i> ${esc(t('Show progress'))}`;
+      return;
+    }
+    wrap.hidden = false;
+    btn.innerHTML = `<i class="fa-solid fa-chart-line" aria-hidden="true"></i> ${esc(t('Hide progress'))}`;
+    wrap.innerHTML = `<p class="lb-chart-empty" data-i18n>Loading…</p>`;
+    rerunI18n();
+    const results = await Promise.all(names.map((nm) =>
+      fetchJSON(`/site/leaderboards/players/${encodeURIComponent(nm)}/series?days=7`).catch(() => null)
+    ));
+    const anchorsSet = new Set();
+    const series = [];
+    results.forEach((data, i) => {
+      if (!data || !data.series) return;
+      const line = data.series.find((s) => s.uuid === uuid);
+      if (!line || !(line.points || []).length) return;
+      line.points.forEach((p) => anchorsSet.add(p.created_at));
+      series.push({
+        key: `m:${names[i]}`,
+        label: names[i],
+        color: CHART_COLORS[series.length % CHART_COLORS.length],
+        points: line.points.map((p) => ({
+          x: p.created_at, y: p.score, rank: p.rank, synthetic: !!p.synthetic,
+        })),
+      });
+    });
+    if (!series.length) {
+      wrap.innerHTML = `<p class="lb-chart-empty" data-i18n>No history to chart.</p>`;
+      rerunI18n();
+      return;
+    }
+    const anchors = Array.from(anchorsSet).sort((a, b) => a - b);
+    wrap.innerHTML = '<div class="lb-cluster-chart-svg"></div><div class="lb-cluster-chart-legend"></div>';
+    drawLineChart(
+      wrap.querySelector('.lb-cluster-chart-svg'),
+      wrap.querySelector('.lb-cluster-chart-legend'),
+      {
+        anchors, series, valueLabel: t('Score'),
+        tooltipNameSuffix: (s, p) => (p.rank ? ` · #${p.rank}` : ''),
+      },
+    );
   }
 
   // ─── Subtitle (dynamic retention window) ───────────────────────────
@@ -1334,9 +1655,12 @@
     if ($tabCheatersBtn) {
       $tabCheatersBtn.addEventListener('click', () => switchTab('cheaters'));
     }
+    if ($tabClustersBtn) {
+      $tabClustersBtn.addEventListener('click', () => switchTab('clusters'));
+    }
 
-    // Confidence-filter slider. Live re-render as the slider drags -
-    // dataset is small (handful of players) so this is cheap. Persists
+    // Confidence-filter sliders (one per anti-cheat tab). Live re-render
+    // as the slider drags - dataset is small so this is cheap. Persists
     // to localStorage so the chosen strictness sticks across reloads.
     if ($cheatersFilter) {
       $cheatersFilter.addEventListener('input', () => {
@@ -1346,11 +1670,20 @@
         renderCheaters();
       });
     }
+    if ($clustersFilter) {
+      $clustersFilter.addEventListener('input', () => {
+        const v = Math.round(Number($clustersFilter.value) * 100) / 100;
+        state.clustersMinConfidence = v;
+        writeClustersMinConfidence(v);
+        renderClustersTab();
+      });
+    }
 
     // React to back/forward.
     window.addEventListener('hashchange', async () => {
       const hash = parseHash();
-      const desiredTab = hash.tab === 'cheaters' ? 'cheaters' : 'boards';
+      const desiredTab = (hash.tab === 'cheaters' || hash.tab === 'clusters')
+        ? hash.tab : 'boards';
       if (desiredTab !== state.activeTab) switchTab(desiredTab);
       if (hash.anchor && hash.anchor !== state.anchor) {
         const idx = state.days.findIndex((d) => d.anchor === hash.anchor);

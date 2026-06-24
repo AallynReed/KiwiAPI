@@ -30,6 +30,19 @@ from app.trove.models import (
     TroveNews,
     TroveStatusEvent,
 )
+from app.trove.mods_hub.models import (
+    ModClaimRequest,
+    ModDownloadEvent,
+    ModGitToken,
+    ModImageAsset,
+    ModProfile,
+    ModProject,
+    ModRelease,
+    ModReport,
+    ModStar,
+    StrayImportState,
+)
+from app.trove.modpacks.models import ModpackProject, ModpackStar
 from app.trove.updates.models import (
     UpdateBranch,
     UpdateChange,
@@ -37,15 +50,21 @@ from app.trove.updates.models import (
     UpdateState,
     UpdateVersion,
 )
+from app.pageviews.models import PageView
 from app.usage.models import UsageEvent
 
 # Every Beanie Document must be registered here so init_beanie can bind it.
 # Models live in their feature packages; this is the one place that aggregates them.
 DOCUMENT_MODELS = [
     User, Session, SiteUser, SiteSession,
-    ApiToken, UsageEvent, OutboxEmail, TroveNews, FeedCache, TroveEvent,
+    ApiToken, UsageEvent, PageView, OutboxEmail, TroveNews, FeedCache, TroveEvent,
     DelveRotation, BttRelease, BttChangelog,
     UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
+    ModProject, ModRelease, ModImageAsset, ModReport, ModGitToken, ModStar,  # mods hub (git store holds commits)
+    ModDownloadEvent,                    # mods hub: 7-day download signal (TTL-pruned)
+    ModProfile,                          # mods hub: modder profile pages
+    ModClaimRequest, StrayImportState,   # mods hub: stray (imported) mod claims + import job state
+    ModpackProject, ModpackStar,         # modpacks: user-curated bundles of mods (refs only) + likes
     MarketInterestItem,                  # MarketListing + CodexEntry moved to Postgres (pg_store)
     ChaosChestCapture, ChallengeCapture,
     FeedbackEntry,
@@ -88,26 +107,71 @@ async def init_db() -> None:
         _db["usage_events"], "created_at", settings.usage_retention_days * 86400
     )
 
+    # Site page-view analytics events expire after their own retention window.
+    await _ensure_ttl_index(
+        _db["page_views"], "created_at", settings.pageview_retention_days * 86400
+    )
+
     # Outbox records (sent/bounced/failed/abandoned) are a transient log - expire
     # them after the retention window so the collection stays small.
     await _ensure_ttl_index(
         _db["email_outbox"], "created_at", settings.email_outbox_retention_days * 86400
     )
 
+    # Mods Hub release tags moved from project-wide unique to per-(project, branch)
+    # unique (each branch/variant has its own version timeline). Drop the old
+    # project-wide index if a prior deploy created it; the new one is built by Beanie.
+    await _drop_index_if_exists(_db["mod_releases"], "project_id_1_tag_1")
+
+    # Mod slugs moved from globally-unique to unique per owner (addressed as
+    # /mods/<owner_handle>/<slug>). Drop the old global slug_1 unique index; the
+    # new (owner_id, slug) unique index is built by Beanie.
+    await _drop_index_if_exists(_db["mod_projects"], "slug_1")
+
+    # Mods Hub download events feed the trailing-7-day "popular" metric; keep only
+    # ~8 days so the collection stays tiny (lifetime totals live on download_count).
+    await _ensure_ttl_index(_db["mod_download_events"], "created_at", 8 * 86400)
+
+
+async def _drop_index_if_exists(collection, name: str) -> None:
+    """Drop a named index if it's present; a no-op if the index or collection
+    doesn't exist yet (fresh database)."""
+    try:
+        await collection.drop_index(name)
+    except OperationFailure:
+        pass  # index (or namespace) not found - nothing to drop
+
 
 async def _ensure_ttl_index(collection, field: str, seconds: int) -> None:
-    """Create a named TTL index, updating expireAfterSeconds if it already exists."""
+    """Ensure a single-field TTL index on ``field`` with the given expiry.
+
+    If a *conflicting* single-field index already exists - a plain ``{field: 1}``
+    declared on a model, or our TTL index with a different expiry - drop it and
+    recreate. We deliberately avoid ``collMod`` (used previously to adjust the TTL
+    in place) because the app's Mongo user is granted ``readWrite`` but not
+    ``dbAdmin``, so ``collMod`` returns "not authorized"; drop+create only needs
+    ``readWrite``.
+    """
     name = f"{field}_ttl"
     try:
         await collection.create_index(field, name=name, expireAfterSeconds=seconds)
+        return
     except OperationFailure:
-        # Index exists with a different TTL - adjust it in place.
-        await collection.database.command(
-            {
-                "collMod": collection.name,
-                "index": {"name": name, "expireAfterSeconds": seconds},
-            }
-        )
+        pass  # an index on this key already exists with different options
+    try:
+        info = await collection.index_information()
+    except OperationFailure:
+        info = {}
+    for ix_name, spec in info.items():
+        if ix_name == "_id_":
+            continue
+        key = list(spec.get("key", []))
+        if len(key) == 1 and key[0][0] == field:   # any single-field index on `field`
+            try:
+                await collection.drop_index(ix_name)
+            except OperationFailure:
+                pass
+    await collection.create_index(field, name=name, expireAfterSeconds=seconds)
 
 
 async def close_db() -> None:

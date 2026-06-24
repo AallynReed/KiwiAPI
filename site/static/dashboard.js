@@ -81,6 +81,8 @@
 
     if ($sideName) $sideName.textContent = user.display_name || user.username;
     if ($avatar && user.avatar_url) { $avatar.src = user.avatar_url; $avatar.hidden = false; }
+    const $myProfile = document.getElementById('dash-my-profile');
+    if ($myProfile && user.username) $myProfile.href = '/mods/' + encodeURIComponent(user.username);
 
     // Profile fields
     if ($profUsername)    $profUsername.textContent = user.username;
@@ -233,7 +235,7 @@
   }
 
   // ─── Section switching (sidebar) ───────────────────────────────────
-  const SECTIONS = ['profile', 'giveaways', 'leaderboard', 'discord'];
+  const SECTIONS = ['profile', 'giveaways', 'mods', 'leaderboard', 'discord'];
   function setupSections() {
     document.querySelectorAll('.dash-nav-item').forEach((b) =>
       b.addEventListener('click', () => showSection(b.dataset.section)));
@@ -252,6 +254,82 @@
     // Lazy-load the Discord Bot section the first time it's opened so users
     // who never visit it don't pay the guild-list round-trip.
     if (name === 'discord' && !_discordLoaded) { _discordLoaded = true; loadDiscordBot(); }
+    if (name === 'mods' && !_modsLoaded) { _modsLoaded = true; loadMyMods(); }
+  }
+
+  // ─── My Mods section ───────────────────────────────────────────────
+  let _modsLoaded = false;
+
+  async function loadMyMods() {
+    const list = $('dash-mods-list');
+    const form = $('dash-mod-create');
+    const err = $('dash-mod-error');
+    if (form && !form.dataset.wired) {
+      form.dataset.wired = '1';
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (err) err.hidden = true;
+        const btn = form.querySelector('button[type=submit]');
+        btn.disabled = true;
+        const r = await Auth.callJSON('/v1/mods/hub/projects', {
+          json: {
+            title: form.title.value.trim(),
+            mode: form.mode.value,
+            visibility: form.visibility.value,
+          },
+        });
+        btn.disabled = false;
+        if (r.ok && r.data && r.data.slug) {
+          location.href = '/mods/' + encodeURIComponent(r.data.handle) + '/' + encodeURIComponent(r.data.slug);
+        } else if (err) {
+          err.textContent = Auth.errorMessage(r.data) || t('Could not create the mod.');
+          err.hidden = false;
+        }
+      });
+    }
+    await Promise.all([renderOwnedMods(), renderStarredMods()]);
+  }
+
+  async function renderOwnedMods() {
+    const list = $('dash-mods-list');
+    if (!list) return;
+    const r = await Auth.callJSON('/v1/mods/hub/me/projects');
+    const items = (r.ok && r.data && Array.isArray(r.data.items)) ? r.data.items : null;
+    if (items === null) {
+      list.innerHTML = `<p class="dash-empty">${esc(t("Couldn't load your mods right now."))}</p>`;
+    } else if (!items.length) {
+      list.innerHTML = `<p class="dash-empty">${esc(t("You haven't created any mods yet. Create one above, or browse the"))} <a href="/mods">${esc(t('Mods Hub'))}</a>.</p>`;
+    } else {
+      list.innerHTML = items.map(modCard).join('');
+    }
+  }
+
+  async function renderStarredMods() {
+    const el = $('dash-starred-list');
+    if (!el) return;
+    const r = await Auth.callJSON('/v1/mods/hub/me/starred');
+    const items = (r.ok && r.data && Array.isArray(r.data.items)) ? r.data.items : [];
+    el.innerHTML = items.length
+      ? items.map(modCard).join('')
+      : `<p class="dash-empty">${esc(t("You haven't starred any mods yet."))} <a href="/mods">${esc(t('Browse the Mods Hub'))}</a>.</p>`;
+  }
+
+  function modCard(p) {
+    const vis = p.visibility === 'public'
+      ? `<span class="dash-tag dash-tag-verified">${esc(t('public'))}</span>`
+      : p.visibility === 'unlisted'
+        ? `<span class="dash-tag">${esc(t('unlisted'))}</span>`
+        : `<span class="dash-tag dash-tag-unverified">${esc(t('draft'))}</span>`;
+    const modeTag = p.mode === 'releases' ? `<span class="dash-tag">${esc(t('releases-only'))}</span>` : '';
+    return `
+      <a class="dash-mod-card" href="/mods/${encodeURIComponent(p.handle)}/${encodeURIComponent(p.slug)}">
+        <span class="dash-mod-title">${esc(p.title)} ${vis} ${modeTag}</span>
+        <span class="dash-mod-meta">
+          <i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}
+          · <i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(p.star_count || 0).toLocaleString()}
+          · <i class="fa-solid fa-code-fork" aria-hidden="true"></i> ${Number(p.fork_count || 0)}
+        </span>
+      </a>`;
   }
 
   // ─── Giveaways section ─────────────────────────────────────────────

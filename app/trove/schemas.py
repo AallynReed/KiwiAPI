@@ -660,8 +660,10 @@ class PlayerHistorySeriesResponse(BaseModel):
 # shape for the OpenAPI surface.
 
 class CheaterEvidence(BaseModel):
-    """One piece of evidence - produced by ONE of the three checks."""
-    type: Literal["score_outlier", "rank_gap", "velocity_outlier"]
+    """One piece of evidence from a per-player check. ``sustained_velocity`` is
+    the week-long throughput check (gain since the weekly reset / hours elapsed
+    vs peer p95); the others are single-snapshot / last-hour."""
+    type: Literal["score_outlier", "rank_gap", "velocity_outlier", "sustained_velocity"]
     summary: str           # human-readable interpretation, safe to render verbatim
     measurements: dict     # type-specific numbers: raw value + peer baseline + magnitude
     confidence: float      # per-evidence confidence in [0.5, 0.99]; sigmoid on magnitude/threshold
@@ -684,6 +686,59 @@ class CheaterPlayer(BaseModel):
     player_name: str
     leaderboards: list[CheaterBoardEntry]
     confidence: float  # overall confidence in [0.0, 1.0] - max-within-board, noisy-OR across boards
+
+
+class CheaterClusterBoard(BaseModel):
+    """One board a cluster was detected on. Fields vary by detection method:
+    name-stem clusters carry the score-range fields (``score_min`` …
+    ``rank_max``); co-movement clusters carry ``matching_hours`` +
+    ``avg_hourly_gain`` instead. The other set is ``null``."""
+    uuid: int
+    name: str
+    category: str
+    contest_type: str | None = None
+    members: int             # accounts from this cluster present on THIS board
+    member_names: list[str] = []  # those accounts' names (capped at 60), for display + the chart
+    # Name-stem method: the near-score subset's spread on this board.
+    score_min: float | None = None
+    score_max: float | None = None
+    spread: float | None = None   # relative score spread of the subset (0 = identical)
+    rank_min: int | None = None
+    rank_max: int | None = None
+    # Co-movement method: how many hours the group matched here + the avg
+    # matched hourly gain.
+    matching_hours: int | None = None
+    avg_hourly_gain: float | None = None
+
+
+class CheaterCluster(BaseModel):
+    """A coordinated multi-account ('alt army') cluster. Two detection methods,
+    distinguished by ``method``:
+
+    * ``"co_movement"`` - the PRIMARY, name-agnostic signal: accounts whose
+      hourly score gains move in lockstep across the captures since the weekly
+      reset (confidence from matching-hour count + group size).
+    * ``"name_stem"`` - similarly-named accounts sitting at near-identical
+      scores in one snapshot (confidence from score tightness + size + boards).
+    * ``"both"`` - a co-moving group that ALSO shares a name stem (highest
+      confidence; the two independent signals corroborate).
+
+    The unit of suspicion is the group, not one account - so this is surfaced
+    separately from the per-player ``players`` list."""
+    stem: str                # shared name stem ("anana"); "" for pure co-movement
+    label: str               # display label ("anana*" or "<name> +N")
+    method: str = "name_stem"  # "co_movement" | "name_stem" | "schedule" | "both"
+    # Which INDEPENDENT signals agreed on this group (fusion). The more, the
+    # higher the confidence: "co_movement", "schedule", "name_stem", "footprint".
+    corroborated_by: list[str] = []
+    member_count: int        # distinct accounts in the group (union across boards)
+    members: list[str]       # member names, capped (see members_truncated)
+    members_truncated: int = 0  # accounts omitted from `members` beyond the cap
+    board_count: int
+    boards: list[CheaterClusterBoard]
+    confidence: float        # [0.5, 0.97]
+    summary: str             # human-readable interpretation, safe to render verbatim
+    measurements: dict       # confidence sub-terms + raw inputs (method-specific)
 
 
 class CheatersConfig(BaseModel):
@@ -932,6 +987,15 @@ class SkippedBoardInfo(BaseModel):
 
 class CheatersResponse(BaseModel):
     players: list[CheaterPlayer]
+    # Coordinated alt-clusters (group-shaped detection), most-suspicious-first.
+    # Separate from `players`: the suspicious unit is the name-family, not one
+    # account. Empty when no clusters found or no anchor available yet.
+    clusters: list[CheaterCluster] = []
+    # How many boards the alt-cluster pass actually scanned (not excluded by
+    # cheaters_cluster_excluded_board_uuids, ≥ cheaters_cluster_min_size
+    # entries). Distinct from boards_analyzed, which is gated by the per-player
+    # cheaters_min_board_size + cheaters_excluded_board_uuids.
+    clusters_boards_scanned: int = 0
     computed_at: int          # unix seconds when the analysis ran
     anchor: int | None        # capture timestamp the analysis is based on
     method: str               # short description of the methodology

@@ -323,6 +323,32 @@ async def prev_rows_for_players(uuid: int, prev_anchor: int, names: list[str]) -
     return {r["name_lower"]: {"rank": r["rank"], "score": r["score"]} for r in rows}
 
 
+async def comovement_series(
+    board_uuid: int, player_names: list[str], since_anchor: int, until_anchor: int,
+) -> dict[str, dict[int, float]]:
+    """``{player_name: {anchor: score}}`` for the given players on one board
+    across EVERY capture in ``[since_anchor, until_anchor]`` - the per-hour
+    series the co-movement detector diffs into lockstep gains.
+
+    Candidate-limited by the caller (top-N by rank) so a board of tens of
+    thousands of accounts doesn't load its whole week. One query per board."""
+    if not player_names:
+        return {}
+    lowered = [n.lower() for n in player_names]
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT p.name AS player_name, e.anchor, e.score "
+            "FROM entry e JOIN player p ON p.id = e.player_id "
+            "WHERE e.board_uuid = $1 AND p.name_lower = ANY($2) "
+            "AND e.anchor >= $3 AND e.anchor <= $4",
+            board_uuid, lowered, since_anchor, until_anchor,
+        )
+    out: dict[str, dict[int, float]] = {}
+    for r in rows:
+        out.setdefault(r["player_name"], {})[r["anchor"]] = r["score"]
+    return out
+
+
 async def previous_captures_bulk(player_names: list[str], board_uuid: int,
                                  anchor: int, cycle_start: int) -> dict[str, tuple[float, int]]:
     """Latest ``(score, anchor)`` strictly before ``anchor`` and ``>= cycle_start``

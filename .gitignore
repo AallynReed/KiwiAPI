@@ -19,6 +19,9 @@ data/
 # Server-side ingest backlog - gzipped dumps keyed by anchor (bind mount target, can grow large)
 .backlog/
 
+# Mods Hub store - shared mods' git repos, images + compiled .tmod (bind mount target, user content)
+.mods/
+
 # BetterTroveTools showcase site - binary assets are ~20 MB of screenshots,
 # shipped to the server via Syncthing rather than git. Templates + CSS + JS are tracked.
 site/static/assets/

@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,6 +20,7 @@ from app.core.config import settings
 from app.core.database import close_db, init_db
 from app.core.email_outbox import start_email_worker, stop_email_worker
 from app.core.errors import COMMON_ERROR_RESPONSES, register_error_handlers
+from app.core.features import require_market_enabled, require_mods_hub_enabled
 from app.core.idempotency import add_idempotency_middleware
 from app.core.maintenance import maintenance_loop
 from app.core.middleware import add_security_middleware
@@ -35,6 +36,8 @@ from app.giveaways.admin import router as giveaways_admin_router
 from app.giveaways.router import public_router as giveaways_public_router
 from app.giveaways.router import router as giveaways_router
 from app.giveaways.worker import start_giveaway_worker, stop_giveaway_worker
+from app.pageviews.middleware import add_pageview_middleware
+from app.pageviews.recorder import start_pageview_recorder, stop_pageview_recorder
 from app.scanning.router import router as scanning_router
 from app.site.router import router as site_router
 from app.site_auth.oauth import router as site_oauth_router
@@ -53,6 +56,17 @@ from app.trove.feeds import start_feeds_refresher, stop_feeds_refresher
 from app.trove.leaderboards.detection import (
     start_cheaters_warmer,
     stop_cheaters_warmer,
+)
+from app.trove.mods_hub.git_http import git_router as mods_git_router
+from app.trove.mods_hub.router import (
+    mods_hub_router,
+    mods_hub_write_router,
+    mods_public_router,
+)
+from app.trove.modpacks.router import (
+    modpacks_hub_router,
+    modpacks_hub_write_router,
+    modpacks_public_router,
 )
 from app.trove.news import start_news_refresher, stop_news_refresher
 from app.trove.router import (
@@ -105,7 +119,10 @@ async def lifespan(app: FastAPI):
     await seed_interest_items_if_empty()
     from app.supporters.service import seed_supporters_if_empty
     await seed_supporters_if_empty()
+    from app.trove.mods_hub.service import backfill_owner_handles
+    await backfill_owner_handles()   # set owner_handle on mods predating per-owner slugs
     start_usage_recorder()
+    start_pageview_recorder()  # buffered writer for showcase-site page-view analytics
     start_email_worker()
     start_news_refresher()
     start_feeds_refresher()
@@ -139,6 +156,7 @@ async def lifespan(app: FastAPI):
     await stop_news_refresher()
     await stop_email_worker()
     await stop_usage_recorder()
+    await stop_pageview_recorder()
     await close_redis()
     await close_postgres()
     await close_db()
@@ -187,7 +205,7 @@ app = FastAPI(
 register_error_handlers(app)
 # Middleware is registered inner-first; the LAST one added is the OUTERMOST layer.
 # Resulting execution order (outer → inner):
-#   CORS → request-context → security → idempotency → usage → route
+#   CORS → request-context → security → idempotency → usage → pageview → route
 # Rationale:
 #   • CORS outermost, so even error responses get access-control headers.
 #   • request-context just inside CORS: tags the request id and converts unhandled
@@ -195,6 +213,9 @@ register_error_handlers(app)
 #   • security (headers + body cap) outside idempotency, so even a replayed
 #     response still carries the security headers.
 #   • idempotency outside usage, so a replay doesn't double-count a usage event.
+#   • pageview innermost: GET page loads aren't idempotency-keyed, so no replay
+#     double-count; it reads the matched route + final response to log site views.
+add_pageview_middleware(app)
 add_usage_middleware(app)
 add_idempotency_middleware(app)
 add_security_middleware(app)
@@ -246,11 +267,29 @@ app.include_router(stats_router)
 app.include_router(gems_router)
 app.include_router(misc_router)
 app.include_router(mods_router)
+# Mods Hub. ALL of it is hidden from the public API reference for now - the
+# website drives the internal hub via the same-origin /site/mods/* proxies + the
+# site-auth write API (both hidden from the reference). The documented, app-facing
+# catalog API is `mods_public_router` (/v1/mods/*). (Reads stay tokenless
+# `mods:read`; writes stay site-login gated.)
+# Mods Hub - all gated by the master feature toggle (feature_mods_hub_enabled);
+# OFF -> every endpoint 404s. See app/core/features.py.
+_MODS_GATE = [Depends(require_mods_hub_enabled)]
+app.include_router(mods_hub_router, include_in_schema=False, dependencies=_MODS_GATE)
+app.include_router(mods_hub_write_router, include_in_schema=False, dependencies=_MODS_GATE)
+app.include_router(mods_public_router, dependencies=_MODS_GATE)  # documented app-facing API (/v1/mods/*)
+app.include_router(mods_git_router, dependencies=_MODS_GATE)   # authenticated git smart-HTTP (/git/mods/*.git)
+# Modpacks (user-curated bundles of hub mods) ride the same master toggle - they're
+# a layer over the hub and meaningless without it. The website-internal hub surface
+# is hidden; the app-facing catalog API (/v1/modpacks/*) is documented like /v1/mods/*.
+app.include_router(modpacks_hub_router, include_in_schema=False, dependencies=_MODS_GATE)
+app.include_router(modpacks_hub_write_router, include_in_schema=False, dependencies=_MODS_GATE)
+app.include_router(modpacks_public_router, dependencies=_MODS_GATE)  # documented app-facing API (/v1/modpacks/*)
 app.include_router(updates_router)
 app.include_router(codexes_router)
 app.include_router(btt_router)
 app.include_router(leaderboards_router)
-app.include_router(market_router)
+app.include_router(market_router, dependencies=[Depends(require_market_enabled)])
 app.include_router(activity_router)
 app.include_router(class_activity_router)
 app.include_router(events_router)  # live SSE event stream (events:read)

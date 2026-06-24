@@ -64,6 +64,9 @@
                             <i class="fa-solid fa-gift" aria-hidden="true"></i> <span data-i18n>Giveaways</span>
                             <span class="dash-nav-badge" id="dash-won-badge" hidden></span>
                         </button>
+                        {% if mods_hub_enabled %}<button type="button" class="dash-nav-item" data-section="mods" role="tab">
+                            <i class="fa-solid fa-cubes" aria-hidden="true"></i> <span data-i18n>My Mods</span>
+                        </button>{% endif %}
                         <button type="button" class="dash-nav-item" data-section="leaderboard" role="tab">
                             <i class="fa-solid fa-ranking-star" aria-hidden="true"></i> <span data-i18n>Leaderboard</span>
                         </button>
@@ -98,6 +101,34 @@
                         <p class="dash-section-sub" data-i18n>Every giveaway you've entered. Won prizes show your code right here - available any time, even if you lose the email.</p>
                         <div id="dash-gw-list"><p class="dash-loading" data-i18n>Loading…</p></div>
                     </section>
+
+                    <!-- ── My Mods ── -->
+                    {% if mods_hub_enabled %}<section class="dash-section" data-pane="mods" hidden>
+                        <h1 class="dash-section-title" data-i18n>My Mods</h1>
+                        <p class="dash-section-sub" data-i18n>Create and manage your shared Trove mods. Browse everyone's on the Mods Hub.</p>
+                        <p class="dash-section-sub"><a id="dash-my-profile" href="/mods"><i class="fa-solid fa-id-badge" aria-hidden="true"></i> <span data-i18n>View &amp; customize my modder profile</span></a></p>
+                        <article class="dash-card">
+                            <h2 class="dash-card-title" data-i18n>Create a mod</h2>
+                            <form id="dash-mod-create" class="dash-mod-form">
+                                <input type="text" name="title" maxlength="120" required data-i18n-placeholder placeholder="Mod title">
+                                <select name="mode" aria-label="Mode">
+                                    <option value="files" data-i18n>Files + releases</option>
+                                    <option value="releases" data-i18n>Releases only</option>
+                                </select>
+                                <select name="visibility" aria-label="Visibility">
+                                    <option value="draft" data-i18n>Draft</option>
+                                    <option value="unlisted" data-i18n>Unlisted</option>
+                                    <option value="public" data-i18n>Public</option>
+                                </select>
+                                <button type="submit" class="dash-btn"><i class="fa-solid fa-plus" aria-hidden="true"></i> <span data-i18n>Create</span></button>
+                            </form>
+                            <p class="dash-hint" data-i18n>Your mod link uses your username (/mods/&lt;you&gt;/&lt;slug&gt;); renaming your Discord changes your mod links + git remotes.</p>
+                            <p class="dash-error" id="dash-mod-error" hidden></p>
+                        </article>
+                        <div id="dash-mods-list"><p class="dash-loading" data-i18n>Loading…</p></div>
+                        <h2 class="dash-card-title" style="margin:24px 0 4px"><i class="fa-regular fa-star" aria-hidden="true"></i> <span data-i18n>Starred</span></h2>
+                        <div id="dash-starred-list"></div>
+                    </section>{% endif %}
 
                     <!-- ── Leaderboard ── -->
                     <section class="dash-section" data-pane="leaderboard" hidden>

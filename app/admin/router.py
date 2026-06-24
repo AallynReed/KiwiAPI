@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from beanie import PydanticObjectId
 from beanie.operators import Set
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 
 from app.admin import ingest_log, runtime_config
 from app.admin.schemas import (
@@ -26,11 +26,14 @@ from app.admin.schemas import (
     TopUser,
 )
 from app.auth.models import User
+from app.core.config import settings
 from app.core.dependencies import get_current_superuser
 from app.core.errors import APIError, ErrorCode
 from app.core.pagination import Page, paginate_newest_first
 from app.core.scopes import decode
 from app.core.utils import utcnow
+from app.pageviews.schemas import PageviewSummary
+from app.pageviews.service import aggregate_pageviews
 from app.site_auth.models import SiteUser
 from app.supporters import service as supporters_service
 from app.supporters.schemas import (
@@ -43,6 +46,7 @@ from app.supporters.schemas import (
 from app.tokens.models import ApiToken
 from app.trove.market import service as market_service
 from app.trove.market.models import MarketInterestItem
+from app.trove.mods_hub.schemas import TakedownRequest
 from app.usage.models import UsageEvent
 from app.usage.schemas import ActivitySummary
 from app.usage.service import ERROR_COND, RATE_LIMITED_COND, aggregate_activity
@@ -311,6 +315,21 @@ async def activity_overview(
     )
 
 
+@router.get("/pageviews", response_model=PageviewSummary)
+async def site_pageviews(
+    days: int = Query(default=30, ge=1, le=365),
+    top: int = Query(default=100, ge=1, le=1000),
+) -> PageviewSummary:
+    """Showcase-site page-view + unique-visitor rollup for the Site Analytics tab.
+
+    Per-page views and unique visitors over the last ``days`` days, one row per
+    real page URL (each mod / player page individually), capped to the ``top`` pages
+    by views. Unique visitors are counted once per UTC day (cookieless salted-hash
+    dedupe); static assets and the JSON proxies aren't counted.
+    """
+    return await aggregate_pageviews(days, top)
+
+
 # --- Market interest-items (admin) -----------------------------------------
 # The bot scrapes the in-game marketplace; only items on THIS list are
 # persisted (everything else is dropped at ingest). Editable from the master
@@ -483,6 +502,60 @@ async def set_leaderboard_board_reset_kind(
         reset_kind_override=ov,
         has_periodic_reset=not is_lifetime_kind(eff),
     )
+
+
+# --- Codexes: force a parser rebuild ---------------------------------------
+# The steady-state indexer only re-touches changed game files, so a parser-code
+# change doesn't reach existing rows until a game update. This forces a full
+# re-parse of a branch with the current parser (UPSERT in place - no empty
+# window). Master-only via the router-level dep.
+
+_CODEX_BRANCHES = ("live-us", "pts")
+
+
+@router.post("/codexes/rebuild")
+async def rebuild_codexes(
+    background_tasks: BackgroundTasks,
+    branch: str = Query(default="live-us", description="live-us | pts"),
+) -> dict:
+    """Force a full codex re-parse for a branch with the CURRENT parser. Runs in the
+    background (a full build is minutes); poll ``/admin/codexes/status``."""
+    if branch not in _CODEX_BRANCHES:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message=f"Unknown branch '{branch}' (known: {', '.join(_CODEX_BRANCHES)})",
+        )
+    if not settings.postgres_enabled:
+        raise APIError(status_code=400, code=ErrorCode.bad_request,
+                       message="Postgres backend is disabled")
+    from app.trove.codexes import indexer
+    from app.trove.updates.cas import ContentStore
+    if indexer.get_rebuild_status(branch).get("running"):
+        return {"started": False, "branch": branch, "message": "A rebuild is already running."}
+    store = ContentStore(settings.trove_update_store_dir)
+    background_tasks.add_task(indexer.rebuild, branch, store)
+    return {"started": True, "branch": branch,
+            "message": "Codex rebuild started - poll /admin/codexes/status."}
+
+
+@router.get("/codexes/status")
+async def codex_status(
+    branch: str = Query(default="live-us", description="live-us | pts"),
+) -> dict:
+    """Current entry count + last manual-rebuild status for a branch."""
+    if branch not in _CODEX_BRANCHES:
+        raise APIError(
+            status_code=400, code=ErrorCode.not_found,
+            message=f"Unknown branch '{branch}'",
+        )
+    from app.trove.codexes import indexer, pg_store
+    count = await pg_store.branch_count(branch) if settings.postgres_enabled else 0
+    version = await pg_store.get_parser_version(branch) if settings.postgres_enabled else 0
+    return {
+        "branch": branch, "entry_count": count,
+        "parser_version": version, "current_parser_version": indexer.CODEX_PARSER_VERSION,
+        "rebuild": indexer.get_rebuild_status(branch),
+    }
 
 
 # --- Runtime configuration -------------------------------------------------
@@ -788,3 +861,128 @@ async def replace_supporters_admin(
     except ValueError as e:
         raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(e))
     return SupporterBulkReplaceResponse(**summary)
+
+
+# --- Mods Hub moderation (master-only takedown of shared mods) --------------
+# Users file reports via /v1/mods/hub/projects/{slug}/report; masters triage
+# them here and take a project down (drops it from all public listings + detail
+# reads) or restore it. Surfaced as buttons on the dev-portal master panel.
+
+@router.get("/mods/reports")
+async def list_mod_reports(resolved: bool = Query(default=False)) -> dict:
+    """Open (or resolved) user reports against shared mods, newest first."""
+    from app.trove.mods_hub import service as mods_hub_service
+    return {"items": await mods_hub_service.list_reports(resolved=resolved)}
+
+
+@router.get("/mods/projects")
+async def list_all_mod_projects(
+    q: str | None = Query(default=None),
+    owner: str | None = Query(default=None),
+    visibility: str | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> dict:
+    """Every modder's project (drafts + taken-down included) for master oversight."""
+    from app.trove.mods_hub import service as mods_hub_service
+    items, total = await mods_hub_service.master_list_projects(
+        q=q, owner=owner, visibility=visibility, limit=limit, offset=offset,
+    )
+    return {"items": items, "count": len(items), "total": total}
+
+
+@router.delete("/mods/projects/{project_id}", status_code=204)
+async def delete_mod_project(project_id: str) -> None:
+    """Force-delete any modder's project (master). Removes branches, commits,
+    releases and reports; content-addressed blobs are left for GC. Addressed by
+    project id (slugs are only unique per owner)."""
+    from app.trove.mods_hub import service as mods_hub_service
+    await mods_hub_service.master_delete_project(project_id)
+
+
+@router.post("/mods/projects/{project_id}/takedown")
+async def take_down_mod(project_id: str, req: TakedownRequest) -> dict:
+    """Remove a mod project from public view (owner still sees it, flagged)."""
+    from app.trove.mods_hub import service as mods_hub_service
+    project = await mods_hub_service.take_down(project_id, req.reason)
+    return {"slug": project.slug, "handle": project.owner_handle,
+            "taken_down": project.taken_down, "takedown_reason": project.takedown_reason}
+
+
+@router.post("/mods/projects/{project_id}/restore")
+async def restore_mod(project_id: str) -> dict:
+    """Reverse a takedown - the project becomes publicly visible again."""
+    from app.trove.mods_hub import service as mods_hub_service
+    project = await mods_hub_service.restore(project_id)
+    return {"slug": project.slug, "handle": project.owner_handle,
+            "taken_down": project.taken_down}
+
+
+# --- Stray (imported) mods: catalog import + approval queue + claims --------
+
+@router.get("/mods/stray/import")
+async def stray_import_state() -> dict:
+    """Progress/state of the stray-mod bulk import + resync job."""
+    from app.trove.mods_hub import strayimport
+    return await strayimport.get_state()
+
+
+@router.post("/mods/stray/import")
+async def stray_import_start(
+    resync: bool = Query(default=False, description="Refresh existing + queue new mods as pending, vs a fresh bulk import."),
+    force: bool = Query(default=False, description="Start even if a run looks in-progress (clears a stale flag)."),
+) -> dict:
+    """Kick off the stray-mod import (``resync=false`` = bulk import, visible;
+    ``resync=true`` = refresh + queue new mods for approval). Runs in the background."""
+    from app.trove.mods_hub import strayimport
+    return await strayimport.start(resync, force=force)
+
+
+@router.get("/mods/stray")
+async def list_stray_mods(
+    status: str | None = Query(default="pending", description="pending | approved | rejected"),
+    q: str | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> dict:
+    """Imported stray mods for review (default: the pending approval queue)."""
+    from app.trove.mods_hub import service as mods_hub_service
+    items, total = await mods_hub_service.master_list_stray(
+        status=status, q=q, limit=limit, offset=offset)
+    return {"items": items, "count": len(items), "total": total}
+
+
+@router.post("/mods/stray/{project_id}/approve")
+async def approve_stray_mod(project_id: str) -> dict:
+    """Approve a pending stray mod -> visible in the public catalog."""
+    from app.trove.mods_hub import service as mods_hub_service
+    return await mods_hub_service.approve_stray(project_id)
+
+
+@router.post("/mods/stray/{project_id}/reject")
+async def reject_stray_mod(project_id: str) -> dict:
+    """Reject a stray mod -> hidden, skipped on future resyncs."""
+    from app.trove.mods_hub import service as mods_hub_service
+    return await mods_hub_service.reject_stray(project_id)
+
+
+@router.get("/mods/claims")
+async def list_mod_claims(
+    status: str | None = Query(default="pending", description="pending | approved | rejected"),
+) -> dict:
+    """User requests to claim stray mods (default: pending)."""
+    from app.trove.mods_hub import service as mods_hub_service
+    return {"items": await mods_hub_service.list_claims(status=status)}
+
+
+@router.post("/mods/claims/{claim_id}/approve")
+async def approve_mod_claim(claim_id: str, admin: User = Depends(get_current_superuser)) -> dict:
+    """Approve a claim: hand the stray mod over to the claimant (becomes their mod)."""
+    from app.trove.mods_hub import service as mods_hub_service
+    return await mods_hub_service.approve_claim(claim_id, admin.id)
+
+
+@router.post("/mods/claims/{claim_id}/reject")
+async def reject_mod_claim(claim_id: str, admin: User = Depends(get_current_superuser)) -> dict:
+    from app.trove.mods_hub import service as mods_hub_service
+    return await mods_hub_service.reject_claim(claim_id, admin.id)

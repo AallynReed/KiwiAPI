@@ -3,9 +3,9 @@
 Page routes: ``/``, ``/documentation``, ``/commands``, ``/leaderboards``,
 ``/updates``, ``/support``.
 
-Plus a small JSON surface under ``/site/*`` (leaderboards + updates
-proxies, screenshots index) that the page-side JS calls same-origin so
-visitors don't get throttled by per-token caps.
+Plus a small JSON surface under ``/site/*`` (leaderboards + updates +
+market + codexes proxies, screenshots index) that the page-side JS calls
+same-origin so visitors don't get throttled by per-token caps.
 
 Templates were ported from a Quart app; the old ``url_for('static', ...)``
 calls were rewritten to hardcoded ``/static/...`` paths (the mount lives
@@ -14,20 +14,29 @@ through Jinja2Templates without a custom url-builder.
 """
 
 import logging
+import re
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from app.admin import runtime_config
+from app.core import features as feature_flags
 from app.core.config import settings
+from app.site_auth.dependencies import get_optional_site_user
+from app.site_auth.models import SiteUser
 from app.trove import status as trove_status
+from app.trove.codexes import read as codexes_read
+from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
+from app.trove.render.service import render_blueprint_cached
 from app.trove.leaderboards import activity as leaderboards_activity
 from app.trove.leaderboards import cache as leaderboards_cache
 from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove.leaderboards import detection as leaderboards_detection
 from app.trove.leaderboards import service as leaderboards_service
+from app.trove.mods_hub import service as mods_hub_service
+from app.trove.modpacks import service as modpacks_service
 from app.trove.updates import compare as updates_compare
 from app.trove.updates import read as updates_read
 from app.trove.updates.cas import ContentStore
@@ -39,9 +48,44 @@ logger = logging.getLogger("kiwi.site.router")
 # Anything else in the folder (READMEs, .DS_Store, etc.) is silently skipped.
 _SCREENSHOT_EXTS = {".webp", ".png", ".jpg", ".jpeg", ".gif"}
 
-_TEMPLATES = Jinja2Templates(directory=str(Path(settings.site_root) / "templates"))
+async def _resolve_feature_flags(request: Request) -> None:
+    """Per-site-request feature gate. Resolves the master toggles once and (a)
+    stashes them on ``request.state`` for the template context processor below
+    (so the navbar can hide a disabled feature's link), and (b) 404s the pages +
+    ``/site/<feature>/*`` proxies of any disabled feature so it's hidden, not
+    just unlinked. Cheap: the values are cached ~5s in runtime_config."""
+    mods = await feature_flags.is_enabled(feature_flags.MODS_HUB_FLAG)
+    market = await feature_flags.is_enabled(feature_flags.MARKET_FLAG)
+    request.state.mods_hub_enabled = mods
+    request.state.market_enabled = market
+    p = request.url.path
+    # Modpacks ride the Mods Hub toggle (they're a layer over the hub).
+    if not mods and (p == "/mods" or p.startswith("/mods/") or p.startswith("/site/mods/")
+                     or p == "/modpacks" or p.startswith("/modpacks/")
+                     or p.startswith("/site/modpacks/")):
+        raise HTTPException(status_code=404)
+    if not market and (p == "/market" or p.startswith("/site/market/")):
+        raise HTTPException(status_code=404)
 
-router = APIRouter(tags=["site"], include_in_schema=False)
+
+def _feature_context(request: Request) -> dict:
+    """Inject the feature flags into EVERY template (the navbar + dashboard read
+    them). Resolved by ``_resolve_feature_flags`` above; default to enabled."""
+    return {
+        "mods_hub_enabled": getattr(request.state, "mods_hub_enabled", True),
+        "market_enabled": getattr(request.state, "market_enabled", True),
+    }
+
+
+_TEMPLATES = Jinja2Templates(
+    directory=str(Path(settings.site_root) / "templates"),
+    context_processors=[_feature_context],
+)
+
+router = APIRouter(
+    tags=["site"], include_in_schema=False,
+    dependencies=[Depends(_resolve_feature_flags)],
+)
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -178,6 +222,156 @@ async def market(request: Request) -> HTMLResponse:
     ``market_listings`` collection via the /site/market/* proxies
     below - bypasses the public API's per-token caps."""
     return _TEMPLATES.TemplateResponse(request, "market.html", {})
+
+
+@router.get("/codexes", response_class=HTMLResponse)
+async def codexes(request: Request) -> HTMLResponse:
+    """Codexes browser - parsed Trove game data (allies, mounts, dragons, mementos,
+    recipes, items, fish, badges) with mastery / power rank / stat & ability bonuses.
+    Reads the same data as ``/v1/codexes/*`` via the ``/site/codexes/*`` proxies
+    below (same-origin, no per-token caps)."""
+    return _TEMPLATES.TemplateResponse(request, "codexes.html", {})
+
+
+@router.get("/mods", response_class=HTMLResponse)
+async def mods_hub(request: Request) -> HTMLResponse:
+    """Mods Hub - browse + download shared Trove mods (public, no login). The
+    grid + search are painted client-side from the ``/site/mods/*`` proxies
+    below; creating/developing a mod needs a signed-in site user."""
+    return _TEMPLATES.TemplateResponse(request, "mods.html", {})
+
+
+def _plain_excerpt(md: str | None, limit: int = 280) -> str:
+    """Crude markdown/HTML → plain text for a meta description."""
+    t = re.sub(r"<[^>]+>", " ", md or "")            # strip HTML tags
+    t = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", t)  # links/images -> their text
+    t = re.sub(r"[#*`_>~|]", "", t)                   # strip md markers
+    t = re.sub(r"\s+", " ", t).strip()
+    return t[:limit]
+
+
+@router.get("/mods/{handle}/{slug}", response_class=HTMLResponse)
+async def mods_project_page(request: Request, handle: str, slug: str) -> HTMLResponse:
+    """A single mod's page: banner, previews, description, releases (with
+    download) and the file/commit browser. The owner (when logged in) also
+    gets the inline studio controls. Addressed as ``/mods/<owner_handle>/<slug>``;
+    all data comes from ``/site/mods/*``.
+
+    The page is client-rendered, but we fetch the mod here (anonymously) to emit
+    real Open Graph / Twitter-card tags, so link unfurls (Discord, Twitter, …) show
+    the actual mod - title, summary and banner. Drafts / unlisted-but-private /
+    not-found fall back to generic tags so nothing private leaks into an embed; the
+    page itself still renders (the client reveals owner-only content when logged in)."""
+    base = settings.app_url.rstrip("/")
+    page_url = f"{base}/mods/{handle}/{slug}"
+    ctx = {
+        "slug": slug, "handle": handle, "og_page_url": page_url,
+        "page_title": f"{slug} · Trove mod · Better Trove Tools",
+        "og_title": f"{slug} · Trove mod",
+        "og_desc": "A Trove mod shared on the Better Trove Tools Mods Hub.",
+        "og_image": f"{base}/static/assets/favicon.png",
+        "og_image_alt": "Better Trove Tools",
+        "og_author": "",
+        "twitter_card": "summary",
+    }
+    project = await mods_hub_service.get_project(handle, slug)
+    if project is not None and mods_hub_service.can_view(project, None):
+        desc = (project.summary or "").strip() or _plain_excerpt(project.description) \
+            or f"A Trove mod by {project.owner_username}."
+        img_sha = project.banner_sha or (project.preview_shas[0] if project.preview_shas else None)
+        ctx.update({
+            "page_title": f"{project.title} · Trove mod · Better Trove Tools",
+            "og_title": f"{project.title} · Trove mod",
+            "og_desc": desc[:300],
+            "og_image": f"{base}/site/mods/image/{img_sha}" if img_sha else ctx["og_image"],
+            "og_image_alt": project.title,
+            "og_author": project.owner_username,
+            "twitter_card": "summary_large_image" if img_sha else "summary",
+        })
+    return _TEMPLATES.TemplateResponse(request, "mods_project.html", ctx)
+
+
+@router.get("/mods/{handle}", response_class=HTMLResponse)
+async def mods_profile_page(request: Request, handle: str) -> HTMLResponse:
+    """A modder's profile page (`/mods/<handle>`): avatar, banner, README, socials
+    and their mods. Client-rendered from ``/site/mods/profile/<handle>``; this route
+    fills per-modder Open Graph tags so a shared profile link unfurls properly.
+
+    A profile only exists once the modder has ≥1 public mod, so this 404s otherwise
+    (the front-facing 404 handler serves the themed HTML page)."""
+    base = settings.app_url.rstrip("/")
+    page_url = f"{base}/mods/{handle}"
+    data = await mods_hub_service.profile_view(handle, None)
+    if data is None:
+        raise HTTPException(status_code=404, detail="No such modder.")
+    ctx = {
+        "handle": handle, "og_page_url": page_url,
+        "page_title": f"{handle} · Trove modder · Better Trove Tools",
+        "og_title": f"{handle} · Trove modder",
+        "og_desc": f"{handle}'s mods on the Better Trove Tools Mods Hub.",
+        "og_image": f"{base}/static/assets/favicon.png",
+        "og_image_alt": handle,
+        "og_author": "",
+        "twitter_card": "summary",
+    }
+    name = data["display_name"]
+    desc = (data["tagline"] or "").strip() or _plain_excerpt(data["readme"]) \
+        or f"{name}'s mods on the Better Trove Tools Mods Hub."
+    img = data["banner_url"] or data["avatar_url"]
+    ctx.update({
+        "page_title": f"{name} · Trove modder · Better Trove Tools",
+        "og_title": f"{name} · Trove modder",
+        "og_desc": desc[:300],
+        "og_image": img or ctx["og_image"],
+        "og_image_alt": name,
+        "og_author": name,
+        "twitter_card": "summary_large_image" if data["banner_url"] else "summary",
+    })
+    return _TEMPLATES.TemplateResponse(request, "mods_profile.html", ctx)
+
+
+@router.get("/modpacks", response_class=HTMLResponse)
+async def modpacks_hub(request: Request) -> HTMLResponse:
+    """Modpacks - browse + download user-curated bundles of hub mods (public, no
+    login). Grid painted client-side from ``/site/modpacks/*``; creating one needs
+    a signed-in site user."""
+    return _TEMPLATES.TemplateResponse(request, "modpacks.html", {})
+
+
+@router.get("/modpacks/{handle}/{slug}", response_class=HTMLResponse)
+async def modpack_project_page(request: Request, handle: str, slug: str) -> HTMLResponse:
+    """A single modpack's page: banner, description, variants and the mods each
+    bundles (with version per mod), plus download. Owner gets the inline editor.
+    Client-rendered from ``/site/modpacks/*``; we fetch it here (anonymously) to
+    emit real Open Graph / Twitter-card tags for link unfurls. Drafts / private /
+    not-found fall back to generic tags so nothing private leaks into an embed."""
+    base = settings.app_url.rstrip("/")
+    page_url = f"{base}/modpacks/{handle}/{slug}"
+    ctx = {
+        "slug": slug, "handle": handle, "og_page_url": page_url,
+        "page_title": f"{slug} · Trove modpack · Better Trove Tools",
+        "og_title": f"{slug} · Trove modpack",
+        "og_desc": "A Trove modpack shared on Better Trove Tools.",
+        "og_image": f"{base}/static/assets/favicon.png",
+        "og_image_alt": "Better Trove Tools",
+        "og_author": "",
+        "twitter_card": "summary",
+    }
+    pack = await modpacks_service.get_pack(handle, slug)
+    if pack is not None and modpacks_service.can_view(pack, None):
+        desc = (pack.summary or "").strip() or _plain_excerpt(pack.description) \
+            or f"A Trove modpack by {pack.owner_username}."
+        img_sha = pack.banner_sha or (pack.preview_shas[0] if pack.preview_shas else None)
+        ctx.update({
+            "page_title": f"{pack.title} · Trove modpack · Better Trove Tools",
+            "og_title": f"{pack.title} · Trove modpack",
+            "og_desc": desc[:300],
+            "og_image": f"{base}/site/mods/image/{img_sha}" if img_sha else ctx["og_image"],
+            "og_image_alt": pack.title,
+            "og_author": pack.owner_username,
+            "twitter_card": "summary_large_image" if img_sha else "summary",
+        })
+    return _TEMPLATES.TemplateResponse(request, "modpacks_project.html", ctx)
 
 
 @router.get("/giveaways", response_class=HTMLResponse)
@@ -368,6 +562,131 @@ async def site_market_item_history(
         keep_outliers=keep_outliers,
     )
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=30"})
+
+
+# --- /site/codexes/* - same-origin JSON proxies for the /codexes page ------
+# Mirror the public ``/v1/codexes/*`` surface but tokenless + same-origin. The
+# two "modes" are branches (live-us / pts); default to live-us.
+
+_CODEX_BRANCHES = ("live-us", "pts")
+_DEFAULT_CODEX_BRANCH = "live-us"
+
+
+def _site_codex_branch(branch: str) -> str:
+    if branch not in _CODEX_BRANCHES:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown branch '{branch}' (known: {', '.join(_CODEX_BRANCHES)})",
+        )
+    return branch
+
+
+def _site_codex_type(codex_type: str) -> None:
+    if codex_type not in CODEX_TYPES:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown codex type '{codex_type}' (known: {', '.join(CODEX_TYPES)})",
+        )
+
+
+def _codex_row(d: dict) -> dict:
+    """JSON-safe codex entry row (the only non-serialisable field is the datetime)."""
+    out = dict(d)
+    ts = out.get("indexed_at")
+    if hasattr(ts, "isoformat"):
+        out["indexed_at"] = ts.isoformat()
+    return out
+
+
+@router.get("/site/codexes/types", response_class=JSONResponse)
+async def site_codex_types(
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> JSONResponse:
+    _site_codex_branch(branch)
+    rows = await codexes_read.type_counts(branch)
+    return JSONResponse(
+        {"branch": branch, "items": rows, "count": len(rows)},
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
+@router.get("/site/codexes/categories", response_class=JSONResponse)
+async def site_codex_categories(
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    type: str | None = Query(default=None),
+) -> JSONResponse:
+    _site_codex_branch(branch)
+    if type is not None:
+        _site_codex_type(type)
+    rows = await codexes_read.list_categories(branch, type)
+    return JSONResponse(
+        {"branch": branch, "type": type, "items": rows, "count": len(rows)},
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
+@router.get("/site/codexes/search", response_class=JSONResponse)
+async def site_codex_search(
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    q: str | None = Query(default=None),
+    type: str | None = Query(default=None),
+    category: str | None = Query(default=None),
+    tradable: bool | None = Query(default=None),
+    sort: str = Query(default="name"),
+    limit: int = Query(default=60, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> JSONResponse:
+    """Cross-type / per-type search for the /codexes grid. Every filter is optional
+    and ANDed; each result carries its own ``type``."""
+    _site_codex_branch(branch)
+    if type is not None:
+        _site_codex_type(type)
+    if sort not in codexes_read.SORTS:
+        raise HTTPException(status_code=400, detail=f"Invalid sort '{sort}'")
+    docs, total = await codexes_read.query_entries(
+        branch, codex_type=type, search=q, category=category, tradable=tradable,
+        sort=sort, limit=limit, offset=offset,
+    )
+    return JSONResponse(
+        {"branch": branch, "type": type, "query": q,
+         "items": [_codex_row(d) for d in docs], "count": len(docs), "total": total},
+        headers={"Cache-Control": "public, max-age=30"},
+    )
+
+
+@router.get("/site/codexes/render")
+async def site_codex_render(
+    blueprint: str = Query(..., min_length=1, description="Blueprint logical name from the codex row"),
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    dim: int = Query(default=160, ge=32, le=512),
+) -> Response:
+    """Same-origin PNG render of a codex item's blueprint (the card thumbnail).
+    Cached in Redis; 404 on a missing/unrenderable blueprint so the grid's
+    ``<img onerror>`` hides cleanly."""
+    _site_codex_branch(branch)
+    try:
+        png = await render_blueprint_cached(blueprint, dim=dim, branch=branch)
+    except Exception:  # noqa: BLE001 - never let a render error break the grid
+        logger.warning("codex render failed for %r", blueprint, exc_info=True)
+        png = None
+    if png is None:
+        raise HTTPException(status_code=404, detail="no render")
+    return Response(content=png, media_type="image/png",
+                    headers={"Cache-Control": "public, max-age=86400"})
+
+
+@router.get("/site/codexes/entry", response_class=JSONResponse)
+async def site_codex_entry(
+    type: str,
+    path: str = Query(...),
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> JSONResponse:
+    _site_codex_branch(branch)
+    _site_codex_type(type)
+    doc = await codexes_read.get_entry(branch, type, path)
+    if doc is None:
+        raise HTTPException(status_code=404, detail=f"No {type} entry '{path}'")
+    return JSONResponse(_codex_row(doc), headers={"Cache-Control": "public, max-age=60"})
 
 
 @router.get("/leaderboards", response_class=HTMLResponse)
@@ -811,6 +1130,258 @@ async def site_up_file_compare(
     hunks = updates_compare.make_hunks(a_dec.lines, b_dec.lines)
     payload.update({"identical": False, "is_text": True, "hunks": hunks})
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
+
+
+# --- /site/mods/* - same-origin proxies for the Mods Hub pages -------------
+# Reads mirror the public ``/v1/mods/hub/*`` surface but tokenless + same-
+# origin, and they pass the *site* user (Discord login) as the viewer - so the
+# owner sees their own drafts + owner-only controls, which the /v1 reads (API
+# token, no site-user concept) never reveal. Writes still go to /v1/mods/hub/*
+# directly with the site-auth bearer (CORS-allowed for trove.aallyn.net).
+
+@router.get("/site/mods/projects", response_class=JSONResponse)
+async def site_mods_projects(
+    q: str | None = Query(default=None, max_length=120),
+    tag: str | None = Query(default=None, max_length=40),
+    author: str | None = Query(default=None, max_length=80),
+    sort: str = Query(default="recent"),
+    limit: int = Query(default=30, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> JSONResponse:
+    items, total = await mods_hub_service.list_public(
+        q=q, tag=tag, author=author, sort=sort, limit=limit, offset=offset,
+    )
+    return JSONResponse(
+        {"items": items, "count": len(items), "total": total},
+        headers={"Cache-Control": "public, max-age=30"},
+    )
+
+
+@router.get("/site/mods/tags", response_class=JSONResponse)
+async def site_mods_tags() -> JSONResponse:
+    """Tag facets (counts) for the browse page filter bar - categories then custom."""
+    return JSONResponse(
+        await mods_hub_service.tag_facets(),
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
+@router.get("/site/mods/profile/{handle}", response_class=JSONResponse)
+async def site_mods_profile(
+    handle: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """A modder's profile + their mods. The owner sees their own drafts + edit
+    controls (the viewer is the *site* user, unlike the anonymous /v1 read)."""
+    data = await mods_hub_service.profile_view(handle, viewer)
+    if data is None:
+        raise HTTPException(status_code=404, detail="No such modder.")
+    return JSONResponse(data, headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/me/projects", response_class=JSONResponse)
+async def site_mods_my_projects(
+    viewer: SiteUser = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The signed-in user's own projects (drafts included) for the studio."""
+    if viewer is None:
+        raise HTTPException(status_code=401, detail="Sign in to view your mods.")
+    return JSONResponse(
+        {"items": await mods_hub_service.list_owned(viewer)},
+        headers={"Cache-Control": "no-cache"},
+    )
+
+
+@router.get("/site/mods/projects/{handle}/{slug}", response_class=JSONResponse)
+async def site_mods_project(
+    handle: str, slug: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    return JSONResponse(
+        await mods_hub_service.project_detail(project, viewer),
+        headers={"Cache-Control": "no-cache"},   # varies by viewer
+    )
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/branches", response_class=JSONResponse)
+async def site_mods_branches(
+    handle: str, slug: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    mods_hub_service.ensure_source_visible(project, viewer)
+    return JSONResponse({"items": await mods_hub_service.list_branches(project)},
+                        headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/commits", response_class=JSONResponse)
+async def site_mods_commits(
+    handle: str, slug: str,
+    branch: str | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    mods_hub_service.ensure_source_visible(project, viewer)
+    items, total = await mods_hub_service.list_commits(project, branch, limit, offset)
+    return JSONResponse({"items": items, "count": len(items), "total": total},
+                        headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/tree", response_class=JSONResponse)
+async def site_mods_tree(
+    handle: str, slug: str, ref: str = Query(default=""),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    mods_hub_service.ensure_source_visible(project, viewer)
+    return JSONResponse(await mods_hub_service.get_tree(project, ref),
+                        headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/placement", response_class=JSONResponse)
+async def site_mods_placement(
+    handle: str, slug: str, ref: str = Query(default=""),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    mods_hub_service.ensure_source_visible(project, viewer)
+    return JSONResponse(await mods_hub_service.placement_report(project, ref),
+                        headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/releases", response_class=JSONResponse)
+async def site_mods_releases(
+    handle: str, slug: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    is_owner = viewer is not None and project.owner_id == viewer.id
+    items = await mods_hub_service.list_releases(
+        project, include_drafts=is_owner, include_hidden=is_owner)
+    return JSONResponse({"items": items}, headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/forks", response_class=JSONResponse)
+async def site_mods_forks(
+    handle: str, slug: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    return JSONResponse({"items": await mods_hub_service.list_forks(project)},
+                        headers={"Cache-Control": "public, max-age=30"})
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/raw/{commit_ref}/{path:path}",
+            response_class=Response)
+async def site_mods_raw(
+    handle: str, slug: str, commit_ref: str, path: str,
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> Response:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    mods_hub_service.ensure_source_visible(project, viewer)
+    data = await mods_hub_service.get_file_bytes(project, commit_ref, path)
+    return Response(content=data, media_type="application/octet-stream",
+                    headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/releases/{release_id}/download", response_class=Response)
+async def site_mods_download(
+    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> Response:
+    """Public download of a release's compiled .tmod (bumps the counter). The
+    owner can also pull their own *draft* releases (to test before publishing)."""
+    release, project = await mods_hub_service.release_with_project(release_id, viewer)
+    data = await mods_hub_service.record_download(release, project)
+    return Response(
+        content=data, media_type=mods_hub_service.release_media_type(release),
+        headers={
+            "Content-Disposition":
+                f'attachment; filename="{mods_hub_service.release_download_filename(release)}"',
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
+@router.get("/site/mods/image/{sha}", response_class=Response)
+async def site_mods_image(sha: str) -> Response:
+    got = await mods_hub_service.get_image(sha)
+    if got is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+    data, content_type = got
+    return Response(content=data, media_type=content_type,
+                    headers={"Cache-Control": "public, max-age=31536000, immutable"})
+
+
+# --- Modpacks (/site/modpacks/*) -------------------------------------------
+# Same shape as the mods proxies. Images reuse /site/mods/image/<sha> (one CAS).
+
+@router.get("/site/modpacks/projects", response_class=JSONResponse)
+async def site_modpacks_projects(
+    q: str | None = Query(default=None, max_length=120),
+    tag: str | None = Query(default=None, max_length=40),
+    author: str | None = Query(default=None, max_length=80),
+    sort: str = Query(default="recent"),
+    limit: int = Query(default=30, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> JSONResponse:
+    items, total = await modpacks_service.list_public(
+        q=q, tag=tag, author=author, sort=sort, limit=limit, offset=offset,
+    )
+    return JSONResponse(
+        {"items": items, "count": len(items), "total": total},
+        headers={"Cache-Control": "public, max-age=30"},
+    )
+
+
+@router.get("/site/modpacks/me/projects", response_class=JSONResponse)
+async def site_modpacks_my_projects(
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The signed-in user's own modpacks (drafts included) for the studio."""
+    if viewer is None:
+        raise HTTPException(status_code=401, detail="Sign in to view your modpacks.")
+    return JSONResponse(
+        {"items": await modpacks_service.list_owned(viewer)},
+        headers={"Cache-Control": "no-cache"},
+    )
+
+
+@router.get("/site/modpacks/projects/{handle}/{slug}", response_class=JSONResponse)
+async def site_modpack_project(
+    handle: str, slug: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    pack = await modpacks_service.get_for_view(handle, slug, viewer)
+    return JSONResponse(
+        await modpacks_service.pack_detail(pack, viewer),
+        headers={"Cache-Control": "no-cache"},   # varies by viewer
+    )
+
+
+@router.get("/site/modpacks/for-mod/{handle}/{slug}", response_class=JSONResponse)
+async def site_modpacks_for_mod(handle: str, slug: str) -> JSONResponse:
+    """Public modpacks that include a given mod - the backlink the mod page shows."""
+    items = await modpacks_service.site_packs_for_mod(handle, slug)
+    return JSONResponse({"items": items, "count": len(items)},
+                        headers={"Cache-Control": "public, max-age=30"})
+
+
+@router.get("/site/modpacks/projects/{handle}/{slug}/download", response_class=Response)
+async def site_modpack_download(
+    handle: str, slug: str,
+    variant: str | None = Query(default=None, max_length=80),
+    format: str = Query(default="zip", pattern="^(tpack|zip)$"),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> Response:
+    """Download a modpack variant (the website defaults to a ``.zip``). Public; the
+    owner can also pull their own draft. Bumps the download count."""
+    pack = await modpacks_service.get_for_view(handle, slug, viewer)
+    blob, filename, media = await modpacks_service.build_artifact(pack, variant, format)
+    await modpacks_service.record_download(pack)
+    return Response(
+        content=blob, media_type=media,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache",
+        },
+    )
 
 
 @router.get("/site/screenshots.json", response_class=JSONResponse)

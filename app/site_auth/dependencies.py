@@ -72,6 +72,26 @@ async def get_current_site_user(
     return user
 
 
+async def get_optional_site_user(
+    creds: HTTPAuthorizationCredentials | None = Depends(_jwt_scheme),
+) -> SiteUser | None:
+    """Like ``get_current_site_user`` but returns ``None`` for an anonymous
+    caller instead of raising. Used by public, browse-while-maybe-logged-in
+    surfaces (e.g. the Mods Hub) so a page can stay public yet reveal the
+    owner's own drafts + owner-only controls when a valid session is present.
+
+    A *malformed* credential is still treated as anonymous here (not a 401) -
+    the endpoint is public, so a stale token shouldn't break the read; the
+    write endpoints that use ``get_current_site_user`` surface the 401."""
+    if creds is None:
+        return None
+    try:
+        user, _ = await _authenticate(creds)
+    except Exception:  # noqa: BLE001 - public surface: any bad cred is just anonymous
+        return None
+    return user
+
+
 async def get_site_auth_context(
     creds: HTTPAuthorizationCredentials | None = Depends(_jwt_scheme),
 ) -> SiteAuthContext:

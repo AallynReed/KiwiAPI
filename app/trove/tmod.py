@@ -18,6 +18,8 @@ from __future__ import annotations
 import base64
 import zlib
 
+from app.trove import mod_categories
+
 from pydantic import BaseModel, Field
 
 # The Trove FNV-1a checksum + LEB128 live in troveio (shared with the archive
@@ -29,6 +31,12 @@ __all__ = ["calculate_hash", "read_leb128", "write_leb128"]
 _CHUNK = 32768
 # The modLoader header BTT stamps as "BTT"; the API stamps its own marker instead.
 KIWI_MOD_LOADER = "KiwiAPI"
+# A ``.tpack`` (modpack) is the SAME container format as a ``.tmod`` - it just
+# packs whole ``.tmod`` files where a ``.tmod`` packs raw game files, so it reuses
+# the same ``modLoader`` marker. A consumer tells a pack from a mod by the ``.tpack``
+# extension + the ``manifest``/``packVersion`` header properties + the inner files
+# being ``.tmod`` builds, not by a distinct loader string.
+KIWI_PACK_LOADER = KIWI_MOD_LOADER
 
 
 class TmodError(ValueError):
@@ -131,9 +139,16 @@ def read_tmod(data: bytes, metadata_only: bool = False) -> dict:
             raise
         raise TmodError(f"malformed .tmod file: {e}") from e
 
+    # Decode the category bitmask (if present) back into its labels - far easier
+    # for a consumer than string-matching the `tags` text.
+    try:
+        flags_val = int(properties.get("flags", 0) or 0)
+    except (TypeError, ValueError):
+        flags_val = 0
     return {
         "version": version, "header_size": header_size, "properties": properties,
         "files": files, "file_count": len(files), "metadata_only": metadata_only,
+        "flags": flags_val, "categories": mod_categories.tags_from_flags(flags_val),
     }
 
 
@@ -141,23 +156,35 @@ def read_tmod(data: bytes, metadata_only: bool = False) -> dict:
 
 
 def build_tmod(version: int, properties: dict[str, str], files: list[tuple[str, bytes]],
-               mod_loader: str = KIWI_MOD_LOADER) -> bytes:
+               mod_loader: str = KIWI_MOD_LOADER, lowercase_paths: bool = True) -> bytes:
     """Serialize a .tmod from (path, bytes) files + header properties. Returns the bytes.
 
     `modLoader` is always (re)stamped to `mod_loader` (the API uses "KiwiAPI",
-    where BTT uses "BTT"). Paths are normalized to lowercase posix.
+    where BTT uses "BTT"). Paths are normalized to posix; with `lowercase_paths`
+    (the default, for real Trove game files - the engine stores them lowercase) they
+    are also lowercased. A `.tpack` packs each mod's `.tmod` under its exact
+    title-cased filename, so it passes `lowercase_paths=False` to preserve case.
     """
     if not files:
         raise TmodError("a .tmod needs at least one file")
 
     props = dict(properties)
     props["modLoader"] = mod_loader  # set or override - never trust a client-sent value
+    # Encode any category tags as a compact integer bitmask alongside the natural
+    # comma-separated `tags` string, so a consumer can recover the category set
+    # from one number. Skipped if the caller already set `flags`.
+    if props.get("tags") and "flags" not in props:
+        flags = mod_categories.flags_from_tags(str(props["tags"]).split(","))
+        if flags:
+            props["flags"] = str(flags)
 
     file_stream = bytearray()
     files_table = bytearray()
     offset = 0
     for raw_path, content in files:
-        path = raw_path.replace("\\", "/").lstrip("/").lower()
+        path = raw_path.replace("\\", "/").lstrip("/")
+        if lowercase_paths:
+            path = path.lower()
         path_bytes = path.encode("utf-8")
         if len(path_bytes) > 255:
             raise TmodError(f"internal path too long for the .tmod format (>255 bytes): {path}")
@@ -192,3 +219,24 @@ def build_tmod(version: int, properties: dict[str, str], files: list[tuple[str, 
     header[0:8] = len(header).to_bytes(8, "little")  # backfill real header size
 
     return bytes(header) + bytes(compressed)
+
+
+def build_tpack(version: int, properties: dict[str, str],
+                tmods: list[tuple[str, bytes]]) -> bytes:
+    """Serialize a ``.tpack`` (modpack) from ``(tmod_filename, tmod_bytes)`` entries
+    plus header properties. A ``.tpack`` is structurally a ``.tmod`` (same header +
+    file-table + zlib stream + ``modLoader``) whose packed "files" are whole ``.tmod``
+    builds. A consumer tells a pack from a mod by the ``.tpack`` extension + the
+    ``manifest``/``packVersion`` header properties + the inner ``.tmod`` files, not by
+    the loader string. The pack's mod manifest (which mod + variant + version each
+    entry resolved to) is carried as the ``manifest`` JSON header property by the
+    caller - it round-trips through ``read_tmod(...)["properties"]``.
+
+    Each ``tmod_filename`` MUST be the packed ``.tmod``'s exact ``<title>.tmod`` (Trove
+    validates a mod's filename against the ``title`` baked into its header), so paths
+    are NOT lowercased here - case is preserved verbatim. Category-flag encoding is
+    skipped (a pack carries no game-category ``tags``); ``properties`` is stamped as-is
+    apart from ``modLoader``.
+    """
+    return build_tmod(version, properties, tmods,
+                      mod_loader=KIWI_PACK_LOADER, lowercase_paths=False)

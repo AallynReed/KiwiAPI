@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Trove codexes - Better Trove Tools</title>
+    <meta name="description" content="Browse Trove's collectibles: allies, mounts, dragons, mementos, recipes, items, fish and badges - with mastery, power rank, and stat/ability bonuses parsed straight from the game files.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://trove.aallyn.net/codexes">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Trove codexes (Beta)">
+    <meta property="og:description" content="Browse Trove's collectibles with mastery, power rank, and stat/ability bonuses parsed from the game files.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/codexes.min.css">
+</head>
+<body class="landing codexes-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="cdx-main">
+
+        <!-- ═══════════════ HERO ═══════════════ -->
+        <section class="cdx-hero">
+            <div class="cdx-hero-inner">
+                <p class="cdx-eyebrow">
+                    <span>/codexes</span>
+                    <span class="cdx-beta-pill">Beta</span>
+                </p>
+                <h1 class="cdx-title" data-i18n>Trove codexes</h1>
+                <p class="cdx-subtitle" data-i18n>Every collectible in the game - allies, mounts, dragons, mementos, recipes, items, fish and badges - parsed straight from the prefab files, with mastery, power rank, and stat &amp; ability bonuses. Re-indexed automatically on every game update.</p>
+            </div>
+        </section>
+
+        <!-- ═══════════════ CONTROLS ═══════════════ -->
+        <section class="cdx-controls" aria-label="Filters">
+            <div class="cdx-controls-row cdx-controls-top">
+                <span class="cdx-search-wrap">
+                    <i class="fa-solid fa-magnifying-glass cdx-search-icon" aria-hidden="true"></i>
+                    <input type="search" id="cdx-search" class="cdx-search-input"
+                           data-i18n-placeholder placeholder="Search name or description…"
+                           autocomplete="off" spellcheck="false">
+                </span>
+
+                <span class="cdx-branch" role="group" aria-label="Branch">
+                    <button type="button" class="cdx-branch-btn active" data-branch="live-us" data-i18n>Live</button>
+                    <button type="button" class="cdx-branch-btn" data-branch="pts">PTS</button>
+                </span>
+            </div>
+
+            <nav class="cdx-tabs" id="cdx-tabs" aria-label="Codex types">
+                <p class="cdx-loading" data-i18n>Loading types…</p>
+            </nav>
+
+            <div class="cdx-controls-row cdx-controls-filters">
+                <label class="cdx-field">
+                    <span class="cdx-field-label" data-i18n>Category</span>
+                    <select id="cdx-category" class="cdx-select">
+                        <option value="" data-i18n>All categories</option>
+                    </select>
+                </label>
+                <label class="cdx-field">
+                    <span class="cdx-field-label" data-i18n>Tradable</span>
+                    <select id="cdx-tradable" class="cdx-select">
+                        <option value="" data-i18n>Any</option>
+                        <option value="true" data-i18n>Tradable</option>
+                        <option value="false" data-i18n>Bound</option>
+                    </select>
+                </label>
+                <label class="cdx-field">
+                    <span class="cdx-field-label" data-i18n>Sort</span>
+                    <select id="cdx-sort" class="cdx-select">
+                        <option value="name" data-i18n>Name (A→Z)</option>
+                        <option value="-name" data-i18n>Name (Z→A)</option>
+                        <option value="-mastery" data-i18n>Mastery (high→low)</option>
+                        <option value="-mastery_geode" data-i18n>Geode mastery (high→low)</option>
+                        <option value="-power_rank" data-i18n>Power rank (high→low)</option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <!-- ═══════════════ RESULTS ═══════════════ -->
+        <section class="cdx-results" aria-label="Results">
+            <p class="cdx-results-meta" id="cdx-results-meta" aria-live="polite"></p>
+            <div class="cdx-grid" id="cdx-grid">
+                <p class="cdx-loading" data-i18n>Loading codexes…</p>
+            </div>
+            <div class="cdx-foot" id="cdx-foot" hidden>
+                <button type="button" class="cdx-load-more" id="cdx-load-more" data-i18n>Load more</button>
+            </div>
+        </section>
+
+        <p class="cdx-source" data-i18n>Parsed from Trove's <code>prefabs/*.binfab</code> game files and re-indexed on every update. Names resolve through the in-game locale tables. This is the same data the public <code>/v1/codexes</code> API serves.</p>
+    </main>
+
+    <!-- ═══════════════ DETAIL MODAL ═══════════════ -->
+    <div class="cdx-modal" id="cdx-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cdx-modal-title">
+        <div class="cdx-modal-backdrop" id="cdx-modal-backdrop"></div>
+        <div class="cdx-modal-card" role="document">
+            <button type="button" class="cdx-modal-close" id="cdx-modal-close" aria-label="Close">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+            <div class="cdx-modal-body" id="cdx-modal-body">
+                <!-- filled by JS -->
+            </div>
+        </div>
+    </div>
+
+    {% include "partials/footer.html" %}
+
+    <!-- Reuse the same support widget. -->
+    <div class="support-widget" id="support-widget" aria-label="Support the project">
+        <button type="button" class="support-trigger" id="support-trigger"
+                aria-expanded="false" aria-controls="support-panel">
+            <i class="fa-solid fa-heart" aria-hidden="true"></i>
+            <span>Support</span>
+        </button>
+        <div class="support-panel" id="support-panel" role="menu" hidden>
+            <p class="support-headline">
+                Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.
+            </p>
+            <a href="https://paypal.me/waterin" target="_blank" rel="noopener" class="support-link support-paypal" role="menuitem">
+                <i class="fa-brands fa-paypal" aria-hidden="true"></i><span>PayPal</span>
+            </a>
+            <a href="https://ko-fi.com/aallyn" target="_blank" rel="noopener" class="support-link support-kofi" role="menuitem">
+                <i class="fa-solid fa-mug-hot" aria-hidden="true"></i><span>Ko-fi</span>
+            </a>
+            <a href="https://buymeacoffee.com/aallyn" target="_blank" rel="noopener" class="support-link support-bmac" role="menuitem">
+                <i class="fa-solid fa-mug-saucer" aria-hidden="true"></i><span>Buy Me a Coffee</span>
+            </a>
+        </div>
+    </div>
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/codexes.min.js" defer></script>
+</body>
+</html>

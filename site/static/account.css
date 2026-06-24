@@ -611,6 +611,7 @@
   font-size: .85rem;
   color: #fed1d1;
 }
+.dash-hint { margin: 8px 0 0; font-size: .8rem; line-height: 1.5; color: var(--text-mute, #8a93a6); }
 .dash-loading,
 .dash-empty {
   text-align: center;
@@ -619,6 +620,28 @@
   font-size: .92rem;
   line-height: 1.55;
 }
+
+/* My Mods section */
+.dash-mod-form {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 6px;
+}
+.dash-mod-form input[name="title"] { flex: 1 1 200px; }
+.dash-mod-form input, .dash-mod-form select {
+  background: var(--bg-deep, #0d1117); border: 1px solid var(--border, #222b36);
+  border-radius: 9px; color: var(--text, #e6edf3); padding: 10px 12px; font: inherit; font-size: .92rem;
+}
+.dash-mod-form input:focus, .dash-mod-form select:focus { outline: none; border-color: var(--accent-blue, #4cc9f0); }
+#dash-mods-list { display: grid; gap: 10px; margin-top: 16px; }
+.dash-mod-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  text-decoration: none; color: inherit;
+  background: var(--bg-card, #11161d); border: 1px solid var(--border, #222b36);
+  border-radius: 11px; padding: 13px 16px;
+  transition: border-color .15s, transform .12s, background .15s;
+}
+.dash-mod-card:hover { border-color: var(--accent-blue, #4cc9f0); transform: translateY(-1px); }
+.dash-mod-title { font-weight: 600; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dash-mod-meta { color: var(--text-mute, #8a93a3); font-size: .84rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 /* Stats list */
 .dash-stat-table {

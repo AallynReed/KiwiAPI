@@ -1,0 +1,374 @@
+"""Mongo models for the Mods Hub.
+
+Branches, commits and file trees are NOT here - they live in the per-project git
+repo (``gitstore.py``), which is the source of truth for file content + history
+(so a `git push` and a web "Commit files" share one history). Mongo holds the
+project metadata, releases (compiled ``.tmod`` artifacts in the CAS), images,
+reports and git access tokens.
+"""
+
+from datetime import datetime
+from typing import Literal
+
+from beanie import Document, PydanticObjectId
+from pydantic import Field
+from pymongo import ASCENDING, DESCENDING, TEXT, IndexModel
+
+from app.core.utils import utcnow
+
+Visibility = Literal["draft", "unlisted", "public"]
+ReleaseStatus = Literal["draft", "published"]
+# Project mode. "files" = full versioned workflow (git commits, branches, clone)
+# plus releases. "releases" = releases-only: the modder just uploads already-
+# compiled builds; no file history / git / files view.
+ProjectMode = Literal["files", "releases"]
+# For "files" mode: whether the source (files view + git clone) is exposed
+# publicly. "private" makes the hub an internal versioning tool - the source is
+# owner-only and only the releases are public.
+SourceVisibility = Literal["public", "private"]
+# Compiled release artifact format (server-side compile from a commit).
+ReleaseFormat = Literal["tmod", "zip"]
+
+
+class ModProject(Document):
+    """The repo metadata. File history lives in the project's git repo."""
+
+    slug: str                                  # url token, unique PER OWNER (not global)
+    title: str
+    summary: str = ""                          # one-liner for cards
+    description: str = ""                       # markdown readme
+    # Long-form README for releases-only mode (no files to hold a README.md). In
+    # files mode this is ignored - the repo's README.md is rendered instead.
+    readme_text: str = ""
+    # Highlighted warning blocks shown under the description; `<br>` splits blocks.
+    warnings: str = ""
+    tags: list[str] = Field(default_factory=list)
+
+    # The owning SiteUser. None ONLY for an imported *stray* mod (is_stray=True) -
+    # an unclaimed mod mirrored from an external catalog that has no account behind
+    # it yet. Set when the mod is handed over to a real user.
+    owner_id: PydanticObjectId | None = None    # SiteUser.id (None for unclaimed stray mods)
+    owner_username: str = ""                    # denormalized for display (may be a display name)
+    # URL handle = the owner's canonical lowercase SiteUser.username. Mods are
+    # addressed as /mods/<owner_handle>/<slug>, so the slug only has to be unique
+    # within one owner. Refreshed to the current username on owner writes + when the
+    # owner lists their mods, so renaming Discord moves their mods to the new handle.
+    # Stray mods use the reserved handle "stray" -> /mods/stray/<slug>.
+    owner_handle: str = ""
+
+    # --- Stray (imported, unclaimed) mods ---------------------------------
+    # A stray mod is mirrored from an external catalog and not yet attributed to a
+    # site user. It carries its original `author` name + the source it came from,
+    # and can be *claimed* by a user (admin-approved) which assigns owner_id and
+    # flips is_stray off (becoming an ordinary mod). Regular mods leave these unset.
+    is_stray: bool = False
+    # approved = visible in the public catalog; pending = mirrored but awaiting an
+    # admin's approval (hidden); rejected = admin declined (hidden). The bulk import
+    # creates mods "approved"; a later resync adds newly-found mods as "pending".
+    stray_status: Literal["approved", "pending", "rejected"] | None = None
+    author: str = ""                            # original author name (display)
+    source: str | None = None                   # opaque import-source key (internal; never serialized out)
+    source_id: str | None = None                # the mod's id in the source catalog (idempotent key)
+    source_url: str | None = None               # link back to the source page (attribution)
+    source_author_id: str | None = None         # the author's id in the source (future auto-match on claim)
+    source_file_id: str | None = None           # the source file id we mirrored (detect newer files on resync)
+    source_likes: int = 0                        # the source's like count (display only; our stars are separate)
+
+    visibility: Visibility = "draft"
+    mode: ProjectMode = "files"                 # files+releases vs releases-only
+    source_visibility: SourceVisibility = "public"   # public source vs internal-tool
+    default_branch: str = "main"
+
+    banner_sha: str | None = None               # ModImageAsset.sha
+    preview_shas: list[str] = Field(default_factory=list)
+
+    # Owner-provided links shown on the mod page.
+    discord_url: str | None = None              # the modder's own Discord invite
+    website_url: str | None = None
+    donation_urls: list[str] = Field(default_factory=list)   # up to 5 support links
+
+    download_count: int = 0                     # sum across releases (denormalized)
+    star_count: int = 0                          # users who starred (denormalized; see ModStar)
+    # Popularity: recomputed periodically from ModDownloadEvent (7-day window) +
+    # stars + total downloads, normalized to 0.0-1.0 across the public catalog.
+    downloads_7d: int = 0                        # downloads in the trailing 7 days
+    popularity_score: float = 0.0               # 0.0-1.0, top mod ~= 1.0
+
+    # Branches are treated as mod *variants*: releases are grouped per branch and
+    # the latest of each is surfaced. The owner can hide chosen variants' releases
+    # from the public display (they still see them, flagged), and set the order the
+    # variants appear in (branches not listed fall back to alphabetical at the end).
+    hidden_release_branches: list[str] = Field(default_factory=list)
+    branch_order: list[str] = Field(default_factory=list)
+
+    # Attribution / lineage. A *fork* copies the original's files into this new
+    # project and points back (forked_from_*); *inspired_by_* is a lighter
+    # pointer with no content copy. Denormalized title/owner so the original is
+    # always credited even if it's later renamed. fork_count tracks derivatives.
+    forked_from_id: PydanticObjectId | None = None   # stable id of the original (fork listing)
+    forked_from_slug: str | None = None
+    forked_from_handle: str | None = None       # owner handle of the original (for the link)
+    forked_from_title: str | None = None
+    forked_from_owner: str | None = None
+    inspired_by_slug: str | None = None
+    inspired_by_handle: str | None = None
+    inspired_by_title: str | None = None
+    inspired_by_owner: str | None = None
+    fork_count: int = 0
+
+    # Master moderation. A taken-down project drops out of all public listings
+    # and detail reads (the owner still sees it, flagged) until restored.
+    taken_down: bool = False
+    takedown_reason: str | None = None
+
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_projects"
+        indexes = [
+            # Slug is unique PER OWNER now (was globally unique). The old global
+            # slug_1 unique index is dropped on startup in database.py.
+            IndexModel([("owner_id", ASCENDING), ("slug", ASCENDING)], unique=True),
+            IndexModel([("owner_handle", ASCENDING), ("slug", ASCENDING)]),  # URL lookup
+            IndexModel([("owner_id", ASCENDING), ("updated_at", DESCENDING)]),
+            IndexModel([("visibility", ASCENDING), ("updated_at", DESCENDING)]),
+            IndexModel([("visibility", ASCENDING), ("download_count", DESCENDING)]),
+            IndexModel([("visibility", ASCENDING), ("star_count", DESCENDING)]),
+            IndexModel([("visibility", ASCENDING), ("popularity_score", DESCENDING)]),
+            IndexModel([("tags", ASCENDING)]),
+            IndexModel([("forked_from_id", ASCENDING)]),   # list a project's forks
+            # Stray (imported) mods: idempotent upsert by source + dedup, and the
+            # admin pending/approval queue. Sparse so regular mods (source=None) are
+            # excluded from the unique source index.
+            IndexModel([("source", ASCENDING), ("source_id", ASCENDING)],
+                       unique=True, sparse=True),
+            IndexModel([("is_stray", ASCENDING), ("stray_status", ASCENDING),
+                        ("updated_at", DESCENDING)]),
+            # Free-text search over the card-visible fields.
+            IndexModel([("title", TEXT), ("summary", TEXT), ("tags", TEXT)],
+                       name="mod_project_text"),
+        ]
+
+
+class ModRelease(Document):
+    """A published build. ``tmod_sha`` is the compiled .tmod in the CAS."""
+
+    project_id: PydanticObjectId
+    owner_id: PydanticObjectId | None = None    # denormalized SiteUser.id (hash ownership + lookup)
+    tag: str                                    # e.g. "v1.2.0" - unique per branch
+    branch: str = "main"                         # the variant (branch) this release belongs to
+    title: str = ""
+    changelog: str = ""                          # markdown
+
+    source_commit_sha: str | None = None        # git commit it was compiled from
+    release_format: ReleaseFormat = "tmod"       # .tmod or .zip artifact
+    # The content hash (sha256 hex) of the artifact bytes - globally unique per
+    # *owner*: a release whose hash is already owned by another creator is rejected.
+    tmod_sha: str                                # CAS key of the artifact bytes
+    tmod_size: int = 0
+    tmod_filename: str = "mod.tmod"              # download name (carries the extension)
+    # The header properties stamped into a .tmod (title/author/modVersion/…); empty for zips.
+    tmod_properties: dict[str, str] = Field(default_factory=dict)
+
+    banner_sha: str | None = None
+    download_count: int = 0
+    status: ReleaseStatus = "published"
+
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+    published_at: datetime | None = None
+
+    class Settings:
+        name = "mod_releases"
+        indexes = [
+            # Tags are unique per *branch* (variant), not per project - branch X and
+            # branch Y can each have their own v1.0 timeline. The old project-wide
+            # unique index (project_id_1_tag_1) is dropped on startup in database.py.
+            IndexModel([("project_id", ASCENDING), ("branch", ASCENDING), ("tag", ASCENDING)],
+                       unique=True),
+            IndexModel([("project_id", ASCENDING), ("published_at", DESCENDING)]),
+            # Hash ownership check + the public lookup-by-hash API.
+            IndexModel([("tmod_sha", ASCENDING)]),
+        ]
+
+
+class ModImageAsset(Document):
+    """Sidecar for an image blob in the CAS - lets the serving route set the
+    right Content-Type without re-sniffing the bytes on every request."""
+
+    sha: str                                    # ContentStore key (unique)
+    content_type: str                           # image/png | image/jpeg | image/webp | image/gif
+    byte_size: int
+    owner_id: PydanticObjectId | None = None    # uploader (None for images mirrored during a stray import)
+    width: int | None = None                    # best-effort (None if not parsed)
+    height: int | None = None
+
+    created_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_images"
+        indexes = [IndexModel([("sha", ASCENDING)], unique=True)]
+
+
+class ModGitToken(Document):
+    """A personal access token a site user pastes as their git password to
+    ``git clone/pull/push`` (Discord login has no password). Only the SHA-256 of
+    the token is stored; the plaintext is shown once at creation."""
+
+    site_user_id: PydanticObjectId
+    token_hash: str                             # sha256(token) - unique
+    prefix: str                                 # first chars, for display
+    name: str = ""                              # user label
+    revoked: bool = False
+    created_at: datetime = Field(default_factory=utcnow)
+    last_used_at: datetime | None = None
+
+    class Settings:
+        name = "mod_git_tokens"
+        indexes = [
+            IndexModel([("token_hash", ASCENDING)], unique=True),
+            IndexModel([("site_user_id", ASCENDING), ("created_at", DESCENDING)]),
+        ]
+
+
+class ModStar(Document):
+    """One user starring (favouriting) one project. Unique per (project, user);
+    ``ModProject.star_count`` is the denormalized total for fast cards/sorting."""
+
+    project_id: PydanticObjectId
+    site_user_id: PydanticObjectId
+    created_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_stars"
+        indexes = [
+            IndexModel([("project_id", ASCENDING), ("site_user_id", ASCENDING)], unique=True),
+            IndexModel([("site_user_id", ASCENDING), ("created_at", DESCENDING)]),  # a user's stars
+        ]
+
+
+class ModReport(Document):
+    """A user report against a project - surfaced to masters for takedown."""
+
+    project_id: PydanticObjectId
+    project_slug: str
+    project_handle: str = ""                     # owner handle (for the /mods/<handle>/<slug> link)
+    reporter_id: PydanticObjectId
+    reporter_username: str
+    reason: str
+    resolved: bool = False
+
+    created_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_reports"
+        indexes = [
+            IndexModel([("resolved", ASCENDING), ("created_at", DESCENDING)]),
+            IndexModel([("project_id", ASCENDING)]),
+        ]
+
+
+class ModClaimRequest(Document):
+    """A site user's request to claim a *stray* (imported, unowned) mod as their own.
+    Surfaced to masters, who approve (hand the mod over - sets ``owner_id`` + clears
+    ``is_stray``) or reject. One open request per (project, user)."""
+
+    project_id: PydanticObjectId
+    project_slug: str
+    project_title: str = ""
+    claimant_id: PydanticObjectId               # SiteUser.id
+    claimant_username: str
+    message: str = ""                            # optional note from the claimant ("proof"/context)
+    status: Literal["pending", "approved", "rejected"] = "pending"
+    resolved_by: PydanticObjectId | None = None  # master who approved/rejected
+    resolved_at: datetime | None = None
+
+    created_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_claim_requests"
+        indexes = [
+            IndexModel([("status", ASCENDING), ("created_at", DESCENDING)]),
+            IndexModel([("project_id", ASCENDING)]),
+            IndexModel([("claimant_id", ASCENDING), ("created_at", DESCENDING)]),
+        ]
+
+
+class StrayImportState(Document):
+    """Singleton progress/state for the stray-mod bulk import + resync job, so the
+    admin panel can show progress and the job is resumable (idempotent by source_id)."""
+
+    key: str = "trovesaurus"                     # opaque singleton key (internal)
+    running: bool = False
+    phase: str = "idle"                          # idle | importing | resyncing | done | error
+    total: int = 0                               # mods seen in the source catalog
+    processed: int = 0                           # mods handled this run
+    imported: int = 0                            # newly created this run
+    updated: int = 0                             # existing refreshed this run
+    pending_added: int = 0                       # new mods queued for approval (resync)
+    failed: int = 0                              # mods that errored (skipped)
+    last_error: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    updated_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "stray_import_state"
+        indexes = [IndexModel([("key", ASCENDING)], unique=True)]
+
+
+class ModDownloadEvent(Document):
+    """One download of one release - the raw signal behind the 7-day "popular"
+    metric. Auto-expires after 8 days (a TTL index set in ``app/core/database.py``)
+    so only the trailing window is kept; the lifetime totals live on the denormalized
+    ``download_count`` fields."""
+
+    project_id: PydanticObjectId
+    release_id: PydanticObjectId
+    created_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_download_events"
+        indexes = [
+            # NOTE: no plain {created_at:1} index here - the TTL index on created_at
+            # is created in app/core/database.py (_ensure_ttl_index). Declaring both
+            # collides (IndexOptionsConflict) and breaks startup.
+            IndexModel([("project_id", ASCENDING), ("created_at", DESCENDING)]),
+        ]
+
+
+class ModProfile(Document):
+    """A modder's customizable profile at ``/mods/<handle>``. One per site user
+    (created lazily on first edit). The handle is the owner's ``SiteUser.username``
+    (denormalized + resynced); resolution goes handle -> SiteUser -> this by
+    ``site_user_id`` so it survives renames."""
+
+    site_user_id: PydanticObjectId             # SiteUser.id (unique)
+    handle: str = ""                           # denormalized username (URL key)
+
+    display_name: str = ""                     # shown name (empty -> SiteUser display/username)
+    tagline: str = ""                          # short one-liner under the name
+    readme: str = ""                           # markdown "about"
+
+    avatar_sha: str | None = None              # custom profile picture (ModImageAsset sha)
+    banner_sha: str | None = None              # profile banner
+
+    discord_url: str | None = None
+    website_url: str | None = None
+    donation_urls: list[str] = Field(default_factory=list)   # up to 5
+
+    # The order the modder's mods appear in (their slugs; not-listed go to the end
+    # by recency) and a single highlighted mod shown in the sidebar.
+    mod_order: list[str] = Field(default_factory=list)
+    featured_slug: str | None = None
+
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_profiles"
+        indexes = [
+            IndexModel([("site_user_id", ASCENDING)], unique=True),
+            IndexModel([("handle", ASCENDING)]),
+        ]

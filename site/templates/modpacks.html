@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Modpacks - Better Trove Tools</title>
+    <meta name="description" content="Ready-made bundles of Trove mods. Grab a whole new setup in a single download, or put your own collection together and share it.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://trove.aallyn.net/modpacks">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Trove Modpacks (Beta)">
+    <meta property="og:description" content="Ready-made bundles of Trove mods - a whole new setup in one download.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/mods.min.css">
+    <link rel="stylesheet" href="/static/modpacks.min.css">
+</head>
+<body class="landing mods-page modpacks-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="mh-main">
+
+        <!-- ═══════════════ HERO ═══════════════ -->
+        <section class="mh-hero">
+            <div class="mh-hero-inner">
+                <p class="mh-eyebrow">
+                    <span>/modpacks</span>
+                    <span class="mh-beta-pill">Beta</span>
+                </p>
+                <h1 class="mh-title" data-i18n>Modpacks</h1>
+                <p class="mh-subtitle" data-i18n>One download, a whole new setup. Modpacks bring a creator's favourite mods together so you can transform how Trove looks and plays in one go - then build and share your own.</p>
+                <div class="mh-hero-actions">
+                    <button type="button" class="mh-btn mh-btn-primary" id="mh-create" hidden>
+                        <i class="fa-solid fa-plus"></i> <span data-i18n>Create a modpack</span>
+                    </button>
+                    <a class="mh-btn mh-btn-ghost" id="mh-mine" href="#" hidden>
+                        <i class="fa-solid fa-folder-open"></i> <span data-i18n>My modpacks</span>
+                    </a>
+                    <a class="mh-btn mh-btn-ghost" id="mh-signin" href="/login" hidden>
+                        <i class="fa-brands fa-discord"></i> <span data-i18n>Sign in to publish</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ CONTROLS ═══════════════ -->
+        <section class="mh-controls">
+            <div class="mh-controls-row mh-controls-top">
+                <div class="mh-search-wrap">
+                    <i class="fa-solid fa-magnifying-glass mh-search-icon" aria-hidden="true"></i>
+                    <input type="search" id="mh-search" class="mh-search-input"
+                           data-i18n-placeholder placeholder="Search modpacks…" aria-label="Search modpacks">
+                </div>
+                <div class="mh-field">
+                    <label class="mh-field-label" for="mh-sort" data-i18n>Sort</label>
+                    <select id="mh-sort" class="mh-select">
+                        <option value="recent" data-i18n>Recently updated</option>
+                        <option value="downloads" data-i18n>Most downloaded</option>
+                        <option value="stars" data-i18n>Most liked</option>
+                        <option value="new" data-i18n>Newest</option>
+                        <option value="title" data-i18n>Title (A–Z)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ RESULTS ═══════════════ -->
+        <section class="mh-results">
+            <p class="mh-results-meta" id="mh-meta"></p>
+            <div class="mh-grid" id="mh-grid"></div>
+            <div class="mh-foot" id="mh-foot" hidden>
+                <button type="button" class="mh-btn mh-btn-ghost" id="mh-load-more" data-i18n>Load more</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- ═══════════════ CREATE MODAL ═══════════════ -->
+    <div class="mh-modal" id="mh-create-modal" hidden role="dialog" aria-modal="true" aria-labelledby="mh-create-title">
+        <div class="mh-modal-backdrop" data-close></div>
+        <div class="mh-modal-card">
+            <button type="button" class="mh-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            <h2 id="mh-create-title" class="mh-modal-title" data-i18n>Create a modpack</h2>
+            <form id="mh-create-form" class="mh-form">
+                <label class="mh-form-field">
+                    <span data-i18n>Title</span>
+                    <input type="text" name="title" maxlength="120" required>
+                </label>
+                <label class="mh-form-field">
+                    <span data-i18n>Short summary</span>
+                    <input type="text" name="summary" maxlength="280" data-i18n-placeholder placeholder="One line shown on the card">
+                </label>
+                <label class="mh-form-field">
+                    <span data-i18n>Tags</span>
+                    <input type="text" name="tags" data-i18n-placeholder placeholder="comma, separated, tags">
+                </label>
+                <label class="mh-form-field">
+                    <span data-i18n>Visibility</span>
+                    <select name="visibility">
+                        <option value="draft" data-i18n>Draft (only you)</option>
+                        <option value="unlisted" data-i18n>Unlisted (link only)</option>
+                        <option value="public" data-i18n>Public</option>
+                    </select>
+                </label>
+                <p class="mh-form-hint" data-i18n>
+                    Give your pack a title to get started - you'll add the mods on the next screen. It'll
+                    live at <strong>/modpacks/&lt;your username&gt;/&lt;slug&gt;</strong>.
+                </p>
+                <p class="mh-form-error" id="mh-create-error" hidden></p>
+                <div class="mh-form-actions">
+                    <button type="button" class="mh-btn mh-btn-ghost" data-close data-i18n>Cancel</button>
+                    <button type="submit" class="mh-btn mh-btn-primary" data-i18n>Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/modpacks.min.js" defer></script>
+</body>
+</html>

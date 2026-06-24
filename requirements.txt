@@ -11,10 +11,15 @@ redis==5.2.1
 asyncpg==0.30.0
 jinja2==3.1.6
 python-multipart==0.0.20
+# Pure-Python git (no native `git` binary). Backs the Mods Hub git store + the
+# authenticated smart-HTTP server (`git clone/pull/push` over /git/mods/*).
+dulwich==0.22.8
 cryptography==46.0.3
 tzdata==2025.2
 beautifulsoup4==4.12.3
 pillow==11.3.0
+# Blueprint→image voxel rasterizer (app/trove/render) - CPU-only, no GPU.
+numpy==2.4.6
 # Self-hosted OCR engine for the character-stat extractor (/v1/ocr/character).
 # RapidOCR (PaddleOCR models) - accurate on stylized game fonts + multilingual,
 # pip-only (no system OCR binary, no torch). The `rapidocr` package supports

@@ -19,10 +19,17 @@ Wire format (text/event-stream):
 
     : ping            <- keep-alive comment every ~20s
 
-Event types: ``challenge`` (an hourly challenge was captured) and ``chaos`` (the
-chaos-chest item). The SSE ``event:`` field carries the type, and the JSON ``data:``
-payload repeats it as ``{type, data, ts}`` so both EventSource listeners and raw
-parsers work. Reconnect on disconnect - the on-connect snapshot re-primes you.
+Event types:
+  - ``challenge`` - an hourly challenge was captured
+  - ``chaos``     - the chaos-chest item
+  - ``mod_release`` - a new mod release was published on the Mods Hub. ``data`` =
+    ``{project:{slug,title,owner}, release:{id,tag,title,branch,format,size,changelog,
+    published_at}, download_url, page_url}``. Discrete (not in the on-connect snapshot) -
+    you only receive ones published while connected; hook it to mirror/announce releases.
+
+The SSE ``event:`` field carries the type, and the JSON ``data:`` payload repeats it as
+``{type, data, ts}`` so both EventSource listeners and raw parsers work. Reconnect on
+disconnect - the on-connect snapshot re-primes the singleton (challenge/chaos) state.
 """
 import asyncio
 import json
@@ -53,10 +60,11 @@ async def stream(request: Request, ctx: AccessContext = _EVENTS) -> StreamingRes
     """Open a Server-Sent Events stream of live game-data updates.
 
     On connect you receive a snapshot of the current ``challenge`` and ``chaos``
-    state, then one event per change as it happens (no polling). Each message is
-    an ``event: <type>`` line plus a JSON ``data:`` payload ``{type, data, ts}``.
-    A ``: ping`` keep-alive comment arrives roughly every 20 seconds; reconnect on
-    disconnect and the snapshot re-primes you."""
+    state, then one event per change as it happens (no polling) - plus discrete
+    ``mod_release`` events when a mod release is published on the Mods Hub. Each
+    message is an ``event: <type>`` line plus a JSON ``data:`` payload
+    ``{type, data, ts}``. A ``: ping`` keep-alive comment arrives roughly every 20
+    seconds; reconnect on disconnect and the snapshot re-primes you."""
     if bus.connection_count() >= settings.events_max_connections:
         raise APIError(
             503, ErrorCode.service_unavailable,
