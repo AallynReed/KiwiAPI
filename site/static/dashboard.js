@@ -532,7 +532,7 @@
 
   // ─── Trove stats (leaderboard appearances) ─────────────────────────
   async function loadTroveStats() {
-    $statsBody.innerHTML = `<p class="dash-loading" data-i18n>${t('Crunching the latest capture - first paint can take a moment while we warm the caches.')}</p>`;
+    $statsBody.innerHTML = `<p class="dash-loading" data-i18n>${t('Loading your stats - this can take a moment.')}</p>`;
     const r = await Auth.callJSON('/v1/site-auth/me/trove-stats');
     if (!r.ok || !r.data) {
       $statsBody.innerHTML = `<p class="dash-error">${esc(t('Could not load your stats right now.'))}</p>`;
@@ -543,7 +543,7 @@
 
     if (!items.length) {
       $statsBody.innerHTML = `
-        <p class="dash-empty">${esc(t('No recent leaderboard appearances for this player name yet. The bot captures hourly - check back after the next sweep, or pick a different name.'))}</p>`;
+        <p class="dash-empty">${esc(t('No recent leaderboard appearances for this name yet. Check back in an hour, or try a different name.'))}</p>`;
       $statsMeta.textContent = '';
       return;
     }

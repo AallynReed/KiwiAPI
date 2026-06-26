@@ -549,7 +549,7 @@
       + encodeURIComponent(v.name) + '/upload', fd);
     if (r.ok && r.data) {
       setDetail(r.data);
-      toast(r.data.matched_existing ? t('Added (we already host this mod).') : t('Mod uploaded.'));
+      toast(r.data.matched_existing ? t('Added to your pack.') : t('Mod uploaded.'));
     } else {
       toast(errMsg(r, t('Could not add that .tmod.')), 'error');
     }

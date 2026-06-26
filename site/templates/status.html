@@ -75,7 +75,7 @@
             <div id="st-history-body"><div class="st-loading" data-i18n>Loading history…</div></div>
         </section>
 
-        <p class="st-method" data-i18n>How this works: once a minute, a background probe opens a TCP connection to the game's login server and checks account auth over HTTPS. "Online" means the login server accepted the connection; "Maintenance" means login is up but the game servers are refusing connections; "Offline" means even auth is unreachable.</p>
+        <p class="st-method" data-i18n>How this works: every minute we check whether Trove's login and game servers are responding. "Online" means you can log in and play; "Maintenance" means login works but the game servers are down for an update; "Offline" means the servers aren't reachable at all.</p>
     </main>
 
     {% include "partials/footer.html" %}

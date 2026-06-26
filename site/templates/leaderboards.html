@@ -258,7 +258,7 @@
             </div>
             <details class="lb-cheaters-method">
                 <summary data-i18n>How is this computed?</summary>
-                <p data-i18n>Three independent statistical checks per board: Modified Z-score (median-based, robust to cheaters polluting their own baseline), rank-gap ratio (a player's lead over the next rank vs the board's typical between-rank step), and velocity (score gain rate vs the board's peer p95). A player flagged by multiple checks, or across multiple boards, is higher confidence.</p>
+                <p data-i18n>We run several statistical checks on each board - unusually large score jumps, suspiciously big leads over the next rank, and improbably fast score gains. A player flagged by more than one check, or across several boards, is rated higher confidence.</p>
             </details>
         </section>
 
@@ -289,7 +289,7 @@
             </div>
             <details class="lb-cheaters-method">
                 <summary data-i18n>How is this computed?</summary>
-                <p data-i18n>A fourth check looks for alt clusters: families of similarly-named accounts (shared name stem) sitting at near-identical scores - a coordinated multi-account pattern no single-player check can see. The tighter the scores, the more accounts, and the more boards they share, the higher the cluster's confidence.</p>
+                <p data-i18n>Beyond the per-player checks, we look for groups: families of similarly-named accounts sitting at near-identical scores - a coordinated pattern no single-player check would catch. The tighter the scores, the more accounts, and the more boards they share, the higher the confidence.</p>
             </details>
         </section>
 

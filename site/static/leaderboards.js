@@ -316,7 +316,7 @@
     // always has this cached - when it doesn't (cold boot / brand new
     // anchor), the wait is several seconds and the user deserves to know
     // SOMETHING is happening.
-    const crunching = t('Crunching the latest capture - first paint can take a moment while we warm the caches.');
+    const crunching = t('Loading the latest data - this can take a moment.');
     if ($cheatersMeta) $cheatersMeta.textContent = crunching;
     if ($clustersMeta) $clustersMeta.textContent = crunching;
     try {
@@ -1222,7 +1222,7 @@
     const hadBoards = previousBoards.length > 0;
     if (!hadBoards) {
       $boardList.innerHTML = `
-        <p class="lb-loading lb-loading-crunch" data-i18n>Crunching the latest capture - first paint can take a moment while we warm the caches.</p>`;
+        <p class="lb-loading lb-loading-crunch" data-i18n>Loading the latest data - this can take a moment.</p>`;
       rerunI18n();
       resetEntries();
     } else {
@@ -1437,7 +1437,7 @@
       $entriesBody.classList.add('lb-refreshing');
     } else {
       $entriesBody.innerHTML = `
-        <p class="lb-loading lb-loading-crunch" data-i18n>Crunching the latest capture - first paint can take a moment while we warm the caches.</p>`;
+        <p class="lb-loading lb-loading-crunch" data-i18n>Loading the latest data - this can take a moment.</p>`;
     }
     $entriesFoot.hidden = true;
     rerunI18n();

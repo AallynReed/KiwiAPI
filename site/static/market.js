@@ -143,7 +143,7 @@
     $detailTitle.textContent = name;
     $detailMeta.textContent = '';
     resetSummary();
-    $listingsBody.innerHTML = `<p class="mkt-loading" data-i18n>${t('Crunching the latest capture - first paint can take a moment while we warm the caches.')}</p>`;
+    $listingsBody.innerHTML = `<p class="mkt-loading" data-i18n>${t('Loading the latest prices - this can take a moment.')}</p>`;
     $listingsFoot.hidden = true;
 
     updateHash();

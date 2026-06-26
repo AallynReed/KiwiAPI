@@ -44,7 +44,7 @@
         <section class="cact-hero">
             <p class="cact-eyebrow">/class-activity</p>
             <h1 class="cact-title" data-i18n>Class Activity</h1>
-            <p class="cact-sub" data-i18n>Which classes are people actually playing? A per-class, lower-bound estimate of active players derived from the Effort leaderboards - trends over time and each class's player share.</p>
+            <p class="cact-sub" data-i18n>Which classes are people actually playing? Trends over time and each class's share of active players.</p>
         </section>
 
         <!-- Player filter: "Established" (default) keeps only players whose Power
@@ -93,7 +93,7 @@
             </div>
         </section>
 
-        <p class="cact-method" data-i18n>How this works: each class is measured by its Effort leaderboard (the related Paragon board is left out - its scores are ambiguous). For the time chart, a player counts toward a class when their Effort score rose (or they first appear) between two consecutive captures; the share donut instead counts everyone present on the class's Effort board in the latest capture. The default "Established" view keeps only players who clear both a Power Rank and an Effort threshold on that class - filtering out brand-new characters and throwaway alts; the "All" view counts everyone. Effort resets weekly (Monday 11:00 UTC), so the chart's lines break across the reset rather than dropping to a false zero. Each line shows the class's share of activity over time (hover for the underlying player count); the donut shows each class's share of players in the latest snapshot. "Share" counts a player who plays several classes in each, so the slices sum to 100% but aren't distinct players. It's a lower bound: anyone outside a board's top ranks isn't seen.</p>
+        <p class="cact-method" data-i18n>Activity is estimated from each class's leaderboard, so it reflects active, higher-ranked players rather than a full headcount. The chart tracks each class's share of activity over time; the donut shows the split right now. "Established" hides brand-new characters and throwaway alts - "All" counts everyone. A player who plays several classes counts toward each, so the shares add up to 100% but aren't unique players.</p>
     </main>
 
     {% include "partials/footer.html" %}

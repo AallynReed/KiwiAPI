@@ -47,7 +47,7 @@
         <section class="act-hero">
             <p class="act-eyebrow">/activity</p>
             <h1 class="act-title" data-i18n>Player Activity</h1>
-            <p class="act-sub" data-i18n>How busy is Trove? A live, lower-bound estimate of active players derived from the hourly leaderboard captures - with trends from the last day to all-time.</p>
+            <p class="act-sub" data-i18n>How busy is Trove? A live estimate of active players, with trends from the last day to all-time.</p>
         </section>
 
         <!-- Live pulse: the most-recent-hour estimate, plus the distinct
@@ -99,7 +99,7 @@
             </div>
         </section>
 
-        <p class="act-method" data-i18n>How this works: each capture counts the distinct top-leaderboard players whose score rose on at least one board since the previous capture, or who newly appear with a non-zero score - a lower bound on real active players (anyone outside every board's top ranks isn't seen). A reset isn't counted as activity (the score drops, it doesn't rise). The 24h and 7d figures are the distinct <strong>union</strong> of every capture's active players across the period. The chart plots the average per-hour estimate inside each time bucket.</p>
+        <p class="act-method" data-i18n>Player counts are estimated each hour from leaderboard movement, so they reflect active, higher-ranked players rather than a full headcount. The 24h and 7d figures count each player once across the whole period.</p>
     </main>
 
     {% include "partials/footer.html" %}

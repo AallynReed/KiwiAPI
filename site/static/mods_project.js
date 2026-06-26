@@ -433,7 +433,7 @@
       ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-primary" id="mp-release"><i class="fa-solid fa-rocket"></i> ${esc(t('New release'))}</button>` : '';
     return `<section class="mp-section">
       <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-rocket"></i> ${esc(t('Releases'))}</h2>${newRelBtn}</div>
-      <p class="mp-muted" style="margin:0 0 12px">${esc(t('Each branch is a variant - the latest release of each is shown.'))}</p>
+      <p class="mp-muted" style="margin:0 0 12px">${esc(t('Each variant shows its latest release.'))}</p>
       <div id="mp-releases">${rows}</div>
     </section>`;
   }
