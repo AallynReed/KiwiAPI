@@ -20,7 +20,16 @@ from app.core.config import settings
 from app.core.database import close_db, init_db
 from app.core.email_outbox import start_email_worker, stop_email_worker
 from app.core.errors import COMMON_ERROR_RESPONSES, register_error_handlers
-from app.core.features import require_market_enabled, require_mods_hub_enabled
+from app.core.features import (
+    require_class_activity_enabled,
+    require_codexes_enabled,
+    require_giveaways_enabled,
+    require_leaderboards_enabled,
+    require_market_enabled,
+    require_mods_hub_enabled,
+    require_player_activity_enabled,
+    require_updates_enabled,
+)
 from app.core.idempotency import add_idempotency_middleware
 from app.core.maintenance import maintenance_loop
 from app.core.middleware import add_security_middleware
@@ -255,8 +264,12 @@ app.include_router(site_oauth_router, include_in_schema=False)
 app.include_router(tokens_router, include_in_schema=False)
 app.include_router(admin_router, include_in_schema=False)
 app.include_router(giveaways_admin_router, include_in_schema=False)
-app.include_router(giveaways_router, include_in_schema=False)
-app.include_router(giveaways_public_router)   # public giveaways:read - in schema
+# Public + user-facing giveaways ride the master feature toggle (the admin
+# management router above stays reachable so draws can be administered while
+# the public surface is hidden).
+_GIVEAWAYS_GATE = [Depends(require_giveaways_enabled)]
+app.include_router(giveaways_router, include_in_schema=False, dependencies=_GIVEAWAYS_GATE)
+app.include_router(giveaways_public_router, dependencies=_GIVEAWAYS_GATE)   # public giveaways:read - in schema
 app.include_router(supporters_public_router)  # public misc:read (tokenless) - in schema
 app.include_router(discord_bot_router, include_in_schema=False)  # User Dashboard "Discord Bot" tab (site_auth)
 app.include_router(scanning_router, include_in_schema=False)
@@ -285,13 +298,16 @@ app.include_router(mods_git_router, dependencies=_MODS_GATE)   # authenticated g
 app.include_router(modpacks_hub_router, include_in_schema=False, dependencies=_MODS_GATE)
 app.include_router(modpacks_hub_write_router, include_in_schema=False, dependencies=_MODS_GATE)
 app.include_router(modpacks_public_router, dependencies=_MODS_GATE)  # documented app-facing API (/v1/modpacks/*)
-app.include_router(updates_router)
-app.include_router(codexes_router)
+# Each of these rides its own master feature toggle (the "features" category in
+# the admin Configuration tab); OFF -> every endpoint 404s, matching how the
+# website page + navbar link disappear. See app/core/features.py.
+app.include_router(updates_router, dependencies=[Depends(require_updates_enabled)])
+app.include_router(codexes_router, dependencies=[Depends(require_codexes_enabled)])
 app.include_router(btt_router)
-app.include_router(leaderboards_router)
+app.include_router(leaderboards_router, dependencies=[Depends(require_leaderboards_enabled)])
 app.include_router(market_router, dependencies=[Depends(require_market_enabled)])
-app.include_router(activity_router)
-app.include_router(class_activity_router)
+app.include_router(activity_router, dependencies=[Depends(require_player_activity_enabled)])
+app.include_router(class_activity_router, dependencies=[Depends(require_class_activity_enabled)])
 app.include_router(events_router)  # live SSE event stream (events:read)
 app.include_router(ocr_router)     # self-hosted character-stat OCR (ocr:read)
 

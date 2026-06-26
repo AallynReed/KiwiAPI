@@ -17,25 +17,29 @@ from pydantic import BaseModel, Field
 from pymongo import ASCENDING, DESCENDING, TEXT, IndexModel
 
 from app.core.utils import utcnow
+from app.trove.mods_hub.models import Collaborator
 
 Visibility = Literal["draft", "unlisted", "public"]
 
 
 class ModpackEntry(BaseModel):
-    """One mod inside a modpack variant - a reference, not a copy.
+    """One mod inside a modpack variant. Two kinds:
 
-    The mod is tracked by its stable ``project_id`` (survives the mod being
-    renamed or moved to a new handle); ``handle``/``slug``/``title`` are
-    denormalized for display + links and resynced when the pack is resolved.
+    1. A **reference** to a Mods Hub mod (``project_id`` set) - tracked by its stable
+       id (survives rename); ``handle``/``slug``/``title`` denormalized for display.
+    2. A **custom uploaded** ``.tmod`` (``custom_sha`` set, ``project_id`` None) - a
+       file the maker uploaded that isn't a hub mod. (If an upload's content hash
+       matches a mod we already host, it's stored as a reference instead - never a
+       duplicate file.)
     """
 
-    project_id: PydanticObjectId               # ModProject.id (stable reference)
-    handle: str                                # owner handle of the mod (denormalized)
-    slug: str                                  # mod slug (denormalized)
-    title: str = ""                            # mod title (denormalized; survives rename/deletion)
+    project_id: PydanticObjectId | None = None  # ModProject.id (None for a custom upload)
+    handle: str = ""                            # owner handle of the mod (denormalized; "" for custom)
+    slug: str = ""                              # mod slug (denormalized; "" for custom)
+    title: str = ""                             # title (denormalized mod title, or the uploaded .tmod's title)
 
     # Which *variant* (Mods Hub branch) of the mod was picked. Its releases are the
-    # candidate builds for this entry.
+    # candidate builds for this entry. (Ignored for custom uploads.)
     branch: str = "main"
 
     # Version lock. OFF by default: the entry tracks the latest published build of
@@ -43,6 +47,12 @@ class ModpackEntry(BaseModel):
     # that branch) and never auto-updates - even if the mod ships a newer build.
     version_locked: bool = False
     locked_tag: str | None = None
+
+    # Custom uploaded .tmod (kind 2): the CAS sha of the uploaded file + its download
+    # name + author (read from the .tmod header). Empty for hub-mod references.
+    custom_sha: str | None = None
+    custom_filename: str | None = None
+    author: str = ""
 
 
 class ModpackVariant(BaseModel):
@@ -66,9 +76,12 @@ class ModpackProject(Document):
     warnings: str = ""
     tags: list[str] = Field(default_factory=list)
 
-    owner_id: PydanticObjectId                  # SiteUser.id
+    owner_id: PydanticObjectId                  # SiteUser.id (primary owner)
     owner_username: str                         # denormalized for display
     owner_handle: str = ""                      # canonical lowercase username (URL handle)
+    # Co-owners (besides the primary owner): full edit rights, but the primary owner
+    # keeps collaborator management + deletion. See mods_hub Collaborator.
+    collaborators: list[Collaborator] = Field(default_factory=list)
 
     visibility: Visibility = "draft"
 
@@ -101,6 +114,7 @@ class ModpackProject(Document):
             IndexModel([("owner_id", ASCENDING), ("slug", ASCENDING)], unique=True),
             IndexModel([("owner_handle", ASCENDING), ("slug", ASCENDING)]),  # URL lookup
             IndexModel([("owner_id", ASCENDING), ("updated_at", DESCENDING)]),
+            IndexModel([("collaborators.user_id", ASCENDING)]),   # "modpacks I collaborate on"
             IndexModel([("visibility", ASCENDING), ("updated_at", DESCENDING)]),
             IndexModel([("visibility", ASCENDING), ("download_count", DESCENDING)]),
             IndexModel([("visibility", ASCENDING), ("star_count", DESCENDING)]),

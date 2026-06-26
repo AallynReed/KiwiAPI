@@ -8,6 +8,7 @@ Mirrors ``app/auth/models.py`` but with:
     grant access to the API-facing surface the dev portal manages
 """
 from datetime import datetime
+from typing import Literal
 
 from beanie import Document, PydanticObjectId
 from pydantic import EmailStr, Field
@@ -21,7 +22,14 @@ class SiteUser(Document):
     and stored lower-cased so login lookups are O(index seek)."""
 
     # Login identity. Sign-in is Discord-only; there is no local password.
-    username: str                              # canonical lowercase
+    # `username` is the **website "Trove username"** (canonical lowercase) - the
+    # handle for mods/modpacks/profiles. It is FROZEN: derived from the Discord
+    # handle at first signup, then only changed via the admin-approved change flow,
+    # so renaming on Discord never shifts a user's mod handles/URLs.
+    username: str                              # canonical lowercase (frozen "Trove username")
+    # The user's LIVE Discord handle, resynced from Discord on every login (display
+    # only). May change on Discord's side without touching `username`.
+    discord_handle: str = ""
     email: EmailStr                            # canonical lowercase (from Discord)
 
     # Profile.
@@ -121,4 +129,28 @@ class SiteSession(Document):
         indexes = [
             IndexModel([("refresh_token_hash", ASCENDING)], unique=True),
             IndexModel([("site_user_id", ASCENDING), ("last_used_at", DESCENDING)]),
+        ]
+
+
+class UsernameChangeRequest(Document):
+    """A user's request to change their frozen **Trove username** to a new value
+    (e.g. their in-game name). Reviewed by a master, who approves (renames the
+    account's ``username``) or rejects with a ``reason``. One *pending* request per
+    user; resolved ones are kept for history."""
+
+    site_user_id: PydanticObjectId
+    current_username: str
+    requested_username: str                    # validated, canonical lowercase
+    status: Literal["pending", "approved", "rejected"] = "pending"
+    reason: str = ""                           # denial reason (shown to the user)
+    resolved_by: PydanticObjectId | None = None  # master who approved/rejected
+    resolved_at: datetime | None = None
+
+    created_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "username_change_requests"
+        indexes = [
+            IndexModel([("status", ASCENDING), ("created_at", DESCENDING)]),
+            IndexModel([("site_user_id", ASCENDING), ("created_at", DESCENDING)]),
         ]

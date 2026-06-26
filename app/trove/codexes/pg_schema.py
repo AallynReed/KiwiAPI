@@ -47,6 +47,22 @@ CREATE TABLE IF NOT EXISTS codex_meta (
     parser_version INTEGER NOT NULL DEFAULT 0,
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Separate version for the rig extractor so a rig-logic/coverage change forces a rig
+-- rebuild WITHOUT a (heavier) full codex re-parse.
+ALTER TABLE codex_meta ADD COLUMN IF NOT EXISTS rig_version INTEGER NOT NULL DEFAULT 0;
+
+-- Rig map for the Mods Hub 3D assembler: blueprint basename -> the creature skeleton
+-- it belongs to + its attach point, read structurally from EVERY skeleton-binding
+-- prefab (mounts, allies' _npc, skins/costumes, npc/mobs). Separate from codex_entry
+-- so rig coverage isn't limited to the collectible types the codex classifies.
+-- Disposable - rebuilt from the archive by reindex_rigs.
+CREATE TABLE IF NOT EXISTS rig_binding (
+    branch     TEXT NOT NULL,
+    blueprint  TEXT NOT NULL,   -- lowercased blueprint basename (matches a mod's .tmod)
+    skeleton   TEXT NOT NULL,
+    ap_key     TEXT NOT NULL,
+    PRIMARY KEY (branch, blueprint)
+);
 """
 
 

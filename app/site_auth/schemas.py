@@ -30,9 +30,15 @@ class SiteLogoutRequest(BaseModel):
     refresh_token: str | None = None
 
 
+class SiteUsernameRequestBody(BaseModel):
+    """Request to change the frozen Trove username (admin-approved)."""
+    username: str = Field(min_length=3, max_length=24)
+
+
 class SiteUserPublic(BaseModel):
     id: str
-    username: str
+    username: str                              # frozen "Trove username" (mod handle)
+    discord_handle: str = ""                   # live Discord handle (display only)
     email: EmailStr
     display_name: str | None = None
     # Ready-to-use Discord CDN avatar URL (built server-side from the stored

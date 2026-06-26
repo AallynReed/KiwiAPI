@@ -78,7 +78,8 @@ def decode(data: bytes) -> list[dict]:
                 for (x, y, z, r, g, b, w, t) in raw]
     if version == 5:
         try:
-            body = zlib.decompressobj().decompress(data[9:])
+            d = zlib.decompressobj()
+            body = d.decompress(data[9:]) + d.flush()   # flush: don't truncate large models
         except zlib.error as e:
             raise BlueprintError(f"bad v5 zlib: {e}") from e
         if len(body) < 32:
@@ -105,6 +106,31 @@ def decode(data: bytes) -> list[dict]:
     raise BlueprintError(f"unsupported kiwib version {version}")
 
 
+def is_empty_blueprint(data: bytes) -> bool:
+    """True if a blueprint has zero voxels (a placeholder for an unused part) or is
+    unreadable - i.e. nothing a viewer could show. Cheap: reads only the count, not
+    the whole model. Mirrors BetterTroveTools' ``is_empty_blueprint``."""
+    if len(data) < 9 or data[:5] != MAGIC:
+        return True
+    version = struct.unpack_from("<I", data, 5)[0]
+    if version in (3, 4):
+        try:
+            count, _ = _uleb(data, 9)
+        except BlueprintError:
+            return True
+        return count == 0
+    if version == 5:
+        try:
+            d = zlib.decompressobj()
+            body = d.decompress(data[9:]) + d.flush()
+        except zlib.error:
+            return True
+        if len(body) < 28:
+            return True
+        return struct.unpack_from("<i", body, 24)[0] <= 0
+    return True
+
+
 # --------------------------------------------------------------------------- #
 # Material mapping (type/w -> render kind + colour)
 # --------------------------------------------------------------------------- #
@@ -123,16 +149,29 @@ def _kind(t: int) -> str:
     return "S"              # solid (and game-internal types) -> shaded opaque
 
 
+# Render-kind -> compact wire code the 3D viewers consume (solid / glass / glow /
+# glow-glass). Shared so the catalog render, the single-blueprint viewer, and the
+# assembled-creature viewer all speak the same material language.
+KIND_CODE = {"S": 0, "G": 1, "E": 2, "GE": 3}
+
+
+def material_for(r: int, g: int, b: int, w: int, t: int) -> tuple[int, int, int, str, int]:
+    """A voxel's material: ``(r, g, b, kind, level)``. ``kind`` is S/G/E/GE; ``level``
+    is the glass alpha level ``16+32*w`` for transparent kinds, else 255. Dark
+    procedurally-tinted voxels are mapped to their placeholder colour. The single
+    source of truth for every voxel renderer (catalog PNG + both 3D viewers)."""
+    if t not in _AUTHORED and max(r, g, b) <= 24:
+        r, g, b = _TINTS.get(t, (110, 110, 110))      # procedural placeholder tint
+    kind = _kind(t)
+    level = 16 + 32 * max(0, min(int(w), 7)) if kind in ("G", "GE") else 255
+    return r, g, b, kind, level
+
+
 def to_render_voxels(decoded: list[dict]) -> dict:
     """``{(x,y,z): (r,g,b,kind,level)}`` -- level = glass alpha level 16+32*w."""
     out = {}
     for v in decoded:
-        r, g, b, w, t = v["r"], v["g"], v["b"], v["w"], v["type"]
-        if t not in _AUTHORED and max(r, g, b) <= 24:
-            r, g, b = _TINTS.get(t, (110, 110, 110))      # procedural placeholder tint
-        kind = _kind(t)
-        level = 16 + 32 * max(0, min(int(w), 7)) if kind in ("G", "GE") else 255
-        out[(v["x"], v["y"], v["z"])] = (r, g, b, kind, level)
+        out[(v["x"], v["y"], v["z"])] = material_for(v["r"], v["g"], v["b"], v["w"], v["type"])
     return out
 
 

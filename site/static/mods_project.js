@@ -210,10 +210,30 @@
     const tags = (d.tags || []).map((x) => `<span class="mp-tag">${esc(x)}</span>`).join('');
     const taken = d.taken_down
       ? `<div class="mp-takedown"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('This mod has been removed by a moderator.'))} ${d.takedown_reason ? esc(d.takedown_reason) : ''}</div>` : '';
-    const latest = (d.releases || []).find((r) => r.status === 'published');
-    const dlBtn = latest
-      ? `<a class="mp-btn mp-btn-primary" href="/site/mods/releases/${esc(latest.id)}/download"><i class="fa-solid fa-download"></i> ${esc(t('Download'))} <span class="mp-release-tagchip">${esc(latest.tag)}</span></a>`
-      : `<span class="mp-muted">${esc(t('No release yet'))}</span>`;
+    // Header download: a direct link for a single release, but a dropdown to pick
+    // when there are several (so it never silently grabs just the latest).
+    const published = (d.releases || []).filter((r) => r.status === 'published');
+    const dlBranches = new Set(published.map((r) => r.branch || 'main'));
+    const showDlBranch = dlBranches.size > 1;
+    let dlBtn;
+    if (!published.length) {
+      dlBtn = `<span class="mp-muted">${esc(t('No release yet'))}</span>`;
+    } else if (published.length === 1) {
+      const r0 = published[0];
+      dlBtn = `<a class="mp-btn mp-btn-primary" href="/site/mods/releases/${esc(r0.id)}/download"><i class="fa-solid fa-download"></i> ${esc(t('Download'))} <span class="mp-release-tagchip">${esc(r0.tag)}</span></a>`;
+    } else {
+      const items = published.map((r) => `<a class="mp-dl-item" href="/site/mods/releases/${esc(r.id)}/download" role="menuitem">
+          <span class="mp-release-tagchip">${esc(r.tag)}</span>
+          ${showDlBranch ? `<span class="mp-dl-branch">${esc(r.branch || 'main')}</span>` : ''}
+          <span class="mp-dl-size">${fmtBytes(r.tmod_size)}</span>
+        </a>`).join('');
+      dlBtn = `<div class="mp-dl-split">
+        <button type="button" class="mp-btn mp-btn-primary mp-dl-toggle" id="mp-dl-toggle" aria-haspopup="true" aria-expanded="false">
+          <i class="fa-solid fa-download"></i> ${esc(t('Download'))} <span class="mp-dl-caret" aria-hidden="true"></span>
+        </button>
+        <div class="mp-dl-menu" id="mp-dl-menu" role="menu" hidden>${items}</div>
+      </div>`;
+    }
     // Stray = an imported mod uploaded via contributions, with no owner here yet.
     const isStray = !!d.is_stray;
     const reportBtn = (!d.is_owner && !isStray && state.viewer)
@@ -248,6 +268,7 @@
     // Edit details + Settings live next to the title (right), not in a toolbar.
     const ownerTitleActions = d.is_owner ? `<div class="mp-title-actions">
         <button type="button" class="mp-btn mp-btn-sm" id="mp-edit"><i class="fa-solid fa-pen"></i> ${esc(t('Edit details'))}</button>
+        ${d.is_primary_owner ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-collab"><i class="fa-solid fa-user-group"></i> ${esc(t('Collaborate'))}</button>` : ''}
         <button type="button" class="mp-btn mp-btn-sm" id="mp-settings" aria-label="${esc(t('Settings'))}" title="${esc(t('Settings'))}"><i class="fa-solid fa-gear"></i></button>
       </div>` : '';
     // Owner-provided links (Discord invite / website / donation buttons).
@@ -299,6 +320,7 @@
   function wireOwnerControls() {
     const w = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
     w('mp-edit', openEdit);
+    w('mp-collab', openCollab);
     w('mp-settings', openSettings);
     w('mp-edit-readme', openReadmeEdit);
     w('mp-banner-btn', openBanner);
@@ -440,6 +462,7 @@
         ${r.published_at ? `<span><i class="fa-solid fa-clock"></i> ${fmtDate(r.published_at)}</span>` : ''}
       </div>
       ${r.changelog ? `<div class="mp-release-changelog">${esc(r.changelog)}</div>` : ''}
+      ${r.format !== 'zip' ? `<div class="mp-release-3d" data-rel-bp="${esc(r.id)}" hidden></div>` : ''}
     </div>`;
   }
 
@@ -746,6 +769,82 @@
     if (star) star.addEventListener('click', toggleStar);
     const claim = document.getElementById('mp-claim');
     if (claim) claim.addEventListener('click', openClaim);
+
+    const dlToggle = document.getElementById('mp-dl-toggle');
+    if (dlToggle) {
+      const menu = document.getElementById('mp-dl-menu');
+      // The menu is position:fixed (escapes the header's overflow:hidden); place it
+      // under the button, clamped to the viewport's right edge.
+      const place = () => {
+        const r = dlToggle.getBoundingClientRect();
+        const w = Math.max(menu.offsetWidth, 230);
+        const h = menu.offsetHeight;
+        const left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+        // Open below the button; flip above if it would run off the viewport bottom.
+        let top = r.bottom + 6;
+        if (top + h > window.innerHeight - 8 && r.top - h - 6 > 8) top = r.top - h - 6;
+        menu.style.top = top + 'px';
+        menu.style.left = left + 'px';
+      };
+      const onDoc = (e) => {
+        if (e.target !== dlToggle && !dlToggle.contains(e.target) && !menu.contains(e.target)) close();
+      };
+      const close = () => {
+        menu.hidden = true;
+        dlToggle.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('click', onDoc);
+        window.removeEventListener('scroll', close, true);
+        window.removeEventListener('resize', close);
+      };
+      dlToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!menu.hidden) { close(); return; }
+        menu.hidden = false;            // unhide so width is measurable, then place
+        place();
+        dlToggle.setAttribute('aria-expanded', 'true');
+        setTimeout(() => {
+          document.addEventListener('click', onDoc);
+          window.addEventListener('scroll', close, true);
+          window.addEventListener('resize', close);
+        }, 0);
+      });
+      menu.querySelectorAll('.mp-dl-item').forEach((a) => a.addEventListener('click', close));
+    }
+  }
+
+  // Manage co-owners (primary owner only).
+  function openCollab() {
+    const d = state.detail;
+    const rows = (d.collaborators || []).map((c) => `
+      <div class="mp-collab-row">
+        <span><i class="fa-solid fa-user"></i> @${esc(c.username)}</span>
+        <button type="button" class="mp-icon-btn mp-icon-danger" data-rm-collab="${esc(c.id)}" title="${esc(t('Remove'))}"><i class="fa-solid fa-xmark"></i></button>
+      </div>`).join('') || `<p class="mp-muted">${esc(t('No collaborators yet.'))}</p>`;
+    const m = openModal(t('Collaborators'), `
+      <p class="mp-muted">${esc(t('Collaborators can edit this mod. Only you, the owner, can add or remove them or delete the mod.'))}</p>
+      <div class="mp-collab-list">${rows}</div>
+      <form id="mp-collab-form" class="mp-form" style="margin-top:12px">
+        <label class="mp-form-field"><span>${esc(t('Add a collaborator by username'))}</span>
+          <input type="text" name="username" maxlength="80" placeholder="username" autocomplete="off" required></label>
+        <p class="mp-form-error" id="mp-collab-error" hidden></p>
+        <div class="mp-form-actions">
+          <button type="button" class="mp-btn mp-btn-ghost" data-close>${esc(t('Close'))}</button>
+          <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Add'))}</button>
+        </div>
+      </form>`);
+    const refresh = (data) => { state.detail = data; m.close(); render(); openCollab(); };
+    m.wrap.querySelectorAll('[data-rm-collab]').forEach((b) => b.addEventListener('click', async () => {
+      const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH + '/collaborators/' + encodeURIComponent(b.getAttribute('data-rm-collab')), { method: 'DELETE' });
+      if (r.ok && r.data) refresh(r.data); else toast(errMsg(r, 'Could not remove.'), true);
+    }));
+    m.wrap.querySelector('#mp-collab-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('mp-collab-error');
+      const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH + '/collaborators',
+        { json: { username: e.target.username.value.trim() } });
+      if (r.ok && r.data) refresh(r.data);
+      else { err.textContent = errMsg(r, t('Could not add that collaborator.')); err.hidden = false; }
+    });
   }
 
   // Claim a stray (imported) mod: a short form -> request to the admins.
@@ -848,6 +947,68 @@
       b.addEventListener('click', () => moveVariant(b.getAttribute('data-move-up'), -1)));
     document.querySelectorAll('[data-move-down]').forEach((b) =>
       b.addEventListener('click', () => moveVariant(b.getAttribute('data-move-down'), 1)));
+    loadReleaseBlueprints();
+  }
+
+  // For each .tmod release, lazily check whether it ships .blueprint models and,
+  // if so, reveal a "3D view" button per model that opens the WebGL viewer.
+  function loadReleaseBlueprints() {
+    document.querySelectorAll('[data-rel-bp]').forEach(async (box) => {
+      const relId = box.getAttribute('data-rel-bp');
+      try {
+        const r = await siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/blueprints');
+        if (!r.ok) return;
+        const body = await r.json();
+        const items = (body && body.items) || [];
+        if (!items.length) return;
+        const btnFor = (bp) => {
+          const name = bp.path.split('/').pop();
+          return '<button type="button" class="mp-btn mp-btn-sm mp-3d-btn" data-bp-rel="' + esc(relId) +
+            '" data-bp-path="' + esc(bp.path) + '" data-bp-name="' + esc(name) + '">' +
+            '<i class="fa-solid fa-cube"></i> ' + esc(name) + '</button>';
+        };
+        const hasRig = !!(body && body.rig);
+        // Component blueprints (the parts the assembled model is built from) fold UNDER
+        // the assembled button; standalone blueprints stay as their own buttons. With no
+        // rig, everything is standalone (a flat list, the original behaviour).
+        const components = hasRig ? items.filter((bp) => bp.assembled) : [];
+        const standalone = hasRig ? items.filter((bp) => !bp.assembled) : items;
+        const assembled = hasRig
+          ? '<button type="button" class="mp-btn mp-btn-sm mp-3d-btn mp-asm-btn" data-asm-rel="' + esc(relId) + '">' +
+            '<i class="fa-solid fa-spider"></i> ' + esc(t('View assembled creature')) +
+            (body.animations && body.animations.length ? ' <span class="mp-asm-anim">' + body.animations.length + ' ' + esc(t('animations')) + '</span>' : '') +
+            '</button>' : '';
+        const partsFold = (hasRig && components.length)
+          ? '<details class="mp-3d-parts"><summary class="mp-3d-parts-summary">' +
+            '<i class="fa-solid fa-cubes"></i> ' + esc(components.length + ' ' + t(components.length === 1 ? 'part' : 'parts')) +
+            '</summary><div class="mp-3d-list">' + components.map(btnFor).join('') + '</div></details>'
+          : '';
+        const topCount = (hasRig ? 1 : 0) + standalone.length;
+        const label = topCount + ' ' + t(topCount === 1 ? '3D model' : '3D models');
+        box.innerHTML = '<details class="mp-3d-details"><summary class="mp-3d-summary">' +
+          '<i class="fa-solid fa-cube"></i> ' + esc(label) + '</summary>' +
+          (assembled ? '<div class="mp-3d-assembled">' + assembled + partsFold + '</div>' : '') +
+          (standalone.length ? '<div class="mp-3d-list">' + standalone.map(btnFor).join('') + '</div>' : '') +
+          '</details>';
+        box.hidden = false;
+        box.querySelectorAll('[data-bp-rel]').forEach((b) => b.addEventListener('click', () => {
+          if (!window.BlueprintViewer) { toast(t('3D viewer is unavailable.'), true); return; }
+          const path = b.getAttribute('data-bp-path');
+          window.BlueprintViewer.open({
+            url: '/site/mods/releases/' + encodeURIComponent(b.getAttribute('data-bp-rel')) +
+                 '/blueprint?path=' + encodeURIComponent(path),
+            title: b.getAttribute('data-bp-name'),
+          });
+        }));
+        box.querySelectorAll('[data-asm-rel]').forEach((b) => b.addEventListener('click', () => {
+          if (!window.ModelViewer) { toast(t('3D viewer is unavailable.'), true); return; }
+          window.ModelViewer.open({
+            url: '/site/mods/releases/' + encodeURIComponent(b.getAttribute('data-asm-rel')) + '/assembled',
+            title: (state.detail && state.detail.title) || t('Assembled creature'),
+          });
+        }));
+      } catch (e) { /* a release without parseable blueprints just stays hidden */ }
+    });
   }
 
   async function toggleHiddenBranch(branch) {
@@ -988,11 +1149,11 @@
         <button type="button" class="mp-btn" data-close>${esc(t('Close'))}</button>
         <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Save'))}</button>
       </div>
-      <div class="mp-danger-zone">
+      ${state.detail.is_primary_owner ? `<div class="mp-danger-zone">
         <strong><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('Danger zone'))}</strong>
         <p class="mp-muted">${esc(t('Permanently removes the project, its files, history and releases. This cannot be undone.'))}</p>
         <button type="button" class="mp-btn mp-btn-sm mp-btn-danger" id="mp-delete-go"><i class="fa-solid fa-trash"></i> ${esc(t('Delete this mod'))}</button>
-      </div></form>`);
+      </div>` : ''}</form>`);
     m.wrap.querySelector('#mp-settings-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.target;
@@ -1001,13 +1162,34 @@
       if (r.ok) { m.close(); toast(t('Saved.')); await loadDetail(); }
       else showFormError(f, errMsg(r, 'Could not save settings.'));
     });
-    m.wrap.querySelector('#mp-delete-go').addEventListener('click', () => { m.close(); confirmDelete(); });
+    const delGo = m.wrap.querySelector('#mp-delete-go');
+    if (delGo) delGo.addEventListener('click', () => { m.close(); confirmDelete(); });
   }
 
   // ─── Studio: banner / previews ─────────────────────────────────────
   function openBanner() {
-    const m = openModal(t('Upload banner'), imageForm('banner', t('Pick a 16:9 image (PNG / JPEG / WebP / GIF, ≤ 5 MB).')));
+    const hasBanner = !!(state.detail && state.detail.banner_sha);
+    const m = openModal(t(hasBanner ? 'Change banner' : 'Upload banner'),
+      imageForm('banner', t('Pick a 16:9 image (PNG / JPEG / WebP / GIF, ≤ 5 MB).')));
     wireImageForm(m, false, '/banner');
+    // When a banner is set, offer a Remove option alongside the upload form.
+    if (hasBanner) {
+      const actions = m.wrap.querySelector('.mp-form-actions');
+      if (actions) {
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'mp-btn mp-btn-danger';
+        rm.style.marginRight = 'auto';   // sit on the left, away from Cancel/Upload
+        rm.textContent = t('Remove banner');
+        rm.addEventListener('click', async () => {
+          rm.disabled = true;
+          const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH + '/banner', { method: 'DELETE' });
+          if (r.ok || r.status === 200) { m.close(); toast(t('Banner removed.')); await loadDetail(); }
+          else { rm.disabled = false; showFormError(m.wrap.querySelector('#mp-img-form'), errMsg(r, 'Could not remove the banner.')); }
+        });
+        actions.insertBefore(rm, actions.firstChild);
+      }
+    }
   }
   function openPreviews() {
     const m = openModal(t('Add preview images'), imageForm('previews', t('Add up to a few screenshots (≤ 5 MB each).'), true));

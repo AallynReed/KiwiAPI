@@ -152,21 +152,29 @@ _STUB_PACKS = [
 
 def _stub_entry(handle, slug, title, branch="main", version=None, locked=False,
                 available=True, reason=None, author=None):
-    return {"handle": handle, "slug": slug, "title": title,
+    return {"handle": handle, "slug": slug, "title": title, "custom": False,
             "author": author or handle.title(), "branch": branch,
             "version": version, "version_locked": locked,
             "locked_tag": version if locked else None,
             "available": available, "reason": reason}
 
 
+def _stub_custom_entry(title, author):
+    return {"custom": True, "custom_sha": "deadbeef", "custom_filename": f"{title}.tmod",
+            "handle": "", "slug": "", "title": title, "author": author, "branch": "",
+            "version": None, "version_locked": False, "locked_tag": None,
+            "available": True, "reason": None}
+
+
 def _stub_pack_detail(handle, slug):
     base = next((p for p in _STUB_PACKS if p["slug"] == slug), _STUB_PACKS[0])
     variants = [
-        {"name": "default", "label": "Default", "mod_count": 3, "available_count": 2,
+        {"name": "default", "label": "Default", "mod_count": 4, "available_count": 3,
          "entries": [
              _stub_entry("aallyn", "neon-hud", "Neon HUD Overhaul", "main", "v1.2.0", author="Aallyn"),
              _stub_entry("skill", "tiny-mounts", "Tiny Mounts", "main", "v0.9", locked=True, author="Skill"),
              _stub_entry("bae", "quiet-ui", "Quiet UI", "main", available=False, reason="no build", author="Bae"),
+             _stub_custom_entry("My Custom HUD", "LocalArtist"),
          ]},
         {"name": "lite", "label": "Lite", "mod_count": 1, "available_count": 1,
          "entries": [
@@ -184,6 +192,8 @@ def _stub_pack_detail(handle, slug):
         "default_variant": "default", "variants": variants,
         "taken_down": False, "takedown_reason": None,
         "is_owner": True,   # dev: show the owner editor controls
+        "is_primary_owner": True,
+        "collaborators": [{"id": "collab1", "username": "skill"}],
     }
 
 
@@ -203,6 +213,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "updates.html", "text/html")
         if path == "/status":
             return self._send_file(TEMPLATES / "status.html", "text/html")
+        if path == "/server-time":
+            return self._send_file(TEMPLATES / "server-time.html", "text/html")
         if path == "/giveaways":
             return self._send_file(TEMPLATES / "giveaways.html", "text/html")
         if path == "/clubs":
@@ -306,6 +318,37 @@ class Handler(SimpleHTTPRequestHandler):
                                     "total": len(_STUB_MODS)})
         if path.startswith("/site/mods/image/"):
             return self._send_bytes(_PLACEHOLDER_PNG, "image/png")
+        # Stub the blueprint list so the page's collapsible "3D models" renders in dev
+        # (the real decode endpoint needs an actual .tmod and isn't stubbed).
+        if path.startswith("/site/mods/releases/") and path.endswith("/blueprints"):
+            return self._send_json({
+                "items": [
+                    {"path": "blueprints/c_head.blueprint", "size": 980, "assembled": True},
+                    {"path": "blueprints/c_l_eye.blueprint", "size": 60, "assembled": True},
+                    {"path": "blueprints/c_r_eye.blueprint", "size": 60, "assembled": True},
+                    {"path": "blueprints/c_l_hand.blueprint", "size": 220, "assembled": True},
+                    {"path": "blueprints/c_sword.blueprint", "size": 310, "assembled": False},
+                ],
+                "rig": "companion_spidermonkey",   # so the "assembled creature" button shows
+                "animations": ["unarmed_idle", "unarmed_walk_forward", "unarmed_run_forward",
+                               "unarmed_dance", "unarmed_idle_1"],
+            })
+        # Serve the pre-baked assembled spider so the model viewer can be previewed.
+        if path.startswith("/site/mods/releases/") and path.endswith("/assembled"):
+            mp = STATIC / "models" / "companion_spidermonkey.model.json"
+            if mp.exists():
+                return self._send_file(mp, "application/json")
+            return self._send_json({"error": {"message": "no model"}})
+        # Lazily-loaded rig animation frames: /site/rigs/<skeleton>/anim/<name>
+        if path.startswith("/site/rigs/") and "/anim/" in path:
+            import re as _re
+            m = _re.match(r"^/site/rigs/([a-z0-9_]+)/anim/([a-z0-9_]+)$", path)
+            if m:
+                ap = (ROOT / "app" / "trove" / "mods_hub" / "rigs" / "anim"
+                      / m.group(1) / (m.group(2) + ".json"))
+                if ap.exists():
+                    return self._send_file(ap, "application/json")
+            return self._send_json({"error": {"message": "no animation"}})
         if path.startswith("/site/mods/projects/"):
             rest = path[len("/site/mods/projects/"):]
             _parts = rest.split("/")
@@ -428,6 +471,27 @@ class Handler(SimpleHTTPRequestHandler):
             # the local preview (prod would normally serve 3 from the
             # runtime_config default).
             return self._send_json({"hot_retention_days": 5})
+        if path == "/site/server-time":
+            # Authoritative Trove time for the /server-time clock. Trove's day
+            # rolls at 11:00 UTC (UTC-11), so daily reset = next 11:00 UTC.
+            import time as _t
+            from datetime import datetime, timezone, timedelta
+            now = datetime.now(timezone.utc)
+            day_reset = now.replace(hour=11, minute=0, second=0, microsecond=0)
+            if now >= day_reset:
+                day_reset += timedelta(days=1)
+            # Weekly reset: just pick the next Sunday 11:00 UTC for the stub.
+            wk = day_reset
+            while wk.weekday() != 6:
+                wk += timedelta(days=1)
+            trove_now = now - timedelta(hours=11)
+            return self._send_json({
+                "now_unix": int(_t.time()),
+                "now_iso": now.isoformat(),
+                "trove_day": trove_now.strftime("%A"),
+                "daily_reset_at": int(day_reset.timestamp()),
+                "weekly_reset_at": int(wk.timestamp()),
+            })
         if path == "/site/trove-status":
             # Multi-env stub (eu/us/pts, binary online/down): EU down, US + PTS
             # online - a partial outage, matching the real-world state observed.

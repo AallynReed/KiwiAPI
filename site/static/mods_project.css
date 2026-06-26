@@ -49,6 +49,27 @@
 .mp-btn-danger:hover { border-color: #ff6b81; background: rgba(255,107,129,.08); }
 .mp-btn-sm { padding: 6px 12px; font-size: .8rem; }
 .mp-starred { color: #f9c74f; border-color: rgba(249,199,79,.45); }
+/* Header download split-button: pick a release when several exist. */
+.mp-dl-split { position: relative; display: inline-block; }
+/* CSS-drawn caret (don't depend on a FontAwesome glyph, which can render blank). */
+.mp-dl-caret {
+  display: inline-block; margin-left: 7px; width: 0; height: 0;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 5px solid currentColor; opacity: .9;
+}
+.mp-dl-menu {
+  position: fixed; z-index: 1000; min-width: 230px;   /* fixed: JS positions it so it escapes the header's overflow:hidden */
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  box-shadow: 0 12px 34px rgba(0,0,0,.5); padding: 6px; display: flex; flex-direction: column; gap: 2px;
+}
+.mp-dl-menu[hidden] { display: none; }
+.mp-dl-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+  color: var(--text); text-decoration: none; font-size: .88rem;
+}
+.mp-dl-item:hover { background: var(--bg-deep); }
+.mp-dl-branch { color: var(--accent-blue); font: 600 .76rem 'JetBrains Mono', monospace; }
+.mp-dl-size { margin-left: auto; color: var(--text-mute); font-size: .8rem; }
 .mp-starred:hover { border-color: #f9c74f; }
 .mp-starred i { color: #f9c74f; }
 
@@ -122,6 +143,19 @@
 .mp-badge-unlisted { color: var(--text-soft); background: rgba(255,255,255,.08); }
 .mp-badge-public { color: #74e08e; background: rgba(116,224,142,.12); }
 .mp-badge-stray { color: #9bb4ff; background: rgba(86,156,255,.14); display: inline-flex; align-items: center; gap: 5px; }
+/* Collaborators modal */
+.mp-collab-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.mp-collab-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 7px 12px; background: var(--bg-deep);
+}
+.mp-collab-row i { color: var(--accent-blue); margin-right: 5px; }
+.mp-icon-btn {
+  width: 30px; height: 30px; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--bg-line); border-radius: var(--radius); background: var(--bg-card); color: var(--text-soft);
+}
+.mp-icon-btn:hover { border-color: var(--accent-blue); color: var(--text); }
+.mp-icon-danger:hover { border-color: #ff6b81; color: #ff8fa0; }
 /* Notice on an imported, unclaimed mod. */
 .mp-stray-note {
   display: flex; gap: 9px; align-items: flex-start; margin: 4px 0 0; max-width: 75ch;
@@ -257,6 +291,42 @@
 .mp-release-stats { color: var(--text-mute); font-size: .82rem; display: flex; gap: 14px; flex-wrap: wrap; }
 .mp-release-changelog { color: var(--text-soft); font-size: .9rem; line-height: 1.55; white-space: pre-wrap; }
 .mp-release-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.mp-release-3d { padding-top: 4px; }
+.mp-3d-details { width: 100%; }
+.mp-3d-summary {
+  cursor: pointer; color: var(--text-mute); font-size: .82rem; list-style: none;
+  display: inline-flex; align-items: center; gap: 7px; padding: 3px 0; user-select: none;
+}
+.mp-3d-summary::-webkit-details-marker { display: none; }
+.mp-3d-summary::after {
+  content: ''; width: 0; height: 0; margin-left: 1px;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 5px solid currentColor; transition: transform .15s var(--ease-out);
+}
+.mp-3d-details[open] .mp-3d-summary::after { transform: rotate(180deg); }
+.mp-3d-summary:hover { color: var(--text); }
+.mp-3d-list { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 10px; }
+.mp-3d-btn { background: rgba(86,156,255,.1); border-color: rgba(86,156,255,.32); }
+.mp-3d-btn:hover { background: rgba(86,156,255,.18); border-color: var(--accent-blue); }
+.mp-3d-assembled { padding-top: 10px; }
+.mp-asm-btn { background: rgba(125,211,134,.12); border-color: rgba(125,211,134,.4); font-weight: 600; }
+.mp-asm-btn:hover { background: rgba(125,211,134,.2); border-color: #5dd078; }
+.mp-asm-anim { color: var(--text-mute); font-weight: 400; font-size: .82em; }
+/* Component blueprints folded under the assembled button (eyes, head, etc.) */
+.mp-3d-parts { margin-top: 8px; }
+.mp-3d-parts-summary {
+  cursor: pointer; color: var(--text-mute); font-size: .78rem; list-style: none;
+  display: inline-flex; align-items: center; gap: 6px; padding: 2px 0; user-select: none;
+}
+.mp-3d-parts-summary::-webkit-details-marker { display: none; }
+.mp-3d-parts-summary::after {
+  content: ''; width: 0; height: 0;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 5px solid currentColor; transition: transform .15s var(--ease-out);
+}
+.mp-3d-parts[open] .mp-3d-parts-summary::after { transform: rotate(180deg); }
+.mp-3d-parts-summary:hover { color: var(--text); }
+.mp-3d-parts .mp-3d-list { padding-top: 8px; padding-left: 12px; }
 
 /* Placement warnings */
 .mp-warn {

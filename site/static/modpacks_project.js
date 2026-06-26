@@ -126,7 +126,8 @@
     const ownerCtl = d.is_owner ? `
       <button type="button" class="mp-btn mp-btn-sm" id="mpk-edit"><i class="fa-solid fa-pen"></i> ${esc(t('Edit details'))}</button>
       <button type="button" class="mp-btn mp-btn-sm" id="mpk-banner"><i class="fa-solid fa-image"></i> ${esc(t('Banner'))}</button>
-      <button type="button" class="mp-btn mp-btn-sm mp-btn-danger" id="mpk-delete"><i class="fa-solid fa-trash"></i> ${esc(t('Delete'))}</button>` : '';
+      ${d.is_primary_owner ? `<button type="button" class="mp-btn mp-btn-sm" id="mpk-collab"><i class="fa-solid fa-user-group"></i> ${esc(t('Collaborate'))}</button>` : ''}
+      ${d.is_primary_owner ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-danger" id="mpk-delete"><i class="fa-solid fa-trash"></i> ${esc(t('Delete'))}</button>` : ''}` : '';
     const likeCls = d.starred ? 'mpk-like active' : 'mpk-like';
     const stats = `<div class="mpk-head-stats">
         <span class="mpk-stat" title="${esc(t('Downloads'))}"><i class="fa-solid fa-download"></i> ${Number(d.download_count || 0).toLocaleString()}</span>
@@ -193,7 +194,11 @@
     const empty = !(v.entries || []).length
       ? `<p class="mpk-empty">${esc(t('No mods in this variant yet.'))}</p>` : '';
     const addMod = d.is_owner
-      ? `<button type="button" class="mp-btn mp-btn-primary mpk-add-mod" id="mpk-add-mod"><i class="fa-solid fa-plus"></i> ${esc(t('Add a mod'))}</button>` : '';
+      ? `<div class="mpk-add-row">
+          <button type="button" class="mp-btn mp-btn-primary mpk-add-mod" id="mpk-add-mod"><i class="fa-solid fa-plus"></i> ${esc(t('Add a mod'))}</button>
+          <button type="button" class="mp-btn mpk-add-mod" id="mpk-upload-mod"><i class="fa-solid fa-upload"></i> ${esc(t('Upload a .tmod'))}</button>
+          <input type="file" id="mpk-upload-input" accept=".tmod" hidden>
+        </div>` : '';
     const dl = downloadHTML(v);
     return `<section class="mp-section mpk-mods">
       <div class="mp-section-head">
@@ -217,31 +222,42 @@
   }
 
   function entryRow(e, i, isOwner) {
-    const ver = e.available
-      ? (e.version_locked
-        ? `<span class="mpk-badge mpk-locked"><i class="fa-solid fa-lock"></i> ${esc(e.version || '')}</span>`
-        : `<span class="mpk-badge"><i class="fa-solid fa-arrows-rotate"></i> ${esc(t('latest'))} · ${esc(e.version || '')}</span>`)
-      : `<span class="mpk-badge mpk-warn"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(reasonLabel(e.reason))}</span>`;
+    // A custom uploaded .tmod has no hub mod behind it: no link, no branch/version
+    // controls - just an "Uploaded" badge.
+    const meta = e.custom
+      ? `<span class="mpk-badge"><i class="fa-solid fa-upload"></i> ${esc(t('Uploaded'))}</span>`
+        + (e.available ? '' : `<span class="mpk-badge mpk-warn"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('file missing'))}</span>`)
+      : `<span class="mpk-badge"><i class="fa-solid fa-code-branch"></i> ${esc(e.branch)}</span>`
+        + (e.available
+          ? (e.version_locked
+            ? `<span class="mpk-badge mpk-locked"><i class="fa-solid fa-lock"></i> ${esc(e.version || '')}</span>`
+            : `<span class="mpk-badge"><i class="fa-solid fa-arrows-rotate"></i> ${esc(t('latest'))} · ${esc(e.version || '')}</span>`)
+          : `<span class="mpk-badge mpk-warn"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(reasonLabel(e.reason))}</span>`);
+    // Custom entries have no version/branch to edit, so no sliders button.
+    const editBtn = e.custom ? '' :
+      `<button type="button" class="mpk-icon" data-edit-entry="${i}" title="${esc(t('Version'))}"><i class="fa-solid fa-sliders"></i></button>`;
     const ctl = isOwner ? `
       <div class="mpk-entry-ctl">
         <button type="button" class="mpk-icon" data-move="${i}" data-dir="-1" title="${esc(t('Move up'))}" ${i === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-up"></i></button>
         <button type="button" class="mpk-icon" data-move="${i}" data-dir="1" title="${esc(t('Move down'))}"><i class="fa-solid fa-arrow-down"></i></button>
-        <button type="button" class="mpk-icon" data-edit-entry="${i}" title="${esc(t('Version'))}"><i class="fa-solid fa-sliders"></i></button>
+        ${editBtn}
         <button type="button" class="mpk-icon mpk-icon-danger" data-remove="${i}" title="${esc(t('Remove'))}"><i class="fa-solid fa-xmark"></i></button>
       </div>` : '';
+    const titleEl = (e.custom || !e.handle)
+      ? `<span class="mpk-entry-title">${esc(e.title || t('Uploaded mod'))}</span>`
+      : `<a class="mpk-entry-title" href="${modUrl(e.handle, e.slug)}">${esc(e.title || e.slug)}</a>`;
     const by = e.author
-      ? `<span class="mpk-entry-by">${esc(t('by'))} <a href="/mods/${encodeURIComponent(e.handle)}">${esc(e.author)}</a></span>`
+      ? (e.custom
+        ? `<span class="mpk-entry-by">${esc(t('by'))} ${esc(e.author)}</span>`
+        : `<span class="mpk-entry-by">${esc(t('by'))} <a href="/mods/${encodeURIComponent(e.handle)}">${esc(e.author)}</a></span>`)
       : '';
     return `<div class="mpk-entry ${e.available ? '' : 'mpk-entry-warn'}">
       <div class="mpk-entry-main">
         <div class="mpk-entry-titlerow">
-          <a class="mpk-entry-title" href="${modUrl(e.handle, e.slug)}">${esc(e.title || e.slug)}</a>
+          ${titleEl}
           ${by}
         </div>
-        <div class="mpk-entry-meta">
-          <span class="mpk-badge"><i class="fa-solid fa-code-branch"></i> ${esc(e.branch)}</span>
-          ${ver}
-        </div>
+        <div class="mpk-entry-meta">${meta}</div>
       </div>
       ${ctl}
     </div>`;
@@ -265,12 +281,16 @@
     on('mpk-like', toggleLike);
     on('mpk-edit', openEditDetails);
     on('mpk-banner', openBanner);
+    on('mpk-collab', openCollab);
     on('mpk-delete', deletePack);
     on('mpk-add-variant', openAddVariant);
     on('mpk-rename-variant', openRenameVariant);
     on('mpk-delete-variant', deleteVariant);
     on('mpk-make-default', makeDefault);
     on('mpk-add-mod', openAddMod);
+    on('mpk-upload-mod', () => { const inp = document.getElementById('mpk-upload-input'); if (inp) inp.click(); });
+    const upInput = document.getElementById('mpk-upload-input');
+    if (upInput) upInput.addEventListener('change', uploadMod);
 
     $root.querySelectorAll('[data-move]').forEach((b) => b.addEventListener('click', () =>
       moveEntry(+b.getAttribute('data-move'), +b.getAttribute('data-dir'))));
@@ -437,6 +457,41 @@
     await patchPack({ default_variant: state.variant });
   }
 
+  // Manage co-owners (primary owner only).
+  function openCollab() {
+    const rows = (state.detail.collaborators || []).map((c) => `
+      <div class="mpk-collab-row">
+        <span><i class="fa-solid fa-user"></i> @${esc(c.username)}</span>
+        <button type="button" class="mpk-icon mpk-icon-danger" data-rm-collab="${esc(c.id)}" title="${esc(t('Remove'))}"><i class="fa-solid fa-xmark"></i></button>
+      </div>`).join('') || `<p class="mp-muted">${esc(t('No collaborators yet.'))}</p>`;
+    openModal(`
+      <button type="button" class="mp-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      <h2 class="mp-modal-title">${esc(t('Collaborators'))}</h2>
+      <p class="mp-muted">${esc(t('Collaborators can edit this modpack. Only you, the owner, can add or remove them or delete the pack.'))}</p>
+      <div class="mpk-collab-list">${rows}</div>
+      <form id="mpk-collab-form" class="mp-form" style="margin-top:12px">
+        <label class="mp-form-field"><span>${esc(t('Add a collaborator by username'))}</span>
+          <input type="text" name="username" maxlength="80" placeholder="username" autocomplete="off" required></label>
+        <p class="mp-form-error" id="mpk-collab-error" hidden></p>
+        <div class="mp-form-actions">
+          <button type="button" class="mp-btn mp-btn-ghost" data-close>${esc(t('Close'))}</button>
+          <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Add'))}</button>
+        </div>
+      </form>`);
+    $modalRoot.querySelectorAll('[data-rm-collab]').forEach((b) => b.addEventListener('click', async () => {
+      const r = await apiJSON('/v1/modpacks/hub/projects/' + PACK_PATH + '/collaborators/' + encodeURIComponent(b.getAttribute('data-rm-collab')), { method: 'DELETE' });
+      if (r.ok) { setDetail(r.data); openCollab(); } else { toast(errMsg(r, t('Could not remove.')), 'error'); }
+    }));
+    document.getElementById('mpk-collab-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('mpk-collab-error');
+      const r = await apiJSON('/v1/modpacks/hub/projects/' + PACK_PATH + '/collaborators',
+        { json: { username: e.target.username.value.trim() } });
+      if (r.ok) { setDetail(r.data); openCollab(); }
+      else { err.textContent = errMsg(r, t('Could not add that collaborator.')); err.hidden = false; }
+    });
+  }
+
   async function toggleLike() {
     if (!state.viewer) { location.href = '/login'; return; }
     const next = !state.detail.starred;
@@ -470,11 +525,34 @@
 
   // ─── Entry editing (PUT the variant's whole list) ───────────────────
   function currentEntries() {
-    // The editable shape the API expects, from the resolved entry views.
-    return (activeVariant().entries || []).map((e) => ({
-      handle: e.handle, slug: e.slug, branch: e.branch,
-      version_locked: !!e.version_locked, locked_tag: e.locked_tag || null,
-    }));
+    // The editable shape the API expects, from the resolved entry views. Custom
+    // uploads round-trip by their stored sha; hub mods by handle/slug.
+    return (activeVariant().entries || []).map((e) => e.custom
+      ? { custom_sha: e.custom_sha, custom_filename: e.custom_filename, title: e.title, author: e.author }
+      : {
+          handle: e.handle, slug: e.slug, branch: e.branch,
+          version_locked: !!e.version_locked, locked_tag: e.locked_tag || null,
+        });
+  }
+
+  // Upload a custom .tmod into the active variant (conflicts rejected server-side).
+  async function uploadMod(ev) {
+    const input = ev.target;
+    const file = input.files && input.files[0];
+    input.value = '';   // allow re-selecting the same file later
+    if (!file) return;
+    const v = activeVariant();
+    if (!v) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    const r = await apiForm('/v1/modpacks/hub/projects/' + PACK_PATH + '/variants/'
+      + encodeURIComponent(v.name) + '/upload', fd);
+    if (r.ok && r.data) {
+      setDetail(r.data);
+      toast(r.data.matched_existing ? t('Added (we already host this mod).') : t('Mod uploaded.'));
+    } else {
+      toast(errMsg(r, t('Could not add that .tmod.')), 'error');
+    }
   }
   async function putEntries(entries, errEl) {
     const v = activeVariant();

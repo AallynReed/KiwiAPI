@@ -61,7 +61,7 @@
                 <div class="mh-search-wrap">
                     <i class="fa-solid fa-magnifying-glass mh-search-icon" aria-hidden="true"></i>
                     <input type="search" id="mh-search" class="mh-search-input"
-                           data-i18n-placeholder placeholder="Search mods…" aria-label="Search mods">
+                           data-i18n-placeholder placeholder="Search mods or authors…" aria-label="Search mods or authors">
                 </div>
                 <div class="mh-field">
                     <label class="mh-field-label" for="mh-sort" data-i18n>Sort</label>
@@ -136,6 +136,8 @@
             </form>
         </div>
     </div>
+
+    {% include "partials/support_widget.html" %}
 
     <script src="/static/app.min.js"></script>
     <script src="/static/i18n.min.js"></script>

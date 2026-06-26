@@ -66,6 +66,9 @@
                         </button>
                         {% if mods_hub_enabled %}<button type="button" class="dash-nav-item" data-section="mods" role="tab">
                             <i class="fa-solid fa-cubes" aria-hidden="true"></i> <span data-i18n>My Mods</span>
+                        </button>
+                        <button type="button" class="dash-nav-item" data-section="modpacks" role="tab">
+                            <i class="fa-solid fa-box-open" aria-hidden="true"></i> <span data-i18n>My Modpacks</span>
                         </button>{% endif %}
                         <button type="button" class="dash-nav-item" data-section="leaderboard" role="tab">
                             <i class="fa-solid fa-ranking-star" aria-hidden="true"></i> <span data-i18n>Leaderboard</span>
@@ -85,7 +88,11 @@
                         <h1 class="dash-section-title" data-i18n>Profile</h1>
                         <article class="dash-card">
                             <dl class="dash-fields">
-                                <div class="dash-field"><dt data-i18n>Username</dt><dd class="dash-mono" id="prof-username"></dd></div>
+                                <div class="dash-field"><dt data-i18n>Trove username</dt>
+                                    <dd><span class="dash-mono" id="prof-username"></span>
+                                        <button type="button" class="dash-link" id="prof-edit-username" data-i18n>Request change</button>
+                                        <p class="dash-hint" id="prof-username-status" hidden></p></dd></div>
+                                <div class="dash-field"><dt data-i18n>Discord handle</dt><dd class="dash-mono" id="prof-discord-handle"></dd></div>
                                 <div class="dash-field"><dt data-i18n>Email</dt><dd id="prof-email"></dd></div>
                                 <div class="dash-field"><dt data-i18n>Display name</dt>
                                     <dd><span id="prof-display-name"></span>
@@ -128,6 +135,27 @@
                         <div id="dash-mods-list"><p class="dash-loading" data-i18n>Loading…</p></div>
                         <h2 class="dash-card-title" style="margin:24px 0 4px"><i class="fa-regular fa-star" aria-hidden="true"></i> <span data-i18n>Starred</span></h2>
                         <div id="dash-starred-list"></div>
+                    </section>{% endif %}
+
+                    <!-- ── My Modpacks ── -->
+                    {% if mods_hub_enabled %}<section class="dash-section" data-pane="modpacks" hidden>
+                        <h1 class="dash-section-title" data-i18n>My Modpacks</h1>
+                        <p class="dash-section-sub" data-i18n>Bundle your favourite mods together to share as one. Browse everyone's on the Modpacks page.</p>
+                        <article class="dash-card">
+                            <h2 class="dash-card-title" data-i18n>Create a modpack</h2>
+                            <form id="dash-modpack-create" class="dash-mod-form">
+                                <input type="text" name="title" maxlength="120" required data-i18n-placeholder placeholder="Modpack title">
+                                <select name="visibility" aria-label="Visibility">
+                                    <option value="draft" data-i18n>Draft</option>
+                                    <option value="unlisted" data-i18n>Unlisted</option>
+                                    <option value="public" data-i18n>Public</option>
+                                </select>
+                                <button type="submit" class="dash-btn"><i class="fa-solid fa-plus" aria-hidden="true"></i> <span data-i18n>Create</span></button>
+                            </form>
+                            <p class="dash-hint" data-i18n>You'll pick the mods, variants and versions on the next screen.</p>
+                            <p class="dash-error" id="dash-modpack-error" hidden></p>
+                        </article>
+                        <div id="dash-modpacks-list"><p class="dash-loading" data-i18n>Loading…</p></div>
                     </section>{% endif %}
 
                     <!-- ── Leaderboard ── -->

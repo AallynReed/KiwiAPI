@@ -122,6 +122,162 @@ REGISTRY: dict[str, TunableSetting] = {
             "want uninterrupted collection. Stored listings are kept."
         ),
     ),
+    "feature_leaderboards_enabled": _t(
+        key="feature_leaderboards_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Leaderboards. OFF hides the /leaderboards page "
+            "+ navbar link and 404s every leaderboards endpoint (/v1/leaderboards/*, "
+            "the /site/leaderboards/* board proxies, and the /player/<name> profile "
+            "pages). The Player/Class Activity pages have their own toggles and are "
+            "unaffected. Stored captures are kept and return when toggled back ON."
+        ),
+    ),
+    "feature_player_activity_enabled": _t(
+        key="feature_player_activity_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Player Activity page. OFF hides the /activity "
+            "page + navbar link (and its OG card) and 404s /v1/activity/* plus the "
+            "/site/leaderboards/activity* proxies. The underlying activity estimate "
+            "still computes in the warmer (the leaderboards hero pulse uses it); "
+            "this only hides the dedicated page + API."
+        ),
+    ),
+    "feature_class_activity_enabled": _t(
+        key="feature_class_activity_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Class Activity page. OFF hides the "
+            "/class-activity page + navbar link and 404s /v1/class-activity/* plus "
+            "the /site/leaderboards/class-activity/* proxies. Stored data is kept."
+        ),
+    ),
+    "feature_clubs_enabled": _t(
+        key="feature_clubs_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the public Clubs directory. OFF hides the /clubs page "
+            "+ navbar link (404). Clubs are a website-only page sourced from the "
+            "Discord dashboard, so there is no /v1 API to gate. Stored club configs "
+            "are untouched."
+        ),
+    ),
+    "feature_updates_enabled": _t(
+        key="feature_updates_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Updates archive browser. OFF hides the /updates "
+            "page + navbar link and 404s /v1/updates/* plus the /site/updates/* "
+            "proxies. The background CDN archiver keeps mirroring regardless; this "
+            "only hides the read surface. Stored versions are kept."
+        ),
+    ),
+    "feature_codexes_enabled": _t(
+        key="feature_codexes_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Codexes browser. OFF hides the /codexes page + "
+            "navbar link and 404s /v1/codexes/* plus the /site/codexes/* proxies "
+            "(including blueprint renders). Stored codex data is kept."
+        ),
+    ),
+    "feature_server_status_enabled": _t(
+        key="feature_server_status_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Trove server-status feature. OFF hides the "
+            "/status page + navbar link (and its OG card) and 404s the status "
+            "endpoints (/v1/misc/trove-status[/history] + /site/trove-status*). The "
+            "background prober keeps probing; this only hides the read surface."
+        ),
+    ),
+    "feature_giveaways_enabled": _t(
+        key="feature_giveaways_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for Giveaways. OFF hides the /giveaways page + navbar "
+            "link and 404s the public giveaways endpoints (/v1/giveaways/*, "
+            "/site/giveaways). The admin management endpoints stay reachable so you "
+            "can still administer draws while the public surface is hidden."
+        ),
+    ),
+    "feature_commands_enabled": _t(
+        key="feature_commands_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Trove Commands reference. OFF hides the /commands "
+            "page + navbar link (404). It's a static client-rendered page (data in "
+            "site/static/commands.json), so there is no /v1 API to gate."
+        ),
+    ),
+    "feature_server_time_enabled": _t(
+        key="feature_server_time_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Server Time page. OFF hides the /server-time "
+            "page + navbar link and 404s its same-origin /site/server-time proxy. "
+            "It's a client-rendered world-clock + Discord-timestamp page reusing the "
+            "public rotations time, so the shared /v1/rotations/server-time endpoint "
+            "(also used by the landing page) is NOT gated by this."
+        ),
+    ),
+
+    # ── Cheater / alt-cluster calculation (master compute switches) ───
+    # Distinct from the cheater_detection TUNING knobs below: these turn the
+    # whole (expensive) detection compute ON/OFF in the leaderboards warmer.
+    # OFF means the warmer skips the work entirely and the Possible-cheaters /
+    # Alt-clusters tabs disappear from the /leaderboards page.
+    "feature_cheater_detection_enabled": _t(
+        key="feature_cheater_detection_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Possible-cheaters analysis. OFF stops the "
+            "leaderboards warmer from running the (heavy) per-board outlier + "
+            "velocity + alt-cluster compute each cycle, makes /v1/leaderboards/"
+            "cheaters + /site/leaderboards/cheaters return an empty 'disabled' "
+            "payload, and hides the Possible-cheaters AND Alt-clusters tabs on the "
+            "/leaderboards page. The biggest warm-cycle CPU saving. Tuning knobs in "
+            "the 'Cheater detection' category are ignored while this is OFF."
+        ),
+    ),
+    "feature_alt_clusters_enabled": _t(
+        key="feature_alt_clusters_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Sub-switch for ALT-CLUSTER detection (name-stem + co-movement + "
+            "schedule fusion - the O(n²), multi-capture history pass that is the "
+            "heaviest part of the cheater compute). OFF keeps the cheap per-player "
+            "flags (score/rank/velocity) running but skips the cluster pass: the "
+            "payload returns clusters=[] and the Alt-clusters tab is hidden. No "
+            "effect while feature_cheater_detection_enabled is OFF (the whole "
+            "compute is already skipped)."
+        ),
+    ),
 
     # ── Feedback (/v1/misc/feedback) ─────────────────────────────────
     "feedback.discord_webhook": _t(

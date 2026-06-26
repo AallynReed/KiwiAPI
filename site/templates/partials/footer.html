@@ -21,11 +21,12 @@
                 <a href="/" data-i18n>Home</a>
                 <a href="https://btt.aallyn.net" target="_blank" rel="noopener" data-i18n>Web App</a>
                 <a href="/documentation" data-i18n>User Guide</a>
-                <a href="/commands" data-i18n>Commands</a>
-                <a href="/leaderboards" data-i18n>Leaderboards</a>
-                <a href="/updates" data-i18n>Updates</a>
-                <a href="/market" data-i18n>Market</a>
-                <a href="/status" data-i18n>Server Status</a>
+                {% if commands_enabled %}<a href="/commands" data-i18n>Commands</a>{% endif %}
+                {% if server_time_enabled %}<a href="/server-time" data-i18n>Server Time</a>{% endif %}
+                {% if leaderboards_enabled %}<a href="/leaderboards" data-i18n>Leaderboards</a>{% endif %}
+                {% if updates_enabled %}<a href="/updates" data-i18n>Updates</a>{% endif %}
+                {% if market_enabled %}<a href="/market" data-i18n>Market</a>{% endif %}
+                {% if server_status_enabled %}<a href="/status" data-i18n>Server Status</a>{% endif %}
             </div>
 
             <div class="footer-col">
@@ -39,7 +40,8 @@
             <div class="footer-col">
                 <h3 data-i18n>Community</h3>
                 <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a>
-                <a href="https://trovesaurus.com" target="_blank" rel="noopener">Trovesaurus</a>
+                {% if mods_hub_enabled %}<a href="/mods" data-i18n>Mods Hub</a>{% endif %}
+                {% if mods_hub_enabled %}<a href="/modpacks" data-i18n>Modpacks</a>{% endif %}
                 <a href="/support" data-i18n>Support</a>
             </div>
         </div>
@@ -53,3 +55,7 @@
             <a href="/privacy" data-i18n>Privacy</a>
         </p>
     </footer>
+
+    {# Floating donation pill - rides along with the footer so every standard
+       page gets it from one source. #}
+    {% include "partials/support_widget.html" %}

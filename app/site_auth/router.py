@@ -9,6 +9,8 @@ There is no password login here - accounts are created and identified
 solely through "Sign in with Discord". The dev portal (``app/auth/*``) is
 a separate system and keeps its own email/password + GitHub flows.
 """
+import re
+
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, Request, status
 
@@ -18,15 +20,22 @@ from app.site_auth.dependencies import (
     get_current_site_user,
     get_current_verified_site_user,
 )
-from app.site_auth.models import SiteSession, SiteUser
+from app.site_auth.models import SiteSession, SiteUser, UsernameChangeRequest
 from app.site_auth.schemas import (
     SiteClaimTroveNameRequest,
     SiteLogoutRequest,
     SiteRefreshRequest,
     SiteTokenResponse,
     SiteUpdateProfileRequest,
+    SiteUsernameRequestBody,
     SiteUserPublic,
     SiteVerifyTroveClaimResponse,
+)
+from app.site_auth.usernames import (
+    cancel_pending,
+    latest_request,
+    request_change,
+    username_request_dto,
 )
 from app.site_auth.sessions import (
     revoke_all_sessions,
@@ -57,6 +66,7 @@ def _to_public(user: SiteUser) -> SiteUserPublic:
     return SiteUserPublic(
         id=str(user.id),
         username=user.username,
+        discord_handle=user.discord_handle or user.username,
         email=user.email,
         display_name=user.display_name,
         avatar_url=_discord_avatar_url(user),
@@ -208,6 +218,31 @@ async def unclaim_trove_name(
     user.updated_at = utcnow()
     await user.save()
     return _to_public(user)
+
+
+@router.get("/me/username-request")
+async def my_username_request(user: SiteUser = Depends(get_current_site_user)) -> dict:
+    """The user's latest Trove-username change request (pending → 'awaiting review';
+    rejected → carries the denial reason). ``None`` if they've never requested one."""
+    req = await latest_request(user)
+    return {"request": username_request_dto(req) if req else None}
+
+
+@router.post("/me/username-request")
+async def request_username(
+    payload: SiteUsernameRequestBody, user: SiteUser = Depends(get_current_site_user),
+) -> dict:
+    """Request to change your frozen Trove username (the handle used for your mods).
+    A moderator reviews it; nothing changes until they approve."""
+    req = await request_change(user, payload.username)
+    return {"request": username_request_dto(req)}
+
+
+@router.delete("/me/username-request")
+async def cancel_username_request(user: SiteUser = Depends(get_current_site_user)) -> dict:
+    """Withdraw a pending username-change request."""
+    await cancel_pending(user)
+    return {"ok": True}
 
 
 @router.post(

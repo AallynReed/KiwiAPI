@@ -24,6 +24,7 @@ from app.trove import mod_categories
 from app.trove.mods_hub import service
 from app.trove.mods_hub.schemas import (
     ClaimRequest,
+    CollaboratorRequest,
     CreateBranchRequest,
     CreateProjectRequest,
     CreateReleaseRequest,
@@ -188,6 +189,42 @@ async def download_release(release_id: str, ctx: AccessContext = _PUB) -> Respon
     )
 
 
+@mods_hub_router.get("/releases/{release_id}/blueprints")
+async def get_release_blueprints(release_id: str, ctx: AccessContext = _PUB) -> dict:
+    """List the ``.blueprint`` model files inside a release + whether they assemble
+    onto a known creature rig (`rig`, `animations`), for the web 3D viewer."""
+    release, _ = await service.release_with_project(release_id, None)
+    return await service.list_release_blueprints(release)
+
+
+@mods_hub_router.get("/releases/{release_id}/assembled")
+async def get_release_assembled(release_id: str, ctx: AccessContext = _PUB) -> dict:
+    """The release's blueprint parts assembled onto their creature rig (rest pose +
+    animations) as the web-viewer model payload."""
+    release, _ = await service.release_with_project(release_id, None)
+    model = await service.assemble_release_model(release)
+    if model is None:
+        raise APIError(404, ErrorCode.not_found, "No assemblable creature for this mod.")
+    return model
+
+
+@mods_hub_router.get("/releases/{release_id}/blueprint")
+async def get_release_blueprint(
+    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    ctx: AccessContext = _PUB,
+) -> dict:
+    """Decoded voxel data for one ``.blueprint`` in a release (web 3D viewer)."""
+    release, _ = await service.release_with_project(release_id, None)
+    return await service.decode_release_blueprint(release, path)
+
+
+@mods_hub_router.get("/rigs/{skeleton}/anim/{name}")
+async def get_rig_animation(skeleton: str, name: str, ctx: AccessContext = _PUB) -> dict:
+    """Baked animation frames for a creature rig, lazily (the assembled-model payload
+    carries only animation metadata; the viewer fetches frames on demand)."""
+    return await service.load_rig_animation(skeleton, name)
+
+
 @mods_hub_router.get("/image/{sha}")
 async def get_image(sha: str, ctx: AccessContext = _PUB) -> Response:
     got = await service.get_image(sha)
@@ -200,10 +237,11 @@ async def get_image(sha: str, ctx: AccessContext = _PUB) -> Response:
 # ── site-login writes ─────────────────────────────────────────────────────
 
 async def _require_owned(handle: str, slug: str, user: SiteUser) -> service.ModProject:
-    """Load a project the caller owns, or 404 (uniform - never leaks existence
-    of someone else's draft via a 403)."""
+    """Load a project the caller can edit (owner OR collaborator), or 404 (uniform -
+    never leaks existence of someone else's draft via a 403). Owner-only actions
+    (delete, managing collaborators) re-check primary ownership in the service."""
     project = await service.get_project(handle, slug)
-    if project is None or project.owner_id != user.id:
+    if project is None or not service.can_edit(project, user):
         raise APIError(404, ErrorCode.not_found, "Mod project not found")
     return project
 
@@ -308,6 +346,13 @@ async def upload_banner(
     project = await _require_owned(handle, slug, user)
     asset = await service.store_image(user, await file.read(), file.content_type)
     project = await service.set_banner(project, user, asset.sha)
+    return {"banner_sha": project.banner_sha}
+
+
+@mods_hub_write_router.delete("/projects/{handle}/{slug}/banner")
+async def delete_banner(handle: str, slug: str, user: SiteUser = _USER) -> dict:
+    project = await _require_owned(handle, slug, user)
+    project = await service.clear_banner(project, user)
     return {"banner_sha": project.banner_sha}
 
 
@@ -461,6 +506,23 @@ async def report_project(
     return {"status": "received"}
 
 
+@mods_hub_write_router.post("/projects/{handle}/{slug}/collaborators")
+async def add_collaborator(
+    handle: str, slug: str, req: CollaboratorRequest, user: SiteUser = _USER,
+) -> dict:
+    """Add a co-owner (collaborator) by username. Owner only; they gain edit rights."""
+    project = await _require_owned(handle, slug, user)
+    return await service.add_collaborator(project, user, req.username)
+
+
+@mods_hub_write_router.delete("/projects/{handle}/{slug}/collaborators/{user_id}")
+async def remove_collaborator(
+    handle: str, slug: str, user_id: str, user: SiteUser = _USER,
+) -> dict:
+    project = await _require_owned(handle, slug, user)
+    return await service.remove_collaborator(project, user, user_id)
+
+
 @mods_hub_write_router.post("/projects/{handle}/{slug}/claim", status_code=202)
 async def claim_project(
     handle: str, slug: str, req: ClaimRequest, user: SiteUser = _USER,
@@ -480,7 +542,7 @@ async def claim_project(
 async def list_mods(
     ctx: AccessContext = _PUB,
     q: str | None = Query(default=None, max_length=120,
-                          description="Full-text search over title / summary / tags."),
+                          description="Case-insensitive substring search over title / summary / tags / author."),
     tag: str | None = Query(default=None, max_length=40, description="Filter by an exact tag."),
     author: str | None = Query(default=None, max_length=80, description="Filter by author username."),
     sort: str = Query(default="recent",

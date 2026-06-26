@@ -23,6 +23,8 @@ from app.admin.schemas import (
     RuntimeConfigUpdate,
     SiteClaimAdminList,
     SiteClaimAdminView,
+    SiteClaimedNameRequest,
+    StrayAssignRequest,
     TopUser,
 )
 from app.auth.models import User
@@ -35,6 +37,7 @@ from app.core.utils import utcnow
 from app.pageviews.schemas import PageviewSummary
 from app.pageviews.service import aggregate_pageviews
 from app.site_auth.models import SiteUser
+from app.site_auth.schemas import SiteUsernameRequestBody
 from app.supporters import service as supporters_service
 from app.supporters.schemas import (
     SupporterAddRequest,
@@ -875,18 +878,28 @@ async def list_mod_reports(resolved: bool = Query(default=False)) -> dict:
     return {"items": await mods_hub_service.list_reports(resolved=resolved)}
 
 
+@router.post("/mods/reports/{report_id}/dismiss")
+async def dismiss_mod_report(report_id: str) -> dict:
+    """Resolve a single report without taking the mod down (bogus/non-actionable)."""
+    from app.trove.mods_hub import service as mods_hub_service
+    await mods_hub_service.dismiss_report(report_id)
+    return {"ok": True}
+
+
 @router.get("/mods/projects")
 async def list_all_mod_projects(
     q: str | None = Query(default=None),
     owner: str | None = Query(default=None),
     visibility: str | None = Query(default=None),
+    sort: str = Query(default="updated",
+                      description="updated | created | popularity | downloads | stars | size"),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ) -> dict:
     """Every modder's project (drafts + taken-down included) for master oversight."""
     from app.trove.mods_hub import service as mods_hub_service
     items, total = await mods_hub_service.master_list_projects(
-        q=q, owner=owner, visibility=visibility, limit=limit, offset=offset,
+        q=q, owner=owner, visibility=visibility, sort=sort, limit=limit, offset=offset,
     )
     return {"items": items, "count": len(items), "total": total}
 
@@ -966,6 +979,16 @@ async def reject_stray_mod(project_id: str) -> dict:
     return await mods_hub_service.reject_stray(project_id)
 
 
+@router.post("/mods/stray/assign")
+async def assign_stray_mods(
+    req: StrayAssignRequest, admin: User = Depends(get_current_superuser),
+) -> dict:
+    """Hand one or more stray mods directly to a site user by their database id (no
+    claim request) - supports bulk/mass assignment of a selection."""
+    from app.trove.mods_hub import service as mods_hub_service
+    return await mods_hub_service.admin_assign_stray(req.project_ids, req.user_id, admin.id)
+
+
 @router.get("/mods/claims")
 async def list_mod_claims(
     status: str | None = Query(default="pending", description="pending | approved | rejected"),
@@ -986,3 +1009,241 @@ async def approve_mod_claim(claim_id: str, admin: User = Depends(get_current_sup
 async def reject_mod_claim(claim_id: str, admin: User = Depends(get_current_superuser)) -> dict:
     from app.trove.mods_hub import service as mods_hub_service
     return await mods_hub_service.reject_claim(claim_id, admin.id)
+
+
+# --- Modpack moderation (mirror of /mods/projects) --------------------------
+
+@router.get("/modpacks")
+async def list_all_modpacks(
+    q: str | None = Query(default=None),
+    owner: str | None = Query(default=None),
+    visibility: str | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> dict:
+    """Every user's modpack (drafts + taken-down included) for master oversight."""
+    from app.trove.modpacks import service as modpacks_service
+    items, total = await modpacks_service.master_list_modpacks(
+        q=q, owner=owner, visibility=visibility, limit=limit, offset=offset)
+    return {"items": items, "count": len(items), "total": total}
+
+
+@router.delete("/modpacks/{pack_id}", status_code=204)
+async def delete_modpack_admin(pack_id: str) -> None:
+    """Force-delete any modpack (master). Addressed by id (slugs are per-owner)."""
+    from app.trove.modpacks import service as modpacks_service
+    await modpacks_service.master_delete(pack_id)
+
+
+@router.post("/modpacks/{pack_id}/takedown")
+async def take_down_modpack(pack_id: str, req: TakedownRequest) -> dict:
+    """Hide a modpack from public view (owner still sees it, flagged)."""
+    from app.trove.modpacks import service as modpacks_service
+    pack = await modpacks_service.take_down(pack_id, req.reason)
+    return {"slug": pack.slug, "handle": pack.owner_handle,
+            "taken_down": pack.taken_down, "takedown_reason": pack.takedown_reason}
+
+
+@router.post("/modpacks/{pack_id}/restore")
+async def restore_modpack(pack_id: str) -> dict:
+    from app.trove.modpacks import service as modpacks_service
+    pack = await modpacks_service.restore(pack_id)
+    return {"slug": pack.slug, "handle": pack.owner_handle, "taken_down": pack.taken_down}
+
+
+# --- Trove username change requests -----------------------------------------
+
+@router.get("/username-requests")
+async def list_username_requests(
+    status: str | None = Query(default="pending", description="pending | approved | rejected"),
+) -> dict:
+    """User requests to change their frozen Trove username (default: pending)."""
+    from app.site_auth import usernames
+    return {"items": await usernames.list_requests(status=status)}
+
+
+@router.post("/username-requests/{request_id}/approve")
+async def approve_username_request(
+    request_id: str, admin: User = Depends(get_current_superuser),
+) -> dict:
+    """Approve: rename the account's username + re-home their mod/modpack handles."""
+    from app.site_auth import usernames
+    return await usernames.approve_request(request_id, admin.id)
+
+
+@router.post("/username-requests/{request_id}/reject")
+async def reject_username_request(
+    request_id: str, req: TakedownRequest, admin: User = Depends(get_current_superuser),
+) -> dict:
+    """Deny a username request, with a reason shown to the user."""
+    from app.site_auth import usernames
+    return await usernames.reject_request(request_id, admin.id, req.reason)
+
+
+# --- Site (dashboard) users -------------------------------------------------
+# Discord-signup accounts that own the public website (mods/modpacks/profiles),
+# distinct from the dev-portal API ``User`` accounts handled by /admin/users.
+
+def _site_user_dto(u: SiteUser, mod_count: int = 0, modpack_count: int = 0) -> dict:
+    return {
+        "id": str(u.id),
+        "username": u.username,
+        "discord_handle": u.discord_handle or "",
+        "email": u.email,
+        "display_name": u.display_name,
+        "is_active": u.is_active,
+        "is_verified": u.is_verified,
+        "discord_id": str(u.discord_id) if u.discord_id else None,
+        "claimed_trove_name": u.claimed_trove_display or u.claimed_trove_name,
+        "claim_verified": u.claim_verified,
+        "mod_count": mod_count,
+        "modpack_count": modpack_count,
+        "created_at": u.created_at.isoformat() if u.created_at else None,
+        "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+    }
+
+
+async def _get_site_user(user_id: str) -> SiteUser:
+    try:
+        u = await SiteUser.get(PydanticObjectId(user_id))
+    except Exception:
+        u = None
+    if u is None:
+        raise APIError(status_code=404, code=ErrorCode.not_found, message="No such site user.")
+    return u
+
+
+@router.get("/site-users")
+async def list_site_users(
+    q: str | None = Query(default=None, description="search username / discord handle / email / display name"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> dict:
+    """Dashboard (Discord-signup) accounts, with their owned mod/modpack counts."""
+    import re as _re
+
+    from app.trove.modpacks.models import ModpackProject
+    from app.trove.mods_hub.models import ModProject
+
+    query: dict = {}
+    if q and q.strip():
+        rx = {"$regex": _re.escape(q.strip()), "$options": "i"}
+        query = {"$or": [{"username": rx}, {"discord_handle": rx},
+                         {"email": rx}, {"display_name": rx}]}
+    total = await SiteUser.find(query).count()
+    docs = await SiteUser.find(query).sort("-created_at").skip(offset).limit(limit).to_list()
+    ids = [u.id for u in docs]
+    mods: dict = {}
+    packs: dict = {}
+    if ids:
+        mrows = await ModProject.aggregate([
+            {"$match": {"owner_id": {"$in": ids}}},
+            {"$group": {"_id": "$owner_id", "n": {"$sum": 1}}}]).to_list()
+        mods = {str(r["_id"]): r["n"] for r in mrows}
+        prows = await ModpackProject.aggregate([
+            {"$match": {"owner_id": {"$in": ids}}},
+            {"$group": {"_id": "$owner_id", "n": {"$sum": 1}}}]).to_list()
+        packs = {str(r["_id"]): r["n"] for r in prows}
+    items = [_site_user_dto(u, mods.get(str(u.id), 0), packs.get(str(u.id), 0)) for u in docs]
+    return {"items": items, "count": len(items), "total": total}
+
+
+@router.get("/site-users/{user_id}")
+async def get_site_user(user_id: str) -> dict:
+    u = await _get_site_user(user_id)
+    return _site_user_dto(u)
+
+
+@router.post("/site-users/{user_id}/deactivate")
+async def deactivate_site_user(user_id: str) -> dict:
+    """Disable a dashboard account and end all of its sessions immediately."""
+    from app.site_auth.sessions import revoke_all_sessions
+    u = await _get_site_user(user_id)
+    u.is_active = False
+    u.updated_at = utcnow()
+    await u.save()
+    await revoke_all_sessions(u)  # bumps token_version → every access token dies
+    return {"id": str(u.id), "is_active": u.is_active}
+
+
+@router.post("/site-users/{user_id}/activate")
+async def activate_site_user(user_id: str) -> dict:
+    """Re-enable a previously deactivated dashboard account."""
+    u = await _get_site_user(user_id)
+    u.is_active = True
+    u.updated_at = utcnow()
+    await u.save()
+    return {"id": str(u.id), "is_active": u.is_active}
+
+
+@router.post("/site-users/{user_id}/logout")
+async def logout_site_user(user_id: str) -> dict:
+    """Force-log-out: end every active session without disabling the account."""
+    from app.site_auth.sessions import revoke_all_sessions
+    u = await _get_site_user(user_id)
+    await revoke_all_sessions(u)
+    return {"id": str(u.id), "ok": True}
+
+
+@router.post("/site-users/{user_id}/username")
+async def set_site_username(
+    user_id: str, body: SiteUsernameRequestBody, admin: User = Depends(get_current_superuser),
+) -> dict:
+    """Master override of a user's frozen Trove username (re-homes their handles)."""
+    from app.site_auth import usernames
+    return await usernames.admin_set_username(user_id, body.username, admin.id)
+
+
+@router.post("/site-users/{user_id}/claimed-name")
+async def set_site_claimed_name(user_id: str, req: SiteClaimedNameRequest) -> dict:
+    """Master override of a user's claimed Trove (leaderboard) name. Setting a name
+    marks it admin-verified; an empty name clears the claim."""
+    u = await _get_site_user(user_id)
+    name = (req.name or "").strip()
+    if not name:
+        u.claimed_trove_name = None
+        u.claimed_trove_display = None
+        u.claimed_at = None
+        u.claim_verified = False
+        u.claim_verified_at = None
+        u.claim_baseline = {}
+    else:
+        low = name.lower()
+        clash = await SiteUser.find_one(SiteUser.claimed_trove_name == low)
+        if clash is not None and clash.id != u.id:
+            raise APIError(status_code=409, code=ErrorCode.conflict,
+                           message=f"'{name}' is already claimed by another user.")
+        u.claimed_trove_name = low
+        u.claimed_trove_display = name
+        u.claimed_at = utcnow()
+        u.claim_verified = True
+        u.claim_verified_at = utcnow()
+        u.claim_baseline = {}
+    u.updated_at = utcnow()
+    await u.save()
+    return _site_user_dto(u)
+
+
+@router.post("/site-users/{user_id}/refresh-discord")
+async def refresh_site_discord(user_id: str) -> dict:
+    """Re-fetch the user's live Discord handle (+ avatar) from Discord via the bot."""
+    from app.bot import discord_rest
+    u = await _get_site_user(user_id)
+    if not u.discord_id:
+        raise APIError(status_code=400, code=ErrorCode.bad_request,
+                       message="This account has no linked Discord id.")
+    try:
+        data = await discord_rest.fetch_user(u.discord_id)
+    except discord_rest.DiscordRestError as exc:
+        raise APIError(status_code=502, code=ErrorCode.service_unavailable, message=str(exc))
+    if not data:
+        raise APIError(status_code=404, code=ErrorCode.not_found,
+                       message="Discord has no record of that user any more.")
+    handle = (data.get("username") or "").strip()
+    if handle:
+        u.discord_handle = handle
+    if "avatar" in data:
+        u.discord_avatar = data.get("avatar")
+    u.updated_at = utcnow()
+    await u.save()
+    return _site_user_dto(u)

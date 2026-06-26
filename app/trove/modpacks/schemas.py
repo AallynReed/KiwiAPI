@@ -50,17 +50,23 @@ class UpdateVariantRequest(BaseModel):
 
 
 class ModpackEntryInput(BaseModel):
-    """One mod entry as the editor sends it. The server resolves the stable
-    ``project_id`` + denormalized title from ``handle``/``slug``."""
+    """One mod entry as the editor sends it. Either a hub-mod reference (``handle``+
+    ``slug``) or a custom uploaded mod (``custom_sha``, from a prior upload)."""
 
-    handle: str = Field(min_length=1, max_length=80)
-    slug: str = Field(min_length=1, max_length=120)
+    handle: str = Field(default="", max_length=80)
+    slug: str = Field(default="", max_length=120)
     branch: str = Field(default="main", max_length=80,
                         description="Which variant (Mods Hub branch) of the mod to include.")
     version_locked: bool = Field(default=False,
                                  description="Pin to a specific version instead of tracking latest. Off by default.")
     locked_tag: str | None = Field(default=None, max_length=60,
                                    description="Release tag to pin to when version_locked is on.")
+    # Custom uploaded .tmod (round-tripped from a prior upload): the CAS sha + its
+    # download name + title/author. When set, this is a custom entry (no hub mod).
+    custom_sha: str | None = Field(default=None, max_length=128)
+    custom_filename: str | None = Field(default=None, max_length=200)
+    title: str = Field(default="", max_length=200)
+    author: str = Field(default="", max_length=200)
 
 
 class SetEntriesRequest(BaseModel):

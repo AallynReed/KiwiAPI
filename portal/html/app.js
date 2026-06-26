@@ -335,8 +335,8 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "activity", "account", "overview", "pageviews", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"];
-const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"]);
+const TABS = ["tokens", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"];
+const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"]);
 
 // Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
 const ICONS = {
@@ -358,6 +358,7 @@ const ICONS = {
   botstats:     '<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="14" width="3" height="3"/>',
   mods:         '<path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>',
   codexes:      '<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5Z"/><path d="M8 7h7M8 10h7"/>',
+  siteusers:    '<circle cx="12" cy="7.5" r="3.3"/><path d="M5.5 20c0-3.4 2.9-5.3 6.5-5.3S18.5 16.6 18.5 20"/><path d="M3 4.5h18"/>',
 };
 function icon(name) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
@@ -374,6 +375,7 @@ const TAB_META = {
   pageviews:    { group: "Admin panel", label: "Site Analytics" },
   events:       { group: "Admin panel", label: "Events" },
   users:        { group: "Admin panel", label: "Users" },
+  siteusers:    { group: "Admin panel", label: "Dashboard users" },
   config:       { group: "Admin panel", label: "Configuration" },
   leaderboards: { group: "Admin panel · Modules", label: "Leaderboards" },
   ingest:       { group: "Admin panel · Modules", label: "Ingest" },
@@ -418,6 +420,7 @@ function renderDashboard() {
           ${navItem("pageviews")}
           ${navItem("events")}
           ${navItem("users")}
+          ${navItem("siteusers")}
           ${navItem("config")}
           <p class="nav-subgroup">${icon("modules")}<span>Modules</span></p>
           ${navItem("leaderboards", true)}
@@ -425,6 +428,7 @@ function renderDashboard() {
           ${navItem("giveaways", true)}
           ${navItem("discord", true)}
           ${navItem("supporters", true)}
+          ${navItem("claims", true)}
           ${navItem("mods", true)}
           ${navItem("codexes", true)}` : "";
 
@@ -487,6 +491,7 @@ function selectTab() {
   else if (state.tab === "pageviews") renderPageviews();
   else if (state.tab === "events") renderEvents();
   else if (state.tab === "users") renderUsers();
+  else if (state.tab === "siteusers") renderSiteUsers();
   else if (state.tab === "config") renderConfigTab();
   else if (state.tab === "leaderboards") renderLeaderboards();
   else if (state.tab === "ingest") renderIngest();
@@ -1187,6 +1192,170 @@ async function renderUsers(days = 30) {
     paintUsers(e.target.value.trim().toLowerCase()));
 }
 
+// --- Dashboard (site) users ------------------------------------------------
+// Discord-signup accounts that own the public site (mods/modpacks/profiles),
+// distinct from the dev-portal API users above. Search is server-side; the
+// shell is painted once and only the rows repaint so the search box keeps focus.
+
+async function renderSiteUsers() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0" id="su-title">Dashboard users</h2>
+        <input id="su-search" placeholder="Search username / handle / email…" style="max-width:300px;flex:0 0 auto" autocomplete="off">
+      </div>
+      <p class="hint">Discord-signup accounts that own the public site — mods, modpacks and profiles. Separate from the API users above. Click a user to manage. Counts are mods / modpacks owned.</p>
+      <table>
+        <thead><tr><th>Trove username</th><th>Discord handle</th><th>Email</th><th>Mods / Packs</th><th>Joined</th></tr></thead>
+        <tbody id="su-rows"><tr><td colspan="5" class="loading">Loading…</td></tr></tbody>
+      </table>
+      <p class="field-help" id="su-more"></p>
+    </div>`;
+
+  const rowsEl = document.getElementById("su-rows");
+  const titleEl = document.getElementById("su-title");
+  const moreEl = document.getElementById("su-more");
+  const searchEl = document.getElementById("su-search");
+
+  const row = (u) => `
+    <tr class="clickable" data-user="${u.id}">
+      <td><b>${esc(u.username)}</b>
+        ${!u.is_active ? '<span class="badge off">deactivated</span>' : ""}
+        ${u.claim_verified ? '<span class="badge ok">claim</span>' : ""}</td>
+      <td class="muted">${u.discord_handle ? "@" + esc(u.discord_handle) : "—"}</td>
+      <td class="muted">${esc(u.email || "—")}</td>
+      <td>${u.mod_count} / ${u.modpack_count}</td>
+      <td class="muted">${fmt(u.created_at)}</td>
+    </tr>`;
+
+  let reqSeq = 0;
+  const load = async (q) => {
+    const mine = ++reqSeq;
+    let data;
+    try { data = await API.call(`/admin/site-users?limit=100${q ? "&q=" + encodeURIComponent(q) : ""}`); }
+    catch (ex) { if (mine === reqSeq) rowsEl.innerHTML = `<tr><td colspan="5" class="err-text">${esc(ex.message)}</td></tr>`; return; }
+    if (mine !== reqSeq) return;  // a newer search superseded this one
+    const users = data.items || [];
+    state._siteUsers = {};
+    users.forEach((u) => { state._siteUsers[u.id] = u; });
+    titleEl.textContent = `Dashboard users${data.total != null ? ` (${data.total})` : ""}`;
+    rowsEl.innerHTML = users.length
+      ? users.map(row).join("")
+      : `<tr><td colspan="5" class="muted">No matching users.</td></tr>`;
+    rowsEl.querySelectorAll("[data-user]").forEach((r) =>
+      r.addEventListener("click", () => openSiteUser(state._siteUsers[r.dataset.user], () => load(searchEl.value.trim()))));
+    moreEl.textContent = (data.total > users.length)
+      ? `Showing ${users.length} of ${data.total}. Refine your search to narrow the list.` : "";
+  };
+
+  let t;
+  searchEl.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => load(searchEl.value.trim()), 300); });
+  load("");
+}
+
+function openSiteUser(u, after) {
+  if (!u) return;
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  const badges = `${u.is_active ? '<span class="badge ok">active</span>' : '<span class="badge off">deactivated</span>'} ${u.is_verified ? '<span class="badge ok">verified</span>' : '<span class="badge warn">unverified</span>'}`;
+  const claim = u.claimed_trove_name
+    ? `${esc(u.claimed_trove_name)}${u.claim_verified ? ' <span class="badge ok">verified</span>' : ' <span class="badge warn">unverified</span>'}` : "—";
+  overlay.innerHTML = `
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>@${esc(u.username)} ${badges}</h3>
+      <div class="modal-body">
+        <table style="width:100%"><tbody>
+          <tr><td class="muted">Discord handle</td><td>${u.discord_handle ? "@" + esc(u.discord_handle) : "—"}</td></tr>
+          <tr><td class="muted">Email</td><td>${esc(u.email || "—")}</td></tr>
+          <tr><td class="muted">Display name</td><td>${esc(u.display_name || "—")}</td></tr>
+          <tr><td class="muted">Trove claim</td><td>${claim}</td></tr>
+          <tr><td class="muted">Owns</td><td>${u.mod_count} mods · ${u.modpack_count} modpacks</td></tr>
+          <tr><td class="muted">Joined</td><td>${fmt(u.created_at)}</td></tr>
+          <tr><td class="muted">Last login</td><td>${fmt(u.last_login_at)}</td></tr>
+          <tr><td class="muted">User ID</td><td class="mono">${esc(u.id)}</td></tr>
+        </tbody></table>
+        <div class="err-text su-err" style="margin-top:8px"></div>
+        <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:10px">
+          <button class="btn small" data-act="username">Change username…</button>
+          <button class="btn small" data-act="claimed">Set Trove name…</button>
+          <button class="btn small" data-act="refresh-discord"${u.discord_id ? "" : " disabled title='No linked Discord id'"}>Refresh Discord</button>
+          <button class="btn small" data-act="logout">Force log out</button>
+          <button class="btn small ${u.is_active ? "danger" : "primary"}" data-act="toggle">${u.is_active ? "Deactivate" : "Activate"}</button>
+        </div>
+        <p class="field-help">Deactivating blocks sign-in and ends every active session immediately. Force log-out ends sessions without disabling the account.</p>
+      </div>
+      <div class="modal-actions"><button class="btn" data-cancel type="button">Close</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  const errEl = overlay.querySelector(".su-err");
+  overlay.querySelector("[data-cancel]").addEventListener("click", close);
+  overlay.addEventListener("mousedown", (e) => { if (e.target === overlay) close(); });
+
+  const run = async (btn, fn) => {
+    errEl.textContent = ""; btn.disabled = true;
+    try { await fn(); close(); if (after) after(); }
+    catch (ex) { errEl.textContent = ex.message || "Something went wrong."; btn.disabled = false; }
+  };
+
+  overlay.querySelector('[data-act="logout"]').addEventListener("click", (e) => run(e.target, async () => {
+    await API.call(`/admin/site-users/${u.id}/logout`, { method: "POST" });
+    toast("All sessions ended.", "ok");
+  }));
+  overlay.querySelector('[data-act="toggle"]').addEventListener("click", (e) => run(e.target, async () => {
+    const path = u.is_active ? "deactivate" : "activate";
+    await API.call(`/admin/site-users/${u.id}/${path}`, { method: "POST" });
+    toast(u.is_active ? "Account deactivated." : "Account activated.", "ok");
+  }));
+  overlay.querySelector('[data-act="refresh-discord"]').addEventListener("click", (e) => {
+    if (e.target.disabled) return;
+    run(e.target, async () => {
+      const res = await API.call(`/admin/site-users/${u.id}/refresh-discord`, { method: "POST" });
+      toast(`Discord handle: @${res.discord_handle || "—"}`, "ok");
+    });
+  });
+  overlay.querySelector('[data-act="username"]').addEventListener("click", () => {
+    close();
+    openSetSiteUsername(u, after);
+  });
+  overlay.querySelector('[data-act="claimed"]').addEventListener("click", () => {
+    close();
+    openSetClaimedName(u, after);
+  });
+}
+
+function openSetClaimedName(u, after) {
+  const current = u.claimed_trove_name || "";
+  modal("Set Trove name", `
+    <p class="hint">Set <b>@${esc(u.username)}</b>'s claimed Trove (leaderboard) name. Setting it marks the claim
+      <b>admin-verified</b>; leave it empty to clear the claim.</p>
+    <label>Trove name</label>
+    <input id="su-claimed" value="${esc(current)}" maxlength="64" autocomplete="off" placeholder="In-game name">
+    <p class="field-help">Matched case-insensitively against captured leaderboard rows.</p>
+  `, async () => {
+    const name = document.getElementById("su-claimed").value.trim();
+    const res = await API.call(`/admin/site-users/${u.id}/claimed-name`, { method: "POST", body: { name } });
+    toast(res.claimed_trove_name ? `Trove name set to ${res.claimed_trove_name}.` : "Trove claim cleared.", "ok");
+    if (after) after();
+  }, "Save");
+}
+
+function openSetSiteUsername(u, after) {
+  modal("Change Trove username", `
+    <p class="hint">Override <b>@${esc(u.username)}</b>'s frozen Trove username. This renames the handle on their mods and modpacks (their URLs change to match) and resolves any pending request they have.</p>
+    <label>New username</label>
+    <input id="su-new-username" value="${esc(u.username)}" maxlength="24" autocomplete="off">
+    <p class="field-help">3–24 characters: lowercase letters, numbers, underscores or periods (a period can't start it or repeat).</p>
+  `, async () => {
+    const name = document.getElementById("su-new-username").value.trim().toLowerCase();
+    if (!name) throw new Error("Enter a username.");
+    const res = await API.call(`/admin/site-users/${u.id}/username`, { method: "POST", body: { username: name } });
+    toast(res.changed === false ? "No change — same username." : `Username set to @${res.username}.`, "ok");
+    if (after) after();
+  }, "Save");
+}
+
 // Admin · Events - cursor-paginated audit log across all users.
 async function renderEvents() {
   const body = document.getElementById("tab-body");
@@ -1801,14 +1970,18 @@ function paintLeaderboardsBoards(q) {
 // just a registry entry on the backend; the UI requires no change.
 
 const CONFIG_CATEGORY_LABELS = {
+  features: "Site features",
   feedback: "Feedback endpoint",
   api_rate_limits: "API rate limits",
   auth_rate_limits: "Auth flow rate limits",
   archive_rate_limits: "Archive-query rate limits",
   scope_multipliers: "Per-scope rate-limit multipliers",
   rate_limit_alerts: "Rate-limit alert digest",
+  ingest_cooldown: "Ingest cooldown",
   cheater_detection: "Cheater detection",
   class_activity: "Class activity",
+  trove_status: "Trove server status",
+  community_feeds: "Community feeds",
 };
 
 async function renderConfigTab() {
@@ -2521,6 +2694,16 @@ async function renderClaims() {
         <button type="button" class="btn small" data-act="refresh">Refresh</button>
       </div>
       <div id="claims-list"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:10px">
+        <h2 style="flex:1;margin:0">Username change requests</h2>
+        <button type="button" class="btn small" data-act="uname-refresh">Refresh</button>
+      </div>
+      <p class="hint" style="margin:0 0 8px">Users request to change their frozen <strong>Trove username</strong>
+        (their mod handle). <strong>Approve</strong> renames the account + re-homes their mod/modpack URLs;
+        <strong>Reject</strong> asks for a reason shown to the user.</p>
+      <div id="uname-list"><div class="loading">Loading…</div></div>
     </div>`;
 
   const listEl = document.getElementById("claims-list");
@@ -2571,9 +2754,49 @@ async function renderClaims() {
     }
   }
 
+  // ── Username change requests ──
+  async function loadUnames() {
+    const el = document.getElementById("uname-list");
+    el.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const data = await API.call("/admin/username-requests?status=pending");
+      if (!data.items || !data.items.length) { el.innerHTML = `<p class="muted" style="margin:0">No pending requests.</p>`; return; }
+      el.innerHTML = data.items.map((r) => {
+        const when = r.created_at ? new Date(r.created_at).toLocaleString() : "—";
+        return `<div class="row" style="align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600"><code>${esc(r.current_username)}</code> → <code>${esc(r.requested_username)}</code></div>
+              <div class="muted" style="font-size:.8rem">requested ${esc(when)}</div>
+            </div>
+            <button class="btn small primary" data-uname-approve="${esc(r.id)}">Approve</button>
+            <button class="btn small" data-uname-reject="${esc(r.id)}">Reject</button>
+          </div>`;
+      }).join("");
+      el.querySelectorAll("[data-uname-approve]").forEach((b) =>
+        b.addEventListener("click", () => unameAct(b.dataset.unameApprove, "approve")));
+      el.querySelectorAll("[data-uname-reject]").forEach((b) =>
+        b.addEventListener("click", () => unameAct(b.dataset.unameReject, "reject")));
+    } catch (ex) { el.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; }
+  }
+  async function unameAct(id, kind) {
+    let reason = "";
+    if (kind === "reject") {
+      reason = window.prompt("Reason for denying this username change (shown to the user):", "");
+      if (reason === null) return;
+    }
+    try {
+      await API.call(`/admin/username-requests/${encodeURIComponent(id)}/${kind}`,
+        kind === "reject" ? { method: "POST", body: { reason } } : { method: "POST" });
+      toast(kind === "approve" ? "Username changed" : "Request rejected", "ok");
+      loadUnames();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+
   document.querySelector('[data-act="refresh"]').addEventListener("click", load);
+  document.querySelector('[data-act="uname-refresh"]').addEventListener("click", loadUnames);
   showAll.addEventListener("change", load);
   load();
+  loadUnames();
 }
 
 // --- Mods hub moderation (master) ------------------------------------------
@@ -2615,6 +2838,14 @@ async function renderModsModeration() {
           <option value="unlisted">Unlisted</option>
           <option value="draft">Draft</option>
         </select>
+        <select id="mods-sort" style="width:150px">
+          <option value="updated">Recently updated</option>
+          <option value="created">Newest</option>
+          <option value="popularity">Most popular</option>
+          <option value="downloads">Most downloads</option>
+          <option value="stars">Most stars</option>
+          <option value="size">Largest on disk</option>
+        </select>
         <button type="button" class="btn small" data-act="search">Search</button>
       </div>
       <div id="mods-projects"><div class="loading">Loading…</div></div>
@@ -2635,10 +2866,17 @@ async function renderModsModeration() {
     </div>
     <div class="card">
       <div class="row" style="align-items:center;margin-bottom:6px;gap:10px">
-        <h2 style="flex:1;margin:0">Pending imported mods</h2>
+        <h2 style="flex:1;margin:0">Stray mods</h2>
+        <input type="text" id="stray-q" placeholder="Search title/author" style="flex:1">
+        <select id="stray-status" style="width:160px">
+          <option value="approved">Approved</option>
+          <option value="pending">Pending approval</option>
+          <option value="rejected">Rejected</option>
+          <option value="">All unclaimed</option>
+        </select>
         <button type="button" class="btn small" data-act="stray-pending-refresh">Refresh</button>
       </div>
-      <p class="hint" style="margin:0 0 8px">New mods found on a resync wait here until approved (then they appear in the public catalog).</p>
+      <p class="hint" style="margin:0 0 8px">Imported, unclaimed mods. Tick rows to <strong>assign many at once</strong> to a user by their ID, or use the per-row actions. Pending mods also show Approve / Reject.</p>
       <div id="stray-pending"><div class="loading">Loading…</div></div>
     </div>
     <div class="card">
@@ -2648,6 +2886,22 @@ async function renderModsModeration() {
       </div>
       <p class="hint" style="margin:0 0 8px">Users requesting to claim a stray mod. <strong>Approve</strong> hands the mod over (it becomes their regular mod).</p>
       <div id="mod-claims"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:10px">
+        <h2 style="flex:1;margin:0">Modpacks</h2>
+        <input type="text" id="modpacks-q" placeholder="Search title/tags" style="flex:1">
+        <input type="text" id="modpacks-owner" placeholder="Owner" style="width:130px">
+        <select id="modpacks-vis" style="width:120px">
+          <option value="">Any visibility</option>
+          <option value="public">Public</option>
+          <option value="unlisted">Unlisted</option>
+          <option value="draft">Draft</option>
+        </select>
+        <button type="button" class="btn small" data-act="modpacks-search">Search</button>
+      </div>
+      <p class="hint" style="margin:0 0 8px">User-curated bundles of mods. <strong>Take down</strong> hides one from public view; <strong>Delete</strong> removes it.</p>
+      <div id="modpacks-list"><div class="loading">Loading…</div></div>
     </div>`;
 
   const listEl = document.getElementById("mods-reports");
@@ -2673,14 +2927,28 @@ async function renderModsModeration() {
               <div class="muted" style="font-size:.8rem">by ${esc(r.reporter_username)} · ${esc(when)}</div>
               <div style="font-size:.86rem;margin-top:3px">${esc(r.reason)}</div>
             </div>
-            <button class="btn small" data-takedown="${esc(r.project_id)}" data-label="${esc(r.project_slug)}">Take down</button>
+            <div class="row" style="gap:6px;flex:0 0 auto">
+              ${r.resolved ? "" : `<button class="btn small" data-dismiss="${esc(r.id)}" data-label="${esc(r.project_slug)}">Dismiss</button>`}
+              <button class="btn small danger" data-takedown="${esc(r.project_id)}" data-label="${esc(r.project_slug)}">Take down</button>
+            </div>
           </div>`;
       }).join("");
       listEl.querySelectorAll("[data-takedown]").forEach((b) =>
         b.addEventListener("click", () => takedown(b.dataset.takedown, b.dataset.label)));
+      listEl.querySelectorAll("[data-dismiss]").forEach((b) =>
+        b.addEventListener("click", () => dismissReport(b.dataset.dismiss, b.dataset.label)));
     } catch (ex) {
       listEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
     }
+  }
+
+  async function dismissReport(reportId, label = "") {
+    if (!window.confirm(`Dismiss the report against "${label || reportId}"? The mod stays up; the report is marked resolved.`)) return;
+    try {
+      await API.call(`/admin/mods/reports/${encodeURIComponent(reportId)}/dismiss`, { method: "POST" });
+      toast("Report dismissed", "ok");
+      load();
+    } catch (ex) { toast(ex.message, "err"); }
   }
 
   async function takedown(id, label = "", reason = "") {
@@ -2707,9 +2975,11 @@ async function renderModsModeration() {
     const q = document.getElementById("mods-q").value.trim();
     const owner = document.getElementById("mods-owner").value.trim();
     const vis = document.getElementById("mods-vis").value;
+    const sort = document.getElementById("mods-sort").value;
     if (q) params.set("q", q);
     if (owner) params.set("owner", owner);
     if (vis) params.set("visibility", vis);
+    if (sort) params.set("sort", sort);
     try {
       const data = await API.call(`/admin/mods/projects?${params.toString()}`);
       if (!data.items || !data.items.length) {
@@ -2723,17 +2993,22 @@ async function renderModsModeration() {
           const tdBtn = p.taken_down
             ? `<button class="btn small" data-restore="${esc(p.id)}">Restore</button>`
             : `<button class="btn small" data-takedown="${esc(p.id)}" data-label="${esc(p.slug)}">Take down</button>`;
+          const assignBtn = p.is_stray
+            ? `<button class="btn small" data-assign="${esc(p.id)}" data-label="${esc(p.title)}">Assign…</button>` : "";
           return `<div class="row" style="align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
               <div style="flex:1;min-width:0">
                 <div style="font-weight:600">
                   <a href="https://trove.aallyn.net/mods/${encodeURIComponent(p.handle || "")}/${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">${esc(p.title)}</a> ${flags}
                 </div>
-                <div class="muted" style="font-size:.8rem">${esc(p.handle || "?")}/${esc(p.slug)} · by ${esc(p.owner_username)} · ${Number(p.download_count || 0)} downloads</div>
+                <div class="muted" style="font-size:.8rem">${esc(p.handle || "?")}/${esc(p.slug)} · by ${esc(p.owner_username)} · ${Number(p.download_count || 0)} downloads · ${Number(p.star_count || 0)}★ · ${formatBytes(Number(p.size_bytes || 0))} · updated ${fmtDay(p.updated_at)}</div>
               </div>
+              ${assignBtn}
               ${tdBtn}
               <button class="btn small danger" data-delete="${esc(p.id)}" data-label="${esc(p.slug)}">Delete</button>
             </div>`;
         }).join("");
+      projEl.querySelectorAll("[data-assign]").forEach((b) =>
+        b.addEventListener("click", () => assignStray([b.dataset.assign], b.dataset.label)));
       projEl.querySelectorAll("[data-takedown]").forEach((b) =>
         b.addEventListener("click", () => takedown(b.dataset.takedown, b.dataset.label).then(loadProjects)));
       projEl.querySelectorAll("[data-restore]").forEach((b) =>
@@ -2778,21 +3053,48 @@ async function renderModsModeration() {
   }
   async function loadPending() {
     const el = document.getElementById("stray-pending");
+    const statusEl = document.getElementById("stray-status");
+    const status = statusEl ? statusEl.value : "approved";   // "" = all unclaimed
+    const q = (document.getElementById("stray-q") || {}).value.trim();
+    const label = status || "unclaimed";
     el.innerHTML = `<div class="loading">Loading…</div>`;
     try {
-      const data = await API.call("/admin/mods/stray?status=pending&limit=100");
-      if (!data.items || !data.items.length) { el.innerHTML = `<p class="muted" style="margin:0">No pending mods.</p>`; return; }
-      el.innerHTML = `<p class="muted" style="margin:0 0 6px;font-size:.8rem">${data.total} pending</p>` + data.items.map((p) => `
-        <div class="row" style="align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+      const params = new URLSearchParams({ status, limit: "200" });
+      if (q) params.set("q", q);
+      const data = await API.call(`/admin/mods/stray?${params.toString()}`);
+      if (!data.items || !data.items.length) {
+        el.innerHTML = `<p class="muted" style="margin:0">No ${esc(label)} stray mods${q ? " matching your search" : ""}.</p>`;
+        return;
+      }
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+          <label class="chk" style="margin:0;font-size:.82rem;flex:0 0 auto"><input type="checkbox" id="stray-all"> Select all</label>
+          <span class="muted" style="font-size:.8rem;flex:1">${data.total} ${esc(label)}${data.total > data.items.length ? ` · showing ${data.items.length}` : ""}</span>
+          <button type="button" class="btn small" id="stray-bulk-assign" disabled>Assign selected…</button>
+        </div>` + data.items.map((p) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+          <input type="checkbox" class="stray-pick" style="width:auto;flex:0 0 auto;margin:0" data-id="${esc(p.id)}" data-label="${esc(p.title)}">
           <div style="flex:1;min-width:0">
-            <div style="font-weight:600">${esc(p.title)}</div>
+            <div style="font-weight:600"><a href="https://trove.aallyn.net/mods/stray/${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">${esc(p.title)}</a>
+              ${p.stray_status && p.stray_status !== status ? `<span class="badge muted" style="font-size:.7rem">${esc(p.stray_status)}</span>` : ""}</div>
             <div class="muted" style="font-size:.8rem">by ${esc(p.author || "?")} · ${Number(p.download_count || 0)} downloads</div>
           </div>
-          <button class="btn small" data-approve="${esc(p.id)}">Approve</button>
-          <button class="btn small danger" data-reject="${esc(p.id)}">Reject</button>
+          <button class="btn small" data-assign="${esc(p.id)}" data-label="${esc(p.title)}">Assign…</button>
+          ${p.stray_status === "pending" ? `<button class="btn small" data-approve="${esc(p.id)}">Approve</button>
+          <button class="btn small danger" data-reject="${esc(p.id)}">Reject</button>` : ""}
         </div>`).join("");
+      const picks = () => Array.from(el.querySelectorAll(".stray-pick:checked")).map((c) => c.dataset.id);
+      const bulkBtn = document.getElementById("stray-bulk-assign");
+      const syncBulk = () => { const n = picks().length; bulkBtn.disabled = !n; bulkBtn.textContent = n ? `Assign ${n} selected…` : "Assign selected…"; };
+      el.querySelectorAll(".stray-pick").forEach((c) => c.addEventListener("change", syncBulk));
+      document.getElementById("stray-all").addEventListener("change", (e) => {
+        el.querySelectorAll(".stray-pick").forEach((c) => { c.checked = e.target.checked; });
+        syncBulk();
+      });
+      bulkBtn.addEventListener("click", () => { const ids = picks(); if (ids.length) assignStray(ids); });
       el.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => strayAction(b.dataset.approve, "approve")));
       el.querySelectorAll("[data-reject]").forEach((b) => b.addEventListener("click", () => strayAction(b.dataset.reject, "reject")));
+      el.querySelectorAll("[data-assign]").forEach((b) => b.addEventListener("click", () => assignStray([b.dataset.assign], b.dataset.label)));
     } catch (ex) { el.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; }
   }
   async function strayAction(id, action) {
@@ -2801,6 +3103,30 @@ async function renderModsModeration() {
       toast(action === "approve" ? "Approved" : "Rejected", "ok");
       loadPending();
     } catch (ex) { toast(ex.message, "err"); }
+  }
+  // Proactively hand one or more stray mods to a known modder by User ID - no claim
+  // request. `ids` is an array of project ids; one entry = single assign.
+  function assignStray(ids, label = "") {
+    const many = ids.length > 1;
+    const what = many ? `${ids.length} selected mods` : esc(label || ids[0]);
+    modal(many ? "Assign mods to a user" : "Assign mod to a user", `
+      <p class="hint">Hand <b>${what}</b> directly to a user by their database <b>User ID</b>. They stop being stray
+        and become that user's mods (re-homed to <span class="mono">/mods/&lt;username&gt;/…</span>). No claim request.</p>
+      <label>User ID</label>
+      <input id="assign-uid" maxlength="32" autocomplete="off" placeholder="e.g. 6612ab9f…">
+      <p class="field-help">The SiteUser database id — copy it from the <b>Dashboard users</b> tab (open a user → User ID).</p>
+    `, async () => {
+      const userId = document.getElementById("assign-uid").value.trim();
+      if (!userId) throw new Error("Enter a User ID.");
+      const res = await API.call(`/admin/mods/stray/assign`,
+        { method: "POST", body: { user_id: userId, project_ids: ids } });
+      const n = (res.assigned || []).length;
+      const failed = (res.errors || []).length;
+      const suffix = failed ? ` (${failed} skipped)` : "";
+      toast(n ? `Assigned ${n} mod${n === 1 ? "" : "s"} to @${res.owner_handle}${suffix}`
+              : `Nothing assigned${suffix}`, n ? "ok" : "err");
+      loadPending(); loadProjects();
+    }, "Assign");
   }
   async function loadClaims() {
     const el = document.getElementById("mod-claims");
@@ -2834,19 +3160,75 @@ async function renderModsModeration() {
     } catch (ex) { toast(ex.message, "err"); }
   }
 
+  // ── Modpacks moderation ──
+  async function loadModpacks() {
+    const el = document.getElementById("modpacks-list");
+    el.innerHTML = `<div class="loading">Loading…</div>`;
+    const params = new URLSearchParams();
+    const q = document.getElementById("modpacks-q").value.trim();
+    const owner = document.getElementById("modpacks-owner").value.trim();
+    const vis = document.getElementById("modpacks-vis").value;
+    if (q) params.set("q", q);
+    if (owner) params.set("owner", owner);
+    if (vis) params.set("visibility", vis);
+    try {
+      const data = await API.call(`/admin/modpacks?${params.toString()}`);
+      if (!data.items || !data.items.length) { el.innerHTML = `<p class="muted" style="margin:0">No modpacks.</p>`; return; }
+      el.innerHTML = `<p class="muted" style="margin:0 0 6px;font-size:.8rem">${data.total} total</p>` + data.items.map((p) => {
+        const flags = `<span class="badge muted">${esc(p.visibility)}</span>` + (p.taken_down ? ' <span class="badge warn">taken down</span>' : '');
+        const tdBtn = p.taken_down
+          ? `<button class="btn small" data-mp-restore="${esc(p.id)}">Restore</button>`
+          : `<button class="btn small" data-mp-takedown="${esc(p.id)}" data-label="${esc(p.slug)}">Take down</button>`;
+        return `<div class="row" style="align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600"><a href="https://trove.aallyn.net/modpacks/${encodeURIComponent(p.handle || "")}/${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">${esc(p.title)}</a> ${flags}</div>
+              <div class="muted" style="font-size:.8rem">${esc(p.handle || "?")}/${esc(p.slug)} · by ${esc(p.owner_username)} · ${Number(p.mod_count || 0)} mods · ${Number(p.download_count || 0)} downloads</div>
+            </div>
+            ${tdBtn}
+            <button class="btn small danger" data-mp-delete="${esc(p.id)}" data-label="${esc(p.slug)}">Delete</button>
+          </div>`;
+      }).join("");
+      el.querySelectorAll("[data-mp-takedown]").forEach((b) => b.addEventListener("click", () => modpackAction(b.dataset.mpTakedown, "takedown", b.dataset.label)));
+      el.querySelectorAll("[data-mp-restore]").forEach((b) => b.addEventListener("click", () => modpackAction(b.dataset.mpRestore, "restore")));
+      el.querySelectorAll("[data-mp-delete]").forEach((b) => b.addEventListener("click", () => deleteModpack(b.dataset.mpDelete, b.dataset.label)));
+    } catch (ex) { el.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; }
+  }
+  async function modpackAction(id, action, label = "") {
+    if (action === "takedown" && !window.confirm(`Take down "${label || id}"? It will disappear from public view.`)) return;
+    try {
+      await API.call(`/admin/modpacks/${encodeURIComponent(id)}/${action}`, { method: "POST" });
+      toast(action === "takedown" ? "Modpack taken down" : "Modpack restored", "ok");
+      loadModpacks();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+  async function deleteModpack(id, label = "") {
+    if (!window.confirm(`Permanently delete modpack "${label || id}"? This cannot be undone.`)) return;
+    try {
+      await API.call(`/admin/modpacks/${encodeURIComponent(id)}`, { method: "DELETE" });
+      toast("Modpack deleted", "ok");
+      loadModpacks();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+
   document.querySelector('[data-act="refresh"]').addEventListener("click", load);
   document.querySelector('[data-act="search"]').addEventListener("click", loadProjects);
+  document.getElementById("mods-sort").addEventListener("change", loadProjects);
   document.querySelector('[data-act="stray-refresh"]').addEventListener("click", loadStrayState);
   document.querySelector('[data-act="stray-import"]').addEventListener("click", () => startImport(false));
   document.querySelector('[data-act="stray-resync"]').addEventListener("click", () => startImport(true));
   document.querySelector('[data-act="stray-pending-refresh"]').addEventListener("click", loadPending);
+  document.getElementById("stray-status").addEventListener("change", loadPending);
+  let _strayQT;
+  document.getElementById("stray-q").addEventListener("input", () => { clearTimeout(_strayQT); _strayQT = setTimeout(loadPending, 300); });
   document.querySelector('[data-act="claims-refresh"]').addEventListener("click", loadClaims);
+  document.querySelector('[data-act="modpacks-search"]').addEventListener("click", loadModpacks);
   showResolved.addEventListener("change", load);
   load();
   loadProjects();
   loadStrayState();
   loadPending();
   loadClaims();
+  loadModpacks();
 }
 
 async function renderIngest() {

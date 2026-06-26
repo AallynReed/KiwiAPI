@@ -232,7 +232,7 @@ class Settings(BaseSettings):
     internal_api_url: str = "http://api:8000"
 
     # Mongo connection - inside Docker the host is the compose service name.
-    mongo_uri: str = "mongodb://localhost:27017"
+    mongo_uri: str = "mongodb://localhost:27016"
     mongo_db: str = "kiwi"
 
     # Redis - backs rate limiting + short-lived caches (Phase C). If unset, the

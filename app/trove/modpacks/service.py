@@ -32,7 +32,7 @@ from app.site_auth.models import SiteUser
 from app.trove import tmod
 from app.trove.mods_hub import service as mods_service
 from app.trove.mods_hub import store as mods_store
-from app.trove.mods_hub.models import ModImageAsset, ModProject, ModRelease
+from app.trove.mods_hub.models import Collaborator, ModImageAsset, ModProject, ModRelease
 from app.trove.modpacks.models import (
     ModpackEntry,
     ModpackProject,
@@ -104,13 +104,46 @@ async def _unique_slug(owner_id: PydanticObjectId, title: str) -> str:
     return candidate
 
 
+def _collab_ids(pack: ModpackProject) -> set:
+    return {c.user_id for c in (pack.collaborators or [])}
+
+
+def can_edit(pack: ModpackProject, actor: SiteUser | None) -> bool:
+    """Edit rights = the primary owner OR a collaborator (co-owner)."""
+    if actor is None:
+        return False
+    return actor.id == pack.owner_id or actor.id in _collab_ids(pack)
+
+
+def is_primary_owner(pack: ModpackProject, actor: SiteUser | None) -> bool:
+    return actor is not None and actor.id == pack.owner_id
+
+
 def _require_owner(pack: ModpackProject, actor: SiteUser) -> None:
-    if pack.owner_id != actor.id:
-        raise APIError(403, ErrorCode.forbidden, "You don't own this modpack.")
+    """Edit-level gate: the primary owner or any collaborator."""
+    if not can_edit(pack, actor):
+        raise APIError(403, ErrorCode.forbidden, "You don't have edit access to this modpack.")
+
+
+def _require_primary_owner(pack: ModpackProject, actor: SiteUser) -> None:
+    """Stricter gate for owner-only actions (delete, managing collaborators)."""
+    if not is_primary_owner(pack, actor):
+        raise APIError(403, ErrorCode.forbidden, "Only the modpack's owner can do this.")
 
 
 def _not_found(what: str = "Modpack not found") -> APIError:
     return APIError(404, ErrorCode.not_found, what)
+
+
+def _search_clause(q: str) -> dict:
+    """Case-insensitive SUBSTRING search across the card-visible fields (replaces the
+    whole-word ``$text`` so partial + any-case terms match)."""
+    rx = {"$regex": re.escape(q.strip()), "$options": "i"}
+    return {"$or": [{"title": rx}, {"summary": rx}, {"tags": rx}, {"owner_username": rx}]}
+
+
+def _author_eq(author: str) -> dict:
+    return {"$regex": f"^{re.escape(author.strip())}$", "$options": "i"}
 
 
 def _find_variant(pack: ModpackProject, name: str | None) -> ModpackVariant:
@@ -135,13 +168,28 @@ async def _resolve_entry(entry: ModpackEntry) -> tuple[dict, ModRelease | None]:
     latest published ``.tmod`` on its branch). Returns ``(view, release)`` where
     ``release`` is None when the mod/build is unavailable. ``view`` is always
     JSON-ready and carries an ``available`` flag + ``reason`` for the UI."""
+    # Custom uploaded .tmod (not a hub mod): resolves directly to its stored bytes.
+    if entry.custom_sha:
+        cview = {
+            "custom": True, "custom_sha": entry.custom_sha,
+            "custom_filename": entry.custom_filename, "handle": "", "slug": "",
+            "title": entry.title or "Uploaded mod", "author": entry.author or "",
+            "branch": "", "version_locked": False, "locked_tag": None, "version": None,
+            "available": True, "reason": None,
+        }
+        if not await mods_store.has_blob(entry.custom_sha):
+            cview["available"] = False
+            cview["reason"] = "missing"
+        return cview, None
+
     view = {
+        "custom": False,
         "handle": entry.handle, "slug": entry.slug, "title": entry.title,
         "author": "", "branch": entry.branch, "version_locked": entry.version_locked,
         "locked_tag": entry.locked_tag, "version": None,
         "available": False, "reason": None,
     }
-    mod = await ModProject.get(entry.project_id)
+    mod = await ModProject.get(entry.project_id) if entry.project_id else None
     if mod is None:
         view["reason"] = "removed"
         return view, None
@@ -215,7 +263,8 @@ def pack_card(p: ModpackProject) -> dict:
 
 
 async def pack_detail(pack: ModpackProject, viewer: SiteUser | None) -> dict:
-    is_owner = viewer is not None and pack.owner_id == viewer.id
+    is_owner = can_edit(pack, viewer)            # owner OR collaborator -> editor UI
+    primary = is_primary_owner(pack, viewer)
     # Variants render in the stored order; every entry is resolved to its current
     # version + availability so the page lists "all mods + variants + versions".
     variants = [await _variant_view(v) for v in pack.variants]
@@ -232,6 +281,9 @@ async def pack_detail(pack: ModpackProject, viewer: SiteUser | None) -> dict:
         "taken_down": pack.taken_down,
         "takedown_reason": pack.takedown_reason if is_owner else None,
         "is_owner": is_owner,
+        "is_primary_owner": primary,
+        "collaborators": [{"id": str(c.user_id), "username": c.username}
+                          for c in (pack.collaborators or [])],
         "starred": await has_starred(viewer, pack),
     }
 
@@ -239,7 +291,7 @@ async def pack_detail(pack: ModpackProject, viewer: SiteUser | None) -> dict:
 # --- visibility + lookup ---------------------------------------------------
 
 def can_view(pack: ModpackProject, viewer: SiteUser | None) -> bool:
-    if viewer is not None and pack.owner_id == viewer.id:
+    if can_edit(pack, viewer):                   # owner or collaborator
         return True
     if pack.taken_down:
         return False
@@ -270,9 +322,9 @@ async def list_public(
     if tag:
         query["tags"] = tag.strip().lower()
     if author:
-        query["owner_username"] = author
+        query["owner_username"] = _author_eq(author)
     if q:
-        query["$text"] = {"$search": q}
+        query.update(_search_clause(q))
     sort_key = _SORTS.get(sort, "-updated_at")
     total = await ModpackProject.find(query).count()
     docs = await ModpackProject.find(query).sort(sort_key).skip(offset).limit(limit).to_list()
@@ -280,14 +332,15 @@ async def list_public(
 
 
 async def list_owned(actor: SiteUser) -> list[dict]:
-    docs = await ModpackProject.find(
-        ModpackProject.owner_id == actor.id,
-    ).sort("-updated_at").to_list()
-    for p in docs:                       # resync URL handle to current username
-        if p.owner_handle != actor.username:
+    # Modpacks the user owns OR collaborates on.
+    docs = await ModpackProject.find({"$or": [
+        {"owner_id": actor.id}, {"collaborators.user_id": actor.id},
+    ]}).sort("-updated_at").to_list()
+    for p in docs:                       # resync URL handle to current username (owner only)
+        if p.owner_id == actor.id and p.owner_handle != actor.username:
             p.owner_handle = actor.username
             await p.save()
-    return [pack_card(p) for p in docs]
+    return [{**pack_card(p), "is_collaborator": p.owner_id != actor.id} for p in docs]
 
 
 # --- create / update -------------------------------------------------------
@@ -350,8 +403,102 @@ async def update_modpack(
 
 
 async def delete_modpack(pack: ModpackProject, actor: SiteUser) -> None:
-    _require_owner(pack, actor)
+    _require_primary_owner(pack, actor)          # collaborators can't delete the pack
+    await ModpackStar.find(ModpackStar.modpack_id == pack.id).delete()
     await pack.delete()
+
+
+# --- master moderation -----------------------------------------------------
+
+async def _get_pack_by_id(pack_id: str) -> ModpackProject | None:
+    try:
+        return await ModpackProject.get(PydanticObjectId(pack_id))
+    except Exception:
+        return None
+
+
+async def master_list_modpacks(
+    *, q: str | None = None, owner: str | None = None, visibility: str | None = None,
+    limit: int = 50, offset: int = 0,
+) -> tuple[list[dict], int]:
+    """ALL modpacks (drafts + taken-down included) for master oversight."""
+    query: dict = {}
+    if q:
+        query.update(_search_clause(q))
+    if owner:
+        query["owner_username"] = owner
+    if visibility:
+        query["visibility"] = visibility
+    total = await ModpackProject.find(query).count()
+    docs = await ModpackProject.find(query).sort("-updated_at").skip(offset).limit(limit).to_list()
+    items = [{**pack_card(p), "id": str(p.id), "taken_down": p.taken_down,
+              "owner_id": str(p.owner_id) if p.owner_id else None} for p in docs]
+    return items, total
+
+
+async def take_down(pack_id: str, reason: str) -> ModpackProject:
+    pack = await _get_pack_by_id(pack_id)
+    if pack is None:
+        raise _not_found()
+    pack.taken_down = True
+    pack.takedown_reason = (reason or "").strip() or None
+    pack.updated_at = utcnow()
+    await pack.save()
+    return pack
+
+
+async def restore(pack_id: str) -> ModpackProject:
+    pack = await _get_pack_by_id(pack_id)
+    if pack is None:
+        raise _not_found()
+    pack.taken_down = False
+    pack.takedown_reason = None
+    pack.updated_at = utcnow()
+    await pack.save()
+    return pack
+
+
+async def master_delete(pack_id: str) -> None:
+    pack = await _get_pack_by_id(pack_id)
+    if pack is None:
+        raise _not_found()
+    await ModpackStar.find(ModpackStar.modpack_id == pack.id).delete()
+    await pack.delete()
+
+
+# --- collaborators (co-owners) ---------------------------------------------
+
+async def add_collaborator(pack: ModpackProject, actor: SiteUser, username: str) -> dict:
+    """Add a co-owner by username (primary owner only)."""
+    _require_primary_owner(pack, actor)
+    uname = (username or "").strip().lstrip("@").lower()
+    if not uname:
+        raise APIError(400, ErrorCode.bad_request, "Enter a username to collaborate with.")
+    user = await SiteUser.find_one(SiteUser.username == uname)
+    if user is None:
+        raise APIError(404, ErrorCode.not_found, f"No site user '@{uname}'. They must sign in once first.")
+    if user.id == pack.owner_id:
+        raise APIError(400, ErrorCode.bad_request, "That's the owner.")
+    if user.id in _collab_ids(pack):
+        return await pack_detail(pack, actor)
+    if len(pack.collaborators) >= 20:
+        raise APIError(400, ErrorCode.bad_request, "Too many collaborators (max 20).")
+    pack.collaborators.append(Collaborator(user_id=user.id, username=user.username))
+    pack.updated_at = utcnow()
+    await pack.save()
+    return await pack_detail(pack, actor)
+
+
+async def remove_collaborator(pack: ModpackProject, actor: SiteUser, user_id: str) -> dict:
+    _require_primary_owner(pack, actor)
+    try:
+        uid = PydanticObjectId(user_id)
+    except Exception:
+        uid = None
+    pack.collaborators = [c for c in pack.collaborators if c.user_id != uid]
+    pack.updated_at = utcnow()
+    await pack.save()
+    return await pack_detail(pack, actor)
 
 
 # --- variants --------------------------------------------------------------
@@ -406,22 +553,118 @@ async def delete_variant(pack: ModpackProject, actor: SiteUser, name: str) -> Mo
 
 # --- entries (replace a variant's whole list) ------------------------------
 
+def _fingerprint_bytes(data: bytes) -> tuple[str, set[str]] | None:
+    """``(title_lowercased, set_of_replaced_file_paths)`` for a ``.tmod``'s bytes.
+    The mod's own preview image (the file named by the ``previewPath`` header
+    property) is excluded - it's a thumbnail, not a real game-file replacement.
+    None if the bytes don't parse as a ``.tmod``."""
+    try:
+        parsed = tmod.read_tmod(data, metadata_only=True)
+    except Exception:
+        return None
+    props = parsed.get("properties") or {}
+    title = (props.get("title") or "").strip().lower()
+    preview = (props.get("previewPath") or "").strip().lower()
+    files = {(f.get("path") or "").lower() for f in parsed.get("files", []) if f.get("path")}
+    files.discard(preview)
+    return title, files
+
+
+async def _fingerprint_sha(sha: str) -> tuple[str, set[str]] | None:
+    data = await mods_store.get_blob(sha)
+    return _fingerprint_bytes(data) if data is not None else None
+
+
+def _entry_sha(entry: ModpackEntry, rel: ModRelease | None) -> str | None:
+    """The CAS sha of the entry's packed ``.tmod`` (custom upload or resolved release)."""
+    return entry.custom_sha or (rel.tmod_sha if rel is not None else None)
+
+
+def _pair_conflicts(label_a, fp_a, label_b, fp_b) -> list[str]:
+    out = []
+    if fp_a[0] and fp_a[0] == fp_b[0]:
+        out.append(f"“{label_a}” and “{label_b}” share the same mod title.")
+    shared = sorted(fp_a[1] & fp_b[1])
+    if shared:
+        shown = ", ".join(shared[:3]) + (" …" if len(shared) > 3 else "")
+        out.append(f"“{label_a}” and “{label_b}” both replace: {shown}")
+    return out
+
+
+async def _detect_conflicts(entries: list[ModpackEntry]) -> list[str]:
+    """Find conflicting mods among the (resolvable .tmod) entries: two mods conflict
+    if they share the same header ``title`` OR replace any of the same files (preview
+    images ignored). Handles both hub-mod references and custom uploads."""
+    fps = []   # (label, fingerprint)
+    for e in entries:
+        view, rel = await _resolve_entry(e)
+        if not view["available"]:
+            continue                       # unresolved/zip/no-build can't be packed -> can't conflict
+        sha = _entry_sha(e, rel)
+        if not sha:
+            continue
+        fp = await _fingerprint_sha(sha)
+        if fp is None:
+            continue
+        fps.append((view["title"] or e.slug or "Uploaded mod", fp))
+
+    conflicts: list[str] = []
+    for i in range(len(fps)):
+        for j in range(i + 1, len(fps)):
+            conflicts += _pair_conflicts(fps[i][0], fps[i][1], fps[j][0], fps[j][1])
+    return conflicts
+
+
+async def _conflicts_against(new_label: str, new_fp: tuple[str, set[str]],
+                             existing: list[ModpackEntry]) -> list[str]:
+    """Conflicts of ONE new mod (already fingerprinted) against existing entries -
+    used to vet an upload before adding it."""
+    out: list[str] = []
+    for e in existing:
+        view, rel = await _resolve_entry(e)
+        if not view["available"]:
+            continue
+        sha = _entry_sha(e, rel)
+        if not sha:
+            continue
+        fp = await _fingerprint_sha(sha)
+        if fp is None:
+            continue
+        out += _pair_conflicts(new_label, new_fp, view["title"] or "a mod", fp)
+    return out
+
+
 async def set_entries(
     pack: ModpackProject, actor: SiteUser, variant_name: str, entries_input: list,
 ) -> ModpackProject:
     """Replace the variant's ordered mod list. Each input is validated to a real,
     viewable mod (public/unlisted, not taken down); the stable ``project_id`` +
     current title are resolved + denormalized. Duplicate (mod, branch) pairs are
-    collapsed (they'd pack to the same file). Branch/version are NOT hard-validated
-    here - an entry can outlive a since-removed build and just shows 'unavailable'."""
+    collapsed (they'd pack to the same file). Submitting is REJECTED if any two mods
+    conflict (same header title, or they replace the same files). Branch/version are
+    NOT hard-validated - an entry can outlive a since-removed build (shows 'unavailable')."""
     _require_owner(pack, actor)
     variant = next((v for v in pack.variants if v.name == variant_name), None)
     if variant is None:
         raise _not_found("Variant not found")
 
     resolved: list[ModpackEntry] = []
-    seen: set[tuple[PydanticObjectId, str]] = set()
+    seen: set = set()
     for item in entries_input:
+        if item.custom_sha:
+            # Custom uploaded .tmod round-tripped from a prior upload: keep it as-is
+            # (the blob must still exist; dedupe by sha).
+            if not await mods_store.has_blob(item.custom_sha):
+                raise APIError(400, ErrorCode.bad_request, "An uploaded mod is missing from storage.")
+            if item.custom_sha in seen:
+                continue
+            seen.add(item.custom_sha)
+            resolved.append(ModpackEntry(
+                project_id=None, custom_sha=item.custom_sha,
+                custom_filename=item.custom_filename, title=item.title or "Uploaded mod",
+                author=item.author or "",
+            ))
+            continue
         mod = await get_mod(item.handle, item.slug)
         if mod is None or mod.taken_down or mod.visibility == "draft":
             raise APIError(400, ErrorCode.bad_request,
@@ -436,6 +679,12 @@ async def set_entries(
             branch=branch, version_locked=bool(item.version_locked),
             locked_tag=(item.locked_tag or None) if item.version_locked else None,
         ))
+
+    conflicts = await _detect_conflicts(resolved)
+    if conflicts:
+        raise APIError(409, ErrorCode.conflict,
+                       "These mods conflict and can't be in the same variant: " + " ".join(conflicts))
+
     variant.entries = resolved
     pack.updated_at = utcnow()
     await pack.save()
@@ -445,6 +694,70 @@ async def set_entries(
 async def get_mod(handle: str, slug: str) -> ModProject | None:
     """Resolve a Mods Hub mod for inclusion (thin wrapper over the hub service)."""
     return await mods_service.get_project(handle, slug)
+
+
+_MAX_UPLOAD_BYTES = 80 * 1024 * 1024
+
+
+async def upload_entry(
+    pack: ModpackProject, actor: SiteUser, variant_name: str, filename: str, data: bytes,
+) -> dict:
+    """Add a custom uploaded ``.tmod`` to a variant. Validates the file, **rejects it
+    (409) if it conflicts** with mods already in the variant (same title / shared
+    files - nothing is committed on conflict), then: if its content hash matches a
+    mod we ALREADY host, add a **reference** to that mod (pinned to the matched
+    build) instead of storing a duplicate; otherwise store it as a **custom** entry.
+    Returns the updated pack detail (+ `matched_existing`)."""
+    _require_owner(pack, actor)
+    variant = next((v for v in pack.variants if v.name == variant_name), None)
+    if variant is None:
+        raise _not_found("Variant not found")
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "The uploaded file is empty.")
+    if len(data) > _MAX_UPLOAD_BYTES:
+        raise APIError(413, ErrorCode.bad_request, "That .tmod is too large to upload.")
+
+    fp = _fingerprint_bytes(data)
+    if fp is None:
+        raise APIError(400, ErrorCode.bad_request, "That isn't a valid .tmod file.")
+    props = tmod.read_tmod(data, metadata_only=True).get("properties") or {}
+    title = (props.get("title") or "").strip()
+    if not title:
+        raise APIError(400, ErrorCode.bad_request, "The .tmod has no title in its header.")
+    author = (props.get("author") or "").strip()
+
+    # Conflict check BEFORE committing anything.
+    conflicts = await _conflicts_against(title, fp, variant.entries)
+    if conflicts:
+        raise APIError(409, ErrorCode.conflict,
+                       "This mod conflicts with mods already in the variant: " + " ".join(conflicts))
+
+    # Store (CAS is content-addressed + idempotent → no duplicate bytes) and dedup by
+    # hash: if we already host this exact file as a mod release, reference that mod.
+    sha, _ = await mods_store.put_blob(data)
+    rel = await ModRelease.find_one(ModRelease.tmod_sha == sha)
+    if rel is not None:
+        mod = await ModProject.get(rel.project_id)
+        if mod is not None and not mod.taken_down and mod.visibility != "draft":
+            if not any(e.project_id == mod.id and e.branch == rel.branch for e in variant.entries):
+                variant.entries.append(ModpackEntry(
+                    project_id=mod.id, handle=mod.owner_handle, slug=mod.slug, title=mod.title,
+                    branch=rel.branch, version_locked=True, locked_tag=rel.tag,
+                ))
+            pack.updated_at = utcnow()
+            await pack.save()
+            return {"matched_existing": True, "handle": mod.owner_handle, "slug": mod.slug,
+                    **(await pack_detail(pack, actor))}
+
+    # Not hosted (or matched a hidden mod) → keep it as a custom uploaded entry.
+    if not any(e.custom_sha == sha for e in variant.entries):
+        variant.entries.append(ModpackEntry(
+            project_id=None, custom_sha=sha, custom_filename=f"{_safe_filename(title)}.tmod",
+            title=title, author=author,
+        ))
+    pack.updated_at = utcnow()
+    await pack.save()
+    return {"matched_existing": False, **(await pack_detail(pack, actor))}
 
 
 # --- images ----------------------------------------------------------------
@@ -523,17 +836,21 @@ async def _collect_builds(variant: ModpackVariant) -> tuple[list[tuple[str, byte
             "branch": view["branch"], "version": view["version"],
             "locked": view["version_locked"], "available": view["available"],
         })
-        if rel is None or not view["available"]:
+        if not view["available"]:
             continue
-        data = await mods_store.get_blob(rel.tmod_sha)
+        sha = _entry_sha(entry, rel)
+        if not sha:
+            continue
+        data = await mods_store.get_blob(sha)
         if data is None:
             manifest[-1]["available"] = False
             continue
         # CRITICAL: a packed mod's filename MUST be the .tmod's internal `title`
         # property (``<title>.tmod``) - Trove matches a mod in-game by that name and
-        # REJECTS a mismatched filename. ``release_download_filename`` is the single
-        # source of truth (same name a standalone download gets); never invent one.
-        name = mods_service.release_download_filename(rel)
+        # REJECTS a mismatched filename. For a hub ref that's `release_download_filename`;
+        # for a custom upload it's the stored `custom_filename` (also `<title>.tmod`).
+        name = (entry.custom_filename or f"{_safe_filename(view['title'])}.tmod") if entry.custom_sha \
+            else mods_service.release_download_filename(rel)
         manifest[-1]["filename"] = name
         downloadable.append((name, data, view))
     return downloadable, manifest
@@ -686,9 +1003,9 @@ async def public_list(
     if tag:
         query["tags"] = tag.strip().lower()
     if author:
-        query["owner_username"] = author
+        query["owner_username"] = _author_eq(author)
     if q:
-        query["$text"] = {"$search": q}
+        query.update(_search_clause(q))
     sort_key = _SORTS.get(sort, "-updated_at")
     total = await ModpackProject.find(query).count()
     docs = await ModpackProject.find(query).sort(sort_key).skip(offset).limit(limit).to_list()

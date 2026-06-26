@@ -1,20 +1,44 @@
 """Master-flippable feature toggles.
 
-A whole site feature (the Mods Hub, the Market) can be hidden completely without
-a code change or restart - it's a ``bool`` in the runtime-config registry
-(``app/admin/runtime_config.py``), flippable from the dev-portal Configuration
-tab. When OFF:
+A whole site feature (the Mods Hub, the Market, the Leaderboards, …) can be
+hidden completely without a code change or restart - it's a ``bool`` in the
+runtime-config registry (``app/admin/runtime_config.py``), flippable from the
+dev-portal Configuration tab's "features" category. When OFF:
   - the navbar entry is hidden (a Jinja context flag the site router injects),
   - the page routes + ``/site/<feature>/*`` proxies 404 (gated in app/site/router.py),
   - the ``/v1/<feature>/*`` (and git) routers 404 via the dependencies here.
 Stored data is untouched and the feature reappears intact when toggled back ON.
+
+Two of the flags here (``CHEATER_DETECTION_FLAG`` / ``ALT_CLUSTERS_FLAG``) don't
+hide a page - they gate the *calculation* of the Possible-cheaters / Alt-cluster
+analysis in the leaderboards warmer (see app/trove/leaderboards/detection.py).
+They still live under the same "features" category so all the master switches
+sit together.
 """
+
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from app.admin import runtime_config
 from app.core.errors import APIError, ErrorCode
 
+# ── Page / API features (hide a whole feature, 404 its endpoints) ──────────
 MODS_HUB_FLAG = "feature_mods_hub_enabled"
 MARKET_FLAG = "feature_market_enabled"
+LEADERBOARDS_FLAG = "feature_leaderboards_enabled"
+PLAYER_ACTIVITY_FLAG = "feature_player_activity_enabled"
+CLASS_ACTIVITY_FLAG = "feature_class_activity_enabled"
+CLUBS_FLAG = "feature_clubs_enabled"
+UPDATES_FLAG = "feature_updates_enabled"
+CODEXES_FLAG = "feature_codexes_enabled"
+SERVER_STATUS_FLAG = "feature_server_status_enabled"
+GIVEAWAYS_FLAG = "feature_giveaways_enabled"
+COMMANDS_FLAG = "feature_commands_enabled"
+SERVER_TIME_FLAG = "feature_server_time_enabled"
+
+# ── Calculation switches (gate compute, not a page) ───────────────────────
+CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
+ALT_CLUSTERS_FLAG = "feature_alt_clusters_enabled"
 
 
 async def is_enabled(flag: str) -> bool:
@@ -28,11 +52,25 @@ def _disabled(name: str) -> APIError:
     return APIError(404, ErrorCode.not_found, f"The {name} is currently disabled.")
 
 
-async def require_mods_hub_enabled() -> None:
-    if not await is_enabled(MODS_HUB_FLAG):
-        raise _disabled("Mods Hub")
+def _gate(flag: str, name: str) -> Callable[[], Coroutine[Any, Any, None]]:
+    """Build a FastAPI dependency that 404s the route when ``flag`` is OFF.
+
+    Used as ``dependencies=[Depends(require_<x>_enabled)]`` on the ``/v1``
+    routers (and individual endpoints) so a disabled feature's API surface
+    vanishes alongside its website page."""
+    async def dependency() -> None:
+        if not await is_enabled(flag):
+            raise _disabled(name)
+    dependency.__name__ = f"require_{flag}"
+    return dependency
 
 
-async def require_market_enabled() -> None:
-    if not await is_enabled(MARKET_FLAG):
-        raise _disabled("Market")
+require_mods_hub_enabled = _gate(MODS_HUB_FLAG, "Mods Hub")
+require_market_enabled = _gate(MARKET_FLAG, "Market")
+require_leaderboards_enabled = _gate(LEADERBOARDS_FLAG, "Leaderboards")
+require_player_activity_enabled = _gate(PLAYER_ACTIVITY_FLAG, "Player Activity")
+require_class_activity_enabled = _gate(CLASS_ACTIVITY_FLAG, "Class Activity")
+require_updates_enabled = _gate(UPDATES_FLAG, "Updates archive")
+require_codexes_enabled = _gate(CODEXES_FLAG, "Codexes")
+require_server_status_enabled = _gate(SERVER_STATUS_FLAG, "Server Status")
+require_giveaways_enabled = _gate(GIVEAWAYS_FLAG, "Giveaways")

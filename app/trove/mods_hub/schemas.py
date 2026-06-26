@@ -112,6 +112,13 @@ class ClaimRequest(BaseModel):
                          description="Optional note to the admin (e.g. proof you're the author).")
 
 
+class CollaboratorRequest(BaseModel):
+    """Add a co-owner (collaborator) to a mod/modpack by their site username."""
+
+    username: str = Field(min_length=1, max_length=80,
+                          description="The site username to grant co-ownership to.")
+
+
 class TakedownRequest(BaseModel):
     reason: str = Field(default="", max_length=2000)
 

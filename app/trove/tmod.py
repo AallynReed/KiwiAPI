@@ -79,7 +79,9 @@ class TmodBuildRequest(BaseModel):
 
 
 def _manual_decompress(data: bytes) -> bytes:
-    """Fallback for streams the zlib object rejects (custom 7-byte head / 5-byte sync markers)."""
+    """De-frame Trove's custom .tmod stream: a 7-byte head, then raw 32 KiB chunks
+    separated by 5-byte sync markers, and a 5-byte tail. (The blocks are STORED, so
+    there's nothing to inflate - just strip the framing.)"""
     buf = data[7:-5]
     out = bytearray()
     pos = 0
@@ -88,6 +90,46 @@ def _manual_decompress(data: bytes) -> bytes:
         pos += _CHUNK + 5  # skip the 5-byte sync-flush marker
     out += buf[pos:]
     return bytes(out)
+
+
+def _verify_stream(stream: bytes, entries: list[dict]) -> bool:
+    """True if the file slices in ``stream`` hash to their stored checksums. A few
+    non-empty files matching is conclusive. We can't trust a no-exception zlib
+    decompress: zlib silently MIS-decodes Trove's custom framing (lying block
+    lengths) into shifted/garbage bytes without raising, so we check the data."""
+    checked = 0
+    for e in entries:
+        if e["size"] == 0:
+            continue
+        end = e["offset"] + e["size"]
+        if end > len(stream):
+            return False
+        if calculate_hash(stream[e["offset"]:end]) != e["checksum"]:
+            return False
+        checked += 1
+        if checked >= 4:
+            return True
+    return True   # all files empty, or every checked file matched
+
+
+def _decompress_file_stream(compressed: bytes, entries: list[dict]) -> bytes:
+    """Decompress a .tmod file stream, robust to BOTH a standard zlib stream (our own
+    ``build_tmod``) AND Trove's custom stored-block framing (real game / BTT mods).
+    zlib decodes the latter WITHOUT raising but yields shifted/garbage bytes, so we
+    verify each candidate against the per-file checksums and fall back to the manual
+    de-framer when zlib's output doesn't check out."""
+    primary: bytes | None = None
+    try:
+        d = zlib.decompressobj(wbits=zlib.MAX_WBITS)
+        primary = d.decompress(compressed) + d.flush()
+    except zlib.error:
+        primary = None
+    if primary is not None and _verify_stream(primary, entries):
+        return primary
+    manual = _manual_decompress(compressed)
+    if _verify_stream(manual, entries):
+        return manual
+    return primary if primary is not None else manual
 
 
 def read_tmod(data: bytes, metadata_only: bool = False) -> dict:
@@ -112,15 +154,10 @@ def read_tmod(data: bytes, metadata_only: bool = False) -> dict:
             pos += value_size
             properties[name] = value
 
-        file_stream = b""
-        if not metadata_only:
-            compressed = data[header_size:]
-            try:
-                file_stream = zlib.decompressobj(wbits=zlib.MAX_WBITS).decompress(compressed)
-            except zlib.error:
-                file_stream = _manual_decompress(compressed)
-
-        files: list[dict] = []
+        # The file table (path/offset/size/checksum) lives in the header. Parse it
+        # FIRST so the decompressor can verify its output against the checksums
+        # (needed to detect zlib's silent mis-decode of Trove's custom framing).
+        entries: list[dict] = []
         while pos < header_size:
             name_size = data[pos]
             pos += 1
@@ -130,9 +167,19 @@ def read_tmod(data: bytes, metadata_only: bool = False) -> dict:
             offset, pos = read_leb128(data, pos)
             size, pos = read_leb128(data, pos)
             checksum, pos = read_leb128(data, pos)
-            entry = {"path": path, "index": index, "offset": offset, "size": size, "checksum": checksum}
+            entries.append({"path": path, "index": index, "offset": offset,
+                            "size": size, "checksum": checksum})
+
+        file_stream = b""
+        if not metadata_only:
+            file_stream = _decompress_file_stream(data[header_size:], entries)
+
+        files: list[dict] = []
+        for e in entries:
+            entry = dict(e)
             if not metadata_only:
-                entry["content_base64"] = base64.b64encode(file_stream[offset:offset + size]).decode("ascii")
+                entry["content_base64"] = base64.b64encode(
+                    file_stream[e["offset"]:e["offset"] + e["size"]]).decode("ascii")
             files.append(entry)
     except (IndexError, UnicodeDecodeError, ValueError) as e:
         if isinstance(e, TmodError):

@@ -1,0 +1,32 @@
+{# ===========================================================================
+   Shared floating "Support" widget - the sticky bottom-right donation pill
+   that expands into PayPal / Ko-fi / Buy Me a Coffee links.
+
+   SINGLE source: included from partials/footer.html (so every page using the
+   shared footer gets it) and directly by the few pages that ship their own
+   footer (the Mods Hub / Modpacks pages). Styled in style.css under
+   `.support-*`; opened/closed by app.js. Do NOT re-inline this per page - the
+   old per-page copies had already drifted (some dropped the data-i18n hooks,
+   so the pill never translated).
+   =========================================================================== #}
+<div class="support-widget" id="support-widget" aria-label="Support the project">
+    <button type="button" class="support-trigger" id="support-trigger"
+            aria-expanded="false" aria-controls="support-panel">
+        <i class="fa-solid fa-heart" aria-hidden="true"></i>
+        <span data-i18n>Support</span>
+    </button>
+    <div class="support-panel" id="support-panel" role="menu" hidden>
+        <p class="support-headline" data-i18n>
+            Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.
+        </p>
+        <a href="https://paypal.me/waterin" target="_blank" rel="noopener" class="support-link support-paypal" role="menuitem">
+            <i class="fa-brands fa-paypal" aria-hidden="true"></i> <span>PayPal</span>
+        </a>
+        <a href="https://ko-fi.com/aallyn" target="_blank" rel="noopener" class="support-link support-kofi" role="menuitem">
+            <i class="fa-solid fa-mug-hot" aria-hidden="true"></i> <span>Ko-fi</span>
+        </a>
+        <a href="https://buymeacoffee.com/aallyn" target="_blank" rel="noopener" class="support-link support-bmac" role="menuitem">
+            <i class="fa-solid fa-mug-saucer" aria-hidden="true"></i> <span>Buy Me a Coffee</span>
+        </a>
+    </div>
+</div>

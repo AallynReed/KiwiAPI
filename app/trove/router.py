@@ -28,6 +28,7 @@ from app.core.dependencies import (
     require_scope,
 )
 from app.core.errors import APIError, ErrorCode
+from app.core.features import require_server_status_enabled
 from app.core.ratelimit import check_rate_limit, rate_limit_headers
 from app.core.utils import client_ip, utcnow
 from app.events import bus as events_bus
@@ -1120,6 +1121,7 @@ async def backfill_class_activity_history(
 @misc_router.get(
     "/trove-status", response_model=TroveStatusResponse,
     summary="Live Trove server status (auth + per-env game sockets)",
+    dependencies=[Depends(require_server_status_enabled)],
 )
 async def misc_trove_status(
     response: Response,
@@ -1141,6 +1143,7 @@ async def misc_trove_status(
 @misc_router.get(
     "/trove-status/history", response_model=TroveStatusHistoryResponse,
     summary="Trove status timeline + uptime for one environment",
+    dependencies=[Depends(require_server_status_enabled)],
 )
 async def misc_trove_status_history(
     response: Response,

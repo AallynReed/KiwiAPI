@@ -246,10 +246,156 @@
                 </a>
             </div>
 
-            <a class="scroll-cue" href="#live" aria-label="Scroll to live data">
+            <a class="scroll-cue" href="#explore" aria-label="Scroll to explore the site">
                 <span data-i18n>Scroll</span>
                 <i class="fa-solid fa-chevron-down"></i>
             </a>
+        </section>
+
+        <!-- ═══════════════ EXPLORE THE SITE ═══════════════
+             A directory of the website's own pages (separate from the
+             desktop/web app spotlights further down). Each card links to a
+             site page and is gated by the SAME feature flag the navbar uses,
+             so toggling a feature off in the admin panel removes it here too.
+             Order mirrors the navbar mega-menu groups (Live → Competitive →
+             Reference → Community). -->
+        <section class="site-explore" id="explore" aria-label="Explore the site">
+            <p class="section-eyebrow" data-i18n>On the site</p>
+            <h2 class="section-title" data-i18n>Explore the <span class="grad">website.</span></h2>
+            <p class="section-sub" data-i18n>No download needed - live game data, leaderboards, decoded codexes, a mod hub and more, all in your browser.</p>
+
+            <div class="explore-grid">
+                {% if server_status_enabled %}
+                <a class="explore-card" href="/status">
+                    <span class="explore-icon"><i class="fa-solid fa-signal" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Server Status <span class="nav-pill nav-pill-beta">Beta</span></h3>
+                        <p data-i18n>Is Trove online? Live login &amp; game-server reachability at a glance.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if server_time_enabled %}
+                <a class="explore-card" href="/server-time">
+                    <span class="explore-icon"><i class="fa-solid fa-clock" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Server Time</h3>
+                        <p data-i18n>The official server clock, world clocks, and a Discord timestamp maker.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if player_activity_enabled %}
+                <a class="explore-card" href="/activity">
+                    <span class="explore-icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Player Activity</h3>
+                        <p data-i18n>How busy Trove is right now, charted hour by hour.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if class_activity_enabled %}
+                <a class="explore-card" href="/class-activity">
+                    <span class="explore-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Class Activity</h3>
+                        <p data-i18n>See which classes people are actually playing.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if leaderboards_enabled %}
+                <a class="explore-card" href="/leaderboards">
+                    <span class="explore-icon"><i class="fa-solid fa-ranking-star" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Leaderboards</h3>
+                        <p data-i18n>Every contest and weekly board, refreshed live - with cheats flagged.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if clubs_enabled %}
+                <a class="explore-card" href="/clubs">
+                    <span class="explore-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Clubs</h3>
+                        <p data-i18n>Club rankings and member stats.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if commands_enabled %}
+                <a class="explore-card" href="/commands">
+                    <span class="explore-icon"><i class="fa-solid fa-keyboard" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Trove Commands</h3>
+                        <p data-i18n>A searchable index of every in-game slash command.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if updates_enabled %}
+                <a class="explore-card" href="/updates">
+                    <span class="explore-icon"><i class="fa-solid fa-code-branch" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Updates</h3>
+                        <p data-i18n>Browse every patch, diffed and archived, with blueprint previews.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if codexes_enabled %}
+                <a class="explore-card" href="/codexes">
+                    <span class="explore-icon"><i class="fa-solid fa-book-atlas" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Codexes <span class="nav-pill nav-pill-beta">Beta</span></h3>
+                        <p data-i18n>Decoded game catalogs: allies, mounts, dragons, recipes and more.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if mods_hub_enabled %}
+                <a class="explore-card" href="/mods">
+                    <span class="explore-icon"><i class="fa-solid fa-cubes" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Mods Hub <span class="nav-pill nav-pill-beta">Beta</span></h3>
+                        <p data-i18n>Share and download mods, with in-browser 3D previews.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if mods_hub_enabled %}
+                <a class="explore-card" href="/modpacks">
+                    <span class="explore-icon"><i class="fa-solid fa-box-open" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Modpacks <span class="nav-pill nav-pill-beta">Beta</span></h3>
+                        <p data-i18n>Grab curated bundles of mods, ready to drop in.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if market_enabled %}
+                <a class="explore-card" href="/market">
+                    <span class="explore-icon"><i class="fa-solid fa-shop" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Market <span class="nav-pill nav-pill-beta">Beta</span></h3>
+                        <p data-i18n>Trove marketplace prices and history.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if giveaways_enabled %}
+                <a class="explore-card" href="/giveaways">
+                    <span class="explore-icon"><i class="fa-solid fa-gift" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Giveaways</h3>
+                        <p data-i18n>Community giveaways and prizes.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
         </section>
 
         <!-- ═══════════════ LIVE STRIP ═══════════════
@@ -264,11 +410,12 @@
                 <a class="live-link" href="https://docs.aallyn.net" data-i18n>view docs →</a>
             </div>
             <div class="live-inner">
-                <article class="live-card" data-live="server-time-card">
+                <a class="live-card live-card-link" href="/server-time" data-live="server-time-card" data-i18n-title title="Open the Server Time page - world clocks &amp; Discord timestamps">
                     <span class="live-label" data-i18n>Server Time</span>
                     <strong class="live-value" data-live="server-time">-:-:-</strong>
                     <span class="live-sub" data-live="server-date">UTC</span>
-                </article>
+                    <span class="live-card-go" aria-hidden="true"><i class="fa-solid fa-arrow-right-long"></i></span>
+                </a>
                 <article class="live-card" data-live="trove-day-card">
                     <span class="live-label" data-i18n>Trove Day</span>
                     <strong class="live-value" data-live="trove-day">-</strong>
@@ -547,35 +694,6 @@
     </main>
 
     {% include "partials/footer.html" %}
-
-    <!-- ─── Support widget ──────────────────────────────────────────────
-         Sticky bottom-right pill that expands into the three donation
-         links. Same component as on docs.aallyn.net (reference.html);
-         styled in style.css under `.support-*`, wired up by landing.js. -->
-    <div class="support-widget" id="support-widget" aria-label="Support the project">
-        <button type="button" class="support-trigger" id="support-trigger"
-                aria-expanded="false" aria-controls="support-panel">
-            <i class="fa-solid fa-heart" aria-hidden="true"></i>
-            <span data-i18n>Support</span>
-        </button>
-        <div class="support-panel" id="support-panel" role="menu" hidden>
-            <p class="support-headline" data-i18n>
-                Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.
-            </p>
-            <a href="https://paypal.me/waterin" target="_blank" rel="noopener" class="support-link support-paypal" role="menuitem">
-                <i class="fa-brands fa-paypal" aria-hidden="true"></i>
-                <span>PayPal</span>
-            </a>
-            <a href="https://ko-fi.com/aallyn" target="_blank" rel="noopener" class="support-link support-kofi" role="menuitem">
-                <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
-                <span>Ko-fi</span>
-            </a>
-            <a href="https://buymeacoffee.com/aallyn" target="_blank" rel="noopener" class="support-link support-bmac" role="menuitem">
-                <i class="fa-solid fa-mug-saucer" aria-hidden="true"></i>
-                <span>Buy Me a Coffee</span>
-            </a>
-        </div>
-    </div>
 
     <script src="/static/app.min.js"></script>
     <script src="/static/i18n.min.js"></script>

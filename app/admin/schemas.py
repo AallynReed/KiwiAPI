@@ -1,6 +1,17 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
+
+
+class StrayAssignRequest(BaseModel):
+    """Assign one or more stray mods to a site user by their database id."""
+    user_id: str = Field(min_length=1, description="Target SiteUser database id.")
+    project_ids: list[str] = Field(min_length=1, description="Stray mod project ids to assign.")
+
+
+class SiteClaimedNameRequest(BaseModel):
+    """Admin override of a site user's claimed Trove name (empty clears it)."""
+    name: str = Field(default="", max_length=64)
 
 
 class AdminUserSummary(BaseModel):

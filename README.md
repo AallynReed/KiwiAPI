@@ -296,6 +296,7 @@ The api container ALSO serves the BTT marketing/manual site out of `site/`
 | `GET /updates` | per-server (Live US / PTS) game-update file explorer + version diff + in-browser preview of small text files |
 | `GET /support` | "support the project" landing for the navbar heart icon |
 | `GET /status` | Trove server-status page - live EU/US/PTS state + downtime-history timeline |
+| `GET /server-time` | Server Time page - live UTC-11 server clock, world clocks, daily/weekly reset countdowns + a Discord-timestamp maker (anchors to `/site/server-time`) |
 | `GET /mods` · `/mods/{handle}/{slug}` | Mods Hub - browse/download shared mods (public) + the signed-in studio to develop, version & publish them |
 | `GET /static/*` | site assets (bind-mounted from `site/static/`) |
 | `GET /site/*` | page-side JSON proxies (leaderboards, updates) - same-origin, no token |
@@ -368,14 +369,56 @@ swaps the Fork button for "Use as inspiration").
 `/site/mods/*`, git). The **handle** is the owner's canonical `SiteUser.username` (denormalized to
 `ModProject.owner_handle`, resynced on owner writes + when they open My Mods), so **slugs only have to be unique
 per owner** - two modders can both own a `my-mod`. The unique index moved `slug` → `(owner_id, slug)` (old global
-`slug_1` dropped on startup; `backfill_owner_handles()` sets the handle on pre-existing mods). Renaming Discord
-changes a modder's mod URLs + git remotes (the create form warns about this). Master actions address by **project
-id** (not slug). `get_project(handle, slug)` resolves the handle → owner → `(owner_id, slug)`.
+`slug_1` dropped on startup; `backfill_owner_handles()` sets the handle on pre-existing mods). The handle is the
+**frozen "Trove username"** (see below), so renaming on Discord does NOT shift mod URLs - only an admin-approved
+username change does. Master actions address by **project id** (not slug). `get_project(handle, slug)` resolves
+the handle → owner → `(owner_id, slug)`.
+
+**Identity: frozen Trove username vs live Discord handle.** `SiteUser` splits its identity in two:
+`username` is the **frozen "Trove username"** (the mod/modpack/profile handle) - seeded from the Discord handle at
+signup, then changed ONLY via an admin-approved request, so a Discord rename never moves a user's mod URLs.
+`discord_handle` is the **live** Discord handle, resynced on every login (display only). A user requests a change
+on the dashboard (`POST /v1/site-auth/me/username-request`, validated `[a-z0-9_.]{3,24}` with Discord's period rules
+- no leading dot, no `..` (trailing dot is allowed) - + not reserved/taken);
+a master approves it in the dev-portal (renames `username` + re-homes their `owner_handle`s) or rejects with a
+reason. Logic in `app/site_auth/usernames.py` (`UsernameChangeRequest` model; `/admin/username-requests/*`).
+
+**Dashboard-user management.** The dev-portal **"Dashboard users"** tab manages these Discord-signup `SiteUser`
+accounts (distinct from the API-consumer `User` accounts under "Users"). `GET /admin/site-users?q=` searches by
+username/discord_handle/email/display-name and returns each account with its owned mod + modpack counts; clicking a
+user opens deactivate/activate (`POST …/{id}/{deactivate,activate}` - deactivate flips `is_active` **and**
+`revoke_all_sessions`, so both the `is_active` check and bumped `token_version` in `_authenticate` cut access
+immediately), force-log-out (`POST …/{id}/logout`, ends sessions without disabling), a master override of the
+frozen Trove username (`POST …/{id}/username` → `usernames.admin_set_username`, re-homes their handles), a master
+override of the **claimed Trove (leaderboard) name** (`POST …/{id}/claimed-name {name}` - sets it admin-verified,
+empty clears; uniqueness-guarded), and a **Discord handle refresh** (`POST …/{id}/refresh-discord` →
+`bot.discord_rest.fetch_user` via the bot token → updates `discord_handle` + `discord_avatar`).
 
 **Download filename = the `.tmod`'s internal `title`.** Trove identifies a mod in-game by the `title` property
 baked into the `.tmod`, so `release_download_filename()` serves the artifact as `<internal title>.tmod` (not
 `slug-tag.tmod`) - a mismatch breaks the mod. Applied at download time (fixes old releases too) and stored on new
 releases; zips keep their `slug-tag.zip` name.
+
+**3D blueprint preview.** If a release's `.tmod` contains `.blueprint` models, the mod page shows a **"3D view"**
+button per model that opens a WebGL turntable (drag-rotate / scroll-zoom / right-drag-pan). The server reuses the
+catalog-render decoder (`app/trove/render/voxel.py decode()`): `GET /site/mods/releases/{id}/blueprints` lists the
+blueprint paths and `…/blueprint?path=` returns a compact voxel payload (`{x,y,z,rgb,kind,level}` parallel arrays;
+`list_release_blueprints`/`decode_release_blueprint`, decode runs off the event loop, 250k-voxel cap). The viewer
+(`site/static/blueprint_viewer.js`) lazy-loads Three.js from cdnjs (CSP already allows it), renders voxels as
+kind-grouped `InstancedMesh`es (solid/glass/glow), and drops fully-buried voxels. Owner can preview draft releases.
+
+**Assembled creature viewer (rest pose + animations).** When a mod's blueprint parts are the pieces of a rigged
+creature (e.g. `..._leg_l_01`, `..._head`), the page also shows **"View assembled creature"** — the parts placed on
+the game's skeleton, posable through the creature's animations. Pipeline: the **Granny `.gr2`/`.gsf` model files are
+proprietary (RAD Granny 2.11, BitKnit/type-4 compression)**, so an **offline** Windows tool (`granny2.dll` via a
+32-bit Python, in `S:\Desktop\Projects\granny_re`) decompresses + reads the skeleton and **bakes** per-bone
+transforms (rest + each animation) into a small platform-independent **rig JSON** (`app/trove/mods_hub/rigs/<creature>.rig.json`,
+321 creatures shipped; only the spider has animations baked so far). At **runtime the server is pure-Python, no DLL**:
+`assembly.assemble()` decodes the mod's parts, matches them to a rig by attach-point (`AP_*`) name suffix, and emits
+the model payload (`GET /site/mods/releases/{id}/assembled`; `list_release_blueprints` also reports the matched `rig`
++ `animations`). The viewer (`site/static/model_viewer.js`) renders each part as a rigid voxel chunk transformed by
+its bone's matrix, defaults to rest pose, and has a button per animation (baked frames, render-on-demand). **Linux-clean
+by construction** — the DLL only ever runs offline; the server and site see nothing but JSON.
 
 **Owner links.** A project carries up to three kinds of owner-provided links shown as buttons under the title:
 a **Discord invite** (`discord_url`), a **website** (`website_url`) and up to **5 donation links**
@@ -481,16 +524,39 @@ it** (no UI text, no API field, no source link). The import flow:
 - **Claim → handover**: a signed-in user hits "This is my mod" (`POST …/projects/stray/<slug>/claim` →
   `ModClaimRequest`); a master approves in the admin panel, which **hands the mod over** (`handover_stray`: assigns
   the owner, clears `is_stray`, re-homes the slug to `/mods/<username>/<slug>`) - it's now an ordinary mod.
+- **Direct assign** (admin): a master can also hand strays to a known modder by their **database User ID** with
+  **no claim request** (`POST /admin/mods/stray/assign {user_id, project_ids[]}` → `admin_assign_stray` →
+  `handover_stray`; auto-rejects pending claims), for proactively attributing mods as their authors sign up.
+  **Bulk/mass** capable - the **Stray mods** card (status filter: Approved [default] / Pending / Rejected / All,
+  + search) has per-row checkboxes, select-all and an **"Assign N selected…"** button; single **Assign…** buttons
+  also sit on each stray row and on All-projects stray rows. (Copy the User ID from the **Dashboard users** tab.)
 - **Public copy is deliberately ambiguous**: the badge says **"Stray"**, the notice says the mod was "uploaded via
   contributions", and the origin/source is **never exposed publicly** (`source`/`source_url` are stripped from the
   public `project_card` + `public_mod_dto`; the mod page shows no source link). The real source is kept **admin-
   only** (on `_stray_card`) for attribution + verifying claims. Models: `ModClaimRequest`, `StrayImportState`;
   `ModProject.owner_id` + `ModImageAsset.owner_id` are optional (None for stray).
 
+**Co-ownership (collaborators).** A mod or modpack can be **co-owned**: `ModProject`/`ModpackProject` carry a
+`collaborators` list (`{user_id, username}`). The primary owner adds co-owners by username via a **Collaborate**
+button (`POST …/collaborators`; remove with `DELETE …/collaborators/{user_id}`). `service.can_edit` (= primary
+owner **or** collaborator) drives all edit rights, draft visibility, and "My Mods/My Modpacks" listing
+(`list_owned` matches owner **or** collaborator and flags `is_collaborator`); the detail DTO exposes
+`collaborators` + `is_primary_owner`. **Only the primary owner** can delete the project or add/remove collaborators
+(`_require_primary_owner`); collaborators get everything else. The User Dashboard now has a **My Modpacks** section
+alongside My Mods.
+
 **Master oversight** lives in the dev-portal master panel ("Mods hub" tab → `/admin/mods/*`): list **every**
-modder's project (drafts included), take down / restore a reported project, or force-delete any project. The same
+modder's project (drafts included), take down / restore a reported project, or force-delete any project. The
+**All projects** list is sortable (`?sort=`) by recency (`updated`/`created`), `popularity` (the warmer's
+`popularity_score`), `downloads`, `stars`, or `size` - on-disk footprint = summed release-artifact (`tmod_size`)
++ banner/preview image bytes (`_project_sizes`; the git source repo isn't counted). The
+**Open reports** card triages user reports - **Take down** resolves all of a project's reports while hiding it;
+**Dismiss** (`/admin/mods/reports/{id}/dismiss` → `dismiss_report`) resolves a single bogus/non-actionable report
+without touching the mod. The same
 tab drives the **stray** import (`/admin/mods/stray/import`), the **pending approval queue**
-(`/admin/mods/stray` + `…/approve`/`…/reject`), and **mod claims** (`/admin/mods/claims` + `…/approve`/`…/reject`).
+(`/admin/mods/stray` + `…/approve`/`…/reject`), **mod claims** (`/admin/mods/claims` + `…/approve`/`…/reject`), and
+a **Modpacks** moderation card (`/admin/modpacks` + `/{id}/takedown`/`/restore`/`DELETE` →
+`modpacks.service.master_list_modpacks`/`take_down`/`restore`/`master_delete`).
 
 **Hiding the whole feature.** The Mods Hub (and the Market) each have a master **feature toggle** -
 `feature_mods_hub_enabled` / `feature_market_enabled`, flippable from the dev-portal **Configuration** tab
@@ -498,6 +564,27 @@ tab drives the **stray** import (`/admin/mods/stray/import`), the **pending appr
 (`/v1/…`, `/site/…`, and `/git/mods/*`), and leaves all stored data intact for when it's switched back ON. The
 gate is one runtime-config bool read via `app/core/features.py` (router-level dependency on the API side, a site-
 router dependency + Jinja context flag on the site side).
+
+The same "features" category now carries a master toggle for **every** Pages-menu feature -
+`feature_leaderboards_enabled`, `feature_player_activity_enabled`, `feature_class_activity_enabled`,
+`feature_clubs_enabled`, `feature_updates_enabled`, `feature_codexes_enabled`, `feature_server_status_enabled`,
+`feature_giveaways_enabled`, `feature_commands_enabled` - each behaving like the Mods Hub/Market switch: OFF hides
+the navbar link, 404s the page + its `/site/…` proxies, and 404s the matching `/v1/…` surface (server-status gates
+the two `/v1/misc/trove-status[/history]` endpoints; clubs + commands are website-only with no `/v1` to gate).
+Player/Class Activity share the leaderboard pipeline but toggle independently of Leaderboards (their
+`/site/leaderboards/activity*` + `/class-activity/*` proxies are excluded from the leaderboards gate). Stored data
+is untouched throughout.
+
+Two further "features" switches gate **calculation**, not a page: `feature_cheater_detection_enabled` and
+`feature_alt_clusters_enabled` (see `app/trove/leaderboards/detection.py`). The master switch OFF makes the
+leaderboards warmer skip the whole Possible-cheaters compute each cycle (the biggest warm-cycle CPU cost), returns
+an empty "disabled" payload from `/v1/leaderboards/cheaters` + `/site/leaderboards/cheaters`, and hides both
+anti-cheat tabs on `/leaderboards`. The alt-clusters sub-switch keeps the cheap per-player flags but skips the
+heavy O(n²) name-stem + co-movement + schedule pass (`clusters=[]`, Alt-clusters tab hidden); it's a no-op while
+the master switch is OFF. The `/leaderboards` page renders the two anti-cheat tab buttons **server-side** behind
+the flags (the handler passes them into `leaderboards.html`), so a disabled tab is gone on first paint regardless
+of the JS bundle; the page also reads the flags from `/site/leaderboards/config` to fall back to the boards tab on
+a deep-link to a disabled tab.
 
 **Modpacks** (user-curated bundles of hub mods - `app/trove/modpacks`)
 
@@ -531,6 +618,18 @@ toggle (`feature_mods_hub_enabled`; meaningless without the hub). Pages live at 
   **warnings**/tags/visibility/links), upload a **banner**, manage variants (add/rename/delete/make-default), and
   add/remove/reorder mods + set each one's branch + version lock. A variant's mod list is saved by **PUTting the
   whole ordered list** (`PUT …/variants/{name}/entries`) - add/remove/reorder/lock in one write.
+- **Conflict prevention.** Saving a variant's mod list is **rejected** (409) if any two of its mods conflict:
+  they share the same `.tmod` header **title**, or they **replace any of the same files** (the mod's own preview
+  image - the file named by the `previewPath` property - is ignored). `service._detect_conflicts` reads each
+  resolved mod's `.tmod` bytes for its title + file paths; the editor shows the conflict in the modal and blocks
+  the save. Unresolvable / no-build / `.zip` entries are skipped (they aren't packed, so they can't conflict).
+- **Custom `.tmod` uploads.** Besides referencing hub mods, the maker can **upload a custom `.tmod`** into a
+  variant (`POST …/variants/{name}/upload`). It's validated, **conflict-checked against the variant before
+  anything is committed** (rejected with the conflicting mod named if it clashes), then **hash-deduped**: if its
+  content hash matches a mod we already host, it's added as a **reference** to that mod (pinned to the matched
+  build) instead of storing a duplicate; otherwise it's kept as a **custom** entry (`ModpackEntry.custom_sha`,
+  `project_id=None`). Custom entries pack like any other mod and round-trip through the editor (shown with an
+  "Uploaded" badge, no hub link / version controls).
 - **Downloads + likes.** Each download bumps `download_count`; a signed-in user can **like** a pack (`ModpackStar`
   + denormalized `star_count`, with a "Most liked" sort) - both surfaced on cards and the pack header. The included-
   mods list shows each mod's **author** linked to their modder page (`/mods/<handle>`), and a mod's own page lists

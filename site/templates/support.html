@@ -129,13 +129,13 @@
                         <span data-i18n>Report bugs, request features, share builds. The fastest channel to me.</span>
                     </span>
                 </a>
-                <a class="sp-free-card" href="https://trovesaurus.com" target="_blank" rel="noopener">
+                <button type="button" class="sp-free-card" id="sp-share-copy" data-copy="https://trove.aallyn.net">
                     <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                     <span>
                         <strong data-i18n>Tell a Trove friend</strong>
-                        <span data-i18n>If a tool here saved you ten minutes once, it'll do the same for someone else.</span>
+                        <span data-i18n>If a tool here saved you ten minutes once, it'll do the same for someone else. Tap to copy the link.</span>
                     </span>
-                </a>
+                </button>
             </div>
         </section>
 
@@ -157,31 +157,38 @@
 
     {% include "partials/footer.html" %}
 
-    <!-- Bottom-right floating widget - same component as every page,
-         shown here too for consistency and so a visitor who scrolls
-         past the main donation cards still has it within reach. -->
-    <div class="support-widget" id="support-widget" aria-label="Support the project">
-        <button type="button" class="support-trigger" id="support-trigger"
-                aria-expanded="false" aria-controls="support-panel">
-            <i class="fa-solid fa-heart" aria-hidden="true"></i>
-            <span>Support</span>
-        </button>
-        <div class="support-panel" id="support-panel" role="menu" hidden>
-            <p class="support-headline">
-                Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.
-            </p>
-            <a href="https://paypal.me/waterin" target="_blank" rel="noopener" class="support-link support-paypal" role="menuitem">
-                <i class="fa-brands fa-paypal" aria-hidden="true"></i><span>PayPal</span>
-            </a>
-            <a href="https://ko-fi.com/aallyn" target="_blank" rel="noopener" class="support-link support-kofi" role="menuitem">
-                <i class="fa-solid fa-mug-hot" aria-hidden="true"></i><span>Ko-fi</span>
-            </a>
-            <a href="https://buymeacoffee.com/aallyn" target="_blank" rel="noopener" class="support-link support-bmac" role="menuitem">
-                <i class="fa-solid fa-mug-saucer" aria-hidden="true"></i><span>Buy Me a Coffee</span>
-            </a>
-        </div>
-    </div>
-
+    <script>
+    (function () {
+        var btn = document.getElementById('sp-share-copy');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            var url = btn.getAttribute('data-copy');
+            var label = btn.querySelector('strong');
+            var done = function () {
+                if (!label || btn.classList.contains('copied')) return;
+                var old = label.textContent;
+                btn.classList.add('copied');
+                label.textContent = 'Link copied!';
+                setTimeout(function () {
+                    btn.classList.remove('copied');
+                    label.textContent = old;
+                }, 1400);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(done).catch(function () { fallback(url, done); });
+            } else {
+                fallback(url, done);
+            }
+        });
+        function fallback(text, cb) {
+            var ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            try { document.execCommand('copy'); cb(); } catch (e) { /* clipboard unavailable */ }
+            document.body.removeChild(ta);
+        }
+    })();
+    </script>
     <script src="/static/app.min.js"></script>
     <script src="/static/i18n.min.js"></script>
     <script src="/static/site_auth.min.js" defer></script>

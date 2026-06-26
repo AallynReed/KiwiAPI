@@ -10,7 +10,7 @@ from app.bot.models import Club, GuildConfig, TrackedAnnouncement
 from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
 from app.giveaways.models import Giveaway, GiveawayEntry, PrizeCode, VaultItem
-from app.site_auth.models import SiteSession, SiteUser
+from app.site_auth.models import SiteSession, SiteUser, UsernameChangeRequest
 from app.supporters.models import Supporter
 from app.tokens.models import ApiToken
 
@@ -56,7 +56,7 @@ from app.usage.models import UsageEvent
 # Every Beanie Document must be registered here so init_beanie can bind it.
 # Models live in their feature packages; this is the one place that aggregates them.
 DOCUMENT_MODELS = [
-    User, Session, SiteUser, SiteSession,
+    User, Session, SiteUser, SiteSession, UsernameChangeRequest,
     ApiToken, UsageEvent, PageView, OutboxEmail, TroveNews, FeedCache, TroveEvent,
     DelveRotation, BttRelease, BttChangelog,
     UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
@@ -96,6 +96,12 @@ async def init_db() -> None:
     # tripped this and 500'd every token-bearing request that had an expiry set.
     _client = AsyncMongoClient(settings.mongo_uri, tz_aware=True)
     _db = _client[settings.mongo_db]
+    # The mod_projects (source, source_id) unique index moved from SPARSE to PARTIAL.
+    # Sparse still indexed source=null (Beanie writes null, not absent), so the unique
+    # index collided on (null,null) and 500'd every normal mod create after the first.
+    # The new index has the SAME name, so the old one must be dropped BEFORE Beanie
+    # recreates it (a same-name create with different options errors).
+    await _drop_index_if_exists(_db["mod_projects"], "source_1_source_id_1")
     await init_beanie(database=_db, document_models=DOCUMENT_MODELS)
 
     # TTL index: Mongo auto-removes a bucket once its window has elapsed.

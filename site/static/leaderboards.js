@@ -82,6 +82,10 @@
     entriesTotal: 0,
     loadingEntries: false,
     hotRetentionDays: 3,    // pulled from /site/leaderboards/config; subtitle reflects it
+    // Master compute switches from /site/leaderboards/config. When off, the
+    // corresponding tab is hidden entirely (the server skips the calculation).
+    cheaterDetectionEnabled: true,
+    altClustersEnabled: true,
     cheaters: null,         // cached payload from /site/leaderboards/cheaters (players + clusters)
     cheatersMinConfidence: readMinConfidence(),  // cheaters slider value, persisted
     clustersMinConfidence: readClustersMinConfidence(),  // clusters slider value, persisted
@@ -170,6 +174,14 @@
     if (config && Number.isFinite(config.hot_retention_days)) {
       state.hotRetentionDays = config.hot_retention_days;
     }
+    // Master compute switches: a disabled tab is hidden outright (the server
+    // skips the calculation, so there's nothing to show). Default ON so a
+    // failed config fetch leaves the tabs in place.
+    if (config) {
+      state.cheaterDetectionEnabled = config.cheater_detection_enabled !== false;
+      state.altClustersEnabled = config.alt_clusters_enabled !== false;
+    }
+    applyAntiCheatToggles();
     renderSubtitle();
 
     buildDays();
@@ -233,8 +245,30 @@
   // / ``tab=clusters`` for deep-link + back-button support.
   const TABS = ['boards', 'cheaters', 'clusters'];
 
+  // A tab is "available" only when its server-side calculation is enabled.
+  // Clusters additionally requires the cheater master switch (it's a sub-pass).
+  function tabAvailable(name) {
+    if (name === 'cheaters') return state.cheaterDetectionEnabled;
+    if (name === 'clusters') return state.cheaterDetectionEnabled && state.altClustersEnabled;
+    return true;
+  }
+
+  // Hide the tab buttons whose calculation is disabled. The server normally
+  // omits them entirely (see leaderboards.html), so these refs are usually null
+  // when disabled; this is the fallback for a cached/stale HTML shell whose flag
+  // has since flipped. Uses inline display, NOT the `hidden` attribute: the
+  // `.lb-tab` rule sets `display: inline-flex`, which (equal specificity,
+  // author > UA) overrides `[hidden]{display:none}`, so the attribute wouldn't
+  // hide it.
+  function applyAntiCheatToggles() {
+    if ($tabCheatersBtn) $tabCheatersBtn.style.display = tabAvailable('cheaters') ? '' : 'none';
+    if ($tabClustersBtn) $tabClustersBtn.style.display = tabAvailable('clusters') ? '' : 'none';
+  }
+
   function switchTab(name) {
     if (!TABS.includes(name)) name = 'boards';
+    // Deep-link / back-button to a disabled tab falls back to boards.
+    if (!tabAvailable(name)) name = 'boards';
     if (state.activeTab === name) return;
     state.activeTab = name;
 

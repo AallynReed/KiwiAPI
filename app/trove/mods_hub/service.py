@@ -9,6 +9,7 @@ verified account.
 from __future__ import annotations
 
 import asyncio
+import base64
 import io
 import logging
 import math
@@ -29,6 +30,7 @@ from app.site_auth.models import SiteUser
 from app.trove import mod_categories, tmod
 from app.trove.mods_hub import gitstore, store, trove_layout
 from app.trove.mods_hub.models import (
+    Collaborator,
     ModClaimRequest,
     ModDownloadEvent,
     ModGitToken,
@@ -128,13 +130,52 @@ def _clean_url(u: str | None, *, field: str = "link") -> str | None:
     return u
 
 
+def _collab_ids(project: ModProject) -> set:
+    return {c.user_id for c in (project.collaborators or [])}
+
+
+def can_edit(project: ModProject, actor: SiteUser | None) -> bool:
+    """Edit rights = the primary owner OR a collaborator (co-owner)."""
+    if actor is None:
+        return False
+    return actor.id == project.owner_id or actor.id in _collab_ids(project)
+
+
+def is_primary_owner(project: ModProject, actor: SiteUser | None) -> bool:
+    return actor is not None and actor.id == project.owner_id
+
+
 def _require_owner(project: ModProject, actor: SiteUser) -> None:
-    if project.owner_id != actor.id:
-        raise APIError(403, ErrorCode.forbidden, "You don't own this mod project.")
+    """Edit-level gate: the primary owner or any collaborator. (Named *owner* for
+    history; collaborators are co-owners with edit rights.)"""
+    if not can_edit(project, actor):
+        raise APIError(403, ErrorCode.forbidden, "You don't have edit access to this mod project.")
+
+
+def _require_primary_owner(project: ModProject, actor: SiteUser) -> None:
+    """Stricter gate for owner-only actions (delete, managing collaborators)."""
+    if not is_primary_owner(project, actor):
+        raise APIError(403, ErrorCode.forbidden,
+                       "Only the mod's owner can do this.")
 
 
 def _not_found(what: str = "Mod project not found") -> APIError:
     return APIError(404, ErrorCode.not_found, what)
+
+
+def _search_clause(q: str) -> dict:
+    """Case-insensitive SUBSTRING search across the card-visible fields + author.
+    (Replaces MongoDB ``$text``, which is case-insensitive but only matches whole
+    word/stems - so it missed partial terms; this matches the substring behaviour
+    users know from the desktop app.)"""
+    rx = {"$regex": re.escape(q.strip()), "$options": "i"}
+    return {"$or": [{"title": rx}, {"summary": rx}, {"tags": rx},
+                    {"owner_username": rx}, {"author": rx}]}
+
+
+def _author_eq(author: str) -> dict:
+    """Case-insensitive exact match on the owner/author name (the `author` filter)."""
+    return {"$regex": f"^{re.escape(author.strip())}$", "$options": "i"}
 
 
 # --- DTO builders ----------------------------------------------------------
@@ -401,9 +442,10 @@ async def get_project(handle: str, slug: str) -> ModProject | None:
 
 
 def can_view(project: ModProject, viewer: SiteUser | None) -> bool:
-    """Visibility gate. Owners always see their own projects (incl. drafts and
-    taken-down ones, flagged); everyone else is bound by visibility + takedown."""
-    if viewer is not None and project.owner_id == viewer.id:
+    """Visibility gate. Owners + collaborators always see their projects (incl.
+    drafts and taken-down ones, flagged); everyone else is bound by visibility +
+    takedown."""
+    if can_edit(project, viewer):
         return True
     if project.taken_down:
         return False
@@ -418,7 +460,7 @@ def source_visible(project: ModProject, viewer: SiteUser | None) -> bool:
     have NO source, so this is False even for the owner."""
     if project.mode != "files":
         return False
-    if viewer is not None and project.owner_id == viewer.id:
+    if can_edit(project, viewer):
         return True
     if project.taken_down or project.source_visibility != "public":
         return False
@@ -451,7 +493,10 @@ async def _branches_or_default(project: ModProject) -> list[dict]:
 
 
 async def project_detail(project: ModProject, viewer: SiteUser | None) -> dict:
-    is_owner = viewer is not None and project.owner_id == viewer.id
+    # "is_owner" = has edit access (primary owner OR a collaborator); the editor UI
+    # keys off it. Collaborator-management + delete additionally need is_primary_owner.
+    is_owner = can_edit(project, viewer)
+    primary = is_primary_owner(project, viewer)
     src_visible = source_visible(project, viewer)
     # Releases are grouped by branch (variant) client-side; non-owners don't see
     # drafts OR releases from hidden variants.
@@ -480,6 +525,9 @@ async def project_detail(project: ModProject, viewer: SiteUser | None) -> dict:
         "taken_down": project.taken_down,
         "takedown_reason": project.takedown_reason if is_owner else None,
         "is_owner": is_owner,
+        "is_primary_owner": primary,
+        "collaborators": [{"id": str(c.user_id), "username": c.username}
+                          for c in (project.collaborators or [])],
         "starred": await has_starred(viewer, project),
         "mode": project.mode,
         "source_visibility": project.source_visibility,
@@ -503,10 +551,10 @@ async def list_public(
     if tag:
         query["tags"] = tag.strip().lower()
     if author:
-        query["owner_username"] = author
+        query["owner_username"] = _author_eq(author)
     if q:
-        # Text index over title/summary/tags; falls back gracefully if a stop-word.
-        query["$text"] = {"$search": q}
+        # Case-insensitive substring across title/summary/tags/author.
+        query.update(_search_clause(q))
     sort_key = _SORTS.get(sort, "-updated_at")
     total = await ModProject.find(query).count()
     docs = await ModProject.find(query).sort(sort_key).skip(offset).limit(limit).to_list()
@@ -615,8 +663,44 @@ async def _purge_project(project: ModProject) -> None:
 
 
 async def delete_project(project: ModProject, actor: SiteUser) -> None:
-    _require_owner(project, actor)
+    _require_primary_owner(project, actor)   # collaborators can't delete the project
     await _purge_project(project)
+
+
+# --- collaborators (co-owners) ---------------------------------------------
+
+async def add_collaborator(project: ModProject, actor: SiteUser, username: str) -> dict:
+    """Add a co-owner by username (primary owner only). They gain edit rights."""
+    _require_primary_owner(project, actor)
+    uname = (username or "").strip().lstrip("@").lower()
+    if not uname:
+        raise APIError(400, ErrorCode.bad_request, "Enter a username to collaborate with.")
+    user = await SiteUser.find_one(SiteUser.username == uname)
+    if user is None:
+        raise APIError(404, ErrorCode.not_found, f"No site user '@{uname}'. They must sign in once first.")
+    if user.id == project.owner_id:
+        raise APIError(400, ErrorCode.bad_request, "That's the owner.")
+    if user.id in _collab_ids(project):
+        return await project_detail(project, actor)   # already a collaborator (idempotent)
+    if len(project.collaborators) >= 20:
+        raise APIError(400, ErrorCode.bad_request, "Too many collaborators (max 20).")
+    project.collaborators.append(Collaborator(user_id=user.id, username=user.username))
+    project.updated_at = utcnow()
+    await project.save()
+    return await project_detail(project, actor)
+
+
+async def remove_collaborator(project: ModProject, actor: SiteUser, user_id: str) -> dict:
+    """Remove a collaborator (primary owner only)."""
+    _require_primary_owner(project, actor)
+    try:
+        uid = PydanticObjectId(user_id)
+    except Exception:
+        uid = None
+    project.collaborators = [c for c in project.collaborators if c.user_id != uid]
+    project.updated_at = utcnow()
+    await project.save()
+    return await project_detail(project, actor)
 
 
 # --- branches (git refs) ---------------------------------------------------
@@ -1112,6 +1196,162 @@ async def release_with_project(
     return release, project
 
 
+# --- Blueprint (.blueprint voxel model) preview --------------------------------
+# A release's .tmod can carry .blueprint models. We surface them for an in-browser
+# 3D viewer: list the blueprint paths, and decode one to a compact voxel payload
+# (reusing the proven catalog-render decoder in app/trove/render/voxel.py).
+
+_BLUEPRINT_VOXEL_CAP = 250_000   # guard the viewer against pathologically huge models
+_KIND_CODE = {"S": 0, "G": 1, "E": 2, "GE": 3}   # solid / glass / glow / glow-glass
+
+
+def _list_blueprints_sync(tmod_bytes: bytes) -> dict:
+    """Sync: the release's non-empty blueprint items + their basenames (``fns``). Rig
+    resolution happens in the async caller (it needs Postgres)."""
+    from app.trove.render.voxel import is_empty_blueprint
+
+    parsed = tmod.read_tmod(tmod_bytes)
+    out: list[dict] = []
+    fns: list[str] = []
+    for f in parsed["files"]:
+        p = f["path"].lower()
+        if not p.endswith(".blueprint"):
+            continue
+        raw = base64.b64decode(f["content_base64"])
+        if is_empty_blueprint(raw):
+            continue                                 # skip 0-voxel placeholder parts
+        out.append({"path": f["path"], "size": f["size"]})
+        fns.append(p.split("/")[-1][:-len(".blueprint")])
+    return {"items": out, "fns": fns}
+
+
+async def _resolve_rig(fns: list[str]) -> tuple[str | None, list[str], set[str]]:
+    """Which baked creature rig these blueprint basenames assemble onto, its animation
+    names, and the SET of basenames that are components of that assembled model.
+
+    AUTHORITATIVE ONLY - the live binfab map (via the codex), which knows each
+    blueprint's exact creature + attach point from the game's own prefab data. There is
+    NO name-overlap heuristic fallback: if the rig isn't known (creature not in the
+    archive, or no baked rig), we return nothing and the page just shows the individual
+    blueprints. Better to not render than to render onto a guessed/wrong skeleton."""
+    if not fns:
+        return None, [], set()
+    from app.trove.mods_hub import assembly, rig_index
+    skeleton, attach = await rig_index.resolve(fns)
+    if skeleton and assembly.has_baked_rig(skeleton):
+        return skeleton, assembly.animations_for(skeleton), set(attach)
+    return None, [], set()
+
+
+async def list_release_blueprints(release: ModRelease) -> dict:
+    """The NON-EMPTY .blueprint models inside a release's .tmod (for the 3D-view
+    affordance) + whether they assemble onto a known creature rig. Each item gets
+    ``assembled`` (is it a component of the assembled model) so the UI can fold the
+    component blueprints under the 'assembled' button. Empty placeholder blueprints
+    (unused body parts, 0 voxels) are skipped. CPU-bound, off the loop."""
+    if release.release_format != "tmod":
+        return {"items": [], "rig": None, "animations": []}
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        return {"items": [], "rig": None, "animations": []}
+    try:
+        base = await asyncio.to_thread(_list_blueprints_sync, data)
+    except tmod.TmodError:
+        return {"items": [], "rig": None, "animations": []}
+    rig, anims, components = await _resolve_rig(base["fns"])
+    for item, fn in zip(base["items"], base["fns"]):
+        item["assembled"] = fn in components
+    return {"items": base["items"], "rig": rig, "animations": anims}
+
+
+async def assemble_release_model(release: ModRelease) -> dict | None:
+    """Assemble the release's blueprint parts onto their matching creature rig ->
+    the web-viewer model payload (rest pose + animations). None if no parts / no rig.
+
+    The rig + per-part attach points are resolved AUTHORITATIVELY from the game's
+    prefab binfabs (``rig_index.resolve``); ``assembly.assemble`` falls back to the
+    name-overlap heuristic for any part the binfab map doesn't cover."""
+    if release.release_format != "tmod":
+        return None
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        return None
+    from app.trove.mods_hub import rig_index
+
+    def _read(b: bytes):
+        files = tmod.read_tmod(b)["files"]
+        basenames = [f["path"].split("/")[-1][:-len(".blueprint")].lower()
+                     for f in files if f["path"].lower().endswith(".blueprint")]
+        return files, basenames
+    files, basenames = await asyncio.to_thread(_read, data)
+    skeleton, attach = await rig_index.resolve(basenames)
+
+    def _work():
+        from app.trove.mods_hub import assembly
+        return assembly.assemble(files, rig_name=skeleton, ap_overrides=attach)
+    return await asyncio.to_thread(_work)
+
+
+async def load_rig_animation(skeleton: str, name: str) -> dict:
+    """One baked animation's frames for a creature rig, lazily (the model viewer fetches
+    these on demand). The assembled-model payload only carries animation metadata, so
+    the frames live here, keyed by skeleton (shared across every mod using that rig)."""
+    from app.trove.mods_hub import assembly
+    anim = await asyncio.to_thread(assembly.load_animation, skeleton, name)
+    if anim is None:
+        raise _not_found("No such rig animation")
+    return anim
+
+
+def _decode_blueprint_payload(tmod_bytes: bytes, want_path: str) -> dict:
+    """Sync: find ``want_path`` in the .tmod, decode it, and pack the voxels into
+    parallel arrays (compact JSON the web viewer consumes directly)."""
+    from app.trove.render.voxel import BlueprintError, decode, is_empty_blueprint, to_render_voxels
+
+    parsed = tmod.read_tmod(tmod_bytes)
+    want = want_path.strip().lower()
+    target = next((f for f in parsed["files"]
+                   if f["path"].lower() == want and want.endswith(".blueprint")), None)
+    if target is None:
+        raise _not_found("No such blueprint in this release")
+    raw = base64.b64decode(target["content_base64"])
+    if is_empty_blueprint(raw):
+        raise APIError(422, ErrorCode.bad_request,
+                       "This blueprint is an empty placeholder (no voxels to show).")
+    try:
+        voxels = to_render_voxels(decode(raw))
+    except BlueprintError as e:
+        raise APIError(422, ErrorCode.bad_request, f"Couldn't read that blueprint: {e}")
+    if not voxels:
+        raise APIError(422, ErrorCode.bad_request, "That blueprint has no voxels.")
+    if len(voxels) > _BLUEPRINT_VOXEL_CAP:
+        raise APIError(413, ErrorCode.bad_request,
+                       f"This model is too large to preview ({len(voxels):,} voxels).")
+    xs: list[int] = []; ys: list[int] = []; zs: list[int] = []
+    rgb: list[int] = []; kind: list[int] = []; level: list[int] = []
+    for (x, y, z), (r, g, b, k, lv) in voxels.items():
+        xs.append(x); ys.append(y); zs.append(z)
+        rgb.append((r << 16) | (g << 8) | b)
+        kind.append(_KIND_CODE.get(k, 0)); level.append(lv)
+    return {
+        "path": target["path"],
+        "count": len(xs),
+        "size": [max(xs) - min(xs) + 1, max(ys) - min(ys) + 1, max(zs) - min(zs) + 1],
+        "x": xs, "y": ys, "z": zs, "rgb": rgb, "kind": kind, "level": level,
+    }
+
+
+async def decode_release_blueprint(release: ModRelease, path: str) -> dict:
+    """Decode one .blueprint inside a release to a voxel payload for the 3D viewer.
+    The .tmod read + decode is CPU-bound, so it runs off the event loop."""
+    if release.release_format != "tmod":
+        raise _not_found("This release has no blueprint models.")
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        raise _not_found("Release artifact not found")
+    return await asyncio.to_thread(_decode_blueprint_payload, data, path)
+
+
 async def update_release(
     release: ModRelease, project: ModProject, actor: SiteUser, *,
     title=None, changelog=None, status=None,
@@ -1201,6 +1441,17 @@ async def set_banner(project: ModProject, actor: SiteUser, sha: str) -> ModProje
     return project
 
 
+async def clear_banner(project: ModProject, actor: SiteUser) -> ModProject:
+    """Drop the project's banner image (falls back to the placeholder). The blob
+    itself is left for GC, matching how previews are removed."""
+    _require_owner(project, actor)
+    if project.banner_sha is not None:
+        project.banner_sha = None
+        project.updated_at = utcnow()
+        await project.save()
+    return project
+
+
 async def add_preview(project: ModProject, actor: SiteUser, sha: str) -> ModProject:
     _require_owner(project, actor)
     if await ModImageAsset.find_one(ModImageAsset.sha == sha) is None:
@@ -1226,14 +1477,17 @@ async def remove_preview(project: ModProject, actor: SiteUser, sha: str) -> ModP
 # --- ownership listing (dashboard) ----------------------------------------
 
 async def list_owned(actor: SiteUser) -> list[dict]:
-    docs = await ModProject.find(ModProject.owner_id == actor.id).sort("-updated_at").to_list()
+    # Mods the user owns OR collaborates on.
+    docs = await ModProject.find({"$or": [
+        {"owner_id": actor.id}, {"collaborators.user_id": actor.id},
+    ]}).sort("-updated_at").to_list()
     # Opportunistically resync the URL handle to the owner's current username, so a
     # Discord rename propagates to their mod links the next time they open My Mods.
     for p in docs:
-        if p.owner_handle != actor.username:
+        if p.owner_id == actor.id and p.owner_handle != actor.username:
             p.owner_handle = actor.username
             await p.save()
-    return [project_card(p) for p in docs]
+    return [{**project_card(p), "is_collaborator": p.owner_id != actor.id} for p in docs]
 
 
 # --- moderation ------------------------------------------------------------
@@ -1278,23 +1532,84 @@ async def restore(project_id: str) -> ModProject:
     return project
 
 
+async def _project_sizes(projects: list[ModProject]) -> dict[str, int]:
+    """On-disk content footprint (bytes) per project: summed release-artifact sizes
+    + banner/preview image sizes. (The git source repo lives on the filesystem and
+    isn't summed here - artifacts + images are the indexed, dominant footprint.)
+    Two grouped queries total, not one-per-project."""
+    if not projects:
+        return {}
+    ids = [p.id for p in projects]
+    rel_rows = await ModRelease.aggregate([
+        {"$match": {"project_id": {"$in": ids}}},
+        {"$group": {"_id": "$project_id", "s": {"$sum": "$tmod_size"}}},
+    ]).to_list()
+    rel = {str(r["_id"]): r["s"] for r in rel_rows}
+    shas: set[str] = set()
+    for p in projects:
+        if p.banner_sha:
+            shas.add(p.banner_sha)
+        shas.update(p.preview_shas or [])
+    img: dict[str, int] = {}
+    if shas:
+        for a in await ModImageAsset.find({"sha": {"$in": list(shas)}}).to_list():
+            img[a.sha] = a.byte_size
+    sizes: dict[str, int] = {}
+    for p in projects:
+        total = rel.get(str(p.id), 0)
+        if p.banner_sha:
+            total += img.get(p.banner_sha, 0)
+        for sh in (p.preview_shas or []):
+            total += img.get(sh, 0)
+        sizes[str(p.id)] = total
+    return sizes
+
+
+# Sort keys offered to the admin projects list. Size is computed (not a stored
+# field), so it sorts in Python; the rest are direct fields sorted in Mongo.
+_PROJECT_SORTS: dict[str, object] = {
+    "updated": "-updated_at",
+    "created": "-created_at",
+    "popularity": [("popularity_score", -1), ("download_count", -1)],
+    "downloads": "-download_count",
+    "stars": "-star_count",
+    "size": "size",   # sentinel - handled separately
+}
+
+
 async def master_list_projects(
     *, q: str | None = None, owner: str | None = None, visibility: str | None = None,
-    limit: int = 50, offset: int = 0,
+    sort: str = "updated", limit: int = 50, offset: int = 0,
 ) -> tuple[list[dict], int]:
     """ALL projects (drafts + taken-down included) for master oversight - no
-    visibility gate. Used by the dev-portal Mods-hub admin tab."""
+    visibility gate. Used by the dev-portal Mods-hub admin tab. Sortable by recency
+    (updated/created), popularity, downloads, stars, or on-disk size."""
     query: dict = {}
     if q:
-        query["$text"] = {"$search": q}
+        query.update(_search_clause(q))
     if owner:
         query["owner_username"] = owner
     if visibility:
         query["visibility"] = visibility
     total = await ModProject.find(query).count()
-    docs = await ModProject.find(query).sort("-updated_at").skip(offset).limit(limit).to_list()
+
+    spec = _PROJECT_SORTS.get(sort, "-updated_at")
+    if spec == "size":
+        # Size isn't stored, so load the matched set, size it (two grouped queries),
+        # sort + paginate in Python. Admin-only + usually narrowed by search/owner.
+        all_docs = await ModProject.find(query).to_list()
+        sizes = await _project_sizes(all_docs)
+        all_docs.sort(key=lambda p: sizes.get(str(p.id), 0), reverse=True)
+        docs = all_docs[offset:offset + limit]
+    else:
+        docs = await ModProject.find(query).sort(spec).skip(offset).limit(limit).to_list()
+        sizes = await _project_sizes(docs)
+
     items = [{**project_card(p), "id": str(p.id), "taken_down": p.taken_down,
-              "owner_id": str(p.owner_id) if p.owner_id else None} for p in docs]
+              "owner_id": str(p.owner_id) if p.owner_id else None,
+              "size_bytes": sizes.get(str(p.id), 0),
+              "popularity_score": round(p.popularity_score, 3),
+              "downloads_7d": p.downloads_7d} for p in docs]
     return items, total
 
 
@@ -1324,7 +1639,7 @@ async def master_list_stray(
     if status:
         query["stray_status"] = status
     if q:
-        query["$text"] = {"$search": q}
+        query.update(_search_clause(q))
     total = await ModProject.find(query).count()
     docs = await ModProject.find(query).sort("-updated_at").skip(offset).limit(limit).to_list()
     return [_stray_card(p) for p in docs], total
@@ -1377,6 +1692,38 @@ async def handover_stray(project: ModProject, user: SiteUser) -> ModProject:
     await ModRelease.find(ModRelease.project_id == project.id).update(
         Set({ModRelease.owner_id: user.id}))
     return project
+
+
+async def admin_assign_stray(
+    project_ids: list[str], user_id: str, master_id: PydanticObjectId,
+) -> dict:
+    """Master action: hand one or more stray mods directly to a known modder by their
+    SiteUser id, with no claim request - for proactively attributing mods as their
+    authors sign up. Pending claims on each assigned mod are auto-rejected (the
+    handover decides ownership). Returns what was assigned + any per-mod errors."""
+    try:
+        user = await SiteUser.get(PydanticObjectId(user_id))
+    except Exception:
+        user = None
+    if user is None:
+        raise _not_found("No such user.")
+    assigned: list[dict] = []
+    errors: list[dict] = []
+    for pid in project_ids:
+        project = await _get_by_id(pid)
+        if project is None or not project.is_stray:
+            errors.append({"id": pid, "error": "Not a stray mod (already claimed or missing)."})
+            continue
+        await handover_stray(project, user)
+        await ModClaimRequest.find(
+            ModClaimRequest.project_id == project.id,
+            ModClaimRequest.status == "pending",
+        ).update(Set({ModClaimRequest.status: "rejected",
+                      ModClaimRequest.resolved_by: master_id,
+                      ModClaimRequest.resolved_at: utcnow()}))
+        assigned.append({"id": str(project.id), "slug": project.slug})
+    return {"assigned": assigned, "errors": errors,
+            "owner_handle": user.username, "owner_username": user.display_name or user.username}
 
 
 def _claim_dto(c: ModClaimRequest) -> dict:
@@ -1538,6 +1885,20 @@ async def touch_after_push(project: ModProject) -> None:
     await project.save()
 
 
+async def dismiss_report(report_id: str) -> None:
+    """Resolve a single user report WITHOUT touching the project - for a bogus or
+    non-actionable complaint. (Take-down resolves a project's reports en masse;
+    this dismisses just the one.)"""
+    try:
+        report = await ModReport.get(PydanticObjectId(report_id))
+    except Exception:
+        report = None
+    if report is None:
+        raise _not_found("Report not found")
+    report.resolved = True
+    await report.save()
+
+
 async def list_reports(resolved: bool = False, limit: int = 100) -> list[dict]:
     docs = await ModReport.find(ModReport.resolved == resolved).sort("-created_at").limit(limit).to_list()
     return [
@@ -1636,9 +1997,9 @@ async def public_list(
     if tag:
         query["tags"] = tag.strip().lower()
     if author:
-        query["owner_username"] = author
+        query["owner_username"] = _author_eq(author)
     if q:
-        query["$text"] = {"$search": q}
+        query.update(_search_clause(q))
     sort_key = _SORTS.get(sort, "-updated_at")
     total = await ModProject.find(query).count()
     docs = await ModProject.find(query).sort(sort_key).skip(offset).limit(limit).to_list()

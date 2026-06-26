@@ -1,0 +1,390 @@
+/* Trove Server Time page (/server-time). Builds on style.css tokens.
+   Class prefix: .srv-  */
+
+.srv-main {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 110px clamp(20px, 3vw, 48px) 80px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+.srv-hero { text-align: center; margin-bottom: 30px; }
+.srv-eyebrow {
+  font-family: SFMono-Regular, Consolas, monospace;
+  color: var(--accent);
+  font-size: .85rem;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+.srv-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0 0 12px;
+  line-height: 1.05;
+}
+.srv-sub {
+  color: var(--text-mute);
+  max-width: 660px;
+  margin: 0 auto;
+  line-height: 1.6;
+  font-size: .98rem;
+}
+
+/* ── Featured server clock ─────────────────────────────────────────── */
+.srv-feature {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+  padding: clamp(24px, 4vw, 44px);
+  border-radius: 22px;
+  border: 1px solid var(--bg-line);
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in oklab, var(--accent-orange) 10%, transparent), transparent 55%),
+    radial-gradient(120% 140% at 100% 100%, color-mix(in oklab, var(--accent-blue) 12%, transparent), transparent 55%),
+    var(--bg-card);
+  box-shadow: 0 24px 70px -30px color-mix(in oklab, var(--accent-orange) 40%, transparent);
+  margin-bottom: 48px;
+}
+
+.srv-clockwrap { display: flex; justify-content: center; }
+.srv-analog {
+  width: clamp(180px, 26vw, 268px);
+  height: clamp(180px, 26vw, 268px);
+  overflow: visible;
+}
+.srv-dial-ring { fill: none; stroke: var(--bg-line); stroke-width: 2; }
+.srv-dial {
+  fill: color-mix(in oklab, var(--bg-base) 60%, var(--bg-card));
+  stroke: color-mix(in oklab, var(--accent-orange) 26%, var(--bg-line));
+  stroke-width: 1.5;
+}
+.srv-tick { stroke: var(--text-soft); stroke-width: 1.4; opacity: .5; }
+.srv-tick-major { stroke: var(--text-mute); stroke-width: 2.4; opacity: .9; }
+.srv-hand { stroke-linecap: round; transform-box: view-box; }
+.srv-hand-h { stroke: var(--text); stroke-width: 5; }
+.srv-hand-m { stroke: var(--text); stroke-width: 3.4; }
+.srv-hand-s { stroke: var(--accent-orange); stroke-width: 1.8; }
+.srv-cap { fill: var(--accent-orange); }
+.srv-cap-dot { fill: var(--bg-card); }
+
+.srv-feature-body { min-width: 0; }
+.srv-feature-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: .72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent-orange);
+  padding: 5px 12px; border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent-orange) 35%, var(--bg-line));
+  background: color-mix(in oklab, var(--accent-orange) 10%, transparent);
+}
+.srv-bigtime {
+  font-family: 'Space Grotesk', SFMono-Regular, Consolas, monospace;
+  font-size: clamp(2.8rem, 9vw, 5.2rem);
+  font-weight: 700;
+  line-height: 1;
+  margin: 14px 0 6px;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(120deg, var(--text), color-mix(in oklab, var(--accent-orange) 60%, var(--text)));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.srv-bigdate { font-size: 1.05rem; color: var(--text); font-weight: 600; }
+.srv-offset { font-size: .85rem; color: var(--text-mute); margin-top: 6px; line-height: 1.5; }
+
+.srv-resets {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  margin-top: 20px;
+}
+.srv-reset {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--bg-line);
+  background: color-mix(in oklab, var(--bg-card) 55%, transparent);
+}
+.srv-reset i { color: var(--accent-blue); font-size: .9rem; }
+.srv-reset-label { color: var(--text-mute); font-size: .85rem; }
+.srv-reset-val {
+  font-variant-numeric: tabular-nums;
+  font-size: .98rem; color: var(--text); margin-left: 2px;
+  min-width: 7ch;
+}
+
+/* ── Shared block heading ──────────────────────────────────────────── */
+.srv-block { margin-bottom: 48px; }
+.srv-block-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.srv-block-head h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.3rem, 3vw, 1.7rem);
+  margin: 0;
+}
+.srv-synced {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .8rem; color: var(--text-mute);
+}
+.srv-synced::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+/* ── World clock grid ──────────────────────────────────────────────── */
+.srv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+.srv-loading { color: var(--text-mute); padding: 20px; text-align: center; grid-column: 1 / -1; }
+
+.srv-wc {
+  position: relative; overflow: hidden;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 15px 16px 16px;
+  transition: border-color .2s ease, transform .2s ease;
+}
+.srv-wc:hover { transform: translateY(-2px); border-color: color-mix(in oklab, var(--accent-blue) 40%, var(--bg-line)); }
+.srv-wc.is-night { background: linear-gradient(160deg, color-mix(in oklab, var(--accent-purple) 9%, var(--bg-card)), var(--bg-card)); }
+.srv-wc.is-day   { background: linear-gradient(160deg, color-mix(in oklab, var(--accent-yellow) 8%, var(--bg-card)), var(--bg-card)); }
+
+.srv-wc.is-trove {
+  border-color: color-mix(in oklab, var(--accent-orange) 55%, var(--bg-line));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent-orange) 30%, transparent);
+}
+.srv-wc.is-trove .srv-wc-time { color: var(--accent-orange); }
+
+.srv-wc-head { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.srv-wc-icon { font-size: .92rem; width: 18px; text-align: center; color: var(--text-soft); flex: 0 0 auto; }
+.srv-wc.is-day .srv-wc-icon { color: var(--accent-yellow); }
+.srv-wc.is-night .srv-wc-icon { color: var(--accent-purple); }
+.srv-wc-names { flex: 1 1 auto; min-width: 0; }
+.srv-wc-name {
+  font-weight: 700; font-size: .92rem; line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.srv-wc-sub {
+  font-size: .72rem; color: var(--text-soft); line-height: 1.2; margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.srv-wc-off {
+  font-size: .64rem; color: var(--text-mute); font-variant-numeric: tabular-nums;
+  padding: 3px 7px; border-radius: 999px; flex: 0 0 auto;
+  border: 1px solid var(--bg-line); background: color-mix(in oklab, var(--bg-base) 40%, transparent);
+}
+.srv-wc-time {
+  font-family: 'Space Grotesk', SFMono-Regular, Consolas, monospace;
+  font-size: 1.7rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: tabular-nums; color: var(--text);
+}
+.srv-wc-date { font-size: .78rem; color: var(--text-mute); margin-top: 6px; }
+.srv-wc.is-trove .srv-wc-name::after {
+  content: "★"; color: var(--accent-orange); font-size: .7rem; margin-left: 6px;
+}
+
+/* ── Discord timestamp maker ───────────────────────────────────────── */
+.srv-conv-intro {
+  color: var(--text-mute); line-height: 1.6; font-size: .95rem;
+  max-width: 720px; margin: -6px 0 20px;
+}
+.srv-conv-controls {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+  border-radius: 14px;
+  margin-bottom: 18px;
+}
+.srv-field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 200px; min-width: 0; }
+.srv-field > span { font-size: .8rem; color: var(--text-mute); font-weight: 600; }
+.srv-field input,
+.srv-select {
+  appearance: none;
+  font: inherit; font-size: .92rem;
+  color: var(--text);
+  background: color-mix(in oklab, var(--bg-base) 55%, var(--bg-card));
+  border: 1px solid var(--bg-line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  width: 100%;
+}
+.srv-field input:focus, .srv-select:focus {
+  outline: none; border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-blue) 22%, transparent);
+}
+.srv-field input::-webkit-calendar-picker-indicator { filter: invert(.7); cursor: pointer; }
+.srv-now-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: inherit; font-weight: 600; font-size: .9rem;
+  cursor: pointer; white-space: nowrap;
+  color: var(--text);
+  padding: 10px 16px; border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--accent-orange) 40%, var(--bg-line));
+  background: color-mix(in oklab, var(--accent-orange) 12%, transparent);
+  transition: background .15s ease, border-color .15s ease;
+}
+.srv-now-btn:hover { background: color-mix(in oklab, var(--accent-orange) 20%, transparent); }
+.srv-now-btn i { color: var(--accent-orange); }
+
+.srv-conv-out {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 12px;
+}
+.srv-cv-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+  border-radius: 12px;
+}
+.srv-cv-meta { flex: 1 1 auto; min-width: 0; }
+.srv-cv-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .76rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+  color: var(--text-soft);
+}
+.srv-cv-badge {
+  font-size: .6rem; letter-spacing: .04em; text-transform: uppercase; font-weight: 700;
+  color: var(--accent-blue);
+  padding: 2px 6px; border-radius: 5px;
+  background: color-mix(in oklab, var(--accent-blue) 16%, transparent);
+}
+.srv-cv-preview {
+  font-size: .98rem; color: var(--text); margin-top: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.srv-cv-code {
+  flex: 0 0 auto; max-width: 42%;
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .8rem; color: var(--accent-orange);
+  padding: 6px 10px; border-radius: 8px;
+  background: color-mix(in oklab, var(--bg-base) 60%, transparent);
+  border: 1px solid var(--bg-line);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  user-select: all;
+}
+.srv-cv-copy {
+  flex: 0 0 auto;
+  width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-mute);
+  border: 1px solid var(--bg-line);
+  background: color-mix(in oklab, var(--bg-base) 40%, transparent);
+  border-radius: 10px;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.srv-cv-copy:hover { color: var(--text); border-color: var(--accent-blue); }
+.srv-cv-copy.copied { color: var(--accent-green); border-color: var(--accent-green); }
+.srv-cv-row.is-active { border-color: color-mix(in oklab, var(--dc-blurple) 60%, var(--bg-line)); }
+
+/* ── Discord message mockup ────────────────────────────────────────────
+   Deliberately uses Discord's own palette (not the site tokens) so the
+   preview reads as an authentic Discord message. */
+.srv-conv { --dc-blurple: #5865f2; }
+.srv-tz-note { font-size: .8rem; color: var(--text-mute); white-space: nowrap; }
+
+.srv-discord { margin-bottom: 8px; }
+.srv-dc-msg {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 16px 18px;
+  border-radius: 14px 14px 0 0;
+  background: #313338;
+  border: 1px solid #232428;
+}
+.srv-dc-avatar img {
+  width: 42px; height: 42px; border-radius: 50%; display: block;
+  background: #1e1f22; object-fit: cover;
+}
+.srv-dc-body { min-width: 0; flex: 1 1 auto; }
+.srv-dc-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+.srv-dc-name { color: #f2f3f5; font-weight: 600; font-size: 1rem; }
+.srv-dc-badge {
+  background: var(--dc-blurple); color: #fff;
+  font-size: .58rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase;
+  padding: 1px 5px; border-radius: 4px; position: relative; top: -1px;
+}
+.srv-dc-sent { color: #949ba4; font-size: .72rem; }
+.srv-dc-line { color: #dbdee1; font-size: 1rem; line-height: 1.55; }
+.srv-dc-lead { margin-right: 3px; }
+.srv-dc-ts {
+  background: color-mix(in oklab, var(--dc-blurple) 28%, transparent);
+  color: #e8eaf6; border-radius: 3px; padding: 0 3px;
+  cursor: default; transition: background .15s ease;
+}
+.srv-dc-ts:hover { background: color-mix(in oklab, var(--dc-blurple) 42%, transparent); }
+.srv-dc-rel-wrap { color: #949ba4; margin-left: 7px; font-size: .92rem; }
+.srv-dc-rel-wrap .srv-dc-ts { background: color-mix(in oklab, var(--dc-blurple) 18%, transparent); color: #b8bcc8; }
+
+.srv-dc-caption {
+  margin: 0; padding: 9px 16px;
+  background: color-mix(in oklab, #313338 78%, var(--bg-card));
+  border-inline: 1px solid #232428;
+  color: var(--text-mute); font-size: .8rem; line-height: 1.45;
+}
+.srv-dc-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 14px 16px;
+  border: 1px solid var(--bg-line); border-top: none;
+  border-radius: 0 0 14px 14px;
+  background: var(--bg-card);
+}
+.srv-dc-styles { display: flex; flex-wrap: wrap; gap: 6px; }
+.srv-dc-style {
+  font: inherit; font-size: .8rem; font-weight: 500; cursor: pointer;
+  color: var(--text-mute);
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--bg-line); background: transparent;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.srv-dc-style:hover { color: var(--text); border-color: color-mix(in oklab, var(--dc-blurple) 50%, var(--bg-line)); }
+.srv-dc-style.is-active { color: #fff; border-color: transparent; background: var(--dc-blurple); }
+
+.srv-dc-primary { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.srv-dc-code {
+  font-family: SFMono-Regular, Consolas, monospace; font-size: .82rem;
+  color: var(--accent-orange);
+  padding: 7px 10px; border-radius: 8px;
+  background: color-mix(in oklab, var(--bg-base) 60%, transparent);
+  border: 1px solid var(--bg-line);
+  user-select: all; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 46vw;
+}
+.srv-dc-copy {
+  display: inline-flex; align-items: center; gap: 7px;
+  font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+  color: #fff; background: var(--dc-blurple);
+  border: none; border-radius: 8px; padding: 8px 14px;
+  transition: filter .15s ease, background .15s ease;
+}
+.srv-dc-copy:hover { filter: brightness(1.08); }
+.srv-dc-copy.copied { background: var(--accent-green); }
+
+.srv-allfmt { margin-top: 16px; }
+.srv-allfmt > summary {
+  cursor: pointer; color: var(--text-mute); font-size: .9rem; font-weight: 600;
+  padding: 8px 2px; user-select: none; list-style-position: inside;
+}
+.srv-allfmt > summary:hover { color: var(--text); }
+.srv-allfmt[open] > summary { margin-bottom: 14px; }
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .srv-feature { grid-template-columns: 1fr; text-align: center; }
+  .srv-feature-body { display: flex; flex-direction: column; align-items: center; }
+  .srv-resets { justify-content: center; }
+  .srv-cv-code { max-width: 38%; }
+  .srv-block-head { align-items: flex-start; }
+  .srv-dc-bar { flex-direction: column; align-items: stretch; }
+  .srv-dc-primary { justify-content: space-between; }
+  .srv-dc-code { max-width: none; flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .srv-synced::before { animation: none; }
+  .srv-wc { transition: none; }
+}

@@ -107,7 +107,18 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
     the old "serve the raw latest, stale-but-good" behaviour.
     """
     from app.admin import runtime_config
+    from app.core import features as feature_flags
     from app.trove.leaderboards import cache as lb_cache
+
+    # Master compute switches. When cheater detection is OFF the whole (heavy)
+    # analysis is skipped - the warmer doesn't compute, this returns an empty
+    # 'disabled' payload, and the page hides both anti-cheat tabs. Alt-clusters
+    # is a sub-switch (only the heavy cluster pass), meaningful only while the
+    # master switch is ON.
+    cheater_enabled = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
+    clusters_enabled = cheater_enabled and await feature_flags.is_enabled(
+        feature_flags.ALT_CLUSTERS_FLAG
+    )
 
     z_threshold = float(await runtime_config.get_setting("cheaters_z_threshold"))
     velocity_multiplier = float(
@@ -163,15 +174,35 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
     now = time.time()
     global _LAST_GOOD
 
+    # Master switch OFF: skip the whole analysis (this is the big warm-cycle CPU
+    # saving). Return an empty 'disabled' payload so the page can hide the
+    # anti-cheat tabs. Bypasses the cache + Redis snapshot entirely.
+    #   • Warmer (force=True): tag it to the RAW latest capture so _warm_all's
+    #     set_ready_anchor() keeps advancing the page to new captures (the rest
+    #     of the warm - boards/activity - still runs and must not freeze).
+    #   • Serving (force=False): tag it to the published anchor so it lines up
+    #     with the boards/entries on screen.
+    if not cheater_enabled:
+        if force:
+            ts = await lb_service.list_timestamps(limit=1, include_archive=False)
+            anchor = ts[0] if ts else None
+        else:
+            anchor = await lb_cache.get_ready_anchor()
+            if anchor is None:
+                ts = await lb_service.list_timestamps(limit=1, include_archive=False)
+                anchor = ts[0] if ts else None
+        return _disabled_payload(anchor, z_threshold, velocity_multiplier, min_board_size)
+
     def _key(anchor: int) -> tuple:
         # Excluded sets as sorted tuples (sets aren't hashable) so a master-panel
         # edit invalidates immediately. Co-movement/schedule/fusion knobs included
         # so a tweak invalidates the served result (recompute_seconds excluded -
-        # it only throttles, doesn't change the answer).
+        # it only throttles, doesn't change the answer). ``clusters_enabled`` is
+        # in the key so flipping the alt-cluster sub-switch re-serves immediately.
         return (anchor, z_threshold, velocity_multiplier, min_board_size,
                 cohort_pct, cluster_min_size, cluster_band_pct,
                 cluster_max_edit, cluster_size_full, tuple(sorted(excluded)),
-                tuple(sorted(cluster_excluded)),
+                tuple(sorted(cluster_excluded)), clusters_enabled,
                 cm["candidate_top_n"], cm["min_hourly_gain"], cm["gain_percentile"],
                 cm["gain_tolerance"], cm["min_matching_hours"], cm["min_match_ratio"],
                 cm["min_density"], cm["min_group_size"], cm["max_cell_accounts"],
@@ -231,6 +262,7 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
         cluster_size_full=cluster_size_full,
         cluster_excluded=cluster_excluded,
         comovement=cm,
+        clusters_enabled=clusters_enabled,
     )
     _CACHE[cache_key] = (now, result)
     _LAST_GOOD = result
@@ -451,6 +483,7 @@ async def _compute(
     cluster_size_full: int = 8,
     cluster_excluded: set[int] | None = None,
     comovement: dict | None = None,
+    clusters_enabled: bool = True,
 ) -> dict:
     boards = await lb_service.list_boards_at(anchor)
     excluded = excluded or set()
@@ -534,65 +567,73 @@ async def _compute(
     # ``min_board_size`` (clustering is robust on tiny boards) and of the
     # lifetime/resetting gate (an alt army shows up on every board kind).
     #
-    # Offloaded to a worker thread: it's a pure-CPU, no-await pass over every
-    # entry in the anchor (name-stem grouping + score-band scan), and the
-    # warmer runs on the API's event loop. Running it inline would block every
-    # request for its duration; ``to_thread`` lets the loop interleave request
-    # handling between the GIL's periodic releases. ``_detect_clusters`` only
-    # READS the already-materialised ``boards``/``by_board`` and shares no
-    # mutable state, so it's safe to run off-thread.
-    name_clusters, clusters_boards_scanned = await asyncio.to_thread(
-        _detect_clusters, boards, by_board, cluster_excluded or set(),
-        min_size=cluster_min_size,
-        band_pct=cluster_band_pct,
-        max_edit=cluster_max_edit,
-        size_full=cluster_size_full,
-    )
+    # The whole pass (name-stem + co-movement + schedule fusion + the weekly
+    # uptime fold below) is the heaviest part of the compute, so it's gated by
+    # the alt-clusters master switch: OFF keeps the cheap per-player flags above
+    # and skips ALL of this, returning clusters=[].
+    if clusters_enabled:
+        # Offloaded to a worker thread: it's a pure-CPU, no-await pass over every
+        # entry in the anchor (name-stem grouping + score-band scan), and the
+        # warmer runs on the API's event loop. Running it inline would block every
+        # request for its duration; ``to_thread`` lets the loop interleave request
+        # handling between the GIL's periodic releases. ``_detect_clusters`` only
+        # READS the already-materialised ``boards``/``by_board`` and shares no
+        # mutable state, so it's safe to run off-thread.
+        name_clusters, clusters_boards_scanned = await asyncio.to_thread(
+            _detect_clusters, boards, by_board, cluster_excluded or set(),
+            min_size=cluster_min_size,
+            band_pct=cluster_band_pct,
+            max_edit=cluster_max_edit,
+            size_full=cluster_size_full,
+        )
 
-    # History-based signals (the PRIMARY, name-agnostic ones): co-movement
-    # (lockstep gains) + schedule correlation (same active/idle hours). Heavier
-    # (multi-capture) + slow-changing, so the whole pass is throttled + cached
-    # separately and reused across warm cycles. Returns the producer outputs +
-    # per-account features (active hours, board sets) for fusion.
-    cmcfg = comovement or {}
-    signals = await _comovement_clusters(
-        anchor, by_board, boards, cluster_excluded or set(), cmcfg,
-    )
+        # History-based signals (the PRIMARY, name-agnostic ones): co-movement
+        # (lockstep gains) + schedule correlation (same active/idle hours). Heavier
+        # (multi-capture) + slow-changing, so the whole pass is throttled + cached
+        # separately and reused across warm cycles. Returns the producer outputs +
+        # per-account features (active hours, board sets) for fusion.
+        cmcfg = comovement or {}
+        signals = await _comovement_clusters(
+            anchor, by_board, boards, cluster_excluded or set(), cmcfg,
+        )
 
-    # Fold the per-player WEEKLY uptime flags (computed from the same week data)
-    # into the per-player evidence, so the cheaters tab reflects week-long
-    # behaviour - not just the last hour's velocity.
-    board_by_uuid = {b["uuid"]: b for b in boards}
-    for pf in signals.get("player_flags", []):
-        board = board_by_uuid.get(pf["board_uuid"])
-        if board is None:
-            continue
-        entry = next((e for e in by_board.get(pf["board_uuid"], [])
-                      if e["player_name"] == pf["player_name"]), None)
-        if entry is None:
-            continue
-        pct_active = pf["active_frac"] * 100.0
-        _add_evidence(flagged, pf["player_name"], board, entry, {
-            "type": "sustained_velocity",
-            "summary": (
-                f"Score rose in {pf['active_hours']} of the last {pf['num_slots']} "
-                f"hourly captures since the weekly reset ({pct_active:.0f}% uptime). "
-                f"No human plays {pf['threshold_frac'] * 100:.0f}%+ of every hour "
-                f"for days - this account essentially never stops, the signature of "
-                f"a no-sleep bot. Invisible to the per-hour check (each hour looks "
-                f"normal alone)."
-            ),
-            "measurements": {
-                "active_hours": pf["active_hours"],
-                "captures_since_reset": pf["num_slots"],
-                "uptime_fraction": round(pf["active_frac"], 3),
-                "threshold_fraction": pf["threshold_frac"],
-            },
-        })
+        # Fold the per-player WEEKLY uptime flags (computed from the same week data)
+        # into the per-player evidence, so the cheaters tab reflects week-long
+        # behaviour - not just the last hour's velocity.
+        board_by_uuid = {b["uuid"]: b for b in boards}
+        for pf in signals.get("player_flags", []):
+            board = board_by_uuid.get(pf["board_uuid"])
+            if board is None:
+                continue
+            entry = next((e for e in by_board.get(pf["board_uuid"], [])
+                          if e["player_name"] == pf["player_name"]), None)
+            if entry is None:
+                continue
+            pct_active = pf["active_frac"] * 100.0
+            _add_evidence(flagged, pf["player_name"], board, entry, {
+                "type": "sustained_velocity",
+                "summary": (
+                    f"Score rose in {pf['active_hours']} of the last {pf['num_slots']} "
+                    f"hourly captures since the weekly reset ({pct_active:.0f}% uptime). "
+                    f"No human plays {pf['threshold_frac'] * 100:.0f}%+ of every hour "
+                    f"for days - this account essentially never stops, the signature of "
+                    f"a no-sleep bot. Invisible to the per-hour check (each hour looks "
+                    f"normal alone)."
+                ),
+                "measurements": {
+                    "active_hours": pf["active_hours"],
+                    "captures_since_reset": pf["num_slots"],
+                    "uptime_fraction": round(pf["active_frac"], 3),
+                    "threshold_fraction": pf["threshold_frac"],
+                },
+            })
 
-    # FUSION: merge name-stem + co-movement + schedule clusters by member
-    # overlap, then score each by how many INDEPENDENT signals agree on it.
-    clusters = _fuse(name_clusters, signals, cmcfg)
+        # FUSION: merge name-stem + co-movement + schedule clusters by member
+        # overlap, then score each by how many INDEPENDENT signals agree on it.
+        clusters = _fuse(name_clusters, signals, cmcfg)
+    else:
+        clusters = []
+        clusters_boards_scanned = 0
 
     return _format(
         flagged, anchor, z_threshold, velocity_multiplier,
@@ -601,6 +642,7 @@ async def _compute(
         excluded_boards=excluded_boards_meta,
         clusters=clusters,
         clusters_boards_scanned=clusters_boards_scanned,
+        alt_clusters_enabled=clusters_enabled,
     )
 
 
@@ -2010,6 +2052,8 @@ def _format(
     excluded_boards: list[dict] | None = None,
     clusters: list[dict] | None = None,
     clusters_boards_scanned: int = 0,
+    cheater_detection_enabled: bool = True,
+    alt_clusters_enabled: bool = True,
 ) -> dict:
     players = []
     for name, boards_map in flagged.items():
@@ -2042,6 +2086,12 @@ def _format(
         "players": players,
         "clusters": clusters or [],
         "clusters_boards_scanned": clusters_boards_scanned,
+        # Master compute switches (see app/core/features.py). When
+        # cheater_detection_enabled is False the lists above are empty because
+        # the analysis was skipped, not because nothing was flagged - the page
+        # uses these to hide the anti-cheat tabs rather than show "0 found".
+        "cheater_detection_enabled": cheater_detection_enabled,
+        "alt_clusters_enabled": cheater_detection_enabled and alt_clusters_enabled,
         "computed_at": int(time.time()),
         "anchor": anchor,
         "method": (
@@ -2077,6 +2127,16 @@ def _format(
 
 def _empty(anchor: int | None, z: float, vm: float, mb: int) -> dict:
     return _format({}, anchor, z, vm, mb, 0)
+
+
+def _disabled_payload(anchor: int | None, z: float, vm: float, mb: int) -> dict:
+    """Empty payload flagged as 'compute disabled' (cheater detection master
+    switch is OFF) so consumers can distinguish 'nothing flagged' from 'analysis
+    didn't run'."""
+    return _format(
+        {}, anchor, z, vm, mb, 0,
+        cheater_detection_enabled=False, alt_clusters_enabled=False,
+    )
 
 
 # ─── Confidence ──────────────────────────────────────────────────────

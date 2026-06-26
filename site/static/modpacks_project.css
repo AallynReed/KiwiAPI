@@ -110,6 +110,8 @@
 .mpk-icon:disabled { opacity: .4; cursor: default; }
 .mpk-icon-danger:hover { border-color: #ff6b81; color: #ff8fa0; }
 .mpk-empty { color: var(--text-mute); font-size: .9rem; padding: 10px 2px; }
+.mpk-add-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.mpk-add-row .mpk-add-mod { margin-top: 0; }
 .mpk-add-mod { margin-top: 14px; }
 
 /* ── Add-mod search (inside the modal) ── */
@@ -118,6 +120,14 @@
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 8px 12px; background: var(--bg-deep);
 }
+/* Collaborators modal */
+.mpk-collab-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.mpk-collab-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 7px 12px; background: var(--bg-deep);
+}
+.mpk-collab-row i { color: var(--accent-blue); margin-right: 5px; }
+
 .mpk-result-main { display: flex; flex-direction: column; min-width: 0; }
 .mpk-result-title { font-weight: 600; color: var(--text); }
 .mpk-result-by { font-size: .78rem; color: var(--text-mute); }

@@ -146,6 +146,13 @@ async def bot_guilds() -> list[dict]:
     return [{"id": str(g["id"]), "name": g.get("name", ""), "icon": g.get("icon")} for g in data]
 
 
+async def fetch_user(discord_id: int) -> dict | None:
+    """The current public user object for a Discord id (``username``, ``global_name``,
+    ``avatar``, …) via the bot token. None if the user no longer exists (404)."""
+    async with httpx.AsyncClient(timeout=15) as client:
+        return await _get(client, f"/users/{discord_id}")
+
+
 async def user_can_manage(guild_id: int, user_discord_id: int) -> bool:
     """True if the user is the guild owner or has Administrator / Manage Server."""
     async with httpx.AsyncClient(timeout=15) as client:

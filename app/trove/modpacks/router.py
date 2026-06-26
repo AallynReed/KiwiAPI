@@ -22,6 +22,7 @@ from app.site_auth.models import SiteUser
 from app.trove.mods_hub import service as mods_service
 from app.trove.modpacks import service
 from app.trove.modpacks.models import ModpackProject
+from app.trove.mods_hub.schemas import CollaboratorRequest
 from app.trove.modpacks.schemas import (
     CreateModpackRequest,
     CreateVariantRequest,
@@ -47,10 +48,10 @@ _USER = Depends(get_current_site_user)
 
 
 async def _require_owned(handle: str, slug: str, user: SiteUser) -> ModpackProject:
-    """Load a modpack the caller owns, or 404 (uniform - never leaks existence of
-    someone else's draft via a 403)."""
+    """Load a modpack the caller can edit (owner OR collaborator), or 404. Owner-only
+    actions (delete, managing collaborators) re-check primary ownership in the service."""
     pack = await service.get_pack(handle, slug)
-    if pack is None or pack.owner_id != user.id:
+    if pack is None or not service.can_edit(pack, user):
         raise APIError(404, ErrorCode.not_found, "Modpack not found")
     return pack
 
@@ -175,6 +176,34 @@ async def set_entries(
     return await service.pack_detail(pack, user)
 
 
+@modpacks_hub_write_router.post("/projects/{handle}/{slug}/variants/{name}/upload", status_code=201)
+async def upload_entry(
+    handle: str, slug: str, name: str, file: UploadFile = File(...), user: SiteUser = _USER,
+) -> dict:
+    """Upload a custom ``.tmod`` into a variant. Rejected (409) if it conflicts with
+    mods already there. If we already host the exact file, it's added as a reference
+    to that mod instead of a duplicate."""
+    pack = await _require_owned(handle, slug, user)
+    return await service.upload_entry(pack, user, name, file.filename or "mod.tmod", await file.read())
+
+
+@modpacks_hub_write_router.post("/projects/{handle}/{slug}/collaborators")
+async def add_modpack_collaborator(
+    handle: str, slug: str, req: CollaboratorRequest, user: SiteUser = _USER,
+) -> dict:
+    """Add a co-owner (collaborator) by username. Owner only; they gain edit rights."""
+    pack = await _require_owned(handle, slug, user)
+    return await service.add_collaborator(pack, user, req.username)
+
+
+@modpacks_hub_write_router.delete("/projects/{handle}/{slug}/collaborators/{user_id}")
+async def remove_modpack_collaborator(
+    handle: str, slug: str, user_id: str, user: SiteUser = _USER,
+) -> dict:
+    pack = await _require_owned(handle, slug, user)
+    return await service.remove_collaborator(pack, user, user_id)
+
+
 @modpacks_hub_write_router.post("/projects/{handle}/{slug}/star")
 async def star_modpack(handle: str, slug: str, user: SiteUser = _USER) -> dict:
     """Like (favourite) a modpack. Idempotent; returns ``{starred, star_count}``."""
@@ -196,7 +225,7 @@ async def unstar_modpack(handle: str, slug: str, user: SiteUser = _USER) -> dict
 async def list_modpacks_public(
     ctx: AccessContext = _PUB,
     q: str | None = Query(default=None, max_length=120,
-                          description="Full-text search over title / summary / tags."),
+                          description="Case-insensitive substring search over title / summary / tags."),
     tag: str | None = Query(default=None, max_length=40, description="Filter by an exact tag."),
     author: str | None = Query(default=None, max_length=80, description="Filter by author username."),
     sort: str = Query(default="recent", description="recent | downloads | new | title"),

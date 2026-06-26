@@ -26,6 +26,7 @@ from app.core import features as feature_flags
 from app.core.config import settings
 from app.site_auth.dependencies import get_optional_site_user
 from app.site_auth.models import SiteUser
+from app.trove import server_time as trove_server_time
 from app.trove import status as trove_status
 from app.trove.codexes import read as codexes_read
 from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
@@ -48,23 +49,97 @@ logger = logging.getLogger("kiwi.site.router")
 # Anything else in the folder (READMEs, .DS_Store, etc.) is silently skipped.
 _SCREENSHOT_EXTS = {".webp", ".png", ".jpg", ".jpeg", ".gif"}
 
+# Site features surfaced to templates: template context key (also the
+# ``request.state`` attr) → runtime-config flag. Each is a master switch the
+# admin Configuration tab flips; resolved once per request in
+# ``_resolve_feature_flags`` and injected into every template by
+# ``_feature_context`` so the navbar can hide a disabled feature's link.
+_SITE_FEATURE_FLAGS = {
+    "mods_hub_enabled": feature_flags.MODS_HUB_FLAG,
+    "market_enabled": feature_flags.MARKET_FLAG,
+    "leaderboards_enabled": feature_flags.LEADERBOARDS_FLAG,
+    "player_activity_enabled": feature_flags.PLAYER_ACTIVITY_FLAG,
+    "class_activity_enabled": feature_flags.CLASS_ACTIVITY_FLAG,
+    "clubs_enabled": feature_flags.CLUBS_FLAG,
+    "updates_enabled": feature_flags.UPDATES_FLAG,
+    "codexes_enabled": feature_flags.CODEXES_FLAG,
+    "server_status_enabled": feature_flags.SERVER_STATUS_FLAG,
+    "giveaways_enabled": feature_flags.GIVEAWAYS_FLAG,
+    "commands_enabled": feature_flags.COMMANDS_FLAG,
+    "server_time_enabled": feature_flags.SERVER_TIME_FLAG,
+}
+
+
+def _feature_blocks(p: str, f: dict) -> bool:
+    """True if the request path ``p`` belongs to a feature that is OFF (``f`` is
+    the resolved flag map). Covers both the page route and that feature's
+    ``/site/<feature>/*`` JSON proxies + OG images, so a disabled feature is
+    hidden, not just unlinked."""
+    # Mods Hub + Modpacks ride the Mods Hub toggle (modpacks are a layer over it).
+    if not f["mods_hub_enabled"] and (
+        p == "/mods" or p.startswith("/mods/") or p.startswith("/site/mods/")
+        or p == "/modpacks" or p.startswith("/modpacks/")
+        or p.startswith("/site/modpacks/")
+    ):
+        return True
+    if not f["market_enabled"] and (p == "/market" or p.startswith("/site/market/")):
+        return True
+    # Leaderboards: board browser + per-player profile pages. The activity /
+    # class-activity proxies share the /site/leaderboards/ root but have their
+    # own toggles, so they're explicitly excluded here.
+    if not f["leaderboards_enabled"] and (
+        p == "/leaderboards"
+        or p.startswith("/player/")
+        or (p.startswith("/site/leaderboards/")
+            and not p.startswith("/site/leaderboards/activity")
+            and not p.startswith("/site/leaderboards/class-activity"))
+    ):
+        return True
+    if not f["player_activity_enabled"] and (
+        p == "/activity" or p.startswith("/activity/")           # page + /activity/og.png
+        or p.startswith("/site/leaderboards/activity")
+    ):
+        return True
+    if not f["class_activity_enabled"] and (
+        p == "/class-activity"
+        or p.startswith("/site/leaderboards/class-activity")
+    ):
+        return True
+    if not f["clubs_enabled"] and p == "/clubs":
+        return True
+    if not f["updates_enabled"] and (p == "/updates" or p.startswith("/site/updates/")):
+        return True
+    if not f["codexes_enabled"] and (p == "/codexes" or p.startswith("/site/codexes/")):
+        return True
+    if not f["server_status_enabled"] and (
+        p == "/status" or p.startswith("/status/")               # page + /status/og.png
+        or p.startswith("/site/trove-status")
+    ):
+        return True
+    if not f["giveaways_enabled"] and (p == "/giveaways" or p == "/site/giveaways"):
+        return True
+    if not f["commands_enabled"] and p == "/commands":
+        return True
+    if not f["server_time_enabled"] and (
+        p == "/server-time" or p == "/site/server-time"
+    ):
+        return True
+    return False
+
+
 async def _resolve_feature_flags(request: Request) -> None:
     """Per-site-request feature gate. Resolves the master toggles once and (a)
     stashes them on ``request.state`` for the template context processor below
     (so the navbar can hide a disabled feature's link), and (b) 404s the pages +
     ``/site/<feature>/*`` proxies of any disabled feature so it's hidden, not
     just unlinked. Cheap: the values are cached ~5s in runtime_config."""
-    mods = await feature_flags.is_enabled(feature_flags.MODS_HUB_FLAG)
-    market = await feature_flags.is_enabled(feature_flags.MARKET_FLAG)
-    request.state.mods_hub_enabled = mods
-    request.state.market_enabled = market
-    p = request.url.path
-    # Modpacks ride the Mods Hub toggle (they're a layer over the hub).
-    if not mods and (p == "/mods" or p.startswith("/mods/") or p.startswith("/site/mods/")
-                     or p == "/modpacks" or p.startswith("/modpacks/")
-                     or p.startswith("/site/modpacks/")):
-        raise HTTPException(status_code=404)
-    if not market and (p == "/market" or p.startswith("/site/market/")):
+    flags = {
+        attr: await feature_flags.is_enabled(flag)
+        for attr, flag in _SITE_FEATURE_FLAGS.items()
+    }
+    for attr, value in flags.items():
+        setattr(request.state, attr, value)
+    if _feature_blocks(request.url.path, flags):
         raise HTTPException(status_code=404)
 
 
@@ -72,8 +147,8 @@ def _feature_context(request: Request) -> dict:
     """Inject the feature flags into EVERY template (the navbar + dashboard read
     them). Resolved by ``_resolve_feature_flags`` above; default to enabled."""
     return {
-        "mods_hub_enabled": getattr(request.state, "mods_hub_enabled", True),
-        "market_enabled": getattr(request.state, "market_enabled", True),
+        attr: getattr(request.state, attr, True)
+        for attr in _SITE_FEATURE_FLAGS
     }
 
 
@@ -129,6 +204,26 @@ async def status_page(request: Request) -> HTMLResponse:
     downtime-history timeline. Page shell + JS; data comes from
     ``/site/trove-status`` + ``/site/trove-status/history``."""
     return _TEMPLATES.TemplateResponse(request, "status.html", {})
+
+
+@router.get("/server-time", response_class=HTMLResponse)
+async def server_time_page(request: Request) -> HTMLResponse:
+    """Dedicated server-time page - a big live Trove server clock (UTC-11), the
+    same instant across common player time zones, daily/weekly reset countdowns,
+    and a Discord-timestamp maker. Page shell + JS; the clock anchors to
+    ``/site/server-time`` (falling back to the local clock)."""
+    return _TEMPLATES.TemplateResponse(request, "server-time.html", {})
+
+
+@router.get("/site/server-time", response_class=JSONResponse)
+async def site_server_time() -> JSONResponse:
+    """Authoritative Trove server time for the /server-time page - same payload as
+    the public ``/v1/rotations/server-time``, served same-origin so the page can
+    anchor its clock without CORS. Short cache; the page re-fetches each minute."""
+    return JSONResponse(
+        trove_server_time.server_time(),
+        headers={"Cache-Control": "public, max-age=15"},
+    )
 
 
 @router.get("/terms", response_class=HTMLResponse)
@@ -696,8 +791,17 @@ async def leaderboards(request: Request) -> HTMLResponse:
     endpoints under ``/site/leaderboards/*`` (see below) which bypass the
     public API's token/scope/rate-limit pipeline and call the service
     layer directly. The data is public anyway, so the bypass costs us
-    nothing and avoids subjecting site browsers to per-token caps."""
-    return _TEMPLATES.TemplateResponse(request, "leaderboards.html", {})
+    nothing and avoids subjecting site browsers to per-token caps.
+
+    The two anti-cheat tabs are gated on the cheater/alt-cluster calculation
+    switches and rendered (or not) server-side, so a disabled tab is gone on
+    first paint - no dependency on JS / the minified bundle."""
+    cheaters_on = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
+    clusters_on = await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG)
+    return _TEMPLATES.TemplateResponse(request, "leaderboards.html", {
+        "cheater_detection_enabled": cheaters_on,
+        "alt_clusters_enabled": cheaters_on and clusters_on,
+    })
 
 
 # --- /leaderboards JSON endpoints ------------------------------------------
@@ -710,12 +814,20 @@ async def leaderboards(request: Request) -> HTMLResponse:
 async def site_lb_config() -> JSONResponse:
     """Runtime tunables the leaderboards page needs to render its chrome.
 
-    Currently only the hot-retention window (so the subtitle's "N-day
-    live retention" line tracks master-panel changes within the 5s
-    runtime_config cache window)."""
+    The hot-retention window (so the subtitle's "N-day live retention" line
+    tracks master-panel changes within the 5s runtime_config cache window), plus
+    the cheater/alt-cluster calculation switches so the page can hide the
+    Possible-cheaters / Alt-clusters tabs when their compute is disabled."""
     days = await runtime_config.get_setting("leaderboards_hot_retention_days")
+    cheaters_on = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
+    clusters_on = await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG)
     return JSONResponse(
-        {"hot_retention_days": int(days)},
+        {
+            "hot_retention_days": int(days),
+            "cheater_detection_enabled": cheaters_on,
+            # Alt-clusters only meaningful when cheater detection runs at all.
+            "alt_clusters_enabled": cheaters_on and clusters_on,
+        },
         headers={"Cache-Control": "public, max-age=30"},
     )
 
@@ -1298,6 +1410,50 @@ async def site_mods_download(
             "Cache-Control": "no-cache",
         },
     )
+
+
+@router.get("/site/mods/releases/{release_id}/blueprints", response_class=JSONResponse)
+async def site_mods_blueprints(
+    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """List the .blueprint models in a release + creature-rig match (drives the page's
+    3D-view + assembled-creature buttons)."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.list_release_blueprints(release),
+                        headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/mods/releases/{release_id}/assembled", response_class=JSONResponse)
+async def site_mods_assembled(
+    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The release's blueprint parts assembled onto their creature rig (rest +
+    animations) for the web model viewer."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    model = await mods_hub_service.assemble_release_model(release)
+    if model is None:
+        from app.core.errors import APIError, ErrorCode
+        raise APIError(404, ErrorCode.not_found, "No assemblable creature for this mod.")
+    return JSONResponse(model, headers={"Cache-Control": "public, max-age=300"})
+
+
+@router.get("/site/rigs/{skeleton}/anim/{name}", response_class=JSONResponse)
+async def site_rig_animation(skeleton: str, name: str) -> JSONResponse:
+    """Lazily-loaded baked animation frames for a creature rig (the model viewer fetches
+    these on demand when a clip is played). Public, shared across mods using the rig."""
+    anim = await mods_hub_service.load_rig_animation(skeleton, name)
+    return JSONResponse(anim, headers={"Cache-Control": "public, max-age=3600"})
+
+
+@router.get("/site/mods/releases/{release_id}/blueprint", response_class=JSONResponse)
+async def site_mods_blueprint(
+    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """Decoded voxel data for one .blueprint in a release (web 3D viewer)."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.decode_release_blueprint(release, path),
+                        headers={"Cache-Control": "public, max-age=300"})
 
 
 @router.get("/site/mods/image/{sha}", response_class=Response)

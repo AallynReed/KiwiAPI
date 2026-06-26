@@ -133,6 +133,87 @@ async def set_parser_version(branch: str, version: int) -> None:
         )
 
 
+async def touch_meta(branch: str) -> None:
+    """Bump a branch's ``updated_at`` (no parser-version change) - the change signal
+    a delta reindex emits so caches keyed on it (the rig map) know to refresh."""
+    async with acquire() as con:
+        await con.execute("UPDATE codex_meta SET updated_at = now() WHERE branch = $1", branch)
+
+
+async def meta_signature(branch: str) -> tuple:
+    """``(parser_version, updated_at)`` for a branch - a cheap cache key that changes
+    on every (re)index. ``(0, None)`` if the branch has no meta row yet."""
+    async with acquire() as con:
+        row = await con.fetchrow(
+            "SELECT parser_version, updated_at FROM codex_meta WHERE branch = $1", branch)
+    return (row["parser_version"], row["updated_at"]) if row else (0, None)
+
+
+# --- rig map (rig_binding table) --------------------------------------------
+
+async def replace_rig_bindings(branch: str, rows: list[tuple]) -> int:
+    """Atomically replace a branch's rig bindings. ``rows`` = ``(branch, blueprint,
+    skeleton, ap_key)`` tuples (built by ``reindex_rigs`` from the prefab binfabs)."""
+    async with acquire() as con:
+        async with con.transaction():
+            await con.execute("DELETE FROM rig_binding WHERE branch = $1", branch)
+            if rows:
+                await con.executemany(
+                    "INSERT INTO rig_binding (branch, blueprint, skeleton, ap_key) "
+                    "VALUES ($1, $2, $3, $4) ON CONFLICT (branch, blueprint) DO UPDATE "
+                    "SET skeleton = EXCLUDED.skeleton, ap_key = EXCLUDED.ap_key",
+                    rows,
+                )
+    return len(rows)
+
+
+async def upsert_rig_bindings(rows: list[tuple]) -> int:
+    """Insert/update rig bindings (the delta path) without clearing the branch.
+    ``rows`` = ``(branch, blueprint, skeleton, ap_key)``."""
+    if not rows:
+        return 0
+    async with acquire() as con:
+        await con.executemany(
+            "INSERT INTO rig_binding (branch, blueprint, skeleton, ap_key) "
+            "VALUES ($1, $2, $3, $4) ON CONFLICT (branch, blueprint) DO UPDATE "
+            "SET skeleton = EXCLUDED.skeleton, ap_key = EXCLUDED.ap_key",
+            rows,
+        )
+    return len(rows)
+
+
+async def rig_binding_count(branch: str) -> int:
+    """Number of rig bindings for a branch (0 => needs a first build)."""
+    async with acquire() as con:
+        return int(await con.fetchval("SELECT count(*) FROM rig_binding WHERE branch = $1", branch) or 0)
+
+
+async def get_rig_version(branch: str) -> int:
+    """Rig-extractor version that last (re)built the branch's rig map (0 if never)."""
+    async with acquire() as con:
+        return int(await con.fetchval("SELECT rig_version FROM codex_meta WHERE branch = $1", branch) or 0)
+
+
+async def set_rig_version(branch: str, version: int) -> None:
+    """Record the rig-extractor version that just rebuilt the branch's rig map."""
+    async with acquire() as con:
+        await con.execute(
+            "INSERT INTO codex_meta (branch, rig_version, updated_at) VALUES ($1, $2, now()) "
+            "ON CONFLICT (branch) DO UPDATE SET rig_version = EXCLUDED.rig_version, updated_at = now()",
+            branch, version,
+        )
+
+
+async def load_rig_map(branch: str) -> dict[str, tuple[str, str]]:
+    """``blueprint basename -> (skeleton stem, AP key)`` for every skeleton-binding
+    creature/costume/mob in a branch - the authoritative map the Mods Hub viewer
+    resolves a mod's blueprints against."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT blueprint, skeleton, ap_key FROM rig_binding WHERE branch = $1", branch)
+    return {r["blueprint"]: (r["skeleton"], r["ap_key"]) for r in rows}
+
+
 # --- reads (router via read.py) ---------------------------------------------
 
 async def query_entries(

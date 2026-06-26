@@ -86,9 +86,12 @@
 
     // Profile fields
     if ($profUsername)    $profUsername.textContent = user.username;
+    const $profDiscord = $('prof-discord-handle');
+    if ($profDiscord)     $profDiscord.textContent = '@' + (user.discord_handle || user.username);
     if ($profEmail)       $profEmail.textContent = user.email;
     if ($profDisplayName) $profDisplayName.textContent = user.display_name || t('(none set)');
     if ($profCreated)     $profCreated.textContent = formatDate(user.created_at);
+    setupUsernameRequest();
 
     // Trove claim state - two visual modes.
     if (user.claimed_trove_name) {
@@ -234,8 +237,90 @@
     }
   }
 
+  // ─── Trove username change request ─────────────────────────────────
+  let _usernameReqWired = false;
+  let _latestUnameReq = null;
+  function setupUsernameRequest() {
+    const btn = $('prof-edit-username');
+    if (!btn) return;
+    if (!_usernameReqWired) {
+      _usernameReqWired = true;
+      // Just a button inline with the username; the form lives in a modal so it
+      // never shows until clicked (a stray inline form was bleeding through CSS).
+      btn.addEventListener('click', () => openUsernameModal(
+        _latestUnameReq && _latestUnameReq.status === 'pending' ? _latestUnameReq.requested_username : ''));
+    }
+    // Load the latest request to show pending / denial state.
+    Auth.callJSON('/v1/site-auth/me/username-request').then((r) => {
+      if (r.ok && r.data) showUsernameStatus(r.data.request);
+    }).catch(() => {});
+  }
+  function openUsernameModal(prefill) {
+    const ov = document.createElement('div');
+    ov.className = 'dash-modal-overlay';
+    ov.innerHTML =
+      '<div class="dash-modal" role="dialog" aria-modal="true" aria-labelledby="uname-modal-title">' +
+        '<form id="uname-modal-form">' +
+          '<h3 class="dash-modal-title" id="uname-modal-title">' + esc(t('Request username change')) + '</h3>' +
+          '<p class="dash-modal-message">' +
+            esc(t('This is your handle for mods & modpacks (/mods/<you>/…). Changes are reviewed by a moderator.')) + '</p>' +
+          '<div class="dash-mod-form" style="margin-top:4px">' +
+            '<input type="text" name="username" maxlength="24" autocomplete="off" placeholder="new_username" value="' +
+              esc(prefill || '') + '" style="flex:1 1 100%">' +
+          '</div>' +
+          '<p class="dash-error" id="uname-modal-error" hidden style="margin-top:10px"></p>' +
+          '<div class="dash-modal-actions" style="margin-top:14px">' +
+            '<button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-act="cancel">' + esc(t('Cancel')) + '</button>' +
+            '<button type="submit" class="dash-btn dash-btn-mini">' + esc(t('Request')) + '</button>' +
+          '</div>' +
+        '</form>' +
+      '</div>';
+    const form = ov.querySelector('#uname-modal-form');
+    const input = form.username;
+    const err = ov.querySelector('#uname-modal-error');
+    const submitBtn = form.querySelector('[type="submit"]');
+    const close = () => { document.removeEventListener('keydown', onKey); ov.remove(); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    ov.querySelector('[data-act="cancel"]').addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.hidden = true;
+      const name = input.value.trim();
+      if (!name) { err.textContent = t('Enter a username.'); err.hidden = false; return; }
+      submitBtn.disabled = true;
+      const r = await Auth.callJSON('/v1/site-auth/me/username-request', { json: { username: name } });
+      if (r.ok && r.data && r.data.request) {
+        close();
+        showUsernameStatus(r.data.request);
+      } else {
+        err.textContent = Auth.errorMessage(r.data) || t('Could not request that username.');
+        err.hidden = false;
+        submitBtn.disabled = false;
+      }
+    });
+    document.body.appendChild(ov);
+    input.focus();
+  }
+  function showUsernameStatus(req) {
+    _latestUnameReq = req || null;
+    const status = $('prof-username-status');
+    if (!status) return;
+    if (!req || req.status === 'approved') { status.hidden = true; return; }
+    if (req.status === 'pending') {
+      status.innerHTML = '<i class="fa-solid fa-clock"></i> ' +
+        esc(t('Requested')) + ' <strong>' + esc(req.requested_username) + '</strong> — ' + esc(t('awaiting moderator approval.'));
+    } else if (req.status === 'rejected') {
+      status.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' +
+        esc(t('Your request for')) + ' <strong>' + esc(req.requested_username) + '</strong> ' + esc(t('was declined.')) +
+        (req.reason ? ' ' + esc(req.reason) : '');
+    }
+    status.hidden = false;
+  }
+
   // ─── Section switching (sidebar) ───────────────────────────────────
-  const SECTIONS = ['profile', 'giveaways', 'mods', 'leaderboard', 'discord'];
+  const SECTIONS = ['profile', 'giveaways', 'mods', 'modpacks', 'leaderboard', 'discord'];
   function setupSections() {
     document.querySelectorAll('.dash-nav-item').forEach((b) =>
       b.addEventListener('click', () => showSection(b.dataset.section)));
@@ -255,6 +340,67 @@
     // who never visit it don't pay the guild-list round-trip.
     if (name === 'discord' && !_discordLoaded) { _discordLoaded = true; loadDiscordBot(); }
     if (name === 'mods' && !_modsLoaded) { _modsLoaded = true; loadMyMods(); }
+    if (name === 'modpacks' && !_modpacksLoaded) { _modpacksLoaded = true; loadMyModpacks(); }
+  }
+
+  // ─── My Modpacks section ───────────────────────────────────────────
+  let _modpacksLoaded = false;
+
+  async function loadMyModpacks() {
+    const form = $('dash-modpack-create');
+    const err = $('dash-modpack-error');
+    if (form && !form.dataset.wired) {
+      form.dataset.wired = '1';
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (err) err.hidden = true;
+        const btn = form.querySelector('button[type=submit]');
+        btn.disabled = true;
+        const r = await Auth.callJSON('/v1/modpacks/hub/projects', {
+          json: { title: form.title.value.trim(), visibility: form.visibility.value },
+        });
+        btn.disabled = false;
+        if (r.ok && r.data && r.data.slug) {
+          location.href = '/modpacks/' + encodeURIComponent(r.data.handle) + '/' + encodeURIComponent(r.data.slug);
+        } else if (err) {
+          err.textContent = Auth.errorMessage(r.data) || t('Could not create the modpack.');
+          err.hidden = false;
+        }
+      });
+    }
+    await renderOwnedModpacks();
+  }
+
+  async function renderOwnedModpacks() {
+    const list = $('dash-modpacks-list');
+    if (!list) return;
+    const r = await Auth.callJSON('/v1/modpacks/hub/me/projects');
+    const items = (r.ok && r.data && Array.isArray(r.data.items)) ? r.data.items : null;
+    if (items === null) {
+      list.innerHTML = `<p class="dash-empty">${esc(t("Couldn't load your modpacks right now."))}</p>`;
+    } else if (!items.length) {
+      list.innerHTML = `<p class="dash-empty">${esc(t("You haven't created any modpacks yet. Create one above, or browse"))} <a href="/modpacks">${esc(t('Modpacks'))}</a>.</p>`;
+    } else {
+      list.innerHTML = items.map(modpackCard).join('');
+    }
+  }
+
+  function modpackCard(p) {
+    const vis = p.visibility === 'public'
+      ? `<span class="dash-tag dash-tag-verified">${esc(t('public'))}</span>`
+      : p.visibility === 'unlisted'
+        ? `<span class="dash-tag">${esc(t('unlisted'))}</span>`
+        : `<span class="dash-tag dash-tag-unverified">${esc(t('draft'))}</span>`;
+    const collab = p.is_collaborator ? `<span class="dash-tag">${esc(t('collaborator'))}</span>` : '';
+    return `
+      <a class="dash-mod-card" href="/modpacks/${encodeURIComponent(p.handle)}/${encodeURIComponent(p.slug)}">
+        <span class="dash-mod-title">${esc(p.title)} ${vis} ${collab}</span>
+        <span class="dash-mod-meta">
+          <i class="fa-solid fa-cube" aria-hidden="true"></i> ${Number(p.mod_count || 0)}
+          · <i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}
+          · <i class="fa-solid fa-heart" aria-hidden="true"></i> ${Number(p.star_count || 0).toLocaleString()}
+        </span>
+      </a>`;
   }
 
   // ─── My Mods section ───────────────────────────────────────────────
@@ -321,9 +467,10 @@
         ? `<span class="dash-tag">${esc(t('unlisted'))}</span>`
         : `<span class="dash-tag dash-tag-unverified">${esc(t('draft'))}</span>`;
     const modeTag = p.mode === 'releases' ? `<span class="dash-tag">${esc(t('releases-only'))}</span>` : '';
+    const collab = p.is_collaborator ? `<span class="dash-tag">${esc(t('collaborator'))}</span>` : '';
     return `
       <a class="dash-mod-card" href="/mods/${encodeURIComponent(p.handle)}/${encodeURIComponent(p.slug)}">
-        <span class="dash-mod-title">${esc(p.title)} ${vis} ${modeTag}</span>
+        <span class="dash-mod-title">${esc(p.title)} ${vis} ${modeTag} ${collab}</span>
         <span class="dash-mod-meta">
           <i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}
           · <i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(p.star_count || 0).toLocaleString()}

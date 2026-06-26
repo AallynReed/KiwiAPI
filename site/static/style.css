@@ -515,6 +515,29 @@ img.nav-account-avatar {
   color: var(--text-mute);
 }
 .nav-dropdown-panel a:hover i { color: var(--accent-blue); }
+/* Highlight the link for the page you're currently on. */
+.nav-dropdown-panel a.active { color: var(--accent-blue); background: var(--bg-card-hi); }
+.nav-dropdown-panel a.active i { color: var(--accent-blue); }
+
+/* Mega-menu: the "Pages" panel grows into labeled, multi-column sections so a
+   long page list stays scannable instead of a single 13-row column. Reuses the
+   .nav-dropdown open/close machinery; only the panel's internals change. */
+.nav-dropdown-panel.nav-mega {
+  grid-template-columns: repeat(2, minmax(195px, 1fr));
+  gap: 6px 14px;
+  padding: 14px;
+  width: max-content;
+  max-width: min(560px, 92vw);
+}
+.nav-mega-group { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nav-mega-title {
+  margin: 4px 10px 4px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
 
 /* Beta pill - lives in the nav dropdown (Market link), so it belongs in the
    SHARED stylesheet to render its background on every page, not just /market. */
@@ -1060,6 +1083,18 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   font-variant-numeric: tabular-nums;
 }
 .live-card .live-sub { font-size: .85rem; color: var(--text-mute); }
+/* The Server Time card doubles as a link to the /server-time page. Strip the
+   anchor's underline/colour (children set their own) and reveal a corner arrow
+   on hover so it reads as clickable without disturbing the other cards. */
+.live-card-link { text-decoration: none; color: inherit; cursor: pointer; }
+.live-card-link .live-card-go {
+  position: absolute; top: 14px; right: 16px;
+  color: var(--accent-blue); font-size: .85rem;
+  opacity: 0; transform: translateX(-4px);
+  transition: opacity .25s, transform .25s var(--ease-out);
+}
+.live-card-link:hover .live-card-go,
+.live-card-link:focus-visible .live-card-go { opacity: 1; transform: translateX(0); }
 .live-card.flash { animation: flash .6s var(--ease-out); }
 @keyframes flash {
   0%   { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent-blue) 50%, transparent); }
@@ -1283,6 +1318,92 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 }
 .section-title { font-size: var(--type-h2); }
 .section-sub  { color: var(--text-mute); font-size: var(--type-lead); }
+
+
+/* ─── 8b. Explore the site ───────────────────────────────────────────────
+   A directory of the website's own pages, sitting just under the hero.
+   Self-contained grid of link cards; capped narrower than the full content
+   width so the cards stay a comfortable 3-4 across on wide monitors. */
+
+.site-explore {
+  padding: 90px clamp(20px, 3vw, 48px) 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.site-explore > .section-eyebrow,
+.site-explore > .section-title,
+.site-explore > .section-sub {
+  text-align: center;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.site-explore > .section-eyebrow { margin-bottom: 10px; }
+.site-explore > .section-title   { margin-bottom: 10px; }
+
+.explore-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 44px;
+}
+.explore-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  color: var(--text);
+  transition: border-color .2s, box-shadow .25s, transform .2s var(--ease-out);
+}
+.explore-card:hover {
+  border-color: color-mix(in oklab, var(--accent-blue) 60%, var(--bg-line));
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-3px);
+  color: var(--text);
+}
+.explore-icon {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  color: var(--accent-blue);
+  background: color-mix(in oklab, var(--accent-blue) 14%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent-blue) 25%, transparent);
+}
+.explore-card-body { min-width: 0; display: grid; gap: 4px; }
+.explore-card-body h3 {
+  font-size: 1.02rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.explore-card-body p {
+  color: var(--text-mute);
+  font-size: .9rem;
+  line-height: 1.45;
+}
+.explore-arrow {
+  margin-left: auto;
+  align-self: center;
+  color: var(--text-mute);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity .2s, transform .2s, color .2s;
+}
+.explore-card:hover .explore-arrow {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--accent-blue);
+}
+@media (max-width: 480px) {
+  .explore-grid { grid-template-columns: 1fr; }
+}
 
 
 /* ─── 9. Bento grid ──────────────────────────────────────────────────── */
@@ -1661,6 +1782,20 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
     transform: none;
     max-height: 320px;
   }
+
+  /* Mega-menu in the drawer: single column, sections stacked with their
+     headers, and enough height for the whole (grouped) page list so the
+     bottom entries aren't clipped the way the old flat 13-item list was. */
+  .nav-dropdown-panel.nav-mega {
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: none;
+    padding: 4px 0 4px 12px;
+    gap: 2px;
+  }
+  .nav-dropdown.open .nav-dropdown-panel.nav-mega { max-height: 1400px; }
+  .nav-mega-title { margin-top: 8px; }
+  .nav-mega-group:first-child .nav-mega-title { margin-top: 2px; }
 
   .hero { padding-top: 60px; padding-bottom: 80px; }
   .hero-actions, .hero-pills { width: 100%; }

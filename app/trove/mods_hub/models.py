@@ -11,10 +11,21 @@ from datetime import datetime
 from typing import Literal
 
 from beanie import Document, PydanticObjectId
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymongo import ASCENDING, DESCENDING, TEXT, IndexModel
 
 from app.core.utils import utcnow
+
+
+class Collaborator(BaseModel):
+    """A co-owner of a mod or modpack. The primary creator (``owner_id``) adds
+    collaborators, who then get full edit rights (everything except managing
+    collaborators + deleting the project, which stay with the primary owner).
+    ``username`` is denormalized for display + links."""
+
+    user_id: PydanticObjectId                   # SiteUser.id
+    username: str                               # denormalized handle (resynced on writes)
+
 
 Visibility = Literal["draft", "unlisted", "public"]
 ReleaseStatus = Literal["draft", "published"]
@@ -55,6 +66,9 @@ class ModProject(Document):
     # owner lists their mods, so renaming Discord moves their mods to the new handle.
     # Stray mods use the reserved handle "stray" -> /mods/stray/<slug>.
     owner_handle: str = ""
+    # Co-owners (besides the primary owner). They get full edit rights; the primary
+    # owner keeps collaborator management + deletion. See `Collaborator`.
+    collaborators: list[Collaborator] = Field(default_factory=list)
 
     # --- Stray (imported, unclaimed) mods ---------------------------------
     # A stray mod is mirrored from an external catalog and not yet attributed to a
@@ -132,6 +146,7 @@ class ModProject(Document):
             IndexModel([("owner_id", ASCENDING), ("slug", ASCENDING)], unique=True),
             IndexModel([("owner_handle", ASCENDING), ("slug", ASCENDING)]),  # URL lookup
             IndexModel([("owner_id", ASCENDING), ("updated_at", DESCENDING)]),
+            IndexModel([("collaborators.user_id", ASCENDING)]),   # "mods I collaborate on"
             IndexModel([("visibility", ASCENDING), ("updated_at", DESCENDING)]),
             IndexModel([("visibility", ASCENDING), ("download_count", DESCENDING)]),
             IndexModel([("visibility", ASCENDING), ("star_count", DESCENDING)]),
@@ -139,10 +154,12 @@ class ModProject(Document):
             IndexModel([("tags", ASCENDING)]),
             IndexModel([("forked_from_id", ASCENDING)]),   # list a project's forks
             # Stray (imported) mods: idempotent upsert by source + dedup, and the
-            # admin pending/approval queue. Sparse so regular mods (source=None) are
-            # excluded from the unique source index.
+            # admin pending/approval queue. PARTIAL (source is a string) so regular
+            # mods are excluded - sparse was WRONG: Beanie writes source=null (present,
+            # not omitted), so a sparse unique index still indexes (null,null) and the
+            # 2nd normal mod create collided -> DuplicateKeyError -> 500.
             IndexModel([("source", ASCENDING), ("source_id", ASCENDING)],
-                       unique=True, sparse=True),
+                       unique=True, partialFilterExpression={"source": {"$type": "string"}}),
             IndexModel([("is_stray", ASCENDING), ("stray_status", ASCENDING),
                         ("updated_at", DESCENDING)]),
             # Free-text search over the card-visible fields.

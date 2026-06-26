@@ -38,7 +38,11 @@ logger = logging.getLogger("kiwi.trove.codexes")
 # resolved strings, …). On the next sync the indexer force-rebuilds any branch whose
 # stored version is behind, so a parser change reaches the data WITHOUT a game update
 # or a manual rebuild - the steady-state delta only re-touches changed game files.
-CODEX_PARSER_VERSION = 3  # v3: extract each prefab's model `blueprint` (strip-and-validate vs the dir tree)
+CODEX_PARSER_VERSION = 7  # v7: rig map moved to its own rig_binding table (reindex_rigs); codex entries drop data['rig']
+
+# Bumped when the rig extractor or its coverage changes - forces a rig-only rebuild on
+# the next sync WITHOUT a (heavier) full codex re-parse.
+RIG_PARSER_VERSION = 1  # v1: scan the WHOLE prefab tree (skins/npc/placeable/item/…), not just collections
 
 _FLUSH_AT = 1000
 
@@ -357,6 +361,9 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
             rows = []
     await _flush(rows)
     await pg_store.delete_entries(branch, removed)
+    # Bump the branch's indexed-at so consumers keyed on it (e.g. the Mods Hub rig-map
+    # cache) refresh after a game patch, even though a delta leaves parser_version put.
+    await pg_store.touch_meta(branch)
 
     logger.info(
         "codexes[%s]: delta ordinal=%s indexed=%d removed=%d missing_blob=%d",
@@ -381,7 +388,8 @@ def _index_decision(*, has_any: bool, stored_version: int, current_version: int,
 
 async def ensure_indexed(branch: str, store: ContentStore, summary: dict) -> dict:
     """Post-sync hook: full bootstrap when the branch is empty, a forced rebuild when
-    the parser advanced since the last build, else the version delta (or nothing)."""
+    the parser advanced since the last build, else the version delta (or nothing).
+    Also rebuilds the rig map (Mods Hub 3D) whenever anything changed."""
     if not settings.postgres_enabled:
         logger.warning("codexes[%s]: Postgres disabled - skipping index", branch)
         return {"indexed": 0, "removed": 0, "missing_blob": 0}
@@ -393,13 +401,89 @@ async def ensure_indexed(branch: str, store: ContentStore, summary: dict) -> dic
         ordinal=summary.get("ordinal"),
     )
     if decision == "full":
-        return await reindex(branch, store)
-    if decision == "rebuild":
+        counts = await reindex(branch, store)
+    elif decision == "rebuild":
         logger.info("codexes[%s]: parser advanced to v%d - rebuilding", branch, CODEX_PARSER_VERSION)
-        return await reindex(branch, store, force=True)
-    if decision == "delta":
-        return await reindex_changes(branch, store, summary["ordinal"])
-    return {"indexed": 0, "removed": 0, "missing_blob": 0}
+        counts = await reindex(branch, store, force=True)
+    elif decision == "delta":
+        counts = await reindex_changes(branch, store, summary["ordinal"])
+    else:
+        counts = {"indexed": 0, "removed": 0, "missing_blob": 0}
+
+    # Rig map (Mods Hub 3D): a full rebuild when the codex did a full/rebuild, when the
+    # rig extractor advanced, or on a first build onto an already-synced archive; just
+    # the changed prefabs on a routine game delta. Isolated - a rig failure must not
+    # derail the codex/archiver.
+    try:
+        rig_stale = (await pg_store.get_rig_version(branch) < RIG_PARSER_VERSION
+                     or await pg_store.rig_binding_count(branch) == 0)
+        if decision in ("full", "rebuild") or rig_stale:
+            await reindex_rigs(branch, store)
+        elif decision == "delta":
+            await reindex_rigs_changes(branch, store, summary["ordinal"])
+    except Exception:  # noqa: BLE001 - a rig failure must not derail the codex/archiver
+        logger.warning("codexes[%s]: rig reindex failed", branch, exc_info=True)
+    return counts
+
+
+def _rig_rows(branch: str, store: ContentStore, candidates: list[tuple[str, str]]) -> list[tuple]:
+    """``(branch, blueprint, skeleton, ap_key)`` rows for the given (path, sha) prefabs.
+    Reads each blob, cheap-prefilters on ``.skeleton.gr2``, extracts structurally. Sync
+    (run in a thread): the blob reads + parse are the heavy part."""
+    rows: list[tuple] = []
+    for _path, sha in candidates:
+        content = store.get(sha)
+        if not content or b".skeleton.gr2" not in content:
+            continue                           # cheap pre-filter: no skeleton, no rig
+        rig = binfab.extract_rig_refs(content)
+        if not rig:
+            continue
+        skeleton = rig["skeleton"]
+        rows.extend((branch, bp, skeleton, ap) for bp, ap in rig["parts"].items())
+    return rows
+
+
+async def reindex_rigs(branch: str, store: ContentStore) -> int:
+    """Full rebuild of the ``rig_binding`` map: read EVERY prefab and extract its
+    ``blueprint basename -> (skeleton, AP)`` structurally. Comprehensive on purpose -
+    skeletons live not just in collections/ (mounts + allies' inline _npc) but also
+    skins/ (player costumes), npc/ (mobs), placeable/, item/ (item-mounts), etc., so we
+    scan the whole prefab tree (cheap `.skeleton.gr2` pre-filter skips the ~85% that
+    have none). A mod then resolves whenever the game itself defines the rig - no
+    folder allow-list to keep in sync, no name guessing."""
+    coll = UpdateState.get_pymongo_collection()
+    docs = await coll.find(
+        _prefix_query(branch, PREFABS_ROOT), {"path": 1, "content_sha256": 1, "_id": 0}
+    ).to_list(length=None)
+    candidates = [(d["path"], d["content_sha256"]) for d in docs]
+    rows = await asyncio.to_thread(_rig_rows, branch, store, candidates)
+    n = await pg_store.replace_rig_bindings(branch, rows)
+    await pg_store.set_rig_version(branch, RIG_PARSER_VERSION)
+    await pg_store.touch_meta(branch)          # invalidate the Mods Hub rig-map cache
+    logger.info("codexes[%s]: rig map rebuilt - %d bindings from %d prefabs",
+                branch, n, len(candidates))
+    return n
+
+
+async def reindex_rigs_changes(branch: str, store: ContentStore, ordinal: int) -> int:
+    """Steady-state rig update for one game version: re-extract only the prefabs that
+    changed and UPSERT their bindings (a creature rarely loses a part, so a removed
+    binding just lingers harmlessly until the next full rebuild)."""
+    rows = await UpdateChange.get_pymongo_collection().find(
+        {"branch": branch, "ordinal": ordinal},
+        {"path": 1, "type": 1, "content_sha256": 1, "_id": 0},
+    ).to_list(length=None)
+    changed = [(r["path"], r["content_sha256"]) for r in rows
+               if r["type"] != "removed" and r.get("content_sha256")
+               and r["path"].startswith(PREFABS_ROOT) and r["path"].endswith(".binfab")]
+    if not changed:
+        return 0
+    new_rows = await asyncio.to_thread(_rig_rows, branch, store, changed)
+    n = await pg_store.upsert_rig_bindings(new_rows)
+    await pg_store.touch_meta(branch)
+    logger.info("codexes[%s]: rig delta ordinal=%s - %d bindings from %d changed prefabs",
+                branch, ordinal, n, len(changed))
+    return n
 
 
 def get_rebuild_status(branch: str) -> dict:
@@ -417,6 +501,7 @@ async def rebuild(branch: str, store: ContentStore) -> dict:
                                "finished_at": None, "counts": None, "error": None}
     try:
         counts = await reindex(branch, store, force=True)
+        await reindex_rigs(branch, store)      # rig map too, so the admin button refreshes both
     except Exception as exc:  # noqa: BLE001 - surface the failure to the poll, don't crash the task
         logger.exception("codexes[%s]: manual rebuild failed", branch)
         _REBUILD_STATUS[branch] = {"running": False, "started_at": started,

@@ -163,6 +163,64 @@ def harvest_strings(data: bytes, min_len: int = 2, max_len: int = 512) -> list[t
     return out
 
 
+def _real_fields(data: bytes) -> list[tuple[int, int, str]]:
+    """``harvest_strings`` scans every byte offset, so it emits spurious sub-strings
+    that start INSIDE a real string's bytes (e.g. ``024/...`` one byte into ``2024/...``).
+    Keep only the true, non-overlapping field sequence: a field whose bytes start before
+    the previous accepted field ended is a phantom and is dropped."""
+    out: list[tuple[int, int, str]] = []
+    last_end = -1
+    for off, field, text in harvest_strings(data):
+        try:
+            _key, j = read_uleb(data, off)
+            length, k = read_uleb(data, j)
+        except (IndexError, ValueError):
+            continue
+        if k >= last_end:                  # doesn't overlap the previous real field
+            out.append((off, field, text))
+            last_end = k + length
+    return out
+
+
+def extract_rig_refs(data: bytes) -> dict | None:
+    """A creature prefab's rig binding read STRUCTURALLY from the wire format (no name
+    guessing): the skeleton it uses + each blueprint mesh basename -> ``AP_*`` key.
+
+    The prefab's model component lists its meshes as ``(mesh-path field 0, AP_<key>
+    field 1)`` pairs, sitting between the ``<name>.skeleton.gr2`` reference and the
+    ``.gsf`` animation-state reference. Empty attach points are a bare ``AP_`` field-1
+    (no preceding mesh); ability/particle bindings are an ``AP_`` field-1 followed by a
+    field-2 ref and sit OUTSIDE that span - so both are excluded by the WIRE STRUCTURE,
+    not by a ``c_`` name prefix (which silently dropped any creature whose meshes aren't
+    named ``c_*`` - mobs, targets, harvesting entities, …).
+
+    Returns ``{"skeleton": "<stem>", "parts": {"<blueprint basename>": "<ap key>"}}``
+    (all lowercased), or None for non-creatures (no skeleton / no mesh bindings).
+    """
+    rows = _real_fields(data)
+    skeleton: str | None = None
+    skel_off = gsf_off = None
+    for off, _field, s in rows:
+        base = s.rsplit("/", 1)[-1].lower()
+        if skeleton is None and base.endswith(".skeleton.gr2"):
+            skeleton, skel_off = base[: -len(".skeleton.gr2")], off
+        elif gsf_off is None and base.endswith(".gsf"):
+            gsf_off = off
+    if skeleton is None or skel_off is None:
+        return None
+    end = gsf_off if (gsf_off is not None and gsf_off > skel_off) else len(data)
+
+    parts: dict[str, str] = {}
+    for (off, field, s), (_n_off, n_field, n_s) in zip(rows, rows[1:]):
+        if not (skel_off < off < end):
+            continue                       # only the model component's mesh list
+        if field == 0 and n_field == 1 and n_s.startswith("AP_"):
+            parts[s.rsplit("/", 1)[-1].lower()] = n_s[3:].lower()
+    if not parts:
+        return None
+    return {"skeleton": skeleton, "parts": parts}
+
+
 def parse_collection_table(data: bytes) -> list[dict]:
     """Decode a collections/collection_* table into category groups
     `{id, name_key, members: [collection-path]}` by walking harvested strings."""

@@ -215,7 +215,7 @@ claimable by its author); detail + lookup also include `releases[]` =
 (`filename` for a `.tmod` is the artifact's internal `title` property + `.tmod` - Trove matches a mod by that
 title in-game, so the download keeps that exact name).
 
-- `GET /v1/mods` - list published mods (cards, no releases). Query `q` (text over title/summary/tags), `tag`
+- `GET /v1/mods` - list published mods (cards, no releases). Query `q` (case-insensitive substring over title/summary/tags/author), `tag`
   (filter by one tag/category), `author`, `sort` ∈ `recent|popular|downloads|stars|new|title`, `limit` (≤100),
   `offset`. Returns `{items, count, total, limit, offset}`.
 - `GET /v1/mods/{handle}/{slug}` - full metadata + published releases for one mod (404 if not public).
@@ -270,7 +270,7 @@ hub. Browse + download are public; creating one needs a Discord (site) login.
   preserved) - Trove validates the filename against the mod's header `title`.
 
 App-facing read API (absolute image / page / download URLs, like the Mods catalog):
-- `GET /v1/modpacks` - list public modpacks (cards). Query `q` (text over title/summary/tags), `tag`, `author`,
+- `GET /v1/modpacks` - list public modpacks (cards). Query `q` (case-insensitive substring over title/summary/tags), `tag`, `author`,
   `sort` ∈ `recent|downloads|stars|new|title`, `limit` (≤100), `offset`. → `{items, count, total, limit, offset}`.
   A card = `{slug, handle, title, summary, tags, author, banner_url, preview_urls[], download_count, star_count,
   variant_count, mod_count, default_variant, page_url, created_at, updated_at}`.

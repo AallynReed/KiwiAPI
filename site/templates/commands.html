@@ -78,30 +78,6 @@
 
     {% include "partials/footer.html" %}
 
-    <!-- Reuse the same support widget from /. Markup-identical so the
-         styles in style.min.css (defined under section 18) just apply. -->
-    <div class="support-widget" id="support-widget" aria-label="Support the project">
-        <button type="button" class="support-trigger" id="support-trigger"
-                aria-expanded="false" aria-controls="support-panel">
-            <i class="fa-solid fa-heart" aria-hidden="true"></i>
-            <span>Support</span>
-        </button>
-        <div class="support-panel" id="support-panel" role="menu" hidden>
-            <p class="support-headline">
-                Better Trove Tools is free &amp; open source. If it saves you time, a tip helps keep it running.
-            </p>
-            <a href="https://paypal.me/waterin" target="_blank" rel="noopener" class="support-link support-paypal" role="menuitem">
-                <i class="fa-brands fa-paypal" aria-hidden="true"></i><span>PayPal</span>
-            </a>
-            <a href="https://ko-fi.com/aallyn" target="_blank" rel="noopener" class="support-link support-kofi" role="menuitem">
-                <i class="fa-solid fa-mug-hot" aria-hidden="true"></i><span>Ko-fi</span>
-            </a>
-            <a href="https://buymeacoffee.com/aallyn" target="_blank" rel="noopener" class="support-link support-bmac" role="menuitem">
-                <i class="fa-solid fa-mug-saucer" aria-hidden="true"></i><span>Buy Me a Coffee</span>
-            </a>
-        </div>
-    </div>
-
     <script src="/static/app.min.js"></script>
     <script src="/static/i18n.min.js"></script>
     <script src="/static/site_auth.min.js" defer></script>
