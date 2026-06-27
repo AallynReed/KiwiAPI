@@ -237,6 +237,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "dashboard.html", "text/html")
         if path == "/mods":
             return self._send_file(TEMPLATES / "mods.html", "text/html")
+        if path == "/mods/why":
+            return self._send_file(TEMPLATES / "mods_why.html", "text/html")
         if path.startswith("/mods/"):
             # /mods/<handle> = modder profile; /mods/<handle>/<slug> = a mod.
             segs = [s for s in path[len("/mods/"):].split("/") if s]

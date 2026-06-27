@@ -49,6 +49,10 @@
   color: var(--text); background: var(--bg-deep); text-decoration: none;
   transition: border-color .15s var(--ease-out), background .15s var(--ease-out), transform .12s var(--ease-out);
 }
+/* Respect the `hidden` attribute the auth JS toggles - the base `.mh-btn`
+   display rule (author origin) otherwise beats the UA `[hidden]` rule, leaving
+   the Create / My mods / Sign in buttons visible regardless of login state. */
+.mh-btn[hidden] { display: none; }
 .mh-btn:hover { border-color: var(--accent-blue); transform: translateY(-1px); }
 .mh-btn:disabled { opacity: .55; cursor: default; transform: none; }
 .mh-btn-primary { background: var(--accent-blue); border-color: var(--accent-blue); color: #06121f; }

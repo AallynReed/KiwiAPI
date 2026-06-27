@@ -47,6 +47,9 @@
     wireEvents();
     wireAuth();
     wireCreate();
+    // Deep link from elsewhere (e.g. the "Create a mod" CTA on /mods/why).
+    // openCreate() itself redirects to /login if the visitor isn't signed in.
+    if (location.hash === '#create') openCreate();
     await loadFacets();
     await loadPage(true);
   }

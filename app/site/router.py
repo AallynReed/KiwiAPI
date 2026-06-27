@@ -336,6 +336,16 @@ async def mods_hub(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "mods.html", {})
 
 
+# NOTE: must stay ABOVE the ``/mods/{handle}`` routes below - Starlette matches in
+# definition order, so this static path has to win over the handle param. "why" is
+# also a RESERVED_USERNAME so no modder's profile can ever shadow it.
+@router.get("/mods/why", response_class=HTMLResponse)
+async def mods_why(request: Request) -> HTMLResponse:
+    """"Why Mods Hub" - a hidden explainer page (not in the nav) linked from the
+    ``/mods`` hero. Sells what the hub offers players + modders. Static content."""
+    return _TEMPLATES.TemplateResponse(request, "mods_why.html", {})
+
+
 def _plain_excerpt(md: str | None, limit: int = 280) -> str:
     """Crude markdown/HTML → plain text for a meta description."""
     t = re.sub(r"<[^>]+>", " ", md or "")            # strip HTML tags

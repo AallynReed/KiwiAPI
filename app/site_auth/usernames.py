@@ -28,7 +28,7 @@ _USERNAME_RE = re.compile(r"^[a-z0-9_.]{3,24}$")
 # Handles that would clash with site routes / reserved namespaces (e.g. the stray
 # mods namespace `/mods/stray/...`) or look like system accounts.
 RESERVED_USERNAMES = frozenset({
-    "stray", "admin", "administrator", "api", "me", "mods", "modpacks",
+    "stray", "why", "admin", "administrator", "api", "me", "mods", "modpacks",
     "trovesaurus", "kiwi", "support", "login", "logout", "dashboard", "system",
     "moderator", "staff", "root", "null", "undefined",
 })

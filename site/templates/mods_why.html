@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Why Mods Hub - Better Trove Tools</title>
+    <meta name="description" content="What the Mods Hub gives you: instant downloads, in-browser 3D previews, modpacks, and a full home for modders to build, version and share their work.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="canonical" href="https://trove.aallyn.net/mods/why">
+
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Why Mods Hub">
+    <meta property="og:description" content="Instant downloads, 3D previews, modpacks, and a real home for modders.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+
+    <style>
+        /* Scoped to this page (.why-mods-page). Reuses the global design tokens
+           from style.css so it tracks the site theme automatically. */
+        .wmh-main { max-width: 1080px; margin: 0 auto; padding: 0 20px 96px; }
+
+        .wmh-hero { text-align: center; padding: 72px 0 48px; }
+        .wmh-back {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--text-mute); font-size: .9rem; margin-bottom: 22px;
+        }
+        .wmh-back:hover { color: var(--text); }
+        .wmh-title {
+            font-family: "Space Grotesk", Inter, sans-serif;
+            font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.05;
+            margin: 0 0 18px; letter-spacing: -.02em;
+        }
+        .wmh-sub {
+            max-width: 640px; margin: 0 auto; color: var(--text-mute);
+            font-size: clamp(1.02rem, 2.2vw, 1.2rem); line-height: 1.6;
+        }
+
+        .wmh-section { padding: 40px 0 8px; }
+        .wmh-section-head { margin-bottom: 26px; }
+        .wmh-eyebrow {
+            display: inline-block; font-size: .78rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .12em;
+            color: var(--accent); margin: 0 0 8px;
+        }
+        .wmh-section-title {
+            font-family: "Space Grotesk", Inter, sans-serif;
+            font-size: clamp(1.5rem, 3.4vw, 2rem); margin: 0; letter-spacing: -.01em;
+        }
+
+        .wmh-grid {
+            display: grid; gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));
+        }
+        .wmh-card {
+            background: var(--bg-card); border: 1px solid var(--bg-line);
+            border-radius: 16px; padding: 22px 20px;
+            transition: transform .18s ease, border-color .18s ease, background .18s ease;
+        }
+        .wmh-card:hover {
+            transform: translateY(-3px);
+            border-color: color-mix(in oklab, var(--accent) 45%, var(--bg-line));
+            background: var(--bg-card-hi);
+        }
+        .wmh-card-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 42px; height: 42px; border-radius: 11px; margin-bottom: 14px;
+            font-size: 1.15rem; color: var(--accent);
+            background: color-mix(in oklab, var(--accent) 16%, transparent);
+        }
+        .wmh-card h3 { font-size: 1.06rem; margin: 0 0 7px; }
+        .wmh-card p { margin: 0; color: var(--text-mute); font-size: .95rem; line-height: 1.55; }
+
+        /* Per-audience accent: players=blue, modders=orange. */
+        .wmh-players .wmh-eyebrow { color: var(--accent-blue); }
+        .wmh-players .wmh-card-icon { color: var(--accent-blue); background: color-mix(in oklab, var(--accent-blue) 16%, transparent); }
+        .wmh-players .wmh-card:hover { border-color: color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); }
+        .wmh-modders .wmh-eyebrow { color: var(--accent-orange); }
+        .wmh-modders .wmh-card-icon { color: var(--accent-orange); background: color-mix(in oklab, var(--accent-orange) 16%, transparent); }
+        .wmh-modders .wmh-card:hover { border-color: color-mix(in oklab, var(--accent-orange) 45%, var(--bg-line)); }
+
+        .wmh-callout {
+            margin-top: 44px; padding: 28px 26px; border-radius: 18px;
+            background: linear-gradient(135deg,
+                color-mix(in oklab, var(--accent-blue) 12%, var(--bg-card)),
+                color-mix(in oklab, var(--accent-purple) 12%, var(--bg-card)));
+            border: 1px solid var(--bg-line);
+            display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+        }
+        .wmh-callout i { font-size: 1.8rem; color: var(--accent-purple); }
+        .wmh-callout-body { flex: 1 1 280px; }
+        .wmh-callout h3 { margin: 0 0 6px; font-size: 1.15rem; }
+        .wmh-callout p { margin: 0; color: var(--text-mute); line-height: 1.55; }
+
+        .wmh-cta { text-align: center; margin-top: 56px; }
+        .wmh-cta h2 {
+            font-family: "Space Grotesk", Inter, sans-serif;
+            font-size: clamp(1.5rem, 3.4vw, 2.1rem); margin: 0 0 20px;
+        }
+        .wmh-cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        /* Respect the `hidden` attribute on the auth-toggled CTA buttons - the
+           global `.btn { display: ... }` rule would otherwise keep them shown. */
+        .wmh-cta-actions .btn[hidden] { display: none; }
+    </style>
+</head>
+<body class="landing why-mods-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="wmh-main">
+
+        <!-- ═══════════════ HERO ═══════════════ -->
+        <section class="wmh-hero">
+            <a class="wmh-back" href="/mods"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> <span data-i18n>Back to the Mods Hub</span></a>
+            <h1 class="wmh-title" data-i18n>Why the <span class="grad">Mods Hub?</span></h1>
+            <p class="wmh-sub" data-i18n>A home for Trove mods that's quick for players and powerful for the people who make them. Here's what you get.</p>
+        </section>
+
+        <!-- ═══════════════ FOR PLAYERS ═══════════════ -->
+        <section class="wmh-section wmh-players" aria-label="For players">
+            <div class="wmh-section-head">
+                <p class="wmh-eyebrow" data-i18n>For players</p>
+                <h2 class="wmh-section-title" data-i18n>Find it, preview it, play it.</h2>
+            </div>
+            <div class="wmh-grid">
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Available the moment it's out</h3>
+                    <p data-i18n>New mods are live as soon as they're published - find it, download it, done. No waiting around.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-cube" aria-hidden="true"></i></span>
+                    <h3 data-i18n>See it in 3D first</h3>
+                    <p data-i18n>Spin a mod's models in 3D right in your browser before you download a thing.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-dragon" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Watch creatures come alive</h3>
+                    <p data-i18n>Creature mods can be viewed fully assembled on the in-game skeleton - posed and animated.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Drops in and just works</h3>
+                    <p data-i18n>Downloads come named exactly how Trove expects, so they install and work the first time.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-box-open" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Whole sets in one go</h3>
+                    <p data-i18n>Modpacks bundle a curated collection of mods into a single download.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-heart" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Free to browse and grab</h3>
+                    <p data-i18n>Browsing and downloading is completely free - no account needed. Sign in only to publish or save favourites.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- ═══════════════ FOR MODDERS ═══════════════ -->
+        <section class="wmh-section wmh-modders" aria-label="For modders">
+            <div class="wmh-section-head">
+                <p class="wmh-eyebrow" data-i18n>For modders</p>
+                <h2 class="wmh-section-title" data-i18n>A real home for your work.</h2>
+            </div>
+            <div class="wmh-grid">
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-code-branch" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Develop in the open</h3>
+                    <p data-i18n>Full version history and releases keep your work organized - and nothing is ever lost.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-rocket" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Publish your way</h3>
+                    <p data-i18n>Ship a polished, ready-to-play file built for you, or upload your own. Your call.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Offer variants</h3>
+                    <p data-i18n>Ship a Full and a Lite edition side by side from one project, no juggling uploads.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-id-badge" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Your own profile</h3>
+                    <p data-i18n>A customizable page for everything you've made - avatar, banner, bio and links.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-code-fork" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Credit that sticks</h3>
+                    <p data-i18n>Forks and mods made in your honour always point back to the original work.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Build as a team</h3>
+                    <p data-i18n>Add co-owners so a whole crew can maintain a mod together.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Your work, protected</h3>
+                    <p data-i18n>Every release is fingerprinted, so nobody can re-upload your mod as their own.</p>
+                </article>
+                <article class="wmh-card">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Helpful by default</h3>
+                    <p data-i18n>The studio catches misplaced files and fixes them in a click, so a mod is ready before you publish.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- ═══════════════ BUILT INTO BTT ═══════════════ -->
+        <div class="wmh-callout">
+            <i class="fa-solid fa-puzzle-piece" aria-hidden="true"></i>
+            <div class="wmh-callout-body">
+                <h3 data-i18n>Built into Better Trove Tools</h3>
+                <p data-i18n>It all connects to the app, too - install mods, catch updates, and manage what you've got without ever leaving the toolkit.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════ CTA ═══════════════ -->
+        <section class="wmh-cta" aria-label="Get started">
+            <h2 data-i18n>Have a look around.</h2>
+            <div class="wmh-cta-actions">
+                <a class="btn btn-primary" href="/mods"><i class="fa-solid fa-cubes"></i> <span data-i18n>Browse the Mods Hub</span></a>
+                <!-- Auth-aware: signed-out visitors get "Sign in to publish",
+                     signed-in users get "Create a mod" instead. Toggled below. -->
+                <a class="btn btn-ghost" id="wmh-signin" href="/login" hidden><i class="fa-brands fa-discord"></i> <span data-i18n>Sign in to publish</span></a>
+                <a class="btn btn-ghost" id="wmh-create" href="/mods#create" hidden><i class="fa-solid fa-plus"></i> <span data-i18n>Create a mod</span></a>
+            </div>
+        </section>
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script>
+        // Swap the secondary CTA based on login: signed-out -> "Sign in to
+        // publish", signed-in -> "Create a mod". Runs on DOMContentLoaded so the
+        // deferred site_auth.min.js (window.BTTAuth) has already initialised.
+        document.addEventListener('DOMContentLoaded', function () {
+            var signin = document.getElementById('wmh-signin');
+            var create = document.getElementById('wmh-create');
+            function apply(user) {
+                var authed = !!user;
+                if (signin) signin.hidden = authed;
+                if (create) create.hidden = !authed;
+            }
+            var A = window.BTTAuth;
+            apply(A && A.getCachedUser ? A.getCachedUser() : null);
+            if (A && A.getMe) A.getMe().then(apply).catch(function () {});
+        });
+    </script>
+</body>
+</html>

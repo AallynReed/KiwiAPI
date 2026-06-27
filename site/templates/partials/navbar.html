@@ -65,7 +65,7 @@
                         {% if mods_hub_enabled or market_enabled or giveaways_enabled %}
                         <div class="nav-mega-group" role="group" aria-label="Community">
                             <p class="nav-mega-title" data-i18n>Community</p>
-                            {% if mods_hub_enabled %}<a href="/mods" role="menuitem" class="{{ 'active' if _p == '/mods' or _p.startswith('/mods/') else '' }}"><i class="fa-solid fa-cubes"></i> <span data-i18n>Mods Hub</span> <span class="nav-pill nav-pill-beta">Beta</span></a>{% endif %}
+                            {% if mods_hub_enabled %}<a href="/mods" role="menuitem" class="{{ 'active' if _p == '/mods' or _p.startswith('/mods/') else '' }}"><i class="fa-solid fa-cubes"></i> <span data-i18n>Mods Hub</span></a>{% endif %}
                             {% if mods_hub_enabled %}<a href="/modpacks" role="menuitem" class="{{ 'active' if _p == '/modpacks' or _p.startswith('/modpacks/') else '' }}"><i class="fa-solid fa-box-open"></i> <span data-i18n>Modpacks</span> <span class="nav-pill nav-pill-beta">Beta</span></a>{% endif %}
                             {% if market_enabled %}<a href="/market" role="menuitem" class="{{ 'active' if _p == '/market' else '' }}"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta">Beta</span></a>{% endif %}
                             {% if giveaways_enabled %}<a href="/giveaways" role="menuitem" class="{{ 'active' if _p == '/giveaways' else '' }}"><i class="fa-solid fa-gift"></i> <span data-i18n>Giveaways</span></a>{% endif %}
