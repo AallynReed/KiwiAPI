@@ -31,12 +31,18 @@
     const phOriginals = new WeakMap(); // element -> original placeholder
     const phChanged = new Set();
 
+    const titleOriginals = new WeakMap(); // element -> original title
+    const titleChanged = new Set();
+
     function cacheOriginals() {
         document.querySelectorAll("[data-i18n]").forEach((el) => {
             if (!originals.has(el)) originals.set(el, el.innerHTML);
         });
         document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
             if (!phOriginals.has(el)) phOriginals.set(el, el.getAttribute("placeholder") || "");
+        });
+        document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+            if (!titleOriginals.has(el)) titleOriginals.set(el, el.getAttribute("title") || "");
         });
     }
 
@@ -52,6 +58,11 @@
             if (orig != null) el.setAttribute("placeholder", orig);
         });
         phChanged.clear();
+        titleChanged.forEach((el) => {
+            const orig = titleOriginals.get(el);
+            if (orig != null) el.setAttribute("title", orig);
+        });
+        titleChanged.clear();
     }
 
     // Apply the active dictionary. CRUCIAL: only elements that actually have a
@@ -76,6 +87,15 @@
             if (translated != null && translated !== "") {
                 el.setAttribute("placeholder", translated);
                 phChanged.add(el);
+            }
+        });
+        document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+            const orig = titleOriginals.get(el);
+            if (orig == null) return;
+            const translated = dict[norm(orig)];
+            if (translated != null && translated !== "") {
+                el.setAttribute("title", translated);
+                titleChanged.add(el);
             }
         });
     }
@@ -180,6 +200,8 @@
         changed.delete(el);
         phOriginals.delete(el);
         phChanged.delete(el);
+        titleOriginals.delete(el);
+        titleChanged.delete(el);
     }
 
     // expose for debugging / external triggers
