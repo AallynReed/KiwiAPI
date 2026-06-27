@@ -177,6 +177,15 @@ async def documentation(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "docs.html", {})
 
 
+@router.get("/swf-docs", response_class=HTMLResponse)
+async def swf_docs(request: Request) -> HTMLResponse:
+    """Hidden, unlisted reference: a markdown viewer with a grouped, searchable
+    sidebar over the decompiled Trove Flash UI (``.swf``) docs. No nav/footer
+    link and ``noindex``; the page shell loads its index + markdown from
+    ``/static/swf-docs/*`` and renders client-side via the shared md renderer."""
+    return _TEMPLATES.TemplateResponse(request, "swf-docs.html", {})
+
+
 @router.get("/commands", response_class=HTMLResponse)
 async def commands(request: Request) -> HTMLResponse:
     """In-game Trove slash-command reference. Page shell + JS only -

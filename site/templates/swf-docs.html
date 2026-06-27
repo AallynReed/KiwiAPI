@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trove UI (Flash) Reference</title>
+    <meta name="description" content="Decompiled reference for Trove's Flash UI (.swf) files — document classes, game-logic classes, and timeline symbols for every screen.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/swf-docs.css">
+</head>
+<body>
+
+<a class="skip-link" href="#docBody">Skip to content</a>
+
+<!-- ============================ NAVBAR ============================ -->
+<nav class="navbar">
+    <div class="nav-container">
+        <a class="nav-logo" href="/">
+            <img src="/static/assets/favicon.png" alt="Logo">
+            <span>Better <span class="highlight-blue">Trove</span> Tools</span>
+        </a>
+        <div class="nav-actions">
+            <a class="nav-link label-only" href="/"><i class="fa-solid fa-house"></i> Home</a>
+            <a class="nav-link nav-icon" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+            <a class="nav-link nav-icon" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+            <button class="mobile-menu-btn" id="menuBtn" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
+        </div>
+    </div>
+</nav>
+
+<div class="sidebar-backdrop" id="backdrop"></div>
+
+<div class="docs-layout">
+    <!-- ============================ SIDEBAR ============================ -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-mobile-nav" aria-label="Site navigation">
+            <a href="/"><i class="fa-solid fa-house"></i> Home</a>
+            <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> GitHub</a>
+            <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> Discord</a>
+        </div>
+
+        <div class="sidebar-head">
+            <p class="eyebrow">Reverse-engineered</p>
+            <h1>Trove UI <span class="highlight-blue">Reference</span></h1>
+            <p>Decompiled Flash (<code>.swf</code>) screens — 108 files.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="navSearch" placeholder="Search screens & classes…" autocomplete="off" spellcheck="false">
+        </div>
+
+        <nav id="sideNav">
+            <div class="nav-empty" id="navEmpty">No matching screens.</div>
+        </nav>
+    </aside>
+
+    <!-- ============================ CONTENT ============================ -->
+    <main id="docBody" class="content">
+        <div class="doc-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>
+    </main>
+</div>
+
+<button id="to-top" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+
+<script src="/static/md_render.js"></script>
+<script src="/static/swf-docs.js"></script>
+
+</body>
+</html>

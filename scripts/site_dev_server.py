@@ -227,6 +227,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "support.html", "text/html")
         if path == "/documentation":
             return self._send_file(TEMPLATES / "docs.html", "text/html")
+        if path == "/swf-docs":
+            return self._send_file(TEMPLATES / "swf-docs.html", "text/html")
         if path == "/terms":
             return self._send_file(TEMPLATES / "terms.html", "text/html")
         if path == "/privacy":

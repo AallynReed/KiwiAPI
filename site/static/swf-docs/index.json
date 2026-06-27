@@ -1,0 +1,827 @@
+{
+  "groups": [
+    {
+      "title": "In-world HUD & overlays",
+      "items": [
+        {
+          "swf": "armorhud.swf",
+          "file": "armorhud.md",
+          "size": "66 KB",
+          "mainClass": "ArmorHudUI",
+          "summary": "A compact HUD element that displays the player's current armor value as a hexagonal fill gauge with a numeric readout. Appears in adventure, PvP, build, and discovery modes; the frame graphic changes between adventure/PvP and build/discovery variants."
+        },
+        {
+          "swf": "healthmeter.swf",
+          "file": "healthmeter.md",
+          "size": "20 KB",
+          "mainClass": "HealthMeter",
+          "summary": "Displays a boss (Titan) health bar during encounters in Trove. The UI shows the Titan's name and a horizontally-scaled mask representing current health as a fraction of maximum health. It is driven entirely by C++ game callbacks registered through the Iggy/ExternalInterface bridge."
+        },
+        {
+          "swf": "playerhealth.swf",
+          "file": "playerhealth.md",
+          "size": "13 KB",
+          "mainClass": "—",
+          "summary": "A minimal HUD element that displays the player's health (and potentially energy/resource) as a percentage bar with a numeric label. It contains no game-specific top-level or document class of its own — the functional work is done entirely by the shared `_kiwi.Controls.ResourceBar` framework component included in this SWF's library."
+        },
+        {
+          "swf": "playerhud.swf",
+          "file": "playerhud.md",
+          "size": "267 KB",
+          "mainClass": "PlayerHUD",
+          "summary": "The Player HUD is the persistent in-game overlay showing the player's class insignia, power rank, XP/prestige bar, active buff icons with cooldown radials, and the group/tether icon. It is always visible during normal gameplay."
+        },
+        {
+          "swf": "hotbar.swf",
+          "file": "hotbar.md",
+          "size": "319 KB",
+          "mainClass": "Hotbar",
+          "summary": "The persistent bottom-of-screen HUD shown during gameplay in Trove. It renders the player's quick-slot items, health and energy globes, fuel/radiance gauge, and Bard-specific UI elements (song meter, melody level pips, QTE prompts). It switches between four distinct layout modes — adventure, build, pvp, and discovery — each with its own slot arrangement and globe configuration."
+        },
+        {
+          "swf": "reticle.swf",
+          "file": "reticle.md",
+          "size": "9 KB",
+          "mainClass": "—",
+          "summary": "The player's reticle (crosshair) and nearby status-bar HUD shown in Trove during gameplay. It renders health and energy bars flanking the crosshair, a circular fuel/mount bar, and a hit-reaction animation. The SWF has no explicit document class; the components are independently embedded and driven by the game engine."
+        },
+        {
+          "swf": "compass.swf",
+          "file": "compass.md",
+          "size": "253 KB",
+          "mainClass": "Compass",
+          "summary": "The in-game compass HUD bar displayed at the top of the screen while exploring. It renders icons for nearby dungeons, lairs, quests, players, and delve rooms at horizontal positions representing their real-world compass bearing, and shows a countdown widget for Mega Dungeon boss encounters."
+        },
+        {
+          "swf": "waypointdisplay.swf",
+          "file": "waypointdisplay.md",
+          "size": "25 KB",
+          "mainClass": "Root",
+          "summary": "Renders in-world waypoint markers on the Trove HUD — directional arrows and icons that track named points of interest (flags, bases, resources, low-health allies). The engine drives all updates through ExternalInterface; the SWF manages a live dictionary of `Waypoint` instances and scales them uniformly on demand."
+        },
+        {
+          "swf": "nameplate.swf",
+          "file": "nameplate.md",
+          "size": "277 KB",
+          "mainClass": "Nameplate",
+          "summary": "Floating nameplate displayed above players and NPCs in the Trove world, showing the entity's name, club affiliation, insignia (shield + wings), and optionally a tether/group icon with a leader badge."
+        },
+        {
+          "swf": "speechbubble.swf",
+          "file": "speechbubble.md",
+          "size": "8 KB",
+          "mainClass": "SpeechBubble",
+          "summary": "Displays a floating speech-bubble overlay anchored to the bottom-center of the screen, used in Trove for NPC or contextual dialogue. The bubble fades in and out on demand with a short alpha tween and redraws itself procedurally to fit the current text."
+        },
+        {
+          "swf": "damageui.swf",
+          "file": "damageui.md",
+          "size": "32 KB",
+          "mainClass": "DamageUIBase",
+          "summary": "Full-screen vignette overlay that visualizes the player's health state in Trove. Appears whenever the player is at low or critical health, animating a red damage frame around the screen edges."
+        },
+        {
+          "swf": "dpsui.swf",
+          "file": "dpsui.md",
+          "size": "86 KB",
+          "mainClass": "DPSUI",
+          "summary": "A minimal combat overlay that displays two live text fields — current DPS and cumulative damage dealt — updated by the game engine via ExternalInterface callbacks. Appears during or after combat encounters in Trove."
+        },
+        {
+          "swf": "starbar.swf",
+          "file": "starbar.md",
+          "size": "126 KB",
+          "mainClass": "StarBar",
+          "summary": "The Star Bar is a persistent HUD element that displays up to three stacked progress bars tracking the player's daily/weekly earning progress (Stars, Tome XP, and Auto-Use Tome XP) plus up to two Reliquary \"mega\" reward slots. It supports two display modes — Normal (Trove dimension) and Discovery/Geode — and notifies the engine when bars complete so rewards can be animated and sounds played."
+        },
+        {
+          "swf": "zonebanner.swf",
+          "file": "zonebanner.md",
+          "size": "74 KB",
+          "mainClass": "ZoneBanner",
+          "summary": "Displays a zone-entry banner overlay in Trove when the player enters a new area, showing the zone name (uppercased) and level range. The banner has a two-state timeline (shown/hidden) and exposes ExternalInterface callbacks so the game engine can push zone data and dismiss the overlay."
+        },
+        {
+          "swf": "rampagealert.swf",
+          "file": "rampagealert.md",
+          "size": "77 KB",
+          "mainClass": "RampageAlert",
+          "summary": "Displays a full-screen animated alert when a Rampage challenge begins in Trove. The SWF plays a timeline animation, shows localized warning and description text, and signals the game engine when the animation finishes so the overlay can be dismissed."
+        },
+        {
+          "swf": "rampagealert02.swf",
+          "file": "rampagealert02.md",
+          "size": "79 KB",
+          "mainClass": "RampageAlert",
+          "summary": "A second variant of the Rampage challenge alert animation for Trove. Functionally identical to `rampagealert.swf` — it displays the same localized warning and description text, plays a timeline animation, and calls `AnimationComplete` on the host when finished. The visual assets differ (hence the `02` suffix) but the ActionScript is byte-for-byte the same."
+        },
+        {
+          "swf": "broadcast.swf",
+          "file": "broadcast.md",
+          "size": "18 KB",
+          "mainClass": "Broadcast",
+          "summary": "A minimal HUD overlay that displays two lines of broadcast text in Trove: one system-driven message and one player-driven message. It appears whenever the game needs to push a short announcement or player notification onto the screen."
+        },
+        {
+          "swf": "notifications.swf",
+          "file": "notifications.md",
+          "size": "26 KB",
+          "mainClass": "NotificationManager",
+          "summary": "Displays transient text notifications in the Trove HUD. Notifications appear stacked vertically, fade in on arrival, and fade out after a configurable timeout — with a FIFO cap of 3 simultaneous messages."
+        },
+        {
+          "swf": "shortcuttray.swf",
+          "file": "shortcuttray.md",
+          "size": "127 KB",
+          "mainClass": "ShortcutTray",
+          "summary": "The shortcut tray is the persistent HUD toolbar that gives players quick access to core UI panels (Store, Character, Collections, Inventory, Map, Class Select, Marketplace, Leaderboard, Chat). It adapts its layout and visible buttons depending on whether the client is running on PC or console (D-Pad mode)."
+        },
+        {
+          "swf": "radial.swf",
+          "file": "radial.md",
+          "size": "68 KB",
+          "mainClass": "Radial",
+          "summary": "Three-sector radial menu used to select mount actions in Trove. Appears when the player opens the mount radial wheel, presenting three labeled sectors the game can highlight programmatically."
+        },
+        {
+          "swf": "draghost.swf",
+          "file": "draghost.md",
+          "size": "6 KB",
+          "mainClass": "DragHost",
+          "summary": "A lightweight drag-image host used in Trove's inventory or item UI. When the player begins dragging an item, the engine pushes a texture name to this SWF; it renders the texture as a `Bitmap` that follows the cursor, acting as the drag ghost/phantom image."
+        },
+        {
+          "swf": "dimmer.swf",
+          "file": "dimmer.md",
+          "size": "18 KB",
+          "mainClass": "Dimmer",
+          "summary": "A full-screen semi-transparent overlay used to darken the background behind modal dialogs and popups. Has no interactive elements; it simply stretches a dim `MovieClip` to fill the stage whenever the stage is resized."
+        },
+        {
+          "swf": "contextmenu.swf",
+          "file": "contextmenu.md",
+          "size": "19 KB",
+          "mainClass": "KiwiContextMenu",
+          "summary": "A lightweight right-click context menu popup that displays a dynamic list of labelled options. It appears wherever the game engine triggers a context menu (e.g. right-clicking world objects or players) and fires `OnOptionSelected` back to the game when the player picks an entry."
+        },
+        {
+          "swf": "tooltip.swf",
+          "file": "tooltip.md",
+          "size": "96 KB",
+          "mainClass": "Tooltip",
+          "summary": "The Trove item tooltip panel that floats near the cursor or a selected item, displaying the item name (with optional rainbow/shadow effects), a vertical stack of stat rows, free-form text rows, and an optional side comparison panel. It reports its own size back to the engine after each layout recalculation."
+        },
+        {
+          "swf": "worldtooltip.swf",
+          "file": "worldtooltip.md",
+          "size": "73 KB",
+          "mainClass": "Tooltip",
+          "summary": "Rich item/world-object tooltip panel displayed when the player hovers over or inspects an item in Trove. Supports a primary info panel with a name, stat rows, and an optional side compare panel showing stats of the currently equipped item."
+        },
+        {
+          "swf": "message.swf",
+          "file": "message.md",
+          "size": "285 KB",
+          "mainClass": "Message",
+          "summary": "A small in-game message/tutorial overlay in Trove used to display a contextual text message, an optional item or art image, an objective icon, and animated input-key highlights (keyboard or controller buttons). Appears during tutorials, quest prompts, or contextual hints."
+        },
+        {
+          "swf": "calltoaction.swf",
+          "file": "calltoaction.md",
+          "size": "37 KB",
+          "mainClass": "CallToAction",
+          "summary": "A tutorial/onboarding overlay that draws a semi-transparent mask over the screen with a cutout ellipse highlighting a specific UI area, and places animated arrow indicators pointing to it. Shown by the game engine when it wants to direct the player's attention to a particular UI element."
+        }
+      ],
+      "kind": "screens"
+    },
+    {
+      "title": "Character, gems & progression",
+      "items": [
+        {
+          "swf": "inventory.swf",
+          "file": "inventory.md",
+          "size": "588 KB",
+          "mainClass": "Inventory",
+          "summary": "The player's Inventory window, showing item slots organized across Adventure, Build, Currency, Geode, and Discovery tabs, plus Personal Chest tabs. Supports up to three bag pages with drag-and-drop, slot expansion purchase, and console/NX button-legend overlays."
+        },
+        {
+          "swf": "charsheet.swf",
+          "file": "charsheet.md",
+          "size": "910 KB",
+          "mainClass": "CharSheet",
+          "summary": "The Character Sheet window in Trove, opened from the main HUD. It shows the player's equipped gear slots, class abilities, stats, name/title, patron status, XP/mastery progress, and houses four tabs: Character, Gems, Rewards (Mastery), and PVP."
+        },
+        {
+          "swf": "charcustomize.swf",
+          "file": "charcustomize.md",
+          "size": "105 KB",
+          "mainClass": "CharCustomize",
+          "summary": "The character customization window where players choose their character's race (class skin), head type, hairstyle, hair colour, and eye colour before finalizing their appearance. Appears during character creation or when re-customizing a character. Supports PC mouse interaction and full console controller navigation with directional mapping."
+        },
+        {
+          "swf": "subclassselect.swf",
+          "file": "subclassselect.md",
+          "size": "100 KB",
+          "mainClass": "SubClassSelect",
+          "summary": "Panel for selecting a subclass (secondary class passive) in Trove. Displays a scrollable tiled grid of available subclasses, each shown as a row with class name, level, power rank, ability icon, and a button to activate, switch, or (if locked/already active) view the class."
+        },
+        {
+          "swf": "progression.swf",
+          "file": "progression.md",
+          "size": "618 KB",
+          "mainClass": "Progression",
+          "summary": "An interactive skill-tree / progression map UI that displays a zoomable, pannable node graph showing unlocked, locked, and upgradeable abilities or content nodes. It appears in Trove when the player opens the Progression or Mastery map screen, allowing them to browse and select nodes to upgrade using skill points. A companion `ProgressionProgressMeter` component (embedded separately in the same SWF) renders the skill-point bar, milestone markers, and potential reward slots above the map."
+        },
+        {
+          "swf": "progressioninfo.swf",
+          "file": "progressioninfo.md",
+          "size": "154 KB",
+          "mainClass": "ProgressionInfo",
+          "summary": "The progression/crafting info panel shown when the player selects an upgrade node, a craftable item, or a progression choice. Displays a title, description, ingredient costs, rewards, an action button, and optionally an upgrade tree list. Used in multiple contexts: class gem unlocking, dragon upgrades, mastery progression, and club/cornerstone upgrades."
+        },
+        {
+          "swf": "titlesselector.swf",
+          "file": "titlesselector.md",
+          "size": "177 KB",
+          "mainClass": "TitlesSelector",
+          "summary": "The Titles selector window where players browse, filter, favourite, and equip name titles (prefixes and suffixes) for their character. It includes a live preview of the player's formatted name with the currently equipped titles and a name colour picker."
+        },
+        {
+          "swf": "collections.swf",
+          "file": "collections.md",
+          "size": "260 KB",
+          "mainClass": "Collections",
+          "summary": "The Collections window, used to browse and equip cosmetic collections (mounts, sails, styles, etc.) organized into named tabs and collapsible categories. Each category shows a grid of `SlotBasic` items that may be equipped, locked, or interactive depending on the collection type."
+        },
+        {
+          "swf": "collectionsnew.swf",
+          "file": "collectionsnew.md",
+          "size": "542 KB",
+          "mainClass": "CollectionsNew",
+          "summary": "The main Collections window in Trove, showing all collectable cosmetic items (mounts, styles, etc.) organized into meta-categories and sub-categories. Supports search, filtering by collected/uncollected/favorites, section collapse, and console D-pad navigation."
+        },
+        {
+          "swf": "collectionconsumeresult.swf",
+          "file": "collectionconsumeresult.md",
+          "size": "121 KB",
+          "mainClass": "CollectionConsumeResult",
+          "summary": "A small confirmation dialog shown after consuming a collection item, displaying the resulting item's name, a title string, an item icon slot, and an OK button. Appears immediately after the player uses (consumes) a collection box or similar item to reveal its contents."
+        },
+        {
+          "swf": "effectviewer.swf",
+          "file": "effectviewer.md",
+          "size": "176 KB",
+          "mainClass": "EffectViewer",
+          "summary": "A scrollable panel that lists all active status effects on the player, supporting search by name and a \"removeable only\" filter. It appears when the player opens the Effects/Buffs viewer window and exposes controls to remove applicable effects."
+        },
+        {
+          "swf": "epicpose.swf",
+          "file": "epicpose.md",
+          "size": "121 KB",
+          "mainClass": "EpicPose",
+          "summary": "The Epic Pose UI panel lets players take a screenshot of their character in a posed state. It provides camera-angle selection via an arrow-select dropdown and rotate left/right buttons (PC only), with console variants that expose a hide-UI toggle and handle camera control through gamepad callbacks."
+        },
+        {
+          "swf": "gems.swf",
+          "file": "gems.md",
+          "size": "237 KB",
+          "mainClass": "Gems",
+          "summary": "The Gem Forge UI panel, accessible from the character sheet. It displays 12 gem equipment slots (organised into blue/yellow/red/opal sets), a central upgrade slot, a Fuse button, gem stat readouts, a karma meter, gem insurance (booster) items, and upgrade result animations. The panel also shows tabs for navigating to the Character, Rewards, and PVP windows."
+        },
+        {
+          "swf": "gemforge.swf",
+          "file": "gemforge.md",
+          "size": "216 KB",
+          "mainClass": "GemForge",
+          "summary": "The Gem Forge crafting window, opened at a Gem Forge station. Lets players drag gems into 12 inventory slots and one central upgrade slot, select which gem stat to augment/reroll/move, choose a booster/insurance item, review required crafting ingredients, and execute the upgrade."
+        },
+        {
+          "swf": "moduleloadout.swf",
+          "file": "moduleloadout.md",
+          "size": "389 KB",
+          "mainClass": "ModuleLoadout",
+          "summary": "The Module Loadout panel in Trove where a player equips and swaps active modules, passive modules, and reliquaries on their character, and views/swaps their active companion. It is opened from the character sheet and supports both PC and console navigation."
+        }
+      ],
+      "kind": "screens"
+    },
+    {
+      "title": "Crafting, economy & loot",
+      "items": [
+        {
+          "swf": "crafting.swf",
+          "file": "crafting.md",
+          "size": "559 KB",
+          "mainClass": "Crafting",
+          "summary": "The Crafting window is Trove's item-crafting UI, shown when the player interacts with a crafting bench. It presents a categorised recipe browser on the left, a detail/ingredient panel on the right, a quantity picker, and a live crafting-progress overlay. The window supports PC, Console, and ConsoleLoc platform variants via a 3-frame timeline."
+        },
+        {
+          "swf": "forge.swf",
+          "file": "forge.md",
+          "size": "1.1 MB",
+          "mainClass": "Forge2",
+          "summary": "The Forge crafting window, opened at Forge stations in Trove. Allows players to upgrade equipment by dragging items into a central slot, selecting an upgrade type (standard, chaos, pearl/enchanted, tome, particle), viewing required ingredients, comparing before/after stats, and confirming the upgrade. Supports four station types with different forge-mode sub-menus."
+        },
+        {
+          "swf": "companionforge.swf",
+          "file": "companionforge.md",
+          "size": "345 KB",
+          "mainClass": "CompanionForge",
+          "summary": "The Companion Forge is the UI panel for upgrading companion items in Trove. It displays the currently-forged item (name, rarity, star rating), lists required crafting ingredients, shows available skill upgrades in a scrollable list, and presents one or more upgrade buttons the player can activate to spend resources and level up the companion."
+        },
+        {
+          "swf": "geodeincubator.swf",
+          "file": "geodeincubator.md",
+          "size": "221 KB",
+          "mainClass": "GeodeIncubator",
+          "summary": "The Geode Incubator / Reliquary window lets players place eggs or reliquaries into one of three slots, apply Karma-based buff influences, and watch a hatching/opening reveal animation. It is opened from the Geode world's incubator or reliquary crafting stations."
+        },
+        {
+          "swf": "marketplace.swf",
+          "file": "marketplace.md",
+          "size": "480 KB",
+          "mainClass": "Marketplace",
+          "summary": "The Trove player-driven auction marketplace, allowing players to search and purchase listings from other players (Buy tab) and create or manage their own sell listings (Sell tab). Uses Flux as the primary trading currency. Appears when the player opens the Marketplace from the in-game UI."
+        },
+        {
+          "swf": "kiwistore.swf",
+          "file": "kiwistore.md",
+          "size": "712 KB",
+          "mainClass": "StoreBase",
+          "summary": "The Trove in-game item store (the \"Kiwi Store\"), presenting purchasable products in a tabbed, scrollable tile grid with support for Patron subscriptions, Starter Packs, class selection, and a loot-probability panel. Appears when the player opens the store from the main menu or HUD."
+        },
+        {
+          "swf": "npcstore.swf",
+          "file": "npcstore.md",
+          "size": "280 KB",
+          "mainClass": "NPCStore",
+          "summary": "The NPC vendor shop window shown when a player interacts with an in-game merchant. Displays a paginated grid of purchasable products with currency balance, deal timers, and purchase confirmation flow, supporting both mouse and controller input."
+        },
+        {
+          "swf": "trade.swf",
+          "file": "trade.md",
+          "size": "292 KB",
+          "mainClass": "Trade",
+          "summary": "The player-to-player trade (and deconstructor) window in Trove. Shows a pending-player list while waiting for a trade partner, then switches to a two-panel item exchange view where both players can offer items, lock in, and accept the trade. Also reused for the Deconstructor collect flow."
+        },
+        {
+          "swf": "lockbox.swf",
+          "file": "lockbox.md",
+          "size": "291 KB",
+          "mainClass": "LockBox",
+          "summary": "The Loot Box (lock box) opening window in Trove. Displays the current box item, unlock buttons (golden key and free/Flux), a karma progress meter with particle explosion effects, the resulting reward item, and an auto-open checkbox. Appears whenever the player interacts with an openable loot box."
+        },
+        {
+          "swf": "rewardcrate.swf",
+          "file": "rewardcrate.md",
+          "size": "353 KB",
+          "mainClass": "RewardCrate",
+          "summary": ""
+        },
+        {
+          "swf": "dailyrewards.swf",
+          "file": "dailyrewards.md",
+          "size": "201 KB",
+          "mainClass": "DailyRewards",
+          "summary": "The Daily Login Rewards window, showing up to 7 day-tiles representing the current weekly reward cycle. Each tile displays an item icon, quantity, name, Flux bonus (for Patron members), and the day number. The window appears once per login day and is populated entirely by the game engine via ExternalInterface."
+        },
+        {
+          "swf": "lootcollector.swf",
+          "file": "lootcollector.md",
+          "size": "162 KB",
+          "mainClass": "LootCollector",
+          "summary": "The Loot Collector panel appears after fighting enemies or opening containers — it lists items waiting to be deconstructed (collected) or bought back from a previous deconstruction. The player can lock individual items to protect them, then collect or buy back the rest individually or all at once. The same window switches between \"collect\" and \"buyback\" modes depending on which station is active."
+        },
+        {
+          "swf": "recipeconsumeprompt.swf",
+          "file": "recipeconsumeprompt.md",
+          "size": "59 KB",
+          "mainClass": "RecipeConsumePrompt",
+          "summary": "A modal confirmation dialog shown when the player attempts to consume (learn) a recipe item. It lists one or more recipes with their icons and names, shows optional crafting requirements, and presents \"Learn\" and \"Keep\" (cancel) buttons. On console it defers setup until the playhead reaches the correct frame."
+        },
+        {
+          "swf": "dropprompt.swf",
+          "file": "dropprompt.md",
+          "size": "94 KB",
+          "mainClass": "DropPrompt",
+          "summary": "A modal quantity-picker dialog that appears when a player chooses to drop (discard) an item from their inventory. It displays a prompt message, a numeric text input, +/− step buttons, Min/Max buttons, and Confirm/Cancel buttons. Full console support is included with D-Pad, LT/RT, and on-screen keyboard hints."
+        },
+        {
+          "swf": "cornerstone.swf",
+          "file": "cornerstone.md",
+          "size": "96 KB",
+          "mainClass": "CornerstoneWindow",
+          "summary": "The Cornerstone window lets players manage their four Cornerstone plot slots — the personal building plots that follow a character in Trove. It displays each slot's current state (locked/purchasable, available to switch to, or currently active) and supports buying new slots, switching the active slot, renaming a slot, and erasing a slot's build."
+        }
+      ],
+      "kind": "screens"
+    },
+    {
+      "title": "Social",
+      "items": [
+        {
+          "swf": "friendslist.swf",
+          "file": "friendslist.md",
+          "size": "224 KB",
+          "mainClass": "FriendsList",
+          "summary": "The social Friends List panel, showing the player's friends and ignored users in two tabs. Appears when the player opens the social/friends menu in Trove, supporting both PC and console (Xbox One, NX/Switch, PS4/Orbis) platforms."
+        },
+        {
+          "swf": "friendpicker.swf",
+          "file": "friendpicker.md",
+          "size": "92 KB",
+          "mainClass": "FriendPicker",
+          "summary": "A modal dialog that displays the player's friends list with search filtering, allowing the player to select a friend or manage social actions. Appears when the game needs the player to pick a friend (e.g. for a co-op invite or party action)."
+        },
+        {
+          "swf": "clubs.swf",
+          "file": "clubs.md",
+          "size": "726 KB",
+          "mainClass": "ClubsUI",
+          "summary": "The full Club management UI in Trove, opened from the social/club interface. It presents a tabbed window with five tabs: Club List (dashboard), Members, Fixtures, Adventures, and Permissions. Each tab is a dedicated pane class with its own server-driven data flow and console/PC control paths."
+        },
+        {
+          "swf": "clubpicker.swf",
+          "file": "clubpicker.md",
+          "size": "163 KB",
+          "mainClass": "ClubPicker",
+          "summary": "A modal dialog that appears when a player needs to select one of their clubs (guilds). Displays a scrollable list of club names with Select buttons and a Cancel option, used for club-context actions that require specifying which club to apply them to."
+        },
+        {
+          "swf": "chat.swf",
+          "file": "chat.md",
+          "size": "311 KB",
+          "mainClass": "Chat",
+          "summary": "The in-game chat window for Trove. It displays scrollable message logs in named tabs, a text input bar with channel selector, a console radial menu for quick chat options, and a social context pop-out system (recent players, nearby, clubs, friends, emotes, player-interact menus)."
+        },
+        {
+          "swf": "leaderboard.swf",
+          "file": "leaderboard.md",
+          "size": "396 KB",
+          "mainClass": "Leaderboard",
+          "summary": "The full Leaderboard window shown in Trove when a player opens a leaderboard category. It displays ranked entries (scores/times) across multiple named leaderboards grouped in collapsible categories, supports an Everyone/Friends filter, a Favorite toggle, paginated entry browsing, and a sidebar contest-reward panel with a countdown timer."
+        },
+        {
+          "swf": "communityleaderboard.swf",
+          "file": "communityleaderboard.md",
+          "size": "245 KB",
+          "mainClass": "CommunityLeaderboard",
+          "summary": "The Community Leaderboard is a voting UI panel that lets players browse and vote for player-submitted items (e.g., contest entries) that are candidates for addition to the game. It shows up to five item tiles in a carousel, tracks per-player and global vote counts, and handles a currency-based vote-purchase flow."
+        },
+        {
+          "swf": "likedworlds.swf",
+          "file": "likedworlds.md",
+          "size": "94 KB",
+          "mainClass": "LikedWorlds",
+          "summary": "The Liked Worlds panel in Trove that displays the player's saved/liked club worlds in a scrollable list, allowing them to teleport to a world or remove it from their favourites. It appears in a small window and supports both PC and console layouts."
+        }
+      ],
+      "kind": "screens"
+    },
+    {
+      "title": "World & navigation",
+      "items": [
+        {
+          "swf": "map.swf",
+          "file": "map.md",
+          "size": "231 KB",
+          "mainClass": "Map",
+          "summary": "The in-game world map overlay, displaying a texture of the current zone with a dynamic legend that shows which point-of-interest categories are present. It appears when the player opens the map (M key or console equivalent) and optionally supports a zone-select / terraform mode for club worlds."
+        },
+        {
+          "swf": "atlas.swf",
+          "file": "atlas.md",
+          "size": "1.8 MB",
+          "mainClass": "Atlas",
+          "summary": "The interactive world map (\"Atlas\") that allows players to navigate between Trove's biomes and portals. It is a zoomable, draggable map of node icons connected by path lines, and it appears when the player opens the world-selection interface."
+        },
+        {
+          "swf": "atlasinfobox.swf",
+          "file": "atlasinfobox.md",
+          "size": "159 KB",
+          "mainClass": "AtlasInfoBox",
+          "summary": "Tooltip-style info box displayed on the Atlas (world map) when a portal or location is selected. Shows the world name, a description, and a zone-level (Uber) selector that lets the player choose a difficulty tier before entering."
+        },
+        {
+          "swf": "delveselectorui.swf",
+          "file": "delveselectorui.md",
+          "size": "106 KB",
+          "mainClass": "DelveSelector",
+          "summary": "The \"Dial-a-Depth\" Delve selector popup, shown when a player chooses to enter a Delve dungeon. It lets the player pick a depth level (within server-defined min/max limits), see who else is queued, then click Ready or Rush to proceed."
+        },
+        {
+          "swf": "shadowtower.swf",
+          "file": "shadowtower.md",
+          "size": "239 KB",
+          "mainClass": "ShadowTower",
+          "summary": "The Shadow Tower window, opened when interacting with a Shadow Tower portal. Lets players select a floor (boss), choose a difficulty (Normal/Hard/Ultra), review key costs, and enter the tower, with a second tab showing a leaderboard of completion times per boss and difficulty."
+        },
+        {
+          "swf": "terraformoverview.swf",
+          "file": "terraformoverview.md",
+          "size": "66 KB",
+          "mainClass": "TerraformOverview",
+          "summary": "Shows a countdown overlay during a Terraformer activation sequence in Trove, displaying a live ticking timer and cancellation instructions. The countdown is driven by a Flash `Timer` calibrated against `getTimer()` for drift correction, and is started by a game-engine callback that passes the initial number of seconds remaining."
+        },
+        {
+          "swf": "claims.swf",
+          "file": "claims.md",
+          "size": "358 KB",
+          "mainClass": "Claims",
+          "summary": "The Claims panel in Trove, showing pending claimable rewards (items, currency, etc.) earned from leaderboards, PvP, mastery, badges, or other sources. Players can claim each reward individually or all at once."
+        }
+      ],
+      "kind": "screens"
+    },
+    {
+      "title": "Quests & activities",
+      "items": [
+        {
+          "swf": "questtracker.swf",
+          "file": "questtracker.md",
+          "size": "142 KB",
+          "mainClass": "QuestTracker",
+          "summary": "The Quest Tracker is Trove's heads-up objective overlay, shown persistently during gameplay to display active quests, the Golden Thread personal objective, weekly challenges, badge progress, Delve depth/timer information, and transient event notifications. Entries are stacked vertically in a `StackList` and updated in real-time by the game engine."
+        },
+        {
+          "swf": "tinyquestui.swf",
+          "file": "tinyquestui.md",
+          "size": "249 KB",
+          "mainClass": "TinyQuestUI",
+          "summary": "The Tiny Quest UI window displays the player's active quests organised into collapsible sections (Active, Completed, Claim, Cancel), each row showing quest name, progress bar, reward tooltip, and action buttons. It opens via the quest-tracker or quest board and supports both mouse and console D-pad navigation."
+        },
+        {
+          "swf": "tinyquestofferui.swf",
+          "file": "tinyquestofferui.md",
+          "size": "392 KB",
+          "mainClass": "TinyQuestOfferUI",
+          "summary": "The Tiny Quest offer/accept dialog shown when a player opens a Tiny Quest for review. It displays the quest title, difficulty star rating, required and reward item slots (paired pet/gear slots), XP and Flux cost, tag-filter buttons for selecting gear stats, and Accept / Insta-Complete / Consume action buttons."
+        },
+        {
+          "swf": "activitytrackerui.swf",
+          "file": "activitytrackerui.md",
+          "size": "531 KB",
+          "mainClass": "ActivityTrackerUI",
+          "summary": "The Activity Tracker is a multi-tab quest/objective panel that surfaces the player's active Trove pursuits across several categories: Events, Expertise (Golden Thread objectives), Adventures (club quests), Repeatable (star bar, tome, challenges, quests), and Badges. It appears as a persistent window the player opens to track daily/weekly progress and earned badge rewards."
+        },
+        {
+          "swf": "guideui.swf",
+          "file": "guideui.md",
+          "size": "472 KB",
+          "mainClass": "GuideUI",
+          "summary": "The Guide UI is Trove's in-game compendium and activity browser, displayed whenever the player opens the Guide (collection/achievement/store listing). It shows categorised content tiles (blueprints, activities, purchase options, badges, challenges, personal objectives) with a live search bar, a hide-completed checkbox, and a progress bar for the current guide collection."
+        },
+        {
+          "swf": "minigamescorecard.swf",
+          "file": "minigamescorecard.md",
+          "size": "409 KB",
+          "mainClass": "MiniGameScorecard",
+          "summary": "End-of-match scorecard window displayed after a Trove minigame concludes. Shows a ranked leaderboard of players with their scores, a set of up to four level-gated rewards available for that match, and a victory summary panel with earned rewards once a winner is declared."
+        }
+      ],
+      "kind": "screens"
+    },
+    {
+      "title": "PvP & Battle Royale",
+      "items": [
+        {
+          "swf": "pvphud.swf",
+          "file": "pvphud.md",
+          "size": "29 KB",
+          "mainClass": "PVPHUD",
+          "summary": "The heads-up display overlay shown during PvP matches in Trove. It displays a countdown timer, team scores, a personal score panel, kill-counter icons, a broadcast message area, and a scrolling message queue for kill-feed or event notifications."
+        },
+        {
+          "swf": "pvpscorecard.swf",
+          "file": "pvpscorecard.md",
+          "size": "106 KB",
+          "mainClass": "PVPScoreCard",
+          "summary": "End-of-match scorecard displayed after a PVP battle in Trove. Shows both teams' player scores (kills, deaths, captures, returns), a victory/defeat header, team names and aggregate scores, a PVP meta-level progress bar, and buttons to exit or play again."
+        },
+        {
+          "swf": "pvpinstructionsui.swf",
+          "file": "pvpinstructionsui.md",
+          "size": "182 KB",
+          "mainClass": "PVPInstructionsUI",
+          "summary": "A simple modal dialog shown before a PvP match begins, presenting the rules or instructions for the game mode. It has a single \"OK\" button that closes the window and notifies the game."
+        },
+        {
+          "swf": "pvpplayercounterui.swf",
+          "file": "pvpplayercounterui.md",
+          "size": "1 KB",
+          "mainClass": "—",
+          "summary": "A PvP HUD element that displays a player count or score counter during PvP matches in Trove. The SWF's scripts/ directory is entirely empty — no ActionScript classes of any kind were decompiled from it."
+        },
+        {
+          "swf": "royalescorecard.swf",
+          "file": "royalescorecard.md",
+          "size": "106 KB",
+          "mainClass": "RoyaleScoreCard",
+          "summary": "The end-of-match (and mid-match) scoreboard for Trove's Bomber Royale mode. Displays a ranked list of all players with stats (kills, damage, power-ups, time alive), reward tier icons, a winner dance panel, and action buttons (Exit, Play Again, Spectate). The card has three modes — alive, dead, and match-over — and updates in real time as players are eliminated."
+        },
+        {
+          "swf": "tutorialroyaleintro.swf",
+          "file": "tutorialroyaleintro.md",
+          "size": "286 KB",
+          "mainClass": "TutorialRoyaleIntro",
+          "summary": "A mode-selection interstitial shown to players entering a Bomber Royale tutorial for the first time, presenting two choices: play the Adventure tutorial or jump directly into Bomber Royale. Supports both mouse/click and console controller navigation."
+        }
+      ],
+      "kind": "screens"
+    },
+    {
+      "title": "Menus, system & flow",
+      "items": [
+        {
+          "swf": "mainmenu.swf",
+          "file": "mainmenu.md",
+          "size": "31 KB",
+          "mainClass": "MainMenu",
+          "summary": "The persistent in-game main menu bar displayed during gameplay. It provides a collapsible dropdown of navigation options, a hub shortcut button, and a patron upsell icon. The game drives it entirely via `ExternalInterface` callbacks."
+        },
+        {
+          "swf": "navigationmenu.swf",
+          "file": "navigationmenu.md",
+          "size": "260 KB",
+          "mainClass": "NavigationMenu",
+          "summary": "The persistent navigation tray and expandable full-screen menu that lets players open any major game window (Store, Character, Inventory, Classes, Clubs, Friends, etc.). The tray is always visible in-game; the grid menu expands on demand and supports both mouse/keyboard and console D-pad navigation."
+        },
+        {
+          "swf": "settings.swf",
+          "file": "settings.md",
+          "size": "393 KB",
+          "mainClass": "Settings",
+          "summary": "The in-game Settings window, opened from the escape menu. It presents a left-side category list and a dynamically swapped content pane for Language, Audio, Video, Controls, Hotkeys, Social, Payments, and Misc on PC; and AudioVideo, Controls, Social, Legal, and Gameplay on console. Each pane notifies the game engine when any option changes."
+        },
+        {
+          "swf": "escapewindow.swf",
+          "file": "escapewindow.md",
+          "size": "121 KB",
+          "mainClass": "EscapeWindow",
+          "summary": "The Escape Window is the in-game pause/escape menu that appears when a player presses Escape in Trove. It presents navigation buttons for Instructions, Store, Settings, Mod Loader (or Exit Tutorial), and Exit, and supports console D-pad highlight/activate callbacks."
+        },
+        {
+          "swf": "loginui.swf",
+          "file": "loginui.md",
+          "size": "83 KB",
+          "mainClass": "LoginBase",
+          "summary": "The Trove login screen UI, presenting username/password fields and a login button. Supports both mouse/keyboard input and Iggy console controller navigation. Also hosts a secondary email-token dialog for two-factor authentication."
+        },
+        {
+          "swf": "pressstart.swf",
+          "file": "pressstart.md",
+          "size": "72 KB",
+          "mainClass": "PressStart",
+          "summary": "The Trove console title / main-menu screen displayed after boot, showing the account name and a navigable list of options (Play, Credits, News, Switch Profile). It handles platform-specific visibility (NX/Durango) and drives a loading animation on the decorative cube."
+        },
+        {
+          "swf": "accountlinking.swf",
+          "file": "accountlinking.md",
+          "size": "349 KB",
+          "mainClass": "AccountLinking",
+          "summary": "The console account-linking flow shown when a player on a platform (Xbox / PS4 / NX) needs to link or create a Trion/Gamigo account before playing. Displays a split left-pane / right-pane layout: the left pane lists navigation options, the right pane swaps between several sub-screens (promo, new account, existing account, web-code link, and completion states)."
+        },
+        {
+          "swf": "eulaui.swf",
+          "file": "eulaui.md",
+          "size": "533 KB",
+          "mainClass": "EULAUI",
+          "summary": "Modal dialog shown at first launch (or on demand) requiring the player to read and accept the Trove End User Licence Agreement, and a secondary screen displaying third-party software credits/licences. Supports PC and console variants with scrollable text and Agree/Disagree buttons."
+        },
+        {
+          "swf": "welcomescreen.swf",
+          "file": "welcomescreen.md",
+          "size": "1.1 MB",
+          "mainClass": "WelcomeScreen",
+          "summary": "The Welcome Screen is the first major UI shown to the player on login, combining a rotating featured-content panel (store deals, events, new features), a daily bonus strip, a Message of the Day (MotD) band, and an event highlight panel. Clicking the daily bonus panel opens a full weekly-bonus detail popup."
+        },
+        {
+          "swf": "credits.swf",
+          "file": "credits.md",
+          "size": "2.0 MB",
+          "mainClass": "Credits",
+          "summary": "A scrolling credits roll dialog shown in Trove when the player views the game credits. It displays HTML-formatted credits text that auto-scrolls upward at a fixed speed, ending with a callback to the game engine. On console builds a close button (B button icon) is also shown."
+        },
+        {
+          "swf": "info.swf",
+          "file": "info.md",
+          "size": "30 KB",
+          "mainClass": "Info",
+          "summary": "The Trove in-game chat / info-message log that displays timed text messages (channel messages, system notifications) in a scrolling stack. Messages auto-expire after 8 seconds and fade out over 0.5 seconds before being reaped. Supports a reduced capacity mode for Nintendo Switch (NX)."
+        },
+        {
+          "swf": "debugui.swf",
+          "file": "debugui.md",
+          "size": "36 KB",
+          "mainClass": "DebugBase",
+          "summary": "Minimal developer/debug overlay UI that displays a live key-value list of engine debug entries. Entries can be added, updated, or removed at runtime via ExternalInterface calls. Not shown to regular players; used internally during development."
+        },
+        {
+          "swf": "modloader.swf",
+          "file": "modloader.md",
+          "size": "118 KB",
+          "mainClass": "ModLoader",
+          "summary": "A window UI for browsing and managing installed game mods. Shows a scrollable list of mods on the left and a detail panel with title, author, notes, warnings, and an image preview on the right, along with Enable/Disable actions. Appears when the player opens the Mod Manager from the settings or launcher."
+        },
+        {
+          "swf": "messagedialog.swf",
+          "file": "messagedialog.md",
+          "size": "92 KB",
+          "mainClass": "MessageDialog",
+          "summary": "General-purpose modal confirmation dialog used throughout Trove for purchase prompts, unlock confirmations, and other binary or multi-choice decisions. The game fills it with a message and one or more labeled response buttons at runtime."
+        },
+        {
+          "swf": "inputpromptui.swf",
+          "file": "inputpromptui.md",
+          "size": "79 KB",
+          "mainClass": "InputPromptUI",
+          "summary": "A modal text-input dialog used whenever the game needs the player to type a short string — for example, naming a character or entering text in a form field. It supports both mouse/keyboard and controller inputs, and notifies the game engine via ExternalInterface callbacks."
+        },
+        {
+          "swf": "controllernotification.swf",
+          "file": "controllernotification.md",
+          "size": "13 KB",
+          "mainClass": "ControllerNotificationManager",
+          "summary": "A small toast-style notification popup that slides in from the bottom of the screen to display short controller-related messages (e.g. item pickups, prompts). Notifications auto-dismiss after a configurable timeout and smoothly animate in and out via IggyTween."
+        },
+        {
+          "swf": "releaseui.swf",
+          "file": "releaseui.md",
+          "size": "67 KB",
+          "mainClass": "ReleaseUI",
+          "summary": "Displays a release/loading screen overlay in Trove that shows a primary message and a secondary instruction line. Supports both plain-text and HTML-rich text depending on whether the game is running on a console platform, via two ExternalInterface callbacks that push text from the game engine."
+        },
+        {
+          "swf": "tutorial.swf",
+          "file": "tutorial.md",
+          "size": "239 KB",
+          "mainClass": "Tutorial",
+          "summary": "A paginated tutorial / help slideshow panel shown to players when they first start Trove or enter a new game mode. It presents a series of slides (each a timeline frame in a `textArea` MovieClip) with prev/next navigation buttons, an optional image panel rendered via `ObjectPreview`, and a close button that appears only on the final page. Separate slide variants exist for the Welcome, Adventure, Build Mode, Tip, and Geode tutorial contexts."
+        },
+        {
+          "swf": "displayarea.swf",
+          "file": "displayarea.md",
+          "size": "148 KB",
+          "mainClass": "DisplayArea",
+          "summary": "A console TV-safe-zone calibration overlay shown to players on console platforms. It presents a resizable safe-zone rectangle with Accept/Cancel buttons so the player can confirm the display area fits their screen."
+        },
+        {
+          "swf": "background.swf",
+          "file": "background.md",
+          "size": "350 KB",
+          "mainClass": "Background",
+          "summary": "Fullscreen animated background displayed during Trove's login/launcher screen and loading states. Handles aspect-ratio-correct scaling of the background image, status/version text overlays, and — on console builds — multi-frame timeline navigation for different background states."
+        }
+      ],
+      "kind": "screens"
+    },
+    {
+      "title": "Framework reference",
+      "kind": "shared",
+      "items": [
+        {
+          "swf": "Shared Library Reference",
+          "file": "SHARED_LIBRARIES.md",
+          "size": "",
+          "mainClass": "—",
+          "summary": "The 214-class framework compiled into all 108 SWFs: the Iggy engine bridge, the _kiwi component toolkit, and Adobe fl/mx stock. Documented once here; the per-screen pages omit it."
+        }
+      ]
+    },
+    {
+      "title": "Platform-shared component libraries",
+      "items": [
+        {
+          "swf": "uips4shared.swf",
+          "file": "uips4shared.md",
+          "size": "58 KB",
+          "mainClass": "—",
+          "summary": "PlayStation 4 (Western regions) shared component library. This is **not a screen** — it is a collection of button-icon and cursor assets loaded by the PS4 build's UI screens. It provides no application logic; every class is a thin embed wrapper."
+        },
+        {
+          "swf": "uips4jshared.swf",
+          "file": "uips4jshared.md",
+          "size": "58 KB",
+          "mainClass": "—",
+          "summary": "PlayStation 4 **Japan** shared component library. This is **not a screen** — it is a collection of button-icon and cursor assets loaded by the PS4 Japan build's UI screens. Structure and class inventory are identical to [uips4shared.md](uips4shared.md); see that file for the full class inventory and overview. The sole functional difference is the swapped asset indices for the Circle and Cross face buttons, reflecting the traditional Japanese PS4 button convention (Circle = confirm, Cross = cancel)."
+        },
+        {
+          "swf": "uiswitchshared.swf",
+          "file": "uiswitchshared.md",
+          "size": "44 KB",
+          "mainClass": "—",
+          "summary": "Nintendo Switch shared component library. This is **not a screen** — it is a collection of button-icon and cursor assets loaded by the Switch build's UI screens. For structural context see [uips4shared.md](uips4shared.md); differences from that PS4 baseline are documented below."
+        },
+        {
+          "swf": "uixbshared.swf",
+          "file": "uixbshared.md",
+          "size": "54 KB",
+          "mainClass": "—",
+          "summary": "Xbox shared component library. This is **not a screen** — it is a collection of button-icon and cursor assets loaded by the Xbox build's UI screens. Structure is essentially identical to [uiswitchshared.md](uiswitchshared.md); see that file for the full class inventory. Differences from the Switch variant are noted below."
+        }
+      ],
+      "kind": "shared"
+    }
+  ]
+}
