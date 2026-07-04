@@ -1742,6 +1742,16 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
     border-bottom: 1px solid var(--bg-line);
     padding: 12px 20px 18px;
     gap: 4px;
+    /* Cap the drawer to the space below the navbar and let it scroll on its
+       own. Without this a tall menu (Pages mega-list expanded on a short
+       phone) overflows past the viewport with no way to reach the bottom
+       items - the sticky navbar can't scroll and an absolutely-positioned
+       panel doesn't extend the page's scroll height. */
+    max-height: calc(100vh - 100%);
+    max-height: calc(100dvh - 100%);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     transform: translateY(-10px);
     opacity: 0;
     pointer-events: none;

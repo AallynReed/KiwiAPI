@@ -76,6 +76,15 @@
                         <button type="button" class="dash-nav-item" data-section="discord" role="tab">
                             <i class="fa-brands fa-discord" aria-hidden="true"></i> <span data-i18n>Discord Bot</span>
                         </button>
+                        {% if webhooks_enabled %}<button type="button" class="dash-nav-item" data-section="webhooks" role="tab">
+                            <i class="fa-solid fa-bolt" aria-hidden="true"></i> <span data-i18n>Webhooks</span>
+                        </button>{% endif %}
+                        {% if dm_subscriptions_enabled %}<button type="button" class="dash-nav-item" data-section="dmsubs" role="tab">
+                            <i class="fa-solid fa-envelope" aria-hidden="true"></i> <span data-i18n>DM Alerts</span>
+                        </button>{% endif %}
+                        {% if image_studio_enabled %}<button type="button" class="dash-nav-item" data-section="images" role="tab">
+                            <i class="fa-solid fa-image" aria-hidden="true"></i> <span data-i18n>Image Studio</span>
+                        </button>{% endif %}
                     </nav>
                     <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost dash-side-logout" id="dash-logout" data-i18n>Sign out</button>
                 </aside>
@@ -118,7 +127,7 @@
                             <h2 class="dash-card-title" data-i18n>Create a mod</h2>
                             <form id="dash-mod-create" class="dash-mod-form">
                                 <input type="text" name="title" maxlength="120" required data-i18n-placeholder placeholder="Mod title">
-                                <select name="mode" aria-label="Mode">
+                                <select name="mode" id="dash-mod-mode" aria-label="Mode">
                                     <option value="files" data-i18n>Files + releases</option>
                                     <option value="releases" data-i18n>Releases only</option>
                                 </select>
@@ -127,6 +136,11 @@
                                     <option value="unlisted" data-i18n>Unlisted</option>
                                     <option value="public" data-i18n>Public</option>
                                 </select>
+                                <label class="dash-mod-check" style="flex:1 1 100%">
+                                    <input type="checkbox" name="on_behalf" id="dash-mod-onbehalf">
+                                    <span data-i18n>This mod was made by someone else</span>
+                                </label>
+                                <input type="text" name="credited_author" id="dash-mod-credited" maxlength="120" style="flex:1 1 100%" hidden data-i18n-placeholder placeholder="Creator's name">
                                 <button type="submit" class="dash-btn"><i class="fa-solid fa-plus" aria-hidden="true"></i> <span data-i18n>Create</span></button>
                             </form>
                             <p class="dash-hint" data-i18n>Your mod link uses your username (/mods/&lt;you&gt;/&lt;slug&gt;); renaming your Discord changes your mod links.</p>
@@ -234,6 +248,24 @@
                         <div id="dash-discord-body"><p class="dash-loading" data-i18n>Loading…</p></div>
                     </section>
 
+                    {% if webhooks_enabled %}<section class="dash-section" data-pane="webhooks" hidden>
+                        <h1 class="dash-section-title" data-i18n>Webhooks</h1>
+                        <p class="dash-section-sub" data-i18n>Get a message in your own Discord the moment a Trove event happens — a new hourly challenge, a fresh game update, or a new release on the Mods Hub. Paste a Discord channel's webhook URL and pick what you want to hear about.</p>
+                        <div id="dash-webhooks-body"><p class="dash-loading" data-i18n>Loading…</p></div>
+                    </section>{% endif %}
+
+                    {% if dm_subscriptions_enabled %}<section class="dash-section" data-pane="dmsubs" hidden>
+                        <h1 class="dash-section-title" data-i18n>DM Alerts</h1>
+                        <p class="dash-section-sub" data-i18n>Get a direct message from the Kiwi bot the moment something you care about happens — an hourly challenge, a merchant arriving, a new game update, or an item on your market watchlist hitting your price. You need Discord linked, and you must share a server with the bot and allow its DMs.</p>
+                        <div id="dash-dmsubs-body"><p class="dash-loading" data-i18n>Loading…</p></div>
+                    </section>{% endif %}
+
+                    {% if image_studio_enabled %}<section class="dash-section" data-pane="images" hidden>
+                        <h1 class="dash-section-title" data-i18n>Image Studio</h1>
+                        <p class="dash-section-sub" data-i18n>Design your own images — backgrounds, text, shapes and logos. Use one as a download or share link, or drop it into a webhook / bot announcement embed where text can fill in with live event data.</p>
+                        <div id="dash-images-body"><p class="dash-loading" data-i18n>Loading…</p></div>
+                    </section>{% endif %}
+
                 </div>
             </div>
         </div>
@@ -244,6 +276,8 @@
     <script src="/static/app.min.js"></script>
     <script src="/static/i18n.min.js"></script>
     <script src="/static/site_auth.min.js"></script>
+    <script src="/static/embed_editor.min.js"></script>
+    <script src="/static/image_studio.min.js"></script>
     <script src="/static/dashboard.min.js"></script>
 </body>
 </html>

@@ -171,6 +171,25 @@
     }
   });
 
+  // ---- Support pill (corner) ----
+  // Standalone copy of app.js's toggle, since this page doesn't load app.js.
+  (function () {
+    const widget = document.getElementById('support-widget');
+    const trigger = document.getElementById('support-trigger');
+    const panel = document.getElementById('support-panel');
+    if (!widget || !trigger || !panel) return;
+    panel.removeAttribute('hidden');   // CSS handles closed-state visibility
+    const setOpen = (open) => {
+      widget.classList.toggle('open', open);
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+    };
+    setOpen(false);
+    trigger.addEventListener('click', (e) => { e.stopPropagation(); setOpen(!widget.classList.contains('open')); });
+    document.addEventListener('click', (e) => { if (!widget.contains(e.target) && widget.classList.contains('open')) setOpen(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && widget.classList.contains('open')) { setOpen(false); trigger.focus(); } });
+  })();
+
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g,
       (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

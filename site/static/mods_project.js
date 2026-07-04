@@ -87,7 +87,14 @@
     try {
       const r = await siteGET('/site/mods/projects/' + PROJ_PATH);
       if (!r.ok) {
-        $root.innerHTML = `<p class="mp-error">${esc(t('This mod could not be found.'))}</p>`;
+        // A real draft the viewer can't see yet reads as "not public" (distinct
+        // error code) rather than a generic "not found".
+        let code = '';
+        try { code = (await r.json()).error.code || ''; } catch (_) { /* no body */ }
+        const msg = code === 'not_public'
+          ? t('This mod is not public yet.')
+          : t('This mod could not be found.');
+        $root.innerHTML = `<p class="mp-error">${esc(msg)}</p>`;
         return;
       }
       state.detail = await r.json();
@@ -243,6 +250,11 @@
       ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-claim"><i class="fa-solid fa-hand-sparkles"></i> ${esc(t('This is my mod'))}</button>` : '';
     const strayBadge = isStray
       ? `<span class="mp-badge mp-badge-stray"><i class="fa-solid fa-paper-plane"></i> ${esc(t('Stray'))}</span>` : '';
+    // Uploaded = an account shared a mod someone else made. Owned by the uploader
+    // (not claimable), credited to d.author. Distinct from an authored mod.
+    const isUploaded = !isStray && !!d.uploaded_on_behalf;
+    const uploadedBadge = isUploaded
+      ? `<span class="mp-badge mp-badge-uploaded"><i class="fa-solid fa-share-from-square"></i> ${esc(t('Uploaded'))}</span>` : '';
     // Star (favourite) - shown to everyone; a click while logged out routes to /login.
     const starred = !!d.starred;
     const starBtn = `<button type="button" class="mp-btn mp-btn-sm ${starred ? 'mp-starred' : ''}" id="mp-star" aria-pressed="${starred}">
@@ -251,7 +263,9 @@
     // Fork copies the source, so it's only offered when the source is visible.
     // A source-locked mod can instead be credited as inspiration.
     let forkBtn = '';
-    if (!d.is_owner && !isStray) {
+    // Uploaded-on-behalf mods can't be forked OR credited as inspiration - they're
+    // not the uploader's work, so no lineage rides on them.
+    if (!d.is_owner && !isStray && !isUploaded) {
       forkBtn = d.source_visible
         ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-fork"><i class="fa-solid fa-code-fork"></i> ${esc(t('Fork'))}</button>`
         : `<button type="button" class="mp-btn mp-btn-sm" id="mp-inspire"><i class="fa-solid fa-lightbulb"></i> ${esc(t('Use as inspiration'))}</button>`;
@@ -276,25 +290,30 @@
     if (d.discord_url) links.push(`<a class="mp-linkbtn" href="${esc(d.discord_url)}" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> Discord</a>`);
     if (d.website_url) links.push(`<a class="mp-linkbtn" href="${esc(d.website_url)}" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> ${esc(t('Website'))}</a>`);
     (d.donation_urls || []).forEach((u) => { const m = donateMeta(u); links.push(`<a class="mp-linkbtn mp-linkbtn-donate" href="${esc(u)}" target="_blank" rel="noopener nofollow"><i class="${m.cls}"></i> ${esc(m.label)}</a>`); });
-    const linksRow = links.length ? `<div class="mp-links">${links.join('')}</div>` : '';
+    // No owner links (Discord / website / donations) on an uploaded mod - the
+    // uploader isn't the author, so no soliciting or self-linking on their work.
+    const linksRow = (links.length && !isUploaded) ? `<div class="mp-links">${links.join('')}</div>` : '';
     return `<header class="mp-header">
       ${banner}
       <div class="mp-header-body">
         ${taken}
         <div class="mp-titlerow">
-          <h1 class="mp-title">${esc(d.title)}</h1> ${strayBadge} ${badge} ${modeBadge} ${privBadge}
+          <h1 class="mp-title">${esc(d.title)}</h1> ${strayBadge} ${uploadedBadge} ${badge} ${modeBadge} ${privBadge}
           ${ownerTitleActions}
         </div>
         ${attribution}
         <div class="mp-meta">
           ${isStray
             ? `<span><i class="fa-solid fa-user"></i> ${esc(d.author || d.owner_username)}</span>`
-            : `<span><i class="fa-solid fa-user"></i> <a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span>`}
+            : isUploaded
+              ? `<span><i class="fa-solid fa-share-from-square"></i> ${esc(t('Uploaded by'))} <a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span><span><i class="fa-solid fa-user"></i> ${esc(t('Created by'))} ${esc(d.author || '')}</span>`
+              : `<span><i class="fa-solid fa-user"></i> <a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span>`}
           <span><i class="fa-solid fa-download"></i> ${Number(d.download_count || 0).toLocaleString()} ${esc(t('downloads'))}</span>
-          ${isStray ? '' : `<span><i class="fa-solid fa-code-commit"></i> ${Number(d.commit_count || 0)} ${esc(t('commits'))}</span>`}
+          ${(isStray || isUploaded) ? '' : `<span><i class="fa-solid fa-code-commit"></i> ${Number(d.commit_count || 0)} ${esc(t('commits'))}</span>`}
           ${forkCount}
         </div>
         ${isStray ? `<p class="mp-stray-note"><i class="fa-solid fa-circle-info"></i> ${esc(t('This mod was uploaded via contributions and hasn\'t been claimed by its author yet. If it\'s yours, claim it to manage it here.'))}</p>` : ''}
+        ${isUploaded ? `<p class="mp-stray-note"><i class="fa-solid fa-circle-info"></i> ${esc(t('This mod was uploaded by a community member on the creator\'s behalf. It isn\'t an official release by the author.'))}</p>` : ''}
         ${d.summary ? `<p class="mp-summary">${esc(d.summary)}</p>` : ''}
         ${tags ? `<div class="mp-tags">${tags}</div>` : ''}
         ${linksRow}
@@ -463,6 +482,10 @@
       </div>
       ${r.changelog ? `<div class="mp-release-changelog">${esc(r.changelog)}</div>` : ''}
       ${r.format !== 'zip' ? `<div class="mp-release-3d" data-rel-bp="${esc(r.id)}" hidden></div>` : ''}
+      ${r.format !== 'zip' ? `<div class="mp-release-vfx" data-rel-vfx="${esc(r.id)}" hidden></div>` : ''}
+      ${r.format !== 'zip' ? `<details class="mp-release-files" data-rel-files="${esc(r.id)}">
+        <summary class="mp-3d-summary"><i class="fa-solid fa-folder-open"></i> ${esc(t('Files'))}</summary>
+        <div class="mp-release-files-list" data-files-box></div></details>` : ''}
     </div>`;
   }
 
@@ -947,7 +970,45 @@
       b.addEventListener('click', () => moveVariant(b.getAttribute('data-move-up'), -1)));
     document.querySelectorAll('[data-move-down]').forEach((b) =>
       b.addEventListener('click', () => moveVariant(b.getAttribute('data-move-down'), 1)));
+    // Per-release file list loads lazily the first time it's expanded.
+    document.querySelectorAll('[data-rel-files]').forEach((d) =>
+      d.addEventListener('toggle', () => { if (d.open && !d.dataset.loaded) { d.dataset.loaded = '1'; loadReleaseFiles(d); } }));
     loadReleaseBlueprints();
+    loadReleaseVfx();
+  }
+
+  // List the files packed in a release's .tmod (preview excluded) with a per-file
+  // download button. Lazy: only fetched when the user expands the release's Files.
+  async function loadReleaseFiles(d) {
+    const id = d.getAttribute('data-rel-files');
+    const box = d.querySelector('[data-files-box]');
+    box.textContent = t('Loading…');
+    try {
+      const r = await siteGET('/site/mods/releases/' + encodeURIComponent(id) + '/files');
+      if (!r.ok) { box.textContent = t('Could not load files.'); return; }
+      const items = ((await r.json()).items) || [];
+      if (!items.length) { box.textContent = t('No downloadable files.'); return; }
+      box.innerHTML = items.map((f) => `<div class="mp-release-file">
+        <span class="mp-release-file-name" title="${esc(f.path)}">${esc(f.path)}</span>
+        <span class="mp-release-file-size">${fmtBytes(f.size)}</span>
+        <button type="button" class="mp-btn mp-btn-sm" data-rel-file="${esc(id)}" data-path="${esc(f.path)}" aria-label="${esc(t('Download'))}"><i class="fa-solid fa-download"></i></button>
+      </div>`).join('');
+      box.querySelectorAll('[data-rel-file]').forEach((b) =>
+        b.addEventListener('click', () => downloadReleaseFile(b.getAttribute('data-rel-file'), b.getAttribute('data-path'))));
+    } catch (_) { box.textContent = t('Could not load files.'); }
+  }
+
+  async function downloadReleaseFile(id, path) {
+    try {
+      const r = await siteGET('/site/mods/releases/' + encodeURIComponent(id) + '/file?path=' + encodeURIComponent(path));
+      if (!r.ok) { toast(t('Could not download that file.'), true); return; }
+      const blob = await r.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = path.split('/').pop();
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    } catch (_) { toast(t('Could not download that file.'), true); }
   }
 
   // For each .tmod release, lazily check whether it ships .blueprint models and,
@@ -1011,6 +1072,40 @@
     });
   }
 
+  // For each .tmod release, lazily check whether it ships .pkfx particle effects
+  // and, if so, reveal a click-to-load WebGL preview per effect. Missing textures /
+  // meshes are pulled from the live game tree server-side.
+  function loadReleaseVfx() {
+    document.querySelectorAll('[data-rel-vfx]').forEach(async (box) => {
+      const relId = box.getAttribute('data-rel-vfx');
+      try {
+        const r = await siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/vfx');
+        if (!r.ok) return;
+        const items = ((await r.json()) || {}).items || [];
+        if (!items.length) return;
+        const btnFor = (it) => {
+          const name = it.path.split('/').pop();
+          return '<button type="button" class="mp-btn mp-btn-sm mp-vfx-btn" data-vfx-rel="' + esc(relId) +
+            '" data-vfx-path="' + esc(it.path) + '" data-vfx-name="' + esc(name) + '">' +
+            '<i class="fa-solid fa-fire-flame-curved"></i> ' + esc(name) + '</button>';
+        };
+        const label = items.length + ' ' + t(items.length === 1 ? 'VFX effect' : 'VFX effects');
+        box.innerHTML = '<details class="mp-3d-details"><summary class="mp-3d-summary">' +
+          '<i class="fa-solid fa-fire-flame-curved"></i> ' + esc(label) + '</summary>' +
+          '<div class="mp-vfx-list mp-3d-list">' + items.map(btnFor).join('') + '</div></details>';
+        box.hidden = false;
+        box.querySelectorAll('.mp-vfx-btn').forEach((b) => b.addEventListener('click', () => {
+          if (!window.PkfxViewer) { toast(t('VFX viewer is unavailable.'), true); return; }
+          window.PkfxViewer.open({
+            releaseId: b.getAttribute('data-vfx-rel'),
+            path: b.getAttribute('data-vfx-path'),
+            title: b.getAttribute('data-vfx-name'),
+          });
+        }));
+      } catch (e) { /* a release without parseable VFX just stays hidden */ }
+    });
+  }
+
   async function toggleHiddenBranch(branch) {
     const cur = (state.detail.hidden_release_branches || []).slice();
     const i = cur.indexOf(branch);
@@ -1071,6 +1166,8 @@
   // ─── Studio: edit details ──────────────────────────────────────────
   function openEdit() {
     const d = state.detail;
+    // An uploaded-on-behalf mod stays bare: no owner links / donations / inspiration.
+    const isUploaded = !d.is_stray && !!d.uploaded_on_behalf;
     const selectedCats = new Set((d.tags || []).filter(isCategory).map((c) => c.toLowerCase()));
     const freeTags = (d.tags || []).filter((tg) => !isCategory(tg));
     const catChips = MOD_CATEGORIES.map((c) =>
@@ -1090,10 +1187,10 @@
           <option value="unlisted" ${d.visibility === 'unlisted' ? 'selected' : ''}>${esc(t('Unlisted (link only)'))}</option>
           <option value="public" ${d.visibility === 'public' ? 'selected' : ''}>${esc(t('Public'))}</option>
         </select></label>
-      <label class="mp-form-field"><span><i class="fa-brands fa-discord"></i> ${esc(t('Discord invite'))}</span><input name="discord_url" maxlength="300" value="${esc(d.discord_url || '')}" placeholder="https://discord.gg/…"></label>
+      ${isUploaded ? '' : `<label class="mp-form-field"><span><i class="fa-brands fa-discord"></i> ${esc(t('Discord invite'))}</span><input name="discord_url" maxlength="300" value="${esc(d.discord_url || '')}" placeholder="https://discord.gg/…"></label>
       <label class="mp-form-field"><span><i class="fa-solid fa-globe"></i> ${esc(t('Website'))}</span><input name="website_url" maxlength="300" value="${esc(d.website_url || '')}" placeholder="https://…"></label>
       <label class="mp-form-field"><span><i class="fa-solid fa-heart"></i> ${esc(t('Donation links (one per line, up to 5)'))}</span><textarea name="donation_urls" rows="3" placeholder="https://ko-fi.com/you">${esc((d.donation_urls || []).join('\n'))}</textarea></label>
-      <label class="mp-form-field"><span>${esc(t('Inspired by (handle/slug)'))}</span><input name="inspired_by" value="${esc(d.inspired_by ? (d.inspired_by.handle + '/' + d.inspired_by.slug) : '')}" placeholder="someuser/another-mod"></label>
+      <label class="mp-form-field"><span>${esc(t('Inspired by (handle/slug)'))}</span><input name="inspired_by" value="${esc(d.inspired_by ? (d.inspired_by.handle + '/' + d.inspired_by.slug) : '')}" placeholder="someuser/another-mod"></label>`}
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">
         <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>
@@ -1117,11 +1214,14 @@
           ...MOD_CATEGORIES.filter((c) => chosen.has(c.toLowerCase())),
           ...f.tags.value.split(',').map((s) => s.trim()).filter(Boolean),
         ],
-        discord_url: f.discord_url.value.trim(),
-        website_url: f.website_url.value.trim(),
-        donation_urls: f.donation_urls.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 5),
-        inspired_by: f.inspired_by.value.trim(),
       };
+      // Owner links / inspiration only exist on non-uploaded mods (fields omitted above).
+      if (!isUploaded) {
+        body.discord_url = f.discord_url.value.trim();
+        body.website_url = f.website_url.value.trim();
+        body.donation_urls = f.donation_urls.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 5);
+        body.inspired_by = f.inspired_by.value.trim();
+      }
       const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH, { method: 'PATCH', json: body });
       if (r.ok) { m.close(); toast(t('Saved.')); await loadDetail(); }
       else showFormError(f, errMsg(r, 'Could not save changes.'));

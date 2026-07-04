@@ -23,6 +23,12 @@ import zlib
 import numpy as np
 from PIL import Image
 
+try:                                   # numba is optional: absence falls back to the
+    from numba import njit             # pure-numpy per-triangle raster (same pixels).
+    _HAVE_NUMBA = True
+except Exception:  # pragma: no cover
+    _HAVE_NUMBA = False
+
 MAGIC = b"kiwib"
 
 
@@ -277,6 +283,101 @@ def _composite_glass(buf, zbuf, tri, z3, rgb, alpha):
     sub[win] = dst
 
 
+# --------------------------------------------------------------------------- #
+# Numba fast path: the per-triangle Python loop above is ~95% of render time
+# (16k+ triangles, each paying numpy dispatch + meshgrid overhead). These kernels
+# compile the SAME barycentric raster + z-test + glass composite into one machine-
+# code pass over all triangles, ~20-40x faster. The math is byte-for-byte the numpy
+# version's, so output is pixel-identical (asserted by the parity test).
+# --------------------------------------------------------------------------- #
+if _HAVE_NUMBA:
+    @njit(cache=True)
+    def _raster_opaque_nb(buf, zbuf, xy, z, rgb):  # noqa: ANN001
+        H, W = zbuf.shape
+        for i in range(xy.shape[0]):
+            x0 = xy[i, 0, 0]; y0 = xy[i, 0, 1]
+            x1 = xy[i, 1, 0]; y1 = xy[i, 1, 1]
+            x2 = xy[i, 2, 0]; y2 = xy[i, 2, 1]
+            z0 = z[i, 0]; z1 = z[i, 1]; z2 = z[i, 2]
+            r = rgb[i, 0]; g = rgb[i, 1]; b = rgb[i, 2]
+            minx = int(np.floor(min(x0, min(x1, x2))));  maxx = int(np.ceil(max(x0, max(x1, x2))))
+            miny = int(np.floor(min(y0, min(y1, y2))));  maxy = int(np.ceil(max(y0, max(y1, y2))))
+            if minx < 0: minx = 0
+            if miny < 0: miny = 0
+            if maxx > W - 1: maxx = W - 1
+            if maxy > H - 1: maxy = H - 1
+            if minx > maxx or miny > maxy:
+                continue
+            d = (y1 - y2) * (x0 - x2) + (x1 - x2) * (y2 - y0)
+            if abs(d) < 1e-9:
+                continue
+            for py in range(miny, maxy + 1):
+                gy = py + 0.5
+                for px in range(minx, maxx + 1):
+                    gx = px + 0.5
+                    a = ((y1 - y2) * (gx - x2) + (x2 - x1) * (gy - y2)) / d
+                    bb = ((y2 - y0) * (gx - x2) + (x0 - x2) * (gy - y2)) / d
+                    c = 1.0 - a - bb
+                    if a >= 0.0 and bb >= 0.0 and c >= 0.0:
+                        zz = a * z0 + bb * z1 + c * z2
+                        if zz < zbuf[py, px]:
+                            zbuf[py, px] = zz
+                            buf[py, px, 0] = r; buf[py, px, 1] = g
+                            buf[py, px, 2] = b; buf[py, px, 3] = 255.0
+
+    @njit(cache=True)
+    def _composite_glass_nb(buf, zbuf, xy, z, rgb, alpha):  # noqa: ANN001
+        H, W = zbuf.shape
+        for i in range(xy.shape[0]):
+            x0 = xy[i, 0, 0]; y0 = xy[i, 0, 1]
+            x1 = xy[i, 1, 0]; y1 = xy[i, 1, 1]
+            x2 = xy[i, 2, 0]; y2 = xy[i, 2, 1]
+            z0 = z[i, 0]; z1 = z[i, 1]; z2 = z[i, 2]
+            r = rgb[i, 0]; g = rgb[i, 1]; b = rgb[i, 2]
+            al = alpha[i]; ga = al / 255.0
+            minx = int(np.floor(min(x0, min(x1, x2))));  maxx = int(np.ceil(max(x0, max(x1, x2))))
+            miny = int(np.floor(min(y0, min(y1, y2))));  maxy = int(np.ceil(max(y0, max(y1, y2))))
+            if minx < 0: minx = 0
+            if miny < 0: miny = 0
+            if maxx > W - 1: maxx = W - 1
+            if maxy > H - 1: maxy = H - 1
+            if minx > maxx or miny > maxy:
+                continue
+            d = (y1 - y2) * (x0 - x2) + (x1 - x2) * (y2 - y0)
+            if abs(d) < 1e-9:
+                continue
+            for py in range(miny, maxy + 1):
+                gy = py + 0.5
+                for px in range(minx, maxx + 1):
+                    gx = px + 0.5
+                    a = ((y1 - y2) * (gx - x2) + (x2 - x1) * (gy - y2)) / d
+                    bb = ((y2 - y0) * (gx - x2) + (x0 - x2) * (gy - y2)) / d
+                    c = 1.0 - a - bb
+                    if a >= 0.0 and bb >= 0.0 and c >= 0.0:
+                        zz = a * z0 + bb * z1 + c * z2
+                        if zz < zbuf[py, px]:
+                            buf[py, px, 0] = ga * r + (1.0 - ga) * buf[py, px, 0]
+                            buf[py, px, 1] = ga * g + (1.0 - ga) * buf[py, px, 1]
+                            buf[py, px, 2] = ga * b + (1.0 - ga) * buf[py, px, 2]
+                            buf[py, px, 3] = al + (1.0 - ga) * buf[py, px, 3]
+
+
+def _raster_batched(buf, zbuf, opaque, glassf):
+    """Pack the triangle lists into contiguous arrays and rasterize each set in one
+    compiled pass. ``glassf`` must already be sorted back-to-front (composite order)."""
+    if opaque:
+        oxy = np.array([[t[0], t[1], t[2]] for (t, _z, _c) in opaque], np.float64)
+        oz = np.array([list(z3) for (_t, z3, _c) in opaque], np.float64)
+        orgb = np.array([c for (_t, _z, c) in opaque], np.float64)
+        _raster_opaque_nb(buf, zbuf, oxy, oz, orgb)
+    if glassf:
+        gxy = np.array([[t[0], t[1], t[2]] for (_d, t, _z, _c, _a) in glassf], np.float64)
+        gz = np.array([list(z3) for (_d, _t, z3, _c, _a) in glassf], np.float64)
+        grgb = np.array([c for (_d, _t, _z, c, _a) in glassf], np.float64)
+        ga = np.array([a for (_d, _t, _z, _c, a) in glassf], np.float64)
+        _composite_glass_nb(buf, zbuf, gxy, gz, grgb, ga)
+
+
 def _fit_scale(ext) -> float:
     """Catalog fit law: model grid -> normalized scale (cubes exact, ~2.88% rms)."""
     d = sorted(ext, reverse=True)        # [max, mid, min]
@@ -336,28 +437,37 @@ def render_voxels(voxels: dict, dim: int = 256, params: dict | None = None) -> n
             return np.array([r, g, b], float)
         return np.minimum(255.0, np.array([r, g, b], float) * ff[key])
 
+    # One batched projection of every face's 4 corners (was a _project call per face).
+    faces = _faces(voxels)
     opaque, glassf = [], []
-    for key, v, corners in _faces(voxels):
-        r, g, b, kind, level = v
-        wc = (corners - center) * s
-        scr, z = _project(wc, eye, R, fy, H, cx, cy)
-        col = face_color(key, r, g, b, kind)
-        tris = [((scr[0], scr[1], scr[2]), (z[0], z[1], z[2])),
-                ((scr[0], scr[2], scr[3]), (z[0], z[2], z[3]))]
-        if kind in ("G", "GE"):
-            a = (level / 255.0) ** 2 * 255.0
-            depth = float(np.mean(z))
-            for tri, z3 in tris:
-                glassf.append((depth, tri, z3, col, a))
-        else:
-            for tri, z3 in tris:
-                opaque.append((tri, z3, col))
+    if faces:
+        allc = np.array([c for (_k, _v, c) in faces], np.float64)        # (Nf, 4, 3)
+        nf = allc.shape[0]
+        scr_all, z_all = _project((allc.reshape(-1, 3) - center) * s, eye, R, fy, H, cx, cy)
+        scr_all = scr_all.reshape(nf, 4, 2); z_all = z_all.reshape(nf, 4)
+        for i, (key, v, _corners) in enumerate(faces):
+            r, g, b, kind, level = v
+            scr = scr_all[i]; z = z_all[i]
+            col = face_color(key, r, g, b, kind)
+            tris = [((scr[0], scr[1], scr[2]), (z[0], z[1], z[2])),
+                    ((scr[0], scr[2], scr[3]), (z[0], z[2], z[3]))]
+            if kind in ("G", "GE"):
+                a = (level / 255.0) ** 2 * 255.0
+                depth = float(np.mean(z))
+                for tri, z3 in tris:
+                    glassf.append((depth, tri, z3, col, a))
+            else:
+                for tri, z3 in tris:
+                    opaque.append((tri, z3, col))
 
-    for tri, z3, col in opaque:
-        _raster_opaque(buf, zbuf, tri, z3, col)
-    glassf.sort(key=lambda e: e[0], reverse=True)
-    for _, tri, z3, col, a in glassf:
-        _composite_glass(buf, zbuf, tri, z3, col, a)
+    glassf.sort(key=lambda e: e[0], reverse=True)       # back-to-front composite order
+    if _HAVE_NUMBA:
+        _raster_batched(buf, zbuf, opaque, glassf)
+    else:
+        for tri, z3, col in opaque:
+            _raster_opaque(buf, zbuf, tri, z3, col)
+        for _, tri, z3, col, a in glassf:
+            _composite_glass(buf, zbuf, tri, z3, col, a)
 
     sub = buf.reshape(dim, SS, dim, SS, 4)
     a = sub[..., 3:4]

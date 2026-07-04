@@ -242,6 +242,92 @@ REGISTRY: dict[str, TunableSetting] = {
             "(also used by the landing page) is NOT gated by this."
         ),
     ),
+    "feature_webhooks_enabled": _t(
+        key="feature_webhooks_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for outbound (Discord) webhooks. OFF hides the Webhooks "
+            "section in the User Dashboard, 404s its CRUD endpoints (/v1/webhooks/*), "
+            "and stops enqueuing event deliveries (challenge / mod_release / "
+            "game_update). Stored webhooks are untouched and resume when toggled ON."
+        ),
+    ),
+    "feature_dm_subscriptions_enabled": _t(
+        key="feature_dm_subscriptions_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for Discord DM subscriptions. OFF hides the DM Alerts "
+            "section in the User Dashboard, 404s its CRUD endpoints "
+            "(/v1/dm-subscriptions/*), and stops delivering DM alerts (challenge / "
+            "corruxion / fluxion / game_update / market watchlist). Stored "
+            "subscriptions are untouched and resume when toggled ON."
+        ),
+    ),
+    "feature_image_studio_enabled": _t(
+        key="feature_image_studio_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Image Studio (user-designed images for embeds + "
+            "standalone). OFF hides the Dashboard section and 404s its endpoints "
+            "(/v1/images/*) and the public render URL (/site/images/*.png). Stored "
+            "designs are untouched and resume when toggled ON."
+        ),
+    ),
+    "feature_calendar_enabled": _t(
+        key="feature_calendar_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Calendar page. OFF hides the /calendar page + "
+            "navbar link and 404s its same-origin /site/calendar/* proxy. It's a "
+            "client-rendered live-rotations + event board reusing the public "
+            "rotations compute, so the shared /site/rotations proxy (also used by "
+            "the homepage) is NOT gated by this."
+        ),
+    ),
+    "feature_streams_enabled": _t(
+        key="feature_streams_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Streams page. OFF hides the /streams page + navbar "
+            "link. It's a client-rendered aggregator of the shared community feeds "
+            "(/site/feeds/videos + /site/feeds/news, also used by the dashboard), so "
+            "those proxies are NOT gated by this - only the dedicated page is hidden."
+        ),
+    ),
+    "feature_btt_releases_enabled": _t(
+        key="feature_btt_releases_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the App Releases page. OFF hides the /releases page + "
+            "navbar link and 404s its same-origin /site/btt/* proxies. The desktop "
+            "app's own update checks hit the public /v1/btt/* API (driven by scopes, "
+            "not this flag), so update prompts keep working while the page is hidden."
+        ),
+    ),
+    "feature_classes_enabled": _t(
+        key="feature_classes_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Classes reference page. OFF hides the /classes "
+            "page + navbar link and 404s its same-origin /site/stats/classes proxy. "
+            "The public /v1/stats/classes API (driven by scopes) is NOT gated by this "
+            "- only the dedicated reference page is hidden. It's static game data."
+        ),
+    ),
 
     # ── Cheater / alt-cluster calculation (master compute switches) ───
     # Distinct from the cheater_detection TUNING knobs below: these turn the

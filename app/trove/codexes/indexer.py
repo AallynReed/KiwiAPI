@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 
 from app.core.config import settings
 from app.core.utils import utcnow
-from app.trove.codexes import binfab, geode, localize, mastery, pg_store
+from app.trove.codexes import binfab, catalogue, geode, localize, mastery, pg_store, providers, recipe
 from app.trove.codexes.extract import extract_entry, refine_mount
 from app.trove.codexes.models import to_row
 from app.trove.codexes.types import LOCALE_ROOT, PREFABS_ROOT, classify
@@ -38,7 +38,7 @@ logger = logging.getLogger("kiwi.trove.codexes")
 # resolved strings, …). On the next sync the indexer force-rebuilds any branch whose
 # stored version is behind, so a parser change reaches the data WITHOUT a game update
 # or a manual rebuild - the steady-state delta only re-touches changed game files.
-CODEX_PARSER_VERSION = 7  # v7: rig map moved to its own rig_binding table (reindex_rigs); codex entries drop data['rig']
+CODEX_PARSER_VERSION = 11  # v11: recipe providers FIXED - benches list bare `recipe_*` tokens (not recipes/ paths); match against known recipe ids. 619 recipes -> 66 benches (was 0)
 
 # Bumped when the rig extractor or its coverage changes - forces a rig-only rebuild on
 # the next sync WITHOUT a (heavier) full codex re-parse.
@@ -55,6 +55,8 @@ _MULTIPLIERS = PREFABS_ROOT + "meta/multipliers.binfab"
 # Geode-mode mastery multipliers + the geode companion membership table.
 _GEODE_MULTIPLIERS = PREFABS_ROOT + "meta/geode_multipliers.binfab"
 _GEODE_TABLE = PREFABS_ROOT + "collections/collection_geodecompanion.binfab"
+# The recipe catalogue membership table (category/group + which recipes are current).
+_RECIPE_TABLE = PREFABS_ROOT + "collections/collection_recipe.binfab"
 
 
 @dataclass
@@ -67,6 +69,11 @@ class _Maps:
     geode_multipliers: dict[str, dict] = field(default_factory=dict)
     geode_members: dict[str, str] = field(default_factory=dict)
     upgrade_trees: dict[str, bytes] = field(default_factory=dict)
+    # Recipe catalogue membership (recipe_id -> {category_key, group, order, …}) and
+    # the inverted provider map (recipe_id -> [bench/profession rows]). Both are only
+    # loaded when a recipe is actually being (re)parsed.
+    recipe_catalogue: dict[str, dict] = field(default_factory=dict)
+    recipe_providers: dict[str, list[dict]] = field(default_factory=dict)
     # Cross-prefab resolver (recipes): full prefab path -> source sha, + the store
     # to read them, with a memoized name/desc cache. Sync reads run inside to_thread.
     store: ContentStore | None = None
@@ -145,6 +152,36 @@ async def _load_upgrade_trees(branch: str, store: ContentStore) -> dict[str, byt
     return trees
 
 
+async def _load_recipe_providers(branch: str, store: ContentStore,
+                                 known_ids: set[str]) -> dict[str, list[dict]]:
+    """`recipe_id -> [provider rows]` by reading the crafting-station + profession
+    prefabs (`*_interactive`/`*_interactable` + `professions/`) and inverting the bare
+    `recipe_*` tokens they list, matched against `known_ids` (the real recipe stems) so
+    glued framing bytes are trimmed and non-recipes dropped. The path regex keeps this a
+    bounded scan; a provider it misses just yields no benches for a recipe (never a wrong
+    one).
+
+    Note: a provider-prefab change alone won't refresh recipe rows on a delta (the map is
+    rebuilt with the recipe parse); a parser bump / full rebuild reconciles it."""
+    if not known_ids:
+        return {}
+    coll = UpdateState.get_pymongo_collection()
+    rows = await coll.find(
+        {"branch": branch, "path": {"$regex": providers.PROVIDER_PATH_RE.pattern,
+                                    "$options": "i"}},
+        {"path": 1, "content_sha256": 1, "_id": 0},
+    ).to_list(length=None)
+    prefabs: list[tuple[str, bytes]] = []
+    for row in rows:
+        path = row["path"]
+        if not (path.startswith(PREFABS_ROOT) and path.endswith(".binfab")):
+            continue
+        content = await asyncio.to_thread(store.get, row["content_sha256"])
+        if content:
+            prefabs.append((path, content))
+    return providers.build_provider_map(prefabs, known_ids)
+
+
 async def _load_prefab_shas(branch: str) -> dict[str, str]:
     """Full `prefab path -> source sha` map for the branch (the recipe resolver's
     index into the archive). Projected (path+sha only), so it's a cheap scan."""
@@ -195,6 +232,17 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
     geode_multipliers = await _load_file(branch, store, _GEODE_MULTIPLIERS)
     geode_table = await _load_file(branch, store, _GEODE_TABLE)
     geode_members = geode.geode_companion_members(geode_table) if geode_table else {}
+    # The recipe catalogue + provider maps are only needed to parse recipes; skip both
+    # for a delta that touched no recipe (same gate as the cross-prefab name resolver).
+    recipe_table = await _load_file(branch, store, _RECIPE_TABLE) if with_resolver else None
+    prefab_shas = await _load_prefab_shas(branch) if with_resolver else {}
+    # Authoritative recipe-id set (the recipes/ stems) - lets the provider scan trim the
+    # glued framing bytes off the bare `recipe_*` tokens the bench prefabs list.
+    recipes_root = PREFABS_ROOT + "recipes/"
+    known_recipe_ids = {
+        p[len(recipes_root):].removesuffix(".binfab").lower()
+        for p in prefab_shas if p.startswith(recipes_root) and p.endswith(".binfab")
+    }
     maps = _Maps(
         loc=await _load_locale_map(branch, store),
         mount_categories=binfab.collection_category_map(mount_table) if mount_table else {},
@@ -202,15 +250,18 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
         geode_multipliers=mastery.parse_geode_multipliers(geode_multipliers) if geode_multipliers else {},
         geode_members=geode_members,
         upgrade_trees=await _load_upgrade_trees(branch, store) if geode_members else {},
+        recipe_catalogue=catalogue.parse_recipe_catalogue(recipe_table, known_recipe_ids) if recipe_table else {},
+        recipe_providers=await _load_recipe_providers(branch, store, known_recipe_ids),
         store=store,
-        prefab_shas=await _load_prefab_shas(branch) if with_resolver else {},
+        prefab_shas=prefab_shas,
         valid_blueprints=await _load_valid_blueprints(branch),
     )
     logger.info("codexes[%s]: %d mount categories, %d mastery rows, %d geode rows, "
-                "%d geode members, %d upgrade trees, %d prefab refs, %d blueprints", branch,
+                "%d geode members, %d upgrade trees, %d prefab refs, %d blueprints, "
+                "%d recipe catalogue, %d recipe providers", branch,
                 len(maps.mount_categories), len(maps.multipliers), len(maps.geode_multipliers),
                 len(maps.geode_members), len(maps.upgrade_trees), len(maps.prefab_shas),
-                len(maps.valid_blueprints))
+                len(maps.valid_blueprints), len(maps.recipe_catalogue), len(maps.recipe_providers))
     return maps
 
 
@@ -242,6 +293,23 @@ def _attach_geode_companion(entry: dict, rel: str, content: bytes, maps: _Maps) 
     }
 
 
+def _attach_recipe_catalogue_and_providers(rdata: dict, rel: str, maps: _Maps) -> None:
+    """Attach catalogue membership + provider/bench rows to a recipe's `data.recipe`.
+
+    Both are additive and never touch the output-derived `category`: `in_catalogue`
+    distinguishes a current catalogue member from a source-only recipe (handoff:
+    "Missing from catalogue is not delete evidence."), and `providers` lists the
+    benches/professions that craft it."""
+    stem = rel.replace("\\", "/").rsplit("/", 1)[-1].lower()
+    cat = maps.recipe_catalogue.get(stem)
+    rdata["in_catalogue"] = bool(cat)
+    if cat:
+        rdata["catalogue_order"] = cat["order"]
+    provs = maps.recipe_providers.get(stem)
+    if provs:
+        rdata["providers"] = provs
+
+
 def _parse_entry(branch: str, path: str, sha: str, ctype: str, maps: _Maps, now) -> tuple | None:
     """Read + parse one prefab into a `codex_entry` row tuple (None if the blob is
     missing). Runs inside ``to_thread`` - all the blocking reads (the prefab itself
@@ -253,8 +321,23 @@ def _parse_entry(branch: str, path: str, sha: str, ctype: str, maps: _Maps, now)
     rel = path[len(PREFABS_ROOT):].removesuffix(".binfab")
     if ctype == "mount":  # split dragons out by their collection category
         refine_mount(entry, rel, maps.mount_categories)
-    entry["mastery"] = mastery.mastery_for(rel, maps.multipliers)
-    entry["mastery_geode"] = mastery.geode_mastery_for(rel, maps.geode_multipliers)
+    if ctype == "recipe":
+        # Recipe mastery is row-local, not a per-type base: the trusted structural
+        # prefab byte (multipliers row overrides). No-byte/conflicting -> None.
+        info = recipe.resolve_recipe_mastery(rel, content, maps.multipliers)
+        entry["mastery"] = info["value"]
+        rdata = entry.setdefault("data", {}).setdefault("recipe", {})
+        rdata["mastery"] = info["value"]
+        rdata["mastery_source"] = info["source"]
+        if info["prefab_byte"] is not None:
+            rdata["mastery_prefab_byte"] = info["prefab_byte"]
+        _attach_recipe_catalogue_and_providers(rdata, rel, maps)
+        entry["mastery_geode"] = mastery.geode_mastery_for(rel, maps.geode_multipliers)
+    else:
+        # Styles (equipment/) resolve through the standard path: the EquipmentAppearance
+        # base (1) unless a multipliers row scales it.
+        entry["mastery"] = mastery.mastery_for(rel, maps.multipliers)
+        entry["mastery_geode"] = mastery.geode_mastery_for(rel, maps.geode_multipliers)
     if rel.lower().startswith("item/companion/"):
         _attach_geode_companion(entry, rel, content, maps)
     return to_row(entry, branch, sha, now)

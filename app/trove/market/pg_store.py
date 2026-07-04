@@ -113,6 +113,30 @@ async def item_summary(name: str, last_seen_floor: int, created_at_floor: int) -
     }
 
 
+async def medians_for_names(
+    names: list[str], last_seen_floor: int, created_at_floor: int,
+) -> dict[str, dict]:
+    """Batch median price-each (exact, ``percentile_cont``) for many item names in
+    ONE query - the price join behind the crafting cost calculator. Only names
+    with at least one active listing appear in the result; callers treat a missing
+    key as "no market data" rather than a zero price."""
+    if not names:
+        return {}
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT name, count(*) AS count, "
+            "percentile_cont(0.5) WITHIN GROUP (ORDER BY price_each) AS median_each "
+            "FROM market_listing "
+            "WHERE name = ANY($1) AND last_seen >= $2 AND created_at >= $3 "
+            "GROUP BY name",
+            names, last_seen_floor, created_at_floor,
+        )
+    return {
+        r["name"]: {"median_each": float(r["median_each"]), "count": int(r["count"])}
+        for r in rows if r["median_each"] is not None
+    }
+
+
 async def price_history_rows(
     name: str, *, created_at_floor: int, last_seen_floor: int | None, limit: int,
 ) -> list[dict]:
@@ -131,6 +155,103 @@ async def price_history_rows(
             *args,
         )
     return [dict(r) for r in rows]
+
+
+# --- analytics aggregations (the /market Analytics tab) ---------------------
+# All read over the immutable `market_listing` history; no new tables. Medians
+# are exact (`percentile_cont`); "active" = re-seen within 3h AND created within
+# the 7-day in-game lifetime (same cutoffs as item_summary).
+
+async def price_volume_timeline(
+    name: str, *, created_at_floor: int, bucket_seconds: int,
+) -> list[dict]:
+    """Per-bucket price band + supply for one item over a window: median / p25 / p75
+    price-each, new-listing count, and total stack. Buckets are floored
+    ``created_at`` (so ``bucket_seconds=86400`` = daily), oldest-first."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT (created_at / $3) * $3 AS bucket, count(*) AS listings, "
+            "sum(stack) AS stack, "
+            "percentile_cont(0.5) WITHIN GROUP (ORDER BY price_each) AS p50, "
+            "percentile_cont(0.25) WITHIN GROUP (ORDER BY price_each) AS p25, "
+            "percentile_cont(0.75) WITHIN GROUP (ORDER BY price_each) AS p75 "
+            "FROM market_listing WHERE name = $1 AND created_at >= $2 "
+            "GROUP BY bucket ORDER BY bucket",
+            name, created_at_floor, bucket_seconds,
+        )
+    return [
+        {"bucket": int(r["bucket"]), "listings": int(r["listings"]),
+         "stack": int(r["stack"] or 0), "p50": float(r["p50"]),
+         "p25": float(r["p25"]), "p75": float(r["p75"])}
+        for r in rows
+    ]
+
+
+async def underpriced_deals(
+    *, last_seen_floor: int, created_at_floor: int,
+    min_discount: float, min_samples: int, limit: int,
+) -> list[dict]:
+    """Active listings priced at least ``min_discount`` (0-1 fraction) below their
+    item's median-each, biggest discount first. ``min_samples`` guards against a
+    "median" computed from one or two listings."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "WITH med AS ("
+            "  SELECT name, count(*) AS n, "
+            "  percentile_cont(0.5) WITHIN GROUP (ORDER BY price_each) AS median_each "
+            "  FROM market_listing WHERE last_seen >= $1 AND created_at >= $2 "
+            "  GROUP BY name HAVING count(*) >= $3) "
+            "SELECT l.id, l.name, l.stack, l.price, l.price_each, l.created_at, "
+            "  l.last_seen, m.median_each, m.n AS sample_size, "
+            "  (1 - l.price_each / m.median_each) AS discount "
+            "FROM market_listing l JOIN med m USING (name) "
+            "WHERE l.last_seen >= $1 AND l.created_at >= $2 "
+            "  AND m.median_each > 0 "
+            "  AND l.price_each <= m.median_each * (1 - $4) "
+            "ORDER BY discount DESC LIMIT $5",
+            last_seen_floor, created_at_floor, min_samples, min_discount, limit,
+        )
+    return [
+        {"id": str(r["id"]), "name": r["name"], "stack": int(r["stack"]),
+         "price": int(r["price"]), "price_each": float(r["price_each"]),
+         "median_each": float(r["median_each"]), "sample_size": int(r["sample_size"]),
+         "discount": round(float(r["discount"]), 4),
+         "created_at": int(r["created_at"]), "last_seen": int(r["last_seen"])}
+        for r in rows
+    ]
+
+
+async def market_movers(
+    *, recent_start: int, prior_start: int, now: int,
+    min_samples: int, limit: int,
+) -> list[dict]:
+    """Per-item median-each in the recent window vs the prior window, biggest
+    absolute % change first. The caller splits the result into risers / fallers.
+    Both windows require ``min_samples`` listings so a thin item can't fake a swing."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "WITH recent AS ("
+            "  SELECT name, count(*) AS n, "
+            "  percentile_cont(0.5) WITHIN GROUP (ORDER BY price_each) AS med "
+            "  FROM market_listing WHERE created_at >= $1 AND created_at < $3 "
+            "  GROUP BY name HAVING count(*) >= $4), "
+            "prior AS ("
+            "  SELECT name, count(*) AS n, "
+            "  percentile_cont(0.5) WITHIN GROUP (ORDER BY price_each) AS med "
+            "  FROM market_listing WHERE created_at >= $2 AND created_at < $1 "
+            "  GROUP BY name HAVING count(*) >= $4) "
+            "SELECT r.name, r.med AS recent_med, p.med AS prior_med, r.n AS recent_n, "
+            "  (r.med - p.med) / p.med AS change "
+            "FROM recent r JOIN prior p USING (name) WHERE p.med > 0 "
+            "ORDER BY abs((r.med - p.med) / p.med) DESC LIMIT $5",
+            recent_start, prior_start, now, min_samples, limit,
+        )
+    return [
+        {"name": r["name"], "recent_med": float(r["recent_med"]),
+         "prior_med": float(r["prior_med"]), "recent_n": int(r["recent_n"]),
+         "change": round(float(r["change"]), 4)}
+        for r in rows
+    ]
 
 
 async def reset() -> int:

@@ -44,6 +44,9 @@ _BASE_RULES: tuple[tuple[str, int], ...] = (
     # (helmet/hat appearances carry a higher base where evidence is present, but the
     # value isn't pinned down here). When such a row sits in multiplier group 0, the
     # group forces the FINAL value to 0; that's an override, not the family base.
+    # `equipment/` (path form) is the style codex root; `equipment_` is the multiplier
+    # identifier form - both resolve to the EquipmentAppearance base.
+    ("equipment/", 1),
     ("equipment_", 1),
     (".blueprint", 1),
 )

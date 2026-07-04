@@ -272,6 +272,50 @@ async def guild_snapshot(guild_id: int) -> dict | None:
     return {"guild": guild, "me": me, "channels": channels, "roles": roles or []}
 
 
+async def send_dm(
+    discord_id: int, body: dict,
+) -> tuple[bool, int | None, str | None]:
+    """Open (or reuse) a DM channel with a user and post ``body`` (a Discord message
+    payload, e.g. ``{"embeds": [...]}``). Returns ``(ok, http_status, error)``.
+
+    Both steps use the bot token over REST - no gateway - so the API process can
+    DM a user directly. Delivery only works if the user shares a server with the
+    bot AND allows DMs from server members; Discord answers 403 otherwise, which
+    the caller treats as a hard failure (like a deleted webhook)."""
+    if not settings.discord_bot_token:
+        return False, None, "DISCORD_BOT_TOKEN is not configured."
+    headers = {**_headers(), "Content-Type": "application/json"}
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            ch = await client.post(f"{_API}/users/@me/channels", headers=headers,
+                                   json={"recipient_id": str(discord_id)})
+            if ch.status_code >= 300:
+                return False, ch.status_code, (ch.text or "")[:200] or "could not open DM"
+            channel_id = ch.json().get("id")
+            if not channel_id:
+                return False, ch.status_code, "no DM channel id returned"
+            for attempt in range(3):
+                msg = await client.post(f"{_API}/channels/{channel_id}/messages",
+                                        headers=headers, json=body)
+                if 200 <= msg.status_code < 300:
+                    return True, msg.status_code, None
+                if msg.status_code == 429:                  # rate limited - honour Retry-After
+                    try:
+                        await _sleep(min(float(msg.headers.get("Retry-After", "1")), 5.0))
+                    except (TypeError, ValueError):
+                        await _sleep(1.0)
+                    continue
+                return False, msg.status_code, (msg.text or "")[:200] or "rejected by Discord"
+            return False, 429, "rate limited by Discord"
+    except httpx.HTTPError as exc:
+        return False, None, str(exc)[:200]
+
+
+async def _sleep(seconds: float) -> None:
+    import asyncio
+    await asyncio.sleep(seconds)
+
+
 def preflight_for(guild: dict, me: dict, channels: list[dict], channel_id) -> dict:
     """Pure: which announce permissions the bot is MISSING in ``channel_id``,
     computed from an already-fetched snapshot. ``{ok, missing:[names], error?}``."""

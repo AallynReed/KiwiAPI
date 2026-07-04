@@ -420,6 +420,33 @@
   font-size: .85rem;
 }
 
+/* Full-tree search results: each row shows the filename plus the dim
+   directory it lives in, since matches can come from anywhere in the tree. */
+.up-tree-hint {
+  padding: 4px 8px 8px;
+  color: var(--text-mute);
+  font-size: .72rem;
+}
+.up-row-search { align-items: start; }
+.up-row-search .up-row-icon { margin-top: 2px; }
+.up-row-search .up-row-name {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.up-row-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.up-row-dir {
+  font-size: .68rem;
+  color: var(--text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;      /* keep the meaningful tail (…/deepest/folder/) visible */
+  text-align: left;
+}
+.up-row-search .up-row-meta { margin-top: 2px; }
+
 
 /* ─── Detail pane (file info + version history) ─────────────────────── */
 

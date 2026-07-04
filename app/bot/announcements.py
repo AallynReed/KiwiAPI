@@ -55,6 +55,11 @@ class AnnouncementType:
 # name to one of these tokens; an anchor fires only while THAT category is live.
 CHALLENGE_CATEGORIES: tuple[str, ...] = ("collection", "rampage", "racing", "target", "dungeon")
 
+# Categories actually offered as announcement options. Racing + Target are currently
+# disabled in-game (they never get captured), so we hide them from the dashboard to
+# avoid dead toggles. Re-add them here if Trion turns them back on.
+ANNOUNCED_CHALLENGE_CATEGORIES: tuple[str, ...] = ("collection", "rampage", "dungeon")
+
 
 def _challenge_category_anchor(category: str) -> AnchorFn:
     """An anchor that fires only while the live hourly challenge is ``category``."""
@@ -225,7 +230,7 @@ _CHALLENGE_TYPES: tuple[AnnouncementType, ...] = tuple(
         f"challenge_{cat}", _CHALLENGE_LABELS[cat][0], _CHALLENGE_LABELS[cat][1],
         "Rotations", embeds.challenge_embed, _challenge_category_anchor(cat),
         auto_manage=True, expiry=_challenge_expiry)
-    for cat in CHALLENGE_CATEGORIES
+    for cat in ANNOUNCED_CHALLENGE_CATEGORIES
 )
 
 ANNOUNCEMENT_TYPES: tuple[AnnouncementType, ...] = (

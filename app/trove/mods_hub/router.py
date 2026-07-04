@@ -225,6 +225,26 @@ async def get_rig_animation(skeleton: str, name: str, ctx: AccessContext = _PUB)
     return await service.load_rig_animation(skeleton, name)
 
 
+@mods_hub_router.get("/releases/{release_id}/files")
+async def get_release_files(release_id: str, ctx: AccessContext = _PUB) -> dict:
+    """The files inside a release's .tmod (path + size), excluding the preview image."""
+    release, _ = await service.release_with_project(release_id, None)
+    return await service.list_release_files(release)
+
+
+@mods_hub_router.get("/releases/{release_id}/file")
+async def get_release_file(
+    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    ctx: AccessContext = _PUB,
+) -> Response:
+    """Download one file from inside a release's .tmod (preview excluded)."""
+    release, _ = await service.release_with_project(release_id, None)
+    data, filename = await service.download_release_file(release, path)
+    safe = filename.replace('"', '').replace("\r", "").replace("\n", "")
+    return Response(content=data, media_type="application/octet-stream",
+                    headers={"Content-Disposition": f'attachment; filename="{safe}"'})
+
+
 @mods_hub_router.get("/image/{sha}")
 async def get_image(sha: str, ctx: AccessContext = _PUB) -> Response:
     got = await service.get_image(sha)
@@ -308,6 +328,7 @@ async def create_project(req: CreateProjectRequest, user: SiteUser = _USER) -> d
         user, title=req.title, summary=req.summary, description=req.description,
         tags=req.tags, visibility=req.visibility, mode=req.mode,
         source_visibility=req.source_visibility, inspired_by=req.inspired_by,
+        on_behalf=req.on_behalf, credited_author=req.credited_author,
     )
     return await service.project_detail(project, user)
 

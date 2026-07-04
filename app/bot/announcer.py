@@ -26,7 +26,9 @@ from app import i18n
 from app.bot.announcements import ANNOUNCEMENT_TYPES, TYPES_BY_KEY
 from app.bot.models import GuildConfig, TrackedAnnouncement
 from app.core.utils import countdown_bucket, utcnow
+from app.discord import embed_contexts
 from app.discord.embeds import SITE
+from app.embed_templates import render_template
 
 logger = logging.getLogger("kiwi.bot.announcer")
 
@@ -62,10 +64,29 @@ async def _build_embed(build_fn, lang: str = "en") -> dict:
     return await result if inspect.isawaitable(result) else result
 
 
+async def _design_file(image_design_id: str | None):
+    """Render an Image Studio design to a ``discord.File`` (fresh per post, so live data
+    in the image is current and never URL-cached), or None on any failure."""
+    if not image_design_id:
+        return None
+    try:
+        from io import BytesIO
+
+        from app.embed_templates import EMBED_IMAGE_ATTACHMENT
+        from app.images import service as images
+        png = await images.render_public(image_design_id)
+        if png:
+            return discord.File(BytesIO(png), filename=EMBED_IMAGE_ATTACHMENT)
+    except Exception:
+        logger.warning("announce image render failed (%s)", image_design_id, exc_info=True)
+    return None
+
+
 async def _post(bot: discord.Client, guild_id: int, setting, embed: discord.Embed,
-                key: str) -> int | None:
-    """Send one announcement (with an optional role ping). Returns the sent message
-    id, or None if it didn't go out."""
+                key: str, extra_content: str | None = None,
+                image_design_id: str | None = None) -> int | None:
+    """Send one announcement (with an optional role ping + custom message text +
+    optional rendered image attachment). Returns the sent message id, or None."""
     channel = bot.get_channel(setting.channel_id)
     if channel is None:
         try:
@@ -75,15 +96,19 @@ async def _post(bot: discord.Client, guild_id: int, setting, embed: discord.Embe
                            key, setting.channel_id, guild_id)
             return None
 
-    content = None
+    parts = []
     allowed = discord.AllowedMentions.none()
     if setting.ping_role_ids:
-        content = " ".join(f"<@&{r}>" for r in setting.ping_role_ids)
+        parts.append(" ".join(f"<@&{r}>" for r in setting.ping_role_ids))
         # Only allow the roles we intend to ping (never @everyone / users).
         allowed = discord.AllowedMentions(roles=[discord.Object(id=r) for r in setting.ping_role_ids])
+    if extra_content:                         # the custom template's message text
+        parts.append(extra_content)
+    content = "\n".join(parts)[:2000] or None
 
+    file = await _design_file(image_design_id)
     try:
-        msg = await channel.send(content=content, embed=embed, allowed_mentions=allowed)
+        msg = await channel.send(content=content, embed=embed, file=file, allowed_mentions=allowed)
     except discord.Forbidden:
         logger.warning("announce %s: missing send perms in guild %s channel %s",
                        key, guild_id, setting.channel_id)
@@ -144,9 +169,14 @@ async def _edit_message(bot: discord.Client, channel_id: int, message_id: int,
 
 
 async def _track(bot: discord.Client, guild_id: int, channel_id: int, message_id: int,
-                 atype, anchor: str, expires: int | None, token: str) -> None:
+                 atype, anchor: str, expires: int | None, token: str,
+                 custom: bool = False) -> None:
     """Record a posted announcement for later cleanup/refresh, superseding any prior
-    message of the same kind in this guild so only the current one ever stays."""
+    message of the same kind in this guild so only the current one ever stays.
+
+    ``custom`` (a user's rich template) embeds use live Discord ``<t:>`` timestamps, so
+    they never need the image re-edit - we still supersede + auto-delete them, just
+    skip the refresh."""
     prior = await TrackedAnnouncement.find(
         TrackedAnnouncement.guild_id == guild_id, TrackedAnnouncement.kind == atype.key,
     ).to_list()
@@ -157,7 +187,8 @@ async def _track(bot: discord.Client, guild_id: int, channel_id: int, message_id
     await TrackedAnnouncement(
         guild_id=guild_id, channel_id=channel_id, message_id=message_id,
         kind=atype.key, anchor=anchor, expires_at=expires,
-        refresh=atype.expiry is not None,     # has a countdown -> refresh it; status has none
+        # has a countdown -> refresh it; status has none; custom embeds self-update.
+        refresh=(atype.expiry is not None) and not custom,
         refresh_v=token,
     ).insert()
 
@@ -234,17 +265,44 @@ async def _announce_one(bot: discord.Client, atype, configs: list[GuildConfig]) 
     except Exception:
         logger.warning("embed build failed for %s", atype.key, exc_info=True)
         return
+
+    # Per-language live variable context, built lazily only when a pending guild has a
+    # custom template. Resilient per lang (a failure just falls that lang back to the
+    # default embed) so it can never block the un-customized guilds.
+    contexts_by_lang: dict[str, dict] = {}
+    if embed_contexts.has_customization(atype.key) and any(
+            (s := c.announcements[atype.key]).template and s.template.enabled for c in pending):
+        for lang in langs:
+            try:
+                i18n.set_current_language(lang)
+                contexts_by_lang[lang] = await embed_contexts.context(atype.key)
+            except Exception:
+                logger.warning("context build failed for %s (%s)", atype.key, lang, exc_info=True)
+
     for cfg in pending:
         setting = cfg.announcements[atype.key]
-        embed = embeds_by_lang[i18n.normalize_lang(getattr(cfg, "language", None))]
-        message_id = await _post(bot, cfg.guild_id, setting, embed, atype.key)
+        lang = i18n.normalize_lang(getattr(cfg, "language", None))
+        custom = bool(setting.template and setting.template.enabled and lang in contexts_by_lang)
+        extra_content = None
+        design_id = None
+        if custom:
+            ctx = contexts_by_lang[lang]
+            ed, extra_content = render_template(
+                setting.template, ctx, default_image_url=ctx.get("image_url"))
+            embed = discord.Embed.from_dict(ed)
+            if setting.template.show_image:
+                design_id = setting.template.image_design_id
+        else:
+            embed = embeds_by_lang[lang]
+        message_id = await _post(bot, cfg.guild_id, setting, embed, atype.key,
+                                 extra_content, design_id)
         if message_id is not None:
             setting.last_anchor = anchor
             cfg.updated_at = utcnow()
             await cfg.save()
             if atype.auto_manage:
                 await _track(bot, cfg.guild_id, setting.channel_id, message_id,
-                             atype, anchor, expires, token)
+                             atype, anchor, expires, token, custom=custom)
 
 
 async def run_announcement_type(bot: discord.Client, key: str) -> None:

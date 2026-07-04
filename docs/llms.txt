@@ -70,7 +70,7 @@ A token carries a bitmask of scopes named `<resource>:<action>`. `0` = all scope
 - `misc:read` (bit 16) - third-party modding-software list, time converter, news archive, the market interest-items list, and the supporters credits list (`/v1/misc/interest-items` and `/v1/misc/supporters` are **public** - no token needed)
 - `mods:read` (bit 32) - decompile a `.tmod` file and build a `.tmod` from files
 - `updates:read` (bit 64) - browse archived game files: versions, per-version changes, directory tree, single-file download
-- `codexes:read` (bit 128) - read parsed game codexes (allies, mounts, dragons, mementos, recipes, items, fish, badges) - **public**
+- `codexes:read` (bit 128) - read parsed game codexes (allies, mounts, dragons, mementos, styles, recipes, items, fish, badges) - **public**
 - `btt:read` (bit 256) - read BetterTroveTools releases (latest version per platform, per channel) - **public**
 - `leaderboards:read` (bit 512) - read Trove in-game leaderboards (boards, entries, timestamps, player history)
 - `market:read` (bit 1024) - read Trove marketplace listings (active listings, distinct items, interest list, per-item summary)
@@ -110,6 +110,18 @@ and `/v1/market/*` need `market:read` (read sides; both have a `/insert` endpoin
   page_url}` - hook it to mirror/announce new mod releases. A `: ping` keep-alive comment arrives ~every 20s;
   reconnect on disconnect and the snapshot re-primes you.
   Example: `curl -N https://api.aallyn.net/v1/events/stream`.
+  - **Don't want to hold a connection?** The website **User Dashboard** (Discord login at
+  trove.aallyn.net) lets a user register a **Discord webhook** that Kiwi POSTs a rendered embed to
+  when a `challenge`, `mod_release`, or `game_update` event fires - a push alternative to the SSE
+  stream for "post it to my Discord channel". The embed is **fully customizable** (title, color,
+  fields, footer, image, message text) with `{variable}` placeholders and a live preview; the same
+  editor customizes the Kiwi Discord **bot's** per-server announcements. The embed image can be a
+  custom one from the **Image Studio** (Dashboard): a freeform, server-rendered image designer
+  (background + text/shape/image layers) whose text can carry the same `{variables}`. Standalone, a
+  design renders at a public URL (`GET /site/images/{id}.png`); as an embed image you pick the design
+  from a dropdown and the bot/webhook **renders + uploads it fresh per post** (a Discord attachment,
+  not a URL - so live data in the image never goes stale behind Discord's image cache). It's a
+  Dashboard feature (no API-token surface), so it's not in this reference.
 
 - `GET /v1/rotations/server-time` → `{ now_unix, now_iso, trove_day, daily_reset_at, weekly_reset_at }`
 - `GET /v1/rotations/daily-buffs` → `{ current: Buff, week: [Buff x7] }` where Buff =
@@ -206,11 +218,14 @@ types 1-9, augments 1 Rough/2 Precise/3 Superior).
 App-facing read API for the Mods Hub (below). A mod is addressed by **`<handle>/<slug>`** (handle = the owner's
 username; slugs are unique per owner, not globally). Returns **absolute** image / download / page URLs. A *mod*
 object carries `{slug, handle, title, summary, description, readme_text, warnings, tags, categories[], flags, author,
-is_stray, banner_url, preview_urls[], download_count, downloads_7d, star_count, popularity_score, discord_url,
-website_url, donation_urls[], page_url, created_at, updated_at, forked_from, inspired_by, fork_count}` (`readme_text`
-is the releases-only long-form README; `warnings` is `<br>`-split warning text; **`is_stray`** marks an unclaimed
-"stray" mod - uploaded via contributions and not yet tied to a user account - addressed at `stray/<slug>` and
-claimable by its author); detail + lookup also include `releases[]` =
+is_stray, uploaded_on_behalf, banner_url, preview_urls[], download_count, downloads_7d, star_count, popularity_score,
+discord_url, website_url, donation_urls[], page_url, created_at, updated_at, forked_from, inspired_by, fork_count}`
+(`readme_text` is the releases-only long-form README; `warnings` is `<br>`-split warning text; **`is_stray`** marks an
+unclaimed "stray" mod - uploaded via contributions and not yet tied to a user account - addressed at `stray/<slug>`
+and claimable by its author; **`uploaded_on_behalf`** marks an *uploaded* mod - a user shared a mod someone else made:
+the uploader owns it (shown as "Uploaded by …") while `author` credits the named creator ("Created by …"). It is
+releases-only and NOT claimable, distinct from an *authored* mod where the uploader is the creator);
+detail + lookup also include `releases[]` =
 `{tag, branch, title, changelog, format, filename, size, sha256, download_count, download_url, published_at}`
 (`filename` for a `.tmod` is the artifact's internal `title` property + `.tmod` - Trove matches a mod by that
 title in-game, so the download keeps that exact name).
@@ -228,7 +243,8 @@ title in-game, so the download keeps that exact name).
   `flags & bit`. The build/read tools auto-encode/decode this (see Mods section above: `flags` + `categories`).
 
 Mod **hashes are unique per creator**: a release whose exact artifact (sha256) is already published by another
-creator is rejected (anti-reupload).
+creator is rejected (anti-reupload). An **uploaded-on-behalf** mod is held to a stricter, *global* bar: its
+artifact must not already exist anywhere on the hub at all (anti-duplicate for shared re-uploads).
 
 ### Mods Hub - browse/share/develop mods (website feature; not in this API reference)
 
@@ -238,6 +254,14 @@ has banners/previews, **forking** + **inspired-by attribution**, and one of two 
 - **files** - full versioned workflow (git commits/branches/clone) + *releases*. A release is compiled
   server-side from a commit into a selectable **format** (`.tmod` or `.zip`), or an uploaded prebuilt build.
 - **releases** - releases-only: the modder just uploads already-built `.tmod`/`.zip` files (no file history).
+
+A user can also **upload a mod on someone else's behalf** ("This mod was made by someone else" in the create
+form): the uploader owns/manages it but names the real creator, shown as "Uploaded by <uploader> · Created by
+<creator>" with an **Uploaded** badge. These are forced releases-only, auto-public, NOT claimable, and their
+uploaded builds must be globally unique (the same artifact can't already exist anywhere on the hub). They're
+kept deliberately **bare** - since the uploader isn't the author, an uploaded mod carries **no owner links
+(Discord/website), no donation buttons, and no inspiration credit**, and can't be forked or credited as
+inspiration by others.
 
 Files-mode projects can set **source private** (`source_visibility`) - keeps version history + git for the
 owner but exposes only the releases publicly (an internal-tool mode; hides the files view + blocks cloning).
@@ -300,13 +324,13 @@ Kiwi mirrors Trove's update CDN and stores each version's files content-addresse
 
 ### Codexes (`codexes:read`) - structured game data parsed from the archive
 
-Eight typed datasets parsed from `prefabs/*.binfab`, names resolved via the `languages/` locale tables. Stored in Postgres (`codex_entry`, one row per `(branch, path)`; the two branches `live-us`/`pts` are the two "modes"). Re-indexed after each archive sync (full build once, then only the changed prefabs; `content_sha256` ties each row to its source file). All default to branch `live-us` (`?branch=pts` for PTS). Each entry has identity (name/category/description/tradable) + decoded collectible bonuses: `mastery` (normal, from `meta/multipliers.binfab`), `mastery_geode` (geode-mode, from `meta/geode_multipliers.binfab`), `power_rank`, and a `data` blob of numeric stat bonuses, visible/hidden ability refs, and geode-companion upgrade-tree levels.
-- `GET /v1/codexes/types[?branch=]` → `{ branch, items: [{ type, count }], count }` - types present: `ally`, `mount`, `dragon`, `memento`, `recipe`, `item`, `fish`, `badge`
+Nine typed datasets parsed from `prefabs/*.binfab`, names resolved via the `languages/` locale tables. Stored in Postgres (`codex_entry`, one row per `(branch, path)`; the two branches `live-us`/`pts` are the two "modes"). Re-indexed after each archive sync (full build once, then only the changed prefabs; `content_sha256` ties each row to its source file). All default to branch `live-us` (`?branch=pts` for PTS). Each entry has identity (name/category/description/tradable) + decoded collectible bonuses: `mastery` (normal, from `meta/multipliers.binfab`), `mastery_geode` (geode-mode, from `meta/geode_multipliers.binfab`), `power_rank`, and a `data` blob of numeric stat bonuses, visible/hidden ability refs, geode-companion upgrade-tree levels, recipe catalogue/providers, and style identity.
+- `GET /v1/codexes/types[?branch=]` → `{ branch, items: [{ type, count }], count }` - types present: `ally`, `mount`, `dragon`, `memento`, `style`, `recipe`, `item`, `fish`, `badge`
 - `GET /v1/codexes/search[?branch=&q=&type=&category=&tradable=&sort=&limit=&offset=]` → `{ branch, type, query, items: [Entry], count, total }` - cross-type search (all filters optional + ANDed; each `Entry` has its own `type`). `q` = name/description substring; `sort` ∈ `name,-name,category,-category,mastery,-mastery,mastery_geode,-mastery_geode,power_rank,-power_rank,indexed_at,-indexed_at`
 - `GET /v1/codexes/{type}[?branch=&search=&category=&tradable=&sort=&limit=&offset=]` → `{ branch, type, items: [Entry], count, total }` - `search` matches name OR description; `category` is exact; `tradable` is a bool
 - `GET /v1/codexes/{type}/categories[?branch=]` → `{ branch, type, items: [{ category, count }], count }` - distinct categories for filter dropdowns
 - `GET /v1/codexes/{type}/entry?path=[&branch=]` → one `Entry` by its source prefab path
-- `Entry` = `{ type, path, name, category, description, tradable, mastery, mastery_geode, power_rank, blueprint, data, indexed_at }` (`path` is the stable id; `mastery`/`mastery_geode` = collectible mastery, null for non-collectibles; `power_rank` null when absent). `data` carries: `stats` (numeric bonuses: `{ stat: $Stat_…, stat_name (resolved display name), operation, amount, value, is_percent, label, slot, slot_name, component, level }`), `abilities` (`{ ref, hidden, name, key?, description? (resolved from the locale tables) }` - hidden refs are evidence, not displayed bonuses), for **recipes** `recipe` (`{ output: { path, name, amount }, ingredients: [{ path, name, amount }], requirements: [str] }` - names resolved by reading the referenced item prefabs), and for geode companions `geode_companion` (`{ upgrade_tree, rarity, levels: [{ level, stats, abilities }] }`). The `$…` localization keys (stat/slot names, ability descriptions) are resolved against the archived `languages/` tables at index time.
+- `Entry` = `{ type, path, name, category, description, tradable, mastery, mastery_geode, power_rank, blueprint, data, indexed_at }` (`path` is the stable id; `mastery`/`mastery_geode` = collectible mastery, null for non-collectibles; `power_rank` null when absent). `data` carries: `stats` (numeric bonuses: `{ stat: $Stat_…, stat_name (resolved display name), operation, amount, value, is_percent, label, slot, slot_name, component, level }`), `abilities` (`{ ref, hidden, name, key?, description? (resolved from the locale tables) }` - hidden refs are evidence, not displayed bonuses), for **recipes** `recipe` (`{ output: { path, name, amount }, ingredients: [{ path, name, amount }], requirements: [str], mastery, mastery_source, mastery_prefab_byte?, in_catalogue, catalogue_order?, providers? }` - names resolved by reading the referenced item prefabs; recipe `mastery` is row-local: an exact `meta/multipliers.binfab` row overrides (`mastery_source: "multipliers"`), else the trusted structural byte in the recipe prefab (`"prefab"`, raw value in `mastery_prefab_byte`), else `null` with `mastery_source: "review"` when no trusted/agreeing byte is present. `in_catalogue` = membership in `collection_recipe.binfab` (`catalogue_order` = its source position); `false` marks a source-only recipe. `providers` = the benches/professions a recipe is craftable at (`[{ provider, provider_path, lane }]`, inverted from the crafting-station + profession prefabs that list the recipe - e.g. `placeable/crafting/workbench_chaos_interactive`, `professions/gearcrafting`; lane ∈ bench/profession/vendor/guide/interactive)), for **styles** (hats/faces/weapons/banners, under `style/`) `style` (`{ source_id, equipment_ref (the equipment id it restyles), resolved_id, confidence, family }`; style `mastery`/`mastery_geode` resolve via the equipment id's multipliers row, `null`/review-only when unbacked), and for geode companions `geode_companion` (`{ upgrade_tree, rarity, levels: [{ level, stats, abilities }] }`). The `$…` localization keys (stat/slot names, ability descriptions) are resolved against the archived `languages/` tables at index time.
 
 ### BTT (`btt:read`) - BetterTroveTools releases (drives in-app update checks)
 

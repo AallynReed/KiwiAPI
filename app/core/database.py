@@ -50,8 +50,11 @@ from app.trove.updates.models import (
     UpdateState,
     UpdateVersion,
 )
+from app.images.models import ImageDesign
+from app.dm_subs.models import DmSubscription
 from app.pageviews.models import PageView
 from app.usage.models import UsageEvent
+from app.webhooks.models import SiteWebhook
 
 # Every Beanie Document must be registered here so init_beanie can bind it.
 # Models live in their feature packages; this is the one place that aggregates them.
@@ -76,6 +79,9 @@ DOCUMENT_MODELS = [
     GuildConfig,
     TrackedAnnouncement,
     Club,
+    SiteWebhook,                         # outbound (Discord) webhooks
+    DmSubscription,                      # inbound (Discord) DM alert subscriptions
+    ImageDesign,                         # user-designed images (image studio)
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).

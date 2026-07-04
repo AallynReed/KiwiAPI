@@ -34,6 +34,12 @@
     treeCache: new Map(),    // prefix → entries (avoid re-fetching as you walk)
     treePrefix: '',          // current directory prefix
     treeFilter: '',          // sidebar search text
+    // Full-tree search: when treeFilter is set the sidebar shows matches from
+    // ANYWHERE in the branch (server-side), not just the loaded directory.
+    searchResults: null,     // null = not searching; [] = searched, no hits
+    searchTotal: 0,          // true match count (may exceed searchResults.length)
+    searchLoading: false,
+    searchToken: 0,          // guards against out-of-order async responses
     selectedPath: null,      // null = directory view, string = file detail view
 
     // Per-file detail
@@ -376,6 +382,10 @@
   }
 
   async function renderTree() {
+    // When a search is active, the sidebar shows full-tree matches instead of
+    // the current directory listing (so files inside collapsed folders show up).
+    if (state.treeFilter) { renderSearchResults(); return; }
+
     renderBreadcrumbs();
     const entries = state.treeCache.get(state.treePrefix);
     if (!entries) {
@@ -384,10 +394,6 @@
       return;
     }
     let visible = entries;
-    if (state.treeFilter) {
-      const needle = state.treeFilter.toLowerCase();
-      visible = entries.filter((e) => e.name.toLowerCase().includes(needle));
-    }
     if (!visible.length) {
       $tree.innerHTML = `<p class="up-tree-empty" data-i18n>Nothing here.</p>`;
       rerunI18n();
@@ -442,6 +448,106 @@
           openFile(path);
         }
       });
+    }
+  }
+
+  // ─── Explorer - full-tree search ───────────────────────────────────
+  // The sidebar box searches the WHOLE branch, not just the folder that
+  // happens to be open. Debounced so we don't fire a request per keystroke,
+  // and token-guarded so a slow response for an old query can't overwrite a
+  // newer one.
+  let _searchTimer = null;
+  function scheduleSearch() {
+    if (_searchTimer) clearTimeout(_searchTimer);
+    const needle = state.treeFilter.trim();
+    if (!needle) {
+      state.searchResults = null;
+      state.searchTotal = 0;
+      state.searchLoading = false;
+      renderTree();
+      return;
+    }
+    state.searchLoading = true;
+    renderSearchResults();  // paint the "Searching…" state immediately
+    _searchTimer = setTimeout(() => runSearch(needle), 200);
+  }
+
+  async function runSearch(needle) {
+    const token = ++state.searchToken;
+    try {
+      const data = await fetchJSON(
+        `/site/updates/${state.branch}/search?q=${encodeURIComponent(needle)}`,
+      );
+      if (token !== state.searchToken) return;  // stale - a newer query won
+      state.searchResults = data.entries || [];
+      state.searchTotal = data.total || 0;
+    } catch (err) {
+      if (token !== state.searchToken) return;
+      state.searchResults = [];
+      state.searchTotal = 0;
+      $tree.innerHTML = errorHTML(err);
+      return;
+    } finally {
+      if (token === state.searchToken) state.searchLoading = false;
+    }
+    renderSearchResults();
+  }
+
+  function renderSearchResults() {
+    const needle = state.treeFilter.trim();
+    $breadcrumbs.innerHTML = `
+      <span class="up-crumb up-crumb-last">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        ${esc(t('Search'))}
+      </span>`;
+
+    if (state.searchLoading && state.searchResults === null) {
+      $tree.innerHTML = `<p class="up-loading" data-i18n>Loading…</p>`;
+      rerunI18n();
+      return;
+    }
+    const results = state.searchResults || [];
+    if (!results.length) {
+      $tree.innerHTML = `<p class="up-tree-empty" data-i18n>Nothing here.</p>`;
+      rerunI18n();
+      return;
+    }
+
+    const touched = state.versionTouched && state.versionTouched.byPath;
+    const capped = state.searchTotal > results.length
+      ? `<p class="up-tree-hint">${esc(
+          t('Showing {n} of {total}')
+            .replace('{n}', formatInt(results.length))
+            .replace('{total}', formatInt(state.searchTotal)))}</p>`
+      : '';
+
+    const rows = results.map((e) => {
+      const icon = iconForName(e.name);
+      const dir = e.path.slice(0, e.path.length - e.name.length);
+      let touchHTML = '';
+      if (touched) {
+        const kind = touched.get(e.path);
+        if (kind) {
+          const cls = kind === 'modified' ? 'up-touch-mod'
+                    : kind === 'removed'  ? 'up-touch-rem' : '';
+          touchHTML = `<span class="up-row-touch ${cls}" title="${esc(t(kind))}"></span>`;
+        }
+      }
+      return `
+        <button type="button" class="up-row up-row-search${state.selectedPath === e.path ? ' active' : ''}"
+                data-path="${esc(e.path)}" title="${esc(e.path)}">
+          <span class="up-row-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span>
+          <span class="up-row-name">
+            <span class="up-row-file">${esc(e.name)}${touchHTML}</span>
+            ${dir ? `<span class="up-row-dir">${esc(dir)}</span>` : ''}
+          </span>
+          <span class="up-row-meta">${esc(formatBytes(e.size))}</span>
+        </button>`;
+    }).join('');
+    $tree.innerHTML = capped + rows;
+
+    for (const btn of $tree.querySelectorAll('[data-path]')) {
+      btn.addEventListener('click', () => openFile(btn.dataset.path));
     }
   }
 
@@ -833,7 +939,7 @@
 
     $treeSearch.addEventListener('input', () => {
       state.treeFilter = $treeSearch.value || '';
-      renderTree();
+      scheduleSearch();
     });
 
     // Change-type filter chips.

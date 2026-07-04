@@ -234,6 +234,19 @@ async def query_entries(
     return [dict(r) for r in rows], int(total or 0)
 
 
+async def all_recipes(branch: str) -> list[dict]:
+    """Every recipe entry for a branch - ``(path, name, category, data)`` only.
+    The crafting calculator inverts these into an ``output_path -> recipe`` map to
+    walk dependency trees, so it needs the whole set at once (not paged)."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT path, name, category, data FROM codex_entry "
+            "WHERE branch = $1 AND codex_type = 'recipe'",
+            branch,
+        )
+    return [dict(r) for r in rows]
+
+
 async def type_counts(branch: str) -> list[dict]:
     """Per-type entry counts for a branch, ordered by type."""
     async with acquire() as con:

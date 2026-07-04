@@ -320,7 +320,7 @@
   }
 
   // ─── Section switching (sidebar) ───────────────────────────────────
-  const SECTIONS = ['profile', 'giveaways', 'mods', 'modpacks', 'leaderboard', 'discord'];
+  const SECTIONS = ['profile', 'giveaways', 'mods', 'modpacks', 'leaderboard', 'discord', 'webhooks', 'dmsubs', 'images'];
   function setupSections() {
     document.querySelectorAll('.dash-nav-item').forEach((b) =>
       b.addEventListener('click', () => showSection(b.dataset.section)));
@@ -341,7 +341,15 @@
     if (name === 'discord' && !_discordLoaded) { _discordLoaded = true; loadDiscordBot(); }
     if (name === 'mods' && !_modsLoaded) { _modsLoaded = true; loadMyMods(); }
     if (name === 'modpacks' && !_modpacksLoaded) { _modpacksLoaded = true; loadMyModpacks(); }
+    if (name === 'webhooks' && !_webhooksLoaded) { _webhooksLoaded = true; loadWebhooks(); }
+    if (name === 'dmsubs' && !_dmsubsLoaded) { _dmsubsLoaded = true; loadDmSubs(); }
+    if (name === 'images' && !_imagesLoaded) {
+      _imagesLoaded = true;
+      const box = document.getElementById('dash-images-body');
+      if (box && window.ImageStudio) window.ImageStudio.mount(box);
+    }
   }
+  let _imagesLoaded = false;
 
   // ─── My Modpacks section ───────────────────────────────────────────
   let _modpacksLoaded = false;
@@ -412,16 +420,34 @@
     const err = $('dash-mod-error');
     if (form && !form.dataset.wired) {
       form.dataset.wired = '1';
+      // "Made by someone else" reveals the creator field + forces releases-only mode
+      // (you can't own the source of a mod you're just sharing on the author's behalf).
+      const onBehalfBox = $('dash-mod-onbehalf');
+      if (onBehalfBox) onBehalfBox.addEventListener('change', () => {
+        const on = onBehalfBox.checked;
+        const credited = $('dash-mod-credited');
+        const modeSel = $('dash-mod-mode');
+        if (credited) { credited.hidden = !on; credited.required = on; }
+        if (modeSel) { modeSel.hidden = on; if (on) modeSel.value = 'releases'; }
+      });
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (err) err.hidden = true;
+        const onBehalf = !!(form.on_behalf && form.on_behalf.checked);
+        const credited = onBehalf ? (form.credited_author.value || '').trim() : null;
+        if (onBehalf && !credited) {
+          if (err) { err.textContent = t('Name the creator this mod was made by.'); err.hidden = false; }
+          return;
+        }
         const btn = form.querySelector('button[type=submit]');
         btn.disabled = true;
         const r = await Auth.callJSON('/v1/mods/hub/projects', {
           json: {
             title: form.title.value.trim(),
-            mode: form.mode.value,
+            mode: onBehalf ? 'releases' : form.mode.value,
             visibility: form.visibility.value,
+            on_behalf: onBehalf,
+            credited_author: credited,
           },
         });
         btn.disabled = false;
@@ -634,6 +660,7 @@
   // in a separate "Add the bot" group. Backend: app/bot/router.py (site-JWT).
   let _discordLoaded = false;
   let _discordSelected = null;   // currently-selected guild id (persists across re-renders)
+  let _annMeta = {};             // announcement key -> embed-editor meta (variables/default/sample)
 
   async function loadDiscordBot() {
     const el = $('dash-discord-body');
@@ -749,7 +776,14 @@
     const panel = $('dash-discord-detail');
     if (!panel) return;
     panel.innerHTML = `<p class="dash-loading">${esc(t('Loading…'))}</p>`;
-    const r = await Auth.callJSON(`/v1/site-auth/discord/guilds/${encodeURIComponent(guildId)}`);
+    const [r, metaR] = await Promise.all([
+      Auth.callJSON(`/v1/site-auth/discord/guilds/${encodeURIComponent(guildId)}`),
+      Object.keys(_annMeta).length ? Promise.resolve(null) : Auth.callJSON('/v1/site-auth/discord/announcement-meta'),
+    ]);
+    if (metaR && metaR.ok && metaR.data) {
+      (metaR.data.meta || []).forEach((m) => { _annMeta[m.key] = m; });
+    }
+    await ensureDesigns();
     if (!r.ok) {
       panel.innerHTML = `<article class="dash-card"><p class="dash-error">${esc(Auth.errorMessage(r.data) || t('Failed to load'))}</p></article>`;
       return;
@@ -857,6 +891,8 @@
       renderRowPreflight(row, (detail.announcements || []).find((x) => x.key === row.dataset.key));
     });
     wireMultiSelects(card);
+    card.querySelectorAll('.dash-ann-customize').forEach((btn) =>
+      btn.addEventListener('click', () => toggleAnnEmbed(card, guildId, btn.dataset.key, detail)));
     const status = card.querySelector('[data-act="ann-status"]');
     const schedule = makeAutoSaver(() => doSaveAnnouncements(body, guildId, detail, status), status);
     card.addEventListener('change', schedule);     // enable checkboxes + channel selects
@@ -1034,7 +1070,51 @@
           </div>
         </div>
         <p class="dash-discord-result" data-act="row-preflight" hidden></p>
+        ${a.customizable && canManage ? `<button type="button" class="dash-btn dash-btn-mini dash-btn-ghost dash-ann-customize" data-key="${esc(a.key)}">${esc(t('Customize embed'))}</button>
+        <div class="dash-ann-embed" data-embed-key="${esc(a.key)}" hidden></div>` : ''}
       </div>`;
+  }
+
+  // Open/close + lazily mount the shared embed editor for one announcement type.
+  // Edits are isolated from the announcements card's auto-saver (stopPropagation),
+  // and saved via the dedicated per-type template endpoint.
+  function toggleAnnEmbed(card, guildId, key, detail) {
+    const sel = (window.CSS && CSS.escape) ? CSS.escape(key) : key;
+    const box = card.querySelector('[data-embed-key="' + sel + '"]');
+    if (!box) return;
+    if (!box.hidden) { box.hidden = true; return; }
+    box.hidden = false;
+    if (box._mounted) return;
+    box._mounted = true;
+    const meta = _annMeta[key];
+    if (!meta) { box.textContent = t('Editor unavailable.'); return; }
+    const a = (detail.announcements || []).find((x) => x.key === key) || {};
+    const edEl = document.createElement('div');
+    box.appendChild(edEl);
+    ['change', 'input', 'ms-change'].forEach((ev) =>
+      edEl.addEventListener(ev, (e) => e.stopPropagation()));
+    const ctrl = window.EmbedEditor.mount(edEl, {
+      meta, template: a.template || null, hasImage: true, designs: _designs,
+    });
+    const save = document.createElement('button');
+    save.type = 'button'; save.className = 'dash-btn dash-btn-mini'; save.textContent = t('Save embed');
+    const msg = document.createElement('span'); msg.className = 'wh-cust-msg';
+    save.addEventListener('click', async () => {
+      save.disabled = true; msg.textContent = '';
+      const r = await Auth.callJSON(
+        `/v1/site-auth/discord/guilds/${encodeURIComponent(guildId)}/announcements/${encodeURIComponent(key)}/template`,
+        { method: 'PUT', json: { template: ctrl.getTemplate() } });
+      save.disabled = false;
+      msg.textContent = r.ok ? t('Saved.') : (Auth.errorMessage(r.data) || t('Failed to save.'));
+      if (r.ok && r.data) {
+        const row = (r.data.announcements || []).find((x) => x.key === key);
+        a.template = row ? row.template : null;
+      }
+    });
+    const footer = document.createElement('div');
+    footer.className = 'wh-cust-footer';
+    footer.appendChild(save); footer.appendChild(msg);
+    box.appendChild(footer);
   }
 
   // ── chip / token multi-select (vanilla; no jQuery) ──
@@ -1564,6 +1644,412 @@
     if (isNaN(d.getTime())) return '';
     const pad = (n) => String(n).padStart(2, '0');
     return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+  }
+
+  // ─── Webhooks section ──────────────────────────────────────────────
+  // Outbound Discord webhooks: paste a channel webhook URL, pick events,
+  // and Kiwi POSTs a rendered embed when each fires. Backend:
+  // app/webhooks/router.py (site-JWT, /v1/webhooks/*).
+  let _webhooksLoaded = false;
+  let _whMeta = {};   // event type -> {variables, default_template, sample}
+
+  // Saved Image Studio designs, shared by the webhook + bot embed editors' image picker.
+  let _designs = [];
+  let _designsLoaded = false;
+  async function ensureDesigns() {
+    if (_designsLoaded) return;
+    _designsLoaded = true;
+    try {
+      const r = await Auth.callJSON('/v1/images');
+      if (r.ok && r.data) _designs = (r.data.items || []).map((d) => ({ id: d.id, name: d.name, render_url: d.render_url }));
+    } catch (e) { /* Image Studio may be disabled */ }
+  }
+
+  const WH_EVENTS = [
+    { type: 'challenge', label: 'Hourly challenge', desc: 'Each new hourly challenge as it starts' },
+    { type: 'mod_release', label: 'New mod release', desc: 'When a mod publishes a new release on the Mods Hub' },
+    { type: 'game_update', label: 'Game update', desc: 'When a new Trove build goes live' },
+  ];
+  const WH_LABEL = Object.fromEntries(WH_EVENTS.map((e) => [e.type, e.label]));
+
+  async function loadWebhooks() {
+    const el = $('dash-webhooks-body');
+    if (!el) return;
+    el.innerHTML = `<p class="dash-loading">${esc(t('Loading…'))}</p>`;
+    const [list, meta] = await Promise.all([
+      Auth.callJSON('/v1/webhooks'),
+      Object.keys(_whMeta).length ? Promise.resolve(null) : Auth.callJSON('/v1/webhooks/events'),
+    ]);
+    if (meta && meta.ok && meta.data) {
+      (meta.data.meta || []).forEach((m) => { _whMeta[m.key] = m; });
+    }
+    await ensureDesigns();
+    if (!list.ok) {
+      el.innerHTML = `<article class="dash-card"><p class="dash-error">${esc(Auth.errorMessage(list.data) || t('Failed to load'))}</p></article>`;
+      return;
+    }
+    renderWebhooks(el, (list.data && list.data.items) || []);
+  }
+
+  function renderWebhooks(el, items) {
+    const evChecks = WH_EVENTS.map((e) =>
+      `<label class="wh-ev-opt"><input type="checkbox" class="wh-ev" value="${esc(e.type)}" checked>
+        <span><strong>${esc(t(e.label))}</strong><br><span class="dash-card-sub-mini">${esc(t(e.desc))}</span></span></label>`).join('');
+
+    const createCard = `<article class="dash-card">
+      <h2 class="dash-card-title" data-i18n>Add a webhook</h2>
+      <p class="dash-card-sub">${esc(t('In Discord: Server Settings → Integrations → Webhooks → New Webhook → Copy Webhook URL. Paste it below.'))}</p>
+      <label class="wh-field"><span class="wh-label-text" data-i18n>Discord webhook URL</span>
+        <input id="wh-url" type="url" class="wh-input" placeholder="https://discord.com/api/webhooks/…" autocomplete="off"></label>
+      <label class="wh-field"><span class="wh-label-text" data-i18n>Label (optional)</span>
+        <input id="wh-label" type="text" class="wh-input" maxlength="80" placeholder="${esc(t('e.g. My server #trove-news'))}"></label>
+      <div class="wh-ev-list">${evChecks}</div>
+      <p id="wh-error" class="dash-error" hidden></p>
+      <button type="button" id="wh-add" class="dash-btn dash-btn-mini" data-i18n>Add webhook</button>
+    </article>`;
+
+    _whItems = items;
+    const list = items.length
+      ? items.map(webhookCard).join('')
+      : `<p class="dash-empty">${esc(t('No webhooks yet. Add one above.'))}</p>`;
+
+    el.innerHTML = createCard + `<div class="wh-list">${list}</div>`;
+
+    $('wh-add').addEventListener('click', () => createWebhook(el));
+    el.querySelectorAll('[data-wh-act]').forEach((b) =>
+      b.addEventListener('click', () => webhookAction(el, b.dataset.whAct, b.dataset.whId, b.dataset.whActive)));
+  }
+
+  function webhookCard(w) {
+    const chips = (w.events || []).map((ev) =>
+      `<span class="wh-chip">${esc(t(WH_LABEL[ev] || ev))}</span>`).join('');
+    let status;
+    if (!w.active) {
+      status = `<span class="wh-status wh-status-off">${esc(t('Disabled'))}</span>`
+        + (w.disabled_reason ? ` <span class="dash-card-sub-mini">${esc(w.disabled_reason)}</span>` : '');
+    } else if (w.last_delivered_at) {
+      status = `<span class="wh-status wh-status-on">${esc(t('Active'))}</span> <span class="dash-card-sub-mini">${esc(t('last delivered'))} ${esc(formatDate(w.last_delivered_at))}</span>`;
+    } else {
+      status = `<span class="wh-status wh-status-on">${esc(t('Active'))}</span> <span class="dash-card-sub-mini">${esc(t('no deliveries yet'))}</span>`;
+    }
+    return `<article class="dash-card wh-card">
+      <div class="wh-card-head">
+        <div>
+          <p class="wh-card-title">${esc(w.label || t('Discord webhook'))}</p>
+          <p class="wh-card-url">${esc(w.url)}</p>
+        </div>
+        <div class="wh-card-status">${status}</div>
+      </div>
+      <div class="wh-chips">${chips}</div>
+      <div class="wh-card-actions">
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-wh-act="customize" data-wh-id="${esc(w.id)}" data-i18n>Customize embeds</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-wh-act="test" data-wh-id="${esc(w.id)}" data-i18n>Send test</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-wh-act="toggle" data-wh-id="${esc(w.id)}" data-wh-active="${w.active ? '1' : '0'}">${esc(w.active ? t('Disable') : t('Enable'))}</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-danger" data-wh-act="delete" data-wh-id="${esc(w.id)}" data-i18n>Delete</button>
+      </div>
+      <div class="wh-customize" data-wh-cust="${esc(w.id)}" hidden></div>
+    </article>`;
+  }
+
+  // The webhook objects from the last load, so the customizer can read templates.
+  let _whItems = [];
+
+  function mountCustomizer(panel, w) {
+    if (panel._mounted) return;
+    panel._mounted = true;
+    panel._editors = {};
+    panel.innerHTML = '';
+    (w.events || []).forEach((ev) => {
+      const meta = _whMeta[ev];
+      if (!meta) return;
+      const block = document.createElement('div');
+      block.className = 'wh-cust-event';
+      const head = document.createElement('div');
+      head.className = 'wh-cust-head';
+      head.innerHTML = `<strong>${esc(t(WH_LABEL[ev] || ev))}</strong>`;
+      const preview = document.createElement('button');
+      preview.type = 'button'; preview.className = 'dash-btn dash-btn-mini dash-btn-ghost';
+      preview.textContent = t('Send preview');
+      preview.addEventListener('click', () => sendPreview(w.id, ev));
+      head.appendChild(preview);
+      block.appendChild(head);
+      const edEl = document.createElement('div');
+      block.appendChild(edEl);
+      panel.appendChild(block);
+      panel._editors[ev] = window.EmbedEditor.mount(edEl, {
+        meta, template: (w.templates || {})[ev] || null, hasImage: true,
+        designs: _designs,
+      });
+    });
+    const save = document.createElement('button');
+    save.type = 'button'; save.className = 'dash-btn dash-btn-mini'; save.textContent = t('Save embeds');
+    const msg = document.createElement('span'); msg.className = 'wh-cust-msg';
+    save.addEventListener('click', async () => {
+      const templates = {};
+      Object.keys(panel._editors).forEach((ev) => { templates[ev] = panel._editors[ev].getTemplate(); });
+      save.disabled = true; msg.textContent = '';
+      const r = await Auth.callJSON('/v1/webhooks/' + encodeURIComponent(w.id), {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templates }),
+      });
+      save.disabled = false;
+      msg.textContent = r.ok ? t('Saved.') : (Auth.errorMessage(r.data) || t('Failed to save.'));
+      if (r.ok && r.data) { w.templates = r.data.templates || {}; }
+    });
+    const footer = document.createElement('div');
+    footer.className = 'wh-cust-footer';
+    footer.appendChild(save); footer.appendChild(msg);
+    panel.appendChild(footer);
+  }
+
+  async function sendPreview(id, ev) {
+    const r = await Auth.callJSON('/v1/webhooks/' + encodeURIComponent(id) + '/test?event=' + encodeURIComponent(ev), { method: 'POST' });
+    if (r.ok && r.data && r.data.ok) alert(t('Preview sent — check your Discord channel.'));
+    else alert(t('Preview failed:') + ' ' + ((r.data && r.data.error) || Auth.errorMessage(r.data) || t('unknown error')));
+  }
+
+  async function createWebhook(el) {
+    const err = $('wh-error');
+    const url = ($('wh-url').value || '').trim();
+    const label = ($('wh-label').value || '').trim();
+    const events = Array.from(el.querySelectorAll('.wh-ev:checked')).map((c) => c.value);
+    err.hidden = true;
+    if (!url) { err.textContent = t('Paste your Discord webhook URL.'); err.hidden = false; return; }
+    if (!events.length) { err.textContent = t('Pick at least one event.'); err.hidden = false; return; }
+    const btn = $('wh-add'); btn.disabled = true;
+    const r = await Auth.callJSON('/v1/webhooks', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, label, events }),
+    });
+    btn.disabled = false;
+    if (!r.ok) { err.textContent = Auth.errorMessage(r.data) || t('Could not add that webhook.'); err.hidden = false; return; }
+    loadWebhooks();
+  }
+
+  async function webhookAction(el, act, id, active) {
+    if (act === 'customize') {
+      const panel = el.querySelector('[data-wh-cust="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
+      if (!panel) return;
+      if (panel.hidden) {
+        const w = _whItems.find((x) => x.id === id);
+        if (w) mountCustomizer(panel, w);
+        panel.hidden = false;
+      } else {
+        panel.hidden = true;
+      }
+      return;
+    }
+    if (act === 'delete') {
+      if (!confirm(t('Delete this webhook? Discord will stop receiving these events.'))) return;
+      const r = await Auth.callJSON('/v1/webhooks/' + encodeURIComponent(id), { method: 'DELETE' });
+      if (!r.ok && r.status !== 204) { alert(Auth.errorMessage(r.data) || t('Failed to delete.')); return; }
+      loadWebhooks();
+    } else if (act === 'toggle') {
+      const r = await Auth.callJSON('/v1/webhooks/' + encodeURIComponent(id), {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: active !== '1' }),
+      });
+      if (!r.ok) { alert(Auth.errorMessage(r.data) || t('Failed to update.')); return; }
+      loadWebhooks();
+    } else if (act === 'test') {
+      const r = await Auth.callJSON('/v1/webhooks/' + encodeURIComponent(id) + '/test', { method: 'POST' });
+      if (r.ok && r.data && r.data.ok) {
+        alert(t('Test message sent — check your Discord channel.'));
+      } else {
+        const msg = (r.data && r.data.error) || Auth.errorMessage(r.data) || t('unknown error');
+        alert(t('Test failed:') + ' ' + msg);
+      }
+    }
+  }
+
+  // ─── DM Alerts section ─────────────────────────────────────────────
+  // Discord DM subscriptions: pick events (with per-type challenge filters and
+  // a market price watchlist) and the Kiwi bot DMs you when they fire. Backend:
+  // app/dm_subs/router.py (site-JWT, /v1/dm-subscriptions/*).
+  let _dmsubsLoaded = false;
+  let _dmItems = [];
+
+  const DM_EVENTS = [
+    { type: 'challenge', label: 'Hourly challenge', desc: 'Each new hourly challenge (filter by type below)' },
+    { type: 'corruxion', label: 'Corruxion merchant', desc: 'When the Corruxion merchant arrives' },
+    { type: 'fluxion', label: 'Fluxion merchant', desc: 'When the Fluxion merchant arrives' },
+    { type: 'game_update', label: 'Game update', desc: 'When a new Trove build goes live' },
+    { type: 'market_watch', label: 'Market watchlist', desc: 'When a watched item drops to your price' },
+  ];
+  const DM_LABEL = Object.fromEntries(DM_EVENTS.map((e) => [e.type, e.label]));
+  const DM_CHALLENGE_TYPES = ['collection', 'rampage', 'racing', 'target', 'dungeon'];
+
+  async function loadDmSubs() {
+    const el = $('dash-dmsubs-body');
+    if (!el) return;
+    el.innerHTML = `<p class="dash-loading">${esc(t('Loading…'))}</p>`;
+    const list = await Auth.callJSON('/v1/dm-subscriptions');
+    if (!list.ok) {
+      el.innerHTML = `<article class="dash-card"><p class="dash-error">${esc(Auth.errorMessage(list.data) || t('Failed to load'))}</p></article>`;
+      return;
+    }
+    const d = list.data || {};
+    renderDmSubs(el, d.items || [], d.discord_linked !== false);
+  }
+
+  function renderDmSubs(el, items, discordLinked) {
+    _dmItems = items;
+    if (!discordLinked) {
+      el.innerHTML = `<article class="dash-card"><p class="dash-card-sub">${esc(t('Link your Discord account (sign in with Discord) to receive DM alerts.'))}</p></article>`;
+      return;
+    }
+
+    const evChecks = DM_EVENTS.map((e) =>
+      `<label class="wh-ev-opt"><input type="checkbox" class="dm-ev" value="${esc(e.type)}">
+        <span><strong>${esc(t(e.label))}</strong><br><span class="dash-card-sub-mini">${esc(t(e.desc))}</span></span></label>`).join('');
+
+    const typeChips = DM_CHALLENGE_TYPES.map((c) =>
+      `<label class="dm-typechip"><input type="checkbox" class="dm-ctype" value="${c}"> ${esc(t(c[0].toUpperCase() + c.slice(1)))}</label>`).join('');
+
+    const createCard = `<article class="dash-card">
+      <h2 class="dash-card-title" data-i18n>Add a DM alert</h2>
+      <p class="dash-card-sub">${esc(t('Pick what you want the bot to DM you about.'))}</p>
+      <label class="wh-field"><span class="wh-label-text" data-i18n>Label (optional)</span>
+        <input id="dm-label" type="text" class="wh-input" maxlength="80" placeholder="${esc(t('e.g. Dungeon challenges'))}"></label>
+      <div class="wh-ev-list">${evChecks}</div>
+      <div id="dm-challenge-filter" class="dm-subfilter" hidden>
+        <p class="wh-label-text" data-i18n>Only these challenge types (all if none picked)</p>
+        <div class="dm-typechips">${typeChips}</div>
+      </div>
+      <div id="dm-watch-filter" class="dm-subfilter" hidden>
+        <p class="wh-label-text" data-i18n>Watchlist — DM me when an item is at or below a price (each)</p>
+        <div id="dm-watch-rows"></div>
+        <button type="button" id="dm-watch-add" class="dash-btn dash-btn-mini dash-btn-ghost" data-i18n>Add item</button>
+      </div>
+      <p id="dm-error" class="dash-error" hidden></p>
+      <button type="button" id="dm-add" class="dash-btn dash-btn-mini" data-i18n>Add alert</button>
+    </article>`;
+
+    const list = items.length
+      ? items.map(dmSubCard).join('')
+      : `<p class="dash-empty">${esc(t('No DM alerts yet. Add one above.'))}</p>`;
+
+    el.innerHTML = createCard + `<div class="wh-list">${list}</div>`;
+
+    // Toggle the conditional filter blocks based on which events are checked.
+    const syncFilters = () => {
+      const checked = new Set(Array.from(el.querySelectorAll('.dm-ev:checked')).map((c) => c.value));
+      $('dm-challenge-filter').hidden = !checked.has('challenge');
+      $('dm-watch-filter').hidden = !checked.has('market_watch');
+    };
+    el.querySelectorAll('.dm-ev').forEach((c) => c.addEventListener('change', syncFilters));
+    $('dm-watch-add').addEventListener('click', () => addWatchRow());
+    $('dm-add').addEventListener('click', () => createDmSub(el));
+    el.querySelectorAll('[data-dm-act]').forEach((b) =>
+      b.addEventListener('click', () => dmSubAction(b.dataset.dmAct, b.dataset.dmId, b.dataset.dmActive)));
+  }
+
+  function addWatchRow(name, price) {
+    const rows = $('dm-watch-rows');
+    if (!rows) return;
+    const row = document.createElement('div');
+    row.className = 'dm-watch-row';
+    row.innerHTML = `<input type="text" class="wh-input dm-watch-name" maxlength="120" placeholder="${esc(t('Item name'))}" value="${esc(name || '')}">
+      <input type="number" class="wh-input dm-watch-price" min="1" step="1" placeholder="${esc(t('Max price/ea'))}" value="${price != null ? esc(price) : ''}">
+      <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost dm-watch-del">✕</button>`;
+    row.querySelector('.dm-watch-del').addEventListener('click', () => row.remove());
+    rows.appendChild(row);
+  }
+
+  function dmSubCard(s) {
+    const chips = (s.events || []).map((ev) => {
+      let extra = '';
+      if (ev === 'challenge' && s.filters && s.filters.challenge_types && s.filters.challenge_types.length) {
+        extra = ' · ' + s.filters.challenge_types.join(', ');
+      }
+      if (ev === 'market_watch' && s.filters && s.filters.watch && s.filters.watch.length) {
+        extra = ' · ' + s.filters.watch.map((w) => `${w.name} ≤ ${w.max_price_each}`).join(', ');
+      }
+      return `<span class="wh-chip">${esc(t(DM_LABEL[ev] || ev))}${esc(extra)}</span>`;
+    }).join('');
+    let status;
+    if (!s.active) {
+      status = `<span class="wh-status wh-status-off">${esc(t('Disabled'))}</span>`
+        + (s.disabled_reason ? ` <span class="dash-card-sub-mini">${esc(s.disabled_reason)}</span>` : '');
+    } else if (s.last_delivered_at) {
+      status = `<span class="wh-status wh-status-on">${esc(t('Active'))}</span> <span class="dash-card-sub-mini">${esc(t('last delivered'))} ${esc(formatDate(s.last_delivered_at))}</span>`;
+    } else {
+      status = `<span class="wh-status wh-status-on">${esc(t('Active'))}</span> <span class="dash-card-sub-mini">${esc(t('no deliveries yet'))}</span>`;
+    }
+    return `<article class="dash-card wh-card">
+      <div class="wh-card-head">
+        <div><p class="wh-card-title">${esc(s.label || t('DM alert'))}</p></div>
+        <div class="wh-card-status">${status}</div>
+      </div>
+      <div class="wh-chips">${chips}</div>
+      <div class="wh-card-actions">
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-dm-act="test" data-dm-id="${esc(s.id)}" data-i18n>Send test DM</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-dm-act="toggle" data-dm-id="${esc(s.id)}" data-dm-active="${s.active ? '1' : '0'}">${esc(s.active ? t('Disable') : t('Enable'))}</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-danger" data-dm-act="delete" data-dm-id="${esc(s.id)}" data-i18n>Delete</button>
+      </div>
+    </article>`;
+  }
+
+  function collectDmFilters(el, events) {
+    const filters = {};
+    if (events.includes('challenge')) {
+      const types = Array.from(el.querySelectorAll('.dm-ctype:checked')).map((c) => c.value);
+      if (types.length) filters.challenge_types = types;
+    }
+    if (events.includes('market_watch')) {
+      const watch = [];
+      el.querySelectorAll('.dm-watch-row').forEach((row) => {
+        const name = (row.querySelector('.dm-watch-name').value || '').trim();
+        const price = parseFloat(row.querySelector('.dm-watch-price').value);
+        if (name && price > 0) watch.push({ name, max_price_each: price });
+      });
+      filters.watch = watch;
+    }
+    return filters;
+  }
+
+  async function createDmSub(el) {
+    const err = $('dm-error');
+    const label = ($('dm-label').value || '').trim();
+    const events = Array.from(el.querySelectorAll('.dm-ev:checked')).map((c) => c.value);
+    err.hidden = true;
+    if (!events.length) { err.textContent = t('Pick at least one alert.'); err.hidden = false; return; }
+    const filters = collectDmFilters(el, events);
+    if (events.includes('market_watch') && (!filters.watch || !filters.watch.length)) {
+      err.textContent = t('Add at least one item (with a price) to your watchlist.'); err.hidden = false; return;
+    }
+    const btn = $('dm-add'); btn.disabled = true;
+    const r = await Auth.callJSON('/v1/dm-subscriptions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label, events, filters }),
+    });
+    btn.disabled = false;
+    if (!r.ok) { err.textContent = Auth.errorMessage(r.data) || t('Could not add that alert.'); err.hidden = false; return; }
+    loadDmSubs();
+  }
+
+  async function dmSubAction(act, id, active) {
+    if (act === 'delete') {
+      if (!confirm(t('Delete this DM alert?'))) return;
+      const r = await Auth.callJSON('/v1/dm-subscriptions/' + encodeURIComponent(id), { method: 'DELETE' });
+      if (!r.ok && r.status !== 204) { alert(Auth.errorMessage(r.data) || t('Failed to delete.')); return; }
+      loadDmSubs();
+    } else if (act === 'toggle') {
+      const r = await Auth.callJSON('/v1/dm-subscriptions/' + encodeURIComponent(id), {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: active !== '1' }),
+      });
+      if (!r.ok) { alert(Auth.errorMessage(r.data) || t('Failed to update.')); return; }
+      loadDmSubs();
+    } else if (act === 'test') {
+      const r = await Auth.callJSON('/v1/dm-subscriptions/' + encodeURIComponent(id) + '/test', { method: 'POST' });
+      if (r.ok && r.data && r.data.ok) {
+        alert(t('Test DM sent — check your Discord DMs.'));
+      } else {
+        const msg = (r.data && r.data.error) || Auth.errorMessage(r.data) || t('unknown error');
+        alert(t('Test failed:') + ' ' + msg);
+      }
+    }
   }
 
   function t(s) {

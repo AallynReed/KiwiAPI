@@ -24,6 +24,7 @@ from datetime import timedelta
 import discord
 
 from app.bot import liveboard, stats
+from app.bot.announcements import ANNOUNCED_CHALLENGE_CATEGORIES
 from app.bot.announcer import (
     cleanup_tracked,
     refresh_tracked,
@@ -44,8 +45,9 @@ logger = logging.getLogger("kiwi.bot")
 # single "challenge" event fans out to every per-category challenge type (only the
 # live category's anchor actually fires).
 _EVENT_TO_ANNOUNCEMENT: dict[str, str | tuple[str, ...]] = {
-    "challenge": ("challenge_collection", "challenge_rampage", "challenge_racing",
-                  "challenge_target", "challenge_dungeon"),
+    # Derived from the offered categories so a hidden one (racing/target) never maps
+    # to a non-existent announcement type.
+    "challenge": tuple(f"challenge_{cat}" for cat in ANNOUNCED_CHALLENGE_CATEGORIES),
     "chaos": "chaos_chest",
     "corruxion": "corruxion",
     "fluxion": "fluxion",

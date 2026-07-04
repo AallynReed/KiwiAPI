@@ -1,0 +1,113 @@
+/* Trove Classes reference (/classes). Builds on style.css tokens.
+   Class prefix: .cls-  */
+
+.cls-main {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 110px clamp(20px, 3vw, 48px) 80px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+.cls-hero { text-align: center; margin-bottom: 30px; }
+.cls-eyebrow {
+  font-family: SFMono-Regular, Consolas, monospace;
+  color: var(--accent);
+  font-size: .85rem; letter-spacing: 0.04em; margin: 0 0 8px;
+}
+.cls-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 12px; line-height: 1.05; }
+.cls-sub { color: var(--text-mute); max-width: 660px; margin: 0 auto; line-height: 1.6; font-size: .98rem; }
+.cls-loading, .cls-empty { color: var(--text-soft); font-size: .92rem; padding: 8px 2px; }
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+.cls-layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
+
+/* ── Class picker ──────────────────────────────────────────────────── */
+.cls-nav {
+  display: flex; flex-direction: column; gap: 4px;
+  position: sticky; top: 96px; max-height: calc(100vh - 120px); overflow-y: auto;
+  padding-right: 4px;
+}
+.cls-navitem {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 11px; border-radius: 11px; cursor: pointer; border: 1px solid transparent;
+  background: none; color: var(--text-mute); font: inherit; text-align: left; width: 100%;
+  transition: background .12s ease, color .12s ease;
+}
+.cls-navitem:hover { background: var(--bg-card); color: var(--text); }
+.cls-navitem.active { background: var(--bg-card); color: var(--text); border-color: color-mix(in oklab, var(--accent) 40%, var(--bg-line)); }
+.cls-navitem img { width: 30px; height: 30px; border-radius: 8px; background: var(--bg-deep); flex-shrink: 0; object-fit: cover; }
+.cls-navitem-name { font-size: .92rem; font-weight: 500; }
+.cls-navitem-dmg { margin-left: auto; font-size: .62rem; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 999px; }
+.dmg-magic { color: var(--accent-purple); background: color-mix(in oklab, var(--accent-purple) 14%, transparent); }
+.dmg-physical { color: var(--accent-orange); background: color-mix(in oklab, var(--accent-orange) 14%, transparent); }
+
+/* ── Detail panel ──────────────────────────────────────────────────── */
+.cls-detail {
+  border: 1px solid var(--bg-line); border-radius: 20px; background: var(--bg-card);
+  padding: clamp(20px, 3vw, 32px); min-height: 400px;
+}
+.cls-detail-head { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 22px; }
+.cls-detail-icon {
+  width: 78px; height: 78px; border-radius: 16px; flex-shrink: 0; object-fit: cover;
+  background: var(--bg-deep); border: 1px solid var(--bg-line);
+}
+.cls-detail-title { min-width: 0; }
+.cls-detail-name { font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.5rem, 4vw, 2rem); margin: 0 0 8px; }
+.cls-detail-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.cls-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .76rem; padding: 4px 11px; border-radius: 999px;
+  color: var(--text-mute); background: var(--bg-deep); border: 1px solid var(--bg-line);
+}
+.cls-tag i { color: var(--text-soft); }
+.cls-tag.is-magic { color: var(--accent-purple); border-color: color-mix(in oklab, var(--accent-purple) 34%, var(--bg-line)); background: color-mix(in oklab, var(--accent-purple) 10%, transparent); }
+.cls-tag.is-physical { color: var(--accent-orange); border-color: color-mix(in oklab, var(--accent-orange) 34%, var(--bg-line)); background: color-mix(in oklab, var(--accent-orange) 10%, transparent); }
+
+.cls-section { margin-top: 26px; }
+.cls-section-title {
+  font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; margin: 0 0 12px;
+  display: inline-flex; align-items: center; gap: 9px;
+}
+.cls-section-title i { color: var(--accent); font-size: .95rem; }
+
+/* Base stats grid */
+.cls-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.cls-stat {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  padding: 9px 12px; border-radius: 10px; background: var(--bg-deep); border: 1px solid var(--bg-line);
+}
+.cls-stat-name { font-size: .8rem; color: var(--text-soft); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cls-stat-val { font-weight: 600; font-size: .9rem; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+/* Subclass */
+.cls-subclass { border: 1px solid var(--bg-line); border-radius: 14px; background: var(--bg-deep); padding: 16px 18px; }
+.cls-subclass-name { font-weight: 700; font-family: 'Space Grotesk', sans-serif; margin-bottom: 6px; }
+.cls-subclass-desc { color: var(--text-mute); font-size: .9rem; line-height: 1.6; margin-bottom: 14px; }
+.cls-levels { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.cls-level {
+  padding: 8px 10px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--bg-line);
+}
+.cls-level-tier { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-soft); margin-bottom: 4px; }
+.cls-level-bonus { font-size: .82rem; color: var(--text-mute); }
+.cls-level-bonus strong { color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* Abilities */
+.cls-abilities { display: flex; flex-direction: column; gap: 10px; }
+.cls-ability { padding: 12px 14px; border-radius: 12px; background: var(--bg-deep); border: 1px solid var(--bg-line); }
+.cls-ability-name { font-weight: 600; margin-bottom: 4px; }
+.cls-ability-desc { font-size: .86rem; color: var(--text-mute); line-height: 1.55; }
+
+.cls-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cls-chip { font-size: .8rem; padding: 4px 10px; border-radius: 999px; background: var(--bg-deep); border: 1px solid var(--bg-line); color: var(--text-mute); }
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .cls-layout { grid-template-columns: 1fr; }
+  .cls-nav {
+    position: static; max-height: none; overflow: visible;
+    flex-direction: row; flex-wrap: wrap; gap: 8px;
+  }
+  .cls-navitem { width: auto; }
+  .cls-navitem-dmg { display: none; }
+}

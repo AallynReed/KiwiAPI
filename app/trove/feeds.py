@@ -96,6 +96,21 @@ def _has_term(text: str, term: str) -> bool:
     return re.search(r"\b" + re.escape(term) + r"\b", text) is not None
 
 
+_YT_DURATION_RE = re.compile(r"^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$")
+
+
+def _iso8601_seconds(value: str | None) -> int | None:
+    """Parse a YouTube ISO-8601 duration (``PT#H#M#S``) to whole seconds, or None
+    when absent/unparseable. Used to drop Shorts from the community feed."""
+    if not value:
+        return None
+    m = _YT_DURATION_RE.match(value)
+    if not m:
+        return None
+    h, mi, se = (int(x) if x else 0 for x in m.groups())
+    return h * 3600 + mi * 60 + se
+
+
 # --- Twitch (client-credentials app token → Helix /streams) -----------------
 
 _twitch_token: str | None = None  # cached app access token; re-minted on 401
@@ -192,16 +207,17 @@ async def _fetch_youtube() -> list[dict]:
         # 2) Enrich with the FULL description + tags + uploader category the
         #    search snippet lacks - 1 quota unit for up to 50 ids.
         vresp = await client.get(_YOUTUBE_VIDEOS_URL, params={
-            "part": "snippet", "id": ",".join(snippets), "maxResults": "50",
+            "part": "snippet,contentDetails", "id": ",".join(snippets), "maxResults": "50",
             "key": settings.yt_api_key,
         })
         vresp.raise_for_status()
-        details = {v["id"]: (v.get("snippet") or {}) for v in vresp.json().get("items", [])}
+        details = {v["id"]: v for v in vresp.json().get("items", [])}
 
     # 3) Our relevance curation over title + description + tags.
     temp: list[dict] = []
     for vid, ssnip in snippets.items():
-        d = details.get(vid, {})
+        full = details.get(vid, {})
+        d = full.get("snippet") or {}
         channel = d.get("channelTitle") or ssnip.get("channelTitle", "")
         title = d.get("title") or ssnip.get("title", "")
         if channel.lower() in excluded_chans:
@@ -211,6 +227,11 @@ async def _fetch_youtube() -> list[dict]:
         blob = " ".join((
             title, d.get("description", ""), " ".join(d.get("tags") or []),
         )).lower()
+        # Drop YouTube Shorts: ≤60s clips, or anything explicitly hashtagged
+        # #shorts. Short-form vertical content doesn't belong in the community rail.
+        dur = _iso8601_seconds((full.get("contentDetails") or {}).get("duration"))
+        if (dur is not None and dur <= 60) or _has_term(blob, "shorts"):
+            continue
         if any(_has_term(blob, t) for t in exclude_terms):
             continue
         if not all(_has_term(blob, t) for t in require_terms):

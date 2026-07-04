@@ -50,3 +50,11 @@ async def get_entry(branch: str, codex_type: str, path: str) -> dict | None:
     if not settings.postgres_enabled:
         return None
     return await pg_store.get_entry(branch, codex_type, path)
+
+
+async def all_recipes(branch: str) -> list[dict]:
+    """Every recipe entry (path/name/category/data) - the crafting calculator's
+    dependency-tree source. Empty when Postgres isn't configured (dev)."""
+    if not settings.postgres_enabled:
+        return []
+    return await pg_store.all_recipes(branch)

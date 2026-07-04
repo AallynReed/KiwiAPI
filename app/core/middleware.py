@@ -42,10 +42,11 @@ _SITE_CSP = (
 # Exact-matched showcase-site HTML page routes. (Everything else under the site
 # is the /static/* asset mount or the /site/* JSON proxies.)
 _PAGE_PATHS = frozenset({
-    "/", "/documentation", "/commands", "/leaderboards", "/updates",
-    "/support", "/login", "/dashboard", "/market", "/codexes", "/status", "/giveaways",
+    "/", "/app", "/browse", "/documentation", "/commands", "/leaderboards", "/updates",
+    "/support", "/login", "/dashboard", "/market", "/codexes", "/codexes/crafting",
+    "/status", "/giveaways",
     "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/mods", "/modpacks",
-    "/server-time", "/swf-docs",
+    "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
 })
 
 # Dynamic site page subtrees (parameterised routes like /mods/{slug},

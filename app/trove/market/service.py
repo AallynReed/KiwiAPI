@@ -184,6 +184,20 @@ async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
                      entry.price_each, entry.created_at, last_seen))
     imported = await pg_store.upsert_listings(rows)
 
+    # DM watchlist: notify subscribers whose price threshold is met by this
+    # ingest. Cheapest price-each per item just seen; never let it break ingest.
+    try:
+        cheapest: dict[str, float] = {}
+        for r in rows:
+            name, pe = r[1], float(r[5])
+            if name not in cheapest or pe < cheapest[name]:
+                cheapest[name] = pe
+        if cheapest:
+            from app.dm_subs import delivery as dm_delivery
+            await dm_delivery.check_market(cheapest)
+    except Exception:
+        logger.warning("market: DM watchlist check failed", exc_info=True)
+
     logger.info(
         "market: ingested last_seen=%d parsed=%d imported=%d ignored=%d",
         last_seen, len(listings), imported, ignored,
@@ -263,6 +277,19 @@ async def list_distinct_items() -> list[str]:
 # callers should `await interest_items_list()`.
 
 
+async def medians_for_names(names: list[str]) -> dict[str, dict]:
+    """``name -> {median_each, count}`` for many items at once, across active
+    listings. Empty dict when Postgres isn't configured (dev) - callers must
+    degrade to "no market data" rather than assuming a price. Powers the crafting
+    calculator's ingredient price join."""
+    from app.core.config import settings
+    if not settings.postgres_enabled or not names:
+        return {}
+    return await pg_store.medians_for_names(
+        list(names), _now() - LISTING_STALE_SECONDS, _now() - LISTING_LIFETIME_SECONDS,
+    )
+
+
 async def item_summary(name: str) -> dict | None:
     """Cheapest / median / average / count for one item across active listings.
     ``None`` when no active listings are stored for ``name``.
@@ -278,6 +305,93 @@ async def item_summary(name: str) -> dict | None:
     return await pg_store.item_summary(
         name, _now() - LISTING_STALE_SECONDS, _now() - LISTING_LIFETIME_SECONDS,
     )
+
+
+# ----- Analytics (the /market Analytics tab) -------------------------------
+# Aggregations over the immutable listing history. Everything degrades to empty
+# when Postgres isn't configured (dev) rather than raising.
+
+async def analytics_timeline(name: str, *, days: int = 14, bucket_hours: int = 24) -> dict:
+    """Daily (by default) price band + supply for one item, plus the merchant-event
+    bands that overlap the window so the chart can shade them."""
+    from app.core.config import settings
+    now = _now()
+    floor = now - days * 86400
+    points: list[dict] = []
+    if settings.postgres_enabled:
+        points = await pg_store.price_volume_timeline(
+            name, created_at_floor=floor, bucket_seconds=bucket_hours * 3600)
+    return {
+        "name": name, "days": days, "bucket_hours": bucket_hours,
+        "points": points, "events": event_bands(floor, now), "now": now,
+    }
+
+
+async def analytics_deals(
+    *, days: int = 7, min_discount: float = 0.25, min_samples: int = 5, limit: int = 50,
+) -> list[dict]:
+    """Underpriced active listings - a flip-finder. ``min_discount`` is a 0-1
+    fraction below the item median; ``days`` bounds how far back a listing's
+    creation can be (on top of the active-listing cutoffs)."""
+    from app.core.config import settings
+    if not settings.postgres_enabled:
+        return []
+    now = _now()
+    created_floor = max(now - days * 86400, now - LISTING_LIFETIME_SECONDS)
+    return await pg_store.underpriced_deals(
+        last_seen_floor=now - LISTING_STALE_SECONDS, created_at_floor=created_floor,
+        min_discount=min_discount, min_samples=min_samples, limit=limit)
+
+
+async def analytics_movers(
+    *, days: int = 7, min_samples: int = 5, limit: int = 40,
+) -> dict:
+    """Biggest median-price movers: this window's median vs the previous window's,
+    split into risers and fallers."""
+    from app.core.config import settings
+    if not settings.postgres_enabled:
+        return {"risers": [], "fallers": [], "days": days}
+    now = _now()
+    rows = await pg_store.market_movers(
+        recent_start=now - days * 86400, prior_start=now - 2 * days * 86400,
+        now=now, min_samples=min_samples, limit=limit)
+    risers = [r for r in rows if r["change"] > 0]
+    fallers = sorted((r for r in rows if r["change"] < 0), key=lambda r: r["change"])
+    return {"risers": risers, "fallers": fallers, "days": days, "now": now}
+
+
+def _cycle_bands(anchor_ts: int, interval_s: int, duration_s: int,
+                 start: int, end: int, name: str, kind: str) -> list[dict]:
+    """Every occurrence of a periodic event overlapping ``[start, end]`` (real-UTC
+    unix). ``anchor_ts`` is the first occurrence's real-UTC start."""
+    if interval_s <= 0:
+        return []
+    k = max(0, (start - duration_s - anchor_ts) // interval_s)
+    bands: list[dict] = []
+    while True:
+        s = anchor_ts + k * interval_s
+        if s > end:
+            break
+        e = s + duration_s
+        if e >= start:
+            bands.append({"name": name, "kind": kind, "starts_at": int(s), "ends_at": int(e)})
+        k += 1
+    return bands
+
+
+def event_bands(start: int, end: int) -> list[dict]:
+    """Merchant-cycle windows (Corruxion, Fluxion) overlapping a time range - the
+    overlay bands on the analytics price chart. Derived from the authoritative
+    anchors in ``server_time`` so they stay in lock-step with the calendar."""
+    from app.trove import server_time as st
+    corr_anchor = int((st.FIRST_CORRUXION + st.TROVE_OFFSET).timestamp())
+    flux_anchor = int((st.FIRST_FLUXION + st.TROVE_OFFSET).timestamp())
+    dur = int(st.DRAGON_DURATION.total_seconds())
+    bands = _cycle_bands(corr_anchor, int(st.DRAGON_INTERVAL.total_seconds()), dur,
+                         start, end, "Corruxion", "merchant")
+    bands += _cycle_bands(flux_anchor, int(st.FLUXION_INTERVAL.total_seconds()), dur,
+                          start, end, "Fluxion", "merchant")
+    return sorted(bands, key=lambda b: b["starts_at"])
 
 
 # Default modified-Z cutoff used by the price-history outlier filter.

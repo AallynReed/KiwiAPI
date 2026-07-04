@@ -489,6 +489,11 @@ class Settings(BaseSettings):
     events_watch_seconds: int = 30            # safety-net poll that re-publishes on change
     events_max_connections: int = 1000        # per-worker cap on concurrent stream clients
 
+    # Outbound webhooks (Discord) - the Redis list used as the delivery queue.
+    webhooks_queue: str = "kiwi:webhooks:queue"
+    # Discord DM subscriptions - the Redis list used as the DM delivery queue.
+    dm_subs_queue: str = "kiwi:dmsubs:queue"
+
     # --- Game-file version archiver (Trion update CDN) ---
     # OFF by default: enabling it triggers a multi-GB first sync against Trion's CDN.
     # Turn on deliberately (per box) once the blob store path/disk is ready.
@@ -496,6 +501,11 @@ class Settings(BaseSettings):
     trove_update_base_url: str = "http://trove-update.dyn.triongames.com"
     trove_update_prefix: str = "/kiwi-live-client-patch/"  # yields an intentional // when joined
     trove_update_store_dir: str = "data/updates"           # content-addressed blob store (bind-mounted)
+    # Dev-only fallback for VFX-preview asset resolution: a local PopcornFX project
+    # tree (e.g. the extracted VFX/ folder) used to resolve a .pkfx's textures/meshes
+    # by basename when the updates archive isn't populated. UNSET in production - the
+    # live game tree (updates archive) is the real source.
+    pkfx_dev_vfx_dir: str = ""
     trove_update_probe_seconds: int = 1200                 # per-branch probe cadence (20 min)
     trove_update_concurrency: int = 6                      # parallel file downloads
 

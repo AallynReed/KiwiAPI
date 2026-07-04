@@ -21,6 +21,10 @@ CODEX_TYPES: list[tuple[str, str, tuple[str, ...]]] = [
     ("ally", "collections/pet/", ("_npc",)),
     ("mount", "collections/mount/", ()),
     ("badge", "collections/badge/", ()),
+    # Styles (hats/faces/hair/weapons/banners) are the `equipment/` appearance prefabs
+    # (verified against the live archive; catalogue = collection_equipmentappearance).
+    # Must precede `item/` - both are item-ish, but equipment/ is its own root.
+    ("style", "equipment/", ()),
     ("recipe", "recipes/", ()),
     ("item", "item/", ()),  # catch-all for remaining item/* prefabs
 ]

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 
-from app.trove.codexes import binfab, bonuses, localize, powerrank, recipe
+from app.trove.codexes import binfab, bonuses, localize, powerrank, recipe, styles
 
 # Types whose prefabs carry displayed stat/ability/Power-Rank bonuses (the handoff's
 # "collection prefabs"). `mount` covers dragons too (split out after extraction).
@@ -155,11 +155,23 @@ def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str,
         _enrich_bonuses(data, loc_map)
         power_rank = powerrank.decode_power_rank(content)
 
+    category = ident.get("category") or ""
+
+    # Styles are the `equipment/` appearance prefabs: attach the equipment id + best-
+    # effort slot family. Mastery is the standard EquipmentAppearance base, added by the
+    # indexer. The in-prefab category is always "Equipment", so the family is the more
+    # useful display category when we can detect a slot.
+    if codex_type == "style":
+        rel = path[len("prefabs/"):].removesuffix(".binfab") if path.startswith("prefabs/") else path.removesuffix(".binfab")
+        family = styles.style_family(rel)
+        data["style"] = {**styles.style_identity(rel), "family": family}
+        category = family or category
+
     return {
         "codex_type": codex_type,
         "path": path,
         "name": name,
-        "category": ident.get("category") or "",
+        "category": category,
         "description": description,
         "tradable": ident.get("tradable"),
         "mastery_geode": None,

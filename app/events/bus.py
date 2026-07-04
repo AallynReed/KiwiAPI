@@ -75,6 +75,8 @@ async def publish(event_type: str, signature: str, data: dict) -> bool:
             return False
         _local_sig[event_type] = signature
         _broadcast_local(payload)
+        await _fanout_webhooks(payload)
+        await _fanout_dm_subs(payload)
         return True
     try:
         # SET ... GET returns the previous value (Redis >= 6.2). If it already
@@ -84,10 +86,32 @@ async def publish(event_type: str, signature: str, data: dict) -> bool:
         if prev == signature:
             return False
         await redis.publish(settings.events_channel, json.dumps(payload, default=str))
+        await _fanout_webhooks(payload)
+        await _fanout_dm_subs(payload)
         return True
     except Exception:
         logger.warning("event publish failed (%s)", event_type, exc_info=True)
         return False
+
+
+async def _fanout_webhooks(payload: dict) -> None:
+    """Enqueue this (exactly-once) event for outbound webhook delivery. Lazy import
+    avoids an import cycle; never let a webhook hiccup break the SSE publish."""
+    try:
+        from app.webhooks import delivery
+        await delivery.enqueue(payload)
+    except Exception:
+        logger.warning("webhook fan-out failed", exc_info=True)
+
+
+async def _fanout_dm_subs(payload: dict) -> None:
+    """Enqueue this (exactly-once) event for Discord DM-subscription delivery.
+    Lazy import avoids an import cycle; never let a DM hiccup break the publish."""
+    try:
+        from app.dm_subs import delivery
+        await delivery.enqueue(payload)
+    except Exception:
+        logger.warning("dm-sub fan-out failed", exc_info=True)
 
 
 # ── concrete event sources ──────────────────────────────────────────────────

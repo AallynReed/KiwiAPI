@@ -1,0 +1,50 @@
+/* ===========================================================================
+   browse.css - the /browse site index ("HTML sitemap").
+   Plain, scannable, crawlable. Reuses global tokens + chrome from style.css.
+   ========================================================================== */
+.browse-wrap {
+  width: min(var(--content-max), 1100px);
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 4rem) 1.25rem clamp(3rem, 6vw, 5rem);
+}
+.browse-head { margin-bottom: 2rem; }
+.browse-head h1 {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: clamp(1.9rem, 4vw + 1rem, 3rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
+}
+.browse-head p { color: var(--text-mute); margin: 0; max-width: 60ch; }
+
+.browse-section { margin-top: 2.5rem; }
+.browse-section h2 {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 1.35rem;
+  border-bottom: 1px solid var(--bg-line);
+  padding-bottom: 0.5rem;
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.browse-count {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-soft);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+}
+.browse-links { list-style: none; margin: 0; padding: 0; }
+.browse-cols { columns: 280px; column-gap: 1.5rem; }
+.browse-links li { break-inside: avoid; margin: 0 0 0.45rem; }
+.browse-links a {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.browse-links a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.browse-empty { color: var(--text-soft); }

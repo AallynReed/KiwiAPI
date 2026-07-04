@@ -18,14 +18,14 @@
   // codex_type -> display labels (plural for tabs, singular for the card chip).
   const TYPE_TABS = {
     ally: 'Allies', mount: 'Mounts', dragon: 'Dragons', memento: 'Mementos',
-    recipe: 'Recipes', item: 'Items', fish: 'Fish', badge: 'Badges',
+    style: 'Styles', recipe: 'Recipes', item: 'Items', fish: 'Fish', badge: 'Badges',
   };
   const TYPE_CHIP = {
     ally: 'Ally', mount: 'Mount', dragon: 'Dragon', memento: 'Memento',
-    recipe: 'Recipe', item: 'Item', fish: 'Fish', badge: 'Badge',
+    style: 'Style', recipe: 'Recipe', item: 'Item', fish: 'Fish', badge: 'Badge',
   };
   // Stable tab order (types not present are dropped after the /types fetch).
-  const TYPE_ORDER = ['ally', 'mount', 'dragon', 'badge', 'memento', 'fish', 'recipe', 'item'];
+  const TYPE_ORDER = ['ally', 'mount', 'dragon', 'badge', 'memento', 'style', 'fish', 'recipe', 'item'];
 
   // `$Stat_…` key -> human label (mirrors the in-game stat names).
   const STAT_LABELS = {
@@ -317,6 +317,31 @@
         const reqs = rec.requirements.map((r) => `<li class="cdx-req">${esc(r)}</li>`).join('');
         parts.push(section(t('Requirements'), `<ul class="cdx-reqs">${reqs}</ul>`));
       }
+      // Where it's crafted: the bench/profession prefabs that reference this recipe.
+      const provs = rec.providers || [];
+      if (provs.length) {
+        const benchName = (p) => {
+          const stem = String(p.provider || '').split('/').pop()
+            .replace(/_(interactive|interactable|hub)$/g, '').replace(/_/g, ' ').trim();
+          return stem.replace(/\b\w/g, (ch) => ch.toUpperCase()) || p.provider;
+        };
+        const rows = provs.map((p) => `<li class="cdx-req">${esc(benchName(p))}${
+          p.lane ? ` <span class="cdx-stat-slot">${esc(p.lane)}</span>` : ''}</li>`).join('');
+        parts.push(section(t('Craftable at'), `<ul class="cdx-reqs">${rows}</ul>`));
+      }
+      // Source-only recipes (not part of the current catalogue lane) get a small note.
+      if (rec.in_catalogue === false) {
+        parts.push(section(t('Catalogue'),
+          `<p class="cdx-modal-cat">${esc(t('Not in the current recipe catalogue'))}</p>`));
+      }
+    }
+
+    // Style identity: the equipment id it restyles (preserved verbatim, aliases intact)
+    const sty = data.style;
+    if (sty && sty.equipment_ref) {
+      parts.push(section(t('Style'),
+        `<div class="cdx-ref"><span class="cdx-ref-row"><span class="cdx-ref-k" data-i18n>Restyles</span>` +
+        `<code>${esc(sty.equipment_ref)}</code></span></div>`));
     }
 
     // Geode companion upgrade-tree levels

@@ -170,6 +170,12 @@
 }
 .mh-badge-draft { color: #ffce6b; background: rgba(255,206,107,.14); }
 .mh-badge-unlisted { color: var(--text-soft); background: rgba(255,255,255,.07); }
+.mh-badge-uploaded { color: #7fd4c8; background: rgba(127,212,200,.14); }
+/* Uploaded-on-behalf card: the muted "uploaded by <account>" under the creator. */
+.mh-card-uploader { display: block; color: var(--text-soft); font-size: .78em; margin-top: 1px; }
+/* "This mod was made by someone else" checkbox row in the create dialog. */
+.mh-form-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.mh-form-check input { width: auto; margin: 0; }
 
 .mh-foot { text-align: center; margin-top: 24px; }
 .mh-empty, .mh-error {

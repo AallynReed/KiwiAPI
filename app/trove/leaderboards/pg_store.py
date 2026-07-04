@@ -409,6 +409,34 @@ async def player_rows_window(name: str, window_start: int) -> list[dict]:
     ]
 
 
+async def player_board_summary(name: str) -> list[dict]:
+    """Per-leaderboard aggregate of one player's ENTIRE appearance history: best
+    rank ever, current rank/score (latest capture), capture count, and first/last
+    seen - one row per board, best boards first. Lets the profile show a ranking
+    per leaderboard instead of one row per capture (a player on one board across
+    thousands of captures collapses to a single row here)."""
+    sql = (
+        "WITH r AS ("
+        "  SELECT e.board_uuid, e.rank, e.score, e.anchor,"
+        "         ROW_NUMBER() OVER (PARTITION BY e.board_uuid ORDER BY e.anchor DESC) AS rn"
+        "  FROM entry e JOIN player p ON p.id = e.player_id"
+        "  WHERE p.name_lower = lower($1)"
+        ") "
+        "SELECT board_uuid AS leaderboard,"
+        "       MIN(rank)::int       AS best_rank,"
+        "       COUNT(*)::int        AS appearances,"
+        "       MIN(anchor)::bigint  AS first_seen,"
+        "       MAX(anchor)::bigint  AS last_seen,"
+        "       (MAX(rank)  FILTER (WHERE rn = 1))::int AS latest_rank,"
+        "       (MAX(score) FILTER (WHERE rn = 1))      AS latest_score "
+        "FROM r GROUP BY board_uuid "
+        "ORDER BY best_rank ASC, last_seen DESC"
+    )
+    async with acquire() as con:
+        rows = await con.fetch(sql, name.strip())
+    return [dict(r) for r in rows]
+
+
 async def board_top_series(
     uuid: int, window_start: int, top: int,
 ) -> tuple[list[int], int | None, list[dict], list[dict]]:

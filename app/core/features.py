@@ -35,6 +35,13 @@ SERVER_STATUS_FLAG = "feature_server_status_enabled"
 GIVEAWAYS_FLAG = "feature_giveaways_enabled"
 COMMANDS_FLAG = "feature_commands_enabled"
 SERVER_TIME_FLAG = "feature_server_time_enabled"
+WEBHOOKS_FLAG = "feature_webhooks_enabled"
+IMAGE_STUDIO_FLAG = "feature_image_studio_enabled"
+CALENDAR_FLAG = "feature_calendar_enabled"
+STREAMS_FLAG = "feature_streams_enabled"
+BTT_RELEASES_FLAG = "feature_btt_releases_enabled"
+CLASSES_FLAG = "feature_classes_enabled"
+DM_SUBS_FLAG = "feature_dm_subscriptions_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
@@ -74,3 +81,6 @@ require_updates_enabled = _gate(UPDATES_FLAG, "Updates archive")
 require_codexes_enabled = _gate(CODEXES_FLAG, "Codexes")
 require_server_status_enabled = _gate(SERVER_STATUS_FLAG, "Server Status")
 require_giveaways_enabled = _gate(GIVEAWAYS_FLAG, "Giveaways")
+require_webhooks_enabled = _gate(WEBHOOKS_FLAG, "Webhooks")
+require_image_studio_enabled = _gate(IMAGE_STUDIO_FLAG, "Image Studio")
+require_dm_subs_enabled = _gate(DM_SUBS_FLAG, "DM subscriptions")

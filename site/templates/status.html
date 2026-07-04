@@ -76,6 +76,54 @@
         </section>
 
         <p class="st-method" data-i18n>How this works: every minute we check whether Trove's login and game servers are responding. "Online" means you can log in and play; "Maintenance" means login works but the game servers are down for an update; "Offline" means the servers aren't reachable at all.</p>
+
+        <!-- Embed this badge: a copy-paste live-status badge for other sites,
+             wikis, Discords and READMEs. It's a linked image, so every embed is
+             also a backlink to the site. -->
+        <section class="st-embed" aria-labelledby="st-embed-h">
+            <style>
+                .st-embed { margin-top: 2.5rem; padding: 1.25rem 1.4rem; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius, 16px); }
+                .st-embed h2 { margin: 0 0 .35rem; font-size: 1.2rem; }
+                .st-embed > p { color: var(--text-mute); margin: 0 0 1rem; }
+                .st-embed-preview { margin: 0 0 1rem; }
+                .st-embed-row { display: flex; align-items: center; gap: .6rem; margin-bottom: .6rem; }
+                .st-embed-row > span { flex: 0 0 64px; color: var(--text-soft); font-size: .85rem; }
+                .st-embed-row input { flex: 1 1 auto; min-width: 0; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 8px; color: var(--text); padding: .5rem .6rem; font-family: ui-monospace, monospace; font-size: .82rem; }
+                .st-embed-row button { flex: 0 0 auto; background: var(--accent); color: #06080d; border: 0; border-radius: 8px; padding: .5rem .9rem; font-weight: 600; cursor: pointer; }
+                @media (max-width: 560px) { .st-embed-row { flex-wrap: wrap; } .st-embed-row > span { flex-basis: 100%; } .st-embed-row button { width: 100%; } }
+            </style>
+            <h2 id="st-embed-h" data-i18n>Embed this badge</h2>
+            <p data-i18n>Show live Trove server status on your own site, wiki, README or Discord - it links back here.</p>
+            <p class="st-embed-preview">
+                <img src="/embed/status.svg" alt="Trove server status" width="95" height="20" loading="lazy">
+            </p>
+            <label class="st-embed-row">
+                <span>HTML</span>
+                <input readonly value='&lt;a href="https://trove.aallyn.net/status"&gt;&lt;img src="https://trove.aallyn.net/embed/status.svg" alt="Trove server status"&gt;&lt;/a&gt;'>
+                <button type="button" data-copy data-i18n>Copy</button>
+            </label>
+            <label class="st-embed-row">
+                <span>Markdown</span>
+                <input readonly value="[![Trove server status](https://trove.aallyn.net/embed/status.svg)](https://trove.aallyn.net/status)">
+                <button type="button" data-copy data-i18n>Copy</button>
+            </label>
+        </section>
+
+        <script>
+            (function () {
+                document.querySelectorAll('.st-embed [data-copy]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var inp = btn.parentElement.querySelector('input');
+                        inp.select();
+                        if (navigator.clipboard) navigator.clipboard.writeText(inp.value).catch(function () {});
+                        else document.execCommand('copy');
+                        var prev = btn.textContent;
+                        btn.textContent = 'Copied!';
+                        setTimeout(function () { btn.textContent = prev; }, 1200);
+                    });
+                });
+            })();
+        </script>
     </main>
 
     {% include "partials/footer.html" %}

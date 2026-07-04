@@ -80,6 +80,7 @@ class ErrorCode(str, Enum):
     captcha_failed = "captcha_failed"
     forbidden = "forbidden"
     not_found = "not_found"
+    not_public = "not_public"
     conflict = "conflict"
     email_taken = "email_taken"
     email_unverified = "email_unverified"

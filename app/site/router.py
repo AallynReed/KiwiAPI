@@ -13,11 +13,14 @@ at ``/static`` in ``app/main.py``), so the templates render straight
 through Jinja2Templates without a custom url-builder.
 """
 
+import asyncio
 import logging
 import re
+import time
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
@@ -28,6 +31,14 @@ from app.site_auth.dependencies import get_optional_site_user
 from app.site_auth.models import SiteUser
 from app.trove import server_time as trove_server_time
 from app.trove import status as trove_status
+from app.trove import btt_releases as trove_btt
+from app.trove import feeds as trove_feeds
+from app.trove import news as trove_news
+from app.trove import rotations as trove_rotations
+from app.trove import chaos as trove_chaos
+from app.trove import stats as trove_stats
+from app.trove.models import TroveEvent
+from app.trove.codexes import crafting as codexes_crafting
 from app.trove.codexes import read as codexes_read
 from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
 from app.trove.render.service import render_blueprint_cached
@@ -67,6 +78,13 @@ _SITE_FEATURE_FLAGS = {
     "giveaways_enabled": feature_flags.GIVEAWAYS_FLAG,
     "commands_enabled": feature_flags.COMMANDS_FLAG,
     "server_time_enabled": feature_flags.SERVER_TIME_FLAG,
+    "webhooks_enabled": feature_flags.WEBHOOKS_FLAG,
+    "dm_subscriptions_enabled": feature_flags.DM_SUBS_FLAG,
+    "image_studio_enabled": feature_flags.IMAGE_STUDIO_FLAG,
+    "calendar_enabled": feature_flags.CALENDAR_FLAG,
+    "streams_enabled": feature_flags.STREAMS_FLAG,
+    "btt_releases_enabled": feature_flags.BTT_RELEASES_FLAG,
+    "classes_enabled": feature_flags.CLASSES_FLAG,
 }
 
 
@@ -109,7 +127,9 @@ def _feature_blocks(p: str, f: dict) -> bool:
         return True
     if not f["updates_enabled"] and (p == "/updates" or p.startswith("/site/updates/")):
         return True
-    if not f["codexes_enabled"] and (p == "/codexes" or p.startswith("/site/codexes/")):
+    if not f["codexes_enabled"] and (
+        p == "/codexes" or p == "/codexes/crafting" or p.startswith("/site/codexes/")
+    ):
         return True
     if not f["server_status_enabled"] and (
         p == "/status" or p.startswith("/status/")               # page + /status/og.png
@@ -122,6 +142,20 @@ def _feature_blocks(p: str, f: dict) -> bool:
         return True
     if not f["server_time_enabled"] and (
         p == "/server-time" or p == "/site/server-time"
+    ):
+        return True
+    if not f["calendar_enabled"] and (
+        p == "/calendar" or p.startswith("/site/calendar")
+    ):
+        return True
+    if not f["streams_enabled"] and p == "/streams":
+        return True
+    if not f["btt_releases_enabled"] and (
+        p == "/releases" or p.startswith("/site/btt")
+    ):
+        return True
+    if not f["classes_enabled"] and (
+        p == "/classes" or p.startswith("/site/stats/classes")
     ):
         return True
     return False
@@ -165,9 +199,283 @@ router = APIRouter(
 
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> HTMLResponse:
-    """The BetterTroveTools landing page."""
+    """The content-hub homepage - a live, navigable front door (server status,
+    leaderboard movers, latest mods, newest update, featured codex, reference)
+    that drives visitors into the site. The app *showcase* lives at ``/app``."""
     return _TEMPLATES.TemplateResponse(
         request, "index.html", {"discord_install_url": settings.discord_install_link},
+    )
+
+
+@router.get("/app", response_class=HTMLResponse)
+async def app_showcase(request: Request) -> HTMLResponse:
+    """The BetterTroveTools app showcase + downloads (was the old landing page).
+    Moved off ``/`` so the homepage can be a content front door instead of a
+    product pitch; still linked from the navbar and the homepage CTA."""
+    return _TEMPLATES.TemplateResponse(
+        request, "app.html", {"discord_install_url": settings.discord_install_link},
+    )
+
+
+# --- Embeddable status badge ("backlink magnet") ---------------------------
+# A shields.io-style SVG badge other Trove sites / Discords / READMEs embed via
+# ``<a href="…/status"><img src="…/embed/status.svg"></a>``. Because the <a>
+# lives on the HOST page's DOM (unlike an iframe), each embed is a real,
+# followable backlink to trove.aallyn.net - plus referral traffic. The /status
+# page hands out copy-paste HTML + Markdown snippets.
+_BADGE_COLORS = {"online": "#3fb950", "down": "#f85149", "unknown": "#9aa4b2"}
+_BADGE_VALUES = {"online": "online", "down": "offline", "unknown": "unknown"}
+
+
+def _badge_svg(label: str, value: str, color: str) -> str:
+    """Minimal flat status badge. Widths are approximated from text length
+    (~6.5px/char + padding) - good enough for a two-segment badge without
+    bundling a font-metrics table."""
+    def w(s: str) -> int:
+        return int(len(s) * 6.5) + 12
+    lw, vw = w(label), w(value)
+    total = lw + vw
+    lx, vx = lw * 5, (lw + vw // 2) * 10  # text anchors at *10 (scaled coords)
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{total}" height="20" '
+        f'role="img" aria-label="{label}: {value}">'
+        f'<linearGradient id="s" x2="0" y2="100%">'
+        f'<stop offset="0" stop-color="#bbb" stop-opacity=".1"/>'
+        f'<stop offset="1" stop-opacity=".1"/></linearGradient>'
+        f'<clipPath id="r"><rect width="{total}" height="20" rx="3" fill="#fff"/></clipPath>'
+        f'<g clip-path="url(#r)">'
+        f'<rect width="{lw}" height="20" fill="#2b3038"/>'
+        f'<rect x="{lw}" width="{vw}" height="20" fill="{color}"/>'
+        f'<rect width="{total}" height="20" fill="url(#s)"/></g>'
+        f'<g fill="#fff" text-anchor="middle" '
+        f'font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">'
+        f'<text x="{lx}" y="15" transform="scale(.1)" textLength="{(lw - 12) * 10}">{label}</text>'
+        f'<text x="{vx}" y="15" transform="scale(.1)" textLength="{(vw - 12) * 10}">{value}</text>'
+        f'</g></svg>'
+    )
+
+
+@router.get("/embed/status.svg")
+async def embed_status_badge() -> Response:
+    """Live Trove server-status badge (SVG). Embed via a linked image so it
+    doubles as a backlink. ``no-cache``-ish short TTL keeps it fresh without
+    hammering the prober."""
+    overall = (trove_status.get_status() or {}).get("overall", "unknown")
+    if overall not in _BADGE_COLORS:
+        overall = "unknown"
+    svg = _badge_svg("trove", _BADGE_VALUES[overall], _BADGE_COLORS[overall])
+    return Response(
+        svg, media_type="image/svg+xml",
+        headers={"Cache-Control": "public, max-age=60", "Access-Control-Allow-Origin": "*"},
+    )
+
+
+@router.get("/browse", response_class=HTMLResponse)
+async def browse_index(request: Request) -> HTMLResponse:
+    """Human-readable site index ("HTML sitemap"): real ``<a>`` links to every
+    public mod and modpack page. The catalog pages render their grids client-
+    side, so individual mod/modpack pages had NO crawlable internal links - only
+    the XML sitemap. This page gives search engines (and people) a static,
+    always-present crawl path + spreads link equity into the long tail. Linked
+    from the footer so it's reachable from every page."""
+    # Modpacks only: the full mod list (thousands of entries) was excessive for a
+    # human index, and the XML sitemap already gives search engines every mod URL.
+    packs: list[dict] = []
+    if getattr(request.state, "mods_hub_enabled", True):
+        packs = await _all_public_cards(
+            modpacks_service.list_public, _SITEMAP_MAX_PER_SECTION, "browse-modpacks")
+    packs.sort(key=lambda c: (c.get("title") or c.get("slug") or "").lower())
+    return _TEMPLATES.TemplateResponse(request, "browse.html", {"modpacks": packs})
+
+
+# Public, indexable STATIC site pages for the sitemap: (path, feature attr that
+# must be truthy; ``None`` = always on). The attr is a key of
+# ``_SITE_FEATURE_FLAGS``, so a page whose master toggle is OFF drops out of the
+# sitemap instead of being advertised to Google as a 404. Private/utility/noindex
+# pages (/login, /dashboard, /swf-docs) are deliberately omitted. The dynamic
+# mod/modpack pages are appended separately in ``_render_sitemap``.
+_SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
+    ("/", None),
+    ("/app", None),
+    ("/browse", None),
+    ("/documentation", None),
+    ("/swf-docs", None),
+    ("/support", None),
+    ("/terms", None),
+    ("/privacy", None),
+    ("/commands", "commands_enabled"),
+    ("/classes", "classes_enabled"),
+    ("/leaderboards", "leaderboards_enabled"),
+    ("/activity", "player_activity_enabled"),
+    ("/class-activity", "class_activity_enabled"),
+    ("/updates", "updates_enabled"),
+    ("/market", "market_enabled"),
+    ("/codexes", "codexes_enabled"),
+    ("/codexes/crafting", "codexes_enabled"),
+    ("/status", "server_status_enabled"),
+    ("/giveaways", "giveaways_enabled"),
+    ("/clubs", "clubs_enabled"),
+    ("/server-time", "server_time_enabled"),
+    ("/calendar", "calendar_enabled"),
+    ("/streams", "streams_enabled"),
+    ("/releases", "btt_releases_enabled"),
+    ("/mods", "mods_hub_enabled"),
+    ("/mods/why", "mods_hub_enabled"),
+    ("/modpacks", "mods_hub_enabled"),
+)
+
+# Machine-surface hosts this app also answers on - raw JSON / portal, never
+# search material, so robots.txt blanket-disallows them. Everything else
+# (notably the public site ``trove.aallyn.net``) defaults to crawlable: a
+# default-allow is the safe failure mode if a proxy ever mangles the Host
+# header, since the worst case is an extra host indexed, not the main site
+# silently de-indexed.
+_ROBOTS_BLOCKED_HOSTS = frozenset(
+    url.split("://", 1)[-1].split("/", 1)[0].lower()
+    for url in (settings.api_url, settings.dev_url, settings.docs_url)
+)
+
+
+@router.get("/robots.txt", include_in_schema=False)
+async def robots_txt(request: Request) -> Response:
+    """Crawler directives, host-aware. The public site is fully crawlable and
+    advertises the sitemap; the raw-JSON API hosts (api./dev./docs.) get a
+    blanket disallow so Google never tries to index endpoint payloads.
+    ``/static/`` is intentionally NOT blocked - Google needs the CSS/JS to
+    render the pages."""
+    if (request.url.hostname or "").lower() in _ROBOTS_BLOCKED_HOSTS:
+        body = "User-agent: *\nDisallow: /\n"
+    else:
+        body = (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /dashboard\n"
+            "Disallow: /login\n"
+            "Disallow: /site/\n"
+            f"\nSitemap: {settings.app_url.rstrip('/')}/sitemap.xml\n"
+        )
+    return Response(
+        body, media_type="text/plain",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+# Bing Webmaster Tools site-ownership verification. Bing fetches this XML from
+# the site ROOT (not /static), so it needs a real root route.
+_BING_VERIFY = (
+    '<?xml version="1.0"?>\n'
+    '<users>\n'
+    '\t<user>FC86658CF71BBCB1184266DE6480D237</user>\n'
+    '</users>\n'
+)
+
+
+@router.get("/BingSiteAuth.xml")
+async def bing_site_auth() -> Response:
+    """Bing Webmaster Tools ownership-verification file, served at the site root
+    so Bing's fetcher (and IndexNow) can confirm the domain."""
+    return Response(
+        _BING_VERIFY, media_type="application/xml",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+# In-process cache for the rendered sitemap. The dynamic mod/modpack sections
+# enumerate the catalog (DB), and Cloudflare won't reliably edge-cache a
+# generated .xml, so the body is memoised for a few minutes to keep crawler hits
+# off the database. Flag/catalog changes reflect within the TTL.
+_SITEMAP_TTL = 600.0
+_SITEMAP_CACHE: dict[str, object] = {"body": None, "at": -1e9}
+_SITEMAP_LOCK = asyncio.Lock()
+# Per-section ceiling, well under the 50k-URL sitemap spec limit. If a section
+# ever exceeds it we truncate and log rather than emit an oversized sitemap.
+_SITEMAP_MAX_PER_SECTION = 25_000
+
+
+def _xml_loc(url: str) -> str:
+    return url.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+async def _all_public_cards(list_fn, cap: int, label: str) -> list[dict]:
+    """Page through a Mods-Hub ``list_public(limit, offset)`` and return every
+    public card (carrying ``handle``/``slug``/``updated_at``). Truncates at
+    ``cap`` with a warning - a silent cap would read as 'whole catalog indexed'
+    when it isn't."""
+    out: list[dict] = []
+    offset, page = 0, 1000
+    while True:
+        rows, total = await list_fn(limit=page, offset=offset)
+        out.extend(rows)
+        offset += page
+        if not rows or offset >= total or len(out) >= cap:
+            break
+    if len(out) > cap:
+        logger.warning(
+            "sitemap: %s catalog (%d) exceeds cap %d - truncating", label, len(out), cap)
+        out = out[:cap]
+    return out
+
+
+async def _render_sitemap() -> str:
+    """Build the sitemap XML: static feature pages (each gated by its master
+    toggle) plus every public mod and modpack page. The mod/modpack sections
+    ride the Mods Hub master toggle, so they vanish wholesale when it's off.
+    Approved strays are addressed as ``/mods/stray/<slug>`` - their card already
+    carries ``handle='stray'``, so the generic URL shape is correct."""
+    base = settings.app_url.rstrip("/")
+    flags = {
+        attr: await feature_flags.is_enabled(flag)
+        for attr, flag in _SITE_FEATURE_FLAGS.items()
+    }
+    # (loc, lastmod-iso-or-None)
+    entries: list[tuple[str, str | None]] = [
+        (base + path, None)
+        for path, attr in _SITEMAP_PAGES
+        if attr is None or flags.get(attr, True)
+    ]
+    if flags.get("mods_hub_enabled", True):
+        mods = await _all_public_cards(
+            mods_hub_service.list_public, _SITEMAP_MAX_PER_SECTION, "mods")
+        packs = await _all_public_cards(
+            modpacks_service.list_public, _SITEMAP_MAX_PER_SECTION, "modpacks")
+        entries += [
+            (f"{base}/mods/{c['handle']}/{c['slug']}", c.get("updated_at"))
+            for c in mods if c.get("handle") and c.get("slug")
+        ]
+        entries += [
+            (f"{base}/modpacks/{c['handle']}/{c['slug']}", c.get("updated_at"))
+            for c in packs if c.get("handle") and c.get("slug")
+        ]
+
+    def _url(loc: str, lastmod: str | None) -> str:
+        inner = f"<loc>{_xml_loc(loc)}</loc>"
+        if lastmod:
+            inner += f"<lastmod>{lastmod}</lastmod>"
+        return f"  <url>{inner}</url>\n"
+
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "".join(_url(loc, lm) for loc, lm in entries)
+        + "</urlset>\n"
+    )
+
+
+@router.get("/sitemap.xml", include_in_schema=False)
+async def sitemap_xml() -> Response:
+    """XML sitemap of the public, indexable pages: the static feature pages plus
+    every public mod and modpack. Cached in-process for a few minutes
+    (``_SITEMAP_TTL``) so crawler hits don't re-enumerate the catalog each time."""
+    now = time.monotonic()
+    if _SITEMAP_CACHE["body"] is None or now - float(_SITEMAP_CACHE["at"]) > _SITEMAP_TTL:
+        async with _SITEMAP_LOCK:
+            now = time.monotonic()
+            if _SITEMAP_CACHE["body"] is None or now - float(_SITEMAP_CACHE["at"]) > _SITEMAP_TTL:
+                _SITEMAP_CACHE["body"] = await _render_sitemap()
+                _SITEMAP_CACHE["at"] = now
+    return Response(
+        _SITEMAP_CACHE["body"], media_type="application/xml",
+        headers={"Cache-Control": "public, max-age=3600"},
     )
 
 
@@ -224,6 +532,51 @@ async def server_time_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "server-time.html", {})
 
 
+@router.get("/calendar", response_class=HTMLResponse)
+async def calendar_page(request: Request) -> HTMLResponse:
+    """Live Trove calendar - every rotation and event on one board: the daily +
+    weekly bonus, the Chaos Chest, the merchant/biome cycles (Corruxion, Fluxion,
+    Wild Mana, Stampy, Shadow), and the ongoing/upcoming Trovesaurus events, each
+    with a live countdown. Page shell + JS; data comes from ``/site/rotations``
+    (shared with the homepage) + ``/site/calendar/events``."""
+    return _TEMPLATES.TemplateResponse(request, "calendar.html", {})
+
+
+@router.get("/streams", response_class=HTMLResponse)
+async def streams_page(request: Request) -> HTMLResponse:
+    """Community hub - live Trove Twitch streams, recent YouTube videos, and the
+    latest official news, all on one page. Page shell + JS; data comes from the
+    shared ``/site/feeds/videos`` + ``/site/feeds/news`` proxies."""
+    return _TEMPLATES.TemplateResponse(request, "streams.html", {})
+
+
+@router.get("/releases", response_class=HTMLResponse)
+async def releases_page(request: Request) -> HTMLResponse:
+    """BetterTroveTools app releases + changelog. Latest build per platform
+    (Windows/Linux/Android) with download links, the full release history, and the
+    commit-grouped changelog. Page shell + JS; data comes from ``/site/btt/*``."""
+    return _TEMPLATES.TemplateResponse(request, "releases.html", {})
+
+
+@router.get("/classes", response_class=HTMLResponse)
+async def classes_page(request: Request) -> HTMLResponse:
+    """Trove class reference - a browsable codex of every class: base stats,
+    weapons, damage type, its signature subclass (with the 1→30 level-scaling
+    bonuses) and abilities. Page shell + JS; data comes from the same-origin
+    ``/site/stats/classes`` proxy. Deep-links per class via the URL hash."""
+    return _TEMPLATES.TemplateResponse(request, "classes.html", {})
+
+
+@router.get("/site/stats/classes", response_class=JSONResponse)
+async def site_stats_classes() -> JSONResponse:
+    """Every Trove class as a full object for the /classes page - same data as
+    ``/v1/stats/classes``, served same-origin. Static game data, cached hard."""
+    return JSONResponse(
+        jsonable_encoder(trove_stats.all_classes()),
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
 @router.get("/site/server-time", response_class=JSONResponse)
 async def site_server_time() -> JSONResponse:
     """Authoritative Trove server time for the /server-time page - same payload as
@@ -233,6 +586,263 @@ async def site_server_time() -> JSONResponse:
         trove_server_time.server_time(),
         headers={"Cache-Control": "public, max-age=15"},
     )
+
+
+def _merchant(mid: str, name: str, active: bool, starts_at, ends_at, **extra) -> dict:
+    return {"id": mid, "name": name, "active": active,
+            "starts_at": starts_at, "ends_at": ends_at, **extra}
+
+
+def _biome_list(biomes: list[dict] | None) -> list[dict]:
+    """Normalize biomes to ``{name, icon}`` so the dashboard can show each biome's
+    icon (served from ``/static/assets/biomes/<icon>.png``) next to its name."""
+    return [{"name": b.get("final_name") or b.get("name"), "icon": b.get("icon")}
+            for b in (biomes or [])]
+
+
+def _biomes(rot: dict | None) -> list[dict]:
+    """The current biomes of a ``{current:{biomes:[...]}}`` rotation, as {name, icon}."""
+    return _biome_list(((rot or {}).get("current") or {}).get("biomes"))
+
+
+def _sched(rows: list[dict] | None, n: int = 6) -> list[dict]:
+    """Normalize a merchant's upcoming windows (``schedule``/``upcoming``) into a
+    compact list the dashboard modal can render: time window + optional state +
+    optional biome names."""
+    out: list[dict] = []
+    for r in (rows or [])[:n]:
+        entry = {"starts_at": r.get("starts_at"), "ends_at": r.get("ends_at")}
+        if r.get("state"):
+            entry["state"] = r["state"]
+        if r.get("biomes"):
+            entry["biomes"] = _biome_list(r["biomes"])
+        out.append(entry)
+    return out
+
+
+def _daily_rotation(st: dict) -> list[dict]:
+    """The full Mon→Sun daily-bonus rotation, each day flagged ``is_current`` and
+    carrying ``next_at`` (unix) - when that day's window next begins. The current
+    day's ``next_at`` is its window START (already active)."""
+    db = trove_server_time.daily_buffs()
+    week = db.get("week") or []
+    cur = db.get("current") or {}
+    cur_idx = next((i for i, x in enumerate(week) if x.get("name") == cur.get("name")), 0)
+    reset = st.get("daily_reset_at")
+    out = []
+    for i, day in enumerate(week):
+        d = (i - cur_idx) % 7
+        out.append({
+            "name": day.get("name"), "emoji": day.get("emoji"), "color": day.get("color"),
+            "weekday": day.get("weekday"), "normal_buffs": day.get("normal_buffs"),
+            "premium_buffs": day.get("premium_buffs"), "banner": day.get("banner"),
+            "is_current": d == 0, "next_at": (reset + (d - 1) * 86400) if reset else None,
+        })
+    return out
+
+
+def _weekly_rotation(st: dict) -> list[dict]:
+    """The full 4-week weekly-bonus rotation, each week flagged ``is_current`` and
+    carrying ``next_at`` (unix) - when that week next begins."""
+    wb = trove_server_time.weekly_buffs()
+    rotation = wb.get("rotation") or []
+    cur = wb.get("current") or {}
+    cur_idx = next((i for i, x in enumerate(rotation) if x.get("name") == cur.get("name")), 0)
+    reset = st.get("weekly_reset_at")
+    out = []
+    for j, wk in enumerate(rotation):
+        d = (j - cur_idx) % 4
+        out.append({
+            "name": wk.get("name"), "emoji": wk.get("emoji"), "color": wk.get("color"),
+            "buffs": wk.get("buffs"), "banner": wk.get("banner"),
+            "is_current": d == 0, "next_at": (reset + (d - 1) * 7 * 86400) if reset else None,
+        })
+    return out
+
+
+@router.get("/site/rotations", response_class=JSONResponse)
+async def site_rotations() -> JSONResponse:
+    """"Today in Trove" payload for the homepage dashboard: server time + resets,
+    today's daily + this week's weekly bonus, the Chaos Chest window, and the
+    live merchant / biome rotations (Corruxion, Fluxion, Wild Mana, Stampy, the
+    3-hour biome cycle). Reuses the same compute functions as the /v1 rotations
+    API; served same-origin so the dashboard renders without a token or CORS."""
+    mana = trove_rotations.wild_mana()
+    stampy = trove_rotations.stampy()
+    d15 = trove_rotations.biome_rotation()
+    corr = trove_server_time.corruxion()
+    flux = trove_server_time.fluxion()
+    stampy_cur = stampy.get("current")
+    merchants = [
+        _merchant("corruxion", "Corruxion", corr["active"], corr["starts_at"], corr["ends_at"],
+                  schedule=_sched(corr.get("schedule"))),
+        _merchant("fluxion", "Fluxion", flux["active"], flux["starts_at"], flux["ends_at"],
+                  state=flux.get("state"), schedule=_sched(flux.get("schedule"))),
+        _merchant("wild_mana", "Wild Mana", True,
+                  (mana.get("current") or {}).get("starts_at"),
+                  (mana.get("current") or {}).get("ends_at"), biomes=_biomes(mana),
+                  schedule=_sched(mana.get("upcoming"))),
+        _merchant("d15", "Long Shade Rotation", True,
+                  (d15.get("current") or {}).get("starts_at"),
+                  (d15.get("current") or {}).get("ends_at"), biomes=_biomes(d15),
+                  schedule=_sched(d15.get("upcoming"))),
+    ]
+    if stampy_cur:
+        merchants.append(_merchant(
+            "stampy", "Stampy", True, stampy_cur.get("starts_at"), stampy_cur.get("ends_at"),
+            biomes=_biome_list(stampy_cur.get("biomes")),
+            schedule=_sched(stampy.get("upcoming"))))
+    # Chaos Chest: window + the current featured item (name + Trovesaurus
+    # identifier). Built into a clean dict so the datetime ``fetched_at`` the
+    # source carries never reaches the JSON serializer.
+    cc = await trove_chaos.get_chaos_chest()
+    chaos = {
+        "starts_at": cc.get("starts_at"), "ends_at": cc.get("ends_at"),
+        "seconds_remaining": cc.get("seconds_remaining"), "item": cc.get("item"),
+    }
+    st = trove_server_time.server_time()
+    return JSONResponse(
+        {
+            "server_time": st,
+            "daily_buff": trove_server_time.daily_buffs().get("current") or None,
+            "weekly_buff": trove_server_time.weekly_buffs().get("current") or None,
+            "daily_rotation": _daily_rotation(st),
+            "weekly_rotation": _weekly_rotation(st),
+            "chaos": chaos,
+            "merchants": merchants,
+        },
+        headers={"Cache-Control": "public, max-age=30"},
+    )
+
+
+@router.get("/site/feeds/news", response_class=JSONResponse)
+async def site_feeds_news(limit: int = Query(default=16, ge=1, le=50)) -> JSONResponse:
+    """Latest Trove news for the homepage dashboard - same data as
+    ``/v1/feeds/news`` (relayed from trovegame.com), served same-origin."""
+    docs = await trove_news.latest_news(limit)
+    items = [
+        {"title": d.title, "url": d.url, "author": d.author, "summary": d.summary,
+         "category": d.category, "categories": d.categories, "image": d.image,
+         "published_at": d.published_at}
+        for d in docs
+    ]
+    return JSONResponse(
+        jsonable_encoder({"items": items}), headers={"Cache-Control": "public, max-age=300"})
+
+
+@router.get("/site/feeds/videos", response_class=JSONResponse)
+async def site_feeds_videos(platform: str = Query(default="youtube")) -> JSONResponse:
+    """Trove community videos/streams (YouTube or Twitch) for the dashboard -
+    same source as ``/v1/feeds/{youtube,twitch}``, served same-origin."""
+    platform = platform if platform in ("youtube", "twitch") else "youtube"
+    items, fetched_at = await trove_feeds.get_feed(platform)
+    return JSONResponse(
+        jsonable_encoder({"platform": platform, "items": items, "fetched_at": fetched_at}),
+        headers={"Cache-Control": "public, max-age=300"},
+    )
+
+
+def _calendar_event(ev: TroveEvent, now: int) -> dict:
+    """A Trovesaurus event flattened for the /calendar board: status + countdown
+    derived from now vs the start/end window (same rule as /v1/feeds/events)."""
+    if now < ev.starts_at:
+        status, seconds_until = "upcoming", ev.starts_at - now
+    elif now < ev.ends_at:
+        status, seconds_until = "ongoing", ev.ends_at - now
+    else:
+        status, seconds_until = "ended", 0
+    return {
+        "event_id": ev.event_id, "name": ev.name, "url": ev.url, "category": ev.category,
+        "image": ev.image, "icon": ev.icon, "starts_at": ev.starts_at, "ends_at": ev.ends_at,
+        "status": status, "seconds_until": seconds_until,
+    }
+
+
+@router.get("/site/calendar/events", response_class=JSONResponse)
+async def site_calendar_events() -> JSONResponse:
+    """Ongoing + upcoming Trovesaurus events for the /calendar page - same data as
+    ``/v1/feeds/events`` + ``/v1/feeds/events/upcoming``, served same-origin. Ongoing
+    end soonest first; upcoming start soonest first."""
+    now = int(time.time())
+    ongoing = await TroveEvent.find(
+        {"starts_at": {"$lte": now}, "ends_at": {"$gt": now}}
+    ).sort("ends_at").limit(100).to_list()
+    upcoming = await TroveEvent.find(
+        {"starts_at": {"$gt": now}}
+    ).sort("starts_at").limit(100).to_list()
+    return JSONResponse(
+        jsonable_encoder({
+            "ongoing": [_calendar_event(e, now) for e in ongoing],
+            "upcoming": [_calendar_event(e, now) for e in upcoming],
+            "now": now,
+        }),
+        headers={"Cache-Control": "public, max-age=120"},
+    )
+
+
+def _btt_release(d) -> dict:
+    """A stored BttRelease flattened for the /releases page (channel derived from
+    the GitHub prerelease flag; assets kept verbatim)."""
+    return {
+        "tag_name": d.tag_name, "name": d.name, "body": d.body, "html_url": d.html_url,
+        "channel": "beta" if d.prerelease else "release", "prerelease": d.prerelease,
+        "published_at": d.published_at, "assets": d.assets,
+    }
+
+
+@router.get("/site/btt/latest", response_class=JSONResponse)
+async def site_btt_latest(channel: str = Query(default="release")) -> JSONResponse:
+    """Latest BetterTroveTools build per platform (windows/linux/android) on a
+    channel, for the /releases hero. Each platform walks back independently to the
+    most recent release that ships an asset for it (same logic as /v1/btt/latest)."""
+    channel = channel if channel in trove_btt.CHANNELS else "release"
+    per = await trove_btt.latest_per_platform(channel)
+    platforms: dict[str, dict | None] = {}
+    for platform, found in per.items():
+        if found is None:
+            platforms[platform] = None
+            continue
+        release, matched = found
+        platforms[platform] = {
+            "platform": platform, "tag_name": release.tag_name,
+            "published_at": release.published_at, "html_url": release.html_url,
+            "assets": matched,
+        }
+    return JSONResponse(
+        jsonable_encoder({"channel": channel, "platforms": platforms}),
+        headers={"Cache-Control": "public, max-age=180"},
+    )
+
+
+@router.get("/site/btt/releases", response_class=JSONResponse)
+async def site_btt_releases(
+    channel: str | None = Query(default=None),
+    limit: int = Query(default=30, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> JSONResponse:
+    """BetterTroveTools release history (newest first) for the /releases list -
+    same data as ``/v1/btt/releases``, served same-origin. Optional channel filter."""
+    channel = channel if channel in trove_btt.CHANNELS else None
+    docs, total = await trove_btt.list_releases(channel, limit, offset)
+    return JSONResponse(
+        jsonable_encoder({
+            "channel": channel, "items": [_btt_release(d) for d in docs],
+            "count": len(docs), "total": total,
+        }),
+        headers={"Cache-Control": "public, max-age=180"},
+    )
+
+
+@router.get("/site/btt/changelog", response_class=JSONResponse)
+async def site_btt_changelog() -> JSONResponse:
+    """The commit-grouped BetterTroveTools changelog for the /releases page - same
+    data as ``/v1/btt/changelog``, served same-origin."""
+    doc = await trove_btt.get_changelog()
+    payload = {"groups": doc.groups if doc else [],
+               "rate_limited": bool(doc.rate_limited) if doc else False,
+               "fetched_at": doc.fetched_at if doc else None}
+    return JSONResponse(
+        jsonable_encoder(payload), headers={"Cache-Control": "public, max-age=180"})
 
 
 @router.get("/terms", response_class=HTMLResponse)
@@ -335,6 +945,15 @@ async def codexes(request: Request) -> HTMLResponse:
     Reads the same data as ``/v1/codexes/*`` via the ``/site/codexes/*`` proxies
     below (same-origin, no per-token caps)."""
     return _TEMPLATES.TemplateResponse(request, "codexes.html", {})
+
+
+@router.get("/codexes/crafting", response_class=HTMLResponse)
+async def codexes_crafting_page(request: Request) -> HTMLResponse:
+    """Recipe Cost Calculator - pick a craftable item and see its full crafting
+    dependency tree with market prices rolled up from the leaves, plus a
+    craft-vs-buy recommendation. Data comes from the codex recipe index joined to
+    the market scope via ``/site/codexes/crafting`` below."""
+    return _TEMPLATES.TemplateResponse(request, "codexes-crafting.html", {})
 
 
 @router.get("/mods", response_class=HTMLResponse)
@@ -678,6 +1297,53 @@ async def site_market_item_history(
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=30"})
 
 
+# --- /site/market/analytics/* - the Market Analytics tab ------------------
+# Aggregations over the same listing history the browser above reads. Cached a
+# little longer than the live listing views since they move slowly.
+
+@router.get("/site/market/analytics/timeline", response_class=JSONResponse)
+async def site_market_analytics_timeline(
+    name: str = Query(..., min_length=1),
+    days: int = Query(default=14, ge=1, le=90),
+    bucket_hours: int = Query(default=24, ge=1, le=168),
+) -> JSONResponse:
+    """Daily median/p25/p75 price band + supply volume for one item, plus the
+    merchant-event bands overlapping the window (for the chart shading)."""
+    from app.trove.market import service as market_service
+    payload = await market_service.analytics_timeline(
+        name, days=days, bucket_hours=bucket_hours)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
+
+
+@router.get("/site/market/analytics/deals", response_class=JSONResponse)
+async def site_market_analytics_deals(
+    days: int = Query(default=7, ge=1, le=30),
+    min_discount: float = Query(default=0.25, ge=0.05, le=0.95),
+    limit: int = Query(default=50, ge=1, le=200),
+) -> JSONResponse:
+    """Underpriced active listings (a flip-finder): posts priced at least
+    ``min_discount`` below their item's median-each, biggest discount first."""
+    from app.trove.market import service as market_service
+    deals = await market_service.analytics_deals(
+        days=days, min_discount=min_discount, limit=limit)
+    return JSONResponse(
+        {"items": deals, "count": len(deals), "min_discount": min_discount, "days": days},
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
+@router.get("/site/market/analytics/movers", response_class=JSONResponse)
+async def site_market_analytics_movers(
+    days: int = Query(default=7, ge=1, le=30),
+    limit: int = Query(default=40, ge=1, le=100),
+) -> JSONResponse:
+    """Biggest median-price movers over ``days``: risers and fallers vs the prior
+    equal-length window."""
+    from app.trove.market import service as market_service
+    payload = await market_service.analytics_movers(days=days, limit=limit)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
+
+
 # --- /site/codexes/* - same-origin JSON proxies for the /codexes page ------
 # Mirror the public ``/v1/codexes/*`` surface but tokenless + same-origin. The
 # two "modes" are branches (live-us / pts); default to live-us.
@@ -801,6 +1467,22 @@ async def site_codex_entry(
     if doc is None:
         raise HTTPException(status_code=404, detail=f"No {type} entry '{path}'")
     return JSONResponse(_codex_row(doc), headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/codexes/crafting", response_class=JSONResponse)
+async def site_codex_crafting(
+    path: str = Query(..., description="Source prefab path of the recipe to expand"),
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> JSONResponse:
+    """Full crafting dependency tree for a recipe, with market prices rolled up and
+    a craft-vs-buy recommendation per node. 404 when ``path`` isn't a known recipe.
+    Prices are best-effort - untracked ingredients come back price-unknown, never
+    as zero."""
+    _site_codex_branch(branch)
+    tree = await codexes_crafting.build_tree(branch, path)
+    if tree is None:
+        raise HTTPException(status_code=404, detail=f"No recipe '{path}' on branch '{branch}'")
+    return JSONResponse(tree, headers={"Cache-Control": "public, max-age=30"})
 
 
 @router.get("/leaderboards", response_class=HTMLResponse)
@@ -1157,6 +1839,24 @@ async def site_up_tree(
     )
 
 
+@router.get("/site/updates/{branch}/search", response_class=JSONResponse)
+async def site_up_search(
+    branch: str,
+    q: str = Query(..., min_length=1, max_length=200),
+    limit: int = Query(default=200, ge=1, le=500),
+) -> JSONResponse:
+    """Full-tree file search - matches paths anywhere in the branch, so files
+    buried in un-expanded directories still surface (the sidebar filter alone
+    only sees the level that's currently loaded)."""
+    _site_check_branch(branch)
+    entries, total = await updates_read.search_paths(branch, q, limit)
+    return JSONResponse(
+        {"branch": branch, "query": q, "entries": entries,
+         "count": len(entries), "total": total},
+        headers={"Cache-Control": "public, max-age=30"},
+    )
+
+
 @router.get("/site/updates/{branch}/file/meta", response_class=JSONResponse)
 async def site_up_file_meta(
     branch: str, path: str = Query(...),
@@ -1456,6 +2156,30 @@ async def site_mods_assembled(
     return JSONResponse(model, headers={"Cache-Control": "public, max-age=300"})
 
 
+@router.get("/site/mods/releases/{release_id}/files", response_class=JSONResponse)
+async def site_mods_release_files(
+    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The files inside a release's .tmod (path + size, preview excluded) - for the
+    per-file download list on the mod page."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.list_release_files(release))
+
+
+@router.get("/site/mods/releases/{release_id}/file", response_class=Response)
+async def site_mods_release_file(
+    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> Response:
+    """Download one file from inside a release's .tmod (the preview image is excluded)."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    data, filename = await mods_hub_service.download_release_file(release, path)
+    safe = filename.replace('"', '').replace("\r", "").replace("\n", "")
+    return Response(content=data, media_type="application/octet-stream",
+                    headers={"Content-Disposition": f'attachment; filename="{safe}"',
+                             "Cache-Control": "no-cache"})
+
+
 @router.get("/site/rigs/{skeleton}/anim/{name}", response_class=JSONResponse)
 async def site_rig_animation(skeleton: str, name: str) -> JSONResponse:
     """Lazily-loaded baked animation frames for a creature rig (the model viewer fetches
@@ -1473,6 +2197,41 @@ async def site_mods_blueprint(
     release, _ = await mods_hub_service.release_with_project(release_id, viewer)
     return JSONResponse(await mods_hub_service.decode_release_blueprint(release, path),
                         headers={"Cache-Control": "public, max-age=300"})
+
+
+@router.get("/site/mods/releases/{release_id}/vfx", response_class=JSONResponse)
+async def site_mods_vfx_list(
+    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The .pkfx particle effects in a release (drives the VFX-preview affordance)."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.list_release_vfx(release),
+                        headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/mods/releases/{release_id}/vfx/manifest", response_class=JSONResponse)
+async def site_mods_vfx_manifest(
+    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """One effect's .pkfx text + its resolved asset dependencies (mod/game/missing) for
+    the web VFX viewer."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.get_release_vfx_manifest(release, path),
+                        headers={"Cache-Control": "public, max-age=120"})
+
+
+@router.get("/site/mods/releases/{release_id}/vfx/asset", response_class=Response)
+async def site_mods_vfx_asset(
+    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> Response:
+    """Bytes of one asset a release's VFX references - bundled in the mod, else from the
+    live game tree. Authorized against the release's .pkfx dependency set."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    data, media = await mods_hub_service.get_release_vfx_asset(release, path)
+    return Response(content=data, media_type=media,
+                    headers={"Cache-Control": "public, max-age=3600"})
 
 
 @router.get("/site/mods/image/{sha}", response_class=Response)

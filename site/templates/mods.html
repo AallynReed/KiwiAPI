@@ -90,6 +90,22 @@
                 <button type="button" class="mh-btn mh-btn-ghost" id="mh-load-more" data-i18n>Load more</button>
             </div>
         </section>
+
+        <!-- Crawlable explainer: gives search engines real, keyword-natural text
+             on a page that's otherwise a JS-rendered catalog. -->
+        <section class="mh-about" aria-labelledby="mh-about-h">
+            <style>
+                .mh-about { max-width: 72ch; margin: 2.5rem auto 0; padding: 1.25rem 1.4rem; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius, 16px); }
+                .mh-about h2 { margin: 0 0 .5rem; font-size: 1.2rem; }
+                .mh-about p { color: var(--text-mute); margin: 0 0 .75rem; line-height: 1.6; }
+                .mh-about p:last-child { margin-bottom: 0; }
+                .mh-about a { color: var(--accent); text-decoration: none; }
+                .mh-about a:hover { text-decoration: underline; }
+            </style>
+            <h2 id="mh-about-h" data-i18n>About Trove mods</h2>
+            <p data-i18n>Trove mods (.tmod files) let you reskin blocks, gear, mounts, allies, the interface and more - without permanently changing your game files. Browse the hub, download any mod and drop it into your Trove mods folder to try it out.</p>
+            <p data-i18n>Want to share your own? Sign in to publish a mod with full version history and one-click releases, or bundle several into a <a href="/modpacks">modpack</a>. Everything here is made by the community and free to use - see the full list on the <a href="/browse">site index</a>.</p>
+        </section>
     </main>
 
     <!-- ═══════════════ CREATE MODAL ═══════════════ -->
@@ -111,7 +127,16 @@
                     <span data-i18n>Tags</span>
                     <input type="text" name="tags" data-i18n-placeholder placeholder="comma, separated, tags">
                 </label>
-                <label class="mh-form-field">
+                <label class="mh-form-check">
+                    <input type="checkbox" name="on_behalf" id="mh-create-onbehalf">
+                    <span data-i18n>This mod was made by someone else</span>
+                </label>
+                <label class="mh-form-field" id="mh-create-credited" hidden>
+                    <span data-i18n>Creator's name</span>
+                    <input type="text" name="credited_author" maxlength="120" data-i18n-placeholder placeholder="Who made this mod?">
+                    <small class="mh-form-hint" data-i18n>You'll be shown as the uploader, credited to this creator.</small>
+                </label>
+                <label class="mh-form-field" id="mh-create-mode">
                     <span data-i18n>Mode</span>
                     <select name="mode">
                         <option value="files" data-i18n>Files + releases (full version history)</option>

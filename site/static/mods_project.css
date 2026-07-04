@@ -143,6 +143,7 @@
 .mp-badge-unlisted { color: var(--text-soft); background: rgba(255,255,255,.08); }
 .mp-badge-public { color: #74e08e; background: rgba(116,224,142,.12); }
 .mp-badge-stray { color: #9bb4ff; background: rgba(86,156,255,.14); display: inline-flex; align-items: center; gap: 5px; }
+.mp-badge-uploaded { color: #7fd4c8; background: rgba(127,212,200,.14); display: inline-flex; align-items: center; gap: 5px; }
 /* Collaborators modal */
 .mp-collab-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .mp-collab-row {
@@ -309,6 +310,12 @@
 .mp-3d-btn { background: rgba(86,156,255,.1); border-color: rgba(86,156,255,.32); }
 .mp-3d-btn:hover { background: rgba(86,156,255,.18); border-color: var(--accent-blue); }
 .mp-3d-assembled { padding-top: 10px; }
+
+/* VFX (PopcornFX .pkfx) previews — each effect opens a WebGL modal (viewer injects
+   its own modal styles). */
+.mp-release-vfx { padding-top: 4px; }
+.mp-vfx-btn { background: rgba(255,138,76,.1); border-color: rgba(255,138,76,.32); }
+.mp-vfx-btn:hover { background: rgba(255,138,76,.18); border-color: var(--accent-orange, #ff8a4c); }
 .mp-asm-btn { background: rgba(125,211,134,.12); border-color: rgba(125,211,134,.4); font-weight: 600; }
 .mp-asm-btn:hover { background: rgba(125,211,134,.2); border-color: #5dd078; }
 .mp-asm-anim { color: var(--text-mute); font-weight: 400; font-size: .82em; }
@@ -327,6 +334,20 @@
 .mp-3d-parts[open] .mp-3d-parts-summary::after { transform: rotate(180deg); }
 .mp-3d-parts-summary:hover { color: var(--text); }
 .mp-3d-parts .mp-3d-list { padding-top: 8px; padding-left: 12px; }
+/* Per-release file list (expand a release -> download files individually) */
+.mp-release-files { width: 100%; margin-top: 8px; }
+.mp-release-files-list { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
+.mp-release-files-list:empty { padding-top: 0; }
+.mp-release-file {
+  display: flex; align-items: center; gap: 10px; padding: 4px 8px;
+  border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,.02);
+}
+.mp-release-file-name {
+  flex: 1; min-width: 0; font-size: .82rem; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--mono, monospace);
+}
+.mp-release-file-size { color: var(--text-mute); font-size: .76rem; flex: 0 0 auto; }
+.mp-release-file .mp-btn { flex: 0 0 auto; }
 
 /* Placement warnings */
 .mp-warn {

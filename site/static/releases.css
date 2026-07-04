@@ -1,0 +1,145 @@
+/* App Releases page (/releases). Builds on style.css tokens.
+   Class prefix: .rel-  */
+
+.rel-main {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 110px clamp(20px, 3vw, 48px) 80px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+.rel-hero { text-align: center; margin-bottom: 26px; }
+.rel-eyebrow {
+  font-family: SFMono-Regular, Consolas, monospace;
+  color: var(--accent);
+  font-size: .85rem; letter-spacing: 0.04em; margin: 0 0 8px;
+}
+.rel-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.8rem, 4.5vw, 2.8rem); margin: 0 0 12px; line-height: 1.05; }
+.rel-sub { color: var(--text-mute); max-width: 640px; margin: 0 auto; line-height: 1.6; font-size: .98rem; }
+
+/* ── Channel toggle ────────────────────────────────────────────────── */
+.rel-channel {
+  display: inline-flex; gap: 4px; padding: 4px;
+  border-radius: 999px; border: 1px solid var(--bg-line); background: var(--bg-card);
+  margin: 0 auto 32px; width: fit-content;
+}
+.rel-channel { display: flex; justify-content: center; }
+.rel-channel-wrap { display: flex; justify-content: center; }
+.rel-channel-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 18px; border-radius: 999px; border: 0; background: none;
+  color: var(--text-mute); cursor: pointer; font: inherit; font-size: .9rem; font-weight: 500;
+  transition: background .12s ease, color .12s ease;
+}
+.rel-channel-btn:hover { color: var(--text); }
+.rel-channel-btn.active { background: color-mix(in oklab, var(--accent-blue) 18%, transparent); color: var(--text); }
+
+/* ── Latest per platform ───────────────────────────────────────────── */
+.rel-latest {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;
+  margin-bottom: 44px;
+}
+.rel-plat {
+  padding: 22px; border-radius: 18px;
+  border: 1px solid var(--bg-line);
+  background:
+    radial-gradient(120% 140% at 100% 0%, color-mix(in oklab, var(--accent-blue) 10%, transparent), transparent 55%),
+    var(--bg-card);
+}
+.rel-plat-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.rel-plat-ic {
+  width: 46px; height: 46px; flex-shrink: 0; border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; color: var(--accent-blue);
+  background: color-mix(in oklab, var(--accent-blue) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent-blue) 26%, var(--bg-line));
+}
+.rel-plat-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.1rem; }
+.rel-plat-ver { font-size: .82rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.rel-plat-assets { display: flex; flex-direction: column; gap: 8px; }
+.rel-dl {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 11px; text-decoration: none;
+  border: 1px solid var(--bg-line); background: var(--bg-deep); color: var(--text);
+  transition: border-color .12s ease, transform .12s ease;
+}
+.rel-dl:hover { transform: translateY(-1px); border-color: color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); }
+.rel-dl-primary { background: color-mix(in oklab, var(--accent-blue) 16%, var(--bg-deep)); border-color: color-mix(in oklab, var(--accent-blue) 40%, var(--bg-line)); }
+.rel-dl i { color: var(--accent-blue); }
+.rel-dl-body { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.rel-dl-name { font-size: .86rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rel-dl-meta { font-size: .74rem; color: var(--text-soft); }
+.rel-plat-empty { font-size: .86rem; color: var(--text-soft); }
+
+/* ── Two-column grid ───────────────────────────────────────────────── */
+.rel-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 28px; align-items: start; }
+.rel-col-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.rel-col-head h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; margin: 0; }
+.rel-col-note { color: var(--text-soft); font-size: .82rem; }
+.rel-loading, .rel-empty { color: var(--text-soft); font-size: .9rem; padding: 6px 2px; }
+
+/* ── Release history (accordion) ───────────────────────────────────── */
+.rel-releases { display: flex; flex-direction: column; gap: 10px; }
+.rel-release { border: 1px solid var(--bg-line); border-radius: 14px; background: var(--bg-card); overflow: hidden; }
+.rel-release-sum {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  cursor: pointer; list-style: none; user-select: none;
+}
+.rel-release-sum::-webkit-details-marker { display: none; }
+.rel-release-tag { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.rel-badge {
+  font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  padding: 3px 8px; border-radius: 999px;
+}
+.rel-badge-release { color: var(--accent-green, #5fd08a); background: color-mix(in oklab, var(--accent-green, #5fd08a) 14%, transparent); }
+.rel-badge-beta { color: var(--accent-orange); background: color-mix(in oklab, var(--accent-orange) 14%, transparent); }
+.rel-release-date { margin-left: auto; font-size: .78rem; color: var(--text-soft); }
+.rel-release-caret { color: var(--text-soft); transition: transform .15s ease; }
+.rel-release[open] .rel-release-caret { transform: rotate(180deg); }
+.rel-release-body { padding: 0 16px 16px; border-top: 1px solid var(--bg-line); }
+.rel-release-name { font-weight: 600; margin: 14px 0 8px; }
+.rel-notes { font-size: .88rem; color: var(--text-mute); line-height: 1.6; }
+.rel-notes h1, .rel-notes h2, .rel-notes h3 { font-size: 1rem; margin: 12px 0 6px; color: var(--text); }
+.rel-notes ul { margin: 6px 0; padding-left: 20px; }
+.rel-notes li { margin: 3px 0; }
+.rel-notes code { background: var(--bg-deep); padding: 1px 5px; border-radius: 5px; font-size: .85em; }
+.rel-notes a { color: var(--accent-blue); }
+.rel-notes-empty { font-size: .86rem; color: var(--text-soft); font-style: italic; }
+.rel-release-assets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.rel-asset {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 11px; border-radius: 9px; font-size: .8rem; text-decoration: none;
+  border: 1px solid var(--bg-line); background: var(--bg-deep); color: var(--text-mute);
+}
+.rel-asset:hover { color: var(--text); border-color: color-mix(in oklab, var(--accent-blue) 40%, var(--bg-line)); }
+.rel-asset i { color: var(--accent-blue); }
+
+/* ── Changelog ─────────────────────────────────────────────────────── */
+.rel-changelog { display: flex; flex-direction: column; gap: 16px; }
+.rel-cl-group { border-left: 2px solid var(--bg-line); padding-left: 16px; }
+.rel-cl-ver {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: .95rem;
+  margin-bottom: 8px; font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.rel-cl-ver.is-unreleased { color: var(--accent-orange); }
+.rel-cl-commits { display: flex; flex-direction: column; gap: 6px; }
+.rel-cl-commit { display: flex; align-items: baseline; gap: 8px; font-size: .84rem; }
+.rel-cl-type {
+  flex-shrink: 0; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  padding: 2px 6px; border-radius: 6px; min-width: 44px; text-align: center;
+  color: var(--text-soft); background: color-mix(in oklab, var(--bg-line) 55%, transparent);
+}
+.rel-cl-type.t-feat { color: var(--accent-green, #5fd08a); background: color-mix(in oklab, var(--accent-green, #5fd08a) 14%, transparent); }
+.rel-cl-type.t-fix { color: var(--accent-orange); background: color-mix(in oklab, var(--accent-orange) 14%, transparent); }
+.rel-cl-type.t-perf, .rel-cl-type.t-refactor { color: var(--accent-blue); background: color-mix(in oklab, var(--accent-blue) 14%, transparent); }
+.rel-cl-msg { color: var(--text-mute); min-width: 0; }
+.rel-cl-msg a { color: var(--text); text-decoration: none; }
+.rel-cl-msg a:hover { color: var(--accent-blue); }
+.rel-cl-note { font-size: .8rem; color: var(--text-soft); font-style: italic; margin-top: 4px; }
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .rel-grid { grid-template-columns: 1fr; }
+}

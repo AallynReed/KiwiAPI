@@ -603,12 +603,28 @@ class BoardHealthResponse(BaseModel):
 
 
 class PlayerProfileSummary(BaseModel):
-    boards_appeared: int                     # distinct boards in the recent window
-    appearances: int                         # total rows returned
+    boards_appeared: int                     # distinct leaderboards ever appeared on
+    appearances: int                         # total capture rows (kept for back-compat)
     best_rank: int | None = None
     best_rank_board_uuid: int | None = None
     best_rank_board_name: str | None = None
+    top10_count: int | None = None           # boards with a best rank in the top 10
+    top100_count: int | None = None          # boards with a best rank in the top 100
     latest_anchor: int | None = None         # most recent capture the player was in
+
+
+class PlayerBoardSummary(BaseModel):
+    """One leaderboard the player has appeared on, aggregated over all history:
+    their best rank ever, current rank/score, how many captures they've been in,
+    and first/last seen. (Replaces the old per-capture flat list on the page.)"""
+    leaderboard: int
+    board_name: str | None = None
+    best_rank: int
+    latest_rank: int | None = None
+    latest_score: float | None = None
+    appearances: int                         # captures on THIS board
+    first_seen: int | None = None
+    last_seen: int | None = None
 
 
 class PlayerProfileEntry(BaseModel):
@@ -631,7 +647,8 @@ class PlayerProfileResponse(BaseModel):
     player_name: str
     verified: bool                           # a site account claimed + was approved
     summary: PlayerProfileSummary
-    recent: list[PlayerProfileEntry]
+    boards: list[PlayerBoardSummary] = []    # one row per leaderboard, best first
+    recent: list[PlayerProfileEntry]         # flat per-capture rows (legacy/back-compat)
 
 
 class PlayerHistorySeriesItem(BaseModel):

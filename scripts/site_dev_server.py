@@ -118,6 +118,12 @@ _STUB_MODS = [
      "updated_at": None, "created_at": None,
      "forked_from": {"slug": "neon-hud", "handle": "aallyn", "title": "Neon HUD Overhaul", "owner": "Aallyn"},
      "inspired_by": None, "fork_count": 0},
+    {"slug": "shared-cursor", "title": "Shared Cursor Pack",
+     "summary": "A great mod someone else made, shared here for the community.",
+     "tags": ["ui", "cursor"], "owner_username": "Aallyn",
+     "visibility": "public", "banner_sha": None, "download_count": 940,
+     "updated_at": None, "created_at": None,
+     "uploaded_on_behalf": True, "author": "OriginalCreator", "mode": "releases"},
 ]
 for _m in _STUB_MODS:
     _m.setdefault("forked_from", None)
@@ -126,6 +132,9 @@ for _m in _STUB_MODS:
     _m.setdefault("mode", "files")
     _m.setdefault("star_count", 0)
     _m.setdefault("preview_sha", None)
+    _m.setdefault("uploaded_on_behalf", False)
+    _m.setdefault("author", "")
+    _m.setdefault("is_stray", False)
     _m.setdefault("handle", _m["owner_username"].lower())   # /mods/<handle>/<slug>
 _STUB_MODS[0]["preview_sha"] = "prevsha1"   # neon-hud: no banner -> card uses first preview
 _STUB_MODS[1]["mode"] = "releases"   # tiny-mounts is a releases-only mod
@@ -197,6 +206,202 @@ def _stub_pack_detail(handle, slug):
     }
 
 
+# Synthetic file tree for the /updates archive browser. Deliberately has files
+# buried a few directories deep so the full-tree search (which must surface
+# matches inside un-expanded folders) can be exercised locally.
+_UPDATE_PATHS = [
+    "prefabs/dungeons/cursed_vale/boss.blueprint",
+    "prefabs/dungeons/cursed_vale/minion.blueprint",
+    "prefabs/dungeons/frozen_peak/boss.blueprint",
+    "prefabs/equipment/sword_epic.blueprint",
+    "ui/hud/health_bar.png",
+    "ui/hud/mana_bar.png",
+    "scripts/combat/damage.lua",
+    "scripts/combat/healing.lua",
+    "languages/en/strings.json",
+    "readme.md",
+]
+
+
+def _update_dir_listing(prefix):
+    """One ls-level of children for `prefix`, mirroring read.directory_listing."""
+    children: dict[str, dict] = {}
+    plen = len(prefix)
+    for path in _UPDATE_PATHS:
+        if not path.startswith(prefix):
+            continue
+        rest = path[plen:]
+        if not rest:
+            continue
+        slash = rest.find("/")
+        name = rest if slash == -1 else rest[:slash]
+        c = children.setdefault(name, {
+            "name": name, "path": prefix + name,
+            "is_dir": slash != -1, "file_count": 0, "size": 0})
+        if slash != -1:
+            c["is_dir"] = True
+            c["path"] = prefix + name + "/"
+        c["file_count"] += 1
+        c["size"] += 512
+    return sorted(children.values(), key=lambda c: (not c["is_dir"], c["name"]))
+
+
+# ── Recipe Cost Calculator (/codexes/crafting) synthetic data ──────────────
+# A small nested recipe graph: "Radiant Sovereign" needs Radiant Shards (itself
+# craftable) + Golden Thread + one Enchanted Ember that is deliberately NOT priced
+# so the "no market data" path is exercised. Mirrors the real build_tree output.
+_CRAFT_PRICES = {
+    "Radiant Sovereign": {"median_each": 45000.0, "count": 6},
+    "Radiant Shard": {"median_each": 4200.0, "count": 9},
+    "Sunlight Bulb": {"median_each": 120.0, "count": 40},
+    "Golden Thread": {"median_each": 850.0, "count": 22},
+    # "Enchanted Ember" intentionally absent → price-unknown leaf.
+}
+_CRAFT_RECIPES = {
+    "item/craft/radiant_sovereign": {
+        "source_path": "prefabs/recipes/recipe_radiant_sovereign",
+        "output": {"path": "item/craft/radiant_sovereign", "name": "Radiant Sovereign", "amount": 1},
+        "ingredients": [
+            {"path": "item/craft/radiant_shard", "name": "Radiant Shard", "amount": 4},
+            {"path": "item/craft/golden_thread", "name": "Golden Thread", "amount": 8},
+            {"path": "item/craft/enchanted_ember", "name": "Enchanted Ember", "amount": 1},
+        ],
+    },
+    "item/craft/radiant_shard": {
+        "source_path": "prefabs/recipes/recipe_radiant_shard",
+        "output": {"path": "item/craft/radiant_shard", "name": "Radiant Shard", "amount": 2},
+        "ingredients": [
+            {"path": "item/craft/sunlight_bulb", "name": "Sunlight Bulb", "amount": 10},
+            {"path": "item/craft/golden_thread", "name": "Golden Thread", "amount": 2},
+        ],
+    },
+}
+_CRAFT_SOURCE_TO_OUTPUT = {r["source_path"]: out for out, r in _CRAFT_RECIPES.items()}
+_CRAFT_SEARCH = [
+    {"type": "recipe", "path": r["source_path"], "name": r["output"]["name"],
+     "category": "Mount" if "sovereign" in out else "Crafting", "tradable": None,
+     "data": {"recipe": {"output": r["output"]}}}
+    for out, r in _CRAFT_RECIPES.items()
+]
+
+
+def _craft_raw(path, name, need, depth, stack, counter, names):
+    import math
+    counter[0] += 1
+    names.add(name)
+    node = {"path": path, "name": name, "need": need,
+            "craftable": False, "crafts": None, "output_amount": None, "children": []}
+    rec = _CRAFT_RECIPES.get(path)
+    if rec and depth < 20 and path not in stack and counter[0] < 600:
+        out_amt = rec["output"]["amount"] or 1
+        crafts = max(1, math.ceil(need / out_amt))
+        node["craftable"] = True
+        node["crafts"] = crafts
+        node["output_amount"] = out_amt
+        deeper = stack | {path}
+        for ing in rec["ingredients"]:
+            node["children"].append(
+                _craft_raw(ing["path"], ing["name"], ing["amount"] * crafts,
+                           depth + 1, deeper, counter, names))
+    return node
+
+
+def _craft_annotate(node):
+    price = _CRAFT_PRICES.get(node["name"])
+    unit = price["median_each"] if price else None
+    node["market_price_each"] = unit
+    node["market_count"] = price["count"] if price else 0
+    node["buy_cost"] = round(unit * node["need"], 2) if unit is not None else None
+    if node["craftable"] and node["children"]:
+        known = 0.0
+        all_known = True
+        unpriced = 0
+        for c in node["children"]:
+            _craft_annotate(c)
+            if c["best_cost"] is None:
+                all_known = False
+            else:
+                known += c["best_cost"]
+            unpriced += c["unpriced_count"]
+        node["craft_cost_partial"] = round(known, 2)
+        node["craft_cost"] = round(known, 2) if all_known else None
+        node["unpriced_count"] = unpriced
+    else:
+        node["craft_cost_partial"] = None
+        node["craft_cost"] = None
+        node["unpriced_count"] = 0 if unit is not None else 1
+    buy, craft = node["buy_cost"], node["craft_cost"]
+    opts = [x for x in (buy, craft) if x is not None]
+    if opts:
+        node["best_cost"] = min(opts)
+        node["recommendation"] = "craft" if (craft is not None and (buy is None or craft <= buy)) else "buy"
+    else:
+        node["best_cost"] = None
+        node["recommendation"] = "unknown"
+    return node
+
+
+def _craft_build(source_path):
+    out_path = _CRAFT_SOURCE_TO_OUTPUT.get(source_path)
+    if out_path is None:
+        return None
+    rec = _CRAFT_RECIPES[out_path]
+    out = rec["output"]
+    counter = [0]
+    names = set()
+    raw = _craft_raw(out["path"], out["name"], out["amount"], 0, frozenset(), counter, names)
+    tree = _craft_annotate(raw)
+    return {"branch": "live-us", "recipe_path": source_path, "output": out,
+            "category": "Mount", "root": tree, "node_count": counter[0],
+            "priced_items": sum(1 for n in names if n in _CRAFT_PRICES),
+            "truncated": False}
+
+
+# ── /market Analytics tab synthetic data ───────────────────────────────────
+_MARKET_ITEMS = ["Radiant Sovereign", "Radiant Shard", "Golden Thread",
+                 "Sunlight Bulb", "Shadow Key", "Glim", "Flux Capacitor"]
+
+
+def _market_movers():
+    import time
+    return {"days": 14, "now": int(time.time()),
+            "risers": [
+                {"name": "Shadow Key", "recent_med": 5200.0, "prior_med": 4000.0, "recent_n": 40, "change": 0.30},
+                {"name": "Golden Thread", "recent_med": 950.0, "prior_med": 850.0, "recent_n": 22, "change": 0.1176}],
+            "fallers": [
+                {"name": "Sunlight Bulb", "recent_med": 95.0, "prior_med": 130.0, "recent_n": 50, "change": -0.2692},
+                {"name": "Radiant Sovereign", "recent_med": 41000.0, "prior_med": 47000.0, "recent_n": 6, "change": -0.1277}]}
+
+
+def _market_deals():
+    import time
+    now = int(time.time())
+    return {"min_discount": 0.25, "days": 14, "items": [
+        {"id": "uuid-1", "name": "Shadow Key", "stack": 20, "price": 80000, "price_each": 4000.0,
+         "median_each": 5200.0, "sample_size": 40, "discount": 0.2308, "created_at": now - 3600, "last_seen": now - 600},
+        {"id": "uuid-2", "name": "Golden Thread", "stack": 100, "price": 68000, "price_each": 680.0,
+         "median_each": 950.0, "sample_size": 22, "discount": 0.2842, "created_at": now - 7200, "last_seen": now - 1200}],
+        "count": 2}
+
+
+def _market_timeline(name, days):
+    import math
+    import time
+    now = int(time.time())
+    day = 86400
+    base = 1200 + (len(name) * 37 % 800)
+    pts = []
+    for i in range(days):
+        bucket = ((now - (days - 1 - i) * day) // day) * day
+        wob = 1 + 0.15 * math.sin(i / 2.0) + ((i * 7 % 5) - 2) * 0.02
+        p50 = round(base * wob, 2)
+        pts.append({"bucket": bucket, "listings": 8 + (i * 13 % 20), "stack": 100 + (i * 29 % 400),
+                    "p50": p50, "p25": round(p50 * 0.85, 2), "p75": round(p50 * 1.2, 2)})
+    events = [{"name": "Fluxion", "kind": "merchant", "starts_at": now - 11 * day, "ends_at": now - 8 * day},
+              {"name": "Corruxion", "kind": "merchant", "starts_at": now - 6 * day, "ends_at": now - 3 * day}]
+    return {"name": name, "days": days, "bucket_hours": 24, "points": pts, "events": events, "now": now}
+
+
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path)
@@ -211,10 +416,22 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "leaderboards.html", "text/html")
         if path == "/updates":
             return self._send_file(TEMPLATES / "updates.html", "text/html")
+        if path == "/codexes":
+            return self._send_file(TEMPLATES / "codexes.html", "text/html")
+        if path == "/codexes/crafting":
+            return self._send_file(TEMPLATES / "codexes-crafting.html", "text/html")
         if path == "/status":
             return self._send_file(TEMPLATES / "status.html", "text/html")
         if path == "/server-time":
             return self._send_file(TEMPLATES / "server-time.html", "text/html")
+        if path == "/calendar":
+            return self._send_file(TEMPLATES / "calendar.html", "text/html")
+        if path == "/streams":
+            return self._send_file(TEMPLATES / "streams.html", "text/html")
+        if path == "/releases":
+            return self._send_file(TEMPLATES / "releases.html", "text/html")
+        if path == "/classes":
+            return self._send_file(TEMPLATES / "classes.html", "text/html")
         if path == "/giveaways":
             return self._send_file(TEMPLATES / "giveaways.html", "text/html")
         if path == "/clubs":
@@ -258,7 +475,10 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/static/"):
             rel = path[len("/static/"):]
             target = STATIC / rel
-            if not target.exists() and ".min." in rel:
+            # Dev: always prefer the un-minified source over its .min build
+            # artifact so local edits show up without running minify_static.py
+            # (the templates hard-code .min.js/.min.css for production).
+            if ".min." in rel:
                 source = STATIC / rel.replace(".min.", ".", 1)
                 if source.exists():
                     target = source
@@ -322,6 +542,15 @@ class Handler(SimpleHTTPRequestHandler):
                                     "total": len(_STUB_MODS)})
         if path.startswith("/site/mods/image/"):
             return self._send_bytes(_PLACEHOLDER_PNG, "image/png")
+        # Stub a release's file list (preview excluded) + per-file download for preview.
+        if path.startswith("/site/mods/releases/") and path.endswith("/files"):
+            return self._send_json({"items": [
+                {"path": "blueprints/c_p_knight_lvl3_torso.blueprint", "size": 1820},
+                {"path": "blueprints/c_p_knight_lvl3_l_hand.blueprint", "size": 540},
+                {"path": "blueprints/c_p_knight_lvl3_ui.blueprint", "size": 260},
+            ]})
+        if path.startswith("/site/mods/releases/") and path.endswith("/file"):
+            return self._send_bytes(b"kiwib stub file contents\n", "application/octet-stream")
         # Stub the blueprint list so the page's collapsible "3D models" renders in dev
         # (the real decode endpoint needs an actual .tmod and isn't stubbed).
         if path.startswith("/site/mods/releases/") and path.endswith("/blueprints"):
@@ -360,6 +589,18 @@ class Handler(SimpleHTTPRequestHandler):
             slug = _parts[1] if len(_parts) > 1 else ""
             sub = "/".join(_parts[2:])
             base = next((m for m in _STUB_MODS if m["slug"] == slug), _STUB_MODS[0])
+            if (sub == "" or sub is None) and slug == "secret-draft":
+                # A real draft a non-owner can't see yet: distinct not_public code so
+                # the page says "not public yet" instead of "not found".
+                return self._send_json(
+                    {"error": {"code": "not_public", "message": "This mod isn't public yet."}},
+                    status=404,
+                )
+            if (sub == "" or sub is None) and slug == "ghost-mod":
+                return self._send_json(
+                    {"error": {"code": "not_found", "message": "Mod project not found"}},
+                    status=404,
+                )
             if (sub == "" or sub is None) and handle == "stray":
                 # Imported, unclaimed "stray" mod (uploaded via contributions).
                 return self._send_json({
@@ -470,6 +711,96 @@ class Handler(SimpleHTTPRequestHandler):
                     "count": 2, "total": 2})
             return self._send_json({"items": []})
 
+        # ── /updates archive browser (synthetic tree) ─────────────────────
+        if path == "/site/updates/branches":
+            return self._send_json({"items": [
+                {"branch": "live-us", "current_version": "1.0.stub",
+                 "current_ordinal": 2, "last_probe_at": None,
+                 "status": "idle", "file_count": len(_UPDATE_PATHS)}]})
+        if path.startswith("/site/updates/"):
+            rest = path[len("/site/updates/"):]
+            branch, _, sub = rest.partition("/")
+            qs = parse_qs(url.query)
+            if sub == "versions":
+                return self._send_json({"items": [
+                    {"branch": branch, "ordinal": 2, "version_tag": "1.0.stub",
+                     "captured_at": None, "completed_at": None,
+                     "files_added": 3, "files_modified": 1, "files_removed": 0,
+                     "bytes_added": 4096},
+                    {"branch": branch, "ordinal": 1, "version_tag": "0.9.stub",
+                     "captured_at": None, "completed_at": None,
+                     "files_added": 6, "files_modified": 0, "files_removed": 0,
+                     "bytes_added": 8192}], "count": 2, "total": 2})
+            if sub == "tree":
+                prefix = qs.get("prefix", [""])[0] or ""
+                if prefix and not prefix.endswith("/"):
+                    prefix += "/"
+                entries = _update_dir_listing(prefix)
+                return self._send_json({"branch": branch, "prefix": prefix,
+                                        "entries": entries, "count": len(entries)})
+            if sub == "changes":
+                return self._send_json({"branch": branch, "ordinal": 2,
+                    "version_tag": "1.0.stub", "entries": [
+                        {"path": "scripts/combat/damage.lua", "type": "modified",
+                         "content_sha256": "stub", "size": 512}],
+                    "count": 1, "total": 1,
+                    "files_added": 3, "files_modified": 1, "files_removed": 0})
+            if sub == "search":
+                q = (qs.get("q", [""])[0] or "").strip().lower()
+                hits = sorted(p for p in _UPDATE_PATHS if q in p.lower())
+                entries = [{"path": p, "name": p.rsplit("/", 1)[-1],
+                            "size": 512, "is_dir": False} for p in hits]
+                return self._send_json({"branch": branch, "query": q,
+                    "entries": entries, "count": len(entries), "total": len(entries)})
+            if sub == "file/meta":
+                p = qs.get("path", [""])[0]
+                return self._send_json({"branch": branch, "path": p,
+                    "content_sha256": "stub", "size": 512,
+                    "archive": None, "archive_index": None})
+            if sub == "file/view":
+                p = qs.get("path", [""])[0]
+                return self._send_json({"branch": branch, "path": p, "size": 42,
+                    "content_sha256": "stub", "truncated": False,
+                    "viewable": True, "reason": None,
+                    "text": f"-- stub contents of {p}\nprint('hello')\n"})
+            if sub == "file/history":
+                p = qs.get("path", [""])[0]
+                return self._send_json({"branch": branch, "path": p, "items": [
+                    {"ordinal": 2, "version_tag": "1.0.stub", "captured_at": None,
+                     "type": "modified", "content_sha256": "stub", "size": 512}],
+                    "count": 1})
+            return self._send_json({"items": []})
+
+        # ── /market Analytics tab ─────────────────────────────────────────
+        if path == "/site/market/items":
+            return self._send_json({"items": _MARKET_ITEMS, "count": len(_MARKET_ITEMS)})
+        if path == "/site/market/analytics/movers":
+            return self._send_json(_market_movers())
+        if path == "/site/market/analytics/deals":
+            return self._send_json(_market_deals())
+        if path == "/site/market/analytics/timeline":
+            qs = parse_qs(url.query)
+            name = qs.get("name", ["Item"])[0]
+            try:
+                days = int(qs.get("days", ["14"])[0])
+            except ValueError:
+                days = 14
+            return self._send_json(_market_timeline(name, days))
+
+        # ── /codexes/crafting Recipe Cost Calculator ──────────────────────
+        if path == "/site/codexes/search":
+            qs = parse_qs(url.query)
+            q = (qs.get("q", [""])[0] or "").strip().lower()
+            items = [r for r in _CRAFT_SEARCH if q in r["name"].lower()] if q else list(_CRAFT_SEARCH)
+            return self._send_json({"branch": "live-us", "type": "recipe", "query": q,
+                                    "items": items, "count": len(items), "total": len(items)})
+        if path == "/site/codexes/crafting":
+            qs = parse_qs(url.query)
+            tree = _craft_build(qs.get("path", [""])[0])
+            if tree is None:
+                return self._send_json({"detail": "No such recipe"}, status=404)
+            return self._send_json(tree)
+
         if path == "/site/leaderboards/config":
             # Return a non-3 value so the subtitle change is visible in
             # the local preview (prod would normally serve 3 from the
@@ -496,6 +827,191 @@ class Handler(SimpleHTTPRequestHandler):
                 "daily_reset_at": int(day_reset.timestamp()),
                 "weekly_reset_at": int(wk.timestamp()),
             })
+        if path == "/site/stats/classes":
+            # Serve the real gamedata classes.json (mapped to the cleaned shape:
+            # qualified_name -> tech_name) so the /classes page renders end-to-end.
+            cj = ROOT / "app" / "trove" / "gamedata" / "classes.json"
+            items = []
+            if cj.exists():
+                for c in json.loads(cj.read_text(encoding="utf-8")):
+                    items.append({
+                        "tech_name": c.get("qualified_name"), "name": c.get("name"),
+                        "shorts": c.get("shorts", []), "damage_type": c.get("damage_type", ""),
+                        "weapons": c.get("weapons", []), "attributes": c.get("attributes", []),
+                        "stats": c.get("stats", []), "bonuses": c.get("bonuses", []),
+                        "subclass": c.get("subclass", {}), "abilities": c.get("abilities", []),
+                    })
+            return self._send_json({"items": items, "count": len(items)})
+        if path == "/site/rotations":
+            # "Today in Trove" - resets + buffs + chaos + live merchants/biomes.
+            import time as _t
+            from datetime import datetime, timezone, timedelta
+            now = int(_t.time())
+            nowdt = datetime.now(timezone.utc)
+            day_reset = nowdt.replace(hour=11, minute=0, second=0, microsecond=0)
+            if nowdt >= day_reset:
+                day_reset += timedelta(days=1)
+            wk = day_reset
+            while wk.weekday() != 6:
+                wk += timedelta(days=1)
+            daily_reset = int(day_reset.timestamp())
+            weekly_reset = int(wk.timestamp())
+            def _biome(n, icon="permafrost"):
+                return {"name": n, "icon": icon}
+            _days = ["Sunny Sunday", "Mining Monday", "Trove Tuesday", "Watery Wednesday",
+                     "Thorny Thursday", "Fried Friday", "Shadow Saturday"]
+            daily_rot = [{"name": _days[i], "emoji": "🌞", "color": "#ffb347",
+                          "weekday": i, "normal_buffs": ["+50% Magic Find"],
+                          "premium_buffs": ["+100% Magic Find"], "banner": None,
+                          "is_current": i == (nowdt.weekday() + 1) % 7,
+                          "next_at": daily_reset + (i - 1) * 86400} for i in range(7)]
+            weekly_rot = [{"name": f"Week {i+1} Bonus", "emoji": "✨", "color": "#7cc7ff",
+                           "buffs": ["+25% Class Gem XP"], "banner": None,
+                           "is_current": i == 0, "next_at": weekly_reset + (i - 1) * 7 * 86400}
+                          for i in range(4)]
+            return self._send_json({
+                "server_time": {"now_unix": now, "now_iso": nowdt.isoformat(),
+                                "trove_day": nowdt.strftime("%A"),
+                                "daily_reset_at": daily_reset, "weekly_reset_at": weekly_reset},
+                "daily_buff": {"name": daily_rot[0]["name"], "emoji": "🌞",
+                               "normal_buffs": ["+50% Magic Find"],
+                               "premium_buffs": ["+100% Magic Find"]},
+                "weekly_buff": {"name": "Week 1 Bonus", "emoji": "✨", "buffs": ["+25% Class Gem XP"]},
+                "daily_rotation": daily_rot, "weekly_rotation": weekly_rot,
+                "chaos": {"starts_at": now - 3 * 86400, "ends_at": now + 4 * 86400,
+                          "seconds_remaining": 4 * 86400,
+                          "item": {"name": "Diamond Dragon Egg", "identifier": "item/diamond"}},
+                "merchants": [
+                    {"id": "corruxion", "name": "Corruxion", "active": True,
+                     "starts_at": now - 1800, "ends_at": now + 5400,
+                     "schedule": [{"starts_at": now + 5400, "ends_at": now + 12600}]},
+                    {"id": "fluxion", "name": "Fluxion", "active": False, "state": "away",
+                     "starts_at": now + 3600, "ends_at": now + 10800,
+                     "schedule": [{"starts_at": now + 3600, "ends_at": now + 10800, "state": "arriving"}]},
+                    {"id": "wild_mana", "name": "Wild Mana", "active": True,
+                     "starts_at": now - 3600, "ends_at": now + 7200,
+                     "biomes": [_biome("Permafrost"), _biome("Cursed Vale", "cursedvale")],
+                     "schedule": [{"starts_at": now + 7200, "ends_at": now + 18000,
+                                   "biomes": [_biome("Fae Forest", "faeforest")]}]},
+                    {"id": "d15", "name": "Long Shade Rotation", "active": True,
+                     "starts_at": now - 5400, "ends_at": now + 5400,
+                     "biomes": [_biome("Neon City", "neoncity")],
+                     "schedule": [{"starts_at": now + 5400, "ends_at": now + 16200,
+                                   "biomes": [_biome("Jurassic Jungle", "jurassicjungle")]}]},
+                    {"id": "stampy", "name": "Stampy", "active": True,
+                     "starts_at": now - 7200, "ends_at": now + 100800,
+                     "biomes": [_biome("Candoria", "candoria")],
+                     "schedule": []},
+                ],
+            })
+        if path == "/site/calendar/events":
+            import time as _t
+            now = int(_t.time())
+            def _ev(i, name, cat, off_s, off_e, icon):
+                return {"event_id": str(i), "name": name, "url": "https://trovesaurus.com/events",
+                        "category": cat, "image": None, "icon": icon,
+                        "starts_at": now + off_s, "ends_at": now + off_e,
+                        "status": "ongoing" if off_s <= 0 < off_e else "upcoming",
+                        "seconds_until": (off_e if off_s <= 0 else off_s)}
+            return self._send_json({
+                "now": now,
+                "ongoing": [
+                    _ev(1, "Shadow's Eve", "Seasonal", -2 * 86400, 5 * 86400,
+                        "https://trovesaurus.com/images/events/shadowseve.png"),
+                    _ev(2, "Double XP Weekend", "Bonus", -86400, 2 * 86400, None),
+                ],
+                "upcoming": [
+                    _ev(3, "Sunfest", "Seasonal", 3 * 86400, 12 * 86400, None),
+                    _ev(4, "Bacon Bonanza", "Bonus", 7 * 86400, 9 * 86400, None),
+                ],
+            })
+        if path == "/site/feeds/videos":
+            import time as _t
+            plat = (parse_qs(url.query).get("platform", ["youtube"])[0])
+            if plat == "twitch":
+                items = [
+                    {"channel": "TroveStreamer", "login": "trovestreamer", "title": "Geode grinding all night!",
+                     "viewers": 342, "thumbnail": "/static/assets/favicon.png", "game": "Trove",
+                     "url": "https://twitch.tv/example", "started_at": None},
+                    {"channel": "PixelPaladin", "login": "pixelpaladin", "title": "Chill delving + chat",
+                     "viewers": 88, "thumbnail": "/static/assets/favicon.png", "game": "Trove",
+                     "url": "https://twitch.tv/example2", "started_at": None},
+                ]
+            else:
+                items = [
+                    {"title": "Trove 2026 Beginner Guide", "channel": "TroveTips",
+                     "thumbnail_url": "/static/assets/favicon.png", "video_id": "x",
+                     "url": "https://youtube.com/watch?v=x", "published_at": None},
+                    {"title": "Top 10 Mounts You Missed", "channel": "MountHunter",
+                     "thumbnail_url": "/static/assets/favicon.png", "video_id": "y",
+                     "url": "https://youtube.com/watch?v=y", "published_at": None},
+                ]
+            return self._send_json({"platform": plat, "items": items, "fetched_at": None})
+        if path == "/site/feeds/news":
+            return self._send_json({"items": [
+                {"title": "Sunfest Returns!", "url": "https://trovegame.com/news/sunfest",
+                 "author": "Trove Team", "summary": "The sunniest event of the year is back with new rewards.",
+                 "category": "Events", "categories": ["Events"],
+                 "image": "/static/assets/favicon.png", "published_at": None},
+                {"title": "Patch Notes 12.3", "url": "https://trovegame.com/news/patch",
+                 "author": "Trove Team", "summary": "Balance changes, bug fixes and a new mount.",
+                 "category": "Patch", "categories": ["Patch"], "image": None, "published_at": None},
+            ]})
+        if path == "/site/btt/latest":
+            import time as _t
+            from datetime import datetime, timezone
+            pub = datetime.now(timezone.utc).isoformat()
+            def _asset(name, size, dl):
+                return {"name": name, "url": "https://github.com/example/releases/download/v2.4.1/" + name,
+                        "size": size, "content_type": "application/octet-stream", "download_count": dl}
+            return self._send_json({"channel": "release", "platforms": {
+                "windows": {"platform": "windows", "tag_name": "v2.4.1", "published_at": pub,
+                            "html_url": "https://github.com/example/releases/tag/v2.4.1",
+                            "assets": [_asset("BetterTroveTools_2.4.1_x64.msi", 48210000, 12840),
+                                       _asset("BetterTroveTools_2.4.1_x64.exe", 47110000, 3120)]},
+                "linux": {"platform": "linux", "tag_name": "v2.4.1", "published_at": pub,
+                          "html_url": "https://github.com/example/releases/tag/v2.4.1",
+                          "assets": [_asset("BetterTroveTools_2.4.1_amd64.AppImage", 62000000, 1840)]},
+                "android": None,
+            }})
+        if path == "/site/btt/releases":
+            import time as _t
+            from datetime import datetime, timezone, timedelta
+            base = datetime.now(timezone.utc)
+            def _rel(i, tag, name, pre, body):
+                return {"tag_name": tag, "name": name, "body": body,
+                        "html_url": f"https://github.com/example/releases/tag/{tag}",
+                        "channel": "beta" if pre else "release", "prerelease": pre,
+                        "published_at": (base - timedelta(days=i * 6)).isoformat(),
+                        "assets": [{"name": f"BetterTroveTools_{tag[1:]}_x64.msi", "url": "https://github.com/example/x.msi",
+                                    "size": 48000000, "content_type": "application/octet-stream", "download_count": 1200 - i * 100}]}
+            items = [
+                _rel(0, "v2.4.1", "Bug fixes", False, "## What's changed\n\n- Fixed a crash on startup\n- Faster mod loading"),
+                _rel(1, "v2.4.0", "Mods Hub integration", False, "### Highlights\n\n- Browse the Mods Hub in-app\n- New settings panel"),
+                _rel(2, "v2.4.0-beta.2", "Beta 2", True, "Testing the new updater."),
+                _rel(3, "v2.3.5", "Maintenance", False, "Small fixes and dependency bumps."),
+            ]
+            channel = parse_qs(url.query).get("channel", [None])[0]
+            if channel in ("release", "beta"):
+                items = [r for r in items if r["channel"] == channel]
+            return self._send_json({"channel": channel, "items": items,
+                                    "count": len(items), "total": len(items)})
+        if path == "/site/btt/changelog":
+            def _c(sha, msg, typ):
+                return {"sha": sha, "short_sha": sha[:7], "message": msg, "type": typ,
+                        "url": f"https://github.com/example/commit/{sha}"}
+            return self._send_json({"rate_limited": False, "fetched_at": None, "groups": [
+                {"version": "Unreleased", "commits": [
+                    _c("aaaaaaa1", "feat: add dark theme toggle", "feat"),
+                    _c("aaaaaaa2", "chore: bump deps", "chore")]},
+                {"version": "v2.4.1", "commits": [
+                    _c("bbbbbbb1", "fix: crash on startup with empty config", "fix"),
+                    _c("bbbbbbb2", "perf: lazy-load the mod list", "perf")]},
+                {"version": "v2.4.0", "commits": [
+                    _c("ccccccc1", "feat: mods hub browser", "feat"),
+                    _c("ccccccc2", "docs: update README", "docs"),
+                    _c("ccccccc3", "refactor: settings store", "refactor")]},
+            ]})
         if path == "/site/trove-status":
             # Multi-env stub (eu/us/pts, binary online/down): EU down, US + PTS
             # online - a partial outage, matching the real-world state observed.
@@ -1026,6 +1542,24 @@ class Handler(SimpleHTTPRequestHandler):
                 ".svg": "image/svg+xml", ".ico": "image/x-icon",
             }.get(suffix, "application/octet-stream")
         data = p.read_bytes()
+        # Minimal Jinja emulation for page templates: inline `{% include
+        # "partials/x.html" %}` and drop `{# … #}` comments, so partials (navbar,
+        # support widget, …) render in the local preview instead of showing as
+        # raw tags. One level deep is enough for our partials.
+        if content_type == "text/html" and p.parent == TEMPLATES:
+            import re as _re
+            text = data.decode("utf-8")
+            for _ in range(3):
+                if "{% include" not in text:
+                    break
+                text = _re.sub(
+                    r'{%\s*include\s*"([^"]+)"\s*%}',
+                    lambda m: (TEMPLATES / m.group(1)).read_text(encoding="utf-8")
+                    if (TEMPLATES / m.group(1)).exists() else "",
+                    text,
+                )
+            text = _re.sub(r"{#.*?#}", "", text, flags=_re.S)
+            data = text.encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
@@ -1033,9 +1567,9 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
-    def _send_json(self, obj):
+    def _send_json(self, obj, status=200):
         data = json.dumps(obj).encode("utf-8")
-        self.send_response(200)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")

@@ -37,6 +37,21 @@
   color: var(--text-mute); font-size: 1.05rem; max-width: 70ch; margin: 0; line-height: 1.55;
 }
 
+/* Hero call-to-action link (→ Recipe Cost Calculator, ← back to Codexes). */
+.cdx-hero-cta { margin: 2px 0 0; }
+.cdx-hero-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-radius: 999px;
+  background: rgba(86,156,255,.12); border: 1px solid var(--accent-blue);
+  color: var(--text); font-weight: 600; font-size: .92rem; text-decoration: none;
+  transition: background .15s var(--ease-out), transform .15s var(--ease-out);
+}
+.cdx-hero-link:hover { background: rgba(86,156,255,.22); transform: translateY(-1px); }
+.cdx-hero-link-back {
+  background: transparent; border-color: var(--bg-line); color: var(--text-mute);
+}
+.cdx-hero-link-back:hover { color: var(--text); background: var(--bg-card); }
+
 /* ─── Controls ──────────────────────────────────────────────────────── */
 
 .cdx-controls {
@@ -150,6 +165,7 @@
 .cdx-type-memento { background: rgba(177,140,255,.16); color: var(--accent-purple); }
 .cdx-type-fish    { background: rgba(86,196,255,.16);  color: #56c4ff; }
 .cdx-type-recipe  { background: rgba(249,150,30,.16);  color: var(--accent-orange); }
+.cdx-type-style   { background: rgba(255,121,198,.16); color: #ff79c6; }
 .cdx-type-item    { background: rgba(255,255,255,.06); color: var(--text-soft); }
 
 .cdx-badge {

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>The Better Trove Tools app - desktop & web companion for Trove</title>
+    <meta name="description" content="Download Better Trove Tools - the free, open-source companion app for Trove. Mod manager, gem optimizer, star chart planner, calculators, code-decoded codexes - desktop or browser, no install required.">
+    <meta name="keywords" content="Trove, Better Trove Tools, BTT, Trove app, Trove mod manager, .tmod, gem simulator, star chart, mastery calculator, power rank, magic find, Kiwi API">
+    <meta name="author" content="Aallyn Reed">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0a0e14" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="canonical" href="https://trove.aallyn.net/app">
+
+    <!-- Performance: hint the browser at the cross-origin endpoints we'll hit
+         immediately on load (live-strip + release fetch + font CDN). The
+         preconnect happens during the HTML parse, in parallel with CSS, so the
+         first real request is already warmed up by the time JS fires. -->
+    <link rel="preconnect" href="https://api.aallyn.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Icons -->
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trove.aallyn.net/app">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="The Better Trove Tools app">
+    <meta property="og:description" content="Mod manager, gem optimizer, star chart planner, calculators, code-decoded codexes - desktop or browser, free & open source.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
+    <meta property="og:image:secure_url" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
+    <meta property="og:image:alt" content="Better Trove Tools - Home Dashboard">
+    <meta property="og:locale" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Better Trove Tools">
+    <meta name="twitter:description" content="The toolkit for Trove players, modders & data miners.">
+    <meta name="twitter:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
+    <meta name="twitter:image:alt" content="Better Trove Tools preview">
+
+    <meta name="application-name" content="Better Trove Tools">
+    <meta name="apple-mobile-web-app-title" content="Better Trove Tools">
+    <!-- Both spellings: apple- is iOS-only and being deprecated in favour of
+         the unprefixed mobile-web-app-capable (now a real spec). Newer Chrome
+         logs a console warning if only the apple- form is present; ship both
+         so iOS keeps the home-screen mode AND the warning shuts up. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Better Trove Tools",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Windows, Linux, Android, Web",
+      "description": "Comprehensive, offline-capable suite for Trove players and modders.",
+      "url": "https://trove.aallyn.net/app",
+      "author": { "@type": "Person", "name": "AallynReed" },
+      "isAccessibleForFree": true
+    }
+    </script>
+
+    <!-- Display font: Space Grotesk for headings (geometric + characterful),
+         Inter as the system body fallback (already in our font stack). -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+
+    <!-- Graceful fallback for screenshots that haven't been captured yet.
+         Same hook the previous design used, unchanged so any feature-card
+         <img> whose source 404s gets replaced by a placeholder tile. -->
+    <script>
+        function shotFail(img) {
+            img.onerror = null;
+            const file = (img.getAttribute('src') || '').split('/').pop();
+            const ph = document.createElement('div');
+            ph.className = 'shot-placeholder';
+            ph.innerHTML = '<i class="fa-regular fa-image"></i>'
+                + '<span data-i18n>' + (img.getAttribute('alt') || 'Screenshot') + '</span>'
+                + '<code>' + file + '</code>';
+            img.replaceWith(ph);
+        }
+    </script>
+</head>
+
+<body class="landing">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <!-- Animated background canvas - particles drift slowly across the
+         viewport behind every other layer. Decorative, so aria-hidden;
+         landing.js handles the rAF loop and pauses it when the tab is
+         hidden or the user prefers reduced motion. -->
+    <canvas class="bg-fx" aria-hidden="true"></canvas>
+
+    <!-- Glass-blurred sticky nav. ID/class names match what app.js binds to
+         (nav-toggle, nav-links, .navbar, .open) so the hamburger logic
+         keeps working without changes. -->
+    {% include "partials/navbar.html" %}
+
+    <main id="main">
+
+        <!-- ═══════════════ HERO ═══════════════
+             Full-viewport hero with a layered animated background (canvas
+             particles + three blurred conic-gradient "orbs" + grain overlay).
+             The title reveal is staggered via @starting-style for browsers
+             that support it, with a JS fallback for the rest. -->
+        <section class="hero" id="hero" tabindex="-1">
+            <div class="hero-bg" aria-hidden="true">
+                <!-- Trove screenshot slideshow - landing.js fetches
+                     /site/screenshots.json on load, builds <img> children
+                     here, and cycles them with crossfade + ken-burns. Sits
+                     UNDERNEATH the orbs and grid so the existing texture
+                     stays the dominant visual; the screenshots add depth +
+                     gameplay context without competing for attention. -->
+                <div class="hero-screens" data-screens></div>
+                <div class="orb orb-1"></div>
+                <div class="orb orb-2"></div>
+                <div class="orb orb-3"></div>
+                <div class="grid-overlay"></div>
+            </div>
+
+            <div class="hero-inner">
+                <p class="hero-eyebrow">
+                    <span class="dot"></span>
+                    <span data-i18n>Free &amp; open source</span>
+                    <span class="sep">·</span>
+                    <span data-i18n>Desktop &amp; web</span>
+                    <span class="sep">·</span>
+                    <span data-i18n>No telemetry</span>
+                </p>
+
+                <h1 class="hero-title">
+                    <span class="word">Better</span>
+                    <span class="word"><span class="grad">Trove</span></span>
+                    <span class="word">Tools</span>
+                </h1>
+
+                <p class="hero-sub" data-i18n>The complete companion suite for Trove players, modders, and data miners. Plan your gems, browse decoded codexes, build and share mods - desktop, web, or both.</p>
+
+                <!-- Latest Trove patch banner: populated by landing.js from the
+                     /site/updates/live-us/versions proxy; stays hidden until a
+                     version resolves (and on any fetch error). -->
+                <div class="hero-patch-row">
+                    <a class="pill pill-accent" id="hero-patch" href="/updates" hidden>
+                        <i class="fa-solid fa-cube" aria-hidden="true"></i>
+                        <span class="hero-patch-badge" data-i18n>New Trove patch</span>
+                        <span class="hero-patch-text"></span>
+                    </a>
+                </div>
+
+                <div class="hero-actions">
+                    <!-- ⚠ Download dropdown HTML below preserves the IDs +
+                         classes app.js binds to (download-dropdown, -trigger,
+                         -panel, -icon, -label, -status, -status-msg, -retry,
+                         .download-item with data-platform). Restyled, not
+                         re-engineered - the live release fetch keeps working. -->
+                    <div class="download-dropdown" id="download-dropdown">
+                        <button type="button" class="btn btn-primary download-trigger" id="download-trigger"
+                                aria-haspopup="menu" aria-expanded="false" aria-controls="download-panel">
+                            <i class="fa-solid fa-spinner fa-spin" id="download-icon"></i>
+                            <span class="download-label" id="download-label">Fetching Latest...</span>
+                            <i class="fa-solid fa-chevron-down download-caret" aria-hidden="true"></i>
+                        </button>
+                        <div class="download-panel" id="download-panel" role="menu" aria-label="Choose your platform" hidden>
+                            <a class="download-item" data-platform="windows" role="menuitem" target="_blank" rel="noopener" hidden>
+                                <i class="fa-brands fa-windows download-item-icon"></i>
+                                <div class="download-item-text">
+                                    <strong>Windows</strong>
+                                    <span class="download-item-version"></span>
+                                </div>
+                                <i class="fa-solid fa-arrow-down download-item-arrow" aria-hidden="true"></i>
+                            </a>
+                            <a class="download-item" data-platform="linux" role="menuitem" target="_blank" rel="noopener" hidden>
+                                <i class="fa-brands fa-linux download-item-icon"></i>
+                                <div class="download-item-text">
+                                    <strong>Linux</strong>
+                                    <span class="download-item-version"></span>
+                                </div>
+                                <i class="fa-solid fa-arrow-down download-item-arrow" aria-hidden="true"></i>
+                            </a>
+                            <a class="download-item" data-platform="android" role="menuitem" target="_blank" rel="noopener" hidden>
+                                <i class="fa-brands fa-android download-item-icon"></i>
+                                <div class="download-item-text">
+                                    <strong>Android</strong>
+                                    <span class="download-item-version"></span>
+                                </div>
+                                <i class="fa-solid fa-arrow-down download-item-arrow" aria-hidden="true"></i>
+                            </a>
+                            <!-- Inline error block (no retry button - click the
+                                 trigger again to retry; that's what app.js
+                                 wires under the hood and the panel's own
+                                 close+reopen feels less alarming than a
+                                 dedicated "Try again" CTA next to working
+                                 platforms.) -->
+                            <div class="download-status" id="download-status" hidden>
+                                <p class="download-status-msg" id="download-status-msg"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="https://btt.aallyn.net" target="_blank" rel="noopener" class="btn btn-ghost">
+                        <i class="fa-solid fa-globe"></i> <span data-i18n>Launch Web App</span>
+                    </a>
+                </div>
+
+                <p id="release-info" class="release-info" aria-live="polite"></p>
+
+                <!-- Secondary pills: all the places someone might want to
+                     go FROM this page. Includes the two new dev links so
+                     they're visible above the fold. -->
+                <div class="hero-pills" aria-label="Quick links">
+                    <a class="pill" href="/documentation"><i class="fa-solid fa-book"></i> <span data-i18n>User Guide</span></a>
+                    <a class="pill pill-accent" href="https://dev.aallyn.net"><i class="fa-solid fa-code"></i> <span data-i18n>Developer Portal</span></a>
+                    <a class="pill pill-accent" href="https://docs.aallyn.net"><i class="fa-solid fa-terminal"></i> <span data-i18n>API Reference</span></a>
+                    <a class="pill" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> <span data-i18n>Source</span></a>
+                    <a class="pill" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> <span data-i18n>Discord</span></a>
+                    {% if discord_install_url %}<a class="pill pill-accent" href="{{ discord_install_url }}" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> <span data-i18n>Add to Discord</span></a>{% endif %}
+                </div>
+
+                <div class="hero-platforms" aria-label="Supported platforms">
+                    <span class="plat-badge plat-windows" title="Windows"><i class="fa-brands fa-windows" aria-hidden="true"></i><span>Windows</span></span>
+                    <span class="plat-badge plat-linux"   title="Linux"  ><i class="fa-brands fa-linux"   aria-hidden="true"></i><span>Linux</span></span>
+                    <span class="plat-badge plat-android" title="Android"><i class="fa-brands fa-android" aria-hidden="true"></i><span>Android</span></span>
+                    <span class="plat-badge plat-web"     title="Web app"><i class="fa-solid fa-globe"   aria-hidden="true"></i><span>Web app</span></span>
+                </div>
+
+                <!-- Trove SERVER status - deliberately placed below the
+                     platform badges so it reads as a distinct, Trove-game
+                     signal rather than a Better Trove Tools status. A link
+                     to the full /status page. JS-owned (landing.js), hidden
+                     until /site/trove-status resolves. -->
+                <a class="trove-status" id="trove-status" href="/status" hidden role="status" aria-live="polite">
+                    <span class="trove-status-dot" aria-hidden="true"></span>
+                    <span class="trove-status-label" data-i18n>Trove servers</span>
+                    <span class="trove-status-sep" aria-hidden="true">·</span>
+                    <span class="trove-status-text"></span>
+                    <i class="fa-solid fa-arrow-right trove-status-arrow" aria-hidden="true"></i>
+                </a>
+            </div>
+
+            <a class="scroll-cue" href="#explore" aria-label="Scroll to explore the site">
+                <span data-i18n>Scroll</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </a>
+        </section>
+
+        <!-- ═══════════════ EXPLORE THE SITE ═══════════════
+             A directory of the website's own pages (separate from the
+             desktop/web app spotlights further down). Each card links to a
+             site page and is gated by the SAME feature flag the navbar uses,
+             so toggling a feature off in the admin panel removes it here too.
+             Order mirrors the navbar mega-menu groups (Live → Competitive →
+             Reference → Community). -->
+        <section class="site-explore" id="explore" aria-label="Explore the site">
+            <p class="section-eyebrow" data-i18n>On the site</p>
+            <h2 class="section-title" data-i18n>Explore the <span class="grad">website.</span></h2>
+            <p class="section-sub" data-i18n>No download needed - live game data, leaderboards, decoded codexes, a mod hub and more, all in your browser.</p>
+
+            <div class="explore-grid">
+                {% if server_status_enabled %}
+                <a class="explore-card" href="/status">
+                    <span class="explore-icon"><i class="fa-solid fa-signal" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Server Status <span class="nav-pill nav-pill-beta">Beta</span></h3>
+                        <p data-i18n>Is Trove online? Live login &amp; game-server reachability at a glance.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if server_time_enabled %}
+                <a class="explore-card" href="/server-time">
+                    <span class="explore-icon"><i class="fa-solid fa-clock" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Server Time</h3>
+                        <p data-i18n>The official server clock, world clocks, and a Discord timestamp maker.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if player_activity_enabled %}
+                <a class="explore-card" href="/activity">
+                    <span class="explore-icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Player Activity</h3>
+                        <p data-i18n>How busy Trove is right now, charted hour by hour.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if class_activity_enabled %}
+                <a class="explore-card" href="/class-activity">
+                    <span class="explore-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Class Activity</h3>
+                        <p data-i18n>See which classes people are actually playing.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if leaderboards_enabled %}
+                <a class="explore-card" href="/leaderboards">
+                    <span class="explore-icon"><i class="fa-solid fa-ranking-star" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Leaderboards</h3>
+                        <p data-i18n>Every contest and weekly board, refreshed live - with cheats flagged.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if clubs_enabled %}
+                <a class="explore-card" href="/clubs">
+                    <span class="explore-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Clubs</h3>
+                        <p data-i18n>Club rankings and member stats.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if commands_enabled %}
+                <a class="explore-card" href="/commands">
+                    <span class="explore-icon"><i class="fa-solid fa-keyboard" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Trove Commands</h3>
+                        <p data-i18n>A searchable index of every in-game slash command.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if updates_enabled %}
+                <a class="explore-card" href="/updates">
+                    <span class="explore-icon"><i class="fa-solid fa-code-branch" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Updates</h3>
+                        <p data-i18n>Browse every patch, diffed and archived, with blueprint previews.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if codexes_enabled %}
+                <a class="explore-card" href="/codexes">
+                    <span class="explore-icon"><i class="fa-solid fa-book-atlas" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Codexes <span class="nav-pill nav-pill-beta">Beta</span></h3>
+                        <p data-i18n>Decoded game catalogs: allies, mounts, dragons, recipes and more.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if mods_hub_enabled %}
+                <a class="explore-card" href="/mods">
+                    <span class="explore-icon"><i class="fa-solid fa-cubes" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Mods Hub</h3>
+                        <p data-i18n>Share and download mods, with in-browser 3D previews.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if mods_hub_enabled %}
+                <a class="explore-card" href="/modpacks">
+                    <span class="explore-icon"><i class="fa-solid fa-box-open" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Modpacks</h3>
+                        <p data-i18n>Grab curated bundles of mods, ready to drop in.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if market_enabled %}
+                <a class="explore-card" href="/market">
+                    <span class="explore-icon"><i class="fa-solid fa-shop" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Market <span class="nav-pill nav-pill-beta">Beta</span></h3>
+                        <p data-i18n>Trove marketplace prices and history.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if giveaways_enabled %}
+                <a class="explore-card" href="/giveaways">
+                    <span class="explore-icon"><i class="fa-solid fa-gift" aria-hidden="true"></i></span>
+                    <span class="explore-card-body">
+                        <h3 data-i18n>Giveaways</h3>
+                        <p data-i18n>Community giveaways and prizes.</p>
+                    </span>
+                    <i class="fa-solid fa-arrow-right explore-arrow" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- ═══════════════ LIVE STRIP ═══════════════
+             Four mini cards that fetch from the Kiwi API on load and refresh
+             every ~30s: server time, Trove day, current chaos chest item,
+             active hourly challenge. Demonstrates the API the site sits on
+             top of - and doubles as a soft pitch for the API Docs link. -->
+        <section class="live-strip" id="live" aria-label="Live game data">
+            <div class="live-eyebrow">
+                <i class="fa-solid fa-circle live-pulse"></i>
+                <span data-i18n>Powered by the Kiwi API</span>
+                <a class="live-link" href="https://docs.aallyn.net" data-i18n>view docs →</a>
+            </div>
+            <div class="live-inner">
+                <a class="live-card live-card-link" href="/server-time" data-live="server-time-card" data-i18n-title title="Open the Server Time page - world clocks &amp; Discord timestamps">
+                    <span class="live-label" data-i18n>Server Time</span>
+                    <strong class="live-value" data-live="server-time">-:-:-</strong>
+                    <span class="live-sub" data-live="server-date">UTC</span>
+                    <span class="live-card-go" aria-hidden="true"><i class="fa-solid fa-arrow-right-long"></i></span>
+                </a>
+                <article class="live-card" data-live="trove-day-card">
+                    <span class="live-label" data-i18n>Trove Day</span>
+                    <strong class="live-value" data-live="trove-day">-</strong>
+                    <span class="live-sub" data-live="reset-in" data-i18n>daily reset in -</span>
+                </article>
+                <article class="live-card" data-live="chaos-card">
+                    <span class="live-label" data-i18n>Chaos Chest</span>
+                    <strong class="live-value" data-live="chaos-name">loading…</strong>
+                    <span class="live-sub" data-live="chaos-ends" data-i18n>this week's featured item</span>
+                </article>
+                <article class="live-card" data-live="challenge-card">
+                    <span class="live-label" data-i18n>Hourly Challenge</span>
+                    <strong class="live-value" data-live="challenge-name">loading…</strong>
+                    <span class="live-sub" data-live="challenge-kind"></span>
+                </article>
+            </div>
+        </section>
+
+        <!-- ═══════════════ STORY SPOTLIGHTS ═══════════════
+             Scrollytelling block. Each .spotlight is a near-full-viewport
+             panel with a parallax background image and overlaid text.
+             IntersectionObserver flips .in-view to drive the entry
+             animation, and a CSS-only fallback ensures content shows
+             when the observer never fires (very old browsers, no-JS). -->
+        <section class="story" id="story" aria-label="Feature spotlights">
+
+            <article class="spotlight" data-theme="blue" data-shot="home_dashboard.webp">
+                <div class="spot-bg" aria-hidden="true">
+                    <img src="/static/assets/home_dashboard.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <div class="spot-veil"></div>
+                </div>
+                <div class="spot-inner">
+                    <p class="spot-eyebrow" data-i18n>Daily play</p>
+                    <h2 class="spot-title" data-i18n>Open the app. Get your bearings. <span class="grad">Head out.</span></h2>
+                    <p class="spot-body" data-i18n>Daily &amp; weekly buffs, merchant tracking, community streams, and event countdowns - all on one live dashboard that already knows what's running right now.</p>
+                    <ul class="spot-bullets">
+                        <li data-i18n>Live daily &amp; weekly buff rotation</li>
+                        <li data-i18n>Corruxion / Fluxion / Stampy countdowns</li>
+                        <li data-i18n>Chaos Chest + Hourly Challenge tracker</li>
+                        <li data-i18n>Trovesaurus stream &amp; news embed</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="spotlight" data-theme="orange" data-shot="gem_builds.webp">
+                <div class="spot-bg" aria-hidden="true">
+                    <img src="/static/assets/gem_builds.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <div class="spot-veil"></div>
+                </div>
+                <div class="spot-inner">
+                    <p class="spot-eyebrow" data-i18n>Gems &amp; builds</p>
+                    <h2 class="spot-title" data-i18n>Crunch <span class="grad">thousands</span> of gem combinations.</h2>
+                    <p class="spot-body" data-i18n>Tell the optimizer what you've got. Get back the highest-DPS, highest-PR, or highest-Light layout - per class, per light level, with active buffs accounted for.</p>
+                    <ul class="spot-bullets">
+                        <li data-i18n>Per-class gem build optimizer</li>
+                        <li data-i18n>Gem Evaluator: keep, reroll, or scrap</li>
+                        <li data-i18n>Free sandbox simulator with drag-and-drop</li>
+                        <li data-i18n>Interactive zoomable Star Chart with shareable build codes</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="spotlight" data-theme="yellow" data-shot="calc_pr.webp">
+                <div class="spot-bg" aria-hidden="true">
+                    <img src="/static/assets/calc_pr.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <div class="spot-veil"></div>
+                </div>
+                <div class="spot-inner">
+                    <p class="spot-eyebrow" data-i18n>Calculators</p>
+                    <h2 class="spot-title" data-i18n>Every stat. Every source. <span class="grad">No more spreadsheets.</span></h2>
+                    <p class="spot-body" data-i18n>Power Rank, Mastery, Light, Magic Find - each calculator shows you the per-source breakdown so you know <em>why</em> the number changed, not just what it is.</p>
+                    <ul class="spot-bullets">
+                        <li data-i18n>Power Rank: gear / dragons / gems / mastery</li>
+                        <li data-i18n>Mastery: PR + Light + MF at every rank</li>
+                        <li data-i18n>Magic Find: Patron, dragons, weekly buffs, chart</li>
+                        <li data-i18n>Light: total from gear, gems, mastery</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="spotlight" data-theme="purple" data-shot="ally_codex.webp">
+                <div class="spot-bg" aria-hidden="true">
+                    <img src="/static/assets/ally_codex.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <div class="spot-veil"></div>
+                </div>
+                <div class="spot-inner">
+                    <p class="spot-eyebrow" data-i18n>Codexes</p>
+                    <h2 class="spot-title" data-i18n>Decoded <span class="grad">live</span> from your installed game.</h2>
+                    <p class="spot-body" data-i18n>Eight searchable, filterable catalogs - allies, mounts, dragons, mementos, recipes, items, fish, badges - each pulled fresh from your game the moment you point BTT at your install.</p>
+                    <ul class="spot-bullets">
+                        <li data-i18n>Filter by stat, ability, mastery, designer, category</li>
+                        <li data-i18n>Source context - biome, boss, creature origin</li>
+                        <li data-i18n>Recipe trees with ingredient counts</li>
+                        <li data-i18n>No upstream scraping; data is yours</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="spotlight" data-theme="blue" data-shot="modder_tools_build.webp">
+                <div class="spot-bg" aria-hidden="true">
+                    <img src="/static/assets/modder_tools_build.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <div class="spot-veil"></div>
+                </div>
+                <div class="spot-inner">
+                    <p class="spot-eyebrow" data-i18n>Modder tools</p>
+                    <h2 class="spot-title" data-i18n>Loose files in. <span class="grad">A shippable .tmod out.</span></h2>
+                    <p class="spot-body" data-i18n>Auto-structure your assets and hot-test in-game with one click. Build, extract, edit, and version-manage mods without ever leaving the app.</p>
+                    <ul class="spot-bullets">
+                        <li data-i18n>One-click in-game test</li>
+                        <li data-i18n>Extract + edit any .tmod, your own or others</li>
+                        <li data-i18n>Persistent versioned project workspaces</li>
+                        <li data-i18n>Game File Explorer: search/extract .tfi/.tfa</li>
+                    </ul>
+                </div>
+            </article>
+        </section>
+
+        <!-- ═══════════════ BENTO GRID ═══════════════
+             Finer-grained features: smaller glass tiles in a CSS Grid with
+             varying spans. Each tile uses perspective transforms for the
+             3D hover lift. Stagger-fades in on viewport entry. -->
+        <section class="bento" id="features" aria-label="More features">
+            <header class="section-head">
+                <p class="section-eyebrow" data-i18n>More inside</p>
+                <h2 class="section-title" data-i18n>Everything else <span class="grad">at a glance.</span></h2>
+                <p class="section-sub" data-i18n>Smaller tools, polish, language support - the parts that don't need their own spotlight but still matter every session.</p>
+            </header>
+
+            <div class="bento-grid">
+                <article class="bento-tile span-2">
+                    <img src="/static/assets/server_time.webp" alt="Server Time" loading="lazy" onerror="shotFail(this)">
+                    <div class="bento-body">
+                        <h3 data-i18n>Server <span class="highlight-orange">Time</span></h3>
+                        <p data-i18n>Live server clock with world clocks and a Discord-timestamp converter - paste the result straight into chat.</p>
+                    </div>
+                </article>
+
+                <article class="bento-tile">
+                    <img src="/static/assets/trovesaurus.webp" alt="Trovesaurus Browser" loading="lazy" onerror="shotFail(this)">
+                    <div class="bento-body">
+                        <h3 data-i18n>Trovesaurus <span class="highlight-yellow">Browser</span></h3>
+                        <p data-i18n>Built-in mod store. Search, filter, install, update - no browser tab needed.</p>
+                    </div>
+                </article>
+
+                <article class="bento-tile">
+                    <img src="/static/assets/mod_manager.webp" alt="Mod Manager" loading="lazy" onerror="shotFail(this)">
+                    <div class="bento-body">
+                        <h3 data-i18n>Mod <span class="highlight-orange">Manager</span></h3>
+                        <p data-i18n>Enable, disable, update, delete - per installation, with conflict detection.</p>
+                    </div>
+                </article>
+
+                <article class="bento-tile span-2">
+                    <img src="/static/assets/update_tracker.webp" alt="Update Tracker" loading="lazy" onerror="shotFail(this)">
+                    <div class="bento-body">
+                        <h3 data-i18n>Update <span class="highlight-orange">Tracker</span></h3>
+                        <p data-i18n>Snapshot the game, diff every patch - auto-extracted, summarized, with blueprint previews so you can see what actually changed.</p>
+                    </div>
+                </article>
+
+                <article class="bento-tile">
+                    <img src="/static/assets/gem_evaluator.webp" alt="Gem Evaluator" loading="lazy" onerror="shotFail(this)">
+                    <div class="bento-body">
+                        <h3 data-i18n>Gem <span class="highlight-yellow">Evaluator</span></h3>
+                        <p data-i18n>Rate any gem before you sink flux into it.</p>
+                    </div>
+                </article>
+
+                <article class="bento-tile">
+                    <img src="/static/assets/calc_mastery.webp" alt="Mastery Calculator" loading="lazy" onerror="shotFail(this)">
+                    <div class="bento-body">
+                        <h3 data-i18n>Mastery <span class="highlight-yellow">Calc</span></h3>
+                        <p data-i18n>Plan Trove + Geode mastery - PR / Light / MF at every rank.</p>
+                    </div>
+                </article>
+
+                <article class="bento-tile">
+                    <img src="/static/assets/blueprint_editor.webp" alt="Blueprint Editor" loading="lazy" onerror="shotFail(this)">
+                    <div class="bento-body">
+                        <h3 data-i18n>Blueprint <span class="highlight-yellow">Editor</span></h3>
+                        <p data-i18n>Open .qb / .blueprint, inspect voxels in 3D, export. <em>Experimental.</em></p>
+                    </div>
+                </article>
+
+                <article class="bento-tile">
+                    <img src="/static/assets/modder_tools_projects.webp" alt="Project Manager" loading="lazy" onerror="shotFail(this)">
+                    <div class="bento-body">
+                        <h3 data-i18n>Project <span class="highlight-yellow">Manager</span></h3>
+                        <p data-i18n>Persistent versioned mod workspaces - organized, always ready.</p>
+                    </div>
+                </article>
+
+                <article class="bento-tile span-2">
+                    <img src="/static/assets/settings.webp" alt="Settings &amp; FPS" loading="lazy" onerror="shotFail(this)">
+                    <div class="bento-body">
+                        <h3 data-i18n>Settings <span class="highlight-blue">&amp; FPS unlock</span></h3>
+                        <p data-i18n>Theme, 9 languages, install management - plus an FPS cap that goes from 60 all the way to uncapped, with automatic backups so you can roll back any time.</p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ═══════════════ STATS COUNTERS ═══════════════
+             Big numbers, count up from 0 when scrolled into view. Each .stat
+             carries data-target with the final value; landing.js animates
+             from 0 → target over ~1.4s using requestAnimationFrame easing. -->
+        <section class="stats" aria-label="At a glance">
+            <article class="stat">
+                <strong class="stat-num" data-target="50">0</strong>
+                <span class="stat-label" data-i18n>major tools</span>
+            </article>
+            <article class="stat">
+                <strong class="stat-num" data-target="9">0</strong>
+                <span class="stat-label" data-i18n>languages</span>
+            </article>
+            <article class="stat">
+                <strong class="stat-num" data-target="4">0</strong>
+                <span class="stat-label" data-i18n>platforms</span>
+            </article>
+            <article class="stat">
+                <strong class="stat-num" data-target="8">0</strong>
+                <span class="stat-label" data-i18n>decoded codexes</span>
+            </article>
+            <article class="stat">
+                <strong class="stat-num">∞</strong>
+                <span class="stat-label" data-i18n>open source</span>
+            </article>
+        </section>
+
+        <!-- ═══════════════ FOR DEVELOPERS ═══════════════
+             New section that prominently features the dev portal + API docs.
+             Justifies their nav link and makes them discoverable to anyone
+             who scrolled past the hero without clicking. -->
+        <section class="dev-cta" id="for-devs" aria-label="For developers">
+            <div class="dev-cta-inner">
+                <p class="section-eyebrow" data-i18n>For developers</p>
+                <h2 class="section-title" data-i18n>Build on the <span class="grad">Kiwi API.</span></h2>
+                <p class="section-sub" data-i18n>The same backend that powers Better Trove Tools is open to you. Live rotations, decoded gamedata, deltaed updates, marketplace history - all under a free tier with proper rate-limited scopes.</p>
+
+                <div class="dev-cards">
+                    <a class="dev-card" href="https://dev.aallyn.net">
+                        <div class="dev-card-icon"><i class="fa-solid fa-key"></i></div>
+                        <h3 data-i18n>Developer Portal</h3>
+                        <p data-i18n>Sign up, mint API tokens, scope them down, monitor usage. Same account works across every Kiwi service.</p>
+                        <span class="dev-card-cta">dev.aallyn.net <i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                    <a class="dev-card" href="https://docs.aallyn.net">
+                        <div class="dev-card-icon"><i class="fa-solid fa-book-open"></i></div>
+                        <h3 data-i18n>API Reference</h3>
+                        <p data-i18n>Full interactive OpenAPI reference. Every endpoint, every scope, every response shape - with a paste-and-go LLM-friendly version at <code>/llms.txt</code>.</p>
+                        <span class="dev-card-cta">docs.aallyn.net <i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                    <a class="dev-card" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener">
+                        <div class="dev-card-icon"><i class="fa-brands fa-github"></i></div>
+                        <h3 data-i18n>Source code</h3>
+                        <p data-i18n>The BTT desktop / web app source. MIT-licensed. PRs welcome - read the contributing guide first.</p>
+                        <span class="dev-card-cta">github.com/AallynReed <i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ FINAL CTA ═══════════════ -->
+        <section class="final-cta" aria-label="Get started">
+            <div class="final-cta-inner">
+                <img src="/static/assets/favicon.png" alt="" class="final-logo" loading="lazy" decoding="async">
+                <h2 data-i18n>Two ways in. <span class="grad">Pick yours.</span></h2>
+                <p data-i18n>Install the desktop app for the full suite, or fire up the browser version for the parts you can run without a local game install.</p>
+                <div class="final-actions">
+                    <a class="btn btn-primary" href="#hero"><i class="fa-solid fa-download"></i> <span data-i18n>Download</span></a>
+                    <a class="btn btn-ghost" href="https://btt.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span data-i18n>Launch Web App</span></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/landing.min.js" defer></script>
+</body>
+</html>

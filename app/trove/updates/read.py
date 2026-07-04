@@ -138,6 +138,41 @@ async def list_directory(branch: str, prefix: str) -> list[dict]:
     return directory_listing(entries, prefix)
 
 
+async def search_paths(branch: str, needle: str, limit: int = 200) -> tuple[list[dict], int]:
+    """Full-tree file search: every path on ``branch`` containing ``needle``
+    (case-insensitive substring), NOT just the current directory level.
+
+    Returns ``(entries, total)`` where each entry is a full-path file row
+    ``{"path", "name", "size", "is_dir": False}`` and ``total`` is the true
+    match count (so the UI can say "showing 200 of N"). Results are capped at
+    ``limit`` and sorted by path. The needle is escaped so it's a literal
+    substring, never a user-supplied regex.
+    """
+    import re
+
+    needle = needle.strip()
+    if not needle:
+        return [], 0
+    coll = UpdateState.get_pymongo_collection()
+    query: dict = {
+        "branch": branch,
+        "path": {"$regex": re.escape(needle), "$options": "i"},
+    }
+    total = await coll.count_documents(query)
+    cursor = coll.find(query, {"path": 1, "size": 1, "_id": 0}).sort("path", 1).limit(limit)
+    docs = await cursor.to_list(length=limit)
+    entries = [
+        {
+            "path": d["path"],
+            "name": d["path"].rsplit("/", 1)[-1],
+            "size": d.get("size", 0),
+            "is_dir": False,
+        }
+        for d in docs
+    ]
+    return entries, total
+
+
 async def get_file_meta(branch: str, path: str) -> dict | None:
     d = await UpdateState.find_one({"branch": branch, "path": path})
     if d is None:

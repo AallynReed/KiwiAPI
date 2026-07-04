@@ -131,8 +131,27 @@ async def refresh_news() -> int:
 # the newest few; the history endpoint pages through everything.
 
 async def latest_news(limit: int) -> list[TroveNews]:
-    """The newest `limit` articles (the small, live view)."""
-    return await TroveNews.find().sort("-published_at").limit(limit).to_list()
+    """The newest ``limit`` articles (the small, live view), de-duplicated by
+    title. The official feed lists the same post once per category (sometimes
+    under different URLs), so a raw query shows the same article several times;
+    we keep the newest copy and merge the others' categories into it (so the
+    Shop-Offers filter still sees every category the post was filed under)."""
+    docs = await TroveNews.find().sort("-published_at").limit(max(limit * 3, limit)).to_list()
+    out: list[TroveNews] = []
+    seen: dict[str, TroveNews] = {}
+    for d in docs:
+        key = (d.title or "").strip().lower() or d.url
+        kept = seen.get(key)
+        if kept is not None:
+            merged = list(kept.categories or [])
+            for c in (d.categories or []):
+                if c not in merged:
+                    merged.append(c)
+            kept.categories = merged
+            continue
+        seen[key] = d
+        out.append(d)
+    return out[:limit]
 
 
 async def news_history(limit: int, offset: int) -> tuple[list[TroveNews], int]:

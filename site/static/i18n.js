@@ -10,13 +10,13 @@
 
     // endonyms - language names shown in their own language (never translated)
     const LANGS = [
-        ["en", "English"],
-        ["fr", "Français"],
-        ["de", "Deutsch"],
-        ["pt-PT", "Português"],
-        ["ru", "Русский"],
-        ["ja", "日本語"],
-        ["zh-CN", "简体中文"],
+        ["en", "English", "🇬🇧"],
+        ["fr", "Français", "🇫🇷"],
+        ["de", "Deutsch", "🇩🇪"],
+        ["pt-PT", "Português", "🇵🇹"],
+        ["ru", "Русский", "🇷🇺"],
+        ["ja", "日本語", "🇯🇵"],
+        ["zh-CN", "简体中文", "🇨🇳"],
     ];
     const SUPPORTED = new Set(LANGS.map((l) => l[0]));
     const STORAGE_KEY = "btt_docs_lang";
@@ -123,6 +123,7 @@
         document.querySelectorAll(".lang-select").forEach(sel => {
             if (sel.value !== lang) sel.value = lang;
         });
+        syncSwitcherFlags();
         // let other scripts (e.g. the release-info line in app.js) re-render
         document.dispatchEvent(new CustomEvent("btt-lang-changed", { detail: { lang } }));
     }
@@ -142,21 +143,84 @@
         return "en";
     }
 
+    function flagFor(code) {
+        const hit = LANGS.find(l => l[0] === code);
+        return (hit && hit[2]) || "🌐";
+    }
+
+    // Keep every custom switcher's trigger flag + active row in sync with the
+    // current language (called on build + on every language change).
+    function syncSwitcherFlags() {
+        document.querySelectorAll(".lang-dd-flag").forEach(s => { s.textContent = flagFor(current); });
+        document.querySelectorAll(".lang-dd-item").forEach(it => {
+            it.classList.toggle("active", it.dataset.lang === current);
+        });
+    }
+
     function buildSwitcher() {
-        // Populate every .lang-select on the page (navbar + sidebar etc.) so
-        // a duplicate switcher in the mobile drawer stays in sync.
+        // Each .lang-select becomes a compact custom dropdown: a flag-only
+        // trigger (small, fits the navbar) with the full language NAMES in the
+        // open panel. The native <select> is kept (hidden) as a no-JS fallback
+        // and so setLanguage's value-sync still has something to write to.
         const selects = document.querySelectorAll(".lang-select");
         if (!selects.length) return;
         selects.forEach(sel => {
             sel.innerHTML = "";
             LANGS.forEach(([code, label]) => {
                 const opt = document.createElement("option");
-                opt.value = code;
-                opt.textContent = label;
+                opt.value = code; opt.textContent = label;
                 sel.appendChild(opt);
             });
-            sel.addEventListener("change", () => setLanguage(sel.value));
+            sel.hidden = true;
+            const host = sel.parentElement || sel;
+            if (host.querySelector(".lang-dd")) return;  // already built
+
+            const dd = document.createElement("div");
+            dd.className = "lang-dd";
+            const trigger = document.createElement("button");
+            trigger.type = "button";
+            trigger.className = "lang-dd-trigger";
+            trigger.setAttribute("aria-haspopup", "true");
+            trigger.setAttribute("aria-expanded", "false");
+            trigger.setAttribute("aria-label", "Language");
+            const flag = document.createElement("span");
+            flag.className = "lang-dd-flag";
+            const caret = document.createElement("i");
+            caret.className = "fa-solid fa-chevron-down lang-dd-caret";
+            caret.setAttribute("aria-hidden", "true");
+            trigger.appendChild(flag);
+            trigger.appendChild(caret);
+
+            const panel = document.createElement("div");
+            panel.className = "lang-dd-panel";
+            panel.setAttribute("role", "menu");
+            panel.hidden = true;
+            LANGS.forEach(([code, label, f]) => {
+                const item = document.createElement("button");
+                item.type = "button";
+                item.className = "lang-dd-item";
+                item.setAttribute("role", "menuitem");
+                item.dataset.lang = code;
+                item.textContent = (f ? f + "  " : "") + label;
+                item.addEventListener("click", () => { setLanguage(code); close(); });
+                panel.appendChild(item);
+            });
+
+            function close() { panel.hidden = true; trigger.setAttribute("aria-expanded", "false"); }
+            function toggle() {
+                const open = panel.hidden;
+                panel.hidden = !open;
+                trigger.setAttribute("aria-expanded", String(open));
+            }
+            trigger.addEventListener("click", e => { e.stopPropagation(); toggle(); });
+            document.addEventListener("click", e => { if (!dd.contains(e.target)) close(); });
+            document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+
+            dd.appendChild(trigger);
+            dd.appendChild(panel);
+            host.appendChild(dd);
         });
+        syncSwitcherFlags();
     }
 
     function init() {

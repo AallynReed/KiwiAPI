@@ -163,6 +163,13 @@ def _not_found(what: str = "Mod project not found") -> APIError:
     return APIError(404, ErrorCode.not_found, what)
 
 
+def _not_public(what: str = "This mod isn't public yet.") -> APIError:
+    # A DISTINCT code (still 404 so an owner's aged-token auto-refresh path is
+    # unaffected) that lets the page say "not public yet" instead of "not found"
+    # when a real, non-taken-down draft is viewed by someone who can't see it.
+    return APIError(404, ErrorCode.not_public, what)
+
+
 def _search_clause(q: str) -> dict:
     """Case-insensitive SUBSTRING search across the card-visible fields + author.
     (Replaces MongoDB ``$text``, which is case-insensitive but only matches whole
@@ -214,6 +221,11 @@ def project_card(p: ModProject) -> dict:
         # yet. The UI shows a "Stray" badge + an "is this yours? claim it" affordance.
         # The source/origin is deliberately NOT exposed publicly (admin-only).
         "is_stray": p.is_stray,
+        # "Uploaded" = an authored account shared a mod made by someone else; the
+        # uploader owns it but `author` credits the named creator ("Uploaded by
+        # <owner> · Created by <author>"). Distinct from an authored mod (uploader
+        # IS the creator, author empty) and a stray (no owner yet).
+        "uploaded_on_behalf": p.uploaded_on_behalf,
         "author": p.author or p.owner_username,
         "updated_at": _iso(p.updated_at),
         "created_at": _iso(p.created_at),
@@ -296,8 +308,21 @@ async def create_project(
     actor: SiteUser, *, title: str, summary: str, description: str,
     tags: list[str], visibility: Visibility, mode: str = "files",
     source_visibility: str = "public", inspired_by: str | None = None,
+    on_behalf: bool = False, credited_author: str | None = None,
 ) -> ModProject:
     slug = await _unique_slug(actor.id, title)
+    # An "uploaded on behalf" mod credits a named third-party creator and is always
+    # releases-only (there's no source workflow for code you didn't write). The
+    # uploader stays the owner; `author` holds the credited creator's name. It also
+    # carries NO inspiration credit - it isn't the uploader's creative lineage.
+    author = ""
+    if on_behalf:
+        author = (credited_author or "").strip()
+        if not author:
+            raise APIError(400, ErrorCode.bad_request,
+                           "Name the creator this mod was made by.")
+        mode = "releases"
+        inspired_by = None
     insp = await _resolve_attribution(inspired_by, actor)
     project = ModProject(
         slug=slug, title=title.strip(), summary=summary.strip(),
@@ -305,6 +330,7 @@ async def create_project(
         mode=mode, source_visibility=source_visibility,
         owner_id=actor.id, owner_username=actor.display_name or actor.username,
         owner_handle=actor.username,
+        uploaded_on_behalf=on_behalf, author=author,
         inspired_by_slug=insp[0] if insp else None,
         inspired_by_handle=insp[1] if insp else None,
         inspired_by_title=insp[2] if insp else None,
@@ -480,7 +506,13 @@ def _require_files_mode(project: ModProject) -> None:
 
 async def get_for_view(handle: str, slug: str, viewer: SiteUser | None) -> ModProject:
     project = await get_project(handle, slug)
-    if project is None or not can_view(project, viewer):
+    if project is None:
+        raise _not_found()
+    if not can_view(project, viewer):
+        # A real draft (not taken down) that this viewer just can't see yet reads
+        # as "not public yet"; taken-down / anything else stays a plain not-found.
+        if project.visibility == "draft" and not project.taken_down:
+            raise _not_public()
         raise _not_found()
     return project
 
@@ -613,6 +645,11 @@ async def update_project(
     if visibility is not None:
         project.visibility = visibility
     if mode is not None:
+        # An uploaded-on-behalf mod is release-only by definition (you can't own the
+        # source of a mod you merely shared) - never let it flip into files mode.
+        if project.uploaded_on_behalf and mode != "releases":
+            raise APIError(400, ErrorCode.bad_request,
+                           "A mod uploaded on someone's behalf stays releases-only.")
         project.mode = mode
     if source_visibility is not None:
         project.source_visibility = source_visibility
@@ -644,6 +681,19 @@ async def update_project(
         project.inspired_by_handle = insp[1] if insp else None
         project.inspired_by_title = insp[2] if insp else None
         project.inspired_by_owner = insp[3] if insp else None
+    # An uploaded-on-behalf mod stays deliberately bare: it isn't the uploader's
+    # work, so no personal links, donation buttons, or inspiration credit ride on
+    # it (nor can it flip out of releases-only). Force-cleared after any edit,
+    # regardless of what the request tried to set.
+    if project.uploaded_on_behalf:
+        project.discord_url = None
+        project.website_url = None
+        project.donation_urls = []
+        project.inspired_by_slug = None
+        project.inspired_by_handle = None
+        project.inspired_by_title = None
+        project.inspired_by_owner = None
+        project.mode = "releases"
     # Keep the URL handle current with the owner's username (Discord renames).
     project.owner_handle = actor.username
     project.updated_at = utcnow()
@@ -987,6 +1037,23 @@ async def _ensure_hash_unowned(project: ModProject, sha: str) -> None:
                        "can't be uploaded here. If it's genuinely yours, contact support.")
 
 
+async def _ensure_hash_globally_unique(project: ModProject, sha: str) -> None:
+    """Stricter than :func:`_ensure_hash_unowned`, for *uploaded-on-behalf* mods:
+    the exact artifact must not already exist ANYWHERE on the hub - not under a
+    different owner, not as a stray (owner_id=None), not even under another of the
+    uploader's own projects. Anti-duplicate / re-upload detection: if you're
+    sharing someone else's build, it can only live in one place. Reuse across
+    branches of THIS same project is still fine (same project_id excluded)."""
+    other = await ModRelease.find_one(
+        ModRelease.tmod_sha == sha,
+        ModRelease.project_id != project.id,
+    )
+    if other is not None:
+        raise APIError(409, ErrorCode.conflict,
+                       "This mod is already on the hub - the exact same build has been "
+                       "uploaded before, so it can't be shared again here.")
+
+
 def _require_publish_ok(actor: SiteUser, status: str) -> None:
     if status == "published" and not actor.is_verified:
         raise APIError(403, ErrorCode.email_unverified,
@@ -1101,7 +1168,12 @@ async def create_release_from_upload(
             raise APIError(400, ErrorCode.bad_request, f"Not a valid .tmod file: {e}")
         props = {str(k): str(v) for k, v in parsed.get("properties", {}).items()}
     sha, _ = await store.put_blob(data)
-    await _ensure_hash_unowned(project, sha)
+    # Uploaded-on-behalf mods (sharing someone else's build) must be globally
+    # unique; ordinary mods only can't collide with a *different* owner's artifact.
+    if project.uploaded_on_behalf:
+        await _ensure_hash_globally_unique(project, sha)
+    else:
+        await _ensure_hash_unowned(project, sha)
     return await _insert_release(
         project, tag=tag, branch=branch_name,
         title=title, changelog=changelog, status=status,
@@ -1301,6 +1373,244 @@ async def load_rig_animation(skeleton: str, name: str) -> dict:
     if anim is None:
         raise _not_found("No such rig animation")
     return anim
+
+
+def _preview_path(properties: dict) -> str:
+    """The release's preview image path inside the .tmod (excluded from the file list),
+    lowercased; '' if none."""
+    return (properties.get("previewPath") or "").strip().lower()
+
+
+async def list_release_files(release: ModRelease) -> dict:
+    """The files packed inside a release's .tmod (path + size), EXCLUDING the preview
+    image - for the per-file download UI. Metadata-only read (no decompression)."""
+    if release.release_format != "tmod":
+        return {"items": []}
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        return {"items": []}
+
+    def _work(b: bytes) -> dict:
+        parsed = tmod.read_tmod(b, metadata_only=True)
+        preview = _preview_path(parsed["properties"])
+        items = [{"path": f["path"], "size": f["size"]} for f in parsed["files"]
+                 if f["path"].lower() != preview]
+        items.sort(key=lambda f: f["path"].lower())
+        return {"items": items}
+    try:
+        return await asyncio.to_thread(_work, data)
+    except tmod.TmodError:
+        return {"items": []}
+
+
+async def download_release_file(release: ModRelease, path: str) -> tuple[bytes, str]:
+    """Bytes of ONE file inside a release's .tmod (individual download). The preview
+    image is not downloadable here. Returns ``(data, download_filename)``."""
+    if release.release_format != "tmod":
+        raise _not_found("This release has no individually downloadable files.")
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        raise _not_found("Release artifact not found")
+    want = path.strip()
+
+    def _work(b: bytes) -> bytes | None:
+        parsed = tmod.read_tmod(b)
+        if want.lower() == _preview_path(parsed["properties"]):
+            return None                                   # preview is excluded
+        target = next((f for f in parsed["files"] if f["path"] == want), None)
+        if target is None or "content_base64" not in target:
+            return None
+        return base64.b64decode(target["content_base64"])
+    raw = await asyncio.to_thread(_work, data)
+    if raw is None:
+        raise _not_found("No such file in this release")
+    return raw, want.rsplit("/", 1)[-1]
+
+
+# ---------------------------------------------------------------------------
+# VFX previews (PopcornFX .pkfx) - see app/trove/mods_hub/vfx.py
+# ---------------------------------------------------------------------------
+# A mod's .pkfx rarely bundles the textures/meshes it needs; those come from the
+# live game tree (the updates archive). We hand the web viewer the .pkfx text plus
+# every referenced asset, resolving each bundled-first then from the game.
+#
+# Cache (keyed by the release's content-addressed .tmod sha) of the SET of asset
+# basenames any .pkfx in the release references - this authorizes the /asset
+# endpoint so it isn't an open game-file proxy.
+_VFX_DEPSET_CACHE: dict[str, set[str]] = {}
+_VFX_DEPSET_ORDER: list[str] = []
+_VFX_DEPSET_MAX = 256
+
+
+def _vfx_remember_depset(sha: str, deps: set[str]) -> None:
+    if sha in _VFX_DEPSET_CACHE:
+        return
+    _VFX_DEPSET_CACHE[sha] = deps
+    _VFX_DEPSET_ORDER.append(sha)
+    while len(_VFX_DEPSET_ORDER) > _VFX_DEPSET_MAX:
+        _VFX_DEPSET_CACHE.pop(_VFX_DEPSET_ORDER.pop(0), None)
+
+
+def _tmod_pkfx_and_index(tmod_bytes: bytes) -> tuple[list[dict], dict[str, bytes]]:
+    """``(pkfx_items, basename_index)`` for a .tmod. ``pkfx_items`` = [{path,size}] per
+    ``.pkfx``; ``basename_index`` = {basename.lower(): raw bytes} for every file, so a
+    .pkfx reference resolves to a bundled file by name."""
+    parsed = tmod.read_tmod(tmod_bytes)
+    pkfx_items: list[dict] = []
+    index: dict[str, bytes] = {}
+    for f in parsed["files"]:
+        p = f["path"]
+        bn = p.replace("\\", "/").rsplit("/", 1)[-1].lower()
+        if "content_base64" in f:
+            index.setdefault(bn, base64.b64decode(f["content_base64"]))
+        if p.lower().endswith(".pkfx"):
+            pkfx_items.append({"path": p, "size": f["size"]})
+    return pkfx_items, index
+
+
+async def list_release_vfx(release: ModRelease) -> dict:
+    """The ``.pkfx`` particle effects inside a release's .tmod (drives the VFX-preview
+    affordance). ``{items:[{path,size}]}``; empty for non-.tmod releases."""
+    if release.release_format != "tmod":
+        return {"items": []}
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        return {"items": []}
+    try:
+        items, _ = await asyncio.to_thread(_tmod_pkfx_and_index, data)
+    except tmod.TmodError:
+        return {"items": []}
+    items.sort(key=lambda f: f["path"].lower())
+    return {"items": items}
+
+
+async def _game_vfx_resolver():
+    """``(lookup, read, available)`` for the live game tree:
+      - ``lookup(basename_lower) -> game_path | None``
+      - ``read(game_path) -> bytes | None``
+      - ``available``: can either source serve files?
+    Production source is the updates archive (``game_file_map`` -> CAS blob);
+    ``settings.pkfx_dev_vfx_dir`` is a local fallback for development."""
+    from app.core.config import settings
+    from app.trove.updates import read as updates_read
+    from app.trove.updates.cas import ContentStore
+    from app.trove.mods_hub.trove_layout import game_file_map, LIVE_BRANCH
+
+    fmap = await game_file_map(LIVE_BRANCH)               # {basename.lower(): canonical path}
+    cas = ContentStore(settings.trove_update_store_dir)
+
+    dev_index: dict[str, str] = {}
+    if settings.pkfx_dev_vfx_dir:
+        import os
+        for root, _dirs, names in os.walk(settings.pkfx_dev_vfx_dir):
+            for n in names:
+                dev_index.setdefault(n.lower(), os.path.join(root, n))
+
+    def lookup(bn: str) -> str | None:
+        if bn in fmap:
+            return fmap[bn]
+        if bn in dev_index:
+            return "dev::" + dev_index[bn]
+        return None
+
+    async def read(game_path: str) -> bytes | None:
+        if game_path.startswith("dev::"):
+            real = game_path[len("dev::"):]
+            return await asyncio.to_thread(lambda: open(real, "rb").read())
+        meta = await updates_read.get_file_meta(LIVE_BRANCH, game_path)
+        if not meta:
+            return None
+        return cas.get(meta["content_sha256"])
+
+    return lookup, read, (bool(fmap) or bool(dev_index))
+
+
+async def _build_vfx_depset(index: dict[str, bytes], lookup, read) -> set[str]:
+    """Every asset basename referenced by ANY .pkfx in the release, walked recursively
+    (a nested child .pkfx pulls in its own deps); nested effects resolve from the mod
+    bundle first, else the game tree."""
+    from app.trove.mods_hub import vfx
+    deps: set[str] = set()
+    seen: set[str] = set()
+    queue: list[str] = [bn for bn in index if bn.endswith(".pkfx")]
+    while queue:
+        bn = queue.pop()
+        if bn in seen:
+            continue
+        seen.add(bn)
+        raw = index.get(bn)
+        if raw is None:
+            gp = lookup(bn)
+            raw = await read(gp) if gp else None
+        if raw is None:
+            continue
+        for ref in vfx.extract_refs(raw.decode("utf-8", "replace")):
+            rbn = vfx.basename(ref).lower()
+            deps.add(rbn)
+            if rbn.endswith(".pkfx") and rbn not in seen:
+                queue.append(rbn)
+    return deps
+
+
+async def get_release_vfx_manifest(release: ModRelease, path: str) -> dict:
+    """One effect's ``.pkfx`` text + its resolved asset dependencies for the web viewer.
+    Each direct dep is classified ``mod`` / ``game`` / ``missing`` (matched by basename).
+    Also primes the recursive dep-set cache that authorizes ``/asset``."""
+    from app.trove.mods_hub import vfx
+    if release.release_format != "tmod":
+        raise _not_found("This release has no VFX.")
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        raise _not_found("Release artifact not found")
+    _items, index = await asyncio.to_thread(_tmod_pkfx_and_index, data)
+    pkfx_raw = index.get(vfx.basename(path).lower())
+    if pkfx_raw is None:
+        raise _not_found("VFX file not found in this release.")
+    pkfx_text = pkfx_raw.decode("utf-8", "replace")
+
+    lookup, read, available = await _game_vfx_resolver()
+    deps: list[dict] = []
+    for ref in vfx.extract_refs(pkfx_text):
+        bn = vfx.basename(ref).lower()
+        source = "mod" if bn in index else ("game" if lookup(bn) else "missing")
+        deps.append({"ref": ref, "basename": vfx.basename(ref), "source": source})
+
+    _vfx_remember_depset(release.tmod_sha, await _build_vfx_depset(index, lookup, read))
+    return {
+        "path": path,
+        "pkfx": pkfx_text,
+        "deps": deps,
+        "missing": [d["basename"] for d in deps if d["source"] == "missing"],
+        "game_available": available,
+    }
+
+
+async def get_release_vfx_asset(release: ModRelease, ref: str) -> tuple[bytes, str]:
+    """Bytes of one asset a release's VFX references - bundled-first, else the live game
+    tree. Authorized against the release's .pkfx dependency set (resolved by basename),
+    so it is not an open game-file proxy. Returns ``(data, media_type)``."""
+    from app.trove.mods_hub import vfx
+    if release.release_format != "tmod":
+        raise _not_found("This release has no VFX.")
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        raise _not_found("Release artifact not found")
+    bn = vfx.basename(ref).lower()
+    _items, index = await asyncio.to_thread(_tmod_pkfx_and_index, data)
+    lookup, read, _available = await _game_vfx_resolver()
+    depset = _VFX_DEPSET_CACHE.get(release.tmod_sha)
+    if depset is None:
+        depset = await _build_vfx_depset(index, lookup, read)
+        _vfx_remember_depset(release.tmod_sha, depset)
+    if bn not in depset and bn not in index:
+        raise _not_found("Asset not referenced by this release's VFX.")
+    raw = index.get(bn)
+    if raw is None:
+        gp = lookup(bn)
+        raw = await read(gp) if gp else None
+    if raw is None:
+        raise _not_found("Asset not found (not bundled and not in the game tree).")
+    return raw, vfx.media_type_for(ref)
 
 
 def _decode_blueprint_payload(tmod_bytes: bytes, want_path: str) -> dict:
@@ -1960,6 +2270,9 @@ def public_mod_dto(p: ModProject, *, releases: list[ModRelease] | None = None) -
         # "Stray" = an unclaimed mod uploaded via contributions (not tied to a user
         # yet). The origin/source is intentionally not exposed in the public API.
         "is_stray": p.is_stray,
+        # "Uploaded" = shared on the creator's behalf: uploader owns it, `author`
+        # credits the named creator. Distinct from an authored mod (author empty).
+        "uploaded_on_behalf": p.uploaded_on_behalf,
         "banner_url": _public_img_url(p.banner_sha),
         "preview_urls": [u for u in (_public_img_url(s) for s in p.preview_shas) if u],
         "download_count": p.download_count,

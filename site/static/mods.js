@@ -181,6 +181,14 @@
       ? `<span class="mh-badge mh-badge-draft">${esc(t('Draft'))}</span>`
       : p.visibility === 'unlisted'
         ? `<span class="mh-badge mh-badge-unlisted">${esc(t('Unlisted'))}</span>` : '';
+    // "Uploaded" = shared on the creator's behalf (uploader isn't the author).
+    const uploadedBadge = p.uploaded_on_behalf
+      ? `<span class="mh-badge mh-badge-uploaded">${esc(t('Uploaded'))}</span>` : '';
+    // Attribution: an uploaded mod credits the named creator, with the uploader as a
+    // muted secondary line; otherwise the owner is the author.
+    const authorLine = p.uploaded_on_behalf
+      ? `<span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> ${esc(p.author || '')}<small class="mh-card-uploader">${esc(t('Uploaded by'))} ${esc(p.owner_username)}</small></span>`
+      : `<span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> ${esc(p.owner_username)}</span>`;
     const lineage = p.forked_from
       ? `<p class="mh-card-lineage"><i class="fa-solid fa-code-fork"></i> ${esc(t('Forked from'))} ${esc(p.forked_from.title || p.forked_from.slug)}</p>`
       : p.inspired_by
@@ -188,12 +196,12 @@
     return `<a class="mh-card" href="${modUrl(p)}">
       ${banner}
       <div class="mh-card-body">
-        <h3 class="mh-card-title">${esc(p.title)} ${badge}</h3>
+        <h3 class="mh-card-title">${esc(p.title)} ${badge}${uploadedBadge}</h3>
         ${lineage}
         ${p.summary ? `<p class="mh-card-summary">${esc(p.summary)}</p>` : ''}
         ${tags ? `<div class="mh-card-tags">${tags}</div>` : ''}
         <div class="mh-card-foot">
-          <span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> ${esc(p.owner_username)}</span>
+          ${authorLine}
           <span class="mh-card-stats">
             <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}</span>
             <span class="mh-card-dl"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(p.star_count || 0).toLocaleString()}</span>
@@ -210,6 +218,20 @@
     modal.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeCreate));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCreate(); });
     $('mh-create-form').addEventListener('submit', submitCreate);
+    // "Made by someone else" reveals the creator-name field and forces releases-only
+    // mode (you can't own the source of a mod you're just sharing on the author's behalf).
+    const onBehalf = $('mh-create-onbehalf');
+    if (onBehalf) onBehalf.addEventListener('change', () => {
+      const on = onBehalf.checked;
+      const credited = $('mh-create-credited');
+      const modeField = $('mh-create-mode');
+      if (credited) credited.hidden = !on;
+      if (modeField) modeField.hidden = on;
+      const modeSel = modeField && modeField.querySelector('select[name=mode]');
+      if (modeSel && on) modeSel.value = 'releases';
+      const creditedInput = credited && credited.querySelector('input[name=credited_author]');
+      if (creditedInput) creditedInput.required = on;
+    });
   }
 
   function openCreate() {
@@ -227,13 +249,21 @@
     const err = $('mh-create-error');
     err.hidden = true;
     const tags = (form.tags.value || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const onBehalf = !!(form.on_behalf && form.on_behalf.checked);
     const body = {
       title: form.title.value.trim(),
       summary: form.summary.value.trim(),
       tags,
-      mode: form.mode.value,
+      mode: onBehalf ? 'releases' : form.mode.value,
       visibility: form.visibility.value,
+      on_behalf: onBehalf,
+      credited_author: onBehalf ? (form.credited_author.value || '').trim() : null,
     };
+    if (onBehalf && !body.credited_author) {
+      err.textContent = t('Name the creator this mod was made by.');
+      err.hidden = false;
+      return;
+    }
     const btn = form.querySelector('button[type=submit]');
     btn.disabled = true;
     try {

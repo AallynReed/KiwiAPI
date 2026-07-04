@@ -1,0 +1,99 @@
+/* Trove Community / Streams page (/streams). Builds on style.css tokens.
+   Class prefix: .stm-  */
+
+.highlight-purple { color: var(--accent-purple); }
+
+.stm-main {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 110px clamp(20px, 3vw, 48px) 80px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+.stm-hero { text-align: center; margin-bottom: 34px; }
+.stm-eyebrow {
+  font-family: SFMono-Regular, Consolas, monospace;
+  color: var(--accent);
+  font-size: .85rem; letter-spacing: 0.04em; margin: 0 0 8px;
+}
+.stm-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 12px; line-height: 1.05; }
+.stm-sub { color: var(--text-mute); max-width: 660px; margin: 0 auto; line-height: 1.6; font-size: .98rem; }
+
+/* ── Blocks ────────────────────────────────────────────────────────── */
+.stm-block { margin-bottom: 44px; }
+.stm-block-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.stm-block-head h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.3rem, 3vw, 1.7rem);
+  margin: 0; display: inline-flex; align-items: center; gap: 10px;
+}
+.stm-tw { color: #a970ff; }
+.stm-yt { color: #ff4e45; }
+.stm-count { font-size: .84rem; color: var(--text-soft); }
+.stm-loading, .stm-empty { color: var(--text-soft); font-size: .92rem; padding: 8px 2px; grid-column: 1 / -1; }
+
+/* ── Card grids ────────────────────────────────────────────────────── */
+.stm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+.stm-grid-wide { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+
+.stm-card {
+  display: flex; flex-direction: column;
+  border-radius: 14px; overflow: hidden; text-decoration: none; color: inherit;
+  border: 1px solid var(--bg-line); background: var(--bg-card);
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.stm-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--bg-line));
+  box-shadow: 0 18px 44px -26px color-mix(in oklab, var(--accent) 60%, transparent);
+}
+.stm-thumb {
+  position: relative; aspect-ratio: 16 / 9;
+  background: var(--bg-deep) center / cover no-repeat;
+  display: flex; align-items: flex-end;
+}
+.stm-thumb-fallback {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--text-soft); font-size: 1.8rem;
+}
+.stm-live {
+  position: absolute; top: 10px; left: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  padding: 4px 9px; border-radius: 999px; color: #fff;
+  background: #e0374b;
+}
+.stm-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: stm-pulse 1.6s ease-in-out infinite; }
+@keyframes stm-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.stm-viewers {
+  position: absolute; bottom: 10px; right: 10px;
+  font-size: .72rem; font-weight: 600; color: #fff;
+  padding: 3px 8px; border-radius: 8px; background: rgba(6, 8, 13, .78);
+}
+.stm-badge {
+  position: absolute; bottom: 10px; right: 10px;
+  font-size: .72rem; color: #fff; padding: 3px 8px; border-radius: 8px; background: rgba(6, 8, 13, .78);
+}
+.stm-card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.stm-card-title {
+  font-weight: 600; font-size: .92rem; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.stm-card-meta { display: flex; align-items: center; gap: 7px; font-size: .8rem; color: var(--text-soft); margin-top: auto; }
+.stm-card-meta i { color: var(--text-soft); }
+.stm-card-cat {
+  font-size: .66rem; text-transform: uppercase; letter-spacing: .05em;
+  padding: 2px 7px; border-radius: 999px; color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+/* News card variant: category chip on the thumb */
+.stm-news-cat {
+  position: absolute; top: 10px; left: 10px;
+  font-size: .66rem; text-transform: uppercase; letter-spacing: .05em;
+  padding: 3px 8px; border-radius: 999px; color: #fff; background: rgba(6, 8, 13, .78);
+}

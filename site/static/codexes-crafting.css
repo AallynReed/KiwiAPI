@@ -1,0 +1,178 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /codexes/crafting - Recipe Cost Calculator
+   Layers on top of style.css + codexes.css (shared hero / search / branch).
+   Only the calculator-specific pieces live here: the recipe autocomplete, the
+   craft-vs-buy summary card, and the collapsible ingredient tree.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Recommendation accent colours (craft = green, buy = blue, unknown = grey). */
+.cdx-crafting-page {
+  --craft-green: #4ad07f;
+  --craft-blue: var(--accent-blue, #569cff);
+  --craft-grey: var(--text-mute, #97a3b6);
+}
+
+/* ─── Recipe autocomplete ───────────────────────────────────────────── */
+.craft-search-wrap { position: relative; flex: 1 1 340px; }
+.craft-suggest {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 40;
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: var(--radius, 10px); box-shadow: var(--shadow-soft, 0 12px 30px rgba(0,0,0,.4));
+  padding: 6px; display: grid; gap: 2px; max-height: 360px; overflow-y: auto;
+}
+.craft-suggest[hidden] { display: none; }
+.craft-suggest-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; text-align: left; border: 0; background: transparent; cursor: pointer;
+  color: var(--text); font: inherit; font-size: .92rem; padding: 9px 11px;
+  border-radius: 8px;
+}
+.craft-suggest-item:hover { background: var(--bg-deep); }
+.craft-suggest-name { display: inline-flex; align-items: baseline; gap: 7px; min-width: 0; }
+.craft-suggest-amt { color: var(--craft-green); font-size: .8rem; font-weight: 600; }
+.craft-suggest-cat {
+  color: var(--text-mute); font-size: .72rem; white-space: nowrap;
+  background: rgba(255,255,255,.05); padding: 2px 8px; border-radius: 999px;
+}
+.craft-suggest-empty { color: var(--text-mute); font-size: .85rem; padding: 10px; margin: 0; }
+
+/* ─── Result area ───────────────────────────────────────────────────── */
+.craft-result { max-width: var(--content-max, 1100px); margin: 8px auto 0; padding: 0 clamp(16px, 4vw, 40px); }
+
+.craft-empty {
+  display: grid; justify-items: center; gap: 12px; text-align: center;
+  padding: 60px 20px; color: var(--text-mute);
+}
+/* `display:grid/flex` on a class beats the reset's `[hidden]{display:none}` at
+   equal specificity, so hidden panels would leak through - re-assert them. */
+.craft-empty[hidden], .craft-panel[hidden] { display: none; }
+.craft-empty i { font-size: 2rem; color: var(--craft-blue); opacity: .8; }
+.craft-empty p { margin: 0; max-width: 40ch; }
+
+.craft-panel { display: grid; gap: 20px; }
+
+/* ─── Summary card ──────────────────────────────────────────────────── */
+.craft-summary {
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: var(--radius-lg, 16px); padding: clamp(18px, 3vw, 26px);
+  display: grid; gap: 14px;
+}
+.craft-summary-eyebrow {
+  margin: 0 0 3px; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-mute);
+}
+.craft-summary-title {
+  margin: 0; font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: clamp(1.3rem, 2.4vw, 1.9rem); font-weight: 700; letter-spacing: -.01em;
+}
+.craft-total {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px 14px;
+  padding-bottom: 4px;
+}
+.craft-total-num {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; line-height: 1;
+}
+.craft-total.rec-craft .craft-total-num { color: var(--craft-green); }
+.craft-total.rec-buy .craft-total-num { color: var(--craft-blue); }
+.craft-total-unit { color: var(--text-mute); font-size: 1rem; }
+.craft-unknown { color: var(--text-mute); font-size: 1.4rem; font-weight: 600; }
+
+.craft-verdict-chip, .craft-node-tag {
+  display: inline-flex; align-items: center; padding: 3px 11px; border-radius: 999px;
+  font: 700 .7rem 'Inter', sans-serif; letter-spacing: .05em; text-transform: uppercase;
+}
+.craft-verdict-chip.rec-craft, .craft-node-tag.rec-craft { background: rgba(74,208,127,.16); color: var(--craft-green); }
+.craft-verdict-chip.rec-buy,   .craft-node-tag.rec-buy   { background: rgba(86,156,255,.16); color: var(--craft-blue); }
+.craft-verdict-chip.rec-unknown { background: rgba(255,255,255,.06); color: var(--craft-grey); }
+
+.craft-verdict { margin: 0; color: var(--text-mute); font-size: .95rem; line-height: 1.5; }
+
+.craft-costlines { display: grid; gap: 8px; margin-top: 4px; }
+.craft-costline {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 14px; border-radius: 10px; background: var(--bg-deep);
+  border: 1px solid transparent;
+}
+.craft-costline.is-best { border-color: rgba(74,208,127,.35); background: rgba(74,208,127,.07); }
+.craft-costline-label { color: var(--text-soft); font-size: .9rem; }
+.craft-costline-value {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace; font-weight: 600;
+}
+.craft-costline-value [data-i18n] { color: var(--text-mute); font-weight: 400; font-size: .82em; }
+.craft-partial { color: var(--text-soft); }
+.craft-na { color: var(--text-mute); font-weight: 400; }
+
+.craft-warnings { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 5px; }
+.craft-warnings li { color: #f0b74b; font-size: .84rem; display: flex; align-items: center; gap: 8px; }
+
+/* ─── Ingredient tree ───────────────────────────────────────────────── */
+.craft-tree-wrap {
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: var(--radius-lg, 16px); padding: clamp(14px, 2.4vw, 20px);
+}
+.craft-tree-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 10px; flex-wrap: wrap;
+}
+.craft-tree-head h3 { margin: 0; font-size: 1.05rem; }
+.craft-tree-actions { display: inline-flex; gap: 6px; }
+.craft-expand-all, .craft-collapse-all {
+  border: 1px solid var(--bg-line); background: var(--bg-deep); color: var(--text-mute);
+  border-radius: 999px; font: inherit; font-size: .78rem; padding: 5px 12px; cursor: pointer;
+  transition: color .15s var(--ease-out), border-color .15s var(--ease-out);
+}
+.craft-expand-all:hover, .craft-collapse-all:hover { color: var(--text); border-color: var(--craft-blue); }
+
+.craft-tree { font-size: .9rem; }
+
+/* Each node = a row + an (indented) children container. */
+.craft-children {
+  margin-left: 10px; padding-left: 12px;
+  border-left: 1px solid var(--bg-line);
+}
+.craft-node.collapsed > .craft-children { display: none; }
+
+.craft-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 7px 8px; border-radius: 8px;
+}
+.craft-row:hover { background: var(--bg-deep); }
+.craft-row-main { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.craft-row-icon { color: var(--text-mute); font-size: .82rem; width: 15px; text-align: center; }
+.craft-node.collapsed > .craft-row .craft-toggle i { transform: rotate(-90deg); }
+.craft-toggle {
+  border: 0; background: transparent; color: var(--text-mute); cursor: pointer;
+  width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; font-size: .72rem;
+}
+.craft-toggle i { transition: transform .15s var(--ease-out); }
+.craft-toggle:hover { color: var(--text); }
+.craft-toggle-spacer { display: inline-block; width: 18px; }
+
+.craft-node-name {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.craft-qty {
+  color: var(--text-mute); font-family: 'JetBrains Mono', monospace; font-size: .82rem;
+  flex-shrink: 0;
+}
+.craft-row-side { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.craft-node-unit { color: var(--text-mute); font-size: .76rem; white-space: nowrap; }
+.craft-node-cost {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace; font-weight: 600;
+  font-size: .86rem; white-space: nowrap;
+}
+.craft-node-cost.rec-craft { color: var(--craft-green); }
+.craft-node-cost.rec-buy { color: var(--text); }
+.craft-node-cost.is-partial { color: var(--text-soft); }
+.craft-node-cost.is-na { color: var(--text-mute); font-weight: 400; font-size: .76rem; }
+
+/* The root node has no toggle chrome noise - give it a touch more weight. */
+.craft-node[data-depth="0"] > .craft-row { background: var(--bg-deep); }
+.craft-node[data-depth="0"] > .craft-row .craft-node-name { font-weight: 600; }
+
+@media (max-width: 620px) {
+  .craft-node-unit { display: none; }
+  .craft-row { align-items: flex-start; }
+}

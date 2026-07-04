@@ -25,10 +25,13 @@ from app.core.features import (
     require_codexes_enabled,
     require_giveaways_enabled,
     require_leaderboards_enabled,
+    require_dm_subs_enabled,
     require_market_enabled,
     require_mods_hub_enabled,
+    require_image_studio_enabled,
     require_player_activity_enabled,
     require_updates_enabled,
+    require_webhooks_enabled,
 )
 from app.core.idempotency import add_idempotency_middleware
 from app.core.maintenance import maintenance_loop
@@ -41,6 +44,11 @@ from app.discord.router import router as discord_router
 from app.events.bus import start_event_bus, stop_event_bus
 from app.events.router import router as events_router
 from app.events.scheduler import start_event_scheduler, stop_event_scheduler
+from app.dm_subs.delivery import start_dm_delivery, stop_dm_delivery
+from app.dm_subs.router import router as dm_subs_router
+from app.webhooks.delivery import start_webhook_delivery, stop_webhook_delivery
+from app.webhooks.router import router as webhooks_router
+from app.images.router import router as images_router
 from app.giveaways.admin import router as giveaways_admin_router
 from app.giveaways.router import public_router as giveaways_public_router
 from app.giveaways.router import router as giveaways_router
@@ -148,9 +156,13 @@ async def lifespan(app: FastAPI):
     start_giveaway_worker()  # auto-opens scheduled giveaways + draws ended ones (60s)
     start_event_bus()  # live SSE event stream: per-worker Redis fan-out + safety-net watcher
     start_event_scheduler()  # time-driven rotation events -> Redis (SSE + bot react)
+    start_webhook_delivery()  # outbound Discord webhooks: per-worker delivery queue consumer
+    start_dm_delivery()  # inbound Discord DM alert subscriptions: per-worker DM queue consumer
     maintenance_task = asyncio.create_task(maintenance_loop())
     yield
     maintenance_task.cancel()
+    await stop_dm_delivery()
+    await stop_webhook_delivery()
     await stop_event_scheduler()
     await stop_event_bus()
     await stop_giveaway_worker()
@@ -272,6 +284,18 @@ app.include_router(giveaways_router, include_in_schema=False, dependencies=_GIVE
 app.include_router(giveaways_public_router, dependencies=_GIVEAWAYS_GATE)   # public giveaways:read - in schema
 app.include_router(supporters_public_router)  # public misc:read (tokenless) - in schema
 app.include_router(discord_bot_router, include_in_schema=False)  # User Dashboard "Discord Bot" tab (site_auth)
+app.include_router(  # User Dashboard "DM Alerts" tab (site_auth); inbound Discord DM subscriptions
+    dm_subs_router, include_in_schema=False,
+    dependencies=[Depends(require_dm_subs_enabled)],
+)
+app.include_router(  # User Dashboard "Webhooks" tab (site_auth); outbound Discord webhooks
+    webhooks_router, include_in_schema=False,
+    dependencies=[Depends(require_webhooks_enabled)],
+)
+app.include_router(  # User Dashboard "Image Studio" (site_auth) + public PNG render URL
+    images_router, include_in_schema=False,
+    dependencies=[Depends(require_image_studio_enabled)],
+)
 app.include_router(scanning_router, include_in_schema=False)
 # Data surface - organized by function (token-authenticated, in the public reference).
 app.include_router(rotations_router)

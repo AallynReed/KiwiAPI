@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/style.min.css">
     <link rel="stylesheet" href="/static/market.min.css">
+    <link rel="stylesheet" href="/static/market-analytics.min.css">
 </head>
 <body class="landing market-page">
 
@@ -45,6 +46,19 @@
             </div>
         </section>
 
+        <!-- ═══════════════ VIEW TABS ═══════════════ -->
+        <div class="mkt-viewtabs" role="tablist" aria-label="Market views">
+            <button type="button" class="mkt-viewtab active" data-view="browse"
+                    role="tab" aria-selected="true">
+                <i class="fa-solid fa-shop" aria-hidden="true"></i> <span data-i18n>Browse</span>
+            </button>
+            <button type="button" class="mkt-viewtab" data-view="analytics"
+                    role="tab" aria-selected="false">
+                <i class="fa-solid fa-chart-line" aria-hidden="true"></i> <span data-i18n>Analytics</span>
+            </button>
+        </div>
+
+      <div id="mkt-view-browse">
         <!-- ═══════════════ LAYOUT ═══════════════
              Sidebar of items (filterable) + main pane showing the
              selected item's summary + listings. Mirrors the
@@ -145,6 +159,76 @@
                 </div>
             </article>
         </section>
+      </div><!-- /#mkt-view-browse -->
+
+      <!-- ═══════════════ ANALYTICS VIEW ═══════════════ -->
+      <div id="mkt-view-analytics" hidden>
+        <div class="mkt-an-controls">
+            <label class="mkt-an-field">
+                <span class="mkt-an-field-label" data-i18n>Window</span>
+                <select id="mkt-an-days" class="mkt-an-select">
+                    <option value="7" data-i18n>Last 7 days</option>
+                    <option value="14" selected data-i18n>Last 14 days</option>
+                    <option value="30" data-i18n>Last 30 days</option>
+                </select>
+            </label>
+        </div>
+
+        <!-- Movers -->
+        <section class="mkt-an-block">
+            <header class="mkt-an-head">
+                <h2 class="mkt-an-title" data-i18n>Biggest movers</h2>
+                <p class="mkt-an-sub" data-i18n>Median price change vs. the previous window.</p>
+            </header>
+            <div class="mkt-an-movers" id="mkt-an-movers">
+                <p class="mkt-loading" data-i18n>Loading…</p>
+            </div>
+        </section>
+
+        <!-- Underpriced deals -->
+        <section class="mkt-an-block">
+            <header class="mkt-an-head mkt-an-head-row">
+                <div>
+                    <h2 class="mkt-an-title" data-i18n>Underpriced deals</h2>
+                    <p class="mkt-an-sub" data-i18n>Active listings priced below their item's median - a flip finder.</p>
+                </div>
+                <label class="mkt-an-field">
+                    <span class="mkt-an-field-label" data-i18n>Min discount</span>
+                    <select id="mkt-an-discount" class="mkt-an-select">
+                        <option value="0.15">15%</option>
+                        <option value="0.25" selected>25%</option>
+                        <option value="0.4">40%</option>
+                        <option value="0.6">60%</option>
+                    </select>
+                </label>
+            </header>
+            <div class="mkt-an-deals" id="mkt-an-deals">
+                <p class="mkt-loading" data-i18n>Loading…</p>
+            </div>
+        </section>
+
+        <!-- Price & volume timeline -->
+        <section class="mkt-an-block">
+            <header class="mkt-an-head mkt-an-head-row">
+                <div>
+                    <h2 class="mkt-an-title" data-i18n>Price &amp; volume</h2>
+                    <p class="mkt-an-sub" data-i18n>Daily median with quartile band and supply, plus merchant-event bands.</p>
+                </div>
+                <span class="mkt-an-item-wrap">
+                    <i class="fa-solid fa-magnifying-glass mkt-search-icon" aria-hidden="true"></i>
+                    <input type="search" id="mkt-an-item" class="mkt-search-input"
+                           data-i18n-placeholder placeholder="Pick an item…"
+                           autocomplete="off" spellcheck="false"
+                           role="combobox" aria-expanded="false" aria-controls="mkt-an-item-suggest"
+                           aria-autocomplete="list">
+                    <div class="mkt-an-suggest" id="mkt-an-item-suggest" role="listbox" hidden></div>
+                </span>
+            </header>
+            <div class="mkt-an-timeline" id="mkt-an-timeline">
+                <p class="mkt-an-hint" data-i18n>Pick an item, or click one from the movers or deals above, to chart its price and supply over time.</p>
+            </div>
+        </section>
+      </div><!-- /#mkt-view-analytics -->
 
         <p class="mkt-source" data-i18n>Captures come from an in-game marketplace scraper. Listings live 7 days in-game; expired ones disappear automatically. Prices are flux per item (stack price ÷ stack size).</p>
     </main>
@@ -155,5 +239,6 @@
     <script src="/static/i18n.min.js"></script>
     <script src="/static/site_auth.min.js" defer></script>
     <script src="/static/market.min.js" defer></script>
+    <script src="/static/market-analytics.min.js" defer></script>
 </body>
 </html>

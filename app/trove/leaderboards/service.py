@@ -306,27 +306,43 @@ async def player_profile(name: str, *, limit: int = 200) -> dict:
     identity. ``recent`` is empty when the name has never been captured."""
     name = name.strip()
     rows = await player_history(name, limit=limit, with_deltas=True)
+    # Per-leaderboard aggregate over ALL history (best rank ever, current rank,
+    # capture count) - one row per board, so the page shows a ranking per board
+    # instead of one row per capture.
+    board_rows = await pg_store.player_board_summary(name)
     canonical = rows[0]["player_name"] if rows else name
-    uuids = sorted({r["leaderboard"] for r in rows})
+    # Board names for every board referenced by the recent rows OR the aggregate
+    # (the aggregate spans all history; ``recent`` only a window), fetched once.
+    uuids = sorted({r["leaderboard"] for r in rows} | {b["leaderboard"] for b in board_rows})
     meta = await pg_store.board_meta(uuids) if uuids else {}
     recent = [
         {**r, "board_name": (meta.get(r["leaderboard"]) or {}).get("name")}
         for r in rows
     ]
-    best_rank = min((r["rank"] for r in rows), default=None)
-    best = next((r for r in rows if r["rank"] == best_rank), None) if best_rank is not None else None
-    latest_anchor = max((r["created_at"] for r in rows), default=None)
+    boards = [
+        {**b, "board_name": (meta.get(b["leaderboard"]) or {}).get("name")}
+        for b in board_rows
+    ]
+    best = boards[0] if boards else None            # board_rows are best_rank-ascending
+    latest_anchor = max((b["last_seen"] for b in board_rows), default=None)
+    top10 = sum(1 for b in board_rows if (b["best_rank"] or 1e9) <= 10)
+    top100 = sum(1 for b in board_rows if (b["best_rank"] or 1e9) <= 100)
     return {
         "player_name": canonical,
         "verified": await _is_verified_trove_name(name),
         "summary": {
-            "boards_appeared": len(uuids),
+            "boards_appeared": len(board_rows),
+            # ``appearances`` (total captures) kept for /v1 back-compat; the page
+            # now counts per-leaderboard via ``boards``.
             "appearances": len(rows),
-            "best_rank": best_rank,
+            "best_rank": best["best_rank"] if best else None,
             "best_rank_board_uuid": best["leaderboard"] if best else None,
-            "best_rank_board_name": (meta.get(best["leaderboard"]) or {}).get("name") if best else None,
+            "best_rank_board_name": best["board_name"] if best else None,
+            "top10_count": top10,
+            "top100_count": top100,
             "latest_anchor": latest_anchor,
         },
+        "boards": boards,
         "recent": recent,
     }
 

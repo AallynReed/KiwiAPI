@@ -28,6 +28,15 @@ class CreateProjectRequest(BaseModel):
         default=None, max_length=80,
         description="Slug of an existing mod this one is inspired by (attribution only, no copy).",
     )
+    on_behalf: bool = Field(
+        default=False,
+        description="This mod was made by someone else - upload it on their behalf. "
+                    "Forces releases-only mode; the uploader owns it, `credited_author` is the creator credit.",
+    )
+    credited_author: str | None = Field(
+        default=None, max_length=120,
+        description="The original creator's name, shown as 'Created by …'. Required when on_behalf is true.",
+    )
 
 
 class UpdateProjectRequest(BaseModel):

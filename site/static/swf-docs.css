@@ -77,7 +77,9 @@ a:hover { text-decoration: underline; }
 }
 
 /* ---------------------------------------------------------------- Layout */
-.docs-layout { display: flex; padding-top: var(--navbar-h); min-height: 100vh; }
+/* The fixed sidebar is reserved with padding-left on the layout; .content
+   then fills the whole remaining column to the right of it. */
+.docs-layout { padding-top: var(--navbar-h); padding-left: var(--sidebar-w); min-height: 100vh; }
 
 .sidebar-backdrop {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 900;
@@ -154,10 +156,8 @@ a:hover { text-decoration: underline; }
 
 /* ---------------------------------------------------------------- Content */
 .content {
-    flex: 1; min-width: 0;
-    margin-left: var(--sidebar-w);
+    /* Fills the whole column left of nothing / right of the sidebar. */
     padding: 32px clamp(20px, 5vw, 64px) 80px;
-    max-width: 1100px;
 }
 
 .doc-meta {
@@ -223,13 +223,59 @@ a:hover { text-decoration: underline; }
 }
 
 #to-top {
-    position: fixed; bottom: 22px; right: 22px; z-index: 800;
+    /* Sits above the bottom-right support pill so the two don't overlap. */
+    position: fixed; bottom: 84px; right: 24px; z-index: 800;
     width: 42px; height: 42px; border-radius: 50%;
     background: var(--accent-blue); color: #06131c; border: none; cursor: pointer;
     font-size: 1rem; display: none; align-items: center; justify-content: center;
     box-shadow: 0 6px 18px rgba(0,0,0,0.4);
 }
 #to-top.show { display: flex; }
+
+/* ---------------------------------------------------- Support pill (corner)
+   Self-contained copy of the shared .support-* widget (style.css) adapted to
+   this page's tokens, since this standalone page doesn't load style.css/app.js.
+   Markup comes from partials/support_widget.html; toggled by swf-docs.js. */
+.support-widget { position: fixed; bottom: 20px; right: 20px; z-index: 9000; }
+.support-trigger {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border: none; border-radius: 999px; cursor: pointer;
+    background: linear-gradient(135deg, #ff6f91, #ff8a3d); color: #fff;
+    font: 600 0.95rem inherit;
+    box-shadow: 0 4px 20px rgba(255,111,145,0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.support-trigger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,111,145,0.55); }
+.support-trigger i { animation: support-pulse 2.4s ease-in-out infinite; }
+@keyframes support-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+.support-panel {
+    position: absolute; bottom: calc(100% + 12px); right: 0; width: 300px; padding: 16px;
+    background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px;
+    box-shadow: 0 12px 50px rgba(0,0,0,0.5); display: grid; gap: 10px;
+    opacity: 0; transform: translateY(8px) scale(0.96); pointer-events: none;
+    transition: opacity 0.18s, transform 0.22s ease;
+}
+.support-widget.open .support-panel { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.support-headline { color: var(--text-main); font-size: 0.85rem; line-height: 1.5; margin: 0 0 4px; }
+.support-link {
+    display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+    background: var(--bg-elev); border: 1px solid var(--border-color); border-radius: 10px;
+    color: var(--text-main); font-weight: 500; font-size: 0.95rem;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.support-link:hover { background: #2a323d; transform: translateX(2px); color: var(--text-main); text-decoration: none; }
+.support-paypal:hover { border-color: #009cde; }
+.support-kofi:hover { border-color: #ff5e5b; }
+.support-bmac:hover { border-color: #ffdd00; }
+.support-link i { font-size: 1.3rem; width: 24px; text-align: center; }
+.support-paypal i { color: #009cde; }
+.support-kofi i { color: #ff5e5b; }
+.support-bmac i { color: #ffdd00; }
+@media (max-width: 480px) {
+    .support-widget { bottom: 16px; right: 16px; }
+    .support-trigger { padding: 8px 14px; font-size: 0.88rem; }
+    .support-panel { width: calc(100vw - 32px); max-width: 320px; }
+}
 
 /* ---------------------------------------------------------------- Mobile */
 @media (max-width: 980px) {
@@ -240,7 +286,8 @@ a:hover { text-decoration: underline; }
         width: min(86vw, 340px); box-shadow: 0 0 40px rgba(0,0,0,0.5);
     }
     .sidebar.open { transform: translateX(0); }
-    .content { margin-left: 0; padding: 24px 18px 70px; }
+    .docs-layout { padding-left: 0; }
+    .content { padding: 24px 18px 70px; }
     .sidebar-mobile-nav {
         display: flex; flex-direction: column; gap: 4px;
         margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft);

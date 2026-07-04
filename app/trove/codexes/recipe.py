@@ -172,6 +172,89 @@ def category_from_output(output_path: str) -> str:
     return "Recipe"
 
 
+def _match_mastery_struct(content: bytes, pos: int) -> int | None:
+    """Match the recipe-mastery structure at ``pos`` (must start on the ``0x30``
+    tag) and return its mastery value, else None.
+
+    The trusted structure is the protobuf-ish tag run (see
+    ``recipe_mastery_from_prefab``)::
+
+        30 <00|02> 50 <mastery> 70 <byte> 80 01 <byte> 98 01
+
+    Reading the whole chain (not a bare ``0x50``) is what excludes ``50 70 6c…``
+    bytes that are really part of a ``Pplaceable…`` string payload.
+    """
+    n = len(content)
+    if pos >= n or content[pos] != 0x30:
+        return None
+    v6, cur = read_varint(content, pos + 1)
+    if v6 is None or v6 not in (0, 2):                       # 30 <00|02>
+        return None
+    if cur >= n or content[cur] != 0x50:                     # 50 <mastery>
+        return None
+    mastery, cur = read_varint(content, cur + 1)
+    if mastery is None:
+        return None
+    if cur >= n or content[cur] != 0x70:                     # 70 <byte>
+        return None
+    _v14, cur = read_varint(content, cur + 1)
+    if _v14 is None:
+        return None
+    if cur + 1 >= n or content[cur] != 0x80 or content[cur + 1] != 0x01:  # 80 01 <byte>
+        return None
+    _v16, cur = read_varint(content, cur + 2)
+    if _v16 is None:
+        return None
+    if cur + 1 >= n or content[cur] != 0x98 or content[cur + 1] != 0x01:  # 98 01
+        return None
+    return int(mastery)
+
+
+def recipe_mastery_from_prefab(content: bytes) -> int | None:
+    """Trusted recipe-mastery byte read STRUCTURALLY from a recipe prefab, or None.
+
+    The mastery value is field 10 (``0x50``) inside the recipe's row structure::
+
+        30 <00|02> 50 <mastery> 70 <byte> 80 01 <byte> 98 01
+
+    Returns the value only when every structural match in the prefab agrees (the
+    common case is a single match). Zero matches, or conflicting matches, return
+    None - ``recipe_block_glass_brown_01`` (``50 00`` -> 0) vs. ``brown_02``
+    (``50 02`` -> 2) is exactly the distinction category/tag/unlocker evidence
+    could not make. A None here is review-only, never a broad-category guess.
+    """
+    matches: list[int] = []
+    for pos in range(len(content)):
+        if content[pos] != 0x30:
+            continue
+        value = _match_mastery_struct(content, pos)
+        if value is not None:
+            matches.append(value)
+    if not matches or len(set(matches)) != 1:
+        return None
+    return matches[0]
+
+
+def resolve_recipe_mastery(rel: str, content: bytes, multipliers: dict[str, dict]) -> dict:
+    """Recipe mastery via the evidence hierarchy -> ``{value, source, prefab_byte}``.
+
+    1. an exact ``prefabs/meta/multipliers.binfab`` row (keyed by the recipe
+       identifier) overrides everything (e.g. ``recipe_item_consumable_prismatic_red``
+       carries ``50 02`` but the multiplier produces 10);
+    2. otherwise the trusted structural prefab byte (``recipe_mastery_from_prefab``);
+    3. otherwise ``value=None`` (``source="review"``) - no trusted byte / conflicting
+       matches stay review-only rather than falling back to a category guess.
+    """
+    prefab_byte = recipe_mastery_from_prefab(content)
+    stem = rel.replace("\\", "/").rsplit("/", 1)[-1]
+    row = multipliers.get(stem)
+    if row is not None:
+        return {"value": int(row["predicted"]), "source": "multipliers", "prefab_byte": prefab_byte}
+    if prefab_byte is not None:
+        return {"value": prefab_byte, "source": "prefab", "prefab_byte": prefab_byte}
+    return {"value": None, "source": "review", "prefab_byte": None}
+
+
 def parse_recipe(content: bytes, *, resolve_meta=None) -> dict:
     """Decode a recipe prefab into ``{name, description, category, output,
     ingredients, requirements}``.

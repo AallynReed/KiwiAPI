@@ -1,0 +1,259 @@
+/* Trove Calendar page (/calendar). Builds on style.css tokens.
+   Class prefix: .cal-  */
+
+.cal-main {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 110px clamp(20px, 3vw, 48px) 80px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+.cal-hero { text-align: center; margin-bottom: 28px; }
+.cal-eyebrow {
+  font-family: SFMono-Regular, Consolas, monospace;
+  color: var(--accent);
+  font-size: .85rem;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+.cal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0 0 12px;
+  line-height: 1.05;
+}
+.cal-sub {
+  color: var(--text-mute);
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.6;
+  font-size: .98rem;
+}
+
+/* ── Reset strip ───────────────────────────────────────────────────── */
+.cal-resets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 40px;
+}
+.cal-reset {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+}
+.cal-reset-ic {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; flex-shrink: 0;
+  border-radius: 12px;
+  color: var(--accent-orange);
+  background: color-mix(in oklab, var(--accent-orange) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent-orange) 26%, var(--bg-line));
+  font-size: 1.05rem;
+}
+.cal-reset-clock .cal-reset-ic {
+  color: var(--accent-blue);
+  background: color-mix(in oklab, var(--accent-blue) 12%, transparent);
+  border-color: color-mix(in oklab, var(--accent-blue) 26%, var(--bg-line));
+}
+.cal-reset-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cal-reset-label { font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-soft); }
+.cal-reset-val {
+  font-family: 'Space Grotesk', SFMono-Regular, Consolas, monospace;
+  font-size: 1.4rem; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* ── Blocks ────────────────────────────────────────────────────────── */
+.cal-block { margin-bottom: 44px; }
+.cal-block-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.cal-block-head h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.3rem, 3vw, 1.7rem);
+  margin: 0;
+}
+.cal-block-note { color: var(--text-soft); font-size: .86rem; }
+.cal-loading, .cal-empty { color: var(--text-soft); font-size: .92rem; padding: 8px 2px; }
+
+/* ── Merchant / biome cards ────────────────────────────────────────── */
+.cal-merchants {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+.cal-merchant {
+  position: relative;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.cal-merchant:hover, .cal-merchant:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--bg-line));
+  box-shadow: 0 18px 40px -24px color-mix(in oklab, var(--accent) 60%, transparent);
+  outline: none;
+}
+.cal-merchant.is-inactive { opacity: .72; }
+.cal-merchant-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-bottom: 10px;
+}
+.cal-merchant-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.05rem; }
+.cal-merchant-badge {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  padding: 3px 9px; border-radius: 999px;
+  color: var(--text-soft);
+  background: color-mix(in oklab, var(--bg-line) 60%, transparent);
+  border: 1px solid var(--bg-line);
+}
+.cal-merchant.is-active .cal-merchant-badge {
+  color: var(--accent-green, #5fd08a);
+  background: color-mix(in oklab, var(--accent-green, #5fd08a) 14%, transparent);
+  border-color: color-mix(in oklab, var(--accent-green, #5fd08a) 34%, var(--bg-line));
+}
+.cal-merchant-time { color: var(--text-mute); font-size: .88rem; font-variant-numeric: tabular-nums; }
+.cal-merchant-biomes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+
+/* Biome pill (shared shape with the homepage dashboard) */
+.cal-biome-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .78rem; color: var(--text-mute);
+  padding: 4px 9px 4px 5px; border-radius: 999px;
+  background: var(--bg-deep); border: 1px solid var(--bg-line);
+}
+.cal-biome-pill img { width: 18px; height: 18px; border-radius: 5px; object-fit: cover; }
+
+/* ── Buff / chaos cards ────────────────────────────────────────────── */
+.cal-buffs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.cal-buff {
+  --buff-accent: var(--accent);
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--bg-line);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--buff-accent) 8%, transparent), transparent 60%),
+    var(--bg-card);
+  cursor: pointer;
+  transition: transform .12s ease, border-color .12s ease;
+}
+.cal-buff:hover, .cal-buff:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--buff-accent) 45%, var(--bg-line));
+  outline: none;
+}
+.cal-buff-kicker {
+  display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text-soft); margin-bottom: 6px;
+}
+.cal-buff-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 10px; }
+.cal-buff-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.cal-buff-list li { font-size: .86rem; color: var(--text-mute); padding-left: 16px; position: relative; }
+.cal-buff-list li::before { content: "›"; position: absolute; left: 2px; color: var(--buff-accent); }
+.cal-buff-chaos { --buff-accent: var(--accent-orange); }
+.cal-buff-when { margin-top: 12px; font-size: .84rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+
+/* ── Events ────────────────────────────────────────────────────────── */
+.cal-events {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+.cal-event {
+  display: flex; gap: 14px; align-items: center;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+  text-decoration: none; color: inherit;
+  transition: transform .12s ease, border-color .12s ease;
+}
+.cal-event:hover { transform: translateY(-2px); border-color: color-mix(in oklab, var(--accent) 40%, var(--bg-line)); }
+.cal-event-ic {
+  width: 48px; height: 48px; flex-shrink: 0;
+  border-radius: 12px; object-fit: cover;
+  background: var(--bg-deep);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--accent); font-size: 1.2rem;
+}
+.cal-event-body { min-width: 0; flex: 1; }
+.cal-event-name { font-weight: 600; font-size: .98rem; margin-bottom: 4px; }
+.cal-event-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .8rem; color: var(--text-soft); }
+.cal-event-cat {
+  font-size: .68rem; text-transform: uppercase; letter-spacing: .05em;
+  padding: 2px 8px; border-radius: 999px;
+  color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+.cal-event-when { font-variant-numeric: tabular-nums; }
+.cal-event.is-ongoing .cal-event-when { color: var(--accent-green, #5fd08a); font-weight: 600; }
+
+.cal-events-group-title {
+  grid-column: 1 / -1;
+  font-size: .74rem; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--text-soft); margin: 6px 0 -2px;
+}
+
+/* ── Modal ─────────────────────────────────────────────────────────── */
+.cal-modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.cal-modal[hidden] { display: none; }
+.cal-modal-backdrop { position: absolute; inset: 0; background: rgba(4, 6, 10, .7); backdrop-filter: blur(3px); }
+.cal-modal-panel {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: 82vh; overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-soft);
+}
+.cal-modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 34px; height: 34px; border-radius: 10px;
+  background: var(--bg-deep); border: 1px solid var(--bg-line); color: var(--text-mute);
+  cursor: pointer; font-size: 1rem;
+}
+.cal-modal-close:hover { color: var(--text); }
+.cal-modal-head { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; margin: 0 40px 14px 0; }
+.cal-modal-note { color: var(--text-soft); font-size: .88rem; margin: 0 0 14px; }
+
+.cal-rot { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cal-rot-row {
+  --buff-accent: var(--accent);
+  padding: 10px 12px; border-radius: 12px;
+  border: 1px solid var(--bg-line); background: var(--bg-deep);
+}
+.cal-rot-row.is-now { border-color: color-mix(in oklab, var(--buff-accent) 55%, var(--bg-line)); background: color-mix(in oklab, var(--buff-accent) 10%, var(--bg-deep)); }
+.cal-rot-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cal-rot-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.cal-rot-when { font-size: .82rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.cal-rot-when.is-now { color: var(--accent-green, #5fd08a); font-weight: 600; }
+.cal-rot-buffs { margin-top: 6px; font-size: .82rem; color: var(--text-mute); }
+
+.cal-sched { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cal-sched-row { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--bg-line); background: var(--bg-deep); }
+.cal-sched-row.is-now { border-color: color-mix(in oklab, var(--accent) 55%, var(--bg-line)); }
+.cal-sched-time { display: flex; align-items: center; gap: 8px; justify-content: space-between; font-size: .86rem; }
+.cal-sched-now { font-size: .68rem; font-weight: 700; text-transform: uppercase; color: var(--accent-green, #5fd08a); }
+.cal-sched-state { font-size: .72rem; color: var(--text-soft); text-transform: capitalize; }
+.cal-sched-biomes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .cal-resets { grid-template-columns: 1fr; }
+}

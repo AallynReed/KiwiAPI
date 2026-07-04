@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from pymongo import ASCENDING, IndexModel
 
 from app.core.utils import utcnow
+from app.embed_templates import EmbedTemplate
 
 
 class AnnouncementSetting(BaseModel):
@@ -20,6 +21,10 @@ class AnnouncementSetting(BaseModel):
     channel_id: int | None = None
     ping_role_ids: list[int] = Field(default_factory=list)   # roles to @-mention (multi)
     ping_role_id: int | None = None              # legacy single; folded into ping_role_ids
+    # Optional custom embed. When ``enabled``, the announcer renders this (against the
+    # type's live variable context) instead of the default embed/image banner. A custom
+    # embed uses native Discord ``<t:>`` timestamps, so it isn't image-refreshed.
+    template: EmbedTemplate | None = None
     # Edge-trigger guard: the anchor we last posted for. A string so it covers
     # both window timestamps ("1718200000") and state signatures ("status:down").
     # Each new anchor is posted once; enabling mid-window seeds this to the

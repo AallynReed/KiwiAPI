@@ -49,6 +49,8 @@ from app.bot.reconcile import reconcile, reconcile_club
 from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
 from app.core.utils import utcnow
+from app.discord import embed_contexts
+from app.embed_templates import EmbedTemplate
 from app.site_auth.dependencies import get_current_site_user
 from app.site_auth.models import SiteUser
 
@@ -104,6 +106,10 @@ class AnnouncementUpdate(BaseModel):
 
 class AnnouncementsUpdate(BaseModel):
     announcements: dict[str, AnnouncementUpdate]   # registry key -> settings
+
+
+class AnnouncementTemplateUpdate(BaseModel):
+    template: EmbedTemplate | None = None          # null clears the custom embed
 
 
 class LiveBoardUpdate(BaseModel):
@@ -215,6 +221,8 @@ def _detail_payload(guild_id: int, ctx: dict, cfg: GuildConfig | None, snap: dic
             "channel_id": str(channel_id) if channel_id else None,
             "ping_role_ids": [str(r) for r in s.ping_role_ids] if s else [],
             "channel_missing": bool(s and s.channel_missing),
+            "customizable": embed_contexts.has_customization(atype.key),
+            "template": s.template.model_dump() if (s and s.template) else None,
             "preflight": preflight,
         })
 
@@ -431,6 +439,56 @@ async def set_announcements(
         await cfg.save()
     else:
         await cfg.insert()
+    return _detail_payload(guild_id, ctx, cfg, snap)
+
+
+@router.get("/announcement-meta")
+async def announcement_meta(user: SiteUser = Depends(get_current_site_user)) -> dict:
+    """Per-type embed-editor metadata (variables, default template, sample, image
+    support) for every customizable announcement type. Fetched once by the dashboard."""
+    out = []
+    for atype in ANNOUNCEMENT_TYPES:
+        if not embed_contexts.has_customization(atype.key):
+            continue
+        out.append({
+            "key": atype.key,
+            "variables": embed_contexts.variables(atype.key),
+            "default_template": embed_contexts.default_template(atype.key).model_dump(),
+            "sample": embed_contexts.sample_context(atype.key),
+            "has_image": embed_contexts.has_image(atype.key),
+        })
+    return {"meta": out}
+
+
+@router.put("/guilds/{guild_id}/announcements/{key}/template")
+async def set_announcement_template(
+    guild_id: int, key: str, body: AnnouncementTemplateUpdate,
+    user: SiteUser = Depends(get_current_site_user),
+) -> dict:
+    """Set (or clear, with ``template: null``) the custom embed for one announcement
+    type. Needs ``manage_announcements``. The default embed is used whenever there's no
+    template or it's disabled."""
+    atype = TYPES_BY_KEY.get(key)
+    if atype is None or not embed_contexts.has_customization(key):
+        raise APIError(404, ErrorCode.not_found, "Unknown announcement type.")
+    ctx = await _member_ctx(guild_id, user)
+    existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
+    config_perms = existing.config_perms if existing else {}
+    if not _has_capability(ctx, config_perms, "manage_announcements"):
+        raise APIError(403, ErrorCode.forbidden,
+                       "You can't configure announcements in this server.")
+    cfg = existing or GuildConfig(guild_id=guild_id)
+    cfg.migrate_legacy()
+    cur = cfg.announcements.get(key) or AnnouncementSetting()
+    cur.template = body.template
+    cfg.announcements[key] = cur
+    cfg.updated_by = user.discord_id
+    cfg.updated_at = utcnow()
+    if existing:
+        await cfg.save()
+    else:
+        await cfg.insert()
+    snap = await _snapshot(guild_id)
     return _detail_payload(guild_id, ctx, cfg, snap)
 
 

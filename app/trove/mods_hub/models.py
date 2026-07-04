@@ -88,6 +88,17 @@ class ModProject(Document):
     source_file_id: str | None = None           # the source file id we mirrored (detect newer files on resync)
     source_likes: int = 0                        # the source's like count (display only; our stars are separate)
 
+    # --- Uploaded on behalf of someone else -------------------------------
+    # An *uploaded* mod (as opposed to an *authored* one): a user shares a mod
+    # they didn't make. It has a real owner_id (the uploader manages it, and it is
+    # NOT claimable - distinct from a stray), but the creator credit points at a
+    # named third party held in `author`. Forced into releases-only mode (you can't
+    # own the source of code you didn't write) and its release artifacts must be
+    # globally unique (anti-duplicate: the exact build can't already exist anywhere
+    # on the hub). Displayed as "Uploaded by <owner> · Created by <author>".
+    # Regular authored mods leave this False and `author` empty.
+    uploaded_on_behalf: bool = False
+
     visibility: Visibility = "draft"
     mode: ProjectMode = "files"                 # files+releases vs releases-only
     source_visibility: SourceVisibility = "public"   # public source vs internal-tool

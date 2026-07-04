@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Recipe Cost Calculator - Better Trove Tools</title>
+    <meta name="description" content="See exactly what any Trove item costs to craft: the full ingredient tree priced against the live market, with a craft-or-buy recommendation for every step.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://trove.aallyn.net/codexes/crafting">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Recipe Cost Calculator">
+    <meta property="og:description" content="The full crafting tree for any Trove item, priced against the live market, with a craft-or-buy call for every step.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/codexes.min.css">
+    <link rel="stylesheet" href="/static/codexes-crafting.min.css">
+</head>
+<body class="landing codexes-page cdx-crafting-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="cdx-main">
+
+        <!-- ═══════════════ HERO ═══════════════ -->
+        <section class="cdx-hero">
+            <div class="cdx-hero-inner">
+                <p class="cdx-eyebrow">
+                    <span>/codexes/crafting</span>
+                    <span class="cdx-beta-pill">Beta</span>
+                </p>
+                <h1 class="cdx-title" data-i18n>Recipe Cost Calculator</h1>
+                <p class="cdx-subtitle" data-i18n>See exactly what an item costs to craft. Pick anything craftable and we expand every ingredient, all the way down to base materials, price each against the live market, and tell you whether it's cheaper to craft or just buy.</p>
+                <p class="cdx-hero-cta">
+                    <a href="/codexes" class="cdx-hero-link cdx-hero-link-back">
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                        <span data-i18n>Back to Codexes</span>
+                    </a>
+                </p>
+            </div>
+        </section>
+
+        <!-- ═══════════════ CONTROLS ═══════════════ -->
+        <section class="cdx-controls" aria-label="Pick a recipe">
+            <div class="cdx-controls-row cdx-controls-top">
+                <span class="cdx-search-wrap craft-search-wrap">
+                    <i class="fa-solid fa-magnifying-glass cdx-search-icon" aria-hidden="true"></i>
+                    <input type="search" id="craft-search" class="cdx-search-input"
+                           data-i18n-placeholder placeholder="Search a craftable item…"
+                           autocomplete="off" spellcheck="false"
+                           role="combobox" aria-expanded="false" aria-controls="craft-suggest"
+                           aria-autocomplete="list">
+                    <div class="craft-suggest" id="craft-suggest" role="listbox" hidden></div>
+                </span>
+
+                <span class="cdx-branch" role="group" aria-label="Branch">
+                    <button type="button" class="cdx-branch-btn active" data-branch="live-us" data-i18n>Live</button>
+                    <button type="button" class="cdx-branch-btn" data-branch="pts">PTS</button>
+                </span>
+            </div>
+        </section>
+
+        <!-- ═══════════════ RESULT ═══════════════ -->
+        <section class="craft-result" aria-label="Crafting breakdown" aria-live="polite">
+            <div class="craft-empty" id="craft-empty">
+                <i class="fa-solid fa-flask" aria-hidden="true"></i>
+                <p data-i18n>Search for a craftable item above to see its full recipe tree and cost.</p>
+            </div>
+            <div class="craft-panel" id="craft-panel" hidden>
+                <!-- summary + tree filled by JS -->
+            </div>
+        </section>
+
+        <p class="cdx-source" data-i18n>Recipes come straight from the game files; prices are the median of active marketplace listings the market bot tracks. Ingredients we don't have a price for are marked "no market data" and never counted as free.</p>
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/codexes-crafting.min.js" defer></script>
+</body>
+</html>
