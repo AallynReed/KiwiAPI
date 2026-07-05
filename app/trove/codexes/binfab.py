@@ -211,7 +211,7 @@ def extract_rig_refs(data: bytes) -> dict | None:
     end = gsf_off if (gsf_off is not None and gsf_off > skel_off) else len(data)
 
     parts: dict[str, str] = {}
-    for (off, field, s), (_n_off, n_field, n_s) in zip(rows, rows[1:]):
+    for (off, field, s), (_n_off, n_field, n_s) in zip(rows, rows[1:], strict=False):
         if not (skel_off < off < end):
             continue                       # only the model component's mesh list
         if field == 0 and n_field == 1 and n_s.startswith("AP_"):

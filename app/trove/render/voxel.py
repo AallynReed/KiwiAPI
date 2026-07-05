@@ -24,7 +24,7 @@ import numpy as np
 from PIL import Image
 
 try:                                   # numba is optional: absence falls back to the
-    from numba import njit             # pure-numpy per-triangle raster (same pixels).
+    from numba import njit  # pure-numpy per-triangle raster (same pixels).
     _HAVE_NUMBA = True
 except Exception:  # pragma: no cover
     _HAVE_NUMBA = False
@@ -103,7 +103,7 @@ def decode(data: bytes) -> list[dict]:
             idx.append(idx[-1] + d)
         plane = sx * sz
         out = []
-        for L, t, c in zip(idx, types, colors):
+        for L, t, c in zip(idx, types, colors, strict=False):
             y = L // plane; rem = L % plane; z = rem // sx; x = rem % sx
             out.append({"x": sx - 1 - x, "y": y, "z": z,
                         "r": (c >> 16) & 0xFF, "g": (c >> 8) & 0xFF, "b": c & 0xFF,
@@ -184,8 +184,8 @@ def to_render_voxels(decoded: list[dict]) -> dict:
 # --------------------------------------------------------------------------- #
 # Rasterizer
 # --------------------------------------------------------------------------- #
-PARAMS = dict(az=40.0, el=29.7, fov_y=42.9, cx=128.0, cy=128.0, dist=2.55, ss=4,
-              f_top=1.109, f_x=0.929, f_z=0.500)
+PARAMS = {"az": 40.0, "el": 29.7, "fov_y": 42.9, "cx": 128.0, "cy": 128.0, "dist": 2.55, "ss": 4,
+              "f_top": 1.109, "f_x": 0.929, "f_z": 0.500}
 
 _FACES = {
     "x": ((1, 0, 0), [(1, 0, 0), (1, 1, 0), (1, 1, 1), (1, 0, 1)]),

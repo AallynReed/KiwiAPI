@@ -19,6 +19,8 @@ target-version = "py313"
 select = ["E", "F", "I", "B", "UP", "C4"]
 ignore = [
     "E501",   # line length - long strings/urls are fine
+    "E701",   # compact one-line if/clamp guards are an intentional style
+    "E702",   # compact "read field; advance offset" idiom in the binary decoders
     "B008",   # Depends() in defaults is the standard FastAPI pattern
     "UP017",  # datetime.timezone.utc is fine; not churning to datetime.UTC
     "UP042",  # str+Enum is fine; not switching to StrEnum
@@ -28,9 +30,14 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["B011"]
+# Per-iteration union-find: find/union are rebuilt and consumed each loop pass,
+# never stored as callbacks, so the loop-variable "capture" B023 warns about is safe.
+"app/trove/leaderboards/detection.py" = ["B023"]
 
 [tool.pyright]
 include = ["app"]
+venvPath = "."
+venv = ".venv"
 pythonVersion = "3.13"
 typeCheckingMode = "basic"
 reportMissingImports = true

@@ -65,7 +65,7 @@ def _decode_v5_grid(raw: bytes) -> list[tuple]:
         idx.append(idx[-1] + dd)
     plane = sx*sz
     out = []
-    for L, t, c in zip(idx, types, colors):
+    for L, t, c in zip(idx, types, colors, strict=False):
         y = L // plane; rem = L % plane; z = rem // sx; x = rem % sx
         r, g, b, kind, level = material_for((c >> 16) & 255, (c >> 8) & 255, c & 255,
                                             (c >> 24) & 255, t)
@@ -163,7 +163,7 @@ def _unbury_enclosed_emissive(parts: list[dict], rest: dict, voxel_scale: float)
                     return True
         return False
 
-    for p, w, m in zip(parts, worlds, mats):
+    for p, w, m in zip(parts, worlds, mats, strict=False):
         kinds = p["kind"]
         if not kinds or sum(1 for k in kinds if k in (2, 3)) / len(kinds) < 0.5:
             continue                      # only un-bury (mostly) emissive accent parts

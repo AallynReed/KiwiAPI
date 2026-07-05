@@ -294,7 +294,7 @@ async def send_dm(
             channel_id = ch.json().get("id")
             if not channel_id:
                 return False, ch.status_code, "no DM channel id returned"
-            for attempt in range(3):
+            for _attempt in range(3):
                 msg = await client.post(f"{_API}/channels/{channel_id}/messages",
                                         headers=headers, json=body)
                 if 200 <= msg.status_code < 300:

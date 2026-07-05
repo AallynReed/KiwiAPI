@@ -58,8 +58,6 @@ from app.trove.codexes.schemas import (
 )
 from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
 from app.trove.gems import builds as gem_builds
-from app.trove.render.service import render_blueprint_cached
-from app.trove.render.voxel import BlueprintError
 from app.trove.gems import evaluator as gem_evaluator
 from app.trove.gems.model import Gem, gem_lookups
 from app.trove.gems.schemas import (
@@ -95,6 +93,8 @@ from app.trove.misc import (
 from app.trove.models import TroveEvent, TroveNews
 from app.trove.ocr import engine as ocr_engine
 from app.trove.ocr import service as ocr_service
+from app.trove.render.service import render_blueprint_cached
+from app.trove.render.voxel import BlueprintError
 from app.trove.schemas import (
     ActivityHistoryResponse,
     ActivityResponse,

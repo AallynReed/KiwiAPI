@@ -16,9 +16,9 @@ import asyncio
 from io import BytesIO
 from pathlib import Path
 
+from dulwich.index import commit_tree
 from dulwich.object_store import iter_tree_contents
 from dulwich.objects import Blob, Commit
-from dulwich.index import commit_tree
 from dulwich.protocol import Protocol, ReceivableProtocol, pkt_line
 from dulwich.repo import Repo
 from dulwich.server import DictBackend, ReceivePackHandler, UploadPackHandler
@@ -66,7 +66,7 @@ def _open(project_id: str) -> Repo | None:
 
 def author_ident(username: str) -> bytes:
     safe = "".join(c for c in (username or "modder") if c.isalnum() or c in "-_.") or "modder"
-    return f"{username} <{safe}@{_GIT_AUTHOR_DOMAIN}>".encode("utf-8")
+    return f"{username} <{safe}@{_GIT_AUTHOR_DOMAIN}>".encode()
 
 
 def _name(ident: bytes) -> str:

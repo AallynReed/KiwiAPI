@@ -1318,7 +1318,7 @@ async def list_release_blueprints(release: ModRelease) -> dict:
     except tmod.TmodError:
         return {"items": [], "rig": None, "animations": []}
     rig, anims, components = await _resolve_rig(base["fns"])
-    for item, fn in zip(base["items"], base["fns"]):
+    for item, fn in zip(base["items"], base["fns"], strict=False):
         item["assembled"] = fn in components
     return {"items": base["items"], "rig": rig, "animations": anims}
 

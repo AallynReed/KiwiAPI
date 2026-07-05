@@ -18,9 +18,9 @@ from __future__ import annotations
 import base64
 import zlib
 
-from app.trove import mod_categories
-
 from pydantic import BaseModel, Field
+
+from app.trove import mod_categories
 
 # The Trove FNV-1a checksum + LEB128 live in troveio (shared with the archive
 # reader). Re-exported here so `tmod.calculate_hash` etc. keep working.
