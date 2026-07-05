@@ -1,0 +1,440 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Star Chart planner — /star-chart
+   Interactive radial constellation builder ported from the Better Trove Tools
+   desktop app (originally Vue + eel) to a self-contained vanilla-JS page.
+   All colours come from the site design tokens in style.css; nothing here
+   relies on eval/inline scripts, so the strict CSP is untouched.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.sc-main {
+  width: var(--content-width, 92vw);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 0 64px;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+.sc-hero { text-align: center; margin: 12px 0 26px; }
+.sc-eyebrow {
+  font-family: monospace;
+  color: var(--accent-blue);
+  font-size: .85rem;
+  letter-spacing: .04em;
+  margin-bottom: 8px;
+}
+.sc-title {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: var(--type-h2, 2.6rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+.sc-sub {
+  color: var(--text-mute);
+  font-size: var(--type-lead, 1.15rem);
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* ── Layout: chart + build panel ──────────────────────────────────────── */
+.sc-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.sc-chart-wrapper {
+  flex: 1;
+  min-width: 0;
+  align-self: flex-start;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  /* Deep night sky — a soft glow up top fading to near-black at the edges. */
+  background:
+    radial-gradient(ellipse 85% 65% at 50% 38%, #111d42 0%, #0a1128 46%, #06070f 100%);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius, 16px);
+  padding: 14px;
+  padding-top: 46px;
+  min-height: 600px;
+  max-height: calc(100vh - 170px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 140px rgba(0, 0, 0, 0.55);
+}
+
+.sc-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-mute);
+  font-size: 1rem;
+}
+.sc-chart-wrapper.ready .sc-loading { display: none; }
+
+/* ── Toolbar over the chart ───────────────────────────────────────────── */
+.sc-toolbar {
+  position: absolute;
+  top: 12px; left: 14px; right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  z-index: 5;
+}
+.sc-toolbar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.sc-hints {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.sc-hint {
+  font-size: 11px;
+  color: var(--text-mute);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  padding: 3px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.sc-zoom { display: flex; gap: 4px; flex-shrink: 0; }
+
+/* ── SVG chart ────────────────────────────────────────────────────────── */
+#sc-svg {
+  width: 100%;
+  max-width: 1000px;
+  height: auto;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+#sc-svg.panning { cursor: grabbing; }
+
+/* Background starfield — scattered pinpricks, some slowly twinkling. */
+.sc-bgstar { fill: #eaf0ff; pointer-events: none; }
+.sc-bgstar.tw { animation: scTwinkle 3s ease-in-out infinite; }
+@keyframes scTwinkle {
+  0%, 100% { opacity: var(--o, .6); }
+  50%      { opacity: calc(var(--o, .6) * .18); }
+}
+
+/* Nebula clouds tinting each constellation's region. */
+.sc-nebula { pointer-events: none; }
+
+/* Constellation threads — faint starlight that brightens along a chosen path. */
+.sc-line { stroke: rgba(150, 176, 224, 0.12); stroke-width: 1.3; transition: stroke .25s ease, stroke-width .25s ease; }
+.sc-line.selected {
+  stroke: rgba(198, 216, 255, 0.62);
+  stroke-width: 1.7;
+  filter: drop-shadow(0 0 3px rgba(130, 170, 255, 0.7));
+}
+
+/* Stars. Each node's own hue drives its glow via the inline --glow variable;
+   brightness/size come from state classes, so the JS just toggles classes. */
+.sc-node {
+  cursor: pointer;
+  stroke: none;
+  filter: drop-shadow(0 0 3px var(--glow, #fff));
+  transition: filter .2s ease, opacity .2s ease, transform .2s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.sc-node.star { stroke: rgba(255, 255, 255, 0.28); stroke-width: .5; }
+.sc-node:hover { filter: drop-shadow(0 0 7px #fff) drop-shadow(0 0 4px var(--glow, #fff)); }
+.sc-node.root { cursor: default; filter: drop-shadow(0 0 5px var(--glow, #fff)); }
+
+/* Distant, unlit stars. */
+.sc-node.muted { opacity: .5; filter: drop-shadow(0 0 2px var(--glow, #fff)) brightness(.9); }
+/* Travelled stars bloom bright with a hot-white core. */
+.sc-node.selected {
+  opacity: 1;
+  filter: drop-shadow(0 0 9px var(--glow, #fff)) drop-shadow(0 0 2px #fff) brightness(1.22);
+}
+/* The three constellation anchors light up when any of their stars are active. */
+.sc-node.root.root-active { filter: drop-shadow(0 0 13px var(--glow, #fff)) drop-shadow(0 0 3px #fff) brightness(1.18); }
+/* Replaced-away stars fade into the dark. */
+.sc-node.overwritten { opacity: .16; filter: saturate(.25) brightness(.6); }
+/* Upgrade tips glow gold. */
+.sc-node.replacement-tip { filter: drop-shadow(0 0 10px #e9c46a) drop-shadow(0 0 3px #fff) brightness(1.12); }
+/* Non-matches recede while a filter/search is active. */
+.sc-node.dim { opacity: .12; }
+
+.sc-anchor {
+  cursor: pointer;
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 6px rgba(150, 180, 255, 0.55));
+  transition: transform .15s ease, filter .2s ease;
+}
+.sc-anchor:hover { transform: scale(1.1); filter: drop-shadow(0 0 12px rgba(190, 210, 255, 0.9)); }
+.sc-anchor.active { filter: drop-shadow(0 0 12px rgba(200, 220, 255, 0.85)); }
+
+.sc-replacement {
+  fill: none;
+  stroke: rgba(233, 196, 106, 0.45);
+  stroke-width: 2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgba(233, 196, 106, 0.3));
+  pointer-events: none;
+}
+.sc-replacement.tip {
+  stroke: rgba(233, 196, 106, 0.9);
+  filter: drop-shadow(0 0 9px rgba(233, 196, 106, 0.5));
+}
+
+/* ── Simple view ──────────────────────────────────────────────────────────
+   Strips the night-sky treatment back to a clean flat chart: solid node fills
+   (each node's --glow hue), plain grey threads, flat background, no starfield
+   or nebula. Toggled by the toolbar button; higher specificity (wrapper class +
+   node class) overrides the star-view rules and the JS-set gradient fills. */
+.sc-chart-wrapper.sc-plain {
+  background: var(--bg-card);
+  box-shadow: none;
+}
+.sc-chart-wrapper.sc-plain #sc-g-sky,
+.sc-chart-wrapper.sc-plain #sc-g-stars { display: none; }
+
+.sc-chart-wrapper.sc-plain .sc-line { stroke: rgba(117, 127, 141, 0.42); stroke-width: 2.5; filter: none; }
+.sc-chart-wrapper.sc-plain .sc-line.selected { stroke: rgba(206, 214, 224, 0.55); stroke-width: 2.5; filter: none; }
+
+/* Flat solid stars (fills come from JS attributes). Strokes are set here — not
+   as attributes — because the base `.sc-node { stroke: none }` would clobber
+   attribute strokes; scoped rules outrank it. Minor/major get a dark outline;
+   roots keep their coloured (--glow) border. */
+.sc-chart-wrapper.sc-plain .sc-node { filter: none; }
+.sc-chart-wrapper.sc-plain .sc-node:not(.root) { stroke: #0f1319; stroke-width: 1.2; }
+.sc-chart-wrapper.sc-plain .sc-node.root { stroke: var(--glow, #fff); stroke-width: 3.5; }
+.sc-chart-wrapper.sc-plain .sc-node:hover { stroke: #fff; stroke-width: 2; filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.75)); }
+.sc-chart-wrapper.sc-plain .sc-node.muted { opacity: .62; filter: saturate(.62) brightness(.92); }
+.sc-chart-wrapper.sc-plain .sc-node.selected { opacity: 1; stroke: #fff; stroke-width: 1.5; filter: brightness(1.18) drop-shadow(0 0 9px rgba(255, 255, 255, 0.45)); }
+.sc-chart-wrapper.sc-plain .sc-node.root.root-active { fill: rgba(255, 255, 255, 0.06); filter: drop-shadow(0 0 8px var(--glow, #fff)); }
+.sc-chart-wrapper.sc-plain .sc-node.overwritten { opacity: .24; filter: saturate(.25) brightness(.82); }
+.sc-chart-wrapper.sc-plain .sc-node.replacement-tip { stroke: rgba(216, 171, 69, 0.9); stroke-width: 1.6; filter: brightness(1.05) drop-shadow(0 0 8px rgba(216, 171, 69, 0.5)); }
+.sc-chart-wrapper.sc-plain .sc-node.dim { opacity: .2; }
+.sc-chart-wrapper.sc-plain .sc-node.hl.on  { stroke: rgba(84, 255, 138, 0.95); filter: drop-shadow(0 0 8px rgba(84, 255, 138, 0.8)); }
+.sc-chart-wrapper.sc-plain .sc-node.hl.off { stroke: rgba(255, 101, 101, 0.92); filter: drop-shadow(0 0 8px rgba(255, 101, 101, 0.75)); }
+.sc-chart-wrapper.sc-plain .sc-anchor { filter: none; }
+.sc-chart-wrapper.sc-plain .sc-anchor:hover,
+.sc-chart-wrapper.sc-plain .sc-anchor.active { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4)); }
+
+/* Stat-highlight / search pulse — matched stars beat gently. */
+.sc-node.hl { animation: scPulse 1.35s ease-in-out infinite; }
+.sc-node.hl.on  { filter: drop-shadow(0 0 11px rgba(84, 255, 138, 0.9)) drop-shadow(0 0 3px #fff) brightness(1.2); }
+.sc-node.hl.off { filter: drop-shadow(0 0 11px rgba(255, 101, 101, 0.85)) brightness(1.08); }
+@keyframes scPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.2); }
+}
+
+/* ── Build panel ──────────────────────────────────────────────────────── */
+.sc-panel {
+  width: 360px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius, 16px);
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 170px);
+  min-height: 0;
+}
+.sc-panel h2 {
+  margin: 0 0 14px;
+  font-size: 1.15rem;
+  color: var(--text);
+  border-bottom: 1px solid var(--bg-line);
+  padding-bottom: 10px;
+}
+
+.sc-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.sc-chip {
+  font-size: 11px;
+  color: var(--text-mute);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03);
+  border-radius: 999px;
+  padding: 3px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sc-chip.active {
+  color: var(--accent-blue);
+  border-color: color-mix(in oklab, var(--accent-blue) 40%, transparent);
+  background: color-mix(in oklab, var(--accent-blue) 12%, transparent);
+}
+.sc-chip.toggle { cursor: pointer; user-select: none; transition: color .2s, border-color .2s, background .2s; }
+.sc-chip.toggle:hover { color: var(--text); border-color: color-mix(in oklab, var(--accent-blue) 28%, transparent); }
+.sc-chip.toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent-blue) 16%, transparent);
+}
+
+/* Share controls */
+.sc-share { display: flex; gap: 8px; margin-bottom: 8px; }
+#sc-code {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  color: var(--accent-blue);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 8px);
+  outline: none;
+  font-size: 12px;
+  font-family: monospace;
+}
+#sc-code:focus { border-color: var(--accent-blue); color: var(--text); }
+
+.sc-btn {
+  background: var(--bg-deep);
+  color: var(--text);
+  border: 1px solid var(--bg-line);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background .2s, color .2s, border-color .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.sc-btn:hover { background: var(--bg-card-hi); color: var(--accent-blue); border-color: var(--accent-blue); }
+.sc-btn:disabled { opacity: .45; cursor: not-allowed; }
+.sc-btn.wide { flex: 1; justify-content: center; }
+
+.sc-filters { display: flex; gap: 8px; margin-bottom: 8px; }
+.sc-filters input, .sc-filters select {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 8px);
+  outline: none;
+  font-size: 12px;
+}
+.sc-filters input:focus, .sc-filters select:focus { border-color: var(--accent-blue); }
+.sc-filter-meta { margin: -2px 0 10px; font-size: 12px; color: var(--text-mute); }
+
+.sc-divider { border: 0; border-top: 1px dashed var(--bg-line); margin: 6px 0 14px; }
+
+#sc-summary {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 6px;
+}
+.sc-empty { color: var(--text-mute); font-size: 13px; }
+.sc-section { margin-bottom: 15px; }
+.sc-section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent-blue);
+  margin: 0 0 5px;
+  padding: 4px 2px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.sc-section-toggle:hover { background: color-mix(in oklab, var(--accent-blue) 8%, transparent); color: var(--text); }
+.sc-section-toggle i { font-size: 11px; color: var(--text-mute); }
+.sc-section ul { margin: 0; padding-left: 20px; font-size: 13px; color: #ccc; }
+.sc-section li { margin-bottom: 4px; }
+.sc-section.collapsed ul { display: none; }
+
+/* ── Tooltip ──────────────────────────────────────────────────────────── */
+#sc-tooltip {
+  position: fixed;
+  display: none;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: 8px;
+  padding: 12px;
+  max-width: 260px;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  color: var(--text);
+  font-size: 13px;
+}
+#sc-tooltip.show { display: block; }
+#sc-tooltip h3 { margin: 0 0 5px; color: var(--accent-blue); font-size: 15px; }
+#sc-tooltip .type { font-size: 11px; color: var(--text-mute); display: block; margin-bottom: 8px; }
+#sc-tooltip p { margin: 0 0 8px; line-height: 1.4; }
+#sc-tooltip ul { margin: 0; padding-left: 20px; }
+#sc-tooltip li { margin-bottom: 4px; color: #ccc; }
+#sc-tooltip hr { border: 0; border-top: 1px solid var(--bg-line); margin: 8px 0; }
+
+/* ── Toast ────────────────────────────────────────────────────────────── */
+.sc-toast-host {
+  position: fixed;
+  bottom: 22px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+.sc-toast {
+  background: var(--bg-card-hi);
+  border: 1px solid var(--bg-line);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  animation: scToastIn .2s ease;
+}
+.sc-toast.err { border-color: color-mix(in oklab, var(--accent-red) 55%, var(--bg-line)); }
+@keyframes scToastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ── Responsive: stack chart above panel ──────────────────────────────── */
+@media (max-width: 900px) {
+  .sc-layout { flex-direction: column; gap: 14px; }
+  .sc-chart-wrapper { width: 100%; min-height: 0; max-height: none; padding: 6px; padding-top: 44px; }
+  #sc-svg { width: 112%; max-width: none; flex-shrink: 0; }
+  .sc-panel { width: 100%; max-height: none; }
+  .sc-hints { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-node.hl { animation: none; }
+  .sc-bgstar.tw { animation: none; }
+}

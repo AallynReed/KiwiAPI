@@ -328,6 +328,33 @@ REGISTRY: dict[str, TunableSetting] = {
             "- only the dedicated reference page is hidden. It's static game data."
         ),
     ),
+    "feature_star_chart_enabled": _t(
+        key="feature_star_chart_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Star Chart planner page. OFF hides the /star-chart "
+            "page + navbar link. It's a client-rendered interactive builder that reads "
+            "the static /static/star_chart.json straight from the asset mount (no "
+            "same-origin proxy or /v1 API), so only the dedicated page is hidden."
+        ),
+    ),
+    "feature_delves_enabled": _t(
+        key="feature_delves_enabled",
+        default=False,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the weekly Delve rotation data (relayed from an "
+            "external community source). OFF (the default) 404s the delve endpoints "
+            "(/v1/rotations/delves + /v1/rotations/delves/weeks) and pauses the "
+            "background refresher so no delve data is fetched. Stored rotations are "
+            "kept and the refresher resumes when toggled back ON (needs "
+            "TROVE_DELVE_SOURCE_URL set). Does not affect the Depth-15 'longshade' "
+            "biome rotation, which is computed locally and unrelated to this source."
+        ),
+    ),
 
     # ── Cheater / alt-cluster calculation (master compute switches) ───
     # Distinct from the cheater_detection TUNING knobs below: these turn the

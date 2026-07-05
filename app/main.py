@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.admin.router import router as admin_router
@@ -443,6 +443,68 @@ def custom_openapi() -> dict:
 
 
 app.openapi = custom_openapi
+
+
+def _feature_gated_ops() -> dict[tuple[str, str], str]:
+    """``{(path, http_method_lower): flag}`` for every in-schema operation whose
+    dependant tree contains a feature-gate dependency (tagged ``_feature_flag`` by
+    ``app.core.features._gate``). Lets the ``/openapi.json`` route drop a disabled
+    feature's operations from the reference the same moment its master toggle flips
+    OFF - so a hidden feature 404s AND vanishes from the docs, no restart."""
+    from fastapi.routing import APIRoute
+
+    def _walk(dep):
+        yield dep
+        for sub in dep.dependencies:
+            yield from _walk(sub)
+
+    out: dict[tuple[str, str], str] = {}
+    for route in app.routes:
+        if not isinstance(route, APIRoute) or not route.include_in_schema:
+            continue
+        flag = next(
+            (getattr(d.call, "_feature_flag", None) for d in _walk(route.dependant)
+             if getattr(d.call, "_feature_flag", None) is not None),
+            None,
+        )
+        if flag is None:
+            continue
+        for method in (route.methods or set()):
+            out[(route.path_format, method.lower())] = flag
+    return out
+
+
+# Serve /openapi.json ourselves (async) so feature-gated operations whose master
+# toggle is currently OFF disappear from the Redoc reference. FastAPI's built-in
+# openapi route is sync and can't read the async runtime-config flags, so we drop
+# it and register our own that prunes the disabled ops from a copy of the spec.
+_OPENAPI_PATH = app.openapi_url or "/openapi.json"
+app.router.routes = [
+    r for r in app.router.routes if getattr(r, "path", None) != _OPENAPI_PATH
+]
+
+
+@app.get(_OPENAPI_PATH, include_in_schema=False)
+async def openapi_json() -> JSONResponse:
+    from copy import deepcopy
+
+    from app.core import features
+
+    base = custom_openapi()
+    gated = _feature_gated_ops()
+    disabled = {
+        flag for flag in set(gated.values()) if not await features.is_enabled(flag)
+    }
+    if not disabled:
+        return JSONResponse(base)
+    schema = deepcopy(base)
+    paths = schema.get("paths", {})
+    for (path, method), flag in gated.items():
+        if flag in disabled and path in paths:
+            paths[path].pop(method, None)
+            if not paths[path]:  # last operation on this path removed → drop it
+                paths.pop(path, None)
+    return JSONResponse(schema)
 
 
 # Fallback API-card landing for `/api-info`, served at api.aallyn.net for

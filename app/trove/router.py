@@ -28,7 +28,7 @@ from app.core.dependencies import (
     require_scope,
 )
 from app.core.errors import APIError, ErrorCode
-from app.core.features import require_server_status_enabled
+from app.core.features import require_delves_enabled, require_server_status_enabled
 from app.core.ratelimit import check_rate_limit, rate_limit_headers
 from app.core.utils import client_ip, utcnow
 from app.events import bus as events_bus
@@ -465,7 +465,10 @@ async def get_calendar(ctx: AccessContext = _ROT) -> YearlyCalendar:
     return YearlyCalendar(**trove_calendar.yearly_calendar())
 
 
-@rotations_router.get("/delves/weeks", response_model=DelveWeekList)
+@rotations_router.get(
+    "/delves/weeks", response_model=DelveWeekList,
+    dependencies=[Depends(require_delves_enabled)],
+)
 async def list_delve_weeks(ctx: AccessContext = _ROT) -> DelveWeekList:
     """The delve weeks available (metadata only), newest first, plus the live week id."""
     weeks = await delves.list_weeks()
@@ -476,7 +479,10 @@ async def list_delve_weeks(ctx: AccessContext = _ROT) -> DelveWeekList:
     )
 
 
-@rotations_router.get("/delves", response_model=DelveRotationOut)
+@rotations_router.get(
+    "/delves", response_model=DelveRotationOut,
+    dependencies=[Depends(require_delves_enabled)],
+)
 async def get_delves(
     ctx: AccessContext = _ROT,
     week: int | None = Query(default=None, description="Week id; defaults to the current week"),

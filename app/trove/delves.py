@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 
+from app.core import features
 from app.core.config import settings
 from app.core.utils import utcnow
 from app.trove.models import DelveRotation
@@ -137,17 +138,28 @@ def _seconds_until_next_pull(now: datetime) -> float:
     return max(1.0, (target - now).total_seconds())
 
 
+# While the feature flag is OFF the loop idles at this cadence, re-checking the
+# flag so a runtime enable resumes fetching within a few minutes (no restart).
+_DISABLED_RECHECK_SECONDS = 300
+
+
 async def _loop() -> None:
     while True:
         try:
-            count = await refresh_current_week()
-            logger.info("Delve refresh: week %s -> %d depths", current_week_id(), count)
+            if await features.is_enabled(features.DELVES_FLAG):
+                count = await refresh_current_week()
+                logger.info("Delve refresh: week %s -> %d depths", current_week_id(), count)
+                sleep_for = _seconds_until_next_pull(datetime.now(timezone.utc))
+            else:
+                # Feature disabled - skip the fetch, idle, and re-check soon.
+                sleep_for = _DISABLED_RECHECK_SECONDS
         except asyncio.CancelledError:
             raise
         except Exception:
             logger.warning("Delve refresh failed", exc_info=True)
+            sleep_for = _seconds_until_next_pull(datetime.now(timezone.utc))
         try:
-            await asyncio.sleep(_seconds_until_next_pull(datetime.now(timezone.utc)))
+            await asyncio.sleep(sleep_for)
         except asyncio.CancelledError:
             raise
 

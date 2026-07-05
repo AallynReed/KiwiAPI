@@ -41,7 +41,9 @@ CALENDAR_FLAG = "feature_calendar_enabled"
 STREAMS_FLAG = "feature_streams_enabled"
 BTT_RELEASES_FLAG = "feature_btt_releases_enabled"
 CLASSES_FLAG = "feature_classes_enabled"
+STAR_CHART_FLAG = "feature_star_chart_enabled"
 DM_SUBS_FLAG = "feature_dm_subscriptions_enabled"
+DELVES_FLAG = "feature_delves_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
@@ -69,6 +71,10 @@ def _gate(flag: str, name: str) -> Callable[[], Coroutine[Any, Any, None]]:
         if not await is_enabled(flag):
             raise _disabled(name)
     dependency.__name__ = f"require_{flag}"
+    # Marker read by main.custom_openapi() to prune this operation from the
+    # OpenAPI reference while the flag is OFF (a disabled feature shouldn't
+    # merely 404 - it should vanish from the docs too).
+    dependency._feature_flag = flag  # type: ignore[attr-defined]
     return dependency
 
 
@@ -84,3 +90,4 @@ require_giveaways_enabled = _gate(GIVEAWAYS_FLAG, "Giveaways")
 require_webhooks_enabled = _gate(WEBHOOKS_FLAG, "Webhooks")
 require_image_studio_enabled = _gate(IMAGE_STUDIO_FLAG, "Image Studio")
 require_dm_subs_enabled = _gate(DM_SUBS_FLAG, "DM subscriptions")
+require_delves_enabled = _gate(DELVES_FLAG, "Delve rotation data")

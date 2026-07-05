@@ -85,6 +85,7 @@ _SITE_FEATURE_FLAGS = {
     "streams_enabled": feature_flags.STREAMS_FLAG,
     "btt_releases_enabled": feature_flags.BTT_RELEASES_FLAG,
     "classes_enabled": feature_flags.CLASSES_FLAG,
+    "star_chart_enabled": feature_flags.STAR_CHART_FLAG,
 }
 
 
@@ -157,6 +158,10 @@ def _feature_blocks(p: str, f: dict) -> bool:
     if not f["classes_enabled"] and (
         p == "/classes" or p.startswith("/site/stats/classes")
     ):
+        return True
+    # Star Chart is fully client-rendered from the static /static/star_chart.json
+    # asset (no /site proxy, no /v1 API), so only the page route needs blocking.
+    if not f["star_chart_enabled"] and p == "/star-chart":
         return True
     return False
 
@@ -305,6 +310,7 @@ _SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/privacy", None),
     ("/commands", "commands_enabled"),
     ("/classes", "classes_enabled"),
+    ("/star-chart", "star_chart_enabled"),
     ("/leaderboards", "leaderboards_enabled"),
     ("/activity", "player_activity_enabled"),
     ("/class-activity", "class_activity_enabled"),
@@ -565,6 +571,16 @@ async def classes_page(request: Request) -> HTMLResponse:
     bonuses) and abilities. Page shell + JS; data comes from the same-origin
     ``/site/stats/classes`` proxy. Deep-links per class via the URL hash."""
     return _TEMPLATES.TemplateResponse(request, "classes.html", {})
+
+
+@router.get("/star-chart", response_class=HTMLResponse)
+async def star_chart_page(request: Request) -> HTMLResponse:
+    """Star Chart planner - an interactive radial builder for Trove's constellation
+    star chart. Click through the nodes and the combined stats, abilities and
+    rewards tally live; builds share by URL (``?b=<code>``) and by an ``SC:`` code
+    that's byte-compatible with the desktop app. Fully client-rendered from the
+    static ``/static/star_chart.json`` (no proxy, no /v1 API)."""
+    return _TEMPLATES.TemplateResponse(request, "star-chart.html", {})
 
 
 @router.get("/site/stats/classes", response_class=JSONResponse)
