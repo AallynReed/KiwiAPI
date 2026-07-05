@@ -11,6 +11,7 @@ from itertools import product
 
 from .bases import (
     get_empowered_gem_pr_threshold,
+    get_gem_max_level,
     get_increment_power_rank_empowered,
     get_increment_power_rank_lesser,
     get_lesser_gem_pr_threshold,
@@ -96,6 +97,16 @@ def _build_focus_plan(display_progress: float, containers: int) -> dict:
         totals[option_key] = {"label": option["label"], **total_counts, "recipe_totals": recipe_totals}
     return {"current_percent": current_percent, "remaining_percent": round(remaining_percent, 2),
             "per_container": per_container, "totals": totals}
+
+
+def _summarize_focus_totals(plan: dict) -> dict:
+    """Reshape a focus plan's per-gem totals into the same {key -> cost} map the
+    full evaluator returns, so both modes render an identical focus-plan card."""
+    return {
+        option_key: {"key": option_key, "label": FOCUS_OPTIONS[option_key]["label"],
+                     **plan["totals"][option_key]}
+        for option_key in FOCUS_OPTIONS
+    }
 
 
 def _evaluate_gem_candidate(gem_tier, gem_type, level, stats_payload) -> dict:
@@ -253,6 +264,62 @@ def evaluate_gem(tier: int, type: int, level: int, stats: list[dict], auto_guess
 
     candidate = _evaluate_gem_candidate(gem_tier, gem_type, level, payload)
     return {"result": candidate, "available_extra_containers": available, "guessed_distribution": guessed}
+
+
+def evaluate_gem_simple(tier: int, type: int, power_rank: int, level: int = 1) -> dict:
+    """Estimate a gem's quality from just its Power Rank - no per-stat input.
+
+    Reads the quality off where the entered Power Rank falls between the min and
+    max PR the given tier/type/level can reach (using the neutral WATER element,
+    which the PR thresholds don't vary by). Also returns the focus plan to perfect
+    it, in the same shape the full evaluator uses.
+    """
+    gem_tier = GemTier(int(tier))
+    gem_type = GemType(int(type))
+    level = max(1, int(level))
+    power_rank = int(power_rank)
+    max_level = get_gem_max_level(gem_tier, gem_type)
+    if level > max_level:
+        raise GemEvaluatorError(f"Level {level} is above the max ({max_level}) for this gem.")
+
+    container_count = min(level, 15) // 5 + 3
+    thresholds = (
+        get_lesser_gem_pr_threshold(gem_tier, GemElement.WATER) if gem_type == GemType.LESSER
+        else get_empowered_gem_pr_threshold(gem_tier, GemElement.WATER)
+    )
+    min_pr = thresholds[0] * container_count
+    max_pr = thresholds[1] * container_count
+    if gem_type == GemType.EMPOWERED:
+        min_pr += 100
+        max_pr += 100
+    inc_fn = get_increment_power_rank_lesser if gem_type == GemType.LESSER else get_increment_power_rank_empowered
+    for lvl in range(1, level + 1):
+        inc = inc_fn(gem_tier, lvl)
+        min_pr += inc * 3
+        max_pr += inc * 3
+    min_pr, max_pr = round(min_pr), round(max_pr)
+
+    if power_rank < min_pr:
+        raw_progress, distance = -1.0, min_pr - power_rank
+    elif power_rank > max_pr:
+        raw_progress, distance = 1.0, power_rank - max_pr
+    else:
+        raw_progress = (power_rank - min_pr) / (max_pr - min_pr) if max_pr > min_pr else 0.0
+        distance = 0
+    progress = max(0.0, min(1.0, raw_progress))
+    focus_totals = _summarize_focus_totals(_build_focus_plan(progress, container_count))
+    headline = dict(focus_totals["optimized_precise_rough"])
+    headline["strategy"] = "optimized_precise_rough"
+
+    return {
+        "tier": gem_tier.value, "tier_name": gem_tier.display_name,
+        "type": gem_type.value, "type_name": gem_type.display_name,
+        "level": level, "power_rank": power_rank,
+        "min_power_rank": min_pr, "max_power_rank": max_pr,
+        "quality": round(progress, 4), "quality_percent": round(progress * 100, 2),
+        "is_within_range": min_pr <= power_rank <= max_pr, "distance": distance,
+        "focus_totals": focus_totals, "headline_cost": headline,
+    }
 
 
 def gem_stat_range(tier: int, type: int, stat_type: int, level: int = 1,

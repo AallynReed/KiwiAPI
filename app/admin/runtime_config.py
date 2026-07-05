@@ -353,6 +353,42 @@ REGISTRY: dict[str, TunableSetting] = {
             "dedicated page is hidden."
         ),
     ),
+    "feature_gem_evaluator_enabled": _t(
+        key="feature_gem_evaluator_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Gem Evaluator page. OFF hides the /gem-evaluator "
+            "page + navbar link and 404s its same-origin proxies (/site/gems/evaluate, "
+            "/site/gems/stat-range, /site/gems/lookups). The page scores a typed-in gem "
+            "(quality %, Power Rank, focus-material plan) via the gems:read service layer."
+        ),
+    ),
+    "feature_gem_builds_enabled": _t(
+        key="feature_gem_builds_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Gem Builds optimizer page. OFF hides the /gem-builds "
+            "page + navbar link and 404s its same-origin proxies (/site/gems/builds/*). "
+            "The page ranks the top gem proc layouts by damage coefficient for a "
+            "class/subclass/food/ally config via the gems:read service layer."
+        ),
+    ),
+    "feature_calculators_enabled": _t(
+        key="feature_calculators_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Calculators page (Power Rank, Mastery, Magic Find, "
+            "Light). OFF hides the /calculators page + navbar link. The tabs are "
+            "client-rendered from static stat tables; the Magic Find tab's optional "
+            "star-chart preview uses the /site/gems/parse-star-chart proxy."
+        ),
+    ),
     "feature_delves_enabled": _t(
         key="feature_delves_enabled",
         default=False,

@@ -76,6 +76,8 @@ from app.trove.gems.schemas import (
     GenerateGemRequest,
     LevelUpRequest,
     SetLevelRequest,
+    SimpleEvaluateRequest,
+    SimpleEvaluationResult,
     StatPositionRequest,
 )
 from app.trove.leaderboards import activity as leaderboards_activity
@@ -824,6 +826,19 @@ async def evaluate_gem(req: EvaluateRequest, ctx: TokenContext = _GEM) -> Evalua
         available_extra_containers=out["available_extra_containers"],
         guessed_distribution=out["guessed_distribution"],
     )
+
+
+@gems_router.post("/evaluate-simple", response_model=SimpleEvaluationResult)
+async def evaluate_gem_simple(req: SimpleEvaluateRequest, ctx: TokenContext = _GEM) -> SimpleEvaluationResult:
+    """Estimate a gem's quality from just its Power Rank (tier/type/level + PR) -
+    the quick evaluator when you don't want to type in every stat."""
+    try:
+        out = gem_evaluator.evaluate_gem_simple(req.tier, req.type, req.power_rank, req.level)
+    except gem_evaluator.GemEvaluatorError as e:
+        raise _bad_request(str(e)) from e
+    except (ValueError, KeyError, ZeroDivisionError) as e:
+        raise _bad_request(f"Could not evaluate gem: {e}") from e
+    return SimpleEvaluationResult(**out)
 
 
 @gems_router.get("/stat-range", response_model=GemStatRange)

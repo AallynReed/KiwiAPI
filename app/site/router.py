@@ -39,6 +39,10 @@ from app.trove import chaos as trove_chaos
 from app.trove import stats as trove_stats
 from app.trove.models import TroveEvent
 from app.trove.codexes import crafting as codexes_crafting
+from app.trove.gems import builds as gem_builds
+from app.trove.gems import evaluator as gem_evaluator
+from app.trove.gems.model import gem_lookups
+from app.trove.gems.schemas import BuildConfigRequest, EvaluateRequest, SimpleEvaluateRequest
 from app.trove.codexes import read as codexes_read
 from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
 from app.trove.render.service import render_blueprint_cached
@@ -87,6 +91,9 @@ _SITE_FEATURE_FLAGS = {
     "classes_enabled": feature_flags.CLASSES_FLAG,
     "star_chart_enabled": feature_flags.STAR_CHART_FLAG,
     "gem_simulator_enabled": feature_flags.GEM_SIMULATOR_FLAG,
+    "gem_evaluator_enabled": feature_flags.GEM_EVALUATOR_FLAG,
+    "gem_builds_enabled": feature_flags.GEM_BUILDS_FLAG,
+    "calculators_enabled": feature_flags.CALCULATORS_FLAG,
 }
 
 
@@ -167,6 +174,25 @@ def _feature_blocks(p: str, f: dict) -> bool:
     # Gem Simulator is likewise fully client-rendered (static /static/gem-engine.js,
     # no /site proxy, no /v1 API), so only the page route needs blocking.
     if not f["gem_simulator_enabled"] and p == "/gem-simulator":
+        return True
+    # Gem Evaluator: page + its evaluate / stat-range / lookups proxies.
+    if not f["gem_evaluator_enabled"] and (
+        p == "/gem-evaluator"
+        or p in ("/site/gems/evaluate", "/site/gems/evaluate-simple",
+                 "/site/gems/stat-range", "/site/gems/lookups")
+    ):
+        return True
+    # Gem Builds: page + its builds/* proxies.
+    if not f["gem_builds_enabled"] and (
+        p == "/gem-builds" or p.startswith("/site/gems/builds")
+    ):
+        return True
+    if not f["calculators_enabled"] and p == "/calculators":
+        return True
+    # The star-chart preview proxy feeds both Builds and Calculators; only hide it
+    # when both of those features are OFF.
+    if (not f["calculators_enabled"] and not f["gem_builds_enabled"]
+            and p == "/site/gems/parse-star-chart"):
         return True
     return False
 
@@ -598,6 +624,135 @@ async def gem_simulator_page(request: Request) -> HTMLResponse:
     port of the gem model) with state kept in the browser's ``localStorage`` (no
     proxy, no /v1 API)."""
     return _TEMPLATES.TemplateResponse(request, "gem-simulator.html", {})
+
+
+@router.get("/gem-evaluator", response_class=HTMLResponse)
+async def gem_evaluator_page(request: Request) -> HTMLResponse:
+    """Gem Evaluator - type in a gem's tier / type / level and its three stats and
+    get back the quality %, estimated Power Rank, a per-stat breakdown and the
+    focus-material plan (Rough / Precise / Superior) to perfect it. The page posts to
+    the same-origin ``/site/gems/*`` proxies below, which call the gems:read service
+    layer directly (no token, no per-token rate cap)."""
+    return _TEMPLATES.TemplateResponse(request, "gem-evaluator.html", {})
+
+
+@router.get("/gem-builds", response_class=HTMLResponse)
+async def gem_builds_page(request: Request) -> HTMLResponse:
+    """Gem Builds - pick a class / subclass / food / ally (plus optional star-chart
+    code and buff toggles) and the optimizer ranks the top gem proc layouts by damage
+    coefficient. Posts to the same-origin ``/site/gems/builds/*`` proxies."""
+    return _TEMPLATES.TemplateResponse(request, "gem-builds.html", {})
+
+
+@router.get("/calculators", response_class=HTMLResponse)
+async def calculators_page(request: Request) -> HTMLResponse:
+    """Calculators - Power Rank, Mastery, Magic Find and Light tabs. Client-rendered
+    from static stat tables (``/static/assets/data/stats/*.json``); the Magic Find
+    tab's optional star-chart preview uses the ``/site/gems/parse-star-chart`` proxy."""
+    return _TEMPLATES.TemplateResponse(request, "calculators.html", {})
+
+
+# --- /site/gems/* JSON proxies (scope-free, same-origin) --------------------
+# Mirror the read-side of /v1/gems/* (evaluate, stat-range, lookups, builds) but
+# skip the TokenContext dep + per-token rate limit. Gem compute is stateless and
+# the data is public, so the bypass costs us nothing and keeps site browsers off
+# the API's per-token caps. Feature-gated in _feature_blocks above.
+
+
+@router.get("/site/gems/lookups", response_class=JSONResponse)
+async def site_gem_lookups() -> JSONResponse:
+    """Reference values (tiers, types, elements, stat types, augments) for the
+    Gem Evaluator's dropdowns - same payload as ``/v1/gems/lookups``."""
+    return JSONResponse(
+        jsonable_encoder(gem_lookups()),
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@router.post("/site/gems/evaluate", response_class=JSONResponse)
+async def site_gem_evaluate(req: EvaluateRequest) -> JSONResponse:
+    """Score a typed-in gem (quality %, Power Rank, per-stat progress, focus plan).
+    Same compute as ``/v1/gems/evaluate``, served same-origin."""
+    try:
+        out = gem_evaluator.evaluate_gem(
+            req.tier, req.type, req.level,
+            [s.model_dump() for s in req.stats], req.auto_guess_procs,
+        )
+    except gem_evaluator.GemEvaluatorError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except (ValueError, KeyError, ZeroDivisionError) as e:
+        raise HTTPException(status_code=400, detail=f"Could not evaluate gem: {e}") from e
+    payload = {
+        **out["result"],
+        "available_extra_containers": out["available_extra_containers"],
+        "guessed_distribution": out["guessed_distribution"],
+    }
+    return JSONResponse(jsonable_encoder(payload))
+
+
+@router.post("/site/gems/evaluate-simple", response_class=JSONResponse)
+async def site_gem_evaluate_simple(req: SimpleEvaluateRequest) -> JSONResponse:
+    """Estimate a gem's quality from just its Power Rank. Same compute as
+    ``/v1/gems/evaluate-simple``, served same-origin."""
+    try:
+        out = gem_evaluator.evaluate_gem_simple(req.tier, req.type, req.power_rank, req.level)
+    except gem_evaluator.GemEvaluatorError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except (ValueError, KeyError, ZeroDivisionError) as e:
+        raise HTTPException(status_code=400, detail=f"Could not evaluate gem: {e}") from e
+    return JSONResponse(jsonable_encoder(out))
+
+
+@router.get("/site/gems/stat-range", response_class=JSONResponse)
+async def site_gem_stat_range(
+    tier: int, type: int, stat_type: int,
+    level: int = Query(default=1, ge=1),
+    extra_containers: int = Query(default=0, ge=0),
+    element: int | None = None,
+) -> JSONResponse:
+    """Plausible (min, max) value a stat can roll at - for the evaluator's inline
+    range hints. Same compute as ``/v1/gems/stat-range``."""
+    try:
+        return JSONResponse(
+            jsonable_encoder(gem_evaluator.gem_stat_range(
+                tier, type, stat_type, level, extra_containers, element)),
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
+    except (ValueError, KeyError) as e:
+        raise HTTPException(status_code=400, detail=f"Invalid stat-range parameters: {e}") from e
+
+
+@router.get("/site/gems/builds/options", response_class=JSONResponse)
+async def site_gem_build_options() -> JSONResponse:
+    """Valid field values for a build config (classes, allies, foods, flags) - same
+    payload as ``/v1/gems/builds/options``. Static game data, cached hard."""
+    return JSONResponse(
+        jsonable_encoder(gem_builds.build_options()),
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@router.post("/site/gems/builds/calculate", response_class=JSONResponse)
+async def site_gem_build_calculate(req: BuildConfigRequest) -> JSONResponse:
+    """Top gem proc layouts for a build, ranked by damage coefficient. Same compute
+    as ``/v1/gems/builds/calculate``; run off the event loop as it's a tight sync
+    brute-force over the layout space."""
+    try:
+        results = await asyncio.to_thread(gem_builds.calculate_builds, req.model_dump())
+    except gem_builds.BuildError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return JSONResponse(jsonable_encoder({"results": results, "count": len(results)}))
+
+
+@router.get("/site/gems/parse-star-chart", response_class=JSONResponse)
+async def site_gem_parse_star_chart(code: str = Query(default="", max_length=8192)) -> JSONResponse:
+    """Decode a star-chart build code into aggregated passive stats for the Builds /
+    Calculators live previews. Never errors: an unparseable code returns zero paths."""
+    try:
+        parsed = gem_builds.parse_star_chart(code)
+    except Exception:  # noqa: BLE001 - preview only; bad codes must degrade, not 500
+        parsed = {"stats": {}, "abilities": [], "paths_count": 0}
+    return JSONResponse(jsonable_encoder(parsed))
 
 
 @router.get("/site/stats/classes", response_class=JSONResponse)

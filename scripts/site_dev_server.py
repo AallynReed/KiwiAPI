@@ -31,6 +31,23 @@ SITE_DIR = ROOT / "site"
 TEMPLATES = SITE_DIR / "templates"
 STATIC = SITE_DIR / "static"
 
+# The gem tools (Evaluator / Builds / Calculators star-chart preview) run the
+# real service layer - it's dependency-light (stdlib + gamedata JSON + pydantic
+# schemas), so we import it here and answer the /site/gems/* proxies with the
+# same maths production serves. Guarded so the rest of the dev server still boots
+# if the app package can't be imported in a bare interpreter.
+import sys as _sys
+if str(ROOT) not in _sys.path:
+    _sys.path.insert(0, str(ROOT))
+try:
+    from app.trove.gems import builds as _gem_builds
+    from app.trove.gems import evaluator as _gem_evaluator
+    from app.trove.gems.model import gem_lookups as _gem_lookups
+    _GEMS_OK = True
+except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
+    print(f"[site-dev] gem tools unavailable ({_e}); /site/gems/* will 503")
+    _GEMS_OK = False
+
 # Stub data shaped to match what app/trove/leaderboards/service.py returns,
 # so the page renders end-to-end without a backend.
 #
@@ -434,6 +451,45 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "classes.html", "text/html")
         if path == "/gem-simulator":
             return self._send_file(TEMPLATES / "gem-simulator.html", "text/html")
+        if path == "/gem-evaluator":
+            return self._send_file(TEMPLATES / "gem-evaluator.html", "text/html")
+        if path == "/gem-builds":
+            return self._send_file(TEMPLATES / "gem-builds.html", "text/html")
+        if path == "/calculators":
+            return self._send_file(TEMPLATES / "calculators.html", "text/html")
+
+        # Gem tool proxies (real service layer).
+        if path == "/site/gems/lookups":
+            if not _GEMS_OK:
+                return self._send_json({"detail": "gem tools unavailable"}, 503)
+            return self._send_json(_gem_lookups())
+        if path == "/site/gems/builds/options":
+            if not _GEMS_OK:
+                return self._send_json({"detail": "gem tools unavailable"}, 503)
+            return self._send_json(_gem_builds.build_options())
+        if path == "/site/gems/stat-range":
+            if not _GEMS_OK:
+                return self._send_json({"detail": "gem tools unavailable"}, 503)
+            q = parse_qs(url.query)
+            try:
+                out = _gem_evaluator.gem_stat_range(
+                    int(q.get("tier", [4])[0]), int(q.get("type", [1])[0]),
+                    int(q.get("stat_type", [1])[0]), int(q.get("level", [1])[0]),
+                    int(q.get("extra_containers", [0])[0]),
+                    int(q["element"][0]) if q.get("element") else None,
+                )
+            except (ValueError, KeyError) as e:
+                return self._send_json({"detail": str(e)}, 400)
+            return self._send_json(out)
+        if path == "/site/gems/parse-star-chart":
+            if not _GEMS_OK:
+                return self._send_json({"stats": {}, "abilities": [], "paths_count": 0})
+            q = parse_qs(url.query)
+            code = (q.get("code", [""])[0] or "")
+            try:
+                return self._send_json(_gem_builds.parse_star_chart(code))
+            except Exception:  # noqa: BLE001
+                return self._send_json({"stats": {}, "abilities": [], "paths_count": 0})
         if path == "/giveaways":
             return self._send_file(TEMPLATES / "giveaways.html", "text/html")
         if path == "/clubs":
@@ -1552,6 +1608,58 @@ class Handler(SimpleHTTPRequestHandler):
             })
 
         self.send_error(404)
+
+    def do_POST(self):
+        url = urlparse(self.path)
+        path = url.path
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        raw = self.rfile.read(length) if length else b"{}"
+        try:
+            body = json.loads(raw.decode("utf-8") or "{}")
+        except (ValueError, UnicodeDecodeError):
+            return self._send_json({"detail": "invalid JSON body"}, 400)
+
+        if path == "/site/gems/evaluate":
+            if not _GEMS_OK:
+                return self._send_json({"detail": "gem tools unavailable"}, 503)
+            try:
+                out = _gem_evaluator.evaluate_gem(
+                    body.get("tier", 4), body.get("type", 1), body.get("level", 1),
+                    body.get("stats", []), bool(body.get("auto_guess_procs", False)),
+                )
+            except _gem_evaluator.GemEvaluatorError as e:
+                return self._send_json({"detail": str(e)}, 400)
+            except (ValueError, KeyError, ZeroDivisionError) as e:
+                return self._send_json({"detail": f"Could not evaluate gem: {e}"}, 400)
+            payload = {**out["result"],
+                       "available_extra_containers": out["available_extra_containers"],
+                       "guessed_distribution": out["guessed_distribution"]}
+            return self._send_json(payload)
+
+        if path == "/site/gems/evaluate-simple":
+            if not _GEMS_OK:
+                return self._send_json({"detail": "gem tools unavailable"}, 503)
+            try:
+                out = _gem_evaluator.evaluate_gem_simple(
+                    body.get("tier", 4), body.get("type", 1),
+                    body.get("power_rank", 0), body.get("level", 1),
+                )
+            except _gem_evaluator.GemEvaluatorError as e:
+                return self._send_json({"detail": str(e)}, 400)
+            except (ValueError, KeyError, ZeroDivisionError) as e:
+                return self._send_json({"detail": f"Could not evaluate gem: {e}"}, 400)
+            return self._send_json(out)
+
+        if path == "/site/gems/builds/calculate":
+            if not _GEMS_OK:
+                return self._send_json({"detail": "gem tools unavailable"}, 503)
+            try:
+                results = _gem_builds.calculate_builds(body)
+            except _gem_builds.BuildError as e:
+                return self._send_json({"detail": str(e)}, 400)
+            return self._send_json({"results": results, "count": len(results)})
+
+        return self.send_error(404)
 
     def _send_file(self, p: Path, content_type: str | None):
         if not p.exists():

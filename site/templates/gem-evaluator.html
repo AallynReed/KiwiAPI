@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Trove Gem Evaluator - quality, Power Rank &amp; focus plan - Better Trove Tools</title>
+    <meta name="description" content="Type in a Trove gem's stats and instantly see its quality %, estimated Power Rank, a per-stat breakdown, and exactly how many Rough / Precise / Superior focuses (and materials) it takes to perfect it.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="canonical" href="https://trove.aallyn.net/gem-evaluator">
+
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:url" content="https://trove.aallyn.net/gem-evaluator">
+    <meta property="og:title" content="Trove Gem Evaluator - quality, Power Rank &amp; focus plan">
+    <meta property="og:description" content="Type in a gem's stats and see its quality %, Power Rank and the exact focuses and materials needed to perfect it.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Trove Gem Evaluator">
+    <meta name="twitter:description" content="Score any Trove gem and plan the focuses to perfect it.">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/gem-evaluator.min.css">
+</head>
+<body class="landing gem-eval-page">
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="ge-main">
+        <section class="ge-hero">
+            <p class="ge-eyebrow">/gem-evaluator</p>
+            <h1 class="ge-title" data-i18n>Trove <span class="highlight-blue">Gem Evaluator</span></h1>
+            <p class="ge-sub" data-i18n>Type in a gem's tier, level and its three stats, and get back its quality %, estimated Power Rank, a per-stat breakdown, and exactly how many focuses - and which materials - it takes to perfect it.</p>
+        </section>
+
+        <div class="ge-layout" id="ge-app">
+            <!-- Left: input form -->
+            <div class="ge-panel ge-form-panel">
+                <div class="ge-panel-head"><i class="fa-solid fa-magnifying-glass-chart"></i> <span data-i18n>Gem details</span></div>
+                <div class="ge-form" id="ge-form"></div>
+                <div class="ge-history" id="ge-history"></div>
+            </div>
+
+            <!-- Right: results -->
+            <div class="ge-panel ge-results-panel">
+                <div class="ge-results" id="ge-results"></div>
+            </div>
+        </div>
+    </main>
+
+    <div class="gem-toast-host" id="ge-toast-host"></div>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/gem-evaluator.min.js" defer></script>
+</body>
+</html>

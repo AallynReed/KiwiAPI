@@ -351,6 +351,15 @@ def calculate_builds(config: dict) -> list[dict]:
     return _engine().calculate_builds(config)
 
 
+def parse_star_chart(code: str) -> dict:
+    """Decode a star-chart build code into aggregated passive stats (for UI previews).
+
+    Returns ``{"stats": {name: {"flat", "pct"}}, "abilities": [...], "paths_count": N}``;
+    ``paths_count == 0`` signals an unparseable / empty code.
+    """
+    return _engine().star_parser.parse_build_code(code or "")
+
+
 def build_options() -> dict:
     """Valid field values a client can pick for a build config."""
     eng = _engine()

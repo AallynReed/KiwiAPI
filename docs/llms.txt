@@ -180,6 +180,7 @@ types 1-9, augments 1 Rough/2 Precise/3 Superior).
 - `POST /v1/gems/spark` · `flare` body `{gem, stat_position}` → `{applied, gem}` (reroll stat type / move a proc)
 - `POST /v1/gems/level-up` body `{gem}` · `set-level` body `{gem, level}` → `{applied, gem}`
 - `POST /v1/gems/evaluate` body `{tier, type, level, stats:[{type,value,extra_containers}]×3, auto_guess_procs?}` → `{quality_percent, calculated_power_rank, stats[], focus_totals, headline_cost, …}`
+- `POST /v1/gems/evaluate-simple` body `{tier, type, power_rank, level}` → `{quality_percent, min_power_rank, max_power_rank, is_within_range, focus_totals, headline_cost, …}` (estimate quality from Power Rank alone - no per-stat input)
 - `GET /v1/gems/stat-range?tier&type&stat_type&level&extra_containers[&element]` → `{min_value, max_value, thresholds, …}`
 - `GET /v1/gems/builds/options` → valid build-config values (classes, allies, foods, flags)
 - `POST /v1/gems/builds/calculate` body BuildConfig `{build_type, character, subclass, food, ally, critical_damage_count, no_face, light, subclass_active, litany, berserker_battler, star_chart?}` → `{results:[{rank, layout, coefficient, …}], count}` (top 200 by damage coefficient)

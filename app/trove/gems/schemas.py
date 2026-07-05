@@ -139,6 +139,30 @@ class EvaluationResult(BaseModel):
     guessed_distribution: list[int]
 
 
+class SimpleEvaluateRequest(BaseModel):
+    tier: int = 4
+    type: int = 1
+    power_rank: int = 0
+    level: int = 1
+
+
+class SimpleEvaluationResult(BaseModel):
+    tier: int
+    tier_name: str
+    type: int
+    type_name: str
+    level: int
+    power_rank: int
+    min_power_rank: int
+    max_power_rank: int
+    quality: float
+    quality_percent: float
+    is_within_range: bool           # True when the entered PR sits in the plausible band
+    distance: int                   # how far outside the band the PR is (0 when within)
+    focus_totals: dict[str, FocusStrategyCost]
+    headline_cost: FocusStrategyCost
+
+
 class GemStatRange(BaseModel):
     stat_type: int
     stat_display_name: str

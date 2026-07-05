@@ -67,12 +67,15 @@
                             {% if clubs_enabled %}<a href="/clubs" role="menuitem" class="{{ 'active' if _p == '/clubs' else '' }}"><i class="fa-solid fa-shield-halved"></i> <span data-i18n>Clubs</span></a>{% endif %}
                         </div>
                         {% endif %}
-                        {% if commands_enabled or classes_enabled or star_chart_enabled or gem_simulator_enabled or updates_enabled or codexes_enabled or btt_releases_enabled %}
+                        {% if commands_enabled or classes_enabled or star_chart_enabled or gem_simulator_enabled or gem_evaluator_enabled or gem_builds_enabled or calculators_enabled or updates_enabled or codexes_enabled or btt_releases_enabled %}
                         <div class="nav-mega-group" role="group" aria-label="Reference">
                             <p class="nav-mega-title" data-i18n>Reference</p>
                             {% if classes_enabled %}<a href="/classes" role="menuitem" class="{{ 'active' if _p == '/classes' else '' }}"><i class="fa-solid fa-hat-wizard"></i> <span data-i18n>Classes</span></a>{% endif %}
                             {% if star_chart_enabled %}<a href="/star-chart" role="menuitem" class="{{ 'active' if _p == '/star-chart' else '' }}"><i class="fa-solid fa-star"></i> <span data-i18n>Star Chart</span></a>{% endif %}
                             {% if gem_simulator_enabled %}<a href="/gem-simulator" role="menuitem" class="{{ 'active' if _p == '/gem-simulator' else '' }}"><i class="fa-solid fa-gem"></i> <span data-i18n>Gem Simulator</span></a>{% endif %}
+                            {% if gem_evaluator_enabled %}<a href="/gem-evaluator" role="menuitem" class="{{ 'active' if _p == '/gem-evaluator' else '' }}"><i class="fa-solid fa-magnifying-glass-chart"></i> <span data-i18n>Gem Evaluator</span></a>{% endif %}
+                            {% if gem_builds_enabled %}<a href="/gem-builds" role="menuitem" class="{{ 'active' if _p == '/gem-builds' else '' }}"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n>Gem Builds</span></a>{% endif %}
+                            {% if calculators_enabled %}<a href="/calculators" role="menuitem" class="{{ 'active' if _p == '/calculators' else '' }}"><i class="fa-solid fa-calculator"></i> <span data-i18n>Calculators</span></a>{% endif %}
                             {% if commands_enabled %}<a href="/commands" role="menuitem" class="{{ 'active' if _p == '/commands' else '' }}"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>{% endif %}
                             {% if updates_enabled %}<a href="/updates" role="menuitem" class="{{ 'active' if _p == '/updates' else '' }}"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>{% endif %}
                             {% if codexes_enabled %}<a href="/codexes" role="menuitem" class="{{ 'active' if _p == '/codexes' else '' }}"><i class="fa-solid fa-book-atlas"></i> <span data-i18n>Codexes</span> <span class="nav-pill nav-pill-beta">Beta</span></a>{% endif %}
