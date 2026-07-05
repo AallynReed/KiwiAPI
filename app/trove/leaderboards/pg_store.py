@@ -194,6 +194,38 @@ async def latest_anchor_for_board(uuid: int) -> int | None:
         return await con.fetchval("SELECT MAX(anchor) FROM entry WHERE board_uuid = $1", uuid)
 
 
+async def top_entries_for_boards(uuids: list[int], anchor: int) -> dict[int, dict]:
+    """The rank-1 entry for each of ``uuids`` at one ``anchor`` (the caller
+    passes the latest published snapshot; rank-1 is the highest score).
+
+    Powers the free Mastery / Power Rank "records" endpoint. ``anchor`` is a
+    CONSTANT here, so Postgres PRUNES the RANGE-partitioned ``entry`` table to
+    that single day's partition and reads rank-1 per board straight off the
+    ``(board_uuid, anchor, rank)`` index (``DISTINCT ON`` + ``ORDER BY rank``).
+    Boards absent from that snapshot are simply missing from the result.
+    """
+    if not uuids:
+        return {}
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT DISTINCT ON (e.board_uuid) "
+            "       e.board_uuid, p.name AS player_name, e.score, e.anchor "
+            "FROM entry e "
+            "JOIN player p ON p.id = e.player_id "
+            "WHERE e.board_uuid = ANY($1) AND e.anchor = $2 "
+            "ORDER BY e.board_uuid, e.rank",
+            uuids, anchor,
+        )
+    return {
+        r["board_uuid"]: {
+            "player_name": r["player_name"],
+            "score": r["score"],
+            "anchor": r["anchor"],
+        }
+        for r in rows
+    }
+
+
 async def list_entries(uuid: int, anchor: int, *, limit: int, offset: int) -> tuple[list[dict], int]:
     async with acquire() as con:
         total = await con.fetchval(

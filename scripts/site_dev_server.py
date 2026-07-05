@@ -1055,6 +1055,27 @@ class Handler(SimpleHTTPRequestHandler):
                 "uptime": round(up/covered, 5), "covered_seconds": covered,
                 "segments": segs, "outages": outages,
             })
+        if path == "/site/leaderboards/records":
+            # Record-high widgets on the homepage. Mastery points chosen so the
+            # level curve resolves to believable in-game values; Geode's points
+            # push it past the level-100 soft cap so the "would be N" note shows.
+            return self._send_json({
+                "trove_mastery": {
+                    "points": 167291, "level": 801, "points_into_level": 40,
+                    "points_to_next_level": 361, "player_name": "Aallyn",
+                    "anchor": STUB_ANCHOR,
+                },
+                "geode_mastery": {
+                    "points": 13450, "level": 100, "points_into_level": 50,
+                    "points_to_next_level": 50, "player_name": "Skill",
+                    "anchor": STUB_ANCHOR, "level_cap": 100,
+                    "uncapped_level": 143, "capped": True,
+                },
+                "power_rank": {
+                    "value": 41230, "board_uuid": 1011, "player_name": "Bae",
+                    "anchor": STUB_ANCHOR,
+                },
+            })
         if path == "/site/leaderboards/activity":
             # 1.0h window with a realistic count so the hero pill renders.
             return self._send_json({

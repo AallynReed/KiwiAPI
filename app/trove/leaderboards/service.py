@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime, timedelta
 
+from app.trove.leaderboards import mastery as mastery_calc
 from app.trove.leaderboards import pg_store
 from app.trove.leaderboards.parser import parse_dump
 
@@ -200,6 +201,81 @@ async def entries_by_board_at(
     """All entries at one anchor grouped by board, sorted by rank - the bulk
     loader for cheater detection + the activity 1h breakdown."""
     return await pg_store.entries_by_board_at(anchor, uuids)
+
+
+# --- record highs (free "how high can these stats go" endpoint) -------------
+# These boards are *lifetime* (never reset), so their current rank-1 IS the
+# highest the stat has ever reached in-game. Mastery boards store a running
+# POINTS total the client turns into a level; Power Rank stores the rank value
+# directly. Board ids are Trove's, not ours.
+_TROVE_MASTERY_UUID = 1
+_GEODE_MASTERY_UUID = 20
+_POWER_RANK_UUIDS = list(range(1000, 1017))   # 1000-1016, one board per class
+# Geode Mastery is soft-capped at 100 in-game: the level bar stops there even
+# though the points keep accruing. We surface both the capped and true level.
+_GEODE_LEVEL_CAP = 100
+
+
+def _mastery_block(top: dict | None, *, cap: int | None = None) -> dict | None:
+    """Shape one mastery board's rank-1 into a points->level summary."""
+    if not top:
+        return None
+    points = max(0, int(round(top["score"])))
+    level, into_level, to_next = mastery_calc.level_from_points(points)
+    block = {
+        "points": points,
+        "level": min(level, cap) if cap is not None else level,
+        "points_into_level": into_level,
+        "points_to_next_level": to_next,
+        "player_name": top["player_name"],
+        "anchor": top["anchor"],
+    }
+    if cap is not None:
+        # Show the soft cap AND what the level would be uncapped (e.g. 100 vs 143).
+        block["level_cap"] = cap
+        block["uncapped_level"] = level
+        block["capped"] = level > cap
+    return block
+
+
+async def mastery_records() -> dict:
+    """The current highest Trove Mastery, Geode Mastery and Power Rank in the
+    game - the absolute ceiling each stat has reached, from the rank-1 holder of
+    the relevant lifetime board(s). Mastery is reported as both points and level;
+    Power Rank is the single highest value across all 17 per-class boards."""
+    # Latest PUBLISHED snapshot - the same warmer-gated anchor the leaderboards
+    # page reads (Redis read-through, falls back to a DISTINCT-anchor query on a
+    # cold cache). Local import: cache.py imports this module, so importing it at
+    # module scope would be circular.
+    from app.trove.leaderboards import cache as leaderboards_cache
+    empty = {"trove_mastery": None, "geode_mastery": None, "power_rank": None}
+    ts = await leaderboards_cache.get_timestamps(1)
+    if not ts:
+        return empty
+    tops = await pg_store.top_entries_for_boards(
+        [_TROVE_MASTERY_UUID, _GEODE_MASTERY_UUID, *_POWER_RANK_UUIDS], ts[0],
+    )
+
+    # Power Rank: one number - the highest rank-1 across every class board.
+    power = None
+    for uuid in _POWER_RANK_UUIDS:
+        top = tops.get(uuid)
+        if not top:
+            continue
+        value = int(round(top["score"]))
+        if power is None or value > power["value"]:
+            power = {
+                "value": value,
+                "board_uuid": uuid,
+                "player_name": top["player_name"],
+                "anchor": top["anchor"],
+            }
+
+    return {
+        "trove_mastery": _mastery_block(tops.get(_TROVE_MASTERY_UUID)),
+        "geode_mastery": _mastery_block(tops.get(_GEODE_MASTERY_UUID), cap=_GEODE_LEVEL_CAP),
+        "power_rank": power,
+    }
 
 
 async def _previous_day_anchor(uuid: int, created_at: int) -> int | None:

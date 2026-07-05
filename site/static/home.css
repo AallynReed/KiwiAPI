@@ -147,6 +147,40 @@
 .dash-buff-chaos .dash-chaos-time { font-size: 1.1rem; font-weight: 600; margin-top: 0.3rem; }
 .dash-buff-chaos .dash-chaos-sub { color: var(--text-soft); font-size: 0.82rem; }
 
+/* ---- Record highs (Mastery + Power Rank ceilings) ----------------------- */
+.dash-records { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; }
+.dash-record {
+  --rec-accent: var(--accent);
+  background: linear-gradient(160deg, color-mix(in oklab, var(--rec-accent) 10%, var(--bg-deep)), var(--bg-deep));
+  border: 1px solid var(--bg-line); border-left: 3px solid var(--rec-accent);
+  border-radius: var(--radius); padding: 0.9rem 1rem;
+  display: flex; flex-direction: column; gap: 0.35rem;
+}
+.dash-record-top { display: flex; align-items: center; gap: 0.5rem; }
+.dash-record-ico {
+  width: 30px; height: 30px; flex: 0 0 auto; display: grid; place-items: center;
+  border-radius: 9px; background: color-mix(in oklab, var(--rec-accent) 20%, transparent);
+  color: var(--rec-accent); font-size: 0.9rem;
+}
+.dash-record-kicker { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); font-weight: 600; }
+.dash-record-value {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+  font-size: 1.5rem; line-height: 1.1; color: var(--text); font-variant-numeric: tabular-nums;
+}
+.dash-record-note {
+  align-self: flex-start; font-size: 0.68rem; font-weight: 600;
+  color: var(--rec-accent); background: color-mix(in oklab, var(--rec-accent) 15%, transparent);
+  border-radius: 999px; padding: 0.1rem 0.5rem;
+}
+.dash-record-meta { font-size: 0.8rem; color: var(--text-mute); font-variant-numeric: tabular-nums; }
+.dash-record-holder {
+  display: flex; align-items: center; gap: 0.4rem; margin-top: 0.15rem;
+  font-size: 0.82rem; color: var(--text); font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dash-record-holder i { color: var(--rec-accent); font-size: 0.78rem; flex: 0 0 auto; }
+.dash-record-holder span { overflow: hidden; text-overflow: ellipsis; }
+
 /* ---- Merchants ---------------------------------------------------------- */
 .dash-merchants { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.7rem; margin-top: 0.85rem; }
 .dash-merchant { background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 0.7rem 0.85rem; display: flex; flex-direction: column; gap: 0.3rem; }

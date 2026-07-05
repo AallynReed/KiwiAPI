@@ -1028,6 +1028,41 @@ class CheatersResponse(BaseModel):
     excluded_boards: list[SkippedBoardInfo] = []
 
 
+# --- Record highs (free "how high can these stats go" endpoint) -----------
+# The current ceiling for Trove Mastery / Geode Mastery / Power Rank, read off
+# the rank-1 holder of the relevant lifetime board(s). Mastery boards store a
+# running POINTS total; ``level`` is that total run through the in-game
+# points->level curve.
+
+
+class MasteryRecord(BaseModel):
+    points: int                     # rank-1's raw Mastery points total
+    level: int                      # level for that total (capped, when soft-capped)
+    points_into_level: int          # how far the total has climbed into `level`
+    points_to_next_level: int       # points still owed to reach the next level
+    player_name: str                # the current record holder
+    anchor: int                     # snapshot the record is from (unix seconds)
+    # Present only on soft-capped boards (Geode Mastery). `level` is clamped to
+    # `level_cap`; `uncapped_level` is what it would be without the cap.
+    level_cap: int | None = None
+    uncapped_level: int | None = None
+    capped: bool | None = None
+
+
+class PowerRankRecord(BaseModel):
+    value: int                      # highest Power Rank across all class boards
+    board_uuid: int                 # which class board (1000-1016) it came from
+    player_name: str
+    anchor: int
+
+
+class MasteryRecordsResponse(BaseModel):
+    # Any field is null only if that board has never been ingested yet.
+    trove_mastery: MasteryRecord | None = None
+    geode_mastery: MasteryRecord | None = None
+    power_rank: PowerRankRecord | None = None
+
+
 # --- Market ---------------------------------------------------------------
 # One ``MarketListingOut`` per in-game listing (UUID v1 from the game is the id).
 # ``expired`` is True when the listing is past its 7-day lifetime OR hasn't been

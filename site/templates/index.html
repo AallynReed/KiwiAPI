@@ -156,6 +156,17 @@
             </section>
             {% endif %}
 
+            <!-- Record highs (all-time ceilings for Mastery + Power Rank) -->
+            {% if leaderboards_enabled %}
+            <section id="records" class="dash-section">
+                <header class="dash-section-head">
+                    <h2><i class="fa-solid fa-trophy"></i> <span data-i18n>Record highs</span></h2>
+                    <a class="dash-seeall" href="/leaderboards"><span data-i18n>Leaderboards</span> <i class="fa-solid fa-arrow-right"></i></a>
+                </header>
+                <div class="dash-records" id="dash-records"><p class="dash-loading" data-i18n>Loading…</p></div>
+            </section>
+            {% endif %}
+
             <!-- Today in Trove -->
             <section id="today" class="dash-section">
                 <header class="dash-section-head">

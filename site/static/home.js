@@ -270,6 +270,72 @@
     }
   })();
 
+  /* ---- Record highs (/site/leaderboards/records) ------------------------- */
+  // The all-time ceiling of Trove Mastery, Geode Mastery and Power Rank, read
+  // off the rank-1 holder of each lifetime board. Mastery arrives as points +
+  // a resolved level; Power Rank is a bare number. Fails closed (empty state).
+  (function () {
+    var box = document.getElementById("dash-records");
+    if (!box) return;
+    function num(n) { return (n == null) ? "—" : Number(n).toLocaleString(); }
+    function holder(name) {
+      var h = el("div", "dash-record-holder");
+      h.appendChild(el("i", "fa-solid fa-crown"));
+      h.appendChild(el("span", null, name || "—"));
+      return h;
+    }
+    function card(opts) {
+      var c = el("div", "dash-record");
+      if (opts.accent) c.style.setProperty("--rec-accent", opts.accent);
+      var top = el("div", "dash-record-top");
+      var ico = el("span", "dash-record-ico");
+      ico.appendChild(el("i", opts.icon));
+      top.appendChild(ico);
+      top.appendChild(el("span", "dash-record-kicker", opts.kicker));
+      c.appendChild(top);
+      c.appendChild(el("div", "dash-record-value", opts.value));
+      if (opts.note) c.appendChild(el("span", "dash-record-note", opts.note));
+      if (opts.meta) c.appendChild(el("div", "dash-record-meta", opts.meta));
+      if (opts.holder) c.appendChild(holder(opts.holder));
+      return c;
+    }
+    getJSON("/site/leaderboards/records").then(function (d) {
+      var cards = [];
+      var tm = d.trove_mastery;
+      if (tm) cards.push(card({
+        icon: "fa-solid fa-star", accent: "#f0b429", kicker: "Trove Mastery",
+        value: "Level " + num(tm.level),
+        meta: num(tm.points) + " pts" +
+          (tm.points_to_next_level ? " · " + num(tm.points_to_next_level) + " to next" : ""),
+        holder: tm.player_name,
+      }));
+      var gm = d.geode_mastery;
+      if (gm) cards.push(card({
+        icon: "fa-solid fa-gem", accent: "#3fb6d4", kicker: "Geode Mastery",
+        value: "Level " + num(gm.level),
+        note: gm.capped ? "Soft cap " + num(gm.level_cap) + " · would be " + num(gm.uncapped_level) : null,
+        meta: num(gm.points) + " pts",
+        holder: gm.player_name,
+      }));
+      var pr = d.power_rank;
+      if (pr) cards.push(card({
+        icon: "fa-solid fa-bolt", accent: "#c678f0", kicker: "Power Rank",
+        value: num(pr.value),
+        meta: "Highest across all classes",
+        holder: pr.player_name,
+      }));
+      box.textContent = "";
+      if (!cards.length) {
+        box.appendChild(el("p", "dash-empty", "No records captured yet."));
+        return;
+      }
+      cards.forEach(function (c) { box.appendChild(c); });
+    }).catch(function () {
+      box.textContent = "";
+      box.appendChild(el("p", "dash-empty", "Records unavailable right now."));
+    });
+  })();
+
   /* ---- Official news (/site/feeds/news) ---------------------------------- */
   (function () {
     var box = document.getElementById("dash-news");

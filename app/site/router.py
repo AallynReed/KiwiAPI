@@ -1626,6 +1626,16 @@ async def site_lb_activity_series(period: str = "7d") -> JSONResponse:
     return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
 
 
+@router.get("/site/leaderboards/records", response_class=JSONResponse)
+async def site_lb_records() -> JSONResponse:
+    """Same payload as the public `/v1/leaderboards/records` - highest Trove
+    Mastery / Geode Mastery / Power Rank in the game - served same-origin so the
+    homepage widgets can fetch it without CORS. Cached briefly (the underlying
+    data only moves on the daily 11:00-UTC ingest)."""
+    payload = await leaderboards_service.mastery_records()
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=900"})
+
+
 @router.get("/site/leaderboards/class-activity/current", response_class=JSONResponse)
 async def site_lb_class_activity_current() -> JSONResponse:
     """Same payload as `/v1/class-activity/current`, served same-origin for the

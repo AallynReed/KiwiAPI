@@ -149,6 +149,7 @@ from app.trove.schemas import (
     MarketItemSummary,
     MarketListingOut,
     MarketListingsPage,
+    MasteryRecordsResponse,
     PlayerHistorySeriesResponse,
     PlayerProfileResponse,
     ServerTime,
@@ -2233,6 +2234,37 @@ async def list_possible_cheaters(
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
     response.headers["Cache-Control"] = f"public, max-age={ttl}"
     return CheatersResponse(**payload)
+
+
+@leaderboards_router.get(
+    "/records", response_model=MasteryRecordsResponse,
+    summary="Highest Trove Mastery, Geode Mastery and Power Rank in the game",
+)
+async def get_mastery_records(
+    response: Response,
+    _ctx: AccessContext = _LB_PUBLIC,
+) -> MasteryRecordsResponse:
+    """**Tokenless.** The absolute ceiling each of these stats has reached
+    in-game, read off the rank-1 holder of the relevant *lifetime* leaderboard
+    (these boards never reset, so their #1 is an all-time record).
+
+    - **Trove Mastery** (board 1) and **Geode Mastery** (board 20) are stored as
+      a running *points* total; ``level`` is that total run through the in-game
+      points->level curve, with ``points_into_level`` / ``points_to_next_level``
+      showing progress. Geode Mastery is soft-capped at level ``100`` in-game, so
+      ``level`` is clamped there while ``uncapped_level`` reports the true level
+      the points would reach (``capped`` flags when the two differ).
+    - **Power Rank** is the single highest value across all 17 per-class boards
+      (1000-1016); ``board_uuid`` says which class board it came from.
+
+    Each block also names the current record holder and the snapshot ``anchor``.
+    A field is null only if that board has never been ingested. Refreshes at most
+    once per daily dump (11:00 UTC)."""
+    payload = await leaderboards_service.mastery_records()
+    # Data only changes on the daily 11:00-UTC ingest; a generous public cache
+    # keeps this cheap for CDN/browsers.
+    response.headers["Cache-Control"] = "public, max-age=900"
+    return MasteryRecordsResponse(**payload)
 
 
 @leaderboards_router.get("/timestamps", response_model=LeaderboardTimestamps)
