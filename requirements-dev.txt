@@ -7,3 +7,4 @@ testcontainers[mongodb,redis]>=4.9
 ruff>=0.8
 pyright>=1.1.390
 pip-audit>=2.7
+playwright>=1.40   # tests/smoke frontend checks; run `playwright install chromium` once
