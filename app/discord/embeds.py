@@ -13,6 +13,7 @@ from __future__ import annotations
 import time
 from datetime import datetime, timezone
 
+from app.core.discord_fmt import discord_ts
 from app.i18n import current_language, t
 from app.trove.btt_releases import PLATFORMS, get_changelog, latest_per_platform
 from app.trove.captures import get_current_challenge
@@ -35,7 +36,7 @@ SITE = "https://trove.aallyn.net"
 
 def _ts(unix, style: str = "f") -> str:
     """A Discord timestamp tag - renders in the viewer's local timezone."""
-    return f"<t:{int(unix)}:{style}>"
+    return discord_ts(unix, style)
 
 
 def _unix(dt: datetime) -> int:

@@ -14,10 +14,10 @@ from html import unescape
 from xml.etree import ElementTree as ET
 
 from app.core.config import settings
+from app.core.database import upsert_by
 from app.core.http import fetch_text
 from app.core.pagination import paginate
 from app.core.refresher import PeriodicRefresher
-from app.core.utils import utcnow
 from app.trove.models import TroveNews
 
 logger = logging.getLogger("kiwi.trove.news")
@@ -103,19 +103,8 @@ async def refresh_news() -> int:
     items = parse_feed(await fetch_text(settings.trove_news_feed_url))
 
     for it in items:
-        existing = await TroveNews.find_one(TroveNews.url == it["url"])
-        if existing is None:
-            await TroveNews(**it).insert()
-            continue
-        existing.title = it["title"]
-        existing.author = it["author"]
-        existing.summary = it["summary"]
-        existing.category = it["category"]
-        existing.categories = it["categories"]
-        existing.image = it["image"]
-        existing.published_at = it["published_at"]
-        existing.updated_at = utcnow()
-        await existing.save()
+        fields = {k: v for k, v in it.items() if k != "url"}
+        await upsert_by(TroveNews, "url", it["url"], fields, stamp="updated_at")
 
     return len(items)
 

@@ -1,4 +1,6 @@
-from beanie import init_beanie
+from typing import Any, TypeVar
+
+from beanie import Document, init_beanie
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import OperationFailure
@@ -9,6 +11,7 @@ from app.auth.models import Session, User
 from app.bot.models import Club, GuildConfig, TrackedAnnouncement
 from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
+from app.core.utils import utcnow
 from app.dm_subs.models import DmSubscription
 from app.giveaways.models import Giveaway, GiveawayEntry, PrizeCode, VaultItem
 from app.images.models import ImageDesign
@@ -199,3 +202,33 @@ def get_db() -> AsyncDatabase:
     if _db is None:
         raise RuntimeError("Database not initialized")
     return _db
+
+
+_DocT = TypeVar("_DocT", bound=Document)
+
+
+async def upsert_by(  # noqa: UP047 - keep classic TypeVar (PEP 695 is 3.12+; matches UP046 policy)
+    model: type[_DocT],
+    key_field: str,
+    value: Any,
+    fields: dict[str, Any],
+    stamp: str | None = None,
+) -> _DocT:
+    """Single-key upsert for the relay refreshers: fetch ``model`` where
+    ``key_field == value``; insert it (with ``key_field`` + ``fields``) if
+    missing, otherwise ``setattr`` each field onto the existing doc; then save.
+
+    ``stamp`` names an optional timestamp attribute set to ``utcnow()`` on the
+    UPDATE path only. Callers that also want the stamp written on INSERT put it
+    directly in ``fields`` (and typically leave ``stamp`` unset so it isn't
+    re-written with a fresh instant on update). Returns the saved doc.
+    """
+    existing = await model.find_one(getattr(model, key_field) == value)
+    if existing is None:
+        return await model(**{key_field: value}, **fields).insert()
+    for name, field_value in fields.items():
+        setattr(existing, name, field_value)
+    if stamp is not None:
+        setattr(existing, stamp, utcnow())
+    await existing.save()
+    return existing

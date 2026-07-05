@@ -29,6 +29,7 @@ import httpx
 
 from app.admin import runtime_config
 from app.core.config import settings
+from app.core.database import upsert_by
 from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
 from app.trove.models import FeedCache
@@ -375,13 +376,8 @@ async def refresh_feed(feed: str) -> int:
     failure (missing creds, upstream error) so ``refresh_all_feeds`` can log it
     and leave the previously cached payload in place."""
     items = await _FEEDS[feed]()
-    existing = await FeedCache.find_one(FeedCache.feed == feed)
-    if existing is None:
-        await FeedCache(feed=feed, items=items, fetched_at=utcnow()).insert()
-    else:
-        existing.items = items
-        existing.fetched_at = utcnow()
-        await existing.save()
+    # fetched_at is written on BOTH insert and update, so it rides in `fields`.
+    await upsert_by(FeedCache, "feed", feed, {"items": items, "fetched_at": utcnow()})
     return len(items)
 
 

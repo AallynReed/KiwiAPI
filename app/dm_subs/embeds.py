@@ -8,8 +8,7 @@ and must never depend on live global state that may have moved on by delivery ti
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
+from app.core.discord_fmt import discord_ts, unix_to_iso
 from app.trove.captures import classify_challenge
 
 # Accent colours per alert kind (Discord ints).
@@ -24,17 +23,12 @@ _FOOTER = "Kiwi DM alerts · manage at trove.aallyn.net/dashboard"
 
 
 def _ts(unix: int | None) -> str | None:
-    if not unix:
-        return None
-    try:
-        return datetime.fromtimestamp(int(unix), UTC).isoformat()
-    except (TypeError, ValueError, OSError):
-        return None
+    return unix_to_iso(unix)
 
 
 def _rel(unix: int | None) -> str:
     """A Discord relative timestamp (<t:...:R>) or empty string."""
-    return f"<t:{int(unix)}:R>" if unix else ""
+    return discord_ts(unix, "R") if unix else ""
 
 
 def _embed(kind: str, title: str, description: str, *, ts: int | None = None) -> dict:

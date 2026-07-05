@@ -10,6 +10,7 @@ be unit-tested with a fixed payload (no network).
 import logging
 
 from app.core.config import settings
+from app.core.database import upsert_by
 from app.core.http import fetch_json
 from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
@@ -49,20 +50,8 @@ async def refresh_events() -> int:
     raw = await fetch_json(settings.trove_events_feed_url)
     events = parse_events(raw if isinstance(raw, list) else [])
     for ev in events:
-        existing = await TroveEvent.find_one({"event_id": ev["event_id"]})
-        if existing is None:
-            await TroveEvent(**ev).insert()
-            continue
-        existing.name = ev["name"]
-        existing.url = ev["url"]
-        existing.category = ev["category"]
-        existing.image = ev["image"]
-        existing.icon = ev["icon"]
-        existing.lookup = ev["lookup"]
-        existing.starts_at = ev["starts_at"]
-        existing.ends_at = ev["ends_at"]
-        existing.updated_at = utcnow()
-        await existing.save()
+        fields = {k: v for k, v in ev.items() if k != "event_id"}
+        await upsert_by(TroveEvent, "event_id", ev["event_id"], fields, stamp="updated_at")
 
     await _prune()
     return len(events)

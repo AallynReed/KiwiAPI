@@ -23,6 +23,7 @@ from datetime import datetime
 import httpx
 
 from app.core.config import settings
+from app.core.database import upsert_by
 from app.core.pagination import paginate
 from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
@@ -211,15 +212,11 @@ async def refresh_releases() -> int:
         norm = normalize_release(raw)
         if norm is None:
             continue
-        existing = await BttRelease.find_one(BttRelease.release_id == norm["release_id"])
-        now = utcnow()
-        if existing is None:
-            await BttRelease(**norm, fetched_at=now).insert()
-        else:
-            for key, value in norm.items():
-                setattr(existing, key, value)
-            existing.fetched_at = now
-            await existing.save()
+        # fetched_at is stamped on BOTH insert and update with the same `now`, so
+        # it rides in `fields` (not the update-only `stamp` param).
+        fields = {k: v for k, v in norm.items() if k != "release_id"}
+        fields["fetched_at"] = utcnow()
+        await upsert_by(BttRelease, "release_id", norm["release_id"], fields)
         stored += 1
     return stored
 

@@ -7,6 +7,7 @@
    ========================================================================= */
 (function () {
   "use strict";
+  const { h } = window.BTTDom;
 
   // ── i18n + helpers (mirrors gem-simulator.js) ──────────────────────────
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
@@ -20,29 +21,6 @@
   const STORAGE_KEY = "troveapi.gemEvaluator.v1";
   const MAX_HISTORY = 20;
 
-  function h(tag, attrs) {
-    const e = document.createElement(tag);
-    if (attrs) {
-      for (const k in attrs) {
-        const v = attrs[k];
-        if (v == null || v === false) continue;
-        if (k === "class") e.className = v;
-        else if (k === "html") e.innerHTML = v;
-        else if (k === "style" && typeof v === "object") Object.assign(e.style, v);
-        else if (k === "dataset") Object.assign(e.dataset, v);
-        else if (k.slice(0, 2) === "on" && typeof v === "function") e.addEventListener(k.slice(2).toLowerCase(), v);
-        else e.setAttribute(k, v);
-      }
-    }
-    for (let i = 2; i < arguments.length; i++) {
-      const kids = arguments[i];
-      (Array.isArray(kids) ? kids : [kids]).forEach((kid) => {
-        if (kid == null || kid === false) return;
-        e.appendChild(typeof kid === "object" ? kid : document.createTextNode(String(kid)));
-      });
-    }
-    return e;
-  }
   const fmtNum = (v) => {
     const n = Number(v) || 0;
     return Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, { maximumFractionDigits: 2 });
