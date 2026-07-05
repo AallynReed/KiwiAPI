@@ -457,6 +457,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "gem-builds.html", "text/html")
         if path == "/calculators":
             return self._send_file(TEMPLATES / "calculators.html", "text/html")
+        if path == "/app":
+            return self._send_file(TEMPLATES / "app.html", "text/html")
 
         # Gem tool proxies (real service layer).
         if path == "/site/gems/lookups":
