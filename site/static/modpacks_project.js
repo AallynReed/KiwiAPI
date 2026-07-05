@@ -13,6 +13,7 @@
 
 (function () {
   'use strict';
+  const toast = window.BTTToast.show;
 
   const { esc } = window.BTTUtil;
 
@@ -55,15 +56,6 @@
     let data = null;
     try { data = await res.json(); } catch (_) { /* no body */ }
     return { ok: res.ok, status: res.status, data };
-  }
-
-  function toast(msg, kind) {
-    const el = document.createElement('div');
-    el.className = 'mp-toast' + (kind === 'error' ? ' mp-toast-error' : '');
-    el.textContent = msg;
-    document.body.appendChild(el);
-    setTimeout(() => el.classList.add('show'), 10);
-    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3200);
   }
 
   // ─── Boot ──────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@
    ========================================================================= */
 (function () {
   "use strict";
+  const toast = window.BTTToast.show;
   const { h } = window.BTTDom;
 
   // ── i18n + helpers (mirrors gem-simulator.js) ──────────────────────────
@@ -57,15 +58,7 @@
   let evaluating = false;
   let history = [];
 
-  let elForm, elResults, elHistory, elToastHost;
-
-  // ── Toast ────────────────────────────────────────────────────────────────
-  function toast(msg, isErr) {
-    if (!elToastHost) return;
-    const el = h("div", { class: "gem-toast" + (isErr ? " error" : "") }, msg);
-    elToastHost.appendChild(el);
-    setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 300); }, 2600);
-  }
+  let elForm, elResults, elHistory;
 
   // ── Persistence ──────────────────────────────────────────────────────────
   function saveHistory() {
@@ -558,7 +551,6 @@
     elForm = document.getElementById("ge-form");
     elResults = document.getElementById("ge-results");
     elHistory = document.getElementById("ge-history");
-    elToastHost = document.getElementById("ge-toast-host");
     if (!elForm) return;
 
     loadHistory();

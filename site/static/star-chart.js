@@ -13,6 +13,8 @@
 (function () {
   "use strict";
 
+  const toast = window.BTTToast.show;
+
   const SVGNS = "http://www.w3.org/2000/svg";
   const COLORS = {
     Combat:    { minor: "#FF8F00", major: "#D84315" },
@@ -61,7 +63,7 @@
   const viewBox = { ...DEFAULT_VB };
 
   // ── DOM refs (resolved on init) ──────────────────────────────────────────
-  let svg, gLines, gReplace, gNodes, gSky, gStars, anchorEl, tooltipEl, toastHost;
+  let svg, gLines, gReplace, gNodes, gSky, gStars, anchorEl, tooltipEl;
   let elCode, elSummary, elMetaNodes, elMetaState, elCheat, elSearch, elStat, elStatMeta, elSearchMeta;
 
   // ── Geometry (port of backend/gems_and_builds/star_chart.py) ──────────────
@@ -705,15 +707,6 @@
   }
   function resetView() { Object.assign(viewBox, DEFAULT_VB); applyViewBox(); }
 
-  // Toast
-  function toast(msg, isErr) {
-    const el = document.createElement("div");
-    el.className = "sc-toast" + (isErr ? " err" : "");
-    el.textContent = msg;
-    toastHost.appendChild(el);
-    setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 250); }, 2600);
-  }
-
   // Clipboard
   function copy(text, okMsg) {
     if (!text) { toast(t("Nothing selected to copy."), true); return; }
@@ -793,7 +786,6 @@
     gReplace = document.getElementById("sc-g-replace");
     gNodes = document.getElementById("sc-g-nodes");
     tooltipEl = document.getElementById("sc-tooltip");
-    toastHost = document.getElementById("sc-toast-host");
     elCode = document.getElementById("sc-code");
     elSummary = document.getElementById("sc-summary");
     elMetaNodes = document.getElementById("sc-meta-nodes");

@@ -8,6 +8,7 @@
    ═══════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
+  const toast = window.BTTToast.show;
 
   const { esc } = window.BTTUtil;
 
@@ -357,14 +358,6 @@
   function showFormError(form, msg) {
     const el = form.querySelector('.mp-form-error');
     if (el) { el.textContent = msg; el.hidden = false; }
-  }
-  function toast(msg, isErr) {
-    const el = document.createElement('div');
-    el.className = 'mp-toast' + (isErr ? ' mp-toast-err' : '');
-    el.textContent = msg;
-    document.body.appendChild(el);
-    setTimeout(() => el.classList.add('show'), 10);
-    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2600);
   }
   function fmtDate(iso) {
     try { return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short' }); }

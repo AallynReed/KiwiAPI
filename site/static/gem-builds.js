@@ -7,6 +7,7 @@
    ========================================================================= */
 (function () {
   "use strict";
+  const toast = window.BTTToast.show;
   const { h } = window.BTTDom;
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
@@ -43,14 +44,7 @@
   let starChartInfo = null;   // {paths_count, stats} | {error:true} | null
   let advancedOpen = false;
 
-  let elConfig, elResults, elToastHost;
-
-  function toast(msg, isErr) {
-    if (!elToastHost) return;
-    const el = h("div", { class: "gem-toast" + (isErr ? " error" : "") }, msg);
-    elToastHost.appendChild(el);
-    setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 300); }, 2600);
-  }
+  let elConfig, elResults;
 
   function saveConfig() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch (e) { /* non-fatal */ }
@@ -375,7 +369,6 @@
   async function init() {
     elConfig = document.getElementById("gb-config");
     elResults = document.getElementById("gb-results");
-    elToastHost = document.getElementById("gb-toast-host");
     if (!elConfig) return;
 
     loadConfig();

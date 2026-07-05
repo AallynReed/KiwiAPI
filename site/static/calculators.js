@@ -8,6 +8,7 @@
    ========================================================================= */
 (function () {
   "use strict";
+  const toast = window.BTTToast.show;
   const { h } = window.BTTDom;
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
@@ -34,14 +35,7 @@
   let starChartCode = "";
   let starChartMf = { flat: 0, pct: 0, pathsCount: 0, error: false };
 
-  let elTabs, elBody, elToastHost;
-
-  function toast(msg, isErr) {
-    if (!elToastHost) return;
-    const el = h("div", { class: "gem-toast" + (isErr ? " error" : "") }, msg);
-    elToastHost.appendChild(el);
-    setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 300); }, 2400);
-  }
+  let elTabs, elBody;
 
   // ── Persistence ──────────────────────────────────────────────────────────
   function keyOf(item) { return item.name || item.type; }
@@ -410,7 +404,6 @@
   async function init() {
     elTabs = document.getElementById("calc-tabs");
     elBody = document.getElementById("calc-body");
-    elToastHost = document.getElementById("calc-toast-host");
     if (!elTabs) return;
 
     let saved = null;

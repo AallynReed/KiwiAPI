@@ -10,6 +10,7 @@
 
 (function () {
   'use strict';
+  const toast = window.BTTToast.show;
 
   const { esc } = window.BTTUtil;
 
@@ -1608,17 +1609,6 @@
   function showFormError(form, msg) {
     const el = form.querySelector('.mp-form-error');
     if (el) { el.textContent = msg; el.hidden = false; }
-  }
-
-  let toastTimer = null;
-  function toast(msg, isErr) {
-    let el = document.getElementById('mp-toast');
-    if (!el) { el = document.createElement('div'); el.id = 'mp-toast'; el.className = 'mp-toast'; document.body.appendChild(el); }
-    el.textContent = msg;
-    el.classList.toggle('err', !!isErr);
-    el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
   }
 
   // ─── Formatting ────────────────────────────────────────────────────

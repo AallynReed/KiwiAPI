@@ -8,6 +8,7 @@
    ========================================================================= */
 (function () {
   "use strict";
+  const toast = window.BTTToast.show;
   const { h } = window.BTTDom;
 
   if (!window.GemEngine) {
@@ -47,7 +48,7 @@
   let dragState = { pane: null, idx: -1, gem: null };
 
   // DOM refs
-  let elEquipped, elPrimordial, elTotals, elForge, elDetail, elInventory, elTrash, elRecalc, elTooltip, elModal, elToastHost;
+  let elEquipped, elPrimordial, elTotals, elForge, elDetail, elInventory, elTrash, elRecalc, elTooltip, elModal;
 
   // ── Lookup name helpers ─────────────────────────────────────────────────
   const nameById = (obj, id) => {
@@ -102,12 +103,7 @@
     });
   }
 
-  // ── Toast + confirm modal (self-contained) ──────────────────────────────
-  function toast(msg, isErr) {
-    const el = h("div", { class: "gem-toast" + (isErr ? " error" : "") }, msg);
-    elToastHost.appendChild(el);
-    setTimeout(() => { el.style.transition = "opacity .3s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 2600);
-  }
+  // ── Confirm modal (self-contained) ──────────────────────────────────────
   function confirmModal(opts) {
     return new Promise((resolve) => {
       const close = (val) => { elModal.classList.remove("show"); elModal.innerHTML = ""; resolve(val); };
@@ -639,7 +635,6 @@
     elRecalc = document.getElementById("gs-recalc");
     elTooltip = document.getElementById("gs-tooltip");
     elModal = document.getElementById("gs-modal");
-    elToastHost = document.getElementById("gs-toast-host");
     if (!elInventory) return;
 
     const look = window.GemEngine.getLookups();
