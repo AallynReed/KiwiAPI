@@ -29,7 +29,7 @@
   const _modCache = {};   // "handle/slug" -> mod detail (branches + releases)
 
   const $root = document.getElementById('mp-root');
-  const $modalRoot = document.getElementById('mp-modal-root');
+  let _modal = null;   // current { wrap, close } handle from window.BTTModal.open
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
@@ -316,13 +316,10 @@
 
   // ─── Modals ────────────────────────────────────────────────────────
   function openModal(html) {
-    $modalRoot.innerHTML = `<div class="mp-modal" role="dialog" aria-modal="true">
-      <div class="mp-modal-backdrop" data-close></div>
-      <div class="mp-modal-card">${html}</div></div>`;
-    $modalRoot.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeModal));
-    rerunI18n();
+    _modal = window.BTTModal.open({ html });
+    return _modal;
   }
-  function closeModal() { $modalRoot.innerHTML = ''; }
+  function closeModal() { if (_modal) { _modal.close(); _modal = null; } }
 
   function openEditDetails() {
     const d = state.detail;
@@ -470,7 +467,7 @@
           <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Add'))}</button>
         </div>
       </form>`);
-    $modalRoot.querySelectorAll('[data-rm-collab]').forEach((b) => b.addEventListener('click', async () => {
+    _modal.wrap.querySelectorAll('[data-rm-collab]').forEach((b) => b.addEventListener('click', async () => {
       const r = await apiJSON('/v1/modpacks/hub/projects/' + PACK_PATH + '/collaborators/' + encodeURIComponent(b.getAttribute('data-rm-collab')), { method: 'DELETE' });
       if (r.ok) { setDetail(r.data); openCollab(); } else { toast(errMsg(r, t('Could not remove.')), 'error'); }
     }));

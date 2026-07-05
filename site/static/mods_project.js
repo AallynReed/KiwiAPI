@@ -29,7 +29,6 @@
   const state = { detail: null, viewer: null, branch: null };
 
   const $root = document.getElementById('mp-root');
-  const $modalRoot = document.getElementById('mp-modal-root');
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
@@ -1147,21 +1146,7 @@
 
   // ─── Modal helper ──────────────────────────────────────────────────
   function openModal(title, bodyHTML, { wide = false } = {}) {
-    const wrap = document.createElement('div');
-    wrap.className = 'mp-modal';
-    wrap.innerHTML = `<div class="mp-modal-backdrop" data-close></div>
-      <div class="mp-modal-card ${wide ? 'wide' : ''}">
-        <button type="button" class="mp-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-        <h2 class="mp-modal-title">${esc(title)}</h2>
-        ${bodyHTML}
-      </div>`;
-    $modalRoot.appendChild(wrap);
-    const close = () => { wrap.remove(); document.removeEventListener('keydown', onKey); };
-    const onKey = (e) => { if (e.key === 'Escape') close(); };
-    document.addEventListener('keydown', onKey);
-    wrap.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
-    rerunI18n();
-    return { wrap, close };
+    return window.BTTModal.open({ title, body: bodyHTML, wide });
   }
 
   // ─── Studio: edit details ──────────────────────────────────────────
