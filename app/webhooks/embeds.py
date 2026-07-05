@@ -33,8 +33,6 @@ def _trunc(s, n: int) -> str:
     return s if len(s) <= n else s[: n - 1].rstrip() + "…"
 
 
-# ── challenge ────────────────────────────────────────────────────────────────
-
 def _challenge_context(d: dict) -> dict:
     name = d.get("name") or "Challenge"
     ctype = d.get("type") or ""
@@ -71,8 +69,6 @@ def _challenge_sample() -> dict:
         "active": True, "is_friday_window": False,
     })
 
-
-# ── mod_release ──────────────────────────────────────────────────────────────
 
 def _mod_release_context(d: dict) -> dict:
     project = d.get("project") or {}
@@ -119,8 +115,6 @@ def _mod_release_sample() -> dict:
     })
 
 
-# ── game_update ──────────────────────────────────────────────────────────────
-
 def _game_update_context(d: dict) -> dict:
     v = d.get("version") or {}
     ordinal = v.get("ordinal")
@@ -160,8 +154,6 @@ def _game_update_sample() -> dict:
     }})
 
 
-# ── registry ─────────────────────────────────────────────────────────────────
-
 _TYPES = {
     "challenge": (_challenge_context, _challenge_default, _challenge_sample),
     "mod_release": (_mod_release_context, _mod_release_default, _mod_release_sample),
@@ -198,9 +190,8 @@ def _render_ctx(event_type: str, ctx: dict, template: EmbedTemplate | None) -> d
 
 
 def render(event_type: str, data: dict, template: EmbedTemplate | None = None) -> dict | None:
-    """A Discord webhook body (``{embeds:[...], content?}``) for one event - using the
-    custom ``template`` if provided & enabled, else the type's default. ``data`` is the
-    raw event payload."""
+    """Discord webhook body for one event, using ``template`` if provided & enabled,
+    else the type's default."""
     spec = _TYPES.get(event_type)
     if spec is None:
         return None

@@ -7,12 +7,12 @@ idiom as the other refreshers; wired into the app lifespan in ``app/main.py``.
 import asyncio
 import logging
 
+from app.core.queue_worker import LoopTask
 from app.giveaways import service
 
 logger = logging.getLogger("kiwi.giveaways")
 
 _INTERVAL_SECONDS = 60
-_task: asyncio.Task | None = None
 
 
 async def _loop() -> None:
@@ -33,18 +33,12 @@ async def _loop() -> None:
             raise
 
 
+_task = LoopTask(_loop)
+
+
 def start_giveaway_worker() -> None:
-    global _task
-    if _task is None:
-        _task = asyncio.create_task(_loop())
+    _task.start()
 
 
 async def stop_giveaway_worker() -> None:
-    global _task
-    if _task is not None:
-        _task.cancel()
-        try:
-            await _task
-        except asyncio.CancelledError:
-            pass
-        _task = None
+    await _task.stop()

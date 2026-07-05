@@ -61,9 +61,9 @@ class SiteUserPublic(BaseModel):
 
 
 class SiteVerifyTroveClaimResponse(BaseModel):
-    """Response from the on-demand verification endpoint. Lets the
-    dashboard show a precise success/failure message ("Verified! Score
-    went up on Enemies Defeated") rather than a generic toast."""
+    """Claim status for the dashboard. ``detail`` carries the message shown
+    to the user (now always the "pending manual review" line - verification
+    is a master approval, not self-service)."""
     verified: bool
     detail: str
     user: SiteUserPublic

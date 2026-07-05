@@ -1,13 +1,8 @@
-"""Render the Player Activity 1D chart to a PNG for OG / Twitter cards.
+"""Pillow-rendered 1200x630 PNG social cards (activity / status / board / announcement).
 
-Drawn with Pillow to echo the ``/activity`` page: dark canvas, green area +
-line, the daily reset marker (00:00 Trove server time = 11:00 UTC), a big live
-active-player count, and branding. 1200x630 - the size Twitter / Discord /
-Facebook expect for ``summary_large_image``.
-
-Fonts: DejaVu (installed via the Dockerfile) in the container, with fallbacks to
-common desktop fonts so the renderer also works in local dev, and finally
-Pillow's bitmap default so it never hard-fails.
+1200x630 is the ``summary_large_image`` size Twitter / Discord / Facebook expect.
+Fonts fall back DejaVu (Dockerfile) → common desktop fonts (local dev) → Pillow's
+bitmap default, so a render never hard-fails.
 """
 from __future__ import annotations
 
@@ -101,8 +96,8 @@ _CJK_LANGS = {"ja", "zh-CN"}
 
 
 def _font(size: int, bold: bool = False, lang: str | None = None):
-    """A font for ``size``/``bold``. For CJK languages (ja/zh) it prefers a CJK
-    font so the glyphs render; ``lang`` defaults to the active i18n context."""
+    """Font at ``size``; CJK languages prefer a CJK font so glyphs render. ``lang``
+    defaults to the active i18n context."""
     lang = lang or i18n.current_language()
     candidates = list(_BOLD if bold else _REG)
     if lang in _CJK_LANGS:
@@ -149,9 +144,9 @@ def _truncate_px(draw, text: str, font, max_w: int) -> str:
 
 def _fit_font(draw, text: str, max_w: int, base_size: int, *, bold: bool = False,
               min_size: int | None = None):
-    """The largest font (``base_size`` down to ``min_size``, step 2) at which ``text``
-    fits in ``max_w`` px. Shrinks instead of truncating, so a longer translation is
-    shown in full at a slightly smaller size rather than clipped or wrapped."""
+    """Largest font (``base_size`` down to ``min_size``) at which ``text`` fits in
+    ``max_w`` px. Shrinks rather than truncates, so a longer translation shows in
+    full at a smaller size instead of clipped or wrapped."""
     if min_size is None:
         min_size = max(11, int(base_size * 0.55))
     size = base_size
@@ -164,10 +159,9 @@ def _fit_font(draw, text: str, max_w: int, base_size: int, *, bold: bool = False
 
 def _fit_text(draw, xy, text: str, max_w: int, base_size: int, *, fill,
               bold: bool = False, align: str = "left", min_size: int | None = None) -> int:
-    """Draw ``text`` shrunk to fit ``max_w`` (full string, never wrapped). ``align``
-    'right' anchors the RIGHT edge at ``xy[0]``. Returns the drawn width. Only the
-    pathological case (a string too long even at ``min_size``) falls back to an
-    ellipsis, which normal translations never hit."""
+    """Draw ``text`` shrunk to fit ``max_w`` (full string, never wrapped); returns the
+    drawn width. ``align='right'`` anchors the RIGHT edge at ``xy[0]``. Only a string
+    too long even at ``min_size`` falls back to an ellipsis (normal translations don't)."""
     x, y = xy
     font = _fit_font(draw, text, max_w, base_size, bold=bold, min_size=min_size)
     shown = _truncate_px(draw, text, font, max_w)
@@ -195,9 +189,9 @@ def _rel(ts) -> str:
 
 def _rel_coarse(ts) -> str:
     """Like ``_rel`` but coarsened to ONE unit ("in 16h", not "in 16h 13m") via
-    ``countdown_bucket`` - so an announcement banner stays identical across the
-    whole hour and the bot re-edits it at most once an hour (per-minute only under
-    1h). The board/activity cards keep the precise ``_rel``."""
+    ``countdown_bucket`` - so an announcement banner stays identical across the hour
+    and the bot re-edits it at most once an hour (per-minute only under 1h). The
+    board/activity cards keep the precise ``_rel``."""
     unit, val = countdown_bucket(ts, int(time.time()))
     if unit == "none":
         return "—"
@@ -242,7 +236,6 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
 
     d.rectangle([0, 0, W, 6], fill=GREEN + (255,))   # top accent
 
-    # ── header: eyebrow + big live count ──────────────────────────────
     cy = 82
     d.ellipse([M, cy - 8, M + 16, cy + 8], fill=GREEN_HI + (255,))
     _fit_text(d, (M + 28, cy - 16), t("PLAYER ACTIVITY"), W - M - (M + 28), 26,
@@ -255,8 +248,8 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
     d.text((M, 116), num_txt, font=f_big, fill=GREEN_HI + (255,))
     after = M + _w(d, num_txt, f_big) + 24
 
-    # right-aligned 24h / 7d rollups (drawn first so the header sub-lines can be
-    # constrained to not collide with them in any locale).
+    # 24h / 7d rollups drawn first so the header sub-lines below can be constrained
+    # not to collide with them in any locale.
     rx, ry = W - M, 92
     stats_left = rx
     for label, val in ((t("ACTIVE · 24H"), live.get("estimate_24h")),
@@ -274,7 +267,6 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
     _fit_text(d, (after, 150), t("active players"), sub_max, 33, fill=TEXT + (255,))
     _fit_text(d, (after, 192), t("in the last hour"), sub_max, 33, fill=MUTE + (255,))
 
-    # ── chart ─────────────────────────────────────────────────────────
     px0, px1, py0, py1 = M, W - M, 322, 540
     points = series.get("points") or []
     if len(points) >= 2:
@@ -325,7 +317,6 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
     else:
         _fit_text(d, (M, 400), t("Activity data warming up…"), W - 2 * M, 33, fill=MUTE + (255,))
 
-    # ── footer ────────────────────────────────────────────────────────
     d.text((M, H - 54), "trove.aallyn.net/activity", font=f_foot, fill=MUTE + (255,))
     lw = _w(d, "trove.aallyn.net/activity", f_foot)
     fr = f"{t(_PERIOD_LABEL.get(period, 'Last 24 hours'))} · {t('Trove server time (UTC−11)')}"
@@ -337,7 +328,6 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
     return out.getvalue()
 
 
-# ── Status card ────────────────────────────────────────────────────────────
 # Binary online/down. "maintenance" is a legacy value kept only so old/stale
 # snapshots still render (as red "Down").
 _ST_COLOR = {
@@ -407,7 +397,6 @@ def _draw_status(payload: dict, uptimes: dict | None = None) -> bytes:
     # The headline is the longest-translating string on the card - shrink to fit.
     _fit_text(d, (M, 118), overall_text, W - 2 * M, 86, bold=True, fill=oc + (255,), min_size=46)
 
-    # EU / US / PTS chips
     envs = (("EU", "eu"), ("US", "us"), ("PTS", "pts"))
     gap, y0, ch = 28, 330, 170
     cw = (W - 2 * M - 2 * gap) // 3
@@ -442,11 +431,10 @@ def _draw_status(payload: dict, uptimes: dict | None = None) -> bytes:
     return out.getvalue()
 
 
-# ── Live "Trove Now" board card ──────────────────────────────────────────────
-# One image holding the whole board (status + challenge + chaos + biomes +
-# merchants + resets). Served at GET /board.png and referenced by the Discord
-# bot's board feature, so it's rendered at most ONCE per minute and shared via
-# Redis - 100 guilds (and every API worker) reuse the same render.
+# Live "Trove Now" board card: the whole board (status + challenge + chaos +
+# biomes + merchants + resets) in one image. Served at GET /board.png and used by
+# the Discord bot's board feature, so it's rendered at most ONCE per minute and
+# shared via Redis - 100 guilds (and every API worker) reuse the same render.
 
 _BOARD_TTL = 120
 
@@ -525,13 +513,12 @@ def _draw_board(data: dict) -> bytes:
 
     d.rectangle([0, 0, W, 6], fill=oc + (255,))
 
-    # header: status headline (colours the whole card)
+    # header: status headline colours the whole card
     d.ellipse([M, 54, M + 16, 70], fill=oc + (255,))
     _fit_text(d, (M + 30, 50), t("TROVE NOW · LIVE"), W - M - (M + 30), 24, bold=True, fill=MUTE + (255,))
     _fit_text(d, (M, 84), t(_ST_OVERALL.get(overall, "Status unknown")), W - 2 * M, 60,
               bold=True, fill=oc + (255,), min_size=38)
 
-    # values per card
     cur = data["challenge"]
     challenge_on = bool(cur.get("active") and cur.get("name"))
     if challenge_on:
@@ -594,7 +581,6 @@ def _draw_board(data: dict) -> bytes:
             _fit_text(d, (x + 26, y + 84), sub, cw - 52, 23, fill=MUTE + (255,))
         _fit_text(d, (x + 26, y + 16), t(title), max(90, title_max), 20, bold=True, fill=MUTE + (255,))
 
-    # footer
     d.text((M, H - 46), "trove.aallyn.net", font=f_foot, fill=MUTE + (255,))
     lw = _w(d, "trove.aallyn.net", f_foot)
     fr = t("Updated {time} UTC", time=datetime.now(timezone.utc).strftime("%H:%M"))
@@ -605,10 +591,10 @@ def _draw_board(data: dict) -> bytes:
     return out.getvalue()
 
 
-# ── Per-announcement card (the image announcements embed) ────────────────────
-# One banner per announcement kind, rendered API-side and referenced by the bot's
-# image announcements. Cached in Redis per (kind, minute) so 100 guilds share one
-# render per minute. No emoji (DejaVu can't); the accent bar carries the colour.
+# Per-announcement card: one banner per announcement kind, rendered API-side for
+# the bot's image announcements. Cached in Redis per (kind, minute) so 100 guilds
+# share one render per minute. No emoji (DejaVu can't); the accent bar carries the
+# colour.
 
 _ANN_W, _ANN_H = 1200, 420
 _ANN_TITLE = {

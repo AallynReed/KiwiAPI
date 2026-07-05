@@ -1,22 +1,16 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   /dashboard - page logic
-   ───────────────────────────────────────────────────────────────────────
-   Depends on site_auth.js (window.BTTAuth). Renders the profile + Trove
-   player name claim card; if a name is claimed, fetches the user's
-   leaderboard appearances and renders a small inline chart-or-table.
-
-   Client-side login gate: if no token / /me returns null, redirect to
-   /login?next=/dashboard. No server-side gate so the page can serve
-   from the static cache.
-   ═══════════════════════════════════════════════════════════════════════ */
+/* /dashboard page logic. Depends on site_auth.js (window.BTTAuth). Renders the
+   profile + Trove name claim card, plus the mods/modpacks/discord/webhooks/dm
+   sections. Client-side login gate only (no token / null /me → /login?next=…),
+   so the page can serve from the static cache. */
 
 (function () {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   const Auth = window.BTTAuth;
   if (!Auth) { console.error('[dashboard] site_auth.js missing'); return; }
 
-  // ─── DOM refs ──────────────────────────────────────────────────────
   const $ = (id) => document.getElementById(id);
   const $loading = $('dash-loading');
   const $body = $('dash-body');
@@ -49,7 +43,6 @@
   const $statsMeta = $('dash-stats-meta');
   const $statsBody = $('dash-stats-body');
 
-  // ─── Boot ──────────────────────────────────────────────────────────
   boot().catch((err) => {
     console.error('[dashboard] boot failed', err);
     showError(err);
@@ -74,7 +67,6 @@
     if ($loading) $loading.innerHTML = `<p class="dash-error">${esc(t('Failed to load'))}: ${esc((err && err.message) || String(err))}</p>`;
   }
 
-  // ─── Render the main body ──────────────────────────────────────────
   function renderUser(user) {
     if ($loading) $loading.hidden = true;
     if ($body) $body.hidden = false;
@@ -84,7 +76,6 @@
     const $myProfile = document.getElementById('dash-my-profile');
     if ($myProfile && user.username) $myProfile.href = '/mods/' + encodeURIComponent(user.username);
 
-    // Profile fields
     if ($profUsername)    $profUsername.textContent = user.username;
     const $profDiscord = $('prof-discord-handle');
     if ($profDiscord)     $profDiscord.textContent = '@' + (user.discord_handle || user.username);
@@ -115,7 +106,6 @@
     wireActions(user);
   }
 
-  // ─── Verification block rendering ──────────────────────────────────
   function renderVerifyBlock(user) {
     if (!$verifyBlock) return;
     $verifyBlock.hidden = false;
@@ -152,7 +142,6 @@
     if ($verifyResult) $verifyResult.hidden = true;
   }
 
-  // ─── Action wiring ─────────────────────────────────────────────────
   function wireActions(user) {
     if ($profEditName) {
       $profEditName.onclick = async () => {
@@ -237,7 +226,7 @@
     }
   }
 
-  // ─── Trove username change request ─────────────────────────────────
+  // Trove username change request.
   let _usernameReqWired = false;
   let _latestUnameReq = null;
   function setupUsernameRequest() {
@@ -319,7 +308,7 @@
     status.hidden = false;
   }
 
-  // ─── Section switching (sidebar) ───────────────────────────────────
+  // Sidebar section switching.
   const SECTIONS = ['profile', 'giveaways', 'mods', 'modpacks', 'leaderboard', 'discord', 'webhooks', 'dmsubs', 'images'];
   function setupSections() {
     document.querySelectorAll('.dash-nav-item').forEach((b) =>
@@ -351,7 +340,7 @@
   }
   let _imagesLoaded = false;
 
-  // ─── My Modpacks section ───────────────────────────────────────────
+  // My Modpacks section.
   let _modpacksLoaded = false;
 
   async function loadMyModpacks() {
@@ -411,7 +400,7 @@
       </a>`;
   }
 
-  // ─── My Mods section ───────────────────────────────────────────────
+  // My Mods section.
   let _modsLoaded = false;
 
   async function loadMyMods() {
@@ -505,7 +494,7 @@
       </a>`;
   }
 
-  // ─── Giveaways section ─────────────────────────────────────────────
+  // Giveaways section.
   async function loadMyGiveaways() {
     if (!$gwList) return;
     const r = await Auth.callJSON('/v1/giveaways/me');
@@ -556,7 +545,7 @@
       </article>`;
   }
 
-  // ─── Trove stats (leaderboard appearances) ─────────────────────────
+  // Trove stats (leaderboard appearances).
   async function loadTroveStats() {
     $statsBody.innerHTML = `<p class="dash-loading" data-i18n>${t('Loading your stats - this can take a moment.')}</p>`;
     const r = await Auth.callJSON('/v1/site-auth/me/trove-stats');
@@ -614,9 +603,8 @@
       <div class="dash-stat-table" role="table">${rows}</div>`;
   }
 
-  // ─── Tiny dependency-free SVG line chart ───────────────────────────
-  // Same vocabulary as leaderboards.js but stripped to the essentials:
-  // no tooltip, fixed height, label list rendered as a separate <ul>.
+  // Tiny dependency-free SVG line chart. Same vocabulary as leaderboards.js but
+  // stripped to essentials: no tooltip, fixed height, labels as a separate <ul>.
   function renderInlineChart(anchors, series) {
     if (!anchors || anchors.length < 2 || !series.length) return '';
     const W = 720, H = 180, PAD = 28;
@@ -652,12 +640,10 @@
   ];
   function chartColor(i) { return CHART_COLORS[i % CHART_COLORS.length]; }
 
-  // ─── Discord Bot section ───────────────────────────────────────────
-  // Master-detail: a side-menu of the servers the bot is confirmed in, and
-  // a detail panel whose per-server config is split into tabs - Announcements
-  // (channel + hourly challenge) and Settings (role-delegated permissions),
-  // with room for more categories as tabs. Servers the bot isn't in yet sit
-  // in a separate "Add the bot" group. Backend: app/bot/router.py (site-JWT).
+  // Discord Bot section. Master-detail: side-menu of servers the bot is in +
+  // a detail panel whose per-server config is split into tabs (Announcements,
+  // Clubs, Settings). Servers the bot isn't in yet sit in an "Add the bot"
+  // group. Backend: app/bot/router.py (site-JWT).
   let _discordLoaded = false;
   let _discordSelected = null;   // currently-selected guild id (persists across re-renders)
   let _annMeta = {};             // announcement key -> embed-editor meta (variables/default/sample)
@@ -1624,7 +1610,6 @@
     el.hidden = false;
   }
 
-  // ─── Formatting helpers ────────────────────────────────────────────
   function formatScore(score) {
     return Number.isInteger(score)
       ? score.toLocaleString()
@@ -1646,9 +1631,8 @@
     return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
   }
 
-  // ─── Webhooks section ──────────────────────────────────────────────
-  // Outbound Discord webhooks: paste a channel webhook URL, pick events,
-  // and Kiwi POSTs a rendered embed when each fires. Backend:
+  // Webhooks section. Outbound Discord webhooks: paste a channel webhook URL,
+  // pick events, and Kiwi POSTs a rendered embed when each fires. Backend:
   // app/webhooks/router.py (site-JWT, /v1/webhooks/*).
   let _webhooksLoaded = false;
   let _whMeta = {};   // event type -> {variables, default_template, sample}
@@ -1862,10 +1846,9 @@
     }
   }
 
-  // ─── DM Alerts section ─────────────────────────────────────────────
-  // Discord DM subscriptions: pick events (with per-type challenge filters and
-  // a market price watchlist) and the Kiwi bot DMs you when they fire. Backend:
-  // app/dm_subs/router.py (site-JWT, /v1/dm-subscriptions/*).
+  // DM Alerts section. Discord DM subscriptions: pick events (with per-type
+  // challenge filters and a market price watchlist) and the Kiwi bot DMs you
+  // when they fire. Backend: app/dm_subs/router.py (site-JWT, /v1/dm-subscriptions/*).
   let _dmsubsLoaded = false;
   let _dmItems = [];
 
@@ -2056,8 +2039,4 @@
     return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s;
   }
 
-  function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
 })();

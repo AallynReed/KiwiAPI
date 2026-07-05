@@ -1,8 +1,6 @@
 """Render an ``ImageDesign`` to a PNG (Pillow).
 
-Draws the background (solid / gradient / CAS image) then each layer in order (text /
-rect / image). Text layers substitute ``{variable}`` placeholders from a context;
-unlike the embed renderer, timestamp styles render as **human-readable text**
+Unlike the embed renderer, timestamp styles render as human-readable text
 (``{ends_at:R}`` → "in 12 minutes") because an image can't hold a live Discord
 ``<t:>`` tag - it's baked at render time (the render URL is cache-busted by the data
 signature, mirroring the existing announce.png banners).

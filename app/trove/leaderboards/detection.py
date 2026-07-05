@@ -87,7 +87,7 @@ _LAST_GOOD: dict | None = None
 
 
 async def detect_possible_cheaters(*, force: bool = False) -> dict:
-    """Run all three checks against a leaderboard snapshot.
+    """Run the outlier checks against a leaderboard snapshot.
 
     Two modes:
 
@@ -459,9 +459,8 @@ async def stop_leaderboards_warmer() -> None:
         pass
 
 
-# Back-compat aliases - the warmer used to only handle cheaters. Existing
-# call sites in app/main.py (and any out-of-tree callers) keep working;
-# new code should reach for ``start_leaderboards_warmer`` directly.
+# Back-compat aliases (still imported by app/main.py); the warmer used to only
+# handle cheaters. New code should use ``start_leaderboards_warmer`` directly.
 start_cheaters_warmer = start_leaderboards_warmer
 stop_cheaters_warmer = stop_leaderboards_warmer
 

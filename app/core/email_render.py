@@ -1,9 +1,7 @@
-"""Jinja2-rendered HTML emails.
+"""Jinja2-rendered HTML emails: one branded base template, autoescaped content.
 
-A single branded base template wraps every message, so all mail looks consistent
-and content is passed as structured, autoescaped data (no hand-built HTML strings
-scattered across the codebase). Templates live as in-module strings via a
-``DictLoader`` so there are no filesystem-path concerns inside the container.
+Templates are in-module strings loaded via ``DictLoader`` so there are no
+filesystem-path concerns inside the container.
 """
 
 from jinja2 import DictLoader, Environment, select_autoescape
@@ -63,7 +61,7 @@ def render_email(
     button: dict | None = None,
     note: str | None = None,
 ) -> str:
-    """Render the branded HTML body. All content is autoescaped."""
+    """Render the branded HTML body (all content autoescaped)."""
     return _env.get_template("base.html").render(
         app_name=settings.app_name,
         dev_url=settings.dev_url,

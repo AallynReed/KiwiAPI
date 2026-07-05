@@ -1,26 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   Better Trove Tools - landing page enhancement layer
-   ───────────────────────────────────────────────────────────────────────
-   Runs AFTER app.js (the download dropdown + nav-toggle logic) and i18n.js.
-   We deliberately don't touch the hamburger / dropdown wiring - those are
-   already proven; this file owns the visual+data enhancements that are
-   new in the 2026-06-07 redesign:
-
-     1. ready-class on <body> so the hero title's staggered entry plays
-        once layout has settled (avoids the first paint flashing)
-     2. canvas particle background (low-density, paused when hidden or
-        when prefers-reduced-motion)
-     3. IntersectionObserver-driven .in-view triggers for spotlights +
-        bento tiles
-     4. animated number counters for the stats strip
-     5. live API data for the strip (server time, trove day, chaos chest,
-        challenge), refreshed every 30s
-     6. nav .scrolled flip when scrolled past the hero (drives the
-        glassmorphic opacity boost in CSS)
-
-   Everything is guarded so missing DOM (e.g. if HTML is trimmed) just
-   silently no-ops - the rest of the page keeps working.
-   ═══════════════════════════════════════════════════════════════════════ */
+/* Landing page enhancement layer (hero animations, particle bg, live-data
+   strip). Runs after app.js + i18n.js and deliberately leaves the nav/dropdown
+   wiring to app.js. Every DOM lookup is guarded so a trimmed page just no-ops. */
 
 (function () {
   'use strict';
@@ -28,17 +8,15 @@
   const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const API = 'https://api.aallyn.net';
 
-  // ── 1. ready flag (drives hero entry animation) ────────────────────
-  // Wait one rAF after DOMContentLoaded so the initial styles have applied
-  // before the transition kicks off - otherwise the transition can fire
-  // mid-paint and skip the "from" state visually.
+  // Ready flag drives the hero entry animation. Double-rAF so the initial
+  // styles apply before the transition kicks off - otherwise it fires mid-paint
+  // and visually skips the "from" state.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     document.body.classList.add('ready');
   }));
 
-  // ── 2. Nav scrolled flag ───────────────────────────────────────────
-  // Pure CSS sticky already keeps it pinned; this class just lets us
-  // bump the bg opacity once the user has scrolled past the very top.
+  // .scrolled class lets CSS bump the navbar bg opacity past the top (sticky
+  // pinning is pure CSS).
   const navbar = document.querySelector('.navbar');
   if (navbar) {
     let ticking = false;
@@ -52,9 +30,7 @@
     update();
   }
 
-  // ── 3. IntersectionObserver triggers ───────────────────────────────
-  // Adds .in-view the first time an element crosses 15% of the viewport;
-  // CSS handles the rest (fade-in, scale-in, etc). One-shot per element.
+  // One-shot .in-view on first viewport crossing; CSS drives the reveal.
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
@@ -66,14 +42,11 @@
     }, { rootMargin: '0px 0px -10% 0px', threshold: 0.15 });
     document.querySelectorAll('.spotlight, .bento-tile').forEach(el => io.observe(el));
   } else {
-    // Older browsers: just surface everything immediately.
     document.querySelectorAll('.spotlight, .bento-tile').forEach(el => el.classList.add('in-view'));
   }
 
-  // ── 4. Animated number counters ────────────────────────────────────
-  // Each .stat-num with data-target counts from 0 → target over ~1.4s
-  // using an ease-out curve. Reduced motion → set the final value
-  // directly and skip the animation.
+  // Animated stat counters: 0 → data-target over ~1.4s (easeOutCubic).
+  // Reduced motion sets the final value directly.
   if ('IntersectionObserver' in window) {
     const statIO = new IntersectionObserver((entries) => {
       for (const e of entries) {
@@ -97,15 +70,10 @@
     document.querySelectorAll('.stat-num[data-target]').forEach(el => statIO.observe(el));
   }
 
-  // ── 4.5 Hero screenshot slideshow ──────────────────────────────────
-  // Fetches /site/screenshots.json (served by app/site/router.py), builds
-  // an <img> per screenshot inside .hero-screens, and cycles them with
-  // an opacity crossfade. The list is dynamic - drop a file in
-  // site/static/trove-screens/ and it appears on next page load (the
-  // endpoint caches for 60s).
-  //
-  // Reduced motion: still shows the first image (so the visual depth is
-  // there), just skips the cycle so the page is static.
+  // Hero screenshot slideshow: opacity-crossfade the images from
+  // /site/screenshots.json (app/site/router.py). The list is dynamic - drop a
+  // file in site/static/trove-screens/ and it shows next load (endpoint caches
+  // 60s). Reduced motion still paints the first image, just skips the cycle.
   (async () => {
     const slot = document.querySelector('.hero-screens');
     if (!slot) return;
@@ -121,10 +89,8 @@
     }
     if (urls.length === 0) return;
 
-    // Build the <img> tags. Preload eagerly so the crossfade doesn't
-    // stutter on the FIRST switch (every cycle after benefits from the
-    // browser's HTTP cache). decoding="async" keeps decode off the main
-    // thread so layout isn't blocked while a heavy screenshot resolves.
+    // Eager load + async decode so the FIRST crossfade doesn't stutter and a
+    // heavy screenshot's decode doesn't block layout.
     const imgs = urls.map(src => {
       const i = document.createElement('img');
       i.src = src;
@@ -135,9 +101,8 @@
       return i;
     });
 
-    // First image visible immediately. requestAnimationFrame so the
-    // class flip happens after the elements are in the layout tree -
-    // otherwise the very first paint can skip the opacity transition.
+    // rAF so the class flip lands after the imgs are in the layout tree -
+    // otherwise the first paint can skip the opacity transition.
     requestAnimationFrame(() => imgs[0].classList.add('active'));
 
     if (RM || imgs.length === 1) return;  // no cycle needed
@@ -151,21 +116,18 @@
       cur = next;
     };
     let timer = setInterval(advance, PERIOD);
-    // Pause the cycle when the tab isn't visible - saves a tiny bit of
-    // CPU but mostly avoids a "skip many at once" jolt when the tab
-    // returns from being backgrounded for an hour.
+    // Pause when hidden - mainly to avoid a "skip many at once" jolt when a
+    // long-backgrounded tab returns.
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { clearInterval(timer); timer = null; }
       else if (!timer) { timer = setInterval(advance, PERIOD); }
     });
   })();
 
-  // ── 5. Canvas particle background ──────────────────────────────────
-  // Sparse drifting dots layered behind the orbs. Cheap: rAF, no shaders,
-  // ~80 particles. Pauses when tab is hidden + when reduced-motion is on.
-  // Wrapped in try/catch defensively: a canvas context failure (locked-down
-  // browser, GPU disabled in headless contexts, etc.) used to take down the
-  // live-data fetch below because the throw aborted the whole IIFE.
+  // Canvas particle background: sparse drifting dots behind the orbs, paused
+  // when hidden or under reduced-motion. try/catch is load-bearing - a canvas
+  // context failure (locked-down browser, GPU-disabled headless) used to abort
+  // the whole IIFE and take the live-data fetch below down with it.
   try {
     const canvas = document.querySelector('canvas.bg-fx');
     if (canvas && !RM) {
@@ -176,10 +138,8 @@
         let w = 0, h = 0, rafId = null;
 
         const seed = () => {
-          // Roughly halved vs. the old (80 cap / 22000 divisor): the
-          // particle layer is the only thing redrawing on the main thread
-          // every frame, so fewer dots is the cheapest lever. Still dense
-          // enough to read as drifting depth behind the orbs.
+          // Count roughly halved vs. the old 80/22000 - this layer redraws on
+          // the main thread every frame, so fewer dots is the cheapest lever.
           const count = Math.min(45, Math.floor((w * h) / 42000));
           parts = Array.from({ length: count }, () => ({
             x: Math.random() * w,
@@ -192,10 +152,8 @@
           }));
         };
         const resize = () => {
-          // clientWidth / clientHeight are READ-ONLY getters - you can't
-          // assign through them. The displayed size already comes from CSS
-          // (canvas.bg-fx is width:100% height:100%); we only need to set
-          // the backing-store size (canvas.width / .height in device px).
+          // CSS already sizes the canvas (width/height:100%); we only set the
+          // backing store (canvas.width/.height in device px).
           w = window.innerWidth;
           h = window.innerHeight;
           canvas.width  = Math.floor(w * dpr);
@@ -226,7 +184,6 @@
 
         window.addEventListener('resize', () => { resize(); }, { passive: true });
         document.addEventListener('visibilitychange', () => {
-          // No point burning CPU when the user can't see it.
           if (document.hidden) stop(); else start();
         });
         resize();
@@ -237,12 +194,9 @@
     console.warn('[landing] canvas fx disabled:', e && e.message);
   }
 
-  // ── 6. Live API data ───────────────────────────────────────────────
-  // Server time, trove day, chaos chest, hourly challenge - refreshed
-  // every 30 seconds. Server time itself ticks every second client-side
-  // off a base offset so the second-hand doesn't only update on the API
-  // poll. Failures keep the previous value rather than blanking the card.
-
+  // Live strip (server time, trove day, chaos chest, challenge), refreshed
+  // every 30s. The clock ticks client-side off a base offset so the second
+  // updates between polls. Failures keep the previous value, never blank a card.
   const $live = (key) => document.querySelector(`[data-live="${key}"]`);
   const cards = {
     serverTime: document.querySelector('[data-live="server-time-card"]'),
@@ -530,16 +484,10 @@
     const overall = (data && data.overall) || 'unknown';
     if (overall === 'unknown') { $status.hidden = true; return; }
 
-    // Map verdict → {class, label, title}. When worlds_checked is false
-    // we only verified the auth tier, so "online" is honest-but-partial;
-    // the title spells that out without cluttering the pill.
-    // The pill reads "Trove servers · <state>" (the prefix is static in
-    // the markup), so the JS only sets the state word + colour. Driven by
-    // the LIVE environment's verdict from the multi-env payload, falling
-    // back to the legacy flat ``overall`` shape for safety.
-    // Binary verdict: online (green) or down (red). 'maintenance' is a legacy
-    // value from older snapshots → treated as down. A partial outage (some Live
-    // region still up) is spelled out in the title.
+    // The pill's "Trove servers · " prefix is static markup; JS sets only the
+    // state word + colour. Binary verdict: online (green) or down (red); the
+    // legacy 'maintenance' value from older snapshots falls through to down. A
+    // partial outage (some Live region still up) is spelled out in the title.
     let cls, label, title;
     if (overall === 'online') {
       cls = 'is-up';

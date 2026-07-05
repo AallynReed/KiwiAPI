@@ -7,9 +7,8 @@ lib) isn't present - the endpoint then returns a clear 503 instead of crashing
 import. The model is loaded lazily + once (it's heavy) and the blocking call is
 run off the event loop by the service layer.
 
-Engine-swap point: anything that turns image bytes into ordered text lines works
-here (Tesseract `image_to_data`, EasyOCR, …) - the accuracy logic lives in
-parse.py and only consumes lines.
+Engine-swappable: any backend that turns image bytes into ordered text lines
+works here; the accuracy logic lives in parse.py and only consumes lines.
 """
 from __future__ import annotations
 

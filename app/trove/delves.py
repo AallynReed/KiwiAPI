@@ -10,7 +10,6 @@ from settings (env) - the refresher is off until it's set. Served under the
 (public) ``rotations`` scope.
 """
 
-import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
@@ -18,6 +17,7 @@ import httpx
 
 from app.core import features
 from app.core.config import settings
+from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
 from app.trove.models import DelveRotation
 
@@ -121,8 +121,6 @@ async def list_weeks() -> list[dict]:
 # reset (11:00 UTC). "Monday" is in the delve frame (UTC-11), i.e. the window
 # Mon 11:00 UTC -> Tue 11:00 UTC.
 
-_task: asyncio.Task | None = None
-
 
 def _seconds_until_next_pull(now: datetime) -> float:
     """Delay to the next scheduled pull (>= 1s)."""
@@ -142,43 +140,41 @@ def _seconds_until_next_pull(now: datetime) -> float:
 # flag so a runtime enable resumes fetching within a few minutes (no restart).
 _DISABLED_RECHECK_SECONDS = 300
 
+# The next sleep is computed per-cycle by the refresh (dynamic cadence: hourly on
+# delve-Monday, else the daily reset; the recheck interval while disabled). It is
+# stashed here for the refresher's ``delay`` callback to read back.
+_next_sleep: float = _DISABLED_RECHECK_SECONDS
 
-async def _loop() -> None:
-    while True:
-        try:
-            if await features.is_enabled(features.DELVES_FLAG):
-                count = await refresh_current_week()
-                logger.info("Delve refresh: week %s -> %d depths", current_week_id(), count)
-                sleep_for = _seconds_until_next_pull(datetime.now(timezone.utc))
-            else:
-                # Feature disabled - skip the fetch, idle, and re-check soon.
-                sleep_for = _DISABLED_RECHECK_SECONDS
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("Delve refresh failed", exc_info=True)
-            sleep_for = _seconds_until_next_pull(datetime.now(timezone.utc))
-        try:
-            await asyncio.sleep(sleep_for)
-        except asyncio.CancelledError:
-            raise
+
+async def _refresh_cycle() -> None:
+    """One delve cycle: refresh when enabled, and set the next dynamic sleep."""
+    global _next_sleep
+    try:
+        if await features.is_enabled(features.DELVES_FLAG):
+            count = await refresh_current_week()
+            logger.info("Delve refresh: week %s -> %d depths", current_week_id(), count)
+            _next_sleep = _seconds_until_next_pull(datetime.now(timezone.utc))
+        else:
+            # Feature disabled - skip the fetch, idle, and re-check soon.
+            _next_sleep = _DISABLED_RECHECK_SECONDS
+    except Exception:
+        _next_sleep = _seconds_until_next_pull(datetime.now(timezone.utc))
+        raise
+
+
+_refresher = PeriodicRefresher(
+    _refresh_cycle,
+    name="Delve refresh",
+    delay=lambda: _next_sleep,
+)
 
 
 def start_delve_refresher() -> None:
-    global _task
     if not settings.trove_delve_source_url:
         logger.info("delves: no source URL configured (set TROVE_DELVE_SOURCE_URL) - refresher off")
         return
-    if _task is None:
-        _task = asyncio.create_task(_loop())
+    _refresher.start()
 
 
 async def stop_delve_refresher() -> None:
-    global _task
-    if _task is not None:
-        _task.cancel()
-        try:
-            await _task
-        except asyncio.CancelledError:
-            pass
-        _task = None
+    await _refresher.stop()

@@ -102,8 +102,6 @@ class KiwiBot(discord.Client):
             task.cancel()
         await super().close()
 
-    # ── event-driven announcements ───────────────────────────────────────────
-
     async def _subscribe_events(self) -> None:
         """Subscribe to the Redis events channel and post the matching announcement
         the instant an event arrives. No-op (poll backstop only) without Redis."""
@@ -154,10 +152,9 @@ class KiwiBot(discord.Client):
             except Exception:
                 pass
 
-    # ── clock-aligned minute loop ────────────────────────────────────────────
-    # Everything periodic fires at HH:MM:00 sharp: deletes land the instant an
-    # occurrence ends, and the image re-edits happen right at the boundary too
-    # (image generation is fast, so there's no need to pre-compute). Aligning to the
+    # Clock-aligned minute loop. Everything periodic fires at HH:MM:00 sharp: deletes
+    # land the instant an occurrence ends, and the image re-edits happen at the boundary
+    # too (image generation is fast, so there's no need to pre-compute). Aligning to the
     # wall clock keeps the countdowns from drifting. (The live board is ALSO refreshed
     # instantly on events - see _subscribe_events.)
 
@@ -185,9 +182,9 @@ class KiwiBot(discord.Client):
                 logger.exception("announcement backstop failed")
             await self._record_presence()           # keep server/user counts fresh
 
-    # ── dynamic linking to guild state ───────────────────────────────────────
-    # The cache reflects the post-deletion state by the time these fire, so
-    # ``guild.channels`` / ``guild.roles`` are the live id sets to reconcile against.
+    # Dynamic linking to guild state. The cache reflects the post-deletion state by the
+    # time these fire, so ``guild.channels`` / ``guild.roles`` are the live id sets to
+    # reconcile against.
 
     async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel) -> None:
         await self._reconcile_guild(channel.guild)

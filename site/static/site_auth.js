@@ -1,21 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   site_auth.js - public-facing user accounts client
-   ───────────────────────────────────────────────────────────────────────
-   Loaded on EVERY site page (via the navbar widget) and is the active
-   driver on /login. Sign-in is Discord-only. Wires up:
-
-     • localStorage token storage with refresh-on-401
-     • The Discord OAuth return handler (#discord=<code> → site tokens)
-     • The "Sign in" / signed-in avatar+dropdown in the navbar
-     • A small global API (window.BTTAuth) the dashboard imports from
-
-   The backend lives at https://api.aallyn.net/v1/site-auth/* and is
-   CORS-allowlisted for *.aallyn.net (see app/core/config.py). The
-   page-side fetch path stays a single hop - no /site/auth/* proxy.
-   ═══════════════════════════════════════════════════════════════════════ */
+/* site_auth.js - public user-accounts client. Loaded on every site page (navbar
+   widget) and the active driver on /login; sign-in is Discord-only. Exposes
+   window.BTTAuth for the dashboard. The backend at api.aallyn.net/v1/site-auth/*
+   is CORS-allowlisted for *.aallyn.net (app/core/config.py), so page fetches
+   stay a single hop - no /site/auth/* proxy. */
 
 (function () {
   'use strict';
+
+  const { esc } = window.BTTUtil;
 
   const API = 'https://api.aallyn.net';
   const STORAGE_PREFIX = 'btt_site_auth';
@@ -259,11 +251,6 @@
     if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh();
   }
 
-  function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-
   // Translate a server error envelope into a clean human string. The
   // backend returns either { error: { message } } or pydantic's
   // { detail: [...] } depending on which validation layer fired.
@@ -289,8 +276,7 @@
 
   // ─── Boot ──────────────────────────────────────────────────────────
   async function bootNav() {
-    // First paint: use cached user (if any) so the avatar shows
-    // immediately. Then refresh from the server.
+    // Paint from cache first (no Sign-in flash), then refresh from the server.
     const cached = getCachedUser();
     renderNav(cached);
     if (!tokens.access) { renderNav(null); return; }

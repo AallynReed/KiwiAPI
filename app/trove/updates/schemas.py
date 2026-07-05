@@ -94,12 +94,6 @@ class FileView(BaseModel):
     text: str | None = None
 
 
-# ── File history + compare ────────────────────────────────────────────────
-# History is "every UpdateChange touching this (branch, path)" with the
-# version's tag + capture time joined in. Compare resolves two versions of
-# the SAME path to two blob shas, then either runs a unified-diff (text) or
-# reports the size/sha mismatch (binary).
-
 class FileHistoryEntry(BaseModel):
     ordinal: int
     version_tag: str
@@ -117,7 +111,6 @@ class FileHistoryList(BaseModel):
 
 
 class FileVersionInfo(BaseModel):
-    """One side of a compare result - identifies which version and blob."""
     ordinal: int
     version_tag: str
     captured_at: datetime | None
@@ -126,7 +119,6 @@ class FileVersionInfo(BaseModel):
 
 
 class DiffHunkLine(BaseModel):
-    """One line inside a unified-diff hunk."""
     kind: str                         # equal | add | remove
     left: int | None = None           # 1-based line number in the "from" side
     right: int | None = None          # 1-based line number in the "to" side
@@ -134,18 +126,15 @@ class DiffHunkLine(BaseModel):
 
 
 class DiffHunk(BaseModel):
-    """One contiguous block of changed lines plus its surrounding context."""
     left_start: int                   # 1-based starting line in "from"
     right_start: int                  # 1-based starting line in "to"
     lines: list[DiffHunkLine]
 
 
 class FileCompareResponse(BaseModel):
-    """Note: the "from" version is exposed under that JSON key via alias -
-    Python's ``from`` is a reserved word, so the attribute is named
-    ``from_`` while ``populate_by_name`` lets the constructor still accept
-    that.
-    """
+    """``from`` is a Python keyword, so the attribute is ``from_`` exposed under
+    the JSON key ``from`` via alias; ``populate_by_name`` keeps the ctor accepting
+    the attribute name too."""
     branch: str
     path: str
     from_: FileVersionInfo = Field(alias="from")

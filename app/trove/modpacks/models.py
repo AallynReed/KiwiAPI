@@ -1,12 +1,8 @@
 """Mongo model for Modpacks.
 
-A modpack stores only *references* to Mods Hub mods, never their content - the
-actual ``.tmod`` bytes live in the referenced ``ModRelease`` (resolved at download
-time). One ``ModpackProject`` document holds the metadata plus its embedded
-*variants*; each variant is an ordered list of mod entries.
-
-Images (banner/previews) reuse the Mods Hub's ``ModImageAsset`` + shared CAS, so
-there is no modpack-specific image model - a banner is just a ``ModImageAsset.sha``.
+One ``ModpackProject`` document holds the metadata plus embedded *variants* (each
+an ordered list of mod *references*, never content). Images reuse the Mods Hub's
+``ModImageAsset`` + shared CAS, so a banner is just a ``ModImageAsset.sha``.
 """
 
 from datetime import datetime
@@ -128,8 +124,8 @@ class ModpackProject(Document):
 
 
 class ModpackStar(Document):
-    """One user liking (favouriting) one modpack. Unique per (modpack, user);
-    ``ModpackProject.star_count`` is the denormalized total for fast cards/sorting.
+    """One user's like of one modpack; unique per (modpack, user). The
+    ``ModpackProject.star_count`` denormalized total is kept in sync separately.
     Mirrors the Mods Hub's ``ModStar``."""
 
     modpack_id: PydanticObjectId

@@ -30,6 +30,8 @@ import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
+from app.core.utils import iso
+
 
 @dataclass(frozen=True)
 class EventSource:
@@ -197,7 +199,7 @@ async def _news_data() -> dict:
     return {"item": {
         "title": top.title,
         "url": top.url,
-        "published_at": top.published_at.isoformat() if top.published_at else None,
+        "published_at": iso(top.published_at),
     }}
 
 
@@ -241,7 +243,7 @@ async def _game_update_data() -> dict:
         "branch": v.branch, "ordinal": v.ordinal, "version_tag": v.version_tag,
         "files_added": v.files_added, "files_modified": v.files_modified,
         "files_removed": v.files_removed, "bytes_added": v.bytes_added,
-        "completed_at": v.completed_at.isoformat() if v.completed_at else None,
+        "completed_at": iso(v.completed_at),
     }}
 
 

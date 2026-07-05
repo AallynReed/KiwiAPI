@@ -1,10 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // --- 0. MOBILE NAVIGATION (hamburger) ---
-    // The navbar collapses into a hamburger below 768px (see style.css). We
-    // toggle .open on the navbar to slide the .nav-links panel in/out; clicks
-    // outside, Escape, or any link inside closes it. A resize back to desktop
-    // also closes it so a stale "open" state doesn't survive orientation flips.
+    // Mobile hamburger nav. A resize back to desktop closes it so a stale
+    // "open" state doesn't survive orientation flips.
     const navbarEl  = document.querySelector('.navbar');
     const navToggle = document.getElementById('nav-toggle');
     const navLinks  = document.getElementById('nav-links');
@@ -13,8 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!navbarEl || !navToggle) return;
         navbarEl.classList.toggle('open', open);
         navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        // Swap the hamburger glyph for an "X" when open, so the same button is
-        // visibly the dismiss control once the panel is showing.
+        // Swap hamburger glyph for an "X" so the same button reads as dismiss.
         const icon = navToggle.querySelector('i');
         if (icon) {
             icon.classList.toggle('fa-bars', !open);
@@ -29,8 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     if (navLinks) {
-        // Tapping any link inside the panel closes it (so navigation to
-        // /documentation or an in-page anchor doesn't leave the panel hanging).
+        // Tapping any link closes the panel (so an in-page anchor jump doesn't
+        // leave it hanging).
         navLinks.addEventListener('click', (e) => {
             const a = e.target.closest('a');
             if (a) setNavOpen(false);
@@ -52,11 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // --- 0b. NAV DROPDOWNS ("Developers", "Pages") ---
-    // Each .nav-dropdown is a trigger button + a panel. Click trigger to
-    // toggle .open on the wrapper, click-outside or Escape to close.
-    // Opening one auto-closes any others (single-dropdown UX). Selecting a
-    // link inside also closes (so the hamburger drawer doesn't linger).
+    // Nav dropdowns ("Developers", "Pages"). Opening one auto-closes the
+    // others (single-dropdown UX).
     function closeAllDropdowns() {
         document.querySelectorAll('.nav-dropdown.open').forEach((dd) => {
             dd.classList.remove('open');
@@ -79,13 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
         panel.addEventListener('click', (e) => {
-            // Clicking a link inside closes the dropdown so the user doesn't
-            // have to dismiss it after navigating.
             if (e.target.closest('a')) closeAllDropdowns();
         });
     });
     document.addEventListener('click', (e) => {
-        // Click anywhere outside any open dropdown closes it.
         if (!e.target.closest('.nav-dropdown')) closeAllDropdowns();
     });
     document.addEventListener('keydown', (e) => {
@@ -98,11 +88,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // --- 1. KIWI API: per-platform release fetch + render ---
-    // We hit the Kiwi API instead of GitHub directly: one call returns every
-    // platform's latest build (with walk-back if a release skipped a platform),
-    // the server-side cache absorbs the load, and visitors aren't subject to
-    // GitHub's 60/hr unauth rate limit.
+    // Per-platform release fetch + render. Hits the Kiwi API instead of GitHub
+    // directly: one call returns every platform's latest build (with walk-back
+    // if a release skipped a platform), the server cache absorbs the load, and
+    // visitors aren't subject to GitHub's 60/hr unauth rate limit.
 
     const KIWI_API = 'https://api.aallyn.net';
     const releaseInfo = document.getElementById('release-info');
@@ -204,10 +193,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!any && ddTrigger) ddTrigger.disabled = true;
     }
 
-    // --- Dropdown open/close logic -----------------------------------------
-    // Click trigger to toggle, click outside (or Escape) to close. Set
-    // aria-expanded on the trigger + flip a .open class on the wrapper so the
-    // panel slide + caret rotation kick in via CSS.
+    // Flip a .open class on the wrapper so the panel slide + caret rotation
+    // kick in via CSS.
     function setDropdownOpen(open) {
         if (!ddRoot || !ddTrigger || !ddPanel) return;
         ddRoot.classList.toggle('open', open);
@@ -347,11 +334,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ddRetry) ddRetry.addEventListener('click', (e) => { e.preventDefault(); fetchLatest(); });
     document.addEventListener('btt-lang-changed', renderReleaseInfo);
 
-    // --- 2. SMOOTH SCROLL FOR IN-PAGE ANCHORS ---
-    // The previous version used gsap.scrollTo; with GSAP removed we lean on the
-    // native CSS smooth-scroll behavior (set on <html> via style.css) and just
-    // hand the rest to scrollIntoView. Only intercepts on-page anchors -
-    // external links and the special download-btn id are ignored.
+    // Smooth-scroll for in-page anchors via scrollIntoView (CSS smooth-scroll
+    // is set on <html>). External links and the download-btn id are ignored.
     document.addEventListener('click', (e) => {
         const anchor = e.target.closest('a');
         if (!anchor) return;
@@ -366,45 +350,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // --- 7. SUPPORT WIDGET (fixed bottom-right donation pill) ---
-    // Lives in app.js (not landing.js) so it works on EVERY page that
-    // includes the markup, not just the landing page. Older copies on
-    // /leaderboards, /commands, /updates used to render the markup
-    // without any wiring - the button looked clickable but silently did
-    // nothing because the listener was scoped to the landing page.
-    //
-    // Wiring is deliberately tolerant: if the markup IDs aren't present
-    // (e.g. on a page that omits the widget by design) we just return
-    // without throwing.
+    // Support widget (fixed bottom-right donation pill). Lives here, not
+    // landing.js, so it wires up on EVERY page that ships the markup - older
+    // copies on /leaderboards, /commands, /updates rendered a clickable-looking
+    // button that silently did nothing. Tolerant of missing IDs.
     (function () {
         const widget  = document.getElementById('support-widget');
         const trigger = document.getElementById('support-trigger');
         const panel   = document.getElementById('support-panel');
         if (!widget || !trigger || !panel) return;
-        // Remove the inline ``hidden`` attribute the template ships
-        // with. Without this the panel starts with ``display: none``,
-        // and the opacity transition from .open → opened can't run
-        // (a transition from display: none never advances - the
-        // browser hasn't computed the "before" state). Visibility is
-        // already handled by ``opacity`` + ``pointer-events: none``
-        // on the closed state, plus ``aria-hidden`` below for screen
-        // readers; the ``hidden`` attribute was redundant AND broke
-        // the animation on every page except the landing one (where
-        // landing.js's older wiring took a different code path).
+        // Drop the template's inline `hidden` attribute: a transition from
+        // display:none never advances (no computed "before" state), so leaving
+        // it on kills the open animation. Closed-state visibility is handled by
+        // CSS opacity + pointer-events; aria-hidden below covers screen readers.
         panel.removeAttribute('hidden');
         const setOpen = (open) => {
             widget.classList.toggle('open', open);
             trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
-            // ``aria-hidden`` instead of the ``hidden`` attribute so
-            // we keep screen readers from announcing the donation
-            // links when the panel's closed, without flipping
-            // ``display: none`` and breaking the opacity transition.
             panel.setAttribute('aria-hidden', open ? 'false' : 'true');
         };
-        // Initial state: closed but visible-to-CSS. The CSS rule
-        // ``.support-panel { opacity: 0; pointer-events: none; }``
-        // keeps the panel invisible and click-through; the .open
-        // class on .support-widget makes it appear.
         setOpen(false);
         trigger.addEventListener('click', (e) => {
             e.stopPropagation();

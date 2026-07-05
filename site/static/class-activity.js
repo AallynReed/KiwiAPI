@@ -1,18 +1,12 @@
-/* ===========================================================================
-   Class Activity page (/class-activity)
-
-   Two same-origin JSON proxies (both derived from the leaderboard captures):
-     • /site/leaderboards/class-activity/series?period=… - per-class bucketed
-       activity-level series for the multi-line chart (shared x `buckets` +
-       per-class `values` aligned to it).
-     • /site/leaderboards/class-activity/current - latest window's per-class
-       active counts + share, for the donut.
-
-   Charts are hand-rolled SVG (no library), matching the /activity page style.
-   Each class gets a fixed color from PALETTE so the line + legend + donut agree.
-   =========================================================================== */
+/* Class Activity page (/class-activity). Two same-origin JSON proxies derived
+   from the leaderboard captures: .../class-activity/series?period=… (per-class
+   bucketed series for the multi-line chart) and .../current (latest per-class
+   counts + share for the donut). Each class gets a fixed CLASS_COLORS hue so the
+   line, legend, and donut agree. */
 (function () {
   'use strict';
+
+  const { esc, fetchJSON } = window.BTTUtil;
 
   const PERIODS = ['1d', '7d', '1m', '3m', '6m', '1y', 'all'];
 
@@ -81,15 +75,6 @@
   // ─── i18n + fetch + util ───────────────────────────────────────────
   function t(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
-  function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-  async function fetchJSON(path) {
-    const res = await fetch(path, { headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  }
   function intl(n) { return Number(Math.round(Number(n) || 0)).toLocaleString(); }
 
   // ─── Trove server time (UTC−11, no DST) - resets sit on day boundaries ──
@@ -202,7 +187,6 @@
       width: '100%', height: H, role: 'img', preserveAspectRatio: 'none',
     });
 
-    // gridlines + Y labels
     const gridG = svgEl('g', {});
     for (let i = 0; i <= 4; i++) {
       const v = (yMaxRaw / 4) * i;           // fraction 0..yMaxRaw
@@ -251,7 +235,6 @@
       if (d) svg.appendChild(svgEl('path', { d: d.trim(), class: 'cact-line', stroke: color(cls.class_index) }));
     }
 
-    // hover guide + overlay
     const guide = svgEl('line', { class: 'cact-guide', y1: padT, y2: padT + plotH, x1: 0, x2: 0 });
     guide.style.opacity = '0';
     svg.appendChild(guide);
@@ -285,7 +268,6 @@
       }
       rows.sort((a, b) => b.frac - a.frac);
       if (!rows.length) { tip.hidden = true; return; }
-      // value column: share %, with the raw active-player count in parentheses.
       tip.innerHTML = `<span class="cact-tip-when">${esc(fmtFull(buckets[best], p.period))}</span>` +
         rows.slice(0, 10).map((rw) =>
           `<span class="cact-tip-row"><span class="cact-tip-sw" style="background:${color(rw.i)}"></span>` +

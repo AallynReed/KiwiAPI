@@ -21,7 +21,6 @@ _COMMANDS = "bot_command_usage"
 
 
 async def record_presence(guild_count: int, member_count: int) -> None:
-    """Upsert the gateway bot's reach (servers + users it can see)."""
     try:
         await get_db()[_PRESENCE].update_one(
             {"_id": "current"},
@@ -34,7 +33,6 @@ async def record_presence(guild_count: int, member_count: int) -> None:
 
 
 async def record_command(name: str) -> None:
-    """Increment a slash command's usage counter (atomic upsert)."""
     if not name:
         return
     try:

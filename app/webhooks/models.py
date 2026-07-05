@@ -6,6 +6,7 @@ from beanie import Document, PydanticObjectId
 from pydantic import Field
 from pymongo import ASCENDING, DESCENDING, IndexModel
 
+from app.core.delivery_health import DeliveryHealth
 from app.core.utils import utcnow
 from app.embed_templates import EmbedTemplate
 
@@ -18,7 +19,7 @@ WEBHOOK_EVENT_TYPES: tuple[str, ...] = ("challenge", "mod_release", "game_update
 MAX_CONSECUTIVE_FAILURES = 12
 
 
-class SiteWebhook(Document):
+class SiteWebhook(Document, DeliveryHealth):
     """A Discord webhook a site user registered to receive event notifications.
 
     When a subscribed event fires, Kiwi renders a Discord embed and POSTs it to
@@ -30,18 +31,12 @@ class SiteWebhook(Document):
     label: str = ""                              # display-only user label
     url: str                                     # validated Discord webhook URL
     events: list[str] = Field(default_factory=list)
-    active: bool = True
 
     # Per-event custom embed templates, keyed by event type. A missing key (or a
     # template with ``enabled=False``) means "use that event's default embed".
     templates: dict[str, EmbedTemplate] = Field(default_factory=dict)
 
-    # delivery health (updated by the delivery worker)
-    consecutive_failures: int = 0
-    last_status: int | None = None               # last HTTP status seen
-    last_error: str | None = None
-    last_delivered_at: datetime | None = None
-    disabled_reason: str | None = None           # set when auto-disabled
+    # ``active`` + delivery-health fields come from DeliveryHealth.
 
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)

@@ -1,11 +1,27 @@
 from datetime import datetime, timezone
 
+from beanie import PydanticObjectId
 from starlette.requests import Request
 
 
 def utcnow() -> datetime:
     """Timezone-aware UTC now - use everywhere instead of datetime.utcnow()."""
     return datetime.now(timezone.utc)
+
+
+def iso(dt: datetime | None) -> str | None:
+    """None-safe ISO-8601 serialization. Plain JSONResponse can't encode a raw
+    datetime, so hand-built response bodies coerce through this."""
+    return dt.isoformat() if dt else None
+
+
+def to_oid(value: str | None) -> PydanticObjectId | None:
+    """Parse an ObjectId, or None if malformed - for by-id lookups where a bad id
+    should 404 rather than raise."""
+    try:
+        return PydanticObjectId(value)
+    except Exception:
+        return None
 
 
 def countdown_bucket(target: int | None, now: int) -> tuple[str, int]:

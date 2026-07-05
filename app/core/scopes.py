@@ -13,14 +13,6 @@ RULES (these make scopes safe long-term - do not break them)
 - The mask ``0`` means ALL scopes - present and future - so adding a new scope
   never invalidates existing "all" tokens.
 - New scopes take the next free bit. Append; don't reorder.
-
-This 1.0 base ships with NO scopes - they're defined alongside the real data
-endpoints. When you add an endpoint, append its scope here, e.g.:
-
-    Scope("widgets:read",  1 << 0, "widgets", "Read your widgets"),
-    Scope("widgets:write", 1 << 1, "widgets", "Create / update / delete your widgets"),
-
-Until a scope exists, tokens can only be created with the "all" mask (0).
 """
 
 from dataclasses import dataclass

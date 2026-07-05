@@ -83,7 +83,7 @@ export function mount(container, { releaseId, path }) {
         } else if (r.kind === 'light') {
           r._tex = glowTex; r._blend = 'add';
         } else if (r.kind === 'mesh') {
-          // proxy box — no texture needed
+          // box proxy, no texture
         } else if (r.cls) unsupported.add(r.cls.replace('CParticleRenderer_', ''));
       }
     }
@@ -108,7 +108,6 @@ export function mount(container, { releaseId, path }) {
     raf = requestAnimationFrame(frame);
   }
 
-  // ---- per-frame instance/vertex packing ----
   const inst = new Float32Array(20000 * FLOATS_PER_INSTANCE);
   const rib = new Float32Array(60000 * RIBBON_FLOATS_PER_VERT);
   const mbuf = new Float32Array(20000 * MESH_FLOATS_PER_INSTANCE);
@@ -250,7 +249,7 @@ export function mount(container, { releaseId, path }) {
     raf = requestAnimationFrame(frame);
   }
 
-  // ---- orbit controls (scoped to this canvas) ----
+  // orbit controls
   let drag = false, px = 0, py = 0;
   const onDown = (e) => { drag = true; px = e.clientX; py = e.clientY; autofit.active = false; };
   const onUp = () => { drag = false; };
@@ -279,7 +278,7 @@ export function mount(container, { releaseId, path }) {
   };
 }
 
-// ---- Modal wrapper (matches the blueprint viewer's UX) ----
+// Modal wrapper; UX matches the blueprint viewer.
 let _stylesDone = false;
 function injectStyles() {
   if (_stylesDone) return; _stylesDone = true;
@@ -341,7 +340,6 @@ export function open({ releaseId, path, title }) {
   return { close };
 }
 
-// tiny vec helpers
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const sub2 = sub;
 const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];

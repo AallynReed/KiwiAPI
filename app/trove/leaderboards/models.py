@@ -39,11 +39,10 @@ _WEEKLY_RESET_UUIDS = {
 
 
 def reset_kind(uuid: int) -> str:
-    """Return one of ``"daily"`` / ``"weekly"`` / ``"default"`` for a board uuid.
+    """Hardcoded fallback cadence (``"daily"`` / ``"weekly"`` / ``"default"``).
 
-    This is the HARDCODED FALLBACK only - production code should prefer the
-    per-board override (``board.reset_kind_override`` in PG, resolved by
-    ``pg_store._effective_reset_kind``) which the admin panel can edit at runtime.
+    Production prefers the per-board override (``board.reset_kind_override`` in PG,
+    resolved by ``pg_store._effective_reset_kind``), editable from the admin panel.
     """
     if uuid in _DAILY_RESET_UUIDS:
         return "daily"
@@ -59,20 +58,16 @@ RESET_KIND_VALUES = ("daily", "weekly", "none")
 
 
 def is_lifetime_kind(rk: str) -> bool:
-    """True for cadences that accumulate forever rather than resetting.
+    """True for cadences that accumulate forever (``"default"`` implicit, ``"none"``
+    the explicit admin override).
 
-    ``"default"`` is the implicit lifetime tag (any board not in the
-    hardcoded daily/weekly sets); ``"none"`` is the explicit one the
-    admin sets via the override. Cheater detection on these boards
-    skips score-outlier + rank-gap because rank-1 will always look
-    like an outlier on a 5-year-old stat - only velocity (score change
-    over time) is a valid signal.
+    Cheater detection on these boards skips score-outlier + rank-gap - rank-1 always
+    looks like an outlier on a 5-year-old stat, so only velocity is a valid signal.
     """
     return rk in ("default", "none")
 
 
 # Boards that aren't a leaderboard of PLAYERS (e.g. server-level tallies).
-# Kept as a set so future additions are one-line.
 _NON_PLAYER_BOARDS = {1100, 21012}
 
 

@@ -1,18 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   /leaderboards - page logic
-   ───────────────────────────────────────────────────────────────────────
-   Fetches anchors, boards, and entries from /site/leaderboards/* (which
-   bypass the public API surface and read the database directly). Renders
-   a sidebar of boards grouped by category and an entries table for the
-   selected one.
-
-   URL hash mirrors selection: ?anchor=X&board=Y. Reload-safe and
-   bookmarkable. Locale labels come through i18n.js (data-i18n attrs on
-   chrome strings); board/player names are game data and stay verbatim.
-   ═══════════════════════════════════════════════════════════════════════ */
+/* /leaderboards page logic. Reads /site/leaderboards/* (bypasses the public
+   API, hits the DB directly); URL hash mirrors ?anchor=X&board=Y for
+   reload-safe deep links. Board/player names are game data and stay verbatim;
+   chrome strings localise via i18n.js. */
 
 (function () {
   'use strict';
+
+  const { esc, fetchJSON } = window.BTTUtil;
 
   const PAGE_SIZE = 100;
   const DAY_SECONDS = 86400;
@@ -110,7 +104,6 @@
     '#4361ee', '#f9c74f', '#7209b7', '#d62828', '#90be6d',
   ];
 
-  // ─── DOM refs ──────────────────────────────────────────────────────
   const $dayPicker = document.getElementById('lb-day-picker');
   const $cheatersMeta = document.getElementById('lb-cheaters-meta');
   const $cheatersBody = document.getElementById('lb-cheaters-body');
@@ -154,7 +147,6 @@
   const $mobileSelected = document.getElementById('lb-mobile-selected');
   const $sidebar = document.getElementById('lb-sidebar');
 
-  // ─── Boot ──────────────────────────────────────────────────────────
   init().catch((err) => {
     console.error('[leaderboards] boot failed', err);
     $boardList.innerHTML = errorHTML(err);
@@ -238,11 +230,8 @@
     }
   }
 
-  // ─── Tabs ──────────────────────────────────────────────────────────
-  // Three tabs: 'boards' (default, all the board-browser machinery),
-  // 'cheaters' and 'clusters' (both lazy-fetched on first activation -
-  // they share one /cheaters payload). URL hash carries ``tab=cheaters``
-  // / ``tab=clusters`` for deep-link + back-button support.
+  // 'cheaters' and 'clusters' are lazy-fetched on first activation and share
+  // one /cheaters payload; URL hash carries tab= for deep-link + back-button.
   const TABS = ['boards', 'cheaters', 'clusters'];
 
   // A tab is "available" only when its server-side calculation is enabled.
@@ -333,11 +322,9 @@
   }
 
 
-  // ─── Possible cheaters panel ───────────────────────────────────────
-  // Pulls from /site/leaderboards/cheaters, which proxies to the
-  // statistical-outlier detection (see app/trove/leaderboards/detection.py).
-  // Stored on `state.cheaters` so a language switch can re-render
-  // without re-fetching.
+  // /site/leaderboards/cheaters proxies the statistical-outlier detection (see
+  // app/trove/leaderboards/detection.py). Cached on state.cheaters so a
+  // language switch re-renders without re-fetching.
   function renderCheaters(payload) {
     if (payload && !payload._error) state.cheaters = payload;
     const data = state.cheaters;
@@ -494,8 +481,7 @@
     return 'lb-confidence-low';
   }
 
-  // ─── Cheaters coverage (analyzed + skipped boards) ────────────────
-  // The collapsible coverage panel under the cheaters tab meta line.
+  // Collapsible coverage panel under the cheaters tab meta line.
   // Design intent: at a glance, the reader sees (1) WHAT FRACTION of
   // analyzable boards landed in each cadence bucket (the stats strip up
   // top, where the bar widths are proportional to count), and (2) WHICH
@@ -762,10 +748,8 @@
       </div>`;
   }
 
-  // ─── Alt-clusters tab (coordinated multi-account detection) ────────
-  // The group-shaped finding: families of similarly-named accounts at
-  // near-identical scores. Its own tab, fed by the cheaters payload's
-  // `clusters` array, with an independent confidence slider + badge.
+  // Group-shaped finding: families of similarly-named accounts at near-identical
+  // scores. Own tab + confidence slider, fed by the cheaters payload's `clusters`.
   function renderClustersTab(payload) {
     if (payload && !payload._error && state.cheaters == null) {
       state.cheaters = payload;
@@ -1044,12 +1028,9 @@
     );
   }
 
-  // ─── Subtitle (dynamic retention window) ───────────────────────────
-  // The retention number in the subtitle tracks the runtime config
-  // tunable ``leaderboards_hot_retention_days``. JS owns this node
-  // entirely (no [data-i18n] on it) - we translate the template via
-  // BTTi18n.t(), substitute the actual number, and write it directly.
-  // Re-runs on language change via the listener in wireEvents().
+  // Subtitle's retention number tracks the runtime config tunable
+  // leaderboards_hot_retention_days. JS owns this node entirely (no [data-i18n]),
+  // so it translates the template via t() and re-runs on language change.
   function renderSubtitle() {
     const el = document.getElementById('lb-subtitle');
     if (!el) return;
@@ -1057,7 +1038,7 @@
     el.textContent = template.replace('{days}', String(state.hotRetentionDays));
   }
 
-  // ─── Day picker (trove-day = real UTC - 11h) ───────────────────────
+  // Day picker (trove-day = real UTC - 11h).
   // A trove-day [N] starts at real UTC date N at 11:00 (trove 00:00) and
   // ends at real UTC date N+1 at 11:00. To group anchors by trove-day we
   // subtract the 11h offset and floor to the day in UTC; the resulting
@@ -1185,20 +1166,6 @@
     await loadBoards();
   }
 
-  // ─── Fetch helpers ─────────────────────────────────────────────────
-  async function fetchJSON(path) {
-    const res = await fetch(path, { headers: { Accept: 'application/json' } });
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
-      try {
-        const body = await res.json();
-        if (body && body.error && body.error.message) msg = body.error.message;
-      } catch (_) { /* no body */ }
-      throw new Error(msg);
-    }
-    return res.json();
-  }
-
   function formatAnchor(ts) {
     const d = new Date(ts * 1000);
     // Show "YYYY-MM-DD HH:mm UTC" - readable, sortable, no surprise
@@ -1207,7 +1174,6 @@
     return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
   }
 
-  // ─── Boards ────────────────────────────────────────────────────────
   // Loading model:
   //   • If we ALREADY have boards in state (a previous day's list, or
   //     this same day from cache), leave them on screen and just paint
@@ -1380,7 +1346,6 @@
     renderBoardList();
   }
 
-  // ─── Entries ───────────────────────────────────────────────────────
   function resetEntries() {
     state.entries = [];
     state.entriesTotal = 0;
@@ -1577,7 +1542,6 @@
       : Number(score).toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
 
-  // ─── Player history ────────────────────────────────────────────────
   async function searchPlayer(name) {
     const trimmed = (name || '').trim();
     if (!trimmed) {
@@ -1645,7 +1609,6 @@
     rerunI18n();
   }
 
-  // ─── Event wiring ──────────────────────────────────────────────────
   function wireEvents() {
     $boardSearch.addEventListener('input', () => {
       state.boardFilter = $boardSearch.value || '';
@@ -1755,7 +1718,6 @@
     });
   }
 
-  // ─── URL hash helpers ──────────────────────────────────────────────
   function parseHash() {
     const out = { anchor: null, board: null, tab: null, player: null };
     const raw = location.hash.replace(/^#/, '');
@@ -1785,10 +1747,8 @@
     history.replaceState(null, '', next);
   }
 
-  // ─── i18n ──────────────────────────────────────────────────────────
-  // i18n.js exposes BTTi18n.t(s) for JS-built strings and BTTi18n.refresh()
-  // to re-translate freshly-injected [data-i18n] nodes (e.g. the entries
-  // table headers, which get rebuilt every render).
+  // BTTi18n.t(s) translates JS-built strings; refresh() re-translates
+  // freshly-injected [data-i18n] nodes (e.g. entries table headers).
   function t(s) {
     return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s;
   }
@@ -1796,30 +1756,15 @@
     if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh();
   }
 
-  // ─── Util ──────────────────────────────────────────────────────────
-  function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-
   function errorHTML(err) {
     const msg = (err && err.message) || String(err);
     return `<p class="lb-error">${t('Failed to load')}: ${esc(msg)}</p>`;
   }
 
-  // ─── Charts ────────────────────────────────────────────────────────
-  // Inline-SVG line charts. One renderer (drawLineChart) drives both the
-  // per-board chart (top-N players' score over 7d) and the per-player
-  // chart (one line per board the player appears on, same window).
-  //
-  // No external dependency. The chart is interactive: hover snaps to the
-  // nearest anchor and pops a tooltip with each series' value at that
-  // moment, plus a legend underneath that highlights on hover.
-  //
-  // State on `state.boardChart` / `state.playerChart` persists payloads
-  // so window-resize and language-switch re-render without re-fetching.
-
-  // ─── Per-board chart ───────────────────────────────────────────────
+  // Dependency-free inline-SVG line charts. One renderer (drawLineChart) drives
+  // both the per-board chart (top-N players over 7d) and the per-player chart
+  // (one line per board). Payloads cached on state.boardChart / state.playerChart
+  // so resize + language-switch re-render without re-fetching.
   async function loadBoardChart(uuid) {
     const $wrap = document.getElementById('lb-board-chart-wrap');
     const $meta = document.getElementById('lb-board-chart-meta');
@@ -1888,7 +1833,6 @@
     state.boardChart = null;
   }
 
-  // ─── Per-player chart ──────────────────────────────────────────────
   async function loadPlayerChart(name) {
     const $wrap = document.getElementById('lb-player-chart-wrap');
     const $chart = document.getElementById('lb-player-chart');
@@ -1956,18 +1900,15 @@
     state.playerChart = null;
   }
 
-  // ─── Generic SVG line-chart renderer ───────────────────────────────
-  // Inputs:
+  // Generic SVG line-chart renderer. Inputs:
   //   container   - <div> that will host the <svg>
   //   legendNode  - <div> for the legend chips
   //   opts.anchors            - all unix timestamps in window (defines x range)
   //   opts.series             - [{key, label, color, points:[{x, y, ...}]}]
   //   opts.valueLabel         - y-axis label (currently embedded in tooltip)
   //   opts.tooltipNameSuffix  - fn(series, point) → extra text after label
-  //
-  // The chart is a fully-laid-out SVG with grid, axes, polylines, and a
-  // single mouse-tracking overlay that resolves to the nearest anchor on
-  // hover. Legend chips highlight/dim series on hover.
+  // Grid, axes, polylines + a single mouse-tracking overlay that snaps to the
+  // nearest anchor on hover; legend chips highlight/dim series on hover.
   function drawLineChart(container, legendNode, opts) {
     container.innerHTML = '';
     const { anchors, series } = opts;
@@ -2237,7 +2178,6 @@
     }
   }
 
-  // ─── Chart-only formatting helpers ─────────────────────────────────
   function abbrevScore(v) {
     // Compact axis labels: 12,345 → 12.3k, 1,234,567 → 1.2M.
     const abs = Math.abs(v);
@@ -2257,9 +2197,7 @@
     return `${months[d.getUTCMonth()]} ${d.getUTCDate()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
   }
 
-  // ─── Window resize + language re-render ────────────────────────────
-  // Debounced resize handler so a drag-resize doesn't recompute the
-  // viewBox 60×/s. Both charts re-render with cached payloads.
+  // Debounced so a drag-resize doesn't recompute the viewBox 60×/s.
   let _resizeTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(_resizeTimer);

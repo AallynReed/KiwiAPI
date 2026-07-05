@@ -12,9 +12,9 @@
 (() => {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   const tr = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   const STATUS_META = {
     online:      { cls: 'is-up',    label: 'Online' },

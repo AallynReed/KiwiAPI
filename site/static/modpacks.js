@@ -11,6 +11,8 @@
 (function () {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   const PAGE_SIZE = 30;
 
   const state = {
@@ -26,8 +28,6 @@
   const $search = $('mh-search');
   const $sort = $('mh-sort');
 
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
   // Modpacks are addressed as /modpacks/<owner_handle>/<slug>.
   const packUrl = (p) => '/modpacks/' + encodeURIComponent(p.handle) + '/' + encodeURIComponent(p.slug);

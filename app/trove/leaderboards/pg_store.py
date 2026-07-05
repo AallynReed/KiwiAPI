@@ -25,8 +25,7 @@ _RESET_HOUR_UTC = 11
 
 
 def _effective_reset_kind(override: str | None, uuid: int) -> str:
-    """Admin override (if a valid value) else the hardcoded mapping - the PG
-    equivalent of ``models.effective_reset_kind`` for a plain override string."""
+    """Admin override (if a valid value) else the hardcoded ``models.reset_kind``."""
     if isinstance(override, str) and override in RESET_KIND_VALUES:
         return override
     return reset_kind(uuid)
@@ -675,19 +674,6 @@ async def get_class_estimates(window_start: int | None = None) -> list[dict]:
                 "ORDER BY window_end, class_index",
                 window_start,
             )
-    return [dict(r) for r in rows]
-
-
-async def latest_class_estimates() -> list[dict]:
-    """All per-class rows for the most recent stored window (for /current)."""
-    cols = ("class_index, window_end, window_start, duration_hours, estimate, "
-            "estimate_clean, computed_at")
-    async with acquire() as con:
-        rows = await con.fetch(
-            f"SELECT {cols} FROM class_activity_estimate "
-            "WHERE window_end = (SELECT MAX(window_end) FROM class_activity_estimate) "
-            "ORDER BY estimate DESC, class_index"
-        )
     return [dict(r) for r in rows]
 
 

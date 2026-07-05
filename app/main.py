@@ -23,12 +23,12 @@ from app.core.errors import COMMON_ERROR_RESPONSES, register_error_handlers
 from app.core.features import (
     require_class_activity_enabled,
     require_codexes_enabled,
-    require_giveaways_enabled,
-    require_leaderboards_enabled,
     require_dm_subs_enabled,
+    require_giveaways_enabled,
+    require_image_studio_enabled,
+    require_leaderboards_enabled,
     require_market_enabled,
     require_mods_hub_enabled,
-    require_image_studio_enabled,
     require_player_activity_enabled,
     require_updates_enabled,
     require_webhooks_enabled,
@@ -41,18 +41,16 @@ from app.core.postgres import close_postgres, init_postgres
 from app.core.redis import close_redis, init_redis
 from app.core.scopes import catalog as scope_catalog
 from app.discord.router import router as discord_router
+from app.dm_subs.delivery import start_dm_delivery, stop_dm_delivery
+from app.dm_subs.router import router as dm_subs_router
 from app.events.bus import start_event_bus, stop_event_bus
 from app.events.router import router as events_router
 from app.events.scheduler import start_event_scheduler, stop_event_scheduler
-from app.dm_subs.delivery import start_dm_delivery, stop_dm_delivery
-from app.dm_subs.router import router as dm_subs_router
-from app.webhooks.delivery import start_webhook_delivery, stop_webhook_delivery
-from app.webhooks.router import router as webhooks_router
-from app.images.router import router as images_router
 from app.giveaways.admin import router as giveaways_admin_router
 from app.giveaways.router import public_router as giveaways_public_router
 from app.giveaways.router import router as giveaways_router
 from app.giveaways.worker import start_giveaway_worker, stop_giveaway_worker
+from app.images.router import router as images_router
 from app.pageviews.middleware import add_pageview_middleware
 from app.pageviews.recorder import start_pageview_recorder, stop_pageview_recorder
 from app.scanning.router import router as scanning_router
@@ -74,16 +72,16 @@ from app.trove.leaderboards.detection import (
     start_cheaters_warmer,
     stop_cheaters_warmer,
 )
+from app.trove.modpacks.router import (
+    modpacks_hub_router,
+    modpacks_hub_write_router,
+    modpacks_public_router,
+)
 from app.trove.mods_hub.git_http import git_router as mods_git_router
 from app.trove.mods_hub.router import (
     mods_hub_router,
     mods_hub_write_router,
     mods_public_router,
-)
-from app.trove.modpacks.router import (
-    modpacks_hub_router,
-    modpacks_hub_write_router,
-    modpacks_public_router,
 )
 from app.trove.news import start_news_refresher, stop_news_refresher
 from app.trove.router import (
@@ -106,6 +104,8 @@ from app.trove.status import start_status_prober, stop_status_prober
 from app.trove.updates.worker import start_update_archiver, stop_update_archiver
 from app.usage.middleware import add_usage_middleware
 from app.usage.recorder import start_usage_recorder, stop_usage_recorder
+from app.webhooks.delivery import start_webhook_delivery, stop_webhook_delivery
+from app.webhooks.router import router as webhooks_router
 
 logger = logging.getLogger("kiwi")
 
@@ -260,9 +260,6 @@ app.add_middleware(
 # the browser portal - programs never call them. So they're hidden from the
 # public OpenAPI reference (`include_in_schema=False`); they still function
 # normally, they just don't appear in the docs that third-party developers read.
-#
-# This 1.0 base ships the full developer platform but NO data endpoints yet - the
-# token-authenticated `/v1/*` product surface is added on top of this foundation.
 app.include_router(auth_router, include_in_schema=False)
 app.include_router(sessions_router, include_in_schema=False)
 app.include_router(account_router, include_in_schema=False)
@@ -304,13 +301,11 @@ app.include_router(stats_router)
 app.include_router(gems_router)
 app.include_router(misc_router)
 app.include_router(mods_router)
-# Mods Hub. ALL of it is hidden from the public API reference for now - the
-# website drives the internal hub via the same-origin /site/mods/* proxies + the
-# site-auth write API (both hidden from the reference). The documented, app-facing
-# catalog API is `mods_public_router` (/v1/mods/*). (Reads stay tokenless
-# `mods:read`; writes stay site-login gated.)
-# Mods Hub - all gated by the master feature toggle (feature_mods_hub_enabled);
-# OFF -> every endpoint 404s. See app/core/features.py.
+# Mods Hub. The internal hub (same-origin /site/mods/* proxies + site-auth write
+# API) is hidden from the public reference; the documented app-facing catalog API is
+# `mods_public_router` (/v1/mods/*). Reads stay tokenless `mods:read`; writes stay
+# site-login gated. All gated by feature_mods_hub_enabled (OFF -> every endpoint
+# 404s; see app/core/features.py).
 _MODS_GATE = [Depends(require_mods_hub_enabled)]
 app.include_router(mods_hub_router, include_in_schema=False, dependencies=_MODS_GATE)
 app.include_router(mods_hub_write_router, include_in_schema=False, dependencies=_MODS_GATE)

@@ -60,8 +60,6 @@ def _blueprint_ref(content: bytes, valid_blueprints: set[str] | None = None,
     return explicit_fallback
 
 
-
-
 def _name_from_path(path: str) -> str:
     stem = path.rsplit("/", 1)[-1].removesuffix(".binfab")
     return stem.replace("_", " ").strip().title() or stem

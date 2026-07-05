@@ -30,10 +30,8 @@ class DecodedSide:
 
 
 def _escape_ctrl(text: str) -> str:
-    """Rewrite NUL + other C0 control bytes (except TAB/CR/LF/FF) as
-    visible ``\\xNN`` escapes so the diff renderer doesn't drop them and
-    so the user can see them as comparable content. Cost is linear in
-    the text length; called once per side."""
+    """Rewrite NUL + other C0 control bytes (except TAB/CR/LF/FF) as visible
+    ``\\xNN`` escapes so the diff renderer doesn't drop them."""
     out: list[str] = []
     for c in text:
         o = ord(c)
@@ -47,14 +45,9 @@ def _escape_ctrl(text: str) -> str:
 
 
 def decode_blob(data: bytes | None) -> DecodedSide:
-    """Decode ``data`` for diffing. Strategy:
-      • ``None`` (path didn't exist at this side's version) → empty text side
-      • bytes > MAX_DIFF_BYTES → "too large" - refuse to diff inline so
-        we don't ship a 100 MB JSON payload to the browser
-      • otherwise: always decode as text (utf-8 first, latin-1 fallback
-        - latin-1 maps every byte unambiguously so decode never fails)
-        and escape NUL + other C0 control bytes to visible ``\\xNN``
-        markers so the diff renderer doesn't choke on them.
+    """Decode ``data`` for diffing: ``None`` → empty side, over MAX_DIFF_BYTES →
+    "too large" (never inline a 100 MB payload), else decode as text and escape
+    control bytes to visible ``\\xNN``.
 
     We DELIBERATELY don't try to classify "binary vs text" by content.
     Two reasons:

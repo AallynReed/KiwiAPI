@@ -285,7 +285,6 @@
 
   function clampLevel() { form.level = clamp(form.level, 1, tierMaxLevel(form.tier)); }
   function updateProcSummary() {
-    // cheap re-render of just the proc summary chip
     const el = elForm.querySelector(".ge-proc-summary span:last-child");
     if (!el) return;
     const available = Math.floor(Math.min(form.level, 15) / 5);

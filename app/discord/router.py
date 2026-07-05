@@ -11,9 +11,7 @@ timestamp arrive in ``X-Signature-Ed25519`` / ``X-Signature-Timestamp``. The
 public key (hex) is ``settings.discord_public_key``. No new dependency - the
 already-required ``cryptography`` package does Ed25519.
 
-This is the foundation for future server / DM commands: register slash commands
-with Discord (admin panel → "Push to Discord"), then dispatch on the command
-name in ``commands.handle``.
+Non-PING interactions dispatch on the command name in ``commands.handle``.
 """
 import json
 import logging

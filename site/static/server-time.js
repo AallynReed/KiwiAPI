@@ -1,19 +1,9 @@
-/* ===========================================================================
-   Trove Server Time page (/server-time).
-
-   Three pieces, all driven off ONE authoritative clock:
-     1. A big analog + digital readout of Trove server time. Trove's day rolls
-        over at 11:00 UTC, so the game clock is real UTC minus 11h ("UTC-11").
-     2. World clocks - the SAME instant across common player time zones, with a
-        day/night glyph and the live UTC offset.
-     3. A Discord timestamp maker - pick a moment, see a live Discord-message
-        mockup of how it renders in YOUR local time, switch styles, and copy the
-        <t:unix:STYLE> code (renders per-viewer inside Discord).
-
-   The clock is anchored to the API's authoritative UTC (so it doesn't trust a
-   wrong local machine clock); it falls back to the local clock if the fetch
-   fails. UTC-11 logic + the tz list are shared with landing.js (the home strip).
-   =========================================================================== */
+/* Trove Server Time page (/server-time): analog+digital clock, world clocks,
+   and a Discord <t:unix:STYLE> timestamp maker - all off one clock. Trove's day
+   rolls over at 11:00 UTC, so the game clock is real UTC minus 11h ("UTC-11").
+   The clock anchors to the API's authoritative UTC (never trusting a wrong local
+   machine clock), falling back to local on fetch failure. UTC-11 logic + tz list
+   are shared with landing.js. */
 (() => {
   'use strict';
 

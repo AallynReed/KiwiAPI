@@ -10,21 +10,15 @@ from app.core.utils import utcnow
 class PageView(Document):
     """One record per showcase-site page load (a GET that returned 200 text/html).
 
-    Powers the admin "Site Analytics" tab. Stores BOTH the matched route TEMPLATE
-    and the CONCRETE URL, same as ``UsageEvent`` (route + path): ``route`` is only
-    used to decide "is this a trackable page", while ``path`` is the real page URL
-    the dashboard rolls up - so each individual mod (``/mods/alice/cool-mod``) and
-    player (``/player/Alice``) gets its own row, not one aggregate ``{slug}`` bucket.
-    Cardinality is naturally bounded: only 200s are recorded, so a path only exists
-    here if a real page was actually served. ``visitor_hash`` is a salted,
-    daily-rotating hash of the client IP + User-Agent: it dedupes a visitor within
-    a single UTC day without storing any PII. Rows auto-expire via a TTL index on
-    ``created_at`` (managed in core.database so the retention window is adjustable).
+    Powers the admin "Site Analytics" tab. Cardinality is naturally bounded: only
+    200s are recorded, so a path exists here only if a real page was served. Rows
+    auto-expire via a TTL index on ``created_at`` (managed in core.database so the
+    retention window is adjustable).
     """
 
     route: str              # matched route TEMPLATE, e.g. /player/{name} (page-decision only)
-    path: str               # CONCRETE page URL, e.g. /player/Alice (what the dashboard rolls up)
-    visitor_hash: str       # sha256(daily_salt | ip | ua)[:32] - a once-per-day id
+    path: str               # CONCRETE page URL rolled up by the dashboard - each mod/player its own row
+    visitor_hash: str       # sha256(daily_salt | ip | ua)[:32] - once-per-day id, no PII
 
     created_at: datetime = Field(default_factory=utcnow)
 

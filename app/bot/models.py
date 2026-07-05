@@ -197,12 +197,9 @@ MAX_CLUBS_PER_GUILD = 3
 
 def promote_rank(current: str, linked: set[str]) -> str | None:
     """The rank a member at ``current`` is promoted INTO: the nearest LINKED rank
-    above them, walking up one step at a time and skipping ranks with no linked
-    role. **President is never a promotion target** (it can only be set in-game),
-    so the ceiling is vice-president. ``None`` if there's no higher linked rank.
-
-    e.g. a member promotes to captain; if captain isn't linked but officer is, it
-    skips straight to officer. ``linked`` is the set of ranks in ``role_links``."""
+    above them, skipping ranks with no linked role. **President is never a promotion
+    target** (it can only be set in-game), so the ceiling is vice-president. ``None``
+    if there's no higher linked rank. ``linked`` is the set of ranks in ``role_links``."""
     if current not in CLUB_RANKS:
         return None
     cur = CLUB_RANKS.index(current)

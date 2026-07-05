@@ -21,7 +21,6 @@ per-feed filter knobs are runtime_config tunables (category ``community_feeds``)
 so they tune from the admin panel without a redeploy.
 """
 
-import asyncio
 import logging
 import re
 from datetime import datetime, timedelta, timezone
@@ -30,6 +29,7 @@ import httpx
 
 from app.admin import runtime_config
 from app.core.config import settings
+from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
 from app.trove.models import FeedCache
 
@@ -441,35 +441,16 @@ async def fetch_bilibili_image(url: str) -> tuple[bytes, str]:
 
 # --- Background refresher ---------------------------------------------------
 
-_task: asyncio.Task | None = None
-
-
-async def _loop() -> None:
-    while True:
-        try:
-            await refresh_all_feeds()
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("Feed refresh iteration failed", exc_info=True)
-        try:
-            await asyncio.sleep(settings.trove_feeds_refresh_seconds)
-        except asyncio.CancelledError:
-            raise
+_refresher = PeriodicRefresher(
+    refresh_all_feeds,
+    name="Feed refresh iteration",
+    delay=lambda: settings.trove_feeds_refresh_seconds,
+)
 
 
 def start_feeds_refresher() -> None:
-    global _task
-    if _task is None:
-        _task = asyncio.create_task(_loop())
+    _refresher.start()
 
 
 async def stop_feeds_refresher() -> None:
-    global _task
-    if _task is not None:
-        _task.cancel()
-        try:
-            await _task
-        except asyncio.CancelledError:
-            pass
-        _task = None
+    await _refresher.stop()

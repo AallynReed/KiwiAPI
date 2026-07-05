@@ -26,9 +26,10 @@ import logging
 import httpx
 
 from app.core.config import settings
+from app.core.delivery_health import record_delivery
 from app.core.features import WEBHOOKS_FLAG, is_enabled
+from app.core.queue_worker import RedisListConsumer, enqueue_or_inline
 from app.core.redis import get_redis
-from app.core.utils import utcnow
 from app.webhooks import embeds
 from app.webhooks.models import (
     MAX_CONSECUTIVE_FAILURES,
@@ -37,8 +38,6 @@ from app.webhooks.models import (
 )
 
 logger = logging.getLogger("kiwi.webhooks")
-
-_worker: asyncio.Task | None = None
 
 _POST_TIMEOUT = 10.0
 _POST_ATTEMPTS = 3
@@ -49,19 +48,17 @@ _POST_ATTEMPTS = 3
 async def enqueue(payload: dict) -> None:
     """Queue one event for webhook fan-out. Safe to call for every event - it
     no-ops unless webhooks are enabled and the type is deliverable."""
-    if payload.get("type") not in WEBHOOK_EVENT_TYPES:
-        return
-    if not await is_enabled(WEBHOOKS_FLAG):
-        return
-    redis = get_redis()
-    if redis is None:
-        # Dev / no Redis: deliver inline so the feature still works.
-        asyncio.create_task(_deliver(payload))
-        return
-    try:
-        await redis.lpush(settings.webhooks_queue, json.dumps(payload, default=str))
-    except Exception:
-        logger.warning("webhook enqueue failed", exc_info=True)
+    await enqueue_or_inline(
+        payload,
+        deliverable_types=WEBHOOK_EVENT_TYPES,
+        flag=WEBHOOKS_FLAG,
+        queue=settings.webhooks_queue,
+        deliver=_deliver,
+        get_redis=get_redis,
+        is_enabled=is_enabled,
+        logger=logger,
+        log_name="webhook",
+    )
 
 
 # ── delivery ─────────────────────────────────────────────────────────────────
@@ -95,25 +92,14 @@ async def _deliver_one(hook: SiteWebhook, event_type: str, data: dict) -> None:
         return
     design_id = tmpl.image_design_id if (tmpl and tmpl.enabled and tmpl.show_image) else None
     ok, status, error = await post_to_discord(hook.url, body, image_design_id=design_id)
-    hook.last_status = status
-    hook.updated_at = utcnow()
-    if ok:
-        hook.consecutive_failures = 0
-        hook.last_error = None
-        hook.last_delivered_at = utcnow()
-    elif status in (404, 410):
-        # The user deleted the Discord webhook - never coming back; disable it.
-        hook.active = False
-        hook.last_error = error
-        hook.disabled_reason = f"Discord webhook was deleted (HTTP {status})."
-    else:
-        hook.consecutive_failures += 1
-        hook.last_error = error
-        if hook.consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-            hook.active = False
-            hook.disabled_reason = (
-                f"Auto-disabled after {hook.consecutive_failures} failed deliveries."
-            )
+    # The user deleted the Discord webhook (404/410) - never coming back; disable it.
+    record_delivery(
+        hook, ok, status, error,
+        permanent_statuses=(404, 410),
+        permanent_reason="Discord webhook was deleted (HTTP {status}).",
+        auto_disable_reason="Auto-disabled after {failures} failed deliveries.",
+        max_failures=MAX_CONSECUTIVE_FAILURES,
+    )
     try:
         await hook.save()
     except Exception:
@@ -186,44 +172,20 @@ async def post_to_discord(
 
 # ── per-worker consumer loop ─────────────────────────────────────────────────
 
-async def _consume() -> None:
-    redis = get_redis()
-    if redis is None:
-        return
-    while True:
-        try:
-            item = await redis.brpop([settings.webhooks_queue], timeout=5)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("webhook BRPOP failed", exc_info=True)
-            await asyncio.sleep(1)
-            continue
-        if item is None:
-            continue                                         # timeout - just loop
-        try:
-            _key, raw = item
-            await _deliver(json.loads(raw))
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("webhook delivery failed", exc_info=True)
+# The consumer is cheap (a blocking BRPOP loop) and the master switch is
+# runtime-flippable, so we always run it and gate at enqueue time instead.
+_worker = RedisListConsumer(
+    get_redis=get_redis,
+    queue=settings.webhooks_queue,
+    handler=_deliver,
+    logger=logger,
+    log_name="webhook",
+)
 
 
 def start_webhook_delivery() -> None:
-    # The consumer is cheap (a blocking BRPOP loop) and the master switch is
-    # runtime-flippable, so we always run it and gate at enqueue time instead.
-    global _worker
-    if _worker is None:
-        _worker = asyncio.create_task(_consume())
+    _worker.start()
 
 
 async def stop_webhook_delivery() -> None:
-    global _worker
-    if _worker is not None:
-        _worker.cancel()
-        try:
-            await _worker
-        except asyncio.CancelledError:
-            pass
-    _worker = None
+    await _worker.stop()

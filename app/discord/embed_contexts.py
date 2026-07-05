@@ -1,16 +1,10 @@
 """Per-announcement-type variable contexts + default templates for the bot.
 
-The bot's existing embed builders (``app/discord/embeds.py``) remain the **default**
-embed for every announcement type (untouched, fully localized). This module adds, for
-each type:
-- ``context(key)``        - the live variables for a *custom* template,
-- ``default_template(key)`` - the editor's starting point (localized labels + ``{vars}``),
-- ``sample_context(key)`` - display-ready sample values for the palette + preview.
-
-So a guild that customizes a type renders ``render_template(custom, context)``; a guild
-that doesn't keeps calling the original ``build_embed`` (no behaviour change, no i18n
-regression). Convenience composite vars (``current_line``, ``status_lines``, …) keep the
-conditional/multiline formatting in code so a template can stay simple.
+A guild that customizes a type renders ``render_template(custom, context)``; a guild
+that doesn't keeps calling the original ``build_embed`` in ``app/discord/embeds.py``
+(the untouched, fully-localized default) - no behaviour change, no i18n regression.
+Composite vars (``current_line``, ``status_lines``, …) keep the conditional/multiline
+formatting in code so templates stay simple.
 """
 
 from __future__ import annotations

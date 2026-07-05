@@ -410,7 +410,6 @@
 
     if (!selected.size) { elSummary.innerHTML = `<p class="sc-empty">${t("Select nodes to see the combined stats, abilities and rewards.")}</p>`; return; }
 
-    // Aggregate
     const statsObj = {}, abilities = [], obtain = {};
     active.forEach((p) => {
       const n = nodeMap[p];
@@ -584,7 +583,6 @@
     el.addEventListener("mouseleave", hideTooltip);
   }
 
-  // Tooltip
   function showTooltip(e, node) {
     if (!node) return;
     const stats = (node.Stats || []).map((s) => `<li><strong>${t(s.name)}:</strong> +${s.value}${s.percentage ? "%" : ""}</li>`).join("");

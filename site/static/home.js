@@ -15,10 +15,7 @@
 (function () {
   "use strict";
 
-  function getJSON(u) {
-    return fetch(u, { headers: { Accept: "application/json" } })
-      .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); });
-  }
+  const { getJSON } = window.BTTUtil;
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;

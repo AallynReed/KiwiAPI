@@ -23,6 +23,8 @@ from datetime import datetime
 import httpx
 
 from app.core.config import settings
+from app.core.pagination import paginate
+from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
 from app.trove.models import BttChangelog, BttRelease
 
@@ -321,9 +323,9 @@ async def list_releases(
     query: dict = {}
     if channel in CHANNELS:
         query["prerelease"] = CHANNELS[channel]
-    total = await BttRelease.find(query).count()
-    docs = await BttRelease.find(query).sort("-published_at").skip(offset).limit(limit).to_list()
-    return docs, total
+    return await paginate(
+        BttRelease.find(query), sort="-published_at", limit=limit, offset=offset
+    )
 
 
 async def latest_per_platform(channel: str) -> dict:
@@ -339,47 +341,38 @@ async def latest_per_platform(channel: str) -> dict:
 
 
 # --- Background refresher ---------------------------------------------------
+# Releases and changelog refresh independently in one cycle: a tags/commits
+# failure must not derail the releases cycle, and vice versa.
 
-_task: asyncio.Task | None = None
+async def _refresh_cycle() -> None:
+    """One BTT refresh cycle: releases then changelog, each error-isolated."""
+    try:
+        count = await refresh_releases()
+        logger.info("BTT releases refreshed: %d release(s)", count)
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        logger.warning("BTT releases refresh failed", exc_info=True)
+    try:
+        info = await refresh_changelog()
+        logger.info("BTT changelog refreshed: %d group(s)%s",
+                    info["groups"], " (rate-limited)" if info["rate_limited"] else "")
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        logger.warning("BTT changelog refresh failed", exc_info=True)
 
 
-async def _loop() -> None:
-    while True:
-        try:
-            count = await refresh_releases()
-            logger.info("BTT releases refreshed: %d release(s)", count)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("BTT releases refresh failed", exc_info=True)
-        try:
-            # Changelog refresh is isolated - a tags/commits failure must not
-            # derail the releases cycle, and vice versa.
-            info = await refresh_changelog()
-            logger.info("BTT changelog refreshed: %d group(s)%s",
-                        info["groups"], " (rate-limited)" if info["rate_limited"] else "")
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("BTT changelog refresh failed", exc_info=True)
-        try:
-            await asyncio.sleep(settings.btt_releases_refresh_seconds)
-        except asyncio.CancelledError:
-            raise
+_refresher = PeriodicRefresher(
+    _refresh_cycle,
+    name="BTT refresh",
+    delay=lambda: settings.btt_releases_refresh_seconds,
+)
 
 
 def start_btt_releases_refresher() -> None:
-    global _task
-    if _task is None:
-        _task = asyncio.create_task(_loop())
+    _refresher.start()
 
 
 async def stop_btt_releases_refresher() -> None:
-    global _task
-    if _task is not None:
-        _task.cancel()
-        try:
-            await _task
-        except asyncio.CancelledError:
-            pass
-        _task = None
+    await _refresher.stop()

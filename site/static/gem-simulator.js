@@ -301,7 +301,6 @@
     restrictionSel = restF.sel;
     restrictionSel.disabled = creatorParams.type !== "1";
 
-    // level slider
     const lvlVal = h("span", { class: "slider-value" }, creatorParams.level);
     const lvlInput = h("input", { class: "slider-input", type: "range", min: "1", max: "35" });
     lvlInput.value = creatorParams.level;
@@ -309,7 +308,6 @@
     const lvlField = h("label", { class: "slider-field" }, h("span", null, t("Level")),
       h("div", { class: "slider-inline" }, lvlInput, lvlVal));
 
-    // augment slider + random toggle
     const augVal = h("span", { class: "slider-value" }, creatorParams.augment);
     const augInput = h("input", { class: "slider-input", type: "range", min: "0", max: "100" });
     augInput.value = creatorParams.augment;
@@ -342,7 +340,6 @@
     }
     const gem = selected;
 
-    // header + big slot + meta
     elDetail.appendChild(h("div", { class: "selected-name" }, gem.gem_name ? t(gem.gem_name) : "(" + t("Unnamed gem") + ")"));
 
     const bigSlot = h("div", { class: "big-slot", draggable: "true" },
@@ -363,7 +360,6 @@
       metaLine("Quality", (gem.quality * 100).toFixed(1) + "%"));
     elDetail.appendChild(h("div", { class: "selected-container" }, bigSlot, meta));
 
-    // stat cards
     const statCol = h("div", { class: "stat-list-column" });
     gem.stats.forEach((stat, i) => {
       const chips = h("div", { class: "container-chip-row" });
@@ -383,7 +379,6 @@
     });
     elDetail.appendChild(statCol);
 
-    // action squares (augments + spark/flare)
     const actionGroup = h("div", { class: "action-group" });
     Object.entries(lookups.augment_types || {}).sort((a, b) => a[1] - b[1]).forEach(([, id]) => {
       const key = "augment-" + id;
@@ -399,7 +394,6 @@
     });
     elDetail.appendChild(h("div", { class: "button-row" }, actionGroup));
 
-    // level up + action buttons
     const lvlBtn = h("button", { class: "gem-action-btn" }, gem.is_max_level ? t("Max Level") : t("Level Up"));
     lvlBtn.disabled = !!gem.is_max_level;
     lvlBtn.addEventListener("click", levelUpSelected);

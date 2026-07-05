@@ -2,13 +2,8 @@
 
 Reads return JSON-ready dicts (datetimes as ISO strings) shared by both the
 ``/v1/modpacks/hub/*`` API and the website's ``/site/modpacks/*`` proxies. Writes
-take a ``SiteUser`` actor and enforce ownership.
-
-A modpack stores only *references* to Mods Hub mods. Each reference (entry) names a
-mod, the mod *variant* (Mods Hub branch) to pull from, and - optionally - a pinned
-version. Artifacts are resolved + built on the fly at download time so unlocked
-entries always track the latest published build. Images reuse the Mods Hub CAS +
-``ModImageAsset`` (served at ``/site/mods/image/<sha>``).
+take a ``SiteUser`` actor and enforce ownership. Entries are resolved against the
+live Mods Hub at download time, so unlocked ones track the latest published build.
 """
 
 from __future__ import annotations
@@ -18,7 +13,6 @@ import json
 import logging
 import re
 import zipfile
-from datetime import datetime
 from urllib.parse import quote
 
 from beanie import PydanticObjectId
@@ -27,12 +21,10 @@ from pymongo.errors import DuplicateKeyError
 
 from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
-from app.core.utils import utcnow
+from app.core.pagination import paginate
+from app.core.utils import iso, to_oid, utcnow
 from app.site_auth.models import SiteUser
 from app.trove import tmod
-from app.trove.mods_hub import service as mods_service
-from app.trove.mods_hub import store as mods_store
-from app.trove.mods_hub.models import Collaborator, ModImageAsset, ModProject, ModRelease
 from app.trove.modpacks.models import (
     ModpackEntry,
     ModpackProject,
@@ -40,6 +32,9 @@ from app.trove.modpacks.models import (
     ModpackVariant,
     Visibility,
 )
+from app.trove.mods_hub import service as mods_service
+from app.trove.mods_hub import store as mods_store
+from app.trove.mods_hub.models import Collaborator, ModImageAsset, ModProject, ModRelease
 
 logger = logging.getLogger("kiwi.modpacks")
 
@@ -55,10 +50,6 @@ _DEFAULT_VARIANT = "default"
 
 
 # --- helpers ---------------------------------------------------------------
-
-def _iso(dt: datetime | None) -> str | None:
-    return dt.isoformat() if dt else None
-
 
 def _slugify(text: str) -> str:
     s = re.sub(r"[^a-z0-9]+", "-", (text or "").lower()).strip("-")
@@ -257,8 +248,8 @@ def pack_card(p: ModpackProject) -> dict:
         # Mod count of the default variant - the headline number on a card.
         "mod_count": len(default_v.entries) if default_v else 0,
         "total_entries": total,
-        "updated_at": _iso(p.updated_at),
-        "created_at": _iso(p.created_at),
+        "updated_at": iso(p.updated_at),
+        "created_at": iso(p.created_at),
     }
 
 
@@ -326,8 +317,9 @@ async def list_public(
     if q:
         query.update(_search_clause(q))
     sort_key = _SORTS.get(sort, "-updated_at")
-    total = await ModpackProject.find(query).count()
-    docs = await ModpackProject.find(query).sort(sort_key).skip(offset).limit(limit).to_list()
+    docs, total = await paginate(
+        ModpackProject.find(query), sort=sort_key, limit=limit, offset=offset,
+    )
     return [pack_card(p) for p in docs], total
 
 
@@ -411,10 +403,8 @@ async def delete_modpack(pack: ModpackProject, actor: SiteUser) -> None:
 # --- master moderation -----------------------------------------------------
 
 async def _get_pack_by_id(pack_id: str) -> ModpackProject | None:
-    try:
-        return await ModpackProject.get(PydanticObjectId(pack_id))
-    except Exception:
-        return None
+    oid = to_oid(pack_id)
+    return await ModpackProject.get(oid) if oid else None
 
 
 async def master_list_modpacks(
@@ -429,8 +419,9 @@ async def master_list_modpacks(
         query["owner_username"] = owner
     if visibility:
         query["visibility"] = visibility
-    total = await ModpackProject.find(query).count()
-    docs = await ModpackProject.find(query).sort("-updated_at").skip(offset).limit(limit).to_list()
+    docs, total = await paginate(
+        ModpackProject.find(query), sort="-updated_at", limit=limit, offset=offset,
+    )
     items = [{**pack_card(p), "id": str(p.id), "taken_down": p.taken_down,
               "owner_id": str(p.owner_id) if p.owner_id else None} for p in docs]
     return items, total
@@ -491,10 +482,7 @@ async def add_collaborator(pack: ModpackProject, actor: SiteUser, username: str)
 
 async def remove_collaborator(pack: ModpackProject, actor: SiteUser, user_id: str) -> dict:
     _require_primary_owner(pack, actor)
-    try:
-        uid = PydanticObjectId(user_id)
-    except Exception:
-        uid = None
+    uid = to_oid(user_id)
     pack.collaborators = [c for c in pack.collaborators if c.user_id != uid]
     pack.updated_at = utcnow()
     await pack.save()
@@ -946,8 +934,8 @@ def public_pack_card(p: ModpackProject) -> dict:
         # Mod count of the default variant - the headline number.
         "mod_count": len(default_v.entries) if default_v else 0,
         "page_url": _pack_page_url(p),
-        "created_at": _iso(p.created_at),
-        "updated_at": _iso(p.updated_at),
+        "created_at": iso(p.created_at),
+        "updated_at": iso(p.updated_at),
     }
 
 
@@ -1007,8 +995,9 @@ async def public_list(
     if q:
         query.update(_search_clause(q))
     sort_key = _SORTS.get(sort, "-updated_at")
-    total = await ModpackProject.find(query).count()
-    docs = await ModpackProject.find(query).sort(sort_key).skip(offset).limit(limit).to_list()
+    docs, total = await paginate(
+        ModpackProject.find(query), sort=sort_key, limit=limit, offset=offset,
+    )
     return [public_pack_card(p) for p in docs], total
 
 

@@ -165,8 +165,6 @@ class Gem(BaseModel):
         if not 0 <= position < len(self.stats):
             raise IndexError(f"stat position {position} out of range (0..{len(self.stats) - 1})")
 
-    # --- Actions (addressed by stat position) ------------------------------
-
     def augment_stat(self, position: int, augment_type: AugmentType | int) -> bool:
         """Apply one focus augment to the stat at `position`. False if already maxed."""
         self._check_position(position)
@@ -235,8 +233,6 @@ class Gem(BaseModel):
                 if stat.containers:
                     stat.containers.pop()
         return True
-
-    # --- Computed (output-only) --------------------------------------------
 
     @computed_field
     @property

@@ -20,6 +20,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
+from app.core.pagination import paginate
 from app.core.utils import utcnow
 from app.trove import server_time
 from app.trove.models import ChallengeCapture, ChaosChestCapture
@@ -66,10 +67,9 @@ async def get_chaos_chest_for_week(week_anchor: int) -> ChaosChestCapture | None
 async def list_chaos_chest_history(
     *, limit: int = 50, offset: int = 0,
 ) -> tuple[list[ChaosChestCapture], int]:
-    query = ChaosChestCapture.find_all()
-    total = await query.count()
-    docs = await query.sort("-week_anchor").skip(offset).limit(limit).to_list()
-    return docs, total
+    return await paginate(
+        ChaosChestCapture.find_all(), sort="-week_anchor", limit=limit, offset=offset,
+    )
 
 
 # --- Hourly challenge ------------------------------------------------------
@@ -189,7 +189,6 @@ async def get_current_challenge() -> dict:
 async def list_challenge_history(
     *, limit: int = 50, offset: int = 0,
 ) -> tuple[list[ChallengeCapture], int]:
-    query = ChallengeCapture.find_all()
-    total = await query.count()
-    docs = await query.sort("-window_anchor").skip(offset).limit(limit).to_list()
-    return docs, total
+    return await paginate(
+        ChallengeCapture.find_all(), sort="-window_anchor", limit=limit, offset=offset,
+    )

@@ -14,6 +14,8 @@
 (function () {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   const _metaSlug = (document.querySelector('meta[name="mh-slug"]') || {}).content || '';
   const _metaHandle = (document.querySelector('meta[name="mh-handle"]') || {}).content || '';
   const _clean = (v) => (v && v.indexOf('{{') === -1 ? v : '');
@@ -28,8 +30,6 @@
   const $root = document.getElementById('mp-root');
   const $modalRoot = document.getElementById('mp-modal-root');
 
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
   const modUrl = (h, s) => '/mods/' + encodeURIComponent(h) + '/' + encodeURIComponent(s);

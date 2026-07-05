@@ -1,9 +1,8 @@
 """Read side of the archive: branches, version history, directory browsing, file fetch.
 
-Latest-version only for now - the materialized `UpdateState` per branch *is* the
-current tree, so listings/fetches are direct lookups (no change-log replay).
-Directory listings compute one level at a time (ls-style) so a 100k-file tree is
-never dumped at once.
+The materialized `UpdateState` per branch *is* the current tree, so listings/fetches
+are direct lookups (no change-log replay). Directory listings compute one level at a
+time (ls-style) so a 100k-file tree is never dumped at once.
 """
 
 from __future__ import annotations
@@ -11,6 +10,7 @@ from __future__ import annotations
 import asyncio
 
 from app.core.config import settings
+from app.core.pagination import paginate
 from app.trove.updates.cas import ContentStore
 from app.trove.updates.models import UpdateBranch, UpdateChange, UpdateState, UpdateVersion
 
@@ -61,10 +61,10 @@ async def list_branches() -> list[dict]:
 
 
 async def list_versions(branch: str, limit: int, offset: int) -> tuple[list[UpdateVersion], int]:
-    q = {"branch": branch, "status": "complete"}
-    total = await UpdateVersion.find(q).count()
-    docs = await UpdateVersion.find(q).sort("-ordinal").skip(offset).limit(limit).to_list()
-    return docs, total
+    return await paginate(
+        UpdateVersion.find({"branch": branch, "status": "complete"}),
+        sort="-ordinal", limit=limit, offset=offset,
+    )
 
 
 async def latest_version(branch: str) -> UpdateVersion | None:
@@ -139,14 +139,9 @@ async def list_directory(branch: str, prefix: str) -> list[dict]:
 
 
 async def search_paths(branch: str, needle: str, limit: int = 200) -> tuple[list[dict], int]:
-    """Full-tree file search: every path on ``branch`` containing ``needle``
-    (case-insensitive substring), NOT just the current directory level.
-
-    Returns ``(entries, total)`` where each entry is a full-path file row
-    ``{"path", "name", "size", "is_dir": False}`` and ``total`` is the true
-    match count (so the UI can say "showing 200 of N"). Results are capped at
-    ``limit`` and sorted by path. The needle is escaped so it's a literal
-    substring, never a user-supplied regex.
+    """Full-tree substring path search (case-insensitive), capped at ``limit``,
+    with the true match ``total`` so the UI can say "showing 200 of N". The
+    needle is regex-escaped - it's a literal substring, never a user regex.
     """
     import re
 
@@ -181,19 +176,13 @@ async def get_file_meta(branch: str, path: str) -> dict | None:
             "archive": d.archive, "archive_index": d.archive_index}
 
 
-# --- File history + per-version resolution ---------------------------------
-# The change-log holds every (branch, path, ordinal) triple, so a file's
-# history is a prefix range scan on the (branch, path, ordinal) index; the
-# version metadata (tag, captured_at) is joined client-side from a small
-# parallel fetch of the relevant UpdateVersion rows.
+# A file's history is a range scan on the (branch, path, ordinal) change-log
+# index; version metadata (tag, captured_at) is joined in a small parallel fetch.
 
 async def file_history(branch: str, path: str) -> list[dict]:
-    """Every change to ``path`` on ``branch``, newest version first.
-
-    Each row carries the change type ("added" | "modified" | "removed"),
-    the resulting ``content_sha256`` + ``size`` (None / 0 for removed), the
-    version ordinal + tag, and the version's ``captured_at`` timestamp so
-    a chart / timeline can render without an extra round-trip per row.
+    """Every change to ``path`` on ``branch``, newest version first, with each
+    version's tag + ``captured_at`` joined in so a timeline renders without a
+    round-trip per row.
     """
     docs = await UpdateChange.find({"branch": branch, "path": path}).sort("-ordinal").to_list()
     if not docs:
@@ -220,12 +209,9 @@ async def file_history(branch: str, path: str) -> list[dict]:
 async def resolve_file_at_version(
     branch: str, path: str, ordinal: int,
 ) -> dict | None:
-    """Resolve a file's blob coordinates AT a historical version.
-
-    Walks back through the change-log to find the most recent
-    non-``removed`` change for ``path`` at or before ``ordinal``. Returns
-    ``None`` if the path never existed at that point or had been removed
-    before it.
+    """Blob coordinates for ``path`` as of ``ordinal``: the most recent
+    non-``removed`` change at or before it. ``None`` if the path didn't exist
+    (or was already removed) then.
     """
     docs = await UpdateChange.find(
         {"branch": branch, "path": path, "ordinal": {"$lte": ordinal}},

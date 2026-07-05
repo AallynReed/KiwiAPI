@@ -21,65 +21,51 @@ class SiteUser(Document):
     """A registered showcase-site user. Username + email both unique
     and stored lower-cased so login lookups are O(index seek)."""
 
-    # Login identity. Sign-in is Discord-only; there is no local password.
-    # `username` is the **website "Trove username"** (canonical lowercase) - the
-    # handle for mods/modpacks/profiles. It is FROZEN: derived from the Discord
-    # handle at first signup, then only changed via the admin-approved change flow,
-    # so renaming on Discord never shifts a user's mod handles/URLs.
-    username: str                              # canonical lowercase (frozen "Trove username")
-    # The user's LIVE Discord handle, resynced from Discord on every login (display
-    # only). May change on Discord's side without touching `username`.
+    # Sign-in is Discord-only; there is no local password. `username` is the
+    # website "Trove username" (canonical lowercase) - the handle for
+    # mods/modpacks/profiles. FROZEN: seeded from the Discord handle at signup,
+    # then only changed via the admin-approved change flow, so renaming on
+    # Discord never shifts a user's mod handles/URLs.
+    username: str
+    # LIVE Discord handle, resynced on every login (display only); may drift
+    # on Discord's side without touching `username`.
     discord_handle: str = ""
     email: EmailStr                            # canonical lowercase (from Discord)
 
-    # Profile.
-    display_name: str | None = None            # human-presented label
+    display_name: str | None = None
     is_active: bool = True
-    is_verified: bool = False                  # Discord-verified email
+    is_verified: bool = False                  # email verified Discord-side
 
-    # Linked Discord account id (snowflake; for "Sign in with Discord"). The
-    # sole identity for the account - every SiteUser is created via Discord.
+    # The sole identity for the account - every SiteUser is created via Discord.
     discord_id: int | None = None
 
-    # Discord avatar hash. The API turns this into a cdn.discordapp.com URL
-    # (see _discord_avatar_url) so we display the user's avatar without ever
-    # hosting an image ourselves. Refreshed on each login; ``None`` = the user
-    # has no custom avatar and we fall back to Discord's default embed avatar.
+    # Discord avatar hash, turned into a cdn.discordapp.com URL by
+    # _discord_avatar_url (we never host the image). ``None`` = no custom avatar
+    # → fall back to Discord's default embed avatar.
     discord_avatar: str | None = None
 
-    # Cached Discord guild list (id/name/icon/owner/permissions) from the
-    # `guilds` OAuth scope - powers the Dashboard's "Discord Bot" tab "your
-    # servers" view. None until the user signs in with the guilds scope;
-    # synced_at gates the "reconnect Discord" reprompt for older grants.
+    # Cached Discord guild list from the `guilds` OAuth scope - powers the
+    # Dashboard's "Discord Bot" tab "your servers" view. None until signed in
+    # with that scope; synced_at gates the "reconnect Discord" reprompt.
     discord_guilds: list[dict] | None = None
     discord_guilds_synced_at: datetime | None = None
 
-    # Bumped on password / email change / logout-all so outstanding access
-    # tokens lose their authority instantly. Same trick the dev portal
-    # uses; the JWT carries the version it was minted against.
+    # Bumped on email change / logout-all so outstanding access tokens lose
+    # authority instantly; the JWT carries the version it was minted against.
     token_version: int = 0
 
-    # Leaderboard-identity claim. Stored lowercased for case-insensitive
-    # match against captured ``LeaderboardEntry.player_name`` rows
-    # (which Trove's dump preserves verbatim, but display-vs-canonical
-    # rotates over time). ``None`` = no claim yet.
+    # Leaderboard-identity claim. Stored lowercased for case-insensitive match
+    # against captured ``LeaderboardEntry.player_name`` rows (Trove's dump
+    # preserves casing verbatim, but display-vs-canonical rotates). ``None`` = no
+    # claim yet.
     claimed_trove_name: str | None = None      # lowercased
     claimed_trove_display: str | None = None   # whatever casing the user typed
     claimed_at: datetime | None = None
 
-    # ── Trove-name verification ─────────────────────────────────────
-    # v1 verification is score-progression: when the user claims a
-    # name, we snapshot their current score on every (board, score)
-    # they appear on at that moment. The user goes plays Trove -
-    # raising at least one score on at least one lifetime-accumulating
-    # board. On demand (Verify now button) we re-fetch their current
-    # scores and compare; if any went up, the claim is verified.
-    #
-    # ``claim_verified`` is True once the check passes.
-    # ``claim_baseline`` is ``{board_uuid (str): score}`` captured at
-    # claim time. Stored as str-keyed dict since Mongo doesn't allow
-    # numeric keys.
-    # ``claim_verified_at`` records when the check passed.
+    # Verification is a MANUAL master approval (the score-progression self-check
+    # is retired). ``claim_baseline`` ({board_uuid str: score}; str keys because
+    # Mongo disallows numeric document keys) is still captured at claim time, but
+    # its only remaining reader is the board-count surfaced to the dashboard.
     claim_verified: bool = False
     claim_baseline: dict[str, float] = Field(default_factory=dict)
     claim_verified_at: datetime | None = None
@@ -87,6 +73,16 @@ class SiteUser(Document):
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     last_login_at: datetime | None = None
+
+    def clear_claim(self) -> None:
+        """Release the leaderboard-identity claim, resetting every claim field
+        (the caller still owns ``updated_at`` + persisting the change)."""
+        self.claimed_trove_name = None
+        self.claimed_trove_display = None
+        self.claimed_at = None
+        self.claim_verified = False
+        self.claim_verified_at = None
+        self.claim_baseline = {}
 
     class Settings:
         name = "site_users"

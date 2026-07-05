@@ -11,10 +11,10 @@
 (function () {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   const Auth = window.BTTAuth;
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 

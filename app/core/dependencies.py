@@ -157,9 +157,8 @@ async def _enforce_token_limits(
     request.state.usage_user_id = user.id
     request.state.usage_token_id = token.id
 
-    # IP allowlist - opt-in defence-in-depth for the token owner. Hashes are
-    # stored, so the check rehashes the inbound IP with this token's salt and
-    # looks for a match. An empty list means "no IP restriction".
+    # IP allowlist - opt-in defence-in-depth for the token owner (see the HMAC
+    # note above). An empty list means "no IP restriction".
     if token.allowed_ip_hashes and not _ip_hash_allowed(
         client_ip(request) or "", token.ip_salt, token.allowed_ip_hashes,
     ):
@@ -251,19 +250,14 @@ async def require_master_ingest(
     creds: HTTPAuthorizationCredentials | None = Depends(_api_scheme),
 ) -> IngestAuth:
     """Master-only gate for the bot-ingest endpoints (leaderboards / market /
-    challenge / chaos-chest). Accepts EITHER:
+    challenge / chaos-chest). Accepts a superuser-owned API token (the bot path,
+    metered through the normal rate-limit + usage pipeline) OR a superuser session
+    JWT (the portal Ingest tab; ``token=None``).
 
-    - A superuser-owned API token - the bot path, with the normal rate-limit
-      + usage-accounting pipeline applied so token caps still hold. Returns
-      the ``ApiToken`` alongside the user so the route can record it.
-    - A superuser session JWT - the portal Ingest tab, where the master is
-      already authenticated and we don't want them to mint+paste an API token
-      just to replay a captured cfg. Returns ``token=None``.
-
-    Routes by shape: a JWT has exactly two ``.``-separated segments (header,
-    payload, signature) and an API token uses ``_`` separators with no dots,
-    so the dispatch is unambiguous and avoids trying both validators on every
-    request."""
+    Dispatches by credential shape: a JWT has exactly two ``.``-separated segments,
+    an API token uses ``_`` separators with no dots - so we never run both
+    validators on one request.
+    """
     if creds is None:
         raise _not_authenticated("Authentication required")
 
@@ -281,14 +275,10 @@ async def require_master_ingest(
             message="Master account required for ingest endpoints.",
         )
 
-    # Per-token, per-endpoint cooldown. ONLY enforced on the API-token
-    # branch - a misbehaving bot resubmitting the same dump on a tight
-    # loop is the spam shape this catches (see ingest_log for duplicate-
-    # anchor spam history). Session-JWT calls bypass this so the master
-    # can replay back-fills through the portal "Manual cfg ingest" card
-    # without waiting out the window. Each ingest endpoint buckets
-    # independently - leaderboards/market/challenge/chaos-chest don't
-    # share budgets.
+    # Per-token, per-endpoint cooldown. ONLY on the API-token branch - it catches a
+    # misbehaving bot resubmitting the same dump on a tight loop; session-JWT calls
+    # bypass it so the master can replay back-fills through the portal. Each ingest
+    # endpoint buckets independently.
     if token is not None:
         from app.admin import runtime_config
 

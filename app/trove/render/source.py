@@ -20,7 +20,6 @@ from app.trove.updates.archive import (
     parse_tfi,
 )
 from app.trove.updates.cas import ContentStore
-from app.trove.updates.read import get_file_meta
 
 logger = logging.getLogger("kiwi.render")
 
@@ -71,8 +70,9 @@ async def _from_store(name: str, branch: str) -> bytes | None:
         clean_name = clean_name[len("blueprints/"):]
     path = f"blueprints/{clean_name}"
 
-    from app.trove.updates.models import UpdateState
     import re
+
+    from app.trove.updates.models import UpdateState
 
     d = await UpdateState.find_one({"branch": branch, "path": path})
     if d is None:

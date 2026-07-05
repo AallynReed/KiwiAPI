@@ -9,6 +9,8 @@
 (function () {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   const _metaHandle = (document.querySelector('meta[name="mh-handle"]') || {}).content || '';
   const _clean = (v) => (v && v.indexOf('{{') === -1 ? v : '');
   const HANDLE = decodeURIComponent(location.pathname.replace(/^\/mods\//, '').split('/')[0] || '')
@@ -18,8 +20,6 @@
   const $root = document.getElementById('mpf-root');
   const $modalRoot = document.getElementById('mpf-modal-root');
 
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
   const md = (s) => (window.BTTMarkdown ? window.BTTMarkdown.render(s) : esc(s));

@@ -1,17 +1,10 @@
-"""Per-endpoint rate-limit overrides.
+"""Per-endpoint rate-limit overrides on top of the global per-token cap.
 
-Every API-token request is already throttled globally (``api_rate_limit_*``).
-Some routes are heavier than others, so this registry lets specific routes carry
-an *additional*, tighter budget - keyed by the FastAPI route template so no
-per-router wiring is needed (``get_token_context`` consults it centrally).
-
-To add a limit for a real endpoint later, register its route template here, e.g.
-
-    register_endpoint_limit("/v1/reports/generate", max_requests=10, window_seconds=60)
+Keyed by the FastAPI route template so no per-router wiring is needed
+(``get_token_context`` consults it centrally). Empty in the base.
 """
 
 # route template -> (max_requests, window_seconds)
-# Empty in the base: add entries here for heavy endpoints as they're built.
 _ENDPOINT_LIMITS: dict[str, tuple[int, int]] = {}
 
 

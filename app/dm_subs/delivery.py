@@ -15,15 +15,15 @@ Two entry points:
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import time
 
 from app.bot import discord_rest
 from app.core.config import settings
+from app.core.delivery_health import record_delivery
 from app.core.features import DM_SUBS_FLAG, is_enabled
+from app.core.queue_worker import RedisListConsumer, enqueue_or_inline
 from app.core.redis import get_redis
-from app.core.utils import utcnow
 from app.dm_subs import embeds
 from app.dm_subs.models import (
     MARKET_NOTIFY_COOLDOWN,
@@ -37,26 +37,23 @@ logger = logging.getLogger("kiwi.dmsubs")
 # check_market, not the bus).
 _BUS_EVENTS = ("challenge", "corruxion", "fluxion", "game_update")
 
-_worker: asyncio.Task | None = None
-
 
 # ── enqueue (called from the event bus) ──────────────────────────────────────
 
 async def enqueue(payload: dict) -> None:
     """Queue one bus event for DM fan-out. No-ops unless DM subs are enabled and
     the type is one we deliver."""
-    if payload.get("type") not in _BUS_EVENTS:
-        return
-    if not await is_enabled(DM_SUBS_FLAG):
-        return
-    redis = get_redis()
-    if redis is None:
-        asyncio.create_task(_deliver(payload))
-        return
-    try:
-        await redis.lpush(settings.dm_subs_queue, json.dumps(payload, default=str))
-    except Exception:
-        logger.warning("dm-sub enqueue failed", exc_info=True)
+    await enqueue_or_inline(
+        payload,
+        deliverable_types=_BUS_EVENTS,
+        flag=DM_SUBS_FLAG,
+        queue=settings.dm_subs_queue,
+        deliver=_deliver,
+        get_redis=get_redis,
+        is_enabled=is_enabled,
+        logger=logger,
+        log_name="dm-sub",
+    )
 
 
 # ── bus-event delivery ───────────────────────────────────────────────────────
@@ -102,24 +99,14 @@ async def _deliver_one(sub: DmSubscription, body: dict) -> bool:
 
 
 def _record(sub: DmSubscription, ok: bool, status: int | None, error: str | None) -> None:
-    sub.last_status = status
-    sub.updated_at = utcnow()
-    if ok:
-        sub.consecutive_failures = 0
-        sub.last_error = None
-        sub.last_delivered_at = utcnow()
-        return
     # 403 = user doesn't share a server / blocks DMs; won't fix itself - disable.
-    if status == 403:
-        sub.active = False
-        sub.last_error = error
-        sub.disabled_reason = "The bot can't DM you (share a server with it and allow DMs)."
-        return
-    sub.consecutive_failures += 1
-    sub.last_error = error
-    if sub.consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-        sub.active = False
-        sub.disabled_reason = f"Auto-disabled after {sub.consecutive_failures} failed DMs."
+    record_delivery(
+        sub, ok, status, error,
+        permanent_statuses=(403,),
+        permanent_reason="The bot can't DM you (share a server with it and allow DMs).",
+        auto_disable_reason="Auto-disabled after {failures} failed DMs.",
+        max_failures=MAX_CONSECUTIVE_FAILURES,
+    )
 
 
 # ── market watchlist delivery ────────────────────────────────────────────────
@@ -175,42 +162,18 @@ async def check_market(prices: dict[str, float]) -> None:
 
 # ── per-worker consumer loop ─────────────────────────────────────────────────
 
-async def _consume() -> None:
-    redis = get_redis()
-    if redis is None:
-        return
-    while True:
-        try:
-            item = await redis.brpop([settings.dm_subs_queue], timeout=5)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("dm-sub BRPOP failed", exc_info=True)
-            await asyncio.sleep(1)
-            continue
-        if item is None:
-            continue
-        try:
-            _key, raw = item
-            await _deliver(json.loads(raw))
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("dm-sub delivery failed", exc_info=True)
+_worker = RedisListConsumer(
+    get_redis=get_redis,
+    queue=settings.dm_subs_queue,
+    handler=_deliver,
+    logger=logger,
+    log_name="dm-sub",
+)
 
 
 def start_dm_delivery() -> None:
-    global _worker
-    if _worker is None:
-        _worker = asyncio.create_task(_consume())
+    _worker.start()
 
 
 async def stop_dm_delivery() -> None:
-    global _worker
-    if _worker is not None:
-        _worker.cancel()
-        try:
-            await _worker
-        except asyncio.CancelledError:
-            pass
-    _worker = None
+    await _worker.stop()

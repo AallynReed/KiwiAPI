@@ -18,10 +18,9 @@ class Settings(BaseSettings):
     # Max request body accepted by the app (defence in depth; the proxy should
     # also cap, e.g. nginx `client_max_body_size 8m`).
     max_request_body_bytes: int = 8 * 1024 * 1024  # 8 MB
-    # The mod tools accept/return whole .tmod files, so they get a larger cap. Set
-    # the proxy's client_max_body_size to match (>= 20m) on the /v1/mods/ paths.
-    # This also governs the Mods Hub write surface (commit uploads, .tmod release
-    # uploads, banner/preview images) - they all live under /v1/mods/.
+    # The mod tools and the whole Mods Hub write surface (commits, .tmod releases,
+    # banner/preview images) accept .tmod files under /v1/mods/, so they get a
+    # larger cap. Match the proxy's client_max_body_size (>= 20m) on /v1/mods/.
     mods_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
 
     # --- Mods Hub (git-like mod sharing; see app/trove/mods_hub) -------------
@@ -37,34 +36,23 @@ class Settings(BaseSettings):
     # can be large, so /git/* gets its own generous body cap.
     mods_git_enabled: bool = True
     mods_git_max_body_bytes: int = 100 * 1024 * 1024    # push packfile cap
-    # The leaderboards ingest endpoint accepts the bot's raw LeaderBot.cfg upload.
-    # At ~20k entries/board a full dump is ~16 MB, so 20 MB leaves modest headroom.
-    # Master-only via superuser API token, so this isn't an open spigot. (Keep the
-    # proxy's client_max_body_size on /v1/leaderboards/insert >= this.)
+    # Master-only bot cfg ingests. A full LeaderBot.cfg dump is ~16 MB; the market
+    # (GrainusMod.cfg) dump is well under 5 MB. Keep the proxy's client_max_body_size
+    # on /v1/leaderboards/insert and /v1/market/insert >= these.
     leaderboards_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
-    # Same shape as leaderboards: master-only ingest of the bot's GrainusMod.cfg
-    # market dump. Capped at 20 MB; in practice a dump is well under 5 MB but
-    # we leave headroom for a wider interest list down the road.
     market_max_request_body_bytes: int = 20 * 1024 * 1024  # 20 MB
-    # The OCR endpoint accepts one screenshot upload. A high-res PNG of the stat
-    # sheet is typically 1-3 MB; 12 MB leaves room for a 4K lossless grab while
-    # still rejecting obvious abuse. The endpoint also caps per-file size itself.
+    # One screenshot upload; the endpoint also caps per-file size itself.
     ocr_max_request_body_bytes: int = 12 * 1024 * 1024  # 12 MB
 
-    # Leaderboards archive throttle. Queries for an anchor older than the
-    # threshold (default 90 days) hit the archive collection - those reads are
-    # cheap individually but a malicious caller could trawl the whole archive
-    # with a tight loop, so apply a much tighter per-token limit on top of the
-    # standard one. The standard cap stays in force; this is additive.
-    # "Hot" window (days): the cache warmer pre-warms the latest capture of each
-    # of these recent days and the leaderboards page surfaces this window in its
-    # date picker. (All entries live in one partitioned Postgres table now - this
-    # is a warm-cache / UI depth knob, not a storage tier.) Matches the archive
-    # threshold below so "what's warm" and "what pays standard rate" line up.
+    # "Hot" window (days): the warmer pre-warms the latest capture of each of these
+    # recent days and the leaderboards page date-picker surfaces this window. (All
+    # entries live in one partitioned Postgres table now - this is a warm-cache / UI
+    # depth knob, not a storage tier.) Matches the archive threshold so "what's warm"
+    # and "what pays standard rate" line up.
     leaderboards_hot_retention_days: int = 3
-    # Anchors older than this count as "archive" reads and pay the extra
-    # per-token rate-limit bucket. Same 3-day window as the hot window so an
-    # old/cold lookup ALSO pays the archive limit.
+    # Anchors older than this count as "archive" reads and pay an extra, tighter
+    # per-token bucket ON TOP of the standard cap - a caller can trawl the archive
+    # cheaply per-read but not in a tight loop. Same 3-day window as the hot window.
     leaderboards_archive_query_threshold_days: int = 3
     leaderboards_archive_rate_limit_max: int = 10
     leaderboards_archive_rate_limit_window_seconds: int = 60
@@ -187,27 +175,22 @@ class Settings(BaseSettings):
     # check can't see this (each individual hour looks normal). 0 disables it.
     cheaters_weekly_uptime_fraction: float = 0.85
 
-    # Class activity (/class-activity). Counts are based on the Effort boards only
+    # Class activity (/class-activity). Counts come from the Effort boards only
     # (4000+i); Paragon (5000+i) is excluded as ambiguous. The "clean" (established)
-    # view keeps only players who clear BOTH floors below, snapshot at the window
-    # end - a way to exclude brand-new characters and throwaway alts so the trend
-    # reflects established players. Power Rank lives on the 1000+i leaderboard,
-    # Effort on 4000+i. Both are runtime-tunable and take effect on the next
-    # recompute. Set either to 0 to drop that gate.
+    # view keeps only players clearing BOTH floors at the window end, excluding
+    # brand-new characters and throwaway alts. Power Rank is the 1000+i board.
+    # Runtime-tunable; set either to 0 to drop that gate.
     class_activity_power_rank_threshold: int = 25000
     class_activity_effort_threshold: int = 50
 
-    # Market archive throttle. Market listings expire after 7 days (in-game),
-    # so the "archive surface" here is anyone passing hide_expired=false on
-    # /v1/market/listings - they're explicitly opting into the historical tail.
-    # Tight per-token bucket; the standard cap stays in force.
+    # Market archive throttle: hide_expired=false on /v1/market/listings opts into
+    # the historical tail (listings expire after 7 days in-game). Tight per-token
+    # bucket on top of the standard cap.
     market_archive_rate_limit_max: int = 10
     market_archive_rate_limit_window_seconds: int = 60
-    # Historical: the /unlock_* byte-patcher tools accepted a ~100 MB
-    # Trove.exe upload here. Routes removed 2026-06 after anti-cheat
-    # shipped - this knob is kept defined (rather than ripped out) so a
-    # stale deployment config or override file referencing it doesn't
-    # crash settings parsing. Free to delete after one full release.
+    # Historical: governed the /unlock_* byte-patcher uploads (routes removed
+    # 2026-06). Kept defined so a stale override referencing it doesn't crash
+    # settings parsing. Free to delete after one full release.
     site_max_request_body_bytes: int = 110 * 1024 * 1024  # 110 MB (unused)
 
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
@@ -279,9 +262,7 @@ class Settings(BaseSettings):
     # use the public key). Only required to REGISTER slash commands, or to run a
     # gateway bot for real-time message/member/presence events. Optional.
     discord_bot_token: str | None = None
-    # Reserved login scope/integration settings. The user-facing "Sign in with
-    # Discord" (app/site_auth/oauth.py) requests "identify email guilds" directly
-    # so the Dashboard can list the user's servers; these remain for future use.
+    # Vestigial for login: app/site_auth/oauth.py requests its scopes directly.
     discord_oauth_scope: str = "identify email guilds"
     # Optional authorize ``integration_type`` ("1" = user-install). Empty/unset =
     # plain login. applications.commands needs "1" to install cleanly (no guild
@@ -342,22 +323,14 @@ class Settings(BaseSettings):
     # authenticated token gets. Send a token with the scope for the full limit.
     public_anon_rate_limit_max: int = 30
     public_anon_rate_limit_window_seconds: int = 60  # 30 requests / minute / IP
-    # Codexes are lightweight reference reads, so they get a wider budget (this ×
-    # the base anon/per-token caps) metered in their own bucket. Default 5×:
-    # 150 req/min/IP anonymous, 600 req/min/token authenticated.
+    # Codexes are lightweight reference reads: wider budget (× base caps) in their
+    # own bucket. Default 5× = 150 req/min/IP anon, 600 req/min/token.
     codexes_rate_limit_multiplier: int = 5
-    # Bilibili thumbnail proxy: one feed-page render fires a burst of <img> loads,
-    # so give the image proxy its own widened bucket (× the base anon/per-token
-    # caps) rather than letting it exhaust the shared feeds budget. Default 10×:
-    # 300 req/min/IP anonymous.
+    # Bilibili thumbnail proxy: one feed render fires a burst of <img> loads, so it
+    # gets its own widened bucket rather than exhausting the shared feeds budget.
     bilibili_image_rate_limit_multiplier: int = 10
-    # Ingest cooldown: per-token, per-endpoint backstop against a misbehaving
-    # bot resubmitting the same dump over and over. Applies ONLY when the
-    # caller authenticates via API token (the bot path); a master replaying a
-    # captured cfg through the portal "Manual cfg ingest" card uses session-
-    # JWT auth and bypasses this cap so back-fills aren't blocked. Each
-    # ingest endpoint has its own bucket: a leaderboards push doesn't share
-    # a budget with a market push. Returned as 429 with Retry-After.
+    # Ingest cooldown: per-token, per-endpoint backstop against a bot resubmitting
+    # the same dump on a loop. API-token (bot) path only - see require_master_ingest.
     ingest_cooldown_max: int = 1
     ingest_cooldown_window_seconds: int = 300  # 1 submit / 5 min / endpoint / token
 

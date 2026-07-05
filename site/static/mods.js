@@ -10,6 +10,8 @@
 (function () {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   const PAGE_SIZE = 30;
 
   const state = {
@@ -28,8 +30,6 @@
   const $tagbar = $('mh-tagbar');
   const $tags = $('mh-tags');
 
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
   // Mods are addressed as /mods/<owner_handle>/<slug>.
   const modUrl = (m) => '/mods/' + encodeURIComponent(m.handle) + '/' + encodeURIComponent(m.slug);

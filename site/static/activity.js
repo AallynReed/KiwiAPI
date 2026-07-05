@@ -1,18 +1,11 @@
-/* ===========================================================================
-   Player Activity page (/activity)
-
-   Two data sources, both same-origin JSON proxies:
-     • /site/leaderboards/activity          - live "last hour" estimate +
-       the distinct 24h / 7d rollups (hero pulse).
-     • /site/leaderboards/activity/series?period=…  - bucketed activity-level
-       time-series for the selected period, plus peak / average / latest.
-
-   The activity estimate is derived from the leaderboard captures, hence the
-   shared /site/leaderboards/* path family. This page owns the rich charts;
-   the leaderboards page no longer shows any of it.
-   =========================================================================== */
+/* Player Activity page (/activity). Two same-origin JSON proxies:
+   /site/leaderboards/activity (live estimate + 24h/7d rollups) and
+   .../activity/series?period=… (bucketed time-series). The estimate derives
+   from the leaderboard captures, hence the shared /site/leaderboards/* path. */
 (function () {
   'use strict';
+
+  const { esc, fetchJSON } = window.BTTUtil;
 
   const PERIODS = ['1d', '7d', '1m'];   // longer ranges (3m/6m/1y/all) removed
   const state = {
@@ -28,15 +21,6 @@
   }
   function rerunI18n() {
     if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh();
-  }
-  function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-  async function fetchJSON(path) {
-    const res = await fetch(path, { headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
   }
   // Compact axis/stat numbers: 4231 -> "4.2k", 1.2M -> "1.2M".
   function abbrev(n) {
@@ -187,7 +171,6 @@
       viewBox: `0 0 ${W} ${H}`, class: 'act-chart-svg',
       width: '100%', height: H, role: 'img', preserveAspectRatio: 'none',
     });
-    // Gradient for the area fill.
     const defs = svgEl('defs', {});
     const grad = svgEl('linearGradient', { id: 'act-grad', x1: '0', y1: '0', x2: '0', y2: '1' });
     grad.appendChild(svgEl('stop', { offset: '0%', 'stop-color': '#3fb950', 'stop-opacity': '0.32' }));
@@ -195,7 +178,7 @@
     defs.appendChild(grad);
     svg.appendChild(defs);
 
-    // Horizontal gridlines + Y labels (0, ¼, ½, ¾, max).
+    // Gridlines + Y labels at 0, ¼, ½, ¾, max.
     const gridG = svgEl('g', { class: 'act-grid' });
     for (let i = 0; i <= 4; i++) {
       const v = (yMaxRaw / 4) * i;
@@ -252,7 +235,6 @@
       svg.appendChild(rg);
     }
 
-    // Hover guide + dot + transparent overlay.
     const guide = svgEl('line', { class: 'act-guide', y1: padT, y2: padT + plotH, x1: 0, x2: 0 });
     guide.style.opacity = '0';
     svg.appendChild(guide);
@@ -289,7 +271,6 @@
         `<span class="act-tip-unit">${esc(t('active / hr'))}</span>` +
         `<span class="act-tip-when">${esc(fmtFull(q.t, p.period))}</span>`;
       tip.hidden = false;
-      // Position the tip within the card, clamped to its width.
       const cardW = host.clientWidth || W;
       const leftPx = (px / W) * cardW;
       tip.style.left = Math.max(8, Math.min(cardW - 8, leftPx)) + 'px';

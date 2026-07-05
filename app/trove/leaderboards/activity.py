@@ -268,24 +268,13 @@ def _board_active_names(
 
 
 async def _compute(anchor_late: int, anchor_early: int) -> dict:
-    """Iterate EVERY player_board, fetch entries at both anchors, count
-    distinct players with a positive activity signal.
+    """Iterate EVERY player_board, fetch entries at both anchors, count distinct
+    players with a positive activity signal (reset-crossing + lower-bound rules per
+    the module docstring).
 
-    ALL boards are used as context, but a board whose reset falls inside the
-    window is IGNORED for that window - its score zeroed at the reset, so a
-    score-delta is meaningless and counting everyone present post-reset would
-    spike the estimate (the daily 11:00 UTC reset would dwarf the real signal).
-    Cadence: daily resets every day at 11:00 UTC, weekly on Monday 11:00 UTC,
-    lifetime (default/none) never - so lifetime boards always count, and a
-    daily/weekly board counts via score-delta on any window that doesn't cross
-    its reset.
-
-    Server-tally boards (``player_board=False``, e.g. CLUB POWER RANK)
-    are skipped - those aggregate everyone's contributions and don't tell us
-    about individual activity.
-
-    Persists the result to the ``activity_estimate`` table (upsert by
-    ``window_end``) so the history graph survives container restarts."""
+    Server-tally boards (``player_board=False``, e.g. CLUB POWER RANK) are skipped -
+    they aggregate everyone's contributions, not individual activity. Persists to
+    ``activity_estimate`` (upsert by ``window_end``) so the graph survives restarts."""
     boards = await lb_service.list_boards_at(anchor_late)
     duration_h = (anchor_late - anchor_early) / 3600.0
 
@@ -340,8 +329,6 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
                     "active_players": len(s),
                 })
 
-    # Sort by per-board activity desc - the highest-engagement boards
-    # rise to the top of the breakdown.
     per_board.sort(key=lambda b: -b["active_players"])
 
     now_ts = int(time.time())
@@ -375,13 +362,9 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
     span_24h = round((anchor_late - early_24h) / 3600.0, 1) if early_24h is not None else None
     span_7d = round((anchor_late - early_7d) / 3600.0, 1) if early_7d is not None else None
 
-    # Persist the point so the history chart accumulates across restarts.
-    # Upsert by window_end (the unique index) so re-runs converge instead
-    # of stacking. Direct motor-style update_one - Beanie's high-level
-    # update API doesn't give us a clean upsert-on-unique-index pattern.
-    # Failure to persist is non-fatal - log and move on.
-    # Persist the graph point ONLY for consecutive windows. A gap window stores
-    # nothing - the graph has no point there and resumes on the next good pair.
+    # Persist the graph point ONLY for consecutive windows (upsert by window_end so
+    # re-runs converge). A gap window stores nothing - the graph resumes on the next
+    # good pair. Non-fatal on failure.
     if not gapped:
         try:
             from app.trove.leaderboards import pg_store

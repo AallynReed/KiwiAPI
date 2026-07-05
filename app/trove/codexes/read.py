@@ -22,7 +22,6 @@ async def query_entries(
     category: str | None = None, tradable: bool | None = None,
     sort: str = DEFAULT_SORT, limit: int = 50, offset: int = 0,
 ) -> tuple[list[dict], int]:
-    """Filtered, sorted, paged entries + the total match count."""
     if not settings.postgres_enabled:
         return [], 0
     return await pg_store.query_entries(
@@ -32,29 +31,24 @@ async def query_entries(
 
 
 async def type_counts(branch: str) -> list[dict]:
-    """Per-type entry counts for a branch, ordered by type."""
     if not settings.postgres_enabled:
         return []
     return await pg_store.type_counts(branch)
 
 
 async def list_categories(branch: str, codex_type: str | None = None) -> list[dict]:
-    """Distinct non-empty categories (+ counts) for filter dropdowns, A->Z."""
     if not settings.postgres_enabled:
         return []
     return await pg_store.list_categories(branch, codex_type)
 
 
 async def get_entry(branch: str, codex_type: str, path: str) -> dict | None:
-    """A single entry by its source prefab path (None if absent)."""
     if not settings.postgres_enabled:
         return None
     return await pg_store.get_entry(branch, codex_type, path)
 
 
 async def all_recipes(branch: str) -> list[dict]:
-    """Every recipe entry (path/name/category/data) - the crafting calculator's
-    dependency-tree source. Empty when Postgres isn't configured (dev)."""
     if not settings.postgres_enabled:
         return []
     return await pg_store.all_recipes(branch)

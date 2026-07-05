@@ -11,6 +11,8 @@
 (function () {
   'use strict';
 
+  const { esc, fetchJSON } = window.BTTUtil;
+
   const state = {
     view: 'browse',
     loaded: false,       // analytics data fetched at least once
@@ -320,24 +322,6 @@
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────
-  async function fetchJSON(path) {
-    const res = await fetch(path, { headers: { Accept: 'application/json' } });
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
-      try {
-        const b = await res.json();
-        if (b && b.detail) msg = b.detail;
-        else if (b && b.error && b.error.message) msg = b.error.message;
-      } catch (_) {}
-      throw new Error(msg);
-    }
-    return res.json();
-  }
-
-  function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
   function errorHTML(err) {
     return `<p class="mkt-an-empty">${esc(t('Failed to load'))}: ${esc((err && err.message) || err)}</p>`;
   }

@@ -32,12 +32,8 @@ class ApiToken(Document):
 
     created_at: datetime = Field(default_factory=utcnow)
     last_used_at: datetime | None = None
-    # NOTE: ``last_used_ip`` was removed. Storing the most-recent IP in plaintext
-    # was the only remaining leak after we started hashing the allowlist; hashing
-    # it would deprive the OWNER of the ability to compare against a known IP
-    # (defeating the field's purpose). The user-facing "is this me?" check is
-    # better served by a dedicated endpoint that takes a candidate IP and
-    # answers yes/no after hashing - to be built when needed.
+    # No ``last_used_ip``: plaintext leaks PII, and hashing it would deny the
+    # owner the "is this me?" compare that is the field's only point.
     rotated_at: datetime | None = None
     request_count: int = 0
 

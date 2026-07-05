@@ -835,7 +835,7 @@ async function renderTokens() {
         revealSecret(document.getElementById("new-token"), t.token,
           "New token - copy it now, it won't be shown again:");
         f.reset();
-        scopeBoxes().forEach((c) => { c.disabled = false; });  // re-enable after reset
+        scopeBoxes().forEach((c) => { c.disabled = false; });
         updatePreview();
         // The revealed secret stays put; the token list refreshes next tab visit.
       } catch (ex) { err.textContent = ex.message; }
@@ -1192,10 +1192,9 @@ async function renderUsers(days = 30) {
     paintUsers(e.target.value.trim().toLowerCase()));
 }
 
-// --- Dashboard (site) users ------------------------------------------------
-// Discord-signup accounts that own the public site (mods/modpacks/profiles),
-// distinct from the dev-portal API users above. Search is server-side; the
-// shell is painted once and only the rows repaint so the search box keeps focus.
+// Dashboard (site) users: Discord-signup accounts that own the public site,
+// distinct from the dev-portal API users above. Only the rows repaint on search
+// so the search box keeps focus.
 
 async function renderSiteUsers() {
   const body = document.getElementById("tab-body");
@@ -1593,9 +1592,8 @@ function wireRecomputeCard() {
   );
 }
 
-// ─── Admin · Modules · Giveaways ────────────────────────────────────────────
-// Two sub-tabs: "Giveaways" (create with date pickers + manage / draw / cancel)
-// and "Vault" (the prize-code pool). Backed by /admin/giveaways/* + /admin/vault/*.
+// Giveaways: "Giveaways" sub-tab (manage/draw/cancel) + "Vault" sub-tab (prize-code
+// pool). Backed by /admin/giveaways/* + /admin/vault/*.
 
 const GW_SUBTAB_KEY = "kiwi_gw_subtab";
 const GW_STATUS_BADGE = {
@@ -1846,12 +1844,8 @@ function openAddCodes(itemId) {
 }
 
 
-// ─── Leaderboard reset-cadence table (lives inside the Admin tab) ────────
-// Lists every captured board with an inline dropdown to pin its reset
-// cadence to daily / weekly / none / auto. PATCHes /admin/leaderboards/
-// boards/{uuid} on change; on success bumps the row's cached state +
-// re-paints just that row's badges. Search filter is client-side over
-// the cached list - no round-trip per keystroke.
+// Reset-cadence table: per-board dropdown PATCHes /admin/leaderboards/boards/{uuid}.
+// Search filters the cached list client-side (no round-trip per keystroke).
 let _lbBoards = [];
 
 async function renderLeaderboardsBoardsTable() {
@@ -1886,7 +1880,7 @@ function paintLeaderboardsBoards(q) {
         b.category.toLowerCase().includes(q) ||
         String(b.uuid).includes(q))
     : _lbBoards.slice()
-  ).sort((a, b) => a.uuid - b.uuid);   // order by board id (ascending)
+  ).sort((a, b) => a.uuid - b.uuid);
   const countEl = document.getElementById("lb-board-count");
   if (countEl) countEl.textContent = q
     ? `${list.length} / ${_lbBoards.length}`   // matched / total while searching
@@ -1963,11 +1957,8 @@ function paintLeaderboardsBoards(q) {
   });
 }
 
-// ─── Configuration tab (master-only) ─────────────────────────────────────
-// Dedicated tab - keeps Admin focused on users/activity and Configuration
-// focused on every runtime-tunable knob (rate limits, webhooks, alerts).
-// Settings are grouped by category server-side so adding a new category is
-// just a registry entry on the backend; the UI requires no change.
+// Configuration tab (master-only): every runtime-tunable knob. Categories come
+// from the server registry, so a new category needs no UI change.
 
 const CONFIG_CATEGORY_LABELS = {
   features: "Site features",
@@ -2104,7 +2095,7 @@ async function renderConfigCard() {
       const next = btn.dataset.subtab;
       if (next === active) return;
       writeConfigSubtab(next);
-      renderConfigCard();  // re-render with the new active sub-tab
+      renderConfigCard();
     });
   });
 
@@ -2120,9 +2111,8 @@ async function renderConfigCard() {
 
 
 function editSetting(item) {
-  // Type-appropriate input. For ints/floats we use type=number with
-  // step/min/max from the registry; for bools a select; for strings
-  // (incl. secrets) a textarea (handles long URLs cleanly).
+  // Type-appropriate input driven by the registry (bool→select, int/float→number,
+  // string/secret→textarea).
   let inputHtml;
   if (item.type === "bool") {
     const v = String(!!item.value);
@@ -2585,9 +2575,8 @@ async function renderBotStats() {
 }
 
 
-// --- Supporters (master) ---------------------------------------------------
-// CRUD over the public credits list shown on /support and exposed tokenless at
-// /v1/misc/supporters. Master-only (router-level superuser dep).
+// Supporters (master): CRUD over the public credits list, exposed tokenless at
+// /v1/misc/supporters.
 async function renderSupporters() {
   const body = document.getElementById("tab-body");
   body.innerHTML = `
@@ -2799,11 +2788,9 @@ async function renderClaims() {
   loadUnames();
 }
 
-// --- Mods hub moderation (master) ------------------------------------------
-// Users report a shared mod from its /mods/{slug} page; masters triage the
-// reports here. "Take down" drops the project from all public listings + detail
-// reads (the owner still sees it, flagged); "Restore" reverses it. Backed by
-// /admin/mods/* (see app/admin/router.py).
+// Mods hub moderation (master). "Take down" drops the project from all public
+// listings + detail reads (the owner still sees it, flagged); "Restore" reverses
+// it. Backed by /admin/mods/* (see app/admin/router.py).
 
 async function renderModsModeration() {
   const body = document.getElementById("tab-body");

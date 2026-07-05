@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from beanie import PydanticObjectId
 
 from app.core.errors import APIError, ErrorCode
-from app.core.utils import utcnow
+from app.core.utils import iso, utcnow
 from app.embed_templates import EmbedTemplate, template_to_dict
 from app.site_auth.models import SiteUser
 from app.webhooks import embeds
@@ -97,7 +97,7 @@ def _dto(w: SiteWebhook) -> dict:
         "active": w.active,
         "last_status": w.last_status,
         "last_error": w.last_error,
-        "last_delivered_at": w.last_delivered_at.isoformat() if w.last_delivered_at else None,
+        "last_delivered_at": iso(w.last_delivered_at),
         "disabled_reason": w.disabled_reason,
         "created_at": w.created_at.isoformat(),
     }

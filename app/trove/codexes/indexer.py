@@ -25,7 +25,16 @@ from dataclasses import dataclass, field
 
 from app.core.config import settings
 from app.core.utils import utcnow
-from app.trove.codexes import binfab, catalogue, geode, localize, mastery, pg_store, providers, recipe
+from app.trove.codexes import (
+    binfab,
+    catalogue,
+    geode,
+    localize,
+    mastery,
+    pg_store,
+    providers,
+    recipe,
+)
 from app.trove.codexes.extract import extract_entry, refine_mount
 from app.trove.codexes.models import to_row
 from app.trove.codexes.types import LOCALE_ROOT, PREFABS_ROOT, classify
@@ -80,7 +89,6 @@ class _Maps:
     prefab_shas: dict[str, str] = field(default_factory=dict)
     _item_meta: dict[str, dict] = field(default_factory=dict)
     valid_blueprints: set[str] = field(default_factory=set)
-
 
     def _read(self, rel: str) -> bytes | None:
         """Bytes of a referenced prefab by its logical path (rel to prefabs/, no ext)."""
@@ -265,7 +273,6 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
     return maps
 
 
-
 async def _flush(rows: list[tuple]) -> None:
     if rows:
         await pg_store.upsert_entries(rows)
@@ -348,8 +355,6 @@ async def reindex(branch: str, store: ContentStore, *, force: bool = False) -> d
     vs. the stored row is skipped; ``force`` re-parses every prefab regardless (used
     after a parser change - the UPSERT overwrites in place, so no empty window)."""
     maps = await _load_maps(branch, store)
-    # (postgres_enabled is checked by the ensure_indexed entry point.)
-
     # path -> current source sha: skip unchanged prefabs (unless forced) and prune
     # removed ones.
     existing = await pg_store.existing_shas(branch)

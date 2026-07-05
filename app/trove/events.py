@@ -7,12 +7,11 @@ serve ongoing / history / upcoming. The parser is split from the fetch so it can
 be unit-tested with a fixed payload (no network).
 """
 
-import asyncio
 import logging
 
-import httpx
-
 from app.core.config import settings
+from app.core.http import fetch_json
+from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
 from app.trove.models import TroveEvent
 
@@ -47,13 +46,7 @@ def parse_events(raw: list[dict]) -> list[dict]:
 
 async def refresh_events() -> int:
     """Fetch the calendar feed and upsert events into Mongo (by event_id). Returns count."""
-    async with httpx.AsyncClient(
-        timeout=15, follow_redirects=True, headers={"User-Agent": "KiwiAPI/1.0"}
-    ) as client:
-        resp = await client.get(settings.trove_events_feed_url)
-        resp.raise_for_status()
-        raw = resp.json()
-
+    raw = await fetch_json(settings.trove_events_feed_url)
     events = parse_events(raw if isinstance(raw, list) else [])
     for ev in events:
         existing = await TroveEvent.find_one({"event_id": ev["event_id"]})
@@ -83,36 +76,17 @@ async def _prune() -> None:
 
 # --- Background refresher ---------------------------------------------------
 
-_task: asyncio.Task | None = None
-
-
-async def _loop() -> None:
-    while True:
-        try:
-            count = await refresh_events()
-            logger.info("Trovesaurus events refreshed: %d event(s)", count)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("Trovesaurus events refresh failed", exc_info=True)
-        try:
-            await asyncio.sleep(settings.trove_events_refresh_seconds)
-        except asyncio.CancelledError:
-            raise
+_refresher = PeriodicRefresher(
+    refresh_events,
+    name="Trovesaurus events refresh",
+    delay=lambda: settings.trove_events_refresh_seconds,
+    log_result=lambda count: f"{count} event(s)",
+)
 
 
 def start_events_refresher() -> None:
-    global _task
-    if _task is None:
-        _task = asyncio.create_task(_loop())
+    _refresher.start()
 
 
 async def stop_events_refresher() -> None:
-    global _task
-    if _task is not None:
-        _task.cancel()
-        try:
-            await _task
-        except asyncio.CancelledError:
-            pass
-        _task = None
+    await _refresher.stop()

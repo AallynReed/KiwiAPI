@@ -20,8 +20,6 @@ from app.core.utils import client_ip, utcnow
 from app.site_auth.models import SiteSession, SiteUser
 from app.site_auth.schemas import SiteTokenResponse
 
-# Distinguishes site-user access tokens from dev-portal ones. Read by the
-# ``get_current_site_user`` dependency; missing or wrong = 401.
 TOKEN_KIND = "site"
 
 
@@ -33,10 +31,6 @@ def _user_agent(request: Request) -> str | None:
 def create_site_access_token(
     subject: str, token_version: int, session_id: str | None = None,
 ) -> str:
-    """Mint an access token for a SiteUser. Identical shape to the
-    dev-portal token EXCEPT for the ``kind=site`` claim - same secret,
-    same algorithm, same exp window. The kind discriminator is what
-    keeps the two surfaces from cross-contaminating."""
     now = utcnow()
     expire = now + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {
@@ -53,7 +47,6 @@ def create_site_access_token(
 
 
 async def issue_tokens(user: SiteUser, request: Request) -> SiteTokenResponse:
-    """Open a new session row and return access + refresh tokens."""
     assert user.id is not None
     refresh_token, refresh_hash = generate_refresh_token()
     session = SiteSession(

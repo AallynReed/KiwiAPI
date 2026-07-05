@@ -25,7 +25,8 @@ from pymongo.errors import DuplicateKeyError
 from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
 from app.core.security import hash_token
-from app.core.utils import utcnow
+from app.core.utils import iso as _iso
+from app.core.utils import to_oid, utcnow
 from app.site_auth.models import SiteUser
 from app.trove import mod_categories, tmod
 from app.trove.mods_hub import gitstore, store, trove_layout
@@ -53,11 +54,6 @@ GIT_TOKEN_PREFIX = "kgit_"
 # new owner's username.
 STRAY_HANDLE = "stray"
 
-# Branches / commits / file trees are NOT stored in Mongo - they live in the
-# per-project git repo (gitstore), so a `git push` and a web "Commit files"
-# share one history with nothing to sync. Mongo holds project metadata,
-# releases (compiled artifacts), images and reports only.
-
 _SORTS = {
     "recent": "-updated_at",
     "downloads": "-download_count",
@@ -69,10 +65,6 @@ _SORTS = {
 
 
 # --- helpers ---------------------------------------------------------------
-
-def _iso(dt: datetime | None) -> str | None:
-    return dt.isoformat() if dt else None
-
 
 def _norm_path(raw: str) -> str:
     """Normalize a mod-internal file path the same way ``build_tmod`` does, and
@@ -743,10 +735,7 @@ async def add_collaborator(project: ModProject, actor: SiteUser, username: str) 
 async def remove_collaborator(project: ModProject, actor: SiteUser, user_id: str) -> dict:
     """Remove a collaborator (primary owner only)."""
     _require_primary_owner(project, actor)
-    try:
-        uid = PydanticObjectId(user_id)
-    except Exception:
-        uid = None
+    uid = to_oid(user_id)
     project.collaborators = [c for c in project.collaborators if c.user_id != uid]
     project.updated_at = utcnow()
     await project.save()
@@ -1240,10 +1229,8 @@ async def list_releases(
 
 
 async def get_release(release_id: str) -> ModRelease | None:
-    try:
-        return await ModRelease.get(PydanticObjectId(release_id))
-    except Exception:
-        return None
+    oid = to_oid(release_id)
+    return await ModRelease.get(oid) if oid else None
 
 
 async def get_project_by_id(pid: PydanticObjectId) -> ModProject | None:
@@ -1341,8 +1328,8 @@ async def assemble_release_model(release: ModRelease) -> dict | None:
     the web-viewer model payload (rest pose + animations). None if no parts / no rig.
 
     The rig + per-part attach points are resolved AUTHORITATIVELY from the game's
-    prefab binfabs (``rig_index.resolve``); ``assembly.assemble`` falls back to the
-    name-overlap heuristic for any part the binfab map doesn't cover."""
+    prefab binfabs (``rig_index.resolve``). There is NO name-overlap heuristic:
+    ``assembly.assemble`` skips any part the binfab map doesn't place (no-guess rig)."""
     if release.release_format != "tmod":
         return None
     data = await store.get_blob(release.tmod_sha)
@@ -1492,9 +1479,9 @@ async def _game_vfx_resolver():
     Production source is the updates archive (``game_file_map`` -> CAS blob);
     ``settings.pkfx_dev_vfx_dir`` is a local fallback for development."""
     from app.core.config import settings
+    from app.trove.mods_hub.trove_layout import LIVE_BRANCH, game_file_map
     from app.trove.updates import read as updates_read
     from app.trove.updates.cas import ContentStore
-    from app.trove.mods_hub.trove_layout import game_file_map, LIVE_BRANCH
 
     fmap = await game_file_map(LIVE_BRANCH)               # {basename.lower(): canonical path}
     cas = ContentStore(settings.trove_update_store_dir)
@@ -1813,10 +1800,8 @@ async def report_project(project: ModProject, reporter: SiteUser, reason: str) -
 async def _get_by_id(project_id: str) -> ModProject | None:
     """Fetch a project by its ObjectId string (master actions address by id, since
     slugs are only unique per owner)."""
-    try:
-        return await ModProject.get(PydanticObjectId(project_id))
-    except Exception:
-        return None
+    oid = to_oid(project_id)
+    return await ModProject.get(oid) if oid else None
 
 
 async def take_down(project_id: str, reason: str) -> ModProject:
@@ -2011,10 +1996,8 @@ async def admin_assign_stray(
     SiteUser id, with no claim request - for proactively attributing mods as their
     authors sign up. Pending claims on each assigned mod are auto-rejected (the
     handover decides ownership). Returns what was assigned + any per-mod errors."""
-    try:
-        user = await SiteUser.get(PydanticObjectId(user_id))
-    except Exception:
-        user = None
+    uid = to_oid(user_id)
+    user = await SiteUser.get(uid) if uid else None
     if user is None:
         raise _not_found("No such user.")
     assigned: list[dict] = []
@@ -2108,10 +2091,8 @@ async def reject_claim(claim_id: str, master_id: PydanticObjectId) -> dict:
 
 
 async def _get_claim(claim_id: str) -> ModClaimRequest:
-    try:
-        claim = await ModClaimRequest.get(PydanticObjectId(claim_id))
-    except Exception:
-        claim = None
+    oid = to_oid(claim_id)
+    claim = await ModClaimRequest.get(oid) if oid else None
     if claim is None:
         raise _not_found("Claim not found")
     return claim
@@ -2161,10 +2142,8 @@ async def list_git_tokens(actor: SiteUser) -> list[dict]:
 
 
 async def revoke_git_token(actor: SiteUser, token_id: str) -> None:
-    try:
-        doc = await ModGitToken.get(PydanticObjectId(token_id))
-    except Exception:
-        doc = None
+    oid = to_oid(token_id)
+    doc = await ModGitToken.get(oid) if oid else None
     if doc is None or doc.site_user_id != actor.id:
         raise _not_found("Token not found")
     doc.revoked = True
@@ -2199,10 +2178,8 @@ async def dismiss_report(report_id: str) -> None:
     """Resolve a single user report WITHOUT touching the project - for a bogus or
     non-actionable complaint. (Take-down resolves a project's reports en masse;
     this dismisses just the one.)"""
-    try:
-        report = await ModReport.get(PydanticObjectId(report_id))
-    except Exception:
-        report = None
+    oid = to_oid(report_id)
+    report = await ModReport.get(oid) if oid else None
     if report is None:
         raise _not_found("Report not found")
     report.resolved = True

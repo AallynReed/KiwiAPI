@@ -77,23 +77,20 @@ async def _setting_int(key: str, fallback: int) -> int:
 
 
 async def _power_rank_threshold() -> int:
-    """Power-Rank floor for the clean (established) view."""
     from app.core.config import settings
     return await _setting_int("class_activity_power_rank_threshold",
                               settings.class_activity_power_rank_threshold)
 
 
 async def _effort_threshold() -> int:
-    """Effort floor for the clean (established) view."""
     from app.core.config import settings
     return await _setting_int("class_activity_effort_threshold",
                               settings.class_activity_effort_threshold)
 
 
 async def _clean_thresholds() -> tuple[int, int]:
-    """The two runtime-tunable floors that define an "established" player:
-    ``(power_rank, effort)``. A player counts toward a class's clean estimate only
-    when they clear BOTH on that class. (Paragon is not used - it's ambiguous.)"""
+    """The two runtime-tunable "established"-player floors ``(power_rank, effort)`` -
+    a player counts toward a class's clean estimate only when it clears BOTH."""
     return (await _power_rank_threshold(), await _effort_threshold())
 
 
@@ -109,22 +106,15 @@ def _class_counts(
 ) -> dict[int, dict]:
     """``{class_index: {"raw": int, "clean": int|None}}`` for one (early, late) pair.
 
-    RAW is the class's Effort active set (``late_maps`` holds Effort boards only;
-    Paragon is excluded as ambiguous). CLEAN (the "established" view) keeps only
-    active players who, snapshot at the LATE anchor, clear BOTH per-class floors:
-    Power Rank (board ``1000+i`` from ``pr_maps``) ``>= threshold`` and Effort
-    (board ``4000+i`` from ``late_maps``) ``>= effort_threshold`` - filtering out
-    new characters and throwaway alts. A floor of 0 is a no-op gate. A player
-    missing from a board reads as 0 there.
+    ``clean`` gates the raw active set on both per-class floors at the LATE anchor -
+    Power Rank (``1000+i`` from ``pr_maps``) and Effort (``4000+i`` from ``late_maps``);
+    a floor of 0 is a no-op, a player missing from a board reads as 0. ``clean`` is
+    ``None`` (unmeasurable, stored as NULL so the clean line gaps) when no Power Rank
+    snapshot is available (``pr_maps`` None, or that board absent at the anchor).
 
-    ``clean`` is ``None`` (unmeasurable, stored as NULL → the clean line gaps
-    rather than plotting a false 0) when no Power Rank snapshot is available for
-    the class (``pr_maps`` is None, or that board is absent at the anchor).
-
-    A class is OMITTED entirely (no key) when its Effort board isn't measurable for
-    the window (reset crossed / no early snapshot) - so the caller stores nothing
-    and the series gaps. A measurable class with no active players keeps
-    ``{"raw": 0, "clean": 0|None}`` (genuinely quiet)."""
+    A class is OMITTED (no key) when its Effort board isn't measurable for the window
+    (reset crossed / no early snapshot) so the caller stores nothing and the series
+    gaps; a measurable-but-quiet class keeps ``{"raw": 0, "clean": 0|None}``."""
     by_class: dict[int, set[str]] = {}
     for uuid, late in late_maps.items():
         if not late:
@@ -209,10 +199,8 @@ def _snapshot_counts(
     pr_threshold: float, effort_threshold: float,
 ) -> dict[int, dict]:
     """``{class_index: {"raw", "clean"}}`` from ONE snapshot's presence - no
-    activity (score-rose) condition. RAW = players present on a class's Effort board
-    (Paragon is excluded as ambiguous); CLEAN (established) = those clearing both
-    floors (Power Rank, Effort). ``clean`` is None if that class's Power Rank board
-    is absent in the snapshot; classes with no players are omitted entirely."""
+    activity (score-rose) condition, unlike ``_class_counts``. ``clean`` is None if
+    the class's Power Rank board is absent; classes with no players are omitted."""
     out: dict[int, dict] = {}
     for i in range(stats.class_count()):
         effort = effort_maps.get(stats.class_effort_board_uuid(i), {})
@@ -238,10 +226,10 @@ def _effort_deltas(
     pr_threshold: float, effort_threshold: float,
 ) -> dict[int, dict]:
     """Per-class Effort ADDED over the latest capture pair: Σ max(0, late - early)
-    over players on the class's Effort board in BOTH snapshots. ``raw`` = all such
-    players; ``clean`` = those also clearing the Power-Rank + Effort floors at the
-    late snapshot (None if the class's PR board is absent). New entrants are
-    excluded - their hour's gain is unmeasurable on a weekly-accumulating board."""
+    over players on the class's Effort board in BOTH snapshots. New entrants are
+    excluded - their hour's gain is unmeasurable on a weekly-accumulating board.
+    ``clean`` gates on the Power-Rank + Effort floors (None if the PR board is
+    absent)."""
     out: dict[int, dict] = {}
     for i in range(stats.class_count()):
         late = effort_late.get(stats.class_effort_board_uuid(i), {})
@@ -269,11 +257,9 @@ def _effort_deltas(
 
 async def class_activity_current() -> dict:
     """Per-class player share for the DONUT, computed DIRECTLY from the latest
-    leaderboard snapshot - a real headcount, with NO activity (score-rose) step.
-    RAW = players present on a class's Effort board at the newest capture (Paragon
-    excluded); the established view applies the Power-Rank + Effort floors.
-    Read-through Redis cache (the short series TTL); falls back to last good /
-    an empty shell."""
+    leaderboard snapshot - a real headcount, with NO activity (score-rose) step
+    (see ``_DONUT_METHODOLOGY``). Read-through Redis cache (the short series TTL);
+    falls back to last good / an empty shell."""
     global _LAST_GOOD_DONUT
     from app.trove.leaderboards import cache as lb_cache
     cached = await lb_cache.get_class_activity_current()

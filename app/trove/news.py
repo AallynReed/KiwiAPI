@@ -6,7 +6,6 @@ client hitting the upstream feed. The parser is split from the fetch so it can b
 unit-tested with a fixed XML string (no network).
 """
 
-import asyncio
 import logging
 import re
 from datetime import timezone
@@ -14,9 +13,10 @@ from email.utils import parsedate_to_datetime
 from html import unescape
 from xml.etree import ElementTree as ET
 
-import httpx
-
 from app.core.config import settings
+from app.core.http import fetch_text
+from app.core.pagination import paginate
+from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
 from app.trove.models import TroveNews
 
@@ -98,15 +98,9 @@ def parse_feed(xml_text: str) -> list[dict]:
 
 async def refresh_news() -> int:
     """Fetch the feed and upsert items into Mongo (by url). Returns items processed."""
-    # follow_redirects: trovegame.com/feed 301s to /feed/. httpx doesn't follow by
-    # default and raise_for_status() ignores 3xx, so without this we'd parse the
-    # redirect page instead of the RSS and silently relay nothing.
-    async with httpx.AsyncClient(
-        timeout=15, follow_redirects=True, headers={"User-Agent": "KiwiAPI/1.0"}
-    ) as client:
-        resp = await client.get(settings.trove_news_feed_url)
-        resp.raise_for_status()
-        items = parse_feed(resp.text)
+    # fetch_text follows redirects: trovegame.com/feed 301s to /feed/, and without
+    # the follow we'd parse the redirect page instead of the RSS and relay nothing.
+    items = parse_feed(await fetch_text(settings.trove_news_feed_url))
 
     for it in items:
         existing = await TroveNews.find_one(TroveNews.url == it["url"])
@@ -156,47 +150,32 @@ async def latest_news(limit: int) -> list[TroveNews]:
 
 async def news_history(limit: int, offset: int) -> tuple[list[TroveNews], int]:
     """A page of the full archive (newest first) + the total article count."""
-    total = await TroveNews.find().count()
-    docs = await TroveNews.find().sort("-published_at").skip(offset).limit(limit).to_list()
-    return docs, total
+    return await paginate(TroveNews.find(), sort="-published_at", limit=limit, offset=offset)
 
 
 # --- Background refresher ---------------------------------------------------
 
-_task: asyncio.Task | None = None
+async def _refresh_news_cycle() -> int:
+    """Refresh the news feed, then fan it out to the live event channel."""
+    count = await refresh_news()
+    # Push to the live event channel (SSE + the bot's news announcement).
+    # Dedup makes this a no-op unless the newest article changed.
+    from app.events import bus
+    await bus.publish_type("trove_news")
+    return count
 
 
-async def _loop() -> None:
-    while True:
-        try:
-            count = await refresh_news()
-            logger.info("Trove news refreshed: %d item(s)", count)
-            # Push to the live event channel (SSE + the bot's news announcement).
-            # Dedup makes this a no-op unless the newest article changed.
-            from app.events import bus
-            await bus.publish_type("trove_news")
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("Trove news refresh failed", exc_info=True)
-        try:
-            await asyncio.sleep(settings.trove_news_refresh_seconds)
-        except asyncio.CancelledError:
-            raise
+_refresher = PeriodicRefresher(
+    _refresh_news_cycle,
+    name="Trove news refresh",
+    delay=lambda: settings.trove_news_refresh_seconds,
+    log_result=lambda count: f"{count} item(s)",
+)
 
 
 def start_news_refresher() -> None:
-    global _task
-    if _task is None:
-        _task = asyncio.create_task(_loop())
+    _refresher.start()
 
 
 async def stop_news_refresher() -> None:
-    global _task
-    if _task is not None:
-        _task.cancel()
-        try:
-            await _task
-        except asyncio.CancelledError:
-            pass
-        _task = None
+    await _refresher.stop()

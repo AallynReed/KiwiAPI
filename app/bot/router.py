@@ -98,6 +98,55 @@ def _perms_int(value) -> int:
         return 0
 
 
+async def _discord(awaitable):
+    """Await a ``discord_rest`` call, mapping a transport failure to a 502."""
+    try:
+        return await awaitable
+    except DiscordRestError as exc:
+        raise APIError(502, ErrorCode.internal_error, f"Couldn't reach Discord: {exc}")
+
+
+async def _load_or_new_config(guild_id: int) -> tuple[GuildConfig | None, GuildConfig]:
+    """Load the guild's config (or build a fresh one) and fold in legacy fields.
+
+    Returns ``(existing, cfg)``: ``existing`` is the loaded doc or ``None`` (the
+    caller inspects it for the permission check and to pick save vs insert);
+    ``cfg`` is the working doc, always migrated."""
+    existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
+    cfg = existing or GuildConfig(guild_id=guild_id)
+    cfg.migrate_legacy()
+    return existing, cfg
+
+
+async def _save_config(existing: GuildConfig | None, cfg: GuildConfig, user: SiteUser) -> None:
+    """Stamp who/when and persist (``save`` when it already existed, else ``insert``)."""
+    cfg.updated_by = user.discord_id
+    cfg.updated_at = utcnow()
+    if existing:
+        await cfg.save()
+    else:
+        await cfg.insert()
+
+
+def _valid_id(value: str | None, valid: set[int]) -> int | None:
+    """A single snowflake string, kept only if it names a currently-live id."""
+    if value and str(value).isdigit() and int(value) in valid:
+        return int(value)
+    return None
+
+
+def _valid_ids(values, valid: set[int]) -> list[int]:
+    """Snowflake strings filtered to currently-live ids (order preserved, no dedupe)."""
+    return [int(r) for r in values if str(r).isdigit() and int(r) in valid]
+
+
+def _live_ids(snap: dict, guild_id: int) -> tuple[set[int], set[int]]:
+    """Live ``(text-channel ids, assignable-role ids)`` from an already-fetched snapshot."""
+    channel_ids = {int(c["id"]) for c in discord_rest.text_channels(snap["channels"])}
+    role_ids = {int(r["id"]) for r in discord_rest.assignable_roles(snap["roles"], guild_id)}
+    return channel_ids, role_ids
+
+
 class AnnouncementUpdate(BaseModel):
     enabled: bool = False
     channel_id: str | None = None            # snowflake string, or null to clear
@@ -148,17 +197,12 @@ class LanguageUpdate(BaseModel):
     language: str                            # a code from app.i18n.SUPPORTED
 
 
-# ── permission helpers ──────────────────────────────────────────────────────
-
 async def _member_ctx(guild_id: int, user: SiteUser) -> dict:
     """The user's {is_owner, is_admin, role_ids} in the guild, or a 403/502."""
     if not user.discord_id:
         raise APIError(403, ErrorCode.forbidden,
                        "Link your Discord account (sign in with Discord) to manage the bot.")
-    try:
-        ctx = await discord_rest.guild_member_context(guild_id, user.discord_id)
-    except DiscordRestError as exc:
-        raise APIError(502, ErrorCode.internal_error, f"Couldn't reach Discord: {exc}")
+    ctx = await _discord(discord_rest.guild_member_context(guild_id, user.discord_id))
     if ctx is None:
         raise APIError(403, ErrorCode.forbidden,
                        "You're not a member of this server (or the bot isn't in it).")
@@ -182,10 +226,7 @@ def _require_admin(ctx: dict) -> None:
 
 async def _snapshot(guild_id: int) -> dict:
     """One batched fetch of the guild's live channels/roles/permissions, or a 502/403."""
-    try:
-        snap = await discord_rest.guild_snapshot(guild_id)
-    except DiscordRestError as exc:
-        raise APIError(502, ErrorCode.internal_error, f"Couldn't reach Discord: {exc}")
+    snap = await _discord(discord_rest.guild_snapshot(guild_id))
     if snap is None:
         raise APIError(403, ErrorCode.forbidden,
                        "The bot isn't in this server (or Discord is unreachable).")
@@ -264,8 +305,6 @@ def _detail_payload(guild_id: int, ctx: dict, cfg: GuildConfig | None, snap: dic
         result["permissions"] = {k: [str(r) for r in config_perms.get(k, [])] for k in CAPABILITIES}
     return result
 
-
-# ── endpoints ────────────────────────────────────────────────────────────────
 
 @router.get("/guilds")
 async def list_my_guilds(user: SiteUser = Depends(get_current_site_user)) -> dict:
@@ -376,7 +415,7 @@ async def set_announcements(
     type's enabled state or channel needs ``manage_announcements``; changing which
     role it pings needs ``manage_ping_roles``. Returns the freshly-assembled detail."""
     ctx = await _member_ctx(guild_id, user)
-    existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
+    existing, cfg = await _load_or_new_config(guild_id)
     config_perms = existing.config_perms if existing else {}
     can_manage = _has_capability(ctx, config_perms, "manage_announcements")
     can_ping = _has_capability(ctx, config_perms, "manage_ping_roles")
@@ -385,25 +424,15 @@ async def set_announcements(
                        "You don't have permission to configure the bot in this server.")
 
     snap = await _snapshot(guild_id)
-    live_channel_ids = {int(c["id"]) for c in discord_rest.text_channels(snap["channels"])}
-    live_role_ids = {int(r["id"]) for r in discord_rest.assignable_roles(snap["roles"], guild_id)}
-
-    cfg = existing or GuildConfig(guild_id=guild_id)
-    cfg.migrate_legacy()
-
-    def _id(value: str | None, valid: set[int]) -> int | None:
-        if value and str(value).isdigit() and int(value) in valid:
-            return int(value)
-        return None
+    live_channel_ids, live_role_ids = _live_ids(snap, guild_id)
 
     for key, upd in body.announcements.items():
         atype = TYPES_BY_KEY.get(key)
         if atype is None:
             continue                              # ignore unknown / retired types
         cur = cfg.announcements.get(key) or AnnouncementSetting()
-        new_channel = _id(upd.channel_id, live_channel_ids)
-        new_pings = sorted({int(r) for r in upd.ping_role_ids
-                            if str(r).isdigit() and int(r) in live_role_ids})
+        new_channel = _valid_id(upd.channel_id, live_channel_ids)
+        new_pings = sorted(set(_valid_ids(upd.ping_role_ids, live_role_ids)))
 
         # Permission split: who-gets-pinged is gated separately from channels/toggles.
         if (upd.enabled != cur.enabled or new_channel != cur.channel_id) and not can_manage:
@@ -433,12 +462,7 @@ async def set_announcements(
             cur.ping_role_ids = new_pings
         cfg.announcements[key] = cur
 
-    cfg.updated_by = user.discord_id
-    cfg.updated_at = utcnow()
-    if existing:
-        await cfg.save()
-    else:
-        await cfg.insert()
+    await _save_config(existing, cfg, user)
     return _detail_payload(guild_id, ctx, cfg, snap)
 
 
@@ -472,22 +496,14 @@ async def set_announcement_template(
     if atype is None or not embed_contexts.has_customization(key):
         raise APIError(404, ErrorCode.not_found, "Unknown announcement type.")
     ctx = await _member_ctx(guild_id, user)
-    existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
-    config_perms = existing.config_perms if existing else {}
-    if not _has_capability(ctx, config_perms, "manage_announcements"):
+    existing, cfg = await _load_or_new_config(guild_id)
+    if not _has_capability(ctx, existing.config_perms if existing else {}, "manage_announcements"):
         raise APIError(403, ErrorCode.forbidden,
                        "You can't configure announcements in this server.")
-    cfg = existing or GuildConfig(guild_id=guild_id)
-    cfg.migrate_legacy()
     cur = cfg.announcements.get(key) or AnnouncementSetting()
     cur.template = body.template
     cfg.announcements[key] = cur
-    cfg.updated_by = user.discord_id
-    cfg.updated_at = utcnow()
-    if existing:
-        await cfg.save()
-    else:
-        await cfg.insert()
+    await _save_config(existing, cfg, user)
     snap = await _snapshot(guild_id)
     return _detail_payload(guild_id, ctx, cfg, snap)
 
@@ -500,22 +516,15 @@ async def set_language(
     board, and slash replies invoked here). Needs ``manage_announcements`` (or
     admin). Returns the freshly-assembled detail."""
     ctx = await _member_ctx(guild_id, user)
-    existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
+    existing, cfg = await _load_or_new_config(guild_id)
     if not _has_capability(ctx, existing.config_perms if existing else {}, "manage_announcements"):
         raise APIError(403, ErrorCode.forbidden,
                        "You don't have permission to configure the bot in this server.")
     if body.language not in i18n.SUPPORTED:
         raise APIError(400, ErrorCode.bad_request, "Unsupported language.")
 
-    cfg = existing or GuildConfig(guild_id=guild_id)
-    cfg.migrate_legacy()
     cfg.language = body.language
-    cfg.updated_by = user.discord_id
-    cfg.updated_at = utcnow()
-    if existing:
-        await cfg.save()
-    else:
-        await cfg.insert()
+    await _save_config(existing, cfg, user)
     snap = await _snapshot(guild_id)
     return _detail_payload(guild_id, ctx, cfg, snap)
 
@@ -527,34 +536,24 @@ async def set_live_board(
     """Enable/disable the self-updating "Trove Now" board + set its channel.
     Requires ``manage_announcements``. Switching channel re-posts a fresh board."""
     ctx = await _member_ctx(guild_id, user)
-    existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
-    config_perms = existing.config_perms if existing else {}
-    if not _has_capability(ctx, config_perms, "manage_announcements"):
+    existing, cfg = await _load_or_new_config(guild_id)
+    if not _has_capability(ctx, existing.config_perms if existing else {}, "manage_announcements"):
         raise APIError(403, ErrorCode.forbidden,
                        "You don't have permission to configure the bot in this server.")
 
     snap = await _snapshot(guild_id)
-    live_channel_ids = {int(c["id"]) for c in discord_rest.text_channels(snap["channels"])}
-    channel_id = (int(body.channel_id)
-                  if body.channel_id and str(body.channel_id).isdigit()
-                  and int(body.channel_id) in live_channel_ids else None)
+    live_channel_ids, _ = _live_ids(snap, guild_id)
+    channel_id = _valid_id(body.channel_id, live_channel_ids)
     if body.enabled and not channel_id:
         raise APIError(400, ErrorCode.bad_request, "Pick a channel before enabling the live board.")
 
-    cfg = existing or GuildConfig(guild_id=guild_id)
-    cfg.migrate_legacy()
     board = cfg.live_board
     if channel_id != board.channel_id:
         board.message_id = None              # post a fresh board in the new channel
     board.enabled = body.enabled
     board.channel_id = channel_id
     board.channel_missing = False
-    cfg.updated_by = user.discord_id
-    cfg.updated_at = utcnow()
-    if existing:
-        await cfg.save()
-    else:
-        await cfg.insert()
+    await _save_config(existing, cfg, user)
     return _detail_payload(guild_id, ctx, cfg, snap)
 
 
@@ -566,28 +565,22 @@ async def set_market_watch(
     watchlist (each item with an optional per-unit flux ceiling). Requires
     ``manage_announcements``; the ping roles also need ``manage_ping_roles``."""
     ctx = await _member_ctx(guild_id, user)
-    existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
+    existing, cfg = await _load_or_new_config(guild_id)
     config_perms = existing.config_perms if existing else {}
     if not _has_capability(ctx, config_perms, "manage_announcements"):
         raise APIError(403, ErrorCode.forbidden,
                        "You don't have permission to configure the bot in this server.")
 
     snap = await _snapshot(guild_id)
-    live_channel_ids = {int(c["id"]) for c in discord_rest.text_channels(snap["channels"])}
-    live_role_ids = {int(r["id"]) for r in discord_rest.assignable_roles(snap["roles"], guild_id)}
-    channel_id = (int(body.channel_id)
-                  if body.channel_id and str(body.channel_id).isdigit()
-                  and int(body.channel_id) in live_channel_ids else None)
+    live_channel_ids, live_role_ids = _live_ids(snap, guild_id)
+    channel_id = _valid_id(body.channel_id, live_channel_ids)
     if body.enabled and not channel_id:
         raise APIError(400, ErrorCode.bad_request, "Pick a channel before enabling market watch.")
 
-    cfg = existing or GuildConfig(guild_id=guild_id)
-    cfg.migrate_legacy()
     mw = cfg.market_watch
     # Ping roles only change when the caller can manage them (else keep existing).
     if _has_capability(ctx, config_perms, "manage_ping_roles"):
-        ping_role_ids = [int(r) for r in body.ping_role_ids
-                         if str(r).isdigit() and int(r) in live_role_ids]
+        ping_role_ids = _valid_ids(body.ping_role_ids, live_role_ids)
     else:
         ping_role_ids = mw.ping_role_ids
     # Normalize + de-dupe the watchlist (cap at 50). Preserve last_alert_sig for kept
@@ -612,16 +605,11 @@ async def set_market_watch(
     mw.ping_role_ids = ping_role_ids
     mw.channel_missing = False
     mw.items = items
-    cfg.updated_by = user.discord_id
-    cfg.updated_at = utcnow()
-    if existing:
-        await cfg.save()
-    else:
-        await cfg.insert()
+    await _save_config(existing, cfg, user)
     return _detail_payload(guild_id, ctx, cfg, snap)
 
 
-# ── Clubs (Discord-side Trove club proxies) ──────────────────────────────────
+# Clubs: Discord-side proxies of in-game Trove clubs.
 
 def _club_view(club: Club) -> dict:
     return {
@@ -718,7 +706,7 @@ async def update_club(
         raise APIError(400, ErrorCode.bad_request, "Club name is required.")
 
     snap = await _snapshot(guild_id)
-    live_role_ids = {int(r["id"]) for r in discord_rest.assignable_roles(snap["roles"], guild_id)}
+    _, live_role_ids = _live_ids(snap, guild_id)
     role_links: dict[str, int] = {}
     for rank, rid in (body.role_links or {}).items():
         if rank in CLUB_RANKS and str(rid).isdigit() and int(rid) in live_role_ids:
@@ -878,27 +866,19 @@ async def set_permissions(
     are filtered to known capabilities + currently-existing roles before storing."""
     ctx = await _member_ctx(guild_id, user)
     _require_admin(ctx)
-    try:
-        live_roles = {int(r["id"]) for r in await discord_rest.guild_assignable_roles(guild_id)}
-    except DiscordRestError as exc:
-        raise APIError(502, ErrorCode.internal_error, f"Couldn't reach Discord: {exc}")
+    live_roles = {int(r["id"]) for r in await _discord(discord_rest.guild_assignable_roles(guild_id))}
 
     cleaned: dict[str, list[int]] = {}
     for cap, role_ids in body.permissions.items():
         if cap not in CAPABILITIES:
             continue
-        valid = sorted({int(r) for r in role_ids if str(r).isdigit() and int(r) in live_roles})
+        valid = sorted(set(_valid_ids(role_ids, live_roles)))
         if valid:
             cleaned[cap] = valid
 
     existing = await GuildConfig.find_one(GuildConfig.guild_id == guild_id)
     cfg = existing or GuildConfig(guild_id=guild_id)
     cfg.config_perms = cleaned
-    cfg.updated_by = user.discord_id
-    cfg.updated_at = utcnow()
-    if existing:
-        await cfg.save()
-    else:
-        await cfg.insert()
+    await _save_config(existing, cfg, user)
 
     return {"saved": True, "permissions": {k: [str(r) for r in v] for k, v in cleaned.items()}}

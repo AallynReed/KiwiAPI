@@ -15,6 +15,8 @@
 (function () {
   'use strict';
 
+  const { esc, fetchJSON } = window.BTTUtil;
+
   const state = {
     branch: 'live-us',
     query: '',
@@ -367,25 +369,7 @@
     return (Number.isInteger(n) ? n : Number(n.toFixed(2))).toLocaleString();
   }
 
-  async function fetchJSON(path) {
-    const res = await fetch(path, { headers: { Accept: 'application/json' } });
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
-      try {
-        const body = await res.json();
-        if (body && body.detail) msg = body.detail;
-        else if (body && body.error && body.error.message) msg = body.error.message;
-      } catch (_) {}
-      throw new Error(msg);
-    }
-    return res.json();
-  }
-
   function enc(s) { return encodeURIComponent(s); }
-  function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
   function errMsg(err) { return (err && err.message) || String(err); }
   function errorHTML(err) {
     return `<p class="cdx-error">${esc(t('Failed to load'))}: ${esc(errMsg(err))}</p>`;

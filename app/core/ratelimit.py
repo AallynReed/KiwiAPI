@@ -54,11 +54,10 @@ async def check_rate_limit(
     return await _mongo_fixed_window(key, max_requests, window_seconds)
 
 
-# --- Redis sliding window (preferred) --------------------------------------
-#
-# A sorted set per key holds one member per request, scored by timestamp. Each
-# call trims members older than the window, adds itself, and counts what's left
-# - a true rolling window with no fixed-window edge bursts. The key self-expires.
+# Redis sliding window (preferred). A sorted set per key holds one member per
+# request, scored by timestamp. Each call trims members older than the window,
+# adds itself, and counts what's left - a true rolling window with no fixed-window
+# edge bursts. The key self-expires.
 
 _SLIDING_WINDOW_LUA = """
 local key = KEYS[1]
@@ -114,7 +113,7 @@ def _counter() -> int:
     return _seq
 
 
-# --- Mongo fixed window (fallback when Redis is unavailable) ----------------
+# Mongo fixed window: fallback when Redis is unavailable.
 
 async def _mongo_fixed_window(
     key: str, max_requests: int, window_seconds: int

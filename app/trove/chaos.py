@@ -9,13 +9,12 @@ as the fallback whenever upstream is unavailable or its item has gone stale.
 Served under the (public) ``rotations`` scope.
 """
 
-import asyncio
 import logging
 from datetime import datetime
 
-import httpx
-
 from app.core.config import settings
+from app.core.http import fetch_json
+from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
 from app.trove import server_time
 from app.trove.models import FeedCache
@@ -100,12 +99,7 @@ def build_response(cached: dict | None, fetched_at: datetime | None,
 
 async def refresh_chaos_chest() -> bool:
     """Fetch the current chaos chest from Trovesaurus and cache it. True if stored."""
-    async with httpx.AsyncClient(
-        timeout=15, follow_redirects=True, headers={"User-Agent": "KiwiAPI/1.0"}
-    ) as client:
-        resp = await client.get(settings.trove_chaos_chest_url)
-        resp.raise_for_status()
-        item = normalize(resp.json())
+    item = normalize(await fetch_json(settings.trove_chaos_chest_url))
     if item is None:
         return False
     existing = await FeedCache.find_one(FeedCache.feed == _FEED)
@@ -150,36 +144,17 @@ async def get_chaos_chest(now: datetime | None = None) -> dict:
 
 # --- Background refresher ---------------------------------------------------
 
-_task: asyncio.Task | None = None
-
-
-async def _loop() -> None:
-    while True:
-        try:
-            stored = await refresh_chaos_chest()
-            logger.info("Chaos Chest relay: %s", "updated" if stored else "no item")
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.warning("Chaos Chest relay failed", exc_info=True)
-        try:
-            await asyncio.sleep(settings.trove_chaos_refresh_seconds)
-        except asyncio.CancelledError:
-            raise
+_refresher = PeriodicRefresher(
+    refresh_chaos_chest,
+    name="Chaos Chest relay",
+    delay=lambda: settings.trove_chaos_refresh_seconds,
+    log_result=lambda stored: "updated" if stored else "no item",
+)
 
 
 def start_chaos_refresher() -> None:
-    global _task
-    if _task is None:
-        _task = asyncio.create_task(_loop())
+    _refresher.start()
 
 
 async def stop_chaos_refresher() -> None:
-    global _task
-    if _task is not None:
-        _task.cancel()
-        try:
-            await _task
-        except asyncio.CancelledError:
-            pass
-        _task = None
+    await _refresher.stop()

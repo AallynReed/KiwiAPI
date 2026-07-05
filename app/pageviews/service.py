@@ -7,17 +7,13 @@ from app.pageviews.schemas import PageStat, PageviewSummary
 
 async def aggregate_pageviews(days: int, top: int = 100) -> PageviewSummary:
     """Roll up showcase-site page views over the last ``days`` days for the admin
-    "Site Analytics" dashboard.
+    "Site Analytics" dashboard (per-page list is the ``top`` pages by views; totals +
+    unique visitors stay global).
 
-    Per-page rows are grouped by CONCRETE url, so each real mod / player page shows
-    up individually; the list is the ``top`` pages by views (totals + unique
-    visitors stay global, not capped). Unique-visitor counts are distinct
-    ``visitor_hash`` values. Because the hash salt rotates daily (see
-    ``pageviews.middleware``), a returning visitor produces a new hash each day - so
-    a multi-day "unique visitors" figure is the sum of daily uniques (daily-active
-    visitors), not distinct humans across the whole window. That's the standard
-    cookieless trade-off and fine at this site's scale; a pre-aggregated
-    daily-counter / HLL is the future path if volume ever demands it.
+    Because the visitor-hash salt rotates daily (see ``pageviews.middleware``), a
+    returning visitor produces a new hash each day - so a multi-day "unique visitors"
+    figure is the sum of daily uniques (daily-active visitors), not distinct humans
+    across the whole window. Standard cookieless trade-off, fine at this scale.
     """
     now = utcnow()
     since = now - timedelta(days=days)

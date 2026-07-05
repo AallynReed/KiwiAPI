@@ -9,18 +9,16 @@ There is no password login here - accounts are created and identified
 solely through "Sign in with Discord". The dev portal (``app/auth/*``) is
 a separate system and keeps its own email/password + GitHub flows.
 """
-import re
-
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, Request, status
 
 from app.core.errors import APIError, ErrorCode
-from app.core.utils import utcnow
+from app.core.utils import iso, utcnow
 from app.site_auth.dependencies import (
     get_current_site_user,
     get_current_verified_site_user,
 )
-from app.site_auth.models import SiteSession, SiteUser, UsernameChangeRequest
+from app.site_auth.models import SiteSession, SiteUser
 from app.site_auth.schemas import (
     SiteClaimTroveNameRequest,
     SiteLogoutRequest,
@@ -31,16 +29,16 @@ from app.site_auth.schemas import (
     SiteUserPublic,
     SiteVerifyTroveClaimResponse,
 )
+from app.site_auth.sessions import (
+    revoke_all_sessions,
+    revoke_by_refresh_token,
+    rotate,
+)
 from app.site_auth.usernames import (
     cancel_pending,
     latest_request,
     request_change,
     username_request_dto,
-)
-from app.site_auth.sessions import (
-    revoke_all_sessions,
-    revoke_by_refresh_token,
-    rotate,
 )
 
 router = APIRouter(prefix="/v1/site-auth", tags=["site-auth"])
@@ -84,14 +82,11 @@ def _to_public(user: SiteUser) -> SiteUserPublic:
 
 
 async def _build_claim_baseline(trove_name: str) -> dict[str, float]:
-    """Snapshot every (board, score) currently captured for this
-    player name. Used at claim time to anchor the "did any score go
-    up?" check the user passes to verify ownership.
+    """Snapshot the best (board, score) currently captured for this player name.
 
-    Pulls from the standard ``player_history`` helper so the lookup is
-    case-insensitive - same convention the public ``/v1/leaderboards``
-    endpoints use. Returns ``{board_uuid_str: score}``; keys are
-    stringified because Mongo's BSON disallows numeric document keys.
+    Returns ``{board_uuid_str: score}``; keys are stringified because Mongo's
+    BSON disallows numeric document keys. Since verification became manual, only
+    the length is read (dashboard board count).
     """
     from app.trove.leaderboards import service as lb_service
     rows = await lb_service.player_history(trove_name, limit=500)
@@ -102,12 +97,7 @@ async def _build_claim_baseline(trove_name: str) -> dict[str, float]:
         if uuid is None or score is None:
             continue
         key = str(uuid)
-        # Keep the BEST score per board (highest seen during the
-        # baseline scan) - if we kept the most-recent we'd capture
-        # whatever the latest anchor stored, which can be lower than
-        # the player's actual peak. Verification compares against the
-        # baseline; a higher current value than the baseline implies
-        # progress, so anchoring on the peak is the strictest gate.
+        # Keep the best (highest) score per board, not the most-recent anchor.
         prev = out.get(key)
         if prev is None or score > prev:
             out[key] = float(score)
@@ -119,7 +109,7 @@ async def _build_claim_baseline(trove_name: str) -> dict[str, float]:
 @router.post("/refresh", response_model=SiteTokenResponse)
 async def refresh(payload: SiteRefreshRequest, request: Request) -> SiteTokenResponse:
     """Rotate a refresh token. Single-use - the old token is dead after
-    this returns. Same rotation pattern as the dev portal."""
+    this returns."""
     tokens = await rotate(payload.refresh_token, request)
     if tokens is None:
         raise APIError(
@@ -155,8 +145,7 @@ async def update_profile(
     payload: SiteUpdateProfileRequest,
     user: SiteUser = Depends(get_current_site_user),
 ) -> SiteUserPublic:
-    """v1 profile editor - just the display name. Username + email are
-    immutable in this turn; change-email lives in a follow-up."""
+    """Edit the display name. Username + email are immutable here."""
     if payload.display_name is not None:
         user.display_name = payload.display_name.strip() or None
         user.updated_at = utcnow()
@@ -169,11 +158,9 @@ async def claim_trove_name(
     payload: SiteClaimTroveNameRequest,
     user: SiteUser = Depends(get_current_verified_site_user),
 ) -> SiteUserPublic:
-    """Self-claim an in-game Trove player name. Email verification is
-    required so a single throwaway address can't squat on every popular
-    name in the database. v1 is self-attest - anybody can claim any
-    name not already taken. Uniqueness enforced by a partial index on
-    the model so two concurrent claims can't both succeed."""
+    """Self-claim an in-game Trove player name (self-attest; any unclaimed
+    name). Email verification is required so a throwaway address can't squat
+    popular names; a partial unique index stops two concurrent claims."""
     name = payload.trove_name.strip()
     if not name:
         raise APIError(
@@ -207,8 +194,7 @@ async def claim_trove_name(
 async def unclaim_trove_name(
     user: SiteUser = Depends(get_current_site_user),
 ) -> SiteUserPublic:
-    """Release the previously-claimed Trove name (frees it up for
-    someone else if the user changes character or moves on)."""
+    """Release the claimed Trove name (frees it for another user)."""
     user.claimed_trove_name = None
     user.claimed_trove_display = None
     user.claimed_at = None
@@ -252,10 +238,10 @@ async def cancel_username_request(user: SiteUser = Depends(get_current_site_user
 async def verify_trove_claim(
     user: SiteUser = Depends(get_current_verified_site_user),
 ) -> SiteVerifyTroveClaimResponse:
-    """Report claim status. Verification is a MANUAL master approval done in the
-    dev-portal admin panel (Trove claims tab → Approve), so this endpoint no longer
-    self-verifies; it just echoes "pending review" until a master approves. The
-    dashboard claim UI is hidden while this flow is finished, so it's rarely hit."""
+    """Report claim status. Verification is a MANUAL master approval
+    (dev-portal admin panel, POST /admin/site-claims/{id}/approve); the old
+    score-progression self-check was retired, so this only ever echoes
+    "pending review" until a master approves."""
     if not user.claimed_trove_name:
         raise APIError(
             status_code=400, code=ErrorCode.bad_request,
@@ -266,10 +252,6 @@ async def verify_trove_claim(
             verified=True, detail="Already verified.", user=_to_public(user),
         )
 
-    # Verification is now a MANUAL master approval in the dev-portal admin panel
-    # (the old score-progression self-check was retired). There's nothing for the
-    # user to do here but wait for review; the claim stays unverified until a
-    # master approves it via POST /admin/site-claims/{id}/approve.
     return SiteVerifyTroveClaimResponse(
         verified=False,
         detail="Your claim is pending manual review by an admin.",
@@ -308,8 +290,7 @@ async def my_trove_stats(
 async def list_sessions(
     user: SiteUser = Depends(get_current_site_user),
 ) -> list[dict]:
-    """The user's active sessions. Lets them spot a stale device and
-    revoke it from the dashboard."""
+    """The user's active sessions, so they can spot and revoke a stale device."""
     sessions = await SiteSession.find(
         SiteSession.site_user_id == user.id,
         SiteSession.revoked == False,  # noqa: E712
@@ -320,9 +301,9 @@ async def list_sessions(
             "id": str(s.id),
             "ip": s.ip,
             "user_agent": s.user_agent,
-            "created_at": s.created_at.isoformat(),
-            "last_used_at": s.last_used_at.isoformat(),
-            "expires_at": s.expires_at.isoformat(),
+            "created_at": iso(s.created_at),
+            "last_used_at": iso(s.last_used_at),
+            "expires_at": iso(s.expires_at),
         }
         for s in sessions
     ]

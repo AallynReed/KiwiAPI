@@ -17,7 +17,7 @@ import re
 from beanie import PydanticObjectId
 
 from app.core.errors import APIError, ErrorCode
-from app.core.utils import utcnow
+from app.core.utils import iso, to_oid, utcnow
 from app.site_auth.models import SiteUser, UsernameChangeRequest
 
 # Allowed character set + length. Periods follow Discord's rules (see
@@ -49,6 +49,26 @@ def normalize_username(raw: str) -> str:
     return name
 
 
+async def _load_site_user_or_404(user_id: str, message: str) -> SiteUser:
+    """Load a ``SiteUser`` by id; a malformed id or a missing user both raise a 404
+    with ``message`` (bad-id-as-404 is the existing behavior via ``to_oid``)."""
+    oid = to_oid(user_id)
+    user = await SiteUser.get(oid) if oid is not None else None
+    if user is None:
+        raise APIError(404, ErrorCode.not_found, message)
+    return user
+
+
+async def _assert_username_free(
+    name: str, exclude_id: PydanticObjectId | None, code: ErrorCode, message: str,
+) -> None:
+    """Raise a 409 (``code``/``message``) if ``name`` is already another user's
+    frozen username; the caller's own row (``exclude_id``) never clashes."""
+    taken = await SiteUser.find_one(SiteUser.username == name)
+    if taken is not None and taken.id != exclude_id:
+        raise APIError(409, code, message)
+
+
 def username_request_dto(req: UsernameChangeRequest) -> dict:
     return {
         "id": str(req.id),
@@ -57,8 +77,8 @@ def username_request_dto(req: UsernameChangeRequest) -> dict:
         "requested_username": req.requested_username,
         "status": req.status,
         "reason": req.reason,
-        "created_at": req.created_at.isoformat() if req.created_at else None,
-        "resolved_at": req.resolved_at.isoformat() if req.resolved_at else None,
+        "created_at": iso(req.created_at),
+        "resolved_at": iso(req.resolved_at),
     }
 
 
@@ -67,9 +87,8 @@ async def request_change(user: SiteUser, raw: str) -> UsernameChangeRequest:
     name = normalize_username(raw)
     if name == user.username:
         raise APIError(400, ErrorCode.bad_request, "That's already your username.")
-    taken = await SiteUser.find_one(SiteUser.username == name)
-    if taken is not None and taken.id != user.id:
-        raise APIError(409, ErrorCode.bad_request, "That username is already taken.")
+    await _assert_username_free(
+        name, user.id, ErrorCode.bad_request, "That username is already taken.")
     other = await UsernameChangeRequest.find_one(
         UsernameChangeRequest.requested_username == name,
         UsernameChangeRequest.status == "pending",
@@ -151,9 +170,8 @@ async def approve_request(request_id: str, master_id: PydanticObjectId) -> dict:
     if user is None:
         raise APIError(404, ErrorCode.not_found, "The requesting user no longer exists.")
     name = req.requested_username
-    taken = await SiteUser.find_one(SiteUser.username == name)
-    if taken is not None and taken.id != user.id:
-        raise APIError(409, ErrorCode.conflict, "That username was taken in the meantime.")
+    await _assert_username_free(
+        name, user.id, ErrorCode.conflict, "That username was taken in the meantime.")
 
     user.username = name
     user.updated_at = utcnow()
@@ -170,18 +188,12 @@ async def approve_request(request_id: str, master_id: PydanticObjectId) -> dict:
 async def admin_set_username(user_id: str, raw: str, master_id: PydanticObjectId) -> dict:
     """Master override: set a site user's frozen Trove username directly (no request),
     re-homing their mod/modpack handles and resolving any pending request they had."""
-    try:
-        user = await SiteUser.get(PydanticObjectId(user_id))
-    except Exception:
-        user = None
-    if user is None:
-        raise APIError(404, ErrorCode.not_found, "No such user.")
+    user = await _load_site_user_or_404(user_id, "No such user.")
     name = normalize_username(raw)
     if name == user.username:
         return {"username": name, "changed": False}
-    taken = await SiteUser.find_one(SiteUser.username == name)
-    if taken is not None and taken.id != user.id:
-        raise APIError(409, ErrorCode.conflict, "That username is already taken.")
+    await _assert_username_free(
+        name, user.id, ErrorCode.conflict, "That username is already taken.")
 
     user.username = name
     user.updated_at = utcnow()

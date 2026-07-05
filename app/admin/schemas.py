@@ -108,8 +108,8 @@ class InterestItemBulkReplaceRequest(BaseModel):
 
 
 class InterestItemBulkReplaceResponse(BaseModel):
-    removed: int   # rows deleted before insert
-    added: int     # rows inserted (after de-dup + trim)
+    removed: int
+    added: int  # after de-dup + trim
 
 
 # --- Leaderboard per-board admin (reset-kind override) ---------------------
@@ -125,15 +125,13 @@ class LeaderboardBoardAdminView(BaseModel):
     name_id: str
     category: str
     category_id: str
-    # The cadence currently in effect for this board. One of "daily",
-    # "weekly", "default" (hardcoded fallback when uuid isn't in either
-    # hardcoded set), or "none" (admin pinned).
+    # One of "daily", "weekly", "default" (hardcoded fallback when uuid is in
+    # neither hardcoded set), or "none" (admin-pinned).
     effective_reset_kind: str
-    # The admin override if set, else None.
     reset_kind_override: str | None = None
-    # ``True`` for daily / weekly. The portal uses this to colour-code
-    # rows so the admin can see at a glance which boards will run all
-    # three cheater checks vs. velocity-only.
+    # True for daily/weekly. Boards without a periodic reset run velocity-only
+    # cheater detection (score-outlier + rank-gap skipped); the portal
+    # colour-codes rows on this.
     has_periodic_reset: bool
 
 

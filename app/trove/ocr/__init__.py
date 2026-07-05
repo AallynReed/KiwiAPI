@@ -1,12 +1,7 @@
 """Self-hosted OCR extraction of Trove character-sheet stats.
 
-The pipeline is engine-agnostic and split so the accuracy-critical part is pure
-and unit-testable without any OCR dependency:
-
-  engine.py      - thin local-OCR wrapper (image bytes -> ordered text lines).
-  vocabulary.py  - the closed, multilingual stat vocabulary + fuzzy label match.
-  parse.py       - lines -> {stat: value} via label/number pairing + validation.
-  service.py     - orchestration (decode image -> engine -> parse).
+Engine-agnostic and split so the accuracy-critical part (parse.py) is pure and
+unit-testable without any OCR dependency.
 
 The moddable in-game UI varies wildly (themes, fonts, columns, language), but the
 SEMANTICS don't: every panel is `(number, known-stat-label)` pairs from a fixed

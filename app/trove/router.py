@@ -353,8 +353,7 @@ async def insert_chaos_chest(
     try:
         await events_bus.publish_chaos()
     except Exception:
-        logging.getLogger("kiwi.trove.router").warning(
-            "chaos event publish failed", exc_info=True)
+        logger.warning("chaos event publish failed", exc_info=True)
     return CaptureInsertResponse(
         anchor=doc.week_anchor, name=doc.name, refreshed=not was_new,
     )
@@ -430,8 +429,7 @@ async def insert_challenge(
     try:
         await events_bus.publish_challenge()
     except Exception:
-        logging.getLogger("kiwi.trove.router").warning(
-            "challenge event publish failed", exc_info=True)
+        logger.warning("challenge event publish failed", exc_info=True)
     return CaptureInsertResponse(
         anchor=doc.window_anchor, name=doc.name, refreshed=not was_new,
     )
@@ -2516,7 +2514,6 @@ async def _process_leaderboard_dump(
             # Relay a lightweight "new leaderboard data" event to the live channel
             # (SSE subscribers can refetch). Best-effort; never fail the ingest.
             try:
-                from app.events import bus as events_bus
                 await events_bus.publish(
                     "leaderboard", str(summary["created_at"]),
                     {"anchor": summary["created_at"], "boards": summary.get("boards"),
@@ -2907,13 +2904,11 @@ async def insert_market_listings(
     # subscribers can refetch). Best-effort; never fail the ingest.
     if summary.get("last_seen"):
         try:
-            from app.events import bus as events_bus
             await events_bus.publish(
                 "market", str(summary["last_seen"]),
                 {"last_seen": summary["last_seen"], "imported": summary.get("imported"),
                  "parsed": summary.get("parsed")},
             )
         except Exception:
-            logging.getLogger("kiwi.trove.router").warning(
-                "market event publish failed", exc_info=True)
+            logger.warning("market event publish failed", exc_info=True)
     return MarketInsertResponse(**summary)

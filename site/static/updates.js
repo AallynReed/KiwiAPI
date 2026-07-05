@@ -18,9 +18,10 @@
 (function () {
   'use strict';
 
+  const { esc, fetchJSON } = window.BTTUtil;
+
   const PAGE_SIZE_CHANGES = 200;
-  // How many recent version chips to show in the timeline strip.
-  const VERSIONS_VISIBLE = 12;
+  const VERSIONS_VISIBLE = 12;   // recent version chips in the timeline strip
 
   const state = {
     branches: [],            // [{branch, current_version, current_ordinal, ...}]
@@ -1029,31 +1030,11 @@
   }
 
   // ─── Fetch + util ──────────────────────────────────────────────────
-  async function fetchJSON(path) {
-    const res = await fetch(path, { headers: { Accept: 'application/json' } });
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
-      try {
-        const body = await res.json();
-        if (body && body.detail) msg = body.detail;
-        else if (body && body.error && body.error.message) msg = body.error.message;
-      } catch (_) { /* no body */ }
-      throw new Error(msg);
-    }
-    return res.json();
-  }
-
-  function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-
   function errorHTML(err) {
     const msg = (err && err.message) || String(err);
     return `<p class="up-hint">${esc(t('Failed to load'))}: ${esc(msg)}</p>`;
   }
 
-  // Right-pad zero-style numbers, locale-aware grouping.
   function formatInt(n) {
     return Number(n || 0).toLocaleString();
   }

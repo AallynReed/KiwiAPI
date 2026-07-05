@@ -1,15 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   /commands - page logic
-   ───────────────────────────────────────────────────────────────────────
-   Loads commands.json on mount, renders the category sections + command
-   rows, wires up search + chip jumps + sticky chip highlighting, and
-   re-renders the localised text whenever i18n.js dispatches
-   `btt-lang-changed`.
-
-   Single-page client-side render so language switching is instant - no
-   reload, no flicker. The JSON is ~150 KB pretty-printed; gzip cuts it
-   to ~40 KB on the wire.
-   ═══════════════════════════════════════════════════════════════════════ */
+/* /commands page. Client-side render from commands.json so language switching
+   is instant (no reload/flicker); re-renders on i18n.js's `btt-lang-changed`. */
 
 (function () {
   'use strict';
@@ -160,9 +150,8 @@
   function renderRow(cmd) {
     const row = document.createElement('div');
     row.className = 'command-row';
-    // Searchable text lives on a dataset attribute so the filter doesn't
-    // have to re-pull innerText (which would force layout). Lowercased
-    // for case-insensitive match.
+    // Precompute lowercased searchable text into a dataset attr so the filter
+    // never re-pulls innerText (which would force layout).
     const aliasStr = (cmd.aliases || []).join(' ');
     const desc = t(cmd.description);
     const note = cmd.note ? t(cmd.note) : '';
@@ -184,16 +173,11 @@
     const descEl = document.createElement('div');
     descEl.textContent = desc;
     textCell.appendChild(descEl);
-    // Yellow inline warning block for any command whose syntax has at
-    // least one <placeholder> - same visual treatment as .command-note
-    // but yellow, so it reads as a usage caution. The regex matches
-    // "<…>" but rejects nested angle brackets (we have none).
+    // Yellow usage-caution block when the syntax has a <placeholder>. Regex
+    // matches "<…>" but rejects nested angle brackets (we have none).
     if (/<[^<>]+>/.test(cmd.syntax)) {
       const warnEl = document.createElement('div');
       warnEl.className = 'command-warning';
-      // Small triangle icon at the start so the block reads as "warning"
-      // at a glance even with the yellow border. Icon font already
-      // loaded site-wide via the navbar.
       const icon = document.createElement('i');
       icon.className = 'fa-solid fa-triangle-exclamation';
       icon.setAttribute('aria-hidden', 'true');

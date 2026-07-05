@@ -1,14 +1,10 @@
-"""HTTP surface for Modpacks: ``/v1/modpacks/hub/*``.
+"""HTTP surface for Modpacks.
 
-Two routers share the prefix, mirroring the Mods Hub:
-  - ``modpacks_hub_router`` - PUBLIC reads + downloads, tokenless via
-    ``public_scope("mods:read")``.
-  - ``modpacks_hub_write_router`` - site-login-gated writes
-    (``get_current_site_user``); driven by the website studio.
-
-The website's browse + owner-draft reveal goes through the same-origin
-``/site/modpacks/*`` proxies (which pass the *site* user as viewer); these ``/v1``
-reads always view as anonymous. Banners reuse the Mods Hub image store/serving.
+Three routers, mirroring the Mods Hub: the hub read + write routers (tokenless
+``public_scope("mods:read")`` vs site-login-gated ``get_current_site_user``) under
+``/v1/modpacks/hub``, and the documented app-facing catalog under ``/v1/modpacks``.
+These ``/v1`` reads always view as anonymous; the website's owner-draft reveal goes
+through the same-origin ``/site/modpacks/*`` proxies (which pass the site user).
 """
 
 from __future__ import annotations
@@ -19,10 +15,8 @@ from app.core.dependencies import AccessContext, public_scope
 from app.core.errors import COMMON_ERROR_RESPONSES, APIError, ErrorCode
 from app.site_auth.dependencies import get_current_site_user
 from app.site_auth.models import SiteUser
-from app.trove.mods_hub import service as mods_service
 from app.trove.modpacks import service
 from app.trove.modpacks.models import ModpackProject
-from app.trove.mods_hub.schemas import CollaboratorRequest
 from app.trove.modpacks.schemas import (
     CreateModpackRequest,
     CreateVariantRequest,
@@ -30,6 +24,8 @@ from app.trove.modpacks.schemas import (
     UpdateModpackRequest,
     UpdateVariantRequest,
 )
+from app.trove.mods_hub import service as mods_service
+from app.trove.mods_hub.schemas import CollaboratorRequest
 
 modpacks_hub_router = APIRouter(
     prefix="/v1/modpacks/hub", tags=["modpacks-hub"], responses=COMMON_ERROR_RESPONSES,

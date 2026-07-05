@@ -18,7 +18,7 @@ from fastapi import FastAPI, Request
 from starlette.responses import JSONResponse, Response
 
 from app.core.context import get_request_id, new_request_id, reset_request_id, set_request_id
-from app.core.errors import ErrorCode
+from app.core.errors import ErrorCode, build_error_body
 
 logger = logging.getLogger("kiwi.request")
 
@@ -63,14 +63,9 @@ def add_request_context_middleware(app: FastAPI) -> None:
             logger.exception("Unhandled error on %s %s", request.method, request.url.path)
             response = JSONResponse(
                 status_code=500,
-                content={
-                    "error": {
-                        "code": ErrorCode.internal_error.value,
-                        "message": "Internal server error",
-                        "details": None,
-                        "request_id": rid,
-                    }
-                },
+                content=build_error_body(
+                    ErrorCode.internal_error.value, "Internal server error"
+                ),
             )
         finally:
             reset_request_id(token)

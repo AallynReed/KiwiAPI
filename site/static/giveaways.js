@@ -9,6 +9,8 @@
 (function () {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   const Auth = window.BTTAuth || null;
   const $list = document.getElementById('gw-list');
   if (!$list) return;
@@ -18,10 +20,6 @@
   let me = null;
   let ticker = null;
 
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
   const fmtNum = (n) => Number(n).toLocaleString();
   // Odds of winning as a percentage = 1 / entrants. e.g. 43 entrants -> "2.3%".
   function oddsText(count) {

@@ -20,7 +20,7 @@ from fastapi import FastAPI, Request
 from starlette.responses import JSONResponse, Response
 
 from app.core.config import settings
-from app.core.errors import ErrorCode
+from app.core.errors import ErrorCode, build_error_body
 from app.core.redis import get_redis
 
 logger = logging.getLogger("kiwi.idempotency")
@@ -41,13 +41,10 @@ def _storage_key(request: Request, key: str) -> str:
 def _conflict() -> JSONResponse:
     return JSONResponse(
         status_code=409,
-        content={
-            "error": {
-                "code": ErrorCode.conflict.value,
-                "message": "A request with this Idempotency-Key is already in progress.",
-                "details": None,
-            }
-        },
+        content=build_error_body(
+            ErrorCode.conflict.value,
+            "A request with this Idempotency-Key is already in progress.",
+        ),
     )
 
 

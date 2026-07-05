@@ -30,14 +30,15 @@ from app.admin.schemas import (
 from app.auth.models import User
 from app.core.config import settings
 from app.core.dependencies import get_current_superuser
-from app.core.errors import APIError, ErrorCode
+from app.core.errors import APIError, ErrorCode, raise_from_value_error
 from app.core.pagination import Page, paginate_newest_first
 from app.core.scopes import decode
-from app.core.utils import utcnow
+from app.core.utils import iso, to_oid, utcnow
 from app.pageviews.schemas import PageviewSummary
 from app.pageviews.service import aggregate_pageviews
 from app.site_auth.models import SiteUser
 from app.site_auth.schemas import SiteUsernameRequestBody
+from app.site_auth.usernames import _load_site_user_or_404
 from app.supporters import service as supporters_service
 from app.supporters.schemas import (
     SupporterAddRequest,
@@ -370,11 +371,7 @@ async def add_interest_item_admin(
             req.name, added_by=admin.id,
         )
     except ValueError as e:
-        # Empty name → 400; dup → 409 (let the message distinguish).
-        msg = str(e)
-        if "already exists" in msg:
-            raise APIError(status_code=409, code=ErrorCode.conflict, message=msg)
-        raise APIError(status_code=400, code=ErrorCode.bad_request, message=msg)
+        raise_from_value_error(e)  # dup → 409, empty name → 400
     return _item_view(doc)
 
 
@@ -773,20 +770,15 @@ async def add_supporter_admin(
     req: SupporterAddRequest,
     admin: User = Depends(get_current_superuser),
 ) -> SupporterAdminView:
-    """Add one name to the supporters list."""
     try:
         doc = await supporters_service.add(req.name, added_by=admin.id)
     except ValueError as e:
-        msg = str(e)
-        if "already exists" in msg:
-            raise APIError(status_code=409, code=ErrorCode.conflict, message=msg)
-        raise APIError(status_code=400, code=ErrorCode.bad_request, message=msg)
+        raise_from_value_error(e)
     return _supporter_view(doc)
 
 
 @router.delete("/supporters/{name}", status_code=204)
 async def remove_supporter_admin(name: str) -> None:
-    """Remove one name from the supporters list."""
     removed = await supporters_service.remove(name)
     if not removed:
         raise APIError(status_code=404, code=ErrorCode.not_found,
@@ -804,9 +796,8 @@ def _site_claim_view(u: SiteUser) -> SiteClaimAdminView:
 
 async def _get_claimant(user_id: str) -> SiteUser:
     """Load a SiteUser by id, 404 on a bad id or no pending claim."""
-    try:
-        oid = PydanticObjectId(user_id)
-    except Exception:
+    oid = to_oid(user_id)
+    if oid is None:
         raise APIError(status_code=404, code=ErrorCode.not_found, message="No such user.")
     u = await SiteUser.get(oid)
     if u is None or not u.claimed_trove_name:
@@ -841,12 +832,7 @@ async def approve_site_claim(user_id: str) -> SiteClaimAdminView:
 async def reject_site_claim(user_id: str) -> SiteClaimAdminView:
     """Reject a claim and release the name so someone else can claim it."""
     u = await _get_claimant(user_id)
-    u.claimed_trove_name = None
-    u.claimed_trove_display = None
-    u.claimed_at = None
-    u.claim_verified = False
-    u.claim_verified_at = None
-    u.claim_baseline = {}
+    u.clear_claim()
     u.updated_at = utcnow()
     await u.save()
     return _site_claim_view(u)
@@ -1098,19 +1084,13 @@ def _site_user_dto(u: SiteUser, mod_count: int = 0, modpack_count: int = 0) -> d
         "claim_verified": u.claim_verified,
         "mod_count": mod_count,
         "modpack_count": modpack_count,
-        "created_at": u.created_at.isoformat() if u.created_at else None,
-        "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+        "created_at": iso(u.created_at),
+        "last_login_at": iso(u.last_login_at),
     }
 
 
 async def _get_site_user(user_id: str) -> SiteUser:
-    try:
-        u = await SiteUser.get(PydanticObjectId(user_id))
-    except Exception:
-        u = None
-    if u is None:
-        raise APIError(status_code=404, code=ErrorCode.not_found, message="No such site user.")
-    return u
+    return await _load_site_user_or_404(user_id, "No such site user.")
 
 
 @router.get("/site-users")
@@ -1201,12 +1181,7 @@ async def set_site_claimed_name(user_id: str, req: SiteClaimedNameRequest) -> di
     u = await _get_site_user(user_id)
     name = (req.name or "").strip()
     if not name:
-        u.claimed_trove_name = None
-        u.claimed_trove_display = None
-        u.claimed_at = None
-        u.claim_verified = False
-        u.claim_verified_at = None
-        u.claim_baseline = {}
+        u.clear_claim()
     else:
         low = name.lower()
         clash = await SiteUser.find_one(SiteUser.claimed_trove_name == low)

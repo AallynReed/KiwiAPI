@@ -94,7 +94,7 @@ async def _get_bot_user_id(client: httpx.AsyncClient) -> int | None:
     return _bot_user_id
 
 
-# ── pure permission math (testable) ─────────────────────────────────────────
+# Pure permission math (no network, testable).
 
 def guild_permissions(guild: dict, member: dict) -> int:
     """A member's guild-level (base) permissions: @everyone OR each role, with the
@@ -137,7 +137,7 @@ def effective_channel_permissions(guild: dict, member: dict, channel: dict) -> i
     return perms
 
 
-# ── REST calls ──────────────────────────────────────────────────────────────
+# REST calls (bot token over httpx).
 
 async def bot_guilds() -> list[dict]:
     """Partial guild objects (id, name, icon) for guilds the bot is a member of."""

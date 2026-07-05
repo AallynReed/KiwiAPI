@@ -1,14 +1,14 @@
 """Redis snapshot cache for the leaderboards page's hot reads.
 
 The page boots on three queries: the anchor list, the boards at the latest
-anchor (a ``distinct()`` aggregate), and a board's top-N entries. The first two
-are the slow ones and only change when a new capture lands.
+anchor, and a board's top-N entries. The first two are the slow ones and only
+change when a new capture lands.
 
 We cache them in Redis, WARMED by the same background warmer that recomputes
 cheaters/activity - so every ingest + TTL boundary refreshes the latest snapshot
-and the page can switch to a new capture with zero Mongo work. Reads are
-read-through (fall back to Mongo + populate on a miss), and everything degrades
-to a plain Mongo read when Redis isn't configured.
+and the page can switch to a new capture with zero DB work. Reads are
+read-through (fall back to Postgres + populate on a miss), and everything degrades
+to a plain Postgres read when Redis isn't configured.
 
 Keyed by anchor so old captures' entries simply expire; an ingest also
 invalidates the exact anchor it touched, so a re-insert / back-fill can't serve
@@ -67,7 +67,7 @@ def _entries_key(anchor: int, uuid: int, limit: int, offset: int) -> str:
     return f"{_PREFIX}entries:{anchor}:{uuid}:{offset}:{limit}"
 
 
-# --- read-through accessors (used by the site proxies) ----------------------
+# Read-through accessors (used by the site proxies).
 
 async def get_timestamps(limit: int = 60) -> list[int]:
     cached = await _rget(_TS_KEY)
@@ -144,7 +144,7 @@ async def set_board_history(uuid: int, days: int, top: int, payload: dict) -> No
     await _rset(_bhist_key(uuid, days, top), payload, ttl=await _retention_seconds())
 
 
-# --- warm + invalidate (used by the warmer + the ingest path) ---------------
+# Warm + invalidate (used by the warmer + the ingest path).
 
 async def _retention_days() -> int:
     """How many days' latest capture to keep pre-warmed - the hot-retention
@@ -170,7 +170,7 @@ def _latest_per_day(anchors: list[int], days: int) -> list[int]:
 async def warm() -> None:
     """Refresh the Redis snapshot. Called by the leaderboards warmer (boot +
     every TTL + after each ingest). Without Redis the queries still run (warming
-    Mongo's page cache like the old warmer did); only the Redis writes no-op.
+    Postgres' page cache); only the Redis writes no-op.
 
     Pre-warms the LATEST capture of each of the most-recent ``hot_retention_days``
     trove-days (the per-day default the picker shows = what users hit most).
@@ -226,7 +226,7 @@ async def warm_board_histories(anchor: int) -> int:
     return warmed
 
 
-# --- published "ready" pointer + persisted derived snapshots ----------------
+# Published "ready" pointer + persisted derived snapshots.
 # The page reads the latest PUBLISHED anchor; the warmer flips it (set_ready_anchor)
 # only after that anchor's entries + cheaters + activity are all cached, so the
 # switch to a new capture is atomic. Cheaters/activity payloads are persisted per

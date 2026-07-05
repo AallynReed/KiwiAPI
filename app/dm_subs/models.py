@@ -6,6 +6,7 @@ from beanie import Document, PydanticObjectId
 from pydantic import Field
 from pymongo import ASCENDING, DESCENDING, IndexModel
 
+from app.core.delivery_health import DeliveryHealth
 from app.core.utils import utcnow
 
 # Deliverable event types. The bus-driven ones ("challenge", "corruxion",
@@ -27,7 +28,7 @@ MAX_CONSECUTIVE_FAILURES = 8
 MARKET_NOTIFY_COOLDOWN = 12 * 3600
 
 
-class DmSubscription(Document):
+class DmSubscription(Document, DeliveryHealth):
     """A user's opt-in for direct-message alerts from the bot.
 
     ``owner_discord_id`` is cached from the SiteUser at create time so delivery
@@ -41,18 +42,12 @@ class DmSubscription(Document):
     label: str = ""
     events: list[str] = Field(default_factory=list)
     filters: dict = Field(default_factory=dict)
-    active: bool = True
 
     # Per-watched-item last-notified timestamps (unix secs), so a standing deal
     # doesn't re-DM every hourly ingest. Keyed by item name.
     watch_state: dict[str, int] = Field(default_factory=dict)
 
-    # delivery health
-    consecutive_failures: int = 0
-    last_status: int | None = None
-    last_error: str | None = None
-    last_delivered_at: datetime | None = None
-    disabled_reason: str | None = None
+    # ``active`` + delivery-health fields come from DeliveryHealth.
 
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)

@@ -1,9 +1,8 @@
-"""Giveaways business logic - the single source of truth for the routers.
+"""Giveaways business logic - the vault, giveaway lifecycle, entries, and views.
 
-Covers the vault (prize codes), giveaway lifecycle (create / update / cancel /
-draw), entries, and the public + admin views. The background worker
-(``app/giveaways/worker.py``) calls ``run_due()`` on a timer to open scheduled
-giveaways and draw ended ones.
+The worker (``app/giveaways/worker.py``) ticks ``run_due()`` to open scheduled
+giveaways at ``starts_at`` and draw open ones at ``ends_at``, so ``status`` is the
+source of truth for the public lists below.
 """
 import logging
 import secrets
@@ -220,13 +219,6 @@ async def list_admin() -> list[GiveawayAdminView]:
     return out
 
 
-async def get_admin(giveaway_id: str) -> GiveawayAdminView:
-    g = await Giveaway.get(_oid(giveaway_id))
-    if g is None:
-        raise APIError(404, ErrorCode.not_found, "Giveaway not found")
-    return _admin_view(g, await _item_name(g.vault_item_id))
-
-
 async def _reserve_from_item(item_id: PydanticObjectId, giveaway_id: PydanticObjectId) -> PrizeCode:
     """Reserve one available code from a drawer for a giveaway."""
     code = await PrizeCode.find_one(
@@ -356,9 +348,7 @@ async def list_public() -> list[GiveawayPublicView]:
 
 
 async def list_ongoing() -> list[GiveawayPublicView]:
-    """Currently-OPEN giveaways (accepting entries), soonest to end first.
-    The worker flips scheduled→open at starts_at and open→drawn at ends_at, so
-    ``status == open`` is the system's source of truth for "running right now"."""
+    """Open giveaways (accepting entries), soonest to end first."""
     rows = (
         await Giveaway.find(Giveaway.status == GiveawayStatus.open)
         .sort("+ends_at").to_list()
@@ -367,8 +357,7 @@ async def list_ongoing() -> list[GiveawayPublicView]:
 
 
 async def list_upcoming() -> list[GiveawayPublicView]:
-    """Scheduled giveaways not yet open, soonest-starting first. Entries open
-    at ``starts_at`` (the worker flips scheduled→open then)."""
+    """Scheduled giveaways not yet open, soonest-starting first."""
     rows = (
         await Giveaway.find(Giveaway.status == GiveawayStatus.scheduled)
         .sort("+starts_at").to_list()
@@ -377,10 +366,9 @@ async def list_upcoming() -> list[GiveawayPublicView]:
 
 
 async def list_ended(days: int = 7) -> list[GiveawayPublicView]:
-    """Giveaways that ENDED in the last ``days`` days, most-recently-ended first.
-    "Ended" = ``drawn`` (a winner was picked - see ``winner_username``) or
-    ``closed`` (ended with no entrants). Cancelled ones are excluded (they
-    didn't run to completion)."""
+    """Giveaways ended in the last ``days`` days, most-recently-ended first.
+    Ended = ``drawn`` (had a winner) or ``closed`` (no entrants); ``cancelled``
+    is excluded (didn't run to completion)."""
     cutoff = utcnow() - timedelta(days=max(1, days))
     rows = (
         await Giveaway.find(

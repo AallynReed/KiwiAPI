@@ -9,16 +9,11 @@ logger = logging.getLogger("kiwi.bootstrap")
 
 
 async def bootstrap_admin() -> None:
-    """Ensure the configured admin account exists, is a superuser, and matches
-    ADMIN_PASSWORD.
+    """Ensure the configured admin account exists and is a superuser. Idempotent.
 
-    Idempotent and treats `.env` as the source of truth for the admin account:
-    creates it if missing, promotes it to superuser, and resets its password to
-    ADMIN_PASSWORD if they differ. No-op if ADMIN_EMAIL / ADMIN_PASSWORD aren't
-    both set.
-
-    Note: this means the admin password is managed via ADMIN_PASSWORD, not the
-    portal - a portal-side change would be reset to ADMIN_PASSWORD on next boot.
+    `.env` is authoritative: the admin password is managed via ADMIN_PASSWORD, so
+    a portal-side change is reset to ADMIN_PASSWORD on the next boot. No-op unless
+    both ADMIN_EMAIL and ADMIN_PASSWORD are set.
     """
     if not settings.admin_email or not settings.admin_password:
         return

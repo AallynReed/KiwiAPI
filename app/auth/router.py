@@ -47,10 +47,9 @@ from app.core.utils import client_ip, utcnow
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# Appended to every "we sent you a link" message. While the sending domain's
-# reputation is still warming up, deliverability is shaky - this nudges users to
-# rescue the mail from spam and train their provider (marking "Not spam" is the
-# fastest reputation signal). Kept identical to the portal's signup toast.
+# Appended to every "we sent you a link" message. The sending domain's reputation
+# is still warming up, so mail often lands in spam; "Not spam" is the fastest
+# reputation signal. Kept identical to the portal's signup toast.
 EMAIL_SPAM_NOTICE = (
     "Don't see it? Check your spam folder and mark it 'Not spam' so future "
     "emails reach your inbox."

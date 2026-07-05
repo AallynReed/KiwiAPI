@@ -11,6 +11,8 @@
 (function () {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   // Path is the source of truth (/mods/{handle}/{slug}); the server-rendered meta
   // is a fallback (skipped if it arrives unrendered, e.g. the static dev server).
   const _metaSlug = (document.querySelector('meta[name="mh-slug"]') || {}).content || '';
@@ -28,8 +30,6 @@
   const $root = document.getElementById('mp-root');
   const $modalRoot = document.getElementById('mp-modal-root');
 
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
@@ -1639,14 +1639,10 @@
     return d.toLocaleDateString();
   }
 
-  // Compact, XSS-safe Markdown. Always escape() first, then transform the escaped
-  // text - so no user input can inject HTML. Handles headings, bullet lists,
-  // fenced code, inline code/bold/italic and links + autolinks. Used for the
-  // README, the About description and anywhere else we render Markdown.
-  // ─── Markdown ───────────────────────────────────────────────────────
   // The GitHub-flavored renderer + DOM sanitizer live in md_render.js
   // (window.BTTMarkdown) so there is ONE copy of the XSS-safe HTML sanitizer,
-  // shared with the modder-profile page.
+  // shared with the modder-profile page. It always escape()s first, then
+  // transforms the escaped text - so no user input can inject HTML.
   const renderMarkdown = (s) => window.BTTMarkdown.render(s);
   const sanitizeHTML = (h) => window.BTTMarkdown.sanitize(h);
   const mdInline = (s, refs) => window.BTTMarkdown.inline(s, refs);

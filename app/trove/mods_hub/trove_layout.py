@@ -46,9 +46,7 @@ def top_folder(path: str) -> str:
 
 
 def is_compilable(path: str) -> bool:
-    """True iff this file would be included in a build: it lives inside a known
-    Trove folder and isn't an ignored (non-content) file type. Root files and
-    files in non-Trove folders (``bin/`` etc.) are excluded."""
+    """True iff the file is inside a known Trove folder and not an ignored type."""
     parts = path.split("/")
     if len(parts) < 2:                       # root file -> not compiled
         return False

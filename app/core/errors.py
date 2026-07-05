@@ -170,7 +170,9 @@ class APIError(Exception):
         super().__init__(message)
 
 
-def _envelope(code: str, message: str, details: Any | None = None) -> dict:
+def build_error_body(code: str, message: str, details: Any | None = None) -> dict:
+    """The standard error envelope. Use anywhere a body is built by hand (proxies,
+    middleware, idempotency replays) so ``request_id`` and shape stay consistent."""
     return {
         "error": {
             "code": code,
@@ -179,6 +181,18 @@ def _envelope(code: str, message: str, details: Any | None = None) -> dict:
             "request_id": get_request_id(),
         }
     }
+
+
+_envelope = build_error_body
+
+
+def raise_from_value_error(exc: ValueError) -> None:
+    """Map a service-layer ValueError to the right APIError: a message mentioning
+    'already exists' is a 409 conflict, otherwise a 400 bad request."""
+    message = str(exc)
+    if "already exists" in message:
+        raise APIError(status_code=409, code=ErrorCode.conflict, message=message)
+    raise APIError(status_code=400, code=ErrorCode.bad_request, message=message)
 
 
 # Fallback mapping for framework-raised HTTPExceptions (no explicit code).

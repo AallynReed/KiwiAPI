@@ -1,17 +1,4 @@
-"""Beanie documents for the giveaways feature.
-
-Collections:
-  - ``VaultItem`` - a "drawer" in the vault: a named prize (name + description)
-    that holds many interchangeable codes. Write the name/description once, then
-    drop codes into it.
-  - ``PrizeCode`` - one redeemable code belonging to a VaultItem. A giveaway
-    reserves one available code from a drawer at creation; it's marked awarded
-    when emailed to a winner.
-  - ``Giveaway``  - one prize draw with a start/end window. Auto-draws a random
-    entrant at ``ends_at`` and emails them the reserved code.
-  - ``GiveawayEntry`` - one row per (giveaway, site user). Unique - one entry
-    per user, enforced by a compound unique index.
-"""
+"""Beanie documents for the giveaways feature."""
 from datetime import datetime
 from enum import Enum
 
@@ -37,9 +24,8 @@ class GiveawayStatus(str, Enum):
 
 
 class VaultItem(Document):
-    """A "drawer" in the vault: a named prize that holds many interchangeable
-    codes. The name + description live here (written once); every code added to
-    the drawer inherits them."""
+    """A "drawer" in the vault: a named prize holding many interchangeable codes.
+    Name + description live here (written once); a giveaway inherits them."""
 
     name: str                                      # e.g. "Trove Radiant Mount"
     description: str | None = None

@@ -321,7 +321,7 @@ async def insert_feedback(
     here because Pydantic's ``max_length`` doesn't strip whitespace, and
     a ``"   \\n\\n   "`` message would otherwise survive the >=5-char
     minimum check via padding."""
-    # Lazy import - see existing comment in earlier version of this fn.
+    # Lazy import: defer Beanie Document classes until Mongo is initialised.
     from app.trove.models import FeedbackAttachmentInfo, FeedbackEntry
 
     msg = message.strip()

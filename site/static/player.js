@@ -5,14 +5,12 @@
 (function () {
   'use strict';
 
+  const { esc } = window.BTTUtil;
+
   const root = document.body;
   const name = (root.dataset.player || '').trim();
   const tr = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
 
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
   function num(n) {
     return (typeof n === 'number' && isFinite(n)) ? n.toLocaleString() : '—';
   }

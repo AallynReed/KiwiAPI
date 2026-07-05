@@ -7,9 +7,6 @@ maps an incoming APPLICATION_COMMAND interaction to its response.
 All responses are PUBLIC (never ephemeral) - the bot is meant to be visible in
 the channel. The HTTP + signature layer lives in ``router.py``; this module is
 pure command logic.
-
-Adding a command: append a def to ``COMMAND_DEFS``, add a branch in ``handle``,
-re-run the admin "Push to Discord" button.
 """
 from __future__ import annotations
 

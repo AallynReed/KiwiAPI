@@ -13,10 +13,9 @@ logger = logging.getLogger("kiwi.pageviews")
 
 
 def _is_page_template(template: str) -> bool:
-    """True for showcase-site PAGE document routes - NOT the ``/static/*`` asset
-    mount or the ``/site/*`` JSON proxies. Reuses the single-sourced page list from
-    ``app.core.middleware`` so a newly-added page is tracked automatically, the
-    same way it inherits the relaxed site CSP."""
+    """True for showcase-site PAGE routes. Reuses ``app.core.middleware``'s
+    single-sourced page list so a new page is tracked automatically (same list that
+    grants the relaxed site CSP)."""
     return template in _PAGE_PATHS or template.startswith(_PAGE_PREFIXES)
 
 
@@ -36,15 +35,12 @@ def _visitor_hash(request: Request) -> str:
 
 
 def add_pageview_middleware(app: FastAPI) -> None:
-    """Record one PageView per showcase-site page load.
+    """Record one PageView per showcase-site page load (best-effort, never breaks the
+    request; gated by ``settings.pageview_tracking_enabled``).
 
-    Counts only GET requests that returned a ``200 text/html`` page document;
-    static assets (``/static/*``) and the ``/site/*`` JSON proxies are skipped
-    (they're not page templates and aren't ``text/html``). The matched route
-    template decides whether a request is a trackable page, but the CONCRETE URL is
-    what's stored - so each individual mod / player page gets its own row.
-    Recording is best-effort and never breaks the request. Gated by
-    ``settings.pageview_tracking_enabled``.
+    The matched route template decides whether a request is a trackable page, but the
+    CONCRETE URL is what's stored - so each individual mod / player page gets its own
+    row.
     """
 
     @app.middleware("http")

@@ -30,7 +30,7 @@ import logging
 
 import httpx
 
-from app.core.utils import utcnow
+from app.core.utils import iso, utcnow
 from app.trove import tmod
 from app.trove.mods_hub import store
 from app.trove.mods_hub.models import (
@@ -78,8 +78,8 @@ def state_dto(st: StrayImportState) -> dict:
         "processed": st.processed, "imported": st.imported, "updated": st.updated,
         "pending_added": st.pending_added, "failed": st.failed,
         "last_error": st.last_error,
-        "started_at": st.started_at.isoformat() if st.started_at else None,
-        "finished_at": st.finished_at.isoformat() if st.finished_at else None,
+        "started_at": iso(st.started_at),
+        "finished_at": iso(st.finished_at),
     }
 
 

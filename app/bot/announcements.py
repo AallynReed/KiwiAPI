@@ -10,9 +10,7 @@ The announcer (app/bot/announcer.py) posts a type's embed to a guild once per
 distinct anchor; the dashboard (app/bot/router.py) lists this registry so server
 admins can toggle each type, pick a channel, and choose a role to ping.
 
-Adding a type: append an ``AnnouncementType`` here (embed + anchor) and it shows
-up in the dashboard and the announcer automatically - no model/schema change. The
-``key`` is a permanent token (it's the GuildConfig.announcements map key); never
+Each ``key`` is a permanent token (the GuildConfig.announcements map key); never
 rename or reuse one.
 """
 from __future__ import annotations
@@ -21,6 +19,7 @@ import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
+from app.core.utils import iso
 from app.discord import embeds
 
 # Embed builders may be sync or async; the announcer awaits as needed.
@@ -45,19 +44,14 @@ class AnnouncementType:
     expiry: ExpiryFn | None = None
 
 
-# ── anchor functions ─────────────────────────────────────────────────────────
-# Imports are lazy (inside each fn) so importing this module stays cheap and free
-# of cycles. Each returns the current anchor string, or None when there's nothing
-# live to announce.
+# Anchor fns import lazily (inside each fn) so importing this module stays cheap and
+# free of cycles. Each returns the current anchor string, or None when there's
+# nothing live to announce.
 
 # Hourly challenges are split per category so each can post to its own channel and
-# ping its own role. classify_challenge() (app/trove/captures.py) maps a captured
-# name to one of these tokens; an anchor fires only while THAT category is live.
-CHALLENGE_CATEGORIES: tuple[str, ...] = ("collection", "rampage", "racing", "target", "dungeon")
-
-# Categories actually offered as announcement options. Racing + Target are currently
-# disabled in-game (they never get captured), so we hide them from the dashboard to
-# avoid dead toggles. Re-add them here if Trion turns them back on.
+# ping its own role. Categories actually offered as announcement options: Racing +
+# Target are currently disabled in-game (never captured), so they're hidden from the
+# dashboard to avoid dead toggles. Re-add them here if Trion turns them back on.
 ANNOUNCED_CHALLENGE_CATEGORIES: tuple[str, ...] = ("collection", "rampage", "dungeon")
 
 
@@ -129,7 +123,7 @@ async def _news_anchor() -> str | None:
     url = getattr(top, "url", None)
     if url:
         return url
-    return top.published_at.isoformat() if getattr(top, "published_at", None) else None
+    return iso(getattr(top, "published_at", None))
 
 
 async def _giveaway_anchor() -> str | None:
@@ -167,9 +161,9 @@ async def _game_update_anchor() -> str | None:
     return f"{v.branch}:{v.ordinal}" if v else None
 
 
-# ── expiry: when the current occurrence becomes irrelevant (auto-delete time) ──
-# Mirror the anchors but return the occurrence's END (unix). The announcer reads
-# these only when it's posting (occurrence is current), so "current end" is right.
+# Expiry (auto-delete time): mirror the anchors but return the occurrence's END
+# (unix). The announcer reads these only when it's posting (occurrence is current),
+# so "current end" is right.
 
 async def _challenge_expiry() -> int | None:
     from app.trove.captures import get_current_challenge
@@ -210,8 +204,6 @@ async def _fluxion_expiry() -> int | None:
     from app.trove.server_time import fluxion
     return fluxion().get("ends_at")
 
-
-# ── the registry ─────────────────────────────────────────────────────────────
 
 # One announcement type per challenge category (replaces the old single
 # "hourly_challenge" type; migrate_legacy folds old configs into these). Each is

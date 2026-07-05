@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from starlette.responses import JSONResponse, Response
 
 from app.core.config import settings
-from app.core.errors import ErrorCode
+from app.core.errors import ErrorCode, build_error_body
 
 # The API serves JSON plus a few small, self-contained HTML pages (landing,
 # verify-email, reset-password). Those use inline <style>/<script>, so inline is
@@ -77,10 +77,6 @@ def add_security_middleware(app: FastAPI) -> None:
     """Reject oversized bodies early and attach security headers to every response."""
     default_max_body = settings.max_request_body_bytes
     mods_max_body = settings.mods_max_request_body_bytes
-    # site_max_request_body_bytes used to govern /unlock_debug + /unlock_fps
-    # uploads; those routes were removed 2026-06 after Trove shipped
-    # anti-cheat. Setting is still defined in settings.py for parity but
-    # not bound here so the middleware closure stays clean.
     leaderboards_max_body = settings.leaderboards_max_request_body_bytes
     market_max_body = settings.market_max_request_body_bytes
     ocr_max_body = settings.ocr_max_request_body_bytes
@@ -118,13 +114,10 @@ def add_security_middleware(app: FastAPI) -> None:
             if too_big:
                 return JSONResponse(
                     status_code=413,
-                    content={
-                        "error": {
-                            "code": ErrorCode.bad_request.value,
-                            "message": f"Request body exceeds the {max_body}-byte limit",
-                            "details": None,
-                        }
-                    },
+                    content=build_error_body(
+                        ErrorCode.bad_request.value,
+                        f"Request body exceeds the {max_body}-byte limit",
+                    ),
                 )
 
         response: Response = await call_next(request)

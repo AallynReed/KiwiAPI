@@ -1,11 +1,9 @@
 """Cursor (keyset) pagination over Mongo ObjectId.
 
-Offset/`skip` pagination degrades on large collections (the server walks and
-discards every skipped row) and can repeat or drop rows when data shifts between
-pages. Keyset pagination instead carries an opaque cursor - here the last
-ObjectId seen - and asks for "the next N after this id". ObjectIds are
-monotonic-ish and unique, so newest-first ordering is ``_id`` descending and the
-next page is ``_id < cursor``.
+The opaque cursor is the last ObjectId seen; newest-first is ``_id`` descending
+and the next page is ``_id < cursor``. Preferred over offset/``skip`` on large
+collections, which walks-and-discards skipped rows and can repeat or drop rows
+when data shifts between pages.
 """
 
 from dataclasses import dataclass
@@ -74,3 +72,12 @@ async def paginate_newest_first(
     docs = docs[:limit]
     next_cursor = str(docs[-1].id) if has_more and docs else None
     return docs, next_cursor, has_more
+
+
+async def paginate(query, *, sort: str, limit: int, offset: int) -> tuple[list, int]:
+    """Offset-page a Beanie query, returning ``(docs, total)``. For admin/history
+    listings that show a total count; use ``paginate_newest_first`` for public
+    cursor pages. Callers project ``docs`` into their own response shape."""
+    total = await query.count()
+    docs = await query.sort(sort).skip(offset).limit(limit).to_list()
+    return docs, total

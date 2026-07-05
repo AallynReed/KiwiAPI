@@ -116,7 +116,7 @@ async def discord_start(client: str | None = None):
         "client_id": settings.discord_client_id,
         "redirect_uri": _redirect_uri(),
         "response_type": "code",
-        "scope": "identify email guilds",   # + guilds so the dashboard can list the user's servers
+        "scope": "identify email guilds",
         "state": state,
     }
     return RedirectResponse(f"{_AUTHORIZE}?{urlencode(params)}", status_code=307)

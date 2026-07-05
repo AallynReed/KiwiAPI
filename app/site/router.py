@@ -1,16 +1,9 @@
 """Routes for the BetterTroveTools showcase site (`trove.aallyn.net`).
 
-Page routes: ``/``, ``/documentation``, ``/commands``, ``/leaderboards``,
-``/updates``, ``/support``.
-
-Plus a small JSON surface under ``/site/*`` (leaderboards + updates +
-market + codexes proxies, screenshots index) that the page-side JS calls
-same-origin so visitors don't get throttled by per-token caps.
-
-Templates were ported from a Quart app; the old ``url_for('static', ...)``
-calls were rewritten to hardcoded ``/static/...`` paths (the mount lives
-at ``/static`` in ``app/main.py``), so the templates render straight
-through Jinja2Templates without a custom url-builder.
+HTML page routes plus a JSON surface under ``/site/*`` that mirrors the read-side
+of ``/v1/*`` but tokenless + same-origin, so the page-side JS isn't throttled by
+the public API's per-token caps. The data is already public, so the bypass costs
+nothing. Every ``/site/<feature>/*`` proxy is feature-gated in ``_feature_blocks``.
 """
 
 import asyncio
@@ -27,32 +20,33 @@ from fastapi.templating import Jinja2Templates
 from app.admin import runtime_config
 from app.core import features as feature_flags
 from app.core.config import settings
+from app.core.utils import iso
 from app.site_auth.dependencies import get_optional_site_user
 from app.site_auth.models import SiteUser
-from app.trove import server_time as trove_server_time
-from app.trove import status as trove_status
 from app.trove import btt_releases as trove_btt
+from app.trove import chaos as trove_chaos
 from app.trove import feeds as trove_feeds
 from app.trove import news as trove_news
 from app.trove import rotations as trove_rotations
-from app.trove import chaos as trove_chaos
+from app.trove import server_time as trove_server_time
 from app.trove import stats as trove_stats
-from app.trove.models import TroveEvent
+from app.trove import status as trove_status
 from app.trove.codexes import crafting as codexes_crafting
+from app.trove.codexes import read as codexes_read
+from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
 from app.trove.gems import builds as gem_builds
 from app.trove.gems import evaluator as gem_evaluator
 from app.trove.gems.model import gem_lookups
 from app.trove.gems.schemas import BuildConfigRequest, EvaluateRequest, SimpleEvaluateRequest
-from app.trove.codexes import read as codexes_read
-from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
-from app.trove.render.service import render_blueprint_cached
 from app.trove.leaderboards import activity as leaderboards_activity
 from app.trove.leaderboards import cache as leaderboards_cache
 from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove.leaderboards import detection as leaderboards_detection
 from app.trove.leaderboards import service as leaderboards_service
-from app.trove.mods_hub import service as mods_hub_service
+from app.trove.models import TroveEvent
 from app.trove.modpacks import service as modpacks_service
+from app.trove.mods_hub import service as mods_hub_service
+from app.trove.render.service import render_blueprint_cached
 from app.trove.updates import compare as updates_compare
 from app.trove.updates import read as updates_read
 from app.trove.updates.cas import ContentStore
@@ -235,9 +229,9 @@ router = APIRouter(
 
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> HTMLResponse:
-    """The content-hub homepage - a live, navigable front door (server status,
-    leaderboard movers, latest mods, newest update, featured codex, reference)
-    that drives visitors into the site. The app *showcase* lives at ``/app``."""
+    """The content-hub homepage - a live front door (server status, leaderboard
+    movers, latest mods, newest update, featured codex, reference). The app
+    *showcase* lives at ``/app``."""
     return _TEMPLATES.TemplateResponse(
         request, "index.html", {"discord_install_url": settings.discord_install_link},
     )
@@ -245,9 +239,8 @@ async def home(request: Request) -> HTMLResponse:
 
 @router.get("/app", response_class=HTMLResponse)
 async def app_showcase(request: Request) -> HTMLResponse:
-    """The BetterTroveTools app showcase + downloads (was the old landing page).
-    Moved off ``/`` so the homepage can be a content front door instead of a
-    product pitch; still linked from the navbar and the homepage CTA."""
+    """The BetterTroveTools app showcase + downloads. Moved off ``/`` (now the
+    content front door) but still linked from the navbar and the homepage CTA."""
     return _TEMPLATES.TemplateResponse(
         request, "app.html", {"discord_install_url": settings.discord_install_link},
     )
@@ -309,11 +302,9 @@ async def embed_status_badge() -> Response:
 @router.get("/browse", response_class=HTMLResponse)
 async def browse_index(request: Request) -> HTMLResponse:
     """Human-readable site index ("HTML sitemap"): real ``<a>`` links to every
-    public mod and modpack page. The catalog pages render their grids client-
-    side, so individual mod/modpack pages had NO crawlable internal links - only
-    the XML sitemap. This page gives search engines (and people) a static,
-    always-present crawl path + spreads link equity into the long tail. Linked
-    from the footer so it's reachable from every page."""
+    public modpack page. The catalog grids render client-side, so mod/modpack pages
+    otherwise have no crawlable internal links - only the XML sitemap. Linked from
+    the footer so it's reachable everywhere."""
     # Modpacks only: the full mod list (thousands of entries) was excessive for a
     # human index, and the XML sitemap already gives search engines every mod URL.
     packs: list[dict] = []
@@ -542,11 +533,9 @@ async def commands(request: Request) -> HTMLResponse:
 
 @router.get("/support", response_class=HTMLResponse)
 async def support(request: Request) -> HTMLResponse:
-    """Dedicated 'Support the project' page - landing for the red-heart
-    navbar link. The bottom-right floating widget is also rendered on
-    every page; this one gives a richer pitch for visitors who want a
-    full read on what the donations actually fund. Renders the supporters
-    credits list (managed via /admin/supporters)."""
+    """'Support the project' page - landing for the red-heart navbar link (the
+    floating widget is on every page). Renders the supporters credits list
+    (managed via /admin/supporters)."""
     from app.supporters import service as supporters_service
     return _TEMPLATES.TemplateResponse(
         request, "support.html", {"supporters": await supporters_service.list_public()},
@@ -617,12 +606,9 @@ async def star_chart_page(request: Request) -> HTMLResponse:
 
 @router.get("/gem-simulator", response_class=HTMLResponse)
 async def gem_simulator_page(request: Request) -> HTMLResponse:
-    """Gem Simulator - roll gems and augment / spark / flare / level them while
-    quality, Power Rank and per-stat values update live; organise them in a
-    104-slot inventory and a 4-element equipped loadout with primordial buffs.
-    Fully client-rendered by the static ``/static/gem-engine.js`` (a faithful JS
-    port of the gem model) with state kept in the browser's ``localStorage`` (no
-    proxy, no /v1 API)."""
+    """Gem Simulator page. Fully client-rendered by the static
+    ``/static/gem-engine.js`` (a JS port of the gem model), state in
+    ``localStorage`` - no proxy, no /v1 API."""
     return _TEMPLATES.TemplateResponse(request, "gem-simulator.html", {})
 
 
@@ -630,9 +616,8 @@ async def gem_simulator_page(request: Request) -> HTMLResponse:
 async def gem_evaluator_page(request: Request) -> HTMLResponse:
     """Gem Evaluator - type in a gem's tier / type / level and its three stats and
     get back the quality %, estimated Power Rank, a per-stat breakdown and the
-    focus-material plan (Rough / Precise / Superior) to perfect it. The page posts to
-    the same-origin ``/site/gems/*`` proxies below, which call the gems:read service
-    layer directly (no token, no per-token rate cap)."""
+    focus-material plan (Rough / Precise / Superior) to perfect it. Posts to the
+    ``/site/gems/*`` proxies below."""
     return _TEMPLATES.TemplateResponse(request, "gem-evaluator.html", {})
 
 
@@ -652,11 +637,7 @@ async def calculators_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "calculators.html", {})
 
 
-# --- /site/gems/* JSON proxies (scope-free, same-origin) --------------------
-# Mirror the read-side of /v1/gems/* (evaluate, stat-range, lookups, builds) but
-# skip the TokenContext dep + per-token rate limit. Gem compute is stateless and
-# the data is public, so the bypass costs us nothing and keeps site browsers off
-# the API's per-token caps. Feature-gated in _feature_blocks above.
+# /site/gems/* JSON proxies: mirror the read-side of /v1/gems/* (stateless compute).
 
 
 @router.get("/site/gems/lookups", response_class=JSONResponse)
@@ -672,7 +653,7 @@ async def site_gem_lookups() -> JSONResponse:
 @router.post("/site/gems/evaluate", response_class=JSONResponse)
 async def site_gem_evaluate(req: EvaluateRequest) -> JSONResponse:
     """Score a typed-in gem (quality %, Power Rank, per-stat progress, focus plan).
-    Same compute as ``/v1/gems/evaluate``, served same-origin."""
+    Same compute as ``/v1/gems/evaluate``."""
     try:
         out = gem_evaluator.evaluate_gem(
             req.tier, req.type, req.level,
@@ -693,7 +674,7 @@ async def site_gem_evaluate(req: EvaluateRequest) -> JSONResponse:
 @router.post("/site/gems/evaluate-simple", response_class=JSONResponse)
 async def site_gem_evaluate_simple(req: SimpleEvaluateRequest) -> JSONResponse:
     """Estimate a gem's quality from just its Power Rank. Same compute as
-    ``/v1/gems/evaluate-simple``, served same-origin."""
+    ``/v1/gems/evaluate-simple``."""
     try:
         out = gem_evaluator.evaluate_gem_simple(req.tier, req.type, req.power_rank, req.level)
     except gem_evaluator.GemEvaluatorError as e:
@@ -758,7 +739,7 @@ async def site_gem_parse_star_chart(code: str = Query(default="", max_length=819
 @router.get("/site/stats/classes", response_class=JSONResponse)
 async def site_stats_classes() -> JSONResponse:
     """Every Trove class as a full object for the /classes page - same data as
-    ``/v1/stats/classes``, served same-origin. Static game data, cached hard."""
+    ``/v1/stats/classes``. Static game data, cached hard."""
     return JSONResponse(
         jsonable_encoder(trove_stats.all_classes()),
         headers={"Cache-Control": "public, max-age=3600"},
@@ -768,8 +749,8 @@ async def site_stats_classes() -> JSONResponse:
 @router.get("/site/server-time", response_class=JSONResponse)
 async def site_server_time() -> JSONResponse:
     """Authoritative Trove server time for the /server-time page - same payload as
-    the public ``/v1/rotations/server-time``, served same-origin so the page can
-    anchor its clock without CORS. Short cache; the page re-fetches each minute."""
+    the public ``/v1/rotations/server-time``. Short cache; the page re-fetches each
+    minute."""
     return JSONResponse(
         trove_server_time.server_time(),
         headers={"Cache-Control": "public, max-age=15"},
@@ -853,8 +834,7 @@ async def site_rotations() -> JSONResponse:
     """"Today in Trove" payload for the homepage dashboard: server time + resets,
     today's daily + this week's weekly bonus, the Chaos Chest window, and the
     live merchant / biome rotations (Corruxion, Fluxion, Wild Mana, Stampy, the
-    3-hour biome cycle). Reuses the same compute functions as the /v1 rotations
-    API; served same-origin so the dashboard renders without a token or CORS."""
+    3-hour biome cycle). Reuses the /v1 rotations compute functions."""
     mana = trove_rotations.wild_mana()
     stampy = trove_rotations.stampy()
     d15 = trove_rotations.biome_rotation()
@@ -906,7 +886,7 @@ async def site_rotations() -> JSONResponse:
 @router.get("/site/feeds/news", response_class=JSONResponse)
 async def site_feeds_news(limit: int = Query(default=16, ge=1, le=50)) -> JSONResponse:
     """Latest Trove news for the homepage dashboard - same data as
-    ``/v1/feeds/news`` (relayed from trovegame.com), served same-origin."""
+    ``/v1/feeds/news`` (relayed from trovegame.com)."""
     docs = await trove_news.latest_news(limit)
     items = [
         {"title": d.title, "url": d.url, "author": d.author, "summary": d.summary,
@@ -921,7 +901,7 @@ async def site_feeds_news(limit: int = Query(default=16, ge=1, le=50)) -> JSONRe
 @router.get("/site/feeds/videos", response_class=JSONResponse)
 async def site_feeds_videos(platform: str = Query(default="youtube")) -> JSONResponse:
     """Trove community videos/streams (YouTube or Twitch) for the dashboard -
-    same source as ``/v1/feeds/{youtube,twitch}``, served same-origin."""
+    same source as ``/v1/feeds/{youtube,twitch}``."""
     platform = platform if platform in ("youtube", "twitch") else "youtube"
     items, fetched_at = await trove_feeds.get_feed(platform)
     return JSONResponse(
@@ -949,8 +929,8 @@ def _calendar_event(ev: TroveEvent, now: int) -> dict:
 @router.get("/site/calendar/events", response_class=JSONResponse)
 async def site_calendar_events() -> JSONResponse:
     """Ongoing + upcoming Trovesaurus events for the /calendar page - same data as
-    ``/v1/feeds/events`` + ``/v1/feeds/events/upcoming``, served same-origin. Ongoing
-    end soonest first; upcoming start soonest first."""
+    ``/v1/feeds/events`` + ``/v1/feeds/events/upcoming``. Ongoing end soonest first;
+    upcoming start soonest first."""
     now = int(time.time())
     ongoing = await TroveEvent.find(
         {"starts_at": {"$lte": now}, "ends_at": {"$gt": now}}
@@ -1009,7 +989,7 @@ async def site_btt_releases(
     offset: int = Query(default=0, ge=0),
 ) -> JSONResponse:
     """BetterTroveTools release history (newest first) for the /releases list -
-    same data as ``/v1/btt/releases``, served same-origin. Optional channel filter."""
+    same data as ``/v1/btt/releases``. Optional channel filter."""
     channel = channel if channel in trove_btt.CHANNELS else None
     docs, total = await trove_btt.list_releases(channel, limit, offset)
     return JSONResponse(
@@ -1024,7 +1004,7 @@ async def site_btt_releases(
 @router.get("/site/btt/changelog", response_class=JSONResponse)
 async def site_btt_changelog() -> JSONResponse:
     """The commit-grouped BetterTroveTools changelog for the /releases page - same
-    data as ``/v1/btt/changelog``, served same-origin."""
+    data as ``/v1/btt/changelog``."""
     doc = await trove_btt.get_changelog()
     payload = {"groups": doc.groups if doc else [],
                "rate_limited": bool(doc.rate_limited) if doc else False,
@@ -1120,9 +1100,8 @@ async def dashboard(request: Request) -> HTMLResponse:
 
 @router.get("/market", response_class=HTMLResponse)
 async def market(request: Request) -> HTMLResponse:
-    """In-game marketplace browser (Beta). Reads from the
-    ``market_listings`` collection via the /site/market/* proxies
-    below - bypasses the public API's per-token caps."""
+    """In-game marketplace browser (Beta). Reads the ``market_listings``
+    collection via the /site/market/* proxies below."""
     return _TEMPLATES.TemplateResponse(request, "market.html", {})
 
 
@@ -1130,8 +1109,7 @@ async def market(request: Request) -> HTMLResponse:
 async def codexes(request: Request) -> HTMLResponse:
     """Codexes browser - parsed Trove game data (allies, mounts, dragons, mementos,
     recipes, items, fish, badges) with mastery / power rank / stat & ability bonuses.
-    Reads the same data as ``/v1/codexes/*`` via the ``/site/codexes/*`` proxies
-    below (same-origin, no per-token caps)."""
+    Reads ``/v1/codexes/*`` via the ``/site/codexes/*`` proxies below."""
     return _TEMPLATES.TemplateResponse(request, "codexes.html", {})
 
 
@@ -1384,11 +1362,7 @@ async def activity_og_image(period: str = "1d") -> Response:
     )
 
 
-# --- /site/market/* - same-origin JSON proxies for the page ---------------
-# Same shape as /site/leaderboards/* and /site/updates/* - call the
-# service layer directly, skip the public API's auth + scope + rate-limit
-# pipeline. Same trade-off: data is already public, no reason to throttle
-# the same browsers we'd be happy to serve via api.aallyn.net anyway.
+# --- /site/market/* JSON proxies for the /market page ---------------------
 
 @router.get("/site/market/items", response_class=JSONResponse)
 async def site_market_items() -> JSONResponse:
@@ -1532,9 +1506,8 @@ async def site_market_analytics_movers(
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
 
 
-# --- /site/codexes/* - same-origin JSON proxies for the /codexes page ------
-# Mirror the public ``/v1/codexes/*`` surface but tokenless + same-origin. The
-# two "modes" are branches (live-us / pts); default to live-us.
+# --- /site/codexes/* JSON proxies for the /codexes page --------------------
+# The two "modes" are branches (live-us / pts); default to live-us.
 
 _CODEX_BRANCHES = ("live-us", "pts")
 _DEFAULT_CODEX_BRANCH = "live-us"
@@ -1675,12 +1648,7 @@ async def site_codex_crafting(
 
 @router.get("/leaderboards", response_class=HTMLResponse)
 async def leaderboards(request: Request) -> HTMLResponse:
-    """Trove leaderboards browser - public site read of the same data the
-    ``/v1/leaderboards/*`` API exposes. The page hits dedicated JSON
-    endpoints under ``/site/leaderboards/*`` (see below) which bypass the
-    public API's token/scope/rate-limit pipeline and call the service
-    layer directly. The data is public anyway, so the bypass costs us
-    nothing and avoids subjecting site browsers to per-token caps.
+    """Trove leaderboards browser (reads via ``/site/leaderboards/*``).
 
     The two anti-cheat tabs are gated on the cheater/alt-cluster calculation
     switches and rendered (or not) server-side, so a disabled tab is gone on
@@ -1693,11 +1661,8 @@ async def leaderboards(request: Request) -> HTMLResponse:
     })
 
 
-# --- /leaderboards JSON endpoints ------------------------------------------
-# These mirror the four read-side helpers from app/trove/router.py but skip
-# the TokenContext dep + archive-rate-limit. They're intentionally NOT
-# include_in_schema (the router already opts out) - the public surface is
-# still /v1/leaderboards/*, this is just a site convenience.
+# /site/leaderboards/* JSON endpoints: mirror the read-side helpers from
+# app/trove/router.py.
 
 @router.get("/site/leaderboards/config", response_class=JSONResponse)
 async def site_lb_config() -> JSONResponse:
@@ -1750,8 +1715,7 @@ async def site_lb_boards(
 # put the named segments above the parameterised ones.
 @router.get("/site/leaderboards/activity", response_class=JSONResponse)
 async def site_lb_activity() -> JSONResponse:
-    """Same payload as the public `/v1/activity/current` but served
-    same-origin so the page can fetch without CORS."""
+    """Same payload as the public ``/v1/activity/current``."""
     payload = await leaderboards_activity.estimate_active_players()
     # no-cache: the chart must reflect a new capture / a master Reset+rebuild
     # immediately, not 30 min later. The query is a cheap indexed read.
@@ -1760,11 +1724,9 @@ async def site_lb_activity() -> JSONResponse:
 
 @router.get("/site/leaderboards/activity/history", response_class=JSONResponse)
 async def site_lb_activity_history(days: int = 7) -> JSONResponse:
-    """Same payload as the public ``/v1/activity/history`` - same-origin
-    proxy so the showcase page can fetch without CORS / token gymnastics.
-    Returns a time-series of activity estimates with both raw counts
-    and per-hour rates, the latter being what the chart line plots so
-    missed-capture gaps don't show as spikes."""
+    """Same payload as the public ``/v1/activity/history``: a time-series of
+    activity estimates with both raw counts and per-hour rates. The chart line
+    plots the rates so missed-capture gaps don't show as spikes."""
     days = max(1, min(int(days), 30))
     payload = await leaderboards_activity.estimate_active_players_history(days=days)
     return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
@@ -1783,9 +1745,8 @@ async def site_lb_activity_series(period: str = "7d") -> JSONResponse:
 
 @router.get("/site/leaderboards/records", response_class=JSONResponse)
 async def site_lb_records() -> JSONResponse:
-    """Same payload as the public `/v1/leaderboards/records` - highest Trove
-    Mastery / Geode Mastery / Power Rank in the game - served same-origin so the
-    homepage widgets can fetch it without CORS. Cached briefly (the underlying
+    """Same payload as the public ``/v1/leaderboards/records`` - highest Trove
+    Mastery / Geode Mastery / Power Rank in the game. Cached briefly (the underlying
     data only moves on the daily 11:00-UTC ingest)."""
     payload = await leaderboards_service.mastery_records()
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=900"})
@@ -1793,8 +1754,8 @@ async def site_lb_records() -> JSONResponse:
 
 @router.get("/site/leaderboards/class-activity/current", response_class=JSONResponse)
 async def site_lb_class_activity_current() -> JSONResponse:
-    """Same payload as `/v1/class-activity/current`, served same-origin for the
-    Class Activity page (no-cache so a new capture / master rebuild shows at once)."""
+    """Same payload as ``/v1/class-activity/current`` for the Class Activity page
+    (no-cache so a new capture / master rebuild shows at once)."""
     payload = await leaderboards_class_activity.class_activity_current()
     return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
 
@@ -1810,8 +1771,7 @@ async def site_lb_class_activity_series(period: str = "7d") -> JSONResponse:
 @router.get("/site/trove-status", response_class=JSONResponse)
 async def site_trove_status() -> JSONResponse:
     """Live Trove server status (Live + PTS) - same payload as
-    ``/v1/misc/trove-status``, served same-origin so the landing + status
-    pages can fetch it without CORS."""
+    ``/v1/misc/trove-status``."""
     payload = trove_status.get_status()
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=30"})
 
@@ -1828,10 +1788,8 @@ async def site_trove_status_history(env: str = "live", days: int = 7) -> JSONRes
 
 @router.get("/site/leaderboards/cheaters", response_class=JSONResponse)
 async def site_lb_cheaters() -> JSONResponse:
-    """Possible-cheaters analysis for the leaderboards page. Same payload
-    as the public ``GET /v1/leaderboards/cheaters`` endpoint - served
-    here so the page can fetch same-origin (no CORS dance from
-    trove.aallyn.net). The detection module itself caches the result
+    """Possible-cheaters analysis for the leaderboards page. Same payload as the
+    public ``GET /v1/leaderboards/cheaters``. The detection module caches the result
     for ``cheaters_cache_ttl_seconds`` so this is cheap to call."""
     payload = await leaderboards_detection.detect_possible_cheaters()
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
@@ -1904,8 +1862,8 @@ async def site_lb_board_health(uuid: int) -> JSONResponse:
 @router.get("/site/leaderboards/players/{player_name}/profile",
             response_class=JSONResponse)
 async def site_lb_player_profile(player_name: str) -> JSONResponse:
-    """Public player profile (appearances + verified-claim flag), same-origin for
-    the /player/<name> page."""
+    """Public player profile (appearances + verified-claim flag) for the
+    /player/<name> page."""
     payload = await leaderboards_service.player_profile(player_name)
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=30"})
 
@@ -1927,17 +1885,12 @@ async def site_lb_player_series(
 
 @router.get("/updates", response_class=HTMLResponse)
 async def updates(request: Request) -> HTMLResponse:
-    """Trove updates browser - public site read of the same archive that
-    ``/v1/updates/*`` exposes. The page hits the JSON helpers below
-    (``/site/updates/*``) which bypass the token/scope/rate-limit pipeline
-    so site browsers don't get throttled by per-token caps."""
+    """Trove updates browser - public site read of the ``/v1/updates/*`` archive,
+    via the ``/site/updates/*`` helpers below."""
     return _TEMPLATES.TemplateResponse(request, "updates.html", {})
 
 
-# --- /updates JSON endpoints ----------------------------------------------
-# Mirrors the public ``/v1/updates/*`` surface but tokenless + same-origin
-# (no CORS, no scope, no archive rate-limit). Implementation is one-line
-# calls into the shared read module.
+# /site/updates/* JSON endpoints: mirror the public /v1/updates/* surface.
 
 def _site_check_branch(branch: str) -> None:
     if branch not in UPDATE_BRANCHES:
@@ -1955,7 +1908,7 @@ async def site_up_branches() -> JSONResponse:
     # ISO serialisation for us. ``JSONResponse`` uses plain ``json.dumps``,
     # which would 500 on the datetime - convert manually here.
     serialised = [
-        {**b, "last_probe_at": b["last_probe_at"].isoformat() if b.get("last_probe_at") else None}
+        {**b, "last_probe_at": iso(b.get("last_probe_at"))}
         for b in items
     ]
     return JSONResponse(
@@ -1975,8 +1928,8 @@ async def site_up_versions(
     items = [
         {
             "branch": d.branch, "ordinal": d.ordinal, "version_tag": d.version_tag,
-            "captured_at": d.captured_at.isoformat() if d.captured_at else None,
-            "completed_at": d.completed_at.isoformat() if d.completed_at else None,
+            "captured_at": iso(d.captured_at),
+            "completed_at": iso(d.completed_at),
             "files_added": d.files_added, "files_modified": d.files_modified,
             "files_removed": d.files_removed, "bytes_added": d.bytes_added,
         }
@@ -2090,7 +2043,7 @@ async def site_up_file_history(
             detail=f"No history for '{path}' on branch '{branch}'",
         )
     items = [
-        {**r, "captured_at": r["captured_at"].isoformat() if r.get("captured_at") else None}
+        {**r, "captured_at": iso(r.get("captured_at"))}
         for r in rows
     ]
     return JSONResponse(
@@ -2107,9 +2060,7 @@ async def site_up_file_compare(
     to: int = Query(...),
 ) -> JSONResponse:
     """Diff two versions of a file. Same body shape as
-    ``/v1/updates/{branch}/file/compare`` - kept here so the page can
-    fetch same-origin and avoid the OpenAPI surface for what is, after
-    all, a UI-driven request."""
+    ``/v1/updates/{branch}/file/compare``."""
     _site_check_branch(branch)
     v_from = await updates_read.resolve_version(branch, ordinal=from_)
     v_to = await updates_read.resolve_version(branch, ordinal=to)
@@ -2122,13 +2073,13 @@ async def site_up_file_compare(
     b = await updates_read.resolve_file_at_version(branch, path, to)
     a_info = {
         "ordinal": v_from.ordinal, "version_tag": v_from.version_tag,
-        "captured_at": v_from.captured_at.isoformat() if v_from.captured_at else None,
+        "captured_at": iso(v_from.captured_at),
         "content_sha256": a["content_sha256"] if a else None,
         "size": a["size"] if a else 0,
     }
     b_info = {
         "ordinal": v_to.ordinal, "version_tag": v_to.version_tag,
-        "captured_at": v_to.captured_at.isoformat() if v_to.captured_at else None,
+        "captured_at": iso(v_to.captured_at),
         "content_sha256": b["content_sha256"] if b else None,
         "size": b["size"] if b else 0,
     }
@@ -2161,12 +2112,11 @@ async def site_up_file_compare(
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
 
 
-# --- /site/mods/* - same-origin proxies for the Mods Hub pages -------------
-# Reads mirror the public ``/v1/mods/hub/*`` surface but tokenless + same-
-# origin, and they pass the *site* user (Discord login) as the viewer - so the
-# owner sees their own drafts + owner-only controls, which the /v1 reads (API
-# token, no site-user concept) never reveal. Writes still go to /v1/mods/hub/*
-# directly with the site-auth bearer (CORS-allowed for trove.aallyn.net).
+# --- /site/mods/* proxies for the Mods Hub pages ---------------------------
+# Reads mirror ``/v1/mods/hub/*`` but pass the *site* user (Discord login) as the
+# viewer - so the owner sees their own drafts + owner-only controls, which the /v1
+# reads (API token, no site-user concept) never reveal. Writes still go to
+# /v1/mods/hub/* directly with the site-auth bearer (CORS-allowed for the site).
 
 @router.get("/site/mods/projects", response_class=JSONResponse)
 async def site_mods_projects(
@@ -2518,26 +2468,16 @@ async def site_modpack_download(
 
 @router.get("/site/screenshots.json", response_class=JSONResponse)
 async def hero_screenshots() -> JSONResponse:
-    """List of Trove screenshots for the landing-page hero slideshow.
-
-    Reads ``site/static/trove-screens/`` and returns every image (by file
-    extension whitelist) sorted alphabetically. Lets the user drop new
-    screenshots into the folder and have them appear on the next page
-    load without an HTML edit. Filenames are exposed as URLs only - full
-    paths never leak.
-
-    Empty list (folder missing, no recognised images) is a clean OK that
-    the landing-page JS treats as "no slideshow"; the orbs + grid stay.
-    """
+    """Trove screenshots (as URLs) for the landing-page hero slideshow, read from
+    ``site/static/trove-screens/`` so new drops appear without an HTML edit. Empty
+    list (folder missing / no recognised images) is a clean OK the JS treats as
+    "no slideshow"."""
     folder = Path(settings.site_root) / "static" / "trove-screens"
     files: list[str] = []
     if folder.is_dir():
         for path in sorted(folder.iterdir()):
             if path.is_file() and path.suffix.lower() in _SCREENSHOT_EXTS:
                 files.append(f"/static/trove-screens/{path.name}")
-    # 60-second client cache: long enough that a back-button hit doesn't
-    # re-list the folder, short enough that adding a new screenshot shows
-    # up within a minute without a hard refresh.
     return JSONResponse(
         {"screenshots": files, "count": len(files)},
         headers={"Cache-Control": "public, max-age=60"},

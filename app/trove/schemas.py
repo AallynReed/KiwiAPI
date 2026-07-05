@@ -3,22 +3,17 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-# Category a captured challenge falls into. Computed from the raw display name
-# by ``app.trove.captures.classify_challenge`` so consumers don't have to
-# memorise which strings are special-cased; see that helper for the rules.
-# Field name ``type`` shadows the Python builtin at attribute level but
-# Pydantic handles it fine - chose ``type`` because the old API used
-# ``challenge_type`` and consumers reading the renamed `kind` would have
-# broken. ``ChallengeType`` (the alias) is the public name.
+# Category a captured challenge falls into; see app.trove.captures.classify_challenge.
+# Field named ``type`` (not ``kind``) to stay compatible with the old API's consumers.
 ChallengeType = Literal["collection", "rampage", "racing", "target", "dungeon"]
 
 # --- Server time -----------------------------------------------------------
 
 
 class ServerTime(BaseModel):
-    now_unix: int                 # real UTC, unix seconds
-    now_iso: str                  # real UTC, ISO 8601
-    trove_day: str                # current in-game day, e.g. "Friday"
+    now_unix: int
+    now_iso: str
+    trove_day: str
     daily_reset_at: int           # next daily reset (11:00 UTC), unix seconds
     weekly_reset_at: int          # next weekly-buff rotation, unix seconds
 
@@ -60,7 +55,7 @@ class WeeklyBuffs(BaseModel):
 
 
 class MerchantWindow(BaseModel):
-    starts_at: int                # unix seconds (real UTC)
+    starts_at: int
     ends_at: int
     state: str | None = None      # Fluxion only: "voting" | "selling"
 
@@ -86,18 +81,18 @@ class Fluxion(BaseModel):
 
 
 class ChaosChestItem(BaseModel):
-    name: str                     # featured item display name
+    name: str
     identifier: str | None = None  # game path identifier (forward-slashed)
     blueprint: str | None = None   # blueprint path (lowercased)
 
 
 class ChaosChest(BaseModel):
     active: bool                  # within the current weekly window
-    starts_at: int                # window start, unix seconds
-    ends_at: int                  # window end, unix seconds
+    starts_at: int
+    ends_at: int
     seconds_remaining: int        # to the window end
-    item: ChaosChestItem | None   # featured item (None if upstream unavailable)
-    fetched_at: datetime | None   # when the item was last relayed
+    item: ChaosChestItem | None   # None if upstream unavailable
+    fetched_at: datetime | None
 
 
 # --- Yearly calendar (all rotations as one ±365-day timeline) --------------
@@ -119,8 +114,8 @@ class CalendarEvent(BaseModel):
 
 
 class YearlyCalendar(BaseModel):
-    starts_at: int                # window start (now − 365d), unix seconds
-    ends_at: int                  # window end (now + 365d), unix seconds
+    starts_at: int                # now − 365d, unix seconds
+    ends_at: int                  # now + 365d, unix seconds
     generated_at: int             # the "now" the window was centered on
     count: int
     events: list[CalendarEvent]   # flat, sorted by starts_at
@@ -137,14 +132,14 @@ class DelveWeekInfo(BaseModel):
 
 
 class DelveWeekList(BaseModel):
-    current_week: int             # the live week id right now
+    current_week: int             # the live week id
     items: list[DelveWeekInfo]    # available weeks, newest first
     count: int
 
 
 class DelveRotationOut(BaseModel):
     week: int
-    is_current: bool              # whether this is the live week
+    is_current: bool
     total: int
     count: int
     fetched_at: datetime | None
@@ -216,9 +211,9 @@ class TroveNewsHistory(BaseModel):
 
 
 class BttAsset(BaseModel):
-    name: str                     # the asset filename
-    url: str                      # the raw download URL (browser_download_url)
-    size: int                     # bytes
+    name: str
+    url: str                      # browser_download_url
+    size: int
     content_type: str | None = None
     download_count: int = 0
 
@@ -226,10 +221,10 @@ class BttAsset(BaseModel):
 class BttReleaseMeta(BaseModel):
     """Release-level metadata WITHOUT the asset list - used inside per-platform views."""
     release_id: int
-    tag_name: str                 # e.g. "v1.2.3"
-    name: str                     # release title
+    tag_name: str
+    name: str
     body: str                     # release notes (markdown)
-    html_url: str                 # the GitHub release page
+    html_url: str
     prerelease: bool
     channel: str                  # "release" | "beta" (derived from prerelease)
     published_at: datetime
@@ -267,15 +262,15 @@ class BttUpdateCheck(BaseModel):
     platform: str                 # windows | linux | android
     update_available: bool        # True iff `installed` is older than `latest.release.tag_name`
     comparable: bool              # False if either side couldn't be parsed as a version
-    latest: BttPlatformLatest | None  # the latest release for this platform/channel, or null
+    latest: BttPlatformLatest | None
 
 
 class BttCommit(BaseModel):
-    sha: str                      # full commit SHA
+    sha: str
     short_sha: str                # first 7 chars (display id)
     message: str                  # first line of the commit message
     type: str | None = None       # conventional-commit prefix (feat/fix/docs/...) or null
-    url: str                      # the GitHub commit page
+    url: str
 
 
 class BttChangelogGroup(BaseModel):
@@ -313,7 +308,7 @@ class TroveEventList(BaseModel):
 
 
 class EventCategoryList(BaseModel):
-    categories: list[str]         # distinct categories currently in the store
+    categories: list[str]         # distinct categories in the store
     count: int
 
 
@@ -393,9 +388,9 @@ class CoefficientResponse(BaseModel):
 
 
 class ClassStat(BaseModel):
-    name: str                     # stat name, e.g. "Physical Damage"
+    name: str                     # e.g. "Physical Damage"
     value: float | None           # base value (null when the class lacks the stat)
-    percentage: bool              # whether the stat is a percentage
+    percentage: bool
 
 
 class AbilityStage(BaseModel):

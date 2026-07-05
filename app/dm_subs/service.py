@@ -5,7 +5,7 @@ from __future__ import annotations
 from beanie import PydanticObjectId
 
 from app.core.errors import APIError, ErrorCode
-from app.core.utils import utcnow
+from app.core.utils import iso, utcnow
 from app.dm_subs.models import (
     CHALLENGE_TYPES,
     DM_EVENT_TYPES,
@@ -70,7 +70,7 @@ def _dto(s: DmSubscription) -> dict:
         "active": s.active,
         "last_status": s.last_status,
         "last_error": s.last_error,
-        "last_delivered_at": s.last_delivered_at.isoformat() if s.last_delivered_at else None,
+        "last_delivered_at": iso(s.last_delivered_at),
         "disabled_reason": s.disabled_reason,
         "created_at": s.created_at.isoformat(),
     }

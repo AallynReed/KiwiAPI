@@ -1,29 +1,11 @@
-"""Runtime-tunable settings: master can change them via the admin panel,
-no env-var edit or container restart needed.
+"""Master-flippable runtime tunables (no env edit or restart needed).
 
-How it stacks:
-
-  ┌─ REGISTRY (this file) - declares the *known* keys with their defaults,
-  │  types, categories, descriptions. Static; adding a new tunable means
-  │  adding an entry here and shipping a deploy.
-  │
-  └─ RuntimeConfig collection in Mongo - sparse overrides. Only keys the
-     master has explicitly set live here. ``get_setting(key)`` returns the
-     override if present, else the registry default.
-
-Reads are cached per-key with a short TTL (5s by default) so a hot path
-like the feedback rate limiter doesn't issue a Mongo round-trip on every
-request. Writes invalidate the cache entry for the affected key.
-
-Adding a new tunable:
-    1. Append a ``TunableSetting`` entry to ``REGISTRY``.
-    2. Read it with ``await runtime_config.get_setting("your.key")``.
-    3. Add a description so the admin UI explains what it does.
-
-Type discipline: every tunable declares its primitive type and (for
-numeric ones) a valid range. ``set_setting`` raises on invalid input
-BEFORE persisting, so the DB only ever holds valid values. Cache keeps
-strict types - int stays int, never a string from the JSON envelope.
+REGISTRY (this file) declares the known keys + defaults; the RuntimeConfig
+Mongo collection holds sparse overrides. ``get_setting`` returns the override
+if present, else the registry default, cached per-key for a short TTL so hot
+paths (e.g. the feedback rate limiter) skip a Mongo round-trip. ``set_setting``
+validates type + range BEFORE persisting, so the DB only ever holds valid
+values, and the cache preserves strict types (int stays int, never a JSON str).
 """
 
 from __future__ import annotations
@@ -47,15 +29,13 @@ from app.core.utils import utcnow
 class RuntimeConfig(Document):
     """One sparse override for a registered tunable. Absent → code default.
 
-    ``value`` is JSON-encoded so the same collection can hold strings,
-    ints, bools, and (later) compound values without per-type columns.
-    The encode/decode happens in :func:`set_setting` / :func:`get_setting`
-    and the cache, never by callers."""
+    ``value`` is JSON-encoded (encode/decode confined to set_setting/get_setting
+    + cache) so one collection holds strings, ints, bools without per-type columns."""
 
     key: str  # registry key, e.g. "feedback.discord_webhook"
-    value: str  # JSON-encoded - decoded by get_setting()
+    value: str
     updated_at: datetime = Field(default_factory=utcnow)
-    updated_by_user_id: PydanticObjectId | None = None  # audit trail
+    updated_by_user_id: PydanticObjectId | None = None
 
     class Settings:
         name = "runtime_config"
