@@ -86,6 +86,7 @@ _SITE_FEATURE_FLAGS = {
     "btt_releases_enabled": feature_flags.BTT_RELEASES_FLAG,
     "classes_enabled": feature_flags.CLASSES_FLAG,
     "star_chart_enabled": feature_flags.STAR_CHART_FLAG,
+    "gem_simulator_enabled": feature_flags.GEM_SIMULATOR_FLAG,
 }
 
 
@@ -162,6 +163,10 @@ def _feature_blocks(p: str, f: dict) -> bool:
     # Star Chart is fully client-rendered from the static /static/star_chart.json
     # asset (no /site proxy, no /v1 API), so only the page route needs blocking.
     if not f["star_chart_enabled"] and p == "/star-chart":
+        return True
+    # Gem Simulator is likewise fully client-rendered (static /static/gem-engine.js,
+    # no /site proxy, no /v1 API), so only the page route needs blocking.
+    if not f["gem_simulator_enabled"] and p == "/gem-simulator":
         return True
     return False
 
@@ -311,6 +316,7 @@ _SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/commands", "commands_enabled"),
     ("/classes", "classes_enabled"),
     ("/star-chart", "star_chart_enabled"),
+    ("/gem-simulator", "gem_simulator_enabled"),
     ("/leaderboards", "leaderboards_enabled"),
     ("/activity", "player_activity_enabled"),
     ("/class-activity", "class_activity_enabled"),
@@ -581,6 +587,17 @@ async def star_chart_page(request: Request) -> HTMLResponse:
     that's byte-compatible with the desktop app. Fully client-rendered from the
     static ``/static/star_chart.json`` (no proxy, no /v1 API)."""
     return _TEMPLATES.TemplateResponse(request, "star-chart.html", {})
+
+
+@router.get("/gem-simulator", response_class=HTMLResponse)
+async def gem_simulator_page(request: Request) -> HTMLResponse:
+    """Gem Simulator - roll gems and augment / spark / flare / level them while
+    quality, Power Rank and per-stat values update live; organise them in a
+    104-slot inventory and a 4-element equipped loadout with primordial buffs.
+    Fully client-rendered by the static ``/static/gem-engine.js`` (a faithful JS
+    port of the gem model) with state kept in the browser's ``localStorage`` (no
+    proxy, no /v1 API)."""
+    return _TEMPLATES.TemplateResponse(request, "gem-simulator.html", {})
 
 
 @router.get("/site/stats/classes", response_class=JSONResponse)

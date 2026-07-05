@@ -42,6 +42,7 @@ STREAMS_FLAG = "feature_streams_enabled"
 BTT_RELEASES_FLAG = "feature_btt_releases_enabled"
 CLASSES_FLAG = "feature_classes_enabled"
 STAR_CHART_FLAG = "feature_star_chart_enabled"
+GEM_SIMULATOR_FLAG = "feature_gem_simulator_enabled"
 DM_SUBS_FLAG = "feature_dm_subscriptions_enabled"
 DELVES_FLAG = "feature_delves_enabled"
 

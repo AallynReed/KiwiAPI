@@ -432,6 +432,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "releases.html", "text/html")
         if path == "/classes":
             return self._send_file(TEMPLATES / "classes.html", "text/html")
+        if path == "/gem-simulator":
+            return self._send_file(TEMPLATES / "gem-simulator.html", "text/html")
         if path == "/giveaways":
             return self._send_file(TEMPLATES / "giveaways.html", "text/html")
         if path == "/clubs":

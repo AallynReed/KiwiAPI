@@ -340,6 +340,19 @@ REGISTRY: dict[str, TunableSetting] = {
             "same-origin proxy or /v1 API), so only the dedicated page is hidden."
         ),
     ),
+    "feature_gem_simulator_enabled": _t(
+        key="feature_gem_simulator_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Gem Simulator page. OFF hides the /gem-simulator "
+            "page + navbar link. It's a client-rendered gem roller/augmenter (static "
+            "/static/gem-engine.js, a JS port of the gem model) with state kept in the "
+            "browser's localStorage (no same-origin proxy or /v1 API), so only the "
+            "dedicated page is hidden."
+        ),
+    ),
     "feature_delves_enabled": _t(
         key="feature_delves_enabled",
         default=False,
