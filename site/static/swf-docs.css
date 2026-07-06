@@ -22,7 +22,7 @@
     --accent-red: #ff6b6b;
     --discord-blurple: #5865F2;
     --sidebar-w: 320px;
-    --navbar-h: 60px;
+    --navbar-h: 72px;   /* matches the shared site navbar (style.css) height */
 }
 
 * { box-sizing: border-box; }
