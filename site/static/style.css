@@ -1622,6 +1622,15 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 
 /* ─── 13. Footer ─────────────────────────────────────────────────────── */
 
+/* Visually hidden, but available to screen readers + search engines. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}
+
 .site-footer {
   padding: 60px 28px 30px;
   border-top: 1px solid var(--bg-line);
@@ -1817,7 +1826,19 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   .bento-grid { grid-template-columns: 1fr; }
   .bento-tile.span-2 { grid-column: auto; }
 
-  .footer-grid { grid-template-columns: 1fr; }
+  /* Footer: stay 2-up (brand spans the top) instead of collapsing into one
+     tall column - the single-column stack was a long scroll on phones. Also
+     tighten the vertical chrome. */
+  .site-footer { padding: 36px 20px 24px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px 20px; align-items: start; }
+  .footer-brand { grid-column: 1 / -1; }
+  /* Let the long Product list own the left column while the two short lists
+     (Developers, Community) stack in the right - balances the heights and
+     kills the dead space next to Product. nth-child(2) = the Product column
+     (child 1 is the brand block). */
+  .footer-grid > .footer-col:nth-child(2) { grid-row: span 2; }
+  .footer-col a { padding: 3px 0; }
+  .footer-fineprint { margin-top: 26px; padding-top: 18px; }
 }
 
 @media (max-width: 480px) {

@@ -87,8 +87,6 @@
 .dash-main { display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
 
 .dash-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-.dash-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.6rem, 2.5vw + 1rem, 2.4rem); margin: 0; letter-spacing: -0.01em; }
-.dash-subtitle { color: var(--text-mute); margin: 0.25rem 0 0; }
 .dash-search { display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 0.35rem 0.35rem 0.35rem 0.85rem; }
 .dash-search:focus-within { border-color: var(--accent); }
 .dash-search i { color: var(--text-soft); }

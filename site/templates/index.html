@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Better Trove Tools - live Trove dashboard: news, daily bonus, mods &amp; more</title>
+    <title>Better Trove Tools</title>
     <meta name="description" content="Your live Trove dashboard: today's daily &amp; weekly bonus, merchant rotations, official news, community videos, player activity, server status, the latest mods and more - all free and open source.">
     <meta name="keywords" content="Trove, Better Trove Tools, Trove dashboard, Trove news, Trove daily bonus, Trove server time, Trove mods, Trove leaderboards, Trove codexes, Trove rotations, chaos chest">
     <meta name="author" content="Aallyn Reed">
@@ -26,14 +26,14 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://trove.aallyn.net/">
     <meta property="og:site_name" content="Better Trove Tools">
-    <meta property="og:title" content="Better Trove Tools - the live Trove dashboard">
+    <meta property="og:title" content="Better Trove Tools">
     <meta property="og:description" content="Daily bonus, merchant rotations, news, community videos, mods, leaderboards and server status for Trove. Free &amp; open source.">
     <meta property="og:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
     <meta property="og:image:secure_url" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
     <meta property="og:image:alt" content="Better Trove Tools">
     <meta property="og:locale" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Better Trove Tools - the live Trove dashboard">
+    <meta name="twitter:title" content="Better Trove Tools">
     <meta name="twitter:description" content="Daily bonus, news, community videos, mods &amp; leaderboards for Trove.">
     <meta name="twitter:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
 
@@ -117,10 +117,9 @@
         <div class="dash-main">
 
             <div class="dash-top" id="hero">
-                <div class="dash-top-text">
-                    <h1 class="dash-title" data-i18n>Your live Trove dashboard</h1>
-                    <p class="dash-subtitle" data-i18n>Today's bonus, the latest news, community content and mods - all in one place.</p>
-                </div>
+                <!-- Visually hidden so the page keeps a single semantic h1 for
+                     screen readers / SEO without the marketing hero text. -->
+                <h1 class="sr-only">Better Trove Tools - live Trove dashboard</h1>
                 {% if leaderboards_enabled %}
                 <form class="dash-search" id="home-player-search" role="search" aria-label="Look up a Trove player">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
