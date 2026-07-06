@@ -1670,5 +1670,18 @@
   "use the Services to cheat in, exploit, or harm the game or its players.": "게임이나 그 플레이어를 속이거나 악용하거나 해치기 위해 서비스를 이용하는 행위.",
   "username": "사용자명",
   "would be": "가 됩니다",
-  "your odds": "귀하의 확률"
+  "your odds": "귀하의 확률",
+  "Skip to content": "콘텐츠로 건너뛰기",
+  "Reverse-engineered": "리버스 엔지니어링",
+  "Trove UI <span class=\"highlight-blue\">Reference</span>": "Trove UI <span class=\"highlight-blue\">참조</span>",
+  "Decompiled Flash (<code>.swf</code>) screens — 108 files.": "디컴파일된 Flash(<code>.swf</code>) 화면 — 108개 파일.",
+  "No matching screens.": "일치하는 화면이 없습니다.",
+  "Search screens & classes…": "화면 및 클래스 검색…",
+  "Browse screens": "화면 둘러보기",
+  "Shared libraries": "공유 라이브러리",
+  "Code shared across every SWF — not individual screens": "모든 SWF에서 공유되는 코드 — 개별 화면이 아님",
+  "Could not load this document.": "이 문서를 불러올 수 없습니다.",
+  "Failed to load the document index.": "문서 색인을 불러오지 못했습니다.",
+  "Trove UI (Flash) decompile reference": "Trove UI(Flash) 디컴파일 참조",
+  "Overview": "개요"
 }

@@ -1670,5 +1670,18 @@
   "use the Services to cheat in, exploit, or harm the game or its players.": "использовать Сервисы для читерства, эксплойтов или причинения вреда игре или её игрокам.",
   "username": "имя пользователя",
   "would be": "составил бы",
-  "your odds": "ваши шансы"
+  "your odds": "ваши шансы",
+  "Skip to content": "Перейти к содержимому",
+  "Reverse-engineered": "Реверс-инжиниринг",
+  "Trove UI <span class=\"highlight-blue\">Reference</span>": "Trove UI <span class=\"highlight-blue\">Справочник</span>",
+  "Decompiled Flash (<code>.swf</code>) screens — 108 files.": "Декомпилированные экраны Flash (<code>.swf</code>) — 108 файлов.",
+  "No matching screens.": "Нет подходящих экранов.",
+  "Search screens & classes…": "Поиск экранов и классов…",
+  "Browse screens": "Просмотр экранов",
+  "Shared libraries": "Общие библиотеки",
+  "Code shared across every SWF — not individual screens": "Код, общий для всех SWF — не для отдельных экранов",
+  "Could not load this document.": "Не удалось загрузить этот документ.",
+  "Failed to load the document index.": "Не удалось загрузить индекс документов.",
+  "Trove UI (Flash) decompile reference": "Справочник по декомпиляции Trove UI (Flash)",
+  "Overview": "Обзор"
 }

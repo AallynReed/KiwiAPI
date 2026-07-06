@@ -1670,5 +1670,18 @@
   "use the Services to cheat in, exploit, or harm the game or its players.": "利用服务在游戏中作弊、滥用漏洞或损害游戏或其玩家。",
   "username": "用户名",
   "would be": "将会是",
-  "your odds": "你的概率"
+  "your odds": "你的概率",
+  "Skip to content": "跳到内容",
+  "Reverse-engineered": "逆向工程",
+  "Trove UI <span class=\"highlight-blue\">Reference</span>": "Trove UI <span class=\"highlight-blue\">参考</span>",
+  "Decompiled Flash (<code>.swf</code>) screens — 108 files.": "反编译的 Flash（<code>.swf</code>）界面 — 108 个文件。",
+  "No matching screens.": "没有匹配的界面。",
+  "Search screens & classes…": "搜索界面和类…",
+  "Browse screens": "浏览界面",
+  "Shared libraries": "共享库",
+  "Code shared across every SWF — not individual screens": "在所有 SWF 之间共享的代码 — 而非单个界面",
+  "Could not load this document.": "无法加载此文档。",
+  "Failed to load the document index.": "加载文档索引失败。",
+  "Trove UI (Flash) decompile reference": "Trove UI（Flash）反编译参考",
+  "Overview": "概览"
 }

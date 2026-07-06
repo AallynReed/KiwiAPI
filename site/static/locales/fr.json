@@ -1670,5 +1670,18 @@
   "use the Services to cheat in, exploit, or harm the game or its players.": "utiliser les Services pour tricher, exploiter ou nuire au jeu ou à ses joueurs.",
   "username": "nom d'utilisateur",
   "would be": "serait",
-  "your odds": "vos chances"
+  "your odds": "vos chances",
+  "Skip to content": "Aller au contenu",
+  "Reverse-engineered": "Rétro-ingénierie",
+  "Trove UI <span class=\"highlight-blue\">Reference</span>": "Trove UI <span class=\"highlight-blue\">Référence</span>",
+  "Decompiled Flash (<code>.swf</code>) screens — 108 files.": "Écrans Flash décompilés (<code>.swf</code>) — 108 fichiers.",
+  "No matching screens.": "Aucun écran correspondant.",
+  "Search screens & classes…": "Rechercher des écrans et des classes…",
+  "Browse screens": "Parcourir les écrans",
+  "Shared libraries": "Bibliothèques partagées",
+  "Code shared across every SWF — not individual screens": "Code partagé entre tous les SWF — pas les écrans individuels",
+  "Could not load this document.": "Impossible de charger ce document.",
+  "Failed to load the document index.": "Échec du chargement de l'index des documents.",
+  "Trove UI (Flash) decompile reference": "Référence de décompilation de Trove UI (Flash)",
+  "Overview": "Aperçu"
 }

@@ -1731,9 +1731,13 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print("[site-dev] http://localhost:8913/leaderboards")
+    # Port comes from $PORT (set by the preview harness' autoPort) or argv[1],
+    # falling back to 8913 for a plain manual run.
+    import os as _os
+    _port = int(_os.environ.get("PORT") or (_sys.argv[1] if len(_sys.argv) > 1 else 8913))
+    print(f"[site-dev] http://localhost:{_port}/leaderboards")
     # ThreadingHTTPServer (not the single-threaded HTTPServer): the browser
     # preview opens several keep-alive connections at once, which would wedge a
     # single-threaded server mid-request. Each request is independent stub data,
     # so threading is safe here.
-    ThreadingHTTPServer(("127.0.0.1", 8913), Handler).serve_forever()
+    ThreadingHTTPServer(("127.0.0.1", _port), Handler).serve_forever()

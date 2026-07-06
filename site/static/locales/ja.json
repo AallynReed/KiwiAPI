@@ -1670,5 +1670,18 @@
   "use the Services to cheat in, exploit, or harm the game or its players.": "本サービスを利用してゲームやそのプレイヤーに対してチート、悪用、または危害を加えること。",
   "username": "ユーザー名",
   "would be": "の場合",
-  "your odds": "あなたの当選確率"
+  "your odds": "あなたの当選確率",
+  "Skip to content": "コンテンツにスキップ",
+  "Reverse-engineered": "リバースエンジニアリング",
+  "Trove UI <span class=\"highlight-blue\">Reference</span>": "Trove UI <span class=\"highlight-blue\">リファレンス</span>",
+  "Decompiled Flash (<code>.swf</code>) screens — 108 files.": "逆コンパイルされた Flash（<code>.swf</code>）画面 — 108 ファイル。",
+  "No matching screens.": "一致する画面はありません。",
+  "Search screens & classes…": "画面とクラスを検索…",
+  "Browse screens": "画面を閲覧",
+  "Shared libraries": "共有ライブラリ",
+  "Code shared across every SWF — not individual screens": "すべての SWF で共有されるコード — 個別の画面ではありません",
+  "Could not load this document.": "このドキュメントを読み込めませんでした。",
+  "Failed to load the document index.": "ドキュメントインデックスの読み込みに失敗しました。",
+  "Trove UI (Flash) decompile reference": "Trove UI（Flash）逆コンパイルリファレンス",
+  "Overview": "概要"
 }
