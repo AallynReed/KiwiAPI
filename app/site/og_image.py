@@ -83,16 +83,20 @@ _BOLD = [
 _CJK_REG = [
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "C:/Windows/Fonts/malgun.ttf",   # Korean (Malgun Gothic, Windows dev)
     "C:/Windows/Fonts/msgothic.ttc",
     "C:/Windows/Fonts/YuGothR.ttc",
 ]
 _CJK_BOLD = [
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
     "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+    "C:/Windows/Fonts/malgunbd.ttf",   # Korean bold (Windows dev)
     "C:/Windows/Fonts/msgothic.ttc",
     "C:/Windows/Fonts/YuGothB.ttc",
 ]
-_CJK_LANGS = {"ja", "zh-CN"}
+# Noto Sans CJK (fonts-noto-cjk) is a unified JP/KR/SC/TC font, so Korean is
+# already covered by the same file - no Dockerfile change needed.
+_CJK_LANGS = {"ja", "ko", "zh-CN"}
 
 
 def _font(size: int, bold: bool = False, lang: str | None = None):

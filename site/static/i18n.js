@@ -14,8 +14,10 @@
         ["fr", "Français", "🇫🇷"],
         ["de", "Deutsch", "🇩🇪"],
         ["pt-PT", "Português", "🇵🇹"],
+        ["es", "Español", "🇪🇸"],
         ["ru", "Русский", "🇷🇺"],
         ["ja", "日本語", "🇯🇵"],
+        ["ko", "한국어", "🇰🇷"],
         ["zh-CN", "简体中文", "🇨🇳"],
     ];
     const SUPPORTED = new Set(LANGS.map((l) => l[0]));
@@ -136,10 +138,12 @@
         const nav = (navigator.language || "").toLowerCase();
         if (nav.startsWith("zh")) return "zh-CN";
         if (nav.startsWith("ja")) return "ja";
+        if (nav.startsWith("ko")) return "ko";
         if (nav.startsWith("ru")) return "ru";
         if (nav.startsWith("pt")) return "pt-PT";
         if (nav.startsWith("fr")) return "fr";
         if (nav.startsWith("de")) return "de";
+        if (nav.startsWith("es")) return "es";
         return "en";
     }
 

@@ -4,14 +4,14 @@
 (function () {
   'use strict';
 
-  const SUPPORTED_LANGS = new Set(['en', 'fr', 'de', 'pt-PT', 'ru', 'ja', 'zh-CN']);
+  const SUPPORTED_LANGS = new Set(['en', 'fr', 'de', 'pt-PT', 'ru', 'ja', 'ko', 'zh-CN', 'es']);
   const STORAGE_KEY = 'btt_docs_lang';  // shared with i18n.js for consistency
 
   let data = null;     // commands.json once loaded
   let currentLang = pickInitialLang();
 
   // ── Boot ────────────────────────────────────────────────────────────
-  fetch('/static/commands.json?v=20260607m', { cache: 'force-cache' })
+  fetch('/static/commands.json?v=20260706k', { cache: 'force-cache' })
     .then((r) => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
@@ -35,10 +35,12 @@
     const nav = (navigator.language || '').toLowerCase();
     if (nav.startsWith('zh')) return 'zh-CN';
     if (nav.startsWith('ja')) return 'ja';
+    if (nav.startsWith('ko')) return 'ko';
     if (nav.startsWith('ru')) return 'ru';
     if (nav.startsWith('pt')) return 'pt-PT';
     if (nav.startsWith('fr')) return 'fr';
     if (nav.startsWith('de')) return 'de';
+    if (nav.startsWith('es')) return 'es';
     return 'en';
   }
 

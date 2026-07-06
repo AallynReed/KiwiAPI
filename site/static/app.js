@@ -124,7 +124,9 @@ document.addEventListener("DOMContentLoaded", () => {
         'pt-PT': { latest: 'Última versão', updated: 'atualizado',         all: 'Ver todas as versões no GitHub', locale: 'pt-PT' },
         'ru':    { latest: 'Последняя версия', updated: 'обновлено',       all: 'Все версии на GitHub', locale: 'ru' },
         'ja':    { latest: '最新リリース', updated: '更新',                 all: 'GitHub ですべてのリリースを見る', locale: 'ja' },
+        'ko':    { latest: '최신 릴리스', updated: '업데이트됨',            all: 'GitHub에서 모든 릴리스 보기', locale: 'ko' },
         'zh-CN': { latest: '最新版本', updated: '更新于',                   all: '在 GitHub 上查看所有版本', locale: 'zh-CN' },
+        'es':    { latest: 'Última versión', updated: 'actualizado',        all: 'Ver todas las versiones en GitHub', locale: 'es' },
     };
 
     function currentLang() {
