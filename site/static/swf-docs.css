@@ -46,40 +46,14 @@ a:hover { text-decoration: underline; }
 .skip-link:focus { left: 0; }
 
 /* ---------------------------------------------------------------- Navbar */
-.navbar {
-    position: fixed; top: 0; left: 0; width: 100%; height: var(--navbar-h);
-    display: flex; align-items: center;
-    background: rgba(18, 22, 28, 0.92);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-color);
-    z-index: 1000;
-}
-.nav-container {
-    width: 100%; max-width: 1700px; margin: 0 auto;
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 20px; gap: 16px;
-}
-.nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; color: inherit; }
-.nav-logo img { height: 32px; width: auto; }
-.nav-actions { display: flex; align-items: center; gap: 8px; }
-.nav-link {
-    color: var(--text-muted); font-size: 0.9rem; font-weight: 600;
-    padding: 8px 14px; border-radius: 8px; transition: 0.18s; white-space: nowrap;
-    display: inline-flex; align-items: center; gap: 8px;
-}
-.nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); text-decoration: none; }
-.nav-link.primary { background: var(--accent-blue); color: #06131c; }
-.nav-link.primary:hover { background: #7ad2ff; }
-.nav-icon { padding: 8px 11px; }
-.mobile-menu-btn {
-    display: none; background: transparent; border: 1px solid var(--border-color);
-    color: var(--text-main); width: 40px; height: 40px; border-radius: 8px; cursor: pointer; font-size: 1.1rem;
-}
+/* The shared site navbar (partials/navbar.html) is styled by style.css now;
+   this page only reserves the layout column below it. The navbar is sticky
+   (in-flow), so the layout needs no padding-top offset. */
 
 /* ---------------------------------------------------------------- Layout */
 /* The fixed sidebar is reserved with padding-left on the layout; .content
    then fills the whole remaining column to the right of it. */
-.docs-layout { padding-top: var(--navbar-h); padding-left: var(--sidebar-w); min-height: 100vh; }
+.docs-layout { padding-left: var(--sidebar-w); min-height: 100vh; }
 
 .sidebar-backdrop {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 900;
@@ -232,6 +206,16 @@ a:hover { text-decoration: underline; }
 }
 #to-top.show { display: flex; }
 
+/* Mobile-only floating button that opens the screen list (the docs sidebar).
+   On desktop the sidebar is always visible, so this is hidden there. */
+.docs-fab {
+    position: fixed; bottom: 84px; left: 24px; z-index: 800;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border-color); cursor: pointer;
+    font-size: 1rem; display: none; align-items: center; justify-content: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+}
+
 /* ---------------------------------------------------- Support pill (corner)
    Self-contained copy of the shared .support-* widget (style.css) adapted to
    this page's tokens, since this standalone page doesn't load style.css/app.js.
@@ -279,8 +263,7 @@ a:hover { text-decoration: underline; }
 
 /* ---------------------------------------------------------------- Mobile */
 @media (max-width: 980px) {
-    .nav-link.label-only { display: none; }
-    .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; }
+    .docs-fab { display: inline-flex; align-items: center; justify-content: center; }
     .sidebar {
         transform: translateX(-100%); transition: transform 0.25s ease;
         width: min(86vw, 340px); box-shadow: 0 0 40px rgba(0,0,0,0.5);

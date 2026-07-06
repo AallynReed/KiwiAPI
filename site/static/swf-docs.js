@@ -20,6 +20,11 @@
   let links = [];                 // {a, file, hay} for each sidebar entry
   const cache = new Map();        // file -> rendered HTML
   const byFile = new Map();       // file -> {swf, mainClass, summary}
+  let lastManifest = null;        // last-loaded manifest (re-render on language change)
+  let currentFile = null;         // file currently shown in the content pane
+
+  // Translate a JS-built string via the shared i18n runtime (English fallback).
+  const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
 
   const slug = (file) => file.replace(/\.md$/i, '');
 
@@ -27,6 +32,11 @@
   const closeSidebar = () => { sidebar.classList.remove('open'); backdrop.classList.remove('show'); };
 
   function buildSidebar(manifest) {
+    lastManifest = manifest;
+    // Idempotent: strip any previously-built groups so this can re-run when
+    // the language changes (to re-translate the generic labels below).
+    Array.from(navHost.querySelectorAll('.nav-group, .nav-divider')).forEach((n) => n.remove());
+    links = [];
     const frag = document.createDocumentFragment();
     let dividedShared = false;
     (manifest.groups || []).forEach((group) => {
@@ -37,7 +47,7 @@
         dividedShared = true;
         const div = document.createElement('div');
         div.className = 'nav-divider';
-        div.innerHTML = '<span>Shared libraries</span><small>Code shared across every SWF — not individual screens</small>';
+        div.innerHTML = '<span>' + escapeHtml(t('Shared libraries')) + '</span><small>' + escapeHtml(t('Code shared across every SWF — not individual screens')) + '</small>';
         frag.appendChild(div);
       }
       const wrap = document.createElement('div');
@@ -80,9 +90,10 @@
 
   async function load(file) {
     setActive(file);
+    currentFile = file;
     const meta = byFile.get(file);
     if (cache.has(file)) { render(cache.get(file), meta); return; }
-    content.innerHTML = '<div class="doc-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>';
+    content.innerHTML = '<div class="doc-loading"><i class="fa-solid fa-spinner fa-spin"></i> ' + escapeHtml(t('Loading…')) + '</div>';
     try {
       const res = await fetch(BASE + encodeURIComponent(file), { cache: 'no-cache' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -91,7 +102,7 @@
       cache.set(file, html);
       render(html, meta);
     } catch (err) {
-      content.innerHTML = '<div class="doc-error"><i class="fa-solid fa-triangle-exclamation"></i> Could not load this document. ' + escapeHtml(String(err.message || err)) + '</div>';
+      content.innerHTML = '<div class="doc-error"><i class="fa-solid fa-triangle-exclamation"></i> ' + escapeHtml(t('Could not load this document.')) + ' ' + escapeHtml(String(err.message || err)) + '</div>';
     }
   }
 
@@ -105,7 +116,7 @@
     content.innerHTML =
       (chips ? '<div class="doc-meta">' + chips + '</div>' : '') +
       '<div class="md-body">' + html + '</div>' +
-      '<div class="doc-foot"><span>Trove UI (Flash) decompile reference</span><span><a href="#README">Overview</a> · <a href="/">Home</a></span></div>';
+      '<div class="doc-foot"><span>' + escapeHtml(t('Trove UI (Flash) decompile reference')) + '</span><span><a href="#README">' + escapeHtml(t('Overview')) + '</a> · <a href="/">' + escapeHtml(t('Home')) + '</a></span></div>';
     rewriteDocLinks();
     content.scrollIntoView({ block: 'start' });
     window.scrollTo({ top: 0 });
@@ -171,24 +182,8 @@
     }
   });
 
-  // ---- Support pill (corner) ----
-  // Standalone copy of app.js's toggle, since this page doesn't load app.js.
-  (function () {
-    const widget = document.getElementById('support-widget');
-    const trigger = document.getElementById('support-trigger');
-    const panel = document.getElementById('support-panel');
-    if (!widget || !trigger || !panel) return;
-    panel.removeAttribute('hidden');   // CSS handles closed-state visibility
-    const setOpen = (open) => {
-      widget.classList.toggle('open', open);
-      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
-      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
-    };
-    setOpen(false);
-    trigger.addEventListener('click', (e) => { e.stopPropagation(); setOpen(!widget.classList.contains('open')); });
-    document.addEventListener('click', (e) => { if (!widget.contains(e.target) && widget.classList.contains('open')) setOpen(false); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && widget.classList.contains('open')) { setOpen(false); trigger.focus(); } });
-  })();
+  // The floating support pill is wired by the shared app.js (loaded on this
+  // page now), so no standalone copy is needed here.
 
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g,
@@ -200,6 +195,11 @@
     .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then((manifest) => { buildSidebar(manifest); fromHash(); })
     .catch((err) => {
-      content.innerHTML = '<div class="doc-error"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load the document index. ' + escapeHtml(String(err.message || err)) + '</div>';
+      content.innerHTML = '<div class="doc-error"><i class="fa-solid fa-triangle-exclamation"></i> ' + escapeHtml(t('Failed to load the document index.')) + ' ' + escapeHtml(String(err.message || err)) + '</div>';
     });
+
+  // Re-translate the JS-built sidebar chrome when the user switches language.
+  document.addEventListener('btt-lang-changed', () => {
+    if (lastManifest) { buildSidebar(lastManifest); if (currentFile) setActive(currentFile); }
+  });
 })();
