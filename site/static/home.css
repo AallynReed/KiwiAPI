@@ -292,9 +292,39 @@
   .dash-right { grid-column: 1 / -1; position: static; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; align-items: start; }
 }
 @media (max-width: 900px) {
-  .dash-wrap { grid-template-columns: 1fr; }
+  /* Single column. Use minmax(0, 1fr) - NOT a bare `1fr` (= minmax(auto, 1fr)) -
+     so the track's minimum is 0 instead of its content's min-content. A bare
+     `1fr` lets a non-wrapping child (a long mod title, a record holder's name,
+     the activity stat line) blow the column wider than the viewport, which spills
+     the whole dashboard off the right edge on phones. */
+  .dash-wrap { grid-template-columns: minmax(0, 1fr); }
   .dash-side { position: static; }
   .dash-nav { flex-direction: row; flex-wrap: wrap; border-bottom: none; }
   .dash-side-block { display: none; }   /* the navbar already covers these on mobile */
-  .dash-right { grid-template-columns: 1fr; }
+  .dash-right { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- Phones ------------------------------------------------------------- */
+@media (max-width: 640px) {
+  /* Section headers: drop the heading onto its own row above the controls
+     (tabs / news filter / see-all). With the default space-between + no-wrap
+     rule, wide controls (the YouTube/Twitch tabs, the "Shop offers hidden"
+     toggle) squeezed the h2 onto two lines and pushed the tabs past the
+     right edge. Full-width h2 forces the controls to wrap cleanly below. */
+  .dash-section-head { flex-wrap: wrap; align-items: flex-start; }
+  .dash-section-head h2 { flex: 1 0 100%; font-size: 1.2rem; }
+
+  /* Trim the section chrome so content gets a couple more readable pixels
+     and long carousels/tiles aren't pinched on narrow screens. */
+  .dash-section { padding: 1.1rem 1rem; }
+  .dash-rail { padding: 1rem; }
+
+  /* Carousel cards were a fixed 280px - on a ~360px viewport that barely fit
+     with the section padding. Size them to the viewport so a card and a peek
+     of the next one show without feeling cramped. */
+  .dash-carousel .dash-card { width: min(280px, 78vw); }
+
+  /* Hero: stack the title and the player search, search full-width. */
+  .dash-top { flex-direction: column; align-items: stretch; }
+  .dash-search { width: 100%; }
 }

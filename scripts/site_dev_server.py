@@ -1680,22 +1680,32 @@ class Handler(SimpleHTTPRequestHandler):
             }.get(suffix, "application/octet-stream")
         data = p.read_bytes()
         # Minimal Jinja emulation for page templates: inline `{% include
-        # "partials/x.html" %}` and drop `{# … #}` comments, so partials (navbar,
-        # support widget, …) render in the local preview instead of showing as
-        # raw tags. One level deep is enough for our partials.
+        # "partials/x.html" %}`, drop `{# … #}` comments, and strip the remaining
+        # statement/expression tags so partials (navbar, support widget, …) and
+        # feature-gated sections render in the local preview instead of leaking
+        # raw `{% if %}` / `{{ }}` text into the page. One level deep is enough
+        # for our partials.
         if content_type == "text/html" and p.parent == TEMPLATES:
             import re as _re
-            text = data.decode("utf-8")
+            _strip_comments = lambda s: _re.sub(r"{#.*?#}", "", s, flags=_re.S)
+            text = _strip_comments(data.decode("utf-8"))
+            # Comments are stripped BEFORE inlining (and again on each partial as
+            # it's read) so that documentation comments which happen to quote a
+            # literal `{% include … %}` as an example don't get re-expanded into a
+            # duplicate partial on the next pass.
+            def _inline(m):
+                f = TEMPLATES / m.group(1)
+                return _strip_comments(f.read_text(encoding="utf-8")) if f.exists() else ""
             for _ in range(3):
                 if "{% include" not in text:
                     break
-                text = _re.sub(
-                    r'{%\s*include\s*"([^"]+)"\s*%}',
-                    lambda m: (TEMPLATES / m.group(1)).read_text(encoding="utf-8")
-                    if (TEMPLATES / m.group(1)).exists() else "",
-                    text,
-                )
-            text = _re.sub(r"{#.*?#}", "", text, flags=_re.S)
+                text = _re.sub(r'{%\s*include\s*"([^"]+)"\s*%}', _inline, text)
+            # Drop every remaining `{% … %}` control tag (if/else/endif/set/for/…).
+            # This keeps the body of every conditional, so all feature-gated
+            # sections are visible in preview — exactly what we want when eyeballing
+            # layout/responsive behaviour. `{{ … }}` expressions collapse to empty.
+            text = _re.sub(r"{%.*?%}", "", text, flags=_re.S)
+            text = _re.sub(r"{{.*?}}", "", text, flags=_re.S)
             data = text.encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", content_type)
