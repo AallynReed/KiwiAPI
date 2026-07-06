@@ -11,6 +11,7 @@
   "use strict";
 
   const { getJSON } = window.BTTUtil;
+  function tr(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -22,9 +23,9 @@
     var t = (typeof ts === "number") ? ts * 1000 : Date.parse(ts);
     if (!t) return "";
     var s = Math.max(0, (Date.now() - t) / 1000);
-    if (s < 3600) return Math.floor(s / 60) + "m ago";
-    if (s < 86400) return Math.floor(s / 3600) + "h ago";
-    return Math.floor(s / 86400) + "d ago";
+    if (s < 3600) return Math.floor(s / 60) + tr("m ago");
+    if (s < 86400) return Math.floor(s / 3600) + tr("h ago");
+    return Math.floor(s / 86400) + tr("d ago");
   }
   function thumb(url) {
     var t = el("div", "stm-thumb");
@@ -45,13 +46,13 @@
       var items = (d && d.items) || [];
       box.textContent = "";
       var cnt = document.getElementById("stm-tw-count");
-      if (cnt) cnt.textContent = items.length ? items.length + (items.length === 1 ? " streamer live" : " streamers live") : "";
-      if (!items.length) { box.appendChild(el("p", "stm-empty", "Nobody's streaming Trove right now - check back later.")); return; }
+      if (cnt) cnt.textContent = items.length ? items.length + " " + (items.length === 1 ? tr("streamer live") : tr("streamers live")) : "";
+      if (!items.length) { box.appendChild(el("p", "stm-empty", tr("Nobody's streaming Trove right now - check back later."))); return; }
       items.slice(0, 16).forEach(function (s) {
         var card = el("a", "stm-card");
         card.href = s.url || "#"; card.target = "_blank"; card.rel = "noopener";
         var th = thumb((s.thumbnail || "").replace("{width}", "440").replace("{height}", "248"));
-        var live = el("span", "stm-live"); live.appendChild(el("span", "stm-live-dot")); live.appendChild(el("span", null, "Live"));
+        var live = el("span", "stm-live"); live.appendChild(el("span", "stm-live-dot")); live.appendChild(el("span", null, tr("Live")));
         th.appendChild(live);
         if (typeof s.viewers === "number") th.appendChild(el("span", "stm-viewers", "👁 " + s.viewers.toLocaleString()));
         card.appendChild(th);
@@ -64,7 +65,7 @@
         card.appendChild(body);
         box.appendChild(card);
       });
-    }).catch(function () { setEmpty("stm-streams", "Couldn't load streams."); });
+    }).catch(function () { setEmpty("stm-streams", tr("Couldn't load streams.")); });
   })();
 
   /* ---- Recent YouTube videos --------------------------------------------- */
@@ -74,7 +75,7 @@
     getJSON("/site/feeds/videos?platform=youtube").then(function (d) {
       var items = (d && d.items) || [];
       box.textContent = "";
-      if (!items.length) { box.appendChild(el("p", "stm-empty", "No recent videos right now.")); return; }
+      if (!items.length) { box.appendChild(el("p", "stm-empty", tr("No recent videos right now."))); return; }
       items.slice(0, 12).forEach(function (v) {
         var card = el("a", "stm-card");
         card.href = v.url || "#"; card.target = "_blank"; card.rel = "noopener";
@@ -91,7 +92,7 @@
         card.appendChild(body);
         box.appendChild(card);
       });
-    }).catch(function () { setEmpty("stm-videos", "Couldn't load videos."); });
+    }).catch(function () { setEmpty("stm-videos", tr("Couldn't load videos.")); });
   })();
 
   /* ---- Latest official news ---------------------------------------------- */
@@ -104,7 +105,7 @@
         return (n.categories || []).indexOf("Shop Offers") === -1;
       });
       box.textContent = "";
-      if (!items.length) { box.appendChild(el("p", "stm-empty", "No news right now.")); return; }
+      if (!items.length) { box.appendChild(el("p", "stm-empty", tr("No news right now."))); return; }
       items.slice(0, 12).forEach(function (n) {
         var card = el("a", "stm-card");
         card.href = n.url || "#"; card.target = "_blank"; card.rel = "noopener";
@@ -120,6 +121,6 @@
         card.appendChild(body);
         box.appendChild(card);
       });
-    }).catch(function () { setEmpty("stm-news", "Couldn't load news."); });
+    }).catch(function () { setEmpty("stm-news", tr("Couldn't load news.")); });
   })();
 })();

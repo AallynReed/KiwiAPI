@@ -138,7 +138,7 @@
 
     function buildForm() {
       const f = el('div', 'ee-form');
-      f.appendChild(field(t('Message text (above embed)'), input(tmpl.content || '', (v) => tmpl.content = v, '@role mentions go here')));
+      f.appendChild(field(t('Message text (above embed)'), input(tmpl.content || '', (v) => tmpl.content = v, t('@role mentions go here'))));
       f.appendChild(field(t('Title'), input(tmpl.title || '', (v) => tmpl.title = v)));
       f.appendChild(field(t('Title link (URL)'), input(tmpl.url || '', (v) => tmpl.url = v, 'https://…')));
 

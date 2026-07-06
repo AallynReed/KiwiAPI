@@ -293,7 +293,7 @@
           : `<span class="craft-node-tag rec-buy" data-i18n>market</span>`);
 
     const toggle = hasKids
-      ? `<button type="button" class="craft-toggle" aria-label="Toggle">
+      ? `<button type="button" class="craft-toggle" aria-label="${esc(t('Toggle'))}">
            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
          </button>`
       : `<span class="craft-toggle-spacer"></span>`;

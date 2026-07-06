@@ -381,7 +381,7 @@
     const shas = d.preview_shas || [];
     const cells = shas.map((sha) => `<div class="mp-preview">
       <img src="${imageUrl(sha)}" alt="" data-zoom="${imageUrl(sha)}" loading="lazy">
-      ${d.is_owner ? `<button type="button" class="mp-preview-del" data-prev-del="${esc(sha)}" aria-label="Remove"><i class="fa-solid fa-xmark"></i></button>` : ''}
+      ${d.is_owner ? `<button type="button" class="mp-preview-del" data-prev-del="${esc(sha)}" aria-label="${esc(t('Remove'))}"><i class="fa-solid fa-xmark"></i></button>` : ''}
     </div>`).join('');
     const addBtn = d.is_owner
       ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-add-previews"><i class="fa-solid fa-plus"></i> ${esc(t('Add previews'))}</button>` : '';
@@ -599,7 +599,7 @@
         <div class="mp-clone-body">
           <div class="mp-clone-row">
             <code id="mp-clone-url">git clone ${esc(d.clone_url)}</code>
-            <button type="button" class="mp-btn mp-btn-sm" id="mp-clone-copy" aria-label="Copy"><i class="fa-solid fa-copy"></i></button>
+            <button type="button" class="mp-btn mp-btn-sm" id="mp-clone-copy" aria-label="${esc(t('Copy'))}"><i class="fa-solid fa-copy"></i></button>
           </div>
           <p class="mp-muted">${esc(t('Use any username and a git access token as the password.'))} ${d.is_owner ? esc(t('Push to your branch to update the mod.')) : ''}</p>
           ${tokensBtn}

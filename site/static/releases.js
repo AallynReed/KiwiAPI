@@ -11,6 +11,7 @@
   "use strict";
 
   const { getJSON } = window.BTTUtil;
+  function tr(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -47,7 +48,7 @@
     var box = document.getElementById("rel-latest");
     if (!box) return;
     box.textContent = "";
-    box.appendChild(el("p", "rel-loading", "Loading downloads…"));
+    box.appendChild(el("p", "rel-loading", tr("Loading downloads…")));
     getJSON("/site/btt/latest?channel=" + channel).then(function (d) {
       box.textContent = "";
       var plats = d.platforms || {};
@@ -56,7 +57,7 @@
       });
     }).catch(function () {
       box.textContent = "";
-      box.appendChild(el("p", "rel-empty", "Couldn't load downloads."));
+      box.appendChild(el("p", "rel-empty", tr("Couldn't load downloads.")));
     });
   }
 
@@ -69,14 +70,14 @@
     if (info && info.tag_name) {
       head.appendChild(el("div", "rel-plat-ver", info.tag_name + " · " + fmtDate(info.published_at)));
     } else {
-      head.appendChild(el("div", "rel-plat-ver", "No build on this channel"));
+      head.appendChild(el("div", "rel-plat-ver", tr("No build on this channel")));
     }
     top.appendChild(head);
     card.appendChild(top);
 
     var assets = (info && info.assets) || [];
     if (!assets.length) {
-      card.appendChild(el("p", "rel-plat-empty", info ? "No downloadable file." : "Not available yet."));
+      card.appendChild(el("p", "rel-plat-empty", info ? tr("No downloadable file.") : tr("Not available yet.")));
       return card;
     }
     var list = el("div", "rel-plat-assets");
@@ -88,7 +89,7 @@
       body.appendChild(el("div", "rel-dl-name", a.name));
       var meta = [];
       if (a.size) meta.push(fmtBytes(a.size));
-      if (typeof a.download_count === "number") meta.push(a.download_count.toLocaleString() + " downloads");
+      if (typeof a.download_count === "number") meta.push(a.download_count.toLocaleString() + " " + tr("downloads"));
       body.appendChild(el("div", "rel-dl-meta", meta.join(" · ")));
       link.appendChild(body);
       list.appendChild(link);
@@ -102,15 +103,15 @@
     var box = document.getElementById("rel-releases");
     if (!box) return;
     box.textContent = "";
-    box.appendChild(el("p", "rel-loading", "Loading releases…"));
+    box.appendChild(el("p", "rel-loading", tr("Loading releases…")));
     getJSON("/site/btt/releases?channel=" + channel + "&limit=30").then(function (d) {
       box.textContent = "";
       var items = d.items || [];
-      if (!items.length) { box.appendChild(el("p", "rel-empty", "No releases on this channel yet.")); return; }
+      if (!items.length) { box.appendChild(el("p", "rel-empty", tr("No releases on this channel yet."))); return; }
       items.forEach(function (r, i) { box.appendChild(releaseRow(r, i === 0)); });
     }).catch(function () {
       box.textContent = "";
-      box.appendChild(el("p", "rel-empty", "Couldn't load releases."));
+      box.appendChild(el("p", "rel-empty", tr("Couldn't load releases.")));
     });
   }
 
@@ -122,7 +123,7 @@
     sum.className = "rel-release-sum";
     sum.appendChild(el("span", "rel-release-tag", r.tag_name || ""));
     var beta = r.channel === "beta";
-    sum.appendChild(el("span", "rel-badge " + (beta ? "rel-badge-beta" : "rel-badge-release"), beta ? "Beta" : "Stable"));
+    sum.appendChild(el("span", "rel-badge " + (beta ? "rel-badge-beta" : "rel-badge-release"), beta ? tr("Beta") : tr("Stable")));
     sum.appendChild(el("span", "rel-release-date", fmtDate(r.published_at)));
     var caret = el("i", "fa-solid fa-chevron-down rel-release-caret"); sum.appendChild(caret);
     det.appendChild(sum);
@@ -132,7 +133,7 @@
     var html = renderMd(r.body);
     if (html) { var notes = el("div", "rel-notes"); notes.innerHTML = html; body.appendChild(notes); }
     else if (r.body) { var pre = el("div", "rel-notes"); pre.textContent = r.body; body.appendChild(pre); }
-    else body.appendChild(el("p", "rel-notes-empty", "No release notes."));
+    else body.appendChild(el("p", "rel-notes-empty", tr("No release notes.")));
 
     var assets = r.assets || [];
     if (assets.length) {
@@ -156,12 +157,12 @@
     getJSON("/site/btt/changelog").then(function (d) {
       box.textContent = "";
       var groups = d.groups || [];
-      if (!groups.length) { box.appendChild(el("p", "rel-empty", "No changelog available.")); return; }
-      if (d.rate_limited) box.appendChild(el("p", "rel-cl-note", "GitHub rate-limited the last refresh - showing the most recent cached changelog."));
+      if (!groups.length) { box.appendChild(el("p", "rel-empty", tr("No changelog available."))); return; }
+      if (d.rate_limited) box.appendChild(el("p", "rel-cl-note", tr("GitHub rate-limited the last refresh - showing the most recent cached changelog.")));
       groups.slice(0, 12).forEach(function (g) { box.appendChild(clGroup(g)); });
     }).catch(function () {
       box.textContent = "";
-      box.appendChild(el("p", "rel-empty", "Couldn't load changelog."));
+      box.appendChild(el("p", "rel-empty", tr("Couldn't load changelog.")));
     });
   })();
 

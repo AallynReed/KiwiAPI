@@ -9,6 +9,7 @@
   "use strict";
 
   const { getJSON } = window.BTTUtil;
+  function tr(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -42,7 +43,7 @@
 
   function setEmpty() {
     var nav = document.getElementById("cls-nav"), det = document.getElementById("cls-detail");
-    if (nav) { nav.textContent = ""; nav.appendChild(el("p", "cls-empty", "Couldn't load classes.")); }
+    if (nav) { nav.textContent = ""; nav.appendChild(el("p", "cls-empty", tr("Couldn't load classes."))); }
     if (det) det.textContent = "";
   }
 
@@ -96,7 +97,7 @@
     if (c.damage_type) {
       var dt = el("span", "cls-tag is-" + dmgClass(c.damage_type));
       dt.appendChild(el("i", "fa-solid " + (dmgClass(c.damage_type) === "magic" ? "fa-wand-sparkles" : "fa-hand-fist")));
-      dt.appendChild(el("span", null, c.damage_type + " damage"));
+      dt.appendChild(el("span", null, c.damage_type + " " + tr("damage")));
       tags.appendChild(dt);
     }
     (c.weapons || []).forEach(function (w) {
@@ -118,7 +119,7 @@
     // Base stats
     var stats = (c.stats || []).filter(function (s) { return s && s.name; });
     if (stats.length) {
-      box.appendChild(section("Base stats", "fa-chart-simple", (function () {
+      box.appendChild(section(tr("Base stats"), "fa-chart-simple", (function () {
         var grid = el("div", "cls-stats");
         stats.forEach(function (s) {
           var row = el("div", "cls-stat");
@@ -133,7 +134,7 @@
     // Class gem / bonus stats (non-zero only)
     var bonuses = (c.bonuses || []).filter(function (b) { return b && b.name && b.value; });
     if (bonuses.length) {
-      box.appendChild(section("Class bonuses", "fa-plus", (function () {
+      box.appendChild(section(tr("Class bonuses"), "fa-plus", (function () {
         var chips = el("div", "cls-chips");
         bonuses.forEach(function (b) {
           chips.appendChild(el("span", "cls-chip", b.name + " +" + fmtStat(b)));
@@ -150,7 +151,7 @@
       .map(function (tier) { return { tier: tier, bonuses: meaningful(lv[tier]) }; })
       .filter(function (t) { return t.bonuses.length; });
     if (sc.name || sc.description || scTiers.length) {
-      box.appendChild(section("Subclass", "fa-star", (function () {
+      box.appendChild(section(tr("Subclass"), "fa-star", (function () {
         var wrap = el("div", "cls-subclass");
         if (sc.name) wrap.appendChild(el("div", "cls-subclass-name", sc.name));
         if (sc.description) wrap.appendChild(el("div", "cls-subclass-desc", sc.description));
@@ -158,7 +159,7 @@
           var grid = el("div", "cls-levels");
           scTiers.forEach(function (t) {
             var cell = el("div", "cls-level");
-            cell.appendChild(el("div", "cls-level-tier", "Level " + t.tier));
+            cell.appendChild(el("div", "cls-level-tier", tr("Level") + " " + t.tier));
             t.bonuses.forEach(function (b) {
               var line = el("div", "cls-level-bonus");
               if (b.name && b.name.trim()) line.appendChild(document.createTextNode(b.name + " "));
@@ -176,7 +177,7 @@
     // Abilities (if the class data carries any)
     var abilities = (c.abilities || []).filter(function (a) { return a && (a.name || a.description); });
     if (abilities.length) {
-      box.appendChild(section("Abilities", "fa-bolt", (function () {
+      box.appendChild(section(tr("Abilities"), "fa-bolt", (function () {
         var list = el("div", "cls-abilities");
         abilities.forEach(function (a) {
           var card = el("div", "cls-ability");

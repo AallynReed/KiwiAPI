@@ -229,7 +229,7 @@
       s.appendChild(field(t('Angle'), num(d.background.angle, (v) => { d.background.angle = v || 0; })));
     }
     if (d.background.type === 'image') {
-      s.appendChild(field(t('Fit'), sel(d.background.fit, [['cover', 'cover'], ['contain', 'contain'], ['stretch', 'stretch']], (v) => { d.background.fit = v; })));
+      s.appendChild(field(t('Fit'), sel(d.background.fit, [['cover', t('Cover')], ['contain', t('Contain')], ['stretch', t('Stretch')]], (v) => { d.background.fit = v; })));
       s.appendChild(uploadBtn(t('Upload background'), (sha) => { d.background.image_sha = sha; markPreview(); }));
     }
     return s;

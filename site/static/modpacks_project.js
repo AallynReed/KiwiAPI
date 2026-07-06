@@ -162,7 +162,7 @@
     const tabs = variants.map((v) => {
       const isDefault = v.name === d.default_variant;
       return `<button type="button" class="mpk-tab ${v.name === state.variant ? 'active' : ''}" data-variant="${esc(v.name)}">
-        ${esc(v.label || v.name)} <span class="mpk-tab-count">${v.available_count}/${v.mod_count}</span>${isDefault ? ' <i class="fa-solid fa-star mpk-default-star" title="Default"></i>' : ''}
+        ${esc(v.label || v.name)} <span class="mpk-tab-count">${v.available_count}/${v.mod_count}</span>${isDefault ? ` <i class="fa-solid fa-star mpk-default-star" title="${esc(t('Default'))}"></i>` : ''}
       </button>`;
     }).join('');
     const addBtn = d.is_owner
@@ -330,8 +330,8 @@
         <label class="mp-form-field"><span>${esc(t('Title'))}</span><input type="text" name="title" maxlength="120" value="${esc(d.title)}" required></label>
         <label class="mp-form-field"><span>${esc(t('Short summary'))}</span><input type="text" name="summary" maxlength="280" value="${esc(d.summary || '')}"></label>
         <label class="mp-form-field"><span>${esc(t('Description (markdown)'))}</span><textarea name="description" rows="5" maxlength="40000">${esc(d.description || '')}</textarea></label>
-        <label class="mp-form-field"><span>${esc(t('Warnings'))}</span><textarea name="warnings" rows="2" maxlength="4000" placeholder="Use <br> to split blocks">${esc(d.warnings || '')}</textarea></label>
-        <label class="mp-form-field"><span>${esc(t('Tags'))}</span><input type="text" name="tags" value="${esc((d.tags || []).join(', '))}" placeholder="comma, separated"></label>
+        <label class="mp-form-field"><span>${esc(t('Warnings'))}</span><textarea name="warnings" rows="2" maxlength="4000" placeholder="${esc(t('Use <br> to split blocks'))}">${esc(d.warnings || '')}</textarea></label>
+        <label class="mp-form-field"><span>${esc(t('Tags'))}</span><input type="text" name="tags" value="${esc((d.tags || []).join(', '))}" placeholder="${esc(t('comma, separated'))}"></label>
         <label class="mp-form-field"><span>${esc(t('Visibility'))}</span>
           <select name="visibility">
             <option value="draft" ${d.visibility === 'draft' ? 'selected' : ''}>${esc(t('Draft (only you)'))}</option>
@@ -389,7 +389,7 @@
       <button type="button" class="mp-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       <h2 class="mp-modal-title">${esc(t('New variant'))}</h2>
       <form id="mpk-variant-form" class="mp-form">
-        <label class="mp-form-field"><span>${esc(t('Name'))}</span><input type="text" name="name" maxlength="80" required placeholder="e.g. Lite"></label>
+        <label class="mp-form-field"><span>${esc(t('Name'))}</span><input type="text" name="name" maxlength="80" required placeholder="${esc(t('e.g. Lite'))}"></label>
         <label class="mp-form-field"><span>${esc(t('Copy mods from'))}</span>
           <select name="copy_from">
             <option value="">${esc(t('Start empty'))}</option>
@@ -460,7 +460,7 @@
       <div class="mpk-collab-list">${rows}</div>
       <form id="mpk-collab-form" class="mp-form" style="margin-top:12px">
         <label class="mp-form-field"><span>${esc(t('Add a collaborator by username'))}</span>
-          <input type="text" name="username" maxlength="80" placeholder="username" autocomplete="off" required></label>
+          <input type="text" name="username" maxlength="80" placeholder="${esc(t('username'))}" autocomplete="off" required></label>
         <p class="mp-form-error" id="mpk-collab-error" hidden></p>
         <div class="mp-form-actions">
           <button type="button" class="mp-btn mp-btn-ghost" data-close>${esc(t('Close'))}</button>

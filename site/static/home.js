@@ -16,6 +16,7 @@
   "use strict";
 
   const { getJSON } = window.BTTUtil;
+  function tr(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -41,7 +42,7 @@
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
   function fmtIn(sec) {
     if (sec == null) return "—";
-    if (sec <= 0) return "now";
+    if (sec <= 0) return tr("now");
     var d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
     if (d > 0) return d + "d " + h + "h";
     if (h > 0) return h + "h " + m + "m";
@@ -57,9 +58,9 @@
     var t = typeof ts === "number" ? ts * 1000 : Date.parse(ts);
     if (!t) return "";
     var s = Math.max(0, (Date.now() - t) / 1000);
-    if (s < 3600) return Math.floor(s / 60) + "m ago";
-    if (s < 86400) return Math.floor(s / 3600) + "h ago";
-    return Math.floor(s / 86400) + "d ago";
+    if (s < 3600) return Math.floor(s / 60) + "m " + tr("ago");
+    if (s < 86400) return Math.floor(s / 3600) + "h " + tr("ago");
+    return Math.floor(s / 86400) + "d " + tr("ago");
   }
 
   function fmtDate(unix) {
@@ -118,8 +119,8 @@
         var n = nowU();
         var t = new Date((n - 11 * 3600) * 1000);
         if (timeEl) timeEl.textContent = pad(t.getUTCHours()) + ":" + pad(t.getUTCMinutes()) + ":" + pad(t.getUTCSeconds());
-        if (dEl && st.daily_reset_at) dEl.textContent = "in " + fmtIn(st.daily_reset_at - n);
-        if (wEl && st.weekly_reset_at) wEl.textContent = "in " + fmtIn(st.weekly_reset_at - n);
+        if (dEl && st.daily_reset_at) dEl.textContent = tr("in") + " " + fmtIn(st.daily_reset_at - n);
+        if (wEl && st.weekly_reset_at) wEl.textContent = tr("in") + " " + fmtIn(st.weekly_reset_at - n);
         setTimeout(tick, 1000);
       })();
 
@@ -127,8 +128,8 @@
       var buffs = document.getElementById("dash-buffs");
       if (buffs) {
         buffs.textContent = "";
-        var db = buffCard("Today's bonus", d.daily_buff, d.daily_rotation, "Daily bonus rotation");
-        var wb = buffCard("This week's bonus", d.weekly_buff, d.weekly_rotation, "Weekly bonus rotation");
+        var db = buffCard(tr("Today's bonus"), d.daily_buff, d.daily_rotation, tr("Daily bonus rotation"));
+        var wb = buffCard(tr("This week's bonus"), d.weekly_buff, d.weekly_rotation, tr("Weekly bonus rotation"));
         if (db) buffs.appendChild(db);
         if (wb) buffs.appendChild(wb);
         if (d.chaos && d.chaos.ends_at) buffs.appendChild(chaosCard(d.chaos, nowU));
@@ -158,10 +159,10 @@
       }
       function chaosCard(chaos, now) {
         var card = el("div", "dash-buff dash-buff-chaos is-clickable");
-        card.appendChild(el("span", "dash-buff-kicker", "Chaos Chest"));
+        card.appendChild(el("span", "dash-buff-kicker", tr("Chaos Chest")));
         var item = chaos.item;
-        card.appendChild(el("div", "dash-chaos-time", (item && item.name) ? item.name : "Featured item"));
-        card.appendChild(el("div", "dash-chaos-sub", "Resets in " + fmtIn(chaos.ends_at - now())));
+        card.appendChild(el("div", "dash-chaos-time", (item && item.name) ? item.name : tr("Featured item")));
+        card.appendChild(el("div", "dash-chaos-sub", tr("Resets in") + " " + fmtIn(chaos.ends_at - now())));
         return clickable(card, function () { chaosModal(chaos, now()); });
       }
       function merchantCard(m, now) {
@@ -169,11 +170,11 @@
         var card = el("div", "dash-merchant is-clickable" + (m.active ? " is-active" : " is-inactive"));
         var top = el("div", "dash-merchant-top");
         top.appendChild(el("span", "dash-merchant-name", m.name));
-        top.appendChild(el("span", "dash-merchant-badge", m.active ? (m.state || "Here") : "Away"));
+        top.appendChild(el("span", "dash-merchant-badge", m.active ? (m.state || tr("Here")) : tr("Away")));
         card.appendChild(top);
         if (m.ends_at) {
           card.appendChild(el("div", "dash-merchant-time",
-            (m.active ? "Leaves in " : "Returns in ") + fmtIn((m.active ? m.ends_at : m.starts_at) - n)));
+            (m.active ? tr("Leaves in") : tr("Returns in")) + " " + fmtIn((m.active ? m.ends_at : m.starts_at) - n)));
         }
         if (m.biomes && m.biomes.length) {
           var bs = el("div", "dash-merchant-biomes");
@@ -190,7 +191,7 @@
     function rotationModal(title, entries, n) {
       var body = el("div");
       if (!entries.length) {
-        body.appendChild(el("p", "dash-modal-note", "Rotation unavailable right now."));
+        body.appendChild(el("p", "dash-modal-note", tr("Rotation unavailable right now.")));
       } else {
         var ul = el("ul", "dash-rot");
         entries.forEach(function (e) {
@@ -203,7 +204,7 @@
           if (e.weekday) name.appendChild(el("span", "dash-rot-day", e.weekday));
           top.appendChild(name);
           top.appendChild(el("span", "dash-rot-when" + (e.is_current ? " is-now" : ""),
-            e.is_current ? "Active now" : "in " + fmtIn((e.next_at || 0) - n)));
+            e.is_current ? tr("Active now") : tr("in") + " " + fmtIn((e.next_at || 0) - n)));
           li.appendChild(top);
           var bl = e.normal_buffs || e.buffs || [];
           if (bl.length) li.appendChild(el("div", "dash-rot-buffs", bl.join(" · ")));
@@ -220,27 +221,27 @@
       var body = el("div");
       var item = chaos.item;
       if (item && item.name) {
-        body.appendChild(el("p", "dash-modal-note", "Featured item this week"));
+        body.appendChild(el("p", "dash-modal-note", tr("Featured item this week")));
         body.appendChild(el("p", "dash-chaos-modal-item", item.name));
       } else {
-        body.appendChild(el("p", "dash-modal-note", "The featured item rotates every week (not captured yet)."));
+        body.appendChild(el("p", "dash-modal-note", tr("The featured item rotates every week (not captured yet).")));
       }
-      body.appendChild(el("p", null, "Window: " + fmtDate(chaos.starts_at) + " → " + fmtDate(chaos.ends_at)));
-      if (chaos.ends_at) body.appendChild(el("p", null, "Resets in " + fmtIn(chaos.ends_at - n)));
-      openModal(function (head) { head.textContent = "🎁 Chaos Chest"; }, body);
+      body.appendChild(el("p", null, tr("Window:") + " " + fmtDate(chaos.starts_at) + " → " + fmtDate(chaos.ends_at)));
+      if (chaos.ends_at) body.appendChild(el("p", null, tr("Resets in") + " " + fmtIn(chaos.ends_at - n)));
+      openModal(function (head) { head.textContent = "🎁 " + tr("Chaos Chest"); }, body);
     }
     function merchantModal(m, n) {
       var body = el("div");
       var status = m.active
-        ? "Here now" + (m.ends_at ? " · leaves in " + fmtIn(m.ends_at - n) : "")
-        : (m.starts_at ? "Returns in " + fmtIn(m.starts_at - n) : "Away");
+        ? tr("Here now") + (m.ends_at ? " · " + tr("leaves in") + " " + fmtIn(m.ends_at - n) : "")
+        : (m.starts_at ? tr("Returns in") + " " + fmtIn(m.starts_at - n) : tr("Away"));
       body.appendChild(el("p", "dash-modal-note", status));
       var sched = m.schedule || [];
       if (!sched.length) {
-        body.appendChild(el("p", "dash-modal-note", "No upcoming schedule available."));
+        body.appendChild(el("p", "dash-modal-note", tr("No upcoming schedule available.")));
       } else {
         var th = el("div", "dash-modal-col-title");
-        th.appendChild(el("i", "fa-regular fa-calendar")); th.appendChild(el("span", null, "Upcoming"));
+        th.appendChild(el("i", "fa-regular fa-calendar")); th.appendChild(el("span", null, tr("Upcoming")));
         body.appendChild(th);
         var ul = el("ul", "dash-sched");
         sched.forEach(function (s) {
@@ -248,7 +249,7 @@
           var li = el("li", "dash-sched-row" + (isNow ? " is-now" : ""));
           var time = el("div", "dash-sched-time");
           time.appendChild(el("span", null, fmtDate(s.starts_at) + " – " + fmtDate(s.ends_at)));
-          if (isNow) time.appendChild(el("span", "dash-sched-now", "Now"));
+          if (isNow) time.appendChild(el("span", "dash-sched-now", tr("Now")));
           else if (s.state) time.appendChild(el("span", "dash-sched-state", s.state));
           li.appendChild(time);
           if (s.biomes && s.biomes.length) {
@@ -300,36 +301,36 @@
       var cards = [];
       var tm = d.trove_mastery;
       if (tm) cards.push(card({
-        icon: "fa-solid fa-star", accent: "#f0b429", kicker: "Trove Mastery",
-        value: "Level " + num(tm.level),
-        meta: num(tm.points) + " pts" +
-          (tm.points_to_next_level ? " · " + num(tm.points_to_next_level) + " to next" : ""),
+        icon: "fa-solid fa-star", accent: "#f0b429", kicker: tr("Trove Mastery"),
+        value: tr("Level") + " " + num(tm.level),
+        meta: num(tm.points) + " " + tr("pts") +
+          (tm.points_to_next_level ? " · " + num(tm.points_to_next_level) + " " + tr("to next") : ""),
         holder: tm.player_name,
       }));
       var gm = d.geode_mastery;
       if (gm) cards.push(card({
-        icon: "fa-solid fa-gem", accent: "#3fb6d4", kicker: "Geode Mastery",
-        value: "Level " + num(gm.level),
-        note: gm.capped ? "Soft cap " + num(gm.level_cap) + " · would be " + num(gm.uncapped_level) : null,
-        meta: num(gm.points) + " pts",
+        icon: "fa-solid fa-gem", accent: "#3fb6d4", kicker: tr("Geode Mastery"),
+        value: tr("Level") + " " + num(gm.level),
+        note: gm.capped ? tr("Soft cap") + " " + num(gm.level_cap) + " · " + tr("would be") + " " + num(gm.uncapped_level) : null,
+        meta: num(gm.points) + " " + tr("pts"),
         holder: gm.player_name,
       }));
       var pr = d.power_rank;
       if (pr) cards.push(card({
-        icon: "fa-solid fa-bolt", accent: "#c678f0", kicker: "Power Rank",
+        icon: "fa-solid fa-bolt", accent: "#c678f0", kicker: tr("Power Rank"),
         value: num(pr.value),
-        meta: "Highest across all classes",
+        meta: tr("Highest across all classes"),
         holder: pr.player_name,
       }));
       box.textContent = "";
       if (!cards.length) {
-        box.appendChild(el("p", "dash-empty", "No records captured yet."));
+        box.appendChild(el("p", "dash-empty", tr("No records captured yet.")));
         return;
       }
       cards.forEach(function (c) { box.appendChild(c); });
     }).catch(function () {
       box.textContent = "";
-      box.appendChild(el("p", "dash-empty", "Records unavailable right now."));
+      box.appendChild(el("p", "dash-empty", tr("Records unavailable right now.")));
     });
   })();
 
@@ -359,21 +360,21 @@
     function render() {
       box.textContent = "";
       var items = all.filter(function (n) { return showShop || !isShop(n); }).slice(0, 12);
-      if (!items.length) { box.appendChild(el("p", "dash-empty", "No news right now.")); return; }
+      if (!items.length) { box.appendChild(el("p", "dash-empty", tr("No news right now."))); return; }
       items.forEach(function (n) { box.appendChild(newsCard(n)); });
     }
     if (toggle) toggle.addEventListener("click", function () {
       showShop = !showShop;
       toggle.classList.toggle("active", showShop);
       var lbl = toggle.querySelector("span"), ic = toggle.querySelector("i");
-      if (lbl) lbl.textContent = showShop ? "Shop offers shown" : "Shop offers hidden";
+      if (lbl) lbl.textContent = showShop ? tr("Shop offers shown") : tr("Shop offers hidden");
       if (ic) ic.className = showShop ? "fa-solid fa-store" : "fa-solid fa-store-slash";
       render();
     });
     getJSON("/site/feeds/news").then(function (d) {
       all = (d && d.items) || [];
       render();
-    }).catch(function () { box.textContent = ""; box.appendChild(el("p", "dash-empty", "Couldn't load news.")); });
+    }).catch(function () { box.textContent = ""; box.appendChild(el("p", "dash-empty", tr("Couldn't load news."))); });
   })();
 
   /* ---- Community videos (/site/feeds/videos) ----------------------------- */
@@ -384,10 +385,10 @@
     var cache = {};
     function render(platform) {
       box.textContent = "";
-      box.appendChild(el("p", "dash-loading", "Loading…"));
+      box.appendChild(el("p", "dash-loading", tr("Loading…")));
       var done = function (items) {
         box.textContent = "";
-        if (!items.length) { box.appendChild(el("p", "dash-empty", "No " + platform + " content right now.")); return; }
+        if (!items.length) { box.appendChild(el("p", "dash-empty", tr("No") + " " + platform + " " + tr("content right now."))); return; }
         items.slice(0, 12).forEach(function (v) {
           // YouTube items carry thumbnail_url/published_at; Twitch items carry
           // thumbnail/viewers/channel (already 440x248 from the normalizer).
@@ -416,7 +417,7 @@
       getJSON("/site/feeds/videos?platform=" + platform).then(function (d) {
         cache[platform] = (d && d.items) || [];
         done(cache[platform]);
-      }).catch(function () { box.textContent = ""; box.appendChild(el("p", "dash-empty", "Couldn't load videos.")); });
+      }).catch(function () { box.textContent = ""; box.appendChild(el("p", "dash-empty", tr("Couldn't load videos."))); });
     }
     if (tabs) tabs.addEventListener("click", function (e) {
       var btn = e.target.closest("button[data-vp]");
@@ -443,9 +444,9 @@
     if (!tile) return;
     getJSON("/site/trove-status").then(function (d) {
       var txt = document.getElementById("dash-status-text");
-      if (d.overall === "online") { tile.classList.add("is-up"); if (txt) txt.textContent = "Online"; }
-      else if (d.overall === "down") { tile.classList.add("is-down"); if (txt) txt.textContent = "Down"; }
-      else if (txt) txt.textContent = "Unknown";
+      if (d.overall === "online") { tile.classList.add("is-up"); if (txt) txt.textContent = tr("Online"); }
+      else if (d.overall === "down") { tile.classList.add("is-down"); if (txt) txt.textContent = tr("Down"); }
+      else if (txt) txt.textContent = tr("Unknown");
     }).catch(function () {});
   })();
 
@@ -480,7 +481,7 @@
         perAuthor[key] = (perAuthor[key] || 0) + 1;
         picked.push(m);
       }
-      if (!picked.length) { box.appendChild(el("p", "dash-empty", "No mods yet.")); return; }
+      if (!picked.length) { box.appendChild(el("p", "dash-empty", tr("No mods yet."))); return; }
       picked.forEach(function (m) {
         var row = el("a", "dash-modrow");
         row.href = "/mods/" + encodeURIComponent(m.handle) + "/" + encodeURIComponent(m.slug);
@@ -495,7 +496,7 @@
         row.appendChild(body);
         box.appendChild(row);
       });
-    }).catch(function () { box.textContent = ""; box.appendChild(el("p", "dash-empty", "Couldn't load mods.")); });
+    }).catch(function () { box.textContent = ""; box.appendChild(el("p", "dash-empty", tr("Couldn't load mods."))); });
   })();
 
   /* ---- Giveaways (/site/giveaways) --------------------------------------- */
@@ -511,12 +512,12 @@
       box.textContent = "";
       items.slice(0, 6).forEach(function (g) {
         var card = el("div", "dash-giveaway");
-        card.appendChild(el("div", "dash-giveaway-prize", g.prize_name || g.prize || g.title || "Giveaway"));
+        card.appendChild(el("div", "dash-giveaway-prize", g.prize_name || g.prize || g.title || tr("Giveaway")));
         var meta = el("div", "dash-giveaway-meta");
         var entries = (typeof g.entry_count === "number") ? g.entry_count : g.entries;
-        if (typeof entries === "number") meta.appendChild(el("span", null, entries.toLocaleString() + " entries"));
+        if (typeof entries === "number") meta.appendChild(el("span", null, entries.toLocaleString() + " " + tr("entries")));
         var endsU = toUnix(g.ends_at);
-        if (endsU) meta.appendChild(el("span", null, "ends in " + fmtIn(endsU - Math.floor(Date.now() / 1000))));
+        if (endsU) meta.appendChild(el("span", null, tr("ends in") + " " + fmtIn(endsU - Math.floor(Date.now() / 1000))));
         card.appendChild(meta);
         box.appendChild(card);
       });

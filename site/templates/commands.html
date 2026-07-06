@@ -31,7 +31,7 @@
 </head>
 <body class="landing commands-page">
 
-    <a class="skip-link" href="#main">Skip to main content</a>
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
 
     {% include "partials/navbar.html" %}
 
@@ -56,7 +56,7 @@
                 </div>
 
                 <details class="commands-rules">
-                    <summary><i class="fa-solid fa-circle-info"></i> Syntax conventions</summary>
+                    <summary><i class="fa-solid fa-circle-info"></i> <span data-i18n>Syntax conventions</span></summary>
                     <ul id="commands-rules-list"></ul>
                 </details>
             </div>
@@ -70,7 +70,7 @@
 
         <!-- ═══════════════ COMMAND LIST ═══════════════ -->
         <section class="commands-list" id="commands-list" aria-live="polite">
-            <p class="commands-loading" id="commands-loading">Loading…</p>
+            <p class="commands-loading" id="commands-loading" data-i18n>Loading…</p>
         </section>
 
         <p class="commands-source" id="commands-source"></p>

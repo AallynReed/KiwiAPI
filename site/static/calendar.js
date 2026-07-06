@@ -11,6 +11,7 @@
   "use strict";
 
   const { getJSON } = window.BTTUtil;
+  function tr(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -20,7 +21,7 @@
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
   function fmtIn(sec) {
     if (sec == null) return "—";
-    if (sec <= 0) return "now";
+    if (sec <= 0) return tr("now");
     var d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
     if (d > 0) return d + "d " + h + "h";
     if (h > 0) return h + "h " + m + "m";
@@ -89,8 +90,8 @@
     var dEl = document.getElementById("cal-daily"), wEl = document.getElementById("cal-weekly"),
         cEl = document.getElementById("cal-clock");
     tickers.push(function (n) {
-      if (dEl && st.daily_reset_at) dEl.textContent = "in " + fmtIn(st.daily_reset_at - n);
-      if (wEl && st.weekly_reset_at) wEl.textContent = "in " + fmtIn(st.weekly_reset_at - n);
+      if (dEl && st.daily_reset_at) dEl.textContent = tr("in") + " " + fmtIn(st.daily_reset_at - n);
+      if (wEl && st.weekly_reset_at) wEl.textContent = tr("in") + " " + fmtIn(st.weekly_reset_at - n);
       if (cEl) {
         var t = new Date((n - 11 * 3600) * 1000);
         cEl.textContent = pad(t.getUTCHours()) + ":" + pad(t.getUTCMinutes()) + ":" + pad(t.getUTCSeconds());
@@ -102,7 +103,7 @@
     if (mEl) {
       mEl.textContent = "";
       var merchants = d.merchants || [];
-      if (!merchants.length) mEl.appendChild(el("p", "cal-empty", "No rotations available right now."));
+      if (!merchants.length) mEl.appendChild(el("p", "cal-empty", tr("No rotations available right now.")));
       merchants.forEach(function (m) { mEl.appendChild(merchantCard(m)); });
     }
 
@@ -110,25 +111,25 @@
     var bEl = document.getElementById("cal-buffs");
     if (bEl) {
       bEl.textContent = "";
-      var db = buffCard("Today's bonus", d.daily_buff, d.daily_rotation, "Daily bonus rotation");
-      var wb = buffCard("This week's bonus", d.weekly_buff, d.weekly_rotation, "Weekly bonus rotation");
+      var db = buffCard(tr("Today's bonus"), d.daily_buff, d.daily_rotation, tr("Daily bonus rotation"));
+      var wb = buffCard(tr("This week's bonus"), d.weekly_buff, d.weekly_rotation, tr("Weekly bonus rotation"));
       if (db) bEl.appendChild(db);
       if (wb) bEl.appendChild(wb);
       if (d.chaos && d.chaos.ends_at) bEl.appendChild(chaosCard(d.chaos));
-      if (!bEl.children.length) bEl.appendChild(el("p", "cal-empty", "No bonuses available right now."));
+      if (!bEl.children.length) bEl.appendChild(el("p", "cal-empty", tr("No bonuses available right now.")));
     }
 
     function merchantCard(m) {
       var card = el("div", "cal-merchant " + (m.active ? "is-active" : "is-inactive"));
       var top = el("div", "cal-merchant-top");
       top.appendChild(el("span", "cal-merchant-name", m.name));
-      top.appendChild(el("span", "cal-merchant-badge", m.active ? (m.state || "Here") : "Away"));
+      top.appendChild(el("span", "cal-merchant-badge", m.active ? (m.state || tr("Here")) : tr("Away")));
       card.appendChild(top);
       var time = el("div", "cal-merchant-time");
       card.appendChild(time);
       tickers.push(function (n) {
         var target = m.active ? m.ends_at : m.starts_at;
-        if (target) time.textContent = (m.active ? "Leaves in " : "Returns in ") + fmtIn(target - n);
+        if (target) time.textContent = (m.active ? tr("Leaves in") : tr("Returns in")) + " " + fmtIn(target - n);
       });
       if (m.biomes && m.biomes.length) {
         var bs = el("div", "cal-merchant-biomes");
@@ -152,17 +153,17 @@
 
     function chaosCard(chaos) {
       var card = el("div", "cal-buff cal-buff-chaos");
-      card.appendChild(el("span", "cal-buff-kicker", "Chaos Chest"));
+      card.appendChild(el("span", "cal-buff-kicker", tr("Chaos Chest")));
       var item = chaos.item;
-      card.appendChild(el("div", "cal-buff-name", (item && item.name) ? item.name : "Featured item"));
+      card.appendChild(el("div", "cal-buff-name", (item && item.name) ? item.name : tr("Featured item")));
       var when = el("div", "cal-buff-when");
       card.appendChild(when);
-      tickers.push(function (n) { if (chaos.ends_at) when.textContent = "Resets in " + fmtIn(chaos.ends_at - n); });
+      tickers.push(function (n) { if (chaos.ends_at) when.textContent = tr("Resets in") + " " + fmtIn(chaos.ends_at - n); });
       return clickable(card, function () { chaosModal(chaos); });
     }
   }).catch(function () {
-    setEmpty("cal-merchants", "Couldn't load rotations.");
-    setEmpty("cal-buffs", "Couldn't load bonuses.");
+    setEmpty("cal-merchants", tr("Couldn't load rotations."));
+    setEmpty("cal-buffs", tr("Couldn't load bonuses."));
   });
 
   /* ---- Events (/site/calendar/events) ------------------------------------ */
@@ -172,18 +173,18 @@
     box.textContent = "";
     var ongoing = d.ongoing || [], upcoming = d.upcoming || [];
     if (!ongoing.length && !upcoming.length) {
-      box.appendChild(el("p", "cal-empty", "No events scheduled right now."));
+      box.appendChild(el("p", "cal-empty", tr("No events scheduled right now.")));
       return;
     }
     if (ongoing.length) {
-      box.appendChild(el("p", "cal-events-group-title", "Happening now"));
+      box.appendChild(el("p", "cal-events-group-title", tr("Happening now")));
       ongoing.forEach(function (ev) { box.appendChild(eventCard(ev, true)); });
     }
     if (upcoming.length) {
-      box.appendChild(el("p", "cal-events-group-title", "Coming up"));
+      box.appendChild(el("p", "cal-events-group-title", tr("Coming up")));
       upcoming.forEach(function (ev) { box.appendChild(eventCard(ev, false)); });
     }
-  }).catch(function () { setEmpty("cal-events", "Couldn't load events."); });
+  }).catch(function () { setEmpty("cal-events", tr("Couldn't load events.")); });
 
   function eventCard(ev, ongoing) {
     var card = el("a", "cal-event " + (ongoing ? "is-ongoing" : "is-upcoming"));
@@ -204,7 +205,7 @@
     var when = el("span", "cal-event-when");
     meta.appendChild(when);
     tickers.push(function (n) {
-      when.textContent = ongoing ? "ends in " + fmtIn(ev.ends_at - n) : "starts in " + fmtIn(ev.starts_at - n);
+      when.textContent = ongoing ? tr("ends in") + " " + fmtIn(ev.ends_at - n) : tr("starts in") + " " + fmtIn(ev.starts_at - n);
     });
     body.appendChild(meta);
     card.appendChild(body);
@@ -215,7 +216,7 @@
   function rotationModal(title, entries) {
     var body = el("div"), n = nowU();
     if (!entries.length) {
-      body.appendChild(el("p", "cal-modal-note", "Rotation unavailable right now."));
+      body.appendChild(el("p", "cal-modal-note", tr("Rotation unavailable right now.")));
     } else {
       var ul = el("ul", "cal-rot");
       entries.forEach(function (e) {
@@ -227,7 +228,7 @@
         name.appendChild(el("span", null, e.name || ""));
         top.appendChild(name);
         top.appendChild(el("span", "cal-rot-when" + (e.is_current ? " is-now" : ""),
-          e.is_current ? "Active now" : "in " + fmtIn((e.next_at || 0) - n)));
+          e.is_current ? tr("Active now") : tr("in") + " " + fmtIn((e.next_at || 0) - n)));
         li.appendChild(top);
         var bl = e.normal_buffs || e.buffs || [];
         if (bl.length) li.appendChild(el("div", "cal-rot-buffs", bl.join(" · ")));
@@ -241,25 +242,25 @@
   function chaosModal(chaos) {
     var body = el("div"), n = nowU(), item = chaos.item;
     if (item && item.name) {
-      body.appendChild(el("p", "cal-modal-note", "Featured item this week"));
+      body.appendChild(el("p", "cal-modal-note", tr("Featured item this week")));
       body.appendChild(el("p", "cal-buff-name", item.name));
     } else {
-      body.appendChild(el("p", "cal-modal-note", "The featured item rotates every week (not captured yet)."));
+      body.appendChild(el("p", "cal-modal-note", tr("The featured item rotates every week (not captured yet).")));
     }
-    body.appendChild(el("p", null, "Window: " + fmtDate(chaos.starts_at) + " → " + fmtDate(chaos.ends_at)));
-    if (chaos.ends_at) body.appendChild(el("p", null, "Resets in " + fmtIn(chaos.ends_at - n)));
-    openModal("🎁 Chaos Chest", body);
+    body.appendChild(el("p", null, tr("Window:") + " " + fmtDate(chaos.starts_at) + " → " + fmtDate(chaos.ends_at)));
+    if (chaos.ends_at) body.appendChild(el("p", null, tr("Resets in") + " " + fmtIn(chaos.ends_at - n)));
+    openModal("🎁 " + tr("Chaos Chest"), body);
   }
 
   function merchantModal(m) {
     var body = el("div"), n = nowU();
     var status = m.active
-      ? "Here now" + (m.ends_at ? " · leaves in " + fmtIn(m.ends_at - n) : "")
-      : (m.starts_at ? "Returns in " + fmtIn(m.starts_at - n) : "Away");
+      ? tr("Here now") + (m.ends_at ? " · " + tr("leaves in") + " " + fmtIn(m.ends_at - n) : "")
+      : (m.starts_at ? tr("Returns in") + " " + fmtIn(m.starts_at - n) : tr("Away"));
     body.appendChild(el("p", "cal-modal-note", status));
     var sched = m.schedule || [];
     if (!sched.length) {
-      body.appendChild(el("p", "cal-modal-note", "No upcoming schedule available."));
+      body.appendChild(el("p", "cal-modal-note", tr("No upcoming schedule available.")));
     } else {
       var ul = el("ul", "cal-sched");
       sched.forEach(function (s) {
@@ -267,7 +268,7 @@
         var li = el("li", "cal-sched-row" + (isNow ? " is-now" : ""));
         var time = el("div", "cal-sched-time");
         time.appendChild(el("span", null, fmtDate(s.starts_at) + " – " + fmtDate(s.ends_at)));
-        if (isNow) time.appendChild(el("span", "cal-sched-now", "Now"));
+        if (isNow) time.appendChild(el("span", "cal-sched-now", tr("Now")));
         else if (s.state) time.appendChild(el("span", "cal-sched-state", s.state));
         li.appendChild(time);
         if (s.biomes && s.biomes.length) {

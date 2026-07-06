@@ -22,7 +22,7 @@
 </head>
 <body class="landing dashboard-page">
 
-    <a class="skip-link" href="#main">Skip to main content</a>
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
 
     {% include "partials/navbar.html" %}
 
@@ -34,7 +34,7 @@
              the noscript case too. -->
         <noscript>
             <section class="dash-card">
-                <p>This dashboard needs JavaScript. <a href="/login">Sign in here</a>.</p>
+                <p><span data-i18n>This dashboard needs JavaScript.</span> <a href="/login" data-i18n>Sign in here</a>.</p>
             </section>
         </noscript>
 
@@ -190,7 +190,7 @@
                             <div id="trove-claim-state">
                                 <p class="dash-card-sub" data-i18n>Claim your in-game name to surface your leaderboard ranks below. Anyone can claim any name in v1 - verification is coming.</p>
                                 <form id="trove-claim-form" class="dash-inline-form">
-                                    <input type="text" id="trove-name-input" placeholder="In-game player name" maxlength="80" autocomplete="off" spellcheck="false">
+                                    <input type="text" id="trove-name-input" placeholder="In-game player name" data-i18n-placeholder maxlength="80" autocomplete="off" spellcheck="false">
                                     <button type="submit" class="dash-btn">
                                         <i class="fa-solid fa-flag" aria-hidden="true"></i>
                                         <span data-i18n>Claim</span>

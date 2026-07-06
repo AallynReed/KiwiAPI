@@ -53,7 +53,7 @@
                         {% if server_status_enabled or server_time_enabled or calendar_enabled or player_activity_enabled or class_activity_enabled %}
                         <div class="nav-mega-group" role="group" aria-label="Live">
                             <p class="nav-mega-title" data-i18n>Live</p>
-                            {% if server_status_enabled %}<a href="/status" role="menuitem" class="{{ 'active' if _p == '/status' else '' }}"><i class="fa-solid fa-signal"></i> <span data-i18n>Server Status</span> <span class="nav-pill nav-pill-beta">Beta</span></a>{% endif %}
+                            {% if server_status_enabled %}<a href="/status" role="menuitem" class="{{ 'active' if _p == '/status' else '' }}"><i class="fa-solid fa-signal"></i> <span data-i18n>Server Status</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
                             {% if server_time_enabled %}<a href="/server-time" role="menuitem" class="{{ 'active' if _p == '/server-time' else '' }}"><i class="fa-solid fa-clock"></i> <span data-i18n>Server Time</span></a>{% endif %}
                             {% if calendar_enabled %}<a href="/calendar" role="menuitem" class="{{ 'active' if _p == '/calendar' else '' }}"><i class="fa-solid fa-calendar-days"></i> <span data-i18n>Calendar</span></a>{% endif %}
                             {% if player_activity_enabled %}<a href="/activity" role="menuitem" class="{{ 'active' if _p == '/activity' else '' }}"><i class="fa-solid fa-chart-line"></i> <span data-i18n>Player Activity</span></a>{% endif %}
@@ -78,7 +78,7 @@
                             {% if calculators_enabled %}<a href="/calculators" role="menuitem" class="{{ 'active' if _p == '/calculators' else '' }}"><i class="fa-solid fa-calculator"></i> <span data-i18n>Calculators</span></a>{% endif %}
                             {% if commands_enabled %}<a href="/commands" role="menuitem" class="{{ 'active' if _p == '/commands' else '' }}"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>{% endif %}
                             {% if updates_enabled %}<a href="/updates" role="menuitem" class="{{ 'active' if _p == '/updates' else '' }}"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>{% endif %}
-                            {% if codexes_enabled %}<a href="/codexes" role="menuitem" class="{{ 'active' if _p == '/codexes' else '' }}"><i class="fa-solid fa-book-atlas"></i> <span data-i18n>Codexes</span> <span class="nav-pill nav-pill-beta">Beta</span></a>{% endif %}
+                            {% if codexes_enabled %}<a href="/codexes" role="menuitem" class="{{ 'active' if _p == '/codexes' else '' }}"><i class="fa-solid fa-book-atlas"></i> <span data-i18n>Codexes</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
                             {% if btt_releases_enabled %}<a href="/releases" role="menuitem" class="{{ 'active' if _p == '/releases' else '' }}"><i class="fa-solid fa-cloud-arrow-down"></i> <span data-i18n>App Releases</span></a>{% endif %}
                         </div>
                         {% endif %}
@@ -88,7 +88,7 @@
                             {% if mods_hub_enabled %}<a href="/mods" role="menuitem" class="{{ 'active' if _p == '/mods' or _p.startswith('/mods/') else '' }}"><i class="fa-solid fa-cubes"></i> <span data-i18n>Mods Hub</span></a>{% endif %}
                             {% if mods_hub_enabled %}<a href="/modpacks" role="menuitem" class="{{ 'active' if _p == '/modpacks' or _p.startswith('/modpacks/') else '' }}"><i class="fa-solid fa-box-open"></i> <span data-i18n>Modpacks</span></a>{% endif %}
                             {% if streams_enabled %}<a href="/streams" role="menuitem" class="{{ 'active' if _p == '/streams' else '' }}"><i class="fa-solid fa-video"></i> <span data-i18n>Streams</span></a>{% endif %}
-                            {% if market_enabled %}<a href="/market" role="menuitem" class="{{ 'active' if _p == '/market' else '' }}"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta">Beta</span></a>{% endif %}
+                            {% if market_enabled %}<a href="/market" role="menuitem" class="{{ 'active' if _p == '/market' else '' }}"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
                             {% if giveaways_enabled %}<a href="/giveaways" role="menuitem" class="{{ 'active' if _p == '/giveaways' else '' }}"><i class="fa-solid fa-gift"></i> <span data-i18n>Giveaways</span></a>{% endif %}
                         </div>
                         {% endif %}

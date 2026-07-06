@@ -10,6 +10,7 @@
   'use strict';
 
   const { esc } = window.BTTUtil;
+  function t(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
 
   const Auth = window.BTTAuth || null;
   const $list = document.getElementById('gw-list');
@@ -47,7 +48,7 @@
       data = await r.json();
       items = data.items || [];
     } catch (_) {
-      $list.innerHTML = `<p class="gw-empty">Couldn't load giveaways. Try again shortly.</p>`;
+      $list.innerHTML = `<p class="gw-empty">${esc(t("Couldn't load giveaways. Try again shortly."))}</p>`;
       return;
     }
     // Signed-in extras: who I am + which giveaways I've entered.
@@ -67,24 +68,24 @@
     const youEntered = entered.has(g.id);
     let cta = '';
     if (g.status === 'open') {
-      if (!me) cta = `<a class="gw-btn" href="/login?next=/giveaways">Sign in to enter</a>`;
-      else if (youEntered) cta = `<button class="gw-btn entered" disabled>✓ You're entered</button>`;
-      else cta = `<button class="gw-btn primary" data-enter="${g.id}">Enter giveaway</button>`;
+      if (!me) cta = `<a class="gw-btn" href="/login?next=/giveaways">${esc(t("Sign in to enter"))}</a>`;
+      else if (youEntered) cta = `<button class="gw-btn entered" disabled>✓ ${esc(t("You're entered"))}</button>`;
+      else cta = `<button class="gw-btn primary" data-enter="${g.id}">${esc(t("Enter giveaway"))}</button>`;
     }
 
     let meta = '';
     if (g.status === 'open') {
       const odds = youEntered ? oddsText(g.entry_count) : oddsText(g.entry_count + 1);
       meta = `
-        <div class="gw-stat"><span class="gw-stat-n">${fmtNum(g.entry_count)}</span><span class="gw-stat-l">entries</span></div>
-        <div class="gw-stat"><span class="gw-stat-n">${odds}</span><span class="gw-stat-l">${youEntered ? 'your odds' : 'odds if you enter'}</span></div>
-        <div class="gw-stat"><span class="gw-stat-n gw-cd" data-end="${esc(g.ends_at)}">…</span><span class="gw-stat-l">closes in</span></div>`;
+        <div class="gw-stat"><span class="gw-stat-n">${fmtNum(g.entry_count)}</span><span class="gw-stat-l">${esc(t("entries"))}</span></div>
+        <div class="gw-stat"><span class="gw-stat-n">${odds}</span><span class="gw-stat-l">${youEntered ? esc(t("your odds")) : esc(t("odds if you enter"))}</span></div>
+        <div class="gw-stat"><span class="gw-stat-n gw-cd" data-end="${esc(g.ends_at)}">…</span><span class="gw-stat-l">${esc(t("closes in"))}</span></div>`;
     } else if (g.status === 'scheduled') {
-      meta = `<div class="gw-stat"><span class="gw-stat-n gw-cd" data-start="${esc(g.starts_at)}">…</span><span class="gw-stat-l">opens in</span></div>`;
+      meta = `<div class="gw-stat"><span class="gw-stat-n gw-cd" data-start="${esc(g.starts_at)}">…</span><span class="gw-stat-l">${esc(t("opens in"))}</span></div>`;
     } else if (g.status === 'drawn') {
-      meta = `<div class="gw-winner">🎉 Winner: <strong>${esc(g.winner_username || '—')}</strong></div>`;
+      meta = `<div class="gw-winner">🎉 ${esc(t("Winner:"))} <strong>${esc(g.winner_username || '—')}</strong></div>`;
     } else if (g.status === 'closed') {
-      meta = `<div class="gw-winner muted">Closed — no entrants</div>`;
+      meta = `<div class="gw-winner muted">${esc(t("Closed — no entrants"))}</div>`;
     }
 
     return `
@@ -104,19 +105,19 @@
 
   function section(title, list) {
     if (!list.length) return '';
-    return `<section class="gw-section"><h2 class="gw-section-title">${title}</h2>
+    return `<section class="gw-section"><h2 class="gw-section-title">${esc(title)}</h2>
       <div class="gw-grid">${list.map(card).join('')}</div></section>`;
   }
 
   function render() {
     if (!items.length) {
-      $list.innerHTML = `<p class="gw-empty">No giveaways right now — check back soon!</p>`;
+      $list.innerHTML = `<p class="gw-empty">${esc(t("No giveaways right now — check back soon!"))}</p>`;
       return;
     }
     const open = items.filter((g) => g.status === 'open');
     const upcoming = items.filter((g) => g.status === 'scheduled');
     const past = items.filter((g) => g.status === 'drawn' || g.status === 'closed');
-    $list.innerHTML = section('Open now', open) + section('Upcoming', upcoming) + section('Past', past);
+    $list.innerHTML = section(t('Open now'), open) + section(t('Upcoming'), upcoming) + section(t('Past'), past);
     $list.querySelectorAll('[data-enter]').forEach((b) =>
       b.addEventListener('click', () => enter(b.dataset.enter, b)));
     startTicker();
@@ -129,7 +130,7 @@
       const r = await Auth.callJSON('/v1/giveaways/' + id + '/enter', { method: 'POST', json: {} });
       if (!r.ok) {
         btn.disabled = false;
-        alert((r.data && r.data.error && r.data.error.message) || "Couldn't enter — try again.");
+        alert((r.data && r.data.error && r.data.error.message) || t("Couldn't enter — try again."));
         return;
       }
       entered.add(id);
@@ -138,7 +139,7 @@
       render();
     } catch (_) {
       btn.disabled = false;
-      alert("Couldn't enter — try again.");
+      alert(t("Couldn't enter — try again."));
     }
   }
 
@@ -147,7 +148,7 @@
     const update = () => {
       $list.querySelectorAll('.gw-cd').forEach((el) => {
         const txt = countdown(el.dataset.end || el.dataset.start);
-        el.textContent = txt == null ? (el.dataset.end ? 'closing…' : 'opening…') : txt;
+        el.textContent = txt == null ? (el.dataset.end ? t('closing…') : t('opening…')) : txt;
       });
     };
     update();

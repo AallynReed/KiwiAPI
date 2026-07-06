@@ -1130,7 +1130,7 @@
     const chips = selected.map((o) =>
       `<span class="dash-ms-chip">
          <span class="dash-ms-dot" style="background:${esc(o.dataset.color)}"></span>${esc(o.dataset.name)}
-         <button type="button" class="dash-ms-x" data-id="${esc(o.dataset.id)}" aria-label="Remove">×</button>
+         <button type="button" class="dash-ms-x" data-id="${esc(o.dataset.id)}" aria-label="${esc(t('Remove'))}">×</button>
        </span>`).join('');
     box.innerHTML = chips + (selected.length ? '' : `<span class="dash-ms-ph">${esc(t('Add roles…'))}</span>`);
   }
@@ -1681,15 +1681,15 @@
         <span><strong>${esc(t(e.label))}</strong><br><span class="dash-card-sub-mini">${esc(t(e.desc))}</span></span></label>`).join('');
 
     const createCard = `<article class="dash-card">
-      <h2 class="dash-card-title" data-i18n>Add a webhook</h2>
+      <h2 class="dash-card-title">${esc(t('Add a webhook'))}</h2>
       <p class="dash-card-sub">${esc(t('In Discord: Server Settings → Integrations → Webhooks → New Webhook → Copy Webhook URL. Paste it below.'))}</p>
-      <label class="wh-field"><span class="wh-label-text" data-i18n>Discord webhook URL</span>
+      <label class="wh-field"><span class="wh-label-text">${esc(t('Discord webhook URL'))}</span>
         <input id="wh-url" type="url" class="wh-input" placeholder="https://discord.com/api/webhooks/…" autocomplete="off"></label>
-      <label class="wh-field"><span class="wh-label-text" data-i18n>Label (optional)</span>
+      <label class="wh-field"><span class="wh-label-text">${esc(t('Label (optional)'))}</span>
         <input id="wh-label" type="text" class="wh-input" maxlength="80" placeholder="${esc(t('e.g. My server #trove-news'))}"></label>
       <div class="wh-ev-list">${evChecks}</div>
       <p id="wh-error" class="dash-error" hidden></p>
-      <button type="button" id="wh-add" class="dash-btn dash-btn-mini" data-i18n>Add webhook</button>
+      <button type="button" id="wh-add" class="dash-btn dash-btn-mini">${esc(t('Add webhook'))}</button>
     </article>`;
 
     _whItems = items;
@@ -1726,10 +1726,10 @@
       </div>
       <div class="wh-chips">${chips}</div>
       <div class="wh-card-actions">
-        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-wh-act="customize" data-wh-id="${esc(w.id)}" data-i18n>Customize embeds</button>
-        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-wh-act="test" data-wh-id="${esc(w.id)}" data-i18n>Send test</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-wh-act="customize" data-wh-id="${esc(w.id)}">${esc(t('Customize embeds'))}</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-wh-act="test" data-wh-id="${esc(w.id)}">${esc(t('Send test'))}</button>
         <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-wh-act="toggle" data-wh-id="${esc(w.id)}" data-wh-active="${w.active ? '1' : '0'}">${esc(w.active ? t('Disable') : t('Enable'))}</button>
-        <button type="button" class="dash-btn dash-btn-mini dash-btn-danger" data-wh-act="delete" data-wh-id="${esc(w.id)}" data-i18n>Delete</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-danger" data-wh-act="delete" data-wh-id="${esc(w.id)}">${esc(t('Delete'))}</button>
       </div>
       <div class="wh-customize" data-wh-cust="${esc(w.id)}" hidden></div>
     </article>`;
@@ -1890,22 +1890,22 @@
       `<label class="dm-typechip"><input type="checkbox" class="dm-ctype" value="${c}"> ${esc(t(c[0].toUpperCase() + c.slice(1)))}</label>`).join('');
 
     const createCard = `<article class="dash-card">
-      <h2 class="dash-card-title" data-i18n>Add a DM alert</h2>
+      <h2 class="dash-card-title">${esc(t('Add a DM alert'))}</h2>
       <p class="dash-card-sub">${esc(t('Pick what you want the bot to DM you about.'))}</p>
-      <label class="wh-field"><span class="wh-label-text" data-i18n>Label (optional)</span>
+      <label class="wh-field"><span class="wh-label-text">${esc(t('Label (optional)'))}</span>
         <input id="dm-label" type="text" class="wh-input" maxlength="80" placeholder="${esc(t('e.g. Dungeon challenges'))}"></label>
       <div class="wh-ev-list">${evChecks}</div>
       <div id="dm-challenge-filter" class="dm-subfilter" hidden>
-        <p class="wh-label-text" data-i18n>Only these challenge types (all if none picked)</p>
+        <p class="wh-label-text">${esc(t('Only these challenge types (all if none picked)'))}</p>
         <div class="dm-typechips">${typeChips}</div>
       </div>
       <div id="dm-watch-filter" class="dm-subfilter" hidden>
-        <p class="wh-label-text" data-i18n>Watchlist — DM me when an item is at or below a price (each)</p>
+        <p class="wh-label-text">${esc(t('Watchlist — DM me when an item is at or below a price (each)'))}</p>
         <div id="dm-watch-rows"></div>
-        <button type="button" id="dm-watch-add" class="dash-btn dash-btn-mini dash-btn-ghost" data-i18n>Add item</button>
+        <button type="button" id="dm-watch-add" class="dash-btn dash-btn-mini dash-btn-ghost">${esc(t('Add item'))}</button>
       </div>
       <p id="dm-error" class="dash-error" hidden></p>
-      <button type="button" id="dm-add" class="dash-btn dash-btn-mini" data-i18n>Add alert</button>
+      <button type="button" id="dm-add" class="dash-btn dash-btn-mini">${esc(t('Add alert'))}</button>
     </article>`;
 
     const list = items.length
@@ -1966,9 +1966,9 @@
       </div>
       <div class="wh-chips">${chips}</div>
       <div class="wh-card-actions">
-        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-dm-act="test" data-dm-id="${esc(s.id)}" data-i18n>Send test DM</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-dm-act="test" data-dm-id="${esc(s.id)}">${esc(t('Send test DM'))}</button>
         <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-dm-act="toggle" data-dm-id="${esc(s.id)}" data-dm-active="${s.active ? '1' : '0'}">${esc(s.active ? t('Disable') : t('Enable'))}</button>
-        <button type="button" class="dash-btn dash-btn-mini dash-btn-danger" data-dm-act="delete" data-dm-id="${esc(s.id)}" data-i18n>Delete</button>
+        <button type="button" class="dash-btn dash-btn-mini dash-btn-danger" data-dm-act="delete" data-dm-id="${esc(s.id)}">${esc(t('Delete'))}</button>
       </div>
     </article>`;
   }
