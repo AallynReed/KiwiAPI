@@ -81,8 +81,13 @@
   var tickers = [];   // fns re-run every second to refresh live countdowns
   (function tick() { var n = nowU(); tickers.forEach(function (f) { f(n); }); setTimeout(tick, 1000); })();
 
+  // Stored payloads so we can re-render JS-built labels on a live language
+  // switch (btt-lang-changed). Both rotations + events builders push tickers,
+  // so a re-render resets the tickers array first to avoid stacking duplicates.
+  var rotationsData = null, eventsData = null;
+
   /* ---- Rotations (/site/rotations) --------------------------------------- */
-  getJSON("/site/rotations").then(function (d) {
+  function renderRotations(d) {
     var st = d.server_time || {};
     if (typeof st.now_unix === "number") { anchor = st.now_unix; t0 = Date.now(); }
 
@@ -161,13 +166,17 @@
       tickers.push(function (n) { if (chaos.ends_at) when.textContent = tr("Resets in") + " " + fmtIn(chaos.ends_at - n); });
       return clickable(card, function () { chaosModal(chaos); });
     }
+  }
+  getJSON("/site/rotations").then(function (d) {
+    rotationsData = d;
+    renderRotations(d);
   }).catch(function () {
     setEmpty("cal-merchants", tr("Couldn't load rotations."));
     setEmpty("cal-buffs", tr("Couldn't load bonuses."));
   });
 
   /* ---- Events (/site/calendar/events) ------------------------------------ */
-  getJSON("/site/calendar/events").then(function (d) {
+  function renderEvents(d) {
     var box = document.getElementById("cal-events");
     if (!box) return;
     box.textContent = "";
@@ -184,6 +193,10 @@
       box.appendChild(el("p", "cal-events-group-title", tr("Coming up")));
       upcoming.forEach(function (ev) { box.appendChild(eventCard(ev, false)); });
     }
+  }
+  getJSON("/site/calendar/events").then(function (d) {
+    eventsData = d;
+    renderEvents(d);
   }).catch(function () { setEmpty("cal-events", tr("Couldn't load events.")); });
 
   function eventCard(ev, ongoing) {
@@ -287,4 +300,16 @@
     var box = document.getElementById(id);
     if (box) { box.textContent = ""; box.appendChild(el("p", "cal-empty", msg)); }
   }
+
+  // Re-render JS-built labels when the locale dict loads / language switches.
+  // Both builders push tickers, so we drop the whole tickers array first and
+  // let the re-render repopulate it — otherwise countdowns would stack and run
+  // multiple times per second. The persistent tick() loop reads `tickers` by
+  // reference each second, so reassigning it here is safe.
+  document.addEventListener("btt-lang-changed", function () {
+    if (!rotationsData && !eventsData) return;
+    tickers = [];
+    if (rotationsData) renderRotations(rotationsData);
+    if (eventsData) renderEvents(eventsData);
+  });
 })();

@@ -20,6 +20,7 @@
   let entered = new Set();
   let me = null;
   let ticker = null;
+  let loaded = false;
 
   const fmtNum = (n) => Number(n).toLocaleString();
   // Odds of winning as a percentage = 1 / entrants. e.g. 43 entrants -> "2.3%".
@@ -61,6 +62,7 @@
         } catch (_) { /* leave entered as-is */ }
       }
     }
+    loaded = true;
     render();
   }
 
@@ -154,6 +156,12 @@
     update();
     ticker = setInterval(update, 1000);
   }
+
+  // Re-render from already-fetched data when the UI language changes (fired on
+  // the initial locale load too). render() rebuilds every t()-wrapped label +
+  // status text; it clears $list first, and startTicker() clears the prior
+  // interval so the countdown timer stays single-instance.
+  document.addEventListener('btt-lang-changed', () => { if (loaded) render(); });
 
   load().then(() => setInterval(load, 30000));  // keep counts + statuses fresh
 })();

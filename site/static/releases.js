@@ -43,18 +43,28 @@
 
   var channel = "release";
 
+  // Stored payloads so we can re-render on a live language change.
+  var latestData = null, releasesData = null, changelogData = null;
+
   /* ---- Latest per platform ---------------------------------------------- */
-  function loadLatest() {
+  function renderLatest(d) {
     var box = document.getElementById("rel-latest");
     if (!box) return;
     box.textContent = "";
+    var plats = (d && d.platforms) || {};
+    PLATFORMS.forEach(function (p) {
+      box.appendChild(platCard(p, plats[p.key]));
+    });
+  }
+  function loadLatest() {
+    var box = document.getElementById("rel-latest");
+    if (!box) return;
+    latestData = null;
+    box.textContent = "";
     box.appendChild(el("p", "rel-loading", tr("Loading downloads…")));
     getJSON("/site/btt/latest?channel=" + channel).then(function (d) {
-      box.textContent = "";
-      var plats = d.platforms || {};
-      PLATFORMS.forEach(function (p) {
-        box.appendChild(platCard(p, plats[p.key]));
-      });
+      latestData = d || {};
+      renderLatest(latestData);
     }).catch(function () {
       box.textContent = "";
       box.appendChild(el("p", "rel-empty", tr("Couldn't load downloads.")));
@@ -99,16 +109,23 @@
   }
 
   /* ---- Release history --------------------------------------------------- */
-  function loadReleases() {
+  function renderReleases(d) {
     var box = document.getElementById("rel-releases");
     if (!box) return;
     box.textContent = "";
+    var items = (d && d.items) || [];
+    if (!items.length) { box.appendChild(el("p", "rel-empty", tr("No releases on this channel yet."))); return; }
+    items.forEach(function (r, i) { box.appendChild(releaseRow(r, i === 0)); });
+  }
+  function loadReleases() {
+    var box = document.getElementById("rel-releases");
+    if (!box) return;
+    releasesData = null;
+    box.textContent = "";
     box.appendChild(el("p", "rel-loading", tr("Loading releases…")));
     getJSON("/site/btt/releases?channel=" + channel + "&limit=30").then(function (d) {
-      box.textContent = "";
-      var items = d.items || [];
-      if (!items.length) { box.appendChild(el("p", "rel-empty", tr("No releases on this channel yet."))); return; }
-      items.forEach(function (r, i) { box.appendChild(releaseRow(r, i === 0)); });
+      releasesData = d || {};
+      renderReleases(releasesData);
     }).catch(function () {
       box.textContent = "";
       box.appendChild(el("p", "rel-empty", tr("Couldn't load releases.")));
@@ -151,16 +168,23 @@
   }
 
   /* ---- Changelog (channel-independent) ----------------------------------- */
-  (function loadChangelog() {
+  function renderChangelog(d) {
     var box = document.getElementById("rel-changelog");
     if (!box) return;
+    box.textContent = "";
+    var groups = (d && d.groups) || [];
+    if (!groups.length) { box.appendChild(el("p", "rel-empty", tr("No changelog available."))); return; }
+    if (d.rate_limited) box.appendChild(el("p", "rel-cl-note", tr("GitHub rate-limited the last refresh - showing the most recent cached changelog.")));
+    groups.slice(0, 12).forEach(function (g) { box.appendChild(clGroup(g)); });
+  }
+  (function loadChangelog() {
+    if (!document.getElementById("rel-changelog")) return;
     getJSON("/site/btt/changelog").then(function (d) {
-      box.textContent = "";
-      var groups = d.groups || [];
-      if (!groups.length) { box.appendChild(el("p", "rel-empty", tr("No changelog available."))); return; }
-      if (d.rate_limited) box.appendChild(el("p", "rel-cl-note", tr("GitHub rate-limited the last refresh - showing the most recent cached changelog.")));
-      groups.slice(0, 12).forEach(function (g) { box.appendChild(clGroup(g)); });
+      changelogData = d || {};
+      renderChangelog(changelogData);
     }).catch(function () {
+      var box = document.getElementById("rel-changelog");
+      if (!box) return;
       box.textContent = "";
       box.appendChild(el("p", "rel-empty", tr("Couldn't load changelog.")));
     });
@@ -206,6 +230,13 @@
     });
     loadLatest();
     loadReleases();
+  });
+
+  /* ---- Re-render labels on a live language change ------------------------- */
+  document.addEventListener("btt-lang-changed", function () {
+    if (latestData) renderLatest(latestData);
+    if (releasesData) renderReleases(releasesData);
+    if (changelogData) renderChangelog(changelogData);
   });
 
   loadLatest();

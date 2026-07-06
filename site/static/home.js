@@ -106,23 +106,33 @@
 
   /* ---- Today in Trove + clock (/site/rotations) -------------------------- */
   (function () {
-    getJSON("/site/rotations").then(function (d) {
+    // The buff/merchant cards embed a live countdown snapshot as static text
+    // (they recompute on click via the modal, not per-second), so they must be
+    // re-rendered on a language switch. The ticking clock loop is registered
+    // ONCE (guarded below) and reads its own live values, so it is never
+    // re-registered — that would stack duplicate 1s loops.
+    var rotationsData = null, tickStarted = false;
+
+    function renderRotations(d) {
       var st = d.server_time || {};
       var anchor = (typeof st.now_unix === "number") ? st.now_unix : Math.floor(Date.now() / 1000);
       var t0 = Date.now();
       function nowU() { return Math.floor(anchor + (Date.now() - t0) / 1000); }
 
-      // --- ticking clock + resets ---
-      var timeEl = document.getElementById("dash-clock-time");
-      var dEl = document.getElementById("dash-daily"), wEl = document.getElementById("dash-weekly");
-      (function tick() {
-        var n = nowU();
-        var t = new Date((n - 11 * 3600) * 1000);
-        if (timeEl) timeEl.textContent = pad(t.getUTCHours()) + ":" + pad(t.getUTCMinutes()) + ":" + pad(t.getUTCSeconds());
-        if (dEl && st.daily_reset_at) dEl.textContent = tr("in") + " " + fmtIn(st.daily_reset_at - n);
-        if (wEl && st.weekly_reset_at) wEl.textContent = tr("in") + " " + fmtIn(st.weekly_reset_at - n);
-        setTimeout(tick, 1000);
-      })();
+      // --- ticking clock + resets (registered once, never on re-render) ---
+      if (!tickStarted) {
+        tickStarted = true;
+        var timeEl = document.getElementById("dash-clock-time");
+        var dEl = document.getElementById("dash-daily"), wEl = document.getElementById("dash-weekly");
+        (function tick() {
+          var n = nowU();
+          var t = new Date((n - 11 * 3600) * 1000);
+          if (timeEl) timeEl.textContent = pad(t.getUTCHours()) + ":" + pad(t.getUTCMinutes()) + ":" + pad(t.getUTCSeconds());
+          if (dEl && st.daily_reset_at) dEl.textContent = tr("in") + " " + fmtIn(st.daily_reset_at - n);
+          if (wEl && st.weekly_reset_at) wEl.textContent = tr("in") + " " + fmtIn(st.weekly_reset_at - n);
+          setTimeout(tick, 1000);
+        })();
+      }
 
       // --- buff + chaos cards (click -> modal) ---
       var buffs = document.getElementById("dash-buffs");
@@ -183,7 +193,16 @@
         }
         return clickable(card, function () { merchantModal(m, now()); });
       }
+    }
+
+    getJSON("/site/rotations").then(function (d) {
+      rotationsData = d;
+      renderRotations(d);
     }).catch(function () {});
+
+    document.addEventListener("btt-lang-changed", function () {
+      if (rotationsData) renderRotations(rotationsData);
+    });
 
     // --- modal renderers (hoisted) ---
     // Full daily (7-day) / weekly (4-week) bonus rotation: every entry in
@@ -297,7 +316,8 @@
       if (opts.holder) c.appendChild(holder(opts.holder));
       return c;
     }
-    getJSON("/site/leaderboards/records").then(function (d) {
+    var recordsData = null;
+    function renderRecords(d) {
       var cards = [];
       var tm = d.trove_mastery;
       if (tm) cards.push(card({
@@ -328,9 +348,16 @@
         return;
       }
       cards.forEach(function (c) { box.appendChild(c); });
+    }
+    getJSON("/site/leaderboards/records").then(function (d) {
+      recordsData = d;
+      renderRecords(d);
     }).catch(function () {
       box.textContent = "";
       box.appendChild(el("p", "dash-empty", tr("Records unavailable right now.")));
+    });
+    document.addEventListener("btt-lang-changed", function () {
+      if (recordsData) renderRecords(recordsData);
     });
   })();
 
@@ -371,10 +398,13 @@
       if (ic) ic.className = showShop ? "fa-solid fa-store" : "fa-solid fa-store-slash";
       render();
     });
+    var loaded = false;
     getJSON("/site/feeds/news").then(function (d) {
       all = (d && d.items) || [];
+      loaded = true;
       render();
     }).catch(function () { box.textContent = ""; box.appendChild(el("p", "dash-empty", tr("Couldn't load news."))); });
+    document.addEventListener("btt-lang-changed", function () { if (loaded) render(); });
   })();
 
   /* ---- Community videos (/site/feeds/videos) ----------------------------- */
@@ -383,7 +413,9 @@
     var tabs = document.getElementById("dash-video-tabs");
     if (!box) return;
     var cache = {};
+    var currentPlatform = "youtube";
     function render(platform) {
+      currentPlatform = platform;
       box.textContent = "";
       box.appendChild(el("p", "dash-loading", tr("Loading…")));
       var done = function (items) {
@@ -426,6 +458,9 @@
       render(btn.dataset.vp);
     });
     render("youtube");
+    // Re-render the active platform on language switch. render() reads from the
+    // per-platform cache (already fetched), so no duplicate network calls.
+    document.addEventListener("btt-lang-changed", function () { render(currentPlatform); });
   })();
 
   /* ---- Players active (/site/leaderboards/activity) ---------------------- */
@@ -442,12 +477,20 @@
   (function () {
     var tile = document.getElementById("dash-status");
     if (!tile) return;
-    getJSON("/site/trove-status").then(function (d) {
+    var statusData = null;
+    function renderStatus(d) {
       var txt = document.getElementById("dash-status-text");
       if (d.overall === "online") { tile.classList.add("is-up"); if (txt) txt.textContent = tr("Online"); }
       else if (d.overall === "down") { tile.classList.add("is-down"); if (txt) txt.textContent = tr("Down"); }
       else if (txt) txt.textContent = tr("Unknown");
+    }
+    getJSON("/site/trove-status").then(function (d) {
+      statusData = d;
+      renderStatus(d);
     }).catch(function () {});
+    document.addEventListener("btt-lang-changed", function () {
+      if (statusData) renderStatus(statusData);
+    });
   })();
 
   /* ---- Latest update chip (/site/updates) -------------------------------- */
@@ -468,7 +511,8 @@
   (function () {
     var box = document.getElementById("dash-mods");
     if (!box) return;
-    getJSON("/site/mods/projects?sort=recent&limit=40").then(function (d) {
+    var modsData = null;
+    function renderMods(d) {
       var items = (d && d.items) || [];
       box.textContent = "";
       // Cap 2 mods per author so one prolific author can't monopolize the rail.
@@ -496,7 +540,14 @@
         row.appendChild(body);
         box.appendChild(row);
       });
+    }
+    getJSON("/site/mods/projects?sort=recent&limit=40").then(function (d) {
+      modsData = d;
+      renderMods(d);
     }).catch(function () { box.textContent = ""; box.appendChild(el("p", "dash-empty", tr("Couldn't load mods."))); });
+    document.addEventListener("btt-lang-changed", function () {
+      if (modsData) renderMods(modsData);
+    });
   })();
 
   /* ---- Giveaways (/site/giveaways) --------------------------------------- */
@@ -504,7 +555,8 @@
     var box = document.getElementById("dash-giveaways");
     var section = box && box.closest(".dash-section");
     if (!box) return;
-    getJSON("/site/giveaways").then(function (d) {
+    var giveawaysData = null;
+    function renderGiveaways(d) {
       var items = ((d && d.items) || []).filter(function (g) {
         return !g.status || g.status === "open" || g.status === "ongoing" || g.status === "active";
       });
@@ -521,6 +573,13 @@
         card.appendChild(meta);
         box.appendChild(card);
       });
+    }
+    getJSON("/site/giveaways").then(function (d) {
+      giveawaysData = d;
+      renderGiveaways(d);
     }).catch(function () { if (section) section.hidden = true; });
+    document.addEventListener("btt-lang-changed", function () {
+      if (giveawaysData) renderGiveaways(giveawaysData);
+    });
   })();
 })();

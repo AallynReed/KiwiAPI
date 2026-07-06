@@ -30,11 +30,12 @@
   }
   function iconUrl(tech) { return "/static/class-icons/" + encodeURIComponent(tech || "") + ".png"; }
 
-  var CLASSES = [], byTech = {};
+  var CLASSES = [], byTech = {}, selectedTech = null, loaded = false;
 
   getJSON("/site/stats/classes").then(function (d) {
     CLASSES = (d && d.items) || [];
     CLASSES.forEach(function (c) { byTech[c.tech_name] = c; });
+    loaded = true;
     if (!CLASSES.length) { setEmpty(); return; }
     buildNav();
     var initial = (location.hash || "").replace(/^#/, "");
@@ -69,6 +70,7 @@
   function select(tech, updateHash) {
     var c = byTech[tech];
     if (!c) return;
+    selectedTech = tech;
     document.querySelectorAll(".cls-navitem").forEach(function (b) {
       var on = b.dataset.tech === tech;
       b.classList.toggle("active", on);
@@ -204,5 +206,16 @@
   window.addEventListener("hashchange", function () {
     var tech = (location.hash || "").replace(/^#/, "");
     if (byTech[tech]) select(tech, false);
+  });
+
+  // Re-render from already-fetched data when the UI language changes (the i18n
+  // runtime fires this on the initial locale load too). Rebuild the nav +
+  // detail so tr()-wrapped labels pick up the new locale; keep the current
+  // class selected.
+  document.addEventListener("btt-lang-changed", function () {
+    if (!loaded) return;
+    if (!CLASSES.length) { setEmpty(); return; }
+    buildNav();
+    select(selectedTech && byTech[selectedTech] ? selectedTech : CLASSES[0].tech_name, false);
   });
 })();
