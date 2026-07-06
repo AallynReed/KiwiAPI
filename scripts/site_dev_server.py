@@ -989,6 +989,76 @@ class Handler(SimpleHTTPRequestHandler):
                     _ev(4, "Bacon Bonanza", "Bonus", 7 * 86400, 9 * 86400, None),
                 ],
             })
+        if path == "/site/calendar/yearly":
+            # Synthetic ±365-day rotation timeline matching the real
+            # app.trove.calendar.yearly_calendar() shape, so the homepage
+            # widget renders end-to-end without the full backend.
+            import time as _t
+            from datetime import datetime, timezone, timedelta
+            UTC = timezone.utc
+            now = datetime.now(UTC)
+            ws = now - timedelta(days=365)
+            we = now + timedelta(days=365)
+
+            def _ev(type_, name, s, e, **extra):
+                d = {"type": type_, "name": name,
+                     "starts_at": int(s.timestamp()), "ends_at": int(e.timestamp())}
+                d.update(extra)
+                return d
+
+            def _cycle(base, interval, dur, emit):
+                total = interval.total_seconds()
+                k = int((ws - base).total_seconds() // total) - 1
+                out = []
+                while True:
+                    s = base + timedelta(seconds=k * total)
+                    if s >= we:
+                        break
+                    e = s + dur
+                    if e > ws and s < we:
+                        out.append((k, s, e))
+                    k += 1
+                return out
+
+            evs = []
+            wk = timedelta(days=7)
+            _buffs = [("Weekly: Class Gem XP", "fbc02d"), ("Weekly: Loot", "7cc7ff"),
+                      ("Weekly: Adventure", "a371f7"), ("Weekly: Faction", "3fb950")]
+            b_base = datetime(2024, 1, 1, 11, 0, tzinfo=UTC)
+            for k, s, e in _cycle(b_base, wk, wk, None):
+                nm, col = _buffs[k % 4]
+                evs.append(_ev("weekly_buff", nm, s, e, color=col))
+            c_base = datetime(2023, 12, 8, 11, 0, tzinfo=UTC)
+            for _k, s, e in _cycle(c_base, timedelta(days=14), timedelta(days=3), None):
+                evs.append(_ev("corruxion", "Corruxion", s, e))
+            f_base = datetime(2023, 12, 5, 11, 0, tzinfo=UTC)
+            for _k, s, _e in _cycle(f_base, timedelta(days=14), timedelta(days=3), None):
+                evs.append(_ev("fluxion", "Fluxion (Voting)", s, s + timedelta(days=3), state="voting", color="5ca8cc"))
+                sell = s + timedelta(days=7)
+                evs.append(_ev("fluxion", "Fluxion (Selling)", sell, sell + timedelta(days=3), state="selling", color="02679e"))
+            g_base = datetime(2025, 5, 23, 11, 0, tzinfo=UTC)
+            for _k, s, _e in _cycle(g_base, timedelta(days=2), timedelta(days=2), None):
+                evs.append(_ev("gardening_2", "2-day plants", s + timedelta(days=1), s + timedelta(days=2), color="8bc34a"))
+            for _k, s, _e in _cycle(g_base, timedelta(days=3), timedelta(days=3), None):
+                evs.append(_ev("gardening_3", "3-day plants", s + timedelta(days=2), s + timedelta(days=3), color="4caf50"))
+            _mana_b = [("Permafrost", "permafrost"), ("Cursed Vale", "cursedvale"),
+                       ("Neon City", "neoncity"), ("Fae Forest", "faeforest")]
+            m_base = datetime(2023, 11, 20, 11, 0, tzinfo=UTC)
+            for k, s, e in _cycle(m_base, wk, wk, None):
+                bs = [{"name": _mana_b[(k - i) % 4][0], "icon": _mana_b[(k - i) % 4][1]} for i in range(3)]
+                evs.append(_ev("mana", "Wild Mana", s, e, biomes=bs))
+            _stampy_b = [("Jurassic Jungle", "jurassicjungle"), ("Candoria", "candoria"),
+                         ("Neon City", "neoncity"), ("Permafrost", "permafrost")]
+            s_base = datetime(2023, 9, 30, 11, 0, tzinfo=UTC)
+            for k, s, _e in _cycle(s_base, wk, timedelta(hours=48), None):
+                nm, ic = _stampy_b[k % 4]
+                evs.append(_ev("stampy", "Stampy", s, s + timedelta(hours=48), biomes=[{"name": nm, "icon": ic}]))
+
+            evs.sort(key=lambda x: (x["starts_at"], x["type"]))
+            return self._send_json({
+                "starts_at": int(ws.timestamp()), "ends_at": int(we.timestamp()),
+                "generated_at": int(now.timestamp()), "count": len(evs), "events": evs,
+            })
         if path == "/site/feeds/videos":
             import time as _t
             plat = (parse_qs(url.query).get("platform", ["youtube"])[0])

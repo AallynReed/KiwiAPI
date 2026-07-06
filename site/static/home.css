@@ -328,3 +328,124 @@
   .dash-top { flex-direction: column; align-items: stretch; }
   .dash-search { width: 100%; }
 }
+
+/* ===========================================================================
+   Yearly rotation calendar widget (#calendar, built by home.js).
+   A ±365-day horizontal timeline of every recurring rotation; ported from the
+   BTT desktop app and re-themed onto the site's design tokens.
+   ========================================================================== */
+.dash-cal { position: relative; }
+.dash-cal .dash-loading { padding: 1.5rem; }
+
+.calendar-toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--bg-line); border-bottom: none; border-radius: 12px 12px 0 0;
+  background: color-mix(in oklab, var(--bg-card) 70%, transparent);
+}
+.calendar-toolbar-left, .calendar-toolbar-right, .calendar-jump-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.calendar-jump-row {
+  padding: 8px 12px;
+  border-left: 1px solid var(--bg-line); border-right: 1px solid var(--bg-line);
+  border-bottom: 1px dashed color-mix(in oklab, var(--text-mute) 25%, transparent);
+  background: color-mix(in oklab, var(--bg-card) 50%, transparent);
+}
+.calendar-chip-btn {
+  border: 1px solid color-mix(in oklab, var(--text-mute) 30%, transparent);
+  background: color-mix(in oklab, var(--bg-base) 40%, transparent);
+  color: var(--text-mute); border-radius: 999px; padding: 5px 10px;
+  font-size: 12px; font-family: inherit; cursor: pointer; transition: all .2s ease;
+}
+.calendar-chip-btn:hover { color: var(--text); border-color: color-mix(in oklab, var(--text) 35%, transparent); }
+.calendar-chip-btn.active {
+  color: #fff; border-color: color-mix(in oklab, var(--accent) 75%, transparent);
+  background: color-mix(in oklab, var(--accent) 20%, transparent);
+}
+.calendar-helper-text { font-size: 12px; color: var(--text-soft); }
+
+.calendar-timeline-wrapper {
+  display: flex; flex-direction: column; overflow-x: auto; overflow-y: hidden;
+  position: relative; background: var(--bg-card);
+  border: 1px solid var(--bg-line); border-radius: 0 0 12px 12px;
+  scrollbar-width: thin; padding-bottom: 16px; min-height: 300px; max-height: 460px;
+}
+.calendar-timeline-wrapper.draggable { cursor: grab; }
+.calendar-timeline-wrapper.dragging { cursor: grabbing; user-select: none; }
+
+.calendar-timeline-header {
+  display: flex; flex-direction: column; position: sticky; top: 0;
+  background: var(--bg-card); z-index: 10; border-bottom: 1px solid var(--bg-line);
+}
+.calendar-months-row {
+  display: flex; border-bottom: 1px solid color-mix(in oklab, var(--text) 6%, transparent);
+  background: color-mix(in oklab, var(--bg-base) 30%, transparent);
+}
+.calendar-days-row { display: flex; }
+.calendar-corner {
+  min-width: 140px; width: 140px; flex-shrink: 0; position: sticky; left: 0; z-index: 7;
+  background: var(--bg-card); border-right: 1px solid var(--bg-line);
+}
+.calendar-month-col {
+  flex-shrink: 0; box-sizing: border-box; position: relative;
+  border-right: 1px dashed color-mix(in oklab, var(--text) 10%, transparent);
+}
+.calendar-month-label {
+  position: sticky; left: 140px; display: inline-block; padding: 6px 15px;
+  font-weight: 700; color: var(--accent-blue); white-space: nowrap; z-index: 6;
+  font-size: .95em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box;
+}
+.calendar-day-col {
+  min-width: 40px; width: 40px; flex-shrink: 0; box-sizing: border-box; text-align: center;
+  display: flex; flex-direction: column;
+  border-right: 1px dashed color-mix(in oklab, var(--text) 5%, transparent);
+}
+.calendar-day-weekday {
+  font-size: .65em; color: var(--text-mute); font-weight: 700; text-transform: uppercase;
+  background: color-mix(in oklab, var(--bg-base) 30%, transparent); padding: 2px 0; height: 20px; overflow: hidden;
+}
+.calendar-day-num { font-size: .85em; color: var(--text); padding: 4px 0; }
+.calendar-day-col.is-today { background: color-mix(in oklab, var(--accent) 12%, transparent); }
+.calendar-day-col.is-today .calendar-day-num { color: var(--accent-blue); font-weight: 700; }
+
+.calendar-tracks { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 15px 0; }
+.calendar-track {
+  position: relative; height: 34px; display: flex; align-items: center;
+  background: color-mix(in oklab, var(--bg-base) 30%, transparent); border-radius: 6px;
+}
+.calendar-track-label {
+  position: sticky; left: 0; z-index: 5; min-width: 140px; width: 140px; height: 100%;
+  box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 15px;
+  font-weight: 700; font-size: .85em; color: var(--text); background: var(--bg-card);
+  border-right: 2px solid var(--bg-line); box-shadow: 2px 0 5px color-mix(in oklab, var(--bg-base) 50%, transparent);
+}
+.calendar-track-label i { opacity: .8; }
+.calendar-event {
+  position: absolute; height: 22px; border-radius: 11px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 8px;
+  font-size: .75em; font-weight: 800; color: #000; white-space: nowrap; overflow: hidden;
+  box-shadow: 0 2px 5px color-mix(in oklab, var(--bg-base) 50%, transparent);
+  transition: filter .2s; cursor: pointer; z-index: 2;
+}
+.calendar-event:hover { filter: brightness(1.2); z-index: 3; }
+.calendar-ev-ics { display: inline-flex; gap: 2px; align-items: center; }
+.calendar-ev-ics img { width: 14px; height: 14px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .5)); }
+
+.calendar-today-line {
+  position: absolute; top: 0; bottom: 0; width: 2px; z-index: 4; pointer-events: none;
+  background: color-mix(in oklab, var(--accent) 85%, transparent);
+}
+.calendar-empty-state {
+  margin: 8px 12px; padding: 12px; border: 1px dashed var(--bg-line); border-radius: 8px;
+  color: var(--text-mute); display: flex; align-items: center; gap: 8px;
+}
+
+/* Track colours (weekly buffs + gardening + fluxion also carry a per-entry hex
+   applied inline by home.js, which overrides these class fallbacks). */
+.event-corruxion { background: #7a1e8a; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); }
+.event-fluxion   { background: #3a9cbd; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); }
+.event-mana      { background: #3e5a63; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); border: 1px solid rgba(255, 255, 255, .1); }
+.event-stampy    { background: #6b513d; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); border: 1px solid rgba(255, 255, 255, .1); }
+.event-gardening { background: #4caf50; color: #063; }
+.event-weekly    { text-transform: uppercase; font-weight: 600; }

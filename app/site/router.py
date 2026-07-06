@@ -24,6 +24,7 @@ from app.core.utils import iso
 from app.site_auth.dependencies import get_optional_site_user
 from app.site_auth.models import SiteUser
 from app.trove import btt_releases as trove_btt
+from app.trove import calendar as trove_calendar
 from app.trove import chaos as trove_chaos
 from app.trove import feeds as trove_feeds
 from app.trove import news as trove_news
@@ -945,6 +946,18 @@ async def site_calendar_events() -> JSONResponse:
             "now": now,
         }),
         headers={"Cache-Control": "public, max-age=120"},
+    )
+
+
+@router.get("/site/calendar/yearly", response_class=JSONResponse)
+async def site_calendar_yearly() -> JSONResponse:
+    """The full +/-365-day rotation timeline for the homepage yearly-calendar
+    widget: weekly buffs, Corruxion/Fluxion, gardening windows, Wild Mana and
+    Stampy as one flat, start-sorted list. Same compute as ``/v1`` rotations
+    calendar - tokenless and long-cached (all entries are deterministic)."""
+    return JSONResponse(
+        trove_calendar.yearly_calendar(),
+        headers={"Cache-Control": "public, max-age=300"},
     )
 
 

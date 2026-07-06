@@ -78,6 +78,7 @@
 
             <nav class="dash-nav" aria-label="Jump to section">
                 <a href="#today"><i class="fa-solid fa-rotate"></i> <span data-i18n>Today in Trove</span></a>
+                {% if calendar_enabled %}<a href="#calendar"><i class="fa-regular fa-calendar-days"></i> <span data-i18n>Yearly calendar</span></a>{% endif %}
                 <a href="#news"><i class="fa-solid fa-newspaper"></i> <span data-i18n>Official news</span></a>
                 <a href="#community"><i class="fa-solid fa-video"></i> <span data-i18n>Community</span></a>
                 {% if giveaways_enabled %}<a href="#giveaways"><i class="fa-solid fa-gift"></i> <span data-i18n>Giveaways</span></a>{% endif %}
@@ -175,6 +176,19 @@
                 <div class="dash-buffs" id="dash-buffs"><p class="dash-loading" data-i18n>Loading…</p></div>
                 <div class="dash-merchants" id="dash-merchants"></div>
             </section>
+
+            <!-- Yearly rotation calendar (±365d timeline of every recurring
+                 rotation: weekly buffs, dragon merchants, gardening, mana, Stampy).
+                 The interactive timeline + toolbar are built by home.js. -->
+            {% if calendar_enabled %}
+            <section id="calendar" class="dash-section dash-cal-section">
+                <header class="dash-section-head">
+                    <h2><i class="fa-regular fa-calendar-days"></i> <span data-i18n>Yearly rotation calendar</span></h2>
+                    <a class="dash-seeall" href="/calendar"><span data-i18n>Live calendar</span> <i class="fa-solid fa-arrow-right"></i></a>
+                </header>
+                <div class="dash-cal" id="dash-calendar"><p class="dash-loading" data-i18n>Loading…</p></div>
+            </section>
+            {% endif %}
 
             <!-- Official news -->
             <section id="news" class="dash-section">

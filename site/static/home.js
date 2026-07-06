@@ -582,4 +582,312 @@
       if (giveawaysData) renderGiveaways(giveawaysData);
     });
   })();
+
+  /* ---- Yearly rotation calendar (/site/calendar/yearly) ------------------
+     A ±365-day horizontal timeline: every recurring rotation (weekly buffs,
+     Corruxion/Fluxion, gardening windows, Wild Mana, Stampy) as stacked bars.
+     Ported from the BTT desktop app; vanilla + CSP-clean (built via the DOM,
+     no innerHTML/eval), drag-to-pan, centred on today. ------------------- */
+  (function () {
+    var root = document.getElementById("dash-calendar");
+    if (!root) return;
+
+    var DAY_MS = 86400000;
+    var TROVE_OFFSET_MS = 11 * 3600 * 1000;   // server time is UTC−11
+    var DAY_W = 40, LABEL_W = 140, TOTAL_DAYS = 730;
+
+    // Tracks (one row each). Invasion + the D15 rotation are intentionally
+    // excluded to match the /v1 calendar payload.
+    var TRACKS = [
+      { id: "weekly_buff", name: "Weekly Buffs", color: "weekly", icon: "fa-bolt" },
+      { id: "dragon_merchants", types: ["corruxion", "fluxion"], name: "Dragon Merchants", color: "corruxion", icon: "fa-dragon" },
+      { id: "gardening_2", name: "2-day plants", color: "gardening", icon: "fa-seedling" },
+      { id: "gardening_3", name: "3-day plants", color: "gardening", icon: "fa-seedling" },
+      { id: "mana", name: "Wild Mana", color: "mana", icon: "fa-flask" },
+      { id: "stampy", name: "Stampy", color: "stampy", icon: "fa-paw" }
+    ];
+
+    var state = { timeMode: "local", filter: "full" };
+    var rawEvents = null;
+    var wrapEl = null, todayPx = 0, barsIndex = [];
+    var dragging = false, dragStartX = 0, dragScrollLeft = 0;
+
+    function toDisplayMs(ms) { return state.timeMode === "trove" ? ms - TROVE_OFFSET_MS : ms; }
+
+    function dayStartMs(baseMs, dayOffset) {
+      if (state.timeMode !== "trove") {
+        var d = new Date(baseMs);
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate() + dayOffset).getTime();
+      }
+      var s = new Date(baseMs - TROVE_OFFSET_MS);
+      return Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate() + dayOffset);
+    }
+
+    function fmtDay(ms, options) {
+      var opts = state.timeMode === "trove" ? Object.assign({ timeZone: "UTC" }, options) : options;
+      return new Date(ms).toLocaleDateString(undefined, opts);
+    }
+    function fmtRange(s, e) {
+      var o = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
+      return new Date(s).toLocaleString(undefined, o) + " → " + new Date(e).toLocaleString(undefined, o);
+    }
+
+    function chip(label, active, onClick, icon) {
+      var b = el("button", "calendar-chip-btn" + (active ? " active" : ""));
+      b.type = "button";
+      if (icon) { b.appendChild(el("i", "fa-solid " + icon)); b.appendChild(document.createTextNode(" ")); }
+      b.appendChild(document.createTextNode(label));
+      b.addEventListener("click", onClick);
+      return b;
+    }
+
+    function applyColor(bar, color) {
+      if (!color) return;
+      var hex = String(color).replace("#", "");
+      if (hex.length !== 6) return;
+      var r = parseInt(hex.substr(0, 2), 16), g = parseInt(hex.substr(2, 2), 16), b = parseInt(hex.substr(4, 2), 16);
+      if (isNaN(r) || isNaN(g) || isNaN(b)) return;
+      var dr = Math.floor(r * 0.8), dg = Math.floor(g * 0.8), db = Math.floor(b * 0.8);
+      var isDark = ((dr * 299) + (dg * 587) + (db * 114)) / 1000 < 128;
+      bar.style.background = "rgb(" + dr + "," + dg + "," + db + ")";
+      bar.style.color = isDark ? "#fff" : "#000";
+      bar.style.border = "1px solid rgba(255,255,255,0.2)";
+      bar.style.textShadow = isDark ? "0 1px 2px rgba(0,0,0,0.8)" : "none";
+    }
+
+    function iconsFor(ev) {
+      if (ev.biomes && ev.biomes.length) {
+        var box = el("span", "calendar-ev-ics");
+        ev.biomes.forEach(function (b) {
+          if (!b || !b.icon) return;
+          var img = document.createElement("img");
+          img.src = "/static/assets/biomes/" + b.icon + ".png";
+          img.alt = ""; img.loading = "lazy";
+          img.onerror = function () { img.style.display = "none"; };
+          box.appendChild(img);
+        });
+        return box.childNodes.length ? box : null;
+      }
+      var cls = null;
+      if (ev.type === "fluxion") cls = ev.state === "selling" ? "fa-sack-dollar" : "fa-check-to-slot";
+      else if (ev.type === "corruxion") cls = "fa-dragon";
+      else if (ev.type.indexOf("gardening") === 0) cls = "fa-seedling";
+      return cls ? el("i", "fa-solid " + cls) : null;
+    }
+
+    function labelFor(ev, tk, widthPx) {
+      if (widthPx <= DAY_W) return "";
+      if (tk.id === "weekly_buff") return tr(ev.name);
+      if (tk.id === "dragon_merchants") {
+        if (ev.type === "fluxion") return ev.state === "selling" ? tr("Selling") : tr("Voting");
+        return tr("Corruxion");
+      }
+      return "";
+    }
+
+    function passFilter(ev, nowMs) {
+      if (state.filter === "now") return ev.starts_at * 1000 <= nowMs && ev.ends_at * 1000 > nowMs;
+      if (state.filter === "next") { var s = ev.starts_at * 1000; return s > nowMs && s <= nowMs + DAY_MS; }
+      return true;
+    }
+
+    function makeBar(ev, tk, startTs) {
+      var s = ev.starts_at * 1000, e = ev.ends_at * 1000;
+      var ds = toDisplayMs(s), de = toDisplayMs(e);
+      var leftPx = ((ds - startTs) / DAY_MS) * DAY_W;
+      var widthPx = ((de - ds) / DAY_MS) * DAY_W;
+      if (!(leftPx + widthPx > 0 && leftPx < TOTAL_DAYS * DAY_W)) return null;
+      if (leftPx < 0) { widthPx += leftPx; leftPx = 0; }
+
+      var colorClass = tk.types ? ev.type : tk.color;
+      var bar = el("div", "calendar-event event-" + colorClass);
+      bar.style.left = (leftPx + LABEL_W) + "px";
+      bar.style.width = widthPx + "px";
+      bar.style.top = "6px";
+      applyColor(bar, ev.color);
+
+      var tip = [tr(ev.name)];
+      if (ev.biomes && ev.biomes.length) tip.push(ev.biomes.map(function (b) { return tr(b.name); }).join(", "));
+      tip.push(fmtRange(s, e));
+      bar.title = tip.join(" — ");
+
+      var ic = iconsFor(ev);
+      if (ic) bar.appendChild(ic);
+      var txt = labelFor(ev, tk, widthPx);
+      if (txt) bar.appendChild(document.createTextNode(txt));
+
+      bar._startTs = s; bar._endTs = e; bar._leftPx = leftPx + LABEL_W;
+      bar._type = ev.type; bar._track = tk.id;
+      return bar;
+    }
+
+    function corner() { return el("div", "calendar-corner"); }
+
+    function render(centerToday) {
+      var prevScroll = wrapEl ? wrapEl.scrollLeft : null;
+      root.textContent = "";
+      barsIndex = [];
+      if (!rawEvents) { root.appendChild(el("p", "dash-loading", tr("Loading…"))); return; }
+
+      var nowMs = Date.now();
+      var startTs = dayStartMs(nowMs, -365);
+      var totalWidth = LABEL_W + TOTAL_DAYS * DAY_W;
+      todayPx = ((toDisplayMs(nowMs) - startTs) / DAY_MS) * DAY_W;
+
+      // Toolbar
+      var bar = el("div", "calendar-toolbar");
+      var left = el("div", "calendar-toolbar-left");
+      left.appendChild(chip(tr("Today"), false, function () { centerOnToday(true); }, "fa-location-crosshairs"));
+      left.appendChild(chip(tr("Full"), state.filter === "full", function () { setFilter("full"); }));
+      left.appendChild(chip(tr("Now"), state.filter === "now", function () { setFilter("now"); }));
+      left.appendChild(chip(tr("Next 24h"), state.filter === "next", function () { setFilter("next"); }));
+      var right = el("div", "calendar-toolbar-right");
+      right.appendChild(chip(tr("Local time"), state.timeMode === "local", function () { setMode("local"); }));
+      right.appendChild(chip(tr("Trove time"), state.timeMode === "trove", function () { setMode("trove"); }));
+      bar.appendChild(left); bar.appendChild(right);
+      root.appendChild(bar);
+
+      // Jump-to row
+      var jump = el("div", "calendar-jump-row");
+      [["corruxion", "Corruxion"], ["fluxion", "Fluxion"], ["mana", tr("Wild Mana")], ["stampy", "Stampy"]]
+        .forEach(function (j) { jump.appendChild(chip(j[1], false, function () { jumpTo(j[0]); })); });
+      jump.appendChild(el("span", "calendar-helper-text", tr("Drag to pan • scroll to move")));
+      root.appendChild(jump);
+
+      // Timeline wrapper
+      var wrap = el("div", "calendar-timeline-wrapper draggable");
+
+      var line = el("div", "calendar-today-line");
+      line.style.left = (todayPx + LABEL_W) + "px";
+      wrap.appendChild(line);
+
+      // Month + day headers
+      var months = [], days = [], curKey = null, cur = null;
+      for (var i = 0; i < TOTAL_DAYS; i++) {
+        var ms = startTs + i * DAY_MS, dd = new Date(ms);
+        var key = state.timeMode === "trove"
+          ? dd.getUTCFullYear() + "-" + dd.getUTCMonth()
+          : dd.getFullYear() + "-" + dd.getMonth();
+        if (key !== curKey) {
+          if (cur) months.push(cur);
+          curKey = key;
+          cur = { name: fmtDay(ms, { month: "long" }), year: state.timeMode === "trove" ? dd.getUTCFullYear() : dd.getFullYear(), days: 0 };
+        }
+        cur.days++;
+        days.push({ isToday: i === 365, num: state.timeMode === "trove" ? dd.getUTCDate() : dd.getDate(), weekday: fmtDay(ms, { weekday: "short" }) });
+      }
+      if (cur) months.push(cur);
+
+      var header = el("div", "calendar-timeline-header");
+      header.style.width = totalWidth + "px";
+      var mrow = el("div", "calendar-months-row");
+      mrow.appendChild(corner());
+      months.forEach(function (m) {
+        var col = el("div", "calendar-month-col");
+        col.style.width = (m.days * DAY_W) + "px";
+        col.appendChild(el("div", "calendar-month-label", m.name + " " + m.year));
+        mrow.appendChild(col);
+      });
+      var drow = el("div", "calendar-days-row");
+      drow.appendChild(corner());
+      days.forEach(function (d) {
+        var col = el("div", "calendar-day-col" + (d.isToday ? " is-today" : ""));
+        col.appendChild(el("div", "calendar-day-weekday", d.weekday));
+        col.appendChild(el("div", "calendar-day-num", String(d.num)));
+        drow.appendChild(col);
+      });
+      header.appendChild(mrow); header.appendChild(drow);
+      wrap.appendChild(header);
+
+      // Tracks
+      var tracksEl = el("div", "calendar-tracks");
+      tracksEl.style.width = totalWidth + "px";
+      var anyTrack = false;
+      TRACKS.forEach(function (tk) {
+        var evs = rawEvents.filter(function (e) {
+          if (!passFilter(e, nowMs)) return false;
+          return tk.types ? tk.types.indexOf(e.type) >= 0 : e.type === tk.id;
+        });
+        var bars = [];
+        evs.forEach(function (ev) { var b = makeBar(ev, tk, startTs); if (b) bars.push(b); });
+        if (!bars.length) return;
+        anyTrack = true;
+        var row = el("div", "calendar-track");
+        var lbl = el("div", "calendar-track-label");
+        lbl.appendChild(el("i", "fa-solid " + tk.icon));
+        lbl.appendChild(document.createTextNode(" " + tr(tk.name)));
+        row.appendChild(lbl);
+        bars.forEach(function (b) { row.appendChild(b); barsIndex.push(b); });
+        tracksEl.appendChild(row);
+      });
+      if (!anyTrack) {
+        var empty = el("div", "calendar-empty-state");
+        empty.appendChild(el("i", "fa-regular fa-calendar-xmark"));
+        empty.appendChild(document.createTextNode(" " + tr("No entries match this filter right now.")));
+        tracksEl.appendChild(empty);
+      }
+      wrap.appendChild(tracksEl);
+
+      root.appendChild(wrap);
+      wrapEl = wrap;
+      attachDrag(wrap);
+
+      if (centerToday) centerOnToday(false);
+      else if (prevScroll != null) wrap.scrollLeft = prevScroll;
+    }
+
+    function centerOnToday(animate) {
+      if (!wrapEl) return;
+      wrapEl.style.scrollBehavior = animate ? "smooth" : "auto";
+      wrapEl.scrollLeft = todayPx + LABEL_W - (wrapEl.clientWidth / 2);
+      if (animate) setTimeout(function () { if (wrapEl) wrapEl.style.scrollBehavior = "auto"; }, 500);
+    }
+
+    function jumpTo(target) {
+      if (!wrapEl || !barsIndex.length) return;
+      var nowMs = Date.now();
+      var cands = barsIndex.filter(function (b) {
+        if (target === "mana") return b._track === "mana";
+        if (target === "stampy") return b._track === "stampy";
+        return b._type === target;
+      });
+      if (!cands.length) return;
+      cands.sort(function (a, b) {
+        var ad = a._startTs >= nowMs ? a._startTs - nowMs : Math.abs(nowMs - a._startTs) + 9e11;
+        var bd = b._startTs >= nowMs ? b._startTs - nowMs : Math.abs(nowMs - b._startTs) + 9e11;
+        return ad - bd;
+      });
+      wrapEl.style.scrollBehavior = "smooth";
+      wrapEl.scrollLeft = Math.max(0, cands[0]._leftPx - wrapEl.clientWidth * 0.35);
+      setTimeout(function () { if (wrapEl) wrapEl.style.scrollBehavior = "auto"; }, 400);
+    }
+
+    function setFilter(f) { if (state.filter === f) return; state.filter = f; render(false); }
+    function setMode(m) { if (state.timeMode === m) return; state.timeMode = m; render(true); }
+
+    function attachDrag(w) {
+      w.addEventListener("mousedown", function (e) {
+        dragging = true; dragStartX = e.pageX - w.offsetLeft; dragScrollLeft = w.scrollLeft; w.classList.add("dragging");
+      });
+      w.addEventListener("mousemove", function (e) {
+        if (!dragging) return; e.preventDefault();
+        w.scrollLeft = dragScrollLeft - ((e.pageX - w.offsetLeft) - dragStartX) * 1.5;
+      });
+      var stop = function () { dragging = false; w.classList.remove("dragging"); };
+      w.addEventListener("mouseup", stop);
+      w.addEventListener("mouseleave", stop);
+      w.addEventListener("wheel", function (e) {
+        if (e.deltaY !== 0) { e.preventDefault(); w.scrollLeft += e.deltaY; }
+      }, { passive: false });
+    }
+
+    getJSON("/site/calendar/yearly").then(function (d) {
+      rawEvents = (d && d.events) || [];
+      render(true);
+    }).catch(function () {
+      root.textContent = "";
+      root.appendChild(el("p", "dash-empty", tr("Couldn't load the calendar.")));
+    });
+    document.addEventListener("btt-lang-changed", function () { if (rawEvents) render(false); });
+  })();
 })();
