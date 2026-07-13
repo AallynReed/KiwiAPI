@@ -335,8 +335,8 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"];
-const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"]);
+const TABS = ["tokens", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"];
+const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"]);
 
 // Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
 const ICONS = {
@@ -359,6 +359,7 @@ const ICONS = {
   mods:         '<path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>',
   codexes:      '<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5Z"/><path d="M8 7h7M8 10h7"/>',
   siteusers:    '<circle cx="12" cy="7.5" r="3.3"/><path d="M5.5 20c0-3.4 2.9-5.3 6.5-5.3S18.5 16.6 18.5 20"/><path d="M3 4.5h18"/>',
+  marketitems:  '<path d="M20.5 11.3 12.7 3.5a1.5 1.5 0 0 0-1.1-.4L5 3.4a1.5 1.5 0 0 0-1.6 1.6l-.3 6.6a1.5 1.5 0 0 0 .4 1.1l7.8 7.8a1.5 1.5 0 0 0 2.1 0l7.1-7.1a1.5 1.5 0 0 0 0-2.1Z"/><circle cx="8" cy="8" r="1.3"/>',
 };
 function icon(name) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
@@ -379,6 +380,7 @@ const TAB_META = {
   config:       { group: "Admin panel", label: "Configuration" },
   leaderboards: { group: "Admin panel · Modules", label: "Leaderboards" },
   ingest:       { group: "Admin panel · Modules", label: "Ingest" },
+  marketitems:  { group: "Admin panel · Modules", label: "Market items" },
   giveaways:    { group: "Admin panel · Modules", label: "Giveaways" },
   discord:      { group: "Admin panel · Modules", label: "Discord" },
   supporters:   { group: "Admin panel · Modules", label: "Supporters" },
@@ -425,6 +427,7 @@ function renderDashboard() {
           <p class="nav-subgroup">${icon("modules")}<span>Modules</span></p>
           ${navItem("leaderboards", true)}
           ${navItem("ingest", true)}
+          ${navItem("marketitems", true)}
           ${navItem("giveaways", true)}
           ${navItem("discord", true)}
           ${navItem("supporters", true)}
@@ -495,6 +498,7 @@ function selectTab() {
   else if (state.tab === "config") renderConfigTab();
   else if (state.tab === "leaderboards") renderLeaderboards();
   else if (state.tab === "ingest") renderIngest();
+  else if (state.tab === "marketitems") renderMarketItems();
   else if (state.tab === "giveaways") renderGiveaways();
   else if (state.tab === "discord") renderDiscord();
   else if (state.tab === "supporters") renderSupporters();
@@ -1094,6 +1098,64 @@ async function renderOverview(days = 30) {
 // Admin · Site Analytics - cookieless page views + unique visitors for the public
 // showcase site. Unique visitors are counted once per UTC day (IP+UA salted hash);
 // dynamic pages are grouped by route template (e.g. /player/{name}).
+// Inline SVG trend chart (views + unique visitors over time). Vanilla/CSP-clean:
+// no chart lib, colours come from the portal's CSS vars so it themes automatically.
+// Per-point hit circles carry a <title> for native hover tooltips.
+function pvTrendChart(series, gran) {
+  const W = 720, H = 220, padL = 46, padR = 14, padT = 14, padB = 26;
+  const iw = W - padL - padR, ih = H - padT - padB, n = series.length;
+  const maxV = Math.max(1, ...series.map((p) => Math.max(p.views, p.unique_visitors)));
+  const x = (i) => (n <= 1 ? padL + iw / 2 : padL + (iw * i) / (n - 1));
+  const y = (v) => padT + ih * (1 - v / maxV);
+  const line = (k) => series.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p[k]).toFixed(1)}`).join(" ");
+  const area = (k) => `${line(k)} L${x(n - 1).toFixed(1)} ${(padT + ih).toFixed(1)} L${x(0).toFixed(1)} ${(padT + ih).toFixed(1)} Z`;
+
+  const ticks = 4;
+  let grid = "";
+  for (let t = 0; t <= ticks; t++) {
+    const val = Math.round((maxV * t) / ticks), gy = y(val);
+    grid += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W - padR}" y2="${gy.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`;
+    grid += `<text x="${padL - 6}" y="${(gy + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--faint)">${val.toLocaleString()}</text>`;
+  }
+
+  const every = Math.max(1, Math.ceil(n / 6));
+  let xl = "", dots = "";
+  series.forEach((p, i) => {
+    if (i % every === 0 || i === n - 1) {
+      const lbl = gran === "hour" ? p.bucket.slice(11, 16) : p.bucket.slice(5);
+      xl += `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="var(--faint)">${lbl}</text>`;
+    }
+    const tip = `${p.bucket} — ${p.views.toLocaleString()} views, ${p.unique_visitors.toLocaleString()} visitors`;
+    dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(p.unique_visitors).toFixed(1)}" r="2.2" fill="var(--green)"/>`;
+    dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(p.views).toFixed(1)}" r="2.5" fill="var(--accent)"/>`;
+    dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(p.views).toFixed(1)}" r="11" fill="transparent"><title>${esc(tip)}</title></circle>`;
+  });
+
+  return `<svg viewBox="0 0 ${W} ${H}" class="pv-chart" role="img" aria-label="Page views over time">
+      ${grid}
+      <path d="${area("views")}" fill="var(--accent)" fill-opacity="0.12"/>
+      <path d="${line("views")}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+      <path d="${line("unique_visitors")}" fill="none" stroke="var(--green)" stroke-width="2"/>
+      ${xl}${dots}
+    </svg>`;
+}
+
+// Horizontal bar chart for the busiest pages (top 10), width-scaled to the leader.
+function pvBars(pages, num) {
+  const top = pages.slice(0, 10);
+  const max = Math.max(1, ...top.map((p) => p.views));
+  return top
+    .map((p) => {
+      const pct = ((p.views / max) * 100).toFixed(1);
+      return `<div class="pv-bar-row">
+        <div class="pv-bar-label mono" title="${esc(p.path)}">${esc(p.path)}</div>
+        <div class="pv-bar-track"><div class="pv-bar-fill" style="width:${pct}%"></div></div>
+        <div class="pv-bar-val">${num(p.views)}</div>
+      </div>`;
+    })
+    .join("");
+}
+
 async function renderPageviews(days = 30) {
   const body = document.getElementById("tab-body");
   body.innerHTML = `<div class="loading">Loading site analytics…</div>`;
@@ -1109,10 +1171,25 @@ async function renderPageviews(days = 30) {
       <td>${num(p.unique_visitors)}</td>
     </tr>`;
 
+  const hasData = stats.total_views > 0 && stats.series.length;
+  const chartBlock = hasData
+    ? `<div class="pv-legend">
+         <span class="pv-key"><span class="pv-swatch" style="background:var(--accent)"></span>Page views</span>
+         <span class="pv-key"><span class="pv-swatch" style="background:var(--green)"></span>Unique visitors</span>
+         <span class="pv-gran">${stats.granularity === "hour" ? "hourly" : "daily"}</span>
+       </div>
+       ${pvTrendChart(stats.series, stats.granularity)}`
+    : `<p class="muted" style="padding:24px 0;text-align:center">No page views in this window yet.</p>`;
+
+  const barsBlock = hasData
+    ? `<h3 style="margin:22px 0 10px;font-size:1rem">Busiest pages</h3>
+       <div class="pv-bars">${pvBars(stats.pages, num)}</div>`
+    : "";
+
   body.innerHTML = `
     <div class="card">
       <div class="row" style="align-items:center;margin-bottom:6px">
-        <h2 style="flex:1;margin:0">Site analytics - last ${days} days</h2>
+        <h2 style="flex:1;margin:0">Site analytics - last ${days === 1 ? "24 hours" : days + " days"}</h2>
         <select id="pv-days" style="max-width:140px;flex:0 0 auto">
           <option value="1">24 hours</option><option value="7">7 days</option>
           <option value="30">30 days</option><option value="90">90 days</option>
@@ -1123,7 +1200,9 @@ async function renderPageviews(days = 30) {
         <div class="stat"><div class="n">${num(stats.unique_visitors)}</div><div class="l">Unique visitors</div></div>
         <div class="stat"><div class="n">${num(stats.views_today)}</div><div class="l">Views today</div></div>
       </div>
-      <p class="hint">Public showcase-site page loads, one row per real page URL (each mod and player page individually), top ${stats.pages.length} by views. Unique visitors are counted once per day (cookieless IP+UA hash, no cookie stored); static assets and JSON proxies aren't counted.</p>
+      ${chartBlock}
+      ${barsBlock}
+      <p class="hint" style="margin-top:22px">Public showcase-site page loads, one row per real page URL (each mod and player page individually), top ${stats.pages.length} by views. Unique visitors are counted once per day (cookieless IP+UA hash, no cookie stored); static assets and JSON proxies aren't counted.</p>
       <table>
         <thead><tr><th>Page</th><th>Views</th><th>Unique visitors</th></tr></thead>
         <tbody id="pv-rows"></tbody>
@@ -2662,6 +2741,161 @@ async function renderSupporters() {
   load();
 }
 
+// Admin · Market items - the bot's marketplace scan allow-list. Only items on
+// this list are persisted at ingest; everything else is dropped. Stored in the
+// DB (MarketInterestItem), served tokenless at /v1/misc/interest-items, and
+// edited here without a redeploy. Single add/remove plus a bulk paste-replace.
+async function renderMarketItems() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <h2 style="margin:0 0 6px">Market items</h2>
+      <p class="hint" style="margin:0">
+        The marketplace scan allow-list. The bot only persists listings for items on
+        this list — everything else is dropped at ingest. Served tokenless at
+        <code>/v1/misc/interest-items</code>. Edits take effect immediately, no redeploy.
+      </p>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center">
+        <input type="text" id="mi-name" placeholder="Item name (exact in-game name)" autocomplete="off" spellcheck="false">
+        <button class="btn primary" data-act="add">Add</button>
+      </div>
+      <div id="mi-result" class="ingest-result"></div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap">
+        <h2 style="flex:1;margin:0">Current list <span class="badge muted" id="mi-count">…</span></h2>
+        <input type="search" id="mi-filter" placeholder="Filter…" autocomplete="off" spellcheck="false" style="max-width:200px;flex:0 0 auto">
+        <button type="button" class="btn small" data-act="refresh">Refresh</button>
+      </div>
+      <div id="mi-list"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card" style="border:1px solid rgba(248,113,113,.45)">
+      <h2 style="margin:0 0 6px;color:#f87171">Bulk replace</h2>
+      <p class="hint" style="margin:0 0 10px">
+        Paste a full list (one item per line) to <strong>replace</strong> the entire allow-list.
+        Everything currently stored is dropped, then the new list is inserted (de-duped, trimmed,
+        sorted). Irreversible; an empty list is refused. Use single remove above for one-offs.
+      </p>
+      <textarea id="mi-bulk" rows="8" placeholder="Fresh Diamond&#10;Golden Egg&#10;…" spellcheck="false"
+        style="width:100%;font-family:var(--mono,monospace);font-size:.85rem"></textarea>
+      <div class="row" style="align-items:center;margin-top:10px">
+        <button class="btn small" data-act="prefill" type="button">Prefill from current</button>
+        <button class="btn danger" data-act="replace" type="button" style="margin-left:auto">Replace entire list</button>
+      </div>
+      <div id="mi-bulk-result" class="ingest-result"></div>
+    </div>`;
+
+  const listEl = document.getElementById("mi-list");
+  const countEl = document.getElementById("mi-count");
+  const result = document.getElementById("mi-result");
+  const input = document.getElementById("mi-name");
+  const filterEl = document.getElementById("mi-filter");
+  const bulkEl = document.getElementById("mi-bulk");
+  const bulkResult = document.getElementById("mi-bulk-result");
+  let items = [];
+
+  function draw() {
+    const q = filterEl.value.trim().toLowerCase();
+    const rows = q ? items.filter((it) => it.name.toLowerCase().includes(q)) : items;
+    countEl.textContent = q ? `${rows.length.toLocaleString()} / ${items.length.toLocaleString()}`
+                            : items.length.toLocaleString();
+    if (!items.length) {
+      listEl.innerHTML = `<p class="muted" style="margin:0">No items yet — add one above.</p>`;
+      return;
+    }
+    if (!rows.length) {
+      listEl.innerHTML = `<p class="muted" style="margin:0">No items match “${esc(filterEl.value.trim())}”.</p>`;
+      return;
+    }
+    listEl.innerHTML = rows.map((it) => {
+      const tag = it.added_by
+        ? `<span class="badge muted" title="Added by an admin on ${esc(fmtDay(it.added_at))}">admin</span>`
+        : `<span class="badge muted" title="Seeded from the bundled list">seeded</span>`;
+      return `<div class="row" style="align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+           <span style="flex:1;font-weight:600">${esc(it.name)}</span>
+           ${tag}
+           <button class="btn small" data-remove="${esc(it.name)}">Remove</button>
+         </div>`;
+    }).join("");
+    listEl.querySelectorAll("[data-remove]").forEach((b) =>
+      b.addEventListener("click", () => remove(b.dataset.remove)));
+  }
+
+  async function load() {
+    listEl.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const data = await API.call("/admin/market/interest-items");
+      items = data.items || [];
+      draw();
+    } catch (ex) {
+      listEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    }
+  }
+
+  async function add() {
+    const name = input.value.trim();
+    if (!name) return;
+    result.className = "ingest-result";
+    result.textContent = "Adding…";
+    try {
+      await API.call("/admin/market/interest-items", { method: "POST", body: { name } });
+      result.className = "ingest-result ok";
+      result.textContent = `Added ${name}.`;
+      input.value = "";
+      toast(`Added ${name}`, "ok");
+      load();
+    } catch (ex) {
+      result.className = "ingest-result err";
+      result.textContent = ex.message;
+    }
+  }
+
+  async function remove(name) {
+    if (!window.confirm(`Remove "${name}" from the market allow-list?`)) return;
+    try {
+      await API.call(`/admin/market/interest-items/${encodeURIComponent(name)}`, { method: "DELETE" });
+      toast(`Removed ${name}`, "ok");
+      load();
+    } catch (ex) {
+      toast(ex.message, "err");
+    }
+  }
+
+  async function replace() {
+    const names = bulkEl.value.split("\n").map((s) => s.trim()).filter(Boolean);
+    if (!names.length) {
+      bulkResult.className = "ingest-result err";
+      bulkResult.textContent = "Paste at least one item (an empty list is refused).";
+      return;
+    }
+    if (!window.confirm(`Replace the ENTIRE allow-list with these ${names.length} line(s)? This drops all current items and cannot be undone.`)) return;
+    bulkResult.className = "ingest-result";
+    bulkResult.textContent = "Replacing…";
+    try {
+      const r = await API.call("/admin/market/interest-items", { method: "PUT", body: { items: names } });
+      bulkResult.className = "ingest-result ok";
+      bulkResult.textContent = `Replaced: ${r.removed.toLocaleString()} removed, ${r.added.toLocaleString()} now stored.`;
+      toast("Allow-list replaced", "ok");
+      load();
+    } catch (ex) {
+      bulkResult.className = "ingest-result err";
+      bulkResult.textContent = ex.message;
+    }
+  }
+
+  document.querySelector('[data-act="add"]').addEventListener("click", add);
+  document.querySelector('[data-act="refresh"]').addEventListener("click", load);
+  document.querySelector('[data-act="replace"]').addEventListener("click", replace);
+  document.querySelector('[data-act="prefill"]').addEventListener("click", () => {
+    bulkEl.value = items.map((it) => it.name).join("\n");
+  });
+  filterEl.addEventListener("input", draw);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
+  load();
+}
+
 async function renderClaims() {
   const body = document.getElementById("tab-body");
   body.innerHTML = `
@@ -3310,6 +3544,19 @@ async function renderIngest() {
       </div>
       <div id="lb-reset-result" class="ingest-result"></div>
     </div>
+    <div class="card" id="mkt-reset-card" style="border:1px solid rgba(248,113,113,.45)">
+      <h2 style="margin:0 0 6px;color:#f87171">Danger zone — reset market data</h2>
+      <p class="hint" style="margin:0 0 12px">
+        Wipes <strong>every</strong> stored marketplace listing (active + historical tail).
+        The interest-items allow-list is kept. Use this to clear seed/demo data before the
+        live hourly scrape takes over. Irreversible. Type <code>RESET</code> to enable.
+      </p>
+      <div class="row" style="align-items:center;gap:12px;flex-wrap:wrap">
+        <input type="text" id="mkt-reset-confirm" placeholder="Type RESET" autocomplete="off" spellcheck="false" style="flex:0 0 auto">
+        <button class="btn small danger" id="mkt-reset-go" disabled style="margin-left:auto">Wipe market data</button>
+      </div>
+      <div id="mkt-reset-result" class="ingest-result"></div>
+    </div>
     <div class="card" id="ingest-log-card">
       <div class="row" style="align-items:center;margin-bottom:6px">
         <h2 style="flex:1;margin:0">Recent submissions</h2>
@@ -3329,6 +3576,7 @@ async function renderIngest() {
   wireBulkLeaderboards();
   wireBacklogReingest();
   wireLeaderboardReset();
+  wireMarketReset();
   document.querySelector('[data-act="refresh-ingest-log"]')
     .addEventListener("click", renderIngestLog);
   renderIngestLog();
@@ -3569,9 +3817,38 @@ function wireLeaderboardReset() {
   });
 }
 
+function wireMarketReset() {
+  const confirmEl = document.getElementById("mkt-reset-confirm");
+  const goBtn = document.getElementById("mkt-reset-go");
+  const resultEl = document.getElementById("mkt-reset-result");
+  if (!confirmEl) return;
+  const armed = () => confirmEl.value.trim().toUpperCase() === "RESET";
+  confirmEl.addEventListener("input", () => { goBtn.disabled = !armed(); });
+  goBtn.addEventListener("click", async () => {
+    if (!window.confirm("Wipe ALL stored market listings? This cannot be undone.")) return;
+    goBtn.disabled = true;
+    resultEl.className = "ingest-result";
+    resultEl.textContent = "Wiping…";
+    try {
+      const r = await API.call("/v1/market/reset", { method: "POST" });
+      resultEl.className = "ingest-result ok";
+      resultEl.innerHTML = `<strong>✓ Wiped.</strong> <code>${esc(JSON.stringify(r))}</code>`;
+      confirmEl.value = "";
+      toast("Market data wiped", "ok");
+      renderIngestLog();
+    } catch (ex) {
+      resultEl.className = "ingest-result err";
+      resultEl.textContent = (ex && ex.message) || String(ex);
+    } finally {
+      goBtn.disabled = !armed();
+    }
+  });
+}
+
 const INGEST_ENDPOINT_LABELS = {
   "/v1/leaderboards/insert": { label: "Leaderboards", cls: "ingest-log-lb" },
   "/v1/market/insert":       { label: "Market",       cls: "ingest-log-mkt" },
+  "/v1/market/reset":        { label: "Market reset", cls: "ingest-log-mkt" },
   "/v1/rotations/challenge/insert":   { label: "Challenge",   cls: "ingest-log-chl" },
   "/v1/rotations/chaos-chest/insert": { label: "Chaos Chest", cls: "ingest-log-cc" },
 };
@@ -3596,6 +3873,10 @@ function fmtIngestSummary(endpoint, summary) {
       if (summary.ignored_not_in_list != null) parts.push(`skipped ${summary.ignored_not_in_list}`);
       if (summary.bytes != null)               parts.push(`${(summary.bytes / 1024).toFixed(0)} KB`);
       return parts.join(" · ");
+    }
+    case "/v1/market/reset": {
+      if (summary.removed != null) return `${summary.removed.toLocaleString()} listing(s) wiped`;
+      return "";
     }
     case "/v1/rotations/challenge/insert":
     case "/v1/rotations/chaos-chest/insert": {

@@ -209,6 +209,18 @@ async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
     }
 
 
+# --- reset ------------------------------------------------------------------
+
+
+async def reset_listings() -> int:
+    """Wipe every stored listing (returns the prior row count). Master-only
+    maintenance action - e.g. clearing seed/demo data before the live hourly
+    scrape takes over. The interest-items allow-list is untouched."""
+    n = await pg_store.reset()
+    logger.warning("market: listings wiped by admin (%d rows removed)", n)
+    return n
+
+
 # --- read -------------------------------------------------------------------
 
 

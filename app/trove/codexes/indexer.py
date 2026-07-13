@@ -47,7 +47,7 @@ logger = logging.getLogger("kiwi.trove.codexes")
 # resolved strings, …). On the next sync the indexer force-rebuilds any branch whose
 # stored version is behind, so a parser change reaches the data WITHOUT a game update
 # or a manual rebuild - the steady-state delta only re-touches changed game files.
-CODEX_PARSER_VERSION = 11  # v11: recipe providers FIXED - benches list bare `recipe_*` tokens (not recipes/ paths); match against known recipe ids. 619 recipes -> 66 benches (was 0)
+CODEX_PARSER_VERSION = 12  # v12: decode_identity now finds the identity component even when it isn't the FIRST sub-message (lootboxes/pouches/eggs open with transform/loot components) - fixes items showing a raw path-stem name (e.g. "Dragondiamondpouch" -> "Diamond Dragonite Pouch") + their category/tradable
 
 # Bumped when the rig extractor or its coverage changes - forces a rig-only rebuild on
 # the next sync WITHOUT a (heavier) full codex re-parse.

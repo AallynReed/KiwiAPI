@@ -38,6 +38,9 @@ CREATE INDEX IF NOT EXISTS codex_entry_type_name ON codex_entry (branch, codex_t
 CREATE INDEX IF NOT EXISTS codex_entry_category  ON codex_entry (branch, codex_type, category);
 -- Source-hash lookups (invalidation / "which entries came from this blob").
 CREATE INDEX IF NOT EXISTS codex_entry_sha       ON codex_entry (content_sha256);
+-- Exact case-insensitive name lookup -> blueprint (the /market thumbnail bridge,
+-- reversing a listing's display name back to its codex model).
+CREATE INDEX IF NOT EXISTS codex_entry_lname_bp  ON codex_entry (branch, lower(name)) INCLUDE (blueprint);
 
 -- Tracks which parser version last (re)built each branch. When the deployed parser
 -- is newer than this, the indexer force-rebuilds the branch on the next sync - so a

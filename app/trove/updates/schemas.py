@@ -82,13 +82,15 @@ class FileMeta(BaseModel):
 
 class FileView(BaseModel):
     """In-browser preview of one file. ``text`` is the UTF-8 content when the file
-    is small + text-like; otherwise ``viewable`` is false and ``reason`` says why
-    ("too_large" / "binary" / "missing") so the client falls back to the download."""
+    is small + text-like; otherwise ``viewable`` is false and ``kind`` tells the
+    client how to render it ("text" / "image" / "binary" / "too_large" / "missing").
+    ``reason`` mirrors ``kind`` for the non-text cases (kept for older clients)."""
     branch: str
     path: str
     size: int
     content_sha256: str
     viewable: bool
+    kind: str | None = None
     reason: str | None = None
     truncated: bool = False
     text: str | None = None

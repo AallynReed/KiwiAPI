@@ -135,6 +135,10 @@
                     </div>
                     <div class="up-detail-file" id="up-detail-file" hidden>
                         <div class="up-detail-head">
+                            <button type="button" class="up-detail-back" id="up-detail-back" hidden>
+                                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                                <span data-i18n>Back</span>
+                            </button>
                             <div class="up-detail-title-wrap">
                                 <h2 class="up-detail-title" id="up-detail-title"></h2>
                                 <p class="up-detail-meta" id="up-detail-meta"></p>
@@ -145,11 +149,37 @@
                                 <span data-i18n>Latest</span>
                             </a>
                         </div>
-                        <!-- In-browser preview of small text files (populated by
-                             updates.js from /site/updates/<branch>/file/view). -->
+                        <!-- In-browser preview (populated by updates.js from
+                             /site/updates/<branch>/file/view): text in a <pre>,
+                             images inline, small binaries in a hex viewer. -->
                         <div class="up-preview" id="up-preview" hidden>
                             <h3 class="up-detail-subhead" data-i18n>Preview</h3>
                             <pre class="up-preview-pre" id="up-preview-pre" hidden></pre>
+                            <figure class="up-preview-image" id="up-preview-image" hidden>
+                                <img id="up-preview-img" alt="" decoding="async">
+                                <figcaption class="up-preview-imgcap" id="up-preview-imgcap"></figcaption>
+                            </figure>
+                            <!-- DDS textures: decoded to this canvas client-side, with a
+                                 "download as PNG" affordance since the browser can't save DDS. -->
+                            <figure class="up-preview-image up-preview-dds" id="up-preview-dds" hidden>
+                                <canvas id="up-preview-canvas"></canvas>
+                                <figcaption class="up-preview-imgcap">
+                                    <span id="up-preview-ddscap"></span>
+                                    <button type="button" class="up-preview-pngbtn" id="up-preview-png">
+                                        <i class="fa-solid fa-download" aria-hidden="true"></i>
+                                        <span data-i18n>Download as PNG</span>
+                                    </button>
+                                </figcaption>
+                            </figure>
+                            <!-- .blueprint voxel models: open the shared 3D turntable viewer. -->
+                            <div class="up-preview-model" id="up-preview-model" hidden>
+                                <button type="button" class="up-preview-3dbtn" id="up-preview-3d">
+                                    <i class="fa-solid fa-cube" aria-hidden="true"></i>
+                                    <span data-i18n>View 3D model</span>
+                                </button>
+                                <span class="up-preview-note" data-i18n>Voxel model — drag to rotate, scroll to zoom.</span>
+                            </div>
+                            <pre class="up-preview-hex" id="up-preview-hex" hidden></pre>
                             <p class="up-preview-note" id="up-preview-note" hidden></p>
                         </div>
                         <h3 class="up-detail-subhead" data-i18n>Version history</h3>
@@ -232,10 +262,18 @@
 
     {% include "partials/footer.html" %}
 
+    <!-- DDS decoder (ES module) exposed as a global so the classic updates.js
+         can decode .dds textures to a canvas + export them as PNG. -->
+    <script type="module">
+        import { decodeDDS } from '/static/pkfx/dds.js';
+        window.decodeDDS = decodeDDS;
+        document.dispatchEvent(new Event('btt-dds-ready'));
+    </script>
     <script src="/static/app.min.js"></script>
     <script src="/static/_site_util.min.js"></script>
     <script src="/static/i18n.min.js"></script>
     <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/blueprint_viewer.min.js" defer></script>
     <script src="/static/updates.min.js" defer></script>
 </body>
 </html>

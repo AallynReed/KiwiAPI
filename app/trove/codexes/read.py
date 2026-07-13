@@ -52,3 +52,11 @@ async def all_recipes(branch: str) -> list[dict]:
     if not settings.postgres_enabled:
         return []
     return await pg_store.all_recipes(branch)
+
+
+async def blueprints_for_names(branch: str, names: list[str]) -> dict[str, str]:
+    """``lower(name) -> blueprint`` for names that map to exactly one blueprint
+    (see ``pg_store.blueprints_for_names``). Empty when Postgres is disabled."""
+    if not settings.postgres_enabled:
+        return {}
+    return await pg_store.blueprints_for_names(branch, names)

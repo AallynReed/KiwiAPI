@@ -519,15 +519,38 @@ img.nav-account-avatar {
 .nav-dropdown-panel a.active { color: var(--accent-blue); background: var(--bg-card-hi); }
 .nav-dropdown-panel a.active i { color: var(--accent-blue); }
 
-/* Mega-menu: the "Pages" panel grows into labeled, multi-column sections so a
-   long page list stays scannable instead of a single 13-row column. Reuses the
-   .nav-dropdown open/close machinery; only the panel's internals change. */
+/* Mega-menu: the "Pages" panel spreads its labeled sections across one wide
+   row of columns rather than stacking them 2-up - that kept a tall group (the
+   old 10-item Reference list) stretching the panel to ~770px. Each section is
+   its own column, so panel height is only as tall as the longest single group
+   (~5 items) and the width grows sideways instead.
+
+   Pinned to the viewport (position: fixed) and aligned to the navbar's right
+   edge rather than to the Pages trigger. The trigger's own position drifts with
+   the account widget's width (signed-in names are wider), so anchoring to it
+   made a wide panel spill off the left at narrow widths. Fixed + a container-
+   aware right offset keeps the panel on screen in every state; it caps to the
+   viewport width and wraps to fewer columns when there isn't room for five. */
 .nav-dropdown-panel.nav-mega {
-  grid-template-columns: repeat(2, minmax(195px, 1fr));
-  gap: 6px 14px;
-  padding: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 18px;
+  padding: 16px;
+  position: fixed;
+  top: 80px;
+  left: auto;
+  right: max(16px, calc((100vw - 1320px) / 2 + 24px));
   width: max-content;
-  max-width: min(560px, 92vw);
+  max-width: min(940px, calc(100vw - 32px));
+  transform: translateY(-6px) scale(.96);
+}
+.nav-dropdown.open .nav-dropdown-panel.nav-mega {
+  transform: translateY(0) scale(1);
+}
+.nav-dropdown-panel.nav-mega .nav-mega-group {
+  flex: 1 1 160px;
+  min-width: 158px;
 }
 .nav-mega-group { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .nav-mega-title {
@@ -1804,15 +1827,24 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 
   /* Mega-menu in the drawer: single column, sections stacked with their
      headers, and enough height for the whole (grouped) page list so the
-     bottom entries aren't clipped the way the old flat 13-item list was. */
+     bottom entries aren't clipped the way the old flat 13-item list was.
+     Overrides the desktop right-anchor + row-of-columns layout back to a
+     plain stacked column for the hamburger. */
   .nav-dropdown-panel.nav-mega {
-    grid-template-columns: 1fr;
+    position: static;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
     width: 100%;
     max-width: none;
     padding: 4px 0 4px 12px;
     gap: 2px;
   }
-  .nav-dropdown.open .nav-dropdown-panel.nav-mega { max-height: 1400px; }
+  .nav-dropdown-panel.nav-mega .nav-mega-group { flex: none; min-width: 0; }
+  .nav-dropdown.open .nav-dropdown-panel.nav-mega { transform: none; max-height: 1400px; }
   .nav-mega-title { margin-top: 8px; }
   .nav-mega-group:first-child .nav-mega-title { margin-top: 2px; }
 

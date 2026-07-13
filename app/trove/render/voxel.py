@@ -36,6 +36,14 @@ class BlueprintError(ValueError):
     """Raised when bytes are not a decodable kiwib blueprint."""
 
 
+class BlueprintEmpty(BlueprintError):
+    """Blueprint is a placeholder / has no voxels to render."""
+
+
+class BlueprintTooLarge(BlueprintError):
+    """Blueprint has more voxels than the preview cap allows."""
+
+
 # --------------------------------------------------------------------------- #
 # kiwib decode (v3 / v4 / v5)  -- ground truth from TROVE_BLUEPRINT_FORMAT.md
 # --------------------------------------------------------------------------- #
@@ -179,6 +187,39 @@ def to_render_voxels(decoded: list[dict]) -> dict:
     for v in decoded:
         out[(v["x"], v["y"], v["z"])] = material_for(v["r"], v["g"], v["b"], v["w"], v["type"])
     return out
+
+
+# Voxel-kind -> compact int code the web 3D viewer (blueprint_viewer.js) consumes.
+KIND_CODE = {"S": 0, "G": 1, "E": 2, "GE": 3}   # solid / glass / glow / glow-glass
+RENDER_VOXEL_CAP = 250_000   # guard the viewer against pathologically huge models
+
+
+def pack_blueprint(raw: bytes, path: str, *, cap: int = RENDER_VOXEL_CAP) -> dict:
+    """Decode raw ``.blueprint`` bytes into the compact parallel-array voxel payload
+    the web 3D viewer (blueprint_viewer.js) consumes directly.
+
+    Raises ``BlueprintEmpty`` for placeholders / zero-voxel parts, ``BlueprintTooLarge``
+    past ``cap``, and ``BlueprintError`` when the bytes aren't a decodable blueprint.
+    CPU-bound - call via ``asyncio.to_thread``."""
+    if is_empty_blueprint(raw):
+        raise BlueprintEmpty("This blueprint is an empty placeholder (no voxels to show).")
+    voxels = to_render_voxels(decode(raw))
+    if not voxels:
+        raise BlueprintEmpty("That blueprint has no voxels.")
+    if len(voxels) > cap:
+        raise BlueprintTooLarge(f"This model is too large to preview ({len(voxels):,} voxels).")
+    xs: list[int] = []; ys: list[int] = []; zs: list[int] = []
+    rgb: list[int] = []; kind: list[int] = []; level: list[int] = []
+    for (x, y, z), (r, g, b, k, lv) in voxels.items():
+        xs.append(x); ys.append(y); zs.append(z)
+        rgb.append((r << 16) | (g << 8) | b)
+        kind.append(KIND_CODE.get(k, 0)); level.append(lv)
+    return {
+        "path": path,
+        "count": len(xs),
+        "size": [max(xs) - min(xs) + 1, max(ys) - min(ys) + 1, max(zs) - min(zs) + 1],
+        "x": xs, "y": ys, "z": zs, "rgb": rgb, "kind": kind, "level": level,
+    }
 
 
 # --------------------------------------------------------------------------- #

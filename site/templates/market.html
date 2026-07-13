@@ -16,7 +16,7 @@
     <link rel="apple-touch-icon" href="/static/assets/favicon.png">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Better Trove Tools">
-    <meta property="og:title" content="Trove marketplace (Beta)">
+    <meta property="og:title" content="Trove marketplace">
     <meta property="og:description" content="Browse Trove's in-game marketplace listings: prices, stacks, recent activity.">
     <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -38,11 +38,9 @@
             <div class="mkt-hero-inner">
                 <p class="mkt-eyebrow">
                     <span>/market</span>
-                    <span class="mkt-beta-pill" data-i18n>Beta</span>
                 </p>
                 <h1 class="mkt-title" data-i18n>Trove marketplace</h1>
                 <p class="mkt-subtitle" data-i18n>Live prices and stacks from the in-game marketplace. The bot scrapes every hour; listings live for 7 days and disappear when they expire.</p>
-                <p class="mkt-beta-note" data-i18n>This page is in early beta. The dataset behind it is a recent demo capture while we ramp the bot's hourly market scrape on live infra - prices won't match what you see in-game right now.</p>
             </div>
         </section>
 
@@ -99,8 +97,11 @@
 
                 <div id="mkt-detail-body" hidden>
                     <header class="mkt-detail-head">
-                        <h2 class="mkt-detail-title" id="mkt-detail-title"></h2>
-                        <p class="mkt-detail-meta" id="mkt-detail-meta"></p>
+                        <span class="mkt-detail-thumb" id="mkt-detail-thumb" hidden></span>
+                        <div class="mkt-detail-headings">
+                            <h2 class="mkt-detail-title" id="mkt-detail-title"></h2>
+                            <p class="mkt-detail-meta" id="mkt-detail-meta"></p>
+                        </div>
                     </header>
 
                     <!-- Summary stats card -->

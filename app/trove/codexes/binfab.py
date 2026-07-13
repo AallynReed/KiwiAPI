@@ -107,36 +107,80 @@ def parse_flat(data: bytes, start: int | None = None) -> tuple[list[dict], int]:
     return fields, pos
 
 
+def _marker_blocks(data: bytes) -> list[dict[tuple[str, int], object]]:
+    """Split the flat field stream into its marker-delimited component blocks.
+
+    Each block is ``{(kind, field): value}`` where kind is ``"s"`` (string, wt 8) or
+    ``"v"`` (varint, wt 0/2), first-wins per key. Fields before the first marker are
+    the entity header and ignored. Unlike ``parse_flat`` this walks the WHOLE stream
+    (not just the first component), so a later identity block is reachable."""
+    pos = content_start(data)
+    n = len(data)
+    blocks: list[dict[tuple[str, int], object]] = []
+    cur: dict[tuple[str, int], object] | None = None
+    while pos < n:
+        try:
+            key, pos = read_uleb(data, pos)
+        except (IndexError, ValueError):
+            break
+        field, wt = key >> 4, key & 0xF
+        try:
+            if wt in (0, 2):
+                value, pos = read_uleb(data, pos)
+                if cur is not None:
+                    cur.setdefault(("v", field), unzig(value) if wt == 2 else value)
+            elif wt == 4:
+                pos += 4
+            elif wt == 6:
+                pos += 8
+            elif wt == 8:
+                length, pos = read_uleb(data, pos)
+                if pos + length > n:
+                    break
+                raw = data[pos:pos + length]
+                pos += length
+                if cur is not None:
+                    text = raw.decode("latin1") if raw and all(32 <= b < 127 for b in raw) else None
+                    cur.setdefault(("s", field), text)
+            else:                              # a wt we don't decode = a component marker
+                cur = {}
+                blocks.append(cur)
+        except (IndexError, struct.error):
+            break
+    return blocks
+
+
 def decode_identity(data: bytes) -> dict | None:
-    """The identity/metadata component every entity prefab opens with.
+    """The identity/metadata component of an entity prefab.
 
     f1 str = name loc key ($prefabs_..._name) · f2 str = display category ·
-    f5 str = description loc key · f14 == 2 => Tradable. None if no identity run
+    f5 str = description loc key · f14 == 2 => Tradable. None if no identity component
     (recipes / collection tables / locale string-tables have other structures).
-    """
-    fields, _ = parse_flat(data)
-    markers = 0
-    inside: dict[tuple[str, int], object] = {}
-    for f in fields:
-        if f.get("marker"):
-            markers += 1
-            if markers > 1:
-                break
-            continue
-        if markers != 1:
-            continue
-        kind = "s" if "str" in f else ("v" if "value" in f else None)
-        if kind:
-            inside.setdefault((kind, f["field"]), f.get("str", f.get("value")))
-    if not inside:
+
+    The identity is NOT always the first sub-component: "physical" items (lootboxes,
+    pouches, dragon eggs, some mounts) open with transform/model/loot components, so
+    their identity block sits further in. We take the first component whose field-1
+    string is a ``$``-prefixed loc key. Simple items (most crafting mats/styles) keep
+    the identity in the first block, so that fast path is preserved exactly - the scan
+    only kicks in when the first block carries no name key (previously => None, and the
+    codex fell back to the raw path stem, e.g. "Dragondiamondpouch")."""
+    blocks = _marker_blocks(data)
+    if not blocks:
         return None
-    trade = inside.get(("v", 14))
+    ident = blocks[0]
+    if not ident.get(("s", 1)):
+        ident = next((b for b in blocks
+                      if isinstance(b.get(("s", 1)), str) and b[("s", 1)].startswith("$")),
+                     ident)
+    if not ident:
+        return None
+    trade = ident.get(("v", 14))
     return {
-        "name_key": inside.get(("s", 1)),
-        "category": inside.get(("s", 2)),
-        "desc_key": inside.get(("s", 5)),
+        "name_key": ident.get(("s", 1)),
+        "category": ident.get(("s", 2)),
+        "desc_key": ident.get(("s", 5)),
         "tradable": (trade == 2) if trade is not None else None,
-        "flags": {fnum: val for (kind, fnum), val in inside.items() if kind == "v"},
+        "flags": {fnum: val for (kind, fnum), val in ident.items() if kind == "v"},
     }
 
 

@@ -274,6 +274,62 @@ async def list_categories(branch: str, codex_type: str | None = None) -> list[di
     return [{"category": r["category"], "count": int(r["count"])} for r in rows]
 
 
+def _item_role_rank(path: str) -> int:
+    """Lower = more representative of the *tradable item* of a given name. A display
+    name can sit on several prefab roles - the plain ``item/`` token (its inventory
+    icon), the equip-variant ``item/mount/`` form, the ``collections/`` body (the 3D
+    model you receive), plus ``_debug``/``_notrade`` flag variants. A market listing
+    sells the item, so the item token's icon is the right thumbnail; the others are
+    only used when nothing better carries the name. Pure - unit-tested without a DB."""
+    p = (path or "").lower()
+    is_item = p.startswith("prefabs/item/")
+    if is_item and "/mount/" not in p:
+        # Base item token beats its own _debug/_notrade alt-flag copies.
+        return 1 if ("_debug" in p or "_notrade" in p) else 0
+    if is_item:                                  # prefabs/item/mount/… (equip variant)
+        return 2
+    if p.startswith("prefabs/collections/"):     # the 3D collection/mount body
+        return 3
+    return 4
+
+
+async def blueprints_for_names(branch: str, names: list[str]) -> dict[str, str]:
+    """Map each requested display name (case-insensitive) to the blueprint that best
+    represents the tradable item of that name.
+
+    A name that appears on several prefab roles resolves to the highest-ranked one
+    (see ``_item_role_rank``) - so a piñata renders its inventory icon, not its mount
+    body. A name with no blueprinted entry is omitted, and one whose *top* role still
+    disagrees on the blueprint (two genuinely different items share a name and role)
+    is dropped as ambiguous: a wrong thumbnail is worse than none. Keys are the
+    lower-cased names for stable lookup.
+    """
+    if not names:
+        return {}
+    lowered = list({n.lower() for n in names})
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT lower(name) AS lname, blueprint, path FROM codex_entry "
+            "WHERE branch = $1 AND blueprint IS NOT NULL AND blueprint <> '' "
+            "AND lower(name) = ANY($2::text[])",
+            branch, lowered,
+        )
+    # Collect every (role rank, blueprint) candidate per name...
+    cands: dict[str, list[tuple[int, str]]] = {}
+    for r in rows:
+        cands.setdefault(r["lname"], []).append(
+            (_item_role_rank(r["path"]), r["blueprint"]))
+    # ...then take the best-ranked role; keep it only if that role is unanimous.
+    out: dict[str, str] = {}
+    for lname, items in cands.items():
+        best = min(rank for rank, _ in items)
+        top_bps = {bp for rank, bp in items if rank == best}
+        if len(top_bps) == 1:
+            out[lname] = next(iter(top_bps))
+        # else: conflicting blueprints even at the top role -> ambiguous, omit
+    return out
+
+
 async def get_entry(branch: str, codex_type: str, path: str) -> dict | None:
     """A single entry by ``(branch, codex_type, path)``."""
     async with acquire() as con:

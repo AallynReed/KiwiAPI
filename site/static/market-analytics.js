@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /market - Analytics tab (Beta)
+   /market - Analytics tab
    ───────────────────────────────────────────────────────────────────────
    A cross-market view layered onto the /market page: biggest movers,
    underpriced deals (flip finder), and a per-item price + supply timeline
@@ -334,7 +334,7 @@
   function fmtNum(n) { return Number(n || 0).toLocaleString(); }
   function fmtDate(ts) {
     const d = new Date(ts * 1000);
-    return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+    return `${d.getMonth() + 1}/${d.getDate()}`;
   }
   function t(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }

@@ -367,6 +367,26 @@ tr.clickable:hover td { background: var(--panel-2); }
 .stat .n { font-size: 1.5rem; font-weight: 700; }
 .stat .l { font-size: .8rem; color: var(--muted); }
 
+/* --- Site-analytics charts ------------------------------------------------ */
+
+.pv-legend { display: flex; align-items: center; gap: 16px; margin: 14px 0 4px; font-size: .8rem; color: var(--muted); }
+.pv-key { display: inline-flex; align-items: center; gap: 6px; }
+.pv-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.pv-gran { margin-left: auto; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--faint); }
+.pv-chart { display: block; width: 100%; height: auto; overflow: visible; }
+.pv-chart circle[fill="transparent"] { cursor: crosshair; }
+
+.pv-bars { display: flex; flex-direction: column; gap: 6px; }
+.pv-bar-row { display: grid; grid-template-columns: minmax(0, 240px) 1fr auto; align-items: center; gap: 10px; }
+.pv-bar-label { font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.pv-bar-track { background: var(--panel-2); border-radius: 4px; height: 14px; overflow: hidden; }
+.pv-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+.pv-bar-val { font-size: .82rem; font-variant-numeric: tabular-nums; color: var(--text); min-width: 48px; text-align: right; }
+
+@media (max-width: 640px) {
+  .pv-bar-row { grid-template-columns: minmax(0, 120px) 1fr auto; }
+}
+
 /* --- Toast ---------------------------------------------------------------- */
 
 .toast {

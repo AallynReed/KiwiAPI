@@ -14,9 +14,15 @@ from app.core.pagination import paginate
 from app.trove.updates.cas import ContentStore
 from app.trove.updates.models import UpdateBranch, UpdateChange, UpdateState, UpdateVersion
 
-# Cap for the in-browser file viewer: only files at/under this size are read and
-# returned as text, so a click never dumps a huge blob into the page.
-VIEW_MAX_BYTES = 512 * 1024
+# Cap for the in-browser file viewer: text and binary (hex) previews are only
+# produced for files at/under this size, so a click never dumps a huge blob into
+# the page. Images render through an <img> tag (the browser streams the bytes),
+# so they aren't bound by this cap.
+VIEW_MAX_BYTES = 1024 * 1024  # 1 MB
+
+# Extensions the browser can render natively in an <img>. DDS is handled
+# separately (decoded client-side to a canvas) since browsers can't render it.
+IMAGE_EXTS = frozenset({"png", "jpg", "jpeg", "gif", "webp", "bmp", "ico", "apng"})
 
 
 def directory_listing(entries: list[dict], prefix: str) -> list[dict]:
@@ -80,9 +86,18 @@ async def latest_version(branch: str) -> UpdateVersion | None:
 
 
 async def read_file_text(branch: str, path: str, max_bytes: int = VIEW_MAX_BYTES) -> dict | None:
-    """Viewer payload for one file: UTF-8 ``text`` when it's small + text-like, else
-    ``viewable: False`` with a ``reason`` ("too_large" / "binary" / "missing"). None
-    when the path isn't in the latest tree. Sync blob I/O is off-loaded to a thread."""
+    """Viewer payload for one file, classified by ``kind`` so the client knows how
+    to render it:
+
+    * ``text``      - UTF-8 ``text`` for small, text-like files.
+    * ``image``     - a browser-native image; render via ``<img>`` (no bytes here).
+    * ``binary``    - small non-text file; the client fetches the raw bytes and
+      renders a hex viewer.
+    * ``too_large`` - non-image file above ``max_bytes``; download to inspect.
+    * ``missing``   - blob absent from the store.
+
+    ``reason`` mirrors ``kind`` for the non-text cases (kept for older clients).
+    None when the path isn't in the latest tree. Sync blob I/O runs in a thread."""
     meta = await get_file_meta(branch, path)
     if meta is None:
         return None
@@ -90,19 +105,29 @@ async def read_file_text(branch: str, path: str, max_bytes: int = VIEW_MAX_BYTES
         "branch": branch, "path": path, "size": meta["size"],
         "content_sha256": meta["content_sha256"], "truncated": False, "text": None,
     }
+    ext = path.rsplit(".", 1)[-1].lower() if "." in path.rsplit("/", 1)[-1] else ""
+    # Images render straight through an <img> tag - no size cap, no blob read here.
+    if ext in IMAGE_EXTS:
+        return {**base, "viewable": False, "kind": "image", "reason": "image"}
+    # DDS textures decode to a canvas client-side; .blueprint models open in the 3D
+    # viewer. Both fetch their own bytes/payload, so no blob read or size cap here.
+    if ext == "dds":
+        return {**base, "viewable": False, "kind": "dds", "reason": "dds"}
+    if ext == "blueprint":
+        return {**base, "viewable": False, "kind": "blueprint", "reason": "blueprint"}
     if meta["size"] > max_bytes:
-        return {**base, "viewable": False, "reason": "too_large"}
+        return {**base, "viewable": False, "kind": "too_large", "reason": "too_large"}
     blob = ContentStore(settings.trove_update_store_dir).path_for(meta["content_sha256"])
     if not blob.is_file():
-        return {**base, "viewable": False, "reason": "missing"}
+        return {**base, "viewable": False, "kind": "missing", "reason": "missing"}
     data = await asyncio.to_thread(blob.read_bytes)
     if b"\x00" in data:                       # NUL byte -> treat as binary
-        return {**base, "viewable": False, "reason": "binary"}
+        return {**base, "viewable": False, "kind": "binary", "reason": "binary"}
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError:
-        return {**base, "viewable": False, "reason": "binary"}
-    return {**base, "viewable": True, "reason": None, "text": text}
+        return {**base, "viewable": False, "kind": "binary", "reason": "binary"}
+    return {**base, "viewable": True, "kind": "text", "reason": None, "text": text}
 
 
 async def resolve_version(

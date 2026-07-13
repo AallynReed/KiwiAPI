@@ -1260,10 +1260,6 @@ async def release_with_project(
 # 3D viewer: list the blueprint paths, and decode one to a compact voxel payload
 # (reusing the proven catalog-render decoder in app/trove/render/voxel.py).
 
-_BLUEPRINT_VOXEL_CAP = 250_000   # guard the viewer against pathologically huge models
-_KIND_CODE = {"S": 0, "G": 1, "E": 2, "GE": 3}   # solid / glass / glow / glow-glass
-
-
 def _list_blueprints_sync(tmod_bytes: bytes) -> dict:
     """Sync: the release's non-empty blueprint items + their basenames (``fns``). Rig
     resolution happens in the async caller (it needs Postgres)."""
@@ -1601,9 +1597,14 @@ async def get_release_vfx_asset(release: ModRelease, ref: str) -> tuple[bytes, s
 
 
 def _decode_blueprint_payload(tmod_bytes: bytes, want_path: str) -> dict:
-    """Sync: find ``want_path`` in the .tmod, decode it, and pack the voxels into
-    parallel arrays (compact JSON the web viewer consumes directly)."""
-    from app.trove.render.voxel import BlueprintError, decode, is_empty_blueprint, to_render_voxels
+    """Sync: find ``want_path`` in the .tmod and pack its voxels into the compact
+    parallel-array payload the web viewer consumes (shared with /updates)."""
+    from app.trove.render.voxel import (
+        BlueprintEmpty,
+        BlueprintError,
+        BlueprintTooLarge,
+        pack_blueprint,
+    )
 
     parsed = tmod.read_tmod(tmod_bytes)
     want = want_path.strip().lower()
@@ -1612,30 +1613,14 @@ def _decode_blueprint_payload(tmod_bytes: bytes, want_path: str) -> dict:
     if target is None:
         raise _not_found("No such blueprint in this release")
     raw = base64.b64decode(target["content_base64"])
-    if is_empty_blueprint(raw):
-        raise APIError(422, ErrorCode.bad_request,
-                       "This blueprint is an empty placeholder (no voxels to show).")
     try:
-        voxels = to_render_voxels(decode(raw))
+        return pack_blueprint(raw, target["path"])
+    except BlueprintTooLarge as e:
+        raise APIError(413, ErrorCode.bad_request, str(e))
+    except BlueprintEmpty as e:
+        raise APIError(422, ErrorCode.bad_request, str(e))
     except BlueprintError as e:
         raise APIError(422, ErrorCode.bad_request, f"Couldn't read that blueprint: {e}")
-    if not voxels:
-        raise APIError(422, ErrorCode.bad_request, "That blueprint has no voxels.")
-    if len(voxels) > _BLUEPRINT_VOXEL_CAP:
-        raise APIError(413, ErrorCode.bad_request,
-                       f"This model is too large to preview ({len(voxels):,} voxels).")
-    xs: list[int] = []; ys: list[int] = []; zs: list[int] = []
-    rgb: list[int] = []; kind: list[int] = []; level: list[int] = []
-    for (x, y, z), (r, g, b, k, lv) in voxels.items():
-        xs.append(x); ys.append(y); zs.append(z)
-        rgb.append((r << 16) | (g << 8) | b)
-        kind.append(_KIND_CODE.get(k, 0)); level.append(lv)
-    return {
-        "path": target["path"],
-        "count": len(xs),
-        "size": [max(xs) - min(xs) + 1, max(ys) - min(ys) + 1, max(zs) - min(zs) + 1],
-        "x": xs, "y": ys, "z": zs, "rgb": rgb, "kind": kind, "level": level,
-    }
 
 
 async def decode_release_blueprint(release: ModRelease, path: str) -> dict:

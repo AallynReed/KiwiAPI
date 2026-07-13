@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /market - page logic (Beta)
+   /market - page logic
    ───────────────────────────────────────────────────────────────────────
    Sidebar of items (filterable client-side), main pane with summary
    stats + paginated listings table for the selected item. Backed by
@@ -17,6 +17,8 @@
 
   const state = {
     items: [],            // [{name}, ...] from /site/market/items
+    images: {},           // item name -> blueprint path (thumbnail source)
+    imageBranch: 'live-us',
     itemFilter: '',
     selected: null,       // currently selected item name
     summary: null,        // {min/max/avg/median/count/...} for selected
@@ -43,6 +45,7 @@
   const $detailBody = $('mkt-detail-body');
   const $detailTitle = $('mkt-detail-title');
   const $detailMeta = $('mkt-detail-meta');
+  const $detailThumb = $('mkt-detail-thumb');
   const $sumCount = $('mkt-sum-count');
   const $sumMedian = $('mkt-sum-median');
   const $sumMin = $('mkt-sum-min');
@@ -68,8 +71,15 @@
   });
 
   async function init() {
-    const data = await fetchJSON('/site/market/items');
+    // Items and their thumbnail map load in parallel; the image map is
+    // cosmetic, so a failure there degrades to a plain (image-less) list.
+    const [data, imgData] = await Promise.all([
+      fetchJSON('/site/market/items'),
+      fetchJSON('/site/market/item-images').catch(() => ({ images: {} })),
+    ]);
     state.items = (data.items || []).map((name) => ({ name }));
+    state.images = imgData.images || {};
+    if (imgData.branch) state.imageBranch = imgData.branch;
     renderItems();
 
     const hash = parseHash();
@@ -79,6 +89,19 @@
     if (startName) await selectItem(startName);
 
     wireEvents();
+  }
+
+  // Thumbnail for an item, reusing the codex blueprint→PNG renderer. Only items
+  // we could pin to a codex model have an entry in state.images; the rest render
+  // without a thumb. A stale/unrenderable blueprint 404s and the <img> removes
+  // its own wrapper via onerror, so the layout never keeps an empty box.
+  function thumbHTML(name, size, cls) {
+    const bp = state.images[name];
+    if (!bp) return '';
+    const src = '/site/codexes/render?blueprint=' + encodeURIComponent(bp)
+      + '&branch=' + encodeURIComponent(state.imageBranch) + '&dim=' + size;
+    return `<span class="${cls}"><img loading="lazy" decoding="async" alt=""
+      src="${esc(src)}" onerror="this.closest('.${cls}').remove()"></span>`;
   }
 
   // ─── Items sidebar ─────────────────────────────────────────────────
@@ -106,6 +129,7 @@
     $items.innerHTML = visible.map((it) => `
       <button type="button" class="mkt-item${it.name === state.selected ? ' active' : ''}"
               data-name="${esc(it.name)}" title="${esc(it.name)}">
+        ${thumbHTML(it.name, 48, 'mkt-item-thumb')}
         <span class="mkt-item-name">${esc(it.name)}</span>
       </button>
     `).join('');
@@ -142,6 +166,19 @@
     // Swap empty-state → detail body.
     $detailEmpty.hidden = true;
     $detailBody.hidden = false;
+    if ($detailThumb) {
+      const bp = state.images[name];
+      if (bp) {
+        const src = '/site/codexes/render?blueprint=' + encodeURIComponent(bp)
+          + '&branch=' + encodeURIComponent(state.imageBranch) + '&dim=96';
+        $detailThumb.innerHTML = `<img loading="lazy" decoding="async" alt=""
+          src="${esc(src)}" onerror="this.closest('#mkt-detail-thumb').hidden = true">`;
+        $detailThumb.hidden = false;
+      } else {
+        $detailThumb.innerHTML = '';
+        $detailThumb.hidden = true;
+      }
+    }
     $detailTitle.textContent = name;
     $detailMeta.textContent = '';
     resetSummary();
@@ -500,13 +537,21 @@
     const d = new Date(unix * 1000);
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const pad = (n) => String(n).padStart(2, '0');
-    return `${months[d.getUTCMonth()]} ${d.getUTCDate()} ${pad(d.getUTCHours())}:00`;
+    return `${months[d.getMonth()]} ${d.getDate()} ${pad(d.getHours())}:00`;
   }
 
   function formatAbsolute(unix) {
     const d = new Date(unix * 1000);
     const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} ${tzAbbrev(d)}`;
+  }
+
+  function tzAbbrev(d) {
+    try {
+      const parts = new Intl.DateTimeFormat(undefined, { timeZoneName: 'short' }).formatToParts(d);
+      const tz = parts.find((p) => p.type === 'timeZoneName');
+      return (tz && tz.value) || 'local';
+    } catch (_) { return 'local'; }
   }
 
 

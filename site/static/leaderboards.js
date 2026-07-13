@@ -207,27 +207,35 @@
       startIdx = state.days.findIndex((d) => d.anchor != null);
     }
 
-    await selectDay(startIdx);
+    // Apply the initial hash with history writes suppressed, then canonicalise
+    // it as ONE replace so the initial load leaves no spurious back-stack entry.
+    _suppressHash = true;
+    try {
+      await selectDay(startIdx);
 
-    const initialBoard = hash.board != null && state.boards.find((b) => b.uuid === hash.board);
-    if (initialBoard) selectBoard(initialBoard.uuid);
+      const initialBoard = hash.board != null && state.boards.find((b) => b.uuid === hash.board);
+      if (initialBoard) selectBoard(initialBoard.uuid);
 
-    wireEvents();
+      wireEvents();
 
-    // Deep-link: reopen a shared player-history panel (#player=…). After boards
-    // load so renderPlayerHistory can resolve board names; fire-and-forget.
-    if (hash.player) {
-      $playerSearch.value = hash.player;
-      searchPlayer(hash.player);
+      // Deep-link: reopen a shared player-history panel (#player=…). After boards
+      // load so renderPlayerHistory can resolve board names; fire-and-forget.
+      if (hash.player) {
+        $playerSearch.value = hash.player;
+        searchPlayer(hash.player);
+      }
+
+      // Activate the requested tab AFTER boards are wired so the boards
+      // view is ready to render (or stay hidden) regardless of which tab
+      // the user lands on. If hash says cheaters, this triggers the
+      // first fetch.
+      if (hash.tab === 'cheaters' || hash.tab === 'clusters') {
+        switchTab(hash.tab);
+      }
+    } finally {
+      _suppressHash = false;
     }
-
-    // Activate the requested tab AFTER boards are wired so the boards
-    // view is ready to render (or stay hidden) regardless of which tab
-    // the user lands on. If hash says cheaters, this triggers the
-    // first fetch.
-    if (hash.tab === 'cheaters' || hash.tab === 'clusters') {
-      switchTab(hash.tab);
-    }
+    writeHash(false);
   }
 
   // 'cheaters' and 'clusters' are lazy-fetched on first activation and share
@@ -278,7 +286,7 @@
         pane.hidden = !active;
       }
     }
-    updateHash();
+    scheduleHash(true);
 
     // Both anti-cheat tabs are served by the same payload.
     if (name === 'cheaters' || name === 'clusters') ensureCheatersLoaded();
@@ -1162,7 +1170,7 @@
     state.selectedDayIdx = idx;
     state.anchor = day.anchor;
     renderDayPicker();  // refresh active state
-    updateHash();
+    scheduleHash(true);
     await loadBoards();
   }
 
@@ -1387,7 +1395,7 @@
       if (window.BTTi18n && window.BTTi18n.untrack) window.BTTi18n.untrack($mobileSelected);
       $mobileSelected.textContent = titleizeName(board.name);
     }
-    updateHash();
+    scheduleHash(true);
 
     // Refresh active state in sidebar.
     for (const btn of $boardList.querySelectorAll('[data-uuid]')) {
@@ -1513,7 +1521,7 @@
       el.addEventListener('click', () => {
         const name = el.dataset.player;
         $playerSearch.value = name;
-        searchPlayer(name);
+        searchPlayer(name, true);
       });
     }
   }
@@ -1542,19 +1550,23 @@
       : Number(score).toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
 
-  async function searchPlayer(name) {
+  // ``push`` forces a new history entry (explicit opens: a player-name click or
+  // Enter). Live debounced typing passes it falsy - the first open still pushes
+  // (going from no player), but refining an already-open panel just replaces.
+  async function searchPlayer(name, push) {
     const trimmed = (name || '').trim();
     if (!trimmed) {
       state.player = null;
-      updateHash();
+      scheduleHash(false);
       $playerPanel.hidden = true;
       hidePlayerChart();
       return;
     }
     // Mirror the open player into the URL hash so the panel is shareable +
-    // survives back/forward (replaceState, so this doesn't re-fire hashchange).
+    // survives Back/Forward.
+    const wasOpen = !!state.player;
     state.player = trimmed;
-    updateHash();
+    scheduleHash(push || !wasOpen);
     $playerPanel.hidden = false;
     $playerName.textContent = trimmed;
     $playerBody.innerHTML = `<p class="lb-loading" data-i18n>Loading…</p>`;
@@ -1622,22 +1634,19 @@
       clearTimeout(searchTimer);
       const val = $playerSearch.value.trim();
       // Hide the panel immediately if cleared; otherwise debounce 350ms.
-      if (!val) { $playerPanel.hidden = true; state.player = null; updateHash(); return; }
+      if (!val) { $playerPanel.hidden = true; state.player = null; scheduleHash(false); return; }
       searchTimer = setTimeout(() => searchPlayer(val), 350);
     });
     $playerSearch.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         clearTimeout(searchTimer);
-        searchPlayer($playerSearch.value.trim());
+        searchPlayer($playerSearch.value.trim(), true);
       }
     });
     $playerClose.addEventListener('click', () => {
-      $playerPanel.hidden = true;
-      $playerSearch.value = '';
-      hidePlayerChart();
-      state.player = null;
-      updateHash();
+      closePlayerPanel();
+      scheduleHash(false);
     });
 
     $mobileTrigger.addEventListener('click', () => {
@@ -1676,33 +1685,8 @@
       });
     }
 
-    // React to back/forward.
-    window.addEventListener('hashchange', async () => {
-      const hash = parseHash();
-      const desiredTab = (hash.tab === 'cheaters' || hash.tab === 'clusters')
-        ? hash.tab : 'boards';
-      if (desiredTab !== state.activeTab) switchTab(desiredTab);
-      if (hash.anchor && hash.anchor !== state.anchor) {
-        const idx = state.days.findIndex((d) => d.anchor === hash.anchor);
-        if (idx >= 0) await selectDay(idx);
-      }
-      if (hash.board != null && hash.board !== state.selectedUuid) {
-        const exists = state.boards.find((b) => b.uuid === hash.board);
-        if (exists) selectBoard(hash.board);
-      }
-      // Player history panel: open/replace or close to match the URL.
-      if ((hash.player || null) !== (state.player || null)) {
-        if (hash.player) {
-          $playerSearch.value = hash.player;
-          searchPlayer(hash.player);
-        } else {
-          $playerPanel.hidden = true;
-          $playerSearch.value = '';
-          hidePlayerChart();
-          state.player = null;
-        }
-      }
-    });
+    // Browser Back/Forward (and manual hash edits) → re-apply the hash to state.
+    window.addEventListener('hashchange', () => { reconcileFromHash(); });
 
     // Re-render the entries pane + day picker + subtitle + cheaters
     // panel on language switch so JS-injected chrome picks up the new
@@ -1731,7 +1715,16 @@
     return out;
   }
 
-  function updateHash() {
+  // The view (tab/day/board/player) lives in the hash so it's shareable AND
+  // traversable with the browser Back/Forward buttons. Each discrete navigation
+  // PUSHES a history entry; incremental/programmatic syncs REPLACE. Writes are
+  // coalesced through a 0ms timer so one action records a single entry, and
+  // suppressed entirely while state is being applied FROM the hash.
+  let _suppressHash = false;
+  let _hashTimer = null;
+  let _hashPush = false;
+
+  function hashString() {
     const parts = [];
     // Tab first so the URL reads naturally: #tab=cheaters or
     // #anchor=…&board=… on the boards view.
@@ -1743,8 +1736,70 @@
     // Open player is shareable too - encode it (names can carry spaces/symbols,
     // and =/& would otherwise break the hash's key=value parsing).
     if (state.player) parts.push(`player=${encodeURIComponent(state.player)}`);
-    const next = parts.length ? '#' + parts.join('&') : location.pathname;
-    history.replaceState(null, '', next);
+    return parts.length ? '#' + parts.join('&') : location.pathname;
+  }
+
+  function writeHash(push) {
+    const next = hashString();
+    const nextFrag = next.startsWith('#') ? next : '';
+    if (nextFrag === location.hash) return;   // unchanged - no dup entry
+    if (push) history.pushState(null, '', next);
+    else history.replaceState(null, '', next);
+  }
+
+  // Request a hash write; coalesces a synchronous burst into one entry.
+  function scheduleHash(push) {
+    if (_suppressHash) return;
+    if (push) _hashPush = true;
+    if (_hashTimer) return;
+    _hashTimer = setTimeout(() => {
+      _hashTimer = null;
+      const p = _hashPush; _hashPush = false;
+      writeHash(p);
+    }, 0);
+  }
+
+  // Deselect the current board (Back to a no-board entry).
+  function clearBoard() {
+    if (state.selectedUuid == null) return;
+    state.selectedUuid = null;
+    resetEntries();
+    for (const btn of $boardList.querySelectorAll('[data-uuid]')) btn.classList.remove('active');
+  }
+
+  // Close the player-history panel (shared by the ✕ button and Back).
+  function closePlayerPanel() {
+    $playerPanel.hidden = true;
+    $playerSearch.value = '';
+    hidePlayerChart();
+    state.player = null;
+  }
+
+  // Apply a parsed hash to state WITHOUT writing history back. Fully syncs every
+  // axis so Back/Forward also clears things the target entry doesn't have.
+  async function applyHash(h) {
+    const desiredTab = (h.tab === 'cheaters' || h.tab === 'clusters') ? h.tab : 'boards';
+    if (desiredTab !== state.activeTab) switchTab(desiredTab);
+    if (h.anchor && h.anchor !== state.anchor) {
+      const idx = state.days.findIndex((d) => d.anchor === h.anchor);
+      if (idx >= 0) await selectDay(idx);
+    }
+    const targetBoard = h.board != null ? h.board : null;
+    if (targetBoard !== state.selectedUuid) {
+      if (targetBoard != null && state.boards.find((b) => b.uuid === targetBoard)) selectBoard(targetBoard);
+      else if (targetBoard == null) clearBoard();
+    }
+    const targetPlayer = h.player || null;
+    if (targetPlayer !== (state.player || null)) {
+      if (targetPlayer) { $playerSearch.value = targetPlayer; searchPlayer(targetPlayer); }
+      else closePlayerPanel();
+    }
+  }
+
+  async function reconcileFromHash() {
+    _suppressHash = true;
+    try { await applyHash(parseHash()); }
+    finally { _suppressHash = false; }
   }
 
   // BTTi18n.t(s) translates JS-built strings; refresh() re-translates

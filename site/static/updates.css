@@ -420,6 +420,31 @@
   font-size: .85rem;
 }
 
+/* Sidebar "load more": reveals the next page of a large folder's listing. */
+.up-tree-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(76,201,240,.25);
+  background: rgba(76,201,240,.08);
+  color: var(--accent-blue, #4cc9f0);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.up-tree-more:hover { background: rgba(76,201,240,.18); }
+.up-tree-more-count {
+  color: var(--text-mute, #9aa3b2);
+  font-weight: 500;
+  font-size: .72rem;
+}
+
 /* Full-tree search results: each row shows the filename plus the dim
    directory it lives in, since matches can come from anywhere in the tree. */
 .up-tree-hint {
@@ -478,6 +503,24 @@
   padding-bottom: 14px;
   border-bottom: 1px solid rgba(255,255,255,.06);
 }
+.up-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 8px;
+  color: var(--text-fg, #e8ecf3);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.up-detail-back:hover { border-color: rgba(76,201,240,.35); color: var(--accent-blue, #4cc9f0); }
 .up-detail-title-wrap { flex: 1; min-width: 0; }
 .up-detail-title {
   margin: 0;
@@ -541,6 +584,108 @@
   font-size: .85rem;
   color: var(--text-muted, #9aa3b2);
 }
+
+/* Inline image preview (png/jpg/gif/webp/…). Checkerboard behind so
+   transparency reads clearly; the image is capped so tall assets scroll. */
+.up-preview-image {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(255,255,255,.08));
+  background:
+    linear-gradient(45deg, rgba(255,255,255,.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.04) 75%) 0 0 / 20px 20px,
+    linear-gradient(45deg, rgba(255,255,255,.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.04) 75%) 10px 10px / 20px 20px,
+    var(--surface-2, rgba(12,16,26,.55));
+  text-align: center;
+}
+.up-preview-image img {
+  max-width: 100%;
+  max-height: 480px;
+  height: auto;
+  image-rendering: pixelated;   /* game sprites stay crisp when upscaled */
+  border-radius: 6px;
+}
+.up-preview-imgcap {
+  margin: 10px 0 0;
+  font-size: .78rem;
+  color: var(--text-muted, #9aa3b2);
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+/* Hex viewer for small binaries (updates.js hexDump). */
+.up-preview-hex {
+  margin: 0;
+  max-height: 480px;
+  overflow: auto;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(255,255,255,.08));
+  background: var(--surface-2, rgba(12,16,26,.55));
+  color: var(--text-fg, #e8ecf3);
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: .78rem;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+/* DDS texture: decoded to a <canvas>, plus a "download as PNG" button since the
+   browser can't save the raw DDS. Shares the checkerboard image frame. */
+.up-preview-dds canvas {
+  max-width: 100%;
+  max-height: 480px;
+  height: auto;
+  image-rendering: pixelated;
+  border-radius: 6px;
+}
+.up-preview-imgcap {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.up-preview-pngbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  border: 1px solid rgba(76,201,240,.30);
+  background: rgba(76,201,240,.10);
+  color: var(--accent-blue, #4cc9f0);
+  font-size: .76rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.up-preview-pngbtn:hover { background: rgba(76,201,240,.20); }
+
+/* .blueprint model: a single button that opens the shared 3D viewer modal. */
+.up-preview-model {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(255,255,255,.08));
+  background: var(--surface-2, rgba(12,16,26,.55));
+}
+.up-preview-3dbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(76,201,240,.35);
+  background: rgba(76,201,240,.12);
+  color: var(--accent-blue, #4cc9f0);
+  font-size: .86rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.up-preview-3dbtn:hover { background: rgba(76,201,240,.22); }
 
 /* Per-file version history rows. Type pill on the left, ordinal +
    tag in the middle, captured-at on the right. Each row is also a
@@ -682,6 +827,71 @@
   color: var(--text-mute);
   white-space: nowrap;
 }
+
+/* ─── Changes tab: collapsible folder tree ─────────────────────────────
+   Directory rows toggle their children; file rows jump into the explorer.
+   Indentation is driven by the --depth custom property so nesting stays cheap. */
+.up-ctree {
+  display: grid;
+  gap: 3px;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .8rem;
+}
+.up-ctree-dir,
+.up-ctree-file {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 12px;
+  padding-left: calc(12px + var(--depth, 0) * 18px);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .1s ease, border-color .1s ease;
+}
+.up-ctree-dir:hover,
+.up-ctree-file:hover {
+  background: rgba(255,255,255,.03);
+  border-color: rgba(76,201,240,.25);
+}
+.up-ctree-caret {
+  width: 10px;
+  font-size: .7rem;
+  color: var(--text-mute, #9aa3b2);
+  flex: 0 0 auto;
+}
+.up-ctree-icon { color: #7fb2d9; flex: 0 0 auto; }
+.up-ctree-name {
+  font-weight: 600;
+  color: var(--text-fg, #e8ecf3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.up-ctree-counts {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+.up-cpill {
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.up-cpill-add { color: #5dd078; background: rgba(93,208,120,.10); }
+.up-cpill-mod { color: #f9c74f; background: rgba(249,199,79,.10); }
+.up-cpill-rem { color: #f87171; background: rgba(248,113,113,.10); }
+/* File rows: the type pill leads, then icon + name, size trails right. */
+.up-ctree-file .up-change-type { flex: 0 0 auto; }
+.up-ctree-ficon { color: var(--text-mute, #9aa3b2); flex: 0 0 auto; }
+.up-ctree-fname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.up-ctree-file .up-change-size { margin-left: auto; flex: 0 0 auto; }
 .up-changes-foot {
   margin-top: 14px;
   display: flex;

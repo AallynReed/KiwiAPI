@@ -231,13 +231,42 @@ _UPDATE_PATHS = [
     "prefabs/dungeons/cursed_vale/minion.blueprint",
     "prefabs/dungeons/frozen_peak/boss.blueprint",
     "prefabs/equipment/sword_epic.blueprint",
+    "textures/ui/health_bar.dds",
+    "textures/blocks/stone_diffuse.dds",
     "ui/hud/health_bar.png",
     "ui/hud/mana_bar.png",
     "scripts/combat/damage.lua",
     "scripts/combat/healing.lua",
     "languages/en/strings.json",
     "readme.md",
-]
+] + [f"blueprints/model_{i:04d}.blueprint" for i in range(500)]   # exercise sidebar "load more"
+
+
+def _stub_dds(w=16, h=16):
+    """A tiny uncompressed 32-bit BGRA DDS (red-x / green-y gradient) so the DDS
+    preview + 'download as PNG' path can be exercised locally."""
+    import struct
+    hdr = bytearray(128)
+    hdr[0:4] = b"DDS "
+    struct.pack_into("<I", hdr, 4, 124)                       # dwSize
+    struct.pack_into("<I", hdr, 8, 0x1 | 0x2 | 0x4 | 0x8 | 0x1000)  # caps/h/w/pitch/pf
+    struct.pack_into("<I", hdr, 12, h)
+    struct.pack_into("<I", hdr, 16, w)
+    struct.pack_into("<I", hdr, 20, w * 4)                    # pitch
+    struct.pack_into("<I", hdr, 76, 32)                       # ddspf size
+    struct.pack_into("<I", hdr, 80, 0x41)                     # DDPF_RGB|DDPF_ALPHAPIXELS
+    struct.pack_into("<I", hdr, 88, 32)                       # bit count
+    struct.pack_into("<I", hdr, 92, 0x00FF0000)               # R mask
+    struct.pack_into("<I", hdr, 96, 0x0000FF00)               # G mask
+    struct.pack_into("<I", hdr, 100, 0x000000FF)              # B mask
+    struct.pack_into("<I", hdr, 104, 0xFF000000)              # A mask
+    struct.pack_into("<I", hdr, 108, 0x1000)                  # DDSCAPS_TEXTURE
+    px = bytearray()
+    for y in range(h):
+        for x in range(w):
+            r = int(255 * x / (w - 1)); g = int(255 * y / (h - 1)); b = 128
+            px += bytes((b, g, r, 255))                       # BGRA byte order
+    return bytes(hdr) + bytes(px)
 
 
 def _update_dir_listing(prefix):
@@ -775,6 +804,22 @@ class Handler(SimpleHTTPRequestHandler):
                     "count": 2, "total": 2})
             return self._send_json({"items": []})
 
+        # Raw file download (tokenless in prod). Images point their <img> here;
+        # the hex viewer fetches these bytes. Serve a real PNG for image paths and
+        # a small deterministic blob for everything else so both previews render.
+        if path.startswith("/v1/updates/") and path.endswith("/file"):
+            p = parse_qs(url.query).get("path", [""])[0]
+            ext = p.rsplit(".", 1)[-1].lower() if "." in p.rsplit("/", 1)[-1] else ""
+            if ext in ("png", "jpg", "jpeg", "gif", "webp", "bmp", "ico"):
+                fav = STATIC / "assets" / "favicon.png"
+                if fav.exists():
+                    return self._send_file(fav, "application/octet-stream")
+            if ext == "dds":
+                return self._send_bytes(_stub_dds(), "application/octet-stream")
+            blob = b"KIWI\x00\x01\x02\x03blueprint stub bytes for " + p.encode() + b"\n"
+            blob += bytes(range(256)) * 2   # a full byte range so the hex gutter is lively
+            return self._send_bytes(blob, "application/octet-stream")
+
         # ── /updates archive browser (synthetic tree) ─────────────────────
         if path == "/site/updates/branches":
             return self._send_json({"items": [
@@ -803,12 +848,51 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json({"branch": branch, "prefix": prefix,
                                         "entries": entries, "count": len(entries)})
             if sub == "changes":
+                # A nested change-set so the folder-tree view is exercisable.
+                ch = [
+                    ("prefabs/dungeons/cursed_vale/boss.blueprint", "modified"),
+                    ("prefabs/dungeons/cursed_vale/minion.blueprint", "added"),
+                    ("prefabs/dungeons/frozen_peak/boss.blueprint", "modified"),
+                    ("prefabs/equipment/sword_epic.blueprint", "added"),
+                    ("prefabs/plant/oak_tree.blueprint", "modified"),
+                    ("prefabs/plant/red_flower.blueprint", "added"),
+                    ("prefabs/plant/fungi/glow_cap.blueprint", "modified"),
+                    ("textures/ui/health_bar.dds", "modified"),
+                    ("textures/blocks/stone_diffuse.dds", "added"),
+                    ("ui/hud/health_bar.png", "modified"),
+                    ("ui/hud/mana_bar.png", "removed"),
+                    ("scripts/combat/damage.lua", "modified"),
+                    ("scripts/combat/healing.lua", "added"),
+                    ("languages/en/strings.json", "modified"),
+                ]
+                entries = [{"path": p, "type": ty, "content_sha256": "stub", "size": 512}
+                           for p, ty in ch]
+                counts = {"added": sum(1 for _, t in ch if t == "added"),
+                          "modified": sum(1 for _, t in ch if t == "modified"),
+                          "removed": sum(1 for _, t in ch if t == "removed")}
                 return self._send_json({"branch": branch, "ordinal": 2,
-                    "version_tag": "1.0.stub", "entries": [
-                        {"path": "scripts/combat/damage.lua", "type": "modified",
-                         "content_sha256": "stub", "size": 512}],
-                    "count": 1, "total": 1,
-                    "files_added": 3, "files_modified": 1, "files_removed": 0})
+                    "version_tag": "1.0.stub", "entries": entries,
+                    "count": len(entries), "total": len(entries),
+                    "files_added": counts["added"], "files_modified": counts["modified"],
+                    "files_removed": counts["removed"]})
+            if sub == "file/blueprint":
+                # A small synthetic voxel model (a hollow-ish 6x6x6 block with a
+                # glowing core) so the 3D viewer can be previewed without a real .tmod.
+                xs = []; ys = []; zs = []; rgb = []; kind = []; level = []
+                for x in range(6):
+                    for y in range(6):
+                        for z in range(6):
+                            shell = x in (0, 5) or y in (0, 5) or z in (0, 5)
+                            core = 2 <= x <= 3 and 2 <= y <= 3 and 2 <= z <= 3
+                            if not (shell or core):
+                                continue
+                            xs.append(x); ys.append(y); zs.append(z)
+                            rgb.append(0x66ccff if core else (0x3a4a5a if shell else 0))
+                            kind.append(2 if core else 0)  # glow core, solid shell
+                            level.append(255)
+                return self._send_json({"path": qs.get("path", [""])[0], "count": len(xs),
+                    "size": [6, 6, 6], "x": xs, "y": ys, "z": zs,
+                    "rgb": rgb, "kind": kind, "level": level})
             if sub == "search":
                 q = (qs.get("q", [""])[0] or "").strip().lower()
                 hits = sorted(p for p in _UPDATE_PATHS if q in p.lower())
@@ -823,9 +907,23 @@ class Handler(SimpleHTTPRequestHandler):
                     "archive": None, "archive_index": None})
             if sub == "file/view":
                 p = qs.get("path", [""])[0]
-                return self._send_json({"branch": branch, "path": p, "size": 42,
-                    "content_sha256": "stub", "truncated": False,
-                    "viewable": True, "reason": None,
+                ext = p.rsplit(".", 1)[-1].lower() if "." in p.rsplit("/", 1)[-1] else ""
+                base = {"branch": branch, "path": p, "content_sha256": "stub",
+                        "truncated": False, "text": None}
+                if ext in ("png", "jpg", "jpeg", "gif", "webp", "bmp", "ico"):
+                    return self._send_json({**base, "size": 4096, "viewable": False,
+                                            "kind": "image", "reason": "image"})
+                if ext == "dds":
+                    return self._send_json({**base, "size": 4096, "viewable": False,
+                                            "kind": "dds", "reason": "dds"})
+                if ext == "blueprint":
+                    return self._send_json({**base, "size": 2048, "viewable": False,
+                                            "kind": "blueprint", "reason": "blueprint"})
+                if ext in ("binfab", "tfa", "tex"):
+                    return self._send_json({**base, "size": 512, "viewable": False,
+                                            "kind": "binary", "reason": "binary"})
+                return self._send_json({**base, "size": 42, "viewable": True,
+                    "kind": "text", "reason": None,
                     "text": f"-- stub contents of {p}\nprint('hello')\n"})
             if sub == "file/history":
                 p = qs.get("path", [""])[0]
@@ -838,6 +936,12 @@ class Handler(SimpleHTTPRequestHandler):
         # ── /market Analytics tab ─────────────────────────────────────────
         if path == "/site/market/items":
             return self._send_json({"items": _MARKET_ITEMS, "count": len(_MARKET_ITEMS)})
+        if path == "/site/market/item-images":
+            # In prod these map to real codex blueprints; locally we hand back a
+            # stub path per item so the thumbnail layout is previewable (the
+            # /site/codexes/render stub below serves a placeholder PNG for any).
+            imgs = {n: f"stub/{n.lower().replace(' ', '_')}" for n in _MARKET_ITEMS}
+            return self._send_json({"images": imgs, "branch": "live-us", "count": len(imgs)})
         if path == "/site/market/analytics/movers":
             return self._send_json(_market_movers())
         if path == "/site/market/analytics/deals":
@@ -852,6 +956,10 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_json(_market_timeline(name, days))
 
         # ── /codexes/crafting Recipe Cost Calculator ──────────────────────
+        if path == "/site/codexes/render":
+            # Blueprint→PNG render (real rasterizer in prod). Serve a placeholder
+            # so codex/market thumbnails have something to show in local preview.
+            return self._send_bytes(_PLACEHOLDER_PNG, "image/png")
         if path == "/site/codexes/search":
             qs = parse_qs(url.query)
             q = (qs.get("q", [""])[0] or "").strip().lower()

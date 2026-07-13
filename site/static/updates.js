@@ -22,6 +22,8 @@
 
   const PAGE_SIZE_CHANGES = 200;
   const VERSIONS_VISIBLE = 12;   // recent version chips in the timeline strip
+  const TREE_PAGE = 300;         // sidebar rows rendered per "load more" (some Trove
+                                 // folders hold 50k+ files - never render them all)
 
   const state = {
     branches: [],            // [{branch, current_version, current_ordinal, ...}]
@@ -34,6 +36,7 @@
     // Explorer tab
     treeCache: new Map(),    // prefix → entries (avoid re-fetching as you walk)
     treePrefix: '',          // current directory prefix
+    treeVisible: TREE_PAGE,  // how many rows of the current dir are rendered (paged)
     treeFilter: '',          // sidebar search text
     // Full-tree search: when treeFilter is set the sidebar shows matches from
     // ANYWHERE in the branch (server-side), not just the loaded directory.
@@ -56,6 +59,10 @@
     changes: { entries: [], total: 0, ordinal: null, version_tag: null,
                counts: {added: 0, modified: 0, removed: 0}, filter: 'all',
                offset: 0, loading: false },
+    // Which change-tree folders are collapsed, remembered PER VERSION (keyed by
+    // ordinal) so it survives re-fetching the change-list, switching versions,
+    // and the browser Back button. Lives outside `changes` (which gets rebuilt).
+    changesCollapsed: new Map(),   // ordinal → Set<dirPath>
 
     // Compare tab
     compare: { from: null, to: null, path: '', payload: null, loading: false },
@@ -86,13 +93,29 @@
 
   const $detailEmpty = $('up-detail-empty');
   const $detailFile = $('up-detail-file');
+  const $detailBack = $('up-detail-back');
   const $detailTitle = $('up-detail-title');
   const $detailMeta = $('up-detail-meta');
   const $detailDownload = $('up-detail-download');
   const $history = $('up-history');
   const $preview = $('up-preview');
   const $previewPre = $('up-preview-pre');
+  const $previewImage = $('up-preview-image');
+  const $previewImg = $('up-preview-img');
+  const $previewImgCap = $('up-preview-imgcap');
+  const $previewDds = $('up-preview-dds');
+  const $previewCanvas = $('up-preview-canvas');
+  const $previewDdsCap = $('up-preview-ddscap');
+  const $previewPng = $('up-preview-png');
+  const $previewModel = $('up-preview-model');
+  const $preview3d = $('up-preview-3d');
+  const $previewHex = $('up-preview-hex');
   const $previewNote = $('up-preview-note');
+
+  // Hard cap on the bytes a hex viewer will render client-side. Matches the
+  // server's VIEW_MAX_BYTES so anything it flags as "binary" fits in one dump.
+  const HEX_MAX_BYTES = 1024 * 1024;
+  let _previewToken = 0;   // guards against out-of-order image/hex fetches
 
   const $changesMeta = $('up-changes-meta');
   const $changesBody = $('up-changes-body');
@@ -127,20 +150,25 @@
 
     // URL hash priority - pick branch + tab + path + version from the
     // hash if present, else default to the first branch / latest version.
+    // Applied with history writes suppressed, then canonicalised as ONE
+    // replace so the initial load doesn't leave spurious back-stack entries.
     const hash = parseHash();
     const startBranch =
       (hash.branch && state.branches.find((b) => b.branch === hash.branch)?.branch)
       || state.branches[0].branch;
-    await selectBranch(startBranch, /* skipURL = */ true);
-
-    if (hash.version != null) {
-      const v = state.versions.find((x) => x.ordinal === hash.version);
-      if (v) await selectVersion(v.ordinal);
+    _suppressHash = true;
+    try {
+      await selectBranch(startBranch);
+      if (hash.version != null) {
+        const v = state.versions.find((x) => x.ordinal === hash.version);
+        if (v) await selectVersion(v.ordinal);
+      }
+      if (hash.path) await openTreePath(hash.path);
+      if (hash.tab) switchTab(hash.tab);
+    } finally {
+      _suppressHash = false;
     }
-    if (hash.path) {
-      await openTreePath(hash.path);
-    }
-    if (hash.tab) switchTab(hash.tab);
+    writeHash(false);
 
     wireEvents();
   }
@@ -155,8 +183,17 @@
         ${esc(branchLabel(b.branch))}
       </button>`).join('');
     for (const btn of $branches.querySelectorAll('[data-branch]')) {
-      btn.addEventListener('click', () => selectBranch(btn.dataset.branch));
+      btn.addEventListener('click', () => navigateBranch(btn.dataset.branch));
     }
+  }
+
+  // A branch switch loads versions + tree over the network, so suppress the
+  // per-step hash writes and push a single entry once it settles.
+  async function navigateBranch(branch) {
+    _suppressHash = true;
+    try { await selectBranch(branch); }
+    finally { _suppressHash = false; }
+    scheduleHash(true);
   }
 
   function branchLabel(b) {
@@ -166,12 +203,13 @@
     return b;
   }
 
-  async function selectBranch(branch, skipURL) {
+  async function selectBranch(branch) {
     if (state.branch === branch) return;
     state.branch = branch;
     // Reset every per-branch piece of state - they're not cross-branch.
     state.treeCache.clear();
     state.treePrefix = '';
+    state.treeVisible = TREE_PAGE;
     state.selectedPath = null;
     state.fileHistory = null;
     state.versions = [];
@@ -181,10 +219,10 @@
       counts: {added: 0, modified: 0, removed: 0}, filter: 'all',
       offset: 0, loading: false,
     };
+    state.changesCollapsed.clear();   // ordinals are per-branch
     state.compare = { from: null, to: null, path: '', payload: null, loading: false };
 
     renderBranchTabs();
-    if (!skipURL) updateHash();
 
     // Three fetches in parallel - versions drive the strip + change-tab
     // default selection; tree drives the explorer.
@@ -270,7 +308,7 @@
     }
     state.selectedVersion = ordinal;
     renderVersions();
-    updateHash();
+    scheduleHash(true);
 
     const v = state.versions.find((x) => x.ordinal === ordinal);
     // Pull this version's change list - drives the changes tab + the
@@ -319,7 +357,7 @@
     if (state.activeTab === name) return;
     state.activeTab = name;
     renderTab();
-    updateHash();
+    scheduleHash(true);
   }
   function renderTab() {
     const map = {
@@ -373,11 +411,12 @@
 
   async function navigateTree(prefix) {
     state.treePrefix = prefix;
+    state.treeVisible = TREE_PAGE;   // fresh directory - reset paging
     state.selectedPath = null;  // leaving file-detail view
     state.fileHistory = null;
     renderTree();
     renderDetail();
-    updateHash();
+    scheduleHash(true);
     await loadTree(prefix);
     renderTree();
   }
@@ -394,12 +433,16 @@
       rerunI18n();
       return;
     }
-    let visible = entries;
-    if (!visible.length) {
+    if (!entries.length) {
       $tree.innerHTML = `<p class="up-tree-empty" data-i18n>Nothing here.</p>`;
       rerunI18n();
       return;
     }
+    // Render at most treeVisible rows - a "load more" reveals the next page.
+    // Trove folders like blueprints/ can hold tens of thousands of files, so
+    // dumping the whole listing into the DOM at once would lock up the page.
+    const shown = Math.min(state.treeVisible, entries.length);
+    const visible = entries.slice(0, shown);
 
     const touched = state.versionTouched && state.versionTouched.byPath;
     const rows = visible.map((e) => {
@@ -438,18 +481,18 @@
           <span class="up-row-meta">${esc(sizeOrCount)}</span>
         </button>`;
     }).join('');
-    $tree.innerHTML = rows;
-
-    for (const btn of $tree.querySelectorAll('[data-path]')) {
-      btn.addEventListener('click', () => {
-        const path = btn.dataset.path;
-        if (btn.dataset.isDir) {
-          navigateTree(path);
-        } else {
-          openFile(path);
-        }
-      });
-    }
+    // Footer: "load more" when the directory has more rows than we've rendered.
+    const more = entries.length > shown
+      ? `<button type="button" class="up-tree-more" data-tree-more>
+           <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+           ${esc(t('Load more'))}
+           <span class="up-tree-more-count">${esc(
+             t('{n} of {total}')
+               .replace('{n}', formatInt(shown))
+               .replace('{total}', formatInt(entries.length)))}</span>
+         </button>`
+      : '';
+    $tree.innerHTML = rows + more;
   }
 
   // ─── Explorer - full-tree search ───────────────────────────────────
@@ -546,10 +589,6 @@
         </button>`;
     }).join('');
     $tree.innerHTML = capped + rows;
-
-    for (const btn of $tree.querySelectorAll('[data-path]')) {
-      btn.addEventListener('click', () => openFile(btn.dataset.path));
-    }
   }
 
   // openTreePath drills into deep paths (e.g. coming from the URL hash
@@ -569,9 +608,24 @@
     const parent = slash >= 0 ? path.slice(0, slash + 1) : '';
     if (state.treePrefix !== parent) {
       state.treePrefix = parent;
+      state.treeVisible = TREE_PAGE;
       await loadTree(parent);
     }
     await openFile(path);
+  }
+
+  // Jump from the Changes tab to a file in the Explorer. Suppresses the
+  // intermediate hash writes so the whole tab-switch + file-open lands as ONE
+  // history entry - a single Back press then returns to the changes list.
+  async function openChangePath(path) {
+    _suppressHash = true;
+    try {
+      switchTab('explorer');
+      await openTreePath(path);
+    } finally {
+      _suppressHash = false;
+    }
+    scheduleHash(true);
   }
 
   // ─── Explorer - file detail (history) ──────────────────────────────
@@ -584,7 +638,7 @@
     }
     renderTree();
     renderDetail();
-    updateHash();
+    scheduleHash(true);
     if ($sidebar) $sidebar.classList.remove('open');
 
     try {
@@ -612,14 +666,16 @@
     loadPreview(path);
   }
 
-  // ─── Explorer - in-browser preview of small text files ─────────────
-  // Fetches the view endpoint (UTF-8 text under 512 KB). Large/binary/removed
-  // files just leave the pane hidden; the download link still covers them.
+  // ─── Explorer - in-browser preview ─────────────────────────────────
+  // Fetches the view endpoint, which classifies the file by `kind`:
+  //   text   → render the UTF-8 content in a <pre>
+  //   image  → render an <img> straight from the raw download endpoint
+  //   binary → fetch the raw bytes (≤1 MB) and render a hex dump
+  //   too_large / missing / removed → just a note; the download link covers it
   async function loadPreview(path) {
     if (!$preview) return;
-    $preview.hidden = true;
-    $previewPre.hidden = true;
-    $previewNote.hidden = true;
+    const token = ++_previewToken;
+    resetPreview();
     let data;
     try {
       data = await fetchJSON(
@@ -628,24 +684,199 @@
     } catch (err) {
       return;   // 404 (removed/missing) etc → no preview, no error noise
     }
-    if (state.selectedPath !== path) return;   // user clicked away mid-fetch
+    if (token !== _previewToken || state.selectedPath !== path) return;  // clicked away
     $preview.hidden = false;
-    if (data.viewable && typeof data.text === 'string') {
+
+    // `kind` is authoritative; fall back to `reason`/`viewable` for older payloads.
+    const kind = data.kind
+      || (data.viewable ? 'text'
+          : data.reason === 'image' ? 'image'
+          : data.reason === 'too_large' ? 'too_large'
+          : data.reason === 'binary' ? 'binary' : 'missing');
+
+    if (kind === 'text' && typeof data.text === 'string') {
       $previewPre.textContent = data.text;
       $previewPre.hidden = false;
-    } else {
-      const note = data.reason === 'too_large'
-        ? t('Too large to preview ({size}) — download it to inspect.')
-            .replace('{size}', formatBytes(data.size))
-        : data.reason === 'binary'
-          ? t('Binary file — download it to inspect.')
-          : t('Preview unavailable.');
-      $previewNote.textContent = note;
-      $previewNote.hidden = false;
+      return;
     }
+    if (kind === 'image') {
+      $previewImg.alt = path;
+      $previewImg.onerror = () => {
+        if (token !== _previewToken) return;
+        $previewImage.hidden = true;
+        $previewNote.textContent = t('Preview unavailable.');
+        $previewNote.hidden = false;
+      };
+      $previewImg.src =
+        `/v1/updates/${state.branch}/file?path=${encodeURIComponent(path)}`;
+      $previewImgCap.textContent = formatBytes(data.size);
+      $previewImage.hidden = false;
+      return;
+    }
+    if (kind === 'dds') {
+      renderDdsPreview(path, data.size, token);
+      return;
+    }
+    if (kind === 'blueprint') {
+      const url = `/site/updates/${state.branch}/file/blueprint?path=${encodeURIComponent(path)}`;
+      $preview3d.onclick = () => {
+        if (!window.BlueprintViewer) { $previewNote.textContent = t('3D viewer is unavailable.'); $previewNote.hidden = false; return; }
+        window.BlueprintViewer.open({ url, title: path });
+      };
+      $previewModel.hidden = false;
+      return;
+    }
+    if (kind === 'binary') {
+      renderHexPreview(path, data.size, token);
+      return;
+    }
+    const note = kind === 'too_large'
+      ? t('Too large to preview ({size}) — download it to inspect.')
+          .replace('{size}', formatBytes(data.size))
+      : t('Preview unavailable.');
+    $previewNote.textContent = note;
+    $previewNote.hidden = false;
+  }
+
+  function resetPreview() {
+    $preview.hidden = true;
+    $previewPre.hidden = true;
+    $previewPre.textContent = '';
+    $previewImage.hidden = true;
+    $previewImg.onerror = null;
+    $previewImg.removeAttribute('src');
+    $previewDds.hidden = true;
+    $previewPng.onclick = null;
+    $previewModel.hidden = true;
+    $preview3d.onclick = null;
+    $previewHex.hidden = true;
+    $previewHex.textContent = '';
+    $previewNote.hidden = true;
+  }
+
+  // Fetch the raw bytes of a small binary file and render a classic hex dump
+  // (offset | 16 hex bytes | ASCII gutter). The server only flags files ≤1 MB as
+  // "binary", so a single dump is always bounded; we guard the size anyway.
+  async function renderHexPreview(path, size, token) {
+    $previewHex.hidden = false;
+    $previewHex.textContent = t('Loading…');
+    if (size > HEX_MAX_BYTES) {
+      $previewHex.hidden = true;
+      $previewNote.textContent = t('Too large to preview ({size}) — download it to inspect.')
+        .replace('{size}', formatBytes(size));
+      $previewNote.hidden = false;
+      return;
+    }
+    let buf;
+    try {
+      const res = await fetch(
+        `/v1/updates/${state.branch}/file?path=${encodeURIComponent(path)}`,
+        { credentials: 'omit' },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      buf = new Uint8Array(await res.arrayBuffer());
+    } catch (err) {
+      if (token !== _previewToken || state.selectedPath !== path) return;
+      $previewHex.hidden = true;
+      $previewNote.textContent = t('Binary file — download it to inspect.');
+      $previewNote.hidden = false;
+      return;
+    }
+    if (token !== _previewToken || state.selectedPath !== path) return;  // clicked away
+    $previewHex.textContent = hexDump(buf);
+  }
+
+  // Build a hex dump string. One line per 16 bytes:
+  //   00000000  89 50 4e 47 0d 0a 1a 0a  00 00 00 0d 49 48 44 52  |.PNG........IHDR|
+  function hexDump(bytes) {
+    const HEX = [];
+    for (let i = 0; i < 256; i++) HEX.push(i.toString(16).padStart(2, '0'));
+    const lines = [];
+    for (let off = 0; off < bytes.length; off += 16) {
+      const slice = bytes.subarray(off, off + 16);
+      let hex = '';
+      let ascii = '';
+      for (let i = 0; i < 16; i++) {
+        if (i === 8) hex += ' ';
+        if (i < slice.length) {
+          const b = slice[i];
+          hex += HEX[b] + ' ';
+          ascii += (b >= 0x20 && b < 0x7f) ? String.fromCharCode(b) : '.';
+        } else {
+          hex += '   ';
+        }
+      }
+      lines.push(off.toString(16).padStart(8, '0') + '  ' + hex + '  ' + ascii);
+    }
+    return lines.join('\n');
+  }
+
+  // ─── Explorer - DDS texture preview (decoded client-side) ──────────────
+  // The DDS decoder is an ES module exposed on window.decodeDDS by an inline
+  // module in the page. It may not be ready yet when the first file is clicked.
+  function ensureDDS() {
+    if (window.decodeDDS) return Promise.resolve(window.decodeDDS);
+    return new Promise((resolve) => {
+      document.addEventListener('btt-dds-ready', () => resolve(window.decodeDDS || null), { once: true });
+      setTimeout(() => resolve(window.decodeDDS || null), 4000);   // don't hang forever
+    });
+  }
+
+  async function renderDdsPreview(path, size, token) {
+    const decodeDDS = await ensureDDS();
+    if (token !== _previewToken || state.selectedPath !== path) return;
+    if (!decodeDDS) { renderHexPreview(path, size, token); return; }
+    let buf;
+    try {
+      const res = await fetch(
+        `/v1/updates/${state.branch}/file?path=${encodeURIComponent(path)}`,
+        { credentials: 'omit' },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      buf = await res.arrayBuffer();
+    } catch (err) {
+      if (token !== _previewToken || state.selectedPath !== path) return;
+      renderHexPreview(path, size, token);
+      return;
+    }
+    if (token !== _previewToken || state.selectedPath !== path) return;
+    let img;
+    try {
+      img = decodeDDS(buf);
+    } catch (err) {
+      renderHexPreview(path, size, token);   // unsupported DDS format → hex fallback
+      return;
+    }
+    const canvas = $previewCanvas;
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext('2d').putImageData(new ImageData(img.rgba, img.width, img.height), 0, 0);
+    $previewDdsCap.textContent = `${img.width}×${img.height} · ${formatBytes(size)}`;
+    $previewPng.onclick = () => downloadCanvasPng(canvas, path);
+    $previewDds.hidden = false;
+  }
+
+  function downloadCanvasPng(canvas, path) {
+    const base = path.slice(path.lastIndexOf('/') + 1).replace(/\.dds$/i, '') || 'texture';
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${base}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
   }
 
   function renderDetail() {
+    // The in-app Back button appears once there's in-app history to step back
+    // through (e.g. after jumping here from the changes list); it just drives
+    // the browser's own history, so it stays in sync with the Back button.
+    if ($detailBack) $detailBack.hidden = _navDepth <= 0;
+
     if (!state.selectedPath) {
       $detailEmpty.hidden = false;
       $detailFile.hidden = true;
@@ -777,26 +1008,96 @@
       return;
     }
 
-    $changesBody.innerHTML = filtered.map((e) => `
-      <div class="up-change-row" data-path="${esc(e.path)}" data-type="${esc(e.type)}">
-        <span class="up-change-type up-change-type-${esc(e.type)}">${esc(t(e.type))}</span>
-        <span class="up-change-path" title="${esc(e.path)}">${esc(e.path)}</span>
-        <span class="up-change-size">${e.type === 'removed' ? '-' : esc(formatBytes(e.size))}</span>
-      </div>
-    `).join('');
+    // Render the change-list as a collapsible folder tree instead of a flat
+    // list, so a version touching hundreds of files is navigable. Clicks are
+    // handled by one delegated listener wired in wireEvents().
+    const root = buildChangeTree(filtered);
+    $changesBody.innerHTML = `<div class="up-ctree">${renderChangeNodes(root, 0)}</div>`;
     rerunI18n();
-
-    for (const row of $changesBody.querySelectorAll('[data-path]')) {
-      row.addEventListener('click', () => {
-        switchTab('explorer');
-        openTreePath(row.dataset.path);
-      });
-    }
 
     // Pagination: backend gave us up to 2000 in one shot, and we
     // filter client-side. If total > what we have, show load-more
     // that fetches the next page.
     $changesFoot.hidden = entries.length >= total;
+  }
+
+  // Build a directory tree from flat change entries. Each dir node carries the
+  // rolled-up added/modified/removed counts of everything beneath it.
+  function buildChangeTree(entries) {
+    const mk = (name, path) => ({
+      name, path, dirs: new Map(), files: [],
+      counts: { added: 0, modified: 0, removed: 0 },
+    });
+    const root = mk('', '');
+    for (const e of entries) {
+      const parts = e.path.split('/');
+      let node = root;
+      if (node.counts[e.type] != null) node.counts[e.type]++;
+      for (let i = 0; i < parts.length - 1; i++) {
+        let child = node.dirs.get(parts[i]);
+        if (!child) { child = mk(parts[i], node.path + parts[i] + '/'); node.dirs.set(parts[i], child); }
+        node = child;
+        if (node.counts[e.type] != null) node.counts[e.type]++;
+      }
+      node.files.push({ ...e, name: parts[parts.length - 1] });
+    }
+    return root;
+  }
+
+  function changeCountPills(c) {
+    const parts = [];
+    if (c.added)    parts.push(`<span class="up-cpill up-cpill-add">+${formatInt(c.added)}</span>`);
+    if (c.modified) parts.push(`<span class="up-cpill up-cpill-mod">~${formatInt(c.modified)}</span>`);
+    if (c.removed)  parts.push(`<span class="up-cpill up-cpill-rem">−${formatInt(c.removed)}</span>`);
+    return `<span class="up-ctree-counts">${parts.join('')}</span>`;
+  }
+
+  // The collapsed-folder set for the version currently shown in the Changes tab.
+  // Kept per-ordinal so each version remembers its own layout across re-renders,
+  // version switches, and Back/Forward.
+  function changesCollapsedSet() {
+    const ord = state.changes.ordinal;
+    let s = state.changesCollapsed.get(ord);
+    if (!s) { s = new Set(); state.changesCollapsed.set(ord, s); }
+    return s;
+  }
+
+  // Recursive HTML for a tree level. Single-child directory chains are collapsed
+  // into one "a/b/c" row (git-style) so deep Trove paths stay readable.
+  function renderChangeNodes(node, depth) {
+    const collapsed = changesCollapsedSet();
+    let html = '';
+    for (const dn of [...node.dirs.keys()].sort()) {
+      let d = node.dirs.get(dn);
+      let name = d.name;
+      while (d.dirs.size === 1 && d.files.length === 0) {
+        const only = d.dirs.values().next().value;
+        name += '/' + only.name;
+        d = only;
+      }
+      const isOpen = !collapsed.has(d.path);
+      html += `
+        <div class="up-ctree-dir" data-cdir="${esc(d.path)}" style="--depth:${depth}">
+          <i class="fa-solid fa-chevron-${isOpen ? 'down' : 'right'} up-ctree-caret" aria-hidden="true"></i>
+          <i class="fa-solid fa-folder up-ctree-icon" aria-hidden="true"></i>
+          <span class="up-ctree-name">${esc(name)}</span>
+          ${changeCountPills(d.counts)}
+        </div>`;
+      if (isOpen) {
+        html += `<div class="up-ctree-children">${renderChangeNodes(d, depth + 1)}</div>`;
+      }
+    }
+    for (const e of node.files.slice().sort((a, b) => (a.name < b.name ? -1 : 1))) {
+      html += `
+        <div class="up-ctree-file" data-path="${esc(e.path)}" data-type="${esc(e.type)}"
+             style="--depth:${depth}" title="${esc(e.path)}">
+          <span class="up-change-type up-change-type-${esc(e.type)}">${esc(t(e.type))}</span>
+          <i class="fa-solid ${iconForName(e.name)} up-ctree-ficon" aria-hidden="true"></i>
+          <span class="up-ctree-fname">${esc(e.name)}</span>
+          <span class="up-change-size">${e.type === 'removed' ? '-' : esc(formatBytes(e.size))}</span>
+        </div>`;
+    }
+    return html;
   }
 
   async function loadMoreChanges() {
@@ -848,7 +1149,7 @@
     $compareMeta.textContent = t('Comparing…');
     $compareBody.innerHTML = `<p class="up-loading" data-i18n>Loading…</p>`;
     rerunI18n();
-    updateHash();
+    scheduleHash(true);
     try {
       const payload = await fetchJSON(
         `/site/updates/${state.branch}/file/compare?path=${encodeURIComponent(path)}`
@@ -943,6 +1244,18 @@
       scheduleSearch();
     });
 
+    // One delegated handler for the whole sidebar list (directory rows, search
+    // rows, and the "load more" footer). Delegation keeps the listener count
+    // constant no matter how many rows a huge folder eventually reveals.
+    $tree.addEventListener('click', (e) => {
+      const more = e.target.closest('[data-tree-more]');
+      if (more) { state.treeVisible += TREE_PAGE; renderTree(); return; }
+      const row = e.target.closest('[data-path]');
+      if (!row || !$tree.contains(row)) return;
+      if (row.dataset.isDir) navigateTree(row.dataset.path);
+      else openFile(row.dataset.path);
+    });
+
     // Change-type filter chips.
     for (const chip of document.querySelectorAll('.up-changes-filter [data-filter]')) {
       chip.addEventListener('click', () => {
@@ -954,6 +1267,23 @@
       });
     }
     if ($changesMore) $changesMore.addEventListener('click', () => loadMoreChanges());
+
+    // Changes tree: one delegated handler - toggle folders, or jump a file into
+    // the explorer. Delegation survives the tree re-rendering on every toggle.
+    $changesBody.addEventListener('click', (e) => {
+      const dir = e.target.closest('[data-cdir]');
+      if (dir && $changesBody.contains(dir)) {
+        const set = changesCollapsedSet();
+        const p = dir.dataset.cdir;
+        if (set.has(p)) set.delete(p); else set.add(p);
+        renderChanges();
+        return;
+      }
+      const file = e.target.closest('[data-path]');
+      if (file && $changesBody.contains(file)) {
+        openChangePath(file.dataset.path);
+      }
+    });
 
     // Compare tab triggers.
     $compareRun.addEventListener('click', () => runCompare());
@@ -968,16 +1298,12 @@
       });
     }
 
-    window.addEventListener('hashchange', async () => {
-      const h = parseHash();
-      if (h.branch && h.branch !== state.branch) await selectBranch(h.branch);
-      if (h.version != null && h.version !== state.selectedVersion) {
-        const v = state.versions.find((x) => x.ordinal === h.version);
-        if (v) await selectVersion(v.ordinal);
-      }
-      if (h.path && h.path !== state.selectedPath) await openTreePath(h.path);
-      if (h.tab && h.tab !== state.activeTab) switchTab(h.tab);
-    });
+    // In-app Back: defer to the browser's history so it behaves identically to
+    // the Back button (returns to the changes list, the parent folder, etc.).
+    if ($detailBack) $detailBack.addEventListener('click', () => history.back());
+
+    // Browser Back/Forward (and manual hash edits) → re-apply the hash to state.
+    window.addEventListener('hashchange', () => { reconcileFromHash(); });
 
     document.addEventListener('btt-lang-changed', () => {
       renderBranchTabs();
@@ -1005,7 +1331,17 @@
     if (params.has('tab')) out.tab = params.get('tab');
     return out;
   }
-  function updateHash() {
+  // The whole view lives in the hash (branch/version/tab/path) so it's
+  // bookmarkable AND traversable with the browser Back/Forward buttons. Each
+  // user navigation PUSHES one history entry; incidental syncs REPLACE. Writes
+  // are coalesced through a 0ms timer so a compound action (e.g. a changes-row
+  // click that switches tab AND opens a file) still records a single entry.
+  let _suppressHash = false;   // true while applying state FROM the hash (reconcile/init)
+  let _hashTimer = null;
+  let _hashPush = false;
+  let _navDepth = 0;           // our position in the pushed-history stack (for the Back button)
+
+  function hashString() {
     const parts = [];
     if (state.branch) parts.push(`branch=${encodeURIComponent(state.branch)}`);
     if (state.selectedVersion) parts.push(`version=${state.selectedVersion}`);
@@ -1017,8 +1353,62 @@
     } else if (state.treePrefix) {
       parts.push(`path=${encodeURIComponent(state.treePrefix)}`);
     }
-    const next = parts.length ? '#' + parts.join('&') : location.pathname;
-    history.replaceState(null, '', next);
+    return parts.length ? '#' + parts.join('&') : location.pathname;
+  }
+
+  function writeHash(push) {
+    const next = hashString();
+    const nextFrag = next.startsWith('#') ? next : '';
+    if (nextFrag === location.hash) return;   // unchanged - no dup entry
+    if (push) {
+      _navDepth += 1;
+      history.pushState({ d: _navDepth }, '', next);
+      renderDetail();   // reveal the in-app Back button now that history has depth
+    } else {
+      history.replaceState({ d: _navDepth }, '', next);
+    }
+  }
+
+  // Request a hash write. Coalesces a synchronous burst of calls into one entry.
+  function scheduleHash(push) {
+    if (_suppressHash) return;
+    if (push) _hashPush = true;
+    if (_hashTimer) return;
+    _hashTimer = setTimeout(() => {
+      _hashTimer = null;
+      const p = _hashPush; _hashPush = false;
+      writeHash(p);
+    }, 0);
+  }
+
+  // Apply the hash to state without writing history back (used by Back/Forward
+  // and the initial load). Fully syncs every axis so going back also *clears*
+  // things the target entry doesn't have (e.g. an open file).
+  async function applyHash(h) {
+    if (h.branch && h.branch !== state.branch) await selectBranch(h.branch);
+    if (h.version != null && h.version !== state.selectedVersion) {
+      const v = state.versions.find((x) => x.ordinal === h.version);
+      if (v) await selectVersion(v.ordinal);
+    }
+    const targetPath = h.path || '';
+    const curPath = state.selectedPath || state.treePrefix || '';
+    if (targetPath !== curPath) {
+      if (h.path) await openTreePath(h.path);
+      else await navigateTree('');   // back to root, clears the open file
+    }
+    const targetTab = h.tab || 'explorer';
+    if (targetTab !== state.activeTab) switchTab(targetTab);
+  }
+
+  async function reconcileFromHash() {
+    _suppressHash = true;
+    try {
+      _navDepth = (history.state && history.state.d) || 0;
+      await applyHash(parseHash());
+    } finally {
+      _suppressHash = false;
+    }
+    renderDetail();   // refresh the Back button for the new depth
   }
 
   // ─── i18n ──────────────────────────────────────────────────────────

@@ -1387,6 +1387,33 @@ async def site_market_items() -> JSONResponse:
     )
 
 
+@router.get("/site/market/item-images", response_class=JSONResponse)
+async def site_market_item_images() -> JSONResponse:
+    """``{name: blueprint}`` map for the market items that we can pin to a codex
+    model, so the /market page can show a thumbnail per item via the existing
+    ``/site/codexes/render`` endpoint. Market listings carry only a display name,
+    so we reverse it through the codex (name -> blueprint); names we can't resolve
+    unambiguously are simply omitted (no thumbnail rather than a wrong one). Best-
+    effort: a codex/DB hiccup degrades to an empty map, never a broken item list."""
+    from app.trove.market import service as market_service
+    images: dict[str, str] = {}
+    try:
+        names = await market_service.list_distinct_items()
+        if names:
+            resolved = await codexes_read.blueprints_for_names(_DEFAULT_CODEX_BRANCH, names)
+            # Re-key from lower(name) back onto the real market names the client uses.
+            for name in names:
+                bp = resolved.get(name.lower())
+                if bp:
+                    images[name] = bp
+    except Exception:  # noqa: BLE001 - thumbnails are cosmetic; never break /market
+        logger.exception("market: item-image resolve failed")
+    return JSONResponse(
+        {"images": images, "branch": _DEFAULT_CODEX_BRANCH, "count": len(images)},
+        headers={"Cache-Control": "public, max-age=300"},
+    )
+
+
 @router.get("/site/giveaways", response_class=JSONResponse)
 async def site_giveaways() -> JSONResponse:
     """Public giveaway list for the /giveaways page (open, upcoming, recent).
@@ -2042,6 +2069,37 @@ async def site_up_file_view(
     if payload is None:
         raise HTTPException(status_code=404, detail=f"No file '{path}'")
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/updates/{branch}/file/blueprint", response_class=JSONResponse)
+async def site_up_file_blueprint(
+    branch: str, path: str = Query(...),
+) -> JSONResponse:
+    """Decoded voxel payload for one ``.blueprint`` in the latest tree, for the web
+    3D viewer (blueprint_viewer.js) - same body shape as the Mods Hub endpoint."""
+    from app.trove.render.voxel import (
+        BlueprintError,
+        BlueprintTooLarge,
+        pack_blueprint,
+    )
+
+    _site_check_branch(branch)
+    meta = await updates_read.get_file_meta(branch, path)
+    if meta is None:
+        raise HTTPException(status_code=404, detail=f"No file '{path}'")
+    raw = await asyncio.to_thread(
+        ContentStore(settings.trove_update_store_dir).get, meta["content_sha256"],
+    )
+    if raw is None:
+        raise HTTPException(status_code=404, detail="Blob missing from the store")
+    try:
+        payload = await asyncio.to_thread(pack_blueprint, raw, path)
+    except BlueprintTooLarge as exc:
+        return JSONResponse({"error": {"message": str(exc)}}, status_code=413)
+    except BlueprintError as exc:
+        # Empty placeholder / undecodable - the viewer surfaces this message.
+        return JSONResponse({"error": {"message": str(exc)}}, status_code=422)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=300"})
 
 
 @router.get("/site/updates/{branch}/file/history", response_class=JSONResponse)

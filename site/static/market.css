@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /market - page-specific styles (Beta)
+   /market - page-specific styles
    ───────────────────────────────────────────────────────────────────────
    Mirrors the leaderboards/updates layout vocabulary (hero, sidebar +
    detail pane) so the three browsable pages feel like siblings. Loaded
@@ -37,17 +37,6 @@
   letter-spacing: .04em;
   margin: 0;
 }
-.mkt-beta-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #f8961e, #ff5e7e);
-  color: #1a0c0c;
-  font: 700 .68rem 'Inter', system-ui, sans-serif;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
 .mkt-title {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   font-size: clamp(2.2rem, 5vw + .5rem, 4rem);
@@ -60,17 +49,6 @@
   font-size: 1.05rem;
   max-width: 64ch;
   margin: 0;
-  line-height: 1.55;
-}
-.mkt-beta-note {
-  margin: 4px 0 0;
-  padding: 10px 14px;
-  max-width: 68ch;
-  background: rgba(249,199,79,.08);
-  border: 1px solid rgba(249,199,79,.25);
-  border-radius: 10px;
-  color: #f9c74f;
-  font-size: .85rem;
   line-height: 1.55;
 }
 
@@ -151,6 +129,7 @@
      with the row's top edge (more readable than vertical-centering a
      1- or 2-line name interchangeably). */
   align-items: flex-start;
+  gap: 8px;
   padding: 8px 10px;
   background: transparent;
   border: 1px solid transparent;
@@ -170,6 +149,25 @@
 .mkt-item.active {
   background: rgba(76,201,240,.10);
   border-color: rgba(76,201,240,.30);
+}
+/* Small blueprint-render thumbnail beside each sidebar item. Voxel art, so
+   nearest-neighbour scaling keeps the pixels crisp instead of blurred. The
+   <img> removes this wrapper on a 404 (see thumbHTML), so a missing render
+   collapses the gap cleanly rather than leaving an empty square. */
+.mkt-item-thumb {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Nudge down so the thumb centres against the first line of a wrapped name. */
+  margin-top: 1px;
+}
+.mkt-item-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  image-rendering: pixelated;
 }
 .mkt-item-name {
   /* Allow long names to wrap onto multiple lines. The earlier
@@ -208,14 +206,35 @@
   color: var(--text-mute);
   text-align: center;
 }
+.mkt-detail-empty[hidden] { display: none; }
 .mkt-detail-empty i {
   font-size: 2rem;
   color: rgba(76,201,240,.5);
 }
 .mkt-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   margin-bottom: 14px;
   padding-bottom: 14px;
   border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.mkt-detail-headings { min-width: 0; }
+/* Larger item render in the detail header. Same pixelated voxel scaling as the
+   sidebar thumb; hidden outright when the item has no resolvable model. */
+.mkt-detail-thumb {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mkt-detail-thumb[hidden] { display: none; }
+.mkt-detail-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  image-rendering: pixelated;
 }
 .mkt-detail-title {
   margin: 0;

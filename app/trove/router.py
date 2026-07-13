@@ -2912,3 +2912,19 @@ async def insert_market_listings(
         except Exception:
             logger.warning("market event publish failed", exc_info=True)
     return MarketInsertResponse(**summary)
+
+
+@market_router.post("/reset", status_code=200,
+                    summary="Reset all market data (master)")
+async def reset_market_listings(_auth = _MKT_MASTER) -> dict:
+    """**Master only. Destructive.** Wipe every stored marketplace listing (hot +
+    historical tail). The interest-items allow-list is kept. Use it to clear
+    seed/demo data before the live hourly scrape takes over. Returns the number
+    of rows removed; logged at WARNING."""
+    removed = await market_service.reset_listings()
+    await ingest_log.record(
+        endpoint="/v1/market/reset",
+        user=_auth.user, token=_auth.token,
+        summary={"removed": removed},
+    )
+    return {"reset": True, "removed": removed}
