@@ -254,6 +254,94 @@ async def market_movers(
     ]
 
 
+async def market_overview(*, stale_floor: int, lifetime_floor: int) -> dict:
+    """Snapshot of the live market right now: active-listing count, distinct
+    active items, total flux value posted (sum of stack prices), and total units.
+    "Active" uses the same cutoffs as ``item_summary`` (re-seen within 3h AND
+    created within the 7-day TTL)."""
+    async with acquire() as con:
+        r = await con.fetchrow(
+            "SELECT count(*) AS listings, count(DISTINCT name) AS items, "
+            "COALESCE(sum(price), 0) AS total_value, COALESCE(sum(stack), 0) AS total_units "
+            "FROM market_listing WHERE last_seen >= $1 AND created_at >= $2",
+            stale_floor, lifetime_floor,
+        )
+    return {
+        "active_listings": int(r["listings"] or 0),
+        "active_items": int(r["items"] or 0),
+        "total_value": int(r["total_value"] or 0),
+        "total_units": int(r["total_units"] or 0),
+    }
+
+
+async def volume_leaders(*, window_start: int, limit: int) -> list[dict]:
+    """Items with the most NEW listings created in the window (a supply/throughput
+    signal), with total units posted, total flux value, and the median price-each.
+    Ordered by listing count desc."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT name, count(*) AS listings, "
+            "COALESCE(sum(stack), 0) AS units, COALESCE(sum(price), 0) AS total_value, "
+            "percentile_cont(0.5) WITHIN GROUP (ORDER BY price_each) AS median_each "
+            "FROM market_listing WHERE created_at >= $1 "
+            "GROUP BY name ORDER BY listings DESC, units DESC LIMIT $2",
+            window_start, limit,
+        )
+    return [
+        {"name": r["name"], "listings": int(r["listings"]),
+         "units": int(r["units"] or 0), "total_value": int(r["total_value"] or 0),
+         "median_each": float(r["median_each"]) if r["median_each"] is not None else 0.0}
+        for r in rows
+    ]
+
+
+async def market_liquidity(
+    *, concluded_before: int, window_start: int, expire_lifespan: int,
+    min_samples: int, limit: int,
+) -> list[dict]:
+    """Per-item sell-through, using each listing's lifespan (``last_seen -
+    created_at``) as an outcome proxy. A listing is *concluded* once we stop seeing
+    it (``last_seen`` older than the stale cutoff = ``concluded_before``). Among
+    listings that concluded inside the window (``last_seen >= window_start``):
+
+      - lifespan ``< expire_lifespan`` -> left the market early = **likely sold**
+        (or pulled). ``expire_lifespan`` is the 7-day TTL minus a capture-jitter
+        margin, since we only scrape hourly.
+      - lifespan ``>= expire_lifespan`` -> survived to ~the TTL = **expired unsold**.
+
+    Returns sold / expired / concluded counts, sell-through fraction, and the median
+    time-to-sell (seconds) over the sold bucket. ``min_samples`` guards thin items;
+    ordered by sell-through desc then volume desc.
+    """
+    async with acquire() as con:
+        rows = await con.fetch(
+            "WITH concluded AS ("
+            "  SELECT name, (last_seen - created_at) AS lifespan "
+            "  FROM market_listing WHERE last_seen < $1 AND last_seen >= $2) "
+            "SELECT name, count(*) AS concluded, "
+            "  count(*) FILTER (WHERE lifespan < $3) AS sold, "
+            "  count(*) FILTER (WHERE lifespan >= $3) AS expired, "
+            "  percentile_cont(0.5) WITHIN GROUP (ORDER BY lifespan) "
+            "    FILTER (WHERE lifespan < $3) AS median_tts "
+            "FROM concluded GROUP BY name HAVING count(*) >= $4 "
+            "ORDER BY (count(*) FILTER (WHERE lifespan < $3))::float / count(*) DESC, "
+            "         count(*) DESC LIMIT $5",
+            concluded_before, window_start, expire_lifespan, min_samples, limit,
+        )
+    out: list[dict] = []
+    for r in rows:
+        concluded = int(r["concluded"])
+        sold = int(r["sold"])
+        out.append({
+            "name": r["name"], "concluded": concluded, "sold": sold,
+            "expired": int(r["expired"]),
+            "sell_through": round(sold / concluded, 4) if concluded else 0.0,
+            "median_time_to_sell": (
+                int(r["median_tts"]) if r["median_tts"] is not None else None),
+        })
+    return out
+
+
 async def reset() -> int:
     """Wipe every listing (returns the prior row count). Used for the cutover from
     the disposable Mongo data, and reusable as a maintenance reset."""

@@ -182,6 +182,10 @@ class Settings(BaseSettings):
     # Runtime-tunable; set either to 0 to drop that gate.
     class_activity_power_rank_threshold: int = 25000
     class_activity_effort_threshold: int = 50
+    # Third clean-view gate, a CAP not a floor: players whose score on the weekly
+    # XP stats board (uuid 21005) EXCEEDS this at the window end are excluded from
+    # the clean view (extreme XP grinders / farm bots). Runtime-tunable; 0 = off.
+    class_activity_xp_cap: int = 2_000_000
 
     # Market archive throttle: hide_expired=false on /v1/market/listings opts into
     # the historical tail (listings expire after 7 days in-game). Tight per-token

@@ -30,6 +30,11 @@ logger = logging.getLogger(__name__)
 # models.py; we pass "weekly" to _active_set rather than per-board lookups.)
 _KIND = "weekly"
 
+# The weekly XP stats board - the clean view's CAP gate (see _clean_thresholds):
+# players whose score here EXCEEDS the configured cap at the window end are
+# excluded as extreme grinders / farm bots. Global (not per-class), weekly-reset.
+_XP_CAP_BOARD = 21005
+
 # Last good /current payload, kept across anchors so a fresh-but-uncomputed or
 # reset-crossing latest window still serves the previous result. Mirrors activity.
 _LAST_GOOD: dict | None = None
@@ -42,8 +47,10 @@ _METHODOLOGY = (
     "its Effort board between two consecutive captures. (Paragon boards are "
     "excluded as ambiguous - counts are Effort-only.) The default 'clean' "
     "(established) view keeps only players who, snapshot at the window end, clear "
-    "both configured floors - Power Rank (1000+i board) and Effort (4000+i) - "
-    "filtering new characters and throwaway alts; the 'All' view counts everyone. "
+    "both configured floors - Power Rank (1000+i board) and Effort (4000+i) - and, "
+    "when a cap is configured, do NOT exceed it on the weekly XP board (21005) - "
+    "filtering new characters, throwaway alts and extreme XP grinders; the 'All' "
+    "view counts everyone. "
     "Effort boards reset weekly (Mon 11:00 UTC); a window crossing the reset is "
     "unmeasurable and contributes no point. 'Share' is share of class activity (a "
     "player active on several classes counts in each), not distinct players. Lower "
@@ -57,7 +64,8 @@ _DONUT_METHODOLOGY = (
     "headcount, NOT the activity pipeline. RAW counts the players present on a "
     "class's Effort board at the most recent capture (Paragon is excluded as "
     "ambiguous); the 'established' view keeps only those clearing both floors - "
-    "Power Rank (1000+i) and Effort (4000+i). 'Share' is a class's count divided by "
+    "Power Rank (1000+i) and Effort (4000+i) - without exceeding the weekly-XP "
+    "cap (board 21005), when one is configured. 'Share' is a class's count divided by "
     "the total across classes (a player on several classes counts in each), so "
     "shares sum to 100% but aren't distinct players. Each class also carries the "
     "Effort ADDED in the latest hour (this capture vs the previous) - the sum of "
@@ -88,10 +96,16 @@ async def _effort_threshold() -> int:
                               settings.class_activity_effort_threshold)
 
 
-async def _clean_thresholds() -> tuple[int, int]:
-    """The two runtime-tunable "established"-player floors ``(power_rank, effort)`` -
-    a player counts toward a class's clean estimate only when it clears BOTH."""
-    return (await _power_rank_threshold(), await _effort_threshold())
+async def _xp_cap() -> int:
+    from app.core.config import settings
+    return await _setting_int("class_activity_xp_cap", settings.class_activity_xp_cap)
+
+
+async def _clean_thresholds() -> tuple[int, int, int]:
+    """The runtime-tunable "established"-player gates ``(power_rank, effort, xp_cap)``.
+    The first two are FLOORS a player must clear; ``xp_cap`` is a CAP - a player
+    whose weekly-XP score (board ``_XP_CAP_BOARD``) exceeds it is excluded (0 = off)."""
+    return (await _power_rank_threshold(), await _effort_threshold(), await _xp_cap())
 
 
 def _class_counts(
@@ -103,14 +117,19 @@ def _class_counts(
     pr_maps: dict[int, dict[str, float]] | None = None,
     threshold: float = 0,
     effort_threshold: float = 0,
+    xp_map: dict[str, float] | None = None,
+    xp_cap: float = 0,
 ) -> dict[int, dict]:
     """``{class_index: {"raw": int, "clean": int|None}}`` for one (early, late) pair.
 
     ``clean`` gates the raw active set on both per-class floors at the LATE anchor -
-    Power Rank (``1000+i`` from ``pr_maps``) and Effort (``4000+i`` from ``late_maps``);
-    a floor of 0 is a no-op, a player missing from a board reads as 0. ``clean`` is
-    ``None`` (unmeasurable, stored as NULL so the clean line gaps) when no Power Rank
-    snapshot is available (``pr_maps`` None, or that board absent at the anchor).
+    Power Rank (``1000+i`` from ``pr_maps``) and Effort (``4000+i`` from ``late_maps``) -
+    plus, when ``xp_cap > 0``, the weekly-XP CAP (board ``_XP_CAP_BOARD`` via
+    ``xp_map``): a player whose XP score EXCEEDS the cap is excluded. A floor of 0 is
+    a no-op, a player missing from a board reads as 0 (so missing-from-XP passes the
+    cap). ``clean`` is ``None`` (unmeasurable, stored as NULL so the clean line gaps)
+    when no Power Rank snapshot is available (``pr_maps`` None, or that board absent
+    at the anchor).
 
     A class is OMITTED (no key) when its Effort board isn't measurable for the window
     (reset crossed / no early snapshot) so the caller stores nothing and the series
@@ -124,6 +143,11 @@ def _class_counts(
             continue  # reset crossed or no early data for this board
         by_class.setdefault(stats.class_index_for_board(uuid), set()).update(s)
 
+    # An absent XP board reads as empty (everyone passes the cap): the board is
+    # weekly-reset, so right after Monday's reset it can legitimately have no rows
+    # - failing the whole clean view there would gap the series every week. A
+    # genuinely uncaptured board just degrades the cap to a no-op (floors still apply).
+    xp = xp_map or {}
     out: dict[int, dict] = {}
     for i, players in by_class.items():
         clean: int | None = None
@@ -135,6 +159,7 @@ def _class_counts(
                     1 for p in players
                     if pr.get(p, 0.0) >= threshold
                     and effort.get(p, 0.0) >= effort_threshold
+                    and (xp_cap <= 0 or xp.get(p, 0.0) <= xp_cap)
                 )
         out[i] = {"raw": len(players), "clean": clean}
     return out
@@ -162,15 +187,17 @@ async def estimate_class_activity(*, force: bool = False) -> dict:
     if _act._is_gap(duration_h, gap_threshold):
         return _LAST_GOOD or _empty()  # missed capture - withhold
 
-    pr_thr, effort_thr = await _clean_thresholds()
+    pr_thr, effort_thr, xp_cap = await _clean_thresholds()
     board_uuids = stats.class_effort_board_uuids()   # Effort only (Paragon excluded)
     late_maps = await _act._load_anchor_maps(anchor_late, board_uuids)
     early_maps = await _act._load_anchor_maps(anchor_early, board_uuids)
-    # Power Rank snapshot at the window END gates the clean view (one extra query;
-    # Effort scores come from late_maps, already loaded above).
-    pr_maps = await _act._load_anchor_maps(anchor_late, stats.class_pr_board_uuids())
+    # Power Rank (+ weekly-XP, when the cap is on) snapshot at the window END gates
+    # the clean view (one extra query; Effort scores come from late_maps above).
+    gate_uuids = stats.class_pr_board_uuids() + ([_XP_CAP_BOARD] if xp_cap > 0 else [])
+    pr_maps = await _act._load_anchor_maps(anchor_late, gate_uuids)
     counts = _class_counts(early_maps, late_maps, anchor_early, anchor_late,
-                           pr_maps=pr_maps, threshold=pr_thr, effort_threshold=effort_thr)
+                           pr_maps=pr_maps, threshold=pr_thr, effort_threshold=effort_thr,
+                           xp_map=pr_maps.get(_XP_CAP_BOARD), xp_cap=xp_cap)
 
     now_ts = int(time.time())
     if counts:
@@ -187,7 +214,7 @@ async def estimate_class_activity(*, force: bool = False) -> dict:
             logger.exception("class activity: persist failed for window_end=%d", anchor_late)
 
     payload = _build_current(anchor_early, anchor_late, duration_h, counts, now_ts,
-                             pr_thr, effort_thr)
+                             pr_thr, effort_thr, xp_cap)
     if counts:
         _LAST_GOOD = payload
     return payload
@@ -197,10 +224,13 @@ def _snapshot_counts(
     effort_maps: dict[int, dict[str, float]],
     pr_maps: dict[int, dict[str, float]],
     pr_threshold: float, effort_threshold: float,
+    xp_map: dict[str, float] | None = None, xp_cap: float = 0,
 ) -> dict[int, dict]:
     """``{class_index: {"raw", "clean"}}`` from ONE snapshot's presence - no
     activity (score-rose) condition, unlike ``_class_counts``. ``clean`` is None if
-    the class's Power Rank board is absent; classes with no players are omitted."""
+    the class's Power Rank board is absent; classes with no players are omitted.
+    Same three clean gates as ``_class_counts`` (two floors + the weekly-XP cap)."""
+    xp = xp_map or {}
     out: dict[int, dict] = {}
     for i in range(stats.class_count()):
         effort = effort_maps.get(stats.class_effort_board_uuid(i), {})
@@ -214,6 +244,7 @@ def _snapshot_counts(
                 1 for p in players
                 if pr.get(p, 0.0) >= pr_threshold
                 and effort.get(p, 0.0) >= effort_threshold
+                and (xp_cap <= 0 or xp.get(p, 0.0) <= xp_cap)
             )
         out[i] = {"raw": len(players), "clean": clean}
     return out
@@ -224,12 +255,14 @@ def _effort_deltas(
     effort_early: dict[int, dict[str, float]],
     pr_maps: dict[int, dict[str, float]],
     pr_threshold: float, effort_threshold: float,
+    xp_map: dict[str, float] | None = None, xp_cap: float = 0,
 ) -> dict[int, dict]:
     """Per-class Effort ADDED over the latest capture pair: Σ max(0, late - early)
     over players on the class's Effort board in BOTH snapshots. New entrants are
     excluded - their hour's gain is unmeasurable on a weekly-accumulating board.
-    ``clean`` gates on the Power-Rank + Effort floors (None if the PR board is
-    absent)."""
+    ``clean`` gates on the Power-Rank + Effort floors and the weekly-XP cap (None
+    if the PR board is absent)."""
+    xp = xp_map or {}
     out: dict[int, dict] = {}
     for i in range(stats.class_count()):
         late = effort_late.get(stats.class_effort_board_uuid(i), {})
@@ -248,7 +281,8 @@ def _effort_deltas(
                 continue
             raw += gain
             if (clean is not None
-                    and pr.get(p, 0.0) >= pr_threshold and lv >= effort_threshold):
+                    and pr.get(p, 0.0) >= pr_threshold and lv >= effort_threshold
+                    and (xp_cap <= 0 or xp.get(p, 0.0) <= xp_cap)):
                 clean += gain
         out[i] = {"raw": int(round(raw)),
                   "clean": int(round(clean)) if clean is not None else None}
@@ -270,11 +304,13 @@ async def class_activity_current() -> dict:
     if not stamps:
         return _LAST_GOOD_DONUT or _empty()
     anchor = stamps[0]
-    pr_thr, effort_thr = await _clean_thresholds()
+    pr_thr, effort_thr, xp_cap = await _clean_thresholds()
     effort_boards = stats.class_effort_board_uuids()
     effort_maps = await _act._load_anchor_maps(anchor, effort_boards)
-    pr_maps = await _act._load_anchor_maps(anchor, stats.class_pr_board_uuids())
-    counts = _snapshot_counts(effort_maps, pr_maps, pr_thr, effort_thr)
+    gate_uuids = stats.class_pr_board_uuids() + ([_XP_CAP_BOARD] if xp_cap > 0 else [])
+    pr_maps = await _act._load_anchor_maps(anchor, gate_uuids)
+    xp_map = pr_maps.get(_XP_CAP_BOARD)
+    counts = _snapshot_counts(effort_maps, pr_maps, pr_thr, effort_thr, xp_map, xp_cap)
     if not counts:
         return _LAST_GOOD_DONUT or _empty()
 
@@ -283,13 +319,14 @@ async def class_activity_current() -> dict:
     if (len(stamps) >= 2
             and not lb_service.reset_boundaries_for_kind("weekly", stamps[1], anchor)):
         early_maps = await _act._load_anchor_maps(stamps[1], effort_boards)
-        for i, d in _effort_deltas(effort_maps, early_maps, pr_maps, pr_thr, effort_thr).items():
+        for i, d in _effort_deltas(effort_maps, early_maps, pr_maps, pr_thr, effort_thr,
+                                   xp_map, xp_cap).items():
             if i in counts:
                 counts[i]["effort_raw"] = d["raw"]
                 counts[i]["effort_clean"] = d["clean"]
 
     payload = _build_current(anchor, anchor, None, counts, int(time.time()),
-                             pr_thr, effort_thr, methodology=_DONUT_METHODOLOGY)
+                             pr_thr, effort_thr, xp_cap, methodology=_DONUT_METHODOLOGY)
     _LAST_GOOD_DONUT = payload
     await lb_cache.set_class_activity_current(payload)
     return payload
@@ -297,7 +334,7 @@ async def class_activity_current() -> dict:
 
 def _build_current(window_start, window_end, duration_h, counts: dict[int, dict],
                    computed_at: int, threshold: int,
-                   effort_threshold: int = 0,
+                   effort_threshold: int = 0, xp_cap: int = 0,
                    methodology: str = _METHODOLOGY) -> dict:
     raw_total = sum(c["raw"] for c in counts.values())
     clean_present = [c["clean"] for c in counts.values() if c["clean"] is not None]
@@ -338,6 +375,7 @@ def _build_current(window_start, window_end, duration_h, counts: dict[int, dict]
         "total_effort_added_clean": total_effort_added_clean,
         "power_rank_threshold": threshold,
         "effort_threshold": effort_threshold,
+        "xp_cap": xp_cap,
         "classes": classes,
         "methodology": methodology,
         "computed_at": computed_at,
@@ -349,7 +387,7 @@ def _empty() -> dict:
         "window_start": None, "window_end": None, "duration_hours": None,
         "total_active": None, "total_active_clean": None,
         "total_effort_added": None, "total_effort_added_clean": None,
-        "power_rank_threshold": 0, "effort_threshold": 0,
+        "power_rank_threshold": 0, "effort_threshold": 0, "xp_cap": 0,
         "classes": [], "methodology": _METHODOLOGY,
         "computed_at": int(time.time()),
     }
@@ -399,8 +437,9 @@ async def backfill_class_history(
                 "total": len(pairs), "note": "all pairs already stored - use force=True"}
 
     board_uuids = stats.class_effort_board_uuids()   # Effort only (Paragon excluded)
-    pr_board_uuids = stats.class_pr_board_uuids()
-    pr_thr, effort_thr = await _clean_thresholds()
+    pr_thr, effort_thr, xp_cap = await _clean_thresholds()
+    pr_board_uuids = stats.class_pr_board_uuids() \
+        + ([_XP_CAP_BOARD] if xp_cap > 0 else [])
     needed = sorted({a for pr in todo for a in pr})
     early_of = {late: early for early, late in todo}
 
@@ -431,11 +470,14 @@ async def backfill_class_history(
                 try:
                     early_maps = prev_maps if (early == prev_anchor and prev_maps is not None) \
                         else await _act._load_anchor_maps(early, board_uuids)
-                    # Power Rank snapshot at the window END gates the clean view.
+                    # Power Rank (+ weekly-XP, when the cap is on) snapshot at the
+                    # window END gates the clean view.
                     pr_maps = await _act._load_anchor_maps(anchor, pr_board_uuids)
                     counts = _class_counts(early_maps, cur_maps, early, anchor,
                                            pr_maps=pr_maps, threshold=pr_thr,
-                                           effort_threshold=effort_thr)
+                                           effort_threshold=effort_thr,
+                                           xp_map=pr_maps.get(_XP_CAP_BOARD),
+                                           xp_cap=xp_cap)
                     now_ts = int(time.time())
                     rows = [
                         {"class_index": i, "window_end": anchor, "window_start": early,
@@ -582,7 +624,7 @@ async def class_activity_series(period: str = "7d") -> dict:
                         "icon": stats.class_icon(i),
                         "values": values, "values_clean": values_clean})
 
-    pr_thr, effort_thr = await _clean_thresholds()
+    pr_thr, effort_thr, xp_cap = await _clean_thresholds()
     payload = {
         "period": period,
         "bucket_seconds": bucket,
@@ -590,6 +632,7 @@ async def class_activity_series(period: str = "7d") -> dict:
         "window_end": now_ts,
         "power_rank_threshold": pr_thr,
         "effort_threshold": effort_thr,
+        "xp_cap": xp_cap,
         "buckets": buckets,
         "classes": classes,
         "methodology": _METHODOLOGY,

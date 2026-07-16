@@ -2764,6 +2764,25 @@ async function renderMarketItems() {
       <div id="mi-result" class="ingest-result"></div>
     </div>
     <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:10px;flex-wrap:wrap">
+        <h2 style="flex:1;margin:0">Categories <span class="badge muted" id="mc-count">…</span></h2>
+        <button type="button" class="btn small" data-act="mc-refresh">Refresh</button>
+      </div>
+      <p class="hint" style="margin:0 0 10px">
+        Sidebar groups for the public <code>/market</code> page, shown as collapsible
+        sections in the order below. Membership is stored by item <em>name</em>,
+        separately from the allow-list — removing an item (or bulk-replacing the whole
+        list) never uncategorizes it; re-add the item and it lands back in its group.
+        Items in no category render under “Other”.
+      </p>
+      <div class="row" style="align-items:center">
+        <input type="text" id="mc-name" placeholder="New category name" autocomplete="off" spellcheck="false">
+        <button class="btn primary" data-act="mc-create">Create</button>
+      </div>
+      <div id="mc-result" class="ingest-result"></div>
+      <div id="mc-list" style="margin-top:10px"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
       <div class="row" style="align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap">
         <h2 style="flex:1;margin:0">Current list <span class="badge muted" id="mi-count">…</span></h2>
         <input type="search" id="mi-filter" placeholder="Filter…" autocomplete="off" spellcheck="false" style="max-width:200px;flex:0 0 auto">
@@ -2794,7 +2813,34 @@ async function renderMarketItems() {
   const filterEl = document.getElementById("mi-filter");
   const bulkEl = document.getElementById("mi-bulk");
   const bulkResult = document.getElementById("mi-bulk-result");
+  const mcList = document.getElementById("mc-list");
+  const mcCount = document.getElementById("mc-count");
+  const mcResult = document.getElementById("mc-result");
+  const mcName = document.getElementById("mc-name");
   let items = [];
+  let cats = [];
+  const mcOpen = new Set();   // expanded category ids (transient)
+  // Same blueprint-render thumbnails the /market page shows. Cosmetic:
+  // loaded best-effort after the lists; names without a resolvable codex
+  // model simply render without an image (and a 404 removes itself).
+  let itemImages = {};
+  let imageBranch = "live-us";
+
+  // name -> category name, for the badge on the allow-list rows.
+  function catOf(name) {
+    for (const c of cats) if (c.items.includes(name)) return c.name;
+    return null;
+  }
+
+  function thumb(name, size) {
+    const bp = itemImages[name];
+    if (!bp) return "";
+    const src = API_BASE + "/site/codexes/render?blueprint=" + encodeURIComponent(bp)
+      + "&branch=" + encodeURIComponent(imageBranch) + "&dim=" + (size * 2);
+    return `<img loading="lazy" decoding="async" alt="" src="${esc(src)}"
+      style="width:${size}px;height:${size}px;image-rendering:pixelated;object-fit:contain;vertical-align:-4px;flex:0 0 auto"
+      onerror="this.remove()">`;
+  }
 
   function draw() {
     const q = filterEl.value.trim().toLowerCase();
@@ -2813,8 +2859,14 @@ async function renderMarketItems() {
       const tag = it.added_by
         ? `<span class="badge muted" title="Added by an admin on ${esc(fmtDay(it.added_at))}">admin</span>`
         : `<span class="badge muted" title="Seeded from the bundled list">seeded</span>`;
+      const cat = catOf(it.name);
+      const catTag = cat
+        ? `<span class="badge" title="Category on the /market sidebar">${esc(cat)}</span>`
+        : "";
       return `<div class="row" style="align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+           ${thumb(it.name, 24)}
            <span style="flex:1;font-weight:600">${esc(it.name)}</span>
+           ${catTag}
            ${tag}
            <button class="btn small" data-remove="${esc(it.name)}">Remove</button>
          </div>`;
@@ -2885,15 +2937,242 @@ async function renderMarketItems() {
     }
   }
 
+  // ── Categories - collapsible /market sidebar groups ──────────────────
+  // Membership is item NAMES on the category doc (decoupled from the
+  // allow-list docs), so removes / bulk replaces above never uncategorize.
+
+  function drawCats() {
+    mcCount.textContent = cats.length.toLocaleString();
+    if (!cats.length) {
+      mcList.innerHTML = `<p class="muted" style="margin:0">No categories yet — the /market sidebar renders one flat list. Create one above.</p>`;
+      return;
+    }
+    const tracked = new Set(items.map((it) => it.name));
+    mcList.innerHTML = cats.map((c, idx) => {
+      const open = mcOpen.has(c.id);
+      const inCat = new Set(c.items);
+      // Per-category suggestions: allow-list items NOT already in it.
+      const dlOptions = items.filter((it) => !inCat.has(it.name))
+        .map((it) => `<option value="${esc(it.name)}"></option>`).join("");
+      const chips = c.items.map((n) => {
+        const known = tracked.has(n);
+        const warnTitle = known ? "" : ` title="Not on the allow-list right now — kept so it survives allow-list edits; re-add the item to show it again"`;
+        const style = `display:inline-flex;align-items:center;gap:5px${known ? "" : ";opacity:.55"}`;
+        return `<span class="badge muted"${warnTitle} style="${style}">${thumb(n, 16)}${esc(n)}${known ? "" : " ⚠"}
+            <a href="#" data-mc-drop="${esc(c.id)}" data-mc-item="${esc(n)}"
+               style="text-decoration:none" title="Remove from category">✕</a></span>`;
+      }).join(" ");
+      return `<div style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px">
+        <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn small" data-mc-toggle="${esc(c.id)}"
+                  title="${open ? "Collapse" : "Expand"}" aria-expanded="${open}">${open ? "▾" : "▸"}</button>
+          <span style="flex:1;font-weight:600">${esc(c.name)}
+            <span class="badge muted">${c.items.length.toLocaleString()}</span></span>
+          <button type="button" class="btn small" data-mc-up="${esc(c.id)}" title="Move up" ${idx === 0 ? "disabled" : ""}>↑</button>
+          <button type="button" class="btn small" data-mc-down="${esc(c.id)}" title="Move down" ${idx === cats.length - 1 ? "disabled" : ""}>↓</button>
+          <button type="button" class="btn small" data-mc-rename="${esc(c.id)}">Rename</button>
+          <button type="button" class="btn small danger" data-mc-del="${esc(c.id)}">Delete</button>
+        </div>
+        <div ${open ? "" : "hidden"} style="margin-top:8px">
+          <div class="row" style="align-items:center;gap:8px;margin-bottom:8px">
+            <input type="text" list="mc-dl-${esc(c.id)}" data-mc-add-input="${esc(c.id)}"
+                   placeholder="Add item by name…" autocomplete="off" spellcheck="false" style="flex:1">
+            <datalist id="mc-dl-${esc(c.id)}">${dlOptions}</datalist>
+            <button type="button" class="btn small primary" data-mc-add="${esc(c.id)}">Add</button>
+          </div>
+          <details style="margin-bottom:8px">
+            <summary class="hint" style="cursor:pointer">Bulk add (one item per line)</summary>
+            <textarea data-mc-bulk-input="${esc(c.id)}" rows="5" spellcheck="false"
+              placeholder="Fresh Diamond&#10;Golden Egg&#10;…"
+              style="width:100%;margin-top:8px;font-family:var(--mono,monospace);font-size:.85rem"></textarea>
+            <div class="row" style="align-items:center;margin-top:6px">
+              <span class="hint" style="flex:1">Names already in the category are skipped; names off the allow-list are kept (shown with ⚠).</span>
+              <button type="button" class="btn small primary" data-mc-bulk-add="${esc(c.id)}">Add all</button>
+            </div>
+          </details>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${chips || `<span class="muted" style="font-size:.85rem">No items yet.</span>`}
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+
+    mcList.querySelectorAll("[data-mc-toggle]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const id = b.dataset.mcToggle;
+        if (mcOpen.has(id)) mcOpen.delete(id); else mcOpen.add(id);
+        drawCats();
+      }));
+    mcList.querySelectorAll("[data-mc-up]").forEach((b) =>
+      b.addEventListener("click", () => moveCat(b.dataset.mcUp, -1)));
+    mcList.querySelectorAll("[data-mc-down]").forEach((b) =>
+      b.addEventListener("click", () => moveCat(b.dataset.mcDown, +1)));
+    mcList.querySelectorAll("[data-mc-rename]").forEach((b) =>
+      b.addEventListener("click", () => renameCat(b.dataset.mcRename)));
+    mcList.querySelectorAll("[data-mc-del]").forEach((b) =>
+      b.addEventListener("click", () => deleteCat(b.dataset.mcDel)));
+    mcList.querySelectorAll("[data-mc-add]").forEach((b) =>
+      b.addEventListener("click", () => addCatItem(b.dataset.mcAdd)));
+    mcList.querySelectorAll("[data-mc-bulk-add]").forEach((b) =>
+      b.addEventListener("click", () => bulkAddCatItems(b.dataset.mcBulkAdd)));
+    mcList.querySelectorAll("[data-mc-add-input]").forEach((inp) =>
+      inp.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); addCatItem(inp.dataset.mcAddInput); }
+      }));
+    mcList.querySelectorAll("[data-mc-drop]").forEach((a) =>
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        dropCatItem(a.dataset.mcDrop, a.dataset.mcItem);
+      }));
+  }
+
+  async function loadCats() {
+    try {
+      const data = await API.call("/admin/market/categories");
+      cats = data.categories || [];
+      drawCats();
+      draw();   // refresh the category badges on the allow-list rows
+    } catch (ex) {
+      mcList.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    }
+  }
+
+  // Thumbnail map - the same /market-page renderer (item name -> codex
+  // blueprint, drawn by /site/codexes/render). Cosmetic, so a failure just
+  // leaves the lists image-less.
+  async function loadImages() {
+    try {
+      const data = await API.call("/site/market/item-images");
+      itemImages = data.images || {};
+      if (data.branch) imageBranch = data.branch;
+      draw();
+      drawCats();
+    } catch (_) { /* thumbnails are decoration - never block the tab */ }
+  }
+
+  async function createCat() {
+    const name = mcName.value.trim();
+    if (!name) return;
+    mcResult.className = "ingest-result";
+    mcResult.textContent = "Creating…";
+    try {
+      const c = await API.call("/admin/market/categories", { method: "POST", body: { name } });
+      mcResult.className = "ingest-result ok";
+      mcResult.textContent = `Created ${name}.`;
+      mcName.value = "";
+      mcOpen.add(c.id);
+      toast(`Created ${name}`, "ok");
+      loadCats();
+    } catch (ex) {
+      mcResult.className = "ingest-result err";
+      mcResult.textContent = ex.message;
+    }
+  }
+
+  async function renameCat(id) {
+    const c = cats.find((x) => x.id === id);
+    if (!c) return;
+    const name = window.prompt("New name for this category:", c.name);
+    if (!name || !name.trim() || name.trim() === c.name) return;
+    try {
+      await API.call(`/admin/market/categories/${encodeURIComponent(id)}`,
+        { method: "PATCH", body: { name: name.trim() } });
+      toast("Renamed", "ok");
+      loadCats();
+    } catch (ex) {
+      toast(ex.message, "err");
+    }
+  }
+
+  async function deleteCat(id) {
+    const c = cats.find((x) => x.id === id);
+    if (!c) return;
+    if (!window.confirm(`Delete category "${c.name}"? Its ${c.items.length} item(s) just become uncategorized ("Other") — the items themselves are untouched.`)) return;
+    try {
+      await API.call(`/admin/market/categories/${encodeURIComponent(id)}`, { method: "DELETE" });
+      toast(`Deleted ${c.name}`, "ok");
+      loadCats();
+    } catch (ex) {
+      toast(ex.message, "err");
+    }
+  }
+
+  async function moveCat(id, dir) {
+    const idx = cats.findIndex((x) => x.id === id);
+    const to = idx + dir;
+    if (idx < 0 || to < 0 || to >= cats.length) return;
+    const order = cats.map((x) => x.id);
+    [order[idx], order[to]] = [order[to], order[idx]];
+    try {
+      await API.call("/admin/market/categories/order", { method: "PUT", body: { ids: order } });
+      loadCats();
+    } catch (ex) {
+      toast(ex.message, "err");
+    }
+  }
+
+  async function addCatItem(id) {
+    const inp = mcList.querySelector(`[data-mc-add-input="${CSS.escape(id)}"]`);
+    const c = cats.find((x) => x.id === id);
+    if (!inp || !c) return;
+    const name = inp.value.trim();
+    if (!name) return;
+    if (c.items.includes(name)) { toast("Already in this category", "err"); return; }
+    try {
+      await API.call(`/admin/market/categories/${encodeURIComponent(id)}`,
+        { method: "PATCH", body: { items: c.items.concat([name]) } });
+      inp.value = "";
+      loadCats();
+    } catch (ex) {
+      toast(ex.message, "err");
+    }
+  }
+
+  async function bulkAddCatItems(id) {
+    const ta = mcList.querySelector(`[data-mc-bulk-input="${CSS.escape(id)}"]`);
+    const c = cats.find((x) => x.id === id);
+    if (!ta || !c) return;
+    const pasted = [...new Set(ta.value.split("\n").map((s) => s.trim()).filter(Boolean))];
+    if (!pasted.length) { toast("Paste at least one item name", "err"); return; }
+    const inCat = new Set(c.items);
+    const fresh = pasted.filter((n) => !inCat.has(n));
+    if (!fresh.length) { toast("All of those are already in this category", "err"); return; }
+    try {
+      await API.call(`/admin/market/categories/${encodeURIComponent(id)}`,
+        { method: "PATCH", body: { items: c.items.concat(fresh) } });
+      const skipped = pasted.length - fresh.length;
+      const note = skipped ? ", " + skipped + " duplicate(s) skipped" : "";
+      toast("Added " + fresh.length + " item(s)" + note, "ok");
+      loadCats();
+    } catch (ex) {
+      toast(ex.message, "err");
+    }
+  }
+
+  async function dropCatItem(id, name) {
+    const c = cats.find((x) => x.id === id);
+    if (!c) return;
+    try {
+      await API.call(`/admin/market/categories/${encodeURIComponent(id)}`,
+        { method: "PATCH", body: { items: c.items.filter((n) => n !== name) } });
+      loadCats();
+    } catch (ex) {
+      toast(ex.message, "err");
+    }
+  }
+
   document.querySelector('[data-act="add"]').addEventListener("click", add);
   document.querySelector('[data-act="refresh"]').addEventListener("click", load);
   document.querySelector('[data-act="replace"]').addEventListener("click", replace);
   document.querySelector('[data-act="prefill"]').addEventListener("click", () => {
     bulkEl.value = items.map((it) => it.name).join("\n");
   });
+  document.querySelector('[data-act="mc-create"]').addEventListener("click", createCat);
+  document.querySelector('[data-act="mc-refresh"]').addEventListener("click", loadCats);
+  mcName.addEventListener("keydown", (e) => { if (e.key === "Enter") createCat(); });
   filterEl.addEventListener("input", draw);
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
-  load();
+  load().then(loadCats).then(loadImages);
 }
 
 async function renderClaims() {

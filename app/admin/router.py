@@ -18,6 +18,12 @@ from app.admin.schemas import (
     LeaderboardBoardAdminList,
     LeaderboardBoardAdminView,
     LeaderboardBoardResetUpdate,
+    MarketCategoryAdminView,
+    MarketCategoryCreateRequest,
+    MarketCategoryListAdmin,
+    MarketCategoryReorderRequest,
+    MarketCategoryReorderResponse,
+    MarketCategoryUpdateRequest,
     RuntimeConfigItem,
     RuntimeConfigList,
     RuntimeConfigUpdate,
@@ -49,7 +55,7 @@ from app.supporters.schemas import (
 )
 from app.tokens.models import ApiToken
 from app.trove.market import service as market_service
-from app.trove.market.models import MarketInterestItem
+from app.trove.market.models import MarketInterestItem, MarketItemCategory
 from app.trove.mods_hub.schemas import TakedownRequest
 from app.usage.models import UsageEvent
 from app.usage.schemas import ActivitySummary
@@ -399,6 +405,92 @@ async def replace_interest_items_admin(
     except ValueError as e:
         raise APIError(status_code=400, code=ErrorCode.bad_request, message=str(e))
     return InterestItemBulkReplaceResponse(**summary)
+
+
+# --- Market item categories (admin) -----------------------------------------
+# Sidebar groupings for the /market page. Membership = item NAMES stored on
+# the category doc, decoupled from MarketInterestItem so allow-list deletes /
+# bulk replaces never lose assignments (re-adding an item puts it straight
+# back in its category). Rendered publicly via /site/market/items.
+
+
+def _category_view(d: MarketItemCategory) -> MarketCategoryAdminView:
+    return MarketCategoryAdminView(
+        id=str(d.id),
+        name=d.name,
+        order=d.order,
+        items=sorted(set(d.items), key=str.lower),
+        created_at=d.created_at,
+    )
+
+
+@router.get("/market/categories", response_model=MarketCategoryListAdmin)
+async def list_market_categories_admin() -> MarketCategoryListAdmin:
+    """Every category in display order, with its member-item names."""
+    docs = await market_service.list_categories()
+    return MarketCategoryListAdmin(
+        categories=[_category_view(d) for d in docs],
+        count=len(docs),
+    )
+
+
+@router.post("/market/categories", response_model=MarketCategoryAdminView,
+             status_code=201)
+async def create_market_category_admin(
+    req: MarketCategoryCreateRequest,
+    admin: User = Depends(get_current_superuser),
+) -> MarketCategoryAdminView:
+    """Create an empty category at the bottom of the display order."""
+    try:
+        doc = await market_service.admin_create_category(
+            req.name, created_by=admin.id,
+        )
+    except ValueError as e:
+        raise_from_value_error(e)  # dup → 409, empty name → 400
+    return _category_view(doc)
+
+
+@router.patch("/market/categories/{category_id}",
+              response_model=MarketCategoryAdminView)
+async def update_market_category_admin(
+    category_id: str,
+    req: MarketCategoryUpdateRequest,
+) -> MarketCategoryAdminView:
+    """Rename and/or replace the member-item list (omitted fields untouched).
+    Item names are free-form on purpose - they may reference items not
+    currently on the allow-list (kept so they survive allow-list churn)."""
+    try:
+        doc = await market_service.admin_update_category(
+            to_oid(category_id), name=req.name, items=req.items,
+        )
+    except ValueError as e:
+        raise_from_value_error(e)
+    if doc is None:
+        raise APIError(status_code=404, code=ErrorCode.not_found,
+                       message="No such category")
+    return _category_view(doc)
+
+
+@router.delete("/market/categories/{category_id}", status_code=204)
+async def delete_market_category_admin(category_id: str) -> None:
+    """Delete one category - its items just become uncategorized."""
+    removed = await market_service.admin_delete_category(to_oid(category_id))
+    if not removed:
+        raise APIError(status_code=404, code=ErrorCode.not_found,
+                       message="No such category")
+
+
+@router.put("/market/categories/order",
+            response_model=MarketCategoryReorderResponse)
+async def reorder_market_categories_admin(
+    req: MarketCategoryReorderRequest,
+) -> MarketCategoryReorderResponse:
+    """Persist a new display order (ids first-to-last = top-to-bottom).
+    Unlisted ids keep their relative order after the listed ones."""
+    touched = await market_service.admin_reorder_categories(
+        [to_oid(i) for i in req.ids],
+    )
+    return MarketCategoryReorderResponse(reordered=touched)
 
 
 # --- Leaderboards: per-board reset cadence override -----------------------

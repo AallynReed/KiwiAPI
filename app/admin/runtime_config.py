@@ -1136,6 +1136,23 @@ REGISTRY: dict[str, TunableSetting] = {
         ),
         min_value=0, max_value=10_000_000,
     ),
+    "class_activity_xp_cap": _t(
+        key="class_activity_xp_cap",
+        default=settings.class_activity_xp_cap,
+        type="int",
+        category="class_activity",
+        description=(
+            "XP CAP for the Class Activity \"clean\" (established) view - the "
+            "opposite direction from the two floors. A player is EXCLUDED from a "
+            "class's clean estimate when their score on the weekly XP stats "
+            "leaderboard (uuid 21005) exceeds this value at the window end - "
+            "filtering extreme XP grinders / farm bots that the floors let "
+            "through. Set to 0 to drop this gate. Takes effect on the next "
+            "class-activity recompute (latest window each capture; full history "
+            "on a backfill)."
+        ),
+        min_value=0, max_value=1_000_000_000,
+    ),
 
     # ── Trove server status - per-environment game endpoints ──────────
     # The auth tier (auth.trionworlds.com HTTPS) needs no config. The game

@@ -29,6 +29,7 @@ from app.trove.market.models import (
     LISTING_LIFETIME_SECONDS,
     LISTING_STALE_SECONDS,
     MarketInterestItem,
+    MarketItemCategory,
     load_interest_items_from_file,
 )
 from app.trove.market.parser import parse_dump
@@ -79,6 +80,16 @@ async def _interest_items_set() -> frozenset[str]:
 async def interest_items_list() -> list[str]:
     """Sorted list of names for public consumption."""
     return sorted(await _interest_items_set())
+
+
+async def untracked_items(names: list[str]) -> list[str]:
+    """Subset of ``names`` NOT on the interest allow-list - items whose stored
+    listings survive but that the bot no longer scans (an admin removed them).
+    The /market sidebar shows these under a system "Untracked" group with a
+    no-longer-updating warning; category membership is retained so re-adding
+    the item puts it straight back in its group."""
+    interest = await _interest_items_set()
+    return [n for n in names if n not in interest]
 
 
 # ----- Admin operations on the interest list -------------------------------
@@ -152,6 +163,108 @@ async def admin_replace_interest_items(
     ])
     _invalidate_interest_cache()
     return {"removed": before, "added": len(clean)}
+
+
+# ----- Item categories ------------------------------------------------------
+# Admin-defined groupings for the /market sidebar. Membership is a list of
+# item NAMES on the category doc - deliberately decoupled from the
+# MarketInterestItem collection so allow-list edits (single removes, the bulk
+# drop-and-reinsert replace) never lose category assignments.
+
+
+def _sorted_categories(docs: list[MarketItemCategory]) -> list[MarketItemCategory]:
+    return sorted(docs, key=lambda d: (d.order, d.name.lower()))
+
+
+async def list_categories() -> list[MarketItemCategory]:
+    """All categories in display order (``order`` asc, name tiebreak)."""
+    return _sorted_categories(await MarketItemCategory.find().to_list())
+
+
+async def categories_public() -> list[dict]:
+    """Ordered ``[{name, items}]`` for the public /market sidebar. Item names
+    are de-duped and sorted for a stable render; empty categories are kept
+    (the client hides groups with no visible items anyway)."""
+    return [
+        {"name": d.name, "items": sorted(set(d.items), key=str.lower)}
+        for d in await list_categories()
+    ]
+
+
+async def admin_create_category(
+    name: str, *, created_by: PydanticObjectId | None,
+) -> MarketItemCategory:
+    """Insert one category at the end of the order. Raises ``ValueError`` on
+    dup / empty name (the caller maps to 409/422)."""
+    name = name.strip()
+    if not name:
+        raise ValueError("name is empty")
+    if await MarketItemCategory.find_one(MarketItemCategory.name == name):
+        raise ValueError(f"category '{name}' already exists")
+    existing = await MarketItemCategory.find().to_list()
+    doc = MarketItemCategory(
+        name=name,
+        order=(max((d.order for d in existing), default=-1) + 1),
+        created_by=created_by,
+    )
+    await doc.insert()
+    return doc
+
+
+async def admin_update_category(
+    category_id: PydanticObjectId | None,
+    *,
+    name: str | None = None,
+    items: list[str] | None = None,
+) -> MarketItemCategory | None:
+    """Rename and/or replace the member-item list. ``None`` = leave as-is.
+    Returns the updated doc, or ``None`` if the id doesn't exist (including a
+    malformed id parsed to ``None``). Raises ``ValueError`` on a rename
+    collision or empty new name."""
+    doc = await MarketItemCategory.get(category_id) if category_id else None
+    if doc is None:
+        return None
+    if name is not None:
+        name = name.strip()
+        if not name:
+            raise ValueError("name is empty")
+        if name != doc.name and await MarketItemCategory.find_one(
+            MarketItemCategory.name == name,
+        ):
+            raise ValueError(f"category '{name}' already exists")
+        doc.name = name
+    if items is not None:
+        # De-dupe, preserve nothing fancy - the read side sorts for display.
+        doc.items = sorted({i.strip() for i in items if i and i.strip()}, key=str.lower)
+    await doc.save()
+    return doc
+
+
+async def admin_delete_category(category_id: PydanticObjectId | None) -> bool:
+    """Delete one category (its items just become uncategorized). Returns
+    True if it existed."""
+    doc = await MarketItemCategory.get(category_id) if category_id else None
+    if doc is None:
+        return False
+    await doc.delete()
+    return True
+
+
+async def admin_reorder_categories(ids: list[PydanticObjectId | None]) -> int:
+    """Set display order = position in ``ids``. Ids not listed keep their
+    relative order after the listed ones (so a partial reorder degrades
+    gracefully instead of erroring). Returns the number of docs touched."""
+    docs = await MarketItemCategory.find().to_list()
+    by_id = {d.id: d for d in docs}
+    ordered = [by_id[i] for i in ids if i in by_id]
+    tail = _sorted_categories([d for d in docs if d.id not in set(ids)])
+    touched = 0
+    for pos, doc in enumerate(ordered + tail):
+        if doc.order != pos:
+            doc.order = pos
+            await doc.save()
+            touched += 1
+    return touched
 
 
 # --- insert -----------------------------------------------------------------
@@ -316,6 +429,70 @@ async def item_summary(name: str) -> dict | None:
 # ----- Analytics (the /market Analytics tab) -------------------------------
 # Aggregations over the immutable listing history. Everything degrades to empty
 # when Postgres isn't configured (dev) rather than raising.
+
+# How far below the 7-day TTL a listing's lifespan can fall and still count as
+# "expired unsold" - a buffer for the hourly capture cadence (missed scrapes near
+# the end of a listing's life). Anything shorter is treated as "left early / sold".
+_LIQUIDITY_SOLD_MARGIN_SECONDS = 6 * 3600
+
+
+async def analytics_overview(*, days: int = 7) -> dict:
+    """At-a-glance market pulse for the Analytics-tab header: live active-listing
+    count / distinct items / total flux value, plus the window's single biggest
+    mover and most-traded item. Degrades to zeros when Postgres is off (dev)."""
+    from app.core.config import settings
+    now = _now()
+    base = {
+        "active_listings": 0, "active_items": 0, "total_value": 0, "total_units": 0,
+        "top_mover": None, "top_traded": None, "days": days, "now": now,
+    }
+    if not settings.postgres_enabled:
+        return base
+    snap = await pg_store.market_overview(
+        stale_floor=now - LISTING_STALE_SECONDS,
+        lifetime_floor=now - LISTING_LIFETIME_SECONDS,
+    )
+    movers = await pg_store.market_movers(
+        recent_start=now - days * 86400, prior_start=now - 2 * days * 86400,
+        now=now, min_samples=5, limit=1,
+    )
+    vol = await pg_store.volume_leaders(window_start=now - days * 86400, limit=1)
+    base.update(snap)
+    base["top_mover"] = movers[0] if movers else None
+    base["top_traded"] = vol[0] if vol else None
+    return base
+
+
+async def analytics_liquidity(
+    *, days: int = 14, min_samples: int = 5, limit: int = 40,
+) -> dict:
+    """Per-item sell-through / time-to-sell, inferred from how long listings lived
+    before leaving the market. An *estimate* (hourly capture; can't tell a sale from
+    a cancellation), surfaced with that caveat. Empty when Postgres is off (dev)."""
+    from app.core.config import settings
+    now = _now()
+    if not settings.postgres_enabled:
+        return {"items": [], "days": days, "now": now}
+    items = await pg_store.market_liquidity(
+        concluded_before=now - LISTING_STALE_SECONDS,
+        window_start=now - days * 86400,
+        expire_lifespan=LISTING_LIFETIME_SECONDS - _LIQUIDITY_SOLD_MARGIN_SECONDS,
+        min_samples=min_samples, limit=limit,
+    )
+    return {"items": items, "days": days, "now": now,
+            "ttl_seconds": LISTING_LIFETIME_SECONDS}
+
+
+async def analytics_volume(*, days: int = 14, limit: int = 40) -> dict:
+    """Most-traded items by new-listing supply in the window. Empty when Postgres
+    is off (dev)."""
+    from app.core.config import settings
+    now = _now()
+    if not settings.postgres_enabled:
+        return {"items": [], "days": days, "now": now}
+    items = await pg_store.volume_leaders(window_start=now - days * 86400, limit=limit)
+    return {"items": items, "days": days, "now": now}
+
 
 async def analytics_timeline(name: str, *, days: int = 14, bucket_hours: int = 24) -> dict:
     """Daily (by default) price band + supply for one item, plus the merchant-event

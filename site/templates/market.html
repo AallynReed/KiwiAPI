@@ -104,6 +104,14 @@
                         </div>
                     </header>
 
+                    <!-- Untracked warning - shown when the selected item has
+                         stored listings but is no longer on the scan
+                         allow-list, so its data has stopped updating. -->
+                    <p class="mkt-untracked-warn" id="mkt-untracked-warn" hidden>
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        <span data-i18n>This item is no longer tracked - prices and listings no longer update.</span>
+                    </p>
+
                     <!-- Summary stats card -->
                     <section class="mkt-summary" id="mkt-summary">
                         <div class="mkt-summary-card">
@@ -175,13 +183,42 @@
             </label>
         </div>
 
+        <!-- Market pulse - KPI strip -->
+        <section class="mkt-an-pulse" id="mkt-an-pulse" aria-label="Market pulse">
+            <p class="mkt-loading" data-i18n>Loading…</p>
+        </section>
+
         <!-- Movers -->
         <section class="mkt-an-block">
             <header class="mkt-an-head">
                 <h2 class="mkt-an-title" data-i18n>Biggest movers</h2>
-                <p class="mkt-an-sub" data-i18n>Median price change vs. the previous window.</p>
+                <p class="mkt-an-sub" data-i18n>Median price change vs. the previous window. Click any item to chart it.</p>
             </header>
             <div class="mkt-an-movers" id="mkt-an-movers">
+                <p class="mkt-loading" data-i18n>Loading…</p>
+            </div>
+        </section>
+
+        <!-- Liquidity & demand -->
+        <section class="mkt-an-block">
+            <header class="mkt-an-head mkt-an-head-row">
+                <div>
+                    <h2 class="mkt-an-title" data-i18n>Liquidity &amp; demand</h2>
+                    <p class="mkt-an-sub" data-i18n>How often listings actually sell, and how fast. Estimated from how long each listing stays on the market before it disappears — hourly captures, so a sale and a cancelled post look the same.</p>
+                </div>
+            </header>
+            <div class="mkt-an-liquidity" id="mkt-an-liquidity">
+                <p class="mkt-loading" data-i18n>Loading…</p>
+            </div>
+        </section>
+
+        <!-- Most traded -->
+        <section class="mkt-an-block">
+            <header class="mkt-an-head">
+                <h2 class="mkt-an-title" data-i18n>Most traded</h2>
+                <p class="mkt-an-sub" data-i18n>Items with the most new listings posted this window — where the volume is.</p>
+            </header>
+            <div class="mkt-an-volume" id="mkt-an-volume">
                 <p class="mkt-loading" data-i18n>Loading…</p>
             </div>
         </section>
@@ -213,17 +250,28 @@
             <header class="mkt-an-head mkt-an-head-row">
                 <div>
                     <h2 class="mkt-an-title" data-i18n>Price &amp; volume</h2>
-                    <p class="mkt-an-sub" data-i18n>Daily median with quartile band and supply, plus merchant-event bands.</p>
+                    <p class="mkt-an-sub" data-i18n>Daily median with quartile band and supply, plus merchant-event bands. Add a second item to compare.</p>
                 </div>
-                <span class="mkt-an-item-wrap">
-                    <i class="fa-solid fa-magnifying-glass mkt-search-icon" aria-hidden="true"></i>
-                    <input type="search" id="mkt-an-item" class="mkt-search-input"
-                           data-i18n-placeholder placeholder="Pick an item…"
-                           autocomplete="off" spellcheck="false"
-                           role="combobox" aria-expanded="false" aria-controls="mkt-an-item-suggest"
-                           aria-autocomplete="list">
-                    <div class="mkt-an-suggest" id="mkt-an-item-suggest" role="listbox" hidden></div>
-                </span>
+                <div class="mkt-an-pickers">
+                    <span class="mkt-an-item-wrap">
+                        <i class="fa-solid fa-magnifying-glass mkt-search-icon" aria-hidden="true"></i>
+                        <input type="search" id="mkt-an-item" class="mkt-search-input"
+                               data-i18n-placeholder placeholder="Pick an item…"
+                               autocomplete="off" spellcheck="false"
+                               role="combobox" aria-expanded="false" aria-controls="mkt-an-item-suggest"
+                               aria-autocomplete="list">
+                        <div class="mkt-an-suggest" id="mkt-an-item-suggest" role="listbox" hidden></div>
+                    </span>
+                    <span class="mkt-an-item-wrap mkt-an-item-wrap-cmp">
+                        <i class="fa-solid fa-code-compare mkt-search-icon" aria-hidden="true"></i>
+                        <input type="search" id="mkt-an-item-cmp" class="mkt-search-input"
+                               data-i18n-placeholder placeholder="Compare with… (optional)"
+                               autocomplete="off" spellcheck="false"
+                               role="combobox" aria-expanded="false" aria-controls="mkt-an-item-cmp-suggest"
+                               aria-autocomplete="list">
+                        <div class="mkt-an-suggest" id="mkt-an-item-cmp-suggest" role="listbox" hidden></div>
+                    </span>
+                </div>
             </header>
             <div class="mkt-an-timeline" id="mkt-an-timeline">
                 <p class="mkt-an-hint" data-i18n>Pick an item, or click one from the movers or deals above, to chart its price and supply over time.</p>

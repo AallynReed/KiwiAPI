@@ -12,7 +12,67 @@
   --an-vol: rgba(147,163,182,.30);
   --an-evt: rgba(248,150,30,.12);
   --an-evt-line: rgba(248,150,30,.5);
+  --an-cmp: #c084fc;               /* compare-series line */
+  --an-ma: rgba(255,255,255,.55);  /* moving-average trend */
 }
+
+/* ─── Market pulse (KPI strip) ──────────────────────────────────────── */
+.mkt-an-pulse {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.mkt-an-pulse > .mkt-loading { grid-column: 1 / -1; margin: 0; }
+.mkt-an-kpi {
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: var(--radius-lg, 16px); padding: 14px 16px;
+  display: grid; gap: 4px; align-content: start; min-width: 0;
+}
+.mkt-an-kpi-label {
+  font-size: .72rem; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--text-mute); display: inline-flex; align-items: center; gap: 6px;
+}
+.mkt-an-kpi-value {
+  font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 700;
+  font-size: 1.35rem; line-height: 1.1; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mkt-an-kpi-sub { font-size: .78rem; color: var(--text-mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mkt-an-kpi-btn { border: 0; background: transparent; cursor: pointer; text-align: left; font: inherit; padding: 0; }
+.mkt-an-kpi-btn:hover .mkt-an-kpi-value { color: var(--accent-blue); }
+.mkt-an-kpi .is-up { color: var(--an-up); }
+.mkt-an-kpi .is-down { color: var(--an-down); }
+
+/* ─── Sortable table headers (shared by deals/liquidity/volume) ─────── */
+.mkt-an-table th.mkt-an-sort { cursor: pointer; user-select: none; white-space: nowrap; }
+.mkt-an-table th.mkt-an-sort:hover { color: var(--text); }
+.mkt-an-table th.mkt-an-sort .mkt-an-caret { opacity: 0; margin-left: 3px; font-size: .7em; }
+.mkt-an-table th.mkt-an-sort.is-active { color: var(--accent-blue); }
+.mkt-an-table th.mkt-an-sort.is-active .mkt-an-caret { opacity: 1; }
+
+/* Confidence badge (sample size) */
+.mkt-an-conf {
+  display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+  padding: 1px 6px; border-radius: 999px; border: 1px solid var(--bg-line); color: var(--text-mute);
+}
+.mkt-an-conf.is-low { color: var(--an-down); border-color: color-mix(in srgb, var(--an-down) 45%, transparent); }
+.mkt-an-conf.is-high { color: var(--an-up); border-color: color-mix(in srgb, var(--an-up) 40%, transparent); }
+.mkt-an-profit { color: var(--an-up); font-weight: 600; }
+
+/* ─── Liquidity: sell-through meter ─────────────────────────────────── */
+.mkt-an-meter {
+  display: inline-flex; align-items: center; gap: 8px; width: 100%; min-width: 120px;
+}
+.mkt-an-meter-track {
+  position: relative; flex: 1; height: 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--an-down) 30%, var(--bg-deep)); overflow: hidden;
+}
+.mkt-an-meter-fill { position: absolute; inset: 0 auto 0 0; background: var(--an-up); border-radius: 999px; }
+.mkt-an-meter-pct { font-family: 'JetBrains Mono', monospace; font-size: .82rem; font-weight: 600; width: 3.2em; text-align: right; }
+
+/* ─── Volume: supply bar cell ───────────────────────────────────────── */
+.mkt-an-volcell { position: relative; }
+.mkt-an-volbar { position: absolute; inset: 0 auto 0 0; background: var(--an-band); border-radius: 0 4px 4px 0; z-index: 0; }
+.mkt-an-volcell > span { position: relative; z-index: 1; }
 
 /* ─── View tabs (Browse | Analytics) ────────────────────────────────── */
 .mkt-viewtabs {
@@ -121,7 +181,30 @@
 .mkt-an-key-vol { background: var(--an-vol); }
 .mkt-an-key-evt { background: var(--an-evt); border: 1px solid var(--an-evt-line); }
 
+.mkt-an-pickers { display: flex; gap: 10px; flex-wrap: wrap; }
+.mkt-an-key-ma { background: var(--an-ma); height: 0; border-top: 2px dashed var(--an-ma); }
+.mkt-an-key-cmp { background: var(--an-cmp); height: 3px; }
+
+.mkt-an-chart-wrap, .mkt-an-timeline { position: relative; }
 .mkt-an-svg { width: 100%; height: auto; display: block; }
+.mkt-an-svg .mkt-an-hoverline { stroke: rgba(255,255,255,.35); stroke-width: 1; stroke-dasharray: 3 3; pointer-events: none; }
+.mkt-an-maline { stroke: var(--an-ma); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+.mkt-an-cmpline { stroke: var(--an-cmp); stroke-width: 2; fill: none; }
+.mkt-an-cmpdot { fill: var(--an-cmp); }
+.mkt-an-hover-rect { cursor: crosshair; }
+.mkt-an-tip {
+  position: absolute; z-index: 30; pointer-events: none; opacity: 0;
+  transform: translate(-50%, -100%); transition: opacity .1s var(--ease-out);
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 8px;
+  padding: 7px 10px; font-size: .78rem; box-shadow: var(--shadow-soft, 0 12px 30px rgba(0,0,0,.45));
+  white-space: nowrap; min-width: 120px;
+}
+.mkt-an-tip.is-visible { opacity: 1; }
+.mkt-an-tip-when { color: var(--text-mute); margin: 0 0 4px; font-size: .72rem; }
+.mkt-an-tip-row { display: flex; justify-content: space-between; gap: 14px; margin: 1px 0; }
+.mkt-an-tip-row b { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.mkt-an-tip-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+
 .mkt-an-band { fill: var(--an-evt); }
 .mkt-an-band-lbl { fill: var(--an-evt-line); font-size: 10px; font-family: 'Inter', sans-serif; }
 .mkt-an-bandfill { fill: var(--an-band); }
@@ -132,8 +215,13 @@
 .mkt-an-ytick, .mkt-an-xtick { fill: var(--text-mute); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
 .mkt-an-chart-meta { color: var(--text-mute); font-size: .78rem; margin: 8px 0 0; }
 
+/* Horizontal scroll guard for the wider tables on narrow screens. */
+.mkt-an-liquidity, .mkt-an-volume, .mkt-an-deals { overflow-x: auto; }
+
 @media (max-width: 620px) {
   .mkt-an-movers { grid-template-columns: 1fr; }
   .mkt-an-item-wrap { min-width: 0; width: 100%; }
+  .mkt-an-pickers { width: 100%; }
   .mkt-an-head-row { flex-direction: column; }
+  .mkt-an-kpi-value { font-size: 1.15rem; }
 }

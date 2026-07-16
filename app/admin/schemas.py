@@ -112,6 +112,47 @@ class InterestItemBulkReplaceResponse(BaseModel):
     added: int  # after de-dup + trim
 
 
+# --- Market item categories (admin) -----------------------------------------
+# Sidebar groupings for the /market page. Membership is stored as item NAMES
+# on the category (NOT on the interest-item docs), so allow-list deletes and
+# the bulk replace never uncategorize anything.
+
+
+class MarketCategoryAdminView(BaseModel):
+    id: str
+    name: str
+    order: int
+    items: list[str]
+    created_at: datetime
+
+
+class MarketCategoryListAdmin(BaseModel):
+    categories: list[MarketCategoryAdminView]
+    count: int
+
+
+class MarketCategoryCreateRequest(BaseModel):
+    name: str
+
+
+class MarketCategoryUpdateRequest(BaseModel):
+    """Partial update: omitted fields stay untouched."""
+
+    name: str | None = None
+    items: list[str] | None = None
+
+
+class MarketCategoryReorderRequest(BaseModel):
+    """Category ids in the desired display order (first = top). Ids not
+    listed keep their relative order after the listed ones."""
+
+    ids: list[str]
+
+
+class MarketCategoryReorderResponse(BaseModel):
+    reordered: int  # docs whose order actually changed
+
+
 # --- Leaderboard per-board admin (reset-kind override) ---------------------
 # The admin panel lists every captured board so the master can pin its
 # reset cadence (daily / weekly / none). The hardcoded set in

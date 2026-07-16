@@ -270,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ddStatus.hidden = false;
     }
 
-    // Move the trigger from "Fetching Latest..." to the resting state. The
+    // Move the trigger from "Fetching latest…" to the resting state. The
     // user-platform version is shown on the label when available; otherwise just
     // "Download". The caret stays visible - this is ALWAYS a dropdown trigger.
     function applyTriggerResting() {
@@ -287,7 +287,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Bound fetch with a hard timeout so a misbehaving proxy or CORS hang
-    // can't leave the trigger stuck on "Fetching latest...".
+    // can't leave the trigger stuck on "Fetching latest…".
     async function fetchWithTimeout(url, ms) {
         const ctrl = new AbortController();
         const tid = setTimeout(() => ctrl.abort(), ms);
@@ -298,7 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function fetchLatest() {
         // Loading state: spinner on the trigger, panel cleared.
         if (ddIcon) { ddIcon.classList.add('fa-spinner', 'fa-spin'); ddIcon.classList.remove('fa-download'); }
-        if (ddLabel) ddLabel.textContent = 'Fetching Latest...';
+        if (ddLabel) ddLabel.textContent = 'Fetching latest…';
         clearPanel();
         try {
             const res = await fetchWithTimeout(

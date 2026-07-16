@@ -188,6 +188,74 @@
   font-size: .85rem;
 }
 
+/* ─── Sidebar category groups ───────────────────────────────────────── */
+/* Admin-defined collapsible sections. When no categories exist the list
+   renders flat (no .mkt-group wrappers at all), so these styles only
+   ever apply alongside the headers. */
+
+.mkt-group { min-width: 0; }
+.mkt-group + .mkt-group { margin-top: 6px; }
+.mkt-group-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 7px 10px 5px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-radius: 0;
+  cursor: pointer;
+  color: var(--text-mute, #9aa3b2);
+  font: inherit;
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-align: left;
+  min-width: 0;
+}
+.mkt-group-head:hover { color: var(--text-fg, #e8ecf3); }
+.mkt-group-chev {
+  flex: 0 0 auto;
+  font-size: .62rem;
+  transition: transform .15s ease;
+}
+.mkt-group.collapsed .mkt-group-chev { transform: rotate(-90deg); }
+.mkt-group-name {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.mkt-group-count {
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.07);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.mkt-group-items {
+  display: grid;
+  gap: 2px;
+  padding-top: 3px;
+  min-width: 0;
+}
+/* ``display: grid`` above overrides the user-agent ``[hidden] { display:
+   none }`` rule, so collapsing needs an explicit re-hide (same pattern as
+   .mkt-detail-empty / .dash-banner elsewhere). */
+.mkt-group-items[hidden] { display: none; }
+/* System "Untracked" group - items with stored listings that fell off the
+   scan allow-list. Muted rows + an amber header icon signal "stale data"
+   without shouting; the detail pane carries the explicit warning text. */
+.mkt-group-warn { color: #f0b429; }
+.mkt-item-untracked { opacity: .55; }
+.mkt-item-untracked:hover,
+.mkt-item-untracked.active { opacity: .8; }
+
 
 /* ─── Detail pane ───────────────────────────────────────────────────── */
 
@@ -248,6 +316,25 @@
   font-size: .85rem;
   color: var(--text-mute);
 }
+
+/* Banner shown when the selected item is off the scan allow-list - its
+   stored listings remain visible but stop refreshing. */
+.mkt-untracked-warn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(240,180,41,.35);
+  border-radius: 8px;
+  background: rgba(240,180,41,.08);
+  color: #f0b429;
+  font-size: .85rem;
+}
+.mkt-untracked-warn i { flex: 0 0 auto; }
+/* ``display: flex`` overrides the user-agent hidden rule - without this the
+   banner would show for tracked items too. */
+.mkt-untracked-warn[hidden] { display: none; }
 
 .mkt-summary {
   display: grid;

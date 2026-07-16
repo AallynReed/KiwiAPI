@@ -23,7 +23,7 @@ from app.tokens.models import ApiToken
 # NOTE: the leaderboards domain (boards/entries/players/activity/cheaters/deltas)
 # AND the codexes (codex_entry) live in PostgreSQL now (app/trove/*/pg_store.py),
 # NOT Beanie - there are deliberately no Documents for them to register here.
-from app.trove.market.models import MarketInterestItem
+from app.trove.market.models import MarketInterestItem, MarketItemCategory
 from app.trove.models import (
     BttChangelog,
     BttRelease,
@@ -72,6 +72,7 @@ DOCUMENT_MODELS = [
     ModClaimRequest, StrayImportState,   # mods hub: stray (imported) mod claims + import job state
     ModpackProject, ModpackStar,         # modpacks: user-curated bundles of mods (refs only) + likes
     MarketInterestItem,                  # MarketListing + CodexEntry moved to Postgres (pg_store)
+    MarketItemCategory,                  # admin-defined /market sidebar groupings (name-keyed)
     ChaosChestCapture, ChallengeCapture,
     FeedbackEntry,
     TroveStatusEvent,

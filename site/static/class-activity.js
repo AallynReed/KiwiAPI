@@ -401,16 +401,18 @@
     return {
       pr: src.power_rank_threshold || 0,
       effort: src.effort_threshold || 0,
+      xpCap: src.xp_cap || 0,
     };
   }
   function updateViewHint() {
     const hint = document.getElementById('cact-view-hint');
     if (!hint) return;
     if (state.view === 'clean') {
-      const { pr, effort } = currentThresholds();
+      const { pr, effort, xpCap } = currentThresholds();
       const parts = [];
       if (pr) parts.push(t('Power Rank ≥ {n}').replace('{n}', intl(pr)));
       if (effort) parts.push(t('Effort ≥ {n}').replace('{n}', intl(effort)));
+      if (xpCap) parts.push(t('weekly XP ≤ {n}').replace('{n}', intl(xpCap)));
       hint.textContent = parts.length
         ? t('Established players — {criteria}.').replace('{criteria}', parts.join(', '))
         : t('Established players only.');

@@ -1379,10 +1379,20 @@ async def activity_og_image(period: str = "1d") -> Response:
 
 @router.get("/site/market/items", response_class=JSONResponse)
 async def site_market_items() -> JSONResponse:
+    """Item names with at least one stored listing, plus the admin-defined
+    sidebar categories (ordered ``[{name, items}]``). Categories may reference
+    names outside ``items`` (not currently trading / off the allow-list) - the
+    client intersects, so membership survives allow-list churn server-side.
+    ``untracked`` is the subset of ``items`` no longer on the scan allow-list
+    (listings stored, updates stopped) - rendered as a system "Untracked"
+    group with a warning instead of their category."""
     from app.trove.market import service as market_service
     items = await market_service.list_distinct_items()
+    categories = await market_service.categories_public()
+    untracked = await market_service.untracked_items(items)
     return JSONResponse(
-        {"items": items, "count": len(items)},
+        {"items": items, "count": len(items), "categories": categories,
+         "untracked": untracked},
         headers={"Cache-Control": "public, max-age=60"},
     )
 
@@ -1543,6 +1553,41 @@ async def site_market_analytics_movers(
     equal-length window."""
     from app.trove.market import service as market_service
     payload = await market_service.analytics_movers(days=days, limit=limit)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
+
+
+@router.get("/site/market/analytics/overview", response_class=JSONResponse)
+async def site_market_analytics_overview(
+    days: int = Query(default=7, ge=1, le=30),
+) -> JSONResponse:
+    """Market-pulse header: live active-listing count / distinct items / total flux
+    value, plus the window's biggest mover and most-traded item."""
+    from app.trove.market import service as market_service
+    payload = await market_service.analytics_overview(days=days)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
+
+
+@router.get("/site/market/analytics/liquidity", response_class=JSONResponse)
+async def site_market_analytics_liquidity(
+    days: int = Query(default=14, ge=1, le=30),
+    limit: int = Query(default=40, ge=1, le=100),
+) -> JSONResponse:
+    """Per-item sell-through / time-to-sell, estimated from how long listings live
+    before leaving the market (an estimate - hourly capture, sale vs cancel
+    indistinguishable)."""
+    from app.trove.market import service as market_service
+    payload = await market_service.analytics_liquidity(days=days, limit=limit)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
+
+
+@router.get("/site/market/analytics/volume", response_class=JSONResponse)
+async def site_market_analytics_volume(
+    days: int = Query(default=14, ge=1, le=30),
+    limit: int = Query(default=40, ge=1, le=100),
+) -> JSONResponse:
+    """Most-traded items by new-listing supply over ``days``."""
+    from app.trove.market import service as market_service
+    payload = await market_service.analytics_volume(days=days, limit=limit)
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
 
 

@@ -15,8 +15,28 @@
 
   const PAGE_SIZE = 100;
 
+  // Sidebar group collapse-state persistence. MUST be declared before
+  // ``state`` below - ``loadCollapsed()`` runs in its initializer, and a
+  // later ``const`` would still be in the temporal dead zone there (the
+  // ReferenceError gets swallowed by the try/catch, silently resetting
+  // the saved state on every page load). Keys are prefixed ('c:' + name,
+  // or a sentinel) so an admin category can never collide with the
+  // system groups.
+  const COLLAPSE_KEY = 'mkt-collapsed-groups';
+  const OTHER_KEY = '__other__';
+  const UNTRACKED_KEY = '__untracked__';
+
+  function loadCollapsed() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '[]'));
+    } catch (_) { return new Set(); }
+  }
+
   const state = {
     items: [],            // [{name}, ...] from /site/market/items
+    categories: [],       // [{name, items:[names]}, ...] admin-defined, ordered
+    untracked: new Set(), // names with listings but off the scan allow-list
+    collapsed: loadCollapsed(),  // Set of collapsed group keys (persisted)
     images: {},           // item name -> blueprint path (thumbnail source)
     imageBranch: 'live-us',
     itemFilter: '',
@@ -45,6 +65,7 @@
   const $detailBody = $('mkt-detail-body');
   const $detailTitle = $('mkt-detail-title');
   const $detailMeta = $('mkt-detail-meta');
+  const $untrackedWarn = $('mkt-untracked-warn');
   const $detailThumb = $('mkt-detail-thumb');
   const $sumCount = $('mkt-sum-count');
   const $sumMedian = $('mkt-sum-median');
@@ -78,6 +99,8 @@
       fetchJSON('/site/market/item-images').catch(() => ({ images: {} })),
     ]);
     state.items = (data.items || []).map((name) => ({ name }));
+    state.categories = data.categories || [];
+    state.untracked = new Set(data.untracked || []);
     state.images = imgData.images || {};
     if (imgData.branch) state.imageBranch = imgData.branch;
     renderItems();
@@ -105,6 +128,39 @@
   }
 
   // ─── Items sidebar ─────────────────────────────────────────────────
+  function saveCollapsed() {
+    try {
+      localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...state.collapsed]));
+    } catch (_) { /* private mode etc. - collapse just won't persist */ }
+  }
+
+  // The display group key an item belongs to. Untracked items (listings
+  // stored, but off the scan allow-list) always render under the system
+  // "Untracked" group - their category membership is retained server-side,
+  // so re-adding them to the allow-list restores their group. Otherwise the
+  // first category (in admin order) that lists the name wins; everything
+  // else falls into "Other".
+  function groupKeyFor(name) {
+    if (state.untracked.has(name)) return UNTRACKED_KEY;
+    for (const c of state.categories) {
+      if (c.items.includes(name)) return 'c:' + c.name;
+    }
+    return OTHER_KEY;
+  }
+
+  function itemButtonHTML(it) {
+    const untracked = state.untracked.has(it.name);
+    const title = untracked
+      ? it.name + ' - ' + t('This item is no longer tracked')
+      : it.name;
+    return `
+      <button type="button" class="mkt-item${it.name === state.selected ? ' active' : ''}${untracked ? ' mkt-item-untracked' : ''}"
+              data-name="${esc(it.name)}" title="${esc(title)}">
+        ${thumbHTML(it.name, 48, 'mkt-item-thumb')}
+        <span class="mkt-item-name">${esc(it.name)}</span>
+      </button>`;
+  }
+
   function renderItems() {
     if (!state.items.length) {
       $items.innerHTML = `<p class="mkt-items-empty" data-i18n>No market data captured yet - check back after the next hourly sweep.</p>`;
@@ -114,7 +170,7 @@
     const filter = state.itemFilter.toLowerCase();
     const visible = filter
       ? state.items.filter((it) => it.name.toLowerCase().includes(filter))
-      : state.items;
+      : state.items.slice();
 
     if (!visible.length) {
       $items.innerHTML = `<p class="mkt-items-empty" data-i18n>No items match that filter.</p>`;
@@ -126,13 +182,82 @@
     // already, but the filter-rendered subset stays stable that way too.
     visible.sort((a, b) => a.name.localeCompare(b.name));
 
-    $items.innerHTML = visible.map((it) => `
-      <button type="button" class="mkt-item${it.name === state.selected ? ' active' : ''}"
-              data-name="${esc(it.name)}" title="${esc(it.name)}">
-        ${thumbHTML(it.name, 48, 'mkt-item-thumb')}
-        <span class="mkt-item-name">${esc(it.name)}</span>
-      </button>
-    `).join('');
+    // Untracked items (off the scan allow-list) always split into a
+    // trailing system "Untracked" group, regardless of category.
+    const tracked = visible.filter((it) => !state.untracked.has(it.name));
+    const untracked = visible.filter((it) => state.untracked.has(it.name));
+
+    // While searching every group renders expanded (a match hidden
+    // behind a collapsed header would look like "no result") and the
+    // headers become inert; the stored collapse state comes back as
+    // soon as the filter clears.
+    const groupHTML = (g) => {
+      const open = filter ? true : !state.collapsed.has(g.key);
+      const label = g.label != null
+        ? esc(g.label)
+        : (g.key === UNTRACKED_KEY
+          ? `<span data-i18n>Untracked</span>`
+          : `<span data-i18n>Other</span>`);
+      const warnIcon = g.key === UNTRACKED_KEY
+        ? `<i class="fa-solid fa-triangle-exclamation mkt-group-warn" aria-hidden="true"></i> `
+        : '';
+      return `
+        <section class="mkt-group${open ? '' : ' collapsed'}">
+          <button type="button" class="mkt-group-head" data-group="${esc(g.key)}"
+                  aria-expanded="${open}">
+            <i class="fa-solid fa-chevron-down mkt-group-chev" aria-hidden="true"></i>
+            <span class="mkt-group-name">${warnIcon}${label}</span>
+            <span class="mkt-group-count">${g.items.length}</span>
+          </button>
+          <div class="mkt-group-items"${open ? '' : ' hidden'}>
+            ${g.items.map(itemButtonHTML).join('')}
+          </div>
+        </section>`;
+    };
+
+    let html;
+    if (!state.categories.length) {
+      // No categories defined - plain flat list, exactly the old layout
+      // (plus the system Untracked section below when applicable).
+      html = tracked.map(itemButtonHTML).join('');
+    } else {
+      // Split the tracked items into the admin-ordered category groups +
+      // a trailing "Other" group. Categories may reference names that are
+      // not currently trading - the intersection here just skips them. An
+      // item claimed by two categories renders in the first one only.
+      const byName = new Map(tracked.map((it) => [it.name, it]));
+      const used = new Set();
+      const groups = [];
+      for (const c of state.categories) {
+        const members = c.items.filter((n) => byName.has(n) && !used.has(n));
+        if (!members.length) continue;
+        for (const n of members) used.add(n);
+        groups.push({
+          key: 'c:' + c.name,
+          label: c.name,
+          items: members.map((n) => byName.get(n)),
+        });
+      }
+      const rest = tracked.filter((it) => !used.has(it.name));
+      if (rest.length) groups.push({ key: OTHER_KEY, label: null, items: rest });
+      html = groups.map(groupHTML).join('');
+    }
+    if (untracked.length) {
+      html += groupHTML({ key: UNTRACKED_KEY, label: null, items: untracked });
+    }
+    $items.innerHTML = html;
+
+    for (const head of $items.querySelectorAll('[data-group]')) {
+      head.addEventListener('click', () => {
+        if (state.itemFilter) return;   // inert while searching
+        const key = head.dataset.group;
+        if (state.collapsed.has(key)) state.collapsed.delete(key);
+        else state.collapsed.add(key);
+        saveCollapsed();
+        renderItems();
+      });
+    }
+    rerunI18n();
 
     for (const btn of $items.querySelectorAll('[data-name]')) {
       btn.addEventListener('click', () => {
@@ -150,6 +275,20 @@
     state.summary = null;
     state.listings = [];
     state.listingsTotal = 0;
+
+    // Deep-links (#item=...) can land on an item inside a collapsed
+    // group - expand it so the active highlight is actually visible.
+    // (In the flat no-categories layout the key never matches a stored
+    // collapse entry, so this is a no-op there.)
+    const gkey = groupKeyFor(name);
+    if (state.collapsed.has(gkey)) {
+      state.collapsed.delete(gkey);
+      saveCollapsed();
+      renderItems();
+    }
+
+    // Warn when the item's data has stopped updating (off the allow-list).
+    if ($untrackedWarn) $untrackedWarn.hidden = !state.untracked.has(name);
 
     // Active state in sidebar; mobile-trigger label.
     for (const btn of $items.querySelectorAll('[data-name]')) {

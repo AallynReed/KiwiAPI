@@ -407,6 +407,24 @@ def _craft_build(source_path):
 _MARKET_ITEMS = ["Radiant Sovereign", "Radiant Shard", "Golden Thread",
                  "Sunlight Bulb", "Shadow Key", "Glim", "Flux Capacitor"]
 
+# Admin-defined sidebar groups (prod: market_item_categories via
+# /admin/market/categories). "Ancient Relic" is deliberately not in
+# _MARKET_ITEMS - exercises the "categorized but not currently trading"
+# path (client intersects, so it just doesn't render). Glim + Flux
+# Capacitor land in the "Other" fallback group.
+_MARKET_CATEGORIES = [
+    {"name": "Currency", "items": ["Radiant Sovereign", "Golden Thread"]},
+    {"name": "Crafting", "items": ["Radiant Shard", "Sunlight Bulb", "Ancient Relic"]},
+    {"name": "Keys & Chests", "items": ["Shadow Key"]},
+]
+
+# Names with stored listings but off the scan allow-list (prod: distinct
+# listing names minus MarketInterestItem). Shadow Key is ALSO categorized
+# above - exercises the "untracked wins over category" display path (its
+# Keys & Chests group goes empty and disappears); Flux Capacitor exercises
+# the uncategorized-untracked path.
+_MARKET_UNTRACKED = ["Shadow Key", "Flux Capacitor"]
+
 
 def _market_movers():
     import time
@@ -428,6 +446,46 @@ def _market_deals():
         {"id": "uuid-2", "name": "Golden Thread", "stack": 100, "price": 68000, "price_each": 680.0,
          "median_each": 950.0, "sample_size": 22, "discount": 0.2842, "created_at": now - 7200, "last_seen": now - 1200}],
         "count": 2}
+
+
+def _market_overview(days):
+    import time
+    now = int(time.time())
+    return {
+        "active_listings": 1843, "active_items": 62, "total_value": 418_500_000,
+        "total_units": 92_400, "days": days, "now": now,
+        "top_mover": {"name": "Shadow Key", "recent_med": 5200.0, "prior_med": 4000.0,
+                      "recent_n": 40, "change": 0.30},
+        "top_traded": {"name": "Glim", "listings": 210, "units": 41000,
+                       "total_value": 61_500_000, "median_each": 1.5},
+    }
+
+
+def _market_liquidity(days):
+    import time
+    now = int(time.time())
+    h = 3600
+    return {"days": days, "now": now, "ttl_seconds": 7 * 86400, "items": [
+        {"name": "Shadow Key", "concluded": 120, "sold": 108, "expired": 12,
+         "sell_through": 0.90, "median_time_to_sell": 9 * h},
+        {"name": "Golden Thread", "concluded": 64, "sold": 44, "expired": 20,
+         "sell_through": 0.6875, "median_time_to_sell": 26 * h},
+        {"name": "Sunlight Bulb", "concluded": 200, "sold": 96, "expired": 104,
+         "sell_through": 0.48, "median_time_to_sell": 40 * h},
+        {"name": "Radiant Sovereign", "concluded": 30, "sold": 6, "expired": 24,
+         "sell_through": 0.20, "median_time_to_sell": 55 * h},
+        {"name": "Flux Capacitor", "concluded": 18, "sold": 2, "expired": 16,
+         "sell_through": 0.1111, "median_time_to_sell": None}]}
+
+
+def _market_volume(days):
+    import time
+    return {"days": days, "now": int(time.time()), "items": [
+        {"name": "Glim", "listings": 210, "units": 41000, "total_value": 61_500_000, "median_each": 1.5},
+        {"name": "Sunlight Bulb", "listings": 150, "units": 12000, "total_value": 1_140_000, "median_each": 95.0},
+        {"name": "Shadow Key", "listings": 88, "units": 1760, "total_value": 9_152_000, "median_each": 5200.0},
+        {"name": "Golden Thread", "listings": 54, "units": 5400, "total_value": 5_130_000, "median_each": 950.0},
+        {"name": "Radiant Sovereign", "listings": 14, "units": 28, "total_value": 1_148_000, "median_each": 41000.0}]}
 
 
 def _market_timeline(name, days):
@@ -935,7 +993,9 @@ class Handler(SimpleHTTPRequestHandler):
 
         # ── /market Analytics tab ─────────────────────────────────────────
         if path == "/site/market/items":
-            return self._send_json({"items": _MARKET_ITEMS, "count": len(_MARKET_ITEMS)})
+            return self._send_json({"items": _MARKET_ITEMS, "count": len(_MARKET_ITEMS),
+                                    "categories": _MARKET_CATEGORIES,
+                                    "untracked": _MARKET_UNTRACKED})
         if path == "/site/market/item-images":
             # In prod these map to real codex blueprints; locally we hand back a
             # stub path per item so the thumbnail layout is previewable (the
@@ -946,6 +1006,18 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_json(_market_movers())
         if path == "/site/market/analytics/deals":
             return self._send_json(_market_deals())
+        if path in ("/site/market/analytics/overview", "/site/market/analytics/liquidity",
+                    "/site/market/analytics/volume"):
+            qs = parse_qs(url.query)
+            try:
+                days = int(qs.get("days", ["14"])[0])
+            except ValueError:
+                days = 14
+            if path.endswith("/overview"):
+                return self._send_json(_market_overview(days))
+            if path.endswith("/liquidity"):
+                return self._send_json(_market_liquidity(days))
+            return self._send_json(_market_volume(days))
         if path == "/site/market/analytics/timeline":
             qs = parse_qs(url.query)
             name = qs.get("name", ["Item"])[0]
@@ -1405,6 +1477,7 @@ class Handler(SimpleHTTPRequestHandler):
                 "period": period, "bucket_seconds": bucket,
                 "window_start": start, "window_end": end,
                 "power_rank_threshold": 25000,
+                "effort_threshold": 50, "xp_cap": 2_000_000,
                 "buckets": buckets, "classes": classes,
                 "methodology": "stub class series",
             })
@@ -1425,7 +1498,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_json({
                 "window_start": STUB_ANCHOR - 3600, "window_end": STUB_ANCHOR,
                 "duration_hours": 1.0, "total_active": total, "total_active_clean": total_clean,
-                "power_rank_threshold": 25000, "classes": classes,
+                "power_rank_threshold": 25000,
+                "effort_threshold": 50, "xp_cap": 2_000_000, "classes": classes,
                 "methodology": "stub class current", "computed_at": STUB_ANCHOR,
             })
         if path == "/site/leaderboards/cheaters":

@@ -882,8 +882,9 @@ class ClassActivityCurrentResponse(BaseModel):
     player present on a class's Effort board at the newest capture (Paragon is
     excluded as ambiguous); CLEAN (``*_clean``), the "established" page default,
     keeps only players who clear BOTH per-class floors - ``power_rank_threshold``
-    (1000+i board) and ``effort_threshold`` (4000+i) - filtering newbies + alts (a
-    floor of 0 disables that gate). ``share`` is a class's count over the total
+    (1000+i board) and ``effort_threshold`` (4000+i) - without exceeding ``xp_cap``
+    on the weekly XP board (21005) - filtering newbies, alts and extreme XP grinders
+    (a floor/cap of 0 disables that gate). ``share`` is a class's count over the total
     across classes: a player on several classes is counted in each, so the total is
     Σ class counts (the share denominator), not a distinct headcount.
     ``window_start``/``window_end`` are both the snapshot anchor; ``duration_hours``
@@ -899,6 +900,7 @@ class ClassActivityCurrentResponse(BaseModel):
     total_effort_added_clean: int | None = None
     power_rank_threshold: int = 0
     effort_threshold: int = 0
+    xp_cap: int = 0
     classes: list[ClassActivityItem]
     methodology: str
     computed_at: int
@@ -919,13 +921,15 @@ class ClassActivitySeriesResponse(BaseModel):
     shared x-axis (one timestamp per bucket); each line's ``values`` (raw) and
     ``values_clean`` (the clean/established view) align to it, with ``null`` where
     that class had no measurable window in the bucket. ``power_rank_threshold`` /
-    ``effort_threshold`` are the current clean-view floors (for display)."""
+    ``effort_threshold`` / ``xp_cap`` are the current clean-view gates (for display;
+    the cap is an upper bound on the weekly XP board, 0 = off)."""
     period: str
     bucket_seconds: int
     window_start: int
     window_end: int
     power_rank_threshold: int = 0
     effort_threshold: int = 0
+    xp_cap: int = 0
     buckets: list[int]
     classes: list[ClassActivitySeriesLine]
     methodology: str
