@@ -335,8 +335,8 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"];
-const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "botstats"]);
+const TABS = ["tokens", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"];
+const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"]);
 
 // Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
 const ICONS = {
@@ -358,6 +358,7 @@ const ICONS = {
   botstats:     '<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="14" width="3" height="3"/>',
   mods:         '<path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>',
   codexes:      '<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5Z"/><path d="M8 7h7M8 10h7"/>',
+  updates:      '<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>',
   siteusers:    '<circle cx="12" cy="7.5" r="3.3"/><path d="M5.5 20c0-3.4 2.9-5.3 6.5-5.3S18.5 16.6 18.5 20"/><path d="M3 4.5h18"/>',
   marketitems:  '<path d="M20.5 11.3 12.7 3.5a1.5 1.5 0 0 0-1.1-.4L5 3.4a1.5 1.5 0 0 0-1.6 1.6l-.3 6.6a1.5 1.5 0 0 0 .4 1.1l7.8 7.8a1.5 1.5 0 0 0 2.1 0l7.1-7.1a1.5 1.5 0 0 0 0-2.1Z"/><circle cx="8" cy="8" r="1.3"/>',
 };
@@ -387,6 +388,7 @@ const TAB_META = {
   claims:       { group: "Admin panel · Modules", label: "Trove claims" },
   mods:         { group: "Admin panel · Modules", label: "Mods hub" },
   codexes:      { group: "Admin panel · Modules", label: "Codexes" },
+  updates:      { group: "Admin panel · Modules", label: "Updates archive" },
   botstats:     { group: "Admin panel · Modules", label: "Bot stats" },
 };
 
@@ -433,7 +435,8 @@ function renderDashboard() {
           ${navItem("supporters", true)}
           ${navItem("claims", true)}
           ${navItem("mods", true)}
-          ${navItem("codexes", true)}` : "";
+          ${navItem("codexes", true)}
+          ${navItem("updates", true)}` : "";
 
   app.innerHTML = `
     <div class="topbar">
@@ -505,6 +508,7 @@ function selectTab() {
   else if (state.tab === "claims") renderClaims();
   else if (state.tab === "mods") renderModsModeration();
   else if (state.tab === "codexes") renderCodexes();
+  else if (state.tab === "updates") renderUpdatesAdmin();
   else if (state.tab === "botstats") renderBotStats();
   else renderTokens();
 }
@@ -2365,6 +2369,15 @@ const INGEST_KINDS = [
     endpoint: "/v1/market/insert",
   },
   {
+    key: "store",
+    title: "Store",
+    cfg: "StoreLog.cfg",
+    description: "Replay a StoreLog.cfg dump through /v1/store/insert. Products upsert by code; price history appends on change.",
+    mode: "multipart",
+    endpoint: "/v1/store/insert",
+    timestampField: true,
+  },
+  {
     key: "challenge",
     title: "Challenge",
     cfg: "QuestLog.cfg",
@@ -2584,6 +2597,96 @@ async function renderCodexes() {
       result.className = "ingest-result err";
       result.textContent = ex.message;
       toast("Rebuild failed to start", "err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  loadStatus();
+}
+
+// --- Updates archive (master) ----------------------------------------------
+// The archive browser can sort files by "last modified" (the version that last
+// touched each file). Ingest records that per file going forward; this tab runs a
+// one-off backfill so files captured before the field existed sort correctly too.
+async function renderUpdatesAdmin() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Updates archive</h2>
+        <select id="upa-branch" style="max-width:160px">
+          <option value="live-us">Live (live-us)</option>
+          <option value="pts">PTS (pts)</option>
+        </select>
+      </div>
+      <p class="hint" style="margin:0 0 14px">
+        The /updates browser can sort by <strong>Last modified</strong> — the version
+        that last changed each file. New captures set this automatically. Run the
+        backfill once per branch to compute it for files captured before the feature
+        existed (recomputed from the change-log, safe to re-run).
+      </p>
+      <div id="upa-status"><div class="loading">Loading…</div></div>
+      <div class="row" style="align-items:center;margin-top:14px">
+        <button class="btn primary" data-act="backfill">Backfill last-modified</button>
+        <button type="button" class="btn small" data-act="refresh">Refresh</button>
+      </div>
+      <div id="upa-result" class="ingest-result"></div>
+    </div>`;
+
+  const branchSel = document.getElementById("upa-branch");
+  const statusEl = document.getElementById("upa-status");
+  const result = document.getElementById("upa-result");
+  let pollTimer = null;
+  const stop = () => { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } };
+  const branch = () => branchSel.value;
+
+  function renderStatus(s) {
+    const bf = s.backfill || {};
+    const rows = [];
+    if (bf.running) rows.push(["Backfill", `running… ${Number(bf.updated || 0).toLocaleString()} files updated`]);
+    else if (bf.error) rows.push(["Last backfill", `failed: ${bf.error}`]);
+    else if (bf.done) rows.push(["Last backfill", `updated ${Number(bf.updated || 0).toLocaleString()} files`]);
+    else rows.push(["Backfill", "not run this session"]);
+    statusEl.innerHTML = rows.map(([k, v]) =>
+      `<div class="row" style="gap:10px;padding:5px 0;border-bottom:1px solid var(--border)">
+         <span class="muted" style="flex:0 0 130px">${esc(k)}</span><span style="flex:1">${esc(String(v))}</span></div>`).join("");
+    return !!bf.running;
+  }
+
+  async function loadStatus() {
+    if (!document.body.contains(statusEl)) return stop();  // left the tab
+    try {
+      const s = await API.call(`/admin/updates/backfill-modified/status?branch=${encodeURIComponent(branch())}`);
+      const running = renderStatus(s);
+      if (running && !pollTimer) pollTimer = setInterval(loadStatus, 3000);
+      if (!running) stop();
+    } catch (ex) {
+      statusEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+      stop();
+    }
+  }
+
+  branchSel.addEventListener("change", () => {
+    result.textContent = ""; result.className = "ingest-result"; stop(); loadStatus();
+  });
+  body.querySelector('[data-act="refresh"]').addEventListener("click", loadStatus);
+
+  body.querySelector('[data-act="backfill"]').addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    result.className = "ingest-result";
+    result.textContent = "Starting backfill…";
+    try {
+      const data = await API.call(`/admin/updates/backfill-modified?branch=${encodeURIComponent(branch())}`, { method: "POST" });
+      result.className = "ingest-result ok";
+      result.textContent = data.message || (data.started ? "Backfill started." : "Backfill already running.");
+      toast(data.started ? "Backfill started" : "Backfill already running", "ok");
+      loadStatus();
+    } catch (ex) {
+      result.className = "ingest-result err";
+      result.textContent = ex.message;
+      toast("Backfill failed to start", "err");
     } finally {
       btn.disabled = false;
     }
@@ -3836,6 +3939,20 @@ async function renderIngest() {
       </div>
       <div id="mkt-reset-result" class="ingest-result"></div>
     </div>
+    <div class="card" id="store-reset-card" style="border:1px solid rgba(248,113,113,.45)">
+      <h2 style="margin:0 0 6px;color:#f87171">Danger zone — reset store data</h2>
+      <p class="hint" style="margin:0 0 12px">
+        Wipes <strong>every</strong> stored store product (including price history),
+        every category, and the ingest state. Use this after a bad ingest or a cfg-format
+        change; the next StoreLog dump repopulates from scratch (first_seen restarts).
+        Irreversible. Type <code>RESET</code> to enable.
+      </p>
+      <div class="row" style="align-items:center;gap:12px;flex-wrap:wrap">
+        <input type="text" id="store-reset-confirm" placeholder="Type RESET" autocomplete="off" spellcheck="false" style="flex:0 0 auto">
+        <button class="btn small danger" id="store-reset-go" disabled style="margin-left:auto">Wipe store data</button>
+      </div>
+      <div id="store-reset-result" class="ingest-result"></div>
+    </div>
     <div class="card" id="ingest-log-card">
       <div class="row" style="align-items:center;margin-bottom:6px">
         <h2 style="flex:1;margin:0">Recent submissions</h2>
@@ -3854,6 +3971,7 @@ async function renderIngest() {
   }
   wireBulkLeaderboards();
   wireBacklogReingest();
+  wireStoreReset();
   wireLeaderboardReset();
   wireMarketReset();
   document.querySelector('[data-act="refresh-ingest-log"]')
@@ -4124,10 +4242,40 @@ function wireMarketReset() {
   });
 }
 
+function wireStoreReset() {
+  const confirmEl = document.getElementById("store-reset-confirm");
+  const goBtn = document.getElementById("store-reset-go");
+  const resultEl = document.getElementById("store-reset-result");
+  if (!confirmEl) return;
+  const armed = () => confirmEl.value.trim().toUpperCase() === "RESET";
+  confirmEl.addEventListener("input", () => { goBtn.disabled = !armed(); });
+  goBtn.addEventListener("click", async () => {
+    if (!window.confirm("Wipe ALL stored store products, price history and categories? This cannot be undone.")) return;
+    goBtn.disabled = true;
+    resultEl.className = "ingest-result";
+    resultEl.textContent = "Wiping…";
+    try {
+      const r = await API.call("/v1/store/reset", { method: "POST" });
+      resultEl.className = "ingest-result ok";
+      resultEl.innerHTML = `<strong>✓ Wiped.</strong> <code>${esc(JSON.stringify(r))}</code>`;
+      confirmEl.value = "";
+      toast("Store data wiped", "ok");
+      renderIngestLog();
+    } catch (ex) {
+      resultEl.className = "ingest-result err";
+      resultEl.textContent = (ex && ex.message) || String(ex);
+    } finally {
+      goBtn.disabled = !armed();
+    }
+  });
+}
+
 const INGEST_ENDPOINT_LABELS = {
   "/v1/leaderboards/insert": { label: "Leaderboards", cls: "ingest-log-lb" },
   "/v1/market/insert":       { label: "Market",       cls: "ingest-log-mkt" },
   "/v1/market/reset":        { label: "Market reset", cls: "ingest-log-mkt" },
+  "/v1/store/insert":        { label: "Store",        cls: "ingest-log-mkt" },
+  "/v1/store/reset":         { label: "Store reset",  cls: "ingest-log-mkt" },
   "/v1/rotations/challenge/insert":   { label: "Challenge",   cls: "ingest-log-chl" },
   "/v1/rotations/chaos-chest/insert": { label: "Chaos Chest", cls: "ingest-log-cc" },
 };
@@ -4155,6 +4303,19 @@ function fmtIngestSummary(endpoint, summary) {
     }
     case "/v1/market/reset": {
       if (summary.removed != null) return `${summary.removed.toLocaleString()} listing(s) wiped`;
+      return "";
+    }
+    case "/v1/store/insert": {
+      const parts = [];
+      if (summary.products != null)      parts.push(`${summary.products} product(s)`);
+      if (summary.categories != null)    parts.push(`${summary.categories} tab(s)`);
+      if (summary.created != null && summary.created > 0) parts.push(`${summary.created} new`);
+      if (summary.price_changes != null && summary.price_changes > 0) parts.push(`${summary.price_changes} price change(s)`);
+      if (summary.bytes != null)         parts.push(`${(summary.bytes / 1024).toFixed(0)} KB`);
+      return parts.join(" · ");
+    }
+    case "/v1/store/reset": {
+      if (summary.removed != null) return `${summary.removed.toLocaleString()} doc(s) wiped`;
       return "";
     }
     case "/v1/rotations/challenge/insert":

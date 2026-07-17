@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Trove Store History - Better Trove Tools</title>
+    <meta name="description" content="The in-game Trove store catalog with history: what packs, costumes and deals were available and when, their prices over time, and in-game art.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://trove.aallyn.net/store">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Trove Store History">
+    <meta property="og:description" content="What was in the Trove store and when: pack availability timelines, price history, and in-game art.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/store.min.css">
+</head>
+<body class="landing store-page">
+
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="st-main">
+
+        <!-- ═══════════════ HERO ═══════════════ -->
+        <section class="st-hero">
+            <div class="st-hero-inner">
+                <p class="st-eyebrow"><span>/store</span></p>
+                <h1 class="st-title" data-i18n>Trove Store History</h1>
+                <p class="st-subtitle" data-i18n>Every pack, costume and deal the in-game store has offered &mdash; what's live now, when it was around, and how its price moved. Snapshotted daily, so the history grows over time.</p>
+                <div class="st-stats" id="st-stats" aria-live="polite"></div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ TABS ═══════════════ -->
+        <div class="st-tabs" role="tablist" aria-label="Store views">
+            <button class="st-tab active" role="tab" aria-selected="true" data-tab="gallery">
+                <i class="fa-solid fa-grip"></i> <span data-i18n>Gallery</span>
+            </button>
+            <button class="st-tab" role="tab" aria-selected="false" data-tab="history">
+                <i class="fa-solid fa-chart-gantt"></i> <span data-i18n>Availability history</span>
+            </button>
+        </div>
+
+        <!-- ═══════════════ GALLERY TAB ═══════════════ -->
+        <section class="st-panel" id="st-panel-gallery" role="tabpanel">
+            <div class="st-toolbar">
+                <div class="st-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="search" id="st-search" data-i18n-placeholder placeholder="Search packs&hellip;" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="st-filters">
+                    <label class="st-check"><input type="checkbox" id="st-active-only" checked> <span data-i18n>Live now only</span></label>
+                    <label class="st-check"><input type="checkbox" id="st-on-sale"> <span data-i18n>On sale</span></label>
+                    <select id="st-kind" class="st-select" aria-label="Kind">
+                        <option value="" data-i18n>All kinds</option>
+                        <option value="product" data-i18n>Items</option>
+                        <option value="starter" data-i18n>Packs &amp; deals</option>
+                        <option value="patron" data-i18n>Patron</option>
+                        <option value="class" data-i18n>Classes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="st-body">
+                <aside class="st-cats" id="st-cats" aria-label="Categories"></aside>
+                <div class="st-grid-wrap">
+                    <div class="st-grid" id="st-grid" aria-live="polite"></div>
+                    <div class="st-empty" id="st-empty" hidden>
+                        <i class="fa-solid fa-box-open"></i>
+                        <p data-i18n>No packs match those filters yet.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ HISTORY TAB ═══════════════ -->
+        <section class="st-panel" id="st-panel-history" role="tabpanel" hidden>
+            <div class="st-toolbar">
+                <p class="st-hint" data-i18n>Each bar is a stretch the pack was available. Gaps mean it left the store; a glowing end means it's live right now.</p>
+                <select id="st-tl-kind" class="st-select" aria-label="Kind">
+                    <option value="" data-i18n>All kinds</option>
+                    <option value="product" data-i18n>Items</option>
+                    <option value="starter" data-i18n>Packs &amp; deals</option>
+                    <option value="patron" data-i18n>Patron</option>
+                    <option value="class" data-i18n>Classes</option>
+                </select>
+            </div>
+            <div class="st-timeline" id="st-timeline" aria-live="polite"></div>
+        </section>
+
+    </main>
+
+    <!-- ═══════════════ DETAIL DRILL-IN ═══════════════ -->
+    <div class="st-modal" id="st-modal" hidden role="dialog" aria-modal="true" aria-labelledby="st-modal-name">
+        <div class="st-modal-backdrop" data-close></div>
+        <div class="st-modal-card">
+            <button class="st-modal-x" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            <div class="st-modal-body" id="st-modal-body"></div>
+        </div>
+    </div>
+
+    {% include "partials/footer.html" %}
+
+    <!-- DDS decoder (client-side): the store's in-game art is .dds; this module
+         exposes window.decodeDDS the same way the /updates file viewer does. -->
+    <script type="module">
+        import { decodeDDS } from '/static/pkfx/dds.js';
+        window.decodeDDS = decodeDDS;
+        document.dispatchEvent(new Event('btt-dds-ready'));
+    </script>
+    <script src="/static/app.min.js"></script>
+    <script src="/static/_site_util.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/store.min.js" defer></script>
+</body>
+</html>

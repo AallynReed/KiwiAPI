@@ -32,6 +32,8 @@
     versionsTotal: 0,
     selectedVersion: null,   // ordinal - drives the "Changes" tab + tree badges
     activeTab: 'explorer',   // 'explorer' | 'changes' | 'compare'
+    viewMode: readViewMode(),// 'list' | 'grid' - explorer sidebar as rows vs a thumbnail gallery
+    treeSort: readTreeSort(),// 'name' | 'modified' - order of the explorer listing
 
     // Explorer tab
     treeCache: new Map(),    // prefix → entries (avoid re-fetching as you walk)
@@ -83,6 +85,9 @@
   const $paneExplorer = $('up-pane-explorer');
   const $paneChanges = $('up-pane-changes');
   const $paneCompare = $('up-pane-compare');
+
+  const $viewToggle = $('up-view-toggle');
+  const $sortSelect = $('up-sort-select');
 
   const $treeSearch = $('up-tree-search');
   const $breadcrumbs = $('up-breadcrumbs');
@@ -147,6 +152,8 @@
       return;
     }
     renderBranchTabs();
+    applyViewMode();   // reflect the remembered list/grid choice before first render
+    if ($sortSelect) $sortSelect.value = state.treeSort;
 
     // URL hash priority - pick branch + tab + path + version from the
     // hash if present, else default to the first branch / latest version.
@@ -441,17 +448,38 @@
     // Render at most treeVisible rows - a "load more" reveals the next page.
     // Trove folders like blueprints/ can hold tens of thousands of files, so
     // dumping the whole listing into the DOM at once would lock up the page.
-    const shown = Math.min(state.treeVisible, entries.length);
-    const visible = entries.slice(0, shown);
+    const ordered = sortEntries(entries);
+    const shown = Math.min(state.treeVisible, ordered.length);
+    const visible = ordered.slice(0, shown);
 
     const touched = state.versionTouched && state.versionTouched.byPath;
+
+    // "load more" footer, shared by both layouts.
+    const more = entries.length > shown
+      ? `<button type="button" class="up-tree-more" data-tree-more>
+           <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+           ${esc(t('Load more'))}
+           <span class="up-tree-more-count">${esc(
+             t('{n} of {total}')
+               .replace('{n}', formatInt(shown))
+               .replace('{total}', formatInt(entries.length)))}</span>
+         </button>`
+      : '';
+
+    // Grid/gallery layout: a tile per entry (image thumbnail when the file is a
+    // renderable image, a file-type tile otherwise).
+    if (state.viewMode === 'grid') {
+      const tiles = visible.map((e) => tileHTML(e, touched)).join('');
+      $tree.innerHTML = `<div class="up-gallery">${tiles}</div>${more}`;
+      observeDdsTiles();
+      return;
+    }
+
     const rows = visible.map((e) => {
       const icon = e.is_dir
         ? 'fa-folder'
         : iconForName(e.name);
-      const sizeOrCount = e.is_dir
-        ? `${formatInt(e.file_count)} ${t('files')}`
-        : formatBytes(e.size);
+      const sizeOrCount = entryMeta(e);
 
       // Touched indicator: directory shows a dot if ANY descendant
       // changed; file shows the change type.
@@ -481,17 +509,6 @@
           <span class="up-row-meta">${esc(sizeOrCount)}</span>
         </button>`;
     }).join('');
-    // Footer: "load more" when the directory has more rows than we've rendered.
-    const more = entries.length > shown
-      ? `<button type="button" class="up-tree-more" data-tree-more>
-           <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-           ${esc(t('Load more'))}
-           <span class="up-tree-more-count">${esc(
-             t('{n} of {total}')
-               .replace('{n}', formatInt(shown))
-               .replace('{total}', formatInt(entries.length)))}</span>
-         </button>`
-      : '';
     $tree.innerHTML = rows + more;
   }
 
@@ -550,7 +567,7 @@
       rerunI18n();
       return;
     }
-    const results = state.searchResults || [];
+    const results = sortEntries(state.searchResults || []);
     if (!results.length) {
       $tree.innerHTML = `<p class="up-tree-empty" data-i18n>Nothing here.</p>`;
       rerunI18n();
@@ -564,6 +581,13 @@
             .replace('{n}', formatInt(results.length))
             .replace('{total}', formatInt(state.searchTotal)))}</p>`
       : '';
+
+    if (state.viewMode === 'grid') {
+      const tiles = results.map((e) => tileHTML(e, touched, { search: true })).join('');
+      $tree.innerHTML = capped + `<div class="up-gallery">${tiles}</div>`;
+      observeDdsTiles();
+      return;
+    }
 
     const rows = results.map((e) => {
       const icon = iconForName(e.name);
@@ -585,7 +609,7 @@
             <span class="up-row-file">${esc(e.name)}${touchHTML}</span>
             ${dir ? `<span class="up-row-dir">${esc(dir)}</span>` : ''}
           </span>
-          <span class="up-row-meta">${esc(formatBytes(e.size))}</span>
+          <span class="up-row-meta">${esc(entryMeta(e))}</span>
         </button>`;
     }).join('');
     $tree.innerHTML = capped + rows;
@@ -876,6 +900,10 @@
     // through (e.g. after jumping here from the changes list); it just drives
     // the browser's own history, so it stays in sync with the Back button.
     if ($detailBack) $detailBack.hidden = _navDepth <= 0;
+
+    // In grid mode the detail pane only appears once a file is picked (the
+    // gallery itself is the browser); this class gates that in CSS.
+    if ($paneExplorer) $paneExplorer.classList.toggle('up-file-open', !!state.selectedPath);
 
     if (!state.selectedPath) {
       $detailEmpty.hidden = false;
@@ -1244,6 +1272,31 @@
       scheduleSearch();
     });
 
+    // View toggle (list ↔ grid gallery).
+    if ($viewToggle) {
+      $viewToggle.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-view]');
+        if (btn) setViewMode(btn.dataset.view);
+      });
+    }
+
+    // Sort order (name ↔ last modified).
+    if ($sortSelect) {
+      $sortSelect.addEventListener('change', () => setTreeSort($sortSelect.value));
+    }
+
+    // Gallery image load failures → swap the <img> for its file-type icon.
+    // Capture phase because `error` on <img> doesn't bubble. Guarded by the
+    // data-fallback marker so it only touches gallery thumbnails.
+    $tree.addEventListener('error', (e) => {
+      const img = e.target;
+      if (!img || img.tagName !== 'IMG' || !img.dataset.fallback) return;
+      const span = document.createElement('span');
+      span.className = 'up-tile-icon';
+      span.innerHTML = `<i class="fa-solid ${img.dataset.fallback}" aria-hidden="true"></i>`;
+      img.replaceWith(span);
+    }, true);
+
     // One delegated handler for the whole sidebar list (directory rows, search
     // rows, and the "load more" footer). Delegation keeps the listener count
     // constant no matter how many rows a huge folder eventually reveals.
@@ -1409,6 +1462,212 @@
       _suppressHash = false;
     }
     renderDetail();   // refresh the Back button for the new depth
+  }
+
+  // ─── View mode (list ↔ grid gallery) ───────────────────────────────
+  // The explorer sidebar renders either as a compact list of rows or as a
+  // thumbnail gallery. The choice is remembered across visits in localStorage.
+  const VIEW_KEY = 'bttUpdatesView';
+
+  function readViewMode() {
+    try {
+      return localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list';
+    } catch (_) { return 'list'; }
+  }
+  function saveViewMode(mode) {
+    try { localStorage.setItem(VIEW_KEY, mode); } catch (_) {}
+  }
+
+  // Reflect state.viewMode onto the DOM: the pane class drives the CSS layout
+  // switch, and the toggle buttons show which mode is active.
+  function applyViewMode() {
+    const grid = state.viewMode === 'grid';
+    if ($paneExplorer) $paneExplorer.classList.toggle('up-view-grid', grid);
+    if ($viewToggle) {
+      for (const btn of $viewToggle.querySelectorAll('[data-view]')) {
+        const on = btn.dataset.view === state.viewMode;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', String(on));
+      }
+    }
+  }
+
+  function setViewMode(mode) {
+    mode = mode === 'grid' ? 'grid' : 'list';
+    if (state.viewMode === mode) return;
+    state.viewMode = mode;
+    saveViewMode(mode);
+    applyViewMode();
+    renderTree();
+    renderDetail();
+  }
+
+  // ─── Sort order (name ↔ last modified) ─────────────────────────────
+  const SORT_KEY = 'bttUpdatesSort';
+
+  function readTreeSort() {
+    try {
+      return localStorage.getItem(SORT_KEY) === 'modified' ? 'modified' : 'name';
+    } catch (_) { return 'name'; }
+  }
+  function saveTreeSort(mode) {
+    try { localStorage.setItem(SORT_KEY, mode); } catch (_) {}
+  }
+  function setTreeSort(mode) {
+    mode = mode === 'modified' ? 'modified' : 'name';
+    if (state.treeSort === mode) return;
+    state.treeSort = mode;
+    saveTreeSort(mode);
+    if ($sortSelect) $sortSelect.value = mode;
+    renderTree();
+  }
+
+  // Return a copy of `entries` in the active order. 'name' is the server order
+  // (directories first, alphabetical). 'modified' sorts by the newest version that
+  // touched each entry (its rolled-up last_ordinal), newest first, dirs winning ties.
+  function sortEntries(entries) {
+    if (state.treeSort !== 'modified') return entries;
+    return entries.slice().sort((a, b) => {
+      const d = (b.last_ordinal || 0) - (a.last_ordinal || 0);
+      if (d) return d;
+      if (!!a.is_dir !== !!b.is_dir) return a.is_dir ? -1 : 1;
+      return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+    });
+  }
+
+  // Compact "modified N ago" label for a listing entry, or '' when unknown.
+  function entryModifiedLabel(e) {
+    if (!e.last_modified_at) return '';
+    const d = new Date(e.last_modified_at);
+    if (isNaN(d.getTime())) return '';
+    return formatRelativeWhen(d);
+  }
+
+  // The meta text shown at the trailing edge of a row/tile: the modified time when
+  // sorting by it (falling back to size/count if unknown), else size/count.
+  function entryMeta(e) {
+    if (state.treeSort === 'modified') {
+      const when = entryModifiedLabel(e);
+      if (when) return when;
+    }
+    return e.is_dir ? `${formatInt(e.file_count)} ${t('files')}` : formatBytes(e.size);
+  }
+
+  // Classify a file by extension for the gallery: 'img' renders straight from the
+  // raw-file endpoint; 'dds' is decoded to a canvas client-side; null → a tile.
+  function imageKindForName(name) {
+    const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+    if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'webp' || ext === 'gif') return 'img';
+    if (ext === 'dds') return 'dds';
+    return null;
+  }
+
+  // One gallery tile. Folders navigate; image files show a thumbnail; everything
+  // else shows a file-type icon. Carries data-path/data-is-dir so the existing
+  // delegated $tree click handler drives it with no extra wiring.
+  function tileHTML(e, touched, opts) {
+    opts = opts || {};
+    const isDir = !!e.is_dir;
+    const imgKind = isDir ? null : imageKindForName(e.name);
+
+    let thumb;
+    if (isDir) {
+      thumb = `<span class="up-tile-icon"><i class="fa-solid fa-folder" aria-hidden="true"></i></span>`;
+    } else if (imgKind === 'img') {
+      const src = `/v1/updates/${encodeURIComponent(state.branch)}/file?path=${encodeURIComponent(e.path)}`;
+      // data-fallback lets the capture-phase error handler swap in an icon if the
+      // image fails to load (inline onerror is disallowed by the page CSP).
+      thumb = `<img class="up-tile-img" loading="lazy" decoding="async" alt=""
+                    src="${src}" data-fallback="${esc(iconForName(e.name))}">`;
+    } else if (imgKind === 'dds') {
+      thumb = `<canvas class="up-tile-img up-tile-dds" data-dds-path="${esc(e.path)}"
+                       width="0" height="0"></canvas>`;
+    } else {
+      thumb = `<span class="up-tile-icon"><i class="fa-solid ${iconForName(e.name)}" aria-hidden="true"></i></span>`;
+    }
+
+    // Touched badge (changed in the selected version): a dot on the tile corner.
+    let touchHTML = '';
+    if (touched && !isDir) {
+      const kind = touched.get(e.path);
+      if (kind) {
+        const cls = kind === 'modified' ? 'up-touch-mod'
+                  : kind === 'removed'  ? 'up-touch-rem' : '';
+        touchHTML = `<span class="up-tile-touch ${cls}" title="${esc(t(kind))}"></span>`;
+      }
+    } else if (touched && isDir) {
+      for (const p of touched.keys()) {
+        if (p.startsWith(e.path)) { touchHTML = `<span class="up-tile-touch" title="${esc(t('contains changes'))}"></span>`; break; }
+      }
+    }
+
+    // Meta line: dir path for search hits (or the modified time when that's the
+    // active sort), else size / child count (or modified time).
+    let meta;
+    if (opts.search) {
+      const dir = e.path.slice(0, e.path.length - e.name.length);
+      meta = (state.treeSort === 'modified' && entryModifiedLabel(e)) || dir || entryMeta(e);
+    } else {
+      meta = entryMeta(e);
+    }
+
+    return `
+      <button type="button" class="up-tile${state.selectedPath === e.path ? ' active' : ''}"
+              data-path="${esc(e.path)}" data-is-dir="${isDir ? '1' : ''}"
+              title="${esc(e.path)}">
+        <span class="up-tile-thumb">${thumb}${touchHTML}</span>
+        <span class="up-tile-body">
+          <span class="up-tile-name">${esc(e.name)}</span>
+          <span class="up-tile-meta">${esc(meta)}</span>
+        </span>
+      </button>`;
+  }
+
+  // Decode DDS thumbnails lazily: only tiles scrolled near the viewport are
+  // fetched + decoded, so a folder of hundreds of textures doesn't stall.
+  let _ddsObserver = null;
+  function observeDdsTiles() {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const canvases = $tree.querySelectorAll('canvas.up-tile-dds[data-dds-path]');
+    if (!canvases.length) return;
+    if (!_ddsObserver) {
+      _ddsObserver = new IntersectionObserver((entries, obs) => {
+        for (const en of entries) {
+          if (en.isIntersecting) { obs.unobserve(en.target); decodeDdsTile(en.target); }
+        }
+      }, { rootMargin: '250px' });
+    }
+    for (const c of canvases) _ddsObserver.observe(c);
+  }
+
+  async function decodeDdsTile(canvas) {
+    const path = canvas.dataset.ddsPath;
+    const decodeDDS = await ensureDDS();
+    if (!decodeDDS) { ddsTileFallback(canvas); return; }
+    let buf;
+    try {
+      const res = await fetch(
+        `/v1/updates/${state.branch}/file?path=${encodeURIComponent(path)}`,
+        { credentials: 'omit' },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      buf = await res.arrayBuffer();
+    } catch (_) { ddsTileFallback(canvas); return; }
+    if (!canvas.isConnected) return;   // tile was re-rendered away
+    let img;
+    try { img = decodeDDS(buf); } catch (_) { ddsTileFallback(canvas); return; }
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext('2d').putImageData(new ImageData(img.rgba, img.width, img.height), 0, 0);
+    canvas.classList.add('is-loaded');
+  }
+
+  function ddsTileFallback(canvas) {
+    if (!canvas.isConnected) return;
+    const span = document.createElement('span');
+    span.className = 'up-tile-icon';
+    span.innerHTML = '<i class="fa-solid fa-file-image" aria-hidden="true"></i>';
+    canvas.replaceWith(span);
   }
 
   // ─── i18n ──────────────────────────────────────────────────────────

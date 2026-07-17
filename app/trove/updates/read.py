@@ -8,6 +8,7 @@ time (ls-style) so a 100k-file tree is never dumped at once.
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 
 from app.core.config import settings
 from app.core.pagination import paginate
@@ -26,11 +27,12 @@ IMAGE_EXTS = frozenset({"png", "jpg", "jpeg", "gif", "webp", "bmp", "ico", "apng
 
 
 def directory_listing(entries: list[dict], prefix: str) -> list[dict]:
-    """Immediate children of `prefix` from a flat (path, size) list. Pure.
+    """Immediate children of `prefix` from a flat (path, size, last_ordinal) list. Pure.
 
     A child is a file (no further '/') or a subdirectory (has more path below it),
-    with file counts and total bytes rolled up. Directories first, then files,
-    each alphabetical.
+    with file counts + total bytes rolled up and ``last_ordinal`` set to the newest
+    version touched underneath it (so a directory sorts by its most-recent change).
+    Directories first, then files, each alphabetical.
     """
     children: dict[str, dict] = {}
     plen = len(prefix)
@@ -44,13 +46,15 @@ def directory_listing(entries: list[dict], prefix: str) -> list[dict]:
         slash = rest.find("/")
         name = rest if slash == -1 else rest[:slash]
         child = children.setdefault(
-            name, {"name": name, "path": prefix + name, "is_dir": slash != -1, "file_count": 0, "size": 0}
+            name, {"name": name, "path": prefix + name, "is_dir": slash != -1,
+                   "file_count": 0, "size": 0, "last_ordinal": 0}
         )
         if slash != -1:
             child["is_dir"] = True
             child["path"] = prefix + name + "/"
         child["file_count"] += 1
         child["size"] += e.get("size", 0)
+        child["last_ordinal"] = max(child["last_ordinal"], e.get("last_ordinal", 0) or 0)
     return sorted(children.values(), key=lambda c: (not c["is_dir"], c["name"]))
 
 
@@ -154,13 +158,32 @@ async def list_changes(
     return docs, total
 
 
+async def _captured_at_by_ordinal(branch: str) -> dict[int, datetime]:
+    """{ordinal → captured_at} for a branch, so a materialized ``last_ordinal`` can be
+    rendered as a real timestamp without a per-row version join. The version set is
+    tiny (one doc per build) relative to the file tree."""
+    coll = UpdateVersion.get_pymongo_collection()
+    docs = await coll.find({"branch": branch}, {"ordinal": 1, "captured_at": 1, "_id": 0}).to_list(length=None)
+    return {d["ordinal"]: d.get("captured_at") for d in docs}
+
+
+def _attach_modified(entries: list[dict], captured: dict[int, datetime]) -> list[dict]:
+    """Add ``last_modified_at`` (from the version map) to each entry in place."""
+    for e in entries:
+        e["last_modified_at"] = captured.get(e.get("last_ordinal", 0) or 0)
+    return entries
+
+
 async def list_directory(branch: str, prefix: str) -> list[dict]:
     query: dict = {"branch": branch}
     if prefix:
         query["path"] = {"$gte": prefix, "$lt": prefix + "￿"}  # range scan on the (branch, path) index
     coll = UpdateState.get_pymongo_collection()
-    entries = await coll.find(query, {"path": 1, "size": 1, "_id": 0}).to_list(length=None)
-    return directory_listing(entries, prefix)
+    entries = await coll.find(
+        query, {"path": 1, "size": 1, "last_ordinal": 1, "_id": 0},
+    ).to_list(length=None)
+    listing = directory_listing(entries, prefix)
+    return _attach_modified(listing, await _captured_at_by_ordinal(branch))
 
 
 async def search_paths(branch: str, needle: str, limit: int = 200) -> tuple[list[dict], int]:
@@ -179,7 +202,7 @@ async def search_paths(branch: str, needle: str, limit: int = 200) -> tuple[list
         "path": {"$regex": re.escape(needle), "$options": "i"},
     }
     total = await coll.count_documents(query)
-    cursor = coll.find(query, {"path": 1, "size": 1, "_id": 0}).sort("path", 1).limit(limit)
+    cursor = coll.find(query, {"path": 1, "size": 1, "last_ordinal": 1, "_id": 0}).sort("path", 1).limit(limit)
     docs = await cursor.to_list(length=limit)
     entries = [
         {
@@ -187,9 +210,11 @@ async def search_paths(branch: str, needle: str, limit: int = 200) -> tuple[list
             "name": d["path"].rsplit("/", 1)[-1],
             "size": d.get("size", 0),
             "is_dir": False,
+            "last_ordinal": d.get("last_ordinal", 0),
         }
         for d in docs
     ]
+    _attach_modified(entries, await _captured_at_by_ordinal(branch))
     return entries, total
 
 

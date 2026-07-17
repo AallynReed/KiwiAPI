@@ -881,10 +881,10 @@ class ClassActivityCurrentResponse(BaseModel):
     Two views: RAW (``active_players`` / ``share`` / ``total_active``) counts every
     player present on a class's Effort board at the newest capture (Paragon is
     excluded as ambiguous); CLEAN (``*_clean``), the "established" page default,
-    keeps only players who clear BOTH per-class floors - ``power_rank_threshold``
-    (1000+i board) and ``effort_threshold`` (4000+i) - without exceeding ``xp_cap``
-    on the weekly XP board (21005) - filtering newbies, alts and extreme XP grinders
-    (a floor/cap of 0 disables that gate). ``share`` is a class's count over the total
+    keeps only players who clear ALL three floors - ``power_rank_threshold``
+    (1000+i board), ``effort_threshold`` (4000+i) and ``xp_threshold`` (the global
+    XP board, 21005) - filtering newbies + alts (a floor of 0 disables that gate).
+    ``share`` is a class's count over the total
     across classes: a player on several classes is counted in each, so the total is
     Σ class counts (the share denominator), not a distinct headcount.
     ``window_start``/``window_end`` are both the snapshot anchor; ``duration_hours``
@@ -900,7 +900,7 @@ class ClassActivityCurrentResponse(BaseModel):
     total_effort_added_clean: int | None = None
     power_rank_threshold: int = 0
     effort_threshold: int = 0
-    xp_cap: int = 0
+    xp_threshold: int = 0
     classes: list[ClassActivityItem]
     methodology: str
     computed_at: int
@@ -921,15 +921,15 @@ class ClassActivitySeriesResponse(BaseModel):
     shared x-axis (one timestamp per bucket); each line's ``values`` (raw) and
     ``values_clean`` (the clean/established view) align to it, with ``null`` where
     that class had no measurable window in the bucket. ``power_rank_threshold`` /
-    ``effort_threshold`` / ``xp_cap`` are the current clean-view gates (for display;
-    the cap is an upper bound on the weekly XP board, 0 = off)."""
+    ``effort_threshold`` / ``xp_threshold`` are the current clean-view floors (for
+    display; the XP floor reads the global XP board, 21005, 0 = off)."""
     period: str
     bucket_seconds: int
     window_start: int
     window_end: int
     power_rank_threshold: int = 0
     effort_threshold: int = 0
-    xp_cap: int = 0
+    xp_threshold: int = 0
     buckets: list[int]
     classes: list[ClassActivitySeriesLine]
     methodology: str
@@ -1109,6 +1109,139 @@ class MarketInsertResponse(BaseModel):
     imported: int              # rows persisted (matched the interest list)
     ignored_not_in_list: int   # parsed but not in the interest list
     last_seen: int | None      # the anchor stamped on every persisted row
+
+
+# --- Store (in-game Kiwi Store catalog) -------------------------------------
+# One ``StoreProductOut`` per product code. ``active`` = the product appeared
+# in the latest scrape; delisted products stay stored (history) but drop out
+# of the default read view. Prices are the in-game currencies (TWC credits /
+# TWP cubits); real-money SKUs carry a pre-formatted ``price_string`` instead.
+
+
+class StorePriceOut(BaseModel):
+    currency: str            # "TWC" (credits) / "TWP" (cubits) / real-money ISO code
+    # In-game currencies (TWC/TWP) are whole units; real-money currencies (EUR,
+    # USD, ...) are in MINOR units (cents) exactly as the game reports them -
+    # divide by 100 for a display price (149 EUR -> €1.49).
+    cost: float
+    can_purchase: bool       # engine-side purchasability at capture time
+    monthly: int = 0         # patron: per-month price; 0 otherwise
+    sale: str = ""           # sale-sticker loc key suffix ("" = no sale)
+
+
+class StoreTextureOut(BaseModel):
+    texture: str
+    x: int = 0
+    y: int = 0
+    text: str = ""           # overlay text ("" = none)
+    overlay: bool = False
+
+
+class StorePricePointOut(BaseModel):
+    ts: int                  # unix seconds (the ingest anchor that saw the change)
+    prices: list[StorePriceOut]
+    price_string: str = ""
+
+
+class StoreProductOut(BaseModel):
+    code: str                # the engine's stable product code
+    kind: str                # product|starter|patron|interactable|trial|class
+    name: str                # raw loc key or display name as the engine sent it
+    image: str
+    info: str
+    informational: bool
+    tradable: bool
+    prices: list[StorePriceOut]
+    price_string: str | None          # real-money SKUs (pre-formatted)
+    price_string_currency: str | None
+    price_string_sale: str | None
+    promo: str | None
+    deal_expires_at: int | None       # unix seconds (limited-time deals)
+    interact_label: str | None
+    interact_enabled: bool
+    trial_limits: str | None
+    class_level: int | None           # class tiles only
+    class_power_rank: int | None
+    class_sub_name: str | None
+    class_icon: str | None
+    textures: list[StoreTextureOut]
+    loot_title: str | None
+    loot_body: str | None             # lootbox probability text
+    categories: list[int]             # store-tab indices this code appears under
+    first_seen: int                   # unix seconds
+    last_seen: int                    # unix seconds
+    active: bool                      # present in the latest scrape
+
+
+class StoreRecords(BaseModel):
+    times_available: int          # number of distinct continuous runs in-store
+    returns: int                  # times it came back after leaving (runs - 1)
+    total_days_seen: int          # summed days present across all runs
+    longest_run_days: int
+    first_seen: int
+    last_seen: int
+    currently_active: bool
+    gap_days: int | None          # whole days since last present (null if active)
+    price_low: dict[str, float] | None   # cheapest each currency has ever been
+    price_high: dict[str, float] | None  # priciest each currency has ever been
+    price_changes: int
+
+
+class StoreProductDetail(StoreProductOut):
+    price_history: list[StorePricePointOut]
+    # Availability intervals [[start_anchor, end_anchor], ...] (unix seconds) -
+    # one per continuous run the product was present; drives the detail timeline.
+    availability: list[list[int]]
+    records: StoreRecords
+
+
+class StoreTimelineItem(BaseModel):
+    code: str
+    name: str
+    kind: str
+    image: str | None
+    availability: list[list[int]]   # [[start_anchor, end_anchor], ...] unix seconds
+    first_seen: int
+    last_seen: int
+    active: bool
+
+
+class StoreTimelineResponse(BaseModel):
+    anchor: int | None                     # latest ingest anchor (unix seconds)
+    span: dict[str, int]                   # {start, end} axis bounds (unix seconds)
+    items: list[StoreTimelineItem]
+    count: int
+
+
+class StoreProductsPage(BaseModel):
+    items: list[StoreProductOut]
+    count: int          # rows returned in this page
+    total: int          # rows matching the filter (independent of pagination)
+    anchor: int | None  # latest ingest anchor (unix seconds)
+
+
+class StoreCategoryOut(BaseModel):
+    index: int
+    label: str           # raw loc key (e.g. "$Store_Tab_Featured")
+    icon: str | None
+    codes: list[str]     # product codes in display order
+    count: int
+    active: bool         # present in the latest scrape
+
+
+class StoreCategoriesResponse(BaseModel):
+    items: list[StoreCategoryOut]
+    count: int
+    anchor: int | None
+
+
+class StoreInsertResponse(BaseModel):
+    products: int        # products the parser recognised
+    categories: int      # categories the parser recognised
+    created: int         # products seen for the first time
+    price_changes: int   # products whose price signature changed
+    anchor: int          # unix seconds stamped on every persisted doc
+    done_marker: bool    # the bot's `done = true` line was present
 
 
 # --- Captured rotations (chaos chest + hourly challenge) -------------------

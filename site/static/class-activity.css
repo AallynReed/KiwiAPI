@@ -62,6 +62,12 @@
   gap: 10px 16px;
   margin-bottom: 10px;
 }
+.cact-chart-controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
 .cact-periods {
   display: inline-flex;
   flex-wrap: wrap;
@@ -93,6 +99,10 @@
 .cact-periods button:focus-visible {
   outline: 2px solid color-mix(in oklab, var(--accent-purple) 60%, transparent);
   outline-offset: 2px;
+}
+/* Metric toggle reuses the pill styling but reads as a distinct control. */
+.cact-metrics button.active {
+  background: linear-gradient(135deg, #2f81f7, #1f6feb);
 }
 
 /* Player-filter toggle (Established / All) - global control above the cards. */
@@ -156,6 +166,19 @@
 }
 .cact-chart-svg { display: block; width: 100%; overflow: visible; }
 .cact-grid-line { stroke: color-mix(in oklab, var(--text-mute) 16%, transparent); stroke-width: 1; }
+/* Peak marker (count mode): a dashed yellow line at the highest value + its label. */
+.cact-peak-line {
+  stroke: var(--accent-yellow, #ffd166);
+  stroke-width: 1.3;
+  stroke-dasharray: 5 4;
+  opacity: .8;
+}
+.cact-peak-label {
+  fill: var(--accent-yellow, #ffd166);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: SFMono-Regular, Consolas, monospace;
+}
 .cact-axis-y {
   fill: var(--text-mute);
   font-size: 11px;
@@ -170,6 +193,7 @@
 .cact-line { fill: none; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 .cact-line.dim { opacity: .12; }
 .cact-guide { stroke: color-mix(in oklab, var(--text-mute) 45%, transparent); stroke-width: 1; stroke-dasharray: 3 3; }
+.cact-reset-daily { stroke: color-mix(in oklab, var(--text-mute) 32%, transparent); stroke-width: 1; stroke-dasharray: 2 4; }
 .cact-reset-weekly { stroke: color-mix(in oklab, var(--accent-yellow) 55%, transparent); stroke-width: 1.5; stroke-dasharray: 4 4; }
 
 /* Hover tooltip - lists the top classes at the hovered bucket. */

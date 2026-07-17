@@ -30,6 +30,7 @@ from app.core.features import (
     require_market_enabled,
     require_mods_hub_enabled,
     require_player_activity_enabled,
+    require_store_enabled,
     require_updates_enabled,
     require_webhooks_enabled,
 )
@@ -98,6 +99,7 @@ from app.trove.router import (
     ocr_router,
     rotations_router,
     stats_router,
+    store_router,
     updates_router,
 )
 from app.trove.status import start_status_prober, stop_status_prober
@@ -325,6 +327,7 @@ app.include_router(codexes_router, dependencies=[Depends(require_codexes_enabled
 app.include_router(btt_router)
 app.include_router(leaderboards_router, dependencies=[Depends(require_leaderboards_enabled)])
 app.include_router(market_router, dependencies=[Depends(require_market_enabled)])
+app.include_router(store_router, dependencies=[Depends(require_store_enabled)])  # in-game Kiwi Store catalog (store:read)
 app.include_router(activity_router, dependencies=[Depends(require_player_activity_enabled)])
 app.include_router(class_activity_router, dependencies=[Depends(require_class_activity_enabled)])
 app.include_router(events_router)  # live SSE event stream (events:read)

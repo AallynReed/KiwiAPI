@@ -150,40 +150,66 @@ def class_by_tech_name(tech_name: str) -> dict | None:
 
 
 # --- Class ↔ leaderboard-board mapping (for the Class Activity feature) ------
-# The Effort and Paragon leaderboards live in two parallel ID ranges: board
-# ``4000+i`` (Effort) and ``5000+i`` (Paragon) both belong to class index ``i``,
-# matching classes.json source order (alphabetical: 0=Bard … 17=Vanguardian, the
-# order the in-game class list shows). So ``class_index = board_uuid % 1000``.
-# (If the game ever reorders these ranges, the per-class display NAMES would shift
-# - re-verify against the real board names if a class looks mislabelled.)
+# The class leaderboards live in three parallel ID ranges: board ``1000+i``
+# (Power Rank), ``4000+i`` (Effort) and ``5000+i`` (Paragon) all belong to class
+# index ``i``, so ``class_index = board_uuid % 1000``. The index order is the
+# game's class RELEASE order (0=Knight … 17=Solarion) - NOT classes.json's
+# alphabetical order. ``_BOARD_CLASS_ORDER`` below is the authoritative
+# board-index → class mapping, verified against the real board names stored in
+# the DB (2026-07-17: board 4000 = "KNIGHT", 4016 = "BARD", and 1000+i/5000+i
+# name the same class as 4000+i for every i). If a class ever looks mislabelled
+# again, re-dump the board names and fix THIS list - never guess.
 _EFFORT_BASE = 4000
 _PARAGON_BASE = 5000
-# Power Rank leaderboards live in a third parallel range: board ``1000+i`` is
-# class ``i``'s Power Rank board. Used by the Class Activity "clean" view to gate
-# the active set to players whose Power Rank on that class clears a threshold.
 _POWER_RANK_BASE = 1000
 
+# Board index -> classes.json tech_name, in the boards' release order.
+_BOARD_CLASS_ORDER: tuple[str, ...] = (
+    "knight",          # 0  - 1000/4000/5000: KNIGHT
+    "gunslinger",      # 1  - GUNSLINGER
+    "faetrickster",    # 2  - FAE TRICKSTER
+    "dracolyte",       # 3  - DRACOLYTE
+    "neonninja",       # 4  - NEON NINJA
+    "candybarbarian",  # 5  - CANDY BARBARIAN
+    "icemage",         # 6  - ICE SAGE
+    "shadowhunter",    # 7  - SHADOW HUNTER
+    "piratelord",      # 8  - PIRATE CAPTAIN
+    "adventurer",      # 9  - BOOMERANGER
+    "tombraiser",      # 10 - TOMB RAISER
+    "lunarlancer",     # 11 - LUNAR LANCER
+    "spirittank",      # 12 - REVENANT
+    "chloromancer",    # 13 - CHLOROMANCER
+    "dinotamer",       # 14 - DINO TAMER
+    "crimefighter",    # 15 - VANGUARDIAN
+    "bard",            # 16 - BARD
+    "solarion",        # 17 - SOLARION
+)
 
-@lru_cache(maxsize=1)
-def _classes_ordered() -> list[dict]:
-    return list(_classes_index().values())
+
+def _class_for_index(i: int) -> dict | None:
+    """The cleaned class object for board/class index ``i`` (release order), or
+    None when the index is out of range or its tech_name isn't in classes.json
+    (e.g. a brand-new class whose board exists before the static data update)."""
+    if 0 <= i < len(_BOARD_CLASS_ORDER):
+        return _classes_index().get(_BOARD_CLASS_ORDER[i])
+    return None
 
 
 def class_count() -> int:
     """Number of known classes (drives the board ranges + chart palette)."""
-    return len(_classes_ordered())
+    return len(_BOARD_CLASS_ORDER)
 
 
 def class_name(i: int) -> str:
-    """Display name for class index ``i`` (classes.json order); falls back to a
-    generic label if the index is out of range (e.g. a new class not yet in the
-    static data)."""
-    classes = _classes_ordered()
-    return classes[i]["name"] if 0 <= i < len(classes) else f"Class {i}"
+    """Display name for class index ``i`` (board release order); falls back to a
+    generic label if the index is unknown (e.g. a new class not yet mapped)."""
+    c = _class_for_index(i)
+    return c["name"] if c is not None else f"Class {i}"
 
 
 def class_index_for_board(uuid: int) -> int:
-    """Class index for an Effort (4000+i) / Paragon (5000+i) board uuid."""
+    """Class index for a Power Rank (1000+i) / Effort (4000+i) / Paragon (5000+i)
+    board uuid."""
     return uuid % 1000
 
 
@@ -191,10 +217,8 @@ def class_icon(i: int) -> str | None:
     """Self-hosted class-icon URL for class index ``i``. The PNGs were downloaded
     from trovesaurus (``ui_class_<qualified_name>.png``) into
     ``site/static/class-icons/<qualified_name>.png`` so we serve them ourselves."""
-    classes = _classes_ordered()
-    if 0 <= i < len(classes):
-        return f"/static/class-icons/{classes[i]['tech_name']}.png"
-    return None
+    c = _class_for_index(i)
+    return f"/static/class-icons/{c['tech_name']}.png" if c is not None else None
 
 
 def class_board_uuids() -> list[int]:

@@ -43,7 +43,7 @@ _SITE_CSP = (
 # is the /static/* asset mount or the /site/* JSON proxies.)
 _PAGE_PATHS = frozenset({
     "/", "/app", "/browse", "/documentation", "/commands", "/leaderboards", "/updates",
-    "/support", "/login", "/dashboard", "/market", "/codexes", "/codexes/crafting",
+    "/support", "/login", "/dashboard", "/market", "/store", "/codexes", "/codexes/crafting",
     "/status", "/giveaways",
     "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/mods", "/modpacks",
     "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",

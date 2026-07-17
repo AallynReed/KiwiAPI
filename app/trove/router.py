@@ -156,6 +156,11 @@ from app.trove.schemas import (
     PlayerProfileResponse,
     ServerTime,
     StatTable,
+    StoreCategoriesResponse,
+    StoreInsertResponse,
+    StoreProductDetail,
+    StoreProductsPage,
+    StoreTimelineResponse,
     TroveClass,
     TroveEventItem,
     TroveEventList,
@@ -171,6 +176,7 @@ from app.trove.schemas import (
     WeeklyBuffs,
     YearlyCalendar,
 )
+from app.trove.store import service as store_service
 from app.trove.tmod import TmodBuildRequest, TmodReadResponse
 from app.trove.updates import compare as updates_compare
 from app.trove.updates import read as updates_read
@@ -209,6 +215,7 @@ codexes_router = APIRouter(prefix="/v1/codexes", tags=["codexes"])
 btt_router = APIRouter(prefix="/v1/btt", tags=["btt"])
 leaderboards_router = APIRouter(prefix="/v1/leaderboards", tags=["leaderboards"])
 market_router = APIRouter(prefix="/v1/market", tags=["market"])
+store_router = APIRouter(prefix="/v1/store", tags=["store"])
 activity_router = APIRouter(prefix="/v1/activity", tags=["activity"])
 class_activity_router = APIRouter(prefix="/v1/class-activity", tags=["class-activity"])
 ocr_router = APIRouter(prefix="/v1/ocr", tags=["ocr"])
@@ -263,6 +270,10 @@ _LB_MASTER = Depends(require_master_ingest)
 # Same shape: read gated by scope, write gated by superuser API token.
 _MKT = Depends(require_scope("market:read"))
 _MKT_MASTER = Depends(require_master_ingest)
+# Store catalog follows the market pattern exactly: reads behind store:read,
+# the ingest behind a superuser API token.
+_STORE = Depends(require_scope("store:read"))
+_STORE_MASTER = Depends(require_master_ingest)
 # Character-stat OCR is token-gated: it's CPU-heavy (runs an OCR model) so it
 # isn't a tokenless freebie, but it needs no special privilege beyond its scope.
 _OCR = Depends(require_scope("ocr:read"))
@@ -2924,6 +2935,158 @@ async def reset_market_listings(_auth = _MKT_MASTER) -> dict:
     removed = await market_service.reset_listings()
     await ingest_log.record(
         endpoint="/v1/market/reset",
+        user=_auth.user, token=_auth.token,
+        summary={"removed": removed},
+    )
+    return {"reset": True, "removed": removed}
+
+
+# --- Store: in-game Kiwi Store catalog ingest + read -------------------------
+# READ side (scope: store:read) - the catalog is small (a few hundred products)
+# and changes at most daily, so no archive tier is needed.
+# WRITE side (insert) - superuser API token only. The bot POSTs the raw
+# StoreLog.cfg dump (written by the StoreBot tmod that replaces
+# ui/kiwistore.swf); the parser mirrors StoreBot's cfg format, the service
+# upserts by product code and appends price-history points on change.
+
+
+@store_router.get("/products", response_model=StoreProductsPage)
+async def list_store_products(
+    ctx: TokenContext = _STORE,
+    category: int | None = Query(default=None,
+        description="Only products under this store-tab index"),
+    kind: str | None = Query(default=None,
+        description="Tile kind: product|starter|patron|interactable|trial|class"),
+    currency: str | None = Query(default=None,
+        description="Only products purchasable with this currency (e.g. TWC, TWP)"),
+    q: str | None = Query(default=None,
+        description="Case-insensitive substring match on the product name"),
+    active: bool = Query(default=True,
+        description="Only products present in the latest scrape (false = include delisted)"),
+    on_sale: bool = Query(default=False,
+        description="Only products currently carrying a sale sticker"),
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+) -> StoreProductsPage:
+    """Paginated store catalog with the usual filters.
+
+    ``active=true`` (the default) serves the latest scrape's catalog; pass
+    ``active=false`` to include products that have since been delisted
+    (they're kept forever - ``last_seen`` tells you when they vanished).
+    """
+    items, total, anchor = await store_service.list_products(
+        category=category, kind=kind, currency=currency, q=q,
+        active_only=active, on_sale=on_sale, limit=limit, offset=offset,
+    )
+    return StoreProductsPage(items=items, count=len(items), total=total, anchor=anchor)
+
+
+@store_router.get("/categories", response_model=StoreCategoriesResponse)
+async def list_store_categories(ctx: TokenContext = _STORE) -> StoreCategoriesResponse:
+    """The store's tab list (label, icon, display-ordered product codes)."""
+    items, anchor = await store_service.list_categories()
+    return StoreCategoriesResponse(items=items, count=len(items), anchor=anchor)
+
+
+@store_router.get("/timeline", response_model=StoreTimelineResponse)
+async def store_timeline(
+    ctx: TokenContext = _STORE,
+    kind: str | None = Query(default=None,
+        description="Restrict to one tile kind (product|starter|patron|...)"),
+    limit: int = Query(default=1000, ge=1, le=4000),
+) -> StoreTimelineResponse:
+    """Availability bands for every product in one call - each item's in-store
+    presence as ``[[start, end], ...]`` unix-second intervals, plus the axis
+    ``span``. Drives the global store-history timeline (a pack that left and
+    returned shows multiple bands). Ordered most-recently-present first."""
+    payload = await store_service.timeline(kind=kind, limit=limit)
+    return StoreTimelineResponse(**payload)
+
+
+@store_router.get("/products/{code}", response_model=StoreProductDetail)
+async def get_store_product(code: str, ctx: TokenContext = _STORE) -> StoreProductDetail:
+    """One product by its engine code, including its full price history
+    (a point per ingest where the price signature changed - sales, price
+    bumps, purchase-option swaps)."""
+    payload = await store_service.get_product(code)
+    if payload is None:
+        raise APIError(
+            status_code=404, code=ErrorCode.not_found,
+            message=f"No store product with code '{code}'",
+        )
+    return StoreProductDetail(**payload)
+
+
+@store_router.post("/insert", response_model=StoreInsertResponse,
+                   status_code=200,
+                   summary="Insert store data")
+async def insert_store_dump(
+    file: UploadFile = File(..., description="The raw StoreLog.cfg dump (text)"),
+    timestamp: int | None = Query(
+        default=None,
+        description=("Override the ingest anchor in unix seconds. Defaults to "
+                     "now() - pass this only for back-fills."),
+    ),
+    _auth = _STORE_MASTER,
+) -> StoreInsertResponse:
+    """Ingest a store scrape.
+
+    **Master only**: requires an API token owned by a superuser account. Submit
+    the raw cfg text as a multipart file (the bot reads the game's
+    ``StoreLog.cfg`` and POSTs it verbatim). Idempotent at the product
+    level - a re-scraped product just refreshes its fields and bumps
+    ``last_seen``; a price-history point is appended only when the price
+    signature actually changed.
+    """
+    raw = await file.read()
+    if not raw:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message="Empty upload - POST the raw cfg text as a multipart 'file' field.",
+        )
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        text = raw.decode("utf-8", errors="replace")
+    try:
+        summary = await store_service.insert_dump(text, timestamp=timestamp)
+    except ValueError as exc:
+        await ingest_log.record(
+            endpoint="/v1/store/insert",
+            user=_auth.user, token=_auth.token, success=False, error=str(exc)[:300],
+            summary={"bytes": len(raw)},
+        )
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request, message=str(exc),
+        ) from exc
+    await ingest_log.record(
+        endpoint="/v1/store/insert",
+        user=_auth.user, token=_auth.token,
+        summary={**summary, "bytes": len(raw)},
+    )
+    # Relay a lightweight "store refreshed" event to the live channel (SSE
+    # subscribers can refetch). Best-effort; never fail the ingest.
+    try:
+        await events_bus.publish(
+            "store", str(summary["anchor"]),
+            {"anchor": summary["anchor"], "products": summary["products"],
+             "price_changes": summary["price_changes"]},
+        )
+    except Exception:
+        logger.warning("store event publish failed", exc_info=True)
+    return StoreInsertResponse(**summary)
+
+
+@store_router.post("/reset", status_code=200,
+                   summary="Reset all store data (master)")
+async def reset_store_data(_auth = _STORE_MASTER) -> dict:
+    """**Master only. Destructive.** Wipe every stored store product, category
+    and the ingest state (bad ingest / cfg-format change escape hatch). The
+    next insert repopulates from scratch. Returns the number of docs removed;
+    logged at WARNING."""
+    removed = await store_service.reset()
+    await ingest_log.record(
+        endpoint="/v1/store/reset",
         user=_auth.user, token=_auth.token,
         summary={"removed": removed},
     )

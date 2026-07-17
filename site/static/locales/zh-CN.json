@@ -1,4 +1,9 @@
 {
+  "Last modified": "最近修改",
+  "List": "列表",
+  "Grid": "网格",
+  "List view": "列表视图",
+  "Grid view": "网格视图",
   "Show progress": "查看进度",
   "Hide progress": "隐藏进度",
   "No history to chart.": "没有可绘制的历史数据。",
@@ -1935,7 +1940,7 @@
   "Other": "其他",
   "Ready when <span class=\"grad\">you are.</span>": "准备好了就<span class=\"grad\">开始吧。</span>",
   "See who's live on Twitch right now, catch up on the newest community videos, and read the latest official Trove news.": "查看谁正在 Twitch 直播，追看最新的社区视频，并阅读最新的官方 Trove 资讯。",
-  "weekly XP ≤ {n}": "每周经验 ≤ {n}",
+  "XP ≥ {n}": "经验 ≥ {n}",
   "Untracked": "未追踪",
   "This item is no longer tracked": "该物品已不再追踪",
   "This item is no longer tracked - prices and listings no longer update.": "该物品已不再追踪 - 价格和挂牌不再更新。"

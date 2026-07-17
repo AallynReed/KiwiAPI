@@ -1,4 +1,9 @@
 {
+  "Last modified": "Última modificação",
+  "List": "Lista",
+  "Grid": "Grelha",
+  "List view": "Vista de lista",
+  "Grid view": "Vista em grelha",
   "Show progress": "Ver progresso",
   "Hide progress": "Ocultar progresso",
   "No history to chart.": "Sem histórico para mostrar.",
@@ -1935,7 +1940,7 @@
   "Other": "Outros",
   "Ready when <span class=\"grad\">you are.</span>": "Começa <span class=\"grad\">quando quiseres.</span>",
   "See who's live on Twitch right now, catch up on the newest community videos, and read the latest official Trove news.": "Vê quem está em direto na Twitch agora mesmo, põe-te a par dos vídeos mais recentes da comunidade, e lê as últimas notícias oficiais de Trove.",
-  "weekly XP ≤ {n}": "XP semanal ≤ {n}",
+  "XP ≥ {n}": "XP ≥ {n}",
   "Untracked": "Sem monitorização",
   "This item is no longer tracked": "Este item já não é monitorizado",
   "This item is no longer tracked - prices and listings no longer update.": "Este item já não é monitorizado - os preços e listagens deixam de ser atualizados."

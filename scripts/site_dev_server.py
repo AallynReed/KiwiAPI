@@ -98,20 +98,21 @@ STUB_ENTRIES = [
     {"player_name": "TestPlayer", "rank": 7, "score": 57000.0},
 ]
 
-# The 18 Trove classes in classes.json order (= Effort/Paragon board offset
-# order), for the Class Activity page stubs.
+# The 18 Trove classes in the boards' class RELEASE order (= the Power
+# Rank/Effort/Paragon board offset order; matches stats._BOARD_CLASS_ORDER),
+# for the Class Activity page stubs.
 _STUB_CLASSES = [
-    "Bard", "Boomeranger", "Candy Barbarian", "Chloromancer", "Dino Tamer",
-    "Dracolyte", "Fae Trickster", "Gunslinger", "Ice Sage", "Knight",
-    "Lunar Lancer", "Neon Ninja", "Pirate Captain", "Revenant", "Shadow Hunter",
-    "Solarion", "Tomb Raiser", "Vanguardian",
+    "Knight", "Gunslinger", "Fae Trickster", "Dracolyte", "Neon Ninja",
+    "Candy Barbarian", "Ice Sage", "Shadow Hunter", "Pirate Captain",
+    "Boomeranger", "Tomb Raiser", "Lunar Lancer", "Revenant", "Chloromancer",
+    "Dino Tamer", "Vanguardian", "Bard", "Solarion",
 ]
-# qualified_name per class (classes.json order) → self-hosted icon path.
+# qualified_name per class (same release order) → self-hosted icon path.
 _STUB_CLASS_QN = [
-    "bard", "adventurer", "candybarbarian", "chloromancer", "dinotamer",
-    "dracolyte", "faetrickster", "gunslinger", "icemage", "knight",
-    "lunarlancer", "neonninja", "piratelord", "spirittank", "shadowhunter",
-    "solarion", "tombraiser", "crimefighter",
+    "knight", "gunslinger", "faetrickster", "dracolyte", "neonninja",
+    "candybarbarian", "icemage", "shadowhunter", "piratelord",
+    "adventurer", "tombraiser", "lunarlancer", "spirittank", "chloromancer",
+    "dinotamer", "crimefighter", "bard", "solarion",
 ]
 def _stub_icon(ci):
     return f"/static/class-icons/{_STUB_CLASS_QN[ci]}.png"
@@ -241,6 +242,22 @@ _UPDATE_PATHS = [
     "readme.md",
 ] + [f"blueprints/model_{i:04d}.blueprint" for i in range(500)]   # exercise sidebar "load more"
 
+# Synthetic "last modified" data so the /updates last-modified sort is exercisable:
+# a handful of paths were touched in the newest version (ordinal 2), the rest in v1.
+_UPDATE_VERSION_DATES = {2: "2026-07-15T12:00:00+00:00", 1: "2026-06-01T09:30:00+00:00"}
+_UPDATE_TOUCHED_V2 = {
+    "prefabs/dungeons/cursed_vale/boss.blueprint",
+    "prefabs/dungeons/cursed_vale/minion.blueprint",
+    "textures/ui/health_bar.dds",
+    "textures/blocks/stone_diffuse.dds",
+    "ui/hud/health_bar.png",
+    "scripts/combat/damage.lua",
+}
+
+
+def _last_ordinal_for(path: str) -> int:
+    return 2 if path in _UPDATE_TOUCHED_V2 else 1
+
 
 def _stub_dds(w=16, h=16):
     """A tiny uncompressed 32-bit BGRA DDS (red-x / green-y gradient) so the DDS
@@ -283,12 +300,15 @@ def _update_dir_listing(prefix):
         name = rest if slash == -1 else rest[:slash]
         c = children.setdefault(name, {
             "name": name, "path": prefix + name,
-            "is_dir": slash != -1, "file_count": 0, "size": 0})
+            "is_dir": slash != -1, "file_count": 0, "size": 0, "last_ordinal": 0})
         if slash != -1:
             c["is_dir"] = True
             c["path"] = prefix + name + "/"
         c["file_count"] += 1
         c["size"] += 512
+        c["last_ordinal"] = max(c["last_ordinal"], _last_ordinal_for(path))
+    for c in children.values():
+        c["last_modified_at"] = _UPDATE_VERSION_DATES.get(c["last_ordinal"])
     return sorted(children.values(), key=lambda c: (not c["is_dir"], c["name"]))
 
 
@@ -424,6 +444,139 @@ _MARKET_CATEGORIES = [
 # Keys & Chests group goes empty and disappears); Flux Capacitor exercises
 # the uncategorized-untracked path.
 _MARKET_UNTRACKED = ["Shadow Key", "Flux Capacitor"]
+
+
+# ── /store (Trove Store History) synthetic catalog ────────────────────────
+# Enough variety to exercise the page: live + delisted packs, multi-run
+# availability, price history (for the graph), TWC/TWP/real-money currencies,
+# sales, deals, and a couple of categories. Anchors are relative to now so
+# "live now" + the availability/today marker land correctly.
+_DAY = 86400
+_STORE_NOW = int(_time.time() // _DAY * _DAY)   # snap to a day boundary
+
+
+def _store_stub_products():
+    now = _STORE_NOW
+    return [
+        {
+            "code": "ITEM_SKIN_KNIGHT_ELYSIAN", "kind": "product",
+            "name": "Elysian Guardian", "image": "ui/skins/ui_skin_knight_elysian.dds",
+            "info": "A costume for the Knight.\n\nThe purity of the guardians.",
+            "informational": False, "tradable": False,
+            "prices": [{"currency": "TWC", "cost": 750, "can_purchase": True, "monthly": 0, "sale": ""}],
+            "price_string": None, "price_string_currency": None, "price_string_sale": None,
+            "promo": None, "deal_expires_at": None,
+            "interact_label": None, "interact_enabled": False, "trial_limits": None,
+            "class_level": None, "class_power_rank": None, "class_sub_name": None, "class_icon": None,
+            "textures": [], "loot_title": None, "loot_body": None,
+            "categories": [7], "first_seen": now - 120 * _DAY, "last_seen": now, "active": True,
+        },
+        {
+            "code": "DEAL_DAILY_EMPOWERED_COSMIC_1", "kind": "starter",
+            "name": "Cosmic Daily Deal", "image": "ui/store/ui_store_daily_deal_greengembox.dds",
+            "info": "An incredible limited-time deal on 1 Empowered Cosmic Gem Box!",
+            "informational": False, "tradable": False,
+            "prices": [{"currency": "TWC", "cost": 3500, "can_purchase": True, "monthly": 0, "sale": "SALE30"}],
+            "price_string": "€1.49", "price_string_currency": "EUR", "price_string_sale": "SALE30",
+            "promo": None, "deal_expires_at": now + 12000,
+            "interact_label": None, "interact_enabled": False, "trial_limits": None,
+            "class_level": None, "class_power_rank": None, "class_sub_name": None, "class_icon": None,
+            "textures": [], "loot_title": None, "loot_body": None,
+            "categories": [0], "first_seen": now - 3 * _DAY, "last_seen": now, "active": True,
+        },
+        {
+            "code": "TROVE_PATRON_15_CREDITS_NOTRADE", "kind": "patron",
+            "name": "15 Day Patron Pass", "image": "ui/store/ui_store_patron_15.dds",
+            "info": "An untradable coin which unlocks Patron status for 15 days.",
+            "informational": False, "tradable": False,
+            "prices": [{"currency": "TWC", "cost": 850, "can_purchase": True, "monthly": 0, "sale": ""}],
+            "price_string": None, "price_string_currency": None, "price_string_sale": None,
+            "promo": None, "deal_expires_at": None,
+            "interact_label": None, "interact_enabled": False, "trial_limits": None,
+            "class_level": None, "class_power_rank": None, "class_sub_name": None, "class_icon": None,
+            "textures": [], "loot_title": None, "loot_body": None,
+            "categories": [3], "first_seen": now - 300 * _DAY, "last_seen": now, "active": True,
+        },
+        {
+            "code": "ITEM_SKIN_TOMBRAISER_PHARAOH", "kind": "product",
+            "name": "Funereal Pharaoh", "image": "ui/skins/ui_skin_ice_tombraiser_pharaoh.dds",
+            "info": "A costume for the Tomb Raiser.\n\nRise and haunt the night!",
+            "informational": False, "tradable": False,
+            "prices": [{"currency": "TWP", "cost": 500, "can_purchase": True, "monthly": 0, "sale": ""}],
+            "price_string": None, "price_string_currency": None, "price_string_sale": None,
+            "promo": None, "deal_expires_at": None,
+            "interact_label": None, "interact_enabled": False, "trial_limits": None,
+            "class_level": None, "class_power_rank": None, "class_sub_name": None, "class_icon": None,
+            "textures": [], "loot_title": None, "loot_body": None,
+            # Seasonal: gone right now (last seen 40 days ago).
+            "categories": [7], "first_seen": now - 400 * _DAY, "last_seen": now - 40 * _DAY, "active": False,
+        },
+        {
+            "code": "TROVE_BAMBOODRAGON_PACK", "kind": "starter",
+            "name": "Bamboo Dragon Pack", "image": "ui/store/ui_store_megapack_bamboo.dds",
+            "info": "A mega pack.",
+            "informational": False, "tradable": False,
+            # Real-money currency in prices[] with no pre-formatted string:
+            # cost is in cents (1499 -> €14.99), exercises the fmtCash path.
+            "prices": [{"currency": "EUR", "cost": 1499, "can_purchase": True, "monthly": 0, "sale": ""}],
+            "price_string": None, "price_string_currency": None, "price_string_sale": None,
+            "promo": None, "deal_expires_at": None,
+            "interact_label": None, "interact_enabled": False, "trial_limits": None,
+            "class_level": None, "class_power_rank": None, "class_sub_name": None, "class_icon": None,
+            "textures": [], "loot_title": None, "loot_body": None,
+            "categories": [0, 8], "first_seen": now - 200 * _DAY, "last_seen": now - 90 * _DAY, "active": False,
+        },
+    ]
+
+
+_STORE_CATEGORIES = [
+    {"index": 0, "label": "$StoreCategory_Deals", "icon": None},
+    {"index": 3, "label": "$StoreCategory_Patron", "icon": None},
+    {"index": 7, "label": "$StoreCategory_Style", "icon": None},
+    {"index": 8, "label": "$StoreCategory_More", "icon": None},
+]
+
+
+def _store_availability(p):
+    """Synthetic availability intervals for a stub product (multi-run for the
+    seasonal skin so the timeline shows gaps)."""
+    now = _STORE_NOW
+    if p["code"] == "ITEM_SKIN_TOMBRAISER_PHARAOH":
+        return [[now - 400 * _DAY, now - 380 * _DAY],
+                [now - 120 * _DAY, now - 100 * _DAY],
+                [now - 60 * _DAY, now - 40 * _DAY]]
+    return [[p["first_seen"], p["last_seen"]]]
+
+
+def _store_price_history(p):
+    """A couple of price points so the detail graph renders."""
+    fs = p["first_seen"]
+    base = p["prices"][0] if p["prices"] else {"currency": "TWC", "cost": 1000, "can_purchase": True, "monthly": 0, "sale": ""}
+    hi = dict(base, cost=base["cost"] * 4 // 3)   # was pricier earlier
+    return [
+        {"ts": fs, "prices": [hi], "price_string": ""},
+        {"ts": fs + 30 * _DAY, "prices": [base], "price_string": p.get("price_string") or ""},
+    ]
+
+
+def _store_records(p):
+    av = _store_availability(p)
+    total = sum(max(1, round((e - s) / _DAY) + 1) for s, e in av)
+    longest = max((max(1, round((e - s) / _DAY) + 1) for s, e in av), default=0)
+    lows, highs = {}, {}
+    for pt in _store_price_history(p):
+        for pr in pt["prices"]:
+            lows[pr["currency"]] = min(lows.get(pr["currency"], pr["cost"]), pr["cost"])
+            highs[pr["currency"]] = max(highs.get(pr["currency"], pr["cost"]), pr["cost"])
+    return {
+        "times_available": len(av), "returns": max(0, len(av) - 1),
+        "total_days_seen": total, "longest_run_days": longest,
+        "first_seen": p["first_seen"], "last_seen": p["last_seen"],
+        "currently_active": p["active"],
+        "gap_days": None if p["active"] else max(0, (_STORE_NOW - p["last_seen"]) // _DAY),
+        "price_low": lows or None, "price_high": highs or None,
+        "price_changes": len(_store_price_history(p)),
+    }
 
 
 def _market_movers():
@@ -591,6 +744,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "activity.html", "text/html")
         if path == "/market":
             return self._send_file(TEMPLATES / "market.html", "text/html")
+        if path == "/store":
+            return self._send_file(TEMPLATES / "store.html", "text/html")
         if path == "/support":
             return self._send_file(TEMPLATES / "support.html", "text/html")
         if path == "/documentation":
@@ -636,6 +791,58 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(target, None)
 
         # Stub JSON endpoints.
+        # --- Store History (/site/store/*) ---------------------------------
+        if path == "/site/store/categories":
+            items = [dict(c, codes=[p["code"] for p in _store_stub_products()
+                                    if c["index"] in p["categories"]],
+                          count=sum(1 for p in _store_stub_products() if c["index"] in p["categories"]),
+                          active=True) for c in _STORE_CATEGORIES]
+            return self._send_json({"items": items, "count": len(items), "anchor": _STORE_NOW})
+        if path == "/site/store/products":
+            qs = parse_qs(url.query)
+            prods = _store_stub_products()
+            if qs.get("active", ["true"])[0] == "true":
+                prods = [p for p in prods if p["active"]]
+            if qs.get("on_sale", ["false"])[0] == "true":
+                prods = [p for p in prods if any(x["sale"] for x in p["prices"]) or p["price_string_sale"]]
+            kind = qs.get("kind", [""])[0]
+            if kind:
+                prods = [p for p in prods if p["kind"] == kind]
+            q = qs.get("q", [""])[0].lower()
+            if q:
+                prods = [p for p in prods if q in p["name"].lower()]
+            return self._send_json({"items": prods, "count": len(prods),
+                                    "total": len(prods), "anchor": _STORE_NOW})
+        if path == "/site/store/timeline":
+            kind = parse_qs(url.query).get("kind", [""])[0]
+            src = [p for p in _store_stub_products() if not kind or p["kind"] == kind]
+            items = [{"code": p["code"], "name": p["name"], "kind": p["kind"],
+                      "image": p["image"], "availability": _store_availability(p),
+                      "first_seen": p["first_seen"], "last_seen": p["last_seen"],
+                      "active": p["active"]} for p in src]
+            start = min((p["first_seen"] for p in src), default=_STORE_NOW)
+            return self._send_json({"anchor": _STORE_NOW,
+                                    "span": {"start": start, "end": _STORE_NOW},
+                                    "items": items, "count": len(items)})
+        if path.startswith("/site/store/products/"):
+            code = unquote(path.rsplit("/", 1)[-1])
+            p = next((x for x in _store_stub_products() if x["code"] == code), None)
+            if p is None:
+                return self._send_json({"detail": "not found"}, 404)
+            detail = dict(p, price_history=_store_price_history(p),
+                          availability=_store_availability(p), records=_store_records(p))
+            return self._send_json(detail)
+        if path == "/site/store/texture":
+            p = parse_qs(url.query).get("path", [""])[0]
+            ext = p.rsplit(".", 1)[-1].lower() if "." in p.rsplit("/", 1)[-1] else ""
+            if ext == "dds":
+                return self._send_bytes(_stub_dds(), "application/octet-stream")
+            if ext in ("png", "jpg", "jpeg", "gif", "webp"):
+                fav = STATIC / "assets" / "favicon.png"
+                if fav.exists():
+                    return self._send_file(fav, "image/png")
+            return self._send_json({"detail": "not found"}, 404)
+
         # --- Modpacks (/site/modpacks/*) -----------------------------------
         if path.startswith("/site/modpacks/for-mod/"):
             # Which modpacks include this mod (the mod-page backlink). Pretend the
@@ -955,7 +1162,10 @@ class Handler(SimpleHTTPRequestHandler):
                 q = (qs.get("q", [""])[0] or "").strip().lower()
                 hits = sorted(p for p in _UPDATE_PATHS if q in p.lower())
                 entries = [{"path": p, "name": p.rsplit("/", 1)[-1],
-                            "size": 512, "is_dir": False} for p in hits]
+                            "size": 512, "is_dir": False,
+                            "last_ordinal": _last_ordinal_for(p),
+                            "last_modified_at": _UPDATE_VERSION_DATES.get(_last_ordinal_for(p))}
+                           for p in hits]
                 return self._send_json({"branch": branch, "query": q,
                     "entries": entries, "count": len(entries), "total": len(entries)})
             if sub == "file/meta":
@@ -1477,7 +1687,7 @@ class Handler(SimpleHTTPRequestHandler):
                 "period": period, "bucket_seconds": bucket,
                 "window_start": start, "window_end": end,
                 "power_rank_threshold": 25000,
-                "effort_threshold": 50, "xp_cap": 2_000_000,
+                "effort_threshold": 50, "xp_threshold": 2_000_000,
                 "buckets": buckets, "classes": classes,
                 "methodology": "stub class series",
             })
@@ -1499,7 +1709,7 @@ class Handler(SimpleHTTPRequestHandler):
                 "window_start": STUB_ANCHOR - 3600, "window_end": STUB_ANCHOR,
                 "duration_hours": 1.0, "total_active": total, "total_active_clean": total_clean,
                 "power_rank_threshold": 25000,
-                "effort_threshold": 50, "xp_cap": 2_000_000, "classes": classes,
+                "effort_threshold": 50, "xp_threshold": 2_000_000, "classes": classes,
                 "methodology": "stub class current", "computed_at": STUB_ANCHOR,
             })
         if path == "/site/leaderboards/cheaters":

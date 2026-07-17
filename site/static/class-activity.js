@@ -10,30 +10,32 @@
 
   const PERIODS = ['1d', '7d', '1m', '3m', '6m', '1y', 'all'];
 
-  // Per-class line colors, indexed by class_index (classes.json source order,
-  // alphabetical: 0=Bard … 17=Vanguardian). Hand-picked for separation on the
-  // dark chart; the short code is the class's in-game abbreviation.
+  // Per-class line colors, indexed by class_index (the boards' class RELEASE
+  // order, 0=Knight … 17=Solarion - matching app/trove/stats.py's
+  // _BOARD_CLASS_ORDER, verified against the stored board names). Hand-picked
+  // for separation on the dark chart; the short code is the class's in-game
+  // abbreviation.
   // NOTE: Bard (BD) and Solarion (SL) are both yellow by request - their lines
   // are intentionally the same colour.
   const CLASS_COLORS = [
-    '#ffd166', // 0  BD Bard          - yellow
-    '#9a6a3c', // 1  BR Boomeranger   - brown
-    '#e879f9', // 2  CB Candy Barbarian - magenta (filled)
-    '#86efac', // 3  CM Chloromancer  - light green
-    '#2f9e44', // 4  DT Dino Tamer    - dark green
-    '#ff8a3d', // 5  DL Dracolyte     - orange
-    '#5eead4', // 6  FT Fae Trickster - mint
-    '#58a6ff', // 7  GS Gunslinger    - blue
-    '#22d3ee', // 8  IS Ice Sage      - cyan (filled)
-    '#cbd5e1', // 9  KT Knight        - light gray
-    '#6b7280', // 10 LL Lunar Lancer  - dark gray
-    '#f472b6', // 11 NN Neon Ninja    - pink
-    '#a3e635', // 12 PC Pirate Captain - lime (filled)
-    '#f04438', // 13 RV Revenant      - red
-    '#818cf8', // 14 SH Shadow Hunter - indigo (filled)
-    '#ffd166', // 15 SL Solarion      - yellow (same as Bard, by request)
-    '#9333ea', // 16 TR Tomb Raiser   - purple
-    '#f8fafc', // 17 VG Vanguardian   - white
+    '#cbd5e1', // 0  KT Knight        - light gray
+    '#58a6ff', // 1  GS Gunslinger    - blue
+    '#5eead4', // 2  FT Fae Trickster - mint
+    '#ff8a3d', // 3  DL Dracolyte     - orange
+    '#f472b6', // 4  NN Neon Ninja    - pink
+    '#e879f9', // 5  CB Candy Barbarian - magenta (filled)
+    '#22d3ee', // 6  IS Ice Sage      - cyan (filled)
+    '#818cf8', // 7  SH Shadow Hunter - indigo (filled)
+    '#a3e635', // 8  PC Pirate Captain - lime (filled)
+    '#9a6a3c', // 9  BR Boomeranger   - brown
+    '#9333ea', // 10 TR Tomb Raiser   - purple
+    '#6b7280', // 11 LL Lunar Lancer  - dark gray
+    '#f04438', // 12 RV Revenant      - red
+    '#86efac', // 13 CM Chloromancer  - light green
+    '#2f9e44', // 14 DT Dino Tamer    - dark green
+    '#f8fafc', // 15 VG Vanguardian   - white
+    '#ffd166', // 16 BD Bard          - yellow
+    '#ffd166', // 17 SL Solarion      - yellow (same as Bard, by request)
   ];
   // Generic fallback hues for any class beyond CLASS_COLORS (a future addition),
   // so color(i) is always defined and index-stable.
@@ -47,6 +49,7 @@
 
   const state = {
     period: '7d',
+    metric: 'count',      // chart Y axis: 'count' (raw players, default) | 'share' (% of activity)
     view: 'clean',        // 'clean' (Power-Rank-filtered, default) | 'raw' (everyone)
     series: {},           // period -> payload cache
     current: null,        // series payload currently drawn (for resize redraw)
@@ -80,18 +83,33 @@
   // ─── Trove server time (UTC−11, no DST) - resets sit on day boundaries ──
   const TROVE_OFFSET_SEC = -11 * 3600;
   function troveDate(unix) { return new Date((unix + TROVE_OFFSET_SEC) * 1000); }
-  function fmtAxis(unix, period) {
+  function fmtAxis(unix, period, spanSec) {
     const dte = troveDate(unix);
     if (period === '1d') return dte.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hourCycle: 'h23' });
     if (period === '7d') return dte.toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' });
-    if (period === '1m' || period === '3m') return dte.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
-    return dte.toLocaleDateString(undefined, { month: 'short', year: '2-digit', timeZone: 'UTC' });
+    // Month/day while the window spans ≲6 months (covers 1m/3m and a young "all");
+    // month+full year once ticks would land in different months anyway.
+    if (period === '1m' || period === '3m' || (spanSec != null && spanSec <= 190 * 86400))
+      return dte.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    return dte.toLocaleDateString(undefined, { month: 'short', year: 'numeric', timeZone: 'UTC' });
   }
   function fmtFull(unix, period) {
     const dte = troveDate(unix);
     if (period === '1d' || period === '7d')
       return dte.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hourCycle: 'h23' }) + ' server';
     return dte.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+
+  // "Nice" axis step (1/2/5 × 10ⁿ) so count gridlines land on round numbers
+  // (0, 200, 400 …) instead of the data-derived 46/93/… - roughly `targetTicks`
+  // intervals across [0, max].
+  function niceStep(max, targetTicks) {
+    if (!(max > 0)) return 1;
+    const raw = max / Math.max(1, targetTicks);
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    const step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+    return step * mag;
   }
 
   // ─── SVG helpers ───────────────────────────────────────────────────
@@ -101,14 +119,18 @@
     for (const k in attrs) el.setAttribute(k, attrs[k]);
     return el;
   }
-  // Weekly (Monday 11:00 UTC = Trove Monday 00:00) reset instants in [from,to].
-  function weeklyResetLines(fromTs, toTs) {
+  // Daily server-reset instants (Trove midnight = 11:00 UTC) in [from,to].
+  function dailyResetLines(fromTs, toTs) {
     const out = [];
     const d = new Date(fromTs * 1000);
     let tt = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 11, 0, 0) / 1000;
-    if (tt < fromTs) tt += 86400;
-    for (; tt <= toTs; tt += 86400) if (new Date(tt * 1000).getUTCDay() === 1) out.push(tt);
+    while (tt < fromTs) tt += 86400;
+    for (; tt <= toTs; tt += 86400) out.push(tt);
     return out;
+  }
+  // Weekly (Monday 11:00 UTC = Trove Monday 00:00) reset instants in [from,to].
+  function weeklyResetLines(fromTs, toTs) {
+    return dailyResetLines(fromTs, toTs).filter((tt) => new Date(tt * 1000).getUTCDay() === 1);
   }
 
   // ─── Multi-line chart ──────────────────────────────────────────────
@@ -125,8 +147,8 @@
       range.textContent = buckets.length
         ? t('{n} points · {from} → {to}')
             .replace('{n}', buckets.length)
-            .replace('{from}', fmtAxis(p.window_start, p.period))
-            .replace('{to}', fmtAxis(p.window_end, p.period)) + ' · ' + t('Trove server time (UTC−11)')
+            .replace('{from}', fmtAxis(p.window_start, p.period, p.window_end - p.window_start))
+            .replace('{to}', fmtAxis(p.window_end, p.period, p.window_end - p.window_start)) + ' · ' + t('Trove server time (UTC−11)')
         : '';
     }
     if (buckets.length < 2) {
@@ -138,9 +160,11 @@
       return;
     }
 
+    const isCount = state.metric === 'count';   // Y axis = raw players (else % share)
+
     const W = Math.max(320, host.clientWidth || 640);
     const H = 320;
-    const padL = 46, padR = 14, padT = 14, padB = 30;
+    const padL = isCount ? 54 : 46, padR = 14, padT = 14, padB = 30;
     const plotW = W - padL - padR, plotH = H - padT - padB;
 
     const xMin = Math.min(p.window_start, buckets[0]);
@@ -167,18 +191,31 @@
       return tot > 0 ? v / tot : 0;
     };
     const fmtPct = (frac, dec) => (frac * 100).toFixed(dec == null ? 1 : dec) + '%';
+    // Number plotted on the Y axis for a class at bucket i (null at a gap):
+    // raw player count in "count" mode, share fraction 0..1 in "share" mode.
+    const plotAt = (cls, i) => {
+      if (!isCount) return shareAt(cls, i);
+      const v = viewValues(cls)[i];
+      return v == null ? null : v;
+    };
 
     let yMaxRaw = 0;
     for (const cls of classes) {
       if (state.hidden.has(cls.class_index)) continue;
       for (let i = 0; i < buckets.length; i++) {
-        const s = shareAt(cls, i);
+        const s = plotAt(cls, i);
         if (s != null && s > yMaxRaw) yMaxRaw = s;
       }
     }
-    if (!(yMaxRaw > 0)) yMaxRaw = 0.1;         // sane axis when there's no data
-    const yMax = yMaxRaw * 1.12;
+    if (!(yMaxRaw > 0)) yMaxRaw = isCount ? 1 : 0.1;  // sane axis when there's no data
+    // Count mode gives the peak its own highlighted line at the very top, so the
+    // plot needs only a sliver of headroom; share mode keeps the old 12% pad.
+    const peakVal = yMaxRaw;
+    const yMax = isCount ? peakVal * 1.06 : yMaxRaw * 1.12;
+    const countStep = isCount ? Math.max(1, niceStep(peakVal, 6)) : 0;
     const pctDecimals = (yMaxRaw * 100 < 10) ? 1 : 0;
+    // Y axis tick label for a plotted value (count or share fraction).
+    const fmtYAxis = (v) => (isCount ? intl(v) : fmtPct(v, pctDecimals));
     const xToPx = (v) => padL + ((v - xMin) / xRange) * plotW;
     const yToPx = (v) => padT + (1 - v / yMax) * plotH;
 
@@ -188,13 +225,28 @@
     });
 
     const gridG = svgEl('g', {});
-    for (let i = 0; i <= 4; i++) {
-      const v = (yMaxRaw / 4) * i;           // fraction 0..yMaxRaw
+    const drawGrid = (v) => {
       const y = yToPx(v);
       gridG.appendChild(svgEl('line', { x1: padL, y1: y.toFixed(1), x2: W - padR, y2: y.toFixed(1), class: 'cact-grid-line' }));
       const lbl = svgEl('text', { x: padL - 8, y: (y + 3.5).toFixed(1), class: 'cact-axis-y' });
-      lbl.textContent = fmtPct(v, pctDecimals);
+      lbl.textContent = fmtYAxis(v);
       gridG.appendChild(lbl);
+      return y;
+    };
+    if (isCount) {
+      // Round, evenly-spaced gridlines (0, step, 2·step …) that stop short of the
+      // peak, then the peak itself as a highlighted line so the exact high reads.
+      for (let v = 0; v < peakVal; v += countStep) {
+        if (v > 0 && v > peakVal - countStep * 0.5) break;  // don't crowd the peak line
+        drawGrid(v);
+      }
+      const py = yToPx(peakVal);
+      gridG.appendChild(svgEl('line', { x1: padL, y1: py.toFixed(1), x2: W - padR, y2: py.toFixed(1), class: 'cact-peak-line' }));
+      const plbl = svgEl('text', { x: W - padR, y: (py - 5).toFixed(1), class: 'cact-peak-label', 'text-anchor': 'end' });
+      plbl.textContent = t('peak {n}').replace('{n}', intl(peakVal));
+      gridG.appendChild(plbl);
+    } else {
+      for (let i = 0; i <= 4; i++) drawGrid((yMaxRaw / 4) * i);  // share: 0..yMaxRaw fraction
     }
     svg.appendChild(gridG);
 
@@ -205,12 +257,23 @@
       const tt = xMin + (xMax - xMin) * (i / (ticks - 1));
       const x = xToPx(tt);
       const txt = svgEl('text', { x: x.toFixed(1), y: (H - 10).toFixed(1), 'text-anchor': i === 0 ? 'start' : i === ticks - 1 ? 'end' : 'middle' });
-      txt.textContent = fmtAxis(tt, p.period);
+      txt.textContent = fmtAxis(tt, p.period, xMax - xMin);
       xG.appendChild(txt);
     }
     svg.appendChild(xG);
 
-    // weekly reset markers (the lines break here anyway) on shorter ranges
+    // Daily server-reset markers (Trove midnight = 11:00 UTC) on the short ranges
+    // where they stay legible - one thin line per server day.
+    if (p.period === '1d' || p.period === '7d') {
+      const dg = svgEl('g', {});
+      for (const rt of dailyResetLines(xMin, xMax)) {
+        const x = xToPx(rt);
+        if (x < padL - 0.5 || x > W - padR + 0.5) continue;
+        dg.appendChild(svgEl('line', { x1: x.toFixed(1), y1: padT, x2: x.toFixed(1), y2: (padT + plotH).toFixed(1), class: 'cact-reset-daily' }));
+      }
+      svg.appendChild(dg);
+    }
+    // Weekly reset markers (Monday) drawn on top as a stronger accent.
     if (p.period === '1d' || p.period === '7d' || p.period === '1m') {
       const rg = svgEl('g', {});
       for (const rt of weeklyResetLines(xMin, xMax)) {
@@ -227,7 +290,7 @@
       let d = '';
       let pen = false;
       for (let i = 0; i < buckets.length; i++) {
-        const s = shareAt(cls, i);
+        const s = plotAt(cls, i);
         if (s == null) { pen = false; continue; }
         d += `${pen ? 'L' : 'M'}${xToPx(buckets[i]).toFixed(1)},${yToPx(s).toFixed(1)} `;
         pen = true;
@@ -269,10 +332,15 @@
       rows.sort((a, b) => b.frac - a.frac);
       if (!rows.length) { tip.hidden = true; return; }
       tip.innerHTML = `<span class="cact-tip-when">${esc(fmtFull(buckets[best], p.period))}</span>` +
-        rows.slice(0, 10).map((rw) =>
-          `<span class="cact-tip-row"><span class="cact-tip-sw" style="background:${color(rw.i)}"></span>` +
-          `<span class="cact-tip-name">${esc(rw.name)}</span>` +
-          `<span class="cact-tip-val">${fmtPct(rw.frac)} <span class="cact-tip-count">(${intl(rw.v)})</span></span></span>`).join('');
+        rows.slice(0, 10).map((rw) => {
+          // Lead with whichever metric the axis shows; the other rides in parens.
+          const val = isCount
+            ? `${intl(rw.v)} <span class="cact-tip-count">(${fmtPct(rw.frac)})</span>`
+            : `${fmtPct(rw.frac)} <span class="cact-tip-count">(${intl(rw.v)})</span>`;
+          return `<span class="cact-tip-row"><span class="cact-tip-sw" style="background:${color(rw.i)}"></span>` +
+            `<span class="cact-tip-name">${esc(rw.name)}</span>` +
+            `<span class="cact-tip-val">${val}</span></span>`;
+        }).join('');
       tip.hidden = false;
       const cardW = host.clientWidth || W;
       const leftPx = (bx / W) * cardW;
@@ -290,7 +358,10 @@
   function renderLegend(p) {
     const host = document.getElementById('cact-legend');
     if (!host) return;
-    const classes = (p && p.classes) || [];
+    // Pills sort alphabetically by display name (the payload arrives in
+    // class_index = board release order); colors/icons stay keyed to the class.
+    const classes = ((p && p.classes) || [])
+      .slice().sort((a, b) => a.name.localeCompare(b.name));
     host.innerHTML = '';
     for (const cls of classes) {
       const off = state.hidden.has(cls.class_index);
@@ -401,18 +472,18 @@
     return {
       pr: src.power_rank_threshold || 0,
       effort: src.effort_threshold || 0,
-      xpCap: src.xp_cap || 0,
+      xp: src.xp_threshold || 0,
     };
   }
   function updateViewHint() {
     const hint = document.getElementById('cact-view-hint');
     if (!hint) return;
     if (state.view === 'clean') {
-      const { pr, effort, xpCap } = currentThresholds();
+      const { pr, effort, xp } = currentThresholds();
       const parts = [];
       if (pr) parts.push(t('Power Rank ≥ {n}').replace('{n}', intl(pr)));
       if (effort) parts.push(t('Effort ≥ {n}').replace('{n}', intl(effort)));
-      if (xpCap) parts.push(t('weekly XP ≤ {n}').replace('{n}', intl(xpCap)));
+      if (xp) parts.push(t('XP ≥ {n}').replace('{n}', intl(xp)));
       hint.textContent = parts.length
         ? t('Established players — {criteria}.').replace('{criteria}', parts.join(', '))
         : t('Established players only.');
@@ -420,6 +491,21 @@
       hint.textContent = t('Everyone on the class’s Effort board.');
     }
   }
+  // ─── Metric toggle (Players / Share) ──────────────────────────────
+  // Switches the chart Y axis between raw player counts and each class's % of
+  // activity. Chart-only - the donut is always a share view.
+  function setMetric(metric, reflect) {
+    if (metric !== 'count' && metric !== 'share') return;
+    state.metric = metric;
+    document.querySelectorAll('#cact-metrics button').forEach((b) => {
+      const on = b.dataset.metric === metric;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+    if (state.current) renderChart(state.current);
+    if (reflect) reflectUrl();
+  }
+
   function setView(view, reflect) {
     if (view !== 'clean' && view !== 'raw') return;
     state.view = view;
@@ -454,10 +540,17 @@
       return URL_TO_VIEW[q] || null;
     } catch (_) { return null; }
   }
+  function metricFromUrl() {
+    try {
+      const q = (new URLSearchParams(location.search).get('metric') || '').toLowerCase();
+      return (q === 'count' || q === 'share') ? q : null;
+    } catch (_) { return null; }
+  }
   function reflectUrl() {
     try {
       const qs = '?period=' + encodeURIComponent(state.period) +
-                 '&view=' + (VIEW_TO_URL[state.view] || 'established');
+                 '&view=' + (VIEW_TO_URL[state.view] || 'established') +
+                 '&metric=' + state.metric;
       history.replaceState(null, '', location.pathname + qs);
     } catch (_) { /* non-fatal */ }
   }
@@ -504,6 +597,13 @@
         if (btn) setView(btn.dataset.view, true);
       });
     }
+    const metrics = document.getElementById('cact-metrics');
+    if (metrics) {
+      metrics.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-metric]');
+        if (btn) setMetric(btn.dataset.metric, true);
+      });
+    }
     window.addEventListener('hashchange', () => {
       const p = periodFromUrl();
       if (p && p !== state.period) loadPeriod(p);
@@ -524,6 +624,8 @@
     wire();
     state.period = periodFromUrl() || state.period;
     state.view = viewFromUrl() || state.view;
+    state.metric = metricFromUrl() || state.metric;
+    setMetric(state.metric); // paint the metric toggle from URL/default (no reflect)
     setView(state.view);   // paint the toggle from URL/default (no reflect on load)
     fetchJSON('/site/leaderboards/class-activity/current')
       .then((d) => { state.donut = d; renderDonut(d); updateViewHint(); })

@@ -67,6 +67,7 @@ _SCREENSHOT_EXTS = {".webp", ".png", ".jpg", ".jpeg", ".gif"}
 _SITE_FEATURE_FLAGS = {
     "mods_hub_enabled": feature_flags.MODS_HUB_FLAG,
     "market_enabled": feature_flags.MARKET_FLAG,
+    "store_enabled": feature_flags.STORE_FLAG,
     "leaderboards_enabled": feature_flags.LEADERBOARDS_FLAG,
     "player_activity_enabled": feature_flags.PLAYER_ACTIVITY_FLAG,
     "class_activity_enabled": feature_flags.CLASS_ACTIVITY_FLAG,
@@ -105,6 +106,8 @@ def _feature_blocks(p: str, f: dict) -> bool:
     ):
         return True
     if not f["market_enabled"] and (p == "/market" or p.startswith("/site/market/")):
+        return True
+    if not f["store_enabled"] and (p == "/store" or p.startswith("/site/store/")):
         return True
     # Leaderboards: board browser + per-player profile pages. The activity /
     # class-activity proxies share the /site/leaderboards/ root but have their
@@ -340,6 +343,7 @@ _SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/class-activity", "class_activity_enabled"),
     ("/updates", "updates_enabled"),
     ("/market", "market_enabled"),
+    ("/store", "store_enabled"),
     ("/codexes", "codexes_enabled"),
     ("/codexes/crafting", "codexes_enabled"),
     ("/status", "server_status_enabled"),
@@ -1118,6 +1122,14 @@ async def market(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "market.html", {})
 
 
+@router.get("/store", response_class=HTMLResponse)
+async def store(request: Request) -> HTMLResponse:
+    """Trove Store History (Beta): the in-game cash-shop catalog with per-pack
+    availability timelines, price history and in-game art. Reads the store
+    collections via the /site/store/* proxies below."""
+    return _TEMPLATES.TemplateResponse(request, "store.html", {})
+
+
 @router.get("/codexes", response_class=HTMLResponse)
 async def codexes(request: Request) -> HTMLResponse:
     """Codexes browser - parsed Trove game data (allies, mounts, dragons, mementos,
@@ -1422,6 +1434,95 @@ async def site_market_item_images() -> JSONResponse:
         {"images": images, "branch": _DEFAULT_CODEX_BRANCH, "count": len(images)},
         headers={"Cache-Control": "public, max-age=300"},
     )
+
+
+# ── Store History proxies (same-origin, tokenless) ────────────────────────
+# Back the /store page. All read from app.trove.store.service (Mongo store_*
+# collections). The catalog changes at most daily, so caches are generous.
+
+_STORE_TEXTURE_BRANCH = "live-us"
+
+
+@router.get("/site/store/products", response_class=JSONResponse)
+async def site_store_products(
+    category: int | None = Query(default=None),
+    kind: str | None = Query(default=None),
+    currency: str | None = Query(default=None),
+    q: str | None = Query(default=None),
+    active: bool = Query(default=True),
+    on_sale: bool = Query(default=False),
+    limit: int = Query(default=500, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+) -> JSONResponse:
+    """Paginated store catalog for the Gallery tab."""
+    from app.trove.store import service as store_service
+    items, total, anchor = await store_service.list_products(
+        category=category, kind=kind, currency=currency, q=q,
+        active_only=active, on_sale=on_sale, limit=limit, offset=offset,
+    )
+    return JSONResponse(
+        {"items": items, "count": len(items), "total": total, "anchor": anchor},
+        headers={"Cache-Control": "public, max-age=120"},
+    )
+
+
+@router.get("/site/store/categories", response_class=JSONResponse)
+async def site_store_categories() -> JSONResponse:
+    """Store tab list (label, icon, display-ordered codes) for the sidebar."""
+    from app.trove.store import service as store_service
+    items, anchor = await store_service.list_categories()
+    return JSONResponse(
+        {"items": items, "count": len(items), "anchor": anchor},
+        headers={"Cache-Control": "public, max-age=120"},
+    )
+
+
+@router.get("/site/store/timeline", response_class=JSONResponse)
+async def site_store_timeline(
+    kind: str | None = Query(default=None),
+    limit: int = Query(default=1000, ge=1, le=4000),
+) -> JSONResponse:
+    """Availability bands for every product - the History tab's data source."""
+    from app.trove.store import service as store_service
+    payload = await store_service.timeline(kind=kind, limit=limit)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
+
+
+@router.get("/site/store/products/{code}", response_class=JSONResponse)
+async def site_store_product(code: str) -> JSONResponse:
+    """One product + price history + availability + records (detail drill-in)."""
+    from app.trove.store import service as store_service
+    payload = await store_service.get_product(code)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="No such store product")
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
+
+
+@router.get("/site/store/texture")
+async def site_store_texture(
+    path: str = Query(..., description="Game texture path, e.g. ui/store/foo.dds"),
+) -> Response:
+    """Raw bytes of an in-game texture from the updates CAS, resolved
+    case-insensitively (store paths can drift from the manifest). Same-origin
+    + tokenless so the /store page can `<img>`/decodeDDS them without a token,
+    and independent of ``feature_updates_enabled`` (store owns this surface).
+    404 when the branch has no such file (client falls back to a placeholder)."""
+    from app.trove.store import service as store_service
+    from app.trove.updates.cas import ContentStore
+
+    sha = await store_service.resolve_texture_sha(path, _STORE_TEXTURE_BRANCH)
+    if sha is None:
+        raise HTTPException(status_code=404, detail="texture not found")
+    blob = ContentStore(settings.trove_update_store_dir).path_for(sha)
+    if not blob.is_file():
+        raise HTTPException(status_code=404, detail="blob missing")
+    data = await asyncio.to_thread(blob.read_bytes)
+    # .dds decodes client-side; browser-native images pass straight through.
+    ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
+    media = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+             "gif": "image/gif", "webp": "image/webp"}.get(ext, "application/octet-stream")
+    return Response(content=data, media_type=media,
+                    headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/site/giveaways", response_class=JSONResponse)
@@ -2068,6 +2169,8 @@ async def site_up_tree(
     if prefix and not prefix.endswith("/"):
         prefix += "/"
     entries = await updates_read.list_directory(branch, prefix)
+    for e in entries:
+        e["last_modified_at"] = iso(e.get("last_modified_at"))
     return JSONResponse(
         {"branch": branch, "prefix": prefix,
          "entries": entries, "count": len(entries)},
@@ -2086,6 +2189,8 @@ async def site_up_search(
     only sees the level that's currently loaded)."""
     _site_check_branch(branch)
     entries, total = await updates_read.search_paths(branch, q, limit)
+    for e in entries:
+        e["last_modified_at"] = iso(e.get("last_modified_at"))
     return JSONResponse(
         {"branch": branch, "query": q, "entries": entries,
          "count": len(entries), "total": total},

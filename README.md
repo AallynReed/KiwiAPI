@@ -55,6 +55,7 @@ the full per-token limit. See the [API reference](https://docs.aallyn.net) for e
 | `stats` · `gems` | stat tables and a stateless gem simulator / build optimizer |
 | `leaderboards` · `activity` | hourly in-game boards (with cheat detection) and player/class activity estimates |
 | `market` | in-game marketplace listings and price history |
+| `store` | the in-game cash-shop catalog — products, prices, sales, deals, lootbox odds |
 | `codexes` | decoded game catalogs — allies, mounts, dragons, recipes, items, fish, badges |
 | `updates` | archived game-update files, browsable and diffable per patch |
 | `mods` · `modpacks` | `.tmod` tooling plus a hub for sharing and bundling mods |

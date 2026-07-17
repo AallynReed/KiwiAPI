@@ -1,4 +1,9 @@
 {
+  "Last modified": "最終更新",
+  "List": "リスト",
+  "Grid": "グリッド",
+  "List view": "リスト表示",
+  "Grid view": "グリッド表示",
   "Show progress": "推移を表示",
   "Hide progress": "推移を隠す",
   "No history to chart.": "表示できる履歴がありません。",
@@ -1935,7 +1940,7 @@
   "Other": "その他",
   "Ready when <span class=\"grad\">you are.</span>": "準備ができたら<span class=\"grad\">始めましょう。</span>",
   "See who's live on Twitch right now, catch up on the newest community videos, and read the latest official Trove news.": "今Twitchでライブ配信中の人を確認し、最新のコミュニティ動画をチェックし、最新の公式Troveニュースを読めます。",
-  "weekly XP ≤ {n}": "週間XP ≤ {n}",
+  "XP ≥ {n}": "XP ≥ {n}",
   "Untracked": "追跡対象外",
   "This item is no longer tracked": "このアイテムは追跡されなくなりました",
   "This item is no longer tracked - prices and listings no longer update.": "このアイテムは追跡されなくなりました - 価格とリスティングは更新されません。"

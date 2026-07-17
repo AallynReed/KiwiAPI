@@ -1,4 +1,9 @@
 {
+  "Last modified": "마지막 수정",
+  "List": "목록",
+  "Grid": "그리드",
+  "List view": "목록 보기",
+  "Grid view": "그리드 보기",
   "(none set)": "(설정 안 됨)",
   "(optional)": "(선택 사항)",
   "+ Add club": "+ 클럽 추가",
@@ -1935,7 +1940,7 @@
   "Other": "기타",
   "Ready when <span class=\"grad\">you are.</span>": "준비되면 <span class=\"grad\">시작하세요.</span>",
   "See who's live on Twitch right now, catch up on the newest community videos, and read the latest official Trove news.": "지금 Twitch에서 라이브 중인 스트리머를 확인하고, 최신 커뮤니티 동영상을 따라잡고, 최신 공식 Trove 뉴스를 읽어보세요.",
-  "weekly XP ≤ {n}": "주간 XP ≤ {n}",
+  "XP ≥ {n}": "XP ≥ {n}",
   "Untracked": "추적 중단",
   "This item is no longer tracked": "이 아이템은 더 이상 추적되지 않습니다",
   "This item is no longer tracked - prices and listings no longer update.": "이 아이템은 더 이상 추적되지 않습니다 - 가격과 판매 등록이 더 이상 갱신되지 않습니다."

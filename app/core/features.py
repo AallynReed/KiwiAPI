@@ -48,6 +48,7 @@ GEM_BUILDS_FLAG = "feature_gem_builds_enabled"
 CALCULATORS_FLAG = "feature_calculators_enabled"
 DM_SUBS_FLAG = "feature_dm_subscriptions_enabled"
 DELVES_FLAG = "feature_delves_enabled"
+STORE_FLAG = "feature_store_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
@@ -95,3 +96,4 @@ require_webhooks_enabled = _gate(WEBHOOKS_FLAG, "Webhooks")
 require_image_studio_enabled = _gate(IMAGE_STUDIO_FLAG, "Image Studio")
 require_dm_subs_enabled = _gate(DM_SUBS_FLAG, "DM subscriptions")
 require_delves_enabled = _gate(DELVES_FLAG, "Delve rotation data")
+require_store_enabled = _gate(STORE_FLAG, "Store catalog")

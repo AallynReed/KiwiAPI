@@ -752,7 +752,7 @@ async def activity_series(period: str = "7d") -> dict:
         data = await internal_get("/v1/activity/series", {"period": p})
         return data if data is not None else {
             "period": p, "bucket_seconds": 0, "window_start": 0, "window_end": 0,
-            "points": [], "peak": None, "average": None, "latest": None,
+            "points": [], "peak": None, "low": None, "average": None, "latest": None,
             "methodology": "unavailable",
         }
 
@@ -788,46 +788,70 @@ async def activity_series(period: str = "7d") -> dict:
     # points aren't all dropped as "gaps".
     gap_threshold = _gap_threshold_hours([r["duration_hours"] for r in rows])
 
-    # Group into fixed buckets keyed by bucket-start; average the per-hour
-    # rate inside each (and keep the bucket's peak for the tooltip).
+    # Group into fixed buckets keyed by bucket-start. Keep the bucket's mean AND
+    # its true high-resolution extremes (busiest/quietest captured hour, each with
+    # the exact capture time). A wide-timeframe bucket holds many hourly captures,
+    # so a plain average flattens the real peak - preserving the extremes lets the
+    # line's high/low points touch the true values (see the points loop below).
     agg: dict[int, dict] = {}
     for r in rows:
         dur = r["duration_hours"] or 0.0
         if _is_gap(dur, gap_threshold):
             continue   # window spans a missed capture - skip it
         ph = (r["estimate"] / dur) if dur > 0 else 0.0
-        b = (r["window_end"] // bucket) * bucket
+        te = r["window_end"]
+        b = (te // bucket) * bucket
         a = agg.get(b)
         if a is None:
-            agg[b] = {"sum": ph, "max": ph, "n": 1, "t_sum": r["window_end"]}
+            agg[b] = {"sum": ph, "n": 1, "t_sum": te,
+                      "max": ph, "max_t": te, "min": ph, "min_t": te}
         else:
             a["sum"] += ph
             a["n"] += 1
-            a["t_sum"] += r["window_end"]
+            a["t_sum"] += te
             if ph > a["max"]:
-                a["max"] = ph
+                a["max"], a["max_t"] = ph, te
+            if ph < a["min"]:
+                a["min"], a["min_t"] = ph, te
+
+    sorted_b = sorted(agg)
+    # The single busiest and quietest buckets across the whole range, ranked by
+    # their TRUE max/min sample (not the bucket mean) - so a coarse bucket that
+    # happens to hold the period's peak hour is the one we let spike to it.
+    peak_b = max(sorted_b, key=lambda b: agg[b]["max"]) if sorted_b else None
+    low_b = min(sorted_b, key=lambda b: agg[b]["min"]) if sorted_b else None
 
     points: list[dict] = []
-    peak: dict | None = None
     avg_running = 0.0
-    for b in sorted(agg):
+    for b in sorted_b:
         a = agg[b]
         avg = a["sum"] / a["n"]
-        # Plot at the AVERAGE actual capture time in the bucket, not the floored
-        # bucket start - so a 21:52 capture shows at 21:52, not 21:00. For a fine
-        # period (one capture per bucket) this is exactly that capture's time; for
-        # a coarse bucket it's the centroid of the captures it holds.
-        t = round(a["t_sum"] / a["n"])
+        avg_running += avg
+        # "Max for the highest point, min for the lowest, average for the rest":
+        # the peak bucket plots its true max at the exact peak capture, the low
+        # bucket its true min, every other bucket its mean at the capture centroid.
+        # On a fine period (one capture per bucket) max == min == avg, so short
+        # ranges are unchanged; only coarse wide-timeframe buckets gain the extreme.
+        if b == peak_b:
+            active, t = round(a["max"], 1), a["max_t"]
+        elif b == low_b:
+            active, t = round(a["min"], 1), a["min_t"]
+        else:
+            active, t = round(avg, 1), round(a["t_sum"] / a["n"])
         points.append({
             "t": t,
-            "active": round(avg, 1),         # avg active players / hour
+            "active": active,                # plotted value (extreme-preserving)
+            "avg": round(avg, 1),            # bucket mean (unsubstituted)
             "peak": round(a["max"], 1),      # busiest hour in the bucket
             "samples": a["n"],
         })
-        avg_running += avg
-        if peak is None or avg > peak["active"]:
-            peak = {"t": t, "active": round(avg, 1)}
 
+    # Peak / quietest stat cards read the TRUE extremes over the range, timestamped
+    # at the actual capture - not the highest/lowest bucket average.
+    peak = ({"t": agg[peak_b]["max_t"], "active": round(agg[peak_b]["max"], 1)}
+            if peak_b is not None else None)
+    low = ({"t": agg[low_b]["min_t"], "active": round(agg[low_b]["min"], 1)}
+           if low_b is not None else None)
     average = round(avg_running / len(points), 1) if points else None
     last = next((r for r in reversed(rows) if not _is_gap(r["duration_hours"] or 0.0, gap_threshold)), None)
     latest = (
@@ -842,13 +866,17 @@ async def activity_series(period: str = "7d") -> dict:
         "window_end": now_ts,
         "points": points,
         "peak": peak,
+        "low": low,
         "average": average,
         "latest": latest,
         "methodology": (
-            "Average distinct active players per hour in each time bucket, from "
-            "the stored per-capture estimates; windows that span a missed capture "
-            "(markedly longer than the median cadence) are skipped. Longer periods "
-            "use coarser buckets (daily/weekly) so the line stays readable."
+            "Distinct active players per hour in each time bucket, from the stored "
+            "per-capture estimates. The busiest and quietest captured hours in the "
+            "range are plotted at their true (high-resolution) values so a coarse "
+            "bucket never flattens the real peak; every other bucket shows its "
+            "average. Windows that span a missed capture (markedly longer than the "
+            "median cadence) are skipped. Longer periods use coarser buckets "
+            "(daily/weekly) so the line stays readable."
         ),
     }
     await lb_cache.set_activity_series(period, payload)

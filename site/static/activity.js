@@ -92,9 +92,11 @@
     if (peakWhen) peakWhen.textContent = p && p.peak ? fmtFull(p.peak.t, p.period) : t('active players / hour');
     if (avgEl) avgEl.textContent = p && p.average != null ? intl(p.average) : '—';
 
-    // Quietest = the lowest bucket in the series (honest min of captured data).
-    let low = null;
-    for (const pt of pts) if (low === null || pt.active < low.active) low = pt;
+    // Quietest = the true minimum captured hour (server-provided, timestamped at
+    // the actual trough). Fall back to scanning the plotted points for older
+    // cached payloads that predate the `low` field.
+    let low = (p && p.low) || null;
+    if (!low) for (const pt of pts) if (low === null || pt.active < low.active) low = pt;
     if (lowEl) lowEl.textContent = low ? intl(low.active) : '—';
     if (lowWhen) lowWhen.textContent = low ? fmtFull(low.t, p.period) : t('active players / hour');
   }

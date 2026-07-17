@@ -650,6 +650,46 @@ async def codex_status(
     }
 
 
+# --- Updates: backfill the "last modified" index ---------------------------
+# The archive's per-file `last_ordinal` (which version last touched a file) is set
+# by ingest going forward; files that predate the field read 0 until this recompute
+# runs once per branch. Pure recompute from the change-log - safe to re-run.
+
+_UPDATE_BRANCHES = ("live-us", "pts")
+
+
+@router.post("/updates/backfill-modified")
+async def backfill_updates_modified(
+    background_tasks: BackgroundTasks,
+    branch: str = Query(default="live-us", description="live-us | pts"),
+) -> dict:
+    """Recompute every file's last-modified version for a branch from the change-log,
+    so the /updates "Last modified" sort is accurate for pre-existing files. Runs in
+    the background (minutes on a large tree); poll ``/admin/updates/backfill-modified/status``."""
+    if branch not in _UPDATE_BRANCHES:
+        raise APIError(
+            status_code=400, code=ErrorCode.bad_request,
+            message=f"Unknown branch '{branch}' (known: {', '.join(_UPDATE_BRANCHES)})",
+        )
+    from app.trove.updates import maintenance
+    if maintenance.get_backfill_status(branch).get("running"):
+        return {"started": False, "branch": branch, "message": "A backfill is already running."}
+    background_tasks.add_task(maintenance.backfill_last_ordinal, branch)
+    return {"started": True, "branch": branch,
+            "message": "Backfill started - poll /admin/updates/backfill-modified/status."}
+
+
+@router.get("/updates/backfill-modified/status")
+async def backfill_updates_modified_status(
+    branch: str = Query(default="live-us", description="live-us | pts"),
+) -> dict:
+    """Progress of the last-modified backfill for a branch."""
+    if branch not in _UPDATE_BRANCHES:
+        raise APIError(status_code=400, code=ErrorCode.not_found, message=f"Unknown branch '{branch}'")
+    from app.trove.updates import maintenance
+    return {"branch": branch, "backfill": maintenance.get_backfill_status(branch)}
+
+
 # --- Runtime configuration -------------------------------------------------
 # Master-only knobs that take effect immediately (5-second cache invalidation
 # on the read side). Surfaces ALL registered settings, even unchanged ones,

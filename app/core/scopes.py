@@ -59,6 +59,8 @@ _REGISTRY: tuple[Scope, ...] = (
           "Subscribe to the live event stream (SSE) - real-time challenge + chaos-chest push updates"),
     Scope("ocr:read", 1 << 14, "ocr",
           "Read character stats from a screenshot - self-hosted OCR of the in-game stat sheet"),
+    Scope("store:read", 1 << 15, "store",
+          "Read the in-game Kiwi Store catalog - categories, products, prices, deals, loot odds"),
 )
 
 ALL_SCOPES = 0  # sentinel mask meaning "every scope, present and future"

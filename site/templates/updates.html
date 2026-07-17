@@ -110,6 +110,31 @@
                 <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
             </button>
 
+            <!-- View toggle: list (sidebar tree + detail pane) vs grid (a
+                 thumbnail gallery of the current folder — images render inline,
+                 everything else gets a file-type tile). -->
+            <div class="up-view-bar">
+                <label class="up-sort">
+                    <span class="up-sort-label" data-i18n>Sort</span>
+                    <select id="up-sort-select" class="up-sort-select" aria-label="Sort files">
+                        <option value="name" data-i18n>Name</option>
+                        <option value="modified" data-i18n>Last modified</option>
+                    </select>
+                </label>
+                <div class="up-view-toggle" id="up-view-toggle" role="group" aria-label="View mode">
+                    <button type="button" class="up-view-btn active" data-view="list"
+                            data-i18n-title title="List view" aria-label="List view" aria-pressed="true">
+                        <i class="fa-solid fa-list" aria-hidden="true"></i>
+                        <span class="up-view-btn-label" data-i18n>List</span>
+                    </button>
+                    <button type="button" class="up-view-btn" data-view="grid"
+                            data-i18n-title title="Grid view" aria-label="Grid view" aria-pressed="false">
+                        <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>
+                        <span class="up-view-btn-label" data-i18n>Grid</span>
+                    </button>
+                </div>
+            </div>
+
             <section class="up-layout">
                 <aside class="up-sidebar" id="up-sidebar" aria-label="Tree">
                     <div class="up-sidebar-head">

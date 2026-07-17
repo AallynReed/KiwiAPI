@@ -1,4 +1,9 @@
 {
+  "Last modified": "Последнее изменение",
+  "List": "Список",
+  "Grid": "Сетка",
+  "List view": "Вид списком",
+  "Grid view": "Вид сеткой",
   "Show progress": "Показать прогресс",
   "Hide progress": "Скрыть прогресс",
   "No history to chart.": "Нет истории для графика.",
@@ -1935,7 +1940,7 @@
   "Other": "Прочее",
   "Ready when <span class=\"grad\">you are.</span>": "Всё готово — <span class=\"grad\">дело за вами.</span>",
   "See who's live on Twitch right now, catch up on the newest community videos, and read the latest official Trove news.": "Смотрите, кто сейчас в эфире на Twitch, наверстайте новейшие видео сообщества и читайте последние официальные новости Trove.",
-  "weekly XP ≤ {n}": "недельный опыт ≤ {n}",
+  "XP ≥ {n}": "опыт ≥ {n}",
   "Untracked": "Не отслеживаются",
   "This item is no longer tracked": "Этот предмет больше не отслеживается",
   "This item is no longer tracked - prices and listings no longer update.": "Этот предмет больше не отслеживается - цены и листинги больше не обновляются."

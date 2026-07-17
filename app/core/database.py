@@ -49,6 +49,7 @@ from app.trove.mods_hub.models import (
     ModStar,
     StrayImportState,
 )
+from app.trove.store.models import StoreCategoryDoc, StoreProductDoc, StoreStateDoc
 from app.trove.updates.models import (
     UpdateBranch,
     UpdateChange,
@@ -73,6 +74,7 @@ DOCUMENT_MODELS = [
     ModpackProject, ModpackStar,         # modpacks: user-curated bundles of mods (refs only) + likes
     MarketInterestItem,                  # MarketListing + CodexEntry moved to Postgres (pg_store)
     MarketItemCategory,                  # admin-defined /market sidebar groupings (name-keyed)
+    StoreProductDoc, StoreCategoryDoc, StoreStateDoc,   # in-game Kiwi Store catalog (store:read)
     ChaosChestCapture, ChallengeCapture,
     FeedbackEntry,
     TroveStatusEvent,

@@ -84,6 +84,8 @@ class UpdateState(Document):
     size: int = 0
     archive: str | None = None        # the TFI directory for archive-sourced files, else None
     archive_index: int | None = None
+    last_ordinal: int = 0             # version this file was last added/modified in (0 = not
+                                      #   yet backfilled; drives the "last modified" tree sort)
 
     class Settings:
         name = "update_state"

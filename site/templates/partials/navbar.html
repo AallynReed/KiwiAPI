@@ -13,7 +13,7 @@
    NOT include this partial.
    =========================================================================== #}
 {% set _p = request.url.path %}
-{% set _pages_active = _p == '/mods' or _p.startswith('/mods/') or _p == '/modpacks' or _p.startswith('/modpacks/') or _p in ['/commands', '/leaderboards', '/activity', '/class-activity', '/updates', '/market', '/codexes', '/codexes/crafting', '/status', '/clubs', '/server-time', '/calendar', '/streams', '/releases', '/classes', '/star-chart', '/gem-simulator'] %}
+{% set _pages_active = _p == '/mods' or _p.startswith('/mods/') or _p == '/modpacks' or _p.startswith('/modpacks/') or _p in ['/commands', '/leaderboards', '/activity', '/class-activity', '/updates', '/market', '/store', '/codexes', '/codexes/crafting', '/status', '/clubs', '/server-time', '/calendar', '/streams', '/releases', '/classes', '/star-chart', '/gem-simulator'] %}
 <style>
     /* Compact flag language picker: flag-only trigger, full names in the panel. */
     .lang-dd { position: relative; display: inline-flex; }
@@ -60,12 +60,13 @@
                             {% if class_activity_enabled %}<a href="/class-activity" role="menuitem" class="{{ 'active' if _p == '/class-activity' else '' }}"><i class="fa-solid fa-users"></i> <span data-i18n>Class Activity</span></a>{% endif %}
                         </div>
                         {% endif %}
-                        {% if leaderboards_enabled or clubs_enabled or market_enabled %}
+                        {% if leaderboards_enabled or clubs_enabled or market_enabled or store_enabled %}
                         <div class="nav-mega-group" role="group" aria-label="Competitive">
                             <p class="nav-mega-title" data-i18n>Competitive</p>
                             {% if leaderboards_enabled %}<a href="/leaderboards" role="menuitem" class="{{ 'active' if _p == '/leaderboards' else '' }}"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>{% endif %}
                             {% if clubs_enabled %}<a href="/clubs" role="menuitem" class="{{ 'active' if _p == '/clubs' else '' }}"><i class="fa-solid fa-shield-halved"></i> <span data-i18n>Clubs</span></a>{% endif %}
                             {% if market_enabled %}<a href="/market" role="menuitem" class="{{ 'active' if _p == '/market' else '' }}"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span></a>{% endif %}
+                            {% if store_enabled %}<a href="/store" role="menuitem" class="{{ 'active' if _p == '/store' else '' }}"><i class="fa-solid fa-store"></i> <span data-i18n>Store History</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
                         </div>
                         {% endif %}
                         {% if star_chart_enabled or gem_simulator_enabled or gem_evaluator_enabled or gem_builds_enabled or calculators_enabled %}

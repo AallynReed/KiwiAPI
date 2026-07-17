@@ -384,6 +384,18 @@ REGISTRY: dict[str, TunableSetting] = {
             "biome rotation, which is computed locally and unrelated to this source."
         ),
     ),
+    "feature_store_enabled": _t(
+        key="feature_store_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the in-game Store catalog. OFF 404s every store "
+            "endpoint (/v1/store/*), including the bot's ingest - re-enable "
+            "before the next dump if you want uninterrupted collection. Stored "
+            "products/categories are kept and return when toggled back ON."
+        ),
+    ),
 
     # ── Cheater / alt-cluster calculation (master compute switches) ───
     # Distinct from the cheater_detection TUNING knobs below: these turn the
@@ -1136,20 +1148,19 @@ REGISTRY: dict[str, TunableSetting] = {
         ),
         min_value=0, max_value=10_000_000,
     ),
-    "class_activity_xp_cap": _t(
-        key="class_activity_xp_cap",
-        default=settings.class_activity_xp_cap,
+    "class_activity_xp_threshold": _t(
+        key="class_activity_xp_threshold",
+        default=settings.class_activity_xp_threshold,
         type="int",
         category="class_activity",
         description=(
-            "XP CAP for the Class Activity \"clean\" (established) view - the "
-            "opposite direction from the two floors. A player is EXCLUDED from a "
-            "class's clean estimate when their score on the weekly XP stats "
-            "leaderboard (uuid 21005) exceeds this value at the window end - "
-            "filtering extreme XP grinders / farm bots that the floors let "
-            "through. Set to 0 to drop this gate. Takes effect on the next "
-            "class-activity recompute (latest window each capture; full history "
-            "on a backfill)."
+            "XP floor for the Class Activity \"clean\" (established) view. A "
+            "player counts toward a class's clean estimate only when their score "
+            "on the XP stats leaderboard (uuid 21005) is at least this value at "
+            "the window end - the third gate alongside the Power-Rank and Effort "
+            "floors (all must pass). Set to 0 to drop this gate. Takes effect on "
+            "the next class-activity recompute (latest window each capture; full "
+            "history on a backfill)."
         ),
         min_value=0, max_value=1_000_000_000,
     ),

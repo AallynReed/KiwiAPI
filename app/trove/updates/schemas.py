@@ -62,6 +62,8 @@ class TreeEntry(BaseModel):
     is_dir: bool
     file_count: int                   # files under it (1 for a file)
     size: int                         # total bytes under it
+    last_ordinal: int = 0             # newest version touched under this entry (0 = unknown)
+    last_modified_at: datetime | None = None  # captured_at of that version, if resolvable
 
 
 class TreeListing(BaseModel):

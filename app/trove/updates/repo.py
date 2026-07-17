@@ -76,11 +76,13 @@ class MongoUpdateRepo:
         await self._maybe_flush()
 
     async def upsert_state(self, branch: str, path: str, content_sha256: str, fnv_hash: int | None,
-                           size: int, archive: str | None, archive_index: int | None) -> None:
+                           size: int, archive: str | None, archive_index: int | None,
+                           last_ordinal: int) -> None:
         self._state_ops.append(UpdateOne(
             {"branch": branch, "path": path},
             {"$set": {"content_sha256": content_sha256, "fnv_hash": fnv_hash, "size": size,
-                      "archive": archive, "archive_index": archive_index}},
+                      "archive": archive, "archive_index": archive_index,
+                      "last_ordinal": last_ordinal}},
             upsert=True,
         ))
         await self._maybe_flush()
