@@ -47,16 +47,18 @@
         <!-- ═══════════════ VIEW TABS ═══════════════ -->
         <div class="mkt-viewtabs" role="tablist" aria-label="Market views">
             <button type="button" class="mkt-viewtab active" data-view="browse"
-                    role="tab" aria-selected="true">
+                    id="mkt-viewtab-browse" role="tab" aria-selected="true"
+                    aria-controls="mkt-view-browse" tabindex="0">
                 <i class="fa-solid fa-shop" aria-hidden="true"></i> <span data-i18n>Browse</span>
             </button>
             <button type="button" class="mkt-viewtab" data-view="analytics"
-                    role="tab" aria-selected="false">
+                    id="mkt-viewtab-analytics" role="tab" aria-selected="false"
+                    aria-controls="mkt-view-analytics" tabindex="-1">
                 <i class="fa-solid fa-chart-line" aria-hidden="true"></i> <span data-i18n>Analytics</span>
             </button>
         </div>
 
-      <div id="mkt-view-browse">
+      <div id="mkt-view-browse" role="tabpanel" aria-labelledby="mkt-viewtab-browse">
         <!-- ═══════════════ LAYOUT ═══════════════
              Sidebar of items (filterable) + main pane showing the
              selected item's summary + listings. Mirrors the
@@ -77,6 +79,7 @@
             <aside class="mkt-sidebar" id="mkt-sidebar" aria-label="Items">
                 <div class="mkt-sidebar-head">
                     <span class="mkt-search-wrap">
+                        <label for="mkt-item-search" class="sr-only" data-i18n>Search items</label>
                         <i class="fa-solid fa-magnifying-glass mkt-search-icon" aria-hidden="true"></i>
                         <input type="search" id="mkt-item-search"
                                class="mkt-search-input"
@@ -171,7 +174,7 @@
       </div><!-- /#mkt-view-browse -->
 
       <!-- ═══════════════ ANALYTICS VIEW ═══════════════ -->
-      <div id="mkt-view-analytics" hidden>
+      <div id="mkt-view-analytics" role="tabpanel" aria-labelledby="mkt-viewtab-analytics" hidden>
         <div class="mkt-an-controls">
             <label class="mkt-an-field">
                 <span class="mkt-an-field-label" data-i18n>Window</span>
@@ -254,6 +257,7 @@
                 </div>
                 <div class="mkt-an-pickers">
                     <span class="mkt-an-item-wrap">
+                        <label for="mkt-an-item" class="sr-only" data-i18n>Pick an item to chart</label>
                         <i class="fa-solid fa-magnifying-glass mkt-search-icon" aria-hidden="true"></i>
                         <input type="search" id="mkt-an-item" class="mkt-search-input"
                                data-i18n-placeholder placeholder="Pick an item…"
@@ -263,6 +267,7 @@
                         <div class="mkt-an-suggest" id="mkt-an-item-suggest" role="listbox" hidden></div>
                     </span>
                     <span class="mkt-an-item-wrap mkt-an-item-wrap-cmp">
+                        <label for="mkt-an-item-cmp" class="sr-only" data-i18n>Compare with a second item</label>
                         <i class="fa-solid fa-code-compare mkt-search-icon" aria-hidden="true"></i>
                         <input type="search" id="mkt-an-item-cmp" class="mkt-search-input"
                                data-i18n-placeholder placeholder="Compare with… (optional)"

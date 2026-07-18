@@ -67,15 +67,18 @@
         <section class="act-chart-card">
             <div class="act-chart-head">
                 <div class="act-periods" id="act-periods" role="tablist" aria-label="Time range">
-                    <button type="button" data-period="1d"  role="tab" aria-selected="false">1D</button>
-                    <button type="button" data-period="7d"  role="tab" class="active" aria-selected="true">7D</button>
-                    <button type="button" data-period="1m"  role="tab" aria-selected="false">1M</button>
+                    <button type="button" data-period="1d" id="act-tab-1d" role="tab" aria-controls="act-chart" aria-selected="false">1D</button>
+                    <button type="button" data-period="7d" id="act-tab-7d" role="tab" aria-controls="act-chart" class="active" aria-selected="true">7D</button>
+                    <button type="button" data-period="1m" id="act-tab-1m" role="tab" aria-controls="act-chart" aria-selected="false">1M</button>
                 </div>
                 <span class="act-chart-range" id="act-chart-range"></span>
             </div>
-            <div class="act-chart" id="act-chart" aria-live="polite">
+            <!-- The chart itself is NOT a live region (it redraws on every period
+                 switch / resize); the small sr-only node below carries the summary. -->
+            <div class="act-chart" id="act-chart" role="tabpanel" aria-labelledby="act-tab-7d">
                 <div class="act-loading" data-i18n>Loading…</div>
             </div>
+            <p class="sr-only" id="act-live-status" role="status" aria-live="polite"></p>
             <div class="act-chart-tip" id="act-chart-tip" hidden></div>
         </section>
 

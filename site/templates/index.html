@@ -77,40 +77,40 @@
             </div>
 
             <nav class="dash-nav" aria-label="Jump to section">
-                <a href="#today"><i class="fa-solid fa-rotate"></i> <span data-i18n>Today in Trove</span></a>
-                {% if calendar_enabled %}<a href="#calendar"><i class="fa-regular fa-calendar-days"></i> <span data-i18n>Yearly calendar</span></a>{% endif %}
-                <a href="#news"><i class="fa-solid fa-newspaper"></i> <span data-i18n>Official news</span></a>
-                <a href="#community"><i class="fa-solid fa-video"></i> <span data-i18n>Community</span></a>
-                {% if giveaways_enabled %}<a href="#giveaways"><i class="fa-solid fa-gift"></i> <span data-i18n>Giveaways</span></a>{% endif %}
+                <a href="#today"><i class="fa-solid fa-rotate" aria-hidden="true"></i> <span data-i18n>Today in Trove</span></a>
+                {% if calendar_enabled %}<a href="#calendar"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> <span data-i18n>Yearly calendar</span></a>{% endif %}
+                <a href="#news"><i class="fa-solid fa-newspaper" aria-hidden="true"></i> <span data-i18n>Official news</span></a>
+                <a href="#community"><i class="fa-solid fa-video" aria-hidden="true"></i> <span data-i18n>Community</span></a>
+                {% if giveaways_enabled %}<a href="#giveaways"><i class="fa-solid fa-gift" aria-hidden="true"></i> <span data-i18n>Giveaways</span></a>{% endif %}
             </nav>
 
             <div class="dash-side-block">
                 <span class="dash-side-h" data-i18n>Explore</span>
                 <div class="dash-side-links">
-                    {% if leaderboards_enabled %}<a href="/leaderboards"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>{% endif %}
-                    {% if codexes_enabled %}<a href="/codexes"><i class="fa-solid fa-book-atlas"></i> <span data-i18n>Codexes</span></a>{% endif %}
-                    {% if updates_enabled %}<a href="/updates"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Game Updates</span></a>{% endif %}
-                    {% if market_enabled %}<a href="/market"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span></a>{% endif %}
-                    {% if server_status_enabled %}<a href="/status"><i class="fa-solid fa-signal"></i> <span data-i18n>Server Status</span></a>{% endif %}
-                    {% if server_time_enabled %}<a href="/server-time"><i class="fa-regular fa-clock"></i> <span data-i18n>Server Time</span></a>{% endif %}
-                    {% if commands_enabled %}<a href="/commands"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>{% endif %}
-                    {% if player_activity_enabled %}<a href="/activity"><i class="fa-solid fa-chart-line"></i> <span data-i18n>Player Activity</span></a>{% endif %}
-                    {% if mods_hub_enabled %}<a href="/modpacks"><i class="fa-solid fa-box-open"></i> <span data-i18n>Modpacks</span></a>{% endif %}
-                    <a href="/browse"><i class="fa-solid fa-sitemap"></i> <span data-i18n>Browse all</span></a>
+                    {% if leaderboards_enabled %}<a href="/leaderboards"><i class="fa-solid fa-ranking-star" aria-hidden="true"></i> <span data-i18n>Leaderboards</span></a>{% endif %}
+                    {% if codexes_enabled %}<a href="/codexes"><i class="fa-solid fa-book-atlas" aria-hidden="true"></i> <span data-i18n>Codexes</span></a>{% endif %}
+                    {% if updates_enabled %}<a href="/updates"><i class="fa-solid fa-code-branch" aria-hidden="true"></i> <span data-i18n>Game Updates</span></a>{% endif %}
+                    {% if market_enabled %}<a href="/market"><i class="fa-solid fa-shop" aria-hidden="true"></i> <span data-i18n>Market</span></a>{% endif %}
+                    {% if server_status_enabled %}<a href="/status"><i class="fa-solid fa-signal" aria-hidden="true"></i> <span data-i18n>Server Status</span></a>{% endif %}
+                    {% if server_time_enabled %}<a href="/server-time"><i class="fa-regular fa-clock" aria-hidden="true"></i> <span data-i18n>Server Time</span></a>{% endif %}
+                    {% if commands_enabled %}<a href="/commands"><i class="fa-solid fa-keyboard" aria-hidden="true"></i> <span data-i18n>Trove Commands</span></a>{% endif %}
+                    {% if player_activity_enabled %}<a href="/activity"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> <span data-i18n>Player Activity</span></a>{% endif %}
+                    {% if mods_hub_enabled %}<a href="/modpacks"><i class="fa-solid fa-box-open" aria-hidden="true"></i> <span data-i18n>Modpacks</span></a>{% endif %}
+                    <a href="/browse"><i class="fa-solid fa-sitemap" aria-hidden="true"></i> <span data-i18n>Browse all</span></a>
                 </div>
             </div>
 
             <div class="dash-side-block">
                 <span class="dash-side-h" data-i18n>For developers</span>
                 <div class="dash-side-links">
-                    <a href="https://dev.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-key"></i> <span data-i18n>Dev Portal</span></a>
-                    <a href="https://docs.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-terminal"></i> <span data-i18n>API Docs</span></a>
-                    <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> <span>GitHub</span></a>
+                    <a href="https://dev.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-key" aria-hidden="true"></i> <span data-i18n>Dev Portal</span></a>
+                    <a href="https://docs.aallyn.net" target="_blank" rel="noopener"><i class="fa-solid fa-terminal" aria-hidden="true"></i> <span data-i18n>API Docs</span></a>
+                    <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github" aria-hidden="true"></i> <span>GitHub</span></a>
                 </div>
             </div>
 
-            <a class="dash-cta btn btn-primary" href="/app"><i class="fa-solid fa-download"></i> <span data-i18n>Get the app</span></a>
-            <a class="dash-support" href="/support"><i class="fa-solid fa-heart"></i> <span data-i18n>Support the project</span></a>
+            <a class="dash-cta btn btn-primary" href="/app"><i class="fa-solid fa-download" aria-hidden="true"></i> <span data-i18n>Get the app</span></a>
+            <a class="dash-support" href="/support"><i class="fa-solid fa-heart" aria-hidden="true"></i> <span data-i18n>Support the project</span></a>
         </aside>
 
         <!-- ═══════════════ MAIN ═══════════════ -->
@@ -148,8 +148,8 @@
             {% if giveaways_enabled %}
             <section id="giveaways" class="dash-section">
                 <header class="dash-section-head">
-                    <h2><i class="fa-solid fa-gift"></i> <span data-i18n>Giveaways</span></h2>
-                    <a class="dash-seeall" href="/giveaways"><span data-i18n>All giveaways</span> <i class="fa-solid fa-arrow-right"></i></a>
+                    <h2><i class="fa-solid fa-gift" aria-hidden="true"></i> <span data-i18n>Giveaways</span></h2>
+                    <a class="dash-seeall" href="/giveaways"><span data-i18n>All giveaways</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </header>
                 <div class="dash-giveaways" id="dash-giveaways"></div>
             </section>
@@ -159,8 +159,8 @@
             {% if leaderboards_enabled %}
             <section id="records" class="dash-section">
                 <header class="dash-section-head">
-                    <h2><i class="fa-solid fa-trophy"></i> <span data-i18n>Record highs</span></h2>
-                    <a class="dash-seeall" href="/leaderboards"><span data-i18n>Leaderboards</span> <i class="fa-solid fa-arrow-right"></i></a>
+                    <h2><i class="fa-solid fa-trophy" aria-hidden="true"></i> <span data-i18n>Record highs</span></h2>
+                    <a class="dash-seeall" href="/leaderboards"><span data-i18n>Leaderboards</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </header>
                 <div class="dash-records" id="dash-records"><p class="dash-loading" data-i18n>Loading…</p></div>
             </section>
@@ -169,8 +169,8 @@
             <!-- Today in Trove -->
             <section id="today" class="dash-section">
                 <header class="dash-section-head">
-                    <h2><i class="fa-solid fa-rotate"></i> <span data-i18n>Today in Trove</span></h2>
-                    <a class="dash-seeall" href="/server-time"><span data-i18n>Server time</span> <i class="fa-solid fa-arrow-right"></i></a>
+                    <h2><i class="fa-solid fa-rotate" aria-hidden="true"></i> <span data-i18n>Today in Trove</span></h2>
+                    <a class="dash-seeall" href="/server-time"><span data-i18n>Server time</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </header>
                 <div class="dash-buffs" id="dash-buffs"><p class="dash-loading" data-i18n>Loading…</p></div>
                 <div class="dash-merchants" id="dash-merchants"></div>
@@ -182,8 +182,8 @@
             {% if calendar_enabled %}
             <section id="calendar" class="dash-section dash-cal-section">
                 <header class="dash-section-head">
-                    <h2><i class="fa-regular fa-calendar-days"></i> <span data-i18n>Yearly rotation calendar</span></h2>
-                    <a class="dash-seeall" href="/calendar"><span data-i18n>Live calendar</span> <i class="fa-solid fa-arrow-right"></i></a>
+                    <h2><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> <span data-i18n>Yearly rotation calendar</span></h2>
+                    <a class="dash-seeall" href="/calendar"><span data-i18n>Live calendar</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </header>
                 <div class="dash-cal" id="dash-calendar"><p class="dash-loading" data-i18n>Loading…</p></div>
             </section>
@@ -192,9 +192,9 @@
             <!-- Official news -->
             <section id="news" class="dash-section">
                 <header class="dash-section-head">
-                    <h2><i class="fa-solid fa-newspaper"></i> <span data-i18n>Official news</span></h2>
-                    <button type="button" class="dash-news-filter" id="dash-news-shop">
-                        <i class="fa-solid fa-store-slash"></i> <span data-i18n>Shop offers hidden</span>
+                    <h2><i class="fa-solid fa-newspaper" aria-hidden="true"></i> <span data-i18n>Official news</span></h2>
+                    <button type="button" class="dash-news-filter" id="dash-news-shop" aria-pressed="false">
+                        <i class="fa-solid fa-store-slash" aria-hidden="true"></i> <span data-i18n>Shop offers hidden</span>
                     </button>
                 </header>
                 <div class="dash-carousel" id="dash-news"><p class="dash-loading" data-i18n>Loading Trove news…</p></div>
@@ -203,10 +203,10 @@
             <!-- Community content -->
             <section id="community" class="dash-section">
                 <header class="dash-section-head">
-                    <h2><i class="fa-solid fa-video"></i> <span data-i18n>Community content</span></h2>
+                    <h2><i class="fa-solid fa-video" aria-hidden="true"></i> <span data-i18n>Community content</span></h2>
                     <div class="dash-tabs" id="dash-video-tabs">
-                        <button type="button" data-vp="youtube" class="active"><i class="fa-brands fa-youtube"></i> YouTube</button>
-                        <button type="button" data-vp="twitch"><i class="fa-brands fa-twitch"></i> Twitch</button>
+                        <button type="button" data-vp="youtube" class="active"><i class="fa-brands fa-youtube" aria-hidden="true"></i> YouTube</button>
+                        <button type="button" data-vp="twitch"><i class="fa-brands fa-twitch" aria-hidden="true"></i> Twitch</button>
                     </div>
                 </header>
                 <div class="dash-carousel" id="dash-videos"><p class="dash-loading" data-i18n>Loading…</p></div>
@@ -218,7 +218,7 @@
         <aside class="dash-right" aria-label="Live stats and latest mods">
             {% if player_activity_enabled %}
             <a class="dash-tile" id="dash-activity" href="/activity">
-                <span class="dash-tile-ico"><i class="fa-solid fa-users-line"></i></span>
+                <span class="dash-tile-ico"><i class="fa-solid fa-users-line" aria-hidden="true"></i></span>
                 <div class="dash-tile-body">
                     <span class="dash-tile-label" data-i18n>Players active</span>
                     <span class="dash-tile-stat"><b id="act-1h">—</b> <small data-i18n>1h</small> · <b id="act-24h">—</b> <small data-i18n>24h</small> · <b id="act-7d">—</b> <small data-i18n>7d</small></span>
@@ -227,7 +227,7 @@
             {% endif %}
             {% if updates_enabled %}
             <a class="dash-tile" id="dash-patch" href="/updates" hidden>
-                <span class="dash-tile-ico"><i class="fa-solid fa-cube"></i></span>
+                <span class="dash-tile-ico"><i class="fa-solid fa-cube" aria-hidden="true"></i></span>
                 <div class="dash-tile-body">
                     <span class="dash-tile-label" data-i18n>Latest update</span>
                     <span class="dash-tile-value" id="dash-patch-text"></span>
@@ -237,8 +237,8 @@
             {% if mods_hub_enabled %}
             <section class="dash-rail" id="mods">
                 <header class="dash-section-head">
-                    <h2><i class="fa-solid fa-cubes"></i> <span data-i18n>Latest mods</span></h2>
-                    <a class="dash-seeall" href="/mods"><span data-i18n>All</span> <i class="fa-solid fa-arrow-right"></i></a>
+                    <h2><i class="fa-solid fa-cubes" aria-hidden="true"></i> <span data-i18n>Latest mods</span></h2>
+                    <a class="dash-seeall" href="/mods"><span data-i18n>All</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </header>
                 <div class="dash-modlist" id="dash-mods"><p class="dash-loading" data-i18n>Loading…</p></div>
             </section>
@@ -250,8 +250,8 @@
          Filled + opened by home.js. -->
     <div class="dash-modal" id="dash-modal" hidden>
         <div class="dash-modal-backdrop" data-close></div>
-        <div class="dash-modal-card" role="dialog" aria-modal="true" aria-labelledby="dash-modal-title">
-            <button type="button" class="dash-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <div class="dash-modal-card" role="dialog" aria-modal="true" aria-labelledby="dash-modal-head">
+            <button type="button" class="dash-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <div class="dash-modal-head" id="dash-modal-head"></div>
             <div class="dash-modal-body" id="dash-modal-body"></div>
         </div>

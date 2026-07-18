@@ -7,7 +7,7 @@
 .market-page {
   --an-up: #4ad07f;
   --an-down: #f87171;
-  --an-med: var(--accent-blue, #569cff);
+  --an-med: var(--accent-blue);
   --an-band: rgba(86,156,255,.16);
   --an-vol: rgba(147,163,182,.30);
   --an-evt: rgba(248,150,30,.12);
@@ -43,9 +43,16 @@
 .mkt-an-kpi .is-down { color: var(--an-down); }
 
 /* ─── Sortable table headers (shared by deals/liquidity/volume) ─────── */
-.mkt-an-table th.mkt-an-sort { cursor: pointer; user-select: none; white-space: nowrap; }
-.mkt-an-table th.mkt-an-sort:hover { color: var(--text); }
-.mkt-an-table th.mkt-an-sort .mkt-an-caret { opacity: 0; margin-left: 3px; font-size: .7em; }
+.mkt-an-table th.mkt-an-sort { user-select: none; white-space: nowrap; }
+/* The header's clickable/keyboard control is a real <button> that inherits
+   the th's typography so it reads as a plain header, plus a focus ring. */
+.mkt-an-sortbtn {
+  border: 0; background: none; margin: 0; padding: 0;
+  font: inherit; letter-spacing: inherit; text-transform: inherit;
+  color: inherit; cursor: pointer;
+}
+.mkt-an-table th.mkt-an-sort:hover .mkt-an-sortbtn { color: var(--text); }
+.mkt-an-caret { opacity: 0; margin-left: 3px; font-size: .7em; }
 .mkt-an-table th.mkt-an-sort.is-active { color: var(--accent-blue); }
 .mkt-an-table th.mkt-an-sort.is-active .mkt-an-caret { opacity: 1; }
 
@@ -102,7 +109,7 @@
   background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 8px;
   color: var(--text); font: inherit; font-size: .88rem; padding: 7px 10px; cursor: pointer;
 }
-.mkt-an-select:focus { outline: none; border-color: var(--accent-blue); }
+.mkt-an-select:focus { border-color: var(--accent-blue); }
 
 .mkt-an-block {
   background: var(--bg-card); border: 1px solid var(--bg-line);

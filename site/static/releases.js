@@ -219,18 +219,38 @@
 
   /* ---- Channel toggle ---------------------------------------------------- */
   var toggle = document.querySelector(".rel-channel");
-  if (toggle) toggle.addEventListener("click", function (e) {
-    var btn = e.target.closest(".rel-channel-btn");
-    if (!btn || btn.dataset.channel === channel) return;
-    channel = btn.dataset.channel;
-    toggle.querySelectorAll(".rel-channel-btn").forEach(function (b) {
-      var on = b === btn;
-      b.classList.toggle("active", on);
-      b.setAttribute("aria-selected", on ? "true" : "false");
+  if (toggle) {
+    var tabs = Array.prototype.slice.call(toggle.querySelectorAll(".rel-channel-btn"));
+    function selectTab(btn, focus) {
+      if (!btn) return;
+      tabs.forEach(function (b) {
+        var on = b === btn;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+        b.tabIndex = on ? 0 : -1;   // roving tabindex: only the active tab is tabbable
+      });
+      if (focus) btn.focus();
+      if (btn.dataset.channel !== channel) {
+        channel = btn.dataset.channel;
+        loadLatest();
+        loadReleases();
+      }
+    }
+    toggle.addEventListener("click", function (e) {
+      selectTab(e.target.closest(".rel-channel-btn"), false);
     });
-    loadLatest();
-    loadReleases();
-  });
+    // Left/Right/Up/Down/Home/End move between tabs (WAI-ARIA tablist pattern).
+    toggle.addEventListener("keydown", function (e) {
+      var i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      var next = null;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") next = tabs[(i + 1) % tabs.length];
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = tabs[(i - 1 + tabs.length) % tabs.length];
+      else if (e.key === "Home") next = tabs[0];
+      else if (e.key === "End") next = tabs[tabs.length - 1];
+      if (next) { e.preventDefault(); selectTab(next, true); }
+    });
+  }
 
   /* ---- Re-render labels on a live language change ------------------------- */
   document.addEventListener("btt-lang-changed", function () {

@@ -74,6 +74,10 @@
                    :                         tr('Trove is down');
     banner.className = 'st-banner ' + meta.cls;
     if (bannerText) bannerText.textContent = headline;
+    // Announce just the short headline to SR users (the card grid is not a live
+    // region, so this small node carries the once-per-poll status change).
+    const live = document.getElementById('st-live-status');
+    if (live && live.textContent !== headline) live.textContent = headline;
     if (bannerChecked) {
       bannerChecked.textContent = data && data.checked_at
         ? tr('checked {ago}').replace('{ago}', fmtAgo(data.checked_at)) : '';
@@ -220,8 +224,9 @@
 
   loadCurrent();
   loadHistory();
-  setInterval(loadCurrent, 60_000);
-  setInterval(loadHistory, 120_000);
+  // Pause polling while the tab is hidden; visibilitychange refetches on return.
+  setInterval(() => { if (!document.hidden) loadCurrent(); }, 60_000);
+  setInterval(() => { if (!document.hidden) loadHistory(); }, 120_000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) { loadCurrent(); loadHistory(); }
   });

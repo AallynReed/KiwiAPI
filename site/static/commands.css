@@ -81,7 +81,7 @@
   color: var(--text);
   font: 500 1rem inherit;
 }
-.commands-search::placeholder { color: var(--text-soft); }
+.commands-search::placeholder { color: var(--text-mute); }
 .commands-count {
   flex-shrink: 0;
   padding: 6px 12px;
@@ -254,7 +254,7 @@
   margin-top: 4px;
   font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
   font-size: .82rem;
-  color: var(--text-soft);
+  color: var(--text-mute);
   font-weight: 400;
 }
 .command-aliases::before {
@@ -311,7 +311,7 @@
 .commands-source {
   margin-top: 60px;
   text-align: center;
-  color: var(--text-soft);
+  color: var(--text-mute);
   font-size: .82rem;
 }
 

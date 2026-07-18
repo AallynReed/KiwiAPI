@@ -15,6 +15,7 @@
   const Auth = window.BTTAuth || null;
   const $list = document.getElementById('gw-list');
   if (!$list) return;
+  const $live = document.getElementById('gw-live');
 
   let items = [];
   let entered = new Set();
@@ -111,9 +112,20 @@
       <div class="gw-grid">${list.map(card).join('')}</div></section>`;
   }
 
+  function announce(openCount) {
+    if (!$live) return;
+    const msg = openCount
+      ? (openCount === 1 ? t('1 giveaway open now.') : openCount + ' ' + t('giveaways open now.'))
+      : t('No giveaways open right now.');
+    // Only write when it actually changes, so an unchanged 30s poll doesn't
+    // re-trigger the announcement.
+    if ($live.textContent !== msg) $live.textContent = msg;
+  }
+
   function render() {
     if (!items.length) {
       $list.innerHTML = `<p class="gw-empty">${esc(t("No giveaways right now — check back soon!"))}</p>`;
+      announce(0);
       return;
     }
     const open = items.filter((g) => g.status === 'open');
@@ -122,6 +134,7 @@
     $list.innerHTML = section(t('Open now'), open) + section(t('Upcoming'), upcoming) + section(t('Past'), past);
     $list.querySelectorAll('[data-enter]').forEach((b) =>
       b.addEventListener('click', () => enter(b.dataset.enter, b)));
+    announce(open.length);
     startTicker();
   }
 
@@ -163,5 +176,7 @@
   // interval so the countdown timer stays single-instance.
   document.addEventListener('btt-lang-changed', () => { if (loaded) render(); });
 
-  load().then(() => setInterval(load, 30000));  // keep counts + statuses fresh
+  // Keep counts + statuses fresh, but pause the poll while the tab is hidden so
+  // a backgrounded tab isn't re-fetching + re-rendering (and re-announcing).
+  load().then(() => setInterval(() => { if (!document.hidden) load(); }, 30000));
 })();

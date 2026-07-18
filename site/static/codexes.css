@@ -155,7 +155,7 @@
 .cdx-chip {
   display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 6px;
   font: 700 .68rem 'Inter', system-ui, sans-serif; text-transform: uppercase; letter-spacing: .05em;
-  background: rgba(255,255,255,.06); color: var(--text-soft);
+  background: rgba(255,255,255,.06); color: var(--text-mute);
 }
 /* Per-type chip accents. */
 .cdx-type-ally    { background: rgba(108,207,142,.16); color: var(--accent-green); }
@@ -166,11 +166,11 @@
 .cdx-type-fish    { background: rgba(86,196,255,.16);  color: #56c4ff; }
 .cdx-type-recipe  { background: rgba(249,150,30,.16);  color: var(--accent-orange); }
 .cdx-type-style   { background: rgba(255,121,198,.16); color: #ff79c6; }
-.cdx-type-item    { background: rgba(255,255,255,.06); color: var(--text-soft); }
+.cdx-type-item    { background: rgba(255,255,255,.06); color: var(--text-mute); }
 
 .cdx-badge {
   display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px;
-  font: 600 .74rem 'JetBrains Mono', monospace; background: rgba(255,255,255,.04); color: var(--text-soft);
+  font: 600 .74rem 'JetBrains Mono', monospace; background: rgba(255,255,255,.04); color: var(--text-mute);
 }
 .cdx-badge i { font-size: .72rem; }
 .cdx-badge-mastery { color: var(--accent-yellow); }
@@ -194,7 +194,7 @@
 .cdx-error { color: var(--accent-red); }
 
 .cdx-source { margin: 40px auto 0; max-width: 78ch; text-align: center; color: var(--text-mute); font-size: .82rem; line-height: 1.6; }
-.cdx-source code { font-size: .85em; color: var(--text-soft); }
+.cdx-source code { font-size: .85em; color: var(--text-mute); }
 
 /* ─── Detail modal ──────────────────────────────────────────────────── */
 
@@ -220,7 +220,7 @@ body.cdx-modal-open { overflow: hidden; }
 .cdx-modal-head { display: grid; gap: 6px; justify-items: start; margin: 0 40px 14px 0; }
 .cdx-modal-title { font: 700 1.5rem 'Space Grotesk', 'Inter', sans-serif; margin: 0; color: var(--text); }
 .cdx-modal-cat { margin: 0; color: var(--text-mute); font-size: .9rem; }
-.cdx-modal-desc { margin: 0 0 16px; color: var(--text-soft); line-height: 1.6; font-size: .95rem; }
+.cdx-modal-desc { margin: 0 0 16px; color: var(--text-mute); line-height: 1.6; font-size: .95rem; }
 
 .cdx-facts { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
 .cdx-fact {
@@ -262,18 +262,18 @@ body.cdx-modal-open { overflow: hidden; }
 .cdx-craft-tag { margin-left: auto; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--accent-green); background: rgba(108,207,142,.12); border-radius: 6px; padding: 2px 8px; }
 .cdx-craft-out .cdx-craft-name { font-weight: 600; }
 .cdx-craft-out { padding-bottom: 8px; border-bottom: 1px dashed var(--bg-line); }
-.cdx-req { display: flex; align-items: center; gap: 8px; color: var(--text-soft); font-size: .9rem; }
+.cdx-req { display: flex; align-items: center; gap: 8px; color: var(--text-mute); font-size: .9rem; }
 .cdx-req::before { content: "\f0c1"; font-family: "Font Awesome 6 Free"; font-weight: 900; color: var(--accent-yellow); font-size: .8rem; }
 
 .cdx-level { display: flex; gap: 12px; align-items: baseline; }
 .cdx-level-n { font: 700 .8rem 'JetBrains Mono', monospace; color: var(--accent-blue); min-width: 56px; }
-.cdx-level-bits { color: var(--text-soft); font-size: .88rem; line-height: 1.5; }
+.cdx-level-bits { color: var(--text-mute); font-size: .88rem; line-height: 1.5; }
 
 .cdx-ref { display: grid; gap: 8px; }
 .cdx-ref-row { display: grid; gap: 4px; }
 .cdx-ref-k { font: 600 .72rem 'Inter', system-ui, sans-serif; text-transform: uppercase; letter-spacing: .05em; color: var(--text-mute); }
 .cdx-ref code {
-  font-size: .82rem; color: var(--text-soft); background: var(--bg-deep);
+  font-size: .82rem; color: var(--text-mute); background: var(--bg-deep);
   border: 1px solid var(--bg-line); border-radius: 7px; padding: 7px 10px; overflow-wrap: anywhere;
 }
 

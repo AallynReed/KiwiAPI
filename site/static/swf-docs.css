@@ -6,15 +6,15 @@
 
 :root {
     --bg-dark: #12161c;
-    --bg-panel: #1d232b;
+    --bg-panel: #1a212c;   /* aligned to site --bg-card-hi */
     --bg-elev: #232a34;
     --bg-code: #0d1117;
     --border-color: #2d3542;
     --border-soft: #232a34;
     --text-main: #ffffff;
     --text-muted: #a3adc2;
-    --text-dim: #79839a;
-    --accent-blue: #5ec6ff;
+    --text-dim: #9aa4b2;   /* was #79839a (~4.1:1) — aligned to site --text-mute for AA */
+    --accent-blue: #58a6ff;
     --accent-orange: #ff9800;
     --accent-yellow: #fbc02d;
     --accent-green: #46d39a;

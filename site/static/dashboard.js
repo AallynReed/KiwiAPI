@@ -268,11 +268,11 @@
     const input = form.username;
     const err = ov.querySelector('#uname-modal-error');
     const submitBtn = form.querySelector('[type="submit"]');
-    const close = () => { document.removeEventListener('keydown', onKey); ov.remove(); };
+    let release = null;
+    const close = () => { if (release) release(); document.removeEventListener('keydown', onKey); ov.remove(); };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
     ov.querySelector('[data-act="cancel"]').addEventListener('click', close);
-    document.addEventListener('keydown', onKey);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       err.hidden = true;
@@ -290,7 +290,14 @@
       }
     });
     document.body.appendChild(ov);
-    input.focus();
+    // Trap focus in the dialog (Escape handled by the helper), first focus the input.
+    const panel = ov.querySelector('.dash-modal');
+    if (window.BTTUtil && window.BTTUtil.trapFocus) {
+      release = window.BTTUtil.trapFocus(panel, { onEscape: close, initialFocus: input });
+    } else {
+      document.addEventListener('keydown', onKey);
+      input.focus();
+    }
   }
   function showUsernameStatus(req) {
     _latestUnameReq = req || null;
@@ -311,8 +318,35 @@
   // Sidebar section switching.
   const SECTIONS = ['profile', 'giveaways', 'mods', 'modpacks', 'leaderboard', 'discord', 'webhooks', 'dmsubs', 'images'];
   function setupSections() {
-    document.querySelectorAll('.dash-nav-item').forEach((b) =>
-      b.addEventListener('click', () => showSection(b.dataset.section)));
+    const navItems = Array.prototype.slice.call(document.querySelectorAll('.dash-nav-item'));
+    const nav = navItems[0] ? navItems[0].closest('.dash-nav') : null;
+    // Wire the role="tablist"/role="tab" relationships to the panels.
+    navItems.forEach((b) => {
+      const sec = b.dataset.section;
+      b.id = 'dash-tab-' + sec;
+      b.setAttribute('aria-controls', 'dash-panel-' + sec);
+      b.setAttribute('aria-selected', 'false');
+      b.tabIndex = -1;
+      b.addEventListener('click', () => showSection(sec));
+    });
+    document.querySelectorAll('.dash-section').forEach((s) => {
+      const sec = s.dataset.pane;
+      s.id = 'dash-panel-' + sec;
+      s.setAttribute('role', 'tabpanel');
+      s.setAttribute('aria-labelledby', 'dash-tab-' + sec);
+      s.setAttribute('tabindex', '0');
+    });
+    // Arrow / Home / End move between tabs (WAI-ARIA tablist pattern).
+    if (nav) nav.addEventListener('keydown', (e) => {
+      const i = navItems.indexOf(document.activeElement);
+      if (i < 0) return;
+      let next = null;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = navItems[(i + 1) % navItems.length];
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = navItems[(i - 1 + navItems.length) % navItems.length];
+      else if (e.key === 'Home') next = navItems[0];
+      else if (e.key === 'End') next = navItems[navItems.length - 1];
+      if (next) { e.preventDefault(); showSection(next.dataset.section); next.focus(); }
+    });
     const hash = location.hash.replace(/^#/, '');
     showSection(SECTIONS.includes(hash) ? hash : 'profile');
     window.addEventListener('hashchange', () => {
@@ -321,8 +355,12 @@
     });
   }
   function showSection(name) {
-    document.querySelectorAll('.dash-nav-item').forEach((b) =>
-      b.classList.toggle('active', b.dataset.section === name));
+    document.querySelectorAll('.dash-nav-item').forEach((b) => {
+      const on = b.dataset.section === name;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;   // roving tabindex: only the selected tab is tabbable
+    });
     document.querySelectorAll('.dash-section').forEach((s) => { s.hidden = s.dataset.pane !== name; });
     if (location.hash.replace(/^#/, '') !== name) history.replaceState(null, '', '#' + name);
     // Lazy-load the Discord Bot section the first time it's opened so users
@@ -1533,16 +1571,30 @@
             <button type="button" class="dash-btn dash-btn-mini${danger ? ' dash-btn-danger' : ''}" data-act="ok">${esc(confirm)}</button>
           </div>
         </div>`;
-      const close = (val) => { document.removeEventListener('keydown', onKey); ov.remove(); resolve(val); };
+      let release = null;
+      const close = (val) => {
+        if (release) release();
+        document.removeEventListener('keydown', onKey);
+        ov.remove();
+        resolve(val);
+      };
       // Escape cancels; Enter is left to the focused button (OK is focused on open),
       // so it never confirms a destructive action while Cancel has focus.
       const onKey = (e) => { if (e.key === 'Escape') close(false); };
       ov.addEventListener('click', (e) => { if (e.target === ov) close(false); });
       ov.querySelector('[data-act="cancel"]').addEventListener('click', () => close(false));
       ov.querySelector('[data-act="ok"]').addEventListener('click', () => close(true));
-      document.addEventListener('keydown', onKey);
       document.body.appendChild(ov);
-      ov.querySelector('[data-act="ok"]').focus();
+      // Move/trap focus in the dialog + restore to the opener on close; trapFocus
+      // owns Escape. Fall back to a manual listener if the helper is unavailable.
+      const panel = ov.querySelector('.dash-modal');
+      const okBtn = ov.querySelector('[data-act="ok"]');
+      if (window.BTTUtil && window.BTTUtil.trapFocus) {
+        release = window.BTTUtil.trapFocus(panel, { onEscape: () => close(false), initialFocus: okBtn });
+      } else {
+        document.addEventListener('keydown', onKey);
+        okBtn.focus();
+      }
     });
   }
 

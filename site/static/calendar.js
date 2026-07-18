@@ -51,9 +51,16 @@
 
   /* ---- Shared modal ------------------------------------------------------ */
   var modalEl = document.getElementById("cal-modal");
+  var modalPanel = modalEl ? modalEl.querySelector(".cal-modal-panel") : null;
   var modalHead = document.getElementById("cal-modal-head");
   var modalBody = document.getElementById("cal-modal-body");
-  function closeModal() { if (modalEl) { modalEl.hidden = true; document.body.style.overflow = ""; } }
+  var modalRelease = null;   // trapFocus() teardown while the dialog is open
+  function closeModal() {
+    if (!modalEl) return;
+    modalEl.hidden = true;
+    document.body.style.overflow = "";
+    if (modalRelease) { modalRelease(); modalRelease = null; }
+  }
   function openModal(title, bodyNode) {
     if (!modalEl) return;
     modalHead.textContent = title;
@@ -61,10 +68,14 @@
     if (bodyNode) modalBody.appendChild(bodyNode);
     modalEl.hidden = false;
     document.body.style.overflow = "hidden";
+    // Move/trap focus in the dialog + restore to the opener on close. trapFocus
+    // owns Escape via onEscape, so there's no separate document-level listener.
+    if (modalPanel && window.BTTUtil && window.BTTUtil.trapFocus) {
+      modalRelease = window.BTTUtil.trapFocus(modalPanel, { onEscape: closeModal });
+    }
   }
   if (modalEl) {
     modalEl.addEventListener("click", function (e) { if (e.target.closest("[data-close]")) closeModal(); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
   }
   function clickable(node, fn) {
     node.setAttribute("role", "button");

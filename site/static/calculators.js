@@ -212,32 +212,33 @@
     elTabs.textContent = "";
     TABS.forEach((tab) => {
       elTabs.appendChild(h("button", { class: "calc-tab" + (activeTab === tab.key ? " active" : ""), onClick: () => { activeTab = tab.key; save(); renderTabs(); renderBody(); } },
-        h("i", { class: "fa-solid " + tab.icon, style: { color: tab.color } }), " " + t(tab.label)));
+        h("i", { class: "fa-solid " + tab.icon, "aria-hidden": "true", style: { color: tab.color } }), " " + t(tab.label)));
     });
     elTabs.appendChild(h("button", {
       class: "calc-sync-btn", disabled: syncing, onClick: syncRecords,
       title: t("Set the mastery fields to the current highest Trove & Geode Mastery in the game"),
     },
-      h("i", { class: "fa-solid " + (syncing ? "fa-spinner fa-spin" : "fa-arrows-rotate") }),
+      h("i", { class: "fa-solid " + (syncing ? "fa-spinner fa-spin" : "fa-arrows-rotate"), "aria-hidden": "true" }),
       " " + t(syncing ? "Syncing..." : "Sync records")));
   }
 
   // Generic input row (slider + number OR switch)
   function calcItem(item, cfg) {
     // cfg: { min, max, step, badge, onInput, sliderMax, numberMax }
+    const name = cfg.title || t(item.name);
     const header = h("div", { class: "calc-item-header" },
-      h("span", {}, cfg.title || t(item.name)),
+      h("span", {}, name),
       h("span", { class: "calc-badge" }, cfg.badge()));
     let control;
     if (item.type && item.type.includes("switch")) {
-      const c = h("input", { type: "checkbox" });
+      const c = h("input", { type: "checkbox", "aria-label": name });
       c.checked = !!item.currentValue;
       c.addEventListener("change", (e) => { item.currentValue = e.target.checked; cfg.onInput(); });
       control = h("label", { class: "calc-switch" }, c, h("span", { class: "calc-switch-track" }));
     } else {
       const lo = cfg.min, hi = cfg.sliderMax;
-      const range = h("input", { class: "calc-slider", type: "range", min: lo, max: hi, step: cfg.step || 1, value: item.currentValue, style: { "--val-pct": sliderFill(item.currentValue, lo, hi) } });
-      const number = h("input", { class: "calc-number", type: "number", min: lo, max: cfg.numberMax, step: cfg.step || 1, value: item.currentValue });
+      const range = h("input", { class: "calc-slider", type: "range", min: lo, max: hi, step: cfg.step || 1, value: item.currentValue, "aria-label": name, style: { "--val-pct": sliderFill(item.currentValue, lo, hi) } });
+      const number = h("input", { class: "calc-number", type: "number", min: lo, max: cfg.numberMax, step: cfg.step || 1, value: item.currentValue, "aria-label": name });
       const sync = (v, fromNumber) => {
         item.currentValue = v;
         range.style.setProperty("--val-pct", sliderFill(v, lo, hi));
@@ -311,17 +312,17 @@
   function masteryBox(val, icon, label, color) {
     return h("div", { class: "calc-mastery-box" },
       h("span", { class: "calc-mastery-val", style: color ? { color } : null }, val),
-      h("span", { class: "calc-mastery-label" }, h("i", { class: "fa-solid " + icon }), " " + t(label)));
+      h("span", { class: "calc-mastery-label" }, h("i", { class: "fa-solid " + icon, "aria-hidden": "true" }), " " + t(label)));
   }
   function masterySlider(label, icon, color, badge, value, sliderMax, numberMax, onInput) {
-    const range = h("input", { class: "calc-slider", type: "range", min: 0, max: sliderMax, value, style: { "--val-pct": sliderFill(value, 0, sliderMax) } });
-    const number = h("input", { class: "calc-number", type: "number", min: 0, max: numberMax, value });
+    const range = h("input", { class: "calc-slider", type: "range", min: 0, max: sliderMax, value, "aria-label": t(label), style: { "--val-pct": sliderFill(value, 0, sliderMax) } });
+    const number = h("input", { class: "calc-number", type: "number", min: 0, max: numberMax, value, "aria-label": t(label) });
     const sync = (v) => { range.style.setProperty("--val-pct", sliderFill(v, 0, sliderMax)); onInput(v); };
     range.addEventListener("input", (e) => { number.value = e.target.value; sync(Number(e.target.value)); });
     number.addEventListener("input", (e) => { range.value = clampN(Number(e.target.value) || 0, 0, sliderMax); sync(Number(e.target.value) || 0); });
     return h("div", { class: "calc-item accent", style: { "--calc-accent": color } },
       h("div", { class: "calc-item-header" },
-        h("span", {}, h("i", { class: "fa-solid " + icon, style: { color } }), " " + t(label)),
+        h("span", {}, h("i", { class: "fa-solid " + icon, "aria-hidden": "true", style: { color } }), " " + t(label)),
         h("span", { class: "calc-badge" }, t(badge))),
       h("div", { class: "calc-slider-wrap" }, range, number));
   }
@@ -354,17 +355,17 @@
     elBody.appendChild(grid);
   }
   function starChartItem() {
-    const input = h("input", { class: "calc-number calc-sc-input", type: "text", value: starChartCode, placeholder: t("Paste a star-chart build code") });
+    const input = h("input", { class: "calc-number calc-sc-input", type: "text", value: starChartCode, "aria-label": t("Star Chart build code"), placeholder: t("Paste a star-chart build code") });
     input.addEventListener("input", (e) => { starChartCode = e.target.value.trim(); save(); scheduleStarChart(); });
     const item = h("div", { class: "calc-item accent", style: { "--calc-accent": "#ff9800" } },
       h("div", { class: "calc-item-header" },
-        h("span", {}, h("i", { class: "fa-solid fa-chart-network", style: { color: "#ff9800" } }), " " + t("Star Chart")),
+        h("span", {}, h("i", { class: "fa-solid fa-chart-network", "aria-hidden": "true", style: { color: "#ff9800" } }), " " + t("Star Chart")),
         h("span", { class: "calc-badge" }, t("MF only"))),
       h("div", { class: "calc-sc-controls" }, input));
     if (starChartCode) {
       const bd = h("div", { class: "calc-sc-breakdown" });
       if (starChartMf.error) {
-        bd.appendChild(h("span", { class: "err" }, h("i", { class: "fa-solid fa-triangle-exclamation" }), " " + t("Invalid build code")));
+        bd.appendChild(h("span", { class: "err" }, h("i", { class: "fa-solid fa-triangle-exclamation", "aria-hidden": "true" }), " " + t("Invalid build code")));
       } else {
         const parts = [];
         if (starChartMf.flat > 0) parts.push("+" + num(starChartMf.flat));

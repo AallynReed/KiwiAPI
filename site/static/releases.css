@@ -56,7 +56,7 @@
   border: 1px solid color-mix(in oklab, var(--accent-blue) 26%, var(--bg-line));
 }
 .rel-plat-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.1rem; }
-.rel-plat-ver { font-size: .82rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.rel-plat-ver { font-size: .82rem; color: var(--text-mute); font-variant-numeric: tabular-nums; }
 .rel-plat-assets { display: flex; flex-direction: column; gap: 8px; }
 .rel-dl {
   display: flex; align-items: center; gap: 10px;
@@ -69,15 +69,15 @@
 .rel-dl i { color: var(--accent-blue); }
 .rel-dl-body { min-width: 0; flex: 1; display: flex; flex-direction: column; }
 .rel-dl-name { font-size: .86rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rel-dl-meta { font-size: .74rem; color: var(--text-soft); }
-.rel-plat-empty { font-size: .86rem; color: var(--text-soft); }
+.rel-dl-meta { font-size: .74rem; color: var(--text-mute); }
+.rel-plat-empty { font-size: .86rem; color: var(--text-mute); }
 
 /* ── Two-column grid ───────────────────────────────────────────────── */
 .rel-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 28px; align-items: start; }
 .rel-col-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .rel-col-head h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; margin: 0; }
-.rel-col-note { color: var(--text-soft); font-size: .82rem; }
-.rel-loading, .rel-empty { color: var(--text-soft); font-size: .9rem; padding: 6px 2px; }
+.rel-col-note { color: var(--text-mute); font-size: .82rem; }
+.rel-loading, .rel-empty { color: var(--text-mute); font-size: .9rem; padding: 6px 2px; }
 
 /* ── Release history (accordion) ───────────────────────────────────── */
 .rel-releases { display: flex; flex-direction: column; gap: 10px; }
@@ -94,8 +94,8 @@
 }
 .rel-badge-release { color: var(--accent-green, #5fd08a); background: color-mix(in oklab, var(--accent-green, #5fd08a) 14%, transparent); }
 .rel-badge-beta { color: var(--accent-orange); background: color-mix(in oklab, var(--accent-orange) 14%, transparent); }
-.rel-release-date { margin-left: auto; font-size: .78rem; color: var(--text-soft); }
-.rel-release-caret { color: var(--text-soft); transition: transform .15s ease; }
+.rel-release-date { margin-left: auto; font-size: .78rem; color: var(--text-mute); }
+.rel-release-caret { color: var(--text-mute); transition: transform .15s ease; }
 .rel-release[open] .rel-release-caret { transform: rotate(180deg); }
 .rel-release-body { padding: 0 16px 16px; border-top: 1px solid var(--bg-line); }
 .rel-release-name { font-weight: 600; margin: 14px 0 8px; }
@@ -105,7 +105,7 @@
 .rel-notes li { margin: 3px 0; }
 .rel-notes code { background: var(--bg-deep); padding: 1px 5px; border-radius: 5px; font-size: .85em; }
 .rel-notes a { color: var(--accent-blue); }
-.rel-notes-empty { font-size: .86rem; color: var(--text-soft); font-style: italic; }
+.rel-notes-empty { font-size: .86rem; color: var(--text-mute); font-style: italic; }
 .rel-release-assets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .rel-asset {
   display: inline-flex; align-items: center; gap: 7px;
@@ -129,7 +129,7 @@
 .rel-cl-type {
   flex-shrink: 0; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
   padding: 2px 6px; border-radius: 6px; min-width: 44px; text-align: center;
-  color: var(--text-soft); background: color-mix(in oklab, var(--bg-line) 55%, transparent);
+  color: var(--text-mute); background: color-mix(in oklab, var(--bg-line) 55%, transparent);
 }
 .rel-cl-type.t-feat { color: var(--accent-green, #5fd08a); background: color-mix(in oklab, var(--accent-green, #5fd08a) 14%, transparent); }
 .rel-cl-type.t-fix { color: var(--accent-orange); background: color-mix(in oklab, var(--accent-orange) 14%, transparent); }
@@ -137,7 +137,7 @@
 .rel-cl-msg { color: var(--text-mute); min-width: 0; }
 .rel-cl-msg a { color: var(--text); text-decoration: none; }
 .rel-cl-msg a:hover { color: var(--accent-blue); }
-.rel-cl-note { font-size: .8rem; color: var(--text-soft); font-style: italic; margin-top: 4px; }
+.rel-cl-note { font-size: .8rem; color: var(--text-mute); font-style: italic; margin-top: 4px; }
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 @media (max-width: 860px) {

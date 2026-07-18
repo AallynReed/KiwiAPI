@@ -62,7 +62,7 @@
   border-color: color-mix(in oklab, var(--accent-blue) 26%, var(--bg-line));
 }
 .cal-reset-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.cal-reset-label { font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-soft); }
+.cal-reset-label { font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-mute); }
 .cal-reset-val {
   font-family: 'Space Grotesk', SFMono-Regular, Consolas, monospace;
   font-size: 1.4rem; font-weight: 700; line-height: 1;
@@ -81,8 +81,8 @@
   font-size: clamp(1.3rem, 3vw, 1.7rem);
   margin: 0;
 }
-.cal-block-note { color: var(--text-soft); font-size: .86rem; }
-.cal-loading, .cal-empty { color: var(--text-soft); font-size: .92rem; padding: 8px 2px; }
+.cal-block-note { color: var(--text-mute); font-size: .86rem; }
+.cal-loading, .cal-empty { color: var(--text-mute); font-size: .92rem; padding: 8px 2px; }
 
 /* ── Merchant / biome cards ────────────────────────────────────────── */
 .cal-merchants {
@@ -114,7 +114,7 @@
 .cal-merchant-badge {
   font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
   padding: 3px 9px; border-radius: 999px;
-  color: var(--text-soft);
+  color: var(--text-mute);
   background: color-mix(in oklab, var(--bg-line) 60%, transparent);
   border: 1px solid var(--bg-line);
 }
@@ -159,14 +159,14 @@
 }
 .cal-buff-kicker {
   display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
-  color: var(--text-soft); margin-bottom: 6px;
+  color: var(--text-mute); margin-bottom: 6px;
 }
 .cal-buff-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 10px; }
 .cal-buff-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
 .cal-buff-list li { font-size: .86rem; color: var(--text-mute); padding-left: 16px; position: relative; }
 .cal-buff-list li::before { content: "›"; position: absolute; left: 2px; color: var(--buff-accent); }
 .cal-buff-chaos { --buff-accent: var(--accent-orange); }
-.cal-buff-when { margin-top: 12px; font-size: .84rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.cal-buff-when { margin-top: 12px; font-size: .84rem; color: var(--text-mute); font-variant-numeric: tabular-nums; }
 
 /* ── Events ────────────────────────────────────────────────────────── */
 .cal-events {
@@ -193,7 +193,7 @@
 }
 .cal-event-body { min-width: 0; flex: 1; }
 .cal-event-name { font-weight: 600; font-size: .98rem; margin-bottom: 4px; }
-.cal-event-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .8rem; color: var(--text-soft); }
+.cal-event-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .8rem; color: var(--text-mute); }
 .cal-event-cat {
   font-size: .68rem; text-transform: uppercase; letter-spacing: .05em;
   padding: 2px 8px; border-radius: 999px;
@@ -205,7 +205,7 @@
 .cal-events-group-title {
   grid-column: 1 / -1;
   font-size: .74rem; text-transform: uppercase; letter-spacing: .1em;
-  color: var(--text-soft); margin: 6px 0 -2px;
+  color: var(--text-mute); margin: 6px 0 -2px;
 }
 
 /* ── Modal ─────────────────────────────────────────────────────────── */
@@ -230,7 +230,7 @@
 }
 .cal-modal-close:hover { color: var(--text); }
 .cal-modal-head { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; margin: 0 40px 14px 0; }
-.cal-modal-note { color: var(--text-soft); font-size: .88rem; margin: 0 0 14px; }
+.cal-modal-note { color: var(--text-mute); font-size: .88rem; margin: 0 0 14px; }
 
 .cal-rot { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .cal-rot-row {
@@ -241,7 +241,7 @@
 .cal-rot-row.is-now { border-color: color-mix(in oklab, var(--buff-accent) 55%, var(--bg-line)); background: color-mix(in oklab, var(--buff-accent) 10%, var(--bg-deep)); }
 .cal-rot-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .cal-rot-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
-.cal-rot-when { font-size: .82rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.cal-rot-when { font-size: .82rem; color: var(--text-mute); font-variant-numeric: tabular-nums; }
 .cal-rot-when.is-now { color: var(--accent-green, #5fd08a); font-weight: 600; }
 .cal-rot-buffs { margin-top: 6px; font-size: .82rem; color: var(--text-mute); }
 
@@ -250,7 +250,7 @@
 .cal-sched-row.is-now { border-color: color-mix(in oklab, var(--accent) 55%, var(--bg-line)); }
 .cal-sched-time { display: flex; align-items: center; gap: 8px; justify-content: space-between; font-size: .86rem; }
 .cal-sched-now { font-size: .68rem; font-weight: 700; text-transform: uppercase; color: var(--accent-green, #5fd08a); }
-.cal-sched-state { font-size: .72rem; color: var(--text-soft); text-transform: capitalize; }
+.cal-sched-state { font-size: .72rem; color: var(--text-mute); text-transform: capitalize; }
 .cal-sched-biomes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 
 /* ── Responsive ────────────────────────────────────────────────────── */

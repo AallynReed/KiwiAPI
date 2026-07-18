@@ -509,8 +509,11 @@
     updateWorld(new Date(nowMs()));
     tick();
     syncTime();            // async; corrects the offset + reset times when it lands
-    setInterval(tick, 250);          // 4/s keeps the second hand from stuttering
+    // Pause the per-tick redraw while the tab is hidden (nothing is visible to
+    // update); catch up immediately on return so the clock never shows stale time.
+    setInterval(() => { if (!document.hidden) tick(); }, 250);  // 4/s = smooth second hand
     setInterval(syncTime, 60000);    // re-anchor + refresh reset countdowns
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
 
     const dt = $('srv-dt'), sel = $('srv-tz'), nowBtn = $('srv-now'), pCopy = $('srv-dc-copy');
     if (dt) dt.addEventListener('input', recompute);

@@ -13,7 +13,7 @@
     --text-main: #ffffff;
     --text-muted: #a3adc2;
     --text-dim: #79839a;
-    --accent-blue: #5ec6ff;
+    --accent-blue: #58a6ff;
     --accent-orange: #ff9800;
     --accent-yellow: #fbc02d;
     --accent-green: #46d39a;
@@ -26,7 +26,9 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+}
 
 body, html {
     margin: 0;
@@ -144,12 +146,13 @@ a:hover { text-decoration: underline; }
     outline: none; transition: border-color 0.18s;
 }
 .sidebar-search input:focus { border-color: var(--accent-blue); }
+.sidebar-search input:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 .sidebar-search input::placeholder { color: var(--text-dim); }
 
 .nav-group { margin-bottom: 22px; }
 .nav-group-title {
     font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1.2px; color: var(--text-dim);
+    letter-spacing: 1.2px; color: var(--text-muted);
     padding: 0 12px 8px; display: flex; align-items: center; gap: 8px;
 }
 .nav-group ul { list-style: none; margin: 0; padding: 0; }
@@ -169,7 +172,7 @@ a:hover { text-decoration: underline; }
 }
 .nav-group li a.active i { color: var(--accent-blue); }
 .nav-empty {
-    display: none; padding: 12px; color: var(--text-dim); font-size: 0.85rem; text-align: center;
+    display: none; padding: 12px; color: var(--text-muted); font-size: 0.85rem; text-align: center;
 }
 
 /* --------------------------------------------------------------- Content */
@@ -291,7 +294,7 @@ code {
     border-radius: 12px; border: 1px solid var(--border-color);
     box-shadow: 0 18px 40px rgba(0,0,0,0.45);
 }
-.shot figcaption { margin-top: 10px; color: var(--text-dim); font-size: 0.85rem; text-align: center; }
+.shot figcaption { margin-top: 10px; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
 
 /* Feature pill list */
 .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
@@ -344,7 +347,7 @@ code {
 .docs-footer {
     border-top: 1px solid var(--border-color);
     margin-top: 60px; padding-top: 28px;
-    color: var(--text-dim); font-size: 0.9rem;
+    color: var(--text-muted); font-size: 0.9rem;
     display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center;
 }
 .docs-footer a { color: var(--text-muted); }
@@ -578,7 +581,7 @@ code {
 }
 .docs-footer .docs-footer-links a:hover { color: #fff; }
 .docs-footer .docs-footer-links i { color: var(--accent-blue); }
-.docs-footer .docs-footer-meta { font-size: 0.82rem; color: var(--text-dim); }
+.docs-footer .docs-footer-meta { font-size: 0.82rem; color: var(--text-muted); }
 
 /* Skip-to-content link - see style.css for the full rationale. Hidden until
    focused, then slides down so keyboard users can bypass the navbar. */
@@ -593,3 +596,17 @@ code {
     transition: top 0.18s ease;
 }
 .skip-link:focus { top: 0; outline: 2px solid #fff; outline-offset: 2px; }
+
+/* ------------------------------------------------------------ Reduced motion
+   docs.html ships its own CSS and does NOT load style.css, so it misses the
+   global reduced-motion guard. Neutralize this file's transitions, animations,
+   and smooth-scroll for users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}

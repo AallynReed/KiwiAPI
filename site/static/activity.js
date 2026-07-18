@@ -289,8 +289,10 @@
     overlay.addEventListener('touchend', onLeave);
 
     const last = points[points.length - 1];
-    svg.setAttribute('aria-label',
-      t('Active-player trend for this period; latest ~{n} per hour').replace('{n}', intl(last.active)));
+    const summary = t('Active-player trend for this period; latest ~{n} per hour').replace('{n}', intl(last.active));
+    svg.setAttribute('aria-label', summary);
+    const liveEl = document.getElementById('act-live-status');
+    if (liveEl) liveEl.textContent = summary;
   }
 
   // ─── Period <-> URL ────────────────────────────────────────────────
@@ -315,11 +317,14 @@
   async function loadPeriod(period, reflect) {
     state.period = period;
     if (reflect) reflectUrl(period);
-    // Reflect the active button.
+    // Reflect the active button + point the shared panel at it.
+    const panel = document.getElementById('act-chart');
     document.querySelectorAll('#act-periods button').forEach((b) => {
       const on = b.dataset.period === period;
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
+      if (on && panel && b.id) panel.setAttribute('aria-labelledby', b.id);
     });
 
     if (state.series[period]) {
@@ -346,6 +351,21 @@
       tabs.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-period]');
         if (btn) loadPeriod(btn.dataset.period, true);   // reflect into the URL
+      });
+      // Left/Right/Home/End roving between the period tabs (WAI-ARIA tablist).
+      tabs.addEventListener('keydown', (e) => {
+        const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+        if (!keys.includes(e.key)) return;
+        const items = Array.from(tabs.querySelectorAll('button[data-period]'));
+        const i = items.indexOf(document.activeElement);
+        if (i < 0) return;
+        e.preventDefault();
+        const next = e.key === 'Home' ? 0
+          : e.key === 'End' ? items.length - 1
+          : e.key === 'ArrowLeft' ? (i - 1 + items.length) % items.length
+          : (i + 1) % items.length;
+        items[next].focus();
+        loadPeriod(items[next].dataset.period, true);
       });
     }
     // Manual #hash edits / back-forward jump to that period.

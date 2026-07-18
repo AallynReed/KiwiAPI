@@ -1322,7 +1322,7 @@
     const m = openModal(t('Commit files'), `<form class="mp-form" id="mp-commit-form">
       <label class="mp-form-field"><span>${esc(t('Branch'))}</span><select name="branch">${branches}</select></label>
       <div class="mp-form-field"><span>${esc(t('Files'))}</span>
-        <div class="mp-drop" id="mp-drop"><i class="fa-solid fa-cloud-arrow-up"></i> ${esc(t('Drop files here or click to choose'))}</div>
+        <div class="mp-drop" id="mp-drop" tabindex="0" role="button" aria-label="${esc(t('Drop files here or click to choose'))}"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> ${esc(t('Drop files here or click to choose'))}</div>
         <input type="file" id="mp-files" multiple hidden>
         <div class="mp-droplist" id="mp-droplist"></div>
       </div>
@@ -1350,6 +1350,9 @@
       refresh();
     };
     drop.addEventListener('click', () => input.click());
+    drop.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); input.click(); }
+    });
     input.addEventListener('change', () => add(input.files));
     ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('drag'); }));
     ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, () => drop.classList.remove('drag')));

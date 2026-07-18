@@ -32,8 +32,8 @@
         </div>
 
         <div class="sidebar-search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="navSearch" placeholder="Search screens & classes…" data-i18n-placeholder autocomplete="off" spellcheck="false">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input type="text" id="navSearch" placeholder="Search screens & classes…" data-i18n-placeholder aria-label="Search screens & classes" autocomplete="off" spellcheck="false">
         </div>
 
         <nav id="sideNav">
@@ -43,12 +43,12 @@
 
     <!-- ============================ CONTENT ============================ -->
     <main id="docBody" class="content">
-        <div class="doc-loading"><i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n>Loading…</span></div>
+        <div class="doc-loading"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> <span data-i18n>Loading…</span></div>
     </main>
 </div>
 
-<button id="to-top" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
-<button id="menuBtn" class="docs-fab" aria-label="Browse screens" data-i18n-title title="Browse screens"><i class="fa-solid fa-bars"></i></button>
+<button id="to-top" aria-label="Back to top"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
+<button id="menuBtn" class="docs-fab" aria-label="Browse screens" data-i18n-title title="Browse screens"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
 
 {% include "partials/support_widget.html" %}
 

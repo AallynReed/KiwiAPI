@@ -21,6 +21,8 @@
     var e = document.createElement(tag);
     if (cls) e.className = cls;
     if (txt != null) e.textContent = txt;
+    // Every <i> we build is a decorative FontAwesome glyph - hide it from AT.
+    if (tag === "i") e.setAttribute("aria-hidden", "true");
     return e;
   }
   // Biome pill with its icon. Accepts {name, icon} (current) or a bare string
@@ -74,7 +76,14 @@
   var modalEl = document.getElementById("dash-modal");
   var modalHead = document.getElementById("dash-modal-head");
   var modalBody = document.getElementById("dash-modal-body");
-  function closeModal() { if (modalEl) { modalEl.hidden = true; document.body.style.overflow = ""; } }
+  var modalCard = modalEl ? modalEl.querySelector(".dash-modal-card") : null;
+  var modalRelease = null;   // trapFocus release() while the modal is open
+  function closeModal() {
+    if (!modalEl) return;
+    modalEl.hidden = true;
+    document.body.style.overflow = "";
+    if (modalRelease) { modalRelease(); modalRelease = null; }
+  }
   function openModal(headSetup, bodyNode) {
     if (!modalEl) return;
     modalHead.textContent = ""; modalBody.textContent = "";
@@ -83,10 +92,13 @@
     if (bodyNode) modalBody.appendChild(bodyNode);
     modalEl.hidden = false;
     document.body.style.overflow = "hidden";
+    // Move focus in, trap Tab, restore focus on release (Escape closes).
+    if (window.BTTUtil && window.BTTUtil.trapFocus && modalCard) {
+      modalRelease = window.BTTUtil.trapFocus(modalCard, { onEscape: closeModal });
+    }
   }
   if (modalEl) {
     modalEl.addEventListener("click", function (e) { if (e.target.closest("[data-close]")) closeModal(); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
   }
   function clickable(node, fn) {
     node.setAttribute("role", "button");
@@ -393,6 +405,7 @@
     if (toggle) toggle.addEventListener("click", function () {
       showShop = !showShop;
       toggle.classList.toggle("active", showShop);
+      toggle.setAttribute("aria-pressed", showShop ? "true" : "false");
       var lbl = toggle.querySelector("span"), ic = toggle.querySelector("i");
       if (lbl) lbl.textContent = showShop ? tr("Shop offers shown") : tr("Shop offers hidden");
       if (ic) ic.className = showShop ? "fa-solid fa-store" : "fa-solid fa-store-slash";
@@ -451,12 +464,39 @@
         done(cache[platform]);
       }).catch(function () { box.textContent = ""; box.appendChild(el("p", "dash-empty", tr("Couldn't load videos."))); });
     }
-    if (tabs) tabs.addEventListener("click", function (e) {
-      var btn = e.target.closest("button[data-vp]");
-      if (!btn) return;
-      tabs.querySelectorAll("button").forEach(function (b) { b.classList.toggle("active", b === btn); });
-      render(btn.dataset.vp);
-    });
+    if (tabs) {
+      var tabBtns = Array.prototype.slice.call(tabs.querySelectorAll("button[data-vp]"));
+      tabs.setAttribute("role", "tablist");
+      if (box) box.setAttribute("role", "tabpanel");
+      var selectTab = function (btn) {
+        tabBtns.forEach(function (b) {
+          var on = b === btn;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-selected", on ? "true" : "false");
+          b.tabIndex = on ? 0 : -1;
+        });
+        if (box) box.setAttribute("aria-labelledby", btn.id);
+        render(btn.dataset.vp);
+      };
+      tabBtns.forEach(function (b, i) {
+        if (!b.id) b.id = "dash-vp-" + b.dataset.vp;
+        b.setAttribute("role", "tab");
+        b.setAttribute("aria-controls", "dash-videos");
+        var on = b.classList.contains("active");
+        b.setAttribute("aria-selected", on ? "true" : "false");
+        b.tabIndex = on ? 0 : -1;
+        if (on && box) box.setAttribute("aria-labelledby", b.id);
+        b.addEventListener("click", function () { selectTab(b); });
+        b.addEventListener("keydown", function (e) {
+          var next = null;
+          if (e.key === "ArrowRight" || e.key === "ArrowDown") next = tabBtns[(i + 1) % tabBtns.length];
+          else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = tabBtns[(i - 1 + tabBtns.length) % tabBtns.length];
+          else if (e.key === "Home") next = tabBtns[0];
+          else if (e.key === "End") next = tabBtns[tabBtns.length - 1];
+          if (next) { e.preventDefault(); next.focus(); selectTab(next); }
+        });
+      });
+    }
     render("youtube");
     // Re-render the active platform on language switch. render() reads from the
     // per-platform cache (already fetched), so no duplicate network calls.
@@ -623,22 +663,54 @@
       return Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate() + dayOffset);
     }
 
+    // toLocaleDateString/toLocaleString rebuild an Intl formatter on every call,
+    // which is the calendar's per-day / per-bar cost. Cache one formatter per
+    // option-set (runtime locale is fixed per session) and reuse it.
+    var _dtfCache = {};
+    function _dtf(opts) {
+      var key = (opts.timeZone || "") + "|" + (opts.weekday || "") + "|" + (opts.month || "")
+        + "|" + (opts.day || "") + "|" + (opts.hour || "") + "|" + (opts.minute || "") + "|" + (opts.year || "");
+      return _dtfCache[key] || (_dtfCache[key] = new Intl.DateTimeFormat(undefined, opts));
+    }
     function fmtDay(ms, options) {
       var opts = state.timeMode === "trove" ? Object.assign({ timeZone: "UTC" }, options) : options;
-      return new Date(ms).toLocaleDateString(undefined, opts);
+      return _dtf(opts).format(ms);
     }
     function fmtRange(s, e) {
-      var o = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
-      return new Date(s).toLocaleString(undefined, o) + " → " + new Date(e).toLocaleString(undefined, o);
+      var f = _dtf({ month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      return f.format(s) + " → " + f.format(e);
     }
 
-    function chip(label, active, onClick, icon) {
+    function chip(label, active, onClick, icon, toggle) {
       var b = el("button", "calendar-chip-btn" + (active ? " active" : ""));
       b.type = "button";
+      // Filter/mode chips are on/off toggles -> expose their state. Action
+      // chips (Today, jump-to) pass toggle falsy and stay plain buttons.
+      if (toggle) b.setAttribute("aria-pressed", active ? "true" : "false");
       if (icon) { b.appendChild(el("i", "fa-solid " + icon)); b.appendChild(document.createTextNode(" ")); }
       b.appendChild(document.createTextNode(label));
       b.addEventListener("click", onClick);
       return b;
+    }
+
+    // Roving-tabindex + Left/Right/Home/End arrow nav across a chip group.
+    function roveGroup(groupEl) {
+      var items = Array.prototype.slice.call(groupEl.querySelectorAll("button.calendar-chip-btn"));
+      if (!items.length) return;
+      items.forEach(function (it, i) { it.tabIndex = i === 0 ? 0 : -1; });
+      function go(i) {
+        i = (i + items.length) % items.length;
+        items.forEach(function (it, j) { it.tabIndex = j === i ? 0 : -1; });
+        items[i].focus();
+      }
+      items.forEach(function (it, i) {
+        it.addEventListener("keydown", function (e) {
+          if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); go(i + 1); }
+          else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); go(i - 1); }
+          else if (e.key === "Home") { e.preventDefault(); go(0); }
+          else if (e.key === "End") { e.preventDefault(); go(items.length - 1); }
+        });
+      });
     }
 
     function applyColor(bar, color) {
@@ -738,13 +810,14 @@
       var bar = el("div", "calendar-toolbar");
       var left = el("div", "calendar-toolbar-left");
       left.appendChild(chip(tr("Today"), false, function () { centerOnToday(true); }, "fa-location-crosshairs"));
-      left.appendChild(chip(tr("Full"), state.filter === "full", function () { setFilter("full"); }));
-      left.appendChild(chip(tr("Now"), state.filter === "now", function () { setFilter("now"); }));
-      left.appendChild(chip(tr("Next 24h"), state.filter === "next", function () { setFilter("next"); }));
+      left.appendChild(chip(tr("Full"), state.filter === "full", function () { setFilter("full"); }, null, true));
+      left.appendChild(chip(tr("Now"), state.filter === "now", function () { setFilter("now"); }, null, true));
+      left.appendChild(chip(tr("Next 24h"), state.filter === "next", function () { setFilter("next"); }, null, true));
       var right = el("div", "calendar-toolbar-right");
-      right.appendChild(chip(tr("Local time"), state.timeMode === "local", function () { setMode("local"); }));
-      right.appendChild(chip(tr("Trove time"), state.timeMode === "trove", function () { setMode("trove"); }));
+      right.appendChild(chip(tr("Local time"), state.timeMode === "local", function () { setMode("local"); }, null, true));
+      right.appendChild(chip(tr("Trove time"), state.timeMode === "trove", function () { setMode("trove"); }, null, true));
       bar.appendChild(left); bar.appendChild(right);
+      roveGroup(left); roveGroup(right);
       root.appendChild(bar);
 
       // Jump-to row
@@ -752,6 +825,7 @@
       [["corruxion", "Corruxion"], ["fluxion", "Fluxion"], ["mana", tr("Wild Mana")], ["stampy", "Stampy"]]
         .forEach(function (j) { jump.appendChild(chip(j[1], false, function () { jumpTo(j[0]); })); });
       jump.appendChild(el("span", "calendar-helper-text", tr("Drag to pan • scroll to move")));
+      roveGroup(jump);
       root.appendChild(jump);
 
       // Timeline wrapper
@@ -761,7 +835,19 @@
       line.style.left = (todayPx + LABEL_W) + "px";
       wrap.appendChild(line);
 
-      // Month + day headers
+      // Month + day headers.
+      // Weekday short-names depend only on the (local) day-of-week, so there are
+      // exactly 7 distinct values. Formatting all 730 days through Intl
+      // (toLocaleDateString) was the dominant render cost; precompute the 7
+      // labels once and index by getDay() for byte-identical output.
+      // Index by the same timezone fmtDay formats in (UTC in Trove-time mode),
+      // so the label matches the day it's placed on.
+      var troveTz = state.timeMode === "trove";
+      var weekdayLabels = [];
+      for (var w = 0; w < 7; w++) {
+        var wMs = startTs + w * DAY_MS, wDate = new Date(wMs);
+        weekdayLabels[troveTz ? wDate.getUTCDay() : wDate.getDay()] = fmtDay(wMs, { weekday: "short" });
+      }
       var months = [], days = [], curKey = null, cur = null;
       for (var i = 0; i < TOTAL_DAYS; i++) {
         var ms = startTs + i * DAY_MS, dd = new Date(ms);
@@ -774,7 +860,7 @@
           cur = { name: fmtDay(ms, { month: "long" }), year: state.timeMode === "trove" ? dd.getUTCFullYear() : dd.getFullYear(), days: 0 };
         }
         cur.days++;
-        days.push({ isToday: i === 365, num: state.timeMode === "trove" ? dd.getUTCDate() : dd.getDate(), weekday: fmtDay(ms, { weekday: "short" }) });
+        days.push({ isToday: i === 365, num: state.timeMode === "trove" ? dd.getUTCDate() : dd.getDate(), weekday: weekdayLabels[troveTz ? dd.getUTCDay() : dd.getDay()] });
       }
       if (cur) months.push(cur);
 

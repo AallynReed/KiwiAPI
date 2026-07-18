@@ -66,7 +66,7 @@
   background: rgba(255,255,255,.03);
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 16px;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
   text-decoration: none;
   transition: transform .15s ease, border-color .15s ease, background .15s ease;
 }
@@ -127,7 +127,7 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   margin: 0 0 18px;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
 }
 
 /* "Where the money goes" - icon | (title + paragraph) grid */
@@ -154,7 +154,7 @@
   margin: 0 0 4px;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
   letter-spacing: -0.01em;
 }
 .sp-bullet p {
@@ -179,7 +179,7 @@
   background: rgba(255,255,255,.02);
   border: 1px solid rgba(255,255,255,.06);
   border-radius: 12px;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
   text-decoration: none;
   transition: border-color .12s ease, background .12s ease;
 }
@@ -253,7 +253,7 @@ button.sp-free-card.copied {
   border-radius: 999px;
   font-size: .95rem;
   font-weight: 600;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
 }
 .sp-supporter::before {
   content: "\2665";              /* heart */

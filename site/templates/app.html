@@ -83,7 +83,7 @@
             const file = (img.getAttribute('src') || '').split('/').pop();
             const ph = document.createElement('div');
             ph.className = 'shot-placeholder';
-            ph.innerHTML = '<i class="fa-regular fa-image"></i>'
+            ph.innerHTML = '<i class="fa-regular fa-image" aria-hidden="true"></i>'
                 + '<span data-i18n>' + (img.getAttribute('alt') || 'Screenshot') + '</span>'
                 + '<code>' + file + '</code>';
             img.replaceWith(ph);
@@ -172,7 +172,7 @@
                         </button>
                         <div class="download-panel" id="download-panel" role="menu" aria-label="Choose your platform" hidden>
                             <a class="download-item" data-platform="windows" role="menuitem" target="_blank" rel="noopener" hidden>
-                                <i class="fa-brands fa-windows download-item-icon"></i>
+                                <i class="fa-brands fa-windows download-item-icon" aria-hidden="true"></i>
                                 <div class="download-item-text">
                                     <strong>Windows</strong>
                                     <span class="download-item-version"></span>
@@ -180,7 +180,7 @@
                                 <i class="fa-solid fa-arrow-down download-item-arrow" aria-hidden="true"></i>
                             </a>
                             <a class="download-item" data-platform="linux" role="menuitem" target="_blank" rel="noopener" hidden>
-                                <i class="fa-brands fa-linux download-item-icon"></i>
+                                <i class="fa-brands fa-linux download-item-icon" aria-hidden="true"></i>
                                 <div class="download-item-text">
                                     <strong>Linux</strong>
                                     <span class="download-item-version"></span>
@@ -188,7 +188,7 @@
                                 <i class="fa-solid fa-arrow-down download-item-arrow" aria-hidden="true"></i>
                             </a>
                             <a class="download-item" data-platform="android" role="menuitem" target="_blank" rel="noopener" hidden>
-                                <i class="fa-brands fa-android download-item-icon"></i>
+                                <i class="fa-brands fa-android download-item-icon" aria-hidden="true"></i>
                                 <div class="download-item-text">
                                     <strong>Android</strong>
                                     <span class="download-item-version"></span>
@@ -214,12 +214,12 @@
                      go FROM this page. Includes the two new dev links so
                      they're visible above the fold. -->
                 <div class="hero-pills" aria-label="Quick links">
-                    <a class="pill" href="/documentation"><i class="fa-solid fa-book"></i> <span data-i18n>User Guide</span></a>
-                    <a class="pill pill-accent" href="https://dev.aallyn.net"><i class="fa-solid fa-code"></i> <span data-i18n>Developer Portal</span></a>
-                    <a class="pill pill-accent" href="https://docs.aallyn.net"><i class="fa-solid fa-terminal"></i> <span data-i18n>API Reference</span></a>
-                    <a class="pill" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> <span data-i18n>Source</span></a>
-                    <a class="pill" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> <span data-i18n>Discord</span></a>
-                    {% if discord_install_url %}<a class="pill pill-accent" href="{{ discord_install_url }}" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> <span data-i18n>Add to Discord</span></a>{% endif %}
+                    <a class="pill" href="/documentation"><i class="fa-solid fa-book" aria-hidden="true"></i> <span data-i18n>User Guide</span></a>
+                    <a class="pill pill-accent" href="https://dev.aallyn.net"><i class="fa-solid fa-code" aria-hidden="true"></i> <span data-i18n>Developer Portal</span></a>
+                    <a class="pill pill-accent" href="https://docs.aallyn.net"><i class="fa-solid fa-terminal" aria-hidden="true"></i> <span data-i18n>API Reference</span></a>
+                    <a class="pill" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener"><i class="fa-brands fa-github" aria-hidden="true"></i> <span data-i18n>Source</span></a>
+                    <a class="pill" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener"><i class="fa-brands fa-discord" aria-hidden="true"></i> <span data-i18n>Discord</span></a>
+                    {% if discord_install_url %}<a class="pill pill-accent" href="{{ discord_install_url }}" target="_blank" rel="noopener"><i class="fa-brands fa-discord" aria-hidden="true"></i> <span data-i18n>Add to Discord</span></a>{% endif %}
                 </div>
 
                 <div class="hero-platforms" aria-label="Supported platforms">
@@ -245,7 +245,7 @@
 
             <a class="scroll-cue" href="#explore" aria-label="Scroll to explore the site">
                 <span data-i18n>Scroll</span>
-                <i class="fa-solid fa-chevron-down"></i>
+                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
             </a>
         </section>
 
@@ -402,7 +402,7 @@
              top of - and doubles as a soft pitch for the API Docs link. -->
         <section class="live-strip" id="live" aria-label="Live game data">
             <div class="live-eyebrow">
-                <i class="fa-solid fa-circle live-pulse"></i>
+                <i class="fa-solid fa-circle live-pulse" aria-hidden="true"></i>
                 <span data-i18n>Powered by the Kiwi API</span>
                 <a class="live-link" href="https://docs.aallyn.net" data-i18n>view docs →</a>
             </div>
@@ -655,22 +655,22 @@
 
                 <div class="dev-cards">
                     <a class="dev-card" href="https://dev.aallyn.net">
-                        <div class="dev-card-icon"><i class="fa-solid fa-key"></i></div>
+                        <div class="dev-card-icon"><i class="fa-solid fa-key" aria-hidden="true"></i></div>
                         <h3 data-i18n>Developer Portal</h3>
                         <p data-i18n>Sign up, mint API tokens, scope them down, monitor usage. Same account works across every Kiwi service.</p>
-                        <span class="dev-card-cta">dev.aallyn.net <i class="fa-solid fa-arrow-right"></i></span>
+                        <span class="dev-card-cta">dev.aallyn.net <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
                     </a>
                     <a class="dev-card" href="https://docs.aallyn.net">
-                        <div class="dev-card-icon"><i class="fa-solid fa-book-open"></i></div>
+                        <div class="dev-card-icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></div>
                         <h3 data-i18n>API Reference</h3>
                         <p data-i18n>Full interactive OpenAPI reference. Every endpoint, every scope, every response shape - with a paste-and-go LLM-friendly version at <code>/llms.txt</code>.</p>
-                        <span class="dev-card-cta">docs.aallyn.net <i class="fa-solid fa-arrow-right"></i></span>
+                        <span class="dev-card-cta">docs.aallyn.net <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
                     </a>
                     <a class="dev-card" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener">
-                        <div class="dev-card-icon"><i class="fa-brands fa-github"></i></div>
+                        <div class="dev-card-icon"><i class="fa-brands fa-github" aria-hidden="true"></i></div>
                         <h3 data-i18n>Source code</h3>
                         <p data-i18n>The BTT desktop / web app source. MIT-licensed. PRs welcome - read the contributing guide first.</p>
-                        <span class="dev-card-cta">github.com/AallynReed <i class="fa-solid fa-arrow-right"></i></span>
+                        <span class="dev-card-cta">github.com/AallynReed <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
                     </a>
                 </div>
             </div>
@@ -683,7 +683,7 @@
                 <h2 data-i18n>Ready when <span class="grad">you are.</span></h2>
                 <p data-i18n>Install the desktop app for the full suite - or use the browser tools built right into this site, no install needed.</p>
                 <div class="final-actions">
-                    <a class="btn btn-primary" href="#hero"><i class="fa-solid fa-download"></i> <span data-i18n>Download</span></a>
+                    <a class="btn btn-primary" href="#hero"><i class="fa-solid fa-download" aria-hidden="true"></i> <span data-i18n>Download</span></a>
                 </div>
             </div>
         </section>

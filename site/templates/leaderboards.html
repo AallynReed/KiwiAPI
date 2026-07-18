@@ -108,7 +108,11 @@
         <!-- ═══════════════ PLAYER HISTORY PANEL ═══════════════
              Hidden until a search is performed. Renders the player's
              recent (board, anchor, rank, score) hits, newest first. -->
-        <section class="lb-player-panel" id="lb-player-panel" hidden aria-live="polite">
+        <section class="lb-player-panel" id="lb-player-panel" hidden>
+            <!-- Small sr-only live node: the panel itself is not a live region
+                 (it holds a chart + a re-rendered table); this announces just the
+                 loaded player + a one-line summary. -->
+            <p class="sr-only" id="lb-player-status" role="status" aria-live="polite"></p>
             <div class="lb-player-head">
                 <h2 class="lb-player-title">
                     <i class="fa-solid fa-user" aria-hidden="true"></i>

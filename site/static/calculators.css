@@ -29,7 +29,7 @@
   background: var(--bg-deep);
   border: 1px solid var(--bg-line);
   border-radius: var(--radius-sm, 8px);
-  color: var(--text-soft);
+  color: var(--text-mute);
   padding: 9px 16px;
   font-size: .9rem;
   font-weight: 600;
@@ -48,7 +48,7 @@
   background: var(--bg-deep);
   border: 1px solid var(--bg-line);
   border-radius: var(--radius-sm, 8px);
-  color: var(--text-soft);
+  color: var(--text-mute);
   padding: 9px 14px;
   font-size: .85rem;
   font-weight: 600;
@@ -64,8 +64,7 @@
 .calc-header {
   display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
   background: var(--bg-deep);
-  border: 1px solid var(--bg-line);
-  border-left: 4px solid var(--calc-accent);
+  border: 1px solid color-mix(in oklab, var(--calc-accent) 55%, var(--bg-line));
   border-radius: var(--radius-sm, 8px);
   padding: 16px 18px;
   margin-bottom: 18px;
@@ -74,7 +73,7 @@
 .calc-total-label { font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-mute); }
 .calc-total-value { font-size: 2rem; font-family: "Space Grotesk", sans-serif; font-weight: 700; color: var(--calc-accent); line-height: 1.1; }
 .calc-summary-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; align-items: center; }
-.calc-chip { font-size: .78rem; background: var(--bg-card-hi); border: 1px solid var(--bg-line); border-radius: 20px; padding: 4px 11px; color: var(--text-soft); }
+.calc-chip { font-size: .78rem; background: var(--bg-card-hi); border: 1px solid var(--bg-line); border-radius: 20px; padding: 4px 11px; color: var(--text-mute); }
 .calc-chip b { color: var(--text-mute); font-weight: 600; }
 
 .calc-mastery-strip { display: flex; gap: 14px; flex-wrap: wrap; margin-left: auto; }
@@ -91,7 +90,7 @@
   border-radius: var(--radius-sm, 8px);
   padding: 12px;
 }
-.calc-item.accent { border-left: 4px solid var(--calc-accent); }
+.calc-item.accent { border-color: color-mix(in oklab, var(--calc-accent) 55%, var(--bg-line)); }
 .calc-item-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; font-size: .86rem; }
 .calc-item-header > span:first-child { font-weight: 600; color: var(--text); }
 .calc-badge { font-size: .72rem; color: var(--text-mute); background: var(--bg-card-hi); border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
@@ -119,13 +118,14 @@
 .calc-number:focus { outline: none; border-color: var(--calc-accent); }
 .calc-sc-input { width: 100%; text-align: left; }
 .calc-sc-controls { display: flex; flex-direction: column; gap: 8px; }
-.calc-sc-breakdown { margin-top: 8px; font-size: .78rem; color: var(--text-soft); }
+.calc-sc-breakdown { margin-top: 8px; font-size: .78rem; color: var(--text-mute); }
 .calc-sc-breakdown b { color: var(--text-mute); }
 .calc-sc-breakdown .err { color: var(--accent-red); }
 
 /* ── Switch ──────────────────────────────────────────────────────────────── */
 .calc-switch { display: inline-flex; cursor: pointer; }
 .calc-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.calc-switch input:focus-visible + .calc-switch-track { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 .calc-switch-track { width: 42px; height: 22px; border-radius: 12px; background: var(--bg-line); position: relative; transition: background .15s; }
 .calc-switch-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; }
 .calc-switch input:checked + .calc-switch-track { background: var(--calc-accent); }
@@ -135,6 +135,6 @@
 
 /* ── Toast (shared) ──────────────────────────────────────────────────────── */
 .gem-toast-host { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
-.gem-toast { background: var(--bg-card-hi); border: 1px solid var(--bg-line); border-left: 3px solid var(--accent-blue); border-radius: var(--radius-sm, 8px); padding: 10px 16px; color: var(--text); font-size: .88rem; box-shadow: var(--shadow-soft, 0 8px 24px rgba(0,0,0,.4)); transition: opacity .3s, transform .3s; }
-.gem-toast.error { border-left-color: var(--accent-red); }
+.gem-toast { background: var(--bg-card-hi); border: 1px solid color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); border-radius: var(--radius-sm, 8px); padding: 10px 16px; color: var(--text); font-size: .88rem; box-shadow: var(--shadow-soft, 0 8px 24px rgba(0,0,0,.4)); transition: opacity .3s, transform .3s; }
+.gem-toast.error { border-color: color-mix(in oklab, var(--accent-red) 55%, var(--bg-line)); }
 .gem-toast.out { opacity: 0; transform: translateY(8px); }

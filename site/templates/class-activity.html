@@ -53,8 +53,8 @@
              JS toggles the dataset client-side (no refetch). -->
         <div class="cact-viewbar">
             <div class="cact-views" id="cact-views" role="tablist" aria-label="Player filter">
-                <button type="button" data-view="clean" role="tab" class="active" aria-selected="true" data-i18n>Established</button>
-                <button type="button" data-view="raw" role="tab" aria-selected="false" data-i18n>All</button>
+                <button type="button" data-view="clean" role="tab" aria-controls="cact-chart cact-donut" class="active" aria-selected="true" data-i18n>Established</button>
+                <button type="button" data-view="raw" role="tab" aria-controls="cact-chart cact-donut" aria-selected="false" data-i18n>All</button>
             </div>
             <span class="cact-view-hint" id="cact-view-hint"></span>
         </div>
@@ -65,25 +65,28 @@
             <div class="cact-chart-head">
                 <div class="cact-chart-controls">
                     <div class="cact-periods" id="cact-periods" role="tablist" aria-label="Time range">
-                        <button type="button" data-period="1d"  role="tab" aria-selected="false">1D</button>
-                        <button type="button" data-period="7d"  role="tab" class="active" aria-selected="true">7D</button>
-                        <button type="button" data-period="1m"  role="tab" aria-selected="false">1M</button>
-                        <button type="button" data-period="3m"  role="tab" aria-selected="false">3M</button>
-                        <button type="button" data-period="6m"  role="tab" aria-selected="false">6M</button>
-                        <button type="button" data-period="1y"  role="tab" aria-selected="false">1Y</button>
-                        <button type="button" data-period="all" role="tab" aria-selected="false" data-i18n>All</button>
+                        <button type="button" data-period="1d"  id="cact-tab-1d"  role="tab" aria-controls="cact-chart" aria-selected="false">1D</button>
+                        <button type="button" data-period="7d"  id="cact-tab-7d"  role="tab" aria-controls="cact-chart" class="active" aria-selected="true">7D</button>
+                        <button type="button" data-period="1m"  id="cact-tab-1m"  role="tab" aria-controls="cact-chart" aria-selected="false">1M</button>
+                        <button type="button" data-period="3m"  id="cact-tab-3m"  role="tab" aria-controls="cact-chart" aria-selected="false">3M</button>
+                        <button type="button" data-period="6m"  id="cact-tab-6m"  role="tab" aria-controls="cact-chart" aria-selected="false">6M</button>
+                        <button type="button" data-period="1y"  id="cact-tab-1y"  role="tab" aria-controls="cact-chart" aria-selected="false">1Y</button>
+                        <button type="button" data-period="all" id="cact-tab-all" role="tab" aria-controls="cact-chart" aria-selected="false" data-i18n>All</button>
                     </div>
                     <!-- Y-axis metric: player count (default) or each class's % share. -->
                     <div class="cact-periods cact-metrics" id="cact-metrics" role="tablist" aria-label="Chart metric">
-                        <button type="button" data-metric="count" role="tab" class="active" aria-selected="true" data-i18n>Players</button>
-                        <button type="button" data-metric="share" role="tab" aria-selected="false" data-i18n>Share</button>
+                        <button type="button" data-metric="count" role="tab" aria-controls="cact-chart" class="active" aria-selected="true" data-i18n>Players</button>
+                        <button type="button" data-metric="share" role="tab" aria-controls="cact-chart" aria-selected="false" data-i18n>Share</button>
                     </div>
                 </div>
                 <span class="cact-chart-range" id="cact-chart-range"></span>
             </div>
-            <div class="cact-chart" id="cact-chart" aria-live="polite">
+            <!-- Not a live region (redraws on every period/metric/legend change);
+                 the sr-only node below announces the summary once per redraw. -->
+            <div class="cact-chart" id="cact-chart" role="tabpanel" aria-labelledby="cact-tab-7d">
                 <div class="cact-loading" data-i18n>Loading…</div>
             </div>
+            <p class="sr-only" id="cact-live-status" role="status" aria-live="polite"></p>
             <div class="cact-chart-tip" id="cact-chart-tip" hidden></div>
             <div class="cact-legend" id="cact-legend" aria-label="Classes - click to toggle"></div>
         </section>

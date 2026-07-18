@@ -350,9 +350,9 @@
       h("button", { class: "gb-btn-icon", disabled: !builds.length, onClick: exportCsv, title: t("Export to CSV") },
         h("i", { class: "fa-solid fa-file-csv" }), " " + t("Export")),
       h("div", { class: "gb-pager" },
-        h("button", { class: "gb-btn-icon", disabled: page === 0, onClick: () => { page = Math.max(0, page - 1); renderResults(); } }, h("i", { class: "fa-solid fa-chevron-left" })),
+        h("button", { class: "gb-btn-icon", "aria-label": t("Previous page"), disabled: page === 0, onClick: () => { page = Math.max(0, page - 1); renderResults(); } }, h("i", { class: "fa-solid fa-chevron-left", "aria-hidden": "true" })),
         h("span", { class: "gb-page-label" }, `${t("Page")} ${page + 1} / ${maxPages}`),
-        h("button", { class: "gb-btn-icon", disabled: page >= maxPages - 1, onClick: () => { page = Math.min(maxPages - 1, page + 1); renderResults(); } }, h("i", { class: "fa-solid fa-chevron-right" }))));
+        h("button", { class: "gb-btn-icon", "aria-label": t("Next page"), disabled: page >= maxPages - 1, onClick: () => { page = Math.min(maxPages - 1, page + 1); renderResults(); } }, h("i", { class: "fa-solid fa-chevron-right", "aria-hidden": "true" }))));
     elResults.appendChild(pag);
   }
 

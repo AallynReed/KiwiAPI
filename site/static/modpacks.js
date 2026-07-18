@@ -177,14 +177,23 @@
     $('mh-create-form').addEventListener('submit', submitCreate);
   }
 
+  let releaseCreateFocus = null;
   function openCreate() {
     if (!(window.BTTAuth && window.BTTAuth.getCachedUser && window.BTTAuth.getCachedUser())) {
       location.href = '/login';
       return;
     }
-    $('mh-create-modal').hidden = false;
+    const modal = $('mh-create-modal');
+    modal.hidden = false;
+    const card = modal.querySelector('.mh-modal-card');
+    if (card && window.BTTUtil && window.BTTUtil.trapFocus) {
+      releaseCreateFocus = window.BTTUtil.trapFocus(card, { onEscape: closeCreate });
+    }
   }
-  function closeCreate() { $('mh-create-modal').hidden = true; }
+  function closeCreate() {
+    if (releaseCreateFocus) { releaseCreateFocus(); releaseCreateFocus = null; }
+    $('mh-create-modal').hidden = true;
+  }
 
   async function submitCreate(e) {
     e.preventDefault();

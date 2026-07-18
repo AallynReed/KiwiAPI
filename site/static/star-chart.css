@@ -158,6 +158,8 @@
   transform-origin: center;
 }
 .sc-node.star { stroke: rgba(255, 255, 255, 0.28); stroke-width: .5; }
+/* Keyboard focus ring for the now-focusable nodes/anchor. */
+.sc-node:focus-visible, .sc-anchor:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 .sc-node:hover { filter: drop-shadow(0 0 7px #fff) drop-shadow(0 0 4px var(--glow, #fff)); }
 .sc-node.root { cursor: default; filter: drop-shadow(0 0 5px var(--glow, #fff)); }
 

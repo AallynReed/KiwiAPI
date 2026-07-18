@@ -31,7 +31,7 @@
   font-family: Inter, system-ui, sans-serif;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--text-soft);
+  color: var(--text-mute);
   background: var(--bg-card);
   border: 1px solid var(--bg-line);
   border-radius: 999px;
@@ -46,5 +46,5 @@
   border-bottom: 1px solid transparent;
   transition: color .15s, border-color .15s;
 }
-.browse-links a:hover { color: var(--accent); border-bottom-color: var(--accent); }
-.browse-empty { color: var(--text-soft); }
+.browse-links a:hover { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+.browse-empty { color: var(--text-mute); }

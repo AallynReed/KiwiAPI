@@ -90,7 +90,7 @@
 }
 .legal-section p,
 .legal-section li {
-  color: var(--text-soft);
+  color: var(--text-mute);
   line-height: 1.75;
   font-size: .98rem;
 }

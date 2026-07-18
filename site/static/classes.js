@@ -16,6 +16,8 @@
     if (txt != null) e.textContent = txt;
     return e;
   }
+  // Decorative Font Awesome icon — hidden from assistive tech.
+  function iconEl(cls) { var e = el("i", cls); e.setAttribute("aria-hidden", "true"); return e; }
   function fmtStat(s) {
     // {name, value, percentage} -> "131%" / "2,376"
     var v = (typeof s.value === "number") ? s.value : 0;
@@ -98,19 +100,19 @@
     var tags = el("div", "cls-detail-tags");
     if (c.damage_type) {
       var dt = el("span", "cls-tag is-" + dmgClass(c.damage_type));
-      dt.appendChild(el("i", "fa-solid " + (dmgClass(c.damage_type) === "magic" ? "fa-wand-sparkles" : "fa-hand-fist")));
+      dt.appendChild(iconEl("fa-solid " + (dmgClass(c.damage_type) === "magic" ? "fa-wand-sparkles" : "fa-hand-fist")));
       dt.appendChild(el("span", null, c.damage_type + " " + tr("damage")));
       tags.appendChild(dt);
     }
     (c.weapons || []).forEach(function (w) {
       var t = el("span", "cls-tag");
-      t.appendChild(el("i", "fa-solid fa-khanda"));
+      t.appendChild(iconEl("fa-solid fa-khanda"));
       t.appendChild(el("span", null, w));
       tags.appendChild(t);
     });
     if (c.shorts && c.shorts.length) {
       var s = el("span", "cls-tag");
-      s.appendChild(el("i", "fa-solid fa-tag"));
+      s.appendChild(iconEl("fa-solid fa-tag"));
       s.appendChild(el("span", null, c.shorts.join(" / ")));
       tags.appendChild(s);
     }
@@ -195,7 +197,7 @@
   function section(titleText, icon, node) {
     var sec = el("section", "cls-section");
     var h = el("h3", "cls-section-title");
-    h.appendChild(el("i", "fa-solid " + icon));
+    h.appendChild(iconEl("fa-solid " + icon));
     h.appendChild(el("span", null, titleText));
     sec.appendChild(h);
     sec.appendChild(node);

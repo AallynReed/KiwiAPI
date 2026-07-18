@@ -32,7 +32,7 @@
 
             <!-- Kept (even with no password form) so site_auth.js can surface
                  a failed OAuth round-trip here. -->
-            <p class="acc-error" id="login-error" hidden></p>
+            <p class="acc-error" id="login-error" role="alert" hidden></p>
 
             {% if discord_oauth_enabled %}
             <a class="acc-oauth-btn acc-oauth-discord" href="https://api.aallyn.net/v1/site-auth/oauth/discord/start">

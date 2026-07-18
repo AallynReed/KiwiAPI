@@ -142,6 +142,7 @@
   const $playerPanel = document.getElementById('lb-player-panel');
   const $playerName = document.getElementById('lb-player-name');
   const $playerBody = document.getElementById('lb-player-body');
+  const $playerStatus = document.getElementById('lb-player-status');
   const $playerClose = document.getElementById('lb-player-close');
   const $mobileTrigger = document.getElementById('lb-mobile-trigger');
   const $mobileSelected = document.getElementById('lb-mobile-selected');
@@ -280,6 +281,7 @@
       if (btn) {
         btn.classList.toggle('active', active);
         btn.setAttribute('aria-selected', String(active));
+        btn.tabIndex = active ? 0 : -1;
       }
       if (pane) {
         pane.classList.toggle('active', active);
@@ -1483,16 +1485,22 @@
         }
       }
       return `
-      <div class="lb-td lb-rank ${rankClass(e.rank)}">${rankExtra}${e.rank}</div>
-      <div class="lb-td"><span class="lb-player" data-player="${esc(e.player_name)}"><span class="lb-player-icon"></span>${esc(e.player_name)}</span></div>
-      <div class="lb-td lb-score">${scoreExtra}${esc(formatScore(e.score))}</div>`;
+      <div class="lb-tr" role="row">
+        <div class="lb-td lb-rank ${rankClass(e.rank)}" role="cell">${rankExtra}${e.rank}</div>
+        <div class="lb-td" role="cell"><span class="lb-player" data-player="${esc(e.player_name)}"><span class="lb-player-icon"></span>${esc(e.player_name)}</span></div>
+        <div class="lb-td lb-score" role="cell">${scoreExtra}${esc(formatScore(e.score))}</div>
+      </div>`;
     }).join('');
 
+    // Div-grid carrying full table semantics: role=table/row/columnheader/cell.
+    // Row wrappers use CSS `display:contents` so the grid layout is unchanged.
     $entriesBody.innerHTML = `
-      <div class="lb-entries-table">
-        <div class="lb-th lb-rank" data-i18n>Rank</div>
-        <div class="lb-th" data-i18n>Player</div>
-        <div class="lb-th lb-score" data-i18n>Score</div>
+      <div class="lb-entries-table" role="table" aria-label="${esc(t('Leaderboard entries'))}">
+        <div class="lb-tr lb-tr-head" role="row">
+          <div class="lb-th lb-rank" role="columnheader" data-i18n>Rank</div>
+          <div class="lb-th" role="columnheader" data-i18n>Player</div>
+          <div class="lb-th lb-score" role="columnheader" data-i18n>Score</div>
+        </div>
         ${rows}
       </div>`;
 
@@ -1597,6 +1605,12 @@
   }
 
   function renderPlayerHistory(items) {
+    // Announce the outcome on the small sr-only live node (the panel isn't live).
+    if ($playerStatus) {
+      $playerStatus.textContent = items.length
+        ? `${$playerName.textContent} — ${items.length} ${t('appearances')}`
+        : t('No recent appearances found for this player.');
+    }
     if (!items.length) {
       $playerBody.innerHTML = `<p class="lb-hint" data-i18n>No recent appearances found for this player.</p>`;
       rerunI18n();
@@ -1663,6 +1677,28 @@
     }
     if ($tabClustersBtn) {
       $tabClustersBtn.addEventListener('click', () => switchTab('clusters'));
+    }
+    // Left/Right/Home/End roving across the (conditionally-rendered) tab strip.
+    const tabStrip = document.querySelector('.lb-tabs');
+    if (tabStrip) {
+      tabStrip.addEventListener('keydown', (e) => {
+        const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+        if (!keys.includes(e.key)) return;
+        const items = Array.from(tabStrip.querySelectorAll('button[role="tab"]'));
+        const i = items.indexOf(document.activeElement);
+        if (i < 0) return;
+        e.preventDefault();
+        const n = e.key === 'Home' ? 0
+          : e.key === 'End' ? items.length - 1
+          : e.key === 'ArrowLeft' ? (i - 1 + items.length) % items.length
+          : (i + 1) % items.length;
+        items[n].focus();
+        switchTab(items[n].dataset.tab);
+      });
+      // Initialise roving tabindex from the server-rendered active state.
+      tabStrip.querySelectorAll('button[role="tab"]').forEach((b) => {
+        b.tabIndex = b.getAttribute('aria-selected') === 'true' ? 0 : -1;
+      });
     }
 
     // Confidence-filter sliders (one per anti-cheat tab). Live re-render

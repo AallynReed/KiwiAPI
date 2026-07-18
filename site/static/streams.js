@@ -27,10 +27,25 @@
     if (s < 86400) return Math.floor(s / 3600) + tr("h ago");
     return Math.floor(s / 86400) + tr("d ago");
   }
+  // Decorative icon: always aria-hidden so screen readers skip it.
+  function icon(cls) { var i = el("i", cls); i.setAttribute("aria-hidden", "true"); return i; }
+  function fallbackThumb(t) {
+    var f = el("div", "stm-thumb-fallback"); f.appendChild(icon("fa-solid fa-image")); t.appendChild(f);
+  }
+  // Thumbnails render as a lazy, async-decoded <img> (not a background-image) so
+  // the ~40 stream/video/news images load only as they scroll into view.
   function thumb(url) {
     var t = el("div", "stm-thumb");
-    if (url) t.style.backgroundImage = "url('" + String(url).replace(/'/g, "%27") + "')";
-    else { var f = el("div", "stm-thumb-fallback"); f.appendChild(el("i", "fa-solid fa-image")); t.appendChild(f); }
+    if (url) {
+      var img = document.createElement("img");
+      img.className = "stm-thumb-img";
+      img.src = String(url);
+      img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+      img.onerror = function () { img.remove(); fallbackThumb(t); };
+      t.appendChild(img);
+    } else {
+      fallbackThumb(t);
+    }
     return t;
   }
   function setEmpty(id, msg) {
@@ -61,7 +76,7 @@
       var body = el("div", "stm-card-body");
       body.appendChild(el("div", "stm-card-title", s.title || ""));
       var meta = el("div", "stm-card-meta");
-      meta.appendChild(el("i", "fa-brands fa-twitch"));
+      meta.appendChild(icon("fa-brands fa-twitch"));
       meta.appendChild(el("span", null, s.channel || s.login || ""));
       body.appendChild(meta);
       card.appendChild(body);
@@ -93,7 +108,7 @@
       var body = el("div", "stm-card-body");
       body.appendChild(el("div", "stm-card-title", v.title || ""));
       var meta = el("div", "stm-card-meta");
-      meta.appendChild(el("i", "fa-brands fa-youtube"));
+      meta.appendChild(icon("fa-brands fa-youtube"));
       meta.appendChild(el("span", null, v.channel || ""));
       body.appendChild(meta);
       card.appendChild(body);
@@ -127,7 +142,7 @@
       var body = el("div", "stm-card-body");
       body.appendChild(el("div", "stm-card-title", n.title || ""));
       var meta = el("div", "stm-card-meta");
-      meta.appendChild(el("i", "fa-regular fa-clock"));
+      meta.appendChild(icon("fa-regular fa-clock"));
       meta.appendChild(el("span", null, timeAgo(n.published_at) || (n.author || "")));
       body.appendChild(meta);
       card.appendChild(body);

@@ -13,7 +13,7 @@
 }
 .mp-warning:last-child { margin-bottom: 0; }
 .mp-warning i { margin-top: 2px; }
-.mp-check { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; color: var(--text-soft); cursor: pointer; }
+.mp-check { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; color: var(--text-mute); cursor: pointer; }
 .mp-check input { margin-top: 3px; }
 
 /* ── Header ── */
@@ -32,7 +32,7 @@
 .mpk-head-by { color: var(--text-mute); font-size: .9rem; margin: 6px 0 0; }
 .mpk-head-by a { color: var(--accent-blue); text-decoration: none; }
 .mpk-head-by a:hover { text-decoration: underline; }
-.mpk-head-summary { color: var(--text-soft); margin: 10px 0 0; max-width: 70ch; }
+.mpk-head-summary { color: var(--text-mute); margin: 10px 0 0; max-width: 70ch; }
 .mpk-head-stats { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
 .mpk-stat { display: inline-flex; align-items: center; gap: 7px; color: var(--text-mute); font-size: .9rem; font-weight: 600; }
 .mpk-stat i { color: var(--accent-blue); }
@@ -89,7 +89,7 @@
 .mpk-entry-title { font-weight: 600; color: var(--text); text-decoration: none; }
 .mpk-entry-title:hover { color: var(--accent-blue); text-decoration: underline; }
 .mpk-entry-by { font-size: .82rem; color: var(--text-mute); }
-.mpk-entry-by a { color: var(--text-soft); text-decoration: none; }
+.mpk-entry-by a { color: var(--text-mute); text-decoration: none; }
 .mpk-entry-by a:hover { color: var(--accent-blue); text-decoration: underline; }
 .mpk-entry-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .mpk-badge {

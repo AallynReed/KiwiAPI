@@ -107,7 +107,7 @@
   padding: 6px 16px; border-radius: 999px; cursor: pointer;
   font-size: .82rem; font-weight: 600; transition: background .15s, color .15s;
 }
-.st-env-tabs button.active { background: var(--accent); color: #fff; }
+.st-env-tabs button.active { background: var(--accent); color: #06080d; }
 
 .st-uptime { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
 .st-uptime-num { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-green); }

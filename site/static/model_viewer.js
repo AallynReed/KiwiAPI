@@ -48,6 +48,9 @@
   function open(opts) {
     injectStyles();
     var ov = document.createElement('div'); ov.className = 'mv-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', (opts.title || 'Model') + ' — 3D model preview');
     ov.innerHTML =
       '<div class="mv-modal">' +
         '<div class="mv-head"><span class="mv-title"></span><span class="mv-meta"></span>' +
@@ -60,11 +63,15 @@
     var stage = ov.querySelector('.mv-stage'), msg = ov.querySelector('.mv-msg'),
         bar = ov.querySelector('.mv-bar'), meta = ov.querySelector('.mv-meta');
     var viewer = null;
-    function close() { if (viewer) viewer.dispose(); document.removeEventListener('keydown', onKey); ov.remove(); }
+    var releaseFocus = null;
+    function close() { if (viewer) viewer.dispose(); document.removeEventListener('keydown', onKey); if (releaseFocus) { releaseFocus(); releaseFocus = null; } ov.remove(); }
     function onKey(e) { if (e.key === 'Escape') close(); }
     ov.querySelector('.mv-close').addEventListener('click', close);
     ov.addEventListener('mousedown', function (e) { if (e.target === ov) close(); });
     document.addEventListener('keydown', onKey);
+    if (window.BTTUtil && window.BTTUtil.trapFocus) {
+      releaseFocus = window.BTTUtil.trapFocus(ov.querySelector('.mv-modal'));
+    }
 
     ensureThree().then(function (THREE) {
       return fetch(opts.url, { credentials: 'same-origin' }).then(function (r) {
@@ -84,7 +91,11 @@
     var W = stage.clientWidth || 900, H = stage.clientHeight || 560, s = data.voxel_scale;
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(W, H); stage.appendChild(renderer.domElement);
+    renderer.setSize(W, H);
+    renderer.domElement.setAttribute('role', 'img');
+    renderer.domElement.setAttribute('aria-label', 'Interactive 3D creature model. Drag to rotate, scroll to zoom.');
+    renderer.domElement.appendChild(document.createTextNode('3D model preview (requires a WebGL-capable browser).'));
+    stage.appendChild(renderer.domElement);
     var scene = new THREE.Scene();
     scene.add(new THREE.AmbientLight(0xffffff, 0.68));
     var key = new THREE.DirectionalLight(0xffffff, 0.85); key.position.set(0.6, 1, 0.5); scene.add(key);

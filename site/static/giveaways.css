@@ -49,11 +49,11 @@
 .gw-badge-open { background: rgba(63,185,80,.16); color: var(--accent-green); }
 .gw-badge-scheduled { background: rgba(88,166,255,.16); color: var(--accent-blue); }
 .gw-badge-drawn { background: rgba(163,113,247,.16); color: var(--accent-purple); }
-.gw-badge-closed { background: rgba(255,255,255,.08); color: var(--text-soft); }
+.gw-badge-closed { background: rgba(255,255,255,.08); color: var(--text-mute); }
 
 .gw-prize { font-size: 1.4rem; margin: 12px 0 4px; color: var(--text); }
 .gw-name { font-size: .95rem; color: var(--text-mute); margin: 0; }
-.gw-desc { font-size: .9rem; color: var(--text-soft); margin: 8px 0 0; line-height: 1.55; }
+.gw-desc { font-size: .9rem; color: var(--text-mute); margin: 8px 0 0; line-height: 1.55; }
 
 .gw-card-side { display: flex; flex-direction: column; gap: 14px; }
 .gw-meta { display: flex; flex-wrap: wrap; gap: 18px; }

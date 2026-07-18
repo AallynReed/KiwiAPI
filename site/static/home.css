@@ -28,7 +28,7 @@
 .dash-modrow-thumb { flex: 0 0 auto; width: 64px; height: 40px; border-radius: 8px; background: var(--bg-deep) center/cover no-repeat; display: grid; place-items: center; color: var(--text-soft); }
 .dash-modrow-body { min-width: 0; display: flex; flex-direction: column; }
 .dash-modrow-title { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dash-modrow-meta { font-size: 0.76rem; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-modrow-meta { font-size: 0.76rem; color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dash-rail-cta { text-align: center; background: linear-gradient(160deg, var(--bg-card), var(--bg-deep)); }
 .dash-rail-cta h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.15rem; margin: 0 0 0.4rem; }
 .dash-rail-cta p { color: var(--text-mute); font-size: 0.88rem; margin: 0 0 0.9rem; }
@@ -91,7 +91,7 @@
 .dash-search:focus-within { border-color: var(--accent); }
 .dash-search i { color: var(--text-soft); }
 .dash-search input { background: none; border: 0; color: var(--text); padding: 0.45rem 0.25rem; min-width: 0; }
-.dash-search input:focus { outline: none; }
+.dash-search input:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 .dash-search input::placeholder { color: var(--text-soft); }
 
 /* ---- Stat tiles --------------------------------------------------------- */
@@ -134,7 +134,7 @@
 
 /* ---- Today in Trove: buffs + chaos -------------------------------------- */
 .dash-buffs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.85rem; }
-.dash-buff { --buff-accent: var(--accent); background: var(--bg-deep); border: 1px solid var(--bg-line); border-left: 3px solid var(--buff-accent); border-radius: var(--radius); overflow: hidden; }
+.dash-buff { --buff-accent: var(--accent); background: var(--bg-deep); border: 1px solid color-mix(in oklab, var(--buff-accent) 40%, var(--bg-line)); border-radius: var(--radius); overflow: hidden; }
 .dash-buff-head { display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem 0.9rem; font-family: 'Space Grotesk', sans-serif; font-weight: 700; background-size: cover; background-position: center; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
 .dash-buff-kicker { display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); padding: 0.6rem 0.9rem 0; }
 .dash-buff-list { list-style: none; margin: 0; padding: 0.5rem 0.9rem 0.85rem; display: grid; gap: 0.3rem; }
@@ -150,7 +150,7 @@
 .dash-record {
   --rec-accent: var(--accent);
   background: linear-gradient(160deg, color-mix(in oklab, var(--rec-accent) 10%, var(--bg-deep)), var(--bg-deep));
-  border: 1px solid var(--bg-line); border-left: 3px solid var(--rec-accent);
+  border: 1px solid color-mix(in oklab, var(--rec-accent) 40%, var(--bg-line));
   border-radius: var(--radius); padding: 0.9rem 1rem;
   display: flex; flex-direction: column; gap: 0.35rem;
 }
@@ -203,7 +203,7 @@
 .dash-card-cat { position: absolute; right: 8px; top: 8px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; background: var(--accent); color: #06080d; border-radius: 999px; padding: 0.1rem 0.5rem; font-weight: 600; }
 .dash-card-body { padding: 0.7rem 0.85rem; display: flex; flex-direction: column; gap: 0.3rem; }
 .dash-card-title { font-weight: 600; font-size: 0.95rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.dash-card-meta { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-soft); }
+.dash-card-meta { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-mute); }
 .dash-card-meta i { color: var(--accent); }
 
 /* ---- Latest mods -------------------------------------------------------- */
@@ -213,7 +213,7 @@
 .dash-mod-thumb { aspect-ratio: 16 / 9; background: var(--bg-card) center/cover no-repeat; display: grid; place-items: center; color: var(--text-soft); }
 .dash-mod-body { padding: 0.6rem 0.7rem; }
 .dash-mod-title { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dash-mod-meta { font-size: 0.76rem; color: var(--text-soft); }
+.dash-mod-meta { font-size: 0.76rem; color: var(--text-mute); }
 
 /* ---- Giveaways ---------------------------------------------------------- */
 .dash-giveaways { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.85rem; }
@@ -270,7 +270,7 @@
 
 /* Daily / weekly rotation list in the buff modal. */
 .dash-rot { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
-.dash-rot-row { --buff-accent: var(--accent); background: var(--bg-deep); border: 1px solid var(--bg-line); border-left: 3px solid var(--buff-accent); border-radius: var(--radius); padding: 0.6rem 0.8rem; }
+.dash-rot-row { --buff-accent: var(--accent); background: var(--bg-deep); border: 1px solid color-mix(in oklab, var(--buff-accent) 40%, var(--bg-line)); border-radius: var(--radius); padding: 0.6rem 0.8rem; }
 .dash-rot-row.is-now { background: color-mix(in oklab, var(--accent) 9%, var(--bg-deep)); border-color: color-mix(in oklab, var(--accent) 40%, var(--bg-line)); }
 .dash-rot-top { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
 .dash-rot-name { display: flex; align-items: center; gap: 0.45rem; font-weight: 600; min-width: 0; }
@@ -278,7 +278,7 @@
 .dash-rot-day { font-size: 0.72rem; color: var(--text-soft); font-weight: 400; }
 .dash-rot-when { font-size: 0.8rem; color: var(--text-mute); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .dash-rot-when.is-now { color: var(--accent-green); font-weight: 600; }
-.dash-rot-buffs { margin-top: 0.35rem; font-size: 0.8rem; color: var(--text-soft); line-height: 1.45; }
+.dash-rot-buffs { margin-top: 0.35rem; font-size: 0.8rem; color: var(--text-mute); line-height: 1.45; }
 .dash-modal-link { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.9rem; color: var(--accent); text-decoration: none; font-weight: 600; }
 .dash-modal-link:hover { text-decoration: underline; }
 
@@ -361,7 +361,7 @@
   color: #fff; border-color: color-mix(in oklab, var(--accent) 75%, transparent);
   background: color-mix(in oklab, var(--accent) 20%, transparent);
 }
-.calendar-helper-text { font-size: 12px; color: var(--text-soft); }
+.calendar-helper-text { font-size: 12px; color: var(--text-mute); }
 
 .calendar-timeline-wrapper {
   display: flex; flex-direction: column; overflow-x: auto; overflow-y: hidden;

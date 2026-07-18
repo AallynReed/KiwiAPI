@@ -98,13 +98,12 @@
   background: rgba(0,0,0,.25);
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 8px;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
   font: inherit;
   font-size: .88rem;
 }
 .mkt-search-input:focus {
-  outline: none;
-  border-color: var(--accent-blue, #4cc9f0);
+  border-color: var(--accent-blue);
 }
 
 .mkt-items {
@@ -135,7 +134,7 @@
   border: 1px solid transparent;
   border-radius: 7px;
   cursor: pointer;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
   font: inherit;
   font-size: .88rem;
   text-align: left;
@@ -206,7 +205,7 @@
   border-bottom: 1px solid rgba(255,255,255,.08);
   border-radius: 0;
   cursor: pointer;
-  color: var(--text-mute, #9aa3b2);
+  color: var(--text-mute);
   font: inherit;
   font-size: .74rem;
   font-weight: 700;
@@ -215,7 +214,7 @@
   text-align: left;
   min-width: 0;
 }
-.mkt-group-head:hover { color: var(--text-fg, #e8ecf3); }
+.mkt-group-head:hover { color: var(--text); }
 .mkt-group-chev {
   flex: 0 0 auto;
   font-size: .62rem;
@@ -361,10 +360,10 @@
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
 }
-.mkt-summary-value-low  { color: #5dd078; }
-.mkt-summary-value-high { color: #f87171; }
+.mkt-summary-value-low  { color: var(--accent-green); }
+.mkt-summary-value-high { color: var(--accent-red); }
 
 
 /* ─── Price-evolution chart ─────────────────────────────────────────
@@ -414,7 +413,7 @@
 .mkt-chart-toggle input[type="checkbox"] {
   width: 14px;
   height: 14px;
-  accent-color: var(--accent-blue, #4cc9f0);
+  accent-color: var(--accent-blue);
   cursor: pointer;
 }
 .mkt-chart {
@@ -436,7 +435,7 @@
   fill: none;
 }
 .mkt-chart-axis-label {
-  fill: var(--text-mute, #8a93a3);
+  fill: var(--text-mute);
   font-size: 10px;
   font-family: 'Inter', system-ui, sans-serif;
 }
@@ -445,14 +444,14 @@
    density. */
 .mkt-chart-trend {
   fill: none;
-  stroke: var(--accent-orange, #f8961e);
+  stroke: var(--accent-orange);
   stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
   filter: drop-shadow(0 0 4px rgba(248,150,30,.5));
 }
 .mkt-chart-dot {
-  fill: var(--accent-blue, #4cc9f0);
+  fill: var(--accent-blue);
   stroke: rgba(15,18,24,.85);
   stroke-width: .8;
 }
@@ -480,7 +479,7 @@
   padding: 8px 10px;
   font-size: .78rem;
   line-height: 1.4;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
   box-shadow: 0 8px 24px rgba(0,0,0,.4);
   white-space: nowrap;
   transform: translate(-50%, calc(-100% - 10px));
@@ -491,7 +490,7 @@
 .mkt-chart-tooltip.is-visible { opacity: 1; }
 .mkt-chart-tooltip-when {
   font-weight: 600;
-  color: var(--text-mute, #8a93a3);
+  color: var(--text-mute);
   font-size: .72rem;
   margin: 0 0 4px;
 }
@@ -499,7 +498,7 @@
   margin: 0;
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
   font-weight: 700;
-  color: var(--accent-blue, #4cc9f0);
+  color: var(--accent-blue);
 }
 
 
@@ -543,12 +542,12 @@
 .mkt-row { display: contents; }
 .mkt-cell-price {
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
-  color: var(--accent-blue, #4cc9f0);
+  color: var(--accent-blue);
   font-weight: 700;
 }
 .mkt-cell-stack {
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
-  color: var(--text-fg, #e8ecf3);
+  color: var(--text);
 }
 .mkt-cell-total {
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
@@ -574,7 +573,7 @@
   background: rgba(76,201,240,.10);
   border: 1px solid rgba(76,201,240,.30);
   border-radius: 8px;
-  color: var(--accent-blue, #4cc9f0);
+  color: var(--accent-blue);
   font: inherit;
   font-size: .9rem;
   font-weight: 600;
@@ -634,7 +633,7 @@
     background: rgba(255,255,255,.02);
     border: 1px solid rgba(255,255,255,.08);
     border-radius: 10px;
-    color: var(--text-fg, #e8ecf3);
+    color: var(--text);
     font: inherit;
     font-size: .9rem;
     cursor: pointer;

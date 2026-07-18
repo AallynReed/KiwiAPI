@@ -46,6 +46,10 @@
   let selectedActionKey = null; // 'augment-1' | 'augment-2' | 'augment-3' | 'spark' | 'flare'
   const creatorParams = { type: "", tier: "", element: "", restriction: "", level: 1, augmentNull: true, augment: 0 };
   let dragState = { pane: null, idx: -1, gem: null };
+  // Keyboard "move" alternative to drag: Enter picks a source slot, Enter on a
+  // second slot moves it there. { pane, idx } | null.
+  let kbSource = null;
+  let kbSourceEl = null;
 
   // DOM refs
   let elEquipped, elPrimordial, elTotals, elForge, elDetail, elInventory, elTrash, elRecalc, elTooltip, elModal;
@@ -106,9 +110,16 @@
   // ── Confirm modal (self-contained) ──────────────────────────────────────
   function confirmModal(opts) {
     return new Promise((resolve) => {
-      const close = (val) => { elModal.classList.remove("show"); elModal.innerHTML = ""; resolve(val); };
-      const content = h("div", { class: "gem-modal-content" },
-        h("h3", null, opts.title || t("Confirm")),
+      let release = null;
+      const close = (val) => {
+        if (release) { release(); release = null; }
+        elModal.classList.remove("show");
+        elModal.innerHTML = "";
+        resolve(val);
+      };
+      const titleId = "gem-modal-title";
+      const content = h("div", { class: "gem-modal-content", role: "dialog", "aria-modal": "true", "aria-labelledby": titleId },
+        h("h3", { id: titleId }, opts.title || t("Confirm")),
         h("p", null, opts.message || ""),
         h("div", { class: "gem-modal-actions" },
           h("button", { class: "cancel-btn", onClick: () => close(false) }, opts.cancelLabel || t("Cancel")),
@@ -119,6 +130,9 @@
       elModal.appendChild(content);
       elModal.classList.add("show");
       elModal.onclick = (e) => { if (e.target === elModal) close(false); };
+      if (window.BTTUtil && window.BTTUtil.trapFocus) {
+        release = window.BTTUtil.trapFocus(content, { onEscape: () => close(false) });
+      }
     });
   }
 
@@ -174,13 +188,29 @@
     item.addEventListener("mouseleave", hideTooltip);
     return item;
   }
+  function slotAria(pane, idx, gem) {
+    if (gem) {
+      const nm = gem.gem_name ? t(gem.gem_name) : t("Unnamed gem");
+      return `${nm} — ${t(typeName(gem.type))} ${t(tierName(gem.tier))}, ${t("Lv")} ${gem.level}`;
+    }
+    return pane === "equipped" ? t("Empty equipped slot") : t("Empty inventory slot");
+  }
   function slotEl(pane, idx, placeholder) {
     const gem = pane === "inventory" ? inventory[idx] : equipped[idx];
-    const slot = h("div", { class: "slot", dataset: { hasItem: gem ? "true" : "false", pane: pane, idx: String(idx) } });
+    const slot = h("div", {
+      class: "slot", role: "button", tabindex: "0",
+      "aria-label": slotAria(pane, idx, gem),
+      dataset: { hasItem: gem ? "true" : "false", pane: pane, idx: String(idx) },
+    });
     slot.addEventListener("dragenter", (e) => onSlotDragOver(e, pane, idx));
     slot.addEventListener("dragover", (e) => onSlotDragOver(e, pane, idx));
     slot.addEventListener("dragleave", (e) => onSlotDragLeave(e, slot));
     slot.addEventListener("drop", (e) => onDrop(e, pane, idx));
+    // Keyboard: Enter/Space selects the gem and, on a second slot, moves it there.
+    slot.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activateSlot(pane, idx, slot); }
+      else if (e.key === "Escape" && kbSource) { e.preventDefault(); clearKbSource(); }
+    });
     if (gem) slot.appendChild(gemItem(gem, pane, idx));
     else if (placeholder) slot.appendChild(h("div", { class: "equipped-slot-placeholder" }, h("img", { src: placeholder, alt: "", draggable: "false" })));
     return slot;
@@ -343,29 +373,43 @@
           h("div", { class: "container-chip-bar-wrap" },
             h("div", { class: "container-chip-bar", style: { background: barColor(c.value), width: (c.value * 100).toFixed(1) + "%" } }))));
       });
-      const card = h("div", { class: "stat-vert-square" + (selectedStatIdx === i ? " selected" : "") },
+      const card = h("div", {
+        class: "stat-vert-square" + (selectedStatIdx === i ? " selected" : ""),
+        role: "button", tabindex: "0",
+        "aria-pressed": selectedStatIdx === i ? "true" : "false",
+        "aria-label": `${t(statName(gem, i))} ${statValue(gem, i).toFixed(2)}`,
+      },
         h("div", { class: "stat-vert-head" },
           h("div", { class: "stat-label" }, h("b", null, statValue(gem, i).toFixed(2) + " "), h("span", null, t(statName(gem, i)))),
           h("div", { class: "stat-augment-pct" }, ((stat.augmentation_progress || 0) * 100).toFixed(1) + "%")),
         chips);
-      card.addEventListener("click", () => { selectedStatIdx = i; renderDetail(); });
+      const pickStat = () => { selectedStatIdx = i; renderDetail(); };
+      card.addEventListener("click", pickStat);
+      card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickStat(); } });
       statCol.appendChild(card);
     });
     elDetail.appendChild(statCol);
 
+    const actionSquare = (key, imgSrc, label) => {
+      const sq = h("div", {
+        class: "action-square" + (selectedActionKey === key ? " selected" : ""),
+        role: "button", tabindex: "0",
+        "aria-pressed": selectedActionKey === key ? "true" : "false",
+        "aria-label": label,
+      }, h("img", { src: imgSrc, alt: "" }));
+      const pick = () => { selectedActionKey = key; renderDetail(); };
+      sq.addEventListener("click", pick);
+      sq.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+      return sq;
+    };
     const actionGroup = h("div", { class: "action-group" });
     Object.entries(lookups.augment_types || {}).sort((a, b) => a[1] - b[1]).forEach(([, id]) => {
-      const key = "augment-" + id;
-      const sq = h("div", { class: "action-square" + (selectedActionKey === key ? " selected" : "") }, h("img", { src: augmentImg(id), alt: "" }));
-      sq.addEventListener("click", () => { selectedActionKey = key; renderDetail(); });
-      actionGroup.appendChild(sq);
+      const label = t(nameById(lookups.augment_types, id) || ("Augment " + id));
+      actionGroup.appendChild(actionSquare("augment-" + id, augmentImg(id), label));
     });
     actionGroup.appendChild(h("div", { class: "action-separator" }));
-    ["spark", "flare"].forEach((key) => {
-      const sq = h("div", { class: "action-square" + (selectedActionKey === key ? " selected" : "") }, h("img", { src: modifierImg(key), alt: "" }));
-      sq.addEventListener("click", () => { selectedActionKey = key; renderDetail(); });
-      actionGroup.appendChild(sq);
-    });
+    actionGroup.appendChild(actionSquare("spark", modifierImg("spark"), t("Change Stat")));
+    actionGroup.appendChild(actionSquare("flare", modifierImg("flare"), t("Move Boost")));
     elDetail.appendChild(h("div", { class: "button-row" }, actionGroup));
 
     const lvlBtn = h("button", { class: "gem-action-btn" }, gem.is_max_level ? t("Max Level") : t("Level Up"));
@@ -420,6 +464,63 @@
       if (selectedSource.pane === "inventory") inventory[selectedSource.idx] = gem;
       else if (selectedSource.pane === "equipped") equipped[selectedSource.idx] = gem;
     }
+  }
+
+  // ── Keyboard "move" (drag alternative) ──────────────────────────────────
+  function setKbSource(pane, idx, el) {
+    clearKbSource();
+    kbSource = { pane, idx };
+    kbSourceEl = el || null;
+    if (kbSourceEl) kbSourceEl.classList.add("kb-source");
+  }
+  function clearKbSource() {
+    if (kbSourceEl) kbSourceEl.classList.remove("kb-source");
+    kbSource = null;
+    kbSourceEl = null;
+  }
+  // Enter on a slot: 1st press picks the gem up (and selects it); 2nd press on a
+  // different slot moves it there; pressing the same slot again cancels.
+  function activateSlot(pane, idx, el) {
+    const gem = pane === "inventory" ? inventory[idx] : equipped[idx];
+    if (kbSource) {
+      if (kbSource.pane === pane && kbSource.idx === idx) { clearKbSource(); return; }
+      const from = kbSource;
+      clearKbSource();
+      keyboardMove(from, { pane, idx });
+      return;
+    }
+    if (gem) {
+      selectGem(gem, pane, idx);
+      setKbSource(pane, idx, el);
+    }
+  }
+  // Mirrors the inventory/equipped branch of onDrop, but from a known source slot.
+  function keyboardMove(from, to) {
+    const draggedGem = from.pane === "inventory" ? inventory[from.idx] : equipped[from.idx];
+    if (!draggedGem) return;
+    if (from.pane === to.pane && from.idx === to.idx) return;
+    if (to.pane === "equipped") {
+      const val = validateEquip(draggedGem, to.idx);
+      if (!val.valid) return toast(val.error, true);
+    }
+    const targetGem = to.pane === "inventory" ? inventory[to.idx] : equipped[to.idx];
+    if (from.pane === "equipped" && targetGem) {
+      const back = validateEquip(targetGem, from.idx);
+      if (!back.valid) return toast(back.error, true);
+    }
+    const srcArr = from.pane === "inventory" ? inventory : equipped;
+    const dstArr = to.pane === "inventory" ? inventory : equipped;
+    srcArr[from.idx] = targetGem;
+    dstArr[to.idx] = draggedGem;
+    if (selected) {
+      if (targetGem && selected.id === targetGem.id) selectedSource = { pane: from.pane, idx: from.idx };
+      if (selected.id === draggedGem.id) selectedSource = { pane: to.pane, idx: to.idx };
+    }
+    render();
+    save();
+    // render() rebuilds the slot DOM, so move focus onto the destination slot.
+    const tgt = document.querySelector(`.gem-sim .slot[data-pane="${to.pane}"][data-idx="${to.idx}"]`);
+    if (tgt) tgt.focus();
   }
 
   // ── Gem operations (via GemEngine) ──────────────────────────────────────
@@ -646,9 +747,12 @@
     render();
 
     elTrash.addEventListener("click", trashSelected);
+    elTrash.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); trashSelected(); } });
     elTrash.addEventListener("dragover", (e) => e.preventDefault());
     elTrash.addEventListener("drop", onDropTrash);
     elRecalc.addEventListener("click", recalcBases);
+    // Global Escape cancels an in-progress keyboard move if focus drifted off the slot.
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && kbSource) clearKbSource(); });
 
     const endDrag = () => { clearDragHighlights(); dragState = { pane: null, idx: -1, gem: null }; };
     document.addEventListener("dragend", endDrag);

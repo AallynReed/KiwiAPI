@@ -54,8 +54,24 @@
   boot();
 
   function boot() {
-    for (const tab of document.querySelectorAll('.mkt-viewtab')) {
+    // Browse/Analytics tablist: click to switch, plus arrow/Home/End keys to
+    // roam between tabs (WAI-ARIA tabs pattern). The panels carry
+    // role=tabpanel + aria-labelledby in the template.
+    const tabs = Array.from(document.querySelectorAll('.mkt-viewtab'));
+    for (const tab of tabs) {
       tab.addEventListener('click', () => switchView(tab.dataset.view));
+      tab.addEventListener('keydown', (e) => {
+        const i = tabs.indexOf(tab);
+        let j = -1;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') j = (i + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') j = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') j = 0;
+        else if (e.key === 'End') j = tabs.length - 1;
+        if (j < 0) return;
+        e.preventDefault();
+        switchView(tabs[j].dataset.view);
+        tabs[j].focus();
+      });
     }
     if ($days) $days.addEventListener('change', () => {
       state.days = Number($days.value) || 14;
@@ -86,6 +102,7 @@
       const on = tab.dataset.view === view;
       tab.classList.toggle('active', on);
       tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
     }
     if (analytics && !state.loaded) {
       state.loaded = true;
@@ -217,8 +234,17 @@
       const caret = active ? (sort.dir === 'asc' ? '▲' : '▼') : '▾';
       const cls = [c.num ? 'mkt-an-num' : '', canSort ? 'mkt-an-sort' : '', active ? 'is-active' : '']
         .filter(Boolean).join(' ');
-      return `<th class="${cls}" ${canSort ? `data-sort="${c.key}"` : ''}>${esc(t(c.label))}` +
-             `${canSort ? `<span class="mkt-an-caret">${caret}</span>` : ''}</th>`;
+      // Expose the sort state to assistive tech, and make the header a real
+      // <button> so it's keyboard-operable (Enter/Space) rather than a
+      // click-only <th>.
+      const ariaSort = canSort
+        ? ` aria-sort="${active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}"`
+        : '';
+      const inner = canSort
+        ? `<button type="button" class="mkt-an-sortbtn" data-sort="${c.key}">${esc(t(c.label))}` +
+          `<span class="mkt-an-caret" aria-hidden="true">${caret}</span></button>`
+        : esc(t(c.label));
+      return `<th class="${cls}"${ariaSort}>${inner}</th>`;
     }).join('');
 
     const body = sorted.map((r) => '<tr>' + columns.map((c) => {
@@ -227,9 +253,9 @@
     }).join('') + '</tr>').join('');
 
     el.innerHTML = `<table class="mkt-an-table"><thead><tr>${thead}</tr></thead><tbody>${body}</tbody></table>`;
-    for (const th of el.querySelectorAll('th[data-sort]')) {
-      th.addEventListener('click', () => {
-        const key = th.dataset.sort;
+    for (const btn of el.querySelectorAll('.mkt-an-sortbtn[data-sort]')) {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.sort;
         const col = columns.find((c) => c.key === key);
         if (sort.key === key) sort.dir = sort.dir === 'asc' ? 'desc' : 'asc';
         else { sort.key = key; sort.dir = col && col.defDir === 'asc' ? 'asc' : 'desc'; }
@@ -369,9 +395,15 @@
   // ─── Item pickers (timeline + compare) ─────────────────────────────
   function wireItemPicker(input, suggest, onPick) {
     if (!input || !suggest) return;
+    // Keep the combobox's aria-expanded in lockstep with the suggestion
+    // popup's visibility so screen readers announce the open/closed state.
+    const setOpen = (open) => {
+      suggest.hidden = !open;
+      input.setAttribute('aria-expanded', String(open));
+    };
     input.addEventListener('input', debounce(async () => {
       const q = input.value.trim().toLowerCase();
-      if (!q) { suggest.hidden = true; return; }
+      if (!q) { setOpen(false); return; }
       const items = await ensureItems();
       const hits = items.filter((n) => n.toLowerCase().includes(q)).slice(0, 12);
       suggest.innerHTML = hits.length
@@ -380,18 +412,18 @@
       for (const el of suggest.querySelectorAll('[data-item]')) {
         el.addEventListener('click', () => {
           input.value = el.dataset.item;
-          suggest.hidden = true;
+          setOpen(false);
           onPick(el.dataset.item);
         });
       }
-      suggest.hidden = false;
+      setOpen(true);
       rerunI18n();
     }, 200));
     input.addEventListener('search', () => {          // native clear (x) button
       if (!input.value.trim() && input === $cmpInput) clearCompare();
     });
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.mkt-an-item-wrap')) suggest.hidden = true;
+      if (!e.target.closest('.mkt-an-item-wrap')) setOpen(false);
     });
   }
 

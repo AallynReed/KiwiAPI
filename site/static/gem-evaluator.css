@@ -46,7 +46,7 @@
   background: var(--bg-deep);
   border: 1px solid var(--bg-line);
   border-radius: var(--radius-sm, 8px);
-  color: var(--text-soft);
+  color: var(--text-mute);
   padding: 9px 12px;
   font-size: .88rem;
   font-weight: 600;
@@ -82,12 +82,13 @@
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
 }
-.ge-proc-summary { font-size: .9rem; color: var(--text-soft); }
+.ge-proc-summary { font-size: .9rem; color: var(--text-mute); }
 .ge-proc-summary b { color: var(--text); margin-right: 4px; }
 .ge-proc-warn { color: var(--accent-orange); font-weight: 600; }
 
-.ge-toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: .88rem; color: var(--text-soft); user-select: none; }
+.ge-toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: .88rem; color: var(--text-mute); user-select: none; }
 .ge-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ge-toggle input:focus-visible + .ge-toggle-mark { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 .ge-toggle-mark { width: 34px; height: 18px; border-radius: 10px; background: var(--bg-line); position: relative; transition: background .15s; flex-shrink: 0; }
 .ge-toggle-mark::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .15s; }
 .ge-toggle input:checked + .ge-toggle-mark { background: var(--accent-blue); }
@@ -136,7 +137,7 @@
 .ge-history-title { font-weight: 600; font-size: .86rem; display: flex; align-items: center; gap: 6px; }
 .ge-history-mode { font-size: .64rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-mute); background: var(--bg-card-hi); border: 1px solid var(--bg-line); border-radius: 20px; padding: 1px 7px; font-weight: 700; }
 .ge-history-sub { font-size: .74rem; color: var(--text-mute); }
-.ge-history-stats { font-size: .72rem; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ge-history-stats { font-size: .72rem; color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ge-history-del { background: none; border: 1px solid var(--bg-line); border-radius: var(--radius-sm, 8px); color: var(--text-mute); cursor: pointer; padding: 0 9px; }
 .ge-history-del:hover { color: var(--accent-red); border-color: var(--accent-red); }
 
@@ -148,30 +149,29 @@
 .ge-headline {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   background: var(--bg-deep);
-  border: 1px solid var(--bg-line);
-  border-left: 4px solid var(--accent-green);
+  border: 1px solid color-mix(in oklab, var(--accent-green) 50%, var(--bg-line));
   border-radius: var(--radius-sm, 8px);
   padding: 14px 16px;
   margin-bottom: 14px;
 }
-.ge-headline.has-issues { border-left-color: var(--accent-orange); }
+.ge-headline.has-issues { border-color: color-mix(in oklab, var(--accent-orange) 50%, var(--bg-line)); }
 .ge-headline-icon { width: 44px; height: 44px; object-fit: contain; }
 .ge-headline-metrics { display: flex; gap: 22px; }
 .ge-metric { display: flex; flex-direction: column; }
 .ge-metric span { font-size: .74rem; color: var(--text-mute); text-transform: uppercase; letter-spacing: .04em; }
 .ge-metric strong { font-size: 1.5rem; font-family: "Space Grotesk", sans-serif; color: var(--text); }
 .ge-headline-tags { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
-.ge-tag { font-size: .74rem; background: var(--bg-card-hi); border: 1px solid var(--bg-line); border-radius: 20px; padding: 3px 10px; color: var(--text-soft); }
+.ge-tag { font-size: .74rem; background: var(--bg-card-hi); border: 1px solid var(--bg-line); border-radius: 20px; padding: 3px 10px; color: var(--text-mute); }
 
 .ge-meta-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .ge-meta { flex: 1; min-width: 150px; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius-sm, 8px); padding: 10px 12px; }
 .ge-meta span { display: block; font-size: .72rem; color: var(--text-mute); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 3px; }
 .ge-meta strong { font-size: 1.05rem; color: var(--text); font-family: "Space Grotesk", sans-serif; }
 
-.ge-warning { background: rgba(255, 152, 0, .1); border: 1px solid var(--accent-orange); border-radius: var(--radius-sm, 8px); padding: 10px 12px; margin-bottom: 14px; font-size: .85rem; color: var(--text-soft); }
+.ge-warning { background: rgba(255, 152, 0, .1); border: 1px solid var(--accent-orange); border-radius: var(--radius-sm, 8px); padding: 10px 12px; margin-bottom: 14px; font-size: .85rem; color: var(--text-mute); }
 .ge-warning strong { color: var(--accent-orange); display: block; margin-bottom: 4px; }
 
-.ge-total-cost { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--text-soft); margin-bottom: 14px; }
+.ge-total-cost { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--text-mute); margin-bottom: 14px; }
 .ge-total-cost i { color: var(--accent-yellow); }
 .ge-total-cost strong { color: var(--text); }
 
@@ -189,7 +189,7 @@
 .ge-focus-total { font-size: .74rem; color: var(--text-mute); white-space: nowrap; }
 .ge-focus-chips, .ge-recipe-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .ge-focus-chips { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--bg-line); }
-.ge-focus-chip, .ge-recipe-chip { display: inline-flex; align-items: center; gap: 5px; font-size: .76rem; color: var(--text-soft); background: var(--bg-deep); border-radius: 6px; padding: 3px 7px; }
+.ge-focus-chip, .ge-recipe-chip { display: inline-flex; align-items: center; gap: 5px; font-size: .76rem; color: var(--text-mute); background: var(--bg-deep); border-radius: 6px; padding: 3px 7px; }
 .ge-focus-chip img, .ge-recipe-chip img { width: 16px; height: 16px; object-fit: contain; }
 .ge-recipe-chip.flux span { color: var(--accent-blue); }
 
@@ -202,6 +202,6 @@
 
 /* ── Toast (shared name with the simulator) ──────────────────────────────── */
 .gem-toast-host { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
-.gem-toast { background: var(--bg-card-hi); border: 1px solid var(--bg-line); border-left: 3px solid var(--accent-blue); border-radius: var(--radius-sm, 8px); padding: 10px 16px; color: var(--text); font-size: .88rem; box-shadow: var(--shadow-soft, 0 8px 24px rgba(0,0,0,.4)); opacity: 1; transition: opacity .3s, transform .3s; }
-.gem-toast.error { border-left-color: var(--accent-red); }
+.gem-toast { background: var(--bg-card-hi); border: 1px solid color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); border-radius: var(--radius-sm, 8px); padding: 10px 16px; color: var(--text); font-size: .88rem; box-shadow: var(--shadow-soft, 0 8px 24px rgba(0,0,0,.4)); opacity: 1; transition: opacity .3s, transform .3s; }
+.gem-toast.error { border-color: color-mix(in oklab, var(--accent-red) 55%, var(--bg-line)); }
 .gem-toast.out { opacity: 0; transform: translateY(8px); }

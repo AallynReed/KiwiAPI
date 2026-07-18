@@ -63,15 +63,15 @@
 .pl-stat {
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid var(--border, rgba(255, 255, 255, .08));
-  background: var(--surface-2, rgba(12, 16, 26, .55));
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
 }
 .pl-stat-label {
   margin: 0 0 4px;
   font-size: .76rem;
   text-transform: uppercase;
   letter-spacing: .04em;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-mute);
 }
 .pl-stat-value {
   margin: 0;
@@ -82,7 +82,7 @@
 .pl-stat-sub {
   margin: 2px 0 0;
   font-size: .78rem;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-mute);
 }
 
 .pl-section { margin-top: 34px; }
@@ -92,6 +92,9 @@
   font-weight: 700;
 }
 
+/* Wrapper lets the wide 6-column table scroll on narrow screens instead of
+   overflowing the page. */
+.pl-table-wrap { overflow-x: auto; }
 .pl-table {
   width: 100%;
   border-collapse: collapse;
@@ -101,26 +104,26 @@
 .pl-table td {
   text-align: left;
   padding: 9px 10px;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, .07));
+  border-bottom: 1px solid var(--bg-line);
 }
 .pl-table th {
   font-size: .74rem;
   text-transform: uppercase;
   letter-spacing: .04em;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-mute);
   font-weight: 600;
 }
 .pl-table td.pl-num { text-align: right; font-variant-numeric: tabular-nums; }
 .pl-rank { font-weight: 700; }
 .pl-delta-up { color: #5dd078; }
 .pl-delta-down { color: #f0556a; }
-.pl-delta-flat { color: var(--text-muted, #9aa3b2); }
+.pl-delta-flat { color: var(--text-mute); }
 
 .pl-loading,
 .pl-empty {
   margin: 0;
   padding: 18px 0;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-mute);
 }
 .pl-foot-link {
   margin-top: 34px;

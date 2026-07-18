@@ -543,7 +543,11 @@
     const svgNS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(svgNS, 'svg');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svg.setAttribute('preserveAspectRatio', 'none');
+    // The viewBox is sized to the container's own pixel dimensions, so a
+    // uniform-scale fit fills it exactly. Using the default "xMidYMid meet"
+    // (rather than "none") means a transient size change before the debounced
+    // re-render letterboxes instead of horizontally stretching the axis text.
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
     // Y grid + labels.
     const yTicks = 4;
@@ -643,10 +647,17 @@
       }
       return best;
     }
-    overlay.addEventListener('mousemove', (evt) => {
+    // ``nearest()`` is an O(n) scan over up to 5000 points, so running it on
+    // every raw mousemove would flood the main thread. Coalesce moves into one
+    // rAF tick - we only ever resolve the cursor once per frame off the most
+    // recent pointer position.
+    let rafId = 0;
+    let lastX = 0, lastY = 0;
+    const paint = () => {
+      rafId = 0;
       const r = svg.getBoundingClientRect();
-      const sx = ((evt.clientX - r.left) / r.width) * W;
-      const sy = ((evt.clientY - r.top) / r.height) * H;
+      const sx = ((lastX - r.left) / r.width) * W;
+      const sy = ((lastY - r.top) / r.height) * H;
       const hit = nearest(sx, sy);
       if (!hit) return;
       const total = (hit.price != null && hit.stack != null)
@@ -656,11 +667,17 @@
         <p class="mkt-chart-tooltip-when">${esc(formatAbsolute(hit.created_at))}</p>
         <p class="mkt-chart-tooltip-row">${esc(total)}</p>`;
       const containerRect = container.getBoundingClientRect();
-      tooltip.style.left = `${evt.clientX - containerRect.left}px`;
+      tooltip.style.left = `${lastX - containerRect.left}px`;
       tooltip.style.top  = `${yToPx(hit.price_each) - 6}px`;
       tooltip.classList.add('is-visible');
+    };
+    overlay.addEventListener('mousemove', (evt) => {
+      lastX = evt.clientX;
+      lastY = evt.clientY;
+      if (!rafId) rafId = requestAnimationFrame(paint);
     });
     overlay.addEventListener('mouseleave', () => {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
       tooltip.classList.remove('is-visible');
     });
   }

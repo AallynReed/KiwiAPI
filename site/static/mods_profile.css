@@ -44,7 +44,7 @@
 /* Tagline sits in the header's normal flow BELOW the avatar/name row (not inside
    the bottom-aligned .mpf-id-text) so adding one can't shove the name up into the
    banner. Negative margin tucks it snug under the identity row. */
-.mpf-tagline { color: var(--text-soft); font-size: 1rem; margin: -10px 0 0; padding: 0 24px 18px; max-width: 70ch; }
+.mpf-tagline { color: var(--text-mute); font-size: 1rem; margin: -10px 0 0; padding: 0 24px 18px; max-width: 70ch; }
 .mpf-meta { display: flex; flex-wrap: wrap; gap: 16px; color: var(--text-mute); font-size: .86rem; margin-top: 10px; }
 .mpf-meta span { display: inline-flex; align-items: center; gap: 6px; }
 .mpf-id-text .mp-links { margin-top: 12px; }
@@ -79,6 +79,11 @@
 }
 .mpf-cbtn:hover:not(:disabled) { background: rgba(255,255,255,.1); color: var(--text); }
 .mpf-cbtn:disabled { opacity: .35; cursor: default; }
+/* Coarse pointers (touch): keep the 26px visual box but expand the hit area to >=44px. */
+@media (pointer: coarse) {
+  .mpf-cbtn { position: relative; }
+  .mpf-cbtn::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); min-width: 44px; min-height: 44px; width: 100%; height: 100%; }
+}
 .mpf-cbtn.is-on { color: var(--accent-blue); }
 
 @media (max-width: 880px) {

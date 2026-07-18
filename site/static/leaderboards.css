@@ -253,8 +253,8 @@
   font-size: .68rem;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(255,184,107,.16);
-  color: #ffb86b;
+  background: color-mix(in oklab, var(--accent-orange) 16%, transparent);
+  color: var(--accent-orange);
   font-weight: 700;
 }
 
@@ -293,14 +293,14 @@
   align-items: center;
   gap: 10px;
 }
-.lb-cheaters-title i { color: #ffb86b; }
+.lb-cheaters-title i { color: var(--accent-orange); }
 .lb-cheaters-count {
   font-family: SFMono-Regular, Consolas, monospace;
   font-size: .78rem;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(255,184,107,.15);
-  color: #ffb86b;
+  background: color-mix(in oklab, var(--accent-orange) 15%, transparent);
+  color: var(--accent-orange);
   font-weight: 700;
 }
 .lb-cheaters-toggle {
@@ -419,7 +419,7 @@
   white-space: nowrap;
 }
 .lb-confidence-high { background: rgba(255,107,107,.18); color: #ff9b9b; }
-.lb-confidence-mid  { background: rgba(255,184,107,.18); color: #ffb86b; }
+.lb-confidence-mid  { background: color-mix(in oklab, var(--accent-orange) 18%, transparent); color: var(--accent-orange); }
 .lb-confidence-low  { background: rgba(120,180,255,.12); color: var(--accent-blue); }
 .lb-cheaters.collapsed .lb-cheaters-body,
 .lb-cheaters.collapsed .lb-cheaters-method,
@@ -589,7 +589,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   flex-shrink: 0;
 }
 .lb-evidence-type-score   { background: rgba(255,107,107,.18); color: #ff9b9b; }
-.lb-evidence-type-rank    { background: rgba(255,184,107,.18); color: #ffb86b; }
+.lb-evidence-type-rank    { background: color-mix(in oklab, var(--accent-orange) 18%, transparent); color: var(--accent-orange); }
 .lb-evidence-type-velocity{ background: rgba(120,180,255,.18); color: #78b4ff; }
 .lb-evidence-type-weekly  { background: rgba(94,234,212,.18); color: #5eead4; }
 .lb-evidence-summary {
@@ -815,8 +815,8 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 /* Per-cadence palette as CSS variables - kept in one place so the
    stats strip + row accents stay in lock-step if we re-tune later. */
 .lb-cheaters-coverage {
-  --cov-daily:    #4cc9f0;
-  --cov-weekly:   #c79bff;
+  --cov-daily:    var(--accent-blue);
+  --cov-weekly:   var(--accent-purple);
   --cov-lifetime: #fbd182;
   --cov-admin:    #f72585;
   --cov-small:    #9aa4b2;
@@ -1288,8 +1288,8 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
    cadence (weekly = purple, daily = blue), a soft bleed at rest, and the
    contest tag recoloured to match. The accent survives hover/active
    (box-shadow), the bleed only shows at rest so it doesn't fight them. */
-.lb-board.contest-weekly { box-shadow: inset 3px 0 0 var(--cov-weekly, #c79bff); }
-.lb-board.contest-daily  { box-shadow: inset 3px 0 0 var(--cov-daily, #4cc9f0); }
+.lb-board.contest-weekly { box-shadow: inset 3px 0 0 var(--cov-weekly, var(--accent-purple)); }
+.lb-board.contest-daily  { box-shadow: inset 3px 0 0 var(--cov-daily, var(--accent-blue)); }
 .lb-board.contest-weekly:not(.active):not(:hover) {
   background: linear-gradient(90deg, rgba(199,155,255,.08), transparent 42%);
 }
@@ -1298,9 +1298,9 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 }
 /* Virtual contest tab headers tinted to match their boards' cadence. */
 .lb-category.contest-weekly .lb-category-name,
-.lb-category.contest-weekly .lb-category-caret { color: #c79bff; }
+.lb-category.contest-weekly .lb-category-caret { color: var(--accent-purple); }
 .lb-category.contest-daily .lb-category-name,
-.lb-category.contest-daily .lb-category-caret { color: #4cc9f0; }
+.lb-category.contest-daily .lb-category-caret { color: var(--accent-blue); }
 
 .lb-board-empty {
   padding: 20px 14px;
@@ -1346,13 +1346,16 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   grid-template-columns: minmax(60px, auto) 1fr auto;
   gap: 0;
 }
-.lb-entries-table > .lb-th,
-.lb-entries-table > .lb-td {
+/* Row wrappers carry role=row but must not disturb the 3-column grid, so they
+   generate no box and their cells participate in the grid directly. */
+.lb-entries-table > .lb-tr { display: contents; }
+.lb-entries-table .lb-th,
+.lb-entries-table .lb-td {
   padding: 10px 14px;
   border-bottom: 1px solid rgba(255,255,255,.04);
   font-size: .92rem;
 }
-.lb-entries-table > .lb-th {
+.lb-entries-table .lb-th {
   font-size: .68rem;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1366,7 +1369,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   text-align: right;
 }
 .lb-rank-top {
-  color: #ffd472;
+  color: var(--accent-yellow);
   font-weight: 700;
 }
 .lb-rank-top-2 { color: #d8e0e8; font-weight: 700; }
@@ -1567,8 +1570,8 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   .lb-entries-table {
     grid-template-columns: 44px 1fr auto;
   }
-  .lb-entries-table > .lb-th,
-  .lb-entries-table > .lb-td {
+  .lb-entries-table .lb-th,
+  .lb-entries-table .lb-td {
     padding: 8px 8px;
     font-size: .85rem;
   }

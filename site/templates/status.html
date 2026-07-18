@@ -57,8 +57,13 @@
             <span class="st-banner-checked" id="st-banner-checked"></span>
         </section>
 
+        <!-- Small screen-reader-only live status. The card grid itself is NOT a
+             live region (it re-renders every 60s poll and would flood SR users);
+             this node announces just the short overall headline instead. -->
+        <p class="sr-only" id="st-live-status" role="status" aria-live="polite"></p>
+
         <!-- Per-environment + auth cards. JS-filled. -->
-        <section class="st-cards" id="st-cards" aria-live="polite">
+        <section class="st-cards" id="st-cards">
             <div class="st-loading" data-i18n>Checking servers…</div>
         </section>
 
@@ -87,7 +92,7 @@
                 .st-embed > p { color: var(--text-mute); margin: 0 0 1rem; }
                 .st-embed-preview { margin: 0 0 1rem; }
                 .st-embed-row { display: flex; align-items: center; gap: .6rem; margin-bottom: .6rem; }
-                .st-embed-row > span { flex: 0 0 64px; color: var(--text-soft); font-size: .85rem; }
+                .st-embed-row > span { flex: 0 0 64px; color: var(--text-mute); font-size: .85rem; }
                 .st-embed-row input { flex: 1 1 auto; min-width: 0; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 8px; color: var(--text); padding: .5rem .6rem; font-family: ui-monospace, monospace; font-size: .82rem; }
                 .st-embed-row button { flex: 0 0 auto; background: var(--accent); color: #06080d; border: 0; border-radius: 8px; padding: .5rem .9rem; font-weight: 600; cursor: pointer; }
                 @media (max-width: 560px) { .st-embed-row { flex-wrap: wrap; } .st-embed-row > span { flex-basis: 100%; } .st-embed-row button { width: 100%; } }

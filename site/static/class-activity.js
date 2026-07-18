@@ -151,6 +151,11 @@
             .replace('{to}', fmtAxis(p.window_end, p.period, p.window_end - p.window_start)) + ' · ' + t('Trove server time (UTC−11)')
         : '';
     }
+    // Announce a short summary on the sr-only live node (the chart itself isn't
+    // a live region). Mirrors the visible range text so no new i18n key is needed.
+    const liveEl = document.getElementById('cact-live-status');
+    if (liveEl && range) liveEl.textContent = range.textContent;
+
     if (buckets.length < 2) {
       host.innerHTML = `<div class="cact-empty" data-i18n>${
         t('Not enough history stored for this range yet - it fills in as hourly captures accumulate.')
@@ -501,6 +506,7 @@
       const on = b.dataset.metric === metric;
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
     });
     if (state.current) renderChart(state.current);
     if (reflect) reflectUrl();
@@ -513,6 +519,7 @@
       const on = b.dataset.view === view;
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
     });
     updateViewHint();
     if (state.current) renderChart(state.current);
@@ -559,10 +566,13 @@
   async function loadPeriod(period, reflect) {
     state.period = period;
     if (reflect) reflectUrl();
+    const panel = document.getElementById('cact-chart');
     document.querySelectorAll('#cact-periods button').forEach((b) => {
       const on = b.dataset.period === period;
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
+      if (on && panel && b.id) panel.setAttribute('aria-labelledby', b.id);
     });
     if (state.series[period]) {
       renderChart(state.series[period]);
@@ -579,6 +589,26 @@
     } catch (_) {
       if (host) host.innerHTML = `<div class="cact-empty">${esc(t('Could not load this range. Try again shortly.'))}</div>`;
     }
+  }
+
+  // Left/Right/Home/End roving between the tabs of a WAI-ARIA tablist,
+  // activating each on focus (these are automatic-activation tablists).
+  function wireTabKeys(el, onSelect) {
+    if (!el) return;
+    el.addEventListener('keydown', (e) => {
+      const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+      if (!keys.includes(e.key)) return;
+      const items = Array.from(el.querySelectorAll('button[role="tab"]'));
+      const i = items.indexOf(document.activeElement);
+      if (i < 0) return;
+      e.preventDefault();
+      const n = e.key === 'Home' ? 0
+        : e.key === 'End' ? items.length - 1
+        : e.key === 'ArrowLeft' ? (i - 1 + items.length) % items.length
+        : (i + 1) % items.length;
+      items[n].focus();
+      onSelect(items[n]);
+    });
   }
 
   // ─── Boot ──────────────────────────────────────────────────────────
@@ -604,6 +634,9 @@
         if (btn) setMetric(btn.dataset.metric, true);
       });
     }
+    wireTabKeys(tabs, (b) => loadPeriod(b.dataset.period, true));
+    wireTabKeys(views, (b) => setView(b.dataset.view, true));
+    wireTabKeys(metrics, (b) => setMetric(b.dataset.metric, true));
     window.addEventListener('hashchange', () => {
       const p = periodFromUrl();
       if (p && p !== state.period) loadPeriod(p);

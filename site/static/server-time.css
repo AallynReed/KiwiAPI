@@ -86,9 +86,8 @@
   margin: 14px 0 6px;
   letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(120deg, var(--text), color-mix(in oklab, var(--accent-orange) 60%, var(--text)));
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent; color: transparent;
+  /* Primary readout: solid colour, not gradient-clipped transparent text. */
+  color: var(--text);
 }
 .srv-bigdate { font-size: 1.05rem; color: var(--text); font-weight: 600; }
 .srv-offset { font-size: .85rem; color: var(--text-mute); margin-top: 6px; line-height: 1.5; }
@@ -169,7 +168,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .srv-wc-sub {
-  font-size: .72rem; color: var(--text-soft); line-height: 1.2; margin-top: 1px;
+  font-size: .72rem; color: var(--text-mute); line-height: 1.2; margin-top: 1px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .srv-wc-off {
@@ -247,7 +246,7 @@
 .srv-cv-label {
   display: flex; align-items: center; gap: 8px;
   font-size: .76rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
-  color: var(--text-soft);
+  color: var(--text-mute);
 }
 .srv-cv-badge {
   font-size: .6rem; letter-spacing: .04em; text-transform: uppercase; font-weight: 700;

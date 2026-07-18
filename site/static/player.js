@@ -73,15 +73,16 @@
       return;
     }
     recentEl.innerHTML = `
+      <div class="pl-table-wrap">
       <table class="pl-table">
         <thead>
           <tr>
-            <th>${esc(tr('Leaderboard'))}</th>
-            <th class="pl-num">${esc(tr('Best'))}</th>
-            <th class="pl-num">${esc(tr('Current'))}</th>
-            <th class="pl-num">${esc(tr('Score'))}</th>
-            <th class="pl-num">${esc(tr('Seen'))}</th>
-            <th class="pl-num">${esc(tr('Last seen'))}</th>
+            <th scope="col">${esc(tr('Leaderboard'))}</th>
+            <th scope="col" class="pl-num">${esc(tr('Best'))}</th>
+            <th scope="col" class="pl-num">${esc(tr('Current'))}</th>
+            <th scope="col" class="pl-num">${esc(tr('Score'))}</th>
+            <th scope="col" class="pl-num">${esc(tr('Seen'))}</th>
+            <th scope="col" class="pl-num">${esc(tr('Last seen'))}</th>
           </tr>
         </thead>
         <tbody>
@@ -95,7 +96,8 @@
               <td class="pl-num">${esc(when(b.last_seen))}</td>
             </tr>`).join('')}
         </tbody>
-      </table>`;
+      </table>
+      </div>`;
   }
 
   function chip(label, value, sub) {

@@ -30,8 +30,8 @@
 }
 .stm-tw { color: #a970ff; }
 .stm-yt { color: #ff4e45; }
-.stm-count { font-size: .84rem; color: var(--text-soft); }
-.stm-loading, .stm-empty { color: var(--text-soft); font-size: .92rem; padding: 8px 2px; grid-column: 1 / -1; }
+.stm-count { font-size: .84rem; color: var(--text-mute); }
+.stm-loading, .stm-empty { color: var(--text-mute); font-size: .92rem; padding: 8px 2px; grid-column: 1 / -1; }
 
 /* ── Card grids ────────────────────────────────────────────────────── */
 .stm-grid {
@@ -57,9 +57,12 @@
   background: var(--bg-deep) center / cover no-repeat;
   display: flex; align-items: flex-end;
 }
+/* Lazy <img> fills the thumb box; overlays (live/viewers/badge) sit above it
+   since they're appended after the image in the DOM. */
+.stm-thumb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .stm-thumb-fallback {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  color: var(--text-soft); font-size: 1.8rem;
+  color: var(--text-mute); font-size: 1.8rem;
 }
 .stm-live {
   position: absolute; top: 10px; left: 10px;
@@ -84,8 +87,8 @@
   font-weight: 600; font-size: .92rem; line-height: 1.35;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.stm-card-meta { display: flex; align-items: center; gap: 7px; font-size: .8rem; color: var(--text-soft); margin-top: auto; }
-.stm-card-meta i { color: var(--text-soft); }
+.stm-card-meta { display: flex; align-items: center; gap: 7px; font-size: .8rem; color: var(--text-mute); margin-top: auto; }
+.stm-card-meta i { color: var(--text-mute); }
 .stm-card-cat {
   font-size: .66rem; text-transform: uppercase; letter-spacing: .05em;
   padding: 2px 7px; border-radius: 999px; color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, transparent);

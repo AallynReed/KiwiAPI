@@ -290,8 +290,7 @@
         : '';
       return `
         <button type="button" class="${cls.join(' ')}"
-                data-ordinal="${v.ordinal}" role="tab"
-                aria-selected="${isActive}"
+                data-ordinal="${v.ordinal}"${isActive ? ' aria-current="true"' : ''}
                 title="${esc(v.version_tag)}">
           ${latestBadge}
           <span class="up-version-tag">${esc(v.version_tag)}</span>
@@ -376,6 +375,7 @@
       const isActive = state.activeTab === name;
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-selected', String(isActive));
+      btn.tabIndex = isActive ? 0 : -1;   // roving tabindex for the tablist
       pane.classList.toggle('active', isActive);
       pane.hidden = !isActive;
     }
@@ -1263,9 +1263,24 @@
 
   // ─── Event wiring ──────────────────────────────────────────────────
   function wireEvents() {
-    $tabExplorer.addEventListener('click', () => switchTab('explorer'));
-    $tabChanges.addEventListener('click', () => switchTab('changes'));
-    $tabCompare.addEventListener('click', () => switchTab('compare'));
+    // Explorer/Changes/Compare tablist: click, plus arrow/Home/End roving per
+    // the WAI-ARIA tabs pattern (panels carry role=tabpanel in the template).
+    const tabBtns = [$tabExplorer, $tabChanges, $tabCompare];
+    for (const btn of tabBtns) {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      btn.addEventListener('keydown', (e) => {
+        const i = tabBtns.indexOf(btn);
+        let j = -1;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') j = (i + 1) % tabBtns.length;
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') j = (i - 1 + tabBtns.length) % tabBtns.length;
+        else if (e.key === 'Home') j = 0;
+        else if (e.key === 'End') j = tabBtns.length - 1;
+        if (j < 0) return;
+        e.preventDefault();
+        switchTab(tabBtns[j].dataset.tab);
+        tabBtns[j].focus();
+      });
+    }
 
     $treeSearch.addEventListener('input', () => {
       state.treeFilter = $treeSearch.value || '';

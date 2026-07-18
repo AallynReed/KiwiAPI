@@ -44,6 +44,9 @@
             font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.05;
             margin: 0 0 18px; letter-spacing: -.02em;
         }
+        /* Solid accent (was a background-clip gradient word) - readable + no
+           gradient-on-text. */
+        .wmh-title-accent { color: var(--accent-blue); }
         .wmh-sub {
             max-width: 640px; margin: 0 auto; color: var(--text-mute);
             font-size: clamp(1.02rem, 2.2vw, 1.2rem); line-height: 1.6;
@@ -51,11 +54,6 @@
 
         .wmh-section { padding: 40px 0 8px; }
         .wmh-section-head { margin-bottom: 26px; }
-        .wmh-eyebrow {
-            display: inline-block; font-size: .78rem; font-weight: 600;
-            text-transform: uppercase; letter-spacing: .12em;
-            color: var(--accent); margin: 0 0 8px;
-        }
         .wmh-section-title {
             font-family: "Space Grotesk", Inter, sans-serif;
             font-size: clamp(1.5rem, 3.4vw, 2rem); margin: 0; letter-spacing: -.01em;
@@ -85,10 +83,8 @@
         .wmh-card p { margin: 0; color: var(--text-mute); font-size: .95rem; line-height: 1.55; }
 
         /* Per-audience accent: players=blue, modders=orange. */
-        .wmh-players .wmh-eyebrow { color: var(--accent-blue); }
         .wmh-players .wmh-card-icon { color: var(--accent-blue); background: color-mix(in oklab, var(--accent-blue) 16%, transparent); }
         .wmh-players .wmh-card:hover { border-color: color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); }
-        .wmh-modders .wmh-eyebrow { color: var(--accent-orange); }
         .wmh-modders .wmh-card-icon { color: var(--accent-orange); background: color-mix(in oklab, var(--accent-orange) 16%, transparent); }
         .wmh-modders .wmh-card:hover { border-color: color-mix(in oklab, var(--accent-orange) 45%, var(--bg-line)); }
 
@@ -127,14 +123,13 @@
         <!-- ═══════════════ HERO ═══════════════ -->
         <section class="wmh-hero">
             <a class="wmh-back" href="/mods"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> <span data-i18n>Back to the Mods Hub</span></a>
-            <h1 class="wmh-title" data-i18n>Why the <span class="grad">Mods Hub?</span></h1>
+            <h1 class="wmh-title" data-i18n>Why the <span class="wmh-title-accent">Mods Hub?</span></h1>
             <p class="wmh-sub" data-i18n>A home for Trove mods that's quick for players and powerful for the people who make them. Here's what you get.</p>
         </section>
 
         <!-- ═══════════════ FOR PLAYERS ═══════════════ -->
         <section class="wmh-section wmh-players" aria-label="For players">
             <div class="wmh-section-head">
-                <p class="wmh-eyebrow" data-i18n>For players</p>
                 <h2 class="wmh-section-title" data-i18n>Find it, preview it, play it.</h2>
             </div>
             <div class="wmh-grid">
@@ -174,7 +169,6 @@
         <!-- ═══════════════ FOR MODDERS ═══════════════ -->
         <section class="wmh-section wmh-modders" aria-label="For modders">
             <div class="wmh-section-head">
-                <p class="wmh-eyebrow" data-i18n>For modders</p>
                 <h2 class="wmh-section-title" data-i18n>A real home for your work.</h2>
             </div>
             <div class="wmh-grid">

@@ -82,7 +82,7 @@
   background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius);
   color: var(--text); font-size: .95rem; transition: border-color .15s var(--ease-out);
 }
-.mh-search-input:focus { outline: none; border-color: var(--accent-blue); }
+.mh-search-input:focus { border-color: var(--accent-blue); }
 
 .mh-field { display: grid; gap: 5px; }
 .mh-field-label {
@@ -93,13 +93,13 @@
   background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius);
   color: var(--text); padding: 9px 12px; font-size: .9rem; min-width: 150px; cursor: pointer;
 }
-.mh-select:focus { outline: none; border-color: var(--accent-blue); }
+.mh-select:focus { border-color: var(--accent-blue); }
 
 .mh-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .mh-tag {
   display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
   background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px;
-  color: var(--text-soft); padding: 5px 12px; font: 600 .8rem 'Inter', system-ui, sans-serif;
+  color: var(--text-mute); padding: 5px 12px; font: 600 .8rem 'Inter', system-ui, sans-serif;
   transition: border-color .15s var(--ease-out), color .15s var(--ease-out), background .15s var(--ease-out);
 }
 .mh-tag:hover { color: var(--text); border-color: var(--accent-blue); }
@@ -172,7 +172,7 @@
 .mh-badge-unlisted { color: var(--text-soft); background: rgba(255,255,255,.07); }
 .mh-badge-uploaded { color: #7fd4c8; background: rgba(127,212,200,.14); }
 /* Uploaded-on-behalf card: the muted "uploaded by <account>" under the creator. */
-.mh-card-uploader { display: block; color: var(--text-soft); font-size: .78em; margin-top: 1px; }
+.mh-card-uploader { display: block; color: var(--text-mute); font-size: .78em; margin-top: 1px; }
 /* "This mod was made by someone else" checkbox row in the create dialog. */
 .mh-form-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .mh-form-check input { width: auto; margin: 0; }
@@ -205,7 +205,7 @@
 
 .mh-form { display: grid; gap: 14px; }
 .mh-form-field { display: grid; gap: 6px; }
-.mh-form-field > span { font: 600 .8rem 'Inter', system-ui, sans-serif; color: var(--text-soft); }
+.mh-form-field > span { font: 600 .8rem 'Inter', system-ui, sans-serif; color: var(--text-mute); }
 .mh-form-field input, .mh-form-field textarea, .mh-form-field select {
   background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius);
   color: var(--text); padding: 10px 12px; font-size: .92rem; font-family: inherit; width: 100%;
@@ -217,7 +217,7 @@
 .mh-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 .mh-form-error { color: #ff6b81; font-size: .85rem; margin: 0; }
 .mh-form-hint { color: var(--text-mute); font-size: .82rem; line-height: 1.5; margin: 0; }
-.mh-form-hint strong { color: var(--text-soft); }
+.mh-form-hint strong { color: var(--text-mute); }
 
 @media (max-width: 560px) {
   .mh-controls-top { flex-direction: column; align-items: stretch; }

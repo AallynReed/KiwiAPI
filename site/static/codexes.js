@@ -204,9 +204,9 @@
     if (e.mastery_geode != null) badges.push(badge('geode', t('Geode'), e.mastery_geode, 'fa-gem'));
     if (e.power_rank != null) badges.push(badge('pr', t('PR'), e.power_rank, 'fa-bolt'));
     const trade = e.tradable === true
-      ? `<span class="cdx-trade cdx-trade-yes" title="${esc(t('Tradable'))}"><i class="fa-solid fa-right-left"></i></span>`
+      ? `<span class="cdx-trade cdx-trade-yes" title="${esc(t('Tradable'))}"><i class="fa-solid fa-right-left" aria-hidden="true"></i></span>`
       : e.tradable === false
-        ? `<span class="cdx-trade cdx-trade-no" title="${esc(t('Bound'))}"><i class="fa-solid fa-lock"></i></span>`
+        ? `<span class="cdx-trade cdx-trade-no" title="${esc(t('Bound'))}"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>`
         : '';
     return `
       <button type="button" class="cdx-card" data-idx="${i}">
@@ -237,15 +237,22 @@
   }
 
   // ─── Detail modal ──────────────────────────────────────────────────
+  let modalRelease = null;
   function openModal(e) {
     $modalBody.innerHTML = modalHTML(e);
     $modal.hidden = false;
     document.body.classList.add('cdx-modal-open');
     rerunI18n();
-    const close = $('cdx-modal-close');
-    if (close) close.focus();
+    const card = $modal.querySelector('.cdx-modal-card');
+    if (card && window.BTTUtil && window.BTTUtil.trapFocus) {
+      modalRelease = window.BTTUtil.trapFocus(card, { onEscape: closeModal });
+    } else {
+      const close = $('cdx-modal-close');
+      if (close) close.focus();
+    }
   }
   function closeModal() {
+    if (modalRelease) { modalRelease(); modalRelease = null; }
     $modal.hidden = true;
     document.body.classList.remove('cdx-modal-open');
   }

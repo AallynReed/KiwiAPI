@@ -48,10 +48,10 @@
 
         <!-- Channel toggle -->
         <div class="rel-channel" role="tablist" aria-label="Release channel">
-            <button type="button" class="rel-channel-btn active" data-channel="release" role="tab" aria-selected="true">
+            <button type="button" class="rel-channel-btn active" data-channel="release" role="tab" aria-selected="true" aria-controls="rel-latest rel-releases">
                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i> <span data-i18n>Stable</span>
             </button>
-            <button type="button" class="rel-channel-btn" data-channel="beta" role="tab" aria-selected="false">
+            <button type="button" class="rel-channel-btn" data-channel="beta" role="tab" aria-selected="false" aria-controls="rel-latest rel-releases" tabindex="-1">
                 <i class="fa-solid fa-flask" aria-hidden="true"></i> <span data-i18n>Beta</span>
             </button>
         </div>

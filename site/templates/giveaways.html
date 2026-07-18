@@ -48,9 +48,12 @@
         <!-- JS (giveaways.js) renders the grouped cards here: open, upcoming,
              and past. Entry counts + your odds update live; the countdown
              ticks every second. -->
-        <div id="gw-list" aria-live="polite">
+        <div id="gw-list">
             <p class="gw-loading" data-i18n>Loading giveaways…</p>
         </div>
+        <!-- Small, polite live region: announces only a short summary count, so
+             the 30s poll re-rendering the whole list isn't re-read each time. -->
+        <p id="gw-live" class="sr-only" aria-live="polite"></p>
     </main>
 
     {% include "partials/footer.html" %}

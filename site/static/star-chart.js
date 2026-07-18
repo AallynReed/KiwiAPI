@@ -346,6 +346,7 @@
       el.classList.toggle("hl", isHl && !data.isRoot);
       el.classList.toggle("on", isHl && isSel);
       el.classList.toggle("off", isHl && !isSel);
+      if (!data.isRoot) el.setAttribute("aria-pressed", isSel ? "true" : "false");
       // While a filter/search is active, push the non-matches far into the background.
       el.classList.toggle("dim", filterActive && !isSel && !isHl && !isTip && !data.isRoot);
       if (data.isRoot) {
@@ -405,10 +406,11 @@
     elMetaNodes.textContent = fmt("Nodes: {n}/{max}", { n: selected.size, max: maxNodes() });
     elMetaState.classList.toggle("active", selected.size > 0);
     elMetaState.innerHTML = selected.size > 0
-      ? `<i class="fa-solid fa-circle-check"></i> ${t("Active")}`
-      : `<i class="fa-regular fa-circle"></i> ${t("Empty")}`;
+      ? `<i class="fa-solid fa-circle-check" aria-hidden="true"></i> ${t("Active")}`
+      : `<i class="fa-regular fa-circle" aria-hidden="true"></i> ${t("Empty")}`;
     elCheat.classList.toggle("active", cheatMode);
-    elCheat.innerHTML = `<i class="fa-solid ${cheatMode ? "fa-bolt" : "fa-lock"}"></i> ${t("Cheat mode")}: ${cheatMode ? t("On") : t("Off")}`;
+    elCheat.setAttribute("aria-pressed", String(cheatMode));
+    elCheat.innerHTML = `<i class="fa-solid ${cheatMode ? "fa-bolt" : "fa-lock"}" aria-hidden="true"></i> ${t("Cheat mode")}: ${cheatMode ? t("On") : t("Off")}`;
 
     if (!selected.size) { elSummary.innerHTML = `<p class="sc-empty">${t("Select nodes to see the combined stats, abilities and rewards.")}</p>`; return; }
 
@@ -432,7 +434,7 @@
       <div class="sc-section ${sectionOpen[key] ? "" : "collapsed"}" data-section="${key}">
         <button type="button" class="sc-section-toggle">
           <span>${t(title)}</span>
-          <i class="fa-solid ${sectionOpen[key] ? "fa-chevron-up" : "fa-chevron-down"}"></i>
+          <i class="fa-solid ${sectionOpen[key] ? "fa-chevron-up" : "fa-chevron-down"}" aria-hidden="true"></i>
         </button>
         <ul>${itemsHtml}</ul>
       </div>` : "";
@@ -564,8 +566,25 @@
   }
 
   // ── Interaction wiring ────────────────────────────────────────────────────
+  function nodeAriaLabel(node) {
+    const name = t(node.Name || node.Constellation || node.constellName || "");
+    const type = t(node.Type || "");
+    return type ? `${name} (${type})` : name;
+  }
+  // Tooltips fire on hover (mouse event carries coords) and on keyboard focus
+  // (synthesize coords from the node's on-screen box so it lands beside it).
+  function showTooltipAtEl(el, node) {
+    const r = el.getBoundingClientRect();
+    showTooltip({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }, node);
+  }
   function wireNode(rec) {
     const { el, data } = rec;
+    // Keyboard operability: every interactive node is a focusable button that
+    // toggles on Enter/Space, mirroring its click behaviour.
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    const label = nodeAriaLabel(data.node);
+    if (label) el.setAttribute("aria-label", label);
     if (data.isRoot) {
       let clickTimer = null;
       el.addEventListener("click", (e) => {
@@ -577,12 +596,26 @@
           onSelectionChanged();
         }
       });
+      // Keyboard: Enter/Space toggles the whole constellation (select if empty,
+      // otherwise clear the branch) — a single deterministic action.
+      el.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        const anySel = Array.from(selected).some((p) => nodeMap[p] && nodeMap[p].constellName === data.node.constellName);
+        if (anySel) deselectWithChildren(data.path); else selectConstellation(data.path);
+        onSelectionChanged();
+      });
     } else {
       el.addEventListener("click", () => onNodeClick(rec));
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onNodeClick(rec); }
+      });
     }
     el.addEventListener("mouseenter", (e) => showTooltip(e, data.node));
     el.addEventListener("mousemove", moveTooltip);
     el.addEventListener("mouseleave", hideTooltip);
+    el.addEventListener("focus", () => showTooltipAtEl(el, data.node));
+    el.addEventListener("blur", hideTooltip);
   }
 
   function showTooltip(e, node) {
@@ -825,6 +858,9 @@
     anchorEl.setAttribute("stroke", "var(--bg-line)");
     anchorEl.setAttribute("stroke-width", 4);
     anchorEl.classList.add("sc-anchor");
+    anchorEl.setAttribute("role", "button");
+    anchorEl.setAttribute("tabindex", "0");
+    anchorEl.setAttribute("aria-label", t("Clear all active nodes"));
     let anchorTimer = null;
     anchorEl.addEventListener("click", (e) => {
       if (e.detail === 1) {
@@ -833,6 +869,12 @@
         clearTimeout(anchorTimer);
         if (cheatMode) { selectAll(); onSelectionChanged(); }
       }
+    });
+    // Keyboard: Enter/Space clears all active nodes (the primary anchor action).
+    anchorEl.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      if (selected.size) { selected.clear(); onSelectionChanged(); toast(t("Cleared all active nodes.")); }
     });
 
     // (Re)build the whole scene for the current view mode. The selection is a
@@ -910,13 +952,16 @@
       suppressCodeInput = false;
     });
 
-    // Cheat toggle
+    // Cheat toggle (a role=button span → operable by keyboard too)
     elCheat.addEventListener("click", () => {
       if (cheatMode && selected.size > 40) { toast(t("Reduce active nodes to 40 or fewer before disabling cheat mode."), true); return; }
       cheatMode = !cheatMode;
       try { localStorage.setItem(CHEAT_KEY, cheatMode ? "1" : "0"); } catch (e) {}
       renderSummary();
       toast(cheatMode ? t("Cheat mode on — node limit raised to 120.") : t("Cheat mode off — node limit back to 40."));
+    });
+    elCheat.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); elCheat.click(); }
     });
 
     // Search + stat highlight

@@ -72,9 +72,17 @@
     }, 200));
 
     $search.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && state.suggestions.length) {
+      const n = state.suggestions.length;
+      if (e.key === 'ArrowDown' && n) {
         e.preventDefault();
-        selectRecipe(state.suggestions[0]);
+        if ($suggest.hidden) { openSuggest(); }
+        highlight(activeIdx < n - 1 ? activeIdx + 1 : 0);
+      } else if (e.key === 'ArrowUp' && n) {
+        e.preventDefault();
+        highlight(activeIdx > 0 ? activeIdx - 1 : n - 1);
+      } else if (e.key === 'Enter' && n) {
+        e.preventDefault();
+        selectRecipe(state.suggestions[activeIdx >= 0 ? activeIdx : 0]);
       } else if (e.key === 'Escape') {
         closeSuggest();
       }
@@ -104,6 +112,22 @@
 
   // ─── Recipe suggestions ────────────────────────────────────────────
   let _suggestToken = 0;
+  let activeIdx = -1;   // highlighted option for arrow-key traversal
+
+  // Move the active-descendant highlight to option `idx` (or clear with -1).
+  function highlight(idx) {
+    const opts = $suggest.querySelectorAll('.craft-suggest-item');
+    if (!opts.length) { activeIdx = -1; $search.removeAttribute('aria-activedescendant'); return; }
+    activeIdx = idx;
+    opts.forEach((el, i) => {
+      const on = i === idx;
+      el.classList.toggle('is-active', on);
+      el.setAttribute('aria-selected', on ? 'true' : 'false');
+      if (on) { el.id = el.id || ('craft-opt-' + i); el.scrollIntoView({ block: 'nearest' }); }
+    });
+    if (idx >= 0 && opts[idx]) $search.setAttribute('aria-activedescendant', opts[idx].id);
+    else $search.removeAttribute('aria-activedescendant');
+  }
   async function runSuggest() {
     const q = state.query;
     if (!q) { closeSuggest(); return; }
@@ -133,19 +157,27 @@
       const out = (r.data && r.data.recipe && r.data.recipe.output) || null;
       const amt = out && out.amount > 1 ? `<span class="craft-suggest-amt">×${out.amount}</span>` : '';
       const cat = r.category ? `<span class="craft-suggest-cat">${esc(r.category)}</span>` : '';
-      return `<button type="button" class="craft-suggest-item" role="option"
-                      data-idx="${i}">
+      return `<button type="button" class="craft-suggest-item" role="option" aria-selected="false"
+                      id="craft-opt-${i}" data-idx="${i}">
                 <span class="craft-suggest-name">${esc(r.name)}${amt}</span>${cat}
               </button>`;
     }).join('');
+    activeIdx = -1;
+    $search.removeAttribute('aria-activedescendant');
     for (const el of $suggest.querySelectorAll('[data-idx]')) {
       el.addEventListener('click', () => selectRecipe(state.suggestions[Number(el.dataset.idx)]));
+      el.addEventListener('mouseenter', () => highlight(Number(el.dataset.idx)));
     }
     openSuggest();
   }
 
   function openSuggest() { $suggest.hidden = false; $search.setAttribute('aria-expanded', 'true'); }
-  function closeSuggest() { $suggest.hidden = true; $search.setAttribute('aria-expanded', 'false'); }
+  function closeSuggest() {
+    $suggest.hidden = true;
+    $search.setAttribute('aria-expanded', 'false');
+    activeIdx = -1;
+    $search.removeAttribute('aria-activedescendant');
+  }
 
   function selectRecipe(row) {
     if (!row) return;

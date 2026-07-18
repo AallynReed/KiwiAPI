@@ -559,7 +559,7 @@ img.nav-account-avatar {
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--text-soft);
+  color: var(--text-mute);
 }
 
 /* Beta pill - lives in the nav dropdown (Market link), so it belongs in the
@@ -1695,7 +1695,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   margin: 40px auto 0;
   padding-top: 24px;
   border-top: 1px solid var(--bg-line);
-  color: var(--text-soft);
+  color: var(--text-mute);
   font-size: .82rem;
   display: flex;
   flex-wrap: wrap;
@@ -1703,7 +1703,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   justify-content: center;
 }
 .footer-fineprint .sep { color: var(--bg-line); }
-.footer-fineprint a { color: var(--text-soft); text-decoration: underline; text-underline-offset: 2px; }
+.footer-fineprint a { color: var(--text-mute); text-decoration: underline; text-underline-offset: 2px; }
 .footer-fineprint a:hover { color: var(--accent-blue); }
 
 

@@ -27,7 +27,8 @@
   color: var(--text); font: inherit; font-size: .92rem; padding: 9px 11px;
   border-radius: 8px;
 }
-.craft-suggest-item:hover { background: var(--bg-deep); }
+.craft-suggest-item:hover, .craft-suggest-item.is-active { background: var(--bg-deep); }
+.craft-suggest-item.is-active { outline: 1px solid var(--accent-blue); outline-offset: -1px; }
 .craft-suggest-name { display: inline-flex; align-items: baseline; gap: 7px; min-width: 0; }
 .craft-suggest-amt { color: var(--craft-green); font-size: .8rem; font-weight: 600; }
 .craft-suggest-cat {
@@ -95,16 +96,16 @@
   border: 1px solid transparent;
 }
 .craft-costline.is-best { border-color: rgba(74,208,127,.35); background: rgba(74,208,127,.07); }
-.craft-costline-label { color: var(--text-soft); font-size: .9rem; }
+.craft-costline-label { color: var(--text-mute); font-size: .9rem; }
 .craft-costline-value {
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace; font-weight: 600;
 }
 .craft-costline-value [data-i18n] { color: var(--text-mute); font-weight: 400; font-size: .82em; }
-.craft-partial { color: var(--text-soft); }
+.craft-partial { color: var(--text-mute); }
 .craft-na { color: var(--text-mute); font-weight: 400; }
 
 .craft-warnings { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 5px; }
-.craft-warnings li { color: #f0b74b; font-size: .84rem; display: flex; align-items: center; gap: 8px; }
+.craft-warnings li { color: var(--accent-yellow); font-size: .84rem; display: flex; align-items: center; gap: 8px; }
 
 /* ─── Ingredient tree ───────────────────────────────────────────────── */
 .craft-tree-wrap {
@@ -165,7 +166,7 @@
 }
 .craft-node-cost.rec-craft { color: var(--craft-green); }
 .craft-node-cost.rec-buy { color: var(--text); }
-.craft-node-cost.is-partial { color: var(--text-soft); }
+.craft-node-cost.is-partial { color: var(--text-mute); }
 .craft-node-cost.is-na { color: var(--text-mute); font-weight: 400; font-size: .76rem; }
 
 /* The root node has no toggle chrome noise - give it a touch more weight. */

@@ -55,6 +55,9 @@
     injectStyles();
     var ov = document.createElement('div');
     ov.className = 'bpv-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', (opts.title || 'Blueprint') + ' — 3D model preview');
     ov.innerHTML =
       '<div class="bpv-modal">' +
         '<div class="bpv-head">' +
@@ -72,15 +75,20 @@
     var msg = ov.querySelector('.bpv-msg');
     var meta = ov.querySelector('.bpv-meta');
     var viewer = null;
+    var releaseFocus = null;
     function close() {
       if (viewer) { viewer.dispose(); viewer = null; }
       document.removeEventListener('keydown', onKey);
+      if (releaseFocus) { releaseFocus(); releaseFocus = null; }
       ov.remove();
     }
     function onKey(e) { if (e.key === 'Escape') close(); }
     ov.querySelector('.bpv-close').addEventListener('click', close);
     ov.addEventListener('mousedown', function (e) { if (e.target === ov) close(); });
     document.addEventListener('keydown', onKey);
+    if (window.BTTUtil && window.BTTUtil.trapFocus) {
+      releaseFocus = window.BTTUtil.trapFocus(ov.querySelector('.bpv-modal'));
+    }
 
     ensureThree().then(function (THREE) {
       return fetch(opts.url, { credentials: 'same-origin' }).then(function (r) {
@@ -107,6 +115,9 @@
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(W, H);
+    renderer.domElement.setAttribute('role', 'img');
+    renderer.domElement.setAttribute('aria-label', 'Interactive 3D voxel model. Drag to rotate, scroll to zoom.');
+    renderer.domElement.appendChild(document.createTextNode('3D model preview (requires a WebGL-capable browser).'));
     stage.appendChild(renderer.domElement);
 
     var scene = new THREE.Scene();
@@ -153,19 +164,19 @@
       if (!drag) return;
       var dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY;
       if (drag === 2) pan(dx, dy); else rotate(dx, dy);
-      applyCamera();
+      applyCamera(); request();
     }
     function onUp() { drag = 0; stage.classList.remove('bpv-grabbing'); }
-    function onWheel(e) { e.preventDefault(); zoom(e.deltaY > 0 ? 1.12 : 0.89); applyCamera(); }
+    function onWheel(e) { e.preventDefault(); zoom(e.deltaY > 0 ? 1.12 : 0.89); applyCamera(); request(); }
     function dist(e) { var a = e.touches[0], b = e.touches[1]; return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
     function onTStart(e) { if (e.touches.length === 1) { drag = 1; lx = e.touches[0].clientX; ly = e.touches[0].clientY; } else if (e.touches.length === 2) { drag = 0; pinch = dist(e); } }
     function onTMove(e) {
-      if (e.touches.length === 1 && drag === 1) { var t = e.touches[0]; rotate(t.clientX - lx, t.clientY - ly); lx = t.clientX; ly = t.clientY; applyCamera(); }
-      else if (e.touches.length === 2) { var d = dist(e); if (pinch) { zoom(pinch / d); applyCamera(); } pinch = d; }
+      if (e.touches.length === 1 && drag === 1) { var t = e.touches[0]; rotate(t.clientX - lx, t.clientY - ly); lx = t.clientX; ly = t.clientY; applyCamera(); request(); }
+      else if (e.touches.length === 2) { var d = dist(e); if (pinch) { zoom(pinch / d); applyCamera(); request(); } pinch = d; }
       e.preventDefault();
     }
     function onTEnd() { drag = 0; pinch = 0; }
-    function onResize() { var w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h); }
+    function onResize() { var w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h); request(); }
 
     el.addEventListener('mousedown', onDown);
     window.addEventListener('mousemove', onMove);
@@ -177,8 +188,12 @@
     el.addEventListener('touchend', onTEnd);
     window.addEventListener('resize', onResize);
 
-    var raf = 0, alive = true;
-    (function loop() { if (!alive) return; raf = requestAnimationFrame(loop); renderer.render(scene, camera); })();
+    // Render-on-demand: the scene is static, so draw once and re-render only on
+    // interaction (drag / zoom / resize) rather than spinning a rAF loop forever.
+    var raf = 0, alive = true, pending = false;
+    function renderOnce() { if (alive) renderer.render(scene, camera); }
+    function request() { if (pending) return; pending = true; raf = requestAnimationFrame(function () { pending = false; renderOnce(); }); }
+    request();
 
     return {
       dispose: function () {
