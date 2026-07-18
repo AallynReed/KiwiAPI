@@ -334,6 +334,7 @@ _SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/support", None),
     ("/terms", None),
     ("/privacy", None),
+    ("/accessibility", None),
     ("/commands", "commands_enabled"),
     ("/classes", "classes_enabled"),
     ("/star-chart", "star_chart_enabled"),
@@ -1040,6 +1041,12 @@ async def terms(request: Request) -> HTMLResponse:
 async def privacy(request: Request) -> HTMLResponse:
     """Privacy Policy - reachable from the footer fine print (no navbar link)."""
     return _TEMPLATES.TemplateResponse(request, "privacy.html", {})
+
+
+@router.get("/accessibility", response_class=HTMLResponse)
+async def accessibility(request: Request) -> HTMLResponse:
+    """Accessibility statement - reachable from the footer fine print."""
+    return _TEMPLATES.TemplateResponse(request, "accessibility.html", {})
 
 
 @router.get("/status/og.png")

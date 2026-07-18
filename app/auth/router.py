@@ -29,7 +29,7 @@ from app.auth.schemas import (
     UpdateProfileRequest,
     UserPublic,
 )
-from app.auth.sessions import _user_agent, issue_tokens, revoke_all_sessions
+from app.auth.sessions import _device, issue_tokens, revoke_all_sessions
 from app.core import lockout
 from app.core.captcha import verify_captcha
 from app.core.config import settings
@@ -177,14 +177,19 @@ async def login(
             message="Verify your email address before logging in.",
         )
 
-    # Notify on a sign-in from an IP we haven't seen on this account.
-    seen_ip = ip and await Session.find_one(Session.user_id == user.id, Session.ip == ip)
+    # Notify on a sign-in from a device/browser we haven't seen on this account.
+    # (We no longer store the IP, so novelty is judged on the coarse device label.)
+    device = _device(request)
+    seen_device = device and await Session.find_one(
+        Session.user_id == user.id, Session.device == device
+    )
     user.last_login_at = utcnow()
     await user.save()
 
     tokens = await issue_tokens(user, request)
-    if settings.security_email_notifications and not seen_ip:
-        background_tasks.add_task(send_new_login_email, user, ip, _user_agent(request))
+    if settings.security_email_notifications and not seen_device:
+        # `ip` is passed transiently into the email only - it is never stored.
+        background_tasks.add_task(send_new_login_email, user, ip, device)
     return tokens
 
 

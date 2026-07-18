@@ -16,16 +16,16 @@ from fastapi import Request
 
 from app.core.config import settings
 from app.core.security import generate_refresh_token, hash_token
-from app.core.utils import client_ip, utcnow
+from app.core.utils import device_label, utcnow
 from app.site_auth.models import SiteSession, SiteUser
 from app.site_auth.schemas import SiteTokenResponse
 
 TOKEN_KIND = "site"
 
 
-def _user_agent(request: Request) -> str | None:
-    ua = request.headers.get("user-agent")
-    return ua[:300] if ua else None
+def _device(request: Request) -> str | None:
+    """Coarse 'Browser on OS' label for the session list - never the raw UA/IP."""
+    return device_label(request.headers.get("user-agent"))
 
 
 def create_site_access_token(
@@ -52,8 +52,7 @@ async def issue_tokens(user: SiteUser, request: Request) -> SiteTokenResponse:
     session = SiteSession(
         site_user_id=user.id,
         refresh_token_hash=refresh_hash,
-        ip=client_ip(request),
-        user_agent=_user_agent(request),
+        device=_device(request),
         expires_at=utcnow() + timedelta(days=settings.refresh_token_expire_days),
     )
     await session.insert()
@@ -95,8 +94,7 @@ async def rotate(refresh_token: str, request: Request) -> SiteTokenResponse | No
     new_refresh, new_hash = generate_refresh_token()
     session.refresh_token_hash = new_hash
     session.last_used_at = now
-    session.ip = client_ip(request)
-    session.user_agent = _user_agent(request)
+    session.device = _device(request)
     await session.save()
 
     access = create_site_access_token(str(user.id), user.token_version, session_id=str(session.id))

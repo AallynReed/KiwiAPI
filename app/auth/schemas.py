@@ -96,8 +96,7 @@ class LogoutRequest(BaseModel):
 
 class SessionPublic(BaseModel):
     id: str
-    ip: str | None = None
-    user_agent: str | None = None
+    device: str | None = None      # coarse "Browser on OS"; no raw UA / IP stored
     created_at: datetime
     last_used_at: datetime
     expires_at: datetime

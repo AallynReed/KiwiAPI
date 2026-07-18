@@ -44,8 +44,7 @@ class PrizeCode(Document):
     code: str                                      # the secret redeemable code
     status: CodeStatus = CodeStatus.available
     giveaway_id: PydanticObjectId | None = None    # set while reserved / awarded
-    awarded_to: PydanticObjectId | None = None     # SiteUser id
-    awarded_to_email: str | None = None
+    awarded_to: PydanticObjectId | None = None     # SiteUser id (no email stored)
     awarded_at: datetime | None = None
     created_at: datetime = Field(default_factory=utcnow)
 
@@ -69,10 +68,10 @@ class Giveaway(Document):
     vault_item_id: PydanticObjectId | None = None  # the drawer the prize comes from
     prize_code_id: PydanticObjectId | None = None  # the reserved code from that drawer
 
-    # Winner - set when the draw runs.
+    # Winner - set when the draw runs. (No email stored; the winner is DM'd and the
+    # code is on their dashboard.)
     winner_user_id: PydanticObjectId | None = None
     winner_username: str | None = None
-    winner_email: str | None = None
     drawn_at: datetime | None = None
 
     # Denormalised running count so the public list never has to fan out a

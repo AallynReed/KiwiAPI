@@ -56,7 +56,6 @@ class VaultCodeView(BaseModel):
     code: str                      # master-only surface, so the code is shown
     status: CodeStatus
     giveaway_id: str | None = None
-    awarded_to_email: str | None = None
     awarded_at: datetime | None = None
     created_at: datetime
 
@@ -103,7 +102,6 @@ class GiveawayAdminView(BaseModel):
     prize_code_id: str | None = None
     winner_user_id: str | None = None
     winner_username: str | None = None
-    winner_email: str | None = None
     drawn_at: datetime | None = None
     created_at: datetime
 

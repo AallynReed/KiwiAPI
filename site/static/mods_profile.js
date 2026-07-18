@@ -77,9 +77,11 @@
   // ─── Render ────────────────────────────────────────────────────────
   function render() {
     const p = state.profile;
+    const taken = p.taken_down
+      ? `<div class="mp-takedown"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('This profile has been removed by a moderator.'))} ${p.takedown_reason ? esc(p.takedown_reason) : ''}</div>` : '';
     const main = readmeHTML(p) + modsHTML(p);
     const side = aboutHTML(p) + featuredHTML(p);
-    $root.innerHTML = headerHTML(p) + `<div class="mpf-layout">
+    $root.innerHTML = headerHTML(p) + taken + `<div class="mpf-layout">
       <div class="mpf-col-main">${main}</div>
       <aside class="mpf-col-side">${side}</aside>
     </div>`;
@@ -122,6 +124,9 @@
 
     const editBtn = p.is_owner
       ? `<button type="button" class="mp-btn mp-btn-sm" id="mpf-edit"><i class="fa-solid fa-pen"></i> ${esc(t('Edit profile'))}</button>` : '';
+    // Anyone (no account needed) can report a profile - DSA notice-and-action.
+    const reportBtn = !p.is_owner
+      ? `<button type="button" class="mp-btn mp-btn-sm" id="mpf-report"><i class="fa-solid fa-flag"></i> ${esc(t('Report'))}</button>` : '';
 
     return `<header class="mpf-header">
       ${banner}
@@ -130,7 +135,7 @@
         <div class="mpf-id-text">
           <div class="mpf-namerow">
             <h1 class="mpf-name">${esc(p.display_name)}</h1>
-            ${editBtn}
+            ${editBtn}${reportBtn}
           </div>
           <div class="mpf-handle">@${esc(p.handle)}</div>
         </div>
@@ -231,6 +236,7 @@
     if (!p.is_owner) return;
     const w = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
     w('mpf-edit', openEditProfile);
+    w('mpf-report', openReport);
     w('mpf-edit-readme', openEditReadme);
     w('mpf-avatar-btn', () => openImageUpload(false));
     w('mpf-banner-btn', () => openImageUpload(true));
@@ -257,6 +263,25 @@
     const r = await apiJSON('/v1/mods/hub/me/profile',
       { method: 'PATCH', json: { featured_slug: cur === slug ? '' : slug } });
     if (r.ok) { await refresh(r.data); } else toast(errMsg(r, 'Could not update.'), true);
+  }
+
+  function openReport() {
+    const m = openModal(t('Report this profile'), `<form class="mp-form" id="mpf-report-form">
+      <label class="mp-form-field"><span>${esc(t('What is the problem?'))}</span><textarea name="reason" rows="4" maxlength="2000" required></textarea></label>
+      <p class="mp-form-error" hidden></p>
+      <div class="mp-form-actions">
+        <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>
+        <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Send report'))}</button>
+      </div></form>`);
+    m.wrap.querySelector('#mpf-report-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const r = await apiJSON('/v1/moderation/report', { json: {
+        target_type: 'profile', handle: HANDLE, reason: f.reason.value.trim(),
+      } });
+      if (r.ok || r.status === 202) { m.close(); toast(t('Thanks - your report was sent.')); }
+      else showFormError(f, errMsg(r, 'Could not send the report.'));
+    });
   }
 
   function openEditProfile() {

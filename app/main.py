@@ -56,6 +56,7 @@ from app.pageviews.middleware import add_pageview_middleware
 from app.pageviews.recorder import start_pageview_recorder, stop_pageview_recorder
 from app.scanning.router import router as scanning_router
 from app.site.router import router as site_router
+from app.site_auth.account import router as site_account_router
 from app.site_auth.oauth import router as site_oauth_router
 from app.site_auth.router import router as site_auth_router
 from app.supporters.router import public_router as supporters_public_router
@@ -73,6 +74,7 @@ from app.trove.leaderboards.detection import (
     start_cheaters_warmer,
     stop_cheaters_warmer,
 )
+from app.trove.moderation import router as moderation_router
 from app.trove.modpacks.router import (
     modpacks_hub_router,
     modpacks_hub_write_router,
@@ -271,6 +273,8 @@ app.include_router(discord_router, include_in_schema=False)
 # in a separate Beanie collection from the dev portal's `User` - see
 # app/site_auth/__init__.py for the rationale.
 app.include_router(site_auth_router, include_in_schema=False)
+app.include_router(site_account_router, include_in_schema=False)  # GDPR export + self-delete (site_auth)
+app.include_router(moderation_router, include_in_schema=False)  # public notice-and-action reports (DSA)
 app.include_router(site_oauth_router, include_in_schema=False)
 app.include_router(tokens_router, include_in_schema=False)
 app.include_router(admin_router, include_in_schema=False)

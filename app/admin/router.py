@@ -991,16 +991,17 @@ async def replace_supporters_admin(
 
 @router.get("/mods/reports")
 async def list_mod_reports(resolved: bool = Query(default=False)) -> dict:
-    """Open (or resolved) user reports against shared mods, newest first."""
-    from app.trove.mods_hub import service as mods_hub_service
-    return {"items": await mods_hub_service.list_reports(resolved=resolved)}
+    """Open (or resolved) notice-and-action reports against public content (mods,
+    modpacks, profiles), newest first."""
+    from app.trove import moderation
+    return {"items": await moderation.list_reports(resolved=resolved)}
 
 
 @router.post("/mods/reports/{report_id}/dismiss")
 async def dismiss_mod_report(report_id: str) -> dict:
-    """Resolve a single report without taking the mod down (bogus/non-actionable)."""
-    from app.trove.mods_hub import service as mods_hub_service
-    await mods_hub_service.dismiss_report(report_id)
+    """Resolve a single report without removing the content (bogus/non-actionable)."""
+    from app.trove import moderation
+    await moderation.dismiss_report(report_id)
     return {"ok": True}
 
 
@@ -1047,6 +1048,22 @@ async def restore_mod(project_id: str) -> dict:
     project = await mods_hub_service.restore(project_id)
     return {"slug": project.slug, "handle": project.owner_handle,
             "taken_down": project.taken_down}
+
+
+@router.post("/mods/profiles/{profile_id}/takedown")
+async def take_down_profile(profile_id: str, req: TakedownRequest) -> dict:
+    """Remove a creator profile from public view (owner still sees it, flagged)."""
+    from app.trove.mods_hub import service as mods_hub_service
+    p = await mods_hub_service.take_down_profile(profile_id, req.reason)
+    return {"handle": p.handle, "taken_down": p.taken_down, "takedown_reason": p.takedown_reason}
+
+
+@router.post("/mods/profiles/{profile_id}/restore")
+async def restore_profile(profile_id: str) -> dict:
+    """Reverse a profile takedown."""
+    from app.trove.mods_hub import service as mods_hub_service
+    p = await mods_hub_service.restore_profile(profile_id)
+    return {"handle": p.handle, "taken_down": p.taken_down}
 
 
 # --- Stray (imported) mods: catalog import + approval queue + claims --------
@@ -1207,7 +1224,6 @@ def _site_user_dto(u: SiteUser, mod_count: int = 0, modpack_count: int = 0) -> d
         "id": str(u.id),
         "username": u.username,
         "discord_handle": u.discord_handle or "",
-        "email": u.email,
         "display_name": u.display_name,
         "is_active": u.is_active,
         "is_verified": u.is_verified,
@@ -1227,7 +1243,7 @@ async def _get_site_user(user_id: str) -> SiteUser:
 
 @router.get("/site-users")
 async def list_site_users(
-    q: str | None = Query(default=None, description="search username / discord handle / email / display name"),
+    q: str | None = Query(default=None, description="search username / discord handle / display name"),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ) -> dict:
@@ -1241,7 +1257,7 @@ async def list_site_users(
     if q and q.strip():
         rx = {"$regex": _re.escape(q.strip()), "$options": "i"}
         query = {"$or": [{"username": rx}, {"discord_handle": rx},
-                         {"email": rx}, {"display_name": rx}]}
+                         {"display_name": rx}]}
     total = await SiteUser.find(query).count()
     docs = await SiteUser.find(query).sort("-created_at").skip(offset).limit(limit).to_list()
     ids = [u.id for u in docs]

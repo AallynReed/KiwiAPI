@@ -12,7 +12,7 @@
 (function () {
   'use strict';
 
-  var THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
+  var THREE_URL = '/static/vendor/three.min.js';  // self-hosted (GDPR: no cdnjs IP leak)
   var _stylesDone = false;
   var _threePromise = null;
 

@@ -498,6 +498,13 @@
 }
 .dash-btn-danger:hover { background: rgba(248,113,113,.26); }
 
+.dash-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
 .dash-inline-form {
   display: flex;
   gap: 10px;

@@ -59,7 +59,7 @@ def _code_view(c: PrizeCode) -> VaultCodeView:
     return VaultCodeView(
         id=str(c.id), code=c.code, status=c.status,
         giveaway_id=str(c.giveaway_id) if c.giveaway_id else None,
-        awarded_to_email=c.awarded_to_email, awarded_at=c.awarded_at,
+        awarded_at=c.awarded_at,
         created_at=c.created_at,
     )
 
@@ -82,7 +82,7 @@ def _admin_view(g: Giveaway, item_name: str | None) -> GiveawayAdminView:
         vault_item_name=item_name,
         prize_code_id=str(g.prize_code_id) if g.prize_code_id else None,
         winner_user_id=str(g.winner_user_id) if g.winner_user_id else None,
-        winner_username=g.winner_username, winner_email=g.winner_email,
+        winner_username=g.winner_username,
         drawn_at=g.drawn_at, created_at=g.created_at,
     )
 
@@ -477,14 +477,12 @@ async def _draw(g: Giveaway) -> None:
 
     winner = secrets.choice(entries)
     su = await SiteUser.get(winner.site_user_id)
-    winner_email = su.email if su else None
 
     code = await PrizeCode.get(g.prize_code_id) if g.prize_code_id else None
 
     g.status = GiveawayStatus.drawn
     g.winner_user_id = winner.site_user_id
     g.winner_username = winner.username
-    g.winner_email = winner_email
     g.drawn_at = now
     g.updated_at = now
     await g.save()
@@ -492,13 +490,15 @@ async def _draw(g: Giveaway) -> None:
     if code and code.status == CodeStatus.reserved:
         code.status = CodeStatus.awarded
         code.awarded_to = winner.site_user_id
-        code.awarded_to_email = winner_email
         code.awarded_at = now
         await code.save()
 
-    if winner_email and code:
+    # Notify the winner by email ONLY if they added an opt-in notification address.
+    # Either way the prize code is always on their dashboard, so no email is not a
+    # miss - just best-effort.
+    if code and su and su.notify_email:
         try:
-            await _email_winner(winner_email, g, code)
+            await _email_winner(su.notify_email, g, code)
         except Exception:
             logger.warning("winner email failed for giveaway %s", g.id, exc_info=True)
 
@@ -506,18 +506,17 @@ async def _draw(g: Giveaway) -> None:
 
 
 async def _email_winner(to: str, g: Giveaway, code: PrizeCode) -> None:
+    """Email the winner their prize code (only sent to a user's opt-in address)."""
     subject = f"You won: {g.prize_name}!"
     text_lines = [
         f'Congratulations - you won "{g.title}" on Better Trove Tools!',
-        "",
-        f"Prize: {g.prize_name}",
-        f"Your code: {code.code}",
+        "", f"Prize: {g.prize_name}", f"Your code: {code.code}",
     ]
     if g.description:
         text_lines += ["", g.description]
-    text_lines += ["", "Thanks for playing.", "- Better Trove Tools"]
+    text_lines += ["", "Your code is also always on your dashboard.",
+                   "Thanks for playing.", "- Better Trove Tools"]
     text = "\n".join(text_lines)
-
     desc_html = f"<p style='color:#9aa4b2'>{g.description}</p>" if g.description else ""
     html = (
         "<div style=\"font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;"
@@ -528,7 +527,8 @@ async def _email_winner(to: str, g: Giveaway, code: PrizeCode) -> None:
         f"<p style='font-family:monospace;font-size:1.1rem;background:#161b22;"
         f"border:1px solid #232a33;border-radius:8px;padding:12px 14px'>{code.code}</p>"
         f"{desc_html}"
-        "<p style='margin-top:20px;color:#9aa4b2'>Thanks for playing.<br>- Better Trove Tools</p>"
+        "<p style='margin-top:20px;color:#9aa4b2'>Your code is also always on your "
+        "dashboard.<br>Thanks for playing.<br>- Better Trove Tools</p>"
         "</div>"
     )
     await queue_email(to, subject, text, html)

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Accessibility - Better Trove Tools</title>
+    <meta name="description" content="Better Trove Tools' accessibility commitment: we build to WCAG 2.1 AA and welcome reports of any barriers you hit.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+    <meta name="robots" content="index, follow">
+
+    <link rel="canonical" href="https://trove.aallyn.net/accessibility">
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:url" content="https://trove.aallyn.net/accessibility">
+    <meta property="og:title" content="Accessibility - Better Trove Tools">
+    <meta property="og:description" content="Our accessibility commitment and how to report a barrier.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/legal.min.css">
+</head>
+<body class="landing legal-page">
+
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="legal-main">
+
+        <header class="legal-hero">
+            <p class="legal-eyebrow">/accessibility</p>
+            <h1 class="legal-title" data-i18n>Accessibility</h1>
+            <p class="legal-updated" data-i18n>Last updated: July 18, 2026</p>
+            <p class="legal-lead" data-i18n>We want Better Trove Tools to work for everyone, whatever device or assistive technology you use. This statement explains what we aim for, where we are, and how to tell us when something gets in your way.</p>
+        </header>
+
+        <section class="legal-section" id="commitment">
+            <h2 data-i18n>Our commitment</h2>
+            <p data-i18n>We design and build the website to meet <strong>WCAG 2.1 Level AA</strong> as our target standard. Accessibility is treated as a requirement, not an afterthought: readable colour contrast, keyboard-operable controls with visible focus, labelled form fields and buttons, proper heading structure, a "skip to content" link, and dialogs that manage focus.</p>
+        </section>
+
+        <section class="legal-section" id="measures">
+            <h2 data-i18n>What we do</h2>
+            <ul>
+                <li data-i18n>body text meets at least a 4.5:1 contrast ratio, and interactive elements are operable by keyboard alone;</li>
+                <li data-i18n>the interface supports both light and dark colour schemes and respects your system preference;</li>
+                <li data-i18n>content reflows and remains usable on small screens and at higher zoom levels;</li>
+                <li data-i18n>the site is available in several languages;</li>
+                <li data-i18n>we review accessibility as part of building and changing the interface.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section" id="limitations">
+            <h2 data-i18n>Known limitations</h2>
+            <p data-i18n>Better Trove Tools is a free project maintained by one person in spare time, so it hasn't had a formal third-party accessibility audit. Some areas - particularly complex interactive tools such as the 3D model viewers, the star-chart planner, and data-heavy tables - may not yet be fully accessible with every assistive technology. We fix reported barriers as quickly as we reasonably can.</p>
+        </section>
+
+        <section class="legal-section" id="feedback">
+            <h2 data-i18n>Tell us about a barrier</h2>
+            <div class="legal-contact">
+                <p data-i18n>If you hit something that doesn't work for you - or that would work better a different way - please tell us. Email <a href="mailto:support@aallyn.net">support@aallyn.net</a>, reach us on <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a>, or use our <a href="/support">Support page</a>. Let us know the page and what happened, and we'll do our best to help and to fix it.</p>
+            </div>
+        </section>
+
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/_site_util.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+</body>
+</html>

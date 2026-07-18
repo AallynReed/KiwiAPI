@@ -19,10 +19,6 @@
          preconnect happens during the HTML parse, in parallel with CSS, so the
          first real request is already warmed up by the time JS fires. -->
     <link rel="preconnect" href="https://api.aallyn.net">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <!-- Icons -->
     <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/static/assets/favicon.png" type="image/png">
@@ -70,8 +66,9 @@
 
     <!-- Display font: Space Grotesk for headings (geometric + characterful),
          Inter as the system body fallback (already in our font stack). -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+
     <link rel="stylesheet" href="/static/style.min.css">
 
     <!-- Graceful fallback for screenshots that haven't been captured yet.

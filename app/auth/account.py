@@ -41,7 +41,7 @@ async def export_account(user: User = Depends(get_current_user)) -> JSONResponse
         ],
         "sessions": [
             {
-                "id": str(s.id), "ip": s.ip, "user_agent": s.user_agent, "revoked": s.revoked,
+                "id": str(s.id), "device": s.device, "revoked": s.revoked,
                 "created_at": s.created_at, "last_used_at": s.last_used_at, "expires_at": s.expires_at,
             }
             for s in sessions

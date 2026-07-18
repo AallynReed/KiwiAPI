@@ -51,3 +51,38 @@ def client_ip(request: Request) -> str | None:
     this reflects the real client once the reverse proxy sets X-Forwarded-For.
     Callers pick their own fallback (e.g. `or "unknown"` for a stable rate-limit key)."""
     return request.client.host if request.client else None
+
+
+def device_label(user_agent: str | None) -> str | None:
+    """A coarse ``"Browser on OS"`` label from a User-Agent string, for the
+    "your active sessions" list. Deliberately lossy: we store THIS, never the raw
+    User-Agent (data minimization), and never the IP. ``None`` if no UA."""
+    if not user_agent:
+        return None
+    ua = user_agent
+    # Order matters - Edge/Opera/Brave embed "Chrome" in their UA.
+    if "Edg" in ua:
+        browser = "Edge"
+    elif "OPR" in ua or "Opera" in ua:
+        browser = "Opera"
+    elif "Firefox" in ua or "FxiOS" in ua:
+        browser = "Firefox"
+    elif "Chrome" in ua or "CriOS" in ua:
+        browser = "Chrome"
+    elif "Safari" in ua:
+        browser = "Safari"
+    else:
+        browser = "Browser"
+    if "Windows" in ua:
+        os_name = "Windows"
+    elif "Android" in ua:
+        os_name = "Android"
+    elif "iPhone" in ua or "iPad" in ua or "iOS" in ua:
+        os_name = "iOS"
+    elif "Mac OS" in ua or "Macintosh" in ua:
+        os_name = "macOS"
+    elif "Linux" in ua:
+        os_name = "Linux"
+    else:
+        os_name = ""
+    return f"{browser} on {os_name}" if os_name else browser

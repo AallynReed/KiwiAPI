@@ -11,10 +11,6 @@
 
     <link rel="canonical" href="https://trove.aallyn.net/privacy">
 
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/static/assets/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/static/assets/favicon.png">
@@ -26,8 +22,9 @@
     <meta property="og:description" content="What we collect, why, and what we don't do. No ads, no trackers, no selling data.">
     <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+
     <link rel="stylesheet" href="/static/style.min.css">
     <link rel="stylesheet" href="/static/legal.min.css">
 </head>
@@ -42,7 +39,7 @@
         <header class="legal-hero">
             <p class="legal-eyebrow">/privacy</p>
             <h1 class="legal-title" data-i18n>Privacy Policy</h1>
-            <p class="legal-updated" data-i18n>Last updated: June 11, 2026</p>
+            <p class="legal-updated" data-i18n>Last updated: July 18, 2026</p>
             <p class="legal-lead" data-i18n>This policy explains what data Better Trove Tools collects, why, and what we do with it. The short version: we collect only the minimum needed to run the Services - no ads, no third-party trackers, and we never sell your data.</p>
         </header>
 
@@ -67,16 +64,18 @@
         <section class="legal-section" id="who">
             <h2 data-i18n>1. Who we are</h2>
             <p data-i18n>Better Trove Tools ("we", "us") is a free, open-source community project for the game Trove, made up of the desktop app, the web app, this website, and the Kiwi API (together, the "Services"). This policy covers personal data handled by those Services. See also our <a href="/terms">Terms of Service</a>.</p>
+            <p data-i18n>Better Trove Tools is run by an individual, Aallyn Reed, who is the data controller responsible for the personal data described here. For any privacy question or request, you can reach the controller by email at <a href="mailto:support@aallyn.net">support@aallyn.net</a>.</p>
         </section>
 
         <section class="legal-section" id="collect">
             <h2 data-i18n>2. Information we collect</h2>
             <h3 data-i18n>Account information</h3>
-            <p data-i18n>When you create an account or sign in, we store your email address. If you sign in with Discord or GitHub, we receive and store a basic identifier from that provider (such as your user id, username, and email) to create and link your account.</p>
+            <p data-i18n>The website dashboard signs in with Discord only. When you do, we store a basic identifier from Discord - your user id and username - to create your account. We do not request or store your email address at sign-in. You may optionally add an email in your dashboard to receive notifications (such as a giveaway win or an action on your content); we store that address only for that purpose, and you can remove it at any time. If you use the Discord Bot section of the Dashboard, we fetch your list of Discord servers live from Discord at that moment to show which ones you can configure - we don't store that list.</p>
+            <p data-i18n>The separate developer portal (for the Kiwi API) uses an email address and password instead. If you create a developer-portal account, we store that email address, and - if you choose to link GitHub - a basic GitHub identifier.</p>
             <h3 data-i18n>API &amp; usage data</h3>
             <p data-i18n>When you use the Kiwi API or the developer portal, we store the API tokens you create and log request metadata - the endpoint called, a timestamp, the response status, and your IP address - to operate rate limits, keep the service secure, and prevent abuse.</p>
             <h3 data-i18n>Giveaway data</h3>
-            <p data-i18n>If you enter a giveaway, we record your entry against your account. If you win, we use the contact details you provide to deliver the prize.</p>
+            <p data-i18n>If you enter a giveaway, we record your entry against your account. If you win, your prize code always appears on your dashboard; if you've added an optional notification email, we email it to you as well.</p>
             <h3 data-i18n>Technical data</h3>
             <p data-i18n>We generate standard server and security logs - including IP address and browser/user-agent - when you use the website or API.</p>
             <h3 data-i18n>Public game data</h3>
@@ -93,6 +92,14 @@
                 <li data-i18n>to send essential transactional emails (for example, email verification and password resets);</li>
                 <li data-i18n>to diagnose problems and improve reliability.</li>
             </ul>
+            <h3 data-i18n>Legal bases</h3>
+            <p data-i18n>If you are in the EU/EEA or the UK, we rely on the following legal bases under the GDPR:</p>
+            <ul>
+                <li data-i18n><strong>Performance of a contract</strong> - to provide your account, the Services and API access under our Terms, and to send essential developer-portal emails (verification, password resets).</li>
+                <li data-i18n><strong>Our legitimate interests</strong> - to keep the Services secure, enforce rate limits, prevent abuse, and keep things running reliably.</li>
+                <li data-i18n><strong>Your consent</strong> - for the optional notification email you choose to add, and for signing in with Discord or GitHub. You can withdraw consent at any time (remove the email, or delete your account).</li>
+                <li data-i18n><strong>Legal obligation</strong> - where we must keep or disclose something to comply with the law.</li>
+            </ul>
         </section>
 
         <section class="legal-section" id="dont">
@@ -102,7 +109,7 @@
 
         <section class="legal-section" id="cookies">
             <h2 data-i18n>5. Cookies &amp; local storage</h2>
-            <p data-i18n>We use essential cookies and tokens to keep you signed in (session and refresh tokens), and your browser's local storage for preferences like theme and language. We don't use advertising or cross-site tracking cookies.</p>
+            <p data-i18n>The website sets no cookies of its own. To keep you signed in we store session and refresh tokens in your browser's <strong>local storage</strong> (not cookies), and we use local storage for preferences like theme and language. We don't use advertising or cross-site tracking cookies or storage. The one exception is the developer portal's bot-protection widget, which may set a strictly-necessary cookie during sign-in to tell humans from bots.</p>
         </section>
 
         <section class="legal-section" id="third-party">
@@ -110,21 +117,33 @@
             <p data-i18n>To run the Services we use a small number of providers, each processing data only as needed to perform its function:</p>
             <ul>
                 <li data-i18n><strong>Cloudflare</strong> - CDN, security, and edge in front of our domains;</li>
+                <li data-i18n><strong>a bot-protection provider</strong> (Cloudflare Turnstile or hCaptcha) - on developer-portal sign-in/sign-up forms only, to tell humans from bots;</li>
                 <li data-i18n><strong>Discord and GitHub</strong> - only if you choose to sign in with them;</li>
-                <li data-i18n><strong>an email delivery provider</strong> - for transactional email;</li>
                 <li data-i18n><strong>hosting infrastructure</strong> we operate.</li>
             </ul>
             <p data-i18n>Donation links (PayPal, Ko-fi, Buy Me a Coffee) are operated by those companies under their own policies; we don't receive your payment details.</p>
+            <h3 data-i18n>Where your data is processed</h3>
+            <p data-i18n>Our hosting and email are self-operated. Some of the providers above may process data outside your country - in particular Cloudflare, and (only if you use them) Discord and GitHub, may process data in the United States. Where a transfer takes personal data outside the EU/EEA, it relies on an appropriate safeguard, such as the EU Standard Contractual Clauses or an adequacy decision.</p>
         </section>
 
         <section class="legal-section" id="retention">
             <h2 data-i18n>7. Data retention</h2>
-            <p data-i18n>We keep account data for as long as your account exists. Usage and security logs are kept for a limited period for operations and abuse prevention, then deleted or anonymized. Giveaway records are kept as needed to run and audit the giveaway. When you delete your account, we delete or anonymize the associated personal data, except where we must retain something for legal or security reasons.</p>
+            <p data-i18n>We keep account data for as long as your account exists. When you delete your account, we delete or anonymize the associated personal data, except where we must retain something for legal or security reasons.</p>
+            <p data-i18n>Other data is kept only for a limited time:</p>
+            <ul>
+                <li data-i18n>login sessions are removed automatically when they expire;</li>
+                <li data-i18n>API usage logs are kept about 30 days;</li>
+                <li data-i18n>website page-view analytics - which hold no identifying data, only a one-way hash that rotates daily - are kept about 90 days;</li>
+                <li data-i18n>records of emails we've sent are kept about 30 days;</li>
+                <li data-i18n>giveaway records are kept as needed to run and audit the giveaway.</li>
+            </ul>
         </section>
 
         <section class="legal-section" id="rights">
             <h2 data-i18n>8. Your rights</h2>
-            <p data-i18n>You can view and update your account information in the developer portal, and you can delete your account, which removes your associated personal data. Depending on where you live, you may have additional rights - such as access, correction, deletion, portability, or objection. To make a request, contact us using the details below.</p>
+            <p data-i18n>From your dashboard you can view and update your details, export a copy of your data, and delete your account (which removes or anonymizes your associated personal data). Developer-portal (API) accounts have the same export and delete options in the portal.</p>
+            <p data-i18n>Depending on where you live, you may have additional rights over your personal data - such as access, correction, deletion, portability, restriction, and objection. To exercise any of these, contact us using the details below; we don't charge for this and will respond within the time the law allows.</p>
+            <p data-i18n>If you are in the EU/EEA or the UK, you also have the right to lodge a complaint with your local data-protection supervisory authority. We'd appreciate the chance to address your concern first, but that right is always yours.</p>
         </section>
 
         <section class="legal-section" id="security">
@@ -134,7 +153,7 @@
 
         <section class="legal-section" id="children">
             <h2 data-i18n>10. Children</h2>
-            <p data-i18n>The Services aren't directed at children under 13 (or the minimum age in your jurisdiction), and we don't knowingly collect their personal data. If you believe a child has provided us data, contact us and we'll remove it.</p>
+            <p data-i18n>The Services aren't directed at children under 16 - or the lower minimum digital-consent age set by your country's law, and never below 13 - and we don't knowingly collect their personal data. If you believe a child has provided us data, contact us and we'll remove it.</p>
         </section>
 
         <section class="legal-section" id="changes">
@@ -145,7 +164,7 @@
         <section class="legal-section" id="contact">
             <h2 data-i18n>12. Contact</h2>
             <div class="legal-contact">
-                <p data-i18n>Questions or privacy requests? Reach us on <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a> or through our <a href="/support">Support page</a>.</p>
+                <p data-i18n>Questions or privacy requests? Email us at <a href="mailto:support@aallyn.net">support@aallyn.net</a>, reach us on <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a>, or use our <a href="/support">Support page</a>. This address is also our point of contact for data-protection matters.</p>
             </div>
         </section>
 

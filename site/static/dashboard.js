@@ -19,11 +19,15 @@
   const $wonBadge = $('dash-won-badge');
   const $gwList = $('dash-gw-list');
   const $profUsername = $('prof-username');
-  const $profEmail = $('prof-email');
   const $profDisplayName = $('prof-display-name');
   const $profEditName = $('prof-edit-name');
+  const $profNotify = $('prof-notify-email');
+  const $profEditNotify = $('prof-edit-notify');
   const $profCreated = $('prof-created');
   const $logout = $('dash-logout');
+  const $export = $('dash-export');
+  const $deleteAcct = $('dash-delete');
+  const $acctError = $('dash-account-error');
   const $troveTagUnverified = $('trove-tag-unverified');
   const $troveTagVerified = $('trove-tag-verified');
   const $claimState = $('trove-claim-state');
@@ -79,8 +83,8 @@
     if ($profUsername)    $profUsername.textContent = user.username;
     const $profDiscord = $('prof-discord-handle');
     if ($profDiscord)     $profDiscord.textContent = '@' + (user.discord_handle || user.username);
-    if ($profEmail)       $profEmail.textContent = user.email;
     if ($profDisplayName) $profDisplayName.textContent = user.display_name || t('(none set)');
+    if ($profNotify)      $profNotify.textContent = user.notify_email || t('Not set');
     if ($profCreated)     $profCreated.textContent = formatDate(user.created_at);
     setupUsernameRequest();
 
@@ -154,8 +158,73 @@
       };
     }
 
+    if ($profEditNotify) {
+      $profEditNotify.onclick = async () => {
+        const next = prompt(
+          t('Email for notifications (optional, blank to remove):'),
+          user.notify_email || '',
+        );
+        if (next === null) return;
+        const r = await Auth.callJSON('/v1/site-auth/me', {
+          method: 'PATCH', json: { notify_email: next.trim() },
+        });
+        if (r.ok && r.data) { user = r.data; renderUser(r.data); }
+        else alert(Auth.errorMessage(r.data) || t('That email address looks invalid.'));
+      };
+    }
+
     if ($logout) {
       $logout.onclick = async () => {
+        await Auth.logout();
+        location.href = '/';
+      };
+    }
+
+    if ($export) {
+      $export.onclick = async () => {
+        if ($acctError) $acctError.hidden = true;
+        $export.disabled = true;
+        try {
+          const res = await Auth.call('/v1/site-auth/me/export');
+          if (!res.ok) throw new Error('export failed');
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'better-trove-tools-export.json';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        } catch (_) {
+          if ($acctError) {
+            $acctError.textContent = t('Could not export your data. Please try again.');
+            $acctError.hidden = false;
+          }
+        } finally {
+          $export.disabled = false;
+        }
+      };
+    }
+
+    if ($deleteAcct) {
+      $deleteAcct.onclick = async () => {
+        if ($acctError) $acctError.hidden = true;
+        const typed = prompt(
+          t('This permanently deletes your account and personal data and cannot be undone. Type your username to confirm:'),
+        );
+        if (typed === null) return;
+        const r = await Auth.callJSON('/v1/site-auth/me/delete', {
+          method: 'POST', json: { confirm_username: typed.trim() },
+        });
+        if (!r.ok) {
+          if ($acctError) {
+            $acctError.textContent =
+              Auth.errorMessage(r.data) || t('Could not delete your account. Please try again.');
+            $acctError.hidden = false;
+          }
+          return;
+        }
         await Auth.logout();
         location.href = '/';
       };

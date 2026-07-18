@@ -19,8 +19,9 @@ _API_PREFIXES = ("/v1/", "/v1", "/admin", "/site/", "/git/", "/secret-scanning",
                  "/openapi", "/.well-known", "/health", "/config", "/metrics")
 
 # Self-contained themed 404 for front-facing website pages (no template/context
-# dependency, so it can never itself error). Pulls in the site stylesheet for
-# fonts + palette and adds a small inline layout.
+# dependency, so it can never itself error). Fully inline palette + layout, and
+# system-font fallbacks - no external font request (GDPR: no IP leak to Google),
+# and no linked stylesheet that the stricter API CSP on unknown paths would block.
 _NOT_FOUND_HTML = """<!DOCTYPE html>
 <html lang="en" dir="ltr"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -28,7 +29,6 @@ _NOT_FOUND_HTML = """<!DOCTYPE html>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0a0e14"><meta name="color-scheme" content="dark">
 <link rel="icon" href="/static/assets/favicon.png" type="image/png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap">
 <style>
   :root{--bg:#0a0e14;--card:#11161f;--line:#222c3a;--text:#e6ebf2;--soft:#9aa6b8;--mute:#6b7688;--blue:#569cff}
   *{box-sizing:border-box}

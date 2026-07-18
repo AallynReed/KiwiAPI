@@ -38,6 +38,7 @@ from app.trove.models import (
 )
 from app.trove.modpacks.models import ModpackProject, ModpackStar
 from app.trove.mods_hub.models import (
+    ContentReport,
     ModClaimRequest,
     ModDownloadEvent,
     ModGitToken,
@@ -45,7 +46,6 @@ from app.trove.mods_hub.models import (
     ModProfile,
     ModProject,
     ModRelease,
-    ModReport,
     ModStar,
     StrayImportState,
 )
@@ -67,7 +67,7 @@ DOCUMENT_MODELS = [
     ApiToken, UsageEvent, PageView, OutboxEmail, TroveNews, FeedCache, TroveEvent,
     DelveRotation, BttRelease, BttChangelog,
     UpdateBranch, UpdateVersion, UpdateChange, UpdateState, UpdateManifestEntry,
-    ModProject, ModRelease, ModImageAsset, ModReport, ModGitToken, ModStar,  # mods hub (git store holds commits)
+    ModProject, ModRelease, ModImageAsset, ContentReport, ModGitToken, ModStar,  # mods hub (git store holds commits)
     ModDownloadEvent,                    # mods hub: 7-day download signal (TTL-pruned)
     ModProfile,                          # mods hub: modder profile pages
     ModClaimRequest, StrayImportState,   # mods hub: stray (imported) mod claims + import job state
@@ -149,6 +149,53 @@ async def init_db() -> None:
     # Mods Hub download events feed the trailing-7-day "popular" metric; keep only
     # ~8 days so the collection stays tiny (lifetime totals live on download_count).
     await _ensure_ttl_index(_db["mod_download_events"], "created_at", 8 * 86400)
+
+    # Login sessions are auto-removed once expired: TTL on `expires_at`
+    # (expireAfterSeconds=0 -> Mongo drops the doc the moment that timestamp passes)
+    # so nothing lingers past a session's usable life.
+    await _ensure_ttl_index(_db["sessions"], "expires_at", 0)
+    await _ensure_ttl_index(_db["site_sessions"], "expires_at", 0)
+
+    # Data-minimization: sessions no longer store the IP or raw User-Agent (only a
+    # coarse `device` label). Strip those fields from any rows the old code wrote.
+    # Idempotent - after the first boot no documents match.
+    for _coll in ("sessions", "site_sessions"):
+        try:
+            await _db[_coll].update_many(
+                {"$or": [{"ip": {"$exists": True}}, {"user_agent": {"$exists": True}}]},
+                {"$unset": {"ip": "", "user_agent": ""}},
+            )
+        except OperationFailure:
+            pass
+
+    # GDPR data-minimization: the old login flow cached each user's full Discord
+    # server (guild) list on their account. That list is now fetched on demand and
+    # never stored, so purge any lists the old flow left behind. Idempotent - after
+    # the first boot no documents match.
+    try:
+        await _db["site_users"].update_many(
+            {"discord_guilds": {"$exists": True}},
+            {"$unset": {"discord_guilds": "", "discord_guilds_synced_at": ""}},
+        )
+    except OperationFailure:
+        pass
+
+    # Data-minimization: site accounts no longer store an email (Discord id is the
+    # sole identity). Drop the old unique email index and purge any stored emails,
+    # plus the giveaway winner/prize emails the old flow captured. Idempotent.
+    await _drop_index_if_exists(_db["site_users"], "email_1")
+    try:
+        await _db["site_users"].update_many(
+            {"email": {"$exists": True}}, {"$unset": {"email": ""}}
+        )
+        await _db["giveaways"].update_many(
+            {"winner_email": {"$exists": True}}, {"$unset": {"winner_email": ""}}
+        )
+        await _db["prize_codes"].update_many(
+            {"awarded_to_email": {"$exists": True}}, {"$unset": {"awarded_to_email": ""}}
+        )
+    except OperationFailure:
+        pass
 
 
 async def _drop_index_if_exists(collection, name: str) -> None:

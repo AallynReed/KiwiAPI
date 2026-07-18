@@ -15,14 +15,14 @@ from app.core.config import settings
 from app.core.dependencies import AuthContext, get_auth_context, get_current_user
 from app.core.errors import APIError, ErrorCode
 from app.core.security import create_access_token, generate_refresh_token, hash_token
-from app.core.utils import client_ip, utcnow
+from app.core.utils import device_label, utcnow
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _user_agent(request: Request) -> str | None:
-    ua = request.headers.get("user-agent")
-    return ua[:300] if ua else None
+def _device(request: Request) -> str | None:
+    """Coarse 'Browser on OS' label for the session list - never the raw UA/IP."""
+    return device_label(request.headers.get("user-agent"))
 
 
 async def issue_tokens(user: User, request: Request) -> TokenResponse:
@@ -32,8 +32,7 @@ async def issue_tokens(user: User, request: Request) -> TokenResponse:
     session = Session(
         user_id=user.id,
         refresh_token_hash=refresh_hash,
-        ip=client_ip(request),
-        user_agent=_user_agent(request),
+        device=_device(request),
         expires_at=utcnow() + timedelta(days=settings.refresh_token_expire_days),
     )
     await session.insert()
@@ -60,8 +59,7 @@ async def revoke_all_sessions(user: User) -> None:
 def _to_public(session: Session, current_id: str | None) -> SessionPublic:
     return SessionPublic(
         id=str(session.id),
-        ip=session.ip,
-        user_agent=session.user_agent,
+        device=session.device,
         created_at=session.created_at,
         last_used_at=session.last_used_at,
         expires_at=session.expires_at,
@@ -87,8 +85,7 @@ async def refresh(payload: RefreshRequest, request: Request) -> TokenResponse:
     new_refresh, new_hash = generate_refresh_token()
     session.refresh_token_hash = new_hash
     session.last_used_at = now
-    session.ip = client_ip(request)
-    session.user_agent = _user_agent(request)
+    session.device = _device(request)
     await session.save()
 
     access = create_access_token(str(user.id), user.token_version, session_id=str(session.id))

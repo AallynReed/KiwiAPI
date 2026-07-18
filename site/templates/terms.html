@@ -11,10 +11,6 @@
 
     <link rel="canonical" href="https://trove.aallyn.net/terms">
 
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/static/assets/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/static/assets/favicon.png">
@@ -26,8 +22,9 @@
     <meta property="og:description" content="The terms that govern your use of Better Trove Tools and the Kiwi API.">
     <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+
     <link rel="stylesheet" href="/static/style.min.css">
     <link rel="stylesheet" href="/static/legal.min.css">
 </head>
@@ -42,7 +39,7 @@
         <header class="legal-hero">
             <p class="legal-eyebrow">/terms</p>
             <h1 class="legal-title" data-i18n>Terms of Service</h1>
-            <p class="legal-updated" data-i18n>Last updated: June 11, 2026</p>
+            <p class="legal-updated" data-i18n>Last updated: July 18, 2026</p>
             <p class="legal-lead" data-i18n>These Terms govern your use of Better Trove Tools - the desktop app, the web app, this website, and the Kiwi API (together, the "Services"). By using any of them, you agree to these Terms. If you don't agree, please don't use the Services.</p>
         </header>
 
@@ -57,6 +54,7 @@
                 <li><a href="#api" data-i18n>The Kiwi API</a></li>
                 <li><a href="#giveaways" data-i18n>Giveaways</a></li>
                 <li><a href="#ip" data-i18n>Intellectual property</a></li>
+                <li><a href="#content-reports" data-i18n>User content, reporting &amp; takedowns</a></li>
                 <li><a href="#third-party" data-i18n>Third-party services</a></li>
                 <li><a href="#disclaimers" data-i18n>Disclaimers</a></li>
                 <li><a href="#liability" data-i18n>Limitation of liability</a></li>
@@ -83,7 +81,7 @@
 
         <section class="legal-section" id="accounts">
             <h2 data-i18n>4. Eligibility &amp; accounts</h2>
-            <p data-i18n>Some features - the Kiwi API, the developer portal, and giveaways - require an account. You are responsible for the accuracy of the information you provide, for keeping your credentials and API tokens secret, and for all activity that happens under your account. Notify us promptly if you suspect unauthorized use. You must be old enough to form a binding contract in your jurisdiction, and at least 13 years old, to create an account.</p>
+            <p data-i18n>Some features - the Kiwi API, the developer portal, and giveaways - require an account. You are responsible for the accuracy of the information you provide, for keeping your credentials and API tokens secret, and for all activity that happens under your account. Notify us promptly if you suspect unauthorized use. You must be old enough to form a binding contract in your jurisdiction, and at least the minimum digital-consent age where you live (16 in much of the EU, and never below 13), to create an account.</p>
         </section>
 
         <section class="legal-section" id="acceptable-use">
@@ -117,35 +115,43 @@
             <p data-i18n>The Better Trove Tools application source is open source under the license in its public repository; your use of that code is governed by that license. The Services' own original branding and content belong to us. Game names, trademarks, artwork, and data belong to their respective owners (see section 3). Nothing in these Terms grants you any rights in third-party intellectual property.</p>
         </section>
 
+        <section class="legal-section" id="content-reports">
+            <h2 data-i18n>9. User content, reporting &amp; takedowns</h2>
+            <p data-i18n>Parts of the Services - such as the Mods Hub, Modpacks, and creator profiles - let people publish their own content. That content belongs to the people who create it, and they are responsible for it. By publishing, you confirm you have the rights to share it and that it doesn't break these Terms or the law.</p>
+            <p data-i18n><strong>Reporting content.</strong> Anyone - you don't need an account - can report content they believe is illegal, infringing, or in breach of these Terms. Use the "Report" control on a mod, modpack, or profile, or email <a href="mailto:support@aallyn.net">support@aallyn.net</a>. Tell us where the content is (a link) and why you're reporting it. We review reports and take the action we consider appropriate.</p>
+            <p data-i18n><strong>Copyright &amp; other IP.</strong> If you own rights in material posted here without permission, send a notice to <a href="mailto:support@aallyn.net">support@aallyn.net</a> that identifies the work, gives the link to the infringing content, includes your contact details, and states in good faith that the use isn't authorized. We act on valid notices - typically by removing or disabling the content - and, where we can, we tell the uploader why.</p>
+            <p data-i18n><strong>Moderation &amp; statement of reasons.</strong> We may remove or restrict content that is illegal, infringing, or breaks these Terms. When we act against content you posted, we'll give you the reason where we reasonably can. If you think we got it wrong, you can appeal by replying to that notice or emailing <a href="mailto:support@aallyn.net">support@aallyn.net</a>, and we'll take another look.</p>
+        </section>
+
         <section class="legal-section" id="third-party">
-            <h2 data-i18n>9. Third-party services</h2>
+            <h2 data-i18n>10. Third-party services</h2>
             <p data-i18n>The Services link to and integrate with third parties - for example Discord and GitHub sign-in, Trovesaurus, donation links, and hosting and CDN providers. We don't control those services and aren't responsible for their content, availability, or practices. Your use of them is governed by their own terms.</p>
         </section>
 
         <section class="legal-section" id="disclaimers">
-            <h2 data-i18n>10. Disclaimers</h2>
+            <h2 data-i18n>11. Disclaimers</h2>
             <p data-i18n>The Services are provided <strong>"as is" and "as available"</strong>, without warranties of any kind, whether express or implied, including warranties of merchantability, fitness for a particular purpose, accuracy, and non-infringement. We don't warrant that the Services will be uninterrupted, secure, or error-free, or that any data shown is accurate or current. You use the Services at your own risk.</p>
         </section>
 
         <section class="legal-section" id="liability">
-            <h2 data-i18n>11. Limitation of liability</h2>
+            <h2 data-i18n>12. Limitation of liability</h2>
             <p data-i18n>To the maximum extent permitted by law, Better Trove Tools and its maintainers will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of data, profits, or goodwill, arising out of or relating to your use of (or inability to use) the Services. Because the Services are provided free of charge, our total liability for any claim is limited to the amount you paid us for the Services in the twelve months before the claim - which, for a free service, is typically zero.</p>
         </section>
 
         <section class="legal-section" id="termination">
-            <h2 data-i18n>12. Termination</h2>
+            <h2 data-i18n>13. Termination</h2>
             <p data-i18n>You may stop using the Services at any time and delete your account. We may suspend or terminate your access to the Services, in whole or in part, at any time and with or without notice, including for violations of these Terms or to protect the Services. Provisions that by their nature should survive termination - such as intellectual property, disclaimers, and limitation of liability - will survive.</p>
         </section>
 
         <section class="legal-section" id="changes">
-            <h2 data-i18n>13. Changes to these terms</h2>
+            <h2 data-i18n>14. Changes to these terms</h2>
             <p data-i18n>We may update these Terms as the project evolves. Material changes will be reflected by the "Last updated" date above. Your continued use of the Services after changes take effect means you accept the revised Terms.</p>
         </section>
 
         <section class="legal-section" id="contact">
-            <h2 data-i18n>14. Contact</h2>
+            <h2 data-i18n>15. Contact</h2>
             <div class="legal-contact">
-                <p data-i18n>Questions about these Terms? Reach us on <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a> or through our <a href="/support">Support page</a>.</p>
+                <p data-i18n>Questions about these Terms? Email us at <a href="mailto:support@aallyn.net">support@aallyn.net</a>, reach us on <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a>, or use our <a href="/support">Support page</a>. <a href="mailto:support@aallyn.net">support@aallyn.net</a> is our single point of contact for users and authorities under the EU Digital Services Act.</p>
             </div>
         </section>
 

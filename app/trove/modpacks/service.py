@@ -435,6 +435,15 @@ async def take_down(pack_id: str, reason: str) -> ModpackProject:
     pack.takedown_reason = (reason or "").strip() or None
     pack.updated_at = utcnow()
     await pack.save()
+    # DSA Art. 17: resolve the reports and give the owner a statement of reasons.
+    from app.trove import moderation
+    await moderation.resolve_reports_for("modpack", pack.id)
+    owner = await SiteUser.get(pack.owner_id) if pack.owner_id else None
+    await moderation.notify_takedown(
+        owner.notify_email if owner else None, "modpack", pack.title,
+        pack.takedown_reason or "Removed by a moderator.",
+        f"/modpacks/{pack.owner_handle}/{pack.slug}",
+    )
     return pack
 
 

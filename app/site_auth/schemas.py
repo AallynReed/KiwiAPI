@@ -1,11 +1,14 @@
 """Request + response models for the site-side auth endpoints."""
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 
 class SiteUpdateProfileRequest(BaseModel):
     display_name: str | None = Field(default=None, max_length=80)
+    # Opt-in notification email. Send "" to clear it, an address to set it, or omit
+    # to leave it unchanged. Validated in the handler.
+    notify_email: str | None = Field(default=None, max_length=254)
 
 
 class SiteClaimTroveNameRequest(BaseModel):
@@ -39,7 +42,7 @@ class SiteUserPublic(BaseModel):
     id: str
     username: str                              # frozen "Trove username" (mod handle)
     discord_handle: str = ""                   # live Discord handle (display only)
-    email: EmailStr
+    notify_email: str | None = None            # opt-in notifications address (or None)
     display_name: str | None = None
     # Ready-to-use Discord CDN avatar URL (built server-side from the stored
     # hash). Always populated for Discord accounts - falls back to Discord's

@@ -30,7 +30,6 @@ from app.trove.mods_hub.schemas import (
     CreateReleaseRequest,
     GitTokenRequest,
     HashLookupRequest,
-    ReportRequest,
     UpdateProfileRequest,
     UpdateProjectRequest,
     UpdateReleaseRequest,
@@ -516,15 +515,6 @@ async def star_project(handle: str, slug: str, user: SiteUser = _USER) -> dict:
 async def unstar_project(handle: str, slug: str, user: SiteUser = _USER) -> dict:
     project = await service.get_for_view(handle, slug, user)
     return await service.unstar_project(user, project)
-
-
-@mods_hub_write_router.post("/projects/{handle}/{slug}/report", status_code=202)
-async def report_project(
-    handle: str, slug: str, req: ReportRequest, user: SiteUser = _USER,
-) -> dict:
-    project = await service.get_for_view(handle, slug, user)
-    await service.report_project(project, user, req.reason)
-    return {"status": "received"}
 
 
 @mods_hub_write_router.post("/projects/{handle}/{slug}/collaborators")

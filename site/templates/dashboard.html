@@ -9,14 +9,12 @@
     <meta name="color-scheme" content="dark">
     <link rel="canonical" href="https://trove.aallyn.net/dashboard">
     <meta name="robots" content="noindex"><!-- private to the user -->
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/static/assets/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/static/assets/favicon.png">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+
     <link rel="stylesheet" href="/static/style.min.css">
     <link rel="stylesheet" href="/static/account.min.css">
 </head>
@@ -102,12 +100,26 @@
                                         <button type="button" class="dash-link" id="prof-edit-username" data-i18n>Request change</button>
                                         <p class="dash-hint" id="prof-username-status" hidden></p></dd></div>
                                 <div class="dash-field"><dt data-i18n>Discord handle</dt><dd class="dash-mono" id="prof-discord-handle"></dd></div>
-                                <div class="dash-field"><dt data-i18n>Email</dt><dd id="prof-email"></dd></div>
                                 <div class="dash-field"><dt data-i18n>Display name</dt>
                                     <dd><span id="prof-display-name"></span>
                                         <button type="button" class="dash-link" id="prof-edit-name" data-i18n>Edit</button></dd></div>
+                                <div class="dash-field"><dt data-i18n>Notification email</dt>
+                                    <dd><span id="prof-notify-email"></span>
+                                        <button type="button" class="dash-link" id="prof-edit-notify" data-i18n>Edit</button>
+                                        <p class="dash-hint" data-i18n>Optional. Add an email only if you want to be notified about giveaway wins and content actions. We store it for nothing else, and you can remove it anytime. Leave it blank and everything still shows on your dashboard.</p></dd></div>
                                 <div class="dash-field"><dt data-i18n>Member since</dt><dd id="prof-created"></dd></div>
                             </dl>
+                        </article>
+
+                        <!-- Privacy & data controls (GDPR export + erasure). -->
+                        <article class="dash-card">
+                            <h2 class="dash-card-title" data-i18n>Privacy &amp; your data</h2>
+                            <p class="dash-hint" data-i18n>Download everything we hold about your account, or delete it. Deleting removes your personal data and signs you out everywhere. Any mods or modpacks you published stay available, but are un-linked from you.</p>
+                            <div class="dash-account-actions">
+                                <button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" id="dash-export"><i class="fa-solid fa-download" aria-hidden="true"></i> <span data-i18n>Export my data</span></button>
+                                <button type="button" class="dash-btn dash-btn-mini dash-btn-danger" id="dash-delete"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> <span data-i18n>Delete account</span></button>
+                            </div>
+                            <p class="dash-error" id="dash-account-error" hidden></p>
                         </article>
                     </section>
 

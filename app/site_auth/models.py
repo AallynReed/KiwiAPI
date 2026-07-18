@@ -11,15 +11,15 @@ from datetime import datetime
 from typing import Literal
 
 from beanie import Document, PydanticObjectId
-from pydantic import EmailStr, Field
+from pydantic import Field
 from pymongo import ASCENDING, DESCENDING, IndexModel
 
 from app.core.utils import utcnow
 
 
 class SiteUser(Document):
-    """A registered showcase-site user. Username + email both unique
-    and stored lower-cased so login lookups are O(index seek)."""
+    """A registered showcase-site user. Identity is the Discord account (no email
+    stored); `username` is unique and lower-cased so lookups are O(index seek)."""
 
     # Sign-in is Discord-only; there is no local password. `username` is the
     # website "Trove username" (canonical lowercase) - the handle for
@@ -30,11 +30,20 @@ class SiteUser(Document):
     # LIVE Discord handle, resynced on every login (display only); may drift
     # on Discord's side without touching `username`.
     discord_handle: str = ""
-    email: EmailStr                            # canonical lowercase (from Discord)
+    # Sign-in is Discord-only and we don't request the `email` OAuth scope - the
+    # Discord id is the sole identity (data minimization). `notify_email` below is a
+    # SEPARATE, purely OPT-IN address the user can add themselves ONLY to receive
+    # notifications (giveaway wins, account/content actions). Default None = no email
+    # stored at all. Never collected at signup; used for nothing but notifications.
+    notify_email: str | None = None
 
     display_name: str | None = None
     is_active: bool = True
-    is_verified: bool = False                  # email verified Discord-side
+    is_verified: bool = False                  # Discord identity verified (always true for Discord logins)
+    # Set when the user self-deletes: the row is kept as an anonymized tombstone
+    # (all PII stripped) so their mods/modpacks stay live under a non-identifying
+    # owner, but it can never be logged into or re-linked. See app/site_auth/account.py.
+    is_deleted: bool = False
 
     # The sole identity for the account - every SiteUser is created via Discord.
     discord_id: int | None = None
@@ -44,11 +53,12 @@ class SiteUser(Document):
     # → fall back to Discord's default embed avatar.
     discord_avatar: str | None = None
 
-    # Cached Discord guild list from the `guilds` OAuth scope - powers the
-    # Dashboard's "Discord Bot" tab "your servers" view. None until signed in
-    # with that scope; synced_at gates the "reconnect Discord" reprompt.
-    discord_guilds: list[dict] | None = None
-    discord_guilds_synced_at: datetime | None = None
+    # NOTE: the user's Discord guild (server) list is deliberately NOT stored here.
+    # It's fetched LIVE from Discord only when the user actually opens the Dashboard
+    # "Discord Bot" tab, using a short-lived Discord access token cached in Redis at
+    # login (see app/site_auth/oauth.py). GDPR data-minimization: we don't keep the
+    # user's server membership (a social graph) at rest. Any list collected by the
+    # old flow is purged at startup (app/core/database.py).
 
     # Bumped on email change / logout-all so outstanding access tokens lose
     # authority instantly; the JWT carries the version it was minted against.
@@ -88,7 +98,6 @@ class SiteUser(Document):
         name = "site_users"
         indexes = [
             IndexModel([("username", ASCENDING)], unique=True),
-            IndexModel([("email", ASCENDING)], unique=True),
             IndexModel(
                 [("discord_id", ASCENDING)],
                 unique=True,
@@ -112,8 +121,9 @@ class SiteSession(Document):
 
     site_user_id: PydanticObjectId
     refresh_token_hash: str                    # sha256 of the current refresh token
-    user_agent: str | None = None
-    ip: str | None = None
+    # Coarse "Browser on OS" label for the "active sessions" list. We deliberately
+    # store NEITHER the raw User-Agent NOR the IP address (data minimization).
+    device: str | None = None
 
     created_at: datetime = Field(default_factory=utcnow)
     last_used_at: datetime = Field(default_factory=utcnow)

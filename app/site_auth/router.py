@@ -11,6 +11,7 @@ a separate system and keeps its own email/password + GitHub flows.
 """
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, Request, status
+from pydantic import EmailStr, TypeAdapter
 
 from app.core.errors import APIError, ErrorCode
 from app.core.utils import iso, utcnow
@@ -46,6 +47,15 @@ router = APIRouter(prefix="/v1/site-auth", tags=["site-auth"])
 
 _DISCORD_CDN = "https://cdn.discordapp.com"
 
+# Validate the opt-in notification email with the same engine as EmailStr, without
+# forcing the model field to be EmailStr (so it can be cleared/omitted cleanly).
+_EMAIL_ADAPTER = TypeAdapter(EmailStr)
+
+
+def _validate_email(value: str) -> str:
+    """Return the normalized address, or raise ValueError if it isn't a valid email."""
+    return str(_EMAIL_ADAPTER.validate_python(value)).lower()
+
 
 def _discord_avatar_url(user: SiteUser) -> str | None:
     """Build a Discord CDN avatar URL from the stored hash. Falls back to the
@@ -65,7 +75,7 @@ def _to_public(user: SiteUser) -> SiteUserPublic:
         id=str(user.id),
         username=user.username,
         discord_handle=user.discord_handle or user.username,
-        email=user.email,
+        notify_email=user.notify_email,
         display_name=user.display_name,
         avatar_url=_discord_avatar_url(user),
         is_active=user.is_active,
@@ -145,9 +155,26 @@ async def update_profile(
     payload: SiteUpdateProfileRequest,
     user: SiteUser = Depends(get_current_site_user),
 ) -> SiteUserPublic:
-    """Edit the display name. Username + email are immutable here."""
+    """Edit the display name and the opt-in notification email. Username is
+    immutable here (changed only via the admin-approved request flow)."""
+    dirty = False
     if payload.display_name is not None:
         user.display_name = payload.display_name.strip() or None
+        dirty = True
+    if payload.notify_email is not None:
+        val = payload.notify_email.strip()
+        if not val:
+            user.notify_email = None            # explicit clear
+        else:
+            try:
+                user.notify_email = _validate_email(val)
+            except ValueError as exc:
+                raise APIError(
+                    400, ErrorCode.bad_request,
+                    "That doesn't look like a valid email address.",
+                ) from exc
+        dirty = True
+    if dirty:
         user.updated_at = utcnow()
         await user.save()
     return _to_public(user)
@@ -299,8 +326,7 @@ async def list_sessions(
     return [
         {
             "id": str(s.id),
-            "ip": s.ip,
-            "user_agent": s.user_agent,
+            "device": s.device,
             "created_at": iso(s.created_at),
             "last_used_at": iso(s.last_used_at),
             "expires_at": iso(s.expires_at),

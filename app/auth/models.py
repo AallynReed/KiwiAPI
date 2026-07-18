@@ -55,8 +55,9 @@ class Session(Document):
 
     user_id: PydanticObjectId
     refresh_token_hash: str  # sha256 of the current refresh token
-    user_agent: str | None = None
-    ip: str | None = None
+    # Coarse "Browser on OS" label only - never the raw User-Agent or IP (data
+    # minimization). Kept for the "active sessions" list.
+    device: str | None = None
 
     created_at: datetime = Field(default_factory=utcnow)
     last_used_at: datetime = Field(default_factory=utcnow)

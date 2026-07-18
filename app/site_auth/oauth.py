@@ -37,6 +37,70 @@ _AUTHORIZE = "https://discord.com/oauth2/authorize"
 _TOKEN = "https://discord.com/api/oauth2/token"
 _API = "https://discord.com/api"
 
+# Short-lived Discord access token, cached in Redis so the Dashboard "Discord Bot"
+# tab can fetch the user's server list ON DEMAND (see fetch_discord_guilds) instead
+# of us persisting that list. GDPR: the server membership is never stored at rest;
+# the token self-expires with Discord's own lifetime (capped at 7 days).
+_DISCORD_TOK_PREFIX = "site_discord_tok:"
+_DISCORD_TOK_MAX_TTL = 7 * 24 * 3600
+
+
+async def store_discord_token(user_id, access_token: str, expires_in) -> None:
+    """Cache the user's Discord access token so guilds can be fetched on demand."""
+    r = get_redis()
+    if r is None or not access_token:
+        return
+    try:
+        ttl = int(expires_in)
+    except (TypeError, ValueError):
+        ttl = 0
+    ttl = max(60, min(ttl or _DISCORD_TOK_MAX_TTL, _DISCORD_TOK_MAX_TTL))
+    await r.set(f"{_DISCORD_TOK_PREFIX}{user_id}", access_token, ex=ttl)
+
+
+async def get_discord_token(user_id) -> str | None:
+    r = get_redis()
+    if r is None:
+        return None
+    return await r.get(f"{_DISCORD_TOK_PREFIX}{user_id}")
+
+
+async def clear_discord_token(user_id) -> None:
+    r = get_redis()
+    if r is None:
+        return
+    await r.delete(f"{_DISCORD_TOK_PREFIX}{user_id}")
+
+
+async def fetch_discord_guilds(access_token: str) -> list[dict] | None:
+    """Live-fetch the user's Discord servers with their cached token. Returns the
+    normalized list (possibly empty), or ``None`` if the token is missing, expired,
+    revoked, or Discord is unreachable - the caller then reprompts a reconnect. The
+    result is used transiently and never written to our database."""
+    if not access_token:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            gr = await client.get(
+                f"{_API}/users/@me/guilds",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+    except httpx.HTTPError:
+        return None
+    if gr.status_code != 200:
+        return None
+    try:
+        raw = gr.json()
+    except ValueError:
+        return None
+    if not isinstance(raw, list):
+        return None
+    return [
+        {"id": str(g["id"]), "name": g.get("name", ""), "icon": g.get("icon"),
+         "owner": bool(g.get("owner")), "permissions": str(g.get("permissions", "0"))}
+        for g in raw if isinstance(g, dict) and g.get("id")
+    ]
+
 
 class _ExchangeBody(BaseModel):
     code: str
@@ -116,7 +180,7 @@ async def discord_start(client: str | None = None):
         "client_id": settings.discord_client_id,
         "redirect_uri": _redirect_uri(),
         "response_type": "code",
-        "scope": "identify email guilds",
+        "scope": "identify guilds",
         "state": state,
     }
     return RedirectResponse(f"{_AUTHORIZE}?{urlencode(params)}", status_code=307)
@@ -148,47 +212,39 @@ async def discord_callback(request: Request, code: str | None = None, state: str
                 "code": code,
                 "redirect_uri": _redirect_uri(),
             })
-            access = tok.json().get("access_token")
+            tok_json = tok.json()
+            access = tok_json.get("access_token")
             if not access:
                 return _emit(mode, error="exchange")
+            expires_in = tok_json.get("expires_in")
             auth_header = {"Authorization": f"Bearer {access}"}
             me = (await client.get(f"{_API}/users/@me", headers=auth_header)).json()
-            # Best-effort guild list (needs the `guilds` scope). A declined scope
-            # or an older grant just leaves this None; the Dashboard reprompts.
-            guilds_raw = None
-            try:
-                gr = await client.get(f"{_API}/users/@me/guilds", headers=auth_header)
-                if gr.status_code == 200:
-                    guilds_raw = gr.json()
-            except (httpx.HTTPError, ValueError):
-                guilds_raw = None
+            # The guild (server) list is NOT fetched or stored here anymore - it's
+            # pulled live from Discord only when the user opens the Dashboard's
+            # "Discord Bot" tab (see fetch_discord_guilds), using the cached token.
     except httpx.HTTPError:
         logger.exception("Discord OAuth request failed")
         return _emit(mode, error="discord")
 
     raw_id = me.get("id")
-    email = me.get("email")
-    # Only a VERIFIED Discord email is trusted for sign-in / linking.
-    if not raw_id or not email or not me.get("verified"):
-        return _emit(mode, error="noemail")
+    # We no longer request the `email` scope or store an email - the Discord
+    # account id is the sole identity (data minimization).
+    if not raw_id:
+        return _emit(mode, error="discord")
     try:
         discord_id = int(raw_id)
     except (TypeError, ValueError):
         return _emit(mode, error="discord")
-    email = email.lower()
 
-    user = await _find_or_create(discord_id, email, me)
+    user = await _find_or_create(discord_id, me)
     if not user.is_active:
         return _emit(mode, error="inactive")
-    if isinstance(guilds_raw, list):
-        user.discord_guilds = [
-            {"id": str(g["id"]), "name": g.get("name", ""), "icon": g.get("icon"),
-             "owner": bool(g.get("owner")), "permissions": str(g.get("permissions", "0"))}
-            for g in guilds_raw if isinstance(g, dict) and g.get("id")
-        ]
-        user.discord_guilds_synced_at = utcnow()
     user.last_login_at = utcnow()
     await user.save()
+    # Cache the Discord token (not the guild list) so the Dashboard can fetch the
+    # user's servers on demand. Best-effort: a Redis outage just means the "Discord
+    # Bot" tab shows the reconnect prompt until the next login.
+    await store_discord_token(user.id, access, expires_in)
     tokens = await issue_tokens(user, request)
 
     xcode = secrets.token_urlsafe(24)
@@ -232,7 +288,7 @@ async def _unique_username(seed: str) -> str:
     return "kiwi" + secrets.token_hex(8)
 
 
-async def _find_or_create(discord_id: int, email: str, me: dict) -> SiteUser:
+async def _find_or_create(discord_id: int, me: dict) -> SiteUser:
     avatar = me.get("avatar")
     handle = (me.get("username") or me.get("global_name") or "").strip()
     user = await SiteUser.find_one(SiteUser.discord_id == discord_id)
@@ -254,24 +310,14 @@ async def _find_or_create(discord_id: int, email: str, me: dict) -> SiteUser:
         if dirty:
             await user.save()
         return user
-    # Link to an existing same-email account (safe: Discord only reports a
-    # VERIFIED email, so the person completing the flow controls this address).
-    user = await SiteUser.find_one(SiteUser.email == email)
-    if user is not None:
-        user.discord_id = discord_id
-        user.is_verified = True
-        user.discord_avatar = avatar
-        user.discord_handle = handle or user.discord_handle or user.username
-        await user.save()
-        return user
+    # New account - the Discord id is the sole identity (no email stored/linked).
     user = SiteUser(
         # The frozen Trove username INHERITS the Discord handle at signup (sanitized
         # to a url-safe, unique handle); it diverges only via an approved change.
         username=await _unique_username(handle),
         discord_handle=handle,
-        email=email,
         display_name=me.get("global_name") or me.get("username"),
-        is_verified=True,
+        is_verified=True,          # a Discord login is inherently identity-verified
         discord_id=discord_id,
         discord_avatar=avatar,
     )

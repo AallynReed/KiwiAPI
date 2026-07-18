@@ -243,7 +243,9 @@
     }
     // Stray = an imported mod uploaded via contributions, with no owner here yet.
     const isStray = !!d.is_stray;
-    const reportBtn = (!d.is_owner && !isStray && state.viewer)
+    // Anyone can report (no account needed) - DSA notice-and-action; only the
+    // owner and unclaimed stray imports don't show the control.
+    const reportBtn = (!d.is_owner && !isStray)
       ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-report"><i class="fa-solid fa-flag"></i> ${esc(t('Report'))}</button>` : '';
     // Claim: only on stray mods. A logged-out click routes to /login.
     const claimBtn = isStray
@@ -1579,7 +1581,7 @@
     m.wrap.querySelector('#mp-report-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.target;
-      const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH + '/report', { json: { reason: f.reason.value.trim() } });
+      const r = await apiJSON('/v1/moderation/report', { json: { target_type: 'mod', handle: HANDLE, slug: SLUG, reason: f.reason.value.trim() } });
       if (r.ok || r.status === 202) { m.close(); toast(t('Thanks - your report was sent.')); }
       else showFormError(f, errMsg(r, 'Could not send the report.'));
     });

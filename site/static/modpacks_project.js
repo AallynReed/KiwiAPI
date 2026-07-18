@@ -136,7 +136,7 @@
         <p class="mpk-head-by">${esc(t('by'))} <a href="/mods/${encodeURIComponent(d.handle)}">${esc(d.owner_username)}</a></p>
         ${d.summary ? `<p class="mpk-head-summary">${esc(d.summary)}</p>` : ''}
         ${stats}
-        <div class="mpk-head-actions">${ownerCtl}</div>
+        <div class="mpk-head-actions">${ownerCtl}${!d.is_owner ? `<button type="button" class="mp-btn mp-btn-sm" id="mpk-report"><i class="fa-solid fa-flag"></i> ${esc(t('Report'))}</button>` : ''}</div>
       </div>
       ${taken}
     </header>`;
@@ -271,6 +271,7 @@
 
     const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
     on('mpk-like', toggleLike);
+    on('mpk-report', openReport);
     on('mpk-edit', openEditDetails);
     on('mpk-banner', openBanner);
     on('mpk-collab', openCollab);
@@ -320,6 +321,29 @@
     return _modal;
   }
   function closeModal() { if (_modal) { _modal.close(); _modal = null; } }
+
+  // Anyone (no account needed) can report a modpack - DSA notice-and-action.
+  function openReport() {
+    openModal(`
+      <button type="button" class="mp-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      <h2 class="mp-modal-title">${esc(t('Report this modpack'))}</h2>
+      <form id="mpk-report-form" class="mp-form">
+        <label class="mp-form-field"><span>${esc(t('What is the problem?'))}</span><textarea name="reason" rows="4" maxlength="2000" required></textarea></label>
+        <p class="mp-form-error" id="mpk-report-error" hidden></p>
+        <div class="mp-form-actions">
+          <button type="button" class="mp-btn mp-btn-ghost" data-close>${esc(t('Cancel'))}</button>
+          <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Send report'))}</button>
+        </div>
+      </form>`);
+    document.getElementById('mpk-report-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const r = await apiJSON('/v1/moderation/report', { json: {
+        target_type: 'modpack', handle: HANDLE, slug: SLUG, reason: e.target.reason.value.trim(),
+      } });
+      if (r.ok || r.status === 202) { closeModal(); toast(t('Thanks - your report was sent.')); }
+      else { const el = document.getElementById('mpk-report-error'); if (el) { el.textContent = t('Could not send the report.'); el.hidden = false; } }
+    });
+  }
 
   function openEditDetails() {
     const d = state.detail;

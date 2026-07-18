@@ -32,6 +32,7 @@ from app.trove import mod_categories, tmod
 from app.trove.mods_hub import gitstore, store, trove_layout
 from app.trove.mods_hub.models import (
     Collaborator,
+    ContentReport,
     ModClaimRequest,
     ModDownloadEvent,
     ModGitToken,
@@ -39,7 +40,6 @@ from app.trove.mods_hub.models import (
     ModProfile,
     ModProject,
     ModRelease,
-    ModReport,
     ModStar,
     Visibility,
 )
@@ -698,7 +698,9 @@ async def _purge_project(project: ModProject) -> None:
     # content-addressed + shared, so they're left for a future GC pass rather than
     # risk deleting a blob another project still references.
     await ModRelease.find(ModRelease.project_id == project.id).delete()
-    await ModReport.find(ModReport.project_id == project.id).delete()
+    await ContentReport.find(
+        ContentReport.target_type == "mod", ContentReport.target_id == project.id
+    ).delete()
     await ModStar.find(ModStar.project_id == project.id).delete()
     await gitstore.delete_repo(str(project.id))
     await project.delete()
@@ -1774,14 +1776,6 @@ async def list_owned(actor: SiteUser) -> list[dict]:
 
 # --- moderation ------------------------------------------------------------
 
-async def report_project(project: ModProject, reporter: SiteUser, reason: str) -> None:
-    await ModReport(
-        project_id=project.id, project_slug=project.slug, project_handle=project.owner_handle,
-        reporter_id=reporter.id, reporter_username=reporter.username,
-        reason=reason.strip(),
-    ).insert()
-
-
 async def _get_by_id(project_id: str) -> ModProject | None:
     """Fetch a project by its ObjectId string (master actions address by id, since
     slugs are only unique per owner)."""
@@ -1797,7 +1791,14 @@ async def take_down(project_id: str, reason: str) -> ModProject:
     project.takedown_reason = reason.strip() or "Removed by a moderator."
     project.updated_at = utcnow()
     await project.save()
-    await ModReport.find(ModReport.project_id == project.id).update(Set({ModReport.resolved: True}))
+    # DSA Art. 17: resolve the reports and give the owner a statement of reasons.
+    from app.trove import moderation
+    await moderation.resolve_reports_for("mod", project.id)
+    owner = await SiteUser.get(project.owner_id) if project.owner_id else None
+    await moderation.notify_takedown(
+        owner.notify_email if owner else None, "mod", project.title,
+        project.takedown_reason, f"/mods/{project.owner_handle}/{project.slug}",
+    )
     return project
 
 
@@ -2159,29 +2160,6 @@ async def touch_after_push(project: ModProject) -> None:
     await project.save()
 
 
-async def dismiss_report(report_id: str) -> None:
-    """Resolve a single user report WITHOUT touching the project - for a bogus or
-    non-actionable complaint. (Take-down resolves a project's reports en masse;
-    this dismisses just the one.)"""
-    oid = to_oid(report_id)
-    report = await ModReport.get(oid) if oid else None
-    if report is None:
-        raise _not_found("Report not found")
-    report.resolved = True
-    await report.save()
-
-
-async def list_reports(resolved: bool = False, limit: int = 100) -> list[dict]:
-    docs = await ModReport.find(ModReport.resolved == resolved).sort("-created_at").limit(limit).to_list()
-    return [
-        {
-            "id": str(r.id), "project_id": str(r.project_id),
-            "project_slug": r.project_slug, "project_handle": r.project_handle,
-            "reporter_username": r.reporter_username, "reason": r.reason,
-            "resolved": r.resolved, "created_at": _iso(r.created_at),
-        }
-        for r in docs
-    ]
 
 
 # --- Public catalog API (documented, app-facing) ---------------------------
@@ -2426,6 +2404,9 @@ def profile_dto(user: SiteUser, profile: ModProfile | None, is_owner: bool,
         "website_url": p.website_url if p else None,
         "donation_urls": p.donation_urls if p else [],
         "is_owner": is_owner,
+        "taken_down": bool(p and p.taken_down),
+        # Reason is shown only to the owner (who sees their flagged profile).
+        "takedown_reason": (p.takedown_reason if (p and p.taken_down and is_owner) else None),
         "joined_at": _iso(user.created_at),
         "page_url": f"{settings.app_url.rstrip('/')}/mods/{user.username}",
         "mod_count": len(ordered),
@@ -2434,6 +2415,40 @@ def profile_dto(user: SiteUser, profile: ModProfile | None, is_owner: bool,
         "featured": featured,
         "mods": [project_card(m) for m in ordered],
     }
+
+
+async def take_down_profile(profile_id: str, reason: str) -> ModProfile:
+    """Master takedown of a creator profile - hides it from the public and gives the
+    owner a statement of reasons (on-page banner + opt-in email). DSA Art. 17."""
+    oid = to_oid(profile_id)
+    profile = await ModProfile.get(oid) if oid else None
+    if profile is None:
+        raise _not_found("Profile not found")
+    profile.taken_down = True
+    profile.takedown_reason = reason.strip() or "Removed by a moderator."
+    profile.updated_at = utcnow()
+    await profile.save()
+    from app.trove import moderation
+    await moderation.resolve_reports_for("profile", profile.id)
+    owner = await SiteUser.get(profile.site_user_id)
+    await moderation.notify_takedown(
+        owner.notify_email if owner else None, "profile",
+        profile.display_name or profile.handle, profile.takedown_reason,
+        f"/mods/{profile.handle}",
+    )
+    return profile
+
+
+async def restore_profile(profile_id: str) -> ModProfile:
+    oid = to_oid(profile_id)
+    profile = await ModProfile.get(oid) if oid else None
+    if profile is None:
+        raise _not_found("Profile not found")
+    profile.taken_down = False
+    profile.takedown_reason = None
+    profile.updated_at = utcnow()
+    await profile.save()
+    return profile
 
 
 async def profile_view(handle: str, viewer: SiteUser | None) -> dict | None:
@@ -2453,6 +2468,9 @@ async def profile_view(handle: str, viewer: SiteUser | None) -> dict | None:
         return None
     profile = await ModProfile.find_one(ModProfile.site_user_id == user.id)
     is_owner = viewer is not None and viewer.id == user.id
+    # A taken-down profile is hidden from the public; the owner still sees it flagged.
+    if profile is not None and profile.taken_down and not is_owner:
+        return None
     query: dict = {"owner_id": user.id}
     if not is_owner:
         query.update({"visibility": "public", "taken_down": False})

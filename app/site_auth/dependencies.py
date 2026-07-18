@@ -98,13 +98,13 @@ async def get_site_auth_context(
 async def get_current_verified_site_user(
     user: SiteUser = Depends(get_current_site_user),
 ) -> SiteUser:
-    """Gates actions that require a confirmed email (claim a Trove
-    name, etc) so a spam signup can't immediately pollute the
-    public-facing leaderboard claim space."""
+    """Gates actions that require a verified account (claim a Trove name, etc).
+    Sign-in is Discord-only, so every account is inherently identity-verified;
+    this stays as a guard for any account explicitly flagged unverified."""
     if not user.is_verified:
         raise APIError(
             status_code=403,
             code=ErrorCode.email_unverified,
-            message="Verify your email address first.",
+            message="Your account isn't verified yet.",
         )
     return user

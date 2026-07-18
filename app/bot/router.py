@@ -53,6 +53,7 @@ from app.discord import embed_contexts
 from app.embed_templates import EmbedTemplate
 from app.site_auth.dependencies import get_current_site_user
 from app.site_auth.models import SiteUser
+from app.site_auth.oauth import clear_discord_token, fetch_discord_guilds, get_discord_token
 
 logger = logging.getLogger("kiwi.bot.dashboard")
 
@@ -308,13 +309,17 @@ def _detail_payload(guild_id: int, ctx: dict, cfg: GuildConfig | None, snap: dic
 
 @router.get("/guilds")
 async def list_my_guilds(user: SiteUser = Depends(get_current_site_user)) -> dict:
-    """The user's servers, from their cached guild list (the `guilds` scope):
-    configurable ones (bot present + they're admin/delegated) plus owner/admin
-    servers the bot isn't in yet (to invite). Reprompts Discord auth if we don't
-    have the guilds scope for this user."""
+    """The user's servers, fetched LIVE from Discord on demand (the guild list is
+    never stored at rest): configurable ones (bot present + they're admin/delegated)
+    plus owner/admin servers the bot isn't in yet (to invite). Reprompts a Discord
+    reconnect if we don't have a valid cached token (expired/revoked/never synced)."""
     invite = _invite_url()
     reconnect = _reconnect_url()
-    if not user.discord_id or user.discord_guilds_synced_at is None or user.discord_guilds is None:
+    token = await get_discord_token(user.id) if user.discord_id else None
+    user_guilds = await fetch_discord_guilds(token) if token else None
+    if user_guilds is None:
+        if token:                      # token present but rejected -> drop the stale key
+            await clear_discord_token(user.id)
         return {
             "linked": bool(user.discord_id),
             "guilds_synced": False,
@@ -328,8 +333,6 @@ async def list_my_guilds(user: SiteUser = Depends(get_current_site_user)) -> dic
     except DiscordRestError as exc:
         return {"linked": True, "guilds_synced": True, "invite_url": invite,
                 "reconnect_url": reconnect, "guilds": [], "error": str(exc)}
-
-    user_guilds = user.discord_guilds
     present = [g for g in user_guilds if int(g["id"]) in bot_ids]
     present_ids = [int(g["id"]) for g in present]
     ctxs = await asyncio.gather(

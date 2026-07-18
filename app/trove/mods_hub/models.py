@@ -276,24 +276,27 @@ class ModStar(Document):
         ]
 
 
-class ModReport(Document):
-    """A user report against a project - surfaced to masters for takedown."""
+class ContentReport(Document):
+    """A notice-and-action report against public user content - a mod, modpack, or
+    creator profile - surfaced to masters for review/takedown (DSA Art. 16).
 
-    project_id: PydanticObjectId
-    project_slug: str
-    project_handle: str = ""                     # owner handle (for the /mods/<handle>/<slug> link)
-    reporter_id: PydanticObjectId
-    reporter_username: str
+    Filed by ANYONE, including anonymously: we store only WHAT is reported and WHY,
+    never who reported it (data minimization - no reporter identity is captured)."""
+
+    target_type: Literal["mod", "modpack", "profile"]
+    target_id: PydanticObjectId
+    target_label: str = ""                       # display name/title, for triage
+    target_url: str = ""                         # link the master opens to review
     reason: str
     resolved: bool = False
 
     created_at: datetime = Field(default_factory=utcnow)
 
     class Settings:
-        name = "mod_reports"
+        name = "content_reports"
         indexes = [
             IndexModel([("resolved", ASCENDING), ("created_at", DESCENDING)]),
-            IndexModel([("project_id", ASCENDING)]),
+            IndexModel([("target_type", ASCENDING), ("target_id", ASCENDING)]),
         ]
 
 
@@ -390,6 +393,11 @@ class ModProfile(Document):
     # by recency) and a single highlighted mod shown in the sidebar.
     mod_order: list[str] = Field(default_factory=list)
     featured_slug: str | None = None
+
+    # Master moderation - mirrors ModProject. A taken-down profile drops from public
+    # view (the owner still sees it, flagged) until restored.
+    taken_down: bool = False
+    takedown_reason: str | None = None
 
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)

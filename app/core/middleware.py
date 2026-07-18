@@ -12,22 +12,20 @@ _API_CSP = (
     "connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
 )
 
-# The BetterTroveTools showcase site pulls FontAwesome CSS from cdnjs, Space
-# Grotesk + Inter from Google Fonts (their CSS lives on fonts.googleapis.com,
-# the actual font files on fonts.gstatic.com - both need to be allowed or the
-# page falls back to system fonts and the bold display look breaks), and calls
-# the Kiwi API for release data. The /login + /signup + /forgot-password pages
-# also render a captcha widget (Turnstile or hCaptcha), whichever the API
-# is configured for - both host their script + iframe under their own
-# domains, so script-src + frame-src cover the union of providers so a
+# The BetterTroveTools showcase site self-hosts all fonts and Font Awesome from
+# /static/fonts/ (GDPR: no font/icon request ever leaves our origin to Google or
+# cdnjs), and calls the Kiwi API for release data. The /login + /signup +
+# /forgot-password pages also render a captcha widget (Turnstile or hCaptcha),
+# whichever the API is configured for - both host their script + iframe under
+# their own domains, so script-src + frame-src cover the union of providers so a
 # toggle from one to the other doesn't require a CSP edit.
 _SITE_CSP = (
     "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com "
+    "script-src 'self' 'unsafe-inline' "
         "https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
-    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com "
-        "https://fonts.googleapis.com https://hcaptcha.com https://*.hcaptcha.com; "
-    "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; "
+    "style-src 'self' 'unsafe-inline' "
+        "https://hcaptcha.com https://*.hcaptcha.com; "
+    "font-src 'self' data:; "
     # Allow any https image so user-content READMEs render badges + screenshots
     # (shields.io, github, imgur, …) like GitHub. Images can't execute, so this is
     # low-risk; `data:` covers inline, `cdn.discordapp.com` is already https.
@@ -45,7 +43,7 @@ _PAGE_PATHS = frozenset({
     "/", "/app", "/browse", "/documentation", "/commands", "/leaderboards", "/updates",
     "/support", "/login", "/dashboard", "/market", "/store", "/codexes", "/codexes/crafting",
     "/status", "/giveaways",
-    "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/mods", "/modpacks",
+    "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/accessibility", "/mods", "/modpacks",
     "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
     "/star-chart", "/gem-simulator", "/gem-evaluator", "/gem-builds", "/calculators",
 })
