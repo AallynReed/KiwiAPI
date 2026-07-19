@@ -945,3 +945,138 @@ async def delete_all_renames() -> int:
     async with acquire() as con:
         res = await con.execute("DELETE FROM player_rename")
     return int(res.split()[-1]) if res.startswith("DELETE") else 0
+
+
+# ── cold-tier partition management ────────────────────────────────────────────
+# Aged trove-day partitions are moved off the fast NVMe data dir onto a slower
+# ``cold`` tablespace (a redundant RAID1 disk) once they pass the hot window. New
+# partitions are always created on pg_default (hot) - see pg_schema.ensure_partition -
+# so NOTHING here ever runs on the write path; only aged partitions are relocated.
+# Each partition's table + every index is moved with its OWN autocommit ALTER, so
+# at most ONE partition holds an ACCESS EXCLUSIVE lock at a time and a long run
+# never blocks the hot partitions. ``SET TABLESPACE`` rewrites into the new
+# location and frees the old files immediately (no VACUUM needed to reclaim NVMe).
+# The ``cold`` tablespace is an ops-provisioned resource (a bind-mounted host dir +
+# ``CREATE TABLESPACE cold LOCATION '/cold'``); when it's absent every function
+# here is a safe no-op so the app still runs on a plain single-disk deploy.
+
+COLD_TABLESPACE = "cold"
+
+
+async def cold_tablespace_exists() -> bool:
+    async with acquire() as con:
+        return bool(await con.fetchval(
+            "SELECT 1 FROM pg_tablespace WHERE spcname = $1", COLD_TABLESPACE
+        ))
+
+
+def _partition_lo(relname: str) -> int | None:
+    """``entry_p_<lo>`` -> ``<lo>`` (the trove-day-start unix seconds the partition
+    covers), or None if the name doesn't match. Also validates the name is a pure
+    ``entry_p_<int>`` so it's safe to interpolate into DDL (identifiers can't be
+    parameterized)."""
+    prefix = "entry_p_"
+    if not relname.startswith(prefix):
+        return None
+    try:
+        return int(relname[len(prefix):])
+    except ValueError:
+        return None
+
+
+async def _entry_partitions(con) -> list[dict]:
+    """Every ``entry`` partition with its lo bound, current tablespace name
+    ('pg_default' when ``reltablespace`` = 0), and total size (table + indexes)."""
+    rows = await con.fetch(
+        "SELECT c.oid, c.relname, "
+        "       COALESCE(t.spcname, 'pg_default') AS tablespace, "
+        "       pg_total_relation_size(c.oid) AS bytes "
+        "FROM pg_inherits i "
+        "JOIN pg_class c ON c.oid = i.inhrelid "
+        "LEFT JOIN pg_tablespace t ON t.oid = c.reltablespace "
+        "WHERE i.inhparent = 'entry'::regclass"
+    )
+    out: list[dict] = []
+    for r in rows:
+        lo = _partition_lo(r["relname"])
+        if lo is None:
+            continue
+        out.append({"oid": r["oid"], "name": r["relname"], "lo": lo,
+                    "tablespace": r["tablespace"], "bytes": int(r["bytes"])})
+    return out
+
+
+def _cold_keep_from(now: int, after_days: int) -> int:
+    """Oldest trove-day-start that stays HOT: keeps ``after_days`` trove-days
+    INCLUDING today's. Partitions whose lo is below this move to cold."""
+    return trove_day_start(now) - (max(1, after_days) - 1) * 86400
+
+
+async def tier_status(after_days: int, now: int) -> dict:
+    """Hot vs cold partition counts + bytes per tablespace, and how many
+    partitions are eligible to move right now (aged, still on pg_default)."""
+    if not await cold_tablespace_exists():
+        return {"cold_tablespace": False}
+    keep_from = _cold_keep_from(now, after_days)
+    async with acquire() as con:
+        parts = await _entry_partitions(con)
+    hot = [p for p in parts if p["tablespace"] == "pg_default"]
+    cold = [p for p in parts if p["tablespace"] == COLD_TABLESPACE]
+    eligible = [p for p in hot if p["lo"] < keep_from]
+    return {
+        "cold_tablespace": True,
+        "after_days": after_days,
+        "keep_from": keep_from,
+        "partitions": len(parts),
+        "hot_partitions": len(hot),
+        "cold_partitions": len(cold),
+        "hot_bytes": sum(p["bytes"] for p in hot),
+        "cold_bytes": sum(p["bytes"] for p in cold),
+        "eligible_partitions": len(eligible),
+        "eligible_bytes": sum(p["bytes"] for p in eligible),
+    }
+
+
+async def tier_cold_partitions(after_days: int, now: int,
+                               limit: int | None = None) -> dict:
+    """Move every ``entry`` partition that has aged past ``after_days`` and is
+    still on pg_default onto the ``cold`` tablespace (table + all its indexes),
+    oldest first. ``limit`` caps how many partitions move in one call (the warmer
+    drips a few per pass; the admin trigger passes None to drain the whole
+    backlog). No-op when the cold tablespace is absent. Returns the moved
+    partition names + bytes relocated."""
+    if not await cold_tablespace_exists():
+        return {"cold_tablespace": False, "moved": [], "moved_bytes": 0}
+    keep_from = _cold_keep_from(now, after_days)
+    async with acquire() as con:
+        parts = await _entry_partitions(con)
+        eligible = sorted(
+            (p for p in parts
+             if p["tablespace"] == "pg_default" and p["lo"] < keep_from),
+            key=lambda p: p["lo"],   # oldest first
+        )
+        if limit is not None:
+            eligible = eligible[:limit]
+        moved: list[str] = []
+        moved_bytes = 0
+        for p in eligible:
+            # Partition index names are auto-generated; resolve them per partition.
+            # ``regclass::text`` quotes any identifier that needs it.
+            idx = await con.fetch(
+                "SELECT indexrelid::regclass::text AS name "
+                "FROM pg_index WHERE indrelid = $1", p["oid"],
+            )
+            # Table first, then each index - each its own autocommit statement so
+            # only one object is locked at a time (asyncpg autocommits outside an
+            # explicit transaction block). ``p["name"]`` is validated pure
+            # ``entry_p_<int>`` by _partition_lo, so the interpolation is safe.
+            await con.execute(
+                f'ALTER TABLE {p["name"]} SET TABLESPACE {COLD_TABLESPACE}'
+            )
+            for r in idx:
+                await con.execute(
+                    f'ALTER INDEX {r["name"]} SET TABLESPACE {COLD_TABLESPACE}'
+                )
+            moved.append(p["name"])
+            moved_bytes += p["bytes"]
+    return {"cold_tablespace": True, "moved": moved, "moved_bytes": moved_bytes}

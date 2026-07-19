@@ -646,6 +646,70 @@ async def rebuild_player_board_agg_status() -> dict:
     return _agg_rebuild_status
 
 
+# --- Leaderboards: cold-tier aged partitions --------------------------------
+# Move entry partitions past the physical retention window (leaderboards_pg_tier_
+# after_days) off the fast NVMe onto the slower `cold` tablespace. The warmer
+# also drips this automatically (a few partitions/day); this is the manual "drain
+# the whole backlog now" trigger (the first run can relocate tens of GB). Safe to
+# re-run + a no-op when the cold tablespace isn't provisioned. Master-only.
+_cold_tier_status: dict = {
+    "running": False, "moved": None, "moved_bytes": None,
+    "finished_at": None, "error": None,
+}
+
+
+async def _run_cold_tier() -> None:
+    import logging
+    import time as _time
+
+    from app.admin import runtime_config
+    from app.trove.leaderboards import pg_store
+    _cold_tier_status.update(running=True, error=None)
+    try:
+        after_days = int(await runtime_config.get_setting("leaderboards_pg_tier_after_days"))
+        res = await pg_store.tier_cold_partitions(after_days, int(_time.time()), limit=None)
+        _cold_tier_status.update(moved=res.get("moved") or [],
+                                 moved_bytes=res.get("moved_bytes") or 0)
+    except Exception as exc:  # noqa: BLE001 - surface via status, never 500 a bg task
+        _cold_tier_status.update(error=str(exc))
+        logging.getLogger(__name__).exception("cold-tier move failed")
+    finally:
+        _cold_tier_status.update(running=False, finished_at=int(_time.time()))
+
+
+@router.post("/leaderboards/tier-cold")
+async def tier_cold_partitions(background_tasks: BackgroundTasks) -> dict:
+    """Move every entry partition aged past leaderboards_pg_tier_after_days onto
+    the cold tablespace (table + indexes), freeing NVMe. Runs in the background
+    (the first run can relocate tens of GB); poll .../tier-cold/status."""
+    if not settings.postgres_enabled:
+        raise APIError(status_code=400, code=ErrorCode.bad_request,
+                       message="Postgres backend is disabled")
+    if _cold_tier_status["running"]:
+        return {"started": False, "message": "A cold-tier move is already running."}
+    background_tasks.add_task(_run_cold_tier)
+    return {"started": True,
+            "message": "Cold-tier move started - poll /admin/leaderboards/tier-cold/status."}
+
+
+@router.get("/leaderboards/tier-cold/status")
+async def tier_cold_partitions_status() -> dict:
+    """Cold-tier layout (hot/cold partition counts + bytes, eligible backlog) plus
+    the state of the last manual move."""
+    out: dict = {"last_run": _cold_tier_status}
+    if settings.postgres_enabled:
+        import time as _time
+
+        from app.admin import runtime_config
+        from app.trove.leaderboards import pg_store
+        try:
+            after_days = int(await runtime_config.get_setting("leaderboards_pg_tier_after_days"))
+            out["layout"] = await pg_store.tier_status(after_days, int(_time.time()))
+        except Exception as exc:  # noqa: BLE001 - report, don't 500
+            out["layout"] = {"error": str(exc)}
+    return out
+
+
 # --- Codexes: force a parser rebuild ---------------------------------------
 # The steady-state indexer only re-touches changed game files, so a parser-code
 # change doesn't reach existing rows until a game update. This forces a full

@@ -1569,6 +1569,10 @@ async function renderLeaderboards() {
           <span style="flex:1 1 200px"><strong>Player board aggregate</strong> <span class="muted" style="font-size:.78rem">— per-player best/latest/appearances that powers the fast /player profile; maintained at ingest. Seed once on an existing dataset or after backfills (whole archive, background).</span></span>
           <button class="btn small" id="rc-agg-rebuild" type="button">Rebuild</button>
         </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Storage tier</strong> <span class="muted" style="font-size:.78rem" id="rc-tier-info">— move entry partitions past the hot window onto the cold disk (frees NVMe; all history stays queryable). The warmer also drips this daily.</span></span>
+          <button class="btn small" id="rc-tier-move" type="button">Tier now</button>
+        </div>
         <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border,#2a2f3a);padding-top:10px">
           <span style="flex:1 1 200px"><strong>Everything</strong> <span class="muted" style="font-size:.78rem">— all four in one go</span></span>
           <button class="btn small danger" id="rc-all-reset" type="button">Reset &amp; recalculate all</button>
@@ -1794,6 +1798,51 @@ function wireRecomputeCard() {
       pollAgg();
     } catch (ex) { toast(ex.message || "Failed to start rebuild", "err"); }
   });
+
+  // Storage tier: move aged entry partitions to the cold tablespace. Shows the
+  // live hot/cold split in the row's sub-label and polls while a move runs.
+  const _fmtGB = (b) => (b == null ? "?" : (b / 1073741824).toFixed(1) + " GB");
+  const _tierInfo = document.getElementById("rc-tier-info");
+  const paintTier = (layout) => {
+    if (!_tierInfo || !layout) return;
+    if (layout.cold_tablespace === false) {
+      _tierInfo.textContent = "— cold tablespace not provisioned on this deploy (no-op).";
+      return;
+    }
+    _tierInfo.textContent =
+      `— ${layout.hot_partitions} hot (${_fmtGB(layout.hot_bytes)} on NVMe) / `
+      + `${layout.cold_partitions} cold (${_fmtGB(layout.cold_bytes)} on the slow disk); `
+      + `keeping ${layout.after_days}d hot, ${layout.eligible_partitions} partition(s) `
+      + `(${_fmtGB(layout.eligible_bytes)}) eligible to move.`;
+  };
+  const refreshTier = async () => {
+    try { const s = await API.call("/admin/leaderboards/tier-cold/status"); paintTier(s && s.layout); return s; }
+    catch (_) { return null; }
+  };
+  let _tierPoll = null;
+  const pollTier = () => {
+    if (_tierPoll) clearInterval(_tierPoll);
+    _tierPoll = setInterval(async () => {
+      const s = await refreshTier();
+      if (s && s.last_run && s.last_run.running) {
+        show("Cold-tiering partitions… (moving table + indexes to the slow disk)");
+      } else {
+        clearInterval(_tierPoll); _tierPoll = null;
+        const r = s && s.last_run;
+        if (r && r.error) show(`Cold-tier move failed: ${r.error}`);
+        else if (r && r.moved != null) show(`Cold-tier move done: ${r.moved.length} partition(s), ${_fmtGB(r.moved_bytes)} relocated.`);
+      }
+    }, 2500);
+  };
+  on("rc-tier-move", async () => {
+    try {
+      const r = await API.call("/admin/leaderboards/tier-cold", { method: "POST" });
+      show(r.message || "Cold-tier move started (background)…");
+      toast(r.started === false ? "Move already running" : "Cold-tier move started", "ok");
+      pollTier();
+    } catch (ex) { toast(ex.message || "Failed to start cold-tier move", "err"); }
+  });
+  refreshTier();
 }
 
 // Giveaways: "Giveaways" sub-tab (manage/draw/cancel) + "Vault" sub-tab (prize-code

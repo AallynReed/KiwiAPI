@@ -628,6 +628,23 @@ REGISTRY: dict[str, TunableSetting] = {
         ),
         min_value=1, max_value=3650,
     ),
+    "leaderboards_pg_tier_after_days": _t(
+        key="leaderboards_pg_tier_after_days",
+        default=settings.leaderboards_pg_tier_after_days,
+        type="int",
+        category="archive_rate_limits",
+        description=(
+            "PHYSICAL storage tier (not a cache knob): entry partitions older "
+            "than this many trove-days are moved off the fast NVMe data dir onto "
+            "the slower \"cold\" tablespace (a redundant RAID1 disk), keeping the "
+            "hot working set small enough to stay in RAM while all history stays "
+            "attached + queryable. The warmer drips a few partitions/day; the "
+            "dev-portal button drains the whole backlog on demand. No effect "
+            "unless the cold tablespace is provisioned. Lower = less on NVMe, more "
+            "cold-disk reads for recent-but-not-latest data."
+        ),
+        min_value=1, max_value=3650,
+    ),
     "leaderboards_archive_query_threshold_days": _t(
         key="leaderboards_archive_query_threshold_days",
         default=settings.leaderboards_archive_query_threshold_days,

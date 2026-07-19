@@ -328,6 +328,13 @@ _warmup_task: asyncio.Task | None = None
 # Set by ``trigger_warmer()`` to wake the sleeping loop early. We
 # ``asyncio.wait`` on this OR the TTL sleep, whichever resolves first.
 _wake_event: asyncio.Event | None = None
+# Last time the warmer ran the cold-tier partition move (monotonic wall clock).
+# Gates it to ~once/day so the ~30-min warm cadence doesn't re-scan constantly;
+# a small per-pass ``limit`` drips any backlog out over successive days instead
+# of one long stall.
+_last_cold_tier_ts: float = 0.0
+_COLD_TIER_PERIOD_SECONDS = 86400.0
+_COLD_TIER_PER_PASS = 3
 
 
 async def _warmup_loop() -> None:
@@ -431,6 +438,36 @@ async def _warm_all() -> None:
             logger.info("leaderboards warmer: pre-warmed %d board-history charts", warmed)
         except Exception:
             logger.exception("leaderboards warmer: board-history pre-warm failed (non-fatal)")
+
+    # Cold-tier aged partitions onto the slower disk (~once/day, a few per pass).
+    # LAST + non-fatal + after the publish above, so a slow SET TABLESPACE move
+    # never delays the atomic snapshot switch or the page's freshness.
+    await _maybe_tier_cold_partitions()
+
+
+async def _maybe_tier_cold_partitions() -> None:
+    """Move partitions past the physical retention window to the cold tablespace,
+    gated to ~once/day and capped per pass. Non-fatal + a no-op when Postgres or
+    the cold tablespace isn't configured."""
+    global _last_cold_tier_ts
+    from app.core.config import settings
+    if not settings.postgres_enabled:
+        return
+    now = time.time()
+    if now - _last_cold_tier_ts < _COLD_TIER_PERIOD_SECONDS:
+        return
+    _last_cold_tier_ts = now
+    try:
+        from app.admin import runtime_config
+        from app.trove.leaderboards import pg_store
+        after_days = int(await runtime_config.get_setting("leaderboards_pg_tier_after_days"))
+        res = await pg_store.tier_cold_partitions(after_days, int(now), limit=_COLD_TIER_PER_PASS)
+        moved = res.get("moved") or []
+        if moved:
+            logger.info("leaderboards warmer: cold-tiered %d partition(s) (%s)",
+                        len(moved), ", ".join(moved))
+    except Exception:
+        logger.exception("leaderboards warmer: cold-tier move failed (non-fatal)")
 
 
 def trigger_warmer() -> None:

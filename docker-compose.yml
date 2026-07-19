@@ -71,6 +71,14 @@ services:
       - "5432:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+      # COLD TABLESPACE for aged leaderboard partitions. The hot working set
+      # (recent trove-days) stays on the fast NVMe data dir above; partitions
+      # older than `leaderboards_pg_tier_after_days` are moved onto this slower
+      # RAID1 disk by the tiering job (see pg_store.tier_cold_partitions). The
+      # host dir MUST be a mounted disk owned by uid 999 mode 700, and the
+      # `cold` tablespace points at this container path. Back this path up
+      # alongside ./data/postgres - together they are one database.
+      - /mnt/db/trove/pg_cold:/cold
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kiwi} -d ${POSTGRES_DB:-kiwi_lb}"]
       interval: 10s

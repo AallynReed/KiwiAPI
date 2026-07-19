@@ -50,6 +50,13 @@ class Settings(BaseSettings):
     # depth knob, not a storage tier.) Matches the archive threshold so "what's warm"
     # and "what pays standard rate" line up.
     leaderboards_hot_retention_days: int = 3
+    # PHYSICAL storage tier (distinct from the warm-cache knob above): entry
+    # partitions older than this many trove-days are relocated off the fast NVMe
+    # data dir onto the slower `cold` tablespace (a redundant RAID1 disk) by the
+    # tiering job. Keeps the hot working set small enough to stay in RAM while all
+    # history stays attached + queryable. New partitions are always created hot;
+    # only aged ones move. No-op when the `cold` tablespace isn't provisioned.
+    leaderboards_pg_tier_after_days: int = 7
     # Anchors older than this count as "archive" reads and pay an extra, tighter
     # per-token bucket ON TOP of the standard cap - a caller can trawl the archive
     # cheaply per-read but not in a tight loop. Same 3-day window as the hot window.
