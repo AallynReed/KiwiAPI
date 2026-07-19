@@ -65,6 +65,13 @@ _ACTIVE_RETENTION_SECONDS = 8 * 86400
 _GAP_FLOOR_HOURS = 1.5
 _GAP_FACTOR = 1.9
 
+# When a backfill is windowed (``since_ts`` given), enumerate anchors only back to
+# ``lo - this`` rather than the whole history: enough margin that the first pair's
+# EARLIER anchor is included, while partition-pruning skips the cold tier so the
+# enumeration doesn't time out. A pair spanning more than this is a gap window
+# (skipped anyway), so nothing measurable is lost by the floor.
+_BACKFILL_ANCHOR_MARGIN = 2 * 86400
+
 
 def _median(values: list[float]) -> float | None:
     vals = sorted(v for v in values if v and v > 0)
@@ -464,13 +471,17 @@ async def backfill_history(
     from app.trove.leaderboards import pg_store
     from app.trove.leaderboards.models import is_player_board
 
-    stamps = await lb_service.list_timestamps(limit=1_000_000, include_archive=True)
+    lo = since_ts if since_ts is not None else int(time.time()) - max(1, window_days) * 86400
+    hi = until_ts   # None = no upper bound
+    # Enumerate only the anchors this window needs (+ a margin for the first pair's
+    # earlier side). Walking ALL anchors here times out on the cold tier - see
+    # pg_store.list_timestamps(since=...). lo<=0 ("all history") keeps the full walk.
+    anchor_floor = None if lo <= 0 else max(0, lo - _BACKFILL_ANCHOR_MARGIN)
+    stamps = await lb_service.list_timestamps(limit=1_000_000, since=anchor_floor)
     if not stamps:
         return {"computed": 0, "skipped": 0, "failed": 0, "total": 0,
                 "note": "no anchors stored"}
     stamps_asc = sorted(stamps)
-    lo = since_ts if since_ts is not None else int(time.time()) - max(1, window_days) * 86400
-    hi = until_ts   # None = no upper bound
 
     # Consecutive (early, late) pairs whose late anchor is in [lo, hi].
     pairs: list[tuple[int, int]] = []

@@ -35,6 +35,12 @@ _TS_KEY = _PREFIX + "timestamps"
 # capture per trove-day from it.
 _TS_CACHE_LIMIT = 365
 _TROVE_DAY_OFFSET = 11 * 3600   # Trove's daily reset is 11:00 UTC (trove-day boundary)
+# Archive date-picker: the LATEST anchor per trove-day, all the way back through the
+# cold tier. Computing it touches every daily partition (slow on the cold disk), but
+# it only changes when a new day rolls over, so it's cached and refreshed by the
+# warmer (see warm_days) - never computed on a page load.
+_DAYS_KEY = _PREFIX + "days"
+_DAYS_TTL = 12 * 3600
 
 
 async def _rget(key: str):
@@ -165,6 +171,37 @@ def _latest_per_day(anchors: list[int], days: int) -> list[int]:
         if a > by_day.get(key, -1):
             by_day[key] = a
     return sorted(by_day.values(), reverse=True)[:days]
+
+
+async def get_days(limit: int = 400) -> list[int]:
+    """Latest anchor per trove-day, newest first (the archive date-picker's day
+    list). Served from Redis; computed cache-aside on a miss. The compute scans the
+    cold tier, so the warmer keeps this warm (see ``warm_days``) - a miss is rare."""
+    cached = await _rget(_DAYS_KEY)
+    if cached is not None:
+        return cached[:limit]
+    days = await lb_service.list_days(limit)
+    await _rset(_DAYS_KEY, days, ttl=_DAYS_TTL)
+    return days
+
+
+async def warm_days() -> None:
+    """Refresh the per-day anchor list cache, but ONLY when it's missing or a new
+    trove-day has rolled over since it was built - the list gains an entry once a
+    day, so re-running the cold-tier scan every warm cycle (~30 min) would be pure
+    waste. The check itself is one cheap newest-anchor lookup. Called by the warmer
+    after the publish (non-fatal), so the slow compute never delays freshness and no
+    user pays it on a page load."""
+    latest = await lb_service.list_timestamps(limit=1)
+    if not latest:
+        return
+    latest_day = (latest[0] - _TROVE_DAY_OFFSET) // 86400
+    cached = await _rget(_DAYS_KEY)
+    if cached:
+        cached_day = (cached[0] - _TROVE_DAY_OFFSET) // 86400
+        if cached_day == latest_day:
+            return   # newest trove-day unchanged - the day list hasn't grown
+    await _rset(_DAYS_KEY, await lb_service.list_days(400), ttl=_DAYS_TTL)
 
 
 async def warm() -> None:

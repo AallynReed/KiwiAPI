@@ -159,6 +159,7 @@
   const { boardIconImg, crownHtml } = window.BTTUtil;
 
   const $dayPicker = document.getElementById('lb-day-picker');
+  const $dayArchive = document.getElementById('lb-day-archive');
   const $cheatersMeta = document.getElementById('lb-cheaters-meta');
   const $cheatersBody = document.getElementById('lb-cheaters-body');
   const $cheatersFilter = document.getElementById('lb-cheaters-min');
@@ -232,10 +233,10 @@
     if (config && Number.isFinite(config.hot_retention_days)) {
       state.hotRetentionDays = config.hot_retention_days;
     }
-    // Day-picker depth for this caller (signed-in users get the extended archive)
-    // + the age past which the top-5 board chart is not drawn. Fall back to the
-    // 7-day hot window if the config fetch failed.
-    state.pickerDays = (config && Number.isFinite(config.picker_days)) ? config.picker_days : PICKER_DAYS;
+    // The age past which the top-5 board chart is not drawn. Fall back to the
+    // 7-day hot window if the config fetch failed. (The day-tile row is always
+    // the 7-day hot window - see effectivePickerDays; older days are reached via
+    // the date picker, so picker_days no longer sizes the tiles.)
     state.graphMaxAgeDays = (config && Number.isFinite(config.graph_max_age_days)) ? config.graph_max_age_days : PICKER_DAYS;
     state.loggedIn = !!(config && config.logged_in);
     // Master compute switches: a disabled tab is hidden outright (the server
@@ -251,6 +252,18 @@
 
     buildDays();
     renderDayPicker();
+    renderDayArchive();   // date-jump (signed-in) or sign-in prompt (anon)
+
+    // Re-render the archive control when auth settles (login / logout) so the
+    // date-jump vs sign-in prompt always matches the current session. Installed
+    // once.
+    if (!state._archiveAuthHook) {
+      state._archiveAuthHook = true;
+      document.addEventListener('btt-auth-changed', () => {
+        _archiveByDay = null;
+        renderDayArchive();
+      });
+    }
 
     // Keep the "Today" chip's relative "Xm ago" label fresh if the page
     // sits open. Re-rendering the whole (tiny) picker every 60s is cheap
@@ -1294,11 +1307,13 @@
     return Math.floor((unix - TROVE_OFFSET_SECONDS) / DAY_SECONDS);
   }
 
-  // How many day-chips to render: the caller's window (7 for anon, the extended
-  // archive for signed-in users) but never further back than the oldest capture
-  // we actually have - so "all history" doesn't paint months of empty chips.
+  // How many day-chips to render: ALWAYS the 7-day hot window, never more - no
+  // matter how much history the caller can access. Older days are reached through
+  // the date picker (renderDayArchive), NOT by growing this tile row into an
+  // endless list. Clamp to the oldest capture too, so a short history doesn't pad
+  // the row with "No data" tiles.
   function effectivePickerDays(todayKey) {
-    const want = Number.isFinite(state.pickerDays) ? state.pickerDays : PICKER_DAYS;
+    const want = PICKER_DAYS;
     if (!state.anchors || !state.anchors.length) return Math.min(want, PICKER_DAYS);
     let oldest = todayKey;
     for (const ts of state.anchors) {
@@ -1364,11 +1379,6 @@
     }).join('');
     rerunI18n();
 
-    // Past the 7-day hot grid (signed-in users browsing the archive) the fixed
-    // 7-col grid would stack into many rows - switch to a horizontal scroller so
-    // the history stays one tidy, swipeable row.
-    $dayPicker.classList.toggle('lb-day-picker--scroll', state.days.length > PICKER_DAYS);
-
     for (const btn of $dayPicker.querySelectorAll('[data-day-idx]:not([disabled])')) {
       btn.addEventListener('click', () => selectDay(Number(btn.dataset.dayIdx)));
     }
@@ -1423,6 +1433,81 @@
     state.selectedDayIdx = idx;
     state.anchor = day.anchor;
     renderDayPicker();  // refresh active state
+    scheduleHash(true);
+    await loadBoards();
+  }
+
+  // ─── Archive access (older than the recent day-chips) ────────────────────
+  // Signed-in Dashboard users can jump to any captured day in the cold-tiered
+  // archive; everyone else gets a sign-in prompt. The recent chips above stay the
+  // quick path - this only reaches what's older than the hot window.
+  function isLoggedIn() {
+    return !!(window.BTTAuth && window.BTTAuth.tokens && window.BTTAuth.tokens.access);
+  }
+
+  let _archiveByDay = null;   // Map<troveDayKey, latest anchor>, from /site/leaderboards/days
+  const keyToISO = (key) => new Date(key * DAY_SECONDS * 1000).toISOString().slice(0, 10);
+
+  async function renderDayArchive() {
+    if (!$dayArchive) return;
+    if (!isLoggedIn()) {
+      _archiveByDay = null;
+      $dayArchive.innerHTML =
+        '<a class="lb-day-cta" href="/login">' +
+        '<i class="fa-solid fa-lock" aria-hidden="true"></i> ' +
+        '<span data-i18n>Sign in to browse the full archive</span></a>';
+      rerunI18n();
+      return;
+    }
+    if (_archiveByDay === null) {
+      $dayArchive.innerHTML = '<span class="lb-day-archive-msg" data-i18n>Loading archive…</span>';
+      rerunI18n();
+      // CRITICAL: validate/refresh the session token BEFORE the /days call. On
+      // load, site_auth refreshes the access token asynchronously; if we fetch
+      // first we send the stale token, and because /days uses OPTIONAL auth the
+      // server silently returns the anon (7-day) window as a 200 - no 401 to
+      // trigger a retry. Awaiting getMe(force) settles the refresh first.
+      if (window.BTTAuth && window.BTTAuth.getMe) {
+        try { await window.BTTAuth.getMe({ force: true }); } catch (_) { /* proceed */ }
+      }
+      if (!isLoggedIn()) { renderDayArchive(); return; }  // session fully expired -> CTA
+      let items = [];
+      try {
+        const r = await fetchJSONAuth('/site/leaderboards/days');
+        items = (r && r.items) || [];
+      } catch (_) { items = []; }
+      _archiveByDay = new Map();
+      for (const a of items) _archiveByDay.set(troveDayKeyFor(a), a);
+    }
+    const keys = [..._archiveByDay.keys()];
+    if (!keys.length) { $dayArchive.innerHTML = ''; return; }
+    const minK = Math.min.apply(null, keys), maxK = Math.max.apply(null, keys);
+    $dayArchive.innerHTML =
+      '<label class="lb-day-jump" title="' + esc(t('Jump to any captured day in the archive')) + '">' +
+      '<i class="fa-solid fa-calendar-days" aria-hidden="true"></i>' +
+      '<span class="lb-day-jump-text" data-i18n>Older date</span>' +
+      '<input type="date" class="lb-day-jump-input" min="' + keyToISO(minK) + '" max="' + keyToISO(maxK) +
+      '" aria-label="' + esc(t('Jump to date')) + '">' +
+      '</label>';
+    rerunI18n();
+    const input = $dayArchive.querySelector('.lb-day-jump-input');
+    input.addEventListener('change', () => loadArchiveDay(input.value));
+  }
+
+  async function loadArchiveDay(dateStr) {
+    if (!dateStr || !_archiveByDay) return;
+    const p = dateStr.split('-').map(Number);
+    const key = Math.floor(Date.UTC(p[0], p[1] - 1, p[2]) / 1000 / DAY_SECONDS);
+    const anchor = _archiveByDay.get(key);
+    if (anchor == null) {
+      // No capture that day (a gap in the archive) - flash the control, do nothing.
+      $dayArchive.classList.add('is-nodata');
+      setTimeout(() => $dayArchive.classList.remove('is-nodata'), 1600);
+      return;
+    }
+    state.selectedDayIdx = -1;   // an archive day, not one of the recent chips
+    state.anchor = anchor;
+    renderDayPicker();           // clear the recent-chip highlight
     scheduleHash(true);
     await loadBoards();
   }
@@ -2245,11 +2330,15 @@
     const $legend = document.getElementById('lb-board-chart-legend');
     if (!$wrap || !$chart) return;
     // The top-5 chart plots the last 7 days' trajectory - meaningful only for a
-    // recent day. For an older selected capture (archive browsing) it's neither
-    // wanted nor worth the cold-partition scan, so skip it entirely.
-    const selDay = state.days[state.selectedDayIdx];
+    // recent day. For an older capture it's neither wanted nor worth the
+    // cold-partition scan, so skip it. Gate on the selected ANCHOR's age (in
+    // trove-days), so this holds for the recent chips AND an archive date-jump
+    // (which has no chip index, state.selectedDayIdx = -1).
     const maxAge = Number.isFinite(state.graphMaxAgeDays) ? state.graphMaxAgeDays : PICKER_DAYS;
-    if (selDay && selDay.relative >= maxAge) { hideBoardChart(); return; }
+    const ageDays = state.anchor != null
+      ? troveDayKeyFor(Math.floor(Date.now() / 1000)) - troveDayKeyFor(state.anchor)
+      : 0;
+    if (ageDays >= maxAge) { hideBoardChart(); return; }
     // Optimistic show - give the user a "something is happening" cue
     // while the fetch runs. drawBoardChart hides again on empty.
     $wrap.hidden = false;

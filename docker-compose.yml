@@ -261,6 +261,12 @@ services:
       # Read-side data from the api over the compose network. Deliberately NO
       # Mongo/Redis/Postgres/SECRET_KEY: the website has no DB and issues no tokens.
       INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
+      # Discord OAuth toggle. The website performs no token exchange (the /login
+      # button links to the api's OAuth start endpoint); it needs these only so
+      # settings.discord_oauth_enabled is true and the sign-in button renders
+      # instead of the "temporarily unavailable" fallback. Same values as the api.
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
     depends_on:
       # Soft dep (started, not healthy), like the bot - internal_get fails
       # gracefully (fail-open flags, generic OG) if the api is briefly down.

@@ -412,13 +412,16 @@ async def backfill_class_history(
     entries). Mirrors ``activity.backfill_history`` but grouped per class."""
     from app.trove.leaderboards import pg_store
 
-    stamps = await lb_service.list_timestamps(limit=1_000_000, include_archive=True)
+    lo = since_ts if since_ts is not None else int(time.time()) - max(1, window_days) * 86400
+    hi = until_ts
+    # Enumerate only the window's anchors (+ margin) - a full-history walk times out
+    # on the cold tier (see pg_store.list_timestamps). lo<=0 keeps the full walk.
+    anchor_floor = None if lo <= 0 else max(0, lo - _act._BACKFILL_ANCHOR_MARGIN)
+    stamps = await lb_service.list_timestamps(limit=1_000_000, since=anchor_floor)
     if not stamps:
         return {"computed": 0, "skipped": 0, "gap_skipped": 0, "failed": 0,
                 "total": 0, "note": "no anchors stored"}
     stamps_asc = sorted(stamps)
-    lo = since_ts if since_ts is not None else int(time.time()) - max(1, window_days) * 86400
-    hi = until_ts
 
     pairs = [
         (stamps_asc[i - 1], stamps_asc[i])

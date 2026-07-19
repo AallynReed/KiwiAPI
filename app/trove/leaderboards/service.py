@@ -274,10 +274,20 @@ async def reset_all(*, drop_boards: bool = False) -> dict:
 
 # --- read -------------------------------------------------------------------
 
-async def list_timestamps(limit: int = 60, *, include_archive: bool = True) -> list[int]:
+async def list_timestamps(
+    limit: int = 60, *, include_archive: bool = True, since: int | None = None,
+) -> list[int]:
     """Distinct anchors with stored entries, newest first. (``include_archive`` is
-    a no-op now - one partitioned table holds everything.)"""
-    return await pg_store.list_timestamps(limit)
+    a no-op now - one partitioned table holds everything.) ``since`` (unix seconds)
+    floors the walk so a windowed caller doesn't enumerate the whole cold-tier
+    history (which times out) - see ``pg_store.list_timestamps``."""
+    return await pg_store.list_timestamps(limit, since=since)
+
+
+async def list_days(limit: int = 40) -> list[int]:
+    """Latest anchor per trove-day, newest first, up to ``limit`` days - for the
+    archive date-picker (one representative capture per day, cheaply)."""
+    return await pg_store.list_days(limit)
 
 
 async def list_boards_at(created_at: int) -> list[dict]:

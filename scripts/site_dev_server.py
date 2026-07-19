@@ -2152,6 +2152,11 @@ class Handler(SimpleHTTPRequestHandler):
             ]})
         if path == "/site/leaderboards/timestamps":
             return self._send_json({"items": STUB_TIMESTAMPS, "count": len(STUB_TIMESTAMPS)})
+        if path == "/site/leaderboards/days":
+            # Archive date-picker: ~30 daily anchors (latest capture ~11:52 UTC per
+            # trove-day), newest first - what the signed-in date-jump reads.
+            days = [(_today_trove_key - i) * _DAY + _TROVE_OFFSET + 3120 for i in range(30)]
+            return self._send_json({"items": days, "count": len(days)})
         if path == "/site/leaderboards/boards":
             qs = parse_qs(url.query)
             created_at = int(qs.get("created_at", [str(STUB_ANCHOR)])[0])

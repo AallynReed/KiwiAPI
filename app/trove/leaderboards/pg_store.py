@@ -140,7 +140,7 @@ async def reset_all(*, drop_boards: bool = False) -> dict:
 
 # ── reads ─────────────────────────────────────────────────────────────────────
 
-async def list_timestamps(limit: int = 60) -> list[int]:
+async def list_timestamps(limit: int = 60, since: int | None = None) -> list[int]:
     # Loose index scan (skip scan): seek the newest anchor, then repeatedly the
     # next-lower one, stopping at ``limit``. Each step is an index MAX using the
     # per-partition ``entry_p_*_anchor_idx``, so this early-stops after ~``limit``
@@ -149,18 +149,71 @@ async def list_timestamps(limit: int = 60) -> list[int]:
     # on the slow cold-tier disk → ~2 min), which blew past the 120s statement
     # timeout and froze the warmer's snapshot publish (page stuck on a stale
     # anchor). The skip scan returns the same newest-first anchors in ~6s.
+    #
+    # ``since`` (unix seconds) FLOORS the walk: the recursive seek also requires
+    # ``anchor >= since``, so it stops the moment it drops below the floor and -
+    # crucially - partition pruning skips every partition older than ``since``
+    # outright. A windowed backfill ("last day") MUST pass this: without it the
+    # walk enumerates a year of anchors across the cold tier and hits the 120s
+    # command_timeout. ``None`` keeps the original unbounded whole-history walk.
+    async with acquire() as con:
+        if since is None:
+            rows = await con.fetch(
+                """
+                WITH RECURSIVE a AS (
+                    SELECT (SELECT max(anchor) FROM entry) AS anchor
+                    UNION ALL
+                    SELECT (SELECT max(e.anchor) FROM entry e WHERE e.anchor < a.anchor)
+                    FROM a WHERE a.anchor IS NOT NULL
+                )
+                SELECT anchor FROM a WHERE anchor IS NOT NULL LIMIT $1
+                """,
+                limit,
+            )
+        else:
+            rows = await con.fetch(
+                """
+                WITH RECURSIVE a AS (
+                    SELECT (SELECT max(anchor) FROM entry WHERE anchor >= $2) AS anchor
+                    UNION ALL
+                    SELECT (SELECT max(e.anchor) FROM entry e
+                            WHERE e.anchor < a.anchor AND e.anchor >= $2)
+                    FROM a WHERE a.anchor IS NOT NULL
+                )
+                SELECT anchor FROM a WHERE anchor IS NOT NULL LIMIT $1
+                """,
+                limit, since,
+            )
+    return [r["anchor"] for r in rows]
+
+
+# Trove-day boundary: captures roll over at 11:00 UTC (the UTC-11 server day), so
+# a trove-day is the window [11:00 UTC, next-day 11:00 UTC).
+_TROVE_DAY_OFFSET = 11 * 3600
+
+
+async def list_days(limit: int = 40) -> list[int]:
+    """The LATEST anchor of each trove-day, newest first, for up to ``limit`` days.
+
+    Powers the archive date-picker: it needs one representative capture per day, not
+    every hourly one. Like ``list_timestamps`` this is a loose index scan, but each
+    step jumps to the start of the current anchor's trove-day and takes the max
+    anchor strictly before it - i.e. one index seek PER DAY. So even the full
+    cold-tiered archive is ~40 seeks, not a table scan. Stops early when the archive
+    runs out (the recursive term yields NULL)."""
     async with acquire() as con:
         rows = await con.fetch(
             """
-            WITH RECURSIVE a AS (
+            WITH RECURSIVE d AS (
                 SELECT (SELECT max(anchor) FROM entry) AS anchor
                 UNION ALL
-                SELECT (SELECT max(e.anchor) FROM entry e WHERE e.anchor < a.anchor)
-                FROM a WHERE a.anchor IS NOT NULL
+                SELECT (SELECT max(e.anchor) FROM entry e
+                        WHERE e.anchor < ((d.anchor - $2) / 86400) * 86400 + $2)
+                FROM d WHERE d.anchor IS NOT NULL
             )
-            SELECT anchor FROM a WHERE anchor IS NOT NULL LIMIT $1
+            SELECT anchor FROM d WHERE anchor IS NOT NULL LIMIT $1
             """,
-            limit,
+            limit, _TROVE_DAY_OFFSET,
         )
     return [r["anchor"] for r in rows]
 

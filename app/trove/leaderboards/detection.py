@@ -460,6 +460,15 @@ async def _warm_all() -> None:
         except Exception:
             logger.exception("leaderboards warmer: board-history pre-warm failed (non-fatal)")
 
+    # Archive date-picker day list (latest anchor per trove-day, full cold tier).
+    # NON-FATAL + after the publish: the compute scans the cold disk (~20s), so it
+    # must never delay freshness - and doing it here means no user ever pays it on a
+    # page load.
+    try:
+        await lb_cache.warm_days()
+    except Exception:
+        logger.exception("leaderboards warmer: day-list warm failed (non-fatal)")
+
     # Cold-tier aged partitions onto the slower disk (~once/day, a few per pass).
     # LAST + non-fatal + after the publish above, so a slow SET TABLESPACE move
     # never delays the atomic snapshot switch or the page's freshness.

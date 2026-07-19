@@ -186,6 +186,48 @@
 }
 .lb-day.active .lb-day-meta { color: rgba(120,180,255,.85); }
 
+/* ─── Archive access row (recent chips + a date-jump / sign-in prompt) ───── */
+.lb-day-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lb-day-row > .lb-day-picker { flex: 1 1 320px; min-width: 0; }
+.lb-day-archive { flex: 0 0 auto; align-self: stretch; display: flex; align-items: center; }
+
+/* Anonymous: a prompt to sign in for the full archive. */
+.lb-day-cta {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px; border-radius: 10px;
+  border: 1px solid rgba(120,180,255,.35);
+  background: rgba(120,180,255,.10);
+  color: var(--accent-blue);
+  font-size: .88rem; font-weight: 600; text-decoration: none; white-space: nowrap;
+  transition: background .12s ease, border-color .12s ease;
+}
+.lb-day-cta:hover { background: rgba(120,180,255,.18); border-color: rgba(120,180,255,.55); }
+.lb-day-cta:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+/* Signed in: jump to any archived day. */
+.lb-day-jump {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 12px; border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text-mute); font-size: .85rem; cursor: pointer; white-space: nowrap;
+  transition: border-color .12s ease;
+}
+.lb-day-jump:hover { border-color: rgba(255,255,255,.2); }
+.lb-day-jump-input {
+  background: transparent; border: 0; padding: 0;
+  color: var(--text); font-family: inherit; font-size: .88rem; cursor: pointer;
+  color-scheme: dark;   /* render the native calendar popup dark */
+}
+.lb-day-jump-input::-webkit-calendar-picker-indicator { filter: invert(.7); cursor: pointer; }
+.lb-day-archive.is-nodata .lb-day-jump { border-color: var(--accent-orange, #f0a24b); }
+.lb-day-archive-msg { color: var(--text-mute); font-size: .85rem; padding: 8px 4px; }
+
 .lb-search-wrap {
   position: relative;
   display: block;

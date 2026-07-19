@@ -1826,6 +1826,28 @@ async def site_lb_timestamps(
     )
 
 
+@router.get("/site/leaderboards/days", response_class=JSONResponse)
+async def site_lb_days(
+    user: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The latest capture anchor per trove-day within THIS caller's browse window -
+    anonymous callers get the recent hot window, signed-in Dashboard users get the
+    whole cold-tiered archive. Powers the date-picker: one anchor per selectable
+    day, newest first. Reads straight from Postgres (a per-day loose index scan),
+    not the hot Redis snapshot, so it can reach past the ~365-capture cache."""
+    window = await _lb_browse_window_days(user)
+    # Served from the warmer-maintained Redis cache (the compute scans the cold
+    # tier); slice to THIS caller's window.
+    anchors = await leaderboards_cache.get_days(400)
+    cutoff = int(time.time()) - window * 86400
+    anchors = [a for a in anchors if a >= cutoff]
+    return JSONResponse(
+        {"items": anchors, "count": len(anchors)},
+        # Auth-dependent (the window depends on the bearer token) - not shared-cacheable.
+        headers={"Cache-Control": "private, max-age=120", "Vary": "Authorization"},
+    )
+
+
 @router.get("/site/leaderboards/boards", response_class=JSONResponse)
 async def site_lb_boards(
     created_at: int = Query(..., description="Anchor in unix seconds"),

@@ -165,8 +165,13 @@
             <div class="lb-toolbar lb-toolbar-stack lb-toolbar-days">
                 <div class="lb-toolbar-field">
                     <span class="lb-toolbar-label" data-i18n>Day</span>
-                    <div class="lb-day-picker" id="lb-day-picker" role="tablist" aria-label="Trove day">
-                        <span class="lb-day-loading" data-i18n>Loading…</span>
+                    <div class="lb-day-row">
+                        <div class="lb-day-picker" id="lb-day-picker" role="tablist" aria-label="Trove day">
+                            <span class="lb-day-loading" data-i18n>Loading…</span>
+                        </div>
+                        <!-- Archive access: a date jump for signed-in users, a sign-in
+                             prompt for everyone else. Filled by leaderboards.js. -->
+                        <div class="lb-day-archive" id="lb-day-archive"></div>
                     </div>
                 </div>
             </div>
