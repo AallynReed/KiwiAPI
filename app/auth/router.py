@@ -1,3 +1,5 @@
+import html as html_lib
+
 import jwt
 from beanie import PydanticObjectId
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
@@ -57,6 +59,9 @@ EMAIL_SPAM_NOTICE = (
 
 
 def _html_page(title: str, body: str, status_code: int = 200) -> HTMLResponse:
+    # ``title`` is always a literal today, but escape it so it can never become a
+    # reflected-XSS sink; ``body`` is intentional caller-authored markup.
+    title = html_lib.escape(title)
     return HTMLResponse(
         f"<!doctype html><html><head><meta charset='utf-8'><title>{title}</title>"
         "<style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;"

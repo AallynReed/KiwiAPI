@@ -57,8 +57,8 @@ async def queue_email(to: str, subject: str, text: str, html: str | None = None)
     """Queue a message for the worker. No-op (logged) when SMTP isn't configured,
     and skipped for addresses we've already seen hard-bounce."""
     if not settings.email_enabled:
+        # Don't log the body - it can contain verification / password-reset links.
         logger.warning("SMTP not configured - not queueing email to %s (%s)", to, subject)
-        logger.info("Email body (would send):\n%s", text)
         return
 
     bounced = await User.find_one(User.email == to.lower(), User.email_bounced == True)  # noqa: E712

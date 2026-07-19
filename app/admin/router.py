@@ -705,8 +705,9 @@ async def tier_cold_partitions_status() -> dict:
         try:
             after_days = int(await runtime_config.get_setting("leaderboards_pg_tier_after_days"))
             out["layout"] = await pg_store.tier_status(after_days, int(_time.time()))
-        except Exception as exc:  # noqa: BLE001 - report, don't 500
-            out["layout"] = {"error": str(exc)}
+        except Exception:  # noqa: BLE001 - report, don't 500
+            logging.getLogger(__name__).exception("tier_status failed")
+            out["layout"] = {"error": "tier status unavailable"}
     return out
 
 

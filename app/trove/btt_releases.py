@@ -87,12 +87,14 @@ def walk_latest(releases, platform: str):
 # suffix (release > prerelease of the same version). Falls back to None if
 # either side can't be parsed.
 
-_VERSION_RE = re.compile(r"^v?(\d+(?:\.\d+)*)(.*)$")
+# Bounded repetition (≤9 dotted groups, ≤9 digits each) keeps this strictly
+# linear - no catastrophic backtracking on adversarial input.
+_VERSION_RE = re.compile(r"^v?(\d{1,9}(?:\.\d{1,9}){0,9})(.*)$")
 
 
 def parse_version(value: str) -> tuple[tuple[int, ...], str] | None:
     """`'v1.2.3-beta.1'` -> `((1, 2, 3), '-beta.1')`, or None if unparseable."""
-    if not value:
+    if not value or len(value) > 64:
         return None
     m = _VERSION_RE.match(value.strip())
     if not m:

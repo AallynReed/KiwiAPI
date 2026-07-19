@@ -331,8 +331,9 @@ async def list_my_guilds(user: SiteUser = Depends(get_current_site_user)) -> dic
     try:
         bot_ids = {int(g["id"]) for g in await discord_rest.bot_guilds()}
     except DiscordRestError as exc:
+        logger.warning("bot_guilds failed: %s", exc)
         return {"linked": True, "guilds_synced": True, "invite_url": invite,
-                "reconnect_url": reconnect, "guilds": [], "error": str(exc)}
+                "reconnect_url": reconnect, "guilds": [], "error": "Couldn't reach Discord."}
     present = [g for g in user_guilds if int(g["id"]) in bot_ids]
     present_ids = [int(g["id"]) for g in present]
     ctxs = await asyncio.gather(
@@ -787,9 +788,10 @@ async def club_roster(
     try:
         members = await discord_rest.guild_members(guild_id)
     except DiscordRestError as exc:
+        logger.warning("guild_members failed: %s", exc)
         hint = ("Enable the Server Members Intent for the bot (Discord Developer Portal "
                 "→ Bot → Privileged Gateway Intents) to load the roster."
-                if "403" in str(exc) else f"Couldn't load members: {exc}")
+                if "403" in str(exc) else "Couldn't load members right now.")
         return {"available": False, "ranks": ranks, "roster": {}, "error": hint}
 
     roster: dict[str, list] = {rk["key"]: [] for rk in ranks}

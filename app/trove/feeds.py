@@ -407,10 +407,24 @@ _BILIBILI_UA = (
 )
 
 
-def _is_hdslb(url: str) -> bool:
+def _hdslb_target(url: str) -> httpx.URL:
+    """Validate a caller-supplied URL as an https hdslb.com image and return the
+    request URL rebuilt from the *validated* scheme/host, so nothing downstream
+    fetches an unchecked host. Raises ValueError otherwise."""
     parsed = httpx.URL(url)
     host = (parsed.host or "").lower()
-    return parsed.scheme == "https" and (host == "hdslb.com" or host.endswith(".hdslb.com"))
+    if parsed.scheme != "https" or not (host == "hdslb.com" or host.endswith(".hdslb.com")):
+        raise ValueError("only https hdslb.com images may be proxied")
+    # Reconstruct from the guarded host + literal https scheme; keep only path/query.
+    return httpx.URL(scheme="https", host=host, port=parsed.port, raw_path=parsed.raw_path)
+
+
+def _is_hdslb(url: str) -> bool:
+    try:
+        _hdslb_target(url)
+    except ValueError:
+        return False
+    return True
 
 
 async def fetch_bilibili_image(url: str) -> tuple[bytes, str]:
@@ -418,16 +432,17 @@ async def fetch_bilibili_image(url: str) -> tuple[bytes, str]:
     protection requires. Returns (bytes, content_type).
 
     Raises ValueError if the URL isn't an https hdslb.com image (guards against
-    using the proxy as an open SSRF relay). httpx errors propagate to the caller.
+    using the proxy as an open SSRF relay). Redirects are NOT followed, so a
+    hdslb redirect can't bounce the fetch to an internal host. httpx errors
+    propagate to the caller.
     """
-    if not _is_hdslb(url):
-        raise ValueError("only https hdslb.com images may be proxied")
+    target = _hdslb_target(url)
     async with httpx.AsyncClient(
         timeout=10,
-        follow_redirects=True,
+        follow_redirects=False,
         headers={"Referer": _BILIBILI_REFERER, "User-Agent": _BILIBILI_UA},
     ) as client:
-        resp = await client.get(url)
+        resp = await client.get(target)
         resp.raise_for_status()
         content_type = resp.headers.get("content-type", "image/jpeg")
         if not content_type.startswith("image/"):
