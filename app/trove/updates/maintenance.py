@@ -51,7 +51,11 @@ async def backfill_last_ordinal(branch: str) -> int:
             {"$group": {"_id": "$path", "last": {"$max": "$ordinal"}}},
         ]
         ops: list = []
-        async for row in changes.aggregate(pipeline, allowDiskUse=True):
+        # async PyMongo: aggregate() is a coroutine returning the async cursor -
+        # await it before iterating (``async for`` over the bare coroutine fails
+        # with "requires an object with __aiter__ method, got coroutine").
+        cursor = await changes.aggregate(pipeline, allowDiskUse=True)
+        async for row in cursor:
             ops.append(UpdateOne(
                 {"branch": branch, "path": row["_id"]},
                 {"$set": {"last_ordinal": row["last"]}},

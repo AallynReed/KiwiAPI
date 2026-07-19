@@ -508,6 +508,116 @@
   display: block;
 }
 
+/* ─── Possible renames ───────────────────────────────────────────── */
+.lb-rename {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+.lb-rename-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lb-rename-head:hover { background: rgba(255,255,255,.04); }
+.lb-rename-names {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+  font-weight: 600;
+  font-size: .95rem;
+}
+.lb-rename-name {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px dotted transparent;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-rename-name:hover { color: var(--accent-blue); border-bottom-color: currentColor; }
+.lb-rename-from { color: var(--text-mute); }
+.lb-rename-arrow { color: var(--accent-orange); flex-shrink: 0; font-size: .8rem; }
+.lb-rename-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.lb-rename-count {
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .72rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+.lb-rename-caret {
+  color: var(--text-mute);
+  transition: transform .15s ease;
+  flex-shrink: 0;
+}
+.lb-rename.expanded .lb-rename-caret { transform: rotate(180deg); }
+.lb-rename-detail { padding: 0 14px 14px; display: none; }
+.lb-rename.expanded .lb-rename-detail { display: block; }
+.lb-rename-summary {
+  font-size: .86rem;
+  color: var(--text-mute);
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+.lb-rename-when {
+  font-size: .76rem;
+  color: var(--text-mute);
+  margin: 0 0 10px;
+}
+.lb-rename-boards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lb-rename-board {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 8px;
+  font-size: .82rem;
+}
+.lb-rename-board-name { flex: 1; min-width: 0; font-weight: 600; }
+.lb-rename-board-scores {
+  font-family: SFMono-Regular, Consolas, monospace;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+.lb-rename-board-drift {
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .74rem;
+  color: var(--accent-green, #7bd88f);
+  min-width: 46px;
+  text-align: right;
+}
+
 .lb-cheater-board {
   background: rgba(255,255,255,.02);
   border: 1px solid rgba(255,255,255,.05);
@@ -1065,26 +1175,145 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   color: var(--text);
   border-color: rgba(255,255,255,.25);
 }
-.lb-player-body { display: grid; gap: 8px; }
-.lb-player-row {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: 14px;
-  align-items: center;
-  padding: 10px 12px;
+/* Username history banner (renames) - between the player head and the chart. */
+.lb-player-aliases {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 4px 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.08);
   background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 8px;
 }
-.lb-player-row .lb-ph-board {
+.lb-aliases-icon { color: var(--accent-blue); font-size: 1rem; margin-top: 2px; }
+.lb-aliases-body { min-width: 0; }
+.lb-aliases-title {
+  margin: 0 0 6px;
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-mute);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lb-aliases-count {
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  color: var(--text-mute);
   font-weight: 600;
-  font-size: .92rem;
 }
-.lb-player-row .lb-ph-when {
+.lb-aliases-chain {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+.lb-alias {
+  font: inherit;
+  font-weight: 600;
+  font-size: .9rem;
+  color: var(--text);
+  background: none;
+  border: none;
+  padding: 1px 3px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.lb-alias:hover { color: var(--accent-blue); background: rgba(255,255,255,.04); }
+.lb-alias-current {
+  color: #5dd078;
+  background: rgba(93,208,120,.12);
+  padding: 1px 8px;
+}
+.lb-alias-arrow { font-size: .68rem; color: var(--text-soft); }
+
+.lb-player-body { display: grid; gap: 12px; }
+
+/* Latest-capture header: shown once above the tile grid so the timestamp
+   isn't repeated on every board a player appears on. */
+.lb-ph-latest {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.lb-ph-latest-label {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-mute);
+}
+.lb-ph-latest-when {
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.lb-ph-latest-count {
   font-size: .8rem;
   color: var(--text-mute);
 }
-.lb-player-row .lb-ph-rank {
+.lb-ph-latest-count::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--text-soft);
+}
+
+/* Category sections: boards grouped by leaderboard category, each a
+   collapsible reusing the sidebar's .lb-category header styling. */
+.lb-ph-groups { display: grid; gap: 2px; }
+.lb-ph-group { margin: 0; }
+.lb-ph-group .lb-category-body { padding-top: 8px; }
+
+/* Tile grid: one board per tile, wraps to fill the panel width. */
+.lb-ph-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+.lb-ph-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+}
+.lb-ph-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.lb-board-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  /* Game art already carries its own framing; a subtle plate keeps small or
+     transparent icons legible on the dark tile without boxing them in. */
+  border-radius: 7px;
+  background: rgba(255,255,255,.04);
+  padding: 2px;
+}
+.lb-ph-tile .lb-ph-board {
+  font-weight: 600;
+  font-size: .9rem;
+  line-height: 1.3;
+  min-width: 0;
+}
+.lb-ph-tile-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.lb-ph-tile .lb-ph-rank {
   font-family: SFMono-Regular, Consolas, monospace;
   font-size: .85rem;
   padding: 2px 8px;
@@ -1092,7 +1321,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   color: var(--accent-blue);
   border-radius: 999px;
 }
-.lb-player-row .lb-ph-score {
+.lb-ph-tile .lb-ph-score {
   font-family: SFMono-Regular, Consolas, monospace;
   font-size: .9rem;
   color: var(--text);
@@ -1575,16 +1804,9 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
     padding: 8px 8px;
     font-size: .85rem;
   }
-  .lb-player-row {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "board rank"
-      "when score";
+  .lb-ph-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
-  .lb-player-row .lb-ph-board { grid-area: board; }
-  .lb-player-row .lb-ph-rank { grid-area: rank; }
-  .lb-player-row .lb-ph-when { grid-area: when; }
-  .lb-player-row .lb-ph-score { grid-area: score; text-align: right; }
 }
 
 

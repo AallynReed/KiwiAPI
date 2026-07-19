@@ -2,7 +2,11 @@
    visual language; self-contained so it ships as one small stylesheet. */
 
 .pl-main {
+  width: 100%;
   max-width: 960px;
+  /* width:100% is load-bearing: body.landing is a flex column, and the auto
+     side-margins would otherwise suppress the flex stretch and shrink <main> to
+     its content width. With an explicit width it fills up to max-width, centred. */
   margin: 0 auto;
   padding: 90px 20px 80px;
 }
@@ -85,6 +89,127 @@
   color: var(--text-mute);
 }
 
+/* Username history banner (renames). */
+.pl-aliases { margin-top: 20px; }
+.pl-aliases-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+}
+.pl-aliases-icon { color: var(--accent-blue, #4cc9f0); font-size: 1.1rem; margin-top: 2px; }
+.pl-aliases-body { min-width: 0; }
+.pl-aliases-title {
+  margin: 0 0 6px;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-mute);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pl-aliases-count {
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .06);
+  color: var(--text-mute);
+  font-weight: 600;
+}
+.pl-aliases-chain {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+.pl-alias {
+  font-weight: 600;
+  font-size: .92rem;
+  color: var(--text);
+}
+.pl-alias:hover { color: var(--accent-blue, #4cc9f0); }
+.pl-alias-current {
+  color: #5dd078;
+  background: rgba(93, 208, 120, .12);
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+.pl-alias-arrow { font-size: .7rem; color: var(--text-soft); }
+
+/* Alt-cluster cards. */
+.pl-cl-intro {
+  margin: 0 0 14px;
+  font-size: .84rem;
+  color: var(--text-mute);
+  max-width: 60ch;
+}
+.pl-cl-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+}
+.pl-cl-card + .pl-cl-card { margin-top: 10px; }
+.pl-cl-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.pl-cl-icon { color: #f0a35a; }
+.pl-cl-label { font-weight: 700; font-size: .98rem; }
+.pl-cl-method {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(240, 163, 90, .14);
+  color: #f0a35a;
+  font-weight: 600;
+}
+.pl-cl-conf {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: .82rem;
+  color: var(--text-mute);
+}
+.pl-cl-summary { margin: 8px 0 0; font-size: .86rem; color: var(--text-mute); }
+.pl-cl-meta {
+  margin-top: 8px;
+  font-size: .78rem;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+.pl-cl-members {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pl-cl-chip {
+  font-size: .82rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+}
+.pl-cl-chip:hover { color: var(--text); }
+.pl-cl-chip-me {
+  background: rgba(76, 201, 240, .15);
+  border-color: rgba(76, 201, 240, .4);
+  color: var(--text);
+  font-weight: 700;
+}
+.pl-cl-more { color: var(--text-soft); }
+
 .pl-section { margin-top: 34px; }
 .pl-subhead {
   margin: 0 0 12px;
@@ -92,32 +217,103 @@
   font-weight: 700;
 }
 
-/* Wrapper lets the wide 6-column table scroll on narrow screens instead of
-   overflowing the page. */
-.pl-table-wrap { overflow-x: auto; }
-.pl-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: .9rem;
+/* Boards grouped into collapsible category sections, each a grid of board
+   tiles. Native <details> drives the collapse (no JS, keyboard-accessible). */
+.pl-group {
+  border-top: 1px solid var(--bg-line);
+  padding: 6px 0;
 }
-.pl-table th,
-.pl-table td {
-  text-align: left;
-  padding: 9px 10px;
-  border-bottom: 1px solid var(--bg-line);
-}
-.pl-table th {
+.pl-group:first-child { border-top: none; }
+.pl-group-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 2px;
+  cursor: pointer;
+  list-style: none;
   font-size: .74rem;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .08em;
+  font-weight: 700;
+  color: var(--text-mute);
+}
+.pl-group-head::-webkit-details-marker { display: none; }
+.pl-group-caret {
+  font-size: .72rem;
+  transition: transform .15s ease;
+}
+.pl-group:not([open]) .pl-group-caret { transform: rotate(-90deg); }
+.pl-group-name { flex: 1; }
+.pl-group-count {
+  font-size: .68rem;
+  letter-spacing: .02em;
+  text-transform: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .06);
   color: var(--text-mute);
   font-weight: 600;
 }
-.pl-table td.pl-num { text-align: right; font-variant-numeric: tabular-nums; }
-.pl-rank { font-weight: 700; }
-.pl-delta-up { color: #5dd078; }
-.pl-delta-down { color: #f0556a; }
-.pl-delta-flat { color: var(--text-mute); }
+
+.pl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  padding: 6px 0 12px;
+}
+.pl-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+}
+.pl-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.pl-tile-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .04);
+  padding: 2px;
+}
+.pl-tile-board {
+  font-weight: 600;
+  font-size: .9rem;
+  line-height: 1.3;
+  min-width: 0;
+}
+.pl-tile-stats {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.pl-tile-rank {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.pl-tile-score {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-mute);
+  font-size: .9rem;
+}
+.pl-tile-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: .76rem;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
 
 .pl-loading,
 .pl-empty {

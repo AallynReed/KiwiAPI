@@ -703,6 +703,10 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "star-chart.html", "text/html")
         if path == "/login":
             return self._send_file(TEMPLATES / "login.html", "text/html")
+        if path.startswith("/player/"):
+            # Public player profile shell. data-player is stripped to empty by the
+            # {{ }} emulation, but player.js falls back to the URL path segment.
+            return self._send_file(TEMPLATES / "player.html", "text/html")
 
         # Gem tool proxies (real service layer).
         if path == "/site/gems/lookups":
@@ -1193,6 +1197,37 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json({**base, "size": 42, "viewable": True,
                     "kind": "text", "reason": None,
                     "text": f"-- stub contents of {p}\nprint('hello')\n"})
+            if sub == "file/compare":
+                # Synthetic diff so the compare-tab renderer (intra-line
+                # highlighting + shareable from/to restore) is exercisable
+                # without a real CAS. Mimics app/trove/updates/compare.make_hunks.
+                p = qs.get("path", [""])[0]
+                frm = int(qs.get("from", ["1"])[0])
+                to = int(qs.get("to", ["2"])[0])
+                long_a = ("id=42;name=\"Frostbite Blade\";dmg=100;"
+                          "tags=[ice,epic,weapon];level=15;value=2500")
+                long_b = ("id=42;name=\"Frostbite Blade\";dmg=140;"
+                          "tags=[ice,legendary,weapon];level=15;value=2500")
+                hunks = [{
+                    "left_start": 1, "right_start": 1,
+                    "lines": [
+                        {"kind": "equal", "left": 1, "right": 1, "text": "-- header block (unchanged)"},
+                        {"kind": "remove", "left": 2, "right": None, "text": long_a},
+                        {"kind": "add", "left": None, "right": 2, "text": long_b},
+                        {"kind": "equal", "left": 3, "right": 3, "text": "rarity=common"},
+                        {"kind": "remove", "left": 4, "right": None, "text": "cooldown=5"},
+                        {"kind": "add", "left": None, "right": 4, "text": "cooldown=3"},
+                        {"kind": "add", "left": None, "right": 5, "text": "-- new trailing line (pure insert)"},
+                        {"kind": "equal", "left": 5, "right": 6, "text": "-- footer block (unchanged)"},
+                    ],
+                }]
+                return self._send_json({
+                    "branch": branch, "path": p,
+                    "from": {"ordinal": frm, "version_tag": f"0.{frm}.stub",
+                             "content_sha256": "stubaaaa", "size": 512, "captured_at": None},
+                    "to": {"ordinal": to, "version_tag": f"1.{to}.stub",
+                           "content_sha256": "stubbbbb", "size": 520, "captured_at": None},
+                    "identical": False, "is_text": True, "hunks": hunks})
             if sub == "file/history":
                 p = qs.get("path", [""])[0]
                 return self._send_json({"branch": branch, "path": p, "items": [
@@ -1712,6 +1747,70 @@ class Handler(SimpleHTTPRequestHandler):
                 "effort_threshold": 50, "xp_threshold": 2_000_000, "classes": classes,
                 "methodology": "stub class current", "computed_at": STUB_ANCHOR,
             })
+        if path == "/site/leaderboards/renames" or path.startswith("/site/leaderboards/renames?"):
+            # Synthetic detected renames spanning the confidence range so the
+            # Possible-renames tab + its slider have something to show locally.
+            def _rename(rid, frm, to, to_anchor, conf, boards):
+                return {
+                    "id": rid, "from_name": frm, "to_name": to,
+                    "from_anchor": to_anchor - 3600, "to_anchor": to_anchor,
+                    "confidence": conf, "matched_boards": len(boards),
+                    "method_version": 1, "created_at": to_anchor,
+                    "evidence": {
+                        "gap_seconds": 3600,
+                        "boards": boards,
+                        "terms": {"matched_boards": len(boards), "board_term": 0.875,
+                                  "tightness": 1.0, "exclusivity": 1.0, "rarity": 1.0,
+                                  "mean_drift_pct": 0.0, "confidence": conf},
+                        "summary": (f"“{frm}” vanished and “{to}” appeared in the "
+                                    f"same capture with the same lifetime score fingerprint across "
+                                    f"{len(boards)} boards. Mutual, unambiguous best match."),
+                    },
+                }
+            renames = [
+                _rename(3, "DragonSlayer", "NightfallX", STUB_ANCHOR, 0.91, [
+                    {"uuid": 1, "name": "Trove Mastery", "score_from": 812340, "score_to": 812340, "drift_pct": 0.0},
+                    {"uuid": 20, "name": "Geode Mastery", "score_from": 45120, "score_to": 45180, "drift_pct": 0.133},
+                    {"uuid": 1000, "name": "Power Rank (Knight)", "score_from": 29800, "score_to": 29800, "drift_pct": 0.0},
+                ]),
+                _rename(2, "oldmage42", "Arcanist", STUB_ANCHOR - 7200, 0.75, [
+                    {"uuid": 1, "name": "Trove Mastery", "score_from": 511200, "score_to": 511200, "drift_pct": 0.0},
+                    {"uuid": 20, "name": "Geode Mastery", "score_from": 30100, "score_to": 30240, "drift_pct": 0.465},
+                ]),
+                _rename(1, "kiwibot", "kiwifruit", STUB_ANCHOR - 90000, 0.62, [
+                    {"uuid": 1, "name": "Trove Mastery", "score_from": 220000, "score_to": 221000, "drift_pct": 0.454},
+                    {"uuid": 1000, "name": "Power Rank (Gunslinger)", "score_from": 15000, "score_to": 15000, "drift_pct": 0.0},
+                ]),
+            ]
+            return self._send_json({
+                "enabled": True, "renames": renames, "total": len(renames),
+                "limit": 200, "offset": 0, "method_version": 1,
+            })
+        if path.startswith("/site/leaderboards/renames/"):
+            # Per-name rename chain. Returns a 2-hop history for the demo alias
+            # family, empty for everyone else (the common case).
+            qname = unquote(path[len("/site/leaderboards/renames/"):])
+            chain = ["xXProGamerXx", "1337Hacker", "1337Hackerdu77"]
+            if qname.lower() in {n.lower() for n in chain}:
+                edges = [
+                    {"id": 11, "from_name": chain[0], "to_name": chain[1],
+                     "from_anchor": STUB_ANCHOR - 90000, "to_anchor": STUB_ANCHOR - 86400,
+                     "confidence": 0.88, "matched_boards": 4, "method_version": 1,
+                     "created_at": STUB_ANCHOR - 86400, "evidence": {}},
+                    {"id": 12, "from_name": chain[1], "to_name": chain[2],
+                     "from_anchor": STUB_ANCHOR - 3600, "to_anchor": STUB_ANCHOR,
+                     "confidence": 0.93, "matched_boards": 5, "method_version": 1,
+                     "created_at": STUB_ANCHOR, "evidence": {}},
+                ]
+                return self._send_json({
+                    "query": qname, "aliases": sorted(set(chain)),
+                    "current_name": chain[-1], "edges": edges,
+                    "rename_count": len(edges),
+                })
+            return self._send_json({
+                "query": qname, "aliases": [], "current_name": qname,
+                "edges": [], "rename_count": 0,
+            })
         if path == "/site/leaderboards/cheaters":
             # Three synthetic flagged players spanning the confidence
             # range - so the page's filter slider has something to
@@ -2025,26 +2124,107 @@ class Handler(SimpleHTTPRequestHandler):
                 "uuid": uuid, "created_at": created_at,
                 "items": page, "count": len(page), "total": len(STUB_ENTRIES),
             })
+        if path.startswith("/site/leaderboards/players/") and path.endswith("/profile"):
+            queried = unquote(path.split("/")[4])
+            # Boards spanning every category so the /player page's category
+            # grouping + icon mapping (incl. an unmapped Bomber board) render.
+            cat_boards = [
+                (1, "TROVE MASTERY POINTS", "META"),
+                (20, "GEODE MASTERY POINTS", "META"),
+                (100, "TOTAL MASTERY POINTS", "META"),
+                (1000, "KNIGHT", "POWER RANK"),
+                (1012, "REVENANT", "POWER RANK"),
+                (1100, "CLUB POWER RANK", "POWER RANK"),
+                (4000, "KNIGHT", "EFFORT"),
+                (4007, "SHADOW HUNTER", "EFFORT"),
+                (5000, "Weekly Highest Paragon Level with Knight", "PARAGON"),
+                (50000, "Weekly Highest Paragon Level", "PARAGON"),
+                (3, "ENEMIES DEFEATED", "STATS"),
+                (33001, "HART-A-PHONES RECEIVED", "STATS"),
+                (30002, "WEEKLY BOMBER ROYALE GAMES WON", "STATS"),  # unmapped -> no icon
+                (2004, "CHALLENGE: Deepest (WEEKLY)", "DELVES"),
+                (2021, "Deepest Diggers of PUBLIC (RECENT)", "DELVES"),
+            ]
+            boards = []
+            for i, (uuid, nm, cat) in enumerate(cat_boards):
+                boards.append({
+                    "leaderboard": uuid, "board_name": nm, "category": cat,
+                    "best_rank": (i % 5) + 1, "latest_rank": (i % 7) + 1,
+                    "latest_score": 59736.0 - i * 850, "appearances": 749 - i,
+                    "first_seen": STUB_TIMESTAMPS[-1], "last_seen": STUB_ANCHOR,
+                })
+            # Rename chain + alt-cluster membership so the profile's username
+            # history + "Possible alt accounts" sections render locally.
+            rn_chain = ["xXProGamerXx", "1337Hacker", queried]
+            renames_out = {
+                "aliases": sorted(set(rn_chain)), "current_name": queried, "count": 2,
+                "edges": [
+                    {"id": 11, "from_name": rn_chain[0], "to_name": rn_chain[1],
+                     "from_anchor": STUB_ANCHOR - 90000, "to_anchor": STUB_ANCHOR - 86400,
+                     "confidence": 0.88, "matched_boards": 4, "evidence": {}},
+                    {"id": 12, "from_name": rn_chain[1], "to_name": queried,
+                     "from_anchor": STUB_ANCHOR - 3600, "to_anchor": STUB_ANCHOR,
+                     "confidence": 0.93, "matched_boards": 5, "evidence": {}},
+                ],
+            }
+            alt_clusters = [{
+                "stem": "1337hacker", "label": "1337hacker*", "method": "both",
+                "confidence": 0.87, "member_count": 4, "members_truncated": 0,
+                "members": [queried, "1337HackerAlt", "1337Hackerbtw", "l337Hacker"],
+                "board_count": 3, "corroborated_by": ["name_stem", "co_movement"],
+                "summary": ("Four near-identically named accounts moved in lockstep "
+                            "across 3 boards with matching hourly gains."),
+                "boards": [],
+            }]
+            return self._send_json({
+                "player_name": queried, "verified": True,
+                "summary": {
+                    "boards_appeared": len(boards), "appearances": 200,
+                    "best_rank": 1, "best_rank_board_uuid": 1000,
+                    "best_rank_board_name": "KNIGHT", "top10_count": 6,
+                    "top100_count": 7, "latest_anchor": STUB_ANCHOR,
+                    # Last played earlier than last seen: on lifetime boards they
+                    # appear every capture, but their score last rose a day ago.
+                    "last_played": STUB_ANCHOR - 86400,
+                },
+                "boards": boards, "recent": [],
+                "renames": renames_out, "alt_clusters": alt_clusters,
+            })
+
         if path.startswith("/site/leaderboards/players/") and path.endswith("/history"):
             queried = unquote(path.split("/")[4])
             # Mirror the prod case-insensitive match (service.py uses
             # an anchored ``$regex`` with ``i``). Return rows ONLY for
             # the small set of stub players, regardless of input casing.
             known = {e["player_name"].lower(): e["player_name"] for e in STUB_ENTRIES}
+            # The rename-demo family also resolves to a prolific player so the
+            # leaderboards panel shows tiles (crowns) alongside the alias banner.
+            for _alias in ("xXProGamerXx", "1337Hacker", "1337Hackerdu77"):
+                known[_alias.lower()] = "1337Hackerdu77"
             canonical = known.get(queried.lower())
             if canonical is None:
                 return self._send_json({
                     "player_name": queried, "items": [], "count": 0,
                 })
+            # A prolific player lands on every board at each capture. Emit the
+            # full board set at the latest anchor AND at the prior one (newest
+            # first) so the client's latest-capture collapse + tile grid can be
+            # exercised locally.
+            prev_anchor = STUB_TIMESTAMPS[1] if len(STUB_TIMESTAMPS) > 1 else STUB_ANCHOR - _DAY
+            items = []
+            for anchor in (STUB_ANCHOR, prev_anchor):
+                for i, b in enumerate(STUB_BOARDS):
+                    items.append({
+                        "player_name": canonical,
+                        "rank": i + 1,
+                        "score": 59731.0 - i * 1200 - (0 if anchor == STUB_ANCHOR else 300),
+                        "leaderboard": b["uuid"],
+                        "created_at": anchor,
+                    })
             return self._send_json({
                 "player_name": canonical,
-                "items": [
-                    {"player_name": canonical, "rank": 1, "score": 59731.0,
-                     "leaderboard": 1012, "created_at": STUB_ANCHOR},
-                    {"player_name": canonical, "rank": 4, "score": 12500.0,
-                     "leaderboard": 20, "created_at": STUB_ANCHOR},
-                ],
-                "count": 2,
+                "items": items,
+                "count": len(items),
             })
 
         if path.startswith("/site/leaderboards/players/") and path.endswith("/series"):

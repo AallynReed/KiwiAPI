@@ -110,15 +110,15 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
     from app.core import features as feature_flags
     from app.trove.leaderboards import cache as lb_cache
 
-    # Master compute switches. When cheater detection is OFF the whole (heavy)
-    # analysis is skipped - the warmer doesn't compute, this returns an empty
-    # 'disabled' payload, and the page hides both anti-cheat tabs. Alt-clusters
-    # is a sub-switch (only the heavy cluster pass), meaningful only while the
-    # master switch is ON.
+    # Two INDEPENDENT compute switches, each gating its own half of the analysis:
+    #   • cheater_enabled → the per-player checks (score-outlier / rank-gap /
+    #     velocity / sustained-uptime) that fill the Possible-cheaters tab.
+    #   • clusters_enabled → the heavy alt-cluster pass (name-stem + co-movement
+    #     + schedule fusion) that fills the Alt-clusters tab.
+    # Either can run without the other. Only when BOTH are OFF is the whole
+    # compute skipped and a 'disabled' payload returned (see below).
     cheater_enabled = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
-    clusters_enabled = cheater_enabled and await feature_flags.is_enabled(
-        feature_flags.ALT_CLUSTERS_FLAG
-    )
+    clusters_enabled = await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG)
 
     z_threshold = float(await runtime_config.get_setting("cheaters_z_threshold"))
     velocity_multiplier = float(
@@ -174,15 +174,16 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
     now = time.time()
     global _LAST_GOOD
 
-    # Master switch OFF: skip the whole analysis (this is the big warm-cycle CPU
-    # saving). Return an empty 'disabled' payload so the page can hide the
-    # anti-cheat tabs. Bypasses the cache + Redis snapshot entirely.
+    # BOTH switches OFF: skip the whole analysis (this is the big warm-cycle CPU
+    # saving). Return an empty 'disabled' payload so the page can hide both
+    # anti-cheat tabs. Bypasses the cache + Redis snapshot entirely. If EITHER
+    # switch is on we fall through and compute its half below.
     #   • Warmer (force=True): tag it to the RAW latest capture so _warm_all's
     #     set_ready_anchor() keeps advancing the page to new captures (the rest
     #     of the warm - boards/activity - still runs and must not freeze).
     #   • Serving (force=False): tag it to the published anchor so it lines up
     #     with the boards/entries on screen.
-    if not cheater_enabled:
+    if not cheater_enabled and not clusters_enabled:
         if force:
             ts = await lb_service.list_timestamps(limit=1, include_archive=False)
             anchor = ts[0] if ts else None
@@ -197,12 +198,13 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
         # Excluded sets as sorted tuples (sets aren't hashable) so a master-panel
         # edit invalidates immediately. Co-movement/schedule/fusion knobs included
         # so a tweak invalidates the served result (recompute_seconds excluded -
-        # it only throttles, doesn't change the answer). ``clusters_enabled`` is
-        # in the key so flipping the alt-cluster sub-switch re-serves immediately.
+        # it only throttles, doesn't change the answer). Both ``cheater_enabled``
+        # and ``clusters_enabled`` are in the key so flipping either switch (each
+        # gates its own half of the payload) re-serves immediately.
         return (anchor, z_threshold, velocity_multiplier, min_board_size,
                 cohort_pct, cluster_min_size, cluster_band_pct,
                 cluster_max_edit, cluster_size_full, tuple(sorted(excluded)),
-                tuple(sorted(cluster_excluded)), clusters_enabled,
+                tuple(sorted(cluster_excluded)), cheater_enabled, clusters_enabled,
                 cm["candidate_top_n"], cm["min_hourly_gain"], cm["gain_percentile"],
                 cm["gain_tolerance"], cm["min_matching_hours"], cm["min_match_ratio"],
                 cm["min_density"], cm["min_group_size"], cm["max_cell_accounts"],
@@ -262,6 +264,7 @@ async def detect_possible_cheaters(*, force: bool = False) -> dict:
         cluster_size_full=cluster_size_full,
         cluster_excluded=cluster_excluded,
         comovement=cm,
+        cheater_enabled=cheater_enabled,
         clusters_enabled=clusters_enabled,
     )
     _CACHE[cache_key] = (now, result)
@@ -399,6 +402,14 @@ async def _warm_all() -> None:
         await lb_class_activity.estimate_class_activity(force=True)
     except Exception:
         logger.exception("leaderboards warmer: class activity estimate failed (non-fatal)")
+    # Player-rename detection on the newest adjacent capture pair. NON-FATAL +
+    # flag-gated inside; a name that vanished while a matching fingerprint
+    # appeared is recorded to player_rename for the Possible-renames tab.
+    from app.trove.leaderboards import renames as lb_renames
+    try:
+        await lb_renames.detect_latest()
+    except Exception:
+        logger.exception("leaderboards warmer: rename detection failed (non-fatal)")
     # Refresh the Redis snapshot for the leaderboards page (anchor list + boards
     # at the latest anchor + the first board's first page) so the page serves
     # the latest capture with zero Mongo work and can switch to a new capture
@@ -482,6 +493,7 @@ async def _compute(
     cluster_size_full: int = 8,
     cluster_excluded: set[int] | None = None,
     comovement: dict | None = None,
+    cheater_enabled: bool = True,
     clusters_enabled: bool = True,
 ) -> dict:
     boards = await lb_service.list_boards_at(anchor)
@@ -516,7 +528,11 @@ async def _compute(
             "contest_type": b.get("contest_type"),
         }
 
-    for board in boards:
+    # The per-player checks (and their board-scan bookkeeping) belong to the
+    # Possible-cheaters tab. When cheater detection is OFF but alt-clusters is ON
+    # we skip this whole loop - ``flagged`` stays empty, the board-meta lists stay
+    # empty - and drop straight to the cluster pass below.
+    for board in boards if cheater_enabled else []:
         if board["uuid"] in excluded:
             boards_excluded += 1
             excluded_boards_meta.append({**_board_meta(board), "reason": "admin_excluded"})
@@ -598,9 +614,11 @@ async def _compute(
 
         # Fold the per-player WEEKLY uptime flags (computed from the same week data)
         # into the per-player evidence, so the cheaters tab reflects week-long
-        # behaviour - not just the last hour's velocity.
+        # behaviour - not just the last hour's velocity. This is per-player cheater
+        # evidence, so it's skipped when cheater detection is OFF (clusters-only) -
+        # the ``signals`` are still used for the cluster fusion below.
         board_by_uuid = {b["uuid"]: b for b in boards}
-        for pf in signals.get("player_flags", []):
+        for pf in (signals.get("player_flags", []) if cheater_enabled else []):
             board = board_by_uuid.get(pf["board_uuid"])
             if board is None:
                 continue
@@ -641,6 +659,7 @@ async def _compute(
         excluded_boards=excluded_boards_meta,
         clusters=clusters,
         clusters_boards_scanned=clusters_boards_scanned,
+        cheater_detection_enabled=cheater_enabled,
         alt_clusters_enabled=clusters_enabled,
     )
 
@@ -2085,12 +2104,13 @@ def _format(
         "players": players,
         "clusters": clusters or [],
         "clusters_boards_scanned": clusters_boards_scanned,
-        # Master compute switches (see app/core/features.py). When
-        # cheater_detection_enabled is False the lists above are empty because
-        # the analysis was skipped, not because nothing was flagged - the page
-        # uses these to hide the anti-cheat tabs rather than show "0 found".
+        # Independent compute switches (see app/core/features.py). Each is False
+        # when its half of the analysis was skipped, not because nothing was
+        # flagged - the page uses these to hide the matching anti-cheat tab rather
+        # than show "0 found". Reported straight through: alt-clusters no longer
+        # depends on cheater detection being on.
         "cheater_detection_enabled": cheater_detection_enabled,
-        "alt_clusters_enabled": cheater_detection_enabled and alt_clusters_enabled,
+        "alt_clusters_enabled": alt_clusters_enabled,
         "computed_at": int(time.time()),
         "anchor": anchor,
         "method": (

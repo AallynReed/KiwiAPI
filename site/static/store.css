@@ -1,7 +1,10 @@
 /* Trove Store History (/store). Vanilla, theme-token-driven, CSP-clean.
    Layout mirrors the market page's density; graphs are inline SVG. */
 
-.st-main { max-width: var(--content-max); margin: 0 auto; padding: 0 20px 80px; }
+/* width:100% is REQUIRED: body is a flex column, and margin:0 auto on a flex
+   item disables stretch, so without it this shrink-wraps to content width
+   (~770px) and max-width never engages. */
+.st-main { width: 100%; max-width: var(--content-max); margin: 0 auto; padding: 0 20px 80px; }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .st-hero { padding: 40px 0 20px; }

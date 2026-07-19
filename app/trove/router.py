@@ -28,7 +28,11 @@ from app.core.dependencies import (
     require_scope,
 )
 from app.core.errors import APIError, ErrorCode
-from app.core.features import require_delves_enabled, require_server_status_enabled
+from app.core.features import (
+    require_delves_enabled,
+    require_leaderboard_renames_enabled,
+    require_server_status_enabled,
+)
 from app.core.ratelimit import check_rate_limit, rate_limit_headers
 from app.core.utils import client_ip, utcnow
 from app.events import bus as events_bus
@@ -81,6 +85,7 @@ from app.trove.gems.schemas import (
 from app.trove.leaderboards import activity as leaderboards_activity
 from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove.leaderboards import detection as leaderboards_detection
+from app.trove.leaderboards import renames as leaderboards_renames
 from app.trove.leaderboards import service as leaderboards_service
 from app.trove.market import service as market_service
 from app.trove.misc import (
@@ -154,6 +159,8 @@ from app.trove.schemas import (
     MasteryRecordsResponse,
     PlayerHistorySeriesResponse,
     PlayerProfileResponse,
+    RenameHistoryResponse,
+    RenamesResponse,
     ServerTime,
     StatTable,
     StoreCategoriesResponse,
@@ -246,6 +253,13 @@ _UPD = Depends(require_scope("updates:read"))
 # per-token budget. The browse endpoints (branches / versions / changes /
 # tree / file/meta) stay token-gated under _UPD.
 _UPD_PUBLIC = Depends(public_scope("updates:read"))
+# Raw file serving fires a BURST per /updates folder paint (a textures dir can
+# hold 500+ .dds tiles), so it gets its own widened bucket - same shape as the
+# Bilibili image proxy - rather than tripping the 30/min anon cap on the shared
+# bucket (which showed as "some .dds don't load" on a big folder).
+_UPD_FILE = Depends(public_scope(
+    "updates:read", rate_multiplier=settings.updates_file_rate_limit_multiplier,
+))
 
 # Used by the feedback webhook helper for "best-effort, log on failure".
 logger = logging.getLogger("kiwi.trove.router")
@@ -1678,10 +1692,14 @@ async def get_update_file_meta(
 
 @updates_router.get("/{branch}/file")
 async def download_update_file(
-    branch: str, path: str = Query(...), ctx: AccessContext = _UPD_PUBLIC,
+    branch: str, path: str = Query(...), ctx: AccessContext = _UPD_FILE,
 ) -> FileResponse:
     """Download a single file's bytes from the latest tree (streamed from the
-    blob store). Tokenless (public) so files can be linked directly."""
+    blob store). Tokenless (public) so files can be linked directly, on a widened
+    ISOLATED bucket (``_UPD_FILE``) so a folder of textures doesn't trip the anon
+    cap. Served from the content-addressed store, so the bytes are immutable per
+    blob - a strong ETag (the content sha) + a long cache let the CDN/browser
+    serve repeat tiles without re-hitting the origin at all."""
     _check_branch(branch)
     meta = await updates_read.get_file_meta(branch, path)
     if meta is None:
@@ -1690,7 +1708,14 @@ async def download_update_file(
     if not blob.is_file():
         raise APIError(status_code=404, code=ErrorCode.not_found, message="Blob missing from the store")
     filename = path.rsplit("/", 1)[-1] or "file"
-    return FileResponse(blob, media_type="application/octet-stream", filename=filename)
+    # Long cache: the CAS blob is immutable, and a logical path only moves to a NEW
+    # blob on a new capture, so a day's cache is safe and kills the per-folder
+    # re-fetch burst on repeat views. FileResponse adds its own (stat-based) ETag +
+    # Last-Modified and handles conditional 304s, so revalidation stays cheap.
+    return FileResponse(
+        blob, media_type="application/octet-stream", filename=filename,
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @updates_router.get("/{branch}/file/view", response_model=FileView)
@@ -2261,6 +2286,58 @@ async def list_possible_cheaters(
 
 
 @leaderboards_router.get(
+    "/renames", response_model=RenamesResponse,
+    dependencies=[Depends(require_leaderboard_renames_enabled)],
+    summary="Detected player renames (reconstructed name changes)",
+)
+async def list_renames(
+    response: Response,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    _ctx: AccessContext = _LB_PUBLIC,
+) -> RenamesResponse:
+    """Players who appear to have **renamed**, most-recent-first.
+
+    Trove leaderboards carry no stable player id, so a rename is reconstructed
+    from behaviour: a name that vanished between two adjacent captures (within
+    ``renames_max_gap_seconds``, default 1.5h) while a NEW name appeared carrying
+    the same **lifetime-board** score fingerprint (Trove/Geode Mastery, Power
+    Rank - boards that never reset and survive a rename, making the match
+    reset-immune). A rename is only recorded when the fingerprint matches on
+    ≥ ``renames_min_boards`` boards AND the old/new names are a *mutual,
+    unambiguous* best match; anything ambiguous is dropped, not guessed.
+
+    Each event carries its matched boards (score_from/score_to/drift), the
+    confidence sub-terms, and a summary. Thresholds are runtime-tunable from the
+    master panel (``renames_*`` keys)."""
+    payload = await leaderboards_renames.serve_list(limit=limit, offset=offset)
+    from app.admin import runtime_config
+    ttl = int(await runtime_config.get_setting("renames_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return RenamesResponse(**payload)
+
+
+@leaderboards_router.get(
+    "/renames/{name}", response_model=RenameHistoryResponse,
+    dependencies=[Depends(require_leaderboard_renames_enabled)],
+    summary="Full rename chain/history for one name",
+)
+async def rename_history(
+    name: str,
+    response: Response,
+    _ctx: AccessContext = _LB_PUBLIC,
+) -> RenameHistoryResponse:
+    """Every rename edge touching ``name``, walked in BOTH directions so an
+    identity that renamed several times (A→B→C) returns its whole timeline plus
+    the set of aliases and the current name. Case-insensitive."""
+    payload = await leaderboards_renames.history(name)
+    from app.admin import runtime_config
+    ttl = int(await runtime_config.get_setting("renames_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return RenameHistoryResponse(**payload)
+
+
+@leaderboards_router.get(
     "/records", response_model=MasteryRecordsResponse,
     summary="Highest Trove Mastery, Geode Mastery and Power Rank in the game",
 )
@@ -2498,6 +2575,31 @@ async def _process_leaderboard_dump(
         summary = await leaderboards_service.insert_dump(
             text, timestamp=timestamp, allow_backfill=allow_backfill,
         )
+        # Rejected as materially incomplete (missing/collapsed boards): NOT stored.
+        # Log it + keep the raw dump in the backlog for audit / manual re-ingest,
+        # but skip invalidate/warm/publish - nothing landed, and the hour is now a
+        # clean gap the delta consumers bridge over.
+        if summary and summary.get("skipped"):
+            await ingest_log.record(
+                endpoint="/v1/leaderboards/insert",
+                user=user, token=token, success=False,
+                error=f"rejected incomplete capture: {summary.get('reason')}",
+                summary={
+                    "rejected": True, "anchor": summary.get("created_at"),
+                    "boards": summary.get("boards"), "entries": summary.get("entries"),
+                    "missing_boards": summary.get("missing_boards"),
+                    "collapsed_boards": summary.get("collapsed_boards"),
+                    "prev_anchor": summary.get("prev_anchor"), "bytes": nbytes,
+                },
+            )
+            if summary.get("created_at"):
+                from app.trove.leaderboards import backlog
+                await backlog.save(summary["created_at"], text)
+            logger.warning(
+                "leaderboard ingest REJECTED (incomplete) anchor=%s: %s",
+                summary.get("created_at"), summary.get("reason"),
+            )
+            return summary
         await ingest_log.record(
             endpoint="/v1/leaderboards/insert",
             user=user, token=token,
@@ -2629,6 +2731,13 @@ async def insert_leaderboards(
                 accepted=False, bytes=len(raw),
                 message="Ingest failed - see the master ingest log for the error.",
             )
+        if summary.get("skipped"):
+            return LeaderboardInsertResponse(
+                accepted=False, bytes=len(raw),
+                message=(f"Rejected incomplete capture for anchor "
+                         f"{summary.get('created_at')}: {summary.get('reason')}. "
+                         f"Not stored (kept in backlog for audit)."),
+            )
         return LeaderboardInsertResponse(
             accepted=True, bytes=len(raw),
             message=(f"Ingested anchor {summary.get('created_at')}: "
@@ -2742,6 +2851,37 @@ async def reingest_status(_auth = _LB_MASTER) -> dict:
     return status
 
 
+@leaderboards_router.post("/renames-backfill", status_code=202,
+                          summary="Rebuild rename history from the archive (master)")
+async def renames_backfill(
+    background_tasks: BackgroundTasks,
+    clear_first: bool = Query(
+        default=False,
+        description="Delete all recorded renames first, then rebuild from scratch.",
+    ),
+    _auth = _LB_MASTER,
+) -> dict:
+    """**Master only.** Walk the WHOLE stored capture history backwards over every
+    adjacent pair within ``renames_max_gap_seconds`` and (re)detect renames into
+    ``player_rename``. Reset-safe (lifetime-board fingerprint only) and gap-gated
+    (multi-hour outage gaps are skipped). Idempotent - safe to re-run; pass
+    ``clear_first`` to wipe and rebuild. Returns immediately; poll
+    ``/renames-backfill-status`` for live progress."""
+    background_tasks.add_task(leaderboards_renames.backfill, clear_first=clear_first)
+    return {"started": True, "clear_first": clear_first}
+
+
+@leaderboards_router.get("/renames-backfill-status",
+                         summary="Rename backfill progress (master)")
+async def renames_backfill_status(_auth = _LB_MASTER) -> dict:
+    """**Master only.** Live progress of the rename-history backfill (poll this),
+    plus how many renames are currently recorded."""
+    from app.trove.leaderboards import pg_store
+    status = await leaderboards_renames.get_status()
+    status["recorded_renames"] = await pg_store.count_renames()
+    return status
+
+
 @leaderboards_router.post("/reset", status_code=200,
                           summary="Reset all leaderboard data (master)")
 async def reset_leaderboards(
@@ -2763,6 +2903,53 @@ async def reset_leaderboards(
         user=_auth.user, token=_auth.token, summary=summary,
     )
     return {"reset": True, **summary}
+
+
+@leaderboards_router.post("/delete-anchor", status_code=200,
+                          summary="Delete a bad capture by anchor (master)")
+async def delete_leaderboard_anchor(
+    background_tasks: BackgroundTasks,
+    anchor: int = Query(..., description="Capture anchor (unix seconds) to delete."),
+    recompute: bool = Query(
+        default=True,
+        description=("Rebuild activity history + warm caches after deleting, so any "
+                     "window that used this capture recomputes as a clean gap "
+                     "(dropping the spike it caused)."),
+    ),
+    _auth = _LB_MASTER,
+) -> dict:
+    """**Master only.** Delete every entry for ONE capture - use it to purge a bad
+    capture (an incomplete scrape that slipped in before the completeness guard, or
+    was force-ingested). The hour becomes a clean time-gap that activity / cheater /
+    rename / day-over-day calculations bridge over. With ``recompute`` (default) the
+    activity history is rebuilt in the background - the affected window recomputes as
+    a gap so any spike it caused disappears - and the leaderboards warmer is kicked."""
+    from app.trove.leaderboards import activity as leaderboards_activity
+    from app.trove.leaderboards import cache as leaderboards_cache
+    from app.trove.leaderboards import pg_store
+    deleted = await pg_store.delete_anchor(anchor)
+    # Drop the orphaned activity point whose window ENDS at this anchor (no pair
+    # ends here anymore); the window that STARTED here recomputes as a gap below.
+    try:
+        await pg_store.delete_estimate(anchor)
+    except Exception:
+        logger.warning("delete-anchor: estimate purge failed for %d", anchor, exc_info=True)
+    await leaderboards_cache.invalidate_anchor(anchor)
+    await ingest_log.record(
+        endpoint="/v1/leaderboards/delete-anchor",
+        user=_auth.user, token=_auth.token,
+        summary={"anchor": anchor, "entries_deleted": deleted, "recompute": recompute},
+    )
+    if recompute and deleted:
+        # reset=True rebuilds the whole activity series consistently (no orphan
+        # rows, rollups correct); the deleted capture's windows resolve to gaps.
+        background_tasks.add_task(
+            leaderboards_activity.backfill_history_chunked, reset=True, total_days=0,
+        )
+        leaderboards_detection.reset()
+        leaderboards_detection.trigger_warmer()
+    return {"deleted": bool(deleted), "anchor": anchor, "entries_deleted": deleted,
+            "recompute": bool(recompute and deleted)}
 
 
 # NOTE: the master activity backfill moved to `POST /v1/activity/backfill`

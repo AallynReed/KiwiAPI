@@ -8,7 +8,10 @@
   const { esc } = window.BTTUtil;
 
   const root = document.body;
-  const name = (root.dataset.player || '').trim();
+  // data-player is the authoritative source (set server-side). Fall back to the
+  // /player/<name> path segment if it's ever absent, so the page still resolves.
+  const fromPath = decodeURIComponent((location.pathname.match(/\/player\/(.+)$/) || [])[1] || '');
+  const name = (root.dataset.player || fromPath).trim();
   const tr = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
 
   function num(n) {
@@ -22,14 +25,6 @@
     try { return new Date(unix * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
     catch (_) { return '—'; }
   }
-  function deltaCell(d) {
-    if (d == null || d === 0) return `<span class="pl-delta-flat">·</span>`;
-    // rank_delta: positive = climbed (good).
-    return d > 0
-      ? `<span class="pl-delta-up">▲ ${num(Math.abs(d))}</span>`
-      : `<span class="pl-delta-down">▼ ${num(Math.abs(d))}</span>`;
-  }
-
   // Initial-letter avatar.
   const avatar = document.getElementById('pl-avatar');
   if (avatar && name) avatar.textContent = name.slice(0, 1).toUpperCase();
@@ -61,43 +56,148 @@
       chip(tr('Best rank'), s.best_rank != null ? '#' + num(s.best_rank) : '—', bestSub),
       chip(tr('Leaderboards'), num(s.boards_appeared), tr('appeared on')),
       chip(tr('Top 10s'), num(s.top10_count), tr('boards')),
-      chip(tr('Last seen'), when(s.latest_anchor), ''),
+      // "Last played" = last capture their score rose (real activity); distinct
+      // from "Last seen" = latest appearance (which is ~always now for anyone on
+      // a lifetime board). Shows "—" when no movement in the tracked window.
+      chip(tr('Last played'), when(s.last_played), s.last_played ? tr('last score gain') : tr('no recent activity')),
+      chip(tr('Last seen'), when(s.latest_anchor), tr('latest appearance')),
     ].join('');
 
-    // One row PER LEADERBOARD (best rank ever + current standing), not one row
-    // per capture - so a player on a board across thousands of captures shows
-    // a single ranking line.
+    // Username history + alt clusters (both hide themselves when empty).
+    renderAliases(data.renames);
+    renderClusters(data.alt_clusters, data.player_name || name);
+
+    // One tile PER LEADERBOARD (best rank ever + current standing), not one per
+    // capture - so a player on a board across thousands of captures shows a
+    // single card. Grouped into collapsible category sections, ordered by
+    // leaderboard id (boards within a group by id; groups by their smallest id).
+    // The single "Last seen" summary chip above stands in for per-tile dates.
     const boards = data.boards || [];
     if (!boards.length) {
       recentEl.innerHTML = `<p class="pl-empty">${esc(tr("This name hasn't appeared on any tracked leaderboard yet."))}</p>`;
       return;
     }
-    recentEl.innerHTML = `
-      <div class="pl-table-wrap">
-      <table class="pl-table">
-        <thead>
-          <tr>
-            <th scope="col">${esc(tr('Leaderboard'))}</th>
-            <th scope="col" class="pl-num">${esc(tr('Best'))}</th>
-            <th scope="col" class="pl-num">${esc(tr('Current'))}</th>
-            <th scope="col" class="pl-num">${esc(tr('Score'))}</th>
-            <th scope="col" class="pl-num">${esc(tr('Seen'))}</th>
-            <th scope="col" class="pl-num">${esc(tr('Last seen'))}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${boards.map((b) => `
-            <tr>
-              <td>${esc(b.board_name || ('#' + b.leaderboard))}</td>
-              <td class="pl-num pl-rank">#${num(b.best_rank)}</td>
-              <td class="pl-num">${b.latest_rank != null ? '#' + num(b.latest_rank) : '—'}</td>
-              <td class="pl-num">${score(b.latest_score)}</td>
-              <td class="pl-num">${num(b.appearances)}&times;</td>
-              <td class="pl-num">${esc(when(b.last_seen))}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
+
+    const groups = new Map();
+    for (const b of boards) {
+      const cat = b.category || tr('Other');
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(b);
+    }
+    for (const arr of groups.values()) arr.sort((a, b) => a.leaderboard - b.leaderboard);
+    const orderedCats = [...groups.keys()].sort(
+      (a, b) => groups.get(a)[0].leaderboard - groups.get(b)[0].leaderboard,
+    );
+
+    recentEl.innerHTML = orderedCats.map((cat) => {
+      const items = groups.get(cat);
+      return `
+        <details class="pl-group" open>
+          <summary class="pl-group-head">
+            <i class="fa-solid fa-chevron-down pl-group-caret" aria-hidden="true"></i>
+            <span class="pl-group-name">${esc(cat)}</span>
+            <span class="pl-group-count">${items.length}</span>
+          </summary>
+          <div class="pl-grid">${items.map(tile).join('')}</div>
+        </details>`;
+    }).join('');
+  }
+
+  // One board card: icon + name, current rank + score headline, best-rank and
+  // appearance count as muted context. No per-tile date (see "Last seen" chip).
+  function tile(b) {
+    const boardName = b.board_name || ('#' + b.leaderboard);
+    const cur = b.latest_rank != null ? '#' + num(b.latest_rank) : '—';
+    // Crown reflects the current standing on this board (gold/silver/bronze = #1/2/3).
+    const crown = window.BTTUtil.crownHtml(b.latest_rank);
+    return `
+      <div class="pl-tile">
+        <div class="pl-tile-head">
+          ${window.BTTUtil.boardIconImg(b.leaderboard, 'pl-tile-icon')}
+          <div class="pl-tile-board">${esc(boardName)}</div>
+        </div>
+        <div class="pl-tile-stats">
+          <span class="pl-tile-rank">${crown}${cur}</span>
+          <span class="pl-tile-score">${score(b.latest_score)}</span>
+        </div>
+        <div class="pl-tile-meta">
+          <span>${esc(tr('Best'))} #${num(b.best_rank)}</span>
+          <span>${num(b.appearances)}&times; ${esc(tr('seen'))}</span>
+        </div>
       </div>`;
+  }
+
+  // Username history: the rename chain (A → B → current), each name linking to
+  // its own profile. Rendered only when the detector found a rename.
+  function renderAliases(r) {
+    const el = document.getElementById('pl-aliases');
+    if (!el || !r || !r.count) { if (el) el.hidden = true; return; }
+    // Build the ordered name chain from the edges (each carries from→to). Falls
+    // back to the alias set if edges are somehow absent.
+    const chain = [];
+    for (const e of (r.edges || [])) {
+      if (!chain.length) chain.push(e.from_name);
+      if (chain[chain.length - 1] !== e.to_name) chain.push(e.to_name);
+    }
+    const names = chain.length ? chain : (r.aliases || []);
+    const current = (r.current_name || names[names.length - 1] || '').toLowerCase();
+    const links = names.map((nm) => {
+      const isCur = nm.toLowerCase() === current;
+      return `<a class="pl-alias${isCur ? ' pl-alias-current' : ''}" href="/player/${encodeURIComponent(nm)}">${esc(nm)}</a>`;
+    }).join('<i class="fa-solid fa-arrow-right pl-alias-arrow" aria-hidden="true"></i>');
+    el.innerHTML = `
+      <div class="pl-aliases-card">
+        <i class="fa-solid fa-clock-rotate-left pl-aliases-icon" aria-hidden="true"></i>
+        <div class="pl-aliases-body">
+          <p class="pl-aliases-title">${esc(tr('Username history'))}
+            <span class="pl-aliases-count">${num(r.count)} ${esc(tr(r.count === 1 ? 'rename' : 'renames'))}</span>
+          </p>
+          <p class="pl-aliases-chain">${links}</p>
+        </div>
+      </div>`;
+    el.hidden = false;
+  }
+
+  // Alt clusters this identity was grouped into by the detector. Compact card per
+  // cluster: label + method + confidence, member chips (this player highlighted),
+  // and the board count. Only shown when membership was found.
+  function renderClusters(clusters, playerName) {
+    const el = document.getElementById('pl-clusters');
+    if (!el || !clusters || !clusters.length) { if (el) el.hidden = true; return; }
+    const me = (playerName || '').toLowerCase();
+    const methodLabel = (m) => ({
+      co_movement: tr('Lockstep'), name_stem: tr('Name match'),
+      schedule: tr('Schedule'), both: tr('Multi-signal'),
+    }[m] || m);
+    const conf = (c) => (c >= 1 ? '1.00' : (Math.floor(c * 100) / 100).toFixed(2));
+    const cards = clusters.map((c) => {
+      const members = c.members || [];
+      const chips = members.map((nm) => {
+        const mine = nm.toLowerCase() === me;
+        return `<a class="pl-cl-chip${mine ? ' pl-cl-chip-me' : ''}" href="/player/${encodeURIComponent(nm)}">${esc(nm)}</a>`;
+      }).join('');
+      const more = c.members_truncated > 0
+        ? `<span class="pl-cl-chip pl-cl-more">+${num(c.members_truncated)}</span>` : '';
+      const mCount = c.member_count != null ? c.member_count : members.length;
+      const bCount = c.board_count != null ? c.board_count : (c.boards || []).length;
+      return `
+        <div class="pl-cl-card">
+          <div class="pl-cl-head">
+            <i class="fa-solid fa-people-group pl-cl-icon" aria-hidden="true"></i>
+            <span class="pl-cl-label">${esc(c.label || c.stem || tr('Cluster'))}</span>
+            <span class="pl-cl-method">${esc(methodLabel(c.method))}</span>
+            <span class="pl-cl-conf" title="${esc(tr('Confidence'))}">${conf(c.confidence ?? 0)}</span>
+          </div>
+          ${c.summary ? `<p class="pl-cl-summary">${esc(c.summary)}</p>` : ''}
+          <div class="pl-cl-meta">${num(mCount)} ${esc(tr('accounts'))} · ${num(bCount)} ${esc(tr('boards'))}</div>
+          <div class="pl-cl-members">${chips}${more}</div>
+        </div>`;
+    }).join('');
+    el.innerHTML = `
+      <h2 class="pl-subhead">${esc(tr('Possible alt accounts'))}</h2>
+      <p class="pl-cl-intro">${esc(tr('This name was grouped with these accounts by the alt-cluster detector. Grouping is heuristic - not proof of wrongdoing.'))}</p>
+      ${cards}`;
+    el.hidden = false;
   }
 
   function chip(label, value, sub) {

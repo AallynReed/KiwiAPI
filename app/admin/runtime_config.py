@@ -397,24 +397,26 @@ REGISTRY: dict[str, TunableSetting] = {
         ),
     ),
 
-    # ── Cheater / alt-cluster calculation (master compute switches) ───
+    # ── Cheater / alt-cluster calculation (independent compute switches) ───
     # Distinct from the cheater_detection TUNING knobs below: these turn the
-    # whole (expensive) detection compute ON/OFF in the leaderboards warmer.
-    # OFF means the warmer skips the work entirely and the Possible-cheaters /
-    # Alt-clusters tabs disappear from the /leaderboards page.
+    # (expensive) detection compute ON/OFF in the leaderboards warmer. Each gates
+    # its own half - cheater detection the per-player checks, alt-clusters the
+    # cluster pass - and either can run alone; a disabled half hides only its own
+    # tab. Only when BOTH are OFF does the warmer skip the work entirely.
     "feature_cheater_detection_enabled": _t(
         key="feature_cheater_detection_enabled",
         default=True,
         type="bool",
         category="features",
         description=(
-            "Master switch for the Possible-cheaters analysis. OFF stops the "
-            "leaderboards warmer from running the (heavy) per-board outlier + "
-            "velocity + alt-cluster compute each cycle, makes /v1/leaderboards/"
-            "cheaters + /site/leaderboards/cheaters return an empty 'disabled' "
-            "payload, and hides the Possible-cheaters AND Alt-clusters tabs on the "
-            "/leaderboards page. The biggest warm-cycle CPU saving. Tuning knobs in "
-            "the 'Cheater detection' category are ignored while this is OFF."
+            "Switch for the Possible-cheaters analysis (the per-player score-"
+            "outlier + rank-gap + velocity + weekly-uptime checks). OFF stops the "
+            "leaderboards warmer from running those checks each cycle, makes the "
+            "cheaters payload return empty players, and hides the Possible-cheaters "
+            "tab on the /leaderboards page. Independent of feature_alt_clusters_"
+            "enabled - either can run alone; only when BOTH are OFF does the warmer "
+            "skip the compute entirely (an empty 'disabled' payload). Tuning knobs "
+            "in the 'Cheater detection' category are ignored while this is OFF."
         ),
     ),
     "feature_alt_clusters_enabled": _t(
@@ -423,13 +425,28 @@ REGISTRY: dict[str, TunableSetting] = {
         type="bool",
         category="features",
         description=(
-            "Sub-switch for ALT-CLUSTER detection (name-stem + co-movement + "
-            "schedule fusion - the O(n²), multi-capture history pass that is the "
-            "heaviest part of the cheater compute). OFF keeps the cheap per-player "
-            "flags (score/rank/velocity) running but skips the cluster pass: the "
-            "payload returns clusters=[] and the Alt-clusters tab is hidden. No "
-            "effect while feature_cheater_detection_enabled is OFF (the whole "
-            "compute is already skipped)."
+            "Switch for ALT-CLUSTER detection (name-stem + co-movement + schedule "
+            "fusion - the O(n²), multi-capture history pass, the heaviest part of "
+            "the compute). OFF skips the cluster pass: the payload returns "
+            "clusters=[] and the Alt-clusters tab is hidden. Independent of "
+            "feature_cheater_detection_enabled - it can run with cheater detection "
+            "OFF (clusters-only) or off while cheater detection runs. Only when "
+            "BOTH are OFF is the whole compute skipped."
+        ),
+    ),
+    "feature_leaderboard_renames_enabled": _t(
+        key="feature_leaderboard_renames_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for player-rename detection. OFF stops the "
+            "leaderboards warmer from running the live rename pass each capture, "
+            "404s the rename endpoints (/v1/leaderboards/renames, "
+            "/site/leaderboards/renames), and hides the Possible-renames tab on "
+            "the /leaderboards page. Already-recorded renames are kept and "
+            "reappear when toggled back ON. Tuning knobs live in the 'Player "
+            "rename detection' category."
         ),
     ),
 
@@ -1114,6 +1131,182 @@ REGISTRY: dict[str, TunableSetting] = {
             "week has elapsed (≥48 captures). 0 disables the weekly uptime check."
         ),
         min_value=0.0, max_value=1.0,
+    ),
+
+    # ── Player rename detection (/v1/leaderboards/renames) ───────────
+    "renames_max_gap_seconds": _t(
+        key="renames_max_gap_seconds",
+        default=settings.renames_max_gap_seconds,
+        type="int",
+        category="renames",
+        description=(
+            "Only compare two captures for renames when they are within this "
+            "many seconds of each other. Captures are hourly, so 5400s (1.5h) "
+            "is 'the adjacent capture plus slack for a delayed one' - never a "
+            "multi-hour outage gap, across which score drift + population churn "
+            "would corrupt the fingerprint match. Pairs beyond this are skipped."
+        ),
+        min_value=3600, max_value=86400,
+    ),
+    "renames_min_boards": _t(
+        key="renames_min_boards",
+        default=settings.renames_min_boards,
+        type="int",
+        category="renames",
+        description=(
+            "A rename is emitted only when the vanished and appeared names match "
+            "on at least this many LIFETIME boards (Trove/Geode Mastery, Power "
+            "Rank - boards that never reset and carry a score across a rename). "
+            "2+ near-identical Mastery-scale scores coinciding by chance between "
+            "two accounts is astronomically unlikely - the core false-positive "
+            "guard. Raise to be even stricter."
+        ),
+        min_value=1, max_value=10,
+    ),
+    "renames_score_drift_pct": _t(
+        key="renames_score_drift_pct",
+        default=settings.renames_score_drift_pct,
+        type="float",
+        category="renames",
+        description=(
+            "Per-board score match tolerance (relative). A renamed player keeps "
+            "grinding, so the new name's score may sit slightly ABOVE the old "
+            "(never below, on an accumulating board). A board matches when the "
+            "rise (score_to - score_from) / score_from is between 0 and this. "
+            "0.02 = up to 2% higher. Tighter = only near-exact carries match."
+        ),
+        min_value=0.0, max_value=0.25,
+    ),
+    "renames_min_score": _t(
+        key="renames_min_score",
+        default=settings.renames_min_score,
+        type="float",
+        category="renames",
+        description=(
+            "Ignore lifetime-board entries whose score is below this when "
+            "fingerprinting. Tiny/round early scores aren't distinctive and "
+            "collide across many players. Higher = fingerprint only on "
+            "meaningful, high-entropy scores (fewer, more certain matches)."
+        ),
+        min_value=0.0, max_value=1e9,
+    ),
+    "renames_min_confidence": _t(
+        key="renames_min_confidence",
+        default=settings.renames_min_confidence,
+        type="float",
+        category="renames",
+        description=(
+            "Minimum blended confidence to persist/emit a rename. Conservative "
+            "matching (mutual-exclusive best match on >= renames_min_boards "
+            "boards) already keeps survivors high; this is the floor below which "
+            "a candidate is dropped rather than guessed. 0.5 is permissive-ish; "
+            "raise toward 0.8 to only record near-certain renames."
+        ),
+        min_value=0.0, max_value=1.0,
+    ),
+    "renames_excluded_board_uuids": _t(
+        key="renames_excluded_board_uuids",
+        default=settings.renames_excluded_board_uuids,
+        type="str",
+        category="renames",
+        description=(
+            "Comma-separated LIFETIME-board UUIDs to exclude from the rename "
+            "fingerprint (e.g. a board where many accounts legitimately tie). "
+            "Whitespace ignored. Empty = use every lifetime board. Resetting "
+            "(daily/weekly) boards are never used regardless."
+        ),
+    ),
+    "renames_cache_ttl_seconds": _t(
+        key="renames_cache_ttl_seconds",
+        default=settings.renames_cache_ttl_seconds,
+        type="int",
+        category="renames",
+        description=(
+            "Cache-Control max-age on the rename-list endpoints. The record is a "
+            "cheap indexed read and only changes when a new capture lands, so this "
+            "is just CDN/browser politeness."
+        ),
+        min_value=0, max_value=86400,
+    ),
+
+    # ── Last played (profile activity heuristic) ─────────────────────
+    "last_played_excluded_board_uuids": _t(
+        key="last_played_excluded_board_uuids",
+        default=settings.last_played_excluded_board_uuids,
+        type="str",
+        category="last_played",
+        description=(
+            "Comma-separated board UUIDs to EXCLUDE from the /player 'Last "
+            "played' estimate. Last-played is the most recent capture where the "
+            "player's score ROSE on any non-excluded board - real activity, "
+            "unlike 'Last seen' which is just their latest appearance (a player "
+            "on a lifetime board like Trove Mastery appears in every capture "
+            "forever). Exclude boards whose score moves WITHOUT the player "
+            "playing - e.g. the club tally boards (Club Power Rank 1100, Club XP "
+            "21012) that rise when other club members play. Whitespace ignored. "
+            "Empty = use every board. Example: '1100, 21012'."
+        ),
+    ),
+
+    # ── Capture completeness guard (reject bad leaderboard dumps) ─────
+    "capture_completeness_enabled": _t(
+        key="capture_completeness_enabled",
+        default=settings.capture_completeness_enabled,
+        type="bool",
+        category="ingest_quality",
+        description=(
+            "Reject a live leaderboard capture that arrives materially incomplete "
+            "vs the previous good capture (missing whole boards, or a board "
+            "truncated part-way) - the in-game scrape can return a short dump when "
+            "the leaderboards are briefly down or crash mid-run. A rejected dump is "
+            "NOT stored (it's still saved to the backlog + logged for audit); the "
+            "hour becomes a clean time-gap that activity / cheater / rename / delta "
+            "calculations already bridge over, instead of a poisoned capture that "
+            "reads absent players as 'newly active'. OFF stores every dump as-is."
+        ),
+    ),
+    "capture_max_missing_boards": _t(
+        key="capture_max_missing_boards",
+        default=settings.capture_max_missing_boards,
+        type="int",
+        category="ingest_quality",
+        description=(
+            "Reject a capture when MORE than this many boards present in the "
+            "previous good capture are absent from the new one. 1 tolerates a "
+            "single benign blip (a quiet board momentarily reporting nothing); set "
+            "0 to reject on ANY missing board. Detection is by board id/presence, "
+            "not entry counts. Ignored at reset boundaries (board rotation is "
+            "expected there)."
+        ),
+        min_value=0, max_value=50,
+    ),
+    "capture_collapse_frac": _t(
+        key="capture_collapse_frac",
+        default=settings.capture_collapse_frac,
+        type="float",
+        category="ingest_quality",
+        description=(
+            "Also reject when a board present in BOTH captures collapsed below this "
+            "fraction of its previous entry count (a board that failed part-way "
+            "through the scrape, e.g. 20k -> 8k = 0.4). Only boards with a real "
+            "prior population (>= 100 entries) count. 0 disables this collapse "
+            "check (presence-only). The one count-based trigger, for gross mid-run "
+            "cuts a pure presence check would miss."
+        ),
+        min_value=0.0, max_value=1.0,
+    ),
+    "capture_min_prev_boards": _t(
+        key="capture_min_prev_boards",
+        default=settings.capture_min_prev_boards,
+        type="int",
+        category="ingest_quality",
+        description=(
+            "Only run the completeness guard when the previous capture had at least "
+            "this many boards - avoids judging completeness on a cold start or "
+            "sparse early history (where a small board set is normal, not a "
+            "failure)."
+        ),
+        min_value=1, max_value=200,
     ),
 
     # ── Class activity (/class-activity) ──────────────────────────────

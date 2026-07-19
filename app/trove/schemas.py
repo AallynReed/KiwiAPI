@@ -1027,6 +1027,49 @@ class CheatersResponse(BaseModel):
     excluded_boards: list[SkippedBoardInfo] = []
 
 
+# --- Player renames (reconstructed name changes) --------------------------
+# Trove leaderboards carry no stable UID, so a rename is inferred from behaviour:
+# a name that vanished between two adjacent captures (within renames_max_gap_seconds)
+# while a NEW name appeared carrying the same lifetime-board score fingerprint.
+
+
+class RenameEvent(BaseModel):
+    """One detected rename ``from_name -> to_name`` across an adjacent capture
+    pair. ``evidence`` carries the matched lifetime boards (score_from/score_to/
+    drift), the confidence sub-terms, and a human-readable summary."""
+    id: int
+    from_name: str
+    to_name: str
+    from_anchor: int          # capture the old name was last seen in
+    to_anchor: int            # capture the new name appeared in (the "detected at")
+    confidence: float         # blended confidence in [0, 0.97]
+    matched_boards: int       # lifetime boards the fingerprint matched on
+    evidence: dict = {}
+    method_version: int = 1
+    created_at: int
+
+
+class RenamesResponse(BaseModel):
+    # Detected renames, MOST-RECENT-first (by the capture the new name appeared in).
+    renames: list[RenameEvent] = []
+    total: int = 0
+    limit: int = 50
+    offset: int = 0
+    # False when the rename-detection feature flag is OFF (the tab hides itself).
+    enabled: bool = True
+    method_version: int = 1
+
+
+class RenameHistoryResponse(BaseModel):
+    """The full rename chain touching a name - edges walked in both directions so
+    an identity that renamed several times (A→B→C) returns its whole timeline."""
+    query: str
+    current_name: str
+    aliases: list[str] = []
+    edges: list[RenameEvent] = []
+    rename_count: int = 0
+
+
 # --- Record highs (free "how high can these stats go" endpoint) -----------
 # The current ceiling for Trove Mastery / Geode Mastery / Power Rank, read off
 # the rank-1 holder of the relevant lifetime board(s). Mastery boards store a

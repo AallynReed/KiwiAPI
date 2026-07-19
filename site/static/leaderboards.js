@@ -45,6 +45,21 @@
     try { localStorage.setItem(CLUSTERS_MIN_KEY, String(v)); } catch (_) {}
   }
 
+  // Possible-renames tab: its own confidence threshold (default 0.6 - matches
+  // the server-side renames_min_confidence floor), persisted separately.
+  const RENAMES_MIN_KEY = 'btt_lb_renames_min';
+  function readRenamesMinConfidence() {
+    try {
+      const raw = localStorage.getItem(RENAMES_MIN_KEY);
+      if (raw == null) return 0.6;
+      const v = Number(raw);
+      return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.6;
+    } catch (_) { return 0.6; }
+  }
+  function writeRenamesMinConfidence(v) {
+    try { localStorage.setItem(RENAMES_MIN_KEY, String(v)); } catch (_) {}
+  }
+
   // Same TDZ note as readMinConfidence: declared above ``state`` so
   // its initial-value call doesn't hit an unset binding. Stores the
   // set of category names the user has collapsed; everything missing
@@ -80,12 +95,17 @@
     // corresponding tab is hidden entirely (the server skips the calculation).
     cheaterDetectionEnabled: true,
     altClustersEnabled: true,
+    renamesEnabled: true,   // master switch for the Possible-renames tab (config)
     cheaters: null,         // cached payload from /site/leaderboards/cheaters (players + clusters)
     cheatersMinConfidence: readMinConfidence(),  // cheaters slider value, persisted
     clustersMinConfidence: readClustersMinConfidence(),  // clusters slider value, persisted
-    activeTab: 'boards',         // 'boards' | 'cheaters' | 'clusters'
+    renames: null,          // cached payload from /site/leaderboards/renames
+    renamesMinConfidence: readRenamesMinConfidence(),  // renames slider value, persisted
+    activeTab: 'boards',         // 'boards' | 'cheaters' | 'clusters' | 'renames'
     cheatersLoaded: false,       // becomes true after the first lazy fetch (shared by both tabs)
     cheatersLoading: false,      // guards against double-firing during fetch
+    renamesLoaded: false,        // becomes true after the first lazy renames fetch
+    renamesLoading: false,       // guards against double-firing during the renames fetch
     boardChart: null,            // {uuid, data} - cached so resize/lang re-renders don't refetch
     playerChart: null,           // {name, data} - same idea for the per-player chart
     player: null,                // currently-open player name (mirrored into the URL hash for sharing)
@@ -94,6 +114,10 @@
     // missing from the set is treated as expanded (the friendly
     // default - first-time visitors see all boards).
     collapsedCategories: readCollapsedCategories(),
+    // Player-history panel: which category sections the user has collapsed.
+    // In-memory only (the panel is transient - opens on a search), so it
+    // resets on reload; independent of the sidebar's collapsedCategories.
+    phCollapsedCats: new Set(),
   };
 
   // Chart palette - picked for readability on the dark theme. We cycle
@@ -103,6 +127,10 @@
     '#4cc9f0', '#f72585', '#43aa8b', '#f8961e', '#b5179e',
     '#4361ee', '#f9c74f', '#7209b7', '#d62828', '#90be6d',
   ];
+
+  // Board icons + rank crowns: shared with the /player profile page via BTTUtil.
+  // See _site_util.js for the icon-mapping rationale.
+  const { boardIconImg, crownHtml } = window.BTTUtil;
 
   const $dayPicker = document.getElementById('lb-day-picker');
   const $cheatersMeta = document.getElementById('lb-cheaters-meta');
@@ -128,9 +156,19 @@
   const $tabCheatersBadge = document.getElementById('lb-tab-cheaters-badge');
   const $tabClustersBtn = document.getElementById('lb-tab-clusters');
   const $tabClustersBadge = document.getElementById('lb-tab-clusters-badge');
+  // Possible-renames tab - reconstructed name changes. Own pane, slider,
+  // meta + badge; lazy-fetched from /site/leaderboards/renames.
+  const $renamesBody = document.getElementById('lb-renames-body');
+  const $renamesMeta = document.getElementById('lb-renames-meta');
+  const $renamesFilter = document.getElementById('lb-renames-min');
+  const $renamesFilterValue = document.getElementById('lb-renames-min-value');
+  const $renamesFilterHint = document.getElementById('lb-renames-filter-hint');
+  const $tabRenamesBtn = document.getElementById('lb-tab-renames');
+  const $tabRenamesBadge = document.getElementById('lb-tab-renames-badge');
   const $paneBoards = document.getElementById('lb-pane-boards');
   const $paneCheaters = document.getElementById('lb-pane-cheaters');
   const $paneClusters = document.getElementById('lb-pane-clusters');
+  const $paneRenames = document.getElementById('lb-pane-renames');
   const $boardSearch = document.getElementById('lb-board-search');
   const $boardList = document.getElementById('lb-board-list');
   const $entriesTitle = document.getElementById('lb-entries-title');
@@ -142,6 +180,7 @@
   const $playerPanel = document.getElementById('lb-player-panel');
   const $playerName = document.getElementById('lb-player-name');
   const $playerBody = document.getElementById('lb-player-body');
+  const $playerAliases = document.getElementById('lb-player-aliases');
   const $playerStatus = document.getElementById('lb-player-status');
   const $playerClose = document.getElementById('lb-player-close');
   const $mobileTrigger = document.getElementById('lb-mobile-trigger');
@@ -173,6 +212,7 @@
     if (config) {
       state.cheaterDetectionEnabled = config.cheater_detection_enabled !== false;
       state.altClustersEnabled = config.alt_clusters_enabled !== false;
+      state.renamesEnabled = config.renames_enabled !== false;
     }
     applyAntiCheatToggles();
     renderSubtitle();
@@ -230,7 +270,7 @@
       // view is ready to render (or stay hidden) regardless of which tab
       // the user lands on. If hash says cheaters, this triggers the
       // first fetch.
-      if (hash.tab === 'cheaters' || hash.tab === 'clusters') {
+      if (hash.tab === 'cheaters' || hash.tab === 'clusters' || hash.tab === 'renames') {
         switchTab(hash.tab);
       }
     } finally {
@@ -241,13 +281,14 @@
 
   // 'cheaters' and 'clusters' are lazy-fetched on first activation and share
   // one /cheaters payload; URL hash carries tab= for deep-link + back-button.
-  const TABS = ['boards', 'cheaters', 'clusters'];
+  const TABS = ['boards', 'cheaters', 'clusters', 'renames'];
 
   // A tab is "available" only when its server-side calculation is enabled.
-  // Clusters additionally requires the cheater master switch (it's a sub-pass).
+  // Cheaters and clusters are independent switches - either can run alone.
   function tabAvailable(name) {
     if (name === 'cheaters') return state.cheaterDetectionEnabled;
-    if (name === 'clusters') return state.cheaterDetectionEnabled && state.altClustersEnabled;
+    if (name === 'clusters') return state.altClustersEnabled;
+    if (name === 'renames') return state.renamesEnabled;
     return true;
   }
 
@@ -261,6 +302,7 @@
   function applyAntiCheatToggles() {
     if ($tabCheatersBtn) $tabCheatersBtn.style.display = tabAvailable('cheaters') ? '' : 'none';
     if ($tabClustersBtn) $tabClustersBtn.style.display = tabAvailable('clusters') ? '' : 'none';
+    if ($tabRenamesBtn) $tabRenamesBtn.style.display = tabAvailable('renames') ? '' : 'none';
   }
 
   function switchTab(name) {
@@ -274,6 +316,7 @@
       boards: { btn: $tabBoardsBtn, pane: $paneBoards },
       cheaters: { btn: $tabCheatersBtn, pane: $paneCheaters },
       clusters: { btn: $tabClustersBtn, pane: $paneClusters },
+      renames: { btn: $tabRenamesBtn, pane: $paneRenames },
     };
     for (const key of TABS) {
       const { btn, pane } = tabEls[key];
@@ -292,6 +335,7 @@
 
     // Both anti-cheat tabs are served by the same payload.
     if (name === 'cheaters' || name === 'clusters') ensureCheatersLoaded();
+    if (name === 'renames') ensureRenamesLoaded();
   }
 
   // Render both anti-cheat panes from the shared payload, so switching
@@ -329,6 +373,167 @@
     } finally {
       state.cheatersLoading = false;
     }
+  }
+
+  // ── Possible renames ──────────────────────────────────────────────────
+  // Lazy-fetched the first time the tab is opened. Its own payload (not the
+  // cheaters one), cached on state.renames so a language/slider change
+  // re-renders without a refetch.
+  async function ensureRenamesLoaded() {
+    if (state.renamesLoaded || state.renamesLoading) {
+      renderRenamesTab();
+      return;
+    }
+    state.renamesLoading = true;
+    if ($renamesMeta) $renamesMeta.textContent = t('Loading the latest data - this can take a moment.');
+    try {
+      const payload = await fetchJSON('/site/leaderboards/renames?limit=200');
+      state.renames = payload;
+      state.renamesLoaded = true;
+      renderRenamesTab(payload);
+    } catch (err) {
+      state.renames = { _error: err };
+      renderRenamesTab(state.renames);
+    } finally {
+      state.renamesLoading = false;
+    }
+  }
+
+  function syncRenamesFilterUI() {
+    if (!$renamesFilter) return;
+    const v = state.renamesMinConfidence;
+    if (Number($renamesFilter.value) !== v) $renamesFilter.value = String(v);
+    if ($renamesFilterValue) $renamesFilterValue.textContent = formatConfidence(v);
+  }
+
+  function renderRenamesTab(payload) {
+    if (payload && !payload._error) state.renames = payload;
+    const data = state.renames;
+    syncRenamesFilterUI();
+    if (!$renamesBody) return;
+    if (data == null) return;
+
+    if (data._error) {
+      if ($tabRenamesBadge) $tabRenamesBadge.hidden = true;
+      if ($renamesMeta) $renamesMeta.textContent = t('Failed to load') + '.';
+      $renamesBody.innerHTML = '';
+      return;
+    }
+
+    const all = data.renames || [];
+    const min = state.renamesMinConfidence;
+    const visible = all.filter((r) => (r.confidence ?? 0) >= min);
+
+    if ($tabRenamesBadge) {
+      if (visible.length > 0) {
+        $tabRenamesBadge.hidden = false;
+        $tabRenamesBadge.textContent = String(visible.length);
+      } else {
+        $tabRenamesBadge.hidden = true;
+      }
+    }
+
+    const hiddenCount = all.length - visible.length;
+    if ($renamesFilterHint) {
+      $renamesFilterHint.textContent = hiddenCount > 0
+        ? t('hiding {n} below threshold').replace('{n}', hiddenCount)
+        : '';
+    }
+
+    if ($renamesMeta) {
+      if (all.length === 0) {
+        $renamesMeta.textContent = t('No renames detected yet - they show up as new captures land.');
+      } else if (visible.length === 0) {
+        $renamesMeta.textContent = t('All {f} detected rename(s) are below the current confidence threshold - slide left to see them.')
+          .replace('{f}', all.length);
+      } else {
+        const newest = visible[0] && visible[0].to_anchor ? formatAnchor(visible[0].to_anchor) : '';
+        $renamesMeta.textContent = t('{c} likely rename(s), most recent first (latest: {when}).')
+          .replace('{c}', visible.length).replace('{when}', newest);
+      }
+    }
+
+    if (!visible.length) {
+      $renamesBody.innerHTML = `<p class="lb-cheaters-empty" data-i18n>No renames flagged.</p>`;
+      rerunI18n();
+      return;
+    }
+
+    $renamesBody.innerHTML = visible.map(renderRenameCard).join('');
+    rerunI18n();
+    // Expansion toggle + click-through to each name's player history.
+    for (const row of $renamesBody.querySelectorAll('[data-ridx]')) {
+      const summary = row.querySelector('[data-act="toggle-rename"]');
+      if (summary) {
+        summary.addEventListener('click', () => {
+          const expanded = row.classList.toggle('expanded');
+          summary.setAttribute('aria-expanded', String(expanded));
+        });
+      }
+      for (const link of row.querySelectorAll('[data-act="rename-player"]')) {
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const nm = link.dataset.name || '';
+          if (!nm) return;
+          $playerSearch.value = nm;
+          searchPlayer(nm);
+          $playerPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+    }
+  }
+
+  // One detected rename: "Old → New", confidence pill, matched-board count, and an
+  // expandable evidence body (per-board score carry-over + the confidence terms).
+  function renderRenameCard(r, idx) {
+    const conf = r.confidence ?? 0;
+    const boards = r.evidence && Array.isArray(r.evidence.boards) ? r.evidence.boards : [];
+    const matched = r.matched_boards ?? boards.length;
+    const when = r.to_anchor ? formatAnchor(r.to_anchor) : '';
+    const gapH = r.evidence && r.evidence.gap_seconds
+      ? (r.evidence.gap_seconds / 3600) : null;
+    const boardLabel = t('{n} board(s)').replace('{n}', matched);
+    const summaryTxt = (r.evidence && r.evidence.summary) || '';
+
+    const boardRows = boards.map((b) => `
+      <li class="lb-rename-board">
+        <span class="lb-rename-board-name">${esc(b.name || String(b.uuid))}</span>
+        <span class="lb-rename-board-scores">${esc(fmtNum(b.score_from))} → ${esc(fmtNum(b.score_to))}</span>
+        <span class="lb-rename-board-drift">${b.drift_pct != null ? '+' + esc(String(b.drift_pct)) + '%' : ''}</span>
+      </li>`).join('');
+
+    return `
+      <article class="lb-rename" data-ridx="${idx}">
+        <button type="button" class="lb-rename-head"
+                data-act="toggle-rename" aria-expanded="false">
+          <span class="lb-rename-names">
+            <a href="#" class="lb-rename-name lb-rename-from" data-act="rename-player"
+               data-name="${esc(r.from_name)}">${esc(r.from_name)}</a>
+            <i class="fa-solid fa-arrow-right lb-rename-arrow" aria-hidden="true"></i>
+            <a href="#" class="lb-rename-name lb-rename-to" data-act="rename-player"
+               data-name="${esc(r.to_name)}">${esc(r.to_name)}</a>
+          </span>
+          <span class="lb-rename-tags">
+            <span class="lb-confidence ${confidenceClass(conf)}">${esc(formatConfidence(conf))}</span>
+            <span class="lb-rename-count">${esc(boardLabel)}</span>
+            <i class="fa-solid fa-chevron-down lb-rename-caret" aria-hidden="true"></i>
+          </span>
+        </button>
+        <div class="lb-rename-detail">
+          ${summaryTxt ? `<p class="lb-rename-summary">${esc(summaryTxt)}</p>` : ''}
+          <p class="lb-rename-when">${esc(t('Detected {when}').replace('{when}', when))}${
+            gapH != null ? ' · ' + esc(t('{h}h between captures').replace('{h}', gapH.toFixed(1))) : ''
+          }</p>
+          <ul class="lb-rename-boards">${boardRows}</ul>
+        </div>
+      </article>`;
+  }
+
+  // Compact number formatting for score carry-over rows (12,345 / 1.2M).
+  function fmtNum(n) {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return String(n);
+    return v.toLocaleString('en-US', { maximumFractionDigits: 0 });
   }
 
 
@@ -1588,6 +1793,13 @@
       hidePlayerChart();
     });
 
+    // Username history fires in parallel too; the banner stays hidden unless the
+    // rename detector found a name change touching this player.
+    loadPlayerAliases(trimmed).catch((err) => {
+      console.warn('[leaderboards] rename history failed', err);
+      if ($playerAliases) $playerAliases.hidden = true;
+    });
+
     try {
       const data = await fetchJSON(
         `/site/leaderboards/players/${encodeURIComponent(trimmed)}/history?limit=50`,
@@ -1604,35 +1816,146 @@
     }
   }
 
-  function renderPlayerHistory(items) {
-    // Announce the outcome on the small sr-only live node (the panel isn't live).
-    if ($playerStatus) {
-      $playerStatus.textContent = items.length
-        ? `${$playerName.textContent} — ${items.length} ${t('appearances')}`
-        : t('No recent appearances found for this player.');
+  // Fetch + render the rename chain touching this player. Hidden when the player
+  // has no detected renames (the common case). Links each alias to the entries
+  // for that name so the user can jump between identities.
+  async function loadPlayerAliases(name) {
+    if (!$playerAliases) return;
+    $playerAliases.hidden = true;
+    const data = await fetchJSON(`/site/leaderboards/renames/${encodeURIComponent(name)}`);
+    if (!data || !data.rename_count) return;
+    // Ordered name chain from the edges (each carries from→to).
+    const chain = [];
+    for (const e of (data.edges || [])) {
+      if (!chain.length) chain.push(e.from_name);
+      if (chain[chain.length - 1] !== e.to_name) chain.push(e.to_name);
     }
+    const names = chain.length ? chain : (data.aliases || []);
+    const current = (data.current_name || names[names.length - 1] || '').toLowerCase();
+    const links = names.map((nm) => {
+      const isCur = nm.toLowerCase() === current;
+      return `<button type="button" class="lb-alias${isCur ? ' lb-alias-current' : ''}"
+                data-alias="${esc(nm)}">${esc(nm)}</button>`;
+    }).join('<i class="fa-solid fa-arrow-right lb-alias-arrow" aria-hidden="true"></i>');
+    const countLabel = t('{n} rename(s)').replace('{n}', data.rename_count);
+    $playerAliases.innerHTML = `
+      <i class="fa-solid fa-clock-rotate-left lb-aliases-icon" aria-hidden="true"></i>
+      <div class="lb-aliases-body">
+        <p class="lb-aliases-title">${esc(t('Username history'))}
+          <span class="lb-aliases-count">${esc(countLabel)}</span>
+        </p>
+        <p class="lb-aliases-chain">${links}</p>
+      </div>`;
+    $playerAliases.hidden = false;
+    // Clicking an alias re-opens the panel for that name (stays on the page).
+    for (const btn of $playerAliases.querySelectorAll('[data-alias]')) {
+      btn.addEventListener('click', () => {
+        const nm = btn.dataset.alias || '';
+        if (!nm) return;
+        $playerSearch.value = nm;
+        searchPlayer(nm, true);
+      });
+    }
+  }
+
+  function renderPlayerHistory(items) {
     if (!items.length) {
+      if ($playerStatus) $playerStatus.textContent = t('No recent appearances found for this player.');
       $playerBody.innerHTML = `<p class="lb-hint" data-i18n>No recent appearances found for this player.</p>`;
       rerunI18n();
       return;
     }
-    // Resolve uuid→board name from the current anchor's list when we can.
-    // (Falls through to "Board #UUID" if it's a board the player only appears
-    // on in a different anchor than the one we've loaded boards for.)
-    const nameByUuid = new Map(state.boards.map((b) => [b.uuid, titleizeName(b.name)]));
-    $playerBody.innerHTML = items.map((it) => {
-      const boardName = nameByUuid.get(it.leaderboard) || `Board #${it.leaderboard}`;
-      // Day-over-day movement on this board (server attaches it only when the
-      // pair is comparable - lifetime always, weekly off-Monday, daily never).
+    // A player on many boards lands on all of them in the SAME capture, so the
+    // history stream repeats every board at every anchor - a very tall list
+    // whose timestamps are near-identical. Collapse to the latest capture: one
+    // tile per board, the timestamp shown once as a header. (Rows arrive anchor
+    // DESC, so items[0] carries the newest anchor.) The per-board chart above
+    // still covers the time dimension.
+    const latestAnchor = items[0].created_at;
+    const latest = items.filter((it) => it.created_at === latestAnchor);
+
+    // Announce the outcome on the small sr-only live node (the panel isn't live).
+    if ($playerStatus) {
+      $playerStatus.textContent =
+        `${$playerName.textContent} — ${latest.length} ${t('boards')}`;
+    }
+
+    // Resolve uuid→board name / category from the current anchor's list when we
+    // can. (Falls through to "Board #UUID" / "Other" for a board the player only
+    // appears on in a different anchor than the one we've loaded boards for.)
+    const metaByUuid = new Map(
+      state.boards.map((b) => [b.uuid, { name: titleizeName(b.name), category: b.category || 'Other' }]),
+    );
+
+    // Group the latest capture's boards by category. Boards are ordered by
+    // leaderboard id within each group, and the groups themselves by their
+    // smallest id, so the ordering is stable and id-driven throughout.
+    const groups = new Map();
+    for (const it of latest) {
+      const cat = (metaByUuid.get(it.leaderboard) || {}).category || 'Other';
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(it);
+    }
+    for (const arr of groups.values()) arr.sort((a, b) => a.leaderboard - b.leaderboard);
+    const orderedCats = [...groups.keys()].sort(
+      (a, b) => groups.get(a)[0].leaderboard - groups.get(b)[0].leaderboard,
+    );
+
+    const tileFor = (it) => {
+      const boardName = (metaByUuid.get(it.leaderboard) || {}).name || `Board #${it.leaderboard}`;
       return `
-        <div class="lb-player-row">
-          <div class="lb-ph-board">${esc(boardName)}</div>
-          <div class="lb-ph-rank">#${it.rank}${deltaBadge(it.rank_delta, null)}</div>
-          <div class="lb-ph-score">${esc(formatScore(it.score))}${deltaBadge(it.score_delta, formatScore)}</div>
-          <div class="lb-ph-when">${esc(formatAnchor(it.created_at))}</div>
+        <div class="lb-ph-tile">
+          <div class="lb-ph-tile-head">
+            ${boardIconImg(it.leaderboard)}
+            <div class="lb-ph-board">${esc(boardName)}</div>
+          </div>
+          <div class="lb-ph-tile-stats">
+            <span class="lb-ph-rank">${crownHtml(it.rank)}#${it.rank}</span>
+            <span class="lb-ph-score">${esc(formatScore(it.score))}</span>
+          </div>
+        </div>`;
+    };
+
+    const groupsHtml = orderedCats.map((cat) => {
+      const boards = groups.get(cat);
+      const collapsed = state.phCollapsedCats.has(cat);
+      return `
+        <div class="lb-category-group lb-ph-group" data-category="${esc(cat)}"
+             data-collapsed="${collapsed ? 'true' : 'false'}">
+          <button type="button" class="lb-category" aria-expanded="${collapsed ? 'false' : 'true'}"
+                  data-ph-cat="${esc(cat)}">
+            <i class="fa-solid fa-chevron-down lb-category-caret" aria-hidden="true"></i>
+            <span class="lb-category-name">${esc(cat)}</span>
+            <span class="lb-category-count">${boards.length}</span>
+          </button>
+          <div class="lb-category-body">
+            <div class="lb-ph-grid">${boards.map(tileFor).join('')}</div>
+          </div>
         </div>`;
     }).join('');
+
+    const header = `
+      <div class="lb-ph-latest">
+        <span class="lb-ph-latest-label" data-i18n>Latest capture</span>
+        <span class="lb-ph-latest-when">${esc(formatAnchor(latestAnchor))}</span>
+        <span class="lb-ph-latest-count">${esc(t('{n} board(s)').replace('{n}', latest.length))}</span>
+      </div>`;
+
+    $playerBody.innerHTML = header + `<div class="lb-ph-groups">${groupsHtml}</div>`;
     rerunI18n();
+
+    // Collapse toggle per category (in-memory; see state.phCollapsedCats).
+    for (const head of $playerBody.querySelectorAll('.lb-category[data-ph-cat]')) {
+      head.addEventListener('click', () => {
+        const cat = head.dataset.phCat;
+        if (state.phCollapsedCats.has(cat)) state.phCollapsedCats.delete(cat);
+        else state.phCollapsedCats.add(cat);
+        const group = head.closest('.lb-ph-group');
+        const collapsed = state.phCollapsedCats.has(cat);
+        group.dataset.collapsed = collapsed ? 'true' : 'false';
+        head.setAttribute('aria-expanded', String(!collapsed));
+      });
+    }
   }
 
   function wireEvents() {
@@ -1678,6 +2001,9 @@
     if ($tabClustersBtn) {
       $tabClustersBtn.addEventListener('click', () => switchTab('clusters'));
     }
+    if ($tabRenamesBtn) {
+      $tabRenamesBtn.addEventListener('click', () => switchTab('renames'));
+    }
     // Left/Right/Home/End roving across the (conditionally-rendered) tab strip.
     const tabStrip = document.querySelector('.lb-tabs');
     if (tabStrip) {
@@ -1720,6 +2046,14 @@
         renderClustersTab();
       });
     }
+    if ($renamesFilter) {
+      $renamesFilter.addEventListener('input', () => {
+        const v = Math.round(Number($renamesFilter.value) * 100) / 100;
+        state.renamesMinConfidence = v;
+        writeRenamesMinConfidence(v);
+        renderRenamesTab();
+      });
+    }
 
     // Browser Back/Forward (and manual hash edits) → re-apply the hash to state.
     window.addEventListener('hashchange', () => { reconcileFromHash(); });
@@ -1732,6 +2066,7 @@
       renderSubtitle();
       renderDayPicker();
       renderCheaters();
+      renderRenamesTab();
       if (state.selectedUuid) renderEntries();
       else resetEntries();
       renderBoardList();
@@ -1808,13 +2143,14 @@
     $playerPanel.hidden = true;
     $playerSearch.value = '';
     hidePlayerChart();
+    if ($playerAliases) $playerAliases.hidden = true;
     state.player = null;
   }
 
   // Apply a parsed hash to state WITHOUT writing history back. Fully syncs every
   // axis so Back/Forward also clears things the target entry doesn't have.
   async function applyHash(h) {
-    const desiredTab = (h.tab === 'cheaters' || h.tab === 'clusters') ? h.tab : 'boards';
+    const desiredTab = (h.tab === 'cheaters' || h.tab === 'clusters' || h.tab === 'renames') ? h.tab : 'boards';
     if (desiredTab !== state.activeTab) switchTab(desiredTab);
     if (h.anchor && h.anchor !== state.anchor) {
       const idx = state.days.findIndex((d) => d.anchor === h.anchor);

@@ -175,6 +175,79 @@ class Settings(BaseSettings):
     # check can't see this (each individual hour looks normal). 0 disables it.
     cheaters_weekly_uptime_fraction: float = 0.85
 
+    # ── Player rename detection (/v1/leaderboards/renames) ───────────────
+    # Trove leaderboards carry no stable UID - a rename mints a brand-new
+    # player row. We reconstruct renames from behaviour: a name that vanishes
+    # between two adjacent captures while a NEW name appears with the same
+    # LIFETIME-board score fingerprint (Trove/Geode Mastery, Power Rank, …).
+    # Those boards never reset and their scores carry over a rename unchanged,
+    # so the match is reset-immune by construction.
+    #
+    # Only compare captures within this many seconds of each other. A wide gap
+    # lets scores drift (grinding) and the population churn, both of which
+    # corrupt the fingerprint match, so pairs beyond this are skipped entirely.
+    # 5400s = 1.5h (captures are hourly, so this is "the adjacent capture plus
+    # a little slack for a delayed/missed one", never a multi-hour outage gap).
+    renames_max_gap_seconds: int = 5400
+    # A rename is only emitted when the vanished + appeared names match on at
+    # least this many lifetime boards. 2+ near-identical Mastery-scale scores
+    # coinciding by chance between two distinct accounts is astronomically
+    # unlikely, so this is the core guard against false positives.
+    renames_min_boards: int = 2
+    # Per-board score match tolerance, relative. A renamed player keeps grinding,
+    # so the new name's score may be slightly ABOVE the old (never below, on an
+    # accumulating board). A board matches when 0 <= (score_to - score_from) /
+    # max(score_from, 1) <= this. 0.02 = the new score may be up to 2% higher.
+    renames_score_drift_pct: float = 0.02
+    # Ignore lifetime-board entries whose score is below this - tiny/round early
+    # scores (a level-2 mastery of 150) aren't distinctive enough to fingerprint
+    # and collide across many players. Higher = only fingerprint on meaningful,
+    # high-entropy scores.
+    renames_min_score: float = 1000.0
+    # Minimum blended confidence to persist/emit a rename. Conservative matching
+    # (mutual-exclusive best match, >= renames_min_boards) already keeps survivors
+    # high; this is the floor below which a candidate is dropped, not guessed.
+    renames_min_confidence: float = 0.5
+    # Comma-separated lifetime-board UUIDs to EXCLUDE from the rename fingerprint
+    # (e.g. a board where many accounts legitimately tie). Whitespace ignored.
+    # Empty = use every lifetime board. Resetting boards are never used regardless.
+    renames_excluded_board_uuids: str = ""
+    # TTL of the first-page rename-list cache (the table is cheap to read, so this
+    # is just CDN/browser politeness; renames only change when a new capture lands).
+    renames_cache_ttl_seconds: int = 300
+
+    # Comma-separated board UUIDs to EXCLUDE from the profile "Last played"
+    # estimate (the most recent capture where the player's score rose on some
+    # board). Exclude boards whose score moves without the player playing - e.g.
+    # the club tally boards (1100 / 21012). Whitespace ignored; empty = all boards.
+    last_played_excluded_board_uuids: str = ""
+
+    # ── Capture completeness guard (reject bad leaderboard dumps) ────────
+    # A live leaderboard capture is REJECTED (not stored) when it arrives
+    # materially incomplete vs the previous good capture - the in-game scrape
+    # can return a short dump when the leaderboards are briefly unavailable or
+    # crash mid-run (missing whole boards, or a board truncated part-way). Storing
+    # such a dump poisons every delta consumer (activity, cheater velocity, renames,
+    # day-over-day deltas) because the players merely absent from the short capture
+    # read as "newly appeared / active" against it. Dropping it turns the hour into
+    # a clean time-gap, which every consumer already bridges over. Detection is by
+    # board PRESENCE (id set), not fine entry counts; gated to non-reset windows so
+    # the legitimate board rotation / zeroing at a daily/weekly reset isn't flagged.
+    capture_completeness_enabled: bool = True
+    # Reject when MORE than this many boards present in the previous good capture
+    # are absent from the new one. 1 tolerates a single benign blip (a quiet board
+    # that momentarily reports nothing); 0 = reject on any missing board.
+    capture_max_missing_boards: int = 1
+    # Reject when a board present in BOTH captures collapsed below this fraction of
+    # its previous entry count (a board that failed part-way through the scrape,
+    # e.g. 20k -> 8k). Only considers boards that had a real population before
+    # (>= 100 entries) so tiny boards don't trip it. 0 disables the collapse check
+    # (presence-only). This is the one count-based trigger, for gross mid-run cuts.
+    capture_collapse_frac: float = 0.5
+    # Only run the guard when the previous capture had at least this many boards -
+    # avoids judging completeness on a cold start / sparse early history.
+    capture_min_prev_boards: int = 20
+
     # Class activity (/class-activity). Counts come from the Effort boards only
     # (4000+i); Paragon (5000+i) is excluded as ambiguous. The "clean" (established)
     # view keeps only players clearing BOTH floors at the window end, excluding
@@ -333,6 +406,15 @@ class Settings(BaseSettings):
     # Bilibili thumbnail proxy: one feed render fires a burst of <img> loads, so it
     # gets its own widened bucket rather than exhausting the shared feeds budget.
     bilibili_image_rate_limit_multiplier: int = 10
+    # Updates raw-file serving (/v1/updates/{branch}/file): the /updates browser
+    # renders a whole FOLDER of textures at once (a store dir can hold 500+ .dds),
+    # so one page paint fires a burst of file fetches - the same shape as the
+    # Bilibili image proxy. Give it a wide, ISOLATED bucket so a texture grid
+    # doesn't trip the 30/min anon cap (which showed as "some .dds don't load").
+    # 20× = 600 req/min/IP anon in its own bucket. It serves immutable static
+    # blobs, so it's also long-cached (see download_update_file) - repeat views
+    # come from the CDN/browser and never re-hit this budget.
+    updates_file_rate_limit_multiplier: int = 20
     # Ingest cooldown: per-token, per-endpoint backstop against a bot resubmitting
     # the same dump on a loop. API-token (bot) path only - see require_master_ingest.
     ingest_cooldown_max: int = 1

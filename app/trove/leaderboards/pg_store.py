@@ -12,6 +12,8 @@ anchor's day-partition (sub-second for a ~720k-row snapshot).
 """
 from __future__ import annotations
 
+import json
+
 from app.core.postgres import acquire
 from app.trove.leaderboards import pg_schema
 from app.trove.leaderboards.models import (
@@ -99,6 +101,10 @@ async def write_snapshot(boards: list[ParsedBoard], anchor: int) -> dict:
                 "SELECT s.board_uuid, s.anchor, s.rank, s.score, p.id "
                 "FROM _stg s JOIN player p ON p.name_lower = lower(s.name)"
             )
+            # Fold this capture into the per-(player, board) lifetime aggregate
+            # in the SAME transaction, so the /player profile reads it in
+            # O(boards) instead of scanning the player's full history.
+            await _fold_anchor_into_agg(con, anchor)
     return {
         "boards": len(boards), "entries": entries_total, "created_at": anchor,
         "cleared_before_insert": cleared, "archived_old": 0,
@@ -116,7 +122,8 @@ async def reset_all(*, drop_boards: bool = False) -> dict:
         async with con.transaction():
             await con.execute(
                 "TRUNCATE entry, player, activity_estimate, activity_active, "
-                "class_activity_estimate RESTART IDENTITY"
+                "class_activity_estimate, player_rename, player_board_agg "
+                "RESTART IDENTITY"
             )
             boards = 0
             if drop_boards:
@@ -139,6 +146,33 @@ async def list_timestamps(limit: int = 60) -> list[int]:
             "SELECT DISTINCT anchor FROM entry ORDER BY anchor DESC LIMIT $1", limit
         )
     return [r["anchor"] for r in rows]
+
+
+async def previous_anchor_before(anchor: int) -> int | None:
+    """The most recent stored capture strictly before ``anchor`` (any board) - the
+    baseline the completeness guard judges a new dump against."""
+    async with acquire() as con:
+        return await con.fetchval("SELECT MAX(anchor) FROM entry WHERE anchor < $1", anchor)
+
+
+async def board_counts_at(anchor: int) -> dict[int, int]:
+    """``{board_uuid: entry_count}`` at one anchor - the board-presence + per-board
+    population snapshot the completeness guard compares (anchor is constant, so
+    Postgres prunes to that day's partition)."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT board_uuid, count(*) AS n FROM entry WHERE anchor = $1 GROUP BY board_uuid",
+            anchor,
+        )
+    return {r["board_uuid"]: int(r["n"]) for r in rows}
+
+
+async def delete_anchor(anchor: int) -> int:
+    """Delete every entry row for one capture (a bad/rejected capture cleanup).
+    Returns the number of rows removed."""
+    async with acquire() as con:
+        res = await con.execute("DELETE FROM entry WHERE anchor = $1", anchor)
+    return int(res.split()[-1]) if res.startswith("DELETE") else 0
 
 
 async def list_boards_at(anchor: int) -> list[dict]:
@@ -399,21 +433,31 @@ async def previous_captures_bulk(player_names: list[str], board_uuid: int,
     return {r["player_name"]: (r["score"], r["anchor"]) for r in rows}
 
 
-async def player_rows(name: str, *, limit: int, uuid: int | None = None) -> list[dict]:
-    """Most recent appearances of one player (case-insensitive), newest first."""
+async def player_rows(
+    name: str, *, limit: int, uuid: int | None = None, window_start: int | None = None,
+) -> list[dict]:
+    """Most recent appearances of one player (case-insensitive), newest first.
+
+    ``window_start`` (unix seconds) bounds the scan to anchors at/after it, which
+    lets Postgres PRUNE to recent partitions instead of merge-scanning every
+    historical partition to find the newest rows - the difference between a
+    sub-second read and tens of seconds for a player with years of history. Pass
+    it whenever the caller only needs recent appearances (the profile's ``recent``
+    and the leaderboards panel, which shows only the latest capture)."""
     sql = (
         "SELECT e.board_uuid AS leaderboard, e.anchor AS created_at, e.rank, e.score, "
         "p.name AS player_name "
         "FROM entry e JOIN player p ON p.id = e.player_id WHERE p.name_lower = lower($1)"
     )
     args: list = [name]
+    if window_start is not None:
+        args.append(window_start)
+        sql += f" AND e.anchor >= ${len(args)}"
     if uuid is not None:
-        sql += " AND e.board_uuid = $2"
         args.append(uuid)
-        sql += " ORDER BY e.anchor DESC LIMIT $3"
-    else:
-        sql += " ORDER BY e.anchor DESC LIMIT $2"
+        sql += f" AND e.board_uuid = ${len(args)}"
     args.append(limit)
+    sql += f" ORDER BY e.anchor DESC LIMIT ${len(args)}"
     async with acquire() as con:
         rows = await con.fetch(sql, *args)
     return [
@@ -421,6 +465,16 @@ async def player_rows(name: str, *, limit: int, uuid: int | None = None) -> list
          "leaderboard": r["leaderboard"], "created_at": r["created_at"]}
         for r in rows
     ]
+
+
+async def player_canonical_name(name: str) -> str | None:
+    """The stored (latest-casing) display name for a player, or None if unknown.
+    One indexed lookup on the unique ``name_lower`` - cheap, so the profile can
+    resolve the canonical name without scanning the player's history."""
+    async with acquire() as con:
+        return await con.fetchval(
+            "SELECT name FROM player WHERE name_lower = lower($1)", name.strip(),
+        )
 
 
 async def player_rows_window(name: str, window_start: int) -> list[dict]:
@@ -440,32 +494,121 @@ async def player_rows_window(name: str, window_start: int) -> list[dict]:
     ]
 
 
+async def player_last_played(
+    name: str, *, excluded: set[int], window_start: int,
+) -> int | None:
+    """Most recent anchor at/after ``window_start`` where this player's score
+    ROSE on some non-excluded board vs their previous appearance on that board -
+    the "last played" signal (real activity, not mere presence on a lifetime
+    board that carries a score forever). None when no rise is found in the window.
+
+    Bounded to the window so the query prunes to recent partitions instead of
+    scanning the player's entire cross-partition history on every profile load."""
+    excl = sorted(excluded)
+    async with acquire() as con:
+        val = await con.fetchval(
+            "WITH me AS ("
+            "  SELECT e.anchor, e.score, "
+            "         lag(e.score) OVER (PARTITION BY e.board_uuid ORDER BY e.anchor) AS prev "
+            "  FROM entry e JOIN player p ON p.id = e.player_id "
+            "  WHERE p.name_lower = lower($1) AND e.anchor >= $2 "
+            "        AND NOT (e.board_uuid = ANY($3::int[])) "
+            ") "
+            "SELECT max(anchor) FROM me WHERE prev IS NOT NULL AND score > prev",
+            name.strip().lower(), window_start, excl,
+        )
+    return int(val) if val is not None else None
+
+
 async def player_board_summary(name: str) -> list[dict]:
     """Per-leaderboard aggregate of one player's ENTIRE appearance history: best
     rank ever, current rank/score (latest capture), capture count, and first/last
-    seen - one row per board, best boards first. Lets the profile show a ranking
-    per leaderboard instead of one row per capture (a player on one board across
-    thousands of captures collapses to a single row here)."""
+    seen - one row per board, best boards first.
+
+    O(boards) read of the incrementally-maintained ``player_board_agg`` (folded
+    per capture in write_snapshot). Previously this scanned the player's whole
+    cross-partition history, which was 30-90s for prolific players. If the
+    aggregate is empty (never rebuilt on an existing dataset), the caller should
+    run ``rebuild_player_board_agg`` once to backfill it."""
     sql = (
-        "WITH r AS ("
-        "  SELECT e.board_uuid, e.rank, e.score, e.anchor,"
-        "         ROW_NUMBER() OVER (PARTITION BY e.board_uuid ORDER BY e.anchor DESC) AS rn"
-        "  FROM entry e JOIN player p ON p.id = e.player_id"
-        "  WHERE p.name_lower = lower($1)"
-        ") "
-        "SELECT board_uuid AS leaderboard,"
-        "       MIN(rank)::int       AS best_rank,"
-        "       COUNT(*)::int        AS appearances,"
-        "       MIN(anchor)::bigint  AS first_seen,"
-        "       MAX(anchor)::bigint  AS last_seen,"
-        "       (MAX(rank)  FILTER (WHERE rn = 1))::int AS latest_rank,"
-        "       (MAX(score) FILTER (WHERE rn = 1))      AS latest_score "
-        "FROM r GROUP BY board_uuid "
-        "ORDER BY best_rank ASC, last_seen DESC"
+        "SELECT a.board_uuid AS leaderboard, a.best_rank, a.appearances::int AS appearances,"
+        "       a.first_seen, a.last_seen, a.latest_rank, a.latest_score "
+        "FROM player_board_agg a JOIN player p ON p.id = a.player_id "
+        "WHERE p.name_lower = lower($1) "
+        "ORDER BY a.best_rank ASC, a.last_seen DESC"
     )
     async with acquire() as con:
         rows = await con.fetch(sql, name.strip())
     return [dict(r) for r in rows]
+
+
+async def _fold_anchor_into_agg(con, anchor: int) -> None:
+    """Fold one just-inserted capture into ``player_board_agg`` (called INSIDE
+    write_snapshot's transaction, after the entry INSERT). One set-based upsert
+    over this anchor's partition only - cheap.
+
+    Idempotent for the common forward-ingest + exact-replay cases: ``appearances``
+    increments only when the anchor is strictly newer than what's already folded
+    (``last_folded_anchor``), so re-ingesting the same hour doesn't double-count.
+    best/first/last/latest use LEAST/GREATEST/CASE so an out-of-order backfill
+    still corrects best-rank / first-seen (only its appearance count is missed -
+    trued up by rebuild_player_board_agg)."""
+    await con.execute(
+        "INSERT INTO player_board_agg AS a "
+        "  (player_id, board_uuid, best_rank, appearances, first_seen, last_seen, "
+        "   latest_rank, latest_score, last_folded_anchor) "
+        # DISTINCT ON guarantees one row per (player, board) so ON CONFLICT never
+        # tries to touch the same key twice in one statement (which errors). A
+        # player is normally on a board once per capture; this just hardens
+        # against a freak double-listing.
+        "SELECT DISTINCT ON (e.player_id, e.board_uuid) "
+        "       e.player_id, e.board_uuid, e.rank, 1, e.anchor, e.anchor, "
+        "       e.rank, e.score, e.anchor "
+        "FROM entry e WHERE e.anchor = $1 "
+        "ORDER BY e.player_id, e.board_uuid, e.rank ASC "
+        "ON CONFLICT (player_id, board_uuid) DO UPDATE SET "
+        "  best_rank    = LEAST(a.best_rank, EXCLUDED.best_rank), "
+        "  first_seen   = LEAST(a.first_seen, EXCLUDED.first_seen), "
+        "  last_seen    = GREATEST(a.last_seen, EXCLUDED.last_seen), "
+        "  appearances  = a.appearances + "
+        "                 (CASE WHEN EXCLUDED.last_folded_anchor > a.last_folded_anchor "
+        "                       THEN 1 ELSE 0 END), "
+        "  latest_rank  = CASE WHEN EXCLUDED.last_seen >= a.last_seen "
+        "                      THEN EXCLUDED.latest_rank ELSE a.latest_rank END, "
+        "  latest_score = CASE WHEN EXCLUDED.last_seen >= a.last_seen "
+        "                      THEN EXCLUDED.latest_score ELSE a.latest_score END, "
+        "  last_folded_anchor = GREATEST(a.last_folded_anchor, EXCLUDED.last_folded_anchor)",
+        anchor,
+    )
+
+
+async def rebuild_player_board_agg() -> int:
+    """Full recompute of ``player_board_agg`` from the entry table (the expensive
+    all-history scan, done ONCE). Use to seed the table on an existing dataset,
+    or to true up appearance counts after out-of-order backfills. Returns the row
+    count written. Runs in a transaction so readers never see a half-built table."""
+    async with acquire() as con:
+        async with con.transaction():
+            await con.execute("TRUNCATE player_board_agg")
+            await con.execute(
+                "INSERT INTO player_board_agg "
+                "  (player_id, board_uuid, best_rank, appearances, first_seen, "
+                "   last_seen, latest_rank, latest_score, last_folded_anchor) "
+                "WITH r AS ("
+                "  SELECT player_id, board_uuid, rank, score, anchor,"
+                "         ROW_NUMBER() OVER (PARTITION BY player_id, board_uuid "
+                "                            ORDER BY anchor DESC) AS rn"
+                "  FROM entry"
+                ") "
+                "SELECT player_id, board_uuid, MIN(rank)::int, COUNT(*)::bigint,"
+                "       MIN(anchor)::bigint, MAX(anchor)::bigint,"
+                "       (MAX(rank)  FILTER (WHERE rn = 1))::int,"
+                "       (MAX(score) FILTER (WHERE rn = 1)),"
+                "       MAX(anchor)::bigint "
+                "FROM r GROUP BY player_id, board_uuid"
+            )
+            count = await con.fetchval("SELECT count(*) FROM player_board_agg")
+    return int(count or 0)
 
 
 async def board_top_series(
@@ -562,17 +705,20 @@ async def all_boards() -> list[dict]:
 
 
 async def board_meta(uuids: list[int]) -> dict[int, dict]:
-    """``{uuid: {name, reset_kind}}`` for a set of boards - for the per-player /
-    per-board history charts (name + cadence for the reset-zero injection)."""
+    """``{uuid: {name, category, reset_kind}}`` for a set of boards - for the
+    per-player / per-board history charts (name + cadence for the reset-zero
+    injection) and the profile page's category grouping."""
     if not uuids:
         return {}
     async with acquire() as con:
         rows = await con.fetch(
-            "SELECT uuid, name, reset_kind_override FROM board WHERE uuid = ANY($1)", uuids,
+            "SELECT uuid, name, category, reset_kind_override FROM board WHERE uuid = ANY($1)",
+            uuids,
         )
     return {
         r["uuid"]: {
             "name": r["name"],
+            "category": r["category"],
             "reset_kind": _effective_reset_kind(r["reset_kind_override"], r["uuid"]),
         }
         for r in rows
@@ -685,4 +831,117 @@ async def delete_class_estimate(window_end: int) -> None:
 async def delete_all_class_estimates() -> int:
     async with acquire() as con:
         res = await con.execute("DELETE FROM class_activity_estimate")
+    return int(res.split()[-1]) if res.startswith("DELETE") else 0
+
+
+# ── player renames ──────────────────────────────────────────────────────────────
+
+async def all_anchors_asc() -> list[int]:
+    """Every distinct capture anchor, OLDEST first - the backfill walks adjacent
+    pairs over this. (``list_timestamps`` is newest-first + capped; the rename
+    backfill needs the full ordered set.)"""
+    async with acquire() as con:
+        rows = await con.fetch("SELECT DISTINCT anchor FROM entry ORDER BY anchor ASC")
+    return [r["anchor"] for r in rows]
+
+
+async def upsert_renames(rows: list[dict]) -> None:
+    """Idempotent batch-insert of detected renames. The ``(from,to,to_anchor)``
+    unique key means re-running the same capture pair (live warm re-fires, or the
+    backfill re-walks) refreshes the row in place instead of duplicating. Each row:
+    ``{from_name, to_name, from_anchor, to_anchor, confidence, matched_boards,
+    evidence(dict), method_version, created_at}``."""
+    if not rows:
+        return
+    payload = [
+        (
+            r["from_name"], r["from_name"].strip().lower(),
+            r["to_name"], r["to_name"].strip().lower(),
+            int(r["from_anchor"]), int(r["to_anchor"]),
+            float(r["confidence"]), int(r["matched_boards"]),
+            json.dumps(r.get("evidence") or {}),
+            int(r.get("method_version", 1)), int(r["created_at"]),
+        )
+        for r in rows
+    ]
+    async with acquire() as con:
+        await con.executemany(
+            "INSERT INTO player_rename (from_name, from_name_lower, to_name, "
+            "to_name_lower, from_anchor, to_anchor, confidence, matched_boards, "
+            "evidence, method_version, created_at) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11) "
+            "ON CONFLICT (from_name_lower, to_name_lower, to_anchor) DO UPDATE SET "
+            "from_name = EXCLUDED.from_name, to_name = EXCLUDED.to_name, "
+            "from_anchor = EXCLUDED.from_anchor, confidence = EXCLUDED.confidence, "
+            "matched_boards = EXCLUDED.matched_boards, evidence = EXCLUDED.evidence, "
+            "method_version = EXCLUDED.method_version, created_at = EXCLUDED.created_at",
+            payload,
+        )
+
+
+def _rename_row(r) -> dict:
+    ev = r["evidence"]
+    if isinstance(ev, str):
+        try:
+            ev = json.loads(ev)
+        except (ValueError, TypeError):
+            ev = {}
+    return {
+        "id": r["id"],
+        "from_name": r["from_name"], "to_name": r["to_name"],
+        "from_anchor": r["from_anchor"], "to_anchor": r["to_anchor"],
+        "confidence": r["confidence"], "matched_boards": r["matched_boards"],
+        "evidence": ev or {}, "method_version": r["method_version"],
+        "created_at": r["created_at"],
+    }
+
+
+_RENAME_COLS = (
+    "id, from_name, to_name, from_anchor, to_anchor, confidence, matched_boards, "
+    "evidence, method_version, created_at"
+)
+
+
+async def list_renames(*, limit: int, offset: int) -> tuple[list[dict], int]:
+    """Detected renames, MOST-RECENT-first (by the capture the new name appeared
+    in), with the total count for pagination."""
+    async with acquire() as con:
+        total = await con.fetchval("SELECT count(*) FROM player_rename")
+        rows = await con.fetch(
+            f"SELECT {_RENAME_COLS} FROM player_rename "
+            "ORDER BY to_anchor DESC, confidence DESC, id DESC LIMIT $1 OFFSET $2",
+            limit, offset,
+        )
+    return [_rename_row(r) for r in rows], int(total or 0)
+
+
+async def renames_for_name(name: str) -> list[dict]:
+    """Every rename edge touching ``name`` (as either the old OR the new name),
+    newest first - the raw edges the caller chains into a full history."""
+    lowered = name.strip().lower()
+    async with acquire() as con:
+        rows = await con.fetch(
+            f"SELECT {_RENAME_COLS} FROM player_rename "
+            "WHERE from_name_lower = $1 OR to_name_lower = $1 "
+            "ORDER BY to_anchor DESC, id DESC",
+            lowered,
+        )
+    return [_rename_row(r) for r in rows]
+
+
+async def count_renames() -> int:
+    async with acquire() as con:
+        return int(await con.fetchval("SELECT count(*) FROM player_rename") or 0)
+
+
+async def latest_rename_to_anchor() -> int | None:
+    """The newest ``to_anchor`` we've already recorded a rename for - lets the live
+    pass skip re-scanning a pair it has already processed."""
+    async with acquire() as con:
+        return await con.fetchval("SELECT MAX(to_anchor) FROM player_rename")
+
+
+async def delete_all_renames() -> int:
+    async with acquire() as con:
+        res = await con.execute("DELETE FROM player_rename")
     return int(res.split()[-1]) if res.startswith("DELETE") else 0

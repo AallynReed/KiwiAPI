@@ -596,6 +596,56 @@ async def set_leaderboard_board_reset_kind(
     )
 
 
+# --- Leaderboards: rebuild the per-player board aggregate ------------------
+# player_board_agg is maintained incrementally at ingest, but an existing
+# dataset (pre-feature) needs a one-time full seed, and out-of-order backfills
+# can undercount appearances. This runs the full recompute in the background
+# (a big all-history scan) and reports status for the poll below. Master-only
+# via the router-level dep.
+_agg_rebuild_status: dict = {
+    "running": False, "rows": None, "finished_at": None, "error": None,
+}
+
+
+async def _run_agg_rebuild() -> None:
+    import logging
+    import time as _time
+
+    from app.trove.leaderboards import pg_store
+    _agg_rebuild_status.update(running=True, error=None)
+    try:
+        rows = await pg_store.rebuild_player_board_agg()
+        _agg_rebuild_status.update(rows=rows)
+    except Exception as exc:  # noqa: BLE001 - surface via status, never 500 a bg task
+        _agg_rebuild_status.update(error=str(exc))
+        logging.getLogger(__name__).exception("player_board_agg rebuild failed")
+    finally:
+        _agg_rebuild_status.update(running=False, finished_at=int(_time.time()))
+
+
+@router.post("/leaderboards/rebuild-player-agg")
+async def rebuild_player_board_agg(background_tasks: BackgroundTasks) -> dict:
+    """Full recompute of the per-player board aggregate (the /player profile's
+    fast read). Seeds the table on an existing dataset and trues up appearance
+    counts after backfills. Runs in the background (a full all-history scan);
+    poll ``/admin/leaderboards/rebuild-player-agg/status``."""
+    if not settings.postgres_enabled:
+        raise APIError(status_code=400, code=ErrorCode.bad_request,
+                       message="Postgres backend is disabled")
+    if _agg_rebuild_status["running"]:
+        return {"started": False, "message": "A rebuild is already running."}
+    background_tasks.add_task(_run_agg_rebuild)
+    return {"started": True,
+            "message": "Player aggregate rebuild started - poll "
+                       "/admin/leaderboards/rebuild-player-agg/status."}
+
+
+@router.get("/leaderboards/rebuild-player-agg/status")
+async def rebuild_player_board_agg_status() -> dict:
+    """Current state of the last player-aggregate rebuild (running / row count)."""
+    return _agg_rebuild_status
+
+
 # --- Codexes: force a parser rebuild ---------------------------------------
 # The steady-state indexer only re-touches changed game files, so a parser-code
 # change doesn't reach existing rows until a game update. This forces a full

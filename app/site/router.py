@@ -43,6 +43,7 @@ from app.trove.leaderboards import activity as leaderboards_activity
 from app.trove.leaderboards import cache as leaderboards_cache
 from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove.leaderboards import detection as leaderboards_detection
+from app.trove.leaderboards import renames as leaderboards_renames
 from app.trove.leaderboards import service as leaderboards_service
 from app.trove.models import TroveEvent
 from app.trove.modpacks import service as modpacks_service
@@ -1848,9 +1849,11 @@ async def leaderboards(request: Request) -> HTMLResponse:
     first paint - no dependency on JS / the minified bundle."""
     cheaters_on = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
     clusters_on = await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG)
+    renames_on = await feature_flags.is_enabled(feature_flags.RENAMES_FLAG)
     return _TEMPLATES.TemplateResponse(request, "leaderboards.html", {
         "cheater_detection_enabled": cheaters_on,
-        "alt_clusters_enabled": cheaters_on and clusters_on,
+        "alt_clusters_enabled": clusters_on,
+        "renames_enabled": renames_on,
     })
 
 
@@ -1868,12 +1871,14 @@ async def site_lb_config() -> JSONResponse:
     days = await runtime_config.get_setting("leaderboards_hot_retention_days")
     cheaters_on = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
     clusters_on = await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG)
+    renames_on = await feature_flags.is_enabled(feature_flags.RENAMES_FLAG)
     return JSONResponse(
         {
             "hot_retention_days": int(days),
             "cheater_detection_enabled": cheaters_on,
-            # Alt-clusters only meaningful when cheater detection runs at all.
-            "alt_clusters_enabled": cheaters_on and clusters_on,
+            # Independent switch - alt-clusters can run without cheater detection.
+            "alt_clusters_enabled": clusters_on,
+            "renames_enabled": renames_on,
         },
         headers={"Cache-Control": "public, max-age=30"},
     )
@@ -1992,6 +1997,28 @@ async def site_lb_cheaters() -> JSONResponse:
     )
 
 
+@router.get("/site/leaderboards/renames", response_class=JSONResponse)
+async def site_lb_renames(
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> JSONResponse:
+    """Detected player renames for the leaderboards page, most-recent-first. Same
+    payload as ``GET /v1/leaderboards/renames``; ``enabled=false`` when the
+    feature flag is off (the tab hides itself)."""
+    payload = await leaderboards_renames.serve_list(limit=limit, offset=offset)
+    ttl = int(await runtime_config.get_setting("renames_cache_ttl_seconds"))
+    return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
+
+
+@router.get("/site/leaderboards/renames/{name}", response_class=JSONResponse)
+async def site_lb_rename_history(name: str) -> JSONResponse:
+    """Full rename chain touching ``name`` (both directions), for the tab's
+    per-name history drill-in."""
+    payload = await leaderboards_renames.history(name)
+    ttl = int(await runtime_config.get_setting("renames_cache_ttl_seconds"))
+    return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
+
+
 @router.get("/site/leaderboards/{uuid}/entries", response_class=JSONResponse)
 async def site_lb_entries(
     uuid: int,
@@ -2019,8 +2046,13 @@ async def site_lb_player_history(
     limit: int = Query(default=50, ge=1, le=500),
     uuid: int | None = Query(default=None),
 ) -> JSONResponse:
+    # Bound to a recent window so the query prunes to recent partitions instead
+    # of merge-scanning the player's entire cross-partition history (which was
+    # ~30s for prolific players). The panel only renders the LATEST capture, and
+    # anyone currently ranked appears every capture, so 7 days always covers it.
+    window_start = int(time.time()) - 7 * 86400
     rows = await leaderboards_service.player_history(
-        player_name, limit=limit, uuid=uuid, with_deltas=True,
+        player_name, limit=limit, uuid=uuid, with_deltas=True, window_start=window_start,
     )
     return JSONResponse(
         {"player_name": player_name, "items": rows, "count": len(rows)},

@@ -551,8 +551,10 @@
   max-height: none;
 }
 .up-view-grid .up-tree { overflow: visible; }
+/* Grid view never stacks the detail inline - a picked file opens the modal
+   below (updates.js relocates #up-detail-file into it), so the inline .up-detail
+   host stays hidden. */
 .up-view-grid .up-detail { display: none; }
-.up-view-grid.up-file-open .up-detail { display: block; }
 
 .up-gallery {
   display: grid;
@@ -728,6 +730,70 @@
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.01em;
+}
+
+/* ─── File-detail modal (grid view) ─────────────────────────────────────
+   Mirrors the shared .mp-modal pattern. The detail content is relocated into
+   .up-modal-slot by updates.js, so no styles are duplicated here. */
+.up-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.up-modal[hidden] { display: none; }
+.up-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4,7,12,.72);
+  backdrop-filter: blur(3px);
+  animation: up-modal-fade .14s ease;
+}
+.up-modal-card {
+  position: relative;
+  width: min(880px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: var(--bg-card, #131922);
+  border: 1px solid var(--bg-line, #1f2733);
+  border-radius: 16px;
+  padding: 24px 26px 26px;
+  box-shadow: 0 28px 70px rgba(0,0,0,.6);
+  animation: up-modal-pop .16s cubic-bezier(.2,.9,.3,1);
+}
+.up-modal-card:focus { outline: none; }
+.up-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 9px;
+  background: rgba(255,255,255,.04);
+  color: var(--text-mute);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.up-modal-close:hover { color: var(--text); border-color: rgba(255,255,255,.24); }
+.up-modal-close:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+/* In the modal the detail node is the direct content - drop the header's top
+   margin so the title clears the close button and the pane isn't double-padded. */
+.up-modal-slot .up-detail-head { margin-right: 40px; }
+@keyframes up-modal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes up-modal-pop {
+  from { opacity: 0; transform: translateY(10px) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+body.up-modal-open { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .up-modal-backdrop, .up-modal-card { animation: none; }
 }
 
 /* In-browser preview of a small text file (updates.js loadPreview). */
@@ -1267,6 +1333,25 @@
 }
 .up-line-remove .up-line-text { color: #fed1d1; }
 .up-line-equal .up-line-text { color: var(--text-mute); }
+
+/* Intra-line highlight: the exact run that changed within a modified line, so
+   a one-character edit reads as a one-character edit instead of a full-line
+   rewrite. Overrides the browser's default <mark> yellow. */
+.up-diff-hl {
+  border-radius: 3px;
+  padding: 0 1px;
+  font-weight: 600;
+  color: inherit;
+  background: transparent;
+}
+.up-line-add .up-diff-hl {
+  background: rgba(93,208,120,.34);
+  color: #eaffef;
+}
+.up-line-remove .up-diff-hl {
+  background: rgba(248,113,113,.34);
+  color: #ffeaea;
+}
 
 
 /* ─── Mobile ────────────────────────────────────────────────────────── */

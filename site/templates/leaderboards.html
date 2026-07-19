@@ -91,13 +91,25 @@
                 <span class="lb-tab-badge" id="lb-tab-cheaters-badge" hidden>0</span>
             </button>
             {% endif %}
-            {% if (cheater_detection_enabled | default(true)) and (alt_clusters_enabled | default(true)) %}
+            {% if alt_clusters_enabled | default(true) %}
             <button type="button" class="lb-tab" role="tab"
                     id="lb-tab-clusters" data-tab="clusters"
                     aria-selected="false" aria-controls="lb-pane-clusters">
                 <i class="fa-solid fa-people-group" aria-hidden="true"></i>
                 <span data-i18n>Alt clusters</span>
                 <span class="lb-tab-badge" id="lb-tab-clusters-badge" hidden>0</span>
+            </button>
+            {% endif %}
+            {# Possible renames: its own master switch, independent of the
+               anti-cheat calc. Server-gated so a disabled tab is gone on first
+               paint. #}
+            {% if renames_enabled | default(true) %}
+            <button type="button" class="lb-tab" role="tab"
+                    id="lb-tab-renames" data-tab="renames"
+                    aria-selected="false" aria-controls="lb-pane-renames">
+                <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+                <span data-i18n>Possible renames</span>
+                <span class="lb-tab-badge" id="lb-tab-renames-badge" hidden>0</span>
             </button>
             {% endif %}
         </nav>
@@ -120,6 +132,9 @@
                     <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
+            <!-- Username history (renames) - injected + unhidden by leaderboards.js
+                 when the rename detector found a name change for this player. -->
+            <div class="lb-player-aliases" id="lb-player-aliases" hidden></div>
             <!-- Per-player chart: one line per board they appear on,
                  last 7 days. JS owns the contents; the outer figure
                  stays hidden until the player series payload returns
@@ -291,6 +306,35 @@
             <details class="lb-cheaters-method">
                 <summary data-i18n>How is this computed?</summary>
                 <p data-i18n>Beyond the per-player checks, we look for groups: families of similarly-named accounts sitting at near-identical scores - a coordinated pattern no single-player check would catch. The tighter the scores, the more accounts, and the more boards they share, the higher the confidence.</p>
+            </details>
+        </section>
+
+        <!-- ═══════════════ TAB: POSSIBLE RENAMES ═══════════════
+             Reconstructed name changes. Trove has no player id, so a rename is
+             inferred when a name vanishes while a new name appears carrying the
+             same lifetime-board score fingerprint. Lazy fetch from
+             /site/leaderboards/renames; most-recent-first, own confidence
+             slider (localStorage btt_lb_renames_min). -->
+        <section class="lb-tab-pane lb-cheaters lb-renames-pane" id="lb-pane-renames"
+                 role="tabpanel" aria-labelledby="lb-tab-renames" hidden>
+            <div class="lb-cheaters-filter">
+                <label class="lb-cheaters-filter-label" for="lb-renames-min">
+                    <span data-i18n>Min confidence</span>
+                    <span class="lb-cheaters-filter-value" id="lb-renames-min-value">0.60</span>
+                </label>
+                <input type="range" class="lb-cheaters-filter-range"
+                       id="lb-renames-min" min="0" max="1" step="0.05" value="0.6">
+                <span class="lb-cheaters-filter-hint" id="lb-renames-filter-hint"></span>
+            </div>
+            <!-- JS owns this line (no data-i18n - it interpolates counts). -->
+            <p class="lb-cheaters-meta" id="lb-renames-meta">Loading…</p>
+            <p class="lb-clusters-blurb" data-i18n>When a name disappears and a new one shows up the same hour with an identical Mastery / Power Rank fingerprint, it's almost certainly the same player under a new name. Most recent first.</p>
+            <div class="lb-renames-body" id="lb-renames-body">
+                <p class="lb-cheaters-empty" data-i18n>Checking recent captures…</p>
+            </div>
+            <details class="lb-cheaters-method">
+                <summary data-i18n>How is this computed?</summary>
+                <p data-i18n>Trove leaderboards have no permanent player id, so a rename is reconstructed from behaviour. Between two captures taken within about 90 minutes of each other, we look for a name that vanished while a brand-new name appeared carrying the same scores on the lifetime boards - Trove Mastery, Geode Mastery and Power Rank, which never reset and carry over a rename unchanged. A match only counts when several of those boards line up and the old and new names are each other's single clear best match; anything ambiguous is left out rather than guessed. That reliance on never-resetting boards is also what keeps daily and weekly resets from ever looking like a rename.</p>
             </details>
         </section>
 

@@ -212,6 +212,24 @@
                     </div>
                 </article>
             </section>
+
+            <!-- Grid view opens a picked file's detail as a modal dialog (a
+                 detail pane stacked at the very bottom of a tall gallery is a
+                 long scroll away). updates.js relocates #up-detail-file into the
+                 slot below on open and moves it back inline when list view or
+                 the modal closes. -->
+            <div class="up-modal up-detail-modal" id="up-detail-modal" hidden>
+                <div class="up-modal-backdrop" id="up-detail-modal-backdrop"></div>
+                <div class="up-modal-card" id="up-detail-modal-card"
+                     role="dialog" aria-modal="true"
+                     aria-labelledby="up-detail-title" tabindex="-1">
+                    <button type="button" class="up-modal-close" id="up-detail-modal-close"
+                            title="Close" aria-label="Close" data-i18n-title>
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                    <div class="up-modal-slot" id="up-detail-modal-slot"></div>
+                </div>
+            </div>
         </section>
 
         <!-- ═══════════════ TAB: CHANGES ═══════════════ -->

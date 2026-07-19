@@ -1560,15 +1560,70 @@ async function renderLeaderboards() {
           <span style="flex:1 1 200px"><strong>Leaderboard views</strong> <span class="muted" style="font-size:.78rem">— page snapshot caches</span></span>
           <button class="btn small danger" id="rc-views-reset" type="button">Reset &amp; recalculate</button>
         </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Rename history</strong> <span class="muted" style="font-size:.78rem">— detected player renames, whole archive (background)</span></span>
+          <button class="btn small" id="rc-ren-rebuild" type="button">Rebuild</button>
+          <button class="btn small danger" id="rc-ren-reset" type="button">Reset &amp; recalculate</button>
+        </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Player board aggregate</strong> <span class="muted" style="font-size:.78rem">— per-player best/latest/appearances that powers the fast /player profile; maintained at ingest. Seed once on an existing dataset or after backfills (whole archive, background).</span></span>
+          <button class="btn small" id="rc-agg-rebuild" type="button">Rebuild</button>
+        </div>
         <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border,#2a2f3a);padding-top:10px">
           <span style="flex:1 1 200px"><strong>Everything</strong> <span class="muted" style="font-size:.78rem">— all four in one go</span></span>
           <button class="btn small danger" id="rc-all-reset" type="button">Reset &amp; recalculate all</button>
         </div>
       </div>
       <p class="hint" id="rc-result" style="margin:14px 0 0"></p>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px">Delete a bad capture</h2>
+      <p class="hint" style="margin:0 0 12px">
+        Purge one capture by its anchor (unix seconds) — for an incomplete scrape that slipped in
+        (missing / collapsed boards). The hour becomes a clean gap that the activity, cheater, rename
+        and day-over-day calculations bridge over; activity history is rebuilt in the background so any
+        spike it caused disappears. Derived data only — nothing irreplaceable is lost.
+      </p>
+      <div class="row" style="align-items:flex-end;gap:12px;flex-wrap:wrap">
+        <label style="flex:0 0 auto">
+          <span class="muted" style="font-size:.78rem;display:block;margin-bottom:4px">Anchor (unix seconds)</span>
+          <input type="number" id="del-anchor" placeholder="1784386380" style="width:200px">
+        </label>
+        <button class="btn small danger" id="del-anchor-btn" type="button">Delete &amp; recompute</button>
+      </div>
+      <p class="hint" id="del-anchor-result" style="margin:12px 0 0"></p>
     </div>`;
   renderLeaderboardsBoardsTable();
   wireRecomputeCard();
+  wireDeleteCapture();
+}
+
+// Admin · Modules · Leaderboards · delete one bad capture by anchor. Backed by
+// master POST /v1/leaderboards/delete-anchor (deletes the entries + rebuilds
+// activity so the affected window becomes a gap).
+function wireDeleteCapture() {
+  const inp = document.getElementById("del-anchor");
+  const btn = document.getElementById("del-anchor-btn");
+  const res = document.getElementById("del-anchor-result");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const a = parseInt(inp.value, 10);
+    if (!Number.isFinite(a) || a <= 0) { toast("Enter a valid anchor (unix seconds)", "err"); return; }
+    const when = new Date(a * 1000).toISOString().replace("T", " ").slice(0, 16);
+    modal("Delete capture " + a + "?",
+      `<p>Deletes every entry for the capture at <code>${a}</code> (<b>${when} UTC</b>) and rebuilds
+       activity so any spike it caused becomes a clean gap.</p>
+       <p class="hint">Derived from the captures — nothing irreplaceable is lost.</p>`,
+      async () => {
+        const r = await API.call(`/v1/leaderboards/delete-anchor?anchor=${a}&recompute=true`, { method: "POST" });
+        const n = r.entries_deleted || 0;
+        res.textContent = n
+          ? `Deleted ${n} entries for anchor ${a}. Activity rebuild started in the background — the chart clears in a few minutes.`
+          : `No entries found for anchor ${a} (nothing to delete).`;
+        toast(n ? "Capture deleted" : "No such capture", n ? "ok" : "err");
+      }, "Delete & recompute");
+  });
 }
 
 // ── Admin · Modules · Leaderboards · recompute / reset ──────────────────────
@@ -1673,6 +1728,72 @@ function wireRecomputeCard() {
       toast(failed ? `${failed} of ${results.length} failed` : "All reset + recompute started", failed ? "err" : "ok");
     },
   );
+
+  // Rename-history backfill: a background walk of the WHOLE archive over adjacent
+  // capture pairs within the 1.5h gap (reset-safe: lifetime-board fingerprint).
+  // Ignores the "days back" input - it always covers all stored captures. Polls
+  // the status endpoint so the result line shows live progress.
+  const postRenames = (reset) =>
+    API.call(`/v1/leaderboards/renames-backfill?clear_first=${reset ? "true" : "false"}`, { method: "POST" });
+  let _renPoll = null;
+  const pollRenames = () => {
+    if (_renPoll) clearInterval(_renPoll);
+    _renPoll = setInterval(async () => {
+      let s;
+      try { s = await API.call("/v1/leaderboards/renames-backfill-status"); }
+      catch (_) { return; }
+      if (s && s.running) {
+        const total = s.total || 0, done = s.done || 0;
+        const pct = total ? Math.floor((done / total) * 100) : 0;
+        show(`Rebuilding rename history… ${done}/${total} capture pairs (${pct}%), `
+           + `${s.detected || 0} rename(s) found, ${s.skipped_gap || 0} skipped for gap.`);
+      } else {
+        clearInterval(_renPoll); _renPoll = null;
+        if (s) show(`Rename history rebuilt: ${s.detected ?? 0} detected across ${s.done ?? 0} capture pairs `
+                  + `(${s.skipped_gap ?? 0} skipped for gap). ${s.recorded_renames ?? 0} recorded total.`);
+      }
+    }, 1500);
+  };
+  on("rc-ren-rebuild", async () => {
+    try { await postRenames(false); show("Rename-history rebuild started (background)…"); toast("Rename rebuild started", "ok"); pollRenames(); }
+    catch (ex) { toast(ex.message || "Failed to start rebuild", "err"); }
+  });
+  onReset(
+    "rc-ren-reset", "Reset rename history?",
+    `<p>Deletes every recorded rename and re-detects them across the <strong>whole</strong> stored capture history
+     (only adjacent pairs within the 1.5h gap; multi-hour outage gaps are skipped). Reset-safe - the
+     lifetime-board fingerprint means daily/weekly resets never look like a rename. Runs in the
+     <strong>background</strong>; the Possible-renames tab fills in as it goes.</p>
+     <p class="hint">Fully derived from the captures - nothing irreplaceable is lost.</p>`,
+    async () => { await postRenames(true); show("Rename history reset + rebuild started (background)…"); toast("Rename reset started", "ok"); pollRenames(); },
+  );
+
+  // Player board aggregate: full all-history recompute in the background (seeds
+  // the fast /player profile read on an existing dataset). Polls for the count.
+  let _aggPoll = null;
+  const pollAgg = () => {
+    if (_aggPoll) clearInterval(_aggPoll);
+    _aggPoll = setInterval(async () => {
+      let s;
+      try { s = await API.call("/admin/leaderboards/rebuild-player-agg/status"); }
+      catch (_) { return; }
+      if (s && s.running) {
+        show("Rebuilding player board aggregate… (scanning all stored captures)");
+      } else {
+        clearInterval(_aggPoll); _aggPoll = null;
+        if (s && s.error) show(`Player aggregate rebuild failed: ${s.error}`);
+        else if (s && s.rows != null) show(`Player board aggregate rebuilt: ${s.rows.toLocaleString()} (player, board) rows.`);
+      }
+    }, 2000);
+  };
+  on("rc-agg-rebuild", async () => {
+    try {
+      const r = await API.call("/admin/leaderboards/rebuild-player-agg", { method: "POST" });
+      show(r.message || "Player aggregate rebuild started (background)…");
+      toast(r.started === false ? "Rebuild already running" : "Aggregate rebuild started", "ok");
+      pollAgg();
+    } catch (ex) { toast(ex.message || "Failed to start rebuild", "err"); }
+  });
 }
 
 // Giveaways: "Giveaways" sub-tab (manage/draw/cancel) + "Vault" sub-tab (prize-code

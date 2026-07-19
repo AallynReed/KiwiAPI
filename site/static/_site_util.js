@@ -92,5 +92,96 @@
         };
     }
 
-    window.BTTUtil = { esc, getJSON, fetchJSON, getFocusable, trapFocus };
+    // ── Leaderboard board icons ───────────────────────────────────────────────
+    // Authoritative board→icon map from the game's own ui/leaderboard_icons set
+    // (mirrored into /static/leaderboard-icons). Keyed on the STABLE leaderboard
+    // uuid, never a fuzzy name match: a board whose uuid isn't covered here (e.g.
+    // Bomber Royale, which the game ships no icon for, or a future seasonal board)
+    // renders no icon rather than a wrong one. Shared by the /leaderboards player
+    // panel and the /player profile page.
+    //
+    // Class boards live in three parallel uuid ranges - Power Rank (1000+i),
+    // Effort (4000+i) and Paragon (5000+i) for class index i - and all share the
+    // one class icon the set provides (icon_paragon_<class>). The order mirrors
+    // stats._BOARD_CLASS_ORDER (board release order), using the icon set's class
+    // tokens (e.g. barbarian, not candybarbarian).
+    const LB_PARAGON_CLASS = [
+        "knight", "gunslinger", "faetrickster", "dracolyte", "neonninja",
+        "barbarian", "icemage", "shadowhunter", "pirate", "boomeranger",
+        "tombraiser", "lunarlancer", "revenant", "chloromancer", "dinotamer",
+        "vanguardian", "bard", "solarion",
+    ];
+    const LB_ICON_BY_UUID = {
+        // META
+        1: "icon_leaderboard_trove_mastery",
+        20: "icon_leaderboard_geode_mastery",
+        100: "icon_leaderboard_total_mastery",
+        999: "icon_leaderboard_meta_power",
+        1100: "icon_leaderboard_stats_club_pr",   // Club Power Rank
+        50000: "icon_paragon_all",                // Weekly Highest Paragon (all classes)
+        // DELVES
+        2004: "icon_leaderboard_challenge_depth",
+        2001: "icon_leaderboard_challenge_depth",
+        2021: "icon_leaderboard_public_depth",
+        2024: "icon_leaderboard_public_depth",
+        2011: "icon_leaderboard_private_depth",
+        2014: "icon_leaderboard_private_depth",
+        // STATS
+        6: "icon_leaderboard_stats_pvp",
+        9: "icon_leaderboard_stats_boxes",
+        32000: "icon_leaderboard_stats_worldboss",
+        4: "icon_leaderboard_stats_dungeons",
+        3: "icon_leaderboard_stats_enemies_killed",
+        10: "icon_leaderboard_stats_flux_earned",
+        11: "icon_leaderboard_stats_glim_collected",
+        33001: "icon_leaderboard_stats_hearts",
+        33002: "icon_leaderboard_stats_hearts_sent",
+        13: "icon_leaderboard_stats_infinium_mined",
+        14: "icon_leaderboard_stats_invaders",
+        15: "icon_leaderboard_stats_loot_collector",
+        16: "icon_leaderboard_stats_pinatas_looted",
+        17: "icon_leaderboard_stats_pinatas_thrown",
+        30001: "icon_leaderboard_geode_adventures",
+        30004: "icon_leaderboard_geode_egg",
+        21005: "icon_leaderboard_stats_experience",
+        21012: "icon_leaderboard_stats_club_xp",
+        21004: "icon_leaderboard_stats_worldboss",
+        // 30002 / 30003 (Bomber Royale): the icon set ships no bomber art -> no icon.
+    };
+
+    // Icon filename (no extension) for a board uuid, or null when uncovered.
+    function boardIconName(uuid) {
+        const inClassRange =
+            (uuid >= 1000 && uuid <= 1017) ||
+            (uuid >= 4000 && uuid <= 4017) ||
+            (uuid >= 5000 && uuid <= 5017);
+        if (inClassRange) {
+            const cls = LB_PARAGON_CLASS[uuid % 1000];
+            return cls ? `icon_paragon_${cls}` : null;
+        }
+        return LB_ICON_BY_UUID[uuid] || null;
+    }
+
+    // <img> for a board's icon, or "" when the board has no mapped icon. alt=""
+    // (decorative - the board name sits right beside it).
+    function boardIconImg(uuid, cls) {
+        const name = boardIconName(uuid);
+        return name
+            ? `<img class="${cls || "lb-board-icon"}" src="/static/leaderboard-icons/${name}.png" alt="" loading="lazy" decoding="async">`
+            : "";
+    }
+
+    // Rank crown: gold / silver / bronze for a #1 / #2 / #3 standing, nothing
+    // otherwise. Decorative (the numeric rank sits beside it) but carries a title
+    // for hover. Shared by the /leaderboards player panel and /player profile.
+    function crownHtml(rank) {
+        const tier = rank === 1 ? "gold" : rank === 2 ? "silver" : rank === 3 ? "bronze" : null;
+        if (!tier) return "";
+        return `<i class="board-crown board-crown-${tier} fa-solid fa-crown" title="#${rank}" aria-hidden="true"></i>`;
+    }
+
+    window.BTTUtil = {
+        esc, getJSON, fetchJSON, getFocusable, trapFocus,
+        boardIconName, boardIconImg, crownHtml,
+    };
 })();

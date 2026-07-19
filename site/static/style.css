@@ -17,6 +17,11 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
+  /* Sticky navbar height (nav-links pills 42px + 2x14px padding + 1px border).
+     Used to size <main> so the footer always starts below the fold on
+     short/loading pages - see `body.landing > main`. */
+  --nav-h: 71px;
+
   /* Palette - deep midnight base with three accent hues used per-section
      (data-theme on spotlights re-binds --accent for that block). */
   --bg-base:        #06080d;
@@ -100,10 +105,25 @@ body.landing {
     radial-gradient(800px 600px at 90% 30%, rgba(255,138,61,.04), transparent 60%);
 }
 /* Fill the gap between navbar and footer so the footer is pinned to the bottom
-   on short pages (the navbar + footer are the other two flex-column children). */
-body.landing > main { flex: 1 0 auto; }
+   on short pages (the navbar + footer are the other two flex-column children).
+   The min-height reserves a full viewport below the navbar, so the footer
+   always starts *below the fold* - even before async content loads. Without it,
+   `flex: 1 0 auto` only fills viewport-navbar-footer, leaving the footer parked
+   at the bottom edge (visible) until content grows and shoves it down. */
+body.landing > main { flex: 1 0 auto; min-height: calc(100svh - var(--nav-h)); }
 
 img, picture, video, canvas, svg { max-width: 100%; display: block; }
+
+/* Rank crown (BTTUtil.crownHtml) - gold/silver/bronze for a top-3 standing.
+   Shared by every board tile across the leaderboards + player-profile pages. */
+.board-crown {
+  font-size: .82em;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .35));
+}
+.board-crown-gold { color: #f4c430; }
+.board-crown-silver { color: #c2ccda; }
+.board-crown-bronze { color: #cd7f32; }
+
 a { color: var(--accent-blue); text-decoration: none; }
 a:hover { color: color-mix(in oklab, var(--accent-blue) 80%, white); }
 

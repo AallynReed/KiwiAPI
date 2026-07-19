@@ -25,6 +25,15 @@
   const TREE_PAGE = 300;         // sidebar rows rendered per "load more" (some Trove
                                  // folders hold 50k+ files - never render them all)
 
+  // localStorage keys for the remembered explorer view + sort. Declared ABOVE
+  // `state` because its initializer calls readViewMode()/readTreeSort(), which
+  // read these keys: a `const` declared LATER sits in the temporal dead zone at
+  // that first call, throws, and the read's try/catch silently returns the
+  // default - so the saved choice never restored (same guard as the leaderboards
+  // page's *_MIN_KEY consts).
+  const VIEW_KEY = 'bttUpdatesView';
+  const SORT_KEY = 'bttUpdatesSort';
+
   const state = {
     branches: [],            // [{branch, current_version, current_ordinal, ...}]
     branch: null,            // active branch name
@@ -96,8 +105,14 @@
   const $mobileTrigger = $('up-mobile-trigger');
   const $mobileSelected = $('up-mobile-selected');
 
+  const $detail = $('up-detail');
   const $detailEmpty = $('up-detail-empty');
   const $detailFile = $('up-detail-file');
+  const $detailModal = $('up-detail-modal');
+  const $detailModalSlot = $('up-detail-modal-slot');
+  const $detailModalCard = $('up-detail-modal-card');
+  const $detailModalClose = $('up-detail-modal-close');
+  const $detailModalBackdrop = $('up-detail-modal-backdrop');
   const $detailBack = $('up-detail-back');
   const $detailTitle = $('up-detail-title');
   const $detailMeta = $('up-detail-meta');
@@ -152,14 +167,25 @@
       return;
     }
     renderBranchTabs();
-    applyViewMode();   // reflect the remembered list/grid choice before first render
-    if ($sortSelect) $sortSelect.value = state.treeSort;
 
     // URL hash priority - pick branch + tab + path + version from the
     // hash if present, else default to the first branch / latest version.
     // Applied with history writes suppressed, then canonicalised as ONE
     // replace so the initial load doesn't leave spurious back-stack entries.
     const hash = parseHash();
+    // View + sort: an explicit hash param wins (so a grid / last-modified view is
+    // shareable); a shared link that carries OTHER params but omits them opens in
+    // the app default (a plain link shouldn't inherit the visitor's saved grid);
+    // a bare visit (empty hash) keeps the remembered localStorage choice. Applying
+    // from the hash does NOT write localStorage - only an explicit toggle does, so
+    // opening someone's link never clobbers your own saved preference.
+    const hashHasParams = location.hash.replace(/^#/, '').length > 0;
+    if (hash.view) state.viewMode = hash.view === 'grid' ? 'grid' : 'list';
+    else if (hashHasParams) state.viewMode = 'list';
+    if (hash.sort) state.treeSort = hash.sort === 'modified' ? 'modified' : 'name';
+    else if (hashHasParams) state.treeSort = 'name';
+    applyViewMode();   // reflect the resolved list/grid choice before first render
+    if ($sortSelect) $sortSelect.value = state.treeSort;
     const startBranch =
       (hash.branch && state.branches.find((b) => b.branch === hash.branch)?.branch)
       || state.branches[0].branch;
@@ -172,6 +198,7 @@
       }
       if (hash.path) await openTreePath(hash.path);
       if (hash.tab) switchTab(hash.tab);
+      await restoreCompareFromHash(hash);
     } finally {
       _suppressHash = false;
     }
@@ -895,6 +922,72 @@
     }, 'image/png');
   }
 
+  // ─── File-detail modal (grid view) ─────────────────────────────────
+  // Rather than duplicate the detail markup, we relocate the live
+  // #up-detail-file node between its inline home (#up-detail) and the modal
+  // slot. All the detail's element IDs + wired listeners survive the move.
+  let _detailModalOpen = false;
+  let _modalPrevFocus = null;
+
+  function detailWantsModal() {
+    return state.viewMode === 'grid' && !!state.selectedPath;
+  }
+
+  function syncDetailPresentation() {
+    const want = detailWantsModal();
+    if (want && !_detailModalOpen) openDetailModal();
+    else if (!want && _detailModalOpen) closeDetailModal();
+  }
+
+  function openDetailModal() {
+    _detailModalOpen = true;
+    _modalPrevFocus = document.activeElement;
+    if ($detailFile.parentNode !== $detailModalSlot) $detailModalSlot.appendChild($detailFile);
+    $detailModal.hidden = false;
+    document.body.classList.add('up-modal-open');
+    document.addEventListener('keydown', onDetailModalKey, true);
+    // Focus the dialog so Escape/Tab are captured and screen readers announce it.
+    ($detailModalCard || $detailModal).focus();
+  }
+
+  function closeDetailModal() {
+    _detailModalOpen = false;
+    $detailModal.hidden = true;
+    document.body.classList.remove('up-modal-open');
+    document.removeEventListener('keydown', onDetailModalKey, true);
+    // Return the detail node to its inline home (after the empty-state div).
+    if ($detailFile.parentNode !== $detail) $detail.appendChild($detailFile);
+    if (_modalPrevFocus && typeof _modalPrevFocus.focus === 'function') {
+      try { _modalPrevFocus.focus(); } catch (_) {}
+    }
+    _modalPrevFocus = null;
+  }
+
+  function onDetailModalKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); dismissDetail(); return; }
+    if (e.key !== 'Tab') return;
+    // Keep focus inside the dialog (WCAG dialog pattern).
+    const nodes = [...$detailModal.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )].filter((el) => el.offsetParent !== null && !el.hidden);
+    if (!nodes.length) return;
+    const first = nodes[0], last = nodes[nodes.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
+  // Close the detail view (modal X / backdrop / Escape). Clears the selected
+  // file so we drop back to the folder gallery - and so a re-render doesn't
+  // immediately re-open the modal.
+  function dismissDetail() {
+    if (!state.selectedPath) return;
+    state.selectedPath = null;
+    state.fileHistory = null;
+    renderTree();
+    renderDetail();      // syncDetailPresentation() here tears the modal down
+    scheduleHash(true);
+  }
+
   function renderDetail() {
     // The in-app Back button appears once there's in-app history to step back
     // through (e.g. after jumping here from the changes list); it just drives
@@ -904,6 +997,12 @@
     // In grid mode the detail pane only appears once a file is picked (the
     // gallery itself is the browser); this class gates that in CSS.
     if ($paneExplorer) $paneExplorer.classList.toggle('up-file-open', !!state.selectedPath);
+
+    // Grid view shows the picked file's detail as a modal dialog (inline at the
+    // bottom of a tall gallery is an awkward scroll away); list view keeps it
+    // inline. Keep the presentation in sync with the current state on every
+    // render - open, close, and view-toggle all funnel through here.
+    syncDetailPresentation();
 
     if (!state.selectedPath) {
       $detailEmpty.hidden = false;
@@ -1192,6 +1291,88 @@
     }
   }
 
+  // ─── Intra-line diff ───────────────────────────────────────────────
+  // Highlight only the run that changed within a modified line. A fast
+  // common prefix/suffix trim handles a tiny edit inside a very long line
+  // (the whole point - .binfab et al. pack a lot onto one line), then a
+  // bounded token LCS refines the middle into word-level spans when it's
+  // small enough to be worth it.
+  function inlineHighlight(aStr, bStr) {
+    const aLen = aStr.length, bLen = bStr.length;
+    let p = 0;
+    const lim = Math.min(aLen, bLen);
+    while (p < lim && aStr.charCodeAt(p) === bStr.charCodeAt(p)) p++;
+    let aE = aLen, bE = bLen;
+    while (aE > p && bE > p && aStr.charCodeAt(aE - 1) === bStr.charCodeAt(bE - 1)) { aE--; bE--; }
+    const aMid = aStr.slice(p, aE), bMid = bStr.slice(p, bE);
+    let aParts, bParts;
+    const at = tokenizeLine(aMid), bt = tokenizeLine(bMid);
+    if (at.length && bt.length && at.length * bt.length <= 40000) {
+      const d = tokenDiff(at, bt);
+      aParts = d[0]; bParts = d[1];
+    } else {
+      aParts = aMid ? [[aMid, true]] : [];
+      bParts = bMid ? [[bMid, true]] : [];
+    }
+    const pre = esc(aStr.slice(0, p));
+    return {
+      aHtml: pre + partsToHTML(aParts) + esc(aStr.slice(aE)),
+      bHtml: pre + partsToHTML(bParts) + esc(bStr.slice(bE)),
+    };
+  }
+
+  // Split into word / whitespace / single-symbol tokens so highlighting lands
+  // on word boundaries rather than mid-word.
+  function tokenizeLine(s) {
+    return s ? (s.match(/\s+|[0-9A-Za-z_]+|[^\s0-9A-Za-z_]/g) || []) : [];
+  }
+
+  function pushPart(arr, text, changed) {
+    const last = arr[arr.length - 1];
+    if (last && last[1] === changed) last[0] += text;
+    else arr.push([text, changed]);
+  }
+
+  // LCS alignment of two token lists → per-side [text, changed] part lists.
+  function tokenDiff(a, b) {
+    const n = a.length, m = b.length;
+    const dp = [];
+    for (let i = 0; i <= n; i++) dp.push(new Uint16Array(m + 1));
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        dp[i][j] = a[i] === b[j]
+          ? dp[i + 1][j + 1] + 1
+          : (dp[i + 1][j] >= dp[i][j + 1] ? dp[i + 1][j] : dp[i][j + 1]);
+      }
+    }
+    const aParts = [], bParts = [];
+    let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (a[i] === b[j]) { pushPart(aParts, a[i], false); pushPart(bParts, b[j], false); i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) { pushPart(aParts, a[i], true); i++; }
+      else { pushPart(bParts, b[j], true); j++; }
+    }
+    while (i < n) pushPart(aParts, a[i++], true);
+    while (j < m) pushPart(bParts, b[j++], true);
+    return [aParts, bParts];
+  }
+
+  function partsToHTML(parts) {
+    let out = '';
+    for (const [text, changed] of parts) {
+      out += changed ? `<mark class="up-diff-hl">${esc(text)}</mark>` : esc(text);
+    }
+    return out;
+  }
+
+  function diffLineRow(cls, leftN, rightN, textHTML) {
+    return `<div class="up-line ${cls}">
+      <span class="up-line-num">${leftN != null ? esc(String(leftN)) : ''}</span>
+      <span class="up-line-num">${rightN != null ? esc(String(rightN)) : ''}</span>
+      <span class="up-line-text">${textHTML}</span>
+    </div>`;
+  }
+
   function renderCompare() {
     const p = state.compare.payload;
     if (!p) return;
@@ -1239,22 +1420,40 @@
     }
 
     const hunks = p.hunks.map((h) => {
-      const lines = h.lines.map((ln) => {
-        const cls = ln.kind === 'add' ? 'up-line-add'
-                  : ln.kind === 'remove' ? 'up-line-remove'
-                  : 'up-line-equal';
-        const leftN = ln.left  != null ? String(ln.left)  : '';
-        const rightN = ln.right != null ? String(ln.right) : '';
-        return `<div class="up-line ${cls}">
-          <span class="up-line-num">${esc(leftN)}</span>
-          <span class="up-line-num">${esc(rightN)}</span>
-          <span class="up-line-text">${esc(ln.text)}</span>
-        </div>`;
-      }).join('');
+      const L = h.lines;
+      const rows = [];
+      let idx = 0;
+      while (idx < L.length) {
+        if (L[idx].kind === 'remove') {
+          // A replace block: a run of removed lines (the backend always emits
+          // these first) optionally followed by a run of added lines. Pair
+          // them index-by-index and highlight only the changed segment within
+          // each pair; leftover unpaired lines render as plain add/remove.
+          const rem = [];
+          while (idx < L.length && L[idx].kind === 'remove') rem.push(L[idx++]);
+          const add = [];
+          while (idx < L.length && L[idx].kind === 'add') add.push(L[idx++]);
+          const pairN = Math.min(rem.length, add.length);
+          const pairs = [];
+          for (let k = 0; k < pairN; k++) pairs.push(inlineHighlight(rem[k].text, add[k].text));
+          for (let k = 0; k < rem.length; k++) {
+            rows.push(diffLineRow('up-line-remove', rem[k].left, null,
+              k < pairN ? pairs[k].aHtml : esc(rem[k].text)));
+          }
+          for (let k = 0; k < add.length; k++) {
+            rows.push(diffLineRow('up-line-add', null, add[k].right,
+              k < pairN ? pairs[k].bHtml : esc(add[k].text)));
+          }
+        } else {
+          const ln = L[idx++];
+          const cls = ln.kind === 'add' ? 'up-line-add' : 'up-line-equal';
+          rows.push(diffLineRow(cls, ln.left, ln.right, esc(ln.text)));
+        }
+      }
       return `
         <section class="up-hunk">
           <div class="up-hunk-head">@@ -${h.left_start} +${h.right_start} @@</div>
-          <div class="up-hunk-lines">${lines}</div>
+          <div class="up-hunk-lines">${rows.join('')}</div>
         </section>`;
     }).join('');
 
@@ -1353,6 +1552,15 @@
       }
     });
 
+    // Grid-view detail modal: X button + backdrop both dismiss to the folder.
+    // Reparent the overlay to <body> so it's never clipped by a hidden tab
+    // pane and its fixed positioning can't be trapped by a transformed ancestor.
+    if ($detailModal && $detailModal.parentNode !== document.body) {
+      document.body.appendChild($detailModal);
+    }
+    if ($detailModalClose) $detailModalClose.addEventListener('click', () => dismissDetail());
+    if ($detailModalBackdrop) $detailModalBackdrop.addEventListener('click', () => dismissDetail());
+
     // Compare tab triggers.
     $compareRun.addEventListener('click', () => runCompare());
     $comparePath.addEventListener('keydown', (e) => {
@@ -1386,7 +1594,8 @@
 
   // ─── URL hash helpers ──────────────────────────────────────────────
   function parseHash() {
-    const out = { branch: null, version: null, path: null, tab: null };
+    const out = { branch: null, version: null, path: null, tab: null,
+                  view: null, sort: null, from: null, to: null };
     const raw = location.hash.replace(/^#/, '');
     if (!raw) return out;
     const params = new URLSearchParams(raw);
@@ -1397,6 +1606,16 @@
     }
     if (params.has('path')) out.path = params.get('path');
     if (params.has('tab')) out.tab = params.get('tab');
+    if (params.has('view')) out.view = params.get('view');
+    if (params.has('sort')) out.sort = params.get('sort');
+    if (params.has('from')) {
+      const n = Number(params.get('from'));
+      if (Number.isFinite(n)) out.from = n;
+    }
+    if (params.has('to')) {
+      const n = Number(params.get('to'));
+      if (Number.isFinite(n)) out.to = n;
+    }
     return out;
   }
   // The whole view lives in the hash (branch/version/tab/path) so it's
@@ -1416,10 +1635,25 @@
     if (state.activeTab && state.activeTab !== 'explorer') {
       parts.push(`tab=${state.activeTab}`);
     }
-    if (state.selectedPath) {
+    // On the compare tab a run diff owns the path (its own field, which may
+    // differ from the open file) plus the two version ordinals, so the diff is
+    // shareable and survives Back/Forward.
+    const cmp = state.activeTab === 'compare'
+      && state.compare.from && state.compare.to && state.compare.path;
+    if (cmp) {
+      parts.push(`path=${encodeURIComponent(state.compare.path)}`);
+    } else if (state.selectedPath) {
       parts.push(`path=${encodeURIComponent(state.selectedPath)}`);
     } else if (state.treePrefix) {
       parts.push(`path=${encodeURIComponent(state.treePrefix)}`);
+    }
+    // Only the non-default choices go in the URL, so a shared link carries the
+    // interesting state (grid / last-modified) without cluttering every link.
+    if (state.viewMode === 'grid') parts.push('view=grid');
+    if (state.treeSort === 'modified') parts.push('sort=modified');
+    if (cmp) {
+      parts.push(`from=${state.compare.from}`);
+      parts.push(`to=${state.compare.to}`);
     }
     return parts.length ? '#' + parts.join('&') : location.pathname;
   }
@@ -1466,6 +1700,50 @@
     }
     const targetTab = h.tab || 'explorer';
     if (targetTab !== state.activeTab) switchTab(targetTab);
+    await restoreCompareFromHash(h);
+    // View + sort follow the hash too (a plain entry means the app default). Set
+    // inline - no localStorage write - so traversing history doesn't overwrite the
+    // remembered preference; renderTree reflects the change.
+    const targetView = h.view === 'grid' ? 'grid' : 'list';
+    if (targetView !== state.viewMode) { state.viewMode = targetView; applyViewMode(); renderTree(); }
+    const targetSort = h.sort === 'modified' ? 'modified' : 'name';
+    if (targetSort !== state.treeSort) {
+      state.treeSort = targetSort;
+      if ($sortSelect) $sortSelect.value = targetSort;
+      renderTree();
+    }
+  }
+
+  // Rebuild a compare view straight from the hash so shared compare links (and
+  // Back/Forward) land on the actual diff instead of an empty Compare tab.
+  async function restoreCompareFromHash(h) {
+    if ((h.tab || 'explorer') !== 'compare') return;
+    if (h.from == null || h.to == null || !h.path) return;
+    if (state.compare.payload
+        && state.compare.from === h.from
+        && state.compare.to === h.to
+        && state.compare.path === h.path) return;   // already on screen
+    ensureCompareOption(h.from);
+    ensureCompareOption(h.to);
+    $comparePath.value = h.path;
+    $compareFrom.value = String(h.from);
+    $compareTo.value = String(h.to);
+    await runCompare();
+  }
+
+  // The compare selectors only list the visible version strip; a shared link
+  // may name an ordinal outside it. Append a stub <option> so the control
+  // reflects the shared choice (the backend compares by ordinal regardless).
+  function ensureCompareOption(ordinal) {
+    for (const sel of [$compareFrom, $compareTo]) {
+      if (!sel) continue;
+      if ([...sel.options].some((o) => o.value === String(ordinal))) continue;
+      const v = state.versions.find((x) => x.ordinal === ordinal);
+      const opt = document.createElement('option');
+      opt.value = String(ordinal);
+      opt.textContent = v ? `#${ordinal} · ${v.version_tag}` : `#${ordinal}`;
+      sel.appendChild(opt);
+    }
   }
 
   async function reconcileFromHash() {
@@ -1481,9 +1759,8 @@
 
   // ─── View mode (list ↔ grid gallery) ───────────────────────────────
   // The explorer sidebar renders either as a compact list of rows or as a
-  // thumbnail gallery. The choice is remembered across visits in localStorage.
-  const VIEW_KEY = 'bttUpdatesView';
-
+  // thumbnail gallery. The choice is remembered across visits in localStorage
+  // (VIEW_KEY is declared up by `state` - see the TDZ note there).
   function readViewMode() {
     try {
       return localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list';
@@ -1515,11 +1792,11 @@
     applyViewMode();
     renderTree();
     renderDetail();
+    scheduleHash(false);   // reflect in the URL (replace - a toggle isn't a nav step)
   }
 
   // ─── Sort order (name ↔ last modified) ─────────────────────────────
-  const SORT_KEY = 'bttUpdatesSort';
-
+  // SORT_KEY is declared up by `state` (TDZ note there).
   function readTreeSort() {
     try {
       return localStorage.getItem(SORT_KEY) === 'modified' ? 'modified' : 'name';
@@ -1535,6 +1812,7 @@
     saveTreeSort(mode);
     if ($sortSelect) $sortSelect.value = mode;
     renderTree();
+    scheduleHash(false);   // reflect in the URL (replace - a toggle isn't a nav step)
   }
 
   // Return a copy of `entries` in the active order. 'name' is the server order

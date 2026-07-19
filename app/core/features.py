@@ -12,8 +12,10 @@ Stored data is untouched and the feature reappears intact when toggled back ON.
 Two of the flags here (``CHEATER_DETECTION_FLAG`` / ``ALT_CLUSTERS_FLAG``) don't
 hide a page - they gate the *calculation* of the Possible-cheaters / Alt-cluster
 analysis in the leaderboards warmer (see app/trove/leaderboards/detection.py).
-They still live under the same "features" category so all the master switches
-sit together.
+They're INDEPENDENT: cheater detection gates the per-player checks, alt-clusters
+gates the cluster pass, and either can run without the other (only when both are
+OFF does the warmer skip the compute entirely). They still live under the same
+"features" category so all the master switches sit together.
 """
 
 from collections.abc import Callable, Coroutine
@@ -53,6 +55,9 @@ STORE_FLAG = "feature_store_enabled"
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
 ALT_CLUSTERS_FLAG = "feature_alt_clusters_enabled"
+# Player-rename detection: gates the warmer's live rename pass + the dev-portal
+# backfill + the Possible-renames tab (a tab on /leaderboards, not its own page).
+RENAMES_FLAG = "feature_leaderboard_renames_enabled"
 
 
 async def is_enabled(flag: str) -> bool:
@@ -97,3 +102,4 @@ require_image_studio_enabled = _gate(IMAGE_STUDIO_FLAG, "Image Studio")
 require_dm_subs_enabled = _gate(DM_SUBS_FLAG, "DM subscriptions")
 require_delves_enabled = _gate(DELVES_FLAG, "Delve rotation data")
 require_store_enabled = _gate(STORE_FLAG, "Store catalog")
+require_leaderboard_renames_enabled = _gate(RENAMES_FLAG, "Rename detection")

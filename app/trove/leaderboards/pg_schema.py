@@ -82,6 +82,28 @@ CREATE TABLE IF NOT EXISTS activity_active (
     PRIMARY KEY (window_end, player_lower)
 );
 
+-- Per-(player, board) lifetime aggregate: best rank ever, appearance count,
+-- first/last-seen anchors, and the latest capture's rank/score. Maintained
+-- INCREMENTALLY at ingest (one small set-based upsert per capture - see
+-- pg_store._fold_anchor_into_agg), same pattern as activity_active. Lets the
+-- /player profile read a player's per-board standings in O(boards) instead of
+-- scanning their entire cross-partition history (which was 30-90s for prolific
+-- players). ``last_folded_anchor`` guards the appearance count against
+-- double-count on an idempotent re-ingest of the same anchor; a full trueup
+-- after out-of-order backfills is pg_store.rebuild_player_board_agg().
+CREATE TABLE IF NOT EXISTS player_board_agg (
+    player_id          BIGINT  NOT NULL,
+    board_uuid         INTEGER NOT NULL,
+    best_rank          INTEGER NOT NULL,
+    appearances        BIGINT  NOT NULL,
+    first_seen         BIGINT  NOT NULL,
+    last_seen          BIGINT  NOT NULL,
+    latest_rank        INTEGER NOT NULL,
+    latest_score       DOUBLE PRECISION NOT NULL,
+    last_folded_anchor BIGINT  NOT NULL,
+    PRIMARY KEY (player_id, board_uuid)
+);
+
 CREATE TABLE IF NOT EXISTS class_activity_estimate (
     class_index    INTEGER NOT NULL,
     window_end     BIGINT  NOT NULL,
@@ -92,6 +114,33 @@ CREATE TABLE IF NOT EXISTS class_activity_estimate (
     computed_at    BIGINT  NOT NULL,
     PRIMARY KEY (class_index, window_end)
 );
+-- Detected player renames. Trove leaderboards carry no stable UID (a rename
+-- mints a brand-new ``player`` row), so a rename is RECONSTRUCTED: a name that
+-- vanished between two adjacent captures while a new name appeared with the same
+-- lifetime-board score fingerprint. One row per detected transition; the
+-- ``(from,to,to_anchor)`` unique key makes re-runs (live warm + backfill)
+-- idempotent. Chaining ``to_name_lower -> from_name_lower`` reconstructs a full
+-- rename history per identity. ``evidence`` holds the matched boards + scores +
+-- confidence sub-terms (same transparency contract as cheater detection).
+CREATE TABLE IF NOT EXISTS player_rename (
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    from_name       TEXT   NOT NULL,
+    from_name_lower TEXT   NOT NULL,
+    to_name         TEXT   NOT NULL,
+    to_name_lower   TEXT   NOT NULL,
+    from_anchor     BIGINT NOT NULL,
+    to_anchor       BIGINT NOT NULL,
+    confidence      DOUBLE PRECISION NOT NULL,
+    matched_boards  INTEGER NOT NULL,
+    evidence        JSONB   NOT NULL DEFAULT '{}'::jsonb,
+    method_version  INTEGER NOT NULL DEFAULT 1,
+    created_at      BIGINT  NOT NULL,
+    UNIQUE (from_name_lower, to_name_lower, to_anchor)
+);
+CREATE INDEX IF NOT EXISTS player_rename_to_anchor ON player_rename (to_anchor DESC);
+CREATE INDEX IF NOT EXISTS player_rename_from ON player_rename (from_name_lower);
+CREATE INDEX IF NOT EXISTS player_rename_to ON player_rename (to_name_lower);
+
 CREATE INDEX IF NOT EXISTS class_activity_we ON class_activity_estimate (window_end);
 -- ``estimate_clean`` (the Power-Rank-filtered "clean" view) was added after the
 -- table shipped; ADD it idempotently so an existing deploy gains the column.

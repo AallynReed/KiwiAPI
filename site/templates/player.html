@@ -54,10 +54,16 @@
             <!-- stat chips injected by player.js -->
         </section>
 
+        <!-- Username history (renames) - injected + unhidden by player.js when found. -->
+        <div class="pl-aliases" id="pl-aliases" hidden></div>
+
         <section class="pl-section">
             <h2 class="pl-subhead" data-i18n>Leaderboard rankings</h2>
             <div id="pl-recent"><p class="pl-loading" data-i18n>Loading…</p></div>
         </section>
+
+        <!-- Alt clusters - injected + unhidden by player.js when membership found. -->
+        <section class="pl-section" id="pl-clusters" hidden></section>
 
         <p class="pl-foot-link">
             <a href="/leaderboards" data-i18n>Browse all leaderboards</a>
