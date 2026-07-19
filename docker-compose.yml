@@ -151,6 +151,11 @@ services:
       TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID:-}
       TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET:-}
       YT_API_KEY: ${YT_API_KEY:-}
+      # Public base for off-site-embedded API renders (board/announce/activity
+      # PNGs + Image-Studio images). Empty => app_url (same-origin default). At
+      # cutover, when the website moves to its own container, set this to the api
+      # host so Discord/webhook embeds keep resolving. See app/core/config.py.
+      ASSET_BASE_URL: ${ASSET_BASE_URL:-}
     depends_on:
       mongo:
         condition: service_healthy
@@ -211,6 +216,9 @@ services:
       # Read Postgres-backed data (activity) from the API over the compose network -
       # the bot has no Postgres. Points at the api service; depends_on it below.
       INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
+      # Same off-site-render base as the api (the bot builds board/announcement
+      # embeds too). Empty => app_url. Set to the api host at cutover.
+      ASSET_BASE_URL: ${ASSET_BASE_URL:-}
     depends_on:
       mongo:
         condition: service_healthy
@@ -224,6 +232,38 @@ services:
     volumes:
       - ./app:/app/app
     command: ["python", "-m", "app.bot.runner"]
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # BetterTroveTools showcase website (trove.aallyn.net) - the presentation plane,
+  # split out from the api. Same image (build: .), different entrypoint: it renders
+  # the HTML pages + serves /static and holds NO database connection. Server-side
+  # it fetches dynamic data from the api over the compose network (OG meta, the
+  # browse/clubs/support first paint, feature-flag gating, the sitemap); in the
+  # browser, the page JS calls api.aallyn.net directly for /site/* + /v1/* data.
+  # See app/web/. Reverse-proxied: trove.aallyn.net -> host :15547 -> container :8000.
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "15547:8000"
+    environment:
+      # Read-side data from the api over the compose network. Deliberately NO
+      # Mongo/Redis/Postgres/SECRET_KEY: the website has no DB and issues no tokens.
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
+    depends_on:
+      # Soft dep (started, not healthy), like the bot - internal_get fails
+      # gracefully (fail-open flags, generic OG) if the api is briefly down.
+      api:
+        condition: service_started
+    volumes:
+      - ./app:/app/app
+      # Templates + static + ~20 MB of screenshots (same bind mount the api uses).
+      - ./site:/app/site:ro
+    command: ["uvicorn", "app.web.main:app", "--host", "0.0.0.0", "--port", "8000",
+              "--proxy-headers", "--forwarded-allow-ips", "*"]
     mem_limit: 512m
     logging:
       driver: json-file

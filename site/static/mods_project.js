@@ -31,7 +31,7 @@
   const $root = document.getElementById('mp-root');
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
-  const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
+  const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
 
   // Mod categories (mirrors app/trove/mod_categories.py). Selected ones are saved
@@ -227,9 +227,9 @@
       dlBtn = `<span class="mp-muted">${esc(t('No release yet'))}</span>`;
     } else if (published.length === 1) {
       const r0 = published[0];
-      dlBtn = `<a class="mp-btn mp-btn-primary" href="/site/mods/releases/${esc(r0.id)}/download"><i class="fa-solid fa-download"></i> ${esc(t('Download'))} <span class="mp-release-tagchip">${esc(r0.tag)}</span></a>`;
+      dlBtn = `<a class="mp-btn mp-btn-primary" href="${BTTUtil.apiUrl('/site/mods/releases/' + r0.id + '/download')}"><i class="fa-solid fa-download"></i> ${esc(t('Download'))} <span class="mp-release-tagchip">${esc(r0.tag)}</span></a>`;
     } else {
-      const items = published.map((r) => `<a class="mp-dl-item" href="/site/mods/releases/${esc(r.id)}/download" role="menuitem">
+      const items = published.map((r) => `<a class="mp-dl-item" href="${BTTUtil.apiUrl('/site/mods/releases/' + r.id + '/download')}" role="menuitem">
           <span class="mp-release-tagchip">${esc(r.tag)}</span>
           ${showDlBranch ? `<span class="mp-dl-branch">${esc(r.branch || 'main')}</span>` : ''}
           <span class="mp-dl-size">${fmtBytes(r.tmod_size)}</span>
@@ -472,7 +472,7 @@
         <span class="mp-release-tag"><span class="mp-release-tagchip">${esc(r.tag)}</span> ${esc(r.title || '')} ${draft}</span>
         <div class="mp-release-actions">
           ${r.status === 'published'
-            ? `<a class="mp-btn mp-btn-sm mp-btn-primary" href="/site/mods/releases/${esc(r.id)}/download"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</a>`
+            ? `<a class="mp-btn mp-btn-sm mp-btn-primary" href="${BTTUtil.apiUrl('/site/mods/releases/' + r.id + '/download')}"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</a>`
             : `<button type="button" class="mp-btn mp-btn-sm mp-btn-primary" data-rel-dl="${esc(r.id)}" data-fn="${esc(r.tmod_filename)}"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</button>`}
           ${ownerBtns}
         </div>

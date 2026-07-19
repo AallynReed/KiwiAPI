@@ -28,7 +28,7 @@
   const $search = $('mh-search');
   const $sort = $('mh-sort');
 
-  const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
+  const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
   // Modpacks are addressed as /modpacks/<owner_handle>/<slug>.
   const packUrl = (p) => '/modpacks/' + encodeURIComponent(p.handle) + '/' + encodeURIComponent(p.slug);
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);

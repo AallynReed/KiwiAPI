@@ -12,7 +12,7 @@ from __future__ import annotations
 import inspect
 import time
 
-from app.discord.embeds import SITE, _ts, _unix
+from app.discord.embeds import _ASSET, SITE, _ts, _unix
 from app.embed_templates import EmbedField, EmbedTemplate
 from app.i18n import t
 
@@ -335,7 +335,7 @@ async def _ctx_activity() -> dict:
             "last_7d": f"{live.get('estimate_7d', 0):,}",
             "peak": f"{round(peak['active']):,}/h" if isinstance(peak.get("active"), (int, float)) else "—",
             "average": f"{round(series['average']):,}/h" if isinstance(series.get("average"), (int, float)) else "—",
-            "image_url": f"{SITE}/activity/og.png?period=7d&v={cb}"}
+            "image_url": f"{_ASSET}/activity/og.png?period=7d&v={cb}"}
 
 
 def _default_activity() -> EmbedTemplate:
@@ -412,7 +412,7 @@ async def _ctx_game_update() -> dict:
                 "files_removed": "0", "ordinal": None, "image_url": None}
     return {"version_tag": v.version_tag, "files_added": f"{v.files_added:,}",
             "files_modified": f"{v.files_modified:,}", "files_removed": f"{v.files_removed:,}",
-            "ordinal": v.ordinal, "image_url": f"{SITE}/announce.png?kind=game_update&v={v.ordinal}"}
+            "ordinal": v.ordinal, "image_url": f"{_ASSET}/announce.png?kind=game_update&v={v.ordinal}"}
 
 
 def _default_game_update() -> EmbedTemplate:

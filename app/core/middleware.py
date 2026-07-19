@@ -31,6 +31,11 @@ _SITE_CSP = (
     # (shields.io, github, imgur, …) like GitHub. Images can't execute, so this is
     # low-risk; `data:` covers inline, `cdn.discordapp.com` is already https.
     "img-src 'self' data: https:; "
+    # Data-plane binary (mod artifacts, textures, blueprints, VFX assets) is
+    # served from the API origin cross-origin; viewers fetch() it (connect-src),
+    # but declare media-src too so any <audio>/<video> from the API isn't blocked
+    # by the default-src fallback.
+    "media-src 'self' https://api.aallyn.net; "
     "connect-src 'self' https://api.aallyn.net "
         "https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
     "frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "

@@ -21,7 +21,10 @@ from app.images.models import (
 from app.site_auth.models import SiteUser
 from app.trove.mods_hub import store
 
-SITE = "https://trove.aallyn.net"
+# The public render URL (/site/images/{id}.png) is served by the API; it's
+# embedded off-site (Discord), so it must point at the asset host - the API once
+# the website is split out. ``settings.asset_url`` is app_url today, api_url at
+# cutover. See app/core/config.py.
 
 # Small in-process render cache (mirrors og_image): render is cheap but Discord may
 # fetch the same URL several times, so we collapse a burst into one render.
@@ -129,7 +132,7 @@ def _dto(d: ImageDesign) -> dict:
     out = d.model_dump(mode="json")
     out["id"] = str(d.id)
     out.pop("owner_id", None)
-    out["render_url"] = f"{SITE}/site/images/{d.id}.png"
+    out["render_url"] = f"{settings.asset_url}/site/images/{d.id}.png"
     return out
 
 

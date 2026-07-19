@@ -571,7 +571,7 @@
         row.href = "/mods/" + encodeURIComponent(m.handle) + "/" + encodeURIComponent(m.slug);
         var thumb = el("div", "dash-modrow-thumb");
         var sha = m.banner_sha || m.preview_sha;
-        if (sha) thumb.style.backgroundImage = "url('/site/mods/image/" + encodeURIComponent(sha) + "')";
+        if (sha) thumb.style.backgroundImage = "url('" + BTTUtil.apiUrl("/site/mods/image/" + encodeURIComponent(sha)) + "')";
         else thumb.appendChild(el("i", "fa-solid fa-cube"));
         row.appendChild(thumb);
         var body = el("div", "dash-modrow-body");

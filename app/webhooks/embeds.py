@@ -12,9 +12,13 @@ with no guild-language context).
 
 from __future__ import annotations
 
+from app.core.config import settings
 from app.embed_templates import EmbedField, EmbedTemplate, render_template
 
-SITE = "https://trove.aallyn.net"
+SITE = "https://trove.aallyn.net"          # page links (on the website host)
+# Off-site-embedded API renders (announce PNG) - app_url today, api_url at
+# cutover once the pages move off the api host. See config.asset_url.
+_ASSET = settings.asset_url
 
 _COLOR_CHALLENGE = "#F2A33C"
 _COLOR_MOD_RELEASE = "#46D39A"
@@ -126,7 +130,7 @@ def _game_update_context(d: dict) -> dict:
         "files_modified": _num(v.get("files_modified")),
         "files_removed": _num(v.get("files_removed")),
         # convenience: the announcement banner image for this build
-        "image_url": (f"{SITE}/announce.png?kind=game_update&v={ordinal}"
+        "image_url": (f"{_ASSET}/announce.png?kind=game_update&v={ordinal}"
                       if ordinal is not None else None),
     }
 

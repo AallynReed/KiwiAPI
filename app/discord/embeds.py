@@ -13,6 +13,7 @@ from __future__ import annotations
 import time
 from datetime import datetime, timezone
 
+from app.core.config import settings
 from app.core.discord_fmt import discord_ts
 from app.i18n import current_language, t
 from app.trove.btt_releases import PLATFORMS, get_changelog, latest_per_platform
@@ -31,7 +32,10 @@ from app.trove.server_time import (
 )
 from app.trove.status import get_status_shared
 
-SITE = "https://trove.aallyn.net"
+SITE = "https://trove.aallyn.net"          # page links (on the website host)
+# Off-site-embedded API renders (board/announce/activity PNGs) - app_url today,
+# api_url at cutover once the pages move off the api host. See config.asset_url.
+_ASSET = settings.asset_url
 
 
 def _ts(unix, style: str = "f") -> str:
@@ -159,7 +163,7 @@ async def activity_embed(period: str = "7d") -> dict:
         "color": 0x4CC9F0,
         "description": t("Estimated distinct active players, from hourly leaderboard captures."),
         "fields": fields,
-        "image": {"url": f"{SITE}/activity/og.png?period={period}&v={cb}"},
+        "image": {"url": f"{_ASSET}/activity/og.png?period={period}&v={cb}"},
         "footer": {"text": "trove.aallyn.net/activity · Trove server time (UTC−11)"},
     }
 
@@ -578,7 +582,7 @@ async def live_board_embed() -> dict:
         "title": t("🥝 Trove Now"),
         "url": SITE,
         "color": _COLOR.get(overall, 0x46D39A),
-        "image": {"url": f"{SITE}/board.png?v={minute}{suffix}"},
+        "image": {"url": f"{_ASSET}/board.png?v={minute}{suffix}"},
         "footer": {"text": t("Live · updates every minute · trove.aallyn.net")},
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -645,7 +649,7 @@ async def game_update_embed() -> dict:
             {"name": t("Modified"), "value": _num(v.files_modified), "inline": True},
             {"name": t("Removed"), "value": _num(v.files_removed), "inline": True},
         ],
-        "image": {"url": f"{SITE}/announce.png?kind=game_update&v={v.ordinal}"},
+        "image": {"url": f"{_ASSET}/announce.png?kind=game_update&v={v.ordinal}"},
         "footer": {"text": t("Browse the changed files at trove.aallyn.net/updates")},
     }
 

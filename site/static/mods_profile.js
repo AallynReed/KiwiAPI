@@ -21,7 +21,7 @@
   const $root = document.getElementById('mpf-root');
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
-  const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
+  const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
   const md = (s) => (window.BTTMarkdown ? window.BTTMarkdown.render(s) : esc(s));
   const modUrl = (m) => '/mods/' + encodeURIComponent(m.handle) + '/' + encodeURIComponent(m.slug);
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }

@@ -285,6 +285,21 @@ class Settings(BaseSettings):
     docs_url: str = "https://docs.aallyn.net"
     app_url: str = "https://trove.aallyn.net"
 
+    # Public base URL for API-SERVED assets that are embedded off-site: the OG/board
+    # PNG renders (/board.png, /announce.png, /activity/og.png) and Image-Studio
+    # renders (/site/images/{id}.png). These endpoints live on the API, so once the
+    # website is split onto its own container they are reachable ONLY at the api
+    # host - the website host no longer serves them. Empty => same as ``app_url``
+    # (the single-process default, where the pages and these renders share an
+    # origin). At cutover set ASSET_BASE_URL=https://api.aallyn.net (coordinated
+    # with the api-host proxy allowlist that begins forwarding these paths).
+    asset_base_url: str = ""
+
+    @property
+    def asset_url(self) -> str:
+        """Base URL for off-site-embedded, API-served images (see asset_base_url)."""
+        return (self.asset_base_url or self.app_url).rstrip("/")
+
     # Internal (service-to-service) base URL for the API, used by the gateway bot
     # to read Postgres-backed data (activity, and future leaderboard/cheater
     # features) over the compose network - the bot container has Mongo + Redis but

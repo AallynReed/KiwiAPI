@@ -30,7 +30,7 @@
   const $tagbar = $('mh-tagbar');
   const $tags = $('mh-tags');
 
-  const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
+  const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
   // Mods are addressed as /mods/<owner_handle>/<slug>.
   const modUrl = (m) => '/mods/' + encodeURIComponent(m.handle) + '/' + encodeURIComponent(m.slug);
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);

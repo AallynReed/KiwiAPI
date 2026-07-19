@@ -3,6 +3,50 @@
 (function () {
     "use strict";
 
+    // ── Cross-origin data base (window.API_BASE) ──────────────────────────────
+    // The website is served from its own origin (trove.aallyn.net) but the data
+    // plane - every /site/* + /v1/* + /git/* endpoint - lives on the API origin
+    // (api.aallyn.net). ``apiUrl`` rewrites those paths onto ``window.API_BASE``.
+    //
+    // Production hosts (*.aallyn.net) serve the pages from the WEBSITE container,
+    // which has no data plane - so /site/* + /v1/* + /git/* must go to the API
+    // host. Local dev (localhost / 127.* / bare hostnames, incl. the site_dev
+    // preview and the single-process app) stays same-origin ("") so relative paths
+    // resolve against whatever is serving the page. A page may pre-set
+    // window.API_BASE before this script to override (e.g. dev against staging).
+    if (window.API_BASE === undefined) {
+        window.API_BASE = location.hostname.endsWith("aallyn.net")
+            ? "https://api.aallyn.net"
+            : "";
+    }
+
+    // Rewrite a data-plane path onto the API origin. Static assets (/static/*),
+    // in-page fragments (#…) and already-absolute URLs are left untouched, so this
+    // is safe to wrap around every URL indiscriminately (and is idempotent).
+    function apiUrl(path) {
+        if (typeof path === "string" &&
+            (path.startsWith("/site/") || path.startsWith("/v1/") || path.startsWith("/git/"))) {
+            return window.API_BASE + path;
+        }
+        return path;
+    }
+
+    // Transparently route EVERY programmatic request through apiUrl, so the ~34
+    // page scripts' raw fetch()/XHR calls to /site/* + /v1/* reach the API origin
+    // without each call site being rewritten. DOM-attribute URLs (<img src>,
+    // <a href>) aren't requests, so those are wrapped at their source instead.
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+        if (typeof input === "string") return _origFetch(apiUrl(input), init);
+        return _origFetch(input, init);   // Request objects pass through (unused here)
+    };
+    const _origOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function (method, url) {
+        const args = Array.prototype.slice.call(arguments);
+        if (typeof url === "string") args[1] = apiUrl(url);
+        return _origOpen.apply(this, args);
+    };
+
     const ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
     // HTML-escape for interpolation into innerHTML. Null/undefined -> "".
@@ -13,7 +57,7 @@
     // Same-origin JSON GET, Promise-style: resolves the parsed body, REJECTS with
     // the HTTP status number on a non-2xx. For .then/.catch callers.
     function getJSON(u) {
-        return fetch(u, { headers: { Accept: "application/json" } })
+        return fetch(apiUrl(u), { headers: { Accept: "application/json" } })
             .then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
     }
 
@@ -21,7 +65,7 @@
     // on a non-2xx whose message is the API's error detail when present (falls back
     // to error.message, then "HTTP <status>"). For await + try/catch callers.
     async function fetchJSON(path) {
-        const res = await fetch(path, { headers: { Accept: "application/json" } });
+        const res = await fetch(apiUrl(path), { headers: { Accept: "application/json" } });
         if (!res.ok) {
             let msg = `HTTP ${res.status}`;
             try {
@@ -170,7 +214,7 @@
         // onerror hides the element if the archive somehow lacks this icon, so a
         // broken-image glyph never shows on a tile.
         return name
-            ? `<img class="${cls || "lb-board-icon"}" src="/site/leaderboards/board-icon/${name}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`
+            ? `<img class="${cls || "lb-board-icon"}" src="${apiUrl("/site/leaderboards/board-icon/" + name)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`
             : "";
     }
 
@@ -184,7 +228,7 @@
     }
 
     window.BTTUtil = {
-        esc, getJSON, fetchJSON, getFocusable, trapFocus,
+        esc, apiUrl, getJSON, fetchJSON, getFocusable, trapFocus,
         boardIconName, boardIconImg, crownHtml,
     };
 })();

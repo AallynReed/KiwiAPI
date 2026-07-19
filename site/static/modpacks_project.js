@@ -32,7 +32,7 @@
   let _modal = null;   // current { wrap, close } handle from window.BTTModal.open
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
-  const imageUrl = (sha) => '/site/mods/image/' + encodeURIComponent(sha);
+  const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
   const modUrl = (h, s) => '/mods/' + encodeURIComponent(h) + '/' + encodeURIComponent(s);
   const renderMd = (s) => (window.BTTMarkdown ? window.BTTMarkdown.render(s || '') : esc(s || ''));
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }

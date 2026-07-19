@@ -1,0 +1,240 @@
+"""DB-free showcase-site metadata shared by the API and the website containers.
+
+The API container (``app.main``) and the website container (``app.web.main``)
+both need the site feature-flag map, the path→feature gate, the sitemap page
+list, and the host-aware robots body. None of these touch a database — they're
+pure constants + functions over config — so they live here, importable by the
+DB-less website app without dragging in ``app.trove.*`` service modules.
+
+The *resolution* of the flags (``feature_flags.is_enabled`` → runtime_config, a
+DB read) stays out of this module: the API resolves them in-process
+(``app/site/router.py``); the website fetches the resolved map over HTTP
+(``app/web/feature_flags.py``). This module only defines the SHAPE.
+"""
+
+from app.core import features as feature_flags
+from app.core.config import settings
+
+# Site features surfaced to templates: template context key (also the
+# ``request.state`` attr) → runtime-config flag. Each is a master switch the
+# admin Configuration tab flips. The API resolves these once per request and
+# injects them into every template so the navbar can hide a disabled feature's
+# link; the website fetches the same map from ``GET /site/feature-flags``.
+SITE_FEATURE_FLAGS = {
+    "mods_hub_enabled": feature_flags.MODS_HUB_FLAG,
+    "market_enabled": feature_flags.MARKET_FLAG,
+    "store_enabled": feature_flags.STORE_FLAG,
+    "leaderboards_enabled": feature_flags.LEADERBOARDS_FLAG,
+    "player_activity_enabled": feature_flags.PLAYER_ACTIVITY_FLAG,
+    "class_activity_enabled": feature_flags.CLASS_ACTIVITY_FLAG,
+    "clubs_enabled": feature_flags.CLUBS_FLAG,
+    "updates_enabled": feature_flags.UPDATES_FLAG,
+    "codexes_enabled": feature_flags.CODEXES_FLAG,
+    "server_status_enabled": feature_flags.SERVER_STATUS_FLAG,
+    "giveaways_enabled": feature_flags.GIVEAWAYS_FLAG,
+    "commands_enabled": feature_flags.COMMANDS_FLAG,
+    "server_time_enabled": feature_flags.SERVER_TIME_FLAG,
+    "webhooks_enabled": feature_flags.WEBHOOKS_FLAG,
+    "dm_subscriptions_enabled": feature_flags.DM_SUBS_FLAG,
+    "image_studio_enabled": feature_flags.IMAGE_STUDIO_FLAG,
+    "calendar_enabled": feature_flags.CALENDAR_FLAG,
+    "streams_enabled": feature_flags.STREAMS_FLAG,
+    "btt_releases_enabled": feature_flags.BTT_RELEASES_FLAG,
+    "classes_enabled": feature_flags.CLASSES_FLAG,
+    "star_chart_enabled": feature_flags.STAR_CHART_FLAG,
+    "gem_simulator_enabled": feature_flags.GEM_SIMULATOR_FLAG,
+    "gem_evaluator_enabled": feature_flags.GEM_EVALUATOR_FLAG,
+    "gem_builds_enabled": feature_flags.GEM_BUILDS_FLAG,
+    "calculators_enabled": feature_flags.CALCULATORS_FLAG,
+}
+
+
+def feature_blocks(p: str, f: dict) -> bool:
+    """True if the request path ``p`` belongs to a feature that is OFF (``f`` is
+    the resolved flag map). Covers both the page route and that feature's
+    ``/site/<feature>/*`` JSON proxies + OG images, so a disabled feature is
+    hidden, not just unlinked."""
+    # Mods Hub + Modpacks ride the Mods Hub toggle (modpacks are a layer over it).
+    if not f["mods_hub_enabled"] and (
+        p == "/mods" or p.startswith("/mods/") or p.startswith("/site/mods/")
+        or p == "/modpacks" or p.startswith("/modpacks/")
+        or p.startswith("/site/modpacks/")
+    ):
+        return True
+    if not f["market_enabled"] and (p == "/market" or p.startswith("/site/market/")):
+        return True
+    if not f["store_enabled"] and (p == "/store" or p.startswith("/site/store/")):
+        return True
+    # Leaderboards: board browser + per-player profile pages. The activity /
+    # class-activity proxies share the /site/leaderboards/ root but have their
+    # own toggles, so they're explicitly excluded here.
+    if not f["leaderboards_enabled"] and (
+        p == "/leaderboards"
+        or p.startswith("/player/")
+        or (p.startswith("/site/leaderboards/")
+            and not p.startswith("/site/leaderboards/activity")
+            and not p.startswith("/site/leaderboards/class-activity"))
+    ):
+        return True
+    if not f["player_activity_enabled"] and (
+        p == "/activity" or p.startswith("/activity/")           # page + /activity/og.png
+        or p.startswith("/site/leaderboards/activity")
+    ):
+        return True
+    if not f["class_activity_enabled"] and (
+        p == "/class-activity"
+        or p.startswith("/site/leaderboards/class-activity")
+    ):
+        return True
+    if not f["clubs_enabled"] and (p == "/clubs" or p == "/site/clubs"):
+        return True
+    if not f["updates_enabled"] and (p == "/updates" or p.startswith("/site/updates/")):
+        return True
+    if not f["codexes_enabled"] and (
+        p == "/codexes" or p == "/codexes/crafting" or p.startswith("/site/codexes/")
+    ):
+        return True
+    if not f["server_status_enabled"] and (
+        p == "/status" or p.startswith("/status/")               # page + /status/og.png
+        or p.startswith("/site/trove-status")
+    ):
+        return True
+    if not f["giveaways_enabled"] and (p == "/giveaways" or p == "/site/giveaways"):
+        return True
+    if not f["commands_enabled"] and p == "/commands":
+        return True
+    if not f["server_time_enabled"] and (
+        p == "/server-time" or p == "/site/server-time"
+    ):
+        return True
+    if not f["calendar_enabled"] and (
+        p == "/calendar" or p.startswith("/site/calendar")
+    ):
+        return True
+    if not f["streams_enabled"] and p == "/streams":
+        return True
+    if not f["btt_releases_enabled"] and (
+        p == "/releases" or p.startswith("/site/btt")
+    ):
+        return True
+    if not f["classes_enabled"] and (
+        p == "/classes" or p.startswith("/site/stats/classes")
+    ):
+        return True
+    # Star Chart is fully client-rendered from the static /static/star_chart.json
+    # asset (no /site proxy, no /v1 API), so only the page route needs blocking.
+    if not f["star_chart_enabled"] and p == "/star-chart":
+        return True
+    # Gem Simulator is likewise fully client-rendered (static /static/gem-engine.js,
+    # no /site proxy, no /v1 API), so only the page route needs blocking.
+    if not f["gem_simulator_enabled"] and p == "/gem-simulator":
+        return True
+    # Gem Evaluator: page + its evaluate / stat-range / lookups proxies.
+    if not f["gem_evaluator_enabled"] and (
+        p == "/gem-evaluator"
+        or p in ("/site/gems/evaluate", "/site/gems/evaluate-simple",
+                 "/site/gems/stat-range", "/site/gems/lookups")
+    ):
+        return True
+    # Gem Builds: page + its builds/* proxies.
+    if not f["gem_builds_enabled"] and (
+        p == "/gem-builds" or p.startswith("/site/gems/builds")
+    ):
+        return True
+    if not f["calculators_enabled"] and p == "/calculators":
+        return True
+    # The star-chart preview proxy feeds both Builds and Calculators; only hide it
+    # when both of those features are OFF.
+    if (not f["calculators_enabled"] and not f["gem_builds_enabled"]
+            and p == "/site/gems/parse-star-chart"):
+        return True
+    return False
+
+
+# Public, indexable STATIC site pages for the sitemap: (path, feature attr that
+# must be truthy; ``None`` = always on). The attr is a key of
+# ``SITE_FEATURE_FLAGS``, so a page whose master toggle is OFF drops out of the
+# sitemap instead of being advertised to Google as a 404. Private/utility/noindex
+# pages (/login, /dashboard, /swf-docs) are deliberately omitted. The dynamic
+# mod/modpack pages are appended separately by the sitemap renderer.
+SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
+    ("/", None),
+    ("/app", None),
+    ("/browse", None),
+    ("/documentation", None),
+    ("/swf-docs", None),
+    ("/support", None),
+    ("/terms", None),
+    ("/privacy", None),
+    ("/accessibility", None),
+    ("/commands", "commands_enabled"),
+    ("/classes", "classes_enabled"),
+    ("/star-chart", "star_chart_enabled"),
+    ("/gem-simulator", "gem_simulator_enabled"),
+    ("/leaderboards", "leaderboards_enabled"),
+    ("/activity", "player_activity_enabled"),
+    ("/class-activity", "class_activity_enabled"),
+    ("/updates", "updates_enabled"),
+    ("/market", "market_enabled"),
+    ("/store", "store_enabled"),
+    ("/codexes", "codexes_enabled"),
+    ("/codexes/crafting", "codexes_enabled"),
+    ("/status", "server_status_enabled"),
+    ("/giveaways", "giveaways_enabled"),
+    ("/clubs", "clubs_enabled"),
+    ("/server-time", "server_time_enabled"),
+    ("/calendar", "calendar_enabled"),
+    ("/streams", "streams_enabled"),
+    ("/releases", "btt_releases_enabled"),
+    ("/mods", "mods_hub_enabled"),
+    ("/mods/why", "mods_hub_enabled"),
+    ("/modpacks", "mods_hub_enabled"),
+)
+
+
+# Machine-surface hosts this app also answers on - raw JSON / portal, never
+# search material, so robots.txt blanket-disallows them. Everything else
+# (notably the public site ``trove.aallyn.net``) defaults to crawlable: a
+# default-allow is the safe failure mode if a proxy ever mangles the Host
+# header, since the worst case is an extra host indexed, not the main site
+# silently de-indexed.
+_ROBOTS_BLOCKED_HOSTS = frozenset(
+    url.split("://", 1)[-1].split("/", 1)[0].lower()
+    for url in (settings.api_url, settings.dev_url, settings.docs_url)
+)
+_API_HOST = settings.api_url.split("://", 1)[-1].split("/", 1)[0].lower()
+
+
+def robots_body(host: str) -> str:
+    """Host-aware robots.txt body. The public site is fully crawlable and
+    advertises the sitemap; the raw-JSON API hosts get a disallow so Google never
+    indexes endpoint payloads. ``/static/`` is intentionally NOT blocked - Google
+    needs the CSS/JS to render the pages.
+
+    The api host is a special case: the one app answers there too, so showcase
+    pages leak onto it (api.aallyn.net/login) and some already got indexed. Those
+    now 301 to app_url (see ``add_api_host_redirect_middleware``) - but a blanket
+    ``Disallow: /`` would FREEZE the stale entries, because Google must be allowed
+    to crawl a URL to see its redirect and drop it. So the api host allows page
+    crawling (the pages just 301 away) while still blocking the JSON API subtrees
+    (/v1, /site, /git) so payloads are never indexed. dev./docs. keep the blanket
+    disallow - they have no such redirect."""
+    host = (host or "").lower()
+    if host == _API_HOST:
+        return (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /v1/\n"
+            "Disallow: /site/\n"
+            "Disallow: /git/\n"
+        )
+    if host in _ROBOTS_BLOCKED_HOSTS:
+        return "User-agent: *\nDisallow: /\n"
+    return (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /dashboard\n"
+        "Disallow: /login\n"
+        "Disallow: /site/\n"
+        f"\nSitemap: {settings.app_url.rstrip('/')}/sitemap.xml\n"
+    )
