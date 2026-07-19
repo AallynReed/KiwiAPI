@@ -21,25 +21,23 @@
                 <a href="/" data-i18n>Home</a>
                 <a href="/app" data-i18n>Get the App</a>
                 <a href="/documentation" data-i18n>User Guide</a>
-                {% if commands_enabled %}<a href="/commands" data-i18n>Commands</a>{% endif %}
-                {% if classes_enabled %}<a href="/classes" data-i18n>Classes</a>{% endif %}
-                {% if calendar_enabled %}<a href="/calendar" data-i18n>Calendar</a>{% endif %}
-                {% if server_time_enabled %}<a href="/server-time" data-i18n>Server Time</a>{% endif %}
-                {% if leaderboards_enabled %}<a href="/leaderboards" data-i18n>Leaderboards</a>{% endif %}
-                {% if updates_enabled %}<a href="/updates" data-i18n>Updates</a>{% endif %}
-                {% if market_enabled %}<a href="/market" data-i18n>Market</a>{% endif %}
-                {% if server_status_enabled %}<a href="/status" data-i18n>Server Status</a>{% endif %}
                 {% if btt_releases_enabled %}<a href="/releases" data-i18n>App Releases</a>{% endif %}
             </div>
 
             <div class="footer-col">
-                <h3 data-i18n>Developers</h3>
-                <a href="https://dev.aallyn.net" data-i18n>Developer Portal</a>
-                <a href="https://docs.aallyn.net" data-i18n>API Reference</a>
-                <a href="https://docs.aallyn.net/llms.txt">llms.txt</a>
-                <a href="/changelog" data-i18n>Changelog</a>
-                <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" data-i18n>App on GitHub</a>
-                <a href="https://github.com/AallynReed/KiwiAPI" target="_blank" rel="noopener" data-i18n>Website on GitHub</a>
+                <h3 data-i18n>Reference</h3>
+                {% if commands_enabled %}<a href="/commands" data-i18n>Commands</a>{% endif %}
+                {% if classes_enabled %}<a href="/classes" data-i18n>Classes</a>{% endif %}
+                {% if calendar_enabled %}<a href="/calendar" data-i18n>Calendar</a>{% endif %}
+                {% if server_time_enabled %}<a href="/server-time" data-i18n>Server Time</a>{% endif %}
+            </div>
+
+            <div class="footer-col">
+                <h3 data-i18n>Live</h3>
+                {% if leaderboards_enabled %}<a href="/leaderboards" data-i18n>Leaderboards</a>{% endif %}
+                {% if market_enabled %}<a href="/market" data-i18n>Market</a>{% endif %}
+                {% if updates_enabled %}<a href="/updates" data-i18n>Updates</a>{% endif %}
+                {% if server_status_enabled %}<a href="/status" data-i18n>Server Status</a>{% endif %}
             </div>
 
             <div class="footer-col">
@@ -50,6 +48,16 @@
                 {% if streams_enabled %}<a href="/streams" data-i18n>Streams</a>{% endif %}
                 <a href="/browse" data-i18n>Browse all</a>
                 <a href="/support" data-i18n>Support</a>
+            </div>
+
+            <div class="footer-col">
+                <h3 data-i18n>Developers</h3>
+                <a href="https://dev.aallyn.net" data-i18n>Developer Portal</a>
+                <a href="https://docs.aallyn.net" data-i18n>API Reference</a>
+                <a href="https://docs.aallyn.net/llms.txt">llms.txt</a>
+                <a href="/changelog" data-i18n>Changelog</a>
+                <a href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" data-i18n>App on GitHub</a>
+                <a href="https://github.com/AallynReed/KiwiAPI" target="_blank" rel="noopener" data-i18n>Website on GitHub</a>
             </div>
         </div>
         <p class="footer-fineprint">

@@ -1683,8 +1683,8 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.5fr repeat(3, 1fr);
-  gap: 40px 30px;
+  grid-template-columns: 1.6fr repeat(5, 1fr);
+  gap: 32px 28px;
 }
 .footer-brand strong {
   display: block;
@@ -1777,7 +1777,9 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 @media (max-width: 1024px) {
   .bento-grid { grid-template-columns: repeat(2, 1fr); }
   .bento-tile.span-2 { grid-column: span 2; }
-  .footer-grid { grid-template-columns: 1fr 1fr; }
+  /* Six columns get cramped below ~1024px - drop to three, brand on its own row. */
+  .footer-grid { grid-template-columns: repeat(3, 1fr); }
+  .footer-brand { grid-column: 1 / -1; }
 }
 
 @media (max-width: 768px) {
@@ -1884,11 +1886,6 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   .site-footer { padding: 36px 20px 24px; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px 20px; align-items: start; }
   .footer-brand { grid-column: 1 / -1; }
-  /* Let the long Product list own the left column while the two short lists
-     (Developers, Community) stack in the right - balances the heights and
-     kills the dead space next to Product. nth-child(2) = the Product column
-     (child 1 is the brand block). */
-  .footer-grid > .footer-col:nth-child(2) { grid-row: span 2; }
   .footer-col a { padding: 3px 0; }
   .footer-fineprint { margin-top: 26px; padding-top: 18px; }
 }
