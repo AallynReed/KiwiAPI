@@ -764,6 +764,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "terms.html", "text/html")
         if path == "/privacy":
             return self._send_file(TEMPLATES / "privacy.html", "text/html")
+        if path == "/changelog":
+            return self._send_file(TEMPLATES / "changelog.html", "text/html")
         if path == "/class-activity":
             return self._send_file(TEMPLATES / "class-activity.html", "text/html")
         if path == "/dashboard":
@@ -799,6 +801,34 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(target, None)
 
         # Stub JSON endpoints.
+        # --- Website changelog (/site/changelog) ---------------------------
+        if path == "/site/changelog":
+            return self._send_json({
+                "repo": "AallynReed/KiwiAPI",
+                "repo_url": "https://github.com/AallynReed/KiwiAPI",
+                "rate_limited": False,
+                "groups": [
+                    {"version": "Unreleased", "commits": [
+                        {"sha": "a" * 40, "short_sha": "aaaaaaa", "type": "feat",
+                         "message": "feat: add website changelog page for transparency",
+                         "url": "https://github.com/AallynReed/KiwiAPI/commit/" + "a" * 40},
+                        {"sha": "b" * 40, "short_sha": "bbbbbbb", "type": "fix",
+                         "message": "fix(market): correct sell-through rounding",
+                         "url": "https://github.com/AallynReed/KiwiAPI/commit/" + "b" * 40},
+                        {"sha": "c" * 40, "short_sha": "ccccccc", "type": None,
+                         "message": "Add new leaderboard icons for Paragon Vanguardian",
+                         "url": "https://github.com/AallynReed/KiwiAPI/commit/" + "c" * 40},
+                    ]},
+                    {"version": "v1.4.0", "commits": [
+                        {"sha": "d" * 40, "short_sha": "ddddddd", "type": "refactor",
+                         "message": "refactor: split the website into its own container",
+                         "url": "https://github.com/AallynReed/KiwiAPI/commit/" + "d" * 40},
+                        {"sha": "e" * 40, "short_sha": "eeeeeee", "type": "docs",
+                         "message": "docs: document the cutover runbook",
+                         "url": "https://github.com/AallynReed/KiwiAPI/commit/" + "e" * 40},
+                    ]},
+                ],
+            })
         # --- Store History (/site/store/*) ---------------------------------
         if path == "/site/store/categories":
             items = [dict(c, codes=[p["code"] for p in _store_stub_products()

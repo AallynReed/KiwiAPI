@@ -253,6 +253,17 @@ async def accessibility(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "accessibility.html", {})
 
 
+@router.get("/changelog", response_class=HTMLResponse)
+async def changelog(request: Request) -> HTMLResponse:
+    """Website changelog - the commit history of the site's own open-source repo
+    (``settings.site_source_repo``), surfaced for transparency. Shell + JS; the
+    data comes from the API's ``/site/changelog`` proxy."""
+    return _TEMPLATES.TemplateResponse(
+        request, "changelog.html",
+        {"repo_url": f"https://github.com/{settings.site_source_repo}"},
+    )
+
+
 # ── Auth pages (client-side token; no server gate) ─────────────────────────
 @router.get("/login", response_class=HTMLResponse)
 async def login(request: Request) -> HTMLResponse:

@@ -1755,6 +1755,17 @@ async def site_feature_flags() -> JSONResponse:
     return JSONResponse(flags, headers={"Cache-Control": "public, max-age=5"})
 
 
+@router.get("/site/changelog", response_class=JSONResponse)
+async def site_changelog_view() -> JSONResponse:
+    """Website source changelog (commits of ``settings.site_source_repo`` grouped
+    by tag) for the public /changelog transparency page. Redis-cached ~15m."""
+    from app.site import site_changelog
+    return JSONResponse(
+        await site_changelog.get_changelog(),
+        headers={"Cache-Control": "public, max-age=300"},
+    )
+
+
 @router.get("/site/clubs", response_class=JSONResponse)
 async def site_clubs() -> JSONResponse:
     """Public clubs directory (ordered by club-leaderboard rank) for the /clubs

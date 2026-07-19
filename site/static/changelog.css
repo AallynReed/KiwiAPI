@@ -1,0 +1,141 @@
+/* /changelog - website source changelog. Uses the shared design tokens
+   (--bg-card / --bg-line / --text / --text-mute / --accent*). */
+
+.cl-main {
+    max-width: var(--content-max, 1100px);
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3rem) 1.25rem 4rem;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+.cl-hero {
+    text-align: center;
+    max-width: 60ch;
+    margin: 0 auto clamp(1.5rem, 4vw, 2.75rem);
+}
+.cl-eyebrow {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    color: var(--accent-blue, #58a6ff);
+    margin: 0 0 0.5rem;
+}
+.cl-title {
+    font-size: clamp(1.9rem, 5vw, 2.75rem);
+    line-height: 1.1;
+    margin: 0 0 0.75rem;
+    color: var(--text, #e6edf3);
+}
+.cl-sub {
+    color: var(--text-mute, #9aa4b2);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+}
+.cl-repo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--bg-line, #2b3038);
+    border-radius: 10px;
+    background: var(--bg-card, #161b22);
+    color: var(--text, #e6edf3);
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.cl-repo-link:hover { border-color: var(--accent-blue, #58a6ff); transform: translateY(-1px); }
+.cl-repo-link:focus-visible { outline: 2px solid var(--accent-blue, #58a6ff); outline-offset: 2px; }
+
+/* ── Body / groups ─────────────────────────────────────────────────────── */
+.cl-body { max-width: 820px; margin: 0 auto; }
+
+.cl-loading, .cl-empty {
+    text-align: center;
+    color: var(--text-mute, #9aa4b2);
+    padding: 2.5rem 1rem;
+}
+
+.cl-group {
+    background: var(--bg-card, #161b22);
+    border: 1px solid var(--bg-line, #2b3038);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem 0.6rem;
+    margin: 0 0 1.1rem;
+}
+.cl-group-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--bg-line, #2b3038);
+    margin-bottom: 0.4rem;
+}
+.cl-version {
+    font-size: 1.15rem;
+    margin: 0;
+    color: var(--text, #e6edf3);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+.cl-count {
+    color: var(--text-mute, #9aa4b2);
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.cl-commits { list-style: none; margin: 0; padding: 0; }
+.cl-commit {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--bg-line, #2b3038) 55%, transparent);
+}
+.cl-commit:last-child { border-bottom: 0; }
+.cl-msg {
+    flex: 1 1 auto;
+    color: var(--text, #e6edf3);
+    line-height: 1.45;
+    word-break: break-word;
+}
+.cl-sha {
+    flex: 0 0 auto;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+    color: var(--text-mute, #9aa4b2);
+    text-decoration: none;
+}
+a.cl-sha:hover { color: var(--accent-blue, #58a6ff); text-decoration: underline; }
+a.cl-sha:focus-visible { outline: 2px solid var(--accent-blue, #58a6ff); outline-offset: 2px; border-radius: 3px; }
+
+/* ── Type chips (conventional-commit prefixes) ─────────────────────────── */
+.cl-type {
+    flex: 0 0 auto;
+    align-self: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.12rem 0.45rem;
+    border-radius: 6px;
+    min-width: 3.6rem;
+    text-align: center;
+    border: 1px solid transparent;
+}
+/* Tinted backgrounds; text kept high-contrast for AA. */
+.cl-type-feat     { color: #7ee2a8; background: rgba(63, 185, 80, 0.14);  border-color: rgba(63, 185, 80, 0.35); }
+.cl-type-fix      { color: #ffb4a2; background: rgba(248, 81, 73, 0.14);  border-color: rgba(248, 81, 73, 0.35); }
+.cl-type-perf     { color: #f0c674; background: rgba(210, 153, 34, 0.14); border-color: rgba(210, 153, 34, 0.35); }
+.cl-type-refactor { color: #9ecbff; background: rgba(88, 166, 255, 0.14); border-color: rgba(88, 166, 255, 0.35); }
+.cl-type-docs     { color: #d2a8ff; background: rgba(163, 113, 247, 0.14); border-color: rgba(163, 113, 247, 0.35); }
+.cl-type-chore    { color: var(--text-mute, #9aa4b2); background: rgba(154, 164, 178, 0.12); border-color: rgba(154, 164, 178, 0.28); }
+.cl-type-other    { color: var(--text-mute, #9aa4b2); background: rgba(154, 164, 178, 0.12); border-color: rgba(154, 164, 178, 0.28); }
+
+@media (max-width: 520px) {
+    .cl-commit { flex-wrap: wrap; }
+    .cl-type { order: 0; }
+    .cl-sha { order: 2; }
+    .cl-msg { order: 1; flex-basis: 100%; }
+}

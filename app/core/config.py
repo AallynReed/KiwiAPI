@@ -529,6 +529,12 @@ class Settings(BaseSettings):
     btt_releases_refresh_seconds: int = 1800
     btt_releases_token: str | None = None
 
+    # Public source repo for the website + API itself (transparency): linked in the
+    # footer and surfaced as the /changelog page, which relays this repo's commits
+    # from GitHub (grouped by tag, reusing the btt_releases changelog builder).
+    # Uses btt_releases_token for the higher GitHub rate limit when set.
+    site_source_repo: str = "AallynReed/KiwiAPI"
+
     # --- Delve rotations (weekly community delve data, relayed from an external source) ---
     # The current week's floor data accumulates as players submit; a background task
     # refreshes it (on startup, hourly on the delve-Monday, then once daily at the

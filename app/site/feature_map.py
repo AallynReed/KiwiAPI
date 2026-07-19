@@ -167,6 +167,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/terms", None),
     ("/privacy", None),
     ("/accessibility", None),
+    ("/changelog", None),
     ("/commands", "commands_enabled"),
     ("/classes", "classes_enabled"),
     ("/star-chart", "star_chart_enabled"),

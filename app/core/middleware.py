@@ -49,7 +49,7 @@ _PAGE_PATHS = frozenset({
     "/", "/app", "/browse", "/documentation", "/commands", "/leaderboards", "/updates",
     "/support", "/login", "/dashboard", "/market", "/store", "/codexes", "/codexes/crafting",
     "/status", "/giveaways",
-    "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/accessibility", "/mods", "/modpacks",
+    "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/accessibility", "/changelog", "/mods", "/modpacks",
     "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
     "/star-chart", "/gem-simulator", "/gem-evaluator", "/gem-builds", "/calculators",
 })
