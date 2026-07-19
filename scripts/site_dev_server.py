@@ -16,9 +16,13 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs, unquote
+
+# Board-icon name guard (mirrors the prod endpoint's path-traversal guard).
+_re_icon = re.compile(r"^[a-z0-9_]+$")
 
 # An 8x8 slate PNG so stubbed image routes (banners/previews) render something
 # instead of leaving the <img> request hanging.
@@ -845,6 +849,19 @@ class Handler(SimpleHTTPRequestHandler):
                 fav = STATIC / "assets" / "favicon.png"
                 if fav.exists():
                     return self._send_file(fav, "image/png")
+            return self._send_json({"detail": "not found"}, 404)
+        if path.startswith("/site/leaderboards/board-icon/"):
+            # Prod serves these from the updates CAS; locally there's no CAS, so
+            # serve from the game-file reference copy, falling back to the favicon
+            # so tiles still show SOMETHING if the reference folder is absent.
+            name = unquote(path[len("/site/leaderboards/board-icon/"):])
+            if _re_icon.match(name):
+                ref = Path("S:/Downloads/ui/leaderboard_icons") / f"{name}.png"
+                if ref.is_file():
+                    return self._send_file(ref, "image/png")
+            fav = STATIC / "assets" / "favicon.png"
+            if fav.exists():
+                return self._send_file(fav, "image/png")
             return self._send_json({"detail": "not found"}, 404)
 
         # --- Modpacks (/site/modpacks/*) -----------------------------------

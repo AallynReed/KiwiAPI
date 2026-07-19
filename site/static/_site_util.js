@@ -93,12 +93,13 @@
     }
 
     // ── Leaderboard board icons ───────────────────────────────────────────────
-    // Authoritative board→icon map from the game's own ui/leaderboard_icons set
-    // (mirrored into /static/leaderboard-icons). Keyed on the STABLE leaderboard
-    // uuid, never a fuzzy name match: a board whose uuid isn't covered here (e.g.
-    // Bomber Royale, which the game ships no icon for, or a future seasonal board)
-    // renders no icon rather than a wrong one. Shared by the /leaderboards player
-    // panel and the /player profile page.
+    // Authoritative board→icon map from the game's own ui/leaderboard_icons set,
+    // served from the updates CAS we already mirror (via /site/leaderboards/
+    // board-icon/<name> - NOT bundled into the repo, so it stays current with the
+    // game). Keyed on the STABLE leaderboard uuid, never a fuzzy name match: a
+    // board whose uuid isn't covered here (e.g. Bomber Royale, which the game
+    // ships no icon for, or a future seasonal board) renders no icon rather than
+    // a wrong one. Shared by the /leaderboards player panel and /player page.
     //
     // Class boards live in three parallel uuid ranges - Power Rank (1000+i),
     // Effort (4000+i) and Paragon (5000+i) for class index i - and all share the
@@ -166,8 +167,10 @@
     // (decorative - the board name sits right beside it).
     function boardIconImg(uuid, cls) {
         const name = boardIconName(uuid);
+        // onerror hides the element if the archive somehow lacks this icon, so a
+        // broken-image glyph never shows on a tile.
         return name
-            ? `<img class="${cls || "lb-board-icon"}" src="/static/leaderboard-icons/${name}.png" alt="" loading="lazy" decoding="async">`
+            ? `<img class="${cls || "lb-board-icon"}" src="/site/leaderboards/board-icon/${name}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`
             : "";
     }
 

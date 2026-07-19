@@ -1533,6 +1533,36 @@ async def site_store_texture(
                     headers={"Cache-Control": "public, max-age=86400"})
 
 
+_LB_ICON_NAME_RE = re.compile(r"^[a-z0-9_]+$")
+
+
+@router.get("/site/leaderboards/board-icon/{name}")
+async def site_lb_board_icon(name: str) -> Response:
+    """A leaderboard board icon (``ui/leaderboard_icons/<name>.png``) served from
+    the updates CAS we already mirror - so the game art isn't duplicated into the
+    repo and stays current with the game. ``name`` is the icon stem the client's
+    boardIconName() produces (e.g. ``icon_paragon_knight``); the strict charset
+    is the path-traversal guard. Long-cached + tokenless so the leaderboards /
+    player pages can <img> them; independent of feature_updates_enabled
+    (leaderboards owns this surface). 404 → the <img> falls back to no icon."""
+    from app.trove.updates import read as updates_read
+    from app.trove.updates.cas import ContentStore
+
+    if not _LB_ICON_NAME_RE.match(name):
+        raise HTTPException(status_code=404, detail="bad icon name")
+    meta = await updates_read.get_file_meta(
+        _STORE_TEXTURE_BRANCH, f"ui/leaderboard_icons/{name}.png",
+    )
+    if not meta or not meta["content_sha256"]:
+        raise HTTPException(status_code=404, detail="icon not found")
+    blob = ContentStore(settings.trove_update_store_dir).path_for(meta["content_sha256"])
+    if not blob.is_file():
+        raise HTTPException(status_code=404, detail="blob missing")
+    data = await asyncio.to_thread(blob.read_bytes)
+    return Response(content=data, media_type="image/png",
+                    headers={"Cache-Control": "public, max-age=604800"})
+
+
 @router.get("/site/giveaways", response_class=JSONResponse)
 async def site_giveaways() -> JSONResponse:
     """Public giveaway list for the /giveaways page (open, upcoming, recent).
