@@ -614,6 +614,7 @@ class PlayerBoardSummary(BaseModel):
     and first/last seen. (Replaces the old per-capture flat list on the page.)"""
     leaderboard: int
     board_name: str | None = None
+    category: str | None = None              # board category (e.g. class / event)
     best_rank: int
     latest_rank: int | None = None
     latest_score: float | None = None
@@ -644,6 +645,17 @@ class PlayerProfileResponse(BaseModel):
     summary: PlayerProfileSummary
     boards: list[PlayerBoardSummary] = []    # one row per leaderboard, best first
     recent: list[PlayerProfileEntry]         # flat per-capture rows (legacy/back-compat)
+
+
+class PlayerBoardsResponse(BaseModel):
+    """A player's leaderboard aggregate, straight from ``player_board_agg``: one
+    row per board they've ever appeared on (best boards first) plus a roll-up
+    summary. Leaner than ``/profile`` - no rename / alt-cluster / last-played
+    machinery, just the materialised aggregate. Unknown names return an empty
+    ``boards`` list rather than 404."""
+    player_name: str                         # canonical (latest-casing) name
+    summary: PlayerProfileSummary
+    boards: list[PlayerBoardSummary] = []    # one row per leaderboard, best first
 
 
 class PlayerHistorySeriesItem(BaseModel):

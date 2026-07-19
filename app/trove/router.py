@@ -157,6 +157,7 @@ from app.trove.schemas import (
     MarketListingOut,
     MarketListingsPage,
     MasteryRecordsResponse,
+    PlayerBoardsResponse,
     PlayerHistorySeriesResponse,
     PlayerProfileResponse,
     RenameHistoryResponse,
@@ -2466,9 +2467,14 @@ async def get_player_history(
 
     Useful for a player profile: their last N ranks across whatever boards they
     were on, optionally pinned to a single board with ``?uuid=``.
+
+    **Hot-only.** The scan is floored at the hot/cold storage boundary
+    (``leaderboards_pg_tier_after_days``), so appearances older than that window
+    are not returned - this endpoint never reads cold-tiered partitions.
     """
     rows = await leaderboards_service.player_history(
         player_name, limit=limit, uuid=uuid,
+        window_start=await leaderboards_service.hot_window_start(),
     )
     return LeaderboardPlayerHistory(
         player_name=player_name,
@@ -2486,9 +2492,36 @@ async def get_player_profile(
     (board names + day-over-day deltas), summary stats (boards, best rank, last
     seen), and whether the name is a verified claimed identity. Powers the
     /player/<name> page and a future Discord ``/rank`` deep-link. Unknown names
-    return an empty profile rather than 404."""
-    payload = await leaderboards_service.player_profile(player_name)
+    return an empty profile rather than 404.
+
+    **Hot-only.** The ``recent`` window is floored at the hot/cold storage
+    boundary (``leaderboards_pg_tier_after_days``), so this endpoint never reads
+    cold-tiered partitions. The ``boards`` summary spans all history regardless
+    (it's the always-hot ``player_board_agg`` aggregate)."""
+    payload = await leaderboards_service.player_profile(player_name, hot_only=True)
     return PlayerProfileResponse(**payload)
+
+
+@leaderboards_router.get("/players/{player_name}/boards",
+                         response_model=PlayerBoardsResponse)
+async def get_player_boards(
+    player_name: str, _ctx: AccessContext = _LB_PUBLIC,
+) -> PlayerBoardsResponse:
+    """**Tokenless.** A player's per-leaderboard aggregate, read straight from the
+    materialised ``player_board_agg`` table: one row per board they've ever
+    appeared on (best rank ever, current rank/score, capture count, first/last
+    seen), best boards first, plus a roll-up summary.
+
+    Leaner and cheaper than ``/profile`` - an O(boards) aggregate read with no
+    rename reconstruction, alt-cluster detection, or last-played activity scan.
+    Use ``/profile`` when you want those extras and the recent per-capture rows;
+    use this when you just want the aggregate. Unknown names return an empty
+    ``boards`` list rather than 404.
+
+    Public: readable without a token (stricter per-IP rate limit); sending a token
+    that carries ``leaderboards:read`` earns the higher per-token limit."""
+    payload = await leaderboards_service.player_boards(player_name)
+    return PlayerBoardsResponse(**payload)
 
 
 @leaderboards_router.get("/{uuid:int}/history", response_model=BoardHistoryResponse)
@@ -2550,7 +2583,12 @@ async def get_player_history_series(
 ) -> PlayerHistorySeriesResponse:
     """Score-vs-time trajectories for ONE player, grouped per board they
     appear on, over the last ``days`` days. Drives the per-player chart
-    in the leaderboards page's history side-panel."""
+    in the leaderboards page's history side-panel.
+
+    **Hot-only.** ``days`` is capped at the hot/cold storage boundary
+    (``leaderboards_pg_tier_after_days``), so the trajectory never reaches into
+    cold-tiered partitions even when a larger window is requested."""
+    days = min(days, await leaderboards_service.hot_window_days())
     await _enforce_lb_archive_limit(
         response, ctx, int(utcnow().timestamp()) - days * 86400,
     )

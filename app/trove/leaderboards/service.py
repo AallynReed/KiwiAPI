@@ -490,11 +490,87 @@ async def _is_verified_trove_name(name: str) -> bool:
         return False
 
 
-async def player_profile(name: str, *, limit: int = 200) -> dict:
+async def hot_window_days() -> int:
+    """Age (in days) of the hot/cold storage boundary: captures younger than this
+    live on fast NVMe; older ones are tiered onto the cold RAID1 tablespace after
+    ``leaderboards_pg_tier_after_days``. A config blip must never silently widen
+    the window into cold, so failures fall back to the static default."""
+    from app.admin import runtime_config
+    from app.core.config import settings
+    try:
+        days = int(await runtime_config.get_setting("leaderboards_pg_tier_after_days"))
+    except Exception:  # noqa: BLE001
+        days = settings.leaderboards_pg_tier_after_days
+    return max(1, days)
+
+
+async def hot_window_start() -> int:
+    """Unix-seconds lower bound of the hot partition set (see ``hot_window_days``).
+    Player read paths that must stay off cold storage floor their scan window here
+    - a lookup older than this would fault in a cold-tiered partition. The
+    aggregate-table read (``player_boards``) is hot by construction and skips it."""
+    return int(datetime.now(UTC).timestamp()) - await hot_window_days() * 86400
+
+
+async def player_boards(name: str) -> dict:
+    """Lean, direct read of the ``player_board_agg`` aggregate for one player:
+    one row per leaderboard they've ever appeared on (best rank ever, current
+    rank/score, capture count, first/last seen), best boards first, plus a small
+    roll-up summary and the canonical (latest-casing) name.
+
+    This is the aggregate table exposed as-is - just the O(boards) aggregate read
+    + the board-name join, with none of ``player_profile``'s extra machinery
+    (rename reconstruction, alt-cluster detection, last-played activity scan). An
+    unknown name returns an empty ``boards`` list with a zeroed summary rather
+    than 404, mirroring the profile endpoint's contract."""
+    name = name.strip()
+    board_rows, stored_name = await asyncio.gather(
+        pg_store.player_board_summary(name),
+        pg_store.player_canonical_name(name),
+    )
+    uuids = sorted({b["leaderboard"] for b in board_rows})
+    meta = await pg_store.board_meta(uuids) if uuids else {}
+    boards = [
+        {
+            **b,
+            "board_name": (meta.get(b["leaderboard"]) or {}).get("name"),
+            "category": (meta.get(b["leaderboard"]) or {}).get("category"),
+        }
+        for b in board_rows
+    ]
+    best = boards[0] if boards else None            # board_rows are best_rank-ascending
+    latest_anchor = max((b["last_seen"] for b in board_rows), default=None)
+    top10 = sum(1 for b in board_rows if (b["best_rank"] or 1e9) <= 10)
+    top100 = sum(1 for b in board_rows if (b["best_rank"] or 1e9) <= 100)
+    total_appearances = sum(int(b.get("appearances") or 0) for b in board_rows)
+
+    return {
+        "player_name": stored_name or name,
+        "summary": {
+            "boards_appeared": len(board_rows),
+            "appearances": total_appearances,
+            "best_rank": best["best_rank"] if best else None,
+            "best_rank_board_uuid": best["leaderboard"] if best else None,
+            "best_rank_board_name": best["board_name"] if best else None,
+            "top10_count": top10,
+            "top100_count": top100,
+            "latest_anchor": latest_anchor,
+        },
+        "boards": boards,
+    }
+
+
+async def player_profile(name: str, *, limit: int = 200, hot_only: bool = False) -> dict:
     """Public profile aggregate for one player: recent appearances (board names +
     day-over-day deltas), a summary, and whether the name is a verified claimed
-    identity. ``recent`` is empty when the name has never been captured."""
+    identity. ``recent`` is empty when the name has never been captured.
+
+    ``hot_only`` floors the ``recent`` and ``last_played`` scan windows at the
+    hot/cold storage boundary (``hot_window_start``) so the query never touches a
+    cold-tiered partition. The public /v1 endpoint sets it; the website's /player
+    page leaves it off so it can still reach into the archive."""
     name = name.strip()
+    hot_start = await hot_window_start() if hot_only else None
     # Every lookup below keys on the name and is independent, so run them
     # concurrently - the profile used to serialize ~6 round-trips (and the
     # board aggregate scanned the player's whole cross-partition history, which
@@ -502,6 +578,8 @@ async def player_profile(name: str, *, limit: int = 200) -> dict:
     # player_board_agg; ``recent`` is bounded to a recent window (it feeds the
     # /v1 payload only - the page renders from ``boards``).
     recent_window = int(datetime.now(UTC).timestamp()) - _PROFILE_RECENT_WINDOW_DAYS * 86400
+    if hot_start is not None:
+        recent_window = max(recent_window, hot_start)   # never scan past the hot line
     (
         board_rows, stored_name, verified, renames_out, alt_clusters,
         last_played, rows,
@@ -511,7 +589,7 @@ async def player_profile(name: str, *, limit: int = 200) -> dict:
         _is_verified_trove_name(name),
         _profile_renames(name),
         _profile_alt_clusters(name, []),
-        _profile_last_played(name),
+        _profile_last_played(name, window_floor=hot_start),
         player_history(name, limit=limit, with_deltas=True, window_start=recent_window),
     )
     canonical = stored_name or (rows[0]["player_name"] if rows else name)
@@ -593,14 +671,22 @@ def _parse_board_csv(csv: str) -> set[int]:
     return out
 
 
-async def _profile_last_played(canonical: str) -> int | None:
+async def _profile_last_played(
+    canonical: str, *, window_floor: int | None = None,
+) -> int | None:
     """Most recent capture where this player's score rose on a non-excluded board
     (the 'last played' activity signal), or None when no movement in the window.
-    Never raises - a lookup failure must not take down the profile."""
+    Never raises - a lookup failure must not take down the profile.
+
+    ``window_floor`` (when set) clamps the lookback so the scan stays on hot
+    storage; a player whose last rise predates it reads as None (the honest
+    'no recent activity' answer for a hot-only query)."""
     from app.admin import runtime_config
     csv = str(await runtime_config.get_setting("last_played_excluded_board_uuids") or "")
     now = int(datetime.now(UTC).timestamp())
     window_start = now - _LAST_PLAYED_WINDOW_DAYS * 86400
+    if window_floor is not None:
+        window_start = max(window_start, window_floor)
     try:
         return await pg_store.player_last_played(
             canonical, excluded=_parse_board_csv(csv), window_start=window_start,
