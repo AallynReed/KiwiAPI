@@ -36,7 +36,11 @@ from app.core.features import (
 )
 from app.core.idempotency import add_idempotency_middleware
 from app.core.maintenance import maintenance_loop
-from app.core.middleware import add_security_middleware
+from app.core.middleware import (
+    add_api_host_redirect_middleware,
+    add_head_method_middleware,
+    add_security_middleware,
+)
 from app.core.observability import add_request_context_middleware, configure_logging
 from app.core.postgres import close_postgres, init_postgres
 from app.core.redis import close_redis, init_redis
@@ -230,7 +234,8 @@ app = FastAPI(
 register_error_handlers(app)
 # Middleware is registered inner-first; the LAST one added is the OUTERMOST layer.
 # Resulting execution order (outer → inner):
-#   CORS → request-context → security → idempotency → usage → pageview → route
+#   CORS → request-context → api-host-redirect → security → idempotency → usage
+#     → pageview → head → route
 # Rationale:
 #   • CORS outermost, so even error responses get access-control headers.
 #   • request-context just inside CORS: tags the request id and converts unhandled
@@ -238,12 +243,19 @@ register_error_handlers(app)
 #   • security (headers + body cap) outside idempotency, so even a replayed
 #     response still carries the security headers.
 #   • idempotency outside usage, so a replay doesn't double-count a usage event.
-#   • pageview innermost: GET page loads aren't idempotency-keyed, so no replay
-#     double-count; it reads the matched route + final response to log site views.
+#   • pageview: GET page loads aren't idempotency-keyed, so no replay double-count;
+#     it reads the matched route + final response to log site views.
+#   • head innermost: flips HEAD→GET for routing only, so the analytics layers
+#     above still see the real HEAD and skip their GET-only accounting.
+#   • api-host-redirect just inside request-context: 301s showcase pages that
+#     leaked onto the api host to app_url, short-circuiting before the heavier
+#     inner layers (a bare redirect needs none of them).
+add_head_method_middleware(app)
 add_pageview_middleware(app)
 add_usage_middleware(app)
 add_idempotency_middleware(app)
 add_security_middleware(app)
+add_api_host_redirect_middleware(app)
 add_request_context_middleware(app)
 
 # CORS is the outermost layer so even error responses get access-control headers.

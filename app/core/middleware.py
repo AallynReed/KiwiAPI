@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse, RedirectResponse, Response
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.core.config import settings
 from app.core.errors import ErrorCode, build_error_body
@@ -134,3 +135,97 @@ def add_security_middleware(app: FastAPI) -> None:
         if path.startswith("/static/") or path in _PAGE_PATHS or path.startswith(_PAGE_PREFIXES):
             h.setdefault("Cache-Control", "no-cache")
         return response
+
+
+class HeadMethodMiddleware:
+    """Serve ``HEAD`` by running the matching ``GET`` route, body suppressed.
+
+    FastAPI's ``APIRoute`` registers only the literal method passed to
+    ``@router.get`` - unlike Starlette's plain ``Route`` it does NOT pair GET
+    with HEAD - so every showcase page (plus ``/robots.txt`` and
+    ``/sitemap.xml``) answers a bare ``HEAD`` with ``405 Method Not Allowed``.
+    Crawlers, link-checkers and uptime monitors that probe with HEAD then read
+    the URL as broken.
+
+    Flipping the method to GET *for the app's routing only* fixes this: uvicorn
+    keeps its own scope (still HEAD) and so already drops the response body and
+    frames the correct ``Content-Length`` per RFC 9110 §9.3.2. We therefore copy
+    the scope and never mutate it in place - mutating it would flip uvicorn's own
+    method too, and it would then try to write the full GET body onto a HEAD
+    response.
+
+    Registered innermost (added first in main.py), so the pageview + usage
+    middleware still observe the real HEAD and skip their GET-only accounting.
+    ``/v1/events`` is excluded: rewriting a HEAD there to GET would open an
+    unbounded SSE stream that never completes.
+    """
+
+    _EXCLUDE_PREFIXES = ("/v1/events",)
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if (
+            scope["type"] == "http"
+            and scope["method"] == "HEAD"
+            and not scope["path"].startswith(self._EXCLUDE_PREFIXES)
+        ):
+            scope = {**scope, "method": "GET"}
+        await self.app(scope, receive, send)
+
+
+def add_head_method_middleware(app: FastAPI) -> None:
+    """Answer HEAD requests via the matching GET route (see HeadMethodMiddleware).
+
+    Register FIRST in main.py so it sits innermost - just outside routing but
+    inside the analytics middleware, which gate on the real (HEAD) method.
+    """
+    app.add_middleware(HeadMethodMiddleware)
+
+
+# The bare API host (api.aallyn.net) derived from settings, lower-cased for the
+# Host-header compare. The one FastAPI app answers on every hostname, so a
+# showcase page is reachable at api.aallyn.net/<page> as well as its real home on
+# app_url - see add_api_host_redirect_middleware.
+_API_HOST = settings.api_url.split("://", 1)[-1].split("/", 1)[0].lower()
+
+
+def _is_site_page(path: str) -> bool:
+    """A showcase-site HTML *page* - one in ``_PAGE_PATHS`` or a dynamic page
+    subtree. These are the routes with a canonical home on ``app_url``.
+
+    Deliberately narrower than ``_is_site_path``: it excludes ``/static`` and
+    ``/site`` (assets + JSON proxies) and every api-native path (/v1, /health,
+    /api-info, /openapi.json, /robots.txt), so only real indexable pages redirect.
+    """
+    return path in _PAGE_PATHS or path.startswith(_PAGE_PREFIXES)
+
+
+def add_api_host_redirect_middleware(app: FastAPI) -> None:
+    """301 showcase-site pages served on the API host to their canonical app_url home.
+
+    api.aallyn.net/login serves the same page as trove.aallyn.net/login, and Google
+    indexed the api copy. robots.txt ``Disallow: /`` on the api host does NOT deindex
+    it - it only blocks the re-crawl that would let Google see the page's
+    canonical/noindex - so the already-indexed URL is frozen there. A hard 301 to the
+    app host is what actually drops it and consolidates the signal onto one URL.
+
+    GET/HEAD only: page routes are GET, and a 301 must never silently turn a POST into
+    a GET. Scoped to the API host; the JSON API, /api-info, robots.txt and static
+    assets are untouched.
+    """
+    app_url = settings.app_url.rstrip("/")
+
+    @app.middleware("http")
+    async def api_host_redirect(request: Request, call_next):
+        if (
+            request.method in ("GET", "HEAD")
+            and (request.url.hostname or "").lower() == _API_HOST
+            and _is_site_page(request.url.path)
+        ):
+            target = app_url + request.url.path
+            if request.url.query:
+                target = f"{target}?{request.url.query}"
+            return RedirectResponse(target, status_code=301)
+        return await call_next(request)

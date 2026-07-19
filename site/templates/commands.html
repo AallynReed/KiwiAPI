@@ -38,23 +38,30 @@
              Pulled live from commands.json so all 7 languages render
              without page reload. Hero stays compact (no full-bleed
              treatment) because the long content below IS the page. -->
+        <!-- Content below is server-rendered from commands.json (English, the
+             crawlable default) so the page is complete without JS. commands.js
+             hydrates search + scroll-spy on this DOM and re-renders on language
+             switch. Keep the ids / classes / data-search in sync with
+             commands.js renderIntro/renderChips/renderList + commands_page.py. -->
         <section class="commands-hero">
             <div class="commands-hero-inner">
                 <p class="commands-eyebrow">/commands</p>
-                <h1 class="commands-title" data-cmd-text="title">Trove commands</h1>
-                <p class="commands-subtitle" data-cmd-text="subtitle">Every slash command, categorised and searchable.</p>
+                <h1 class="commands-title" data-cmd-text="title">{{ cmd.intro.title }}</h1>
+                <p class="commands-subtitle" data-cmd-text="subtitle">{{ cmd.intro.subtitle }}</p>
 
                 <div class="commands-toolbar" role="search">
                     <i class="fa-solid fa-magnifying-glass commands-search-icon" aria-hidden="true"></i>
                     <input type="search" id="commands-search" class="commands-search"
-                           data-cmd-placeholder="search_placeholder" placeholder="Search commands…"
+                           data-cmd-placeholder="search_placeholder" placeholder="{{ cmd.intro.search_placeholder }}"
                            aria-label="Search commands" autocomplete="off" spellcheck="false">
-                    <span class="commands-count"><span id="commands-count-num">-</span></span>
+                    <span class="commands-count"><span id="commands-count-num">{{ cmd.total }}</span></span>
                 </div>
 
                 <details class="commands-rules">
                     <summary><i class="fa-solid fa-circle-info" aria-hidden="true"></i> <span data-i18n>Syntax conventions</span></summary>
-                    <ul id="commands-rules-list"></ul>
+                    <ul id="commands-rules-list">
+                        {% for rule in cmd.intro.rules %}<li>{{ rule }}</li>{% endfor %}
+                    </ul>
                 </details>
             </div>
         </section>
@@ -63,14 +70,32 @@
              Clicking a chip scrolls to that category's section. The
              active chip mirrors what's currently in viewport via
              IntersectionObserver in commands.js. -->
-        <nav class="commands-chips" id="commands-chips" aria-label="Jump to category"></nav>
+        <nav class="commands-chips" id="commands-chips" aria-label="Jump to category">
+            {% for chip in cmd.chips %}<button type="button" class="commands-chip" data-cat="{{ chip.key }}">{{ chip.name }}<span class="commands-chip-count">{{ chip.count }}</span></button>{% endfor %}
+        </nav>
 
         <!-- ═══════════════ COMMAND LIST ═══════════════ -->
-        <section class="commands-list" id="commands-list" aria-live="polite">
-            <p class="commands-loading" id="commands-loading" data-i18n>Loading…</p>
+        <section class="commands-list" id="commands-list" aria-live="polite" data-ssr-lang="{{ cmd.ssr_lang }}">
+            {% for sec in cmd.sections %}
+            <section class="commands-category" id="cat-{{ sec.key }}" data-cat="{{ sec.key }}">
+                <h2 class="commands-category-title">{{ sec.name }}<span class="commands-category-count">{{ sec.count }}</span></h2>
+                <div class="commands-rows">
+                    {% for row in sec.rows %}
+                    <div class="command-row" data-search="{{ row.search }}">
+                        <div class="command-syntax">{{ row.syntax }}{% if row.aliases %}<span class="command-aliases">{{ row.aliases | join(', ') }}</span>{% endif %}</div>
+                        <div class="command-text">
+                            <div>{{ row.desc }}</div>
+                            {% if row.has_placeholder %}<div class="command-warning"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i><span>{{ cmd.intro.placeholder_warning }}</span></div>{% endif %}
+                            {% if row.note %}<div class="command-note">{{ row.note }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
         </section>
 
-        <p class="commands-source" id="commands-source"></p>
+        <p class="commands-source" id="commands-source">{{ cmd.intro.source_note }}</p>
     </main>
 
     {% include "partials/footer.html" %}

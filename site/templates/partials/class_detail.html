@@ -1,0 +1,43 @@
+{# Server-rendered class detail - mirrors classes.js renderDetail exactly (same
+   classes + section order) so the pre-rendered DOM is what the JS would build.
+   Expects `d`, a detail model from classes_page._detail(). Section titles are
+   English (the crawlable default); classes.js re-renders on language switch. #}
+<div class="cls-detail-head">
+    <img class="cls-detail-icon" src="/static/class-icons/{{ d.tech }}.png" alt="{{ d.name }}">
+    <div class="cls-detail-title">
+        <h2 class="cls-detail-name">{{ d.name }}</h2>
+        <div class="cls-detail-tags">
+            {% if d.damage_type %}<span class="cls-tag is-{{ d.dmg_class }}"><i class="fa-solid {{ 'fa-wand-sparkles' if d.dmg_class == 'magic' else 'fa-hand-fist' }}" aria-hidden="true"></i><span>{{ d.damage_type }} damage</span></span>{% endif %}
+            {% for w in d.weapons %}<span class="cls-tag"><i class="fa-solid fa-khanda" aria-hidden="true"></i><span>{{ w }}</span></span>{% endfor %}
+            {% if d.shorts %}<span class="cls-tag"><i class="fa-solid fa-tag" aria-hidden="true"></i><span>{{ d.shorts }}</span></span>{% endif %}
+        </div>
+    </div>
+</div>
+{% if d.stats %}
+<section class="cls-section">
+    <h3 class="cls-section-title"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>Base stats</span></h3>
+    <div class="cls-stats">{% for s in d.stats %}<div class="cls-stat"><span class="cls-stat-name">{{ s.name }}</span><span class="cls-stat-val">{{ s.val }}</span></div>{% endfor %}</div>
+</section>
+{% endif %}
+{% if d.bonuses %}
+<section class="cls-section">
+    <h3 class="cls-section-title"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Class bonuses</span></h3>
+    <div class="cls-chips">{% for b in d.bonuses %}<span class="cls-chip">{{ b.name }} +{{ b.val }}</span>{% endfor %}</div>
+</section>
+{% endif %}
+{% if d.subclass %}
+<section class="cls-section">
+    <h3 class="cls-section-title"><i class="fa-solid fa-star" aria-hidden="true"></i><span>Subclass</span></h3>
+    <div class="cls-subclass">
+        {% if d.subclass.name %}<div class="cls-subclass-name">{{ d.subclass.name }}</div>{% endif %}
+        {% if d.subclass.description %}<div class="cls-subclass-desc">{{ d.subclass.description }}</div>{% endif %}
+        {% if d.subclass.tiers %}<div class="cls-levels">{% for t in d.subclass.tiers %}<div class="cls-level"><div class="cls-level-tier">Level {{ t.tier }}</div>{% for b in t.bonuses %}<div class="cls-level-bonus">{% if b.name %}{{ b.name }} {% endif %}<strong>+{{ b.val }}</strong></div>{% endfor %}</div>{% endfor %}</div>{% endif %}
+    </div>
+</section>
+{% endif %}
+{% if d.abilities %}
+<section class="cls-section">
+    <h3 class="cls-section-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span>Abilities</span></h3>
+    <div class="cls-abilities">{% for a in d.abilities %}<div class="cls-ability">{% if a.name %}<div class="cls-ability-name">{{ a.name }}</div>{% endif %}{% if a.description %}<div class="cls-ability-desc">{{ a.description }}</div>{% endif %}</div>{% endfor %}</div>
+</section>
+{% endif %}

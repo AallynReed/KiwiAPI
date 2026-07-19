@@ -34,15 +34,35 @@
 
   var CLASSES = [], byTech = {}, selectedTech = null, loaded = false;
 
+  // The nav + the first class's detail are server-rendered (English) - see
+  // classes.html + classes_page.py. We still fetch the full set once (needed to
+  // render OTHER classes on click / hash / language switch), but when the server
+  // already rendered the class we're showing we skip the initial rebuild and
+  // just hydrate the existing DOM.
+  var detailEl = document.getElementById("cls-detail");
+  var ssrTech = (detailEl && detailEl.dataset.ssrTech) || "";
+
   getJSON("/site/stats/classes").then(function (d) {
     CLASSES = (d && d.items) || [];
     CLASSES.forEach(function (c) { byTech[c.tech_name] = c; });
     loaded = true;
-    if (!CLASSES.length) { setEmpty(); return; }
-    buildNav();
-    var initial = (location.hash || "").replace(/^#/, "");
-    select(byTech[initial] ? initial : CLASSES[0].tech_name, false);
-  }).catch(function () { setEmpty(); });
+    if (!CLASSES.length) { if (!ssrTech) setEmpty(); return; }
+    var hash = (location.hash || "").replace(/^#/, "");
+    var initial = byTech[hash] ? hash : (ssrTech && byTech[ssrTech] ? ssrTech : CLASSES[0].tech_name);
+    if (ssrTech) {
+      hydrateNav();
+      if (initial === ssrTech) {
+        // Server already rendered this class - just sync selection state.
+        selectedTech = ssrTech;
+        markActive(ssrTech);
+      } else {
+        select(initial, false);
+      }
+    } else {
+      buildNav();
+      select(initial, false);
+    }
+  }).catch(function () { if (!ssrTech) setEmpty(); });
 
   function setEmpty() {
     var nav = document.getElementById("cls-nav"), det = document.getElementById("cls-detail");
@@ -64,8 +84,27 @@
       btn.appendChild(img);
       btn.appendChild(el("span", "cls-navitem-name", c.name));
       btn.appendChild(el("span", "cls-navitem-dmg dmg-" + dmgClass(c.damage_type), c.damage_type || ""));
-      btn.addEventListener("click", function () { select(c.tech_name, true); });
       nav.appendChild(btn);
+    });
+    hydrateNav();
+  }
+
+  // Attach the select-on-click handler to every nav button - server-rendered or
+  // freshly built by buildNav. Idempotent (the _wired flag) so a language-switch
+  // rebuild doesn't stack listeners.
+  function hydrateNav() {
+    document.querySelectorAll(".cls-navitem").forEach(function (b) {
+      if (b._wired) return;
+      b._wired = true;
+      b.addEventListener("click", function () { select(b.dataset.tech, true); });
+    });
+  }
+
+  function markActive(tech) {
+    document.querySelectorAll(".cls-navitem").forEach(function (b) {
+      var on = b.dataset.tech === tech;
+      b.classList.toggle("active", on);
+      if (on) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
     });
   }
 
@@ -73,11 +112,7 @@
     var c = byTech[tech];
     if (!c) return;
     selectedTech = tech;
-    document.querySelectorAll(".cls-navitem").forEach(function (b) {
-      var on = b.dataset.tech === tech;
-      b.classList.toggle("active", on);
-      if (on) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
-    });
+    markActive(tech);
     if (updateHash && location.hash.replace(/^#/, "") !== tech) {
       history.replaceState(null, "", "#" + tech);
     }

@@ -7,23 +7,41 @@
   const SUPPORTED_LANGS = new Set(['en', 'fr', 'de', 'pt-PT', 'ru', 'ja', 'ko', 'zh-CN', 'es']);
   const STORAGE_KEY = 'btt_docs_lang';  // shared with i18n.js for consistency
 
-  let data = null;     // commands.json once loaded
+  let data = null;     // commands.json, lazy-loaded (see loadData)
   let currentLang = pickInitialLang();
 
+  // The list is server-rendered from commands.json in English (see
+  // commands.html + commands_page.py), so the page is complete without JS.
+  // When the server DOM already matches the active language we hydrate in
+  // place - no fetch, no rebuild; otherwise (a non-English visitor, or a
+  // future non-SSR deploy) we fall back to fetching + building as before.
+  const listEl = document.getElementById('commands-list');
+  const ssrLang = (listEl && listEl.dataset.ssrLang) || '';
+
   // ── Boot ────────────────────────────────────────────────────────────
-  fetch('/static/commands.json?v=20260706k', { cache: 'force-cache' })
-    .then((r) => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then((json) => {
-      data = json;
-      renderAll();
-    })
-    .catch((err) => {
-      const list = document.getElementById('commands-list');
-      list.innerHTML = `<p class="commands-empty">Failed to load commands.json (${err.message}). Try refreshing the page.</p>`;
-    });
+  if (ssrLang && currentLang === ssrLang) {
+    wireChips();
+    applyFilter(document.getElementById('commands-search').value || '');
+  } else {
+    loadData()
+      .then(() => renderAll())
+      .catch((err) => {
+        // Keep the server-rendered English DOM if there was one; only the
+        // pure-client path shows the hard failure message.
+        if (ssrLang) return;
+        const list = document.getElementById('commands-list');
+        list.innerHTML = `<p class="commands-empty">Failed to load commands.json (${err.message}). Try refreshing the page.</p>`;
+      });
+  }
+
+  // Lazy-load + cache commands.json (needed for language switching, and for the
+  // non-SSR build path). Resolves to the parsed data.
+  function loadData() {
+    if (data) return Promise.resolve(data);
+    return fetch('/static/commands.json?v=20260706k', { cache: 'force-cache' })
+      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then((json) => { data = json; return json; });
+  }
 
 
   function pickInitialLang() {
@@ -51,7 +69,9 @@
     if (e && e.detail && e.detail.lang && SUPPORTED_LANGS.has(e.detail.lang)) {
       currentLang = e.detail.lang;
     }
-    if (data) renderAll();
+    // The SSR path may not have fetched the data yet - load it, then re-render
+    // the whole page in the new language.
+    loadData().then(() => renderAll()).catch(() => {});
   });
 
 
@@ -107,12 +127,24 @@
       btn.className = 'commands-chip';
       btn.dataset.cat = cat.key;
       btn.innerHTML = `${escapeHtml(t(cat.name))}<span class="commands-chip-count">${count}</span>`;
-      btn.addEventListener('click', () => {
-        const target = document.getElementById('cat-' + cat.key);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
       chips.appendChild(btn);
     }
+    wireChips();
+  }
+
+
+  // Attach the scroll-to-category handler to every chip - server-rendered or
+  // freshly built by renderChips. Idempotent (the _wired flag) so re-renders
+  // on language switch don't stack duplicate listeners.
+  function wireChips() {
+    document.querySelectorAll('.commands-chip').forEach((btn) => {
+      if (btn._wired) return;
+      btn._wired = true;
+      btn.addEventListener('click', () => {
+        const target = document.getElementById('cat-' + btn.dataset.cat);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
   }
 
 

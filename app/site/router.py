@@ -21,6 +21,7 @@ from app.admin import runtime_config
 from app.core import features as feature_flags
 from app.core.config import settings
 from app.core.utils import iso
+from app.site import classes_page, commands_page
 from app.site_auth.dependencies import get_optional_site_user
 from app.site_auth.models import SiteUser
 from app.trove import btt_releases as trove_btt
@@ -370,16 +371,34 @@ _ROBOTS_BLOCKED_HOSTS = frozenset(
     url.split("://", 1)[-1].split("/", 1)[0].lower()
     for url in (settings.api_url, settings.dev_url, settings.docs_url)
 )
+_API_HOST = settings.api_url.split("://", 1)[-1].split("/", 1)[0].lower()
 
 
 @router.get("/robots.txt", include_in_schema=False)
 async def robots_txt(request: Request) -> Response:
     """Crawler directives, host-aware. The public site is fully crawlable and
-    advertises the sitemap; the raw-JSON API hosts (api./dev./docs.) get a
-    blanket disallow so Google never tries to index endpoint payloads.
-    ``/static/`` is intentionally NOT blocked - Google needs the CSS/JS to
-    render the pages."""
-    if (request.url.hostname or "").lower() in _ROBOTS_BLOCKED_HOSTS:
+    advertises the sitemap; the raw-JSON API hosts get a disallow so Google never
+    indexes endpoint payloads. ``/static/`` is intentionally NOT blocked - Google
+    needs the CSS/JS to render the pages.
+
+    The api host is a special case: the one app answers there too, so showcase
+    pages leak onto it (api.aallyn.net/login) and some already got indexed. Those
+    now 301 to app_url (see ``add_api_host_redirect_middleware``) - but a blanket
+    ``Disallow: /`` would FREEZE the stale entries, because Google must be allowed
+    to crawl a URL to see its redirect and drop it. So the api host allows page
+    crawling (the pages just 301 away) while still blocking the JSON API subtrees
+    (/v1, /site, /git) so payloads are never indexed. dev./docs. keep the blanket
+    disallow - they have no such redirect."""
+    host = (request.url.hostname or "").lower()
+    if host == _API_HOST:
+        body = (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /v1/\n"
+            "Disallow: /site/\n"
+            "Disallow: /git/\n"
+        )
+    elif host in _ROBOTS_BLOCKED_HOSTS:
         body = "User-agent: *\nDisallow: /\n"
     else:
         body = (
@@ -427,6 +446,14 @@ _SITEMAP_LOCK = asyncio.Lock()
 # ever exceeds it we truncate and log rather than emit an oversized sitemap.
 _SITEMAP_MAX_PER_SECTION = 25_000
 
+# TEMP: individual mod detail pages (/mods/{handle}/{slug}) are excluded from the
+# sitemap for now. Their above-the-fold content is JS-rendered, so as raw HTML
+# they read thin, and listing thousands of them while the site is still
+# establishing indexing dilutes crawl budget for the pages that matter. The hub
+# pages (/mods, /mods/why) stay in via _SITEMAP_PAGES. Flip back to True to
+# re-list them once the core pages are indexed.
+_SITEMAP_INCLUDE_MOD_PAGES = False
+
 
 def _xml_loc(url: str) -> str:
     return url.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -454,10 +481,11 @@ async def _all_public_cards(list_fn, cap: int, label: str) -> list[dict]:
 
 async def _render_sitemap() -> str:
     """Build the sitemap XML: static feature pages (each gated by its master
-    toggle) plus every public mod and modpack page. The mod/modpack sections
-    ride the Mods Hub master toggle, so they vanish wholesale when it's off.
-    Approved strays are addressed as ``/mods/stray/<slug>`` - their card already
-    carries ``handle='stray'``, so the generic URL shape is correct."""
+    toggle) plus every public modpack page. Individual mod detail pages are
+    currently excluded (see ``_SITEMAP_INCLUDE_MOD_PAGES``). The mod/modpack
+    sections ride the Mods Hub master toggle, so they vanish wholesale when it's
+    off. Approved strays are addressed as ``/mods/stray/<slug>`` - their card
+    already carries ``handle='stray'``, so the generic URL shape is correct."""
     base = settings.app_url.rstrip("/")
     flags = {
         attr: await feature_flags.is_enabled(flag)
@@ -470,14 +498,15 @@ async def _render_sitemap() -> str:
         if attr is None or flags.get(attr, True)
     ]
     if flags.get("mods_hub_enabled", True):
-        mods = await _all_public_cards(
-            mods_hub_service.list_public, _SITEMAP_MAX_PER_SECTION, "mods")
+        if _SITEMAP_INCLUDE_MOD_PAGES:
+            mods = await _all_public_cards(
+                mods_hub_service.list_public, _SITEMAP_MAX_PER_SECTION, "mods")
+            entries += [
+                (f"{base}/mods/{c['handle']}/{c['slug']}", c.get("updated_at"))
+                for c in mods if c.get("handle") and c.get("slug")
+            ]
         packs = await _all_public_cards(
             modpacks_service.list_public, _SITEMAP_MAX_PER_SECTION, "modpacks")
-        entries += [
-            (f"{base}/mods/{c['handle']}/{c['slug']}", c.get("updated_at"))
-            for c in mods if c.get("handle") and c.get("slug")
-        ]
         entries += [
             (f"{base}/modpacks/{c['handle']}/{c['slug']}", c.get("updated_at"))
             for c in packs if c.get("handle") and c.get("slug")
@@ -500,7 +529,8 @@ async def _render_sitemap() -> str:
 @router.get("/sitemap.xml", include_in_schema=False)
 async def sitemap_xml() -> Response:
     """XML sitemap of the public, indexable pages: the static feature pages plus
-    every public mod and modpack. Cached in-process for a few minutes
+    every public modpack (individual mod pages are excluded for now - see
+    ``_SITEMAP_INCLUDE_MOD_PAGES``). Cached in-process for a few minutes
     (``_SITEMAP_TTL``) so crawler hits don't re-enumerate the catalog each time."""
     now = time.monotonic()
     if _SITEMAP_CACHE["body"] is None or now - float(_SITEMAP_CACHE["at"]) > _SITEMAP_TTL:
@@ -532,10 +562,13 @@ async def swf_docs(request: Request) -> HTMLResponse:
 
 @router.get("/commands", response_class=HTMLResponse)
 async def commands(request: Request) -> HTMLResponse:
-    """In-game Trove slash-command reference. Page shell + JS only -
-    actual command data lives in ``site/static/commands.json`` and is
-    fetched + rendered client-side so language switches don't reload."""
-    return _TEMPLATES.TemplateResponse(request, "commands.html", {})
+    """In-game Trove slash-command reference. The command list is server-rendered
+    from ``site/static/commands.json`` (English - the crawlable default) so the
+    page is complete without JS; ``commands.js`` then hydrates and re-renders on
+    language switch. See ``app/site/commands_page.py``."""
+    return _TEMPLATES.TemplateResponse(
+        request, "commands.html", {"cmd": commands_page.commands_view()},
+    )
 
 
 @router.get("/support", response_class=HTMLResponse)
@@ -593,12 +626,15 @@ async def releases_page(request: Request) -> HTMLResponse:
 
 
 @router.get("/classes", response_class=HTMLResponse)
-async def classes_page(request: Request) -> HTMLResponse:
+async def classes(request: Request) -> HTMLResponse:
     """Trove class reference - a browsable codex of every class: base stats,
     weapons, damage type, its signature subclass (with the 1→30 level-scaling
-    bonuses) and abilities. Page shell + JS; data comes from the same-origin
-    ``/site/stats/classes`` proxy. Deep-links per class via the URL hash."""
-    return _TEMPLATES.TemplateResponse(request, "classes.html", {})
+    bonuses) and abilities. The picker + the first class's detail are
+    server-rendered (English) so the page is complete without JS; classes.js
+    fetches ``/site/stats/classes`` to power switching. See classes_page.py."""
+    return _TEMPLATES.TemplateResponse(
+        request, "classes.html", {"cls": classes_page.classes_view()},
+    )
 
 
 @router.get("/star-chart", response_class=HTMLResponse)

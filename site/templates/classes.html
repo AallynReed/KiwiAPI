@@ -43,15 +43,19 @@
             <p class="cls-sub" data-i18n>Every class at a glance - base stats, weapons and damage type, the signature subclass with its full level-scaling bonuses, and abilities. Pick a class to dig in.</p>
         </section>
 
+        <!-- Picker + the first class's detail are server-rendered (English) so
+             the page is complete without JS; classes.js hydrates the nav and
+             re-renders the detail on selection / language switch. Keep the
+             classes / data-tech in sync with classes.js + classes_page.py. -->
         <div class="cls-layout">
             <!-- Class picker -->
             <nav class="cls-nav" id="cls-nav" aria-label="Choose a class">
-                <p class="cls-loading" data-i18n>Loading classes…</p>
+                {% for c in cls.nav %}<button type="button" class="cls-navitem{{ ' active' if c.tech == cls.initial_tech else '' }}" data-tech="{{ c.tech }}"{{ ' aria-current="true"' | safe if c.tech == cls.initial_tech else '' }}><img src="/static/class-icons/{{ c.tech }}.png" alt="" loading="lazy"><span class="cls-navitem-name">{{ c.name }}</span><span class="cls-navitem-dmg dmg-{{ c.dmg_class }}">{{ c.damage_type }}</span></button>{% endfor %}
             </nav>
 
             <!-- Detail panel -->
-            <section class="cls-detail" id="cls-detail" aria-live="polite">
-                <p class="cls-loading" data-i18n>Loading…</p>
+            <section class="cls-detail" id="cls-detail" aria-live="polite" data-ssr-tech="{{ cls.initial_tech }}">
+                {% if cls.initial %}{% set d = cls.initial %}{% include "partials/class_detail.html" %}{% endif %}
             </section>
         </div>
     </main>
