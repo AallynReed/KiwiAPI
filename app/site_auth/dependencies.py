@@ -5,8 +5,6 @@ Same shape as ``app.core.dependencies.get_current_user`` but:
     tokens that happen to be presented to a /site-auth endpoint)
   - loads from the ``site_users`` collection, not ``users``
 """
-from dataclasses import dataclass
-
 import jwt
 from beanie import PydanticObjectId
 from fastapi import Depends
@@ -31,12 +29,6 @@ def _not_authenticated(message: str = "Authentication required") -> APIError:
         message=message,
         headers={"WWW-Authenticate": "Bearer"},
     )
-
-
-@dataclass
-class SiteAuthContext:
-    user: SiteUser
-    session_id: str | None
 
 
 async def _authenticate(
@@ -86,13 +78,6 @@ async def get_optional_site_user(
     except Exception:  # noqa: BLE001 - public surface: any bad cred is just anonymous
         return None
     return user
-
-
-async def get_site_auth_context(
-    creds: HTTPAuthorizationCredentials | None = Depends(_jwt_scheme),
-) -> SiteAuthContext:
-    user, payload = await _authenticate(creds)
-    return SiteAuthContext(user=user, session_id=payload.get("sid"))
 
 
 async def get_current_verified_site_user(

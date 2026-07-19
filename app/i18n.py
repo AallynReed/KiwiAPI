@@ -126,11 +126,6 @@ def t(text: str, lang: str | None = None, /, **fmt) -> str:
             return text
 
 
-def reset_cache() -> None:
-    """Drop the in-process catalog cache (tests / hot-reload)."""
-    _catalog.cache_clear()
-
-
 # ── language resolution (per Discord guild / interaction) ────────────────────
 
 # Discord client locales -> our supported codes (best-effort, for DMs or guilds

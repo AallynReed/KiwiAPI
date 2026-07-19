@@ -215,25 +215,6 @@ async def get_token_context(
     return TokenContext(user=user, token=token)
 
 
-async def get_superuser_token_context(
-    ctx: TokenContext = Depends(get_token_context),
-) -> TokenContext:
-    """Master-only API-token gate for ingest endpoints (e.g. /v1/leaderboards/insert).
-
-    Validates the API token through the normal pipeline (rate limit + usage
-    accounting) and then requires the token's owner to be a superuser. The
-    session-cookie equivalent is ``get_current_superuser`` - this one is for
-    bots that authenticate with an API token.
-    """
-    if not ctx.user.is_superuser:
-        raise APIError(
-            status_code=403,
-            code=ErrorCode.forbidden,
-            message="This endpoint requires a superuser API token.",
-        )
-    return ctx
-
-
 @dataclass
 class IngestAuth:
     """Master-ingest auth context. ``token`` is set when the caller

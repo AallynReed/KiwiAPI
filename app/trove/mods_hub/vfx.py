@@ -64,10 +64,6 @@ def basename(path: str) -> str:
     return path.replace("\\", "/").rsplit("/", 1)[-1]
 
 
-def is_pkfx(name: str) -> bool:
-    return name.lower().endswith(".pkfx")
-
-
 _MEDIA = {
     "dds": "image/vnd.ms-dds",
     "png": "image/png",

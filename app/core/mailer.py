@@ -73,26 +73,3 @@ async def deliver_email(
     except (aiosmtplib.SMTPException, OSError) as exc:
         # Connection refused, timeout, disconnect, etc. - transient, retry later.
         raise EmailDeliveryError(f"Transient SMTP failure: {exc}", permanent=False) from exc
-
-
-async def send_email(
-    to: str,
-    subject: str,
-    text_body: str,
-    html_body: str | None = None,
-) -> bool:
-    """Best-effort direct send. Logs (and returns False) instead of raising.
-
-    If SMTP is not configured, the message is logged so local development still
-    surfaces verification/reset links. Returns True only on a confirmed send.
-    """
-    if not settings.email_enabled:
-        logger.warning("SMTP not configured - not sending email to %s. Subject: %s", to, subject)
-        logger.info("Email body (would send):\n%s", text_body)
-        return False
-    try:
-        await deliver_email(to, subject, text_body, html_body)
-        return True
-    except EmailDeliveryError:
-        logger.exception("Failed to send email to %s", to)
-        return False

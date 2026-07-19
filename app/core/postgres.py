@@ -60,10 +60,6 @@ async def close_postgres() -> None:
         _pool = None
 
 
-def get_pool() -> asyncpg.Pool | None:
-    return _pool
-
-
 def acquire():
     """Acquire a pooled connection (async context manager). Raises if the pool
     isn't configured - leaderboards callers run only when ``postgres_enabled``."""

@@ -9,7 +9,7 @@ import os
 import sys
 
 from app.trove import tmod
-from app.trove.mods_hub import vfx, service
+from app.trove.mods_hub import service, vfx
 
 VFX = sys.argv[1] if len(sys.argv) > 1 else r"S:\Downloads\particles\VFX"
 PKFX = sys.argv[2] if len(sys.argv) > 2 else "weapon_aura_torch_fire_01.pkfx"

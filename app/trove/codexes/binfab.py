@@ -56,57 +56,6 @@ def content_start(data: bytes) -> int:
     return 0
 
 
-def parse_flat(data: bytes, start: int | None = None) -> tuple[list[dict], int]:
-    """Parse the leading flat field run; stop at the 2nd composite marker (end of
-    the identity component) or on an anomaly. Returns (fields, end_pos)."""
-    if start is None:
-        start = content_start(data)
-    pos = start
-    n = len(data)
-    fields: list[dict] = []
-    markers = 0
-    while pos < n:
-        kstart = pos
-        try:
-            key, pos = read_uleb(data, pos)
-        except (IndexError, ValueError):
-            break
-        field, wt = key >> 4, key & 0xF
-        try:
-            if wt == 0:
-                value, pos = read_uleb(data, pos)
-                fields.append({"off": kstart, "field": field, "wt": wt, "value": value})
-            elif wt == 2:
-                value, pos = read_uleb(data, pos)
-                fields.append({"off": kstart, "field": field, "wt": wt, "value": unzig(value)})
-            elif wt == 4:
-                raw = data[pos:pos + 4]
-                pos += 4
-                fields.append({"off": kstart, "field": field, "wt": wt,
-                               "u32": int.from_bytes(raw, "little"),
-                               "f32": struct.unpack("<f", raw)[0] if len(raw) == 4 else None})
-            elif wt == 6:
-                raw = data[pos:pos + 8]
-                pos += 8
-                fields.append({"off": kstart, "field": field, "wt": wt, "u64": int.from_bytes(raw, "little")})
-            elif wt == 8:
-                length, pos = read_uleb(data, pos)
-                if pos + length > n:
-                    break
-                raw = data[pos:pos + length]
-                pos += length
-                text = raw.decode("latin1") if raw and all(32 <= b < 127 for b in raw) else None
-                fields.append({"off": kstart, "field": field, "wt": wt, "len": length, "str": text})
-            else:
-                fields.append({"off": kstart, "field": field, "wt": wt, "marker": True})
-                markers += 1
-                if markers > 1:
-                    break
-        except (IndexError, struct.error):
-            break
-    return fields, pos
-
-
 def _marker_blocks(data: bytes) -> list[dict[tuple[str, int], object]]:
     """Split the flat field stream into its marker-delimited component blocks.
 

@@ -45,7 +45,7 @@ async def probe(host, port, opener_hex):
                 if chunk == b"":
                     return ("FIN(down)" if total <= SUBSTANTIVE else "FIN-after-data"), total, el
                 total += len(chunk)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return "HELD(online)", total, (time.monotonic() - t0) * 1000
         except (ConnectionResetError, ConnectionError) as e:
             return f"RESET:{type(e).__name__}", total, (time.monotonic() - t0) * 1000

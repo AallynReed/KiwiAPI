@@ -59,11 +59,6 @@ def categories() -> list[dict]:
     return [{"name": name, "bit": 1 << i} for i, name in enumerate(_CATEGORY_NAMES)]
 
 
-def is_category(tag: str) -> bool:
-    """Is this tag string one of the known categories (case-insensitive)?"""
-    return str(tag).strip().lower() in _BIT_BY_LOWER
-
-
 def flags_from_tags(tags: Iterable[str]) -> int:
     """OR together the bits of every recognized category found in ``tags``
     (case-insensitive; unknown tags are ignored)."""

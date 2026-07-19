@@ -40,11 +40,6 @@ def _ext(path: str) -> str:
     return ("." + name.rsplit(".", 1)[1].lower()) if "." in name else ""
 
 
-def top_folder(path: str) -> str:
-    parts = path.split("/")
-    return parts[0].lower() if len(parts) > 1 else ""
-
-
 def is_compilable(path: str) -> bool:
     """True iff the file is inside a known Trove folder and not an ignored type."""
     parts = path.split("/")

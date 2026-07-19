@@ -6,40 +6,20 @@ collections, which walks-and-discards skipped rows and can repeat or drop rows
 when data shifts between pages.
 """
 
-from dataclasses import dataclass
 from typing import Generic, TypeVar
 
 from beanie import PydanticObjectId
-from fastapi import Query
 from pydantic import BaseModel
 
 from app.core.errors import APIError, ErrorCode
 
 T = TypeVar("T")
 
-DEFAULT_LIMIT = 50
-MAX_LIMIT = 200
-
 
 class Page(BaseModel, Generic[T]):
     items: list[T]
     next_cursor: str | None = None  # pass back as ?cursor= to fetch the next page
     has_more: bool = False
-
-
-@dataclass
-class ListParams:
-    """Standard cursor-pagination query params for any list endpoint."""
-
-    cursor: str | None
-    limit: int
-
-
-def list_params(
-    cursor: str | None = Query(default=None, description="next_cursor from a prior page"),
-    limit: int = Query(default=DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
-) -> ListParams:
-    return ListParams(cursor=cursor, limit=limit)
 
 
 def decode_cursor(cursor: str | None) -> PydanticObjectId | None:

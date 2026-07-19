@@ -153,17 +153,6 @@ async def fetch_user(discord_id: int) -> dict | None:
         return await _get(client, f"/users/{discord_id}")
 
 
-async def user_can_manage(guild_id: int, user_discord_id: int) -> bool:
-    """True if the user is the guild owner or has Administrator / Manage Server."""
-    async with httpx.AsyncClient(timeout=15) as client:
-        guild = await _get(client, f"/guilds/{guild_id}")
-        member = await _get(client, f"/guilds/{guild_id}/members/{user_discord_id}")
-    if not guild or not member:
-        return False
-    perms = guild_permissions(guild, member)
-    return bool(perms & (PERM_ADMINISTRATOR | PERM_MANAGE_GUILD))
-
-
 def text_channels(channels: list[dict]) -> list[dict]:
     """Pure: text/announcement channels from a raw channel list, by position."""
     out = [
@@ -184,13 +173,6 @@ def assignable_roles(roles: list[dict], guild_id: int) -> list[dict]:
     ]
     out.sort(key=lambda r: r["position"], reverse=True)
     return out
-
-
-async def guild_text_channels(guild_id: int) -> list[dict]:
-    """Text/announcement channels in a guild, ordered by position."""
-    async with httpx.AsyncClient(timeout=15) as client:
-        channels = await _get(client, f"/guilds/{guild_id}/channels") or []
-    return text_channels(channels)
 
 
 async def guild_member_context(guild_id: int, user_discord_id: int) -> dict | None:
@@ -325,12 +307,3 @@ def preflight_for(guild: dict, me: dict, channels: list[dict], channel_id) -> di
     perms = effective_channel_permissions(guild, me, channel)
     missing = [name for name, bit in ANNOUNCE_PERMS if not (perms & bit)]
     return {"ok": not missing, "missing": missing}
-
-
-async def channel_preflight(guild_id: int, channel_id: int) -> dict:
-    """Which announce permissions the bot is MISSING in a channel (standalone
-    fetch). Returns ``{ok, missing:[names], error?}``."""
-    snap = await guild_snapshot(guild_id)
-    if snap is None:
-        return {"ok": False, "missing": [], "error": "The bot isn't in this server (or Discord is unreachable)."}
-    return preflight_for(snap["guild"], snap["me"], snap["channels"], channel_id)

@@ -110,10 +110,6 @@ class UpdateReleaseRequest(BaseModel):
     status: ReleaseStatus | None = None
 
 
-class ReportRequest(BaseModel):
-    reason: str = Field(min_length=3, max_length=2000)
-
-
 class ClaimRequest(BaseModel):
     """A site user's request to claim a stray (imported) mod as their own."""
 
