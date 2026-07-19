@@ -57,6 +57,14 @@ class Settings(BaseSettings):
     # history stays attached + queryable. New partitions are always created hot;
     # only aged ones move. No-op when the `cold` tablespace isn't provisioned.
     leaderboards_pg_tier_after_days: int = 7
+    # Leaderboards browse window (how many days of day-picker history the page
+    # offers). Anonymous visitors get the recent hot window; signed-in Dashboard
+    # users can browse deeper into the (slower, cold-tiered) archive. The extended
+    # default is effectively "all stored history" - lower it from the admin panel
+    # to cap cold-read load. The anon window also gates the top-5 board-history
+    # chart: it's only drawn for captures within this recent window.
+    leaderboards_anon_retention_days: int = 7
+    leaderboards_extended_retention_days: int = 36500
     # Anchors older than this count as "archive" reads and pay an extra, tighter
     # per-token bucket ON TOP of the standard cap - a caller can trawl the archive
     # cheaply per-read but not in a tight loop. Same 3-day window as the hot window.

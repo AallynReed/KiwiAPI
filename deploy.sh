@@ -22,6 +22,10 @@
 # small tools venv at ~/.cache/trove-tools-venv (override with TOOLS_VENV=...), created
 # once. Env: SKIP_GIT=1 to skip the automatic 'git pull'.
 #
+# The static nginx containers (portal, docs) are ALWAYS force-recreated, so a
+# replaced bind-mounted directory can never leave them serving a stale/empty
+# mount (403).
+#
 set -euo pipefail
 
 # Always run from the directory this script lives in.
@@ -56,9 +60,9 @@ if [ ! -f .env ]; then
   echo "WARNING: no .env found - using compose defaults (insecure SECRET_KEY, no admin, no email)." >&2
 fi
 
-# NOTE: deploy is Syncthing-based - the source is already synced to this host, so
-# we build straight from the local tree and do NOT touch git. (Set FETCH_GIT=1 to
-# opt back into a 'git pull' if you ever run this on a plain git checkout.)
+# NOTE: the source is already present on this host, so we build straight from the
+# local tree and do NOT touch git. (Set FETCH_GIT=1 to opt back into a 'git pull'
+# if you ever run this on a plain git checkout.)
 if [ -d .git ] && [ "${FETCH_GIT:-0}" = "1" ]; then
   git config --global --add safe.directory "$(pwd)" 2>/dev/null || true
   echo ">> git pull (FETCH_GIT=1)"
@@ -92,15 +96,15 @@ if [ "$MINIFY" -eq 1 ] && [ -f scripts/minify_static.py ]; then
     "$TOOLS_VENV/bin/python" scripts/minify_static.py \
       || echo "   (minify failed; keeping existing .min files)"
     # Deploy may run as root; keep the generated files owned by the source tree's
-    # owner so a later Syncthing push / edit can overwrite them without a clash.
+    # owner so a later edit can overwrite them without a permission clash.
     chown --reference=site/static site/static/*.min.* 2>/dev/null || true
   fi
 fi
 
 # nginx serves the docs site + dev portal straight off these bind-mounted trees
-# (worker uid 101). A git pull / Syncthing write under a tight umask or an
-# inherited ACL can leave fresh files unreadable to nginx -> 403 across the whole
-# static site. They're public, so normalise to world-readable on every deploy.
+# (worker uid 101). A deploy write under a tight umask or an inherited ACL can
+# leave fresh files unreadable to nginx -> 403 across the whole static site.
+# They're public, so normalise to world-readable on every deploy.
 echo ">> normalising static perms (docs + portal)"
 chmod -R a+rX portal/html docs 2>/dev/null || true
 
@@ -115,6 +119,19 @@ if [ "$BUILD" -eq 1 ]; then UP_ARGS="$UP_ARGS --build"; fi
 if [ "$FORCE" -eq 1 ]; then UP_ARGS="$UP_ARGS --force-recreate"; fi
 # shellcheck disable=SC2086  # intentional word-split of the flag list
 $COMPOSE $UP_ARGS
+
+# portal + docs are long-lived static nginx containers that bind-mount host dirs
+# (./portal/html, ./docs). If a deploy REPLACES one of those directories, it gets a
+# new inode while the container keeps serving the OLD (now-empty) one -> nginx 403s
+# the whole site (directory-index-forbidden) until it's recreated. A plain `up -d`
+# won't fix it: their config is unchanged, so compose leaves them running on the
+# stale mount. Force-recreate them every deploy so they always re-resolve the bind
+# mount to the current tree - cheap (stock nginx:alpine, nothing to build). Skipped
+# when --force-recreate already did it.
+if [ "$FORCE" -ne 1 ]; then
+  echo ">> refreshing static containers (portal + docs) so their bind mounts re-resolve"
+  $COMPOSE up -d --no-deps --force-recreate portal docs
+fi
 
 if [ "$PRUNE" -eq 1 ]; then
   echo ">> cleaning up old images + build cache"

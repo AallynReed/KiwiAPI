@@ -66,6 +66,14 @@
   grid-template-columns: 1fr;
   max-width: 900px;
 }
+/* The Day picker holds up to PICKER_DAYS (7) chips - at the 900px stack cap they
+   wrapped into a 5+2 block with acres of empty width beside them. Give this
+   toolbar the room to lay all 7 out on ONE row (the chips flex-grow to fill it);
+   it still wraps gracefully on narrow screens, and the extended-history variant
+   still switches to a single scrolling row past 7 days. */
+.lb-toolbar.lb-toolbar-days {
+  max-width: 1400px;
+}
 .lb-toolbar-field {
   display: grid;
   gap: 6px;
@@ -104,30 +112,47 @@
 /* ─── 7-day picker ─────────────────────────────────────────────────── */
 
 .lb-day-picker {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
+/* Extended archive (signed-in users): many chips would wrap into a tall block,
+   so lay them out as one horizontal, snap-scrolling row instead. */
+.lb-day-picker.lb-day-picker--scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.lb-day-picker--scroll .lb-day {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
 .lb-day-loading {
-  grid-column: 1 / -1;
+  flex: 1 1 100%;
   color: var(--text-mute);
   font-size: .9rem;
   padding: 16px;
   text-align: center;
 }
+/* Compact single-line chip: date + capture time on one row (no "DAY" label). */
 .lb-day {
+  flex: 1 1 auto;
+  min-width: 120px;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 2px;
-  padding: 10px 8px 12px;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+  padding: 8px 12px;
   background: rgba(255,255,255,.04);
   border: 1px solid rgba(255,255,255,.1);
   border-radius: 10px;
   color: var(--text);
   font-family: inherit;
   cursor: pointer;
-  text-align: center;
   transition: background .12s ease, border-color .12s ease, transform .08s ease;
 }
 .lb-day:hover {
@@ -149,25 +174,15 @@
   background: rgba(255,255,255,.04);
   border-color: rgba(255,255,255,.1);
 }
-.lb-day-rel {
-  font-size: .68rem;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--text-mute);
-}
-.lb-day.active .lb-day-rel { color: var(--accent-blue); opacity: .9; }
 .lb-day-date {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  font-size: .92rem;
+  font-size: .9rem;
   font-weight: 600;
-  margin-top: 1px;
 }
 .lb-day-meta {
   font-size: .72rem;
   color: var(--text-mute);
   font-family: SFMono-Regular, Consolas, monospace;
-  margin-top: 4px;
 }
 .lb-day.active .lb-day-meta { color: rgba(120,180,255,.85); }
 
@@ -1761,14 +1776,12 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   /* Collapse the picker into a horizontal scroller so each chip stays
      legible on phones. */
   .lb-day-picker {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(96px, 1fr);
+    flex-wrap: nowrap;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     padding-bottom: 6px;
   }
-  .lb-day { scroll-snap-align: start; }
+  .lb-day { flex: 0 0 auto; scroll-snap-align: start; }
   .lb-day-date { font-size: .85rem; }
 }
 

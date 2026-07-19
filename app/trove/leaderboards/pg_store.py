@@ -141,9 +141,26 @@ async def reset_all(*, drop_boards: bool = False) -> dict:
 # ── reads ─────────────────────────────────────────────────────────────────────
 
 async def list_timestamps(limit: int = 60) -> list[int]:
+    # Loose index scan (skip scan): seek the newest anchor, then repeatedly the
+    # next-lower one, stopping at ``limit``. Each step is an index MAX using the
+    # per-partition ``entry_p_*_anchor_idx``, so this early-stops after ~``limit``
+    # seeks. A plain ``SELECT DISTINCT anchor ... LIMIT`` can't early-stop - it
+    # HashAggregates the WHOLE table (grown to ~228M rows across 38 partitions, 31
+    # on the slow cold-tier disk → ~2 min), which blew past the 120s statement
+    # timeout and froze the warmer's snapshot publish (page stuck on a stale
+    # anchor). The skip scan returns the same newest-first anchors in ~6s.
     async with acquire() as con:
         rows = await con.fetch(
-            "SELECT DISTINCT anchor FROM entry ORDER BY anchor DESC LIMIT $1", limit
+            """
+            WITH RECURSIVE a AS (
+                SELECT (SELECT max(anchor) FROM entry) AS anchor
+                UNION ALL
+                SELECT (SELECT max(e.anchor) FROM entry e WHERE e.anchor < a.anchor)
+                FROM a WHERE a.anchor IS NOT NULL
+            )
+            SELECT anchor FROM a WHERE anchor IS NOT NULL LIMIT $1
+            """,
+            limit,
         )
     return [r["anchor"] for r in rows]
 

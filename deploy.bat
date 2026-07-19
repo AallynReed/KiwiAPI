@@ -2,9 +2,9 @@
 REM ============================================================
 REM  deploy.bat - push the latest code to the server's Docker.
 REM
-REM  Assumes Syncthing has already synced the source to the
-REM  server. This just SSHes in (over your VPN) and runs the
-REM  remote deploy.sh, which rebuilds + restarts the containers.
+REM  Assumes the source is already on the server. This just SSHes
+REM  in (over your VPN) and runs the remote deploy.sh, which
+REM  rebuilds + restarts the containers.
 REM
 REM  Usage:
 REM    deploy.bat            normal redeploy
@@ -18,9 +18,6 @@ REM ============================================================
 setlocal
 set "HOST=aallyn@zakros"
 set "REMOTE=/opt/trove/deploy.sh"
-
-REM Give Syncthing a moment to finish propagating recent edits.
-timeout /t 2 /nobreak >nul
 
 echo Connecting to %HOST% and running deploy.sh ...
 echo.

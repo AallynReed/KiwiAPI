@@ -179,22 +179,22 @@ services:
     volumes:
       - ./app:/app/app
       # Content-addressed blob store for the game-file archive (host: ./.game_updates).
-      # Many GB once enabled - kept out of git/Syncthing/the image build context.
+      # Many GB once enabled - kept out of git and the image build context.
       - ./.game_updates:/data/updates
       # Ingest backlog: every leaderboard dump the API receives is gzip-saved here
       # keyed by anchor, so the whole history can be re-ingested from the admin
       # panel with no upload. Drop <unix>.cfg files in by hand too. Kept out of
-      # git/Syncthing (can grow large).
+      # git (can grow large).
       - ./.backlog:/data/backlog
       # Mods Hub store: shared mods' git repos, uploaded images and compiled
-      # .tmod release artifacts. Kept out of git/Syncthing (user content, grows).
+      # .tmod release artifacts. Kept out of git (user content, grows).
       - ./.mods:/data/mods
       # BetterTroveTools showcase site (templates + static + ~20 MB of screenshots).
       # Bind-mounted so the heavy binary assets don't bake into the image; the
       # api container serves trove.aallyn.net out of this directory.
       - ./site:/app/site:ro
     # NOTE: no --reload. It's a dev-only flag - it restarts the worker on any
-    # .py change (Syncthing/deploy touch those constantly), which kills in-flight
+    # .py change (deploys touch those constantly), which kills in-flight
     # leaderboard ingests + the cache warmer mid-pass. Use ./deploy.sh (it
     # recreates the container) to pick up code changes instead.
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",

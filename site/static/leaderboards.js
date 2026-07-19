@@ -6,7 +6,33 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON } = window.BTTUtil;
+  const { esc, fetchJSON, apiUrl } = window.BTTUtil;
+
+  // Signed-in Dashboard users can browse deeper leaderboard history (the extended
+  // archive window) and pass the older-than-hot gate on boards/entries. The site
+  // session is a bearer token held by site_auth.js on window.BTTAuth; attach it
+  // when present. Anonymous callers just omit the header and get the hot window.
+  function lbAuthHeaders() {
+    const tok = window.BTTAuth && window.BTTAuth.tokens ? window.BTTAuth.tokens.access : null;
+    return tok ? { Authorization: 'Bearer ' + tok } : {};
+  }
+  // Like BTTUtil.fetchJSON but sends the site-auth token when present. Used only
+  // for the leaderboards data calls that vary by login (config/boards/entries).
+  async function fetchJSONAuth(path) {
+    const res = await fetch(apiUrl(path), {
+      headers: { Accept: 'application/json', ...lbAuthHeaders() },
+    });
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try {
+        const b = await res.json();
+        if (b && b.detail) msg = b.detail;
+        else if (b && b.error && b.error.message) msg = b.error.message;
+      } catch (_) {}
+      const err = new Error(msg); err.status = res.status; throw err;
+    }
+    return res.json();
+  }
 
   const PAGE_SIZE = 100;
   const DAY_SECONDS = 86400;
@@ -200,12 +226,18 @@
       // limit=365 (endpoint max) so the day-picker's PICKER_DAYS window is
       // fully covered even at hourly captures; served from the Redis snapshot.
       fetchJSON('/site/leaderboards/timestamps?limit=365'),
-      fetchJSON('/site/leaderboards/config').catch(() => null),
+      fetchJSONAuth('/site/leaderboards/config').catch(() => null),
     ]);
     state.anchors = stamps.items || [];
     if (config && Number.isFinite(config.hot_retention_days)) {
       state.hotRetentionDays = config.hot_retention_days;
     }
+    // Day-picker depth for this caller (signed-in users get the extended archive)
+    // + the age past which the top-5 board chart is not drawn. Fall back to the
+    // 7-day hot window if the config fetch failed.
+    state.pickerDays = (config && Number.isFinite(config.picker_days)) ? config.picker_days : PICKER_DAYS;
+    state.graphMaxAgeDays = (config && Number.isFinite(config.graph_max_age_days)) ? config.graph_max_age_days : PICKER_DAYS;
+    state.loggedIn = !!(config && config.logged_in);
     // Master compute switches: a disabled tab is hidden outright (the server
     // skips the calculation, so there's nothing to show). Default ON so a
     // failed config fetch leaves the tabs in place.
@@ -1262,6 +1294,21 @@
     return Math.floor((unix - TROVE_OFFSET_SECONDS) / DAY_SECONDS);
   }
 
+  // How many day-chips to render: the caller's window (7 for anon, the extended
+  // archive for signed-in users) but never further back than the oldest capture
+  // we actually have - so "all history" doesn't paint months of empty chips.
+  function effectivePickerDays(todayKey) {
+    const want = Number.isFinite(state.pickerDays) ? state.pickerDays : PICKER_DAYS;
+    if (!state.anchors || !state.anchors.length) return Math.min(want, PICKER_DAYS);
+    let oldest = todayKey;
+    for (const ts of state.anchors) {
+      const k = troveDayKeyFor(ts);
+      if (k < oldest) oldest = k;
+    }
+    const span = (todayKey - oldest) + 1;
+    return Math.max(1, Math.min(want, span));
+  }
+
   function buildDays() {
     // Current trove-day key from real-time "now". This is the chip we
     // mark as "Today".
@@ -1278,7 +1325,8 @@
     }
 
     state.days = [];
-    for (let i = 0; i < PICKER_DAYS; i++) {
+    const nDays = effectivePickerDays(todayKey);
+    for (let i = 0; i < nDays; i++) {
       const key = todayKey - i;
       const dayStart = key * DAY_SECONDS + TROVE_OFFSET_SECONDS;       // real UTC start (11:00)
       const dayEnd = dayStart + DAY_SECONDS;                            // real UTC end (next 11:00)
@@ -1308,7 +1356,6 @@
       const role = d.anchor == null ? '' : 'role="tab"';
       return `
         <button type="button" class="${cls.join(' ')}" data-day-idx="${idx}" ${dis} ${role}>
-          <span class="lb-day-rel" data-i18n>${dayRelativeLabel(d.relative)}</span>
           <span class="lb-day-date">${dayCalendarLabel(d.troveDate)}</span>
           ${d.anchor == null
             ? `<span class="lb-day-meta" data-i18n>No data</span>`
@@ -1317,15 +1364,14 @@
     }).join('');
     rerunI18n();
 
+    // Past the 7-day hot grid (signed-in users browsing the archive) the fixed
+    // 7-col grid would stack into many rows - switch to a horizontal scroller so
+    // the history stays one tidy, swipeable row.
+    $dayPicker.classList.toggle('lb-day-picker--scroll', state.days.length > PICKER_DAYS);
+
     for (const btn of $dayPicker.querySelectorAll('[data-day-idx]:not([disabled])')) {
       btn.addEventListener('click', () => selectDay(Number(btn.dataset.dayIdx)));
     }
-  }
-
-  function dayRelativeLabel(rel) {
-    if (rel === 0) return 'Today';
-    if (rel === 1) return 'Yesterday';
-    return 'Day';  // generic label, the date below carries the specifics
   }
 
   function dayCalendarLabel(troveDate) {
@@ -1412,7 +1458,7 @@
     }
     state.selectedUuid = null;
     try {
-      const data = await fetchJSON(`/site/leaderboards/boards?created_at=${state.anchor}`);
+      const data = await fetchJSONAuth(`/site/leaderboards/boards?created_at=${state.anchor}`);
       const fresh = data.items || [];
       state.boards = fresh;
       if (hadBoards) resetEntries();   // clear the now-stale entries pane
@@ -1637,7 +1683,7 @@
     if (!reset) $loadMore.disabled = true;
     const offset = reset ? 0 : state.entries.length;
     try {
-      const data = await fetchJSON(
+      const data = await fetchJSONAuth(
         `/site/leaderboards/${state.selectedUuid}/entries`
         + `?created_at=${state.anchor}&limit=${PAGE_SIZE}&offset=${offset}`,
       );
@@ -2198,6 +2244,12 @@
     const $chart = document.getElementById('lb-board-chart');
     const $legend = document.getElementById('lb-board-chart-legend');
     if (!$wrap || !$chart) return;
+    // The top-5 chart plots the last 7 days' trajectory - meaningful only for a
+    // recent day. For an older selected capture (archive browsing) it's neither
+    // wanted nor worth the cold-partition scan, so skip it entirely.
+    const selDay = state.days[state.selectedDayIdx];
+    const maxAge = Number.isFinite(state.graphMaxAgeDays) ? state.graphMaxAgeDays : PICKER_DAYS;
+    if (selDay && selDay.relative >= maxAge) { hideBoardChart(); return; }
     // Optimistic show - give the user a "something is happening" cue
     // while the fetch runs. drawBoardChart hides again on empty.
     $wrap.hidden = false;

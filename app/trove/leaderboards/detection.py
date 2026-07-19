@@ -392,7 +392,22 @@ async def _warm_all() -> None:
     # the warmer would see _LAST_GOOD (the previous anchor's payload)
     # and return that without ever calling _compute() - and the user
     # would be stuck looking at yesterday's flags forever.
-    res = await detect_possible_cheaters(force=True)
+    #
+    # NON-FATAL (like activity / class / renames below): detection - especially
+    # the alt-cluster comovement pass - can be slow enough to TIME OUT at scale.
+    # It must NEVER abort this pass before the publish below, or a detection
+    # failure freezes the page's freshness (ready_anchor stays put) even though
+    # ingest keeps landing new anchors. On failure we degrade gracefully: the
+    # cheaters/clusters tab serves last-good while the rest of the page still
+    # advances to the new capture.
+    res: dict | None = None
+    try:
+        res = await detect_possible_cheaters(force=True)
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        logger.exception(
+            "leaderboards warmer: cheater/cluster detection failed (non-fatal)")
     # activity estimate - also a multi-board scan. NON-FATAL: it's the auxiliary
     # "live pulse" pill, so a failure here must not abort the pass before the
     # publish below (which would freeze the atomic snapshot switch). The pill
@@ -427,7 +442,13 @@ async def _warm_all() -> None:
     # cheaters + activity + boards/entries are all cached. Until this flips,
     # get_timestamps hides the freshly-ingested anchor, so the page switches to
     # a new capture atomically (never showing a half-processed snapshot).
+    # Advance the page's "latest" to this anchor. Prefer the anchor detection just
+    # published; if detection failed (res is None) fall back to the latest ingested
+    # anchor, so page freshness NEVER depends on the detection pass succeeding.
     anchor = res.get("anchor") if isinstance(res, dict) else None
+    if anchor is None:
+        ts = await lb_service.list_timestamps(limit=1, include_archive=False)
+        anchor = ts[0] if ts else None
     if anchor is not None:
         await lb_cache.set_ready_anchor(anchor)
         # Pre-warm each board's default chart (7d / top-5) so selecting a board on

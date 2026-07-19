@@ -645,6 +645,32 @@ REGISTRY: dict[str, TunableSetting] = {
         ),
         min_value=1, max_value=3650,
     ),
+    "leaderboards_anon_retention_days": _t(
+        key="leaderboards_anon_retention_days",
+        default=settings.leaderboards_anon_retention_days,
+        type="int",
+        category="archive_rate_limits",
+        description=(
+            "How many days of leaderboard history ANONYMOUS visitors can browse "
+            "in the /leaderboards day-picker (and the window within which the "
+            "top-5 board-history chart is drawn). Signed-in Dashboard users get "
+            "leaderboards_extended_retention_days instead. Deeper captures are "
+            "cold-tiered (slower disk), so this caps anonymous cold-read load."
+        ),
+        min_value=1, max_value=3650,
+    ),
+    "leaderboards_extended_retention_days": _t(
+        key="leaderboards_extended_retention_days",
+        default=settings.leaderboards_extended_retention_days,
+        type="int",
+        category="archive_rate_limits",
+        description=(
+            "How many days of leaderboard history SIGNED-IN Dashboard users can "
+            "browse in the day-picker. Default is effectively all stored history; "
+            "lower it to cap how far into the slower cold archive users can reach."
+        ),
+        min_value=1, max_value=36500,
+    ),
     "leaderboards_archive_query_threshold_days": _t(
         key="leaderboards_archive_query_threshold_days",
         default=settings.leaderboards_archive_query_threshold_days,
