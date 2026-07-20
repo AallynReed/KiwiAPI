@@ -18,7 +18,9 @@ async def password_breach_count(password: str) -> int:
     leave this server. Fails OPEN (returns 0) if HIBP is unreachable, so an
     outage can't block signups.
     """
-    sha1 = hashlib.sha1(password.encode("utf-8")).hexdigest().upper()  # noqa: S324
+    # SHA-1 is dictated by the HIBP range API (k-anonymity); only the first 5 hex
+    # chars ever leave this process, and it is not used for storage. Not swappable.
+    sha1 = hashlib.sha1(password.encode("utf-8")).hexdigest().upper()  # noqa: S324  # lgtm[py/weak-sensitive-data-hashing]
     prefix, suffix = sha1[:5], sha1[5:]
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:

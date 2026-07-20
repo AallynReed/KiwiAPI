@@ -14,8 +14,6 @@
 (function () {
   'use strict';
 
-  const { esc } = window.BTTUtil;
-
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
 
   const TS_STYLES = 'tTdDfFR';
@@ -56,14 +54,39 @@
     return d.toLocaleString();
   }
 
-  // minimal Discord markdown -> HTML for the preview (links, bold, italics, code)
+  // Minimal Discord markdown -> DOM nodes for the preview (links, bold, italics,
+  // code). Builds a DocumentFragment with textContent-only leaves so preview text
+  // can never be reinterpreted as HTML - no innerHTML sink anywhere on this path.
   function md(text) {
-    let h = esc(text);
-    h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-    h = h.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    h = h.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
-    h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
-    return h.replace(/\n/g, '<br>');
+    const frag = document.createDocumentFragment();
+    const s = String(text == null ? '' : text);
+    const pushText = (str) => {
+      const lines = str.split('\n');
+      lines.forEach((line, i) => {
+        if (i) frag.appendChild(document.createElement('br'));
+        if (line) frag.appendChild(document.createTextNode(line));
+      });
+    };
+    // link | **bold** | *italic* | `code`
+    const re = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|\*\*([^*]+)\*\*|\*([^*\s][^*]*?)\*|`([^`]+)`/g;
+    let last = 0, m;
+    while ((m = re.exec(s)) !== null) {
+      if (m.index > last) pushText(s.slice(last, m.index));
+      if (m[1] != null) {
+        const a = document.createElement('a');
+        a.href = m[2]; a.target = '_blank'; a.rel = 'noopener'; a.textContent = m[1];
+        frag.appendChild(a);
+      } else if (m[3] != null) {
+        const b = document.createElement('strong'); b.textContent = m[3]; frag.appendChild(b);
+      } else if (m[4] != null) {
+        const em = document.createElement('em'); em.textContent = m[4]; frag.appendChild(em);
+      } else if (m[5] != null) {
+        const c = document.createElement('code'); c.textContent = m[5]; frag.appendChild(c);
+      }
+      last = re.lastIndex;
+    }
+    if (last < s.length) pushText(s.slice(last));
+    return frag;
   }
 
   function clone(o) { return JSON.parse(JSON.stringify(o || {})); }
@@ -254,7 +277,7 @@
       if (title) {
         const url = subst(tt.url, sample, true);
         const titleEl = el('div', 'ee-pv-title', null, md(title));
-        if (/^https?:\/\//.test(url)) { const a = el('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.innerHTML = md(title); titleEl.innerHTML = ''; titleEl.appendChild(a); }
+        if (/^https?:\/\//.test(url)) { const a = el('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.appendChild(md(title)); titleEl.replaceChildren(); titleEl.appendChild(a); }
         card.appendChild(titleEl);
       }
       const desc = subst(tt.description, sample, true);
@@ -291,11 +314,11 @@
     }
 
     // ── small DOM helpers ───────────────────────────────────────────────
-    function el(tag, cls, text, html) {
+    function el(tag, cls, text, node) {
       const e = document.createElement(tag);
       if (cls) e.className = cls;
       if (text != null) e.textContent = text;
-      if (html != null) e.innerHTML = html;
+      if (node != null) e.appendChild(node);  // node is a DOM Node from md(), never a string
       return e;
     }
     function field(label, control) {

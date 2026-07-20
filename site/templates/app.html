@@ -80,9 +80,15 @@
             const file = (img.getAttribute('src') || '').split('/').pop();
             const ph = document.createElement('div');
             ph.className = 'shot-placeholder';
-            ph.innerHTML = '<i class="fa-regular fa-image" aria-hidden="true"></i>'
-                + '<span data-i18n>' + (img.getAttribute('alt') || 'Screenshot') + '</span>'
-                + '<code>' + file + '</code>';
+            const icon = document.createElement('i');
+            icon.className = 'fa-regular fa-image';
+            icon.setAttribute('aria-hidden', 'true');
+            const label = document.createElement('span');
+            label.setAttribute('data-i18n', '');
+            label.textContent = img.getAttribute('alt') || 'Screenshot';
+            const code = document.createElement('code');
+            code.textContent = file;
+            ph.append(icon, label, code);
             img.replaceWith(ph);
         }
     </script>

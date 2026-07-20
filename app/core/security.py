@@ -130,7 +130,10 @@ def verify_token_checksum(token: str) -> bool | None:
 
 
 def hash_token(token: str) -> str:
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+    # A high-entropy random token indexed by its digest - NOT a password. A fast
+    # hash is correct here (argon2 would be re-run on every authenticated request
+    # and can't be used as a lookup key); brute-forcing a 256-bit token is infeasible.
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()  # lgtm[py/weak-sensitive-data-hashing]
 
 
 # --- Purpose-scoped email links (verification, password reset) -------------

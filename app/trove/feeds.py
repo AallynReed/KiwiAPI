@@ -415,8 +415,8 @@ def _hdslb_target(url: str) -> httpx.URL:
     host = (parsed.host or "").lower()
     if parsed.scheme != "https" or not (host == "hdslb.com" or host.endswith(".hdslb.com")):
         raise ValueError("only https hdslb.com images may be proxied")
-    # Reconstruct from the guarded host + literal https scheme; keep only path/query.
-    return httpx.URL(scheme="https", host=host, port=parsed.port, raw_path=parsed.raw_path)
+    # Rebuild from the guarded host + literal https scheme; path/query preserved.
+    return parsed.copy_with(scheme="https", host=host)
 
 
 def _is_hdslb(url: str) -> bool:

@@ -668,6 +668,12 @@ class Handler(SimpleHTTPRequestHandler):
         url = urlparse(self.path)
         path = url.path
 
+        # Dev-only static preview: reject any path traversal before a request
+        # path is ever turned into a filesystem path, so nothing below can escape
+        # the site directories.
+        if ".." in path or "\x00" in path:
+            return self.send_error(400)
+
         # Page routes.
         if path == "/":
             return self._send_file(TEMPLATES / "index.html", "text/html")

@@ -233,7 +233,10 @@
       tokens.save(r.data.access_token, r.data.refresh_token);
       await getMe({ force: true });
       const next = new URLSearchParams(location.search).get('next');
-      location.href = next && next.startsWith('/') ? next : '/dashboard';
+      // Only same-origin, single-slash paths - reject "//evil.com" and "/\evil.com"
+      // (protocol-relative URLs the browser would treat as off-site).
+      const safeNext = next && /^\/(?![/\\])/.test(next) ? next : '/dashboard';
+      location.href = safeNext;
     } catch (_) {
       const $err = document.getElementById('login-error');
       if ($err) {

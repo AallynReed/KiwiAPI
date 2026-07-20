@@ -2243,10 +2243,17 @@ async def site_up_file_blueprint(
     try:
         payload = await asyncio.to_thread(pack_blueprint, raw, path)
     except BlueprintTooLarge as exc:
-        return JSONResponse({"error": {"message": str(exc)}}, status_code=413)
+        logging.getLogger(__name__).info("blueprint too large: %s", exc)
+        return JSONResponse(
+            {"error": {"message": "This blueprint is too large to preview."}}, status_code=413,
+        )
     except BlueprintError as exc:
         # Empty placeholder / undecodable - the viewer surfaces this message.
-        return JSONResponse({"error": {"message": str(exc)}}, status_code=422)
+        logging.getLogger(__name__).info("blueprint decode failed: %s", exc)
+        return JSONResponse(
+            {"error": {"message": "This blueprint is empty or could not be decoded."}},
+            status_code=422,
+        )
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=300"})
 
 

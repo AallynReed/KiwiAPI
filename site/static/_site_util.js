@@ -15,7 +15,9 @@
     // resolve against whatever is serving the page. A page may pre-set
     // window.API_BASE before this script to override (e.g. dev against staging).
     if (window.API_BASE === undefined) {
-        window.API_BASE = location.hostname.endsWith("aallyn.net")
+        // Exact host or a real subdomain of aallyn.net - NOT "evilaallyn.net".
+        const _h = location.hostname;
+        window.API_BASE = (_h === "aallyn.net" || _h.endsWith(".aallyn.net"))
             ? "https://api.aallyn.net"
             : "";
     }
