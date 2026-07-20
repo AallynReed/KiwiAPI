@@ -9,8 +9,18 @@ from __future__ import annotations
 
 from app.core.postgres import acquire
 
-# Columns the listings page is allowed to sort by (whitelist -> injection-safe).
-_SORT_COLUMNS = {"last_seen", "price_each", "created_at", "price", "stack", "name"}
+# Columns the listings page is allowed to sort by. Mapping user token -> the
+# literal SQL identifier we emit, so the value spliced into the query is ALWAYS
+# one of these constants, never the caller's string (injection-safe by
+# construction - the user input only ever selects a key, it is never emitted).
+_SORT_COLUMNS = {
+    "last_seen": "last_seen",
+    "price_each": "price_each",
+    "created_at": "created_at",
+    "price": "price",
+    "stack": "stack",
+    "name": "name",
+}
 
 
 def order_by(sort: str | None) -> str:
@@ -18,8 +28,8 @@ def order_by(sort: str | None) -> str:
     safe SQL ``ORDER BY`` expression. Unknown fields fall back to ``last_seen DESC``."""
     s = (sort or "-last_seen").strip()
     desc = s.startswith("-")
-    col = s.lstrip("+-")
-    if col not in _SORT_COLUMNS:
+    col = _SORT_COLUMNS.get(s.lstrip("+-"))
+    if col is None:
         return "last_seen DESC"
     return f"{col} {'DESC' if desc else 'ASC'}"
 

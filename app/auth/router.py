@@ -405,16 +405,19 @@ async def reset_password(payload: ResetPasswordRequest) -> MessageResponse:
 @router.get("/reset-password", response_class=HTMLResponse, include_in_schema=False)
 async def reset_password_form(token: str) -> HTMLResponse:
     # Minimal self-contained page so a reset link works straight from the email,
-    # with no separate frontend: it POSTs JSON to /auth/reset-password.
-    safe_token = token.replace("'", "").replace('"', "").replace("<", "")
+    # with no separate frontend: it POSTs JSON to /auth/reset-password. The token
+    # is carried in an escaped hidden input (never spliced into script text), so
+    # it can't break out of the markup or the JS context.
+    safe_token = html_lib.escape(token, quote=True)
     return _html_page(
         "Set a new password",
         f"""
         <input id="pw" type="password" placeholder="New password (min 8 chars)" autocomplete="new-password">
+        <input id="rtoken" type="hidden" value="{safe_token}">
         <button onclick="submitReset()">Reset password</button>
         <p id="msg" style="margin-top:12px"></p>
         <script>
-        const token = '{safe_token}';
+        const token = document.getElementById('rtoken').value;
         async function submitReset() {{
           const pw = document.getElementById('pw').value;
           const msg = document.getElementById('msg');

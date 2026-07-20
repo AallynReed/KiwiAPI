@@ -54,6 +54,17 @@
     return d.toLocaleString();
   }
 
+  // Only http(s) URLs survive - anything else (javascript:, data:, …) becomes
+  // an inert '#', so a preview URL can never execute or be reinterpreted.
+  function safeUrl(u) {
+    try {
+      const p = new URL(u, location.href);
+      return (p.protocol === 'https:' || p.protocol === 'http:') ? p.href : '#';
+    } catch (_) {
+      return '#';
+    }
+  }
+
   // Minimal Discord markdown -> DOM nodes for the preview (links, bold, italics,
   // code). Builds a DocumentFragment with textContent-only leaves so preview text
   // can never be reinterpreted as HTML - no innerHTML sink anywhere on this path.
@@ -74,7 +85,7 @@
       if (m.index > last) pushText(s.slice(last, m.index));
       if (m[1] != null) {
         const a = document.createElement('a');
-        a.href = m[2]; a.target = '_blank'; a.rel = 'noopener'; a.textContent = m[1];
+        a.href = safeUrl(m[2]); a.target = '_blank'; a.rel = 'noopener'; a.textContent = m[1];
         frag.appendChild(a);
       } else if (m[3] != null) {
         const b = document.createElement('strong'); b.textContent = m[3]; frag.appendChild(b);
@@ -277,7 +288,7 @@
       if (title) {
         const url = subst(tt.url, sample, true);
         const titleEl = el('div', 'ee-pv-title', null, md(title));
-        if (/^https?:\/\//.test(url)) { const a = el('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.appendChild(md(title)); titleEl.replaceChildren(); titleEl.appendChild(a); }
+        if (/^https?:\/\//.test(url)) { const a = el('a'); a.href = safeUrl(url); a.target = '_blank'; a.rel = 'noopener'; a.appendChild(md(title)); titleEl.replaceChildren(); titleEl.appendChild(a); }
         card.appendChild(titleEl);
       }
       const desc = subst(tt.description, sample, true);
@@ -300,7 +311,7 @@
         // real delivery uploads it as an attachment.
         const imgUrl = (tt.image_design_id && designUrl(tt.image_design_id))
           || subst(tt.image_url, sample, true) || sample.image_url;
-        if (imgUrl) { const im = el('img', 'ee-pv-img'); im.src = imgUrl; im.alt = ''; card.appendChild(im); }
+        if (imgUrl) { const im = el('img', 'ee-pv-img'); im.src = safeUrl(imgUrl); im.alt = ''; card.appendChild(im); }
       }
       const footer = subst(tt.footer, sample, true);
       if (footer) card.appendChild(el('div', 'ee-pv-footer', null, md(footer)));

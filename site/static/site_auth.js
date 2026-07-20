@@ -232,10 +232,14 @@
       if (!r.ok) throw new Error('exchange');
       tokens.save(r.data.access_token, r.data.refresh_token);
       await getMe({ force: true });
-      const next = new URLSearchParams(location.search).get('next');
-      // Only same-origin, single-slash paths - reject "//evil.com" and "/\evil.com"
-      // (protocol-relative URLs the browser would treat as off-site).
-      const safeNext = next && /^\/(?![/\\])/.test(next) ? next : '/dashboard';
+      const rawNext = new URLSearchParams(location.search).get('next') || '';
+      // Resolve against our own origin and only keep the path if it stays
+      // same-origin - defeats "//evil.com", "https://evil.com" and "javascript:".
+      let safeNext = '/dashboard';
+      try {
+        const u = new URL(rawNext, location.origin);
+        if (u.origin === location.origin) safeNext = u.pathname + u.search + u.hash;
+      } catch (_) { /* malformed - keep the default */ }
       location.href = safeNext;
     } catch (_) {
       const $err = document.getElementById('login-error');

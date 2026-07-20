@@ -35,6 +35,18 @@ SITE_DIR = ROOT / "site"
 TEMPLATES = SITE_DIR / "templates"
 STATIC = SITE_DIR / "static"
 
+
+def _under(base: Path, *parts: str) -> Path | None:
+    """Resolve ``base / *parts`` and return it ONLY if it stays inside ``base``.
+
+    Both an absolute part and a ``..`` escape resolve to a path outside ``base``,
+    so this rejects every traversal (dev-only static preview hardening)."""
+    root = base.resolve()
+    candidate = (root / Path(*parts)).resolve()
+    if candidate == root or root in candidate.parents:
+        return candidate
+    return None
+
 # The gem tools (Evaluator / Builds / Calculators star-chart preview) run the
 # real service layer - it's dependency-light (stdlib + gamedata JSON + pydantic
 # schemas), so we import it here and answer the /site/gems/* proxies with the
@@ -796,14 +808,14 @@ class Handler(SimpleHTTPRequestHandler):
         # unminified source so local preview works without running the minifier.
         if path.startswith("/static/"):
             rel = path[len("/static/"):]
-            target = STATIC / rel
             # Dev: always prefer the un-minified source over its .min build
             # artifact so local edits show up without running minify_static.py
             # (the templates hard-code .min.js/.min.css for production).
-            if ".min." in rel:
-                source = STATIC / rel.replace(".min.", ".", 1)
-                if source.exists():
-                    target = source
+            if ".min." in rel and (STATIC / rel.replace(".min.", ".", 1)).exists():
+                rel = rel.replace(".min.", ".", 1)
+            target = _under(STATIC, rel)
+            if target is None:
+                return self.send_error(404)
             return self._send_file(target, None)
 
         # Stub JSON endpoints.
@@ -892,8 +904,8 @@ class Handler(SimpleHTTPRequestHandler):
             # so tiles still show SOMETHING if the reference folder is absent.
             name = unquote(path[len("/site/leaderboards/board-icon/"):])
             if _re_icon.match(name):
-                ref = Path("S:/Downloads/ui/leaderboard_icons") / f"{name}.png"
-                if ref.is_file():
+                ref = _under(Path("S:/Downloads/ui/leaderboard_icons"), f"{name}.png")
+                if ref is not None and ref.is_file():
                     return self._send_file(ref, "image/png")
             fav = STATIC / "assets" / "favicon.png"
             if fav.exists():
@@ -992,9 +1004,9 @@ class Handler(SimpleHTTPRequestHandler):
             import re as _re
             m = _re.match(r"^/site/rigs/([a-z0-9_]+)/anim/([a-z0-9_]+)$", path)
             if m:
-                ap = (ROOT / "app" / "trove" / "mods_hub" / "rigs" / "anim"
-                      / m.group(1) / (m.group(2) + ".json"))
-                if ap.exists():
+                ap = _under(ROOT / "app" / "trove" / "mods_hub" / "rigs" / "anim",
+                            m.group(1), m.group(2) + ".json")
+                if ap is not None and ap.exists():
                     return self._send_file(ap, "application/json")
             return self._send_json({"error": {"message": "no animation"}})
         if path.startswith("/site/mods/projects/"):
