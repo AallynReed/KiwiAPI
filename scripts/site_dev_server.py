@@ -810,9 +810,12 @@ class Handler(SimpleHTTPRequestHandler):
             rel = path[len("/static/"):]
             # Dev: always prefer the un-minified source over its .min build
             # artifact so local edits show up without running minify_static.py
-            # (the templates hard-code .min.js/.min.css for production).
-            if ".min." in rel and (STATIC / rel.replace(".min.", ".", 1)).exists():
-                rel = rel.replace(".min.", ".", 1)
+            # (the templates hard-code .min.js/.min.css for production). Every
+            # candidate goes through _under, so no raw path is built from input.
+            if ".min." in rel:
+                unmin = _under(STATIC, rel.replace(".min.", ".", 1))
+                if unmin is not None and unmin.exists():
+                    rel = rel.replace(".min.", ".", 1)
             target = _under(STATIC, rel)
             if target is None:
                 return self.send_error(404)
