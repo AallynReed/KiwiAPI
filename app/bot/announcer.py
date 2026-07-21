@@ -25,9 +25,9 @@ import discord
 from app import i18n
 from app.bot.announcements import ANNOUNCEMENT_TYPES, TYPES_BY_KEY
 from app.bot.models import GuildConfig, TrackedAnnouncement
+from app.core.config import settings
 from app.core.utils import countdown_bucket, utcnow
 from app.discord import embed_contexts
-from app.discord.embeds import SITE
 from app.embed_templates import render_template
 
 logger = logging.getLogger("kiwi.bot.announcer")
@@ -39,7 +39,10 @@ def _image_embed_dict(kind: str, token: str, lang: str = "en") -> dict:
     ``lang`` selects the localized render (omitted for English so existing URLs +
     the per-(kind,minute) image cache are unchanged)."""
     suffix = f"&lang={lang}" if lang != "en" else ""
-    return {"image": {"url": f"{SITE}/announce.png?kind={kind}&v={token}{suffix}"}}
+    # announce.png is an API-rendered PNG, so it must point at the ASSET host
+    # (api.aallyn.net once the website is split out), NOT the website host - Discord
+    # fetches embed images server-side and the web container doesn't serve it.
+    return {"image": {"url": f"{settings.asset_url}/announce.png?kind={kind}&v={token}{suffix}"}}
 
 
 def _refresh_token(expires_at: int | None, now: int) -> str:

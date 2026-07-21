@@ -42,6 +42,7 @@ from app.trove import (
     chaos,
     delves,
     feeds,
+    luxion as luxion_mod,
     misc,
     news,
     rotations,
@@ -151,6 +152,9 @@ from app.trove.schemas import (
     LeaderboardPlayerEntry,
     LeaderboardPlayerHistory,
     LeaderboardTimestamps,
+    Luxion,
+    LuxionAppearanceOut,
+    LuxionHistoryPage,
     MarketInsertResponse,
     MarketItemList,
     MarketItemSummary,
@@ -329,6 +333,67 @@ async def get_fluxion(ctx: AccessContext = _ROT) -> Fluxion:
     return Fluxion(**server_time.fluxion())
 
 
+@rotations_router.get("/luxion", response_model=Luxion)
+async def get_luxion(ctx: AccessContext = _ROT) -> Luxion:
+    """Luxion merchant: live status + the daily 3-hour windows for the current run.
+
+    Unlike Corruxion/Fluxion, Luxion's start is dev-set and unpredictable, so it's
+    CAPTURED from the game (welcome screen) rather than computed. Once the bot
+    reports a sighting, the API anchors the run to that trove-day's 00:00 and the
+    rest of the 7-day schedule (a 3-hour window per day, shifting +3h daily) is
+    deterministic. ``active`` is False with an empty schedule until Luxion has
+    been seen in-game at least once."""
+    return Luxion(**await luxion_mod.get_luxion())
+
+
+@rotations_router.post("/luxion/insert", response_model=CaptureInsertResponse,
+                       summary="Insert Luxion sighting")
+async def insert_luxion(
+    _auth = Depends(require_master_ingest),
+) -> CaptureInsertResponse:
+    """Record that the bot saw Luxion featured in-game right now.
+
+    **Master only**: requires a superuser-owned API token. No body - the server
+    anchors a NEW appearance to the current trove-day's daily reset (00:00 =
+    11:00 UTC). Idempotent within a live 7-day run: re-reporting just refreshes
+    the sighting timestamp (``refreshed=true``)."""
+    doc, was_new = await captures.insert_luxion()
+    await ingest_log.record(
+        endpoint="/v1/rotations/luxion/insert",
+        user=_auth.user, token=_auth.token,
+        summary={"started_at": doc.started_at, "refreshed": not was_new},
+    )
+    # Push to live SSE subscribers + the Discord announcer. Dedup on the run start
+    # makes this a no-op on the hourly re-sightings; only a new run emits.
+    try:
+        await events_bus.publish_luxion()
+    except Exception:
+        logger.warning("luxion event publish failed", exc_info=True)
+    return CaptureInsertResponse(
+        anchor=doc.started_at, name="luxion", refreshed=not was_new,
+    )
+
+
+@rotations_router.get("/luxion/history", response_model=LuxionHistoryPage)
+async def list_luxion_history(
+    ctx: AccessContext = _ROT,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> LuxionHistoryPage:
+    """Past Luxion appearances, newest first. Public under ``rotations:read``."""
+    docs, total = await captures.list_luxion_history(limit=limit, offset=offset)
+    items = [
+        LuxionAppearanceOut(
+            started_at=d.started_at,
+            ends_at=d.started_at + 7 * 86400,
+            first_seen_at=d.first_seen_at,
+            last_seen_at=d.last_seen_at,
+        )
+        for d in docs
+    ]
+    return LuxionHistoryPage(items=items, count=len(items), total=total)
+
+
 @rotations_router.get("/gardening", response_model=Gardening)
 async def get_gardening(ctx: AccessContext = _ROT) -> Gardening:
     """Gardening harvest windows: current 2-day and 3-day plant windows + what's next."""
@@ -487,9 +552,11 @@ async def list_challenge_history(
 @rotations_router.get("/calendar", response_model=YearlyCalendar)
 async def get_calendar(ctx: AccessContext = _ROT) -> YearlyCalendar:
     """The full yearly event calendar (±365 days): every recurring rotation -
-    weekly buffs, Corruxion/Fluxion, gardening, Wild Mana, Stampy - as one flat,
-    start-sorted timeline. (Invasion is excluded.)"""
-    return YearlyCalendar(**trove_calendar.yearly_calendar())
+    weekly buffs, Corruxion/Fluxion, gardening, Wild Mana, Stampy - plus any
+    recorded Luxion runs, as one flat, start-sorted timeline. (Invasion is
+    excluded; Luxion is captured, so only known past/current runs appear.)"""
+    luxion_runs = await captures.list_luxion_starts()
+    return YearlyCalendar(**trove_calendar.yearly_calendar(luxion_runs=luxion_runs))
 
 
 @rotations_router.get(

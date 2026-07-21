@@ -606,6 +606,7 @@ _ANN_TITLE = {
     "daily_bonuses": "Daily Bonus", "longshade": "Depth-15 Biomes",
     "wild_mana": "Wild Mana", "stampy": "Stampy Event",
     "corruxion": "Corruxion Merchant", "fluxion": "Fluxion Merchant",
+    "luxion": "Luxion Merchant",
     "server_status": "Trove Server Status", "game_update": "Trove Update",
     "challenge_collection": "Collection Challenge", "challenge_rampage": "Rampage Alert",
     "challenge_racing": "Racing Challenge", "challenge_target": "Target Challenge",
@@ -616,6 +617,7 @@ _ANN_ACCENT = {
     "daily_bonuses": (255, 184, 107), "longshade": (155, 138, 251),
     "wild_mana": (70, 211, 154), "stampy": (255, 184, 107),
     "corruxion": (155, 93, 229), "fluxion": (76, 201, 240),
+    "luxion": (245, 197, 66),
     "game_update": (94, 198, 255),
     "challenge_collection": (255, 193, 7), "challenge_rampage": (244, 67, 54),
     "challenge_racing": (33, 150, 243), "challenge_target": (156, 39, 176),
@@ -680,6 +682,19 @@ async def _announcement_content(kind: str) -> tuple[str, tuple, list[str]]:
                      t("Leaves {when}", when=_rel_coarse(m.get('ends_at')))]
         else:
             lines = [t("Away"), t("Arrives {when}", when=_rel_coarse(m.get('starts_at')))]
+    elif kind == "luxion":
+        from app.trove.luxion import get_luxion
+        m = await get_luxion()
+        if m.get("active"):
+            win = m.get("current_window") or m.get("next_window")
+            if m.get("merchant_open") and win:
+                lines = [t("Here now · open"), t("Closes {when}", when=_rel_coarse(win.get("ends_at")))]
+            elif win:
+                lines = [t("Here now"), t("Next window {when}", when=_rel_coarse(win.get("starts_at")))]
+            else:
+                lines = [t("Here now"), t("Leaves {when}", when=_rel_coarse(m.get("ends_at")))]
+        else:
+            lines = [t("Away"), t("Returns every ~4 weeks")]
     elif kind == "server_status":
         from app.trove import status as trove_status
         s = trove_status.get_status()

@@ -11,7 +11,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON } = window.BTTUtil;
+  const { esc, fetchJSON, apiUrl } = window.BTTUtil;
 
   const PAGE_SIZE = 100;
 
@@ -121,8 +121,8 @@
   function thumbHTML(name, size, cls) {
     const bp = state.images[name];
     if (!bp) return '';
-    const src = '/site/codexes/render?blueprint=' + encodeURIComponent(bp)
-      + '&branch=' + encodeURIComponent(state.imageBranch) + '&dim=' + size;
+    const src = apiUrl('/site/codexes/render?blueprint=' + encodeURIComponent(bp)
+      + '&branch=' + encodeURIComponent(state.imageBranch) + '&dim=' + size);
     return `<span class="${cls}"><img loading="lazy" decoding="async" alt=""
       src="${esc(src)}" onerror="this.closest('.${cls}').remove()"></span>`;
   }
@@ -308,8 +308,8 @@
     if ($detailThumb) {
       const bp = state.images[name];
       if (bp) {
-        const src = '/site/codexes/render?blueprint=' + encodeURIComponent(bp)
-          + '&branch=' + encodeURIComponent(state.imageBranch) + '&dim=96';
+        const src = apiUrl('/site/codexes/render?blueprint=' + encodeURIComponent(bp)
+          + '&branch=' + encodeURIComponent(state.imageBranch) + '&dim=96');
         $detailThumb.innerHTML = `<img loading="lazy" decoding="async" alt=""
           src="${esc(src)}" onerror="this.closest('#mkt-detail-thumb').hidden = true">`;
         $detailThumb.hidden = false;

@@ -114,6 +114,12 @@ async def _fluxion_anchor() -> str | None:
     return str(f["starts_at"]) if f.get("active") else None
 
 
+async def _luxion_anchor() -> str | None:
+    from app.trove.luxion import get_luxion
+    l = await get_luxion()
+    return str(l["starts_at"]) if l.get("active") else None
+
+
 async def _news_anchor() -> str | None:
     from app.trove.news import latest_news
     items = await latest_news(1)
@@ -205,6 +211,11 @@ async def _fluxion_expiry() -> int | None:
     return fluxion().get("ends_at")
 
 
+async def _luxion_expiry() -> int | None:
+    from app.trove.luxion import get_luxion
+    return (await get_luxion()).get("ends_at")
+
+
 # One announcement type per challenge category (replaces the old single
 # "hourly_challenge" type; migrate_legacy folds old configs into these). Each is
 # an image announcement like the original; only the live category's anchor fires,
@@ -262,6 +273,11 @@ ANNOUNCEMENT_TYPES: tuple[AnnouncementType, ...] = (
         "Post when the Fluxion merchant arrives (voting / selling stage).",
         "Rotations", embeds.fluxion_embed, _fluxion_anchor,
         auto_manage=True, expiry=_fluxion_expiry),
+    AnnouncementType(
+        "luxion", "Luxion merchant",
+        "Post when Luxion arrives for its weekly (7-day) visit.",
+        "Rotations", embeds.luxion_embed, _luxion_anchor,
+        auto_manage=True, expiry=_luxion_expiry),
     AnnouncementType(
         "trove_news", "Trove news",
         "Post each new Trove news article from the official feed.",

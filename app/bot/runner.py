@@ -12,9 +12,13 @@ to the interactions endpoint, while this gateway connection handles proactive wo
       also refreshed instantly on board-relevant events.)
 - keeping per-guild config in sync with Discord's live state - when a channel or
   role a guild configured is deleted, we reconcile immediately.
+- mirroring a linked user's Discord avatar change into their SiteUser (on_user_update),
+  so the website's cached avatar hash stays fresh between logins (app/bot/avatar_sync).
 
-Shares the API's Mongo (``GuildConfig``) and Redis. Only the default (Guilds)
-intent is needed. Run: ``python -m app.bot.runner`` (the compose ``bot`` service).
+Shares the API's Mongo (``GuildConfig``, ``SiteUser``) and Redis. Runs on the default
+(Guilds) intent plus the members privileged intent for the avatar sync above - if that
+intent isn't granted in the Developer Portal, main() falls back to running without it.
+Run: ``python -m app.bot.runner`` (the compose ``bot`` service).
 """
 import asyncio
 import json
@@ -31,6 +35,7 @@ from app.bot.announcer import (
     run_all_announcements,
     run_announcement_type,
 )
+from app.bot.avatar_sync import sync_avatar
 from app.bot.models import GuildConfig
 from app.bot.reconcile import reconcile
 from app.core.config import settings
@@ -49,6 +54,7 @@ _EVENT_TO_ANNOUNCEMENT: dict[str, str | tuple[str, ...]] = {
     # to a non-existent announcement type.
     "challenge": tuple(f"challenge_{cat}" for cat in ANNOUNCED_CHALLENGE_CATEGORIES),
     "chaos": "chaos_chest",
+    "luxion": "luxion",
     "corruxion": "corruxion",
     "fluxion": "fluxion",
     "longshade": "longshade",
@@ -72,11 +78,24 @@ def _seconds_until(second: int) -> float:
     return max(0.0, (target - now).total_seconds())
 
 
+def _build_intents(members: bool) -> discord.Intents:
+    # Default intents (Guilds) already cover everything the announcer/reconciler
+    # need - sending messages, reading guild structure, channel/role events. The
+    # members privileged intent is added only for the Discord avatar auto-sync
+    # (on_user_update); it requires the "Server Members Intent" toggle in the
+    # Developer Portal, and main() drops it gracefully if that's not granted.
+    intents = discord.Intents.default()
+    if members:
+        intents.members = True
+    return intents
+
+
 class KiwiBot(discord.Client):
-    def __init__(self) -> None:
-        # Default intents (Guilds) are enough - we send messages, read guild
-        # structure, and receive channel/role create+delete+update events.
-        super().__init__(intents=discord.Intents.default())
+    def __init__(self, members_intent: bool | None = None) -> None:
+        use_members = (
+            settings.bot_members_intent if members_intent is None else members_intent
+        )
+        super().__init__(intents=_build_intents(use_members))
         self._tasks: list[asyncio.Task] = []
 
     async def setup_hook(self) -> None:
@@ -186,6 +205,18 @@ class KiwiBot(discord.Client):
     # time these fire, so ``guild.channels`` / ``guild.roles`` are the live id sets to
     # reconcile against.
 
+    async def on_user_update(self, before: discord.User, after: discord.User) -> None:
+        """Mirror a Discord avatar change into the linked SiteUser (if any), so the
+        website's cached hash stays fresh between logins. Fires only for users we
+        share a guild with (needs the members intent). Username/discriminator-only
+        changes are skipped so we don't touch the DB for edits we don't track."""
+        if before.avatar == after.avatar:
+            return
+        try:
+            await sync_avatar(after)
+        except Exception:
+            logger.exception("avatar sync failed for user %s", after.id)
+
     async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel) -> None:
         await self._reconcile_guild(channel.guild)
 
@@ -217,9 +248,22 @@ async def main() -> None:
         raise SystemExit("DISCORD_BOT_TOKEN is required to run the Kiwi bot.")
     await init_db()
     await init_redis()
-    bot = KiwiBot()
     try:
-        await bot.start(settings.discord_bot_token)
+        try:
+            await KiwiBot().start(settings.discord_bot_token)
+        except discord.PrivilegedIntentsRequired:
+            # The members intent (for avatar auto-sync) isn't granted in the Discord
+            # Developer Portal. Don't take the whole bot down for it - restart WITHOUT
+            # the intent; avatars just keep refreshing at login as before.
+            if not settings.bot_members_intent:
+                raise  # not our doing - surface the real error
+            logger.warning(
+                "Server Members Intent is not enabled in the Discord Developer "
+                "Portal - starting the bot without it (Discord avatar auto-sync is "
+                "off; avatars still refresh on the user's next login). Enable the "
+                "intent to turn it on, or set BOT_MEMBERS_INTENT=false to silence this."
+            )
+            await KiwiBot(members_intent=False).start(settings.discord_bot_token)
     finally:
         await close_redis()
         await close_db()

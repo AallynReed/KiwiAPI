@@ -62,6 +62,19 @@ def _chaos_sig(d: dict) -> str | None:
     return f"{d.get('starts_at')}:{item.get('name')}" if item.get("name") else None
 
 
+# ── insert-driven: Luxion merchant (captured, not computed) ─────────────────
+
+async def _luxion_data() -> dict:
+    from app.trove.luxion import get_luxion
+    return await get_luxion()
+
+
+def _luxion_sig(d: dict) -> str | None:
+    # Signature = the run start, so the event fires ONCE per new appearance and the
+    # hourly re-sightings within the 7-day run collapse. Away -> None (no event).
+    return str(d["starts_at"]) if d.get("active") and d.get("starts_at") else None
+
+
 # ── time-driven: merchants ──────────────────────────────────────────────────
 
 def _corruxion_data() -> dict:
@@ -257,6 +270,7 @@ def _game_update_sig(d: dict) -> str | None:
 SOURCES: tuple[EventSource, ...] = (
     EventSource("challenge", _challenge_data, _challenge_sig, None),
     EventSource("chaos", _chaos_data, _chaos_sig, None),
+    EventSource("luxion", _luxion_data, _luxion_sig, None),   # insert-driven (captured)
     EventSource("corruxion", _corruxion_data, _merchant_sig, _corruxion_next),
     EventSource("fluxion", _fluxion_data, _merchant_sig, _fluxion_next),
     EventSource("longshade", _longshade_data, _rotation_sig, _longshade_next),

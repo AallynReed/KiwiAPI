@@ -2006,5 +2006,8 @@
   "Privacy &amp; your data": "隐私与您的数据",
   "Download everything we hold about your account, or delete it. Deleting removes your personal data and signs you out everywhere. Any mods or modpacks you published stay available, but are un-linked from you.": "下载我们保存的关于您账户的所有内容，或将其删除。删除会移除您的个人数据，并使您在所有设备上退出登录。您发布的模组或模组包仍然可用，但将不再与您关联。",
   "Export my data": "导出我的数据",
-  "Delete account": "删除账户"
+  "Delete account": "删除账户",
+  "Open now · closes in": "现已开放 · 剩余",
+  "Next window in": "下个时段还有",
+  "Done": "已结束"
 }

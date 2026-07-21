@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON } = window.BTTUtil;
+  const { esc, fetchJSON, apiUrl } = window.BTTUtil;
 
   const PAGE_SIZE = 60;
 
@@ -225,8 +225,8 @@
   // a missing/unrenderable blueprint 404s and onerror drops the image cleanly.
   function thumbHTML(e, size) {
     if (!e.blueprint) return '';
-    const src = '/site/codexes/render?blueprint=' + enc(e.blueprint)
-      + '&branch=' + enc(state.branch) + (size ? '&dim=' + size : '');
+    const src = apiUrl('/site/codexes/render?blueprint=' + enc(e.blueprint)
+      + '&branch=' + enc(state.branch) + (size ? '&dim=' + size : ''));
     return `<span class="cdx-card-img"><img loading="lazy" decoding="async" alt=""
       src="${esc(src)}" onerror="this.closest('.cdx-card-img').remove()"></span>`;
   }

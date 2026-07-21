@@ -2006,5 +2006,8 @@
   "Privacy &amp; your data": "プライバシーとあなたのデータ",
   "Download everything we hold about your account, or delete it. Deleting removes your personal data and signs you out everywhere. Any mods or modpacks you published stay available, but are un-linked from you.": "あなたのアカウントについて当社が保有するすべてをダウンロードするか、削除できます。削除すると個人データが取り除かれ、すべての端末からサインアウトされます。あなたが公開した Mod や Modpack は引き続き利用可能ですが、あなたとの関連付けは解除されます。",
   "Export my data": "データをエクスポート",
-  "Delete account": "アカウントを削除"
+  "Delete account": "アカウントを削除",
+  "Open now · closes in": "現在オープン · 終了まで",
+  "Next window in": "次の時間帯まで",
+  "Done": "終了"
 }

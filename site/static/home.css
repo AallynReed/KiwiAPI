@@ -261,6 +261,7 @@
 .dash-sched { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
 .dash-sched-row { background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 0.6rem 0.8rem; }
 .dash-sched-row.is-now { border-color: color-mix(in oklab, var(--accent-green) 45%, transparent); }
+.dash-sched-row.is-past { opacity: 0.5; }
 .dash-sched-time { font-weight: 600; font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .dash-sched-now { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-green); }
 .dash-sched-state { font-size: 0.72rem; color: var(--text-soft); }
@@ -446,4 +447,5 @@
 .event-mana      { background: #3e5a63; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); border: 1px solid rgba(255, 255, 255, .1); }
 .event-stampy    { background: #6b513d; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); border: 1px solid rgba(255, 255, 255, .1); }
 .event-gardening { background: #4caf50; color: #063; }
+.event-luxion    { background: #f5c542; }
 .event-weekly    { text-transform: uppercase; font-weight: 600; }

@@ -106,6 +106,16 @@ def _next_daily_reset(real_now: datetime) -> datetime:
     return today if real_now < today else today + timedelta(days=1)
 
 
+def current_daily_reset(now: datetime | None = None) -> int:
+    """Unix seconds of the most recent daily reset (11:00 UTC = trove 00:00) at or
+    before ``now`` - i.e. the start of the current trove-day. Used to anchor
+    captured events (Luxion) to "today at 00:00"."""
+    real = now or real_utc_now()
+    today = real.replace(hour=11, minute=0, second=0, microsecond=0)
+    reset = today if real >= today else today - timedelta(days=1)
+    return int(reset.timestamp())
+
+
 def _next_weekly_reset(real_now: datetime) -> datetime:
     t = real_now - TROVE_OFFSET
     completed = (t - FIRST_WEEK_BUFF) // timedelta(days=7)

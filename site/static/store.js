@@ -4,7 +4,7 @@
  * (the same module the /updates file viewer uses). */
 (function () {
   'use strict';
-  const { esc, fetchJSON } = window.BTTUtil;
+  const { esc, fetchJSON, apiUrl } = window.BTTUtil;
   const $ = (id) => document.getElementById(id);
   const DAY = 86400;
 
@@ -80,7 +80,7 @@
     });
     return _ddsReady;
   }
-  function texUrl(path) { return `/site/store/texture?path=${encodeURIComponent(path)}`; }
+  function texUrl(path) { return apiUrl(`/site/store/texture?path=${encodeURIComponent(path)}`); }
 
   // Paint a product's art into `host` (a .st-thumb / .st-d-art element).
   async function paintArt(host, path) {

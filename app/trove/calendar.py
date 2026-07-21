@@ -132,13 +132,41 @@ def _mana(ws: datetime, we: datetime) -> list[dict]:
     return out
 
 
-def yearly_calendar(now: datetime | None = None) -> dict:
-    """All recurring events across ±365 days, as one flat list sorted by start."""
+def _luxion(runs: list[int], ws: datetime, we: datetime) -> list[dict]:
+    """Recorded Luxion runs, expanded into their daily 3-hour merchant windows.
+
+    Unlike every other generator here, Luxion is NOT computed - its start is
+    dev-set and unpredictable, so we can only place the runs the bot has actually
+    captured (past appearances + the current one); future runs can't be projected.
+    Each run is a 7-day visit with a 3-hour window per day that shifts +3h daily,
+    so we emit one short event per window (its own timeline row, rendered as bare
+    coloured pills). ``runs`` are run-start unix seconds (the daily-reset anchors
+    from ``LuxionAppearance.started_at``)."""
+    from app.trove.luxion import schedule_for
+
+    out = []
+    for started_at in runs:
+        for w in schedule_for(started_at):
+            s = datetime.fromtimestamp(w["starts_at"], server_time.UTC)
+            e = datetime.fromtimestamp(w["ends_at"], server_time.UTC)
+            if _overlaps(s, e, ws, we):
+                out.append(_ev("luxion", "Luxion", s, e))
+    return out
+
+
+def yearly_calendar(now: datetime | None = None,
+                    luxion_runs: list[int] | None = None) -> dict:
+    """All recurring events across ±365 days, as one flat list sorted by start.
+
+    ``luxion_runs`` (run-start anchors, unix seconds) are passed in by the caller
+    rather than computed - Luxion is captured, not deterministic. Omitting it just
+    leaves Luxion off the timeline; everything else stays pure + unit-testable."""
     real, ws, we = _window(now)
     events: list[dict] = []
     events += _weekly_buffs(ws, we)
     events += _corruxion(ws, we)
     events += _fluxion(ws, we)
+    events += _luxion(luxion_runs or [], ws, we)
     events += _gardening(ws, we)
     events += _stampy(ws, we)
     events += _mana(ws, we)

@@ -2006,5 +2006,8 @@
   "Privacy &amp; your data": "Конфиденциальность и ваши данные",
   "Download everything we hold about your account, or delete it. Deleting removes your personal data and signs you out everywhere. Any mods or modpacks you published stay available, but are un-linked from you.": "Скачайте всё, что мы храним о вашей учётной записи, или удалите это. При удалении ваши персональные данные удаляются, и вы выходите из системы везде. Опубликованные вами моды или модпаки остаются доступными, но отвязываются от вас.",
   "Export my data": "Экспортировать мои данные",
-  "Delete account": "Удалить учётную запись"
+  "Delete account": "Удалить учётную запись",
+  "Open now · closes in": "Открыт · закроется через",
+  "Next window in": "Следующее окно через",
+  "Done": "Завершено"
 }

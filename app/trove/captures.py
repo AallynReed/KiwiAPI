@@ -20,12 +20,19 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
+from pymongo.errors import DuplicateKeyError
+
 from app.core.pagination import paginate
 from app.core.utils import utcnow
 from app.trove import server_time
-from app.trove.models import ChallengeCapture, ChaosChestCapture
+from app.trove.models import ChallengeCapture, ChaosChestCapture, LuxionAppearance
 
 logger = logging.getLogger("kiwi.trove.captures")
+
+# Luxion runs for a fixed 7-day window once it appears (see LuxionAppearance /
+# app.trove.luxion). A sighting inside a live run refreshes it; a sighting after
+# the run has elapsed is a brand-new appearance (the next ~4-week cycle).
+LUXION_RUN_DAYS = 7
 
 
 # --- Chaos chest -----------------------------------------------------------
@@ -70,6 +77,78 @@ async def list_chaos_chest_history(
     return await paginate(
         ChaosChestCapture.find_all(), sort="-week_anchor", limit=limit, offset=offset,
     )
+
+
+# --- Luxion merchant -------------------------------------------------------
+
+
+async def insert_luxion(
+    *, now: datetime | None = None,
+) -> tuple[LuxionAppearance, bool]:
+    """Record a Luxion sighting → the current run, creating it only on the FIRST
+    signal.
+
+    The bot re-reports every hour Luxion is up, so only the first sighting matters:
+    it anchors the run to that trove-day's daily reset (00:00 = 11:00 UTC) and the
+    run is fixed at 7 days. Every later sighting *inside* that 7-day window just
+    refreshes ``last_seen_at`` on the SAME row - we never start a second appearance
+    while one is live. Only once the 7 days have elapsed does a new signal open the
+    next run.
+
+    Returns ``(doc, was_new)``. The bot sends no body - the server infers the
+    anchor from now."""
+    real = now or utcnow()
+    now_ts = int(real.timestamp())
+    anchor = server_time.current_daily_reset(real)
+
+    latest = await LuxionAppearance.find_all().sort("-started_at").first_or_none()
+    if latest is not None and now_ts < latest.started_at + LUXION_RUN_DAYS * 86400:
+        # Still inside the live run - same appearance, just refresh last-seen.
+        latest.last_seen_at = real
+        await latest.save()
+        logger.info("luxion sighting: run start=%d (refreshed)", latest.started_at)
+        return latest, False
+
+    try:
+        doc = await LuxionAppearance(
+            started_at=anchor, first_seen_at=real, last_seen_at=real,
+        ).insert()
+    except DuplicateKeyError:
+        # Race: a concurrent first-signal already opened this run's row (the
+        # unique index on started_at is the hard backstop that keeps us from ever
+        # starting two appearances for the same day). Fold this one into it.
+        existing = await LuxionAppearance.find_one(
+            LuxionAppearance.started_at == anchor
+        )
+        if existing is not None:
+            existing.last_seen_at = real
+            await existing.save()
+            logger.info("luxion sighting: run start=%d (raced, refreshed)", anchor)
+            return existing, False
+        raise
+    logger.info("luxion sighting: run start=%d (new appearance)", anchor)
+    return doc, True
+
+
+async def get_latest_luxion() -> LuxionAppearance | None:
+    """The most recent Luxion appearance (regardless of whether it's still live)."""
+    return await LuxionAppearance.find_all().sort("-started_at").first_or_none()
+
+
+async def list_luxion_history(
+    *, limit: int = 50, offset: int = 0,
+) -> tuple[list[LuxionAppearance], int]:
+    return await paginate(
+        LuxionAppearance.find_all(), sort="-started_at", limit=limit, offset=offset,
+    )
+
+
+async def list_luxion_starts() -> list[int]:
+    """Every captured Luxion run-start anchor (unix seconds), newest first. Used to
+    place recorded appearances on the yearly calendar (they can't be computed).
+    Appearances are sparse (~one per 4 weeks), so fetching all is cheap."""
+    docs = await LuxionAppearance.find_all().sort("-started_at").to_list()
+    return [d.started_at for d in docs]
 
 
 # --- Hourly challenge ------------------------------------------------------

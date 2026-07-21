@@ -20,6 +20,7 @@ from app.trove.btt_releases import PLATFORMS, get_changelog, latest_per_platform
 from app.trove.captures import get_current_challenge
 from app.trove.chaos import get_chaos_chest
 from app.trove.leaderboards.activity import activity_series, estimate_active_players
+from app.trove.luxion import get_luxion
 from app.trove.news import latest_news
 from app.trove.rotations import biome_rotation, stampy, wild_mana
 from app.trove.server_time import (
@@ -403,6 +404,41 @@ def fluxion_embed() -> dict:
         "fields": fields,
         "footer": {"text": t("Fluxion merchant · alternates voting / selling")},
     }
+
+
+# ── /luxion ────────────────────────────────────────────────────────────────
+
+async def luxion_embed() -> dict:
+    """Luxion: here for a fixed 7-day visit, with a 3-hour merchant window that
+    shifts +3h each day. Captured from the game, so we only know the current run."""
+    l = await get_luxion()
+    now = int(time.time())
+    if l.get("active"):
+        desc = (t("**Luxion is here!**") + "\n"
+                + t("Leaves {when}", when=_ts(l['ends_at'], 'R')) + f" · {_ts(l['ends_at'], 'f')}")
+        win = l.get("current_window") or l.get("next_window")
+        if l.get("merchant_open") and win:
+            desc += "\n" + t("**Open now** — closes {when}", when=_ts(win['ends_at'], 'R'))
+        elif win:
+            desc += "\n" + t("Next window {when}", when=_ts(win['starts_at'], 'R')) + f" · {_ts(win['starts_at'], 'f')}"
+    else:
+        desc = t("Luxion is away — it returns roughly every 4 weeks (dev-set, unpredictable).")
+    fields = []
+    upcoming = [w for w in (l.get("schedule") or []) if (w.get("ends_at") or 0) > now][:6]
+    if upcoming:
+        lines = [f"{w.get('state', '')} · {_ts(w['starts_at'], 'f')} → {_ts(w['ends_at'], 't')}"
+                 for w in upcoming]
+        fields.append({"name": t("Daily windows"), "value": "\n".join(lines), "inline": False})
+    embed = {
+        "title": t("🐉 Luxion"),
+        "color": 0xF5C542,
+        "description": desc,
+        "fields": fields,
+        "footer": {"text": t("Luxion merchant · 7-day visit, a 3-hour window each day")},
+    }
+    if l.get("active"):
+        embed["image"] = {"url": f"{_ASSET}/announce.png?kind=luxion&v={l.get('starts_at') or 0}"}
+    return embed
 
 
 # ── /stampy ────────────────────────────────────────────────────────────────

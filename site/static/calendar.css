@@ -248,6 +248,7 @@
 .cal-sched { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .cal-sched-row { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--bg-line); background: var(--bg-deep); }
 .cal-sched-row.is-now { border-color: color-mix(in oklab, var(--accent) 55%, var(--bg-line)); }
+.cal-sched-row.is-past { opacity: 0.5; }
 .cal-sched-time { display: flex; align-items: center; gap: 8px; justify-content: space-between; font-size: .86rem; }
 .cal-sched-now { font-size: .68rem; font-weight: 700; text-transform: uppercase; color: var(--accent-green, #5fd08a); }
 .cal-sched-state { font-size: .72rem; color: var(--text-mute); text-transform: capitalize; }

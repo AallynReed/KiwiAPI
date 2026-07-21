@@ -175,6 +175,32 @@ class ChallengeCapture(Document):
         ]
 
 
+class LuxionAppearance(Document):
+    """One Luxion-merchant appearance, anchored to the daily reset of its first
+    sighting.
+
+    Luxion visits for a fixed 7-day run roughly every 4 weeks, but the dev-set
+    start date is not predictable (events shift it), so it can't be computed like
+    Corruxion/Fluxion. Instead the bot CAPTURES the first in-game sighting from the
+    welcome screen (``WelcomeLog.cfg`` -> ``luxion``) and the API anchors the whole
+    run to that Trove-day's 00:00 (= 11:00 UTC). Once anchored, the run is fully
+    deterministic: a 3-hour merchant window each day, shifting +3h per day (so it
+    opens at ``started_at + day * 27h``). See ``app.trove.luxion``.
+
+    Upsert by ``started_at``: re-sightings within the 7-day run just refresh
+    ``last_seen_at``; the next run (weeks later) is a new row."""
+
+    started_at: int      # unix seconds at the daily reset (11:00 UTC) of run day 1
+    first_seen_at: datetime = Field(default_factory=utcnow)
+    last_seen_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "luxion_appearances"
+        indexes = [
+            IndexModel([("started_at", DESCENDING)], unique=True),
+        ]
+
+
 class FeedCache(Document):
     """Cached payload for a relayed feed (twitch / youtube / bilibili).
 

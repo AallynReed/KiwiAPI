@@ -32,6 +32,7 @@ from app.trove.models import (
     DelveRotation,
     FeedbackEntry,
     FeedCache,
+    LuxionAppearance,
     TroveEvent,
     TroveNews,
     TroveStatusEvent,
@@ -76,6 +77,7 @@ DOCUMENT_MODELS = [
     MarketItemCategory,                  # admin-defined /market sidebar groupings (name-keyed)
     StoreProductDoc, StoreCategoryDoc, StoreStateDoc,   # in-game Kiwi Store catalog (store:read)
     ChaosChestCapture, ChallengeCapture,
+    LuxionAppearance,                    # captured Luxion-merchant appearances (rotations:read)
     FeedbackEntry,
     TroveStatusEvent,
     RuntimeConfig,

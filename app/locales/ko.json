@@ -174,5 +174,15 @@
   "DEPTH-15 BIOMES": "깊이-15 바이옴",
   "RESETS": "리셋",
   "CORRUXION": "코럭션",
-  "FLUXION": "플럭시온"
+  "FLUXION": "플럭시온",
+  "**Luxion is here!**": "**럭시온이 등장했습니다!**",
+  "**Open now** — closes {when}": "**지금 이용 가능** — {when} 종료",
+  "Luxion is away — it returns roughly every 4 weeks (dev-set, unpredictable).": "럭시온이 부재중입니다 — 약 4주마다 돌아옵니다 (개발자 지정, 예측 불가).",
+  "Daily windows": "일일 시간대",
+  "🐉 Luxion": "🐉 럭시온",
+  "Luxion merchant · 7-day visit, a 3-hour window each day": "럭시온 상인 · 7일간 방문, 매일 3시간 시간대",
+  "Luxion Merchant": "럭시온 상인",
+  "Here now · open": "지금 이곳에 · 이용 가능",
+  "Closes {when}": "{when} 종료",
+  "Returns every ~4 weeks": "약 4주마다 돌아옴"
 }

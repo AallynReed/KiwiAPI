@@ -174,5 +174,15 @@
   "DEPTH-15 BIOMES": "深度15生物群系",
   "RESETS": "重置",
   "CORRUXION": "Corruxion",
-  "FLUXION": "Fluxion"
+  "FLUXION": "Fluxion",
+  "**Luxion is here!**": "**Luxion 已到来！**",
+  "**Open now** — closes {when}": "**现已开放** —— 关闭于 {when}",
+  "Luxion is away — it returns roughly every 4 weeks (dev-set, unpredictable).": "Luxion 已离开 —— 大约每 4 周回归一次（由开发者设定，无法预测）。",
+  "Daily windows": "每日时段",
+  "🐉 Luxion": "🐉 Luxion",
+  "Luxion merchant · 7-day visit, a 3-hour window each day": "Luxion 商人 · 停留 7 天，每天一个 3 小时时段",
+  "Luxion Merchant": "Luxion 商人",
+  "Here now · open": "现在在场 · 开放",
+  "Closes {when}": "关闭于 {when}",
+  "Returns every ~4 weeks": "约每 4 周回归"
 }

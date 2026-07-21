@@ -198,6 +198,12 @@
           card.appendChild(el("div", "dash-merchant-time",
             (m.active ? tr("Leaves in") : tr("Returns in")) + " " + fmtIn((m.active ? m.ends_at : m.starts_at) - n)));
         }
+        if (m.window) {
+          card.appendChild(el("div", "dash-merchant-time",
+            m.window.open
+              ? tr("Open now · closes in") + " " + fmtIn(m.window.ends_at - n)
+              : tr("Next window in") + " " + fmtIn(m.window.starts_at - n)));
+        }
         if (m.biomes && m.biomes.length) {
           var bs = el("div", "dash-merchant-biomes");
           m.biomes.slice(0, 3).forEach(function (b) { bs.appendChild(biomePill(b)); });
@@ -271,16 +277,22 @@
       if (!sched.length) {
         body.appendChild(el("p", "dash-modal-note", tr("No upcoming schedule available.")));
       } else {
+        // If the list includes windows that have already passed (Luxion sends the
+        // whole run), call it a schedule, not "Upcoming", and dim the elapsed rows.
+        var hasPast = sched.some(function (s) { return s.ends_at <= n; });
         var th = el("div", "dash-modal-col-title");
-        th.appendChild(el("i", "fa-regular fa-calendar")); th.appendChild(el("span", null, tr("Upcoming")));
+        th.appendChild(el("i", "fa-regular fa-calendar"));
+        th.appendChild(el("span", null, hasPast ? tr("Schedule") : tr("Upcoming")));
         body.appendChild(th);
         var ul = el("ul", "dash-sched");
         sched.forEach(function (s) {
           var isNow = s.starts_at <= n && s.ends_at > n;
-          var li = el("li", "dash-sched-row" + (isNow ? " is-now" : ""));
+          var isPast = s.ends_at <= n;
+          var li = el("li", "dash-sched-row" + (isNow ? " is-now" : isPast ? " is-past" : ""));
           var time = el("div", "dash-sched-time");
           time.appendChild(el("span", null, fmtDate(s.starts_at) + " – " + fmtDate(s.ends_at)));
           if (isNow) time.appendChild(el("span", "dash-sched-now", tr("Now")));
+          else if (isPast) time.appendChild(el("span", "dash-sched-state", tr("Done")));
           else if (s.state) time.appendChild(el("span", "dash-sched-state", s.state));
           li.appendChild(time);
           if (s.biomes && s.biomes.length) {
@@ -641,6 +653,7 @@
     var TRACKS = [
       { id: "weekly_buff", name: "Weekly Buffs", color: "weekly", icon: "fa-bolt" },
       { id: "dragon_merchants", types: ["corruxion", "fluxion"], name: "Dragon Merchants", color: "corruxion", icon: "fa-dragon" },
+      { id: "luxion", name: "Luxion", color: "luxion", icon: "fa-dragon" },
       { id: "gardening_2", name: "2-day plants", color: "gardening", icon: "fa-seedling" },
       { id: "gardening_3", name: "3-day plants", color: "gardening", icon: "fa-seedling" },
       { id: "mana", name: "Wild Mana", color: "mana", icon: "fa-flask" },
@@ -740,6 +753,8 @@
         });
         return box.childNodes.length ? box : null;
       }
+      // Luxion pills are intentionally bare (no icon/text) - just the colour.
+      if (ev.type === "luxion") return null;
       var cls = null;
       if (ev.type === "fluxion") cls = ev.state === "selling" ? "fa-sack-dollar" : "fa-check-to-slot";
       else if (ev.type === "corruxion") cls = "fa-dragon";

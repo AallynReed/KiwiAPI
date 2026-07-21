@@ -156,6 +156,13 @@ async def publish_chaos() -> bool:
     return await publish_source(SOURCES_BY_TYPE["chaos"])
 
 
+async def publish_luxion() -> bool:
+    """Announce a newly-started Luxion run. Dedup on the run start means the hourly
+    re-sightings within a run collapse to one event; away publishes nothing."""
+    from app.events.sources import SOURCES_BY_TYPE
+    return await publish_source(SOURCES_BY_TYPE["luxion"])
+
+
 async def current_snapshot() -> list[dict]:
     """The current state of every event source as event payloads, so a freshly
     connected SSE client has the latest values immediately (then live updates).

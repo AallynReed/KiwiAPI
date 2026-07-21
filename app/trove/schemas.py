@@ -57,7 +57,7 @@ class WeeklyBuffs(BaseModel):
 class MerchantWindow(BaseModel):
     starts_at: int
     ends_at: int
-    state: str | None = None      # Fluxion only: "voting" | "selling"
+    state: str | None = None      # Fluxion: "voting"|"selling"; Luxion: "Day 1".."Day 7"
 
 
 class Corruxion(BaseModel):
@@ -75,6 +75,37 @@ class Fluxion(BaseModel):
     ends_at: int
     seconds_remaining: int
     schedule: list[MerchantWindow]
+
+
+class Luxion(BaseModel):
+    """Captured Luxion appearance projected onto its deterministic 7-day run.
+
+    ``active`` = within the run; ``merchant_open`` = inside one of the daily
+    3-hour windows now. ``starts_at``/``ends_at`` are null only when Luxion has
+    never been captured (its start is unpredictable until seen in-game)."""
+    active: bool
+    merchant_open: bool             # inside a daily 3h window right now
+    starts_at: int | None           # run start (daily-reset anchor of first sighting)
+    ends_at: int | None             # starts_at + 7 days
+    seconds_remaining: int          # to window close / next window open / run end
+    current_window: MerchantWindow | None
+    next_window: MerchantWindow | None
+    schedule: list[MerchantWindow]  # the 7 daily windows, soonest first
+    first_seen_at: datetime | None
+    last_seen_at: datetime | None
+
+
+class LuxionAppearanceOut(BaseModel):
+    started_at: int      # run start (daily-reset anchor), unix seconds
+    ends_at: int         # started_at + 7 days
+    first_seen_at: datetime
+    last_seen_at: datetime
+
+
+class LuxionHistoryPage(BaseModel):
+    items: list[LuxionAppearanceOut]
+    count: int
+    total: int
 
 
 # --- Chaos Chest (weekly featured-item rotation) ---------------------------

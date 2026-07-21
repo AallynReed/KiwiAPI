@@ -369,6 +369,14 @@ class Settings(BaseSettings):
     # use the public key). Only required to REGISTER slash commands, or to run a
     # gateway bot for real-time message/member/presence events. Optional.
     discord_bot_token: str | None = None
+    # Enable the gateway bot's Server Members privileged intent, which lets
+    # ``on_user_update`` fire for any user the bot shares a guild with - used to
+    # mirror a Discord avatar change into the linked SiteUser without waiting for
+    # the user's next login (see app/bot/avatar_sync.py). Requires the matching
+    # "Server Members Intent" toggle in the Discord Developer Portal; if that
+    # isn't granted the bot starts WITHOUT the intent and this feature stays off
+    # (avatars still refresh at login). Set false to opt out entirely.
+    bot_members_intent: bool = True
     # Vestigial for login: app/site_auth/oauth.py requests its scopes directly.
     discord_oauth_scope: str = "identify email guilds"
     # Optional authorize ``integration_type`` ("1" = user-install). Empty/unset =

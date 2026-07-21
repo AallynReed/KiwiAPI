@@ -2006,5 +2006,8 @@
   "Privacy &amp; your data": "개인정보 및 내 데이터",
   "Download everything we hold about your account, or delete it. Deleting removes your personal data and signs you out everywhere. Any mods or modpacks you published stay available, but are un-linked from you.": "당사가 귀하의 계정에 대해 보유한 모든 것을 다운로드하거나 삭제하세요. 삭제하면 개인정보가 제거되고 모든 곳에서 로그아웃됩니다. 귀하가 게시한 모드나 모드팩은 계속 이용할 수 있지만 귀하와의 연결은 해제됩니다.",
   "Export my data": "내 데이터 내보내기",
-  "Delete account": "계정 삭제"
+  "Delete account": "계정 삭제",
+  "Open now · closes in": "지금 이용 가능 · 종료까지",
+  "Next window in": "다음 시간대까지",
+  "Done": "종료됨"
 }

@@ -30,8 +30,10 @@ from app.site_auth.dependencies import get_optional_site_user
 from app.site_auth.models import SiteUser
 from app.trove import btt_releases as trove_btt
 from app.trove import calendar as trove_calendar
+from app.trove import captures as trove_captures
 from app.trove import chaos as trove_chaos
 from app.trove import feeds as trove_feeds
+from app.trove import luxion as trove_luxion
 from app.trove import news as trove_news
 from app.trove import rotations as trove_rotations
 from app.trove import server_time as trove_server_time
@@ -666,12 +668,34 @@ async def site_rotations() -> JSONResponse:
     d15 = trove_rotations.biome_rotation()
     corr = trove_server_time.corruxion()
     flux = trove_server_time.fluxion()
+    # Luxion is CAPTURED (not computed): a fixed 7-day run whose start is dev-set.
+    # Show it Here/Away at the event level - "Leaves in Nd" while the run is on;
+    # no countdown when Away (the next appearance is unpredictable until seen
+    # in-game). The daily 3-hour windows go in the schedule modal.
+    lux = await trove_luxion.get_luxion()
+    # While Luxion is here, expose the FULL weekly rotation (all 7 daily windows,
+    # each labelled Day 1..7) so the dashboard/calendar modal shows the whole run
+    # with the current window highlighted; nothing when it's away.
+    lux_sched = _sched(lux.get("schedule"), n=7) if lux["active"] else []
+    # The card also needs the daily 3-hour window: whether the merchant is open
+    # right now (→ when it closes) or, between windows, when it next opens.
+    _lw = lux.get("current_window") or lux.get("next_window")
+    lux_window = (
+        {"open": bool(lux.get("merchant_open")),
+         "starts_at": _lw.get("starts_at"), "ends_at": _lw.get("ends_at")}
+        if (lux["active"] and _lw) else None
+    )
     stampy_cur = stampy.get("current")
     merchants = [
         _merchant("corruxion", "Corruxion", corr["active"], corr["starts_at"], corr["ends_at"],
                   schedule=_sched(corr.get("schedule"))),
         _merchant("fluxion", "Fluxion", flux["active"], flux["starts_at"], flux["ends_at"],
                   state=flux.get("state"), schedule=_sched(flux.get("schedule"))),
+        _merchant("luxion", "Luxion", lux["active"],
+                  lux["starts_at"] if lux["active"] else None,
+                  lux["ends_at"] if lux["active"] else None,
+                  state=("Open" if lux.get("merchant_open") else None),
+                  schedule=lux_sched, window=lux_window),
         _merchant("wild_mana", "Wild Mana", True,
                   (mana.get("current") or {}).get("starts_at"),
                   (mana.get("current") or {}).get("ends_at"), biomes=_biomes(mana),
@@ -778,10 +802,12 @@ async def site_calendar_events() -> JSONResponse:
 async def site_calendar_yearly() -> JSONResponse:
     """The full +/-365-day rotation timeline for the homepage yearly-calendar
     widget: weekly buffs, Corruxion/Fluxion, gardening windows, Wild Mana and
-    Stampy as one flat, start-sorted list. Same compute as ``/v1`` rotations
-    calendar - tokenless and long-cached (all entries are deterministic)."""
+    Stampy, plus any recorded Luxion runs, as one flat, start-sorted list. Same
+    compute as ``/v1`` rotations calendar - tokenless and long-cached (everything
+    but Luxion is deterministic; Luxion shows only known past/current runs)."""
+    luxion_runs = await trove_captures.list_luxion_starts()
     return JSONResponse(
-        trove_calendar.yearly_calendar(),
+        trove_calendar.yearly_calendar(luxion_runs=luxion_runs),
         headers={"Cache-Control": "public, max-age=300"},
     )
 

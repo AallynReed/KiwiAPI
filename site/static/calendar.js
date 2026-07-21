@@ -147,6 +147,15 @@
         var target = m.active ? m.ends_at : m.starts_at;
         if (target) time.textContent = (m.active ? tr("Leaves in") : tr("Returns in")) + " " + fmtIn(target - n);
       });
+      if (m.window) {
+        var win = el("div", "cal-merchant-time");
+        card.appendChild(win);
+        tickers.push(function (n) {
+          win.textContent = m.window.open
+            ? tr("Open now · closes in") + " " + fmtIn(m.window.ends_at - n)
+            : tr("Next window in") + " " + fmtIn(m.window.starts_at - n);
+        });
+      }
       if (m.biomes && m.biomes.length) {
         var bs = el("div", "cal-merchant-biomes");
         m.biomes.slice(0, 4).forEach(function (b) { bs.appendChild(biomePill(b)); });
@@ -289,10 +298,12 @@
       var ul = el("ul", "cal-sched");
       sched.forEach(function (s) {
         var isNow = s.starts_at <= n && s.ends_at > n;
-        var li = el("li", "cal-sched-row" + (isNow ? " is-now" : ""));
+        var isPast = s.ends_at <= n;
+        var li = el("li", "cal-sched-row" + (isNow ? " is-now" : isPast ? " is-past" : ""));
         var time = el("div", "cal-sched-time");
         time.appendChild(el("span", null, fmtDate(s.starts_at) + " – " + fmtDate(s.ends_at)));
         if (isNow) time.appendChild(el("span", "cal-sched-now", tr("Now")));
+        else if (isPast) time.appendChild(el("span", "cal-sched-state", tr("Done")));
         else if (s.state) time.appendChild(el("span", "cal-sched-state", s.state));
         li.appendChild(time);
         if (s.biomes && s.biomes.length) {

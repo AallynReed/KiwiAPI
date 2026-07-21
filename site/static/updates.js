@@ -18,7 +18,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON } = window.BTTUtil;
+  const { esc, fetchJSON, apiUrl } = window.BTTUtil;
 
   const PAGE_SIZE_CHANGES = 200;
   const VERSIONS_VISIBLE = 12;   // recent version chips in the timeline strip
@@ -759,7 +759,7 @@
         $previewNote.hidden = false;
       };
       $previewImg.src =
-        `/v1/updates/${state.branch}/file?path=${encodeURIComponent(path)}`;
+        apiUrl(`/v1/updates/${state.branch}/file?path=${encodeURIComponent(path)}`);
       $previewImgCap.textContent = formatBytes(data.size);
       $previewImage.hidden = false;
       return;
@@ -1032,7 +1032,7 @@
     if (latest.type !== 'removed') {
       $detailDownload.hidden = false;
       $detailDownload.href =
-        `/v1/updates/${state.branch}/file?path=${encodeURIComponent(state.selectedPath)}`;
+        apiUrl(`/v1/updates/${state.branch}/file?path=${encodeURIComponent(state.selectedPath)}`);
     } else {
       $detailDownload.hidden = true;
     }
@@ -1867,7 +1867,7 @@
     if (isDir) {
       thumb = `<span class="up-tile-icon"><i class="fa-solid fa-folder" aria-hidden="true"></i></span>`;
     } else if (imgKind === 'img') {
-      const src = `/v1/updates/${encodeURIComponent(state.branch)}/file?path=${encodeURIComponent(e.path)}`;
+      const src = apiUrl(`/v1/updates/${encodeURIComponent(state.branch)}/file?path=${encodeURIComponent(e.path)}`);
       // data-fallback lets the capture-phase error handler swap in an icon if the
       // image fails to load (inline onerror is disallowed by the page CSP).
       thumb = `<img class="up-tile-img" loading="lazy" decoding="async" alt=""
