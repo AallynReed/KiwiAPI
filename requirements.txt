@@ -17,7 +17,7 @@ dulwich==0.22.8
 cryptography==46.0.3
 tzdata==2025.2
 beautifulsoup4==4.12.3
-pillow==11.3.0
+pillow==12.3.0
 # Blueprint→image voxel rasterizer (app/trove/render) - CPU-only, no GPU.
 numpy==2.4.6
 # JIT-compiles the per-triangle rasterizer hot loop (~11x faster, pixel-identical to
