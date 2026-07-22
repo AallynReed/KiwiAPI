@@ -432,6 +432,15 @@ async def star_chart_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "star-chart.html", {})
 
 
+@router.get("/gems-guide", response_class=HTMLResponse)
+async def gems_guide_page(request: Request) -> HTMLResponse:
+    """How Gems Work - an interactive, animated explainer of Trove's gem system
+    (tiers, elements incl. Cosmic/Light, Lesser vs Empowered, stat rolls,
+    leveling/Power Rank and focusing). Fully client-rendered from the static
+    ``/static/gems-guide.js`` - no proxy, no /v1 API."""
+    return _TEMPLATES.TemplateResponse(request, "gems-guide.html", {})
+
+
 @router.get("/gem-simulator", response_class=HTMLResponse)
 async def gem_simulator_page(request: Request) -> HTMLResponse:
     """Gem Simulator page. Fully client-rendered by the static

@@ -369,6 +369,18 @@ REGISTRY: dict[str, TunableSetting] = {
             "star-chart preview uses the /site/gems/parse-star-chart proxy."
         ),
     ),
+    "feature_gems_guide_enabled": _t(
+        key="feature_gems_guide_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the How Gems Work guide (/gems-guide). OFF hides the "
+            "page + navbar link. It's a fully client-rendered interactive explainer "
+            "of the gem system (static /static/gems-guide.js, no proxy or /v1 API), "
+            "so only the page route is hidden."
+        ),
+    ),
     "feature_delves_enabled": _t(
         key="feature_delves_enabled",
         default=False,

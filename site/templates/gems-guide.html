@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>How Gems Work in Trove - an interactive guide - Better Trove Tools</title>
+    <meta name="description" content="An interactive, animated guide to Trove gems: tiers, the four elements including Cosmic and its Light stat, Lesser vs Empowered, how stats roll, leveling and Power Rank, and using Rough / Precise / Superior focuses to perfect a gem.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="canonical" href="https://trove.aallyn.net/gems-guide">
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:url" content="https://trove.aallyn.net/gems-guide">
+    <meta property="og:title" content="How Gems Work in Trove - an interactive guide">
+    <meta property="og:description" content="Tiers, elements, Cosmic &amp; Light, stats, leveling and focusing - the whole Trove gem system, explained interactively.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="How Gems Work in Trove">
+    <meta name="twitter:description" content="An interactive walkthrough of Trove's gem system.">
+
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/gems-guide.min.css">
+</head>
+<body class="landing gems-guide-page">
+
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="gg-main">
+
+        <!-- ─── Hero ─────────────────────────────────────────────────── -->
+        <section class="gg-hero">
+            <div class="gg-hero-copy">
+                <p class="gg-eyebrow">/gems-guide</p>
+                <h1 class="gg-title" data-i18n>How <span class="highlight-blue">Gems</span> Work in Trove</h1>
+                <p class="gg-lead" data-i18n>Gems are the single biggest source of power on a Trove character - and the most confusing. This is the whole system, taken apart piece by piece and made interactive. Scroll to build one up; poke at everything.</p>
+                <div class="gg-hero-chips" aria-hidden="true">
+                    <span class="gg-chip"><i class="fa-solid fa-layer-group"></i> 4 top tiers</span>
+                    <span class="gg-chip"><i class="fa-solid fa-droplet"></i> 4 elements</span>
+                    <span class="gg-chip"><i class="fa-solid fa-dice-d6"></i> 2-3 stats</span>
+                    <span class="gg-chip"><i class="fa-solid fa-arrow-trend-up"></i> level to perfect</span>
+                </div>
+            </div>
+            <div class="gg-hero-gem">
+                <div class="gg-gem-stage gg-gem-stage-hero" id="hero-gem" data-element="4"></div>
+            </div>
+        </section>
+
+        <!-- ─── Section nav (sticky pill row) ────────────────────────── -->
+        <nav class="gg-secnav" aria-label="Guide sections" id="gg-secnav">
+            <a href="#build" data-i18n>Anatomy</a>
+            <a href="#tiers" data-i18n>Tiers</a>
+            <a href="#type" data-i18n>Lesser &amp; Empowered</a>
+            <a href="#class-gems" data-i18n>Class Gems</a>
+            <a href="#elements" data-i18n>Elements</a>
+            <a href="#stats" data-i18n>Stats &amp; rolls</a>
+            <a href="#leveling" data-i18n>Leveling</a>
+            <a href="#focus" data-i18n>Perfecting</a>
+            <a href="#builds" data-i18n>Gem Builds</a>
+            <a href="#tables" data-i18n>Stat tables</a>
+        </nav>
+
+        <!-- ─── 1. Anatomy — scrollytelling "assemble a gem" ─────────── -->
+        <section class="gg-section gg-section-scrolly" id="build">
+            <header class="gg-sec-head" data-reveal>
+                <span class="gg-sec-num" aria-hidden="true">01</span>
+                <h2 data-i18n>Build a gem, part by part</h2>
+                <p data-i18n>Every gem is the same five decisions stacked together. Scroll down - the spec sheet fills in and the gem takes shape as each part locks in.</p>
+            </header>
+
+            <div class="gg-scrolly">
+                <div class="gg-scrolly-viz">
+                    <div class="gg-scrolly-sticky">
+                        <div class="gg-gem-stage gg-gem-stage-lg" id="scrolly-gem" data-element="0" data-assembled="0"></div>
+                        <dl class="gg-spec" id="scrolly-spec">
+                            <div class="gg-spec-row" data-spec="0"><dt data-i18n>Tier</dt><dd data-i18n>—</dd></div>
+                            <div class="gg-spec-row" data-spec="1"><dt data-i18n>Type</dt><dd data-i18n>—</dd></div>
+                            <div class="gg-spec-row" data-spec="2"><dt data-i18n>Element</dt><dd data-i18n>—</dd></div>
+                            <div class="gg-spec-row" data-spec="3"><dt data-i18n>Stats</dt><dd data-i18n>—</dd></div>
+                            <div class="gg-spec-row" data-spec="4"><dt data-i18n>Ability</dt><dd data-i18n>—</dd></div>
+                        </dl>
+                    </div>
+                </div>
+                <ol class="gg-steps" id="gg-steps">
+                    <li class="gg-step" data-step="0">
+                        <span class="gg-step-tag" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
+                        <h3 data-i18n>1 — Its tier sets the ceiling</h3>
+                        <p data-i18n>A gem's tier sets its ceiling - how big its stats get and how far it can level. Trove has more tiers than these, but the four worth building around are <b>Radiant</b>, <b>Stellar</b>, <b>Crystal</b> and <b>Mystic</b>. Leveling never changes a gem's tier - but a Converter can raise it a tier while keeping its progress.</p>
+                    </li>
+                    <li class="gg-step" data-step="1">
+                        <span class="gg-step-tag" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                        <h3 data-i18n>2 — Lesser or Empowered</h3>
+                        <p data-i18n>A <b>Lesser</b> gem is locked to one damage school. An <b>Empowered</b> gem drops that restriction, rolls stronger, and carries a special <b>ability</b>. You slot far fewer Empowered gems, so they matter more.</p>
+                    </li>
+                    <li class="gg-step" data-step="2">
+                        <span class="gg-step-tag" aria-hidden="true"><i class="fa-solid fa-droplet"></i></span>
+                        <h3 data-i18n>3 — An element gives it a home</h3>
+                        <p data-i18n>Each gem is <b>Water</b>, <b>Fire</b>, <b>Air</b> or <b>Cosmic</b>, and only slots into the matching gem socket. Cosmic is the odd one out - it always carries <b>Light</b>.</p>
+                    </li>
+                    <li class="gg-step" data-step="3">
+                        <span class="gg-step-tag" aria-hidden="true"><i class="fa-solid fa-dice-d6"></i></span>
+                        <h3 data-i18n>4 — Its stats, rolled</h3>
+                        <p data-i18n>The gem rolls with <b>two or three stats</b> from a pool - damage, crit and health - each at a random strength. Three-stat gems are the only keepers; a two-stat gem can never catch up, so check the count before the rolls.</p>
+                    </li>
+                    <li class="gg-step" data-step="4">
+                        <span class="gg-step-tag" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+                        <h3 data-i18n>5 — Level it, then perfect it</h3>
+                        <p data-i18n>From there you feed it Gem Dust to <b>level up</b> - climbing Power Rank and unlocking extra rolls - then spend <b>focuses</b> to push every stat to 100%. That's the whole loop.</p>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- ─── 2. Tiers ─────────────────────────────────────────────── -->
+        <section class="gg-section" id="tiers" data-reveal>
+            <header class="gg-sec-head">
+                <span class="gg-sec-num" aria-hidden="true">02</span>
+                <h2 data-i18n>The tiers that matter</h2>
+                <p data-i18n>Gems come in more tiers than these, but only Radiant, Stellar, Crystal and Mystic hold stats worth building around. Each tier is a higher ceiling than the last, so late-game power lives almost entirely in Crystal and Mystic gems.</p>
+            </header>
+
+            <div class="gg-tiers" id="gg-tiers" role="radiogroup" aria-label="Gem tier"></div>
+            <div class="gg-tier-detail" id="gg-tier-detail"></div>
+
+            <div class="gg-converters">
+                <div class="gg-conv-head">
+                    <h3 data-i18n>Converters — move a gem up a tier</h3>
+                    <p data-i18n>Leveling never changes a gem's tier, but two Store items do - and they carry the gem's <b>level and every augment</b> straight across, so a maxed gem never starts over.</p>
+                </div>
+                <div class="gg-conv-cards" id="gg-conv-cards"></div>
+                <p class="gg-conv-foot" data-i18n>You never <i>need</i> a converter - higher-tier gems drop on their own. It's just a shortcut to carry a gem you've already poured levels and focuses into up a tier, instead of starting over on a fresh drop.</p>
+            </div>
+        </section>
+
+        <!-- ─── 3. Type ──────────────────────────────────────────────── -->
+        <section class="gg-section" id="type" data-reveal>
+            <header class="gg-sec-head">
+                <span class="gg-sec-num" aria-hidden="true">03</span>
+                <h2 data-i18n>Lesser vs Empowered</h2>
+                <p data-i18n>Two kinds of gem. Lesser gems are restricted to one damage school; Empowered gems drop the restriction, hit harder, and carry a special ability.</p>
+            </header>
+
+            <div class="gg-type-toggle" role="radiogroup" aria-label="Gem type">
+                <button class="gg-seg active" data-type="1" role="radio" aria-checked="true" data-i18n>Lesser</button>
+                <button class="gg-seg" data-type="2" role="radio" aria-checked="false" data-i18n>Empowered</button>
+            </div>
+            <div class="gg-type-panels">
+                <div class="gg-gem-stage gg-gem-stage-md" id="type-gem" data-element="2"></div>
+                <div class="gg-type-detail" id="gg-type-detail" aria-live="polite"></div>
+            </div>
+        </section>
+
+        <!-- ─── 4. Class Gems ────────────────────────────────────────── -->
+        <section class="gg-section" id="class-gems" data-reveal>
+            <header class="gg-sec-head">
+                <span class="gg-sec-num" aria-hidden="true">04</span>
+                <h2 data-i18n>Class Gems</h2>
+                <p data-i18n>Every class has one gem all its own. A Class Gem is a special Empowered gem, locked to a single class, that rewrites one of its abilities - a build-defining upgrade you slot like any other Empowered gem.</p>
+            </header>
+
+            <div class="gg-classgem-cards">
+                <div class="gg-cg-card" data-reveal>
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    <h3 data-i18n>One per class</h3>
+                    <p data-i18n>Each class has its own Class Gem, and only that class can equip it. Switch class and you swap to a different one.</p>
+                </div>
+                <div class="gg-cg-card" data-reveal>
+                    <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                    <h3 data-i18n>Rewrites an ability</h3>
+                    <p data-i18n>Rather than just stats, it upgrades one of the class's abilities - like Dino Tamer's Hunting Dart firing three darts, or Pirate Captain's First Mate cannons hitting twice as hard.</p>
+                </div>
+            </div>
+
+            <p class="gg-cg-note"><i class="fa-solid fa-key" aria-hidden="true"></i> <span data-i18n><b>How you get one:</b> take a <b>Class Gem Key</b> into the Shadow Colosseum in the Shores of the Everdark, clear it, and open the <b>Everdark Vault</b> that appears - it drops the Class Gem for whichever class you're playing at the time.</span></p>
+        </section>
+
+        <!-- ─── 5. Elements ──────────────────────────────────────────── -->
+        <section class="gg-section" id="elements" data-reveal>
+            <header class="gg-sec-head">
+                <span class="gg-sec-num" aria-hidden="true">05</span>
+                <h2 data-i18n>Gem elements</h2>
+                <p data-i18n>Element sets a gem's slot on your character and colors what it can roll. Water, Fire and Air behave the same way; Cosmic plays by its own rules.</p>
+            </header>
+
+            <div class="gg-elements" id="gg-elements" role="radiogroup" aria-label="Gem element"></div>
+            <div class="gg-element-detail" id="gg-element-detail" aria-live="polite"></div>
+        </section>
+
+        <!-- ─── 5. Stats & rolls ─────────────────────────────────────── -->
+        <section class="gg-section" id="stats" data-reveal>
+            <header class="gg-sec-head">
+                <span class="gg-sec-num" aria-hidden="true">06</span>
+                <h2 data-i18n>Two or three stats</h2>
+                <p data-i18n>A gem rolls with two or three stats, each pulled from a pool at a random strength. Only three-stat gems are worth keeping - a two-stat gem can never catch up - and the rolls are what focusing later fixes.</p>
+            </header>
+
+            <div class="gg-stats-lab">
+                <div class="gg-roll-panel">
+                    <div class="gg-roll-slots" id="gg-roll-slots"></div>
+                    <div class="gg-roll-actions">
+                        <button class="gg-btn gg-btn-primary" id="gg-reroll"><i class="fa-solid fa-dice"></i> <span data-i18n>Roll a new gem</span></button>
+                        <p class="gg-roll-hint" id="gg-roll-hint" aria-live="polite"></p>
+                    </div>
+                </div>
+                <aside class="gg-pool-card">
+                    <h3 data-i18n>The stat pool</h3>
+                    <p data-i18n>A gem draws its stats from a fixed pool decided by its type and element:</p>
+                    <ul class="gg-pool-list" id="gg-pool-list"></ul>
+                    <p class="gg-pool-note" data-i18n>Damage, Critical Damage, Critical Hit and the two Max Health stats make up the pool. Cosmic gems lock one slot to <span class="highlight-yellow">Light</span>.</p>
+                </aside>
+            </div>
+
+            <div class="gg-keeper">
+                <div class="gg-keeper-head">
+                    <h3 data-i18n>The one rule that decides a keeper</h3>
+                    <p data-i18n>How many stats a gem rolls is locked at level 1 - no dust or focus ever adds a missing one, so the stat <b>count</b> is the first thing to check. In practice only <b>Empowered</b> gems roll a random count - every Lesser gem from <b>Stellar</b> up already has all three.</p>
+                </div>
+                <div class="gg-keeper-compare">
+                    <div class="gg-keeper-card good">
+                        <div class="gg-keeper-pips" aria-hidden="true"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></div>
+                        <span class="gg-keeper-verdict good"><i class="fa-solid fa-check" aria-hidden="true"></i> <span data-i18n>Keeper</span></span>
+                        <p data-i18n><b>3 stats</b> at level 1 - the only gems worth leveling. It then picks up a boost at <b>5, 10 and 15</b>, ending at 6 containers.</p>
+                    </div>
+                    <div class="gg-keeper-card bad">
+                        <div class="gg-keeper-pips" aria-hidden="true"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></div>
+                        <span class="gg-keeper-verdict bad"><i class="fa-solid fa-xmark" aria-hidden="true"></i> <span data-i18n>Trash</span></span>
+                        <p data-i18n><b>2 stats</b> or fewer - automatic scrap. It can never catch a 3-stat gem, so don't spend a single dust on it.</p>
+                    </div>
+                </div>
+                <div class="gg-keeper-timeline" aria-hidden="true">
+                    <span class="gg-kt-step"><b>Lvl 1</b><small>3 stats</small></span>
+                    <span class="gg-kt-join">+</span>
+                    <span class="gg-kt-step boost"><b>Lvl 5</b><small>boost</small></span>
+                    <span class="gg-kt-join">+</span>
+                    <span class="gg-kt-step boost"><b>Lvl 10</b><small>boost</small></span>
+                    <span class="gg-kt-join">+</span>
+                    <span class="gg-kt-step boost"><b>Lvl 15</b><small>boost</small></span>
+                    <span class="gg-kt-join">=</span>
+                    <span class="gg-kt-step total"><b>6</b><small>containers</small></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── 6. Leveling ──────────────────────────────────────────── -->
+        <section class="gg-section" id="leveling" data-reveal>
+            <header class="gg-sec-head">
+                <span class="gg-sec-num" aria-hidden="true">07</span>
+                <h2 data-i18n>Leveling &amp; Power Rank</h2>
+                <p data-i18n>Feeding a gem Gem Dust raises its level, which grows every stat and adds to your Power Rank. Milestone levels give the biggest jumps - and unlock extra rolls on the gem.</p>
+            </header>
+
+            <div class="gg-level-lab">
+                <div class="gg-level-readout">
+                    <div class="gg-level-pickrow">
+                        <div class="gg-level-tierpick" id="gg-level-tierpick" role="radiogroup" aria-label="Tier for the leveling demo"></div>
+                        <div class="gg-level-typepick" id="gg-level-typepick" role="radiogroup" aria-label="Gem type for the leveling demo"></div>
+                    </div>
+                    <div class="gg-level-meta">
+                        <div class="gg-level-num">
+                            <span class="gg-level-lbl" data-i18n>Level</span>
+                            <span class="gg-level-val" id="gg-level-val">1</span>
+                            <span class="gg-level-max" id="gg-level-max">/ 23</span>
+                        </div>
+                        <div class="gg-pr-num">
+                            <span class="gg-level-lbl" data-i18n>Power Rank</span>
+                            <span class="gg-pr-line"><span class="gg-pr-val" id="gg-pr-val">0</span><span class="gg-pr-bonus" id="gg-pr-bonus" hidden></span></span>
+                            <span class="gg-pr-sub" id="gg-pr-sub">perfect Mystic Empowered gem</span>
+                        </div>
+                    </div>
+                    <label class="gg-slider-wrap">
+                        <span class="sr-only" data-i18n>Gem level</span>
+                        <input type="range" id="gg-level-slider" class="gg-slider" min="1" max="23" value="1" step="1">
+                    </label>
+                    <div class="gg-milestones" id="gg-milestones" aria-hidden="true"></div>
+                    <label class="gg-primordial">
+                        <input type="checkbox" id="gg-primordial" checked>
+                        <span class="gg-primordial-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                        <span class="gg-primordial-txt"><i class="fa-solid fa-dragon" aria-hidden="true"></i> <span data-i18n>Primordial Dragon</span> <b>+10%</b></span>
+                    </label>
+                    <p class="gg-level-hint" id="gg-level-hint" aria-live="polite"></p>
+                </div>
+                <div class="gg-pr-chart" id="gg-pr-chart" role="img" aria-label="Power Rank gained at each level"></div>
+            </div>
+
+            <div class="gg-boosters">
+                <div class="gg-boost-head">
+                    <h3 data-i18n>Boosters — better odds each level</h3>
+                    <p data-i18n>Every level-up is a roll: it can raise the gem one level, or <b>double level</b> for two at once. Gems no longer crack, so a bad roll only costs the materials, never progress. Boosters are one-shot items you spend on the attempt to tilt the odds - the stronger the booster, the more level-ups land and the more of them double, so the gem maxes out in far fewer tries.</p>
+                </div>
+                <div class="gg-boost-cards" id="gg-boost-cards"></div>
+                <p class="gg-boost-foot" data-i18n><b>Ninth &amp; Tenth Life</b> share the same numbers but never overlap - Ninth Life covers every tier <i>except</i> Mystic, and Mystic gems take only <b>Tenth Life</b> in its place.</p>
+            </div>
+
+            <div class="gg-dustprofit">
+                <div class="gg-dp-head">
+                    <h3 data-i18n>Upcycling: farming Gem Dust</h3>
+                    <p data-i18n>Loot-collect a gem and it returns Gem Dust based on its level - and a Crystal gem leveled to <b>25</b> gives back more dust than it took to get there. Leveling Crystal gems purely to loot-collect them for that surplus is called <b>upcycling</b>. A <b>Gem Fixture</b> trims the upgrade cost by 20%, or a Gem Fixture plus a <b>Gem Day</b> from Patron by 40% - both grow the net return:</p>
+                </div>
+                <div class="gg-dp-stats">
+                    <div class="gg-dp-stat">
+                        <span class="gg-dp-stat-k"><b>Gem Fixture</b> · −20%</span>
+                        <span class="gg-dp-stat-v">+4,045,666</span>
+                        <span class="gg-dp-stat-s" data-i18n>net dust per 50 gems</span>
+                    </div>
+                    <div class="gg-dp-stat best">
+                        <span class="gg-dp-stat-k"><b>+ Gem Day</b> · −40%</span>
+                        <span class="gg-dp-stat-v">+4,854,799</span>
+                        <span class="gg-dp-stat-s" data-i18n>net dust per 50 gems</span>
+                    </div>
+                </div>
+                <div class="gg-dp-rules">
+                    <p class="gg-dp-rule"><i class="fa-solid fa-ban" aria-hidden="true"></i> <span data-i18n><b>Never level with boosters when you're farming dust.</b> A booster costs more than the extra dust it hands back, so it only eats into the profit - level the plain way.</span></p>
+                    <p class="gg-dp-rule"><i class="fa-solid fa-recycle" aria-hidden="true"></i> <span data-i18n><b>Level every Crystal gem you get to 25</b> - even ones you'll never equip - then loot-collect them for the dust. End-game gems burn through a <i>lot</i> of it, and this is the steadiest way to bank it.</span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── 7. Focus / perfecting ────────────────────────────────── -->
+        <section class="gg-section" id="focus" data-reveal>
+            <header class="gg-sec-head">
+                <span class="gg-sec-num" aria-hidden="true">08</span>
+                <h2 data-i18n>Perfecting with focuses</h2>
+                <p data-i18n>A stat almost never rolls at 100%. Focus items push it up the rest of the way - three grades, each worth a fixed slice of quality. The trick is spending the fewest, most efficient focuses to hit the cap.</p>
+            </header>
+
+            <div class="gg-focus-lab">
+                <div class="gg-focus-ring-wrap">
+                    <div class="gg-focus-ring" id="gg-focus-ring">
+                        <svg viewBox="0 0 120 120" class="gg-ring-svg" aria-hidden="true">
+                            <circle class="gg-ring-track" cx="60" cy="60" r="52"></circle>
+                            <circle class="gg-ring-fill" id="gg-ring-fill" cx="60" cy="60" r="52"></circle>
+                        </svg>
+                        <div class="gg-ring-center">
+                            <span class="gg-ring-pct" id="gg-ring-pct">71<span class="gg-ring-unit">%</span></span>
+                            <span class="gg-ring-cap" data-i18n>quality</span>
+                        </div>
+                    </div>
+                    <p class="gg-focus-count" id="gg-focus-count" aria-live="polite"></p>
+                </div>
+                <div class="gg-focus-controls">
+                    <p class="gg-focus-intro" data-i18n>Apply focuses to close the gap to a perfect stat:</p>
+                    <div class="gg-focus-btns">
+                        <button class="gg-focus-btn" data-aug="1">
+                            <span class="gg-focus-left"><img class="gg-focus-ic" src="/static/assets/gems/augments/1.png" alt="" aria-hidden="true"><span class="gg-focus-name" data-i18n>Rough Focus</span></span>
+                            <span class="gg-focus-val">+2.5%</span>
+                        </button>
+                        <button class="gg-focus-btn" data-aug="2">
+                            <span class="gg-focus-left"><img class="gg-focus-ic" src="/static/assets/gems/augments/2.png" alt="" aria-hidden="true"><span class="gg-focus-name" data-i18n>Precise Focus</span></span>
+                            <span class="gg-focus-val">+5%</span>
+                        </button>
+                        <button class="gg-focus-btn" data-aug="3">
+                            <span class="gg-focus-left"><img class="gg-focus-ic" src="/static/assets/gems/augments/3.png" alt="" aria-hidden="true"><span class="gg-focus-name" data-i18n>Superior Focus</span></span>
+                            <span class="gg-focus-val">+12.5%</span>
+                        </button>
+                    </div>
+                    <div class="gg-focus-foot">
+                        <button class="gg-btn gg-btn-ghost" id="gg-focus-reset"><i class="fa-solid fa-rotate-left"></i> <span data-i18n>Reset roll</span></button>
+                        <button class="gg-btn gg-btn-ghost" id="gg-focus-auto"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n>Perfect it</span></button>
+                    </div>
+                    <p class="gg-focus-note" data-i18n>Focuses only add quality up to 100%; overshooting is wasted. The <a href="/gem-evaluator">Gem Evaluator</a> plans the exact, cheapest set of focuses for a real gem.</p>
+                </div>
+            </div>
+
+            <div class="gg-chaos-lead">
+                <h3 data-i18n>Rerolled wrong? Reshape it with Chaos</h3>
+                <p data-i18n>Focus fixes a stat's <b>quality</b> - but not <b>which</b> stats you rolled or <b>where</b> the boosts landed. Two items fix the layout itself:</p>
+            </div>
+            <div class="gg-chaos">
+                <div class="gg-chaos-card">
+                    <img class="gg-chaos-ic" src="/static/assets/gems/modifiers/spark.png" alt="" aria-hidden="true">
+                    <div>
+                        <h3 data-i18n>Chaos Spark</h3>
+                        <p data-i18n>Rerolls one stat's <b>type</b> - swap a stat you don't want (say Max Health) for one you do (Critical Hit). It picks a new stat at random from whatever's still valid.</p>
+                        <span class="gg-chaos-cav" data-i18n>Can't reroll a locked <span class="highlight-yellow">Light</span> stat, duplicate a stat you already have, or give you both Physical and Magic damage.</span>
+                    </div>
+                </div>
+                <div class="gg-chaos-card">
+                    <img class="gg-chaos-ic" src="/static/assets/gems/modifiers/flare.png" alt="" aria-hidden="true">
+                    <div>
+                        <h3 data-i18n>Chaos Flare</h3>
+                        <p data-i18n>Moves one <b>boost container</b> from one stat onto another. If a milestone boost landed on a throwaway stat, flare relocates that container to a stat that matters.</p>
+                        <span class="gg-chaos-cav" data-i18n>Only works on a stat holding more than one container (one that caught a boost); the container lands on a random other stat.</span>
+                    </div>
+                </div>
+            </div>
+
+            <details class="gg-advanced">
+                <summary>
+                    <span class="gg-adv-badge" data-i18n>Advanced</span>
+                    <span data-i18n>Under the hood: how a gem really stores its stats</span>
+                    <i class="fa-solid fa-chevron-down gg-adv-chev" aria-hidden="true"></i>
+                </summary>
+                <div class="gg-adv-body">
+                    <p data-i18n>In-game a stat shows a single number, but underneath it's a stack of hidden <b>containers</b> - and that stack is what really decides how hard a gem is to perfect. Every stat starts with one container; each milestone boost (level 5, 10, 15) drops one more onto a <b>random</b> stat, so a maxed gem holds <b>six containers</b> spread across its three stats.</p>
+
+                    <div class="gg-adv-diagram" aria-hidden="true">
+                        <div class="gg-adv-stat">
+                            <span class="gg-adv-slabel">Magic Dmg · 3</span>
+                            <div class="gg-adv-conts">
+                                <span class="gg-adv-cont"><i style="height:78%"></i></span>
+                                <span class="gg-adv-cont boost"><i style="height:52%"></i></span>
+                                <span class="gg-adv-cont boost"><i style="height:64%"></i></span>
+                            </div>
+                        </div>
+                        <div class="gg-adv-stat">
+                            <span class="gg-adv-slabel">Crit Dmg · 2</span>
+                            <div class="gg-adv-conts">
+                                <span class="gg-adv-cont"><i style="height:88%"></i></span>
+                                <span class="gg-adv-cont boost"><i style="height:41%"></i></span>
+                            </div>
+                        </div>
+                        <div class="gg-adv-stat">
+                            <span class="gg-adv-slabel">Light · 1</span>
+                            <div class="gg-adv-conts">
+                                <span class="gg-adv-cont"><i style="height:70%"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gg-adv-legend">
+                        <span><i style="background:var(--accent-blue)"></i> <span data-i18n>base container</span></span>
+                        <span><i style="background:var(--accent-orange)"></i> <span data-i18n>boost container (from a milestone)</span></span>
+                        <span data-i18n>empty top = what focus has to fill</span>
+                    </div>
+
+                    <div class="gg-adv-cols">
+                        <div>
+                            <h4><i class="fa-solid fa-layer-group" aria-hidden="true"></i> <span data-i18n>Containers overflow</span></h4>
+                            <p data-i18n>Each container has its own random <b>base roll</b> (0–100%), fixed at creation - that's the RNG. Focus stacks on top (Rough +2.5%, Precise +5%, Superior +12.5% each). A stat's quality is the <b>average</b> of its containers, and a container can overflow <b>past 100%</b> to carry a low one - so 112.5% + 87.5% averages to a perfect 100% stat. The stat caps at 100%, so overflow beyond that adds no power; it just flattens out.</p>
+                        </div>
+                        <div>
+                            <h4><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> <span data-i18n>Why boosts cost you</span></h4>
+                            <p data-i18n>Every boost is another container you must fill to reach a perfect gem. More boosts means more power but a pricier cap - and because they land at random, one stat can end up with several <b>low-rolled</b> containers that each eat a pile of focus. "How hard to perfect" = how many containers × how low they rolled. That's the exact sum the <a href="/gem-evaluator">Evaluator</a> solves.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <!-- ─── Gem Builds (interactive code decoder) ─────────────────── -->
+        <section class="gg-section" id="builds" data-reveal>
+            <header class="gg-sec-head">
+                <span class="gg-sec-num" aria-hidden="true">09</span>
+                <h2 data-i18n>Gem Builds</h2>
+                <p data-i18n>Once your gems are perfect, a "build" is how you spread their boosts across stats to squeeze out the last drop of damage. It's deep end-game min-maxing that most players never need - but here's exactly how a build code reads. Hover or tap any number.</p>
+            </header>
+
+            <div class="gg-builds-lab">
+                <div class="gg-build-modes" id="gg-build-modes" role="radiogroup" aria-label="Example build"></div>
+                <div class="gg-build-viz" id="gg-build-viz"></div>
+                <div class="gg-build-detail" id="gg-build-detail" aria-live="polite"></div>
+            </div>
+
+            <div class="gg-build-notes">
+                <div class="gg-build-note">
+                    <h4><i class="fa-solid fa-eye-slash" aria-hidden="true"></i> <span data-i18n>What the "+" hides</span></h4>
+                    <p data-i18n>A plain four-number code like <b>9/0 3/15</b> leaves the Cosmic gems out - in a damage build they always sit at <b>+ 0/0/3 0/0/6</b> (every Cosmic boost poured into Light), so printing them would just be clutter.</p>
+                </div>
+                <div class="gg-build-note">
+                    <h4><i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i> <span data-i18n>What a Farm build changes</span></h4>
+                    <p data-i18n>A Farm build pulls Cosmic boosts <b>off Light and onto Damage</b> - you give up some Light to hit harder. That's the only time the <b>+</b> segment shows real numbers, like <b>3/0/0 1/1/4</b>.</p>
+                </div>
+            </div>
+
+            <p class="gg-build-bottom" data-i18n><b>Bottom line:</b> build codes wring tiny, hard-won gains out of an already-maxed set. Skip them unless you're chasing the very top of a leaderboard - and when you are, let the <a href="/gem-builds">Gem Builds</a> optimizer find the best layout for your class.</p>
+        </section>
+
+        <!-- ─── Advanced: generated stat tables ──────────────────────── -->
+        <section class="gg-section" id="tables" data-reveal>
+            <header class="gg-sec-head">
+                <span class="gg-adv-badge" data-i18n>Advanced</span>
+                <h2 data-i18n>Every stat, every level - generated</h2>
+                <p data-i18n>The exact numbers under the guide. Pick a tier, type and how many boosts a stat carries, and read off what that stat is worth at a min and a max roll, level by level. This is the same math the game runs.</p>
+            </header>
+            <div class="gg-tbl-controls" id="gg-tbl-controls"></div>
+            <div class="gg-tbl-wrap"><table class="gg-tbl" id="gg-stat-table"></table></div>
+            <p class="gg-tbl-foot" data-i18n>Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>LT</b> = Light. Rows shaded are milestone levels.</p>
+        </section>
+
+        <!-- ─── Power Rank ceiling payoff ────────────────────────────── -->
+        <section class="gg-ceiling" data-reveal>
+            <div class="gg-ceiling-inner">
+                <p class="gg-ceiling-kicker" data-i18n>Why it's worth the grind</p>
+                <h2 data-i18n>A perfected gem set is most of your Power Rank</h2>
+                <p class="gg-ceiling-lead" data-i18n>Perfect rolls, max level and full focuses stack a single gem into the thousands of Power Rank - and you run a whole set of them. Nothing else on a character comes close.</p>
+                <div class="gg-ceiling-stats">
+                    <div class="gg-ceiling-stat" data-reveal><span class="v" data-count="12">0</span><span class="k" data-i18n>gems in a full loadout (3 per element)</span></div>
+                    <div class="gg-ceiling-stat" data-reveal><span class="v" data-count="35">0</span><span class="k" data-i18n>max level on a Mystic gem</span></div>
+                    <div class="gg-ceiling-stat" data-reveal><span class="v" data-count="100" data-suffix="%">0</span><span class="k" data-i18n>quality every stat can reach</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── Recap / CTA ──────────────────────────────────────────── -->
+        <section class="gg-recap" data-reveal>
+            <h2 data-i18n>Now go build one</h2>
+            <p data-i18n>You've got the whole system: tier for the ceiling, type and element for the flavor, two or three rolled stats, levels for Power Rank, and focuses to perfect it. Take it into the tools.</p>
+            <div class="gg-recap-links">
+                <a class="gg-recap-card" href="/gem-simulator" data-reveal>
+                    <i class="fa-solid fa-gem"></i>
+                    <span class="gg-recap-t" data-i18n>Gem Simulator</span>
+                    <span class="gg-recap-d" data-i18n>Roll, level and augment gems risk-free.</span>
+                </a>
+                <a class="gg-recap-card" href="/gem-evaluator" data-reveal>
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                    <span class="gg-recap-t" data-i18n>Gem Evaluator</span>
+                    <span class="gg-recap-d" data-i18n>Score a real gem and plan its focuses.</span>
+                </a>
+                <a class="gg-recap-card" href="/gem-builds" data-reveal>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span class="gg-recap-t" data-i18n>Gem Builds</span>
+                    <span class="gg-recap-d" data-i18n>Find the best gem layout for your class.</span>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/_site_util.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/gems-guide.min.js" defer></script>
+</body>
+</html>

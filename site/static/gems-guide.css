@@ -1,0 +1,787 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /gems-guide - "How Gems Work in Trove" interactive explainer.
+   Scoped under body.gems-guide-page. Uses the shared tokens from style.css
+   (--bg-*, --text-*, --accent-*, --radius*, --ease-out, --shadow-*).
+
+   The gem categories (element / tier / stat kind / focus grade) are the one
+   place color carries meaning here, so each gets a semantic hue. Everything
+   else stays on the single electric-blue voice. Motion is a response to
+   state and every animated block has a reduced-motion fallback.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.gems-guide-page {
+  /* Per-gem colour, re-bound by JS as the element changes. Defaults cosmic. */
+  --gem: var(--accent-purple);
+  --gem-soft: color-mix(in oklab, var(--gem) 22%, transparent);
+  --z-secnav: 20;
+}
+/* style.css sets `body.landing { overflow-x: hidden }`, which forces overflow-y
+   to `auto` and turns <body> into the scroll container - that breaks the
+   position:sticky scrollytelling + section-nav (they'd stick to <body>, not the
+   viewport). `overflow-x: clip` clips horizontal overflow the same way WITHOUT
+   establishing a scroll container, so the viewport stays the sticky root. */
+body.gems-guide-page { overflow-x: clip; }
+
+.gg-main {
+  width: min(1180px, 92vw);
+  margin-inline: auto;
+  padding-bottom: 5rem;
+}
+
+.gems-guide-page .sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ─── Shared section furniture ─────────────────────────────────────────── */
+.gg-section { padding: clamp(3rem, 7vw, 5.5rem) 0; border-top: 1px solid var(--bg-line); scroll-margin-top: 120px; }
+.gg-sec-head { max-width: 62ch; margin-bottom: 2.4rem; }
+.gg-sec-num {
+  display: inline-block; font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .8rem; letter-spacing: .14em; color: var(--accent-blue);
+  padding: 2px 8px; border: 1px solid var(--bg-line); border-radius: 999px; margin-bottom: 1rem;
+}
+.gg-sec-head h2 { font-size: clamp(1.7rem, 3.2vw + .6rem, 2.6rem); margin-bottom: .7rem; text-wrap: balance; }
+.gg-sec-head p { color: var(--text-mute); font-size: var(--type-lead); text-wrap: pretty; }
+
+/* ─── Gem visual: real voxel art (tier socket + gem) built by JS ────────── */
+.gg-gem-stage { position: relative; aspect-ratio: 1; width: 100%; color: var(--gem); }
+.gg-gem-stage-hero { max-width: 340px; }
+.gg-gem-stage-lg { max-width: 300px; }
+.gg-gem-stage-md { max-width: 230px; }
+
+.gg-gem-render { position: relative; width: 100%; height: 100%; display: grid; place-items: center; }
+.gg-gem-tier { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.gg-gem-img {
+  position: relative; width: 72%; height: 72%; object-fit: contain;
+  filter: drop-shadow(0 6px 20px color-mix(in oklab, var(--gem) 50%, transparent));
+  transition: opacity .5s var(--ease-out), filter .5s var(--ease-out);
+}
+.gems-guide-page:not(.gg-reduce) .gg-gem-float .gg-gem-img { animation: gg-float 5.5s var(--ease-out) infinite; }
+/* Scrollytelling: the gem starts desaturated and colours in once its element locks. */
+.gg-gem-stage[data-assembled="0"] .gg-gem-img { filter: grayscale(1) brightness(.68); opacity: .8; }
+
+@keyframes gg-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6%); } }
+
+/* ─── Hero ─────────────────────────────────────────────────────────────── */
+.gg-hero {
+  display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center; padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(1.5rem, 4vw, 3rem);
+}
+.gg-eyebrow {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; letter-spacing: .06em;
+  color: var(--accent-blue); margin-bottom: 1rem;
+}
+.gg-title { font-size: clamp(2.4rem, 5vw + 1rem, 4.2rem); line-height: 1.02; text-wrap: balance; margin-bottom: 1.1rem; }
+.gg-lead { color: var(--text-mute); font-size: var(--type-lead); max-width: 54ch; text-wrap: pretty; }
+.gg-hero-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.6rem 0 1.8rem; }
+.gg-chip {
+  display: inline-flex; align-items: center; gap: .45rem; font-size: .85rem; color: var(--text-mute);
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: 999px; padding: 6px 12px;
+}
+.gg-chip i { color: var(--accent-blue); font-size: .8rem; }
+.gg-hero-cue {
+  display: inline-flex; align-items: center; gap: .55rem; font-weight: 600; color: var(--text);
+  border-bottom: 1px solid transparent; transition: gap .2s var(--ease-out), color .2s var(--ease-out);
+}
+.gg-hero-cue:hover { color: var(--accent-blue); gap: .8rem; }
+.gg-hero-gem { display: grid; place-items: center; }
+
+/* ─── Section nav (sticky pill row) ────────────────────────────────────── */
+.gg-secnav {
+  position: sticky; top: calc(var(--nav-h) + 8px); z-index: var(--z-secnav);
+  display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none;
+  padding: 6px; margin: 0 auto 1rem; width: fit-content; max-width: 100%;
+  background: color-mix(in oklab, var(--bg-card) 82%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid var(--bg-line); border-radius: 999px;
+}
+.gg-secnav::-webkit-scrollbar { display: none; }
+.gg-secnav a {
+  white-space: nowrap; font-size: .84rem; font-weight: 500; color: var(--text-mute);
+  padding: 7px 14px; border-radius: 999px; transition: background .18s var(--ease-out), color .18s var(--ease-out);
+}
+.gg-secnav a:hover { color: var(--text); background: var(--bg-card-hi); }
+.gg-secnav a.active { color: var(--bg-base); background: var(--accent-blue); }
+
+/* ─── 1. Anatomy ───────────────────────────────────────────────────────── */
+.gg-anatomy {
+  display: grid; grid-template-columns: minmax(0, 320px) 1fr; grid-template-areas: "gem parts" "gem detail";
+  gap: clamp(1.2rem, 3vw, 2.4rem) clamp(1.5rem, 4vw, 3rem); align-items: start;
+}
+.gg-anatomy #anatomy-gem { grid-area: gem; align-self: center; }
+.gg-anatomy-parts { grid-area: parts; display: flex; flex-wrap: wrap; gap: .5rem; }
+.gg-part {
+  display: inline-flex; align-items: center; gap: .5rem; cursor: pointer; font: inherit; font-size: .92rem; font-weight: 500;
+  color: var(--text-mute); background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: 999px; padding: 9px 16px; transition: border-color .18s var(--ease-out), color .18s var(--ease-out), background .18s var(--ease-out);
+}
+.gg-part i { color: var(--text-soft); transition: color .18s var(--ease-out); }
+.gg-part:hover { color: var(--text); border-color: color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); }
+.gg-part.active { color: var(--text); border-color: var(--accent-blue); background: color-mix(in oklab, var(--accent-blue) 12%, var(--bg-card)); }
+.gg-part.active i { color: var(--accent-blue); }
+.gg-anatomy-detail { grid-area: detail; }
+.gg-detail-card {
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  padding: 1.4rem 1.5rem; min-height: 148px;
+}
+.gg-detail-card h3 { font-size: 1.2rem; margin-bottom: .5rem; }
+.gg-detail-card h3 i { color: var(--accent-blue); margin-right: .5rem; }
+.gg-detail-card p { color: var(--text-mute); }
+.gg-detail-card .gg-detail-eg { margin-top: .8rem; font-size: .9rem; color: var(--text-soft); }
+.gems-guide-page:not(.gg-reduce) .gg-detail-card { animation: gg-fade .35s var(--ease-out); }
+@keyframes gg-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ─── 2. Tiers ─────────────────────────────────────────────────────────── */
+.gg-tiers { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; margin-bottom: 1.4rem; }
+.gg-tier {
+  --tc: var(--accent-blue);
+  cursor: pointer; text-align: left; font: inherit; color: var(--text);
+  display: flex; flex-direction: column; align-items: flex-start;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  padding: 1rem 1.1rem 1.1rem; position: relative; overflow: hidden;
+  transition: border-color .2s var(--ease-out), transform .2s var(--ease-out), background .2s var(--ease-out);
+}
+.gg-tier::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--tc); opacity: .55;
+  transform: scaleX(.35); transform-origin: left; transition: transform .25s var(--ease-out), opacity .2s var(--ease-out);
+}
+.gg-tier:hover { transform: translateY(-3px); border-color: color-mix(in oklab, var(--tc) 45%, var(--bg-line)); }
+.gg-tier.active { border-color: var(--tc); background: color-mix(in oklab, var(--tc) 10%, var(--bg-card)); }
+.gg-tier.active::before { transform: scaleX(1); opacity: 1; }
+.gg-tier-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: .5rem; }
+.gg-tier-name .gg-tier-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tc); box-shadow: 0 0 10px var(--tc); }
+.gg-tier-rank { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--text-soft); margin-top: .35rem; letter-spacing: .04em; }
+.gg-tier-ml { margin-top: .8rem; font-size: .88rem; color: var(--text-mute); }
+.gg-tier-ml b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.gg-tier-detail {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px;
+  background: var(--bg-line); border: 1px solid var(--bg-line); border-radius: var(--radius); overflow: hidden;
+}
+.gg-tier-stat { background: var(--bg-card); padding: 1.1rem 1.2rem; display: flex; flex-direction: column; }
+.gg-tier-stat .k { font-family: 'JetBrains Mono', monospace; font-size: .72rem; letter-spacing: .06em; color: var(--text-soft); text-transform: uppercase; }
+.gg-tier-stat .v { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.9rem; line-height: 1.1; margin-top: .35rem; font-variant-numeric: tabular-nums; color: var(--gem); transition: color .3s var(--ease-out); }
+.gg-tier-stat .s { font-size: .85rem; color: var(--text-mute); margin-top: .3rem; }
+.gg-tier-bar { height: 7px; border-radius: 999px; background: var(--bg-deep); margin-top: .9rem; overflow: hidden; }
+.gg-tier-bar > i { display: block; height: 100%; border-radius: inherit; background: var(--gem); width: 0; transition: width .6s var(--ease-out); }
+
+/* ─── 3. Type ──────────────────────────────────────────────────────────── */
+.gg-type-toggle, .gg-focus-lab .gg-seg-wrap { display: inline-flex; gap: 4px; padding: 4px; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; margin-bottom: 1.8rem; }
+.gg-seg {
+  cursor: pointer; font: inherit; font-weight: 600; font-size: .95rem; color: var(--text-mute);
+  background: transparent; border: 0; border-radius: 999px; padding: 9px 22px; transition: background .18s var(--ease-out), color .18s var(--ease-out);
+}
+.gg-seg:hover { color: var(--text); }
+.gg-seg.active { background: var(--accent-blue); color: var(--bg-base); }
+.gg-type-panels { display: grid; grid-template-columns: minmax(0, 260px) 1fr; gap: clamp(1.5rem, 4vw, 3rem); align-items: center; }
+.gg-type-detail h3 { font-size: 1.4rem; margin-bottom: .3rem; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.gg-badge { font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .05em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid; }
+.gg-badge-blue { color: var(--accent-blue); border-color: color-mix(in oklab, var(--accent-blue) 45%, transparent); background: color-mix(in oklab, var(--accent-blue) 12%, transparent); }
+.gg-badge-purple { color: var(--accent-purple); border-color: color-mix(in oklab, var(--accent-purple) 45%, transparent); background: color-mix(in oklab, var(--accent-purple) 12%, transparent); }
+.gg-type-detail > p { color: var(--text-mute); margin-bottom: 1rem; max-width: 56ch; }
+.gg-feat-list { display: grid; gap: .6rem; }
+.gg-feat {
+  display: flex; gap: .7rem; align-items: flex-start; padding: .7rem .9rem;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius-sm);
+}
+.gems-guide-page:not(.gg-reduce) .gg-feat { animation: gg-fade .35s var(--ease-out) backwards; }
+.gg-feat i { color: var(--gem); margin-top: 2px; flex: none; width: 18px; text-align: center; }
+.gg-feat span { font-size: .92rem; color: var(--text-mute); }
+.gg-feat span b { color: var(--text); font-weight: 600; }
+
+/* ─── 4. Elements ──────────────────────────────────────────────────────── */
+.gg-elements { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; margin-bottom: 1.6rem; }
+.gg-elem {
+  --ec: var(--accent-blue);
+  cursor: pointer; font: inherit; color: var(--text); text-align: center;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  padding: 1.2rem .8rem 1.1rem; transition: border-color .2s var(--ease-out), transform .2s var(--ease-out), background .2s var(--ease-out);
+}
+.gg-elem:hover { transform: translateY(-3px); border-color: color-mix(in oklab, var(--ec) 50%, var(--bg-line)); }
+.gg-elem.active { border-color: var(--ec); background: color-mix(in oklab, var(--ec) 10%, var(--bg-card)); }
+.gg-elem-orb {
+  width: 62px; height: 62px; margin: 0 auto .6rem; display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 46%, color-mix(in oklab, var(--ec) 22%, transparent), transparent 70%);
+  transition: filter .25s var(--ease-out);
+}
+.gg-elem-orb img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 7px rgba(0,0,0,.45)); }
+.gg-elem-orb.multi { width: auto; display: flex; justify-content: center; align-items: center; gap: .35rem; background: none; }
+.gg-elem-orb.multi img { width: 42px; height: 42px; }
+.gg-elem.active .gg-elem-orb { filter: drop-shadow(0 0 13px color-mix(in oklab, var(--ec) 55%, transparent)); }
+.gg-elem-name { display: block; font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+.gg-elem-slot { display: block; font-size: .78rem; color: var(--text-soft); margin-top: .2rem; }
+
+.gg-element-detail {
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 3vw, 2rem);
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: clamp(1.2rem, 3vw, 1.8rem);
+}
+.gg-element-detail.cosmic { border-color: color-mix(in oklab, var(--gem) 50%, var(--bg-line)); box-shadow: 0 0 0 1px color-mix(in oklab, var(--gem) 20%, transparent); }
+.gg-ed-block h3 { font-size: 1.15rem; margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+.gg-ed-block h3 i { color: var(--gem); }
+.gg-tag-row { display: flex; flex-wrap: wrap; gap: .4rem; }
+.gg-tag { font-size: .82rem; color: var(--text-mute); background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; padding: 4px 11px; }
+.gg-tag.locked { color: var(--accent-yellow); border-color: color-mix(in oklab, var(--accent-yellow) 40%, transparent); }
+.gg-tag.locked i { margin-right: 4px; font-size: .72rem; }
+.gg-ed-note { grid-column: 1 / -1; font-size: .9rem; color: var(--text-mute); padding-top: .4rem; border-top: 1px dashed var(--bg-line); }
+.gg-ed-note.cosmic { color: color-mix(in oklab, var(--gem) 55%, var(--text)); }
+
+/* ─── 5. Stats & rolls ─────────────────────────────────────────────────── */
+.gg-stats-lab { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(1.2rem, 3vw, 2rem); align-items: start; }
+.gg-roll-panel { background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: clamp(1.1rem, 3vw, 1.6rem); }
+.gg-roll-slots { display: grid; gap: .8rem; margin-bottom: 1.3rem; }
+.gg-slot { background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius-sm); padding: .9rem 1rem; }
+.gg-slot-top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: .55rem; }
+.gg-slot-name { font-weight: 600; display: flex; align-items: center; gap: .5rem; }
+.gg-slot-name .gg-slot-i { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: .72rem; background: var(--gem-soft); color: var(--gem); flex: none; }
+.gg-slot-name.locked .gg-slot-i { background: color-mix(in oklab, var(--accent-yellow) 20%, transparent); color: var(--accent-yellow); }
+.gg-slot-roll { font-family: 'JetBrains Mono', monospace; font-size: .9rem; font-variant-numeric: tabular-nums; color: var(--text-mute); }
+.gg-slot-roll b { color: var(--text); }
+.gg-slot-bar { height: 8px; background: var(--bg-base); border-radius: 999px; overflow: hidden; }
+.gg-slot-bar > i { display: block; height: 100%; border-radius: inherit; width: 0; transition: width .55s var(--ease-out), background .3s var(--ease-out); }
+.gg-slot .q-low > i    { background: var(--accent-red); }
+.gg-slot .q-mid > i    { background: var(--accent-yellow); }
+.gg-slot .q-high > i   { background: var(--accent-green); }
+.gg-slot-grade { font-size: .78rem; margin-top: .4rem; color: var(--text-soft); }
+
+.gg-roll-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.gg-roll-hint { font-size: .88rem; color: var(--text-mute); margin: 0; }
+
+.gg-pool-card { background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: clamp(1.1rem, 3vw, 1.6rem); }
+.gg-pool-card h3 { font-size: 1.15rem; margin-bottom: .5rem; }
+.gg-pool-card > p { color: var(--text-mute); font-size: .92rem; margin-bottom: .9rem; }
+.gg-pool-list { list-style: none; display: grid; gap: .45rem; margin-bottom: 1rem; }
+.gg-pool-list li { display: flex; align-items: center; gap: .6rem; font-size: .92rem; color: var(--text); }
+.gg-pool-list li .d { width: 8px; height: 8px; border-radius: 50%; background: var(--gem); flex: none; }
+.gg-pool-list li.locked .d { background: var(--accent-yellow); }
+.gg-pool-note { font-size: .85rem; color: var(--text-soft); }
+
+/* ─── Keeper rule (3 stats = keep, 2 = trash) + boost cadence ───────────── */
+.gg-keeper { margin-top: 2rem; padding: clamp(1.2rem, 3vw, 1.8rem); background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); }
+.gg-keeper-head { max-width: 68ch; margin-bottom: 1.3rem; }
+.gg-keeper-head h3 { font-size: 1.25rem; margin-bottom: .4rem; }
+.gg-keeper-head p { color: var(--text-mute); font-size: .95rem; }
+.gg-keeper-head b { color: var(--text); }
+.gg-keeper-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.4rem; }
+.gg-keeper-card { padding: 1.1rem 1.2rem; border-radius: var(--radius-sm); border: 1px solid; }
+.gg-keeper-card.good { border-color: color-mix(in oklab, var(--accent-green) 42%, var(--bg-line)); background: color-mix(in oklab, var(--accent-green) 7%, var(--bg-deep)); }
+.gg-keeper-card.bad  { border-color: color-mix(in oklab, var(--accent-red) 42%, var(--bg-line)); background: color-mix(in oklab, var(--accent-red) 7%, var(--bg-deep)); }
+.gg-keeper-pips { display: flex; gap: 7px; margin-bottom: .8rem; }
+.gg-keeper-pips .pip { width: 26px; height: 8px; border-radius: 999px; background: var(--bg-line); }
+.gg-keeper-card.good .pip.on { background: var(--accent-green); }
+.gg-keeper-card.bad .pip.on { background: var(--accent-red); }
+.gg-keeper-pips .pip.off { background: transparent; border: 1px dashed color-mix(in oklab, var(--accent-red) 55%, var(--bg-line)); }
+.gg-keeper-verdict { display: inline-flex; align-items: center; gap: .4rem; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.05rem; margin-bottom: .4rem; }
+.gg-keeper-verdict.good { color: var(--accent-green); }
+.gg-keeper-verdict.bad { color: var(--accent-red); }
+.gg-keeper-card p { font-size: .9rem; color: var(--text-mute); }
+.gg-keeper-card b { color: var(--text); }
+.gg-keeper-timeline { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; padding: 1rem; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius-sm); }
+.gg-kt-step { display: grid; gap: 1px; text-align: center; padding: .5rem .8rem; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--bg-line); min-width: 60px; }
+.gg-kt-step b { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; }
+.gg-kt-step small { font-size: .66rem; color: var(--text-soft); font-family: 'JetBrains Mono', monospace; }
+.gg-kt-step.boost { border-color: color-mix(in oklab, var(--accent-orange) 45%, var(--bg-line)); }
+.gg-kt-step.boost b { color: var(--accent-orange); }
+.gg-kt-step.total { border-color: color-mix(in oklab, var(--accent-blue) 50%, var(--bg-line)); background: color-mix(in oklab, var(--accent-blue) 10%, var(--bg-card)); }
+.gg-kt-step.total b { color: var(--accent-blue); }
+.gg-kt-join { color: var(--text-soft); font-weight: 700; }
+@media (max-width: 560px) { .gg-keeper-compare { grid-template-columns: 1fr; } }
+
+/* ─── 6. Leveling ──────────────────────────────────────────────────────── */
+.gg-level-lab { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.2rem, 3vw, 2.2rem); align-items: stretch; }
+.gg-level-readout { background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: clamp(1.2rem, 3vw, 1.8rem); }
+.gg-level-pickrow { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-bottom: 1.4rem; }
+.gg-level-pickrow .gg-level-tierpick { margin-bottom: 0; }
+.gg-level-typepick { display: inline-flex; gap: 4px; padding: 4px; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; }
+.gg-level-typepick button { cursor: pointer; font: inherit; font-size: .82rem; font-weight: 600; color: var(--text-mute); background: transparent; border: 0; border-radius: 999px; padding: 6px 15px; transition: background .18s, color .18s; }
+.gg-level-typepick button:hover { color: var(--text); }
+.gg-level-typepick button.active { background: var(--gem); color: var(--bg-base); }
+.gg-level-tierpick { display: inline-flex; gap: 4px; padding: 4px; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; margin-bottom: 1.4rem; flex-wrap: wrap; }
+.gg-level-tierpick button { --tc: var(--accent-blue); position: relative; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 600; color: var(--text-mute); background: transparent; border: 0; border-radius: 999px; padding: 6px 14px 6px 22px; transition: background .18s, color .18s; }
+.gg-level-tierpick button::before { content: ""; position: absolute; left: 9px; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; border-radius: 50%; background: var(--tc); box-shadow: 0 0 6px color-mix(in oklab, var(--tc) 60%, transparent); }
+.gg-level-tierpick button:hover { color: var(--text); }
+.gg-level-tierpick button.active { background: var(--tc); color: var(--bg-base); }
+.gg-level-tierpick button.active::before { background: var(--bg-base); opacity: .55; box-shadow: none; }
+.gg-level-meta { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1.4rem; }
+.gg-level-lbl { display: block; font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-soft); margin-bottom: .3rem; }
+.gg-level-val { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.gg-level-max { font-size: 1rem; color: var(--text-soft); margin-left: .2rem; }
+.gg-pr-num { text-align: right; }
+.gg-pr-val { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 2.6rem; line-height: 1; color: var(--gem); font-variant-numeric: tabular-nums; transition: color .3s var(--ease-out); }
+.gg-pr-line { display: inline-flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; justify-content: flex-end; }
+.gg-pr-bonus { font-family: 'JetBrains Mono', monospace; font-size: .92rem; color: var(--accent-green); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gg-pr-bonus[hidden] { display: none; }
+.gg-pr-sub { display: block; font-size: .74rem; color: var(--text-soft); margin-top: .35rem; }
+
+/* ─── Chaos Spark / Flare (reshaping a gem) ────────────────────────────── */
+.gg-chaos-lead { margin-top: 2.2rem; max-width: 70ch; }
+.gg-chaos-lead h3 { font-size: 1.3rem; margin-bottom: .4rem; text-wrap: balance; }
+.gg-chaos-lead p { color: var(--text-mute); font-size: .96rem; text-wrap: pretty; }
+.gg-chaos-lead b { color: var(--text); }
+.gg-chaos { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.1rem; }
+.gg-chaos-card { display: flex; gap: 1rem; align-items: flex-start; padding: 1.2rem 1.3rem; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); }
+.gg-chaos-ic { width: 54px; height: 54px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 8px rgba(0,0,0,.45)); }
+.gg-chaos-card h3 { font-size: 1.1rem; margin-bottom: .35rem; }
+.gg-chaos-card p { font-size: .92rem; color: var(--text-mute); text-wrap: pretty; }
+.gg-chaos-card p b { color: var(--text); }
+.gg-chaos-card .gg-chaos-cav { display: block; margin-top: .5rem; font-size: .82rem; color: var(--text-soft); }
+@media (max-width: 640px) { .gg-chaos { grid-template-columns: 1fr; } }
+
+/* Primordial Dragon toggle */
+.gg-primordial { display: inline-flex; align-items: center; gap: .6rem; cursor: pointer; margin-top: 1.1rem; user-select: none; font-size: .9rem; color: var(--text-mute); }
+.gg-primordial input { position: absolute; opacity: 0; width: 0; height: 0; }
+.gg-primordial-box { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--bg-line); background: var(--bg-deep); color: transparent; font-size: .7rem; transition: background .18s var(--ease-out), border-color .18s var(--ease-out), color .18s var(--ease-out); }
+.gg-primordial input:checked + .gg-primordial-box { background: var(--gem); border-color: var(--gem); color: var(--bg-base); }
+.gg-primordial input:focus-visible + .gg-primordial-box { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.gg-primordial-txt { display: inline-flex; align-items: center; gap: .4rem; }
+.gg-primordial-txt i { color: var(--gem); }
+.gg-primordial-txt b { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: .85rem; }
+.gg-primordial:hover .gg-primordial-txt { color: var(--text); }
+
+/* Primordial note in the Elements detail (normal paragraph + inline icon;
+   must NOT be a flex container or the <b> spans break into columns). */
+.gg-ed-primo { border-top: none; padding-top: 0; }
+.gg-ed-primo i { color: var(--accent-green); margin-right: .45rem; }
+
+.gg-slider-wrap { display: block; }
+.gg-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 999px; background: var(--bg-deep); outline-offset: 4px; cursor: pointer;
+  background-image: linear-gradient(var(--gem), var(--gem)); background-repeat: no-repeat; background-size: var(--fill, 0%) 100%; }
+.gg-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--text); border: 3px solid var(--gem); box-shadow: 0 0 0 4px color-mix(in oklab, var(--gem) 25%, transparent); cursor: grab; transition: transform .12s var(--ease-out); }
+.gg-slider::-webkit-slider-thumb:active { transform: scale(1.12); cursor: grabbing; }
+.gg-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--text); border: 3px solid var(--gem); box-shadow: 0 0 0 4px color-mix(in oklab, var(--gem) 25%, transparent); cursor: grab; }
+.gg-slider::-moz-range-progress { background: var(--gem); height: 8px; border-radius: 999px; }
+
+.gg-milestones { position: relative; height: 30px; margin-top: .5rem; }
+.gg-ms { position: absolute; top: 0; transform: translateX(-50%); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: .66rem; color: var(--text-soft); transition: color .25s var(--ease-out); }
+.gg-ms::before { content: ""; display: block; width: 2px; height: 8px; background: var(--bg-line); margin: 0 auto 3px; transition: background .25s var(--ease-out); }
+.gg-ms.reached { color: var(--gem); }
+.gg-ms.reached::before { background: var(--gem); }
+.gg-level-hint { margin-top: 1rem; font-size: .9rem; color: var(--text-mute); min-height: 2.6em; }
+.gg-level-hint b { color: var(--text); }
+
+.gg-pr-chart { display: flex; align-items: flex-end; gap: 2px; padding: clamp(1rem, 3vw, 1.4rem); background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); min-height: 220px; }
+.gg-bar { flex: 1; min-width: 0; border-radius: 3px 3px 0 0; background: var(--bg-line); align-self: flex-end; transition: height .4s var(--ease-out), background .25s var(--ease-out); position: relative; }
+.gg-bar.on { background: color-mix(in oklab, var(--gem) 55%, var(--bg-line)); }
+.gg-bar.milestone { background: var(--gem); }
+.gg-bar.cursor { background: var(--text); box-shadow: 0 0 10px color-mix(in oklab, var(--gem) 60%, transparent); }
+
+/* ─── 7. Focus / perfecting ────────────────────────────────────────────── */
+.gg-focus-lab { display: grid; grid-template-columns: minmax(0, 280px) 1fr; gap: clamp(1.5rem, 4vw, 3rem); align-items: center; }
+.gg-focus-ring-wrap { text-align: center; }
+.gg-focus-ring { position: relative; width: min(240px, 70vw); aspect-ratio: 1; margin: 0 auto; }
+.gg-ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.gg-ring-track { fill: none; stroke: var(--bg-line); stroke-width: 9; }
+.gg-ring-fill { fill: none; stroke: var(--gem); stroke-width: 9; stroke-linecap: round;
+  stroke-dasharray: 326.7; stroke-dashoffset: 326.7; transition: stroke-dashoffset .55s var(--ease-out), stroke .3s var(--ease-out); }
+.gg-ring-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.gg-ring-pct { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 2.8rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.gg-ring-unit { font-size: 1.2rem; color: var(--text-soft); }
+.gg-ring-cap { font-family: 'JetBrains Mono', monospace; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-soft); }
+.gg-focus-ring.perfect .gg-ring-fill { stroke: var(--accent-green); }
+.gg-focus-ring.perfect .gg-ring-pct { color: var(--accent-green); }
+.gg-focus-count { margin-top: 1rem; font-size: .9rem; color: var(--text-mute); }
+.gg-focus-count b { color: var(--text); }
+
+.gg-focus-intro { color: var(--text-mute); margin-bottom: 1rem; }
+.gg-focus-btns { display: grid; gap: .6rem; margin-bottom: 1.2rem; }
+.gg-focus-btn {
+  --fc: var(--accent-blue);
+  display: flex; justify-content: space-between; align-items: center; cursor: pointer; font: inherit;
+  color: var(--text); background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius-sm);
+  padding: .85rem 1.1rem; transition: border-color .18s var(--ease-out), transform .12s var(--ease-out), background .18s var(--ease-out);
+}
+.gg-focus-btn[data-aug="1"] { --fc: var(--accent-blue); }
+.gg-focus-btn[data-aug="2"] { --fc: var(--accent-purple); }
+.gg-focus-btn[data-aug="3"] { --fc: var(--accent-orange); }
+.gg-focus-btn:hover:not(:disabled) { border-color: var(--fc); background: color-mix(in oklab, var(--fc) 8%, var(--bg-card)); }
+.gg-focus-btn:active:not(:disabled) { transform: scale(.98); }
+.gg-focus-btn:disabled { opacity: .45; cursor: not-allowed; }
+.gg-focus-left { display: flex; align-items: center; gap: .7rem; }
+.gg-focus-ic { width: 30px; height: 30px; object-fit: contain; flex: none; filter: drop-shadow(0 1px 3px rgba(0,0,0,.4)); }
+.gg-focus-name { font-weight: 600; }
+.gg-focus-val { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--fc); font-weight: 600; }
+.gg-focus-foot { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.gg-focus-note { font-size: .88rem; color: var(--text-soft); max-width: 52ch; }
+.gg-focus-note a { color: var(--accent-blue); }
+
+/* ─── Advanced note (containers under the hood) ────────────────────────── */
+.gg-advanced { margin-top: 2.2rem; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); overflow: hidden; }
+.gg-advanced > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: .8rem; padding: 1.05rem 1.4rem; font-weight: 600; color: var(--text); transition: background .18s var(--ease-out); }
+.gg-advanced > summary::-webkit-details-marker { display: none; }
+.gg-advanced > summary:hover { background: var(--bg-card-hi); }
+.gg-advanced > summary:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: -2px; }
+.gg-adv-badge { font-family: 'JetBrains Mono', monospace; font-size: .64rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-blue); border: 1px solid color-mix(in oklab, var(--accent-blue) 40%, transparent); background: color-mix(in oklab, var(--accent-blue) 12%, transparent); padding: 3px 8px; border-radius: 999px; flex: none; }
+.gg-adv-chev { margin-left: auto; color: var(--text-soft); transition: transform .2s var(--ease-out); }
+.gg-advanced[open] .gg-adv-chev { transform: rotate(180deg); }
+.gg-adv-body { padding: 0 1.4rem 1.5rem; border-top: 1px solid var(--bg-line); }
+.gg-adv-body > p { color: var(--text-mute); margin: 1.1rem 0 1.3rem; max-width: 72ch; text-wrap: pretty; }
+.gg-adv-body b { color: var(--text); font-weight: 600; }
+
+.gg-adv-diagram { display: flex; gap: clamp(1rem, 4vw, 2rem); flex-wrap: wrap; padding: 1.3rem; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius-sm); }
+.gg-adv-stat { display: grid; gap: .55rem; }
+.gg-adv-slabel { font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .04em; color: var(--text-mute); }
+.gg-adv-conts { display: flex; gap: 6px; align-items: flex-end; height: 76px; }
+.gg-adv-cont { width: 26px; height: 100%; background: var(--bg-base); border: 1px solid var(--bg-line); border-radius: 4px; overflow: hidden; display: flex; align-items: flex-end; }
+.gg-adv-cont > i { display: block; width: 100%; background: var(--accent-blue); }
+.gg-adv-cont.boost > i { background: var(--accent-orange); }
+.gg-adv-legend { display: flex; gap: 1.2rem; flex-wrap: wrap; align-items: center; font-size: .8rem; color: var(--text-soft); margin-top: .9rem; }
+.gg-adv-legend > span { display: inline-flex; align-items: center; gap: .45rem; }
+.gg-adv-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+
+.gg-adv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.2rem, 4vw, 2rem); margin-top: 1.4rem; }
+.gg-adv-cols h4 { font-size: 1.02rem; margin-bottom: .45rem; display: flex; align-items: center; gap: .5rem; }
+.gg-adv-cols h4 i { color: var(--accent-blue); }
+.gg-adv-cols p { color: var(--text-mute); font-size: .95rem; text-wrap: pretty; }
+.gg-adv-cols a { color: var(--accent-blue); }
+@media (max-width: 640px) { .gg-adv-cols { grid-template-columns: 1fr; } }
+
+/* ─── Buttons ──────────────────────────────────────────────────────────── */
+.gg-btn { display: inline-flex; align-items: center; gap: .5rem; cursor: pointer; font: inherit; font-weight: 600; font-size: .92rem; border-radius: var(--radius-sm); padding: 10px 18px; border: 1px solid transparent; transition: background .18s var(--ease-out), border-color .18s var(--ease-out), transform .12s var(--ease-out); }
+.gg-btn:active { transform: scale(.97); }
+.gg-btn-primary { background: var(--accent-blue); color: var(--bg-base); box-shadow: 0 6px 22px color-mix(in oklab, var(--accent-blue) 22%, transparent); }
+.gg-btn-primary:hover { background: color-mix(in oklab, var(--accent-blue) 88%, white); }
+.gg-btn-ghost { background: color-mix(in oklab, var(--bg-card) 60%, transparent); border-color: var(--bg-line); color: var(--text); }
+.gg-btn-ghost:hover { border-color: var(--accent-blue); }
+
+/* ─── Recap / CTA ──────────────────────────────────────────────────────── */
+.gg-recap { text-align: center; padding: clamp(3rem, 7vw, 5rem) 0 1rem; border-top: 1px solid var(--bg-line); }
+.gg-recap h2 { font-size: clamp(1.8rem, 3.5vw + .6rem, 2.8rem); margin-bottom: .8rem; }
+.gg-recap > p { color: var(--text-mute); font-size: var(--type-lead); max-width: 60ch; margin: 0 auto 2.4rem; text-wrap: pretty; }
+.gg-recap-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; text-align: left; }
+.gg-recap-card {
+  display: grid; gap: .3rem; padding: 1.4rem 1.5rem; color: var(--text);
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  transition: border-color .2s var(--ease-out), transform .2s var(--ease-out);
+}
+.gg-recap-card:hover { transform: translateY(-4px); border-color: var(--accent-blue); color: var(--text); }
+.gg-recap-card > i { font-size: 1.4rem; color: var(--accent-blue); margin-bottom: .4rem; }
+.gg-recap-t { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.15rem; }
+.gg-recap-d { font-size: .9rem; color: var(--text-mute); }
+
+/* ─── Scroll reveal (JS-gated: only applies once body.gg-js is set, so
+   content is fully visible with no JS or with reduced motion) ──────────── */
+.gg-js [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .6s var(--ease-out), transform .6s var(--ease-out); }
+.gg-js [data-reveal].in { opacity: 1; transform: none; }
+/* Stagger children that are themselves reveal targets. */
+.gg-js [data-reveal].in [data-reveal] { transition-delay: calc(var(--i, 0) * 70ms); }
+
+/* ─── "What you'll learn" asks ─────────────────────────────────────────── */
+.gg-asks { padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(1rem, 3vw, 2rem); }
+.gg-asks-kicker { font-family: 'JetBrains Mono', monospace; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 1rem; }
+.gg-ask-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .7rem; }
+.gg-ask-list a {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; height: 100%;
+  padding: 1rem 1.2rem; color: var(--text); font-weight: 600;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  transition: border-color .2s var(--ease-out), transform .2s var(--ease-out), color .2s var(--ease-out);
+}
+.gg-ask-list a i { color: var(--text-soft); transition: transform .2s var(--ease-out), color .2s var(--ease-out); }
+.gg-ask-list a:hover { border-color: var(--accent-blue); transform: translateY(-3px); color: var(--text); }
+.gg-ask-list a:hover i { color: var(--accent-blue); transform: translateX(4px); }
+
+/* ─── Scrollytelling "assemble a gem" ──────────────────────────────────── */
+/* align-items:stretch (default) is required - the viz column must span the full
+   row height (as tall as the steps) so its sticky child has travel range. */
+.gg-scrolly { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 5vw, 4rem); }
+.gg-scrolly-viz { position: relative; }
+.gg-scrolly-sticky { position: sticky; top: calc(var(--nav-h) + 64px); display: grid; gap: 1.4rem; }
+.gg-scrolly-sticky #scrolly-gem { max-width: 300px; margin-inline: auto; transition: filter .5s var(--ease-out); }
+.gg-gem-stage[data-assembled="0"] { filter: grayscale(1) brightness(.7); }
+
+.gg-spec { display: grid; gap: 1px; background: var(--bg-line); border: 1px solid var(--bg-line); border-radius: var(--radius); overflow: hidden; }
+.gg-spec-row { display: grid; grid-template-columns: 92px 1fr; gap: .5rem; align-items: baseline; padding: .7rem 1.1rem; background: var(--bg-card); opacity: .38; transition: opacity .4s var(--ease-out), background .4s var(--ease-out); }
+.gg-spec-row dt { font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .05em; text-transform: uppercase; color: var(--text-soft); }
+.gg-spec-row dd { font-weight: 600; color: var(--text); }
+.gg-spec-row.lit { opacity: 1; background: color-mix(in oklab, var(--gem) 8%, var(--bg-card)); }
+.gg-spec-row.lit dd { color: var(--gem); }
+.gg-spec-row.just-lit dd { animation: gg-pop .45s var(--ease-out); }
+@keyframes gg-pop { 0% { transform: translateX(-6px); opacity: .3; } 100% { transform: none; opacity: 1; } }
+
+.gg-steps { list-style: none; counter-reset: none; display: grid; gap: clamp(3rem, 22vh, 12rem); padding: 12vh 0; }
+.gg-step {
+  border-left: 1px solid var(--bg-line); padding: .3rem 0 .3rem 1.6rem; position: relative;
+  opacity: .32; transition: opacity .4s var(--ease-out), border-color .4s var(--ease-out);
+}
+.gg-step::before {
+  content: ""; position: absolute; left: -6px; top: .55rem; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--bg-line); border: 2px solid var(--bg-base); transition: background .3s var(--ease-out), box-shadow .3s var(--ease-out);
+}
+.gg-step.active { opacity: 1; border-color: color-mix(in oklab, var(--gem) 50%, var(--bg-line)); }
+.gg-step.done { opacity: .5; }
+.gg-step.active::before { background: var(--gem); box-shadow: 0 0 0 4px color-mix(in oklab, var(--gem) 22%, transparent); }
+.gg-step-tag { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--gem-soft); color: var(--gem); margin-bottom: .8rem; font-size: .95rem; }
+.gg-step h3 { font-size: 1.35rem; margin-bottom: .5rem; text-wrap: balance; }
+.gg-step p { color: var(--text-mute); text-wrap: pretty; }
+.gg-step b { color: var(--text); font-weight: 600; }
+
+/* ─── Power Rank ceiling payoff ────────────────────────────────────────── */
+.gg-ceiling { border-top: 1px solid var(--bg-line); padding: clamp(3rem, 7vw, 5.5rem) 0; }
+.gg-ceiling-inner {
+  position: relative; overflow: hidden; border-radius: var(--radius-lg); border: 1px solid var(--bg-line);
+  padding: clamp(1.8rem, 5vw, 3.2rem); text-align: center;
+  background:
+    radial-gradient(120% 130% at 50% -20%, color-mix(in oklab, var(--gem) 16%, transparent), transparent 60%),
+    var(--bg-card);
+}
+.gg-ceiling-kicker { font-family: 'JetBrains Mono', monospace; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gem); margin-bottom: 1rem; }
+.gg-ceiling-inner h2 { font-size: clamp(1.7rem, 3.4vw + .6rem, 2.7rem); margin-bottom: .8rem; text-wrap: balance; }
+.gg-ceiling-lead { color: var(--text-mute); font-size: var(--type-lead); max-width: 58ch; margin: 0 auto 2.4rem; text-wrap: pretty; }
+.gg-ceiling-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-width: 640px; margin: 0 auto; }
+.gg-ceiling-stat { display: grid; gap: .3rem; padding: 1.2rem 1rem; background: color-mix(in oklab, var(--bg-deep) 70%, transparent); border: 1px solid var(--bg-line); border-radius: var(--radius); }
+.gg-ceiling-stat .v { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: clamp(1.9rem, 4vw, 2.8rem); line-height: 1; color: var(--gem); font-variant-numeric: tabular-nums; }
+.gg-ceiling-stat .k { font-size: .82rem; color: var(--text-mute); }
+
+/* ─── Advanced: generated stat tables ─────────────────────────────────── */
+.gg-tbl-controls { display: flex; flex-wrap: wrap; gap: 1.1rem 1.6rem; margin-bottom: 1.4rem; }
+.gg-tbl-cgroup { display: flex; flex-direction: column; gap: .5rem; }
+.gg-tbl-clabel { font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-soft); }
+.gg-seg-pick { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; }
+.gg-seg-pick button { --tc: var(--accent-blue); cursor: pointer; font: inherit; font-size: .82rem; font-weight: 600; color: var(--text-mute); background: transparent; border: 0; border-radius: 999px; padding: 6px 14px; transition: background .18s var(--ease-out), color .18s var(--ease-out); }
+.gg-seg-pick button:hover { color: var(--text); }
+.gg-seg-pick button.active { background: var(--tc); color: var(--bg-base); }
+
+.gg-tbl-wrap { overflow-x: auto; border: 1px solid var(--bg-line); border-radius: var(--radius); background: var(--bg-card); }
+.gg-tbl { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.gg-tbl th, .gg-tbl td { padding: .45rem .8rem; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--bg-line); }
+.gg-tbl thead th { position: sticky; top: 0; z-index: 1; background: var(--bg-card-hi); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: .72rem; letter-spacing: .04em; }
+.gg-tbl thead th:first-child, .gg-tbl thead th:nth-child(2) { text-align: right; }
+.gg-tbl tbody th { font-weight: 700; color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: .92rem; }
+.gg-tbl td { font-family: 'JetBrains Mono', monospace; font-size: .82rem; color: var(--text-mute); }
+.gg-tbl td.prlvl { color: var(--text-soft); }
+.gg-tbl td .mn { color: var(--text-soft); }
+.gg-tbl td .mx { color: var(--gem); margin-left: .55rem; }
+.gg-tbl tbody tr.ms { background: color-mix(in oklab, var(--gem) 9%, transparent); }
+.gg-tbl tbody tr.ms th { color: var(--gem); }
+.gg-tbl tbody tr:hover { background: color-mix(in oklab, var(--gem) 6%, var(--bg-card-hi)); }
+.gg-tbl-foot { margin-top: .9rem; font-size: .82rem; color: var(--text-soft); max-width: 92ch; text-wrap: pretty; }
+.gg-tbl-foot b { color: var(--text-mute); }
+
+/* ─── Gem Builds interactive decoder ───────────────────────────────────── */
+.gg-builds-lab { display: grid; gap: 1.4rem; }
+.gg-build-modes { display: inline-flex; gap: 4px; padding: 4px; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; width: fit-content; }
+.gg-build-viz { padding: clamp(1rem, 3vw, 1.6rem); background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius); overflow-x: auto; }
+.gg-code-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; min-width: fit-content; }
+.gg-code-grp { --gc: var(--accent-blue); display: flex; flex-direction: column; align-items: center; gap: .5rem; padding: .7rem .8rem; border-radius: var(--radius-sm); border: 1px solid color-mix(in oklab, var(--gc) 22%, var(--bg-line)); background: color-mix(in oklab, var(--gc) 6%, var(--bg-card)); transition: opacity .2s var(--ease-out), border-color .2s var(--ease-out); }
+.gg-code-grp.emp { --gc: var(--accent-blue); }
+.gg-code-grp.lesser { --gc: var(--accent-green); }
+.gg-code-grp.cosmic { --gc: var(--accent-purple); }
+.gg-code-grp.dim { opacity: .38; }
+.gg-code-grp.hot { border-color: var(--gc); box-shadow: 0 0 0 1px var(--gc); }
+.gg-code-grplabel { font-family: 'JetBrains Mono', monospace; font-size: .64rem; letter-spacing: .05em; text-transform: uppercase; color: var(--gc); white-space: nowrap; }
+.gg-code-cells { display: flex; align-items: flex-end; gap: .4rem; }
+.gg-code-slot { display: grid; justify-items: center; gap: .25rem; }
+.gg-code-cell { cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: clamp(1.4rem, 4vw, 1.8rem); line-height: 1; min-width: 1.6em; padding: .28rem .45rem; border-radius: var(--radius-sm); border: 1px solid var(--bg-line); background: var(--bg-card); color: var(--text); font-variant-numeric: tabular-nums; transition: background .15s var(--ease-out), border-color .15s var(--ease-out), transform .1s var(--ease-out), color .15s var(--ease-out); }
+.gg-code-cell:hover, .gg-code-cell:focus-visible { background: var(--gc); color: var(--bg-base); border-color: var(--gc); transform: translateY(-2px); outline: none; }
+.gg-code-stat { font-family: 'JetBrains Mono', monospace; font-size: .6rem; letter-spacing: .03em; text-transform: uppercase; color: var(--text-soft); }
+.gg-code-sep { color: var(--text-soft); font-size: 1.4rem; font-weight: 700; align-self: center; }
+.gg-code-sep.sm { font-size: 1.1rem; }
+.gg-code-sep.plus { color: var(--accent-orange); font-size: 1.6rem; margin: 0 .25rem; }
+
+.gg-build-detail { min-height: 116px; padding: 1.1rem 1.3rem; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); --gc: var(--accent-blue); transition: border-color .2s var(--ease-out); }
+.gg-build-detail.active { border-color: color-mix(in oklab, var(--gc) 45%, var(--bg-line)); }
+.gg-build-detail.emp { --gc: var(--accent-blue); }
+.gg-build-detail.lesser { --gc: var(--accent-green); }
+.gg-build-detail.cosmic { --gc: var(--accent-purple); }
+.gg-bd-hint { color: var(--text-soft); display: flex; align-items: center; gap: .5rem; }
+.gg-bd-hint i { color: var(--accent-blue); }
+.gg-bd-top { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .3rem; }
+.gg-bd-num { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 2rem; line-height: 1; color: var(--gc); }
+.gg-bd-lbl { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: .05em; }
+.gg-bd-path { font-size: .95rem; color: var(--text-mute); margin-bottom: .5rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.gg-bd-path b { color: var(--text); }
+.gg-bd-path i { color: var(--gc); font-size: .8rem; }
+.gg-build-detail p { color: var(--text-mute); font-size: .95rem; text-wrap: pretty; }
+
+.gg-build-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+.gg-build-note { padding: 1.1rem 1.2rem; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); }
+.gg-build-note h4 { font-size: 1rem; margin-bottom: .4rem; display: flex; align-items: center; gap: .5rem; }
+.gg-build-note h4 i { color: var(--accent-blue); }
+.gg-build-note p { color: var(--text-mute); font-size: .92rem; text-wrap: pretty; }
+.gg-build-note b { color: var(--text); }
+.gg-build-bottom { margin-top: 1.6rem; color: var(--text-mute); text-wrap: pretty; max-width: 82ch; }
+.gg-build-bottom b { color: var(--text); }
+.gg-build-bottom a { color: var(--accent-blue); }
+@media (max-width: 640px) { .gg-build-notes { grid-template-columns: 1fr; } }
+
+/* ─── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .gg-hero { grid-template-columns: 1fr; }
+  .gg-hero-gem { order: -1; }
+  .gg-hero-gem .gg-gem-stage { max-width: 230px; }
+  /* Scrolly: the gem/spec bar pins to the top of the viewport, steps scroll
+     beneath. The VIZ grid item is the sticky one so it travels the full height
+     of the section (the inner .gg-scrolly-sticky can't - its cell is short). */
+  /* Drop the section-nav to static so it doesn't fight the scrolly bar for the
+     pinned top slot (and to reclaim vertical space on small screens). */
+  .gg-secnav { position: static; margin-bottom: 1.5rem; }
+  .gg-scrolly { grid-template-columns: 1fr; gap: 0; }
+  .gg-scrolly-viz { position: sticky; top: calc(var(--nav-h) + 8px); z-index: 5; }
+  .gg-scrolly-sticky { position: static; top: auto; grid-template-columns: 116px 1fr; align-items: center;
+    padding: .7rem; background: color-mix(in oklab, var(--bg-base) 90%, transparent);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid var(--bg-line); border-radius: var(--radius); box-shadow: var(--shadow-soft); }
+  .gg-scrolly-sticky #scrolly-gem { max-width: 116px; }
+  .gg-spec-row { grid-template-columns: 62px 1fr; padding: .35rem .6rem; font-size: .88rem; }
+  .gg-steps { padding: 6vh 0 8vh; gap: clamp(2.5rem, 16vh, 7rem); }
+  .gg-anatomy { grid-template-columns: 1fr; grid-template-areas: "gem" "parts" "detail"; }
+  .gg-anatomy #anatomy-gem { max-width: 240px; margin-inline: auto; }
+  .gg-type-panels, .gg-stats-lab, .gg-level-lab, .gg-focus-lab, .gg-element-detail { grid-template-columns: 1fr; }
+  .gg-type-panels #type-gem { max-width: 200px; margin-inline: auto; }
+  .gg-tiers, .gg-elements { grid-template-columns: repeat(2, 1fr); }
+  .gg-focus-lab { justify-items: center; }
+}
+@media (max-width: 460px) {
+  .gg-tiers, .gg-elements { grid-template-columns: 1fr 1fr; }
+  .gg-level-meta { flex-direction: column; gap: 1.2rem; }
+  .gg-pr-num { text-align: left; }
+  .gg-ceiling-stats { grid-template-columns: 1fr; }
+}
+
+/* ─── Gem Converters (inside §02 Tiers) ────────────────────────────────── */
+.gg-converters { margin-top: 2rem; border-top: 1px solid var(--bg-line); padding-top: 1.6rem; }
+.gg-conv-head h3 { font-size: 1.2rem; margin: 0 0 .45rem; color: var(--text); }
+.gg-conv-head p { margin: 0 0 1.1rem; color: var(--text-mute); line-height: 1.6; max-width: 64ch; }
+.gg-conv-cards { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.gg-conv-card {
+  display: flex; align-items: center; gap: .9rem;
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-left: 3px solid var(--gc); border-radius: var(--radius); padding: .85rem 1rem;
+  transition: transform .18s var(--ease-out), border-color .18s var(--ease-out), box-shadow .18s var(--ease-out);
+}
+.gg-conv-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--gc) 45%, var(--bg-line)); box-shadow: 0 9px 24px -14px rgba(0,0,0,.6); }
+.gg-conv-ic { width: 52px; height: 52px; flex: none; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,.45)); }
+.gg-conv-body { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
+.gg-conv-name { font-weight: 700; color: var(--text); font-size: .98rem; line-height: 1.2; }
+.gg-conv-flow { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.gg-conv-tier { display: inline-flex; align-items: center; gap: .32rem; font-size: .86rem; font-weight: 600; color: var(--text); }
+.gg-conv-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--tc); box-shadow: 0 0 6px color-mix(in srgb, var(--tc) 70%, transparent); }
+.gg-conv-arrow { color: var(--text-mute); font-size: .8rem; }
+.gg-conv-keep { font-size: .75rem; color: var(--text-mute); }
+.gg-conv-price { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; font-size: .78rem; color: var(--text); font-weight: 600; margin-top: .1rem; }
+.gg-conv-coin { color: var(--accent-yellow); font-size: .8rem; }
+.gg-conv-or { color: var(--text-mute); font-weight: 400; font-size: .72rem; }
+.gg-conv-foot { margin: 1.2rem 0 0; font-size: .84rem; color: var(--text-mute); line-height: 1.6; max-width: 66ch; }
+
+/* ─── Gem Level Up Boosters (inside §06 Leveling) ──────────────────────── */
+.gg-boosters { margin-top: 2.4rem; border-top: 1px solid var(--bg-line); padding-top: 1.8rem; }
+.gg-boost-head h3 { font-size: 1.25rem; margin: 0 0 .5rem; color: var(--text); }
+.gg-boost-head p { margin: 0 0 1.4rem; color: var(--text-mute); line-height: 1.6; max-width: 62ch; }
+.gg-boost-cards {
+  display: grid; gap: .9rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.gg-boost-card {
+  position: relative; display: flex; flex-direction: column; gap: .9rem;
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: var(--radius); padding: 1rem;
+  transition: transform .18s var(--ease-out), border-color .18s var(--ease-out), box-shadow .18s var(--ease-out);
+}
+.gg-boost-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent-blue) 45%, var(--bg-line)); box-shadow: 0 10px 26px -14px rgba(0,0,0,.6); }
+.gg-boost-card.mystic { border-color: color-mix(in srgb, var(--accent-purple) 40%, var(--bg-line)); }
+.gg-boost-card.mystic:hover { border-color: color-mix(in srgb, var(--accent-purple) 65%, var(--bg-line)); box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--accent-purple) 40%, transparent); }
+.gg-boost-top { display: flex; align-items: center; gap: .7rem; }
+.gg-boost-ic {
+  width: 44px; height: 44px; flex: none; border-radius: 10px;
+  background: var(--bg-deep); border: 1px solid var(--bg-line);
+  image-rendering: auto; object-fit: cover;
+}
+.gg-boost-id { display: flex; flex-direction: column; gap: .18rem; min-width: 0; }
+.gg-boost-name { font-weight: 700; color: var(--text); font-size: .98rem; line-height: 1.2; }
+.gg-boost-rank { font-size: .72rem; color: var(--text-mute); letter-spacing: .02em; }
+.gg-boost-badge {
+  align-self: flex-start; font-size: .68rem; font-weight: 700; letter-spacing: .03em;
+  text-transform: uppercase; padding: .12rem .45rem; border-radius: 999px;
+  color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent);
+}
+.gg-boost-badge.alt {
+  color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 16%, transparent);
+  border-color: color-mix(in srgb, var(--accent-blue) 35%, transparent);
+}
+.gg-boost-chips { display: flex; gap: .5rem; }
+.gg-boost-chip {
+  flex: 1; display: flex; flex-direction: column; gap: .15rem;
+  background: var(--bg-deep); border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm); padding: .5rem .55rem;
+}
+.gg-boost-chip-k { font-size: .68rem; color: var(--text-mute); line-height: 1.2; }
+.gg-boost-chip-v { font-size: 1rem; font-weight: 700; line-height: 1.1; }
+.gg-boost-chip.up .gg-boost-chip-v { color: var(--accent-green); }
+.gg-boost-chip.dbl .gg-boost-chip-v { color: var(--accent-blue); }
+.gg-boost-strength { display: flex; align-items: center; gap: .55rem; }
+.gg-boost-strength-lbl { font-size: .68rem; color: var(--text-mute); flex: none; }
+.gg-boost-meter { flex: 1; height: 6px; border-radius: 999px; background: var(--bg-deep); overflow: hidden; border: 1px solid var(--bg-line); }
+.gg-boost-meter > i {
+  display: block; height: 100%; width: 0; border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+  transition: width .6s var(--ease-out);
+}
+.gg-boost-card.mystic .gg-boost-meter > i { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+.gg-boost-foot { margin: 1.3rem 0 0; font-size: .86rem; color: var(--text-mute); line-height: 1.6; max-width: 68ch; }
+.gg-boost-foot b { color: var(--text); }
+@media (max-width: 560px) { .gg-boost-cards { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 380px) { .gg-boost-cards { grid-template-columns: 1fr; } }
+
+/* ─── Gem Dust upcycling (inside §07 Leveling) ─────────────────────────── */
+.gg-dustprofit { margin-top: 2.4rem; border-top: 1px solid var(--bg-line); padding-top: 1.8rem; }
+.gg-dp-head h3 { font-size: 1.25rem; margin: 0 0 .5rem; color: var(--text); }
+.gg-dp-head p { margin: 0 0 1.3rem; color: var(--text-mute); line-height: 1.6; max-width: 66ch; }
+.gg-dp-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; margin-bottom: 1.4rem; }
+.gg-dp-stat { display: flex; flex-direction: column; gap: .25rem; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 1rem 1.15rem; }
+.gg-dp-stat.best { border-color: color-mix(in srgb, var(--accent-green) 40%, var(--bg-line)); background: color-mix(in srgb, var(--accent-green) 6%, var(--bg-card)); }
+.gg-dp-stat-k { font-size: .82rem; color: var(--text-mute); }
+.gg-dp-stat-k b { color: var(--text); }
+.gg-dp-stat-v { font-size: 1.5rem; font-weight: 700; color: var(--accent-green); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.gg-dp-stat-s { font-size: .72rem; color: var(--text-mute); }
+.gg-dp-rules { display: flex; flex-direction: column; gap: .7rem; }
+.gg-dp-rule { display: flex; gap: .65rem; align-items: baseline; margin: 0; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: .9rem 1.1rem; color: var(--text-mute); line-height: 1.6; font-size: .92rem; }
+.gg-dp-rule > i { flex: none; font-size: .95rem; }
+.gg-dp-rule:first-child > i { color: var(--accent-red); }
+.gg-dp-rule:last-child > i { color: var(--accent-green); }
+.gg-dp-rule b { color: var(--text); }
+@media (max-width: 520px) { .gg-dp-stats { grid-template-columns: 1fr; } }
+
+/* ─── Class Gems (§04) ─────────────────────────────────────────────────── */
+.gg-classgem-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: .9rem; margin-bottom: 1.4rem; }
+.gg-cg-card { background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 1.3rem 1.2rem; transition: border-color .18s var(--ease-out), transform .18s var(--ease-out); }
+.gg-cg-card:hover { transform: translateY(-3px); border-color: color-mix(in oklab, var(--accent-blue) 40%, var(--bg-line)); }
+.gg-cg-card > i { font-size: 1.35rem; color: var(--accent-blue); margin-bottom: .7rem; display: block; }
+.gg-cg-card h3 { font-size: 1.05rem; margin: 0 0 .4rem; color: var(--text); }
+.gg-cg-card p { margin: 0; color: var(--text-mute); font-size: .9rem; line-height: 1.55; }
+.gg-cg-note { display: flex; gap: .65rem; align-items: baseline; background: color-mix(in oklab, var(--accent-yellow) 8%, var(--bg-card)); border: 1px solid color-mix(in oklab, var(--accent-yellow) 22%, var(--bg-line)); border-radius: var(--radius); padding: 1rem 1.15rem; color: var(--text-mute); line-height: 1.6; font-size: .92rem; }
+.gg-cg-note > i { color: var(--accent-yellow); flex: none; }
+.gg-cg-note b { color: var(--text); }
+@media (max-width: 720px) { .gg-classgem-cards { grid-template-columns: 1fr; } }
+
+/* ─── Optional Wiki view (compact, tabbed, info-first) ─────────────────── */
+.gg-view-toggle { display: flex; align-items: center; justify-content: flex-end; gap: .55rem; padding-top: .8rem; }
+.gg-view-toggle-lbl { font-size: .78rem; color: var(--text-mute); }
+.gg-view-seg { display: inline-flex; gap: .2rem; padding: .22rem; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; }
+.gg-view-seg button { border: 0; background: transparent; color: var(--text-mute); font: inherit; font-size: .82rem; font-weight: 600; padding: .32rem .85rem; border-radius: 999px; cursor: pointer; transition: background .15s var(--ease-out), color .15s var(--ease-out); }
+.gg-view-seg button:hover { color: var(--text); }
+.gg-view-seg button.active { background: var(--accent-blue); color: var(--bg-base); }
+
+.gg-wiki .gg-hero { min-height: auto; padding-block: 1.4rem .2rem; display: block; }
+.gg-wiki .gg-hero-gem, .gg-wiki .gg-lead, .gg-wiki .gg-hero-chips, .gg-wiki .gg-hero-cue, .gg-wiki .gg-eyebrow { display: none; }
+.gg-wiki .gg-title { font-size: clamp(1.55rem, 4vw, 2.15rem); margin: 0; }
+.gg-wiki .gg-asks, .gg-wiki .gg-ceiling, .gg-wiki .gg-recap { display: none; }
+.gg-wiki [data-reveal] { opacity: 1 !important; transform: none !important; }
+.gg-wiki .gg-sec-head p { display: none; }        /* drop the narrative lead prose */
+
+/* section-nav becomes a tab bar; one section shows at a time */
+.gg-wiki .gg-secnav a { cursor: pointer; }
+.gg-wiki .gg-section { display: none; padding: 1.4rem 0 2.8rem; border-top: 0; scroll-margin-top: 116px; }
+.gg-wiki .gg-section.gg-wiki-active { display: block; }
+.gg-wiki .gg-sec-head { margin-bottom: 1.3rem; max-width: 80ch; }
+
+/* anatomy: no sticky viz, plain static step list */
+.gg-wiki .gg-scrolly { display: block; }
+.gg-wiki .gg-scrolly-viz { display: none; }
+.gg-wiki .gg-steps { gap: 1rem; padding: 0; }
+.gg-wiki .gg-step { opacity: 1 !important; padding-left: 1.1rem; }
+.gg-wiki .gg-step.done { opacity: 1 !important; }
+
+/* ─── Reduced motion ───────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .gems-guide-page * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}

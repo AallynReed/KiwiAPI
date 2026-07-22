@@ -46,6 +46,7 @@ SITE_FEATURE_FLAGS = {
     "gem_evaluator_enabled": feature_flags.GEM_EVALUATOR_FLAG,
     "gem_builds_enabled": feature_flags.GEM_BUILDS_FLAG,
     "calculators_enabled": feature_flags.CALCULATORS_FLAG,
+    "gems_guide_enabled": feature_flags.GEMS_GUIDE_FLAG,
 }
 
 
@@ -143,6 +144,10 @@ def feature_blocks(p: str, f: dict) -> bool:
         return True
     if not f["calculators_enabled"] and p == "/calculators":
         return True
+    # Gems guide is a fully client-rendered explainer (static JS, no proxy or
+    # /v1 API), so only the page route needs blocking.
+    if not f["gems_guide_enabled"] and p == "/gems-guide":
+        return True
     # The star-chart preview proxy feeds both Builds and Calculators; only hide it
     # when both of those features are OFF.
     if (not f["calculators_enabled"] and not f["gem_builds_enabled"]
@@ -172,6 +177,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/classes", "classes_enabled"),
     ("/star-chart", "star_chart_enabled"),
     ("/gem-simulator", "gem_simulator_enabled"),
+    ("/gems-guide", "gems_guide_enabled"),
     ("/leaderboards", "leaderboards_enabled"),
     ("/activity", "player_activity_enabled"),
     ("/class-activity", "class_activity_enabled"),

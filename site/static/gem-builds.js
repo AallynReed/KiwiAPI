@@ -257,6 +257,25 @@
   }
 
   // ── Results ──────────────────────────────────────────────────────────────
+  // Display a build layout with its gem-groups spaced for clarity:
+  // "9/0/0/18 + 3/0/0/1/1/4" -> "9/0 0/18 + 3/0/0 1/1/4". A 4-number segment
+  // is an Empowered/Lesser pair (split after 2); a 6-number one is the Cosmic
+  // Emp/Lesser triples (split after 3). Elemental->Cosmic keeps its " + ".
+  function fmtLayout(layout) {
+    if (typeof layout !== "string") return layout;
+    return layout.split(" + ").map(function (seg) {
+      var p = seg.trim().split("/");
+      if (p.length === 4) return p[0] + "/" + p[1] + " " + p[2] + "/" + p[3];
+      if (p.length === 6) return p.slice(0, 3).join("/") + " " + p.slice(3).join("/");
+      return p.join("/");
+    }).join(" + ");
+  }
+  // Small "?" affordance with a hover/focus tooltip (concise format explainer).
+  function helpIcon(txt) {
+    return h("span", { class: "gb-help", tabindex: "0", role: "note", "aria-label": txt },
+      h("i", { class: "fa-solid fa-circle-question", "aria-hidden": "true" }),
+      h("span", { class: "gb-help-tip" }, txt));
+  }
   function copyLayout(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => toast(t("Layout copied") + ": " + text), () => toast(text));
@@ -277,6 +296,7 @@
   function renderResults() {
     elResults.textContent = "";
     const bestCoeff = builds.length ? builds[0].coefficient : 0;
+    const buildHelp = t("Boosts placed on each stat, by gem group. The first pair is Empowered (Damage / Crit Damage), the second is Lesser (Damage / Crit Damage). After the + are the Cosmic gems (Damage / Crit / Light).");
 
     // Top build card
     if (builds.length) {
@@ -284,7 +304,9 @@
       const card = h("div", { class: "gb-top-card" },
         h("div", { class: "gb-top-copy" },
           h("div", { class: "gb-eyebrow-sm" }, t("Top build")),
-          h("div", { class: "gb-top-layout", title: t("Click to copy"), onClick: () => copyLayout(top.layout) }, top.layout),
+          h("div", { class: "gb-top-layout-row" },
+            h("div", { class: "gb-top-layout", title: t("Click to copy"), onClick: () => copyLayout(fmtLayout(top.layout)) }, fmtLayout(top.layout)),
+            helpIcon(buildHelp)),
           h("p", { class: "gb-top-reason" }, buildHeadline(top))),
         h("div", { class: "gb-top-stats" },
           statBox("Coefficient", num(top.coefficient)),
@@ -310,7 +332,7 @@
     const table = h("table", { class: "gb-table" });
     table.appendChild(h("thead", {}, h("tr", {},
       h("th", { class: "c" }, "#"),
-      h("th", { class: "l" }, t("Build")),
+      h("th", { class: "l" }, t("Build"), " ", helpIcon(buildHelp)),
       h("th", { class: "r" }, t("Light")),
       h("th", { class: "r" }, t("Base dmg")),
       h("th", { class: "r" }, t("Bonus dmg")),
@@ -328,7 +350,7 @@
       builds.slice(start, start + PER_PAGE).forEach((b) => {
         tbody.appendChild(h("tr", { class: b.rank === 1 ? "best" : "" },
           h("td", { class: "c" }, b.rank),
-          h("td", { class: "l layout", title: t("Click to copy"), onClick: () => copyLayout(b.layout) }, b.layout),
+          h("td", { class: "l layout", title: t("Click to copy"), onClick: () => copyLayout(fmtLayout(b.layout)) }, fmtLayout(b.layout)),
           h("td", { class: "r" }, num(b.light)),
           h("td", { class: "r" }, round(b.base_dmg)),
           h("td", { class: "r" }, b.bonus_dmg.toFixed(2) + "%", b.class_bonus ? h("span", { class: "gb-bonus-extra" }, " + " + b.class_bonus + "%") : null),

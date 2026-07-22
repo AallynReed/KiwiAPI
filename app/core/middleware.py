@@ -52,6 +52,7 @@ _PAGE_PATHS = frozenset({
     "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/accessibility", "/changelog", "/mods", "/modpacks",
     "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
     "/star-chart", "/gem-simulator", "/gem-evaluator", "/gem-builds", "/calculators",
+    "/gems-guide",
 })
 
 # Dynamic site page subtrees (parameterised routes like /mods/{slug},

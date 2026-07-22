@@ -105,7 +105,7 @@
   margin-bottom: 14px;
 }
 .gb-eyebrow-sm { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-blue); font-weight: 700; margin-bottom: 6px; }
-.gb-top-layout { font-family: "Space Grotesk", monospace; font-size: 1.5rem; font-weight: 700; color: var(--text); cursor: pointer; letter-spacing: .02em; }
+.gb-top-layout { font-family: "JetBrains Mono", SFMono-Regular, Consolas, monospace; font-size: 1.4rem; font-weight: 700; color: var(--text); cursor: pointer; letter-spacing: 0; }
 .gb-top-layout:hover { color: var(--accent-blue); }
 .gb-top-reason { font-size: .84rem; color: var(--text-mute); margin: 6px 0 0; }
 .gb-top-stats { display: flex; gap: 18px; flex-wrap: wrap; }
@@ -131,9 +131,23 @@
 .gb-table .l { text-align: left; }
 .gb-table .r { text-align: right; }
 .gb-table td.muted { color: var(--text-mute); padding: 22px; }
-.gb-table td.layout { font-family: "Space Grotesk", monospace; cursor: pointer; color: var(--text); }
+.gb-table td.layout { font-family: "JetBrains Mono", SFMono-Regular, Consolas, monospace; cursor: pointer; color: var(--text); }
 .gb-table td.layout:hover { color: var(--accent-blue); }
 .gb-table td.sort.strong { font-weight: 700; color: #fff; }
+
+/* Build-format help affordance */
+.gb-top-layout-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.gb-help { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; margin-left: 2px; color: var(--text-mute); cursor: help; font-size: .8rem; vertical-align: middle; outline: none; }
+.gb-help:hover, .gb-help:focus-visible { color: var(--accent-blue); }
+.gb-help-tip {
+  position: absolute; top: calc(100% + 8px); left: 0; width: max-content; max-width: 250px;
+  padding: .55rem .7rem; border-radius: 8px; background: var(--bg-deep, #0d1117);
+  border: 1px solid var(--bg-line); color: var(--text); font-size: .76rem; font-weight: 400;
+  line-height: 1.45; letter-spacing: 0; text-transform: none; text-align: left; white-space: normal;
+  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, .7); opacity: 0; visibility: hidden;
+  transition: opacity .14s ease; z-index: 40; pointer-events: none;
+}
+.gb-help:hover .gb-help-tip, .gb-help:focus-within .gb-help-tip { opacity: 1; visibility: visible; }
 .gb-bonus-extra { color: var(--accent-blue); }
 .gb-best-tag { color: var(--accent-blue); font-weight: 700; }
 .gb-diff { color: var(--accent-red); }
