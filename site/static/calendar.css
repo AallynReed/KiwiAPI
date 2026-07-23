@@ -166,6 +166,22 @@
 .cal-buff-list li { font-size: .86rem; color: var(--text-mute); padding-left: 16px; position: relative; }
 .cal-buff-list li::before { content: "›"; position: absolute; left: 2px; color: var(--buff-accent); }
 .cal-buff-chaos { --buff-accent: var(--accent-orange); }
+/* Featured-item icon + name. The icon is optional (items we can't pin to a
+   blueprint render text-only), so the row degrades to a single column. */
+.cal-chaos-row { display: flex; align-items: center; gap: 12px; }
+.cal-chaos-text { min-width: 0; }
+.cal-chaos-text .cal-buff-name { margin-bottom: 0; }
+.cal-chaos-thumb {
+  flex: 0 0 auto; width: 58px; height: 58px; display: grid; place-items: center;
+  border-radius: 12px; background: color-mix(in oklab, var(--buff-accent) 12%, var(--bg-card));
+  border: 1px solid color-mix(in oklab, var(--buff-accent) 32%, var(--bg-line));
+}
+.cal-chaos-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.cal-chaos-modal-thumb {
+  display: grid; place-items: center; width: 132px; height: 132px; margin: 8px 0;
+  border-radius: 16px; background: var(--bg-deep); border: 1px solid var(--bg-line);
+}
+.cal-chaos-modal-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .cal-buff-when { margin-top: 12px; font-size: .84rem; color: var(--text-mute); font-variant-numeric: tabular-nums; }
 
 /* ── Events ────────────────────────────────────────────────────────── */

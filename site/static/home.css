@@ -144,6 +144,16 @@
 .dash-buff-chaos .dash-buff-kicker { padding: 0; }
 .dash-buff-chaos .dash-chaos-time { font-size: 1.1rem; font-weight: 600; margin-top: 0.3rem; }
 .dash-buff-chaos .dash-chaos-sub { color: var(--text-soft); font-size: 0.82rem; }
+/* Featured-item icon + text. The icon is optional (items we can't pin to a
+   blueprint render text-only), so the row degrades to a single column. */
+.dash-chaos-row { display: flex; align-items: center; gap: 0.75rem; }
+.dash-chaos-text { min-width: 0; }
+.dash-chaos-thumb {
+  flex: 0 0 auto; width: 58px; height: 58px; display: grid; place-items: center;
+  border-radius: 12px; background: color-mix(in oklab, var(--buff-accent) 12%, var(--bg-card));
+  border: 1px solid color-mix(in oklab, var(--buff-accent) 32%, var(--bg-line));
+}
+.dash-chaos-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* ---- Record highs (Mastery + Power Rank ceilings) ----------------------- */
 .dash-records { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; }
@@ -268,6 +278,11 @@
 .dash-sched-biomes { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.4rem; }
 .dash-modal-note { color: var(--text-mute); font-size: 0.9rem; }
 .dash-chaos-modal-item { font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 700; margin: 0.1rem 0 0.6rem; color: var(--accent-yellow); }
+.dash-chaos-modal-thumb {
+  display: grid; place-items: center; width: 132px; height: 132px; margin: 0.5rem 0;
+  border-radius: 16px; background: var(--bg-deep); border: 1px solid var(--bg-line);
+}
+.dash-chaos-modal-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* Daily / weekly rotation list in the buff modal. */
 .dash-rot { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }

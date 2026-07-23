@@ -115,6 +115,10 @@ class ChaosChestItem(BaseModel):
     name: str
     identifier: str | None = None  # game path identifier (forward-slashed)
     blueprint: str | None = None   # blueprint path (lowercased)
+    # Ready-made 256px PNG of the item, rendered by the (tokenless) codex
+    # renderer. None when we couldn't pin a blueprint; feed ``blueprint`` to
+    # /v1/codexes/render yourself for any other size.
+    image_url: str | None = None
 
 
 class ChaosChest(BaseModel):

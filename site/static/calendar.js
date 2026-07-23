@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  const { getJSON } = window.BTTUtil;
+  const { getJSON, apiUrl } = window.BTTUtil;
   function tr(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
@@ -47,6 +47,20 @@
     }
     span.appendChild(el("span", null, name));
     return span;
+  }
+  // Icon for the Chaos Chest's featured item, drawn by the same blueprint→PNG
+  // renderer the codex/market thumbnails use. Items the codex can't pin have no
+  // blueprint and render text-only; an unrenderable one 404s and the <img>
+  // removes its own wrapper, so the card never keeps an empty box.
+  function itemThumb(item, size, cls) {
+    if (!item || !item.blueprint) return null;
+    var wrap = el("span", cls);
+    var img = document.createElement("img");
+    img.src = apiUrl("/site/codexes/render?blueprint=" + encodeURIComponent(item.blueprint) + "&dim=" + size);
+    img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+    img.onerror = function () { wrap.remove(); };
+    wrap.appendChild(img);
+    return wrap;
   }
 
   /* ---- Shared modal ------------------------------------------------------ */
@@ -180,7 +194,14 @@
       var card = el("div", "cal-buff cal-buff-chaos");
       card.appendChild(el("span", "cal-buff-kicker", tr("Chaos Chest")));
       var item = chaos.item;
-      card.appendChild(el("div", "cal-buff-name", (item && item.name) ? item.name : tr("Featured item")));
+      // Icon beside the item name; without one the text column simply fills the card.
+      var row = el("div", "cal-chaos-row");
+      var thumb = itemThumb(item, 96, "cal-chaos-thumb");
+      if (thumb) row.appendChild(thumb);
+      var text = el("div", "cal-chaos-text");
+      text.appendChild(el("div", "cal-buff-name", (item && item.name) ? item.name : tr("Featured item")));
+      row.appendChild(text);
+      card.appendChild(row);
       var when = el("div", "cal-buff-when");
       card.appendChild(when);
       tickers.push(function (n) { if (chaos.ends_at) when.textContent = tr("Resets in") + " " + fmtIn(chaos.ends_at - n); });
@@ -276,6 +297,8 @@
     var body = el("div"), n = nowU(), item = chaos.item;
     if (item && item.name) {
       body.appendChild(el("p", "cal-modal-note", tr("Featured item this week")));
+      var thumb = itemThumb(item, 256, "cal-chaos-modal-thumb");
+      if (thumb) body.appendChild(thumb);
       body.appendChild(el("p", "cal-buff-name", item.name));
     } else {
       body.appendChild(el("p", "cal-modal-note", tr("The featured item rotates every week (not captured yet).")));

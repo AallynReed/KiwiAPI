@@ -15,7 +15,7 @@
 (function () {
   "use strict";
 
-  const { getJSON } = window.BTTUtil;
+  const { getJSON, apiUrl } = window.BTTUtil;
   function tr(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
@@ -40,6 +40,20 @@
     }
     span.appendChild(el("span", null, name));
     return span;
+  }
+  // Icon for the Chaos Chest's featured item, drawn by the same blueprint→PNG
+  // renderer the codex/market thumbnails use. Items the codex can't pin have no
+  // blueprint and render text-only; an unrenderable one 404s and the <img>
+  // removes its own wrapper, so the card never keeps an empty box.
+  function itemThumb(item, size, cls) {
+    if (!item || !item.blueprint) return null;
+    var wrap = el("span", cls);
+    var img = document.createElement("img");
+    img.src = apiUrl("/site/codexes/render?blueprint=" + encodeURIComponent(item.blueprint) + "&dim=" + size);
+    img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+    img.onerror = function () { wrap.remove(); };
+    wrap.appendChild(img);
+    return wrap;
   }
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
   function fmtIn(sec) {
@@ -183,8 +197,15 @@
         var card = el("div", "dash-buff dash-buff-chaos is-clickable");
         card.appendChild(el("span", "dash-buff-kicker", tr("Chaos Chest")));
         var item = chaos.item;
-        card.appendChild(el("div", "dash-chaos-time", (item && item.name) ? item.name : tr("Featured item")));
-        card.appendChild(el("div", "dash-chaos-sub", tr("Resets in") + " " + fmtIn(chaos.ends_at - now())));
+        // Icon beside the item name; without one the text column simply fills the card.
+        var row = el("div", "dash-chaos-row");
+        var thumb = itemThumb(item, 96, "dash-chaos-thumb");
+        if (thumb) row.appendChild(thumb);
+        var text = el("div", "dash-chaos-text");
+        text.appendChild(el("div", "dash-chaos-time", (item && item.name) ? item.name : tr("Featured item")));
+        text.appendChild(el("div", "dash-chaos-sub", tr("Resets in") + " " + fmtIn(chaos.ends_at - now())));
+        row.appendChild(text);
+        card.appendChild(row);
         return clickable(card, function () { chaosModal(chaos, now()); });
       }
       function merchantCard(m, now) {
@@ -259,6 +280,8 @@
       var item = chaos.item;
       if (item && item.name) {
         body.appendChild(el("p", "dash-modal-note", tr("Featured item this week")));
+        var thumb = itemThumb(item, 256, "dash-chaos-modal-thumb");
+        if (thumb) body.appendChild(thumb);
         body.appendChild(el("p", "dash-chaos-modal-item", item.name));
       } else {
         body.appendChild(el("p", "dash-modal-note", tr("The featured item rotates every week (not captured yet).")));

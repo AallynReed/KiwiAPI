@@ -179,7 +179,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>/v1/rotations/corruxion</code></td><td><code>rotations:read</code></td><td>Corruxion merchant: live timer + upcoming schedule</td></tr>
             <tr><td><code>/v1/rotations/fluxion</code></td><td><code>rotations:read</code></td><td>Fluxion merchant: voting/selling timer + schedule</td></tr>
             <tr><td><code>/v1/rotations/gardening</code></td><td><code>rotations:read</code></td><td>2-day / 3-day plant harvest windows + what's next</td></tr>
-            <tr><td><code>/v1/rotations/chaos-chest</code></td><td><code>rotations:read</code></td><td>Weekly Chaos Chest: featured item (relayed from Trovesaurus) + window + countdown</td></tr>
+            <tr><td><code>/v1/rotations/chaos-chest</code></td><td><code>rotations:read</code></td><td>Weekly Chaos Chest: featured item (name + blueprint + <code>image_url</code> icon) + window + countdown</td></tr>
             <tr><td><code>/v1/rotations/calendar</code></td><td><code>rotations:read</code></td><td>Yearly calendar: all recurring rotations (buffs, merchants, gardening, biomes) as one ±365-day timeline</td></tr>
             <tr><td><code>/v1/rotations/delves?week=</code></td><td><code>rotations:read</code></td><td>A week's delve rotation - floor records relayed from a community delve source (default current week; <code>/delves/weeks</code> lists weeks). Gated behind the <code>feature_delves_enabled</code> admin toggle (default off; 404s when disabled)</td></tr>
             <tr><td><code>/v1/rotations/biomes</code></td><td><code>rotations:read</code></td><td>The 3-hour adventure-world biome rotation (current + upcoming)</td></tr>

@@ -11,6 +11,7 @@ Served under the (public) ``rotations`` scope.
 
 import logging
 from datetime import datetime
+from urllib.parse import quote
 
 from app.core.config import settings
 from app.core.http import fetch_json
@@ -112,6 +113,46 @@ async def refresh_chaos_chest() -> bool:
     return True
 
 
+# --- Item art ---------------------------------------------------------------
+# The featured item's blueprint is what the render endpoint draws its icon from.
+# The relay carries one; the bot capture (which wins) reads only a name out of the
+# in-game cfg, so that name is reversed through the codex the same way the /market
+# thumbnails are. Memoized per name - the item changes weekly, and a name the codex
+# can't pin won't start resolving mid-week either, so misses are cached too.
+_CODEX_BRANCH = "live-us"
+_IMAGE_DIM = 256          # square px of the ready-made ``image_url`` render
+_bp_cache: dict[str, str | None] = {}
+
+
+async def resolve_item_blueprint(name: str) -> str | None:
+    """The codex blueprint that best represents ``name``, or None when the codex
+    has no unambiguous match (no icon beats a wrong icon). Best-effort: a codex or
+    DB hiccup returns None rather than failing the chest payload."""
+    key = (name or "").strip().lower()
+    if not key:
+        return None
+    if key in _bp_cache:
+        return _bp_cache[key]
+    try:
+        from app.trove.codexes import read as codexes_read
+        resolved = await codexes_read.blueprints_for_names(_CODEX_BRANCH, [key])
+    except Exception:  # noqa: BLE001 - the icon is cosmetic; never break the chest
+        logger.warning("chaos: blueprint resolve failed for %r", name, exc_info=True)
+        return None  # transient - not cached, so the next call retries
+    _bp_cache[key] = bp = resolved.get(key)
+    return bp
+
+
+def item_image_url(blueprint: str | None) -> str | None:
+    """Ready-to-use PNG URL for a blueprint, or None without one. Points at the
+    codex renderer, which is tokenless like this endpoint - so a client reading
+    the chest can show the item's icon without a second lookup or extra scope."""
+    if not blueprint:
+        return None
+    return (f"{settings.api_url.rstrip('/')}/v1/codexes/render"
+            f"?blueprint={quote(blueprint, safe='')}&dim={_IMAGE_DIM}")
+
+
 async def get_chaos_chest(now: datetime | None = None) -> dict:
     """The current chaos chest (cached item + computed window), ready to serve.
 
@@ -119,6 +160,9 @@ async def get_chaos_chest(now: datetime | None = None) -> dict:
     ``captures.get_chaos_chest_for_week``) wins, since it's read from the
     actual in-game cfg. Falls back to the Trovesaurus relay when the bot
     hasn't reported the current week yet (e.g., immediately after a reset).
+
+    The item's ``blueprint`` is filled in from the codex when the source didn't
+    carry one, and paired with an ``image_url`` clients can render directly.
     """
     # Imported lazily - captures.py imports server_time too and we'd loop otherwise.
     from app.trove.captures import get_chaos_chest_for_week
@@ -134,12 +178,19 @@ async def get_chaos_chest(now: datetime | None = None) -> dict:
             "start": week["starts_at"],
             "end": week["ends_at"],
         }
-        return build_response(cached, capture.captured_at, now)
+        response = build_response(cached, capture.captured_at, now)
+    else:
+        doc = await FeedCache.find_one(FeedCache.feed == _FEED)
+        cached = doc.items[0] if doc and doc.items else None
+        fetched_at = doc.fetched_at if doc else None
+        response = build_response(cached, fetched_at, now)
 
-    doc = await FeedCache.find_one(FeedCache.feed == _FEED)
-    cached = doc.items[0] if doc and doc.items else None
-    fetched_at = doc.fetched_at if doc else None
-    return build_response(cached, fetched_at, now)
+    item = response.get("item")
+    if item:
+        if not item.get("blueprint"):
+            item["blueprint"] = await resolve_item_blueprint(item["name"])
+        item["image_url"] = item_image_url(item["blueprint"])
+    return response
 
 
 # --- Background refresher ---------------------------------------------------

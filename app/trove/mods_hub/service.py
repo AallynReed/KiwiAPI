@@ -975,8 +975,10 @@ def _release_properties(project: ModProject, tag: str, changelog: str,
     return props
 
 
-# Image content-type → the extension used for the in-.tmod preview path.
-_PREVIEW_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif"}
+# Image content-type → the extension used for the in-.tmod preview path. WebP is
+# intentionally excluded: Trove itself can't render a WebP preview, so it must
+# never be baked into a .tmod (see _inject_preview's guard).
+_PREVIEW_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/gif": "gif"}
 
 
 async def _inject_preview(
@@ -994,7 +996,10 @@ async def _inject_preview(
     if got is None:
         raise APIError(400, ErrorCode.bad_request, "That preview image is missing.")
     data, content_type = got
-    path = f"ui/{project.slug}.{_PREVIEW_EXT.get(content_type, 'png')}"
+    if content_type not in _PREVIEW_EXT:
+        raise APIError(400, ErrorCode.bad_request,
+                       "The .tmod preview must be a PNG, JPEG, or GIF image (Trove can't render WebP).")
+    path = f"ui/{project.slug}.{_PREVIEW_EXT[content_type]}"
     files[:] = [(p, b) for (p, b) in files
                 if p.replace("\\", "/").lstrip("/").lower() != path]
     files.append((path, data))

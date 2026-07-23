@@ -719,9 +719,10 @@ async def site_rotations() -> JSONResponse:
             "stampy", "Stampy", True, stampy_cur.get("starts_at"), stampy_cur.get("ends_at"),
             biomes=_biome_list(stampy_cur.get("biomes")),
             schedule=_sched(stampy.get("upcoming"))))
-    # Chaos Chest: window + the current featured item (name + Trovesaurus
-    # identifier). Built into a clean dict so the datetime ``fetched_at`` the
-    # source carries never reaches the JSON serializer.
+    # Chaos Chest: window + the current featured item (name, identifier and the
+    # blueprint the card/modal draws its icon from, via /site/codexes/render).
+    # Built into a clean dict so the datetime ``fetched_at`` the source carries
+    # never reaches the JSON serializer.
     cc = await trove_chaos.get_chaos_chest()
     chaos = {
         "starts_at": cc.get("starts_at"), "ends_at": cc.get("ends_at"),

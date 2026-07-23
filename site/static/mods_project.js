@@ -1478,7 +1478,7 @@
     };
     const uploadPreviewInline = () => {
       const inp = document.createElement('input');
-      inp.type = 'file'; inp.accept = 'image/png,image/jpeg,image/webp,image/gif';
+      inp.type = 'file'; inp.accept = 'image/png,image/jpeg,image/gif';
       inp.addEventListener('change', async () => {
         if (!inp.files.length) return;
         const fd = new FormData(); fd.append('files', inp.files[0]);

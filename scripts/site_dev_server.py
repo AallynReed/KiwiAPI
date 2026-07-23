@@ -1439,7 +1439,10 @@ class Handler(SimpleHTTPRequestHandler):
                 "daily_rotation": daily_rot, "weekly_rotation": weekly_rot,
                 "chaos": {"starts_at": now - 3 * 86400, "ends_at": now + 4 * 86400,
                           "seconds_remaining": 4 * 86400,
-                          "item": {"name": "Diamond Dragon Egg", "identifier": "item/diamond"}},
+                          # blueprint → the /site/codexes/render stub below, so the
+                          # featured-item icon is previewable locally.
+                          "item": {"name": "Diamond Dragon Egg", "identifier": "item/diamond",
+                                   "blueprint": "stub/diamond_dragon_egg"}},
                 "merchants": [
                     {"id": "corruxion", "name": "Corruxion", "active": True,
                      "starts_at": now - 1800, "ends_at": now + 5400,
