@@ -29,10 +29,10 @@ from app.trove.models import ChallengeCapture, ChaosChestCapture, LuxionAppearan
 
 logger = logging.getLogger("kiwi.trove.captures")
 
-# Luxion runs for a fixed 7-day window once it appears (see LuxionAppearance /
-# app.trove.luxion). A sighting inside a live run refreshes it; a sighting after
-# the run has elapsed is a brand-new appearance (the next ~4-week cycle).
-LUXION_RUN_DAYS = 7
+# Luxion runs for a fixed 7-day window once it appears (run length + the 27h
+# cycle grid the windows sit on live in app.trove.luxion). A sighting inside a
+# live run refreshes it; a sighting after the run has elapsed is a brand-new
+# appearance (the next ~4-week cycle).
 
 
 # --- Chaos chest -----------------------------------------------------------
@@ -88,21 +88,24 @@ async def insert_luxion(
     """Record a Luxion sighting → the current run, creating it only on the FIRST
     signal.
 
-    The bot re-reports every hour Luxion is up, so only the first sighting matters:
-    it anchors the run to that trove-day's daily reset (00:00 = 11:00 UTC) and the
-    run is fixed at 7 days. Every later sighting *inside* that 7-day window just
-    refreshes ``last_seen_at`` on the SAME row - we never start a second appearance
-    while one is live. Only once the 7 days have elapsed does a new signal open the
-    next run.
+    The bot re-reports every hour Luxion is up, so only the first sighting matters,
+    and all we take from it is the trove-DAY the run started on (00:00 = 11:00
+    UTC). The openings themselves come off the global 27h cycle grid, not off the
+    daily reset - see ``luxion.run_start``. The run is fixed at 7 days; every later
+    sighting *inside* it just refreshes ``last_seen_at`` on the SAME row - we never
+    start a second appearance while one is live. Only once the run has elapsed does
+    a new signal open the next one.
 
     Returns ``(doc, was_new)``. The bot sends no body - the server infers the
     anchor from now."""
+    from app.trove import luxion
+
     real = now or utcnow()
     now_ts = int(real.timestamp())
     anchor = server_time.current_daily_reset(real)
 
     latest = await LuxionAppearance.find_all().sort("-started_at").first_or_none()
-    if latest is not None and now_ts < latest.started_at + LUXION_RUN_DAYS * 86400:
+    if latest is not None and now_ts < luxion.run_bounds(latest.started_at)[1]:
         # Still inside the live run - same appearance, just refresh last-seen.
         latest.last_seen_at = real
         await latest.save()

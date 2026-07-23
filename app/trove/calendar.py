@@ -133,15 +133,15 @@ def _mana(ws: datetime, we: datetime) -> list[dict]:
 
 
 def _luxion(runs: list[int], ws: datetime, we: datetime) -> list[dict]:
-    """Recorded Luxion runs, expanded into their daily 3-hour merchant windows.
+    """Recorded Luxion runs, expanded into their 3-hour merchant windows.
 
-    Unlike every other generator here, Luxion is NOT computed - its start is
-    dev-set and unpredictable, so we can only place the runs the bot has actually
-    captured (past appearances + the current one); future runs can't be projected.
-    Each run is a 7-day visit with a 3-hour window per day that shifts +3h daily,
-    so we emit one short event per window (its own timeline row, rendered as bare
-    coloured pills). ``runs`` are run-start unix seconds (the daily-reset anchors
-    from ``LuxionAppearance.started_at``)."""
+    Unlike every other generator here, Luxion's *placement* is NOT computed - its
+    start is dev-set and unpredictable, so we can only place the runs the bot has
+    actually captured (past appearances + the current one); future runs can't be
+    projected. The windows within a run are computed, off a global 27h grid, so we
+    emit one short event per window (its own timeline row, rendered as bare
+    coloured pills). ``runs`` are the captured start-DAY anchors from
+    ``LuxionAppearance.started_at``; ``schedule_for`` snaps each to the grid."""
     from app.trove.luxion import schedule_for
 
     out = []

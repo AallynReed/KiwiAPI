@@ -337,12 +337,13 @@ async def get_fluxion(ctx: AccessContext = _ROT) -> Fluxion:
 async def get_luxion(ctx: AccessContext = _ROT) -> Luxion:
     """Luxion merchant: live status + the daily 3-hour windows for the current run.
 
-    Unlike Corruxion/Fluxion, Luxion's start is dev-set and unpredictable, so it's
-    CAPTURED from the game (welcome screen) rather than computed. Once the bot
-    reports a sighting, the API anchors the run to that trove-day's 00:00 and the
-    rest of the 7-day schedule (a 3-hour window per day, shifting +3h daily) is
-    deterministic. ``active`` is False with an empty schedule until Luxion has
-    been seen in-game at least once."""
+    Unlike Corruxion/Fluxion, *which* run is live is dev-set and unpredictable, so
+    the start day is CAPTURED from the game (welcome screen) rather than computed.
+    The windows themselves are deterministic: a 27-hour cycle (3h open, 24h away)
+    that has been running continuously since a fixed epoch, so a run's first
+    opening is the first grid slot on its start day - hours into the day, not at
+    reset. ``active`` is False with an empty schedule until Luxion has been seen
+    in-game at least once."""
     return Luxion(**await luxion_mod.get_luxion())
 
 
@@ -354,9 +355,10 @@ async def insert_luxion(
     """Record that the bot saw Luxion featured in-game right now.
 
     **Master only**: requires a superuser-owned API token. No body - the server
-    anchors a NEW appearance to the current trove-day's daily reset (00:00 =
-    11:00 UTC). Idempotent within a live 7-day run: re-reporting just refreshes
-    the sighting timestamp (``refreshed=true``)."""
+    records a NEW appearance against the current trove-day (00:00 = 11:00 UTC) and
+    derives the run's openings from the 27h cycle grid. Idempotent within a live
+    7-day run: re-reporting just refreshes the sighting timestamp
+    (``refreshed=true``)."""
     doc, was_new = await captures.insert_luxion()
     await ingest_log.record(
         endpoint="/v1/rotations/luxion/insert",
@@ -382,15 +384,13 @@ async def list_luxion_history(
 ) -> LuxionHistoryPage:
     """Past Luxion appearances, newest first. Public under ``rotations:read``."""
     docs, total = await captures.list_luxion_history(limit=limit, offset=offset)
-    items = [
-        LuxionAppearanceOut(
-            started_at=d.started_at,
-            ends_at=d.started_at + 7 * 86400,
-            first_seen_at=d.first_seen_at,
-            last_seen_at=d.last_seen_at,
-        )
-        for d in docs
-    ]
+    items = []
+    for d in docs:
+        starts_at, ends_at = luxion_mod.run_bounds(d.started_at)
+        items.append(LuxionAppearanceOut(
+            started_at=starts_at, ends_at=ends_at,
+            first_seen_at=d.first_seen_at, last_seen_at=d.last_seen_at,
+        ))
     return LuxionHistoryPage(items=items, count=len(items), total=total)
 
 

@@ -1,42 +1,78 @@
 """Luxion: the captured dragon-merchant appearance + its deterministic schedule.
 
-Unlike Corruxion/Fluxion (fixed cadences computed from an epoch), Luxion's start
-date is dev-set and shifts around events, so it can't be computed - the bot
-captures the first in-game sighting (``WelcomeLog.cfg`` -> ``luxion``) and the API
-anchors the run to that trove-day's 00:00 (see ``captures.insert_luxion`` +
-``LuxionAppearance``).
+Luxion is a hybrid of the two rotation kinds in this project. Its *cadence* is
+computed like Corruxion/Fluxion - a fixed grid running off a global epoch - but
+*which run* is live is dev-set and shifts around events, so it can't be computed
+at all. The bot captures the first in-game sighting (``WelcomeLog.cfg`` ->
+``luxion``); all that signal carries is **the trove-day the run started on** (see
+``captures.insert_luxion`` + ``LuxionAppearance.started_at``).
 
-Once anchored, the run IS deterministic and matches the in-game format exactly:
+The cadence: the merchant is open for 3 hours, then away for 24 - a 27-hour
+cycle that has been ticking continuously since ``CYCLE_EPOCH``, whether or not a
+run is live. So the openings are always ``CYCLE_EPOCH + k * 27h``; a run just
+picks up the grid rather than defining it.
 
-- The event lasts ``LUXION_RUN_DAYS`` (7) days from the anchor.
-- Each day the merchant is available for a 3-hour window, and that window opens
-  3 hours LATER than the day before - so day ``d`` (0-indexed) opens at
-  ``started_at + d * 27h`` (24h to the next day + 3h shift) and lasts 3h.
+That is the part that used to be wrong here: the run was assumed to open AT its
+start day's reset and step 27h from there. It opens at the first grid slot at or
+after that reset instead. Since the grid drifts +3h per day, that offset is
+``{0,3,6,9,12,15,18,21}h`` depending on the day - so a run can quite normally
+start 15 hours after the day it was reported on.
 
-  day 0: 00:00-03:00, day 1: 03:00-06:00, day 2: 06:00-09:00, ... (trove time).
+- ``run_start(day)`` snaps a captured start-day to that first grid opening.
+- Day ``d`` (0-indexed) of the run opens at ``run_start + d * 27h`` for 3h.
+- The run lasts ``LUXION_RUN_DAYS`` (7) windows.
+
+(The in-game mod expresses this as a 9-long ``[0,3,…,24]`` offset table indexed by
+day-since-epoch, with a roll-over flag when the offset hits 24. Deduped, that
+emits exactly this grid - the table is just a longhand for +27h.)
 
 Served under the (public) ``rotations`` scope, mirroring the Corruxion/Fluxion
 response shape (active + live window + upcoming schedule).
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.trove import server_time
 
 LUXION_RUN_DAYS = 7
-_WINDOW = 3 * 3600          # 3-hour daily merchant window
-_DAY_STEP = 27 * 3600       # window opens 3h later each day (24h + 3h shift)
+_WINDOW = 3 * 3600          # 3-hour merchant window
+_CYCLE = 27 * 3600          # 3h open + 24h away; the opening shifts +3h each day
+
+# Origin of the never-resetting 27h cycle grid: trove 2025-10-10 00:00, i.e. that
+# day's reset. Every Luxion opening - past, future, in a run or not - sits exactly
+# on ``CYCLE_EPOCH + k * _CYCLE``.
+CYCLE_EPOCH = datetime(2025, 10, 10, 11, 0, tzinfo=timezone.utc)
+_EPOCH_TS = int(CYCLE_EPOCH.timestamp())
 
 
-def schedule_for(started_at: int) -> list[dict]:
-    """The full list of daily 3-hour merchant windows for a run anchored at
-    ``started_at`` (unix seconds), soonest first. ``state`` carries the run-day
-    label ("Day 1" … "Day 7") so a consumer can show the weekly rotation without
-    recomputing it."""
+def run_start(day_anchor: int) -> int:
+    """The run's first merchant opening, given the trove-day it started on.
+
+    ``day_anchor`` is the captured start day's 00:00 (11:00 UTC) in unix seconds.
+    Returns the first 27h-grid slot at or after it. Because the epoch is itself a
+    reset, that lands on ``day_anchor + {0,3,6,9,12,15,18,21}h`` - the offset the
+    grid happens to give that day, NOT zero. The 8 offsets cycle over 9 days, so
+    every 9th trove-day holds no opening at all and rolls to the next day's 00:00."""
+    cycles = -((_EPOCH_TS - day_anchor) // _CYCLE)      # ceil division
+    return _EPOCH_TS + cycles * _CYCLE
+
+
+def run_bounds(day_anchor: int) -> tuple[int, int]:
+    """``(first opening, run end)`` for a run captured on ``day_anchor``."""
+    start = run_start(day_anchor)
+    return start, start + LUXION_RUN_DAYS * 86400
+
+
+def schedule_for(day_anchor: int) -> list[dict]:
+    """The full list of 3-hour merchant windows for the run that started on the
+    trove-day ``day_anchor`` (unix seconds), soonest first. ``state`` carries the
+    run-day label ("Day 1" … "Day 7") so a consumer can show the weekly rotation
+    without recomputing it."""
+    start = run_start(day_anchor)
     return [
         {
-            "starts_at": started_at + d * _DAY_STEP,
-            "ends_at": started_at + d * _DAY_STEP + _WINDOW,
+            "starts_at": start + d * _CYCLE,
+            "ends_at": start + d * _CYCLE + _WINDOW,
             "state": f"Day {d + 1}",
         }
         for d in range(LUXION_RUN_DAYS)
@@ -61,20 +97,22 @@ def _away() -> dict:
     }
 
 
-def build_response(started_at: int, first_seen_at: datetime | None,
+def build_response(day_anchor: int, first_seen_at: datetime | None,
                    last_seen_at: datetime | None,
                    now: datetime | None = None) -> dict:
     """Assemble the served shape from a stored appearance + the computed schedule.
 
-    ``active`` = within the 7-day run. ``merchant_open`` = inside one of the daily
-    3-hour windows right now. ``seconds_remaining`` counts down to the most useful
-    next boundary: the current window's close if the merchant is open, else the
-    next window's open, else the run's end."""
+    ``day_anchor`` is the stored start-DAY; ``starts_at`` in the response is the
+    run's first actual opening (the 27h-grid slot that day). ``active`` = within
+    the 7-day run. ``merchant_open`` = inside one of the 3-hour windows right now.
+    ``seconds_remaining`` counts down to the most useful next boundary: the
+    current window's close if the merchant is open, else the next window's open,
+    else the run's end."""
     real = now or server_time.real_utc_now()
     now_ts = int(real.timestamp())
-    end = started_at + LUXION_RUN_DAYS * 86400
+    started_at, end = run_bounds(day_anchor)
     active = started_at <= now_ts < end
-    sched = schedule_for(started_at)
+    sched = schedule_for(day_anchor)
 
     current = next(
         (w for w in sched if w["starts_at"] <= now_ts < w["ends_at"]), None

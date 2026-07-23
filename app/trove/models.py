@@ -176,16 +176,18 @@ class ChallengeCapture(Document):
 
 
 class LuxionAppearance(Document):
-    """One Luxion-merchant appearance, anchored to the daily reset of its first
-    sighting.
+    """One Luxion-merchant appearance, keyed by the trove-DAY it started on.
 
     Luxion visits for a fixed 7-day run roughly every 4 weeks, but the dev-set
-    start date is not predictable (events shift it), so it can't be computed like
-    Corruxion/Fluxion. Instead the bot CAPTURES the first in-game sighting from the
-    welcome screen (``WelcomeLog.cfg`` -> ``luxion``) and the API anchors the whole
-    run to that Trove-day's 00:00 (= 11:00 UTC). Once anchored, the run is fully
-    deterministic: a 3-hour merchant window each day, shifting +3h per day (so it
-    opens at ``started_at + day * 27h``). See ``app.trove.luxion``.
+    start date is not predictable (events shift it), so *which* run is live can't
+    be computed like Corruxion/Fluxion. The bot CAPTURES the first in-game sighting
+    from the welcome screen (``WelcomeLog.cfg`` -> ``luxion``); the only thing we
+    take from it is the Trove-day (00:00 = 11:00 UTC) the run began on.
+
+    ``started_at`` is that DAY, not the first opening. The openings sit on a global
+    27h grid (3h open + 24h away) that never resets, so the run's first window is
+    the first grid slot at or after ``started_at`` - typically hours into the day,
+    not at reset. See ``app.trove.luxion.run_start``.
 
     Upsert by ``started_at``: re-sightings within the 7-day run just refresh
     ``last_seen_at``; the next run (weeks later) is a new row."""

@@ -80,23 +80,25 @@ class Fluxion(BaseModel):
 class Luxion(BaseModel):
     """Captured Luxion appearance projected onto its deterministic 7-day run.
 
-    ``active`` = within the run; ``merchant_open`` = inside one of the daily
-    3-hour windows now. ``starts_at``/``ends_at`` are null only when Luxion has
-    never been captured (its start is unpredictable until seen in-game)."""
+    ``active`` = within the run; ``merchant_open`` = inside one of the 3-hour
+    windows now. ``starts_at``/``ends_at`` are null only when Luxion has never
+    been captured (its start day is unpredictable until seen in-game)."""
     active: bool
-    merchant_open: bool             # inside a daily 3h window right now
-    starts_at: int | None           # run start (daily-reset anchor of first sighting)
+    merchant_open: bool             # inside a 3h merchant window right now
+    # Run start = the first 27h-grid opening on the captured start day. NOT that
+    # day's reset - the grid runs continuously, so the delay can be up to 27h.
+    starts_at: int | None
     ends_at: int | None             # starts_at + 7 days
     seconds_remaining: int          # to window close / next window open / run end
     current_window: MerchantWindow | None
     next_window: MerchantWindow | None
-    schedule: list[MerchantWindow]  # the 7 daily windows, soonest first
+    schedule: list[MerchantWindow]  # the 7 windows (one per run day), soonest first
     first_seen_at: datetime | None
     last_seen_at: datetime | None
 
 
 class LuxionAppearanceOut(BaseModel):
-    started_at: int      # run start (daily-reset anchor), unix seconds
+    started_at: int      # first merchant opening of the run, unix seconds
     ends_at: int         # started_at + 7 days
     first_seen_at: datetime
     last_seen_at: datetime
