@@ -70,9 +70,22 @@
                 </div>
             </div>
             <div class="st-body">
-                <aside class="st-cats" id="st-cats" aria-label="Categories"></aside>
+                <!-- Server-rendered first paint (see app/site/ssr.py); store.js
+                     clears and refills the category rail + the grid on load. -->
+                <aside class="st-cats" id="st-cats" aria-label="Categories">
+                    {%- if ssr and ssr.categories %}{% for c in ssr.categories %}
+                    <button type="button" class="st-cat">{{ c.label }}</button>
+                    {% endfor %}{% endif %}
+                </aside>
                 <div class="st-grid-wrap">
-                    <div class="st-grid" id="st-grid" aria-live="polite"></div>
+                    <div class="st-grid" id="st-grid" aria-live="polite">
+                        {%- if ssr and ssr.products %}{% for p in ssr.products %}
+                        <button type="button" class="st-card">
+                            <div class="st-card-name">{{ p.name }}</div>
+                            {%- if p.price %}<div class="st-card-price">{{ p.price }}</div>{% endif %}
+                        </button>
+                        {% endfor %}{% endif %}
+                    </div>
                     <div class="st-empty" id="st-empty" hidden>
                         <i class="fa-solid fa-box-open"></i>
                         <p data-i18n>No packs match those filters yet.</p>

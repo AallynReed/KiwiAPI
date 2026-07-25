@@ -44,8 +44,14 @@
                 <!-- Branch tabs (Live US / PTS). The currently-selected
                      branch governs every fetch below. URL hash carries
                      `branch=…` so a refresh keeps the selection. -->
+                <!-- Server-rendered first paint (see app/site/ssr.py); updates.js
+                     clears and refills the branch tabs + version strip on load. -->
                 <div class="up-branches" id="up-branches" role="tablist" aria-label="Branch">
-                    <span class="up-branches-loading" data-i18n>Loading…</span>
+                    {%- if ssr and ssr.branches %}{% for b in ssr.branches %}
+                    <button type="button" class="up-branch" role="tab" aria-selected="{{ 'true' if loop.first else 'false' }}">
+                        <span class="up-branch-dot"></span>{{ b.branch }}
+                    </button>
+                    {% endfor %}{% else %}<span class="up-branches-loading" data-i18n>Loading…</span>{% endif %}
                 </div>
 
                 <p class="up-meta" id="up-meta"></p>
@@ -62,7 +68,17 @@
                 <span class="up-section-hint" id="up-versions-hint"></span>
             </div>
             <div class="up-versions" id="up-versions" role="group" aria-label="Versions">
-                <p class="up-loading" data-i18n>Loading…</p>
+                {%- if ssr and ssr.versions %}{% for v in ssr.versions %}
+                <button type="button" class="up-version{{ ' up-version-latest' if loop.first }}">
+                    <span class="up-version-tag">{{ v.tag }}</span>
+                    <span class="up-version-when"><time datetime="{{ v.datetime }}">{{ v.date }}</time></span>
+                    <span class="up-version-counts">
+                        <span class="up-count-pill up-count-pill-add">+{{ v.added }}</span>
+                        <span class="up-count-pill up-count-pill-mod">~{{ v.modified }}</span>
+                        <span class="up-count-pill up-count-pill-rem">−{{ v.removed }}</span>
+                    </span>
+                </button>
+                {% endfor %}{% else %}<p class="up-loading" data-i18n>Loading…</p>{% endif %}
             </div>
         </section>
 

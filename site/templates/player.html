@@ -50,8 +50,10 @@
             </div>
         </section>
 
+        <!-- Server-rendered first paint (see app/site/ssr.py): player.js
+             replaces the chips and the rankings block below on load. -->
         <section class="pl-stats" id="pl-stats" aria-label="Summary">
-            <!-- stat chips injected by player.js -->
+            {%- if ssr and ssr.summary %}<ul class="ssr-chips">{% for s in ssr.summary %}<li>{{ s.label }}: {{ s.value }}</li>{% endfor %}</ul>{% endif %}
         </section>
 
         <!-- Username history (renames) - injected + unhidden by player.js when found. -->
@@ -59,7 +61,23 @@
 
         <section class="pl-section">
             <h2 class="pl-subhead" data-i18n>Leaderboard rankings</h2>
-            <div id="pl-recent"><p class="pl-loading" data-i18n>Loading…</p></div>
+            <div id="pl-recent">
+                {%- if ssr and ssr.boards %}
+                <table class="ssr-table">
+                    <thead><tr>
+                        <th scope="col" data-i18n>Leaderboard</th>
+                        <th scope="col" data-i18n>Rank</th>
+                        <th scope="col" data-i18n>Best</th>
+                        <th scope="col" data-i18n>Score</th>
+                    </tr></thead>
+                    <tbody>
+                    {%- for b in ssr.boards %}
+                        <tr><td>{{ b.board }}</td><td>{{ b.rank }}</td><td>{{ b.best }}</td><td>{{ b.score }}</td></tr>
+                    {%- endfor %}
+                    </tbody>
+                </table>
+                {% else %}<p class="pl-loading" data-i18n>Loading…</p>{% endif %}
+            </div>
         </section>
 
         <!-- Alt clusters - injected + unhidden by player.js when membership found. -->

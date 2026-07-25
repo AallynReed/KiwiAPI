@@ -45,8 +45,18 @@
         <!-- JS (giveaways.js) renders the grouped cards here: open, upcoming,
              and past. Entry counts + your odds update live; the countdown
              ticks every second. -->
+        <!-- Server-rendered first paint (see app/site/ssr.py); giveaways.js
+             clears and refills this list on load with the live entry counts,
+             countdowns and the enter button. -->
         <div id="gw-list">
-            <p class="gw-loading" data-i18n>Loading giveaways…</p>
+            {%- if ssr and ssr.giveaways %}{% for g in ssr.giveaways %}
+            <article class="ssr-prose">
+                <h3>{{ g.prize }} <span>{{ g.status }}</span></h3>
+                {%- if g.title %}<p>{{ g.title }}</p>{% endif %}
+                {%- if g.description %}<p>{{ g.description }}</p>{% endif %}
+                {%- if g.winner %}<p><span data-i18n>Winner:</span> {{ g.winner }}</p>{% endif %}
+            </article>
+            {% endfor %}{% else %}<p class="gw-loading" data-i18n>Loading giveaways…</p>{% endif %}
         </div>
         <!-- Small, polite live region: announces only a short summary count, so
              the 30s poll re-rendering the whole list isn't re-read each time. -->

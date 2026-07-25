@@ -159,7 +159,21 @@
                     <h2><i class="fa-solid fa-trophy" aria-hidden="true"></i> <span data-i18n>Record highs</span></h2>
                     <a class="dash-seeall" href="/leaderboards"><span data-i18n>Leaderboards</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </header>
-                <div class="dash-records" id="dash-records"><p class="dash-loading" data-i18n>Loading…</p></div>
+                <!-- Server-rendered first paint (see app/site/ssr.py). home.js
+                     clears and refills this container on load; the pre-rendered
+                     copy is what crawlers (and a no-JS visitor) actually get. -->
+                <div class="dash-records" id="dash-records">
+                    {%- if ssr and ssr.records %}{% for r in ssr.records %}
+                    <div class="dash-record">
+                        <div class="dash-record-top"><span class="dash-record-kicker">{{ r.kicker }}</span></div>
+                        <div class="dash-record-value">{{ r.value }}</div>
+                        <div class="dash-record-meta">{{ r.meta }}</div>
+                        {%- if r.holder %}
+                        <div class="dash-record-holder"><i class="fa-solid fa-crown" aria-hidden="true"></i> <span>{{ r.holder }}</span></div>
+                        {%- endif %}
+                    </div>
+                    {% endfor %}{% else %}<p class="dash-loading" data-i18n>Loading…</p>{% endif %}
+                </div>
             </section>
             {% endif %}
 
@@ -169,8 +183,37 @@
                     <h2><i class="fa-solid fa-rotate" aria-hidden="true"></i> <span data-i18n>Today in Trove</span></h2>
                     <a class="dash-seeall" href="/server-time"><span data-i18n>Server time</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </header>
-                <div class="dash-buffs" id="dash-buffs"><p class="dash-loading" data-i18n>Loading…</p></div>
-                <div class="dash-merchants" id="dash-merchants"></div>
+                <div class="dash-buffs" id="dash-buffs">
+                    {%- if ssr and (ssr.buffs or ssr.chaos) %}{% for b in ssr.buffs %}
+                    <div class="dash-buff">
+                        <div class="dash-buff-head"><span>{{ b.name }}</span></div>
+                        <span class="dash-buff-kicker">{{ b.kicker }}</span>
+                        <ul class="dash-buff-list">{% for line in b.list %}<li>{{ line }}</li>{% endfor %}</ul>
+                    </div>
+                    {% endfor %}
+                    {%- if ssr.chaos %}
+                    <div class="dash-buff dash-buff-chaos">
+                        <span class="dash-buff-kicker">Chaos Chest</span>
+                        <div class="dash-chaos-row"><div class="dash-chaos-text">
+                            <div class="dash-chaos-time">{{ ssr.chaos.name }}</div>
+                        </div></div>
+                    </div>
+                    {%- endif %}
+                    {% else %}<p class="dash-loading" data-i18n>Loading…</p>{% endif %}
+                </div>
+                <div class="dash-merchants" id="dash-merchants">
+                    {%- if ssr and ssr.merchants %}{% for m in ssr.merchants %}
+                    <div class="dash-merchant {{ 'is-active' if m.active else 'is-inactive' }}">
+                        <div class="dash-merchant-top">
+                            <span class="dash-merchant-name">{{ m.name }}</span>
+                            <span class="dash-merchant-badge">{{ m.badge }}</span>
+                        </div>
+                        {%- if m.biomes %}
+                        <div class="dash-merchant-biomes">{% for b in m.biomes %}<span class="dash-biome-pill"><span>{{ b }}</span></span>{% endfor %}</div>
+                        {%- endif %}
+                    </div>
+                    {% endfor %}{% endif %}
+                </div>
             </section>
 
             <!-- Yearly rotation calendar (±365d timeline of every recurring
@@ -194,7 +237,18 @@
                         <i class="fa-solid fa-store-slash" aria-hidden="true"></i> <span data-i18n>Shop offers hidden</span>
                     </button>
                 </header>
-                <div class="dash-carousel" id="dash-news"><p class="dash-loading" data-i18n>Loading Trove news…</p></div>
+                <div class="dash-carousel" id="dash-news">
+                    {%- if ssr and ssr.news %}{% for n in ssr.news %}
+                    <a class="dash-card" href="{{ n.url }}" target="_blank" rel="noopener">
+                        <div class="dash-card-thumb">{% if n.category %}<span class="dash-card-cat">{{ n.category }}</span>{% endif %}</div>
+                        <div class="dash-card-body">
+                            <div class="dash-card-title">{{ n.title }}</div>
+                            <div class="dash-card-meta"><i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                <time datetime="{{ n.datetime }}">{{ n.date }}</time></div>
+                        </div>
+                    </a>
+                    {% endfor %}{% else %}<p class="dash-loading" data-i18n>Loading Trove news…</p>{% endif %}
+                </div>
             </section>
 
             <!-- Community content -->
@@ -206,7 +260,17 @@
                         <button type="button" data-vp="twitch"><i class="fa-brands fa-twitch" aria-hidden="true"></i> Twitch</button>
                     </div>
                 </header>
-                <div class="dash-carousel" id="dash-videos"><p class="dash-loading" data-i18n>Loading…</p></div>
+                <div class="dash-carousel" id="dash-videos">
+                    {%- if ssr and ssr.videos %}{% for v in ssr.videos %}
+                    <a class="dash-card" href="{{ v.url }}" target="_blank" rel="noopener">
+                        <div class="dash-card-thumb"></div>
+                        <div class="dash-card-body">
+                            <div class="dash-card-title">{{ v.title }}</div>
+                            <div class="dash-card-meta"><i class="fa-brands fa-youtube" aria-hidden="true"></i> <span>{{ v.channel }}</span></div>
+                        </div>
+                    </a>
+                    {% endfor %}{% else %}<p class="dash-loading" data-i18n>Loading…</p>{% endif %}
+                </div>
             </section>
 
         </div>
@@ -237,7 +301,17 @@
                     <h2><i class="fa-solid fa-cubes" aria-hidden="true"></i> <span data-i18n>Latest mods</span></h2>
                     <a class="dash-seeall" href="/mods"><span data-i18n>All</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </header>
-                <div class="dash-modlist" id="dash-mods"><p class="dash-loading" data-i18n>Loading…</p></div>
+                <div class="dash-modlist" id="dash-mods">
+                    {%- if ssr and ssr.mods %}{% for m in ssr.mods %}
+                    <a class="dash-modrow" href="{{ m.url }}">
+                        <div class="dash-modrow-thumb"><i class="fa-solid fa-cube" aria-hidden="true"></i></div>
+                        <div class="dash-modrow-body">
+                            <div class="dash-modrow-title">{{ m.title }}</div>
+                            <div class="dash-modrow-meta">{{ m.author }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}{% else %}<p class="dash-loading" data-i18n>Loading…</p>{% endif %}
+                </div>
             </section>
             {% endif %}
         </aside>

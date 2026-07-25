@@ -42,8 +42,24 @@
 
     <main id="main" class="mp-main">
         <a class="mp-back" href="/mods"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> <span data-i18n>Mods Hub</span></a>
+        <!-- Server-rendered first paint (see app/site/ssr.py). mods_project.js
+             replaces this whole root on load with the full page (previews, file
+             browser, releases, owner controls). Until this existed the mod pages
+             shipped as a bare "Loading…" - which is exactly why they were held
+             out of the sitemap. -->
         <div id="mp-root" class="mp-root" aria-live="polite">
-            <p class="mp-loading" data-i18n>Loading…</p>
+            {%- if ssr and ssr.title %}
+            <h1>{{ ssr.title }}</h1>
+            {%- if ssr.author %}<p class="ssr-prose"><span data-i18n>By</span> <a href="/mods/{{ handle }}">{{ ssr.author }}</a></p>{% endif %}
+            {%- if ssr.summary %}<p class="ssr-prose">{{ ssr.summary }}</p>{% endif %}
+            {%- if ssr.tags %}<ul class="ssr-chips">{% for t in ssr.tags %}<li>{{ t }}</li>{% endfor %}</ul>{% endif %}
+            <ul class="ssr-chips">
+                <li><span data-i18n>Downloads</span>: {{ ssr.downloads }}</li>
+                <li><span data-i18n>Stars</span>: {{ ssr.stars }}</li>
+                {%- if ssr.updated %}<li><span data-i18n>Updated</span>: <time datetime="{{ ssr.datetime }}">{{ ssr.updated }}</time></li>{% endif %}
+            </ul>
+            {%- if ssr.description %}<p class="ssr-prose">{{ ssr.description }}</p>{% endif %}
+            {% else %}<p class="mp-loading" data-i18n>Loading…</p>{% endif %}
         </div>
     </main>
 

@@ -2023,3 +2023,57 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   .support-trigger { padding: 8px 14px; font-size: .88rem; }
   .support-panel { width: calc(100vw - 32px); max-width: 320px; }
 }
+
+/* ─── Server-rendered first paint ────────────────────────────────────────
+   Shared styling for the pre-rendered content the page routes emit before
+   any JS runs (see app/site/ssr.py). Each page's own script replaces these
+   nodes on load, so these rules only ever paint for the first few hundred
+   milliseconds - and for crawlers and no-JS visitors, permanently. Kept
+   deliberately plain: readable, tokenised, no layout tricks that could
+   fight the real component that replaces it.
+   ─────────────────────────────────────────────────────────────────────── */
+.ssr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  text-align: left;
+}
+.ssr-table caption {
+  padding: 0 0 .5rem;
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+}
+.ssr-table th,
+.ssr-table td {
+  padding: .45rem .7rem;
+  border-bottom: 1px solid var(--bg-line);
+}
+.ssr-table th { color: var(--text-mute); font-weight: 600; }
+.ssr-table td { color: var(--text); }
+.ssr-table a  { color: var(--accent); text-decoration: none; }
+.ssr-table a:hover { text-decoration: underline; }
+
+/* Plain chip row for pre-rendered tag / category / name lists. */
+.ssr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  list-style: none;
+}
+.ssr-chips li {
+  padding: .25rem .6rem;
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text-mute);
+  font-size: .85rem;
+}
+
+/* Pre-rendered prose block (a mod description, a profile readme). */
+.ssr-prose {
+  max-width: 72ch;
+  color: var(--text-mute);
+  line-height: 1.65;
+}
+.ssr-prose + .ssr-prose { margin-top: .75rem; }

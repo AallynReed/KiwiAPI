@@ -204,8 +204,13 @@
                                    autocomplete="off" spellcheck="false">
                         </span>
                     </div>
+                    <!-- Server-rendered first paint (see app/site/ssr.py):
+                         leaderboards.js clears and refills the board list and the
+                         entries table on load. -->
                     <nav class="lb-board-list" id="lb-board-list" aria-label="Board list">
-                        <p class="lb-loading" data-i18n>Loading…</p>
+                        {%- if ssr and ssr.boards %}{% for b in ssr.boards %}
+                        <button type="button" class="lb-board">{{ b.name }}{% if b.entries %} <span class="lb-board-count">{{ b.entries }}</span>{% endif %}</button>
+                        {% endfor %}{% else %}<p class="lb-loading" data-i18n>Loading…</p>{% endif %}
                     </nav>
                 </aside>
 
@@ -230,7 +235,22 @@
                         <div class="lb-chart-legend" id="lb-board-chart-legend"></div>
                     </figure>
                     <div class="lb-entries-body" id="lb-entries-body">
-                        <p class="lb-hint" data-i18n>Choose a board on the left to load its ranked entries.</p>
+                        {%- if ssr and ssr.entries %}
+                        <div class="lb-table" role="table">
+                            <div class="lb-tr" role="row">
+                                <div class="lb-td" role="columnheader" data-i18n>Rank</div>
+                                <div class="lb-td" role="columnheader" data-i18n>Player</div>
+                                <div class="lb-td" role="columnheader" data-i18n>Score</div>
+                            </div>
+                            {%- for e in ssr.entries %}
+                            <div class="lb-tr" role="row">
+                                <div class="lb-td lb-rank" role="cell">{{ e.rank }}</div>
+                                <div class="lb-td" role="cell"><a class="lb-player" href="{{ e.url }}">{{ e.player }}</a></div>
+                                <div class="lb-td lb-score" role="cell">{{ e.score }}</div>
+                            </div>
+                            {%- endfor %}
+                        </div>
+                        {% else %}<p class="lb-hint" data-i18n>Choose a board on the left to load its ranked entries.</p>{% endif %}
                     </div>
                     <div class="lb-entries-foot" id="lb-entries-foot" hidden>
                         <button type="button" class="lb-load-more" id="lb-load-more" data-i18n>Load more</button>

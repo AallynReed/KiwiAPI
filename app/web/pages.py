@@ -23,10 +23,29 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.core.internal_api import internal_get
-from app.site import classes_page, commands_page
+from app.site import classes_page, commands_page, ssr
+from app.site.feature_map import SITE_FEATURE_FLAGS
 from app.web import feature_flags as web_flags
 
 logger = logging.getLogger("kiwi.web.pages")
+
+
+async def _ssr_fetch(path: str, params: dict | None = None) -> object | None:
+    """Data source for the server-rendered first paint (see ``app/site/ssr.py``).
+
+    In this container the ``/site/*`` proxies live on the API, so the SSR
+    builders' fetches go over the compose network. ``internal_get`` never raises
+    - a failure returns ``None`` and the builder falls back to an empty model, so
+    a blip on the data plane costs the crawlable copy, never the page."""
+    return await internal_get(path, params, timeout=3.0)
+
+
+def _flag_map(request: Request) -> dict[str, bool]:
+    """The resolved feature flags as a plain dict - what the SSR builders need to
+    skip fetching for a feature that's switched off."""
+    return {attr: bool(getattr(request.state, attr, True))
+            for attr in SITE_FEATURE_FLAGS}
+
 
 _API = settings.api_url.rstrip("/")   # data-plane origin (api.aallyn.net)
 _APP = settings.app_url.rstrip("/")   # this site's own origin (trove.aallyn.net)
@@ -48,9 +67,10 @@ async def home(request: Request) -> HTMLResponse:
     """The content-hub homepage - a live front door (server status, leaderboard
     movers, latest mods, newest update, featured codex, reference). The app
     *showcase* lives at ``/app``."""
-    return _TEMPLATES.TemplateResponse(
-        request, "index.html", {"discord_install_url": settings.discord_install_link},
-    )
+    return _TEMPLATES.TemplateResponse(request, "index.html", {
+        "discord_install_url": settings.discord_install_link,
+        "ssr": await ssr.home_view(_ssr_fetch, flags=_flag_map(request)),
+    })
 
 
 @router.get("/app", response_class=HTMLResponse)
@@ -142,7 +162,8 @@ async def status_page(request: Request) -> HTMLResponse:
     """Dedicated Trove server-status page - live Live/PTS state plus a
     downtime-history timeline. Page shell + JS; data comes from
     ``/site/trove-status`` + ``/site/trove-status/history``."""
-    return _TEMPLATES.TemplateResponse(request, "status.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "status.html", {"ssr": await ssr.status_view(_ssr_fetch)})
 
 
 @router.get("/server-time", response_class=HTMLResponse)
@@ -161,7 +182,8 @@ async def calendar_page(request: Request) -> HTMLResponse:
     Wild Mana, Stampy, Shadow), and the ongoing/upcoming Trovesaurus events, each
     with a live countdown. Page shell + JS; data comes from ``/site/rotations``
     (shared with the homepage) + ``/site/calendar/events``."""
-    return _TEMPLATES.TemplateResponse(request, "calendar.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "calendar.html", {"ssr": await ssr.calendar_view(_ssr_fetch)})
 
 
 @router.get("/streams", response_class=HTMLResponse)
@@ -169,7 +191,8 @@ async def streams_page(request: Request) -> HTMLResponse:
     """Community hub - live Trove Twitch streams, recent YouTube videos, and the
     latest official news, all on one page. Page shell + JS; data comes from the
     shared ``/site/feeds/videos`` + ``/site/feeds/news`` proxies."""
-    return _TEMPLATES.TemplateResponse(request, "streams.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "streams.html", {"ssr": await ssr.streams_view(_ssr_fetch)})
 
 
 @router.get("/releases", response_class=HTMLResponse)
@@ -177,7 +200,8 @@ async def releases_page(request: Request) -> HTMLResponse:
     """BetterTroveTools app releases + changelog. Latest build per platform
     (Windows/Linux/Android) with download links, the full release history, and the
     commit-grouped changelog. Page shell + JS; data comes from ``/site/btt/*``."""
-    return _TEMPLATES.TemplateResponse(request, "releases.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "releases.html", {"ssr": await ssr.releases_view(_ssr_fetch)})
 
 
 @router.get("/classes", response_class=HTMLResponse)
@@ -298,7 +322,8 @@ async def dashboard(request: Request) -> HTMLResponse:
 async def market(request: Request) -> HTMLResponse:
     """In-game marketplace browser (Beta). Reads the ``market_listings``
     collection via the /site/market/* proxies below."""
-    return _TEMPLATES.TemplateResponse(request, "market.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "market.html", {"ssr": await ssr.market_view(_ssr_fetch)})
 
 
 @router.get("/store", response_class=HTMLResponse)
@@ -306,7 +331,8 @@ async def store(request: Request) -> HTMLResponse:
     """Trove Store History (Beta): the in-game cash-shop catalog with per-pack
     availability timelines, price history and in-game art. Reads the store
     collections via the /site/store/* proxies below."""
-    return _TEMPLATES.TemplateResponse(request, "store.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "store.html", {"ssr": await ssr.store_view(_ssr_fetch)})
 
 
 @router.get("/codexes", response_class=HTMLResponse)
@@ -314,7 +340,8 @@ async def codexes(request: Request) -> HTMLResponse:
     """Codexes browser - parsed Trove game data (allies, mounts, dragons, mementos,
     recipes, items, fish, badges) with mastery / power rank / stat & ability bonuses.
     Reads ``/v1/codexes/*`` via the ``/site/codexes/*`` proxies below."""
-    return _TEMPLATES.TemplateResponse(request, "codexes.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "codexes.html", {"ssr": await ssr.codexes_view(_ssr_fetch)})
 
 
 @router.get("/codexes/crafting", response_class=HTMLResponse)
@@ -331,7 +358,8 @@ async def mods_hub(request: Request) -> HTMLResponse:
     """Mods Hub - browse + download shared Trove mods (public, no login). The
     grid + search are painted client-side from the ``/site/mods/*`` proxies
     below; creating/developing a mod needs a signed-in site user."""
-    return _TEMPLATES.TemplateResponse(request, "mods.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "mods.html", {"ssr": await ssr.mods_view(_ssr_fetch)})
 
 
 # NOTE: must stay ABOVE the ``/mods/{handle}`` routes below - Starlette matches in
@@ -367,7 +395,7 @@ async def mods_project_page(request: Request, handle: str, slug: str) -> HTMLRes
     embed; the page itself still renders (the client reveals owner-only content
     when logged in)."""
     page_url = f"{_APP}/mods/{handle}/{slug}"
-    ctx = {
+    ctx: dict = {
         "slug": slug, "handle": handle, "og_page_url": page_url,
         "page_title": f"{slug} · Trove mod · Better Trove Tools",
         "og_title": f"{slug} · Trove mod",
@@ -395,6 +423,9 @@ async def mods_project_page(request: Request, handle: str, slug: str) -> HTMLRes
             "og_author": owner,
             "twitter_card": "summary_large_image" if img_sha else "summary",
         })
+        # Same payload, no extra round-trip: the mod's title, description, tags
+        # and stats become server-rendered body copy, not just meta tags.
+        ctx["ssr"] = ssr.mod_project_view(project)
     return _TEMPLATES.TemplateResponse(request, "mods_project.html", ctx)
 
 
@@ -410,7 +441,7 @@ async def mods_profile_page(request: Request, handle: str) -> HTMLResponse:
     data = await internal_get(f"/site/mods/profile/{quote(handle)}")
     if not isinstance(data, dict):
         raise HTTPException(status_code=404, detail="No such modder.")
-    ctx = {
+    ctx: dict = {
         "handle": handle, "og_page_url": page_url,
         "page_title": f"{handle} · Trove modder · Better Trove Tools",
         "og_title": f"{handle} · Trove modder",
@@ -432,6 +463,7 @@ async def mods_profile_page(request: Request, handle: str) -> HTMLResponse:
         "og_image_alt": name,
         "og_author": name,
         "twitter_card": "summary_large_image" if data.get("banner_url") else "summary",
+        "ssr": ssr.mod_profile_view(data),
     })
     return _TEMPLATES.TemplateResponse(request, "mods_profile.html", ctx)
 
@@ -441,7 +473,8 @@ async def modpacks_hub(request: Request) -> HTMLResponse:
     """Modpacks - browse + download user-curated bundles of hub mods (public, no
     login). Grid painted client-side from ``/site/modpacks/*``; creating one needs
     a signed-in site user."""
-    return _TEMPLATES.TemplateResponse(request, "modpacks.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "modpacks.html", {"ssr": await ssr.modpacks_view(_ssr_fetch)})
 
 
 @router.get("/modpacks/{handle}/{slug}", response_class=HTMLResponse)
@@ -453,7 +486,7 @@ async def modpack_project_page(request: Request, handle: str, slug: str) -> HTML
     Drafts / private / not-found fall back to generic tags so nothing private leaks
     into an embed."""
     page_url = f"{_APP}/modpacks/{handle}/{slug}"
-    ctx = {
+    ctx: dict = {
         "slug": slug, "handle": handle, "og_page_url": page_url,
         "page_title": f"{slug} · Trove modpack · Better Trove Tools",
         "og_title": f"{slug} · Trove modpack",
@@ -481,6 +514,7 @@ async def modpack_project_page(request: Request, handle: str, slug: str) -> HTML
             "og_author": owner,
             "twitter_card": "summary_large_image" if img_sha else "summary",
         })
+        ctx["ssr"] = ssr.modpack_project_view(pack)
     return _TEMPLATES.TemplateResponse(request, "modpacks_project.html", ctx)
 
 
@@ -488,7 +522,8 @@ async def modpack_project_page(request: Request, handle: str, slug: str) -> HTML
 async def giveaways(request: Request) -> HTMLResponse:
     """Public giveaways page. Lists open / upcoming / past draws (data from
     the /site/giveaways proxy); entering needs a signed-in site user."""
-    return _TEMPLATES.TemplateResponse(request, "giveaways.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "giveaways.html", {"ssr": await ssr.giveaways_view(_ssr_fetch)})
 
 
 @router.get("/clubs", response_class=HTMLResponse)
@@ -532,6 +567,7 @@ async def activity_page(request: Request, period: str | None = None) -> HTMLResp
         # The OG PNG render stays on the API (data-plane); the page URL is our own.
         "og_image_url": f"{_API}/activity/og.png{qs}",
         "og_page_url": f"{_APP}/activity{qs}",
+        "ssr": await ssr.activity_view(_ssr_fetch),
     })
 
 
@@ -539,7 +575,9 @@ async def activity_page(request: Request, period: str | None = None) -> HTMLResp
 async def class_activity_page(request: Request) -> HTMLResponse:
     """Class Activity page - per-class active players over time (multi-line) plus
     a class player-share donut, derived from the Effort/Paragon leaderboards."""
-    return _TEMPLATES.TemplateResponse(request, "class-activity.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "class-activity.html",
+        {"ssr": await ssr.class_activity_view(_ssr_fetch)})
 
 
 @router.get("/player/{name}", response_class=HTMLResponse)
@@ -553,6 +591,7 @@ async def player_page(request: Request, name: str) -> HTMLResponse:
         "og_title": title,
         "og_desc": f"{name}'s Trove leaderboard ranks and recent appearances.",
         "og_page_url": f"{_APP}/player/{name}",
+        "ssr": await ssr.player_view(_ssr_fetch, name),
     })
 
 
@@ -568,6 +607,7 @@ async def leaderboards(request: Request) -> HTMLResponse:
         "cheater_detection_enabled": getattr(request.state, "cheater_detection_enabled", True),
         "alt_clusters_enabled": getattr(request.state, "alt_clusters_enabled", True),
         "renames_enabled": getattr(request.state, "renames_enabled", True),
+        "ssr": await ssr.leaderboards_view(_ssr_fetch),
     })
 
 
@@ -575,4 +615,5 @@ async def leaderboards(request: Request) -> HTMLResponse:
 async def updates(request: Request) -> HTMLResponse:
     """Trove updates browser - public site read of the ``/v1/updates/*`` archive,
     via the ``/site/updates/*`` helpers (on the API)."""
-    return _TEMPLATES.TemplateResponse(request, "updates.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "updates.html", {"ssr": await ssr.updates_view(_ssr_fetch)})

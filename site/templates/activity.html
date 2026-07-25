@@ -50,13 +50,19 @@
         <!-- Live pulse: the most-recent-hour estimate, plus the distinct
              24h / 7d rollups. Filled by JS from /site/leaderboards/activity;
              hidden when the API can't compute one yet (needs 2+ captures). -->
-        <section class="act-live" id="act-live" hidden>
+        <section class="act-live" id="act-live" {% if not (ssr and ssr.estimate) %}hidden{% endif %}>
             <div class="act-now">
                 <span class="act-now-dot" aria-hidden="true"></span>
-                <span class="act-now-num" id="act-now-num">—</span>
+                <span class="act-now-num" id="act-now-num">{% if ssr and ssr.estimate %}~{{ ssr.estimate }}{% else %}—{% endif %}</span>
                 <span class="act-now-label" data-i18n>active players in the last hour</span>
             </div>
-            <div class="act-rollups" id="act-rollups" hidden></div>
+            <!-- Server-rendered first paint (see app/site/ssr.py); activity.js
+                 replaces these chips with the live figures on load. -->
+            <div class="act-rollups" id="act-rollups" {% if not (ssr and ssr.rollups) %}hidden{% endif %}>
+                {%- if ssr and ssr.rollups %}{% for r in ssr.rollups %}
+                <span class="act-roll"><span class="act-roll-num">~{{ r.value }}</span><span class="act-roll-label">{{ r.label }}</span></span>
+                {% endfor %}{% endif %}
+            </div>
         </section>
 
         <!-- Trend chart with a period selector. JS swaps the series on

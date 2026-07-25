@@ -83,7 +83,29 @@
         <!-- ═══════════════ RESULTS ═══════════════ -->
         <section class="mh-results">
             <p class="mh-results-meta" id="mh-meta"></p>
-            <div class="mh-grid" id="mh-grid"></div>
+            <!-- Server-rendered first paint (see app/site/ssr.py): mods.js clears
+                 and refills this grid on load. Without it the hub's HTML carries
+                 no mod names and - more costly - no links to the mod pages, which
+                 then have no crawlable route in from anywhere but the sitemap. -->
+            <div class="mh-grid" id="mh-grid">
+                {%- if ssr and ssr.mods %}{% for m in ssr.mods %}
+                <a class="mh-card" href="{{ m.url }}">
+                    <div class="mh-card-banner placeholder"><i class="fa-solid fa-cube" aria-hidden="true"></i></div>
+                    <div class="mh-card-body">
+                        <h3 class="mh-card-title">{{ m.title }}</h3>
+                        {%- if m.summary %}<p class="mh-card-summary">{{ m.summary }}</p>{% endif %}
+                        {%- if m.tags %}<div class="mh-card-tags">{% for t in m.tags %}<span class="mh-card-tag">{{ t }}</span>{% endfor %}</div>{% endif %}
+                        <div class="mh-card-foot">
+                            <span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> {{ m.author }}</span>
+                            <span class="mh-card-stats">
+                                <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> {{ m.downloads }}</span>
+                                <span class="mh-card-dl"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ m.stars }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}{% endif %}
+            </div>
             <div class="mh-foot" id="mh-foot" hidden>
                 <button type="button" class="mh-btn mh-btn-ghost" id="mh-load-more" data-i18n>Load more</button>
             </div>

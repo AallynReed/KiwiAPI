@@ -66,8 +66,10 @@ def _xml_loc(url: str) -> str:
 async def _render_sitemap() -> str:
     """Build the sitemap XML: static feature pages (each gated by its master
     toggle) plus every public modpack page. Individual mod detail pages are
-    excluded (their above-the-fold content is JS-rendered, so as raw HTML they
-    read thin). The modpack section rides the Mods Hub master toggle."""
+    excluded - not for thin content any more (they server-render now, see
+    ``app/site/ssr.py``) but to keep crawl budget on the core pages; see
+    ``_SITEMAP_INCLUDE_MOD_PAGES`` on the API. The modpack section rides the Mods
+    Hub master toggle."""
     base = settings.app_url.rstrip("/")
     flags = await web_flags._fetch()
     # (loc, lastmod-iso-or-None)

@@ -119,6 +119,7 @@ app/
 ├── admin/      # superuser metrics, toggles, moderation
 └── …           # usage, pageviews, events, scanning
 site/           # showcase website (templates + static)
+                #   server-rendered first paint: app/site/ssr.py
 portal/         # developer-portal SPA
 docs/           # static docs (guide + Redoc reference + llms.txt)
 ```

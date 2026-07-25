@@ -96,7 +96,15 @@
             <p class="cact-share-total" id="cact-share-total" hidden></p>
             <div class="cact-share-body">
                 <div class="cact-donut" id="cact-donut"></div>
-                <ol class="cact-share-legend" id="cact-share-legend"></ol>
+                <!-- Server-rendered first paint (see app/site/ssr.py): the donut
+                     is a canvas-style SVG a crawler reads nothing from, so the
+                     same numbers go out as a table. class-activity.js replaces
+                     this legend with the interactive one on load. -->
+                <ol class="cact-share-legend" id="cact-share-legend">
+                    {%- if ssr and ssr.classes %}{% for c in ssr.classes %}
+                    <li>{{ c.name }} — {{ c.players }}{% if c.share %} ({{ c.share }}){% endif %}</li>
+                    {% endfor %}{% endif %}
+                </ol>
             </div>
         </section>
 

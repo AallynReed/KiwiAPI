@@ -59,9 +59,25 @@
              this node announces just the short overall headline instead. -->
         <p class="sr-only" id="st-live-status" role="status" aria-live="polite"></p>
 
-        <!-- Per-environment + auth cards. JS-filled. -->
+        <!-- Per-environment + auth cards. Server-rendered on first paint (see
+             app/site/ssr.py) then re-filled by status.js every poll - "is Trove
+             down" is the whole question this page answers, so the answer has to
+             be in the HTML, not only in the hydrated DOM. -->
         <section class="st-cards" id="st-cards">
-            <div class="st-loading" data-i18n>Checking servers…</div>
+            {%- if ssr and ssr.environments %}
+            <p class="ssr-prose"><strong>{{ ssr.headline }}</strong>{% if ssr.checked %} <span data-i18n>Checked</span> {{ ssr.checked }}{% endif %}</p>
+            <table class="ssr-table">
+                <thead><tr>
+                    <th scope="col" data-i18n>Server</th>
+                    <th scope="col" data-i18n>Status</th>
+                </tr></thead>
+                <tbody>
+                {%- for e in ssr.environments %}
+                    <tr><td>{{ e.label }}</td><td>{{ e.state }}</td></tr>
+                {%- endfor %}
+                </tbody>
+            </table>
+            {% else %}<div class="st-loading" data-i18n>Checking servers…</div>{% endif %}
         </section>
 
         <!-- Downtime history -->

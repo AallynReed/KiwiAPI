@@ -43,8 +43,29 @@
 
     <main id="main" class="mpf-main">
         <a class="mp-back" href="/mods"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> <span data-i18n>Mods Hub</span></a>
+        <!-- Server-rendered first paint (see app/site/ssr.py); mods_profile.js
+             replaces this root on load. -->
         <div id="mpf-root" class="mpf-root" aria-live="polite">
-            <p class="mp-loading" data-i18n>Loading…</p>
+            {%- if ssr and ssr.name %}
+            <h1>{{ ssr.name }}</h1>
+            {%- if ssr.tagline %}<p class="ssr-prose">{{ ssr.tagline }}</p>{% endif %}
+            {%- if ssr.readme %}<p class="ssr-prose">{{ ssr.readme }}</p>{% endif %}
+            {%- if ssr.mods %}
+            <h2 data-i18n>Mods</h2>
+            <table class="ssr-table">
+                <thead><tr>
+                    <th scope="col" data-i18n>Mod</th>
+                    <th scope="col" data-i18n>Summary</th>
+                    <th scope="col" data-i18n>Downloads</th>
+                </tr></thead>
+                <tbody>
+                {%- for m in ssr.mods %}
+                    <tr><td><a href="{{ m.url }}">{{ m.title }}</a></td><td>{{ m.summary }}</td><td>{{ m.downloads }}</td></tr>
+                {%- endfor %}
+                </tbody>
+            </table>
+            {%- endif %}
+            {% else %}<p class="mp-loading" data-i18n>Loading…</p>{% endif %}
         </div>
     </main>
 

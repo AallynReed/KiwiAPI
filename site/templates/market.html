@@ -85,8 +85,14 @@
                                autocomplete="off" spellcheck="false">
                     </span>
                 </div>
+                <!-- Server-rendered first paint (see app/site/ssr.py): market.js
+                     clears and refills this list on load. Item NAMES are the whole
+                     reason anyone reaches this page from a search engine, so they
+                     have to exist in the HTML. -->
                 <nav class="mkt-items" id="mkt-items" aria-label="Item list">
-                    <p class="mkt-loading" data-i18n>Loading the latest prices - this can take a moment.</p>
+                    {%- if ssr and ssr.item_names %}{% for name in ssr.item_names %}
+                    <button type="button" class="mkt-item">{{ name }}</button>
+                    {% endfor %}{% else %}<p class="mkt-loading" data-i18n>Loading the latest prices - this can take a moment.</p>{% endif %}
                 </nav>
             </aside>
 
@@ -94,6 +100,26 @@
                 <div class="mkt-detail-empty" id="mkt-detail-empty">
                     <i class="fa-solid fa-shop" aria-hidden="true"></i>
                     <p data-i18n>Pick an item from the list to see its live listings, price spread, and recent activity.</p>
+                    <!-- The most recent listings across every item. Real content
+                         on the pane a visitor (and a crawler) lands on before
+                         picking anything; market.js hides this whole block the
+                         moment an item is selected. -->
+                    {%- if ssr and ssr.listings %}
+                    <table class="ssr-table">
+                        <caption data-i18n>Recently listed</caption>
+                        <thead><tr>
+                            <th scope="col" data-i18n>Item</th>
+                            <th scope="col" data-i18n>Each</th>
+                            <th scope="col" data-i18n>Stack</th>
+                            <th scope="col" data-i18n>Seen</th>
+                        </tr></thead>
+                        <tbody>
+                        {%- for row in ssr.listings %}
+                            <tr><td>{{ row.name }}</td><td>{{ row.each }}</td><td>{{ row.stack }}</td><td>{{ row.date }}</td></tr>
+                        {%- endfor %}
+                        </tbody>
+                    </table>
+                    {%- endif %}
                 </div>
 
                 <div id="mkt-detail-body" hidden>

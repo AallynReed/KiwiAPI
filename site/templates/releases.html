@@ -65,8 +65,17 @@
                     <h2 data-i18n>Release history</h2>
                     <span class="rel-col-note" data-i18n>Newest first</span>
                 </div>
+                <!-- Server-rendered first paint (see app/site/ssr.py);
+                     releases.js clears and refills this list on load. -->
                 <div class="rel-releases" id="rel-releases">
-                    <p class="rel-loading" data-i18n>Loading releases…</p>
+                    {%- if ssr and ssr.releases %}{% for r in ssr.releases %}
+                    <article class="ssr-prose">
+                        <h3><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.name }}</a>
+                            <span>{{ r.channel }}</span>
+                            <time datetime="{{ r.datetime }}">{{ r.date }}</time></h3>
+                        {%- if r.notes %}<p>{{ r.notes }}</p>{% endif %}
+                    </article>
+                    {% endfor %}{% else %}<p class="rel-loading" data-i18n>Loading releases…</p>{% endif %}
                 </div>
             </section>
 

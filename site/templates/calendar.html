@@ -74,8 +74,23 @@
                 <h2 data-i18n>Live right now</h2>
                 <span class="cal-block-note" data-i18n>Merchants &amp; biome rotations - tap for the upcoming schedule</span>
             </div>
+            <!-- Server-rendered first paint (see app/site/ssr.py); calendar.js
+                 clears and refills each of these blocks on load. -->
             <div class="cal-merchants" id="cal-merchants">
-                <p class="cal-loading" data-i18n>Loading rotations…</p>
+                {%- if ssr and ssr.merchants %}
+                <table class="ssr-table">
+                    <thead><tr>
+                        <th scope="col" data-i18n>Rotation</th>
+                        <th scope="col" data-i18n>Status</th>
+                        <th scope="col" data-i18n>Biomes</th>
+                    </tr></thead>
+                    <tbody>
+                    {%- for m in ssr.merchants %}
+                        <tr><td>{{ m.name }}</td><td>{{ m.badge }}</td><td>{{ m.biomes | join(', ') }}</td></tr>
+                    {%- endfor %}
+                    </tbody>
+                </table>
+                {% else %}<p class="cal-loading" data-i18n>Loading rotations…</p>{% endif %}
             </div>
         </section>
 
@@ -86,7 +101,12 @@
                 <span class="cal-block-note" data-i18n>Tap a bonus to see its full rotation</span>
             </div>
             <div class="cal-buffs" id="cal-buffs">
-                <p class="cal-loading" data-i18n>Loading bonuses…</p>
+                {%- if ssr and ssr.buffs %}{% for b in ssr.buffs %}
+                <div class="ssr-prose">
+                    <strong>{{ b.kicker }}: {{ b.name }}</strong>
+                    <ul class="ssr-chips">{% for line in b.list %}<li>{{ line }}</li>{% endfor %}</ul>
+                </div>
+                {% endfor %}{% else %}<p class="cal-loading" data-i18n>Loading bonuses…</p>{% endif %}
             </div>
         </section>
 
@@ -97,7 +117,26 @@
                 <span class="cal-block-note" data-i18n>Ongoing &amp; upcoming Trove events</span>
             </div>
             <div class="cal-events" id="cal-events">
-                <p class="cal-loading" data-i18n>Loading events…</p>
+                {%- if ssr and (ssr.ongoing or ssr.upcoming) %}
+                <table class="ssr-table">
+                    <thead><tr>
+                        <th scope="col" data-i18n>Event</th>
+                        <th scope="col" data-i18n>Status</th>
+                        <th scope="col" data-i18n>Starts</th>
+                        <th scope="col" data-i18n>Ends</th>
+                    </tr></thead>
+                    <tbody>
+                    {%- for e in ssr.ongoing %}
+                        <tr><td>{% if e.url %}<a href="{{ e.url }}" rel="noopener">{{ e.name }}</a>{% else %}{{ e.name }}{% endif %}</td>
+                            <td data-i18n>Ongoing</td><td>{{ e.starts }}</td><td>{{ e.ends }}</td></tr>
+                    {%- endfor %}
+                    {%- for e in ssr.upcoming %}
+                        <tr><td>{% if e.url %}<a href="{{ e.url }}" rel="noopener">{{ e.name }}</a>{% else %}{{ e.name }}{% endif %}</td>
+                            <td data-i18n>Upcoming</td><td>{{ e.starts }}</td><td>{{ e.ends }}</td></tr>
+                    {%- endfor %}
+                    </tbody>
+                </table>
+                {% else %}<p class="cal-loading" data-i18n>Loading events…</p>{% endif %}
             </div>
         </section>
     </main>

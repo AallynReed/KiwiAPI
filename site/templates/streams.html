@@ -49,8 +49,12 @@
                 <h2><i class="fa-brands fa-twitch stm-tw" aria-hidden="true"></i> <span data-i18n>Live on Twitch</span></h2>
                 <span class="stm-count" id="stm-tw-count"></span>
             </div>
+            <!-- Server-rendered first paint (see app/site/ssr.py); streams.js
+                 clears and refills each grid on load. -->
             <div class="stm-grid stm-grid-wide" id="stm-streams">
-                <p class="stm-loading" data-i18n>Loading streams…</p>
+                {%- if ssr and ssr.streams %}{% for v in ssr.streams %}
+                <a class="ssr-prose" href="{{ v.url }}" target="_blank" rel="noopener">{{ v.title }} — {{ v.channel }}</a>
+                {% endfor %}{% else %}<p class="stm-loading" data-i18n>Loading streams…</p>{% endif %}
             </div>
         </section>
 
@@ -60,7 +64,9 @@
                 <h2><i class="fa-brands fa-youtube stm-yt" aria-hidden="true"></i> <span data-i18n>Recent videos</span></h2>
             </div>
             <div class="stm-grid" id="stm-videos">
-                <p class="stm-loading" data-i18n>Loading videos…</p>
+                {%- if ssr and ssr.videos %}{% for v in ssr.videos %}
+                <a class="ssr-prose" href="{{ v.url }}" target="_blank" rel="noopener">{{ v.title }} — {{ v.channel }}</a>
+                {% endfor %}{% else %}<p class="stm-loading" data-i18n>Loading videos…</p>{% endif %}
             </div>
         </section>
 
@@ -70,7 +76,10 @@
                 <h2><i class="fa-regular fa-newspaper" aria-hidden="true"></i> <span data-i18n>Latest news</span></h2>
             </div>
             <div class="stm-grid" id="stm-news">
-                <p class="stm-loading" data-i18n>Loading news…</p>
+                {%- if ssr and ssr.news %}{% for n in ssr.news %}
+                <a class="ssr-prose" href="{{ n.url }}" target="_blank" rel="noopener">{{ n.title }}
+                    <time datetime="{{ n.datetime }}">{{ n.date }}</time></a>
+                {% endfor %}{% else %}<p class="stm-loading" data-i18n>Loading news…</p>{% endif %}
             </div>
         </section>
     </main>

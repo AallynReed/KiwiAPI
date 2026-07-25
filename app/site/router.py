@@ -7,10 +7,12 @@ nothing. Every ``/site/<feature>/*`` proxy is feature-gated in ``_feature_blocks
 """
 
 import asyncio
+import json
 import logging
 import re
 import time
 from pathlib import Path
+from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
@@ -21,7 +23,7 @@ from app.admin import runtime_config
 from app.core import features as feature_flags
 from app.core.config import settings
 from app.core.utils import iso
-from app.site import classes_page, commands_page
+from app.site import classes_page, commands_page, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS as _SITE_FEATURE_FLAGS
 from app.site.feature_map import SITEMAP_PAGES as _SITEMAP_PAGES
 from app.site.feature_map import feature_blocks as _feature_blocks
@@ -83,6 +85,13 @@ async def _resolve_feature_flags(request: Request) -> None:
         raise HTTPException(status_code=404)
 
 
+def _flag_map(request: Request) -> dict[str, bool]:
+    """The resolved feature flags as a plain dict - what the SSR builders need to
+    skip fetching for a feature that's switched off."""
+    return {attr: bool(getattr(request.state, attr, True))
+            for attr in _SITE_FEATURE_FLAGS}
+
+
 def _feature_context(request: Request) -> dict:
     """Inject the feature flags into EVERY template (the navbar + dashboard read
     them). Resolved by ``_resolve_feature_flags`` above; default to enabled."""
@@ -103,14 +112,120 @@ router = APIRouter(
 )
 
 
+# ── server-rendered first paint ────────────────────────────────────────────
+# The page routes below pre-render their above-the-fold content so crawlers get
+# real HTML instead of an empty shell (see ``app/site/ssr.py``). The builders
+# there are transport-agnostic: they ask for the SAME payloads the ``/site/*``
+# proxies emit. In THIS container those proxies are local coroutines, so we
+# dispatch straight to them - no HTTP, no self-request. (The website container
+# fetches the same paths over the compose network instead; see
+# ``app/web/pages.py``.)
+#
+# Only the paths the SSR builders actually ask for are routed; anything else
+# returns None, which the builders treat as "no data" and the template falls
+# back to its JS-only placeholder. The auth-gated leaderboard proxies are called
+# anonymously (``user=None``) - the same view a crawler would get.
+async def _ssr_fetch(path: str, params: dict | None = None) -> object | None:
+    """Call this container's own ``/site/*`` handler and return its parsed JSON.
+
+    Never raises: a handler that 404s / errors resolves to ``None`` so a single
+    broken data source can't take a page render down with it."""
+    p = params or {}
+    try:
+        resp = await _ssr_dispatch(path, p)
+    except HTTPException:
+        return None                       # e.g. an empty archive 404ing
+    except Exception:
+        logger.warning("ssr dispatch %s failed", path, exc_info=True)
+        return None
+    if resp is None:
+        return None
+    body = getattr(resp, "body", None)
+    return json.loads(body) if body else None
+
+
+async def _ssr_dispatch(path: str, p: dict) -> JSONResponse | None:
+    """Path -> local handler. Explicit rather than reflective: the SSR surface is
+    a small fixed set, and an explicit table can't accidentally expose a proxy
+    the builders never meant to call."""
+    match path:
+        case "/site/rotations":
+            return await site_rotations()
+        case "/site/feeds/news":
+            return await site_feeds_news(limit=int(p.get("limit", 16)))
+        case "/site/feeds/videos":
+            return await site_feeds_videos(platform=str(p.get("platform", "youtube")))
+        case "/site/calendar/events":
+            return await site_calendar_events()
+        case "/site/trove-status":
+            return await site_trove_status()
+        case "/site/giveaways":
+            return await site_giveaways()
+        case "/site/btt/releases":
+            return await site_btt_releases(channel=None, limit=int(p.get("limit", 30)),
+                                           offset=0)
+        case "/site/mods/projects":
+            return await site_mods_projects(
+                q=None, tag=None, author=None, sort=str(p.get("sort", "recent")),
+                limit=int(p.get("limit", 30)), offset=0)
+        case "/site/modpacks/projects":
+            return await site_modpacks_projects(
+                q=None, tag=None, author=None, sort="recent",
+                limit=int(p.get("limit", 30)), offset=0)
+        case "/site/updates/branches":
+            return await site_up_branches()
+        case "/site/codexes/types":
+            return await site_codex_types(branch=_DEFAULT_CODEX_BRANCH)
+        case "/site/codexes/search":
+            return await site_codex_search(
+                branch=_DEFAULT_CODEX_BRANCH, q=None, type=None, category=None,
+                tradable=None, sort=str(p.get("sort", "name")),
+                limit=int(p.get("limit", 60)), offset=0)
+        case "/site/market/items":
+            return await site_market_items()
+        case "/site/market/listings":
+            return await site_market_listings(
+                name=None, price_min=None, price_max=None, last_seen_after=None,
+                hide_expired=True, sort=str(p.get("sort", "-last_seen")),
+                limit=int(p.get("limit", 100)), offset=0)
+        case "/site/store/categories":
+            return await site_store_categories()
+        case "/site/store/products":
+            return await site_store_products(
+                category=None, kind=None, currency=None, q=None, active=True,
+                on_sale=False, limit=int(p.get("limit", 500)), offset=0)
+        case "/site/leaderboards/records":
+            return await site_lb_records()
+        case "/site/leaderboards/activity":
+            return await site_lb_activity()
+        case "/site/leaderboards/class-activity/current":
+            return await site_lb_class_activity_current()
+        case "/site/leaderboards/timestamps":
+            return await site_lb_timestamps(limit=int(p.get("limit", 60)))
+        case "/site/leaderboards/boards":
+            return await site_lb_boards(created_at=int(p["created_at"]), user=None)
+    # Parameterised paths.
+    if (m := re.fullmatch(r"/site/updates/([\w-]+)/versions", path)):
+        return await site_up_versions(branch=m.group(1),
+                                      limit=int(p.get("limit", 50)), offset=0)
+    if (m := re.fullmatch(r"/site/leaderboards/(\d+)/entries", path)):
+        return await site_lb_entries(uuid=int(m.group(1)),
+                                     created_at=int(p["created_at"]),
+                                     limit=int(p.get("limit", 100)), offset=0, user=None)
+    if (m := re.fullmatch(r"/site/leaderboards/players/(.+)/profile", path)):
+        return await site_lb_player_profile(player_name=unquote(m.group(1)))
+    return None
+
+
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> HTMLResponse:
     """The content-hub homepage - a live front door (server status, leaderboard
     movers, latest mods, newest update, featured codex, reference). The app
     *showcase* lives at ``/app``."""
-    return _TEMPLATES.TemplateResponse(
-        request, "index.html", {"discord_install_url": settings.discord_install_link},
-    )
+    return _TEMPLATES.TemplateResponse(request, "index.html", {
+        "discord_install_url": settings.discord_install_link,
+        "ssr": await ssr.home_view(_ssr_fetch, flags=_flag_map(request)),
+    })
 
 
 @router.get("/app", response_class=HTMLResponse)
@@ -232,11 +347,13 @@ _SITEMAP_LOCK = asyncio.Lock()
 _SITEMAP_MAX_PER_SECTION = 25_000
 
 # TEMP: individual mod detail pages (/mods/{handle}/{slug}) are excluded from the
-# sitemap for now. Their above-the-fold content is JS-rendered, so as raw HTML
-# they read thin, and listing thousands of them while the site is still
-# establishing indexing dilutes crawl budget for the pages that matter. The hub
-# pages (/mods, /mods/why) stay in via _SITEMAP_PAGES. Flip back to True to
-# re-list them once the core pages are indexed.
+# sitemap for now. The original reason - their above-the-fold content was
+# JS-rendered, so as raw HTML they read thin - no longer applies: they now
+# server-render title, author, description, tags and stats (see app/site/ssr.py
+# ``mod_project_view``). What's left is purely a crawl-budget call: listing
+# thousands of them while the core pages are still establishing indexing spends
+# budget on the long tail. The hub pages (/mods, /mods/why) stay in via
+# _SITEMAP_PAGES. Flip to True to re-list them once the core pages are indexed.
 _SITEMAP_INCLUDE_MOD_PAGES = False
 
 
@@ -372,7 +489,8 @@ async def status_page(request: Request) -> HTMLResponse:
     """Dedicated Trove server-status page - live Live/PTS state plus a
     downtime-history timeline. Page shell + JS; data comes from
     ``/site/trove-status`` + ``/site/trove-status/history``."""
-    return _TEMPLATES.TemplateResponse(request, "status.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "status.html", {"ssr": await ssr.status_view(_ssr_fetch)})
 
 
 @router.get("/server-time", response_class=HTMLResponse)
@@ -391,7 +509,8 @@ async def calendar_page(request: Request) -> HTMLResponse:
     Wild Mana, Stampy, Shadow), and the ongoing/upcoming Trovesaurus events, each
     with a live countdown. Page shell + JS; data comes from ``/site/rotations``
     (shared with the homepage) + ``/site/calendar/events``."""
-    return _TEMPLATES.TemplateResponse(request, "calendar.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "calendar.html", {"ssr": await ssr.calendar_view(_ssr_fetch)})
 
 
 @router.get("/streams", response_class=HTMLResponse)
@@ -399,7 +518,8 @@ async def streams_page(request: Request) -> HTMLResponse:
     """Community hub - live Trove Twitch streams, recent YouTube videos, and the
     latest official news, all on one page. Page shell + JS; data comes from the
     shared ``/site/feeds/videos`` + ``/site/feeds/news`` proxies."""
-    return _TEMPLATES.TemplateResponse(request, "streams.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "streams.html", {"ssr": await ssr.streams_view(_ssr_fetch)})
 
 
 @router.get("/releases", response_class=HTMLResponse)
@@ -407,7 +527,8 @@ async def releases_page(request: Request) -> HTMLResponse:
     """BetterTroveTools app releases + changelog. Latest build per platform
     (Windows/Linux/Android) with download links, the full release history, and the
     commit-grouped changelog. Page shell + JS; data comes from ``/site/btt/*``."""
-    return _TEMPLATES.TemplateResponse(request, "releases.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "releases.html", {"ssr": await ssr.releases_view(_ssr_fetch)})
 
 
 @router.get("/classes", response_class=HTMLResponse)
@@ -982,7 +1103,8 @@ async def dashboard(request: Request) -> HTMLResponse:
 async def market(request: Request) -> HTMLResponse:
     """In-game marketplace browser (Beta). Reads the ``market_listings``
     collection via the /site/market/* proxies below."""
-    return _TEMPLATES.TemplateResponse(request, "market.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "market.html", {"ssr": await ssr.market_view(_ssr_fetch)})
 
 
 @router.get("/store", response_class=HTMLResponse)
@@ -990,7 +1112,8 @@ async def store(request: Request) -> HTMLResponse:
     """Trove Store History (Beta): the in-game cash-shop catalog with per-pack
     availability timelines, price history and in-game art. Reads the store
     collections via the /site/store/* proxies below."""
-    return _TEMPLATES.TemplateResponse(request, "store.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "store.html", {"ssr": await ssr.store_view(_ssr_fetch)})
 
 
 @router.get("/codexes", response_class=HTMLResponse)
@@ -998,7 +1121,8 @@ async def codexes(request: Request) -> HTMLResponse:
     """Codexes browser - parsed Trove game data (allies, mounts, dragons, mementos,
     recipes, items, fish, badges) with mastery / power rank / stat & ability bonuses.
     Reads ``/v1/codexes/*`` via the ``/site/codexes/*`` proxies below."""
-    return _TEMPLATES.TemplateResponse(request, "codexes.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "codexes.html", {"ssr": await ssr.codexes_view(_ssr_fetch)})
 
 
 @router.get("/codexes/crafting", response_class=HTMLResponse)
@@ -1015,7 +1139,8 @@ async def mods_hub(request: Request) -> HTMLResponse:
     """Mods Hub - browse + download shared Trove mods (public, no login). The
     grid + search are painted client-side from the ``/site/mods/*`` proxies
     below; creating/developing a mod needs a signed-in site user."""
-    return _TEMPLATES.TemplateResponse(request, "mods.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "mods.html", {"ssr": await ssr.mods_view(_ssr_fetch)})
 
 
 # NOTE: must stay ABOVE the ``/mods/{handle}`` routes below - Starlette matches in
@@ -1051,7 +1176,7 @@ async def mods_project_page(request: Request, handle: str, slug: str) -> HTMLRes
     page itself still renders (the client reveals owner-only content when logged in)."""
     base = settings.app_url.rstrip("/")
     page_url = f"{base}/mods/{handle}/{slug}"
-    ctx = {
+    ctx: dict = {
         "slug": slug, "handle": handle, "og_page_url": page_url,
         "page_title": f"{slug} · Trove mod · Better Trove Tools",
         "og_title": f"{slug} · Trove mod",
@@ -1075,6 +1200,10 @@ async def mods_project_page(request: Request, handle: str, slug: str) -> HTMLRes
             "og_author": project.owner_username,
             "twitter_card": "summary_large_image" if img_sha else "summary",
         })
+        # Same document, no extra query: the mod's title, description, tags and
+        # stats become server-rendered body copy, not just meta tags.
+        ctx["ssr"] = ssr.mod_project_view(
+            await mods_hub_service.project_detail(project, None))
     return _TEMPLATES.TemplateResponse(request, "mods_project.html", ctx)
 
 
@@ -1091,7 +1220,7 @@ async def mods_profile_page(request: Request, handle: str) -> HTMLResponse:
     data = await mods_hub_service.profile_view(handle, None)
     if data is None:
         raise HTTPException(status_code=404, detail="No such modder.")
-    ctx = {
+    ctx: dict = {
         "handle": handle, "og_page_url": page_url,
         "page_title": f"{handle} · Trove modder · Better Trove Tools",
         "og_title": f"{handle} · Trove modder",
@@ -1113,6 +1242,7 @@ async def mods_profile_page(request: Request, handle: str) -> HTMLResponse:
         "og_image_alt": name,
         "og_author": name,
         "twitter_card": "summary_large_image" if data["banner_url"] else "summary",
+        "ssr": ssr.mod_profile_view(data),
     })
     return _TEMPLATES.TemplateResponse(request, "mods_profile.html", ctx)
 
@@ -1122,7 +1252,8 @@ async def modpacks_hub(request: Request) -> HTMLResponse:
     """Modpacks - browse + download user-curated bundles of hub mods (public, no
     login). Grid painted client-side from ``/site/modpacks/*``; creating one needs
     a signed-in site user."""
-    return _TEMPLATES.TemplateResponse(request, "modpacks.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "modpacks.html", {"ssr": await ssr.modpacks_view(_ssr_fetch)})
 
 
 @router.get("/modpacks/{handle}/{slug}", response_class=HTMLResponse)
@@ -1134,7 +1265,7 @@ async def modpack_project_page(request: Request, handle: str, slug: str) -> HTML
     not-found fall back to generic tags so nothing private leaks into an embed."""
     base = settings.app_url.rstrip("/")
     page_url = f"{base}/modpacks/{handle}/{slug}"
-    ctx = {
+    ctx: dict = {
         "slug": slug, "handle": handle, "og_page_url": page_url,
         "page_title": f"{slug} · Trove modpack · Better Trove Tools",
         "og_title": f"{slug} · Trove modpack",
@@ -1158,6 +1289,8 @@ async def modpack_project_page(request: Request, handle: str, slug: str) -> HTML
             "og_author": pack.owner_username,
             "twitter_card": "summary_large_image" if img_sha else "summary",
         })
+        ctx["ssr"] = ssr.modpack_project_view(
+            await modpacks_service.pack_detail(pack, None))
     return _TEMPLATES.TemplateResponse(request, "modpacks_project.html", ctx)
 
 
@@ -1165,7 +1298,8 @@ async def modpack_project_page(request: Request, handle: str, slug: str) -> HTML
 async def giveaways(request: Request) -> HTMLResponse:
     """Public giveaways page. Lists open / upcoming / past draws (data from
     the /site/giveaways proxy); entering needs a signed-in site user."""
-    return _TEMPLATES.TemplateResponse(request, "giveaways.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "giveaways.html", {"ssr": await ssr.giveaways_view(_ssr_fetch)})
 
 
 @router.get("/clubs", response_class=HTMLResponse)
@@ -1208,6 +1342,7 @@ async def activity_page(request: Request, period: str | None = None) -> HTMLResp
         "og_desc": desc,
         "og_image_url": f"https://trove.aallyn.net/activity/og.png{qs}",
         "og_page_url": f"https://trove.aallyn.net/activity{qs}",
+        "ssr": await ssr.activity_view(_ssr_fetch),
     })
 
 
@@ -1215,7 +1350,9 @@ async def activity_page(request: Request, period: str | None = None) -> HTMLResp
 async def class_activity_page(request: Request) -> HTMLResponse:
     """Class Activity page - per-class active players over time (multi-line) plus
     a class player-share donut, derived from the Effort/Paragon leaderboards."""
-    return _TEMPLATES.TemplateResponse(request, "class-activity.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "class-activity.html",
+        {"ssr": await ssr.class_activity_view(_ssr_fetch)})
 
 
 @router.get("/player/{name}", response_class=HTMLResponse)
@@ -1229,6 +1366,7 @@ async def player_page(request: Request, name: str) -> HTMLResponse:
         "og_title": title,
         "og_desc": f"{name}'s Trove leaderboard ranks and recent appearances.",
         "og_page_url": f"https://trove.aallyn.net/player/{name}",
+        "ssr": await ssr.player_view(_ssr_fetch, name),
     })
 
 
@@ -1739,6 +1877,7 @@ async def leaderboards(request: Request) -> HTMLResponse:
         "cheater_detection_enabled": cheaters_on,
         "alt_clusters_enabled": clusters_on,
         "renames_enabled": renames_on,
+        "ssr": await ssr.leaderboards_view(_ssr_fetch),
     })
 
 
@@ -2107,7 +2246,8 @@ async def site_lb_player_series(
 async def updates(request: Request) -> HTMLResponse:
     """Trove updates browser - public site read of the ``/v1/updates/*`` archive,
     via the ``/site/updates/*`` helpers below."""
-    return _TEMPLATES.TemplateResponse(request, "updates.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "updates.html", {"ssr": await ssr.updates_view(_ssr_fetch)})
 
 
 # /site/updates/* JSON endpoints: mirror the public /v1/updates/* surface.

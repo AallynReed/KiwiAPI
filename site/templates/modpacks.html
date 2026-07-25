@@ -77,7 +77,25 @@
         <!-- ═══════════════ RESULTS ═══════════════ -->
         <section class="mh-results">
             <p class="mh-results-meta" id="mh-meta"></p>
-            <div class="mh-grid" id="mh-grid"></div>
+            <!-- Server-rendered first paint (see app/site/ssr.py); modpacks.js
+                 clears and refills this grid on load. -->
+            <div class="mh-grid" id="mh-grid">
+                {%- if ssr and ssr.modpacks %}{% for p in ssr.modpacks %}
+                <a class="mh-card" href="{{ p.url }}">
+                    <div class="mh-card-banner placeholder"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div>
+                    <div class="mh-card-body">
+                        <h3 class="mh-card-title">{{ p.title }}</h3>
+                        {%- if p.summary %}<p class="mh-card-summary">{{ p.summary }}</p>{% endif %}
+                        <div class="mh-card-foot">
+                            <span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> {{ p.author }}</span>
+                            <span class="mh-card-stats">
+                                <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> {{ p.downloads }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}{% endif %}
+            </div>
             <div class="mh-foot" id="mh-foot" hidden>
                 <button type="button" class="mh-btn mh-btn-ghost" id="mh-load-more" data-i18n>Load more</button>
             </div>

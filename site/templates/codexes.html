@@ -64,8 +64,12 @@
                 </span>
             </div>
 
+            <!-- Server-rendered first paint (see app/site/ssr.py); codexes.js
+                 clears and refills both the tabs and the grid below on load. -->
             <nav class="cdx-tabs" id="cdx-tabs" aria-label="Codex types">
-                <p class="cdx-loading" data-i18n>Loading types…</p>
+                {%- if ssr and ssr.types %}{% for t in ssr.types %}
+                <button type="button" class="cdx-tab"><span>{{ t.type }}</span><span class="cdx-tab-count">{{ t.count }}</span></button>
+                {% endfor %}{% else %}<p class="cdx-loading" data-i18n>Loading types…</p>{% endif %}
             </nav>
 
             <div class="cdx-controls-row cdx-controls-filters">
@@ -100,7 +104,13 @@
         <section class="cdx-results" aria-label="Results">
             <p class="cdx-results-meta" id="cdx-results-meta" aria-live="polite"></p>
             <div class="cdx-grid" id="cdx-grid">
-                <p class="cdx-loading" data-i18n>Loading codexes…</p>
+                {%- if ssr and ssr.entries %}{% for e in ssr.entries %}
+                <button type="button" class="cdx-card">
+                    <span class="cdx-card-top"><span class="cdx-chip cdx-type-{{ e.type }}">{{ e.type }}</span></span>
+                    <span class="cdx-card-name">{{ e.name }}</span>
+                    {%- if e.category %}<span class="cdx-card-cat">{{ e.category }}</span>{% endif %}
+                </button>
+                {% endfor %}{% else %}<p class="cdx-loading" data-i18n>Loading codexes…</p>{% endif %}
             </div>
             <div class="cdx-foot" id="cdx-foot" hidden>
                 <button type="button" class="cdx-load-more" id="cdx-load-more" data-i18n>Load more</button>

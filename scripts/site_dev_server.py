@@ -36,6 +36,79 @@ TEMPLATES = SITE_DIR / "templates"
 STATIC = SITE_DIR / "static"
 
 
+# ── page-template rendering ────────────────────────────────────────────────
+# Real Jinja when it's importable (it is, inside the project venv), so the
+# preview matches what FastAPI serves: `{% if %}` branches resolve properly and
+# the server-rendered-first-paint blocks take their no-data fallback - which is
+# exactly the state a browser sees before the page JS runs. Undefined values
+# render empty and chain safely, so no per-page context is needed.
+#
+# Falling back to the old regex emulation keeps the script runnable with a bare
+# stdlib interpreter: inline the partials, drop comments, then strip the
+# remaining tags. That path keeps BOTH branches of an `{% if %}`, so it shows a
+# little more than the real render does - fine for eyeballing layout.
+try:
+    import jinja2 as _jinja2
+except ImportError:
+    _jinja2 = None
+
+_JINJA_ENV = _jinja2 and _jinja2.Environment(
+    loader=_jinja2.FileSystemLoader(str(TEMPLATES)),
+    autoescape=True,
+    undefined=_jinja2.ChainableUndefined,
+)
+
+# Every feature switched on, so no section is hidden in preview.
+_PREVIEW_FLAGS = {
+    "mods_hub_enabled", "market_enabled", "store_enabled", "leaderboards_enabled",
+    "player_activity_enabled", "class_activity_enabled", "clubs_enabled",
+    "updates_enabled", "codexes_enabled", "server_status_enabled",
+    "giveaways_enabled", "commands_enabled", "server_time_enabled",
+    "webhooks_enabled", "dm_subscriptions_enabled", "image_studio_enabled",
+    "calendar_enabled", "streams_enabled", "btt_releases_enabled",
+    "classes_enabled", "star_chart_enabled", "gem_simulator_enabled",
+    "gem_evaluator_enabled", "gem_builds_enabled", "calculators_enabled",
+    "gems_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
+    "renames_enabled", "discord_oauth_enabled",
+}
+
+
+class _PreviewRequest:
+    """Just enough of a Starlette request for the navbar, which reads
+    ``request.url.path`` to mark the active nav item."""
+
+    def __init__(self, path: str):
+        self.url = type("_U", (), {"path": path})()
+
+
+def _render_page_template(p: Path, request_path: str = "/") -> bytes:
+    """Render a page template to HTML bytes for the preview."""
+    if _JINJA_ENV is not None:
+        ctx = dict.fromkeys(_PREVIEW_FLAGS, True)
+        ctx["request"] = _PreviewRequest(request_path)
+        return _JINJA_ENV.get_template(p.name).render(**ctx).encode("utf-8")
+
+    import re as _re
+    def _strip_comments(s: str) -> str:
+        return _re.sub(r"{#.*?#}", "", s, flags=_re.S)
+    # Comments are stripped BEFORE inlining (and again on each partial as it's
+    # read) so a documentation comment quoting a literal `{% include … %}` as an
+    # example isn't re-expanded into a duplicate partial on the next pass.
+    text = _strip_comments(p.read_text(encoding="utf-8"))
+
+    def _inline(m):
+        f = TEMPLATES / m.group(1)
+        return _strip_comments(f.read_text(encoding="utf-8")) if f.exists() else ""
+
+    for _ in range(3):
+        if "{% include" not in text:
+            break
+        text = _re.sub(r'{%\s*include\s*"([^"]+)"\s*%}', _inline, text)
+    text = _re.sub(r"{%.*?%}", "", text, flags=_re.S)
+    text = _re.sub(r"{{.*?}}", "", text, flags=_re.S)
+    return text.encode("utf-8")
+
+
 def _under(base: Path, *parts: str) -> Path | None:
     """Resolve ``base / *parts`` and return it ONLY if it stays inside ``base``.
 
@@ -2399,34 +2472,8 @@ class Handler(SimpleHTTPRequestHandler):
                 ".svg": "image/svg+xml", ".ico": "image/x-icon",
             }.get(suffix, "application/octet-stream")
         data = p.read_bytes()
-        # Minimal Jinja emulation for page templates: inline `{% include
-        # "partials/x.html" %}`, drop `{# … #}` comments, and strip the remaining
-        # statement/expression tags so partials (navbar, support widget, …) and
-        # feature-gated sections render in the local preview instead of leaking
-        # raw `{% if %}` / `{{ }}` text into the page. One level deep is enough
-        # for our partials.
         if content_type == "text/html" and p.parent == TEMPLATES:
-            import re as _re
-            _strip_comments = lambda s: _re.sub(r"{#.*?#}", "", s, flags=_re.S)
-            text = _strip_comments(data.decode("utf-8"))
-            # Comments are stripped BEFORE inlining (and again on each partial as
-            # it's read) so that documentation comments which happen to quote a
-            # literal `{% include … %}` as an example don't get re-expanded into a
-            # duplicate partial on the next pass.
-            def _inline(m):
-                f = TEMPLATES / m.group(1)
-                return _strip_comments(f.read_text(encoding="utf-8")) if f.exists() else ""
-            for _ in range(3):
-                if "{% include" not in text:
-                    break
-                text = _re.sub(r'{%\s*include\s*"([^"]+)"\s*%}', _inline, text)
-            # Drop every remaining `{% … %}` control tag (if/else/endif/set/for/…).
-            # This keeps the body of every conditional, so all feature-gated
-            # sections are visible in preview — exactly what we want when eyeballing
-            # layout/responsive behaviour. `{{ … }}` expressions collapse to empty.
-            text = _re.sub(r"{%.*?%}", "", text, flags=_re.S)
-            text = _re.sub(r"{{.*?}}", "", text, flags=_re.S)
-            data = text.encode("utf-8")
+            data = _render_page_template(p, self.path.split("?", 1)[0])
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))

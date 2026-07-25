@@ -42,8 +42,35 @@
 
     <main id="main" class="mp-main">
         <a class="mp-back" href="/modpacks"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> <span data-i18n>Modpacks</span></a>
+        <!-- Server-rendered first paint (see app/site/ssr.py); modpacks_project.js
+             replaces this root on load. The bundled-mod list also gives each mod
+             page a real inbound link from every pack that ships it. -->
         <div id="mp-root" class="mp-root" aria-live="polite">
-            <p class="mp-loading" data-i18n>Loading…</p>
+            {%- if ssr and ssr.title %}
+            <h1>{{ ssr.title }}</h1>
+            {%- if ssr.owner %}<p class="ssr-prose"><span data-i18n>By</span> <a href="/mods/{{ handle }}">{{ ssr.owner }}</a></p>{% endif %}
+            {%- if ssr.summary %}<p class="ssr-prose">{{ ssr.summary }}</p>{% endif %}
+            <ul class="ssr-chips">
+                <li><span data-i18n>Downloads</span>: {{ ssr.downloads }}</li>
+                {%- if ssr.updated %}<li><span data-i18n>Updated</span>: {{ ssr.updated }}</li>{% endif %}
+                {%- for v in ssr.variants %}<li>{{ v }}</li>{% endfor %}
+            </ul>
+            {%- if ssr.description %}<p class="ssr-prose">{{ ssr.description }}</p>{% endif %}
+            {%- if ssr.mods %}
+            <h2 data-i18n>Mods in this pack</h2>
+            <table class="ssr-table">
+                <thead><tr>
+                    <th scope="col" data-i18n>Mod</th>
+                    <th scope="col" data-i18n>Author</th>
+                </tr></thead>
+                <tbody>
+                {%- for m in ssr.mods %}
+                    <tr><td>{% if m.url %}<a href="{{ m.url }}">{{ m.title }}</a>{% else %}{{ m.title }}{% endif %}</td><td>{{ m.author }}</td></tr>
+                {%- endfor %}
+                </tbody>
+            </table>
+            {%- endif %}
+            {% else %}<p class="mp-loading" data-i18n>Loading…</p>{% endif %}
         </div>
     </main>
 
