@@ -461,20 +461,21 @@ REGISTRY: dict[str, TunableSetting] = {
         min_value=10, max_value=86400,
         description="Sliding-window length for the per-IP embed bucket, in seconds.",
     ),
-    "embed.upload_ttl_hours": _t(
-        key="embed.upload_ttl_hours",
-        default=168,                       # 7 days
+    "embed.upload_ttl_minutes": _t(
+        key="embed.upload_ttl_minutes",
+        default=30,
         type="int",
         category="embed",
-        min_value=1,
-        max_value=8760,
+        min_value=5,
+        max_value=1440,
         description=(
-            "How long an uploaded .tmod stays previewable after its last view. "
-            "A partner POSTs the file to /v1/embed/tmod once and reuses the token "
-            "in their page; every view slides the expiry, so a mod page that keeps "
-            "getting traffic never needs a re-upload, while a one-off upload ages "
-            "out. Expired blobs are removed by the Purge action in the admin "
-            "panel's Embed section."
+            "How long a .tmod a partner POSTs to /v1/embed/tmod stays previewable. "
+            "It is held in Redis for this long and then dropped - we never write a "
+            "partner's mod to disk, and there is nothing to clean up. The expiry "
+            "does NOT extend while someone is watching, so the intended flow is "
+            "that a partner posts the mod as their page renders. Raising this "
+            "keeps more mods resident in Redis at once; lowering it risks a visitor "
+            "outliving the token on a page they left open (they reload to fix it)."
         ),
     ),
 

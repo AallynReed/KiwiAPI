@@ -148,10 +148,6 @@ services:
       # Mods Hub store: per-project git repos + images + compiled .tmod blobs.
       # Bind-mounted below so mods survive a container rebuild.
       MODS_STORE_DIR: ${MODS_STORE_DIR:-/data/mods}
-      # Embeddable-viewer uploads: .tmods partner sites POST to preview. Its OWN
-      # store, never the hub's, so expired uploads can be purged without walking
-      # the hub's references. Bind-mounted below.
-      EMBED_STORE_DIR: ${EMBED_STORE_DIR:-/data/embed}
       # Delve-rotation source (week-based). Refresher stays off until the URL is set.
       TROVE_DELVE_SOURCE_URL: ${TROVE_DELVE_SOURCE_URL:-}
       TROVE_DELVE_SOURCE_REFERER: ${TROVE_DELVE_SOURCE_REFERER:-}
@@ -193,9 +189,6 @@ services:
       # Mods Hub store: shared mods' git repos, uploaded images and compiled
       # .tmod release artifacts. Kept out of git (user content, grows).
       - ./.mods:/data/mods
-      # Embeddable-viewer uploads (see EMBED_STORE_DIR). Small and self-cleaning
-      # via the admin Purge action, but kept out of git like the other stores.
-      - ./.embed:/data/embed
       # BetterTroveTools showcase site (templates + static + ~20 MB of screenshots).
       # Bind-mounted so the heavy binary assets don't bake into the image; the
       # api container serves trove.aallyn.net out of this directory.

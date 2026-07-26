@@ -40,11 +40,12 @@ class Settings(BaseSettings):
     # --- Embeddable viewers (see app/embed) ---------------------------------
     # Partner sites (Trovesaurus, …) iframe /embed/viewer to preview a .blueprint
     # model or a .pkfx effect - from a hub release, an uploaded .tmod, or a path
-    # in the game tree. Uploaded .tmods live in their OWN content-addressed store
-    # (never the hub's), so an expired upload can be purged without walking the
-    # hub's references. Bind-mount this like the other stores.
-    embed_store_dir: str = "data/embed"
-    embed_upload_max_bytes: int = 20 * 1024 * 1024      # one .tmod
+    # in the game tree. An uploaded .tmod is NEVER stored: it's held in Redis for
+    # embed.upload_ttl_minutes and then gone, so there is no store to bind-mount.
+    # The cap is well under the 20 MB the hub allows - these are transient Redis
+    # values sharing an allkeys-lru instance with the leaderboard snapshots, so a
+    # burst of oversized uploads must not be able to pressure those out.
+    embed_upload_max_bytes: int = 8 * 1024 * 1024       # one .tmod
     # Master-only bot cfg ingests. A full LeaderBot.cfg dump is ~16 MB; the market
     # (GrainusMod.cfg) dump is well under 5 MB. Keep the proxy's client_max_body_size
     # on /v1/leaderboards/insert and /v1/market/insert >= these.

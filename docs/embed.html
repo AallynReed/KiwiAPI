@@ -12,7 +12,33 @@
   -->
 </head>
 <body>
+  <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
+  <div class="backdrop"></div>
+
   <div class="layout">
+    <aside class="sidebar">
+      <a class="brand" href="/"><span class="mark">◆</span> Kiwi <em>embeds</em></a>
+      <nav class="nav">
+        <div class="nav-group">Getting started</div>
+        <a href="#quick-start">Quick start</a>
+        <a href="#sources">Choosing what to show</a>
+        <a href="#options">Options</a>
+
+        <div class="nav-group">Your own mods</div>
+        <a href="#uploading">Uploading a mod</a>
+
+        <div class="nav-group">Reference</div>
+        <a href="#fidelity">What renders</a>
+        <a href="#privacy">Privacy and cost</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a class="external" href="/">API documentation ↗</a>
+      </nav>
+      <div class="sidebar-foot">
+        <a href="https://trove.aallyn.net/mods">See it in use <span class="ext">↗</span></a>
+        <a href="mailto:support@aallyn.net">Get an origin allowed <span class="ext">↗</span></a>
+      </div>
+    </aside>
+
     <main class="content">
       <div class="content-inner">
 
@@ -21,7 +47,7 @@
           <p class="lede">Put Trove's 3D model and particle-effect previews on your own site.</p>
         </header>
 
-        <section>
+        <section id="intro">
           <p>Kiwi renders Trove content in the browser - voxel <code>.blueprint</code> models,
           whole creatures assembled on their skeleton with animation clips, and PopcornFX
           <code>.pkfx</code> effects. The embeddable viewer puts that same renderer in an
@@ -38,7 +64,7 @@
           </div>
         </section>
 
-        <section>
+        <section id="quick-start">
           <h2>Quick start</h2>
           <p>Drop in the loader once, then mark up each spot you want a preview:</p>
           <pre><code>&lt;div data-kiwi-embed data-game="dragon_head.blueprint"&gt;&lt;/div&gt;
@@ -51,7 +77,7 @@
         title="Trove 3D preview" loading="lazy" allowfullscreen&gt;&lt;/iframe&gt;</code></pre>
         </section>
 
-        <section>
+        <section id="sources">
           <h2>Choosing what to show</h2>
           <p>Every embed needs exactly one <strong>source</strong>.</p>
 
@@ -76,7 +102,7 @@
           <pre><code>?release=66f1c0a3e4b0a1d2c3e4f5a6</code></pre>
         </section>
 
-        <section>
+        <section id="options">
           <h2>Options</h2>
           <p>All optional. With the loader script, each one is a <code>data-</code> attribute
           (<code>data-theme="light"</code>); on a hand-written iframe it's a query parameter.</p>
@@ -143,7 +169,7 @@
           → <code>{"token": "…", "live": true, …}</code></p>
         </section>
 
-        <section>
+        <section id="fidelity">
           <h2>What renders, and what doesn't</h2>
           <p>Models are exact - the same voxel data the game reads, with glass, glow and tint
           shaded the way the game shades them.</p>
@@ -158,7 +184,7 @@
           bug in your page, not a limitation of ours.</p>
         </section>
 
-        <section>
+        <section id="privacy">
           <h2>Privacy and cost</h2>
           <p>The viewer sets no cookies, stores nothing in the visitor's browser, and reads
           nothing from your page. The loader script only writes an iframe.</p>
@@ -166,7 +192,7 @@
           monopolise the renderer; a normal page with a few previews is nowhere near it.</p>
         </section>
 
-        <section>
+        <section id="troubleshooting">
           <h2>Troubleshooting</h2>
           <table>
             <thead><tr><th>What you see</th><th>Why</th></tr></thead>
@@ -197,5 +223,70 @@
       </div>
     </main>
   </div>
+
+  <script>
+    // Mobile sidebar toggle
+    const sidebar = document.querySelector('.sidebar');
+    const toggle = document.querySelector('.menu-toggle');
+    const backdrop = document.querySelector('.backdrop');
+    const setOpen = (open) => {
+      sidebar.classList.toggle('open', open);
+      backdrop.classList.toggle('show', open);
+    };
+    toggle.addEventListener('click', () => setOpen(!sidebar.classList.contains('open')));
+    backdrop.addEventListener('click', () => setOpen(false));
+
+    // Scrollspy: highlight the nav link for the section nearest the top
+    const links = Array.from(document.querySelectorAll('.nav a[href^="#"]'));
+    const byId = new Map(links.map((a) => [a.getAttribute('href').slice(1), a]));
+    links.forEach((a) => a.addEventListener('click', () => setOpen(false)));
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const active = byId.get(entry.target.id);
+          if (active) {
+            links.forEach((l) => l.classList.remove('active'));
+            active.classList.add('active');
+          }
+        }
+      });
+    }, { rootMargin: '0px 0px -72% 0px', threshold: 0 });
+
+    document.querySelectorAll('main section[id]').forEach((s) => observer.observe(s));
+
+    // Copy buttons on every code example.
+    const COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+    const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    const face = (icon, label) => `${icon}<span class="copy-label">${label}</span>`;
+
+    document.querySelectorAll('main pre').forEach((pre) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'code-block';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copy-btn';
+      btn.setAttribute('aria-label', 'Copy code to clipboard');
+      btn.innerHTML = face(COPY_ICON, 'Copy');
+      wrap.appendChild(btn);
+
+      let timer;
+      btn.addEventListener('click', async () => {
+        const text = (pre.querySelector('code') || pre).innerText;
+        let ok = true;
+        try { await navigator.clipboard.writeText(text); } catch { ok = false; }
+        btn.innerHTML = ok ? face(CHECK_ICON, 'Copied') : face(COPY_ICON, 'Press Ctrl+C');
+        btn.classList.toggle('copied', ok);
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          btn.innerHTML = face(COPY_ICON, 'Copy');
+          btn.classList.remove('copied');
+        }, 1600);
+      });
+    });
+  </script>
 </body>
 </html>

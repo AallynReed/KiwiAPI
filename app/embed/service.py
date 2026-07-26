@@ -101,19 +101,20 @@ async def _release_source(release_id: str) -> Source:
 
 
 async def _upload_source(token: str) -> Source:
-    got = await uploads.load(token)
-    if got is None:
-        raise _missing("That preview link has expired. Re-upload the mod to renew it.")
-    data, name = got
+    data = await uploads.load(token)
+    if data is None:
+        # Read by a VISITOR on someone else's page, who can't "re-upload" anything.
+        # Reloading the host page IS the fix: it re-renders, which re-posts the mod
+        # and mints a fresh token.
+        raise _missing("This preview has expired. Reload the page to start it again.")
     return Source(kind="tmod", ident=token,
-                  title=_tmod_title(data) or name or "Mod preview", tmod=data)
+                  title=_tmod_title(data) or "Mod preview", tmod=data)
 
 
 def _tmod_title(data: bytes) -> str:
-    """The mod's own header title. Preferred over the uploaded filename: it's what
-    the author named the mod, it's inside the bytes (so it survives a partner
-    posting the file as ``upload.tmod``), and it doesn't depend on Redis holding
-    the upload's metadata."""
+    """The mod's own header title - what the author named it, read straight out of
+    the bytes. Nothing else about an upload is known to us: we hold the file and
+    nothing beside it, so this is the only name there is."""
     try:
         props = tmod_mod.read_tmod(data, metadata_only=True).get("properties") or {}
     except tmod_mod.TmodError:

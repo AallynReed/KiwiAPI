@@ -19,6 +19,7 @@ shapes, so the SAME viewer JS drives both surfaces with only a base URL swapped.
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Query, Request, Response, UploadFile
@@ -165,15 +166,15 @@ async def upload_tmod(
     file: UploadFile = File(..., description="The .tmod to make previewable."),
     ctx: TokenContext = Depends(require_scope("mods:read")),
 ) -> dict:
-    """Upload a ``.tmod`` and get a **preview token** for the embeddable viewer.
+    """Hand us a ``.tmod`` and get a short-lived **preview token** for the viewer.
 
-    Call this from your backend when a mod is published or updated, then embed
-    ``/embed/viewer?tmod=<token>``. The token is the file's SHA-256, so re-posting
-    an unchanged mod returns the same token and stores nothing new.
+    Call this as your mod page renders, then embed ``/embed/viewer?tmod=<token>``.
 
-    The upload stays previewable for as long as it keeps being viewed (every view
-    slides the expiry); a mod nobody looks at is purged. Re-post to renew a token
-    that has expired.
+    We do not keep the file. It's held in memory only for ``expires_in`` seconds -
+    long enough for a visitor to look at it - and then it's gone, with no copy left
+    on our side. The expiry does NOT extend while someone is watching, so treat the
+    token as per-page-render rather than something to cache for days. The token is
+    the file's SHA-256, so posting the same mod again just refreshes the same entry.
     """
     data = await file.read()
     if not data:
@@ -186,8 +187,9 @@ async def upload_tmod(
     except tmod_mod.TmodError as e:
         raise APIError(400, ErrorCode.bad_request, f"Not a readable .tmod: {e}") from None
 
-    name = (file.filename or "").rsplit("/", 1)[-1].rsplit("\\", 1)[-1][:120]
-    got = await uploads.store(data, name)
+    # Hash here rather than in the store: the token IS the content hash, and the
+    # upload path is the only place that has a reason to compute it.
+    got = await uploads.store(data, hashlib.sha256(data).hexdigest())
     return {
         **got,
         "viewer_url": f"{settings.app_url.rstrip('/')}/embed/viewer?tmod={got['token']}",
@@ -196,10 +198,9 @@ async def upload_tmod(
 
 @embed_api_router.get("/tmod/{token}")
 async def upload_status(token: str, ctx: AccessContext = _PUB) -> dict:
-    """Whether a preview token is still live - so a partner can re-upload before a
+    """Whether a preview token is still live - so a partner can re-post before a
     visitor hits an expired embed rather than after."""
-    got = await uploads.load(token)
-    if got is None:
+    data = await uploads.load(token)
+    if data is None:
         return {"token": token, "live": False}
-    data, name = got
-    return {"token": token, "live": True, "name": name, "size": len(data)}
+    return {"token": token, "live": True, "size": len(data)}
