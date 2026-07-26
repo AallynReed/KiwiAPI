@@ -313,6 +313,18 @@ App-facing read API (absolute image / page / download URLs, like the Mods catalo
 The website-internal surface (`/v1/modpacks/hub/*` + same-origin `/site/modpacks/*`) is website-driven and **not
 in this reference**; the documented app-facing API is the three endpoints above.
 
+### Embeddable viewers (`mods:read`) - preview tokens for the iframe viewer
+
+Kiwi's 3D model / assembled-creature / `.pkfx` viewers can be embedded on another site as an iframe
+(`trove.aallyn.net/embed/viewer`). Embedding itself needs no token - it's allowed per-origin by an admin.
+Only the upload is an API call, and it exists so a partner can preview a mod **they** host:
+- `POST /v1/embed/tmod` - multipart `file=@Mod.tmod` → `{token, name, size, expires_in, reused, viewer_url}`.
+  The token is the file's SHA-256, so re-posting an unchanged mod returns the same token. Views slide the expiry.
+- `GET /v1/embed/tmod/{token}` (tokenless) → `{token, live, name?, size?}` - check before a visitor hits it.
+
+Everything else about embedding - the iframe URL, sources (`release=` / `tmod=` / `game=`), options and the
+loader script - is a **separate integration guide, not part of this API reference**: https://docs.aallyn.net/embed
+
 ### Updates (`updates:read`) - archived game files (latest version)
 
 Kiwi mirrors Trove's update CDN and stores each version's files content-addressed (deduped). Browse them:

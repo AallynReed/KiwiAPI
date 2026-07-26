@@ -1,0 +1,223 @@
+/* Embeddable viewer (/embed/viewer) — the chrome around the 3D + VFX stages when
+   they run inside another site's page.
+
+   Standalone on purpose: this ships none of the site bundle, so it stays small and
+   inherits nothing from the host page. The palette is DESIGN.md's (Midnight Base /
+   Card Surface / Hairline / Electric Blue) restated locally rather than imported.
+   Both themes are defined - a partner picks one with ?theme=dark|light so the frame
+   sits in their layout instead of punching a dark hole in a light page. */
+
+:root {
+  --kv-bg: #06080d;
+  --kv-surface: #131922;
+  --kv-line: #1f2733;
+  --kv-raised: #1a212c;
+  --kv-ink: #e6edf3;
+  --kv-mute: #9aa4b2;          /* the readable gray — all reading copy */
+  --kv-soft: #6e7785;          /* non-content metadata only */
+  --kv-accent: #58a6ff;
+  --kv-danger: #f0997b;
+  --kv-radius: 10px;
+  --kv-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --kv-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --kv-bg: #f5f7fa;
+  --kv-surface: #ffffff;
+  --kv-line: #dde3ea;
+  --kv-raised: #eef2f7;
+  --kv-ink: #10151c;
+  --kv-mute: #4d5765;          /* ~7:1 on white — same role as Muted Ink */
+  --kv-soft: #6e7785;
+  --kv-accent: #1f6feb;
+  --kv-danger: #b3441f;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--kv-bg);
+  color: var(--kv-ink);
+  font-family: var(--kv-font);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.kv-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+
+.kv-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  background: var(--kv-surface);
+  border-bottom: 1px solid var(--kv-line);
+}
+
+.kv-title {
+  font-weight: 600;
+  font-size: .92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.kv-meta {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-family: var(--kv-mono);
+  font-size: .72rem;
+  letter-spacing: .04em;
+  color: var(--kv-mute);
+}
+
+.kv-tabs { display: flex; gap: 4px; flex: 0 0 auto; }
+.kv-tabs[hidden], .kv-pick[hidden], .kv-bar[hidden] { display: none; }
+
+.kv-tab {
+  background: transparent;
+  border: 1px solid var(--kv-line);
+  color: var(--kv-mute);
+  border-radius: var(--kv-radius);
+  padding: 4px 11px;
+  font: inherit;
+  font-size: .8rem;
+  cursor: pointer;
+}
+.kv-tab:hover { color: var(--kv-ink); border-color: var(--kv-accent); }
+.kv-tab[aria-selected="true"] {
+  color: var(--kv-ink);
+  border-color: var(--kv-accent);
+  background: color-mix(in oklab, var(--kv-accent) 16%, transparent);
+}
+
+.kv-pick { display: flex; min-width: 0; }
+.kv-select {
+  max-width: 34ch;
+  background: var(--kv-bg);
+  color: var(--kv-ink);
+  border: 1px solid var(--kv-line);
+  border-radius: var(--kv-radius);
+  padding: 4px 8px;
+  font: inherit;
+  font-size: .8rem;
+}
+.kv-select:hover { border-color: var(--kv-accent); }
+
+/* ── stage ──────────────────────────────────────────────────────────────── */
+
+.kv-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: radial-gradient(circle at 50% 40%, #1b2531, #0c1118 78%);
+  cursor: grab;
+}
+[data-theme="light"] .kv-stage {
+  background: radial-gradient(circle at 50% 40%, #ffffff, #e4eaf2 78%);
+}
+.kv-stage canvas { display: block; width: 100%; height: 100%; }
+
+.kv-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  color: var(--kv-mute);
+  font-size: .9rem;
+}
+.kv-msg.kv-error { color: var(--kv-danger); }
+
+/* The mounted viewers bring their own stage classes (.bpv-stage / .mv-stage /
+   .pkfx-*). They set their own background, so neutralise it and let the shell's
+   gradient show through — one stage look across all three. */
+.kv-stage.bpv-stage,
+.kv-stage.mv-stage { background: none; }
+
+/* ── animation bar (assembled-creature clips) + footer ───────────────────── */
+
+.kv-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  background: var(--kv-surface);
+  border-top: 1px solid var(--kv-line);
+}
+
+.kv-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  background: var(--kv-surface);
+  border-top: 1px solid var(--kv-line);
+  font-size: .74rem;
+  color: var(--kv-soft);
+}
+
+.kv-hint {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-brand {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--kv-mute);
+  text-decoration: none;
+}
+.kv-brand strong { color: var(--kv-accent); font-weight: 600; }
+.kv-brand:hover { color: var(--kv-ink); }
+
+/* Focus is the one thing a host page can't give us — make it unmissable. */
+.kv-tab:focus-visible,
+.kv-select:focus-visible,
+.kv-brand:focus-visible,
+.kv-bar button:focus-visible {
+  outline: 2px solid var(--kv-accent);
+  outline-offset: 2px;
+}
+
+.kv-sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Short embeds (a 260px-tall card slot) can't afford two stacked chrome rows. */
+@media (max-height: 340px) {
+  .kv-foot { display: none; }
+  .kv-top { padding: 6px 10px; }
+}
+
+@media (max-width: 520px) {
+  .kv-meta { display: none; }
+  .kv-select { max-width: 18ch; }
+}

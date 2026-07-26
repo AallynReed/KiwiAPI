@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiwi - Embeddable viewers</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!--
+    This is deliberately its OWN page, not a section of the API reference. The
+    audience is different: a site owner wiring an iframe into their mod pages, not
+    a developer consuming JSON. The only API call here is the optional upload.
+  -->
+</head>
+<body>
+  <div class="layout">
+    <main class="content">
+      <div class="content-inner">
+
+        <header class="page-head">
+          <h1>Embeddable viewers</h1>
+          <p class="lede">Put Trove's 3D model and particle-effect previews on your own site.</p>
+        </header>
+
+        <section>
+          <p>Kiwi renders Trove content in the browser - voxel <code>.blueprint</code> models,
+          whole creatures assembled on their skeleton with animation clips, and PopcornFX
+          <code>.pkfx</code> effects. The embeddable viewer puts that same renderer in an
+          <code>&lt;iframe&gt;</code> on your pages.</p>
+
+          <p>It can show a mod you host yourself, or a file straight out of the live game -
+          you don't need to ship game assets, and you don't need to build anything 3D.</p>
+
+          <div class="callout">
+            <p><strong>Before you start:</strong> embedding is allowed per-origin. Send us the
+            exact origin(s) your pages are served from (for example
+            <code>https://example.com</code>) and we'll enable them. Until then the viewer
+            refuses to render in a frame on your site.</p>
+          </div>
+        </section>
+
+        <section>
+          <h2>Quick start</h2>
+          <p>Drop in the loader once, then mark up each spot you want a preview:</p>
+          <pre><code>&lt;div data-kiwi-embed data-game="dragon_head.blueprint"&gt;&lt;/div&gt;
+
+&lt;script src="https://trove.aallyn.net/static/embed.js" async&gt;&lt;/script&gt;</code></pre>
+          <p>Every marked element becomes a responsive iframe. If you'd rather not run our
+          script, write the iframe yourself - it's the same URL:</p>
+          <pre><code>&lt;iframe src="https://trove.aallyn.net/embed/viewer?game=dragon_head.blueprint"
+        style="width:100%;height:420px;border:0;border-radius:12px"
+        title="Trove 3D preview" loading="lazy" allowfullscreen&gt;&lt;/iframe&gt;</code></pre>
+        </section>
+
+        <section>
+          <h2>Choosing what to show</h2>
+          <p>Every embed needs exactly one <strong>source</strong>.</p>
+
+          <h3>A file from the live game</h3>
+          <p><code>game=&lt;path&gt;</code> - any <code>.blueprint</code> or <code>.pkfx</code>
+          in the current game files. A full path works, and so does a bare filename; we resolve
+          it against the game tree.</p>
+          <pre><code>?game=prefabs/creatures/dragon/dragon_head.blueprint
+?game=dragon_head.blueprint
+?game=fx_fire_medium.pkfx</code></pre>
+          <p>When the blueprint you name is part of a creature, the viewer offers the
+          <strong>whole creature</strong> - every other part pulled from the game files,
+          placed on its skeleton, with its animation clips. One filename, the full model.</p>
+
+          <h3>A mod you host</h3>
+          <p>Upload the <code>.tmod</code> once from your backend and embed the token you get
+          back. See <a href="#uploading">Uploading a mod</a> below.</p>
+          <pre><code>?tmod=&lt;token&gt;</code></pre>
+
+          <h3>A mod on the Kiwi Mods Hub</h3>
+          <p><code>release=&lt;id&gt;</code> - a published release id. Nothing to upload.</p>
+          <pre><code>?release=66f1c0a3e4b0a1d2c3e4f5a6</code></pre>
+        </section>
+
+        <section>
+          <h2>Options</h2>
+          <p>All optional. With the loader script, each one is a <code>data-</code> attribute
+          (<code>data-theme="light"</code>); on a hand-written iframe it's a query parameter.</p>
+          <table>
+            <thead>
+              <tr><th>Option</th><th>Values</th><th>What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>path</code></td><td>a file path</td>
+                <td>Which file inside the source to open first. Defaults to the first one;
+                the visitor can switch with the picker.</td>
+              </tr>
+              <tr>
+                <td><code>mode</code></td><td><code>auto</code> · <code>blueprint</code> · <code>assembled</code> · <code>vfx</code></td>
+                <td>Which view to open on. <code>auto</code> picks the most interesting one
+                available - the assembled creature when there is one.</td>
+              </tr>
+              <tr>
+                <td><code>theme</code></td><td><code>dark</code> · <code>light</code></td>
+                <td>Match your page. Defaults to dark.</td>
+              </tr>
+              <tr>
+                <td><code>height</code></td><td>any CSS height</td>
+                <td>Loader script only - the iframe's height. Defaults to <code>420px</code>.
+                Below about 340px the footer hides itself.</td>
+              </tr>
+              <tr>
+                <td><code>title</code></td><td>text</td>
+                <td>Loader script only - the iframe's accessible name.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>If you render your mod list client-side, call <code>KiwiEmbed.scan()</code> after
+          your own render pass to mount any placeholders that appeared since page load.</p>
+        </section>
+
+        <section id="uploading">
+          <h2>Uploading a mod</h2>
+          <p>For mods you host yourself, POST the <code>.tmod</code> from your backend and keep
+          the token you get back. This needs a Kiwi API token with the <code>mods:read</code>
+          scope - it's a server-to-server call, so the token never reaches a browser.</p>
+
+          <p><span class="method post">POST</span> <code>https://api.aallyn.net/v1/embed/tmod</code></p>
+          <pre><code>curl -X POST https://api.aallyn.net/v1/embed/tmod \
+  -H "Authorization: Bearer kiwi_..." \
+  -F "file=@MyMod.tmod"</code></pre>
+          <pre><code>{
+  "token": "9f2c…",
+  "name": "MyMod.tmod",
+  "size": 184320,
+  "expires_in": 604800,
+  "reused": false,
+  "viewer_url": "https://trove.aallyn.net/embed/viewer?tmod=9f2c…"
+}</code></pre>
+
+          <p>The token is the file's SHA-256, so uploading an unchanged mod hands back the same
+          token and stores nothing new - it's safe to call on every publish.</p>
+
+          <p>An upload stays previewable for as long as people keep looking at it: every view
+          slides the expiry out again. A mod nobody opens for a week ages out, and re-posting
+          the file brings it straight back. If you want to check before a visitor does:</p>
+          <p><span class="method get">GET</span> <code>https://api.aallyn.net/v1/embed/tmod/&lt;token&gt;</code>
+          → <code>{"token": "…", "live": true, …}</code></p>
+        </section>
+
+        <section>
+          <h2>What renders, and what doesn't</h2>
+          <p>Models are exact - the same voxel data the game reads, with glass, glow and tint
+          shaded the way the game shades them.</p>
+          <p>Effects are a best-effort preview. Billboard and ribbon particles render;
+          mesh-based and light renderers are approximated, and a few effect types aren't drawn
+          at all. The viewer says so on-screen when a preview is partial, including when an
+          effect references an asset we can't resolve. Treat it as a good look at an effect,
+          not a substitute for seeing it in game.</p>
+          <p>A creature only assembles when the game's own data tells us which skeleton its
+          parts belong to and where each attaches. If we don't know, we show the individual
+          blueprints instead of guessing - a model built on the wrong skeleton looks like a
+          bug in your page, not a limitation of ours.</p>
+        </section>
+
+        <section>
+          <h2>Privacy and cost</h2>
+          <p>The viewer sets no cookies, stores nothing in the visitor's browser, and reads
+          nothing from your page. The loader script only writes an iframe.</p>
+          <p>It's free to embed. There's a per-visitor request budget so one page can't
+          monopolise the renderer; a normal page with a few previews is nowhere near it.</p>
+        </section>
+
+        <section>
+          <h2>Troubleshooting</h2>
+          <table>
+            <thead><tr><th>What you see</th><th>Why</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>The frame is blank or the browser blocks it</td>
+                <td>Your origin isn't allowed yet. Send us the exact origin, scheme included.</td>
+              </tr>
+              <tr>
+                <td>"This preview link has expired"</td>
+                <td>An unviewed upload aged out. Re-POST the <code>.tmod</code> for a fresh token.</td>
+              </tr>
+              <tr>
+                <td>"No '…' in the current game files"</td>
+                <td>The filename doesn't exist in the live game tree - check spelling and
+                extension, or pass the full path.</td>
+              </tr>
+              <tr>
+                <td>"This mod has no 3D models or effects to preview"</td>
+                <td>The <code>.tmod</code> contains no <code>.blueprint</code> or
+                <code>.pkfx</code> - a texture-only or UI mod, for instance.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Anything else: <a href="mailto:support@aallyn.net">support@aallyn.net</a>.</p>
+        </section>
+
+      </div>
+    </main>
+  </div>
+</body>
+</html>

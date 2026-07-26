@@ -24,6 +24,7 @@ from app.core.features import (
     require_class_activity_enabled,
     require_codexes_enabled,
     require_dm_subs_enabled,
+    require_embed_enabled,
     require_giveaways_enabled,
     require_image_studio_enabled,
     require_leaderboards_enabled,
@@ -48,6 +49,7 @@ from app.core.scopes import catalog as scope_catalog
 from app.discord.router import router as discord_router
 from app.dm_subs.delivery import start_dm_delivery, stop_dm_delivery
 from app.dm_subs.router import router as dm_subs_router
+from app.embed.router import embed_api_router, embed_page_router
 from app.events.bus import start_event_bus, stop_event_bus
 from app.events.router import router as events_router
 from app.events.scheduler import start_event_scheduler, stop_event_scheduler
@@ -335,6 +337,15 @@ app.include_router(mods_git_router, dependencies=_MODS_GATE)   # authenticated g
 app.include_router(modpacks_hub_router, include_in_schema=False, dependencies=_MODS_GATE)
 app.include_router(modpacks_hub_write_router, include_in_schema=False, dependencies=_MODS_GATE)
 app.include_router(modpacks_public_router, dependencies=_MODS_GATE)  # documented app-facing API (/v1/modpacks/*)
+# Embeddable viewers. Partner sites iframe /embed/viewer to preview a blueprint
+# model, an assembled creature or a .pkfx effect - from a hub release, a .tmod they
+# uploaded, or a path in the game files. The page + its same-origin data endpoints
+# are browser-internal (hidden from the reference); the partner-facing upload API
+# (/v1/embed/tmod) is documented. Who may FRAME it is embed.allowed_origins, applied
+# as CSP frame-ancestors in app/core/middleware.py.
+_EMBED_GATE = [Depends(require_embed_enabled)]
+app.include_router(embed_page_router, dependencies=_EMBED_GATE)
+app.include_router(embed_api_router, dependencies=_EMBED_GATE)
 # Each of these rides its own master feature toggle (the "features" category in
 # the admin Configuration tab); OFF -> every endpoint 404s, matching how the
 # website page + navbar link disappear. See app/core/features.py.

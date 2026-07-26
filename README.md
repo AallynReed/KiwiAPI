@@ -59,6 +59,7 @@ the full per-token limit. See the [API reference](https://docs.aallyn.net) for e
 | `codexes` | decoded game catalogs — allies, mounts, dragons, recipes, items, fish, badges |
 | `updates` | archived game-update files, browsable and diffable per patch |
 | `mods` · `modpacks` | `.tmod` tooling plus a hub for sharing and bundling mods |
+| `embed` | preview tokens for the embeddable 3D/VFX viewer other sites can iframe |
 | `events` | a live SSE stream so clients stop polling on the hour |
 | `ocr` | reads a character stat sheet from a screenshot (self-hosted, no LLM) |
 | `btt` · `misc` | Better Trove Tools release feeds, time tools, server status, supporters |
@@ -69,6 +70,12 @@ The API container also serves the Better Trove Tools website out of `site/` — 
 page, user manual, command reference, and live pages for leaderboards, player/class activity,
 codexes, the mods hub, modpacks, the marketplace, game updates, server status, and server time.
 Browsing is public; developing and publishing mods is a Discord-login action.
+
+Its 3D model and particle-effect viewers are also **embeddable**: another site can iframe
+`/embed/viewer` to preview a mod it hosts, a mod on the hub, or a file straight out of the
+live game — and a single blueprint filename resolves into the whole assembled creature.
+Framing is allowed per-origin (`embed.allowed_origins`). Partner guide:
+[docs/embed.html](docs/embed.html); code in `app/embed/`.
 
 ## Run with Docker
 
@@ -117,6 +124,7 @@ app/
 ├── trove/      # the Trove data surfaces (rotations, leaderboards, mods, codexes, …)
 ├── site_auth/  # Discord login for the showcase site (mods/modpacks)
 ├── admin/      # superuser metrics, toggles, moderation
+├── embed/      # the 3D/VFX viewers packaged for other sites' iframes
 └── …           # usage, pageviews, events, scanning
 site/           # showcase website (templates + static)
                 #   server-rendered first paint: app/site/ssr.py

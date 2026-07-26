@@ -1683,8 +1683,8 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.6fr repeat(5, 1fr);
-  gap: 32px 28px;
+  grid-template-columns: 1.5fr repeat(6, minmax(0, 1fr));
+  gap: 32px 24px;
 }
 .footer-brand strong {
   display: block;
@@ -1725,6 +1725,14 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 .footer-fineprint .sep { color: var(--bg-line); }
 .footer-fineprint a { color: var(--text-mute); text-decoration: underline; text-underline-offset: 2px; }
 .footer-fineprint a:hover { color: var(--accent-blue); }
+.footer-legal {
+  max-width: 780px;
+  margin: 12px auto 0;
+  color: var(--text-mute);
+  font-size: .78rem;
+  line-height: 1.55;
+  text-align: center;
+}
 
 
 /* ─── 14. Language picker (used in nav) ──────────────────────────────── */

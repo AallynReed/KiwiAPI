@@ -408,6 +408,75 @@ REGISTRY: dict[str, TunableSetting] = {
             "products/categories are kept and return when toggled back ON."
         ),
     ),
+    "feature_embed_viewer_enabled": _t(
+        key="feature_embed_viewer_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the embeddable 3D/VFX viewer that partner sites "
+            "iframe (/embed/viewer + /site/embed/* + /v1/embed/*). OFF 404s the "
+            "embed page and every embed endpoint, so existing iframes on other "
+            "sites go blank; the Mods Hub's own on-page viewers are unaffected. "
+            "Who may frame it is a separate setting - embed.allowed_origins."
+        ),
+    ),
+
+    # ── Embeddable viewer (partner iframes; see app/embed) ────────────
+    "embed.allowed_origins": _t(
+        key="embed.allowed_origins",
+        default="",
+        type="str",
+        category="embed",
+        description=(
+            "Space-separated list of origins allowed to iframe /embed/viewer, e.g. "
+            "'https://trovesaurus.com https://www.trovesaurus.com'. Drives the "
+            "page's CSP frame-ancestors. EMPTY = nobody can embed it (the page "
+            "still works when opened directly). Each entry must be a full origin "
+            "(scheme + host, no path); one leading '*.' wildcard label is allowed "
+            "('https://*.trovesaurus.com'). This is the ONLY gate on embedding - "
+            "an origin listed here needs no API token to render the viewer."
+        ),
+    ),
+    "embed_rate_limit_max": _t(
+        key="embed_rate_limit_max",
+        default=240,
+        type="int",
+        category="embed",
+        min_value=1, max_value=100000,
+        description=(
+            "Per-IP cap on the embed's data endpoints (/site/embed/*). These are "
+            "tokenless and callable from anyone's page, and each one decodes a "
+            "blueprint or parses a .tmod, so they get their own bucket rather than "
+            "sharing the anonymous API budget. One visitor loading an embed spends "
+            "a manifest + a model + a handful of VFX assets, so keep this "
+            "comfortably above a page's worth of requests."
+        ),
+    ),
+    "embed_rate_limit_window_seconds": _t(
+        key="embed_rate_limit_window_seconds",
+        default=60,
+        type="int",
+        category="embed",
+        min_value=10, max_value=86400,
+        description="Sliding-window length for the per-IP embed bucket, in seconds.",
+    ),
+    "embed.upload_ttl_hours": _t(
+        key="embed.upload_ttl_hours",
+        default=168,                       # 7 days
+        type="int",
+        category="embed",
+        min_value=1,
+        max_value=8760,
+        description=(
+            "How long an uploaded .tmod stays previewable after its last view. "
+            "A partner POSTs the file to /v1/embed/tmod once and reuses the token "
+            "in their page; every view slides the expiry, so a mod page that keeps "
+            "getting traffic never needs a re-upload, while a one-off upload ages "
+            "out. Expired blobs are removed by the Purge action in the admin "
+            "panel's Embed section."
+        ),
+    ),
 
     # ── Cheater / alt-cluster calculation (independent compute switches) ───
     # Distinct from the cheater_detection TUNING knobs below: these turn the

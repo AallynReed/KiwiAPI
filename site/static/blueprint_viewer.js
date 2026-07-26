@@ -8,7 +8,8 @@
      { count, size:[sx,sy,sz], x:[], y:[], z:[], rgb:[], kind:[], level:[] }
    kind: 0 solid · 1 glass · 2 glow · 3 glow-glass
 
-   Public API: window.BlueprintViewer.open({ url, title }) */
+   Public API: window.BlueprintViewer.open({ url, title })      -- modal
+               window.BlueprintViewer.mount(el, { url, onMeta })  -- inline (embed page) */
 (function () {
   'use strict';
 
@@ -51,6 +52,45 @@
     return _threePromise;
   }
 
+  /* Load a model into an existing element (no modal). This is what the modal below
+     uses, and what the embeddable viewer (/embed/viewer) mounts directly into its
+     page. `onMeta` reports the voxel count so each host can label it its own way.
+     Returns { dispose } - safe to call while the fetch is still in flight. */
+  function mount(container, opts) {
+    injectStyles();
+    container.classList.add('bpv-stage');
+    var msg = document.createElement('div');
+    msg.className = 'bpv-msg';
+    msg.textContent = 'Loading model…';
+    container.appendChild(msg);
+
+    var viewer = null, alive = true;
+    ensureThree().then(function (THREE) {
+      return fetch(opts.url, { credentials: 'same-origin' }).then(function (r) {
+        if (!r.ok) {
+          return r.json().then(function (j) {
+            throw new Error((j && j.error && j.error.message) || ('Could not load model (HTTP ' + r.status + ').'));
+          }, function () { throw new Error('Could not load model (HTTP ' + r.status + ').'); });
+        }
+        return r.json();
+      }).then(function (data) {
+        if (!alive) return;                     // disposed while loading
+        msg.remove();
+        if (opts.onMeta) opts.onMeta(data.count.toLocaleString() + ' voxels');
+        viewer = buildViewer(THREE, container, data);
+      });
+    }).catch(function (err) {
+      if (!alive) return;
+      msg.textContent = err.message || 'Could not load this model.';
+      msg.classList.add('bpv-error');
+    });
+
+    return { dispose: function () {
+      alive = false;
+      if (viewer) { viewer.dispose(); viewer = null; }
+    } };
+  }
+
   function open(opts) {
     injectStyles();
     var ov = document.createElement('div');
@@ -66,13 +106,12 @@
           '<span class="bpv-meta"></span>' +
           '<button class="bpv-close" type="button" aria-label="Close">×</button>' +
         '</div>' +
-        '<div class="bpv-stage"><div class="bpv-msg">Loading model…</div></div>' +
+        '<div class="bpv-stage"></div>' +
       '</div>';
     ov.querySelector('.bpv-title').textContent = opts.title || 'Blueprint';
     document.body.appendChild(ov);
 
     var stage = ov.querySelector('.bpv-stage');
-    var msg = ov.querySelector('.bpv-msg');
     var meta = ov.querySelector('.bpv-meta');
     var viewer = null;
     var releaseFocus = null;
@@ -90,23 +129,9 @@
       releaseFocus = window.BTTUtil.trapFocus(ov.querySelector('.bpv-modal'));
     }
 
-    ensureThree().then(function (THREE) {
-      return fetch(opts.url, { credentials: 'same-origin' }).then(function (r) {
-        if (!r.ok) {
-          return r.json().then(function (j) {
-            throw new Error((j && j.error && j.error.message) || ('Could not load model (HTTP ' + r.status + ').'));
-          }, function () { throw new Error('Could not load model (HTTP ' + r.status + ').'); });
-        }
-        return r.json();
-      }).then(function (data) {
-        if (!ov.isConnected) return;            // closed while loading
-        msg.remove();
-        meta.textContent = data.count.toLocaleString() + ' voxels';
-        viewer = buildViewer(THREE, stage, data);
-      });
-    }).catch(function (err) {
-      msg.textContent = err.message || 'Could not load this model.';
-      msg.classList.add('bpv-error');
+    viewer = mount(stage, {
+      url: opts.url,
+      onMeta: function (text) { meta.textContent = text; },
     });
   }
 
@@ -264,5 +289,5 @@
     return meshes;
   }
 
-  window.BlueprintViewer = { open: open };
+  window.BlueprintViewer = { open: open, mount: mount };
 })();

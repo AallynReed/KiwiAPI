@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Trove preview — Kiwi API</title>
+  {# Standalone by design: no navbar, no footer, no site CSS bundle. This page is
+     rendered inside someone else's layout, so it ships only what it needs and
+     inherits nothing. Framing is controlled by embed.allowed_origins (CSP
+     frame-ancestors, applied in app/core/middleware.py). #}
+  <link rel="stylesheet" href="/static/embed_viewer.css">
+  <link rel="icon" href="/static/favicon.ico">
+</head>
+<body>
+  <div class="kv-shell"
+       data-release="{{ release }}"
+       data-tmod="{{ tmod }}"
+       data-game="{{ game }}"
+       data-path="{{ path }}"
+       data-mode="{{ mode }}"
+       data-app-url="{{ app_url }}">
+    <header class="kv-top">
+      <span class="kv-title">Loading…</span>
+      <div class="kv-tabs" role="tablist" aria-label="Preview type" hidden></div>
+      <label class="kv-pick" hidden>
+        <span class="kv-sr">Choose a file to preview</span>
+        <select class="kv-select"></select>
+      </label>
+      <span class="kv-meta"></span>
+    </header>
+
+    <main class="kv-stage" id="kv-stage" role="tabpanel" aria-live="polite">
+      <p class="kv-msg">Loading preview…</p>
+    </main>
+
+    <div class="kv-bar" hidden></div>
+
+    <footer class="kv-foot">
+      <span class="kv-hint">Drag to rotate · scroll to zoom</span>
+      <a class="kv-brand" href="{{ app_url }}" target="_blank" rel="noopener">
+        Powered by <strong>Kiwi</strong>
+      </a>
+    </footer>
+  </div>
+
+  <script src="/static/blueprint_viewer.min.js" defer></script>
+  <script src="/static/model_viewer.min.js" defer></script>
+  <script type="module" src="/static/pkfx/vfx_viewer.js"></script>
+  <script src="/static/embed_viewer.min.js" defer></script>
+</body>
+</html>

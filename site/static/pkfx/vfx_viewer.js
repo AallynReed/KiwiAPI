@@ -6,6 +6,7 @@
 
    Public API (assigned to window.PkfxViewer for classic-script callers):
      PkfxViewer.mount(container, { releaseId, path }) -> { dispose() }
+     PkfxViewer.mount(container, { endpoint: {base, query}, path })  // embeddable viewer
 
    Renders billboard + ribbon particles. Mesh/Light renderers and parent-emitted
    trails are not yet drawn (surfaced as a "partial preview" note).  */
@@ -17,7 +18,22 @@ import { Renderer, makeTexture, FLOATS_PER_INSTANCE, RIBBON_FLOATS_PER_VERT, MES
 
 const SITE = (id) => `/site/mods/releases/${encodeURIComponent(id)}/vfx`;
 
-export function mount(container, { releaseId, path }) {
+/* Where the .pkfx text + its assets come from. A hub release resolves to the Mods
+   Hub proxies; the embeddable viewer (/embed/viewer) passes `endpoint` instead,
+   since its source may be an uploaded .tmod or a game file rather than a release.
+   Both surfaces speak the same two shapes - `<base>/manifest?path=` and
+   `<base>/asset?path=` - so only the base (and its source query) differs. */
+function endpointsFor({ releaseId, endpoint }) {
+  const base = endpoint ? endpoint.base : SITE(releaseId);
+  const extra = endpoint && endpoint.query ? `&${endpoint.query}` : '';
+  return {
+    manifest: (p) => `${base}/manifest?path=${encodeURIComponent(p)}${extra}`,
+    asset: (ref) => `${base}/asset?path=${encodeURIComponent(ref)}${extra}`,
+  };
+}
+
+export function mount(container, { releaseId, path, endpoint }) {
+  const urls = endpointsFor({ releaseId, endpoint });
   const canvas = document.createElement('canvas');
   canvas.className = 'pkfx-canvas';
   container.appendChild(canvas);
@@ -32,7 +48,7 @@ export function mount(container, { releaseId, path }) {
   let renderer, system, current, raf = 0, disposed = false, glowTex = null;
   const texCache = new Map(), atlasCache = new Map();
 
-  const assetUrl = (ref) => `${SITE(releaseId)}/asset?path=${encodeURIComponent(ref)}`;
+  const assetUrl = (ref) => urls.asset(ref);
 
   async function loadTexture(ref) {
     if (!ref) return renderer.white;
@@ -68,7 +84,7 @@ export function mount(container, { releaseId, path }) {
   async function load() {
     renderer = new Renderer(canvas);
     glowTex = makeGlowTexture(renderer.gl);
-    const man = await (await fetch(`${SITE(releaseId)}/manifest?path=${encodeURIComponent(path)}`)).json();
+    const man = await (await fetch(urls.manifest(path))).json();
     if (disposed) return;
     const doc = parsePkfx(man.pkfx);
     const effect = buildEffect(doc, Math.random);
@@ -308,7 +324,7 @@ function injectStyles() {
   const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
 }
 
-export function open({ releaseId, path, title }) {
+export function open({ releaseId, path, title, endpoint }) {
   injectStyles();
   const ov = document.createElement('div');
   ov.className = 'pkfxv-overlay';
@@ -324,7 +340,7 @@ export function open({ releaseId, path, title }) {
   document.body.appendChild(ov);
 
   const body = ov.querySelector('.pkfxv-body');
-  const viewer = mount(body, { releaseId, path });
+  const viewer = mount(body, { releaseId, path, endpoint });
 
   let closed = false;
   function close() {

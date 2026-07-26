@@ -8,7 +8,8 @@
        rest:{part:[16]}, animations:{name:{fps,frames:[{part:[16]}]}} }
    Matrices are column-major (three.js order).
 
-   API: window.ModelViewer.open({ url, title }) */
+   API: window.ModelViewer.open({ url, title })   -- modal
+        window.ModelViewer.mount(el, { url, bar, onMeta })  -- inline (embed page) */
 (function () {
   'use strict';
   var THREE_URL = '/static/vendor/three.min.js';  // self-hosted (GDPR: no cdnjs IP leak)
@@ -45,6 +46,42 @@
     return _three;
   }
 
+  /* Load an assembled model into an existing element (no modal) - used by the modal
+     below and by the embeddable viewer (/embed/viewer). `bar` is where the animation
+     buttons go; pass one so the host controls where they sit. Returns { dispose }. */
+  function mount(container, opts) {
+    injectStyles();
+    container.classList.add('mv-stage');
+    var msg = document.createElement('div');
+    msg.className = 'mv-msg';
+    msg.textContent = 'Loading model…';
+    container.appendChild(msg);
+    var bar = opts.bar || document.createElement('div');
+
+    var viewer = null, alive = true;
+    ensureThree().then(function (THREE) {
+      return fetch(opts.url, { credentials: 'same-origin' }).then(function (r) {
+        if (!r.ok) throw new Error('Could not load model (HTTP ' + r.status + ').');
+        return r.json();
+      }).then(function (data) {
+        if (!alive) return;
+        msg.remove();
+        var nv = data.parts.reduce(function (a, p) { return a + p.x.length; }, 0);
+        if (opts.onMeta) opts.onMeta(data.parts.length + ' parts · ' + nv.toLocaleString() + ' voxels');
+        viewer = build(THREE, container, bar, data);
+      });
+    }).catch(function (e) {
+      if (!alive) return;
+      msg.textContent = e.message || 'Could not load this model.';
+      msg.classList.add('err');
+    });
+
+    return { dispose: function () {
+      alive = false;
+      if (viewer) { viewer.dispose(); viewer = null; }
+    } };
+  }
+
   function open(opts) {
     injectStyles();
     var ov = document.createElement('div'); ov.className = 'mv-overlay';
@@ -55,12 +92,12 @@
       '<div class="mv-modal">' +
         '<div class="mv-head"><span class="mv-title"></span><span class="mv-meta"></span>' +
           '<button class="mv-close" type="button" aria-label="Close">×</button></div>' +
-        '<div class="mv-stage"><div class="mv-msg">Loading model…</div></div>' +
+        '<div class="mv-stage"></div>' +
         '<div class="mv-bar"></div>' +
       '</div>';
     ov.querySelector('.mv-title').textContent = opts.title || 'Model';
     document.body.appendChild(ov);
-    var stage = ov.querySelector('.mv-stage'), msg = ov.querySelector('.mv-msg'),
+    var stage = ov.querySelector('.mv-stage'),
         bar = ov.querySelector('.mv-bar'), meta = ov.querySelector('.mv-meta');
     var viewer = null;
     var releaseFocus = null;
@@ -73,18 +110,10 @@
       releaseFocus = window.BTTUtil.trapFocus(ov.querySelector('.mv-modal'));
     }
 
-    ensureThree().then(function (THREE) {
-      return fetch(opts.url, { credentials: 'same-origin' }).then(function (r) {
-        if (!r.ok) throw new Error('Could not load model (HTTP ' + r.status + ').');
-        return r.json();
-      }).then(function (data) {
-        if (!ov.isConnected) return;
-        msg.remove();
-        var nv = data.parts.reduce(function (a, p) { return a + p.x.length; }, 0);
-        meta.textContent = data.parts.length + ' parts · ' + nv.toLocaleString() + ' voxels';
-        viewer = build(THREE, stage, bar, data);
-      });
-    }).catch(function (e) { msg.textContent = e.message || 'Could not load this model.'; msg.classList.add('err'); });
+    viewer = mount(stage, {
+      url: opts.url, bar: bar,
+      onMeta: function (text) { meta.textContent = text; },
+    });
   }
 
   function build(THREE, stage, bar, data) {
@@ -230,5 +259,5 @@
     } };
   }
 
-  window.ModelViewer = { open: open };
+  window.ModelViewer = { open: open, mount: mount };
 })();

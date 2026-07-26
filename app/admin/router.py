@@ -1486,3 +1486,21 @@ async def refresh_site_discord(user_id: str) -> dict:
     u.updated_at = utcnow()
     await u.save()
     return _site_user_dto(u)
+
+
+# --- Embeddable viewer: uploaded-.tmod store --------------------------------
+
+@router.get("/embed/uploads")
+async def embed_upload_stats() -> dict:
+    """Size of the embed upload store + how many preview tokens are still live.
+    ``blobs`` above ``live_tokens`` is the reclaimable garbage."""
+    from app.embed import uploads
+    return await uploads.stats()
+
+
+@router.post("/embed/uploads/purge")
+async def embed_upload_purge() -> dict:
+    """Delete stored .tmods whose preview token has expired. Safe to run any time:
+    a live token is never touched, and it no-ops if Redis (the live set) is down."""
+    from app.embed import uploads
+    return await uploads.purge_expired()

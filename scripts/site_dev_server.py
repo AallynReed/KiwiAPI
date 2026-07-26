@@ -81,11 +81,16 @@ class _PreviewRequest:
         self.url = type("_U", (), {"path": path})()
 
 
-def _render_page_template(p: Path, request_path: str = "/") -> bytes:
-    """Render a page template to HTML bytes for the preview."""
+def _render_page_template(p: Path, request_path: str = "/", extra: dict | None = None) -> bytes:
+    """Render a page template to HTML bytes for the preview.
+
+    ``extra`` supplies the per-page context a route passes in production (the embed
+    page's source params, for instance) - without it those `{{ }}` render empty and
+    the page can't tell what it was asked to show."""
     if _JINJA_ENV is not None:
         ctx = dict.fromkeys(_PREVIEW_FLAGS, True)
         ctx["request"] = _PreviewRequest(request_path)
+        ctx.update(extra or {})
         return _JINJA_ENV.get_template(p.name).render(**ctx).encode("utf-8")
 
     import re as _re
@@ -311,6 +316,23 @@ def _stub_pack_detail(handle, slug):
         "is_primary_owner": True,
         "collaborators": [{"id": "collab1", "username": "skill"}],
     }
+
+
+def _stub_blueprint():
+    """A small solid voxel cube in the web viewer's payload shape - enough for the
+    3D stages (/updates, mod pages, /embed/viewer) to actually render in dev."""
+    n = 6
+    xs, ys, zs, rgb, kind, level = [], [], [], [], [], []
+    for x in range(n):
+        for y in range(n):
+            for z in range(n):
+                if not (x in (0, n - 1) or y in (0, n - 1) or z in (0, n - 1)):
+                    continue                       # hollow shell - fewer voxels, same look
+                xs.append(x); ys.append(y); zs.append(z)
+                rgb.append((60 + x * 30) << 16 | (90 + y * 25) << 8 | (140 + z * 18))
+                kind.append(0); level.append(255)
+    return {"count": len(xs), "size": [n, n, n],
+            "x": xs, "y": ys, "z": zs, "rgb": rgb, "kind": kind, "level": level}
 
 
 # Synthetic file tree for the /updates archive browser. Deliberately has files
@@ -804,6 +826,48 @@ class Handler(SimpleHTTPRequestHandler):
             # Public player profile shell. data-player is stripped to empty by the
             # {{ }} emulation, but player.js falls back to the URL path segment.
             return self._send_file(TEMPLATES / "player.html", "text/html")
+        if path == "/embed/viewer":
+            # Embeddable viewer shell (app/embed). Production passes the source params
+            # into the template; do the same from the query string here, defaulting to
+            # a stub upload token so a bare /embed/viewer still renders something.
+            q = parse_qs(url.query)
+            def _q(name, default=""):
+                return q.get(name, [default])[0]
+            return self._send_file(TEMPLATES / "embed_viewer.html", "text/html", {
+                "release": _q("release"),
+                "tmod": _q("tmod") or ("" if (_q("release") or _q("game")) else "devtoken"),
+                "game": _q("game"),
+                "path": _q("path"),
+                "mode": _q("mode", "auto"),
+                "theme": _q("theme", "dark"),
+                "app_url": "http://localhost:8913",
+            })
+
+        # Embeddable viewer stubs (/site/embed/*) - one blueprint + one effect, so
+        # the page exercises its tabs, picker and viewer mount without a game tree.
+        if path == "/site/embed/manifest":
+            # A `game=` source the stub doesn't know answers like production does -
+            # the error envelope - so the in-frame error state is exercisable too.
+            want = parse_qs(url.query).get("game", [""])[0]
+            if want and want not in _UPDATE_PATHS:
+                return self._send_json(
+                    {"error": {"message": f"No '{want}' in the current game files."}}, 404)
+            # Two blueprints so the file picker is exercised; no rig (the assembled
+            # tab needs baked rigs + the codex, neither of which the stub has).
+            return self._send_json({
+                "source": "tmod", "title": "Dev preview",
+                "blueprints": {"items": [
+                    {"path": "blueprints/dev_cube.blueprint", "size": 512, "assembled": False},
+                    {"path": "blueprints/dev_cube_alt.blueprint", "size": 512, "assembled": False},
+                ], "rig": None, "animations": []},
+                "vfx": {"items": []},
+            })
+        if path == "/site/embed/blueprint":
+            return self._send_json(_stub_blueprint())
+        if path == "/site/embed/assembled":
+            return self._send_json({"error": {"message": "No assemblable creature here."}}, 404)
+        if path.startswith("/site/embed/vfx/"):
+            return self._send_json({"error": {"message": "No VFX in this dev stub."}}, 404)
 
         # Gem tool proxies (real service layer).
         if path == "/site/gems/lookups":
@@ -2460,7 +2524,7 @@ class Handler(SimpleHTTPRequestHandler):
 
         return self.send_error(404)
 
-    def _send_file(self, p: Path, content_type: str | None):
+    def _send_file(self, p: Path, content_type: str | None, extra_ctx: dict | None = None):
         if not p.exists():
             return self.send_error(404)
         if content_type is None:
@@ -2473,7 +2537,7 @@ class Handler(SimpleHTTPRequestHandler):
             }.get(suffix, "application/octet-stream")
         data = p.read_bytes()
         if content_type == "text/html" and p.parent == TEMPLATES:
-            data = _render_page_template(p, self.path.split("?", 1)[0])
+            data = _render_page_template(p, self.path.split("?", 1)[0], extra_ctx)
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))

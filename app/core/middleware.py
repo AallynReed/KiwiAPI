@@ -43,6 +43,32 @@ _SITE_CSP = (
 )
 
 
+# The embeddable viewer (app/embed) is the ONE surface that may be framed by another
+# site. Its CSP is the site CSP with `frame-ancestors` swapped for the admin's
+# allowlist (`embed.allowed_origins`) - and, because a legacy `X-Frame-Options: DENY`
+# would veto that in every browser regardless of CSP, that header is dropped here too.
+# Empty allowlist -> stays `frame-ancestors 'none'`: nobody can embed it until an
+# origin is added, and the page still works when opened directly.
+#
+# Matched on the viewer path, NOT the whole `/embed/` prefix: `/embed/status.svg` is
+# the status badge, embedded as an <img> on other sites, and it has no business
+# becoming framable or carrying a frame-ancestors list.
+_EMBED_PREFIX = "/embed/viewer"
+# Everything in the site CSP except its frame-ancestors directive. Split by name
+# rather than by position so reordering _SITE_CSP can't silently leave the original
+# `frame-ancestors 'none'` in front of ours (first directive wins - the embed would
+# stay unframable, with a perfectly valid-looking header).
+_SITE_CSP_NO_FRAME_ANCESTORS = "; ".join(
+    d.strip() for d in _SITE_CSP.split(";")
+    if d.strip() and not d.strip().startswith("frame-ancestors")
+)
+
+
+def _embed_csp(origins: list[str]) -> str:
+    ancestors = " ".join(origins) if origins else "'none'"
+    return f"{_SITE_CSP_NO_FRAME_ANCESTORS}; frame-ancestors {ancestors}"
+
+
 # Exact-matched showcase-site HTML page routes. (Everything else under the site
 # is the /static/* asset mount or the /site/* JSON proxies.)
 _PAGE_PATHS = frozenset({
@@ -128,10 +154,19 @@ def add_security_middleware(app: FastAPI) -> None:
         response: Response = await call_next(request)
         h = response.headers
         h.setdefault("X-Content-Type-Options", "nosniff")
-        h.setdefault("X-Frame-Options", "DENY")
         h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         h.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         h.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+        if path.startswith(_EMBED_PREFIX):
+            # The one framable surface: CSP carries the allowlist and X-Frame-Options
+            # is deliberately absent (DENY would override frame-ancestors).
+            # Imported here, not at module scope: app.embed.service pulls in the whole
+            # Mods Hub service chain, and middleware is imported by everything.
+            from app.embed.service import allowed_origins
+            h.setdefault("Content-Security-Policy", _embed_csp(await allowed_origins()))
+            h.setdefault("Cache-Control", "no-cache")
+            return response
+        h.setdefault("X-Frame-Options", "DENY")
         # The showcase site pulls FontAwesome / GSAP from CDN and needs a looser CSP.
         h.setdefault("Content-Security-Policy", _SITE_CSP if _is_site_path(path) else _API_CSP)
         # Static assets + HTML pages always revalidate, so a deploy is picked up

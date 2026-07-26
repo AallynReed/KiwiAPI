@@ -22,6 +22,9 @@ data/
 # Mods Hub store - shared mods' git repos, images + compiled .tmod (bind mount target, user content)
 .mods/
 
+# Embeddable-viewer uploads - .tmods partner sites POST to preview (bind mount target, expires + purged)
+.embed/
+
 # BetterTroveTools showcase site - binary assets are ~20 MB of screenshots,
 # shipped to the server via Syncthing rather than git. Templates + CSS + JS are tracked.
 site/static/assets/

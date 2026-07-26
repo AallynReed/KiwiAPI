@@ -64,3 +64,19 @@ async def resolve(
     skeleton = Counter(skel for skel, _ap in hits.values()).most_common(1)[0][0]
     attach = {b: ap for b, (skel, ap) in hits.items() if skel == skeleton}
     return skeleton, attach
+
+
+async def parts_for(
+    skeleton: str, branch: str | None = None
+) -> dict[str, str]:
+    """The REVERSE lookup: every blueprint basename the binfab map binds to
+    ``skeleton``, as ``{basename: AP key}`` (empty if unknown).
+
+    ``resolve`` answers "which creature do these parts belong to"; this answers
+    "which parts make up this creature" - what the embeddable viewer needs to
+    assemble a native game creature from a single blueprint path, where the caller
+    has one part and wants the whole model. Same authoritative source, so it
+    inherits the no-guess rule: a skeleton with no bindings returns nothing."""
+    branch = branch or settings.trove_render_branch
+    rig_map = await _rig_map(branch)
+    return {b: ap for b, (skel, ap) in rig_map.items() if skel == skeleton}

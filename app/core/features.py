@@ -52,6 +52,7 @@ GEMS_GUIDE_FLAG = "feature_gems_guide_enabled"
 DM_SUBS_FLAG = "feature_dm_subscriptions_enabled"
 DELVES_FLAG = "feature_delves_enabled"
 STORE_FLAG = "feature_store_enabled"
+EMBED_FLAG = "feature_embed_viewer_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
@@ -104,3 +105,4 @@ require_dm_subs_enabled = _gate(DM_SUBS_FLAG, "DM subscriptions")
 require_delves_enabled = _gate(DELVES_FLAG, "Delve rotation data")
 require_store_enabled = _gate(STORE_FLAG, "Store catalog")
 require_leaderboard_renames_enabled = _gate(RENAMES_FLAG, "Rename detection")
+require_embed_enabled = _gate(EMBED_FLAG, "embeddable viewer")

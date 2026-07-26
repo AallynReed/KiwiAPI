@@ -3675,6 +3675,18 @@ async function renderModsModeration() {
       </div>
       <p class="hint" style="margin:0 0 8px">User-curated bundles of mods. <strong>Take down</strong> hides one from public view; <strong>Delete</strong> removes it.</p>
       <div id="modpacks-list"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:10px">
+        <h2 style="flex:1;margin:0">Embeddable viewer uploads</h2>
+        <button type="button" class="btn small" data-act="embed-refresh">Refresh</button>
+      </div>
+      <p class="hint" style="margin:0 0 10px">.tmod files partner sites uploaded to preview
+        (<code>/v1/embed/tmod</code>). A token stays live while people keep viewing it; once it
+        expires the bytes are garbage. <strong>Purge</strong> deletes only the expired ones.
+        Who may embed at all is <code>embed.allowed_origins</code> in Configuration.</p>
+      <div id="embed-uploads" class="muted" style="font-size:.85rem;margin-bottom:8px">Loading…</div>
+      <button type="button" class="btn small" data-act="embed-purge">Purge expired</button>
     </div>`;
 
   const listEl = document.getElementById("mods-reports");
@@ -3983,6 +3995,29 @@ async function renderModsModeration() {
     } catch (ex) { toast(ex.message, "err"); }
   }
 
+  // ── Embeddable viewer: uploaded-.tmod store ──────────────────────────
+  const embedEl = () => document.getElementById("embed-uploads");
+  async function loadEmbedUploads() {
+    embedEl().textContent = "Loading…";
+    try {
+      const s = await API.call("/admin/embed/uploads");
+      const mb = (s.bytes / 1048576).toFixed(1);
+      const stale = Math.max(0, s.blobs - s.live_tokens);
+      embedEl().innerHTML = `<strong>${s.blobs}</strong> stored · <strong>${mb} MB</strong> on disk ·
+        <strong>${s.live_tokens}</strong> live token${s.live_tokens === 1 ? "" : "s"} ·
+        <strong>${stale}</strong> reclaimable`
+        + (s.redis ? "" : ` <span style="color:var(--warn,#e0a33e)">· Redis unavailable — purge is disabled</span>`);
+    } catch (ex) { embedEl().textContent = ex.message; }
+  }
+  async function purgeEmbedUploads() {
+    try {
+      const r = await API.call("/admin/embed/uploads/purge", { method: "POST" });
+      if (r.skipped) toast("Skipped — Redis is unavailable", "err");
+      else toast(`Purged ${r.purged} (${(r.freed_bytes / 1048576).toFixed(1)} MB freed)`, "ok");
+      loadEmbedUploads();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
+
   document.querySelector('[data-act="refresh"]').addEventListener("click", load);
   document.querySelector('[data-act="search"]').addEventListener("click", loadProjects);
   document.getElementById("mods-sort").addEventListener("change", loadProjects);
@@ -3995,6 +4030,8 @@ async function renderModsModeration() {
   document.getElementById("stray-q").addEventListener("input", () => { clearTimeout(_strayQT); _strayQT = setTimeout(loadPending, 300); });
   document.querySelector('[data-act="claims-refresh"]').addEventListener("click", loadClaims);
   document.querySelector('[data-act="modpacks-search"]').addEventListener("click", loadModpacks);
+  document.querySelector('[data-act="embed-refresh"]').addEventListener("click", loadEmbedUploads);
+  document.querySelector('[data-act="embed-purge"]').addEventListener("click", purgeEmbedUploads);
   showResolved.addEventListener("change", load);
   load();
   loadProjects();
@@ -4002,6 +4039,7 @@ async function renderModsModeration() {
   loadPending();
   loadClaims();
   loadModpacks();
+  loadEmbedUploads();
 }
 
 async function renderIngest() {

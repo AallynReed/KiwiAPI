@@ -36,6 +36,15 @@ class Settings(BaseSettings):
     # can be large, so /git/* gets its own generous body cap.
     mods_git_enabled: bool = True
     mods_git_max_body_bytes: int = 100 * 1024 * 1024    # push packfile cap
+
+    # --- Embeddable viewers (see app/embed) ---------------------------------
+    # Partner sites (Trovesaurus, …) iframe /embed/viewer to preview a .blueprint
+    # model or a .pkfx effect - from a hub release, an uploaded .tmod, or a path
+    # in the game tree. Uploaded .tmods live in their OWN content-addressed store
+    # (never the hub's), so an expired upload can be purged without walking the
+    # hub's references. Bind-mount this like the other stores.
+    embed_store_dir: str = "data/embed"
+    embed_upload_max_bytes: int = 20 * 1024 * 1024      # one .tmod
     # Master-only bot cfg ingests. A full LeaderBot.cfg dump is ~16 MB; the market
     # (GrainusMod.cfg) dump is well under 5 MB. Keep the proxy's client_max_body_size
     # on /v1/leaderboards/insert and /v1/market/insert >= these.
