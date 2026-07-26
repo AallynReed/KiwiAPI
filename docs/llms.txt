@@ -318,9 +318,12 @@ in this reference**; the documented app-facing API is the three endpoints above.
 Kiwi's 3D model / assembled-creature / `.pkfx` viewers can be embedded on another site as an iframe
 (`trove.aallyn.net/embed/viewer`). Embedding itself needs no token - it's allowed per-origin by an admin.
 Only the upload is an API call, and it exists so a partner can preview a mod **they** host:
-- `POST /v1/embed/tmod` - multipart `file=@Mod.tmod` → `{token, name, size, expires_in, reused, viewer_url}`.
-  The token is the file's SHA-256, so re-posting an unchanged mod returns the same token. Views slide the expiry.
-- `GET /v1/embed/tmod/{token}` (tokenless) → `{token, live, name?, size?}` - check before a visitor hits it.
+- `POST /v1/embed/tmod` - multipart `file=@Mod.tmod` (max 8 MB) → `{token, size, expires_in, reused, viewer_url}`.
+  **The file is NOT stored**: it's held in Redis for `expires_in` seconds (default 30 min) and then dropped -
+  never written to disk, nothing to purge. The TTL does NOT slide while a visitor watches, so post the mod as
+  the partner's page RENDERS rather than caching the token. The token is the file's SHA-256, so re-posting an
+  unchanged mod refreshes the same entry instead of holding a second copy.
+- `GET /v1/embed/tmod/{token}` (tokenless) → `{token, live, size?}` - check before a visitor hits it.
 
 Everything else about embedding - the iframe URL, sources (`release=` / `tmod=` / `game=`), options and the
 loader script - is a **separate integration guide, not part of this API reference**: https://docs.aallyn.net/embed

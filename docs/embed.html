@@ -142,9 +142,10 @@
 
         <section id="uploading">
           <h2>Uploading a mod</h2>
-          <p>For mods you host yourself, POST the <code>.tmod</code> from your backend and keep
-          the token you get back. This needs a Kiwi API token with the <code>mods:read</code>
-          scope - it's a server-to-server call, so the token never reaches a browser.</p>
+          <p>For mods you host yourself, POST the <code>.tmod</code> as your mod page renders
+          and put the token you get back in the embed. This needs a Kiwi API token with the
+          <code>mods:read</code> scope - it's a server-to-server call, so the token never
+          reaches a browser.</p>
 
           <p><span class="method post">POST</span> <code>https://api.aallyn.net/v1/embed/tmod</code></p>
           <pre><code>curl -X POST https://api.aallyn.net/v1/embed/tmod \
@@ -152,21 +153,33 @@
   -F "file=@MyMod.tmod"</code></pre>
           <pre><code>{
   "token": "9f2c…",
-  "name": "MyMod.tmod",
   "size": 184320,
-  "expires_in": 604800,
+  "expires_in": 1800,
   "reused": false,
   "viewer_url": "https://trove.aallyn.net/embed/viewer?tmod=9f2c…"
 }</code></pre>
 
-          <p>The token is the file's SHA-256, so uploading an unchanged mod hands back the same
-          token and stores nothing new - it's safe to call on every publish.</p>
+          <div class="callout">
+            <p><strong>We don't keep your file.</strong> It's held in memory for
+            <code>expires_in</code> seconds - long enough for a visitor to look at it - and then
+            it's gone. Nothing is written to disk on our side, and there's no copy to delete
+            later. That's also why the token is short-lived rather than permanent.</p>
+          </div>
 
-          <p>An upload stays previewable for as long as people keep looking at it: every view
-          slides the expiry out again. A mod nobody opens for a week ages out, and re-posting
-          the file brings it straight back. If you want to check before a visitor does:</p>
+          <p><strong>Post it per page render, not once per publish.</strong> The clock starts at
+          upload and does <em>not</em> extend while someone is watching, so a token cached for
+          days will be dead by the time a visitor loads the page. Posting on render costs you one
+          small request and always yields a fresh token. The token is the file's SHA-256, so
+          re-posting an unchanged mod refreshes the same entry rather than holding a second copy.</p>
+
+          <p>A visitor who leaves a page open past the expiry sees <em>"This preview has expired -
+          reload the page"</em>, and reloading re-renders your page, which mints a new token. To
+          check a token yourself first:</p>
           <p><span class="method get">GET</span> <code>https://api.aallyn.net/v1/embed/tmod/&lt;token&gt;</code>
-          → <code>{"token": "…", "live": true, …}</code></p>
+          → <code>{"token": "…", "live": true, "size": 184320}</code></p>
+
+          <p>Mods must be under 8 MB to preview this way. Larger ones can still go on the Kiwi
+          Mods Hub and embed with <code>release=</code>.</p>
         </section>
 
         <section id="fidelity">
@@ -188,6 +201,10 @@
           <h2>Privacy and cost</h2>
           <p>The viewer sets no cookies, stores nothing in the visitor's browser, and reads
           nothing from your page. The loader script only writes an iframe.</p>
+          <p>On our side, a mod you upload is held only for the life of its token and never
+          written to disk - we keep no library of partner mods, and nothing needs deleting when
+          you stop using the embed. Embedding a hub mod or a game file stores nothing at all,
+          since both are already ours.</p>
           <p>It's free to embed. There's a per-visitor request budget so one page can't
           monopolise the renderer; a normal page with a few previews is nowhere near it.</p>
         </section>
@@ -202,8 +219,9 @@
                 <td>Your origin isn't allowed yet. Send us the exact origin, scheme included.</td>
               </tr>
               <tr>
-                <td>"This preview link has expired"</td>
-                <td>An unviewed upload aged out. Re-POST the <code>.tmod</code> for a fresh token.</td>
+                <td>"This preview has expired"</td>
+                <td>The token outlived its TTL. POST the <code>.tmod</code> as the page renders
+                rather than caching the token for later.</td>
               </tr>
               <tr>
                 <td>"No '…' in the current game files"</td>

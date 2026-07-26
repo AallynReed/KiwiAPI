@@ -50,10 +50,12 @@ _SITE_CSP = (
 # Empty allowlist -> stays `frame-ancestors 'none'`: nobody can embed it until an
 # origin is added, and the page still works when opened directly.
 #
-# Matched on the viewer path, NOT the whole `/embed/` prefix: `/embed/status.svg` is
-# the status badge, embedded as an <img> on other sites, and it has no business
-# becoming framable or carrying a frame-ancestors list.
-_EMBED_PREFIX = "/embed/viewer"
+# Matched EXACTLY, not as a prefix. `/embed/status.svg` is the status badge (an
+# <img> on other sites) and has no business carrying a frame-ancestors list, and
+# `/embed/viewer/anything-else` is a 404 that should get the ordinary locked-down
+# CSP. The edge proxy matches this same path exactly; keeping the two in step means
+# there is no path where the app relaxes and the proxy doesn't, or vice versa.
+_EMBED_PATH = "/embed/viewer"
 # Everything in the site CSP except its frame-ancestors directive. Split by name
 # rather than by position so reordering _SITE_CSP can't silently leave the original
 # `frame-ancestors 'none'` in front of ours (first directive wins - the embed would
@@ -157,12 +159,17 @@ def add_security_middleware(app: FastAPI) -> None:
         h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         h.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         h.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
-        if path.startswith(_EMBED_PREFIX):
+        if path == _EMBED_PATH:
             # The one framable surface: CSP carries the allowlist and X-Frame-Options
-            # is deliberately absent (DENY would override frame-ancestors).
+            # must be ABSENT (a legacy DENY beats frame-ancestors in every browser -
+            # Firefox reports it as NS_ERROR_XFO_VIOLATION).
             # Imported here, not at module scope: app.embed.service pulls in the whole
             # Mods Hub service chain, and middleware is imported by everything.
             from app.embed.service import allowed_origins
+            # Deleted, not merely un-set: an inner layer may have added one, and this
+            # makes the ORIGIN's answer unambiguous when debugging a proxy that injects
+            # its own (nginx `add_header`, a Cloudflare managed transform).
+            del h["X-Frame-Options"]
             h.setdefault("Content-Security-Policy", _embed_csp(await allowed_origins()))
             h.setdefault("Cache-Control", "no-cache")
             return response

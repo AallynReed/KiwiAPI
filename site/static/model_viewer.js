@@ -9,11 +9,15 @@
    Matrices are column-major (three.js order).
 
    API: window.ModelViewer.open({ url, title })   -- modal
-        window.ModelViewer.mount(el, { url, bar, onMeta })  -- inline (embed page) */
+        window.ModelViewer.mount(el, { url, bar, onMeta, apiBase })  -- inline (embed page) */
 (function () {
   'use strict';
   var THREE_URL = '/static/vendor/three.min.js';  // self-hosted (GDPR: no cdnjs IP leak)
   var _styles = false, _three = null;
+  // Origin serving /site/rigs/* (the lazily-fetched animation clips). Empty = same
+  // origin, which is the Mods Hub case. The embeddable viewer is served from the
+  // website host while its data lives on the API, so it passes that origin in.
+  var _apiBase = '';
 
   function injectStyles() {
     if (_styles) return; _styles = true;
@@ -52,6 +56,7 @@
   function mount(container, opts) {
     injectStyles();
     container.classList.add('mv-stage');
+    if (typeof opts.apiBase === 'string') _apiBase = opts.apiBase.replace(/\/$/, '');
     var msg = document.createElement('div');
     msg.className = 'mv-msg';
     msg.textContent = 'Loading model…';
@@ -236,7 +241,7 @@
       if (!data.rig) return;                                  // no skeleton -> can't fetch frames
       var btn = bar.querySelector('.mv-btn[data-anim="' + name + '"]');
       if (btn) btn.classList.add('mv-loading');
-      fetch('/site/rigs/' + encodeURIComponent(data.rig) + '/anim/' + encodeURIComponent(name), { credentials: 'same-origin' })
+      fetch(_apiBase + '/site/rigs/' + encodeURIComponent(data.rig) + '/anim/' + encodeURIComponent(name), { credentials: 'same-origin' })
         .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
         .then(function (a) { loaded[name] = a; if (btn) btn.classList.remove('mv-loading'); if (want === name) startAnim(name); })
         .catch(function () { if (btn) btn.classList.remove('mv-loading'); });

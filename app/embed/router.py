@@ -5,13 +5,19 @@ Three groups, all gated by ``feature_embed_viewer_enabled``:
   ``GET  /embed/viewer``      the chrome-free HTML page a partner puts in an iframe.
                               Framing is controlled by ``embed.allowed_origins``
                               (CSP frame-ancestors, applied in app/core/middleware.py).
-  ``GET  /site/embed/*``      the data the page fetches - same-origin from inside the
-                              iframe, so no CORS and no token. Tokenless + throttled.
+  ``GET  /site/embed/*``      the data the page fetches. Tokenless + throttled.
   ``POST /v1/embed/tmod``     server-to-server: a partner uploads a .tmod once and gets
                               a preview token. Needs an API token with ``mods:read``
                               (it never touches a browser, so a real credential costs
                               the partner nothing and keeps the endpoint from being an
                               open upload).
+
+**Where the page is served matters.** In production the PAGE comes from the website
+container (``app/web/pages.py``) on ``trove.aallyn.net`` - the ONLY origin permitted
+to be framed anywhere in the estate - while the data above stays here on the API,
+which refuses framing outright. The page reaches across that boundary with CORS,
+like every other page on the site. The copy of the page route below serves the
+single-process (pre-split) and local-dev case, where both surfaces share an origin.
 
 The read endpoints deliberately mirror the hub's ``/site/mods/releases/{id}/*``
 shapes, so the SAME viewer JS drives both surfaces with only a base URL swapped.
@@ -110,6 +116,8 @@ async def embed_viewer(
     return _TEMPLATES.TemplateResponse(request, "embed_viewer.html", {
         "release": release or "", "tmod": tmod or "", "game": game or "",
         "path": path or "", "mode": mode, "theme": theme,
+        # Same origin here (this process serves both), so no prefix is needed.
+        "api_base": "",
         "app_url": settings.app_url.rstrip("/"),
     })
 
@@ -148,6 +156,17 @@ async def embed_vfx_manifest(
     src: service.Source = _SRC, _t: None = _LIMIT,
 ) -> JSONResponse:
     return JSONResponse(await service.vfx_manifest(src, path), headers=_MED)
+
+
+@embed_page_router.get("/site/embed/allowed-origins", response_class=JSONResponse)
+async def embed_allowed_origins() -> JSONResponse:
+    """The framing allowlist, for the website container - it serves the framable page
+    but has no database to read the setting from (see app/embed/service.py).
+
+    Discloses nothing new: the same list is already in the CSP of the public page.
+    Not rate-limited with the others - it's an internal, cached, once-per-30s call
+    on the compose network, and throttling it could deny framing estate-wide."""
+    return JSONResponse({"origins": await service.allowed_origins()}, headers=_SHORT)
 
 
 @embed_page_router.get("/site/embed/vfx/asset", response_class=Response)
@@ -192,6 +211,8 @@ async def upload_tmod(
     got = await uploads.store(data, hashlib.sha256(data).hexdigest())
     return {
         **got,
+        # The WEBSITE host: it's the only origin permitted to be framed (the API
+        # host refuses framing), so this is the URL a partner can actually embed.
         "viewer_url": f"{settings.app_url.rstrip('/')}/embed/viewer?tmod={got['token']}",
     }
 

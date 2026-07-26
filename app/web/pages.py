@@ -61,6 +61,39 @@ router = APIRouter(
 )
 
 
+# ── Embeddable viewer ──────────────────────────────────────────────────────
+
+@router.get("/embed/viewer", response_class=HTMLResponse, include_in_schema=False)
+async def embed_viewer(
+    request: Request,
+    release: str | None = None,
+    tmod: str | None = None,
+    game: str | None = None,
+    path: str | None = None,
+    mode: str = "auto",
+    theme: str = "dark",
+) -> HTMLResponse:
+    """The chrome-free viewer other sites put in an ``<iframe>``.
+
+    Served from THIS host on purpose: the website is the only origin allowed to be
+    framed (the API host refuses framing outright), so partners embed a brand URL
+    and the data plane stays unframable.
+
+    Presentation only, like every other page here - the shell is rendered and the
+    client fetches its manifest/model/effect from the API cross-origin, the same way
+    the rest of the site gets its data. Params are handed to the client untouched: a
+    bad one should paint a readable message inside the frame, not a bare error inside
+    somebody else's page."""
+    return _TEMPLATES.TemplateResponse(request, "embed_viewer.html", {
+        "release": release or "", "tmod": tmod or "", "game": game or "",
+        "path": path or "", "mode": mode if mode in
+        ("auto", "blueprint", "assembled", "vfx") else "auto",
+        "theme": theme if theme in ("dark", "light") else "dark",
+        "api_base": _API,
+        "app_url": _APP,
+    })
+
+
 # ── Static / marketing / legal (no backend) ────────────────────────────────
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> HTMLResponse:

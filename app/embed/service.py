@@ -29,7 +29,9 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import logging
 import re
+import time
 from dataclasses import dataclass
 
 from app.core.errors import APIError, ErrorCode
@@ -38,6 +40,8 @@ from app.trove import tmod as tmod_mod
 from app.trove.mods_hub import service as hub
 from app.trove.mods_hub import vfx
 from app.trove.mods_hub.trove_layout import LIVE_BRANCH, game_file_map
+
+logger = logging.getLogger("kiwi.embed")
 
 # Files a ``game=`` source may address directly. (Everything else in the tree is
 # reachable only as a resolved dependency of a .pkfx, never by request.)
@@ -286,13 +290,28 @@ async def _game_assembled(src: Source) -> dict | None:
     if not parts:
         return None
 
+    # A skeleton is shared by every creature that uses it - `mount_raptor` covers
+    # EVERY raptor mount in the game. Taking all of its bound parts assembles all of
+    # them at once, stacked (534 parts / 127k voxels for one raptor, with each attach
+    # point claimed several times over). The game keeps one creature's blueprints in
+    # one folder, so the requested file's folder is what identifies WHICH raptor this
+    # is - and one part per attach point is what a single creature means.
+    folder = path.rsplit("/", 1)[0].lower() if "/" in path else ""
     fmap = await game_file_map(LIVE_BRANCH)
     files: list[dict] = []
-    for basename, _ap in parts.items():
+    claimed: set[str] = set()
+    for basename, ap in parts.items():
         gp = fmap.get(f"{basename}.blueprint")
-        raw = await _read_game_file(gp) if gp else None
+        if not gp:
+            continue
+        if folder and gp.rsplit("/", 1)[0].lower() != folder:
+            continue                     # a different creature on the same skeleton
+        if ap in claimed:
+            continue                     # attach point already filled
+        raw = await _read_game_file(gp)
         if raw is None:
             continue                     # a part we don't have -> the rest still assembles
+        claimed.add(ap)
         files.append({"path": f"{basename}.blueprint",
                       "content_base64": base64.b64encode(raw).decode()})
     if not files:
@@ -384,14 +403,56 @@ _ORIGIN_RE = re.compile(
 )
 
 
+_ORIGINS_TTL = 30.0
+_origins_cache: dict = {"at": -1e9, "value": None}
+
+
 async def allowed_origins() -> list[str]:
     """The origins the admin has allowed to iframe the viewer. Empty = nobody.
 
-    Accepts space- or comma-separated entries; malformed ones are ignored (see
-    ``_ORIGIN_RE``) so a bad character can never break or widen the CSP."""
+    Runs from the security middleware on every ``/embed/viewer`` response, so it's
+    memoised ~30s and **never raises**.
+
+    Two containers, one answer. The API reads the setting in-process. The website
+    container - which is where the framable page is actually served - has no database
+    at all (app/web/main.py), so it asks the API, exactly as it does for feature
+    flags. An unguarded read there used to 500 every request before routing.
+
+    Unlike the feature flags, this fails **CLOSED**: it's the whole access control
+    for framing, and "we couldn't check" must never read as "yes". Worst case a
+    partner's embed goes blank for 30s; the alternative is letting anyone frame it
+    during a blip.
+    """
+    now = time.monotonic()
+    cached = _origins_cache["value"]
+    if cached is not None and now - float(_origins_cache["at"]) <= _ORIGINS_TTL:
+        return cached
+
+    parsed = _parse_origins(await _read_allowlist())
+    _origins_cache["at"], _origins_cache["value"] = now, parsed
+    return parsed
+
+
+async def _read_allowlist() -> str:
+    """The raw setting - locally if this process has a database, else from the API."""
     from app.admin import runtime_config
 
-    raw = str(await runtime_config.get_setting("embed.allowed_origins") or "")
+    try:
+        return str(await runtime_config.get_setting("embed.allowed_origins") or "")
+    except Exception:                       # no DB here (website container), or a blip
+        pass
+    from app.core.internal_api import internal_get
+
+    data = await internal_get("/site/embed/allowed-origins")   # never raises
+    if isinstance(data, dict) and isinstance(data.get("origins"), list):
+        return " ".join(str(o) for o in data["origins"])
+    logger.warning("embed: allowlist unreadable - framing denied until it returns")
+    return ""
+
+
+def _parse_origins(raw: str) -> list[str]:
+    """Space- or comma-separated entries; malformed ones dropped (see ``_ORIGIN_RE``)
+    so a bad character can never break or widen the CSP."""
     seen: list[str] = []
     for part in raw.replace(",", " ").split():
         origin = part.strip().rstrip("/")

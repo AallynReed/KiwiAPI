@@ -31,6 +31,11 @@
   var cfg = {
     path: shell.dataset.path || '',
     mode: shell.dataset.mode || 'auto',
+    // The data plane's origin. This page is served from the WEBSITE host (the only
+    // one allowed to be framed), while every byte it needs lives on the API - so the
+    // fetches are cross-origin, exactly like the rest of the site. Empty when the two
+    // are the same origin, which keeps local dev same-origin.
+    apiBase: (shell.dataset.apiBase || '').replace(/\/$/, ''),
   };
 
   // The one source param the page was opened with, re-encoded for our own fetches.
@@ -49,7 +54,8 @@
   var state = { manifest: null, mode: null, path: null, viewer: null };
 
   function api(endpoint, extra) {
-    return '/site/embed/' + endpoint + '?' + srcQuery + (extra ? '&' + extra : '');
+    return cfg.apiBase + '/site/embed/' + endpoint + '?' + srcQuery
+      + (extra ? '&' + extra : '');
   }
 
   function message(text, isError) {
@@ -190,6 +196,8 @@
       els.bar.hidden = false;
       state.viewer = window.ModelViewer.mount(els.stage, {
         url: api('assembled'), bar: els.bar, onMeta: onMeta,
+        // Animation clips are fetched lazily from /site/rigs/* - same origin swap.
+        apiBase: cfg.apiBase,
       });
       return;
     }
@@ -209,7 +217,7 @@
         if (state.mode !== 'vfx') return;        // switched tabs while loading
         state.viewer = Pkfx.mount(stage, {
           path: state.path,
-          endpoint: { base: '/site/embed/vfx', query: srcQuery },
+          endpoint: { base: cfg.apiBase + '/site/embed/vfx', query: srcQuery },
         });
       }).catch(function (e) { message(e.message, true); });
       return;

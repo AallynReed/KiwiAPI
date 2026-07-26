@@ -59,7 +59,7 @@ the full per-token limit. See the [API reference](https://docs.aallyn.net) for e
 | `codexes` | decoded game catalogs — allies, mounts, dragons, recipes, items, fish, badges |
 | `updates` | archived game-update files, browsable and diffable per patch |
 | `mods` · `modpacks` | `.tmod` tooling plus a hub for sharing and bundling mods |
-| `embed` | preview tokens for the embeddable 3D/VFX viewer other sites can iframe |
+| `embed` | short-lived preview tokens for the embeddable 3D/VFX viewer other sites can iframe |
 | `events` | a live SSE stream so clients stop polling on the hour |
 | `ocr` | reads a character stat sheet from a screenshot (self-hosted, no LLM) |
 | `btt` · `misc` | Better Trove Tools release feeds, time tools, server status, supporters |
@@ -72,9 +72,10 @@ codexes, the mods hub, modpacks, the marketplace, game updates, server status, a
 Browsing is public; developing and publishing mods is a Discord-login action.
 
 Its 3D model and particle-effect viewers are also **embeddable**: another site can iframe
-`/embed/viewer` to preview a mod it hosts, a mod on the hub, or a file straight out of the
+`trove.aallyn.net/embed/viewer` to preview a mod it hosts, a mod on the hub, or a file straight out of the
 live game — and a single blueprint filename resolves into the whole assembled creature.
-Framing is allowed per-origin (`embed.allowed_origins`). Partner guide:
+Framing is allowed per-origin (`embed.allowed_origins`), and a mod a partner uploads to preview is
+held in Redis for minutes, never written to disk. Partner guide:
 [docs/embed.html](docs/embed.html); code in `app/embed/`.
 
 ## Run with Docker
