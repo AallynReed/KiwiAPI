@@ -282,10 +282,10 @@ title in-game, so the download keeps that exact name).
   derived mainly from the **last 7 days** of downloads (with stars + lifetime downloads as a floor), top mod ≈ 1.0.
 - `POST /v1/mods/lookup` - JSON `{hashes: [sha256, …]}` (≤200). Resolves mod + release metadata from artifact
   **content hashes** → `{results: {<hash>: {mod, release}}, unknown: [<hash>, …]}`. Identify installed `.tmod`s.
-  A release's `sha256` is exactly what its `download_url` serves and never changes once the build is cut, so
-  comparing it against the hash of the file on disk is a reliable "installed / outdated" check. A build that was
-  repacked to carry a **config** (below) also answers to the modder's pre-repack hash, so a copy of their own
-  build still resolves to the release that ships it.
+  A release's `sha256` is exactly what its `download_url` serves, so comparing it against the hash of the file on
+  disk is a reliable "installed / outdated" check. A build that was repacked to carry a **config** (below) also
+  answers to **every hash it used to have**, so a copy installed before the repack still resolves to this release
+  - it reads as installed and raises no phantom update (it just doesn't get the config).
 - `GET /v1/mods/categories` - the fixed category vocabulary → `{categories: [{name, bit}]}`. A mod's categories
   are stored as tags AND encoded as a `flags` bitmask (sum of bits) on its `.tmod`; test membership with
   `flags & bit`. The build/read tools auto-encode/decode this (see Mods section above: `flags` + `categories`).
@@ -320,10 +320,15 @@ so nothing is decompressed to show it; a `.zip` release lists its entries the sa
 the mod's title. When cutting a release a modder can attach that file and it's packed into the build as
 `ui/<title>.cfg` (the mod's own header title) - compiled or uploaded alike; an uploaded `.tmod` is repacked with
 everything else preserved, its header version, properties and packed paths included. Offered **only for a build
-that ships a `.swf`** - nothing else reads a config - and hidden everywhere else. It's baked in once, at build
-time, so the artifact and its `sha256` are fixed from then on; the pre-repack hash is kept so hash lookup still
-recognises the modder's own copy. The build also stamps a **`configPath`** header property naming that packed
-path, so a mod that happens to pack several `.cfg` files still says which one IS the config.
+that ships a `.swf`** - nothing else reads a config - and hidden everywhere else. It's baked in at build time, so
+the artifact and its `sha256` are fixed from then on; the pre-repack hash is kept so hash lookup still recognises
+the modder's own copy. The build also stamps a **`configPath`** header property naming that packed path, so a mod
+that happens to pack several `.cfg` files still says which one IS the config.
+
+An owner can also attach a config to a release that's **already published**, behind a warning that spells out the
+trade-off: the build is rewritten in place and gets a new `sha256` (the superseded one is remembered), so anyone
+who already installed it is never prompted to re-download and won't get the config - their copy simply keeps
+resolving to this release. Delivering a config to existing installs means cutting a **new release**.
 
 When a release's `.tmod` packs a **`.cfg`**, the mod page offers it as its own **Config** download beside the
 main one - a config belongs in the game's `ModCfgs` folder, not the mods folder, so it's needed separately. The

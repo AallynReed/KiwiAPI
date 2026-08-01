@@ -1249,7 +1249,7 @@ class Handler(SimpleHTTPRequestHandler):
                     "Saved on the project (releases-only mode). Normal **bold** + `code`.",
                     "warnings": "Requires the latest game build.<br>Back up your mods folder first.",
                     "default_branch": "main", "preview_shas": ["prevsha1", "prevsha2"], "taken_down": False,
-                    "takedown_reason": None, "is_owner": True, "starred": False,  # TEMP-VERIFY
+                    "takedown_reason": None, "is_owner": False, "starred": False,
                     "discord_url": "https://discord.gg/example",
                     "website_url": "https://example.com",
                     "donation_urls": ["https://ko-fi.com/example", "https://paypal.me/example"],
