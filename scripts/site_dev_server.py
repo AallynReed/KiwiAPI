@@ -760,6 +760,10 @@ def _market_timeline(name, days):
     base = 1200 + (len(name) * 37 % 800)
     pts = []
     for i in range(days):
+        # Two buckets nobody listed in, so local preview exercises the dashed
+        # "no data" bridge instead of only the happy gapless path.
+        if days >= 8 and i in (days - 6, days - 5):
+            continue
         bucket = ((now - (days - 1 - i) * day) // day) * day
         wob = 1 + 0.15 * math.sin(i / 2.0) + ((i * 7 % 5) - 2) * 0.02
         p50 = round(base * wob, 2)
@@ -1120,6 +1124,43 @@ class Handler(SimpleHTTPRequestHandler):
             ]})
         if path.startswith("/site/mods/releases/") and path.endswith("/file"):
             return self._send_bytes(b"kiwib stub file contents\n", "application/octet-stream")
+        # Stub the packed-config list + download so the dedicated "Config" button renders.
+        # The decoded artifact behind the release "Contents" modal.
+        if path.startswith("/site/mods/releases/") and path.endswith("/inspect"):
+            files = [
+                {"path": "ui/samplemod.swf", "size": 262144},
+                {"path": "ui/samplemod.cfg", "size": 128},
+                {"path": "ui/extra.cfg", "size": 64},
+                {"path": "ui/sample-mod.png", "size": 40960},
+                {"path": "blueprints/equipment/c_p_knight_lvl3_torso.blueprint", "size": 1820},
+                {"path": "blueprints/equipment/c_p_knight_lvl3_l_hand.blueprint", "size": 540},
+                {"path": "prefabs/item/style/hat.binfab", "size": 2048},
+            ]
+            return self._send_json({
+                "format": "tmod", "tag": "v1.2.0", "branch": "main",
+                "filename": "SampleMod.tmod", "sha256": "0" * 64, "base_sha256": None,
+                "size": 20480, "version": 1, "readable": True,
+                "properties": {
+                    "title": "SampleMod", "author": "Aallyn", "modVersion": "v1.2.0",
+                    "notes": "Local preview build.\nSecond line of notes.",
+                    "modLoader": "KiwiAPI", "previewPath": "ui/sample-mod.png",
+                    "configPath": "ui/samplemod.cfg", "tags": "Interface,Quality of Life",
+                },
+                "categories": ["Interface", "Quality of Life"], "flags": 6,
+                "preview_path": "ui/sample-mod.png", "config_path": "ui/samplemod.cfg",
+                "files": files, "file_count": len(files),
+                "total_size": sum(f["size"] for f in files),
+            })
+        # Two configs, one declared by the build's configPath - so the page shows a
+        # single Config button (the declared one) rather than one per .cfg.
+        if path.startswith("/site/mods/releases/") and path.endswith("/cfgs"):
+            return self._send_json({"items": [
+                {"path": "ui/samplemod.cfg", "size": 128, "filename": "SampleMod.cfg",
+                 "declared": True},
+                {"path": "ui/extra.cfg", "size": 64, "filename": "extra.cfg",
+                 "declared": False}]})
+        if path.startswith("/site/mods/releases/") and path.endswith("/cfg"):
+            return self._send_bytes(b"[Settings]\nstub = 1\n", "text/plain; charset=utf-8")
         # Stub the blueprint list so the page's collapsible "3D models" renders in dev
         # (the real decode endpoint needs an actual .tmod and isn't stubbed).
         if path.startswith("/site/mods/releases/") and path.endswith("/blueprints"):
@@ -1250,6 +1291,9 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json({"commit": {"id": "stub", "seq": 2}, "entries": [
                     {"path": "readme.md", "blob_sha": "stub", "size": 180},
                     {"path": "config/default.cfg", "blob_sha": "stub", "size": 128},
+                    # A .swf so the release modal's "Settings file" field is previewable
+                    # (it only appears for mods with a Flash UI).
+                    {"path": "ui/sample.swf", "blob_sha": "stub", "size": 65536},
                     {"path": "ui/icon.png", "blob_sha": "stub", "size": 4096}]})
             if sub.startswith("raw/") and sub.lower().endswith("readme.md"):
                 return self._send_text(
@@ -1881,6 +1925,11 @@ class Handler(SimpleHTTPRequestHandler):
             start = end - bucket * count
             points = []
             for i in range(count):
+                # A stretch of missed captures, plus a pair of holes that strand
+                # a single bucket between them - so local preview exercises both
+                # the dashed no-data bridge and the lone-point dot.
+                if count // 3 <= i < count // 3 + max(2, count // 10) or i in (count - 5, count - 3):
+                    continue
                 ti = start + i * bucket
                 base = 3500 + 1500 * math.sin(i / 3.0) + (i * 12)
                 active = max(180, round(base))
@@ -1911,11 +1960,16 @@ class Handler(SimpleHTTPRequestHandler):
             bucket, count = spec
             end = STUB_ANCHOR
             start = end - bucket * count
-            buckets = [start + i * bucket for i in range(count)]
+            # A stretch of buckets missing ENTIRELY (no captures at all) on top of
+            # the per-class nulls below - the two hole kinds the chart has to tell
+            # apart, both drawn as dashed no-data bridges.
+            idxs = [i for i in range(count)
+                    if not (count // 4 <= i < count // 4 + max(2, count // 12))]
+            buckets = [start + i * bucket for i in idxs]
             classes = []
             for ci, name in enumerate(_STUB_CLASSES):
                 vals, vals_clean = [], []
-                for i in range(count):
+                for i in idxs:
                     base = 120 + 70 * math.sin(i / 3.0 + ci * 0.5) + (18 - ci) * 6
                     # a couple of synthetic gaps (weekly reset look)
                     raw = None if (i % 28 == 13) else max(2.0, round(base, 1))
@@ -2451,11 +2505,15 @@ class Handler(SimpleHTTPRequestHandler):
             sanchors = [STUB_ANCHOR - (11 - i) * _HR for i in range(12)]
             seed = sum(ord(c) for c in name)
 
-            def _pts(base, rate):
+            def _pts(base, rate, holes=()):
+                # ``holes`` drops anchors from this series only - the board was
+                # captured, this player just wasn't in it - so the chart's
+                # dashed "no data" bridge shows up in local preview.
                 out, cur = [], float(base)
-                for a in sanchors:
-                    out.append({"created_at": a, "score": round(cur, 2),
-                                "rank": 1 + (seed % 6), "synthetic": False})
+                for i, a in enumerate(sanchors):
+                    if i not in holes:
+                        out.append({"created_at": a, "score": round(cur, 2),
+                                    "rank": 1 + (seed % 6), "synthetic": False})
                     cur += rate
                 return out
 
@@ -2466,7 +2524,7 @@ class Handler(SimpleHTTPRequestHandler):
                     {"uuid": 20, "name": "GEODE MASTERY POINTS",
                      "points": _pts(1_000_000_000 + seed * 1000, 48_500_000)},
                     {"uuid": 4002, "name": "DELVE DEPTH",
-                     "points": _pts(1880 + (seed % 10), 1920)},
+                     "points": _pts(1880 + (seed % 10), 1920, holes=(4, 5, 6))},
                 ],
             })
 

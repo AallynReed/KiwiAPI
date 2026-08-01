@@ -41,6 +41,11 @@ def _now() -> int:
     return int(datetime.now(UTC).replace(microsecond=0).timestamp())
 
 
+# How far ahead of the server a client-supplied ``last_seen`` may sit before we
+# stop trusting it. Covers ordinary NTP jitter and the capture->POST flight time.
+_CLOCK_SKEW_GRACE_SECONDS = 300
+
+
 # ----- Interest-items cache ------------------------------------------------
 # Read on every market insert + /v1/misc/interest-items hit. Short TTL as a
 # safety net; write paths also invalidate immediately so admin edits show on the
@@ -281,7 +286,18 @@ async def insert_dump(text: str, *, timestamp: int | None = None) -> dict:
         logger.warning("market: parsed 0 listings from %d-char dump", len(text))
         return {"parsed": 0, "imported": 0, "ignored_not_in_list": 0, "last_seen": None}
 
-    last_seen = int(timestamp) if (timestamp is not None and timestamp > 0) else _now()
+    now = _now()
+    last_seen = int(timestamp) if (timestamp is not None and timestamp > 0) else now
+    # ``last_seen`` means "when we saw this listing", so it can never legitimately
+    # be in the future. Storing a future value poisons every staleness check -
+    # ``now - last_seen`` goes negative, so nothing is ever old enough to expire
+    # and dead listings show as fresh forever. Clamp and shout instead.
+    if last_seen > now + _CLOCK_SKEW_GRACE_SECONDS:
+        logger.warning(
+            "market: client last_seen %d is %ds in the future - clamping to %d. "
+            "Check the scraper host's clock.", last_seen, last_seen - now, now,
+        )
+        last_seen = now
     interest = await _interest_items_set()
 
     ignored = 0

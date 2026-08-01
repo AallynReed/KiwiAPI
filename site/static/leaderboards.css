@@ -1938,8 +1938,19 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   stroke: rgba(15, 18, 24, .9);
   transition: r .12s ease;
 }
+/* Bridge across captures this series is missing (player out of the top-N, or no
+   capture at all). Dashed and thinned so the eye reads "we didn't measure this"
+   instead of a real climb - it keeps the series color so it's still traceable
+   back to its line, and stays dimmed even when highlighted. */
+.lb-chart .lb-series-line.lb-series-gap {
+  stroke-width: 1.4;
+  stroke-dasharray: 3 4;
+  opacity: .45;
+}
 .lb-chart.lb-chart-hover .lb-series-line { opacity: .35; }
 .lb-chart.lb-chart-hover .lb-series-line.is-active { opacity: 1; stroke-width: 2.6; }
+.lb-chart.lb-chart-hover .lb-series-line.lb-series-gap { opacity: .18; }
+.lb-chart.lb-chart-hover .lb-series-line.lb-series-gap.is-active { opacity: .6; stroke-width: 1.8; }
 .lb-chart.lb-chart-hover .lb-series-point { opacity: .35; }
 .lb-chart.lb-chart-hover .lb-series-point.is-active { opacity: 1; r: 4; }
 
@@ -2025,6 +2036,15 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   height: 10px;
   border-radius: 2px;
   flex-shrink: 0;
+}
+/* Key for the dashed bridges - a caption, not a series, so it isn't clickable
+   and doesn't take part in the hover highlight. */
+.lb-chart-legend-gap { cursor: default; color: var(--text-mute, #9aa4b2); }
+.lb-chart-legend-swatch-gap {
+  width: 14px;
+  height: 0;
+  border-radius: 0;
+  border-top: 2px dashed var(--text-mute, #9aa4b2);
 }
 .lb-chart-empty {
   /* Shown when a board/player has no usable timeseries yet

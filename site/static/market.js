@@ -11,7 +11,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON, apiUrl } = window.BTTUtil;
+  const { esc, fetchJSON, apiUrl, segmentGaps } = window.BTTUtil;
 
   const PAGE_SIZE = 100;
 
@@ -596,14 +596,30 @@
       if (!bucket.length) continue;
       const sorted = bucket.map((p) => p.price_each).sort((a, b_) => a - b_);
       const med = sorted[Math.floor(sorted.length / 2)];
-      const cx = xToPx(lo + bucketSize / 2);
-      const cy = yToPx(med);
-      trendPts.push(`${cx.toFixed(1)},${cy.toFixed(1)}`);
+      trendPts.push({ b, cx: xToPx(lo + bucketSize / 2), cy: yToPx(med) });
     }
-    if (trendPts.length >= 2) {
+    // Nobody listed the item in an empty bucket, so there's no median to plot -
+    // and a solid stroke straight over those buckets would claim a price drift
+    // we never observed. Solid within a run of consecutive buckets, dashed +
+    // dimmed across the skipped ones.
+    const trendSeg = segmentGaps(trendPts, { x: (p) => p.b, step: 1 });
+    const xy = (p) => `${p.cx.toFixed(1)},${p.cy.toFixed(1)}`;
+    for (const run of trendSeg.runs) {
+      if (run.length < 2) continue;
       const trend = document.createElementNS(svgNS, 'polyline');
       trend.setAttribute('class', 'mkt-chart-trend');
-      trend.setAttribute('points', trendPts.join(' '));
+      trend.setAttribute('points', run.map(xy).join(' '));
+      svg.appendChild(trend);
+    }
+    for (const [a, b] of trendSeg.bridges) {
+      const trend = document.createElementNS(svgNS, 'polyline');
+      trend.setAttribute('class', 'mkt-chart-trend mkt-chart-trend-gap');
+      // `[a, b].map(xy).join(' ')`, not a `${x} ${y}` template - the minifier's
+      // template lexer can eat that space (see scripts/minify_static.py).
+      trend.setAttribute('points', [a, b].map(xy).join(' '));
+      const why = document.createElementNS(svgNS, 'title');
+      why.textContent = t('No listings in this stretch');
+      trend.appendChild(why);
       svg.appendChild(trend);
     }
 

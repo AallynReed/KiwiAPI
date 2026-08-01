@@ -102,6 +102,12 @@ class CreateReleaseRequest(BaseModel):
         description="One of the project's preview images to embed in the .tmod as "
                     "ui/<slug>.<ext> (tmod format only; not committed to the repo).",
     )
+    config_base64: str | None = Field(
+        default=None,
+        description="A .cfg to pack into the build as ui/<title>.cfg, base64-encoded "
+                    "(tmod format only; not committed to the repo). Allowed only when "
+                    "the build ships a Flash UI (.swf) - nothing else reads a config.",
+    )
 
 
 class UpdateReleaseRequest(BaseModel):
@@ -154,4 +160,28 @@ class HashLookupRequest(BaseModel):
     hashes: list[str] = Field(
         min_length=1, max_length=200,
         description="Artifact sha256 hex hashes (one .tmod/.zip per hash) to resolve. Max 200.",
+    )
+
+
+class CreatorLinkRequest(BaseModel):
+    """Connect this API account to a creator, using the creator token they
+    generated on their Dashboard."""
+
+    token: str = Field(min_length=8, max_length=200,
+                       description="The creator token the creator gave you (starts with kiwi_creator_).")
+    label: str = Field(default="", max_length=60,
+                       description="Your name for this connection (e.g. 'release CI'). "
+                                   "It's what the creator sees in their connections list.")
+
+
+class CreatorScopeRequest(BaseModel):
+    """Narrow (or re-widen) what one connected API account may touch. Creator-side."""
+
+    all_projects: bool = Field(
+        default=True,
+        description="Cover every mod this creator owns, including ones created later.",
+    )
+    project_ids: list[str] = Field(
+        default_factory=list, max_length=500,
+        description="When all_projects is false, the mods the connection is limited to.",
     )

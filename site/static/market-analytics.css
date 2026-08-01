@@ -191,6 +191,7 @@
 .mkt-an-pickers { display: flex; gap: 10px; flex-wrap: wrap; }
 .mkt-an-key-ma { background: var(--an-ma); height: 0; border-top: 2px dashed var(--an-ma); }
 .mkt-an-key-cmp { background: var(--an-cmp); height: 3px; }
+.mkt-an-key-gap { background: none; height: 0; border-top: 2px dashed var(--text-mute); }
 
 .mkt-an-chart-wrap, .mkt-an-timeline { position: relative; }
 .mkt-an-svg { width: 100%; height: auto; display: block; }
@@ -216,6 +217,10 @@
 .mkt-an-band-lbl { fill: var(--an-evt-line); font-size: 10px; font-family: 'Inter', sans-serif; }
 .mkt-an-bandfill { fill: var(--an-band); }
 .mkt-an-medline { stroke: var(--an-med); stroke-width: 2; }
+/* Bridge over buckets with no listings. Finer dashes than the moving average's
+   (5 4) plus a lower opacity, so the two dashed strokes never read as the same
+   thing, and the bridge never passes for observed price movement. */
+.mkt-an-gapline { stroke: var(--text-soft, #6e7785); stroke-width: 1.4; stroke-dasharray: 2 4; opacity: .8; }
 .mkt-an-dot { fill: var(--an-med); }
 .mkt-an-vbar { fill: var(--an-vol); }
 .mkt-an-grid { stroke: rgba(255,255,255,.07); stroke-width: 1; }

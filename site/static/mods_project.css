@@ -339,20 +339,61 @@
 .mp-3d-parts[open] .mp-3d-parts-summary::after { transform: rotate(180deg); }
 .mp-3d-parts-summary:hover { color: var(--text); }
 .mp-3d-parts .mp-3d-list { padding-top: 8px; padding-left: 12px; }
-/* Per-release file list (expand a release -> download files individually) */
-.mp-release-files { width: 100%; margin-top: 8px; }
-.mp-release-files-list { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
-.mp-release-files-list:empty { padding-top: 0; }
-.mp-release-file {
-  display: flex; align-items: center; gap: 10px; padding: 4px 8px;
-  border: 1px solid var(--bg-line); border-radius: 8px; background: rgba(255,255,255,.02);
+/* Build contents (Contents -> the decoded .tmod: header + packed file tree) */
+.mp-insp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.mp-insp-chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px;
+  border: 1px solid var(--bg-line); border-radius: 999px; background: var(--bg-deep);
+  font-size: .8rem; color: var(--text-mute);
 }
-.mp-release-file-name {
-  flex: 1; min-width: 0; font-size: .82rem; color: var(--text);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--mono, monospace);
+.mp-insp-chip i { color: var(--text-mute); }
+.mp-insp-sha { margin: 8px 0 0; }
+.mp-insp-sha code {
+  font-family: 'JetBrains Mono', monospace; font-size: .74rem;
+  color: var(--text-mute); word-break: break-all;   /* readable gray, not --text-soft */
 }
-.mp-release-file-size { color: var(--text-mute); font-size: .76rem; flex: 0 0 auto; }
-.mp-release-file .mp-btn { flex: 0 0 auto; }
+.mp-insp-h { margin: 20px 0 8px; font: 700 1rem 'Space Grotesk', 'Inter', sans-serif; color: var(--text); }
+.mp-insp-cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.mp-insp-props { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.mp-insp-props th, .mp-insp-props td {
+  text-align: left; vertical-align: top; padding: 7px 10px; border-top: 1px solid var(--bg-line);
+}
+.mp-insp-props tr:first-child th, .mp-insp-props tr:first-child td { border-top: 0; }
+.mp-insp-props th {
+  width: 34%; font-weight: 600; color: var(--text-mute);
+  font-family: 'JetBrains Mono', monospace; font-size: .78rem; word-break: break-all;
+}
+.mp-insp-props td { color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mp-insp-tree {
+  border: 1px solid var(--bg-line); border-radius: var(--radius);
+  padding: 6px; max-height: 46vh; overflow-y: auto;
+}
+.mp-insp-dir > summary {
+  display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none;
+  padding: 5px 7px; border-radius: 8px; font-size: .84rem; color: var(--text);
+  user-select: none; -webkit-user-select: none;
+}
+.mp-insp-dir > summary::-webkit-details-marker { display: none; }
+.mp-insp-dir > summary:hover { background: var(--bg-card-hi); }
+.mp-insp-dir > summary i { color: var(--accent-yellow); }
+.mp-insp-kids { padding-left: 15px; border-left: 1px solid var(--bg-line); margin-left: 13px; }
+.mp-insp-file {
+  display: flex; align-items: center; gap: 8px; padding: 4px 7px; font-size: .82rem;
+}
+.mp-insp-file > i { color: var(--text-mute); }
+.mp-insp-file:hover { background: var(--bg-card-hi); border-radius: 8px; }
+.mp-insp-name {
+  flex: 1; min-width: 0; font-family: 'JetBrains Mono', monospace; font-size: .78rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mp-insp-dir > summary .mp-insp-name { font-family: inherit; font-size: .84rem; flex: 1; }
+.mp-insp-meta { flex: 0 0 auto; color: var(--text-mute); font-size: .74rem; font-variant-numeric: tabular-nums; }
+.mp-insp-role {
+  flex: 0 0 auto; padding: 1px 7px; border-radius: 999px; font-size: .68rem;
+  border: 1px solid var(--bg-line); color: var(--text-mute); background: var(--bg-deep);
+}
+.mp-insp-file .mp-btn { flex: 0 0 auto; padding: 2px 8px; }
+.mp-cfg-more { font-size: .76rem; align-self: center; }
 
 /* Placement warnings */
 .mp-warn {

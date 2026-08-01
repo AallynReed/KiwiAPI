@@ -192,6 +192,28 @@
 }
 .cact-line { fill: none; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 .cact-line.dim { opacity: .12; }
+/* Bridge across buckets this class has no measurement for. Keeps the class color
+   so the line stays traceable, but thinner + dashed + dimmed so it can't be read
+   as a measured rise or fall. Dashes differ from the reset markers' (2 4 / 4 4),
+   which are faint verticals rather than data strokes. */
+.cact-line-gap { stroke-width: 1.2; stroke-dasharray: 3 4; opacity: .45; }
+/* A bucket stranded between two holes - a one-point path draws nothing. */
+.cact-point { stroke: none; }
+/* Key for the dashed bridges (the class pills below the chart are toggles, so
+   this non-interactive caption sits with the chart instead). */
+.cact-chart-key {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 6px 0 0;
+  color: var(--text-mute);
+  font-size: .78rem;
+}
+.cact-key-gap {
+  width: 16px;
+  border-top: 2px dashed var(--text-mute);
+  display: inline-block;
+}
 .cact-guide { stroke: color-mix(in oklab, var(--text-mute) 45%, transparent); stroke-width: 1; stroke-dasharray: 3 3; }
 .cact-reset-daily { stroke: color-mix(in oklab, var(--text-mute) 32%, transparent); stroke-width: 1; stroke-dasharray: 2 4; }
 .cact-reset-weekly { stroke: color-mix(in oklab, var(--accent-yellow) 55%, transparent); stroke-width: 1.5; stroke-dasharray: 4 4; }

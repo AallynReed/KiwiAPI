@@ -138,6 +138,55 @@
         };
     }
 
+    // ── Gap-aware line segmentation ───────────────────────────────────────────
+    // Every time-series on the site plots ONLY the periods we actually captured.
+    // Where a stretch has no data the naive polyline joins straight across it,
+    // and that straight run reads as a real trend ("prices climbed all week")
+    // when in truth nothing was measured. segmentGaps splits a point list into
+    //   runs    - contiguous stretches, drawn solid with their normal markers
+    //   bridges - [last-before, first-after] pairs spanning a hole, drawn
+    //             dashed + dimmed and never given dots
+    // so an empty period is visibly an empty period.
+    //   points      - array sorted ascending by x
+    //   opts.x      - (p) => number; defaults to p.x
+    //   opts.step   - expected spacing between neighbours (bucket size / capture
+    //                 cadence). Omitted -> inferred from the median delta.
+    //   opts.factor - a delta must exceed factor * step to count as a hole (1.5)
+    // Returns { runs, bridges, step }. With < 3 points there's no cadence to
+    // infer from, so an unspecified step yields one run and no bridges.
+    function segmentGaps(points, opts) {
+        opts = opts || {};
+        const getX = opts.x || ((p) => p.x);
+        const factor = opts.factor || 1.5;
+        const pts = points || [];
+        if (pts.length < 2) return { runs: pts.length ? [pts.slice()] : [], bridges: [], step: null };
+
+        const deltas = [];
+        for (let i = 1; i < pts.length; i++) deltas.push(getX(pts[i]) - getX(pts[i - 1]));
+        let step = opts.step;
+        if (!(step > 0)) {
+            if (deltas.length < 2) return { runs: [pts.slice()], bridges: [], step: null };
+            const sorted = deltas.slice().sort((a, b) => a - b);
+            step = sorted[Math.floor(sorted.length / 2)];
+        }
+        if (!(step > 0)) return { runs: [pts.slice()], bridges: [], step: null };
+
+        const limit = step * factor;
+        const runs = [];
+        const bridges = [];
+        let run = [pts[0]];
+        for (let i = 1; i < pts.length; i++) {
+            if (deltas[i - 1] > limit) {
+                bridges.push([pts[i - 1], pts[i]]);
+                runs.push(run);
+                run = [];
+            }
+            run.push(pts[i]);
+        }
+        runs.push(run);
+        return { runs, bridges, step };
+    }
+
     // ── Leaderboard board icons ───────────────────────────────────────────────
     // Authoritative board→icon map from the game's own ui/leaderboard_icons set,
     // served from the updates CAS we already mirror (via /site/leaderboards/
@@ -231,6 +280,6 @@
 
     window.BTTUtil = {
         esc, apiUrl, getJSON, fetchJSON, getFocusable, trapFocus,
-        boardIconName, boardIconImg, crownHtml,
+        segmentGaps, boardIconName, boardIconImg, crownHtml,
     };
 })();

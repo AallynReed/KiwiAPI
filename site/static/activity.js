@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON } = window.BTTUtil;
+  const { esc, fetchJSON, segmentGaps } = window.BTTUtil;
 
   const PERIODS = ['1d', '7d', '1m'];   // longer ranges (3m/6m/1y/all) removed
   const state = {
@@ -210,16 +210,47 @@
     }
     svg.appendChild(xG);
 
-    // Area + line. Close the fill under the actual DATA extent (first/last
-    // point), not the axis bounds - otherwise a sparse range smears the fill
-    // across the empty part of the window.
-    const line = points.map((q, i) =>
-      `${i === 0 ? 'M' : 'L'}${xToPx(q.t).toFixed(1)},${yToPx(q.active).toFixed(1)}`).join(' ');
-    const area = line +
-      ` L${xToPx(xs[xs.length - 1]).toFixed(1)},${(padT + plotH).toFixed(1)}` +
-      ` L${xToPx(xs[0]).toFixed(1)},${(padT + plotH).toFixed(1)} Z`;
-    svg.appendChild(svgEl('path', { d: area, class: 'act-area', fill: 'url(#act-grad)' }));
-    svg.appendChild(svgEl('path', { d: line, class: 'act-line', fill: 'none' }));
+    // Area + line, split at the buckets we have NO capture for. A straight
+    // stroke across a missing stretch reads as a measured trend, so those
+    // stretches get a dashed, dimmed bridge instead - and no fill under them.
+    // Contiguity is judged on the BUCKET INDEX (floor(t / bucket_seconds)), not
+    // on the plotted timestamp: a coarse bucket plots its centroid/extreme, so
+    // neighbouring buckets' timestamps can sit almost two buckets apart without
+    // anything actually being missing.
+    const bucket = p.bucket_seconds || 0;
+    const seg = segmentGaps(points, bucket > 0
+      ? { x: (q) => Math.floor(q.t / bucket), step: 1 }
+      : { x: (q) => q.t });
+    for (const run of seg.runs) {
+      if (run.length < 2) {
+        // Lone survivor between two holes - a path draws nothing, so mark it.
+        if (run.length === 1) {
+          svg.appendChild(svgEl('circle', {
+            class: 'act-point', r: '2.6',
+            cx: xToPx(run[0].t).toFixed(1), cy: yToPx(run[0].active).toFixed(1),
+          }));
+        }
+        continue;
+      }
+      const line = run.map((q, i) =>
+        `${i === 0 ? 'M' : 'L'}${xToPx(q.t).toFixed(1)},${yToPx(q.active).toFixed(1)}`).join(' ');
+      const area = line +
+        ` L${xToPx(run[run.length - 1].t).toFixed(1)},${(padT + plotH).toFixed(1)}` +
+        ` L${xToPx(run[0].t).toFixed(1)},${(padT + plotH).toFixed(1)} Z`;
+      svg.appendChild(svgEl('path', { d: area, class: 'act-area', fill: 'url(#act-grad)' }));
+      svg.appendChild(svgEl('path', { d: line, class: 'act-line', fill: 'none' }));
+    }
+    for (const [a, b] of seg.bridges) {
+      const bridge = svgEl('path', {
+        class: 'act-line act-line-gap', fill: 'none',
+        d: `M${xToPx(a.t).toFixed(1)},${yToPx(a.active).toFixed(1)}`
+         + ` L${xToPx(b.t).toFixed(1)},${yToPx(b.active).toFixed(1)}`,
+      });
+      const why = svgEl('title', {});
+      why.textContent = t('No data captured for this stretch');
+      bridge.appendChild(why);
+      svg.appendChild(bridge);
+    }
 
     // Reset markers - vertical lines at each daily 11:00 UTC reset (Monday's
     // is the weekly reset, drawn distinct). Only on the short ranges where an

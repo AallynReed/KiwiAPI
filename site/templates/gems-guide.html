@@ -45,10 +45,10 @@
                 <h1 class="gg-title" data-i18n>How <span class="highlight-blue">Gems</span> Work in Trove</h1>
                 <p class="gg-lead" data-i18n>Gems are the single biggest source of power on a Trove character - and the most confusing. This is the whole system, taken apart piece by piece and made interactive. Scroll to build one up; poke at everything.</p>
                 <div class="gg-hero-chips" aria-hidden="true">
-                    <span class="gg-chip"><i class="fa-solid fa-layer-group"></i> 4 top tiers</span>
-                    <span class="gg-chip"><i class="fa-solid fa-droplet"></i> 4 elements</span>
-                    <span class="gg-chip"><i class="fa-solid fa-dice-d6"></i> 2-3 stats</span>
-                    <span class="gg-chip"><i class="fa-solid fa-arrow-trend-up"></i> level to perfect</span>
+                    <span class="gg-chip"><i class="fa-solid fa-layer-group"></i> <span data-i18n>4 top tiers</span></span>
+                    <span class="gg-chip"><i class="fa-solid fa-droplet"></i> <span data-i18n>4 elements</span></span>
+                    <span class="gg-chip"><i class="fa-solid fa-dice-d6"></i> <span data-i18n>2-3 stats</span></span>
+                    <span class="gg-chip"><i class="fa-solid fa-arrow-trend-up"></i> <span data-i18n>level to perfect</span></span>
                 </div>
             </div>
             <div class="gg-hero-gem">
@@ -158,6 +158,34 @@
                 <div class="gg-gem-stage gg-gem-stage-md" id="type-gem" data-element="2"></div>
                 <div class="gg-type-detail" id="gg-type-detail" aria-live="polite"></div>
             </div>
+
+            <div class="gg-drops">
+                <div class="gg-drops-head">
+                    <h3 data-i18n>Where Lesser gems come from</h3>
+                    <p data-i18n>You don't craft Lesser gems - you find them. Each tier starts dropping at its own world difficulty, so the gems you pick up get better as the worlds you can clear do.</p>
+                </div>
+                <div class="gg-drop-cards" id="gg-drop-cards"></div>
+
+                <div class="gg-shortcut">
+                    <div class="gg-sc-head">
+                        <h4><i class="fa-solid fa-stairs" aria-hidden="true"></i> <span data-i18n>Delves are the shortcut to Mystic</span></h4>
+                        <p data-i18n>Delves parallel the same difficulties, and the deeper you go the higher they climb - <b>depth 160+</b> is the D15 equivalent and drops the same Mystic gem boxes. What it doesn't ask for is a D15 character:</p>
+                    </div>
+                    <div class="gg-sc-compare">
+                        <div class="gg-sc-card best">
+                            <span class="gg-sc-k" data-i18n>Delve, depth 160+</span>
+                            <span class="gg-sc-v">15,000 <small data-i18n>Power Rank</small></span>
+                            <span class="gg-sc-s" data-i18n>No Light requirement</span>
+                        </div>
+                        <div class="gg-sc-card">
+                            <span class="gg-sc-k" data-i18n>D15 world</span>
+                            <span class="gg-sc-v">42,500 <small data-i18n>Power Rank</small></span>
+                            <span class="gg-sc-s" data-i18n>and 10,000 Light</span>
+                        </div>
+                    </div>
+                    <p class="gg-sc-foot" data-i18n>Same gems, a third of the power. If friends can carry you that deep, you can skip Stellar and Crystal entirely and start collecting Mystic gems long before you could set foot in a D15 world.</p>
+                </div>
+            </div>
         </section>
 
         <!-- ─── 4. Class Gems ────────────────────────────────────────── -->
@@ -238,15 +266,15 @@
                     </div>
                 </div>
                 <div class="gg-keeper-timeline" aria-hidden="true">
-                    <span class="gg-kt-step"><b>Lvl 1</b><small>3 stats</small></span>
+                    <span class="gg-kt-step"><b><span data-i18n>Lvl</span> 1</b><small data-i18n>3 stats</small></span>
                     <span class="gg-kt-join">+</span>
-                    <span class="gg-kt-step boost"><b>Lvl 5</b><small>boost</small></span>
+                    <span class="gg-kt-step boost"><b><span data-i18n>Lvl</span> 5</b><small data-i18n>boost</small></span>
                     <span class="gg-kt-join">+</span>
-                    <span class="gg-kt-step boost"><b>Lvl 10</b><small>boost</small></span>
+                    <span class="gg-kt-step boost"><b><span data-i18n>Lvl</span> 10</b><small data-i18n>boost</small></span>
                     <span class="gg-kt-join">+</span>
-                    <span class="gg-kt-step boost"><b>Lvl 15</b><small>boost</small></span>
+                    <span class="gg-kt-step boost"><b><span data-i18n>Lvl</span> 15</b><small data-i18n>boost</small></span>
                     <span class="gg-kt-join">=</span>
-                    <span class="gg-kt-step total"><b>6</b><small>containers</small></span>
+                    <span class="gg-kt-step total"><b>6</b><small data-i18n>containers</small></span>
                 </div>
             </div>
         </section>
@@ -308,12 +336,12 @@
                 </div>
                 <div class="gg-dp-stats">
                     <div class="gg-dp-stat">
-                        <span class="gg-dp-stat-k"><b>Gem Fixture</b> · −20%</span>
+                        <span class="gg-dp-stat-k"><b data-i18n>Gem Fixture</b> · −20%</span>
                         <span class="gg-dp-stat-v">+4,045,666</span>
                         <span class="gg-dp-stat-s" data-i18n>net dust per 50 gems</span>
                     </div>
                     <div class="gg-dp-stat best">
-                        <span class="gg-dp-stat-k"><b>+ Gem Day</b> · −40%</span>
+                        <span class="gg-dp-stat-k"><b>+ <span data-i18n>Gem Day</span></b> · −40%</span>
                         <span class="gg-dp-stat-v">+4,854,799</span>
                         <span class="gg-dp-stat-s" data-i18n>net dust per 50 gems</span>
                     </div>
@@ -405,7 +433,7 @@
 
                     <div class="gg-adv-diagram" aria-hidden="true">
                         <div class="gg-adv-stat">
-                            <span class="gg-adv-slabel">Magic Dmg · 3</span>
+                            <span class="gg-adv-slabel"><span data-i18n>Magic Dmg</span> · 3</span>
                             <div class="gg-adv-conts">
                                 <span class="gg-adv-cont"><i style="height:78%"></i></span>
                                 <span class="gg-adv-cont boost"><i style="height:52%"></i></span>
@@ -413,14 +441,14 @@
                             </div>
                         </div>
                         <div class="gg-adv-stat">
-                            <span class="gg-adv-slabel">Crit Dmg · 2</span>
+                            <span class="gg-adv-slabel"><span data-i18n>Crit Dmg</span> · 2</span>
                             <div class="gg-adv-conts">
                                 <span class="gg-adv-cont"><i style="height:88%"></i></span>
                                 <span class="gg-adv-cont boost"><i style="height:41%"></i></span>
                             </div>
                         </div>
                         <div class="gg-adv-stat">
-                            <span class="gg-adv-slabel">Light · 1</span>
+                            <span class="gg-adv-slabel"><span data-i18n>Light</span> · 1</span>
                             <div class="gg-adv-conts">
                                 <span class="gg-adv-cont"><i style="height:70%"></i></span>
                             </div>

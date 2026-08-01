@@ -1521,3 +1521,50 @@
 .is-canvas-hint { margin: 6px 0 0; font-size: .72rem; color: var(--text-mute, #9aa6b6); }
 .is-livepreview { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.07); }
 .is-live { display: block; max-width: 100%; height: auto; border: 1px solid rgba(255,255,255,.1); border-radius: 6px; background: repeating-conic-gradient(#2a2a2a 0% 25%, #222 0% 50%) 50% / 20px 20px; }
+
+/* ── Mods: API access (creator token + connected apps) ── */
+.dash-token-reveal {
+  display: grid; gap: 8px; justify-items: start;
+  margin: 0 0 14px; padding: 12px 14px;
+  background: rgba(76,201,240,.06);
+  border: 1px solid rgba(76,201,240,.22);
+  border-radius: 10px;
+}
+.dash-token-value {
+  display: block; width: 100%; box-sizing: border-box;
+  padding: 8px 10px;
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .82rem; word-break: break-all; color: var(--text);
+}
+.dash-creator-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.dash-creator-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+}
+.dash-creator-main { display: grid; gap: 2px; min-width: 0; }
+.dash-creator-main .dash-hint { margin: 0; }
+.dash-creator-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+/* The scope editor drops onto its own row under both columns. */
+.dash-creator-scope { grid-column: 1 / -1; display: grid; gap: 8px; justify-items: start; }
+.dash-creator-scope[hidden] { display: none; }
+.dash-creator-picks {
+  display: grid; gap: 6px;
+  max-height: 220px; overflow-y: auto;
+  width: 100%; box-sizing: border-box;
+  padding: 8px 10px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 8px;
+}
+@media (max-width: 720px) {
+  .dash-creator-row { grid-template-columns: 1fr; }
+}

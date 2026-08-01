@@ -87,14 +87,19 @@ body.gems-guide-page { overflow-x: clip; }
 .gg-hero-cue:hover { color: var(--accent-blue); gap: .8rem; }
 .gg-hero-gem { display: grid; place-items: center; }
 
-/* ─── Section nav (sticky pill row) ────────────────────────────────────── */
+/* ─── Section nav (sticky pill row) ──────────────────────────────────────
+   Wraps onto a second row rather than clipping: translated labels (pt, de,
+   ru) run far wider than the English ones and used to scroll out of sight
+   behind a hidden scrollbar. Narrow screens keep the single scrolling row -
+   see the 860px block, where wrapping would cost five rows of height. */
 .gg-secnav {
   position: sticky; top: calc(var(--nav-h) + 8px); z-index: var(--z-secnav);
-  display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem;
+  scrollbar-width: none;
   padding: 6px; margin: 0 auto 1rem; width: fit-content; max-width: 100%;
   background: color-mix(in oklab, var(--bg-card) 82%, transparent);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  border: 1px solid var(--bg-line); border-radius: 999px;
+  border: 1px solid var(--bg-line); border-radius: 24px;
 }
 .gg-secnav::-webkit-scrollbar { display: none; }
 .gg-secnav a {
@@ -613,7 +618,11 @@ body.gems-guide-page { overflow-x: clip; }
      of the section (the inner .gg-scrolly-sticky can't - its cell is short). */
   /* Drop the section-nav to static so it doesn't fight the scrolly bar for the
      pinned top slot (and to reclaim vertical space on small screens). */
-  .gg-secnav { position: static; margin-bottom: 1.5rem; }
+  .gg-secnav {
+    position: static; margin-bottom: 1.5rem;
+    flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto;
+    border-radius: 999px;
+  }
   .gg-scrolly { grid-template-columns: 1fr; gap: 0; }
   .gg-scrolly-viz { position: sticky; top: calc(var(--nav-h) + 8px); z-index: 5; }
   .gg-scrolly-sticky { position: static; top: auto; grid-template-columns: 116px 1fr; align-items: center;
@@ -660,6 +669,55 @@ body.gems-guide-page { overflow-x: clip; }
 .gg-conv-coin { color: var(--accent-yellow); font-size: .8rem; }
 .gg-conv-or { color: var(--text-mute); font-weight: 400; font-size: .72rem; }
 .gg-conv-foot { margin: 1.2rem 0 0; font-size: .84rem; color: var(--text-mute); line-height: 1.6; max-width: 66ch; }
+
+/* ─── Where Lesser gems drop (inside §03 Lesser vs Empowered) ──────────── */
+.gg-drops { margin-top: 2.2rem; border-top: 1px solid var(--bg-line); padding-top: 1.6rem; }
+.gg-drops-head h3 { font-size: 1.2rem; margin: 0 0 .45rem; color: var(--text); }
+.gg-drops-head p { margin: 0 0 1.1rem; color: var(--text-mute); line-height: 1.6; max-width: 64ch; }
+.gg-drop-cards { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }
+.gg-drop-card {
+  display: flex; flex-direction: column; gap: .3rem;
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-top: 3px solid var(--tc); border-radius: var(--radius); padding: .9rem 1rem;
+  transition: transform .18s var(--ease-out), border-color .18s var(--ease-out), box-shadow .18s var(--ease-out);
+}
+.gg-drop-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--tc) 45%, var(--bg-line)); border-top-color: var(--tc);
+  box-shadow: 0 9px 24px -14px rgba(0,0,0,.6);
+}
+.gg-drop-tier { display: inline-flex; align-items: center; gap: .35rem; font-size: .88rem; font-weight: 600; color: var(--text); }
+.gg-drop-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--tc); box-shadow: 0 0 6px color-mix(in srgb, var(--tc) 70%, transparent); }
+.gg-drop-diff { font-size: 1.55rem; font-weight: 800; line-height: 1.15; color: var(--tc); }
+.gg-drop-sub { font-size: .78rem; color: var(--text-mute); line-height: 1.5; }
+.gg-drop-delve {
+  display: inline-flex; align-items: center; gap: .35rem; margin-top: auto; padding-top: .5rem;
+  font-size: .78rem; font-weight: 600; color: var(--text);
+}
+.gg-drop-delve > i { color: var(--tc); font-size: .74rem; }
+/* The Delve route - same Mystic gems, far lower entry requirements. */
+.gg-shortcut {
+  margin-top: 1.1rem; padding: 1.1rem 1.2rem; border-radius: var(--radius);
+  background: color-mix(in oklab, var(--accent-purple) 7%, var(--bg-card));
+  border: 1px solid color-mix(in oklab, var(--accent-purple) 22%, var(--bg-line));
+}
+.gg-sc-head h4 { display: flex; align-items: center; gap: .5rem; font-size: 1rem; margin: 0 0 .4rem; color: var(--text); }
+.gg-sc-head h4 > i { color: var(--accent-purple); font-size: .92rem; }
+.gg-sc-head p { margin: 0 0 1rem; color: var(--text-mute); line-height: 1.6; font-size: .9rem; max-width: 66ch; }
+.gg-sc-head p b { color: var(--text); }
+.gg-sc-compare { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.gg-sc-card {
+  display: flex; flex-direction: column; gap: .25rem;
+  background: var(--bg-deep); border: 1px solid var(--bg-line);
+  border-radius: var(--radius); padding: .8rem .95rem;
+}
+.gg-sc-card.best { border-color: color-mix(in oklab, var(--accent-purple) 45%, var(--bg-line)); }
+.gg-sc-k { font-size: .8rem; font-weight: 600; color: var(--text-mute); }
+.gg-sc-v { font-size: 1.3rem; font-weight: 800; line-height: 1.2; color: var(--text); }
+.gg-sc-card.best .gg-sc-v { color: var(--accent-purple); }
+.gg-sc-v small { font-size: .72rem; font-weight: 600; color: var(--text-mute); letter-spacing: .01em; }
+.gg-sc-s { font-size: .78rem; color: var(--text-mute); line-height: 1.5; }
+.gg-sc-foot { margin: .95rem 0 0; font-size: .84rem; color: var(--text-mute); line-height: 1.6; max-width: 68ch; }
 
 /* ─── Gem Level Up Boosters (inside §06 Leveling) ──────────────────────── */
 .gg-boosters { margin-top: 2.4rem; border-top: 1px solid var(--bg-line); padding-top: 1.8rem; }

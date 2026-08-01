@@ -2714,6 +2714,11 @@ async def _process_leaderboard_dump(
                 "anchor": summary.get("created_at"),
                 "cleared_before_insert": summary.get("cleared_before_insert"),
                 "archived_old": summary.get("archived_old"),
+                # Present only when the client's ?timestamp was out of range and
+                # the anchor fell back to the day reset - the row landed, but NOT
+                # where the bot asked for it. Surfaced so the admin log shows the
+                # mismatch instead of a bare green "OK".
+                "rejected_timestamp": summary.get("rejected_timestamp"),
                 "bytes": nbytes,
             },
         )

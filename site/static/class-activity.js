@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON } = window.BTTUtil;
+  const { esc, fetchJSON, segmentGaps } = window.BTTUtil;
 
   const PERIODS = ['1d', '7d', '1m', '3m', '6m', '1y', 'all'];
 
@@ -289,18 +289,54 @@
       svg.appendChild(rg);
     }
 
-    // one path per visible class; break the path at null buckets (gaps).
+    // One path per visible class, split wherever the class has no measurement -
+    // either the bucket is missing entirely (no captures at all) or this class's
+    // value is null there (a window crossing the weekly reset is unmeasurable,
+    // and the clean view gaps wherever the Power-Rank filter had nothing to go
+    // on). Contiguity is judged on the BUCKET KEY (floor(t / bucket_seconds)),
+    // not the array index, so an absent bucket doesn't read as adjacent, and not
+    // on the plotted timestamp, which is the bucket's centroid.
+    // The hole gets a dashed, dimmed bridge in the class's own color: a solid
+    // stroke there would draw a rise or fall nobody measured.
+    const bucketSecs = p.bucket_seconds || 0;
+    let hadGap = false;
     for (const cls of classes) {
       if (state.hidden.has(cls.class_index)) continue;
-      let d = '';
-      let pen = false;
+      const pts = [];
       for (let i = 0; i < buckets.length; i++) {
         const s = plotAt(cls, i);
-        if (s == null) { pen = false; continue; }
-        d += `${pen ? 'L' : 'M'}${xToPx(buckets[i]).toFixed(1)},${yToPx(s).toFixed(1)} `;
-        pen = true;
+        if (s != null) pts.push({ t: buckets[i], y: s });
       }
-      if (d) svg.appendChild(svgEl('path', { d: d.trim(), class: 'cact-line', stroke: color(cls.class_index) }));
+      if (!pts.length) continue;
+      const stroke = color(cls.class_index);
+      const seg = segmentGaps(pts, bucketSecs > 0
+        ? { x: (q) => Math.floor(q.t / bucketSecs), step: 1 }
+        : { x: (q) => q.t });
+      for (const run of seg.runs) {
+        if (run.length < 2) {
+          // Lone bucket between two holes - a one-point path draws nothing.
+          svg.appendChild(svgEl('circle', {
+            class: 'cact-point', r: '2.2', fill: stroke,
+            cx: xToPx(run[0].t).toFixed(1), cy: yToPx(run[0].y).toFixed(1),
+          }));
+          continue;
+        }
+        const d = run.map((q, i) =>
+          `${i === 0 ? 'M' : 'L'}${xToPx(q.t).toFixed(1)},${yToPx(q.y).toFixed(1)}`).join(' ');
+        svg.appendChild(svgEl('path', { d, class: 'cact-line', stroke }));
+      }
+      for (const [a, b] of seg.bridges) {
+        hadGap = true;
+        const bridge = svgEl('path', {
+          class: 'cact-line cact-line-gap', stroke,
+          d: `M${xToPx(a.t).toFixed(1)},${yToPx(a.y).toFixed(1)}`
+           + ` L${xToPx(b.t).toFixed(1)},${yToPx(b.y).toFixed(1)}`,
+        });
+        const why = svgEl('title', {});
+        why.textContent = t('No data captured for this stretch');
+        bridge.appendChild(why);
+        svg.appendChild(bridge);
+      }
     }
 
     const guide = svgEl('line', { class: 'cact-guide', y1: padT, y2: padT + plotH, x1: 0, x2: 0 });
@@ -311,6 +347,15 @@
 
     host.innerHTML = '';
     host.appendChild(svg);
+    // Key for the dashed bridges, shown only when the chart actually drew one -
+    // the class pills below are toggles, so this caption lives with the chart
+    // rather than in that legend.
+    if (hadGap) {
+      const key = document.createElement('p');
+      key.className = 'cact-chart-key';
+      key.innerHTML = `<span class="cact-key-gap"></span>${esc(t('No data'))}`;
+      host.appendChild(key);
+    }
 
     function onMove(evt) {
       const r = svg.getBoundingClientRect();

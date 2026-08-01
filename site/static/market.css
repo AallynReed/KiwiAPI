@@ -450,6 +450,14 @@
   stroke-linecap: round;
   filter: drop-shadow(0 0 4px rgba(248,150,30,.5));
 }
+/* Buckets nobody listed in: the trend is bridged dashed, dimmed and without the
+   glow, so an unlisted stretch never reads as a measured price drift. */
+.mkt-chart-trend-gap {
+  stroke: var(--text-soft, #6e7785);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+  filter: none;
+}
 .mkt-chart-dot {
   fill: var(--accent-blue);
   stroke: rgba(15,18,24,.85);

@@ -22,10 +22,25 @@ Wire format (text/event-stream):
 Event types:
   - ``challenge`` - an hourly challenge was captured
   - ``chaos``     - the chaos-chest item
-  - ``mod_release`` - a new mod release was published on the Mods Hub. ``data`` =
-    ``{project:{slug,title,owner}, release:{id,tag,title,branch,format,size,changelog,
-    published_at}, download_url, page_url}``. Discrete (not in the on-connect snapshot) -
-    you only receive ones published while connected; hook it to mirror/announce releases.
+  - ``mod_release`` - a PUBLIC mod published a release on the Mods Hub. ``data`` =
+    ``{project, release, previous, change, image_url, download_url, page_url}``:
+
+      * ``project``  - the public mod card (slug/handle/title/summary/tags/categories/
+        author/banner_url/preview_urls/counts/links/lineage + ``api_url``). The long
+        ``description``/``readme_text`` are omitted - fetch ``api_url`` for those.
+      * ``release``  - the build (id, tag, branch, title, changelog, format, filename,
+        size, sha256, mod_version, ``properties`` = the .tmod header, image_url,
+        download_url, published_at).
+      * ``previous`` - the same shape for the build this supersedes on that branch,
+        or ``null`` on a first release.
+      * ``change``   - the step between them (kind, from_tag, to_tag, size_delta,
+        days_since_previous, release_count, artifact_unchanged).
+      * ``image_url`` - the one image to lead an announcement with (the build's
+        preview, else the mod banner, else the first gallery shot).
+
+    Discrete (not in the on-connect snapshot) - you only receive ones published while
+    connected; hook it to mirror/announce releases. Draft, unlisted and taken-down mods
+    are never announced.
 
 The SSE ``event:`` field carries the type, and the JSON ``data:`` payload repeats it as
 ``{type, data, ts}`` so both EventSource listeners and raw parsers work. Reconnect on

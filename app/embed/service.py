@@ -32,6 +32,7 @@ import base64
 import logging
 import re
 import time
+from collections.abc import Awaitable
 from dataclasses import dataclass
 
 from app.core.errors import APIError, ErrorCode
@@ -40,6 +41,7 @@ from app.trove import tmod as tmod_mod
 from app.trove.mods_hub import service as hub
 from app.trove.mods_hub import vfx
 from app.trove.mods_hub.trove_layout import LIVE_BRANCH, game_file_map
+from app.trove.render import bp_cache
 
 logger = logging.getLogger("kiwi.embed")
 
@@ -69,6 +71,10 @@ class Source:
     title: str                     # what the viewer shows in its header
     tmod: bytes | None = None
     game_path: str | None = None
+    # SHA-256 of `tmod` (an upload's token IS its hash). Keys the decoded-payload
+    # cache for a hub release; an upload is deliberately never cached, since we
+    # hold that file for its TTL and nothing longer.
+    tmod_sha: str | None = None
 
     @property
     def cache_key(self) -> str:
@@ -101,7 +107,7 @@ async def _release_source(release_id: str) -> Source:
     if data is None:
         raise _missing("Release artifact not found.")
     return Source(kind="release", ident=release_id,
-                  title=f"{project.title} {rel.tag}".strip(), tmod=data)
+                  title=f"{project.title} {rel.tag}".strip(), tmod=data, tmod_sha=rel.tmod_sha)
 
 
 async def _upload_source(token: str) -> Source:
@@ -112,7 +118,7 @@ async def _upload_source(token: str) -> Source:
         # and mints a fresh token.
         raise _missing("This preview has expired. Reload the page to start it again.")
     return Source(kind="tmod", ident=token,
-                  title=_tmod_title(data) or "Mod preview", tmod=data)
+                  title=_tmod_title(data) or "Mod preview", tmod=data, tmod_sha=token)
 
 
 def _tmod_title(data: bytes) -> str:
@@ -152,15 +158,23 @@ async def _resolve_game_path(path: str) -> str | None:
 
 
 async def _read_game_file(path: str) -> bytes | None:
-    from app.core.config import settings
     from app.trove.updates import read as updates_read
-    from app.trove.updates.cas import ContentStore
 
     meta = await updates_read.get_file_meta(LIVE_BRANCH, path)
     if not meta:
         return None
+    return await _read_game_blob(meta["content_sha256"])
+
+
+async def _read_game_blob(sha: str) -> bytes | None:
+    """The archive blob for a known content hash. Split out from ``_read_game_file``
+    so a caller that already resolved the hash (to key the payload cache) doesn't
+    look the file up twice."""
+    from app.core.config import settings
+    from app.trove.updates.cas import ContentStore
+
     store = ContentStore(settings.trove_update_store_dir)
-    return await asyncio.to_thread(store.get, meta["content_sha256"])
+    return await asyncio.to_thread(store.get, sha)
 
 
 # ── manifest (what this source can show) ───────────────────────────────────
@@ -218,28 +232,53 @@ async def _game_manifest(src: Source) -> dict:
 
 # ── blueprint / assembled model ────────────────────────────────────────────
 
-async def blueprint(src: Source, path: str) -> dict:
-    """Decoded voxel payload for one .blueprint (the 3D viewer's model format)."""
+async def blueprint(src: Source, path: str, fmt: str = "json") -> bp_cache.Cached:
+    """Decoded voxel payload for one .blueprint (the 3D viewer's model format).
+
+    Content we host - a hub release, a game file - is content-addressed, so the
+    decode is cached and the first view of a model is the only one that pays for
+    it, however many partner pages embed it afterwards. An **upload** is not: the
+    file is held in Redis for its TTL and never written to disk, and a decoded
+    copy of a mod is still the mod, so it's rebuilt on every view."""
     if src.kind == "game":
-        return await _game_blueprint(src, path)
+        return await _game_blueprint(src, path, fmt)
     assert src.tmod is not None
-    return await asyncio.to_thread(hub._decode_blueprint_payload, src.tmod, path)
+    data = src.tmod
+    def build() -> Awaitable[dict]:
+        return asyncio.to_thread(hub._decode_blueprint_payload, data, path)
+
+    if src.kind == "tmod" or not src.tmod_sha:
+        return await bp_cache.build_uncached(build, fmt)
+    return await bp_cache.get_or_build(bp_cache.key_for_tmod(src.tmod_sha, path), build, fmt)
 
 
-async def _game_blueprint(src: Source, path: str) -> dict:
-    from app.trove.render.voxel import (
-        BlueprintEmpty,
-        BlueprintError,
-        BlueprintTooLarge,
-        pack_blueprint,
-    )
+async def _game_blueprint(src: Source, path: str, fmt: str = "json") -> bp_cache.Cached:
+    from app.trove.updates import read as updates_read
+
     # A game source is pinned to its own file - the path param is only ever the
     # one the manifest advertised, so ignore anything else rather than turning
     # this into a general file reader.
     target = src.game_path or ""
     if path and path.strip().lower() not in (target.lower(), vfx.basename(target).lower()):
         raise _missing("That blueprint isn't part of this preview.")
-    raw = await _read_game_file(target)
+    meta = await updates_read.get_file_meta(LIVE_BRANCH, target)
+    if not meta:
+        raise _missing("Game file not found.")
+    sha = meta["content_sha256"]
+    return await bp_cache.get_or_build(
+        bp_cache.key_for_file(sha, target), lambda: _pack_game_blueprint(sha, target), fmt,
+    )
+
+
+async def _pack_game_blueprint(sha: str, target: str) -> dict:
+    from app.trove.render.voxel import (
+        BlueprintEmpty,
+        BlueprintError,
+        BlueprintTooLarge,
+        pack_blueprint,
+    )
+
+    raw = await _read_game_blob(sha)
     if raw is None:
         raise _missing("Game file not found.")
     try:
@@ -252,26 +291,44 @@ async def _game_blueprint(src: Source, path: str) -> dict:
         raise APIError(422, ErrorCode.bad_request, f"Couldn't read that blueprint: {e}") from None
 
 
-async def assembled(src: Source) -> dict | None:
-    """The source's blueprint parts assembled onto their creature rig, or None."""
+async def assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | None:
+    """The source's blueprint parts assembled onto their creature rig, or None.
+
+    Cached like a single blueprint - a hub release keys on the same artifact hash
+    the hub itself uses, so both viewers share one assembly. An upload is rebuilt
+    every view (we don't keep partner files, decoded or not)."""
     if src.kind == "game":
-        return await _game_assembled(src)
+        return await _game_assembled(src, fmt)
     assert src.tmod is not None
+    data = src.tmod
     from app.trove.mods_hub import assembly, rig_index
 
-    def _read(b: bytes):
-        files = tmod_mod.read_tmod(b)["files"]
-        names = [f["path"].split("/")[-1][: -len(".blueprint")].lower()
-                 for f in files if f["path"].lower().endswith(".blueprint")]
-        return files, names
+    async def build() -> dict:
+        def _read(b: bytes):
+            files = tmod_mod.read_tmod(b)["files"]
+            names = [f["path"].split("/")[-1][: -len(".blueprint")].lower()
+                     for f in files if f["path"].lower().endswith(".blueprint")]
+            return files, names
 
-    files, names = await asyncio.to_thread(_read, src.tmod)
-    skeleton, attach = await rig_index.resolve(names)
-    return await asyncio.to_thread(
-        lambda: assembly.assemble(files, rig_name=skeleton, ap_overrides=attach))
+        files, names = await asyncio.to_thread(_read, data)
+        skeleton, attach = await rig_index.resolve(names)
+        model = await asyncio.to_thread(
+            lambda: assembly.assemble(files, rig_name=skeleton, ap_overrides=attach))
+        if model is None:
+            raise bp_cache.NoPayload
+        return model
+
+    sig = None if src.kind == "tmod" else await rig_index.index_signature()
+    try:
+        if sig is None or not src.tmod_sha:
+            return await bp_cache.build_uncached(build, fmt)
+        return await bp_cache.get_or_build(
+            bp_cache.key_for_assembly(sig, f"tmod:{src.tmod_sha}"), build, fmt)
+    except bp_cache.NoPayload:
+        return None
 
 
-async def _game_assembled(src: Source) -> dict | None:
+async def _game_assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | None:
     """Assemble a NATIVE creature from one blueprint path: resolve the part to its
     skeleton, then pull that skeleton's every bound part out of the game tree.
 
@@ -297,27 +354,45 @@ async def _game_assembled(src: Source) -> dict | None:
     # one folder, so the requested file's folder is what identifies WHICH raptor this
     # is - and one part per attach point is what a single creature means.
     folder = path.rsplit("/", 1)[0].lower() if "/" in path else ""
-    fmap = await game_file_map(LIVE_BRANCH)
-    files: list[dict] = []
-    claimed: set[str] = set()
-    for basename, ap in parts.items():
-        gp = fmap.get(f"{basename}.blueprint")
-        if not gp:
-            continue
-        if folder and gp.rsplit("/", 1)[0].lower() != folder:
-            continue                     # a different creature on the same skeleton
-        if ap in claimed:
-            continue                     # attach point already filled
-        raw = await _read_game_file(gp)
-        if raw is None:
-            continue                     # a part we don't have -> the rest still assembles
-        claimed.add(ap)
-        files.append({"path": f"{basename}.blueprint",
-                      "content_base64": base64.b64encode(raw).decode()})
-    if not files:
+
+    async def build() -> dict:
+        fmap = await game_file_map(LIVE_BRANCH)
+        files: list[dict] = []
+        claimed: set[str] = set()
+        for basename, ap in parts.items():
+            gp = fmap.get(f"{basename}.blueprint")
+            if not gp:
+                continue
+            if folder and gp.rsplit("/", 1)[0].lower() != folder:
+                continue                 # a different creature on the same skeleton
+            if ap in claimed:
+                continue                 # attach point already filled
+            raw = await _read_game_file(gp)
+            if raw is None:
+                continue                 # a part we don't have -> the rest still assembles
+            claimed.add(ap)
+            files.append({"path": f"{basename}.blueprint",
+                          "content_base64": base64.b64encode(raw).decode()})
+        if not files:
+            raise bp_cache.NoPayload
+        model = await asyncio.to_thread(
+            lambda: assembly.assemble(files, rig_name=skeleton, ap_overrides=parts))
+        if model is None:
+            raise bp_cache.NoPayload
+        return model
+
+    # Reading and placing every part of a creature is the most expensive thing the
+    # embed does, and the answer only moves when the game files or the rig map do -
+    # both of which the signature tracks. Folder + skeleton IS the creature's identity
+    # here, so every partner page pointing at any of its parts shares one assembly.
+    sig = await rig_index.index_signature()
+    try:
+        if sig is None:
+            return await bp_cache.build_uncached(build, fmt)
+        return await bp_cache.get_or_build(
+            bp_cache.key_for_assembly(sig, f"game:{skeleton}:{folder or path}"), build, fmt)
+    except bp_cache.NoPayload:
         return None
-    return await asyncio.to_thread(
-        lambda: assembly.assemble(files, rig_name=skeleton, ap_overrides=parts))
 
 
 # ── VFX ────────────────────────────────────────────────────────────────────

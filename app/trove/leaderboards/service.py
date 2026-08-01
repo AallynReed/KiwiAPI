@@ -222,10 +222,27 @@ async def insert_dump(
         logger.warning("leaderboards: parsed 0 boards from %d-char dump", len(text))
         return {"boards": 0, "entries": 0, "created_at": None}
 
+    rejected_timestamp: int | None = None
     if timestamp is not None and timestamp > 0:
         created_at = normalize_timestamp(timestamp, allow_backfill=allow_backfill)
         if created_at == -1:
+            # Out of range: in the future, or older than 14 days without
+            # allow_backfill. Falling back is NOT harmless - the capture gets
+            # mislabelled as the 11:00 reset and write_snapshot then CLEARS the
+            # real reset snapshot to make room for it. This used to happen
+            # silently, with a green "OK" in the ingest log, so a scraper host
+            # running 11h ahead went unnoticed for a full day. Say it loudly and
+            # hand it back to the caller to record.
+            rejected_timestamp = int(timestamp)
             created_at = _trove_day_anchor()
+            logger.warning(
+                "leaderboards: client timestamp %d is %+ds vs server now - out of "
+                "range, falling back to day anchor %d; this capture OVERWRITES the "
+                "11:00 UTC snapshot. Check the scraper host's clock.",
+                rejected_timestamp,
+                rejected_timestamp - int(datetime.now(UTC).timestamp()),
+                created_at,
+            )
     else:
         created_at = _trove_day_anchor()
 
@@ -248,6 +265,8 @@ async def insert_dump(
             }
 
     summary = await pg_store.write_snapshot(boards, created_at)
+    if rejected_timestamp is not None:
+        summary["rejected_timestamp"] = rejected_timestamp
     logger.info(
         "leaderboards: ingested anchor=%d boards=%d entries=%d cleared=%d",
         created_at, summary["boards"], summary["entries"], summary["cleared_before_insert"],

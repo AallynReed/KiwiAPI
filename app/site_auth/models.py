@@ -80,6 +80,18 @@ class SiteUser(Document):
     claim_baseline: dict[str, float] = Field(default_factory=dict)
     claim_verified_at: datetime | None = None
 
+    # --- Creator token (Mods Hub API access) ------------------------------
+    # ONE per account, minted lazily the first time the user opens the "API
+    # access" panel. A developer pastes it into their dev-portal account to
+    # CONNECT to this creator; the connection (`ModCreatorLink`) is what actually
+    # carries the per-project permissions, so the token is a connect code, not a
+    # per-call credential. Only the sha256 is stored - the plaintext is shown once
+    # at mint\rotate. Rotating mints a new token AND revokes every connection made
+    # with the old one, which is the "cut everyone off" button.
+    creator_token_hash: str | None = None
+    creator_token_prefix: str | None = None    # display slice, e.g. "kiwi_creator_ab12cd34"
+    creator_token_at: datetime | None = None   # last mint\rotate
+
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     last_login_at: datetime | None = None
@@ -110,6 +122,14 @@ class SiteUser(Document):
                 [("claimed_trove_name", ASCENDING)],
                 unique=True,
                 partialFilterExpression={"claimed_trove_name": {"$type": "string"}},
+            ),
+            # The creator-token lookup on connect. PARTIAL (not sparse) for the
+            # same reason as discord_id above: rows store the field present-but-
+            # null, so a sparse unique index would collide every unminted account.
+            IndexModel(
+                [("creator_token_hash", ASCENDING)],
+                unique=True,
+                partialFilterExpression={"creator_token_hash": {"$type": "string"}},
             ),
         ]
 

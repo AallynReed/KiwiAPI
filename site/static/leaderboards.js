@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON, apiUrl } = window.BTTUtil;
+  const { esc, fetchJSON, apiUrl, segmentGaps } = window.BTTUtil;
 
   // Signed-in Dashboard users can browse deeper leaderboard history (the extended
   // archive window) and pass the older-than-hot gate on boards/entries. The site
@@ -2557,15 +2557,38 @@
     // Series polylines + points. Each line gets a stable data-key so
     // legend hover can find it. Points are drawn AFTER lines so circles
     // sit on top of the stroke.
+    //
+    // A series can be missing at an anchor (player dropped out of the top-N,
+    // board not captured at all), and joining straight across that hole draws a
+    // trend nobody measured. Split on the capture cadence - the median gap
+    // between anchors - and stroke the missing stretches dashed + dimmed.
+    const anchorStep = medianStep(anchors);
+    let hadGap = false;
     for (const s of series) {
-      const points = s.points;
-      const pts = points.map((p) => `${xToPx(p.x).toFixed(1)},${yToPx(p.y).toFixed(1)}`).join(' ');
-      const poly = document.createElementNS(svgNS, 'polyline');
-      poly.setAttribute('class', 'lb-series-line');
-      poly.setAttribute('points', pts);
-      poly.setAttribute('stroke', s.color);
-      poly.dataset.key = s.key;
-      svg.appendChild(poly);
+      const seg = segmentGaps(s.points, { x: (p) => p.x, step: anchorStep });
+      for (const run of seg.runs) {
+        if (run.length < 2) continue;   // lone point still gets its dot below
+        const pts = run.map((p) => `${xToPx(p.x).toFixed(1)},${yToPx(p.y).toFixed(1)}`).join(' ');
+        const poly = document.createElementNS(svgNS, 'polyline');
+        poly.setAttribute('class', 'lb-series-line');
+        poly.setAttribute('points', pts);
+        poly.setAttribute('stroke', s.color);
+        poly.dataset.key = s.key;
+        svg.appendChild(poly);
+      }
+      for (const [a, b] of seg.bridges) {
+        hadGap = true;
+        const poly = document.createElementNS(svgNS, 'polyline');
+        poly.setAttribute('class', 'lb-series-line lb-series-gap');
+        poly.setAttribute('points',
+          [a, b].map((p) => `${xToPx(p.x).toFixed(1)},${yToPx(p.y).toFixed(1)}`).join(' '));
+        poly.setAttribute('stroke', s.color);
+        poly.dataset.key = s.key;
+        const why = document.createElementNS(svgNS, 'title');
+        why.textContent = t('No data captured for this stretch');
+        poly.appendChild(why);
+        svg.appendChild(poly);
+      }
     }
     for (const s of series) {
       for (const p of s.points) {
@@ -2725,7 +2748,15 @@
           <span class="lb-chart-legend-swatch" style="background:${s.color}"></span>
           ${esc(s.label)}
         </span>
-      `).join('');
+      `).join('')
+      // Only when something was actually bridged - a key for a treatment the
+      // chart isn't showing is just noise.
+      + (hadGap ? `
+        <span class="lb-chart-legend-item lb-chart-legend-gap">
+          <span class="lb-chart-legend-swatch lb-chart-legend-swatch-gap"></span>
+          ${esc(t('No data'))}
+        </span>
+      ` : '');
       for (const chip of legendNode.querySelectorAll('[data-key]')) {
         chip.addEventListener('mouseenter', () => {
           container.classList.add('lb-chart-hover');
@@ -2744,6 +2775,17 @@
         });
       }
     }
+  }
+
+  // Median spacing of a sorted timestamp list - the capture cadence the chart
+  // measures "is this stretch missing?" against. Null when there's too little
+  // to infer one (segmentGaps then falls back to the series' own spacing).
+  function medianStep(values) {
+    if (!values || values.length < 3) return null;
+    const d = [];
+    for (let i = 1; i < values.length; i++) d.push(values[i] - values[i - 1]);
+    d.sort((a, b) => a - b);
+    return d[Math.floor(d.length / 2)] || null;
   }
 
   function abbrevScore(v) {

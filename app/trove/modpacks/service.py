@@ -732,7 +732,7 @@ async def upload_entry(
     # Store (CAS is content-addressed + idempotent → no duplicate bytes) and dedup by
     # hash: if we already host this exact file as a mod release, reference that mod.
     sha, _ = await mods_store.put_blob(data)
-    rel = await ModRelease.find_one(ModRelease.tmod_sha == sha)
+    rel = await mods_service.release_by_artifact_hash(sha)
     if rel is not None:
         mod = await ModProject.get(rel.project_id)
         if mod is not None and not mod.taken_down and mod.visibility != "draft":

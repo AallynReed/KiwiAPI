@@ -52,6 +52,22 @@
     return _threePromise;
   }
 
+  /* Fetch a payload, preferring the binary container (voxel_binary.js) - same object
+     back either way, typed arrays instead of parsed numbers. If that script isn't on
+     the page we fetch JSON exactly as before, so a template that hasn't been updated
+     still works. */
+  function loadModel(url) {
+    if (window.VoxelBinary) return window.VoxelBinary.fetchModel(url);
+    return fetch(url, { credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) {
+        return r.json().then(function (j) {
+          throw new Error((j && j.error && j.error.message) || ('Could not load model (HTTP ' + r.status + ').'));
+        }, function () { throw new Error('Could not load model (HTTP ' + r.status + ').'); });
+      }
+      return r.json();
+    });
+  }
+
   /* Load a model into an existing element (no modal). This is what the modal below
      uses, and what the embeddable viewer (/embed/viewer) mounts directly into its
      page. `onMeta` reports the voxel count so each host can label it its own way.
@@ -66,14 +82,7 @@
 
     var viewer = null, alive = true;
     ensureThree().then(function (THREE) {
-      return fetch(opts.url, { credentials: 'same-origin' }).then(function (r) {
-        if (!r.ok) {
-          return r.json().then(function (j) {
-            throw new Error((j && j.error && j.error.message) || ('Could not load model (HTTP ' + r.status + ').'));
-          }, function () { throw new Error('Could not load model (HTTP ' + r.status + ').'); });
-        }
-        return r.json();
-      }).then(function (data) {
+      return loadModel(opts.url).then(function (data) {
         if (!alive) return;                     // disposed while loading
         msg.remove();
         if (opts.onMeta) opts.onMeta(data.count.toLocaleString() + ' voxels');
@@ -151,7 +160,7 @@
     var fill = new THREE.DirectionalLight(0xffffff, 0.32); fill.position.set(-0.6, 0.35, -0.7); scene.add(fill);
 
     var camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 8000);
-    var meshes = buildVoxelMeshes(THREE, data);
+    var meshes = window.VoxelMesh.build(THREE, data);
     meshes.forEach(function (m) { scene.add(m); });
 
     var sx = data.size[0], sy = data.size[1], sz = data.size[2];
@@ -236,57 +245,6 @@
         if (el.parentNode) el.parentNode.removeChild(el);
       }
     };
-  }
-
-  /* Material per kind (+ glass level): 0 solid · 1 glass · 2 glow · 3 glow-glass.
-     glass opacity = (level/255)^2 (level = 16+32*w), matching the game/catalog;
-     solids/glass get a specular sheen, glow is unlit/emissive. */
-  function makeMaterial(THREE, kind, level) {
-    var opacity = Math.pow((level || 255) / 255, 2);
-    if (kind === 2) return new THREE.MeshBasicMaterial();
-    if (kind === 3) return new THREE.MeshBasicMaterial({ transparent: true, opacity: opacity, depthWrite: false });
-    if (kind === 1) return new THREE.MeshPhongMaterial({ transparent: true, opacity: opacity, depthWrite: false, shininess: 70, specular: 0x4d4d4d });
-    return new THREE.MeshPhongMaterial({ shininess: 28, specular: 0x1c1c1c });
-  }
-
-  /* Build instanced cube meshes grouped by material kind (+ glass level). Fully-buried
-     voxels (all 6 neighbours occupied) are dropped - they can never be seen. */
-  function buildVoxelMeshes(THREE, data) {
-    var n = data.count, X = data.x, Y = data.y, Z = data.z, RGB = data.rgb,
-        KIND = data.kind, LVL = data.level;
-    var occ = new Set();
-    var i;
-    for (i = 0; i < n; i++) occ.add(X[i] + ',' + Y[i] + ',' + Z[i]);
-    var groups = {};   // "kind:level" -> [indices]
-    for (i = 0; i < n; i++) {
-      var x = X[i], y = Y[i], z = Z[i];
-      if (occ.has((x + 1) + ',' + y + ',' + z) && occ.has((x - 1) + ',' + y + ',' + z) &&
-          occ.has(x + ',' + (y + 1) + ',' + z) && occ.has(x + ',' + (y - 1) + ',' + z) &&
-          occ.has(x + ',' + y + ',' + (z + 1)) && occ.has(x + ',' + y + ',' + (z - 1))) continue;
-      var k = KIND ? (KIND[i] || 0) : 0;
-      var lv = (k === 1 || k === 3) ? (LVL ? LVL[i] : 255) : 255;
-      var gk = k + ':' + lv; (groups[gk] || (groups[gk] = [])).push(i);
-    }
-    var geo = new THREE.BoxGeometry(1, 1, 1);
-    var obj = new THREE.Object3D(), col = new THREE.Color();
-    var meshes = [];
-    Object.keys(groups).forEach(function (gk) {
-      var idx = groups[gk], kv = gk.split(':'), k = +kv[0], lv = +kv[1];
-      var mesh = new THREE.InstancedMesh(geo, makeMaterial(THREE, k, lv), idx.length);
-      for (var j = 0; j < idx.length; j++) {
-        var v = idx[j];
-        obj.position.set(X[v], Y[v], Z[v]); obj.updateMatrix();
-        mesh.setMatrixAt(j, obj.matrix);
-        var rgb = RGB[v];
-        col.setRGB(((rgb >> 16) & 255) / 255, ((rgb >> 8) & 255) / 255, (rgb & 255) / 255);
-        mesh.setColorAt(j, col);
-      }
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-      if (k === 1 || k === 3) mesh.renderOrder = 1;   // draw transparent after opaque
-      meshes.push(mesh);
-    });
-    return meshes;
   }
 
   window.BlueprintViewer = { open: open, mount: mount };

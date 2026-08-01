@@ -241,6 +241,10 @@
         <div class="mp-dl-menu" id="mp-dl-menu" role="menu" hidden>${items}</div>
       </div>`;
     }
+    // A mod's config file goes in the game's ModCfgs folder, not the mods folder,
+    // so it gets its own button - filled in after we've looked inside the .tmod.
+    const headRel = published.find((r) => r.format !== 'zip');
+    const cfgSlot = headRel ? `<span data-rel-cfg="${esc(headRel.id)}"></span>` : '';
     // Stray = an imported mod uploaded via contributions, with no owner here yet.
     const isStray = !!d.is_stray;
     // Anyone can report (no account needed) - DSA notice-and-action; only the
@@ -319,7 +323,7 @@
         ${d.summary ? `<p class="mp-summary">${esc(d.summary)}</p>` : ''}
         ${tags ? `<div class="mp-tags">${tags}</div>` : ''}
         ${linksRow}
-        <div class="mp-actions">${dlBtn}${starBtn}${claimBtn}${forkBtn}${reportBtn}</div>
+        <div class="mp-actions">${dlBtn}${cfgSlot}${starBtn}${claimBtn}${forkBtn}${reportBtn}</div>
       </div>
     </header>`;
   }
@@ -474,6 +478,8 @@
           ${r.status === 'published'
             ? `<a class="mp-btn mp-btn-sm mp-btn-primary" href="${BTTUtil.apiUrl('/site/mods/releases/' + r.id + '/download')}"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</a>`
             : `<button type="button" class="mp-btn mp-btn-sm mp-btn-primary" data-rel-dl="${esc(r.id)}" data-fn="${esc(r.tmod_filename)}"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</button>`}
+          ${r.format !== 'zip' ? `<span data-rel-cfg="${esc(r.id)}"></span>` : ''}
+          <button type="button" class="mp-btn mp-btn-sm" data-rel-inspect="${esc(r.id)}"><i class="fa-solid fa-folder-tree"></i> ${esc(t('Contents'))}</button>
           ${ownerBtns}
         </div>
       </div>
@@ -485,9 +491,6 @@
       ${r.changelog ? `<div class="mp-release-changelog">${esc(r.changelog)}</div>` : ''}
       ${r.format !== 'zip' ? `<div class="mp-release-3d" data-rel-bp="${esc(r.id)}" hidden></div>` : ''}
       ${r.format !== 'zip' ? `<div class="mp-release-vfx" data-rel-vfx="${esc(r.id)}" hidden></div>` : ''}
-      ${r.format !== 'zip' ? `<details class="mp-release-files" data-rel-files="${esc(r.id)}">
-        <summary class="mp-3d-summary"><i class="fa-solid fa-folder-open"></i> ${esc(t('Files'))}</summary>
-        <div class="mp-release-files-list" data-files-box></div></details>` : ''}
     </div>`;
   }
 
@@ -972,32 +975,112 @@
       b.addEventListener('click', () => moveVariant(b.getAttribute('data-move-up'), -1)));
     document.querySelectorAll('[data-move-down]').forEach((b) =>
       b.addEventListener('click', () => moveVariant(b.getAttribute('data-move-down'), 1)));
-    // Per-release file list loads lazily the first time it's expanded.
-    document.querySelectorAll('[data-rel-files]').forEach((d) =>
-      d.addEventListener('toggle', () => { if (d.open && !d.dataset.loaded) { d.dataset.loaded = '1'; loadReleaseFiles(d); } }));
+    document.querySelectorAll('[data-rel-inspect]').forEach((b) =>
+      b.addEventListener('click', () => openReleaseContents(b.getAttribute('data-rel-inspect'))));
     loadReleaseBlueprints();
     loadReleaseVfx();
+    loadReleaseCfgs();
   }
 
-  // List the files packed in a release's .tmod (preview excluded) with a per-file
-  // download button. Lazy: only fetched when the user expands the release's Files.
-  async function loadReleaseFiles(d) {
-    const id = d.getAttribute('data-rel-files');
-    const box = d.querySelector('[data-files-box]');
-    box.textContent = t('Loading…');
+  // ─── Build contents (the decoded artifact) ─────────────────────────────
+  // What's actually inside a release: the .tmod header the game reads, and every
+  // packed file as a folder tree (any file downloadable on its own, bar the
+  // preview image). Replaces the old flat per-release file list.
+
+  async function openReleaseContents(id) {
+    const m = openModal(t('Build contents'),
+      `<div class="mp-insp" id="mp-insp">${esc(t('Loading…'))}</div>`, { wide: true });
+    const box = m.wrap.querySelector('#mp-insp');
+    let d;
     try {
-      const r = await siteGET('/site/mods/releases/' + encodeURIComponent(id) + '/files');
-      if (!r.ok) { box.textContent = t('Could not load files.'); return; }
-      const items = ((await r.json()).items) || [];
-      if (!items.length) { box.textContent = t('No downloadable files.'); return; }
-      box.innerHTML = items.map((f) => `<div class="mp-release-file">
-        <span class="mp-release-file-name" title="${esc(f.path)}">${esc(f.path)}</span>
-        <span class="mp-release-file-size">${fmtBytes(f.size)}</span>
-        <button type="button" class="mp-btn mp-btn-sm" data-rel-file="${esc(id)}" data-path="${esc(f.path)}" aria-label="${esc(t('Download'))}"><i class="fa-solid fa-download"></i></button>
-      </div>`).join('');
-      box.querySelectorAll('[data-rel-file]').forEach((b) =>
-        b.addEventListener('click', () => downloadReleaseFile(b.getAttribute('data-rel-file'), b.getAttribute('data-path'))));
-    } catch (_) { box.textContent = t('Could not load files.'); }
+      const r = await siteGET('/site/mods/releases/' + encodeURIComponent(id) + '/inspect');
+      if (!r.ok) throw new Error('http');
+      d = await r.json();
+    } catch (_) { box.textContent = t('Could not read this build.'); return; }
+    if (!d.readable) { box.textContent = t('This build could not be decoded.'); return; }
+    box.innerHTML = inspectorHTML(d, id);
+    box.querySelectorAll('[data-insp-file]').forEach((b) =>
+      b.addEventListener('click', () => downloadReleaseFile(id, b.getAttribute('data-insp-file'))));
+  }
+
+  function inspectorHTML(d, id) {
+    const chip = (icon, text) => `<span class="mp-insp-chip"><i class="fa-solid ${icon}"></i> ${esc(text)}</span>`;
+    const head = `<div class="mp-insp-chips">
+      ${chip('fa-file-zipper', (d.format === 'zip' ? '.zip' : '.tmod') + ' · ' + fmtBytes(d.size))}
+      ${chip('fa-folder-tree', d.file_count + ' ' + t(d.file_count === 1 ? 'file' : 'files'))}
+      ${d.total_size ? chip('fa-box-open', t('Unpacked') + ' ' + fmtBytes(d.total_size)) : ''}
+      ${d.version != null ? chip('fa-code-branch', t('Format version') + ' ' + d.version) : ''}
+    </div>
+    <p class="mp-insp-sha" title="${esc(t('Content hash of this build'))}"><code>${esc(d.sha256 || '')}</code></p>`;
+
+    // Header properties: what the game and mod sites read off the build.
+    const props = d.properties || {};
+    const keys = Object.keys(props).sort((a, b) => a.toLowerCase() < b.toLowerCase() ? -1 : 1);
+    const propRows = keys.map((k) => `<tr><th>${esc(k)}</th><td>${esc(props[k])}</td></tr>`).join('');
+    const cats = (d.categories || []).length
+      ? `<p class="mp-insp-cats">${(d.categories).map((c) => `<span class="mp-tag">${esc(c)}</span>`).join('')}</p>` : '';
+    const propsBlock = keys.length
+      ? `<h3 class="mp-insp-h">${esc(t('Header'))}</h3>${cats}
+         <table class="mp-insp-props"><tbody>${propRows}</tbody></table>`
+      : `<h3 class="mp-insp-h">${esc(t('Header'))}</h3><p class="mp-muted">${esc(t('A .zip build carries no header.'))}</p>`;
+
+    return head + propsBlock
+      + `<h3 class="mp-insp-h">${esc(t('Files'))}</h3>`
+      + `<div class="mp-insp-tree">${treeHTML(fileTree(d.files || []), d, id)}</div>`;
+  }
+
+  // Flat paths -> nested folders. Folders keep their own total size so a collapsed
+  // one still says how much is under it.
+  function fileTree(files) {
+    const root = { dirs: new Map(), files: [], size: 0 };
+    files.forEach((f) => {
+      const parts = String(f.path || '').split('/').filter(Boolean);
+      let node = root;
+      node.size += Number(f.size || 0);
+      parts.slice(0, -1).forEach((part) => {
+        if (!node.dirs.has(part)) node.dirs.set(part, { dirs: new Map(), files: [], size: 0 });
+        node = node.dirs.get(part);
+        node.size += Number(f.size || 0);
+      });
+      node.files.push(f);
+    });
+    return root;
+  }
+
+  function treeHTML(node, d, id, depth) {
+    depth = depth || 0;
+    const dirs = [...node.dirs.entries()].sort((a, b) => a[0].toLowerCase() < b[0].toLowerCase() ? -1 : 1);
+    const folders = dirs.map(([name, child]) => {
+      const count = countFiles(child);
+      return `<details class="mp-insp-dir" ${depth < 1 ? 'open' : ''}>
+        <summary><i class="fa-solid fa-folder"></i> <span class="mp-insp-name">${esc(name)}</span>
+          <span class="mp-insp-meta">${count} · ${fmtBytes(child.size)}</span></summary>
+        <div class="mp-insp-kids">${treeHTML(child, d, id, depth + 1)}</div>
+      </details>`;
+    }).join('');
+    const files = node.files.map((f) => {
+      const low = String(f.path).toLowerCase();
+      // The preview image isn't served individually (it's the build's thumbnail),
+      // so it's listed but not offered as a download.
+      const isPreview = d.preview_path && low === d.preview_path;
+      const isConfig = d.config_path && low === d.config_path;
+      const role = isPreview ? `<span class="mp-insp-role">${esc(t('Preview'))}</span>`
+        : isConfig ? `<span class="mp-insp-role">${esc(t('Config'))}</span>` : '';
+      const dl = isPreview ? ''
+        : `<button type="button" class="mp-btn mp-btn-sm" data-insp-file="${esc(f.path)}" aria-label="${esc(t('Download'))}"><i class="fa-solid fa-download"></i></button>`;
+      return `<div class="mp-insp-file">
+        <i class="fa-regular fa-file"></i>
+        <span class="mp-insp-name" title="${esc(f.path)}">${esc(String(f.path).split('/').pop())}</span>
+        ${role}<span class="mp-insp-meta">${fmtBytes(f.size)}</span>${dl}
+      </div>`;
+    }).join('');
+    return folders + files;
+  }
+
+  function countFiles(node) {
+    let n = node.files.length;
+    node.dirs.forEach((child) => { n += countFiles(child); });
+    return n;
   }
 
   async function downloadReleaseFile(id, path) {
@@ -1008,6 +1091,61 @@
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = path.split('/').pop();
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    } catch (_) { toast(t('Could not download that file.'), true); }
+  }
+
+  // A mod's settings live in a .cfg that belongs in the game's ModCfgs folder, so
+  // installing the .tmod alone isn't enough. When a release packs one we surface it
+  // as its own button next to Download; the file is pulled out of the .tmod on the
+  // fly (nothing is stored server-side).
+  function loadReleaseCfgs() {
+    // The header button and the release row can point at the SAME release - group
+    // the slots so that release is only looked inside once.
+    const byRelease = new Map();
+    document.querySelectorAll('[data-rel-cfg]').forEach((slot) => {
+      const relId = slot.getAttribute('data-rel-cfg');
+      if (!byRelease.has(relId)) byRelease.set(relId, []);
+      byRelease.get(relId).push(slot);
+    });
+    byRelease.forEach(async (slots, relId) => {
+      try {
+        const r = await siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/cfgs');
+        if (!r.ok) return;
+        const all = ((await r.json()) || {}).items || [];
+        if (!all.length) return;
+        // A build says which of its files IS the config (configPath), so a mod that
+        // happens to pack several .cfg files still gets ONE button. Only when
+        // nothing is declared do we show them all - named, since we can't know
+        // which one matters. The rest stay reachable under Files either way.
+        const declared = all.find((f) => f.declared);
+        const items = declared ? [declared] : all.slice(0, 5);
+        const hidden = all.length - items.length;
+        slots.forEach((slot) => {
+          const sm = slot.closest('.mp-release-actions') ? ' mp-btn-sm' : '';
+          slot.innerHTML = items.map((f) => `<button type="button" class="mp-btn${sm} mp-cfg-btn" data-cfg-rel="${esc(relId)}" data-cfg-path="${esc(f.path)}" title="${esc(f.filename)}">
+            <i class="fa-solid fa-sliders"></i> ${esc(items.length === 1 ? t('Config') : f.filename)}</button>`).join('')
+            + (hidden > 0 ? `<span class="mp-muted mp-cfg-more">${esc(t('More under Files'))}</span>` : '');
+          slot.querySelectorAll('.mp-cfg-btn').forEach((b) => b.addEventListener('click', () =>
+            downloadReleaseCfg(b.getAttribute('data-cfg-rel'), b.getAttribute('data-cfg-path'))));
+        });
+      } catch (_) { /* a release with no readable config just shows no button */ }
+    });
+  }
+
+  async function downloadReleaseCfg(id, path) {
+    try {
+      const r = await siteGET('/site/mods/releases/' + encodeURIComponent(id) + '/cfg?path=' + encodeURIComponent(path));
+      if (!r.ok) { toast(t('Could not download that file.'), true); return; }
+      const blob = await r.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      // The server names the file (it restores the casing the game expects); fall
+      // back to the packed name if the header isn't readable.
+      const cd = r.headers.get('Content-Disposition') || '';
+      const m = /filename="([^"]+)"/.exec(cd);
+      a.download = m ? m[1] : path.split('/').pop();
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     } catch (_) { toast(t('Could not download that file.'), true); }
@@ -1399,6 +1537,53 @@
   }
 
   // ─── Studio: new release ───────────────────────────────────────────
+  // Read a .tmod's header - its properties + the paths it packs - without pulling
+  // in the whole file: the header is uncompressed and its size is the first field.
+  // Layout: u64 header size, u16 version, u16 property count, then LEB128-length-
+  // prefixed name/value pairs, then the file table (1-byte path length, the path,
+  // then four LEB128 fields). Returns null for anything that doesn't parse.
+  async function readTmodHeader(file) {
+    try {
+      const first = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+      if (first.length < 12) return null;
+      const size = new DataView(first.buffer).getUint32(0, true);
+      const high = new DataView(first.buffer).getUint32(4, true);
+      if (high !== 0 || size < 12 || size > file.size || size > 16 * 1024 * 1024) return null;
+      const b = new Uint8Array(await file.slice(0, size).arrayBuffer());
+      const dv = new DataView(b.buffer);
+      let pos = 10;                                   // skip size (8) + version (2)
+      const propCount = dv.getUint16(pos, true); pos += 2;
+      const leb = () => {
+        let result = 0, shift = 0, byte;
+        do { byte = b[pos++]; result += (byte & 0x7f) * Math.pow(2, shift); shift += 7; }
+        while (byte & 0x80);
+        return result;
+      };
+      const dec = new TextDecoder();
+      const str = (n) => dec.decode(b.subarray(pos, pos += n));
+      const props = {};
+      for (let i = 0; i < propCount; i++) {
+        const name = str(leb());
+        props[name] = str(leb());
+      }
+      const paths = [];
+      while (pos < size) {
+        paths.push(str(b[pos++]));
+        leb(); leb(); leb(); leb();                   // index / offset / size / checksum
+      }
+      return { props, paths };
+    } catch (_) { return null; }
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onerror = () => reject(fr.error);
+      fr.onload = () => resolve(String(fr.result).split(',')[1] || '');
+      fr.readAsDataURL(file);
+    });
+  }
+
   function openRelease() {
     const filesMode = state.detail.mode === 'files';
     const branches = (state.detail.branches || []).map((b) =>
@@ -1425,6 +1610,13 @@
         <div class="mp-prevpick" id="mp-prevpick"></div>
         <p class="mp-form-hint">${esc(t('Embedded in the .tmod as the in-game / mod-site thumbnail. Stored only in the build, not your files.'))}</p>
       </div>` : '';
+    // Settings file for a Flash UI mod. Stays hidden - and unsent - until we can
+    // see that the build actually ships a .swf, since nothing else reads one.
+    const configField = `
+      <div class="mp-form-field" id="mp-cfg-field" hidden><span>${esc(t('Settings file (.cfg)'))}</span>
+        <input type="file" name="config" accept=".cfg,text/plain">
+        <p class="mp-form-hint"><code id="mp-cfg-name"></code> ${esc(t('Packed into the build under this name, where Trove looks for it. Stored only in the build, not your files.'))}</p>
+      </div>`;
     const m = openModal(t('New release'), `<form class="mp-form" id="mp-rel-form">
       ${modeRow}
       <label class="mp-form-field"><span>${esc(t('Version tag'))}</span><input name="tag" maxlength="60" required placeholder="v1.0.0"></label>
@@ -1434,6 +1626,7 @@
       ${previewPicker}
       <label class="mp-form-field" data-mode="upload" ${filesMode ? 'hidden' : ''}><span>${esc(t('Build file (.tmod or .zip)'))}</span><input type="file" name="file" accept=".tmod,.zip,application/octet-stream,application/zip"></label>
       <label class="mp-form-field" data-mode="upload" ${filesMode ? 'hidden' : ''}><span>${esc(t('Variant (branch)'))}</span><input name="upload_branch" maxlength="80" value="${esc(state.detail.default_branch || 'main')}"></label>
+      ${configField}
       <label class="mp-form-field"><span>${esc(t('Changelog (Markdown)'))}</span><textarea name="changelog" maxlength="20000"></textarea></label>
       <label class="mp-form-field"><span>${esc(t('Status'))}</span>
         <select name="status"><option value="published">${esc(t('Published'))}</option><option value="draft">${esc(t('Draft'))}</option></select></label>
@@ -1457,6 +1650,58 @@
     };
     f.querySelectorAll('input[name=mode]').forEach((r) => r.addEventListener('change', toggleMode));
     if (fmtSel) fmtSel.addEventListener('change', toggleMode);
+
+    // ── Settings file (.cfg) ────────────────────────────────────────────────
+    // Only a mod with a Flash UI (.swf) can carry one, so the field appears only
+    // once we can see a .swf in the build being cut: the branch's committed files
+    // when compiling, or the picked .tmod's own file table when uploading. If we
+    // can't tell (unreadable file, tree fetch failed), it stays hidden - the
+    // server enforces the same rule either way.
+    const cfgField = f.querySelector('#mp-cfg-field');
+    const cfgInput = f.querySelector('input[name=config]');
+    const cfgName = f.querySelector('#mp-cfg-name');
+    const swfByRef = {};                       // ref -> does its tree hold a .swf
+    const packedCfgName = (title) =>
+      'ui/' + (String(title || '').replace(/[<>:"/\\|?*\x00-\x1f]/g, '').trim().replace(/\.+$/, '')
+        .slice(0, 120) || 'mod').toLowerCase() + '.cfg';
+
+    async function branchHasSwf(ref) {
+      if (ref in swfByRef) return swfByRef[ref];
+      let has = false;
+      try {
+        const r = await siteGET(`/site/mods/projects/${PROJ_PATH}/tree?ref=${encodeURIComponent(ref)}`);
+        if (r.ok) {
+          const d = await r.json();
+          has = (d.entries || []).some((e) => String(e.path || '').toLowerCase().endsWith('.swf'));
+        }
+      } catch (_) { has = false; }
+      swfByRef[ref] = has;
+      return has;
+    }
+
+    async function refreshConfigField() {
+      const mode = f.mode.value;
+      const fmt = fmtSel ? fmtSel.value : 'tmod';
+      let show = false;
+      let title = '';
+      if (mode === 'upload') {
+        const picked = f.file && f.file.files[0];
+        const head = (picked && !/\.zip$/i.test(picked.name)) ? await readTmodHeader(picked) : null;
+        show = !!(head && head.paths.some((p) => p.toLowerCase().endsWith('.swf')));
+        title = head ? (head.props.title || '') : '';
+      } else {
+        show = fmt === 'tmod' && await branchHasSwf(f.ref ? f.ref.value : '');
+        title = state.detail.title || '';       // what the compiler stamps as the title
+      }
+      if (!show && cfgInput) cfgInput.value = '';   // never send what we've hidden
+      if (cfgName) cfgName.textContent = packedCfgName(title);
+      if (cfgField) cfgField.hidden = !show;
+    }
+    f.querySelectorAll('input[name=mode]').forEach((r) => r.addEventListener('change', refreshConfigField));
+    if (fmtSel) fmtSel.addEventListener('change', refreshConfigField);
+    if (f.ref) f.ref.addEventListener('change', refreshConfigField);
+    if (f.file) f.file.addEventListener('change', refreshConfigField);
+    refreshConfigField();
 
     // Preview picker: choose one of the project's previews (default the first), or
     // upload a new one (which also adds it to the project gallery), to embed in the build.
@@ -1508,8 +1753,12 @@
         fd.append('status', f.status.value);
         fd.append('branch', f.upload_branch ? f.upload_branch.value.trim() : '');
         fd.append('file', f.file.files[0]);
+        // Only sent when the field is showing, i.e. the build has a Flash UI.
+        if (!cfgField.hidden && cfgInput.files.length) fd.append('config', cfgInput.files[0]);
         r = await apiForm('/v1/mods/hub/projects/' + PROJ_PATH + '/releases/upload', fd);
       } else {
+        const cfg = (!cfgField.hidden && cfgInput.files.length)
+          ? await fileToBase64(cfgInput.files[0]) : null;
         r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH + '/releases', {
           json: {
             tag: f.tag.value.trim(), title: f.title.value.trim(),
@@ -1517,6 +1766,7 @@
             format: f.format ? f.format.value : 'tmod', status: f.status.value,
             preview_sha: (f.format && f.format.value === 'tmod') ? selectedPreview : null,
             author: f.author ? f.author.value.trim() : null,
+            config_base64: (f.format && f.format.value === 'tmod') ? cfg : null,
           },
         });
       }

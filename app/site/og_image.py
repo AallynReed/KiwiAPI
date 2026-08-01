@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import io
 import logging
+import math
 import time
 from datetime import datetime, timezone
 
@@ -130,6 +131,57 @@ def _resets(lo: float, hi: float) -> list[float]:
         out.append(r)
         r += 86400
     return out
+
+
+def _split_gaps(points: list[dict], bucket: int) -> tuple[list[list[dict]], list[tuple[dict, dict]]]:
+    """Split a series at the buckets nothing was captured for - mirrors the site's
+    BTTUtil.segmentGaps so the share card and the live chart tell the same story.
+    Returns (runs, bridges): contiguous stretches to stroke solid, and the
+    (before, after) pairs to stroke dashed across a hole.
+
+    Contiguity is judged on the bucket INDEX, not the plotted timestamp: a coarse
+    bucket plots its centroid, so two adjacent buckets' points can sit nearly two
+    bucket-widths apart with nothing actually missing."""
+    if len(points) < 2:
+        return ([points] if points else []), []
+    if bucket > 0:
+        keys = [p["t"] // bucket for p in points]
+        limit = 1.5
+    else:                                    # no cadence from the payload - infer
+        keys = [p["t"] for p in points]
+        deltas = sorted(keys[i] - keys[i - 1] for i in range(1, len(keys)))
+        med = deltas[len(deltas) // 2]
+        if med <= 0:
+            return [points], []
+        limit = med * 1.5
+    runs: list[list[dict]] = []
+    bridges: list[tuple[dict, dict]] = []
+    run = [points[0]]
+    for i in range(1, len(points)):
+        if keys[i] - keys[i - 1] > limit:
+            bridges.append((points[i - 1], points[i]))
+            runs.append(run)
+            run = []
+        run.append(points[i])
+    runs.append(run)
+    return runs, bridges
+
+
+def _dashed(d, p0: tuple[float, float], p1: tuple[float, float], *, fill, width: int,
+            dash: int = 10, gap: int = 9) -> None:
+    """Straight dashed segment between two points (Pillow has no dash support)."""
+    x0, y0 = p0
+    x1, y1 = p1
+    span = math.hypot(x1 - x0, y1 - y0)
+    if span <= 0:
+        return
+    step = dash + gap
+    n = int(span // step) + 1
+    for i in range(n):
+        a = min(1.0, (i * step) / span)
+        b = min(1.0, (i * step + dash) / span)
+        d.line([(x0 + (x1 - x0) * a, y0 + (y1 - y0) * a),
+                (x0 + (x1 - x0) * b, y0 + (y1 - y0) * b)], fill=fill, width=width)
 
 
 def _w(draw, text, font) -> int:
@@ -286,8 +338,14 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
         def fy(v):
             return py1 - (v / ymax) * (py1 - py0)
 
+        # Split at the stretches with no captures: those get a dashed grey bridge
+        # and no fill, so the card never shows an unmeasured stretch as a trend.
+        runs, bridges = _split_gaps(points, int(series.get("bucket_seconds") or 0))
         line = [(fx(p["t"]), fy(p["active"])) for p in points]
-        d.polygon(line + [(line[-1][0], py1), (line[0][0], py1)], fill=AREA)
+        run_px = [[(fx(p["t"]), fy(p["active"])) for p in run] for run in runs]
+        for seg in run_px:
+            if len(seg) >= 2:
+                d.polygon(seg + [(seg[-1][0], py1), (seg[0][0], py1)], fill=AREA)
         d.line([(px0, py1), (px1, py1)], fill=GRID + (255,), width=2)  # baseline
 
         # Reset markers only on the short ranges (daily/weekly rhythm); on
@@ -304,7 +362,15 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
                         d.text((x + 7, py0 - 1), _trove(r, "%H:%M"),
                                font=f_axis, fill=MUTE + (210,))
 
-        d.line(line, fill=GREEN + (255,), width=5, joint="curve")
+        for a, b in bridges:
+            _dashed(d, (fx(a["t"]), fy(a["active"])), (fx(b["t"]), fy(b["active"])),
+                    fill=MUTE + (190,), width=3)
+        for seg in run_px:
+            if len(seg) >= 2:
+                d.line(seg, fill=GREEN + (255,), width=5, joint="curve")
+            else:                                   # lone point between two gaps
+                (sx, sy) = seg[0]
+                d.ellipse([sx - 4, sy - 4, sx + 4, sy + 4], fill=GREEN + (255,))
         lx, ly = line[-1]
         d.ellipse([lx - 7, ly - 7, lx + 7, ly + 7], fill=GREEN_HI + (255,),
                   outline=BG + (255,), width=3)

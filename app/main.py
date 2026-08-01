@@ -88,6 +88,8 @@ from app.trove.modpacks.router import (
 )
 from app.trove.mods_hub.git_http import git_router as mods_git_router
 from app.trove.mods_hub.router import (
+    mods_creator_router,
+    mods_creator_write_router,
     mods_hub_router,
     mods_hub_write_router,
     mods_public_router,
@@ -219,6 +221,52 @@ superuser-owned token.
 """
 
 
+# Reference sidebar. Every section is a tag; listing them fixes the ORDER (Redoc
+# follows this array, then appends anything unlisted). Only "creators" carries a
+# description - it's the one section that isn't self-explanatory, because it needs
+# a connection before any of it works. The rest are ordered only.
+API_TAGS: list[dict] = [
+    {"name": t} for t in (
+        "giveaways", "misc", "rotations", "feeds", "stats", "gems", "mods",
+        "modpacks",
+    )
+] + [{
+    "name": "creators",
+    "description": (
+        "**Control endpoints** - manage a creator's Mods Hub mods from your own app. "
+        "Everything else in this reference reads public data; this section writes.\n\n"
+        "Mods belong to **Dashboard** accounts (Discord sign-in on trove.aallyn.net), "
+        "not to API accounts, so a creator has to invite you before you can touch "
+        "theirs. The invite is a **creator token** (`kiwi_creator_…`): one per "
+        "Dashboard account, generated under **Mods → API access**, shown once.\n\n"
+        "1. The creator gives you their creator token.\n"
+        "2. You paste it once on **dev.aallyn.net → Creators** (`POST "
+        "/v1/mods/hub/creator-links`, authenticated with your portal session). That "
+        "creates a **connection**; the token is a connect code and isn't used again.\n"
+        "3. Every call below then uses an ordinary API token carrying `mods:write`.\n\n"
+        "A connection covers **all of that creator's mods, including ones they create "
+        "later**, until they narrow it to named mods from their Dashboard. They can "
+        "revoke one connection, or rotate their creator token to cut every connection "
+        "at once. You can hold connections to many creators, and a creator can connect "
+        "many API accounts.\n\n"
+        "The mod in the URL decides which creator you act as. On the two routes that "
+        "name no mod (create a mod, list mods) add `?creator=<handle>` or the "
+        "`X-Kiwi-Creator` header - optional when you're connected to exactly one "
+        "creator.\n\n"
+        "**Not available here, by design:** deleting a mod or a release, minting git "
+        "tokens, editing the creator's profile, and changing collaborators. Those stay "
+        "with the creator on the website.\n\n"
+        "`403 insufficient_scope` = your token lacks `mods:write`. `403 forbidden` = no "
+        "connection of yours covers that mod, or the action is website-only."
+    ),
+}] + [
+    {"name": t} for t in (
+        "embed", "updates", "codexes", "btt", "leaderboards", "market", "store",
+        "activity", "class-activity", "events", "ocr", "meta",
+    )
+]
+
+
 app = FastAPI(
     title=settings.app_name,
     description=API_DESCRIPTION,
@@ -226,6 +274,7 @@ app = FastAPI(
     debug=settings.debug,
     lifespan=lifespan,
     responses=COMMON_ERROR_RESPONSES,
+    openapi_tags=API_TAGS,
     # Declare the canonical API host so the reference page (Redoc) shows request
     # URLs as api.aallyn.net. Without this, the spec has no `servers` and Redoc
     # falls back to the page's own origin - docs.aallyn.net, since the docs site
@@ -321,14 +370,22 @@ app.include_router(stats_router)
 app.include_router(gems_router)
 app.include_router(misc_router)
 app.include_router(mods_router)
-# Mods Hub. The internal hub (same-origin /site/mods/* proxies + site-auth write
-# API) is hidden from the public reference; the documented app-facing catalog API is
-# `mods_public_router` (/v1/mods/*). Reads stay tokenless `mods:read`; writes stay
-# site-login gated. All gated by feature_mods_hub_enabled (OFF -> every endpoint
-# 404s; see app/core/features.py).
+# Mods Hub. Three surfaces, and only two of them are public API:
+#   - `mods_hub_router` / `mods_hub_write_router` - the website's own hub (browse +
+#     the writes only the creator's Dashboard session can make). Hidden from the
+#     reference: they're driven by the website studio, not by API developers.
+#   - `mods_public_router` (/v1/mods/*) - the documented app-facing READ catalog.
+#   - `mods_creator_write_router` + `mods_creator_router` - the documented CONTROL
+#     surface ("creators" tag): what an API account can do for a creator who
+#     connected to it (app/trove/mods_hub/write_auth.py), plus managing those
+#     connections. Reads stay tokenless `mods:read`; control needs `mods:write`.
+# All gated by feature_mods_hub_enabled (OFF -> every endpoint 404s; see
+# app/core/features.py).
 _MODS_GATE = [Depends(require_mods_hub_enabled)]
 app.include_router(mods_hub_router, include_in_schema=False, dependencies=_MODS_GATE)
 app.include_router(mods_hub_write_router, include_in_schema=False, dependencies=_MODS_GATE)
+app.include_router(mods_creator_write_router, dependencies=_MODS_GATE)  # control surface
+app.include_router(mods_creator_router, dependencies=_MODS_GATE)        # its connections
 app.include_router(mods_public_router, dependencies=_MODS_GATE)  # documented app-facing API (/v1/mods/*)
 app.include_router(mods_git_router, dependencies=_MODS_GATE)   # authenticated git smart-HTTP (/git/mods/*.git)
 # Modpacks (user-curated bundles of hub mods) ride the same master toggle - they're

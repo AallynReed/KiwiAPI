@@ -17,7 +17,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON } = window.BTTUtil;
+  const { esc, fetchJSON, segmentGaps } = window.BTTUtil;
 
   const state = {
     view: 'browse',
@@ -561,19 +561,39 @@
               <text x="${m.l - 6}" y="${(yy + 3).toFixed(1)}" class="mkt-an-ytick" text-anchor="end">${fmtFlux(v)}</text>`;
     }).join('');
 
-    const top = pts.map((p) => `${x.xToPx(p.bucket).toFixed(1)},${yToPx(p.p75).toFixed(1)}`);
-    const bot = pts.map((p) => `${x.xToPx(p.bucket).toFixed(1)},${yToPx(p.p25).toFixed(1)}`).reverse();
-    const bandPath = `M${top.join(' L')} L${bot.join(' L')} Z`;
+    // A bucket nobody listed in produces no point at all, so band, median and
+    // average are all split on the missing buckets: solid inside a run of
+    // consecutive buckets, a dashed + dimmed bridge across a hole. Drawing one
+    // unbroken line would present an unmeasured stretch as an observed trend.
+    const seg = segmentGaps(pts, { x: (p) => p.bucket, step: (data.bucket_hours || 24) * 3600 });
+    const runs = seg.runs.filter((r) => r.length >= 2);
+    const px = (p, v) => `${x.xToPx(p.bucket).toFixed(1)},${yToPx(v).toFixed(1)}`;
 
-    const med = pts.map((p) => `${x.xToPx(p.bucket).toFixed(1)},${yToPx(p.p50).toFixed(1)}`);
+    const bandPath = runs.map((run) => {
+      const top = run.map((p) => px(p, p.p75));
+      const bot = run.map((p) => px(p, p.p25)).reverse();
+      return `M${top.join(' L')} L${bot.join(' L')} Z`;
+    }).join(' ');
+
+    const medLines = runs.map((run) =>
+      `<polyline points="${run.map((p) => px(p, p.p50)).join(' ')}" class="mkt-an-medline" fill="none"/>`).join('');
+    // Point pairs go through join(' '), never a `${x} ${y}` template - the
+    // minifier's template lexer can eat that space (see minify_static.py).
+    const gapLines = seg.bridges.map(([a, b]) =>
+      `<polyline points="${[px(a, a.p50), px(b, b.p50)].join(' ')}" class="mkt-an-medline mkt-an-gapline" fill="none"
+        ><title>${esc(t('No listings in this stretch'))}</title></polyline>`).join('');
     const dots = pts.map((p) =>
       `<circle cx="${x.xToPx(p.bucket).toFixed(1)}" cy="${yToPx(p.p50).toFixed(1)}" r="2.6" class="mkt-an-dot"/>`).join('');
 
     // Moving-average trend (3-bucket trailing) once there's enough to smooth.
+    // Averaged per run, never across a hole - a trailing mean that reaches over
+    // missing buckets is an average of things that were never measured.
     let maLine = '';
     if (pts.length >= 4) {
-      const ma = movingAvg(pts, 'p50', 3);
-      maLine = `<polyline points="${ma.map((a) => `${x.xToPx(a.bucket).toFixed(1)},${yToPx(a.v).toFixed(1)}`).join(' ')}" class="mkt-an-maline"/>`;
+      maLine = runs.filter((run) => run.length >= 4).map((run) =>
+        `<polyline points="${movingAvg(run, 'p50', 3)
+          .map((a) => `${x.xToPx(a.bucket).toFixed(1)},${yToPx(a.v).toFixed(1)}`)
+          .join(' ')}" class="mkt-an-maline"/>`).join('');
     }
 
     const barW = Math.max(2, (x.pw / pts.length) * 0.6);
@@ -588,7 +608,7 @@
         ${bands}${yticks}
         <path d="${bandPath}" class="mkt-an-bandfill"/>
         ${vbars}
-        <polyline points="${med.join(' ')}" class="mkt-an-medline" fill="none"/>
+        ${medLines}${gapLines}
         ${maLine}${dots}
         <line x1="${m.l}" y1="${volTop.toFixed(1)}" x2="${W - m.r}" y2="${volTop.toFixed(1)}" class="mkt-an-grid"/>
         <line class="mkt-an-hoverline" x1="0" y1="${priceTop}" x2="0" y2="${volBot}" style="opacity:0"/>
@@ -596,7 +616,7 @@
         <rect class="mkt-an-hover-rect" x="${m.l}" y="${priceTop}" width="${x.pw}" height="${(volBot - priceTop).toFixed(1)}" fill="transparent"/>
       </svg>`;
 
-    $timeline.innerHTML = legend(false) + svg +
+    $timeline.innerHTML = legend(seg.bridges.length > 0) + svg +
       `<div class="mkt-an-tip"></div>` +
       `<p class="mkt-an-chart-meta">${esc(t('{name} · {n} day(s) · {b} buckets')
         .replace('{name}', data.name).replace('{n}', data.days).replace('{b}', pts.length))}</p>`;
@@ -631,7 +651,20 @@
               <text x="${m.l - 6}" y="${(yy + 3).toFixed(1)}" class="mkt-an-ytick" text-anchor="end">${Math.round(v)}</text>`;
     }).join('');
 
-    const line = (s, cls) => `<polyline points="${s.map((p) => `${x.xToPx(p.bucket).toFixed(1)},${yToPx(p.idx).toFixed(1)}`).join(' ')}" class="${cls}" fill="none"/>`;
+    // Both series are drawn gap-aware (see drawSingle): solid over consecutive
+    // buckets, dashed + dimmed where an item had no listings to price.
+    const step = (data.bucket_hours || 24) * 3600;
+    const xy = (p) => `${x.xToPx(p.bucket).toFixed(1)},${yToPx(p.idx).toFixed(1)}`;
+    let hasGap = false;
+    const line = (s, cls) => {
+      const seg = segmentGaps(s, { x: (p) => p.bucket, step });
+      if (seg.bridges.length) hasGap = true;
+      return seg.runs.filter((r) => r.length >= 2)
+          .map((run) => `<polyline points="${run.map(xy).join(' ')}" class="${cls}" fill="none"/>`).join('')
+        + seg.bridges.map((pair) =>
+          `<polyline points="${pair.map(xy).join(' ')}" class="${cls} mkt-an-gapline" fill="none"
+            ><title>${esc(t('No listings in this stretch'))}</title></polyline>`).join('');
+    };
     const dots = (s, cls) => s.map((p) => `<circle cx="${x.xToPx(p.bucket).toFixed(1)}" cy="${yToPx(p.idx).toFixed(1)}" r="2.4" class="${cls}"/>`).join('');
 
     const svg = `
@@ -645,7 +678,9 @@
         <rect class="mkt-an-hover-rect" x="${m.l}" y="${priceTop}" width="${x.pw}" height="${priceH.toFixed(1)}" fill="transparent"/>
       </svg>`;
 
-    $timeline.innerHTML = legendCompare(data.name, cmp.name) + svg +
+    // `line()` above sets hasGap while the svg literal is built, so this reads
+    // the final value.
+    $timeline.innerHTML = legendCompare(data.name, cmp.name, hasGap) + svg +
       `<div class="mkt-an-tip"></div>` +
       `<p class="mkt-an-chart-meta">${esc(t('Indexed to 100 at window start · higher = bigger gain'))}</p>`;
 
@@ -654,21 +689,25 @@
     rerunI18n();
   }
 
-  function legend(compare) {
+  // ``hasGap`` adds the dashed "No data" key - only shown when the chart
+  // actually bridges a hole, so the legend never explains an absent treatment.
+  function legend(hasGap) {
     return `<div class="mkt-an-chart-legend">
         <span><i class="mkt-an-key mkt-an-key-med"></i> ${esc(t('Median/ea'))}</span>
         <span><i class="mkt-an-key mkt-an-key-band"></i> ${esc(t('25-75% range'))}</span>
         <span><i class="mkt-an-key mkt-an-key-ma"></i> ${esc(t('3-day average'))}</span>
         <span><i class="mkt-an-key mkt-an-key-vol"></i> ${esc(t('New listings'))}</span>
         <span><i class="mkt-an-key mkt-an-key-evt"></i> ${esc(t('Merchant event'))}</span>
+        ${hasGap ? `<span><i class="mkt-an-key mkt-an-key-gap"></i> ${esc(t('No data'))}</span>` : ''}
       </div>`;
   }
 
-  function legendCompare(nameA, nameB) {
+  function legendCompare(nameA, nameB, hasGap) {
     return `<div class="mkt-an-chart-legend">
         <span><i class="mkt-an-key mkt-an-key-med"></i> ${esc(nameA)}</span>
         <span><i class="mkt-an-key mkt-an-key-cmp"></i> ${esc(nameB)}</span>
         <span><i class="mkt-an-key mkt-an-key-evt"></i> ${esc(t('Merchant event'))}</span>
+        ${hasGap ? `<span><i class="mkt-an-key mkt-an-key-gap"></i> ${esc(t('No data'))}</span>` : ''}
       </div>`;
   }
 

@@ -43,11 +43,13 @@
 
   // Tier accent colours match the in-game tiers: Radiant white, Stellar gold,
   // Crystal cyan, Mystic purple.
+  // `drop` = the world difficulty a Lesser gem of that tier starts dropping at.
+  // `delve` = the Delve depth that parallels it, where that depth is known.
   var TIERS = [
-    { id: 1, name: "Radiant", max: 23, pr: 3, color: COL.white,  band: "85 – 113",  note: "Entry tier - the gems you start earning." },
-    { id: 2, name: "Stellar", max: 25, pr: 5, color: COL.yellow, band: "150 – 200", note: "A solid mid-game jump over Radiant." },
-    { id: 3, name: "Crystal", max: 30, pr: 7, color: COL.cyan,   band: "210 – 280", note: "Where serious end-game power begins." },
-    { id: 4, name: "Mystic",  max: 35, pr: 9, color: COL.purple, band: "270 – 360", note: "The ceiling. Every perfect build is Mystic." }
+    { id: 1, name: "Radiant", max: 23, pr: 3, color: COL.white,  band: "85 – 113",  drop: 12, note: "Entry tier - the gems you start earning." },
+    { id: 2, name: "Stellar", max: 25, pr: 5, color: COL.yellow, band: "150 – 200", drop: 13, note: "A solid mid-game jump over Radiant." },
+    { id: 3, name: "Crystal", max: 30, pr: 7, color: COL.cyan,   band: "210 – 280", drop: 14, note: "Where serious end-game power begins." },
+    { id: 4, name: "Mystic",  max: 35, pr: 9, color: COL.purple, band: "270 – 360", drop: 15, delve: "160+", note: "The ceiling. Every perfect build is Mystic." }
   ];
 
   var ELEM_ABIL = ["Stinging Curse", "Volatile Velocity", "Spirit Surge", "Mired Mojo", "Stunburst", "Pyrodisc", "Explosive Epilogue", "Cubic Curtain"];
@@ -323,7 +325,7 @@
         var card = el("div", { class: "gg-conv-card" }, [
           el("img", { class: "gg-conv-ic", src: ICON + c.img + ".png", alt: "", "aria-hidden": "true", loading: "lazy", width: "52", height: "52" }),
           el("div", { class: "gg-conv-body" }, [
-            el("span", { class: "gg-conv-name", text: c.name }),
+            el("span", { class: "gg-conv-name", text: tt(c.name) }),
             el("span", { class: "gg-conv-flow" }, [
               tierChip(from),
               el("i", { class: "fa-solid fa-arrow-right gg-conv-arrow", "aria-hidden": "true" }),
@@ -349,7 +351,7 @@
   /* ═══════════════════════════════════════════════════════════════════
      6b. Gem Level Up Boosters (verbatim from the game's item strings:
      languages/en/prefabs_item_gem_booster.binfab). Ordered weakest→strongest.
-     Names are item proper nouns, kept in English like Gem Dust / Chaos Spark.
+     Item names go through tt() so they read in the page's language.
      ═══════════════════════════════════════════════════════════════════ */
   (function () {
     var wrap = $("#gg-boost-cards");
@@ -382,7 +384,7 @@
           el("div", { class: "gg-boost-top" }, [
             el("img", { class: "gg-boost-ic", src: ICON + b.img + ".png", alt: "", "aria-hidden": "true", loading: "lazy", width: "44", height: "44" }),
             el("div", { class: "gg-boost-id" }, [
-              el("span", { class: "gg-boost-name", text: b.name }),
+              el("span", { class: "gg-boost-name", text: tt(b.name) }),
               tag
             ])
           ]),
@@ -454,6 +456,33 @@
     segs.forEach(function (s) { s.addEventListener("click", function () { select(+s.getAttribute("data-type")); }); });
     select(1);
     onLang(function () { select(curType); });
+  })();
+
+  /* ═══════════════════════════════════════════════════════════════════
+     3b. Where Lesser gems drop — one card per tier, showing the world
+     difficulty it starts appearing at (TIERS[*].drop).
+     ═══════════════════════════════════════════════════════════════════ */
+  (function () {
+    var wrap = $("#gg-drop-cards");
+    if (!wrap) return;
+    function build() {
+      wrap.innerHTML = "";
+      TIERS.forEach(function (t) {
+        var card = el("div", { class: "gg-drop-card" }, [
+          el("span", { class: "gg-drop-tier" }, [el("span", { class: "gg-drop-dot" }), tt(t.name)]),
+          el("span", { class: "gg-drop-diff", text: "D" + t.drop }),
+          el("span", { class: "gg-drop-sub", text: ttf("Worlds at difficulty {n}", { n: t.drop }) }),
+          t.delve ? el("span", { class: "gg-drop-delve" }, [
+            el("i", { class: "fa-solid fa-stairs", "aria-hidden": "true" }),
+            ttf("Delve depth {n}", { n: t.delve })
+          ]) : null
+        ]);
+        card.style.setProperty("--tc", t.color);
+        wrap.appendChild(card);
+      });
+    }
+    build();
+    onLang(build);
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -997,12 +1026,22 @@
 
     function showTab(id, scroll) {
       curTab = id;
+      var activeLink = null;
       sections.forEach(function (s, i) {
         if (!s) return;
         var on = s.id === id;
         s.classList.toggle("gg-wiki-active", on);
         links[i].classList.toggle("active", on);
+        if (on) activeLink = links[i];
       });
+      // Narrow screens keep the nav as one scrolling row - centre the selected
+      // pill so the tab you just picked is never parked off-screen.
+      if (activeLink && secnav.scrollWidth > secnav.clientWidth + 1) {
+        var lr = activeLink.getBoundingClientRect(), nr = secnav.getBoundingClientRect();
+        var left = secnav.scrollLeft + (lr.left + lr.width / 2) - (nr.left + nr.width / 2);
+        if (secnav.scrollTo) secnav.scrollTo({ left: left, behavior: REDUCE ? "auto" : "smooth" });
+        else secnav.scrollLeft = left;
+      }
       if (scroll) { var t = doc.getElementById(id); if (t) t.scrollIntoView({ block: "start" }); }
       if (view === "wiki") writeUrl("wiki", id);
     }

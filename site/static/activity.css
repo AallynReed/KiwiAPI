@@ -173,6 +173,17 @@
 }
 .act-line { stroke: #5dd078; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .act-area { stroke: none; }
+/* Bridge over a stretch we captured nothing for: dashed, thinner and desaturated
+   so it can't be mistaken for a measured trend. No fill sits under it either. */
+.act-line-gap {
+  stroke: var(--text-soft, #6e7785);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+  opacity: .7;
+}
+/* A single bucket marooned between two gaps - a path of one point draws
+   nothing, so it gets a dot instead of vanishing. */
+.act-point { fill: #5dd078; }
 .act-guide { stroke: rgba(93, 208, 120, .45); stroke-width: 1; stroke-dasharray: 3 3; }
 .act-dot { fill: #8ee5a0; stroke: #0a0e14; stroke-width: 2; }
 /* Reset markers: faint dashed verticals at each daily 11:00 UTC reset; the

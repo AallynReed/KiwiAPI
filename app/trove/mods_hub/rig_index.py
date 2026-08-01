@@ -80,3 +80,20 @@ async def parts_for(
     branch = branch or settings.trove_render_branch
     rig_map = await _rig_map(branch)
     return {b: ap for b, (skel, ap) in rig_map.items() if skel == skeleton}
+
+
+async def index_signature(branch: str | None = None) -> str | None:
+    """A token that changes whenever the rig map could have - the same codex
+    ``(parser_version, updated_at)`` signature ``_rig_map`` keys its own cache on.
+
+    Anything derived from the map (an assembled creature) must carry this in its
+    cache key, or a reindex that moves a part to a different attach point would
+    keep serving the old model. ``None`` when there is no live map at all
+    (Postgres disabled in dev) - a caller with no signature must not cache."""
+    branch = branch or settings.trove_render_branch
+    if not settings.postgres_enabled:
+        return None
+    version, updated = await pg_store.meta_signature(branch)
+    if not updated:
+        return None
+    return f"{branch}:{version}:{int(updated.timestamp())}"

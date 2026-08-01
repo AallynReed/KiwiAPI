@@ -74,22 +74,73 @@ def _challenge_sample() -> dict:
     })
 
 
+def _bytes(n) -> str:
+    """A byte count as KB/MB (blank when unknown, so the field just reads empty)."""
+    try:
+        b = float(n)
+    except (TypeError, ValueError):
+        return ""
+    if b < 1024:
+        return f"{int(b)} B"
+    if b < 1024 * 1024:
+        return f"{b / 1024:.0f} KB"
+    return f"{b / (1024 * 1024):.2f} MB"
+
+
+def _signed_bytes(n) -> str:
+    """A size *delta* against the previous build, e.g. ``+40 KB`` / ``-1.20 MB``."""
+    try:
+        b = int(n)
+    except (TypeError, ValueError):
+        return ""
+    if b == 0:
+        return "no change"
+    return f"{'+' if b > 0 else '-'}{_bytes(abs(b))}"
+
+
 def _mod_release_context(d: dict) -> dict:
     project = d.get("project") or {}
     release = d.get("release") or {}
+    previous = d.get("previous") or {}
+    change = d.get("change") or {}
     fmt = str(release.get("format") or "")
+    prev_tag = previous.get("tag") or ""
+    tag = release.get("tag") or ""
     return {
         "project_title": project.get("title") or project.get("slug") or "Mod",
         "project_slug": project.get("slug") or "",
+        "handle": project.get("handle") or "",
         "owner": project.get("owner") or "unknown",
-        "tag": release.get("tag") or "",
-        "release_title": release.get("title") or release.get("tag") or "New release",
+        # The creator credit: `author` is the named third party on an uploaded /
+        # stray mod, and the owner on an ordinary authored one.
+        "author": project.get("author") or project.get("owner") or "unknown",
+        "summary": _trunc(project.get("summary") or "", 200),
+        "tags": ", ".join(t for t in (project.get("tags") or []) if t),
+        "downloads": _num(project.get("download_count")),
+        "stars": _num(project.get("star_count")),
+        "tag": tag,
+        "release_title": release.get("title") or tag or "New release",
         "branch": release.get("branch") or "",
         "format": fmt,
         "format_upper": fmt.upper(),
+        "filename": release.get("filename") or "",
+        # The .tmod header's own version string (empty for a .zip release).
+        "mod_version": release.get("mod_version") or "",
+        "sha256": release.get("sha256") or "",
+        "sha_short": (release.get("sha256") or "")[:12],
+        "size": release.get("size"),
+        "size_label": _bytes(release.get("size")),
         "changelog": _trunc(release.get("changelog") or "", 1000),
+        # --- what changed since the previous build on this variant --------
+        "previous_tag": prev_tag,
+        "version_change": f"{prev_tag} → {tag}" if prev_tag else tag,
+        "size_delta": _signed_bytes(change.get("size_delta")),
+        "release_count": _num(change.get("release_count")),
+        "update_kind": "First release" if change.get("is_first_release") else "Update",
         "download_url": d.get("download_url") or "",
         "page_url": d.get("page_url") or SITE,
+        # Drives the embed image (the build's preview, else the mod banner).
+        "image_url": d.get("image_url") or "",
     }
 
 
@@ -100,21 +151,34 @@ def _mod_release_default() -> EmbedTemplate:
         description="{changelog}",
         color=_COLOR_MOD_RELEASE,
         fields=[
-            EmbedField(name="Version", value="{tag}", inline=True),
+            # "v1.2.0 → v1.3.0" on an update; just the tag on a first release.
+            EmbedField(name="Version", value="{version_change}", inline=True),
             EmbedField(name="Variant", value="{branch}", inline=True),
             EmbedField(name="Format", value="{format_upper}", inline=True),
+            EmbedField(name="Size", value="{size_label}", inline=True),
             EmbedField(name="Download", value="[Get it]({download_url})", inline=True),
         ],
-        footer="Mods Hub · by {owner}",
-        show_image=False,
+        footer="Mods Hub · by {author}",
+        show_image=True,
     )
 
 
 def _mod_release_sample() -> dict:
     return _mod_release_context({
-        "project": {"title": "Neon HUD", "slug": "neon-hud", "owner": "Aallyn"},
-        "release": {"tag": "v1.2.0", "title": "Stable", "branch": "main",
-                    "format": "tmod", "changelog": "Cleaner icons + bug fixes."},
+        "project": {"title": "Neon HUD", "slug": "neon-hud", "handle": "aallyn",
+                    "owner": "Aallyn", "author": "Aallyn",
+                    "summary": "A cleaner, higher-contrast HUD.",
+                    "tags": ["ui", "hud"], "download_count": 4820, "star_count": 96},
+        "release": {"tag": "v1.3.0", "title": "Stable", "branch": "main",
+                    "format": "tmod", "changelog": "Cleaner icons + bug fixes.",
+                    "filename": "Neon HUD.tmod", "size": 1_482_240,
+                    "mod_version": "1.3.0",
+                    "sha256": "9f2c1ab4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f80"},
+        "previous": {"tag": "v1.2.0"},
+        "change": {"size_delta": 40_960, "release_count": 7, "is_first_release": False},
+        # A real mod's event carries its own preview/banner; the editor preview
+        # just needs a stand-in that resolves.
+        "image_url": f"{_ASSET}/static/assets/mod_manager.png",
         "download_url": f"{SITE}/mods/aallyn/neon-hud", "page_url": f"{SITE}/mods/aallyn/neon-hud",
     })
 

@@ -41,6 +41,7 @@ from app.trove.modpacks.models import ModpackProject, ModpackStar
 from app.trove.mods_hub.models import (
     ContentReport,
     ModClaimRequest,
+    ModCreatorLink,
     ModDownloadEvent,
     ModGitToken,
     ModImageAsset,
@@ -50,6 +51,7 @@ from app.trove.mods_hub.models import (
     ModStar,
     StrayImportState,
 )
+from app.trove.render.models import BlueprintCacheEntry
 from app.trove.store.models import StoreCategoryDoc, StoreProductDoc, StoreStateDoc
 from app.trove.updates.models import (
     UpdateBranch,
@@ -72,7 +74,9 @@ DOCUMENT_MODELS = [
     ModDownloadEvent,                    # mods hub: 7-day download signal (TTL-pruned)
     ModProfile,                          # mods hub: modder profile pages
     ModClaimRequest, StrayImportState,   # mods hub: stray (imported) mod claims + import job state
+    ModCreatorLink,                      # mods hub: creator ↔ dev-portal account API access
     ModpackProject, ModpackStar,         # modpacks: user-curated bundles of mods (refs only) + likes
+    BlueprintCacheEntry,                 # decoded .blueprint payloads (index; bodies live in the CAS)
     MarketInterestItem,                  # MarketListing + CodexEntry moved to Postgres (pg_store)
     MarketItemCategory,                  # admin-defined /market sidebar groupings (name-keyed)
     StoreProductDoc, StoreCategoryDoc, StoreStateDoc,   # in-game Kiwi Store catalog (store:read)

@@ -19,7 +19,7 @@ import zipfile
 from datetime import datetime, timedelta, timezone
 
 from beanie import PydanticObjectId
-from beanie.operators import In, Inc, Set
+from beanie.operators import In, Inc, Or, Set
 from pymongo.errors import DuplicateKeyError
 
 from app.core.config import settings
@@ -43,6 +43,7 @@ from app.trove.mods_hub.models import (
     ModStar,
     Visibility,
 )
+from app.trove.render import bp_cache
 
 logger = logging.getLogger("kiwi.mods_hub")
 
@@ -1006,6 +1007,82 @@ async def _inject_preview(
     props["previewPath"] = path
 
 
+# --- Attached config (.cfg) injection --------------------------------------
+# A Flash-UI mod reads its settings from a .cfg the game keeps in ModCfgs/, named
+# after the mod's title. A modder can attach that config when cutting a release and
+# it's packed into the build as `ui/<title>.cfg` - the name the game expects - so
+# nobody has to place it by hand. Two rules make this safe:
+#   * Only a build that actually ships a .swf can carry one. Nothing else reads a
+#     config, so for every other mod the option is refused here and hidden in the UI.
+#   * It's baked in ONCE, at build time. The stored artifact IS the injected one, so
+#     its hash is stable forever (a download-time rewrite would change the bytes on
+#     every fetch and break every hash-based update check).
+_CONFIG_MAX_BYTES = 256 * 1024          # a .cfg is text; anything bigger isn't one
+
+
+def _config_packed_path(props: dict[str, str]) -> str:
+    """Where an attached config is packed: ``ui/<title>.cfg`` - the mod's own header
+    title, lowercased like every other packed game path (the download endpoint
+    restores the title's casing when serving it)."""
+    title = str(props.get("title", "")).strip()
+    if not title:
+        raise APIError(400, ErrorCode.bad_request,
+                       "This build has no title in its header to name the config after.")
+    return f"ui/{_safe_filename(title)}.cfg".lower()
+
+
+def _inject_config(
+    files: list[tuple[str, bytes]], props: dict[str, str], data: bytes,
+) -> str:
+    """Pack an attached ``.cfg`` into the build as ``ui/<title>.cfg``, replacing
+    anything already sitting at that path, and stamp ``configPath`` so the build
+    says which of its files IS the config (a build can pack any number of .cfg
+    files; only one of them is the config). Returns the packed path.
+
+    Refused unless the build ships a ``.swf`` - a mod with no Flash UI has nothing
+    that would read a config, so the file would just be dead weight in the archive."""
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "The config file is empty.")
+    if len(data) > _CONFIG_MAX_BYTES:
+        raise APIError(400, ErrorCode.bad_request,
+                       f"A config file can be at most {_CONFIG_MAX_BYTES // 1024} KB.")
+    if b"\x00" in data:            # binary bytes = the wrong file was picked
+        raise APIError(400, ErrorCode.bad_request,
+                       "That doesn't look like a text config file.")
+    if not any(p.lower().endswith(".swf") for p, _ in files):
+        raise APIError(400, ErrorCode.bad_request,
+                       "Only a mod with a Flash UI (.swf) can carry a config file.")
+    path = _config_packed_path(props)
+    files[:] = [(p, b) for (p, b) in files
+                if p.replace("\\", "/").lstrip("/").lower() != path]
+    files.append((path, data))
+    props["configPath"] = path
+    return path
+
+
+def _repack_with_config(data: bytes, config_data: bytes) -> tuple[bytes, dict[str, str]]:
+    """Rebuild an uploaded ``.tmod`` with an attached config packed in. Everything
+    else is preserved - header version, properties (including which builder stamped
+    it), and the packed paths verbatim - so the only difference from the modder's own
+    build is the added file. Sync + deterministic: the same upload and config always
+    produce the same bytes. Returns ``(artifact, header properties)``."""
+    try:
+        parsed = tmod.read_tmod(data)
+    except tmod.TmodError as e:
+        raise APIError(400, ErrorCode.bad_request, f"Not a valid .tmod file: {e}")
+    props = {str(k): str(v) for k, v in parsed.get("properties", {}).items()}
+    files = [(f["path"], base64.b64decode(f["content_base64"])) for f in parsed["files"]]
+    _inject_config(files, props, config_data)
+    artifact = tmod.build_tmod(
+        int(parsed.get("version") or 1), props, files,
+        mod_loader=props.get("modLoader") or tmod.KIWI_MOD_LOADER,
+        lowercase_paths=False,     # keep the uploader's own packed paths untouched
+    )
+    # Re-read the built header so what we store is exactly what's in the artifact.
+    final = tmod.read_tmod(artifact, metadata_only=True)
+    return artifact, {str(k): str(v) for k, v in final.get("properties", {}).items()}
+
+
 async def _check_release_tag(project: ModProject, branch: str, tag: str) -> None:
     # Tags are unique per branch (variant) - branch X and branch Y can both have v1.0.
     if await ModRelease.find_one(
@@ -1017,14 +1094,30 @@ async def _check_release_tag(project: ModProject, branch: str, tag: str) -> None
                        f"Release '{tag}' already exists on branch '{branch}'.")
 
 
-async def _ensure_hash_unowned(project: ModProject, sha: str) -> None:
+def _hash_match(shas: tuple[str | None, ...]):
+    """Query fragment matching a release by EITHER of its hashes. A build repacked
+    with a config keeps its pre-injection hash in ``base_tmod_sha``, so both sides
+    of the comparison have to consider both - otherwise attaching a config would
+    launder a known artifact into a "new" one."""
+    want = [s for s in shas if s]
+    return Or(In(ModRelease.tmod_sha, want), In(ModRelease.base_tmod_sha, want))
+
+
+async def release_by_artifact_hash(sha: str) -> ModRelease | None:
+    """The release whose artifact hashes to ``sha`` - matching a repacked build on
+    its pre-injection hash too, so the modder's own copy of a build still resolves
+    to the release that ships it."""
+    return await ModRelease.find_one(_hash_match((sha,)))
+
+
+async def _ensure_hash_unowned(project: ModProject, *shas: str | None) -> None:
     """A mod's content hash belongs to whoever first released it. Reject a release
     whose exact artifact is already published by a *different* creator (anti-reupload).
     The same owner reusing their own artifact (across branches/projects) is fine."""
     # $nin [None, me]: only a release with a *different, known* owner blocks - a
     # pre-migration release with no owner_id (null) must not falsely flag.
     other = await ModRelease.find_one(
-        ModRelease.tmod_sha == sha,
+        _hash_match(shas),
         {"owner_id": {"$nin": [None, project.owner_id]}},
     )
     if other is not None:
@@ -1033,7 +1126,7 @@ async def _ensure_hash_unowned(project: ModProject, sha: str) -> None:
                        "can't be uploaded here. If it's genuinely yours, contact support.")
 
 
-async def _ensure_hash_globally_unique(project: ModProject, sha: str) -> None:
+async def _ensure_hash_globally_unique(project: ModProject, *shas: str | None) -> None:
     """Stricter than :func:`_ensure_hash_unowned`, for *uploaded-on-behalf* mods:
     the exact artifact must not already exist ANYWHERE on the hub - not under a
     different owner, not as a stray (owner_id=None), not even under another of the
@@ -1041,7 +1134,7 @@ async def _ensure_hash_globally_unique(project: ModProject, sha: str) -> None:
     sharing someone else's build, it can only live in one place. Reuse across
     branches of THIS same project is still fine (same project_id excluded)."""
     other = await ModRelease.find_one(
-        ModRelease.tmod_sha == sha,
+        _hash_match(shas),
         ModRelease.project_id != project.id,
     )
     if other is not None:
@@ -1056,26 +1149,130 @@ def _require_publish_ok(actor: SiteUser, status: str) -> None:
                        "Verify your account before publishing a release.")
 
 
+# The bulk markdown is left OUT of the release event: description + readme_text
+# can each run to tens of KB, and every SSE subscriber, webhook post and Redis
+# pub/sub hop would carry them on every release. The event's `project.api_url`
+# points at the detail endpoint that serves them.
+_EVENT_PROJECT_OMIT = ("description", "readme_text")
+
+
+async def _previous_published_release(release: ModRelease) -> ModRelease | None:
+    """The published build this one supersedes, or None if it's the first.
+
+    Scoped to the same BRANCH: branches are mod *variants*, so v2 on ``main`` does
+    not supersede v1 on ``alt`` - each variant has its own timeline. Ordered by
+    ``published_at`` (created_at breaks ties)."""
+    query: dict = {
+        "project_id": release.project_id, "branch": release.branch,
+        "status": "published", "_id": {"$ne": release.id},
+    }
+    if release.published_at is not None:
+        query["published_at"] = {"$lt": release.published_at}
+    found = await ModRelease.find(query).sort("-published_at", "-created_at").limit(1).to_list()
+    return found[0] if found else None
+
+
+def _event_project(project: ModProject) -> dict:
+    """The mod card for a release event: the app-facing public DTO (banner +
+    gallery image URLs, tags, categories, counts, links, lineage) minus the bulk
+    markdown, plus ``owner`` (the key the original payload used) and the detail
+    endpoint for everything not inlined."""
+    dto = {k: v for k, v in public_mod_dto(project).items() if k not in _EVENT_PROJECT_OMIT}
+    return {
+        **dto,
+        "owner": project.owner_username,
+        "mode": project.mode,
+        "default_branch": project.default_branch,
+        "api_url": (f"{settings.api_url.rstrip('/')}"
+                    f"/v1/mods/{project.owner_handle}/{project.slug}"),
+    }
+
+
+def _event_release(release: ModRelease) -> dict:
+    """One build for a release event: the app-facing release DTO (tag, changelog,
+    filename, sha256, size, download URL) plus its identity and the ``.tmod``
+    header, so a consumer can announce or mirror it without a follow-up fetch."""
+    props = dict(release.tmod_properties or {})
+    return {
+        **public_release_dto(release),
+        "id": str(release.id),
+        "status": release.status,
+        "source_commit_sha": release.source_commit_sha,
+        # The .tmod header stamped into the artifact (title/author/modVersion/…).
+        # Empty for a .zip release, which has no header.
+        "properties": props,
+        "mod_version": props.get("modVersion") or None,
+        "mod_author": props.get("author") or None,
+        # This build's own preview image (defaults to the mod banner at create).
+        "image_url": _public_img_url(release.banner_sha),
+        "created_at": _iso(release.created_at),
+    }
+
+
+def _event_change(
+    release: ModRelease, previous: ModRelease | None, release_count: int,
+) -> dict:
+    """How this build relates to the one it supersedes - enough for a consumer to
+    say "v1.2 → v1.3, +40 KB, 12 days later" without walking the release history."""
+    size_delta = None if previous is None else release.tmod_size - previous.tmod_size
+    days = None
+    if previous is not None and release.published_at and previous.published_at:
+        elapsed = release.published_at - previous.published_at
+        days = round(elapsed.total_seconds() / 86400, 2)
+    return {
+        "kind": "initial" if previous is None else "update",
+        "is_first_release": previous is None,
+        "from_tag": previous.tag if previous is not None else None,
+        "to_tag": release.tag,
+        "size_delta": size_delta,
+        "days_since_previous": days,
+        # Published builds on this branch, this one included.
+        "release_count": release_count,
+        # A re-tag: identical artifact bytes, so nothing actually changed in-game.
+        "artifact_unchanged": previous is not None and previous.tmod_sha == release.tmod_sha,
+    }
+
+
 async def _emit_release_event(project: ModProject, release: ModRelease) -> None:
     """Fire a ``mod_release`` event on the live SSE stream (``/v1/events/stream``)
-    so external apps can react to new releases without polling. PUBLISHED-only and
-    best-effort: a draft, or any publish failure, never affects release creation.
-    Signature = the release id, so each new release announces exactly once."""
+    so external apps can react to new releases without polling.
+
+    Carries the whole announcement: the public mod card (image URLs included), the
+    build's identity + ``.tmod`` header, and the release it supersedes - so a
+    consumer can render or mirror it with no follow-up request.
+
+    PUBLIC + PUBLISHED only. A draft, unlisted or taken-down mod is never announced
+    on a public firehose: unlisted means link-only, and for a draft the event's own
+    download URL 404s for every subscriber anyway. Best-effort - any failure here
+    leaves release creation untouched. Signature = the release id, so each release
+    announces exactly once."""
     if release.status != "published":
+        return
+    if project.visibility != "public" or project.taken_down:
         return
     try:
         from app.events import bus
         api = settings.api_url.rstrip("/")
         site = settings.app_url.rstrip("/")
+        previous = await _previous_published_release(release)
+        release_count = await ModRelease.find({
+            "project_id": release.project_id, "branch": release.branch,
+            "status": "published",
+        }).count()
+        release_out = _event_release(release)
         data = {
-            "project": {"slug": project.slug, "handle": project.owner_handle,
-                        "title": project.title, "owner": project.owner_username},
-            "release": {
-                "id": str(release.id), "tag": release.tag, "title": release.title,
-                "branch": release.branch, "format": release.release_format,
-                "size": release.tmod_size, "changelog": release.changelog,
-                "published_at": _iso(release.published_at),
-            },
+            "project": _event_project(project),
+            "release": release_out,
+            "previous": _event_release(previous) if previous is not None else None,
+            "change": _event_change(release, previous, release_count),
+            # The one image to lead an announcement with: this build's preview,
+            # else the mod banner, else the first gallery shot.
+            "image_url": (release_out["image_url"]
+                          or _public_img_url(project.banner_sha)
+                          or next((u for u in (_public_img_url(s)
+                                               for s in project.preview_shas) if u), None)),
+            # Kept at the top level: the original payload's shape, which existing
+            # webhook templates and external consumers are built against.
             "download_url": f"{api}/v1/mods/hub/releases/{release.id}/download",
             "page_url": f"{site}/mods/{project.owner_handle}/{project.slug}",
         }
@@ -1088,6 +1285,7 @@ async def create_release_from_commit(
     project: ModProject, actor: SiteUser, *, tag: str, title: str,
     changelog: str, ref: str, status: str, fmt: str = "tmod",
     preview_sha: str | None = None, author: str | None = None,
+    config_data: bytes | None = None,
 ) -> dict:
     _require_owner(project, actor)
     _require_files_mode(project)
@@ -1121,6 +1319,9 @@ async def create_release_from_commit(
             raise APIError(500, ErrorCode.internal_error, f"Missing blob for {e['path']}")
         files.append((e["path"], data))
     if fmt == "zip":
+        if config_data:
+            raise APIError(400, ErrorCode.bad_request,
+                           "A config file can only be packed into a .tmod build.")
         artifact = await asyncio.to_thread(_build_zip, files)
         props: dict[str, str] = {}
     else:
@@ -1130,6 +1331,10 @@ async def create_release_from_commit(
         # Zips carry no header properties, so the preview only applies to .tmod.
         if preview_sha:
             await _inject_preview(project, preview_sha, files, props)
+        # An attached config is packed as ui/<title>.cfg - same deal: it lives in
+        # the build only, never in the repo. Refused if the mod ships no .swf.
+        if config_data:
+            _inject_config(files, props, config_data)
         artifact = await asyncio.to_thread(tmod.build_tmod, 1, props, files)
     sha, _ = await store.put_blob(artifact)
     await _ensure_hash_unowned(project, sha)
@@ -1143,6 +1348,7 @@ async def create_release_from_commit(
 async def create_release_from_upload(
     project: ModProject, actor: SiteUser, *, tag: str, title: str,
     changelog: str, status: str, filename: str, data: bytes, branch: str = "",
+    config_data: bytes | None = None,
 ) -> dict:
     _require_owner(project, actor)
     _require_publish_ok(actor, status)
@@ -1152,8 +1358,15 @@ async def create_release_from_upload(
     # Accept an already-compiled .tmod OR a .zip (both modes can upload these).
     is_zip = data[:2] == b"PK" or (filename or "").lower().endswith(".zip")
     props: dict[str, str] = {}
+    # The hash of what the modder actually uploaded. It only differs from the
+    # release's own hash when a config was packed in below - and it's kept so that
+    # copy stays recognisable to hash lookup (see ModRelease.base_tmod_sha).
+    base_sha: str | None = None
     if is_zip:
         fmt = "zip"
+        if config_data:
+            raise APIError(400, ErrorCode.bad_request,
+                           "A config file can only be packed into a .tmod build.")
         if not zipfile.is_zipfile(io.BytesIO(data)):
             raise APIError(400, ErrorCode.bad_request, "Not a valid .zip file.")
     else:
@@ -1163,18 +1376,24 @@ async def create_release_from_upload(
         except tmod.TmodError as e:
             raise APIError(400, ErrorCode.bad_request, f"Not a valid .tmod file: {e}")
         props = {str(k): str(v) for k, v in parsed.get("properties", {}).items()}
+        if config_data:
+            base_sha = store.blob_sha(data)
+            data, props = await asyncio.to_thread(_repack_with_config, data, config_data)
     sha, _ = await store.put_blob(data)
+    if base_sha == sha:               # nothing actually changed; keep one hash
+        base_sha = None
     # Uploaded-on-behalf mods (sharing someone else's build) must be globally
     # unique; ordinary mods only can't collide with a *different* owner's artifact.
+    # Both hashes are checked: a config must not launder a known build into a new one.
     if project.uploaded_on_behalf:
-        await _ensure_hash_globally_unique(project, sha)
+        await _ensure_hash_globally_unique(project, sha, base_sha)
     else:
-        await _ensure_hash_unowned(project, sha)
+        await _ensure_hash_unowned(project, sha, base_sha)
     return await _insert_release(
         project, tag=tag, branch=branch_name,
         title=title, changelog=changelog, status=status,
         tmod_sha=sha, tmod_size=len(data), properties=props,
-        source_commit_sha=None, release_format=fmt,
+        source_commit_sha=None, release_format=fmt, base_tmod_sha=base_sha,
     )
 
 
@@ -1199,7 +1418,7 @@ def release_download_filename(release: ModRelease) -> str:
 async def _insert_release(
     project: ModProject, *, tag: str, branch: str, title: str, changelog: str,
     status: str, tmod_sha: str, tmod_size: int, properties: dict, source_commit_sha,
-    release_format: str = "tmod",
+    release_format: str = "tmod", base_tmod_sha: str | None = None,
 ) -> dict:
     # The download name is the .tmod's internal `title` (Trove matches on it),
     # falling back to slug-tag; zips keep the slug-tag name.
@@ -1212,7 +1431,7 @@ async def _insert_release(
         project_id=project.id, owner_id=project.owner_id, tag=tag, branch=branch,
         title=title.strip(), changelog=changelog, source_commit_sha=source_commit_sha,
         release_format=release_format, tmod_sha=tmod_sha, tmod_size=tmod_size,
-        tmod_filename=filename, tmod_properties=properties,
+        base_tmod_sha=base_tmod_sha, tmod_filename=filename, tmod_properties=properties,
         banner_sha=project.banner_sha, status=status,
         published_at=utcnow() if status == "published" else None,
     )
@@ -1326,32 +1545,52 @@ async def list_release_blueprints(release: ModRelease) -> dict:
     return {"items": base["items"], "rig": rig, "animations": anims}
 
 
-async def assemble_release_model(release: ModRelease) -> dict | None:
+async def assemble_release_model(
+    release: ModRelease, fmt: str = "json",
+) -> bp_cache.Cached | None:
     """Assemble the release's blueprint parts onto their matching creature rig ->
     the web-viewer model payload (rest pose + animations). None if no parts / no rig.
 
     The rig + per-part attach points are resolved AUTHORITATIVELY from the game's
     prefab binfabs (``rig_index.resolve``). There is NO name-overlap heuristic:
-    ``assembly.assemble`` skips any part the binfab map doesn't place (no-guess rig)."""
+    ``assembly.assemble`` skips any part the binfab map doesn't place (no-guess rig).
+
+    The heaviest payload the viewers ask for - every part decoded and placed - so
+    it's cached like a single blueprint, keyed on the artifact plus the rig map's
+    signature (see ``bp_cache.key_for_assembly``)."""
     if release.release_format != "tmod":
-        return None
-    data = await store.get_blob(release.tmod_sha)
-    if data is None:
         return None
     from app.trove.mods_hub import rig_index
 
-    def _read(b: bytes):
-        files = tmod.read_tmod(b)["files"]
-        basenames = [f["path"].split("/")[-1][:-len(".blueprint")].lower()
-                     for f in files if f["path"].lower().endswith(".blueprint")]
-        return files, basenames
-    files, basenames = await asyncio.to_thread(_read, data)
-    skeleton, attach = await rig_index.resolve(basenames)
+    async def build() -> dict:
+        data = await store.get_blob(release.tmod_sha)
+        if data is None:
+            raise bp_cache.NoPayload
 
-    def _work():
-        from app.trove.mods_hub import assembly
-        return assembly.assemble(files, rig_name=skeleton, ap_overrides=attach)
-    return await asyncio.to_thread(_work)
+        def _read(b: bytes):
+            files = tmod.read_tmod(b)["files"]
+            basenames = [f["path"].split("/")[-1][:-len(".blueprint")].lower()
+                         for f in files if f["path"].lower().endswith(".blueprint")]
+            return files, basenames
+        files, basenames = await asyncio.to_thread(_read, data)
+        skeleton, attach = await rig_index.resolve(basenames)
+
+        def _work():
+            from app.trove.mods_hub import assembly
+            return assembly.assemble(files, rig_name=skeleton, ap_overrides=attach)
+        model = await asyncio.to_thread(_work)
+        if model is None:
+            raise bp_cache.NoPayload
+        return model
+
+    sig = await rig_index.index_signature()
+    try:
+        if sig is None:                  # no live rig map to pin the result to
+            return await bp_cache.build_uncached(build, fmt)
+        return await bp_cache.get_or_build(
+            bp_cache.key_for_assembly(sig, f"tmod:{release.tmod_sha}"), build, fmt)
+    except bp_cache.NoPayload:
+        return None
 
 
 async def load_rig_animation(skeleton: str, name: str) -> dict:
@@ -1393,6 +1632,55 @@ async def list_release_files(release: ModRelease) -> dict:
         return {"items": []}
 
 
+async def inspect_release(release: ModRelease) -> dict:
+    """A release's artifact, decoded: the ``.tmod`` header (version, every property,
+    the decoded category flags) plus every packed file with its size - or a ``.zip``
+    release's entries. This is the whole archive, the preview image included, so the
+    mod page's inspector shows what's really in the build; ``preview_path`` and
+    ``config_path`` mark the two entries the header gives a meaning to.
+
+    Metadata-only read - the file table lives in the header, so nothing is
+    decompressed. ``readable`` is false if the artifact is missing or won't parse."""
+    out: dict = {
+        "format": release.release_format, "tag": release.tag, "branch": release.branch,
+        "filename": release_download_filename(release),
+        "sha256": release.tmod_sha, "base_sha256": release.base_tmod_sha,
+        "size": release.tmod_size, "version": None, "properties": {},
+        "categories": [], "flags": 0, "preview_path": "", "config_path": "",
+        "files": [], "file_count": 0, "total_size": 0, "readable": False,
+    }
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        return out
+
+    def _work(b: bytes) -> dict:
+        if release.release_format == "zip":
+            with zipfile.ZipFile(io.BytesIO(b)) as z:
+                files = [{"path": i.filename, "size": i.file_size}
+                         for i in z.infolist() if not i.is_dir()]
+            return {"readable": True, "files": files}
+        parsed = tmod.read_tmod(b, metadata_only=True)
+        props = {str(k): str(v) for k, v in parsed["properties"].items()}
+        return {
+            "readable": True,
+            "version": parsed.get("version"),
+            "properties": props,
+            "categories": parsed.get("categories") or [],
+            "flags": parsed.get("flags") or 0,
+            "preview_path": _preview_path(props),
+            "config_path": _declared_config_path(props),
+            "files": [{"path": f["path"], "size": f["size"]} for f in parsed["files"]],
+        }
+    try:
+        out.update(await asyncio.to_thread(_work, data))
+    except (tmod.TmodError, zipfile.BadZipFile, OSError, ValueError):
+        return out
+    out["files"].sort(key=lambda f: f["path"].lower())
+    out["file_count"] = len(out["files"])
+    out["total_size"] = sum(int(f["size"] or 0) for f in out["files"])
+    return out
+
+
 async def download_release_file(release: ModRelease, path: str) -> tuple[bytes, str]:
     """Bytes of ONE file inside a release's .tmod (individual download). The preview
     image is not downloadable here. Returns ``(data, download_filename)``."""
@@ -1415,6 +1703,82 @@ async def download_release_file(release: ModRelease, path: str) -> tuple[bytes, 
     if raw is None:
         raise _not_found("No such file in this release")
     return raw, want.rsplit("/", 1)[-1]
+
+
+# --- Packed config (.cfg) --------------------------------------------------
+# Some mods ship a .cfg alongside their content (scraper mods especially). It's
+# needed on its own - it goes in the game's ModCfgs/ folder, not the mods folder -
+# so the mod page offers it as its own download, read out of the .tmod on the fly
+# (nothing extra is stored: the artifact in the CAS is the only copy).
+#
+# `configPath` is the header property that says WHICH packed path is the config.
+# It settles the otherwise unanswerable case of a build that packs several .cfg
+# files: the declared one is the config, the rest are just files.
+
+def _declared_config_path(props: dict) -> str:
+    """The packed path the artifact declares as its config (``configPath``),
+    normalized; ``''`` when it declares none."""
+    declared = next((str(v) for k, v in (props or {}).items() if k.lower() == "configpath"), "")
+    return declared.replace("\\", "/").lstrip("/").strip().lower()
+
+
+def _cfg_download_name(release: ModRelease, path: str) -> str:
+    """The name to save one packed .cfg under. The packed path is authoritative,
+    except for CASE: ``build_tmod`` lowercases inner paths, while the game names the
+    live cfg after the mod's title. So restore the case we KNOW - from the artifact's
+    ``title`` when the packed name is that title, else from a ``configPath`` that
+    names this same file - and otherwise serve the packed name verbatim (a guess is
+    worse than the name that's actually in the archive)."""
+    base = path.rsplit("/", 1)[-1]
+    props = release.tmod_properties or {}
+    title = str(props.get("title", "")).strip()
+    if title and base.lower() == f"{title.lower()}.cfg":
+        return f"{_safe_filename(title)}.cfg"
+    declared_base = _declared_config_path(props).rsplit("/", 1)[-1]
+    if declared_base and declared_base == base.lower():
+        # Case comes from the property's own value, not its lowercased form.
+        raw = next((str(v) for k, v in props.items() if k.lower() == "configpath"), "")
+        return _safe_filename(raw.replace("\\", "/").rsplit("/", 1)[-1].strip())
+    return _safe_filename(base)
+
+
+async def list_release_cfgs(release: ModRelease) -> dict:
+    """The ``.cfg`` config files packed inside a release's .tmod (path + size + the
+    name to save it under) - drives the mod page's config download button.
+    Metadata-only read (no decompression).
+
+    ``declared`` marks the file the artifact's ``configPath`` points at, and that
+    one sorts first: a build that packs a hundred .cfg files still has exactly one
+    config, and this is how we know which."""
+    if release.release_format != "tmod":
+        return {"items": []}
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        return {"items": []}
+
+    def _work(b: bytes) -> dict:
+        parsed = tmod.read_tmod(b, metadata_only=True)
+        declared = _declared_config_path(parsed["properties"])
+        items = [{"path": f["path"], "size": f["size"],
+                  "filename": _cfg_download_name(release, f["path"]),
+                  "declared": f["path"].lower() == declared}
+                 for f in parsed["files"] if f["path"].lower().endswith(".cfg")]
+        items.sort(key=lambda f: (not f["declared"], f["path"].lower()))
+        return {"items": items}
+    try:
+        return await asyncio.to_thread(_work, data)
+    except tmod.TmodError:
+        return {"items": []}
+
+
+async def download_release_cfg(release: ModRelease, path: str) -> tuple[bytes, str]:
+    """Bytes of ONE packed ``.cfg``, extracted from the .tmod on the fly. Returns
+    ``(data, download_filename)``."""
+    want = path.strip()
+    if not want.lower().endswith(".cfg"):
+        raise _not_found("No such config file in this release")
+    data, _ = await download_release_file(release, want)
+    return data, _cfg_download_name(release, want)
 
 
 # ---------------------------------------------------------------------------
@@ -1630,15 +1994,25 @@ def _decode_blueprint_payload(tmod_bytes: bytes, want_path: str) -> dict:
         raise APIError(422, ErrorCode.bad_request, f"Couldn't read that blueprint: {e}")
 
 
-async def decode_release_blueprint(release: ModRelease, path: str) -> dict:
-    """Decode one .blueprint inside a release to a voxel payload for the 3D viewer.
-    The .tmod read + decode is CPU-bound, so it runs off the event loop."""
+async def decode_release_blueprint(
+    release: ModRelease, path: str, fmt: str = "json",
+) -> bp_cache.Cached:
+    """The voxel payload for one .blueprint inside a release, ready to serve.
+
+    Reading the .tmod and decoding it is expensive and the answer never changes,
+    so it happens once per (artifact, path) and is cached from then on - nothing
+    below the ``get_or_build`` call runs on a hit."""
     if release.release_format != "tmod":
         raise _not_found("This release has no blueprint models.")
-    data = await store.get_blob(release.tmod_sha)
-    if data is None:
-        raise _not_found("Release artifact not found")
-    return await asyncio.to_thread(_decode_blueprint_payload, data, path)
+
+    async def build() -> dict:
+        data = await store.get_blob(release.tmod_sha)
+        if data is None:
+            raise _not_found("Release artifact not found")
+        return await asyncio.to_thread(_decode_blueprint_payload, data, path)
+
+    return await bp_cache.get_or_build(
+        bp_cache.key_for_tmod(release.tmod_sha, path), build, fmt)
 
 
 async def update_release(
@@ -2180,7 +2554,11 @@ def _public_img_url(sha: str | None) -> str | None:
 
 def public_release_dto(r: ModRelease) -> dict:
     """A published build, app-facing. ``sha256`` is the artifact's content hash -
-    the same value the lookup-by-hash endpoint matches on."""
+    the same value the lookup-by-hash endpoint matches on, and exactly what
+    ``download_url`` serves. A build is never rewritten after it's cut (an attached
+    config is baked in once, at build time), so this hash is stable for the life of
+    the release - which is what lets an app tell "installed" from "outdated" by
+    comparing it against the hash of the file on disk."""
     return {
         "tag": r.tag,
         "branch": r.branch,
@@ -2284,28 +2662,34 @@ async def lookup_by_hashes(hashes: list[str]) -> dict:
     """Resolve mod metadata for one or more artifact content hashes (sha256 hex).
     Per known hash, returns the matching mod + the specific release (newest if the
     owner reused it); hashes with no public match are listed under ``unknown``.
-    Draft / taken-down mods never match."""
+    Draft / taken-down mods never match.
+
+    A build that was repacked to carry an attached config answers to BOTH hashes -
+    the release's own and the modder's pre-injection upload - so a copy installed
+    from anywhere still resolves to the right mod and update."""
     seen: set[str] = set()
     uniq = [h for h in (x.strip().lower() for x in hashes if x and x.strip())
             if not (h in seen or seen.add(h))]
     results: dict[str, dict] = {}
     if uniq:
+        wanted = set(uniq)
         releases = await ModRelease.find(
-            In(ModRelease.tmod_sha, uniq), ModRelease.status == "published",
+            _hash_match(tuple(uniq)), ModRelease.status == "published",
         ).sort("-published_at").to_list()
         proj_cache: dict = {}
         for r in releases:
-            if r.tmod_sha in results:
+            keys = [h for h in (r.tmod_sha, r.base_tmod_sha)
+                    if h in wanted and h not in results]
+            if not keys:
                 continue  # newest already chosen (sorted desc)
             if r.project_id not in proj_cache:
                 proj_cache[r.project_id] = await ModProject.get(r.project_id)
             proj = proj_cache[r.project_id]
             if proj is None or proj.taken_down or proj.visibility == "draft":
                 continue
-            results[r.tmod_sha] = {
-                "mod": public_mod_dto(proj),
-                "release": public_release_dto(r),
-            }
+            hit = {"mod": public_mod_dto(proj), "release": public_release_dto(r)}
+            for key in keys:
+                results[key] = hit
     return {"results": results, "unknown": [h for h in uniq if h not in results]}
 
 

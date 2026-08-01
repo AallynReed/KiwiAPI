@@ -555,7 +555,151 @@
         }
       });
     }
-    await Promise.all([renderOwnedMods(), renderStarredMods()]);
+    await Promise.all([renderOwnedMods(), renderStarredMods(), renderCreatorAccess()]);
+  }
+
+  // ── API access: the creator token + the API accounts using it ──
+  // The token is a connect code, not a password: someone pastes it once in the
+  // developer portal and their account shows up below. The permissions live on
+  // the connection, so the creator keeps control after handing the token over.
+
+  function creatorCoverText(link) {
+    if (link.all_projects) return t('All my mods, including new ones');
+    const picked = link.projects || [];
+    if (!picked.length) return t('No mods');
+    return picked.map((p) => p.title || p.slug).join(', ');
+  }
+
+  function creatorTokenReveal(token) {
+    return '<div class="dash-token-reveal">' +
+      '<p class="dash-hint">' + esc(t('Copy it now — this is the only time it is shown.')) + '</p>' +
+      '<code class="dash-token-value">' + esc(token) + '</code>' +
+      '<button type="button" class="dash-btn dash-btn-mini" data-act="copy-creator-token">' +
+      '<i class="fa-regular fa-copy" aria-hidden="true"></i> <span>' + esc(t('Copy')) + '</span>' +
+      '</button></div>';
+  }
+
+  // `reveal` is a freshly minted token, passed straight back into the re-render
+  // so it survives the refresh that follows creating or replacing it.
+  async function renderCreatorAccess(reveal) {
+    const box = $('dash-creator-body');
+    if (!box) return;
+    const r = await Auth.callJSON('/site/mods/creator-token');
+    if (!r.ok || !r.data) {
+      box.innerHTML = '<p class="dash-error">' + esc(t('Could not load your API access.')) + '</p>';
+      return;
+    }
+    const links = r.data.connections || [];
+    const mods = r.data.mods || [];
+
+    const tokenBlock = r.data.has_token
+      ? '<p class="dash-hint">' + esc(t('Your creator token')) + ': <code>' + esc(r.data.prefix || '') + '…</code></p>' +
+        '<button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-act="rotate-creator-token">' +
+        '<i class="fa-solid fa-rotate" aria-hidden="true"></i> <span>' + esc(t('Replace token')) + '</span></button>' +
+        '<p class="dash-hint">' + esc(t('Replacing it disconnects everyone using the old one.')) + '</p>'
+      : '<button type="button" class="dash-btn dash-btn-mini" data-act="create-creator-token">' +
+        '<i class="fa-solid fa-key" aria-hidden="true"></i> <span>' + esc(t('Create my creator token')) + '</span></button>';
+
+    const rows = links.length ? links.map((l) =>
+      '<li class="dash-creator-row">' +
+        '<div class="dash-creator-main">' +
+          '<strong>' + esc(l.label || t('Unnamed connection')) + '</strong> ' +
+          '<span class="dash-hint">' + esc(creatorCoverText(l)) + '</span>' +
+        '</div>' +
+        '<div class="dash-creator-actions">' +
+          '<button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" data-act="scope" data-link="' + esc(l.id) + '">' +
+            esc(t('Choose mods')) + '</button> ' +
+          '<button type="button" class="dash-btn dash-btn-mini dash-btn-danger" data-act="revoke" data-link="' + esc(l.id) + '">' +
+            esc(t('Remove')) + '</button>' +
+        '</div>' +
+        '<div class="dash-creator-scope" hidden></div>' +
+      '</li>').join('')
+      : '<li class="dash-hint">' + esc(t('Nobody is connected yet.')) + '</li>';
+
+    box.innerHTML = (reveal ? creatorTokenReveal(reveal) : '') + tokenBlock +
+      '<h3 class="dash-card-title" style="margin:18px 0 6px">' + esc(t('Connected apps')) + '</h3>' +
+      '<ul class="dash-creator-list">' + rows + '</ul>';
+
+    const copyBtn = box.querySelector('[data-act="copy-creator-token"]');
+    if (copyBtn) copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(reveal).then(() => {
+        copyBtn.querySelector('span').textContent = t('Copied');
+      });
+    });
+
+    const createBtn = box.querySelector('[data-act="create-creator-token"]');
+    if (createBtn) createBtn.addEventListener('click', async () => {
+      createBtn.disabled = true;
+      const res = await Auth.callJSON('/site/mods/creator-token', { method: 'POST', json: {} });
+      createBtn.disabled = false;
+      if (res.ok && res.data && res.data.token) renderCreatorAccess(res.data.token);
+    });
+
+    const rotateBtn = box.querySelector('[data-act="rotate-creator-token"]');
+    if (rotateBtn) rotateBtn.addEventListener('click', async () => {
+      const ok = await confirmModal({
+        title: t('Replace your creator token?'),
+        message: t('Everyone connected with the old token loses access right away, and you will need to share the new one again.'),
+        confirm: t('Replace'),
+        danger: true,
+      });
+      if (!ok) return;
+      const res = await Auth.callJSON('/site/mods/creator-token/rotate', { method: 'POST', json: {} });
+      if (res.ok && res.data && res.data.token) renderCreatorAccess(res.data.token);
+    });
+
+    box.querySelectorAll('[data-act="revoke"]').forEach((b) => b.addEventListener('click', async () => {
+      const ok = await confirmModal({
+        title: t('Remove this connection?'),
+        message: t('That app can no longer touch your mods. Anything it already published stays.'),
+        confirm: t('Remove'),
+        danger: true,
+      });
+      if (!ok) return;
+      const res = await Auth.callJSON(
+        '/site/mods/creator-connections/' + encodeURIComponent(b.dataset.link), { method: 'DELETE' });
+      if (res.ok) renderCreatorAccess();
+    }));
+
+    box.querySelectorAll('[data-act="scope"]').forEach((b) => b.addEventListener('click', () => {
+      const pane = b.closest('.dash-creator-row').querySelector('.dash-creator-scope');
+      if (!pane.hidden) { pane.hidden = true; return; }
+      const link = links.filter((l) => l.id === b.dataset.link)[0];
+      if (!link) return;
+      const chosen = {};
+      (link.project_ids || []).forEach((id) => { chosen[id] = true; });
+      const group = 'scope-' + link.id;
+      const picks = mods.length
+        ? mods.map((m) =>
+            '<label class="dash-mod-check"><input type="checkbox" value="' + esc(m.id) + '"' +
+            (chosen[m.id] ? ' checked' : '') + '> <span>' + esc(m.title || m.slug) + '</span></label>').join('')
+        : '<p class="dash-hint">' + esc(t('You have no mods yet.')) + '</p>';
+      pane.innerHTML =
+        '<label class="dash-mod-check"><input type="radio" name="' + esc(group) + '" value="all"' +
+          (link.all_projects ? ' checked' : '') + '> <span>' + esc(t('All my mods, including new ones')) + '</span></label>' +
+        '<label class="dash-mod-check"><input type="radio" name="' + esc(group) + '" value="some"' +
+          (link.all_projects ? '' : ' checked') + '> <span>' + esc(t('Only the mods I pick')) + '</span></label>' +
+        '<div class="dash-creator-picks"' + (link.all_projects ? ' hidden' : '') + '>' + picks + '</div>' +
+        '<button type="button" class="dash-btn dash-btn-mini" data-act="save-scope">' + esc(t('Save')) + '</button>' +
+        '<p class="dash-error" data-act="scope-error" hidden></p>';
+      pane.hidden = false;
+      const pickBox = pane.querySelector('.dash-creator-picks');
+      const allRadio = pane.querySelector('input[type=radio][value="all"]');
+      pane.querySelectorAll('input[type=radio]').forEach((rd) =>
+        rd.addEventListener('change', () => { pickBox.hidden = allRadio.checked; }));
+      pane.querySelector('[data-act="save-scope"]').addEventListener('click', async () => {
+        const errEl = pane.querySelector('[data-act="scope-error"]');
+        errEl.hidden = true;
+        const ids = Array.prototype.slice.call(
+          pane.querySelectorAll('input[type=checkbox]:checked')).map((c) => c.value);
+        const res = await Auth.callJSON(
+          '/site/mods/creator-connections/' + encodeURIComponent(link.id),
+          { method: 'PATCH', json: { all_projects: allRadio.checked, project_ids: ids } });
+        if (res.ok) { renderCreatorAccess(); return; }
+        errEl.textContent = Auth.errorMessage(res.data) || t('Could not save.');
+        errEl.hidden = false;
+      });
+    }));
   }
 
   async function renderOwnedMods() {

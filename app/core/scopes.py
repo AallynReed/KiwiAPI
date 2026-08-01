@@ -61,6 +61,9 @@ _REGISTRY: tuple[Scope, ...] = (
           "Read character stats from a screenshot - self-hosted OCR of the in-game stat sheet"),
     Scope("store:read", 1 << 15, "store",
           "Read the in-game Kiwi Store catalog - categories, products, prices, deals, loot odds"),
+    Scope("mods:write", 1 << 16, "mods",
+          "Manage Mods Hub projects for creators who connected their account to yours - "
+          "create mods, cut and publish releases, edit metadata, images and visibility"),
 )
 
 ALL_SCOPES = 0  # sentinel mask meaning "every scope, present and future"

@@ -45,6 +45,7 @@ from app.core.ratelimit import check_rate_limit
 from app.core.utils import client_ip
 from app.embed import service, uploads
 from app.trove import tmod as tmod_mod
+from app.trove.render import bp_cache
 
 # The iframe page + the JSON/asset endpoints it fetches. Hidden from the public
 # reference (they're browser-internal); the documented partner API is the upload
@@ -60,7 +61,8 @@ _PUB = Depends(public_scope("mods:read"))
 _TEMPLATES = Jinja2Templates(directory=str(Path(settings.site_root) / "templates"))
 
 _SHORT = {"Cache-Control": "public, max-age=60"}
-_MED = {"Cache-Control": "public, max-age=300"}
+_MED_MAX_AGE = 300
+_MED = {"Cache-Control": f"public, max-age={_MED_MAX_AGE}"}
 _LONG = {"Cache-Control": "public, max-age=3600"}
 
 
@@ -132,22 +134,27 @@ async def embed_manifest(
     return JSONResponse(await service.manifest(src), headers=_SHORT)
 
 
-@embed_page_router.get("/site/embed/blueprint", response_class=JSONResponse)
+@embed_page_router.get("/site/embed/blueprint", response_class=Response)
 async def embed_blueprint(
-    path: str = Query(default="", max_length=400),
+    request: Request, path: str = Query(default="", max_length=400),
+    fmt: str = Query(default="json", pattern="^(json|bin)$"),
     src: service.Source = _SRC, _t: None = _LIMIT,
-) -> JSONResponse:
-    return JSONResponse(await service.blueprint(src, path), headers=_MED)
+) -> Response:
+    """Served from the decoded-payload cache, gzipped and ETag'd - a partner's
+    visitors re-fetching the same model cost us a 304."""
+    cached = await service.blueprint(src, path, fmt)
+    return bp_cache.respond(request, cached, max_age=_MED_MAX_AGE)
 
 
-@embed_page_router.get("/site/embed/assembled", response_class=JSONResponse)
+@embed_page_router.get("/site/embed/assembled", response_class=Response)
 async def embed_assembled(
+    request: Request, fmt: str = Query(default="json", pattern="^(json|bin)$"),
     src: service.Source = _SRC, _t: None = _LIMIT,
-) -> JSONResponse:
-    model = await service.assembled(src)
+) -> Response:
+    model = await service.assembled(src, fmt)
     if model is None:
         raise APIError(404, ErrorCode.not_found, "No assemblable creature here.")
-    return JSONResponse(model, headers=_MED)
+    return bp_cache.respond(request, model, max_age=_MED_MAX_AGE)
 
 
 @embed_page_router.get("/site/embed/vfx/manifest", response_class=JSONResponse)

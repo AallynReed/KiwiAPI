@@ -11,6 +11,7 @@ content hash. The store does sync I/O, so every call is wrapped in
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import struct
 
 from app.core.config import settings
@@ -22,6 +23,12 @@ _store = ContentStore(settings.mods_store_dir)
 async def put_blob(data: bytes) -> tuple[str, bool]:
     """Store bytes; return ``(sha256_hex, created)``."""
     return await asyncio.to_thread(_store.put, data)
+
+
+def blob_sha(data: bytes) -> str:
+    """The store key bytes WOULD get, without storing them - for hashing an
+    artifact we only need to recognise later (an upload we repack before storing)."""
+    return hashlib.sha256(data).hexdigest()
 
 
 async def get_blob(sha: str) -> bytes | None:

@@ -335,13 +335,14 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"];
+const TABS = ["tokens", "creators", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"];
 const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"]);
 
 // Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
 const ICONS = {
   tokens:       '<circle cx="8" cy="15" r="4"/><path d="M11 12.5 20 3.5M17.5 6l2 2M19.5 4l1.5 1.5"/>',
   activity:     '<path d="M3 12h4l3 7 4-15 3 8h4"/>',
+  creators:     '<path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 12l9 4.5 9-4.5"/><circle cx="18.5" cy="18.5" r="3"/><path d="M18.5 17v3M17 18.5h3"/>',
   account:      '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>',
   overview:     '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
   pageviews:    '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
@@ -371,6 +372,7 @@ function icon(name) {
 // admin pages slot in without touching the shell.
 const TAB_META = {
   tokens:       { group: "API management", label: "Tokens" },
+  creators:     { group: "API management", label: "Creators" },
   activity:     { group: "API management", label: "Activity" },
   account:      { group: "API management", label: "Account" },
   overview:     { group: "Admin panel", label: "Overview" },
@@ -450,6 +452,7 @@ function renderDashboard() {
         <nav role="tablist">
           <p class="nav-group">API management</p>
           ${navItem("tokens")}
+          ${navItem("creators")}
           ${navItem("activity")}
           ${navItem("account")}
           ${adminNav}
@@ -491,6 +494,7 @@ function selectTab() {
       `<span>${esc(meta.group)}</span><span class="crumb-sep">›</span><span class="cur">${esc(meta.label)}</span>`;
   }
   if (state.tab === "tokens") renderTokens();
+  else if (state.tab === "creators") renderCreators();
   else if (state.tab === "activity") renderActivity();
   else if (state.tab === "account") renderAccount();
   else if (state.tab === "overview") renderOverview();
@@ -849,6 +853,114 @@ async function renderTokens() {
       } catch (ex) { err.textContent = ex.message; }
     });
   }
+}
+
+// --- Creators tab ----------------------------------------------------------
+// A creator (Dashboard account on trove.aallyn.net) can hand out a "creator
+// token" that connects THIS API account to their Mods Hub mods. The token is a
+// one-time connect code, not a credential: once connected, ordinary API tokens
+// carrying `mods:write` do the work. The creator keeps control - they choose
+// which of their mods a connection covers, and can cut it at any time.
+
+const CREATOR_SNIPPET = `# Publish a release as a connected creator:
+curl -X POST ${API_BASE}/v1/mods/hub/projects/<handle>/<slug>/releases \
+  -H "Authorization: Bearer $KIWI_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"tag":"v1.1.0","title":"Stable","ref":"main","status":"published"}'`;
+
+function openConnectCreator(after) {
+  modal("Connect a creator", `
+    <p class="hint">Paste the <b>creator token</b> the creator generated on their
+      Dashboard (Mods → API access). It's used once, to make the connection.</p>
+    <label>Creator token</label>
+    <input id="creator-token" placeholder="kiwi_creator_…" autocomplete="off">
+    <label>Label <span class="muted">(optional)</span></label>
+    <input id="creator-label" maxlength="60" placeholder="release CI">
+    <p class="field-help">The creator sees this label in their connections list, so
+      make it recognisable - it's how they tell your connections apart.</p>
+  `, async () => {
+    const token = document.getElementById("creator-token").value.trim();
+    if (!token) throw new Error("Paste the creator token.");
+    const link = await API.call("/v1/mods/hub/creator-links", {
+      method: "POST",
+      body: { token, label: document.getElementById("creator-label").value.trim() },
+    });
+    toast(`Connected to ${link.creator.display_name}.`, "ok");
+    after();
+  }, "Connect");
+}
+
+function openDisconnectCreator(link, after) {
+  modal("Disconnect creator", `
+    <p class="hint">Stop managing <b>${esc(link.creator.display_name)}</b>'s mods from
+      this account. Nothing you've already published changes.</p>
+    <p class="field-help">You'll need a fresh creator token from them to reconnect.</p>
+  `, async () => {
+    await API.call(`/v1/mods/hub/creator-links/${link.id}`, { method: "DELETE" });
+    toast("Disconnected.", "ok");
+    after();
+  }, "Disconnect");
+}
+
+async function renderCreators() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `<div class="loading">Loading creators…</div>`;
+  let links = [];
+  try {
+    const r = await API.call("/v1/mods/hub/creator-links");
+    links = r.items || [];
+  } catch (ex) { body.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+
+  const scopeCell = (l) => l.all_projects
+    ? '<span class="badge ok">all mods</span>'
+    : (l.projects.length
+        ? l.projects.map((p) => `<code>${esc(p.title || p.slug)}</code>`).join(" ")
+        : '<span class="badge warn">no mods</span>');
+
+  const rows = links.length ? links.map((l) => `
+    <tr>
+      <td>${esc(l.creator.display_name)}<div class="muted mono">${esc(l.creator.handle)}</div></td>
+      <td>${esc(l.label || "-")}</td>
+      <td>${scopeCell(l)}</td>
+      <td>${l.request_count}</td>
+      <td class="muted">${fmt(l.last_used_at)}</td>
+      <td><button class="btn small danger" data-drop="${l.id}">Disconnect</button></td>
+    </tr>`).join("")
+    : `<tr><td colspan="6" class="muted">No creators connected yet.</td></tr>`;
+
+  body.innerHTML = `
+    <div class="card">
+      <h2>Connected creators</h2>
+      <p class="hint">Mods on the Hub belong to Dashboard accounts. Connect to a
+        creator and you can manage their mods over the API - create mods, cut and
+        publish releases, edit metadata, images and visibility.</p>
+      <table>
+        <thead><tr><th>Creator</th><th>Label</th><th>Covers</th><th>Requests</th><th>Last used</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <button class="btn primary" style="margin-top:14px" id="connect-creator">Connect a creator</button>
+    </div>
+    <div class="card">
+      <h2>Using a connection</h2>
+      <p class="hint">Connections don't authenticate anything by themselves. Calls
+        use one of your own API tokens, and that token needs the
+        <code>mods:write</code> scope - add it on the <b>Tokens</b> tab.</p>
+      <pre class="curl-block"><code>${esc(CREATOR_SNIPPET)}</code></pre>
+      <button class="btn small" id="copy-creator-usage">Copy</button>
+      <p class="field-help">Connected to more than one creator? Routes that don't name a
+        mod (like creating one) take <code>?creator=&lt;handle&gt;</code> or the
+        <code>X-Kiwi-Creator</code> header to say which account to act as.</p>
+      <p class="field-help">Deleting mods or releases, git access and profile edits stay
+        with the creator on the website.</p>
+    </div>`;
+
+  document.getElementById("connect-creator")
+    .addEventListener("click", () => openConnectCreator(renderCreators));
+  document.getElementById("copy-creator-usage").addEventListener("click", () =>
+    navigator.clipboard.writeText(CREATOR_SNIPPET).then(() => toast("Copied.", "ok")));
+  const byId = Object.fromEntries(links.map((l) => [l.id, l]));
+  body.querySelectorAll("[data-drop]").forEach((b) =>
+    b.addEventListener("click", () => openDisconnectCreator(byId[b.dataset.drop], renderCreators)));
 }
 
 // --- Activity tab ----------------------------------------------------------

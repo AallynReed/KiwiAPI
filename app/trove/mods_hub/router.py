@@ -3,9 +3,12 @@
 Two routers share the prefix:
   - ``mods_hub_router`` - PUBLIC reads, tokenless via ``public_scope("mods:read")``
     (in the OpenAPI reference). API consumers see only public/unlisted projects.
-  - ``mods_hub_write_router`` - site-login-gated writes (``get_current_site_user``);
-    mounted ``include_in_schema=False`` since they're driven by the website studio,
-    not API-token developers.
+  - ``mods_hub_write_router`` - writes, gated by ``get_mod_write_user``: either the
+    creator's own Dashboard session, or a dev-portal API token with ``mods:write``
+    whose account the creator connected (see ``creators.py`` / ``write_auth.py``).
+    Either way the route body receives the creator's ``SiteUser`` and behaves
+    identically. Mounted ``include_in_schema=False`` - the website studio is the
+    primary driver and the API contract is documented in the guide.
 
 The website's browse + owner-draft reveal goes through the same-origin
 ``/site/mods/*`` proxies in ``app/site/router.py`` (which pass the *site* user as
@@ -14,26 +17,32 @@ the viewer); these ``/v1`` reads always view as anonymous.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile
+import base64
+import binascii
 
-from app.core.dependencies import AccessContext, public_scope
+from fastapi import APIRouter, Depends, File, Form, Query, Request, Response, UploadFile
+
+from app.auth.models import User
+from app.core.dependencies import AccessContext, get_current_user, public_scope
 from app.core.errors import COMMON_ERROR_RESPONSES, APIError, ErrorCode
-from app.site_auth.dependencies import get_current_site_user
 from app.site_auth.models import SiteUser
 from app.trove import mod_categories
-from app.trove.mods_hub import service
+from app.trove.mods_hub import creators, service
 from app.trove.mods_hub.schemas import (
     ClaimRequest,
     CollaboratorRequest,
     CreateBranchRequest,
     CreateProjectRequest,
     CreateReleaseRequest,
+    CreatorLinkRequest,
     GitTokenRequest,
     HashLookupRequest,
     UpdateProfileRequest,
     UpdateProjectRequest,
     UpdateReleaseRequest,
 )
+from app.trove.mods_hub.write_auth import get_mod_write_user
+from app.trove.render import bp_cache
 
 mods_hub_router = APIRouter(
     prefix="/v1/mods/hub", tags=["mods-hub"], responses=COMMON_ERROR_RESPONSES,
@@ -46,9 +55,27 @@ mods_hub_write_router = APIRouter(
 mods_public_router = APIRouter(
     prefix="/v1/mods", tags=["mods"], responses=COMMON_ERROR_RESPONSES,
 )
+# ── the "creators" surface (documented in the API reference) ───────────────
+# Everything a *connected API account* can do, split off from the website-only
+# writes so the reference divides read-anything endpoints from control ones. This
+# router's route set IS the API allowlist in write_auth._API_ROUTES - a test
+# asserts the two agree, so a route can't be documented as callable without
+# actually being callable, or vice versa.
+mods_creator_write_router = APIRouter(
+    prefix="/v1/mods/hub", tags=["creators"], responses=COMMON_ERROR_RESPONSES,
+)
+# Creator connections, managed from the DEV PORTAL, so these authenticate with the
+# portal's session JWT (not an API token): they're account plumbing, like /tokens.
+mods_creator_router = APIRouter(
+    prefix="/v1/mods/hub/creator-links", tags=["creators"],
+    responses=COMMON_ERROR_RESPONSES,
+)
 
 _PUB = Depends(public_scope("mods:read"))
-_USER = Depends(get_current_site_user)
+# Writes: the creator's Dashboard session, or a connected API account's token
+# carrying mods:write. Both resolve to the creator's SiteUser - see write_auth.py.
+_USER = Depends(get_mod_write_user)
+_PORTAL = Depends(get_current_user)
 
 _IMMUTABLE = {"Cache-Control": "public, max-age=31536000, immutable"}
 
@@ -196,25 +223,48 @@ async def get_release_blueprints(release_id: str, ctx: AccessContext = _PUB) -> 
     return await service.list_release_blueprints(release)
 
 
-@mods_hub_router.get("/releases/{release_id}/assembled")
-async def get_release_assembled(release_id: str, ctx: AccessContext = _PUB) -> dict:
+@mods_hub_router.get(
+    "/releases/{release_id}/assembled",
+    responses={200: {"content": {"application/json": {}},
+                     "description": "Assembled creature: rest pose + animation metadata."}},
+)
+async def get_release_assembled(
+    request: Request, release_id: str,
+    fmt: str = Query(default="json", pattern="^(json|bin)$",
+                     description="`json` (default) or `bin` - the compact KVX1 binary container."),
+    ctx: AccessContext = _PUB,
+) -> Response:
     """The release's blueprint parts assembled onto their creature rig (rest pose +
-    animations) as the web-viewer model payload."""
+    animations) as the web-viewer model payload.
+
+    Assembled once per artifact and cached, then served gzipped with an ``ETag`` -
+    send ``If-None-Match`` to skip the transfer on a repeat fetch."""
     release, _ = await service.release_with_project(release_id, None)
-    model = await service.assemble_release_model(release)
+    model = await service.assemble_release_model(release, fmt)
     if model is None:
         raise APIError(404, ErrorCode.not_found, "No assemblable creature for this mod.")
-    return model
+    return bp_cache.respond(request, model)
 
 
-@mods_hub_router.get("/releases/{release_id}/blueprint")
+@mods_hub_router.get(
+    "/releases/{release_id}/blueprint",
+    responses={200: {"content": {"application/json": {}},
+                     "description": "Voxel payload: parallel x/y/z/rgb/kind/level arrays."}},
+)
 async def get_release_blueprint(
-    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    request: Request, release_id: str,
+    path: str = Query(..., min_length=1, max_length=400),
+    fmt: str = Query(default="json", pattern="^(json|bin)$",
+                     description="`json` (default) or `bin` - the compact KVX1 binary container."),
     ctx: AccessContext = _PUB,
-) -> dict:
-    """Decoded voxel data for one ``.blueprint`` in a release (web 3D viewer)."""
+) -> Response:
+    """Decoded voxel data for one ``.blueprint`` in a release (web 3D viewer).
+
+    Decoded once per artifact and cached, then served gzipped with an ``ETag`` -
+    send ``If-None-Match`` to skip the transfer entirely on a repeat fetch."""
     release, _ = await service.release_with_project(release_id, None)
-    return await service.decode_release_blueprint(release, path)
+    cached = await service.decode_release_blueprint(release, path, fmt)
+    return bp_cache.respond(request, cached)
 
 
 @mods_hub_router.get("/rigs/{skeleton}/anim/{name}")
@@ -241,6 +291,37 @@ async def get_release_file(
     data, filename = await service.download_release_file(release, path)
     safe = filename.replace('"', '').replace("\r", "").replace("\n", "")
     return Response(content=data, media_type="application/octet-stream",
+                    headers={"Content-Disposition": f'attachment; filename="{safe}"'})
+
+
+@mods_hub_router.get("/releases/{release_id}/inspect")
+async def inspect_release(release_id: str, ctx: AccessContext = _PUB) -> dict:
+    """A release's artifact decoded: the ``.tmod`` header (version + every property +
+    decoded categories) and every packed file with its size - what the mod page's
+    build inspector shows. Header-only read; nothing is decompressed."""
+    release, _ = await service.release_with_project(release_id, None)
+    return await service.inspect_release(release)
+
+
+@mods_hub_router.get("/releases/{release_id}/cfgs")
+async def get_release_cfgs(release_id: str, ctx: AccessContext = _PUB) -> dict:
+    """The ``.cfg`` config files packed inside a release's .tmod (path, size and the
+    name to save each under) - a mod's config is needed on its own, in the game's
+    ModCfgs folder."""
+    release, _ = await service.release_with_project(release_id, None)
+    return await service.list_release_cfgs(release)
+
+
+@mods_hub_router.get("/releases/{release_id}/cfg")
+async def get_release_cfg(
+    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    ctx: AccessContext = _PUB,
+) -> Response:
+    """Download one packed ``.cfg``, extracted from the .tmod on the fly."""
+    release, _ = await service.release_with_project(release_id, None)
+    data, filename = await service.download_release_cfg(release, path)
+    safe = filename.replace('"', '').replace("\r", "").replace("\n", "")
+    return Response(content=data, media_type="text/plain; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{safe}"'})
 
 
@@ -271,7 +352,36 @@ def _valid_status(status: str) -> str:
     return status
 
 
-@mods_hub_write_router.get("/me/projects")
+# ── creator connections (dev portal, session JWT) ─────────────────────────
+# The developer's half of the link: paste a creator's token to connect, see who
+# you're connected to, drop one. The creator's half (issuing/rotating the token,
+# narrowing a connection to specific mods, revoking) lives on the Dashboard, at
+# ``/site/mods/creator-*`` in app/site/router.py.
+
+@mods_creator_router.get("")
+async def list_creator_links(user: User = _PORTAL) -> dict:
+    """The creators whose mods this API account may manage."""
+    return {"items": await creators.list_for_developer(user)}
+
+
+@mods_creator_router.post("", status_code=201)
+async def add_creator_link(req: CreatorLinkRequest, user: User = _PORTAL) -> dict:
+    """Connect to a creator by pasting the creator token from their Dashboard.
+
+    The connection starts covering all of that creator's mods (including ones they
+    add later); they can narrow or revoke it from their side at any time. Calls
+    then use a normal API token carrying ``mods:write``."""
+    return await creators.connect(user, req.token, req.label)
+
+
+@mods_creator_router.delete("/{link_id}", status_code=204)
+async def remove_creator_link(link_id: str, user: User = _PORTAL) -> Response:
+    """Drop a creator from your list (the creator can also revoke from their side)."""
+    await creators.disconnect_by_developer(user, link_id)
+    return Response(status_code=204)
+
+
+@mods_creator_write_router.get("/me/projects")
 async def my_projects(user: SiteUser = _USER) -> dict:
     return {"items": await service.list_owned(user)}
 
@@ -321,7 +431,7 @@ async def revoke_git_token(token_id: str, user: SiteUser = _USER) -> Response:
     return Response(status_code=204)
 
 
-@mods_hub_write_router.post("/projects", status_code=201)
+@mods_creator_write_router.post("/projects", status_code=201)
 async def create_project(req: CreateProjectRequest, user: SiteUser = _USER) -> dict:
     project = await service.create_project(
         user, title=req.title, summary=req.summary, description=req.description,
@@ -332,7 +442,7 @@ async def create_project(req: CreateProjectRequest, user: SiteUser = _USER) -> d
     return await service.project_detail(project, user)
 
 
-@mods_hub_write_router.post("/projects/{handle}/{slug}/fork", status_code=201)
+@mods_creator_write_router.post("/projects/{handle}/{slug}/fork", status_code=201)
 async def fork_project(handle: str, slug: str, user: SiteUser = _USER) -> dict:
     """Fork a mod into a new project of your own, copying its current files and
     crediting the original. The source must be viewable (public/unlisted/yours)."""
@@ -341,7 +451,7 @@ async def fork_project(handle: str, slug: str, user: SiteUser = _USER) -> dict:
     return await service.project_detail(fork, user)
 
 
-@mods_hub_write_router.patch("/projects/{handle}/{slug}")
+@mods_creator_write_router.patch("/projects/{handle}/{slug}")
 async def update_project(
     handle: str, slug: str, req: UpdateProjectRequest, user: SiteUser = _USER,
 ) -> dict:
@@ -359,7 +469,7 @@ async def delete_project(handle: str, slug: str, user: SiteUser = _USER) -> Resp
     return Response(status_code=204)
 
 
-@mods_hub_write_router.post("/projects/{handle}/{slug}/banner")
+@mods_creator_write_router.post("/projects/{handle}/{slug}/banner")
 async def upload_banner(
     handle: str, slug: str, file: UploadFile = File(...), user: SiteUser = _USER,
 ) -> dict:
@@ -369,14 +479,14 @@ async def upload_banner(
     return {"banner_sha": project.banner_sha}
 
 
-@mods_hub_write_router.delete("/projects/{handle}/{slug}/banner")
+@mods_creator_write_router.delete("/projects/{handle}/{slug}/banner")
 async def delete_banner(handle: str, slug: str, user: SiteUser = _USER) -> dict:
     project = await _require_owned(handle, slug, user)
     project = await service.clear_banner(project, user)
     return {"banner_sha": project.banner_sha}
 
 
-@mods_hub_write_router.post("/projects/{handle}/{slug}/previews")
+@mods_creator_write_router.post("/projects/{handle}/{slug}/previews")
 async def upload_previews(
     handle: str, slug: str, files: list[UploadFile] = File(...), user: SiteUser = _USER,
 ) -> dict:
@@ -387,14 +497,14 @@ async def upload_previews(
     return {"preview_shas": project.preview_shas}
 
 
-@mods_hub_write_router.delete("/projects/{handle}/{slug}/previews/{sha}")
+@mods_creator_write_router.delete("/projects/{handle}/{slug}/previews/{sha}")
 async def delete_preview(handle: str, slug: str, sha: str, user: SiteUser = _USER) -> dict:
     project = await _require_owned(handle, slug, user)
     project = await service.remove_preview(project, user, sha)
     return {"preview_shas": project.preview_shas}
 
 
-@mods_hub_write_router.post("/projects/{handle}/{slug}/branches", status_code=201)
+@mods_creator_write_router.post("/projects/{handle}/{slug}/branches", status_code=201)
 async def create_branch(
     handle: str, slug: str, req: CreateBranchRequest, user: SiteUser = _USER,
 ) -> dict:
@@ -402,14 +512,14 @@ async def create_branch(
     return await service.create_branch(project, user, req.name, req.from_ref)
 
 
-@mods_hub_write_router.delete("/projects/{handle}/{slug}/branches/{name}", status_code=204)
+@mods_creator_write_router.delete("/projects/{handle}/{slug}/branches/{name}", status_code=204)
 async def delete_branch(handle: str, slug: str, name: str, user: SiteUser = _USER) -> Response:
     project = await _require_owned(handle, slug, user)
     await service.delete_branch(project, user, name)
     return Response(status_code=204)
 
 
-@mods_hub_write_router.post("/projects/{handle}/{slug}/commits", status_code=201)
+@mods_creator_write_router.post("/projects/{handle}/{slug}/commits", status_code=201)
 async def create_commit(
     handle: str, slug: str,
     branch: str = Form(...),
@@ -433,7 +543,17 @@ async def create_commit(
     )
 
 
-@mods_hub_write_router.post("/projects/{handle}/{slug}/releases", status_code=201)
+def _decode_config(encoded: str | None) -> bytes | None:
+    """Decode the optional base64 ``.cfg`` on a compile-from-commit release."""
+    if not encoded:
+        return None
+    try:
+        return base64.b64decode(encoded, validate=True)
+    except (ValueError, binascii.Error):
+        raise APIError(400, ErrorCode.bad_request, "config_base64 is not valid base64.")
+
+
+@mods_creator_write_router.post("/projects/{handle}/{slug}/releases", status_code=201)
 async def create_release(
     handle: str, slug: str, req: CreateReleaseRequest, user: SiteUser = _USER,
 ) -> dict:
@@ -443,11 +563,11 @@ async def create_release(
     return await service.create_release_from_commit(
         project, user, tag=req.tag, title=req.title, changelog=req.changelog,
         ref=req.ref, status=req.status, fmt=req.format, preview_sha=req.preview_sha,
-        author=req.author,
+        author=req.author, config_data=_decode_config(req.config_base64),
     )
 
 
-@mods_hub_write_router.post("/projects/{handle}/{slug}/releases/upload", status_code=201)
+@mods_creator_write_router.post("/projects/{handle}/{slug}/releases/upload", status_code=201)
 async def upload_release(
     handle: str, slug: str,
     tag: str = Form(...),
@@ -456,6 +576,11 @@ async def upload_release(
     status: str = Form(default="published"),
     branch: str = Form(default=""),
     file: UploadFile = File(...),
+    config: UploadFile | None = File(
+        default=None,
+        description="Optional .cfg packed into the build as ui/<title>.cfg. Allowed "
+                    "only for a .tmod that ships a Flash UI (.swf).",
+    ),
     user: SiteUser = _USER,
 ) -> dict:
     """Cut a release from an already-built ``.tmod`` or ``.zip`` upload (validated
@@ -465,10 +590,11 @@ async def upload_release(
         project, user, tag=tag, title=title, changelog=changelog,
         status=_valid_status(status), branch=branch,
         filename=file.filename or "mod.tmod", data=await file.read(),
+        config_data=await config.read() if config is not None else None,
     )
 
 
-@mods_hub_write_router.patch("/releases/{release_id}")
+@mods_creator_write_router.patch("/releases/{release_id}")
 async def update_release(
     release_id: str, req: UpdateReleaseRequest, user: SiteUser = _USER,
 ) -> dict:
@@ -495,7 +621,7 @@ async def delete_release(release_id: str, user: SiteUser = _USER) -> Response:
     return Response(status_code=204)
 
 
-@mods_hub_write_router.post("/projects/{handle}/{slug}/fix-placement", status_code=201)
+@mods_creator_write_router.post("/projects/{handle}/{slug}/fix-placement", status_code=201)
 async def fix_placement(
     handle: str, slug: str, branch: str = Query(default=""), user: SiteUser = _USER,
 ) -> dict:

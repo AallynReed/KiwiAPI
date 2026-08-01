@@ -194,6 +194,12 @@ class ModRelease(Document):
     # The content hash (sha256 hex) of the artifact bytes - globally unique per
     # *owner*: a release whose hash is already owned by another creator is rejected.
     tmod_sha: str                                # CAS key of the artifact bytes
+    # Set only when an uploaded build was repacked to carry an attached config
+    # (ui/<title>.cfg): the hash of the modder's ORIGINAL upload. The repack gives
+    # the release a new `tmod_sha`, so this keeps the copy already circulating in
+    # the wild recognisable to hash lookup (update detection), and keeps the
+    # uniqueness guards from being bypassed by adding a config to a known build.
+    base_tmod_sha: str | None = None
     tmod_size: int = 0
     tmod_filename: str = "mod.tmod"              # download name (carries the extension)
     # The header properties stamped into a .tmod (title/author/modVersion/…); empty for zips.
@@ -216,8 +222,10 @@ class ModRelease(Document):
             IndexModel([("project_id", ASCENDING), ("branch", ASCENDING), ("tag", ASCENDING)],
                        unique=True),
             IndexModel([("project_id", ASCENDING), ("published_at", DESCENDING)]),
-            # Hash ownership check + the public lookup-by-hash API.
+            # Hash ownership check + the public lookup-by-hash API. Both hashes are
+            # queried (a repacked build answers to its pre-injection hash too).
             IndexModel([("tmod_sha", ASCENDING)]),
+            IndexModel([("base_tmod_sha", ASCENDING)], sparse=True),
         ]
 
 
@@ -257,6 +265,57 @@ class ModGitToken(Document):
         indexes = [
             IndexModel([("token_hash", ASCENDING)], unique=True),
             IndexModel([("site_user_id", ASCENDING), ("created_at", DESCENDING)]),
+        ]
+
+
+class ModCreatorLink(Document):
+    """One connection between a **creator** (Dashboard ``SiteUser``) and a
+    **developer's API account** (dev-portal ``User``), letting that account manage
+    the creator's mods over the HTTP API.
+
+    Established by the developer pasting the creator's creator token
+    (``SiteUser.creator_token_hash``) into their portal account. The token only
+    proves "this creator invited me" - the PERMISSIONS live here, on the link, and
+    stay editable by the creator afterwards without re-issuing anything.
+
+    A developer can hold many links (managing several creators); a creator can
+    connect several developers. One row per (creator, developer) pair.
+
+    Deliberately NOT covered by a link: deleting mods or releases, minting git
+    tokens, and editing the creator's public profile. Those stay on the website,
+    under the creator's own login."""
+
+    site_user_id: PydanticObjectId              # the creator whose mods can be managed
+    api_user_id: PydanticObjectId               # the dev-portal User granted access
+    # The developer's own label for the connection ("release CI", "my bot"). It is
+    # what the creator sees in their connections list, so it's how they tell two
+    # connections apart when revoking one - we don't store the developer's email.
+    label: str = ""
+
+    # Scope. ``all_projects`` (the default a fresh connection gets) covers every
+    # mod the creator owns INCLUDING ones created later - the "set it once" case.
+    # Narrowing to a list also blocks creating new mods: a connection limited to
+    # named mods must not be able to mint more.
+    all_projects: bool = True
+    project_ids: list[PydanticObjectId] = Field(default_factory=list)
+
+    revoked: bool = False
+    revoked_at: datetime | None = None
+    # Set when the creator rotated their token: the link died with the token
+    # rather than being individually revoked (surfaced differently in the UI).
+    revoked_by_rotation: bool = False
+
+    created_at: datetime = Field(default_factory=utcnow)
+    last_used_at: datetime | None = None
+    request_count: int = 0
+
+    class Settings:
+        name = "mod_creator_links"
+        indexes = [
+            IndexModel([("site_user_id", ASCENDING), ("api_user_id", ASCENDING)],
+                       unique=True),
+            # The per-request authorization lookup: this developer's live links.
+            IndexModel([("api_user_id", ASCENDING), ("revoked", ASCENDING)]),
         ]
 
 

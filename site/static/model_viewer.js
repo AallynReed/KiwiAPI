@@ -50,6 +50,17 @@
     return _three;
   }
 
+  /* Fetch the payload, preferring the binary container (voxel_binary.js): an assembled
+     creature is the biggest thing we ship, so skipping the JSON parse matters most
+     here. Falls back to plain JSON when that script isn't on the page. */
+  function loadModel(url) {
+    if (window.VoxelBinary) return window.VoxelBinary.fetchModel(url);
+    return fetch(url, { credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) throw new Error('Could not load model (HTTP ' + r.status + ').');
+      return r.json();
+    });
+  }
+
   /* Load an assembled model into an existing element (no modal) - used by the modal
      below and by the embeddable viewer (/embed/viewer). `bar` is where the animation
      buttons go; pass one so the host controls where they sit. Returns { dispose }. */
@@ -65,10 +76,7 @@
 
     var viewer = null, alive = true;
     ensureThree().then(function (THREE) {
-      return fetch(opts.url, { credentials: 'same-origin' }).then(function (r) {
-        if (!r.ok) throw new Error('Could not load model (HTTP ' + r.status + ').');
-        return r.json();
-      }).then(function (data) {
+      return loadModel(opts.url).then(function (data) {
         if (!alive) return;
         msg.remove();
         var nv = data.parts.reduce(function (a, p) { return a + p.x.length; }, 0);
@@ -136,38 +144,16 @@
     var fill = new THREE.DirectionalLight(0xffffff, 0.32); fill.position.set(-0.5, 0.4, -0.6); scene.add(fill);
     var camera = new THREE.PerspectiveCamera(42, W / H, 0.001, 1000);
 
-    var geo = new THREE.BoxGeometry(1, 1, 1), scaleM = new THREE.Matrix4().makeScale(s, s, s);
+    var scaleM = new THREE.Matrix4().makeScale(s, s, s);
+    // One mesh per material group per part, with the faces you can't see culled
+    // (voxel_mesh.js). Culling is per PART - two parts meeting at a joint are placed
+    // by different bone matrices, so neither can know it's hidden by the other.
     var meshByPart = {};
-    var obj = new THREE.Object3D(), col = new THREE.Color();
-    // Material kinds (from the blueprint): 0 solid · 1 glass · 2 glow · 3 glow-glass.
-    // level = glass alpha 16+32*w -> opacity (level/255)^2, matching the game/catalog.
-    function makeMaterial(kind, level) {
-      var opacity = Math.pow((level || 255) / 255, 2);
-      if (kind === 2) return new THREE.MeshBasicMaterial();   // glow -> unlit/emissive
-      if (kind === 3) return new THREE.MeshBasicMaterial({ transparent: true, opacity: opacity, depthWrite: false });
-      if (kind === 1) return new THREE.MeshPhongMaterial({ transparent: true, opacity: opacity, depthWrite: false, shininess: 70, specular: 0x4d4d4d });
-      return new THREE.MeshPhongMaterial({ shininess: 28, specular: 0x1c1c1c });   // solid -> specular sheen
-    }
     data.parts.forEach(function (p) {
-      var n = p.x.length, KIND = p.kind, LVL = p.level, groups = {};
-      for (var i = 0; i < n; i++) {                 // split a part by material (+ glass level)
-        var k = KIND ? (KIND[i] || 0) : 0;
-        var lv = (k === 1 || k === 3) ? (LVL ? LVL[i] : 255) : 255;
-        var gk = k + ':' + lv; (groups[gk] || (groups[gk] = [])).push(i);
-      }
-      var partMeshes = [];
-      Object.keys(groups).forEach(function (gk) {
-        var idx = groups[gk], kv = gk.split(':'), k = +kv[0], lv = +kv[1];
-        var mesh = new THREE.InstancedMesh(geo, makeMaterial(k, lv), idx.length);
-        for (var j = 0; j < idx.length; j++) {
-          var vi = idx[j];
-          obj.position.set(p.x[vi], p.y[vi], p.z[vi]); obj.updateMatrix(); mesh.setMatrixAt(j, obj.matrix);
-          var c = p.rgb[vi]; col.setRGB(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255); mesh.setColorAt(j, col);
-        }
-        mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      var partMeshes = window.VoxelMesh.build(THREE, p);
+      partMeshes.forEach(function (mesh) {
         mesh.matrixAutoUpdate = false; mesh.frustumCulled = false;
-        if (k === 1 || k === 3) mesh.renderOrder = 1;   // draw transparent after opaque
-        partMeshes.push(mesh); scene.add(mesh);
+        scene.add(mesh);
       });
       meshByPart[p.name] = partMeshes;
     });
@@ -259,8 +245,10 @@
       el.removeEventListener('mousedown', down); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', upE);
       el.removeEventListener('wheel', wheel); el.removeEventListener('touchstart', ts); el.removeEventListener('touchmove', tm); el.removeEventListener('touchend', te);
       window.removeEventListener('resize', onResize);
-      Object.keys(meshByPart).forEach(function (k) { meshByPart[k].forEach(function (m) { m.material.dispose(); }); });
-      geo.dispose(); renderer.dispose(); if (el.parentNode) el.parentNode.removeChild(el);
+      Object.keys(meshByPart).forEach(function (k) {
+        meshByPart[k].forEach(function (m) { m.geometry.dispose(); m.material.dispose(); });
+      });
+      renderer.dispose(); if (el.parentNode) el.parentNode.removeChild(el);
     } };
   }
 

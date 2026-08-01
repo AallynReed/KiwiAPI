@@ -28,7 +28,7 @@ from app.site.feature_map import SITE_FEATURE_FLAGS as _SITE_FEATURE_FLAGS
 from app.site.feature_map import SITEMAP_PAGES as _SITEMAP_PAGES
 from app.site.feature_map import feature_blocks as _feature_blocks
 from app.site.feature_map import robots_body as _robots_body
-from app.site_auth.dependencies import get_optional_site_user
+from app.site_auth.dependencies import get_current_site_user, get_optional_site_user
 from app.site_auth.models import SiteUser
 from app.trove import btt_releases as trove_btt
 from app.trove import calendar as trove_calendar
@@ -56,7 +56,10 @@ from app.trove.leaderboards import renames as leaderboards_renames
 from app.trove.leaderboards import service as leaderboards_service
 from app.trove.models import TroveEvent
 from app.trove.modpacks import service as modpacks_service
+from app.trove.mods_hub import creators as mods_hub_creators
 from app.trove.mods_hub import service as mods_hub_service
+from app.trove.mods_hub.schemas import CreatorScopeRequest
+from app.trove.render import bp_cache
 from app.trove.render.service import render_blueprint_cached
 from app.trove.updates import compare as updates_compare
 from app.trove.updates import read as updates_read
@@ -2395,12 +2398,16 @@ async def site_up_file_view(
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
 
 
-@router.get("/site/updates/{branch}/file/blueprint", response_class=JSONResponse)
+@router.get("/site/updates/{branch}/file/blueprint", response_class=Response)
 async def site_up_file_blueprint(
-    branch: str, path: str = Query(...),
-) -> JSONResponse:
+    request: Request, branch: str, path: str = Query(...),
+    fmt: str = Query(default="json", pattern="^(json|bin)$"),
+) -> Response:
     """Decoded voxel payload for one ``.blueprint`` in the latest tree, for the web
-    3D viewer (blueprint_viewer.js) - same body shape as the Mods Hub endpoint."""
+    3D viewer (blueprint_viewer.js) - same body shape as the Mods Hub endpoint, and
+    the same payload cache behind it (keyed on the file's own content hash, so one
+    decode covers every game version that ships the file unchanged)."""
+    from app.core.errors import APIError, ErrorCode
     from app.trove.render.voxel import (
         BlueprintError,
         BlueprintTooLarge,
@@ -2411,26 +2418,26 @@ async def site_up_file_blueprint(
     meta = await updates_read.get_file_meta(branch, path)
     if meta is None:
         raise HTTPException(status_code=404, detail=f"No file '{path}'")
-    raw = await asyncio.to_thread(
-        ContentStore(settings.trove_update_store_dir).get, meta["content_sha256"],
-    )
-    if raw is None:
-        raise HTTPException(status_code=404, detail="Blob missing from the store")
-    try:
-        payload = await asyncio.to_thread(pack_blueprint, raw, path)
-    except BlueprintTooLarge as exc:
-        logging.getLogger(__name__).info("blueprint too large: %s", exc)
-        return JSONResponse(
-            {"error": {"message": "This blueprint is too large to preview."}}, status_code=413,
-        )
-    except BlueprintError as exc:
-        # Empty placeholder / undecodable - the viewer surfaces this message.
-        logging.getLogger(__name__).info("blueprint decode failed: %s", exc)
-        return JSONResponse(
-            {"error": {"message": "This blueprint is empty or could not be decoded."}},
-            status_code=422,
-        )
-    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=300"})
+    sha = meta["content_sha256"]
+
+    async def build() -> dict:
+        raw = await asyncio.to_thread(ContentStore(settings.trove_update_store_dir).get, sha)
+        if raw is None:
+            raise HTTPException(status_code=404, detail="Blob missing from the store")
+        try:
+            return await asyncio.to_thread(pack_blueprint, raw, path)
+        except BlueprintTooLarge as exc:
+            logging.getLogger(__name__).info("blueprint too large: %s", exc)
+            raise APIError(413, ErrorCode.bad_request,
+                           "This blueprint is too large to preview.") from None
+        except BlueprintError as exc:
+            # Empty placeholder / undecodable - the viewer surfaces this message.
+            logging.getLogger(__name__).info("blueprint decode failed: %s", exc)
+            raise APIError(422, ErrorCode.bad_request,
+                           "This blueprint is empty or could not be decoded.") from None
+
+    cached = await bp_cache.get_or_build(bp_cache.key_for_file(sha, path), build, fmt)
+    return bp_cache.respond(request, cached)
 
 
 @router.get("/site/updates/{branch}/file/history", response_class=JSONResponse)
@@ -2572,6 +2579,74 @@ async def site_mods_my_projects(
     )
 
 
+# ── creator token + API-account connections (Dashboard side) ───────────────
+# The creator's half of Mods Hub API access: issue/rotate the one creator token
+# for this account, and manage the dev-portal accounts that connected with it.
+# The developer's half lives at /v1/mods/hub/creator-links. See mods_hub/creators.py.
+
+@router.get("/site/mods/creator-token", response_class=JSONResponse)
+async def site_mods_creator_token(
+    user: SiteUser = Depends(get_current_site_user),
+) -> JSONResponse:
+    """The account's creator-token state + the API accounts currently connected."""
+    return JSONResponse(
+        {**mods_hub_creators.token_dto(user),
+         "connections": await mods_hub_creators.list_for_creator(user),
+         # The picker for narrowing a connection to named mods, so the panel
+         # renders in one round-trip.
+         "mods": await mods_hub_creators.owned_cards(user)},
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/site/mods/creator-token", response_class=JSONResponse)
+async def site_mods_issue_creator_token(
+    user: SiteUser = Depends(get_current_site_user),
+) -> JSONResponse:
+    """Generate this account's creator token. Returned in FULL exactly once - only
+    its hash is stored, so a lost token is replaced by rotating, not re-read."""
+    dto, raw = await mods_hub_creators.ensure_token(user)
+    if raw is None:
+        raise HTTPException(
+            status_code=409,
+            detail="You already have a creator token. Rotate it to get a new one "
+                   "(that disconnects any API accounts using the old one).")
+    return JSONResponse({**dto, "token": raw}, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/site/mods/creator-token/rotate", response_class=JSONResponse)
+async def site_mods_rotate_creator_token(
+    user: SiteUser = Depends(get_current_site_user),
+) -> JSONResponse:
+    """Replace the creator token and disconnect every API account connected with
+    the old one. The full new token is returned once."""
+    dto, raw = await mods_hub_creators.rotate_token(user)
+    return JSONResponse({**dto, "token": raw}, headers={"Cache-Control": "no-store"})
+
+
+@router.patch("/site/mods/creator-connections/{link_id}", response_class=JSONResponse)
+async def site_mods_set_connection_scope(
+    link_id: str, req: CreatorScopeRequest,
+    user: SiteUser = Depends(get_current_site_user),
+) -> JSONResponse:
+    """Limit one connected API account to specific mods, or widen it back to all
+    of them (including mods created later)."""
+    return JSONResponse(
+        await mods_hub_creators.set_scope(
+            user, link_id, all_projects=req.all_projects, project_ids=req.project_ids),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.delete("/site/mods/creator-connections/{link_id}", status_code=204)
+async def site_mods_revoke_connection(
+    link_id: str, user: SiteUser = Depends(get_current_site_user),
+) -> Response:
+    """Cut one API account off. The others keep working."""
+    await mods_hub_creators.revoke_by_creator(user, link_id)
+    return Response(status_code=204)
+
+
 @router.get("/site/mods/projects/{handle}/{slug}", response_class=JSONResponse)
 async def site_mods_project(
     handle: str, slug: str, viewer: SiteUser | None = Depends(get_optional_site_user),
@@ -2692,18 +2767,21 @@ async def site_mods_blueprints(
                         headers={"Cache-Control": "public, max-age=60"})
 
 
-@router.get("/site/mods/releases/{release_id}/assembled", response_class=JSONResponse)
+@router.get("/site/mods/releases/{release_id}/assembled", response_class=Response)
 async def site_mods_assembled(
-    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
-) -> JSONResponse:
+    request: Request, release_id: str,
+    fmt: str = Query(default="json", pattern="^(json|bin)$"),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> Response:
     """The release's blueprint parts assembled onto their creature rig (rest +
-    animations) for the web model viewer."""
+    animations) for the web model viewer. Cached + ETag'd like the single-model
+    endpoint (bp_cache) - assembling a creature is the heavier of the two."""
     release, _ = await mods_hub_service.release_with_project(release_id, viewer)
-    model = await mods_hub_service.assemble_release_model(release)
+    model = await mods_hub_service.assemble_release_model(release, fmt)
     if model is None:
         from app.core.errors import APIError, ErrorCode
         raise APIError(404, ErrorCode.not_found, "No assemblable creature for this mod.")
-    return JSONResponse(model, headers={"Cache-Control": "public, max-age=300"})
+    return bp_cache.respond(request, model)
 
 
 @router.get("/site/mods/releases/{release_id}/files", response_class=JSONResponse)
@@ -2730,6 +2808,41 @@ async def site_mods_release_file(
                              "Cache-Control": "no-cache"})
 
 
+@router.get("/site/mods/releases/{release_id}/inspect", response_class=JSONResponse)
+async def site_mods_release_inspect(
+    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The decoded artifact (header properties + full file table) behind the mod
+    page's build inspector."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.inspect_release(release))
+
+
+@router.get("/site/mods/releases/{release_id}/cfgs", response_class=JSONResponse)
+async def site_mods_release_cfgs(
+    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The .cfg config files packed in a release's .tmod - drives the mod page's
+    dedicated config download button (a config belongs in ModCfgs, not the mods
+    folder, so it's offered separately)."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.list_release_cfgs(release))
+
+
+@router.get("/site/mods/releases/{release_id}/cfg", response_class=Response)
+async def site_mods_release_cfg(
+    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> Response:
+    """Download one packed .cfg, extracted from the .tmod on the fly (nothing stored)."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    data, filename = await mods_hub_service.download_release_cfg(release, path)
+    safe = filename.replace('"', '').replace("\r", "").replace("\n", "")
+    return Response(content=data, media_type="text/plain; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{safe}"',
+                             "Cache-Control": "no-cache"})
+
+
 @router.get("/site/rigs/{skeleton}/anim/{name}", response_class=JSONResponse)
 async def site_rig_animation(skeleton: str, name: str) -> JSONResponse:
     """Lazily-loaded baked animation frames for a creature rig (the model viewer fetches
@@ -2738,15 +2851,18 @@ async def site_rig_animation(skeleton: str, name: str) -> JSONResponse:
     return JSONResponse(anim, headers={"Cache-Control": "public, max-age=3600"})
 
 
-@router.get("/site/mods/releases/{release_id}/blueprint", response_class=JSONResponse)
+@router.get("/site/mods/releases/{release_id}/blueprint", response_class=Response)
 async def site_mods_blueprint(
-    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    request: Request, release_id: str,
+    path: str = Query(..., min_length=1, max_length=400),
+    fmt: str = Query(default="json", pattern="^(json|bin)$"),
     viewer: SiteUser | None = Depends(get_optional_site_user),
-) -> JSONResponse:
-    """Decoded voxel data for one .blueprint in a release (web 3D viewer)."""
+) -> Response:
+    """Decoded voxel data for one .blueprint in a release (web 3D viewer). Served
+    from the payload cache (bp_cache) - decoded once per artifact, ETag'd after."""
     release, _ = await mods_hub_service.release_with_project(release_id, viewer)
-    return JSONResponse(await mods_hub_service.decode_release_blueprint(release, path),
-                        headers={"Cache-Control": "public, max-age=300"})
+    cached = await mods_hub_service.decode_release_blueprint(release, path, fmt)
+    return bp_cache.respond(request, cached)
 
 
 @router.get("/site/mods/releases/{release_id}/vfx", response_class=JSONResponse)
