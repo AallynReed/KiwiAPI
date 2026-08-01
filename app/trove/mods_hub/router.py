@@ -594,6 +594,28 @@ async def upload_release(
     )
 
 
+@mods_creator_write_router.post("/releases/{release_id}/config")
+async def attach_release_config(
+    release_id: str,
+    file: UploadFile = File(..., description="The .cfg to pack into the existing build."),
+    user: SiteUser = _USER,
+) -> dict:
+    """Pack a config into an ALREADY-PUBLISHED release, as ``ui/<title>.cfg``.
+
+    Rewrites the build in place: the release gets a new ``sha256`` and the old one is
+    remembered, so a copy already installed still resolves to this release and no
+    phantom update is raised - but nobody who has it is prompted to re-download.
+    Cutting a new release is the way to actually deliver a config to existing
+    installs. Same gate as at release time: the build must ship a ``.swf``."""
+    release = await service.get_release(release_id)
+    if release is None:
+        raise APIError(404, ErrorCode.not_found, "Release not found")
+    project = await service.get_project_by_id(release.project_id)
+    if project is None:
+        raise APIError(404, ErrorCode.not_found, "Release not found")
+    return await service.attach_config_to_release(release, project, user, await file.read())
+
+
 @mods_creator_write_router.patch("/releases/{release_id}")
 async def update_release(
     release_id: str, req: UpdateReleaseRequest, user: SiteUser = _USER,

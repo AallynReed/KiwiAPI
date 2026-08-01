@@ -467,6 +467,7 @@
     const draft = r.status !== 'published'
       ? `<span class="mp-badge mp-badge-draft">${esc(t('Draft'))}</span>` : '';
     const ownerBtns = owner ? `
+      <button type="button" class="mp-btn mp-btn-sm" data-rel-cfgset="${esc(r.id)}" hidden></button>
       <button type="button" class="mp-btn mp-btn-sm" data-rel-toggle="${esc(r.id)}" data-status="${esc(r.status)}">
         ${r.status === 'published' ? esc(t('Unpublish')) : esc(t('Publish'))}
       </button>
@@ -977,9 +978,52 @@
       b.addEventListener('click', () => moveVariant(b.getAttribute('data-move-down'), 1)));
     document.querySelectorAll('[data-rel-inspect]').forEach((b) =>
       b.addEventListener('click', () => openReleaseContents(b.getAttribute('data-rel-inspect'))));
+    document.querySelectorAll('[data-rel-cfgset]').forEach((b) =>
+      b.addEventListener('click', () => openAttachConfig(b.getAttribute('data-rel-cfgset'))));
     loadReleaseBlueprints();
     loadReleaseVfx();
     loadReleaseCfgs();
+  }
+
+  // Owner action: pack a config into a release that's ALREADY out. This rewrites a
+  // published build, so the trade-off is spelled out rather than buried - see the
+  // service docstring for why players who already have it are left alone.
+  function openAttachConfig(id) {
+    const m = openModal(t('Attach a config to this release'), `<form class="mp-form" id="mp-cfgset-form">
+      <div class="mp-warn mp-warn-fix">
+        <div class="mp-warn-head"><i class="fa-solid fa-triangle-exclamation"></i>
+          <strong>${esc(t('This rewrites a build that is already published.'))}</strong></div>
+        <ul class="mp-warn-list">
+          <li>${esc(t('Players who already installed this release keep what they have - they are not prompted to re-download, so the config will not reach them.'))}</li>
+          <li>${esc(t('Their copy still shows as installed, and no false update appears.'))}</li>
+          <li>${esc(t('To actually deliver the config to everyone, cut a new release instead.'))}</li>
+        </ul>
+      </div>
+      <label class="mp-form-field"><span>${esc(t('Settings file (.cfg)'))}</span>
+        <input type="file" name="config" accept=".cfg,text/plain" required>
+        <p class="mp-form-hint">${esc(t('Packed as ui/<title>.cfg, replacing the build\'s current config if it has one.'))}</p>
+      </label>
+      <p class="mp-form-error" hidden></p>
+      <div class="mp-form-actions">
+        <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>
+        <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Rewrite this build'))}</button>
+      </div></form>`, { wide: true });
+    const f = m.wrap.querySelector('#mp-cfgset-form');
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!f.config.files.length) { showFormError(f, t('Choose a .cfg file.')); return; }
+      const btn = f.querySelector('button[type=submit]');
+      btn.disabled = true;
+      const fd = new FormData();
+      fd.append('file', f.config.files[0]);
+      const r = await apiForm('/v1/mods/hub/releases/' + encodeURIComponent(id) + '/config', fd);
+      btn.disabled = false;
+      if (!r.ok) { showFormError(f, errMsg(r, 'Could not attach the config.')); return; }
+      m.close();
+      toast(r.data && r.data.changed === false
+        ? t('That build already carries this exact config.') : t('Config packed into the build.'));
+      await loadDetail();
+    });
   }
 
   // ─── Build contents (the decoded artifact) ─────────────────────────────
@@ -1113,7 +1157,18 @@
       try {
         const r = await siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/cfgs');
         if (!r.ok) return;
-        const all = ((await r.json()) || {}).items || [];
+        const body = (await r.json()) || {};
+        const all = body.items || [];
+        // The owner's "attach a config" action rides on the same answer this call
+        // already gives: only a build with a Flash UI can carry one, so a mod that
+        // can't never shows the action at all.
+        if (state.detail.is_owner && body.has_flash_ui) {
+          document.querySelectorAll('[data-rel-cfgset]').forEach((b) => {
+            if (b.getAttribute('data-rel-cfgset') !== relId) return;
+            b.innerHTML = `<i class="fa-solid fa-sliders"></i> ${esc(all.length ? t('Replace config') : t('Attach config'))}`;
+            b.hidden = false;
+          });
+        }
         if (!all.length) return;
         // A build says which of its files IS the config (configPath), so a mod that
         // happens to pack several .cfg files still gets ONE button. Only when

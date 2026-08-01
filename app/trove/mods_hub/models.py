@@ -194,12 +194,14 @@ class ModRelease(Document):
     # The content hash (sha256 hex) of the artifact bytes - globally unique per
     # *owner*: a release whose hash is already owned by another creator is rejected.
     tmod_sha: str                                # CAS key of the artifact bytes
-    # Set only when an uploaded build was repacked to carry an attached config
-    # (ui/<title>.cfg): the hash of the modder's ORIGINAL upload. The repack gives
-    # the release a new `tmod_sha`, so this keeps the copy already circulating in
-    # the wild recognisable to hash lookup (update detection), and keeps the
-    # uniqueness guards from being bypassed by adding a config to a known build.
-    base_tmod_sha: str | None = None
+    # Every artifact hash this release has ALSO been, oldest first - filled when a
+    # build is repacked to carry an attached config (ui/<title>.cfg): the modder's
+    # own upload at release time, and whatever was published before an owner
+    # attached a config to an existing release. A repack gives the release a new
+    # `tmod_sha`, so these keep the copies already installed out there recognisable
+    # to hash lookup (update detection), and keep the uniqueness guards from being
+    # bypassed by adding a config to a known build.
+    prior_tmod_shas: list[str] = Field(default_factory=list)
     tmod_size: int = 0
     tmod_filename: str = "mod.tmod"              # download name (carries the extension)
     # The header properties stamped into a .tmod (title/author/modVersion/…); empty for zips.
@@ -225,7 +227,7 @@ class ModRelease(Document):
             # Hash ownership check + the public lookup-by-hash API. Both hashes are
             # queried (a repacked build answers to its pre-injection hash too).
             IndexModel([("tmod_sha", ASCENDING)]),
-            IndexModel([("base_tmod_sha", ASCENDING)], sparse=True),
+            IndexModel([("prior_tmod_shas", ASCENDING)], sparse=True),   # multikey
         ]
 
 

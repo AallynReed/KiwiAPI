@@ -1095,12 +1095,12 @@ async def _check_release_tag(project: ModProject, branch: str, tag: str) -> None
 
 
 def _hash_match(shas: tuple[str | None, ...]):
-    """Query fragment matching a release by EITHER of its hashes. A build repacked
-    with a config keeps its pre-injection hash in ``base_tmod_sha``, so both sides
-    of the comparison have to consider both - otherwise attaching a config would
-    launder a known artifact into a "new" one."""
+    """Query fragment matching a release by its CURRENT artifact hash or any hash it
+    used to have (``prior_tmod_shas``, filled when a build is repacked to carry a
+    config). Both sides of the comparison have to consider both - otherwise
+    attaching a config would launder a known artifact into a "new" one."""
     want = [s for s in shas if s]
-    return Or(In(ModRelease.tmod_sha, want), In(ModRelease.base_tmod_sha, want))
+    return Or(In(ModRelease.tmod_sha, want), In(ModRelease.prior_tmod_shas, want))
 
 
 async def release_by_artifact_hash(sha: str) -> ModRelease | None:
@@ -1360,7 +1360,7 @@ async def create_release_from_upload(
     props: dict[str, str] = {}
     # The hash of what the modder actually uploaded. It only differs from the
     # release's own hash when a config was packed in below - and it's kept so that
-    # copy stays recognisable to hash lookup (see ModRelease.base_tmod_sha).
+    # copy stays recognisable to hash lookup (see ModRelease.prior_tmod_shas).
     base_sha: str | None = None
     if is_zip:
         fmt = "zip"
@@ -1393,7 +1393,8 @@ async def create_release_from_upload(
         project, tag=tag, branch=branch_name,
         title=title, changelog=changelog, status=status,
         tmod_sha=sha, tmod_size=len(data), properties=props,
-        source_commit_sha=None, release_format=fmt, base_tmod_sha=base_sha,
+        source_commit_sha=None, release_format=fmt,
+        prior_tmod_shas=[base_sha] if base_sha else [],
     )
 
 
@@ -1418,7 +1419,7 @@ def release_download_filename(release: ModRelease) -> str:
 async def _insert_release(
     project: ModProject, *, tag: str, branch: str, title: str, changelog: str,
     status: str, tmod_sha: str, tmod_size: int, properties: dict, source_commit_sha,
-    release_format: str = "tmod", base_tmod_sha: str | None = None,
+    release_format: str = "tmod", prior_tmod_shas: list[str] | None = None,
 ) -> dict:
     # The download name is the .tmod's internal `title` (Trove matches on it),
     # falling back to slug-tag; zips keep the slug-tag name.
@@ -1431,7 +1432,8 @@ async def _insert_release(
         project_id=project.id, owner_id=project.owner_id, tag=tag, branch=branch,
         title=title.strip(), changelog=changelog, source_commit_sha=source_commit_sha,
         release_format=release_format, tmod_sha=tmod_sha, tmod_size=tmod_size,
-        base_tmod_sha=base_tmod_sha, tmod_filename=filename, tmod_properties=properties,
+        prior_tmod_shas=prior_tmod_shas or [], tmod_filename=filename,
+        tmod_properties=properties,
         banner_sha=project.banner_sha, status=status,
         published_at=utcnow() if status == "published" else None,
     )
@@ -1644,7 +1646,7 @@ async def inspect_release(release: ModRelease) -> dict:
     out: dict = {
         "format": release.release_format, "tag": release.tag, "branch": release.branch,
         "filename": release_download_filename(release),
-        "sha256": release.tmod_sha, "base_sha256": release.base_tmod_sha,
+        "sha256": release.tmod_sha, "prior_sha256s": list(release.prior_tmod_shas or []),
         "size": release.tmod_size, "version": None, "properties": {},
         "categories": [], "flags": 0, "preview_path": "", "config_path": "",
         "files": [], "file_count": 0, "total_size": 0, "readable": False,
@@ -1749,12 +1751,17 @@ async def list_release_cfgs(release: ModRelease) -> dict:
 
     ``declared`` marks the file the artifact's ``configPath`` points at, and that
     one sorts first: a build that packs a hundred .cfg files still has exactly one
-    config, and this is how we know which."""
+    config, and this is how we know which.
+
+    ``has_flash_ui`` says whether the build ships a ``.swf`` - the same gate that
+    decides whether a config may be attached at all, so the owner's "attach a
+    config" action can be shown or hidden off this one call."""
+    empty = {"items": [], "has_flash_ui": False}
     if release.release_format != "tmod":
-        return {"items": []}
+        return empty
     data = await store.get_blob(release.tmod_sha)
     if data is None:
-        return {"items": []}
+        return empty
 
     def _work(b: bytes) -> dict:
         parsed = tmod.read_tmod(b, metadata_only=True)
@@ -1764,11 +1771,58 @@ async def list_release_cfgs(release: ModRelease) -> dict:
                   "declared": f["path"].lower() == declared}
                  for f in parsed["files"] if f["path"].lower().endswith(".cfg")]
         items.sort(key=lambda f: (not f["declared"], f["path"].lower()))
-        return {"items": items}
+        return {"items": items,
+                "has_flash_ui": any(f["path"].lower().endswith(".swf")
+                                    for f in parsed["files"])}
     try:
         return await asyncio.to_thread(_work, data)
     except tmod.TmodError:
-        return {"items": []}
+        return empty
+
+
+async def attach_config_to_release(
+    release: ModRelease, project: ModProject, actor: SiteUser, data: bytes,
+) -> dict:
+    """Repack an EXISTING release's artifact to carry an attached config.
+
+    This rewrites a build that's already published, which is deliberately not what
+    cutting a release does - so the UI puts a warning in front of it. What it costs,
+    exactly: the release gets a new ``tmod_sha``, and anyone who already installed
+    the old bytes is NOT told to re-download. Their copy keeps resolving to this
+    release (the superseded hash moves into ``prior_tmod_shas``, which hash lookup
+    matches), so the desktop app still reports it as installed and does not invent a
+    phantom update - it simply won't hand them the config. Someone who wants the
+    config to reach existing installs should cut a NEW release instead.
+
+    The old artifact bytes stay in the content store (immutable, shared, and still
+    referenced by anything that pinned that hash); only this release moves on."""
+    _require_owner(project, actor)
+    if release.release_format != "tmod":
+        raise APIError(400, ErrorCode.bad_request,
+                       "A config file can only be packed into a .tmod build.")
+    current = await store.get_blob(release.tmod_sha)
+    if current is None:
+        raise _not_found("Release artifact not found")
+    artifact, props = await asyncio.to_thread(_repack_with_config, current, data)
+    sha, _ = await store.put_blob(artifact)
+    if sha == release.tmod_sha:                     # byte-identical: nothing to do
+        return {**_release_dto(release), "changed": False}
+    # The new bytes must still be nobody else's build.
+    if project.uploaded_on_behalf:
+        await _ensure_hash_globally_unique(project, sha)
+    else:
+        await _ensure_hash_unowned(project, sha)
+    prior = list(release.prior_tmod_shas or [])
+    if release.tmod_sha not in prior:
+        prior.append(release.tmod_sha)
+    release.prior_tmod_shas = prior
+    release.tmod_sha = sha
+    release.tmod_size = len(artifact)
+    release.tmod_properties = props
+    release.tmod_filename = release_download_filename(release)
+    release.updated_at = utcnow()
+    await release.save()
+    return {**_release_dto(release), "changed": True}
 
 
 async def download_release_cfg(release: ModRelease, path: str) -> tuple[bytes, str]:
@@ -2678,7 +2732,7 @@ async def lookup_by_hashes(hashes: list[str]) -> dict:
         ).sort("-published_at").to_list()
         proj_cache: dict = {}
         for r in releases:
-            keys = [h for h in (r.tmod_sha, r.base_tmod_sha)
+            keys = [h for h in (r.tmod_sha, *(r.prior_tmod_shas or []))
                     if h in wanted and h not in results]
             if not keys:
                 continue  # newest already chosen (sorted desc)

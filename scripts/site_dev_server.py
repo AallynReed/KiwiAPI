@@ -1138,7 +1138,7 @@ class Handler(SimpleHTTPRequestHandler):
             ]
             return self._send_json({
                 "format": "tmod", "tag": "v1.2.0", "branch": "main",
-                "filename": "SampleMod.tmod", "sha256": "0" * 64, "base_sha256": None,
+                "filename": "SampleMod.tmod", "sha256": "0" * 64, "prior_sha256s": [],
                 "size": 20480, "version": 1, "readable": True,
                 "properties": {
                     "title": "SampleMod", "author": "Aallyn", "modVersion": "v1.2.0",
@@ -1154,7 +1154,7 @@ class Handler(SimpleHTTPRequestHandler):
         # Two configs, one declared by the build's configPath - so the page shows a
         # single Config button (the declared one) rather than one per .cfg.
         if path.startswith("/site/mods/releases/") and path.endswith("/cfgs"):
-            return self._send_json({"items": [
+            return self._send_json({"has_flash_ui": True, "items": [
                 {"path": "ui/samplemod.cfg", "size": 128, "filename": "SampleMod.cfg",
                  "declared": True},
                 {"path": "ui/extra.cfg", "size": 64, "filename": "extra.cfg",
@@ -1249,7 +1249,7 @@ class Handler(SimpleHTTPRequestHandler):
                     "Saved on the project (releases-only mode). Normal **bold** + `code`.",
                     "warnings": "Requires the latest game build.<br>Back up your mods folder first.",
                     "default_branch": "main", "preview_shas": ["prevsha1", "prevsha2"], "taken_down": False,
-                    "takedown_reason": None, "is_owner": False, "starred": False,
+                    "takedown_reason": None, "is_owner": True, "starred": False,  # TEMP-VERIFY
                     "discord_url": "https://discord.gg/example",
                     "website_url": "https://example.com",
                     "donation_urls": ["https://ko-fi.com/example", "https://paypal.me/example"],

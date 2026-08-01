@@ -200,39 +200,53 @@
 .mp-section-title { font: 700 1.1rem 'Space Grotesk', 'Inter', sans-serif; margin: 0; display: inline-flex; align-items: center; gap: 9px; }
 .mp-section-title i { color: var(--accent-blue); }
 
-/* Rendered Markdown (README + About description) */
+/* Rendered Markdown (README + About description)
+   Selectors target ELEMENTS, not the renderer's mp-md-* classes: the sanitizer in
+   md_render.js drops every class attribute (a README must not be able to borrow
+   site UI classes), so class-keyed rules never reach rendered markdown - which is
+   how a wide code block ended up unstyled and scrolling the whole page sideways.
+   The mp-md-* selectors ride along for any markup that arrives unsanitized. */
 .mp-markdown { color: var(--text-mute); line-height: 1.65; font-size: .96rem; word-break: break-word; }
 .mp-markdown p { margin: 0 0 12px; }
 .mp-markdown p:last-child { margin-bottom: 0; }
-.mp-markdown .mp-md-h {
+.mp-markdown h1, .mp-markdown h2, .mp-markdown h3,
+.mp-markdown h4, .mp-markdown h5, .mp-markdown h6, .mp-markdown .mp-md-h {
   font-family: 'Space Grotesk', 'Inter', sans-serif; color: var(--text);
   line-height: 1.3; margin: 18px 0 10px; font-weight: 700;
 }
-.mp-markdown .mp-md-h:first-child { margin-top: 0; }
-.mp-markdown h1.mp-md-h { font-size: 1.5rem; padding-bottom: 6px; border-bottom: 1px solid var(--bg-line); }
-.mp-markdown h2.mp-md-h { font-size: 1.25rem; padding-bottom: 5px; border-bottom: 1px solid var(--bg-line); }
-.mp-markdown h3.mp-md-h { font-size: 1.08rem; }
-.mp-markdown h4.mp-md-h { font-size: .98rem; }
-.mp-markdown .mp-md-ul { margin: 0 0 12px; padding-left: 22px; display: grid; gap: 4px; }
-.mp-markdown code { background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 5px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: .86em; }
-.mp-markdown .mp-md-pre {
-  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius);
-  padding: 12px 14px; overflow-x: auto; margin: 0 0 12px;
+.mp-markdown > :first-child { margin-top: 0; }
+.mp-markdown h1, .mp-markdown h1.mp-md-h { font-size: 1.5rem; padding-bottom: 6px; border-bottom: 1px solid var(--bg-line); }
+.mp-markdown h2, .mp-markdown h2.mp-md-h { font-size: 1.25rem; padding-bottom: 5px; border-bottom: 1px solid var(--bg-line); }
+.mp-markdown h3, .mp-markdown h3.mp-md-h { font-size: 1.08rem; }
+.mp-markdown h4, .mp-markdown h5, .mp-markdown h6, .mp-markdown h4.mp-md-h { font-size: .98rem; }
+.mp-markdown ul, .mp-markdown ol, .mp-markdown .mp-md-ul, .mp-markdown ol.mp-md-ol {
+  margin: 0 0 12px; padding-left: 22px; display: grid; gap: 4px;
 }
-.mp-markdown .mp-md-pre code { background: none; border: 0; padding: 0; font-size: .84rem; color: var(--text-mute); white-space: pre; }
+.mp-markdown li > ul, .mp-markdown li > ol { margin-bottom: 0; margin-top: 4px; }
+.mp-markdown code { background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 5px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: .86em; }
+.mp-markdown pre, .mp-markdown .mp-md-pre {
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  padding: 12px 14px; margin: 0 0 12px;
+  /* A long line scrolls inside its own box - the page body never scrolls sideways. */
+  max-width: 100%; overflow-x: auto;
+}
+.mp-markdown pre code, .mp-markdown .mp-md-pre code { background: none; border: 0; padding: 0; font-size: .84rem; color: var(--text-mute); white-space: pre; }
 .mp-markdown a { color: var(--accent-blue); }
 .mp-markdown a:hover { text-decoration: underline; }
 .mp-markdown strong { color: var(--text); }
 .mp-markdown img { max-width: 100%; vertical-align: middle; border-radius: 4px; }
-.mp-markdown ol.mp-md-ol { margin: 0 0 12px; padding-left: 22px; display: grid; gap: 4px; }
 .mp-markdown [align="center"] { text-align: center; }
 .mp-markdown [align="right"] { text-align: right; }
 .mp-markdown [align="left"] { text-align: left; }
 .mp-markdown hr { border: 0; border-top: 1px solid var(--bg-line); margin: 16px 0; }
-.mp-markdown .mp-md-quote { margin: 0 0 12px; padding: 4px 14px; border-left: 3px solid var(--bg-line); color: var(--text-mute); }
-.mp-markdown .mp-md-table { border-collapse: collapse; margin: 0 0 14px; display: block; overflow-x: auto; max-width: 100%; }
+.mp-markdown blockquote, .mp-markdown .mp-md-quote { margin: 0 0 12px; padding: 4px 14px; border-left: 3px solid var(--bg-line); color: var(--text-mute); }
+.mp-markdown table, .mp-markdown .mp-md-table {
+  border-collapse: collapse; margin: 0 0 14px;
+  display: block; width: max-content; max-width: 100%; overflow-x: auto;
+}
+.mp-markdown th, .mp-markdown td,
 .mp-markdown .mp-md-table th, .mp-markdown .mp-md-table td { border: 1px solid var(--bg-line); padding: 6px 12px; }
-.mp-markdown .mp-md-table thead th { background: var(--bg-deep); }
+.mp-markdown thead th, .mp-markdown .mp-md-table thead th { background: var(--bg-deep); }
 .mp-markdown sub, .mp-markdown sup { line-height: 0; }
 
 /* Owner-authored warnings (one block per <br>) */

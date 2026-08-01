@@ -71,6 +71,9 @@ _API_ROUTES: dict[str, frozenset[str]] = {
     "/v1/mods/hub/projects/{handle}/{slug}/fix-placement": frozenset({"POST"}),
     # Publish / unpublish / retitle an existing release.
     "/v1/mods/hub/releases/{release_id}": frozenset({"PATCH"}),
+    # Pack a config into an existing build (repacks the artifact - same trust level
+    # as cutting a release, which is already allowed above).
+    "/v1/mods/hub/releases/{release_id}/config": frozenset({"POST"}),
 }
 
 # Routes that bring a NEW mod into existence. A connection narrowed to named mods
