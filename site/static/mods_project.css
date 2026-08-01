@@ -234,6 +234,13 @@
 .mp-markdown a { color: var(--accent-blue); }
 .mp-markdown a:hover { text-decoration: underline; }
 .mp-markdown strong { color: var(--text); }
+/* Author-set colours (md_render.js: [text]{gold}, <span style="color:…">) must
+   beat our own colour rules for the text they wrap, or `[**bold**]{gold}` would
+   silently lose its colour to `.mp-markdown strong`. */
+.mp-markdown [style*="color"] strong,
+.mp-markdown [style*="color"] em,
+.mp-markdown [style*="color"] code { color: inherit; }
+.mp-markdown span[style*="background-color"] { padding: 0 .28em; border-radius: 4px; }
 .mp-markdown img { max-width: 100%; vertical-align: middle; border-radius: 4px; }
 .mp-markdown [align="center"] { text-align: center; }
 .mp-markdown [align="right"] { text-align: right; }

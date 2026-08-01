@@ -2288,5 +2288,6 @@
   "Gem Fixture": "ジェム装置",
   "Gem Day": "ジェムデー",
   "Magic Dmg": "魔法ダメージ",
-  "Crit Dmg": "クリティカルダメージ"
+  "Crit Dmg": "クリティカルダメージ",
+  "Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.": "[テキスト]{#ff8a3d}、[テキスト]{gold}、[テキスト]{#fff on #1f2733} で文字に色を付けられます。"
 }

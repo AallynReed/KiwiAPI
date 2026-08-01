@@ -6,6 +6,12 @@
    allowlist sanitizer, so author-supplied READMEs render like GitHub with no XSS
    surface. Exposed as `window.BTTMarkdown = { render, sanitize, inline }` and used
    by mods_project.js + mods_profile.js (one copy of the sanitizer, not two).
+
+   Colour (one thing GitHub itself won't do) is supported three ways, all of
+   which end up as an inline `style` filtered to colour declarations only:
+     [text]{#ff8a3d}   [text]{gold}   [text]{#fff on #1f2733}   [text]{on crimson}
+     <span style="color: #ff8a3d">text</span>   (also background-color)
+     <font color="#ff8a3d">text</font>          (rewritten to a span)
    ═══════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -24,7 +30,36 @@
     title: 1, noscript: 1, template: 1, frame: 1, frameset: 1, applet: 1, audio: 1, video: 1,
     canvas: 1, map: 1, area: 1 };
   const _MD_ATTR = { href: 1, src: 1, srcset: 1, alt: 1, title: 1, width: 1, height: 1,
-    align: 1, valign: 1, colspan: 1, rowspan: 1, start: 1, open: 1, type: 1, media: 1 };
+    align: 1, valign: 1, colspan: 1, rowspan: 1, start: 1, open: 1, type: 1, media: 1,
+    style: 1 };
+
+  // ── Colour support ───────────────────────────────────────────────────────
+  // `style` is allowed but filtered down to colour declarations ONLY, so a
+  // README can't inject `position:fixed` overlays, `url(...)` beacons, etc.
+  // Values are checked twice: a charset guard, then the browser's own CSS
+  // parser (assigning a non-colour to `.style.color` leaves it empty), which
+  // also normalises whatever the author wrote into one clean declaration.
+  const _STYLE_PROPS = { color: 1, 'background-color': 1 };
+  const _COLOR_CHARS = /^[#a-z0-9%.,()\/\s+-]{1,64}$/i;
+  let _colorProbe = null;
+  function _safeColor(v) {
+    v = String(v == null ? '' : v).trim();
+    if (!v || !_COLOR_CHARS.test(v)) return null;
+    _colorProbe = _colorProbe || document.createElement('span');
+    _colorProbe.style.color = '';
+    try { _colorProbe.style.color = v; } catch (e) { return null; }
+    return _colorProbe.style.color || null;
+  }
+  function _cleanStyle(v) {
+    return String(v || '').split(';').map((decl) => {
+      const i = decl.indexOf(':');
+      if (i < 0) return '';
+      const prop = decl.slice(0, i).trim().toLowerCase();
+      if (!_STYLE_PROPS[prop]) return '';
+      const val = _safeColor(decl.slice(i + 1));
+      return val ? prop + ':' + val : '';
+    }).filter(Boolean).join(';');
+  }
 
   // Allow http(s)/mailto/relative/anchor URLs; block javascript:/data:/vbscript:/etc.
   // (control chars are collapsed first so `java\nscript:` can't slip past.)
@@ -48,6 +83,17 @@
       if (node.nodeType !== 1) continue;               // drop comments etc.
       const tag = node.tagName.toLowerCase();
       if (_MD_DROP[tag]) continue;                     // drop element + subtree
+      // <font color="..."> - dead in HTML5 but the first thing most authors
+      // reach for; rewrite it as a coloured <span>.
+      if (tag === 'font') {
+        const span = document.createElement('span');
+        const c = _safeColor(node.getAttribute('color'));
+        const style = [c ? 'color:' + c : '', _cleanStyle(node.getAttribute('style'))].filter(Boolean).join(';');
+        if (style) span.setAttribute('style', style);
+        _sanitizeInto(node, span);
+        dst.appendChild(span);
+        continue;
+      }
       if (!_MD_ALLOWED[tag]) { _sanitizeInto(node, dst); continue; }  // unwrap unknown tags
       const el = document.createElement(tag);
       for (const attr of node.attributes) {
@@ -56,6 +102,7 @@
         let val = attr.value;
         if (name === 'href' || name === 'src') { val = _safeUrl(val); if (val == null) continue; }
         else if (name === 'srcset') { val = _cleanSrcset(val); if (!val) continue; }
+        else if (name === 'style') { val = _cleanStyle(val); if (!val) continue; }
         el.setAttribute(name, val);
       }
       if (tag === 'a') { el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener nofollow ugc'); }
@@ -79,6 +126,18 @@
     refs = refs || {};
     const codes = [];
     s = s.replace(/`([^`]+)`/g, (m, c) => { codes.push('<code>' + esc(c) + '</code>'); return '\u0000' + (codes.length - 1) + '\u0000'; });
+    // Colour shorthand: [text]{#ff8a3d} - [text]{gold} - [text]{#fff on #1f2733}
+    // - [text]{on crimson}. A spec that isn't a real colour is left exactly as
+    // typed, so ordinary prose that happens to use braces survives untouched.
+    s = s.replace(/\[([^\]\n]+)\]\{([^}\n]{1,80})\}/g, (m, txt, spec) => {
+      const on = spec.match(/^(?:(.*?)\s+)?on\s+(.+)$/i);
+      const fgSpec = (on ? (on[1] || '') : spec).trim();
+      const fg = fgSpec ? _safeColor(fgSpec) : null;
+      const bg = on ? _safeColor(on[2]) : null;
+      if ((fgSpec && !fg) || (on && !bg) || (!fg && !bg)) return m;
+      const style = [fg ? 'color:' + fg : '', bg ? 'background-color:' + bg : ''].filter(Boolean).join(';');
+      return `<span style="${style}">${txt}</span>`;
+    });
     s = s.replace(/!\[([^\]]*)\]\(\s*([^)\s]+)(?:\s+["'][^)]*)?\)/g, '<img src="$2" alt="$1">');     // image
     s = s.replace(/!\[([^\]]*)\]\[([^\]]*)\]/g, (m, alt, id) => { const u = refs[(id || alt).trim().toLowerCase()]; return u ? `<img src="${u}" alt="${alt}">` : m; });
     s = s.replace(/\[([^\]]+)\]\(\s*([^)\s]+)(?:\s+["'][^)]*)?\)/g, '<a href="$2">$1</a>');           // link (also wraps linked images)

@@ -554,7 +554,8 @@
     const d = state.detail;
     const m = openModal(t('Edit README'), `<form class="mp-form" id="mp-readme-form">
       <label class="mp-form-field"><span>${esc(t('README (Markdown)'))}</span><textarea name="readme" rows="14" maxlength="60000">${esc(d.readme_text || '')}</textarea></label>
-      <p class="mp-form-hint">${esc(t('Shown as the main content for releases-only mods. Markdown + safe HTML (badges, alignment, tables) supported.'))}</p>
+      <p class="mp-form-hint">${esc(t('Shown as the main content for releases-only mods. Markdown + safe HTML (badges, alignment, tables) supported.'))}
+        ${esc(t('Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}</p>
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">
         <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>

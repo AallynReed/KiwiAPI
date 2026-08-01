@@ -2288,5 +2288,6 @@
   "Gem Fixture": "Soporte de Gemas",
   "Gem Day": "Día de Gemas",
   "Magic Dmg": "Daño Mágico",
-  "Crit Dmg": "Daño Crítico"
+  "Crit Dmg": "Daño Crítico",
+  "Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.": "Colorea el texto con [texto]{#ff8a3d}, [texto]{gold} o [texto]{#fff on #1f2733}."
 }

@@ -317,7 +317,8 @@
     const p = state.profile;
     const m = openModal(t('Edit README'), `<form class="mp-form" id="mpf-readme-form">
       <label class="mp-form-field"><span>${esc(t('About you (Markdown)'))}</span><textarea name="readme" rows="14" maxlength="40000">${esc(p.readme || '')}</textarea></label>
-      <p class="mp-form-hint">${esc(t('Markdown + safe HTML (badges, images, tables) supported - make it yours.'))}</p>
+      <p class="mp-form-hint">${esc(t('Markdown + safe HTML (badges, images, tables) supported - make it yours.'))}
+        ${esc(t('Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}</p>
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">
         <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>

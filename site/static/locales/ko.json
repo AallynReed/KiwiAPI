@@ -2288,5 +2288,6 @@
   "Gem Fixture": "젬 고정대",
   "Gem Day": "젬 데이",
   "Magic Dmg": "마법 피해",
-  "Crit Dmg": "치명타 피해"
+  "Crit Dmg": "치명타 피해",
+  "Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.": "[텍스트]{#ff8a3d}, [텍스트]{gold}, [텍스트]{#fff on #1f2733} 로 글자 색을 지정할 수 있습니다."
 }
