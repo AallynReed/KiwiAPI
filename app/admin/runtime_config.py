@@ -531,6 +531,25 @@ REGISTRY: dict[str, TunableSetting] = {
             "rename detection' category."
         ),
     ),
+    "feature_leaderboard_duplicates_enabled": _t(
+        key="feature_leaderboard_duplicates_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for duplicate-name detection. OFF stops the "
+            "leaderboards warmer from scanning each capture for names that "
+            "resolve to more than one identity, 404s the duplicate endpoints "
+            "(/v1/leaderboards/duplicates, /site/leaderboards/duplicates), and "
+            "hides the Possible-duplicates tab on the /leaderboards page. "
+            "Already-recorded groups are kept and reappear when toggled back ON. "
+            "NOTE: this does NOT disable the per-identity SPLIT in the player "
+            "chart / history deltas - that is a correctness fix (it stops two "
+            "people's scores being drawn as one sawtooth line) and always "
+            "applies. Tuning knobs live in the 'Duplicate-name detection' "
+            "category."
+        ),
+    ),
 
     # ── Feedback (/v1/misc/feedback) ─────────────────────────────────
     "feedback.discord_webhook": _t(
@@ -1354,6 +1373,72 @@ REGISTRY: dict[str, TunableSetting] = {
         min_value=0, max_value=86400,
     ),
 
+    # ── Duplicate-name detection (/v1/leaderboards/duplicates) ───────
+    "duplicates_lookback_days": _t(
+        key="duplicates_lookback_days",
+        default=settings.duplicates_lookback_days,
+        type="int",
+        category="duplicates",
+        description=(
+            "How far back the evidence pass looks when judging a duplicated "
+            "name's score lines. Each line is classed as still MOVING or FROZEN "
+            "over this window, which is what separates 'two active players "
+            "sharing a name' from 'one player plus a leftover leaderboard row'. "
+            "Longer = a more confident read, at the cost of a wider scan."
+        ),
+        min_value=1, max_value=30,
+    ),
+    "duplicates_min_boards": _t(
+        key="duplicates_min_boards",
+        default=settings.duplicates_min_boards,
+        type="int",
+        category="duplicates",
+        description=(
+            "Only record a name duplicated on at least this many boards. 1 "
+            "records every occurrence, including a one-off scrape artefact on a "
+            "single board; raise it to keep the tab to names with a systematic, "
+            "multi-board duplication (the real cases span 20+ boards)."
+        ),
+        min_value=1, max_value=100,
+    ),
+    "duplicates_frozen_min_captures": _t(
+        key="duplicates_frozen_min_captures",
+        default=settings.duplicates_frozen_min_captures,
+        type="int",
+        category="duplicates",
+        description=(
+            "A flat score line is only called FROZEN once it has been seen this "
+            "many times in the lookback window. Below it, a flat line is just an "
+            "idle hour rather than evidence of a stalled leaderboard row."
+        ),
+        min_value=2, max_value=200,
+    ),
+    "duplicates_max_names": _t(
+        key="duplicates_max_names",
+        default=settings.duplicates_max_names,
+        type="int",
+        category="duplicates",
+        description=(
+            "Safety cap on how many duplicated names one detection pass records "
+            "(widest blast radius first). The live figure is ~16, so this only "
+            "bites if a malformed dump duplicates everything - in which case "
+            "writing thousands of rows per capture is the wrong response."
+        ),
+        min_value=1, max_value=100000,
+    ),
+    "duplicates_cache_ttl_seconds": _t(
+        key="duplicates_cache_ttl_seconds",
+        default=settings.duplicates_cache_ttl_seconds,
+        type="int",
+        category="duplicates",
+        description=(
+            "Cache-Control max-age on the duplicate-list endpoints. The record "
+            "only changes when a new capture lands, so this is just CDN/browser "
+            "politeness."
+        ),
+        min_value=0, max_value=86400,
+    ),
+
     # ── Last played (profile activity heuristic) ─────────────────────
     "last_played_excluded_board_uuids": _t(
         key="last_played_excluded_board_uuids",
@@ -1648,6 +1733,47 @@ REGISTRY: dict[str, TunableSetting] = {
             "hammering. Default 2s; 0 = retry instantly."
         ),
         min_value=0.0, max_value=30.0,
+    ),
+    "trove_status_local_check_enabled": _t(
+        key="trove_status_local_check_enabled",
+        default=settings.trove_status_local_check_enabled,
+        type="bool",
+        category="trove_status",
+        description=(
+            "Our-end guard. When a round finds NOTHING reachable (auth AND every "
+            "region), check whether this box can reach the internet at all before "
+            "believing it. If no anchor answers, the round is DISCARDED - no "
+            "outage recorded, no snapshot update, no event - because the outage "
+            "is ours, not Trove's. Off = record it as Trove downtime (the old "
+            "behaviour, which logged hours-long fake outages across all regions "
+            "whenever the uplink dropped)."
+        ),
+    ),
+    "trove_status_local_check_hosts": _t(
+        key="trove_status_local_check_hosts",
+        default=settings.trove_status_local_check_hosts,
+        type="str",
+        category="trove_status",
+        description=(
+            "Comma-separated host:port uplink anchors for the guard above; the "
+            "internet counts as up if ANY of them accepts a TCP connection. Use "
+            "RAW IPs of independent operators (default: Cloudflare, Quad9, "
+            "Google on :443) - a hostname would drag DNS into the verdict, and "
+            "one operator alone can't tell its own outage from ours. Empty = "
+            "guard disabled (rounds are always recorded)."
+        ),
+    ),
+    "trove_status_local_check_timeout_seconds": _t(
+        key="trove_status_local_check_timeout_seconds",
+        default=settings.trove_status_local_check_timeout_seconds,
+        type="float",
+        category="trove_status",
+        description=(
+            "Per-anchor TCP timeout for the uplink check. All anchors are probed "
+            "at once, so this is the worst-case added delay - and only on a round "
+            "where everything already failed."
+        ),
+        min_value=0.5, max_value=20.0,
     ),
 
     # ── Community feeds (/v1/feeds/{youtube,bilibili,twitch}) ──────────

@@ -69,7 +69,7 @@ _PREVIEW_FLAGS = {
     "classes_enabled", "star_chart_enabled", "gem_simulator_enabled",
     "gem_evaluator_enabled", "gem_builds_enabled", "calculators_enabled",
     "gems_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
-    "renames_enabled", "discord_oauth_enabled",
+    "renames_enabled", "duplicates_enabled", "discord_oauth_enabled",
 }
 
 
@@ -2010,6 +2010,81 @@ class Handler(SimpleHTTPRequestHandler):
                 "power_rank_threshold": 25000,
                 "effort_threshold": 50, "xp_threshold": 2_000_000, "classes": classes,
                 "methodology": "stub class current", "computed_at": STUB_ANCHOR,
+            })
+        if (path == "/site/leaderboards/duplicates"
+                or path.startswith("/site/leaderboards/duplicates?")):
+            # Synthetic duplicate-name groups covering every verdict + cause so
+            # the Possible-duplicates tab and its filter chips have something to
+            # render locally. Mirrors the real payload shape exactly.
+            def _series(slot, score, rank, moved):
+                return {
+                    "slot": slot, "captures": 24,
+                    "first_anchor": STUB_ANCHOR - 86400,
+                    "last_anchor": STUB_ANCHOR,
+                    "first_score": score if moved else score,
+                    "last_score": score, "last_rank": rank,
+                    "moved": moved, "frozen": not moved,
+                }
+
+            def _group(name, kind, verdict, boards, occ, spellings=()):
+                return {
+                    "name": name, "kind": kind, "verdict": verdict,
+                    "boards": len(boards), "max_occurrences": occ,
+                    "spellings": list(spellings),
+                    "first_anchor": STUB_ANCHOR - 7 * 86400,
+                    "last_anchor": STUB_ANCHOR,
+                    "method_version": 1, "updated_at": STUB_ANCHOR,
+                    "evidence": {
+                        "lookback_days": 7, "boards": boards,
+                        "summary": (
+                            f"Trove's own capture lists “{name}” {occ} times on the "
+                            f"same board across {len(boards)} boards."),
+                    },
+                }
+            duplicates = [
+                _group("LateCom", "same_name", "one_live", [
+                    {"uuid": 4, "name": "Quests Completed", "occurrences": 2,
+                     "series": [_series(0, 1647674, 39, True),
+                                _series(1, 192044, 2209, False)]},
+                    {"uuid": 11, "name": "Glim Collected", "occurrences": 2,
+                     "series": [_series(0, 8141459, 670, True),
+                                _series(1, 2675220, 2019, False)]},
+                ], 2),
+                _group("FaeGoMyEggo", "same_name", "multi_live", [
+                    {"uuid": 1, "name": "Trove Mastery", "occurrences": 2,
+                     "series": [_series(0, 162986, 810, True),
+                                _series(1, 98939, 4715, True)]},
+                ], 2),
+                _group("Robot", "case", "case_only", [], 2, ("Robot", "robot")),
+            ]
+            return self._send_json({
+                "enabled": True, "duplicates": duplicates,
+                "total": len(duplicates), "current": len(duplicates),
+                "latest_anchor": STUB_ANCHOR,
+                "limit": 200, "offset": 0, "method_version": 1,
+            })
+        if path.startswith("/site/leaderboards/duplicates/"):
+            # Per-name lookup driving the player panel's shared-name banner.
+            # Only the demo name is flagged; everyone else comes back clean,
+            # which is the common case in production too.
+            qname = unquote(path[len("/site/leaderboards/duplicates/"):])
+            if qname.lower() != "latecom":
+                return self._send_json(
+                    {"query": qname, "found": False, "enabled": True})
+            return self._send_json({
+                "query": qname, "found": True, "enabled": True,
+                "name": "LateCom", "kind": "same_name", "verdict": "one_live",
+                "boards": 25, "max_occurrences": 2, "spellings": [],
+                "first_anchor": STUB_ANCHOR - 7 * 86400,
+                "last_anchor": STUB_ANCHOR, "method_version": 1,
+                "updated_at": STUB_ANCHOR,
+                "evidence": {
+                    "lookback_days": 7, "boards": [],
+                    "summary": (
+                        "Trove's own capture lists “LateCom” 2 times on the same "
+                        "board across 25 boards, and only one of those score "
+                        "lines is still moving."),
+                },
             })
         if path == "/site/leaderboards/renames" or path.startswith("/site/leaderboards/renames?"):
             # Synthetic detected renames spanning the confidence range so the

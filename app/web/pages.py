@@ -640,6 +640,7 @@ async def leaderboards(request: Request) -> HTMLResponse:
         "cheater_detection_enabled": getattr(request.state, "cheater_detection_enabled", True),
         "alt_clusters_enabled": getattr(request.state, "alt_clusters_enabled", True),
         "renames_enabled": getattr(request.state, "renames_enabled", True),
+        "duplicates_enabled": getattr(request.state, "duplicates_enabled", True),
         "ssr": await ssr.leaderboards_view(_ssr_fetch),
     })
 

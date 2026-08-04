@@ -216,7 +216,15 @@ def extract_rig_refs(data: bytes) -> dict | None:
 
 def parse_collection_table(data: bytes) -> list[dict]:
     """Decode a collections/collection_* table into category groups
-    `{id, name_key, members: [collection-path]}` by walking harvested strings."""
+    `{id, name_key, members: [collection-path]}` by walking harvested strings.
+
+    The group id is the display label that PRECEDES the `$CollectionName_*` key. That
+    label is rejected when it carries a `$` anywhere: `harvest_strings` scans every byte
+    offset, so a label whose last byte has wire-type 8 in its low nibble (`h`, `x`, `H`,
+    `X`, `8`, `(`) is also read as a field key - swallowing the real key's tag as a
+    length and yielding a phantom that straddles into the loc key (`Mount Taming Bench`
+    -> `" $CollectionName_MountTa"`). Dropping the whole overlapping-field set here is
+    NOT an option: it also discards real member paths (mount members 1174 -> 1136)."""
     groups: list[dict] = []
     prev_bare = ""
     cur: dict | None = None
@@ -227,7 +235,7 @@ def parse_collection_table(data: bytes) -> list[dict]:
         elif s.startswith("collections/"):
             if cur is not None:
                 cur["members"].append(s)
-        elif "/" not in s and not s.startswith("$"):
+        elif "/" not in s and "$" not in s:
             prev_bare = s
     return groups
 

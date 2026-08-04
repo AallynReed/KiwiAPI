@@ -126,6 +126,46 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
             "rest": rig["rest"], "animations": rig["animations"]}
 
 
+def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
+    """``[(AP key, raw .blueprint bytes)]`` -> ``{(x,y,z): (r,g,b,kind,level)}`` in rig
+    space, ready for ``render.voxel.render_voxels``.
+
+    The web viewer gets its parts in LOCAL space plus the rest-pose matrices and does the
+    transform on the GPU; a server-side still image has to bake the rest pose in here.
+    Same matrices, same voxel scale, so the two agree. Returns ``{}`` for an unknown rig
+    or when nothing places - the caller then falls back to a single blueprint rather than
+    showing a half-creature.
+    """
+    import numpy as np
+
+    rig = _rigs().get(rig_name)
+    if not rig:
+        return {}
+    scale = rig["voxel_scale"] or 1.0
+    rest = rig["rest"]
+    out: dict = {}
+    for ap_key, raw in parts:
+        mat = rest.get(ap_key)
+        if mat is None or not raw:
+            continue
+        if raw[:5] != b"kiwib" or struct.unpack_from("<I", raw, 5)[0] != 5:
+            continue
+        voxels = _decode_v5_grid(raw)
+        if not voxels:
+            continue
+        m = np.array(mat).reshape(4, 4).T @ np.diag([scale] * 3 + [1.0])
+        n = len(voxels)
+        local = np.array([[v[0] for v in voxels], [v[1] for v in voxels],
+                          [v[2] for v in voxels], [1.0] * n], dtype=float)
+        # back into voxel units so the renderer's grid maths still applies
+        world = (m @ local)[:3].T / scale
+        for (wx, wy, wz), v in zip(world, voxels, strict=False):
+            rgb = v[3]
+            out[(int(round(wx)), int(round(wy)), int(round(wz)))] = (
+                (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255, v[4], v[5])
+    return out
+
+
 def _unbury_enclosed_emissive(parts: list[dict], rest: dict, voxel_scale: float) -> None:
     """Push pure-emissive accent parts (eyes, runes) that are FULLY enclosed by other
     parts' voxels OUTWARD so they protrude past the covering geometry and render with

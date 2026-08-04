@@ -112,6 +112,17 @@
                 <span class="lb-tab-badge" id="lb-tab-renames-badge" hidden>0</span>
             </button>
             {% endif %}
+            {# Possible duplicates: names that resolve to more than one player.
+               Own master switch, server-gated like the tabs above. #}
+            {% if duplicates_enabled | default(true) %}
+            <button type="button" class="lb-tab" role="tab"
+                    id="lb-tab-duplicates" data-tab="duplicates"
+                    aria-selected="false" aria-controls="lb-pane-duplicates">
+                <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                <span data-i18n>Possible duplicates</span>
+                <span class="lb-tab-badge" id="lb-tab-duplicates-badge" hidden>0</span>
+            </button>
+            {% endif %}
         </nav>
 
         <!-- ═══════════════ PLAYER HISTORY PANEL ═══════════════
@@ -135,6 +146,10 @@
             <!-- Username history (renames) - injected + unhidden by leaderboards.js
                  when the rename detector found a name change for this player. -->
             <div class="lb-player-aliases" id="lb-player-aliases" hidden></div>
+            <!-- Shared-name warning - injected + unhidden by leaderboards.js when
+                 this name resolves to more than one player, so the numbers below
+                 are never presented as one person's without saying so. -->
+            <div class="lb-player-dupe" id="lb-player-dupe" hidden></div>
             <!-- Per-player chart: one line per board they appear on,
                  last 7 days. JS owns the contents; the outer figure
                  stays hidden until the player series payload returns
@@ -360,6 +375,35 @@
             <details class="lb-cheaters-method">
                 <summary data-i18n>How is this computed?</summary>
                 <p data-i18n>Trove leaderboards have no permanent player id, so a rename is reconstructed from behaviour. Between two captures taken within about 90 minutes of each other, we look for a name that vanished while a brand-new name appeared carrying the same scores on the lifetime boards - Trove Mastery, Geode Mastery and Power Rank, which never reset and carry over a rename unchanged. A match only counts when several of those boards line up and the old and new names are each other's single clear best match; anything ambiguous is left out rather than guessed. That reliance on never-resetting boards is also what keeps daily and weekly resets from ever looking like a rename.</p>
+            </details>
+        </section>
+
+        <!-- ═══════════════ TAB: POSSIBLE DUPLICATES ═══════════════
+             Names that don't map to a single player: either Trove's own capture
+             lists the same spelling twice on one board, or two spellings differ
+             only in capitalisation and get folded together. Lazy fetch from
+             /site/leaderboards/duplicates. No confidence slider - the
+             duplication is a fact in the capture, not an inference; the filter
+             is by cause instead. -->
+        <section class="lb-tab-pane lb-cheaters lb-duplicates-pane" id="lb-pane-duplicates"
+                 role="tabpanel" aria-labelledby="lb-tab-duplicates" hidden>
+            <div class="lb-dupe-filter" role="group" aria-label="Filter by cause">
+                <button type="button" class="lb-dupe-chip active" data-dupe-kind=""
+                        data-i18n>All</button>
+                <button type="button" class="lb-dupe-chip" data-dupe-kind="same_name"
+                        data-i18n>Listed twice</button>
+                <button type="button" class="lb-dupe-chip" data-dupe-kind="case"
+                        data-i18n>Capitalisation</button>
+            </div>
+            <!-- JS owns this line (no data-i18n - it interpolates counts). -->
+            <p class="lb-cheaters-meta" id="lb-duplicates-meta">Loading…</p>
+            <p class="lb-clusters-blurb" data-i18n>Some names don't belong to just one player. When that happens, everything shown for that name - their chart, their ranks, their totals - is really two people's numbers mixed together. These are the names we've spotted it on.</p>
+            <div class="lb-duplicates-body" id="lb-duplicates-body">
+                <p class="lb-cheaters-empty" data-i18n>Checking recent captures…</p>
+            </div>
+            <details class="lb-cheaters-method">
+                <summary data-i18n>How is this computed?</summary>
+                <p data-i18n>Trove's leaderboards identify players by name only - there's no permanent id behind it. So two things can go wrong, and we check for both on every capture. The first is that the game's own leaderboard lists the exact same name twice on one board, at two different ranks with two different scores. The second is that two names differing only in capitalisation get treated as one. Either way, we separate the score lines by following each one from hour to hour, and then report whether one line has stopped moving while the other keeps climbing - which is what a leftover, abandoned leaderboard entry looks like. We never claim to know which line is the "real" player, because nothing in the data can tell us that.</p>
             </details>
         </section>
 

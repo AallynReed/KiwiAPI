@@ -43,7 +43,9 @@ def geode_companion_members(content: bytes) -> dict[str, str]:
     no `.binfab`) -> rarity group id (Common/Uncommon/Rare/…).
 
     Unlike `parse_collection_table`, geode members are `item/companion/…` paths, so
-    this groups those directly under each `$CollectionName_*` label."""
+    this groups those directly under each `$CollectionName_*` label. The label rejects
+    any harvested string carrying a `$` for the same reason as `parse_collection_table`
+    (a phantom field can straddle a label into the loc key that follows it)."""
     members: dict[str, str] = {}
     group = ""
     prev_bare = ""
@@ -53,7 +55,7 @@ def geode_companion_members(content: bytes) -> dict[str, str]:
         elif s.startswith("item/companion/"):
             key = s.replace("\\", "/").removesuffix(".binfab").lower()
             members.setdefault(key, group)
-        elif "/" not in s and not s.startswith("$"):
+        elif "/" not in s and "$" not in s:
             prev_bare = s
     return members
 

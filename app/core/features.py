@@ -60,6 +60,10 @@ ALT_CLUSTERS_FLAG = "feature_alt_clusters_enabled"
 # Player-rename detection: gates the warmer's live rename pass + the dev-portal
 # backfill + the Possible-renames tab (a tab on /leaderboards, not its own page).
 RENAMES_FLAG = "feature_leaderboard_renames_enabled"
+# Duplicate-name detection: gates the warmer's live pass + the dev-portal backfill
+# + the Possible-duplicates tab. The per-series SPLIT in the read paths is NOT
+# gated - it is a correctness fix for the chart/deltas, not a feature.
+DUPLICATES_FLAG = "feature_leaderboard_duplicates_enabled"
 
 
 async def is_enabled(flag: str) -> bool:
@@ -105,4 +109,6 @@ require_dm_subs_enabled = _gate(DM_SUBS_FLAG, "DM subscriptions")
 require_delves_enabled = _gate(DELVES_FLAG, "Delve rotation data")
 require_store_enabled = _gate(STORE_FLAG, "Store catalog")
 require_leaderboard_renames_enabled = _gate(RENAMES_FLAG, "Rename detection")
+require_leaderboard_duplicates_enabled = _gate(
+    DUPLICATES_FLAG, "Duplicate-name detection")
 require_embed_enabled = _gate(EMBED_FLAG, "embeddable viewer")

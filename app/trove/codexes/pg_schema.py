@@ -54,18 +54,41 @@ CREATE TABLE IF NOT EXISTS codex_meta (
 -- rebuild WITHOUT a (heavier) full codex re-parse.
 ALTER TABLE codex_meta ADD COLUMN IF NOT EXISTS rig_version INTEGER NOT NULL DEFAULT 0;
 
--- Rig map for the Mods Hub 3D assembler: blueprint basename -> the creature skeleton
--- it belongs to + its attach point, read structurally from EVERY skeleton-binding
--- prefab (mounts, allies' _npc, skins/costumes, npc/mobs). Separate from codex_entry
--- so rig coverage isn't limited to the collectible types the codex classifies.
--- Disposable - rebuilt from the archive by reindex_rigs.
+-- Rig map for the Mods Hub 3D assembler: one row per (creature prefab, blueprint part)
+-- - the skeleton the part belongs to + its attach point, read structurally from EVERY
+-- skeleton-binding prefab (mounts, allies' _npc, skins/costumes, npc/mobs). Separate
+-- from codex_entry so rig coverage isn't limited to the collectible types the codex
+-- classifies. Disposable - rebuilt from the archive by reindex_rigs.
+--
+-- ``prefab`` is the CREATURE'S IDENTITY and belongs in the key. A skeleton is shared by
+-- every creature that uses it (`mount_raptor` covers every raptor mount in the game), so
+-- (branch, skeleton) alone cannot name one creature, and the blueprints all sit in the
+-- same flat `blueprints/` folder - there is nothing else to tell them apart. Without
+-- this column the embed's "assemble a native creature from one path" could only pick
+-- parts skeleton-wide and rendered a chimera of every variant at once.
+DO $$
+BEGIN
+    IF to_regclass('rig_binding') IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'rig_binding' AND column_name = 'prefab'
+    ) THEN
+        -- Pre-prefab shape: no way to add the key in place, and the table is disposable.
+        -- Dropping fails CLOSED (empty map -> nothing renders) until reindex_rigs
+        -- refills it, which the RIG_PARSER_VERSION bump forces on the next sync.
+        DROP TABLE rig_binding;
+    END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS rig_binding (
     branch     TEXT NOT NULL,
+    prefab     TEXT NOT NULL,   -- archive path of the creature prefab the binding came from
     blueprint  TEXT NOT NULL,   -- lowercased blueprint basename (matches a mod's .tmod)
     skeleton   TEXT NOT NULL,
     ap_key     TEXT NOT NULL,
-    PRIMARY KEY (branch, blueprint)
+    PRIMARY KEY (branch, prefab, blueprint)
 );
+-- "Which creature owns this part" - the embed's lookup, and the mod resolver's scan.
+CREATE INDEX IF NOT EXISTS rig_binding_bp ON rig_binding (branch, blueprint);
 """
 
 

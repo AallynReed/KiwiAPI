@@ -1828,8 +1828,50 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 }
 
 @media (max-width: 760px) {
-  .lb-main { padding: 0 18px 60px; }
-  .lb-hero { padding: 36px 0 20px; }
+  /* --content-max is 92vw, so the shared page shell already spends ~4% of the
+     viewport per side BEFORE this padding lands on top of it. On a 375px phone
+     that stacked to 33px of dead gutter each side (18% of the screen) on a page
+     whose whole job is dense tables. Take the full width and spend one gutter. */
+  .lb-main { max-width: none; margin: 0; padding: 0 16px 60px; }
+  .lb-hero { padding: 28px 0 18px; }
+  .lb-title { font-size: 1.9rem; }
+  .lb-subtitle { font-size: .95rem; }
+  .lb-eyebrow { font-size: .8rem; }
+
+  /* The day row is a grid item, and grid items get ``min-width: auto`` - the
+     archive CTA is ``white-space: nowrap`` and the picker's flex-basis kept the
+     row from shrinking, so the row sized itself to max-content and dragged the
+     ENTIRE PAGE out to ~1100px of horizontal scroll on a 375px screen. A fixed
+     ``minmax(0, 1fr)`` track plus an explicit ``min-width: 0`` breaks that chain;
+     the picker then scrolls inside its own box the way it was meant to. */
+  .lb-toolbar-field { min-width: 0; }
+  .lb-day-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .lb-day-archive { min-width: 0; }
+  .lb-day-cta,
+  .lb-day-jump { width: 100%; justify-content: center; }
+
+  /* Tab strip: four tabs run ~810px wide against a ~340px phone, so it has
+     always been a horizontal scroller - but with the scrollbar hidden there
+     was nothing to say so. Tighten the tabs, snap them, and fade the trailing
+     edge so the off-screen ones read as "there's more this way". */
+  .lb-tabs {
+    margin: 14px 0;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+  .lb-tab {
+    padding: 11px 13px;
+    font-size: .88rem;
+    gap: 7px;
+    scroll-snap-align: start;
+  }
+
   .lb-layout {
     grid-template-columns: 1fr;
     gap: 14px;
@@ -1862,6 +1904,39 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   .lb-ph-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
+}
+
+/* Phones - the anti-cheat panes (cheaters / alt clusters / renames).
+   Deliberately AFTER the 760px block so these win at equal specificity. */
+@media (max-width: 640px) {
+  /* The filter is a 3-up row: ``minmax(140px, auto) 1fr auto``. The label
+     takes its 140px and the "hiding N below threshold" hint is nowrap+auto,
+     so on a 343px line the 1fr middle column - the slider itself - resolved
+     to ONE pixel. Give the range its own full-width row underneath. */
+  .lb-cheaters-filter {
+    grid-template-columns: 1fr auto;
+    gap: 8px 12px;
+  }
+  .lb-cheaters-filter-range { grid-column: 1 / -1; }
+  .lb-cheaters-filter-hint { justify-self: end; }
+
+  /* Cluster rows: ``.lb-cluster-stats`` is flex-shrink:0 and ate 235px of a
+     341px row, collapsing the cluster NAME (the one thing identifying the
+     row) to 0px wide. Same wrap treatment the cheater rows already get. */
+  .lb-cluster-summary { flex-wrap: wrap; }
+  .lb-cluster-title { flex: 1 1 100%; }
+  .lb-cluster-stats { flex-basis: 100%; justify-content: flex-start; }
+
+  /* Renames: the count pill + caret are flex-shrink:0 and squeezed the
+     old→new name pair into ~150px. Let the tags drop to their own line. */
+  .lb-rename-head { flex-wrap: wrap; }
+  .lb-rename-names { flex: 1 1 100%; }
+  .lb-rename-tags { flex-basis: 100%; justify-content: flex-start; }
+
+  /* Sub-10px labels in the board sidebar. Below ~11px these stop being
+     readable at arm's length on a phone; nudge them back over the floor. */
+  .lb-category-count { font-size: .72rem; }
+  .lb-name-pill { font-size: .68rem; }
 }
 
 
@@ -2060,4 +2135,247 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   .lb-chart { height: 180px; }
   .lb-chart-wrap { padding: 12px 12px 14px; }
   .lb-chart-legend-item { font-size: .72rem; padding: 3px 8px; }
+}
+
+/* ── Possible duplicates tab ────────────────────────────────────────────
+   Names that resolve to more than one player. Structurally a sibling of
+   the renames cards (collapsed head + expandable detail), with a cause
+   filter instead of a confidence slider - there is no confidence to
+   threshold here, the duplication is a fact in the capture. */
+.lb-dupe-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.lb-dupe-chip {
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.03);
+  color: var(--text-mute);
+  cursor: pointer;
+}
+.lb-dupe-chip:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
+.lb-dupe-chip.active {
+  color: var(--text);
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.24);
+}
+.lb-dupe-chip:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+.lb-dupe {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+.lb-dupe-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lb-dupe-head:hover { background: rgba(255,255,255,.04); }
+.lb-dupe-head:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: -2px; }
+.lb-dupe-names {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+  font-weight: 600;
+  font-size: .95rem;
+}
+.lb-dupe-name {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px dotted transparent;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-dupe-name:hover { color: var(--accent-blue); border-bottom-color: currentColor; }
+.lb-dupe-multiplier {
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .76rem;
+  color: var(--text-mute);
+  flex-shrink: 0;
+}
+.lb-dupe-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.lb-dupe-verdict,
+.lb-dupe-kind,
+.lb-dupe-count {
+  font-size: .72rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.lb-dupe-kind,
+.lb-dupe-count {
+  font-family: SFMono-Regular, Consolas, monospace;
+  background: rgba(255,255,255,.06);
+  color: var(--text-mute);
+}
+.lb-dupe-verdict { font-weight: 600; }
+/* Two identities both still playing is the case a reader most needs to
+   notice; a stalled leftover row is milder; idle is neutral. */
+.lb-dupe-verdict-hot {
+  background: rgba(255,138,128,.14);
+  color: var(--accent-red, #ff8a80);
+}
+.lb-dupe-verdict-warm {
+  background: rgba(255,183,77,.14);
+  color: var(--accent-orange, #ffb74d);
+}
+.lb-dupe-verdict-cool {
+  background: rgba(255,255,255,.06);
+  color: var(--text-mute);
+}
+.lb-dupe-caret {
+  color: var(--text-mute);
+  transition: transform .15s ease;
+  flex-shrink: 0;
+}
+.lb-dupe.expanded .lb-dupe-caret { transform: rotate(180deg); }
+.lb-dupe-detail { padding: 0 14px 14px; display: none; }
+.lb-dupe.expanded .lb-dupe-detail { display: block; }
+.lb-dupe-summary {
+  font-size: .86rem;
+  color: var(--text-mute);
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+.lb-dupe-when,
+.lb-dupe-spellings {
+  font-size: .76rem;
+  color: var(--text-mute);
+  margin: 0 0 10px;
+}
+.lb-dupe-spellings code {
+  font-size: .74rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+}
+.lb-dupe-boards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lb-dupe-board {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 8px;
+  font-size: .82rem;
+  flex-wrap: wrap;
+}
+.lb-dupe-board-name { flex: 1; min-width: 0; font-weight: 600; }
+.lb-dupe-board-lines {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lb-dupe-line {
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .76rem;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+.lb-dupe-line b { color: var(--text); font-weight: 700; }
+.lb-dupe-line i { font-style: normal; opacity: .75; }
+.lb-dupe-line-live i { color: var(--accent-green, #7bd88f); opacity: 1; }
+.lb-dupe-line-dead i { color: var(--accent-orange, #ffb74d); opacity: 1; }
+
+/* Shared-name warning inside the player panel. Same shape as the rename
+   aliases banner, warmer border so it reads as a caveat about the data
+   below rather than a neutral fact about the player. */
+.lb-player-dupe {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 4px 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,183,77,.28);
+  background: rgba(255,183,77,.07);
+}
+.lb-player-dupe-icon {
+  color: var(--accent-orange, #ffb74d);
+  font-size: 1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.lb-player-dupe-body { min-width: 0; }
+.lb-player-dupe-title {
+  margin: 0 0 6px;
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-mute);
+  font-weight: 700;
+}
+.lb-player-dupe-text {
+  margin: 0 0 6px;
+  font-size: .86rem;
+  line-height: 1.5;
+  color: var(--text-mute);
+}
+.lb-player-dupe-link {
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 600;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-blue);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.lb-player-dupe-link:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+/* Board tile badge in the history panel: which of the two identities this
+   tile belongs to. */
+.lb-ph-tile-dupe { border-color: rgba(255,183,77,.28); }
+.lb-ph-slot {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-family: SFMono-Regular, Consolas, monospace;
+  font-size: .68rem;
+  font-weight: 700;
+  background: rgba(255,183,77,.16);
+  color: var(--accent-orange, #ffb74d);
+  vertical-align: middle;
 }

@@ -101,6 +101,12 @@ async def write_snapshot(boards: list[ParsedBoard], anchor: int) -> dict:
                 "SELECT s.board_uuid, s.anchor, s.rank, s.score, p.id "
                 "FROM _stg s JOIN player p ON p.name_lower = lower(s.name)"
             )
+            # Record case-only name collisions while the RAW spellings are still
+            # in reach. The player upsert above folds "Robot" and "robot" into one
+            # row keyed by name_lower, so after this transaction there is no way
+            # to tell that two distinct accounts were merged - this is the only
+            # point where that evidence exists.
+            await _record_case_collisions(con, anchor)
             # Fold this capture into the per-(player, board) lifetime aggregate
             # in the SAME transaction, so the /player profile reads it in
             # O(boards) instead of scanning the player's full history.
@@ -122,8 +128,8 @@ async def reset_all(*, drop_boards: bool = False) -> dict:
         async with con.transaction():
             await con.execute(
                 "TRUNCATE entry, player, activity_estimate, activity_active, "
-                "class_activity_estimate, player_rename, player_board_agg "
-                "RESTART IDENTITY"
+                "class_activity_estimate, player_rename, player_duplicate, "
+                "player_board_agg RESTART IDENTITY"
             )
             boards = 0
             if drop_boards:
@@ -573,18 +579,31 @@ async def player_last_played(
     board that carries a score forever). None when no rise is found in the window.
 
     Bounded to the window so the query prunes to recent partitions instead of
-    scanning the player's entire cross-partition history on every profile load."""
+    scanning the player's entire cross-partition history on every profile load.
+
+    The ``slot`` rank is what makes this correct for a DUPLICATED name (a name
+    Trove's dump lists twice on one board - see ``duplicates``). Without it the
+    lag alternates between the two co-existing rows, so ``score > prev`` fires on
+    every single capture and the player reads as permanently active. Ranking the
+    rows within each ``(board, anchor)`` by score and lagging per slot compares
+    like with like. For the overwhelming majority - one row per board per anchor -
+    slot is always 1 and the result is identical to a plain lag."""
     excl = sorted(excluded)
     async with acquire() as con:
         val = await con.fetchval(
             "WITH me AS ("
-            "  SELECT e.anchor, e.score, "
-            "         lag(e.score) OVER (PARTITION BY e.board_uuid ORDER BY e.anchor) AS prev "
+            "  SELECT e.board_uuid, e.anchor, e.score, "
+            "         row_number() OVER (PARTITION BY e.board_uuid, e.anchor "
+            "                            ORDER BY e.score DESC, e.rank ASC) AS slot "
             "  FROM entry e JOIN player p ON p.id = e.player_id "
             "  WHERE p.name_lower = lower($1) AND e.anchor >= $2 "
             "        AND NOT (e.board_uuid = ANY($3::int[])) "
+            "), s AS ("
+            "  SELECT anchor, score, "
+            "         lag(score) OVER (PARTITION BY board_uuid, slot ORDER BY anchor) AS prev "
+            "  FROM me "
             ") "
-            "SELECT max(anchor) FROM me WHERE prev IS NOT NULL AND score > prev",
+            "SELECT max(anchor) FROM s WHERE prev IS NOT NULL AND score > prev",
             name.strip().lower(), window_start, excl,
         )
     return int(val) if val is not None else None
@@ -1014,6 +1033,191 @@ async def latest_rename_to_anchor() -> int | None:
 async def delete_all_renames() -> int:
     async with acquire() as con:
         res = await con.execute("DELETE FROM player_rename")
+    return int(res.split()[-1]) if res.startswith("DELETE") else 0
+
+
+# ── duplicate names ──────────────────────────────────────────────────────────
+
+async def _record_case_collisions(con, anchor: int) -> None:
+    """Persist names whose RAW spellings in this dump differ only by case.
+
+    Must run inside ``write_snapshot``'s transaction, against the ``_stg`` temp
+    table - the ``player`` upsert keys on ``lower(name)``, so once the entries are
+    resolved the fact that two spellings were merged is gone for good.
+
+    Never clobbers a ``same_name`` record for the same name: a name can be hit by
+    both problems at once, and that combination is recorded as ``kind='both'``."""
+    await con.execute(
+        "INSERT INTO player_duplicate (name_lower, name, kind, verdict, boards, "
+        "  max_occurrences, spellings, first_anchor, last_anchor, evidence, "
+        "  method_version, updated_at) "
+        "SELECT lower(s.name), max(s.name), 'case', 'case_only', "
+        "       count(DISTINCT s.board_uuid)::int, count(DISTINCT s.name)::int, "
+        "       to_jsonb(array_agg(DISTINCT s.name)), $1, $1, '{}'::jsonb, 1, $1 "
+        "FROM _stg s GROUP BY lower(s.name) HAVING count(DISTINCT s.name) > 1 "
+        "ON CONFLICT (name_lower) DO UPDATE SET "
+        "  name = EXCLUDED.name, "
+        "  kind = CASE WHEN player_duplicate.kind IN ('same_name', 'both') "
+        "              THEN 'both' ELSE 'case' END, "
+        "  verdict = CASE WHEN player_duplicate.kind IN ('same_name', 'both') "
+        "                 THEN player_duplicate.verdict ELSE EXCLUDED.verdict END, "
+        "  boards = CASE WHEN player_duplicate.kind IN ('same_name', 'both') "
+        "                THEN player_duplicate.boards ELSE EXCLUDED.boards END, "
+        "  max_occurrences = GREATEST(player_duplicate.max_occurrences, "
+        "                             EXCLUDED.max_occurrences), "
+        "  spellings = EXCLUDED.spellings, "
+        "  first_anchor = LEAST(player_duplicate.first_anchor, EXCLUDED.first_anchor), "
+        "  last_anchor = GREATEST(player_duplicate.last_anchor, EXCLUDED.last_anchor), "
+        "  updated_at = EXCLUDED.updated_at",
+        anchor,
+    )
+
+
+async def duplicate_groups_at(anchor: int) -> list[dict]:
+    """Every ``(name, board)`` that carries MORE THAN ONE entry row at ``anchor``.
+
+    One row per duplicated pair: ``{name, board_uuid, occurrences}``. This is the
+    raw signal the duplicates detector groups by name - a single grouped scan of
+    one day-partition, run once per capture by the warmer."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT p.name AS name, e.board_uuid, count(*)::int AS occurrences "
+            "FROM entry e JOIN player p ON p.id = e.player_id "
+            "WHERE e.anchor = $1 "
+            "GROUP BY p.name, e.board_uuid HAVING count(*) > 1 "
+            "ORDER BY p.name, e.board_uuid",
+            anchor,
+        )
+    return [
+        {"name": r["name"], "board_uuid": r["board_uuid"],
+         "occurrences": r["occurrences"]}
+        for r in rows
+    ]
+
+
+async def upsert_duplicates(rows: list[dict]) -> None:
+    """Idempotent batch-upsert of detected duplicate-name records (one per name).
+
+    ``first_anchor`` folds to the EARLIEST ever seen and ``last_anchor`` to the
+    latest, so re-running the live pass or re-walking the archive tightens the
+    dating instead of resetting it. A name already flagged ``case`` is promoted to
+    ``both`` rather than overwritten."""
+    if not rows:
+        return
+    payload = [
+        (
+            r["name"].strip().lower(), r["name"], r.get("kind", "same_name"),
+            r.get("verdict", "all_idle"), int(r.get("boards", 0)),
+            int(r.get("max_occurrences", 2)),
+            json.dumps(r.get("spellings") or []),
+            int(r["first_anchor"]), int(r["last_anchor"]),
+            json.dumps(r.get("evidence") or {}),
+            int(r.get("method_version", 1)), int(r["updated_at"]),
+        )
+        for r in rows
+    ]
+    async with acquire() as con:
+        await con.executemany(
+            "INSERT INTO player_duplicate (name_lower, name, kind, verdict, boards, "
+            "  max_occurrences, spellings, first_anchor, last_anchor, evidence, "
+            "  method_version, updated_at) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10::jsonb, $11, $12) "
+            "ON CONFLICT (name_lower) DO UPDATE SET "
+            "  name = EXCLUDED.name, "
+            "  kind = CASE WHEN player_duplicate.kind IN ('case', 'both') "
+            "              THEN 'both' ELSE EXCLUDED.kind END, "
+            "  verdict = EXCLUDED.verdict, boards = EXCLUDED.boards, "
+            "  max_occurrences = EXCLUDED.max_occurrences, "
+            "  first_anchor = LEAST(player_duplicate.first_anchor, EXCLUDED.first_anchor), "
+            "  last_anchor = GREATEST(player_duplicate.last_anchor, EXCLUDED.last_anchor), "
+            "  evidence = EXCLUDED.evidence, "
+            "  method_version = EXCLUDED.method_version, "
+            "  updated_at = EXCLUDED.updated_at",
+            payload,
+        )
+
+
+_DUP_COLS = (
+    "name, kind, verdict, boards, max_occurrences, spellings, first_anchor, "
+    "last_anchor, evidence, method_version, updated_at"
+)
+
+
+def _duplicate_row(r) -> dict:
+    def _json(val, fallback):
+        if isinstance(val, str):
+            try:
+                return json.loads(val)
+            except (ValueError, TypeError):
+                return fallback
+        return val if val is not None else fallback
+
+    return {
+        "name": r["name"], "kind": r["kind"], "verdict": r["verdict"],
+        "boards": r["boards"], "max_occurrences": r["max_occurrences"],
+        "spellings": _json(r["spellings"], []),
+        "first_anchor": r["first_anchor"], "last_anchor": r["last_anchor"],
+        "evidence": _json(r["evidence"], {}) or {},
+        "method_version": r["method_version"], "updated_at": r["updated_at"],
+    }
+
+
+async def list_duplicates(
+    *, limit: int, offset: int, kind: str | None = None,
+) -> tuple[list[dict], int]:
+    """Recorded duplicate-name groups: still-current first (newest ``last_anchor``),
+    then widest blast radius, with the total for pagination."""
+    where = ""
+    args: list = []
+    if kind:
+        args.append(kind)
+        # 'both' rows satisfy either filter - they carry both problems.
+        where = f" WHERE (kind = ${len(args)} OR kind = 'both')"
+    async with acquire() as con:
+        total = await con.fetchval(
+            f"SELECT count(*) FROM player_duplicate{where}", *args)
+        rows = await con.fetch(
+            f"SELECT {_DUP_COLS} FROM player_duplicate{where} "
+            "ORDER BY last_anchor DESC, boards DESC, name_lower ASC "
+            f"LIMIT ${len(args) + 1} OFFSET ${len(args) + 2}",
+            *args, limit, offset,
+        )
+    return [_duplicate_row(r) for r in rows], int(total or 0)
+
+
+async def duplicate_for_name(name: str) -> dict | None:
+    """The duplicate record for one name, or None when the name is clean."""
+    async with acquire() as con:
+        row = await con.fetchrow(
+            f"SELECT {_DUP_COLS} FROM player_duplicate WHERE name_lower = lower($1)",
+            name.strip(),
+        )
+    return _duplicate_row(row) if row is not None else None
+
+
+async def duplicate_names_lower() -> set[str]:
+    """Just the flagged ``name_lower`` set - a cheap membership test for read
+    paths that only need "is this player ambiguous?" without the evidence."""
+    async with acquire() as con:
+        rows = await con.fetch("SELECT name_lower FROM player_duplicate")
+    return {r["name_lower"] for r in rows}
+
+
+async def count_duplicates() -> int:
+    async with acquire() as con:
+        return int(await con.fetchval("SELECT count(*) FROM player_duplicate") or 0)
+
+
+async def latest_duplicate_anchor() -> int | None:
+    """Newest capture any duplication was recorded in - lets the tab mark which
+    groups are still current versus historical."""
+    async with acquire() as con:
+        return await con.fetchval("SELECT MAX(last_anchor) FROM player_duplicate")
+
+
+async def delete_all_duplicates() -> int:
+    async with acquire() as con:
+        res = await con.execute("DELETE FROM player_duplicate")
     return int(res.split()[-1]) if res.startswith("DELETE") else 0
 
 

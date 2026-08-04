@@ -22,7 +22,8 @@ from app.site.feature_map import SITE_FEATURE_FLAGS, feature_blocks
 _TTL = 5.0
 # Calc switches the /leaderboards page needs on top of the master page toggles;
 # the API returns them in the same payload. Stashed on request.state for the page.
-_EXTRA_FLAGS = ("cheater_detection_enabled", "alt_clusters_enabled", "renames_enabled")
+_EXTRA_FLAGS = ("cheater_detection_enabled", "alt_clusters_enabled",
+                "renames_enabled", "duplicates_enabled")
 _ALL_ATTRS = tuple(SITE_FEATURE_FLAGS) + _EXTRA_FLAGS
 
 # Fail-open default: every feature enabled.

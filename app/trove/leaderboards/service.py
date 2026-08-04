@@ -278,7 +278,13 @@ async def reset_all(*, drop_boards: bool = False) -> dict:
     """**Destructive.** TRUNCATE the leaderboards tables + clear every derived
     cache. Board metadata (incl. admin reset-cadence overrides) is kept unless
     ``drop_boards``. All derived from captures - a re-ingest rebuilds it."""
-    from app.trove.leaderboards import activity, class_activity, detection, renames
+    from app.trove.leaderboards import (
+        activity,
+        class_activity,
+        detection,
+        duplicates,
+        renames,
+    )
     from app.trove.leaderboards import cache as lb_cache
 
     summary = await pg_store.reset_all(drop_boards=drop_boards)
@@ -286,6 +292,7 @@ async def reset_all(*, drop_boards: bool = False) -> dict:
     activity.reset_caches()
     class_activity.reset_caches()
     renames.reset()
+    duplicates.reset()
     summary["redis_keys_cleared"] = await lb_cache.reset_all()
     logger.warning("leaderboards: FULL RESET %s", summary)
     return summary
@@ -448,22 +455,53 @@ async def list_entries_with_deltas(
 
 async def _attach_player_history_deltas(player_name: str, rows: list[dict]) -> None:
     """In-place: add day-over-day deltas to player-history rows (same comparable
-    rule as the entries table). One windowed query for the player's recent rows."""
+    rule as the entries table). One windowed query for the player's recent rows.
+
+    Deltas are computed **per series**, not per board. A name Trove's dump lists
+    twice on one board (see ``duplicates``) has two co-existing rows per capture,
+    and comparing a row against whichever of yesterday's two rows happened to sort
+    first produced nonsense deltas - a +5.4M "gain" that was really just the two
+    identities being compared against each other. Splitting first means each row
+    is compared with its own predecessor. The window split also supersedes the
+    slots ``_attach_duplicate_slots`` derived from the (narrower) result rows, so
+    the labels a caller sees match the wider history."""
     window_start = int(datetime.now(UTC).timestamp()) - 8 * 86400
     docs = await pg_store.player_rows_window(player_name.strip(), window_start)
+    if not docs:
+        return
+    from app.trove.leaderboards.duplicates import split_series
 
-    by_board: dict[int, list[tuple[int, int, float]]] = {}
+    # {board: {slot: [(anchor, rank, score)] newest-first}} + a lookup from a
+    # concrete row back to its slot.
+    by_board: dict[int, dict[int, list[tuple[int, int, float]]]] = {}
+    slot_of: dict[tuple[int, int, int], int] = {}
+    slots_on: dict[int, int] = {}
+    grouped: dict[int, list[dict]] = {}
     for d in docs:
-        by_board.setdefault(d["leaderboard"], []).append(
-            (d["created_at"], d["rank"], d["score"])
-        )
-    for series in by_board.values():
-        series.sort(reverse=True)
+        grouped.setdefault(d["leaderboard"], []).append(d)
+    for uuid_, board_docs in grouped.items():
+        split = split_series(board_docs)
+        slots_on[uuid_] = len(split)
+        per_slot: dict[int, list[tuple[int, int, float]]] = {}
+        for s in split:
+            per_slot[s["slot"]] = sorted(
+                ((p["created_at"], p["rank"], p["score"]) for p in s["points"]),
+                reverse=True,
+            )
+            for p in s["points"]:
+                slot_of[(uuid_, p["created_at"], p["rank"])] = s["slot"]
+        by_board[uuid_] = per_slot
 
     kinds = await pg_store.board_kinds(list(by_board.keys()))
 
     for r in rows:
-        series = by_board.get(r["leaderboard"])
+        per_slot = by_board.get(r["leaderboard"])
+        if not per_slot:
+            continue
+        slot = slot_of.get((r["leaderboard"], r["created_at"], r["rank"]), 0)
+        r["slot"] = slot
+        r["slots"] = slots_on.get(r["leaderboard"], 1)
+        series = per_slot.get(slot)
         if not series:
             continue
         day = _trove_day_start(r["created_at"])
@@ -479,6 +517,39 @@ async def _attach_player_history_deltas(player_name: str, rows: list[dict]) -> N
         r["score_delta"] = r["score"] - prev[2]
 
 
+def _attach_duplicate_slots(rows: list[dict]) -> None:
+    """In-place: tag each row with ``slot``/``slots`` when a name resolves to more
+    than one entry on the same board at the same capture.
+
+    Trove's dump can list one spelling twice on a board (see ``duplicates``), and
+    both rows land under one player. Without a slot the panel renders two
+    identical-looking tiles for the board with no way to tell which is which; with
+    it, each tile is labelled and stays with the same identity between captures.
+
+    ``slots`` is 1 for the overwhelming majority of players, and callers can treat
+    that as "no duplication". Slot numbers are derived from the rows PASSED IN, so
+    a caller with a narrower window can in principle number two series differently
+    from the chart's wider window - the numbering is a display label, never an
+    identity claim."""
+    from app.trove.leaderboards.duplicates import split_series
+
+    by_board: dict[int, list[dict]] = {}
+    for r in rows:
+        by_board.setdefault(r["leaderboard"], []).append(r)
+    for board_rows in by_board.values():
+        # Cheap exit: no anchor carries two rows for this board.
+        anchors = [r["created_at"] for r in board_rows]
+        if len(set(anchors)) == len(anchors):
+            for r in board_rows:
+                r["slot"], r["slots"] = 0, 1
+            continue
+        split = split_series(board_rows)
+        total = len(split)
+        for s in split:
+            for p in s["points"]:
+                p["slot"], p["slots"] = s["slot"], total
+
+
 async def player_history(
     player_name: str, *, limit: int = 50, uuid: int | None = None,
     include_archive: bool = True, with_deltas: bool = False,
@@ -487,10 +558,15 @@ async def player_history(
     """Most recent dumps that featured a player (case-insensitive), optional board
     filter. ``window_start`` bounds the scan to recent partitions (see
     pg_store.player_rows) - callers that only need recent appearances pass it to
-    avoid the slow all-partition scan. (``include_archive`` is a no-op now.)"""
+    avoid the slow all-partition scan. (``include_archive`` is a no-op now.)
+
+    Rows carry ``slot``/``slots`` so a duplicated name renders as distinguishable
+    entries rather than two anonymous tiles on the same board."""
     out = await pg_store.player_rows(
         player_name.strip(), limit=limit, uuid=uuid, window_start=window_start,
     )
+    if out:
+        _attach_duplicate_slots(out)
     if with_deltas and out:
         await _attach_player_history_deltas(player_name.strip(), out)
     return out
@@ -601,7 +677,7 @@ async def player_profile(name: str, *, limit: int = 200, hot_only: bool = False)
         recent_window = max(recent_window, hot_start)   # never scan past the hot line
     (
         board_rows, stored_name, verified, renames_out, alt_clusters,
-        last_played, rows,
+        last_played, rows, duplicate,
     ) = await asyncio.gather(
         pg_store.player_board_summary(name),
         pg_store.player_canonical_name(name),
@@ -610,6 +686,7 @@ async def player_profile(name: str, *, limit: int = 200, hot_only: bool = False)
         _profile_alt_clusters(name, []),
         _profile_last_played(name, window_floor=hot_start),
         player_history(name, limit=limit, with_deltas=True, window_start=recent_window),
+        _profile_duplicate(name),
     )
     canonical = stored_name or (rows[0]["player_name"] if rows else name)
     # Board names for every board referenced by the recent rows OR the aggregate
@@ -661,6 +738,10 @@ async def player_profile(name: str, *, limit: int = 200, hot_only: bool = False)
         # respective feature is off or nothing was found).
         "renames": renames_out,
         "alt_clusters": alt_clusters,
+        # Set when this name resolves to more than one identity, so the page can
+        # warn instead of silently presenting two people's numbers as one
+        # player's. None for every unambiguous name.
+        "duplicate": duplicate,
     }
 
 
@@ -732,6 +813,31 @@ async def _profile_renames(canonical: str) -> dict | None:
         "current_name": hist.get("current_name"),
         "count": hist.get("rename_count", 0),
         "edges": hist.get("edges", []),
+    }
+
+
+async def _profile_duplicate(canonical: str) -> dict | None:
+    """The duplicate-name record for ``canonical``, or None when the name resolves
+    to a single identity (the normal case). Drives the profile's "this name is
+    shared" warning, so the page never presents merged numbers as one person's
+    without saying so. Never raises - the profile must survive a lookup failure."""
+    from app.trove.leaderboards import duplicates as leaderboards_duplicates
+    try:
+        rec = await leaderboards_duplicates.for_name(canonical)
+    except Exception:
+        logger.exception("profile duplicate lookup failed for %s", canonical)
+        return None
+    if not rec.get("found"):
+        return None
+    return {
+        "kind": rec.get("kind"),
+        "verdict": rec.get("verdict"),
+        "boards": rec.get("boards"),
+        "max_occurrences": rec.get("max_occurrences"),
+        "spellings": rec.get("spellings", []),
+        "first_anchor": rec.get("first_anchor"),
+        "last_anchor": rec.get("last_anchor"),
+        "summary": (rec.get("evidence") or {}).get("summary"),
     }
 
 
@@ -913,16 +1019,33 @@ async def player_history_series(player_name: str, *, days: int = 7) -> dict:
 
     meta = await pg_store.board_meta(list(by_board.keys()))
 
+    # One line per IDENTITY, not per board. A name Trove lists twice on a board
+    # used to come back as a single point set with two values at every timestamp,
+    # which the chart drew as a vertical sawtooth between two players' scores.
+    # ``split_series`` links each capture's rows to their own predecessor by score
+    # continuity, so each identity plots as its own continuous line.
+    from app.trove.leaderboards.duplicates import split_series
+
     series = []
+    duplicated_boards = 0
     for uuid_, pts in by_board.items():
-        best_rank = min(p["rank"] for p in pts)
         m = meta.get(uuid_, {"name": f"Board #{uuid_}", "reset_kind": "default"})
-        series.append({
-            "uuid": uuid_, "name": m["name"], "best_rank": best_rank,
-            "points": _inject_reset_zeros(pts, m["reset_kind"]),
-        })
-    series.sort(key=lambda s: s["best_rank"])
+        split = split_series(pts)
+        if len(split) > 1:
+            duplicated_boards += 1
+        for s in split:
+            spts = s["points"]
+            series.append({
+                "uuid": uuid_, "name": m["name"],
+                "best_rank": min(p["rank"] for p in spts),
+                # ``slots`` > 1 marks a board whose name resolves to more than one
+                # identity; the UI labels those lines and links to the tab.
+                "slot": s["slot"], "slots": len(split),
+                "points": _inject_reset_zeros(spts, m["reset_kind"]),
+            })
+    series.sort(key=lambda s: (s["best_rank"], s["uuid"], s["slot"]))
 
     return {"player_name": name, "canonical_name": canonical, "days": days,
             "window_start": window_start, "window_end": now,
+            "duplicate_boards": duplicated_boards,
             "anchors": sorted(anchors), "series": series}

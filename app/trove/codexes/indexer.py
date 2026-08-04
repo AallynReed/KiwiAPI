@@ -27,6 +27,7 @@ from app.core.config import settings
 from app.core.utils import utcnow
 from app.trove.codexes import (
     binfab,
+    blocks,
     catalogue,
     geode,
     localize,
@@ -35,7 +36,14 @@ from app.trove.codexes import (
     providers,
     recipe,
 )
-from app.trove.codexes.extract import extract_entry, refine_mount
+from app.trove.codexes.extract import (
+    blueprint_ref,
+    blueprint_stems,
+    conventional_blueprint,
+    extract_entry,
+    model_blueprint,
+    refine_mount,
+)
 from app.trove.codexes.models import to_row
 from app.trove.codexes.types import LOCALE_ROOT, PREFABS_ROOT, classify
 from app.trove.updates.cas import ContentStore
@@ -47,11 +55,16 @@ logger = logging.getLogger("kiwi.trove.codexes")
 # resolved strings, …). On the next sync the indexer force-rebuilds any branch whose
 # stored version is behind, so a parser change reaches the data WITHOUT a game update
 # or a manual rebuild - the steady-state delta only re-touches changed game files.
-CODEX_PARSER_VERSION = 12  # v12: decode_identity now finds the identity component even when it isn't the FIRST sub-message (lootboxes/pouches/eggs open with transform/loot components) - fixes items showing a raw path-stem name (e.g. "Dragondiamondpouch" -> "Diamond Dragonite Pouch") + their category/tradable
+CODEX_PARSER_VERSION = 19  # v19: recipe product detection covers three more shapes it read as absent - a product path on a field the ingredients also use (banners, geode abilities), a product that IS a crafting material (conversion + gardening recipes), and the bare token costume/skin recipes name theirs with, resolved only against a prefab that exists
+# v18: placeable models come from the game's OWN table (blocks/blocks.binfab) instead of the name convention, which cannot tell mirrored siblings apart and had every deco_arrow_*_left pointing at its right-facing twin; the convention stays only for the placeables that table omits
+# v17: a blueprint that decodes to nothing no longer ends the search - the warhorse/bull mounts ship no whole model at all, only parts, and the parts their prefab names first are the empty banner slots, so they rendered blank; falls through to the largest part the same prefab names
+# v16: placeable products resolve their model by the blueprint naming convention (placeable/deco/<stem> -> deco_<stem>, frameworks -> fw_<stem>), since a placeable prefab references no model at all - gated on the name matching EXACTLY ONE blueprint in the branch
+# v15: recipe OUTPUT read from its own wire field (16 = item form, 1 = collection/equipment ref) instead of "first non-material path in the string scan", which named an ingredient as the product for 1,044 recipes and found none at all for 2,411; plus a last-quantified-record fallback for the plain crafting recipes that carry no product field
+# v14: blueprint resolution - recipes borrow their output item's model (they reference none of their own), multi-part creatures prefer the whole-model "_ui" blueprint over a component part that renders blank, author-credited names survive the "," / " " between handles, and a run that matches no real blueprint file is dropped instead of stored as a name that can only 404
 
 # Bumped when the rig extractor or its coverage changes - forces a rig-only rebuild on
 # the next sync WITHOUT a (heavier) full codex re-parse.
-RIG_PARSER_VERSION = 1  # v1: scan the WHOLE prefab tree (skins/npc/placeable/item/…), not just collections
+RIG_PARSER_VERSION = 2  # v2: carry the source PREFAB onto every row - the creature's identity, which a shared skeleton + a flat blueprints/ folder cannot reconstruct
 
 _FLUSH_AT = 1000
 
@@ -66,6 +79,8 @@ _GEODE_MULTIPLIERS = PREFABS_ROOT + "meta/geode_multipliers.binfab"
 _GEODE_TABLE = PREFABS_ROOT + "collections/collection_geodecompanion.binfab"
 # The recipe catalogue membership table (category/group + which recipes are current).
 _RECIPE_TABLE = PREFABS_ROOT + "collections/collection_recipe.binfab"
+# The placeable/block -> model table: where the game states what a placeable looks like.
+_BLOCKS_TABLE = PREFABS_ROOT + "blocks/blocks.binfab"
 
 
 @dataclass
@@ -89,6 +104,15 @@ class _Maps:
     prefab_shas: dict[str, str] = field(default_factory=dict)
     _item_meta: dict[str, dict] = field(default_factory=dict)
     valid_blueprints: set[str] = field(default_factory=set)
+    # `blueprint basename without its [author] credit` -> blueprints carrying it, for the
+    # placeable naming convention (see `extract.conventional_blueprint`).
+    blueprint_stems: dict[str, list[str]] = field(default_factory=dict)
+    # blueprint name (lowercased, rel to blueprints/) -> content sha, so `model_size` can
+    # read a candidate's voxels out of the CAS.
+    blueprint_shas: dict[str, str] = field(default_factory=dict)
+    _model_size: dict[str, int] = field(default_factory=dict)
+    # `placeable/block prefab path -> model name`, from `blocks/blocks.binfab`.
+    block_models: dict[str, str] = field(default_factory=dict)
 
     def _read(self, rel: str) -> bytes | None:
         """Bytes of a referenced prefab by its logical path (rel to prefabs/, no ext)."""
@@ -99,19 +123,65 @@ class _Maps:
         sha = self.prefab_shas.get(full)
         return self.store.get(sha) if sha else None
 
+    def prefab_exists(self, rel: str) -> bool:
+        """Is there a prefab at this logical path? Gates the costume/skin product
+        token, so a token only becomes a product path when the prefab is really there."""
+        key = rel.replace("\\", "/").removesuffix(".binfab")
+        full = (key if key.startswith(PREFABS_ROOT) else PREFABS_ROOT + key) + ".binfab"
+        return full in self.prefab_shas
+
+    def model_size(self, name: str) -> int:
+        """Voxel count of a blueprint, 0 when it's an empty placeholder / unreadable.
+
+        Memoized per name - the extractor asks about a couple of candidates per prefab,
+        and the same part blueprints recur across a creature's whole family. The cheap
+        ``is_empty_blueprint`` check short-circuits the placeholders, which is the case
+        this exists to detect, so only real models pay for a decode."""
+        from app.trove.render.voxel import decode, is_empty_blueprint, to_render_voxels
+        key = name.replace("\\", "/").lower().removeprefix("blueprints/")
+        cached = self._model_size.get(key)
+        if cached is not None:
+            return cached
+        size = 0
+        sha = self.blueprint_shas.get(key)
+        raw = self.store.get(sha) if (sha and self.store is not None) else None
+        if raw and not is_empty_blueprint(raw):
+            try:
+                size = len(to_render_voxels(decode(raw)))
+            except Exception:  # noqa: BLE001 - an undecodable model is simply not usable
+                size = 0
+        self._model_size[key] = size
+        return size
+
     def item_meta(self, rel: str) -> dict:
-        """Resolve {name, desc} for an item/collection prefab (memoized). Empty when
-        the prefab or its locale keys can't be resolved."""
+        """Resolve {name, desc, blueprint} for an item/collection prefab (memoized).
+        Empty when the prefab or its locale keys can't be resolved.
+
+        ``blueprint`` is what lets a recipe show its product: recipe prefabs carry no
+        model reference at all, so the only way to a thumbnail is the output item's
+        own prefab - which this already reads for the name."""
         norm = rel.replace("\\", "/").removesuffix(".binfab").lower()
         cached = self._item_meta.get(norm)
         if cached is not None:
             return cached
-        meta = {"name": "", "desc": ""}
+        meta = {"name": "", "desc": "", "blueprint": None}
         content = self._read(norm)
         if content:
             ident = binfab.decode_identity(content) or {}
             meta["name"] = self.loc.get(ident.get("name_key") or "", "") or ""
             meta["desc"] = self.loc.get(ident.get("desc_key") or "", "") or ""
+            meta["blueprint"] = blueprint_ref(
+                content, valid_blueprints=self.valid_blueprints, path=norm,
+                model_size=self.model_size)
+        if meta["blueprint"] is None:
+            # Placeables reference no model of their own. The game's own table states
+            # the mapping; the name convention is only for the placeables it omits.
+            model = self.block_models.get(norm)
+            if model:
+                meta["blueprint"] = model_blueprint(
+                    model, self.valid_blueprints, self.blueprint_stems)
+            if meta["blueprint"] is None:
+                meta["blueprint"] = conventional_blueprint(norm, self.blueprint_stems)
         self._item_meta[norm] = meta
         return meta
 
@@ -200,19 +270,24 @@ async def _load_prefab_shas(branch: str) -> dict[str, str]:
     return {r["path"]: r["content_sha256"] for r in rows}
 
 
-async def _load_valid_blueprints(branch: str) -> set[str]:
-    """All valid blueprint paths (lowercased, relative to blueprints/) in the branch."""
+async def _load_valid_blueprints(branch: str, shas: dict[str, str] | None = None) -> set[str]:
+    """All valid blueprint paths (lowercased, relative to blueprints/) in the branch.
+
+    Pass ``shas`` to collect ``name -> content sha`` in the same pass - that's what lets
+    the extractor ask whether a candidate blueprint actually has anything to draw."""
     blueprints = set()
     coll = UpdateState.get_pymongo_collection()
     cursor = coll.find(
         {"branch": branch, "path": {"$regex": "^blueprints/"}},
-        {"path": 1, "_id": 0}
+        {"path": 1, "content_sha256": 1, "_id": 0}
     )
     async for row in cursor:
         path = row["path"]
         if path.startswith("blueprints/"):
             path = path[len("blueprints/"):]
         blueprints.add(path.lower())
+        if shas is not None and row.get("content_sha256"):
+            shas[path.lower()] = row["content_sha256"]
 
     root = settings.trove_local_game_dir
     if root:
@@ -251,6 +326,9 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
         p[len(recipes_root):].removesuffix(".binfab").lower()
         for p in prefab_shas if p.startswith(recipes_root) and p.endswith(".binfab")
     }
+    blocks_table = await _load_file(branch, store, _BLOCKS_TABLE)
+    bp_shas: dict[str, str] = {}
+    valid = await _load_valid_blueprints(branch, bp_shas)
     maps = _Maps(
         loc=await _load_locale_map(branch, store),
         mount_categories=binfab.collection_category_map(mount_table) if mount_table else {},
@@ -262,14 +340,18 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
         recipe_providers=await _load_recipe_providers(branch, store, known_recipe_ids),
         store=store,
         prefab_shas=prefab_shas,
-        valid_blueprints=await _load_valid_blueprints(branch),
+        valid_blueprints=valid,
+        blueprint_stems=blueprint_stems(valid),
+        blueprint_shas=bp_shas,
+        block_models=blocks.parse_block_models(blocks_table) if blocks_table else {},
     )
     logger.info("codexes[%s]: %d mount categories, %d mastery rows, %d geode rows, "
                 "%d geode members, %d upgrade trees, %d prefab refs, %d blueprints, "
-                "%d recipe catalogue, %d recipe providers", branch,
+                "%d recipe catalogue, %d recipe providers, %d block models", branch,
                 len(maps.mount_categories), len(maps.multipliers), len(maps.geode_multipliers),
                 len(maps.geode_members), len(maps.upgrade_trees), len(maps.prefab_shas),
-                len(maps.valid_blueprints), len(maps.recipe_catalogue), len(maps.recipe_providers))
+                len(maps.valid_blueprints), len(maps.recipe_catalogue), len(maps.recipe_providers),
+                len(maps.block_models))
     return maps
 
 
@@ -324,7 +406,9 @@ def _parse_entry(branch: str, path: str, sha: str, ctype: str, maps: _Maps, now)
     content = maps.store.get(sha) if maps.store is not None else None
     if content is None:
         return None
-    entry = extract_entry(ctype, path, content, maps.loc, resolve_meta=maps.item_meta, valid_blueprints=maps.valid_blueprints)
+    entry = extract_entry(ctype, path, content, maps.loc, resolve_meta=maps.item_meta,
+                          valid_blueprints=maps.valid_blueprints, model_size=maps.model_size,
+                          prefab_exists=maps.prefab_exists)
     rel = path[len(PREFABS_ROOT):].removesuffix(".binfab")
     if ctype == "mount":  # split dragons out by their collection category
         refine_mount(entry, rel, maps.mount_categories)
@@ -515,11 +599,17 @@ async def ensure_indexed(branch: str, store: ContentStore, summary: dict) -> dic
 
 
 def _rig_rows(branch: str, store: ContentStore, candidates: list[tuple[str, str]]) -> list[tuple]:
-    """``(branch, blueprint, skeleton, ap_key)`` rows for the given (path, sha) prefabs.
-    Reads each blob, cheap-prefilters on ``.skeleton.gr2``, extracts structurally. Sync
-    (run in a thread): the blob reads + parse are the heavy part."""
+    """``(branch, prefab, blueprint, skeleton, ap_key)`` rows for the given (path, sha)
+    prefabs. Reads each blob, cheap-prefilters on ``.skeleton.gr2``, extracts
+    structurally. Sync (run in a thread): the blob reads + parse are the heavy part.
+
+    ONE prefab is ONE creature - ``extract_rig_refs`` returns exactly that creature's
+    part set - so the prefab path is carried onto every row as the creature's identity.
+    Nothing downstream can reconstruct it (a skeleton is shared by every variant that
+    uses it, and the blueprints all live in the same flat folder), so dropping it here
+    is what made the embed assemble a chimera."""
     rows: list[tuple] = []
-    for _path, sha in candidates:
+    for path, sha in candidates:
         content = store.get(sha)
         if not content or b".skeleton.gr2" not in content:
             continue                           # cheap pre-filter: no skeleton, no rig
@@ -527,7 +617,7 @@ def _rig_rows(branch: str, store: ContentStore, candidates: list[tuple[str, str]
         if not rig:
             continue
         skeleton = rig["skeleton"]
-        rows.extend((branch, bp, skeleton, ap) for bp, ap in rig["parts"].items())
+        rows.extend((branch, path, bp, skeleton, ap) for bp, ap in rig["parts"].items())
     return rows
 
 
@@ -555,22 +645,28 @@ async def reindex_rigs(branch: str, store: ContentStore) -> int:
 
 async def reindex_rigs_changes(branch: str, store: ContentStore, ordinal: int) -> int:
     """Steady-state rig update for one game version: re-extract only the prefabs that
-    changed and UPSERT their bindings (a creature rarely loses a part, so a removed
-    binding just lingers harmlessly until the next full rebuild)."""
+    changed and re-state their bindings.
+
+    Scoped by PREFAB, so a creature that loses a part in an update actually loses it -
+    now that the prefab is part of the key, a stale row would otherwise keep being
+    assembled onto that one creature until the next full rebuild. Removed prefabs are
+    included in the delete set (they re-state to nothing)."""
     rows = await UpdateChange.get_pymongo_collection().find(
         {"branch": branch, "ordinal": ordinal},
         {"path": 1, "type": 1, "content_sha256": 1, "_id": 0},
     ).to_list(length=None)
-    changed = [(r["path"], r["content_sha256"]) for r in rows
-               if r["type"] != "removed" and r.get("content_sha256")
-               and r["path"].startswith(PREFABS_ROOT) and r["path"].endswith(".binfab")]
-    if not changed:
+    touched = [r for r in rows
+               if r["path"].startswith(PREFABS_ROOT) and r["path"].endswith(".binfab")]
+    prefabs = [r["path"] for r in touched]
+    changed = [(r["path"], r["content_sha256"]) for r in touched
+               if r["type"] != "removed" and r.get("content_sha256")]
+    if not prefabs:
         return 0
     new_rows = await asyncio.to_thread(_rig_rows, branch, store, changed)
-    n = await pg_store.upsert_rig_bindings(new_rows)
+    n = await pg_store.replace_prefab_rig_bindings(branch, prefabs, new_rows)
     await pg_store.touch_meta(branch)
-    logger.info("codexes[%s]: rig delta ordinal=%s - %d bindings from %d changed prefabs",
-                branch, ordinal, n, len(changed))
+    logger.info("codexes[%s]: rig delta ordinal=%s - %d bindings from %d re-parsed "
+                "prefabs (%d re-stated)", branch, ordinal, n, len(changed), len(prefabs))
     return n
 
 

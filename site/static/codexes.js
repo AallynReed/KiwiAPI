@@ -221,12 +221,19 @@
       </button>`;
   }
 
+  // Creature types are built from parts on a skeleton, so the single blueprint on the
+  // row is a torso or a jaw (and the game's own _ui icon is a small stand-in). Sending
+  // the prefab path lets the renderer assemble the whole animal; it falls back to the
+  // blueprint by itself whenever it can't supply every part.
+  const RIGGED_TYPES = { mount: 1, dragon: 1 };
+
   // Blueprint render thumbnail (lazy so only on-screen cards trigger a render);
   // a missing/unrenderable blueprint 404s and onerror drops the image cleanly.
   function thumbHTML(e, size) {
     if (!e.blueprint) return '';
     const src = apiUrl('/site/codexes/render?blueprint=' + enc(e.blueprint)
-      + '&branch=' + enc(state.branch) + (size ? '&dim=' + size : ''));
+      + '&branch=' + enc(state.branch) + (size ? '&dim=' + size : '')
+      + (RIGGED_TYPES[e.codex_type] && e.path ? '&prefab=' + enc(e.path) : ''));
     return `<span class="cdx-card-img"><img loading="lazy" decoding="async" alt=""
       src="${esc(src)}" onerror="this.closest('.cdx-card-img').remove()"></span>`;
   }

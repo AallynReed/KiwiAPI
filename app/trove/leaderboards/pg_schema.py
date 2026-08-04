@@ -141,6 +141,33 @@ CREATE INDEX IF NOT EXISTS player_rename_to_anchor ON player_rename (to_anchor D
 CREATE INDEX IF NOT EXISTS player_rename_from ON player_rename (from_name_lower);
 CREATE INDEX IF NOT EXISTS player_rename_to ON player_rename (to_name_lower);
 
+-- Names that resolve to more than one identity. Two distinct causes, one column
+-- (``kind``) apart: ``same_name`` = Trove's own dump lists the identical spelling
+-- twice on the SAME board (two rows, two scores, one ``player`` row here), and
+-- ``case`` = two spellings differing only in capitalisation, which ``name_lower``
+-- folds into one player. Both make a single profile show two people's numbers, so
+-- both are recorded here and surfaced on the Possible-duplicates tab.
+-- One row per name (keyed by ``name_lower``): re-detecting refreshes it in place,
+-- keeping the EARLIEST ``first_anchor`` so the record dates the duplication.
+-- ``evidence`` holds the per-board series breakdown (which line is still moving,
+-- which has stalled) - the same transparency contract as rename/cheater evidence.
+CREATE TABLE IF NOT EXISTS player_duplicate (
+    name_lower      TEXT   PRIMARY KEY,
+    name            TEXT   NOT NULL,
+    kind            TEXT   NOT NULL DEFAULT 'same_name',
+    verdict         TEXT   NOT NULL DEFAULT 'all_idle',
+    boards          INTEGER NOT NULL DEFAULT 0,
+    max_occurrences INTEGER NOT NULL DEFAULT 2,
+    spellings       JSONB   NOT NULL DEFAULT '[]'::jsonb,
+    first_anchor    BIGINT  NOT NULL,
+    last_anchor     BIGINT  NOT NULL,
+    evidence        JSONB   NOT NULL DEFAULT '{}'::jsonb,
+    method_version  INTEGER NOT NULL DEFAULT 1,
+    updated_at      BIGINT  NOT NULL
+);
+CREATE INDEX IF NOT EXISTS player_duplicate_last ON player_duplicate (last_anchor DESC);
+CREATE INDEX IF NOT EXISTS player_duplicate_kind ON player_duplicate (kind);
+
 CREATE INDEX IF NOT EXISTS class_activity_we ON class_activity_estimate (window_end);
 -- ``estimate_clean`` (the Power-Rank-filtered "clean" view) was added after the
 -- table shipped; ADD it idempotently so an existing deploy gains the column.

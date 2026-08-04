@@ -102,14 +102,21 @@
                     </div>
                 </div>
 
-                <a class="nav-icon" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
-                <a class="nav-icon" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
-                <a class="nav-support {{ 'active' if _p == '/support' else '' }}" href="/support" aria-label="Support" data-i18n-title title="Support the project"><i class="fa-solid fa-heart"></i></a>
-                <span id="nav-account" class="nav-account" data-state="loading"></span>
+                {# Social icons + account + language are one "utility cluster".
+                   On desktop the wrapper is ``display: contents`` so these stay
+                   direct flex children of .nav-links exactly as before; in the
+                   mobile drawer it becomes a single row, so the three 36x36
+                   icons don't each claim a full-width row of their own. #}
+                <div class="nav-utility">
+                    <a class="nav-icon" href="https://github.com/AallynReed/BetterTroveTools" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a class="nav-icon" href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                    <a class="nav-support {{ 'active' if _p == '/support' else '' }}" href="/support" aria-label="Support" data-i18n-title title="Support the project"><i class="fa-solid fa-heart"></i></a>
+                    <span id="nav-account" class="nav-account" data-state="loading"></span>
 
-                <span class="lang-picker">
-                    <select id="langSelect" class="lang-select" aria-label="Language"></select>
-                </span>
+                    <span class="lang-picker">
+                        <select id="langSelect" class="lang-select" aria-label="Language"></select>
+                    </span>
+                </div>
             </nav>
         </div>
     </header>

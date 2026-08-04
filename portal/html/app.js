@@ -1678,6 +1678,11 @@ async function renderLeaderboards() {
           <button class="btn small danger" id="rc-ren-reset" type="button">Reset &amp; recalculate</button>
         </div>
         <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Duplicate names</strong> <span class="muted" style="font-size:.78rem">— names Trove lists twice on one board, whole archive (background). Dates when each duplication started; the live pass only sees the newest capture.</span></span>
+          <button class="btn small" id="rc-dup-rebuild" type="button">Rebuild</button>
+          <button class="btn small danger" id="rc-dup-reset" type="button">Reset &amp; recalculate</button>
+        </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
           <span style="flex:1 1 200px"><strong>Player board aggregate</strong> <span class="muted" style="font-size:.78rem">— per-player best/latest/appearances that powers the fast /player profile; maintained at ingest. Seed once on an existing dataset or after backfills (whole archive, background).</span></span>
           <button class="btn small" id="rc-agg-rebuild" type="button">Rebuild</button>
         </div>
@@ -1882,6 +1887,47 @@ function wireRecomputeCard() {
      <strong>background</strong>; the Possible-renames tab fills in as it goes.</p>
      <p class="hint">Fully derived from the captures - nothing irreplaceable is lost.</p>`,
     async () => { await postRenames(true); show("Rename history reset + rebuild started (background)…"); toast("Rename reset started", "ok"); pollRenames(); },
+  );
+
+  // Duplicate-name backfill: a background walk of EVERY stored capture, folding
+  // each anchor's duplicated names into the record so first_anchor dates the real
+  // start. NOTE: 'case' groups (spellings differing only in capitalisation) are
+  // captured at INGEST from the raw dump, so a reset drops that history until the
+  // backlog is re-ingested - the rebuild only recovers same-name groups.
+  const postDupes = (reset) =>
+    API.call(`/v1/leaderboards/duplicates-backfill?clear_first=${reset ? "true" : "false"}`, { method: "POST" });
+  let _dupPoll = null;
+  const pollDupes = () => {
+    if (_dupPoll) clearInterval(_dupPoll);
+    _dupPoll = setInterval(async () => {
+      let s;
+      try { s = await API.call("/v1/leaderboards/duplicates-backfill-status"); }
+      catch (_) { return; }
+      if (s && s.running) {
+        const total = s.total || 0, done = s.done || 0;
+        const pct = total ? Math.floor((done / total) * 100) : 0;
+        show(`Rebuilding duplicate names… ${done}/${total} captures (${pct}%), `
+           + `${s.detected || 0} name(s) found.`);
+      } else {
+        clearInterval(_dupPoll); _dupPoll = null;
+        if (s) show(`Duplicate names rebuilt: ${s.detected ?? 0} name(s) across ${s.done ?? 0} captures. `
+                  + `${s.recorded_duplicates ?? 0} recorded total.`);
+      }
+    }, 1500);
+  };
+  on("rc-dup-rebuild", async () => {
+    try { await postDupes(false); show("Duplicate-name rebuild started (background)…"); toast("Duplicate rebuild started", "ok"); pollDupes(); }
+    catch (ex) { toast(ex.message || "Failed to start rebuild", "err"); }
+  });
+  onReset(
+    "rc-dup-reset", "Reset duplicate names?",
+    `<p>Deletes every recorded duplicate-name group and re-detects them across the <strong>whole</strong>
+     stored capture history. Runs in the <strong>background</strong>; the Possible-duplicates tab fills
+     in as it goes.</p>
+     <p class="hint">One caveat: capitalisation-only collisions are recorded at ingest from the raw dump,
+     so those are <strong>not</strong> rebuilt here — they come back as new captures land (or on a
+     backlog re-ingest). Same-name groups are fully derived from stored captures.</p>`,
+    async () => { await postDupes(true); show("Duplicate names reset + rebuild started (background)…"); toast("Duplicate reset started", "ok"); pollDupes(); },
   );
 
   // Player board aggregate: full all-history recompute in the background (seeds

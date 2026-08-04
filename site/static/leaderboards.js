@@ -122,16 +122,21 @@
     cheaterDetectionEnabled: true,
     altClustersEnabled: true,
     renamesEnabled: true,   // master switch for the Possible-renames tab (config)
+    duplicatesEnabled: true,  // master switch for the Possible-duplicates tab (config)
     cheaters: null,         // cached payload from /site/leaderboards/cheaters (players + clusters)
     cheatersMinConfidence: readMinConfidence(),  // cheaters slider value, persisted
     clustersMinConfidence: readClustersMinConfidence(),  // clusters slider value, persisted
     renames: null,          // cached payload from /site/leaderboards/renames
+    duplicates: null,       // cached payload from /site/leaderboards/duplicates
+    duplicatesKind: '',     // active cause filter on that tab ('' = all)
     renamesMinConfidence: readRenamesMinConfidence(),  // renames slider value, persisted
-    activeTab: 'boards',         // 'boards' | 'cheaters' | 'clusters' | 'renames'
+    activeTab: 'boards',         // 'boards' | 'cheaters' | 'clusters' | 'renames' | 'duplicates'
     cheatersLoaded: false,       // becomes true after the first lazy fetch (shared by both tabs)
     cheatersLoading: false,      // guards against double-firing during fetch
     renamesLoaded: false,        // becomes true after the first lazy renames fetch
     renamesLoading: false,       // guards against double-firing during the renames fetch
+    duplicatesLoaded: false,     // same pair for the duplicates tab
+    duplicatesLoading: false,
     boardChart: null,            // {uuid, data} - cached so resize/lang re-renders don't refetch
     playerChart: null,           // {name, data} - same idea for the per-player chart
     player: null,                // currently-open player name (mirrored into the URL hash for sharing)
@@ -192,10 +197,17 @@
   const $renamesFilterHint = document.getElementById('lb-renames-filter-hint');
   const $tabRenamesBtn = document.getElementById('lb-tab-renames');
   const $tabRenamesBadge = document.getElementById('lb-tab-renames-badge');
+  // Possible-duplicates tab - names that resolve to more than one player.
+  const $duplicatesBody = document.getElementById('lb-duplicates-body');
+  const $duplicatesMeta = document.getElementById('lb-duplicates-meta');
+  const $tabDuplicatesBtn = document.getElementById('lb-tab-duplicates');
+  const $tabDuplicatesBadge = document.getElementById('lb-tab-duplicates-badge');
+  const $playerDupe = document.getElementById('lb-player-dupe');
   const $paneBoards = document.getElementById('lb-pane-boards');
   const $paneCheaters = document.getElementById('lb-pane-cheaters');
   const $paneClusters = document.getElementById('lb-pane-clusters');
   const $paneRenames = document.getElementById('lb-pane-renames');
+  const $paneDuplicates = document.getElementById('lb-pane-duplicates');
   const $boardSearch = document.getElementById('lb-board-search');
   const $boardList = document.getElementById('lb-board-list');
   const $entriesTitle = document.getElementById('lb-entries-title');
@@ -246,6 +258,7 @@
       state.cheaterDetectionEnabled = config.cheater_detection_enabled !== false;
       state.altClustersEnabled = config.alt_clusters_enabled !== false;
       state.renamesEnabled = config.renames_enabled !== false;
+      state.duplicatesEnabled = config.duplicates_enabled !== false;
     }
     applyAntiCheatToggles();
     renderSubtitle();
@@ -315,7 +328,7 @@
       // view is ready to render (or stay hidden) regardless of which tab
       // the user lands on. If hash says cheaters, this triggers the
       // first fetch.
-      if (hash.tab === 'cheaters' || hash.tab === 'clusters' || hash.tab === 'renames') {
+      if (hash.tab && hash.tab !== 'boards' && TABS.includes(hash.tab)) {
         switchTab(hash.tab);
       }
     } finally {
@@ -326,7 +339,7 @@
 
   // 'cheaters' and 'clusters' are lazy-fetched on first activation and share
   // one /cheaters payload; URL hash carries tab= for deep-link + back-button.
-  const TABS = ['boards', 'cheaters', 'clusters', 'renames'];
+  const TABS = ['boards', 'cheaters', 'clusters', 'renames', 'duplicates'];
 
   // A tab is "available" only when its server-side calculation is enabled.
   // Cheaters and clusters are independent switches - either can run alone.
@@ -334,6 +347,7 @@
     if (name === 'cheaters') return state.cheaterDetectionEnabled;
     if (name === 'clusters') return state.altClustersEnabled;
     if (name === 'renames') return state.renamesEnabled;
+    if (name === 'duplicates') return state.duplicatesEnabled;
     return true;
   }
 
@@ -348,6 +362,9 @@
     if ($tabCheatersBtn) $tabCheatersBtn.style.display = tabAvailable('cheaters') ? '' : 'none';
     if ($tabClustersBtn) $tabClustersBtn.style.display = tabAvailable('clusters') ? '' : 'none';
     if ($tabRenamesBtn) $tabRenamesBtn.style.display = tabAvailable('renames') ? '' : 'none';
+    if ($tabDuplicatesBtn) {
+      $tabDuplicatesBtn.style.display = tabAvailable('duplicates') ? '' : 'none';
+    }
   }
 
   function switchTab(name) {
@@ -362,6 +379,7 @@
       cheaters: { btn: $tabCheatersBtn, pane: $paneCheaters },
       clusters: { btn: $tabClustersBtn, pane: $paneClusters },
       renames: { btn: $tabRenamesBtn, pane: $paneRenames },
+      duplicates: { btn: $tabDuplicatesBtn, pane: $paneDuplicates },
     };
     for (const key of TABS) {
       const { btn, pane } = tabEls[key];
@@ -381,6 +399,7 @@
     // Both anti-cheat tabs are served by the same payload.
     if (name === 'cheaters' || name === 'clusters') ensureCheatersLoaded();
     if (name === 'renames') ensureRenamesLoaded();
+    if (name === 'duplicates') ensureDuplicatesLoaded();
   }
 
   // Render both anti-cheat panes from the shared payload, so switching
@@ -572,6 +591,212 @@
           <ul class="lb-rename-boards">${boardRows}</ul>
         </div>
       </article>`;
+  }
+
+  // ── Possible duplicates ───────────────────────────────────────────────
+  // Names that don't map to a single player. Unlike renames there is no
+  // confidence to threshold - the duplication is a fact in the capture - so the
+  // filter is by CAUSE instead. Lazy-fetched on first activation, cached on
+  // state.duplicates so a language or filter change re-renders without a
+  // refetch.
+  async function ensureDuplicatesLoaded() {
+    if (state.duplicatesLoaded || state.duplicatesLoading) {
+      renderDuplicatesTab();
+      return;
+    }
+    state.duplicatesLoading = true;
+    if ($duplicatesMeta) {
+      $duplicatesMeta.textContent = t('Loading the latest data - this can take a moment.');
+    }
+    try {
+      const payload = await fetchJSON('/site/leaderboards/duplicates?limit=200');
+      state.duplicates = payload;
+      state.duplicatesLoaded = true;
+      renderDuplicatesTab(payload);
+    } catch (err) {
+      state.duplicates = { _error: err };
+      renderDuplicatesTab(state.duplicates);
+    } finally {
+      state.duplicatesLoading = false;
+    }
+  }
+
+  // A group matches the active filter when its kind is that cause - or 'both',
+  // which carries either.
+  function duplicateMatchesKind(d, kind) {
+    if (!kind) return true;
+    return d.kind === kind || d.kind === 'both';
+  }
+
+  function renderDuplicatesTab(payload) {
+    if (payload && !payload._error) state.duplicates = payload;
+    const data = state.duplicates;
+    if (!$duplicatesBody || data == null) return;
+
+    for (const chip of document.querySelectorAll('[data-dupe-kind]')) {
+      chip.classList.toggle('active', (chip.dataset.dupeKind || '') === state.duplicatesKind);
+    }
+
+    if (data._error) {
+      if ($tabDuplicatesBadge) $tabDuplicatesBadge.hidden = true;
+      if ($duplicatesMeta) $duplicatesMeta.textContent = t('Failed to load') + '.';
+      $duplicatesBody.innerHTML = '';
+      return;
+    }
+
+    const all = data.duplicates || [];
+    const visible = all.filter((d) => duplicateMatchesKind(d, state.duplicatesKind));
+    // The badge counts groups still present in the newest capture - a historical
+    // group that has since resolved shouldn't nag on the tab forever.
+    const latest = data.latest_anchor;
+    const current = all.filter((d) => latest && d.last_anchor === latest).length;
+
+    if ($tabDuplicatesBadge) {
+      $tabDuplicatesBadge.hidden = current === 0;
+      $tabDuplicatesBadge.textContent = String(current);
+    }
+
+    if ($duplicatesMeta) {
+      if (all.length === 0) {
+        $duplicatesMeta.textContent = t('No shared names found - every name maps to one player.');
+      } else if (visible.length === 0) {
+        $duplicatesMeta.textContent = t('No names match this filter.');
+      } else {
+        $duplicatesMeta.textContent = t('{c} shared name(s), {n} still in the latest capture.')
+          .replace('{c}', visible.length).replace('{n}', current);
+      }
+    }
+
+    if (!visible.length) {
+      $duplicatesBody.innerHTML = '<p class="lb-cheaters-empty" data-i18n>No shared names flagged.</p>';
+      rerunI18n();
+      return;
+    }
+
+    $duplicatesBody.innerHTML = visible.map(renderDuplicateCard).join('');
+    rerunI18n();
+    for (const row of $duplicatesBody.querySelectorAll('[data-didx]')) {
+      const head = row.querySelector('[data-act="toggle-dupe"]');
+      if (head) {
+        head.addEventListener('click', () => {
+          const expanded = row.classList.toggle('expanded');
+          head.setAttribute('aria-expanded', String(expanded));
+        });
+      }
+      for (const link of row.querySelectorAll('[data-act="dupe-player"]')) {
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const nm = link.dataset.name || '';
+          if (!nm) return;
+          $playerSearch.value = nm;
+          searchPlayer(nm, true);
+          $playerPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+    }
+  }
+
+  // Plain-language label per verdict. Deliberately descriptive - we never assert
+  // which of the score lines is the "real" player, because the capture carries
+  // no id that could tell us.
+  function duplicateVerdictLabel(verdict) {
+    if (verdict === 'one_live') return t('One still active, one stopped');
+    if (verdict === 'multi_live') return t('Both still active');
+    if (verdict === 'case_only') return t('Only the capitalisation differs');
+    return t('Neither has moved recently');
+  }
+
+  function duplicateVerdictClass(verdict) {
+    if (verdict === 'multi_live') return 'lb-dupe-verdict-hot';
+    if (verdict === 'one_live') return 'lb-dupe-verdict-warm';
+    return 'lb-dupe-verdict-cool';
+  }
+
+  function duplicateKindLabel(kind) {
+    if (kind === 'case') return t('Capitalisation');
+    if (kind === 'both') return t('Both causes');
+    return t('Listed twice');
+  }
+
+  function renderDuplicateCard(d, idx) {
+    const boards = (d.evidence && Array.isArray(d.evidence.boards)) ? d.evidence.boards : [];
+    const summaryTxt = (d.evidence && d.evidence.summary) || '';
+    const seen = d.first_anchor ? formatAnchor(d.first_anchor) : '';
+    const boardLabel = t('{n} board(s)').replace('{n}', d.boards != null ? d.boards : boards.length);
+    const spellings = Array.isArray(d.spellings) ? d.spellings : [];
+
+    // Per-board breakdown: each separated score line with its current value and
+    // whether it is still climbing or has stalled.
+    const boardRows = boards.slice(0, 20).map((b) => {
+      const lines = (b.series || []).map((sr) => {
+        const status = sr.moved ? t('still climbing') : (sr.frozen ? t('stopped') : t('flat'));
+        const cls = sr.moved ? 'lb-dupe-line-live' : (sr.frozen ? 'lb-dupe-line-dead' : '');
+        return '<span class="lb-dupe-line ' + cls + '">'
+          + '<b>#' + esc(String(sr.slot + 1)) + '</b> '
+          + esc(fmtNum(sr.last_score)) + ' <i>' + esc(status) + '</i></span>';
+      }).join('');
+      return '<li class="lb-dupe-board">'
+        + '<span class="lb-dupe-board-name">' + esc(b.name || String(b.uuid)) + '</span>'
+        + '<span class="lb-dupe-board-lines">' + lines + '</span>'
+        + '</li>';
+    }).join('');
+
+    const spellingChips = spellings.length > 1
+      ? '<p class="lb-dupe-spellings">' + esc(t('Spellings seen:')) + ' '
+        + spellings.map((sp) => '<code>' + esc(sp) + '</code>').join(' ') + '</p>'
+      : '';
+
+    return '<article class="lb-dupe" data-didx="' + idx + '">'
+      + '<button type="button" class="lb-dupe-head" data-act="toggle-dupe" aria-expanded="false">'
+      + '<span class="lb-dupe-names">'
+      + '<a href="#" class="lb-dupe-name" data-act="dupe-player" data-name="'
+      + esc(d.name) + '">' + esc(d.name) + '</a>'
+      + '<span class="lb-dupe-multiplier">&times;' + esc(String(d.max_occurrences || 2)) + '</span>'
+      + '</span>'
+      + '<span class="lb-dupe-tags">'
+      + '<span class="lb-dupe-verdict ' + duplicateVerdictClass(d.verdict) + '">'
+      + esc(duplicateVerdictLabel(d.verdict)) + '</span>'
+      + '<span class="lb-dupe-kind">' + esc(duplicateKindLabel(d.kind)) + '</span>'
+      + '<span class="lb-dupe-count">' + esc(boardLabel) + '</span>'
+      + '<i class="fa-solid fa-chevron-down lb-dupe-caret" aria-hidden="true"></i>'
+      + '</span></button>'
+      + '<div class="lb-dupe-detail">'
+      + (summaryTxt ? '<p class="lb-dupe-summary">' + esc(summaryTxt) + '</p>' : '')
+      + spellingChips
+      + (seen ? '<p class="lb-dupe-when">'
+          + esc(t('First seen {when}').replace('{when}', seen)) + '</p>' : '')
+      + '<ul class="lb-dupe-boards">' + boardRows + '</ul>'
+      + '</div></article>';
+  }
+
+  // Shared-name banner inside the player panel. Fires alongside the history
+  // fetch; stays hidden for the ~all names that map to one player.
+  async function loadPlayerDuplicate(name) {
+    if (!$playerDupe) return;
+    $playerDupe.hidden = true;
+    if (!state.duplicatesEnabled) return;
+    const data = await fetchJSON(
+      '/site/leaderboards/duplicates/' + encodeURIComponent(name),
+    );
+    if (!data || !data.found) return;
+    const summaryTxt = (data.evidence && data.evidence.summary) || '';
+    const fallback = t('Trove lists this name more than once, so the numbers below cover more than one player.');
+    $playerDupe.innerHTML =
+      '<i class="fa-solid fa-triangle-exclamation lb-player-dupe-icon" aria-hidden="true"></i>'
+      + '<div class="lb-player-dupe-body">'
+      + '<p class="lb-player-dupe-title">'
+      + esc(t('This name belongs to more than one player')) + '</p>'
+      + '<p class="lb-player-dupe-text">' + esc(summaryTxt || fallback) + '</p>'
+      + '<p class="lb-player-dupe-text">'
+      + esc(t('The chart below draws each one as its own line. Ranks and totals still count them together.'))
+      + '</p>'
+      + '<button type="button" class="lb-player-dupe-link" data-act="open-dupes">'
+      + esc(t('See all shared names')) + '</button>'
+      + '</div>';
+    $playerDupe.hidden = false;
+    const btn = $playerDupe.querySelector('[data-act="open-dupes"]');
+    if (btn) btn.addEventListener('click', () => switchTab('duplicates'));
   }
 
   // Compact number formatting for score carry-over rows (12,345 / 1.2M).
@@ -1903,6 +2128,7 @@
       state.player = null;
       scheduleHash(false);
       $playerPanel.hidden = true;
+      if ($playerDupe) $playerDupe.hidden = true;
       hidePlayerChart();
       return;
     }
@@ -1929,6 +2155,13 @@
     loadPlayerAliases(trimmed).catch((err) => {
       console.warn('[leaderboards] rename history failed', err);
       if ($playerAliases) $playerAliases.hidden = true;
+    });
+
+    // Shared-name check - the banner stays hidden unless this name resolves to
+    // more than one player.
+    loadPlayerDuplicate(trimmed).catch((err) => {
+      console.warn('[leaderboards] duplicate lookup failed', err);
+      if ($playerDupe) $playerDupe.hidden = true;
     });
 
     try {
@@ -2034,11 +2267,17 @@
 
     const tileFor = (it) => {
       const boardName = (metaByUuid.get(it.leaderboard) || {}).name || `Board #${it.leaderboard}`;
+      // A board can produce two tiles when Trove lists this name twice on it.
+      // Badge them so the pair reads as two identities, not a rendering bug.
+      const dupeBadge = (it.slots || 1) > 1
+        ? '<span class="lb-ph-slot" title="' + esc(t('This name appears more than once on this board')) + '">#'
+          + esc(String((it.slot || 0) + 1)) + '</span>'
+        : '';
       return `
-        <div class="lb-ph-tile">
+        <div class="lb-ph-tile${(it.slots || 1) > 1 ? ' lb-ph-tile-dupe' : ''}">
           <div class="lb-ph-tile-head">
             ${boardIconImg(it.leaderboard)}
-            <div class="lb-ph-board">${esc(boardName)}</div>
+            <div class="lb-ph-board">${esc(boardName)}${dupeBadge}</div>
           </div>
           <div class="lb-ph-tile-stats">
             <span class="lb-ph-rank">${crownHtml(it.rank)}#${it.rank}</span>
@@ -2122,21 +2361,19 @@
       $mobileTrigger.setAttribute('aria-expanded', String(open));
     });
 
-    // Tab strip - switch + lazy-load cheaters on first activation.
-    if ($tabBoardsBtn) {
-      $tabBoardsBtn.addEventListener('click', () => switchTab('boards'));
-    }
-    if ($tabCheatersBtn) {
-      $tabCheatersBtn.addEventListener('click', () => switchTab('cheaters'));
-    }
-    if ($tabClustersBtn) {
-      $tabClustersBtn.addEventListener('click', () => switchTab('clusters'));
-    }
-    if ($tabRenamesBtn) {
-      $tabRenamesBtn.addEventListener('click', () => switchTab('renames'));
+    // Tab strip - switch + lazy-load each tab's payload on first activation.
+    // DELEGATED off ``data-tab`` rather than one listener per button: the
+    // per-button version silently left a newly added tab unclickable (the
+    // keyboard path below already read data-tab, so arrow keys worked while
+    // clicking did nothing).
+    const tabStrip = document.querySelector('.lb-tabs');
+    if (tabStrip) {
+      tabStrip.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[role="tab"][data-tab]');
+        if (btn && tabStrip.contains(btn)) switchTab(btn.dataset.tab);
+      });
     }
     // Left/Right/Home/End roving across the (conditionally-rendered) tab strip.
-    const tabStrip = document.querySelector('.lb-tabs');
     if (tabStrip) {
       tabStrip.addEventListener('keydown', (e) => {
         const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
@@ -2183,6 +2420,14 @@
         state.renamesMinConfidence = v;
         writeRenamesMinConfidence(v);
         renderRenamesTab();
+      });
+    }
+    // Cause filter on the duplicates tab. No refetch - the payload carries every
+    // group and the filter is applied client-side.
+    for (const chip of document.querySelectorAll('[data-dupe-kind]')) {
+      chip.addEventListener('click', () => {
+        state.duplicatesKind = chip.dataset.dupeKind || '';
+        renderDuplicatesTab();
       });
     }
 
@@ -2281,7 +2526,10 @@
   // Apply a parsed hash to state WITHOUT writing history back. Fully syncs every
   // axis so Back/Forward also clears things the target entry doesn't have.
   async function applyHash(h) {
-    const desiredTab = (h.tab === 'cheaters' || h.tab === 'clusters' || h.tab === 'renames') ? h.tab : 'boards';
+    // Whitelist off TABS rather than a hardcoded list: this used to enumerate
+    // the tab names inline, so adding a tab silently left its deep link (and
+    // Back/Forward onto it) falling back to the boards view.
+    const desiredTab = TABS.includes(h.tab) ? h.tab : 'boards';
     if (desiredTab !== state.activeTab) switchTab(desiredTab);
     if (h.anchor && h.anchor !== state.anchor) {
       const idx = state.days.findIndex((d) => d.anchor === h.anchor);
@@ -2444,8 +2692,12 @@
     // tooltip still surfaces the full set on hover.
     const limit = Math.min(usableSeries.length, 8);
     const series = usableSeries.slice(0, limit).map((s, i) => ({
-      key: `b:${s.uuid}`,
-      label: titleizeName(s.name),
+      // Slot is part of the key: a name Trove lists twice on one board yields
+      // two lines for the same uuid, and a bare uuid key would collide.
+      key: `b:${s.uuid}:${s.slot || 0}`,
+      label: (s.slots || 1) > 1
+        ? titleizeName(s.name) + ' #' + String((s.slot || 0) + 1)
+        : titleizeName(s.name),
       color: CHART_COLORS[i % CHART_COLORS.length],
       // See drawBoardChart for why ``synthetic`` is forwarded.
       points: s.points.map((p) => ({

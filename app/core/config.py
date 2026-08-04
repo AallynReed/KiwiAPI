@@ -241,6 +241,32 @@ class Settings(BaseSettings):
     # is just CDN/browser politeness; renames only change when a new capture lands).
     renames_cache_ttl_seconds: int = 300
 
+    # ── Duplicate-name detection (/v1/leaderboards/duplicates) ────────────────
+    # Trove's dump can list one spelling TWICE on the same board (two ranks, two
+    # scores), and two spellings differing only in case fold into one player row.
+    # Both make one profile show two identities' numbers.
+    #
+    # How far back the evidence pass looks when deciding whether a duplicated
+    # name's score lines are still moving or have stalled. Longer = a more
+    # confident "this line is frozen" read, at the cost of a wider window scan.
+    duplicates_lookback_days: int = 7
+    # Only record a name duplicated on at least this many boards. 1 records every
+    # occurrence (including one-off scrape artefacts); raise it to keep the tab to
+    # names with a systematic, multi-board duplication.
+    duplicates_min_boards: int = 1
+    # A flat score line is only called "frozen" once it has been seen this many
+    # times in the window. Below it, a flat line is just an idle hour, not
+    # evidence of a stalled leaderboard row.
+    duplicates_frozen_min_captures: int = 4
+    # Safety cap on how many duplicated names one detection pass records. The live
+    # figure is ~16; the cap only matters if something upstream goes badly wrong
+    # (a malformed dump duplicating everything), where writing thousands of rows
+    # per capture would be the wrong response.
+    duplicates_max_names: int = 500
+    # TTL of the duplicates-list cache. Same reasoning as renames: the record only
+    # changes when a new capture lands.
+    duplicates_cache_ttl_seconds: int = 300
+
     # Comma-separated board UUIDs to EXCLUDE from the profile "Last played"
     # estimate (the most recent capture where the player's score rose on some
     # board). Exclude boards whose score moves without the player playing - e.g.
@@ -665,6 +691,16 @@ class Settings(BaseSettings):
     # consecutive failures mark it down. Both runtime-tunable (admin panel).
     trove_status_probe_attempts: int = 3                   # tries per probe before "down"
     trove_status_probe_retry_delay_seconds: float = 2.0    # gap between back-to-back retries
+    # Self-check: when EVERY tier fails (auth + all regions), the likeliest cause
+    # is OUR uplink, not Trove - and recording that as Trove downtime is simply
+    # wrong. Before believing a total blackout, TCP-probe a couple of unrelated,
+    # always-up public anchors: if none answer, the internet is out on this end,
+    # so the round is DISCARDED (no snapshot, no history segment, no event).
+    # Raw IPs on purpose - a name would drag DNS into the verdict. Anchors are
+    # independent operators so one provider's outage can't fake a local one.
+    trove_status_local_check_enabled: bool = True
+    trove_status_local_check_hosts: str = "1.1.1.1:443,9.9.9.9:443,8.8.8.8:443"
+    trove_status_local_check_timeout_seconds: float = 4.0
     # Two public Live regions + PTS. The probe target is the REGIONAL
     # glsserver (login-to-game) box on :6560, captured from per-region
     # pcaps - EU = Amsterdam (ams-*), US = Dallas (dal-*), both shaped

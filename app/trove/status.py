@@ -40,6 +40,14 @@ an outage, so an unreachable server is simply "down", shown red):
                   refused/dropped)
   • ``unknown`` - no probe completed yet
 
+OUR-END GUARD: when a round finds NOTHING reachable - auth *and* every region -
+the likeliest cause is this box losing its uplink, not Trove going dark, and
+recording that as Trove downtime is flatly wrong (it wrote hours-long fake
+outages, identical across all three regions to the second). So a total blackout
+is confirmed against unrelated public anchors first (``_local_network_is_up``);
+if none of them answer either, the round is DISCARDED - no history segment, no
+snapshot update, no event. See ``trove_status_local_check_*``.
+
 Each environment's status timeline is persisted as ``TroveStatusEvent``
 segments (a new open segment opens on every status change, the prior one
 closes). The /status page reads these to draw uptime/downtime history.
@@ -279,6 +287,48 @@ async def _probe_game(
             pass
 
 
+async def _anchor_reachable(host: str, port: int, timeout: float) -> bool:
+    """TCP-connect one uplink anchor. Connect-only on purpose: we're asking
+    "can this box reach the internet at all", not "is that host healthy"."""
+    try:
+        _, writer = await asyncio.wait_for(
+            asyncio.open_connection(host, port), timeout=timeout,
+        )
+    except Exception:  # noqa: BLE001 - refused/timeout/unreachable = no answer
+        return False
+    try:
+        return True
+    finally:
+        try:
+            writer.close()
+            await writer.wait_closed()
+        except Exception:
+            pass
+
+
+async def _local_network_is_up(hosts: str, timeout: float) -> bool:
+    """Is OUR internet working? True if ANY anchor answers (they're independent
+    operators, so one being down proves nothing; all of them being unreachable
+    means the problem is on this side). Empty/unparseable list = assume up, so a
+    bad config can never suppress real outage recording."""
+    anchors: list[tuple[str, int]] = []
+    for raw in (hosts or "").split(","):
+        raw = raw.strip()
+        if not raw:
+            continue
+        host, _, port = raw.rpartition(":")
+        if not host or not port.isdigit():
+            continue
+        anchors.append((host, int(port)))
+    if not anchors:
+        return True
+    results = await asyncio.gather(
+        *(_anchor_reachable(h, p, timeout) for h, p in anchors),
+        return_exceptions=True,
+    )
+    return any(r is True for r in results)
+
+
 def _verdict(auth_online: bool, game_online: bool) -> str:
     # Binary: online only when the login gateway is reachable AND the region's
     # game socket is alive. Anything else is "down" (red). No "maintenance" state -
@@ -339,6 +389,7 @@ async def _probe_with_retries(make_probe, attempts: int, delay: float) -> dict:
 async def probe_once() -> dict:
     """Run auth + per-env game probes, persist any status transitions,
     update the in-process cache, and return the snapshot."""
+    global _state
     from app.admin import runtime_config
     # Forgiveness: each probe is retried back-to-back up to N times and counts
     # online if ANY attempt succeeds, so a transient miss / local network blip
@@ -375,7 +426,35 @@ async def probe_once() -> dict:
             "online": game["online"],
             "game": game,
         }
-        await _record_transition(env, status, game["online"])
+
+    # Nothing answered anywhere - auth AND every region. Trove going fully dark
+    # in one probe interval is rare; OUR uplink dying does exactly this, and
+    # recording it as Trove downtime is just wrong (it wrote hours-long fake
+    # outages, identical across all three regions to the second). Confirm we can
+    # reach the internet at all before believing it.
+    blackout = not auth["online"] and all(e["status"] != "online" for e in environments.values())
+    if blackout and bool(await runtime_config.get_setting("trove_status_local_check_enabled")):
+        local_up = await _local_network_is_up(
+            str(await runtime_config.get_setting("trove_status_local_check_hosts")),
+            float(await runtime_config.get_setting("trove_status_local_check_timeout_seconds")),
+        )
+        if not local_up:
+            # Our outage, not Trove's: DISCARD the round. No history segment, no
+            # snapshot update, no event - the timeline just keeps the last known
+            # state, which is the honest answer (we don't know what Trove was
+            # doing while we were offline). Nobody can read /status without our
+            # uplink anyway, so a briefly stale snapshot costs nothing.
+            logger.warning(
+                "trove status: every probe failed and no uplink anchor answered - "
+                "local connectivity loss, discarding this round (no downtime recorded)",
+            )
+            discarded = dict(_state) if _state is not None else get_status()
+            discarded["auth"] = auth
+            discarded["local_network"] = False
+            return discarded
+
+    for env, data in environments.items():
+        await _record_transition(env, data["status"], data["online"])
 
     snapshot = {
         # Top-level overall = rollup of the public Live regions (eu+us),
@@ -385,7 +464,6 @@ async def probe_once() -> dict:
         "environments": environments,
         "checked_at": int(time.time()),
     }
-    global _state
     _state = snapshot
     await _publish_snapshot(snapshot)
     return snapshot

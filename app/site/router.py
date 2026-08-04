@@ -52,6 +52,7 @@ from app.trove.leaderboards import activity as leaderboards_activity
 from app.trove.leaderboards import cache as leaderboards_cache
 from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove.leaderboards import detection as leaderboards_detection
+from app.trove.leaderboards import duplicates as leaderboards_duplicates
 from app.trove.leaderboards import renames as leaderboards_renames
 from app.trove.leaderboards import service as leaderboards_service
 from app.trove.models import TroveEvent
@@ -60,7 +61,7 @@ from app.trove.mods_hub import creators as mods_hub_creators
 from app.trove.mods_hub import service as mods_hub_service
 from app.trove.mods_hub.schemas import CreatorScopeRequest
 from app.trove.render import bp_cache
-from app.trove.render.service import render_blueprint_cached
+from app.trove.render.service import render_blueprint_cached, render_creature_cached
 from app.trove.updates import compare as updates_compare
 from app.trove.updates import read as updates_read
 from app.trove.updates.cas import ContentStore
@@ -1820,18 +1821,42 @@ async def site_codex_render(
     blueprint: str = Query(..., min_length=1, description="Blueprint logical name from the codex row"),
     branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
     dim: int = Query(default=160, ge=32, le=512),
+    prefab: str | None = Query(default=None, description="Codex entry path; renders the "
+                               "whole assembled creature when its rig can supply every part"),
 ) -> Response:
     """Same-origin PNG render of a codex item's blueprint (the card thumbnail).
-    Cached in Redis; 404 on a missing/unrenderable blueprint so the grid's
-    ``<img onerror>`` hides cleanly."""
+    Cached in Redis.
+
+    The grid's ``<img onerror>`` hides on any non-200, so the status code exists for
+    whoever is debugging a missing image - and there it has to separate the two very
+    different causes, matching ``/v1/codexes/render``: **404** the branch has no such
+    blueprint (a bad/stale name on the codex row), **422** the file is there but has
+    nothing to draw (an empty placeholder - typically a component part rather than a
+    whole model). Collapsing both into 404 is what previously made this only
+    diagnosable by rendering the blueprint by hand inside the container."""
+    from app.trove.render.voxel import BlueprintError
+
     _site_codex_branch(branch)
+    # A creature is a set of parts on a skeleton; `blueprint` alone is one of those parts
+    # (or the game's small `_ui` stand-in). When the caller names the prefab too, draw the
+    # whole assembled creature - falling back to `blueprint` whenever every part can't be
+    # supplied, since a half-assembled mount is worse than a single part.
+    if prefab:
+        assembled = await render_creature_cached(prefab, dim=dim, branch=branch)
+        if assembled:
+            return Response(content=assembled, media_type="image/png",
+                            headers={"Cache-Control": "public, max-age=86400"})
     try:
         png = await render_blueprint_cached(blueprint, dim=dim, branch=branch)
-    except Exception:  # noqa: BLE001 - never let a render error break the grid
-        logger.warning("codex render failed for %r", blueprint, exc_info=True)
-        png = None
+    except BlueprintError as exc:
+        logger.info("codex render: %r is not renderable: %s", blueprint, exc)
+        raise HTTPException(status_code=422, detail=f"Blueprint not renderable: {exc}") from None
+    # Anything else is a real fault, not a property of the blueprint - let it 500 so it
+    # reaches the logs instead of hiding as a per-item "no image" (the grid degrades the
+    # same either way: `onerror` drops the thumbnail on any non-200).
     if png is None:
-        raise HTTPException(status_code=404, detail="no render")
+        raise HTTPException(status_code=404,
+                            detail=f"No blueprint '{blueprint}' on branch '{branch}'")
     return Response(content=png, media_type="image/png",
                     headers={"Cache-Control": "public, max-age=86400"})
 
@@ -1876,10 +1901,12 @@ async def leaderboards(request: Request) -> HTMLResponse:
     cheaters_on = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
     clusters_on = await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG)
     renames_on = await feature_flags.is_enabled(feature_flags.RENAMES_FLAG)
+    duplicates_on = await feature_flags.is_enabled(feature_flags.DUPLICATES_FLAG)
     return _TEMPLATES.TemplateResponse(request, "leaderboards.html", {
         "cheater_detection_enabled": cheaters_on,
         "alt_clusters_enabled": clusters_on,
         "renames_enabled": renames_on,
+        "duplicates_enabled": duplicates_on,
         "ssr": await ssr.leaderboards_view(_ssr_fetch),
     })
 
@@ -1929,6 +1956,7 @@ async def site_lb_config(
     cheaters_on = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
     clusters_on = await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG)
     renames_on = await feature_flags.is_enabled(feature_flags.RENAMES_FLAG)
+    duplicates_on = await feature_flags.is_enabled(feature_flags.DUPLICATES_FLAG)
     return JSONResponse(
         {
             "hot_retention_days": int(days),
@@ -1940,6 +1968,7 @@ async def site_lb_config(
             # Independent switch - alt-clusters can run without cheater detection.
             "alt_clusters_enabled": clusters_on,
             "renames_enabled": renames_on,
+            "duplicates_enabled": duplicates_on,
         },
         # Auth-dependent (picker_days/logged_in vary by the bearer token), so it
         # must not be shared-cached across callers.
@@ -1966,6 +1995,8 @@ async def site_feature_flags() -> JSONResponse:
     flags["alt_clusters_enabled"] = await feature_flags.is_enabled(
         feature_flags.ALT_CLUSTERS_FLAG)
     flags["renames_enabled"] = await feature_flags.is_enabled(feature_flags.RENAMES_FLAG)
+    flags["duplicates_enabled"] = await feature_flags.is_enabled(
+        feature_flags.DUPLICATES_FLAG)
     return JSONResponse(flags, headers={"Cache-Control": "public, max-age=5"})
 
 
@@ -2150,6 +2181,31 @@ async def site_lb_rename_history(name: str) -> JSONResponse:
     per-name history drill-in."""
     payload = await leaderboards_renames.history(name)
     ttl = int(await runtime_config.get_setting("renames_cache_ttl_seconds"))
+    return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
+
+
+@router.get("/site/leaderboards/duplicates", response_class=JSONResponse)
+async def site_lb_duplicates(
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    kind: str | None = Query(default=None, pattern="^(same_name|case)$"),
+) -> JSONResponse:
+    """Names that resolve to more than one player, for the leaderboards page.
+    Same payload as ``GET /v1/leaderboards/duplicates``; ``enabled=false`` when
+    the feature flag is off (the tab hides itself)."""
+    payload = await leaderboards_duplicates.serve_list(
+        limit=limit, offset=offset, kind=kind)
+    ttl = int(await runtime_config.get_setting("duplicates_cache_ttl_seconds"))
+    return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
+
+
+@router.get("/site/leaderboards/duplicates/{name}", response_class=JSONResponse)
+async def site_lb_duplicate_lookup(name: str) -> JSONResponse:
+    """Whether ONE name resolves to more than one identity - drives the warning
+    banner in the player panel and on ``/player/<name>``. ``found=false`` is the
+    normal answer."""
+    payload = await leaderboards_duplicates.for_name(name)
+    ttl = int(await runtime_config.get_setting("duplicates_cache_ttl_seconds"))
     return JSONResponse(payload, headers={"Cache-Control": f"public, max-age={ttl}"})
 
 

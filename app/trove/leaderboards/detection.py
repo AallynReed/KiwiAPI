@@ -432,6 +432,15 @@ async def _warm_all() -> None:
         await lb_renames.detect_latest()
     except Exception:
         logger.exception("leaderboards warmer: rename detection failed (non-fatal)")
+    # Duplicate-name detection on the newest capture. NON-FATAL + flag-gated
+    # inside; names the dump lists twice on one board (or whose spellings differ
+    # only in case) are recorded to player_duplicate for the Possible-duplicates
+    # tab and the "this name is shared" warning on /player.
+    from app.trove.leaderboards import duplicates as lb_duplicates
+    try:
+        await lb_duplicates.detect_latest()
+    except Exception:
+        logger.exception("leaderboards warmer: duplicate detection failed (non-fatal)")
     # Refresh the Redis snapshot for the leaderboards page (anchor list + boards
     # at the latest anchor + the first board's first page) so the page serves
     # the latest capture with zero Mongo work and can switch to a new capture

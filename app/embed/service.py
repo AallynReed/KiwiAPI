@@ -217,7 +217,9 @@ async def _game_manifest(src: Source) -> dict:
 
     from app.trove.mods_hub import assembly, rig_index
     stem = vfx.basename(path).lower()[: -len(".blueprint")]
-    skeleton, _attach = await rig_index.resolve([stem])
+    # Same lookup ``_game_assembled`` will make, so the manifest can't advertise a
+    # creature the assemble step then declines to build.
+    skeleton, _prefab, _parts = await rig_index.creature_for(stem)
     rig = skeleton if skeleton and assembly.has_baked_rig(skeleton) else None
     return {
         "source": "game", "title": src.title,
@@ -329,48 +331,40 @@ async def assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | None:
 
 
 async def _game_assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | None:
-    """Assemble a NATIVE creature from one blueprint path: resolve the part to its
-    skeleton, then pull that skeleton's every bound part out of the game tree.
+    """Assemble a NATIVE creature from one blueprint path: resolve the part to the
+    CREATURE it belongs to, then pull that creature's other parts out of the game tree.
 
     This is the piece a partner can't do themselves - they have a file path, and we
-    have the binfab map that says which other files belong to the same creature."""
+    have the binfab map that says which other files belong to the same creature.
+
+    The creature comes from ``rig_index.creature_for``, i.e. from the one prefab that
+    binds this part. It deliberately does NOT come from the skeleton: a skeleton is
+    shared by every variant that uses it (``mount_raptor`` covers every raptor mount in
+    the game), so taking its parts assembled all of them at once - each attach point
+    claimed by whichever variant happened to sort first, which rendered a chimera and
+    dropped the requested file from its own preview."""
     path = src.game_path or ""
     if not path.lower().endswith(".blueprint"):
         return None
     from app.trove.mods_hub import assembly, rig_index
 
     stem = vfx.basename(path).lower()[: -len(".blueprint")]
-    skeleton, _attach = await rig_index.resolve([stem])
-    if not skeleton or not assembly.has_baked_rig(skeleton):
+    skeleton, prefab, parts = await rig_index.creature_for(stem)
+    if not skeleton or not prefab or not parts:
+        return None                      # part not bound to a creature -> no guess, no render
+    if not assembly.has_baked_rig(skeleton):
         return None                      # unknown rig -> no guess, no render
-    parts = await rig_index.parts_for(skeleton)
-    if not parts:
-        return None
-
-    # A skeleton is shared by every creature that uses it - `mount_raptor` covers
-    # EVERY raptor mount in the game. Taking all of its bound parts assembles all of
-    # them at once, stacked (534 parts / 127k voxels for one raptor, with each attach
-    # point claimed several times over). The game keeps one creature's blueprints in
-    # one folder, so the requested file's folder is what identifies WHICH raptor this
-    # is - and one part per attach point is what a single creature means.
-    folder = path.rsplit("/", 1)[0].lower() if "/" in path else ""
 
     async def build() -> dict:
         fmap = await game_file_map(LIVE_BRANCH)
         files: list[dict] = []
-        claimed: set[str] = set()
-        for basename, ap in parts.items():
+        for basename in parts:
             gp = fmap.get(f"{basename}.blueprint")
             if not gp:
                 continue
-            if folder and gp.rsplit("/", 1)[0].lower() != folder:
-                continue                 # a different creature on the same skeleton
-            if ap in claimed:
-                continue                 # attach point already filled
             raw = await _read_game_file(gp)
             if raw is None:
                 continue                 # a part we don't have -> the rest still assembles
-            claimed.add(ap)
             files.append({"path": f"{basename}.blueprint",
                           "content_base64": base64.b64encode(raw).decode()})
         if not files:
@@ -383,14 +377,15 @@ async def _game_assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | N
 
     # Reading and placing every part of a creature is the most expensive thing the
     # embed does, and the answer only moves when the game files or the rig map do -
-    # both of which the signature tracks. Folder + skeleton IS the creature's identity
-    # here, so every partner page pointing at any of its parts shares one assembly.
+    # both of which the signature tracks. The PREFAB is the creature's identity, so
+    # every partner page pointing at any of its parts shares one assembly - and two
+    # creatures on one skeleton no longer share (and overwrite) each other's.
     sig = await rig_index.index_signature()
     try:
         if sig is None:
             return await bp_cache.build_uncached(build, fmt)
         return await bp_cache.get_or_build(
-            bp_cache.key_for_assembly(sig, f"game:{skeleton}:{folder or path}"), build, fmt)
+            bp_cache.key_for_assembly(sig, f"game:{prefab}"), build, fmt)
     except bp_cache.NoPayload:
         return None
 

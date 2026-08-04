@@ -275,6 +275,13 @@ canvas.bg-fx {
   background: linear-gradient(135deg, color-mix(in oklab, var(--accent-blue) 80%, white), var(--accent-orange));
 }
 
+/* Utility cluster (socials + support + account + language). ``display:
+   contents`` makes the wrapper vanish from layout so its children remain
+   direct flex items of .nav-links - the desktop navbar is byte-identical to
+   the pre-wrapper version. The mobile drawer re-materialises it as a row
+   (see the 768px block). */
+.nav-utility { display: contents; }
+
 /* Icon-only nav items (Discord, GitHub). Square 36×36 hit target with
    no text label - frees room on the navbar for the heart-Support link
    without crowding. Uses the same hover treatment as text links. */
@@ -1793,13 +1800,27 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 @media (max-width: 768px) {
   /* Hamburger nav: hide the inline link list, show the toggle, slide the
      panel down from below the header when .open. */
-  .nav-toggle { display: inline-flex; align-items: center; justify-content: center; }
+  .nav-container { padding: 12px 18px; gap: 12px; }
+  /* 44px square: the minimum comfortable touch target. */
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+  }
   .nav-links {
     position: absolute;
     top: 100%;
     left: 0; right: 0;
     flex-direction: column;
     align-items: stretch;
+    /* MUST be nowrap. A column flex container with a definite (max-)height
+       and wrap enabled breaks its overflow into extra COLUMNS instead of
+       scrolling - with the Pages mega-list expanded the drawer split into
+       three side-by-side columns and shoved the socials/account/language
+       cluster clean off the right edge of the phone. */
+    flex-wrap: nowrap;
     background: var(--bg-deep);
     border-bottom: 1px solid var(--bg-line);
     padding: 12px 20px 18px;
@@ -1822,6 +1843,21 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   .navbar.open .nav-links { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .nav-links a { padding: 12px 14px; border-radius: 10px; }
   .nav-links a.nav-cta { justify-content: center; }
+
+  /* Utility cluster: one centred row under a hairline instead of five
+     stretched rows (the 36x36 icons each used to sit alone on a full-width
+     row, leaving three near-empty bands in the drawer). */
+  .nav-utility {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--bg-line);
+  }
+  .nav-utility .nav-account { flex: 0 1 auto; min-width: 0; }
   .lang-picker { justify-content: center; }
 
   /* Nav dropdowns inside the mobile drawer - expand inline as a sub-list
@@ -1874,7 +1910,11 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
     gap: 2px;
   }
   .nav-dropdown-panel.nav-mega .nav-mega-group { flex: none; min-width: 0; }
-  .nav-dropdown.open .nav-dropdown-panel.nav-mega { transform: none; max-height: 1400px; }
+  /* Generous cap: the max-height has to be a number for the transition, and
+     the full five-group list already measures ~1350px. The drawer scrolls, so
+     over-shooting costs nothing - under-shooting silently clips the bottom
+     groups the moment another page is added to the menu. */
+  .nav-dropdown.open .nav-dropdown-panel.nav-mega { transform: none; max-height: 2600px; }
   .nav-mega-title { margin-top: 8px; }
   .nav-mega-group:first-child .nav-mega-title { margin-top: 2px; }
 

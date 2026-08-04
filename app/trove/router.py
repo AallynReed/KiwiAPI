@@ -30,6 +30,7 @@ from app.core.dependencies import (
 from app.core.errors import APIError, ErrorCode
 from app.core.features import (
     require_delves_enabled,
+    require_leaderboard_duplicates_enabled,
     require_leaderboard_renames_enabled,
     require_server_status_enabled,
 )
@@ -42,7 +43,6 @@ from app.trove import (
     chaos,
     delves,
     feeds,
-    luxion as luxion_mod,
     misc,
     news,
     rotations,
@@ -51,6 +51,9 @@ from app.trove import (
     tmod,
 )
 from app.trove import calendar as trove_calendar
+from app.trove import (
+    luxion as luxion_mod,
+)
 from app.trove.codexes import read as codexes_read
 from app.trove.codexes.schemas import (
     CodexCategoryInfo,
@@ -86,6 +89,7 @@ from app.trove.gems.schemas import (
 from app.trove.leaderboards import activity as leaderboards_activity
 from app.trove.leaderboards import class_activity as leaderboards_class_activity
 from app.trove.leaderboards import detection as leaderboards_detection
+from app.trove.leaderboards import duplicates as leaderboards_duplicates
 from app.trove.leaderboards import renames as leaderboards_renames
 from app.trove.leaderboards import service as leaderboards_service
 from app.trove.market import service as market_service
@@ -99,7 +103,7 @@ from app.trove.misc import (
 from app.trove.models import TroveEvent, TroveNews
 from app.trove.ocr import engine as ocr_engine
 from app.trove.ocr import service as ocr_service
-from app.trove.render.service import render_blueprint_cached
+from app.trove.render.service import render_blueprint_cached, render_creature_cached
 from app.trove.render.voxel import BlueprintError
 from app.trove.schemas import (
     ActivityHistoryResponse,
@@ -138,6 +142,8 @@ from app.trove.schemas import (
     DelveRotationOut,
     DelveWeekInfo,
     DelveWeekList,
+    DuplicateLookupResponse,
+    DuplicatesResponse,
     EventCategoryList,
     FeedbackAck,
     Fluxion,
@@ -2005,11 +2011,19 @@ async def render_blueprint_image(
     ctx: AccessContext = _CODEX,
     branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
     dim: int = Query(default=256, ge=32, le=512, description="Square output size in px"),
+    prefab: str | None = Query(default=None, description="An `Entry.path`; renders the whole "
+                               "assembled creature when its rig can supply every part, else "
+                               "falls back to `blueprint`"),
 ) -> Response:
     """Render a blueprint to a game-like image, emulating Trove's catalog tool
     (perspective voxel render, flat lighting, glass transparency). Cached in Redis;
     served as a transparent PNG."""
     _check_branch(branch)
+    if prefab:
+        assembled = await render_creature_cached(prefab, dim=dim, branch=branch)
+        if assembled:
+            return Response(content=assembled, media_type="image/png",
+                            headers={"Cache-Control": "public, max-age=86400"})
     try:
         png = await render_blueprint_cached(blueprint, dim=dim, branch=branch)
     except BlueprintError as e:
@@ -2403,6 +2417,69 @@ async def rename_history(
     ttl = int(await runtime_config.get_setting("renames_cache_ttl_seconds"))
     response.headers["Cache-Control"] = f"public, max-age={ttl}"
     return RenameHistoryResponse(**payload)
+
+
+@leaderboards_router.get(
+    "/duplicates", response_model=DuplicatesResponse,
+    dependencies=[Depends(require_leaderboard_duplicates_enabled)],
+    summary="Names that resolve to more than one player",
+)
+async def list_duplicates(
+    response: Response,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    kind: str | None = Query(
+        default=None, pattern="^(same_name|case)$",
+        description="Filter to one cause. Names hit by both always match either.",
+    ),
+    _ctx: AccessContext = _LB_PUBLIC,
+) -> DuplicatesResponse:
+    """Names that do **not** map to a single player, still-current first.
+
+    Trove's leaderboard dump carries no player id - only ``rank;name;score`` -
+    so identity here is keyed by name. That breaks two ways, and this endpoint
+    reports both:
+
+    * ``same_name`` - the game's own capture lists the *identical* spelling twice
+      on the same board, at two ranks with two scores. Both rows resolve to one
+      player, so a naive per-player read interleaves two people's numbers.
+    * ``case`` - two spellings differing only in capitalisation (``Robot`` /
+      ``robot``) fold into one name key, merging two accounts.
+
+    Each group carries a per-board breakdown of the separated score lines and
+    whether each one is still moving or has stalled. The ``verdict`` describes
+    that pattern; it never asserts which identity is the "real" player, because
+    nothing in the data supports that. Thresholds are runtime-tunable from the
+    master panel (``duplicates_*`` keys)."""
+    payload = await leaderboards_duplicates.serve_list(
+        limit=limit, offset=offset, kind=kind)
+    from app.admin import runtime_config
+    ttl = int(await runtime_config.get_setting("duplicates_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return DuplicatesResponse(**payload)
+
+
+@leaderboards_router.get(
+    "/duplicates/{name}", response_model=DuplicateLookupResponse,
+    dependencies=[Depends(require_leaderboard_duplicates_enabled)],
+    summary="Does one name resolve to more than one player?",
+)
+async def duplicate_lookup(
+    name: str,
+    response: Response,
+    _ctx: AccessContext = _LB_PUBLIC,
+) -> DuplicateLookupResponse:
+    """The duplicate-name record for ``name``, case-insensitive.
+
+    ``found=false`` is the normal answer and means the name is unambiguous. When
+    true, treat that player's aggregate stats as covering more than one identity:
+    the per-board evidence separates the score lines, but the lifetime aggregate
+    (best rank, appearances) cannot be split retroactively."""
+    payload = await leaderboards_duplicates.for_name(name)
+    from app.admin import runtime_config
+    ttl = int(await runtime_config.get_setting("duplicates_cache_ttl_seconds"))
+    response.headers["Cache-Control"] = f"public, max-age={ttl}"
+    return DuplicateLookupResponse(**payload)
 
 
 @leaderboards_router.get(
@@ -2989,6 +3066,44 @@ async def renames_backfill_status(_auth = _LB_MASTER) -> dict:
     from app.trove.leaderboards import pg_store
     status = await leaderboards_renames.get_status()
     status["recorded_renames"] = await pg_store.count_renames()
+    return status
+
+
+@leaderboards_router.post("/duplicates-backfill", status_code=202,
+                          summary="Rebuild duplicate-name history from the archive (master)")
+async def duplicates_backfill(
+    background_tasks: BackgroundTasks,
+    clear_first: bool = Query(
+        default=False,
+        description="Delete all recorded duplicate groups first, then rebuild.",
+    ),
+    _auth = _LB_MASTER,
+) -> dict:
+    """**Master only.** Walk EVERY stored capture and (re)detect names that
+    resolve to more than one identity into ``player_duplicate``.
+
+    The live pass only ever sees the newest capture, so it can't date when a
+    duplication started - this can, folding each anchor into the record so
+    ``first_anchor`` reaches back to the real beginning. Idempotent; pass
+    ``clear_first`` to wipe and rebuild. Returns immediately; poll
+    ``/duplicates-backfill-status`` for live progress.
+
+    NOTE: ``case`` groups are captured at INGEST (the raw spellings are gone by
+    the time the entries are stored), so this pass rebuilds ``same_name`` groups
+    only - a ``clear_first`` run drops case history that only a re-ingest of the
+    backlog can restore."""
+    background_tasks.add_task(leaderboards_duplicates.backfill, clear_first=clear_first)
+    return {"started": True, "clear_first": clear_first}
+
+
+@leaderboards_router.get("/duplicates-backfill-status",
+                         summary="Duplicate-name backfill progress (master)")
+async def duplicates_backfill_status(_auth = _LB_MASTER) -> dict:
+    """**Master only.** Live progress of the duplicate-name backfill (poll this),
+    plus how many groups are currently recorded."""
+    from app.trove.leaderboards import pg_store
+    status = await leaderboards_duplicates.get_status()
+    status["recorded_duplicates"] = await pg_store.count_duplicates()
     return status
 
 

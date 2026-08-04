@@ -17,11 +17,40 @@ from __future__ import annotations
 import re
 from pathlib import PurePosixPath
 
-from app.trove.codexes.binfab import clean_localized_text, read_varint, unzig
+from app.trove.codexes.binfab import (
+    clean_localized_text,
+    harvest_strings,
+    read_varint,
+    unzig,
+)
 
 _ASCII_RE = re.compile(rb"[ -~]{3,}")
 # Path-ish prefixes that mark an item/placeable/etc. reference (vs. a token/label).
 _PATH_PREFIXES = ("item/", "placeable/", "block/", "collections/", "effects/")
+# The product can also be an equipment/ability reference (costume + banner + geode-module
+# recipes). Kept separate from `_PATH_PREFIXES` so widening what counts as an OUTPUT
+# can't change what counts as an ingredient or a requirement.
+_OUTPUT_PREFIXES = _PATH_PREFIXES + ("equipment/", "abilities/")
+
+# Recipe wire fields, read structurally rather than by position:
+#   0   the quantified ingredient records (`08 <len> <path> 10 <amount>`)
+#   1   the product REFERENCE - the collection/equipment the recipe unlocks
+#   16  the product's ITEM form, when it has one (`item/pet/dog_pudding`)
+# Preferring 16 then 1 is what stops an ingredient being mistaken for the product. The
+# positional scan below reached for the first non-material path it saw, which is a
+# terrain block or a delve-food cost far more often than it is the thing you craft -
+# e.g. `recipe_costume_bard_norse` reported its output as `item/food/delve/tier_03`.
+_FIELD_OUTPUT_ITEM = 16
+_FIELD_OUTPUT_REF = 1
+_FIELD_INGREDIENT = 0
+# Costume/skin/class recipes name their product as a bare token on one of these fields
+# ("bard_pc", "crimefighter_cyberbun") instead of a path.
+_FIELD_PRODUCT_TOKEN = (1, 2)
+_TOKEN_RE = re.compile(r"[A-Za-z0-9_]{4,}")
+# Where a product token's prefab can live. Tried in order; a token that matches none of
+# them yields no product at all rather than a fabricated path.
+_TOKEN_PRODUCT_ROOTS = ("item/costume/", "item/skin/", "skins/", "collections/costume/",
+                        "item/")
 
 # Non-path requirement tokens -> their display label.
 _REQUIREMENT_LABELS = {
@@ -128,7 +157,78 @@ def _split_sections(strings: list[str]) -> tuple[list[str], list[str]]:
     return strings, []
 
 
-def _choose_output(strings: list[str]) -> str:
+def _structural_output(content: bytes, quantified: list[dict] | None = None,
+                       prefab_exists=None) -> str:
+    """The product, read off its own wire field.
+
+    Reading framed fields yields the payload without the ULEB length prefix that the raw
+    ASCII scan keeps glued to the front (``"%item/pet/x"`` for a 37-char path) - which is
+    why the positional reader missed these paths entirely rather than merely mis-ranking
+    them.
+
+    Uses the unfiltered ``harvest_strings`` rather than ``_real_fields``: an ingredient's
+    *amount* varint can alias a wt8 key (amount 100 -> zigzag 200 -> ``C8 01``), and the
+    phantom field it opens swallows the real product field in the non-overlap filter. The
+    path-prefix check below is the stronger guard here, since a phantom read starting
+    mid-string can't begin exactly on ``item/``, ``collections/`` and friends.
+    """
+    best: dict[int, str] = {}
+    loose: str = ""
+    token: str = ""
+    ingredients = {_normalize(q["path"]) for q in (quantified or [])}
+    for _off, field, text in harvest_strings(content):
+        norm = _normalize(text)
+        if not norm or norm.lower() == "null":
+            continue
+        if norm.lower().startswith(_OUTPUT_PREFIXES):
+            if field in (_FIELD_OUTPUT_ITEM, _FIELD_OUTPUT_REF):
+                best.setdefault(field, norm)
+            elif field == _FIELD_INGREDIENT and norm not in ingredients:
+                # An unquantified path on the ingredient field: you don't consume it, so
+                # it's what you get. Banner and geode-ability recipes name their product
+                # only this way. Keep the LAST such path, not the first - a delve banner
+                # recipe leads with the world-boss torch it REQUIRES and ends with the
+                # banner mod it produces.
+                loose = norm
+        elif field in _FIELD_PRODUCT_TOKEN and not token and _TOKEN_RE.fullmatch(norm):
+            token = norm
+    named = best.get(_FIELD_OUTPUT_ITEM) or best.get(_FIELD_OUTPUT_REF) or loose
+    if named:
+        return named
+    # Costume/skin recipes name their product as a bare token ("bard_pc"), with the
+    # matching prefab living under one of a few known roots. Resolved only against a
+    # prefab that really exists - never assembled into a path on faith.
+    if token and prefab_exists is not None:
+        for root in _TOKEN_PRODUCT_ROOTS:
+            cand = root + token
+            if prefab_exists(cand):
+                return cand
+    return ""
+
+
+def _quantified_output(quantified: list[dict]) -> str:
+    """Fallback for the plain crafting recipes that carry no product field: the product
+    is one of the quantified records, emitted LAST (`item/gardening/wateringcan_advanced`
+    after the four block costs). Terrain blocks are skipped - in every recipe that gets
+    this far a `placeable/block/…` is a cost, and a recipe that really does produce one
+    says so in its own field and never reaches here."""
+    for row in reversed(quantified):
+        p = _normalize(row["path"])
+        if p and not _is_material(p) and not p.lower().startswith("placeable/block/"):
+            return p
+    return ""
+
+
+def _choose_output(content: bytes, strings: list[str],
+                   quantified: list[dict] | None = None, prefab_exists=None) -> str:
+    """The recipe's product: its own wire field first, then the quantified records, and
+    only then the original positional scan."""
+    structural = _structural_output(content, quantified, prefab_exists)
+    if structural:
+        return structural
+    from_quantified = _quantified_output(quantified or [])
+    if from_quantified:
+        return from_quantified
     head, tail = _split_sections(strings)
     for section in (tail, head):
         for text in section:
@@ -255,7 +355,7 @@ def resolve_recipe_mastery(rel: str, content: bytes, multipliers: dict[str, dict
     return {"value": None, "source": "review", "prefab_byte": None}
 
 
-def parse_recipe(content: bytes, *, resolve_meta=None) -> dict:
+def parse_recipe(content: bytes, *, resolve_meta=None, prefab_exists=None) -> dict:
     """Decode a recipe prefab into ``{name, description, category, output,
     ingredients, requirements}``.
 
@@ -265,7 +365,7 @@ def parse_recipe(content: bytes, *, resolve_meta=None) -> dict:
     """
     strings = _scan_strings(content)
     quantified = decode_quantified_paths(content)
-    output_path = _choose_output(strings)
+    output_path = _choose_output(content, strings, quantified, prefab_exists)
     output_norm = output_path.removesuffix(".binfab") if output_path else ""
 
     ingredient_paths: set[str] = set()

@@ -140,6 +140,35 @@ def _from_local_sync(name: str) -> bytes | None:
     return extract_archive(tfa_path.read_bytes(), idx["entries"], entry.archive_index).get(entry.name)
 
 
+_basenames: dict[str, tuple[str, dict[str, str]]] = {}
+
+
+async def blueprint_by_basename(branch: str) -> dict[str, str]:
+    """``basename (lowercased, no extension) -> full logical path``, for names that map
+    to exactly one blueprint in the branch.
+
+    The rig map stores part BASENAMES, but the store is keyed on the full archived path
+    (``blueprints/2024/mounts/…/part.blueprint``), so a bare basename resolves to nothing
+    without this. Ambiguous basenames are dropped rather than pointed at an arbitrary
+    twin. Cached per branch against the archive's current file count, which changes on
+    every sync."""
+    from app.trove.updates.models import UpdateState
+    coll = UpdateState.get_pymongo_collection()
+    query = {"branch": branch, "path": {"$regex": "^blueprints/"}}
+    sig = str(await coll.count_documents(query))
+    cached = _basenames.get(branch)
+    if cached and cached[0] == sig:
+        return cached[1]
+    seen: dict[str, str | None] = {}
+    async for row in coll.find(query, {"path": 1, "_id": 0}):
+        path = row["path"][len("blueprints/"):]
+        base = path.rsplit("/", 1)[-1].removesuffix(".blueprint").lower()
+        seen[base] = None if base in seen else path      # second sighting -> ambiguous
+    index = {b: p for b, p in seen.items() if p}
+    _basenames[branch] = (sig, index)
+    return index
+
+
 async def get_blueprint_bytes(name: str, branch: str | None = None) -> bytes | None:
     """Raw ``.blueprint`` bytes for a logical name, or None if not found."""
     branch = branch or settings.trove_render_branch

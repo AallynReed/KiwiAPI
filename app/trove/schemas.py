@@ -1119,6 +1119,69 @@ class RenameHistoryResponse(BaseModel):
     rename_count: int = 0
 
 
+# --- Duplicate names ------------------------------------------------------
+# A name that resolves to MORE THAN ONE identity. Two causes: Trove's own dump
+# lists one spelling twice on the same board (``same_name``), or two spellings
+# differ only in capitalisation and fold into one player key (``case``).
+
+
+class DuplicateGroup(BaseModel):
+    """One name that resolves to more than one identity.
+
+    ``verdict`` is descriptive, never a claim about which identity is the "real"
+    one - the dump carries no player id, so nothing in the data supports that:
+
+    * ``one_live`` - exactly one score line still moves; the rest are frozen
+      (what a leftover leaderboard row looks like).
+    * ``multi_live`` - two or more lines still move: separate active identities.
+    * ``all_idle`` - nothing moved in the window, so they can't be told apart.
+    * ``case_only`` - the spellings differ only in capitalisation.
+    """
+    name: str
+    kind: str                 # 'same_name' | 'case' | 'both'
+    verdict: str
+    boards: int               # boards the name is duplicated on
+    max_occurrences: int      # most rows seen for the name on a single board
+    spellings: list[str] = []  # distinct raw spellings (``case``/``both`` only)
+    first_anchor: int         # earliest capture the duplication was seen in
+    last_anchor: int          # most recent capture it was seen in
+    evidence: dict = {}       # per-board series breakdown + summary
+    method_version: int = 1
+    updated_at: int
+
+
+class DuplicatesResponse(BaseModel):
+    # Recorded duplicate-name groups, still-current first then widest first.
+    duplicates: list[DuplicateGroup] = []
+    total: int = 0
+    current: int = 0                    # of the returned page, how many are still live
+    latest_anchor: int | None = None
+    limit: int = 50
+    offset: int = 0
+    # False when the duplicate-detection feature flag is OFF (the tab hides itself).
+    enabled: bool = True
+    method_version: int = 1
+
+
+class DuplicateLookupResponse(BaseModel):
+    """Whether ONE name resolves to more than one identity. ``found=false`` is the
+    normal answer - it means the name is unambiguous."""
+    query: str
+    found: bool = False
+    enabled: bool = True
+    name: str | None = None
+    kind: str | None = None
+    verdict: str | None = None
+    boards: int | None = None
+    max_occurrences: int | None = None
+    spellings: list[str] = []
+    first_anchor: int | None = None
+    last_anchor: int | None = None
+    evidence: dict = {}
+    method_version: int | None = None
+    updated_at: int | None = None
+
+
 # --- Record highs (free "how high can these stats go" endpoint) -----------
 # The current ceiling for Trove Mastery / Geode Mastery / Power Rank, read off
 # the rank-1 holder of the relevant lifetime board(s). Mastery boards store a

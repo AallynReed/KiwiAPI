@@ -151,34 +151,45 @@ async def meta_signature(branch: str) -> tuple:
 
 # --- rig map (rig_binding table) --------------------------------------------
 
+_RIG_INSERT = (
+    "INSERT INTO rig_binding (branch, prefab, blueprint, skeleton, ap_key) "
+    "VALUES ($1, $2, $3, $4, $5) ON CONFLICT (branch, prefab, blueprint) DO UPDATE "
+    "SET skeleton = EXCLUDED.skeleton, ap_key = EXCLUDED.ap_key"
+)
+
+
 async def replace_rig_bindings(branch: str, rows: list[tuple]) -> int:
-    """Atomically replace a branch's rig bindings. ``rows`` = ``(branch, blueprint,
-    skeleton, ap_key)`` tuples (built by ``reindex_rigs`` from the prefab binfabs)."""
+    """Atomically replace a branch's rig bindings. ``rows`` = ``(branch, prefab,
+    blueprint, skeleton, ap_key)`` tuples (built by ``reindex_rigs`` from the prefab
+    binfabs)."""
     async with acquire() as con:
         async with con.transaction():
             await con.execute("DELETE FROM rig_binding WHERE branch = $1", branch)
             if rows:
-                await con.executemany(
-                    "INSERT INTO rig_binding (branch, blueprint, skeleton, ap_key) "
-                    "VALUES ($1, $2, $3, $4) ON CONFLICT (branch, blueprint) DO UPDATE "
-                    "SET skeleton = EXCLUDED.skeleton, ap_key = EXCLUDED.ap_key",
-                    rows,
-                )
+                await con.executemany(_RIG_INSERT, rows)
     return len(rows)
 
 
-async def upsert_rig_bindings(rows: list[tuple]) -> int:
-    """Insert/update rig bindings (the delta path) without clearing the branch.
-    ``rows`` = ``(branch, blueprint, skeleton, ap_key)``."""
-    if not rows:
+async def replace_prefab_rig_bindings(
+    branch: str, prefabs: list[str], rows: list[tuple],
+) -> int:
+    """Re-state the bindings of specific PREFABS (the delta path): drop what those
+    prefabs said before, then insert what they say now, in one transaction.
+
+    Scoped by prefab rather than upserted blindly, so a creature that LOSES a part in a
+    game update actually loses it - the row can't linger and get assembled onto the
+    model forever. ``prefabs`` is the full set that was re-parsed (including any that
+    now yield no bindings at all), not just the ones that produced ``rows``."""
+    if not prefabs:
         return 0
     async with acquire() as con:
-        await con.executemany(
-            "INSERT INTO rig_binding (branch, blueprint, skeleton, ap_key) "
-            "VALUES ($1, $2, $3, $4) ON CONFLICT (branch, blueprint) DO UPDATE "
-            "SET skeleton = EXCLUDED.skeleton, ap_key = EXCLUDED.ap_key",
-            rows,
-        )
+        async with con.transaction():
+            await con.execute(
+                "DELETE FROM rig_binding WHERE branch = $1 AND prefab = ANY($2::text[])",
+                branch, prefabs,
+            )
+            if rows:
+                await con.executemany(_RIG_INSERT, rows)
     return len(rows)
 
 
@@ -204,14 +215,19 @@ async def set_rig_version(branch: str, version: int) -> None:
         )
 
 
-async def load_rig_map(branch: str) -> dict[str, tuple[str, str]]:
-    """``blueprint basename -> (skeleton stem, AP key)`` for every skeleton-binding
-    creature/costume/mob in a branch - the authoritative map the Mods Hub viewer
-    resolves a mod's blueprints against."""
+async def load_rig_bindings(branch: str) -> list[tuple[str, str, str, str]]:
+    """Every ``(prefab, blueprint basename, skeleton stem, AP key)`` binding in a branch
+    - the authoritative map the Mods Hub viewer resolves a mod's blueprints against, and
+    the embed groups a native creature's parts by.
+
+    Returned flat and ORDERED (prefab, blueprint): ``rig_index`` builds both of its
+    indexes from one pass, and a stable order makes the "which creature owns this part"
+    answer stable across processes when a part is shared by more than one prefab."""
     async with acquire() as con:
         rows = await con.fetch(
-            "SELECT blueprint, skeleton, ap_key FROM rig_binding WHERE branch = $1", branch)
-    return {r["blueprint"]: (r["skeleton"], r["ap_key"]) for r in rows}
+            "SELECT prefab, blueprint, skeleton, ap_key FROM rig_binding "
+            "WHERE branch = $1 ORDER BY prefab, blueprint", branch)
+    return [(r["prefab"], r["blueprint"], r["skeleton"], r["ap_key"]) for r in rows]
 
 
 # --- reads (router via read.py) ---------------------------------------------
