@@ -30,10 +30,26 @@
     return m[0] === 75 && m[1] === 86 && m[2] === 88 && m[3] === 49;   // 'KVX1'
   }
 
+  /* Header paths name fields of the payload the server just built, so a segment
+     that walks off the object (`__proto__`, an inherited key, a missing part) is
+     malformed - drop the field rather than write through Object.prototype. */
+  function unsafeSeg(seg) {
+    return seg === '__proto__' || seg === 'constructor' || seg === 'prototype';
+  }
+
   function setPath(root, path, value) {
     var segs = path.split('.'), cur = root, i;
-    for (i = 0; i < segs.length - 1; i++) cur = cur[segs[i]];
+    for (i = 0; i < segs.length; i++) {
+      if (!segs[i] || unsafeSeg(segs[i])) return false;
+    }
+    for (i = 0; i < segs.length - 1; i++) {
+      if (cur === null || typeof cur !== 'object'
+          || !Object.prototype.hasOwnProperty.call(cur, segs[i])) return false;
+      cur = cur[segs[i]];
+    }
+    if (cur === null || typeof cur !== 'object') return false;
     cur[segs[segs.length - 1]] = value;
+    return true;
   }
 
   /* ArrayBuffer -> payload object. Throws on a malformed container. */

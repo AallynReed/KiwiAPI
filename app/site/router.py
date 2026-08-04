@@ -148,6 +148,10 @@ async def _ssr_fetch(path: str, params: dict | None = None) -> object | None:
     return json.loads(body) if body else None
 
 
+_PLAYER_PREFIX = "/site/leaderboards/players/"
+_PLAYER_SUFFIX = "/profile"
+
+
 async def _ssr_dispatch(path: str, p: dict) -> JSONResponse | None:
     """Path -> local handler. Explicit rather than reflective: the SSR surface is
     a small fixed set, and an explicit table can't accidentally expose a proxy
@@ -216,8 +220,12 @@ async def _ssr_dispatch(path: str, p: dict) -> JSONResponse | None:
         return await site_lb_entries(uuid=int(m.group(1)),
                                      created_at=int(p["created_at"]),
                                      limit=int(p.get("limit", 100)), offset=0, user=None)
-    if (m := re.fullmatch(r"/site/leaderboards/players/(.+)/profile", path)):
-        return await site_lb_player_profile(player_name=unquote(m.group(1)))
+    # Sliced rather than matched: a player name is "anything", and `(.+)` before a
+    # literal suffix is a backtracking pattern (CodeQL py/polynomial-redos).
+    if path.startswith(_PLAYER_PREFIX) and path.endswith(_PLAYER_SUFFIX):
+        name = path[len(_PLAYER_PREFIX):-len(_PLAYER_SUFFIX)]
+        if name:
+            return await site_lb_player_profile(player_name=unquote(name))
     return None
 
 
