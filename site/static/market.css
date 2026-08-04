@@ -531,7 +531,7 @@
 /* Listings table - same grid pattern leaderboards uses. */
 .mkt-table {
   display: grid;
-  grid-template-columns: 100px 90px 110px 1fr;
+  grid-template-columns: 96px 78px 104px 92px 104px 1fr;
   gap: 0;
 }
 .mkt-th,
@@ -561,9 +561,28 @@
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
   color: var(--text-mute);
 }
+/* Derived economics, not scraped data: the fee the seller paid to post,
+   and what they keep after the 10% sale tax. Gold = flux out, green =
+   flux kept - the same semantics the Fees tab uses. */
+.mkt-cell-fee {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  color: var(--accent-yellow);
+  cursor: help;
+}
+.mkt-cell-net {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  color: var(--accent-green);
+  cursor: help;
+}
 .mkt-cell-when {
   color: var(--text-mute);
   font-size: .82rem;
+}
+.mkt-listings-note {
+  margin: 0 0 10px;
+  font-size: .8rem;
+  color: var(--text-mute);
+  line-height: 1.45;
 }
 .mkt-listings-empty {
   padding: 24px 12px;
@@ -664,11 +683,26 @@
   .mkt-detail { padding: 18px; }
 }
 
+/* Six numeric columns don't fit once the sidebar has collapsed on top of
+   the detail pane. Total goes first - it's each × stack, the only column
+   a reader can reconstruct without the fee curve. */
+@media (max-width: 780px) {
+  .mkt-table {
+    grid-template-columns: 92px 70px 88px 100px 1fr;
+  }
+  .mkt-th.mkt-cell-total,
+  .mkt-cell-total { display: none; }
+}
+
 @media (max-width: 600px) {
   .mkt-main { padding: 0 16px 60px; }
   .mkt-hero { padding: 40px 0 18px; }
+  /* Each / Fee / Seller nets, with "last seen" wrapped onto its own line.
+     Stack and total drop out; fee and net stay, because the whole point of
+     the columns is answering "what does this cost me" on the small screen
+     people actually browse the market on. */
   .mkt-table {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
   }
   .mkt-th.mkt-cell-stack,
   .mkt-th.mkt-cell-total,

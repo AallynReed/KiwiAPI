@@ -17,6 +17,7 @@ Reads delegate to ``pg_store``; the ``market_listing`` indexes (``name``,
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time as time_mod
 from datetime import UTC, datetime
@@ -551,11 +552,20 @@ async def analytics_movers(
     if not settings.postgres_enabled:
         return {"risers": [], "fallers": [], "days": days}
     now = _now()
-    rows = await pg_store.market_movers(
-        recent_start=now - days * 86400, prior_start=now - 2 * days * 86400,
-        now=now, min_samples=min_samples, limit=limit)
-    risers = [r for r in rows if r["change"] > 0]
-    fallers = sorted((r for r in rows if r["change"] < 0), key=lambda r: r["change"])
+    # One query per side. Splitting a single abs()-ranked result set starves the
+    # fallers: a rise is unbounded while a fall can't pass -100%, so anything that
+    # doubled outranks every possible faller and the Fallers column renders empty.
+    # ``limit`` stays the total budget, halved across the two columns.
+    per_side = max(1, limit // 2)
+    common = {
+        "recent_start": now - days * 86400,
+        "prior_start": now - 2 * days * 86400,
+        "now": now, "min_samples": min_samples, "limit": per_side,
+    }
+    risers, fallers = await asyncio.gather(
+        pg_store.market_movers(**common, direction="up"),
+        pg_store.market_movers(**common, direction="down"),
+    )
     return {"risers": risers, "fallers": fallers, "days": days, "now": now}
 
 

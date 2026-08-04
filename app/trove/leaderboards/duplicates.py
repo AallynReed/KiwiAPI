@@ -247,9 +247,19 @@ def split_series(points: list[dict]) -> list[dict]:
     is what every non-duplicated player hits."""
     if not points:
         return []
+    # Rows identical in BOTH rank and score at the same anchor are one row the
+    # capture emitted twice, not two identities - two real entities tied on score
+    # still hold different ranks. Collapsing them here stops the chart drawing two
+    # perfectly coincident lines (and matches what pg_store.duplicate_groups_at
+    # counts, so the tab and the chart can never disagree).
     by_anchor: dict[int, list[dict]] = {}
     for p in points:
-        by_anchor.setdefault(int(p["created_at"]), []).append(p)
+        anchor = int(p["created_at"])
+        bucket = by_anchor.setdefault(anchor, [])
+        key = (int(p["rank"]), float(p["score"]))
+        if any((int(q["rank"]), float(q["score"])) == key for q in bucket):
+            continue
+        bucket.append(p)
     anchors = sorted(by_anchor)
 
     # Fast path: never more than one row at any anchor → nothing to split.
@@ -362,13 +372,21 @@ def _summary_text(name: str, boards: int, verdict: str, series_count: int) -> st
 
 async def _build_record(
     name: str, groups: list[dict], cfg: _Cfg, anchor: int, now: int,
+    *, first_anchor_override: int | None = None,
 ) -> dict:
     """Assemble one ``player_duplicate`` row for ``name``. ``groups`` is the
     per-board duplication found at ``anchor``; the window rows are re-split so the
-    evidence can say which line is moving and which has stalled."""
+    evidence can say which line is moving and which has stalled.
+
+    This is the EXPENSIVE half of detection (one windowed read of the player's
+    rows, then a split per board), so it runs once per name - not once per name
+    per anchor. See ``backfill``."""
     window_start = anchor - cfg.lookback_days * 86400
     try:
-        rows = await pg_store.player_rows_window(name, window_start)
+        # Bounded at BOTH ends: ``anchor`` here can be historical (the backfill
+        # dates each name at its last sighting), and an open-ended window would
+        # scan every partition from there to now.
+        rows = await pg_store.player_rows_window(name, window_start, anchor)
     except Exception:  # noqa: BLE001 - evidence is best-effort, the row still lands
         logger.warning("duplicates: window rows failed for %r", name, exc_info=True)
         rows = []
@@ -394,7 +412,10 @@ async def _build_record(
 
     series_count = max((int(g["occurrences"]) for g in groups), default=2)
     verdict = _verdict(board_reports)
-    first_anchor = min(
+    # The window rows can only date the duplication as far back as the lookback,
+    # so a caller that already knows the true first sighting (the backfill, which
+    # walked the whole archive) passes it in.
+    first_anchor = first_anchor_override if first_anchor_override is not None else min(
         (s["first_anchor"] for b in board_reports for s in b["series"]),
         default=anchor,
     )
@@ -500,8 +521,21 @@ async def backfill(*, clear_first: bool = False) -> None:
     """Walk EVERY capture in the archive, oldest-first, recording duplicated names.
 
     The live pass only ever sees the newest capture, so it can't tell you when a
-    duplication started. This does: each anchor's groups are folded into the
-    record, keeping the earliest ``first_anchor`` and the latest ``last_anchor``.
+    duplication STARTED. This can. Two phases, because they cost wildly different
+    amounts:
+
+    1. **Dating walk** - one grouped scan per anchor (``duplicate_groups_at``),
+       folding each name's earliest/latest sighting and widest board count into an
+       in-memory tally. Cheap and the only part that needs every anchor.
+    2. **Evidence** - the per-name windowed read + series split, run ONCE per
+       distinct name at its most recent sighting.
+
+    Doing step 2 inside step 1 (the obvious shape) meant a windowed player read at
+    every anchor: ~12 names x ~1000 anchors = ~12k reads, nearly all of them
+    against cold-tiered partitions, to produce evidence that is immediately
+    overwritten by the next anchor's. Splitting the phases makes it ~1000 cheap
+    scans plus a few dozen reads.
+
     Single-flight guarded with live Redis progress, mirroring the rename
     backfill."""
     from app.core.redis import get_redis
@@ -513,21 +547,28 @@ async def backfill(*, clear_first: bool = False) -> None:
             logger.info("duplicates backfill already running - skipping duplicate")
             return
 
-    anchors = await pg_store.all_anchors_asc()
-    cfg = await _load_config(anchors[-1] if anchors else None)
-    now = int(time.time())
-    status = {
-        "running": True, "total": len(anchors), "done": 0, "detected": 0,
-        "started_at": now, "finished_at": None, "last_anchor": None,
-        "clear_first": clear_first,
-    }
-    await _set_status(status)
+    # EVERYTHING after the lock is acquired must sit inside the try, so a failure
+    # releases it. It didn't, and the first run died on the anchor query with the
+    # lock still held - which then silently no-ops every retry for its 900s TTL.
+    status: dict = {"running": True, "phase": "starting", "total": 0, "done": 0,
+                    "detected": 0, "started_at": int(time.time()),
+                    "finished_at": None, "last_anchor": None,
+                    "clear_first": clear_first}
     try:
+        await _set_status(status)
+        anchors = await pg_store.all_anchors_asc()
+        cfg = await _load_config(anchors[-1] if anchors else None)
+        now = int(time.time())
+        status.update({"phase": "dating", "total": len(anchors)})
+        await _set_status(status)
+
         if clear_first:
             status["cleared"] = await pg_store.delete_all_duplicates()
             await _set_status(status)
 
-        seen: set[str] = set()
+        # ── phase 1: date every duplication ──────────────────────────────────
+        # {name: {"first": anchor, "last": anchor, "groups": [...] at last}}
+        tally: dict[str, dict] = {}
         for anchor in anchors:
             try:
                 groups = await pg_store.duplicate_groups_at(anchor)
@@ -539,18 +580,16 @@ async def backfill(*, clear_first: bool = False) -> None:
             by_name: dict[str, list[dict]] = {}
             for g in groups:
                 by_name.setdefault(g["name"], []).append(g)
-            batch = []
             for name, g in by_name.items():
                 if len(g) < cfg.min_boards:
                     continue
-                rec = await _build_record(name, g, cfg, anchor, now)
-                # Oldest anchor wins for first_anchor; upsert_duplicates keeps the
-                # minimum, so just record it and let the store fold.
-                batch.append(rec)
-                seen.add(name.lower())
-            if batch:
-                await pg_store.upsert_duplicates(batch)
-            status["detected"] = len(seen)
+                rec = tally.get(name)
+                if rec is None:
+                    tally[name] = {"first": anchor, "last": anchor, "groups": g}
+                else:
+                    rec["last"] = anchor
+                    rec["groups"] = g      # keep the most recent shape
+            status["detected"] = len(tally)
             status["done"] += 1
             status["last_anchor"] = anchor
             if status["done"] % 25 == 0:
@@ -560,9 +599,48 @@ async def backfill(*, clear_first: bool = False) -> None:
                         await r.expire(_RUNNING_KEY, 900)  # heartbeat
                     except Exception:
                         pass
+
+        # ── phase 2: evidence, once per name ─────────────────────────────────
+        # Widest blast radius first so a max_names cap keeps the worst offenders.
+        ordered = sorted(tally.items(), key=lambda kv: -len(kv[1]["groups"]))
+        ordered = ordered[:cfg.max_names]
+        status.update({"phase": "evidence", "total": len(ordered), "done": 0})
+        await _set_status(status)
+        batch: list[dict] = []
+        for name, rec in ordered:
+            try:
+                built = await _build_record(
+                    name, rec["groups"], cfg, rec["last"], now,
+                    first_anchor_override=rec["first"],
+                )
+            except Exception:
+                logger.warning("duplicates backfill: evidence failed for %r", name,
+                               exc_info=True)
+                status["done"] += 1
+                continue
+            batch.append(built)
+            status["done"] += 1
+            if len(batch) >= 50:
+                await pg_store.upsert_duplicates(batch)
+                batch = []
+                await _set_status(status)
+                if r is not None:
+                    try:
+                        await r.expire(_RUNNING_KEY, 900)
+                    except Exception:
+                        pass
+        if batch:
+            await pg_store.upsert_duplicates(batch)
+        status["detected"] = len(ordered)
+    except Exception as exc:
+        # Surfaced in the portal's progress line instead of dying silently in the
+        # background task with only a container log to show for it.
+        status["error"] = f"{type(exc).__name__}: {exc}"
+        logger.exception("duplicates backfill failed")
+        raise
     finally:
         status["running"] = False
-        status["phase"] = "done"
+        status["phase"] = "failed" if status.get("error") else "done"
         status["finished_at"] = int(time.time())
         await _set_status(status)
         if r is not None:
@@ -570,8 +648,8 @@ async def backfill(*, clear_first: bool = False) -> None:
                 await r.delete(_RUNNING_KEY)
             except Exception:
                 pass
-        logger.info("duplicates backfill done: %d name(s) across %d capture(s)",
-                    status["detected"], status["done"])
+        logger.info("duplicates backfill %s: %d name(s) recorded",
+                    status["phase"], status.get("detected", 0))
 
 
 # ── serving ──────────────────────────────────────────────────────────────────

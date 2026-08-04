@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="/static/style.min.css">
     <link rel="stylesheet" href="/static/market.min.css">
     <link rel="stylesheet" href="/static/market-analytics.min.css">
+    <link rel="stylesheet" href="/static/market-fees.min.css">
 </head>
 <body class="landing market-page">
 
@@ -53,6 +54,11 @@
                     id="mkt-viewtab-analytics" role="tab" aria-selected="false"
                     aria-controls="mkt-view-analytics" tabindex="-1">
                 <i class="fa-solid fa-chart-line" aria-hidden="true"></i> <span data-i18n>Analytics</span>
+            </button>
+            <button type="button" class="mkt-viewtab" data-view="fees"
+                    id="mkt-viewtab-fees" role="tab" aria-selected="false"
+                    aria-controls="mkt-view-fees" tabindex="-1">
+                <i class="fa-solid fa-coins" aria-hidden="true"></i> <span data-i18n>Fees</span>
             </button>
         </div>
 
@@ -186,6 +192,10 @@
                         <h3 class="mkt-listings-title" data-i18n>Recent listings</h3>
                         <span class="mkt-listings-meta" id="mkt-listings-meta"></span>
                     </header>
+                    <!-- Fee / Seller nets are computed client-side from each
+                         listing's total price (market-fees.js), not returned
+                         by the API. -->
+                    <p class="mkt-listings-note" data-i18n>Fee is what the seller paid to post the listing. Seller nets is what they keep if it sells, after the 10% tax.</p>
                     <div class="mkt-listings-body" id="mkt-listings-body">
                         <p class="mkt-loading" data-i18n>Loading…</p>
                     </div>
@@ -308,6 +318,76 @@
         </section>
       </div><!-- /#mkt-view-analytics -->
 
+      <!-- ═══════════════ FEES VIEW ═══════════════
+           Pure client-side calculator - the fee curve is a published game
+           constant, not scraped data, so this tab makes no requests. The
+           same math prices the Fee / Seller nets columns in Browse. -->
+      <div id="mkt-view-fees" role="tabpanel" aria-labelledby="mkt-viewtab-fees" hidden>
+
+        <section class="mkt-fee-block">
+            <header class="mkt-fee-head">
+                <h2 class="mkt-fee-title" data-i18n>What a listing actually costs</h2>
+                <p class="mkt-fee-sub" data-i18n>Posting to the marketplace charges a fee up front. Put in what you plan to ask and see the fee, what you bank if it sells, and what you are out if nobody buys.</p>
+            </header>
+
+            <div class="mkt-fee-controls">
+                <div class="mkt-fee-field">
+                    <label class="mkt-fee-field-label" for="mkt-fee-price" data-i18n>Asking price</label>
+                    <span class="mkt-fee-input-wrap">
+                        <input type="text" inputmode="numeric" id="mkt-fee-price"
+                               class="mkt-fee-input" value="1000000"
+                               autocomplete="off" spellcheck="false">
+                        <span class="mkt-fee-unit" aria-hidden="true">flux</span>
+                    </span>
+                </div>
+                <div class="mkt-fee-field">
+                    <span class="mkt-fee-field-label" id="mkt-fee-presets-label" data-i18n>Jump to</span>
+                    <div class="mkt-fee-presets" id="mkt-fee-presets"
+                         role="group" aria-labelledby="mkt-fee-presets-label"></div>
+                </div>
+            </div>
+
+            <div class="mkt-fee-cards" id="mkt-fee-cards"></div>
+        </section>
+
+        <section class="mkt-fee-block">
+            <header class="mkt-fee-chart-head">
+                <div>
+                    <h2 class="mkt-fee-title" data-i18n>The fee across the price range</h2>
+                    <p class="mkt-fee-sub" data-i18n>The fee climbs steeply near the top end and caps at 65,000 flux. As a share of the price it is cheapest in the middle of the market.</p>
+                </div>
+                <div class="mkt-fee-modes" id="mkt-fee-modes">
+                    <button type="button" class="mkt-fee-mode active" data-mode="flux"
+                            aria-pressed="true" data-i18n>In flux</button>
+                    <button type="button" class="mkt-fee-mode" data-mode="rate"
+                            aria-pressed="false" data-i18n>As a %</button>
+                </div>
+            </header>
+            <div class="mkt-fee-chart" id="mkt-fee-chart"></div>
+            <p class="mkt-fee-chart-meta" id="mkt-fee-chart-meta"></p>
+        </section>
+
+        <section class="mkt-fee-block">
+            <header class="mkt-fee-head">
+                <h2 class="mkt-fee-title" data-i18n>How the fee and tax work</h2>
+            </header>
+            <dl class="mkt-fee-rules">
+                <div class="mkt-fee-rule">
+                    <dt><i class="fa-solid fa-tag" aria-hidden="true"></i> <span data-i18n>You pay when you post</span></dt>
+                    <dd data-i18n>The fee comes out of your flux the moment the listing goes up, before anyone has bought anything.</dd>
+                </div>
+                <div class="mkt-fee-rule">
+                    <dt><i class="fa-solid fa-handshake" aria-hidden="true"></i> <span data-i18n>It sells</span></dt>
+                    <dd data-i18n>You get the fee back and pay a 10% tax on the sale, so you keep 90% of the asking price.</dd>
+                </div>
+                <div class="mkt-fee-rule">
+                    <dt><i class="fa-solid fa-hourglass-end" aria-hidden="true"></i> <span data-i18n>Nobody buys it</span></dt>
+                    <dd data-i18n>No tax, but the fee is not returned. Overpricing a big listing is what actually costs you flux.</dd>
+                </div>
+            </dl>
+        </section>
+      </div><!-- /#mkt-view-fees -->
+
         <p class="mkt-source" data-i18n>Captures come from an in-game marketplace scraper. Listings live 7 days in-game; expired ones disappear automatically. Prices are flux per item (stack price ÷ stack size).</p>
     </main>
 
@@ -317,6 +397,9 @@
     <script src="/static/_site_util.min.js"></script>
     <script src="/static/i18n.min.js"></script>
     <script src="/static/site_auth.min.js" defer></script>
+    <!-- market-fees.js first: it defines window.BTTMarketFee, which market.js
+         uses to price the Fee / Seller nets columns on every listing row. -->
+    <script src="/static/market-fees.min.js" defer></script>
     <script src="/static/market.min.js" defer></script>
     <script src="/static/market-analytics.min.js" defer></script>
 </body>

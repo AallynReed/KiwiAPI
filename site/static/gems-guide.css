@@ -332,6 +332,123 @@ body.gems-guide-page { overflow-x: clip; }
 .gg-chaos-card .gg-chaos-cav { display: block; margin-top: .5rem; font-size: .82rem; color: var(--text-soft); }
 @media (max-width: 640px) { .gg-chaos { grid-template-columns: 1fr; } }
 
+/* ─── Timegated materials: Lunar Souls / Bound Brilliance (inside §08) ────
+   Two summary cards for the materials themselves, then one card per source.
+   Item art is a live blueprint render, so every plinth sizes to a 1:1 PNG.
+   `--mc` = the material's accent (blue = Souls, yellow = Brilliance). */
+.gg-timegate { margin-top: 2.4rem; border-top: 1px solid var(--bg-line); padding-top: 1.8rem; }
+.gg-tg-head h3 { font-size: 1.25rem; margin: 0 0 .5rem; color: var(--text); text-wrap: balance; }
+.gg-tg-head p { margin: 0 0 1.3rem; color: var(--text-mute); line-height: 1.6; max-width: 68ch; text-wrap: pretty; }
+.gg-tg-head p b { color: var(--text); }
+
+/* The two materials, with their weekly ceiling. */
+.gg-tg-mats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .8rem; margin-bottom: 1.1rem; }
+.gg-tg-mat {
+  display: flex; align-items: center; gap: .85rem; padding: .85rem 1rem;
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--mc) 7%, var(--bg-card));
+  border: 1px solid color-mix(in oklab, var(--mc) 26%, var(--bg-line));
+}
+.gg-tg-matic {
+  display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 12px;
+  background: color-mix(in oklab, var(--mc) 12%, var(--bg-deep));
+  border: 1px solid color-mix(in oklab, var(--mc) 22%, var(--bg-line));
+}
+.gg-tg-matimg { width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,.5)); }
+.gg-tg-matbody { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.gg-tg-matname { font-size: .98rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+.gg-tg-matcap { font-size: .8rem; color: var(--text-mute); }
+.gg-tg-matcap b { font-size: 1.05rem; color: var(--mc); font-variant-numeric: tabular-nums; }
+.gg-tg-matcap-soft { font-style: italic; }
+
+/* One card per source - all on screen, no tabs to click through. */
+.gg-tg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: .9rem; }
+.gg-tg-card {
+  display: flex; gap: 1rem; align-items: flex-start; padding: 1.15rem 1.25rem;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  transition: border-color .18s var(--ease-out);
+}
+.gg-tg-card:hover { border-color: color-mix(in oklab, var(--mc) 38%, var(--bg-line)); }
+.gg-tg-plinth {
+  display: grid; place-items: center; flex: none; width: 76px; height: 76px; border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 35%, color-mix(in oklab, var(--mc) 22%, transparent), transparent 70%),
+    var(--bg-deep);
+  border: 1px solid color-mix(in oklab, var(--mc) 24%, var(--bg-line));
+}
+.gg-tg-bigic { width: 62px; height: 62px; object-fit: contain; filter: drop-shadow(0 3px 8px rgba(0,0,0,.55)); }
+.gg-tg-cbody { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.gg-tg-cmat {
+  align-self: flex-start; padding: .16rem .5rem; border-radius: 999px;
+  font-size: .68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--mc); background: color-mix(in oklab, var(--mc) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--mc) 28%, transparent);
+}
+.gg-tg-chead { font-size: 1.02rem; margin: .15rem 0 0; color: var(--text); line-height: 1.25; }
+.gg-tg-yield { display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; }
+.gg-tg-yield b { font-size: 1.5rem; font-weight: 800; line-height: 1.1; color: var(--mc); font-variant-numeric: tabular-nums; }
+.gg-tg-yield span { font-size: .78rem; font-weight: 600; color: var(--text-mute); }
+.gg-tg-ctext { margin: .2rem 0 0; font-size: .89rem; color: var(--text-mute); line-height: 1.6; text-wrap: pretty; }
+.gg-tg-ctext b { color: var(--text); }
+
+/* Decorative depth rail - the floors are spelled out in the copy above it. */
+.gg-tg-ladder { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin-top: .6rem; }
+.gg-tg-floor {
+  display: inline-grid; place-items: center; min-width: 2.8rem; padding: .28rem .45rem;
+  font-family: 'JetBrains Mono', monospace; font-size: .74rem; font-weight: 600; line-height: 1;
+  color: var(--mc); background: color-mix(in oklab, var(--mc) 12%, var(--bg-deep));
+  border: 1px solid color-mix(in oklab, var(--mc) 30%, var(--bg-line)); border-radius: 999px;
+}
+.gg-tg-floor.more { min-width: 0; color: var(--text-mute); background: none; border-color: transparent; }
+
+/* Recipe ingredients, straight from the codex index. */
+.gg-tg-rlabel { margin-top: .65rem; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-mute); }
+.gg-tg-recipe { list-style: none; margin: .3rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
+.gg-tg-recipe li {
+  display: inline-flex; align-items: baseline; gap: .35rem; padding: .26rem .55rem; border-radius: 8px;
+  background: var(--bg-deep); border: 1px solid var(--bg-line); font-size: .76rem; color: var(--text-mute);
+}
+.gg-tg-recipe li b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* --text-mute, never --text-soft: these notes carry real reading copy and
+   --text-soft (~3.9:1) misses AA. */
+.gg-tg-cnote { display: flex; gap: .5rem; align-items: baseline; margin: .65rem 0 0; font-size: .8rem; color: var(--text-mute); line-height: 1.55; }
+.gg-tg-cnote > i { flex: none; font-size: .76rem; color: var(--text-mute); }
+.gg-tg-cnote b { color: var(--text); }
+.gg-tg-cnote a { color: var(--mc); text-decoration: underline; text-underline-offset: 2px; }
+.gg-tg-cnote a:hover { color: color-mix(in oklab, var(--mc) 80%, white); }
+
+/* This week's three Effort contest boards (live). */
+.gg-tg-liveslot:empty { display: none; }
+.gg-tg-live-lbl { display: block; margin-top: .7rem; margin-bottom: .35rem; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-mute); }
+.gg-tg-live-list { display: flex; flex-wrap: wrap; gap: .35rem; }
+.gg-tg-live-chip {
+  display: inline-flex; align-items: center; gap: .35rem; padding: .26rem .6rem .26rem .32rem;
+  font-size: .78rem; font-weight: 600; color: var(--text); border-radius: 999px;
+  background: color-mix(in oklab, var(--mc) 10%, var(--bg-deep));
+  border: 1px solid color-mix(in oklab, var(--mc) 26%, var(--bg-line));
+  transition: border-color .18s var(--ease-out), background .18s var(--ease-out);
+}
+.gg-tg-live-chip:hover { color: var(--text); border-color: color-mix(in oklab, var(--mc) 55%, var(--bg-line)); background: color-mix(in oklab, var(--mc) 16%, var(--bg-deep)); }
+.gg-tg-live-ic { width: 20px; height: 20px; flex: none; object-fit: contain; }
+
+.gg-tg-note {
+  display: flex; gap: .75rem; align-items: baseline; margin: 1rem 0 0;
+  padding: .95rem 1.1rem; border-radius: var(--radius);
+  background: color-mix(in oklab, var(--accent-blue) 7%, var(--bg-card));
+  border: 1px solid color-mix(in oklab, var(--accent-blue) 24%, var(--bg-line));
+  font-size: .9rem; color: var(--text-mute); line-height: 1.6;
+}
+.gg-tg-note > i { flex: none; color: var(--accent-blue); font-size: .95rem; }
+.gg-tg-note b { color: var(--text); }
+
+@media (max-width: 560px) {
+  .gg-tg-grid { grid-template-columns: 1fr; }
+  .gg-tg-card { flex-direction: column; gap: .75rem; }
+  .gg-tg-plinth { width: 64px; height: 64px; }
+  .gg-tg-bigic { width: 52px; height: 52px; }
+}
+
 /* Primordial Dragon toggle */
 .gg-primordial { display: inline-flex; align-items: center; gap: .6rem; cursor: pointer; margin-top: 1.1rem; user-select: none; font-size: .9rem; color: var(--text-mute); }
 .gg-primordial input { position: absolute; opacity: 0; width: 0; height: 0; }

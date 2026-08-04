@@ -231,13 +231,35 @@ async def underpriced_deals(
     ]
 
 
+# Ranking for ``market_movers``. NOT user input - an internal enum, since the
+# value is interpolated straight into the SQL.
+#   "abs"  - biggest move either way (the single top mover on the pulse strip)
+#   "up"   - risers only, biggest gain first
+#   "down" - fallers only, biggest drop first
+#
+# Risers and fallers MUST be queried separately. A rise is unbounded (+850% is
+# routine on a thin Trove item) while a fall is floored at -100%, so ranking a
+# single result set by abs(change) lets any item that merely doubled outrank
+# EVERY possible faller. Take the top N of that combined ranking and the fallers
+# list comes back empty whenever N items rose past +100% - which is most days.
+_MOVER_ORDER = {
+    "abs": ("", "abs((r.med - p.med) / p.med) DESC"),
+    "up": ("AND r.med > p.med", "(r.med - p.med) / p.med DESC"),
+    "down": ("AND r.med < p.med", "(r.med - p.med) / p.med ASC"),
+}
+
+
 async def market_movers(
     *, recent_start: int, prior_start: int, now: int,
-    min_samples: int, limit: int,
+    min_samples: int, limit: int, direction: str = "abs",
 ) -> list[dict]:
-    """Per-item median-each in the recent window vs the prior window, biggest
-    absolute % change first. The caller splits the result into risers / fallers.
-    Both windows require ``min_samples`` listings so a thin item can't fake a swing."""
+    """Per-item median-each in the recent window vs the prior window.
+
+    ``direction`` picks the ranking (see ``_MOVER_ORDER``): ``"up"`` / ``"down"``
+    return one side only, already ordered biggest-move-first, so each list gets
+    its own LIMIT. Both windows require ``min_samples`` listings so a thin item
+    can't fake a swing."""
+    where_extra, order_by = _MOVER_ORDER[direction]
     async with acquire() as con:
         rows = await con.fetch(
             "WITH recent AS ("
@@ -252,8 +274,8 @@ async def market_movers(
             "  GROUP BY name HAVING count(*) >= $4) "
             "SELECT r.name, r.med AS recent_med, p.med AS prior_med, r.n AS recent_n, "
             "  (r.med - p.med) / p.med AS change "
-            "FROM recent r JOIN prior p USING (name) WHERE p.med > 0 "
-            "ORDER BY abs((r.med - p.med) / p.med) DESC LIMIT $5",
+            f"FROM recent r JOIN prior p USING (name) WHERE p.med > 0 {where_extra} "
+            f"ORDER BY {order_by} LIMIT $5",
             recent_start, prior_start, now, min_samples, limit,
         )
     return [

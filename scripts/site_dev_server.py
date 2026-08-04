@@ -181,6 +181,19 @@ STUB_BOARDS = [
     {"uuid": 5001, "name_id": "Leaderboard_ClubExp", "name": "CLUB MASTERY",
      "category_id": "Leaderboard_Category_Clubs", "category": "CLUBS",
      "contest_type": None, "reset_kind": "default", "player_board": False},
+    # Three class Effort boards (4000+i, named for the class) flagged as this
+    # week's contests - what /gems-guide reads to name the current rotation.
+    # Copied from a real capture; production rotates these every week, so treat
+    # the trio here as a shape to render against, not as the live answer.
+    {"uuid": 4005, "name_id": "Leaderboard_Effort_CandyBarbarian", "name": "CANDY BARBARIAN",
+     "category_id": "Leaderboard_Category_Effort", "category": "EFFORT",
+     "contest_type": "weekly", "reset_kind": "weekly", "player_board": True},
+    {"uuid": 4006, "name_id": "Leaderboard_Effort_IceSage", "name": "ICE SAGE",
+     "category_id": "Leaderboard_Category_Effort", "category": "EFFORT",
+     "contest_type": "weekly", "reset_kind": "weekly", "player_board": True},
+    {"uuid": 4010, "name_id": "Leaderboard_Effort_TombRaiser", "name": "TOMB RAISER",
+     "category_id": "Leaderboard_Category_Effort", "category": "EFFORT",
+     "contest_type": "weekly", "reset_kind": "weekly", "player_board": True},
 ]
 STUB_ENTRIES = [
     {"player_name": "Skill", "rank": 1, "score": 59731.0},
@@ -691,9 +704,15 @@ def _store_records(p):
 
 
 def _market_movers():
+    # The lead riser is deliberately a >100% move. Live data is full of them
+    # (+850% on a thin item is routine), and that asymmetry - rises unbounded,
+    # falls floored at -100% - is what used to starve the Fallers column when
+    # both sides shared one abs()-ranked query. Keep a runaway riser here so the
+    # stub renders the same shape production does.
     import time
     return {"days": 14, "now": int(time.time()),
             "risers": [
+                {"name": "Onionito", "recent_med": 18999.0, "prior_med": 2000.0, "recent_n": 35, "change": 8.4995},
                 {"name": "Shadow Key", "recent_med": 5200.0, "prior_med": 4000.0, "recent_n": 40, "change": 0.30},
                 {"name": "Golden Thread", "recent_med": 950.0, "prior_med": 850.0, "recent_n": 22, "change": 0.1176}],
             "fallers": [
@@ -772,6 +791,62 @@ def _market_timeline(name, days):
     events = [{"name": "Fluxion", "kind": "merchant", "starts_at": now - 11 * day, "ends_at": now - 8 * day},
               {"name": "Corruxion", "kind": "merchant", "starts_at": now - 6 * day, "ends_at": now - 3 * day}]
     return {"name": name, "days": days, "bucket_hours": 24, "points": pts, "events": events, "now": now}
+
+
+# ── /market Browse tab synthetic listings ─────────────────────────────────
+# Prices deliberately span the whole fee curve (a few hundred flux up to past
+# the 40M saturation point) so the client-side Fee / Seller nets columns are
+# actually exercised, cap included, instead of all landing in the flat
+# low-end of the curve.
+_MARKET_STACKS = [1, 1, 5, 10, 25, 100, 1, 3, 50, 200, 1, 100]
+_MARKET_UNIT_MULT = [0.62, 0.78, 0.91, 1.0, 1.04, 1.12, 1.3, 1.55, 2.1, 3.4,
+                     8.0, 40.0]
+
+
+def _market_listings(name, limit, offset):
+    import time
+    now = int(time.time())
+    base = 900 + (len(name) * 613 % 40000)
+    rows = []
+    for i in range(len(_MARKET_STACKS)):
+        stack = _MARKET_STACKS[i]
+        each = round(base * _MARKET_UNIT_MULT[i], 2)
+        rows.append({
+            "id": f"stub-{i}",
+            "name": name,
+            "type": "Crafting",
+            "stack": stack,
+            "price": int(each * stack),
+            "price_each": each,
+            "created_at": now - (i + 1) * 5400,
+            "last_seen": now - (i % 4) * 3600,
+            "expired": False,
+        })
+    rows.sort(key=lambda r: r["price_each"])
+    return {"items": rows[offset:offset + limit], "total": len(rows),
+            "limit": limit, "offset": offset}
+
+
+def _market_item_summary(name):
+    rows = _market_listings(name, 999, 0)["items"]
+    each = sorted(r["price_each"] for r in rows)
+    mid = len(each) // 2
+    return {"name": name, "count": len(rows), "min_each": each[0],
+            "max_each": each[-1], "median_each": each[mid],
+            "avg_each": round(sum(each) / len(each), 2),
+            "total_stack": sum(r["stack"] for r in rows)}
+
+
+def _market_item_history(name, days):
+    """Scatter payload for the Browse price-evolution chart."""
+    import time
+    now = int(time.time())
+    rows = _market_listings(name, 999, 0)["items"]
+    pts = [{"created_at": r["created_at"], "price_each": r["price_each"]} for r in rows]
+    pts.sort(key=lambda p: p["created_at"])
+    return {"name": name, "points": pts, "count": len(pts),
+            "window_start": now - days * 86400, "window_end": now,
+            "truncated": False, "outliers_excluded": 0}
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -1498,6 +1573,26 @@ class Handler(SimpleHTTPRequestHandler):
             # /site/codexes/render stub below serves a placeholder PNG for any).
             imgs = {n: f"stub/{n.lower().replace(' ', '_')}" for n in _MARKET_ITEMS}
             return self._send_json({"images": imgs, "branch": "live-us", "count": len(imgs)})
+        if path == "/site/market/listings":
+            qs = parse_qs(url.query)
+            name = qs.get("name", ["Glim"])[0]
+            try:
+                limit = int(qs.get("limit", ["100"])[0])
+                offset = int(qs.get("offset", ["0"])[0])
+            except ValueError:
+                limit, offset = 100, 0
+            return self._send_json(_market_listings(name, limit, offset))
+        if path.startswith("/site/market/items/") and path.endswith("/summary"):
+            name = unquote(path[len("/site/market/items/"):-len("/summary")])
+            return self._send_json(_market_item_summary(name))
+        if path.startswith("/site/market/items/") and path.endswith("/history"):
+            name = unquote(path[len("/site/market/items/"):-len("/history")])
+            qs = parse_qs(url.query)
+            try:
+                days = int(qs.get("days", ["7"])[0])
+            except ValueError:
+                days = 7
+            return self._send_json(_market_item_history(name, days))
         if path == "/site/market/analytics/movers":
             return self._send_json(_market_movers())
         if path == "/site/market/analytics/deals":

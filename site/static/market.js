@@ -412,19 +412,34 @@
       rerunI18n();
       return;
     }
-    const rows = state.listings.map((l) => `
+    // Fee and take-home are derived per row from the listing's TOTAL price
+    // (what the seller actually posted), never from price_each - the fee
+    // curve is charged once per listing, not once per item in the stack.
+    // Math lives in market-fees.js so the Fees tab and these columns can
+    // never drift apart.
+    const fees = window.BTTMarketFee;
+    const feeTitle = t('Listing fee: {n} flux, charged up front. Refunded if it sells, lost if it expires.');
+    const netTitle = t('Seller keeps {n} flux after the 10% sale tax.');
+    const rows = state.listings.map((l) => {
+      const fee = fees.listingFee(l.price);
+      const net = fees.netIfSold(l.price);
+      return `
       <div class="mkt-row">
         <span class="mkt-cell mkt-cell-price">${esc(formatPrice(l.price_each))}</span>
         <span class="mkt-cell mkt-cell-stack">×${esc(formatInt(l.stack))}</span>
         <span class="mkt-cell mkt-cell-total">${esc(formatPrice(l.price))}</span>
+        <span class="mkt-cell mkt-cell-fee" title="${esc(feeTitle.replace('{n}', formatInt(fee)))}">${esc(formatPrice(fee))}</span>
+        <span class="mkt-cell mkt-cell-net" title="${esc(netTitle.replace('{n}', formatInt(net)))}">${esc(formatPrice(net))}</span>
         <span class="mkt-cell mkt-cell-when">${esc(formatRelative(l.last_seen))}</span>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
     $listingsBody.innerHTML = `
       <div class="mkt-table">
         <div class="mkt-th mkt-cell-price"   data-i18n>Each</div>
         <div class="mkt-th mkt-cell-stack"   data-i18n>Stack</div>
         <div class="mkt-th mkt-cell-total"   data-i18n>Total</div>
+        <div class="mkt-th mkt-cell-fee"     data-i18n>Fee</div>
+        <div class="mkt-th mkt-cell-net"     data-i18n>Seller nets</div>
         <div class="mkt-th mkt-cell-when"    data-i18n>Last seen</div>
         ${rows}
       </div>`;

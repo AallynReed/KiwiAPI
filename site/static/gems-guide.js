@@ -2,7 +2,8 @@
    /gems-guide - interactive "How Gems Work in Trove" explainer.
    Vanilla JS, no deps, CSP-clean. All gem numbers mirror the server-side
    gem model (app/trove/gems/{constants,bases}.py) so the guide stays true
-   to the actual game data. Client-only; nothing is fetched.
+   to the actual game data. Client-only bar one optional read: this week's
+   Effort contests (module 8b), which degrades to hidden if it fails.
    ═══════════════════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
@@ -860,6 +861,215 @@
     }
     render();
     onLang(render);
+  })();
+
+  /* ═══════════════════════════════════════════════════════════════════
+     8b. Timegated materials - Lunar Souls & Bound Brilliance.
+     One card per way of earning them, each showing the real in-game item
+     rendered from its blueprint via /site/codexes/render (the same endpoint
+     the codex grid uses). Blueprint names and recipe amounts come from the
+     live codex index, not from memory.
+     The Effort card additionally names THIS week's three contest boards -
+     the only live read on the page, and purely additive: if it fails, the
+     card still reads correctly without them.
+     ═══════════════════════════════════════════════════════════════════ */
+  (function () {
+    var matsWrap = $("#gg-tg-mats"), grid = $("#gg-tg-grid");
+    if (!matsWrap || !grid) return;
+    var U = window.BTTUtil;
+
+    // Same-origin PNG of a blueprint. apiUrl() points it at the API host when
+    // the site is served from its own container.
+    function itemImg(bp, cls, dim) {
+      var u = "/site/codexes/render?branch=live-us&dim=" + (dim || 160) +
+              "&blueprint=" + encodeURIComponent(bp);
+      return el("img", {
+        class: cls, src: (U && U.apiUrl) ? U.apiUrl(u) : u,
+        alt: "", "aria-hidden": "true", loading: "lazy", decoding: "async"
+      });
+    }
+
+    // The two materials every Spark, Flare and focus is paid for in.
+    var MATS = {
+      soul:  { name: "Lunar Souls", bp: "item_crafting_moonsoul.blueprint",
+               cap: "23", capUnit: "a week", color: COL.blue },
+      // 5 (tome) + 10 (Bomber Royale) + 21 (all three Effort contests) = 36,
+      // and any running event stacks on top of that.
+      brill: { name: "Bound Brilliance", bp: "item_crafting_gempower_01.blueprint",
+               cap: "36", capUnit: "a week, before events", color: COL.yellow }
+    };
+
+    // `val`/`unit` = what one payout hands you. `bp` = the item that identifies
+    // the source (the currency you spend, or the material itself when there is
+    // no single item behind it).
+    var SOURCES = [
+      {
+        mat: "soul", bp: "item_crafting_moonsoul.blueprint",
+        head: "Vaults on the way down", val: "18", unit: "Lunar Souls a week",
+        body: "Vaults start appearing at depth <b>110</b> and sit on every third floor from there - 112, 115, 118 and onward for as deep as you care to go. Each holds <b>3 Lunar Souls</b>, and the week pays out for <b>six of them</b>, so 18 is the ceiling no matter how many more you crack open.",
+        floors: [112, 115, 118, 121, 124, 127], floorsMore: true,
+        floorsLabel: "Every third floor from 110"
+      },
+      {
+        mat: "soul", bp: "item_crafting_delvekey_01_fragment.blueprint",
+        head: "Five more, Mondays only", val: "5", unit: "Lunar Souls a week",
+        body: "Pick up a <b>Delve Shadowkey Fragment</b> on a Monday and it hands you a quest: clear any Delve depth. Turn it in for five more Souls. Once per Monday, then it is gone until the next one - which is what makes 23 the real weekly ceiling.",
+        note: "Any depth counts, so the shallowest clear you can manage pays the same five."
+      },
+      {
+        mat: "brill", bp: "equipment_tome_gempower_01_legendary.blueprint",
+        head: "Book of Bound Brilliance", val: "5", unit: "Brilliance a charge",
+        body: "Craft it once at the Adventurer's Crafting Bench and it is yours for good. Equipped, it charges as you play Dungeons, Geode Caves and Delves - but Legendary Tomes only charge <b>once a week</b>, so it pays out five and then waits.",
+        recipe: [
+          { n: "Water Gem Dust", a: 2000 }, { n: "Fire Gem Dust", a: 2000 },
+          { n: "Air Gem Dust", a: 2000 }, { n: "Primordial Flame", a: 10 },
+          { n: "Penta-Forged Shadow Soul", a: 2 }
+        ],
+        recipeLabel: "One-time craft"
+      },
+      {
+        mat: "brill", bp: "2022/items/item_currency_pvp_legacy.blueprint",
+        head: "Burnt Coins, traded in", val: "10", unit: "Brilliance a week",
+        body: "Playing Bomber Royale earns <b>Burnt Coins</b>, and the mode's own bench turns 30 of them into ten Brilliance. The craft is <b>once a week</b>, which still makes it the biggest single payout here - well worth a few rounds even if the mode isn't your thing.",
+        recipe: [{ n: "Bomber Royale Coin: Burnt Coin", a: 30 }],
+        recipeLabel: "At the Bomber Royale bench"
+      },
+      {
+        mat: "brill", bp: "item_crafting_gempower_01.blueprint",
+        head: "Three boards, every week", val: "21", unit: "Brilliance a week",
+        body: "Three class <b>Effort</b> boards run as contests each week, and finishing <b>rank 125 or better</b> on one pays <b>7 Brilliance</b>. Each board pays separately, so placing on all three is 21 - the largest weekly source there is. They rotate, so the classes worth your time change with them.",
+        note: "Payouts land at the weekly reset, <b>Monday 11:00 UTC</b> - the same rollover the <a href=\"/server-time\">server clock</a> counts down to. The Class Power Rank boards pay out on their own schedule.",
+        live: true
+      },
+      {
+        mat: "brill", bp: "item_crafting_gempower_01.blueprint",
+        head: "While an event is running", val: "varies", unit: "event to event",
+        body: "Some events ship their own recipe that turns the event's currency straight into Brilliance. What it costs and how much you can claim in a week is set per event, so there's no fixed rate to plan around - just check the bench whenever one starts.",
+        note: "Event recipes vanish with the event. Spend the currency before it closes."
+      }
+    ];
+
+    /* ── the two material summary cards ─────────────────────────────── */
+    function buildMats() {
+      matsWrap.innerHTML = "";
+      ["soul", "brill"].forEach(function (k) {
+        var m = MATS[k];
+        var card = el("div", { class: "gg-tg-mat" }, [
+          el("span", { class: "gg-tg-matic" }, itemImg(m.bp, "gg-tg-matimg", 96)),
+          el("div", { class: "gg-tg-matbody" }, [
+            el("span", { class: "gg-tg-matname", text: tt(m.name) }),
+            el("span", { class: "gg-tg-matcap" }, m.cap
+              ? [el("b", { text: m.cap }), " " + tt(m.capUnit)]
+              : [el("span", { class: "gg-tg-matcap-soft", text: tt(m.capUnit) })])
+          ])
+        ]);
+        card.style.setProperty("--mc", m.color);
+        matsWrap.appendChild(card);
+      });
+    }
+
+    /* ── source cards ───────────────────────────────────────────────────
+       Every source is on screen at once - the list is short enough that
+       hiding five of six behind tabs would only add clicks. */
+    function buildGrid() {
+      grid.innerHTML = "";
+      SOURCES.forEach(function (s) { grid.appendChild(sourceCard(s)); });
+    }
+
+    function sourceCard(s) {
+      var m = MATS[s.mat];
+      var body = el("div", { class: "gg-tg-cbody" }, [
+        el("span", { class: "gg-tg-cmat", text: tt(m.name) }),
+        el("h5", { class: "gg-tg-chead", text: tt(s.head) }),
+        el("div", { class: "gg-tg-yield" }, [
+          el("b", { text: tt(s.val) }),
+          el("span", { text: tt(s.unit) })
+        ]),
+        el("p", { class: "gg-tg-ctext", html: tt(s.body) })
+      ]);
+
+      if (s.floors) {
+        // The rail is a sample, not a limit - vaults keep appearing every third
+        // floor however deep you go, so it trails off rather than ending.
+        body.appendChild(el("span", { class: "gg-tg-rlabel", text: tt(s.floorsLabel) }));
+        var ladder = el("div", { class: "gg-tg-ladder", "aria-hidden": "true" });
+        s.floors.forEach(function (f) {
+          ladder.appendChild(el("span", { class: "gg-tg-floor", text: String(f) }));
+        });
+        if (s.floorsMore) ladder.appendChild(el("span", { class: "gg-tg-floor more", text: "…" }));
+        body.appendChild(ladder);
+      }
+      if (s.recipe) {
+        body.appendChild(el("span", { class: "gg-tg-rlabel", text: tt(s.recipeLabel) }));
+        var rec = el("ul", { class: "gg-tg-recipe" });
+        s.recipe.forEach(function (g) {
+          rec.appendChild(el("li", {}, [
+            el("b", { text: g.a.toLocaleString() }),
+            el("span", { text: tt(g.n) })
+          ]));
+        });
+        body.appendChild(rec);
+      }
+      if (s.live) {
+        // Filled in (or left out) once the leaderboards read resolves.
+        body.appendChild(el("div", { class: "gg-tg-liveslot" }));
+      }
+      if (s.note) {
+        body.appendChild(el("p", { class: "gg-tg-cnote" }, [
+          el("i", { class: "fa-solid fa-circle-info", "aria-hidden": "true" }),
+          el("span", { html: tt(s.note) })   // notes may carry <b> / links
+        ]));
+      }
+
+      var card = el("article", { class: "gg-tg-card" }, [
+        el("span", { class: "gg-tg-plinth" }, itemImg(s.bp, "gg-tg-bigic", 256)),
+        body
+      ]);
+      card.style.setProperty("--mc", m.color);
+      return card;
+    }
+
+    /* ── this week's Effort boards (live) ───────────────────────────── */
+    // Class Effort boards are 4000+i; Paragon (5000+i) and Power Rank (1000+i)
+    // are different families and never count here.
+    var EFFORT_LO = 4000, EFFORT_HI = 4017, boards = [];
+
+    // Names this week's three boards inside the Effort card. No boards (fetch
+    // failed, feature off, none flagged) simply leaves the slot empty - the
+    // card's copy already explains the rotation without them.
+    function paintLive() {
+      var slot = $(".gg-tg-liveslot", grid);
+      if (!slot) return;
+      slot.innerHTML = "";
+      if (!boards.length) return;
+      var list = el("div", { class: "gg-tg-live-list" });
+      boards.forEach(function (b) {
+        list.appendChild(el("a", {
+          class: "gg-tg-live-chip", href: "/leaderboards#board=" + b.uuid,
+          html: (U ? U.boardIconImg(b.uuid, "gg-tg-live-ic") : "") +
+                "<span>" + (U ? U.esc(b.name || ("#" + b.uuid)) : "") + "</span>"
+        }));
+      });
+      slot.appendChild(el("span", { class: "gg-tg-live-lbl", text: tt("Running this week") }));
+      slot.appendChild(list);
+    }
+
+    if (U) {
+      U.getJSON("/site/leaderboards/timestamps?limit=1").then(function (d) {
+        var anchor = d && d.items && d.items[0];
+        if (!anchor) return null;
+        return U.getJSON("/site/leaderboards/boards?created_at=" + anchor);
+      }).then(function (r) {
+        boards = ((r && r.items) || []).filter(function (b) {
+          return b.contest_type === "weekly" && b.uuid >= EFFORT_LO && b.uuid <= EFFORT_HI;
+        });
+        paintLive();
+      }).catch(function () { /* the card reads fine without the board names */ });
+    }
+
+    function build() { buildMats(); buildGrid(); paintLive(); }
+    build();
+    onLang(build);
   })();
 
   /* ═══════════════════════════════════════════════════════════════════

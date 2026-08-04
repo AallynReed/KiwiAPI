@@ -38,6 +38,15 @@
   const $ = (id) => document.getElementById(id);
   const $browse = $('mkt-view-browse');
   const $analytics = $('mkt-view-analytics');
+  // This file owns the tablist for the whole page, including panels it
+  // doesn't render. Keyed by the tab's data-view; a missing element is
+  // skipped, so a panel can be dropped from the template without
+  // breaking the switcher.
+  const PANELS = {
+    browse: $browse,
+    analytics: $analytics,
+    fees: $('mkt-view-fees'),
+  };
   const $days = $('mkt-an-days');
   const $discount = $('mkt-an-discount');
   const $pulse = $('mkt-an-pulse');
@@ -93,21 +102,24 @@
   }
 
   function switchView(view) {
-    if (view === state.view) return;
+    if (view === state.view || !PANELS[view]) return;
     state.view = view;
-    const analytics = view === 'analytics';
-    $browse.hidden = analytics;
-    $analytics.hidden = !analytics;
+    for (const key of Object.keys(PANELS)) {
+      if (PANELS[key]) PANELS[key].hidden = key !== view;
+    }
     for (const tab of document.querySelectorAll('.mkt-viewtab')) {
       const on = tab.dataset.view === view;
       tab.classList.toggle('active', on);
       tab.setAttribute('aria-selected', String(on));
       tab.tabIndex = on ? 0 : -1;
     }
-    if (analytics && !state.loaded) {
+    if (view === 'analytics' && !state.loaded) {
       state.loaded = true;
       loadAll();
     }
+    // Panels owned by other files (the Fees tab) can only size their SVGs
+    // once they're actually visible, so announce every switch.
+    document.dispatchEvent(new CustomEvent('btt-mkt-view', { detail: view }));
   }
 
   function loadAll() {

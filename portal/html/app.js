@@ -1906,11 +1906,14 @@ function wireRecomputeCard() {
       if (s && s.running) {
         const total = s.total || 0, done = s.done || 0;
         const pct = total ? Math.floor((done / total) * 100) : 0;
-        show(`Rebuilding duplicate names… ${done}/${total} captures (${pct}%), `
-           + `${s.detected || 0} name(s) found.`);
+        // Two phases with very different units: 'dating' walks every capture,
+        // 'evidence' walks the (much shorter) list of names it found.
+        const unit = s.phase === "evidence" ? "names" : "captures";
+        show(`Rebuilding duplicate names… [${s.phase || "dating"}] ${done}/${total} ${unit} `
+           + `(${pct}%), ${s.detected || 0} name(s) found.`);
       } else {
         clearInterval(_dupPoll); _dupPoll = null;
-        if (s) show(`Duplicate names rebuilt: ${s.detected ?? 0} name(s) across ${s.done ?? 0} captures. `
+        if (s) show(`Duplicate names rebuilt: ${s.detected ?? 0} name(s) dated across the archive. `
                   + `${s.recorded_duplicates ?? 0} recorded total.`);
       }
     }, 1500);

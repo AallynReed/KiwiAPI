@@ -553,18 +553,40 @@ async def player_canonical_name(name: str) -> str | None:
         )
 
 
-async def player_rows_window(name: str, window_start: int) -> list[dict]:
-    """All of one player's rows since ``window_start`` (for the per-player chart)."""
+async def player_rows_window(
+    name: str, window_start: int, window_end: int | None = None,
+) -> list[dict]:
+    """All of one player's rows in ``[window_start, window_end]`` (per-player chart).
+
+    ``window_end`` matters for HISTORICAL windows. With only the lower bound, a
+    7-day window anchored in the past still scans every partition from its start
+    to NOW - for a name last seen weeks ago that is most of the archive, nearly
+    all of it on the cold tier, and it blew the 120s command_timeout during the
+    duplicates backfill. Bounding both ends lets partition pruning keep the scan
+    to the ~7 partitions actually being asked about. ``None`` keeps the original
+    "from here to now" behaviour that the live chart wants."""
     async with acquire() as con:
-        rows = await con.fetch(
-            "SELECT e.board_uuid AS leaderboard, e.anchor AS created_at, e.rank, e.score, "
-            "p.name AS player_name "
-            "FROM entry e JOIN player p ON p.id = e.player_id "
-            "WHERE p.name_lower = lower($1) AND e.anchor >= $2",
-            name, window_start,
+        # Resolve the player FIRST (one indexed hit on the unique name_lower), then
+        # read entries by player_id. Filtering on ``p.name_lower`` across the join
+        # left the planner walking ``entry`` and joining back, which on a
+        # cold-tiered historical window ran tens of seconds per player. Querying
+        # ``player_id`` directly uses the (player_id, anchor) index the table was
+        # built for.
+        who = await con.fetchrow(
+            "SELECT id, name FROM player WHERE name_lower = lower($1)", name.strip())
+        if who is None:
+            return []
+        sql = (
+            "SELECT board_uuid AS leaderboard, anchor AS created_at, rank, score "
+            "FROM entry WHERE player_id = $1 AND anchor >= $2"
         )
+        args: list = [who["id"], window_start]
+        if window_end is not None:
+            args.append(window_end)
+            sql += f" AND anchor <= ${len(args)}"
+        rows = await con.fetch(sql, *args)
     return [
-        {"player_name": r["player_name"], "rank": r["rank"], "score": r["score"],
+        {"player_name": who["name"], "rank": r["rank"], "score": r["score"],
          "leaderboard": r["leaderboard"], "created_at": r["created_at"]}
         for r in rows
     ]
@@ -925,12 +947,40 @@ async def delete_all_class_estimates() -> int:
 
 # ── player renames ──────────────────────────────────────────────────────────────
 
-async def all_anchors_asc() -> list[int]:
-    """Every distinct capture anchor, OLDEST first - the backfill walks adjacent
-    pairs over this. (``list_timestamps`` is newest-first + capped; the rename
-    backfill needs the full ordered set.)"""
+async def all_anchors_asc(*, since: int | None = None) -> list[int]:
+    """Every distinct capture anchor, OLDEST first - the backfills walk over this.
+
+    Uses the SAME loose index scan (skip scan) as ``list_timestamps``, for the same
+    reason: a plain ``SELECT DISTINCT anchor FROM entry`` HashAggregates the whole
+    partitioned table (hundreds of millions of rows, most of them on the cold-tier
+    disk) and blows straight past the 120s ``command_timeout``. That is exactly how
+    this failed - the rename and duplicate backfills both died on their FIRST query,
+    before their single-flight lock was even released. The skip scan seeks the max
+    anchor, then repeatedly the next-lower one, so it costs one index seek per
+    capture instead of a full scan.
+
+    ``since`` (unix seconds) floors the walk and lets partition pruning skip every
+    older partition outright - pass it for a windowed rebuild."""
+    sql = (
+        """
+        WITH RECURSIVE a AS (
+            SELECT (SELECT max(anchor) FROM entry{floor1}) AS anchor
+            UNION ALL
+            SELECT (SELECT max(e.anchor) FROM entry e WHERE e.anchor < a.anchor{floor2})
+            FROM a WHERE a.anchor IS NOT NULL
+        )
+        SELECT anchor FROM a WHERE anchor IS NOT NULL ORDER BY anchor ASC
+        """
+    )
     async with acquire() as con:
-        rows = await con.fetch("SELECT DISTINCT anchor FROM entry ORDER BY anchor ASC")
+        if since is None:
+            rows = await con.fetch(sql.format(floor1="", floor2=""))
+        else:
+            rows = await con.fetch(
+                sql.format(floor1=" WHERE anchor >= $1",
+                           floor2=" AND e.anchor >= $1"),
+                since,
+            )
     return [r["anchor"] for r in rows]
 
 
@@ -1076,21 +1126,47 @@ async def _record_case_collisions(con, anchor: int) -> None:
 async def duplicate_groups_at(anchor: int) -> list[dict]:
     """Every ``(name, board)`` that carries MORE THAN ONE entry row at ``anchor``.
 
-    One row per duplicated pair: ``{name, board_uuid, occurrences}``. This is the
-    raw signal the duplicates detector groups by name - a single grouped scan of
-    one day-partition, run once per capture by the warmer."""
+    One row per duplicated pair: ``{name, board_uuid, occurrences}``.
+
+    Counted on DISTINCT ``(rank, score)``, not raw rows. A name listed twice at
+    the same rank AND the same score is one row emitted twice by the capture, not
+    two identities - two real entities tied on score still occupy different ranks.
+    Treating an identical repeat as a second player asserts something the data
+    does not support, and it is not rare: 14 of 120 duplicated pairs in a live
+    capture were identical repeats, almost all of them on the club boards.
+
+    Grouped on ``player_id``, with the handful of names resolved in a second
+    lookup, rather than joining ``player`` inside the aggregate. An anchor holds
+    ~700k entry rows and yields ~100 duplicated pairs, so joining to get a name
+    per row does ~700k lookups to label ~100 results. Measured on live data, the
+    join costs 1.9x on a hot partition and 2.8x on a cold one (0.48s -> 0.25s,
+    0.72s -> 0.26s); across the whole-archive backfill that is the difference
+    between ~16 and ~5 minutes.
+
+    Batching several anchors into one grouped scan was also measured and is
+    WORSE (0.80s/anchor for a whole day-partition vs 0.26s one at a time), so the
+    per-anchor loop stays. What remains is inherent: finding a name listed twice
+    on a board means grouping every row of every capture, ~692M rows."""
     async with acquire() as con:
         rows = await con.fetch(
-            "SELECT p.name AS name, e.board_uuid, count(*)::int AS occurrences "
-            "FROM entry e JOIN player p ON p.id = e.player_id "
-            "WHERE e.anchor = $1 "
-            "GROUP BY p.name, e.board_uuid HAVING count(*) > 1 "
-            "ORDER BY p.name, e.board_uuid",
+            "SELECT player_id, board_uuid, "
+            "       count(DISTINCT (rank, score))::int AS occurrences "
+            "FROM entry WHERE anchor = $1 "
+            "GROUP BY player_id, board_uuid "
+            "HAVING count(DISTINCT (rank, score)) > 1 "
+            "ORDER BY player_id, board_uuid",
             anchor,
         )
+        if not rows:
+            return []
+        ids = sorted({r["player_id"] for r in rows})
+        names = {
+            n["id"]: n["name"] for n in await con.fetch(
+                "SELECT id, name FROM player WHERE id = ANY($1::bigint[])", ids)
+        }
     return [
-        {"name": r["name"], "board_uuid": r["board_uuid"],
-         "occurrences": r["occurrences"]}
+        {"name": names.get(r["player_id"], str(r["player_id"])),
+         "board_uuid": r["board_uuid"], "occurrences": r["occurrences"]}
         for r in rows
     ]
 

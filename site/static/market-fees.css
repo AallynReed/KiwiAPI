@@ -1,0 +1,217 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /market - Fees tab
+   ───────────────────────────────────────────────────────────────────────
+   Reuses the summary-card + chart vocabulary already established by
+   market.css so the third tab reads as the same instrument panel, not a
+   bolted-on calculator.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+#mkt-view-fees {
+  max-width: var(--content-max, 1100px);
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px);
+  display: grid;
+  gap: 24px;
+}
+
+/* ─── Blocks ──────────────────────────────────────────────────────────
+   Same card shell as .mkt-an-block; duplicated rather than shared so the
+   two tabs can diverge without one breaking the other. */
+.mkt-fee-block {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-lg, 16px);
+  padding: clamp(16px, 2.6vw, 22px);
+}
+.mkt-fee-head { margin-bottom: 16px; }
+.mkt-fee-title { margin: 0; font-size: 1.15rem; }
+.mkt-fee-sub {
+  margin: 3px 0 0;
+  color: var(--text-mute);
+  font-size: .86rem;
+  max-width: 72ch;
+}
+
+/* ─── Price input + presets ──────────────────────────────────────── */
+.mkt-fee-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.mkt-fee-field { display: grid; gap: 6px; }
+.mkt-fee-field-label {
+  font-size: .72rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+}
+.mkt-fee-input-wrap { position: relative; display: inline-flex; align-items: center; }
+.mkt-fee-input {
+  width: 220px;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 10px 46px 10px 13px;
+}
+.mkt-fee-input:focus { border-color: var(--accent-blue); }
+/* Trailing unit sits inside the field - the number is the content, the
+   unit is a label, so it must not compete for weight. */
+.mkt-fee-unit {
+  position: absolute;
+  right: 13px;
+  pointer-events: none;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .78rem;
+  color: var(--text-mute);
+}
+.mkt-fee-presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.mkt-fee-preset {
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  color: var(--text-mute);
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .8rem;
+  padding: 7px 13px;
+  cursor: pointer;
+  transition: color .15s var(--ease-out), border-color .15s var(--ease-out);
+}
+.mkt-fee-preset:hover { color: var(--text); border-color: var(--accent-blue); }
+
+/* ─── Outcome cards ──────────────────────────────────────────────── */
+.mkt-fee-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.mkt-fee-card {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 14px 16px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+}
+.mkt-fee-card-label {
+  font-size: .72rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+}
+.mkt-fee-card-value {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.mkt-fee-card-sub { font-size: .76rem; color: var(--text-mute); line-height: 1.35; }
+/* Semantic, not decorative: gold = flux you pay, green = flux you keep,
+   red = flux you lose. */
+.mkt-fee-card-cost .mkt-fee-card-value { color: var(--accent-yellow); }
+.mkt-fee-card-good .mkt-fee-card-value { color: var(--accent-green); }
+.mkt-fee-card-bad  .mkt-fee-card-value { color: var(--accent-red); }
+
+/* ─── Curve ──────────────────────────────────────────────────────── */
+.mkt-fee-chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.mkt-fee-modes {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  padding: 3px;
+}
+.mkt-fee-mode {
+  border: 0;
+  background: transparent;
+  color: var(--text-mute);
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s var(--ease-out), color .15s var(--ease-out);
+}
+.mkt-fee-mode:hover { color: var(--text); }
+.mkt-fee-mode.active { background: var(--accent-blue); color: #06121f; }
+
+.mkt-fee-chart { width: 100%; height: 260px; }
+.mkt-fee-chart svg { width: 100%; height: 100%; display: block; }
+.mkt-fee-chart-meta { margin: 8px 0 0; font-size: .8rem; color: var(--text-mute); }
+
+.mkt-fee-grid {
+  stroke: rgba(255,255,255,.08);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  shape-rendering: crispEdges;
+  fill: none;
+}
+.mkt-fee-axis {
+  fill: var(--text-mute);
+  font-size: 10px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.mkt-fee-line {
+  fill: none;
+  stroke: var(--accent-blue);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.mkt-fee-cap {
+  stroke: var(--text-soft);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.mkt-fee-cap-label {
+  fill: var(--text-mute);
+  font-size: 10px;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  letter-spacing: .06em;
+}
+.mkt-fee-marker { stroke: var(--accent-orange); stroke-width: 1; stroke-dasharray: 3 3; }
+.mkt-fee-dot { fill: var(--accent-orange); stroke: var(--bg-card); stroke-width: 2; }
+
+/* ─── Rules explainer ────────────────────────────────────────────── */
+.mkt-fee-rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+}
+.mkt-fee-rule { display: grid; gap: 5px; align-content: start; }
+.mkt-fee-rule dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: .92rem;
+  color: var(--text);
+}
+.mkt-fee-rule dd { margin: 0; font-size: .86rem; color: var(--text-mute); line-height: 1.5; }
+.mkt-fee-rule i { color: var(--accent-blue); font-size: .85em; }
+
+@media (max-width: 640px) {
+  .mkt-fee-input { width: 100%; }
+  .mkt-fee-field { width: 100%; }
+  .mkt-fee-chart { height: 220px; }
+}
