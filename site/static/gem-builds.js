@@ -77,7 +77,9 @@
   // ── Config form ──────────────────────────────────────────────────────────
   function selectRow(label, value, entries, onChange, opts) {
     // entries: [{value, label}]
-    const sel = h("select", { class: "gb-select", onChange: (e) => onChange(e.target.value) });
+    // Stable key so focus can be returned to this control if the panel is
+    // rebuilt underneath it - see onConfigChange.
+    const sel = h("select", { class: "gb-select", "data-field": label, onChange: (e) => onChange(e.target.value) });
     entries.forEach((o) => {
       const opt = h("option", { value: o.value }, t(o.label));
       if (String(o.value) === String(value)) opt.selected = true;
@@ -89,7 +91,7 @@
   function classSelectRow(label, value, entries, onChange) {
     const img = h("img", { class: "gb-class-icon", src: classIcon(value), alt: "" });
     img.addEventListener("error", () => { img.style.visibility = "hidden"; });
-    const sel = h("select", { class: "gb-select", onChange: (e) => { img.src = classIcon(e.target.value); img.style.visibility = "visible"; onChange(e.target.value); } });
+    const sel = h("select", { class: "gb-select", "data-field": label, onChange: (e) => { img.src = classIcon(e.target.value); img.style.visibility = "visible"; onChange(e.target.value); } });
     entries.forEach((o) => {
       const opt = h("option", { value: o.value }, t(o.label));
       if (String(o.value) === String(value)) opt.selected = true;
@@ -190,7 +192,20 @@
 
   function onConfigChange(rerender) {
     saveConfig();
-    if (rerender) renderConfig();
+    if (rerender) {
+      // Changing the build goal adds/removes the light field, so the panel has
+      // to be rebuilt - which replaces the very <select> that triggered it. In
+      // Chrome each arrow-key press on a closed select fires `change`, so
+      // without this a keyboard user loses focus on the first press and cannot
+      // keep arrowing. Restore focus to the same field after the rebuild.
+      const active = document.activeElement;
+      const field = active && active.dataset ? active.dataset.field : null;
+      renderConfig();
+      if (field) {
+        const next = elConfig.querySelector('[data-field="' + CSS.escape(field) + '"]');
+        if (next) next.focus();
+      }
+    }
     calculate();
   }
 
