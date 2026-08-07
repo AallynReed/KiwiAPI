@@ -14,6 +14,13 @@
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   const STORAGE_KEY = "troveapi.calculators.v1";
 
+  // Callbacks that refresh the DERIVED display (totals, summary chips, badges)
+  // without rebuilding the DOM. Re-rendering the body on every `input` event
+  // destroyed the very control being dragged or typed into, so focus was lost
+  // on each keystroke and sliders stopped tracking the mouse. Rebuilt only on a
+  // structural change (tab switch, data load).
+  let liveUpdaters = [];
+
   const num = (v) => (Number(v) || 0).toLocaleString();
   const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const sliderFill = (v, lo, hi) => (hi <= lo ? "0%" : clampN(((v - lo) / (hi - lo)) * 100, 0, 100) + "%");
@@ -147,7 +154,7 @@
   function scheduleStarChart() { if (scTimer) clearTimeout(scTimer); scTimer = setTimeout(fetchStarChartMf, 350); }
   async function fetchStarChartMf() {
     const code = starChartCode.trim();
-    if (!code) { starChartMf = { flat: 0, pct: 0, pathsCount: 0, error: false }; renderBody(); return; }
+    if (!code) { starChartMf = { flat: 0, pct: 0, pathsCount: 0, error: false }; refresh(); return; }
     try {
       const r = await fetch(`/site/gems/parse-star-chart?code=${encodeURIComponent(code)}`, { headers: { Accept: "application/json" } });
       const data = await r.json();
@@ -161,7 +168,7 @@
     } catch (e) {
       starChartMf = { flat: 0, pct: 0, pathsCount: 0, error: true };
     }
-    renderBody();
+    refresh();
   }
 
   // ── Records sync ─────────────────────────────────────────────────────────
@@ -226,9 +233,11 @@
   function calcItem(item, cfg) {
     // cfg: { min, max, step, badge, onInput, sliderMax, numberMax }
     const name = cfg.title || t(item.name);
+    const badge = h("span", { class: "calc-badge" }, cfg.badge());
+    liveUpdaters.push(() => { badge.textContent = cfg.badge(); });
     const header = h("div", { class: "calc-item-header" },
       h("span", {}, name),
-      h("span", { class: "calc-badge" }, cfg.badge()));
+      badge);
     let control;
     if (item.type && item.type.includes("switch")) {
       const c = h("input", { type: "checkbox", "aria-label": name });
@@ -253,28 +262,45 @@
     return h("div", { class: "calc-item" + (cfg.accentClass || "") }, header, control);
   }
 
+  // `value` and `summaryChildren` are thunks so the header can refresh its own
+  // derived text in place - see `liveUpdaters`.
   function header(label, value, accent, summaryChildren) {
+    const total = h("span", { class: "calc-total-value" }, value());
+    const strip = summaryChildren ? h("div", { class: "calc-summary-strip" }, summaryChildren()) : null;
+    liveUpdaters.push(() => {
+      total.textContent = value();
+      if (!strip) return;
+      // The strip's chips are conditional (a Star Chart chip appears only once a
+      // code is entered), so replace its children wholesale. It holds no inputs.
+      strip.textContent = "";
+      const kids = summaryChildren();
+      for (const k of (Array.isArray(kids) ? kids : [kids])) if (k) strip.appendChild(k);
+    });
     return h("div", { class: "calc-header", style: accent ? { "--calc-accent": accent } : null },
       h("div", { class: "calc-total-box" },
         h("span", { class: "calc-total-label" }, t(label)),
-        h("span", { class: "calc-total-value" }, value)),
-      summaryChildren ? h("div", { class: "calc-summary-strip" }, summaryChildren) : null);
+        total),
+      strip);
   }
 
   // ── Render: body per tab ─────────────────────────────────────────────────
   function renderBody() {
     elBody.textContent = "";
+    liveUpdaters = [];          // the nodes they targeted just went away
     if (activeTab === "pr") return renderPr();
     if (activeTab === "mastery") return renderMastery();
     if (activeTab === "mf") return renderMf();
     if (activeTab === "light") return renderLight();
   }
 
-  function refresh() { save(); renderBody(); }
+  // Called on every input event: persist and refresh the derived text only. The
+  // controls keep their own value/fill in sync, so nothing here touches them -
+  // which is what lets focus, drag state and caret position survive.
+  function refresh() { save(); for (const fn of liveUpdaters) fn(); }
 
   function renderPr() {
-    const strip = [h("span", { class: "calc-chip" }, h("b", {}, t("Mastery PR") + " "), num(prBreakdownMasteryPR()))];
-    elBody.appendChild(header("Total Power Rank", num(totalPR()), "#fbc02d", strip));
+    const strip = () => [h("span", { class: "calc-chip" }, h("b", {}, t("Mastery PR") + " "), num(prBreakdownMasteryPR()))];
+    elBody.appendChild(header("Total Power Rank", () => num(totalPR()), "#fbc02d", strip));
     const grid = h("div", { class: "calc-grid" });
     prData.forEach((item) => {
       const isMastery = String(item.type).includes("mastery");
@@ -297,12 +323,12 @@
   }
 
   function renderMastery() {
-    const strip = h("div", { class: "calc-mastery-strip" },
+    const strip = () => h("div", { class: "calc-mastery-strip" },
       masteryBox("+" + (Math.min(troveMastery || 0, 500) * 0.2).toFixed(1) + "%", "fa-burst", "Damage"),
       masteryBox("+" + (Math.min(troveMastery || 0, 500) * 0.6).toFixed(1) + "%", "fa-heart", "Health"),
       masteryBox("+" + num(Math.min(geodeMastery || 0, 100) * 10), "fa-sun", "Light", "#00bcd4"),
       masteryBox("+" + Math.max(0, Math.min(troveMastery || 0, 1000) - 500), "fa-gem", "Magic Find"));
-    elBody.appendChild(header("Total Mastery Power Rank", num(masteryPR()), "#ff9800", strip));
+    elBody.appendChild(header("Total Mastery Power Rank", () => num(masteryPR()), "#ff9800", strip));
 
     const grid = h("div", { class: "calc-grid" });
     grid.appendChild(masterySlider("Trove Mastery", "fa-crown", "#fbc02d", "Soft cap 1000", troveMastery, Math.max(1100, troveMastery), 2000, (v) => { troveMastery = clampN(v, 0, 2000); refresh(); }));
@@ -317,9 +343,19 @@
   function masterySlider(label, icon, color, badge, value, sliderMax, numberMax, onInput) {
     const range = h("input", { class: "calc-slider", type: "range", min: 0, max: sliderMax, value, "aria-label": t(label), style: { "--val-pct": sliderFill(value, 0, sliderMax) } });
     const number = h("input", { class: "calc-number", type: "number", min: 0, max: numberMax, value, "aria-label": t(label) });
-    const sync = (v) => { range.style.setProperty("--val-pct", sliderFill(v, 0, sliderMax)); onInput(v); };
+    // The track used to stretch past its start value only because a re-render
+    // recomputed max from the new value. Nothing re-renders now, so grow it here
+    // - otherwise typing 1500 would peg the handle at the old 1100 ceiling.
+    let hi = sliderMax;
+    const grow = (v) => { if (v > hi) { hi = v; range.max = hi; } };
+    const sync = (v) => { grow(v); range.style.setProperty("--val-pct", sliderFill(v, 0, hi)); onInput(v); };
     range.addEventListener("input", (e) => { number.value = e.target.value; sync(Number(e.target.value)); });
-    number.addEventListener("input", (e) => { range.value = clampN(Number(e.target.value) || 0, 0, sliderMax); sync(Number(e.target.value) || 0); });
+    number.addEventListener("input", (e) => {
+      const v = Number(e.target.value) || 0;
+      grow(v);
+      range.value = clampN(v, 0, hi);
+      sync(v);
+    });
     return h("div", { class: "calc-item accent", style: { "--calc-accent": color } },
       h("div", { class: "calc-item-header" },
         h("span", {}, h("i", { class: "fa-solid " + icon, "aria-hidden": "true", style: { color } }), " " + t(label)),
@@ -328,19 +364,22 @@
   }
 
   function renderMf() {
-    const s = mfStats();
-    const strip = [
-      h("span", { class: "calc-chip" }, h("b", {}, t("Base MF") + " "), num(s.flat)),
-      h("span", { class: "calc-chip" }, h("b", {}, t("Bonus") + " "), "+" + s.bonus + "%"),
-    ];
-    if (s.starFlat > 0 || s.starPct > 0) {
-      const parts = [];
-      if (s.starFlat > 0) parts.push("+" + num(s.starFlat));
-      if (s.starPct > 0) parts.push("+" + s.starPct + "%");
-      strip.push(h("span", { class: "calc-chip" }, h("b", {}, t("Star Chart") + " "), parts.join(" / ")));
-    }
-    if (s.patron > 1) strip.push(h("span", { class: "calc-chip" }, h("b", {}, t("Patron") + " "), "x" + s.patron));
-    elBody.appendChild(header("Total Magic Find", num(s.total), "var(--accent-blue)", strip));
+    const strip = () => {
+      const s = mfStats();
+      const chips = [
+        h("span", { class: "calc-chip" }, h("b", {}, t("Base MF") + " "), num(s.flat)),
+        h("span", { class: "calc-chip" }, h("b", {}, t("Bonus") + " "), "+" + s.bonus + "%"),
+      ];
+      if (s.starFlat > 0 || s.starPct > 0) {
+        const parts = [];
+        if (s.starFlat > 0) parts.push("+" + num(s.starFlat));
+        if (s.starPct > 0) parts.push("+" + s.starPct + "%");
+        chips.push(h("span", { class: "calc-chip" }, h("b", {}, t("Star Chart") + " "), parts.join(" / ")));
+      }
+      if (s.patron > 1) chips.push(h("span", { class: "calc-chip" }, h("b", {}, t("Patron") + " "), "x" + s.patron));
+      return chips;
+    };
+    elBody.appendChild(header("Total Magic Find", () => num(mfStats().total), "var(--accent-blue)", strip));
 
     const grid = h("div", { class: "calc-grid" });
     mfData.forEach((item) => {
@@ -357,33 +396,43 @@
   function starChartItem() {
     const input = h("input", { class: "calc-number calc-sc-input", type: "text", value: starChartCode, "aria-label": t("Star Chart build code"), placeholder: t("Paste a star-chart build code") });
     input.addEventListener("input", (e) => { starChartCode = e.target.value.trim(); save(); scheduleStarChart(); });
-    const item = h("div", { class: "calc-item accent", style: { "--calc-accent": "#ff9800" } },
+    // The breakdown node always exists and is filled in place. Rebuilding the
+    // item when the parse resolved would have yanked the text field out from
+    // under the caret 350ms into typing - the same defect as the sliders.
+    const bd = h("div", { class: "calc-sc-breakdown" });
+    const paintBreakdown = () => {
+      bd.textContent = "";
+      bd.hidden = !starChartCode;
+      if (!starChartCode) return;
+      if (starChartMf.error) {
+        bd.appendChild(h("span", { class: "err" }, h("i", { class: "fa-solid fa-triangle-exclamation", "aria-hidden": "true" }), " " + t("Invalid build code")));
+        return;
+      }
+      const parts = [];
+      if (starChartMf.flat > 0) parts.push("+" + num(starChartMf.flat));
+      if (starChartMf.pct > 0) parts.push("+" + starChartMf.pct + "%");
+      bd.appendChild(h("span", {},
+        h("b", {}, t("Nodes") + ": "), starChartMf.pathsCount, "  ",
+        h("b", {}, t("Magic Find") + ": "), parts.length ? parts.join(" / ") : t("none detected")));
+    };
+    paintBreakdown();
+    liveUpdaters.push(paintBreakdown);
+    return h("div", { class: "calc-item accent", style: { "--calc-accent": "#ff9800" } },
       h("div", { class: "calc-item-header" },
         h("span", {}, h("i", { class: "fa-solid fa-chart-network", "aria-hidden": "true", style: { color: "#ff9800" } }), " " + t("Star Chart")),
         h("span", { class: "calc-badge" }, t("MF only"))),
-      h("div", { class: "calc-sc-controls" }, input));
-    if (starChartCode) {
-      const bd = h("div", { class: "calc-sc-breakdown" });
-      if (starChartMf.error) {
-        bd.appendChild(h("span", { class: "err" }, h("i", { class: "fa-solid fa-triangle-exclamation", "aria-hidden": "true" }), " " + t("Invalid build code")));
-      } else {
-        const parts = [];
-        if (starChartMf.flat > 0) parts.push("+" + num(starChartMf.flat));
-        if (starChartMf.pct > 0) parts.push("+" + starChartMf.pct + "%");
-        bd.appendChild(h("span", {},
-          h("b", {}, t("Nodes") + ": "), starChartMf.pathsCount, "  ",
-          h("b", {}, t("Magic Find") + ": "), parts.length ? parts.join(" / ") : t("none detected")));
-      }
-      item.appendChild(bd);
-    }
-    return item;
+      h("div", { class: "calc-sc-controls" }, input),
+      bd);
   }
 
   function renderLight() {
-    const s = lightStats();
-    const strip = [h("span", { class: "calc-chip" }, h("b", {}, t("Base Light") + " "), num(s.flat))];
-    if (s.bonusPct > 0) strip.push(h("span", { class: "calc-chip" }, h("b", {}, t("Bonus") + " "), "+" + s.bonusPct.toFixed(0) + "%"));
-    elBody.appendChild(header("Total Light", num(s.total), "#00bcd4", strip));
+    const strip = () => {
+      const s = lightStats();
+      const chips = [h("span", { class: "calc-chip" }, h("b", {}, t("Base Light") + " "), num(s.flat))];
+      if (s.bonusPct > 0) chips.push(h("span", { class: "calc-chip" }, h("b", {}, t("Bonus") + " "), "+" + s.bonusPct.toFixed(0) + "%"));
+      return chips;
+    };
+    elBody.appendChild(header("Total Light", () => num(lightStats().total), "#00bcd4", strip));
 
     const grid = h("div", { class: "calc-grid" });
     lightData.forEach((item) => {
