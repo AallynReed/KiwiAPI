@@ -1292,9 +1292,14 @@ def _duplicate_row(r) -> dict:
 
 async def list_duplicates(
     *, limit: int, offset: int, kind: str | None = None,
-) -> tuple[list[dict], int]:
+) -> tuple[list[dict], int, int]:
     """Recorded duplicate-name groups: still-current first (newest ``last_anchor``),
-    then widest blast radius, with the total for pagination."""
+    then widest blast radius.
+
+    Returns ``(rows, total, current)`` where both counts span the WHOLE filtered
+    set, not the page. ``current`` used to be counted over the returned rows,
+    which only matched the real figure while the page was big enough to hold
+    every current group - paginate and the tab would under-report it."""
     where = ""
     args: list = []
     if kind:
@@ -1304,13 +1309,18 @@ async def list_duplicates(
     async with acquire() as con:
         total = await con.fetchval(
             f"SELECT count(*) FROM player_duplicate{where}", *args)
+        current = await con.fetchval(
+            f"SELECT count(*) FROM player_duplicate{where}"
+            f"{' AND' if where else ' WHERE'} last_anchor = "
+            "(SELECT MAX(last_anchor) FROM player_duplicate)",
+            *args)
         rows = await con.fetch(
             f"SELECT {_DUP_COLS} FROM player_duplicate{where} "
             "ORDER BY last_anchor DESC, boards DESC, name_lower ASC "
             f"LIMIT ${len(args) + 1} OFFSET ${len(args) + 2}",
             *args, limit, offset,
         )
-    return [_duplicate_row(r) for r in rows], int(total or 0)
+    return [_duplicate_row(r) for r in rows], int(total or 0), int(current or 0)
 
 
 async def duplicate_for_name(name: str) -> dict | None:

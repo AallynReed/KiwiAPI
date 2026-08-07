@@ -35,6 +35,9 @@
   }
 
   const PAGE_SIZE = 100;
+  // Smaller than PAGE_SIZE: each duplicate renders as a tall expandable card
+  // with its per-board evidence, so 200 at once was a very long scroll.
+  const DUPLICATES_PAGE_SIZE = 50;
   const DAY_SECONDS = 86400;
   const TROVE_OFFSET_SECONDS = 11 * 3600;  // trove-time = real UTC - 11h
   const PICKER_DAYS = 7;
@@ -129,6 +132,7 @@
     renames: null,          // cached payload from /site/leaderboards/renames
     duplicates: null,       // cached payload from /site/leaderboards/duplicates
     duplicatesKind: '',     // active cause filter on that tab ('' = all)
+    duplicatesCurrentAll: 0,  // unfiltered still-current count, for the tab badge
     renamesMinConfidence: readRenamesMinConfidence(),  // renames slider value, persisted
     activeTab: 'boards',         // 'boards' | 'cheaters' | 'clusters' | 'renames' | 'duplicates'
     cheatersLoaded: false,       // becomes true after the first lazy fetch (shared by both tabs)
@@ -200,6 +204,8 @@
   // Possible-duplicates tab - names that resolve to more than one player.
   const $duplicatesBody = document.getElementById('lb-duplicates-body');
   const $duplicatesMeta = document.getElementById('lb-duplicates-meta');
+  const $duplicatesFoot = document.getElementById('lb-duplicates-foot');
+  const $duplicatesMore = document.getElementById('lb-duplicates-more');
   const $tabDuplicatesBtn = document.getElementById('lb-tab-duplicates');
   const $tabDuplicatesBadge = document.getElementById('lb-tab-duplicates-badge');
   const $playerDupe = document.getElementById('lb-player-dupe');
@@ -604,28 +610,46 @@
       renderDuplicatesTab();
       return;
     }
+    await loadMoreDuplicates(/* reset = */ true);
+  }
+
+  // Paged loader for the duplicates tab. The archive holds every name ever
+  // duplicated (thousands), so the tab pulls one page at a time and appends.
+  //
+  // The cause filter is applied SERVER-side (?kind=): filtering a single page
+  // client-side would only ever filter the rows already fetched, and `total`
+  // would describe a different population than the rows on screen. A filter
+  // change is therefore a refetch from offset 0.
+  async function loadMoreDuplicates(reset = false) {
+    if (state.duplicatesLoading) return;
     state.duplicatesLoading = true;
-    if ($duplicatesMeta) {
+    const rows = reset ? [] : ((state.duplicates && state.duplicates.duplicates) || []);
+    if (reset && $duplicatesMeta) {
       $duplicatesMeta.textContent = t('Loading the latest data - this can take a moment.');
     }
+    if ($duplicatesMore) $duplicatesMore.disabled = true;
     try {
-      const payload = await fetchJSON('/site/leaderboards/duplicates?limit=200');
+      const qs = `?limit=${DUPLICATES_PAGE_SIZE}&offset=${rows.length}`
+        + (state.duplicatesKind ? `&kind=${encodeURIComponent(state.duplicatesKind)}` : '');
+      const payload = await fetchJSON('/site/leaderboards/duplicates' + qs);
+      payload.duplicates = rows.concat(payload.duplicates || []);
       state.duplicates = payload;
       state.duplicatesLoaded = true;
       renderDuplicatesTab(payload);
     } catch (err) {
-      state.duplicates = { _error: err };
-      renderDuplicatesTab(state.duplicates);
+      // A failed "load more" must not wipe rows already on screen - only an
+      // opening load has nothing better to show.
+      if (rows.length) {
+        console.warn('[leaderboards] duplicates page failed; keeping previous rows', err);
+        renderDuplicatesTab();
+      } else {
+        state.duplicates = { _error: err };
+        renderDuplicatesTab(state.duplicates);
+      }
     } finally {
       state.duplicatesLoading = false;
+      if ($duplicatesMore) $duplicatesMore.disabled = false;
     }
-  }
-
-  // A group matches the active filter when its kind is that cause - or 'both',
-  // which carries either.
-  function duplicateMatchesKind(d, kind) {
-    if (!kind) return true;
-    return d.kind === kind || d.kind === 'both';
   }
 
   function renderDuplicatesTab(payload) {
@@ -644,54 +668,48 @@
       return;
     }
 
-    const all = data.duplicates || [];
-    const visible = all.filter((d) => duplicateMatchesKind(d, state.duplicatesKind));
-    // The badge counts groups still present in the newest capture - a historical
-    // group that has since resolved shouldn't nag on the tab forever.
+    // Rows are the loaded pages of the ACTIVE filter - the server applies ?kind=
+    // and reports total/current over that same filtered set, so every number
+    // here describes one population and no client-side filtering is needed.
+    const visible = data.duplicates || [];
+    const total = data.total || 0;
     const latest = data.latest_anchor;
-    // serve_list already counts this over the same rows - don't keep a second
-    // definition of "current" in sync. Fall back for a payload cached before the
-    // field existed.
+    // Groups still present in the newest capture. Counted server-side across the
+    // whole set, not the page, so paging can't make it drift.
     const current = typeof data.current === 'number'
       ? data.current
-      : all.filter((d) => latest && d.last_anchor === latest).length;
-    // Both counts in the meta line must describe the same set. `current` is the
-    // server's count over the whole page, so under a cause filter it can exceed
-    // the number of rows on screen ("47 shared names, 85 still in the latest
-    // capture"). Re-derive it from the filtered rows whenever a filter is on.
-    const currentShown = state.duplicatesKind
-      ? visible.filter((d) => latest && d.last_anchor === latest).length
-      : current;
+      : visible.filter((d) => latest && d.last_anchor === latest).length;
 
     if ($tabDuplicatesBadge) {
-      $tabDuplicatesBadge.hidden = current === 0;
-      $tabDuplicatesBadge.textContent = String(current);
+      // The badge is the unfiltered "needs attention" count, so it must not move
+      // when a cause chip narrows the list. Latch the value from the unfiltered
+      // view and keep it.
+      if (!state.duplicatesKind) state.duplicatesCurrentAll = current;
+      const badge = state.duplicatesCurrentAll;
+      $tabDuplicatesBadge.hidden = !badge;
+      $tabDuplicatesBadge.textContent = String(badge || 0);
     }
 
     if ($duplicatesMeta) {
-      if (all.length === 0) {
-        $duplicatesMeta.textContent = t('No shared names found - every name maps to one player.');
-      } else if (visible.length === 0) {
-        $duplicatesMeta.textContent = t('No names match this filter.');
-      } else if (!state.duplicatesKind && (data.total || 0) > all.length) {
-        // The payload is one capped page of a much longer record (the archive
-        // holds every name ever duplicated), so say so rather than presenting
-        // the page size as the total. Still-current groups sort first, so the
-        // ones that matter are always on this page.
-        //
-        // Only when NO cause filter is active: data.total is the server's
-        // unfiltered archive count, so pairing it with the client-filtered
-        // visible.length would read "showing 12 of 412" about two different
-        // populations. With a filter on, fall through to the plain count.
+      if (total === 0) {
+        $duplicatesMeta.textContent = state.duplicatesKind
+          ? t('No names match this filter.')
+          : t('No shared names found - every name maps to one player.');
+      } else if (visible.length < total) {
+        // Part-way through a long record: say how far in we are. Both numbers
+        // span the active filter, so they are directly comparable.
         $duplicatesMeta.textContent =
           t('Showing {v} of {c} shared name(s), {n} still in the latest capture.')
-            .replace('{v}', all.length).replace('{c}', data.total)
+            .replace('{v}', visible.length).replace('{c}', total)
             .replace('{n}', current);
       } else {
         $duplicatesMeta.textContent = t('{c} shared name(s), {n} still in the latest capture.')
-          .replace('{c}', visible.length).replace('{n}', currentShown);
+          .replace('{c}', total).replace('{n}', current);
       }
     }
+
+    // "Load more" only while pages remain for the active filter.
+    if ($duplicatesFoot) $duplicatesFoot.hidden = visible.length >= total;
 
     if (!visible.length) {
       $duplicatesBody.innerHTML = '<p class="lb-cheaters-empty" data-i18n>No shared names flagged.</p>';
@@ -2452,13 +2470,20 @@
         renderRenamesTab();
       });
     }
-    // Cause filter on the duplicates tab. No refetch - the payload carries every
-    // group and the filter is applied client-side.
+    // Cause filter on the duplicates tab. The filter is applied SERVER-side so
+    // it spans the whole archive rather than the pages already loaded, so a
+    // change refetches from offset 0.
     for (const chip of document.querySelectorAll('[data-dupe-kind]')) {
       chip.addEventListener('click', () => {
-        state.duplicatesKind = chip.dataset.dupeKind || '';
-        renderDuplicatesTab();
+        const kind = chip.dataset.dupeKind || '';
+        if (kind === state.duplicatesKind) return;
+        state.duplicatesKind = kind;
+        loadMoreDuplicates(/* reset = */ true);
       });
+    }
+
+    if ($duplicatesMore) {
+      $duplicatesMore.addEventListener('click', () => loadMoreDuplicates(false));
     }
 
     // Browser Back/Forward (and manual hash edits) → re-apply the hash to state.

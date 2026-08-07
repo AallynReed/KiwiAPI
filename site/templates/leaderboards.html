@@ -401,6 +401,9 @@
             <div class="lb-duplicates-body" id="lb-duplicates-body">
                 <p class="lb-cheaters-empty" data-i18n>Checking recent captures…</p>
             </div>
+            <div class="lb-entries-foot" id="lb-duplicates-foot" hidden>
+                <button type="button" class="lb-load-more" id="lb-duplicates-more" data-i18n>Load more</button>
+            </div>
             <details class="lb-cheaters-method">
                 <summary data-i18n>How is this computed?</summary>
                 <p data-i18n>Trove's leaderboards identify players by name only - there's no permanent id behind it. So two things can go wrong, and we check for both on every capture. The first is that the game's own leaderboard lists the exact same name twice on one board, at two different ranks with two different scores. The second is that two names differing only in capitalisation get treated as one. Either way, we separate the score lines by following each one from hour to hour, and then report whether one line has stopped moving while the other keeps climbing - which is what a leftover, abandoned leaderboard entry looks like. We never claim to know which line is the "real" player, because nothing in the data can tell us that.</p>

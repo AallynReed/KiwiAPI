@@ -2152,11 +2152,41 @@ class Handler(SimpleHTTPRequestHandler):
                 ], 2),
                 _group("Robot", "case", "case_only", [], 2, ("Robot", "robot")),
             ]
+            # Bulk filler so the tab has more rows than one page and the
+            # "Load more" path is actually exercisable locally. Production has
+            # thousands; the handful above stay first so every verdict + cause
+            # is visible without paging.
+            for i in range(120):
+                kind = "case" if i % 5 == 0 else "same_name"
+                verdict = "case_only" if kind == "case" else (
+                    "not_analysed" if i % 3 else "all_idle")
+                g = _group(f"Filler{i:03d}", kind, verdict, [], 2)
+                if verdict == "not_analysed":
+                    # Dated by the archive walk but never measured - no evidence.
+                    g["evidence"] = {}
+                    g["last_anchor"] = STUB_ANCHOR - (i + 2) * 86400   # historical
+                duplicates.append(g)
+
+            # Honour limit/offset/kind exactly as the real endpoint does, so the
+            # pager and the server-side cause filter can be verified here. 'both'
+            # satisfies either filter, matching pg_store.list_duplicates.
+            # `path` has the query stripped (see `url = urlparse(self.path)`
+            # above), so read it off `url` - parsing `path` yields nothing and
+            # every page would silently return the same first slice.
+            q = parse_qs(url.query)
+            kind = (q.get("kind") or [""])[0]
+            limit = max(1, min(int((q.get("limit") or ["50"])[0]), 200))
+            offset = max(0, int((q.get("offset") or ["0"])[0]))
+            if kind:
+                duplicates = [d for d in duplicates
+                              if d["kind"] == kind or d["kind"] == "both"]
+            total = len(duplicates)
+            current = sum(1 for d in duplicates if d["last_anchor"] == STUB_ANCHOR)
             return self._send_json({
-                "enabled": True, "duplicates": duplicates,
-                "total": len(duplicates), "current": len(duplicates),
+                "enabled": True, "duplicates": duplicates[offset:offset + limit],
+                "total": total, "current": current,
                 "latest_anchor": STUB_ANCHOR,
-                "limit": 200, "offset": 0, "method_version": 1,
+                "limit": limit, "offset": offset, "method_version": 1,
             })
         if path.startswith("/site/leaderboards/duplicates/"):
             # Per-name lookup driving the player panel's shared-name banner.

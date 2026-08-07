@@ -741,10 +741,9 @@ async def serve_list(*, limit: int = 50, offset: int = 0,
     if not await feature_flags.is_enabled(feature_flags.DUPLICATES_FLAG):
         return {"enabled": False, "duplicates": [], "total": 0, "current": 0,
                 "limit": limit, "offset": offset, "method_version": METHOD_VERSION}
-    rows, total = await pg_store.list_duplicates(
+    rows, total, current = await pg_store.list_duplicates(
         limit=limit, offset=offset, kind=kind)
     latest = await pg_store.latest_duplicate_anchor()
-    current = sum(1 for r in rows if latest and r["last_anchor"] == latest)
     return {
         "enabled": True, "duplicates": rows, "total": total, "current": current,
         "latest_anchor": latest, "limit": limit, "offset": offset,
