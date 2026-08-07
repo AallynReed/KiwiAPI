@@ -49,7 +49,7 @@
     },
     {
         "name": "Ally",
-        "value": 462.5,
+        "value": 562.5,
         "type": "slider",
         "step": 2.5,
         "perm": true
