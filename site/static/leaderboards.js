@@ -655,6 +655,13 @@
     const current = typeof data.current === 'number'
       ? data.current
       : all.filter((d) => latest && d.last_anchor === latest).length;
+    // Both counts in the meta line must describe the same set. `current` is the
+    // server's count over the whole page, so under a cause filter it can exceed
+    // the number of rows on screen ("47 shared names, 85 still in the latest
+    // capture"). Re-derive it from the filtered rows whenever a filter is on.
+    const currentShown = state.duplicatesKind
+      ? visible.filter((d) => latest && d.last_anchor === latest).length
+      : current;
 
     if ($tabDuplicatesBadge) {
       $tabDuplicatesBadge.hidden = current === 0;
@@ -682,7 +689,7 @@
             .replace('{n}', current);
       } else {
         $duplicatesMeta.textContent = t('{c} shared name(s), {n} still in the latest capture.')
-          .replace('{c}', visible.length).replace('{n}', current);
+          .replace('{c}', visible.length).replace('{n}', currentShown);
       }
     }
 
