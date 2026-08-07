@@ -11,12 +11,14 @@ REM    deploy.bat            normal redeploy
 REM    deploy.bat --logs     redeploy, then follow logs
 REM    deploy.bat --no-build just restart
 REM
-REM  Edit HOST below to your server's VPN hostname or IP.
-REM  Set up SSH key auth first (ssh-copy-id) for no password prompt.
+REM  HOST is the ssh_config alias ZakrosL (root@10.0.0.253:22, LAN).
+REM  ALWAYS use ZakrosL - the other aliases do not work for deploys:
+REM  bare "zakros" does not resolve, AZakrosL (aallyn@) is denied by
+REM  publickey, and Zakros (via the VPS on :1511) is ipset-restricted.
 REM ============================================================
 
 setlocal
-set "HOST=aallyn@zakros"
+set "HOST=ZakrosL"
 set "REMOTE=/opt/trove/deploy.sh"
 
 echo Connecting to %HOST% and running deploy.sh ...

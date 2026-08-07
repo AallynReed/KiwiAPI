@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 #
-# deploy.sh - rebuild and (re)start the Kiwi API stack with the current code.
+# deploy.sh - update, rebuild and (re)start the Kiwi API stack.
+#
+# /opt/trove is a git checkout, so this is the single update command: it pulls
+# origin/main, re-minifies the static assets, rebuilds and recreates. A failed
+# pull aborts rather than silently deploying the old tree.
 #
 # Usage:
-#   ./deploy.sh                   build changed images, recreate containers, show status
+#   ./deploy.sh                   pull, build changed images, recreate containers
+#   ./deploy.sh --no-pull         build the tree as-is, skip the git pull
 #   ./deploy.sh --force-recreate  recreate ALL containers even if unchanged (picks up .env edits)
 #   ./deploy.sh --logs            ... then follow logs
 #   ./deploy.sh --no-build        just recreate containers (skip image rebuild)
@@ -31,7 +36,7 @@ set -euo pipefail
 # Always run from the directory this script lives in.
 cd "$(dirname "$(readlink -f "$0")")"
 
-BUILD=1; FOLLOW=0; PULL=0; PRUNE=1; FORCE=0; MINIFY=1
+BUILD=1; FOLLOW=0; PULL=0; PRUNE=1; FORCE=0; MINIFY=1; PULLSRC=1
 for arg in "$@"; do
   case "$arg" in
     --no-build)       BUILD=0 ;;
@@ -41,6 +46,7 @@ for arg in "$@"; do
     --no-prune)       PRUNE=0 ;;
     --force-recreate) FORCE=1 ;;
     --no-minify)      MINIFY=0 ;;
+    --no-pull)        PULLSRC=0 ;;   # build the tree as-is, skip 'git pull'
     -h|--help)        grep '^#' "$0" | sed 's/^#\{1,\} \{0,1\}//'; exit 0 ;;
     *) echo "Unknown option: $arg (try --help)" >&2; exit 2 ;;
   esac
@@ -60,13 +66,25 @@ if [ ! -f .env ]; then
   echo "WARNING: no .env found - using compose defaults (insecure SECRET_KEY, no admin, no email)." >&2
 fi
 
-# NOTE: the source is already present on this host, so we build straight from the
-# local tree and do NOT touch git. (Set FETCH_GIT=1 to opt back into a 'git pull'
-# if you ever run this on a plain git checkout.)
-if [ -d .git ] && [ "${FETCH_GIT:-0}" = "1" ]; then
+# /opt/trove is a git checkout, so a deploy IS an update: pull first, then build
+# from what we just pulled. One command updates and restarts the stack.
+#
+# A failed pull is FATAL rather than a warning. Continuing on failure would build
+# the old tree while printing "deploy complete", which looks identical to a
+# successful update - the whole point of this step is that you can trust the
+# running code matches origin/main. Skip deliberately with --no-pull, and set
+# FETCH_GIT=0 to turn it off for a host that is not a checkout.
+if [ -d .git ] && [ "$PULLSRC" -eq 1 ] && [ "${FETCH_GIT:-1}" = "1" ]; then
   git config --global --add safe.directory "$(pwd)" 2>/dev/null || true
-  echo ">> git pull (FETCH_GIT=1)"
-  git pull --ff-only || echo "   (git pull skipped/failed; continuing with local code)"
+  echo ">> git pull --ff-only"
+  if ! git pull --ff-only; then
+    echo "ERROR: git pull failed - refusing to deploy stale code." >&2
+    echo "       Local commits or a dirty tree block a fast-forward; resolve on the" >&2
+    echo "       server (git status), or re-run with --no-pull to build as-is." >&2
+    exit 1
+  fi
+elif [ ! -d .git ]; then
+  echo ">> not a git checkout - building from the local tree"
 fi
 
 # Regenerate minified CSS/JS from source so nobody has to hand-minify. The tools
