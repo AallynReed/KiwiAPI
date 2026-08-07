@@ -1913,8 +1913,16 @@ function wireRecomputeCard() {
            + `(${pct}%), ${s.detected || 0} name(s) found.`);
       } else {
         clearInterval(_dupPoll); _dupPoll = null;
-        if (s) show(`Duplicate names rebuilt: ${s.detected ?? 0} name(s) dated across the archive. `
-                  + `${s.recorded_duplicates ?? 0} recorded total.`);
+        // Dated != analysed: evidence is only built for names still in the newest
+        // capture (an older window is cold-tiered and costs ~35s apiece), so spell
+        // out the split - otherwise "400 dated" reads as 400 analysed when only a
+        // handful carry a real verdict.
+        if (s) show(`Duplicate names rebuilt: ${s.detected ?? 0} name(s) dated across the archive`
+                  + (s.evidenced != null
+                      ? ` (${s.evidenced} still current, with evidence; `
+                        + `${s.skipped_historical ?? 0} historical, dated only)`
+                      : "")
+                  + `. ${s.recorded_duplicates ?? 0} recorded total.`);
       }
     }, 1500);
   };

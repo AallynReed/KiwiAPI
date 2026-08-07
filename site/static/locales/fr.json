@@ -2385,5 +2385,9 @@
   "Above 40M the fee is flat at 65,000 flux.": "Au-delà de 40 M, les frais restent fixes à 65 000 flux.",
   "The fee is cheapest, relative to price, around the 1M mark.": "Rapportés au prix, les frais sont les plus faibles autour du million.",
   "Listing fee: {n} flux, charged up front. Refunded if it sells, lost if it expires.": "Frais de publication : {n} flux, prélevés d'avance. Remboursés en cas de vente, perdus en cas d'expiration.",
-  "Seller keeps {n} flux after the 10% sale tax.": "Le vendeur conserve {n} flux après la taxe de vente de 10 %."
+  "Seller keeps {n} flux after the 10% sale tax.": "Le vendeur conserve {n} flux après la taxe de vente de 10 %.",
+  "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one.": "Chaque capacité est <b>unique</b> : deux gemmes équipées ne peuvent jamais partager la même.",
+  "Only one gem of each ability at a time - you can't equip the same ability twice.": "Une seule gemme par capacité à la fois : impossible d'équiper deux fois la même capacité.",
+  "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "Affichage de {v} pseudo(s) partagé(s) sur {c}, {n} encore présent(s) dans la dernière capture.",
+  "Not checked - no longer in the latest capture": "Non vérifié – absent de la dernière capture"
 }

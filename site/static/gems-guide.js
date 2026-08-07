@@ -430,6 +430,7 @@
         blurb: "The rare, powerful gem. It drops the damage-school restriction, rolls in a higher band, and carries a special ability - so a single one is worth far more.",
         feats: [
           ["fa-bolt", "Carries a special <b>ability</b> (or a class ability on class gems)."],
+          ["fa-ban", "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one."],
           ["fa-arrow-up-right-dots", "Rolls in a <b>higher stat band</b> and starts <b>+100 Power Rank</b> ahead."],
           ["fa-star", "You only equip a few - each one is a major upgrade."]
         ]
@@ -544,6 +545,7 @@
       var arow = el("div", { class: "gg-tag-row" });
       g.abil.forEach(function (n) { arow.appendChild(tag(n, false)); });
       abil.appendChild(arow);
+      abil.appendChild(el("p", { class: "gg-ed-hint", text: tt("Only one gem of each ability at a time - you can't equip the same ability twice.") }));
 
       detail.appendChild(rolls);
       detail.appendChild(abil);

@@ -103,6 +103,11 @@ VERDICT_ONE_LIVE = "one_live"       # exactly one series moved; the rest are fro
 VERDICT_MULTI_LIVE = "multi_live"   # 2+ series moved - two active identities
 VERDICT_ALL_IDLE = "all_idle"       # nothing moved in the window - undecidable
 VERDICT_CASE_ONLY = "case_only"     # spellings differ only by case (merged rows)
+# The backfill DATES every duplication it walks but only builds evidence for the
+# ones still present in the newest capture (an old window is cold-tiered and costs
+# ~35s apiece). A dated-but-unevidenced name carries this instead of a real verdict
+# - "all_idle" would be a positive claim that nothing moved, which nobody measured.
+VERDICT_NOT_ANALYSED = "not_analysed"
 
 
 # ── config ───────────────────────────────────────────────────────────────────
@@ -558,7 +563,6 @@ async def backfill(*, clear_first: bool = False) -> None:
         await _set_status(status)
         anchors = await pg_store.all_anchors_asc()
         cfg = await _load_config(anchors[-1] if anchors else None)
-        now = int(time.time())
         status.update({"phase": "dating", "total": len(anchors)})
         await _set_status(status)
 
@@ -569,6 +573,45 @@ async def backfill(*, clear_first: bool = False) -> None:
         # ── phase 1: date every duplication ──────────────────────────────────
         # {name: {"first": anchor, "last": anchor, "groups": [...] at last}}
         tally: dict[str, dict] = {}
+        # Names mutated since the last checkpoint. Flushing the whole tally each
+        # time rewrites every row already on disk - by the final flush that is the
+        # entire set, several times over across a 1000-anchor walk.
+        dirty: set[str] = set()
+        # The newest anchor we actually SCANNED. If the last anchor throws, this
+        # stays at the last good one, so phase 2 still has a "current" set to work
+        # from instead of silently evidencing nothing.
+        newest_scanned: int | None = None
+        # Wall-clock heartbeat: the lock TTL is 900s and a cold-tier anchor can
+        # take ~35s, so an every-N-anchors refresh can lapse mid-walk. Refresh on
+        # elapsed time instead, and on the failure path too - a run of slow
+        # failures used to skip the heartbeat entirely and drop the lock.
+        last_beat = time.time()
+
+        async def _heartbeat() -> None:
+            nonlocal last_beat
+            if r is None or time.time() - last_beat < 120:
+                return
+            last_beat = time.time()
+            try:
+                await r.expire(_RUNNING_KEY, 900)
+            except Exception:
+                pass
+
+        async def _flush_dates() -> None:
+            """Persist only the names touched since the previous checkpoint."""
+            if not dirty:
+                return
+            stamp = int(time.time())
+            await pg_store.upsert_duplicate_dates([
+                {"name": n, "boards": len(tally[n]["groups"]),
+                 "max_occurrences": max(
+                     (int(g["occurrences"]) for g in tally[n]["groups"]), default=2),
+                 "first_anchor": tally[n]["first"], "last_anchor": tally[n]["last"],
+                 "updated_at": stamp}
+                for n in dirty
+            ])
+            dirty.clear()
+
         for anchor in anchors:
             try:
                 groups = await pg_store.duplicate_groups_at(anchor)
@@ -576,7 +619,9 @@ async def backfill(*, clear_first: bool = False) -> None:
                 logger.warning("duplicates backfill: anchor %d failed", anchor,
                                exc_info=True)
                 status["done"] += 1
+                await _heartbeat()
                 continue
+            newest_scanned = anchor
             by_name: dict[str, list[dict]] = {}
             for g in groups:
                 by_name.setdefault(g["name"], []).append(g)
@@ -589,28 +634,62 @@ async def backfill(*, clear_first: bool = False) -> None:
                 else:
                     rec["last"] = anchor
                     rec["groups"] = g      # keep the most recent shape
+                dirty.add(name)
             status["detected"] = len(tally)
             status["done"] += 1
             status["last_anchor"] = anchor
             if status["done"] % 25 == 0:
                 await _set_status(status)
-                if r is not None:
-                    try:
-                        await r.expire(_RUNNING_KEY, 900)  # heartbeat
-                    except Exception:
-                        pass
+            await _heartbeat()
+            # Persist the dating as we go. The walk takes minutes and anything
+            # running in the api container dies when it is recreated, so holding
+            # every result until the end means an interrupted rebuild leaves
+            # nothing behind. Dating-only, so it never clobbers good evidence.
+            if status["done"] % 100 == 0:
+                await _flush_dates()
 
-        # ── phase 2: evidence, once per name ─────────────────────────────────
-        # Widest blast radius first so a max_names cap keeps the worst offenders.
-        ordered = sorted(tally.items(), key=lambda kv: -len(kv[1]["groups"]))
+        # Final dating flush, so every walked name is on disk before the
+        # (much slower, I/O-bound) evidence phase begins.
+        await _flush_dates()
+
+        # ── phase 2: evidence, for STILL-CURRENT duplications only ───────────
+        # "Is this score line still moving, or has it stalled?" only means
+        # something while the duplication is live. For a name whose duplication
+        # ended in June the question is moot - and answering it is what costs the
+        # money: each name needs a 7-day window read, and an old window is cold-
+        # tiered, ~35s of random I/O apiece. Restricting evidence to names present
+        # in the newest capture turns hundreds of cold reads into a handful of hot
+        # ones. Every name still gets DATED above; only the breakdown is skipped.
+        # Keyed on the newest anchor we actually scanned, NOT anchors[-1]: if the
+        # last anchor threw, no name carries it as "last" and every name would look
+        # historical, quietly reducing the evidence phase to zero.
+        current = {n: v for n, v in tally.items() if v["last"] == newest_scanned}
+        skipped = len(tally) - len(current)
+        ordered = sorted(current.items(), key=lambda kv: -len(kv[1]["groups"]))
+        if len(ordered) > cfg.max_names:
+            logger.warning(
+                "duplicates backfill: %d current name(s) exceed duplicates_max_names"
+                " (%d) - the rest are dated but get no evidence",
+                len(ordered), cfg.max_names)
         ordered = ordered[:cfg.max_names]
+        if anchors and newest_scanned != anchors[-1]:
+            logger.warning(
+                "duplicates backfill: newest anchor %s failed to scan - 'current' is "
+                "keyed on %s instead, so the evidence set may lag one capture",
+                anchors[-1], newest_scanned)
+        logger.info(
+            "duplicates backfill: %d name(s) dated, %d current get evidence, "
+            "%d historical dated without evidence", len(tally), len(ordered), skipped)
+        status["skipped_historical"] = skipped
         status.update({"phase": "evidence", "total": len(ordered), "done": 0})
         await _set_status(status)
         batch: list[dict] = []
         for name, rec in ordered:
             try:
                 built = await _build_record(
-                    name, rec["groups"], cfg, rec["last"], now,
+                    # Stamped per record, not once at run start: updated_at dates
+                    # the evidence, and the evidence phase runs for a long time.
+                    name, rec["groups"], cfg, rec["last"], int(time.time()),
                     first_anchor_override=rec["first"],
                 )
             except Exception:
@@ -624,14 +703,14 @@ async def backfill(*, clear_first: bool = False) -> None:
                 await pg_store.upsert_duplicates(batch)
                 batch = []
                 await _set_status(status)
-                if r is not None:
-                    try:
-                        await r.expire(_RUNNING_KEY, 900)
-                    except Exception:
-                        pass
+            await _heartbeat()
         if batch:
             await pg_store.upsert_duplicates(batch)
-        status["detected"] = len(ordered)
+        # detected = what the run PERSISTED (every dated name), not just the subset
+        # that earned evidence - the completion log reads this, and reporting 12
+        # after a run that recorded 400 reads as a near-empty rebuild.
+        status["detected"] = len(tally)
+        status["evidenced"] = len(ordered)
     except Exception as exc:
         # Surfaced in the portal's progress line instead of dying silently in the
         # background task with only a container log to show for it.

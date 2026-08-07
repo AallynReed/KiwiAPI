@@ -649,7 +649,12 @@
     // The badge counts groups still present in the newest capture - a historical
     // group that has since resolved shouldn't nag on the tab forever.
     const latest = data.latest_anchor;
-    const current = all.filter((d) => latest && d.last_anchor === latest).length;
+    // serve_list already counts this over the same rows - don't keep a second
+    // definition of "current" in sync. Fall back for a payload cached before the
+    // field existed.
+    const current = typeof data.current === 'number'
+      ? data.current
+      : all.filter((d) => latest && d.last_anchor === latest).length;
 
     if ($tabDuplicatesBadge) {
       $tabDuplicatesBadge.hidden = current === 0;
@@ -661,6 +666,20 @@
         $duplicatesMeta.textContent = t('No shared names found - every name maps to one player.');
       } else if (visible.length === 0) {
         $duplicatesMeta.textContent = t('No names match this filter.');
+      } else if (!state.duplicatesKind && (data.total || 0) > all.length) {
+        // The payload is one capped page of a much longer record (the archive
+        // holds every name ever duplicated), so say so rather than presenting
+        // the page size as the total. Still-current groups sort first, so the
+        // ones that matter are always on this page.
+        //
+        // Only when NO cause filter is active: data.total is the server's
+        // unfiltered archive count, so pairing it with the client-filtered
+        // visible.length would read "showing 12 of 412" about two different
+        // populations. With a filter on, fall through to the plain count.
+        $duplicatesMeta.textContent =
+          t('Showing {v} of {c} shared name(s), {n} still in the latest capture.')
+            .replace('{v}', all.length).replace('{c}', data.total)
+            .replace('{n}', current);
       } else {
         $duplicatesMeta.textContent = t('{c} shared name(s), {n} still in the latest capture.')
           .replace('{c}', visible.length).replace('{n}', current);
@@ -704,6 +723,10 @@
     if (verdict === 'one_live') return t('One still active, one stopped');
     if (verdict === 'multi_live') return t('Both still active');
     if (verdict === 'case_only') return t('Only the capitalisation differs');
+    // Dated by the archive walk but never measured - the backfill only reads the
+    // score series for names still in the latest capture. Say that, rather than
+    // falling through to "Neither has moved recently", which claims a result.
+    if (verdict === 'not_analysed') return t('Not checked - no longer in the latest capture');
     return t('Neither has moved recently');
   }
 

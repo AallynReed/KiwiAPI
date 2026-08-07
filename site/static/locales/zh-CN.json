@@ -2385,5 +2385,9 @@
   "Above 40M the fee is flat at 65,000 flux.": "超过 40M 后，手续费固定为 65,000 flux。",
   "The fee is cheapest, relative to price, around the 1M mark.": "按占价格的比例算，1M 左右手续费最便宜。",
   "Listing fee: {n} flux, charged up front. Refunded if it sells, lost if it expires.": "上架手续费：{n} flux，预先扣除。卖出退还，过期不退。",
-  "Seller keeps {n} flux after the 10% sale tax.": "扣掉 10% 交易税后，卖家实得 {n} flux。"
+  "Seller keeps {n} flux after the 10% sale tax.": "扣掉 10% 交易税后，卖家实得 {n} flux。",
+  "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one.": "每个能力都是<b>独一无二</b>的 — 两颗已装备的宝石不可能拥有相同的能力。",
+  "Only one gem of each ability at a time - you can't equip the same ability twice.": "每种能力同时只能装备一颗宝石 — 无法重复装备相同能力。",
+  "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "显示 {c} 个共用名字中的 {v} 个，其中 {n} 个仍出现在最新抓取中。",
+  "Not checked - no longer in the latest capture": "未检查 - 已不在最新抓取中"
 }

@@ -1213,6 +1213,50 @@ async def upsert_duplicates(rows: list[dict]) -> None:
         )
 
 
+async def upsert_duplicate_dates(rows: list[dict]) -> None:
+    """Dating-only upsert: name, counts and the first/last sighting, WITHOUT
+    touching ``evidence`` or ``verdict``.
+
+    Lets the backfill persist its archive walk incrementally instead of holding
+    every result in memory until the end. That matters because the walk is long
+    and anything running in the api container dies with it - three separate runs
+    were lost to a container recreate mid-pass. Flushing as it goes means an
+    interrupted rebuild still leaves the archive dated, and re-running only
+    tightens the dates (first_anchor folds to LEAST, last_anchor to GREATEST).
+
+    A NEW row lands as ``not_analysed`` rather than the column default
+    ``all_idle``: "nothing moved" is a positive claim about a series nobody read,
+    and the tab renders it as one. ``updated_at`` is likewise only set on INSERT -
+    it dates the EVIDENCE, so re-dating a row whose evidence is months old must not
+    restamp it as fresh. Both fields belong to the evidence phase and are left to
+    ``upsert_duplicates``."""
+    if not rows:
+        return
+    payload = [
+        (
+            r["name"].strip().lower(), r["name"], int(r.get("boards", 0)),
+            int(r.get("max_occurrences", 2)),
+            int(r["first_anchor"]), int(r["last_anchor"]), int(r["updated_at"]),
+        )
+        for r in rows
+    ]
+    async with acquire() as con:
+        await con.executemany(
+            "INSERT INTO player_duplicate (name_lower, name, kind, verdict, boards, "
+            "  max_occurrences, first_anchor, last_anchor, updated_at) "
+            "VALUES ($1, $2, 'same_name', 'not_analysed', $3, $4, $5, $6, $7) "
+            "ON CONFLICT (name_lower) DO UPDATE SET "
+            "  name = EXCLUDED.name, "
+            "  kind = CASE WHEN player_duplicate.kind IN ('case', 'both') "
+            "              THEN 'both' ELSE 'same_name' END, "
+            "  boards = EXCLUDED.boards, "
+            "  max_occurrences = EXCLUDED.max_occurrences, "
+            "  first_anchor = LEAST(player_duplicate.first_anchor, EXCLUDED.first_anchor), "
+            "  last_anchor = GREATEST(player_duplicate.last_anchor, EXCLUDED.last_anchor)",
+            payload,
+        )
+
+
 _DUP_COLS = (
     "name, kind, verdict, boards, max_occurrences, spellings, first_anchor, "
     "last_anchor, evidence, method_version, updated_at"

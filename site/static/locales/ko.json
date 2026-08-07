@@ -2385,5 +2385,9 @@
   "Above 40M the fee is flat at 65,000 flux.": "40M을 넘으면 수수료는 65,000 플럭스로 고정됩니다.",
   "The fee is cheapest, relative to price, around the 1M mark.": "가격 대비로는 1M 부근에서 수수료가 가장 저렴합니다.",
   "Listing fee: {n} flux, charged up front. Refunded if it sells, lost if it expires.": "등록 수수료: {n} 플럭스, 선불. 팔리면 환급, 만료되면 소멸.",
-  "Seller keeps {n} flux after the 10% sale tax.": "10% 판매 세금을 제하고 판매자는 {n} 플럭스를 받습니다."
+  "Seller keeps {n} flux after the 10% sale tax.": "10% 판매 세금을 제하고 판매자는 {n} 플럭스를 받습니다.",
+  "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one.": "각 능력은 <b>고유</b>합니다 - 장착한 두 젠이 같은 능력을 가질 수 없습니다.",
+  "Only one gem of each ability at a time - you can't equip the same ability twice.": "능력당 젠은 한 번에 하나만 - 같은 능력을 두 번 장착할 수 없습니다.",
+  "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "공유된 이름 {c}개 중 {v}개 표시, 그중 {n}개는 최신 수집에도 있습니다.",
+  "Not checked - no longer in the latest capture": "미확인 - 최신 수집에 없음"
 }

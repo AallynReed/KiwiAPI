@@ -2385,5 +2385,9 @@
   "Above 40M the fee is flat at 65,000 flux.": "40M を超えると手数料は 65,000 flux で一定です。",
   "The fee is cheapest, relative to price, around the 1M mark.": "価格に対する割合では、1M 前後がもっとも手数料が安く済みます。",
   "Listing fee: {n} flux, charged up front. Refunded if it sells, lost if it expires.": "出品手数料：{n} flux（先払い）。売れれば返還、期限切れなら没収。",
-  "Seller keeps {n} flux after the 10% sale tax.": "10% の販売税を引いて、出品者の手元には {n} flux が残ります。"
+  "Seller keeps {n} flux after the 10% sale tax.": "10% の販売税を引いて、出品者の手元には {n} flux が残ります。",
+  "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one.": "各アビリティは<b>唯一無二</b>です。装備した2つのジェムが同じアビリティを持つことはありません。",
+  "Only one gem of each ability at a time - you can't equip the same ability twice.": "同じアビリティのジェムは同時に1つだけ - 同じアビリティを2つ装備することはできません。",
+  "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "共有された名前 {c} 件のうち {v} 件を表示、うち {n} 件は最新の取得にも存在します。",
+  "Not checked - no longer in the latest capture": "未確認 - 最新の取得には存在しません"
 }

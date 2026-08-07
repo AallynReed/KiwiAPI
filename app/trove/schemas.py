@@ -1136,6 +1136,11 @@ class DuplicateGroup(BaseModel):
     * ``multi_live`` - two or more lines still move: separate active identities.
     * ``all_idle`` - nothing moved in the window, so they can't be told apart.
     * ``case_only`` - the spellings differ only in capitalisation.
+    * ``not_analysed`` - dated by the archive backfill but never measured. The
+      backfill only reads the score series for names still present in the newest
+      capture (an older window is cold-tiered and costs ~35s apiece), so a
+      duplication that ended months ago is recorded and dated with no evidence.
+      ``evidence`` is ``{}`` for these; it is NOT a finding of "nothing moved".
     """
     name: str
     kind: str                 # 'same_name' | 'case' | 'both'

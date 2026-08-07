@@ -228,6 +228,7 @@ body.gems-guide-page { overflow-x: clip; }
 .gg-tag { font-size: .82rem; color: var(--text-mute); background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; padding: 4px 11px; }
 .gg-tag.locked { color: var(--accent-yellow); border-color: color-mix(in oklab, var(--accent-yellow) 40%, transparent); }
 .gg-tag.locked i { margin-right: 4px; font-size: .72rem; }
+.gg-ed-hint { font-size: .82rem; color: var(--text-mute); margin-top: .6rem; }
 .gg-ed-note { grid-column: 1 / -1; font-size: .9rem; color: var(--text-mute); padding-top: .4rem; border-top: 1px dashed var(--bg-line); }
 .gg-ed-note.cosmic { color: color-mix(in oklab, var(--gem) 55%, var(--text)); }
 
