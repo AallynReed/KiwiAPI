@@ -222,8 +222,6 @@ class GemOptimizerEngine:
         light_target = int(config.get("light", 0))
 
         damage_type = "Magic Damage" if selected_class.get("damage_type") == "Magic" else "Physical Damage"
-        if ally == "boot_clown":
-            ally = "phoenix_stars" if damage_type == "Magic Damage" else "spidermonkey_stars"
 
         if build_type == "Health":
             first = self.sum_file_values("health") + _stat_value(selected_class["stats"], "Maximum Health")
@@ -312,7 +310,7 @@ class GemOptimizerEngine:
             if class_bonus is not None:
                 final *= 1 + (class_bonus / 100)
             coefficient = round(final * (1 + (csecond * (fifth / 100)) / 100), 2)
-            raw_builds.append([build, cfirst, csecond, int(cthird * (sixth / 100)), fourth, fifth, final, class_bonus, coefficient])
+            raw_builds.append([build, cfirst, csecond, round(cthird * (sixth / 100), 2), fourth, fifth, final, class_bonus, coefficient])
 
         raw_builds.sort(key=lambda x: ([abs(x[3] - light_target), -x[-1]] if light_target else -x[-1]))
 
@@ -365,7 +363,7 @@ def build_options() -> dict:
     eng = _engine()
     classes = [c["name"] for c in eng.classes_data] if eng.classes_data else []
     foods = [{"key": k, "label": v.get("qualified_name", k)} for k, v in eng.foods.items()]
-    allies = [{"key": "boot_clown", "label": "Auto (optimal for damage type)"}] + [
+    allies = [{"key": "boot_clown", "label": "No ally"}] + [
         {"key": k, "label": v.get("qualified_name", k)} for k, v in eng.allies.items() if k != "boot_clown"
     ]
     return {
@@ -377,7 +375,7 @@ def build_options() -> dict:
         "flags": ["berserker_battler", "no_face", "subclass_active", "litany"],
         "notes": {
             "subclass": "Same options as character.",
-            "ally": "Use 'boot_clown' for auto-optimal by damage type.",
+            "ally": "Use 'boot_clown' for no ally.",
             "food": "Use \"\" for none.",
             "light": "Farm builds only - target base light; 0 disables light targeting.",
             "star_chart": "Optional star-chart build code (SC:/v2: compact, or base64).",

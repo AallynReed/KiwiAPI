@@ -2389,5 +2389,6 @@
   "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one.": "Cada habilidad es <b>única</b>: dos gemas equipadas nunca pueden compartir la misma.",
   "Only one gem of each ability at a time - you can't equip the same ability twice.": "Solo una gema por habilidad a la vez: no puedes equipar la misma habilidad dos veces.",
   "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "Mostrando {v} de {c} nombre(s) compartido(s), {n} todavía en la última captura.",
-  "Not checked - no longer in the latest capture": "Sin comprobar: ya no aparece en la última captura"
+  "Not checked - no longer in the latest capture": "Sin comprobar: ya no aparece en la última captura",
+  "No ally": "Sin aliado"
 }

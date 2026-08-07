@@ -2389,5 +2389,6 @@
   "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one.": "각 능력은 <b>고유</b>합니다 - 장착한 두 젠이 같은 능력을 가질 수 없습니다.",
   "Only one gem of each ability at a time - you can't equip the same ability twice.": "능력당 젠은 한 번에 하나만 - 같은 능력을 두 번 장착할 수 없습니다.",
   "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "공유된 이름 {c}개 중 {v}개 표시, 그중 {n}개는 최신 수집에도 있습니다.",
-  "Not checked - no longer in the latest capture": "미확인 - 최신 수집에 없음"
+  "Not checked - no longer in the latest capture": "미확인 - 최신 수집에 없음",
+  "No ally": "동료 없음"
 }

@@ -2389,5 +2389,6 @@
   "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one.": "各アビリティは<b>唯一無二</b>です。装備した2つのジェムが同じアビリティを持つことはありません。",
   "Only one gem of each ability at a time - you can't equip the same ability twice.": "同じアビリティのジェムは同時に1つだけ - 同じアビリティを2つ装備することはできません。",
   "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "共有された名前 {c} 件のうち {v} 件を表示、うち {n} 件は最新の取得にも存在します。",
-  "Not checked - no longer in the latest capture": "未確認 - 最新の取得には存在しません"
+  "Not checked - no longer in the latest capture": "未確認 - 最新の取得には存在しません",
+  "No ally": "仲間なし"
 }

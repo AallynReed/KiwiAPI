@@ -2389,5 +2389,6 @@
   "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one.": "Каждая способность <b>уникальна</b> — два надетых самоцвета не могут иметь одну и ту же.",
   "Only one gem of each ability at a time - you can't equip the same ability twice.": "Одновременно только один самоцвет с каждой способностью — одну и ту же способность нельзя надеть дважды.",
   "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "Показано {v} из {c} общих имён, из них {n} есть в последнем снимке.",
-  "Not checked - no longer in the latest capture": "Не проверено — отсутствует в последнем снимке"
+  "Not checked - no longer in the latest capture": "Не проверено — отсутствует в последнем снимке",
+  "No ally": "Без спутника"
 }

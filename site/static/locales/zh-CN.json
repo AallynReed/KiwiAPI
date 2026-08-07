@@ -2389,5 +2389,6 @@
   "Each ability is <b>one of a kind</b> - two equipped gems can never share the same one.": "每个能力都是<b>独一无二</b>的 — 两颗已装备的宝石不可能拥有相同的能力。",
   "Only one gem of each ability at a time - you can't equip the same ability twice.": "每种能力同时只能装备一颗宝石 — 无法重复装备相同能力。",
   "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "显示 {c} 个共用名字中的 {v} 个，其中 {n} 个仍出现在最新抓取中。",
-  "Not checked - no longer in the latest capture": "未检查 - 已不在最新抓取中"
+  "Not checked - no longer in the latest capture": "未检查 - 已不在最新抓取中",
+  "No ally": "无伙伴"
 }
