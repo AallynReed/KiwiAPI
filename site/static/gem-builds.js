@@ -204,10 +204,16 @@
       toast(t("The star chart editor couldn't load."), true);
       return;
     }
-    const m = window.BTTModal.open({ title: t("Star Chart"), wide: true });
+    const m = window.BTTModal.open({ title: t("Star Chart") });
+    m.wrap.classList.add("gb-sc-wrap");
     const card = m.wrap.querySelector(".mp-modal-card");
     card.classList.add("gb-sc-modal");
     card.appendChild(tpl.content.cloneNode(true));
+    // Only the node counter survives from the build panel - lift it into the
+    // toolbar so it stays visible once CSS hides the panel.
+    const hints = card.querySelector(".sc-hints");
+    const counter = card.querySelector("#sc-meta-nodes");
+    if (hints && counter) hints.replaceWith(counter);
     // BTTModal translates before we append, so re-run over the cloned markup.
     if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh();
     window.BTTStarChart.mount({

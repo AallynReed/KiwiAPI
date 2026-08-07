@@ -180,17 +180,24 @@
 /* The star-chart widget inside a modal: a wider card, the chart sized against
    the viewport rather than the page, and the card itself never scrolls - the
    build panel and its summary scroll internally instead. */
-/* justify-self:stretch (not a % width) so the card fills the padded modal box
-   and is only then capped - inside a centred grid a percentage has no definite
-   track to resolve against. */
-.mp-modal-card.gb-sc-modal { width: auto; justify-self: stretch; max-width: 1240px; overflow: hidden; }
-.gb-sc-modal .sc-layout { min-width: 0; }
-.gb-sc-modal .sc-chart-wrapper { min-height: 0; height: calc(88vh - 150px); max-height: none; }
-.gb-sc-modal .sc-panel { max-height: calc(88vh - 150px); }
-@media (max-width: 900px) {
-  .mp-modal-card.gb-sc-modal { overflow: auto; }
-  /* .sc-layout stacks here, so flex:1 would make the wrapper's height the main
-     size with a 0 basis - pin it instead and let the card scroll. */
-  .gb-sc-modal .sc-chart-wrapper { flex: 0 0 auto; height: 55vh; }
-  .gb-sc-modal .sc-panel { max-height: none; }
-}
+/* Chart only: the build panel and the hover hints are dropped - the code lives
+   in the field behind the modal and the stats summary is right under it, so the
+   modal is purely the thing you draw on. The panel is kept in the DOM (not
+   removed) so the planner's own wiring is untouched; display:none also keeps
+   its inputs out of the focus trap. The node counter is lifted out into the
+   toolbar by gem-builds.js before the panel is hidden. */
+.gb-sc-modal .sc-panel,
+.gb-sc-modal .sc-hints { display: none; }
+.gb-sc-modal .sc-toolbar #sc-meta-nodes { font-size: 11px; white-space: nowrap; }
+
+/* See-through backdrop, no blur: the whole point is watching the build ranking
+   behind the modal re-rank as you click nodes. */
+.gb-sc-wrap .mp-modal-backdrop { background: rgba(4, 7, 12, .35); backdrop-filter: none; }
+
+/* The card hugs the chart. The SVG is 1000x800, so cap its width by the height
+   the modal can actually spare (x1.25) - that keeps the chart at its own aspect
+   ratio with no letterboxing, at any window size. */
+.mp-modal-card.gb-sc-modal { width: fit-content; max-width: min(1100px, calc(100vw - 40px)); overflow: hidden; }
+.gb-sc-modal .sc-layout { justify-content: center; }
+.gb-sc-modal .sc-chart-wrapper { flex: 0 1 auto; min-height: 0; height: auto; max-height: none; }
+.gb-sc-modal #sc-svg { width: min(1000px, calc((88vh - 160px) * 1.25)); max-width: 100%; }
