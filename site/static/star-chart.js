@@ -769,6 +769,11 @@
     const opts = [`<option value="">${t("Highlight a stat…")}</option>`];
     Array.from(labels).sort((a, b) => t(a).localeCompare(t(b))).forEach((n) => { opts.push(`<option value="${n.replace(/"/g, "&quot;")}">${t(n)}</option>`); });
     elStat.innerHTML = opts.join("");
+    // Replacing the options clears the selection, but `statFilter` still holds
+    // it - so after a language switch the chart went on highlighting a stat the
+    // dropdown claimed wasn't chosen. Option values are the raw (untranslated)
+    // stat names, so re-applying works in any language.
+    if (statFilter) elStat.value = statFilter;
   }
 
   // ── Night-sky scenery: gradients, twinkling starfield, nebula clouds ───────
