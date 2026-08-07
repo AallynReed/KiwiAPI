@@ -1251,6 +1251,14 @@ async def upsert_duplicate_dates(rows: list[dict]) -> None:
             "              THEN 'both' ELSE 'same_name' END, "
             "  boards = EXCLUDED.boards, "
             "  max_occurrences = EXCLUDED.max_occurrences, "
+            # Self-heal rows written before 'not_analysed' existed. An empty
+            # evidence blob means the series was never read, so an 'all_idle'
+            # sitting on one is the old default, not a measurement - downgrade it.
+            # Anything with real evidence, and every 'case_only' (detected at
+            # ingest and legitimately evidence-free), is left alone.
+            "  verdict = CASE WHEN player_duplicate.verdict = 'all_idle' "
+            "                  AND player_duplicate.evidence = '{}'::jsonb "
+            "                 THEN 'not_analysed' ELSE player_duplicate.verdict END, "
             "  first_anchor = LEAST(player_duplicate.first_anchor, EXCLUDED.first_anchor), "
             "  last_anchor = GREATEST(player_duplicate.last_anchor, EXCLUDED.last_anchor)",
             payload,
