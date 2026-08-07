@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
 
     <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/star-chart.min.css">
     <link rel="stylesheet" href="/static/gem-builds.min.css">
 </head>
 <body class="landing gem-builds-page">
@@ -58,6 +59,9 @@
 
     <div class="gem-toast-host" id="gb-toast-host"></div>
 
+    <!-- Cloned into the star-chart editor modal by gem-builds.js. -->
+    <template id="gb-sc-template">{% include "partials/star_chart_widget.html" %}</template>
+
     {% include "partials/footer.html" %}
 
     <script src="/static/app.min.js"></script>
@@ -65,7 +69,9 @@
     <script src="/static/toast.min.js"></script>
     <script src="/static/dom-h.min.js"></script>
     <script src="/static/i18n.min.js"></script>
+    <script src="/static/modal.min.js"></script>
     <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/star-chart.min.js" defer></script>
     <script src="/static/gem-builds.min.js" defer></script>
 </body>
 </html>

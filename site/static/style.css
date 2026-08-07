@@ -2125,3 +2125,23 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   line-height: 1.65;
 }
 .ssr-prose + .ssr-prose { margin-top: .75rem; }
+
+/* ─── 19. Shared modal (window.BTTModal.open) ─────────────────────────────
+   The .mp- prefix is historical (these rules started on the mod project page);
+   modal.js is shared plumbing, so the shell lives here for every page. */
+.mp-modal { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 20px; }
+.mp-modal[hidden] { display: none; }
+.mp-modal-backdrop { position: absolute; inset: 0; background: rgba(4,7,12,.74); backdrop-filter: blur(3px); }
+.mp-modal-card {
+  position: relative; width: min(600px, 100%); max-height: 88vh; overflow: auto;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius-lg);
+  padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,.5);
+}
+.mp-modal-card.wide { width: min(760px, 100%); }
+.mp-modal-close { position: absolute; top: 14px; right: 14px; border: 0; background: transparent; color: var(--text-mute); font-size: 1.1rem; cursor: pointer; padding: 6px; }
+.mp-modal-close:hover { color: var(--text); }
+.mp-modal-title { font: 700 1.3rem 'Space Grotesk', 'Inter', sans-serif; margin: 0 0 16px; }
+
+@media (max-width: 640px) {
+  .mp-modal-card { padding: 20px 16px; }
+}

@@ -164,3 +164,33 @@
 .gem-toast { background: var(--bg-card-hi); border: 1px solid color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); border-radius: var(--radius-sm, 8px); padding: 10px 16px; color: var(--text); font-size: .88rem; box-shadow: var(--shadow-soft, 0 8px 24px rgba(0,0,0,.4)); transition: opacity .3s, transform .3s; }
 .gem-toast.error { border-color: color-mix(in oklab, var(--accent-red) 55%, var(--bg-line)); }
 .gem-toast.out { opacity: 0; transform: translateY(8px); }
+
+/* ── Star chart: code field + inline editor ──────────────────────────────── */
+.gb-sc-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 10px; }
+.gb-sc-field { flex: 1; min-width: 0; margin-bottom: 0; }
+.gb-sc-edit {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius-sm, 8px);
+  color: var(--text); font-family: inherit; font-size: .88rem; padding: 10px 14px; cursor: pointer;
+  transition: border-color .2s, color .2s;
+}
+.gb-sc-edit:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+.gb-sc-edit:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+/* The star-chart widget inside a modal: a wider card, the chart sized against
+   the viewport rather than the page, and the card itself never scrolls - the
+   build panel and its summary scroll internally instead. */
+/* justify-self:stretch (not a % width) so the card fills the padded modal box
+   and is only then capped - inside a centred grid a percentage has no definite
+   track to resolve against. */
+.mp-modal-card.gb-sc-modal { width: auto; justify-self: stretch; max-width: 1240px; overflow: hidden; }
+.gb-sc-modal .sc-layout { min-width: 0; }
+.gb-sc-modal .sc-chart-wrapper { min-height: 0; height: calc(88vh - 150px); max-height: none; }
+.gb-sc-modal .sc-panel { max-height: calc(88vh - 150px); }
+@media (max-width: 900px) {
+  .mp-modal-card.gb-sc-modal { overflow: auto; }
+  /* .sc-layout stacks here, so flex:1 would make the wrapper's height the main
+     size with a 0 basis - pin it instead and let the card scroll. */
+  .gb-sc-modal .sc-chart-wrapper { flex: 0 0 auto; height: 55vh; }
+  .gb-sc-modal .sc-panel { max-height: none; }
+}

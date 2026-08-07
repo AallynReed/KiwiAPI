@@ -9,6 +9,11 @@
    Build codes use the EXACT same `SC:` base64 format as the desktop app, so a
    code copied here pastes into the desktop app and vice-versa. Builds are also
    shareable by URL (?b=<payload>): the link is kept in sync as you select.
+
+   The widget markup lives in partials/star_chart_widget.html and is mounted by
+   window.BTTStarChart.mount(). On /star-chart it mounts itself; elsewhere (the
+   Gem Builds editor modal) the host calls mount({ embed: true, ... }) and gets
+   the build code back through onChange instead of the URL/localStorage.
    ═══════════════════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
@@ -62,6 +67,13 @@
   let searchQuery = "";
   const sectionOpen = { stats: true, abilities: true, obtainables: true };
   const viewBox = { ...DEFAULT_VB };
+
+  // Embedded mode: the host owns persistence, so selections are reported through
+  // onChange instead of being written to the URL and localStorage.
+  let embedMode = false;
+  let onChangeCb = null;
+  let chartPromise = null;   // the parsed star_chart.json, fetched at most once
+  let langHooked = false;
 
   // ── DOM refs (resolved on init) ──────────────────────────────────────────
   let svg, gLines, gReplace, gNodes, gSky, gStars, anchorEl, tooltipEl;
@@ -550,8 +562,12 @@
   }
 
   // ── URL + persistence ─────────────────────────────────────────────────────
-  function syncUrlAndStorage() {
+  function persist() {
     const payload = encodePayload();
+    if (embedMode) {
+      if (onChangeCb) onChangeCb(payload ? CODE_PREFIX + payload : "");
+      return;
+    }
     const url = new URL(window.location.href);
     if (payload) url.searchParams.set("b", payload);
     else url.searchParams.delete("b");
@@ -562,7 +578,7 @@
     if (!suppressCodeInput) elCode.value = encodeCode();
     updateVisuals();
     renderSummary();
-    syncUrlAndStorage();
+    persist();
   }
 
   // ── Interaction wiring ────────────────────────────────────────────────────
@@ -812,8 +828,26 @@
     });
   }
 
-  // ── Init ──────────────────────────────────────────────────────────────────
-  async function init() {
+  // ── Mount ─────────────────────────────────────────────────────────────────
+  function resetState() {
+    for (const p in nodeMap) delete nodeMap[p];
+    nodeEls.length = 0;
+    lineEls.length = 0;
+    selected.clear();
+    codecMaps = null;
+    statFilter = "";
+    searchQuery = "";
+    Object.assign(viewBox, DEFAULT_VB);
+  }
+
+  // opts: { embed, initialCode, onChange }. The widget markup must already be in
+  // the document — mount() only wires it up.
+  async function mount(opts) {
+    opts = opts || {};
+    embedMode = !!opts.embed;
+    onChangeCb = opts.onChange || null;
+    resetState();
+
     svg = document.getElementById("sc-svg");
     gLines = document.getElementById("sc-g-lines");
     gReplace = document.getElementById("sc-g-replace");
@@ -831,10 +865,17 @@
 
     let chart;
     try {
-      const res = await fetch("/static/star_chart.json", { cache: "force-cache" });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      chart = await res.json();
+      // Cached across mounts: computeCoords/registerNode recompute every field
+      // from constants, so re-using the parsed tree is safe.
+      if (!chartPromise) {
+        chartPromise = fetch("/static/star_chart.json", { cache: "force-cache" }).then((res) => {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        });
+      }
+      chart = await chartPromise;
     } catch (e) {
+      chartPromise = null;
       document.querySelector(".sc-loading").innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${t("Couldn't load the star chart data.")}`;
       return;
     }
@@ -941,14 +982,15 @@
     document.getElementById("sc-copy-code").addEventListener("click", () => copy(encodeCode(), t("Build code copied — paste it in the desktop app.")));
     document.getElementById("sc-copy-link").addEventListener("click", () => {
       const payload = encodePayload();
-      const url = new URL(window.location.href);
+      // Embedded, the current page isn't the planner — always share /star-chart.
+      const url = new URL(embedMode ? "/star-chart" : window.location.href, window.location.origin);
       if (payload) url.searchParams.set("b", payload); else url.searchParams.delete("b");
       copy(url.toString(), t("Share link copied to clipboard."));
     });
     elCode.addEventListener("input", () => {
       suppressCodeInput = true;
       const ok = applyCode(elCode.value, true);
-      if (ok) { updateVisuals(); renderSummary(); syncUrlAndStorage(); }
+      if (ok) { updateVisuals(); renderSummary(); persist(); }
       suppressCodeInput = false;
     });
 
@@ -980,12 +1022,16 @@
 
     document.querySelector(".sc-chart-wrapper").classList.add("ready");
 
-    // Load an initial build: URL ?b= wins, else localStorage.
-    const params = new URLSearchParams(window.location.search);
-    const urlB = params.get("b");
+    // Load an initial build: embedded, the host hands one over; standalone, the
+    // URL ?b= wins, else localStorage.
     let initialCode = "";
-    if (urlB) initialCode = CODE_PREFIX + urlB;
-    else { try { const saved = localStorage.getItem(STORAGE_KEY); if (saved) initialCode = CODE_PREFIX + saved; } catch (e) {} }
+    if (embedMode) {
+      initialCode = opts.initialCode || "";
+    } else {
+      const urlB = new URLSearchParams(window.location.search).get("b");
+      if (urlB) initialCode = CODE_PREFIX + urlB;
+      else { try { const saved = localStorage.getItem(STORAGE_KEY); if (saved) initialCode = CODE_PREFIX + saved; } catch (e) {} }
+    }
     if (initialCode) applyCode(initialCode, true);
 
     elCode.value = encodeCode();
@@ -993,10 +1039,21 @@
     renderSummary();
 
     // Re-translate dynamic strings when the language changes (i18n.js fires
-    // `btt-lang-changed` on document after swapping the active locale).
-    document.addEventListener("btt-lang-changed", () => { fillStatFilter(); renderSummary(); });
+    // `btt-lang-changed` on document after swapping the active locale). Bound
+    // once — the widget can be mounted more than once per page load.
+    if (!langHooked) {
+      langHooked = true;
+      document.addEventListener("btt-lang-changed", () => {
+        if (document.getElementById("sc-stat")) { fillStatFilter(); renderSummary(); }
+      });
+    }
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
+  window.BTTStarChart = { mount };
+
+  // /star-chart mounts itself; everywhere else the host decides when.
+  if (document.body && document.body.classList.contains("sc-page")) {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => mount());
+    else mount();
+  }
 })();

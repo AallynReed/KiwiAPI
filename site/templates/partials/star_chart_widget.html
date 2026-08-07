@@ -1,0 +1,65 @@
+{# Interactive star chart (chart + build panel). Used full-page on /star-chart
+   and cloned into the Gem Builds editor modal. Mounted by star-chart.js via
+   window.BTTStarChart.mount(). Needs star-chart.css on the page. #}
+<div class="sc-layout">
+    <!-- Interactive chart -->
+    <div class="sc-chart-wrapper" id="sc-chart-wrapper">
+        <div class="sc-toolbar">
+            <div class="sc-toolbar-title"><i class="fa-solid fa-star"></i> <span data-i18n>Interactive star chart</span></div>
+            <div class="sc-hints">
+                <span class="sc-hint"><i class="fa-solid fa-computer-mouse"></i> <span data-i18n>Click a node to travel its path</span></span>
+                <span class="sc-hint"><i class="fa-solid fa-circle-dot"></i> <span data-i18n>Click the centre to clear</span></span>
+                <span class="sc-hint"><i class="fa-solid fa-up-down-left-right"></i> <span data-i18n>Scroll to zoom, drag to pan</span></span>
+            </div>
+            <div class="sc-zoom">
+                <button class="sc-btn" id="sc-view-toggle" title="Simple view" data-i18n-title aria-pressed="false"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                <button class="sc-btn" id="sc-zoom-in" title="Zoom in" data-i18n-title><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                <button class="sc-btn" id="sc-zoom-out" title="Zoom out" data-i18n-title><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                <button class="sc-btn" id="sc-reset" title="Reset view" data-i18n-title><i class="fa-solid fa-expand"></i></button>
+            </div>
+        </div>
+
+        <svg id="sc-svg" viewBox="0 0 1000 800" xmlns="http://www.w3.org/2000/svg" aria-label="Trove star chart">
+            <g id="sc-g-lines"></g>
+            <g id="sc-g-replace"></g>
+            <g id="sc-g-nodes"></g>
+        </svg>
+
+        <div class="sc-loading"><i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n>Calculating constellations…</span></div>
+    </div>
+
+    <!-- Build panel -->
+    <aside class="sc-panel" id="sc-panel">
+        <h2 data-i18n>Current build</h2>
+
+        <div class="sc-meta">
+            <span class="sc-chip" id="sc-meta-nodes"><i class="fa-solid fa-diagram-project"></i> Nodes: 0/40</span>
+            <span class="sc-chip" id="sc-meta-state"><i class="fa-regular fa-circle"></i> <span data-i18n>Empty</span></span>
+            <span class="sc-chip toggle" id="sc-meta-cheat" role="button" tabindex="0"><i class="fa-solid fa-lock"></i> <span data-i18n>Cheat mode</span>: <span data-i18n>Off</span></span>
+        </div>
+
+        <div class="sc-share">
+            <input type="text" id="sc-code" placeholder="Paste a build code (SC:…)" data-i18n-placeholder autocomplete="off" spellcheck="false" aria-label="Build code">
+            <button class="sc-btn" id="sc-copy-code" title="Copy build code" data-i18n-title><i class="fa-regular fa-copy"></i></button>
+            <button class="sc-btn" id="sc-copy-link" title="Copy share link" data-i18n-title><i class="fa-solid fa-link"></i></button>
+        </div>
+
+        <div class="sc-filters">
+            <input type="text" id="sc-search" placeholder="Search nodes, stats, abilities…" data-i18n-placeholder autocomplete="off" spellcheck="false" aria-label="Search nodes">
+        </div>
+        <div class="sc-filter-meta" id="sc-search-meta"></div>
+
+        <div class="sc-filters">
+            <select id="sc-stat" aria-label="Highlight a stat"><option value="" data-i18n>Highlight a stat…</option></select>
+        </div>
+        <div class="sc-filter-meta" id="sc-stat-meta"></div>
+
+        <hr class="sc-divider">
+
+        <div id="sc-summary">
+            <p class="sc-empty" data-i18n>Select nodes to see the combined stats, abilities and rewards.</p>
+        </div>
+    </aside>
+</div>
+
+<div id="sc-tooltip"></div>

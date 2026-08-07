@@ -2390,5 +2390,7 @@
   "Only one gem of each ability at a time - you can't equip the same ability twice.": "Só uma gema por habilidade de cada vez: não podes equipar a mesma habilidade duas vezes.",
   "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "A mostrar {v} de {c} nome(s) partilhado(s), {n} ainda na última captura.",
   "Not checked - no longer in the latest capture": "Não verificado – já não está na última captura",
-  "No ally": "Sem aliado"
+  "No ally": "Sem aliado",
+  "Build your star chart without leaving this page": "Monte a sua carta estelar sem sair desta página",
+  "The star chart editor couldn't load.": "Não foi possível carregar o editor da carta estelar."
 }

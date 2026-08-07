@@ -45,6 +45,7 @@
   let advancedOpen = false;
 
   let elConfig, elResults;
+  let scInput = null;   // the star-chart code field, kept in sync by the editor
 
   function saveConfig() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch (e) { /* non-fatal */ }
@@ -152,13 +153,20 @@
     }
     elConfig.appendChild(gearSection);
 
-    // Star chart
+    // Star chart — paste a code, or build one right here in the editor.
     const scSection = h("div", { class: "gb-section" },
       h("h4", {}, h("i", { class: "fa-solid fa-chart-network" }), " " + t("Star Chart")));
-    const scInput = h("input", { class: "gb-input", type: "text", value: config.star_chart, placeholder: t("Paste a star-chart build code (e.g. SC:...)") });
+    scInput = h("input", { class: "gb-input", type: "text", value: config.star_chart, placeholder: t("Paste a star-chart build code (e.g. SC:...)") });
     scInput.addEventListener("input", (e) => { config.star_chart = e.target.value.trim(); saveConfig(); scheduleStarChart(); });
-    scSection.appendChild(h("label", { class: "gb-field" },
-      h("span", { class: "gb-field-label" }, t("Star chart build code")), scInput));
+    const scEdit = h("button", {
+      class: "gb-sc-edit", type: "button",
+      title: t("Build your star chart without leaving this page"),
+      onClick: openStarChartEditor,
+    }, h("i", { class: "fa-solid fa-star" }), " ", h("span", {}, t("Edit")));
+    scSection.appendChild(h("div", { class: "gb-sc-row" },
+      h("label", { class: "gb-field gb-sc-field" },
+        h("span", { class: "gb-field-label" }, t("Star chart build code")), scInput),
+      scEdit));
     scSection.appendChild(h("div", { class: "gb-sc-summary", id: "gb-sc-summary" }));
     elConfig.appendChild(scSection);
 
@@ -184,6 +192,34 @@
     saveConfig();
     if (rerender) renderConfig();
     calculate();
+  }
+
+  // ── Star chart editor ────────────────────────────────────────────────────
+  // Clones the shared star-chart widget into a modal and mounts it in embed
+  // mode, so every node you click streams straight back into the build config
+  // and the results behind the modal re-rank as you go.
+  function openStarChartEditor() {
+    const tpl = document.getElementById("gb-sc-template");
+    if (!tpl || !window.BTTModal || !window.BTTStarChart) {
+      toast(t("The star chart editor couldn't load."), true);
+      return;
+    }
+    const m = window.BTTModal.open({ title: t("Star Chart"), wide: true });
+    const card = m.wrap.querySelector(".mp-modal-card");
+    card.classList.add("gb-sc-modal");
+    card.appendChild(tpl.content.cloneNode(true));
+    // BTTModal translates before we append, so re-run over the cloned markup.
+    if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh();
+    window.BTTStarChart.mount({
+      embed: true,
+      initialCode: config.star_chart,
+      onChange: (code) => {
+        config.star_chart = code;
+        saveConfig();
+        if (scInput) scInput.value = code;
+        scheduleStarChart();
+      },
+    });
   }
 
   // ── Star chart preview ───────────────────────────────────────────────────

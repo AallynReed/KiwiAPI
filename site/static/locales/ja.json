@@ -2390,5 +2390,7 @@
   "Only one gem of each ability at a time - you can't equip the same ability twice.": "同じアビリティのジェムは同時に1つだけ - 同じアビリティを2つ装備することはできません。",
   "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "共有された名前 {c} 件のうち {v} 件を表示、うち {n} 件は最新の取得にも存在します。",
   "Not checked - no longer in the latest capture": "未確認 - 最新の取得には存在しません",
-  "No ally": "仲間なし"
+  "No ally": "仲間なし",
+  "Build your star chart without leaving this page": "このページを離れずにスターチャートを組めます",
+  "The star chart editor couldn't load.": "スターチャートエディターを読み込めませんでした。"
 }

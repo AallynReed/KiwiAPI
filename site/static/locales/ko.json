@@ -2390,5 +2390,7 @@
   "Only one gem of each ability at a time - you can't equip the same ability twice.": "능력당 젠은 한 번에 하나만 - 같은 능력을 두 번 장착할 수 없습니다.",
   "Showing {v} of {c} shared name(s), {n} still in the latest capture.": "공유된 이름 {c}개 중 {v}개 표시, 그중 {n}개는 최신 수집에도 있습니다.",
   "Not checked - no longer in the latest capture": "미확인 - 최신 수집에 없음",
-  "No ally": "동료 없음"
+  "No ally": "동료 없음",
+  "Build your star chart without leaving this page": "이 페이지를 벗어나지 않고 스타 차트를 구성하세요",
+  "The star chart editor couldn't load.": "스타 차트 편집기를 불러오지 못했습니다."
 }
