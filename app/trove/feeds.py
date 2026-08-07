@@ -26,6 +26,7 @@ import re
 from datetime import datetime, timedelta, timezone
 
 import httpx
+from bs4 import BeautifulSoup
 
 from app.admin import runtime_config
 from app.core.config import settings
@@ -290,16 +291,6 @@ def _parse_bilibili_date(date_str: str, now: datetime) -> datetime:
 
 
 async def _fetch_bilibili() -> list[dict]:
-    # Lazy import so a missing optional dep degrades to "bilibili feed fails,
-    # logged" rather than taking down the whole module (and Twitch/YouTube
-    # with it) at import time.
-    try:
-        from bs4 import BeautifulSoup
-    except ImportError as exc:
-        raise RuntimeError(
-            "beautifulsoup4 is not installed (required for the Bilibili scraper)"
-        ) from exc
-
     keyword         = await runtime_config.get_setting("feeds_bilibili_keyword")
     cutoff_days     = int(await runtime_config.get_setting("feeds_video_cutoff_days"))
     per_channel_max = int(await runtime_config.get_setting("feeds_per_channel_max"))

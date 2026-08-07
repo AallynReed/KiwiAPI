@@ -4,14 +4,12 @@ error envelope. Lives in its own low-level module so both `observability` and
 
 import contextvars
 import secrets
-import string
 
-_ALPHABET = string.ascii_lowercase + string.digits
 _request_id: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="-")
 
 
 def new_request_id() -> str:
-    return "req_" + "".join(secrets.choice(_ALPHABET) for _ in range(16))
+    return "req_" + secrets.token_hex(8)
 
 
 def set_request_id(value: str):

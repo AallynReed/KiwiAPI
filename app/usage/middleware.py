@@ -4,7 +4,7 @@ import time
 from fastapi import FastAPI, Request
 
 from app.usage.models import UsageEvent
-from app.usage.recorder import record_usage_event
+from app.usage.recorder import recorder
 
 logger = logging.getLogger("kiwi.usage")
 
@@ -27,7 +27,7 @@ def add_usage_middleware(app: FastAPI) -> None:
         if token_id is not None:
             route = request.scope.get("route")
             try:
-                record_usage_event(
+                recorder.record(
                     UsageEvent(
                         user_id=request.state.usage_user_id,
                         token_id=token_id,

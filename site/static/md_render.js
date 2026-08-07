@@ -16,8 +16,7 @@
 (function () {
   'use strict';
 
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const { esc } = window.BTTUtil;
 
   const _MD_ALLOWED = { a: 1, p: 1, br: 1, div: 1, span: 1, img: 1, picture: 1, source: 1,
     h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, b: 1, strong: 1, i: 1, em: 1, u: 1, s: 1,

@@ -7,7 +7,7 @@ from app.core.config import settings
 from app.core.middleware import _PAGE_PATHS, _PAGE_PREFIXES
 from app.core.utils import client_ip, utcnow
 from app.pageviews.models import PageView
-from app.pageviews.recorder import record_page_view
+from app.pageviews.recorder import recorder
 
 logger = logging.getLogger("kiwi.pageviews")
 
@@ -62,7 +62,7 @@ def add_pageview_middleware(app: FastAPI) -> None:
             return response
 
         try:
-            record_page_view(PageView(
+            recorder.record(PageView(
                 route=template,
                 path=request.url.path,
                 visitor_hash=_visitor_hash(request),

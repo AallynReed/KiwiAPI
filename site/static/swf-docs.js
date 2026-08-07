@@ -7,6 +7,8 @@
 (function () {
   'use strict';
 
+  const { esc: escapeHtml } = window.BTTUtil;
+
   const BASE = '/static/swf-docs/';
   const sidebar  = document.getElementById('sidebar');
   const backdrop = document.getElementById('backdrop');
@@ -184,11 +186,6 @@
 
   // The floating support pill is wired by the shared app.js (loaded on this
   // page now), so no standalone copy is needed here.
-
-  function escapeHtml(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g,
-      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
 
   // ---- Boot ----
   fetch(BASE + 'index.json', { cache: 'no-cache' })

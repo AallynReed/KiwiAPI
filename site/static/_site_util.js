@@ -80,6 +80,30 @@
         return res.json();
     }
 
+    // Trailing-edge debounce: returns a wrapper that runs `fn` only once `ms`
+    // have passed with no further call. Preserves `this` for method call sites.
+    function debounce(fn, ms) {
+        let h;
+        return function (...a) { clearTimeout(h); h = setTimeout(() => fn.apply(this, a), ms); };
+    }
+
+    // Compact "5m ago" / "3h ago" / "2d ago" for feed/card timestamps. Accepts
+    // unix seconds or anything Date.parse handles; "" for missing/unparseable.
+    // i18n is looked up lazily (i18n.js loads after this file) and uses the
+    // "<unit> ago" keys, so the whole phrase stays one translatable unit.
+    // NOT the same function as app.js's timeAgo, which is a full
+    // Intl.RelativeTimeFormat ladder (year..second) for the releases page.
+    function timeAgo(ts) {
+        if (!ts) return "";
+        const t = typeof ts === "number" ? ts * 1000 : Date.parse(ts);
+        if (!t) return "";
+        const tr = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
+        const s = Math.max(0, (Date.now() - t) / 1000);
+        if (s < 3600) return Math.floor(s / 60) + tr("m ago");
+        if (s < 86400) return Math.floor(s / 3600) + tr("h ago");
+        return Math.floor(s / 86400) + tr("d ago");
+    }
+
     // ── Focus management (shared by every modal / dialog on the site) ──────────
     // A dialog must: move focus in, trap Tab inside, and restore focus to the
     // opener on close (WCAG 2.4.3 / 2.1.2). This is the one implementation; the
@@ -279,7 +303,7 @@
     }
 
     window.BTTUtil = {
-        esc, apiUrl, getJSON, fetchJSON, getFocusable, trapFocus,
+        esc, apiUrl, getJSON, fetchJSON, debounce, timeAgo, getFocusable, trapFocus,
         segmentGaps, boardIconName, boardIconImg, crownHtml,
     };
 })();

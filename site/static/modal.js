@@ -7,8 +7,7 @@
 (function () {
     "use strict";
 
-    const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
-    const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ESC[c]);
+    const { esc } = window.BTTUtil;
 
     let current = null;  // one modal at a time; opening a new one replaces it
 

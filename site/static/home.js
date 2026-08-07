@@ -15,7 +15,7 @@
 (function () {
   "use strict";
 
-  const { getJSON, apiUrl } = window.BTTUtil;
+  const { getJSON, apiUrl, timeAgo } = window.BTTUtil;
   function tr(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
@@ -69,14 +69,6 @@
     if (typeof v === "number") return v;
     var t = Date.parse(v);
     return isNaN(t) ? null : Math.floor(t / 1000);
-  }
-  function timeAgo(ts) {
-    var t = typeof ts === "number" ? ts * 1000 : Date.parse(ts);
-    if (!t) return "";
-    var s = Math.max(0, (Date.now() - t) / 1000);
-    if (s < 3600) return Math.floor(s / 60) + "m " + tr("ago");
-    if (s < 86400) return Math.floor(s / 3600) + "h " + tr("ago");
-    return Math.floor(s / 86400) + "d " + tr("ago");
   }
 
   function fmtDate(unix) {

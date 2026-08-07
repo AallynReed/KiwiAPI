@@ -15,7 +15,7 @@ from xml.etree import ElementTree as ET
 
 from app.core.config import settings
 from app.core.database import upsert_by
-from app.core.http import fetch_text
+from app.core.http import fetch
 from app.core.pagination import paginate
 from app.core.refresher import PeriodicRefresher
 from app.trove.models import TroveNews
@@ -98,9 +98,9 @@ def parse_feed(xml_text: str) -> list[dict]:
 
 async def refresh_news() -> int:
     """Fetch the feed and upsert items into Mongo (by url). Returns items processed."""
-    # fetch_text follows redirects: trovegame.com/feed 301s to /feed/, and without
+    # fetch follows redirects: trovegame.com/feed 301s to /feed/, and without
     # the follow we'd parse the redirect page instead of the RSS and relay nothing.
-    items = parse_feed(await fetch_text(settings.trove_news_feed_url))
+    items = parse_feed((await fetch(settings.trove_news_feed_url)).text)
 
     for it in items:
         fields = {k: v for k, v in it.items() if k != "url"}

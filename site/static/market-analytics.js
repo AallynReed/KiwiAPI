@@ -17,7 +17,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON, segmentGaps } = window.BTTUtil;
+  const { esc, fetchJSON, segmentGaps, debounce } = window.BTTUtil;
 
   const state = {
     view: 'browse',
@@ -809,8 +809,4 @@
   }
   function t(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
-  function debounce(fn, ms) {
-    let h;
-    return function (...a) { clearTimeout(h); h = setTimeout(() => fn.apply(this, a), ms); };
-  }
 })();

@@ -14,7 +14,7 @@ from datetime import datetime
 from urllib.parse import quote
 
 from app.core.config import settings
-from app.core.http import fetch_json
+from app.core.http import fetch
 from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
 from app.trove import server_time
@@ -100,7 +100,7 @@ def build_response(cached: dict | None, fetched_at: datetime | None,
 
 async def refresh_chaos_chest() -> bool:
     """Fetch the current chaos chest from Trovesaurus and cache it. True if stored."""
-    item = normalize(await fetch_json(settings.trove_chaos_chest_url))
+    item = normalize((await fetch(settings.trove_chaos_chest_url)).json())
     if item is None:
         return False
     existing = await FeedCache.find_one(FeedCache.feed == _FEED)

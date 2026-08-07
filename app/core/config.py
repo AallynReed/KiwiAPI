@@ -34,7 +34,6 @@ class Settings(BaseSettings):
     # Git: per-project bare repos live under <mods_store_dir>/git; the
     # authenticated smart-HTTP server is mounted at /git/mods/*. A push packfile
     # can be large, so /git/* gets its own generous body cap.
-    mods_git_enabled: bool = True
     mods_git_max_body_bytes: int = 100 * 1024 * 1024    # push packfile cap
 
     # --- Embeddable viewers (see app/embed) ---------------------------------

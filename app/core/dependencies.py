@@ -8,7 +8,6 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.auth.models import User
 from app.core.errors import APIError, ErrorCode
 from app.core.ip_hash import ip_allowed as _ip_hash_allowed
-from app.core.limits import endpoint_limit_for
 from app.core.ratelimit import check_rate_limit, rate_limit_headers
 from app.core.scopes import mask_grants
 from app.core.security import decode_access_token, hash_token, verify_token_checksum
@@ -178,12 +177,6 @@ async def _enforce_token_limits(
     info = await check_rate_limit(key, api_max * multiplier, api_window)
     # Surface limit state on every successful response so clients self-throttle.
     response.headers.update(rate_limit_headers(info))
-
-    # Tighter per-endpoint budget on top of the global cap, where configured.
-    route = request.scope.get("route")
-    extra = endpoint_limit_for(getattr(route, "path", None))
-    if extra is not None:
-        await check_rate_limit(f"ep:{getattr(route, 'path', '')}:{token.id}", *extra)
 
     # Usage accounting - coalesced into ~one write per interval when Redis is up.
     await record_token_use(token, client_ip(request))

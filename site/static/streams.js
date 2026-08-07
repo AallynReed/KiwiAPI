@@ -10,22 +10,13 @@
 (function () {
   "use strict";
 
-  const { getJSON } = window.BTTUtil;
+  const { getJSON, timeAgo } = window.BTTUtil;
   function tr(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
     if (txt != null) e.textContent = txt;
     return e;
-  }
-  function timeAgo(ts) {
-    if (!ts) return "";
-    var t = (typeof ts === "number") ? ts * 1000 : Date.parse(ts);
-    if (!t) return "";
-    var s = Math.max(0, (Date.now() - t) / 1000);
-    if (s < 3600) return Math.floor(s / 60) + tr("m ago");
-    if (s < 86400) return Math.floor(s / 3600) + tr("h ago");
-    return Math.floor(s / 86400) + tr("d ago");
   }
   // Decorative icon: always aria-hidden so screen readers skip it.
   function icon(cls) { var i = el("i", cls); i.setAttribute("aria-hidden", "true"); return i; }

@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON, apiUrl } = window.BTTUtil;
+  const { esc, fetchJSON, apiUrl, debounce } = window.BTTUtil;
 
   const PAGE_SIZE = 60;
 
@@ -508,8 +508,4 @@
   function t(s) { return window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s; }
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
 
-  function debounce(fn, ms) {
-    let h;
-    return (...a) => { clearTimeout(h); h = setTimeout(() => fn(...a), ms); };
-  }
 })();

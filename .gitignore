@@ -23,16 +23,22 @@ data/
 .mods/
 
 # BetterTroveTools showcase site - binary assets are ~20 MB of screenshots,
-# shipped to the server via Syncthing rather than git. Templates + CSS + JS are tracked.
+# copied to the server by hand rather than git. Templates + CSS + JS are tracked.
 site/static/assets/
+
+# Minified build output - regenerated from source by scripts/minify_static.py on
+# every deploy. Top-level glob only, matching what the script actually generates;
+# vendored minified libs (fonts/, vendor/) stay tracked.
+/site/static/*.min.css
+/site/static/*.min.js
 
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
 
 # Tests are kept LOCAL only (run with `pytest tests/unit`), not pushed to the
-# remote. Deployment is via Syncthing and the Docker image only COPYs `app/`,
-# so the shipped artifact never included them anyway.
+# remote. The source tree is copied to the server by hand and the Docker image
+# only COPYs `app/`, so the shipped artifact never included them anyway.
 tests/
 
 # Local mobile-preview dir - symlinked copy of site/templates + static junction,
@@ -51,7 +57,4 @@ _preview/
 # Database backups (never commit data dumps)
 backups/
 
-# Syncthing per-machine state / in-flight temp files
-.stfolder/
-~syncthing~*
 *.tmp

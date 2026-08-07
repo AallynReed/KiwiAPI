@@ -101,6 +101,19 @@ if [ "$MINIFY" -eq 1 ] && [ -f scripts/minify_static.py ]; then
   fi
 fi
 
+# The .min.* files are build output and are no longer tracked in git, so a fresh
+# checkout has none until minify runs. Every template hardcodes /static/*.min.js
+# with no unminified fallback, so shipping without them serves pages whose CSS and
+# JS all 404. "minify failed, keep the existing files" only works when there ARE
+# existing files - check, and refuse to deploy a stylesheet-less site.
+if ! ls site/static/*.min.js >/dev/null 2>&1 || ! ls site/static/*.min.css >/dev/null 2>&1; then
+  echo "ERROR: no site/static/*.min.js|css present and minify did not produce any." >&2
+  echo "       Templates reference these directly - deploying now serves pages with" >&2
+  echo "       no CSS or JS. Fix the minify venv (see above) or run:" >&2
+  echo "         python scripts/minify_static.py" >&2
+  exit 1
+fi
+
 # nginx serves the docs site + dev portal straight off these bind-mounted trees
 # (worker uid 101). A deploy write under a tight umask or an inherited ACL can
 # leave fresh files unreadable to nginx -> 403 across the whole static site.

@@ -11,7 +11,7 @@ import logging
 
 from app.core.config import settings
 from app.core.database import upsert_by
-from app.core.http import fetch_json
+from app.core.http import fetch
 from app.core.refresher import PeriodicRefresher
 from app.core.utils import utcnow
 from app.trove.models import TroveEvent
@@ -47,7 +47,7 @@ def parse_events(raw: list[dict]) -> list[dict]:
 
 async def refresh_events() -> int:
     """Fetch the calendar feed and upsert events into Mongo (by event_id). Returns count."""
-    raw = await fetch_json(settings.trove_events_feed_url)
+    raw = (await fetch(settings.trove_events_feed_url)).json()
     events = parse_events(raw if isinstance(raw, list) else [])
     for ev in events:
         fields = {k: v for k, v in ev.items() if k != "event_id"}

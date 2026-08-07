@@ -4,6 +4,8 @@
 (function () {
   'use strict';
 
+  const { esc: escapeHtml } = window.BTTUtil;
+
   const SUPPORTED_LANGS = new Set(['en', 'fr', 'de', 'pt-PT', 'ru', 'ja', 'ko', 'zh-CN', 'es']);
   const STORAGE_KEY = 'btt_docs_lang';  // shared with i18n.js for consistency
 
@@ -295,13 +297,6 @@
     watchSections();
   }
 
-
-  // ── Utils ───────────────────────────────────────────────────────────
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, (ch) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[ch]));
-  }
 
 
   // ── Support widget ──────────────────────────────────────────────────

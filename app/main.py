@@ -59,7 +59,7 @@ from app.giveaways.router import router as giveaways_router
 from app.giveaways.worker import start_giveaway_worker, stop_giveaway_worker
 from app.images.router import router as images_router
 from app.pageviews.middleware import add_pageview_middleware
-from app.pageviews.recorder import start_pageview_recorder, stop_pageview_recorder
+from app.pageviews.recorder import recorder as pageview_recorder
 from app.scanning.router import router as scanning_router
 from app.site.router import router as site_router
 from app.site_auth.account import router as site_account_router
@@ -115,7 +115,7 @@ from app.trove.router import (
 from app.trove.status import start_status_prober, stop_status_prober
 from app.trove.updates.worker import start_update_archiver, stop_update_archiver
 from app.usage.middleware import add_usage_middleware
-from app.usage.recorder import start_usage_recorder, stop_usage_recorder
+from app.usage.recorder import recorder as usage_recorder
 from app.webhooks.delivery import start_webhook_delivery, stop_webhook_delivery
 from app.webhooks.router import router as webhooks_router
 
@@ -150,8 +150,8 @@ async def lifespan(app: FastAPI):
     await seed_supporters_if_empty()
     from app.trove.mods_hub.service import backfill_owner_handles
     await backfill_owner_handles()   # set owner_handle on mods predating per-owner slugs
-    start_usage_recorder()
-    start_pageview_recorder()  # buffered writer for showcase-site page-view analytics
+    usage_recorder.start()
+    pageview_recorder.start()  # buffered writer for showcase-site page-view analytics
     start_email_worker()
     start_news_refresher()
     start_feeds_refresher()
@@ -188,8 +188,8 @@ async def lifespan(app: FastAPI):
     await stop_feeds_refresher()
     await stop_news_refresher()
     await stop_email_worker()
-    await stop_usage_recorder()
-    await stop_pageview_recorder()
+    await usage_recorder.stop()
+    await pageview_recorder.stop()
     await close_redis()
     await close_postgres()
     await close_db()

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import httpx
 
 # Identifies our relays to upstreams. Bespoke clients (custom headers/UA) keep
@@ -16,27 +14,24 @@ BROWSER_UA = (
 )
 
 
-async def fetch_text(
+async def fetch(
     url: str, *, timeout: float = 15, headers: dict[str, str] | None = None,
-) -> str:
-    # follow_redirects: some feeds 301 to a trailing-slash path; without it
-    # raise_for_status() passes the 3xx through and we'd parse the redirect page.
+) -> httpx.Response:
+    """GET a URL, raising on a non-2xx. Caller takes ``.text`` or ``.json()``.
+
+    The body is fully READ before the client closes (httpx reads eagerly on a
+    non-streaming send), so the returned response is safe to use after this
+    returns - but only for the already-materialised body. Streaming accessors
+    (``.aiter_bytes()``, ``.aread()``) will fail on the closed transport; if you
+    need those, open your own client instead of reaching for this helper.
+
+    follow_redirects: some feeds 301 to a trailing-slash path; without it
+    raise_for_status() passes the 3xx through and we'd parse the redirect page.
+    """
     async with httpx.AsyncClient(
         timeout=timeout, follow_redirects=True,
         headers=headers or {"User-Agent": KIWI_UA},
     ) as client:
         resp = await client.get(url)
         resp.raise_for_status()
-        return resp.text
-
-
-async def fetch_json(
-    url: str, *, timeout: float = 15, headers: dict[str, str] | None = None,
-) -> Any:
-    async with httpx.AsyncClient(
-        timeout=timeout, follow_redirects=True,
-        headers=headers or {"User-Agent": KIWI_UA},
-    ) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        return resp.json()
+        return resp

@@ -14,6 +14,7 @@
   "use strict";
 
   const toast = window.BTTToast.show;
+  const { esc } = window.BTTUtil;
 
   const SVGNS = "http://www.w3.org/2000/svg";
   const COLORS = {
@@ -429,7 +430,6 @@
     const stats = Object.values(statsObj);
     const obtainables = Object.entries(obtain).map(([name, count]) => ({ name, count }));
 
-    const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     const section = (key, title, itemsHtml) => itemsHtml ? `
       <div class="sc-section ${sectionOpen[key] ? "" : "collapsed"}" data-section="${key}">
         <button type="button" class="sc-section-toggle">
