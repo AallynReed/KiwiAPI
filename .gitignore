@@ -24,7 +24,11 @@ data/
 
 # BetterTroveTools showcase site - binary assets are ~20 MB of screenshots,
 # copied to the server by hand rather than git. Templates + CSS + JS are tracked.
-site/static/assets/
+# assets/data/ is the exception: hand-maintained stat tables the /calculators
+# page fetches at runtime, so they have to ship with the repo or a deploy can
+# never update them.
+site/static/assets/*
+!site/static/assets/data/
 
 # Minified build output - regenerated from source by scripts/minify_static.py on
 # every deploy. Top-level glob only, matching what the script actually generates;
