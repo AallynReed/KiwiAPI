@@ -2392,5 +2392,19 @@
   "Not checked - no longer in the latest capture": "未確認 - 最新の取得には存在しません",
   "No ally": "仲間なし",
   "Build your star chart without leaving this page": "このページを離れずにスターチャートを組めます",
-  "The star chart editor couldn't load.": "スターチャートエディターを読み込めませんでした。"
+  "The star chart editor couldn't load.": "スターチャートエディターを読み込めませんでした。",
+  "Attack Speed": "攻撃速度",
+  "Crafting Speed": "クラフト速度",
+  "Damage Reduction": "ダメージ軽減",
+  "Energy Regen": "エナジー回復",
+  "Experience Gain": "経験値獲得",
+  "Flask Capacity": "フラスコ容量",
+  "Health Regen": "体力回復",
+  "Incoming Damage": "被ダメージ",
+  "Jump": "ジャンプ",
+  "Maximum Health %": "最大体力 %",
+  "Movement Speed": "移動速度",
+  "Outgoing Damage": "与ダメージ",
+  "Random Flask Emblem": "ランダムフラスコエンブレム",
+  "Stability": "安定性"
 }

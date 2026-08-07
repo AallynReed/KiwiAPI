@@ -2392,5 +2392,19 @@
   "Not checked - no longer in the latest capture": "Не проверено — отсутствует в последнем снимке",
   "No ally": "Без спутника",
   "Build your star chart without leaving this page": "Соберите звёздную карту, не покидая эту страницу",
-  "The star chart editor couldn't load.": "Не удалось загрузить редактор звёздной карты."
+  "The star chart editor couldn't load.": "Не удалось загрузить редактор звёздной карты.",
+  "Attack Speed": "Скорость атаки",
+  "Crafting Speed": "Скорость создания",
+  "Damage Reduction": "Снижение урона",
+  "Energy Regen": "Восстановление энергии",
+  "Experience Gain": "Прирост опыта",
+  "Flask Capacity": "Ёмкость фляги",
+  "Health Regen": "Восстановление здоровья",
+  "Incoming Damage": "Входящий урон",
+  "Jump": "Прыжок",
+  "Maximum Health %": "Максимальное здоровье %",
+  "Movement Speed": "Скорость передвижения",
+  "Outgoing Damage": "Исходящий урон",
+  "Random Flask Emblem": "Случайная эмблема фляги",
+  "Stability": "Стабильность"
 }

@@ -2392,5 +2392,19 @@
   "Not checked - no longer in the latest capture": "Nicht geprüft – nicht mehr in der neuesten Aufnahme",
   "No ally": "Kein Verbündeter",
   "Build your star chart without leaving this page": "Erstelle deine Sternenkarte, ohne diese Seite zu verlassen",
-  "The star chart editor couldn't load.": "Der Sternenkarten-Editor konnte nicht geladen werden."
+  "The star chart editor couldn't load.": "Der Sternenkarten-Editor konnte nicht geladen werden.",
+  "Attack Speed": "Angriffstempo",
+  "Crafting Speed": "Herstellungstempo",
+  "Damage Reduction": "Schadensreduzierung",
+  "Energy Regen": "Energieregeneration",
+  "Experience Gain": "Erfahrungsgewinn",
+  "Flask Capacity": "Flaschenkapazität",
+  "Health Regen": "Lebensregeneration",
+  "Incoming Damage": "Eingehender Schaden",
+  "Jump": "Sprung",
+  "Maximum Health %": "Maximale Gesundheit %",
+  "Movement Speed": "Bewegungstempo",
+  "Outgoing Damage": "Ausgehender Schaden",
+  "Random Flask Emblem": "Zufälliges Flaschenemblem",
+  "Stability": "Stabilität"
 }

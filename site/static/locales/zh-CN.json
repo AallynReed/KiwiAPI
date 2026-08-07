@@ -2392,5 +2392,19 @@
   "Not checked - no longer in the latest capture": "未检查 - 已不在最新抓取中",
   "No ally": "无伙伴",
   "Build your star chart without leaving this page": "无需离开本页即可搭配星图",
-  "The star chart editor couldn't load.": "星图编辑器加载失败。"
+  "The star chart editor couldn't load.": "星图编辑器加载失败。",
+  "Attack Speed": "攻击速度",
+  "Crafting Speed": "制作速度",
+  "Damage Reduction": "伤害减免",
+  "Energy Regen": "能量恢复",
+  "Experience Gain": "经验获取",
+  "Flask Capacity": "药剂容量",
+  "Health Regen": "生命恢复",
+  "Incoming Damage": "受到伤害",
+  "Jump": "跳跃",
+  "Maximum Health %": "最大生命 %",
+  "Movement Speed": "移动速度",
+  "Outgoing Damage": "造成伤害",
+  "Random Flask Emblem": "随机药剂徽记",
+  "Stability": "稳定性"
 }

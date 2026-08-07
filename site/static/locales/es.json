@@ -2392,5 +2392,19 @@
   "Not checked - no longer in the latest capture": "Sin comprobar: ya no aparece en la última captura",
   "No ally": "Sin aliado",
   "Build your star chart without leaving this page": "Crea tu carta estelar sin salir de esta página",
-  "The star chart editor couldn't load.": "No se pudo cargar el editor de la carta estelar."
+  "The star chart editor couldn't load.": "No se pudo cargar el editor de la carta estelar.",
+  "Attack Speed": "Velocidad de ataque",
+  "Crafting Speed": "Velocidad de fabricación",
+  "Damage Reduction": "Reducción de daño",
+  "Energy Regen": "Regeneración de energía",
+  "Experience Gain": "Ganancia de experiencia",
+  "Flask Capacity": "Capacidad de frasco",
+  "Health Regen": "Regeneración de salud",
+  "Incoming Damage": "Daño recibido",
+  "Jump": "Salto",
+  "Maximum Health %": "Salud máxima %",
+  "Movement Speed": "Velocidad de movimiento",
+  "Outgoing Damage": "Daño infligido",
+  "Random Flask Emblem": "Emblema de frasco aleatorio",
+  "Stability": "Estabilidad"
 }

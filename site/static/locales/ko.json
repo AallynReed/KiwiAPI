@@ -2392,5 +2392,19 @@
   "Not checked - no longer in the latest capture": "미확인 - 최신 수집에 없음",
   "No ally": "동료 없음",
   "Build your star chart without leaving this page": "이 페이지를 벗어나지 않고 스타 차트를 구성하세요",
-  "The star chart editor couldn't load.": "스타 차트 편집기를 불러오지 못했습니다."
+  "The star chart editor couldn't load.": "스타 차트 편집기를 불러오지 못했습니다.",
+  "Attack Speed": "공격 속도",
+  "Crafting Speed": "제작 속도",
+  "Damage Reduction": "피해 감소",
+  "Energy Regen": "기력 재생",
+  "Experience Gain": "경험치 획득",
+  "Flask Capacity": "플라스크 용량",
+  "Health Regen": "체력 재생",
+  "Incoming Damage": "받는 피해",
+  "Jump": "점프",
+  "Maximum Health %": "최대 체력 %",
+  "Movement Speed": "이동 속도",
+  "Outgoing Damage": "주는 피해",
+  "Random Flask Emblem": "무작위 플라스크 엠블럼",
+  "Stability": "안정성"
 }

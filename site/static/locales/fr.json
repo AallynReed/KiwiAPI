@@ -2392,5 +2392,19 @@
   "Not checked - no longer in the latest capture": "Non vérifié – absent de la dernière capture",
   "No ally": "Aucun allié",
   "Build your star chart without leaving this page": "Composez votre carte stellaire sans quitter cette page",
-  "The star chart editor couldn't load.": "Impossible de charger l'éditeur de carte stellaire."
+  "The star chart editor couldn't load.": "Impossible de charger l'éditeur de carte stellaire.",
+  "Attack Speed": "Vitesse d'attaque",
+  "Crafting Speed": "Vitesse de fabrication",
+  "Damage Reduction": "Réduction de dégâts",
+  "Energy Regen": "Régénération d'énergie",
+  "Experience Gain": "Gain d'expérience",
+  "Flask Capacity": "Capacité de fiole",
+  "Health Regen": "Régénération de santé",
+  "Incoming Damage": "Dégâts subis",
+  "Jump": "Saut",
+  "Maximum Health %": "Santé maximale %",
+  "Movement Speed": "Vitesse de déplacement",
+  "Outgoing Damage": "Dégâts infligés",
+  "Random Flask Emblem": "Emblème de fiole aléatoire",
+  "Stability": "Stabilité"
 }
