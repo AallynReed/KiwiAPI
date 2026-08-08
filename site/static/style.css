@@ -69,8 +69,12 @@
   --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent),
                  0 12px 50px color-mix(in oklab, var(--accent) 18%, transparent);
 
-  /* Easing curves - used everywhere so the page feels coordinated. */
+  /* Easing curves - used everywhere so the page feels coordinated.
+     --ease-in is the exact inverse of --ease-out, so a transition that
+     reverses (a panel that slides in and back out) retraces its own path
+     instead of easing the wrong way on the return trip. */
   --ease-out:    cubic-bezier(.22,.61,.36,1);
+  --ease-in:     cubic-bezier(.64,0,.78,.39);
   --ease-spring: cubic-bezier(.34,1.56,.64,1);
 }
 
@@ -1949,13 +1953,18 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 
 /* ─── 17. Reduced motion ─────────────────────────────────────────────── */
 
+/* Reduced motion means "don't move things", not "don't respond". The blanket
+   below kills travel (transform / position / size) but deliberately leaves
+   opacity and colour alone, so a cross-fade still reads as a state change and
+   pressing a button still gives feedback - just without the slide or scale. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+    transition-property: opacity, color, background-color, border-color, box-shadow, fill, stroke !important;
   }
+  html { scroll-behavior: auto; }
   .orb { animation: none; }
   .grad { animation: none; background-position: 0 0; }
   /* Surface everything that animates in - otherwise reduced-motion users
@@ -1965,7 +1974,43 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   .spotlight .spot-bg img { opacity: .9; transform: none; }
   .bento-tile { opacity: 1; transform: none; }
   .support-trigger i { animation: none !important; }
-  .support-trigger, .support-link, .support-panel { transition: none !important; }
+  /* The panel keeps its opacity fade (the blanket above already stripped the
+     slide), so opening it still reads as a change rather than a hard cut. */
+}
+
+
+/* ─── 17b. Reduced transparency / increased contrast ──────────────────────
+   The site leans on backdrop-filter for its floating chrome. When the OS asks
+   for less translucency or more contrast, the blur stops being decoration and
+   starts being a legibility problem - so the persistent chrome, dialog
+   backdrops and tooltips go opaque. Purely decorative card blurs are left
+   alone; they never sit under reading copy.
+   Selectors span every page's stylesheet on purpose - style.css is the one
+   sheet every page loads, so this block is the only place the override can
+   live once. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .navbar, .gg-secnav, .mh-foot, .mp-modal-card, .mh-modal-card, .cdx-modal-card,
+  .st-modal-card, .up-modal-card, .gem-tooltip.show, .unlock-nav-panel,
+  .support-panel, .btn-ghost, .pill, .hero-eyebrow, .stat, .final-cta-inner {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: var(--bg-card, #131922) !important;
+  }
+  /* Dialog scrims: solid enough to actually separate the layers. */
+  .mp-modal-backdrop, .mh-modal-backdrop, .cdx-modal-backdrop, .st-modal-backdrop,
+  .cal-modal-backdrop, .dash-modal-backdrop, .up-modal-backdrop, .dash-modal-overlay,
+  .gem-modal-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(3, 6, 11, .94) !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .navbar, .mp-modal-card, .mh-modal-card, .cdx-modal-card, .st-modal-card,
+  .up-modal-card, .support-panel, .pill, .btn-ghost {
+    border-color: var(--text-mute, #9aa4b2) !important;
+  }
 }
 
 
@@ -2145,3 +2190,127 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 @media (max-width: 640px) {
   .mp-modal-card { padding: 20px 16px; }
 }
+
+
+/* ─── 20. Press feedback ─────────────────────────────────────────────────
+   Every control in the site had a :hover state and (almost) no pressed state,
+   which means on a phone - where hover doesn't exist - tapping anything gave
+   no acknowledgement at all until the next page painted.
+
+   This layer answers the press on pointer-down instead of on release. It uses
+   the standalone `scale` property rather than `transform`, so it composes with
+   the translateY / translateX hovers already declared across the per-page
+   stylesheets instead of replacing them. `scale` is used nowhere else in the
+   codebase, so nothing here can collide.
+
+   The transition is declared inside :where() (specificity 0) so it can never
+   clobber a stylesheet's own `transition` shorthand; controls that already own
+   their transition simply get an instant press and release, which still reads
+   correctly. */
+
+:where(
+  button, summary, [role="button"], [role="tab"],
+  input[type="submit"], input[type="button"], input[type="reset"],
+  a[class*="btn"], a[class*="chip"], a[class*="pill"],
+  label[class*="chip"], label[class*="pill"],
+  a.nav-cta, a.nav-account-signin, a.support-link
+) {
+  transition: scale 140ms var(--ease-out);
+  /* We own the feedback now - the OS grey flash on tap is redundant and
+     always lags the real press. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active,
+[role="button"]:active,
+[role="tab"]:active,
+input[type="submit"]:active,
+input[type="button"]:active,
+input[type="reset"]:active,
+a[class*="btn"]:active,
+a[class*="chip"]:active,
+a[class*="pill"]:active,
+label[class*="chip"]:active,
+label[class*="pill"]:active,
+a.nav-cta:active,
+a.nav-account-signin:active,
+a.support-link:active {
+  scale: .97;
+  /* Going down is instant; coming back up eases. A press should never feel
+     like it has to catch up with the finger. */
+  transition-duration: 0s;
+}
+
+/* Wide controls pull in visibly at .97, so accordion headers get a lighter
+   press than a pill-sized button does. */
+summary:active { scale: .99; transition-duration: 0s; }
+
+/* Nothing that can't be actioned should look like it responded. */
+:disabled:active,
+[aria-disabled="true"]:active { scale: 1; }
+
+/* Controls whose own `transition` shorthand would otherwise shadow the
+   :where() rule above - listed explicitly so they get the eased release. */
+.btn { transition: transform .18s var(--ease-out), scale 140ms var(--ease-out), background .18s, border-color .18s, box-shadow .18s; }
+.pill { transition: color .15s, border-color .15s, background .15s, transform .15s, scale 140ms var(--ease-out); }
+
+/* Reduced motion still needs an answer to the press - it just shouldn't move.
+   The scale becomes a dip in opacity, which carries the same "I got that"
+   without any travel. */
+@media (prefers-reduced-motion: reduce) {
+  button:active, [role="button"]:active, [role="tab"]:active, summary:active,
+  input[type="submit"]:active, input[type="button"]:active, input[type="reset"]:active,
+  a[class*="btn"]:active, a[class*="chip"]:active, a[class*="pill"]:active,
+  label[class*="chip"]:active, label[class*="pill"]:active,
+  a.nav-cta:active, a.nav-account-signin:active, a.support-link:active {
+    scale: 1;
+    opacity: .68;
+  }
+}
+
+
+/* ─── 21. Dialog motion ──────────────────────────────────────────────────
+   Every modal on the site was a `hidden` toggle: it appeared and vanished
+   between one frame and the next, with no sense of where it came from. These
+   keyframes give the whole family the same arrival - the scrim fades while the
+   card materialises (blur + scale together, so it reads as a surface arriving
+   rather than an image cross-fading in).
+
+   The class list is every page's modal shell. style.css is the one stylesheet
+   loaded everywhere, so declaring it once here covers all of them. */
+
+@keyframes btt-scrim-in { from { opacity: 0; } to { opacity: 1; } }
+
+@keyframes btt-card-in {
+  from { opacity: 0; scale: .96; translate: 0 10px; }
+  to   { opacity: 1; scale: 1;   translate: 0 0; }
+}
+
+.mp-modal-backdrop, .mh-modal-backdrop, .cdx-modal-backdrop, .st-modal-backdrop,
+.cal-modal-backdrop, .dash-modal-backdrop {
+  animation: btt-scrim-in 160ms var(--ease-out);
+}
+
+.mp-modal-card, .mh-modal-card, .cdx-modal-card, .st-modal-card,
+.cal-modal-card, .dash-modal-card {
+  animation: btt-card-in 260ms var(--ease-out);
+}
+
+/* Exit for the shared modal (modal.js drives it). Symmetric with the entrance:
+   the card retraces the same path on the way out, on the mirrored curve, and
+   faster - leaving should never take as long as arriving. */
+.mp-modal.is-closing .mp-modal-backdrop {
+  opacity: 0;
+  animation: none;
+  transition: opacity 170ms var(--ease-in);
+}
+.mp-modal.is-closing .mp-modal-card {
+  opacity: 0;
+  scale: .96;
+  translate: 0 10px;
+  animation: none;
+  transition: opacity 170ms var(--ease-in), scale 170ms var(--ease-in), translate 170ms var(--ease-in);
+}
+/* A dialog on its way out must not swallow clicks meant for what's underneath
+   or for the dialog replacing it. */
+.mp-modal.is-closing { pointer-events: none; }

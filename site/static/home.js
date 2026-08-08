@@ -678,7 +678,6 @@
     var state = { timeMode: "local", filter: "full" };
     var rawEvents = null;
     var wrapEl = null, todayPx = 0, barsIndex = [];
-    var dragging = false, dragStartX = 0, dragScrollLeft = 0;
 
     function toDisplayMs(ms) { return state.timeMode === "trove" ? ms - TROVE_OFFSET_MS : ms; }
 
@@ -981,19 +980,82 @@
     function setFilter(f) { if (state.filter === f) return; state.filter = f; render(false); }
     function setMode(m) { if (state.timeMode === m) return; state.timeMode = m; render(true); }
 
+    // Drag-to-pan for the timeline. Pointer Events + pointer capture, so the
+    // drag survives the cursor leaving the rail (the old mouse handlers dropped
+    // it on mouseleave, which meant a fast drag just stopped). Touch is left
+    // alone on purpose: the wrapper already scrolls natively there, complete
+    // with momentum and rubber-banding we'd only be reimplementing worse.
+    var DRAG_SLOP = 6;      // px before a click becomes a drag
+    var DECEL = 0.998;      // per-ms velocity decay - scroll-like glide
+    var MIN_FLICK = 90;     // px/s below which a release isn't a throw
+
     function attachDrag(w) {
-      w.addEventListener("mousedown", function (e) {
-        dragging = true; dragStartX = e.pageX - w.offsetLeft; dragScrollLeft = w.scrollLeft; w.classList.add("dragging");
+      var pid = null, grabX = 0, grabScroll = 0, moved = false;
+      var vel = 0, lastX = 0, lastT = 0, raf = 0;
+
+      function stopGlide() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
+
+      // Momentum: keep going at the velocity the cursor let go at, decaying the
+      // way a scroll does, so there's no seam between dragging and coasting.
+      function glide(v) {
+        var prev = 0;
+        raf = requestAnimationFrame(function step(t) {
+          // First frame only establishes the clock - measuring a zero-length
+          // step would read as "hit the end" and kill the glide immediately.
+          if (!prev) { prev = t; raf = requestAnimationFrame(step); return; }
+          var dt = Math.min(t - prev, 64); prev = t;
+          var before = w.scrollLeft;
+          w.scrollLeft = before + v * (dt / 1000);
+          v *= Math.pow(DECEL, dt);
+          // Hit an end, or slowed to a crawl - either way we're done.
+          if (Math.abs(v) < 20 || w.scrollLeft === before) { raf = 0; return; }
+          raf = requestAnimationFrame(step);
+        });
+      }
+
+      w.addEventListener("pointerdown", function (e) {
+        if (e.pointerType === "touch" || e.button !== 0) return;
+        stopGlide();   // grabbing a coasting rail stops it dead, under the cursor
+        pid = e.pointerId;
+        grabX = e.clientX; lastX = e.clientX; lastT = e.timeStamp;
+        grabScroll = w.scrollLeft; moved = false; vel = 0;
+        try { w.setPointerCapture(pid); } catch (_) { /* drag still tracks, just not past the edge */ }
       });
-      w.addEventListener("mousemove", function (e) {
-        if (!dragging) return; e.preventDefault();
-        w.scrollLeft = dragScrollLeft - ((e.pageX - w.offsetLeft) - dragStartX) * 1.5;
+
+      w.addEventListener("pointermove", function (e) {
+        if (e.pointerId !== pid) return;
+        var dx = e.clientX - grabX;
+        if (!moved) {
+          if (Math.abs(dx) < DRAG_SLOP) return;   // still a click, not a drag
+          moved = true; w.classList.add("dragging");
+        }
+        e.preventDefault();
+        w.scrollLeft = grabScroll - dx;           // 1:1 - the rail tracks the cursor
+        var dt = e.timeStamp - lastT;
+        if (dt > 0) vel = (e.clientX - lastX) / dt * 1000;
+        lastX = e.clientX; lastT = e.timeStamp;
       });
-      var stop = function () { dragging = false; w.classList.remove("dragging"); };
-      w.addEventListener("mouseup", stop);
-      w.addEventListener("mouseleave", stop);
+
+      function release(e) {
+        if (pid === null || e.pointerId !== pid) return;
+        try { if (w.hasPointerCapture(pid)) w.releasePointerCapture(pid); } catch (_) { /* already gone */ }
+        pid = null;
+        w.classList.remove("dragging");
+        // Coasting is motion the user didn't ask to continue - skip it when the
+        // OS says to reduce motion; the drag itself still tracks 1:1.
+        var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (moved && !calm && Math.abs(vel) >= MIN_FLICK) glide(-vel);
+      }
+      w.addEventListener("pointerup", release);
+      w.addEventListener("pointercancel", release);
+
+      // A drag that ends over a bar shouldn't also count as clicking it.
+      w.addEventListener("click", function (e) {
+        if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
+      }, true);
+
       w.addEventListener("wheel", function (e) {
-        if (e.deltaY !== 0) { e.preventDefault(); w.scrollLeft += e.deltaY; }
+        if (e.deltaY !== 0) { e.preventDefault(); stopGlide(); w.scrollLeft += e.deltaY; }
       }, { passive: false });
     }
 
