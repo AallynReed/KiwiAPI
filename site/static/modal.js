@@ -11,6 +11,9 @@
 
     let current = null;  // one modal at a time; opening a new one replaces it
 
+    // Matches the .mp-modal.is-closing transition in style.css section 21.
+    const EXIT_MS = 190;
+
     function open(opts) {
         opts = opts || {};
         if (current) current.close();
@@ -41,11 +44,20 @@
         // Focus trap + restore (Escape routed through it). Falls back to a bare
         // Escape listener if the shared helper somehow isn't loaded.
         let release = null;
+        let closing = false;
         const onKeyFallback = (e) => { if (e.key === "Escape") handle.close(); };
         handle.close = () => {
+            if (closing) return;
+            closing = true;
+            // Everything the caller can observe happens now: focus goes back,
+            // the modal stops being "current", and the shell stops taking
+            // clicks. Only the DOM removal waits for the exit to play, so a
+            // caller that closes one modal and opens another in the same tick
+            // still gets the new one immediately.
             if (release) release(); else document.removeEventListener("keydown", onKeyFallback);
-            wrap.remove();
             if (current === handle) current = null;
+            wrap.classList.add("is-closing");
+            setTimeout(() => wrap.remove(), EXIT_MS);
         };
         if (window.BTTUtil && window.BTTUtil.trapFocus) {
             release = window.BTTUtil.trapFocus(card, { onEscape: handle.close });

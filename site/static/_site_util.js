@@ -3,6 +3,13 @@
 (function () {
     "use strict";
 
+    // ── iOS :active enabler ───────────────────────────────────────────────────
+    // Mobile Safari only applies :active to an element if it (or an ancestor)
+    // has a touch handler bound. Without this no-op listener the press states in
+    // style.css section 20 never fire on iPhone - which is the one platform
+    // where they matter most, since there is no hover to fall back on.
+    document.addEventListener("touchstart", function () {}, { passive: true });
+
     // ── Cross-origin data base (window.API_BASE) ──────────────────────────────
     // The website is served from its own origin (trove.aallyn.net) but the data
     // plane - every /site/* + /v1/* + /git/* endpoint - lives on the API origin
