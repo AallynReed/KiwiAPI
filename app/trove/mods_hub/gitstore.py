@@ -26,7 +26,62 @@ from dulwich.server import DictBackend, ReceivePackHandler, UploadPackHandler
 from app.core.config import settings
 
 _GIT_AUTHOR_DOMAIN = "users.noreply.kiwi"
-_HANDLERS = {b"git-upload-pack": UploadPackHandler, b"git-receive-pack": ReceivePackHandler}
+
+# A built .tmod belongs in a release, never in the versioned files - the studio's
+# commit path refuses one too (service.BLOCKED_COMMIT_EXTENSIONS).
+BLOCKED_EXTENSIONS = (".tmod",)
+_BLOCKED_PUSH_STATUS = b"a built .tmod belongs in a release, not in the files"
+
+
+def _blocked_in_commit(repo: Repo, commit_sha: bytes) -> str | None:
+    """The first blocked path in a commit's tree, or None if it's clean."""
+    try:
+        tree = repo.object_store[commit_sha].tree
+    except (KeyError, AttributeError):
+        return None                          # tag / missing object - nothing to scan
+    for e in iter_tree_contents(repo.object_store, tree):
+        path = e.path.decode("utf-8", "replace")
+        if path.lower().endswith(BLOCKED_EXTENSIONS):
+            return path
+    return None
+
+
+class _GuardedReceivePackHandler(ReceivePackHandler):
+    """``git push`` that refuses any ref whose new tip commits a blocked file.
+
+    dulwich applies the pack and moves the refs in one step, so the check runs
+    after ``_apply_pack`` and rewinds the ref it rejects; the pushed objects stay
+    behind unreferenced (a later gc reclaims them) and the client gets a real
+    ``remote rejected`` line instead of a silent no-op."""
+
+    def _apply_pack(self, refs):
+        status = list(super()._apply_pack(refs))
+        commanded = {ref: (oldsha, sha) for oldsha, sha, ref in refs}
+        out = []
+        for name, msg in status:
+            cmd = commanded.get(name)
+            if msg != b"ok" or cmd is None or not cmd[1].strip(b"0"):
+                out.append((name, msg))      # already failed, or a ref deletion
+                continue
+            oldsha, sha = cmd
+            blocked = _blocked_in_commit(self.repo, sha)
+            if blocked is None:
+                out.append((name, msg))
+                continue
+            try:
+                if not oldsha.strip(b"0"):
+                    self.repo.refs.remove_if_equals(name, sha)
+                else:
+                    self.repo.refs.set_if_equals(name, sha, oldsha)
+            except (OSError, KeyError):       # rewind failed - report it anyway
+                pass
+            out.append((name, _BLOCKED_PUSH_STATUS
+                        + b" (" + blocked.encode("utf-8", "replace") + b")"))
+        return out
+
+
+_HANDLERS = {b"git-upload-pack": UploadPackHandler,
+             b"git-receive-pack": _GuardedReceivePackHandler}
 
 
 class GitStoreError(Exception):
