@@ -42,6 +42,16 @@
 @media (max-width: 1040px) {
   .mp-doc { grid-template-columns: 1fr; gap: 0; }   /* stack on narrow screens */
 }
+/* The rail follows you down a long README. The max-height is what keeps a tall
+   rail reachable: pinned by its top alone, anything past the viewport's bottom
+   edge could never be scrolled to. Short rails never hit it, so no scrollbar. */
+@media (min-width: 1041px) {
+  .mp-doc-side {
+    position: sticky; top: 84px;            /* clears the sticky navbar */
+    max-height: calc(100vh - 104px); overflow-y: auto;
+    scrollbar-width: thin; overscroll-behavior: contain;
+  }
+}
 .mp-doc .mp-section { margin-bottom: 22px; }
 .mp-doc-main > #mp-previews-section,
 .mp-doc-main > #mp-description-section,
