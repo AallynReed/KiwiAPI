@@ -102,35 +102,68 @@
    a screen reader got one undifferentiated run of buttons). */
 .mh-tagbar:not([hidden]) { display: block; }
 .mh-tagbar[hidden] { display: none; }   /* the row's author display would beat the UA rule */
-.mh-tiers { display: grid; gap: 11px; }
-.mh-tier { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 14px; align-items: start; }
+/* One grid for both tiers, and each tier borrows its columns with `subgrid`, so
+   the two labels share a single column width and the chip rows start on the
+   same edge. Per-tier grids sized their own label column, which is why
+   "Categories" and "Tags" pushed their chips to different places. */
+.mh-tiers { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 12px 14px; }
+.mh-tier { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: start; }
 .mh-tier-label {
   font: 600 .7rem 'JetBrains Mono', ui-monospace, monospace;
   letter-spacing: .09em; text-transform: uppercase; color: var(--text-mute);
-  white-space: nowrap; padding-top: 8px;      /* optical align to the first chip row */
+  white-space: nowrap; padding-top: 9px;      /* optical align to the first chip row */
 }
 .mh-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.mh-tag {
-  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+
+/* Categories: a fixed set, so each one gets a face and a solid selected state. */
+.mh-cat {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
   background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px;
-  color: var(--text-mute); padding: 5px 13px; font: 600 .8rem 'Inter', system-ui, sans-serif;
-  transition: border-color .15s var(--ease-out), color .15s var(--ease-out), background .15s var(--ease-out);
+  color: var(--text-mute); padding: 6px 14px 6px 12px;
+  font: 600 .82rem 'Inter', system-ui, sans-serif;
+  transition: border-color .15s var(--ease-out), color .15s var(--ease-out),
+              background .15s var(--ease-out);
 }
-.mh-tag:hover { color: var(--text); border-color: var(--accent-blue); background: var(--bg-card-hi); }
-.mh-tag.active { background: rgba(88,166,255,.15); border-color: var(--accent-blue); color: var(--text); }
-.mh-tag-all { letter-spacing: .01em; }
-/* "All" isn't a tag, so a real hairline separates it from the ones that are. */
-.mh-tag-div { width: 1px; align-self: stretch; margin: 3px 4px; background: var(--bg-line); flex: none; }
-.mh-tag-count {
+.mh-cat > i { font-size: .86em; color: var(--text-soft); transition: color .15s var(--ease-out); }
+.mh-cat:hover { color: var(--text); border-color: var(--accent-blue); background: var(--bg-card-hi); }
+.mh-cat:hover > i { color: var(--accent-blue); }
+.mh-cat.active {
+  background: var(--accent-blue); border-color: var(--accent-blue); color: #06121f;
+}
+.mh-cat.active > i { color: #06121f; }
+.mh-cat-count {
   padding: 0 7px; border-radius: 999px; background: var(--bg-card);
-  color: var(--text-mute); font-size: .72em; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--text-mute); font-size: .74em; font-weight: 700; font-variant-numeric: tabular-nums;
 }
-/* Same-hue tint on the selected chip, and readable ink - this used to be
-   --text-soft, which is below the AA reading floor. */
-.mh-tag.active .mh-tag-count { background: rgba(88,166,255,.24); color: #d3e4ff; }
+.mh-cat.active .mh-cat-count { background: rgba(6,18,31,.16); color: #06121f; }
+
+/* Creator tags: free text, so they read as text - lighter, hashed, no icon. */
+.mh-utag {
+  display: inline-flex; align-items: baseline; gap: 6px; cursor: pointer;
+  background: var(--bg-deep); border: 1px solid transparent; border-radius: 999px;
+  color: var(--text-mute); padding: 4px 12px; font: 500 .8rem 'Inter', system-ui, sans-serif;
+  transition: color .15s var(--ease-out), background .15s var(--ease-out),
+              border-color .15s var(--ease-out);
+}
+.mh-utag-hash { font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--text-soft); }
+/* Muted, not Soft: a facet count is content, and Soft is below the AA floor. */
+.mh-utag-count { font-size: .78em; font-weight: 700; color: var(--text-mute); font-variant-numeric: tabular-nums; }
+.mh-utag:hover { color: var(--text); background: var(--bg-card-hi); }
+.mh-utag:hover .mh-utag-hash { color: var(--text-mute); }
+.mh-utag.active {
+  color: var(--accent-blue); background: rgba(88,166,255,.13); border-color: rgba(88,166,255,.42);
+}
+.mh-utag.active .mh-utag-hash, .mh-utag.active .mh-utag-count { color: var(--accent-blue); }
+
 @media (max-width: 560px) {
+  .mh-tiers { grid-template-columns: 1fr; gap: 14px; }
   .mh-tier { grid-template-columns: 1fr; gap: 7px; }
   .mh-tier-label { padding-top: 0; }
+}
+/* The text chips sit at 27px, which clears the 24px minimum but is mean on a
+   thumb. */
+@media (pointer: coarse) {
+  .mh-cat, .mh-utag { min-height: 34px; }
 }
 
 /* ─── Results grid ──────────────────────────────────────────────────── */

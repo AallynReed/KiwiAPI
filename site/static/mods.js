@@ -14,6 +14,18 @@
 
   const PAGE_SIZE = 30;
 
+  // One icon per fixed category (the list in mods_project.js / mod_categories.py).
+  // Anything the server sends that isn't on here falls back to a plain tag glyph.
+  const CAT_ICONS = {
+    Allies: 'fa-dove', Banners: 'fa-flag', 'Boats and Sails': 'fa-sailboat',
+    Cosmetics: 'fa-wand-magic-sparkles', Costumes: 'fa-shirt', Dragons: 'fa-dragon',
+    Fishing: 'fa-fish', GUI: 'fa-table-columns', Helmets: 'fa-hat-wizard',
+    Language: 'fa-language', 'Mag Riders': 'fa-person-skating', Mounts: 'fa-horse',
+    NPCs: 'fa-users', Wings: 'fa-feather-pointed', Automation: 'fa-robot',
+    Optimization: 'fa-gauge-high', Reskin: 'fa-palette', Waypoint: 'fa-location-dot',
+    Radar: 'fa-satellite-dish',
+  };
+
   const state = {
     q: '', tag: '', sort: 'recent',
     offset: 0, items: [], total: 0, loading: false,
@@ -156,30 +168,41 @@
     if (!cats.length && !custom.length) { $tagbar.hidden = true; return; }
     $tagbar.hidden = false;
     const cur = state.tag.toLowerCase();
-    const chip = (tg, n) => {
+    // A category is a fixed, known thing, so it gets a face. Anything not on the
+    // list is a creator's own tag and renders in the quieter tier below.
+    const catChip = (tg, n) => {
       const on = cur === String(tg).toLowerCase();
-      return `<button type="button" class="mh-tag${on ? ' active' : ''}" data-tag="${esc(tg)}" aria-pressed="${on}">`
-        + `${esc(tg)}<span class="mh-tag-count">${Number(n).toLocaleString()}</span></button>`;
+      return `<button type="button" class="mh-cat${on ? ' active' : ''}" data-tag="${esc(tg)}" aria-pressed="${on}">`
+        + `<i class="fa-solid ${CAT_ICONS[tg] || 'fa-tag'}" aria-hidden="true"></i>`
+        + `<span class="mh-cat-name">${esc(tg)}</span>`
+        + `<span class="mh-cat-count">${Number(n).toLocaleString()}</span></button>`;
     };
-    const allChip = `<button type="button" class="mh-tag mh-tag-all${state.tag ? '' : ' active'}" data-tag="" aria-pressed="${!state.tag}">${esc(t('All'))}</button>`
-      + '<span class="mh-tag-div" aria-hidden="true"></span>';
-    // Two labelled tiers, not one run of identical pills split by a dashed rule:
-    // the categories are a set the hub curates, the tags are whatever creators
-    // typed on their own mods. They filter alike but they aren't alike, and the
-    // rule was carrying that meaning on its own (and silently - it's aria-hidden).
+    const allChip = `<button type="button" class="mh-cat mh-cat-all${state.tag ? '' : ' active'}" data-tag="" aria-pressed="${!state.tag}">`
+      + '<i class="fa-solid fa-border-all" aria-hidden="true"></i>'
+      + `<span class="mh-cat-name">${esc(t('All'))}</span></button>`;
+    // Creator tags are free text, so they read as text: a hash, the word, the
+    // count. No icon to invent, and visibly a lighter weight of thing than the
+    // curated set above - which one dashed rule between identical pills never
+    // managed to say (and never said at all to a screen reader, being hidden).
+    const tagChip = (tg, n) => {
+      const on = cur === String(tg).toLowerCase();
+      return `<button type="button" class="mh-utag${on ? ' active' : ''}" data-tag="${esc(tg)}" aria-pressed="${on}">`
+        + `<span class="mh-utag-hash" aria-hidden="true">#</span>${esc(tg)}`
+        + `<span class="mh-utag-count">${Number(n).toLocaleString()}</span></button>`;
+    };
     const tier = (label, inner) => `<div class="mh-tier" role="group" aria-label="${esc(label)}">
         <span class="mh-tier-label">${esc(label)}</span>
         <div class="mh-tags">${inner}</div>
       </div>`;
     let html;
     if (cats.length) {
-      html = tier(t('Categories'), allChip + cats.map((c) => chip(c.tag, c.count)).join(''));
-      if (custom.length) html += tier(t('Tags'), custom.map((c) => chip(c.tag, c.count)).join(''));
+      html = tier(t('Categories'), allChip + cats.map((c) => catChip(c.tag, c.count)).join(''));
+      if (custom.length) html += tier(t('Tags'), custom.map((c) => tagChip(c.tag, c.count)).join(''));
     } else {
-      html = tier(t('Tags'), allChip + custom.map((c) => chip(c.tag, c.count)).join(''));
+      html = tier(t('Tags'), allChip + custom.map((c) => tagChip(c.tag, c.count)).join(''));
     }
     $tags.innerHTML = html;
-    $tags.querySelectorAll('.mh-tag').forEach((b) => b.addEventListener('click', () => {
+    $tags.querySelectorAll('[data-tag]').forEach((b) => b.addEventListener('click', () => {
       state.tag = b.getAttribute('data-tag');
       loadPage(true);
     }));
