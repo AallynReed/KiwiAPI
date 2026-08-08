@@ -190,6 +190,18 @@
 /* Releases-only pages run a narrower column - the hero text lines up with it. */
 .mp-header.is-doc .mp-header-body { max-width: 1120px; margin-inline: auto; }
 #mp-langswitch:empty { display: none; }
+
+/* On a phone the hero box is portrait (~375x455) while every real banner is
+   landscape, so filling it cropped a 16:9 shot down to its middle 46%. Below
+   this width the banner stops stretching to the hero and takes a ~1.6:1 band at
+   the top instead - close to the middle of the range creators actually upload -
+   with the text running on under it. The text scrim's reach shortens to match,
+   or it would veil the whole band. */
+@media (max-width: 720px) {
+  .mp-header { padding-top: clamp(170px, 52vw, 250px); }
+  .mp-banner-wrap { bottom: auto; height: clamp(210px, 62vw, 420px); }
+  .mp-header-body::before { top: -70px; }
+}
 .mp-titlerow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .mp-title-actions { margin-left: auto; display: inline-flex; gap: 8px; }
 /* Owner-provided links (Discord invite / website / donation buttons). */
