@@ -60,7 +60,7 @@
    Capped in width, not stretched to the column: a full-width 16:9 shot at this
    measure is 630px tall and swallows the page. */
 .mp-doc .mp-previews { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-.mp-doc .mp-preview:first-child { grid-column: 1 / -1; max-width: 620px; aspect-ratio: 16 / 9; }
+.mp-doc .mp-preview:first-child { grid-column: 1 / -1; max-width: 480px; aspect-ratio: 16 / 9; }
 
 .mp-back {
   display: inline-flex; align-items: center; gap: 8px; color: var(--text-mute);
