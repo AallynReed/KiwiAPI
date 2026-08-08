@@ -29,38 +29,51 @@
   .mp-layout { grid-template-columns: 1fr; }   /* stack on narrow screens */
 }
 
-/* Releases-only body: a document, not a stack of identical panels. A narrower
-   reading column; the gallery and the prose drop their card chrome so only the
-   interactive sections (releases, modpacks, forks) stay raised. */
-.mp-doc { max-width: 1120px; margin-inline: auto; }
-.mp-doc .mp-section { margin-bottom: 22px; }
-.mp-doc > #mp-previews-section,
-.mp-doc > #mp-description-section,
-.mp-doc > #mp-readme-text-section {
-  border: 0; background: none; padding: 0; margin-bottom: 36px;
+/* Releases-only body: a document, not a stack of identical panels. Prose and
+   gallery run chrome-free down the reading column; the panels that do something
+   sit in a rail beside them, so the download list is level with the top of the
+   page instead of a screen and a half under the previews. */
+.mp-doc {
+  max-width: 1180px; margin-inline: auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 26px;
+  align-items: start;
 }
-.mp-doc > #mp-previews-section .mp-section-head,
-.mp-doc > #mp-description-section .mp-section-head,
-.mp-doc > #mp-readme-text-section .mp-section-head {
+.mp-doc-main, .mp-doc-side { min-width: 0; }
+@media (max-width: 1040px) {
+  .mp-doc { grid-template-columns: 1fr; gap: 0; }   /* stack on narrow screens */
+}
+.mp-doc .mp-section { margin-bottom: 22px; }
+.mp-doc-main > #mp-previews-section,
+.mp-doc-main > #mp-description-section,
+.mp-doc-main > #mp-readme-text-section {
+  border: 0; background: none; padding: 0; margin-bottom: 34px;
+}
+.mp-doc-main > #mp-previews-section .mp-section-head,
+.mp-doc-main > #mp-description-section .mp-section-head,
+.mp-doc-main > #mp-readme-text-section .mp-section-head {
   border-bottom: 1px solid var(--bg-line); padding-bottom: 9px; margin-bottom: 16px;
 }
 /* Quiet label captions, so three document headings don't read as three more
-   cards competing with the one panel that matters (Releases). */
-.mp-doc > #mp-previews-section .mp-section-title,
-.mp-doc > #mp-description-section .mp-section-title,
-.mp-doc > #mp-readme-text-section .mp-section-title {
+   cards competing with the panels in the rail. */
+.mp-doc-main > #mp-previews-section .mp-section-title,
+.mp-doc-main > #mp-description-section .mp-section-title,
+.mp-doc-main > #mp-readme-text-section .mp-section-title {
   font: 600 .78rem 'JetBrains Mono', ui-monospace, monospace;
   letter-spacing: .08em; text-transform: uppercase; color: var(--text-mute);
 }
-.mp-doc > #mp-previews-section .mp-section-title i,
-.mp-doc > #mp-description-section .mp-section-title i,
-.mp-doc > #mp-readme-text-section .mp-section-title i { color: var(--text-soft); font-size: .95em; }
+.mp-doc-main > #mp-previews-section .mp-section-title i,
+.mp-doc-main > #mp-description-section .mp-section-title i,
+.mp-doc-main > #mp-readme-text-section .mp-section-title i { color: var(--text-soft); font-size: .95em; }
 .mp-doc .mp-markdown { font-size: 1rem; }
 /* The lead preview gets its own row and the rest sit under it as a thumb strip.
    Capped in width, not stretched to the column: a full-width 16:9 shot at this
    measure is 630px tall and swallows the page. */
-.mp-doc .mp-previews { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.mp-doc .mp-previews { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 .mp-doc .mp-preview:first-child { grid-column: 1 / -1; max-width: 480px; aspect-ratio: 16 / 9; }
+/* The rail is narrow, so the release rows drop to a stacked layout. */
+.mp-doc-side .mp-section { padding: 16px 18px; }
+.mp-doc-side .mp-release-top { flex-direction: column; align-items: stretch; gap: 8px; }
+.mp-doc-side .mp-release-actions { gap: 6px; }
 
 .mp-back {
   display: inline-flex; align-items: center; gap: 8px; color: var(--text-mute);
@@ -188,7 +201,7 @@
     rgba(6,8,13,0) 0, rgba(6,8,13,.66) 110px, rgba(6,8,13,.90) 220px, rgba(6,8,13,.94));
 }
 /* Releases-only pages run a narrower column - the hero text lines up with it. */
-.mp-header.is-doc .mp-header-body { max-width: 1120px; margin-inline: auto; }
+.mp-header.is-doc .mp-header-body { max-width: 1180px; margin-inline: auto; }
 #mp-langswitch:empty { display: none; }
 
 /* On a phone the hero box is portrait (~375x455) while every real banner is

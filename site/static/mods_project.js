@@ -167,18 +167,20 @@
         <aside class="mp-col-side">${sideCol.filter(Boolean).join('')}</aside>
       </div>`);
     } else {
-      // No file browser (releases-only / private source). A narrower reading
-      // column that runs like a document: the gallery leads, prose follows
-      // chrome-free, and only the interactive panels keep card borders - four
-      // identical full-width boxes down a 1600px page read as a pile of blocks.
-      const doc = [];
-      if (ownerHasPreviews) doc.push(previewsHTML(d));
-      doc.push(descriptionHTML(d));
-      doc.push(readmeTextHTML(d));        // releases-only README (saved text)
-      doc.push(releasesHTML(d));
-      doc.push(modpacksHTML());
-      if (d.fork_count) doc.push(forksHTML());
-      parts.push(`<div class="mp-doc">${doc.filter(Boolean).join('')}</div>`);
+      // No file browser (releases-only / private source). Reads like a document
+      // rather than a stack of identical panels: prose and gallery run
+      // chrome-free down the left, and the panels that do something (releases,
+      // packs, forks) sit in a rail on the right - stacked, they pushed the
+      // download list a screen and a half below the fold.
+      const docMain = [descriptionHTML(d)];
+      if (ownerHasPreviews) docMain.push(previewsHTML(d));
+      docMain.push(readmeTextHTML(d));    // releases-only README (saved text)
+      const docSide = [releasesHTML(d), modpacksHTML()];
+      if (d.fork_count) docSide.push(forksHTML());
+      parts.push(`<div class="mp-doc">
+        <div class="mp-doc-main">${docMain.filter(Boolean).join('')}</div>
+        <aside class="mp-doc-side">${docSide.filter(Boolean).join('')}</aside>
+      </div>`);
     }
 
     $root.innerHTML = parts.join('');
