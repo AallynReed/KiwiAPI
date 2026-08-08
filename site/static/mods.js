@@ -156,14 +156,27 @@
     if (!cats.length && !custom.length) { $tagbar.hidden = true; return; }
     $tagbar.hidden = false;
     const cur = state.tag.toLowerCase();
-    const chip = (tg, n) =>
-      `<button type="button" class="mh-tag ${cur === tg.toLowerCase() ? 'active' : ''}" data-tag="${esc(tg)}">${esc(tg)} <span class="mh-tag-count">${Number(n).toLocaleString()}</span></button>`;
-    // "All" first, then the fixed categories, then a separator, then custom tags.
-    let html = `<button type="button" class="mh-tag ${state.tag ? '' : 'active'}" data-tag="">${esc(t('All'))}</button>`;
-    html += cats.map((c) => chip(c.tag, c.count)).join('');
-    if (custom.length) {
-      html += '<span class="mh-tag-sep" aria-hidden="true"></span>';
-      html += custom.map((c) => chip(c.tag, c.count)).join('');
+    const chip = (tg, n) => {
+      const on = cur === String(tg).toLowerCase();
+      return `<button type="button" class="mh-tag${on ? ' active' : ''}" data-tag="${esc(tg)}" aria-pressed="${on}">`
+        + `${esc(tg)}<span class="mh-tag-count">${Number(n).toLocaleString()}</span></button>`;
+    };
+    const allChip = `<button type="button" class="mh-tag mh-tag-all${state.tag ? '' : ' active'}" data-tag="" aria-pressed="${!state.tag}">${esc(t('All'))}</button>`
+      + '<span class="mh-tag-div" aria-hidden="true"></span>';
+    // Two labelled tiers, not one run of identical pills split by a dashed rule:
+    // the categories are a set the hub curates, the tags are whatever creators
+    // typed on their own mods. They filter alike but they aren't alike, and the
+    // rule was carrying that meaning on its own (and silently - it's aria-hidden).
+    const tier = (label, inner) => `<div class="mh-tier" role="group" aria-label="${esc(label)}">
+        <span class="mh-tier-label">${esc(label)}</span>
+        <div class="mh-tags">${inner}</div>
+      </div>`;
+    let html;
+    if (cats.length) {
+      html = tier(t('Categories'), allChip + cats.map((c) => chip(c.tag, c.count)).join(''));
+      if (custom.length) html += tier(t('Tags'), custom.map((c) => chip(c.tag, c.count)).join(''));
+    } else {
+      html = tier(t('Tags'), allChip + custom.map((c) => chip(c.tag, c.count)).join(''));
     }
     $tags.innerHTML = html;
     $tags.querySelectorAll('.mh-tag').forEach((b) => b.addEventListener('click', () => {

@@ -100,15 +100,21 @@
   function render() {
     const d = state.detail;
     if (!d) return;
-    $root.innerHTML = headerHTML(d) + warningsHTML(d) + bodyHTML(d);
+    $root.innerHTML = headerHTML(d) + bodyHTML(d);
+    const main = $root.closest('.mp-main');
+    if (main) main.classList.add('mp-has-hero');
     wire();
     rerunI18n();
   }
 
   function headerHTML(d) {
-    const banner = d.banner_sha
+    // Same hero as a mod page (mods_project.css): the banner is the backdrop
+    // behind the title, bleeding to the viewport edges, not a framed image.
+    const bannerInner = d.banner_sha
       ? `<img class="mp-banner" src="${imageUrl(d.banner_sha)}" alt="">`
       : `<div class="mp-banner placeholder"><i class="fa-solid fa-box-open"></i></div>`;
+    const banner = `<div class="mp-banner-wrap">${bannerInner}`
+      + '<span class="mp-banner-scrim" aria-hidden="true"></span></div>';
     const badge = d.visibility === 'draft'
       ? `<span class="mp-badge mp-badge-draft">${esc(t('Draft'))}</span>`
       : d.visibility === 'unlisted'
@@ -127,9 +133,10 @@
           <i class="fa-solid fa-heart"></i> <span id="mpk-like-count">${Number(d.star_count || 0).toLocaleString()}</span>
         </button>
       </div>`;
-    return `<header class="mpk-header">
+    return `<header class="mp-header is-doc mpk-header">
       ${banner}
-      <div class="mpk-head-body">
+      <div class="mp-header-body mpk-head-body">
+        ${taken}
         <div class="mpk-head-titlerow">
           <h1 class="mp-title">${esc(d.title)} ${badge}</h1>
         </div>
@@ -138,7 +145,6 @@
         ${stats}
         <div class="mpk-head-actions">${ownerCtl}${!d.is_owner ? `<button type="button" class="mp-btn mp-btn-sm" id="mpk-report"><i class="fa-solid fa-flag"></i> ${esc(t('Report'))}</button>` : ''}</div>
       </div>
-      ${taken}
     </header>`;
   }
 
@@ -151,13 +157,21 @@
     </section>`;
   }
 
+  // Reading column on the left, the panel you act on in a rail beside it -
+  // stacked full-width, the pack read as four identical blocks and the download
+  // sat below the fold.
   function bodyHTML(d) {
     const desc = d.description
       ? `<section class="mp-section mpk-desc"><div class="mp-markdown">${renderMd(d.description)}</div></section>` : '';
-    return desc + variantsHTML(d) + modsHTML(d);
+    return `<div class="mp-doc">
+      <div class="mp-doc-main">${warningsHTML(d)}${desc}${modsHTML(d)}</div>
+      <aside class="mp-doc-side">${getPackHTML(d)}</aside>
+    </div>`;
   }
 
-  function variantsHTML(d) {
+  // Pick a variant, then take the pack: the choice and the buttons it drives
+  // belong in one panel, not two cards a screen apart.
+  function getPackHTML(d) {
     const variants = d.variants || [];
     const tabs = variants.map((v) => {
       const isDefault = v.name === d.default_variant;
@@ -167,21 +181,33 @@
     }).join('');
     const addBtn = d.is_owner
       ? `<button type="button" class="mpk-tab mpk-tab-add" id="mpk-add-variant"><i class="fa-solid fa-plus"></i> ${esc(t('Variant'))}</button>` : '';
-    return `<section class="mp-section mpk-variants">
-      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-code-branch"></i> ${esc(t('Variants'))}</h2></div>
-      <div class="mpk-tabs">${tabs}${addBtn}</div>
+    // A single-variant pack has no choice to offer - don't show a picker of one.
+    const picker = (variants.length > 1 || d.is_owner)
+      ? `<div class="mpk-picker">
+          <span class="mpk-picker-label">${esc(t('Variants'))}</span>
+          <div class="mpk-tabs">${tabs}${addBtn}</div>
+        </div>` : '';
+    const v = activeVariant();
+    return `<section class="mp-section mpk-get">
+      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</h2></div>
+      ${picker}
+      ${variantOwnerCtl(d)}
+      ${v ? downloadHTML(v) : ''}
     </section>`;
+  }
+
+  function variantOwnerCtl(d) {
+    if (!d.is_owner || !activeVariant()) return '';
+    return `<div class="mpk-variant-ctl">
+      ${activeVariant().name !== d.default_variant ? `<button type="button" class="mp-btn mp-btn-sm" id="mpk-make-default"><i class="fa-solid fa-star"></i> ${esc(t('Make default'))}</button>` : ''}
+      <button type="button" class="mp-btn mp-btn-sm" id="mpk-rename-variant"><i class="fa-solid fa-pen"></i> ${esc(t('Rename'))}</button>
+      ${(d.variants || []).length > 1 ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-danger" id="mpk-delete-variant"><i class="fa-solid fa-trash"></i> ${esc(t('Delete variant'))}</button>` : ''}
+    </div>`;
   }
 
   function modsHTML(d) {
     const v = activeVariant();
     if (!v) return '';
-    const ownerVariantCtl = d.is_owner ? `
-      <div class="mpk-variant-ctl">
-        ${v.name !== d.default_variant ? `<button type="button" class="mp-btn mp-btn-sm" id="mpk-make-default"><i class="fa-solid fa-star"></i> ${esc(t('Make default'))}</button>` : ''}
-        <button type="button" class="mp-btn mp-btn-sm" id="mpk-rename-variant"><i class="fa-solid fa-pen"></i> ${esc(t('Rename'))}</button>
-        ${(d.variants || []).length > 1 ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-danger" id="mpk-delete-variant"><i class="fa-solid fa-trash"></i> ${esc(t('Delete variant'))}</button>` : ''}
-      </div>` : '';
     const rows = (v.entries || []).map((e, i) => entryRow(e, i, d.is_owner)).join('');
     const empty = !(v.entries || []).length
       ? `<p class="mpk-empty">${esc(t('No mods in this variant yet.'))}</p>` : '';
@@ -191,13 +217,10 @@
           <button type="button" class="mp-btn mpk-add-mod" id="mpk-upload-mod"><i class="fa-solid fa-upload"></i> ${esc(t('Upload a .tmod'))}</button>
           <input type="file" id="mpk-upload-input" accept=".tmod" hidden>
         </div>` : '';
-    const dl = downloadHTML(v);
     return `<section class="mp-section mpk-mods">
       <div class="mp-section-head">
         <h2 class="mp-section-title"><i class="fa-solid fa-cubes"></i> ${esc(t('Included mods'))} <span class="mpk-count">${(v.entries || []).length}</span></h2>
-        ${dl}
       </div>
-      ${ownerVariantCtl}
       <div class="mpk-entries">${rows}${empty}</div>
       ${addMod}
     </section>`;

@@ -95,22 +95,43 @@
 }
 .mh-select:focus { border-color: var(--accent-blue); }
 
-.mh-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+/* ─── Tag filter ─────────────────────────────────────────────────────
+   Two labelled tiers - the categories the hub curates, then whatever creators
+   tagged their own mods with. A mono caption per tier carries the distinction
+   the old dashed rule was carrying alone (and silently: it was aria-hidden, so
+   a screen reader got one undifferentiated run of buttons). */
+.mh-tagbar:not([hidden]) { display: block; }
+.mh-tagbar[hidden] { display: none; }   /* the row's author display would beat the UA rule */
+.mh-tiers { display: grid; gap: 11px; }
+.mh-tier { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 14px; align-items: start; }
+.mh-tier-label {
+  font: 600 .7rem 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--text-mute);
+  white-space: nowrap; padding-top: 8px;      /* optical align to the first chip row */
+}
+.mh-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .mh-tag {
-  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
   background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px;
-  color: var(--text-mute); padding: 5px 12px; font: 600 .8rem 'Inter', system-ui, sans-serif;
+  color: var(--text-mute); padding: 5px 13px; font: 600 .8rem 'Inter', system-ui, sans-serif;
   transition: border-color .15s var(--ease-out), color .15s var(--ease-out), background .15s var(--ease-out);
 }
-.mh-tag:hover { color: var(--text); border-color: var(--accent-blue); }
-.mh-tag.active { background: rgba(86,156,255,.14); border-color: var(--accent-blue); color: var(--text); }
+.mh-tag:hover { color: var(--text); border-color: var(--accent-blue); background: var(--bg-card-hi); }
+.mh-tag.active { background: rgba(88,166,255,.15); border-color: var(--accent-blue); color: var(--text); }
+.mh-tag-all { letter-spacing: .01em; }
+/* "All" isn't a tag, so a real hairline separates it from the ones that are. */
+.mh-tag-div { width: 1px; align-self: stretch; margin: 3px 4px; background: var(--bg-line); flex: none; }
 .mh-tag-count {
-  padding: 0 6px; border-radius: 999px; background: rgba(255,255,255,.07);
+  padding: 0 7px; border-radius: 999px; background: var(--bg-card);
   color: var(--text-mute); font-size: .72em; font-weight: 700; font-variant-numeric: tabular-nums;
 }
-.mh-tag.active .mh-tag-count { background: rgba(86,156,255,.28); color: var(--text-soft); }
-/* Forces custom tags onto their own row(s) below the fixed categories. */
-.mh-tag-sep { flex-basis: 100%; height: 0; margin: 4px 0 0; border-top: 1px dashed var(--bg-line); }
+/* Same-hue tint on the selected chip, and readable ink - this used to be
+   --text-soft, which is below the AA reading floor. */
+.mh-tag.active .mh-tag-count { background: rgba(88,166,255,.24); color: #d3e4ff; }
+@media (max-width: 560px) {
+  .mh-tier { grid-template-columns: 1fr; gap: 7px; }
+  .mh-tier-label { padding-top: 0; }
+}
 
 /* ─── Results grid ──────────────────────────────────────────────────── */
 
