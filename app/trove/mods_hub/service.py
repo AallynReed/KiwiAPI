@@ -22,6 +22,7 @@ from beanie import PydanticObjectId
 from beanie.operators import In, Inc, Or, Set
 from pymongo.errors import DuplicateKeyError
 
+from app import i18n as app_i18n
 from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
 from app.core.security import hash_token
@@ -54,6 +55,15 @@ GIT_TOKEN_PREFIX = "kgit_"
 # so it can't collide with a SiteUser. On claim-handover the mod re-homes to the
 # new owner's username.
 STRAY_HANDLE = "stray"
+
+# A built .tmod is a release artifact, never versioned source. Committed as a file
+# it lands in the Files tab where nobody can install it, so it's refused on every
+# write path: here, and on git push (see gitstore's receive-pack guard).
+BLOCKED_COMMIT_EXTENSIONS = (".tmod",)
+BLOCKED_COMMIT_MESSAGE = (
+    "A built .tmod goes in a release, not in your files - use New release to "
+    "upload it so people can download and install it."
+)
 
 _SORTS = {
     "recent": "-updated_at",
@@ -106,6 +116,49 @@ def _clean_tags(tags: list[str]) -> list[str]:
         if t and t not in out:
             out.append(t)
     return out[:12]
+
+
+# Languages a mod's text may be translated into = the site's language picker,
+# minus English (which is the base field itself, always the fallback).
+CONTENT_LANGS: frozenset[str] = frozenset(app_i18n.SUPPORTED) - {app_i18n.DEFAULT_LANG}
+
+# Human wording for the field an error is about (the API field name would read as
+# jargon in the modder's editor).
+_I18N_LABELS = {
+    "title": "title", "summary": "summary", "description": "description",
+    "readme_text": "README", "readme": "README", "warnings": "warnings",
+    "changelog": "changelog", "tagline": "tagline",
+}
+
+
+def _clean_i18n_map(translations: dict[str, str], *, base: str, max_len: int) -> dict[str, str]:
+    """Validate a translation map: known language codes only, English excluded
+    (it lives in ``base``), blanks dropped."""
+    label = _I18N_LABELS.get(base, base)
+    out: dict[str, str] = {}
+    for lang, text in translations.items():
+        lang = (lang or "").strip()
+        if lang == app_i18n.DEFAULT_LANG:
+            raise APIError(400, ErrorCode.bad_request,
+                           f"The English {label} is `{base}`, not a translation.")
+        if lang not in CONTENT_LANGS:
+            raise APIError(400, ErrorCode.bad_request,
+                           f"'{lang}' isn't a language the site supports.")
+        if len(text or "") > max_len:
+            raise APIError(400, ErrorCode.bad_request,
+                           f"The {lang} {label} is too long (max {max_len:,} characters).")
+        text = (text or "").strip()
+        if text:
+            out[lang] = text
+    return out
+
+
+def _set_i18n(doc, fields: dict[str, tuple[dict | None, str, int]]) -> None:
+    """Write ``{attribute: (translations, base field, max length)}`` onto a
+    document, skipping the fields this request didn't send."""
+    for attr, (translations, base, max_len) in fields.items():
+        if translations is not None:
+            setattr(doc, attr, _clean_i18n_map(translations, base=base, max_len=max_len))
 
 
 _URL_RE = re.compile(r"^https?://\S+$", re.IGNORECASE)
@@ -199,7 +252,9 @@ def project_card(p: ModProject) -> dict:
         "slug": p.slug,
         "handle": p.owner_handle,
         "title": p.title,
+        "title_i18n": p.title_i18n,
         "summary": p.summary,
+        "summary_i18n": p.summary_i18n,
         "tags": p.tags,
         "owner_username": p.owner_username,
         "visibility": p.visibility,
@@ -246,7 +301,9 @@ def _release_dto(r: ModRelease) -> dict:
         "tag": r.tag,
         "branch": r.branch,
         "title": r.title,
+        "title_i18n": r.title_i18n,
         "changelog": r.changelog,
+        "changelog_i18n": r.changelog_i18n,
         "status": r.status,
         "tmod_filename": release_download_filename(r),   # the .tmod's internal title
         "tmod_size": r.tmod_size,
@@ -540,8 +597,11 @@ async def project_detail(project: ModProject, viewer: SiteUser | None) -> dict:
     return {
         **project_card(project),
         "description": project.description,
+        "description_i18n": project.description_i18n,
         "readme_text": project.readme_text,
+        "readme_i18n": project.readme_i18n,
         "warnings": project.warnings,
+        "warnings_i18n": project.warnings_i18n,
         "default_branch": project.default_branch,
         "preview_shas": project.preview_shas,
         "discord_url": project.discord_url,
@@ -617,8 +677,10 @@ async def tag_facets() -> dict:
 
 
 async def update_project(
-    project: ModProject, actor: SiteUser, *, title=None, summary=None,
-    description=None, readme_text=None, warnings=None, tags=None, visibility=None,
+    project: ModProject, actor: SiteUser, *, title=None, title_i18n=None,
+    summary=None, summary_i18n=None, description=None, description_i18n=None,
+    readme_text=None, readme_i18n=None, warnings=None, warnings_i18n=None,
+    tags=None, visibility=None,
     mode=None, source_visibility=None, hidden_release_branches=None, branch_order=None,
     discord_url=None, website_url=None, donation_urls=None, inspired_by=None,
 ) -> ModProject:
@@ -633,6 +695,13 @@ async def update_project(
         project.readme_text = readme_text
     if warnings is not None:
         project.warnings = warnings
+    _set_i18n(project, {
+        "title_i18n": (title_i18n, "title", 120),
+        "summary_i18n": (summary_i18n, "summary", 280),
+        "description_i18n": (description_i18n, "description", 40_000),
+        "readme_i18n": (readme_i18n, "readme_text", 60_000),
+        "warnings_i18n": (warnings_i18n, "warnings", 4_000),
+    })
     if tags is not None:
         project.tags = _clean_tags(tags)
     if visibility is not None:
@@ -809,7 +878,10 @@ async def commit_files(
         if len(content) > settings.mods_hub_max_file_bytes:
             raise APIError(413, ErrorCode.bad_request,
                            f"File {raw!r} exceeds the {settings.mods_hub_max_file_bytes}-byte limit.")
-        adds_norm.append((_norm_path(raw), content))
+        path = _norm_path(raw)
+        if path.endswith(BLOCKED_COMMIT_EXTENSIONS):
+            raise APIError(400, ErrorCode.bad_request, BLOCKED_COMMIT_MESSAGE)
+        adds_norm.append((path, content))
     deletes_norm = [_norm_path(d) for d in deletes]
     try:
         sha = await gitstore.write_commit(
@@ -1153,7 +1225,7 @@ def _require_publish_ok(actor: SiteUser, status: str) -> None:
 # can each run to tens of KB, and every SSE subscriber, webhook post and Redis
 # pub/sub hop would carry them on every release. The event's `project.api_url`
 # points at the detail endpoint that serves them.
-_EVENT_PROJECT_OMIT = ("description", "readme_text")
+_EVENT_PROJECT_OMIT = ("description", "description_i18n", "readme_text", "readme_i18n")
 
 
 async def _previous_published_release(release: ModRelease) -> ModRelease | None:
@@ -1286,6 +1358,7 @@ async def create_release_from_commit(
     changelog: str, ref: str, status: str, fmt: str = "tmod",
     preview_sha: str | None = None, author: str | None = None,
     config_data: bytes | None = None,
+    title_i18n: dict | None = None, changelog_i18n: dict | None = None,
 ) -> dict:
     _require_owner(project, actor)
     _require_files_mode(project)
@@ -1342,6 +1415,7 @@ async def create_release_from_commit(
         project, tag=tag, branch=branch_name, title=title, changelog=changelog,
         status=status, tmod_sha=sha, tmod_size=len(artifact), properties=props,
         source_commit_sha=commit_sha, release_format=fmt,
+        title_i18n=title_i18n, changelog_i18n=changelog_i18n,
     )
 
 
@@ -1349,6 +1423,7 @@ async def create_release_from_upload(
     project: ModProject, actor: SiteUser, *, tag: str, title: str,
     changelog: str, status: str, filename: str, data: bytes, branch: str = "",
     config_data: bytes | None = None,
+    title_i18n: dict | None = None, changelog_i18n: dict | None = None,
 ) -> dict:
     _require_owner(project, actor)
     _require_publish_ok(actor, status)
@@ -1395,6 +1470,7 @@ async def create_release_from_upload(
         tmod_sha=sha, tmod_size=len(data), properties=props,
         source_commit_sha=None, release_format=fmt,
         prior_tmod_shas=[base_sha] if base_sha else [],
+        title_i18n=title_i18n, changelog_i18n=changelog_i18n,
     )
 
 
@@ -1420,6 +1496,7 @@ async def _insert_release(
     project: ModProject, *, tag: str, branch: str, title: str, changelog: str,
     status: str, tmod_sha: str, tmod_size: int, properties: dict, source_commit_sha,
     release_format: str = "tmod", prior_tmod_shas: list[str] | None = None,
+    title_i18n: dict | None = None, changelog_i18n: dict | None = None,
 ) -> dict:
     # The download name is the .tmod's internal `title` (Trove matches on it),
     # falling back to slug-tag; zips keep the slug-tag name.
@@ -1437,6 +1514,10 @@ async def _insert_release(
         banner_sha=project.banner_sha, status=status,
         published_at=utcnow() if status == "published" else None,
     )
+    _set_i18n(release, {
+        "title_i18n": (title_i18n, "title", 160),
+        "changelog_i18n": (changelog_i18n, "changelog", 20_000),
+    })
     await release.insert()
     project.updated_at = utcnow()
     await project.save()
@@ -2071,13 +2152,17 @@ async def decode_release_blueprint(
 
 async def update_release(
     release: ModRelease, project: ModProject, actor: SiteUser, *,
-    title=None, changelog=None, status=None,
+    title=None, title_i18n=None, changelog=None, changelog_i18n=None, status=None,
 ) -> dict:
     _require_owner(project, actor)
     if title is not None:
         release.title = title.strip()
     if changelog is not None:
         release.changelog = changelog
+    _set_i18n(release, {
+        "title_i18n": (title_i18n, "title", 160),
+        "changelog_i18n": (changelog_i18n, "changelog", 20_000),
+    })
     became_published = False
     if status is not None and status != release.status:
         _require_publish_ok(actor, status)
@@ -2617,7 +2702,9 @@ def public_release_dto(r: ModRelease) -> dict:
         "tag": r.tag,
         "branch": r.branch,
         "title": r.title,
+        "title_i18n": r.title_i18n,
         "changelog": r.changelog,
+        "changelog_i18n": r.changelog_i18n,
         "format": r.release_format,
         "filename": release_download_filename(r),   # the .tmod's internal title
         "size": r.tmod_size,
@@ -2635,11 +2722,18 @@ def public_mod_dto(p: ModProject, *, releases: list[ModRelease] | None = None) -
         "slug": p.slug,
         "handle": p.owner_handle,
         "title": p.title,
+        "title_i18n": p.title_i18n,
         "summary": p.summary,
+        "summary_i18n": p.summary_i18n,
         "description": p.description,
-        # readme_text = releases-only long-form README; warnings = <br>-split blocks.
+        "description_i18n": p.description_i18n,
+        # readme_text = releases-only long-form README (English, always present when
+        # there is one); the *_i18n maps are the creator's translations of the field
+        # they name, keyed by language code. warnings = <br>-split blocks.
         "readme_text": p.readme_text,
+        "readme_i18n": p.readme_i18n,
         "warnings": p.warnings,
+        "warnings_i18n": p.warnings_i18n,
         "tags": p.tags,
         "categories": mod_categories.tags_from_flags(mod_categories.flags_from_tags(p.tags)),
         "flags": mod_categories.flags_from_tags(p.tags),
@@ -2838,7 +2932,9 @@ def profile_dto(user: SiteUser, profile: ModProfile | None, is_owner: bool,
         "handle": user.username,
         "display_name": name,
         "tagline": p.tagline if p else "",
+        "tagline_i18n": p.tagline_i18n if p else {},
         "readme": p.readme if p else "",
+        "readme_i18n": p.readme_i18n if p else {},
         "avatar_url": _profile_avatar_url(user, profile),
         "avatar_sha": p.avatar_sha if p else None,
         "banner_url": _public_img_url(p.banner_sha) if (p and p.banner_sha) else None,
@@ -2930,7 +3026,8 @@ async def _get_or_make_profile(actor: SiteUser) -> ModProfile:
 
 
 async def update_profile(
-    actor: SiteUser, *, display_name=None, tagline=None, readme=None,
+    actor: SiteUser, *, display_name=None, tagline=None, tagline_i18n=None,
+    readme=None, readme_i18n=None,
     discord_url=None, website_url=None, donation_urls=None,
     mod_order=None, featured_slug=None,
 ) -> dict:
@@ -2948,6 +3045,10 @@ async def update_profile(
         profile.tagline = tagline.strip()[:160]
     if readme is not None:
         profile.readme = readme
+    _set_i18n(profile, {
+        "tagline_i18n": (tagline_i18n, "tagline", 160),
+        "readme_i18n": (readme_i18n, "readme", 40_000),
+    })
     if discord_url is not None:
         profile.discord_url = _clean_url(discord_url, field="Discord")
     if website_url is not None:

@@ -39,14 +39,30 @@ class CreateProjectRequest(BaseModel):
     )
 
 
+# Every `*_i18n` field is a {language code: text} map of the creator's own
+# translations of the field it names. English lives in the base field and is the
+# fallback; an empty value drops that language, and sending the map replaces it
+# wholesale. Codes: fr, de, pt-PT, es, ru, ja, ko, zh-CN.
+_I18N = "Translations of `{0}`, keyed by language code (fr, de, pt-PT, es, ru, ja, ko, zh-CN)."
+
+
 class UpdateProjectRequest(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=120)
+    title_i18n: dict[str, str] | None = Field(
+        default=None,
+        description=_I18N.format("title") + " Display only - the slug, the .tmod's "
+                    "internal title and release filenames stay on the base title.",
+    )
     summary: str | None = Field(default=None, max_length=280)
+    summary_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("summary"))
     description: str | None = Field(default=None, max_length=40_000)
+    description_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("description"))
     readme_text: str | None = Field(default=None, max_length=60_000,
                                     description="Long-form README for releases-only mode (ignored in files mode).")
+    readme_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("readme_text"))
     warnings: str | None = Field(default=None, max_length=4_000,
                                  description="Warning blocks shown under the description; <br> splits blocks.")
+    warnings_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("warnings"))
     tags: list[str] | None = Field(default=None, max_length=12)
     visibility: Visibility | None = None
     mode: ProjectMode | None = None
@@ -85,7 +101,9 @@ class CreateReleaseRequest(BaseModel):
 
     tag: str = Field(min_length=1, max_length=60)
     title: str = Field(default="", max_length=160)
+    title_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("title"))
     changelog: str = Field(default="", max_length=20_000)
+    changelog_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("changelog"))
     ref: str = Field(
         default="",
         description="Branch name or commit id to compile. Empty = default branch head.",
@@ -112,7 +130,9 @@ class CreateReleaseRequest(BaseModel):
 
 class UpdateReleaseRequest(BaseModel):
     title: str | None = Field(default=None, max_length=160)
+    title_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("title"))
     changelog: str | None = Field(default=None, max_length=20_000)
+    changelog_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("changelog"))
     status: ReleaseStatus | None = None
 
 
@@ -144,7 +164,9 @@ class UpdateProfileRequest(BaseModel):
 
     display_name: str | None = Field(default=None, max_length=80)
     tagline: str | None = Field(default=None, max_length=160)
+    tagline_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("tagline"))
     readme: str | None = Field(default=None, max_length=40_000)
+    readme_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("readme"))
     discord_url: str | None = Field(default=None, max_length=300)
     website_url: str | None = Field(default=None, max_length=300)
     donation_urls: list[str] | None = Field(default=None, max_length=5)

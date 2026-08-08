@@ -302,8 +302,46 @@
         return `<i class="board-crown board-crown-${tier} fa-solid fa-crown" title="#${rank}" aria-hidden="true"></i>`;
     }
 
+    // ─── Creator-written translations ──────────────────────────────────
+    // A Mods Hub text field ships as an English base plus a {lang: text} map the
+    // creator wrote (summary / description / README). These pick the version a
+    // given reader should see; surfaces with their own switch (the mod page) pass
+    // the reader's pick as `preferred`, cards just follow the site language.
+    function siteLang() {
+        return document.documentElement.getAttribute("lang") || "en";
+    }
+
+    // {lang: text} of the versions that actually exist, English included.
+    function textVersions(base, translations) {
+        const out = {};
+        if (base && base.trim()) out.en = base;
+        Object.keys(translations || {}).forEach((c) => {
+            const text = translations[c];
+            if (text && text.trim()) out[c] = text;
+        });
+        return out;
+    }
+
+    // The version to show: an explicit pick, else the site language, else
+    // English, else whatever single language the creator wrote. null if empty.
+    function pickLang(versions, preferred) {
+        const codes = Object.keys(versions || {});
+        if (!codes.length) return null;
+        if (preferred && versions[preferred]) return preferred;
+        if (versions[siteLang()]) return siteLang();
+        return versions.en ? "en" : codes[0];
+    }
+
+    // One-liner for surfaces with no switch of their own (cards).
+    function localized(base, translations, preferred) {
+        const versions = textVersions(base, translations);
+        const lang = pickLang(versions, preferred);
+        return lang ? versions[lang] : "";
+    }
+
     window.BTTUtil = {
         esc, apiUrl, getJSON, fetchJSON, debounce, timeAgo, getFocusable, trapFocus,
         segmentGaps, boardIconName, boardIconImg, crownHtml,
+        siteLang, textVersions, pickLang, localized,
     };
 })();

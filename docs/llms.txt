@@ -143,7 +143,7 @@ endpoint that is **master-only** - it requires a superuser API token).
   the whole announcement so you never need a follow-up fetch: `data = {project, release, previous, change,
   image_url, download_url, page_url}`, where `project` is the full public mod card (`slug`, `handle`, `title`,
   `summary`, `tags`, `categories`, `author`, `banner_url`, `preview_urls`, `download_count`, `star_count`,
-  `page_url`, `api_url`, fork/lineage fields - the long `description`/`readme_text` are left out, fetch
+  `page_url`, `api_url`, fork/lineage fields - the long `description`/`readme_text` and their `*_i18n` maps are left out, fetch
   `api_url` for those), `release` is the build (`id`, `tag`, `branch`, `title`, `changelog`, `format`,
   `filename`, `size`, `sha256`, `mod_version`, `properties` = the `.tmod` header, `image_url`, `download_url`,
   `published_at`), `previous` is the same shape for the build it supersedes on that branch (`null` on a first
@@ -264,15 +264,23 @@ username; slugs are unique per owner, not globally). Returns **absolute** image 
 object carries `{slug, handle, title, summary, description, readme_text, warnings, tags, categories[], flags, author,
 is_stray, uploaded_on_behalf, banner_url, preview_urls[], download_count, downloads_7d, star_count, popularity_score,
 discord_url, website_url, donation_urls[], page_url, created_at, updated_at, forked_from, inspired_by, fork_count}`
-(`readme_text` is the releases-only long-form README; `warnings` is `<br>`-split warning text; **`is_stray`** marks an
+plus a **`<field>_i18n`** map beside each prose field (`title_i18n`, `summary_i18n`, `description_i18n`,
+`readme_i18n` for `readme_text`, `warnings_i18n`): the creator's OWN translations, `{lang: text}` over the site's
+language codes (`fr`, `de`, `pt-PT`, `es`, `ru`, `ja`, `ko`, `zh-CN`). Show the reader's language when it's there,
+else the base field - which is always the English one and always present, so a partially translated mod still reads.
+`title_i18n` is display only: the slug, the `.tmod`'s internal title and every release filename stay on the base
+title. Files-mode mods keep their README translations in the repo instead: `README.md` plus `README.<lang>.md`
+beside it. (`readme_text` is the releases-only long-form README; `warnings` is `<br>`-split warning text;
+**`is_stray`** marks an
 unclaimed "stray" mod - uploaded via contributions and not yet tied to a user account - addressed at `stray/<slug>`
 and claimable by its author; **`uploaded_on_behalf`** marks an *uploaded* mod - a user shared a mod someone else made:
 the uploader owns it (shown as "Uploaded by …") while `author` credits the named creator ("Created by …"). It is
 releases-only and NOT claimable, distinct from an *authored* mod where the uploader is the creator);
 detail + lookup also include `releases[]` =
 `{tag, branch, title, changelog, format, filename, size, sha256, download_count, download_url, published_at}`
-(`filename` for a `.tmod` is the artifact's internal `title` property + `.tmod` - Trove matches a mod by that
-title in-game, so the download keeps that exact name).
+(plus `title_i18n` / `changelog_i18n`, the creator's translations of that build's wording; `filename` for a `.tmod`
+is the artifact's internal `title` property + `.tmod` - Trove matches a mod by that title in-game, so the download
+keeps that exact name).
 
 - `GET /v1/mods` - list published mods (cards, no releases). Query `q` (case-insensitive substring over title/summary/tags/author), `tag`
   (filter by one tag/category), `author`, `sort` ∈ `recent|popular|downloads|stars|new|title`, `limit` (≤100),
@@ -302,6 +310,10 @@ has banners/previews, **forking** + **inspired-by attribution**, and one of two 
 - **files** - full versioned workflow (git commits/branches/clone) + *releases*. A release is compiled
   server-side from a commit into a selectable **format** (`.tmod` or `.zip`), or an uploaded prebuilt build.
 - **releases** - releases-only: the modder just uploads already-built `.tmod`/`.zip` files (no file history).
+
+A built `.tmod` is a *release artifact*, never a versioned file: committing one is rejected on every write path
+(the studio's commit form, `POST /projects/{handle}/{slug}/commits`, and `git push`, which reports the ref as
+`remote rejected`). It has to go through the release upload instead.
 
 A user can also **upload a mod on someone else's behalf** ("This mod was made by someone else" in the create
 form): the uploader owns/manages it but names the real creator, shown as "Uploaded by <uploader> · Created by

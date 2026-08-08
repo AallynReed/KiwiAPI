@@ -36,6 +36,9 @@
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
 
+  // A creator's own translations follow the site language, so re-render on it.
+  document.addEventListener('btt-lang-changed', () => { if (state.items.length) render(); });
+
   // ─── Boot ──────────────────────────────────────────────────────────
   init().catch((err) => {
     console.error('[mods] boot failed', err);
@@ -193,12 +196,14 @@
       ? `<p class="mh-card-lineage"><i class="fa-solid fa-code-fork"></i> ${esc(t('Forked from'))} ${esc(p.forked_from.title || p.forked_from.slug)}</p>`
       : p.inspired_by
         ? `<p class="mh-card-lineage"><i class="fa-solid fa-lightbulb"></i> ${esc(t('Inspired by'))} ${esc(p.inspired_by.title || p.inspired_by.slug)}</p>` : '';
+    // The creator may have written the card's text in the reader's language.
+    const localSummary = BTTUtil.localized(p.summary, p.summary_i18n);
     return `<a class="mh-card" href="${modUrl(p)}">
       ${banner}
       <div class="mh-card-body">
-        <h3 class="mh-card-title">${esc(p.title)} ${badge}${uploadedBadge}</h3>
+        <h3 class="mh-card-title">${esc(BTTUtil.localized(p.title, p.title_i18n))} ${badge}${uploadedBadge}</h3>
         ${lineage}
-        ${p.summary ? `<p class="mh-card-summary">${esc(p.summary)}</p>` : ''}
+        ${localSummary ? `<p class="mh-card-summary">${esc(localSummary)}</p>` : ''}
         ${tags ? `<div class="mh-card-tags">${tags}</div>` : ''}
         <div class="mh-card-foot">
           ${authorLine}

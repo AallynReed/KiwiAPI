@@ -26,7 +26,9 @@
   const PROJ_PATH = encodeURIComponent(HANDLE) + '/' + encodeURIComponent(SLUG);
   const modUrl = (m) => '/mods/' + encodeURIComponent(m.handle) + '/' + encodeURIComponent(m.slug);
 
-  const state = { detail: null, viewer: null, branch: null };
+  // contentLang: the language the reader picked for this mod's own text (About +
+  // README). null = follow the site language (and fall back to English).
+  const state = { detail: null, viewer: null, branch: null, contentLang: null, repoReadme: null };
 
   const $root = document.getElementById('mp-root');
 
@@ -41,6 +43,45 @@
     'Wings', 'Automation', 'Optimization', 'Reskin', 'Waypoint', 'Radar'];
   const _CAT_LOWER = new Set(MOD_CATEGORIES.map((c) => c.toLowerCase()));
   const isCategory = (tag) => _CAT_LOWER.has(String(tag).trim().toLowerCase());
+
+  // ─── Content languages ───────────────────────────────────────────────
+  // Every piece of prose on a mod - title, summary, About, warnings, README and
+  // each release's title + changelog - can be written again in any language the
+  // site speaks. English is always the base and the fallback, so a partial
+  // translation never leaves a blank. One switch at the top of the page drives
+  // the lot. In files mode the README's translations live in the repo instead,
+  // as README.<code>.md files next to README.md.
+  const LANG_BY_LOWER = ModsI18n.BY_LOWER;      // lowercased code -> canonical
+  const sortLangs = ModsI18n.sortLangs;
+  const textVersions = BTTUtil.textVersions;
+  // The text to show for one field, honouring the reader's pick.
+  const local = (base, translations) => BTTUtil.localized(base, translations, state.contentLang);
+  const pickLang = (versions) => BTTUtil.pickLang(versions, state.contentLang);
+
+  // Every language this mod has *something* in, so the one switch covers the
+  // whole page (a section without that language quietly stays English).
+  function pageLangs(d) {
+    const codes = new Set();
+    [[d.title, d.title_i18n], [d.summary, d.summary_i18n],
+      [d.description, d.description_i18n], [d.warnings, d.warnings_i18n],
+      [d.readme_text, d.readme_i18n]].forEach(([base, map]) => {
+      Object.keys(textVersions(base, map)).forEach((c) => codes.add(c));
+    });
+    (d.releases || []).forEach((r) => {
+      Object.keys(textVersions(r.title, r.title_i18n)).forEach((c) => codes.add(c));
+      Object.keys(textVersions(r.changelog, r.changelog_i18n)).forEach((c) => codes.add(c));
+    });
+    // Files mode: the README translations are repo files, found after the tree loads.
+    if (state.repoReadme) Object.keys(state.repoReadme.files).forEach((c) => codes.add(c));
+    codes.add('en');                       // the base language is always readable
+    return sortLangs([...codes]);
+  }
+
+  // The switch itself - nothing at all when the mod is English-only.
+  function pageLangTabsHTML(d) {
+    const codes = pageLangs(d);
+    return ModsI18n.tabsHTML(codes, pickLang(Object.fromEntries(codes.map((c) => [c, true]))));
+  }
 
   function authHeader() {
     const tok = window.BTTAuth && window.BTTAuth.tokens ? window.BTTAuth.tokens.access : null;
@@ -304,9 +345,10 @@
       <div class="mp-header-body">
         ${taken}
         <div class="mp-titlerow">
-          <h1 class="mp-title">${esc(d.title)}</h1> ${strayBadge} ${uploadedBadge} ${badge} ${modeBadge} ${privBadge}
+          <h1 class="mp-title" id="mp-title">${esc(local(d.title, d.title_i18n))}</h1> ${strayBadge} ${uploadedBadge} ${badge} ${modeBadge} ${privBadge}
           ${ownerTitleActions}
         </div>
+        <div id="mp-langswitch">${pageLangTabsHTML(d)}</div>
         ${attribution}
         <div class="mp-meta">
           ${isStray
@@ -315,12 +357,12 @@
               ? `<span><i class="fa-solid fa-share-from-square"></i> ${esc(t('Uploaded by'))} <a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span><span><i class="fa-solid fa-user"></i> ${esc(t('Created by'))} ${esc(d.author || '')}</span>`
               : `<span><i class="fa-solid fa-user"></i> <a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span>`}
           <span><i class="fa-solid fa-download"></i> ${Number(d.download_count || 0).toLocaleString()} ${esc(t('downloads'))}</span>
-          ${(isStray || isUploaded) ? '' : `<span><i class="fa-solid fa-code-commit"></i> ${Number(d.commit_count || 0)} ${esc(t('commits'))}</span>`}
+          ${d.source_visible ? `<span><i class="fa-solid fa-code-commit"></i> ${Number(d.commit_count || 0)} ${esc(t('commits'))}</span>` : ''}
           ${forkCount}
         </div>
         ${isStray ? `<p class="mp-stray-note"><i class="fa-solid fa-circle-info"></i> ${esc(t('This mod was uploaded via contributions and hasn\'t been claimed by its author yet. If it\'s yours, claim it to manage it here.'))}</p>` : ''}
         ${isUploaded ? `<p class="mp-stray-note"><i class="fa-solid fa-circle-info"></i> ${esc(t('This mod was uploaded by a community member on the creator\'s behalf. It isn\'t an official release by the author.'))}</p>` : ''}
-        ${d.summary ? `<p class="mp-summary">${esc(d.summary)}</p>` : ''}
+        <p class="mp-summary" id="mp-summary"${local(d.summary, d.summary_i18n) ? '' : ' hidden'}>${esc(local(d.summary, d.summary_i18n))}</p>
         ${tags ? `<div class="mp-tags">${tags}</div>` : ''}
         ${linksRow}
         <div class="mp-actions">${dlBtn}${cfgSlot}${starBtn}${claimBtn}${forkBtn}${reportBtn}</div>
@@ -363,19 +405,24 @@
   }
 
   function descriptionHTML(d) {
-    const body = d.description && d.description.trim()
-      ? renderMarkdown(d.description)
+    return `<section class="mp-section" id="mp-description-section">${descriptionInnerHTML(d)}</section>`;
+  }
+
+  // Head + body of the About text, rebuilt on every language switch.
+  function descriptionInnerHTML(d) {
+    const text = local(d.description, d.description_i18n);
+    const body = text ? renderMarkdown(text)
       : `<p class="mp-muted">${esc(t('No description yet.'))}</p>`;
-    return `<section class="mp-section">
-      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-book"></i> ${esc(t('About'))}</h2></div>
+    return `<div class="mp-section-head">
+        <h2 class="mp-section-title"><i class="fa-solid fa-book"></i> ${esc(t('About'))}</h2>
+      </div>
       <div class="mp-markdown">${body}</div>
-      ${warningsHTML(d)}
-    </section>`;
+      ${warningsHTML(d)}`;
   }
 
   // Owner-authored warnings: one highlighted block per `<br>`-separated segment.
   function warningsHTML(d) {
-    const raw = (d.warnings || '').trim();
+    const raw = local(d.warnings, d.warnings_i18n).trim();
     if (!raw) return '';
     const blocks = raw.split(/<br\s*\/?>/i).map((s) => s.trim()).filter(Boolean);
     if (!blocks.length) return '';
@@ -471,10 +518,11 @@
       <button type="button" class="mp-btn mp-btn-sm" data-rel-toggle="${esc(r.id)}" data-status="${esc(r.status)}">
         ${r.status === 'published' ? esc(t('Unpublish')) : esc(t('Publish'))}
       </button>
+      <button type="button" class="mp-btn mp-btn-sm" data-rel-edit="${esc(r.id)}" aria-label="${esc(t('Edit release'))}" title="${esc(t('Edit release'))}"><i class="fa-solid fa-pen"></i></button>
       <button type="button" class="mp-btn mp-btn-sm mp-btn-danger" data-rel-del="${esc(r.id)}"><i class="fa-solid fa-trash"></i></button>` : '';
     return `<div class="mp-release">
       <div class="mp-release-top">
-        <span class="mp-release-tag"><span class="mp-release-tagchip">${esc(r.tag)}</span> ${esc(r.title || '')} ${draft}</span>
+        <span class="mp-release-tag"><span class="mp-release-tagchip">${esc(r.tag)}</span> <span data-rel-title="${esc(r.id)}">${esc(local(r.title, r.title_i18n))}</span> ${draft}</span>
         <div class="mp-release-actions">
           ${r.status === 'published'
             ? `<a class="mp-btn mp-btn-sm mp-btn-primary" href="${BTTUtil.apiUrl('/site/mods/releases/' + r.id + '/download')}"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</a>`
@@ -489,7 +537,7 @@
         <span><i class="fa-solid fa-file-zipper"></i> ${fmtBytes(r.tmod_size)}</span>
         ${r.published_at ? `<span><i class="fa-solid fa-clock"></i> ${fmtDate(r.published_at)}</span>` : ''}
       </div>
-      ${r.changelog ? `<div class="mp-release-changelog">${esc(r.changelog)}</div>` : ''}
+      <div class="mp-release-changelog" data-rel-changelog="${esc(r.id)}"${local(r.changelog, r.changelog_i18n) ? '' : ' hidden'}>${esc(local(r.changelog, r.changelog_i18n))}</div>
       ${r.format !== 'zip' ? `<div class="mp-release-3d" data-rel-bp="${esc(r.id)}" hidden></div>` : ''}
       ${r.format !== 'zip' ? `<div class="mp-release-vfx" data-rel-vfx="${esc(r.id)}" hidden></div>` : ''}
     </div>`;
@@ -528,8 +576,10 @@
 
   function readmeHTML() {
     return `<section class="mp-section" id="mp-readme-section" hidden>
-      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-book-open"></i> <span id="mp-readme-name">README</span></h2></div>
+      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-book-open"></i> <span id="mp-readme-name">README</span></h2>
+        <span id="mp-readme-langs"></span></div>
       <div id="mp-readme" class="mp-markdown"></div>
+      <p class="mp-form-hint mp-readme-hint" id="mp-readme-hint" hidden></p>
     </section>`;
   }
 
@@ -538,55 +588,157 @@
   // loadReadme) and this text is ignored.
   function readmeTextHTML(d) {
     if (d.mode !== 'releases') return '';
-    const has = d.readme_text && d.readme_text.trim();
-    if (!has && !d.is_owner) return '';
-    const editBtn = d.is_owner
-      ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-edit-readme"><i class="fa-solid fa-pen"></i> ${esc(has ? t('Edit README') : t('Add README'))}</button>` : '';
-    const body = has ? renderMarkdown(d.readme_text)
-      : `<p class="mp-muted">${esc(t('No README yet.'))}</p>`;
-    return `<section class="mp-section">
-      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-book-open"></i> ${esc(t('README'))}</h2>${editBtn}</div>
-      <div class="mp-markdown">${body}</div>
-    </section>`;
+    if (!Object.keys(textVersions(d.readme_text, d.readme_i18n)).length && !d.is_owner) return '';
+    return `<section class="mp-section" id="mp-readme-text-section">${readmeTextInnerHTML(d)}</section>`;
   }
+
+  // Head + body of the releases-only README, rebuilt on every language switch.
+  function readmeTextInnerHTML(d) {
+    const text = local(d.readme_text, d.readme_i18n);
+    const editBtn = d.is_owner
+      ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-edit-readme"><i class="fa-solid fa-pen"></i> ${esc(text ? t('Edit README') : t('Add README'))}</button>` : '';
+    const body = text ? renderMarkdown(text)
+      : `<p class="mp-muted">${esc(t('No README yet.'))}</p>`;
+    return `<div class="mp-section-head">
+        <h2 class="mp-section-title"><i class="fa-solid fa-book-open"></i> ${esc(t('README'))}</h2>
+        ${editBtn}
+      </div>
+      <div class="mp-markdown">${body}</div>`;
+  }
+
+  // Repaint everything the language switch touches. Each piece falls back to
+  // English on its own, so a mod translated in patches still reads through.
+  function repaintTranslations() {
+    const d = state.detail;
+    if (!d) return;
+    const set = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = text; el.hidden = !text; }
+    };
+    set('mp-title', local(d.title, d.title_i18n));
+    set('mp-summary', local(d.summary, d.summary_i18n));
+    const sw = document.getElementById('mp-langswitch');
+    if (sw) sw.innerHTML = pageLangTabsHTML(d);
+    const desc = document.getElementById('mp-description-section');
+    if (desc) desc.innerHTML = descriptionInnerHTML(d);
+    const sec = document.getElementById('mp-readme-text-section');
+    if (sec) {
+      sec.innerHTML = readmeTextInnerHTML(d);
+      const edit = sec.querySelector('#mp-edit-readme');
+      if (edit) edit.addEventListener('click', openReadmeEdit);
+    } else {
+      paintRepoReadme();
+    }
+    // Releases: swap the text in place so the rows' own handlers stay wired.
+    (d.releases || []).forEach((r) => {
+      const title = document.querySelector(`[data-rel-title="${cssEsc(r.id)}"]`);
+      if (title) title.textContent = local(r.title, r.title_i18n);
+      const log = document.querySelector(`[data-rel-changelog="${cssEsc(r.id)}"]`);
+      if (log) {
+        const text = local(r.changelog, r.changelog_i18n);
+        log.textContent = text;
+        log.hidden = !text;
+      }
+    });
+    rerunI18n();
+  }
+
+  // Release ids are hex ObjectIds, but never build a selector from data without
+  // escaping it.
+  const cssEsc = (s) => (window.CSS && CSS.escape ? CSS.escape(String(s)) : String(s));
+
+  // The switch survives section rebuilds ($root itself is never replaced), so it
+  // is delegated and wired once.
+  $root.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-content-lang]');
+    if (!btn) return;
+    state.contentLang = btn.getAttribute('data-content-lang');
+    repaintTranslations();
+  });
+  // A reader who hasn't picked a language follows the site's.
+  document.addEventListener('btt-lang-changed', () => { if (!state.contentLang) repaintTranslations(); });
 
   function openReadmeEdit() {
     const d = state.detail;
     const m = openModal(t('Edit README'), `<form class="mp-form" id="mp-readme-form">
-      <label class="mp-form-field"><span>${esc(t('README (Markdown)'))}</span><textarea name="readme" rows="14" maxlength="60000">${esc(d.readme_text || '')}</textarea></label>
+      ${ModsI18n.editorHTML('mp-readme')}
+      <label class="mp-form-field"><span id="mp-readme-label">${esc(t('README (Markdown)'))}</span><textarea name="readme" rows="14" maxlength="60000"></textarea></label>
       <p class="mp-form-hint">${esc(t('Shown as the main content for releases-only mods. Markdown + safe HTML (badges, alignment, tables) supported.'))}
-        ${esc(t('Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}</p>
+        ${esc(t('Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}
+        ${esc(t('Leave a translation empty to remove it.'))}</p>
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">
         <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>
         <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Save'))}</button>
       </div></form>`, { wide: true });
-    m.wrap.querySelector('#mp-readme-form').addEventListener('submit', async (e) => {
+    const form = m.wrap.querySelector('#mp-readme-form');
+    const collect = ModsI18n.wireEditor(form, 'mp-readme', [{
+      base: d.readme_text, translations: d.readme_i18n,
+      area: form.querySelector('textarea[name="readme"]'),
+      labelEl: form.querySelector('#mp-readme-label'), label: t('README (Markdown)'),
+    }]);
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const f = e.target;
+      const [{ base, translations }] = collect();
       const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH,
-        { method: 'PATCH', json: { readme_text: f.readme.value } });
+        { method: 'PATCH', json: { readme_text: base, readme_i18n: translations } });
       if (r.ok) { m.close(); toast(t('Saved.')); await loadDetail(); }
-      else showFormError(f, errMsg(r, 'Could not save README.'));
+      else showFormError(form, errMsg(r, 'Could not save README.'));
     });
   }
 
-  // Render the branch's README.md (root preferred) under the file browser.
+  // Render the branch's README.md (root preferred) under the file browser, plus
+  // any README.<lang>.md translations sitting next to it.
   async function loadReadme(entries, commitId) {
     const sec = document.getElementById('mp-readme-section');
     if (!sec) return;
     const list = entries || [];
-    const entry = list.find((e) => e.path.toLowerCase() === 'readme.md')
+    const base = list.find((e) => e.path.toLowerCase() === 'readme.md')
       || list.find((e) => e.path.toLowerCase().endsWith('/readme.md'));
-    if (!entry || !commitId) { sec.hidden = true; return; }
+    if (!base || !commitId) { sec.hidden = true; return; }
+    const dir = base.path.slice(0, base.path.lastIndexOf('/') + 1);   // '' at the root
+    const files = { en: base.path };
+    list.forEach((e) => {
+      if (e.path.slice(0, e.path.lastIndexOf('/') + 1) !== dir) return;
+      const m = /^readme\.([a-z-]+)\.md$/i.exec(e.path.slice(dir.length));
+      const code = m && LANG_BY_LOWER[m[1].toLowerCase()];
+      if (code && code !== 'en') files[code] = e.path;
+    });
+    state.repoReadme = { files, commitId, cache: {} };
+    // The repo's languages only surface once the tree has loaded - fold them
+    // into the page switch now that we know them.
+    const sw = document.getElementById('mp-langswitch');
+    if (sw) sw.innerHTML = pageLangTabsHTML(state.detail);
+    await paintRepoReadme();
+  }
+
+  // Fetch (once per language) + render the active repo README.
+  async function paintRepoReadme() {
+    const sec = document.getElementById('mp-readme-section');
+    const info = state.repoReadme;
+    if (!sec || !info) return;
+    const active = pickLang(info.files);
+    if (!active) { sec.hidden = true; return; }
     try {
-      const url = `/site/mods/projects/${PROJ_PATH}/raw/${commitId}/`
-        + entry.path.split('/').map(encodeURIComponent).join('/');
-      const r = await siteGET(url);
-      if (!r.ok) { sec.hidden = true; return; }
-      document.getElementById('mp-readme').innerHTML = renderMarkdown(await r.text());
+      if (info.cache[active] == null) {
+        const url = `/site/mods/projects/${PROJ_PATH}/raw/${info.commitId}/`
+          + info.files[active].split('/').map(encodeURIComponent).join('/');
+        const r = await siteGET(url);
+        if (!r.ok) { sec.hidden = true; return; }
+        info.cache[active] = await r.text();
+      }
+      document.getElementById('mp-readme').innerHTML = renderMarkdown(info.cache[active]);
       const nameEl = document.getElementById('mp-readme-name');
-      if (nameEl) nameEl.textContent = entry.path.split('/').pop();
+      if (nameEl) nameEl.textContent = info.files[active].split('/').pop();
+      // The file-naming convention is invisible otherwise, so tell the owner
+      // about it once - only while there's nothing but the English README.
+      const hint = document.getElementById('mp-readme-hint');
+      if (hint) {
+        const solo = Object.keys(info.files).length < 2 && state.detail && state.detail.is_owner;
+        hint.textContent = solo ? t('Add README.fr.md (or any language) next to it and readers who use it get that version.') : '';
+        hint.hidden = !solo;
+      }
       sec.hidden = false;
       rerunI18n();
     } catch (_) { sec.hidden = true; }
@@ -966,6 +1118,8 @@
   function wireReleases() {
     document.querySelectorAll('[data-rel-del]').forEach((b) =>
       b.addEventListener('click', () => deleteRelease(b.getAttribute('data-rel-del'))));
+    document.querySelectorAll('[data-rel-edit]').forEach((b) =>
+      b.addEventListener('click', () => openReleaseEdit(b.getAttribute('data-rel-edit'))));
     document.querySelectorAll('[data-rel-toggle]').forEach((b) =>
       b.addEventListener('click', () => toggleRelease(b.getAttribute('data-rel-toggle'), b.getAttribute('data-status'))));
     // Draft releases need an auth-aware fetch (a plain link can't carry the bearer).
@@ -1355,10 +1509,11 @@
     const catChips = MOD_CATEGORIES.map((c) =>
       `<button type="button" class="mp-catchip ${selectedCats.has(c.toLowerCase()) ? 'is-sel' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
     const m = openModal(t('Edit mod details'), `<form class="mp-form" id="mp-edit-form">
-      <label class="mp-form-field"><span>${esc(t('Title'))}</span><input name="title" maxlength="120" value="${esc(d.title)}" required></label>
-      <label class="mp-form-field"><span>${esc(t('Short summary'))}</span><input name="summary" maxlength="280" value="${esc(d.summary || '')}"></label>
-      <label class="mp-form-field"><span>${esc(t('Description (Markdown)'))}</span><textarea name="description" maxlength="40000">${esc(d.description || '')}</textarea></label>
-      <label class="mp-form-field"><span><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('Warnings'))}</span><textarea name="warnings" rows="3" maxlength="4000" placeholder="${esc(t('Highlighted below the description. <br> starts a new warning block.'))}">${esc(d.warnings || '')}</textarea></label>
+      ${ModsI18n.editorHTML('mp-text')}
+      <label class="mp-form-field"><span id="mp-title-label">${esc(t('Title'))}</span><input name="title" maxlength="120" required></label>
+      <label class="mp-form-field"><span id="mp-summary-label">${esc(t('Short summary'))}</span><input name="summary" maxlength="280"></label>
+      <label class="mp-form-field"><span id="mp-desc-label">${esc(t('Description (Markdown)'))}</span><textarea name="description" maxlength="40000"></textarea></label>
+      <label class="mp-form-field"><span id="mp-warn-label"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('Warnings'))}</span><textarea name="warnings" rows="3" maxlength="4000" placeholder="${esc(t('Highlighted below the description. <br> starts a new warning block.'))}"></textarea></label>
       <div class="mp-form-field"><span>${esc(t('Categories'))}</span>
         <div class="mp-cats" id="mp-cats">${catChips}</div>
         <p class="mp-form-hint">${esc(t('Pick any that fit - saved as tags and embedded in the build.'))}</p></div>
@@ -1384,12 +1539,28 @@
       if (chosen.has(k)) { chosen.delete(k); b.classList.remove('is-sel'); }
       else { chosen.add(k); b.classList.add('is-sel'); }
     }));
-    m.wrap.querySelector('#mp-edit-form').addEventListener('submit', async (e) => {
+    const editForm = m.wrap.querySelector('#mp-edit-form');
+    // One tab strip over all four prose fields: pick a language, write the whole
+    // mod in it. The title's translation is display only (see the model).
+    const collectText = ModsI18n.wireEditor(editForm, 'mp-text', [
+      { base: d.title, translations: d.title_i18n, area: editForm.querySelector('input[name="title"]'),
+        labelEl: editForm.querySelector('#mp-title-label'), label: t('Title') },
+      { base: d.summary, translations: d.summary_i18n, area: editForm.querySelector('input[name="summary"]'),
+        labelEl: editForm.querySelector('#mp-summary-label'), label: t('Short summary') },
+      { base: d.description, translations: d.description_i18n, area: editForm.querySelector('textarea[name="description"]'),
+        labelEl: editForm.querySelector('#mp-desc-label'), label: t('Description (Markdown)') },
+      { base: d.warnings, translations: d.warnings_i18n, area: editForm.querySelector('textarea[name="warnings"]'),
+        labelEl: editForm.querySelector('#mp-warn-label'), label: t('Warnings') },
+    ]);
+    editForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.target;
+      const [title, summary, desc, warn] = collectText();
       const body = {
-        title: f.title.value.trim(), summary: f.summary.value.trim(),
-        description: f.description.value, warnings: f.warnings.value,
+        title: title.base.trim(), title_i18n: title.translations,
+        summary: summary.base.trim(), summary_i18n: summary.translations,
+        description: desc.base, description_i18n: desc.translations,
+        warnings: warn.base, warnings_i18n: warn.translations,
         visibility: f.visibility.value,
         // Selected categories (canonical labels) + free tags from the input.
         tags: [
@@ -1524,6 +1695,7 @@
       </div>
       <label class="mp-form-field"><span>${esc(t('Commit message'))}</span><input name="message" maxlength="500" required></label>
       <p class="mp-form-hint">${esc(t('Folder paths from a drag-drop are kept as the in-mod path.'))}</p>
+      <p class="mp-form-hint">${esc(t('Files hold your mod source. A built .tmod goes under New release instead.'))}</p>
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">
         <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>
@@ -1541,9 +1713,20 @@
         picked.splice(Number(b.getAttribute('data-i')), 1); refresh();
       }));
     };
+    // A built .tmod is a release, not source - drop it here and it would sit in
+    // Files where nobody can install it. Rejected client-side and server-side.
     const add = (files) => {
-      for (const f of files) picked.push({ file: f, path: (f.webkitRelativePath || f.name) });
+      let blocked = false;
+      for (const f of files) {
+        const path = (f.webkitRelativePath || f.name);
+        if (/\.tmod$/i.test(path)) { blocked = true; continue; }
+        picked.push({ file: f, path });
+      }
       refresh();
+      const err = m.wrap.querySelector('.mp-form-error');
+      if (!err) return;
+      err.textContent = blocked ? t('A built .tmod goes in a release, not in your files - use New release to upload it.') : '';
+      err.hidden = !blocked;
     };
     drop.addEventListener('click', () => input.click());
     drop.addEventListener('keydown', (e) => {
@@ -1829,6 +2012,43 @@
       btn.disabled = false;
       if (r.ok) { m.close(); toast(t('Release published.')); await loadDetail(); }
       else showFormError(f, errMsg(r, 'Could not create the release.'));
+    });
+  }
+
+  // Edit a cut release's wording (the tag and the built file are fixed), in as
+  // many languages as the modder wants.
+  function openReleaseEdit(id) {
+    const r = (state.detail.releases || []).find((x) => x.id === id);
+    if (!r) return;
+    const m = openModal(t('Edit release') + ' ' + r.tag, `<form class="mp-form" id="mp-reledit-form">
+      ${ModsI18n.editorHTML('mp-rel')}
+      <label class="mp-form-field"><span id="mp-rel-title-label">${esc(t('Release title'))}</span><input name="title" maxlength="160"></label>
+      <label class="mp-form-field"><span id="mp-rel-log-label">${esc(t('Changelog'))}</span><textarea name="changelog" rows="8" maxlength="20000"></textarea></label>
+      <p class="mp-form-hint">${esc(t('Leave a translation empty to remove it.'))}</p>
+      <p class="mp-form-error" hidden></p>
+      <div class="mp-form-actions">
+        <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>
+        <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Save'))}</button>
+      </div></form>`, { wide: true });
+    const form = m.wrap.querySelector('#mp-reledit-form');
+    const collect = ModsI18n.wireEditor(form, 'mp-rel', [
+      { base: r.title, translations: r.title_i18n, area: form.querySelector('input[name="title"]'),
+        labelEl: form.querySelector('#mp-rel-title-label'), label: t('Release title') },
+      { base: r.changelog, translations: r.changelog_i18n, area: form.querySelector('textarea[name="changelog"]'),
+        labelEl: form.querySelector('#mp-rel-log-label'), label: t('Changelog') },
+    ]);
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const [title, log] = collect();
+      const res = await apiJSON('/v1/mods/hub/releases/' + encodeURIComponent(id), {
+        method: 'PATCH',
+        json: {
+          title: title.base.trim(), title_i18n: title.translations,
+          changelog: log.base, changelog_i18n: log.translations,
+        },
+      });
+      if (res.ok) { m.close(); toast(t('Saved.')); await loadDetail(); }
+      else showFormError(form, errMsg(res, 'Could not update the release.'));
     });
   }
 

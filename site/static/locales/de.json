@@ -2406,5 +2406,16 @@
   "Movement Speed": "Bewegungstempo",
   "Outgoing Damage": "Ausgehender Schaden",
   "Random Flask Emblem": "Zufälliges Flaschenemblem",
-  "Stability": "Stabilität"
+  "Stability": "Stabilität",
+  "Files hold your mod source. A built .tmod goes under New release instead.": "Unter Dateien liegt der Quellcode deines Mods. Eine fertige .tmod gehört stattdessen unter Neue Version.",
+  "A built .tmod goes in a release, not in your files - use New release to upload it.": "Eine fertige .tmod gehört in eine Version, nicht in deine Dateien - lade sie über Neue Version hoch.",
+  "Language": "Sprache",
+  "Add a language": "Sprache hinzufügen",
+  "Add a language…": "Sprache hinzufügen…",
+  "Everyone sees English by default. Add a language and readers who use it see your version instead.": "Standardmäßig sehen alle die englische Fassung. Füge eine Sprache hinzu, dann sehen Leser, die sie nutzen, deine Version.",
+  "Leave a translation empty to remove it.": "Lass eine Übersetzung leer, um sie zu entfernen.",
+  "Add README.fr.md (or any language) next to it and readers who use it get that version.": "Lege ein README.fr.md (oder eine andere Sprache) daneben, dann sehen Leser, die sie nutzen, diese Fassung.",
+  "Content language": "Inhaltssprache",
+  "Edit release": "Version bearbeiten",
+  "Release title": "Titel der Version"
 }

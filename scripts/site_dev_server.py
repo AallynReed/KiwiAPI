@@ -233,6 +233,9 @@ _STUB_MODS = [
      "updated_at": None, "created_at": None},
     {"slug": "tiny-mounts", "title": "Tiny Mounts",
      "summary": "Shrinks every mount to adorable proportions.",
+     # Card text the creator also wrote in French (cards follow the site language).
+     "title_i18n": {"fr": "Montures Minuscules"},
+     "summary_i18n": {"fr": "Réduit toutes les montures à des proportions adorables."},
      "tags": ["mounts", "fun"], "owner_username": "Skill",
      "visibility": "public", "banner_sha": None, "download_count": 642,
      "updated_at": None, "created_at": None},
@@ -1162,6 +1165,8 @@ class Handler(SimpleHTTPRequestHandler):
                 "tagline": "Trove modder · HUD & retexture artist",
                 "readme": "## Hey!\n\nI make **clean HUD** mods. Check out my work below.\n\n"
                 "[![ko-fi](https://img.shields.io/badge/support-ko--fi-ff5e5b)](https://ko-fi.com/example)",
+                "tagline_i18n": {"fr": "Moddeur Trove et artiste de textures"},
+                "readme_i18n": {"fr": "## Bonjour\n\nMa page, en français."},
                 "avatar_url": "/site/mods/image/avatarsha",
                 "avatar_sha": "avatarsha",
                 "banner_url": "/site/mods/image/bannersha",
@@ -1316,12 +1321,27 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json({
                     **base, "description": "A **sample** mod for local preview.\n\n"
                     "Files, branches and releases are stubbed by the dev server.",
+                    "title_i18n": {"fr": "Montures Minuscules"},
+                    "warnings_i18n": {
+                        "fr": "Nécessite la dernière version du jeu.<br>Sauvegardez votre dossier mods.",
+                    },
+                    "description_i18n": {
+                        "fr": "Un mod **d'exemple** pour l'aperçu local.\n\n"
+                              "La description traduite par le moddeur.",
+                    },
                     "readme_text": "## Sample README\n\n"
                     "[![badge](https://img.shields.io/badge/build-passing-brightgreen)](https://example.com)\n\n"
                     "<div align=\"center\">Centered HTML works.</div>\n\n"
                     "| A | B |\n|---|---|\n| 1 | 2 |\n\n"
                     "- bullet one\n- bullet two\n\n"
                     "Saved on the project (releases-only mode). Normal **bold** + `code`.",
+                    # Creator-written translations; the page shows the reader's
+                    # language and offers a switch for the others.
+                    "readme_i18n": {
+                        "fr": "## README d'exemple\n\nLa version française, écrite par le moddeur.\n\n"
+                              "- premier point\n- deuxième point",
+                        "ja": "## サンプル README\n\nモッダーが書いた日本語版です。\n\n- 一つ目\n- 二つ目",
+                    },
                     "warnings": "Requires the latest game build.<br>Back up your mods folder first.",
                     "default_branch": "main", "preview_shas": ["prevsha1", "prevsha2"], "taken_down": False,
                     "takedown_reason": None, "is_owner": False, "starred": False,
@@ -1338,6 +1358,8 @@ class Handler(SimpleHTTPRequestHandler):
                     "releases": [
                         {"id": "rel-main", "tag": "v1.2.0", "branch": "main",
                          "title": "Stable", "changelog": "Latest stable build.",
+                         "title_i18n": {"fr": "Stable"},
+                         "changelog_i18n": {"fr": "Dernière version stable."},
                          "status": "published", "tmod_filename": f"{slug}-v1.2.0.tmod",
                          "tmod_size": 20480, "download_count": 142, "format": "tmod",
                          "banner_sha": None, "published_at": None, "created_at": None},
@@ -1365,11 +1387,19 @@ class Handler(SimpleHTTPRequestHandler):
             if sub == "tree":
                 return self._send_json({"commit": {"id": "stub", "seq": 2}, "entries": [
                     {"path": "readme.md", "blob_sha": "stub", "size": 180},
+                    # A translated README next to the English one (files mode's
+                    # equivalent of readme_i18n).
+                    {"path": "README.fr.md", "blob_sha": "stub", "size": 150},
                     {"path": "config/default.cfg", "blob_sha": "stub", "size": 128},
                     # A .swf so the release modal's "Settings file" field is previewable
                     # (it only appears for mods with a Flash UI).
                     {"path": "ui/sample.swf", "blob_sha": "stub", "size": 65536},
                     {"path": "ui/icon.png", "blob_sha": "stub", "size": 4096}]})
+            if sub.startswith("raw/") and sub.lower().endswith("readme.fr.md"):
+                return self._send_text(
+                    "# Mod d'exemple\n\nCe README est **rendu** depuis le fichier "
+                    "`README.fr.md` du dépôt.\n\n## Fonctionnalités\n\n- Un truc sympa\n"
+                    "- Un autre truc\n")
             if sub.startswith("raw/") and sub.lower().endswith("readme.md"):
                 return self._send_text(
                     "# Sample Mod\n\nThis README is **rendered** from the repo's "

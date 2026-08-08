@@ -2406,5 +2406,16 @@
   "Movement Speed": "Скорость передвижения",
   "Outgoing Damage": "Исходящий урон",
   "Random Flask Emblem": "Случайная эмблема фляги",
-  "Stability": "Стабильность"
+  "Stability": "Стабильность",
+  "Files hold your mod source. A built .tmod goes under New release instead.": "В «Файлах» хранятся исходники мода. Готовый .tmod загружается через «Новый релиз».",
+  "A built .tmod goes in a release, not in your files - use New release to upload it.": "Готовый .tmod размещается в релизе, а не в файлах — загрузите его через «Новый релиз».",
+  "Language": "Язык",
+  "Add a language": "Добавить язык",
+  "Add a language…": "Добавить язык…",
+  "Everyone sees English by default. Add a language and readers who use it see your version instead.": "По умолчанию все видят английскую версию. Добавьте язык — и читатели, которые им пользуются, увидят вашу версию.",
+  "Leave a translation empty to remove it.": "Оставьте перевод пустым, чтобы удалить его.",
+  "Add README.fr.md (or any language) next to it and readers who use it get that version.": "Положите рядом README.fr.md (или на другом языке) — читатели, которые им пользуются, увидят эту версию.",
+  "Content language": "Язык содержимого",
+  "Edit release": "Изменить версию",
+  "Release title": "Название версии"
 }

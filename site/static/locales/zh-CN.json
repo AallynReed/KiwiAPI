@@ -2406,5 +2406,16 @@
   "Movement Speed": "移动速度",
   "Outgoing Damage": "造成伤害",
   "Random Flask Emblem": "随机药剂徽记",
-  "Stability": "稳定性"
+  "Stability": "稳定性",
+  "Files hold your mod source. A built .tmod goes under New release instead.": "“文件”存放模组的源文件；已打包的 .tmod 请改用“新建发布”上传。",
+  "A built .tmod goes in a release, not in your files - use New release to upload it.": "已打包的 .tmod 属于发布，而不是文件，请通过“新建发布”上传。",
+  "Language": "语言",
+  "Add a language": "添加语言",
+  "Add a language…": "添加语言…",
+  "Everyone sees English by default. Add a language and readers who use it see your version instead.": "默认所有人看到英文版。添加语言后，使用该语言的读者会看到你的版本。",
+  "Leave a translation empty to remove it.": "将译文留空即可删除。",
+  "Add README.fr.md (or any language) next to it and readers who use it get that version.": "在旁边放一个 README.fr.md（或其他语言），使用该语言的读者就会看到那个版本。",
+  "Content language": "内容语言",
+  "Edit release": "编辑版本",
+  "Release title": "版本标题"
 }

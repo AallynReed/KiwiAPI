@@ -272,6 +272,8 @@
         titleChanged.delete(el);
     }
 
-    // expose for debugging / external triggers
-    window.BTTi18n = { setLanguage, t: translate, refresh, untrack };
+    // expose for debugging / external triggers. `langs` is the canonical
+    // [code, endonym, flag] table - page scripts that build their own language
+    // UI (e.g. the Mods Hub translation switch) read it instead of re-listing.
+    window.BTTi18n = { setLanguage, t: translate, refresh, untrack, langs: LANGS, current: () => current };
 })();

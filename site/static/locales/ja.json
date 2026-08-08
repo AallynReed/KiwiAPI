@@ -2406,5 +2406,16 @@
   "Movement Speed": "移動速度",
   "Outgoing Damage": "与ダメージ",
   "Random Flask Emblem": "ランダムフラスコエンブレム",
-  "Stability": "安定性"
+  "Stability": "安定性",
+  "Files hold your mod source. A built .tmod goes under New release instead.": "「ファイル」には MOD のソースを置きます。ビルド済みの .tmod は「新しいリリース」から登録してください。",
+  "A built .tmod goes in a release, not in your files - use New release to upload it.": "ビルド済みの .tmod はファイルではなくリリースに入れます。「新しいリリース」からアップロードしてください。",
+  "Language": "言語",
+  "Add a language": "言語を追加",
+  "Add a language…": "言語を追加…",
+  "Everyone sees English by default. Add a language and readers who use it see your version instead.": "既定では全員に英語が表示されます。言語を追加すると、その言語の読者にはあなたの版が表示されます。",
+  "Leave a translation empty to remove it.": "翻訳を空にすると削除されます。",
+  "Add README.fr.md (or any language) next to it and readers who use it get that version.": "隣に README.fr.md（他の言語も可）を置くと、その言語の読者にはそちらが表示されます。",
+  "Content language": "コンテンツの言語",
+  "Edit release": "リリースを編集",
+  "Release title": "リリースのタイトル"
 }

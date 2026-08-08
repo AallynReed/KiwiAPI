@@ -199,6 +199,25 @@
 .mp-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .mp-section-title { font: 700 1.1rem 'Space Grotesk', 'Inter', sans-serif; margin: 0; display: inline-flex; align-items: center; gap: 9px; }
 .mp-section-title i { color: var(--accent-blue); }
+.mp-section-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+
+/* README language switch: one pill per language the creator wrote, in the
+   section head (and in the editor modal, where it swaps which draft is shown).
+   Hidden entirely when there is only one language to read. */
+.mp-langtabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.mp-langtab {
+  cursor: pointer; border: 1px solid var(--bg-line); border-radius: 999px;
+  padding: 4px 11px; font: 600 .78rem 'Inter', system-ui, sans-serif;
+  background: var(--bg-deep); color: var(--text-mute);
+  transition: border-color .12s var(--ease-out), background .12s, color .12s;
+}
+.mp-langtab:hover { border-color: var(--text-soft); color: var(--text); }
+.mp-langtab.is-sel { border-color: var(--accent-blue); background: rgba(86,156,255,.14); color: var(--text); }
+.mp-readme-hint { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bg-line); }
+.mp-readme-hint[hidden] { display: none; }
+.mp-langedit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mp-form-field .mp-langadd { width: auto; min-width: 170px; padding: 7px 10px; font-size: .85rem; }
+.mp-form-field .mp-langadd[hidden] { display: none; }
 
 /* Rendered Markdown (README + About description)
    Selectors target ELEMENTS, not the renderer's mp-md-* classes: the sanitizer in

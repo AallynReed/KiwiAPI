@@ -2406,5 +2406,16 @@
   "Movement Speed": "이동 속도",
   "Outgoing Damage": "주는 피해",
   "Random Flask Emblem": "무작위 플라스크 엠블럼",
-  "Stability": "안정성"
+  "Stability": "안정성",
+  "Files hold your mod source. A built .tmod goes under New release instead.": "파일에는 모드의 소스를 넣습니다. 빌드된 .tmod는 새 릴리스에 올려주세요.",
+  "A built .tmod goes in a release, not in your files - use New release to upload it.": "빌드된 .tmod는 파일이 아니라 릴리스에 들어갑니다. 새 릴리스로 업로드하세요.",
+  "Language": "언어",
+  "Add a language": "언어 추가",
+  "Add a language…": "언어 추가…",
+  "Everyone sees English by default. Add a language and readers who use it see your version instead.": "기본적으로 모두에게 영어가 표시됩니다. 언어를 추가하면 해당 언어를 쓰는 독자에게는 그 버전이 표시됩니다.",
+  "Leave a translation empty to remove it.": "번역을 비워 두면 삭제됩니다.",
+  "Add README.fr.md (or any language) next to it and readers who use it get that version.": "옆에 README.fr.md(다른 언어도 가능)를 두면 해당 언어를 쓰는 독자에게 그 버전이 표시됩니다.",
+  "Content language": "콘텐츠 언어",
+  "Edit release": "릴리스 편집",
+  "Release title": "릴리스 제목"
 }

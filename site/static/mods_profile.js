@@ -17,8 +17,23 @@
   const HANDLE = decodeURIComponent(location.pathname.replace(/^\/mods\//, '').split('/')[0] || '')
     || _clean(_metaHandle);
 
-  const state = { profile: null, viewer: null };
+  // contentLang: the language the reader picked for this modder's own text.
+  // null = follow the site language (and fall back to English).
+  const state = { profile: null, viewer: null, contentLang: null };
   const $root = document.getElementById('mpf-root');
+
+  // The modder writes their tagline + About text (and each mod's card text) in
+  // English and may add any language the site speaks - one switch in the header
+  // drives the page. See mods_i18n.js.
+  const local = (base, translations) => BTTUtil.localized(base, translations, state.contentLang);
+  function pageLangs(p) {
+    const codes = new Set(['en']);
+    const add = (base, map) => Object.keys(BTTUtil.textVersions(base, map)).forEach((c) => codes.add(c));
+    add(p.tagline, p.tagline_i18n);
+    add(p.readme, p.readme_i18n);
+    (p.mods || []).forEach((m) => { add(m.title, m.title_i18n); add(m.summary, m.summary_i18n); });
+    return ModsI18n.sortLangs([...codes]);
+  }
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
@@ -140,7 +155,9 @@
           <div class="mpf-handle">@${esc(p.handle)}</div>
         </div>
       </div>
-      ${p.tagline ? `<p class="mpf-tagline">${esc(p.tagline)}</p>` : ''}
+      ${local(p.tagline, p.tagline_i18n) ? `<p class="mpf-tagline">${esc(local(p.tagline, p.tagline_i18n))}</p>` : ''}
+      ${ModsI18n.tabsHTML(pageLangs(p), BTTUtil.pickLang(
+        Object.fromEntries(pageLangs(p).map((c) => [c, true])), state.contentLang))}
     </header>`;
   }
 
@@ -171,11 +188,11 @@
   }
 
   function readmeHTML(p) {
-    const has = p.readme && p.readme.trim();
+    const has = local(p.readme, p.readme_i18n);
     if (!has && !p.is_owner) return '';
     const editBtn = p.is_owner
       ? `<button type="button" class="mp-btn mp-btn-sm" id="mpf-edit-readme"><i class="fa-solid fa-pen"></i> ${esc(has ? t('Edit') : t('Add README'))}</button>` : '';
-    const body = has ? md(p.readme) : `<p class="mp-muted">${esc(t('No README yet.'))}</p>`;
+    const body = has ? md(has) : `<p class="mp-muted">${esc(t('No README yet.'))}</p>`;
     return `<section class="mp-section mpf-section">
       <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-book-open"></i> ${esc(t('About'))}</h2>${editBtn}</div>
       <div class="mp-markdown">${body}</div>
@@ -210,8 +227,8 @@
     const card = `<a class="mh-card" href="${modUrl(m)}">
       ${banner}
       <div class="mh-card-body">
-        <h3 class="mh-card-title">${esc(m.title)} ${badge}</h3>
-        ${m.summary ? `<p class="mh-card-summary">${esc(m.summary)}</p>` : ''}
+        <h3 class="mh-card-title">${esc(local(m.title, m.title_i18n))} ${badge}</h3>
+        ${local(m.summary, m.summary_i18n) ? `<p class="mh-card-summary">${esc(local(m.summary, m.summary_i18n))}</p>` : ''}
         ${tags ? `<div class="mh-card-tags">${tags}</div>` : ''}
         <div class="mh-card-foot">
           <span class="mh-card-stats">
@@ -232,6 +249,18 @@
   }
 
   // ─── Owner controls ────────────────────────────────────────────────
+  // The language switch is for everyone (the owner's edit controls below aren't).
+  $root.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-content-lang]');
+    if (!btn) return;
+    state.contentLang = btn.getAttribute('data-content-lang');
+    render();
+  });
+  // A reader who hasn't picked one follows the site language.
+  document.addEventListener('btt-lang-changed', () => {
+    if (!state.contentLang && state.profile) render();
+  });
+
   function wire(p) {
     if (!p.is_owner) return;
     const w = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
@@ -288,7 +317,8 @@
     const p = state.profile;
     const m = openModal(t('Edit profile'), `<form class="mp-form" id="mpf-form">
       <label class="mp-form-field"><span>${esc(t('Display name'))}</span><input name="display_name" maxlength="80" value="${esc(p.display_name || '')}"></label>
-      <label class="mp-form-field"><span>${esc(t('Tagline'))}</span><input name="tagline" maxlength="160" value="${esc(p.tagline || '')}" placeholder="${esc(t('Trove modder & retexture artist'))}"></label>
+      ${ModsI18n.editorHTML('mpf-tag')}
+      <label class="mp-form-field"><span id="mpf-tag-label">${esc(t('Tagline'))}</span><input name="tagline" maxlength="160" placeholder="${esc(t('Trove modder & retexture artist'))}"></label>
       <label class="mp-form-field"><span><i class="fa-brands fa-discord"></i> ${esc(t('Discord invite'))}</span><input name="discord_url" maxlength="300" value="${esc(p.discord_url || '')}" placeholder="https://discord.gg/…"></label>
       <label class="mp-form-field"><span><i class="fa-solid fa-globe"></i> ${esc(t('Website'))}</span><input name="website_url" maxlength="300" value="${esc(p.website_url || '')}" placeholder="https://…"></label>
       <label class="mp-form-field"><span><i class="fa-solid fa-heart"></i> ${esc(t('Donation links (one per line, up to 5)'))}</span><textarea name="donation_urls" rows="3" placeholder="https://ko-fi.com/you">${esc((p.donation_urls || []).join('\n'))}</textarea></label>
@@ -297,12 +327,19 @@
         <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>
         <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Save'))}</button>
       </div></form>`);
-    m.wrap.querySelector('#mpf-form').addEventListener('submit', async (e) => {
+    const profForm = m.wrap.querySelector('#mpf-form');
+    const collectTag = ModsI18n.wireEditor(profForm, 'mpf-tag', [{
+      base: p.tagline, translations: p.tagline_i18n,
+      area: profForm.querySelector('input[name="tagline"]'),
+      labelEl: profForm.querySelector('#mpf-tag-label'), label: t('Tagline'),
+    }]);
+    profForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.target;
+      const [tag] = collectTag();
       const body = {
         display_name: f.display_name.value.trim(),
-        tagline: f.tagline.value.trim(),
+        tagline: tag.base.trim(), tagline_i18n: tag.translations,
         discord_url: f.discord_url.value.trim(),
         website_url: f.website_url.value.trim(),
         donation_urls: f.donation_urls.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 5),
@@ -316,18 +353,28 @@
   function openEditReadme() {
     const p = state.profile;
     const m = openModal(t('Edit README'), `<form class="mp-form" id="mpf-readme-form">
-      <label class="mp-form-field"><span>${esc(t('About you (Markdown)'))}</span><textarea name="readme" rows="14" maxlength="40000">${esc(p.readme || '')}</textarea></label>
+      ${ModsI18n.editorHTML('mpf-readme')}
+      <label class="mp-form-field"><span id="mpf-readme-label">${esc(t('About you (Markdown)'))}</span><textarea name="readme" rows="14" maxlength="40000"></textarea></label>
       <p class="mp-form-hint">${esc(t('Markdown + safe HTML (badges, images, tables) supported - make it yours.'))}
-        ${esc(t('Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}</p>
+        ${esc(t('Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}
+        ${esc(t('Leave a translation empty to remove it.'))}</p>
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">
         <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>
         <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Save'))}</button>
       </div></form>`, { wide: true });
-    m.wrap.querySelector('#mpf-readme-form').addEventListener('submit', async (e) => {
+    const readmeForm = m.wrap.querySelector('#mpf-readme-form');
+    const collectReadme = ModsI18n.wireEditor(readmeForm, 'mpf-readme', [{
+      base: p.readme, translations: p.readme_i18n,
+      area: readmeForm.querySelector('textarea[name="readme"]'),
+      labelEl: readmeForm.querySelector('#mpf-readme-label'), label: t('About you (Markdown)'),
+    }]);
+    readmeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.target;
-      const r = await apiJSON('/v1/mods/hub/me/profile', { method: 'PATCH', json: { readme: f.readme.value } });
+      const [readme] = collectReadme();
+      const r = await apiJSON('/v1/mods/hub/me/profile',
+        { method: 'PATCH', json: { readme: readme.base, readme_i18n: readme.translations } });
       if (r.ok) { m.close(); toast(t('Saved.')); await refresh(r.data); }
       else showFormError(f, errMsg(r, 'Could not save README.'));
     });

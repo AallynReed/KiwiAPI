@@ -53,6 +53,23 @@ class ModProject(Document):
     readme_text: str = ""
     # Highlighted warning blocks shown under the description; `<br>` splits blocks.
     warnings: str = ""
+
+    # --- Creator-written translations -------------------------------------
+    # Every piece of prose above can be written again in any language the site
+    # speaks: `<field>_i18n` maps a language code ("fr", "de", … =
+    # app.i18n.SUPPORTED minus "en") to that language's version. The base field
+    # IS the English one and is always the fallback, so a partial translation
+    # never leaves a blank. One switch on the mod page drives them all.
+    #
+    # `title_i18n` is DISPLAY ONLY: the URL slug, the .tmod's internal title and
+    # every release filename stay on the base title (Trove matches a mod by that
+    # exact name in-game). Files mode keeps its README translations in the repo
+    # instead - README.<lang>.md next to README.md.
+    title_i18n: dict[str, str] = Field(default_factory=dict)
+    summary_i18n: dict[str, str] = Field(default_factory=dict)
+    description_i18n: dict[str, str] = Field(default_factory=dict)
+    readme_i18n: dict[str, str] = Field(default_factory=dict)
+    warnings_i18n: dict[str, str] = Field(default_factory=dict)
     tags: list[str] = Field(default_factory=list)
 
     # The owning SiteUser. None ONLY for an imported *stray* mod (is_stray=True) -
@@ -188,6 +205,10 @@ class ModRelease(Document):
     branch: str = "main"                         # the variant (branch) this release belongs to
     title: str = ""
     changelog: str = ""                          # markdown
+    # The creator's translations of the two prose fields above, keyed by language
+    # code (see ModProject's block). The tag and the artifact are never translated.
+    title_i18n: dict[str, str] = Field(default_factory=dict)
+    changelog_i18n: dict[str, str] = Field(default_factory=dict)
 
     source_commit_sha: str | None = None        # git commit it was compiled from
     release_format: ReleaseFormat = "tmod"       # .tmod or .zip artifact
@@ -442,6 +463,10 @@ class ModProfile(Document):
     display_name: str = ""                     # shown name (empty -> SiteUser display/username)
     tagline: str = ""                          # short one-liner under the name
     readme: str = ""                           # markdown "about"
+    # The modder's own translations of their tagline + about text, keyed by
+    # language code (see ModProject's block). The display name isn't translated.
+    tagline_i18n: dict[str, str] = Field(default_factory=dict)
+    readme_i18n: dict[str, str] = Field(default_factory=dict)
 
     avatar_sha: str | None = None              # custom profile picture (ModImageAsset sha)
     banner_sha: str | None = None              # profile banner
