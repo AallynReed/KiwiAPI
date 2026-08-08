@@ -56,9 +56,11 @@
 .mp-doc > #mp-description-section .mp-section-title i,
 .mp-doc > #mp-readme-text-section .mp-section-title i { color: var(--text-soft); font-size: .95em; }
 .mp-doc .mp-markdown { font-size: 1rem; }
-/* Lead preview runs the full column; the rest sit under it as a thumb strip. */
+/* The lead preview gets its own row and the rest sit under it as a thumb strip.
+   Capped in width, not stretched to the column: a full-width 16:9 shot at this
+   measure is 630px tall and swallows the page. */
 .mp-doc .mp-previews { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-.mp-doc .mp-preview:first-child { grid-column: 1 / -1; aspect-ratio: 16 / 9; }
+.mp-doc .mp-preview:first-child { grid-column: 1 / -1; max-width: 620px; aspect-ratio: 16 / 9; }
 
 .mp-back {
   display: inline-flex; align-items: center; gap: 8px; color: var(--text-mute);
