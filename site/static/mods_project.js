@@ -167,16 +167,24 @@
         <aside class="mp-col-side">${sideCol.filter(Boolean).join('')}</aside>
       </div>`);
     } else {
-      // No file browser (releases-only / private source) -> single column.
-      parts.push(descriptionHTML(d));
-      if (ownerHasPreviews) parts.push(previewsHTML(d));
-      parts.push(readmeTextHTML(d));        // releases-only README (saved text)
-      parts.push(releasesHTML(d));
-      parts.push(modpacksHTML());
-      if (d.fork_count) parts.push(forksHTML());
+      // No file browser (releases-only / private source). A narrower reading
+      // column that runs like a document: the gallery leads, prose follows
+      // chrome-free, and only the interactive panels keep card borders - four
+      // identical full-width boxes down a 1600px page read as a pile of blocks.
+      const doc = [];
+      if (ownerHasPreviews) doc.push(previewsHTML(d));
+      doc.push(descriptionHTML(d));
+      doc.push(readmeTextHTML(d));        // releases-only README (saved text)
+      doc.push(releasesHTML(d));
+      doc.push(modpacksHTML());
+      if (d.fork_count) doc.push(forksHTML());
+      parts.push(`<div class="mp-doc">${doc.filter(Boolean).join('')}</div>`);
     }
 
     $root.innerHTML = parts.join('');
+    // Lets the page pull its top padding and float the back link over the hero.
+    const main = $root.closest('.mp-main');
+    if (main) main.classList.add('mp-has-hero');
     wireHeader();
     wireOwnerControls();          // contextual owner actions (banner/edit/commit/release/…)
     wireReleases();
@@ -240,13 +248,18 @@
   }
 
   function headerHTML(d) {
+    // The banner is the hero's backdrop (it fills the header behind the title
+    // and fades into the page), not a framed image sitting inside a card.
     const bannerInner = d.banner_sha
       ? `<img class="mp-banner" src="${imageUrl(d.banner_sha)}" alt="">`
       : `<div class="mp-banner placeholder"><i class="fa-solid fa-cube"></i></div>`;
     // The owner edits the banner by clicking it (no separate toolbar button).
-    const banner = d.is_owner
-      ? `<div class="mp-banner-wrap" id="mp-banner-btn" role="button" tabindex="0" title="${esc(t('Change banner'))}">${bannerInner}<span class="mp-banner-edit"><i class="fa-solid fa-camera"></i> ${esc(d.banner_sha ? t('Change banner') : t('Add banner'))}</span></div>`
-      : bannerInner;
+    const banner = `<div class="mp-banner-wrap${d.is_owner ? ' is-editable' : ''}"${d.is_owner
+      ? ` id="mp-banner-btn" role="button" tabindex="0" title="${esc(t('Change banner'))}"` : ''}>`
+      + bannerInner
+      + '<span class="mp-banner-scrim" aria-hidden="true"></span>'
+      + (d.is_owner ? `<span class="mp-banner-edit"><i class="fa-solid fa-camera"></i> ${esc(d.banner_sha ? t('Change banner') : t('Add banner'))}</span>` : '')
+      + '</div>';
     const vis = d.visibility;
     const badge = vis === 'draft' ? `<span class="mp-badge mp-badge-draft">${esc(t('Draft'))}</span>`
       : vis === 'unlisted' ? `<span class="mp-badge mp-badge-unlisted">${esc(t('Unlisted'))}</span>`
@@ -340,7 +353,7 @@
     // No owner links (Discord / website / donations) on an uploaded mod - the
     // uploader isn't the author, so no soliciting or self-linking on their work.
     const linksRow = (links.length && !isUploaded) ? `<div class="mp-links">${links.join('')}</div>` : '';
-    return `<header class="mp-header">
+    return `<header class="mp-header${d.source_visible ? '' : ' is-doc'}">
       ${banner}
       <div class="mp-header-body">
         ${taken}
@@ -438,7 +451,7 @@
     </div>`).join('');
     const addBtn = d.is_owner
       ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-add-previews"><i class="fa-solid fa-plus"></i> ${esc(t('Add previews'))}</button>` : '';
-    return `<section class="mp-section">
+    return `<section class="mp-section" id="mp-previews-section">
       <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-images"></i> ${esc(t('Previews'))}</h2>${addBtn}</div>
       ${cells ? `<div class="mp-previews">${cells}</div>` : `<p class="mp-muted">${esc(t('No previews yet.'))}</p>`}
     </section>`;

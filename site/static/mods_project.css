@@ -9,9 +9,13 @@
 .mods-project-page main { padding-top: 0; }
 
 .mp-main {
+  --mp-pad: clamp(16px, 3vw, 44px);
+  position: relative;
   width: 100%; max-width: 1600px; margin: 0 auto;
-  padding: 24px clamp(16px, 3vw, 44px) 90px;
+  padding: 24px var(--mp-pad) 90px;
 }
+/* The hero starts flush under the navbar; the back link rides over it. */
+.mp-main.mp-has-hero { padding-top: 0; }
 
 /* GitHub-style two-column body: wide file browser + about on the left, a
    releases → history → clone → forks sidebar on the right. */
@@ -25,11 +29,46 @@
   .mp-layout { grid-template-columns: 1fr; }   /* stack on narrow screens */
 }
 
+/* Releases-only body: a document, not a stack of identical panels. A narrower
+   reading column; the gallery and the prose drop their card chrome so only the
+   interactive sections (releases, modpacks, forks) stay raised. */
+.mp-doc { max-width: 1120px; margin-inline: auto; }
+.mp-doc .mp-section { margin-bottom: 22px; }
+.mp-doc > #mp-previews-section,
+.mp-doc > #mp-description-section,
+.mp-doc > #mp-readme-text-section {
+  border: 0; background: none; padding: 0; margin-bottom: 36px;
+}
+.mp-doc > #mp-previews-section .mp-section-head,
+.mp-doc > #mp-description-section .mp-section-head,
+.mp-doc > #mp-readme-text-section .mp-section-head {
+  border-bottom: 1px solid var(--bg-line); padding-bottom: 9px; margin-bottom: 16px;
+}
+/* Quiet label captions, so three document headings don't read as three more
+   cards competing with the one panel that matters (Releases). */
+.mp-doc > #mp-previews-section .mp-section-title,
+.mp-doc > #mp-description-section .mp-section-title,
+.mp-doc > #mp-readme-text-section .mp-section-title {
+  font: 600 .78rem 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--text-mute);
+}
+.mp-doc > #mp-previews-section .mp-section-title i,
+.mp-doc > #mp-description-section .mp-section-title i,
+.mp-doc > #mp-readme-text-section .mp-section-title i { color: var(--text-soft); font-size: .95em; }
+.mp-doc .mp-markdown { font-size: 1rem; }
+/* Lead preview runs the full column; the rest sit under it as a thumb strip. */
+.mp-doc .mp-previews { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.mp-doc .mp-preview:first-child { grid-column: 1 / -1; aspect-ratio: 16 / 9; }
+
 .mp-back {
   display: inline-flex; align-items: center; gap: 8px; color: var(--text-mute);
   text-decoration: none; font: 600 .85rem 'Inter', system-ui, sans-serif; margin-bottom: 16px;
 }
 .mp-back:hover { color: var(--accent-blue); }
+.mp-has-hero .mp-back {
+  position: absolute; z-index: 3; top: 16px; left: var(--mp-pad); margin: 0;
+  color: #cfdae8; text-shadow: 0 1px 10px rgba(0, 0, 0, .75);
+}
 .mp-loading, .mp-error { color: var(--text-mute); padding: 60px 0; text-align: center; }
 .mp-error { color: var(--accent-red); }
 
@@ -73,18 +112,53 @@
 .mp-starred:hover { border-color: var(--accent-yellow); }
 .mp-starred i { color: var(--accent-yellow); }
 
-/* ─── Header / banner ───────────────────────────────────────────────── */
+/* ─── Hero header / banner ──────────────────────────────────────────
+   The banner is the page's backdrop, not a framed image inside a card: the
+   header bleeds to the viewport edges (body.landing clips overflow-x, so the
+   50vw margins can't raise a scrollbar), the image fills the whole box, and a
+   scrim dissolves it into --bg-base so the title reads on near-solid ink.
+   No `isolation` here on purpose - a stacking context would trap the
+   position:fixed download menu (z 1000) below the navbar (z 100). */
 .mp-header {
-  position: relative; border: 1px solid var(--bg-line); border-radius: var(--radius-lg);
-  overflow: hidden; background: var(--bg-card); margin-bottom: 22px;
+  position: relative; margin-bottom: 30px;
+  min-height: min(56vh, 500px);
+  padding-top: clamp(120px, 14vw, 190px);     /* image breathing room above the text */
+  display: flex; align-items: flex-end;
 }
+/* Only the imagery bleeds; the header itself keeps the page's content width so
+   the title lines up with everything below it. */
+.mp-banner-wrap {
+  position: absolute; z-index: 0; overflow: hidden;
+  top: 0; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw);
+}
+.mp-banner-wrap.is-editable { cursor: pointer; }
+/* Base .mp-banner is shared with the modpack page, which still frames it inside
+   a card - only the hero (inside .mp-banner-wrap) fills its box. */
 .mp-banner {
   height: clamp(150px, 28vw, 280px); width: 100%; object-fit: cover; display: block;
   background: linear-gradient(135deg, rgba(86,156,255,.14), rgba(255,94,126,.10));
 }
 .mp-banner.placeholder { display: grid; place-items: center; color: var(--text-mute); font-size: 2.4rem; }
-/* Clickable banner: the owner edits it by clicking (no toolbar button). */
-.mp-banner-wrap { position: relative; display: block; cursor: pointer; }
+.mp-banner-wrap .mp-banner { height: 100%; object-position: 50% 32%; }
+.mp-banner-wrap .mp-banner.placeholder {
+  color: rgba(230,237,243,.09); font-size: 5rem;
+  background:
+    radial-gradient(120% 90% at 28% 0%, rgba(88,166,255,.16), transparent 62%),
+    radial-gradient(90% 80% at 88% 15%, rgba(163,113,247,.12), transparent 60%),
+    var(--bg-deep);
+}
+/* Dissolves the image into the page. Deliberately light through the top half -
+   the text's own contrast comes from .mp-header-body::before, which is tied to
+   the text block instead of to a percentage of a content-sized header. */
+.mp-banner-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(to right, rgba(6,8,13,.72) 0%, rgba(6,8,13,.30) 48%, rgba(6,8,13,0) 78%),
+    linear-gradient(to bottom, rgba(6,8,13,.34) 0%, rgba(6,8,13,.16) 30%,
+                    rgba(6,8,13,.55) 70%, rgba(6,8,13,.88) 90%, var(--bg-base) 100%);
+}
+/* Clickable banner: the owner edits it by clicking (no toolbar button).
+   Shared with the creator-profile banner, so the hero's corner is set below. */
 .mp-banner-edit {
   position: absolute; right: 12px; bottom: 12px;
   display: inline-flex; align-items: center; gap: 7px;
@@ -92,9 +166,28 @@
   border-radius: 999px; padding: 6px 13px; font: 600 .82rem 'Inter', system-ui, sans-serif;
   opacity: 0; transition: opacity .15s var(--ease-out); pointer-events: none;
 }
+/* In the hero the chip goes top-right, clear of the title and action row. */
+.mp-banner-wrap .mp-banner-edit { top: 18px; right: 18px; bottom: auto; }
 .mp-banner-wrap:hover .mp-banner-edit, .mp-banner-wrap:focus-visible .mp-banner-edit { opacity: 1; }
 .mp-banner-wrap:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: -2px; }
-.mp-header-body { padding: 18px 20px; display: grid; gap: 12px; }
+.mp-header-body {
+  position: relative; z-index: 1; width: 100%;
+  padding: 0 0 30px;
+  display: grid; gap: 13px;
+}
+/* Bleeds back out to the viewport edges and sits behind the header text only,
+   so a bright banner can't drop the title or meta below AA. */
+.mp-header-body::before {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  top: -110px; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw);
+  /* Fixed px stops, not percentages: the header is content-sized, so a
+     percentage fade lands somewhere different on every mod. */
+  background: linear-gradient(to bottom,
+    rgba(6,8,13,0) 0, rgba(6,8,13,.66) 110px, rgba(6,8,13,.90) 220px, rgba(6,8,13,.94));
+}
+/* Releases-only pages run a narrower column - the hero text lines up with it. */
+.mp-header.is-doc .mp-header-body { max-width: 1120px; margin-inline: auto; }
+#mp-langswitch:empty { display: none; }
 .mp-titlerow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .mp-title-actions { margin-left: auto; display: inline-flex; gap: 8px; }
 /* Owner-provided links (Discord invite / website / donation buttons). */
