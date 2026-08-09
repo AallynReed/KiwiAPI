@@ -2472,5 +2472,7 @@
   "Edition shown.": "エディションを表示しました。",
   "Edition hidden.": "エディションを非表示にしました。",
   "You'll pick the mods, editions and versions on the next screen.": "Mod・エディション・バージョンは次の画面で選びます。",
-  "Could not update your favourite.": "お気に入りを更新できませんでした。"
+  "Could not update your favourite.": "お気に入りを更新できませんでした。",
+  "Open in app": "アプリで開く",
+  "Requires the Better Trove Tools desktop app": "Better Trove Tools デスクトップアプリが必要です"
 }

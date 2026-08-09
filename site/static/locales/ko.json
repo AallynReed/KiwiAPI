@@ -2472,5 +2472,7 @@
   "Edition shown.": "에디션을 공개했습니다.",
   "Edition hidden.": "에디션을 숨겼습니다.",
   "You'll pick the mods, editions and versions on the next screen.": "모드와 에디션, 버전은 다음 화면에서 고릅니다.",
-  "Could not update your favourite.": "즐겨찾기를 변경하지 못했습니다."
+  "Could not update your favourite.": "즐겨찾기를 변경하지 못했습니다.",
+  "Open in app": "앱에서 열기",
+  "Requires the Better Trove Tools desktop app": "Better Trove Tools 데스크톱 앱이 필요합니다"
 }

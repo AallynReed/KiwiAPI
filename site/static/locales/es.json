@@ -2472,5 +2472,7 @@
   "Edition shown.": "Edición visible.",
   "Edition hidden.": "Edición oculta.",
   "You'll pick the mods, editions and versions on the next screen.": "Elegirás los mods, las ediciones y las versiones en la siguiente pantalla.",
-  "Could not update your favourite.": "No se pudo actualizar tu favorito."
+  "Could not update your favourite.": "No se pudo actualizar tu favorito.",
+  "Open in app": "Abrir en la aplicación",
+  "Requires the Better Trove Tools desktop app": "Requiere la aplicación de escritorio Better Trove Tools"
 }

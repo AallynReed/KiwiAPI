@@ -2472,5 +2472,7 @@
   "Edition shown.": "版本已公开。",
   "Edition hidden.": "版本已隐藏。",
   "You'll pick the mods, editions and versions on the next screen.": "模组、版本与具体版本号将在下一步选择。",
-  "Could not update your favourite.": "无法更新你的收藏。"
+  "Could not update your favourite.": "无法更新你的收藏。",
+  "Open in app": "在应用中打开",
+  "Requires the Better Trove Tools desktop app": "需要 Better Trove Tools 桌面应用"
 }

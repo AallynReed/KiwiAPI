@@ -2472,5 +2472,7 @@
   "Edition shown.": "Редакция показана.",
   "Edition hidden.": "Редакция скрыта.",
   "You'll pick the mods, editions and versions on the next screen.": "Моды, редакции и версии вы выберете на следующем экране.",
-  "Could not update your favourite.": "Не удалось обновить избранное."
+  "Could not update your favourite.": "Не удалось обновить избранное.",
+  "Open in app": "Открыть в приложении",
+  "Requires the Better Trove Tools desktop app": "Требуется приложение Better Trove Tools для ПК"
 }
