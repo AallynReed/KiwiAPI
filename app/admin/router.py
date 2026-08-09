@@ -1498,3 +1498,58 @@ async def embed_upload_stats() -> dict:
     on their own (``embed.upload_ttl_minutes``). This is a load reading, not a store."""
     from app.embed import uploads
     return await uploads.stats()
+
+
+# --- App releases: pull GitHub now -------------------------------------------
+# Release + changelog data is mirrored from GitHub on a timer
+# (`btt_releases_refresh_seconds`, 30m), so a fresh app release doesn't show on
+# the site until the next cycle. This is the "I just published, show it now"
+# button. Cheap enough (a handful of GitHub calls) to run inline and hand the
+# result straight back. Master-only via the router-level dep.
+
+@router.post("/btt/refresh-releases")
+async def refresh_btt_releases() -> dict:
+    """Re-pull app releases + changelog from GitHub immediately.
+
+    Returns what landed, so the panel can show the new version without a reload."""
+    from app.trove import btt_releases
+
+    result: dict = {"releases": None, "changelog": None, "errors": []}
+    try:
+        result["releases"] = await btt_releases.refresh_releases()
+    except Exception as exc:  # noqa: BLE001 - report per-source, never 500 the button
+        result["errors"].append(f"releases: {exc}")
+    try:
+        info = await btt_releases.refresh_changelog()
+        result["changelog"] = info.get("groups")
+        result["rate_limited"] = bool(info.get("rate_limited"))
+    except Exception as exc:  # noqa: BLE001
+        result["errors"].append(f"changelog: {exc}")
+
+    latest = {}
+    for channel in btt_releases.CHANNELS:
+        try:
+            data = await btt_releases.latest_per_platform(channel)
+        except Exception:  # noqa: BLE001 - the refresh itself already succeeded
+            continue
+        # latest_per_platform returns {platform: (release_doc, assets) | None}.
+        for platform, hit in (data or {}).items():
+            if not hit:
+                continue
+            tag = getattr(hit[0], "tag_name", None)
+            if tag:
+                latest[f"{channel}/{platform}"] = tag
+    result["latest"] = latest
+    # Download counts ride on the assets, so they're refreshed by the same pull.
+    # Report the total so the panel shows the number the button was clicked for.
+    try:
+        from app.trove.models import BttRelease
+        result["downloads"] = sum(
+            int(a.get("download_count") or 0)
+            for rel in await BttRelease.find_all().to_list()
+            for a in (rel.assets or [])
+        )
+    except Exception:  # noqa: BLE001 - a display extra, never the reason this fails
+        result["downloads"] = None
+    result["ok"] = not result["errors"]
+    return result

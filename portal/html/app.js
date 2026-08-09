@@ -2413,8 +2413,62 @@ async function renderConfigTab() {
         FastAPI dependency tree at startup.
       </p>
       <div id="config-body"><div class="loading">Loading config…</div></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">App releases</h2>
+        <span class="muted" style="font-size:12px">master-only</span>
+      </div>
+      <p class="hint">
+        Release info (latest version, download counts, changelog) is mirrored from
+        GitHub every 30 minutes, so a version you just published won't show on the
+        site or reach the app's update check until the next cycle. This pulls it
+        now - the same work the timer does, without restarting the API container.
+      </p>
+      <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="flex:1 1 200px"><strong>Releases &amp; changelog</strong>
+          <span class="muted" style="font-size:.78rem">— re-reads GitHub and upserts every release + the grouped changelog</span></span>
+        <button class="btn small" id="cfg-btt-refresh" type="button">Pull from GitHub now</button>
+      </div>
+      <p class="hint" id="cfg-btt-result" style="margin:12px 0 0"></p>
     </div>`;
   renderConfigCard();
+  wireBttRefresh();
+}
+
+// "I just published a release, show it now" - the manual trigger for the timer
+// that mirrors GitHub into Mongo (app/trove/btt_releases.py).
+function wireBttRefresh() {
+  const btn = document.getElementById("cfg-btt-refresh");
+  const out = document.getElementById("cfg-btt-result");
+  if (!btn || !out) return;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = "Pulling…";
+    out.textContent = "Reading GitHub…";
+    try {
+      const r = await API.call("/admin/btt/refresh-releases", { method: "POST" });
+      const bits = [];
+      if (r.releases != null) bits.push(`${r.releases} release(s) stored`);
+      if (r.changelog != null) bits.push(`${r.changelog} changelog group(s)`);
+      if (r.downloads != null) bits.push(`${Number(r.downloads).toLocaleString()} total downloads`);
+      const versions = Object.entries(r.latest || {})
+        .map(([k, v]) => `${k} → ${v}`).join(" · ");
+      out.textContent = (bits.join(", ") || "Nothing returned")
+        + (versions ? `. Latest: ${versions}` : "")
+        + (r.rate_limited ? " (GitHub rate-limited the commits call; changelog kept its cached groups.)" : "")
+        + (r.errors && r.errors.length ? ` Problems: ${r.errors.join("; ")}` : "");
+      toast(r.ok ? "Release info refreshed" : "Refreshed with problems", r.ok ? "ok" : "err");
+    } catch (ex) {
+      out.textContent = `Refresh failed: ${ex.message || ex}`;
+      toast(ex.message || "Refresh failed", "err");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  });
 }
 
 const CONFIG_SUBTAB_KEY = "kiwi_config_subtab";
