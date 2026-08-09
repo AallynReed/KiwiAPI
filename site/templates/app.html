@@ -71,27 +71,11 @@
 
     <link rel="stylesheet" href="/static/style.min.css">
 
-    <!-- Graceful fallback for screenshots that haven't been captured yet.
-         Same hook the previous design used, unchanged so any feature-card
-         <img> whose source 404s gets replaced by a placeholder tile. -->
-    <script>
-        function shotFail(img) {
-            img.onerror = null;
-            const file = (img.getAttribute('src') || '').split('/').pop();
-            const ph = document.createElement('div');
-            ph.className = 'shot-placeholder';
-            const icon = document.createElement('i');
-            icon.className = 'fa-regular fa-image';
-            icon.setAttribute('aria-hidden', 'true');
-            const label = document.createElement('span');
-            label.setAttribute('data-i18n', '');
-            label.textContent = img.getAttribute('alt') || 'Screenshot';
-            const code = document.createElement('code');
-            code.textContent = file;
-            ph.append(icon, label, code);
-            img.replaceWith(ph);
-        }
-    </script>
+    <!-- Graceful fallback for screenshots that haven't been captured yet: any
+         feature-card <img data-shot-fallback> whose source 404s is replaced by
+         a placeholder tile. Blocking (not deferred) so the delegated listener
+         is registered before the body's images are parsed. -->
+    <script src="/static/shot_fallback.min.js"></script>
 </head>
 
 <body class="landing">
@@ -444,7 +428,7 @@
 
             <article class="spotlight" data-theme="blue" data-shot="home_dashboard.webp">
                 <div class="spot-bg" aria-hidden="true">
-                    <img src="/static/assets/home_dashboard.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/home_dashboard.webp" alt="" loading="lazy" data-shot-fallback>
                     <div class="spot-veil"></div>
                 </div>
                 <div class="spot-inner">
@@ -462,7 +446,7 @@
 
             <article class="spotlight" data-theme="orange" data-shot="gem_builds.webp">
                 <div class="spot-bg" aria-hidden="true">
-                    <img src="/static/assets/gem_builds.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/gem_builds.webp" alt="" loading="lazy" data-shot-fallback>
                     <div class="spot-veil"></div>
                 </div>
                 <div class="spot-inner">
@@ -480,7 +464,7 @@
 
             <article class="spotlight" data-theme="yellow" data-shot="calc_pr.webp">
                 <div class="spot-bg" aria-hidden="true">
-                    <img src="/static/assets/calc_pr.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/calc_pr.webp" alt="" loading="lazy" data-shot-fallback>
                     <div class="spot-veil"></div>
                 </div>
                 <div class="spot-inner">
@@ -498,7 +482,7 @@
 
             <article class="spotlight" data-theme="purple" data-shot="ally_codex.webp">
                 <div class="spot-bg" aria-hidden="true">
-                    <img src="/static/assets/ally_codex.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/ally_codex.webp" alt="" loading="lazy" data-shot-fallback>
                     <div class="spot-veil"></div>
                 </div>
                 <div class="spot-inner">
@@ -516,7 +500,7 @@
 
             <article class="spotlight" data-theme="blue" data-shot="modder_tools_build.webp">
                 <div class="spot-bg" aria-hidden="true">
-                    <img src="/static/assets/modder_tools_build.webp" alt="" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/modder_tools_build.webp" alt="" loading="lazy" data-shot-fallback>
                     <div class="spot-veil"></div>
                 </div>
                 <div class="spot-inner">
@@ -546,7 +530,7 @@
 
             <div class="bento-grid">
                 <article class="bento-tile span-2">
-                    <img src="/static/assets/server_time.webp" alt="Server Time" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/server_time.webp" alt="Server Time" loading="lazy" data-shot-fallback>
                     <div class="bento-body">
                         <h3 data-i18n>Server <span class="highlight-orange">Time</span></h3>
                         <p data-i18n>Live server clock with world clocks and a Discord-timestamp converter - paste the result straight into chat.</p>
@@ -554,7 +538,7 @@
                 </article>
 
                 <article class="bento-tile">
-                    <img src="/static/assets/trovesaurus.webp" alt="Trovesaurus Browser" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/trovesaurus.webp" alt="Trovesaurus Browser" loading="lazy" data-shot-fallback>
                     <div class="bento-body">
                         <h3 data-i18n>Trovesaurus <span class="highlight-yellow">Browser</span></h3>
                         <p data-i18n>Built-in mod store. Search, filter, install, update - no browser tab needed.</p>
@@ -562,7 +546,7 @@
                 </article>
 
                 <article class="bento-tile">
-                    <img src="/static/assets/mod_manager.webp" alt="Mod Manager" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/mod_manager.webp" alt="Mod Manager" loading="lazy" data-shot-fallback>
                     <div class="bento-body">
                         <h3 data-i18n>Mod <span class="highlight-orange">Manager</span></h3>
                         <p data-i18n>Enable, disable, update, delete - per installation, with conflict detection.</p>
@@ -570,7 +554,7 @@
                 </article>
 
                 <article class="bento-tile span-2">
-                    <img src="/static/assets/update_tracker.webp" alt="Update Tracker" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/update_tracker.webp" alt="Update Tracker" loading="lazy" data-shot-fallback>
                     <div class="bento-body">
                         <h3 data-i18n>Update <span class="highlight-orange">Tracker</span></h3>
                         <p data-i18n>Snapshot the game, diff every patch - auto-extracted, summarized, with blueprint previews so you can see what actually changed.</p>
@@ -578,7 +562,7 @@
                 </article>
 
                 <article class="bento-tile">
-                    <img src="/static/assets/gem_evaluator.webp" alt="Gem Evaluator" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/gem_evaluator.webp" alt="Gem Evaluator" loading="lazy" data-shot-fallback>
                     <div class="bento-body">
                         <h3 data-i18n>Gem <span class="highlight-yellow">Evaluator</span></h3>
                         <p data-i18n>Rate any gem before you sink flux into it.</p>
@@ -586,7 +570,7 @@
                 </article>
 
                 <article class="bento-tile">
-                    <img src="/static/assets/calc_mastery.webp" alt="Mastery Calculator" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/calc_mastery.webp" alt="Mastery Calculator" loading="lazy" data-shot-fallback>
                     <div class="bento-body">
                         <h3 data-i18n>Mastery <span class="highlight-yellow">Calc</span></h3>
                         <p data-i18n>Plan Trove + Geode mastery - PR / Light / MF at every rank.</p>
@@ -594,7 +578,7 @@
                 </article>
 
                 <article class="bento-tile">
-                    <img src="/static/assets/blueprint_editor.webp" alt="Blueprint Editor" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/blueprint_editor.webp" alt="Blueprint Editor" loading="lazy" data-shot-fallback>
                     <div class="bento-body">
                         <h3 data-i18n>Blueprint <span class="highlight-yellow">Editor</span></h3>
                         <p data-i18n>Open .qb / .blueprint, inspect voxels in 3D, export. <em>Experimental.</em></p>
@@ -602,7 +586,7 @@
                 </article>
 
                 <article class="bento-tile">
-                    <img src="/static/assets/modder_tools_projects.webp" alt="Project Manager" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/modder_tools_projects.webp" alt="Project Manager" loading="lazy" data-shot-fallback>
                     <div class="bento-body">
                         <h3 data-i18n>Project <span class="highlight-yellow">Manager</span></h3>
                         <p data-i18n>Persistent versioned mod workspaces - organized, always ready.</p>
@@ -610,7 +594,7 @@
                 </article>
 
                 <article class="bento-tile span-2">
-                    <img src="/static/assets/settings.webp" alt="Settings &amp; FPS" loading="lazy" onerror="shotFail(this)">
+                    <img src="/static/assets/settings.webp" alt="Settings &amp; FPS" loading="lazy" data-shot-fallback>
                     <div class="bento-body">
                         <h3 data-i18n>Settings <span class="highlight-blue">&amp; FPS unlock</span></h3>
                         <p data-i18n>Theme, 9 languages, install management - plus an FPS cap that goes from 60 all the way to uncapped, with automatic backups so you can roll back any time.</p>

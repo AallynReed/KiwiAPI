@@ -321,11 +321,7 @@
 
     <!-- DDS decoder (ES module) exposed as a global so the classic updates.js
          can decode .dds textures to a canvas + export them as PNG. -->
-    <script type="module">
-        import { decodeDDS } from '/static/pkfx/dds.js';
-        window.decodeDDS = decodeDDS;
-        document.dispatchEvent(new Event('btt-dds-ready'));
-    </script>
+    <script type="module" src="/static/dds_ready.min.js"></script>
     <script src="/static/app.min.js"></script>
     <script src="/static/_site_util.min.js"></script>
     <script src="/static/i18n.min.js"></script>

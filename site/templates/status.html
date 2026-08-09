@@ -127,21 +127,6 @@
             </label>
         </section>
 
-        <script>
-            (function () {
-                document.querySelectorAll('.st-embed [data-copy]').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var inp = btn.parentElement.querySelector('input');
-                        inp.select();
-                        if (navigator.clipboard) navigator.clipboard.writeText(inp.value).catch(function () {});
-                        else document.execCommand('copy');
-                        var prev = btn.textContent;
-                        btn.textContent = 'Copied!';
-                        setTimeout(function () { btn.textContent = prev; }, 1200);
-                    });
-                });
-            })();
-        </script>
     </main>
 
     {% include "partials/footer.html" %}

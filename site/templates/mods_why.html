@@ -207,22 +207,6 @@
     <script src="/static/_site_util.min.js"></script>
     <script src="/static/i18n.min.js"></script>
     <script src="/static/site_auth.min.js" defer></script>
-    <script>
-        // Swap the secondary CTA based on login: signed-out -> "Sign in to
-        // publish", signed-in -> "Create a mod". Runs on DOMContentLoaded so the
-        // deferred site_auth.min.js (window.BTTAuth) has already initialised.
-        document.addEventListener('DOMContentLoaded', function () {
-            var signin = document.getElementById('wmh-signin');
-            var create = document.getElementById('wmh-create');
-            function apply(user) {
-                var authed = !!user;
-                if (signin) signin.hidden = authed;
-                if (create) create.hidden = !authed;
-            }
-            var A = window.BTTAuth;
-            apply(A && A.getCachedUser ? A.getCachedUser() : null);
-            if (A && A.getMe) A.getMe().then(apply).catch(function () {});
-        });
-    </script>
+    <script src="/static/mods_why.min.js" defer></script>
 </body>
 </html>

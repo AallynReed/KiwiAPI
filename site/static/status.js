@@ -219,6 +219,20 @@
     });
   }
 
+  // Copy buttons on the "embed this badge" snippets. Was inline in
+  // status.html until the site CSP dropped 'unsafe-inline'.
+  document.querySelectorAll('.st-embed [data-copy]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const inp = btn.parentElement.querySelector('input');
+      inp.select();
+      if (navigator.clipboard) navigator.clipboard.writeText(inp.value).catch(() => {});
+      else document.execCommand('copy');
+      const prev = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = prev; }, 1200);
+    });
+  });
+
   // i18n relabel re-render (cards/history hold translated text).
   document.addEventListener('btt-lang-changed', () => { loadCurrent(); loadHistory(); });
 

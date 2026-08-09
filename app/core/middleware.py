@@ -3,45 +3,10 @@ from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.core.config import settings
+from app.core.csp import API_CSP as _API_CSP
+from app.core.csp import SITE_CSP as _SITE_CSP
+from app.core.csp import embed_csp as _embed_csp
 from app.core.errors import ErrorCode, build_error_body
-
-# The API serves JSON plus a few small, self-contained HTML pages (landing,
-# verify-email, reset-password). Those use inline <style>/<script>, so inline is
-# allowed, but everything external is locked down.
-_API_CSP = (
-    "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
-    "connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
-)
-
-# The BetterTroveTools showcase site self-hosts all fonts and Font Awesome from
-# /static/fonts/ (GDPR: no font/icon request ever leaves our origin to Google or
-# cdnjs), and calls the Kiwi API for release data. The /login + /signup +
-# /forgot-password pages also render a captcha widget (Turnstile or hCaptcha),
-# whichever the API is configured for - both host their script + iframe under
-# their own domains, so script-src + frame-src cover the union of providers so a
-# toggle from one to the other doesn't require a CSP edit.
-_SITE_CSP = (
-    "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline' "
-        "https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
-    "style-src 'self' 'unsafe-inline' "
-        "https://hcaptcha.com https://*.hcaptcha.com; "
-    "font-src 'self' data:; "
-    # Allow any https image so user-content READMEs render badges + screenshots
-    # (shields.io, github, imgur, …) like GitHub. Images can't execute, so this is
-    # low-risk; `data:` covers inline, `cdn.discordapp.com` is already https.
-    "img-src 'self' data: https:; "
-    # Data-plane binary (mod artifacts, textures, blueprints, VFX assets) is
-    # served from the API origin cross-origin; viewers fetch() it (connect-src),
-    # but declare media-src too so any <audio>/<video> from the API isn't blocked
-    # by the default-src fallback.
-    "media-src 'self' https://api.aallyn.net; "
-    "connect-src 'self' https://api.aallyn.net "
-        "https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
-    "frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
-    "base-uri 'none'; frame-ancestors 'none'"
-)
-
 
 # The embeddable viewer (app/embed) is the ONE surface that may be framed by another
 # site. Its CSP is the site CSP with `frame-ancestors` swapped for the admin's
@@ -56,19 +21,6 @@ _SITE_CSP = (
 # CSP. The edge proxy matches this same path exactly; keeping the two in step means
 # there is no path where the app relaxes and the proxy doesn't, or vice versa.
 _EMBED_PATH = "/embed/viewer"
-# Everything in the site CSP except its frame-ancestors directive. Split by name
-# rather than by position so reordering _SITE_CSP can't silently leave the original
-# `frame-ancestors 'none'` in front of ours (first directive wins - the embed would
-# stay unframable, with a perfectly valid-looking header).
-_SITE_CSP_NO_FRAME_ANCESTORS = "; ".join(
-    d.strip() for d in _SITE_CSP.split(";")
-    if d.strip() and not d.strip().startswith("frame-ancestors")
-)
-
-
-def _embed_csp(origins: list[str]) -> str:
-    ancestors = " ".join(origins) if origins else "'none'"
-    return f"{_SITE_CSP_NO_FRAME_ANCESTORS}; frame-ancestors {ancestors}"
 
 
 # Exact-matched showcase-site HTML page routes. (Everything else under the site

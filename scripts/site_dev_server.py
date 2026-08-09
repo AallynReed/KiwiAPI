@@ -143,6 +143,15 @@ except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
     print(f"[site-dev] gem tools unavailable ({_e}); /site/gems/* will 503")
     _GEMS_OK = False
 
+# Serve the same CSP the edge does. Without it an inline <script> or `onclick=`
+# works perfectly here and is silently refused in production - the one class of
+# bug this server used to be blind to.
+try:
+    from app.core.csp import SITE_CSP as _SITE_CSP
+except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
+    print(f"[site-dev] CSP unavailable ({_e}); pages served without one")
+    _SITE_CSP = ""
+
 # Stub data shaped to match what app/trove/leaderboards/service.py returns,
 # so the page renders end-to-end without a backend.
 #
@@ -2880,6 +2889,8 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
+        if content_type == "text/html" and _SITE_CSP:
+            self.send_header("Content-Security-Policy", _SITE_CSP)
         self.end_headers()
         self.wfile.write(data)
 
