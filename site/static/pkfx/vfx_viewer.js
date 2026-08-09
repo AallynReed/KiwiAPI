@@ -2,18 +2,16 @@
 
    The server (/site/mods/releases/<id>/vfx/*) hands us the .pkfx text plus every
    asset it references, resolving missing textures/meshes from the live game tree.
-   We parse, simulate on the CPU, and render billboards + ribbons here.
+   We parse, simulate on the CPU, and render billboards + ribbons + meshes here.
 
    Public API (assigned to window.PkfxViewer for classic-script callers):
      PkfxViewer.mount(container, { releaseId, path }) -> { dispose() }
-     PkfxViewer.mount(container, { endpoint: {base, query}, path })  // embeddable viewer
-
-   Renders billboard + ribbon particles. Mesh/Light renderers and parent-emitted
-   trails are not yet drawn (surfaced as a "partial preview" note).  */
+     PkfxViewer.mount(container, { endpoint: {base, query}, path })  // embeddable viewer */
 import { parsePkfx } from './parser.js';
 import { buildEffect } from './model.js';
 import { System } from './sim.js';
 import { decodeDDS } from './dds.js';
+import { decodePkmm } from './pkmm.js';
 import { Renderer, makeTexture, FLOATS_PER_INSTANCE, RIBBON_FLOATS_PER_VERT, MESH_FLOATS_PER_INSTANCE } from './renderer.js';
 
 const SITE = (id) => `/site/mods/releases/${encodeURIComponent(id)}/vfx`;
@@ -32,6 +30,14 @@ function endpointsFor({ releaseId, endpoint }) {
   };
 }
 
+// BillboardingMaterial -> blend kind (0 alpha, 1 additive, 2 alphablend+additive, 3 additive-noalpha)
+function kindFor(material) {
+  if (/Additive_NoAlpha/i.test(material)) return 3;
+  if (/^AlphaBlend_Additive/i.test(material)) return 2;
+  if (/^Additive/i.test(material)) return 1;
+  return 0;
+}
+
 export function mount(container, { releaseId, path, endpoint }) {
   const urls = endpointsFor({ releaseId, endpoint });
   const canvas = document.createElement('canvas');
@@ -46,7 +52,7 @@ export function mount(container, { releaseId, path, endpoint }) {
   container.appendChild(loading);
 
   let renderer, system, current, raf = 0, disposed = false, glowTex = null;
-  const texCache = new Map(), atlasCache = new Map();
+  const texCache = new Map(), atlasCache = new Map(), meshCache = new Map();
 
   const assetUrl = (ref) => urls.asset(ref);
 
@@ -81,6 +87,22 @@ export function mount(container, { releaseId, path, endpoint }) {
     } catch { atlasCache.set(ref, null); return null; }
   }
 
+  // .pkmm -> uploaded geometry (null -> the renderer's cube proxy)
+  async function loadMesh(ref) {
+    if (!ref || !/\.pkmm$/i.test(ref)) return null;
+    if (meshCache.has(ref)) return meshCache.get(ref);
+    const p = (async () => {
+      try {
+        const res = await fetch(assetUrl(ref));
+        if (!res.ok) throw new Error(res.status);
+        const mesh = decodePkmm(await res.arrayBuffer());
+        return mesh ? renderer.makeMeshGeometry(mesh) : null;
+      } catch { return null; }
+    })();
+    meshCache.set(ref, p);
+    const g = await p; meshCache.set(ref, g); return g;
+  }
+
   async function load() {
     renderer = new Renderer(canvas);
     glowTex = makeGlowTexture(renderer.gl);
@@ -92,14 +114,22 @@ export function mount(container, { releaseId, path, endpoint }) {
     const unsupported = new Set();
     for (const layer of effect.layers) {
       for (const r of layer.renderers) {
-        if (r.kind === 'billboard' || r.kind === 'ribbon') {
+        if (r.kind === 'billboard') {
           r._tex = await loadTexture(r.diffuse);
           r._atlas = await loadAtlas(r.atlas);
-          r._blend = /Additive/.test(r.material) ? 'add' : 'alpha';
+          r._remap = r.alphaRemap ? await loadTexture(r.alphaRemap) : null;
+          r._kind = kindFor(r.material);
+        } else if (r.kind === 'ribbon') {
+          r._tex = await loadTexture(r.diffuse);
+          r._atlas = await loadAtlas(r.atlas);
+          r._kind = kindFor(r.material);
         } else if (r.kind === 'light') {
-          r._tex = glowTex; r._blend = 'add';
+          r._tex = glowTex; r._kind = 1;
         } else if (r.kind === 'mesh') {
-          // box proxy, no texture
+          r._geom = await loadMesh(r.mesh);
+          r._tex = await loadTexture(r.diffuse);
+          r._lit = !/Additive/i.test(r.material);
+          r._kind = /Additive_NoAlpha/i.test(r.material) ? 3 : /Additive/i.test(r.material) ? 1 : 0;
         } else if (r.cls) unsupported.add(r.cls.replace('CParticleRenderer_', ''));
       }
     }
@@ -109,7 +139,8 @@ export function mount(container, { releaseId, path, endpoint }) {
     // to move or they just clump at the origin. Ribbon renderers always imply this; for
     // billboard trails the name is the reliable signal (the .pkfx is named *_trail_*, *_wake_*).
     const hasRibbon = effect.layers.some((l) => l.renderers.some((r) => r.kind === 'ribbon'));
-    const trail = hasRibbon || /trail|wake|streak|trailing/i.test(path);
+    const hasTrailEvolver = effect.layers.some((l) => l.evolvers.some((e) => e.type === 'spawner'));
+    const trail = hasRibbon || hasTrailEvolver || /trail|wake|streak|trailing/i.test(path);
     current = { effect, unsupported: [...unsupported], missing: man.missing || [], trail };
 
     const partials = [];
@@ -126,63 +157,163 @@ export function mount(container, { releaseId, path, endpoint }) {
 
   const inst = new Float32Array(20000 * FLOATS_PER_INSTANCE);
   const rib = new Float32Array(60000 * RIBBON_FLOATS_PER_VERT);
-  const mbuf = new Float32Array(20000 * MESH_FLOATS_PER_INSTANCE);
+  const mbuf = new Float32Array(4000 * MESH_FLOATS_PER_INSTANCE);
 
-  function packMesh(ls, r, meshes) {
-    const n = ls.count; if (!n) return;
-    let o = 0;
-    for (let i = 0; i < n; i++) {
-      const p = ls.getAt(i, 'Position'); const sf = ls.getAt(i, r.scaleField);
-      const s = (sf[0] || 1);
-      const hx = Math.abs(r.scale[0] * (sf[0] ?? s)) * 0.5, hy = Math.abs(r.scale[1] * (sf[1] ?? s)) * 0.5, hz = Math.abs(r.scale[2] * (sf[2] ?? s)) * 0.5;
-      const col = ls.getAt(i, r.colorField);
-      mbuf[o++] = p[0]; mbuf[o++] = p[1]; mbuf[o++] = p[2];
-      mbuf[o++] = hx || 0.05; mbuf[o++] = hy || 0.05; mbuf[o++] = hz || 0.05;
-      mbuf[o++] = (col[0] ?? 1) * r.diffuseColor[0]; mbuf[o++] = (col[1] ?? 1) * r.diffuseColor[1];
-      mbuf[o++] = (col[2] ?? 1) * r.diffuseColor[2]; mbuf[o++] = col[3] ?? 1;
-    }
-    meshes.push({ instances: mbuf.slice(0, o), count: n, drawOrder: r.drawOrder });
+  function frameRect(r, tid, alen) {
+    // atlas rects are [u0,v0,u1,v1]; VFlipUVs mirrors v
+    let f = Math.floor(tid); if (!isFinite(f)) f = 0;
+    f = ((f % alen) + alen) % alen;
+    const rc = r._atlas[f];
+    if (r.vflip) return [rc[0], rc[3], rc[2] - rc[0], rc[1] - rc[3]];
+    return [rc[0], rc[1], rc[2] - rc[0], rc[3] - rc[1]];
   }
 
-  function packLight(ls, r, draws) {
+  function packBillboards(ls, r, items) {
+    const n = ls.count; if (!n) return;
+    let o = 0; const alen = r._atlas ? r._atlas.length : 0;
+    const mode = r.mode;
+    for (let i = 0; i < n; i++) {
+      const p = ls.getAt(i, r.positionField);
+      if (!isFinite(p[0]) || !isFinite(p[1]) || !isFinite(p[2])) continue;
+      const sz = ls.getAt(i, r.sizeField), col = ls.getAt(i, r.colorField);
+      const rot = ls.getAt(i, r.rotationField)[0] || 0;
+      let u0 = 0, v0 = r.vflip ? 1 : 0, du = 1, dv = r.vflip ? -1 : 1;
+      let u02 = u0, v02 = v0, du2 = du, dv2 = dv, blend = 0;
+      if (alen) {
+        const tid = ls.getAt(i, r.textureIDField)[0] || 0;
+        [u0, v0, du, dv] = frameRect(r, tid, alen);
+        if (r.softAnim) {
+          [u02, v02, du2, dv2] = frameRect(r, tid + 1, alen);
+          blend = tid - Math.floor(tid);
+        } else { u02 = u0; v02 = v0; du2 = du; dv2 = dv; }
+      }
+      // stretch axis: velocity modes use Velocity*AxisScale; planar uses the axis fields
+      let ax = 0, ay = 0, az = 0, bx = 0, by = 1, bz = 0;
+      if (mode === 2 || mode === 3) {
+        // Velocity* modes stretch along the particle velocity; other axis-aligned
+        // modes read the axis field
+        const useVel = /^Velocity/.test(r.modeName || '');
+        const src = !useVel && r.axisField && ls.field(r.axisField) ? ls.getAt(i, r.axisField) : ls.getAt(i, 'Velocity');
+        ax = (src[0] || 0) * r.axisScale; ay = (src[1] || 0) * r.axisScale; az = (src[2] || 0) * r.axisScale;
+      } else if (mode === 4) {
+        const a1 = r.axisField && ls.field(r.axisField) ? ls.getAt(i, r.axisField) : [1, 0, 0];
+        const a2 = r.axis2Field && ls.field(r.axis2Field) ? ls.getAt(i, r.axis2Field) : [0, 1, 0];
+        ax = a1[0] || 0; ay = a1[1] || 0; az = a1[2] || 0;
+        bx = a2[0] || 0; by = a2[1] || 0; bz = a2[2] || 0;
+        if (!ax && !ay && !az) ax = 1;
+        if (!bx && !by && !bz) by = 1;
+      }
+      let cursor = 0;
+      if (r._remap) {
+        cursor = r.alphaCursorField && ls.field(r.alphaCursorField)
+          ? (ls.getAt(i, r.alphaCursorField)[0] || 0)
+          : (ls.getAt(i, 'Age')[0] / (ls.getAt(i, 'Life')[0] || 1));
+      }
+      inst[o++] = p[0]; inst[o++] = p[1]; inst[o++] = p[2];
+      inst[o++] = sz[0] ?? 1; inst[o++] = (sz[1] ?? sz[0] ?? 1) * r.aspect;
+      inst[o++] = col[0] ?? 1; inst[o++] = col[1] ?? 1; inst[o++] = col[2] ?? 1; inst[o++] = col[3] ?? 1;
+      inst[o++] = rot;
+      inst[o++] = u0; inst[o++] = v0; inst[o++] = du; inst[o++] = dv;
+      inst[o++] = u02; inst[o++] = v02; inst[o++] = du2; inst[o++] = dv2;
+      inst[o++] = blend;
+      inst[o++] = ax; inst[o++] = ay; inst[o++] = az;
+      inst[o++] = bx; inst[o++] = by; inst[o++] = bz;
+      inst[o++] = cursor;
+    }
+    const count = o / FLOATS_PER_INSTANCE;
+    if (!count) return;
+    items.push({ type: 'billboard', texture: r._tex, remapTexture: r._remap, kind: r._kind, mode, instances: inst.slice(0, o), count, drawOrder: r.drawOrder });
+  }
+
+  function packLight(ls, r, items) {
     const n = ls.count; if (!n) return;
     let o = 0;
     for (let i = 0; i < n; i++) {
       const p = ls.getAt(i, 'Position'); const col = ls.getAt(i, r.colorField);
-      const rad = (r.radiusField ? ls.getAt(i, r.radiusField)[0] : r.radius) || 1;
-      const sz = rad * 0.5;
+      if (!isFinite(p[0])) continue;
+      const sz = (r.radius || 1) * 0.5;
       inst[o++] = p[0]; inst[o++] = p[1]; inst[o++] = p[2];
       inst[o++] = sz; inst[o++] = sz;
       inst[o++] = col[0] ?? 1; inst[o++] = col[1] ?? 1; inst[o++] = col[2] ?? 1; inst[o++] = Math.min(1, (col[3] ?? 1));
-      inst[o++] = 0; inst[o++] = 0; inst[o++] = 0; inst[o++] = 1; inst[o++] = 1;
+      inst[o++] = 0;
+      inst[o++] = 0; inst[o++] = 0; inst[o++] = 1; inst[o++] = 1;
+      inst[o++] = 0; inst[o++] = 0; inst[o++] = 1; inst[o++] = 1;
+      inst[o++] = 0;
+      inst[o++] = 0; inst[o++] = 0; inst[o++] = 0;
+      inst[o++] = 0; inst[o++] = 1; inst[o++] = 0;
+      inst[o++] = 0;
     }
-    draws.push({ texture: glowTex, blend: 'add', instances: inst.slice(0, o), count: n, drawOrder: r.drawOrder });
+    const count = o / FLOATS_PER_INSTANCE;
+    if (!count) return;
+    items.push({ type: 'billboard', texture: glowTex, kind: 1, mode: 0, instances: inst.slice(0, o), count, drawOrder: r.drawOrder });
   }
 
-  function packBillboards(ls, r, draws) {
+  // orientation basis for a mesh particle (rotation columns scaled per-axis)
+  function meshBasis(ls, i, r, out) {
+    // start from axis fields when present, else identity
+    let m = IDENT;
+    if (r.forwardAxisField && ls.field(r.forwardAxisField)) {
+      const f = ls.getAt(i, r.forwardAxisField);
+      const up = r.upAxisField && ls.field(r.upAxisField) ? ls.getAt(i, r.upAxisField) : [0, 1, 0];
+      m = basisFromForwardUp(f, up);
+    } else if (r.upAxisField && ls.field(r.upAxisField)) {
+      m = basisFromForwardUp([0, 0, 1], ls.getAt(i, r.upAxisField));
+    }
+    if (r.eulerRotationField && ls.field(r.eulerRotationField)) {
+      m = mat3mulm(m, eulerRad(ls.getAt(i, r.eulerRotationField))); // scripts write radians
+    }
+    if (r.rotationAxisField && ls.field(r.rotationAxisField)) {
+      const axis = ls.getAt(i, r.rotationAxisField);
+      const ang = r.rotationAxisAngleField && ls.field(r.rotationAxisAngleField)
+        ? (ls.getAt(i, r.rotationAxisAngleField)[0] || 0)
+        : (ls.getAt(i, 'Rotation')[0] || 0);
+      m = mat3mulm(m, axisAngle(axis, ang));
+    }
+    if (r.staticOrientation) m = mat3mulm(m, eulerDeg(r.staticOrientation));
+    // scale each column
+    let sx = r.scale[0], sy = r.scale[1], sz = r.scale[2];
+    if (r.scaleField && ls.field(r.scaleField)) {
+      const s = ls.getAt(i, r.scaleField);
+      const s0 = s[0] ?? 1;
+      sx *= s0; sy *= s[1] ?? s0; sz *= s[2] ?? s0;
+    }
+    out[0] = m[0] * sx; out[1] = m[3] * sx; out[2] = m[6] * sx;
+    out[3] = m[1] * sy; out[4] = m[4] * sy; out[5] = m[7] * sy;
+    out[6] = m[2] * sz; out[7] = m[5] * sz; out[8] = m[8] * sz;
+  }
+  const IDENT = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+  const BASIS = new Float32Array(9);
+
+  function packMesh(ls, r, items) {
     const n = ls.count; if (!n) return;
-    let o = 0; const atlas = r._atlas, alen = atlas ? atlas.length : 0;
-    for (let i = 0; i < n; i++) {
-      const p = ls.getAt(i, 'Position'), sz = ls.getAt(i, r.sizeField), col = ls.getAt(i, r.colorField);
-      const rot = ls.getAt(i, r.rotationField)[0] || 0;
-      let u0 = 0, v0 = 0, du = 1, dv = 1;
-      if (alen) {
-        let f = Math.floor(ls.getAt(i, 'TextureID')[0] || 0); f = Math.max(0, Math.min(alen - 1, f));
-        const rc = atlas[f]; u0 = rc[0]; v0 = rc[1]; du = rc[2] - rc[0]; dv = rc[3] - rc[1];
+    let o = 0;
+    for (let i = 0; i < n && o + MESH_FLOATS_PER_INSTANCE <= mbuf.length; i++) {
+      const p = ls.getAt(i, r.positionField);
+      if (!isFinite(p[0]) || !isFinite(p[1]) || !isFinite(p[2])) continue;
+      meshBasis(ls, i, r, BASIS);
+      const col = ls.getAt(i, r.colorField);
+      let px = p[0], py = p[1], pz = p[2];
+      if (r.staticPosition) {
+        // offset is in mesh-local space
+        px += BASIS[0] * r.staticPosition[0] + BASIS[3] * r.staticPosition[1] + BASIS[6] * r.staticPosition[2];
+        py += BASIS[1] * r.staticPosition[0] + BASIS[4] * r.staticPosition[1] + BASIS[7] * r.staticPosition[2];
+        pz += BASIS[2] * r.staticPosition[0] + BASIS[5] * r.staticPosition[1] + BASIS[8] * r.staticPosition[2];
       }
-      inst[o++] = p[0]; inst[o++] = p[1]; inst[o++] = p[2];
-      inst[o++] = sz[0] ?? 1; inst[o++] = sz[1] ?? sz[0] ?? 1;
-      inst[o++] = col[0] ?? 1; inst[o++] = col[1] ?? 1; inst[o++] = col[2] ?? 1; inst[o++] = col[3] ?? 1;
-      inst[o++] = rot; inst[o++] = u0; inst[o++] = v0; inst[o++] = du; inst[o++] = dv;
+      for (let k = 0; k < 9; k++) mbuf[o++] = BASIS[k];
+      mbuf[o++] = px; mbuf[o++] = py; mbuf[o++] = pz;
+      mbuf[o++] = (col[0] ?? 1) * r.diffuseColor[0]; mbuf[o++] = (col[1] ?? 1) * r.diffuseColor[1];
+      mbuf[o++] = (col[2] ?? 1) * r.diffuseColor[2]; mbuf[o++] = col[3] ?? 1;
     }
-    draws.push({ texture: r._tex, blend: r._blend, instances: inst.slice(0, o), count: n, drawOrder: r.drawOrder });
+    const count = o / MESH_FLOATS_PER_INSTANCE;
+    if (!count) return;
+    items.push({ type: 'mesh', geom: r._geom, texture: r._tex, lit: r._lit, kind: r._kind, instances: mbuf.slice(0, o), count, drawOrder: r.drawOrder });
   }
 
-  function packRibbon(ls, r, eye, ribbons) {
+  function packRibbon(ls, r, eye, items) {
     const n = ls.count; if (n < 2) return;
     // order the layer's particles oldest -> newest (the ribbon follows their path)
     const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => ls.getAt(b, 'Age')[0] - ls.getAt(a, 'Age')[0]);
-    const C = order.map((i) => ls.getAt(i, 'Position'));
+    const C = order.map((i) => ls.getAt(i, r.positionField));
     let o = 0;
     const push = (p, u, v, c) => { rib[o++] = p[0]; rib[o++] = p[1]; rib[o++] = p[2]; rib[o++] = u; rib[o++] = v; rib[o++] = c[0] ?? 1; rib[o++] = c[1] ?? 1; rib[o++] = c[2] ?? 1; rib[o++] = c[3] ?? 1; };
     const edge = (k) => {
@@ -192,7 +323,7 @@ export function mount(container, { releaseId, path, endpoint }) {
       const toEye = norm(sub(eye, c));
       let side = norm(cross(tan, toEye));
       if (!isFinite(side[0]) || (side[0] === 0 && side[1] === 0 && side[2] === 0)) side = [1, 0, 0];
-      const hw = (ls.getAt(i, r.sizeField)[0] || 0.2) * 0.5;
+      const hw = (ls.getAt(i, r.sizeField)[0] || r.width || 0.2) * 0.5;
       const life = ls.getAt(i, 'Age')[0] / (ls.getAt(i, 'Life')[0] || 1);
       const u = r.textureUField === 'LifeRatio' ? life : k / (n - 1);
       const col = ls.getAt(i, r.colorField);
@@ -205,12 +336,16 @@ export function mount(container, { releaseId, path, endpoint }) {
       push(a.R, a.u, 1, a.col); push(b.R, b.u, 1, b.col); push(b.L, b.u, 0, b.col);
       a = b;
     }
-    ribbons.push({ texture: r._tex, blend: r._blend, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder });
+    items.push({ type: 'ribbon', texture: r._tex, kind: r._kind, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder });
   }
 
   const autofit = { active: true, scale: 0, t: 0 };
   function frame() {
     if (disposed) return;
+    tick();
+    raf = requestAnimationFrame(frame);
+  }
+  function tick() {
     const dt = Math.min(0.05, 1 / 60);
     autofit.t += dt;
     // brief static phase up front to gauge the effect's own footprint (before any sweep)
@@ -218,29 +353,32 @@ export function mount(container, { releaseId, path, endpoint }) {
     const trail = !!(current && current.trail);
 
     // Move the emitter through space so a trail forms; the camera then FOLLOWS it (below),
-    // so older particles stream behind it like a comet — the way you'd swing the effect
-    // around in the PopcornFX editor, rather than the whole thing spinning in a ring.
+    // so older particles stream behind it like a comet. Localspace-attached layers follow
+    // the emitter rigidly, exactly as they would follow a moving character in game.
     if (system && trail && !measuring) {
       const ts = autofit.t, R = autofit.scale * 1.2 + 0.3;
       system.emitter[0] = Math.sin(ts * 1.6) * R;
       system.emitter[2] = Math.sin(ts * 3.2) * R * 0.5;
     }
-    if (system) system.update(dt);
+    if (system) {
+      try { system.update(dt); }
+      catch (e) { if (!system._crashWarned) { system._crashWarned = true; console.warn('pkfx sim error:', e); } }
+    }
 
-    const draws = [], ribbons = [], meshes = [];
+    const items = [];
     const eye = renderer.eyePosition();
     let sumY = 0, cnt = 0, maxR2 = 0;
     if (system) {
       for (const ls of system.layers) {
         for (let i = 0; i < ls.count; i++) {
           const p = ls.getAt(i, 'Position'); sumY += p[1]; cnt++;
-          const r2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2]; if (r2 > maxR2) maxR2 = r2;
+          const r2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2]; if (r2 > maxR2 && isFinite(r2)) maxR2 = r2;
         }
         for (const r of ls.L.renderers) {
-          if (r.kind === 'billboard') packBillboards(ls, r, draws);
-          else if (r.kind === 'ribbon') packRibbon(ls, r, eye, ribbons);
-          else if (r.kind === 'mesh') packMesh(ls, r, meshes);
-          else if (r.kind === 'light') packLight(ls, r, draws);
+          if (r.kind === 'billboard') packBillboards(ls, r, items);
+          else if (r.kind === 'ribbon') packRibbon(ls, r, eye, items);
+          else if (r.kind === 'mesh') packMesh(ls, r, items);
+          else if (r.kind === 'light') packLight(ls, r, items);
         }
       }
     }
@@ -261,8 +399,7 @@ export function mount(container, { releaseId, path, endpoint }) {
         renderer.cam.target[1] += (sumY / cnt - renderer.cam.target[1]) * 0.1;
       }
     }
-    renderer.draw(draws, ribbons, meshes);
-    raf = requestAnimationFrame(frame);
+    renderer.draw(items);
   }
 
   // orbit controls
@@ -282,6 +419,20 @@ export function mount(container, { releaseId, path, endpoint }) {
   });
 
   return {
+    // test/debug hook: advance + draw one frame, report what's alive and on screen
+    tick() {
+      if (!renderer || !system) return null;
+      tick();
+      const gl = renderer.gl;
+      const w = Math.min(canvas.width, 256), h = Math.min(canvas.height, 256);
+      const px = new Uint8Array(w * h * 4);
+      gl.readPixels((canvas.width - w) >> 1, (canvas.height - h) >> 1, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      let lit = 0;
+      for (let i = 0; i < px.length; i += 4) if (px[i] > 20 || px[i + 1] > 20 || px[i + 2] > 24) lit++;
+      let alive = 0;
+      for (const ls of system.layers) alive += ls.count;
+      return { alive, litPixels: lit, sampled: w * h, layers: system.layers.map((l) => ({ name: l.L.name, count: l.count })) };
+    },
     dispose() {
       disposed = true;
       cancelAnimationFrame(raf);
@@ -363,6 +514,48 @@ const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const norm = (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
 const clamp = (x, a, b) => Math.min(Math.max(x, a), b);
+
+// ---- small mat3 helpers for mesh orientation (row-major) ----
+function eulerDeg(deg) {
+  return eulerRad([(deg[0] || 0) * Math.PI / 180, (deg[1] || 0) * Math.PI / 180, (deg[2] || 0) * Math.PI / 180]);
+}
+function eulerRad(v) {
+  const r = [v[0] || 0, v[1] || 0, v[2] || 0];
+  const cx = Math.cos(r[0]), sx = Math.sin(r[0]);
+  const cy = Math.cos(r[1]), sy = Math.sin(r[1]);
+  const cz = Math.cos(r[2]), sz = Math.sin(r[2]);
+  return [
+    cy * cz, -cy * sz, sy,
+    sx * sy * cz + cx * sz, -sx * sy * sz + cx * cz, -sx * cy,
+    -cx * sy * cz + sx * sz, cx * sy * sz + sx * cz, cx * cy,
+  ];
+}
+function axisAngle(axis, ang) {
+  const l = Math.hypot(axis[0] || 0, axis[1] || 0, axis[2] || 0) || 1;
+  const x = (axis[0] || 0) / l, y = (axis[1] || 0) / l, z = (axis[2] || 0) / l;
+  const c = Math.cos(ang), s = Math.sin(ang), t = 1 - c;
+  return [
+    t * x * x + c, t * x * y - s * z, t * x * z + s * y,
+    t * x * y + s * z, t * y * y + c, t * y * z - s * x,
+    t * x * z - s * y, t * y * z + s * x, t * z * z + c,
+  ];
+}
+function basisFromForwardUp(fwd, up) {
+  let f = norm([fwd[0] || 0, fwd[1] || 0, fwd[2] || 1]);
+  let r = cross([up[0] || 0, up[1] || 1, up[2] || 0], f);
+  const rl = Math.hypot(r[0], r[1], r[2]);
+  r = rl > 1e-5 ? [r[0] / rl, r[1] / rl, r[2] / rl] : [1, 0, 0];
+  const u = cross(f, r);
+  // columns: X=right, Y=up, Z=forward (row-major rows)
+  return [r[0], u[0], f[0], r[1], u[1], f[1], r[2], u[2], f[2]];
+}
+function mat3mulm(a, b) {
+  const o = new Array(9);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+    o[i * 3 + j] = a[i * 3] * b[j] + a[i * 3 + 1] * b[3 + j] + a[i * 3 + 2] * b[6 + j];
+  }
+  return o;
+}
 
 // soft radial-gradient texture used as the stand-in glow for Light particles
 function makeGlowTexture(gl, size = 64) {
