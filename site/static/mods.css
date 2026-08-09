@@ -240,6 +240,10 @@
   grid-column: 1 / -1; text-align: center; color: var(--text-mute);
   padding: 48px 16px; font-size: .95rem;
 }
+.mh-empty p { margin: 0 0 6px; }
+.mh-empty-lead { color: var(--text); font-size: 1.05rem; font-weight: 600; }
+.mh-empty-actions { display: flex; justify-content: center; margin-top: 16px; }
+.mh-empty-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
 .mh-error { color: #ff6b81; }
 
 /* ─── Modal (shared shape with the project page) ────────────────────── */
@@ -277,7 +281,30 @@
 .mh-form-hint { color: var(--text-mute); font-size: .82rem; line-height: 1.5; margin: 0; }
 .mh-form-hint strong { color: var(--text-mute); }
 
+/* The filter toggle only exists on phones; desktop shows everything at once. */
+.mh-filter-toggle { display: none; }
+
 @media (max-width: 560px) {
   .mh-controls-top { flex-direction: column; align-items: stretch; }
   .mh-modal-card { padding: 22px 18px; }
+}
+
+/* Phones: the hero + sort + two chip tiers pushed the first mod ~1050px down the
+   page. Trim the hero and fold the filters away so the catalogue starts near the
+   top - the mods are the argument, not the controls over them. */
+@media (max-width: 720px) {
+  .mh-hero { padding: 26px 0 8px; }
+  .mh-subtitle { display: none; }
+  .mh-controls { margin-top: 14px; padding: 12px; gap: 10px; }
+  /* .mh-controls-top flips to a column here, which turns the search field's
+     `flex: 1 1 280px` basis into a 280px-TALL box. Reset it to content height. */
+  .mh-search-wrap { flex: 0 0 auto; }
+  .mh-filter-toggle { display: inline-flex; align-self: stretch; justify-content: center; }
+  .mh-controls .mh-field,
+  .mh-controls .mh-tagbar { display: none; }
+  .mh-controls.is-open .mh-field { display: grid; }
+  .mh-controls.is-open .mh-tagbar:not([hidden]) { display: flex; }
+  /* Comfortable thumb targets (44px) once the filters are open. */
+  .mh-cat, .mh-utag { min-height: 44px; }
+  .mh-search-input, .mh-select, .mh-btn { min-height: 44px; }
 }

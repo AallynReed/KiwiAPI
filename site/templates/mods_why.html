@@ -33,12 +33,12 @@
         .wmh-hero { text-align: center; padding: 72px 0 48px; }
         .wmh-back {
             display: inline-flex; align-items: center; gap: 8px;
-            color: var(--text-mute); font-size: .9rem; margin-bottom: 22px;
+            color: var(--text-mute); font-size: .875rem; margin-bottom: 22px;
         }
         .wmh-back:hover { color: var(--text); }
         .wmh-title {
             font-family: "Space Grotesk", Inter, sans-serif;
-            font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.05;
+            font-size: var(--type-h2); line-height: 1.05;
             margin: 0 0 18px; letter-spacing: -.02em;
         }
         /* Solid accent (was a background-clip gradient word) - readable + no
@@ -46,14 +46,14 @@
         .wmh-title-accent { color: var(--accent-blue); }
         .wmh-sub {
             max-width: 640px; margin: 0 auto; color: var(--text-mute);
-            font-size: clamp(1.02rem, 2.2vw, 1.2rem); line-height: 1.6;
+            font-size: var(--type-lead); line-height: 1.6;
         }
 
         .wmh-section { padding: 40px 0 8px; }
         .wmh-section-head { margin-bottom: 26px; }
         .wmh-section-title {
             font-family: "Space Grotesk", Inter, sans-serif;
-            font-size: clamp(1.5rem, 3.4vw, 2rem); margin: 0; letter-spacing: -.01em;
+            font-size: var(--type-h3); margin: 0; letter-spacing: -.01em;
         }
 
         .wmh-grid {
@@ -62,7 +62,7 @@
         }
         .wmh-card {
             background: var(--bg-card); border: 1px solid var(--bg-line);
-            border-radius: 16px; padding: 22px 20px;
+            border-radius: var(--radius); padding: 22px 20px;
             transition: transform .18s ease, border-color .18s ease, background .18s ease;
         }
         .wmh-card:hover {
@@ -72,12 +72,19 @@
         }
         .wmh-card-icon {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 42px; height: 42px; border-radius: 11px; margin-bottom: 14px;
+            width: 42px; height: 42px; border-radius: var(--radius-sm); margin-bottom: 14px;
             font-size: 1.15rem; color: var(--accent);
             background: color-mix(in oklab, var(--accent) 16%, transparent);
         }
         .wmh-card h3 { font-size: 1.06rem; margin: 0 0 7px; }
-        .wmh-card p { margin: 0; color: var(--text-mute); font-size: .95rem; line-height: 1.55; }
+        .wmh-card p { margin: 0; color: var(--text-mute); font-size: .9375rem; line-height: 1.55; }
+        /* The lead claim in each section carries the section - a same-size grid of
+           icon+heading+text is the template this page is trying not to be. */
+        .wmh-card-lead { grid-column: span 2; display: flex; flex-direction: column; justify-content: center; padding: 30px 28px; }
+        .wmh-card-lead h3 { font-size: var(--type-h3); margin-bottom: 10px; }
+        .wmh-card-lead p { font-size: var(--type-body); }
+        .wmh-card-lead .wmh-card-icon { width: 52px; height: 52px; font-size: 1.35rem; }
+        @media (max-width: 720px) { .wmh-card-lead { grid-column: 1 / -1; padding: 24px 20px; } }
 
         /* Per-audience accent: players=blue, modders=orange. */
         .wmh-players .wmh-card-icon { color: var(--accent-blue); background: color-mix(in oklab, var(--accent-blue) 16%, transparent); }
@@ -93,7 +100,7 @@
             border: 1px solid var(--bg-line);
             display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
         }
-        .wmh-callout i { font-size: 1.8rem; color: var(--accent-purple); }
+        .wmh-callout i { font-size: 1.5rem; color: var(--accent-purple); }
         .wmh-callout-body { flex: 1 1 280px; }
         .wmh-callout h3 { margin: 0 0 6px; font-size: 1.15rem; }
         .wmh-callout p { margin: 0; color: var(--text-mute); line-height: 1.55; }
@@ -101,7 +108,7 @@
         .wmh-cta { text-align: center; margin-top: 56px; }
         .wmh-cta h2 {
             font-family: "Space Grotesk", Inter, sans-serif;
-            font-size: clamp(1.5rem, 3.4vw, 2.1rem); margin: 0 0 20px;
+            font-size: var(--type-h3); margin: 0 0 20px;
         }
         .wmh-cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
         /* Respect the `hidden` attribute on the auth-toggled CTA buttons - the
@@ -130,10 +137,10 @@
                 <h2 class="wmh-section-title" data-i18n>Find it, preview it, play it.</h2>
             </div>
             <div class="wmh-grid">
-                <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Available the moment it's out</h3>
-                    <p data-i18n>New mods are live as soon as they're published - find it, download it, done. No waiting around.</p>
+                <article class="wmh-card wmh-card-lead">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-heart" aria-hidden="true"></i></span>
+                    <h3 data-i18n>Free to browse and grab</h3>
+                    <p data-i18n>Browsing and downloading is completely free - no account needed. Sign in only to publish or save favourites.</p>
                 </article>
                 <article class="wmh-card">
                     <span class="wmh-card-icon"><i class="fa-solid fa-cube" aria-hidden="true"></i></span>
@@ -141,24 +148,9 @@
                     <p data-i18n>Spin a mod's models in 3D right in your browser before you download a thing.</p>
                 </article>
                 <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-dragon" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Watch creatures come alive</h3>
-                    <p data-i18n>Creature mods can be viewed fully assembled on the in-game skeleton - posed and animated.</p>
-                </article>
-                <article class="wmh-card">
                     <span class="wmh-card-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
                     <h3 data-i18n>Drops in and just works</h3>
                     <p data-i18n>Downloads come named exactly how Trove expects, so they install and work the first time.</p>
-                </article>
-                <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-box-open" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Whole sets in one go</h3>
-                    <p data-i18n>Modpacks bundle a curated collection of mods into a single download.</p>
-                </article>
-                <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-heart" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Free to browse and grab</h3>
-                    <p data-i18n>Browsing and downloading is completely free - no account needed. Sign in only to publish or save favourites.</p>
                 </article>
             </div>
         </section>
@@ -169,45 +161,20 @@
                 <h2 class="wmh-section-title" data-i18n>A real home for your work.</h2>
             </div>
             <div class="wmh-grid">
-                <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-code-branch" aria-hidden="true"></i></span>
+                <article class="wmh-card wmh-card-lead">
+                    <span class="wmh-card-icon"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span>
                     <h3 data-i18n>Develop in the open</h3>
                     <p data-i18n>Full version history and releases keep your work organized - and nothing is ever lost.</p>
                 </article>
                 <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-rocket" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Publish your way</h3>
-                    <p data-i18n>Ship a polished, ready-to-play file built for you, or upload your own. Your call.</p>
-                </article>
-                <article class="wmh-card">
                     <span class="wmh-card-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Offer variants</h3>
+                    <h3 data-i18n>Offer editions</h3>
                     <p data-i18n>Ship a Full and a Lite edition side by side from one project, no juggling uploads.</p>
-                </article>
-                <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-id-badge" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Your own profile</h3>
-                    <p data-i18n>A customizable page for everything you've made - avatar, banner, bio and links.</p>
-                </article>
-                <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-code-fork" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Credit that sticks</h3>
-                    <p data-i18n>Forks and mods made in your honour always point back to the original work.</p>
-                </article>
-                <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Build as a team</h3>
-                    <p data-i18n>Add co-owners so a whole crew can maintain a mod together.</p>
                 </article>
                 <article class="wmh-card">
                     <span class="wmh-card-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
                     <h3 data-i18n>Your work, protected</h3>
                     <p data-i18n>Every release is fingerprinted, so nobody can re-upload your mod as their own.</p>
-                </article>
-                <article class="wmh-card">
-                    <span class="wmh-card-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
-                    <h3 data-i18n>Helpful by default</h3>
-                    <p data-i18n>The studio catches misplaced files and fixes them in a click, so a mod is ready before you publish.</p>
                 </article>
             </div>
         </section>

@@ -58,7 +58,29 @@
     rerunI18n();
   });
 
+  // The filters were written to the URL but never read back, so a shared link
+  // opened on the unfiltered catalogue. Restore on load, and keep it in step.
+  function readUrl() {
+    const p = new URLSearchParams(location.search);
+    state.q = (p.get('q') || '').trim();
+    state.tag = (p.get('tag') || '').trim();
+    const sort = p.get('sort');
+    if (sort && [...$sort.options].some((o) => o.value === sort)) state.sort = sort;
+    if (state.q) $search.value = state.q;
+    $sort.value = state.sort;
+  }
+
+  function syncUrl() {
+    const p = new URLSearchParams();
+    if (state.q) p.set('q', state.q);
+    if (state.tag) p.set('tag', state.tag);
+    if (state.sort && state.sort !== 'recent') p.set('sort', state.sort);
+    const qs = p.toString();
+    history.replaceState(null, '', qs ? '?' + qs : location.pathname);
+  }
+
   async function init() {
+    readUrl();
     wireEvents();
     wireAuth();
     wireCreate();
@@ -81,10 +103,19 @@
     let timer = null;
     $search.addEventListener('input', () => {
       clearTimeout(timer);
-      timer = setTimeout(() => { state.q = $search.value.trim(); loadPage(true); }, 250);
+      timer = setTimeout(() => { state.q = $search.value.trim(); syncUrl(); loadPage(true); }, 250);
     });
-    $sort.addEventListener('change', () => { state.sort = $sort.value; loadPage(true); });
+    $sort.addEventListener('change', () => { state.sort = $sort.value; syncUrl(); loadPage(true); });
     $loadMore.addEventListener('click', () => loadPage(false));
+    // Phone-only fold (the button is display:none above 720px).
+    const filterToggle = $('mh-filter-toggle');
+    if (filterToggle) {
+      filterToggle.addEventListener('click', () => {
+        const controls = filterToggle.closest('.mh-controls');
+        const open = controls.classList.toggle('is-open');
+        filterToggle.setAttribute('aria-expanded', String(open));
+      });
+    }
   }
 
   // Show "Create" / "My mods" for signed-in users, "Sign in" otherwise.
@@ -150,16 +181,69 @@
   function render() {
     renderTags();
     if (!state.items.length) {
-      $grid.innerHTML = `<p class="mh-empty">${esc(t('No mods found. Be the first to publish one!'))}</p>`;
+      $grid.innerHTML = emptyHTML();
       $meta.textContent = '';
       $foot.hidden = true;
+      wireEmpty();
       rerunI18n();
       return;
     }
-    $meta.textContent = t('Showing') + ' ' + state.items.length + ' / ' + state.total;
+    // "Showing 13 / 13" is a pagination readout that isn't paginating. Say the
+    // count plainly, and only mention the total once there's more to load.
+    $meta.textContent = state.items.length >= state.total
+      ? state.total + ' ' + t(state.total === 1 ? 'mod' : 'mods')
+      : state.items.length + ' ' + t('of') + ' ' + state.total;
     $grid.innerHTML = state.items.map(cardHTML).join('');
     $foot.hidden = state.items.length >= state.total;
     rerunI18n();
+  }
+
+  // Two different situations wearing one message before: a search that found
+  // nothing is not an empty catalogue, and telling someone who mistyped to go
+  // publish a mod is a dead end. Filtered = offer the way back.
+  function emptyHTML() {
+    const filtered = !!(state.q || state.tag);
+    if (!filtered) {
+      return `<div class="mh-empty">
+        <p class="mh-empty-lead">${esc(t('No mods here yet.'))}</p>
+        <p>${esc(t('Be the first to publish one.'))}</p>
+      </div>`;
+    }
+    const what = state.q ? `“${esc(state.q)}”` : esc(state.tag);
+    const suggestions = (state.facets.categories || []).slice(0, 3)
+      .map((c) => `<button type="button" class="mh-cat" data-empty-tag="${esc(c.tag)}">`
+        + `<i class="fa-solid ${CAT_ICONS[c.tag] || 'fa-tag'}" aria-hidden="true"></i>`
+        + `<span class="mh-cat-name">${esc(c.tag)}</span></button>`).join('');
+    return `<div class="mh-empty">
+      <p class="mh-empty-lead">${esc(t('Nothing matches')) + ' ' + what}</p>
+      <p>${esc(t('Try another spelling, or browse a category.'))}</p>
+      <div class="mh-empty-actions">
+        <button type="button" class="mh-btn mh-btn-ghost" id="mh-empty-clear">
+          <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> ${esc(t('Clear search'))}
+        </button>
+      </div>
+      ${suggestions ? `<div class="mh-empty-tags">${suggestions}</div>` : ''}
+    </div>`;
+  }
+
+  function wireEmpty() {
+    const clear = $('mh-empty-clear');
+    if (clear) {
+      clear.addEventListener('click', () => {
+        state.q = ''; state.tag = '';
+        $search.value = '';
+        syncUrl();
+        loadPage(true);
+      });
+    }
+    $grid.querySelectorAll('[data-empty-tag]').forEach((b) => {
+      b.addEventListener('click', () => {
+        state.q = ''; state.tag = b.getAttribute('data-empty-tag');
+        $search.value = '';
+        syncUrl();
+        loadPage(true);
+      });
+    });
   }
 
   function renderTags() {
@@ -204,6 +288,7 @@
     $tags.innerHTML = html;
     $tags.querySelectorAll('[data-tag]').forEach((b) => b.addEventListener('click', () => {
       state.tag = b.getAttribute('data-tag');
+      syncUrl();
       loadPage(true);
     }));
   }
@@ -233,7 +318,7 @@
       ? `<span class="mh-card-author">${face}${esc(p.author || '')}<small class="mh-card-uploader">${esc(t('Uploaded by'))} ${esc(p.owner_username)}</small></span>`
       : `<span class="mh-card-author">${face}${esc(p.owner_username)}</span>`;
     const lineage = p.forked_from
-      ? `<p class="mh-card-lineage"><i class="fa-solid fa-code-fork"></i> ${esc(t('Forked from'))} ${esc(p.forked_from.title || p.forked_from.slug)}</p>`
+      ? `<p class="mh-card-lineage"><i class="fa-solid fa-wand-magic-sparkles"></i> ${esc(t('Remixed from'))} ${esc(p.forked_from.title || p.forked_from.slug)}</p>`
       : p.inspired_by
         ? `<p class="mh-card-lineage"><i class="fa-solid fa-lightbulb"></i> ${esc(t('Inspired by'))} ${esc(p.inspired_by.title || p.inspired_by.slug)}</p>` : '';
     // The creator may have written the card's text in the reader's language.
@@ -248,8 +333,8 @@
         <div class="mh-card-foot">
           ${authorLine}
           <span class="mh-card-stats">
-            <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}</span>
-            <span class="mh-card-dl"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(p.star_count || 0).toLocaleString()}</span>
+            <span class="mh-card-dl" title="${esc(t('Downloads'))}"><i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}<span class="sr-only">${esc(t('downloads'))}</span></span>
+            ${Number(p.star_count) > 0 ? `<span class="mh-card-dl" title="${esc(t('Favourites'))}"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(p.star_count).toLocaleString()}<span class="sr-only">${esc(t('favourites'))}</span></span>` : ''}
           </span>
         </div>
       </div>

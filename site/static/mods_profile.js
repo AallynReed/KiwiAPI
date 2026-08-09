@@ -99,7 +99,7 @@
     $root.innerHTML = headerHTML(p) + taken + `<div class="mpf-layout">
       <div class="mpf-col-main">${main}</div>
       <aside class="mpf-col-side">${side}</aside>
-    </div>`;
+    </div>` + reportFootHTML(p);
     wire(p);
     rerunI18n();
   }
@@ -123,6 +123,18 @@
     return { cls: 'fa-solid fa-heart', label: t('Donate') };
   }
 
+  // Anyone (no account needed) can report a profile - DSA notice-and-action. It
+  // sits quietly at the foot of the page rather than beside the creator's name:
+  // an accusation shouldn't be the second thing you read about someone.
+  function reportFootHTML(p) {
+    if (p.is_owner) return '';
+    return `<div class="mpf-report-row">
+      <button type="button" class="mp-btn mp-btn-sm mp-btn-quiet" id="mpf-report">
+        <i class="fa-solid fa-flag"></i> ${esc(t('Report this profile'))}
+      </button>
+    </div>`;
+  }
+
   function headerHTML(p) {
     const bannerInner = p.banner_url
       ? `<img class="mpf-banner" src="${esc(p.banner_url)}" alt="">`
@@ -139,9 +151,6 @@
 
     const editBtn = p.is_owner
       ? `<button type="button" class="mp-btn mp-btn-sm" id="mpf-edit"><i class="fa-solid fa-pen"></i> ${esc(t('Edit profile'))}</button>` : '';
-    // Anyone (no account needed) can report a profile - DSA notice-and-action.
-    const reportBtn = !p.is_owner
-      ? `<button type="button" class="mp-btn mp-btn-sm" id="mpf-report"><i class="fa-solid fa-flag"></i> ${esc(t('Report'))}</button>` : '';
 
     return `<header class="mpf-header">
       ${banner}
@@ -150,7 +159,7 @@
         <div class="mpf-id-text">
           <div class="mpf-namerow">
             <h1 class="mpf-name">${esc(p.display_name)}</h1>
-            ${editBtn}${reportBtn}
+            ${editBtn}
           </div>
           <div class="mpf-handle">@${esc(p.handle)}</div>
         </div>
@@ -233,7 +242,7 @@
         <div class="mh-card-foot">
           <span class="mh-card-stats">
             <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(m.download_count || 0).toLocaleString()}</span>
-            <span class="mh-card-dl"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(m.star_count || 0).toLocaleString()}</span>
+            ${Number(m.star_count) > 0 ? `<span class="mh-card-dl" title="${esc(t('Favourites'))}"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(m.star_count).toLocaleString()}<span class="sr-only">${esc(t('favourites'))}</span></span>` : ''}
           </span>
         </div>
       </div>
@@ -262,10 +271,12 @@
   });
 
   function wire(p) {
-    if (!p.is_owner) return;
     const w = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
-    w('mpf-edit', openEditProfile);
+    // Report is the one control shown to NON-owners, so it has to be wired before
+    // the owner-only bail below - otherwise the button renders and does nothing.
     w('mpf-report', openReport);
+    if (!p.is_owner) return;
+    w('mpf-edit', openEditProfile);
     w('mpf-edit-readme', openEditReadme);
     w('mpf-avatar-btn', () => openImageUpload(false));
     w('mpf-banner-btn', () => openImageUpload(true));
