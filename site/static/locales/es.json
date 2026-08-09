@@ -2454,5 +2454,22 @@
   "Most favourited": "Más favoritos",
   "Offer editions": "Ofrece ediciones",
   "Favourite": "Favorito",
-  "Report this profile": "Denunciar este perfil"
+  "Report this profile": "Denunciar este perfil",
+  "Edition": "Edición",
+  "Editions": "Ediciones",
+  "editions": "ediciones",
+  "New edition": "Nueva edición",
+  "Delete edition": "Eliminar edición",
+  "Rename edition": "Renombrar edición",
+  "No mods in this edition yet.": "Aún no hay mods en esta edición.",
+  "Edition created.": "Edición creada.",
+  "Could not create the edition.": "No se pudo crear la edición.",
+  "Delete this edition? Its mod list is removed.": "¿Eliminar esta edición? Se borrará su lista de mods.",
+  "Edition deleted.": "Edición eliminada.",
+  "Could not delete the edition.": "No se pudo eliminar la edición.",
+  "Edition of the mod": "Edición del mod",
+  "Off by default: the mod tracks its latest published build on the chosen edition.": "Desactivado por defecto: el mod sigue su última compilación publicada en la edición elegida.",
+  "Edition shown.": "Edición visible.",
+  "Edition hidden.": "Edición oculta.",
+  "You'll pick the mods, editions and versions on the next screen.": "Elegirás los mods, las ediciones y las versiones en la siguiente pantalla."
 }

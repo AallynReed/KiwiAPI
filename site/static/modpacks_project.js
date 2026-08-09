@@ -180,11 +180,11 @@
       </button>`;
     }).join('');
     const addBtn = d.is_owner
-      ? `<button type="button" class="mpk-tab mpk-tab-add" id="mpk-add-variant"><i class="fa-solid fa-plus"></i> ${esc(t('Variant'))}</button>` : '';
+      ? `<button type="button" class="mpk-tab mpk-tab-add" id="mpk-add-variant"><i class="fa-solid fa-plus"></i> ${esc(t('Edition'))}</button>` : '';
     // A single-variant pack has no choice to offer - don't show a picker of one.
     const picker = (variants.length > 1 || d.is_owner)
       ? `<div class="mpk-picker">
-          <span class="mpk-picker-label">${esc(t('Variants'))}</span>
+          <span class="mpk-picker-label">${esc(t('Editions'))}</span>
           <div class="mpk-tabs">${tabs}${addBtn}</div>
         </div>` : '';
     const v = activeVariant();
@@ -201,7 +201,7 @@
     return `<div class="mpk-variant-ctl">
       ${activeVariant().name !== d.default_variant ? `<button type="button" class="mp-btn mp-btn-sm" id="mpk-make-default"><i class="fa-solid fa-star"></i> ${esc(t('Make default'))}</button>` : ''}
       <button type="button" class="mp-btn mp-btn-sm" id="mpk-rename-variant"><i class="fa-solid fa-pen"></i> ${esc(t('Rename'))}</button>
-      ${(d.variants || []).length > 1 ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-danger" id="mpk-delete-variant"><i class="fa-solid fa-trash"></i> ${esc(t('Delete variant'))}</button>` : ''}
+      ${(d.variants || []).length > 1 ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-danger" id="mpk-delete-variant"><i class="fa-solid fa-trash"></i> ${esc(t('Delete edition'))}</button>` : ''}
     </div>`;
   }
 
@@ -210,7 +210,7 @@
     if (!v) return '';
     const rows = (v.entries || []).map((e, i) => entryRow(e, i, d.is_owner)).join('');
     const empty = !(v.entries || []).length
-      ? `<p class="mpk-empty">${esc(t('No mods in this variant yet.'))}</p>` : '';
+      ? `<p class="mpk-empty">${esc(t('No mods in this edition yet.'))}</p>` : '';
     const addMod = d.is_owner
       ? `<div class="mpk-add-row">
           <button type="button" class="mp-btn mp-btn-primary mpk-add-mod" id="mpk-add-mod"><i class="fa-solid fa-plus"></i> ${esc(t('Add a mod'))}</button>
@@ -434,7 +434,7 @@
   function openAddVariant() {
     openModal(`
       <button type="button" class="mp-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-      <h2 class="mp-modal-title">${esc(t('New variant'))}</h2>
+      <h2 class="mp-modal-title">${esc(t('New edition'))}</h2>
       <form id="mpk-variant-form" class="mp-form">
         <label class="mp-form-field"><span>${esc(t('Name'))}</span><input type="text" name="name" maxlength="80" required placeholder="${esc(t('e.g. Lite'))}"></label>
         <label class="mp-form-field"><span>${esc(t('Copy mods from'))}</span>
@@ -454,8 +454,8 @@
       const err = document.getElementById('mpk-variant-error');
       const r = await apiJSON('/v1/modpacks/hub/projects/' + PACK_PATH + '/variants',
         { json: { name: f.name.value.trim(), copy_from: f.copy_from.value || null } });
-      if (r.ok) { closeModal(); setDetail(r.data); toast(t('Variant created.')); }
-      else { err.textContent = errMsg(r, t('Could not create the variant.')); err.hidden = false; }
+      if (r.ok) { closeModal(); setDetail(r.data); toast(t('Edition created.')); }
+      else { err.textContent = errMsg(r, t('Could not create the edition.')); err.hidden = false; }
     });
   }
 
@@ -463,7 +463,7 @@
     const v = activeVariant();
     openModal(`
       <button type="button" class="mp-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-      <h2 class="mp-modal-title">${esc(t('Rename variant'))}</h2>
+      <h2 class="mp-modal-title">${esc(t('Rename edition'))}</h2>
       <form id="mpk-rv-form" class="mp-form">
         <label class="mp-form-field"><span>${esc(t('Label'))}</span><input type="text" name="label" maxlength="120" value="${esc(v.label || v.name)}" required></label>
         <div class="mp-form-actions">
@@ -482,11 +482,11 @@
 
   async function deleteVariant() {
     const v = activeVariant();
-    if (!confirm(t('Delete this variant? Its mod list is removed.'))) return;
+    if (!confirm(t('Delete this edition? Its mod list is removed.'))) return;
     const r = await apiJSON('/v1/modpacks/hub/projects/' + PACK_PATH + '/variants/' + encodeURIComponent(v.name),
       { method: 'DELETE' });
-    if (r.ok) { state.variant = null; setDetail(r.data); toast(t('Variant deleted.')); }
-    else { toast(errMsg(r, t('Could not delete the variant.')), 'error'); }
+    if (r.ok) { state.variant = null; setDetail(r.data); toast(t('Edition deleted.')); }
+    else { toast(errMsg(r, t('Could not delete the edition.')), 'error'); }
   }
 
   async function makeDefault() {
@@ -663,10 +663,10 @@
       <button type="button" class="mp-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       <h2 class="mp-modal-title">${esc(opts.title || opts.slug)}</h2>
       <form id="mpk-entry-form" class="mp-form">
-        <label class="mp-form-field"><span>${esc(t('Variant of the mod'))}</span><select name="branch">${branchOpts}</select></label>
+        <label class="mp-form-field"><span>${esc(t('Edition of the mod'))}</span><select name="branch">${branchOpts}</select></label>
         <label class="mp-check"><input type="checkbox" name="lock" ${opts.version_locked ? 'checked' : ''}> <span>${esc(t('Lock to a specific version (don\'t auto-update)'))}</span></label>
         <label class="mp-form-field" id="mpk-ver-wrap" ${opts.version_locked ? '' : 'hidden'}><span>${esc(t('Version'))}</span><select name="locked_tag"></select></label>
-        <p class="mp-form-hint">${esc(t('Off by default: the mod tracks its latest published build on the chosen variant.'))}</p>
+        <p class="mp-form-hint">${esc(t('Off by default: the mod tracks its latest published build on the chosen edition.'))}</p>
         <p class="mp-form-error" id="mpk-entry-error" hidden></p>
         <div class="mp-form-actions">
           <button type="button" class="mp-btn mp-btn-ghost" data-close>${esc(t('Cancel'))}</button>

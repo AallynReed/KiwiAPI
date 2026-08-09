@@ -322,7 +322,7 @@ def _stub_pack_detail(handle, slug):
     return {
         **base, "handle": handle, "starred": False,
         "description": "A **sample** modpack for local preview.\n\n"
-        "Pick mods, group them into variants and lock versions. Downloads as a "
+        "Pick mods, group them into editions and lock versions. Downloads as a "
         "`.zip` (web) or `.tpack` (API).",
         "warnings": "Back up your mods folder first.<br>Some mods need the latest game build.",
         "preview_shas": [], "discord_url": "https://discord.gg/example",

@@ -2454,5 +2454,22 @@
   "Most favourited": "Больше всего в избранном",
   "Offer editions": "Предлагайте редакции",
   "Favourite": "В избранное",
-  "Report this profile": "Пожаловаться на профиль"
+  "Report this profile": "Пожаловаться на профиль",
+  "Edition": "Редакция",
+  "Editions": "Редакции",
+  "editions": "редакции",
+  "New edition": "Новая редакция",
+  "Delete edition": "Удалить редакцию",
+  "Rename edition": "Переименовать редакцию",
+  "No mods in this edition yet.": "В этой редакции пока нет модов.",
+  "Edition created.": "Редакция создана.",
+  "Could not create the edition.": "Не удалось создать редакцию.",
+  "Delete this edition? Its mod list is removed.": "Удалить эту редакцию? Её список модов будет удалён.",
+  "Edition deleted.": "Редакция удалена.",
+  "Could not delete the edition.": "Не удалось удалить редакцию.",
+  "Edition of the mod": "Редакция мода",
+  "Off by default: the mod tracks its latest published build on the chosen edition.": "По умолчанию выключено: мод следует последней опубликованной сборке в выбранной редакции.",
+  "Edition shown.": "Редакция показана.",
+  "Edition hidden.": "Редакция скрыта.",
+  "You'll pick the mods, editions and versions on the next screen.": "Моды, редакции и версии вы выберете на следующем экране."
 }

@@ -2454,5 +2454,22 @@
   "Most favourited": "收藏最多",
   "Offer editions": "提供多个版本",
   "Favourite": "收藏",
-  "Report this profile": "举报此主页"
+  "Report this profile": "举报此主页",
+  "Edition": "版本",
+  "Editions": "版本",
+  "editions": "个版本",
+  "New edition": "新建版本",
+  "Delete edition": "删除版本",
+  "Rename edition": "重命名版本",
+  "No mods in this edition yet.": "这个版本里还没有模组。",
+  "Edition created.": "版本已创建。",
+  "Could not create the edition.": "无法创建版本。",
+  "Delete this edition? Its mod list is removed.": "删除这个版本？它的模组列表也会一并移除。",
+  "Edition deleted.": "版本已删除。",
+  "Could not delete the edition.": "无法删除版本。",
+  "Edition of the mod": "模组的版本",
+  "Off by default: the mod tracks its latest published build on the chosen edition.": "默认关闭：模组将跟随所选版本中最新发布的构建。",
+  "Edition shown.": "版本已公开。",
+  "Edition hidden.": "版本已隐藏。",
+  "You'll pick the mods, editions and versions on the next screen.": "模组、版本与具体版本号将在下一步选择。"
 }

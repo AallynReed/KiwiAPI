@@ -1532,7 +1532,7 @@
     if (i >= 0) cur.splice(i, 1); else cur.push(branch);
     const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH,
       { method: 'PATCH', json: { hidden_release_branches: cur } });
-    if (r.ok) { toast(i >= 0 ? t('Variant shown.') : t('Variant hidden.')); await loadDetail(); }
+    if (r.ok) { toast(i >= 0 ? t('Edition shown.') : t('Edition hidden.')); await loadDetail(); }
     else toast(errMsg(r, 'Could not update visibility.'), true);
   }
 
@@ -1934,7 +1934,7 @@
       ${authorField}
       ${previewPicker}
       <label class="mp-form-field" data-mode="upload" ${filesMode ? 'hidden' : ''}><span>${esc(t('Build file (.tmod or .zip)'))}</span><input type="file" name="file" accept=".tmod,.zip,application/octet-stream,application/zip"></label>
-      <label class="mp-form-field" data-mode="upload" ${filesMode ? 'hidden' : ''}><span>${esc(t('Variant (branch)'))}</span><input name="upload_branch" maxlength="80" value="${esc(state.detail.default_branch || 'main')}"></label>
+      <label class="mp-form-field" data-mode="upload" ${filesMode ? 'hidden' : ''}><span>${esc(t('Edition'))}</span><input name="upload_branch" maxlength="80" value="${esc(state.detail.default_branch || 'main')}"></label>
       ${configField}
       <label class="mp-form-field"><span>${esc(t('Changelog (Markdown)'))}</span><textarea name="changelog" maxlength="20000"></textarea></label>
       <label class="mp-form-field"><span>${esc(t('Status'))}</span>

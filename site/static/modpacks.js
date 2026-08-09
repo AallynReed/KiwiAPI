@@ -146,7 +146,7 @@
     const variants = Number(p.variant_count || 1);
     const modLabel = mods === 1 ? t('mod') : t('mods');
     const variantChip = variants > 1
-      ? `<span class="mhp-chip"><i class="fa-solid fa-code-branch" aria-hidden="true"></i> ${variants} ${esc(t('variants'))}</span>` : '';
+      ? `<span class="mhp-chip"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> ${variants} ${esc(t('editions'))}</span>` : '';
     return `<a class="mh-card" href="${packUrl(p)}">
       ${banner}
       <div class="mh-card-body">

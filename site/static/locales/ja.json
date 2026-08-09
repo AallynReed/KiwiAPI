@@ -2454,5 +2454,22 @@
   "Most favourited": "お気に入りが多い順",
   "Offer editions": "エディションを用意",
   "Favourite": "お気に入り",
-  "Report this profile": "このプロフィールを報告"
+  "Report this profile": "このプロフィールを報告",
+  "Edition": "エディション",
+  "Editions": "エディション",
+  "editions": "エディション",
+  "New edition": "新しいエディション",
+  "Delete edition": "エディションを削除",
+  "Rename edition": "エディション名を変更",
+  "No mods in this edition yet.": "このエディションにはまだ Mod がありません。",
+  "Edition created.": "エディションを作成しました。",
+  "Could not create the edition.": "エディションを作成できませんでした。",
+  "Delete this edition? Its mod list is removed.": "このエディションを削除しますか？ Mod のリストも削除されます。",
+  "Edition deleted.": "エディションを削除しました。",
+  "Could not delete the edition.": "エディションを削除できませんでした。",
+  "Edition of the mod": "Mod のエディション",
+  "Off by default: the mod tracks its latest published build on the chosen edition.": "既定ではオフ: 選んだエディションで公開されている最新ビルドに追従します。",
+  "Edition shown.": "エディションを表示しました。",
+  "Edition hidden.": "エディションを非表示にしました。",
+  "You'll pick the mods, editions and versions on the next screen.": "Mod・エディション・バージョンは次の画面で選びます。"
 }

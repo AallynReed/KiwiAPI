@@ -2454,5 +2454,22 @@
   "Most favourited": "즐겨찾기 많은 순",
   "Offer editions": "에디션 제공",
   "Favourite": "즐겨찾기",
-  "Report this profile": "이 프로필 신고"
+  "Report this profile": "이 프로필 신고",
+  "Edition": "에디션",
+  "Editions": "에디션",
+  "editions": "개 에디션",
+  "New edition": "새 에디션",
+  "Delete edition": "에디션 삭제",
+  "Rename edition": "에디션 이름 변경",
+  "No mods in this edition yet.": "이 에디션에는 아직 모드가 없습니다.",
+  "Edition created.": "에디션을 만들었습니다.",
+  "Could not create the edition.": "에디션을 만들지 못했습니다.",
+  "Delete this edition? Its mod list is removed.": "이 에디션을 삭제할까요? 모드 목록도 함께 사라집니다.",
+  "Edition deleted.": "에디션을 삭제했습니다.",
+  "Could not delete the edition.": "에디션을 삭제하지 못했습니다.",
+  "Edition of the mod": "모드의 에디션",
+  "Off by default: the mod tracks its latest published build on the chosen edition.": "기본값은 꺼짐: 선택한 에디션에서 최근 게시된 빌드를 따라갑니다.",
+  "Edition shown.": "에디션을 공개했습니다.",
+  "Edition hidden.": "에디션을 숨겼습니다.",
+  "You'll pick the mods, editions and versions on the next screen.": "모드와 에디션, 버전은 다음 화면에서 고릅니다."
 }
