@@ -112,7 +112,20 @@ def set_session_cookies(response: Response, tokens: SiteTokenResponse) -> None:
 
 
 def clear_session_cookies(response: Response) -> None:
-    domain = _cookie_domain()
-    response.delete_cookie(ACCESS_COOKIE, domain=domain, path="/")
-    response.delete_cookie(REFRESH_COOKIE, domain=domain, path=_REFRESH_PATH)
-    response.delete_cookie(SESSION_HINT_COOKIE, domain=domain, path="/")
+    # The expiring cookie mirrors the attributes of the one it replaces. Domain
+    # and path are what actually identify it, but matching secure/samesite too
+    # keeps a browser from ever treating this as a *different* cookie, and
+    # keeps the header honest about what it is replacing.
+    domain, secure = _cookie_domain(), _secure()
+    response.delete_cookie(
+        ACCESS_COOKIE, domain=domain, path="/",
+        httponly=True, secure=secure, samesite="lax",
+    )
+    response.delete_cookie(
+        REFRESH_COOKIE, domain=domain, path=_REFRESH_PATH,
+        httponly=True, secure=secure, samesite="lax",
+    )
+    response.delete_cookie(
+        SESSION_HINT_COOKIE, domain=domain, path="/",
+        httponly=False, secure=secure, samesite="lax",
+    )
