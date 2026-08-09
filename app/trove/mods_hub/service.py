@@ -281,6 +281,24 @@ def project_card(p: ModProject) -> dict:
     }
 
 
+async def cards_with_avatars(projects: list[ModProject]) -> list[dict]:
+    """``project_card`` per mod, plus the owner's picture for the card byline -
+    resolved in two queries for the whole page rather than two per mod."""
+    cards = [project_card(p) for p in projects]
+    owner_ids = list({p.owner_id for p in projects if p.owner_id is not None})
+    if not owner_ids:
+        return cards
+    users, profiles = await asyncio.gather(
+        SiteUser.find(In(SiteUser.id, owner_ids)).to_list(),
+        ModProfile.find(In(ModProfile.site_user_id, owner_ids)).to_list(),
+    )
+    by_user = {pr.site_user_id: pr for pr in profiles}
+    urls = {u.id: _profile_avatar_url(u, by_user.get(u.id)) for u in users}
+    for card, project in zip(cards, projects, strict=True):
+        card["owner_avatar_url"] = urls.get(project.owner_id)
+    return cards
+
+
 def _commit_dto(meta: dict, branch: str | None = None) -> dict:
     """Build a commit DTO from a gitstore commit meta (sha/author/message/time…)."""
     return {
@@ -611,6 +629,7 @@ async def project_detail(project: ModProject, viewer: SiteUser | None) -> dict:
         "takedown_reason": project.takedown_reason if is_owner else None,
         "is_owner": is_owner,
         "is_primary_owner": primary,
+        "owner_avatar_url": await owner_avatar_url(project),
         "collaborators": [{"id": str(c.user_id), "username": c.username}
                           for c in (project.collaborators or [])],
         "starred": await has_starred(viewer, project),
@@ -643,7 +662,7 @@ async def list_public(
     sort_key = _SORTS.get(sort, "-updated_at")
     total = await ModProject.find(query).count()
     docs = await ModProject.find(query).sort(sort_key).skip(offset).limit(limit).to_list()
-    return [project_card(p) for p in docs], total
+    return await cards_with_avatars(docs), total
 
 
 async def tag_facets() -> dict:
@@ -2912,6 +2931,17 @@ def _profile_avatar_url(user: SiteUser, profile: ModProfile | None) -> str | Non
     if profile is not None and profile.avatar_sha:
         return _public_img_url(profile.avatar_sha)
     return _discord_avatar_url(user)
+
+
+async def owner_avatar_url(project: ModProject) -> str | None:
+    """The mod owner's profile picture, for the byline on the mod page. ``None`` for
+    strays (no owner yet) - the UI keeps its placeholder icon."""
+    if project.owner_id is None:
+        return None
+    user = await SiteUser.get(project.owner_id)
+    if user is None:
+        return None
+    return _profile_avatar_url(user, await ModProfile.find_one(ModProfile.site_user_id == user.id))
 
 
 def profile_dto(user: SiteUser, profile: ModProfile | None, is_owner: bool,

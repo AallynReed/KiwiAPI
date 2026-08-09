@@ -263,6 +263,7 @@ for _m in _STUB_MODS:
     _m.setdefault("uploaded_on_behalf", False)
     _m.setdefault("author", "")
     _m.setdefault("is_stray", False)
+    _m.setdefault("owner_avatar_url", "/site/mods/image/avatarsha")
     _m.setdefault("handle", _m["owner_username"].lower())   # /mods/<handle>/<slug>
 _STUB_MODS[0]["preview_sha"] = "prevsha1"   # neon-hud: no banner -> card uses first preview
 _STUB_MODS[1]["mode"] = "releases"   # tiny-mounts is a releases-only mod
@@ -1345,6 +1346,7 @@ class Handler(SimpleHTTPRequestHandler):
                     "warnings": "Requires the latest game build.<br>Back up your mods folder first.",
                     "default_branch": "main", "preview_shas": ["prevsha1", "prevsha2"], "taken_down": False,
                     "takedown_reason": None, "is_owner": False, "starred": False,
+                    "owner_avatar_url": "/site/mods/image/avatarsha",
                     "discord_url": "https://discord.gg/example",
                     "website_url": "https://example.com",
                     "donation_urls": ["https://ko-fi.com/example", "https://paypal.me/example"],

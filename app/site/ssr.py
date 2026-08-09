@@ -320,6 +320,7 @@ def _mod_card(m: dict) -> dict:
         "url": f"/mods/{m['handle']}/{m['slug']}",
         "summary": text(m.get("summary"), 160),
         "author": m.get("author") or m.get("owner_username") or "",
+        "avatar": m.get("owner_avatar_url") or "",
         "tags": [t for t in (m.get("tags") or []) if isinstance(t, str)][:4],
         "downloads": num(m.get("download_count") or 0),
         "stars": num(m.get("star_count") or 0),

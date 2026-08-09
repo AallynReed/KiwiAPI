@@ -355,6 +355,10 @@
     // No owner links (Discord / website / donations) on an uploaded mod - the
     // uploader isn't the author, so no soliciting or self-linking on their work.
     const linksRow = (links.length && !isUploaded) ? `<div class="mp-links">${links.join('')}</div>` : '';
+    // The owner's own picture on the byline; strays and owners without one keep an icon.
+    const ownerFace = d.owner_avatar_url
+      ? `<img class="mp-author-av" src="${esc(d.owner_avatar_url)}" alt="" referrerpolicy="no-referrer">`
+      : `<i class="fa-solid fa-${isUploaded ? 'share-from-square' : 'user'}"></i>`;
     return `<header class="mp-header${d.source_visible ? '' : ' is-doc'}">
       ${banner}
       <div class="mp-header-body">
@@ -369,8 +373,8 @@
           ${isStray
             ? `<span><i class="fa-solid fa-user"></i> ${esc(d.author || d.owner_username)}</span>`
             : isUploaded
-              ? `<span><i class="fa-solid fa-share-from-square"></i> ${esc(t('Uploaded by'))} <a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span><span><i class="fa-solid fa-user"></i> ${esc(t('Created by'))} ${esc(d.author || '')}</span>`
-              : `<span><i class="fa-solid fa-user"></i> <a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span>`}
+              ? `<span>${ownerFace}${esc(t('Uploaded by'))} <a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span><span><i class="fa-solid fa-user"></i> ${esc(t('Created by'))} ${esc(d.author || '')}</span>`
+              : `<span>${ownerFace}<a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span>`}
           <span><i class="fa-solid fa-download"></i> ${Number(d.download_count || 0).toLocaleString()} ${esc(t('downloads'))}</span>
           ${d.source_visible ? `<span><i class="fa-solid fa-code-commit"></i> ${Number(d.commit_count || 0)} ${esc(t('commits'))}</span>` : ''}
           ${forkCount}

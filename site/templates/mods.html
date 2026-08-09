@@ -96,7 +96,7 @@
                         {%- if m.summary %}<p class="mh-card-summary">{{ m.summary }}</p>{% endif %}
                         {%- if m.tags %}<div class="mh-card-tags">{% for t in m.tags %}<span class="mh-card-tag">{{ t }}</span>{% endfor %}</div>{% endif %}
                         <div class="mh-card-foot">
-                            <span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> {{ m.author }}</span>
+                            <span class="mh-card-author">{% if m.avatar %}<img class="mh-card-av" src="{{ m.avatar }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<i class="fa-solid fa-user" aria-hidden="true"></i>{% endif %} {{ m.author }}</span>
                             <span class="mh-card-stats">
                                 <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> {{ m.downloads }}</span>
                                 <span class="mh-card-dl"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ m.stars }}</span>

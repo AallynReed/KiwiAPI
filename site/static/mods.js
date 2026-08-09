@@ -225,9 +225,13 @@
       ? `<span class="mh-badge mh-badge-uploaded">${esc(t('Uploaded'))}</span>` : '';
     // Attribution: an uploaded mod credits the named creator, with the uploader as a
     // muted secondary line; otherwise the owner is the author.
+    // The owner's own picture, falling back to the generic person icon.
+    const face = p.owner_avatar_url
+      ? `<img class="mh-card-av" src="${esc(p.owner_avatar_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+      : `<i class="fa-solid fa-user" aria-hidden="true"></i>`;
     const authorLine = p.uploaded_on_behalf
-      ? `<span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> ${esc(p.author || '')}<small class="mh-card-uploader">${esc(t('Uploaded by'))} ${esc(p.owner_username)}</small></span>`
-      : `<span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> ${esc(p.owner_username)}</span>`;
+      ? `<span class="mh-card-author">${face}${esc(p.author || '')}<small class="mh-card-uploader">${esc(t('Uploaded by'))} ${esc(p.owner_username)}</small></span>`
+      : `<span class="mh-card-author">${face}${esc(p.owner_username)}</span>`;
     const lineage = p.forked_from
       ? `<p class="mh-card-lineage"><i class="fa-solid fa-code-fork"></i> ${esc(t('Forked from'))} ${esc(p.forked_from.title || p.forked_from.slug)}</p>`
       : p.inspired_by

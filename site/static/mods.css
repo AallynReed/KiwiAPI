@@ -216,6 +216,10 @@
   margin-top: auto; padding-top: 6px; color: var(--text-mute); font-size: .8rem;
 }
 .mh-card-author { display: inline-flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mh-card-av {
+  flex: none; width: 18px; height: 18px; border-radius: 50%; object-fit: cover;
+  background: var(--bg-deep); border: 1px solid var(--bg-line);
+}
 .mh-card-stats { display: inline-flex; align-items: center; gap: 12px; flex: 0 0 auto; }
 .mh-card-dl { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
 .mh-badge {
