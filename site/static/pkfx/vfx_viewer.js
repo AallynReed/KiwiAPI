@@ -4,6 +4,10 @@
    asset it references, resolving missing textures/meshes from the live game tree.
    We parse, simulate on the CPU, and render billboards + ribbons + meshes here.
 
+   The effect plays in place — nothing sweeps the emitter around on its own, so what you
+   see is what the effect does when it is spawned. Shift-drag moves it if you want to see
+   how the trails stream.
+
    Public API (assigned to window.PkfxViewer for classic-script callers):
      PkfxViewer.mount(container, { releaseId, path }) -> { dispose() }
      PkfxViewer.mount(container, { endpoint: {base, query}, path })  // embeddable viewer */
@@ -135,13 +139,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     }
     if (disposed) return;
     system = new System(effect, Math.random);
-    // Effects meant to be dragged through the world (trails/wakes/streaks) need the emitter
-    // to move or they just clump at the origin. Ribbon renderers always imply this; for
-    // billboard trails the name is the reliable signal (the .pkfx is named *_trail_*, *_wake_*).
-    const hasRibbon = effect.layers.some((l) => l.renderers.some((r) => r.kind === 'ribbon'));
-    const hasTrailEvolver = effect.layers.some((l) => l.evolvers.some((e) => e.type === 'spawner'));
-    const trail = hasRibbon || hasTrailEvolver || /trail|wake|streak|trailing/i.test(path);
-    current = { effect, unsupported: [...unsupported], missing: man.missing || [], trail };
+    current = { effect, unsupported: [...unsupported], missing: man.missing || [] };
 
     const partials = [];
     if (current.missing.length) partials.push(`${current.missing.length} asset(s) missing`);
@@ -348,18 +346,12 @@ export function mount(container, { releaseId, path, endpoint }) {
   function tick() {
     const dt = Math.min(0.05, 1 / 60);
     autofit.t += dt;
-    // brief static phase up front to gauge the effect's own footprint (before any sweep)
-    const measuring = autofit.t < 0.8;
-    const trail = !!(current && current.trail);
+    // Opening window used to gauge the effect's footprint for the initial framing.
+    const measuring = autofit.t < 1.5;
 
-    // Move the emitter through space so a trail forms; the camera then FOLLOWS it (below),
-    // so older particles stream behind it like a comet. Localspace-attached layers follow
-    // the emitter rigidly, exactly as they would follow a moving character in game.
-    if (system && trail && !measuring) {
-      const ts = autofit.t, R = autofit.scale * 1.2 + 0.3;
-      system.emitter[0] = Math.sin(ts * 1.6) * R;
-      system.emitter[2] = Math.sin(ts * 3.2) * R * 0.5;
-    }
+    // The emitter only ever moves when the user drags it (see the controls below) — the
+    // effect plays in place, the way it does in the PopcornFX editor. Trails and
+    // localspace-attached layers therefore look exactly as authored.
     if (system) {
       try { system.update(dt); }
       catch (e) { if (!system._crashWarned) { system._crashWarned = true; console.warn('pkfx sim error:', e); } }
@@ -384,34 +376,50 @@ export function mount(container, { releaseId, path, endpoint }) {
     }
     if (cnt && measuring) autofit.scale = Math.max(autofit.scale, Math.sqrt(maxR2));
 
-    // Camera: trail effects keep the moving emitter framed (so it stays on screen and the
-    // trail streams behind it) — this follow persists through user orbit/zoom. Otherwise
-    // centre on the particle centroid. Auto-distance only until the user interacts.
-    if (cnt) {
-      if (trail && !measuring) {
-        const e = system.emitter;
-        renderer.cam.target[0] += (e[0] - renderer.cam.target[0]) * 0.1;
-        renderer.cam.target[1] += (e[1] - renderer.cam.target[1]) * 0.1;
-        renderer.cam.target[2] += (e[2] - renderer.cam.target[2]) * 0.1;
-        if (autofit.active) renderer.cam.dist += (clamp(autofit.scale * 3 + 0.8, 2, 60) - renderer.cam.dist) * 0.05;
-      } else if (autofit.active) {
-        renderer.cam.dist += (clamp((autofit.scale || Math.sqrt(maxR2)) * 2.2 + 0.6, 2, 60) - renderer.cam.dist) * 0.1;
-        renderer.cam.target[1] += (sumY / cnt - renderer.cam.target[1]) * 0.1;
-      }
+    // Camera centres on the particle centroid; auto-distance only until the user interacts.
+    if (cnt && autofit.active) {
+      renderer.cam.dist += (clamp((autofit.scale || Math.sqrt(maxR2)) * 2.2 + 0.6, 2, 60) - renderer.cam.dist) * 0.1;
+      renderer.cam.target[1] += (sumY / cnt - renderer.cam.target[1]) * 0.1;
     }
     renderer.draw(items);
   }
 
-  // orbit controls
-  let drag = false, px = 0, py = 0;
-  const onDown = (e) => { drag = true; px = e.clientX; py = e.clientY; autofit.active = false; };
-  const onUp = () => { drag = false; };
-  const onMove = (e) => { if (!drag) return; renderer.cam.az -= (e.clientX - px) * 0.01; renderer.cam.el = clamp(renderer.cam.el + (e.clientY - py) * 0.01, -1.5, 1.5); px = e.clientX; py = e.clientY; };
+  // Controls: drag orbits the camera; shift-drag (or right-drag) pulls the EFFECT through
+  // the scene, the way you'd drag the emitter around in the PopcornFX editor. That drag is
+  // the only thing that ever moves the emitter, so trails and localspace-attached layers
+  // only stream when the user asks them to.
+  const ORBIT = 1, MOVE = 2;
+  let drag = 0, px = 0, py = 0;
+  const onDown = (e) => {
+    drag = (e.shiftKey || e.button === 2) ? MOVE : ORBIT;
+    px = e.clientX; py = e.clientY;
+    autofit.active = false;
+  };
+  const onUp = () => { drag = 0; };
+  const onMove = (e) => {
+    if (!drag) return;
+    const dx = e.clientX - px, dy = e.clientY - py;
+    px = e.clientX; py = e.clientY;
+    if (drag === MOVE) {
+      if (!system) return;
+      // screen delta -> world delta across the camera plane (≈1:1 at the orbit target)
+      const { az, el, dist } = renderer.cam;
+      const k = 2 * dist * Math.tan(30 * Math.PI / 180) / Math.max(canvas.clientHeight, 1);
+      const right = [Math.cos(az), 0, -Math.sin(az)];
+      const up = [-Math.sin(el) * Math.sin(az), Math.cos(el), -Math.sin(el) * Math.cos(az)];
+      for (let k2 = 0; k2 < 3; k2++) system.emitter[k2] += (right[k2] * dx - up[k2] * dy) * k;
+      return;
+    }
+    renderer.cam.az -= dx * 0.01;
+    renderer.cam.el = clamp(renderer.cam.el + dy * 0.01, -1.5, 1.5);
+  };
   const onWheel = (e) => { e.preventDefault(); autofit.active = false; renderer.cam.dist = clamp(renderer.cam.dist * (1 + Math.sign(e.deltaY) * 0.1), 1, 120); };
+  const onCtx = (e) => e.preventDefault();   // right-drag is a control, not a context menu
   canvas.addEventListener('pointerdown', onDown);
   window.addEventListener('pointerup', onUp);
   window.addEventListener('pointermove', onMove);
   canvas.addEventListener('wheel', onWheel, { passive: false });
+  canvas.addEventListener('contextmenu', onCtx);
 
   load().catch((e) => {
     loading.style.display = 'none';
@@ -431,7 +439,11 @@ export function mount(container, { releaseId, path, endpoint }) {
       for (let i = 0; i < px.length; i += 4) if (px[i] > 20 || px[i + 1] > 20 || px[i + 2] > 24) lit++;
       let alive = 0;
       for (const ls of system.layers) alive += ls.count;
-      return { alive, litPixels: lit, sampled: w * h, layers: system.layers.map((l) => ({ name: l.L.name, count: l.count })) };
+      return {
+        alive, litPixels: lit, sampled: w * h,
+        emitter: Array.from(system.emitter),
+        layers: system.layers.map((l) => ({ name: l.L.name, count: l.count })),
+      };
     },
     dispose() {
       disposed = true;
@@ -483,7 +495,7 @@ export function open({ releaseId, path, title, endpoint }) {
     '<div class="pkfxv-modal">' +
       '<div class="pkfxv-head"><span class="pkfxv-title"></span>' +
         '<button class="pkfxv-close" type="button" aria-label="Close">×</button></div>' +
-      '<div class="pkfxv-body"><div class="pkfxv-hint">drag to orbit · scroll to zoom</div></div>' +
+      '<div class="pkfxv-body"><div class="pkfxv-hint">drag to orbit · scroll to zoom · shift-drag to move the effect</div></div>' +
       '<div class="pkfxv-foot"><i class="fa-solid fa-circle-info"></i>' +
         '<span>VFX may not render completely — when in doubt, test it in game.</span></div>' +
     '</div>';
