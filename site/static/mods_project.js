@@ -228,7 +228,7 @@
 
   function forksHTML() {
     return `<section class="mp-section">
-      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-code-fork"></i> ${esc(t('Forks'))}</h2></div>
+      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-wand-magic-sparkles"></i> ${esc(t('Remixes'))}</h2></div>
       <div id="mp-forks" class="mp-forklist"><p class="mp-muted">${esc(t('Loading…'))}</p></div>
     </section>`;
   }
@@ -241,11 +241,11 @@
       const data = r.ok ? await r.json() : { items: [] };
       box.innerHTML = data.items && data.items.length
         ? data.items.map((f) => `<a class="mp-fork-item" href="${modUrl(f)}">
-            <i class="fa-solid fa-code-fork"></i>
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
             <span class="mp-fork-title">${esc(f.title)}</span>
             <span class="mp-muted">${esc(t('by'))} ${esc(f.owner_username)}</span>
           </a>`).join('')
-        : `<p class="mp-muted">${esc(t('No public forks yet.'))}</p>`;
+        : `<p class="mp-muted">${esc(t('No remixes yet.'))}</p>`;
     } catch (_) { box.innerHTML = ''; }
   }
 
@@ -263,10 +263,13 @@
       + (d.is_owner ? `<span class="mp-banner-edit"><i class="fa-solid fa-camera"></i> ${esc(d.banner_sha ? t('Change banner') : t('Add banner'))}</span>` : '')
       + '</div>';
     const vis = d.visibility;
-    const badge = vis === 'draft' ? `<span class="mp-badge mp-badge-draft">${esc(t('Draft'))}</span>`
+    // Visibility and mode are owner settings. A visitor already knows the mod is
+    // public - they're reading it - so the badges only speak to the owner.
+    const badge = !d.is_owner ? ''
+      : vis === 'draft' ? `<span class="mp-badge mp-badge-draft">${esc(t('Draft'))}</span>`
       : vis === 'unlisted' ? `<span class="mp-badge mp-badge-unlisted">${esc(t('Unlisted'))}</span>`
       : `<span class="mp-badge mp-badge-public">${esc(t('Public'))}</span>`;
-    const modeBadge = d.mode === 'releases'
+    const modeBadge = (d.is_owner && d.mode === 'releases')
       ? `<span class="mp-badge mp-badge-unlisted">${esc(t('Releases only'))}</span>` : '';
     const privBadge = (d.is_owner && d.source_visibility === 'private')
       ? `<span class="mp-badge mp-badge-draft">${esc(t('Private source'))}</span>` : '';
@@ -287,7 +290,7 @@
     } else {
       const items = published.map((r) => `<a class="mp-dl-item" href="${BTTUtil.apiUrl('/site/mods/releases/' + r.id + '/download')}" role="menuitem">
           <span class="mp-release-tagchip">${esc(r.tag)}</span>
-          ${showDlBranch ? `<span class="mp-dl-branch">${esc(r.branch || 'main')}</span>` : ''}
+          ${showDlBranch ? `<span class="mp-dl-branch">${esc(variantLabel(r.branch || 'main'))}</span>` : ''}
           <span class="mp-dl-size">${fmtBytes(r.tmod_size)}</span>
         </a>`).join('');
       dlBtn = `<div class="mp-dl-split">
@@ -301,6 +304,15 @@
     // so it gets its own button - filled in after we've looked inside the .tmod.
     const headRel = published.find((r) => r.format !== 'zip');
     const cfgSlot = headRel ? `<span data-rel-cfg="${esc(headRel.id)}"></span>` : '';
+    // Hand off to the desktop app's Mods Hub tab over the btt:// protocol it
+    // registers on install. Only for mods the app can actually find: the hub
+    // browses published, public mods.
+    const appHref = 'btt://mods?handle=' + encodeURIComponent(d.handle || '')
+      + '&slug=' + encodeURIComponent(d.slug || '')
+      + '&q=' + encodeURIComponent(d.title || '');
+    const appBtn = (vis === 'public' && published.length && !d.taken_down)
+      ? `<a class="mp-btn" id="mp-open-app" href="${esc(appHref)}" title="${esc(t('Requires the Better Trove Tools desktop app'))}"><i class="fa-solid fa-desktop"></i> ${esc(t('Open in app'))}</a>`
+      : '';
     // Stray = an imported mod uploaded via contributions, with no owner here yet.
     const isStray = !!d.is_stray;
     // Anyone can report (no account needed) - DSA notice-and-action; only the
@@ -329,18 +341,18 @@
     // not the uploader's work, so no lineage rides on them.
     if (!d.is_owner && !isStray && !isUploaded) {
       forkBtn = d.source_visible
-        ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-fork"><i class="fa-solid fa-code-fork"></i> ${esc(t('Fork'))}</button>`
-        : `<button type="button" class="mp-btn mp-btn-sm" id="mp-inspire"><i class="fa-solid fa-lightbulb"></i> ${esc(t('Use as inspiration'))}</button>`;
+        ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-fork"><i class="fa-solid fa-wand-magic-sparkles"></i> ${esc(t('Remix'))}</button>`
+        : `<button type="button" class="mp-btn mp-btn-sm" id="mp-inspire"><i class="fa-solid fa-lightbulb"></i> ${esc(t('Make your own version'))}</button>`;
     }
     const forkLink = (ref) => `<a href="${modUrl(ref)}">${esc(ref.title || ref.slug)}</a>`;
     let attribution = '';
     if (d.forked_from) {
-      attribution = `<div class="mp-attribution"><i class="fa-solid fa-code-fork"></i> ${esc(t('Forked from'))} ${forkLink(d.forked_from)}${d.forked_from.owner ? ' ' + esc(t('by')) + ' ' + esc(d.forked_from.owner) : ''}</div>`;
+      attribution = `<div class="mp-attribution"><i class="fa-solid fa-wand-magic-sparkles"></i> ${esc(t('Remixed from'))} ${forkLink(d.forked_from)}${d.forked_from.owner ? ' ' + esc(t('by')) + ' ' + esc(d.forked_from.owner) : ''}</div>`;
     } else if (d.inspired_by) {
       attribution = `<div class="mp-attribution"><i class="fa-solid fa-lightbulb"></i> ${esc(t('Inspired by'))} ${forkLink(d.inspired_by)}${d.inspired_by.owner ? ' ' + esc(t('by')) + ' ' + esc(d.inspired_by.owner) : ''}</div>`;
     }
     const forkCount = d.fork_count
-      ? `<span><i class="fa-solid fa-code-fork"></i> ${Number(d.fork_count)} ${esc(t('forks'))}</span>` : '';
+      ? `<span><i class="fa-solid fa-wand-magic-sparkles"></i> ${Number(d.fork_count)} ${esc(d.fork_count === 1 ? t('remix') : t('remixes'))}</span>` : '';
     // Edit details + Settings live next to the title (right), not in a toolbar.
     const ownerTitleActions = d.is_owner ? `<div class="mp-title-actions">
         <button type="button" class="mp-btn mp-btn-sm" id="mp-edit"><i class="fa-solid fa-pen"></i> ${esc(t('Edit details'))}</button>
@@ -355,6 +367,18 @@
     // No owner links (Discord / website / donations) on an uploaded mod - the
     // uploader isn't the author, so no soliciting or self-linking on their work.
     const linksRow = (links.length && !isUploaded) ? `<div class="mp-links">${links.join('')}</div>` : '';
+    // A first-timer leaves here with a .tmod and no idea what to do with it, so the
+    // answer sits at the download rather than on a page they'd have to go find.
+    // Deliberately no absolute path: Glyph and Steam installs differ, and the
+    // desktop app is the thing that actually resolves the folder.
+    const installHelp = published.length ? `<details class="mp-install">
+      <summary class="mp-install-summary"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> ${esc(t('Where does this file go?'))}</summary>
+      <div class="mp-install-body">
+        <p>${esc(t('Drop the downloaded file into your Trove {folder} folder - nothing else to set up.')).replace('{folder}', '<code>mods</code>')}</p>
+        <p>${esc(t('If the mod also comes with a settings file, that one goes in {folder} instead.')).replace('{folder}', '<code>ModCfgs</code>')}</p>
+        <p class="mp-install-app">${esc(t('Not sure where that is? The desktop app finds the folder and installs for you.'))} <a href="/app">${esc(t('Get the app'))}</a></p>
+      </div>
+    </details>` : '';
     // The owner's own picture on the byline; strays and owners without one keep an icon.
     const ownerFace = d.owner_avatar_url
       ? `<img class="mp-author-av" src="${esc(d.owner_avatar_url)}" alt="" referrerpolicy="no-referrer">`
@@ -376,7 +400,7 @@
               ? `<span>${ownerFace}${esc(t('Uploaded by'))} <a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span><span><i class="fa-solid fa-user"></i> ${esc(t('Created by'))} ${esc(d.author || '')}</span>`
               : `<span>${ownerFace}<a class="mp-author-link" href="/mods/${encodeURIComponent(d.handle || '')}">${esc(d.owner_username)}</a></span>`}
           <span><i class="fa-solid fa-download"></i> ${Number(d.download_count || 0).toLocaleString()} ${esc(t('downloads'))}</span>
-          ${d.source_visible ? `<span><i class="fa-solid fa-code-commit"></i> ${Number(d.commit_count || 0)} ${esc(t('commits'))}</span>` : ''}
+          ${d.source_visible ? `<span><i class="fa-solid fa-clock-rotate-left"></i> ${Number(d.commit_count || 0)} ${esc(d.commit_count === 1 ? t('update') : t('updates'))}</span>` : ''}
           ${forkCount}
         </div>
         ${isStray ? `<p class="mp-stray-note"><i class="fa-solid fa-circle-info"></i> ${esc(t('This mod was uploaded via contributions and hasn\'t been claimed by its author yet. If it\'s yours, claim it to manage it here.'))}</p>` : ''}
@@ -384,7 +408,8 @@
         <p class="mp-summary" id="mp-summary"${local(d.summary, d.summary_i18n) ? '' : ' hidden'}>${esc(local(d.summary, d.summary_i18n))}</p>
         ${tags ? `<div class="mp-tags">${tags}</div>` : ''}
         ${linksRow}
-        <div class="mp-actions">${dlBtn}${cfgSlot}${starBtn}${claimBtn}${forkBtn}${reportBtn}</div>
+        <div class="mp-actions">${dlBtn}${appBtn}${cfgSlot}${starBtn}${claimBtn}${forkBtn}${reportBtn}</div>
+        ${installHelp}
       </div>
     </header>`;
   }
@@ -486,11 +511,19 @@
     else toast(errMsg(r, 'Could not reorder variants.'), true);
   }
 
+  // A creator's editions are their own words ("lite", "full"); only the git default
+  // needs translating into something a player recognises.
+  function variantLabel(branch) {
+    return branch === 'main' ? t('Standard') : branch;
+  }
+
   function releasesHTML(d) {
     const items = d.releases || [];
+    // The "each edition…" hint only earns its line when there's more than one.
+    const multiVariant = new Set(items.map((r) => r.branch || 'main')).size > 1;
     let rows;
     if (!items.length) {
-      rows = `<p class="mp-muted">${esc(t('No releases yet.'))} ${d.is_owner ? esc(t('Use “New release” to publish one.')) : ''}</p>`;
+      rows = `<p class="mp-muted">${esc(t('No versions yet.'))} ${d.is_owner ? esc(t('Use “New version” to publish one.')) : ''}</p>`;
     } else {
       // Group by branch = variant; surface the latest of each, older collapsible.
       const groups = {};
@@ -510,21 +543,25 @@
             <button type="button" class="mp-iconbtn" data-move-up="${esc(branch)}" ${idx === 0 ? 'disabled' : ''} aria-label="${esc(t('Move up'))}" title="${esc(t('Move up'))}"><i class="fa-solid fa-chevron-up"></i></button>
             <button type="button" class="mp-iconbtn" data-move-down="${esc(branch)}" ${idx === ordered.length - 1 ? 'disabled' : ''} aria-label="${esc(t('Move down'))}" title="${esc(t('Move down'))}"><i class="fa-solid fa-chevron-down"></i></button>
           </span>` : '';
+        // A lone default edition has nothing to say to a visitor - "main" is a git
+        // default, not a choice the creator made. The owner still needs the row for
+        // its hide/reorder controls.
+        const bareDefault = ordered.length === 1 && branch === 'main' && !d.is_owner;
         return `<div class="mp-variant">
-          <div class="mp-variant-head">
-            <span class="mp-variant-name"><i class="fa-solid fa-code-branch"></i> ${esc(branch)} ${hiddenTag}</span>
+          ${bareDefault ? '' : `<div class="mp-variant-head">
+            <span class="mp-variant-name"><i class="fa-solid fa-layer-group"></i> ${esc(variantLabel(branch))} ${hiddenTag}</span>
             <span class="mp-variant-actions">${reorder}${toggle}</span>
-          </div>
+          </div>`}
           ${releaseRow(rels[0], d.is_owner)}
-          ${older.length ? `<details class="mp-variant-older"><summary>${older.length + ' ' + esc(older.length === 1 ? t('older release') : t('older releases'))}</summary>${older.map((r) => releaseRow(r, d.is_owner)).join('')}</details>` : ''}
+          ${older.length ? `<details class="mp-variant-older"><summary>${older.length + ' ' + esc(older.length === 1 ? t('older version') : t('older versions'))}</summary>${older.map((r) => releaseRow(r, d.is_owner)).join('')}</details>` : ''}
         </div>`;
       }).join('');
     }
     const newRelBtn = d.is_owner
-      ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-primary" id="mp-release"><i class="fa-solid fa-rocket"></i> ${esc(t('New release'))}</button>` : '';
+      ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-primary" id="mp-release"><i class="fa-solid fa-rocket"></i> ${esc(t('New version'))}</button>` : '';
     return `<section class="mp-section">
-      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-rocket"></i> ${esc(t('Releases'))}</h2>${newRelBtn}</div>
-      <p class="mp-muted" style="margin:0 0 12px">${esc(t('Each variant shows its latest release.'))}</p>
+      <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-rocket"></i> ${esc(t('Versions'))}</h2>${newRelBtn}</div>
+      ${multiVariant ? `<p class="mp-muted" style="margin:0 0 12px">${esc(t('Each edition shows its latest version.'))}</p>` : ''}
       <div id="mp-releases">${rows}</div>
     </section>`;
   }
@@ -968,6 +1005,11 @@
     if (inspire) inspire.addEventListener('click', createInspired);
     const star = document.getElementById('mp-star');
     if (star) star.addEventListener('click', toggleStar);
+    // The download is a plain link, so the browser gives no in-page feedback.
+    // Confirm it started and repeat the one thing they need to do next.
+    document.querySelectorAll('a[href*="/download"]').forEach((a) => {
+      a.addEventListener('click', () => toast(t('Downloading - drop the file in your Trove mods folder.')));
+    });
     const claim = document.getElementById('mp-claim');
     if (claim) claim.addEventListener('click', openClaim);
 
@@ -1098,7 +1140,7 @@
 
   async function forkProject() {
     if (!state.viewer) { location.href = '/login'; return; }
-    if (!confirm(t('Fork this mod into a new project of your own?'))) return;
+    if (!confirm(t('Start your own version of this mod, with the files copied over?'))) return;
     const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH + '/fork', { method: 'POST' });
     if (r.ok && r.data && r.data.slug) { location.href = modUrl(r.data); }
     else toast(errMsg(r, 'Could not fork this mod.'), true);
@@ -1108,7 +1150,7 @@
   // the original as inspiration (no file copy).
   async function createInspired() {
     if (!state.viewer) { location.href = '/login'; return; }
-    if (!confirm(t('Start a new mod of your own that credits this one as inspiration?'))) return;
+    if (!confirm(t('Start your own mod that credits this one as inspiration?'))) return;
     const r = await apiJSON('/v1/mods/hub/projects', {
       json: { title: (state.detail.title || 'My mod') + ' (inspired)', inspired_by: HANDLE + '/' + SLUG },
     });

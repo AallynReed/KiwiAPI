@@ -267,6 +267,31 @@
   width: 22px; height: 22px; border-radius: 50%; object-fit: cover;
   background: var(--bg-deep); border: 1px solid var(--bg-line);
 }
+/* "Where does this file go?" - the answer a first-timer needs, at the download. */
+.mp-install { margin-top: 14px; max-width: 68ch; }
+.mp-install-summary {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  color: var(--text-mute); font-size: .88rem; padding: 6px 2px; list-style: none;
+  border-radius: var(--radius-sm); transition: color 160ms var(--ease-out);
+}
+.mp-install-summary::-webkit-details-marker { display: none; }
+.mp-install-summary:hover { color: var(--text); }
+.mp-install[open] .mp-install-summary { color: var(--text); }
+.mp-install-body {
+  margin-top: 8px; padding: 14px 16px; border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm); background: var(--bg-deep);
+  color: var(--text-mute); font-size: .92rem; line-height: 1.6;
+}
+.mp-install-body p { margin: 0 0 8px; }
+.mp-install-body p:last-child { margin-bottom: 0; }
+.mp-install-body code {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .86em;
+  color: var(--text); background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: 6px; padding: 1px 6px;
+}
+.mp-install-app { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--bg-line); }
+.mp-install-app a { color: var(--accent-blue); }
+
 .mp-summary { color: var(--text-mute); font-size: 1rem; line-height: 1.55; margin: 0; max-width: 75ch; }
 .mp-tags { display: flex; flex-wrap: wrap; gap: 7px; }
 .mp-tag { font-size: .74rem; color: var(--accent-blue); background: rgba(86,156,255,.12); border-radius: 999px; padding: 3px 10px; }

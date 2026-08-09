@@ -1192,8 +1192,20 @@ class Handler(SimpleHTTPRequestHandler):
                            {"tag": "fun", "count": 1}, {"tag": "minimal", "count": 1}],
             })
         if path == "/site/mods/projects":
-            return self._send_json({"items": _STUB_MODS, "count": len(_STUB_MODS),
-                                    "total": len(_STUB_MODS)})
+            # Honour q/tag like the real endpoint, so the no-results empty state
+            # is reachable locally instead of only in production.
+            rows = _STUB_MODS
+            mq = parse_qs(url.query)
+            q = (mq.get("q", [""])[0] or "").strip().lower()
+            tag = (mq.get("tag", [""])[0] or "").strip().lower()
+            if q:
+                rows = [m for m in rows if q in m["title"].lower()
+                        or q in (m.get("summary") or "").lower()
+                        or q in m["owner_username"].lower()]
+            if tag:
+                rows = [m for m in rows if tag in [str(x).lower() for x in (m.get("tags") or [])]]
+            return self._send_json({"items": rows, "count": len(rows),
+                                    "total": len(rows)})
         if path.startswith("/site/mods/image/"):
             return self._send_bytes(_PLACEHOLDER_PNG, "image/png")
         # Stub a release's file list (preview excluded) + per-file download for preview.
