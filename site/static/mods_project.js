@@ -317,8 +317,10 @@
     const isStray = !!d.is_stray;
     // Anyone can report (no account needed) - DSA notice-and-action; only the
     // owner and unclaimed stray imports don't show the control.
+    // Quiet by design: reporting stays one click away for DSA notice-and-action,
+    // but it isn't a visual peer of the download.
     const reportBtn = (!d.is_owner && !isStray)
-      ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-report"><i class="fa-solid fa-flag"></i> ${esc(t('Report'))}</button>` : '';
+      ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-quiet" id="mp-report"><i class="fa-solid fa-flag"></i> ${esc(t('Report'))}</button>` : '';
     // Claim: only on stray mods. A logged-out click routes to /login.
     const claimBtn = isStray
       ? `<button type="button" class="mp-btn mp-btn-sm" id="mp-claim"><i class="fa-solid fa-hand-sparkles"></i> ${esc(t('This is my mod'))}</button>` : '';
@@ -331,8 +333,11 @@
       ? `<span class="mp-badge mp-badge-uploaded"><i class="fa-solid fa-share-from-square"></i> ${esc(t('Uploaded'))}</span>` : '';
     // Star (favourite) - shown to everyone; a click while logged out routes to /login.
     const starred = !!d.starred;
-    const starBtn = `<button type="button" class="mp-btn mp-btn-sm ${starred ? 'mp-starred' : ''}" id="mp-star" aria-pressed="${starred}">
-        <i class="fa-${starred ? 'solid' : 'regular'} fa-star"></i> <span id="mp-star-count">${Number(d.star_count || 0).toLocaleString()}</span>
+    // A lone "0" beside a star reads as a rating, not a count - so it only shows
+    // once someone has actually favourited the mod.
+    const starN = Number(d.star_count || 0);
+    const starBtn = `<button type="button" class="mp-btn mp-btn-sm ${starred ? 'mp-starred' : ''}" id="mp-star" aria-pressed="${starred}" aria-label="${esc(t('Favourite'))}" title="${esc(t('Favourite'))}">
+        <i class="fa-${starred ? 'solid' : 'regular'} fa-star"></i> <span id="mp-star-count"${starN ? '' : ' hidden'}>${starN.toLocaleString()}</span>
       </button>`;
     // Fork copies the source, so it's only offered when the source is visible.
     // A source-locked mod can instead be credited as inspiration.
@@ -1135,7 +1140,11 @@
       const icon = btn.querySelector('i');
       if (icon) icon.className = 'fa-' + (r.data.starred ? 'solid' : 'regular') + ' fa-star';
     }
-    if (cnt) cnt.textContent = Number(r.data.star_count || 0).toLocaleString();
+    if (cnt) {
+      const n = Number(r.data.star_count || 0);
+      cnt.textContent = n.toLocaleString();
+      cnt.hidden = !n;                       // back to a bare star at zero
+    }
   }
 
   async function forkProject() {
