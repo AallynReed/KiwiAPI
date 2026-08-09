@@ -1,6 +1,6 @@
 """Binary container for voxel payloads (``KVX1``).
 
-A model's bulk is six parallel arrays per part, and as JSON they are millions of
+A model's bulk is a handful of parallel arrays per part, and as JSON they are millions of
 decimal digits: the browser spends longer in ``JSON.parse`` building boxed JS
 numbers than the network spends fetching them. This packs those arrays as raw
 typed-array bytes and leaves everything else - sizes, part names, rest matrices,
@@ -38,7 +38,7 @@ MAGIC = b"KVX1"
 # `(rgb >> 16) & 255` working unchanged.
 _ARRAYS: dict[str, str] = {
     "x": "i16", "y": "i16", "z": "i16",
-    "rgb": "u32", "kind": "u8", "level": "u8",
+    "rgb": "u32", "kind": "u8", "level": "u8", "spec": "u8",
 }
 _TYPECODE = {"i16": "h", "u32": "I", "u8": "B"}
 

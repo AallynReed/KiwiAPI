@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import re
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -337,9 +338,11 @@ def _stub_pack_detail(handle, slug):
 
 def _stub_blueprint():
     """A small solid voxel cube in the web viewer's payload shape - enough for the
-    3D stages (/updates, mod pages, /embed/viewer) to actually render in dev."""
+    3D stages (/updates, mod pages, /embed/viewer) to actually render in dev.
+    Banded by specular value along Y so the specular map is visible locally (it
+    needs the BRDF atlas below; without it every band shades as rough)."""
     n = 6
-    xs, ys, zs, rgb, kind, level = [], [], [], [], [], []
+    xs, ys, zs, rgb, kind, level, spec = [], [], [], [], [], [], []
     for x in range(n):
         for y in range(n):
             for z in range(n):
@@ -347,9 +350,33 @@ def _stub_blueprint():
                     continue                       # hollow shell - fewer voxels, same look
                 xs.append(x); ys.append(y); zs.append(z)
                 rgb.append((60 + x * 30) << 16 | (90 + y * 25) << 8 | (140 + z * 18))
-                kind.append(0); level.append(255)
-    return {"count": len(xs), "size": [n, n, n],
-            "x": xs, "y": ys, "z": zs, "rgb": rgb, "kind": kind, "level": level}
+                kind.append(0); level.append(255); spec.append(y % 5)
+    return {"count": len(xs), "size": [n, n, n], "x": xs, "y": ys, "z": zs,
+            "rgb": rgb, "kind": kind, "level": level, "spec": spec}
+
+
+# The specular BRDF atlas the 3D viewers sample. Production pulls it out of the
+# updates CAS; locally it can only come from a game install, so point
+# TROVE_LIVE_DIR at one (or accept the default Glyph path). Missing -> 404, which
+# is exactly what the viewers already degrade around.
+_BRDF_SRC = Path(os.environ.get(
+    "TROVE_LIVE_DIR", r"C:/Program Files (x86)/Glyph/Games/Trove/Live")) / "extracted/textures/brdfmap.dds"
+_brdf_png_cache: bytes | None = None
+
+
+def _brdf_map_png() -> bytes | None:
+    global _brdf_png_cache
+    if _brdf_png_cache is None:
+        try:
+            from io import BytesIO
+
+            from PIL import Image
+            buf = BytesIO()
+            Image.open(_BRDF_SRC).convert("RGB").save(buf, format="PNG")
+            _brdf_png_cache = buf.getvalue()
+        except Exception:      # noqa: BLE001 - no game install / no Pillow: just 404
+            return None
+    return _brdf_png_cache
 
 
 # Synthetic file tree for the /updates archive browser. Deliberately has files
@@ -945,6 +972,15 @@ class Handler(SimpleHTTPRequestHandler):
                 ], "rig": None, "animations": []},
                 "vfx": {"items": []},
             })
+        if path == "/site/render/brdf-map.png":
+            png = _brdf_map_png()
+            if png is None:
+                return self._send_json({"error": {"message": "No local game install."}}, 404)
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Content-Length", str(len(png)))
+            self.end_headers()
+            return self.wfile.write(png)
         if path == "/site/embed/blueprint":
             return self._send_json(_stub_blueprint())
         if path == "/site/embed/assembled":

@@ -86,7 +86,7 @@
         if (!alive) return;                     // disposed while loading
         msg.remove();
         if (opts.onMeta) opts.onMeta(data.count.toLocaleString() + ' voxels');
-        viewer = buildViewer(THREE, container, data);
+        viewer = buildViewer(THREE, container, data, opts.url);
       });
     }).catch(function (err) {
       if (!alive) return;
@@ -144,7 +144,14 @@
     });
   }
 
-  function buildViewer(THREE, stage, data) {
+  /* The specular atlas lives beside the model data, wherever that is served from
+     (same origin on the site, the API's origin for a partner's embed). */
+  function brdfUrl(modelUrl) {
+    try { return new URL(modelUrl, window.location.href).origin + '/site/render/brdf-map.png'; }
+    catch (e) { return '/site/render/brdf-map.png'; }
+  }
+
+  function buildViewer(THREE, stage, data, modelUrl) {
     var W = stage.clientWidth || 800, H = stage.clientHeight || 560;
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -160,7 +167,11 @@
     var fill = new THREE.DirectionalLight(0xffffff, 0.32); fill.position.set(-0.6, 0.35, -0.7); scene.add(fill);
 
     var camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 8000);
-    var meshes = window.VoxelMesh.build(THREE, data);
+    var meshes = window.VoxelMesh.build(THREE, data, {
+      brdfUrl: brdfUrl(modelUrl),
+      lightDir: [0.7, 1.0, 0.55],                  // the key light, in world space
+      onReady: function () { request(); },         // static scene: redraw when it lands
+    });
     meshes.forEach(function (m) { scene.add(m); });
 
     var sx = data.size[0], sy = data.size[1], sz = data.size[2];

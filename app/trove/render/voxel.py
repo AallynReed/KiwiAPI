@@ -163,26 +163,39 @@ def _kind(t: int) -> str:
     return "S"              # solid (and game-internal types) -> shaded opaque
 
 
+# The 4th colour byte does double duty, which is why the specular map used to go
+# missing from the previews. On a TRANSPARENT voxel it is the alpha level
+# (16+32*w); on a shaded SOLID it is the specular-map index -- the same 0-7 value
+# Trove's ``*_s.qb`` material map carries, and the tile the game's shader picks out
+# of ``textures/brdfmap.dds`` (``Lighting_BRDFSpecular``, ``effectColor.x*8.0``).
+# Verified against the game's own blueprints: knight armour and silver badges are
+# all 1, gold/platinum badges all 3, and tile 3 of the atlas is the rainbow lobe.
+# Glowing solids carry a value too, but the game renders them unlit and its own
+# specular pass on them is known-broken, so they stay 0 here.
+SPEC_NAMES = {0: "rough", 1: "metal", 2: "water", 3: "iridescent", 4: "waxy"}
+
 # Render-kind -> compact wire code the 3D viewers consume (solid / glass / glow /
 # glow-glass). Shared so the catalog render, the single-blueprint viewer, and the
 # assembled-creature viewer all speak the same material language.
 KIND_CODE = {"S": 0, "G": 1, "E": 2, "GE": 3}
 
 
-def material_for(r: int, g: int, b: int, w: int, t: int) -> tuple[int, int, int, str, int]:
-    """A voxel's material: ``(r, g, b, kind, level)``. ``kind`` is S/G/E/GE; ``level``
-    is the glass alpha level ``16+32*w`` for transparent kinds, else 255. Dark
-    procedurally-tinted voxels are mapped to their placeholder colour. The single
-    source of truth for every voxel renderer (catalog PNG + both 3D viewers)."""
+def material_for(r: int, g: int, b: int, w: int, t: int) -> tuple[int, int, int, str, int, int]:
+    """A voxel's material: ``(r, g, b, kind, level, spec)``. ``kind`` is S/G/E/GE;
+    ``level`` is the glass alpha level ``16+32*w`` for transparent kinds, else 255;
+    ``spec`` is the specular-map index for shaded solids, else 0. Dark procedurally-
+    tinted voxels are mapped to their placeholder colour. The single source of truth
+    for every voxel renderer (catalog PNG + both 3D viewers)."""
     if t not in _AUTHORED and max(r, g, b) <= 24:
         r, g, b = _TINTS.get(t, (110, 110, 110))      # procedural placeholder tint
     kind = _kind(t)
-    level = 16 + 32 * max(0, min(int(w), 7)) if kind in ("G", "GE") else 255
-    return r, g, b, kind, level
+    glassy = kind in ("G", "GE")
+    level = 16 + 32 * max(0, min(int(w), 7)) if glassy else 255
+    return r, g, b, kind, level, (0 if kind != "S" else max(0, min(int(w), 7)))
 
 
 def to_render_voxels(decoded: list[dict]) -> dict:
-    """``{(x,y,z): (r,g,b,kind,level)}`` -- level = glass alpha level 16+32*w."""
+    """``{(x,y,z): (r,g,b,kind,level,spec)}`` -- level = glass alpha level 16+32*w."""
     out = {}
     for v in decoded:
         out[(v["x"], v["y"], v["z"])] = material_for(v["r"], v["g"], v["b"], v["w"], v["type"])
@@ -209,17 +222,20 @@ def pack_blueprint(raw: bytes, path: str, *, cap: int = RENDER_VOXEL_CAP) -> dic
     if len(voxels) > cap:
         raise BlueprintTooLarge(f"This model is too large to preview ({len(voxels):,} voxels).")
     xs: list[int] = []; ys: list[int] = []; zs: list[int] = []
-    rgb: list[int] = []; kind: list[int] = []; level: list[int] = []
-    for (x, y, z), (r, g, b, k, lv) in voxels.items():
+    rgb: list[int] = []; kind: list[int] = []; level: list[int] = []; spec: list[int] = []
+    for (x, y, z), (r, g, b, k, lv, sp) in voxels.items():
         xs.append(x); ys.append(y); zs.append(z)
         rgb.append((r << 16) | (g << 8) | b)
-        kind.append(KIND_CODE.get(k, 0)); level.append(lv)
-    return {
+        kind.append(KIND_CODE.get(k, 0)); level.append(lv); spec.append(sp)
+    out = {
         "path": path,
         "count": len(xs),
         "size": [max(xs) - min(xs) + 1, max(ys) - min(ys) + 1, max(zs) - min(zs) + 1],
         "x": xs, "y": ys, "z": zs, "rgb": rgb, "kind": kind, "level": level,
     }
+    if any(spec):                       # all-rough is the common case: don't ship the array
+        out["spec"] = spec
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -487,7 +503,7 @@ def render_voxels(voxels: dict, dim: int = 256, params: dict | None = None) -> n
         scr_all, z_all = _project((allc.reshape(-1, 3) - center) * s, eye, R, fy, H, cx, cy)
         scr_all = scr_all.reshape(nf, 4, 2); z_all = z_all.reshape(nf, 4)
         for i, (key, v, _corners) in enumerate(faces):
-            r, g, b, kind, level = v
+            r, g, b, kind, level = v[:5]      # the catalog tool renders flat: no specular pass
             scr = scr_all[i]; z = z_all[i]
             col = face_color(key, r, g, b, kind)
             tris = [((scr[0], scr[1], scr[2]), (z[0], z[1], z[2])),

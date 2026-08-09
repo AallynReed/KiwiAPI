@@ -1,6 +1,6 @@
 /* Kiwi voxel payload reader (KVX1).
 
-   A model's bulk is six parallel arrays per part. As JSON that's millions of
+   A model's bulk is a handful of parallel arrays per part. As JSON that's millions of
    decimal digits, and the browser spends longer in JSON.parse - boxing every one
    into a JS number - than the network spends fetching them. The server can hand
    back the same payload with those arrays as raw bytes instead (`?fmt=bin`), and

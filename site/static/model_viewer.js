@@ -150,7 +150,11 @@
     // by different bone matrices, so neither can know it's hidden by the other.
     var meshByPart = {};
     data.parts.forEach(function (p) {
-      var partMeshes = window.VoxelMesh.build(THREE, p);
+      var partMeshes = window.VoxelMesh.build(THREE, p, {
+        brdfUrl: _apiBase + '/site/render/brdf-map.png',
+        lightDir: [0.6, 1.0, 0.5],                   // the key light, in world space
+        onReady: function () { request(); },         // redraw when the atlas lands
+      });
       partMeshes.forEach(function (mesh) {
         mesh.matrixAutoUpdate = false; mesh.frustumCulled = false;
         scene.add(mesh);

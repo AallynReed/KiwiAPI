@@ -249,7 +249,8 @@ async def get_release_assembled(
 @mods_hub_router.get(
     "/releases/{release_id}/blueprint",
     responses={200: {"content": {"application/json": {}},
-                     "description": "Voxel payload: parallel x/y/z/rgb/kind/level arrays."}},
+                     "description": "Voxel payload: parallel x/y/z/rgb/kind/level"
+                                    " (+spec) arrays."}},
 )
 async def get_release_blueprint(
     request: Request, release_id: str,

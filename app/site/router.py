@@ -1568,6 +1568,57 @@ async def site_lb_board_icon(name: str) -> Response:
                     headers={"Cache-Control": "public, max-age=604800"})
 
 
+_BRDF_PATH = "textures/brdfmap.dds"
+_brdf_png: tuple[str, bytes] | None = None      # (blob sha, converted PNG)
+
+
+def _brdf_to_png(dds: bytes) -> bytes:
+    """The BRDF atlas as a PNG the browser can upload as a texture. Uncompressed
+    BGRA8 with mips; Pillow reads the top level, and the alpha channel is unused."""
+    import io
+
+    from PIL import Image
+
+    img = Image.open(io.BytesIO(dds)).convert("RGB")
+    out = io.BytesIO()
+    img.save(out, format="PNG", optimize=True)
+    return out.getvalue()
+
+
+@router.get("/site/render/brdf-map.png")
+async def site_render_brdf_map() -> Response:
+    """Trove's specular BRDF lookup atlas, converted to PNG for the 3D viewers.
+
+    A voxel's specular-map value (rough / metal / water / iridescent / waxy) is an
+    index into this 4x2 atlas of highlight lobes, which the game's own shader
+    samples by (N·H, L·H) - so the previews reproduce the highlight rather than
+    inventing per-material shininess. Pulled from the updates CAS like the
+    leaderboard icons, so the game art isn't duplicated into the repo, and cached
+    in-process (it is one small file that only changes when the game's does). A
+    404 here just means the viewers shade every solid as rough."""
+    global _brdf_png
+    from app.trove.updates import read as updates_read
+    from app.trove.updates.cas import ContentStore
+
+    meta = await updates_read.get_file_meta(_STORE_TEXTURE_BRANCH, _BRDF_PATH)
+    sha = (meta or {}).get("content_sha256")
+    if not sha:
+        raise HTTPException(status_code=404, detail="brdf map not in the archive")
+    headers = {"Cache-Control": "public, max-age=604800", "ETag": f'"{sha}"'}
+    if _brdf_png and _brdf_png[0] == sha:
+        return Response(content=_brdf_png[1], media_type="image/png", headers=headers)
+    blob = ContentStore(settings.trove_update_store_dir).path_for(sha)
+    if not blob.is_file():
+        raise HTTPException(status_code=404, detail="blob missing")
+    try:
+        png = await asyncio.to_thread(_brdf_to_png, await asyncio.to_thread(blob.read_bytes))
+    except Exception as exc:  # noqa: BLE001 - an undecodable texture is a 404, not a 500
+        logger.warning("brdf map: could not convert %s: %s", sha, exc)
+        raise HTTPException(status_code=404, detail="brdf map unreadable") from exc
+    _brdf_png = (sha, png)
+    return Response(content=png, media_type="image/png", headers=headers)
+
+
 @router.get("/site/giveaways", response_class=JSONResponse)
 async def site_giveaways() -> JSONResponse:
     """Public giveaway list for the /giveaways page (open, upcoming, recent).

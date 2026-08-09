@@ -47,11 +47,11 @@ def load_animation(skeleton: str, name: str) -> dict | None:
 
 
 def _decode_v5_grid(raw: bytes) -> list[tuple]:
-    """Decode a v5 .blueprint to grid voxels ``(x, y, z, packed_rgb, kind, level)`` in
-    part-local space, including the header's px,py,pz origin offset (so parts sit at
-    their bone). ``kind``/``level`` carry the material (glass alpha, glow, tint) via the
-    same ground-truth mapping as the catalog renderer, so the viewer shades it like the
-    game instead of as flat opaque cubes."""
+    """Decode a v5 .blueprint to grid voxels ``(x, y, z, packed_rgb, kind, level, spec)``
+    in part-local space, including the header's px,py,pz origin offset (so parts sit at
+    their bone). ``kind``/``level``/``spec`` carry the material (glass alpha, glow, tint,
+    specular map) via the same ground-truth mapping as the catalog renderer, so the
+    viewer shades it like the game instead of as flat opaque cubes."""
     from app.trove.render.voxel import KIND_CODE, material_for
     d = zlib.decompressobj()
     body = d.decompress(raw[9:]) + d.flush()
@@ -67,9 +67,9 @@ def _decode_v5_grid(raw: bytes) -> list[tuple]:
     out = []
     for L, t, c in zip(idx, types, colors, strict=False):
         y = L // plane; rem = L % plane; z = rem // sx; x = rem % sx
-        r, g, b, kind, level = material_for((c >> 16) & 255, (c >> 8) & 255, c & 255,
-                                            (c >> 24) & 255, t)
-        out.append((px+x, py+y, pz+z, (r << 16) | (g << 8) | b, KIND_CODE[kind], level))
+        r, g, b, kind, level, spec = material_for((c >> 16) & 255, (c >> 8) & 255, c & 255,
+                                                  (c >> 24) & 255, t)
+        out.append((px+x, py+y, pz+z, (r << 16) | (g << 8) | b, KIND_CODE[kind], level, spec))
     return out
 
 
@@ -116,9 +116,13 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
         vox = _decode_v5_grid(raw)
         if not vox:
             continue
-        parts.append({"name": key,
-                      "x": [v[0] for v in vox], "y": [v[1] for v in vox], "z": [v[2] for v in vox],
-                      "rgb": [v[3] for v in vox], "kind": [v[4] for v in vox], "level": [v[5] for v in vox]})
+        part = {"name": key,
+                "x": [v[0] for v in vox], "y": [v[1] for v in vox], "z": [v[2] for v in vox],
+                "rgb": [v[3] for v in vox], "kind": [v[4] for v in vox], "level": [v[5] for v in vox]}
+        spec = [v[6] for v in vox]
+        if any(spec):                    # all-rough is the common case: don't ship the array
+            part["spec"] = spec
+        parts.append(part)
     if not parts:
         return None
     _unbury_enclosed_emissive(parts, rig["rest"], rig["voxel_scale"])
@@ -127,8 +131,8 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
 
 
 def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
-    """``[(AP key, raw .blueprint bytes)]`` -> ``{(x,y,z): (r,g,b,kind,level)}`` in rig
-    space, ready for ``render.voxel.render_voxels``.
+    """``[(AP key, raw .blueprint bytes)]`` -> ``{(x,y,z): (r,g,b,kind,level,spec)}`` in
+    rig space, ready for ``render.voxel.render_voxels``.
 
     The web viewer gets its parts in LOCAL space plus the rest-pose matrices and does the
     transform on the GPU; a server-side still image has to bake the rest pose in here.
@@ -162,7 +166,7 @@ def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
         for (wx, wy, wz), v in zip(world, voxels, strict=False):
             rgb = v[3]
             out[(int(round(wx)), int(round(wy)), int(round(wz)))] = (
-                (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255, v[4], v[5])
+                (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255, v[4], v[5], v[6])
     return out
 
 
