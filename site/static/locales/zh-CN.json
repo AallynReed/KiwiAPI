@@ -2471,5 +2471,6 @@
   "Off by default: the mod tracks its latest published build on the chosen edition.": "默认关闭：模组将跟随所选版本中最新发布的构建。",
   "Edition shown.": "版本已公开。",
   "Edition hidden.": "版本已隐藏。",
-  "You'll pick the mods, editions and versions on the next screen.": "模组、版本与具体版本号将在下一步选择。"
+  "You'll pick the mods, editions and versions on the next screen.": "模组、版本与具体版本号将在下一步选择。",
+  "Could not update your favourite.": "无法更新你的收藏。"
 }

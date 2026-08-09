@@ -129,8 +129,8 @@
     const likeCls = d.starred ? 'mpk-like active' : 'mpk-like';
     const stats = `<div class="mpk-head-stats">
         <span class="mpk-stat" title="${esc(t('Downloads'))}"><i class="fa-solid fa-download"></i> ${Number(d.download_count || 0).toLocaleString()}</span>
-        <button type="button" class="${likeCls}" id="mpk-like" aria-pressed="${d.starred ? 'true' : 'false'}">
-          <i class="fa-solid fa-heart"></i> <span id="mpk-like-count">${Number(d.star_count || 0).toLocaleString()}</span>
+        <button type="button" class="${likeCls}" id="mpk-like" aria-pressed="${d.starred ? 'true' : 'false'}" aria-label="${esc(t('Favourite'))}" title="${esc(t('Favourite'))}">
+          <i class="fa-${d.starred ? 'solid' : 'regular'} fa-star"></i> <span id="mpk-like-count"${Number(d.star_count) ? '' : ' hidden'}>${Number(d.star_count || 0).toLocaleString()}</span>
         </button>
       </div>`;
     return `<header class="mp-header is-doc mpk-header">
@@ -176,7 +176,7 @@
     const tabs = variants.map((v) => {
       const isDefault = v.name === d.default_variant;
       return `<button type="button" class="mpk-tab ${v.name === state.variant ? 'active' : ''}" data-variant="${esc(v.name)}">
-        ${esc(v.label || v.name)} <span class="mpk-tab-count">${v.available_count}/${v.mod_count}</span>${isDefault ? ` <i class="fa-solid fa-star mpk-default-star" title="${esc(t('Default'))}"></i>` : ''}
+        ${esc(v.label || v.name)} <span class="mpk-tab-count">${v.available_count}/${v.mod_count}</span>${isDefault ? ` <i class="fa-solid fa-circle-check mpk-default-star" title="${esc(t('Default'))}"></i>` : ''}
       </button>`;
     }).join('');
     const addBtn = d.is_owner
@@ -199,7 +199,7 @@
   function variantOwnerCtl(d) {
     if (!d.is_owner || !activeVariant()) return '';
     return `<div class="mpk-variant-ctl">
-      ${activeVariant().name !== d.default_variant ? `<button type="button" class="mp-btn mp-btn-sm" id="mpk-make-default"><i class="fa-solid fa-star"></i> ${esc(t('Make default'))}</button>` : ''}
+      ${activeVariant().name !== d.default_variant ? `<button type="button" class="mp-btn mp-btn-sm" id="mpk-make-default"><i class="fa-solid fa-circle-check"></i> ${esc(t('Make default'))}</button>` : ''}
       <button type="button" class="mp-btn mp-btn-sm" id="mpk-rename-variant"><i class="fa-solid fa-pen"></i> ${esc(t('Rename'))}</button>
       ${(d.variants || []).length > 1 ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-danger" id="mpk-delete-variant"><i class="fa-solid fa-trash"></i> ${esc(t('Delete edition'))}</button>` : ''}
     </div>`;
@@ -538,10 +538,19 @@
       state.detail.star_count = r.data.star_count;
       const btn = document.getElementById('mpk-like');
       const cnt = document.getElementById('mpk-like-count');
-      if (btn) { btn.classList.toggle('active', r.data.starred); btn.setAttribute('aria-pressed', r.data.starred ? 'true' : 'false'); }
-      if (cnt) cnt.textContent = Number(r.data.star_count || 0).toLocaleString();
+      if (btn) {
+        btn.classList.toggle('active', r.data.starred);
+        btn.setAttribute('aria-pressed', r.data.starred ? 'true' : 'false');
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = 'fa-' + (r.data.starred ? 'solid' : 'regular') + ' fa-star';
+      }
+      if (cnt) {
+        const n = Number(r.data.star_count || 0);
+        cnt.textContent = n.toLocaleString();
+        cnt.hidden = !n;                     // bare star at zero, same as the mods hub
+      }
     } else {
-      toast(errMsg(r, t('Could not update your like.')), 'error');
+      toast(errMsg(r, t('Could not update your favourite.')), 'error');
     }
   }
 

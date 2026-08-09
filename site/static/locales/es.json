@@ -2471,5 +2471,6 @@
   "Off by default: the mod tracks its latest published build on the chosen edition.": "Desactivado por defecto: el mod sigue su última compilación publicada en la edición elegida.",
   "Edition shown.": "Edición visible.",
   "Edition hidden.": "Edición oculta.",
-  "You'll pick the mods, editions and versions on the next screen.": "Elegirás los mods, las ediciones y las versiones en la siguiente pantalla."
+  "You'll pick the mods, editions and versions on the next screen.": "Elegirás los mods, las ediciones y las versiones en la siguiente pantalla.",
+  "Could not update your favourite.": "No se pudo actualizar tu favorito."
 }

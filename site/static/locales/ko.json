@@ -2471,5 +2471,6 @@
   "Off by default: the mod tracks its latest published build on the chosen edition.": "기본값은 꺼짐: 선택한 에디션에서 최근 게시된 빌드를 따라갑니다.",
   "Edition shown.": "에디션을 공개했습니다.",
   "Edition hidden.": "에디션을 숨겼습니다.",
-  "You'll pick the mods, editions and versions on the next screen.": "모드와 에디션, 버전은 다음 화면에서 고릅니다."
+  "You'll pick the mods, editions and versions on the next screen.": "모드와 에디션, 버전은 다음 화면에서 고릅니다.",
+  "Could not update your favourite.": "즐겨찾기를 변경하지 못했습니다."
 }

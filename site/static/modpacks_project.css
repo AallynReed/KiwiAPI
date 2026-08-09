@@ -37,13 +37,18 @@
 .mpk-like {
   display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
   border: 1px solid var(--bg-line); border-radius: 999px; background: var(--bg-deep);
-  padding: 6px 14px; font: 600 .85rem 'Inter', sans-serif; color: var(--text-soft);
+  padding: 6px 14px; font: 600 .85rem 'Inter', sans-serif; color: var(--text-mute);
   transition: border-color .15s, color .15s, background .15s;
 }
-.mpk-like:hover { border-color: #ff6b81; color: #ff8fa0; }
+/* Favouriting is one thing across the site: a gold star. The pink here was the
+   only off-palette hue on the page, and the heart now means Donate, nothing else. */
+.mpk-like:hover { border-color: var(--accent-yellow); color: var(--text); }
 .mpk-like i { color: var(--text-mute); transition: color .15s; }
-.mpk-like:hover i, .mpk-like.active i { color: #ff6b81; }
-.mpk-like.active { border-color: rgba(255,107,129,.5); color: #ff8fa0; }
+.mpk-like:hover i, .mpk-like.active i { color: var(--accent-yellow); }
+.mpk-like.active {
+  border-color: color-mix(in oklab, var(--accent-yellow) 45%, transparent);
+  color: var(--accent-yellow);
+}
 .mpk-head-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .mp-takedown {
   margin: 0; padding: 12px 16px; background: rgba(255,107,129,.1);
@@ -83,7 +88,8 @@
 .mpk-tab.active { background: var(--accent-blue); border-color: var(--accent-blue); color: #06121f; }
 .mpk-tab-count { font-size: .72rem; opacity: .8; font-weight: 700; }
 .mpk-tab-add { border-style: dashed; color: var(--text-mute); }
-.mpk-default-star { font-size: .7rem; color: #ffce5b; }
+/* Green check, not a star - gold stars mean "favourited" everywhere else now. */
+.mpk-default-star { font-size: .7rem; color: var(--accent-green); }
 .mpk-tab.active .mpk-default-star { color: #06121f; }
 .mpk-variant-ctl { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
 

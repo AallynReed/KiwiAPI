@@ -112,7 +112,7 @@
 .mp-btn-danger { color: var(--accent-red); border-color: rgba(255,107,129,.4); }
 .mp-btn-danger:hover { border-color: var(--accent-red); background: rgba(255,107,129,.08); }
 .mp-btn-sm { padding: 6px 12px; font-size: .8rem; }
-.mp-starred { color: var(--accent-yellow); border-color: rgba(249,199,79,.45); }
+.mp-starred { color: var(--accent-yellow); border-color: color-mix(in oklab, var(--accent-yellow) 45%, transparent); }
 /* Header download split-button: pick a release when several exist. */
 .mp-dl-split { position: relative; display: inline-block; }
 /* CSS-drawn caret (don't depend on a FontAwesome glyph, which can render blank). */

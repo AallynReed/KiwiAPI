@@ -242,7 +242,7 @@
         <div class="mh-card-foot">
           <span class="mh-card-stats">
             <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(m.download_count || 0).toLocaleString()}</span>
-            <span class="mh-card-dl"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(m.star_count || 0).toLocaleString()}</span>
+            ${Number(m.star_count) > 0 ? `<span class="mh-card-dl" title="${esc(t('Favourites'))}"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(m.star_count).toLocaleString()}<span class="sr-only">${esc(t('favourites'))}</span></span>` : ''}
           </span>
         </div>
       </div>
