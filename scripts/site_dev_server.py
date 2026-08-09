@@ -18,6 +18,8 @@ import base64
 import json
 import os
 import re
+import urllib.error as _urlerr
+import urllib.request as _urlreq
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs, unquote
@@ -151,6 +153,12 @@ try:
 except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
     print(f"[site-dev] CSP unavailable ({_e}); pages served without one")
     _SITE_CSP = ""
+
+# Session endpoints are proxied to the real API rather than stubbed - see
+# Handler._proxy_auth for why cookies make direct calls impossible from dev.
+_AUTH_PREFIX = "/v1/site-auth"
+_API_ORIGIN = os.environ.get("SITE_DEV_API", "https://api.aallyn.net").rstrip("/")
+_SITE_ORIGIN = os.environ.get("SITE_DEV_ORIGIN", "https://trove.aallyn.net").rstrip("/")
 
 # Stub data shaped to match what app/trove/leaderboards/service.py returns,
 # so the page renders end-to-end without a backend.
@@ -890,9 +898,67 @@ def _market_item_history(name, days):
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def do_PATCH(self):
+        if self.path.startswith(_AUTH_PREFIX):
+            return self._proxy_auth()
+        return self.send_error(405)
+
+    def do_DELETE(self):
+        if self.path.startswith(_AUTH_PREFIX):
+            return self._proxy_auth()
+        return self.send_error(405)
+
+    def _proxy_auth(self):
+        """Reverse-proxy /v1/site-auth/* to the real API.
+
+        The site session is HttpOnly cookies now, and a cookie set for
+        `.aallyn.net` over https is one a browser on http://localhost will not
+        store - so talking to api.aallyn.net directly from dev cannot work. We
+        stand in as the site origin instead: forward the browser's cookies up,
+        rewrite Set-Cookie on the way back down (drop Domain + Secure so
+        localhost accepts them), and present `Origin: <app_url>` because the
+        API's cookie-origin allowlist rightly refuses localhost in production.
+
+        The upshot is that dev exercises the SAME cookie code path prod does,
+        rather than quietly falling back to something more permissive.
+        """
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        body = self.rfile.read(length) if length else None
+
+        req = _urlreq.Request(_API_ORIGIN + self.path, data=body, method=self.command)
+        for h in ("Content-Type", "Cookie", "Authorization", "Accept"):
+            if self.headers.get(h):
+                req.add_header(h, self.headers[h])
+        req.add_header("Origin", _SITE_ORIGIN)
+
+        try:
+            resp = _urlreq.urlopen(req, timeout=20)
+            status, headers, payload = resp.status, resp.headers, resp.read()
+        except _urlerr.HTTPError as e:
+            status, headers, payload = e.code, e.headers, e.read()
+        except Exception as e:  # noqa: BLE001 - dev proxy: surface, never crash
+            return self._send_json({"detail": f"auth proxy failed: {e}"}, 502)
+
+        self.send_response(status)
+        for cookie in headers.get_all("Set-Cookie") or []:
+            parts = [
+                p for p in cookie.split("; ")
+                if not p.lower().startswith("domain=") and p.lower() != "secure"
+            ]
+            self.send_header("Set-Cookie", "; ".join(parts))
+        self.send_header("Content-Type", headers.get("Content-Type", "application/json"))
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        if payload:
+            self.wfile.write(payload)
+
     def do_GET(self):
         url = urlparse(self.path)
         path = url.path
+
+        if path.startswith(_AUTH_PREFIX):
+            return self._proxy_auth()
 
         # Dev-only static preview: reject any path traversal before a request
         # path is ever turned into a filesystem path, so nothing below can escape
@@ -2822,6 +2888,10 @@ class Handler(SimpleHTTPRequestHandler):
     def do_POST(self):
         url = urlparse(self.path)
         path = url.path
+
+        if path.startswith(_AUTH_PREFIX):
+            return self._proxy_auth()
+
         length = int(self.headers.get("Content-Length", 0) or 0)
         raw = self.rfile.read(length) if length else b"{}"
         try:

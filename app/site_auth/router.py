@@ -10,11 +10,16 @@ solely through "Sign in with Discord". The dev portal (``app/auth/*``) is
 a separate system and keeps its own email/password + GitHub flows.
 """
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from pydantic import EmailStr, TypeAdapter
 
 from app.core.errors import APIError, ErrorCode
 from app.core.utils import iso, utcnow
+from app.site_auth.cookies import (
+    REFRESH_COOKIE,
+    clear_session_cookies,
+    set_session_cookies,
+)
 from app.site_auth.dependencies import (
     get_current_site_user,
     get_current_verified_site_user,
@@ -117,30 +122,53 @@ async def _build_claim_baseline(trove_name: str) -> dict[str, float]:
 # --- Tokens / session lifecycle --------------------------------------------
 
 @router.post("/refresh", response_model=SiteTokenResponse)
-async def refresh(payload: SiteRefreshRequest, request: Request) -> SiteTokenResponse:
+async def refresh(
+    request: Request,
+    response: Response,
+    payload: SiteRefreshRequest | None = None,
+) -> SiteTokenResponse:
     """Rotate a refresh token. Single-use - the old token is dead after
-    this returns."""
-    tokens = await rotate(payload.refresh_token, request)
+    this returns.
+
+    Takes the token from the request body (desktop app, and browsers still on a
+    pre-cookie session) or from the HttpOnly cookie. The body wins when both are
+    present: a legacy client's own copy is the one it will keep using.
+    """
+    supplied = (payload.refresh_token if payload else None) or request.cookies.get(REFRESH_COOKIE)
+    tokens = await rotate(supplied, request) if supplied else None
     if tokens is None:
+        # Cookies are NOT cleared here - an APIError is rendered by the error
+        # handler, which builds its own response and would drop the headers.
+        # The client expires its own session-hint cookie on a failed refresh.
         raise APIError(
             status_code=401, code=ErrorCode.not_authenticated,
             message="Invalid or expired refresh token",
         )
+    set_session_cookies(response, tokens)
     return tokens
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(payload: SiteLogoutRequest) -> None:
+async def logout(
+    request: Request,
+    response: Response,
+    payload: SiteLogoutRequest | None = None,
+) -> None:
     """End a session by its refresh token (idempotent)."""
-    if payload.refresh_token:
-        await revoke_by_refresh_token(payload.refresh_token)
+    supplied = (payload.refresh_token if payload else None) or request.cookies.get(REFRESH_COOKIE)
+    if supplied:
+        await revoke_by_refresh_token(supplied)
+    clear_session_cookies(response)
 
 
 @router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
-async def logout_all(user: SiteUser = Depends(get_current_site_user)) -> None:
+async def logout_all(
+    response: Response, user: SiteUser = Depends(get_current_site_user),
+) -> None:
     """End every session for the current account and invalidate every
     outstanding access token by bumping ``token_version``."""
     await revoke_all_sessions(user)
+    clear_session_cookies(response)
 
 
 # --- Profile + account management ------------------------------------------

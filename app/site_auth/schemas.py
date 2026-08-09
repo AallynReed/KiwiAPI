@@ -26,7 +26,9 @@ class SiteTokenResponse(BaseModel):
 
 
 class SiteRefreshRequest(BaseModel):
-    refresh_token: str
+    # Optional: browsers now send the refresh token as an HttpOnly cookie and
+    # POST an empty body. Non-browser clients (desktop app) still pass it here.
+    refresh_token: str | None = None
 
 
 class SiteLogoutRequest(BaseModel):

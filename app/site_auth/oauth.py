@@ -17,7 +17,7 @@ import secrets
 from urllib.parse import urlencode
 
 import httpx
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 
@@ -25,6 +25,7 @@ from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
 from app.core.redis import get_redis
 from app.core.utils import utcnow
+from app.site_auth.cookies import set_session_cookies
 from app.site_auth.models import SiteUser
 from app.site_auth.schemas import SiteTokenResponse
 from app.site_auth.sessions import issue_tokens
@@ -257,18 +258,25 @@ async def discord_callback(request: Request, code: str | None = None, state: str
 
 
 @router.post("/exchange", response_model=SiteTokenResponse)
-async def oauth_exchange(payload: _ExchangeBody) -> SiteTokenResponse:
-    """Swap the one-time code from the Discord redirect for real site tokens."""
+async def oauth_exchange(payload: _ExchangeBody, response: Response) -> SiteTokenResponse:
+    """Swap the one-time code from the Discord redirect for real site tokens.
+
+    This is where a browser session becomes cookie-backed: the tokens are still
+    returned in the body (the desktop app reads them from there), but a browser
+    gets the HttpOnly pair set here and never touches the body values.
+    """
     r = get_redis()
     raw = await r.getdel(f"site_oauthx:{payload.code}") if r is not None else None
     if not isinstance(raw, str):
         raise APIError(400, ErrorCode.bad_request, "Invalid or expired exchange code")
     d = json.loads(raw)
-    return SiteTokenResponse(
+    tokens = SiteTokenResponse(
         access_token=d["a"],
         refresh_token=d["r"],
         expires_in=settings.access_token_expire_minutes * 60,
     )
+    set_session_cookies(response, tokens)
+    return tokens
 
 
 async def _unique_username(seed: str) -> str:

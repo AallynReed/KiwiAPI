@@ -13,6 +13,9 @@
   // session is a bearer token held by site_auth.js on window.BTTAuth; attach it
   // when present. Anonymous callers just omit the header and get the hot window.
   function lbAuthHeaders() {
+    // Empty for a cookie session - the HttpOnly session cookie is the
+    // credential and rides along automatically. Only a pre-cookie
+    // localStorage session still has a bearer to send.
     const tok = window.BTTAuth && window.BTTAuth.tokens ? window.BTTAuth.tokens.access : null;
     return tok ? { Authorization: 'Bearer ' + tok } : {};
   }
@@ -1715,7 +1718,7 @@
   // archive; everyone else gets a sign-in prompt. The recent chips above stay the
   // quick path - this only reaches what's older than the hot window.
   function isLoggedIn() {
-    return !!(window.BTTAuth && window.BTTAuth.tokens && window.BTTAuth.tokens.access);
+    return !!(window.BTTAuth && window.BTTAuth.hasSession && window.BTTAuth.hasSession());
   }
 
   let _archiveByDay = null;   // Map<troveDayKey, latest anchor>, from /site/leaderboards/days

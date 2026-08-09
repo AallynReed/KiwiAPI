@@ -1,32 +1,67 @@
 /* site_auth.js - public user-accounts client. Loaded on every site page (navbar
    widget) and the active driver on /login; sign-in is Discord-only. Exposes
    window.BTTAuth for the dashboard. The backend at api.aallyn.net/v1/site-auth/*
-   is CORS-allowlisted for *.aallyn.net (app/core/config.py), so page fetches
-   stay a single hop - no /site/auth/* proxy. */
+   is CORS-allowlisted for *.aallyn.net with credentials (app/core/config.py), so
+   page fetches stay a single hop.
+
+   The session is HttpOnly cookies (app/site_auth/cookies.py), NOT localStorage -
+   there is deliberately no token here for a script to read or exfiltrate. What
+   that costs, and how each piece pays for it, is commented inline below. */
 
 (function () {
   'use strict';
 
   const { esc } = window.BTTUtil;
 
-  const API = 'https://api.aallyn.net';
+  // Same rule the rest of the site uses (_site_util.js): the API origin in
+  // production, same-origin ("") in dev - where the dev server reverse-proxies
+  // /v1/site-auth/* so the session cookies actually apply to localhost.
+  const API = window.API_BASE === undefined ? 'https://api.aallyn.net' : window.API_BASE;
   const STORAGE_PREFIX = 'btt_site_auth';
   const KEY_ACCESS = `${STORAGE_PREFIX}_access`;
   const KEY_REFRESH = `${STORAGE_PREFIX}_refresh`;
   const KEY_USER = `${STORAGE_PREFIX}_user`;        // cached /me snapshot
 
-  // ─── Token storage ─────────────────────────────────────────────────
-  // localStorage rather than cookies so we don't need CSRF tokens on
-  // every form submit. Same trade-off the dev portal makes. JWTs in
-  // localStorage are XSS-readable; the CSP locks the page down enough
-  // that injected scripts are a non-trivial bar.
-  const tokens = {
+  // ─── Session storage ───────────────────────────────────────────────
+  // The session lives in HttpOnly cookies set by /v1/site-auth/* (see
+  // app/site_auth/cookies.py). Script cannot read them, which is the point:
+  // an HTML injection can no longer walk off with a 30-day refresh token.
+  //
+  // Because we can't see the real cookies, the server also sets a
+  // non-HttpOnly, valueless HINT cookie. It is the only thing that tells an
+  // anonymous visitor apart from a signed-in one without spending a request,
+  // and it holds no secret - losing it costs one wasted /me, nothing more.
+  const HINT_COOKIE = 'kiwi_site_session';
+
+  function hasHint() {
+    return document.cookie.split('; ').some((c) => c.startsWith(HINT_COOKIE + '='));
+  }
+
+  // Expire the hint locally. The server clears it on logout, but a refresh
+  // that comes back 401 (session revoked, 30 days elapsed) is rendered by the
+  // error handler and carries no Set-Cookie - without this the client would
+  // keep believing it had a session and re-probe /me on every page load.
+  function dropHint() {
+    const base = HINT_COOKIE + '=; Max-Age=0; Path=/; SameSite=Lax';
+    document.cookie = base;
+    const host = location.hostname.split('.');
+    if (host.length >= 3) document.cookie = base + '; Domain=.' + host.slice(-2).join('.');
+  }
+
+  // LEGACY: sessions created before the cookie migration still live in
+  // localStorage. They keep working - `call()` sends the bearer alongside the
+  // cookie and the server prefers it - so nobody is signed out by the switch.
+  // Nothing WRITES these any more, so they drain as sessions expire or sign
+  // out, and this whole block can be deleted a release later.
+  const legacy = {
     get access() {
       try { return localStorage.getItem(KEY_ACCESS); } catch (_) { return null; }
     },
     get refresh() {
       try { return localStorage.getItem(KEY_REFRESH); } catch (_) { return null; }
     },
+    // Only used to keep a legacy session alive when the cookie did NOT land
+    // (see refresh()). Never used to start a new session.
     save(access, refresh) {
       try {
         if (access)  localStorage.setItem(KEY_ACCESS,  access);
@@ -37,10 +72,21 @@
       try {
         localStorage.removeItem(KEY_ACCESS);
         localStorage.removeItem(KEY_REFRESH);
-        localStorage.removeItem(KEY_USER);
       } catch (_) {}
     },
   };
+
+  // Is there anything worth asking the server about? Cheap and synchronous.
+  function hasSession() {
+    return hasHint() || !!legacy.access;
+  }
+
+  function clearSession() {
+    legacy.clear();
+    dropHint();
+    try { localStorage.removeItem(KEY_USER); } catch (_) {}
+    _meCache = null;
+  }
 
   // ─── Authenticated fetch with refresh-on-401 ───────────────────────
   async function call(path, opts = {}) {
@@ -49,25 +95,29 @@
     if (opts.json !== undefined) {
       headers['Content-Type'] = 'application/json';
     }
-    if (opts.auth !== false && tokens.access) {
-      headers['Authorization'] = 'Bearer ' + tokens.access;
+    if (opts.auth !== false && legacy.access) {
+      headers['Authorization'] = 'Bearer ' + legacy.access;
     }
     const init = {
       method: opts.method || (opts.json !== undefined ? 'POST' : 'GET'),
       headers,
       body: opts.json !== undefined ? JSON.stringify(opts.json) : opts.body,
+      // The session cookie is the credential now, and this is cross-origin
+      // (trove.aallyn.net -> api.aallyn.net), so it has to be asked for
+      // explicitly. The API allowlists our origin with allow_credentials.
+      credentials: 'include',
     };
     let res = await fetch(url, init);
     // 401 → refresh once and retry. We never refresh while ALREADY
     // refreshing to avoid loops; the second 401 in a row clears state
     // and bubbles up.
-    if (res.status === 401 && opts.auth !== false && !opts._retried && tokens.refresh) {
+    if (res.status === 401 && opts.auth !== false && !opts._retried && hasSession()) {
       const ok = await refresh();
       if (ok) {
-        headers['Authorization'] = 'Bearer ' + tokens.access;
+        if (legacy.access) headers['Authorization'] = 'Bearer ' + legacy.access;
         res = await fetch(url, Object.assign({}, init, { headers }));
       } else {
-        tokens.clear();
+        clearSession();
       }
     }
     return res;
@@ -81,16 +131,25 @@
   }
 
   async function refresh() {
-    if (!tokens.refresh) return false;
+    if (!hasSession()) return false;
     try {
       const r = await fetch(API + '/v1/site-auth/refresh', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: tokens.refresh }),
+        credentials: 'include',
+        // A cookie session sends an empty body; the server reads the token
+        // from the HttpOnly cookie instead.
+        body: JSON.stringify(legacy.refresh ? { refresh_token: legacy.refresh } : {}),
       });
-      if (!r.ok) return false;
+      if (!r.ok) { clearSession(); return false; }
       const data = await r.json();
-      tokens.save(data.access_token, data.refresh_token);
+      // This is where a pre-cookie session migrates: the response just set the
+      // HttpOnly pair, so the localStorage copy is redundant and we drop it.
+      // If the cookie did NOT land (dev over a cross-site origin), keep the
+      // rotated bearer instead - otherwise the old token is dead and so is
+      // the session.
+      if (hasHint()) legacy.clear();
+      else legacy.save(data.access_token, data.refresh_token);
       return true;
     } catch (_) {
       return false;
@@ -98,18 +157,18 @@
   }
 
   async function logout() {
-    if (tokens.refresh) {
-      try {
-        await fetch(API + '/v1/site-auth/logout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: tokens.refresh }),
-        });
-      } catch (_) { /* best-effort */ }
-    }
-    tokens.clear();
-    // Broadcast so the navbar widget on this page re-renders without
-    // a hard reload. Other tabs pick it up via the 'storage' event.
+    try {
+      await fetch(API + '/v1/site-auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(legacy.refresh ? { refresh_token: legacy.refresh } : {}),
+      });
+    } catch (_) { /* best-effort - the local clear below still happens */ }
+    clearSession();
+    // Broadcast so the navbar widget on this page re-renders without a hard
+    // reload, and so other tabs drop their session too.
+    announce();
     document.dispatchEvent(new CustomEvent('btt-auth-changed', { detail: { user: null } }));
   }
 
@@ -118,7 +177,7 @@
   let _meInflight = null;
 
   async function getMe({ force = false } = {}) {
-    if (!tokens.access) return null;
+    if (!hasSession()) return null;
     if (!force && _meCache) return _meCache;
     if (_meInflight) return _meInflight;
     _meInflight = (async () => {
@@ -126,9 +185,13 @@
       if (r.ok && r.data) {
         _meCache = r.data;
         try { localStorage.setItem(KEY_USER, JSON.stringify(r.data)); } catch (_) {}
+        announce();
         document.dispatchEvent(new CustomEvent('btt-auth-changed', { detail: { user: r.data } }));
         return r.data;
       }
+      // The hint outlived the session (revoked elsewhere, or 30 days passed).
+      // Drop it so we stop probing on every page load.
+      if (r.status === 401) clearSession();
       return null;
     })().finally(() => { _meInflight = null; });
     return _meInflight;
@@ -230,7 +293,11 @@
         method: 'POST', json: { code: decodeURIComponent(m[1]) }, auth: false,
       });
       if (!r.ok) throw new Error('exchange');
-      tokens.save(r.data.access_token, r.data.refresh_token);
+      // Nothing is stored here on purpose: the response set the HttpOnly
+      // session cookies (and the hint), so the tokens in r.data are for
+      // non-browser clients only. Writing them to localStorage is exactly the
+      // exposure this migration removed.
+      if (!hasHint()) throw new Error('no-session-cookie');
       await getMe({ force: true });
       const rawNext = new URLSearchParams(location.search).get('next') || '';
       // Resolve against our own origin and only keep the path if it stays
@@ -272,8 +339,24 @@
     return null;
   }
 
-  // ─── Cross-tab + storage sync ──────────────────────────────────────
-  // If the user logs out (or in) in another tab, mirror the change here.
+  // ─── Cross-tab sync ────────────────────────────────────────────────
+  // The session used to live in localStorage, so a sign-in/out in another tab
+  // arrived for free as a 'storage' event. Cookies fire no such event, so say
+  // it explicitly over BroadcastChannel. The 'storage' listener stays for the
+  // legacy KEY_USER snapshot (and older browsers without BroadcastChannel).
+  let _channel = null;
+  try {
+    _channel = new BroadcastChannel('btt-site-auth');
+    _channel.addEventListener('message', () => {
+      _meCache = null;
+      bootNav();
+    });
+  } catch (_) { /* unsupported - the storage event below still covers most cases */ }
+
+  function announce() {
+    try { if (_channel) _channel.postMessage(1); } catch (_) {}
+  }
+
   window.addEventListener('storage', (e) => {
     if (e.key === KEY_ACCESS || e.key === KEY_REFRESH || e.key === KEY_USER) {
       _meCache = null;
@@ -286,7 +369,9 @@
     // Paint from cache first (no Sign-in flash), then refresh from the server.
     const cached = getCachedUser();
     renderNav(cached);
-    if (!tokens.access) { renderNav(null); return; }
+    // The hint cookie is what keeps an anonymous visitor from spending a /me
+    // request on every page just to be told they're anonymous.
+    if (!hasSession()) { renderNav(null); return; }
     const fresh = await getMe();
     renderNav(fresh);
   }
@@ -314,8 +399,12 @@
     logout,
     getMe,
     getCachedUser,
-    tokens,
+    hasSession,
     API,
     errorMessage,
+    // Kept only so a stale cached page script reading `.access` gets null
+    // instead of throwing. The session is HttpOnly cookies - there is nothing
+    // here to read. Callers wanting "am I signed in?" use hasSession().
+    tokens: { get access() { return legacy.access; }, get refresh() { return legacy.refresh; } },
   };
 })();

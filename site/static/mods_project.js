@@ -84,6 +84,9 @@
   }
 
   function authHeader() {
+    // Empty for a cookie session - the HttpOnly session cookie is the
+    // credential and rides along automatically. Only a pre-cookie
+    // localStorage session still has a bearer to send.
     const tok = window.BTTAuth && window.BTTAuth.tokens ? window.BTTAuth.tokens.access : null;
     return tok ? { Authorization: 'Bearer ' + tok } : {};
   }
@@ -91,10 +94,10 @@
   // Same-origin read with a one-shot token refresh, so an owner whose access
   // token aged out still sees their drafts after the silent refresh.
   async function siteGET(path) {
-    let r = await fetch(path, { headers: authHeader() });
-    if ((r.status === 401 || r.status === 404) && window.BTTAuth
-        && window.BTTAuth.tokens && window.BTTAuth.tokens.refresh) {
-      if (await window.BTTAuth.refresh()) r = await fetch(path, { headers: authHeader() });
+    const init = { headers: authHeader(), credentials: 'same-origin' };
+    let r = await fetch(path, init);
+    if ((r.status === 401 || r.status === 404) && window.BTTAuth && window.BTTAuth.hasSession && window.BTTAuth.hasSession()) {
+      if (await window.BTTAuth.refresh()) r = await fetch(path, init);
     }
     return r;
   }
