@@ -277,8 +277,36 @@
     .dr-share, .dr-opt, .dr-tab { transition: none; }
 }
 
-/* Colour swatches - hair and eyes are the only art Trove masks. */
-.dr-colours { display: flex; flex-wrap: wrap; gap: .5rem; }
+/* Colour swatches - the game's own palette, laid out in its grid. */
+.dr-colours { display: flex; flex-wrap: wrap; gap: .85rem; }
+.dr-colgroup { display: flex; flex-direction: column; gap: .3rem; }
+.dr-colhead {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--text-mute);
+    font-size: .8rem;
+}
+.dr-swatches {
+    display: grid;
+    grid-template-columns: repeat(var(--dr-cols, 6), 1fr);
+    gap: 3px;
+}
+.dr-sw {
+    width: 22px;
+    height: 18px;
+    border: 1px solid var(--bg-line);
+    border-radius: 4px;
+    padding: 0;
+    cursor: pointer;
+}
+.dr-sw:hover { border-color: var(--text-mute); }
+.dr-sw.on {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 55%, transparent);
+}
+.dr-sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 .dr-colour {
     display: inline-flex;
     align-items: center;

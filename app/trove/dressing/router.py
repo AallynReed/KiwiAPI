@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from app.core.dependencies import AccessContext, public_scope
 from app.core.errors import COMMON_ERROR_RESPONSES, APIError, ErrorCode
 from app.trove.dressing import catalogue as cat
+from app.trove.dressing import palette as pal
 from app.trove.dressing import service
 from app.trove.dressing.schemas import (
     DressClassList,
@@ -20,6 +21,7 @@ from app.trove.dressing.schemas import (
     DressOptionOut,
     DressOptionPage,
     DressOutfit,
+    DressPalette,
     DressRaceList,
     DressRaceOut,
 )
@@ -50,6 +52,16 @@ def _empty() -> APIError:
     return APIError(503, ErrorCode.not_found,
                     "The dressing room catalogue isn't built yet - the game archive "
                     "hasn't been indexed on this instance.")
+
+
+@dressing_router.get("/palette", response_model=DressPalette)
+async def get_palette(ctx: AccessContext = _PUB) -> DressPalette:
+    """The hair and eye colours the game's own character creator offers.
+
+    Transcribed from the in-game picker - the swatch list is not in the shipped data
+    (see app/trove/dressing/palette.py) - so `hair_color`/`eye_color` still accept any
+    `#rrggbb`; this is what Trove itself gives you."""
+    return DressPalette(columns=pal.COLUMNS, hair=list(pal.HAIR), eyes=list(pal.EYE))
 
 
 @dressing_router.get("/races", response_model=DressRaceList)

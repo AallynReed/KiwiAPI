@@ -41,6 +41,7 @@
     var els = {};
     var classes = [];
     var races = [];
+    var palette = null;
     var state = { cls: "", race: "", costume: "", head: "", hair: "", eyes: "",
                   hat: "", face: "", weapon: "", hair_color: "", eye_color: "" };
     var slot = "costume";
@@ -95,6 +96,14 @@
             if (!r.ok) throw new Error("HTTP " + r.status);
             return r.json();
         });
+    }
+
+    /* The colours Trove's own picker offers. Freeform hex still works on the API, but
+       the page shows the game's list, because that's what a player can actually pick. */
+    function loadPalette() {
+        return get("/site/dressing/palette").then(function (d) {
+            palette = d;
+        }).catch(function () { palette = null; });
     }
 
     function loadRaces() {
@@ -267,15 +276,24 @@
     /* One swatch per maskable slot. Trove itself only colours hair and eyes - a head is
        authored in a real skin tone, and you change skin by changing race. */
     function renderColors() {
+        if (!palette) { els.colors.innerHTML = ""; return; }
         els.colors.innerHTML = COLORS.map(function (c) {
-            var on = !!state[c.param];
-            return '<label class="dr-colour' + (supports(c.slot) ? "" : " dr-chip-off") + '">'
-                + '<input type="color" data-param="' + c.param + '" value="'
-                + esc(state[c.param] || c.fallback) + '">'
-                + "<span>" + esc(c.label) + "</span>"
-                + (on ? '<button type="button" class="dr-colour-x" data-clear="' + c.param
-                        + '" aria-label="Reset">&times;</button>' : "")
-                + "</label>";
+            var list = palette[c.slot] || [];
+            if (!list.length) return "";
+            var cur = state[c.param];
+            var swatches = list.map(function (hex) {
+                return '<button type="button" class="dr-sw' + (cur === hex ? " on" : "")
+                    + '" data-param="' + c.param + '" data-hex="' + esc(hex)
+                    + '" style="background:' + esc(hex) + '" title="' + esc(hex)
+                    + '" aria-label="' + esc(hex) + '"></button>';
+            }).join("");
+            return '<div class="dr-colgroup' + (supports(c.slot) ? "" : " dr-chip-off") + '">'
+                + '<div class="dr-colhead"><span>' + esc(c.label) + "</span>"
+                + (cur ? '<button type="button" class="dr-colour-x" data-clear="' + c.param
+                         + '">Reset</button>' : "")
+                + "</div>"
+                + '<div class="dr-swatches" style="--dr-cols:' + (palette.columns || 6) + '">'
+                + swatches + "</div></div>";
         }).join("");
     }
 
@@ -404,13 +422,15 @@
     function wire() {
         els.cls.addEventListener("change", function () { setClass(els.cls.value); });
         els.race.addEventListener("change", function () { setRace(els.race.value); });
-        els.colors.addEventListener("input", function (e) {
-            var i = e.target.closest("input[data-param]");
-            if (i) setColor(i.getAttribute("data-param"), i.value);
-        });
         els.colors.addEventListener("click", function (e) {
-            var b = e.target.closest("[data-clear]");
-            if (b) { e.preventDefault(); setColor(b.getAttribute("data-clear"), ""); }
+            var clear = e.target.closest("[data-clear]");
+            if (clear) { setColor(clear.getAttribute("data-clear"), ""); return; }
+            var sw = e.target.closest("[data-hex]");
+            if (sw) {
+                var param = sw.getAttribute("data-param");
+                var hex = sw.getAttribute("data-hex");
+                setColor(param, state[param] === hex ? "" : hex);   // click again to clear
+            }
         });
         els.tabs.addEventListener("click", function (e) {
             var b = e.target.closest("[data-slot]");
@@ -446,7 +466,7 @@
         renderTabs();
         renderCurrent();
         readUrl();
-        loadRaces().then(loadClasses).then(function () {
+        Promise.all([loadPalette(), loadRaces()]).then(loadClasses).then(function () {
             wire();
             renderTabs();
             renderColors();

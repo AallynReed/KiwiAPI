@@ -75,3 +75,11 @@ class DressRaceOut(BaseModel):
 
 class DressRaceList(BaseModel):
     items: list[DressRaceOut]
+
+
+class DressPalette(BaseModel):
+    """The colours Trove's own picker offers, in its layout order."""
+
+    columns: int = Field(description="Grid width the game uses.")
+    hair: list[str]
+    eyes: list[str]

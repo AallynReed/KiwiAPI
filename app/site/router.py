@@ -1940,6 +1940,15 @@ async def site_dressing_classes() -> JSONResponse:
                         headers={"Cache-Control": "public, max-age=300"})
 
 
+@router.get("/site/dressing/palette", response_class=JSONResponse)
+async def site_dressing_palette() -> JSONResponse:
+    """The game's hair/eye colour swatches for the /dressing-room picker."""
+    from app.trove.dressing.router import get_palette
+
+    return JSONResponse(jsonable_encoder(await get_palette()),
+                        headers={"Cache-Control": "public, max-age=3600"})
+
+
 @router.get("/site/dressing/races", response_class=JSONResponse)
 async def site_dressing_races() -> JSONResponse:
     """Character-creation races for the /dressing-room picker."""
