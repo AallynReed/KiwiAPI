@@ -72,8 +72,9 @@ codexes, the mods hub, modpacks, the marketplace, game updates, server status, a
 Browsing is public; developing and publishing mods is a Discord-login action.
 
 Its 3D model and particle-effect viewers are also **embeddable**: another site can iframe
-`trove.aallyn.net/embed/viewer` to preview a mod it hosts, a mod on the hub, or a file straight out of the
-live game — and a single blueprint filename resolves into the whole assembled creature.
+`trove.aallyn.net/embed/viewer` to preview a mod it hosts, a mod on the hub, a dressed character, or
+anything in the live game — a creature by its own prefab name, or a single blueprint filename, which
+resolves into the whole assembled creature.
 Framing is allowed per-origin (`embed.allowed_origins`), and a mod a partner uploads to preview is
 held in Redis for minutes, never written to disk. Partner guide:
 [docs/embed.html](docs/embed.html); code in `app/embed/`.

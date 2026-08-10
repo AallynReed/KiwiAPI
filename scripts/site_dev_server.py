@@ -1048,10 +1048,13 @@ class Handler(SimpleHTTPRequestHandler):
             q = parse_qs(url.query)
             def _q(name, default=""):
                 return q.get(name, [default])[0]
+            other = _q("release") or _q("game") or _q("prefab") or _q("dress")
             return self._send_file(TEMPLATES / "embed_viewer.html", "text/html", {
                 "release": _q("release"),
-                "tmod": _q("tmod") or ("" if (_q("release") or _q("game")) else "devtoken"),
+                "tmod": _q("tmod") or ("" if other else "devtoken"),
                 "game": _q("game"),
+                "prefab": _q("prefab"),
+                "dress": _q("dress"),
                 "path": _q("path"),
                 "mode": _q("mode", "auto"),
                 "theme": _q("theme", "dark"),

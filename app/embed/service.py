@@ -1,13 +1,18 @@
 """Source resolution for the embeddable viewers.
 
 The Mods Hub's viewers only ever previewed one thing: a release in our own hub.
-The embed widens that to three **sources**, all rendered by exactly the same code:
+The embed widens that to five **sources**, all rendered by exactly the same code:
 
   ``release=<id>``   a published Mods Hub release (public/unlisted only - a draft
                      is never previewable through an embed, which is anonymous)
   ``tmod=<token>``   a .tmod the partner uploaded to /v1/embed/tmod (app/embed/uploads.py)
   ``game=<path>``    a file in the live game tree (the updates archive), so a partner
                      can preview native game content they don't host at all
+  ``prefab=<path>``  a creature by its game PREFAB - the mount/dragon/ally/costume
+                     itself rather than one of its meshes. The prefab is what the game
+                     binds a skeleton and a part set to, so this is the direct way to
+                     point at a creature; ``game=`` reaches the same model the long way
+                     round, by asking which creature owns a given blueprint
   ``dress=<outfit>`` a dressed character -
                      ``class:costume:hat:face:weapon:head:hair:weapon_family``, the
                      dressing room's colon-joined selection. Each slot takes a style's
@@ -72,14 +77,16 @@ def _missing(msg: str) -> APIError:
 @dataclass(frozen=True)
 class Source:
     """A resolved embed target. ``tmod`` is set for release/upload sources;
-    ``game_path`` for a game-tree file. ``cache_key`` namespaces the shared VFX
+    ``game_path`` for a game-tree file; ``prefab`` for a whole game creature.
+    ``cache_key`` namespaces the shared VFX
     dependency-set cache so two sources can't authorise each other's assets."""
 
-    kind: str                      # "release" | "tmod" | "game" | "dress"
-    ident: str                     # release id / upload token / game path / outfit
+    kind: str                      # "release" | "tmod" | "game" | "prefab" | "dress"
+    ident: str                     # release id / upload token / game path / prefab / outfit
     title: str                     # what the viewer shows in its header
     tmod: bytes | None = None
     game_path: str | None = None
+    prefab: str | None = None      # canonical creature prefab, for kind == "prefab"
     outfit: object | None = None   # a dressing_service.Outfit, for kind == "dress"
     # SHA-256 of `tmod` (an upload's token IS its hash). Keys the decoded-payload
     # cache for a hub release; an upload is deliberately never cached, since we
@@ -95,17 +102,19 @@ class Source:
 
 async def resolve(
     *, release: str | None = None, tmod: str | None = None, game: str | None = None,
-    dress: str | None = None,
+    prefab: str | None = None, dress: str | None = None,
 ) -> Source:
     """Resolve exactly one of the source params to a ``Source``."""
-    given = [p for p in (release, tmod, game, dress) if p]
+    given = [p for p in (release, tmod, game, prefab, dress) if p]
     if len(given) != 1:
-        raise _bad("Pass exactly one source: release, tmod, game or dress.")
+        raise _bad("Pass exactly one source: release, tmod, game, prefab or dress.")
 
     if release:
         return await _release_source(release)
     if tmod:
         return await _upload_source(tmod)
+    if prefab:
+        return await _prefab_source(prefab)
     if dress:
         return await _dress_source(dress)
     return await _game_source(game or "")
@@ -151,6 +160,46 @@ async def _dress_source(token: str) -> Source:
         raise _missing("No such Trove class to dress.")
     return Source(kind="dress", ident=outfit.ident,
                   title=f"{outfit.cls.name} - {outfit.costume.name}", outfit=outfit)
+
+
+async def _prefab_source(name: str) -> Source:
+    """A creature named by its own prefab: ``prefabs/collections/mount/mount_raptor_peacock``
+    (the ``.binfab`` is optional), or the bare filename when it's unambiguous.
+
+    A prefab is the game's own definition of one creature - it binds the skeleton and
+    every blueprint part to its attach point - so this addresses a mount, dragon, ally,
+    mob or costume directly, and the rig plus the whole part set comes out of the live
+    game files with nothing for the partner to host or upload.
+
+    Only prefabs the rig map actually binds a skeleton to are addressable. That is the
+    same authoritative binfab-derived map every other creature preview uses, so this
+    inherits the no-guess rule: an unbound prefab (or a name that would have to be
+    guessed between several creatures) renders nothing rather than the wrong animal.
+    """
+    from app.trove.mods_hub import rig_index
+
+    name = (name or "").strip()
+    if not name or len(name) > _MAX_GAME_PATH:
+        raise _bad("Missing or over-long prefab path.")
+    path, candidates = await rig_index.prefab_path(name)
+    if path is None and candidates:
+        raise _bad(
+            f"'{name}' is the filename of {len(candidates)} different creature prefabs. "
+            f"Pass the full path, e.g. '{candidates[0]}'.")
+    if path is None:
+        raise _missing(f"No creature prefab '{name}' in the current game files.")
+    return Source(kind="prefab", ident=path, title=_prefab_title(path), prefab=path)
+
+
+def _prefab_title(path: str) -> str:
+    """The creature's name, as far as the path knows it. Trove writes a costume's own
+    prefab as ``<costume>/npc.binfab``, where the folder is the name and the file is
+    not - so that one case takes the folder."""
+    parts = [p for p in path.replace("\\", "/").split("/") if p]
+    stem = parts[-1][: -len(".binfab")] if parts[-1].lower().endswith(".binfab") else parts[-1]
+    if stem.lower() in ("npc", "prefab") and len(parts) > 1:
+        return parts[-2]
+    return stem
 
 
 async def _release_source(release_id: str) -> Source:
@@ -239,6 +288,8 @@ async def manifest(src: Source) -> dict:
     (with rig/assembly info) and .pkfx effects in this source."""
     if src.kind == "game":
         return await _game_manifest(src)
+    if src.kind == "prefab":
+        return await _prefab_manifest(src)
     if src.kind == "dress":
         return _dress_manifest(src)
     return await _tmod_manifest(src)
@@ -257,6 +308,33 @@ def _dress_manifest(src: Source) -> dict:
             "items": [{"path": src.ident, "size": None, "assembled": True}],
             "rig": rig,
             "animations": assembly.animations_for(rig),
+        },
+        "vfx": {"items": []},
+    }
+
+
+async def _prefab_manifest(src: Source) -> dict:
+    """One creature: its rig, its clips, and every part the prefab binds - so the viewer
+    offers the whole animal on the Creature tab and its individual meshes on the other.
+
+    A part the archive doesn't have is left out of the picker rather than offered and
+    then 404'd; the assembled model still builds from the parts we do have."""
+    from app.trove.mods_hub import assembly, rig_index
+
+    prefab = src.prefab or ""
+    skeleton, parts = await rig_index.creature_by_prefab(prefab)
+    rig = skeleton if skeleton and assembly.has_baked_rig(skeleton) else None
+    paths = await game_file_paths(LIVE_BRANCH)
+    items = []
+    for basename in sorted(parts):
+        gp = nearest_path(paths.get(f"{basename}.blueprint", []), prefab)
+        if gp:
+            items.append({"path": gp, "size": None, "assembled": bool(rig)})
+    return {
+        "source": "prefab", "title": src.title,
+        "blueprints": {
+            "items": items, "rig": rig,
+            "animations": assembly.animations_for(rig) if rig else [],
         },
         "vfx": {"items": []},
     }
@@ -319,6 +397,8 @@ async def blueprint(src: Source, path: str, fmt: str = "json") -> bp_cache.Cache
     copy of a mod is still the mod, so it's rebuilt on every view."""
     if src.kind == "game":
         return await _game_blueprint(src, path, fmt)
+    if src.kind == "prefab":
+        return await _prefab_blueprint(src, path, fmt)
     if src.kind == "dress":
         raise _missing("A dressed character has no separate blueprint to show.")
     assert src.tmod is not None
@@ -332,14 +412,39 @@ async def blueprint(src: Source, path: str, fmt: str = "json") -> bp_cache.Cache
 
 
 async def _game_blueprint(src: Source, path: str, fmt: str = "json") -> bp_cache.Cached:
-    from app.trove.updates import read as updates_read
-
     # A game source is pinned to its own file - the path param is only ever the
     # one the manifest advertised, so ignore anything else rather than turning
     # this into a general file reader.
     target = src.game_path or ""
     if path and path.strip().lower() not in (target.lower(), vfx.basename(target).lower()):
         raise _missing("That blueprint isn't part of this preview.")
+    return await _decode_game_path(target, fmt)
+
+
+async def _prefab_blueprint(src: Source, path: str, fmt: str = "json") -> bp_cache.Cached:
+    """One mesh of the creature. Authorised against the prefab's OWN part set, so this
+    reads the creature the embed was opened on and not the rest of the game tree."""
+    from app.trove.mods_hub import rig_index
+
+    prefab = src.prefab or ""
+    _skeleton, parts = await rig_index.creature_by_prefab(prefab)
+    want = vfx.basename(path or "").lower()
+    if want.endswith(".blueprint"):
+        want = want[: -len(".blueprint")]
+    if not want or want not in parts:
+        raise _missing("That blueprint isn't part of this creature.")
+    paths = await game_file_paths(LIVE_BRANCH)
+    target = nearest_path(paths.get(f"{want}.blueprint", []), prefab)
+    if not target:
+        raise _missing("Game file not found.")
+    return await _decode_game_path(target, fmt)
+
+
+async def _decode_game_path(target: str, fmt: str) -> bp_cache.Cached:
+    """Decoded payload for one archived blueprint, keyed by its content hash - so every
+    source that reaches the same file shares one decode."""
+    from app.trove.updates import read as updates_read
+
     meta = await updates_read.get_file_meta(LIVE_BRANCH, target)
     if not meta:
         raise _missing("Game file not found.")
@@ -378,6 +483,8 @@ async def assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | None:
     every view (we don't keep partner files, decoded or not)."""
     if src.kind == "game":
         return await _game_assembled(src, fmt)
+    if src.kind == "prefab":
+        return await _prefab_assembled(src, fmt)
     if src.kind == "dress":
         from app.trove.dressing import service as dressing
 
@@ -427,12 +534,36 @@ async def _game_assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | N
     path = src.game_path or ""
     if not path.lower().endswith(".blueprint"):
         return None
-    from app.trove.mods_hub import assembly, rig_index
+    from app.trove.mods_hub import rig_index
 
     stem = vfx.basename(path).lower()[: -len(".blueprint")]
     skeleton, prefab, parts = await rig_index.creature_for(stem)
     if not skeleton or not prefab or not parts:
         return None                      # part not bound to a creature -> no guess, no render
+    return await _assemble_creature(prefab, skeleton, parts, fmt)
+
+
+async def _prefab_assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | None:
+    """Same assembly, entered from the creature instead of one of its parts - the prefab
+    IS the identity ``_game_assembled`` has to work backwards to."""
+    from app.trove.mods_hub import rig_index
+
+    prefab = src.prefab or ""
+    skeleton, parts = await rig_index.creature_by_prefab(prefab)
+    if not skeleton or not parts:
+        return None
+    return await _assemble_creature(prefab, skeleton, parts, fmt)
+
+
+async def _assemble_creature(
+    prefab: str, skeleton: str, parts: dict[str, str], fmt: str,
+) -> bp_cache.Cached | None:
+    """Build ONE creature - the prefab's own part set on its skeleton - from the game
+    tree. Shared by both native sources: ``game=`` works back from a part to the prefab,
+    ``prefab=`` names it outright, and either way this is the same creature and the same
+    cache entry."""
+    from app.trove.mods_hub import assembly, rig_index
+
     if not assembly.has_baked_rig(skeleton):
         return None                      # unknown rig -> no guess, no render
 
@@ -533,7 +664,11 @@ async def _vfx_index_and_text(src: Source, path: str | None) -> tuple[dict[str, 
         index = {vfx.basename(target).lower(): raw}
         return index, raw.decode("utf-8", "replace")
 
-    assert src.tmod is not None
+    if src.tmod is None:
+        # A creature (prefab=) or a dressed character bundles no files at all, so there
+        # is nothing here to resolve an effect against - and its manifest never offered
+        # one. Answer that rather than tripping over the missing bytes.
+        raise _missing("This preview has no effects to show.")
     try:
         _items, index = await asyncio.to_thread(hub._tmod_pkfx_and_index, src.tmod)
     except tmod_mod.TmodError:

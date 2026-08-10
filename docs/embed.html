@@ -53,8 +53,9 @@
           <code>.pkfx</code> effects. The embeddable viewer puts that same renderer in an
           <code>&lt;iframe&gt;</code> on your pages.</p>
 
-          <p>It can show a mod you host yourself, or a file straight out of the live game -
-          you don't need to ship game assets, and you don't need to build anything 3D.</p>
+          <p>It can show a mod you host yourself, a creature straight out of the live game, or
+          any single game file - you don't need to ship game assets, and you don't need to build
+          anything 3D.</p>
 
           <div class="callout">
             <p><strong>Before you start:</strong> embedding is allowed per-origin. Send us the
@@ -81,6 +82,19 @@
           <h2>Choosing what to show</h2>
           <p>Every embed needs exactly one <strong>source</strong>.</p>
 
+          <h3>A creature from the game</h3>
+          <p><code>prefab=&lt;path&gt;</code> - a mount, dragon, ally, mob or costume, named the
+          way the game names it. You get the whole creature: every part placed on its skeleton,
+          with its animation clips, straight out of the current game files.</p>
+          <pre><code>?prefab=prefabs/collections/mount/mount_raptor_peacock.binfab
+?prefab=prefabs/collections/mount/mount_raptor_peacock
+?prefab=mount_raptor_peacock</code></pre>
+          <p>The <code>.binfab</code> is optional, and so is the folder when the filename is
+          unique. Costumes are the common exception - the game calls every costume's prefab
+          <code>npc.binfab</code>, so those need the full path
+          (<code>prefabs/collections/skins/crimefighter_beequeen/npc.binfab</code>). If a name
+          could mean more than one creature we say so instead of picking one.</p>
+
           <h3>A file from the live game</h3>
           <p><code>game=&lt;path&gt;</code> - any <code>.blueprint</code> or <code>.pkfx</code>
           in the current game files. A full path works, and so does a bare filename; we resolve
@@ -90,7 +104,9 @@
 ?game=fx_fire_medium.pkfx</code></pre>
           <p>When the blueprint you name is part of a creature, the viewer offers the
           <strong>whole creature</strong> - every other part pulled from the game files,
-          placed on its skeleton, with its animation clips. One filename, the full model.</p>
+          placed on its skeleton, with its animation clips. One filename, the full model.
+          (If you already know which creature you want, <code>prefab=</code> above says so
+          directly.)</p>
 
           <h3>A mod you host</h3>
           <p>Upload the <code>.tmod</code> once from your backend and embed the token you get
@@ -233,6 +249,11 @@
                 <td>"No '…' in the current game files"</td>
                 <td>The filename doesn't exist in the live game tree - check spelling and
                 extension, or pass the full path.</td>
+              </tr>
+              <tr>
+                <td>"'…' is the filename of N different creature prefabs"</td>
+                <td>A short <code>prefab=</code> name that several creatures share (usually
+                <code>npc</code>). The message includes a real full path - use that shape.</td>
               </tr>
               <tr>
                 <td>"This mod has no 3D models or effects to preview"</td>

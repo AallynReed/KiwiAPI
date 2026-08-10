@@ -8,7 +8,8 @@
    hostname and a move can't strand their pages.
 
    Attributes (all optional except the source):
-     data-release / data-tmod / data-game   the source — exactly one
+     data-release / data-tmod / data-game / data-prefab / data-dress
+                    the source — exactly one
      data-path      which file inside the source to show
      data-mode      blueprint | assembled | vfx   (default: auto)
      data-theme     dark | light                  (default: dark)
@@ -25,7 +26,7 @@
     try { return new URL(self.src).origin; } catch (e) { return ''; }
   })();
 
-  var SOURCES = ['release', 'tmod', 'game'];
+  var SOURCES = ['release', 'tmod', 'game', 'prefab', 'dress'];
   var PASS = ['path', 'mode', 'theme'];
 
   function build(el) {

@@ -88,11 +88,15 @@ async def _source(
                              description="An upload token from POST /v1/embed/tmod."),
     game: str | None = Query(default=None, max_length=400,
                              description="A .blueprint/.pkfx path (or filename) in the live game files."),
+    prefab: str | None = Query(default=None, max_length=400,
+                               description="A creature by its game prefab path (or unambiguous filename): "
+                                           "its rig, clips and every part come from the live game files."),
     dress: str | None = Query(default=None, max_length=700,
                               description="A dressed character: `class:costume:hat:face:weapon:head:hair:weapon_family`. Each slot takes a style stem or a blueprint name."),
 ) -> service.Source:
     """Shared dependency: resolve the one source param the caller passed."""
-    return await service.resolve(release=release, tmod=tmod, game=game, dress=dress)
+    return await service.resolve(release=release, tmod=tmod, game=game, prefab=prefab,
+                                 dress=dress)
 
 
 _SRC = Depends(_source)
@@ -106,6 +110,7 @@ async def embed_viewer(
     release: str | None = Query(default=None, max_length=64),
     tmod: str | None = Query(default=None, max_length=64),
     game: str | None = Query(default=None, max_length=400),
+    prefab: str | None = Query(default=None, max_length=400),
     dress: str | None = Query(default=None, max_length=700),
     path: str | None = Query(default=None, max_length=400),
     mode: str = Query(default="auto", pattern="^(auto|blueprint|assembled|vfx)$"),
@@ -120,7 +125,7 @@ async def embed_viewer(
     """
     return _TEMPLATES.TemplateResponse(request, "embed_viewer.html", {
         "release": release or "", "tmod": tmod or "", "game": game or "",
-        "dress": dress or "",
+        "prefab": prefab or "", "dress": dress or "",
         "path": path or "", "mode": mode, "theme": theme,
         # Same origin here (this process serves both), so no prefix is needed.
         "api_base": "",

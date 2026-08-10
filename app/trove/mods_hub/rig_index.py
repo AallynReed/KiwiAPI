@@ -54,9 +54,20 @@ class RigMap:
     creatures: dict[str, tuple[str, dict[str, str]]] = field(default_factory=dict)
     # blueprint basename -> prefab that owns it (first in the store's stable ordering).
     owner: dict[str, str] = field(default_factory=dict)
+    # Name -> prefab, for a caller who HAS the prefab rather than one of its parts (the
+    # embed's ``prefab=`` source). Lower-cased path for an exact address, and filename
+    # stem for the short form - a stem can name several creatures, since Trove writes
+    # every skin's own prefab as ``npc.binfab``, so it holds a list.
+    by_path: dict[str, str] = field(default_factory=dict)
+    by_stem: dict[str, list[str]] = field(default_factory=dict)
 
     def __bool__(self) -> bool:
         return bool(self.by_blueprint)
+
+
+def _stem(prefab: str) -> str:
+    name = prefab.replace("\\", "/").rsplit("/", 1)[-1].lower()
+    return name[: -len(".binfab")] if name.endswith(".binfab") else name
 
 
 def _build(rows: list[tuple[str, str, str, str]]) -> RigMap:
@@ -66,11 +77,18 @@ def _build(rows: list[tuple[str, str, str, str]]) -> RigMap:
     by_blueprint: dict[str, tuple[str, str]] = {}
     creatures: dict[str, tuple[str, dict[str, str]]] = {}
     owner: dict[str, str] = {}
+    by_path: dict[str, str] = {}
+    by_stem: dict[str, list[str]] = {}
     for prefab, blueprint, skeleton, ap in rows:
         by_blueprint.setdefault(blueprint, (skeleton, ap))
         owner.setdefault(blueprint, prefab)
-        creatures.setdefault(prefab, (skeleton, {}))[1][blueprint] = ap
-    return RigMap(by_blueprint=by_blueprint, creatures=creatures, owner=owner)
+        if prefab not in creatures:
+            creatures[prefab] = (skeleton, {})
+            by_path[prefab.replace("\\", "/").lower()] = prefab
+            by_stem.setdefault(_stem(prefab), []).append(prefab)
+        creatures[prefab][1][blueprint] = ap
+    return RigMap(by_blueprint=by_blueprint, creatures=creatures, owner=owner,
+                  by_path=by_path, by_stem=by_stem)
 
 
 _STYLE_RE = re.compile(r"\[[^\]]*\]")          # a Trove style suffix: name[stylename]
@@ -162,6 +180,40 @@ async def creature_by_prefab(
         return None, {}
     skeleton, parts = found
     return skeleton, dict(parts)
+
+
+async def prefab_path(
+    name: str, branch: str | None = None
+) -> tuple[str | None, list[str]]:
+    """Resolve a prefab NAME to the one creature prefab it addresses.
+
+    Returns ``(canonical path, [])`` when it names exactly one creature, ``(None,
+    candidates)`` when a bare stem names several, and ``(None, [])`` when the map
+    binds no such prefab. Accepts the full archive path (with or without the
+    ``.binfab``) or just the filename stem.
+
+    Ambiguity is reported rather than resolved: ``npc`` is the filename of every
+    skin's own prefab, so picking one would be a guess, and a guess here renders a
+    different creature than the caller asked for.
+    """
+    branch = branch or settings.trove_render_branch
+    rig_map = await _rig_map(branch)
+    if not rig_map.creatures:
+        return None, []
+    want = (name or "").replace("\\", "/").strip().lstrip("/").lower()
+    if not want:
+        return None, []
+    if not want.endswith(".binfab"):
+        want += ".binfab"
+    found = rig_map.by_path.get(want)
+    if found:
+        return found, []
+    if "/" in want:
+        return None, []                        # a full path either binds or it doesn't
+    candidates = rig_map.by_stem.get(want[: -len(".binfab")]) or []
+    if len(candidates) == 1:
+        return candidates[0], []
+    return None, sorted(candidates)
 
 
 async def creature_for(
