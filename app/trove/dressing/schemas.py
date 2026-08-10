@@ -31,6 +31,8 @@ class DressOptionOut(BaseModel):
     family: str = Field(default="", description="Weapon family, for weapon styles.")
     blueprint: str = Field(default="", description="Model blueprint basename (styles).")
     prefab: str = Field(default="", description="Source prefab path.")
+    credit: str = Field(default="", description="Community author, for a "
+                        "player-submitted hair style.")
 
 
 class DressOptionPage(BaseModel):

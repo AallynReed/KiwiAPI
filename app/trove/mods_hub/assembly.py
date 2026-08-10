@@ -71,6 +71,42 @@ def load_animation(skeleton: str, name: str) -> bytes | None:
         return f.read()
 
 
+def _decode_grid(raw: bytes) -> list[tuple]:
+    """Decode ANY .blueprint version to grid voxels, in the same un-mirrored, absolute
+    grid space ``_decode_v5_grid`` produces.
+
+    v5 is compressed and stores an origin; v3/v4 store absolute coordinates per voxel
+    and no origin, which is already that space. Both matter: the game still ships v3
+    blueprints - several character heads and every eye mesh are v3 - and a decoder that
+    only spoke v5 dropped them silently, which is a part quietly missing from a model
+    rather than an error anyone sees."""
+    from app.trove.render.voxel import KIND_CODE, material_for
+
+    if raw[:5] != b"kiwib":
+        return []
+    version = struct.unpack_from("<I", raw, 5)[0]
+    if version == 5:
+        return _decode_v5_grid(raw)
+    if version not in (3, 4):
+        return []
+    from app.trove.render.voxel import _svar, _uleb
+
+    count, pos = _uleb(raw, 9)
+    out = []
+    for _ in range(count):
+        x, pos = _svar(raw, pos)
+        y, pos = _svar(raw, pos)
+        z, pos = _svar(raw, pos)
+        if pos + 6 > len(raw):
+            break
+        vtype = struct.unpack_from("<H", raw, pos)[0]
+        b, g, r, w = raw[pos + 2], raw[pos + 3], raw[pos + 4], raw[pos + 5]
+        pos += 6
+        rr, gg, bb, kind, level, spec = material_for(r, g, b, w, vtype)
+        out.append((x, y, z, (rr << 16) | (gg << 8) | bb, KIND_CODE[kind], level, spec))
+    return out
+
+
 def _decode_v5_grid(raw: bytes) -> list[tuple]:
     """Decode a v5 .blueprint to grid voxels ``(x, y, z, packed_rgb, kind, level, spec)``
     in part-local space, including the header's px,py,pz origin offset (so parts sit at
@@ -147,10 +183,9 @@ def _part_at(key: str, raw: bytes, scale: float) -> dict | None:
     file is empty / not a v5 blueprint. ``scale`` multiplies the rig's voxel size."""
     from app.trove.render.voxel import is_empty_blueprint
 
-    if (raw[:5] != b"kiwib" or struct.unpack_from("<I", raw, 5)[0] != 5
-            or is_empty_blueprint(raw)):
+    if raw[:5] != b"kiwib" or is_empty_blueprint(raw):
         return None
-    vox = _decode_v5_grid(raw)
+    vox = _decode_grid(raw)
     if not vox:
         return None
     part = {"name": key,
@@ -214,9 +249,7 @@ def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
         mat = rest.get(ap_key)
         if mat is None or not raw:
             continue
-        if raw[:5] != b"kiwib" or struct.unpack_from("<I", raw, 5)[0] != 5:
-            continue
-        voxels = _decode_v5_grid(raw)
+        voxels = _decode_grid(raw)
         if not voxels:
             continue
         # A head slot is authored at double resolution (see scale_for). On this shared

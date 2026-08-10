@@ -61,6 +61,7 @@ class Option:
     blueprint: str = ""                   # style model basename (no extension)
     prefab: str = ""                      # source prefab path
     skeleton: str = ""                    # costume only
+    credit: str = ""                      # community author, from a `[name]` suffix
     parts: dict[str, str] = field(default_factory=dict)   # costume: basename -> AP key
 
 
@@ -106,10 +107,21 @@ _cache: dict[str, tuple] = {}
 _lock = asyncio.Lock()
 
 
+_CREDIT_RE = re.compile(r"\[([^\]]+)\]")
+# Prefixes the piece blueprints all share; they say nothing to a reader.
+_PIECE_PREFIX = re.compile(r"^c_p_(?:head|hair|eyes)_?")
+
+
 def _humanize(stem: str) -> str:
-    """Readable label from a prefab stem, for the rare option whose locale key isn't in
-    the string tables. Only ever a NAME - nothing about the model depends on it."""
-    return " ".join(w.capitalize() for w in _WORD_RE.split(stem) if w)
+    """Readable label from a prefab stem, for an option the string tables don't name.
+    Only ever a NAME - nothing about the model depends on it.
+
+    Most hair styles are community submissions and carry their author in a ``[name]``
+    suffix; the game names barely a third of them, so the rest fall here. Drop the shared
+    ``c_p_hair_`` prefix and the credit, both of which are noise in a picker."""
+    body = _CREDIT_RE.sub("", stem)
+    body = _PIECE_PREFIX.sub("", body)
+    return " ".join(w.capitalize() for w in _WORD_RE.split(body) if w) or stem
 
 
 def _name_key(data: bytes) -> str | None:
@@ -268,8 +280,10 @@ def _build_races(data: bytes, loc: dict[str, str]) -> tuple[dict[str, Race], dic
                 seen.add((kind, key))
                 label = binfab.clean_localized_text(
                     loc.get(f"$CustomHead_Piece_{bp}", "")) or _humanize(key)
+                credit = _CREDIT_RE.search(bp)
                 slots[kind].append(Option(key=key, name=label, slot=kind, blueprint=key,
-                                          prefab=CUSTOM_HEADS))
+                                          prefab=CUSTOM_HEADS,
+                                          credit=credit.group(1) if credit else ""))
     for options in slots.values():
         options.sort(key=lambda o: o.name.lower())
     return races, slots

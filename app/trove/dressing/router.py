@@ -104,7 +104,8 @@ async def list_options(
     page = items[offset:offset + limit]
     return DressOptionPage(
         items=[DressOptionOut(key=o.key, name=o.name, slot=o.slot, family=o.family,
-                              blueprint=o.blueprint, prefab=o.prefab) for o in page],
+                              blueprint=o.blueprint, prefab=o.prefab,
+                              credit=o.credit) for o in page],
         total=len(items), offset=offset, limit=limit,
     )
 

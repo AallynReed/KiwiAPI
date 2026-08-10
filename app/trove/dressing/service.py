@@ -170,10 +170,15 @@ async def resolve(
     if not fam and "weapon" in raw:
         fam = cls.weapons[0] if cls.weapons else ""
     # Nothing chosen for a character-creation slot -> the race's own default, so the
-    # model matches what the game shows a player who never opened the customizer.
+    # model matches what the game shows a player who never opened the customizer. Hair
+    # is not defaulted: "no hair" is a real look, and the game's own default is Bald.
     if chosen_race:
-        for slot in RACE_SLOTS:
+        for slot in ("head", "eyes"):
             if slot in styles or slot in raw:
+                continue
+            # A face style occupies the same attach point as the eyes, so equipping one
+            # replaces them - which is exactly what the game does when you put on a mask.
+            if slot == "eyes" and ("face" in styles or "face" in raw):
                 continue
             default = chosen_race.first(slot)
             if default:
