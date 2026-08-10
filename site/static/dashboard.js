@@ -1,6 +1,6 @@
 /* /dashboard page logic. Depends on site_auth.js (window.BTTAuth). Renders the
    profile + Trove name claim card, plus the mods/modpacks/discord/webhooks/dm
-   sections. Client-side login gate only (no token / null /me → /login?next=…),
+   sections. Client-side login gate only (no session / null /me → /login?next=…),
    so the page can serve from the static cache. */
 
 (function () {
@@ -53,8 +53,9 @@
   });
 
   async function boot() {
-    // Client-side gate. If we have no token, go to /login.
-    if (!Auth.tokens.access) { redirectToLogin(); return; }
+    // Client-side gate. The session is HttpOnly cookies, so hasSession() (the
+    // JS-readable hint cookie) is the only thing a script can check.
+    if (!Auth.hasSession()) { redirectToLogin(); return; }
     const user = await Auth.getMe({ force: true });
     if (!user) { redirectToLogin(); return; }
     renderUser(user);

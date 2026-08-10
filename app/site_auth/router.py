@@ -130,9 +130,9 @@ async def refresh(
     """Rotate a refresh token. Single-use - the old token is dead after
     this returns.
 
-    Takes the token from the request body (desktop app, and browsers still on a
-    pre-cookie session) or from the HttpOnly cookie. The body wins when both are
-    present: a legacy client's own copy is the one it will keep using.
+    Takes the token from the request body (the desktop app, which holds its own
+    copy) or from the HttpOnly cookie (browsers). The body wins when both are
+    present. Browsers no longer send one at all.
     """
     supplied = (payload.refresh_token if payload else None) or request.cookies.get(REFRESH_COOKIE)
     tokens = await rotate(supplied, request) if supplied else None

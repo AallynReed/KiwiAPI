@@ -48,41 +48,23 @@
     if (host.length >= 3) document.cookie = base + '; Domain=.' + host.slice(-2).join('.');
   }
 
-  // LEGACY: sessions created before the cookie migration still live in
-  // localStorage. They keep working - `call()` sends the bearer alongside the
-  // cookie and the server prefers it - so nobody is signed out by the switch.
-  // Nothing WRITES these any more, so they drain as sessions expire or sign
-  // out, and this whole block can be deleted a release later.
-  const legacy = {
-    get access() {
-      try { return localStorage.getItem(KEY_ACCESS); } catch (_) { return null; }
-    },
-    get refresh() {
-      try { return localStorage.getItem(KEY_REFRESH); } catch (_) { return null; }
-    },
-    // Only used to keep a legacy session alive when the cookie did NOT land
-    // (see refresh()). Never used to start a new session.
-    save(access, refresh) {
-      try {
-        if (access)  localStorage.setItem(KEY_ACCESS,  access);
-        if (refresh) localStorage.setItem(KEY_REFRESH, refresh);
-      } catch (_) {}
-    },
-    clear() {
-      try {
-        localStorage.removeItem(KEY_ACCESS);
-        localStorage.removeItem(KEY_REFRESH);
-      } catch (_) {}
-    },
-  };
+  // Pre-cookie sessions kept their tokens in localStorage. That is the exposure
+  // the cookie migration removed, so they are no longer honoured: the keys are
+  // purged on load and the holder signs in again to get an HttpOnly session.
+  function purgeLegacy() {
+    try {
+      localStorage.removeItem(KEY_ACCESS);
+      localStorage.removeItem(KEY_REFRESH);
+    } catch (_) {}
+  }
+  purgeLegacy();
 
   // Is there anything worth asking the server about? Cheap and synchronous.
   function hasSession() {
-    return hasHint() || !!legacy.access;
+    return hasHint();
   }
 
   function clearSession() {
-    legacy.clear();
     dropHint();
     try { localStorage.removeItem(KEY_USER); } catch (_) {}
     _meCache = null;
@@ -94,9 +76,6 @@
     const headers = Object.assign({}, opts.headers || {});
     if (opts.json !== undefined) {
       headers['Content-Type'] = 'application/json';
-    }
-    if (opts.auth !== false && legacy.access) {
-      headers['Authorization'] = 'Bearer ' + legacy.access;
     }
     const init = {
       method: opts.method || (opts.json !== undefined ? 'POST' : 'GET'),
@@ -114,8 +93,7 @@
     if (res.status === 401 && opts.auth !== false && !opts._retried && hasSession()) {
       const ok = await refresh();
       if (ok) {
-        if (legacy.access) headers['Authorization'] = 'Bearer ' + legacy.access;
-        res = await fetch(url, Object.assign({}, init, { headers }));
+        res = await fetch(url, init);
       } else {
         clearSession();
       }
@@ -137,19 +115,11 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        // A cookie session sends an empty body; the server reads the token
-        // from the HttpOnly cookie instead.
-        body: JSON.stringify(legacy.refresh ? { refresh_token: legacy.refresh } : {}),
+        // Empty body - the server reads the refresh token from the HttpOnly
+        // cookie. Nothing here ever holds one.
+        body: '{}',
       });
       if (!r.ok) { clearSession(); return false; }
-      const data = await r.json();
-      // This is where a pre-cookie session migrates: the response just set the
-      // HttpOnly pair, so the localStorage copy is redundant and we drop it.
-      // If the cookie did NOT land (dev over a cross-site origin), keep the
-      // rotated bearer instead - otherwise the old token is dead and so is
-      // the session.
-      if (hasHint()) legacy.clear();
-      else legacy.save(data.access_token, data.refresh_token);
       return true;
     } catch (_) {
       return false;
@@ -162,7 +132,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(legacy.refresh ? { refresh_token: legacy.refresh } : {}),
+        body: '{}',
       });
     } catch (_) { /* best-effort - the local clear below still happens */ }
     clearSession();
@@ -358,7 +328,7 @@
   }
 
   window.addEventListener('storage', (e) => {
-    if (e.key === KEY_ACCESS || e.key === KEY_REFRESH || e.key === KEY_USER) {
+    if (e.key === KEY_USER) {
       _meCache = null;
       bootNav();
     }
@@ -405,6 +375,6 @@
     // Kept only so a stale cached page script reading `.access` gets null
     // instead of throwing. The session is HttpOnly cookies - there is nothing
     // here to read. Callers wanting "am I signed in?" use hasSession().
-    tokens: { get access() { return legacy.access; }, get refresh() { return legacy.refresh; } },
+    tokens: { access: null, refresh: null },
   };
 })();
