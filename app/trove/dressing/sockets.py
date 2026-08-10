@@ -56,6 +56,7 @@ _SOCKET_RE = re.compile(
 )
 
 _SKELETON_RE = re.compile(rb"([A-Za-z0-9_]+)\.skeleton\.gr2")
+_DISPLAY_RE = re.compile(rb"\$DisplayName_[A-Za-z0-9_]+")
 _BONE_RE = re.compile(r"^[A-Za-z0-9_]+$")
 
 
@@ -66,7 +67,13 @@ def _ap_key(bone: str) -> str:
 
 
 def parse_class(data: bytes) -> dict | None:
-    """``{skeleton, sockets: [{bone, ap, slot, family, flag}]}`` for a class prefab.
+    """``{skeleton, name_key, sockets: [{bone, ap, slot, family, flag}]}`` for a class
+    prefab.
+
+    ``name_key`` is the prefab's own ``$DisplayName_…`` key, read rather than rebuilt
+    from the filename - the two differ in case (``$DisplayName_Knight`` for
+    ``knight.binfab``), and a rebuilt key misses the locale table and leaves the class
+    labelled with its stem ("Candybarbarian" for Candy Barbarian).
 
     ``None`` when the prefab names no skeleton or declares no socket - a class form that
     isn't wearable (``dinotamer_ultimate``) rather than something to guess at."""
@@ -95,7 +102,12 @@ def parse_class(data: bytes) -> dict | None:
         })
     if not sockets:
         return None
-    return {"skeleton": skel.group(1).decode("ascii", "ignore").lower(), "sockets": sockets}
+    display = _DISPLAY_RE.search(data)
+    return {
+        "skeleton": skel.group(1).decode("ascii", "ignore").lower(),
+        "name_key": display.group(0).decode("ascii", "ignore") if display else "",
+        "sockets": sockets,
+    }
 
 
 def style_slot(ident_flags: dict[int, int] | None) -> int | None:

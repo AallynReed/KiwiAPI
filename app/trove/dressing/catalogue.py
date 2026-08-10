@@ -141,8 +141,7 @@ def _build_classes(files: list[tuple[str, bytes]], loc: dict[str, str]) -> dict[
         if not parsed:
             continue                       # not a wearable class form - no sockets declared
         stem = _stem(path)
-        key = f"$DisplayName_{stem}"
-        name = binfab.clean_localized_text(loc.get(key, "")) or _humanize(stem)
+        name = binfab.clean_localized_text(loc.get(parsed["name_key"], "")) or _humanize(stem)
         out[stem] = DressClass(
             key=stem, name=name, skeleton=parsed["skeleton"], sockets=parsed["sockets"],
             weapons=sockets_mod.weapon_families(parsed["sockets"]),
