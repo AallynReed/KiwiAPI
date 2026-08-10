@@ -1940,10 +1940,20 @@ async def site_dressing_classes() -> JSONResponse:
                         headers={"Cache-Control": "public, max-age=300"})
 
 
+@router.get("/site/dressing/races", response_class=JSONResponse)
+async def site_dressing_races() -> JSONResponse:
+    """Character-creation races for the /dressing-room picker."""
+    from app.trove.dressing.router import list_races
+
+    return JSONResponse(jsonable_encoder(await list_races()),
+                        headers={"Cache-Control": "public, max-age=300"})
+
+
 @router.get("/site/dressing/options", response_class=JSONResponse)
 async def site_dressing_options(
-    slot: str = Query(..., pattern="^(costume|hat|face|weapon)$"),
+    slot: str = Query(..., pattern="^(costume|hat|face|weapon|head|hair|eyes)$"),
     class_key: str | None = Query(default=None, alias="class"),
+    race: str | None = Query(default=None),
     q: str | None = Query(default=None, max_length=80),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=500),
@@ -1951,7 +1961,8 @@ async def site_dressing_options(
     """One slot's options - same payload as ``/v1/dressing/options``."""
     from app.trove.dressing.router import list_options
 
-    page = await list_options(slot=slot, class_key=class_key, q=q, offset=offset, limit=limit)
+    page = await list_options(slot=slot, class_key=class_key, race=race, q=q,
+                              offset=offset, limit=limit)
     return JSONResponse(jsonable_encoder(page),
                         headers={"Cache-Control": "public, max-age=300"})
 

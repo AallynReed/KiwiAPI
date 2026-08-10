@@ -20,6 +20,8 @@ from app.trove.dressing.schemas import (
     DressOptionOut,
     DressOptionPage,
     DressOutfit,
+    DressRaceList,
+    DressRaceOut,
 )
 from app.trove.render import bp_cache
 
@@ -50,6 +52,21 @@ def _empty() -> APIError:
                     "hasn't been indexed on this instance.")
 
 
+@dressing_router.get("/races", response_model=DressRaceList)
+async def list_races(ctx: AccessContext = _PUB) -> DressRaceList:
+    """The character-creation races. Each supplies the head and eyes the game draws
+    whether or not anything covers them."""
+    catalogue = await cat.get()
+    if not catalogue:
+        raise _empty()
+    return DressRaceList(items=[
+        DressRaceOut(key=r.key, name=r.name,
+                     heads=len(r.pieces.get("head") or []),
+                     eyes=len(r.pieces.get("eyes") or []))
+        for r in catalogue.races.values()
+    ])
+
+
 @dressing_router.get("/classes", response_model=DressClassList)
 async def list_classes(ctx: AccessContext = _PUB) -> DressClassList:
     """Every dressable class: its rig, its equipment sockets and the weapon families
@@ -75,6 +92,8 @@ async def list_options(
     class_key: str | None = Query(default=None, alias="class",
                                   description="Required for `costume`; filters `weapon` "
                                               "to the families this class can hold."),
+    race: str | None = Query(default=None, description="Filters `head`/`eyes` to that "
+                             "race's own pieces."),
     q: str | None = Query(default=None, max_length=80, description="Name search."),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=500),
@@ -97,6 +116,11 @@ async def list_options(
         if slot == "weapon" and cls:
             allowed = {s["slot"] for s in cls.sockets}
             items = [o for o in items if o.slot_id in allowed]
+        # Heads and eyes belong to a race; hair is shared by all of them.
+        chosen = catalogue.races.get((race or "").lower())
+        if chosen and slot in ("head", "eyes"):
+            mine = {b.lower() for b in chosen.pieces.get(slot, [])}
+            items = [o for o in items if o.key in mine]
 
     if q:
         needle = q.strip().lower()

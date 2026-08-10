@@ -19,16 +19,23 @@
 
     var SLOTS = [
         { id: "costume", label: "Costume", icon: "fa-shirt" },
+        { id: "head", label: "Head", icon: "fa-user" },
+        { id: "hair", label: "Hair", icon: "fa-scissors" },
+        { id: "eyes", label: "Eyes", icon: "fa-eye" },
         { id: "hat", label: "Hat", icon: "fa-hat-wizard" },
         { id: "face", label: "Face", icon: "fa-masks-theater" },
         { id: "weapon", label: "Weapon", icon: "fa-gavel" }
     ];
+    // Slots whose options belong to the chosen race rather than the class.
+    var RACE_SLOTS = ["head", "eyes"];
     var PAGE = 60;
     var RENDER_DEBOUNCE = 220;
 
     var els = {};
     var classes = [];
-    var state = { cls: "", costume: "", hat: "", face: "", weapon: "" };
+    var races = [];
+    var state = { cls: "", race: "", costume: "", head: "", hair: "", eyes: "",
+                  hat: "", face: "", weapon: "" };
     var slot = "costume";
     var listing = { items: [], total: 0, offset: 0, q: "", slot: "", cls: "" };
     var chosenNames = {};                 // slot -> display name, so the summary reads
@@ -50,17 +57,19 @@
     function readUrl() {
         var q = new URLSearchParams(location.search);
         state.cls = (q.get("class") || "").toLowerCase();
+        state.race = (q.get("race") || "").toLowerCase();
         state.costume = (q.get("costume") || "").toLowerCase();
-        state.hat = (q.get("hat") || "").toLowerCase();
-        state.face = (q.get("face") || "").toLowerCase();
-        state.weapon = (q.get("weapon") || "").toLowerCase();
+        ["head", "hair", "eyes", "hat", "face", "weapon"].forEach(function (s) {
+            state[s] = (q.get(s) || "").toLowerCase();
+        });
     }
 
     function query() {
         var q = new URLSearchParams();
         q.set("class", state.cls);
+        if (state.race) q.set("race", state.race);
         if (state.costume) q.set("costume", state.costume);
-        ["hat", "face", "weapon"].forEach(function (s) {
+        ["head", "hair", "eyes", "hat", "face", "weapon"].forEach(function (s) {
             if (state[s]) q.set(s, state[s]);
         });
         return q;
@@ -79,6 +88,23 @@
         });
     }
 
+    function loadRaces() {
+        return get("/site/dressing/races").then(function (data) {
+            races = (data && data.items) || [];
+            if (!races.length) return;
+            var known = races.some(function (r) { return r.key === state.race; });
+            // Default to the first race the game gives a head, matching the server.
+            if (!known) {
+                state.race = (races.filter(function (r) { return r.heads; })[0]
+                              || races[0]).key;
+            }
+            els.race.innerHTML = races.map(function (r) {
+                return '<option value="' + esc(r.key) + '">' + esc(r.name) + "</option>";
+            }).join("");
+            els.race.value = state.race;
+        }).catch(function () { /* races are optional chrome; the model still renders */ });
+    }
+
     function loadClasses() {
         return get("/site/dressing/classes").then(function (data) {
             classes = (data && data.items) || [];
@@ -94,6 +120,7 @@
     function optionsUrl(s, offset) {
         var q = new URLSearchParams({ slot: s, offset: String(offset), limit: String(PAGE) });
         if (s === "costume" || s === "weapon") q.set("class", state.cls);
+        if (RACE_SLOTS.indexOf(s) >= 0 && state.race) q.set("race", state.race);
         if (listing.q) q.set("q", listing.q);
         return "/site/dressing/options?" + q.toString();
     }
@@ -165,6 +192,7 @@
             'decoding="async" onerror="this.remove()"></span>' +
             '<span class="dr-optname">' + esc(opt.name) + "</span>" +
             (opt.family ? '<span class="dr-optfam">' + esc(opt.family) + "</span>" : "") +
+            (opt.credit ? '<span class="dr-optfam">by ' + esc(opt.credit) + "</span>" : "") +
             "</button>";
     }
 
@@ -266,6 +294,21 @@
         loadOptions(true);
     }
 
+    function setRace(key) {
+        state.race = key;
+        // A head and eyes belong to one race, so they don't carry across.
+        state.head = state.eyes = "";
+        chosenNames.head = chosenNames.eyes = "";
+        writeUrl();
+        renderCurrent();
+        if (RACE_SLOTS.indexOf(slot) >= 0) {
+            listing = { items: [], total: 0, offset: 0, q: "", slot: slot, cls: state.cls };
+            els.search.value = "";
+            loadOptions(true);
+        }
+        scheduleRender();
+    }
+
     function setClass(key) {
         state.cls = key;
         // A costume belongs to one class and the weapon families change with it, so
@@ -303,6 +346,7 @@
 
     function wire() {
         els.cls.addEventListener("change", function () { setClass(els.cls.value); });
+        els.race.addEventListener("change", function () { setRace(els.race.value); });
         els.tabs.addEventListener("click", function (e) {
             var b = e.target.closest("[data-slot]");
             if (b) setSlot(b.getAttribute("data-slot"));
@@ -328,7 +372,8 @@
     function init() {
         els = {
             stage: byId("drStage"), bar: byId("drBar"), meta: byId("drMeta"),
-            share: byId("drShare"), cls: byId("drClass"), current: byId("drCurrent"),
+            share: byId("drShare"), cls: byId("drClass"), race: byId("drRace"),
+            current: byId("drCurrent"),
             tabs: byId("drTabs"), search: byId("drSearch"), grid: byId("drGrid"),
             more: byId("drMore")
         };
@@ -336,7 +381,7 @@
         renderTabs();
         renderCurrent();
         readUrl();
-        loadClasses().then(function () {
+        loadRaces().then(loadClasses).then(function () {
             wire();
             writeUrl();
             renderCurrent();

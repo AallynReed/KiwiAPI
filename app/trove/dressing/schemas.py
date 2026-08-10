@@ -59,3 +59,14 @@ class DressOutfit(BaseModel):
         description="Slots the request asked for that this class has no socket for.")
 
     model_config = {"populate_by_name": True}
+
+
+class DressRaceOut(BaseModel):
+    key: str
+    name: str
+    heads: int = Field(description="How many head pieces this race has.")
+    eyes: int = Field(description="How many eye pieces this race has.")
+
+
+class DressRaceList(BaseModel):
+    items: list[DressRaceOut]
