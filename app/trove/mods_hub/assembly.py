@@ -267,6 +267,7 @@ def assemble_placements(placements: list[tuple], rig_name: str) -> dict | None:
             parts.append(part)
     if not parts:
         return None
+    parts = _merge_same_ap(parts)
     _unbury_enclosed_emissive(parts, rig["rest"], rig["voxel_scale"])
     return {"voxel_scale": rig["voxel_scale"], "rig": rig_name, "parts": parts,
             "rest": rig["rest"], "animations": rig["animations"]}
