@@ -414,11 +414,11 @@ Everything else about embedding - the iframe URL, sources (`release=` / `tmod=` 
 reference**: https://docs.aallyn.net/embed
 
 `prefab=<path>` frames a whole game creature - mount, dragon, ally, mob or costume - named the way the game
-names it (`prefabs/collections/mount/mount_raptor_peacock.binfab`; the `.binfab` and the folder are optional
-when the filename is unambiguous). Rig, animation clips and every part come from the live game files, so
-there is nothing to host or upload. Only prefabs the game binds a skeleton to are addressable, and a bare
-name several creatures share (every costume's prefab is `npc.binfab`) is refused with a real full path in
-the message rather than resolved to a guess.
+names it (`prefabs/collections/mount/duck_dragon.binfab`, `prefabs/skins/adventurer_artist.binfab`; the
+`.binfab` and the folder are optional when the filename is unambiguous). Rig, animation clips and every part
+come from the live game files, so there is nothing to host or upload. Only prefabs the game binds a skeleton
+to are addressable, and a bare name more than one creature is filed under (`beetle_firebug` exists four times
+over) is refused with a real full path in the message rather than resolved to a guess.
 
 ### Updates (`updates:read`) - archived game files (latest version)
 

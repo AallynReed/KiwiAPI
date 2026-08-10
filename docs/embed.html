@@ -86,14 +86,14 @@
           <p><code>prefab=&lt;path&gt;</code> - a mount, dragon, ally, mob or costume, named the
           way the game names it. You get the whole creature: every part placed on its skeleton,
           with its animation clips, straight out of the current game files.</p>
-          <pre><code>?prefab=prefabs/collections/mount/mount_raptor_peacock.binfab
-?prefab=prefabs/collections/mount/mount_raptor_peacock
-?prefab=mount_raptor_peacock</code></pre>
+          <pre><code>?prefab=prefabs/collections/mount/duck_dragon.binfab
+?prefab=prefabs/collections/mount/duck_dragon
+?prefab=duck_dragon
+?prefab=adventurer_artist</code></pre>
           <p>The <code>.binfab</code> is optional, and so is the folder when the filename is
-          unique. Costumes are the common exception - the game calls every costume's prefab
-          <code>npc.binfab</code>, so those need the full path
-          (<code>prefabs/collections/skins/crimefighter_beequeen/npc.binfab</code>). If a name
-          could mean more than one creature we say so instead of picking one.</p>
+          unique - which it usually is. A few NPCs are filed in several places under the same
+          name (<code>beetle_firebug</code> exists four times over); if a name could mean more
+          than one creature we say so, and name one of them, instead of picking for you.</p>
 
           <h3>A file from the live game</h3>
           <p><code>game=&lt;path&gt;</code> - any <code>.blueprint</code> or <code>.pkfx</code>
@@ -252,8 +252,8 @@
               </tr>
               <tr>
                 <td>"'…' is the filename of N different creature prefabs"</td>
-                <td>A short <code>prefab=</code> name that several creatures share (usually
-                <code>npc</code>). The message includes a real full path - use that shape.</td>
+                <td>A short <code>prefab=</code> name that more than one creature is filed
+                under. The message includes a real full path - use that shape.</td>
               </tr>
               <tr>
                 <td>"This mod has no 3D models or effects to preview"</td>

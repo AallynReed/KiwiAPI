@@ -188,18 +188,9 @@ async def _prefab_source(name: str) -> Source:
             f"Pass the full path, e.g. '{candidates[0]}'.")
     if path is None:
         raise _missing(f"No creature prefab '{name}' in the current game files.")
-    return Source(kind="prefab", ident=path, title=_prefab_title(path), prefab=path)
-
-
-def _prefab_title(path: str) -> str:
-    """The creature's name, as far as the path knows it. Trove writes a costume's own
-    prefab as ``<costume>/npc.binfab``, where the folder is the name and the file is
-    not - so that one case takes the folder."""
-    parts = [p for p in path.replace("\\", "/").split("/") if p]
-    stem = parts[-1][: -len(".binfab")] if parts[-1].lower().endswith(".binfab") else parts[-1]
-    if stem.lower() in ("npc", "prefab") and len(parts) > 1:
-        return parts[-2]
-    return stem
+    # The filename IS the creature's name in Trove's own tree
+    # (`prefabs/collections/mount/duck_dragon.binfab`, `prefabs/skins/adventurer_artist.binfab`).
+    return Source(kind="prefab", ident=path, title=rig_index.prefab_stem(path), prefab=path)
 
 
 async def _release_source(release_id: str) -> Source:
@@ -318,18 +309,19 @@ async def _prefab_manifest(src: Source) -> dict:
     offers the whole animal on the Creature tab and its individual meshes on the other.
 
     A part the archive doesn't have is left out of the picker rather than offered and
-    then 404'd; the assembled model still builds from the parts we do have."""
+    then 404'd; the assembled model still builds from the parts we do have. When NONE of
+    them is in the archive there is no creature to build (a handful of older mounts are
+    bound to blueprint names the live tree no longer carries), so the rig is dropped too
+    - the manifest must not advertise a Creature tab that then fails to load."""
     from app.trove.mods_hub import assembly, rig_index
 
     prefab = src.prefab or ""
     skeleton, parts = await rig_index.creature_by_prefab(prefab)
-    rig = skeleton if skeleton and assembly.has_baked_rig(skeleton) else None
     paths = await game_file_paths(LIVE_BRANCH)
-    items = []
-    for basename in sorted(parts):
-        gp = nearest_path(paths.get(f"{basename}.blueprint", []), prefab)
-        if gp:
-            items.append({"path": gp, "size": None, "assembled": bool(rig)})
+    found = [gp for gp in (nearest_path(paths.get(f"{b}.blueprint", []), prefab)
+                           for b in sorted(parts)) if gp]
+    rig = skeleton if skeleton and found and assembly.has_baked_rig(skeleton) else None
+    items = [{"path": gp, "size": None, "assembled": bool(rig)} for gp in found]
     return {
         "source": "prefab", "title": src.title,
         "blueprints": {

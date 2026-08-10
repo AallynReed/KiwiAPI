@@ -56,8 +56,9 @@ class RigMap:
     owner: dict[str, str] = field(default_factory=dict)
     # Name -> prefab, for a caller who HAS the prefab rather than one of its parts (the
     # embed's ``prefab=`` source). Lower-cased path for an exact address, and filename
-    # stem for the short form - a stem can name several creatures, since Trove writes
-    # every skin's own prefab as ``npc.binfab``, so it holds a list.
+    # stem for the short form - the stem is usually the creature's name, but the same
+    # NPC is filed in several folders (``beetle_firebug.binfab`` sits under ``npc/``,
+    # ``npc/delve/path/`` and two 2023 event folders), so it holds a list.
     by_path: dict[str, str] = field(default_factory=dict)
     by_stem: dict[str, list[str]] = field(default_factory=dict)
 
@@ -65,9 +66,11 @@ class RigMap:
         return bool(self.by_blueprint)
 
 
-def _stem(prefab: str) -> str:
-    name = prefab.replace("\\", "/").rsplit("/", 1)[-1].lower()
-    return name[: -len(".binfab")] if name.endswith(".binfab") else name
+def prefab_stem(prefab: str) -> str:
+    """A prefab's filename without its extension - which is what the game calls the
+    creature (``prefabs/collections/mount/duck_dragon.binfab`` -> ``duck_dragon``)."""
+    name = prefab.replace("\\", "/").rsplit("/", 1)[-1]
+    return name[: -len(".binfab")] if name.lower().endswith(".binfab") else name
 
 
 def _build(rows: list[tuple[str, str, str, str]]) -> RigMap:
@@ -85,7 +88,7 @@ def _build(rows: list[tuple[str, str, str, str]]) -> RigMap:
         if prefab not in creatures:
             creatures[prefab] = (skeleton, {})
             by_path[prefab.replace("\\", "/").lower()] = prefab
-            by_stem.setdefault(_stem(prefab), []).append(prefab)
+            by_stem.setdefault(prefab_stem(prefab).lower(), []).append(prefab)
         creatures[prefab][1][blueprint] = ap
     return RigMap(by_blueprint=by_blueprint, creatures=creatures, owner=owner,
                   by_path=by_path, by_stem=by_stem)
@@ -192,9 +195,9 @@ async def prefab_path(
     binds no such prefab. Accepts the full archive path (with or without the
     ``.binfab``) or just the filename stem.
 
-    Ambiguity is reported rather than resolved: ``npc`` is the filename of every
-    skin's own prefab, so picking one would be a guess, and a guess here renders a
-    different creature than the caller asked for.
+    Ambiguity is reported rather than resolved: the same NPC is filed under several
+    folders (``beetle_firebug.binfab`` exists four times over), so picking one would be
+    a guess, and a guess here renders a different creature than the caller asked for.
     """
     branch = branch or settings.trove_render_branch
     rig_map = await _rig_map(branch)
