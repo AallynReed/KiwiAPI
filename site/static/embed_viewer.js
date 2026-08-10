@@ -9,7 +9,7 @@
      vfx        -> PkfxViewer.mount        a .pkfx particle effect
 
    The source is whatever the page was opened with - a Mods Hub release, an uploaded
-   .tmod token, or a path in the game files - and is passed straight through as the
+   .tmod token, a path in the game files, or a dressed character - and is passed through as the
    query string, so this file never needs to know which one it is. */
 (function () {
   'use strict';
@@ -39,7 +39,7 @@
   };
 
   // The one source param the page was opened with, re-encoded for our own fetches.
-  var srcQuery = ['release', 'tmod', 'game'].reduce(function (acc, key) {
+  var srcQuery = ['release', 'tmod', 'game', 'dress'].reduce(function (acc, key) {
     var v = shell.dataset[key];
     return acc || (v ? key + '=' + encodeURIComponent(v) : '');
   }, '');
@@ -263,7 +263,7 @@
   // ── boot ─────────────────────────────────────────────────────────────────
 
   if (!srcQuery) {
-    message('This embed is missing its source. Add a release, tmod or game parameter.', true);
+    message('This embed is missing its source. Add a release, tmod, game or dress parameter.', true);
     els.title.textContent = 'Nothing to preview';
     return;
   }

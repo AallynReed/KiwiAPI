@@ -8,6 +8,8 @@ The embed widens that to three **sources**, all rendered by exactly the same cod
   ``tmod=<token>``   a .tmod the partner uploaded to /v1/embed/tmod (app/embed/uploads.py)
   ``game=<path>``    a file in the live game tree (the updates archive), so a partner
                      can preview native game content they don't host at all
+  ``dress=<outfit>`` a dressed character - ``class:costume:hat:face:weapon``, the
+                     dressing room's own colon-joined selection of game prefab stems
 
 The first two hand back ``.tmod`` bytes, and every hub helper here already takes
 ``tmod_bytes`` - so they're reused verbatim (``_list_blueprints_sync``,
@@ -71,11 +73,12 @@ class Source:
     ``game_path`` for a game-tree file. ``cache_key`` namespaces the shared VFX
     dependency-set cache so two sources can't authorise each other's assets."""
 
-    kind: str                      # "release" | "tmod" | "game"
-    ident: str                     # release id / upload token / game path
+    kind: str                      # "release" | "tmod" | "game" | "dress"
+    ident: str                     # release id / upload token / game path / outfit
     title: str                     # what the viewer shows in its header
     tmod: bytes | None = None
     game_path: str | None = None
+    outfit: object | None = None   # a dressing_service.Outfit, for kind == "dress"
     # SHA-256 of `tmod` (an upload's token IS its hash). Keys the decoded-payload
     # cache for a hub release; an upload is deliberately never cached, since we
     # hold that file for its TTL and nothing longer.
@@ -90,17 +93,42 @@ class Source:
 
 async def resolve(
     *, release: str | None = None, tmod: str | None = None, game: str | None = None,
+    dress: str | None = None,
 ) -> Source:
-    """Resolve exactly one of the three source params to a ``Source``."""
-    given = [p for p in (release, tmod, game) if p]
+    """Resolve exactly one of the source params to a ``Source``."""
+    given = [p for p in (release, tmod, game, dress) if p]
     if len(given) != 1:
-        raise _bad("Pass exactly one source: release, tmod or game.")
+        raise _bad("Pass exactly one source: release, tmod, game or dress.")
 
     if release:
         return await _release_source(release)
     if tmod:
         return await _upload_source(tmod)
+    if dress:
+        return await _dress_source(dress)
     return await _game_source(game or "")
+
+
+_MAX_DRESS = 200
+
+
+async def _dress_source(token: str) -> Source:
+    """``class:costume:hat:face:weapon`` - each field a game prefab stem, trailing
+    fields optional. Stems are Trove's own identifiers rather than row ids of ours, so
+    a partner's link keeps meaning the same thing across game updates and rebuilds, and
+    nothing has to be stored for it to resolve."""
+    from app.trove.dressing import service as dressing
+
+    token = (token or "").strip()
+    if not token or len(token) > _MAX_DRESS:
+        raise _bad("Missing or over-long outfit.")
+    fields = (token.lower().split(":") + ["", "", "", ""])[:5]
+    outfit = await dressing.resolve(
+        fields[0], fields[1], {"hat": fields[2], "face": fields[3], "weapon": fields[4]})
+    if outfit is None:
+        raise _missing("No such Trove class to dress.")
+    return Source(kind="dress", ident=outfit.ident,
+                  title=f"{outfit.cls.name} - {outfit.costume.name}", outfit=outfit)
 
 
 async def _release_source(release_id: str) -> Source:
@@ -189,7 +217,27 @@ async def manifest(src: Source) -> dict:
     (with rig/assembly info) and .pkfx effects in this source."""
     if src.kind == "game":
         return await _game_manifest(src)
+    if src.kind == "dress":
+        return _dress_manifest(src)
     return await _tmod_manifest(src)
+
+
+def _dress_manifest(src: Source) -> dict:
+    """A dressed character is only ever the assembled model - there is no per-part
+    picker to offer, and no bundled VFX."""
+    from app.trove.mods_hub import assembly
+
+    outfit = src.outfit
+    rig = outfit.cls.skeleton                            # type: ignore[union-attr]
+    return {
+        "source": "dress", "title": src.title,
+        "blueprints": {
+            "items": [{"path": src.ident, "size": None, "assembled": True}],
+            "rig": rig,
+            "animations": assembly.animations_for(rig),
+        },
+        "vfx": {"items": []},
+    }
 
 
 async def _tmod_manifest(src: Source) -> dict:
@@ -249,6 +297,8 @@ async def blueprint(src: Source, path: str, fmt: str = "json") -> bp_cache.Cache
     copy of a mod is still the mod, so it's rebuilt on every view."""
     if src.kind == "game":
         return await _game_blueprint(src, path, fmt)
+    if src.kind == "dress":
+        raise _missing("A dressed character has no separate blueprint to show.")
     assert src.tmod is not None
     data = src.tmod
     def build() -> Awaitable[dict]:
@@ -306,6 +356,10 @@ async def assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | None:
     every view (we don't keep partner files, decoded or not)."""
     if src.kind == "game":
         return await _game_assembled(src, fmt)
+    if src.kind == "dress":
+        from app.trove.dressing import service as dressing
+
+        return await dressing.model(src.outfit, fmt)     # type: ignore[arg-type]
     assert src.tmod is not None
     data = src.tmod
     from app.trove.mods_hub import assembly, rig_index

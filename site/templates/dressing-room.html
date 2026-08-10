@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Trove Dressing Room - preview costumes, hats, faces and weapons - Better Trove Tools</title>
+    <meta name="description" content="Dress a Trove character in 3D. Pick a class, a costume, a hat, a face and a weapon style, spin the model, play its animations and share the look with a link.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="canonical" href="https://trove.aallyn.net/dressing-room">
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:url" content="https://trove.aallyn.net/dressing-room">
+    <meta property="og:title" content="Trove Dressing Room">
+    <meta property="og:description" content="Try on any costume, hat, face and weapon style in 3D, then share the look with a link.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Trove Dressing Room">
+    <meta name="twitter:description" content="Try on any costume, hat, face and weapon style in 3D.">
+
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/dressing-room.min.css">
+</head>
+<body class="dressing-page">
+
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="dr-main">
+        <header class="dr-head">
+            <h1 data-i18n>Dressing Room</h1>
+            <p class="dr-sub" data-i18n>Try on any costume, hat, face and weapon before you spend a thing. Share the look with a link.</p>
+        </header>
+
+        <div class="dr-layout">
+            <section class="dr-stagewrap" aria-label="Character preview">
+                <div class="dr-stage" id="drStage"></div>
+                <div class="dr-bar" id="drBar" aria-label="Animations"></div>
+                <div class="dr-stagefoot">
+                    <span class="dr-meta" id="drMeta" role="status" aria-live="polite"></span>
+                    <button type="button" class="dr-share" id="drShare">
+                        <i class="fa-solid fa-link" aria-hidden="true"></i> <span data-i18n>Copy link</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="dr-panel" aria-label="Appearance">
+                <div class="dr-classrow">
+                    <label class="dr-label" for="drClass" data-i18n>Class</label>
+                    <select id="drClass" class="dr-select"></select>
+                </div>
+
+                <div class="dr-current" id="drCurrent" aria-label="Current look"></div>
+
+                <div class="dr-tabs" role="tablist" id="drTabs"></div>
+
+                <div class="dr-search">
+                    <input type="search" id="drSearch" class="dr-input" autocomplete="off"
+                           placeholder="Search" aria-label="Search this slot">
+                </div>
+
+                <div class="dr-grid" id="drGrid" role="listbox" aria-label="Options"></div>
+                <div class="dr-more"><button type="button" class="dr-morebtn" id="drMore" hidden data-i18n>Show more</button></div>
+            </section>
+        </div>
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/_site_util.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/voxel_binary.min.js" defer></script>
+    <script src="/static/voxel_mesh.min.js" defer></script>
+    <script src="/static/model_viewer.min.js" defer></script>
+    <script src="/static/dressing-room.min.js" defer></script>
+</body>
+</html>

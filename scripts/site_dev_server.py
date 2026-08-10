@@ -243,6 +243,34 @@ def _stub_icon(ci):
     return f"/static/class-icons/{_STUB_CLASS_QN[ci]}.png"
 
 # Mods Hub stub cards for the /mods + /mods/{slug} local preview.
+_DRESS_CLASSES = [
+    {"key": "knight", "name": "Knight", "skeleton": "biped_medium", "weapons": ["Melee"],
+     "sockets": [{"ap": "r_prop", "slot": 28, "family": "Melee"},
+                 {"ap": "hat", "slot": 24, "family": "Hat"},
+                 {"ap": "face", "slot": 26, "family": "Face"}], "costumes": 2},
+    {"key": "candybarbarian", "name": "Candy Barbarian", "skeleton": "candybarbarian",
+     "weapons": ["Melee"],
+     "sockets": [{"ap": "prop_r_jnt", "slot": 28, "family": "Melee"},
+                 {"ap": "prop_l_jnt", "slot": 28, "family": "Melee"},
+                 {"ap": "hat", "slot": 24, "family": "Hat"},
+                 {"ap": "face", "slot": 26, "family": "Face"}], "costumes": 1},
+]
+
+_DRESS_OPTIONS = {
+    "costume": [
+        {"key": "knight_lvl3", "name": "Knight", "slot": "costume", "family": "",
+         "blueprint": "", "prefab": "prefabs/skins/knight_lvl3.binfab"},
+        {"key": "knight_dragon", "name": "Dragon Knight", "slot": "costume", "family": "",
+         "blueprint": "", "prefab": "prefabs/skins/knight_dragon.binfab"},
+    ],
+    "hat": [{"key": "hat_party", "name": "Party Hat", "slot": "hat", "family": "Hat",
+             "blueprint": "equipment_hat_party", "prefab": "prefabs/equipment/hat_party.binfab"}],
+    "face": [{"key": "face_wolf", "name": "Wolf Mask", "slot": "face", "family": "Face",
+              "blueprint": "equipment_face_mask_wolf", "prefab": "prefabs/equipment/face_wolf.binfab"}],
+    "weapon": [{"key": "axe_purity", "name": "Axe of Purity", "slot": "weapon", "family": "Melee",
+                "blueprint": "equipment_weapon_1h_axe_038", "prefab": "prefabs/equipment/axe_purity.binfab"}],
+}
+
 _STUB_MODS = [
     {"slug": "neon-hud", "title": "Neon HUD Overhaul",
      "summary": "A clean, high-contrast HUD retexture with neon accents.",
@@ -1003,6 +1031,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "calculators.html", "text/html")
         if path == "/app":
             return self._send_file(TEMPLATES / "app.html", "text/html")
+        if path == "/dressing-room":
+            return self._send_file(TEMPLATES / "dressing-room.html", "text/html")
         if path == "/star-chart":
             return self._send_file(TEMPLATES / "star-chart.html", "text/html")
         if path == "/login":
@@ -1056,6 +1086,23 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(png)))
             self.end_headers()
             return self.wfile.write(png)
+        # Dressing room. There is no game archive in dev, so the catalogue is stubbed
+        # and every outfit draws the pre-baked spider - enough to exercise the picker,
+        # the URL state and the viewer mount.
+        if path == "/site/dressing/classes":
+            return self._send_json({"items": _DRESS_CLASSES})
+        if path == "/site/dressing/options":
+            slot = (parse_qs(url.query).get("slot") or ["costume"])[0]
+            return self._send_json({"items": _DRESS_OPTIONS.get(slot, []),
+                                    "total": len(_DRESS_OPTIONS.get(slot, [])),
+                                    "offset": 0, "limit": 100})
+        if path == "/site/dressing/model":
+            mp = STATIC / "models" / "companion_spidermonkey.model.json"
+            if mp.exists():
+                return self._send_file(mp, "application/json")
+            return self._send_json({"error": {"message": "no model"}}, 404)
+        if path == "/site/dressing/render":
+            return self._send_json({"error": {"message": "no thumbnails in dev"}}, 404)
         if path == "/site/embed/blueprint":
             return self._send_json(_stub_blueprint())
         if path == "/site/embed/assembled":

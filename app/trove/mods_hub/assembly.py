@@ -29,6 +29,12 @@ _RIG_NAME_RE = re.compile(r"^[a-z0-9_]+$")   # skeleton / animation names; also 
 HALF_SCALE = 0.5
 HALF_SCALE_APS = frozenset({"head", "hat", "hair", "face"})
 
+# The game agrees: every ``prefabs/equipment/`` appearance - hat, face and weapon alike -
+# declares a voxel size of 1/12, exactly half the body resolution the rigs are calibrated
+# to. So an equipment style is drawn at HALF_SCALE wherever it attaches, which is the same
+# number the head slots above were arrived at by eye, now with the data behind it.
+EQUIPMENT_SCALE = HALF_SCALE
+
 
 @lru_cache(maxsize=1)
 def _rigs() -> dict:
@@ -106,8 +112,6 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
     heuristic: we either KNOW where each part attaches (from the game's own prefab data)
     or we don't render it. A part with no override is skipped - we never guess a creature
     or an attach point, which would render onto the wrong model."""
-    from app.trove.render.voxel import is_empty_blueprint
-
     rigs = _rigs()
     if not rig_name or rig_name not in rigs:
         return None                              # unknown rig -> don't render (no guess)
@@ -122,22 +126,60 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
         key = ap_overrides.get(p.split("/")[-1][:-len(".blueprint")])   # exact AP, or None
         if not key or key not in rig["rest"]:
             continue                             # not a known part of this rig -> skip
-        raw = base64.b64decode(f["content_base64"])
-        if (raw[:5] != b"kiwib" or struct.unpack_from("<I", raw, 5)[0] != 5
-                or is_empty_blueprint(raw)):
-            continue
-        vox = _decode_v5_grid(raw)
-        if not vox:
-            continue
-        part = {"name": key,
-                "x": [v[0] for v in vox], "y": [v[1] for v in vox], "z": [v[2] for v in vox],
-                "rgb": [v[3] for v in vox], "kind": [v[4] for v in vox], "level": [v[5] for v in vox]}
-        spec = [v[6] for v in vox]
-        if any(spec):                    # all-rough is the common case: don't ship the array
-            part["spec"] = spec
-        if key in HALF_SCALE_APS:
-            part["scale"] = HALF_SCALE
-        parts.append(part)
+        part = _part_at(key, base64.b64decode(f["content_base64"]),
+                        HALF_SCALE if key in HALF_SCALE_APS else 1.0)
+        if part:
+            parts.append(part)
+    if not parts:
+        return None
+    _unbury_enclosed_emissive(parts, rig["rest"], rig["voxel_scale"])
+    return {"voxel_scale": rig["voxel_scale"], "rig": rig_name, "parts": parts,
+            "rest": rig["rest"], "animations": rig["animations"]}
+
+
+def _part_at(key: str, raw: bytes, scale: float) -> dict | None:
+    """One decoded ``.blueprint`` positioned at attach point ``key``, or None when the
+    file is empty / not a v5 blueprint. ``scale`` multiplies the rig's voxel size."""
+    from app.trove.render.voxel import is_empty_blueprint
+
+    if (raw[:5] != b"kiwib" or struct.unpack_from("<I", raw, 5)[0] != 5
+            or is_empty_blueprint(raw)):
+        return None
+    vox = _decode_v5_grid(raw)
+    if not vox:
+        return None
+    part = {"name": key,
+            "x": [v[0] for v in vox], "y": [v[1] for v in vox], "z": [v[2] for v in vox],
+            "rgb": [v[3] for v in vox], "kind": [v[4] for v in vox], "level": [v[5] for v in vox]}
+    spec = [v[6] for v in vox]
+    if any(spec):                        # all-rough is the common case: don't ship the array
+        part["spec"] = spec
+    if scale != 1.0:
+        part["scale"] = scale
+    return part
+
+
+def assemble_placements(placements: list[tuple[str, bytes, float]], rig_name: str) -> dict | None:
+    """``[(AP key, raw .blueprint bytes, scale)]`` -> the web-viewer model payload.
+
+    ``assemble`` above answers "here is a mod, work out where its parts go". This answers
+    "here is exactly what goes where", which is what a dressed character needs: its body
+    comes from one prefab and its hat, face and weapon from three others, and the same
+    weapon style is placed once per socket the class declares - so a blueprint can appear
+    more than once, at attach points no single prefab binds it to. The caller has already
+    resolved every key from the game's own data; nothing is guessed here either.
+
+    Returns None for an unknown rig or when nothing places."""
+    rig = _rigs().get(rig_name)
+    if not rig:
+        return None
+    parts = []
+    for key, raw, scale in placements:
+        if not raw or key not in rig["rest"]:
+            continue                     # a socket this skeleton doesn't have -> skip it
+        part = _part_at(key, raw, scale)
+        if part:
+            parts.append(part)
     if not parts:
         return None
     _unbury_enclosed_emissive(parts, rig["rest"], rig["voxel_scale"])

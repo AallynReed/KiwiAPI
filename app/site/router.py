@@ -574,6 +574,16 @@ async def gems_guide_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "gems-guide.html", {})
 
 
+@router.get("/dressing-room", response_class=HTMLResponse)
+async def dressing_room_page(request: Request) -> HTMLResponse:
+    """Dressing Room - build a Trove character out of the game's own parts: pick a
+    class, a costume, a hat, a face and a weapon style and see the result assembled on
+    that class's rig, with its animations. Client-rendered from the
+    ``/site/dressing/*`` proxies; the whole outfit lives in the query string, so a look
+    is shared by copying the URL and nothing is stored."""
+    return _TEMPLATES.TemplateResponse(request, "dressing-room.html", {})
+
+
 @router.get("/gem-simulator", response_class=HTMLResponse)
 async def gem_simulator_page(request: Request) -> HTMLResponse:
     """Gem Simulator page. Fully client-rendered by the static
@@ -1916,6 +1926,84 @@ async def site_codex_render(
     if png is None:
         raise HTTPException(status_code=404,
                             detail=f"No blueprint '{blueprint}' on branch '{branch}'")
+    return Response(content=png, media_type="image/png",
+                    headers={"Cache-Control": "public, max-age=86400"})
+
+
+@router.get("/site/dressing/classes", response_class=JSONResponse)
+async def site_dressing_classes() -> JSONResponse:
+    """Dressable classes for the /dressing-room picker - same payload as
+    ``/v1/dressing/classes``."""
+    from app.trove.dressing.router import list_classes
+
+    return JSONResponse(jsonable_encoder(await list_classes()),
+                        headers={"Cache-Control": "public, max-age=300"})
+
+
+@router.get("/site/dressing/options", response_class=JSONResponse)
+async def site_dressing_options(
+    slot: str = Query(..., pattern="^(costume|hat|face|weapon)$"),
+    class_key: str | None = Query(default=None, alias="class"),
+    q: str | None = Query(default=None, max_length=80),
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
+) -> JSONResponse:
+    """One slot's options - same payload as ``/v1/dressing/options``."""
+    from app.trove.dressing.router import list_options
+
+    page = await list_options(slot=slot, class_key=class_key, q=q, offset=offset, limit=limit)
+    return JSONResponse(jsonable_encoder(page),
+                        headers={"Cache-Control": "public, max-age=300"})
+
+
+@router.get("/site/dressing/model")
+async def site_dressing_model(
+    request: Request,
+    class_key: str = Query(..., alias="class"),
+    costume: str | None = Query(default=None),
+    hat: str | None = Query(default=None),
+    face: str | None = Query(default=None),
+    weapon: str | None = Query(default=None),
+    fmt: str = Query(default="json", pattern="^(json|bin)$"),
+) -> Response:
+    """The dressed character as the web-viewer model payload (same-origin mirror of
+    ``/v1/dressing/model``), so ``model_viewer.js`` can draw it exactly as it draws an
+    assembled mod."""
+    from app.trove.dressing import service as dressing_service
+    from app.trove.dressing.router import resolve_query
+
+    outfit = await resolve_query(class_key, costume, hat, face, weapon)
+    built = await dressing_service.model(outfit, fmt)
+    if built is None:
+        raise HTTPException(status_code=404, detail="That outfit has nothing to draw.")
+    return bp_cache.respond(request, built)
+
+
+@router.get("/site/dressing/render")
+async def site_dressing_render(
+    blueprint: str | None = Query(default=None, min_length=1, max_length=200),
+    prefab: str | None = Query(default=None, min_length=1, max_length=400),
+    dim: int = Query(default=96, ge=32, le=256),
+) -> Response:
+    """Thumbnail for one option: a costume renders as its whole assembled creature
+    (``prefab``), a style as its model blueprint. Same renderer and cache the codex
+    grid uses - it lives here so the dressing room's own toggle governs it."""
+    from app.trove.render.voxel import BlueprintError
+
+    branch = _DEFAULT_CODEX_BRANCH
+    if prefab:
+        assembled = await render_creature_cached(prefab, dim=dim, branch=branch)
+        if assembled:
+            return Response(content=assembled, media_type="image/png",
+                            headers={"Cache-Control": "public, max-age=86400"})
+    if not blueprint:
+        raise HTTPException(status_code=404, detail="Nothing to render.")
+    try:
+        png = await render_blueprint_cached(blueprint, dim=dim, branch=branch)
+    except BlueprintError as exc:
+        raise HTTPException(status_code=422, detail=f"Not renderable: {exc}") from None
+    if png is None:
+        raise HTTPException(status_code=404, detail=f"No blueprint '{blueprint}'")
     return Response(content=png, media_type="image/png",
                     headers={"Cache-Control": "public, max-age=86400"})
 

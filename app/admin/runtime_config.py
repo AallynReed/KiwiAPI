@@ -421,6 +421,19 @@ REGISTRY: dict[str, TunableSetting] = {
             "Who may frame it is a separate setting - embed.allowed_origins."
         ),
     ),
+    "feature_dressing_room_enabled": _t(
+        key="feature_dressing_room_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Dressing Room (/dressing-room + /site/dressing/* "
+            "+ /v1/dressing/*), which composes a character from the game's own "
+            "costumes and equipment styles and renders it on the baked class rigs. "
+            "OFF hides the page + navbar link and 404s its endpoints. It reads the "
+            "updates archive and the rig map, so it needs the game index built."
+        ),
+    ),
 
     # ── Embeddable viewer (partner iframes; see app/embed) ────────────
     "embed.allowed_origins": _t(

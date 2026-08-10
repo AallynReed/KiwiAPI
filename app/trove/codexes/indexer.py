@@ -191,7 +191,7 @@ def _prefix_query(branch: str, prefix: str) -> dict:
     return {"branch": branch, "path": {"$gte": prefix, "$lt": prefix + "￿"}}
 
 
-async def _load_locale_map(branch: str, store: ContentStore) -> dict[str, str]:
+async def load_locale_map(branch: str, store: ContentStore) -> dict[str, str]:
     """Merge every `languages/<en>/…` string table into one $key -> text map."""
     coll = UpdateState.get_pymongo_collection()
     rows = await coll.find(
@@ -330,7 +330,7 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
     bp_shas: dict[str, str] = {}
     valid = await _load_valid_blueprints(branch, bp_shas)
     maps = _Maps(
-        loc=await _load_locale_map(branch, store),
+        loc=await load_locale_map(branch, store),
         mount_categories=binfab.collection_category_map(mount_table) if mount_table else {},
         multipliers=mastery.parse_multipliers(multipliers) if multipliers else {},
         geode_multipliers=mastery.parse_geode_multipliers(geode_multipliers) if geode_multipliers else {},

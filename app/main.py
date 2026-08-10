@@ -24,6 +24,7 @@ from app.core.features import (
     require_class_activity_enabled,
     require_codexes_enabled,
     require_dm_subs_enabled,
+    require_dressing_room_enabled,
     require_embed_enabled,
     require_giveaways_enabled,
     require_image_studio_enabled,
@@ -74,6 +75,7 @@ from app.trove.btt_releases import (
 )
 from app.trove.chaos import start_chaos_refresher, stop_chaos_refresher
 from app.trove.delves import start_delve_refresher, stop_delve_refresher
+from app.trove.dressing.router import dressing_router
 from app.trove.events import start_events_refresher, stop_events_refresher
 from app.trove.feeds import start_feeds_refresher, stop_feeds_refresher
 from app.trove.leaderboards.detection import (
@@ -408,6 +410,8 @@ app.include_router(embed_api_router, dependencies=_EMBED_GATE)
 # website page + navbar link disappear. See app/core/features.py.
 app.include_router(updates_router, dependencies=[Depends(require_updates_enabled)])
 app.include_router(codexes_router, dependencies=[Depends(require_codexes_enabled)])
+app.include_router(  # compose a character from the game's costumes + styles (/v1/dressing/*)
+    dressing_router, dependencies=[Depends(require_dressing_room_enabled)])
 app.include_router(btt_router)
 app.include_router(leaderboards_router, dependencies=[Depends(require_leaderboards_enabled)])
 app.include_router(market_router, dependencies=[Depends(require_market_enabled)])

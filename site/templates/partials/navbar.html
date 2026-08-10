@@ -13,7 +13,7 @@
    NOT include this partial.
    =========================================================================== #}
 {% set _p = request.url.path %}
-{% set _pages_active = _p == '/mods' or _p.startswith('/mods/') or _p == '/modpacks' or _p.startswith('/modpacks/') or _p in ['/commands', '/leaderboards', '/activity', '/class-activity', '/updates', '/market', '/store', '/codexes', '/codexes/crafting', '/status', '/clubs', '/server-time', '/calendar', '/streams', '/releases', '/classes', '/star-chart', '/gem-simulator', '/gems-guide'] %}
+{% set _pages_active = _p == '/mods' or _p.startswith('/mods/') or _p == '/modpacks' or _p.startswith('/modpacks/') or _p in ['/commands', '/leaderboards', '/activity', '/class-activity', '/updates', '/market', '/store', '/codexes', '/codexes/crafting', '/status', '/clubs', '/server-time', '/calendar', '/streams', '/releases', '/classes', '/star-chart', '/gem-simulator', '/gems-guide', '/dressing-room'] %}
 <style>
     /* Compact flag language picker: flag-only trigger, full names in the panel. */
     .lang-dd { position: relative; display: inline-flex; }
@@ -69,9 +69,10 @@
                             {% if store_enabled %}<a href="/store" role="menuitem" class="{{ 'active' if _p == '/store' else '' }}"><i class="fa-solid fa-store"></i> <span data-i18n>Store History</span></a>{% endif %}
                         </div>
                         {% endif %}
-                        {% if star_chart_enabled or gem_simulator_enabled or gem_evaluator_enabled or gem_builds_enabled or calculators_enabled %}
+                        {% if star_chart_enabled or gem_simulator_enabled or gem_evaluator_enabled or gem_builds_enabled or calculators_enabled or dressing_room_enabled %}
                         <div class="nav-mega-group" role="group" aria-label="Tools">
                             <p class="nav-mega-title" data-i18n>Tools</p>
+                            {% if dressing_room_enabled %}<a href="/dressing-room" role="menuitem" class="{{ 'active' if _p == '/dressing-room' else '' }}"><i class="fa-solid fa-shirt"></i> <span data-i18n>Dressing Room</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
                             {% if star_chart_enabled %}<a href="/star-chart" role="menuitem" class="{{ 'active' if _p == '/star-chart' else '' }}"><i class="fa-solid fa-star"></i> <span data-i18n>Star Chart</span></a>{% endif %}
                             {% if gem_simulator_enabled %}<a href="/gem-simulator" role="menuitem" class="{{ 'active' if _p == '/gem-simulator' else '' }}"><i class="fa-solid fa-gem"></i> <span data-i18n>Gem Simulator</span></a>{% endif %}
                             {% if gem_evaluator_enabled %}<a href="/gem-evaluator" role="menuitem" class="{{ 'active' if _p == '/gem-evaluator' else '' }}"><i class="fa-solid fa-magnifying-glass-chart"></i> <span data-i18n>Gem Evaluator</span></a>{% endif %}

@@ -69,6 +69,7 @@ async def embed_viewer(
     release: str | None = None,
     tmod: str | None = None,
     game: str | None = None,
+    dress: str | None = None,
     path: str | None = None,
     mode: str = "auto",
     theme: str = "dark",
@@ -86,6 +87,7 @@ async def embed_viewer(
     somebody else's page."""
     return _TEMPLATES.TemplateResponse(request, "embed_viewer.html", {
         "release": release or "", "tmod": tmod or "", "game": game or "",
+        "dress": dress or "",
         "path": path or "", "mode": mode if mode in
         ("auto", "blueprint", "assembled", "vfx") else "auto",
         "theme": theme if theme in ("dark", "light") else "dark",
@@ -266,6 +268,16 @@ async def gems_guide_page(request: Request) -> HTMLResponse:
     leveling/Power Rank and focusing). Fully client-rendered from the static
     ``/static/gems-guide.js`` - no proxy, no /v1 API."""
     return _TEMPLATES.TemplateResponse(request, "gems-guide.html", {})
+
+
+@router.get("/dressing-room", response_class=HTMLResponse)
+async def dressing_room_page(request: Request) -> HTMLResponse:
+    """Dressing Room - build a Trove character out of the game's own parts: pick a
+    class, a costume, a hat, a face and a weapon style and see the result assembled on
+    that class's rig, with its animations. Client-rendered from the
+    ``/site/dressing/*`` proxies; the whole outfit lives in the query string, so a look
+    is shared by copying the URL and nothing is stored."""
+    return _TEMPLATES.TemplateResponse(request, "dressing-room.html", {})
 
 
 @router.get("/gem-simulator", response_class=HTMLResponse)

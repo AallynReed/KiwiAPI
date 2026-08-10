@@ -116,6 +116,13 @@ async def _rig_map(branch: str) -> RigMap:
         return rig_map
 
 
+async def rig_map(branch: str | None = None) -> RigMap:
+    """The whole live map. The dressing room needs the ``skins/`` rows in bulk (every
+    costume and its parts), which is the one caller that wants the map itself rather
+    than an answer about one creature."""
+    return await _rig_map(branch or settings.trove_render_branch)
+
+
 async def resolve(
     part_basenames: list[str], branch: str | None = None
 ) -> tuple[str | None, dict[str, str]]:

@@ -53,6 +53,7 @@ DM_SUBS_FLAG = "feature_dm_subscriptions_enabled"
 DELVES_FLAG = "feature_delves_enabled"
 STORE_FLAG = "feature_store_enabled"
 EMBED_FLAG = "feature_embed_viewer_enabled"
+DRESSING_ROOM_FLAG = "feature_dressing_room_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
@@ -112,3 +113,4 @@ require_leaderboard_renames_enabled = _gate(RENAMES_FLAG, "Rename detection")
 require_leaderboard_duplicates_enabled = _gate(
     DUPLICATES_FLAG, "Duplicate-name detection")
 require_embed_enabled = _gate(EMBED_FLAG, "embeddable viewer")
+require_dressing_room_enabled = _gate(DRESSING_ROOM_FLAG, "Dressing Room")
