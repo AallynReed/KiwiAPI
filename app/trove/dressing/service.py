@@ -130,8 +130,10 @@ async def resolve(
             styles[slot] = opt
             continue
         ref = blueprint_ref(key)
-        if ref is None:
-            dropped.append(slot)              # neither a style we know nor a usable name
+        # Check it EXISTS here rather than at placement time, so /outfit answers "is this
+        # name usable" - which is the question a partner wiring up an embed is asking.
+        if ref is None or not await blueprint_path(ref.rsplit("/", 1)[-1], ref, branch):
+            dropped.append(slot)              # neither a style we know nor a name we have
             continue
         raw[slot] = ref
 
