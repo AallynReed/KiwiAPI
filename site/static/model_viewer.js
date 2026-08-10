@@ -121,7 +121,10 @@
       '.mv-btn{background:#1b2129;border:1px solid #2a323d;color:#cdd6e0;border-radius:8px;padding:6px 12px;font-size:.82rem;cursor:pointer}' +
       '.mv-btn:hover{border-color:#4cc9f0}.mv-btn.on{background:rgba(86,156,255,.16);border-color:#4cc9f0;color:#e6edf3}' +
       '.mv-btn.mv-loading{opacity:.55;cursor:progress}' +
-      '.mv-hint{color:#6b7480;font-size:.74rem;margin-left:auto}' +
+      // shrink-to-fit rather than push the buckets onto a second row and cost the model
+      // a whole line of height
+      '.mv-hint{color:#6b7480;font-size:.74rem;margin-left:auto;flex:0 1 auto;min-width:0;' +
+        'overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       // grouped mode: a row of action buckets over a row of that bucket's clips.
       // Both rows take a full flex line so they stack inside the host's bar.
       '.mv-cats,.mv-clips{display:flex;flex-wrap:wrap;gap:7px;align-items:center;flex:1 0 100%;min-width:0}' +
@@ -310,6 +313,16 @@
     el.addEventListener('touchstart', ts, { passive: false }); el.addEventListener('touchmove', tm, { passive: false }); el.addEventListener('touchend', te);
     function onResize() { var w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h); request(); }
     window.addEventListener('resize', onResize);
+    /* three.js writes the canvas size as an INLINE style, which outranks the host's
+       `height:100%` rule, so a canvas sized before the control bar existed keeps its
+       old height, spills over the bar and swallows every click. The bar is built below
+       (and grows again when a big bucket is picked), so watch the stage itself rather
+       than relying on window resizes. */
+    var ro = null;
+    if (window.ResizeObserver) {
+      ro = new ResizeObserver(function () { onResize(); });
+      ro.observe(stage);
+    }
 
     // render-on-demand; a rAF loop runs only while an animation plays. Animation CLIPS
     // are fetched lazily (the payload only carries metadata) and cached.
@@ -403,6 +416,7 @@
       function showGroup(g) {
         clips.textContent = '';
         buckets[g].forEach(function (k) { mkBtn(clips, clipLabel(k, clipInfo(k).token), k); });
+        onResize();                               // bucket sizes differ -> bar height changed
         Array.prototype.forEach.call(cats.querySelectorAll('.mv-cat'), function (b) {
           var on = b.dataset.cat === g;
           b.classList.toggle('on', on);
@@ -425,6 +439,11 @@
       hintHost = cats;                            // ride the category row, not a third line
     }
     var hint = document.createElement('span'); hint.className = 'mv-hint'; hint.textContent = 'drag rotate · scroll zoom · right-drag pan'; hintHost.appendChild(hint);
+    // The canvas was sized against a stage that had no control bar under it yet. Re-fit
+    // now that the bar occupies its real height, or the canvas overhangs it and eats
+    // every click. Done explicitly rather than left to the ResizeObserver above, which
+    // only delivers on a rendering tick.
+    onResize();
     play(null);
 
     return {
@@ -455,6 +474,7 @@
       el.removeEventListener('mousedown', down); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', upE);
       el.removeEventListener('wheel', wheel); el.removeEventListener('touchstart', ts); el.removeEventListener('touchmove', tm); el.removeEventListener('touchend', te);
       window.removeEventListener('resize', onResize);
+      if (ro) { ro.disconnect(); ro = null; }
       Object.keys(meshByPart).forEach(function (k) {
         meshByPart[k].forEach(function (m) { m.geometry.dispose(); m.material.dispose(); });
       });

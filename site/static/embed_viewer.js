@@ -177,6 +177,39 @@
     show(state.mode, els.select.value);
   });
 
+  /* ── auto-height ──────────────────────────────────────────────────────────
+     A rig with 80+ animation clips needs a control bar; without this the bar would
+     have to eat the 3D stage to fit the height the host picked. So report our
+     "chrome" - everything that is not the stage - and let the loader grow the iframe
+     by exactly that, keeping the render area the size the host asked for.
+     Reported unconditionally; a host that doesn't listen simply keeps its height. */
+  function reportChrome() {
+    if (window.parent === window) return;
+    var chrome = 0;
+    ['top', 'bar', 'foot'].forEach(function (k) {
+      var el = k === 'top' ? shell.querySelector('.kv-top')
+             : k === 'foot' ? shell.querySelector('.kv-foot') : els.bar;
+      if (el && !el.hidden) chrome += el.offsetHeight;
+    });
+    if (!chrome) return;
+    try {
+      // '*' because the host origin isn't known in here (framing is allow-listed
+      // server-side). The payload is one layout integer - nothing about the mod, the
+      // viewer or the visitor - so there is nothing to leak to a parent.
+      window.parent.postMessage({ source: 'kiwi-embed', type: 'chrome', chrome: chrome }, '*');
+    } catch (e) { /* a host that blocks postMessage just keeps its configured height */ }
+  }
+  var _chromeTimer = 0;
+  function scheduleChromeReport() {
+    clearTimeout(_chromeTimer);
+    _chromeTimer = setTimeout(reportChrome, 50);   // after the bar has laid out
+  }
+  if (window.ResizeObserver) {
+    var cro = new ResizeObserver(scheduleChromeReport);
+    cro.observe(els.bar);
+  }
+  window.addEventListener('load', scheduleChromeReport);
+
   // ── mounting ─────────────────────────────────────────────────────────────
 
   function show(mode, path) {
@@ -188,6 +221,7 @@
     els.hint.textContent = HINTS[mode] || '';
     paintTabs(availableModes(state.manifest));
     paintPicker();
+    scheduleChromeReport();                     // the bar appears/disappears per mode
 
     var onMeta = function (text) { els.meta.textContent = text; };
 

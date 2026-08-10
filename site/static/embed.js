@@ -44,13 +44,36 @@
     frame.loading = 'lazy';
     frame.allowFullscreen = true;
     frame.setAttribute('frameborder', '0');
+    var height = el.getAttribute('data-height') || '420px';
     frame.style.cssText = 'display:block;width:100%;border:0;border-radius:12px;'
-      + 'height:' + (el.getAttribute('data-height') || '420px');
+      + 'height:' + height;
+
+    // data-height sizes the 3D VIEW. A creature with animation clips also needs a
+    // control bar, so the viewer reports how much chrome it added and we grow the
+    // frame by that much - the model keeps the height you asked for instead of being
+    // squeezed to make room. Only px heights can be grown; anything else is left be.
+    var px = /^(\d+(?:\.\d+)?)px$/.exec(height.trim());
+    if (px) { frames.push({ frame: frame, base: parseFloat(px[1]) }); }
 
     el.textContent = '';
     el.appendChild(frame);
     el.setAttribute('data-kiwi-mounted', '1');
   }
+
+  // Frames we may auto-grow, paired with the height the host asked for.
+  var frames = [];
+  window.addEventListener('message', function (e) {
+    if (e.origin !== ORIGIN || !e.data || e.data.source !== 'kiwi-embed') return;
+    if (e.data.type !== 'chrome') return;
+    var chrome = Number(e.data.chrome);
+    if (!(chrome >= 0 && chrome < 2000)) return;          // ignore nonsense
+    for (var i = 0; i < frames.length; i++) {
+      if (frames[i].frame.contentWindow === e.source) {   // only the frame that spoke
+        frames[i].frame.style.height = (frames[i].base + chrome) + 'px';
+        return;
+      }
+    }
+  });
 
   function scan() {
     var nodes = document.querySelectorAll('[data-kiwi-embed]');

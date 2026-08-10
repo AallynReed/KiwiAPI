@@ -127,8 +127,14 @@
               </tr>
               <tr>
                 <td><code>height</code></td><td>any CSS height</td>
-                <td>Loader script only - the iframe's height. Defaults to <code>420px</code>.
-                Below about 340px the footer hides itself.</td>
+                <td>Loader script only - the height of the <strong>3D view</strong>. Defaults to
+                <code>420px</code>. Below about 340px the footer hides itself. An assembled
+                creature also gets a row of animation clips; when it does, the loader grows the
+                iframe by the height of that bar so the model keeps the size you asked for
+                rather than being squeezed to make room. (Growing needs a <code>px</code>
+                value - any other unit is left exactly as you set it. A hand-written
+                <code>&lt;iframe&gt;</code> is never resized; give it ~120px of extra height if
+                you're embedding creatures with animations.)</td>
               </tr>
               <tr>
                 <td><code>title</code></td><td>text</td>
