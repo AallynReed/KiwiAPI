@@ -21,6 +21,14 @@ from functools import lru_cache
 _RIG_DIR = os.path.join(os.path.dirname(__file__), "rigs")
 _RIG_NAME_RE = re.compile(r"^[a-z0-9_]+$")   # skeleton / animation names; also blocks path traversal
 
+# The head slots are modelled at DOUBLE resolution so a face can carry detail the body
+# never needs - a crimefighter helm is 14x19x18 voxels against a 9x9x5 chest. They are
+# authored that way, so they must be drawn at half the voxel size or the head comes out
+# twice the size of the character wearing it. Halving keeps every voxel; it only changes
+# how big each one is.
+HALF_SCALE = 0.5
+HALF_SCALE_APS = frozenset({"head", "hat", "hair", "face"})
+
 
 @lru_cache(maxsize=1)
 def _rigs() -> dict:
@@ -127,6 +135,8 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
         spec = [v[6] for v in vox]
         if any(spec):                    # all-rough is the common case: don't ship the array
             part["spec"] = spec
+        if key in HALF_SCALE_APS:
+            part["scale"] = HALF_SCALE
         parts.append(part)
     if not parts:
         return None
@@ -162,7 +172,11 @@ def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
         voxels = _decode_v5_grid(raw)
         if not voxels:
             continue
-        m = np.array(mat).reshape(4, 4).T @ np.diag([scale] * 3 + [1.0])
+        # A head slot is authored at double resolution (see HALF_SCALE_APS). On this
+        # shared integer grid that resamples it to body resolution, which is the right
+        # size at the size it's drawn.
+        ps = scale * (HALF_SCALE if ap_key in HALF_SCALE_APS else 1.0)
+        m = np.array(mat).reshape(4, 4).T @ np.diag([ps] * 3 + [1.0])
         n = len(voxels)
         local = np.array([[v[0] for v in voxels], [v[1] for v in voxels],
                           [v[2] for v in voxels], [1.0] * n], dtype=float)
@@ -191,7 +205,9 @@ def _unbury_enclosed_emissive(parts: list[dict], rest: dict, voxel_scale: float)
     worlds: list = []
     mats: list = []
     for p in parts:
-        m = np.array(rest[p["name"]]).reshape(4, 4).T @ np.diag([voxel_scale] * 3 + [1.0])
+        # head slots are drawn at half size, so their voxels sit on a finer lattice
+        ps = voxel_scale * float(p.get("scale", 1.0))
+        m = np.array(rest[p["name"]]).reshape(4, 4).T @ np.diag([ps] * 3 + [1.0])
         mats.append(m)
         n = len(p["x"])
         loc = np.array([p["x"], p["y"], p["z"], [1.0] * n], dtype=float)

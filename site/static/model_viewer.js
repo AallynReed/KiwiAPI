@@ -253,6 +253,15 @@
     var camera = new THREE.PerspectiveCamera(42, W / H, 0.001, 1000);
 
     var scaleM = new THREE.Matrix4().makeScale(s, s, s);
+    /* Head slots (head/hat/hair/face) are modelled at DOUBLE resolution so a face can
+       carry detail the body never needs, so they carry their own `scale` and are drawn
+       at half the voxel size. Every voxel is kept - only the size of each one changes -
+       and without it the head comes out twice the size of the character wearing it. */
+    var scaleOf = {};
+    data.parts.forEach(function (p) {
+      var ps = s * (typeof p.scale === 'number' ? p.scale : 1);
+      scaleOf[p.name] = ps === s ? scaleM : new THREE.Matrix4().makeScale(ps, ps, ps);
+    });
     // One mesh per material group per part, with the faces you can't see culled
     // (voxel_mesh.js). Culling is per PART - two parts meeting at a joint are placed
     // by different bone matrices, so neither can know it's hidden by the other.
@@ -272,7 +281,8 @@
     function applyPose(pose) {                       // pose = {part:[16]}
       data.parts.forEach(function (p) {
         var m = pose[p.name], meshes = meshByPart[p.name]; if (!m || !meshes) return;
-        for (var i = 0; i < meshes.length; i++) meshes[i].matrix.fromArray(m).multiply(scaleM);
+        var sm = scaleOf[p.name] || scaleM;
+        for (var i = 0; i < meshes.length; i++) meshes[i].matrix.fromArray(m).multiply(sm);
       });
     }
     applyPose(data.rest);
@@ -280,7 +290,7 @@
     // frame the camera on the rest-pose bounds
     var box = new THREE.Box3(), v = new THREE.Vector3();
     data.parts.forEach(function (p) {
-      var M = new THREE.Matrix4().fromArray(data.rest[p.name]).multiply(scaleM);
+      var M = new THREE.Matrix4().fromArray(data.rest[p.name]).multiply(scaleOf[p.name] || scaleM);
       for (var i = 0; i < p.x.length; i++) { v.set(p.x[i], p.y[i], p.z[i]).applyMatrix4(M); box.expandByPoint(v); }
     });
     var center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
@@ -341,7 +351,8 @@
         var o = base + ai * 7;
         _p.set(d[o], d[o + 1], d[o + 2]);
         _q.set(d[o + 3], d[o + 4], d[o + 5], d[o + 6]);
-        for (var i = 0; i < meshes.length; i++) meshes[i].matrix.compose(_p, _q, _one).multiply(scaleM);
+        var sm = scaleOf[p.name] || scaleM;
+        for (var i = 0; i < meshes.length; i++) meshes[i].matrix.compose(_p, _q, _one).multiply(sm);
       });
     }
     function loop(ts2) {
