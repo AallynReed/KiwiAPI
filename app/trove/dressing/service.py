@@ -64,12 +64,13 @@ def attach_point(slot: str, skeleton: str) -> str | None:
 # "I want nothing here" - distinct from "I didn't choose", which takes the race default.
 NONE = "none"
 
-# Character-creation art is BODY resolution, not the finer equipment resolution: a custom
-# head measures 10x10x10 voxels against a knight chest's 9x8x9, so it is drawn at the
-# rig's voxel size like the body is. Equipment styles keep their halving (a hat is 15-21
-# voxels for the same head), which is why the scale can't be decided by attach point
-# alone - the eyes and a face style share the `face` point but not the resolution.
-PIECE_SCALE = 1.0
+# The head and eyes are drawn at the same half scale as everything else on the head - the
+# size that was confirmed correct by eye. DO NOT "derive" this from voxel counts: doing
+# that once put the head back to double size while fixing something else entirely.
+#
+# Hair is the one that is still wrong (too big), and it gets its own number so it can be
+# corrected WITHOUT touching the head again.
+PIECE_SCALE = {"head": 0.5, "eyes": 0.5, "hair": 0.5}
 # slot -> the colour parameter that tints it (see assembly.recolor). Hair and eyes only,
 # which is exactly what Trove's own customizer offers: ui/charcustomize.swf has RACE,
 # HAIRSTYLE, EYECOLOR and HAIRCOLOR and no skin colour. The data agrees - hair and eyes
@@ -296,7 +297,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         ap = attach_point(slot, outfit.cls.skeleton)
         data = await read(opt.blueprint, opt.prefab) if ap else None
         if data:
-            out.append((ap, data, PIECE_SCALE, outfit.colors.get(slot)))
+            out.append((ap, data, PIECE_SCALE[slot], outfit.colors.get(slot)))
 
     for slot, ref in outfit.blueprints.items():
         if ref == NONE:
@@ -320,7 +321,8 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         if not data:
             continue
         tint = outfit.colors.get(slot)
-        scale = PIECE_SCALE if slot in RACE_SLOTS else assembly.scale_for(aps[0])
+        scale = (PIECE_SCALE[slot] if slot in RACE_SLOTS
+                 else assembly.scale_for(aps[0]))
         for ap in aps:
             out.append((ap, data, scale, tint))
     return out
