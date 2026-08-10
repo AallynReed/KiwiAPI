@@ -66,10 +66,14 @@ class Outfit:
 
     @property
     def ident(self) -> str:
-        """Cache identity: the same outfit always assembles to the same model."""
-        picks = ",".join(f"{s}={self.styles[s].key}" for s in STYLE_SLOTS if s in self.styles)
-        raw = ",".join(f"{s}~{self.blueprints[s]}" for s in BLUEPRINT_SLOTS
-                       if s in self.blueprints)
+        """Cache identity: the same outfit always assembles to the same model.
+
+        EVERY slot has to appear. It listed only the equipment styles once, so two
+        outfits differing solely by a catalogue-chosen head, hair or eyes shared one key
+        and the first one built was served for all of them."""
+        slots = tuple(dict.fromkeys(STYLE_SLOTS + RACE_SLOTS + BLUEPRINT_SLOTS))
+        picks = ",".join(f"{s}={self.styles[s].key}" for s in slots if s in self.styles)
+        raw = ",".join(f"{s}~{self.blueprints[s]}" for s in slots if s in self.blueprints)
         fam = f"@{self.weapon_family}" if self.weapon_family else ""
         race = self.race.key if self.race else ""
         return f"{self.cls.key}/{self.costume.key}/{race}/{picks}/{raw}{fam}"
