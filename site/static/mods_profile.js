@@ -41,15 +41,10 @@
   const modUrl = (m) => '/mods/' + encodeURIComponent(m.handle) + '/' + encodeURIComponent(m.slug);
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
 
-  function authHeader() {
-    // Empty for a cookie session - the HttpOnly session cookie is the
-    // credential and rides along automatically. Only a pre-cookie
-    // localStorage session still has a bearer to send.
-    const tok = window.BTTAuth && window.BTTAuth.tokens ? window.BTTAuth.tokens.access : null;
-    return tok ? { Authorization: 'Bearer ' + tok } : {};
-  }
+  // The HttpOnly session cookie is the credential and rides along on a
+  // same-origin request; there is no header to add.
   async function siteGET(path) {
-    const init = { headers: authHeader(), credentials: 'same-origin' };
+    const init = { credentials: 'same-origin' };
     let r = await fetch(path, init);
     if (r.status === 401 && window.BTTAuth && window.BTTAuth.hasSession && window.BTTAuth.hasSession()) {
       if (await window.BTTAuth.refresh()) r = await fetch(path, init);

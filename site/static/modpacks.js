@@ -74,7 +74,7 @@
     $('mh-mine').addEventListener('click', async (e) => {
       e.preventDefault();
       try {
-        const r = await fetch('/site/modpacks/me/projects', { headers: authHeader() });
+        const r = await fetch('/site/modpacks/me/projects', { credentials: 'same-origin' });
         const data = r.ok ? await r.json() : { items: [] };
         if (data.items && data.items.length) {
           location.href = packUrl(data.items[0]);
@@ -83,14 +83,6 @@
         }
       } catch (_) { openCreate(); }
     });
-  }
-
-  function authHeader() {
-    // Empty for a cookie session - the HttpOnly session cookie is the
-    // credential and rides along automatically. Only a pre-cookie
-    // localStorage session still has a bearer to send.
-    const tok = window.BTTAuth && window.BTTAuth.tokens ? window.BTTAuth.tokens.access : null;
-    return tok ? { Authorization: 'Bearer ' + tok } : {};
   }
 
   // ─── Data ──────────────────────────────────────────────────────────

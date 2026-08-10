@@ -9,21 +9,14 @@
   const { esc, fetchJSON, apiUrl, segmentGaps } = window.BTTUtil;
 
   // Signed-in Dashboard users can browse deeper leaderboard history (the extended
-  // archive window) and pass the older-than-hot gate on boards/entries. The site
-  // session is a bearer token held by site_auth.js on window.BTTAuth; attach it
-  // when present. Anonymous callers just omit the header and get the hot window.
-  function lbAuthHeaders() {
-    // Empty for a cookie session - the HttpOnly session cookie is the
-    // credential and rides along automatically. Only a pre-cookie
-    // localStorage session still has a bearer to send.
-    const tok = window.BTTAuth && window.BTTAuth.tokens ? window.BTTAuth.tokens.access : null;
-    return tok ? { Authorization: 'Bearer ' + tok } : {};
-  }
-  // Like BTTUtil.fetchJSON but sends the site-auth token when present. Used only
-  // for the leaderboards data calls that vary by login (config/boards/entries).
+  // archive window) and pass the older-than-hot gate on boards/entries. The
+  // session is an HttpOnly cookie, so this only has to ASK for it - hence
+  // credentials, which a cross-origin fetch omits by default. Anonymous callers
+  // send nothing and get the hot window.
   async function fetchJSONAuth(path) {
     const res = await fetch(apiUrl(path), {
-      headers: { Accept: 'application/json', ...lbAuthHeaders() },
+      headers: { Accept: 'application/json' },
+      credentials: 'include',
     });
     if (!res.ok) {
       let msg = `HTTP ${res.status}`;
