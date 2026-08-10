@@ -51,9 +51,9 @@
     // data-height sizes the 3D VIEW. A creature with animation clips also needs a
     // control bar, so the viewer reports how much chrome it added and we grow the
     // frame by that much - the model keeps the height you asked for instead of being
-    // squeezed to make room. Only px heights can be grown; anything else is left be.
-    var px = /^(\d+(?:\.\d+)?)px$/.exec(height.trim());
-    if (px) { frames.push({ frame: frame, base: parseFloat(px[1]) }); }
+    // squeezed to make room. The base is MEASURED on the first report rather than
+    // parsed, so calc()/vh/% heights grow just as well as px ones.
+    frames.push({ frame: frame, base: 0 });
 
     el.textContent = '';
     el.appendChild(frame);
@@ -68,10 +68,14 @@
     var chrome = Number(e.data.chrome);
     if (!(chrome >= 0 && chrome < 2000)) return;          // ignore nonsense
     for (var i = 0; i < frames.length; i++) {
-      if (frames[i].frame.contentWindow === e.source) {   // only the frame that spoke
-        frames[i].frame.style.height = (frames[i].base + chrome) + 'px';
-        return;
+      var f = frames[i];
+      if (f.frame.contentWindow !== e.source) continue;   // only the frame that spoke
+      if (!f.base) {                                      // measure the author's height once
+        f.base = f.frame.getBoundingClientRect().height;
+        if (!f.base) return;                              // not laid out yet; wait for the next report
       }
+      f.frame.style.height = Math.round(f.base + chrome) + 'px';
+      return;
     }
   });
 
