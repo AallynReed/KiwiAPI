@@ -86,17 +86,26 @@ async def resolve(
     return Outfit(cls=cls, costume=chosen, styles=styles, dropped=dropped)
 
 
+async def blueprint_path(basename: str, hint: str, branch: str | None = None) -> str | None:
+    """Where a part's blueprint actually lives. The catalogue stores basenames, but the
+    archive keys on full logical paths (``2025/equipment/…``), so a bare name resolves to
+    nothing without this - and a basename Trove reuses across skins and NPC sets is
+    absent from the unambiguous index, so fall back to every archived path and take the
+    one closest to the prefab that asked for it (the creature renderer's rule)."""
+    branch = branch or settings.trove_render_branch
+    index = await blueprint_by_basename(branch)
+    found = index.get(basename)
+    if found:
+        return found
+    all_paths = await game_file_paths(branch)
+    return nearest_path(all_paths.get(f"{basename}.blueprint", []), hint)
+
+
 async def _placements(outfit: Outfit, branch: str) -> list[tuple[str, bytes, float]]:
     """``[(AP key, blueprint bytes, scale)]`` for everything the outfit puts on the rig."""
-    index = await blueprint_by_basename(branch)
-    all_paths = await game_file_paths(branch)
 
     async def read(basename: str, hint: str) -> bytes | None:
-        # A basename Trove reuses across skins/NPC sets is absent from the unambiguous
-        # index, so fall back to every archived path and take the one closest to the
-        # prefab that asked for it (the same rule the creature renderer uses).
-        path = index.get(basename) or nearest_path(
-            all_paths.get(f"{basename}.blueprint", []), hint)
+        path = await blueprint_path(basename, hint, branch)
         return await get_blueprint_bytes(path, branch) if path else None
 
     out: list[tuple[str, bytes, float]] = []

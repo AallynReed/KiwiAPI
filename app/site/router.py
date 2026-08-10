@@ -1988,18 +1988,25 @@ async def site_dressing_render(
     """Thumbnail for one option: a costume renders as its whole assembled creature
     (``prefab``), a style as its model blueprint. Same renderer and cache the codex
     grid uses - it lives here so the dressing room's own toggle governs it."""
+    from app.trove.dressing.service import blueprint_path
     from app.trove.render.voxel import BlueprintError
 
     branch = _DEFAULT_CODEX_BRANCH
-    if prefab:
-        assembled = await render_creature_cached(prefab, dim=dim, branch=branch)
-        if assembled:
-            return Response(content=assembled, media_type="image/png",
-                            headers={"Cache-Control": "public, max-age=86400"})
     if not blueprint:
-        raise HTTPException(status_code=404, detail="Nothing to render.")
+        # A costume has no single model - it IS the assembled creature its prefab binds.
+        if not prefab:
+            raise HTTPException(status_code=404, detail="Nothing to render.")
+        assembled = await render_creature_cached(prefab, dim=dim, branch=branch)
+        if not assembled:
+            raise HTTPException(status_code=404, detail="Nothing to assemble for that prefab.")
+        return Response(content=assembled, media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=86400"})
+    # The catalogue carries basenames; the archive keys on full logical paths, so a style
+    # whose model lives in a dated folder renders only after this resolution. `prefab` is
+    # the hint that picks between reused names, not a second thing to draw.
+    resolved = await blueprint_path(blueprint.lower(), prefab or "", branch)
     try:
-        png = await render_blueprint_cached(blueprint, dim=dim, branch=branch)
+        png = await render_blueprint_cached(resolved or blueprint, dim=dim, branch=branch)
     except BlueprintError as exc:
         raise HTTPException(status_code=422, detail=f"Not renderable: {exc}") from None
     if png is None:

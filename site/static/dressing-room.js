@@ -148,8 +148,11 @@
 
     function thumbUrl(opt) {
         var q = new URLSearchParams({ dim: "96" });
-        if (opt.slot === "costume") q.set("prefab", opt.prefab);
-        else q.set("blueprint", opt.blueprint);
+        // A costume has no single model, so it renders as the creature its prefab
+        // assembles. A style draws its own blueprint; its prefab still goes along, as
+        // the hint that picks between blueprints Trove reuses across skins.
+        if (opt.blueprint) q.set("blueprint", opt.blueprint);
+        if (opt.prefab) q.set("prefab", opt.prefab);
         return "/site/dressing/render?" + q.toString();
     }
 
