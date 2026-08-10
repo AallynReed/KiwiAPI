@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 
 from app.core.config import settings
 from app.trove.dressing import catalogue as cat
+from app.trove.dressing import customhead
 from app.trove.dressing import sockets as sockets_mod
 from app.trove.mods_hub import assembly, rig_index
 from app.trove.mods_hub.trove_layout import game_file_paths, nearest_path
@@ -37,13 +38,18 @@ from app.trove.render.source import blueprint_by_basename, get_blueprint_bytes
 logger = logging.getLogger("kiwi.dressing")
 
 STYLE_SLOTS = ("hat", "face", "weapon")
-# Slots a raw blueprint can fill. head/hair have no catalogue behind them at all.
-BLUEPRINT_SLOTS = ("head", "hair", "hat", "face", "weapon")
+# The character-creation slots (see customhead.py): a catalogue backs them, and each
+# attaches at the point the game's own prefabs bind that mesh to.
+RACE_SLOTS = ("head", "hair", "eyes")
+# Slots a raw blueprint can fill.
+BLUEPRINT_SLOTS = ("head", "hair", "eyes", "hat", "face", "weapon")
 # slot -> the socket family that names its attach point on any class.
 SLOT_FAMILY = {"hat": "Hat", "face": "Face"}
-# head/hair aren't equipment sockets - they're attach points every player rig carries,
-# so they're addressed by AP name directly.
-DIRECT_APS = {"head": "head", "hair": "hair"}
+# head/hair/eyes aren't equipment sockets - they're attach points on the rig, addressed
+# by name. eyes ride the `face` point, which is why a face style covers them.
+DIRECT_APS = dict(customhead.PIECE_APS)
+# "I want nothing here" - distinct from "I didn't choose", which takes the race default.
+NONE = "none"
 
 
 @dataclass(frozen=True)
@@ -52,6 +58,7 @@ class Outfit:
 
     cls: cat.DressClass
     costume: cat.Option
+    race: cat.Race | None = None
     styles: dict[str, cat.Option] = field(default_factory=dict)   # slot -> option
     blueprints: dict[str, str] = field(default_factory=dict)      # slot -> raw blueprint ref
     weapon_family: str = ""                                       # for a raw weapon blueprint
@@ -64,10 +71,12 @@ class Outfit:
         raw = ",".join(f"{s}~{self.blueprints[s]}" for s in BLUEPRINT_SLOTS
                        if s in self.blueprints)
         fam = f"@{self.weapon_family}" if self.weapon_family else ""
-        return f"{self.cls.key}/{self.costume.key}/{picks}/{raw}{fam}"
+        race = self.race.key if self.race else ""
+        return f"{self.cls.key}/{self.costume.key}/{race}/{picks}/{raw}{fam}"
 
     def as_dict(self) -> dict:
-        out = {"class": self.cls.key, "costume": self.costume.key}
+        out = {"class": self.cls.key, "costume": self.costume.key,
+               "race": self.race.key if self.race else None}
         for slot in BLUEPRINT_SLOTS:
             out[slot] = (self.styles[slot].key if slot in self.styles
                          else self.blueprints.get(slot))
@@ -93,6 +102,7 @@ def blueprint_ref(value: str | None) -> str | None:
 async def resolve(
     class_key: str, costume: str | None, picks: dict[str, str | None],
     branch: str | None = None, weapon_family: str | None = None,
+    race: str | None = None,
 ) -> Outfit | None:
     """Validate a selection against the catalogue and normalise it.
 
@@ -115,6 +125,13 @@ async def resolve(
     if chosen is None or chosen.skeleton != cls.skeleton:
         chosen = wardrobe[0]                  # a costume for another class -> this class's default
 
+    # The race supplies the head and eyes the game draws whether or not anything covers
+    # them - a character is never faceless. An unknown race falls back to the first that
+    # has a head, rather than to none.
+    chosen_race = catalogue.races.get((race or "").lower())
+    if chosen_race is None:
+        chosen_race = next((r for r in catalogue.races.values() if r.first("head")), None)
+
     styles: dict[str, cat.Option] = {}
     raw: dict[str, str] = {}
     dropped: list[str] = []
@@ -122,9 +139,15 @@ async def resolve(
         key = (picks.get(slot) or "").strip().lower()
         if not key:
             continue
-        opt = catalogue.get(slot, key) if slot in STYLE_SLOTS else None
+        if key == NONE:
+            raw[slot] = NONE                  # explicit "leave this empty"
+            continue
+        opt = catalogue.get(slot, key)
         if opt is not None:
-            if not sockets_mod.sockets_for_slot(cls.sockets, opt.slot_id):
+            # A head/hair/eyes piece isn't equipment: it has no slot number and rides an
+            # attach point every rig has, so there is no compatibility to check.
+            if slot not in RACE_SLOTS and not sockets_mod.sockets_for_slot(
+                    cls.sockets, opt.slot_id):
                 dropped.append(slot)          # this class has no socket for that family
                 continue
             styles[slot] = opt
@@ -146,8 +169,17 @@ async def resolve(
         fam = ""
     if not fam and "weapon" in raw:
         fam = cls.weapons[0] if cls.weapons else ""
-    return Outfit(cls=cls, costume=chosen, styles=styles, blueprints=raw,
-                  weapon_family=fam, dropped=dropped)
+    # Nothing chosen for a character-creation slot -> the race's own default, so the
+    # model matches what the game shows a player who never opened the customizer.
+    if chosen_race:
+        for slot in RACE_SLOTS:
+            if slot in styles or slot in raw:
+                continue
+            default = chosen_race.first(slot)
+            if default:
+                raw[slot] = default.lower()
+    return Outfit(cls=cls, costume=chosen, race=chosen_race, styles=styles,
+                  blueprints=raw, weapon_family=fam, dropped=dropped)
 
 
 async def blueprint_path(basename: str, hint: str, branch: str | None = None) -> str | None:
@@ -192,7 +224,17 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple[str, bytes, flo
         for socket in sockets_mod.sockets_for_slot(outfit.cls.sockets, opt.slot_id):
             out.append((socket["ap"], raw, assembly.scale_for(socket["ap"])))
 
+    for slot, opt in outfit.styles.items():
+        if slot not in RACE_SLOTS:
+            continue                          # equipment styles are placed above
+        ap = DIRECT_APS[slot]
+        data = await read(opt.blueprint, opt.prefab)
+        if data:
+            out.append((ap, data, assembly.scale_for(ap)))
+
     for slot, ref in outfit.blueprints.items():
+        if ref == NONE:
+            continue
         # The caller named the file; the class's socket table still names the bone.
         # head/hair are plain attach points rather than equipment sockets.
         if slot in DIRECT_APS:

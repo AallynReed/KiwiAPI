@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 
 from app.core.config import settings
 from app.trove.codexes import binfab, pg_store
+from app.trove.dressing import customhead
 from app.trove.dressing import sockets as sockets_mod
 from app.trove.mods_hub import rig_index
 
@@ -34,11 +35,15 @@ logger = logging.getLogger("kiwi.dressing")
 CLASS_ROOT = "prefabs/class/"
 SKIN_ROOT = "prefabs/skins/"
 EQUIP_ROOT = "prefabs/equipment/"
+CUSTOM_HEADS = "prefabs/custom_heads_service.binfab"
 
 # Slot ids the page addresses. "weapon" is one slot even for a class that draws the
 # selected style twice - the game gives one equipped style, the sockets say how often
 # it is drawn (see sockets.py).
-SLOTS = ("costume", "hat", "face", "weapon")
+SLOTS = ("costume", "hat", "face", "weapon", "head", "hair", "eyes")
+# The character-creation slots: not styles you equip, but the race you picked and the
+# head, hair and eyes that come with it (see customhead.py).
+RACE_SLOTS = ("head", "hair", "eyes")
 
 _NAME_KEY_RE = re.compile(r"^\$[A-Za-z0-9_]+_(?:skinset_)?name$")
 _WORD_RE = re.compile(r"[_/]+")
@@ -60,6 +65,20 @@ class Option:
 
 
 @dataclass(frozen=True)
+class Race:
+    """A character-creation race and the pieces it can wear."""
+
+    key: str
+    name: str
+    pieces: dict[str, list[str]] = field(default_factory=dict)   # kind -> blueprints
+
+    def first(self, kind: str) -> str:
+        """The race's default piece of this kind - what the game shows before you pick."""
+        got = self.pieces.get(kind) or []
+        return got[0] if got else ""
+
+
+@dataclass(frozen=True)
 class DressClass:
     key: str                              # class prefab stem ("knight")
     name: str
@@ -74,6 +93,7 @@ class Catalogue:
     costumes: dict[str, list[Option]] = field(default_factory=dict)   # class key -> options
     styles: dict[str, list[Option]] = field(default_factory=dict)     # slot -> options
     options: dict[str, Option] = field(default_factory=dict)          # "slot:key" -> option
+    races: dict[str, Race] = field(default_factory=dict)              # race key -> race
 
     def __bool__(self) -> bool:
         return bool(self.classes)
@@ -128,6 +148,18 @@ async def _load(branch: str, prefix: str) -> list[tuple[str, bytes]]:
     store = ContentStore(settings.trove_update_store_dir)
     blobs = await asyncio.to_thread(_read_many, store, [sha for _p, sha in files])
     return [(path, blob) for (path, _sha), blob in zip(files, blobs, strict=False) if blob]
+
+
+async def _load_one(branch: str, path: str) -> bytes | None:
+    """One archived file's bytes by logical path."""
+    from app.trove.updates.cas import ContentStore
+    from app.trove.updates.models import UpdateState
+
+    doc = await UpdateState.find_one({"branch": branch, "path": path})
+    if doc is None:
+        return None
+    store = ContentStore(settings.trove_update_store_dir)
+    return await asyncio.to_thread(store.get, doc.content_sha256)
 
 
 def _stem(path: str) -> str:
@@ -218,6 +250,31 @@ async def _locale_map(branch: str) -> dict[str, str]:
     return await load_locale_map(branch, ContentStore(settings.trove_update_store_dir))
 
 
+def _build_races(data: bytes, loc: dict[str, str]) -> tuple[dict[str, Race], dict[str, list[Option]]]:
+    """The races, plus one option list per character-creation slot. A head or eyes option
+    is per race (its key is prefixed so two races' pieces can't collide); hair is shared,
+    so it is listed once."""
+    races: dict[str, Race] = {}
+    slots: dict[str, list[Option]] = {k: [] for k in RACE_SLOTS}
+    seen: set[tuple[str, str]] = set()
+    for row in customhead.parse(data):
+        name = binfab.clean_localized_text(loc.get(row["name_key"], "")) or _humanize(row["race"])
+        races[row["key"]] = Race(key=row["key"], name=name, pieces=row["pieces"])
+        for kind, blueprints in row["pieces"].items():
+            for bp in blueprints:
+                key = bp.lower()
+                if (kind, key) in seen:
+                    continue
+                seen.add((kind, key))
+                label = binfab.clean_localized_text(
+                    loc.get(f"$CustomHead_Piece_{bp}", "")) or _humanize(key)
+                slots[kind].append(Option(key=key, name=label, slot=kind, blueprint=key,
+                                          prefab=CUSTOM_HEADS))
+    for options in slots.values():
+        options.sort(key=lambda o: o.name.lower())
+    return races, slots
+
+
 async def _build(branch: str) -> Catalogue:
     loc = await _locale_map(branch)
     classes = _build_classes(await _load(branch, CLASS_ROOT), loc)
@@ -240,6 +297,10 @@ async def _build(branch: str) -> Catalogue:
     costumes = _build_costumes(rig_map, names, by_skeleton)
     styles = _build_styles(await _load(branch, EQUIP_ROOT), loc)
 
+    heads_raw = await _load_one(branch, CUSTOM_HEADS)
+    races, race_slots = _build_races(heads_raw, loc) if heads_raw else ({}, {})
+    styles.update(race_slots)
+
     # A class with no costume at all is a form the game never dresses (an ultimate
     # transformation), so it isn't offered - the data decides, not the name.
     classes = {k: c for k, c in classes.items() if costumes.get(k)}
@@ -250,10 +311,11 @@ async def _build(branch: str) -> Catalogue:
         for opt in group:
             options[f"{opt.slot}:{opt.key}"] = opt
 
-    logger.info("dressing[%s]: %d classes, %d costumes, %s styles", branch, len(classes),
-                sum(len(v) for v in costumes.values()),
+    logger.info("dressing[%s]: %d classes, %d costumes, %d races, %s styles", branch,
+                len(classes), sum(len(v) for v in costumes.values()), len(races),
                 {k: len(v) for k, v in styles.items()})
-    return Catalogue(classes=classes, costumes=costumes, styles=styles, options=options)
+    return Catalogue(classes=classes, costumes=costumes, styles=styles, options=options,
+                     races=races)
 
 
 async def get(branch: str | None = None) -> Catalogue:

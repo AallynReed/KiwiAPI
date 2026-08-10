@@ -115,8 +115,10 @@ _MAX_DRESS = 700   # slots can carry full blueprint paths
 
 
 async def _dress_source(token: str) -> Source:
-    """``class:costume:hat:face:weapon:head:hair:weapon_family`` - trailing fields
-    optional, so an older five-field token still means what it did.
+    """``class:costume:hat:face:weapon:head:hair:weapon_family:eyes:race`` - trailing
+    fields optional, so an older token still means what it did. A token containing an
+    ``=`` is read as a query string instead (``class=knight&race=undead&hair=…``), which
+    is easier to write than ten positions.
 
     Each slot takes a style's prefab stem or a raw blueprint name (``equipment_hat_x[y]``,
     or a full path). Both are Trove's own identifiers rather than row ids of ours, so a
@@ -128,12 +130,22 @@ async def _dress_source(token: str) -> Source:
     token = (token or "").strip()
     if not token or len(token) > _MAX_DRESS:
         raise _bad("Missing or over-long outfit.")
-    fields = (token.lower().split(":") + [""] * 8)[:8]
-    outfit = await dressing.resolve(
-        fields[0], fields[1],
-        {"hat": fields[2], "face": fields[3], "weapon": fields[4],
-         "head": fields[5], "hair": fields[6]},
-        weapon_family=fields[7])
+    if "=" in token:
+        # Ten positional fields is a lot to count on your fingers, so a token carrying
+        # an `=` is read as a query string instead. Positional tokens have none.
+        from urllib.parse import parse_qs
+        q = {k: (v[0] if v else "") for k, v in parse_qs(token.lower()).items()}
+        outfit = await dressing.resolve(
+            q.get("class", ""), q.get("costume"),
+            {k: q.get(k) for k in ("hat", "face", "weapon", "head", "hair", "eyes")},
+            weapon_family=q.get("weapon_family"), race=q.get("race"))
+    else:
+        fields = (token.lower().split(":") + [""] * 10)[:10]
+        outfit = await dressing.resolve(
+            fields[0], fields[1],
+            {"hat": fields[2], "face": fields[3], "weapon": fields[4],
+             "head": fields[5], "hair": fields[6], "eyes": fields[8]},
+            weapon_family=fields[7], race=fields[9])
     if outfit is None:
         raise _missing("No such Trove class to dress.")
     return Source(kind="dress", ident=outfit.ident,

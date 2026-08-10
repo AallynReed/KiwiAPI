@@ -71,7 +71,7 @@ async def list_classes(ctx: AccessContext = _PUB) -> DressClassList:
 
 @dressing_router.get("/options", response_model=DressOptionPage)
 async def list_options(
-    slot: str = Query(..., pattern="^(costume|hat|face|weapon)$"),
+    slot: str = Query(..., pattern="^(costume|hat|face|weapon|head|hair|eyes)$"),
     class_key: str | None = Query(default=None, alias="class",
                                   description="Required for `costume`; filters `weapon` "
                                               "to the families this class can hold."),
@@ -113,13 +113,14 @@ async def resolve_query(
     class_key: str, costume: str | None, hat: str | None,
     face: str | None, weapon: str | None, head: str | None = None,
     hair: str | None = None, weapon_family: str | None = None,
+    eyes: str | None = None, race: str | None = None,
 ) -> service.Outfit:
     """Shared by this router and the site proxy: validate a selection or 404."""
     outfit = await service.resolve(
         _key(class_key) or "", _key(costume),
         {"hat": _key(hat), "face": _key(face), "weapon": _key(weapon),
-         "head": _key(head), "hair": _key(hair)},
-        weapon_family=weapon_family,
+         "head": _key(head), "hair": _key(hair), "eyes": _key(eyes)},
+        weapon_family=weapon_family, race=_key(race),
     )
     if outfit is None:
         raise APIError(404, ErrorCode.not_found, "Unknown class, or no costumes for it.")
@@ -133,9 +134,14 @@ async def get_outfit(
     hat: str | None = Query(default=None),
     face: str | None = Query(default=None),
     weapon: str | None = Query(default=None),
-    head: str | None = Query(default=None, description="Blueprint only - a face style is a "
-                             "face, not a head."),
-    hair: str | None = Query(default=None, description="Blueprint only."),
+    head: str | None = Query(default=None, description="Character-creation head. Omitted, "
+                             "the race's default is drawn - the game shows a head with or "
+                             "without a hat. `none` leaves it bare."),
+    hair: str | None = Query(default=None, description="Character-creation hair style."),
+    eyes: str | None = Query(default=None, description="Character-creation eyes (they ride "
+                             "the `face` point, so a face style covers them)."),
+    race: str | None = Query(default=None, description="Character-creation race - supplies "
+                             "the default head and eyes."),
     weapon_family: str | None = Query(default=None, description="Which weapon socket a raw "
                                       "blueprint fills (Melee/Bow/Gun/Staff/Spear/Fist). "
                                       "Only the Boomeranger is ambiguous without it."),
@@ -144,7 +150,7 @@ async def get_outfit(
     """Normalise a selection without building the model: what a share link actually
     resolves to, plus any slot this class has no socket for."""
     outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
-                                 weapon_family)
+                                 weapon_family, eyes, race)
     return DressOutfit(**outfit.as_dict(), dropped=outfit.dropped)
 
 
@@ -160,9 +166,14 @@ async def get_model(
     hat: str | None = Query(default=None),
     face: str | None = Query(default=None),
     weapon: str | None = Query(default=None),
-    head: str | None = Query(default=None, description="Blueprint only - a face style is a "
-                             "face, not a head."),
-    hair: str | None = Query(default=None, description="Blueprint only."),
+    head: str | None = Query(default=None, description="Character-creation head. Omitted, "
+                             "the race's default is drawn - the game shows a head with or "
+                             "without a hat. `none` leaves it bare."),
+    hair: str | None = Query(default=None, description="Character-creation hair style."),
+    eyes: str | None = Query(default=None, description="Character-creation eyes (they ride "
+                             "the `face` point, so a face style covers them)."),
+    race: str | None = Query(default=None, description="Character-creation race - supplies "
+                             "the default head and eyes."),
     weapon_family: str | None = Query(default=None, description="Which weapon socket a raw "
                                       "blueprint fills (Melee/Bow/Gun/Staff/Spear/Fist). "
                                       "Only the Boomeranger is ambiguous without it."),
@@ -175,7 +186,7 @@ async def get_model(
 
     Built once per outfit and cached, then served gzipped with an ``ETag``."""
     outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
-                                 weapon_family)
+                                 weapon_family, eyes, race)
     built = await service.model(outfit, fmt)
     if built is None:
         raise APIError(404, ErrorCode.not_found,
