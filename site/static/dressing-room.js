@@ -325,6 +325,7 @@
         state.cls = key;
         // A class that can't show this slot shouldn't leave you stranded on its tab.
         if (!slotsFor().some(function (s) { return s.id === slot; })) slot = "costume";
+        renderTabs();                     // the slot list is per class
         // A costume belongs to one class and the weapon families change with it, so
         // both are cleared rather than silently carried onto a body they don't fit.
         state.costume = "";
