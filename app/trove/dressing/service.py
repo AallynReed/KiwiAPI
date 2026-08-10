@@ -28,7 +28,6 @@ from dataclasses import dataclass, field
 
 from app.core.config import settings
 from app.trove.dressing import catalogue as cat
-from app.trove.dressing import customhead
 from app.trove.dressing import sockets as sockets_mod
 from app.trove.mods_hub import assembly, rig_index
 from app.trove.mods_hub.trove_layout import game_file_paths, nearest_path
@@ -46,8 +45,22 @@ BLUEPRINT_SLOTS = ("head", "hair", "eyes", "hat", "face", "weapon")
 # slot -> the socket family that names its attach point on any class.
 SLOT_FAMILY = {"hat": "Hat", "face": "Face"}
 # head/hair/eyes aren't equipment sockets - they're attach points on the rig, addressed
-# by name. eyes ride the `face` point, which is why a face style covers them.
-DIRECT_APS = dict(customhead.PIECE_APS)
+# by name, in order of preference.
+#
+# Hair falls back to `head` and that is an IDENTITY, not a guess: on every rig carrying
+# both, `AP_hair` and `AP_head` are the same transform to 1e-5 (38 of 40 corpus-wide; the
+# two that differ are bosses, not classes). Five class rigs - Bard, Boomeranger, Lunar
+# Lancer, Pirate Captain, Revenant - ship no `AP_hair` at all, and the game plainly does
+# show hair on them, so the point they share is where it goes.
+DIRECT_APS = {"head": ("head",), "hair": ("hair", "head"), "eyes": ("face",)}
+
+
+def attach_point(slot: str, skeleton: str) -> str | None:
+    """The attach point this rig uses for a character-creation slot, or None."""
+    for ap in DIRECT_APS.get(slot, ()):
+        if assembly.has_ap(skeleton, ap):
+            return ap
+    return None
 # "I want nothing here" - distinct from "I didn't choose", which takes the race default.
 NONE = "none"
 # slot -> the colour parameter that tints it (see assembly.recolor). Hair and eyes only,
@@ -210,12 +223,10 @@ async def resolve(
             default = chosen_race.first(slot)
             if default:
                 raw[slot] = default.lower()
-    # 5 of the 18 class rigs (Boomeranger, Bard, Lunar Lancer, Pirate Captain, Revenant)
-    # have no `hair` attach point at all, so hair on those classes had nowhere to go and
-    # vanished without a word. Say so instead.
+    # A slot the rig genuinely has nowhere to put is reported rather than dropped in
+    # silence. With hair's fallback in place this is now rare.
     for slot in RACE_SLOTS:
-        if (slot in styles or slot in raw) and not assembly.has_ap(cls.skeleton,
-                                                                  DIRECT_APS[slot]):
+        if (slot in styles or slot in raw) and not attach_point(slot, cls.skeleton):
             styles.pop(slot, None)
             raw.pop(slot, None)
             if slot not in dropped:
@@ -275,8 +286,8 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
     for slot, opt in outfit.styles.items():
         if slot not in RACE_SLOTS:
             continue                          # equipment styles are placed above
-        ap = DIRECT_APS[slot]
-        data = await read(opt.blueprint, opt.prefab)
+        ap = attach_point(slot, outfit.cls.skeleton)
+        data = await read(opt.blueprint, opt.prefab) if ap else None
         if data:
             out.append((ap, data, assembly.scale_for(ap), outfit.colors.get(slot)))
 
@@ -286,7 +297,8 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         # The caller named the file; the class's socket table still names the bone.
         # head/hair are plain attach points rather than equipment sockets.
         if slot in DIRECT_APS:
-            aps = [DIRECT_APS[slot]]
+            ap = attach_point(slot, outfit.cls.skeleton)
+            aps = [ap] if ap else []
         elif slot in SLOT_FAMILY:
             aps = [s["ap"] for s in sockets_mod.sockets_for_family(
                 outfit.cls.sockets, SLOT_FAMILY[slot])]
