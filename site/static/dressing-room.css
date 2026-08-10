@@ -276,3 +276,38 @@
 @media (prefers-reduced-motion: reduce) {
     .dr-share, .dr-opt, .dr-tab { transition: none; }
 }
+
+/* Colour swatches - hair and eyes are the only art Trove masks. */
+.dr-colours { display: flex; flex-wrap: wrap; gap: .5rem; }
+.dr-colour {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem .6rem .35rem .4rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--bg-line);
+    background: var(--bg-deep);
+    color: var(--text-mute);
+    font-size: .85rem;
+    cursor: pointer;
+}
+.dr-colour input[type="color"] {
+    width: 28px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid var(--bg-line);
+    border-radius: 6px;
+    background: none;
+    cursor: pointer;
+}
+.dr-colour-x {
+    border: 0;
+    background: none;
+    color: var(--text-mute);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 .15rem;
+}
+.dr-colour-x:hover { color: var(--text); }
+.dr-tab-off { opacity: .5; }

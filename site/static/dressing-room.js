@@ -30,6 +30,11 @@
     var RACE_SLOTS = ["head", "eyes"];
     // Slots the server fills in when you choose nothing.
     var DEFAULTED = ["costume", "head", "eyes"];
+    // Slots whose art is a colour mask, and the URL param that tints each.
+    var COLORS = [
+        { slot: "hair", param: "hair_color", label: "Hair colour", fallback: "#c81400" },
+        { slot: "eyes", param: "eye_color", label: "Eye colour", fallback: "#ea0000" }
+    ];
     var PAGE = 60;
     var RENDER_DEBOUNCE = 220;
 
@@ -37,7 +42,7 @@
     var classes = [];
     var races = [];
     var state = { cls: "", race: "", costume: "", head: "", hair: "", eyes: "",
-                  hat: "", face: "", weapon: "" };
+                  hat: "", face: "", weapon: "", hair_color: "", eye_color: "" };
     var slot = "costume";
     var listing = { items: [], total: 0, offset: 0, q: "", slot: "", cls: "" };
     var chosenNames = {};                 // slot -> display name, so the summary reads
@@ -64,6 +69,7 @@
         ["head", "hair", "eyes", "hat", "face", "weapon"].forEach(function (s) {
             state[s] = (q.get(s) || "").toLowerCase();
         });
+        COLORS.forEach(function (c) { state[c.param] = (q.get(c.param) || "").toLowerCase(); });
     }
 
     function query() {
@@ -74,6 +80,7 @@
         ["head", "hair", "eyes", "hat", "face", "weapon"].forEach(function (s) {
             if (state[s]) q.set(s, state[s]);
         });
+        COLORS.forEach(function (c) { if (state[c.param]) q.set(c.param, state[c.param]); });
         return q;
     }
 
@@ -199,6 +206,14 @@
     }
 
     function renderGrid() {
+        if (!supports(slot)) {
+            var cls = classOf(state.cls);
+            els.grid.innerHTML = '<p class="dr-empty">' + esc((cls && cls.name) || "This class")
+                + " has no attach point for " + esc(slot)
+                + ", so Trove doesn't show it on this class either.</p>";
+            els.more.hidden = true;
+            return;
+        }
         var none = slot === "costume" ? "" :
             '<button type="button" class="dr-opt dr-none' + (state[slot] ? "" : " sel") +
             '" role="option" aria-selected="' + (state[slot] ? "false" : "true") +
@@ -238,19 +253,46 @@
         }).join("");
     }
 
-    /* Not every rig can show every slot - five classes have no hair attach point - so
-       the class says which it supports and the rest aren't offered. */
-    function slotsFor() {
+    /* Not every rig can show every slot - five classes have no hair attach point. The
+       tab STAYS, because removing it just looks like the feature vanished; it's marked
+       unavailable and the grid explains itself. */
+    function supports(id) {
         var c = classOf(state.cls);
-        if (!c || !c.slots || !c.slots.length) return SLOTS;
-        return SLOTS.filter(function (s) { return c.slots.indexOf(s.id) >= 0; });
+        if (!c || !c.slots || !c.slots.length) return true;
+        return c.slots.indexOf(id) >= 0;
+    }
+
+    function slotsFor() { return SLOTS; }
+
+    /* One swatch per maskable slot. Trove itself only colours hair and eyes - a head is
+       authored in a real skin tone, and you change skin by changing race. */
+    function renderColors() {
+        els.colors.innerHTML = COLORS.map(function (c) {
+            var on = !!state[c.param];
+            return '<label class="dr-colour' + (supports(c.slot) ? "" : " dr-chip-off") + '">'
+                + '<input type="color" data-param="' + c.param + '" value="'
+                + esc(state[c.param] || c.fallback) + '">'
+                + "<span>" + esc(c.label) + "</span>"
+                + (on ? '<button type="button" class="dr-colour-x" data-clear="' + c.param
+                        + '" aria-label="Reset">&times;</button>' : "")
+                + "</label>";
+        }).join("");
+    }
+
+    function setColor(param, value) {
+        state[param] = value || "";
+        writeUrl();
+        renderColors();
+        scheduleRender();
     }
 
     function renderTabs() {
         els.tabs.innerHTML = slotsFor().map(function (s) {
+            var off = !supports(s.id);
             return '<button type="button" role="tab" class="dr-tab' +
-                (s.id === slot ? " on" : "") + '" aria-selected="' +
-                (s.id === slot ? "true" : "false") + '" data-slot="' + s.id + '">' +
+                (s.id === slot ? " on" : "") + (off ? " dr-tab-off" : "") +
+                '" aria-selected="' + (s.id === slot ? "true" : "false") +
+                '" data-slot="' + s.id + '">' +
                 '<i class="fa-solid ' + s.icon + '" aria-hidden="true"></i> ' +
                 '<span data-i18n>' + esc(s.label) + "</span></button>";
         }).join("");
@@ -324,8 +366,8 @@
     function setClass(key) {
         state.cls = key;
         // A class that can't show this slot shouldn't leave you stranded on its tab.
-        if (!slotsFor().some(function (s) { return s.id === slot; })) slot = "costume";
-        renderTabs();                     // the slot list is per class
+        renderTabs();                     // availability is per class
+        renderColors();
         // A costume belongs to one class and the weapon families change with it, so
         // both are cleared rather than silently carried onto a body they don't fit.
         state.costume = "";
@@ -362,6 +404,14 @@
     function wire() {
         els.cls.addEventListener("change", function () { setClass(els.cls.value); });
         els.race.addEventListener("change", function () { setRace(els.race.value); });
+        els.colors.addEventListener("input", function (e) {
+            var i = e.target.closest("input[data-param]");
+            if (i) setColor(i.getAttribute("data-param"), i.value);
+        });
+        els.colors.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-clear]");
+            if (b) { e.preventDefault(); setColor(b.getAttribute("data-clear"), ""); }
+        });
         els.tabs.addEventListener("click", function (e) {
             var b = e.target.closest("[data-slot]");
             if (b) setSlot(b.getAttribute("data-slot"));
@@ -388,7 +438,7 @@
         els = {
             stage: byId("drStage"), bar: byId("drBar"), meta: byId("drMeta"),
             share: byId("drShare"), cls: byId("drClass"), race: byId("drRace"),
-            current: byId("drCurrent"),
+            current: byId("drCurrent"), colors: byId("drColors"),
             tabs: byId("drTabs"), search: byId("drSearch"), grid: byId("drGrid"),
             more: byId("drMore")
         };
@@ -399,6 +449,7 @@
         loadRaces().then(loadClasses).then(function () {
             wire();
             renderTabs();
+            renderColors();
             writeUrl();
             renderCurrent();
             loadOptions(true);
