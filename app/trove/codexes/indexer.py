@@ -64,7 +64,10 @@ CODEX_PARSER_VERSION = 19  # v19: recipe product detection covers three more sha
 
 # Bumped when the rig extractor or its coverage changes - forces a rig-only rebuild on
 # the next sync WITHOUT a (heavier) full codex re-parse.
-RIG_PARSER_VERSION = 2  # v2: carry the source PREFAB onto every row - the creature's identity, which a shared skeleton + a flat blueprints/ folder cannot reconstruct
+RIG_PARSER_VERSION = 3  # v2: carry the source PREFAB onto every row - the creature's identity, which a shared skeleton + a flat blueprints/ folder cannot reconstruct
+# v3: end a creature's mesh list at the NEXT .skeleton.gr2, not just the .gsf - a costume
+# bundles the character with its transformed form and its pets, and 272 of 603 costumes were
+# handing all of them to the character's own attach points (a werewolf head on the Lunar Lancer)
 
 _FLUSH_AT = 1000
 

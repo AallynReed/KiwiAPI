@@ -187,21 +187,34 @@ def extract_rig_refs(data: bytes) -> dict | None:
     not by a ``c_`` name prefix (which silently dropped any creature whose meshes aren't
     named ``c_*`` - mobs, targets, harvesting entities, …).
 
+    A prefab can carry SEVERAL creatures, each opened by its own ``.skeleton.gr2``
+    reference: a costume bundles the character with its transformed/ultimate form and
+    any pets it summons (``dinotamer_coffee`` = dinotamer + dinotamer_ultimate +
+    scissorhand + quetzalcoatlus + triceratops). Only the FIRST one is this prefab's
+    creature, so a following skeleton reference ends the mesh list exactly as the
+    ``.gsf`` does. Without that bound - and these prefabs carry no ``.gsf`` at all - the
+    later forms' meshes were read as the first creature's, landing a werewolf head and
+    an ultimate torso on the same attach points as the character's own.
+
     Returns ``{"skeleton": "<stem>", "parts": {"<blueprint basename>": "<ap key>"}}``
     (all lowercased), or None for non-creatures (no skeleton / no mesh bindings).
     """
     rows = _real_fields(data)
     skeleton: str | None = None
-    skel_off = gsf_off = None
+    skel_off = gsf_off = next_skel_off = None
     for off, _field, s in rows:
         base = s.rsplit("/", 1)[-1].lower()
-        if skeleton is None and base.endswith(".skeleton.gr2"):
-            skeleton, skel_off = base[: -len(".skeleton.gr2")], off
+        if base.endswith(".skeleton.gr2"):
+            if skeleton is None:
+                skeleton, skel_off = base[: -len(".skeleton.gr2")], off
+            elif next_skel_off is None:
+                next_skel_off = off        # a second creature starts here
         elif gsf_off is None and base.endswith(".gsf"):
             gsf_off = off
     if skeleton is None or skel_off is None:
         return None
-    end = gsf_off if (gsf_off is not None and gsf_off > skel_off) else len(data)
+    ends = [o for o in (gsf_off, next_skel_off) if o is not None and o > skel_off]
+    end = min(ends) if ends else len(data)
 
     parts: dict[str, str] = {}
     for (off, field, s), (_n_off, n_field, n_s) in zip(rows, rows[1:], strict=False):
