@@ -23,6 +23,7 @@ from app.trove.dressing.schemas import (
     DressRaceList,
     DressRaceOut,
 )
+from app.trove.mods_hub import assembly
 from app.trove.render import bp_cache
 
 dressing_router = APIRouter(
@@ -81,6 +82,9 @@ async def list_classes(ctx: AccessContext = _PUB) -> DressClassList:
             sockets=[{"ap": s["ap"], "slot": s["slot"], "family": s["family"]}
                      for s in c.sockets],
             costumes=len(catalogue.costumes.get(c.key) or []),
+            slots=[s for s in ("costume", "head", "hair", "eyes", "hat", "face", "weapon")
+                   if s not in service.DIRECT_APS
+                   or assembly.has_ap(c.skeleton, service.DIRECT_APS[s])],
         )
         for c in sorted(catalogue.classes.values(), key=lambda c: c.name.lower())
     ])

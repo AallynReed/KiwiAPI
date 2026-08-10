@@ -223,7 +223,7 @@
 
     function renderCurrent() {
         var cls = classOf(state.cls);
-        els.current.innerHTML = SLOTS.map(function (s) {
+        els.current.innerHTML = slotsFor().map(function (s) {
             var key = state[s.id];
             // costume, head and eyes always render something: the class's first
             // costume and the race's own pieces. Only the rest are genuinely empty.
@@ -238,8 +238,16 @@
         }).join("");
     }
 
+    /* Not every rig can show every slot - five classes have no hair attach point - so
+       the class says which it supports and the rest aren't offered. */
+    function slotsFor() {
+        var c = classOf(state.cls);
+        if (!c || !c.slots || !c.slots.length) return SLOTS;
+        return SLOTS.filter(function (s) { return c.slots.indexOf(s.id) >= 0; });
+    }
+
     function renderTabs() {
-        els.tabs.innerHTML = SLOTS.map(function (s) {
+        els.tabs.innerHTML = slotsFor().map(function (s) {
             return '<button type="button" role="tab" class="dr-tab' +
                 (s.id === slot ? " on" : "") + '" aria-selected="' +
                 (s.id === slot ? "true" : "false") + '" data-slot="' + s.id + '">' +
@@ -315,6 +323,8 @@
 
     function setClass(key) {
         state.cls = key;
+        // A class that can't show this slot shouldn't leave you stranded on its tab.
+        if (!slotsFor().some(function (s) { return s.id === slot; })) slot = "costume";
         // A costume belongs to one class and the weapon families change with it, so
         // both are cleared rather than silently carried onto a body they don't fit.
         state.costume = "";
@@ -387,6 +397,7 @@
         readUrl();
         loadRaces().then(loadClasses).then(function () {
             wire();
+            renderTabs();
             writeUrl();
             renderCurrent();
             loadOptions(true);

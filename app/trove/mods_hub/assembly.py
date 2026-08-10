@@ -139,6 +139,14 @@ def has_baked_rig(name: str) -> bool:
     return name in _rigs()
 
 
+def has_ap(rig_name: str, ap_key: str) -> bool:
+    """Whether a baked rig carries this attach point. Not every skeleton does - five of
+    the player rigs have no ``hair`` point, for instance - and a caller needs to be able
+    to say so rather than place nothing."""
+    rig = _rigs().get(rig_name)
+    return bool(rig) and ap_key in rig["rest"]
+
+
 def animations_for(name: str) -> list[str]:
     """Animation names baked for a rig (empty if rest-pose-only / unknown)."""
     rig = _rigs().get(name)

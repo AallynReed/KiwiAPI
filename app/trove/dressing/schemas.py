@@ -18,6 +18,9 @@ class DressClassOut(BaseModel):
     weapons: list[str] = Field(description="Weapon families this class can hold.")
     sockets: list[DressSocket]
     costumes: int = Field(description="How many costumes are available for it.")
+    slots: list[str] = Field(default_factory=list,
+                             description="Slots this class's rig can actually "
+                                         "show - five rigs have no hair point.")
 
 
 class DressClassList(BaseModel):

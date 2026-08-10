@@ -210,6 +210,17 @@ async def resolve(
             default = chosen_race.first(slot)
             if default:
                 raw[slot] = default.lower()
+    # 5 of the 18 class rigs (Boomeranger, Bard, Lunar Lancer, Pirate Captain, Revenant)
+    # have no `hair` attach point at all, so hair on those classes had nowhere to go and
+    # vanished without a word. Say so instead.
+    for slot in RACE_SLOTS:
+        if (slot in styles or slot in raw) and not assembly.has_ap(cls.skeleton,
+                                                                  DIRECT_APS[slot]):
+            styles.pop(slot, None)
+            raw.pop(slot, None)
+            if slot not in dropped:
+                dropped.append(slot)
+
     tints = {}
     for slot, param in SLOT_COLOR.items():
         rgb = color_ref((colors or {}).get(param))
