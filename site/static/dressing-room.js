@@ -28,6 +28,8 @@
     ];
     // Slots whose options belong to the chosen race rather than the class.
     var RACE_SLOTS = ["head", "eyes"];
+    // Slots the server fills in when you choose nothing.
+    var DEFAULTED = ["costume", "head", "eyes"];
     var PAGE = 60;
     var RENDER_DEBOUNCE = 220;
 
@@ -223,8 +225,10 @@
         var cls = classOf(state.cls);
         els.current.innerHTML = SLOTS.map(function (s) {
             var key = state[s.id];
+            // costume, head and eyes always render something: the class's first
+            // costume and the race's own pieces. Only the rest are genuinely empty.
             var name = key ? (chosenNames[s.id] || key)
-                : (s.id === "costume" ? "Default" : "None");
+                : (DEFAULTED.indexOf(s.id) >= 0 ? "Default" : "None");
             var off = (s.id === "weapon" && cls && !cls.weapons.length);
             return '<button type="button" class="dr-chip' + (key ? " on" : "") +
                 (off ? " dr-chip-off" : "") + '" data-slot="' + s.id + '">' +
