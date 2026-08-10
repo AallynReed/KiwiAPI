@@ -264,6 +264,12 @@ async def resolve(
             if slot not in dropped:
                 dropped.append(slot)
 
+    # A full helmet encloses the head, so the hair goes with it (a hat leaves it on).
+    hat = styles.get("hat")
+    if hat is not None and hat.hides_hair:
+        styles.pop("hair", None)
+        raw.pop("hair", None)
+
     tints = {}
     for slot, param in SLOT_COLOR.items():
         rgb = color_ref((colors or {}).get(param))
