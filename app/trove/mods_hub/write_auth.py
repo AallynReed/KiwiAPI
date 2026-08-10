@@ -3,8 +3,10 @@
 One dependency serves both callers, so there is a single implementation of every
 mod-editing route:
 
-  * **Website** - a Dashboard session JWT (``kind=site``). Unchanged: the caller is
-    the creator, and the route's own ownership checks apply.
+  * **Website** - a Dashboard session, presented as the ``HttpOnly`` cookie the
+    browser sends by itself, or as a ``kind=site`` JWT in the Authorization header
+    (the desktop app). The caller is the creator, and the route's own ownership
+    checks apply.
   * **API** - an API token carrying ``mods:write``, belonging to a dev-portal
     account that holds a live ``ModCreatorLink`` to the creator being acted for
     (see ``creators.py``). The dependency resolves that connection and returns the
@@ -13,7 +15,8 @@ mod-editing route:
 
 The two credential shapes are told apart the same way ``require_master_ingest``
 does it - a JWT has two ``.`` separators, an API token has none - so only one
-validator ever runs.
+validator ever runs. Anything that isn't an API token (a JWT, or no header at all)
+goes to ``get_current_site_user``, which is what reads the session cookie.
 
 **API callers are default-denied.** ``_API_ROUTES`` is an explicit allowlist of
 (route template → methods); anything absent - including any route added later - is
@@ -95,11 +98,6 @@ class ModWriteAuth:
     @property
     def via_api(self) -> bool:
         return self.link is not None
-
-
-def _not_authenticated(message: str = "Authentication required") -> APIError:
-    return APIError(401, ErrorCode.not_authenticated, message,
-                    headers={"WWW-Authenticate": "Bearer"})
 
 
 def _route_path(request: Request) -> str:
@@ -206,11 +204,13 @@ async def get_mod_write_auth(
     creds: HTTPAuthorizationCredentials | None = Depends(_scheme),
 ) -> ModWriteAuth:
     """Resolve a Mods Hub write caller - Dashboard session or connected API account."""
-    if creds is None:
-        raise _not_authenticated()
-    if creds.credentials.count(".") == 2:        # a JWT: the website's own session
-        return ModWriteAuth(user=await get_current_site_user(creds))
-    return await _authorize_api(request, response, creds)
+    if creds is not None and creds.credentials.count(".") != 2:
+        return await _authorize_api(request, response, creds)
+    # Everything else is the website's own session. No header at all is the normal
+    # case now that the session is an HttpOnly cookie, so this must not short out
+    # on `creds is None` - the cookie is read inside get_current_site_user, which
+    # raises the 401 when there is genuinely nothing to authenticate.
+    return ModWriteAuth(user=await get_current_site_user(request, creds))
 
 
 async def get_mod_write_user(
