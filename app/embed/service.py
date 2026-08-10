@@ -138,7 +138,8 @@ async def _dress_source(token: str) -> Source:
         outfit = await dressing.resolve(
             q.get("class", ""), q.get("costume"),
             {k: q.get(k) for k in ("hat", "face", "weapon", "head", "hair", "eyes")},
-            weapon_family=q.get("weapon_family"), race=q.get("race"))
+            weapon_family=q.get("weapon_family"), race=q.get("race"),
+            colors={k: q.get(k) for k in ("hair_color", "eye_color", "skin_color")})
     else:
         fields = (token.lower().split(":") + [""] * 10)[:10]
         outfit = await dressing.resolve(

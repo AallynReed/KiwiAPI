@@ -50,6 +50,18 @@ SLOT_FAMILY = {"hat": "Hat", "face": "Face"}
 DIRECT_APS = dict(customhead.PIECE_APS)
 # "I want nothing here" - distinct from "I didn't choose", which takes the race default.
 NONE = "none"
+# slot -> the colour parameter that tints it (see assembly.recolor).
+SLOT_COLOR = {"hair": "hair_color", "eyes": "eye_color", "head": "skin_color"}
+_HEX_RE = re.compile(r"^#?([0-9a-f]{6})$")
+
+
+def color_ref(value: str | None) -> tuple[int, int, int] | None:
+    """``#rrggbb`` -> (r, g, b), or None if it isn't one."""
+    m = _HEX_RE.match((value or "").strip().lower())
+    if not m:
+        return None
+    v = int(m.group(1), 16)
+    return ((v >> 16) & 255, (v >> 8) & 255, v & 255)
 
 
 @dataclass(frozen=True)
@@ -62,6 +74,7 @@ class Outfit:
     styles: dict[str, cat.Option] = field(default_factory=dict)   # slot -> option
     blueprints: dict[str, str] = field(default_factory=dict)      # slot -> raw blueprint ref
     weapon_family: str = ""                                       # for a raw weapon blueprint
+    colors: dict[str, tuple[int, int, int]] = field(default_factory=dict)   # slot -> rgb
     dropped: list[str] = field(default_factory=list)              # slots we couldn't honour
 
     @property
@@ -75,6 +88,9 @@ class Outfit:
         picks = ",".join(f"{s}={self.styles[s].key}" for s in slots if s in self.styles)
         raw = ",".join(f"{s}~{self.blueprints[s]}" for s in slots if s in self.blueprints)
         fam = f"@{self.weapon_family}" if self.weapon_family else ""
+        tints = ",".join(f"{s}#{self.colors[s][0]:02x}{self.colors[s][1]:02x}"
+                         f"{self.colors[s][2]:02x}" for s in sorted(self.colors))
+        fam = f"{fam}({tints})" if tints else fam
         race = self.race.key if self.race else ""
         return f"{self.cls.key}/{self.costume.key}/{race}/{picks}/{raw}{fam}"
 
@@ -84,6 +100,9 @@ class Outfit:
         for slot in BLUEPRINT_SLOTS:
             out[slot] = (self.styles[slot].key if slot in self.styles
                          else self.blueprints.get(slot))
+        for slot, param in SLOT_COLOR.items():
+            rgb = self.colors.get(slot)
+            out[param] = f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}" if rgb else None
         return out
 
 
@@ -106,7 +125,7 @@ def blueprint_ref(value: str | None) -> str | None:
 async def resolve(
     class_key: str, costume: str | None, picks: dict[str, str | None],
     branch: str | None = None, weapon_family: str | None = None,
-    race: str | None = None,
+    race: str | None = None, colors: dict[str, str | None] | None = None,
 ) -> Outfit | None:
     """Validate a selection against the catalogue and normalise it.
 
@@ -187,8 +206,13 @@ async def resolve(
             default = chosen_race.first(slot)
             if default:
                 raw[slot] = default.lower()
+    tints = {}
+    for slot, param in SLOT_COLOR.items():
+        rgb = color_ref((colors or {}).get(param))
+        if rgb:
+            tints[slot] = rgb
     return Outfit(cls=cls, costume=chosen, race=chosen_race, styles=styles,
-                  blueprints=raw, weapon_family=fam, dropped=dropped)
+                  blueprints=raw, weapon_family=fam, colors=tints, dropped=dropped)
 
 
 async def blueprint_path(basename: str, hint: str, branch: str | None = None) -> str | None:
@@ -206,18 +230,18 @@ async def blueprint_path(basename: str, hint: str, branch: str | None = None) ->
     return nearest_path(all_paths.get(f"{basename}.blueprint", []), hint)
 
 
-async def _placements(outfit: Outfit, branch: str) -> list[tuple[str, bytes, float]]:
-    """``[(AP key, blueprint bytes, scale)]`` for everything the outfit puts on the rig."""
+async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
+    """``[(AP key, blueprint bytes, scale, tint|None)]`` for everything on the rig."""
 
     async def read(basename: str, hint: str) -> bytes | None:
         path = await blueprint_path(basename, hint, branch)
         return await get_blueprint_bytes(path, branch) if path else None
 
-    out: list[tuple[str, bytes, float]] = []
+    out: list[tuple] = []
     for basename, ap_key in outfit.costume.parts.items():
         raw = await read(basename, outfit.costume.prefab)
         if raw:
-            out.append((ap_key, raw, 1.0))
+            out.append((ap_key, raw, 1.0, None))
 
     for slot in STYLE_SLOTS:
         opt = outfit.styles.get(slot)
@@ -231,7 +255,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple[str, bytes, flo
         # decides the scale: hat/face art is authored at double the body's resolution,
         # a weapon's is not (see assembly.scale_for).
         for socket in sockets_mod.sockets_for_slot(outfit.cls.sockets, opt.slot_id):
-            out.append((socket["ap"], raw, assembly.scale_for(socket["ap"])))
+            out.append((socket["ap"], raw, assembly.scale_for(socket["ap"]), None))
 
     for slot, opt in outfit.styles.items():
         if slot not in RACE_SLOTS:
@@ -239,7 +263,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple[str, bytes, flo
         ap = DIRECT_APS[slot]
         data = await read(opt.blueprint, opt.prefab)
         if data:
-            out.append((ap, data, assembly.scale_for(ap)))
+            out.append((ap, data, assembly.scale_for(ap), outfit.colors.get(slot)))
 
     for slot, ref in outfit.blueprints.items():
         if ref == NONE:
@@ -261,8 +285,9 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple[str, bytes, flo
         data = await read(ref.rsplit("/", 1)[-1], ref)
         if not data:
             continue
+        tint = outfit.colors.get(slot)
         for ap in aps:
-            out.append((ap, data, assembly.scale_for(ap)))
+            out.append((ap, data, assembly.scale_for(ap), tint))
     return out
 
 

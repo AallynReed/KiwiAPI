@@ -54,6 +54,9 @@ class DressOutfit(BaseModel):
     hair: str | None = None
     eyes: str | None = None
     race: str | None = None
+    hair_color: str | None = None
+    eye_color: str | None = None
+    skin_color: str | None = None
     dropped: list[str] = Field(
         default_factory=list,
         description="Slots the request asked for that this class has no socket for.")

@@ -178,6 +178,39 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
             "rest": rig["rest"], "animations": rig["animations"]}
 
 
+# A voxel this saturated is carrying a mask rather than an authored colour. The
+# recolourable character art sits at 0.88-1.00 across the corpus and ordinary body art at
+# ~0.16, so the gap is wide enough that the threshold isn't doing any delicate work - it
+# only has to spare the accessories some hair styles carry (goggles, bands).
+RECOLOR_MIN_SAT = 0.5
+
+
+def recolor(part: dict, rgb: tuple[int, int, int], min_sat: float = RECOLOR_MIN_SAT) -> None:
+    """Tint a part's mask voxels to ``rgb``, in place, keeping their shading.
+
+    Trove authors the recolourable character art - hair, eyes, and the skin of a head - in
+    a saturated red whose brightness varies voxel to voxel: the hue is a placeholder and
+    the ramp is the shading. So the chosen colour is scaled by each voxel's own level,
+    which reproduces the ramp under any hue.
+
+    **This is our reading of the art, not a port of the game's.** The recolour itself
+    happens inside Trove's executable: no shader in the shipped data performs it, the
+    customization table carries no palette, and ``ui/charcustomize.swf`` is handed its
+    swatches at runtime. What the data does say is that these voxels are a mask - which is
+    why anything NOT saturated (an accessory baked into a hair style) is left alone."""
+    r0, g0, b0 = (max(0, min(255, int(v))) for v in rgb)
+    out = []
+    for packed in part["rgb"]:
+        r, g, b = (packed >> 16) & 255, (packed >> 8) & 255, packed & 255
+        hi = max(r, g, b)
+        if hi == 0 or 1 - (min(r, g, b) / hi) < min_sat:
+            out.append(packed)                # authored colour, not part of the mask
+            continue
+        level = hi / 255.0
+        out.append((int(r0 * level) << 16) | (int(g0 * level) << 8) | int(b0 * level))
+    part["rgb"] = out
+
+
 def _part_at(key: str, raw: bytes, scale: float) -> dict | None:
     """One decoded ``.blueprint`` positioned at attach point ``key``, or None when the
     file is empty / not a v5 blueprint. ``scale`` multiplies the rig's voxel size."""
@@ -199,8 +232,8 @@ def _part_at(key: str, raw: bytes, scale: float) -> dict | None:
     return part
 
 
-def assemble_placements(placements: list[tuple[str, bytes, float]], rig_name: str) -> dict | None:
-    """``[(AP key, raw .blueprint bytes, scale)]`` -> the web-viewer model payload.
+def assemble_placements(placements: list[tuple], rig_name: str) -> dict | None:
+    """``[(AP key, raw .blueprint bytes, scale[, (r,g,b) recolour])]`` -> the model payload.
 
     ``assemble`` above answers "here is a mod, work out where its parts go". This answers
     "here is exactly what goes where", which is what a dressed character needs: its body
@@ -214,11 +247,15 @@ def assemble_placements(placements: list[tuple[str, bytes, float]], rig_name: st
     if not rig:
         return None
     parts = []
-    for key, raw, scale in placements:
+    for placement in placements:
+        key, raw, scale = placement[0], placement[1], placement[2]
+        tint = placement[3] if len(placement) > 3 else None
         if not raw or key not in rig["rest"]:
             continue                     # a socket this skeleton doesn't have -> skip it
         part = _part_at(key, raw, scale)
         if part:
+            if tint:
+                recolor(part, tint)
             parts.append(part)
     if not parts:
         return None
