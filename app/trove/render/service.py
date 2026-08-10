@@ -54,7 +54,13 @@ async def render_blueprint_cached(
 
 
 def _creature_key(branch: str, prefab: str, dim: int) -> str:
-    return f"render:rig:{branch}:{dim}:{prefab.replace(chr(92), '/').lower()}"
+    # Carries ASSEMBLY_VERSION: this PNG is a picture of the assembler's output, so a
+    # change to how parts are placed or scaled has to invalidate it. Without it the
+    # cache held the old image for its whole 24h TTL after a fix had shipped.
+    from app.trove.render.bp_cache import ASSEMBLY_VERSION
+
+    return (f"render:rig:{ASSEMBLY_VERSION}:{branch}:{dim}:"
+            f"{prefab.replace(chr(92), '/').lower()}")
 
 
 async def render_creature_cached(

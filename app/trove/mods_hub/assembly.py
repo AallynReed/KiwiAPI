@@ -26,15 +26,26 @@ _RIG_NAME_RE = re.compile(r"^[a-z0-9_]+$")   # skeleton / animation names; also 
 # of 1/12 exactly as ``c_p_knight_lvl3_torso``'s .blueprint is 9x8x9 voxels. Body parts
 # and weapons are drawn at it directly.
 #
-# The HEAD SLOTS are the one exception, and it is a real one: that art is authored at
-# DOUBLE the body's resolution, so it must be drawn at half the voxel size or the head
-# comes out twice the size of the character wearing it. The rigs' own head meshes run 5-13
-# voxels across every creature that ships a real one, while a Trove hat/face style
-# blueprint measures 15-21 - about twice the volume it has to fill. Weapons need no such
-# correction: the rigs' weapon meshes (the Candy Barbarian's is 26 voxels long, the
-# Boomeranger's example sword 30) are the same size as the real weapon styles, ~19-21.
+# EQUIPMENT STYLES are the one exception, and it is a real one: hat and face art is
+# authored at DOUBLE the body's resolution, so it must be drawn at half the voxel size or
+# it comes out twice the size of the character wearing it. A Trove hat/face style
+# blueprint measures 15-21 voxels against the 5-13 of the head mesh it has to fit.
+# Weapons need no such correction: the rigs' weapon meshes (the Candy Barbarian's is 26
+# voxels long, the Boomeranger's example sword 30) are the same size as the real weapon
+# styles, ~19-21.
+#
+# **A CREATURE'S OWN HEAD IS NOT ONE OF THEM.** It used to be listed here, which drew
+# every mount, dragon and mob at half the head it should have. Measured against the game's
+# own art-source meshes (granny_re/rig_mesh_bbox.json, which ARE the volumes these parts
+# fill): every part the rig map binds comes out at body resolution - head 1.00x over 329
+# creatures, jaw 1.00x over 219, body 1.00x, neck 1.00x. Nothing bound through a prefab is
+# double-resolution; only the equipment styles are, and those never arrive at `head`.
+#
+# So the resolution follows where the art came FROM, not what it is attached to - the same
+# reason the dressing room keeps its own table for character-creation art (a face style and
+# an eye mesh share the `face` point and disagree about resolution).
 HALF_SCALE = 0.5
-HALF_SCALE_APS = frozenset({"head", "hat", "hair", "face"})
+HALF_SCALE_APS = frozenset({"hat", "hair", "face"})
 
 
 def scale_for(ap_key: str) -> float:
@@ -342,9 +353,9 @@ def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
         voxels = _decode_grid(raw)
         if not voxels:
             continue
-        # A head slot is authored at double resolution (see scale_for). On this shared
-        # integer grid that resamples it to body resolution - the right size at the
-        # size it's drawn.
+        # An equipment style is authored at double resolution (see scale_for). On this
+        # shared integer grid that resamples it to body resolution - the right size at
+        # the size it's drawn.
         ps = scale * scale_for(ap_key)
         m = np.array(mat).reshape(4, 4).T @ np.diag([ps] * 3 + [1.0])
         n = len(voxels)
@@ -375,7 +386,7 @@ def _unbury_enclosed_emissive(parts: list[dict], rest: dict, voxel_scale: float)
     worlds: list = []
     mats: list = []
     for p in parts:
-        # head slots are drawn at half size, so their voxels sit on a finer lattice
+        # equipment styles are drawn at half size, so their voxels sit on a finer lattice
         ps = voxel_scale * float(p.get("scale", 1.0))
         m = np.array(rest[p["name"]]).reshape(4, 4).T @ np.diag([ps] * 3 + [1.0])
         mats.append(m)
