@@ -41,7 +41,7 @@
   // The HttpOnly session cookie is the credential and rides along on a
   // same-origin request; there is no header to add.
   async function siteGET(path) {
-    const init = { credentials: 'same-origin' };
+    const init = { credentials: 'include' };
     let r = await fetch(path, init);
     if ((r.status === 401 || r.status === 404) && window.BTTAuth && window.BTTAuth.hasSession && window.BTTAuth.hasSession()) {
       if (await window.BTTAuth.refresh()) r = await fetch(path, init);

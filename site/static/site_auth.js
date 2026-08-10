@@ -248,6 +248,23 @@
     });
   }
 
+  // ─── Discord sign-in button ────────────────────────────────────────
+  // The template ships the production URL so the button still works with no JS.
+  // This re-points it at whatever API origin this deployment actually uses (dev
+  // would otherwise sign you into production), and carries ``next`` along -
+  // Discord round-trips through its own domain, so the server has to hand it
+  // back to us afterwards (app/site_auth/oauth.py).
+  function wireDiscordButton() {
+    const $btn = document.querySelector('.acc-oauth-discord');
+    if (!$btn) return;
+    let url = API + '/v1/site-auth/oauth/discord/start';
+    const next = new URLSearchParams(location.search).get('next');
+    if (next && next.startsWith('/') && !next.startsWith('//')) {
+      url += '?next=' + encodeURIComponent(next);
+    }
+    $btn.setAttribute('href', url);
+  }
+
   // ─── Discord OAuth return ──────────────────────────────────────────
 
   // Complete a Discord OAuth return: the callback lands back on the site with
@@ -348,6 +365,7 @@
 
   function boot() {
     bootNav();
+    wireDiscordButton();
     handleOAuthReturn();
     // Re-render the navbar on language change so localized strings refresh.
     document.addEventListener('btt-lang-changed', () => {
