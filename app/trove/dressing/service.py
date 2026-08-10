@@ -100,6 +100,7 @@ class Outfit:
     blueprints: dict[str, str] = field(default_factory=dict)      # slot -> raw blueprint ref
     weapon_family: str = ""                                       # for a raw weapon blueprint
     colors: dict[str, tuple[int, int, int]] = field(default_factory=dict)   # slot -> rgb
+    hair_scale: float = 0.5                                       # calibration knob
     dropped: list[str] = field(default_factory=list)              # slots we couldn't honour
 
     @property
@@ -117,7 +118,13 @@ class Outfit:
                          f"{self.colors[s][2]:02x}" for s in sorted(self.colors))
         fam = f"{fam}({tints})" if tints else fam
         race = self.race.key if self.race else ""
+        if self.hair_scale != PIECE_SCALE["hair"]:
+            fam = f"{fam}~h{self.hair_scale}"
         return f"{self.cls.key}/{self.costume.key}/{race}/{picks}/{raw}{fam}"
+
+    def piece_scale(self, slot: str) -> float:
+        """Voxel-size multiplier for a character-creation piece."""
+        return self.hair_scale if slot == "hair" else PIECE_SCALE[slot]
 
     def as_dict(self) -> dict:
         out = {"class": self.cls.key, "costume": self.costume.key,
@@ -151,6 +158,7 @@ async def resolve(
     class_key: str, costume: str | None, picks: dict[str, str | None],
     branch: str | None = None, weapon_family: str | None = None,
     race: str | None = None, colors: dict[str, str | None] | None = None,
+    hair_scale: float | None = None,
 ) -> Outfit | None:
     """Validate a selection against the catalogue and normalise it.
 
@@ -245,8 +253,12 @@ async def resolve(
         rgb = color_ref((colors or {}).get(param))
         if rgb:
             tints[slot] = rgb
+    hs = PIECE_SCALE["hair"]
+    if hair_scale is not None and 0.05 <= hair_scale <= 1.0:
+        hs = round(float(hair_scale), 4)
     return Outfit(cls=cls, costume=chosen, race=chosen_race, styles=styles,
-                  blueprints=raw, weapon_family=fam, colors=tints, dropped=dropped)
+                  blueprints=raw, weapon_family=fam, colors=tints, hair_scale=hs,
+                  dropped=dropped)
 
 
 async def blueprint_path(basename: str, hint: str, branch: str | None = None) -> str | None:
@@ -297,7 +309,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         ap = attach_point(slot, outfit.cls.skeleton)
         data = await read(opt.blueprint, opt.prefab) if ap else None
         if data:
-            out.append((ap, data, PIECE_SCALE[slot], outfit.colors.get(slot)))
+            out.append((ap, data, outfit.piece_scale(slot), outfit.colors.get(slot)))
 
     for slot, ref in outfit.blueprints.items():
         if ref == NONE:
@@ -321,7 +333,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         if not data:
             continue
         tint = outfit.colors.get(slot)
-        scale = (PIECE_SCALE[slot] if slot in RACE_SLOTS
+        scale = (outfit.piece_scale(slot) if slot in RACE_SLOTS
                  else assembly.scale_for(aps[0]))
         for ap in aps:
             out.append((ap, data, scale, tint))

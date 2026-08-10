@@ -74,7 +74,7 @@
     $('mh-mine').addEventListener('click', async (e) => {
       e.preventDefault();
       try {
-        const r = await fetch('/site/modpacks/me/projects', { credentials: 'same-origin' });
+        const r = await fetch('/site/modpacks/me/projects', { credentials: 'include' });
         const data = r.ok ? await r.json() : { items: [] };
         if (data.items && data.items.length) {
           location.href = packUrl(data.items[0]);
