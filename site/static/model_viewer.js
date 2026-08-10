@@ -46,6 +46,65 @@
     };
   }
 
+  /* Clip names read <stance>_<action>_<detail>, e.g. "unarmed_ability_drink" or
+     "mount_balance_idle". A companion ships a handful; a player rig ships 80+, which
+     would bury the model under buttons, so those bucket by action and the bar shows one
+     bucket at a time. Matching is prefix-based on the action token - anything unmatched
+     lands in "Other" rather than being guessed into the wrong bucket. */
+  var STANCES = ['unarmed_', 'ranged_', '1h_', '2h_'];
+  var CLIP_GROUPS = [
+    ['Idle', ['idle', 'sleep', 'pose', 'sit', 'afk', 'bob', 'stand', 'breathe', 'wait']],
+    ['Move', ['walk', 'run', 'jump', 'roll', 'swim', 'glide', 'fly', 'climb', 'dash',
+              'sprint', 'land', 'fall', 'turn', 'strafe', 'charge', 'move', 'hover',
+              'crawl', 'slide', 'recall', 'leap', 'flip']],
+    ['Mount', ['mount']],
+    ['Combat', ['ability', 'melee', 'shoot', 'throw', 'attack', 'block', 'cast', 'mine',
+                'shockwave', 'damage', 'death', 'die', 'hit', 'fling', 'instant', 'swing',
+                'stab', 'punch', 'kick', 'slam', 'rampage', 'multispit', 'breath']],
+    ['Emote', ['emote', 'dance', 'wave', 'laugh', 'cry', 'shrug', 'taunt', 'bow',
+               'excite', 'point', 'clap', 'salute', 'prance']],
+    ['Fishing', ['fishing']],
+  ];
+  var OTHER = 'Other';
+
+  function stripStance(name) {
+    for (var i = 0; i < STANCES.length; i++) {
+      if (name.indexOf(STANCES[i]) === 0) return name.slice(STANCES[i].length);
+    }
+    return name;
+  }
+  /* -> { group, token }; token is the action word the bucket matched on, so the label
+     can drop it (under "Mount", "mount balance idle" reads better as "balance idle"). */
+  function clipInfo(name) {
+    var b = stripStance(name);
+    for (var i = 0; i < CLIP_GROUPS.length; i++) {
+      var toks = CLIP_GROUPS[i][1];
+      for (var j = 0; j < toks.length; j++) {
+        if (b === toks[j] || b.indexOf(toks[j] + '_') === 0) {
+          return { group: CLIP_GROUPS[i][0], token: toks[j] };
+        }
+      }
+    }
+    return { group: OTHER, token: null };
+  }
+  function groupRank(g) {
+    for (var i = 0; i < CLIP_GROUPS.length; i++) if (CLIP_GROUPS[i][0] === g) return i;
+    return CLIP_GROUPS.length;                     // Other sorts last
+  }
+  /* Tokens that are pure namespaces - the bucket chip already says "Mount", so
+     "mount balance idle" reads better as "balance idle". Every other token carries
+     meaning that the bucket name does not ("walk"/"run" both live under Move, and
+     "idle class" must not collapse to a bare "class"), so it stays in the label. */
+  var NAMESPACE_TOKENS = { mount: 1, ability: 1, emote: 1, fishing: 1 };
+
+  function clipLabel(name, token) {
+    var b = stripStance(name).replace(/_/g, ' ');
+    if (token && NAMESPACE_TOKENS[token] && b.indexOf(token + ' ') === 0) {
+      b = b.slice(token.length + 1);
+    }
+    return b;
+  }
+
   function injectStyles() {
     if (_styles) return; _styles = true;
     var css =
@@ -62,7 +121,19 @@
       '.mv-btn{background:#1b2129;border:1px solid #2a323d;color:#cdd6e0;border-radius:8px;padding:6px 12px;font-size:.82rem;cursor:pointer}' +
       '.mv-btn:hover{border-color:#4cc9f0}.mv-btn.on{background:rgba(86,156,255,.16);border-color:#4cc9f0;color:#e6edf3}' +
       '.mv-btn.mv-loading{opacity:.55;cursor:progress}' +
-      '.mv-hint{color:#6b7480;font-size:.74rem;margin-left:auto}';
+      '.mv-hint{color:#6b7480;font-size:.74rem;margin-left:auto}' +
+      // grouped mode: a row of action buckets over a row of that bucket's clips.
+      // Both rows take a full flex line so they stack inside the host's bar.
+      '.mv-cats,.mv-clips{display:flex;flex-wrap:wrap;gap:7px;align-items:center;flex:1 0 100%;min-width:0}' +
+      // hard cap so a 30-clip bucket scrolls instead of squeezing the model; the vh term
+      // keeps it proportionate inside a short embed iframe
+      '.mv-clips{max-height:min(5.6rem,26vh);overflow-y:auto;overscroll-behavior:contain}' +
+      '.mv-cat{background:transparent;border:1px solid #2a323d;color:#9aa4b2;border-radius:999px;' +
+        'padding:5px 12px;font-size:.78rem;cursor:pointer}' +
+      '.mv-cat:hover{border-color:#4cc9f0;color:#cdd6e0}' +
+      '.mv-cat.on{background:rgba(86,156,255,.16);border-color:#4cc9f0;color:#e6edf3}' +
+      '.mv-cat-n{opacity:.6;font-variant-numeric:tabular-nums}' +
+      '.mv-sep{width:1px;height:18px;background:#2a323d;flex:0 0 auto}';
     var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
   }
   function ensureThree() {
@@ -292,11 +363,68 @@
         });
     }
 
-    // control bar: Rest + one button per animation (names from the metadata)
-    function mkBtn(label, an) { var b = document.createElement('button'); b.className = 'mv-btn'; b.textContent = label; b.dataset.anim = an; b.addEventListener('click', function () { play(an === 'rest' ? null : an); }); bar.appendChild(b); return b; }
-    mkBtn('Rest pose', 'rest');
-    Object.keys(data.animations || {}).forEach(function (k) { mkBtn(k.replace(/^unarmed_/, '').replace(/_/g, ' '), k); });
-    var hint = document.createElement('span'); hint.className = 'mv-hint'; hint.textContent = 'drag rotate · scroll zoom · right-drag pan'; bar.appendChild(hint);
+    // Control bar: Rest + one button per animation (names from the metadata). Up to
+    // FLAT_MAX clips list flat; past that they bucket by action so the bar stays a
+    // couple of rows instead of burying the model.
+    var FLAT_MAX = 12;
+    function mkBtn(parent, label, an) {
+      var b = document.createElement('button');
+      b.className = 'mv-btn'; b.textContent = label; b.dataset.anim = an;
+      b.addEventListener('click', function () { play(an === 'rest' ? null : an); });
+      parent.appendChild(b); return b;
+    }
+    var clipNames = Object.keys(data.animations || {});
+    var hintHost = bar;
+    if (clipNames.length <= FLAT_MAX) {
+      mkBtn(bar, 'Rest pose', 'rest');
+      clipNames.forEach(function (k) { mkBtn(bar, clipLabel(k, null), k); });
+    } else {
+      var buckets = {}, groups = [];
+      clipNames.forEach(function (k) {
+        var g = clipInfo(k).group;
+        if (!buckets[g]) { buckets[g] = []; groups.push(g); }
+        buckets[g].push(k);
+      });
+      groups.sort(function (a, b) { return groupRank(a) - groupRank(b); });
+
+      var cats = document.createElement('div');
+      cats.className = 'mv-cats';
+      var clips = document.createElement('div');
+      clips.className = 'mv-clips';
+      clips.setAttribute('role', 'group');
+      clips.setAttribute('aria-label', 'Animation clips');
+      bar.appendChild(cats); bar.appendChild(clips);
+
+      mkBtn(cats, 'Rest pose', 'rest');
+      var sep = document.createElement('span');
+      sep.className = 'mv-sep'; sep.setAttribute('aria-hidden', 'true');
+      cats.appendChild(sep);
+
+      function showGroup(g) {
+        clips.textContent = '';
+        buckets[g].forEach(function (k) { mkBtn(clips, clipLabel(k, clipInfo(k).token), k); });
+        Array.prototype.forEach.call(cats.querySelectorAll('.mv-cat'), function (b) {
+          var on = b.dataset.cat === g;
+          b.classList.toggle('on', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        setActive(anim);                          // keep the playing clip highlighted
+      }
+      groups.forEach(function (g) {
+        var b = document.createElement('button');
+        b.className = 'mv-cat'; b.dataset.cat = g;
+        b.setAttribute('aria-pressed', 'false');
+        b.appendChild(document.createTextNode(g + ' '));
+        var n = document.createElement('span');
+        n.className = 'mv-cat-n'; n.textContent = buckets[g].length;
+        b.appendChild(n);
+        b.addEventListener('click', function () { showGroup(g); });
+        cats.appendChild(b);
+      });
+      showGroup(groups[0]);
+      hintHost = cats;                            // ride the category row, not a third line
+    }
+    var hint = document.createElement('span'); hint.className = 'mv-hint'; hint.textContent = 'drag rotate · scroll zoom · right-drag pan'; hintHost.appendChild(hint);
     play(null);
 
     return {
