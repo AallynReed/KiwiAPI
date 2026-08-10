@@ -1964,6 +1964,9 @@ async def site_dressing_model(
     hat: str | None = Query(default=None),
     face: str | None = Query(default=None),
     weapon: str | None = Query(default=None),
+    head: str | None = Query(default=None),
+    hair: str | None = Query(default=None),
+    weapon_family: str | None = Query(default=None),
     fmt: str = Query(default="json", pattern="^(json|bin)$"),
 ) -> Response:
     """The dressed character as the web-viewer model payload (same-origin mirror of
@@ -1972,7 +1975,8 @@ async def site_dressing_model(
     from app.trove.dressing import service as dressing_service
     from app.trove.dressing.router import resolve_query
 
-    outfit = await resolve_query(class_key, costume, hat, face, weapon)
+    outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
+                                 weapon_family)
     built = await dressing_service.model(outfit, fmt)
     if built is None:
         raise HTTPException(status_code=404, detail="That outfit has nothing to draw.")

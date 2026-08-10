@@ -8,8 +8,10 @@ The embed widens that to three **sources**, all rendered by exactly the same cod
   ``tmod=<token>``   a .tmod the partner uploaded to /v1/embed/tmod (app/embed/uploads.py)
   ``game=<path>``    a file in the live game tree (the updates archive), so a partner
                      can preview native game content they don't host at all
-  ``dress=<outfit>`` a dressed character - ``class:costume:hat:face:weapon``, the
-                     dressing room's own colon-joined selection of game prefab stems
+  ``dress=<outfit>`` a dressed character -
+                     ``class:costume:hat:face:weapon:head:hair:weapon_family``, the
+                     dressing room's colon-joined selection. Each slot takes a style's
+                     prefab stem OR a raw blueprint name
 
 The first two hand back ``.tmod`` bytes, and every hub helper here already takes
 ``tmod_bytes`` - so they're reused verbatim (``_list_blueprints_sync``,
@@ -109,22 +111,29 @@ async def resolve(
     return await _game_source(game or "")
 
 
-_MAX_DRESS = 200
+_MAX_DRESS = 700   # slots can carry full blueprint paths
 
 
 async def _dress_source(token: str) -> Source:
-    """``class:costume:hat:face:weapon`` - each field a game prefab stem, trailing
-    fields optional. Stems are Trove's own identifiers rather than row ids of ours, so
-    a partner's link keeps meaning the same thing across game updates and rebuilds, and
-    nothing has to be stored for it to resolve."""
+    """``class:costume:hat:face:weapon:head:hair:weapon_family`` - trailing fields
+    optional, so an older five-field token still means what it did.
+
+    Each slot takes a style's prefab stem or a raw blueprint name (``equipment_hat_x[y]``,
+    or a full path). Both are Trove's own identifiers rather than row ids of ours, so a
+    partner's link keeps meaning the same thing across game updates and rebuilds, and
+    nothing has to be stored for it to resolve. ``head``/``hair`` are blueprint-only -
+    a face style is a face, not a head."""
     from app.trove.dressing import service as dressing
 
     token = (token or "").strip()
     if not token or len(token) > _MAX_DRESS:
         raise _bad("Missing or over-long outfit.")
-    fields = (token.lower().split(":") + ["", "", "", ""])[:5]
+    fields = (token.lower().split(":") + [""] * 8)[:8]
     outfit = await dressing.resolve(
-        fields[0], fields[1], {"hat": fields[2], "face": fields[3], "weapon": fields[4]})
+        fields[0], fields[1],
+        {"hat": fields[2], "face": fields[3], "weapon": fields[4],
+         "head": fields[5], "hair": fields[6]},
+        weapon_family=fields[7])
     if outfit is None:
         raise _missing("No such Trove class to dress.")
     return Source(kind="dress", ident=outfit.ident,

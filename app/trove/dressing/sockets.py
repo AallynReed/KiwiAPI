@@ -128,6 +128,16 @@ def weapon_families(sockets: list[dict]) -> list[str]:
     return out
 
 
+def sockets_for_family(sockets: list[dict], family: str) -> list[dict]:
+    """Every socket that takes this display family ("Melee", "Bow", "Hat", …).
+
+    A catalogue style carries the game's slot number, so it matches on that. A raw
+    blueprint a caller hands us carries nothing, so the family is how they name where it
+    goes - which still resolves through the class's own socket table, never a guess."""
+    want = (family or "").strip().lower()
+    return [s for s in sockets if s["family"].lower() == want]
+
+
 def sockets_for_slot(sockets: list[dict], slot: int) -> list[dict]:
     """Every socket that takes this slot number. More than one means the class draws
     the selected style once per socket (dual wielding, or a bow split across its two

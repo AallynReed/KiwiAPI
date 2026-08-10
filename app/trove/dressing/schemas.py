@@ -48,6 +48,8 @@ class DressOutfit(BaseModel):
     hat: str | None = None
     face: str | None = None
     weapon: str | None = None
+    head: str | None = None
+    hair: str | None = None
     dropped: list[str] = Field(
         default_factory=list,
         description="Slots the request asked for that this class has no socket for.")

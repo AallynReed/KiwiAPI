@@ -29,17 +29,18 @@ dressing_router = APIRouter(
 
 _PUB = Depends(public_scope("codexes:read"))
 
-_MAX_KEY = 120
+_MAX_KEY = 220   # a style stem is short; a blueprint path is not
 
 
 def _key(value: str | None) -> str | None:
-    """A selection key is a prefab stem. Bound the length before it reaches a lookup so
-    an over-long query string is rejected rather than parsed."""
+    """A selection value: a style's prefab stem, or a blueprint reference. Bound the
+    length before it reaches a lookup so an over-long query string is rejected rather
+    than parsed; the shape of a blueprint name is checked in the service."""
     if value is None:
         return None
     value = value.strip().lower()
     if len(value) > _MAX_KEY:
-        raise APIError(400, ErrorCode.bad_request, "Selection key is too long.")
+        raise APIError(400, ErrorCode.bad_request, "Selection value is too long.")
     return value or None
 
 
@@ -110,12 +111,15 @@ async def list_options(
 
 async def resolve_query(
     class_key: str, costume: str | None, hat: str | None,
-    face: str | None, weapon: str | None,
+    face: str | None, weapon: str | None, head: str | None = None,
+    hair: str | None = None, weapon_family: str | None = None,
 ) -> service.Outfit:
     """Shared by this router and the site proxy: validate a selection or 404."""
     outfit = await service.resolve(
         _key(class_key) or "", _key(costume),
-        {"hat": _key(hat), "face": _key(face), "weapon": _key(weapon)},
+        {"hat": _key(hat), "face": _key(face), "weapon": _key(weapon),
+         "head": _key(head), "hair": _key(hair)},
+        weapon_family=weapon_family,
     )
     if outfit is None:
         raise APIError(404, ErrorCode.not_found, "Unknown class, or no costumes for it.")
@@ -129,11 +133,18 @@ async def get_outfit(
     hat: str | None = Query(default=None),
     face: str | None = Query(default=None),
     weapon: str | None = Query(default=None),
+    head: str | None = Query(default=None, description="Blueprint only - a face style is a "
+                             "face, not a head."),
+    hair: str | None = Query(default=None, description="Blueprint only."),
+    weapon_family: str | None = Query(default=None, description="Which weapon socket a raw "
+                                      "blueprint fills (Melee/Bow/Gun/Staff/Spear/Fist). "
+                                      "Only the Boomeranger is ambiguous without it."),
     ctx: AccessContext = _PUB,
 ) -> DressOutfit:
     """Normalise a selection without building the model: what a share link actually
     resolves to, plus any slot this class has no socket for."""
-    outfit = await resolve_query(class_key, costume, hat, face, weapon)
+    outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
+                                 weapon_family)
     return DressOutfit(**outfit.as_dict(), dropped=outfit.dropped)
 
 
@@ -149,6 +160,12 @@ async def get_model(
     hat: str | None = Query(default=None),
     face: str | None = Query(default=None),
     weapon: str | None = Query(default=None),
+    head: str | None = Query(default=None, description="Blueprint only - a face style is a "
+                             "face, not a head."),
+    hair: str | None = Query(default=None, description="Blueprint only."),
+    weapon_family: str | None = Query(default=None, description="Which weapon socket a raw "
+                                      "blueprint fills (Melee/Bow/Gun/Staff/Spear/Fist). "
+                                      "Only the Boomeranger is ambiguous without it."),
     fmt: str = Query(default="json", pattern="^(json|bin)$",
                      description="`json` (default) or `bin` - the compact KVX1 container."),
     ctx: AccessContext = _PUB,
@@ -157,7 +174,8 @@ async def get_model(
     Hub's assembled creature uses, so the same viewer draws it.
 
     Built once per outfit and cached, then served gzipped with an ``ETag``."""
-    outfit = await resolve_query(class_key, costume, hat, face, weapon)
+    outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
+                                 weapon_family)
     built = await service.model(outfit, fmt)
     if built is None:
         raise APIError(404, ErrorCode.not_found,
