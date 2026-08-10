@@ -54,7 +54,7 @@ PACK_VERSION = "v2"
 # Bump when the baked rigs (``mods_hub/rigs``) or ``mods_hub/assembly.py`` change
 # the shape of an assembled creature. The live rig map has its own signature in the
 # key (see ``key_for_assembly``); this covers what ships in the repo.
-ASSEMBLY_VERSION = "a5"      # a5: voxel size measured off the .gr2 meshes (1/12), no half-scale
+ASSEMBLY_VERSION = "a6"      # a6: measured 1/12 voxel size; head slots keep their 2x-art halving
 
 # Derived payloads share the mods content store: same sharded, atomic, dedupe-by-
 # content primitive, already bind-mounted, and a cache blob that goes missing is

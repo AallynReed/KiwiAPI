@@ -122,9 +122,11 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple[str, bytes, flo
         if not raw:
             continue
         # One equipped style, drawn once per socket the class declares for its family -
-        # which is what makes the Candy Barbarian hold two identical swords.
+        # which is what makes the Candy Barbarian hold two identical swords. The socket
+        # decides the scale: hat/face art is authored at double the body's resolution,
+        # a weapon's is not (see assembly.scale_for).
         for socket in sockets_mod.sockets_for_slot(outfit.cls.sockets, opt.slot_id):
-            out.append((socket["ap"], raw, assembly.EQUIPMENT_SCALE))
+            out.append((socket["ap"], raw, assembly.scale_for(socket["ap"])))
     return out
 
 

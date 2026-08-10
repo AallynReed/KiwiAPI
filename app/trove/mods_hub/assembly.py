@@ -21,21 +21,25 @@ from functools import lru_cache
 _RIG_DIR = os.path.join(os.path.dirname(__file__), "rigs")
 _RIG_NAME_RE = re.compile(r"^[a-z0-9_]+$")   # skeleton / animation names; also blocks path traversal
 
-# EVERY part is drawn at the rig's own voxel size - body, head, hat, face and weapon
-# alike. There is one voxel size in Trove and it is 1/12 of a world unit, measured off
-# the art-source meshes inside the ``.gr2`` files (each one IS the part's voxel volume:
-# the knight's chest mesh is 9x8x9 units of 1/12, and so is ``c_p_knight_lvl3_torso``'s
-# .blueprint, on every axis) and independently declared by every ``prefabs/equipment/``
-# appearance for itself.
+# The rig's voxel size (1/12 of a world unit) is MEASURED: the art-source meshes inside
+# each ``.gr2`` ARE the parts' voxel volumes, and the knight's chest mesh is 9x8x9 units
+# of 1/12 exactly as ``c_p_knight_lvl3_torso``'s .blueprint is 9x8x9 voxels. Body parts
+# and weapons are drawn at it directly.
 #
-# The head slots used to be halved here, on the reading that they were authored at double
-# resolution. They aren't: the rigs shipped a voxel size of 0.11 that had been eyeballed
-# off one creature, which is 1.32x too big, and because bone TRANSLATIONS don't scale with
-# it every part overflowed the volume the game reserves for it and collided with its
-# neighbours. Heads, being the biggest part, showed it first - so halving them treated the
-# symptom. With the measured size the whole model is consistent and nothing needs a
-# correction factor.
-EQUIPMENT_SCALE = 1.0
+# The HEAD SLOTS are the one exception, and it is a real one: that art is authored at
+# DOUBLE the body's resolution, so it must be drawn at half the voxel size or the head
+# comes out twice the size of the character wearing it. The rigs' own head meshes run 5-13
+# voxels across every creature that ships a real one, while a Trove hat/face style
+# blueprint measures 15-21 - about twice the volume it has to fill. Weapons need no such
+# correction: the rigs' weapon meshes (the Candy Barbarian's is 26 voxels long, the
+# Boomeranger's example sword 30) are the same size as the real weapon styles, ~19-21.
+HALF_SCALE = 0.5
+HALF_SCALE_APS = frozenset({"head", "hat", "hair", "face"})
+
+
+def scale_for(ap_key: str) -> float:
+    """The voxel-size multiplier for a part at this attach point (see above)."""
+    return HALF_SCALE if ap_key in HALF_SCALE_APS else 1.0
 
 
 @lru_cache(maxsize=1)
@@ -128,7 +132,7 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
         key = ap_overrides.get(p.split("/")[-1][:-len(".blueprint")])   # exact AP, or None
         if not key or key not in rig["rest"]:
             continue                             # not a known part of this rig -> skip
-        part = _part_at(key, base64.b64decode(f["content_base64"]), 1.0)
+        part = _part_at(key, base64.b64decode(f["content_base64"]), scale_for(key))
         if part:
             parts.append(part)
     if not parts:
@@ -215,7 +219,11 @@ def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
         voxels = _decode_v5_grid(raw)
         if not voxels:
             continue
-        m = np.array(mat).reshape(4, 4).T @ np.diag([scale] * 3 + [1.0])
+        # A head slot is authored at double resolution (see scale_for). On this shared
+        # integer grid that resamples it to body resolution - the right size at the
+        # size it's drawn.
+        ps = scale * scale_for(ap_key)
+        m = np.array(mat).reshape(4, 4).T @ np.diag([ps] * 3 + [1.0])
         n = len(voxels)
         local = np.array([[v[0] for v in voxels], [v[1] for v in voxels],
                           [v[2] for v in voxels], [1.0] * n], dtype=float)
