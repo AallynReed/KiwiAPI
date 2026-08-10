@@ -44,16 +44,34 @@
     // page scripts' raw fetch()/XHR calls to /site/* + /v1/* reach the API origin
     // without each call site being rewritten. DOM-attribute URLs (<img src>,
     // <a href>) aren't requests, so those are wrapped at their source instead.
+    //
+    // Rewriting also makes the call CROSS-ORIGIN, and a cross-origin request
+    // sends no cookies unless it asks. The site session IS a cookie
+    // (app/site_auth/cookies.py), so a rewritten call must ask for it - without
+    // this every data-plane request arrives anonymous and the signed-in half of
+    // the site (own drafts, owner controls, deep leaderboard history) silently
+    // degrades to the logged-out view. The API allowlists this origin with
+    // allow_credentials, so no endpoint answers with a wildcard ACAO.
+    function _withCreds(input, init) {
+        const url = apiUrl(input);
+        if (url === input) return [input, init];          // untouched: still same-origin
+        init = Object.assign({}, init);
+        if (init.credentials !== "omit") init.credentials = "include";
+        return [url, init];
+    }
     const _origFetch = window.fetch.bind(window);
     window.fetch = function (input, init) {
-        if (typeof input === "string") return _origFetch(apiUrl(input), init);
+        if (typeof input === "string") return _origFetch.apply(null, _withCreds(input, init));
         return _origFetch(input, init);   // Request objects pass through (unused here)
     };
     const _origOpen = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function (method, url) {
         const args = Array.prototype.slice.call(arguments);
-        if (typeof url === "string") args[1] = apiUrl(url);
-        return _origOpen.apply(this, args);
+        const rewritten = typeof url === "string" ? apiUrl(url) : url;
+        args[1] = rewritten;
+        const r = _origOpen.apply(this, args);
+        if (rewritten !== url) this.withCredentials = true;
+        return r;
     };
 
     const ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };

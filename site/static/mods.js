@@ -135,7 +135,7 @@
     $('mh-mine').addEventListener('click', async (e) => {
       e.preventDefault();
       try {
-        const r = await fetch('/site/mods/me/projects', { credentials: 'same-origin' });
+        const r = await fetch('/site/mods/me/projects', { credentials: 'include' });
         const data = r.ok ? await r.json() : { items: [] };
         if (data.items && data.items.length) {
           location.href = modUrl(data.items[0]);

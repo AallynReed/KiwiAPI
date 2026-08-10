@@ -14,7 +14,7 @@ import json
 import logging
 import re
 import secrets
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 import httpx
 from fastapi import APIRouter, Request, Response
@@ -116,10 +116,25 @@ def _redirect_uri() -> str:
     return f"{settings.api_url}/v1/site-auth/oauth/discord/callback"
 
 
-def _back(fragment: str) -> RedirectResponse:
+def _safe_next(raw: str | None) -> str:
+    """The post-sign-in destination, or "" if it isn't one we may bounce to.
+
+    Only a site-relative path survives: an absolute URL, a protocol-relative
+    "//evil.com" or anything not starting with "/" is dropped, so a crafted
+    ?next= can never turn sign-in into an open redirect. The client re-checks
+    this against its own origin before navigating (site_auth.js).
+    """
+    if not raw or not raw.startswith("/") or raw.startswith("//"):
+        return ""
+    return raw
+
+
+def _back(fragment: str, next_: str = "") -> RedirectResponse:
     # Land back on the showcase-site login page; the one-time code rides in the
-    # URL fragment so it never reaches a server log.
-    return RedirectResponse(f"{settings.app_url}/login#{fragment}", status_code=307)
+    # URL fragment so it never reaches a server log. ``next`` rides in the query
+    # string instead - the page reads it to resume wherever sign-in interrupted.
+    query = f"?next={quote(next_, safe='/')}" if next_ else ""
+    return RedirectResponse(f"{settings.app_url}/login{query}#{fragment}", status_code=307)
 
 
 def _app_return(fragment: str) -> HTMLResponse:
@@ -157,26 +172,30 @@ def _app_return(fragment: str) -> HTMLResponse:
     return HTMLResponse(html)
 
 
-def _emit(mode: str, *, ok: str | None = None, error: str | None = None):
+def _emit(mode: str, *, ok: str | None = None, error: str | None = None, next_: str = ""):
     """Hand the OAuth result back to the right client. ``mode == "app"`` returns
-    the btt:// interstitial; anything else returns the showcase-site redirect."""
+    the btt:// interstitial; anything else returns the showcase-site redirect.
+    ``next_`` is web-only - the desktop app has no page to resume."""
     if mode == "app":
         return _app_return(f"code={ok}" if ok is not None else f"error={error}")
-    return _back(f"discord={ok}" if ok is not None else f"oauth_error={error}")
+    return _back(f"discord={ok}" if ok is not None else f"oauth_error={error}", next_)
 
 
 @router.get("/discord/start", include_in_schema=False)
-async def discord_start(client: str | None = None):
+async def discord_start(client: str | None = None, next: str | None = None):
     _require_enabled()
     # client=app -> finish the login inside the BetterTroveTools desktop app via
     # a btt:// deep link instead of redirecting back to the showcase site. The
-    # mode is carried in the state value so the callback knows where to return.
+    # mode is carried in the state value so the callback knows where to return,
+    # and so is the page the user was heading for - Discord round-trips through
+    # its own domain, so nothing else survives the trip.
     mode = "app" if client == "app" else "web"
+    next_ = _safe_next(next)
     r = get_redis()
     if r is None:
-        return _emit(mode, error="unavailable")
+        return _emit(mode, error="unavailable", next_=next_)
     state = secrets.token_urlsafe(24)
-    await r.set(f"site_oauthstate:{state}", mode, ex=600)
+    await r.set(f"site_oauthstate:{state}", json.dumps({"mode": mode, "next": next_}), ex=600)
     params = {
         "client_id": settings.discord_client_id,
         "redirect_uri": _redirect_uri(),
@@ -194,15 +213,21 @@ async def discord_callback(request: Request, code: str | None = None, state: str
     if r is None:
         return _back("oauth_error=unavailable")
     # Consume the state first (Discord echoes it back even on a denial), so we
-    # know whether to return to the app or the website for every later branch.
-    mode = "web"
+    # know whether to return to the app or the website - and to which page - for
+    # every later branch.
+    mode, next_ = "web", ""
     if state:
         stored = await r.getdel(f"site_oauthstate:{state}")
         if not stored:
             return _back("oauth_error=state")
-        mode = "app" if stored == "app" else "web"
+        try:
+            parsed = json.loads(stored)
+        except (TypeError, ValueError):
+            parsed = {"mode": stored}   # a state issued before ``next`` was carried
+        mode = "app" if parsed.get("mode") == "app" else "web"
+        next_ = _safe_next(parsed.get("next"))
     if not code or not state:
-        return _emit(mode, error="missing")
+        return _emit(mode, error="missing", next_=next_)
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -216,7 +241,7 @@ async def discord_callback(request: Request, code: str | None = None, state: str
             tok_json = tok.json()
             access = tok_json.get("access_token")
             if not access:
-                return _emit(mode, error="exchange")
+                return _emit(mode, error="exchange", next_=next_)
             expires_in = tok_json.get("expires_in")
             auth_header = {"Authorization": f"Bearer {access}"}
             me = (await client.get(f"{_API}/users/@me", headers=auth_header)).json()
@@ -225,21 +250,21 @@ async def discord_callback(request: Request, code: str | None = None, state: str
             # "Discord Bot" tab (see fetch_discord_guilds), using the cached token.
     except httpx.HTTPError:
         logger.exception("Discord OAuth request failed")
-        return _emit(mode, error="discord")
+        return _emit(mode, error="discord", next_=next_)
 
     raw_id = me.get("id")
     # We no longer request the `email` scope or store an email - the Discord
     # account id is the sole identity (data minimization).
     if not raw_id:
-        return _emit(mode, error="discord")
+        return _emit(mode, error="discord", next_=next_)
     try:
         discord_id = int(raw_id)
     except (TypeError, ValueError):
-        return _emit(mode, error="discord")
+        return _emit(mode, error="discord", next_=next_)
 
     user = await _find_or_create(discord_id, me)
     if not user.is_active:
-        return _emit(mode, error="inactive")
+        return _emit(mode, error="inactive", next_=next_)
     user.last_login_at = utcnow()
     await user.save()
     # Cache the Discord token (not the guild list) so the Dashboard can fetch the
@@ -254,7 +279,7 @@ async def discord_callback(request: Request, code: str | None = None, state: str
         json.dumps({"a": tokens.access_token, "r": tokens.refresh_token}),
         ex=120,
     )
-    return _emit(mode, ok=xcode)
+    return _emit(mode, ok=xcode, next_=next_)
 
 
 @router.post("/exchange", response_model=SiteTokenResponse)
