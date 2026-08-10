@@ -181,6 +181,7 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
             parts.append(part)
     if not parts:
         return None
+    parts = _merge_same_ap(parts)
     _unbury_enclosed_emissive(parts, rig["rest"], rig["voxel_scale"])
     return {"voxel_scale": rig["voxel_scale"], "rig": rig_name, "parts": parts,
             "rest": rig["rest"], "animations": rig["animations"]}
@@ -238,6 +239,37 @@ def _part_at(key: str, raw: bytes, scale: float) -> dict | None:
     if scale != 1.0:
         part["scale"] = scale
     return part
+
+
+def _merge_same_ap(parts: list[dict]) -> list[dict]:
+    """Fold parts that share an attach point into one, in place order.
+
+    Downstream a part IS its attach point - the viewer keys the transform and the
+    scale it applies by that name - so two parts on one point are one part to
+    everything past here, and shipping them separately leaves the second at the
+    mercy of whichever one the consumer keeps.
+
+    Only merged when the scale matches too, since the merged part carries a single
+    one. Parts at genuinely different points - a dual-wielded weapon - are untouched.
+    """
+    merged: dict[tuple[str, float], dict] = {}
+    order: list[tuple[str, float]] = []
+    for part in parts:
+        key = (part["name"], float(part.get("scale", 1.0)))
+        into = merged.get(key)
+        if into is None:
+            merged[key] = part
+            order.append(key)
+            continue
+        n_into, n_part = len(into["x"]), len(part["x"])
+        for field in ("x", "y", "z", "rgb", "kind", "level"):
+            into[field] = into[field] + part[field]
+        # spec is omitted when a part is all-rough, so a merge of one with and one
+        # without has to pad or the arrays stop lining up with the voxels.
+        if "spec" in into or "spec" in part:
+            into["spec"] = (into.get("spec") or [0] * n_into) \
+                + (part.get("spec") or [0] * n_part)
+    return [merged[k] for k in order]
 
 
 def assemble_placements(placements: list[tuple], rig_name: str) -> dict | None:
