@@ -251,6 +251,7 @@ def _build_styles(files: list[tuple[str, bytes]], loc: dict[str, str]) -> dict[s
             key=stem, name=name or _humanize(stem), slot=slot,
             family=sockets_mod.SLOTS[slot_id], slot_id=slot_id,
             blueprint=blueprint, prefab=path,
+            hides_hair=slot == "hat" and bool(_HELMET_RE.search(blueprint)),
         ))
     for options in out.values():
         options.sort(key=lambda o: o.name.lower())
