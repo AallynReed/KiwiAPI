@@ -71,6 +71,12 @@ NONE = "none"
 # Hair is the one that is still wrong (too big), and it gets its own number so it can be
 # corrected WITHOUT touching the head again.
 PIECE_SCALE = {"head": 0.5, "eyes": 0.5, "hair": 0.5}
+# Eyebrows live in the head blueprint but take the HAIR colour, as they do in game.
+# They are the only near-pure-red voxels a human head carries (4 of 992: two shades,
+# mirrored), and the strict threshold keeps a lizard's or ghost's saturated skin out
+# of it - a head with no brows (skull, robot) simply has none to find.
+BROW_MAX_OFF = 24
+
 # slot -> the colour parameter that tints it (see assembly.recolor). Hair and eyes only,
 # which is exactly what Trove's own customizer offers: ui/charcustomize.swf has RACE,
 # HAIRSTYLE, EYECOLOR and HAIRCOLOR and no skin colour. The data agrees - hair and eyes
@@ -121,6 +127,16 @@ class Outfit:
         if self.hair_scale != PIECE_SCALE["hair"]:
             fam = f"{fam}~h{self.hair_scale}"
         return f"{self.cls.key}/{self.costume.key}/{race}/{picks}/{raw}{fam}"
+
+    def tint_for(self, slot: str):
+        """The recolour for a slot: its own colour, or - for a head - the hair colour
+        applied to the eyebrows alone."""
+        own = self.colors.get(slot)
+        if own:
+            return own
+        if slot == "head" and self.colors.get("hair"):
+            return (self.colors["hair"], BROW_MAX_OFF)
+        return None
 
     def piece_scale(self, slot: str) -> float:
         """Voxel-size multiplier for a character-creation piece."""
@@ -309,7 +325,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         ap = attach_point(slot, outfit.cls.skeleton)
         data = await read(opt.blueprint, opt.prefab) if ap else None
         if data:
-            out.append((ap, data, outfit.piece_scale(slot), outfit.colors.get(slot)))
+            out.append((ap, data, outfit.piece_scale(slot), outfit.tint_for(slot)))
 
     for slot, ref in outfit.blueprints.items():
         if ref == NONE:
@@ -332,7 +348,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         data = await read(ref.rsplit("/", 1)[-1], ref)
         if not data:
             continue
-        tint = outfit.colors.get(slot)
+        tint = outfit.tint_for(slot)
         scale = (outfit.piece_scale(slot) if slot in RACE_SLOTS
                  else assembly.scale_for(aps[0]))
         for ap in aps:

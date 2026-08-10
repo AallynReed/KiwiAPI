@@ -194,7 +194,8 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
 RECOLOR_MIN_SAT = 0.5
 
 
-def recolor(part: dict, rgb: tuple[int, int, int], min_sat: float = RECOLOR_MIN_SAT) -> None:
+def recolor(part: dict, rgb: tuple[int, int, int], min_sat: float = RECOLOR_MIN_SAT,
+            max_off: int | None = None) -> None:
     """Tint a part's mask voxels to ``rgb``, in place, keeping their shading.
 
     Trove authors the recolourable character art - hair, eyes, and the skin of a head - in
@@ -214,6 +215,13 @@ def recolor(part: dict, rgb: tuple[int, int, int], min_sat: float = RECOLOR_MIN_
         hi = max(r, g, b)
         if hi == 0 or 1 - (min(r, g, b) / hi) < min_sat:
             out.append(packed)                # authored colour, not part of the mask
+            continue
+        # A stricter test, for a mask embedded in art that ISN'T one. The eyebrows sit
+        # inside a head whose skin is authored for real, and some of those skins are
+        # themselves saturated (a lizard's brown, a ghost's green), so saturation alone
+        # would repaint the whole face. Near-pure red is the brows and nothing else.
+        if max_off is not None and (r != hi or max(g, b) > max_off):
+            out.append(packed)
             continue
         level = hi / 255.0
         out.append((int(r0 * level) << 16) | (int(g0 * level) << 8) | int(b0 * level))
@@ -289,13 +297,17 @@ def assemble_placements(placements: list[tuple], rig_name: str) -> dict | None:
     parts = []
     for placement in placements:
         key, raw, scale = placement[0], placement[1], placement[2]
+        # tint is (rgb) or (rgb, max_off) - the second form is the strict mask above.
         tint = placement[3] if len(placement) > 3 else None
+        max_off = None
+        if tint and isinstance(tint[0], tuple):
+            tint, max_off = tint
         if not raw or key not in rig["rest"]:
             continue                     # a socket this skeleton doesn't have -> skip it
         part = _part_at(key, raw, scale)
         if part:
             if tint:
-                recolor(part, tint)
+                recolor(part, tint, max_off=max_off)
             parts.append(part)
     if not parts:
         return None
