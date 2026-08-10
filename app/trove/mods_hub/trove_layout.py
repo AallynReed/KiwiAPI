@@ -78,7 +78,7 @@ def classify(paths: list[str]) -> tuple[list[str], list[dict]]:
 # Cached game-file index, rebuilt only when the live branch's current build
 # changes (keyed by ordinal). Building it scans the whole UpdateState tree, so we
 # do it at most once per game update.
-_GAME_MAP_CACHE: dict = {"ordinal": None, "map": {}}
+_GAME_MAP_CACHE: dict = {"ordinal": None, "map": {}, "all": {}}
 
 
 async def game_file_map(branch: str = LIVE_BRANCH) -> dict[str, str]:
@@ -105,9 +105,41 @@ async def game_file_map(branch: str = LIVE_BRANCH) -> dict[str, str]:
         name = path.rsplit("/", 1)[-1].lower()
         if name not in fmap:                  # first occurrence wins (matches BTT)
             fmap[name] = path
+        _GAME_MAP_CACHE["all"].setdefault(name, []).append(path)
     _GAME_MAP_CACHE["ordinal"] = ub.current_ordinal
     _GAME_MAP_CACHE["map"] = fmap
     return fmap
+
+
+async def game_file_paths(branch: str = LIVE_BRANCH) -> dict[str, list[str]]:
+    """``{filename.lower(): [every archived path with that name]}``.
+
+    ``game_file_map`` keeps only the first sighting, which is fine for "does this file
+    exist in the game", but not for "which of these is THIS creature's". Trove reuses a
+    filename across skins and NPC sets - ``equipment_helm_crimefighter.blueprint`` exists
+    both under the beequeen skin and under a merchant-hub NPC - so assembling a creature
+    has to choose, and choosing by insertion order attaches a merchant NPC to a costume's
+    head. Pair this with ``nearest_path``."""
+    await game_file_map(branch)               # populates both caches together
+    return _GAME_MAP_CACHE["all"]
+
+
+def nearest_path(candidates: list[str], hint: str) -> str | None:
+    """The candidate that lives closest to ``hint`` - the creature's own prefab path.
+
+    Scored on how many directory segments the two share, so a part under
+    ``…/skins/crimefighter_beequeen/`` wins for a prefab under the same skin folder over
+    an identically-named file in an unrelated NPC set. Ties break lexicographically so
+    the answer is stable rather than dependent on archive order."""
+    if not candidates:
+        return None
+    if len(candidates) == 1 or not hint:
+        return sorted(candidates)[0]
+    want = {s for s in hint.replace("\\", "/").lower().split("/")[:-1] if s}
+    def score(p: str) -> tuple:
+        segs = [s for s in p.replace("\\", "/").lower().split("/")[:-1] if s]
+        return (-len(want & set(segs)), p)
+    return sorted(candidates, key=score)[0]
 
 
 def find_misplaced(paths: list[str], game_map: dict[str, str]) -> list[dict]:

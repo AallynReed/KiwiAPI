@@ -30,6 +30,7 @@ prefab data or we don't render it.
 from __future__ import annotations
 
 import asyncio
+import re
 from collections import Counter
 from dataclasses import dataclass, field
 
@@ -72,6 +73,32 @@ def _build(rows: list[tuple[str, str, str, str]]) -> RigMap:
     return RigMap(by_blueprint=by_blueprint, creatures=creatures, owner=owner)
 
 
+_STYLE_RE = re.compile(r"\[[^\]]*\]")          # a Trove style suffix: name[stylename]
+_TIER_RE = re.compile(r"_lvl\d+")
+
+
+def _match_variant(basename: str, rig_map: RigMap) -> tuple[str, str] | None:
+    """A styled or tiered spelling of a part the map does know.
+
+    Trove writes a cosmetic variant as ``<base>[style]`` and a tier as ``<base>_lvlN``,
+    so a mod shipping ``equipment_helm_crimefighter_lvl2[technoshyft]`` never matched the
+    map's ``equipment_helm_crimefighter`` and its head silently went missing. Only these
+    two documented suffixes are stripped, and only down to a name the map already binds -
+    an unknown name still resolves to nothing rather than being guessed onto a rig."""
+    seen = {basename}
+    for cand in (_STYLE_RE.sub("", basename),
+                 _TIER_RE.sub("", basename),
+                 _TIER_RE.sub("", _STYLE_RE.sub("", basename))):
+        cand = cand.strip().strip("_")
+        if not cand or cand in seen:
+            continue
+        seen.add(cand)
+        found = rig_map.by_blueprint.get(cand)
+        if found is not None:
+            return found
+    return None
+
+
 async def _rig_map(branch: str) -> RigMap:
     """The branch's rig map, rebuilt only when the codex index signature changes."""
     if not settings.postgres_enabled:
@@ -101,7 +128,13 @@ async def resolve(
     rig_map = await _rig_map(branch)
     if not rig_map:
         return None, {}
-    hits = {b: rig_map.by_blueprint[b] for b in part_basenames if b in rig_map.by_blueprint}
+    hits = {}
+    for b in part_basenames:
+        found = rig_map.by_blueprint.get(b)
+        if found is None:
+            found = _match_variant(b, rig_map)
+        if found is not None:
+            hits[b] = found
     if not hits:
         return None, {}
     skeleton = Counter(skel for skel, _ap in hits.values()).most_common(1)[0][0]

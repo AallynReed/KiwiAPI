@@ -99,6 +99,7 @@ async def render_creature_cached(
 
 async def _build_creature_png(prefab: str, dim: int, branch: str) -> bytes | None:
     from app.trove.mods_hub import assembly, rig_index
+    from app.trove.mods_hub.trove_layout import game_file_paths, nearest_path
     from app.trove.render.source import blueprint_by_basename
     from app.trove.render.voxel import render_voxels
 
@@ -106,10 +107,16 @@ async def _build_creature_png(prefab: str, dim: int, branch: str) -> bytes | Non
     if not skeleton or not parts or not assembly.has_baked_rig(skeleton):
         return None
     index = await blueprint_by_basename(branch)
+    # A name Trove reuses across skins/NPC sets is absent from `index` (it only keeps
+    # unambiguous ones), so fall back to every archived path and take the one living
+    # closest to this creature's prefab - otherwise a shared part name sank the whole
+    # creature, or worse, resolved to somebody else's file.
+    all_paths = await game_file_paths(branch)
 
     wanted: list[tuple[str, bytes]] = []
     for basename, ap_key in parts.items():
-        path = index.get(basename.lower())
+        path = index.get(basename.lower()) or nearest_path(
+            all_paths.get(f"{basename.lower()}.blueprint", []), prefab)
         if not path:
             return None                       # a part we can't locate -> incomplete
         data = await get_blueprint_bytes(path, branch)

@@ -40,7 +40,12 @@ from app.embed import uploads
 from app.trove import tmod as tmod_mod
 from app.trove.mods_hub import service as hub
 from app.trove.mods_hub import vfx
-from app.trove.mods_hub.trove_layout import LIVE_BRANCH, game_file_map
+from app.trove.mods_hub.trove_layout import (
+    LIVE_BRANCH,
+    game_file_map,
+    game_file_paths,
+    nearest_path,
+)
 from app.trove.render import bp_cache
 
 logger = logging.getLogger("kiwi.embed")
@@ -356,10 +361,13 @@ async def _game_assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | N
         return None                      # unknown rig -> no guess, no render
 
     async def build() -> dict:
-        fmap = await game_file_map(LIVE_BRANCH)
+        # Resolve each part against the CREATURE's own prefab. Trove reuses filenames
+        # across skins and NPC sets, so picking by archive order once put a merchant-hub
+        # NPC on a costume's head attach point.
+        paths = await game_file_paths(LIVE_BRANCH)
         files: list[dict] = []
         for basename in parts:
-            gp = fmap.get(f"{basename}.blueprint")
+            gp = nearest_path(paths.get(f"{basename}.blueprint", []), prefab)
             if not gp:
                 continue
             raw = await _read_game_file(gp)
