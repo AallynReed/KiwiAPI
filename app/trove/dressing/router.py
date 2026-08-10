@@ -140,7 +140,6 @@ async def resolve_query(
     hair: str | None = None, weapon_family: str | None = None,
     eyes: str | None = None, race: str | None = None,
     hair_color: str | None = None, eye_color: str | None = None,
-    skin_color: str | None = None,
 ) -> service.Outfit:
     """Shared by this router and the site proxy: validate a selection or 404."""
     outfit = await service.resolve(
@@ -148,7 +147,7 @@ async def resolve_query(
         {"hat": _key(hat), "face": _key(face), "weapon": _key(weapon),
          "head": _key(head), "hair": _key(hair), "eyes": _key(eyes)},
         weapon_family=weapon_family, race=_key(race),
-        colors={"hair_color": hair_color, "eye_color": eye_color, "skin_color": skin_color},
+        colors={"hair_color": hair_color, "eye_color": eye_color},
     )
     if outfit is None:
         raise APIError(404, ErrorCode.not_found, "Unknown class, or no costumes for it.")
@@ -173,7 +172,6 @@ async def get_outfit(
     hair_color: str | None = Query(default=None, description="`#rrggbb`. Tints the hair's "
                                    "mask voxels; see the model docs on how faithful this is."),
     eye_color: str | None = Query(default=None, description="`#rrggbb`."),
-    skin_color: str | None = Query(default=None, description="`#rrggbb`. Tints a head's skin."),
     weapon_family: str | None = Query(default=None, description="Which weapon socket a raw "
                                       "blueprint fills (Melee/Bow/Gun/Staff/Spear/Fist). "
                                       "Only the Boomeranger is ambiguous without it."),
@@ -183,7 +181,7 @@ async def get_outfit(
     resolves to, plus any slot this class has no socket for."""
     outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
                                  weapon_family, eyes, race,
-                                 hair_color, eye_color, skin_color)
+                                 hair_color, eye_color)
     return DressOutfit(**outfit.as_dict(), dropped=outfit.dropped)
 
 
@@ -210,7 +208,6 @@ async def get_model(
     hair_color: str | None = Query(default=None, description="`#rrggbb`. Tints the hair's "
                                    "mask voxels; see the model docs on how faithful this is."),
     eye_color: str | None = Query(default=None, description="`#rrggbb`."),
-    skin_color: str | None = Query(default=None, description="`#rrggbb`. Tints a head's skin."),
     weapon_family: str | None = Query(default=None, description="Which weapon socket a raw "
                                       "blueprint fills (Melee/Bow/Gun/Staff/Spear/Fist). "
                                       "Only the Boomeranger is ambiguous without it."),
@@ -224,7 +221,7 @@ async def get_model(
     Built once per outfit and cached, then served gzipped with an ``ETag``."""
     outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
                                  weapon_family, eyes, race,
-                                 hair_color, eye_color, skin_color)
+                                 hair_color, eye_color)
     built = await service.model(outfit, fmt)
     if built is None:
         raise APIError(404, ErrorCode.not_found,

@@ -50,8 +50,12 @@ SLOT_FAMILY = {"hat": "Hat", "face": "Face"}
 DIRECT_APS = dict(customhead.PIECE_APS)
 # "I want nothing here" - distinct from "I didn't choose", which takes the race default.
 NONE = "none"
-# slot -> the colour parameter that tints it (see assembly.recolor).
-SLOT_COLOR = {"hair": "hair_color", "eyes": "eye_color", "head": "skin_color"}
+# slot -> the colour parameter that tints it (see assembly.recolor). Hair and eyes only,
+# which is exactly what Trove's own customizer offers: ui/charcustomize.swf has RACE,
+# HAIRSTYLE, EYECOLOR and HAIRCOLOR and no skin colour. The data agrees - hair and eyes
+# are masks at ~1.0 saturation, while a head is authored in a real skin tone at ~0.16, so
+# there is nothing to mask. You change a character's skin by changing its race.
+SLOT_COLOR = {"hair": "hair_color", "eyes": "eye_color"}
 _HEX_RE = re.compile(r"^#?([0-9a-f]{6})$")
 
 
