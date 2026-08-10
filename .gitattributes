@@ -1,3 +1,8 @@
 # Keep shell scripts LF so they run on the Linux server regardless of host OS.
 *.sh text eol=lf
 deploy.sh text eol=lf
+
+# Baked rig animation clips are binary (TANIM1: float32 pos+quat per attach point).
+# core.autocrlf is on, so say so explicitly rather than trust content sniffing - a
+# CRLF rewrite would silently corrupt the float payload.
+*.anim binary

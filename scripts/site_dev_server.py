@@ -1386,15 +1386,15 @@ class Handler(SimpleHTTPRequestHandler):
             if mp.exists():
                 return self._send_file(mp, "application/json")
             return self._send_json({"error": {"message": "no model"}})
-        # Lazily-loaded rig animation frames: /site/rigs/<skeleton>/anim/<name>
+        # Lazily-loaded rig animation clip (TANIM1 binary): /site/rigs/<skeleton>/anim/<name>
         if path.startswith("/site/rigs/") and "/anim/" in path:
             import re as _re
             m = _re.match(r"^/site/rigs/([a-z0-9_]+)/anim/([a-z0-9_]+)$", path)
             if m:
                 ap = _under(ROOT / "app" / "trove" / "mods_hub" / "rigs" / "anim",
-                            m.group(1), m.group(2) + ".json")
+                            m.group(1), m.group(2) + ".anim")
                 if ap is not None and ap.exists():
-                    return self._send_file(ap, "application/json")
+                    return self._send_file(ap, "application/octet-stream")
             return self._send_json({"error": {"message": "no animation"}})
         if path.startswith("/site/mods/projects/"):
             rest = path[len("/site/mods/projects/"):]

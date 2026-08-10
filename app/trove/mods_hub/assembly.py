@@ -32,18 +32,23 @@ def _rigs() -> dict:
     return out
 
 
-def load_animation(skeleton: str, name: str) -> dict | None:
-    """Lazily load ONE baked animation's frames - ``{fps, frames:[{ap_key:[16]}]}`` from
-    ``rigs/anim/<skeleton>/<name>.json`` - or None. The rig JSON only carries animation
+def load_animation(skeleton: str, name: str) -> bytes | None:
+    """Lazily load ONE baked animation clip - the raw ``TANIM1`` bytes of
+    ``rigs/anim/<skeleton>/<name>.anim`` - or None. The rig JSON only carries animation
     METADATA (name/fps/frame-count) so the model payload stays small; the viewer fetches
-    the frames on demand when a clip is played. Names are validated (no path traversal)."""
+    a clip on demand when it is played.
+
+    The clip is binary rather than JSON because the attach-point transforms are pure
+    rigid, so each one is stored as position(3) + quaternion(4) float32 instead of a 4x4
+    matrix of JSON text - about 10x smaller across the ~3.2k baked clips. The viewer
+    rebuilds the matrices. Names are validated (no path traversal)."""
     if not (_RIG_NAME_RE.match(skeleton or "") and _RIG_NAME_RE.match(name or "")):
         return None
-    path = os.path.join(_RIG_DIR, "anim", skeleton, name + ".json")
+    path = os.path.join(_RIG_DIR, "anim", skeleton, name + ".anim")
     if not os.path.isfile(path):
         return None
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    with open(path, "rb") as f:
+        return f.read()
 
 
 def _decode_v5_grid(raw: bytes) -> list[tuple]:

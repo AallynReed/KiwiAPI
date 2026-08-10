@@ -5,8 +5,11 @@
 
    Model payload:
      { voxel_scale, parts:[{name,x[],y[],z[],rgb[]}],
-       rest:{part:[16]}, animations:{name:{fps,frames:[{part:[16]}]}} }
-   Matrices are column-major (three.js order).
+       rest:{part:[16]}, animations:{name:{fps,frames:N}} }
+   Matrices are column-major (three.js order). `animations` is METADATA only; a clip's
+   frames are fetched on demand from /site/rigs/<rig>/anim/<name> as a TANIM1 binary
+   (see decodeAnim) - the attach-point transforms are rigid, so they ship as
+   position+quaternion float32 rather than 4x4 matrices of JSON text.
 
    API: window.ModelViewer.open({ url, title })   -- modal
         window.ModelViewer.mount(el, { url, bar, onMeta, apiBase })  -- inline (embed page) */
@@ -18,6 +21,30 @@
   // origin, which is the Mods Hub case. The embeddable viewer is served from the
   // website host while its data lives on the API, so it passes that origin in.
   var _apiBase = '';
+
+  /* Decode one baked animation clip (TANIM1). Layout, little-endian:
+       8s  magic "TANIM1\0\0"
+       u32 ap_count, u32 frame_count, u32 fps, u32 name_blob_len
+       ..  name_blob: NUL-separated attach-point keys, NUL-padded to a 4-byte boundary
+       ..  frame_count * ap_count * 7 float32: position xyz then quaternion xyzw
+     The float payload is 4-byte aligned by construction, so it wraps with no copy. */
+  function decodeAnim(buf) {
+    var dv = new DataView(buf);
+    var head = new Uint8Array(buf, 0, 6), magic = '';
+    for (var i = 0; i < 6; i++) magic += String.fromCharCode(head[i]);
+    if (magic !== 'TANIM1') throw new Error('bad animation clip');
+    var apCount = dv.getUint32(8, true), frameCount = dv.getUint32(12, true);
+    var fps = dv.getUint32(16, true), nb = dv.getUint32(20, true);
+    var raw = new Uint8Array(buf, 24, nb), s = '';
+    for (var j = 0; j < nb; j++) s += String.fromCharCode(raw[j]);
+    var keys = s.split('\0').filter(Boolean);
+    var apIndex = {};
+    for (var k = 0; k < keys.length; k++) apIndex[keys[k]] = k;
+    return {
+      fps: fps, frameCount: frameCount, apCount: apCount, apIndex: apIndex,
+      data: new Float32Array(buf, 24 + nb, frameCount * apCount * 7),
+    };
+  }
 
   function injectStyles() {
     if (_styles) return; _styles = true;
@@ -85,14 +112,21 @@
       });
     }).catch(function (e) {
       if (!alive) return;
+      // build() runs after msg.remove(), so re-attach or the failure is invisible
+      if (!msg.parentNode) container.appendChild(msg);
       msg.textContent = e.message || 'Could not load this model.';
       msg.classList.add('err');
+      if (window.console) console.error('model viewer:', e);
     });
 
-    return { dispose: function () {
-      alive = false;
-      if (viewer) { viewer.dispose(); viewer = null; }
-    } };
+    return {
+      state: function () { return viewer ? viewer.state() : null; },
+      poseFrame: function (n, f) { return viewer ? viewer.poseFrame(n, f) : null; },
+      dispose: function () {
+        alive = false;
+        if (viewer) { viewer.dispose(); viewer = null; }
+      },
+    };
   }
 
   function open(opts) {
@@ -206,20 +240,34 @@
     function onResize() { var w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h); request(); }
     window.addEventListener('resize', onResize);
 
-    // render-on-demand; a rAF loop runs only while an animation plays. Animation FRAMES
-    // are fetched lazily per clip (the payload only carries metadata) and cached.
+    // render-on-demand; a rAF loop runs only while an animation plays. Animation CLIPS
+    // are fetched lazily (the payload only carries metadata) and cached.
     var alive = true, anim = null, want = null, animStart = 0, raf = 0, pending = false;
-    var loaded = {};   // animation name -> {fps, frames:[{part:[16]}]}
+    var loaded = {};   // animation name -> decodeAnim() result
+    var _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _one = new THREE.Vector3(1, 1, 1);
     function renderOnce() { renderer.render(scene, camera); }
     function request() { if (anim) return; if (!pending) { pending = true; requestAnimationFrame(function () { pending = false; renderOnce(); }); } }
+    /* Pose the parts from frame `fi` of a decoded clip: rebuild each attach point's
+       matrix from its position+quaternion instead of reading a stored 4x4. */
+    function applyFrame(A, fi) {
+      var base = fi * A.apCount * 7, d = A.data;
+      data.parts.forEach(function (p) {
+        var ai = A.apIndex[p.name], meshes = meshByPart[p.name];
+        if (ai === undefined || !meshes) return;
+        var o = base + ai * 7;
+        _p.set(d[o], d[o + 1], d[o + 2]);
+        _q.set(d[o + 3], d[o + 4], d[o + 5], d[o + 6]);
+        for (var i = 0; i < meshes.length; i++) meshes[i].matrix.compose(_p, _q, _one).multiply(scaleM);
+      });
+    }
     function loop(ts2) {
       if (!alive || !anim) return;
-      var A = loaded[anim]; if (!A || !A.frames || !A.frames.length) return;
+      var A = loaded[anim]; if (!A || !A.frameCount) return;
       raf = requestAnimationFrame(loop);
-      var dur = A.frames.length / A.fps;
+      var dur = A.frameCount / A.fps;
       var t = ((ts2 - animStart) / 1000) % dur;
-      var fi = Math.floor(t * A.fps) % A.frames.length;
-      applyPose(A.frames[fi]); renderOnce();
+      var fi = Math.floor(t * A.fps) % A.frameCount;
+      applyFrame(A, fi); renderOnce();
     }
     function setActive(name) { Array.prototype.forEach.call(bar.querySelectorAll('.mv-btn'), function (b) { b.classList.toggle('on', b.dataset.anim === (name || 'rest')); }); }
     function startAnim(name) { anim = name; animStart = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
@@ -232,9 +280,16 @@
       var btn = bar.querySelector('.mv-btn[data-anim="' + name + '"]');
       if (btn) btn.classList.add('mv-loading');
       fetch(_apiBase + '/site/rigs/' + encodeURIComponent(data.rig) + '/anim/' + encodeURIComponent(name), { credentials: 'same-origin' })
-        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-        .then(function (a) { loaded[name] = a; if (btn) btn.classList.remove('mv-loading'); if (want === name) startAnim(name); })
-        .catch(function () { if (btn) btn.classList.remove('mv-loading'); });
+        .then(function (r) { if (!r.ok) throw new Error(); return r.arrayBuffer(); })
+        .then(function (buf) {
+          loaded[name] = decodeAnim(buf);
+          if (btn) btn.classList.remove('mv-loading');
+          if (want === name) startAnim(name);
+        })
+        .catch(function (e) {
+          if (btn) btn.classList.remove('mv-loading');
+          if (window.console) console.error('model viewer: animation "' + name + '":', e);
+        });
     }
 
     // control bar: Rest + one button per animation (names from the metadata)
@@ -244,7 +299,30 @@
     var hint = document.createElement('span'); hint.className = 'mv-hint'; hint.textContent = 'drag rotate · scroll zoom · right-drag pan'; bar.appendChild(hint);
     play(null);
 
-    return { dispose: function () {
+    return {
+      // test hook: what the playback loop currently sees
+      state: function () {
+        var A = anim ? loaded[anim] : null;
+        return { anim: anim, want: want, alive: alive, cached: Object.keys(loaded),
+                 clip: A ? { fps: A.fps, frameCount: A.frameCount, apCount: A.apCount,
+                             dataLen: A.data && A.data.length } : null };
+      },
+      /* test hook: pose one specific frame of a loaded clip and report the resulting
+         attach-point matrices. Playback itself is rAF-driven, which never runs in a
+         non-compositing tab, so tests drive frames through here instead. */
+      poseFrame: function (name, fi) {
+        var A = loaded[name];
+        if (!A || !A.frameCount) return null;
+        applyFrame(A, ((fi % A.frameCount) + A.frameCount) % A.frameCount);
+        renderOnce();
+        var out = {};
+        data.parts.forEach(function (p) {
+          var m = meshByPart[p.name] && meshByPart[p.name][0];
+          if (m) out[p.name] = Array.prototype.slice.call(m.matrix.elements);
+        });
+        return out;
+      },
+      dispose: function () {
       alive = false; cancelAnimationFrame(raf);
       el.removeEventListener('mousedown', down); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', upE);
       el.removeEventListener('wheel', wheel); el.removeEventListener('touchstart', ts); el.removeEventListener('touchmove', tm); el.removeEventListener('touchend', te);

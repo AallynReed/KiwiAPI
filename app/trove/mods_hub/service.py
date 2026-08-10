@@ -1695,10 +1695,11 @@ async def assemble_release_model(
         return None
 
 
-async def load_rig_animation(skeleton: str, name: str) -> dict:
-    """One baked animation's frames for a creature rig, lazily (the model viewer fetches
-    these on demand). The assembled-model payload only carries animation metadata, so
-    the frames live here, keyed by skeleton (shared across every mod using that rig)."""
+async def load_rig_animation(skeleton: str, name: str) -> bytes:
+    """One baked animation clip for a creature rig, lazily (the model viewer fetches these
+    on demand). The assembled-model payload only carries animation metadata, so the frames
+    live here, keyed by skeleton (shared across every mod using that rig). Returns the raw
+    ``TANIM1`` bytes; the viewer decodes them."""
     from app.trove.mods_hub import assembly
     anim = await asyncio.to_thread(assembly.load_animation, skeleton, name)
     if anim is None:

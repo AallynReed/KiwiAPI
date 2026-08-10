@@ -268,11 +268,16 @@ async def get_release_blueprint(
     return bp_cache.respond(request, cached)
 
 
-@mods_hub_router.get("/rigs/{skeleton}/anim/{name}")
-async def get_rig_animation(skeleton: str, name: str, ctx: AccessContext = _PUB) -> dict:
-    """Baked animation frames for a creature rig, lazily (the assembled-model payload
-    carries only animation metadata; the viewer fetches frames on demand)."""
-    return await service.load_rig_animation(skeleton, name)
+@mods_hub_router.get("/rigs/{skeleton}/anim/{name}", response_class=Response)
+async def get_rig_animation(skeleton: str, name: str, ctx: AccessContext = _PUB) -> Response:
+    """Baked animation clip for a creature rig, lazily (the assembled-model payload
+    carries only animation metadata; the viewer fetches clips on demand). Binary
+    ``TANIM1``: an 8-byte magic, then ``ap_count``/``frame_count``/``fps``/name-blob
+    length as u32, the NUL-separated attach-point keys, then
+    ``frame_count x ap_count x 7`` float32 - position xyz then quaternion xyzw."""
+    data = await service.load_rig_animation(skeleton, name)
+    return Response(content=data, media_type="application/octet-stream",
+                    headers={"Cache-Control": "public, max-age=3600"})
 
 
 @mods_hub_router.get("/releases/{release_id}/files")

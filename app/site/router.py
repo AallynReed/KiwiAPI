@@ -2958,12 +2958,14 @@ async def site_mods_release_cfg(
                              "Cache-Control": "no-cache"})
 
 
-@router.get("/site/rigs/{skeleton}/anim/{name}", response_class=JSONResponse)
-async def site_rig_animation(skeleton: str, name: str) -> JSONResponse:
-    """Lazily-loaded baked animation frames for a creature rig (the model viewer fetches
-    these on demand when a clip is played). Public, shared across mods using the rig."""
+@router.get("/site/rigs/{skeleton}/anim/{name}", response_class=Response)
+async def site_rig_animation(skeleton: str, name: str) -> Response:
+    """Lazily-loaded baked animation clip for a creature rig (the model viewer fetches
+    these on demand when a clip is played). Public, shared across mods using the rig.
+    Binary ``TANIM1`` - position+quaternion per attach point per frame."""
     anim = await mods_hub_service.load_rig_animation(skeleton, name)
-    return JSONResponse(anim, headers={"Cache-Control": "public, max-age=3600"})
+    return Response(content=anim, media_type="application/octet-stream",
+                    headers={"Cache-Control": "public, max-age=3600"})
 
 
 @router.get("/site/mods/releases/{release_id}/blueprint", response_class=Response)
