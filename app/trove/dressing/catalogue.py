@@ -46,14 +46,15 @@ SLOTS = ("costume", "hat", "face", "weapon", "head", "hair", "eyes")
 RACE_SLOTS = ("head", "hair", "eyes")
 
 _NAME_KEY_RE = re.compile(r"^\$[A-Za-z0-9_]+_(?:skinset_)?name$")
-# A full helmet encloses the head and hides the hair; a hat sits on top and doesn't.
+# A full helmet ENCLOSES the head: hair, face style and eyes all go with it. A hat sits
+# on top and leaves them showing.
 #
 # This is a NAME rule, chosen deliberately over the alternatives and worth knowing the
 # limits of: the game does not record the difference anywhere in the prefab. All 76
 # hat-slot styles were compared field by field and not one identity flag separates the
 # helm-named from the hat-named group - every field is either identical across both or
 # overlaps. So this reads the model's own filename, which is a convention rather than a
-# statement, and will be wrong for any helmet not named like one. `hides_hair` is on the
+# statement, and will be wrong for any helmet not named like one. `covers_head` is on the
 # option in the API so a wrong call is visible and correctable per style.
 _HELMET_RE = re.compile(r"_helm(?:_|$|[^a-z])")
 _WORD_RE = re.compile(r"[_/]+")
@@ -71,7 +72,7 @@ class Option:
     blueprint: str = ""                   # style model basename (no extension)
     prefab: str = ""                      # source prefab path
     skeleton: str = ""                    # costume only
-    hides_hair: bool = False              # a full helmet rather than a hat
+    covers_head: bool = False             # a full helmet rather than a hat
     credit: str = ""                      # community author, from a `[name]` suffix
     parts: dict[str, str] = field(default_factory=dict)   # costume: basename -> AP key
 
@@ -251,7 +252,7 @@ def _build_styles(files: list[tuple[str, bytes]], loc: dict[str, str]) -> dict[s
             key=stem, name=name or _humanize(stem), slot=slot,
             family=sockets_mod.SLOTS[slot_id], slot_id=slot_id,
             blueprint=blueprint, prefab=path,
-            hides_hair=slot == "hat" and bool(_HELMET_RE.search(blueprint)),
+            covers_head=slot == "hat" and bool(_HELMET_RE.search(blueprint)),
         ))
     for options in out.values():
         options.sort(key=lambda o: o.name.lower())

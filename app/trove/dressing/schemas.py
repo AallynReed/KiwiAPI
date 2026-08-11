@@ -36,10 +36,11 @@ class DressOptionOut(BaseModel):
     prefab: str = Field(default="", description="Source prefab path.")
     credit: str = Field(default="", description="Community author, for a "
                         "player-submitted hair style.")
-    hides_hair: bool = Field(default=False,
-                             description="A full helmet: wearing it hides the hair. Read "
-                                         "from the model's name - the game records the "
-                                         "difference nowhere in its data.")
+    covers_head: bool = Field(default=False,
+                              description="A full helmet: wearing it hides the hair, the "
+                                          "face style and the eyes. Read from the model's "
+                                          "name - the game records the difference nowhere "
+                                          "in its data.")
 
 
 class DressOptionPage(BaseModel):
