@@ -78,7 +78,7 @@ Timeline symbol classes for background panels, decorative arrows, forge-type ico
 ### Asset helpers
 
 - `image` (extends `_kiwi.Controls.ArtClip`) — Embed symbol78; the item-art display in the centre forge slot (`currentForge.artClip`).
-- `btnGreen` (extends `LabelButton`) — Embed symbol81; green action button with four-state frame stops.
+- `btnGreen` (extends `LabelButton`) — Embed symbol76; green action button with four-state frame stops.
 - `rarity_frame_*` (×12 PNG/asset wrappers) — rarity border graphics for ingredient slots.
 - `dummy` — not present in this SWF (contrast with minigamescorecard).
 

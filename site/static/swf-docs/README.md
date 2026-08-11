@@ -91,7 +91,7 @@ A reference for Trove's **108 Flash UI files**. Each page covers that SWF's game
 ## World & navigation
 | SWF | Size | Main class | Summary |
 |---|---|---|---|
-| [map.swf](./map.md) | 231 KB | `Map` | The in-game world map overlay, displaying a texture of the current zone with a dynamic legend that shows which point-of-interest categori... |
+| [map.swf](./map.md) | 274 KB | `Map` | The in-game world map overlay, displaying a texture of the current zone with a dynamic legend that shows which point-of-interest categori... |
 | [atlas.swf](./atlas.md) | 1.8 MB | `Atlas` | The interactive world map ("Atlas") that allows players to navigate between Trove's biomes and portals. It is a zoomable, draggable map o... |
 | [atlasinfobox.swf](./atlasinfobox.md) | 159 KB | `AtlasInfoBox` | Tooltip-style info box displayed on the Atlas (world map) when a portal or location is selected. Shows the world name, a description, and... |
 | [delveselectorui.swf](./delveselectorui.md) | 106 KB | `DelveSelector` | The "Dial-a-Depth" Delve selector popup, shown when a player chooses to enter a Delve dungeon. It lets the player pick a depth level (wit... |
@@ -104,7 +104,7 @@ A reference for Trove's **108 Flash UI files**. Each page covers that SWF's game
 |---|---|---|---|
 | [questtracker.swf](./questtracker.md) | 142 KB | `QuestTracker` | The Quest Tracker is Trove's heads-up objective overlay, shown persistently during gameplay to display active quests, the Golden Thread p... |
 | [tinyquestui.swf](./tinyquestui.md) | 249 KB | `TinyQuestUI` | The Tiny Quest UI window displays the player's active quests organised into collapsible sections (Active, Completed, Claim, Cancel), each... |
-| [tinyquestofferui.swf](./tinyquestofferui.md) | 392 KB | `TinyQuestOfferUI` | The Tiny Quest offer/accept dialog shown when a player opens a Tiny Quest for review. It displays the quest title, difficulty star rating... |
+| [tinyquestofferui.swf](./tinyquestofferui.md) | 414 KB | `TinyQuestOfferUI` | The Tiny Quest offer/accept dialog shown when a player opens a Tiny Quest for review. It displays the quest title, difficulty star rating... |
 | [activitytrackerui.swf](./activitytrackerui.md) | 531 KB | `ActivityTrackerUI` | The Activity Tracker is a multi-tab quest/objective panel that surfaces the player's active Trove pursuits across several categories: Eve... |
 | [guideui.swf](./guideui.md) | 472 KB | `GuideUI` | The Guide UI is Trove's in-game compendium and activity browser, displayed whenever the player opens the Guide (collection/achievement/st... |
 | [minigamescorecard.swf](./minigamescorecard.md) | 409 KB | `MiniGameScorecard` | End-of-match scorecard window displayed after a Trove minigame concludes. Shows a ranked leaderboard of players with their scores, a set ... |
@@ -123,7 +123,7 @@ A reference for Trove's **108 Flash UI files**. Each page covers that SWF's game
 | SWF | Size | Main class | Summary |
 |---|---|---|---|
 | [mainmenu.swf](./mainmenu.md) | 31 KB | `MainMenu` | The persistent in-game main menu bar displayed during gameplay. It provides a collapsible dropdown of navigation options, a hub shortcut ... |
-| [navigationmenu.swf](./navigationmenu.md) | 260 KB | `NavigationMenu` | The persistent navigation tray and expandable full-screen menu that lets players open any major game window (Store, Character, Inventory,... |
+| [navigationmenu.swf](./navigationmenu.md) | 261 KB | `NavigationMenu` | The persistent navigation tray and expandable full-screen menu that lets players open any major game window (Store, Character, Inventory,... |
 | [settings.swf](./settings.md) | 393 KB | `Settings` | The in-game Settings window, opened from the escape menu. It presents a left-side category list and a dynamically swapped content pane fo... |
 | [escapewindow.swf](./escapewindow.md) | 121 KB | `EscapeWindow` | The Escape Window is the in-game pause/escape menu that appears when a player presses Escape in Trove. It presents navigation buttons for... |
 | [loginui.swf](./loginui.md) | 83 KB | `LoginBase` | The Trove login screen UI, presenting username/password fields and a login button. Supports both mouse/keyboard input and Iggy console co... |

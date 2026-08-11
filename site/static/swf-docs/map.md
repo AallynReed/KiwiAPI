@@ -2,13 +2,15 @@
 > The in-game world map overlay, displaying a texture of the current zone with a dynamic legend that shows which point-of-interest categories are present. It appears when the player opens the map (M key or console equivalent) and optionally supports a zone-select / terraform mode for club worlds.
 
 **Document/main class:** `Map` (extends `UIComponent`)
-**SWF-specific classes:** 8
+**SWF-specific classes:** 13 (+ 2 `Map_fla` timeline symbols)
 
 ---
 
 ## Main class: `Map`
 
 `Map` is the root UIComponent for the world-map panel. On construction it registers several `ExternalInterface` callbacks so the game engine can push data in, hooks `MouseEvent` listeners for zone-select interaction, and triggers a one-frame `ENTER_FRAME` loop to run post-layout setup after all child symbols are initialised. The map texture is rendered via an `ObjectPreview` child loaded with the texture name `"_WorldMap"`.
+
+The constructor also sizes the legend's tether icon to 24×24 and hides both it and its label until the engine supplies a tether texture.
 
 ### Public methods
 
@@ -39,10 +41,11 @@
 - `closeButton : MovieClip` — shown on PC when zone-select mode is active.
 - `instructions : MovieClip` — overlay panel with a `textField`; hidden by default, shown via `setInstructions()`; on console it plays the `"Console"` label on frame 11.
 - `textureContainer : MovieClip` — parent clip that hosts the map texture; used as the hit-test target for click/mouse-move zone select.
-- `mc_mapLegend : MovieClip` — contains all icon/label pairs for the legend; its `legend` sub-clip height is resized dynamically by `rebuildLegend()`.
+- `mc_mapLegend : MovieClip` — contains all icon/label pairs for the legend; its `legend` sub-clip height is resized dynamically by `rebuildLegend()`. Includes `tetherIcon : ExternalArt` and its `tetherTextField` label.
 - `m_troveHub : MovieClip` — Trove Hub panel; starts hidden (`visible = false`).
+- `m_geodeHub : MovieClip` — Geode Hub panel, the Geode-world counterpart to `m_troveHub`. Unlike `m_troveHub` it is *not* hidden by the constructor, so its default visibility comes from the timeline. It has no dedicated class — it is an untyped `MovieClip` stage instance driven by the engine.
 - `mapHeader : WindowHeaderSmall` — title bar; title key `"$WorldMap_Header"`; disabled (non-interactive).
-- `legendIcons : Array` — ordered list of icon `MovieClip` refs built once on the first `ENTER_FRAME`.
+- `legendIcons : Array` — ordered list of 23 icon `MovieClip` refs built once on the first `ENTER_FRAME`: you, player, tether, hub, cornerstone, cleared, dungeon, largeDungeon, recipeDungeon, clubArchitect, clubOfficer, clubMember, clubNobuild, pvpArena, shrineUnity, vault01–03, adventure01–03, outpost, masterDungeon.
 - `legendTextFields : Array` — corresponding `TextField` refs, index-matched to `legendIcons`.
 - `zoneSelectEnabled : Boolean` — gating flag; when `true`, mouse/stick/button-A events are forwarded to the engine.
 - `FrameRightMargin : int = 2`, `FrameBottomMargin : int = 8` — pixel padding applied when the engine notifies a texture resize.
@@ -62,7 +65,7 @@
   - `"enableZoneSelect"` → `enableZoneSelect()` — activates zone-select mode; shows appropriate UI for PC (`closeButton`) or console (`btn_selectzone`, `btn_TerraformZone`).
   - `"onMapStickChanged"` → `onMapStickChanged(x, y):Boolean` — translates analog stick position to local texture coords and calls `ExternalInterface.call("OnMapMouseMoved", ...)`.
   - `"onMapButtonA"` → `onMapButtonA(x, y)` — maps console A-button press to `ExternalInterface.call("OnMapClicked", ...)`.
-  - `"setTetherIcon"` → `setTetherIcon(name:String)` — sets `mc_mapLegend.tetherIcon.textureName` and toggles visibility.
+  - `"setTetherIcon"` → `setTetherIcon(name:String)` — sets `mc_mapLegend.tetherIcon.textureName`; shows or hides both the icon *and* its `tetherTextField` label depending on whether the name is non-empty.
 - **ExternalInterface calls (out):**
   - `"OnConsoleFrameEntered"` — notifies engine when the console frame is reached.
   - `"OnMapClicked"(x, y, w, h)` — fired on mouse click or console button-A within the texture bounds, with local coords and texture dimensions.
@@ -75,11 +78,12 @@
 
 ## Other game-specific classes
 
-- `TroveHub` (extends `UIComponent`, embeds `symbol49`) — hub-area overlay showing `LabelButton` entries for Statue, Club, Event, Character, Quest, Crafting, Leaderboard, and Battle sections; labels set from `$WorldMap_Trove_*` translate keys via `IggyFunctions.translate()`.
+- `TroveHub` (extends `UIComponent`, embeds `symbol50`) — hub-area overlay showing `LabelButton` entries for Statue, Club, Event, Character, Quest, Crafting, Leaderboard, and Battle sections; labels set from `$WorldMap_Trove_*` translate keys via `IggyFunctions.translate()`.
 - `ExternalArt` (extends `ObjectPreview`, embeds `symbol29`) — generic dynamic art placeholder used for the tether icon in the legend.
+- `btn_console_analog_top_left` (extends `MovieClip`, embeds `symbol13`) — analog-stick button glyph from the shared console button set, pulled into this SWF's library for the console legend.
 - `dummy` (extends `BitmapData`, embeds `1_dummy.png`) — 48×48 placeholder bitmap asset.
-- **`Map_fla/instructionsContainer_14`** (extends `MovieClip`, embeds `symbol73`) — two-frame symbol (frame 1 = PC, frame 11 = Console) containing a single `textField`; used as the `instructions` clip.
-- **`Map_fla/map_legend_console_43`** (extends `MovieClip`, embeds `symbol202`) — two-frame symbol holding all legend icon `MovieClip`s, label `TextField`s, the `tetherIcon : ExternalArt`, console buttons (`btn_selectzone`, `btn_TerraformZone`, `btn_closemap`), and the `legend` resize clip.
+- **`Map_fla/instructionsContainer_14`** (extends `MovieClip`, embeds `symbol74`) — two-frame symbol (frame 1 = PC, frame 11 = Console) containing a single `textField`; used as the `instructions` clip.
+- **`Map_fla/map_legend_console_43`** (extends `MovieClip`, embeds `symbol203`) — two-frame symbol holding all legend icon `MovieClip`s, label `TextField`s, the `tetherIcon : ExternalArt` and `tetherTextField`, console buttons (`btn_selectzone`, `btn_TerraformZone`, `btn_closemap`), and the `legend` resize clip.
 - `battle_label`, `character_label`, `club_label`, `crafting_label`, `event_label`, `leaderboard_label`, `quest_label`, `statue_label` — 8 named `LabelButton` subclasses (each embeds a distinct symbol), used as the interactive labels inside `TroveHub`.
 
 ---

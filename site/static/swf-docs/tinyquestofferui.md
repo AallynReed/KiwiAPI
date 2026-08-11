@@ -2,7 +2,7 @@
 > The Tiny Quest offer/accept dialog shown when a player opens a Tiny Quest for review. It displays the quest title, difficulty star rating, required and reward item slots (paired pet/gear slots), XP and Flux cost, tag-filter buttons for selecting gear stats, and Accept / Insta-Complete / Consume action buttons.
 
 **Document/main class:** `TinyQuestOfferUI` (extends `_kiwi.Core.UIComponent`) — no top-level embed; header title key `$TinyQuestUI`
-**SWF-specific classes:** 13
+**SWF-specific classes:** 20 (+ 7 `TinyQuestOfferUI_fla` timeline symbols)
 
 ---
 
@@ -12,7 +12,7 @@
 
 ### Public methods
 
-- `setQuestTitleName(name:String) : *` — writes `name` to `tinyQuestHeader.questIDText.text`.
+- `setQuestTitleName(name:String) : *` — assigns `name` to `tinyQuestHeader.questIDText.questName`. `questIDText` is a `QuestTitle` clip, so the setter takes HTML and auto-shrinks the font (25 pt downwards) until the title fits two lines, then re-centres it vertically against `backgroundA`.
 - `setQuestIcon(icon:String) : *` — sets `tinyQuestHeader.slot.iconImage`; hides the slot frame border.
 - `setQuestLevel(level:int) : *` — stores `questDifficultyLevel` and updates `tinyQuestHeader.questLevelText`.
 - `setQuestDesc(desc:String) : *` — stores `questDesc` for the info popup tooltip.
@@ -31,10 +31,12 @@
 - `setSlotBlueprint(slotIndex:int, imagePath:String) : void` — sets `forceIconImage` on the gear or item slot; toggles `BGIconController` visibility and manages the cross (invalid-item) indicator.
 - `setPetSlotFrame(slotIndex:int, frameIndex:int) : void` — drives the slot border to one of `["default","synergy","underlevel","required","underlvlSynergy"]` frame labels.
 - `setTagButtons(count:int) : void` — creates `count` `StatFilterObj` filter buttons positioned left of `TagFilterPosition`.
-- `setTargetTagButtonsStat(btnIdx:int, tagInt:int, textureName:String, title:String, desc:String) : void` — populates a stat-type filter button.
-- `setTargetTagButtonsTag(btnIdx:int, tagStr:String, textureName:String, title:String, desc:String) : void` — populates a tag-string filter button (sets `tagInt = -1`).
+- `setTargetTagButtonsStat(btnIdx:int, tagInt:int, textureName:String, title:String, desc:String) : void` — populates a stat-type filter button, records `buttonId`, and hides the button's blue (active) skin.
+- `setTargetTagButtonsTag(btnIdx:int, tagStr:String, textureName:String, title:String, desc:String) : void` — populates a tag-string filter button. Both setters now assign `tagInt = btnIdx`; neither uses the old `-1` sentinel, so the engine distinguishes stat from tag filters by whether `tagStr` is set.
 - `applyFilter(btnIndex:int) : void` — programmatically dispatches a `CLICK` on the specified tag button.
 - `selectSlot(slotIndex:int) : void` — programmatically dispatches a `CLICK` on a pet or item slot.
+- `goToNextPetSlot(slotIndex:int) : void` — console only; forwards straight to `ExternalInterface.call("SLOT.ACTIVATE", slotIndex)` so the engine can advance the highlighted slot.
+- `onSelectionActivated(slotIndex:int) : void` — console only; routes an activated selection to either `SLOT.PET.ACTIVATE` (index within `gearSlotArray`) or `SLOT.ITEM.ACTIVATE` (index minus `itemOffset`, within `itemSlotArray`). Index `0` is ignored.
 - `focusSlot(slotIndex:int) : void` — console only: highlights the target slot and triggers the accept-button tooltip via `ExternalInterface`.
 - `focusToggleFilter(filterIndex:int) : void` — console only: shows the highlight only on the indicated tag button.
 - `clearFocus() : void` — hides all slot and tag-button highlights.
@@ -58,7 +60,8 @@
 ### Key fields
 
 - `m_header : WindowHeaderSmall` — window title bar; title key `"$TinyQuestUI"`, enabled=false (non-interactive header).
-- `tinyQuestHeader : MovieClip` — sub-clip containing `questIDText`, `questLevelText`, `durationText`, `slot` (quest icon), `questDifficultyIcon`, `infoBtn`, `infoPopup`.
+- `tinyQuestHeader : MovieClip` — sub-clip containing `questIDText` (a `QuestTitle`), `questLevelText`, `durationText`, `slot` (quest icon), `questDifficultyIcon`, `infoBtn`, and `infoPopup` (an `InfoPopup`).
+- `tinyQuestRewards : MovieClip` — stage instance holding the reward strip; positioned on the timeline and not manipulated by the document class.
 - `xpHeader : MovieClip` — XP display area with `xpText`, `qubeslyXpIcon` (tooltip trigger), `highlight`.
 - `costTotal : MovieClip` — Flux cost display with `costText`, `iconFlux` (tooltip trigger), `highlight`.
 - `tinyQuestCost : MovieClip` — cost breakdown with `baseFee` and `alliesFee` text fields.
@@ -77,9 +80,13 @@
 - `questDesc : String` — cached quest description HTML for the info popup.
 - `questDifficultyLevel : int` — cached numeric difficulty level.
 - `slotSize_large : int = 77` — slot pixel size used in `setSlotSize()` calls.
+- `slotSize_mid : int = 65` — smaller slot size; declared but not currently referenced.
 - `itemOffset : int = 7` — data ID offset separating pet slots (1–6) from item slots (8+).
 - `rewardOffset : int = 16` — data ID offset for reward slots.
 - `requiredOffset : int = 21` — data ID offset for required slots.
+- `itemPositionOffset_X / itemPositionOffset_Y : int = 35` — pixel offset applied to each item slot; the paired gear slot is placed back at the un-offset position, so the two slots sit diagonally staggered rather than overlapping.
+- `buttonId : int = -1` — index of the tag button most recently populated by `setTargetTagButtonsStat`, stored as `tagButtons.length + btnIdx`.
+- `_showSwitchScreensButtonLegend : Boolean = false` — reserved flag for the console screen-switch legend; not currently read.
 
 ### Frame scripts / timeline
 
@@ -89,7 +96,7 @@
 
 ### Runtime dependencies & integration
 
-- `ExternalInterface.addCallback` — 38 callbacks registered; game engine drives all data population.
+- `ExternalInterface.addCallback` — 44 callbacks registered; game engine drives all data population.
 - `ExternalInterface.call` outbound:
   - `"onQuestAccept"`, `"onQuestConsume"`, `"onQuestAcceptAndComplete"` — button action results.
   - `"ToggleFilter"(tagInt, tagStr, isActive)` — stat/tag filter toggle.
@@ -107,35 +114,42 @@
 
 ## Other game-specific classes
 
-- `PetSlot` — Embeds `symbol87`; paired slot container with a `slot_large` (`slot`), `SlotIconController` (`BGIconController`), and a `cross` MovieClip (hidden by default). Used for both pet (head icon) and item (bag icon) modes.
-- `SlotIconController` — Embeds `symbol47`; switches between `head` (pet) and `bag` (item) sub-clips via `PetMode()`, `ItemMode()`, `Hide()`, `Show()`.
-- `StatFilterObj` — Embeds `symbol15`; toggle filter button combining a `LabelButton` (`button`), an `ObjectPreview` image, `highlight` clip, and string/int tag metadata (`tagStr`, `tagInt`, `tagTitle`, `tagDesc`, `isActive`).
-- `RewardObject` — Embeds `symbol38`; reward slot container with a `Slot` and `CountText` field.
-- `RequiredObject` — Embeds `symbol40`; required-item slot container with a `Slot` and `CountText` field.
-- `slot_large` — Embeds `symbol83`; concrete `Slot` subclass used inside `PetSlot`.
-- `btnGreen` — Embeds `symbol12`; green `LabelButton` skin with 4 stop-frames (up/over/down/disabled at frames 10/20/30/40).
-- `btnAutoAcceptComplete` — Embeds `symbol104`; `BaseButton` skin for the insta-complete button, same 4-stop-frame layout.
-- `Hat` — Embeds `symbol90`; decorative hat overlay placed on the first gear slot.
-- `art` — Embeds `symbol31`; plain `ArtClip` background/panel art asset.
+- `PetSlot` — Embeds `symbol89`; paired slot container with a `slot_large` (`slot`), `SlotIconController` (`BGIconController`), and a `cross` MovieClip (hidden by default). Used for both pet (head icon) and item (bag icon) modes — `setSlotNumber` instantiates it twice per row.
+- `ItemSlot` — Embeds `symbol92`; structurally identical twin of `PetSlot` (`slot`, `BGIconController`, `cross`). Exported for linkage but never instantiated by the document class, which still uses `PetSlot` in item mode.
+- `SlotIconController` — Embeds `symbol51`; switches between `head` (pet) and `bag` (item) sub-clips via `PetMode()`, `ItemMode()`, `Hide()`, `Show()`.
+- `StatFilterObj` — Embeds `symbol19`; toggle filter button carrying **two** `LabelButton` skins — `button` (grey, shown when inactive) and `btnBlue` (shown when active) — plus an `ObjectPreview` image, `highlight` clip, and string/int tag metadata (`tagStr`, `tagInt`, `tagTitle`, `tagDesc`, `isActive`). `FixVisibility()` swaps which skin is visible. Both skins are configured as `toggle` buttons with empty labels and tooltips.
+- `QuestTitle` — Embeds `symbol122`; the quest-name plate (`txt_questName`, `backgroundA`). Its `questName` setter accepts HTML and steps the point size down from 25 until the text fits within two lines and the original field height, then vertically centres it.
+- `InfoPopup` — Embeds `symbol117`; the quest-description tooltip. A three-slice background (`bgStart` / `bgBody` / `bgEnd`) plus `textField`; `FixSize()` grows `bgBody` to the measured text height and pushes `bgEnd` below it.
+- `RewardObject` — Embeds `symbol42`; reward slot container with a `Slot` and `CountText` field.
+- `RequiredObject` — Embeds `symbol44`; required-item slot container with a `Slot` and `CountText` field.
+- `slot_large` — Embeds `symbol87`; concrete `Slot` subclass used inside `PetSlot` and `ItemSlot`.
+- `btnGreen` — Embeds `symbol102`; green `LabelButton` skin with 4 stop-frames (up/over/down/disabled at frames 10/20/30/40).
+- `BtnEmbark` — Embeds `symbol148`; `LabelButton` skin for the quest Embark action, same 4-stop-frame layout.
+- `btnVoucher` — Embeds `symbol150`; `LabelButton` skin for the voucher action, same 4-stop-frame layout.
+- `btnStat` — Embeds `symbol13`; the inactive (grey) `LabelButton` skin behind `StatFilterObj.button`; 5 stop-frames at 10/20/30/40/50.
+- `btnStatBlue` — Embeds `symbol17`; the active (blue) counterpart behind `StatFilterObj.btnBlue`; same 5-stop-frame layout.
+- `btnAutoAcceptComplete` — Embeds `symbol136`; `BaseButton` skin for the insta-complete button, 4-stop-frame layout.
+- `Hat` — Embeds `symbol105`; decorative hat overlay placed on the first gear slot.
+- `art` — Embeds `symbol33`; plain `ArtClip` background/panel art asset.
 - Asset wrappers (2 bitmap classes): `dummy` (52×52 placeholder PNG), `rarity_frame_normal_large_over_png` (76×76 slot hover overlay).
 
 ### `TinyQuestOfferUI_fla` package (timeline symbol classes)
 
-- `buttonLegend_29` — Embeds `symbol193`; console button legend clip with sub-clips `consoleButtonConsume`, `consoleButtonEmbark`, `primaryAction`, `consoleButtonInstaComplete`; stops on frame 1.
-- `slotFrameLarge_36` — Embeds `symbol62`; large slot border with 5 labeled stop-frames (default/synergy/underlevel/required/underlvlSynergy) and a `highlightCircle` sub-clip.
-- `slotFrame_18` — Embeds `symbol24`; smaller slot frame with 3 stop-frames.
-- `quest_difficulty_icon_16` — Embeds `symbol171`; 6-state difficulty icon (6 stop-frames × 10 frames each), driven by `gotoAndStop("1star"/"3star"/"5star")`.
-- `btnInfo2_27` — Embeds `symbol183`; info-button skin with 4 stop-frames (up/over/down/disabled).
-- `equipped_39` — Embeds `symbol66`; 2-frame equipped indicator (frame 1 = hidden, frame 2 = shown).
-- `qualityPips_43` — Embeds `symbol81`; quality pip indicator; stops on frame 1.
+- `buttonLegend_40` — Embeds `symbol245`; console button legend clip with sub-clips `consoleButtonConsume`, `consoleButtonEmbark`, `primaryAction`, `consoleButtonInstaComplete`; stops on frame 1.
+- `slotFrameLarge_49` — Embeds `symbol66`; large slot border with 5 labeled stop-frames (default/synergy/underlevel/required/underlvlSynergy) and a `highlightCircle` sub-clip.
+- `slotFrame_27` — Embeds `symbol26`; smaller slot frame with 3 stop-frames.
+- `quest_difficulty_icon_23` — Embeds `symbol228`; 6-state difficulty icon (6 stop-frames × 10 frames each), driven by `gotoAndStop("1star"/"3star"/"5star")`.
+- `btnInfo2_39` — Embeds `symbol235`; info-button skin with 4 stop-frames (up/over/down/disabled).
+- `equipped_52` — Embeds `symbol70`; 2-frame equipped indicator (frame 1 = hidden, frame 2 = shown).
+- `qualityPips_56` — Embeds `symbol85`; quality pip indicator; stops on frame 1.
 
 ---
 
 ## Notable logic
 
 - **Slot data ID scheme**: gear slots use IDs `1..gearCount`, item slots `itemOffset+1..itemOffset+count` (offset 7), reward slots start at `rewardOffset+1` (17), required slots at `requiredOffset+1` (22). The engine uses these IDs to refer back to specific slots via `onSlotEnter`/`onSlotLeave`.
-- **Dual-row slot layout**: `setSlotNumber` distributes up to 4 slots on the `Start1→End1` segment then switches to `Start2→End2` for a third row, using linear interpolation with `_loc11_` as the divisor.
-- **Tag filter glow**: clicking an active `StatFilterObj` applies an inner black `GlowFilter` (blur 20, alpha 1, strength 1, quality 2) as the active visual; deactivating removes all filters.
+- **Dual-row slot layout**: `setSlotNumber` distributes up to 4 slots on the `Start1→End1` segment then switches to `Start2→End2` for a second run, using linear interpolation with a divisor of 3 (first row) or 2 (second row). Each row places an item slot at the interpolated point plus `itemPositionOffset_X/Y` (35, 35) and its paired gear slot back at the un-offset point, so the pet and item slots sit diagonally staggered.
+- **Tag filter skin swap**: the active state of a `StatFilterObj` is now a skin swap, not a filter — `FixVisibility()` hides the grey `btnStat` skin and shows the blue `btnStatBlue` one (plus the `highlight` clip). The old inner-glow treatment is gone; only a vestigial `filters = []` clear remains on deactivation. On console, both skins are stepped between the `"up"` and `"down"` frame labels in lockstep.
 - **Ally cost coloring**: `alliesFee` text is colored orange-gold (`0xFBAADC` — actually `0xFBAADC` hex ≈ pink, integer `16487452`) when the ally discount is positive (surcharge), white when zero or negative.
 - **Console button legend**: the `buttonLegend` clip stays hidden until `onTargetFrame()` signals readiness via the `ENTER_FRAME` loop, then the listener is removed. On frame 20 the legend is positioned to `"ConsoleLoc"`.
 - **`setAcceptButtonText` prefix**: the label is prefixed with `"/t "`, suggesting a tab-stop or translate-token convention consumed by the `LabelButton` renderer.

@@ -485,7 +485,7 @@
         {
           "swf": "map.swf",
           "file": "map.md",
-          "size": "231 KB",
+          "size": "274 KB",
           "mainClass": "Map",
           "summary": "The in-game world map overlay, displaying a texture of the current zone with a dynamic legend that shows which point-of-interest categories are present. It appears when the player opens the map (M key or console equivalent) and optionally supports a zone-select / terraform mode for club worlds."
         },
@@ -554,7 +554,7 @@
         {
           "swf": "tinyquestofferui.swf",
           "file": "tinyquestofferui.md",
-          "size": "392 KB",
+          "size": "414 KB",
           "mainClass": "TinyQuestOfferUI",
           "summary": "The Tiny Quest offer/accept dialog shown when a player opens a Tiny Quest for review. It displays the quest title, difficulty star rating, required and reward item slots (paired pet/gear slots), XP and Flux cost, tag-filter buttons for selecting gear stats, and Accept / Insta-Complete / Consume action buttons."
         },
@@ -643,7 +643,7 @@
         {
           "swf": "navigationmenu.swf",
           "file": "navigationmenu.md",
-          "size": "260 KB",
+          "size": "261 KB",
           "mainClass": "NavigationMenu",
           "summary": "The persistent navigation tray and expandable full-screen menu that lets players open any major game window (Store, Character, Inventory, Classes, Clubs, Friends, etc.). The tray is always visible in-game; the grid menu expands on demand and supports both mouse/keyboard and console D-pad navigation."
         },
