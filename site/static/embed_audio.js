@@ -34,9 +34,15 @@
     });
   }
 
+  /* Game audio is mostly sub-second: a bank of footsteps and UI clicks rendered
+     as m:ss is a column of "0:00", which reads as broken rather than as short. So
+     anything under a minute is shown in seconds to one decimal, and m:ss is kept
+     for the music that actually needs it. */
   function clock(seconds) {
-    var s = Math.max(0, Math.round(Number(seconds) || 0));
-    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    var s = Math.max(0, Number(seconds) || 0);
+    if (s < 60) return (Math.round(s * 10) / 10).toFixed(1) + 's';
+    var whole = Math.round(s);
+    return Math.floor(whole / 60) + ':' + String(whole % 60).padStart(2, '0');
   }
 
   function spec(sound) {
@@ -137,11 +143,16 @@
       var tag = sound.error
         ? '<span class="kv-snd-bad">can’t decode</span>'
         : '<span class="kv-snd-codec">' + esc(sound.codec || '') + '</span>';
+      // The Wwise object path is a genuinely useful tooltip and a terrible name -
+      // it's 120 characters of container hierarchy, and on the BUTTON it becomes
+      // what a screen reader announces instead of the sound. So it hangs off the
+      // label, and the button says the sound's name and nothing else.
       return '<button type="button" class="kv-snd" data-id="' + sound.id + '"'
         + (sound.error ? ' disabled' : '')
-        + ' title="' + esc(sound.path || label) + '">'
+        + ' aria-label="Play ' + esc(label) + '">'
         + '<span class="kv-snd-glyph">' + ICONS.play + '</span>'
-        + '<span class="kv-snd-name">' + esc(label) + '</span>'
+        + '<span class="kv-snd-name" title="' + esc(sound.path || label) + '">'
+        + esc(label) + '</span>'
         + tag
         + '<span class="kv-snd-dur">' + esc(clock(sound.duration)) + '</span>'
         + '</button>';
@@ -170,8 +181,11 @@
         rows[i].classList.toggle('playing', on && !el.paused);
         if (on) rows[i].setAttribute('aria-current', 'true');
         else rows[i].removeAttribute('aria-current');
-        rows[i].querySelector('.kv-snd-glyph').innerHTML =
-          (on && !el.paused) ? ICONS.pause : ICONS.play;
+        var live = on && !el.paused;
+        rows[i].querySelector('.kv-snd-glyph').innerHTML = live ? ICONS.pause : ICONS.play;
+        // The row IS the play/pause toggle, so its name has to follow what it does.
+        var label = rows[i].querySelector('.kv-snd-name').textContent;
+        rows[i].setAttribute('aria-label', (live ? 'Pause ' : 'Play ') + label);
       }
     }
 
