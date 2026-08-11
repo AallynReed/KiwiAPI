@@ -125,5 +125,7 @@
 
     <!-- The shared <select> replacement. Loaded here rather than per page: the
          navbar is on every page that has a dropdown, so this is the one include
-         that guarantees a new page gets it without anyone remembering to. -->
+         that guarantees a new page gets it without anyone remembering to. The
+         embeddable viewer has no navbar and pulls both files in itself. -->
+    <link rel="stylesheet" href="/static/dropdown.min.css">
     <script src="/static/dropdown.min.js" defer></script>

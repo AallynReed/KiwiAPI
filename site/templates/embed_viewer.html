@@ -10,6 +10,11 @@
      inherits nothing. Framing is controlled by embed.allowed_origins (CSP
      frame-ancestors, applied in app/core/middleware.py). #}
   <link rel="stylesheet" href="/static/embed_viewer.css">
+  <!-- The shared <select> replacement. Every other page gets this from the
+       navbar; this one has none, so it pulls both files in itself. The
+       component's colours resolve through --kv-* here, so it follows the
+       viewer's light/dark theme rather than assuming the main site's dark. -->
+  <link rel="stylesheet" href="/static/dropdown.min.css">
   <link rel="icon" href="/static/favicon.ico">
 </head>
 <body>
@@ -54,6 +59,7 @@
   <script src="/static/model_viewer.min.js" defer></script>
   <script type="module" src="/static/pkfx/vfx_viewer.js"></script>
   <script src="/static/embed_audio.min.js" defer></script>
+  <script src="/static/dropdown.min.js" defer></script>
   <script src="/static/embed_viewer.min.js" defer></script>
 </body>
 </html>

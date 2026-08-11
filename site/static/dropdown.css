@@ -1,0 +1,143 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Dropdown - the shared replacement for every <select>
+   ───────────────────────────────────────────────────────────────────────
+   A native select paints its open list with the operating system, which on
+   a dark page means light text on a white popup and nothing CSS can reach.
+   dropdown.js keeps the real <select> (hidden, still the value) and draws
+   this in its place, copying the select's own classes onto the trigger so
+   whatever a page already styled carries straight over.
+
+   Colours resolve through the site tokens first and the embeddable
+   viewer's second, so the control follows whichever theme it lands in
+   rather than assuming a dark one.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.btt-dd {
+  /* No box of its own: the trigger takes the select's place in the layout,
+     so a flex/grid parent keeps sizing the control it was written for. */
+  display: contents;
+}
+
+/* Kept for the value, for form submission, and for anyone without JS. */
+.btt-dd-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Paint sits in :where() so it carries ZERO specificity. The trigger wears the
+   select's own classes, and those rules have to win whichever stylesheet the
+   browser happens to load first - otherwise moving this file changes how ten
+   pages look. This is the fallback for a select nothing styled by class. */
+:where(.btt-dd-trigger) {
+  padding: 8px 12px;
+  border: 1px solid var(--bg-line, var(--kv-line, #1f2733));
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg-card, var(--kv-surface, #131922));
+  color: var(--text, var(--kv-ink, #e6edf3));
+  font: inherit;
+  font-size: .86rem;
+}
+
+/* Structure, not paint: a <button> has to be told to lay out like a field, and
+   no page sets these on one - so they keep normal weight. */
+.btt-dd-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.btt-dd-trigger:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--accent-blue, var(--kv-accent, #58a6ff)) 45%, transparent);
+}
+.btt-dd-trigger:focus-visible {
+  outline: 2px solid var(--accent-blue, var(--kv-accent, #58a6ff));
+  outline-offset: 2px;
+}
+.btt-dd-trigger:disabled { opacity: .5; cursor: default; }
+
+.btt-dd-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btt-dd.is-placeholder .btt-dd-value { color: var(--text-mute, var(--kv-mute, #9aa4b2)); }
+
+/* Drawn rather than iconographic, so the control never waits on a font. */
+.btt-dd-caret {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  rotate: 45deg;
+  translate: 0 -2px;
+  opacity: .6;
+  transition: rotate 140ms ease, translate 140ms ease;
+}
+.btt-dd.is-open .btt-dd-caret { rotate: 225deg; translate: 0 2px; }
+
+/* Lives on <body> while open, so a scrolling card or a modal can't clip it. */
+.btt-dd-panel {
+  position: fixed;
+  z-index: 900;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 5px;
+  border: 1px solid var(--bg-line, var(--kv-line, #1f2733));
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg-card, var(--kv-surface, #131922));
+  box-shadow: 0 14px 40px rgba(0,0,0,.45);
+  scrollbar-width: thin;
+}
+.btt-dd-panel[hidden] { display: none; }
+
+.btt-dd-option {
+  padding: 7px 10px;
+  border-radius: 7px;
+  color: var(--text, var(--kv-ink, #e6edf3));
+  font-size: .86rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* Hover and keyboard share one highlight - two competing ones is how you end
+   up unsure which entry Enter will take. */
+.btt-dd-option.is-active {
+  background: color-mix(in oklab, var(--accent-blue, var(--kv-accent, #58a6ff)) 20%, transparent);
+}
+.btt-dd-option.is-selected { font-weight: 600; }
+.btt-dd-option.is-selected::after {
+  content: "";
+  float: right;
+  width: 5px;
+  height: 9px;
+  margin: 3px 0 0 12px;
+  border-right: 2px solid var(--accent-blue, var(--kv-accent, #58a6ff));
+  border-bottom: 2px solid var(--accent-blue, var(--kv-accent, #58a6ff));
+  rotate: 45deg;
+}
+.btt-dd-option[aria-disabled="true"] { opacity: .45; cursor: default; }
+
+.btt-dd-grouplabel {
+  padding: 8px 10px 4px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-mute, var(--kv-mute, #9aa4b2));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btt-dd-caret { transition: none; }
+}
