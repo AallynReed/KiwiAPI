@@ -974,7 +974,7 @@
     _modalPrevFocus = document.activeElement;
     if ($detailFile.parentNode !== $detailModalSlot) $detailModalSlot.appendChild($detailFile);
     $detailModal.hidden = false;
-    document.body.classList.add('up-modal-open');
+    syncBodyLock();
     document.addEventListener('keydown', onDetailModalKey, true);
     // Focus the dialog so Escape/Tab are captured and screen readers announce it.
     ($detailModalCard || $detailModal).focus();
@@ -983,7 +983,7 @@
   function closeDetailModal() {
     _detailModalOpen = false;
     $detailModal.hidden = true;
-    document.body.classList.remove('up-modal-open');
+    syncBodyLock();
     document.removeEventListener('keydown', onDetailModalKey, true);
     // Return the detail node to its inline home (after the empty-state div).
     if ($detailFile.parentNode !== $detail) $detail.appendChild($detailFile);
@@ -994,9 +994,9 @@
   }
 
   function onDetailModalKey(e) {
-    // The asset gallery stacks on top of this dialog; while it's up it owns the
+    // The asset gallery takes over from this dialog; while it's up it owns the
     // keyboard, or one Escape would close both.
-    if (!$swfModal.hidden || !$assetModal.hidden) return;
+    if (_swfOpen || _assetOpen) return;
     if (e.key === 'Escape') { e.preventDefault(); dismissDetail(); return; }
     if (e.key !== 'Tab') return;
     // Keep focus inside the dialog (WCAG dialog pattern).
@@ -1029,12 +1029,25 @@
   let _swfPath = null;
   let _swfAssets = [];
   let _swfToken = 0;
+  let _swfOpen = false;
+  let _assetOpen = false;
+  let _swfHidDetail = false;
   let _swfPrevFocus = null;
   let _assetPrevFocus = null;
 
   function swfAssetUrl(path, id, thumb) {
     const q = `path=${encodeURIComponent(path)}&id=${id}${thumb ? '&thumb=1' : ''}`;
-    return `/site/updates/${state.branch}/file/swf/asset?${q}`;
+    // Must be absolute. _site_util only rewrites fetch()/XHR onto the API origin;
+    // an <img src> / <a href> is a plain resource load, so a bare /site/ path would
+    // hit the website host, which has no data plane.
+    return apiUrl(`/site/updates/${state.branch}/file/swf/asset?${q}`);
+  }
+
+  // Body scroll stays locked while ANY of the stacked dialogs is up.
+  function syncBodyLock() {
+    document.body.classList.toggle(
+      'up-modal-open', _detailModalOpen || _swfOpen || _assetOpen,
+    );
   }
 
   async function openSwfGallery(path) {
@@ -1047,8 +1060,14 @@
     $swfFilter.value = '';
     $swfZip.disabled = true;
     $swfBody.innerHTML = `<p class="up-loading">${esc(t('Loading…'))}</p>`;
+    // One dialog at a time. In grid view the file detail is itself a modal, and
+    // stacking the gallery on top of it just looks broken - tuck it away and put
+    // it back when the gallery closes, so the file stays where the user left it.
+    _swfHidDetail = _detailModalOpen && !$detailModal.hidden;
+    if (_swfHidDetail) $detailModal.hidden = true;
+    _swfOpen = true;
     $swfModal.hidden = false;
-    document.body.classList.add('up-modal-open');
+    syncBodyLock();
     document.addEventListener('keydown', onSwfKey, true);
     ($swfCard || $swfModal).focus();
 
@@ -1103,18 +1122,24 @@
 
   function closeSwfGallery() {
     _swfToken++;
+    _swfOpen = false;
     $swfModal.hidden = true;
     document.removeEventListener('keydown', onSwfKey, true);
-    if ($assetModal.hidden) document.body.classList.remove('up-modal-open');
     $swfBody.innerHTML = '';
-    if (_swfPrevFocus && typeof _swfPrevFocus.focus === 'function') {
+    // Bring the file detail back up if we displaced it on the way in.
+    const restore = _swfHidDetail && _detailModalOpen;
+    _swfHidDetail = false;
+    if (restore) $detailModal.hidden = false;
+    syncBodyLock();
+    if (restore) ($detailModalCard || $detailModal).focus();
+    else if (_swfPrevFocus && typeof _swfPrevFocus.focus === 'function') {
       try { _swfPrevFocus.focus(); } catch (_) {}
     }
     _swfPrevFocus = null;
   }
 
   function onSwfKey(e) {
-    if (!$assetModal.hidden) return;          // the full-size view is on top
+    if (_assetOpen) return;                   // the full-size view is on top
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeSwfGallery(); return; }
     if (e.key === 'Tab') trapFocus(e, $swfModal);
   }
@@ -1129,20 +1154,27 @@
     $assetImg.src = swfAssetUrl(_swfPath, asset.id, false);
     $assetMeta.textContent =
       `${asset.width}×${asset.height} · ${formatBytes(asset.bytes)} · ${asset.source} (${asset.codec})`;
+    // The href keeps this a real link (middle-click, open in new tab), but the
+    // `download` attribute is ignored cross-origin - and the asset lives on the API
+    // origin - so the click handler saves it through a blob instead.
     $assetDl.href = swfAssetUrl(_swfPath, asset.id, false);
     $assetDl.download = `${asset.id}_${(asset.name || 'asset').replace(/[^\w.-]+/g, '_')}`
       + (asset.mime === 'image/jpeg' ? '.jpg' : asset.mime === 'image/gif' ? '.gif' : '.png');
+    _assetOpen = true;
+    if (_swfOpen) $swfModal.hidden = true;     // same one-dialog-at-a-time rule
     $assetModal.hidden = false;
-    document.body.classList.add('up-modal-open');
+    syncBodyLock();
     document.addEventListener('keydown', onAssetKey, true);
     ($assetCard || $assetModal).focus();
   }
 
   function closeAssetView() {
+    _assetOpen = false;
     $assetModal.hidden = true;
     document.removeEventListener('keydown', onAssetKey, true);
     $assetImg.removeAttribute('src');
-    if ($swfModal.hidden) document.body.classList.remove('up-modal-open');
+    if (_swfOpen) $swfModal.hidden = false;    // back to the grid we came from
+    syncBodyLock();
     if (_assetPrevFocus && typeof _assetPrevFocus.focus === 'function') {
       try { _assetPrevFocus.focus(); } catch (_) {}
     }
@@ -1152,6 +1184,28 @@
   function onAssetKey(e) {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeAssetView(); return; }
     if (e.key === 'Tab') trapFocus(e, $assetModal);
+  }
+
+  // Save a cross-origin file under a chosen name. `<a download>` only honours the
+  // name same-origin, so pull the bytes down and hand the browser a blob instead.
+  async function saveCrossOrigin(url, filename) {
+    let blob;
+    try {
+      const res = await fetch(url, { credentials: 'omit' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      blob = await res.blob();
+    } catch (_) {
+      window.open(url, '_blank', 'noopener');    // fall back to just showing it
+      return;
+    }
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = filename || 'asset';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 1000);
   }
 
   // Keep Tab inside a dialog (WCAG dialog pattern).
@@ -1670,8 +1724,8 @@
     $swfFilter.addEventListener('input', renderSwfGrid);
     $swfZip.addEventListener('click', () => {
       if (!_swfPath) return;
-      window.location.href =
-        `/site/updates/${state.branch}/file/swf/zip?path=${encodeURIComponent(_swfPath)}`;
+      window.location.href = apiUrl(
+        `/site/updates/${state.branch}/file/swf/zip?path=${encodeURIComponent(_swfPath)}`);
     });
     $swfBody.addEventListener('click', (e) => {
       const tile = e.target.closest('[data-asset-id]');
@@ -1679,6 +1733,11 @@
     });
     $assetClose.addEventListener('click', closeAssetView);
     $assetBackdrop.addEventListener('click', closeAssetView);
+    $assetDl.addEventListener('click', (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;   // let the link be a link
+      e.preventDefault();
+      saveCrossOrigin($assetDl.href, $assetDl.download);
+    });
 
     // View toggle (list ↔ grid gallery).
     if ($viewToggle) {
