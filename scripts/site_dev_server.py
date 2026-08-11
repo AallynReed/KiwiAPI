@@ -1649,6 +1649,35 @@ class Handler(SimpleHTTPRequestHandler):
                 "animations": ["unarmed_idle", "unarmed_walk_forward", "unarmed_run_forward",
                                "unarmed_dance", "unarmed_idle_1"],
             })
+        # Sound banks bundled in a release - the same stub bank the embed viewer
+        # gets, so the release page's player is exercisable locally too.
+        if path.startswith("/site/mods/releases/") and path.endswith("/audio"):
+            return self._send_json({
+                "items": [{"path": "audio/dev_bank.bnk", "size": 4096},
+                          {"path": "audio/dev_music.bnk", "size": 812000}],
+            })
+        if path.startswith("/site/mods/releases/") and path.endswith("/audio/bank"):
+            return self._send_json({
+                "path": (parse_qs(url.query).get("path") or ["audio/dev_bank.bnk"])[0],
+                "bank": {"version": 128, "bank_id": 1, "sections": ["BKHD", "DIDX", "DATA"],
+                         "objects": len(_DEV_SOUNDS), "events": 0},
+                "sounds": _DEV_SOUNDS,
+                "count": len(_DEV_SOUNDS),
+                "playable": sum(1 for s in _DEV_SOUNDS if not s["error"]),
+                "total_duration": round(sum(s["duration"] for s in _DEV_SOUNDS), 1),
+            })
+        if path.startswith("/site/mods/releases/") and path.endswith("/audio/sound"):
+            want = (parse_qs(url.query).get("id") or ["0"])[0]
+            sound = next((s for s in _DEV_SOUNDS if str(s["id"]) == want), None)
+            if sound is None or sound["error"]:
+                return self._send_json({"error": {"message": "No such sound."}}, 404)
+            wav = _dev_tone_wav(sound["duration"], 180 + (sound["id"] % 7) * 90)
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/wav")
+            self.send_header("Content-Length", str(len(wav)))
+            self.send_header("Cache-Control", "public, max-age=60")
+            self.end_headers()
+            return self.wfile.write(wav)
         # Serve the pre-baked assembled spider so the model viewer can be previewed.
         if path.startswith("/site/mods/releases/") and path.endswith("/assembled"):
             mp = STATIC / "models" / "companion_spidermonkey.model.json"

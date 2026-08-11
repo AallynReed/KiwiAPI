@@ -597,6 +597,7 @@
       <div class="mp-release-changelog" data-rel-changelog="${esc(r.id)}"${local(r.changelog, r.changelog_i18n) ? '' : ' hidden'}>${esc(local(r.changelog, r.changelog_i18n))}</div>
       ${r.format !== 'zip' ? `<div class="mp-release-3d" data-rel-bp="${esc(r.id)}" hidden></div>` : ''}
       ${r.format !== 'zip' ? `<div class="mp-release-vfx" data-rel-vfx="${esc(r.id)}" hidden></div>` : ''}
+      ${r.format !== 'zip' ? `<div class="mp-release-audio" data-rel-audio="${esc(r.id)}" hidden></div>` : ''}
     </div>`;
   }
 
@@ -1203,6 +1204,7 @@
       b.addEventListener('click', () => openAttachConfig(b.getAttribute('data-rel-cfgset'))));
     loadReleaseBlueprints();
     loadReleaseVfx();
+    loadReleaseAudio();
     loadReleaseCfgs();
   }
 
@@ -1519,6 +1521,45 @@
           });
         }));
       } catch (e) { /* a release without parseable VFX just stays hidden */ }
+    });
+  }
+
+  // For each .tmod release, lazily check whether it ships Wwise .bnk sound banks
+  // and, if so, reveal a button per bank that opens the player. A bank is a bundle
+  // of hundreds of sounds, so the button opens a browser rather than playing
+  // something: the index is fetched on open, and only what the visitor presses
+  // play on is ever decoded.
+  function loadReleaseAudio() {
+    document.querySelectorAll('[data-rel-audio]').forEach(async (box) => {
+      const relId = box.getAttribute('data-rel-audio');
+      try {
+        const r = await siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/audio');
+        if (!r.ok) return;
+        const items = ((await r.json()) || {}).items || [];
+        if (!items.length) return;
+        const btnFor = (it) => {
+          const name = it.path.split('/').pop();
+          return '<button type="button" class="mp-btn mp-btn-sm mp-audio-btn" data-snd-rel="' + esc(relId) +
+            '" data-snd-path="' + esc(it.path) + '" data-snd-name="' + esc(name) + '">' +
+            '<i class="fa-solid fa-music"></i> ' + esc(name) + '</button>';
+        };
+        const label = items.length + ' ' + t(items.length === 1 ? 'sound bank' : 'sound banks');
+        box.innerHTML = '<details class="mp-3d-details"><summary class="mp-3d-summary">' +
+          '<i class="fa-solid fa-music"></i> ' + esc(label) + '</summary>' +
+          '<div class="mp-audio-list mp-3d-list">' + items.map(btnFor).join('') + '</div></details>';
+        box.hidden = false;
+        box.querySelectorAll('.mp-audio-btn').forEach((b) => b.addEventListener('click', () => {
+          if (!window.AudioPlayer) { toast(t('Sound player is unavailable.'), true); return; }
+          const rel = b.getAttribute('data-snd-rel');
+          const path = encodeURIComponent(b.getAttribute('data-snd-path'));
+          const base = '/site/mods/releases/' + encodeURIComponent(rel) + '/audio';
+          window.AudioPlayer.open({
+            title: b.getAttribute('data-snd-name'),
+            bankUrl: BTTUtil.apiUrl(base + '/bank?path=' + path),
+            soundUrl: (id) => BTTUtil.apiUrl(base + '/sound?path=' + path + '&id=' + id),
+          });
+        }));
+      } catch (e) { /* a release without readable banks just stays hidden */ }
     });
   }
 

@@ -7,7 +7,7 @@
      blueprint  -> BlueprintViewer.mount   one .blueprint model
      assembled  -> ModelViewer.mount       the whole creature on its rig, with clips
      vfx        -> PkfxViewer.mount        a .pkfx particle effect
-     audio      -> EmbedAudio.mount        the sounds inside a .bnk bank
+     audio      -> AudioPlayer.mount       the sounds inside a .bnk bank
 
    The source is whatever the page was opened with - a Mods Hub release, an uploaded
    .tmod token, a path in the game files, a game creature prefab, or a dressed character -
@@ -260,9 +260,9 @@
     }
 
     if (mode === 'audio') {
-      if (!window.EmbedAudio) return message('The audio player could not start.', true);
+      if (!window.AudioPlayer) return message('The audio player could not start.', true);
       var bank = encodeURIComponent(state.path || '');
-      state.viewer = window.EmbedAudio.mount(els.stage, {
+      state.viewer = window.AudioPlayer.mount(els.stage, {
         bankUrl: api('audio/bank', 'path=' + bank),
         soundUrl: function (id) { return api('audio/sound', 'path=' + bank + '&id=' + id); },
         pin: cfg.sound,

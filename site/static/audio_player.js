@@ -1,20 +1,25 @@
-/* Embeddable audio player (/embed/viewer?mode=audio) — the fourth viewer.
+/* Kiwi sound player — a Wwise bank, playable.
 
-   A Wwise sound bank is a bundle, not a file: one .bnk holds anywhere from one
-   sound to the 1,600 in a UI bank. So this mounts a browser, not a single
-   <audio> tag - a filterable list of what's in the bank, with a transport docked
-   above it for whatever is loaded.
+   A .bnk is a bundle, not a file: one holds anywhere from a single sound to the
+   1,600 in a UI bank. So this mounts a browser, not a single <audio> tag - a
+   filterable list of what's in the bank, with a transport docked above it for
+   whatever is loaded.
 
    Two requests do the work, matching how the server splits it: the bank index
    (names, codecs, durations - nothing decoded), then one sound when the visitor
    presses play. The waveform is a third, decoded in the browser from the bytes
    the player just fetched, so it lands on the HTTP cache the transport filled.
 
-   ?sound=<id or name> pins one sound: the list disappears and the embed is a
-   single player, which is what a page showing off one effect actually wants.
+   `pin` (the embed's ?sound=) selects one sound and drops the list, which is
+   what a page showing off one effect actually wants.
 
-   Same mount contract as the 3D viewers (mount -> {dispose}), so the shell in
-   embed_viewer.js swaps between all four without special-casing this one. */
+   Public API, matching the 3D viewers exactly:
+     AudioPlayer.mount(el, { bankUrl, soundUrl, pin, onMeta, onHint })  inline
+     AudioPlayer.open({ bankUrl, soundUrl, title, pin })                modal
+
+   mount() is what the embeddable viewer puts in its stage; open() is what a Mods
+   Hub release page opens when a visitor clicks one of the mod's sound banks.
+   Styles live in audio_player.css - both surfaces link it. */
 (function () {
   'use strict';
 
@@ -82,7 +87,9 @@
     var peakToken = 0;
     var audioCtx = null;
 
-    stage.className = 'kv-stage kv-audio';
+    // ADD the class rather than assign it: on the embed page the host element is
+    // the shell's .kv-stage, in the modal it's .apv-body, and both keep their own.
+    stage.classList.add('kv-audio');
     stage.innerHTML = '<p class="kv-msg">Loading sounds…</p>';
     // One sound and no list is a different shape of embed, not a shorter one: the
     // transport becomes a card centred in the frame instead of a header above a list.
@@ -417,10 +424,59 @@
         el.removeAttribute('src');
         el.load();
         if (audioCtx) { try { audioCtx.close(); } catch (e) { /* already closed */ } }
+        stage.classList.remove('kv-audio', 'kv-audio-solo');
         stage.innerHTML = '';
       },
     };
   }
 
-  window.EmbedAudio = { mount: mount };
+  /* The modal form, for the Mods Hub release page. Same modal contract as
+     BlueprintViewer.open / PkfxViewer.open - Escape closes, the backdrop closes,
+     focus is trapped while it's up - so a mod page behaves the same whichever
+     preview a visitor opened. */
+  function open(opts) {
+    var ov = document.createElement('div');
+    ov.className = 'apv-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', (opts.title || 'Sounds') + ' — sound preview');
+    ov.innerHTML =
+      '<div class="apv-modal">'
+      + '<div class="apv-head">'
+      + '<span class="apv-title"></span>'
+      + '<span class="apv-meta"></span>'
+      + '<button class="apv-close" type="button" aria-label="Close">×</button>'
+      + '</div>'
+      + '<div class="apv-body"></div>'
+      + '</div>';
+    ov.querySelector('.apv-title').textContent = opts.title || 'Sounds';
+    document.body.appendChild(ov);
+
+    var viewer = null;
+    var releaseFocus = null;
+    function close() {
+      if (viewer) { viewer.dispose(); viewer = null; }   // stops playback
+      document.removeEventListener('keydown', onKey);
+      if (releaseFocus) { releaseFocus(); releaseFocus = null; }
+      ov.remove();
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    ov.querySelector('.apv-close').addEventListener('click', close);
+    ov.addEventListener('mousedown', function (e) { if (e.target === ov) close(); });
+    document.addEventListener('keydown', onKey);
+    if (window.BTTUtil && window.BTTUtil.trapFocus) {
+      releaseFocus = window.BTTUtil.trapFocus(ov.querySelector('.apv-modal'));
+    }
+
+    var meta = ov.querySelector('.apv-meta');
+    viewer = mount(ov.querySelector('.apv-body'), {
+      bankUrl: opts.bankUrl,
+      soundUrl: opts.soundUrl,
+      pin: opts.pin,
+      onMeta: function (text) { meta.textContent = text; },
+    });
+    return { close: close };
+  }
+
+  window.AudioPlayer = { mount: mount, open: open };
 })();

@@ -3418,6 +3418,50 @@ async def site_mods_vfx_asset(
                     headers={"Cache-Control": "public, max-age=3600"})
 
 
+@router.get("/site/mods/releases/{release_id}/audio", response_class=JSONResponse)
+async def site_mods_audio_list(
+    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The ``.bnk`` sound banks in a release (drives the sound-preview affordance)."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.list_release_banks(release),
+                        headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/mods/releases/{release_id}/audio/bank", response_class=JSONResponse)
+async def site_mods_audio_bank(
+    release_id: str, path: str = Query(..., min_length=1, max_length=400),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """Every sound in one of the release's banks - names, codecs, durations. Decodes
+    nothing, so opening a bank of 1,600 effects costs one small JSON body."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.release_bank_index(release, path),
+                        headers={"Cache-Control": "public, max-age=300"})
+
+
+@router.get("/site/mods/releases/{release_id}/audio/sound", response_class=Response)
+async def site_mods_audio_sound(
+    request: Request, release_id: str,
+    path: str = Query(..., min_length=1, max_length=400),
+    id: int = Query(..., ge=0, le=0xFFFFFFFF),
+    raw: bool = Query(default=False),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> Response:
+    """One sound, decoded to Ogg or WAV. ``raw=1`` serves the game's own ``.wem``.
+    ETag'd on the media's own hash, so replaying a sound costs a 304."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    data, media, filename, etag = await mods_hub_service.release_sound(
+        release, path, id, raw)
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers={"ETag": etag})
+    return Response(content=data, media_type=media, headers={
+        "ETag": etag,
+        "Cache-Control": "public, max-age=86400",
+        "Content-Disposition": f'inline; filename="{filename}"',
+    })
+
+
 @router.get("/site/mods/image/{sha}", response_class=Response)
 async def site_mods_image(sha: str) -> Response:
     got = await mods_hub_service.get_image(sha)

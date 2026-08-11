@@ -1993,6 +1993,149 @@ async def list_release_vfx(release: ModRelease) -> dict:
     return {"items": items}
 
 
+# ── sound banks ────────────────────────────────────────────────────────────
+#
+# A mod that ships a ``.bnk`` is a sound mod, and the release page can play it.
+# Read in the two steps ``app.trove.audio`` was built for: index the bank (cheap,
+# cached under its content hash, decodes nothing), then decode ONE sound when a
+# visitor presses play.
+#
+# The embed viewer (app/embed) drives the same three helpers for its ``release=``
+# source, so both surfaces share one implementation and one cache entry.
+
+
+def _tmod_banks_sync(tmod_bytes: bytes) -> list[dict]:
+    """The ``.bnk`` files a mod bundles. Header-only - listing them must not
+    decompress the file stream of a sound mod that may be tens of megabytes."""
+    parsed = tmod.read_tmod(tmod_bytes, metadata_only=True)
+    items = [{"path": f["path"], "size": f["size"]}
+             for f in parsed["files"] if f["path"].lower().endswith(".bnk")]
+    items.sort(key=lambda f: f["path"].lower())
+    return items
+
+
+def _tmod_bank_bytes_sync(tmod_bytes: bytes, path: str) -> tuple[bytes, str | None] | None:
+    """``(bank bytes, sidecar text)`` for one ``.bnk`` bundled in a mod.
+
+    The sidecar is the ``.txt`` Wwise writes beside a bank; it carries every
+    sound's name, so a mod that ships one gets named sounds instead of ids."""
+    from app.trove.mods_hub import vfx
+
+    files = tmod.read_tmod(tmod_bytes)["files"]
+    want = vfx.basename(path or "").lower()
+    hit = next((f for f in files if f["path"].lower().endswith(".bnk")
+                and vfx.basename(f["path"]).lower() == want), None)
+    if hit is None:
+        return None
+    raw = base64.b64decode(hit["content_base64"])
+    stem = hit["path"][: -len(".bnk")].lower()
+    side = next((f for f in files if f["path"].lower() == f"{stem}.txt"), None)
+    text = (base64.b64decode(side["content_base64"]).decode("utf-8", "replace")
+            if side else None)
+    return raw, text
+
+
+async def list_release_banks(release: ModRelease) -> dict:
+    """The ``.bnk`` sound banks inside a release's .tmod (drives the sound-preview
+    affordance). ``{items:[{path,size}]}``; empty for non-.tmod releases."""
+    if release.release_format != "tmod":
+        return {"items": []}
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        return {"items": []}
+    try:
+        return {"items": await asyncio.to_thread(_tmod_banks_sync, data)}
+    except tmod.TmodError:
+        return {"items": []}
+
+
+async def tmod_bank_index(tmod_bytes: bytes, path: str) -> dict:
+    """The cached sound index for one bank bundled in a .tmod.
+
+    Keyed by the bank's own content hash (plus the sidecar's), so a bank that ships
+    unchanged across releases - or is embedded on a dozen partner pages - is indexed
+    once, and the index is shared with the ``/updates`` sound browser."""
+    import hashlib
+
+    from app.trove.audio import service as audio_service
+
+    try:
+        got = await asyncio.to_thread(_tmod_bank_bytes_sync, tmod_bytes, path)
+    except tmod.TmodError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "That file isn't a readable .tmod.") from None
+    if got is None:
+        raise APIError(404, ErrorCode.not_found, "No such sound bank in this mod.")
+    raw, sidecar = got
+    sidecar_sha = (hashlib.sha256(sidecar.encode("utf-8", "replace")).hexdigest()
+                   if sidecar else None)
+    return await audio_service.manifest(
+        raw, hashlib.sha256(raw).hexdigest(), sidecar, sidecar_sha)
+
+
+async def release_bank_index(release: ModRelease, path: str) -> dict:
+    """Every sound in one of a release's banks - names, codecs, durations, nothing
+    decoded. The store hash each sound is filed under is an internal handle, so it is
+    dropped here; ``release_sound`` resolves ids against this same index."""
+    data = await _release_tmod_or_404(release)
+    payload = await tmod_bank_index(data, path)
+    return {
+        "path": path,
+        "bank": payload.get("bank"),
+        "sounds": [{k: v for k, v in s.items() if k != "sha"}
+                   for s in payload.get("sounds", [])],
+        "count": payload.get("count"),
+        "playable": payload.get("playable"),
+        "total_duration": payload.get("total_duration"),
+    }
+
+
+async def release_sound(
+    release: ModRelease, path: str, sound_id: int, raw: bool = False,
+) -> tuple[bytes, str, str, str]:
+    """One sound as ``(bytes, media type, filename, etag)``. Decoded to Ogg or WAV
+    by default; ``raw`` hands back the game's own ``.wem``."""
+    data = await _release_tmod_or_404(release)
+    payload = await tmod_bank_index(data, path)
+    return await sound_from_index(payload, sound_id, raw)
+
+
+async def sound_from_index(
+    payload: dict, sound_id: int, raw: bool = False,
+) -> tuple[bytes, str, str, str]:
+    """Decode one sound out of an already-built bank index. Shared with app/embed,
+    which reaches the same banks through its own source resolution."""
+    from app.trove.audio import service as audio_service
+
+    sound = next((s for s in payload.get("sounds", []) if s["id"] == sound_id), None)
+    if sound is None:
+        raise APIError(404, ErrorCode.not_found, "No such sound in this bank.")
+
+    if raw:
+        data = await audio_service.raw_bytes(sound["sha"])
+        media, extension = "audio/vnd.wave", "wem"
+    else:
+        if sound.get("error"):
+            raise APIError(422, ErrorCode.bad_request, sound["error"])
+        decoded = await audio_service.audio_bytes(sound["sha"])
+        data, media, extension = decoded if decoded else (None, "", "")
+    if data is None:
+        raise APIError(404, ErrorCode.not_found, "Sound blob missing from the store.")
+
+    stem = sound.get("name") or f"sound_{sound_id}"
+    stem = "".join(c if c.isalnum() or c in "._-" else "_" for c in stem) or "sound"
+    return data, media, f"{stem}.{extension}", f'"{sound["sha"]}{"-raw" if raw else ""}"'
+
+
+async def _release_tmod_or_404(release: ModRelease) -> bytes:
+    if release.release_format != "tmod":
+        raise APIError(404, ErrorCode.not_found, "That release has no sounds to play.")
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        raise APIError(404, ErrorCode.not_found, "Release artifact not found.")
+    return data
+
+
 async def _game_vfx_resolver():
     """``(lookup, read, available)`` for the live game tree:
       - ``lookup(basename_lower) -> game_path | None``

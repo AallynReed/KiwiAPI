@@ -39,7 +39,6 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import hashlib
 import logging
 import re
 import time
@@ -341,7 +340,7 @@ async def _tmod_manifest(src: Source) -> dict:
     try:
         base = await asyncio.to_thread(hub._list_blueprints_sync, src.tmod)
         pkfx_items, _index = await asyncio.to_thread(hub._tmod_pkfx_and_index, src.tmod)
-        banks = await asyncio.to_thread(_tmod_banks_sync, src.tmod)
+        banks = await asyncio.to_thread(hub._tmod_banks_sync, src.tmod)
     except tmod_mod.TmodError:
         raise _bad("That file isn't a readable .tmod.") from None
     rig, anims, components = await hub._resolve_rig(base["fns"])
@@ -626,35 +625,6 @@ async def _assemble_creature(
 # there is already indexed here.
 
 
-def _tmod_banks_sync(tmod_bytes: bytes) -> list[dict]:
-    """The ``.bnk`` files a mod bundles. Header-only - listing them must not
-    decompress the file stream of a sound mod that may be tens of megabytes."""
-    parsed = tmod_mod.read_tmod(tmod_bytes, metadata_only=True)
-    items = [{"path": f["path"], "size": f["size"]}
-             for f in parsed["files"] if f["path"].lower().endswith(".bnk")]
-    items.sort(key=lambda f: f["path"].lower())
-    return items
-
-
-def _tmod_bank_bytes_sync(tmod_bytes: bytes, path: str) -> tuple[bytes, str | None] | None:
-    """``(bank bytes, sidecar text)`` for one ``.bnk`` bundled in a mod.
-
-    The sidecar is the ``.txt`` Wwise writes beside a bank; it carries every
-    sound's name, so a mod that ships one gets named sounds instead of ids."""
-    files = tmod_mod.read_tmod(tmod_bytes)["files"]
-    want = vfx.basename(path or "").lower()
-    hit = next((f for f in files if f["path"].lower().endswith(".bnk")
-                and vfx.basename(f["path"]).lower() == want), None)
-    if hit is None:
-        return None
-    raw = base64.b64decode(hit["content_base64"])
-    stem = hit["path"][: -len(".bnk")].lower()
-    side = next((f for f in files if f["path"].lower() == f"{stem}.txt"), None)
-    text = (base64.b64decode(side["content_base64"]).decode("utf-8", "replace")
-            if side else None)
-    return raw, text
-
-
 async def _bank_index(src: Source, path: str) -> dict:
     """The cached sound index for one bank in this source.
 
@@ -662,34 +632,26 @@ async def _bank_index(src: Source, path: str) -> dict:
     built once however many partner pages point at the same sounds."""
     from app.trove.audio import service as audio_service
 
-    if src.kind == "game":
-        target = src.game_path or ""
-        if not target.lower().endswith(".bnk"):
-            raise _missing("This preview has no sounds to play.")
-        # Pinned to its own file, like every other game read: the path param is
-        # only ever the one the manifest advertised.
-        if path and vfx.basename(path).lower() != vfx.basename(target).lower():
-            raise _missing("That sound bank isn't part of this preview.")
-        raw, sha, sidecar, sidecar_sha = await _game_bank_bytes(target)
-    elif src.kind == "release" and src.tmod is not None:
-        try:
-            got = await asyncio.to_thread(_tmod_bank_bytes_sync, src.tmod, path)
-        except tmod_mod.TmodError:
-            raise _bad("That file isn't a readable .tmod.") from None
-        if got is None:
-            raise _missing("No such sound bank in this mod.")
-        raw, sidecar = got
-        sha = hashlib.sha256(raw).hexdigest()
-        sidecar_sha = (hashlib.sha256(sidecar.encode("utf-8", "replace")).hexdigest()
-                       if sidecar else None)
-    elif src.kind == "tmod":
+    if src.kind == "release" and src.tmod is not None:
+        # The hub owns reading a bank out of a .tmod - same helper the release page
+        # calls, so both surfaces share one index and one cache entry.
+        return await hub.tmod_bank_index(src.tmod, path)
+    if src.kind == "tmod":
         # See ``_tmod_manifest``: indexing a bank writes every sound to the content
         # store, and an upload is held in memory only. Say why rather than 404.
         raise _missing("Sounds can't be previewed from an uploaded mod. "
                        "Publish it to the Mods Hub and embed the release instead.")
-    else:
+    if src.kind != "game":
         raise _missing("This preview has no sounds to play.")
 
+    target = src.game_path or ""
+    if not target.lower().endswith(".bnk"):
+        raise _missing("This preview has no sounds to play.")
+    # Pinned to its own file, like every other game read: the path param is only
+    # ever the one the manifest advertised.
+    if path and vfx.basename(path).lower() != vfx.basename(target).lower():
+        raise _missing("That sound bank isn't part of this preview.")
+    raw, sha, sidecar, sidecar_sha = await _game_bank_bytes(target)
     return await audio_service.manifest(raw, sha, sidecar, sidecar_sha)
 
 
@@ -738,27 +700,7 @@ async def audio_sound(
     """One sound as ``(bytes, media type, filename, etag)``.
 
     Decoded to Ogg or WAV by default; ``raw`` hands back the game's own ``.wem``."""
-    from app.trove.audio import service as audio_service
-
-    payload = await _bank_index(src, path)
-    sound = next((s for s in payload.get("sounds", []) if s["id"] == sound_id), None)
-    if sound is None:
-        raise _missing("No such sound in this bank.")
-
-    if raw:
-        data = await audio_service.raw_bytes(sound["sha"])
-        media, extension = "audio/vnd.wave", "wem"
-    else:
-        if sound.get("error"):
-            raise APIError(422, ErrorCode.bad_request, sound["error"])
-        decoded = await audio_service.audio_bytes(sound["sha"])
-        data, media, extension = decoded if decoded else (None, "", "")
-    if data is None:
-        raise _missing("Sound blob missing from the store.")
-
-    stem = sound.get("name") or f"sound_{sound_id}"
-    stem = "".join(c if c.isalnum() or c in "._-" else "_" for c in stem) or "sound"
-    return data, media, f"{stem}.{extension}", f'"{sound["sha"]}{"-raw" if raw else ""}"'
+    return await hub.sound_from_index(await _bank_index(src, path), sound_id, raw)
 
 
 # ── VFX ────────────────────────────────────────────────────────────────────
