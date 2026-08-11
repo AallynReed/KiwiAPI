@@ -241,23 +241,19 @@ async def resolve(
         fam = ""
     if not fam and "weapon" in raw:
         fam = cls.weapons[0] if cls.weapons else ""
-    # A full helmet encloses the head, so the hair, the face style and the eyes all go
-    # with it - a hat leaves them showing. The eyes matter here: they ride the same attach
-    # point as a face style, so dropping only the face would bring the eyes BACK out from
-    # under the helmet, which is worse than either.
+    # A full helmet replaces the hair and the face style; the eyes stay, showing through
+    # it the way the game draws them. Dropping the face style is what lets them: the eyes
+    # ride the same attach point, so with the mask gone the race's own eyes take it back.
     hat = styles.get("hat")
     if hat is not None and hat.covers_head:
-        for slot in ("hair", "face", "eyes"):
+        for slot in ("hair", "face"):
             styles.pop(slot, None)
             raw.pop(slot, None)
-        covered = True
-    else:
-        covered = False
 
     # Nothing chosen for a character-creation slot -> the race's own default, so the
     # model matches what the game shows a player who never opened the customizer. Hair
     # is not defaulted: "no hair" is a real look, and the game's own default is Bald.
-    if chosen_race and not covered:
+    if chosen_race:
         for slot in ("head", "eyes"):
             if slot in styles or slot in raw:
                 continue

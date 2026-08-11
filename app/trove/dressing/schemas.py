@@ -37,10 +37,10 @@ class DressOptionOut(BaseModel):
     credit: str = Field(default="", description="Community author, for a "
                         "player-submitted hair style.")
     covers_head: bool = Field(default=False,
-                              description="A full helmet: wearing it hides the hair, the "
-                                          "face style and the eyes. Read from the model's "
-                                          "name - the game records the difference nowhere "
-                                          "in its data.")
+                              description="A full helmet: wearing it hides the hair and "
+                                          "the face style (the eyes still show). Read from "
+                                          "the model's name - the game records the "
+                                          "difference nowhere in its data.")
 
 
 class DressOptionPage(BaseModel):
