@@ -262,6 +262,19 @@ async def star_chart_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "star-chart.html", {})
 
 
+@router.get("/sound-studio", response_class=HTMLResponse)
+async def sound_studio_page(request: Request) -> HTMLResponse:
+    """Sound Studio - swap the game's sounds for your own.
+
+    Pick one of Trove's sound banks, then silence a sound, replace it with an
+    audio file, or add a brand-new one, and download the result as a bank or as a
+    ready-to-install mod. The browser decodes and resamples whatever file is
+    dropped on it (Web Audio already reads mp3/wav/ogg/flac), so the upload is
+    plain samples and the server only has to write Wwise's own encoding - see
+    ``app/trove/audio/studio.py``. Bank listings come from the updates archive."""
+    return _TEMPLATES.TemplateResponse(request, "sound-studio.html", {})
+
+
 @router.get("/gems-guide", response_class=HTMLResponse)
 async def gems_guide_page(request: Request) -> HTMLResponse:
     """How Gems Work - an interactive, animated explainer of Trove's gem system

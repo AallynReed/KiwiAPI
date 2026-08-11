@@ -320,6 +320,13 @@ class Settings(BaseSettings):
     # settings parsing. Free to delete after one full release.
     site_max_request_body_bytes: int = 110 * 1024 * 1024  # 110 MB (unused)
 
+    # Sound Studio builds: replacement audio is uploaded as raw 16-bit PCM (the
+    # browser decodes whatever file the user picked, so the server needs no audio
+    # decoder of its own). Bulky by nature - a 10 s stereo 48 kHz clip is ~2 MB -
+    # so this sits well above the 8 MB default. Per-clip and per-request limits
+    # are enforced by the endpoint itself.
+    sound_studio_max_request_body_bytes: int = 32 * 1024 * 1024  # 32 MB
+
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
     # Bind-mounted into the api container from `./site` in the project root.
     site_root: str = "site"

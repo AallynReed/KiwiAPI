@@ -32,7 +32,7 @@ _PAGE_PATHS = frozenset({
     "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/accessibility", "/changelog", "/mods", "/modpacks",
     "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
     "/star-chart", "/gem-simulator", "/gem-evaluator", "/gem-builds", "/calculators",
-    "/gems-guide", "/dressing-room",
+    "/gems-guide", "/dressing-room", "/sound-studio",
 })
 
 # Dynamic site page subtrees (parameterised routes like /mods/{slug},
@@ -83,6 +83,11 @@ def add_security_middleware(app: FastAPI) -> None:
             max_body = market_max_body
         elif path == "/v1/ocr/character":
             max_body = ocr_max_body
+        elif path == "/site/sound-studio/build":
+            # Replacement audio arrives as raw PCM (the browser decodes whatever
+            # the user picked and sends samples), which is bulky by nature. The
+            # endpoint caps each clip and the total itself.
+            max_body = settings.sound_studio_max_request_body_bytes
         elif path == "/v1/misc/feedback":
             # 4 attachments × 5 MB + form fields. The endpoint also caps
             # per-file size + count itself, so this is a generous gate

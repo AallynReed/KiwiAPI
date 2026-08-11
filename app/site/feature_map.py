@@ -48,6 +48,7 @@ SITE_FEATURE_FLAGS = {
     "calculators_enabled": feature_flags.CALCULATORS_FLAG,
     "gems_guide_enabled": feature_flags.GEMS_GUIDE_FLAG,
     "dressing_room_enabled": feature_flags.DRESSING_ROOM_FLAG,
+    "sound_studio_enabled": feature_flags.SOUND_STUDIO_FLAG,
 }
 
 
@@ -127,6 +128,12 @@ def feature_blocks(p: str, f: dict) -> bool:
     # asset (no /site proxy, no /v1 API), so only the page route needs blocking.
     if not f["star_chart_enabled"] and p == "/star-chart":
         return True
+    # Sound Studio: the page plus its build endpoint. It reads banks through the
+    # updates archive, so turning /updates off takes its source data with it.
+    if not f["sound_studio_enabled"] and (
+        p == "/sound-studio" or p.startswith("/site/sound-studio")
+    ):
+        return True
     # Gem Simulator is likewise fully client-rendered (static /static/gem-engine.js,
     # no /site proxy, no /v1 API), so only the page route needs blocking.
     if not f["gem_simulator_enabled"] and p == "/gem-simulator":
@@ -184,6 +191,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/gem-simulator", "gem_simulator_enabled"),
     ("/gems-guide", "gems_guide_enabled"),
     ("/dressing-room", "dressing_room_enabled"),
+    ("/sound-studio", "sound_studio_enabled"),
     ("/leaderboards", "leaderboards_enabled"),
     ("/activity", "player_activity_enabled"),
     ("/class-activity", "class_activity_enabled"),

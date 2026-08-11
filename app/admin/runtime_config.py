@@ -222,6 +222,19 @@ REGISTRY: dict[str, TunableSetting] = {
             "(also used by the landing page) is NOT gated by this."
         ),
     ),
+    "feature_sound_studio_enabled": _t(
+        key="feature_sound_studio_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for Sound Studio. OFF hides the /sound-studio page + "
+            "navbar link (404) and 404s its /site/sound-studio/build endpoint. It "
+            "reads sound banks through the updates archive, so it also needs "
+            "feature_updates_enabled; the /updates Audio browser is separate and "
+            "stays available when this is off."
+        ),
+    ),
     "feature_webhooks_enabled": _t(
         key="feature_webhooks_enabled",
         default=True,

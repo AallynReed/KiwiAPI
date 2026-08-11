@@ -73,6 +73,7 @@ _PREVIEW_FLAGS = {
     "gem_evaluator_enabled", "gem_builds_enabled", "calculators_enabled",
     "gems_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
     "renames_enabled", "duplicates_enabled", "discord_oauth_enabled",
+    "dressing_room_enabled", "sound_studio_enabled",
 }
 
 
@@ -514,9 +515,10 @@ def _bank_manifest() -> dict:
 
         sounds: list[dict] = []
         blobs: dict[int, bytes] = {}
+        raw_bank = b""
         info = {"version": 0, "bank_id": 0, "sections": [], "objects": 0, "events": 0}
         try:
-            raw = Path(_BNK_SRC).read_bytes()
+            raw = raw_bank = Path(_BNK_SRC).read_bytes()
             parsed = bank_reader.parse(raw)
             named: dict[int, object] = {}
             events: dict[int, str] = {}
@@ -551,7 +553,7 @@ def _bank_manifest() -> dict:
             sounds.sort(key=lambda s: (s["name"] or "").lower() or f"~{s['id']}")
         except (OSError, bank_reader.BankError):
             pass
-        _bnk_cache = {"bank": info, "sounds": sounds, "blobs": blobs}
+        _bnk_cache = {"bank": info, "sounds": sounds, "blobs": blobs, "raw": raw_bank}
     return _bnk_cache
 
 
@@ -1153,6 +1155,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "leaderboards.html", "text/html")
         if path == "/updates":
             return self._send_file(TEMPLATES / "updates.html", "text/html")
+        if path == "/sound-studio":
+            return self._send_file(TEMPLATES / "sound-studio.html", "text/html")
         if path == "/codexes":
             return self._send_file(TEMPLATES / "codexes.html", "text/html")
         if path == "/codexes/crafting":
@@ -3162,12 +3166,65 @@ class Handler(SimpleHTTPRequestHandler):
 
         self.send_error(404)
 
+    def _sound_studio_build(self):
+        """Run the REAL editor (app.trove.audio.studio) against the local bank so
+        the dev preview exercises the same rebuild production does."""
+        import email
+        import sys
+        sys.path.insert(0, str(ROOT))
+        from app.core.errors import APIError
+        from app.trove.audio import studio
+
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        raw = self.rfile.read(length) if length else b""
+        header = "\n".join([
+            "Content-Type: " + (self.headers.get("Content-Type") or ""),
+            "MIME-Version: 1.0", "", "",
+        ]).encode()
+        message = email.message_from_bytes(header + raw)
+        spec_text, clips = "{}", {}
+        for part in message.walk():
+            if part.get_content_maintype() == "multipart":
+                continue
+            name = part.get_param("name", header="content-disposition")
+            payload = part.get_payload(decode=True) or b""
+            if name == "spec":
+                spec_text = payload.decode("utf-8", "replace")
+            elif name == "clips":
+                clips[part.get_filename() or ""] = payload
+        try:
+            spec = json.loads(spec_text)
+        except ValueError:
+            return self._send_json({"detail": "invalid spec"}, 400)
+
+        bank = _bank_manifest()
+        if not bank.get("raw"):
+            return self._send_json({"detail": "no local bank - set TROVE_DEV_BNK"}, 503)
+        try:
+            result = studio.apply_edits(bank["raw"], spec, clips)
+            blob, filename, media_type = studio.package(
+                result, str(spec.get("path") or "audio/ui.bnk"), spec)
+        except APIError as e:
+            return self._send_json({"error": {"code": "bad_request", "message": e.message}},
+                                   getattr(e, "status_code", 400))
+        except Exception as e:      # noqa: BLE001 - dev server: surface, never crash
+            return self._send_json({"error": {"code": "bad_request", "message": str(e)}}, 400)
+        self.send_response(200)
+        self.send_header("Content-Type", media_type)
+        self.send_header("Content-Length", str(len(blob)))
+        self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+        self.end_headers()
+        self.wfile.write(blob)
+
     def do_POST(self):
         url = urlparse(self.path)
         path = url.path
 
         if path.startswith(_AUTH_PREFIX):
             return self._proxy_auth()
+
+        if path == "/site/sound-studio/build":
+            return self._sound_studio_build()
 
         length = int(self.headers.get("Content-Length", 0) or 0)
         raw = self.rfile.read(length) if length else b"{}"

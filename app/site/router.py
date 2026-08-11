@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from urllib.parse import unquote
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
@@ -2894,6 +2894,64 @@ async def site_up_file_bnk_zip(
             "Content-Disposition": f'attachment; filename="{stem}-sounds.zip"',
             "ETag": f'"{sha}-zip"',
             "Cache-Control": "public, max-age=3600",
+        },
+    )
+
+
+@router.post("/site/sound-studio/build", response_class=Response)
+async def site_sound_studio_build(
+    spec: str = Form(...),
+    clips: list[UploadFile] = File(default=[]),
+) -> Response:
+    """Rebuild one sound bank with the caller's changes applied.
+
+    ``spec`` is JSON - the bank to edit and a list of changes (``mute``,
+    ``replace``, ``add``). Replacement audio rides alongside as file parts named
+    by each change's ``clip`` key, and is **raw interleaved 16-bit PCM**: the
+    browser already decodes and resamples whatever the user picked, which is why
+    nothing here needs an audio decoder.
+
+    Nothing is stored. The bank comes out of the archive, the edits are applied in
+    memory, and the result streams straight back as a ``.bnk`` or a ``.tmod``."""
+    from app.core.errors import APIError, ErrorCode
+    from app.trove.audio import studio
+
+    try:
+        parsed = json.loads(spec)
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request, "The change list was not valid JSON.") from None
+    if not isinstance(parsed, dict):
+        raise APIError(400, ErrorCode.bad_request, "The change list was not understood.")
+
+    branch = str(parsed.get("branch") or "")
+    path = str(parsed.get("path") or "")
+    _site_check_branch(branch)
+    if not path.lower().endswith(".bnk"):
+        raise APIError(400, ErrorCode.bad_request, "Only a .bnk file can be edited.")
+    meta = await updates_read.get_file_meta(branch, path)
+    if meta is None:
+        raise HTTPException(status_code=404, detail=f"No file '{path}'")
+    raw = await asyncio.to_thread(
+        ContentStore(settings.trove_update_store_dir).get, meta["content_sha256"])
+    if raw is None:
+        raise HTTPException(status_code=404, detail="Blob missing from the store")
+
+    uploads: dict[str, bytes] = {}
+    for part in clips:
+        if part.filename:
+            uploads[part.filename] = await part.read()
+
+    result = await asyncio.to_thread(studio.apply_edits, raw, parsed, uploads)
+    blob, filename, media_type = await asyncio.to_thread(
+        studio.package, result, path, parsed)
+    return Response(
+        content=blob,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+            "X-Kiwi-Sounds-Replaced": str(result.replaced),
+            "X-Kiwi-Sounds-Added": json.dumps([a["event"] for a in result.added]),
         },
     )
 
