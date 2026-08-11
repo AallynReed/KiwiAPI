@@ -2775,6 +2775,129 @@ async def site_up_file_swf_zip(
     )
 
 
+async def _bank_manifest(branch: str, path: str) -> tuple[dict, str]:
+    """The cached sound index for a ``.bnk`` in the latest tree, plus its sha.
+
+    The names come from the ``.txt`` Wwise wrote next to the bank, so that file is
+    fetched alongside it - and its hash goes into the cache key, since a rebuild
+    that only renames sounds still has to invalidate the index."""
+    from app.trove.audio import service as audio_service
+
+    _site_check_branch(branch)
+    if not path.lower().endswith(".bnk"):
+        raise HTTPException(status_code=400, detail="Not a .bnk file")
+    meta = await updates_read.get_file_meta(branch, path)
+    if meta is None:
+        raise HTTPException(status_code=404, detail=f"No file '{path}'")
+    sha = meta["content_sha256"]
+    store = ContentStore(settings.trove_update_store_dir)
+    raw = await asyncio.to_thread(store.get, sha)
+    if raw is None:
+        raise HTTPException(status_code=404, detail="Blob missing from the store")
+
+    sidecar = sidecar_sha = None
+    side_meta = await updates_read.get_file_meta(branch, path[: -len(".bnk")] + ".txt")
+    if side_meta is not None:
+        sidecar_sha = side_meta["content_sha256"]
+        blob = await asyncio.to_thread(store.get, sidecar_sha)
+        if blob is not None:
+            sidecar = blob.decode("utf-8", "replace")
+        else:
+            sidecar_sha = None
+    return await audio_service.manifest(raw, sha, sidecar, sidecar_sha), sha
+
+
+@router.get("/site/updates/{branch}/file/bnk", response_class=JSONResponse)
+async def site_up_file_bnk(
+    branch: str, path: str = Query(...),
+) -> JSONResponse:
+    """Every sound embedded in one Wwise bank, for the audio browser.
+
+    Lists them only - names, codecs, durations and the container each belongs to.
+    The audio itself comes from ``/file/bnk/audio`` per sound, so opening an 87 MB
+    music bank costs one small JSON body and no decoding at all."""
+    payload, sha = await _bank_manifest(branch, path)
+    # The store hash is an internal handle; the audio endpoint resolves ids
+    # against this same manifest.
+    sounds = [{k: v for k, v in s.items() if k != "sha"} for s in payload.get("sounds", [])]
+    return JSONResponse(
+        {"branch": branch, "path": path, "content_sha256": sha,
+         "bank": payload.get("bank"), "sounds": sounds, "count": len(sounds),
+         "playable": payload.get("playable"),
+         "total_duration": payload.get("total_duration")},
+        headers={"Cache-Control": "public, max-age=300"},
+    )
+
+
+@router.get("/site/updates/{branch}/file/bnk/audio", response_class=Response)
+async def site_up_file_bnk_audio(
+    request: Request,
+    branch: str,
+    path: str = Query(...),
+    id: int = Query(..., ge=0, le=0xFFFFFFFF),
+    raw: bool = Query(default=False),
+) -> Response:
+    """One sound, decoded to Ogg or WAV. ``raw=1`` serves the game's own ``.wem``."""
+    from app.trove.audio import service as audio_service
+
+    payload, _sha = await _bank_manifest(branch, path)
+    sound = next((s for s in payload.get("sounds", []) if s["id"] == id), None)
+    if sound is None:
+        raise HTTPException(status_code=404, detail=f"No sound {id} in '{path}'")
+    etag = f'"{sound["sha"]}{"-raw" if raw else ""}"'
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers={"ETag": etag})
+
+    if raw:
+        data = await audio_service.raw_bytes(sound["sha"])
+        if data is None:
+            raise HTTPException(status_code=404, detail="Sound blob missing from the store")
+        media_type, extension = "audio/vnd.wave", "wem"
+    else:
+        if sound.get("error"):
+            raise HTTPException(status_code=422, detail=sound["error"])
+        decoded = await audio_service.audio_bytes(sound["sha"])
+        if decoded is None:
+            raise HTTPException(status_code=404, detail="Sound blob missing from the store")
+        data, media_type, extension = decoded
+
+    stem = sound.get("name") or f"sound_{id}"
+    stem = "".join(c if c.isalnum() or c in "._-" else "_" for c in stem) or "sound"
+    return Response(
+        content=data,
+        media_type=media_type,
+        headers={
+            "ETag": etag,
+            "Cache-Control": "public, max-age=86400",
+            "Content-Disposition": f'inline; filename="{stem}.{extension}"',
+        },
+    )
+
+
+@router.get("/site/updates/{branch}/file/bnk/zip", response_class=Response)
+async def site_up_file_bnk_zip(
+    branch: str, path: str = Query(...),
+) -> Response:
+    """Every playable sound from one bank, as a single .zip."""
+    from app.trove.audio import service as audio_service
+
+    payload, sha = await _bank_manifest(branch, path)
+    sounds = payload.get("sounds", [])
+    if not any(s.get("error") is None for s in sounds):
+        raise HTTPException(status_code=404, detail="This bank has no playable sounds")
+    blob = await asyncio.to_thread(audio_service.build_zip, sounds)
+    stem = path.rsplit("/", 1)[-1].rsplit(".", 1)[0] or "sounds"
+    return Response(
+        content=blob,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{stem}-sounds.zip"',
+            "ETag": f'"{sha}-zip"',
+            "Cache-Control": "public, max-age=3600",
+        },
+    )
+
+
 @router.get("/site/updates/{branch}/file/history", response_class=JSONResponse)
 async def site_up_file_history(
     branch: str, path: str = Query(...),

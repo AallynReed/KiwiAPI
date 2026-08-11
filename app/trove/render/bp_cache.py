@@ -61,6 +61,11 @@ ASSEMBLY_VERSION = "a18"     # a18: head scale follows the rig - character half,
 # bitmap is decoded. Namespaces the SWF keys only.
 SWF_VERSION = "s1"
 
+# Bump when ``app.trove.audio`` changes what a bank's sound index holds. Decoded
+# audio is not cached here - it is rebuilt per sound from the stored .wem - so
+# this covers the index shape alone. Namespaces the bank keys only.
+BANK_VERSION = "b1"
+
 # Derived payloads share the mods content store: same sharded, atomic, dedupe-by-
 # content primitive, already bind-mounted, and a cache blob that goes missing is
 # simply rebuilt on the next hit.
@@ -98,6 +103,15 @@ def key_for_swf(content_sha: str) -> str:
     function of the movie's bytes alone, so the same interface file shipped on
     several branches is extracted once."""
     return f"{SWF_VERSION}:swf:{content_sha}"
+
+
+def key_for_bank(content_sha: str, sidecar_sha: str | None = None) -> str:
+    """Key for the sound index of one ``.bnk`` (see ``app.trove.audio``).
+
+    Two files decide that index: the bank itself, and the ``.txt`` Wwise wrote
+    beside it - which supplies every sound's name and is versioned independently,
+    so a rebuild that only renames things must still invalidate the index."""
+    return f"{BANK_VERSION}:bnk:{content_sha}:{sidecar_sha or '-'}"
 
 
 def key_for_assembly(rig_sig: str, ident: str) -> str:

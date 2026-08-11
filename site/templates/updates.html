@@ -105,6 +105,18 @@
                 <i class="fa-solid fa-code-compare" aria-hidden="true"></i>
                 <span data-i18n>Compare versions</span>
             </button>
+            <button type="button" class="up-tab" role="tab"
+                    id="up-tab-interface" data-tab="interface"
+                    aria-selected="false" aria-controls="up-pane-interface">
+                <i class="fa-solid fa-images" aria-hidden="true"></i>
+                <span data-i18n>Interface</span>
+            </button>
+            <button type="button" class="up-tab" role="tab"
+                    id="up-tab-audio" data-tab="audio"
+                    aria-selected="false" aria-controls="up-pane-audio">
+                <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+                <span data-i18n>Audio</span>
+            </button>
         </nav>
 
         <!-- ═══════════════ TAB: EXPLORER ═══════════════ -->
@@ -372,6 +384,141 @@
             </div>
             <div class="up-compare-body" id="up-compare-body">
                 <p class="up-hint" data-i18n>Fill in a path, pick two versions, then press Compare. Text files are diffed inline; binaries show their size and content hash on each side.</p>
+            </div>
+        </section>
+
+        <!-- ═══════════════ TAB: INTERFACE ═══════════════
+             The game's Flash UI files, as art rather than as files: pick a .swf
+             on the left, every bitmap inside it renders on the right. Same
+             extraction the explorer's preview offers, given room to breathe. -->
+        <section class="up-tab-pane" id="up-pane-interface"
+                 role="tabpanel" aria-labelledby="up-tab-interface" hidden>
+            <div class="up-bundle-layout">
+                <aside class="up-bundle-side" aria-label="Interface files">
+                    <div class="up-bundle-side-head">
+                        <h3 class="up-bundle-subhead" data-i18n>Interface files</h3>
+                        <span class="up-bundle-count" id="up-swf-filecount"></span>
+                    </div>
+                    <label class="up-swf-search" for="up-swf-filefilter">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <span class="sr-only" data-i18n>Filter interface files</span>
+                        <input type="search" id="up-swf-filefilter" autocomplete="off"
+                               placeholder="Filter files…" data-i18n-placeholder>
+                    </label>
+                    <div class="up-bundle-list" id="up-swf-files">
+                        <p class="up-loading" data-i18n>Loading…</p>
+                    </div>
+                </aside>
+                <div class="up-bundle-main">
+                    <div class="up-bundle-bar">
+                        <div class="up-bundle-titles">
+                            <h3 class="up-bundle-title" id="up-swf-title2" data-i18n>Interface</h3>
+                            <p class="up-bundle-meta" id="up-swf-meta2" data-i18n>Pick an interface file to see the artwork inside it.</p>
+                        </div>
+                        <label class="up-swf-search" for="up-swf-filter2">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <span class="sr-only" data-i18n>Filter assets</span>
+                            <input type="search" id="up-swf-filter2" autocomplete="off"
+                                   placeholder="Filter assets…" data-i18n-placeholder>
+                        </label>
+                        <button type="button" class="up-swf-zip" id="up-swf-zip2" disabled>
+                            <i class="fa-solid fa-file-zipper" aria-hidden="true"></i>
+                            <span data-i18n>Download all</span>
+                        </button>
+                    </div>
+                    <div class="up-swf-body" id="up-swf-body2" aria-live="polite">
+                        <p class="up-hint" data-i18n>Pick an interface file on the left to browse the images inside it.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ TAB: AUDIO ═══════════════
+             The game's Wwise sound banks, as sounds rather than as files. Names
+             come from the .txt Wwise writes beside each bank, so these are real
+             sound names; "Group variations" folds the numbered takes of one
+             effect back under the container they belong to. -->
+        <section class="up-tab-pane" id="up-pane-audio"
+                 role="tabpanel" aria-labelledby="up-tab-audio" hidden>
+            <div class="up-bundle-layout">
+                <aside class="up-bundle-side" aria-label="Sound banks">
+                    <div class="up-bundle-side-head">
+                        <h3 class="up-bundle-subhead" data-i18n>Sound banks</h3>
+                        <span class="up-bundle-count" id="up-audio-bankcount"></span>
+                    </div>
+                    <div class="up-bundle-list" id="up-audio-banks">
+                        <p class="up-loading" data-i18n>Loading…</p>
+                    </div>
+                </aside>
+                <div class="up-bundle-main">
+                    <div class="up-bundle-bar">
+                        <div class="up-bundle-titles">
+                            <h3 class="up-bundle-title" id="up-audio-title" data-i18n>Audio</h3>
+                            <p class="up-bundle-meta" id="up-audio-meta" data-i18n>Pick a sound bank to browse the sounds inside it.</p>
+                        </div>
+                        <label class="up-swf-search" for="up-audio-filter">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <span class="sr-only" data-i18n>Filter sounds</span>
+                            <input type="search" id="up-audio-filter" autocomplete="off"
+                                   placeholder="Filter sounds…" data-i18n-placeholder>
+                        </label>
+                        <select id="up-audio-codec" class="up-select up-audio-codec"
+                                aria-label="Filter by audio format">
+                            <option value="all" data-i18n>All formats</option>
+                            <option value="vorbis">Vorbis</option>
+                            <option value="adpcm">ADPCM</option>
+                            <option value="pcm">PCM</option>
+                        </select>
+                        <label class="up-audio-groupchk">
+                            <input type="checkbox" id="up-audio-group" checked>
+                            <span data-i18n>Group variations</span>
+                        </label>
+                        <button type="button" class="up-swf-zip" id="up-audio-zip" disabled>
+                            <i class="fa-solid fa-file-zipper" aria-hidden="true"></i>
+                            <span data-i18n>Download all</span>
+                        </button>
+                    </div>
+                    <div class="up-audio-body" id="up-audio-body" aria-live="polite">
+                        <p class="up-hint" data-i18n>Pick a sound bank on the left to browse the sounds inside it.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transport for whatever is playing. Sticks to the bottom of the
+                 pane so the list stays scrollable while a sound runs. -->
+            <div class="up-player" id="up-player" hidden>
+                <button type="button" class="up-player-play" id="up-player-play"
+                        title="Play/pause" aria-label="Play/pause" data-i18n-title>
+                    <i class="fa-solid fa-play" aria-hidden="true"></i>
+                </button>
+                <div class="up-player-id">
+                    <span class="up-player-name" id="up-player-name"></span>
+                    <span class="up-player-sub" id="up-player-sub"></span>
+                </div>
+                <div class="up-player-seek" id="up-player-seek"
+                     role="slider" tabindex="0" aria-label="Seek"
+                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <canvas class="up-player-wave" id="up-player-wave"></canvas>
+                    <span class="up-player-played" id="up-player-played"></span>
+                </div>
+                <span class="up-player-time" id="up-player-time">0:00 / 0:00</span>
+                <button type="button" class="up-player-icon" id="up-player-loop"
+                        title="Loop" aria-label="Loop" aria-pressed="false" data-i18n-title>
+                    <i class="fa-solid fa-repeat" aria-hidden="true"></i>
+                </button>
+                <label class="up-player-vol">
+                    <i class="fa-solid fa-volume-low" aria-hidden="true"></i>
+                    <span class="sr-only" data-i18n>Volume</span>
+                    <input type="range" id="up-player-vol" min="0" max="1" step="0.01" value="1">
+                </label>
+                <a class="up-player-icon" id="up-player-dl" download
+                   title="Download" aria-label="Download" data-i18n-title>
+                    <i class="fa-solid fa-download" aria-hidden="true"></i>
+                </a>
+                <button type="button" class="up-player-icon" id="up-player-close"
+                        title="Close" aria-label="Close" data-i18n-title>
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
             </div>
         </section>
 

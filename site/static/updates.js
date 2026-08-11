@@ -77,6 +77,14 @@
 
     // Compare tab
     compare: { from: null, to: null, path: '', payload: null, loading: false },
+
+    // Interface + Audio tabs. Both browse a *bundle* format the file tree can
+    // only hand you as a blob - a .swf full of artwork, a .bnk full of sounds -
+    // so each keeps the list of bundles in the branch plus whichever one is open.
+    iface: { files: null, path: null, assets: [], filter: '', fileFilter: '',
+             loading: false, token: 0 },
+    audio: { files: null, path: null, sounds: [], bank: null, filter: '',
+             codec: 'all', grouped: true, loading: false, token: 0 },
   };
 
   // ─── DOM refs ──────────────────────────────────────────────────────
@@ -173,6 +181,43 @@
   const $compareRun = $('up-compare-run');
   const $compareMeta = $('up-compare-meta');
   const $compareBody = $('up-compare-body');
+
+  const $tabInterface = $('up-tab-interface');
+  const $tabAudio = $('up-tab-audio');
+  const $paneInterface = $('up-pane-interface');
+  const $paneAudio = $('up-pane-audio');
+
+  const $swfFiles = $('up-swf-files');
+  const $swfFileCount = $('up-swf-filecount');
+  const $swfFileFilter = $('up-swf-filefilter');
+  const $swfTitle2 = $('up-swf-title2');
+  const $swfMeta2 = $('up-swf-meta2');
+  const $swfFilter2 = $('up-swf-filter2');
+  const $swfZip2 = $('up-swf-zip2');
+  const $swfBody2 = $('up-swf-body2');
+
+  const $audioBanks = $('up-audio-banks');
+  const $audioBankCount = $('up-audio-bankcount');
+  const $audioTitle = $('up-audio-title');
+  const $audioMeta = $('up-audio-meta');
+  const $audioFilter = $('up-audio-filter');
+  const $audioCodec = $('up-audio-codec');
+  const $audioGroup = $('up-audio-group');
+  const $audioZip = $('up-audio-zip');
+  const $audioBody = $('up-audio-body');
+
+  const $player = $('up-player');
+  const $playerPlay = $('up-player-play');
+  const $playerName = $('up-player-name');
+  const $playerSub = $('up-player-sub');
+  const $playerSeek = $('up-player-seek');
+  const $playerWave = $('up-player-wave');
+  const $playerPlayed = $('up-player-played');
+  const $playerTime = $('up-player-time');
+  const $playerLoop = $('up-player-loop');
+  const $playerVol = $('up-player-vol');
+  const $playerDl = $('up-player-dl');
+  const $playerClose = $('up-player-close');
 
   // ─── Boot ──────────────────────────────────────────────────────────
   init().catch((err) => {
@@ -277,6 +322,16 @@
     };
     state.changesCollapsed.clear();   // ordinals are per-branch
     state.compare = { from: null, to: null, path: '', payload: null, loading: false };
+    // The bundle tabs are per-branch too: a bank open on Live is not the bank at
+    // the same path on PTS, and anything playing belongs to the old branch.
+    closePlayer();
+    state.iface = { files: null, path: null, assets: [], filter: '', fileFilter: '',
+                    loading: false, token: state.iface.token + 1 };
+    state.audio = { files: null, path: null, sounds: [], bank: null, filter: '',
+                    codec: state.audio.codec, grouped: state.audio.grouped,
+                    loading: false, token: state.audio.token + 1 };
+    if (state.activeTab === 'interface') ensureBundleList('iface');
+    if (state.activeTab === 'audio') ensureBundleList('audio');
 
     renderBranchTabs();
 
@@ -407,18 +462,26 @@
   }
 
   // ─── Tab strip ─────────────────────────────────────────────────────
+  const TABS = ['explorer', 'changes', 'compare', 'interface', 'audio'];
+
   function switchTab(name) {
-    if (name !== 'explorer' && name !== 'changes' && name !== 'compare') name = 'explorer';
+    if (!TABS.includes(name)) name = 'explorer';
     if (state.activeTab === name) return;
     state.activeTab = name;
     renderTab();
+    // Both bundle tabs need their list of bundles before they can show anything,
+    // and neither is worth fetching until someone actually opens the tab.
+    if (name === 'interface') ensureBundleList('iface');
+    if (name === 'audio') ensureBundleList('audio');
     scheduleHash(true);
   }
   function renderTab() {
     const map = {
-      explorer: { btn: $tabExplorer, pane: $paneExplorer },
-      changes:  { btn: $tabChanges,  pane: $paneChanges },
-      compare:  { btn: $tabCompare,  pane: $paneCompare },
+      explorer:  { btn: $tabExplorer,  pane: $paneExplorer },
+      changes:   { btn: $tabChanges,   pane: $paneChanges },
+      compare:   { btn: $tabCompare,   pane: $paneCompare },
+      interface: { btn: $tabInterface, pane: $paneInterface },
+      audio:     { btn: $tabAudio,     pane: $paneAudio },
     };
     for (const [name, { btn, pane }] of Object.entries(map)) {
       const isActive = state.activeTab === name;
@@ -799,9 +862,24 @@
       $previewModel.hidden = false;
       return;
     }
+    // Bundle formats hand off to their own tab rather than opening a dialog on
+    // top of the explorer: that is where they have room, and it leaves the file
+    // browser doing one job.
     if (kind === 'swf') {
-      $previewSwfBtn.onclick = () => openSwfGallery(path);
+      $previewSwfBtn.innerHTML =
+        '<i class="fa-solid fa-images" aria-hidden="true"></i><span>'
+        + esc(t('Browse the artwork inside')) + '</span>';
+      $previewSwfBtn.onclick = () => { dismissDetail(); switchTab('interface'); openInterfaceFile(path); };
       $previewSwfNote.textContent = t('Flash movie — every image inside it, extracted.');
+      $previewSwf.hidden = false;
+      return;
+    }
+    if (kind === 'bnk') {
+      $previewSwfBtn.innerHTML =
+        '<i class="fa-solid fa-volume-high" aria-hidden="true"></i><span>'
+        + esc(t('Browse the sounds inside')) + '</span>';
+      $previewSwfBtn.onclick = () => { dismissDetail(); switchTab('audio'); openBank(path); };
+      $previewSwfNote.textContent = t('Sound bank — every sound inside it, playable.');
       $previewSwf.hidden = false;
       return;
     }
@@ -1333,6 +1411,418 @@
     runCompare();
   }
 
+  // ─── Interface + Audio tabs ────────────────────────────────────────
+  // Two bundle formats the file tree can only hand you as an opaque blob: a
+  // .swf is a pile of artwork, a .bnk is a pile of sounds. Both tabs work the
+  // same way - list every bundle in the branch on the left, open one on the
+  // right - which keeps the explorer free to just be a file browser.
+
+  const BUNDLE_SUFFIX = { iface: '.swf', audio: '.bnk' };
+
+  async function ensureBundleList(kind) {
+    const slice = state[kind];
+    if (slice.files || slice.loading) return;
+    slice.loading = true;
+    renderBundleList(kind);
+    try {
+      const data = await fetchJSON(
+        `/site/updates/${state.branch}/search?q=${encodeURIComponent(BUNDLE_SUFFIX[kind])}&limit=500`,
+      );
+      slice.files = (data.entries || [])
+        .filter((e) => !e.is_dir && e.path.toLowerCase().endsWith(BUNDLE_SUFFIX[kind]))
+        .sort((a, b) => a.path.localeCompare(b.path));
+    } catch (err) {
+      slice.files = [];
+      slice.error = (err && err.message) || String(err);
+    }
+    slice.loading = false;
+    renderBundleList(kind);
+    // Nothing picked yet? Open the first bundle so the tab lands on content
+    // rather than on an instruction to click something.
+    if (!slice.path && slice.files.length) {
+      if (kind === 'audio') openBank(slice.files[0].path);
+      else openInterfaceFile(slice.files[0].path);
+    }
+  }
+
+  function renderBundleList(kind) {
+    const slice = state[kind];
+    const host = kind === 'audio' ? $audioBanks : $swfFiles;
+    const counter = kind === 'audio' ? $audioBankCount : $swfFileCount;
+    if (slice.loading) {
+      host.innerHTML = `<p class="up-loading">${esc(t('Loading…'))}</p>`;
+      return;
+    }
+    if (slice.error) { host.innerHTML = errorHTML(new Error(slice.error)); return; }
+    const needle = kind === 'iface' ? (slice.fileFilter || '').toLowerCase() : '';
+    const files = (slice.files || []).filter(
+      (f) => !needle || f.path.toLowerCase().includes(needle));
+    counter.textContent = formatInt(files.length);
+    if (!files.length) {
+      host.innerHTML = `<p class="up-tree-empty">${esc(
+        kind === 'audio' ? t('This branch has no sound banks.') : t('Nothing matches that filter.'))}</p>`;
+      return;
+    }
+    host.innerHTML = files.map((f) => `
+      <button type="button" class="up-bundle-row${f.path === slice.path ? ' active' : ''}"
+              data-bundle-path="${esc(f.path)}">
+        <i class="fa-solid ${kind === 'audio' ? 'fa-file-audio' : 'fa-file-image'}" aria-hidden="true"></i>
+        <span class="up-bundle-name">${esc(f.path.slice(f.path.lastIndexOf('/') + 1))}</span>
+        <span class="up-bundle-size">${esc(formatBytes(f.size))}</span>
+      </button>`).join('');
+  }
+
+  // ── Interface tab ──────────────────────────────────────────────────
+
+  function swfGridHTML(assets, path) {
+    return `<div class="up-swf-grid">${assets.map((a) => `
+      <button type="button" class="up-swf-tile" data-asset-id="${a.id}"
+              title="${esc(a.name || '#' + a.id)}">
+        <span class="up-swf-thumb up-checker">
+          <img src="${esc(swfAssetUrl(path, a.id, a.thumb))}" alt="${esc(a.name || '')}"
+               loading="lazy" decoding="async">
+        </span>
+        <span class="up-swf-name">${esc(a.name || '#' + a.id)}</span>
+        <span class="up-swf-dims">${a.width}×${a.height} · ${esc(formatBytes(a.bytes))}</span>
+      </button>`).join('')}</div>`;
+  }
+
+  async function openInterfaceFile(path) {
+    const slice = state.iface;
+    const token = ++slice.token;
+    slice.path = path;
+    slice.assets = [];
+    slice.filter = '';
+    $swfFilter2.value = '';
+    $swfZip2.disabled = true;
+    $swfTitle2.textContent = path.slice(path.lastIndexOf('/') + 1);
+    $swfMeta2.textContent = '';
+    $swfBody2.innerHTML = `<p class="up-loading">${esc(t('Loading…'))}</p>`;
+    renderBundleList('iface');
+    scheduleHash(true);
+
+    let data;
+    try {
+      data = await fetchJSON(
+        `/site/updates/${state.branch}/file/swf?path=${encodeURIComponent(path)}`);
+    } catch (err) {
+      if (token !== slice.token) return;
+      $swfBody2.innerHTML = errorHTML(err);
+      return;
+    }
+    if (token !== slice.token) return;
+    slice.assets = data.assets || [];
+    const m = data.swf || {};
+    $swfMeta2.textContent = [
+      `${formatInt(slice.assets.length)} ${t('images')}`,
+      m.version ? `SWF v${m.version}` : '',
+      (m.width && m.height) ? `${m.width}×${m.height}` : '',
+    ].filter(Boolean).join(' · ');
+    $swfZip2.disabled = !slice.assets.length;
+    renderInterfaceGrid();
+  }
+
+  function renderInterfaceGrid() {
+    const slice = state.iface;
+    if (!slice.assets.length) {
+      $swfBody2.innerHTML =
+        `<p class="up-tree-empty">${esc(t('No images are embedded in this movie.'))}</p>`;
+      return;
+    }
+    const needle = (slice.filter || '').trim().toLowerCase();
+    const shown = needle
+      ? slice.assets.filter((a) => (a.name || '').toLowerCase().includes(needle)
+          || String(a.id).includes(needle))
+      : slice.assets;
+    $swfBody2.innerHTML = shown.length
+      ? swfGridHTML(shown, slice.path)
+      : `<p class="up-tree-empty">${esc(t('Nothing matches that filter.'))}</p>`;
+  }
+
+  // ── Audio tab ──────────────────────────────────────────────────────
+
+  function bankAudioUrl(path, id, raw) {
+    const q = `path=${encodeURIComponent(path)}&id=${id}${raw ? '&raw=1' : ''}`;
+    // Absolute: _site_util only rewrites fetch()/XHR onto the API origin, and an
+    // <audio src> / <a href> is a plain resource load.
+    return apiUrl(`/site/updates/${state.branch}/file/bnk/audio?${q}`);
+  }
+
+  async function openBank(path) {
+    const slice = state.audio;
+    const token = ++slice.token;
+    slice.path = path;
+    slice.sounds = [];
+    slice.bank = null;
+    slice.filter = '';
+    $audioFilter.value = '';
+    $audioZip.disabled = true;
+    $audioTitle.textContent = path.slice(path.lastIndexOf('/') + 1);
+    $audioMeta.textContent = '';
+    $audioBody.innerHTML = `<p class="up-loading">${esc(t('Loading…'))}</p>`;
+    renderBundleList('audio');
+    scheduleHash(true);
+
+    let data;
+    try {
+      data = await fetchJSON(
+        `/site/updates/${state.branch}/file/bnk?path=${encodeURIComponent(path)}`);
+    } catch (err) {
+      if (token !== slice.token) return;
+      $audioBody.innerHTML = errorHTML(err);
+      return;
+    }
+    if (token !== slice.token) return;
+    slice.sounds = data.sounds || [];
+    slice.bank = data.bank || {};
+    $audioMeta.textContent = [
+      `${formatInt(data.count || 0)} ${t('sounds')}`,
+      data.total_duration ? formatClock(data.total_duration) : '',
+      slice.bank.events ? `${formatInt(slice.bank.events)} ${t('events')}` : '',
+    ].filter(Boolean).join(' · ');
+    $audioZip.disabled = !(data.playable > 0);
+    renderSoundList();
+  }
+
+  function visibleSounds() {
+    const slice = state.audio;
+    const needle = (slice.filter || '').trim().toLowerCase();
+    return slice.sounds.filter((s) => {
+      if (slice.codec !== 'all' && s.codec !== slice.codec) return false;
+      if (!needle) return true;
+      return (s.name || '').toLowerCase().includes(needle)
+        || (s.group || '').toLowerCase().includes(needle)
+        || String(s.id).includes(needle);
+    });
+  }
+
+  function soundRowHTML(s) {
+    const playing = _playing && _playing.id === s.id && _playing.path === state.audio.path;
+    const label = s.name || `#${s.id}`;
+    const tags = s.error
+      ? `<span class="up-snd-bad">${esc(t('Cannot decode'))}</span>`
+      : `<span class="up-snd-codec up-snd-${esc(s.codec || '')}">${esc(s.codec || '')}</span>`
+        + `<span class="up-snd-spec">${s.channels === 2 ? t('stereo') : t('mono')} · ${Math.round(s.sample_rate / 100) / 10} kHz</span>`;
+    return `<div class="up-snd${playing ? ' playing' : ''}${s.error ? ' broken' : ''}" data-sound-id="${s.id}">
+      <button type="button" class="up-snd-play" data-sound-play="${s.id}"
+              aria-label="${esc(t('Play'))} ${esc(label)}"${s.error ? ' disabled' : ''}>
+        <i class="fa-solid ${playing ? 'fa-pause' : 'fa-play'}" aria-hidden="true"></i>
+      </button>
+      <span class="up-snd-name" title="${esc(s.path || label)}">${esc(label)}</span>
+      <span class="up-snd-tags">${tags}</span>
+      <span class="up-snd-dur">${esc(formatClock(s.duration))}</span>
+      ${s.error ? '' : `<a class="up-snd-dl" href="${esc(bankAudioUrl(state.audio.path, s.id))}"
+         download title="${esc(t('Download'))}" aria-label="${esc(t('Download'))} ${esc(label)}">
+        <i class="fa-solid fa-download" aria-hidden="true"></i></a>`}
+    </div>`;
+  }
+
+  function renderSoundList() {
+    const slice = state.audio;
+    if (!slice.sounds.length) {
+      $audioBody.innerHTML =
+        `<p class="up-tree-empty">${esc(t('This bank holds no embedded sounds.'))}</p>`;
+      return;
+    }
+    const shown = visibleSounds();
+    if (!shown.length) {
+      $audioBody.innerHTML = `<p class="up-tree-empty">${esc(t('Nothing matches that filter.'))}</p>`;
+      return;
+    }
+    if (!slice.grouped) {
+      $audioBody.innerHTML = `<div class="up-snd-list">${shown.map(soundRowHTML).join('')}</div>`;
+      return;
+    }
+    // Grouped: Wwise puts the numbered takes of one effect under a shared
+    // container, and that container name is the only thing that tells you
+    // "these five footsteps are the same footstep".
+    const groups = new Map();
+    for (const s of shown) {
+      const key = s.group || '';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(s);
+    }
+    const order = [...groups.keys()].sort((a, b) =>
+      (a || '￿').toLowerCase().localeCompare((b || '￿').toLowerCase()));
+    $audioBody.innerHTML = order.map((key) => {
+      const rows = groups.get(key);
+      const head = key
+        ? `<div class="up-snd-group"><span class="up-snd-groupname">${esc(key)}</span>
+             <span class="up-snd-groupcount">${formatInt(rows.length)}</span></div>`
+        : `<div class="up-snd-group"><span class="up-snd-groupname up-snd-ungrouped">${esc(t('Ungrouped'))}</span>
+             <span class="up-snd-groupcount">${formatInt(rows.length)}</span></div>`;
+      return head + `<div class="up-snd-list">${rows.map(soundRowHTML).join('')}</div>`;
+    }).join('');
+  }
+
+  // ── Player ─────────────────────────────────────────────────────────
+  // One <audio> element for the whole tab. The waveform is drawn from a decoded
+  // copy of the same bytes - a second fetch, but it lands on the HTTP cache the
+  // first one just filled.
+
+  let _audioEl = null;
+  let _playing = null;      // {id, path, name} currently loaded
+  let _peaks = null;        // Float32Array of per-column peaks, or null while decoding
+  let _peakToken = 0;
+
+  function audioEl() {
+    if (!_audioEl) {
+      _audioEl = new Audio();
+      _audioEl.preload = 'auto';
+      _audioEl.crossOrigin = 'anonymous';
+      _audioEl.addEventListener('timeupdate', paintProgress);
+      _audioEl.addEventListener('durationchange', paintProgress);
+      _audioEl.addEventListener('ended', () => { syncPlayButtons(); paintProgress(); });
+      _audioEl.addEventListener('play', syncPlayButtons);
+      _audioEl.addEventListener('pause', syncPlayButtons);
+      _audioEl.addEventListener('error', () => {
+        $playerSub.textContent = t('This sound could not be played.');
+      });
+    }
+    return _audioEl;
+  }
+
+  function playSound(id) {
+    const slice = state.audio;
+    const sound = slice.sounds.find((s) => s.id === id);
+    if (!sound || sound.error) return;
+    const el = audioEl();
+    if (_playing && _playing.id === id && _playing.path === slice.path) {
+      if (el.paused) el.play().catch(() => {}); else el.pause();
+      return;
+    }
+    _playing = { id, path: slice.path, name: sound.name || `#${id}` };
+    const url = bankAudioUrl(slice.path, id);
+    el.src = url;
+    el.volume = Number($playerVol.value || 1);
+    el.loop = $playerLoop.getAttribute('aria-pressed') === 'true';
+    el.play().catch(() => {});
+    $player.hidden = false;
+    $playerName.textContent = _playing.name;
+    $playerSub.textContent = [
+      sound.group || '',
+      sound.codec || '',
+      sound.channels === 2 ? t('stereo') : t('mono'),
+      `${Math.round(sound.sample_rate / 100) / 10} kHz`,
+    ].filter(Boolean).join(' · ');
+    $playerDl.href = url;
+    $playerDl.setAttribute('download', `${_playing.name}`);
+    _peaks = null;
+    loadPeaks(url, ++_peakToken);
+    paintProgress();
+    renderSoundList();
+  }
+
+  async function loadPeaks(url, token) {
+    drawWave();
+    let decoded;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const bytes = await (await fetch(url)).arrayBuffer();
+      if (token !== _peakToken) return;
+      decoded = await new Ctx().decodeAudioData(bytes);
+    } catch (_) { return; }
+    if (token !== _peakToken) return;
+    const COLUMNS = 900;
+    const data = decoded.getChannelData(0);
+    const peaks = new Float32Array(COLUMNS);
+    for (let i = 0; i < COLUMNS; i++) {
+      const from = Math.floor(i * data.length / COLUMNS);
+      const to = Math.floor((i + 1) * data.length / COLUMNS);
+      let peak = 0;
+      for (let j = from; j < to; j++) {
+        const v = data[j] < 0 ? -data[j] : data[j];
+        if (v > peak) peak = v;
+      }
+      peaks[i] = peak;
+    }
+    _peaks = peaks;
+    drawWave();
+  }
+
+  function drawWave() {
+    const canvas = $playerWave;
+    if (!canvas || $player.hidden) return;
+    const ratio = window.devicePixelRatio || 1;
+    const width = canvas.clientWidth || 300;
+    const height = canvas.clientHeight || 40;
+    if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+    }
+    const g = canvas.getContext('2d');
+    if (!g) return;
+    g.setTransform(ratio, 0, 0, ratio, 0, 0);
+    g.clearRect(0, 0, width, height);
+    const mid = height / 2;
+    if (!_peaks) {
+      // Nothing decoded yet - a flat rule reads as "loading", not as silence.
+      g.fillStyle = 'rgba(255,255,255,.10)';
+      g.fillRect(0, mid - 0.5, width, 1);
+      return;
+    }
+    const columns = Math.max(1, Math.floor(width / 2));
+    g.fillStyle = 'rgba(255,255,255,.28)';
+    for (let x = 0; x < columns; x++) {
+      const peak = _peaks[Math.floor(x * _peaks.length / columns)] || 0;
+      const h = Math.max(1, peak * (height - 4));
+      g.fillRect(x * 2, mid - h / 2, 1, h);
+    }
+  }
+
+  function paintProgress() {
+    const el = _audioEl;
+    if (!el || $player.hidden) return;
+    const dur = Number.isFinite(el.duration) ? el.duration : 0;
+    const at = el.currentTime || 0;
+    const pct = dur ? Math.min(100, (at / dur) * 100) : 0;
+    $playerPlayed.style.width = `${pct}%`;
+    $playerTime.textContent = `${formatClock(at)} / ${formatClock(dur)}`;
+    $playerSeek.setAttribute('aria-valuenow', String(Math.round(pct)));
+  }
+
+  function syncPlayButtons() {
+    const paused = !_audioEl || _audioEl.paused;
+    const icon = $playerPlay.querySelector('i');
+    if (icon) icon.className = `fa-solid ${paused ? 'fa-play' : 'fa-pause'}`;
+    if (!_playing) return;
+    for (const row of $audioBody.querySelectorAll('.up-snd')) {
+      const active = Number(row.dataset.soundId) === _playing.id;
+      row.classList.toggle('playing', active && !paused);
+      const rowIcon = row.querySelector('.up-snd-play i');
+      if (rowIcon) rowIcon.className = `fa-solid ${active && !paused ? 'fa-pause' : 'fa-play'}`;
+    }
+  }
+
+  function seekTo(clientX) {
+    const el = _audioEl;
+    if (!el || !Number.isFinite(el.duration) || !el.duration) return;
+    const box = $playerSeek.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - box.left) / box.width));
+    el.currentTime = ratio * el.duration;
+    paintProgress();
+  }
+
+  function closePlayer() {
+    _peakToken++;
+    if (_audioEl) { _audioEl.pause(); _audioEl.removeAttribute('src'); _audioEl.load(); }
+    _playing = null;
+    _peaks = null;
+    $player.hidden = true;
+    renderSoundList();
+  }
+
+  function formatClock(seconds) {
+    seconds = Math.max(0, Number(seconds) || 0);
+    if (seconds >= 3600) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      return `${h}:${String(m).padStart(2, '0')}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+    }
+    return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+  }
+
   // ─── Changes tab ───────────────────────────────────────────────────
   function renderChanges() {
     const { entries, total, ordinal, version_tag, counts, filter } = state.changes;
@@ -1695,7 +2185,7 @@
   function wireEvents() {
     // Explorer/Changes/Compare tablist: click, plus arrow/Home/End roving per
     // the WAI-ARIA tabs pattern (panels carry role=tabpanel in the template).
-    const tabBtns = [$tabExplorer, $tabChanges, $tabCompare];
+    const tabBtns = [$tabExplorer, $tabChanges, $tabCompare, $tabInterface, $tabAudio];
     for (const btn of tabBtns) {
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));
       btn.addEventListener('keydown', (e) => {
@@ -1738,6 +2228,97 @@
       e.preventDefault();
       saveCrossOrigin($assetDl.href, $assetDl.download);
     });
+
+    // ── Interface tab ──
+    $swfFiles.addEventListener('click', (e) => {
+      const row = e.target.closest('[data-bundle-path]');
+      if (row) openInterfaceFile(row.dataset.bundlePath);
+    });
+    $swfFileFilter.addEventListener('input', () => {
+      state.iface.fileFilter = $swfFileFilter.value || '';
+      renderBundleList('iface');
+    });
+    $swfFilter2.addEventListener('input', () => {
+      state.iface.filter = $swfFilter2.value || '';
+      renderInterfaceGrid();
+    });
+    $swfZip2.addEventListener('click', () => {
+      if (!state.iface.path) return;
+      window.location.href = apiUrl(`/site/updates/${state.branch}/file/swf/zip`
+        + `?path=${encodeURIComponent(state.iface.path)}`);
+    });
+    $swfBody2.addEventListener('click', (e) => {
+      const tile = e.target.closest('[data-asset-id]');
+      if (!tile) return;
+      // The full-size viewer reads from the gallery's asset list, so point it at
+      // the tab's set before opening.
+      _swfAssets = state.iface.assets;
+      _swfPath = state.iface.path;
+      openAssetView(Number(tile.dataset.assetId));
+    });
+
+    // ── Audio tab ──
+    $audioBanks.addEventListener('click', (e) => {
+      const row = e.target.closest('[data-bundle-path]');
+      if (row) openBank(row.dataset.bundlePath);
+    });
+    $audioFilter.addEventListener('input', () => {
+      state.audio.filter = $audioFilter.value || '';
+      renderSoundList();
+    });
+    $audioCodec.addEventListener('change', () => {
+      state.audio.codec = $audioCodec.value || 'all';
+      renderSoundList();
+    });
+    $audioGroup.addEventListener('change', () => {
+      state.audio.grouped = $audioGroup.checked;
+      renderSoundList();
+    });
+    $audioZip.addEventListener('click', () => {
+      if (!state.audio.path) return;
+      window.location.href = apiUrl(`/site/updates/${state.branch}/file/bnk/zip`
+        + `?path=${encodeURIComponent(state.audio.path)}`);
+    });
+    $audioBody.addEventListener('click', (e) => {
+      if (e.target.closest('.up-snd-dl')) return;        // let the download be a link
+      const row = e.target.closest('[data-sound-id]');
+      if (row) playSound(Number(row.dataset.soundId));
+    });
+
+    // ── Player transport ──
+    $playerPlay.addEventListener('click', () => {
+      if (!_audioEl) return;
+      if (_audioEl.paused) _audioEl.play().catch(() => {}); else _audioEl.pause();
+    });
+    $playerClose.addEventListener('click', closePlayer);
+    $playerVol.addEventListener('input', () => {
+      if (_audioEl) _audioEl.volume = Number($playerVol.value || 1);
+    });
+    $playerLoop.addEventListener('click', () => {
+      const on = $playerLoop.getAttribute('aria-pressed') !== 'true';
+      $playerLoop.setAttribute('aria-pressed', String(on));
+      $playerLoop.classList.toggle('active', on);
+      if (_audioEl) _audioEl.loop = on;
+    });
+    // Drag anywhere on the waveform to scrub; pointer capture keeps the drag
+    // alive when the cursor leaves the strip.
+    $playerSeek.addEventListener('pointerdown', (e) => {
+      $playerSeek.setPointerCapture(e.pointerId);
+      seekTo(e.clientX);
+    });
+    $playerSeek.addEventListener('pointermove', (e) => {
+      if ($playerSeek.hasPointerCapture(e.pointerId)) seekTo(e.clientX);
+    });
+    $playerSeek.addEventListener('keydown', (e) => {
+      if (!_audioEl || !Number.isFinite(_audioEl.duration)) return;
+      const step = e.shiftKey ? 5 : 1;
+      if (e.key === 'ArrowRight') { e.preventDefault(); _audioEl.currentTime += step; }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); _audioEl.currentTime -= step; }
+      else if (e.key === 'Home') { e.preventDefault(); _audioEl.currentTime = 0; }
+      else return;
+      paintProgress();
+    });
+    window.addEventListener('resize', drawWave);
 
     // View toggle (list ↔ grid gallery).
     if ($viewToggle) {
@@ -1859,6 +2440,7 @@
     }
     if (params.has('path')) out.path = params.get('path');
     if (params.has('tab')) out.tab = params.get('tab');
+    if (params.has('bundle')) out.bundle = params.get('bundle');
     if (params.has('view')) out.view = params.get('view');
     if (params.has('sort')) out.sort = params.get('sort');
     if (params.has('from')) {
@@ -1888,6 +2470,11 @@
     if (state.activeTab && state.activeTab !== 'explorer') {
       parts.push(`tab=${state.activeTab}`);
     }
+    // The bundle tabs own their own selection, so it rides in its own key rather
+    // than fighting the explorer for `path=`.
+    const bundle = state.activeTab === 'audio' ? state.audio.path
+      : state.activeTab === 'interface' ? state.iface.path : null;
+    if (bundle) parts.push(`bundle=${encodeURIComponent(bundle)}`);
     // On the compare tab a run diff owns the path (its own field, which may
     // differ from the open file) plus the two version ordinals, so the diff is
     // shareable and survives Back/Forward.
@@ -1953,6 +2540,14 @@
     }
     const targetTab = h.tab || 'explorer';
     if (targetTab !== state.activeTab) switchTab(targetTab);
+    if (targetTab === 'audio' || targetTab === 'interface') {
+      await ensureBundleList(targetTab === 'audio' ? 'audio' : 'iface');
+      const slice = targetTab === 'audio' ? state.audio : state.iface;
+      if (h.bundle && h.bundle !== slice.path) {
+        if (targetTab === 'audio') await openBank(h.bundle);
+        else await openInterfaceFile(h.bundle);
+      }
+    }
     await restoreCompareFromHash(h);
     // View + sort follow the hash too (a plain entry means the app default). Set
     // inline - no localStorage write - so traversing history doesn't overwrite the

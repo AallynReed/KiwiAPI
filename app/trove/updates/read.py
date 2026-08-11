@@ -97,6 +97,8 @@ async def read_file_text(branch: str, path: str, max_bytes: int = VIEW_MAX_BYTES
     * ``image``     - a browser-native image; render via ``<img>`` (no bytes here).
     * ``binary``    - small non-text file; the client fetches the raw bytes and
       renders a hex viewer.
+    * ``swf``       - Flash movie; the client opens the extracted-asset gallery.
+    * ``bnk``       - Wwise sound bank; the client opens the sound browser.
     * ``too_large`` - non-image file above ``max_bytes``; download to inspect.
     * ``missing``   - blob absent from the store.
 
@@ -122,6 +124,9 @@ async def read_file_text(branch: str, path: str, max_bytes: int = VIEW_MAX_BYTES
     # Flash movies are an art bundle - the client opens the extracted-asset gallery.
     if ext == "swf":
         return {**base, "viewable": False, "kind": "swf", "reason": "swf"}
+    # A sound bank is an audio bundle - the client opens the sound browser.
+    if ext == "bnk":
+        return {**base, "viewable": False, "kind": "bnk", "reason": "bnk"}
     if meta["size"] > max_bytes:
         return {**base, "viewable": False, "kind": "too_large", "reason": "too_large"}
     blob = ContentStore(settings.trove_update_store_dir).path_for(meta["content_sha256"])

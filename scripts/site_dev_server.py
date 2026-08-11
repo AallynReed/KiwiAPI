@@ -488,6 +488,73 @@ def _swf_manifest() -> dict:
     return _swf_manifest_cache
 
 
+# The .bnk sound browser runs the REAL decoder (app.trove.audio) so the dev
+# preview exercises the same Vorbis/ADPCM/PCM path prod does. Point TROVE_DEV_BNK
+# at a game bank; ui.bnk is the good one to develop against (167 named sounds,
+# every codec, and small enough to index instantly). Missing -> the Audio tab
+# reports an empty bank, which is a state it has to handle anyway.
+_BNK_SRC = os.environ.get("TROVE_DEV_BNK") or str(
+    Path(os.environ.get("TROVE_LIVE_DIR",
+                        r"C:/Program Files (x86)/Glyph/Games/Trove/Live"))
+    / "extracted/audio/ui.bnk"
+)
+_bnk_cache: dict | None = None
+
+
+def _bank_manifest() -> dict:
+    """Index once, cache. Mirrors what app.trove.audio.service stores in prod,
+    except the ``.wem`` bytes stay in memory instead of going to a content store."""
+    global _bnk_cache
+    if _bnk_cache is None:
+        import sys
+        sys.path.insert(0, str(ROOT))
+        from app.trove.audio import bank as bank_reader
+        from app.trove.audio import names as name_reader
+        from app.trove.audio import wem as wem_reader
+
+        sounds: list[dict] = []
+        blobs: dict[int, bytes] = {}
+        info = {"version": 0, "bank_id": 0, "sections": [], "objects": 0, "events": 0}
+        try:
+            raw = Path(_BNK_SRC).read_bytes()
+            parsed = bank_reader.parse(raw)
+            named: dict[int, object] = {}
+            events: dict[int, str] = {}
+            try:
+                side = Path(name_reader.sidecar_path(_BNK_SRC))
+                named, events = name_reader.parse(side.read_text("utf-8", errors="replace"))
+            except OSError:
+                pass
+            info = {"version": parsed.version, "bank_id": parsed.bank_id,
+                    "sections": [s.tag for s in parsed.sections],
+                    "objects": len(parsed.objects), "events": len(events)}
+            for entry in parsed.media:
+                data = parsed.media_bytes(entry)
+                blobs[entry.media_id] = data
+                tag = named.get(entry.media_id)
+                record = {"id": entry.media_id, "bytes": entry.size,
+                          "name": getattr(tag, "name", None),
+                          "group": getattr(tag, "group", ""),
+                          "path": getattr(tag, "path", ""),
+                          "source": getattr(tag, "source", ""),
+                          "notes": getattr(tag, "notes", "")}
+                try:
+                    meta = wem_reader.parse(data)
+                except wem_reader.WemError as exc:
+                    record |= {"codec": None, "channels": 0, "sample_rate": 0,
+                               "duration": 0.0, "error": str(exc)}
+                else:
+                    record |= {"codec": meta.codec, "channels": meta.channels,
+                               "sample_rate": meta.sample_rate,
+                               "duration": round(meta.duration, 3), "error": None}
+                sounds.append(record)
+            sounds.sort(key=lambda s: (s["name"] or "").lower() or f"~{s['id']}")
+        except (OSError, bank_reader.BankError):
+            pass
+        _bnk_cache = {"bank": info, "sounds": sounds, "blobs": blobs}
+    return _bnk_cache
+
+
 def _brdf_map_png() -> bytes | None:
     global _brdf_png_cache
     if _brdf_png_cache is None:
@@ -516,6 +583,9 @@ _UPDATE_PATHS = [
     "ui/hud/health_bar.png",
     "ui/hud/mana_bar.png",
     "ui/settings.swf",
+    "audio/ui.bnk",
+    "audio/ui.txt",
+    "audio/foley.bnk",
     "scripts/combat/damage.lua",
     "scripts/combat/healing.lua",
     "languages/en/strings.json",
@@ -1805,6 +1875,9 @@ class Handler(SimpleHTTPRequestHandler):
                 if ext == "swf":
                     return self._send_json({**base, "size": 262144, "viewable": False,
                                             "kind": "swf", "reason": "swf"})
+                if ext == "bnk":
+                    return self._send_json({**base, "size": 4567829, "viewable": False,
+                                            "kind": "bnk", "reason": "bnk"})
                 if ext in ("binfab", "tfa", "tex"):
                     return self._send_json({**base, "size": 512, "viewable": False,
                                             "kind": "binary", "reason": "binary"})
@@ -1838,6 +1911,49 @@ class Handler(SimpleHTTPRequestHandler):
                     for i in m["images"]:
                         ext = {"image/jpeg": "jpg", "image/gif": "gif"}.get(i.mime, "png")
                         zf.writestr(f"{i.char_id:04d}_{i.name or 'asset'}.{ext}", i.data)
+                return self._send_bytes(buf.getvalue(), "application/zip")
+            if sub == "file/bnk":
+                m = _bank_manifest()
+                sounds = m["sounds"]
+                return self._send_json({
+                    "branch": branch, "path": qs.get("path", [""])[0],
+                    "content_sha256": "stub", "bank": m["bank"], "sounds": sounds,
+                    "count": len(sounds),
+                    "playable": sum(1 for s in sounds if s["error"] is None),
+                    "total_duration": round(sum(s["duration"] for s in sounds), 1)})
+            if sub == "file/bnk/audio":
+                import sys
+                sys.path.insert(0, str(ROOT))
+                from app.trove.audio import wem as wem_reader
+                m = _bank_manifest()
+                want = int(qs.get("id", ["-1"])[0])
+                data = m["blobs"].get(want)
+                if data is None:
+                    return self._send_json({"detail": "no such sound"}, status=404)
+                if qs.get("raw", ["0"])[0] in ("1", "true"):
+                    return self._send_bytes(data, "audio/vnd.wave")
+                try:
+                    out, mime, _ext = wem_reader.convert(data)
+                except wem_reader.WemError as exc:
+                    return self._send_json({"detail": str(exc)}, status=422)
+                return self._send_bytes(out, mime)
+            if sub == "file/bnk/zip":
+                import io as _io
+                import sys
+                import zipfile as _zip
+                sys.path.insert(0, str(ROOT))
+                from app.trove.audio import wem as wem_reader
+                m = _bank_manifest()
+                buf = _io.BytesIO()
+                with _zip.ZipFile(buf, "w", _zip.ZIP_STORED) as zf:
+                    for s in m["sounds"]:
+                        if s["error"]:
+                            continue
+                        try:
+                            out, _mime, ext = wem_reader.convert(m["blobs"][s["id"]])
+                        except wem_reader.WemError:
+                            continue
+                        zf.writestr(f"{s['name'] or s['id']}.{ext}", out)
                 return self._send_bytes(buf.getvalue(), "application/zip")
             if sub == "file/compare":
                 # Synthetic diff so the compare-tab renderer (intra-line
