@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kiwi - Embeddable viewers</title>
+  <title>Kiwi - Embeddable viewers and sound player</title>
   <link rel="stylesheet" href="styles.css" />
   <!--
     This is deliberately its OWN page, not a section of the API reference. The
@@ -44,13 +44,14 @@
 
         <header class="page-head">
           <h1>Embeddable viewers</h1>
-          <p class="lede">Put Trove's 3D model and particle-effect previews on your own site.</p>
+          <p class="lede">Put Trove's 3D models, particle effects and game sounds on your own site.</p>
         </header>
 
         <section id="intro">
           <p>Kiwi renders Trove content in the browser - voxel <code>.blueprint</code> models,
-          whole creatures assembled on their skeleton with animation clips, and PopcornFX
-          <code>.pkfx</code> effects. The embeddable viewer puts that same renderer in an
+          whole creatures assembled on their skeleton with animation clips, PopcornFX
+          <code>.pkfx</code> effects, and the audio inside Wwise <code>.bnk</code> sound banks.
+          The embeddable viewer puts that same renderer and player in an
           <code>&lt;iframe&gt;</code> on your pages.</p>
 
           <p>It can show a mod you host yourself, a creature straight out of the live game, or
@@ -96,17 +97,31 @@
           than one creature we say so, and name one of them, instead of picking for you.</p>
 
           <h3>A file from the live game</h3>
-          <p><code>game=&lt;path&gt;</code> - any <code>.blueprint</code> or <code>.pkfx</code>
-          in the current game files. A full path works, and so does a bare filename; we resolve
-          it against the game tree.</p>
+          <p><code>game=&lt;path&gt;</code> - any <code>.blueprint</code>, <code>.pkfx</code> or
+          <code>.bnk</code> in the current game files. A full path works, and so does a bare
+          filename; we resolve it against the game tree.</p>
           <pre><code>?game=prefabs/creatures/dragon/dragon_head.blueprint
 ?game=dragon_head.blueprint
-?game=fx_fire_medium.pkfx</code></pre>
+?game=fx_fire_medium.pkfx
+?game=audio/ui.bnk</code></pre>
           <p>When the blueprint you name is part of a creature, the viewer offers the
           <strong>whole creature</strong> - every other part pulled from the game files,
           placed on its skeleton, with its animation clips. One filename, the full model.
           (If you already know which creature you want, <code>prefab=</code> above says so
           directly.)</p>
+
+          <h3>Game sounds</h3>
+          <p>A <code>.bnk</code> is a sound bank - one file holding anywhere from a single
+          effect to the 1,600 in Trove's UI bank - so pointing at one gives you a player: a
+          filterable list of everything inside, with a waveform transport above it. Nothing is
+          decoded until a visitor presses play, so embedding an 87 MB music bank costs your page
+          one small request.</p>
+          <pre><code>?game=audio/ui.bnk</code></pre>
+          <p>Add <code>sound=</code> to pin one sound and drop the list - the embed becomes a
+          single player, which is usually what a page showing off one effect wants. It takes the
+          sound's name or its numeric id.</p>
+          <pre><code>?game=audio/ui.bnk&amp;sound=ui_gems_upgrade_sm_01
+?game=audio/ui.bnk&amp;sound=1099092</code></pre>
 
           <h3>A mod you host</h3>
           <p>Upload the <code>.tmod</code> once from your backend and embed the token you get
@@ -114,7 +129,8 @@
           <pre><code>?tmod=&lt;token&gt;</code></pre>
 
           <h3>A mod on the Kiwi Mods Hub</h3>
-          <p><code>release=&lt;id&gt;</code> - a published release id. Nothing to upload.</p>
+          <p><code>release=&lt;id&gt;</code> - a published release id. Nothing to upload. A hub
+          release that bundles a <code>.bnk</code> gets the sound player too.</p>
           <pre><code>?release=66f1c0a3e4b0a1d2c3e4f5a6</code></pre>
         </section>
 
@@ -133,7 +149,13 @@
                 the visitor can switch with the picker.</td>
               </tr>
               <tr>
-                <td><code>mode</code></td><td><code>auto</code> · <code>blueprint</code> · <code>assembled</code> · <code>vfx</code></td>
+                <td><code>sound</code></td><td>a sound name or id</td>
+                <td>Pins the player to one sound inside a <code>.bnk</code> and hides the list.
+                A name matches in full before it matches a fragment, so <code>hit</code> finds
+                the sound actually called "hit" rather than <code>hit_critical_02</code>.</td>
+              </tr>
+              <tr>
+                <td><code>mode</code></td><td><code>auto</code> · <code>blueprint</code> · <code>assembled</code> · <code>vfx</code> · <code>audio</code></td>
                 <td>Which view to open on. <code>auto</code> picks the most interesting one
                 available - the assembled creature when there is one.</td>
               </tr>
@@ -217,6 +239,10 @@
           parts belong to and where each attaches. If we don't know, we show the individual
           blueprints instead of guessing - a model built on the wrong skeleton looks like a
           bug in your page, not a limitation of ours.</p>
+          <p>Sounds are the game's own audio, converted to something a browser can play. Names
+          come from the log Wwise writes beside each bank, so most sounds list under the name
+          the studio gave them; a handful that bank carries no entry for show as an id. A media
+          object we can't decode stays in the list, marked, rather than vanishing.</p>
         </section>
 
         <section id="privacy">
@@ -259,6 +285,12 @@
                 <td>"This mod has no 3D models or effects to preview"</td>
                 <td>The <code>.tmod</code> contains no <code>.blueprint</code> or
                 <code>.pkfx</code> - a texture-only or UI mod, for instance.</td>
+              </tr>
+              <tr>
+                <td>"Sounds can't be previewed from an uploaded mod"</td>
+                <td>Indexing a sound bank writes every sound to our store, and we promise an
+                uploaded <code>.tmod</code> is never written to disk. Publish the mod to the
+                Kiwi Mods Hub and embed it with <code>release=</code> instead.</td>
               </tr>
             </tbody>
           </table>

@@ -7,7 +7,8 @@ The embed widens that to five **sources**, all rendered by exactly the same code
                      is never previewable through an embed, which is anonymous)
   ``tmod=<token>``   a .tmod the partner uploaded to /v1/embed/tmod (app/embed/uploads.py)
   ``game=<path>``    a file in the live game tree (the updates archive), so a partner
-                     can preview native game content they don't host at all
+                     can preview native game content they don't host at all - a
+                     ``.blueprint``, a ``.pkfx`` effect, or a ``.bnk`` sound bank
   ``prefab=<path>``  a creature by its game PREFAB - the mount/dragon/ally/costume
                      itself rather than one of its meshes. The prefab is what the game
                      binds a skeleton and a part set to, so this is the direct way to
@@ -38,6 +39,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import logging
 import re
 import time
@@ -61,7 +63,7 @@ logger = logging.getLogger("kiwi.embed")
 
 # Files a ``game=`` source may address directly. (Everything else in the tree is
 # reachable only as a resolved dependency of a .pkfx, never by request.)
-_GAME_EXTS = (".blueprint", ".pkfx")
+_GAME_EXTS = (".blueprint", ".pkfx", ".bnk")
 
 _MAX_GAME_PATH = 400
 
@@ -232,7 +234,7 @@ async def _game_source(path: str) -> Source:
     if not path or len(path) > _MAX_GAME_PATH:
         raise _bad("Missing or over-long game file path.")
     if not path.lower().endswith(_GAME_EXTS):
-        raise _bad("Only .blueprint and .pkfx game files can be previewed.")
+        raise _bad("Only .blueprint, .pkfx and .bnk game files can be previewed.")
     resolved = await _resolve_game_path(path)
     if resolved is None:
         raise _missing(f"No '{path}' in the current game files.")
@@ -301,6 +303,7 @@ def _dress_manifest(src: Source) -> dict:
             "animations": assembly.animations_for(rig),
         },
         "vfx": {"items": []},
+        "audio": {"items": []},
     }
 
 
@@ -329,6 +332,7 @@ async def _prefab_manifest(src: Source) -> dict:
             "animations": assembly.animations_for(rig) if rig else [],
         },
         "vfx": {"items": []},
+        "audio": {"items": []},
     }
 
 
@@ -337,6 +341,7 @@ async def _tmod_manifest(src: Source) -> dict:
     try:
         base = await asyncio.to_thread(hub._list_blueprints_sync, src.tmod)
         pkfx_items, _index = await asyncio.to_thread(hub._tmod_pkfx_and_index, src.tmod)
+        banks = await asyncio.to_thread(_tmod_banks_sync, src.tmod)
     except tmod_mod.TmodError:
         raise _bad("That file isn't a readable .tmod.") from None
     rig, anims, components = await hub._resolve_rig(base["fns"])
@@ -347,6 +352,10 @@ async def _tmod_manifest(src: Source) -> dict:
         "source": src.kind, "title": src.title,
         "blueprints": {"items": base["items"], "rig": rig, "animations": anims},
         "vfx": {"items": pkfx_items},
+        # An UPLOAD is deliberately silent: indexing a bank files every sound's .wem
+        # into the content store, and we promise a partner's upload is never written
+        # to disk. A hub release is already ours, on disk, so it plays.
+        "audio": {"items": banks if src.kind == "release" else []},
     }
 
 
@@ -358,7 +367,14 @@ async def _game_manifest(src: Source) -> dict:
     if path.lower().endswith(".pkfx"):
         return {"source": "game", "title": src.title,
                 "blueprints": {"items": [], "rig": None, "animations": []},
-                "vfx": {"items": [{"path": path, "size": None}]}}
+                "vfx": {"items": [{"path": path, "size": None}]},
+                "audio": {"items": []}}
+
+    if path.lower().endswith(".bnk"):
+        return {"source": "game", "title": src.title,
+                "blueprints": {"items": [], "rig": None, "animations": []},
+                "vfx": {"items": []},
+                "audio": {"items": [{"path": path, "size": None}]}}
 
     from app.trove.mods_hub import assembly, rig_index
     stem = vfx.basename(path).lower()[: -len(".blueprint")]
@@ -374,6 +390,7 @@ async def _game_manifest(src: Source) -> dict:
             "animations": assembly.animations_for(rig) if rig else [],
         },
         "vfx": {"items": []},
+        "audio": {"items": []},
     }
 
 
@@ -595,6 +612,153 @@ async def _assemble_creature(
             bp_cache.key_for_assembly(sig, f"game:{prefab}"), build, fmt)
     except bp_cache.NoPayload:
         return None
+
+
+# ── audio (Wwise sound banks) ──────────────────────────────────────────────
+#
+# A bank is a bundle, like a .swf: one file holding hundreds of sounds. So the
+# embed reads it in the same two steps ``app.trove.audio`` was built for - index
+# the bank (cheap, cached under its content hash, no decoding), then decode ONE
+# sound when a visitor presses play. Embedding ``mus_main.bnk`` therefore costs a
+# JSON body, not 87 MB of Vorbis.
+#
+# Both steps share the /updates browser's cache entries: the same bank indexed
+# there is already indexed here.
+
+
+def _tmod_banks_sync(tmod_bytes: bytes) -> list[dict]:
+    """The ``.bnk`` files a mod bundles. Header-only - listing them must not
+    decompress the file stream of a sound mod that may be tens of megabytes."""
+    parsed = tmod_mod.read_tmod(tmod_bytes, metadata_only=True)
+    items = [{"path": f["path"], "size": f["size"]}
+             for f in parsed["files"] if f["path"].lower().endswith(".bnk")]
+    items.sort(key=lambda f: f["path"].lower())
+    return items
+
+
+def _tmod_bank_bytes_sync(tmod_bytes: bytes, path: str) -> tuple[bytes, str | None] | None:
+    """``(bank bytes, sidecar text)`` for one ``.bnk`` bundled in a mod.
+
+    The sidecar is the ``.txt`` Wwise writes beside a bank; it carries every
+    sound's name, so a mod that ships one gets named sounds instead of ids."""
+    files = tmod_mod.read_tmod(tmod_bytes)["files"]
+    want = vfx.basename(path or "").lower()
+    hit = next((f for f in files if f["path"].lower().endswith(".bnk")
+                and vfx.basename(f["path"]).lower() == want), None)
+    if hit is None:
+        return None
+    raw = base64.b64decode(hit["content_base64"])
+    stem = hit["path"][: -len(".bnk")].lower()
+    side = next((f for f in files if f["path"].lower() == f"{stem}.txt"), None)
+    text = (base64.b64decode(side["content_base64"]).decode("utf-8", "replace")
+            if side else None)
+    return raw, text
+
+
+async def _bank_index(src: Source, path: str) -> dict:
+    """The cached sound index for one bank in this source.
+
+    Keyed by the bank's own content hash (plus the sidecar's), so the index is
+    built once however many partner pages point at the same sounds."""
+    from app.trove.audio import service as audio_service
+
+    if src.kind == "game":
+        target = src.game_path or ""
+        if not target.lower().endswith(".bnk"):
+            raise _missing("This preview has no sounds to play.")
+        # Pinned to its own file, like every other game read: the path param is
+        # only ever the one the manifest advertised.
+        if path and vfx.basename(path).lower() != vfx.basename(target).lower():
+            raise _missing("That sound bank isn't part of this preview.")
+        raw, sha, sidecar, sidecar_sha = await _game_bank_bytes(target)
+    elif src.kind == "release" and src.tmod is not None:
+        try:
+            got = await asyncio.to_thread(_tmod_bank_bytes_sync, src.tmod, path)
+        except tmod_mod.TmodError:
+            raise _bad("That file isn't a readable .tmod.") from None
+        if got is None:
+            raise _missing("No such sound bank in this mod.")
+        raw, sidecar = got
+        sha = hashlib.sha256(raw).hexdigest()
+        sidecar_sha = (hashlib.sha256(sidecar.encode("utf-8", "replace")).hexdigest()
+                       if sidecar else None)
+    elif src.kind == "tmod":
+        # See ``_tmod_manifest``: indexing a bank writes every sound to the content
+        # store, and an upload is held in memory only. Say why rather than 404.
+        raise _missing("Sounds can't be previewed from an uploaded mod. "
+                       "Publish it to the Mods Hub and embed the release instead.")
+    else:
+        raise _missing("This preview has no sounds to play.")
+
+    return await audio_service.manifest(raw, sha, sidecar, sidecar_sha)
+
+
+async def _game_bank_bytes(target: str) -> tuple[bytes, str, str | None, str | None]:
+    """``(bank, bank sha, sidecar text, sidecar sha)`` out of the updates archive."""
+    from app.trove.updates import read as updates_read
+
+    meta = await updates_read.get_file_meta(LIVE_BRANCH, target)
+    if not meta:
+        raise _missing("Game file not found.")
+    sha = meta["content_sha256"]
+    raw = await _read_game_blob(sha)
+    if raw is None:
+        raise _missing("Game file not found.")
+
+    sidecar = sidecar_sha = None
+    side_meta = await updates_read.get_file_meta(LIVE_BRANCH, f"{target[: -len('.bnk')]}.txt")
+    if side_meta is not None:
+        blob = await _read_game_blob(side_meta["content_sha256"])
+        if blob is not None:
+            sidecar = blob.decode("utf-8", "replace")
+            sidecar_sha = side_meta["content_sha256"]
+    return raw, sha, sidecar, sidecar_sha
+
+
+async def audio_bank(src: Source, path: str) -> dict:
+    """Every sound in one bank - names, codecs and durations, nothing decoded.
+
+    The store hash each sound is filed under is an internal handle, so it's
+    dropped here; ``audio_sound`` resolves ids against this same index."""
+    payload = await _bank_index(src, path)
+    return {
+        "path": path,
+        "bank": payload.get("bank"),
+        "sounds": [{k: v for k, v in s.items() if k != "sha"}
+                   for s in payload.get("sounds", [])],
+        "count": payload.get("count"),
+        "playable": payload.get("playable"),
+        "total_duration": payload.get("total_duration"),
+    }
+
+
+async def audio_sound(
+    src: Source, path: str, sound_id: int, raw: bool = False,
+) -> tuple[bytes, str, str, str]:
+    """One sound as ``(bytes, media type, filename, etag)``.
+
+    Decoded to Ogg or WAV by default; ``raw`` hands back the game's own ``.wem``."""
+    from app.trove.audio import service as audio_service
+
+    payload = await _bank_index(src, path)
+    sound = next((s for s in payload.get("sounds", []) if s["id"] == sound_id), None)
+    if sound is None:
+        raise _missing("No such sound in this bank.")
+
+    if raw:
+        data = await audio_service.raw_bytes(sound["sha"])
+        media, extension = "audio/vnd.wave", "wem"
+    else:
+        if sound.get("error"):
+            raise APIError(422, ErrorCode.bad_request, sound["error"])
+        decoded = await audio_service.audio_bytes(sound["sha"])
+        data, media, extension = decoded if decoded else (None, "", "")
+    if data is None:
+        raise _missing("Sound blob missing from the store.")
+
+    stem = sound.get("name") or f"sound_{sound_id}"
+    stem = "".join(c if c.isalnum() or c in "._-" else "_" for c in stem) or "sound"
+    return data, media, f"{stem}.{extension}", f'"{sound["sha"]}{"-raw" if raw else ""}"'
 
 
 # ── VFX ────────────────────────────────────────────────────────────────────

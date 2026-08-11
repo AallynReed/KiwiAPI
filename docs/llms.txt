@@ -399,8 +399,9 @@ in this reference**; the documented app-facing API is the three endpoints above.
 
 ### Embeddable viewers (`mods:read`) - preview tokens for the iframe viewer
 
-Kiwi's 3D model / assembled-creature / `.pkfx` viewers can be embedded on another site as an iframe
-(`trove.aallyn.net/embed/viewer`). Embedding itself needs no token - it's allowed per-origin by an admin.
+Kiwi's 3D model / assembled-creature / `.pkfx` viewers **and its sound player** can be embedded on another
+site as an iframe (`trove.aallyn.net/embed/viewer`). Embedding itself needs no token - it's allowed
+per-origin by an admin.
 Only the upload is an API call, and it exists so a partner can preview a mod **they** host:
 - `POST /v1/embed/tmod` - multipart `file=@Mod.tmod` (max 8 MB) → `{token, size, expires_in, reused, viewer_url}`.
   **The file is NOT stored**: it's held in Redis for `expires_in` seconds (default 30 min) and then dropped -
@@ -419,6 +420,14 @@ names it (`prefabs/collections/mount/duck_dragon.binfab`, `prefabs/skins/adventu
 come from the live game files, so there is nothing to host or upload. Only prefabs the game binds a skeleton
 to are addressable, and a bare name more than one creature is filed under (`beetle_firebug` exists four times
 over) is refused with a real full path in the message rather than resolved to a guess.
+
+`game=<path>.bnk` frames the **sound player** instead of a 3D stage: a filterable list of every sound in a
+Wwise bank with a transport (waveform seek, loop, volume, download) docked above it. `sound=<id or name>`
+pins one sound and drops the list, which is the shape a page showing off a single effect wants
+(`?game=ui.bnk&sound=ui_gems_upgrade_sm_01`). It reads the same cached bank index the `/updates` sound
+browser does, so the manifest decodes nothing and only the sound a visitor plays is decoded. A hub
+`release=` whose `.tmod` bundles a `.bnk` plays too; an **uploaded** `tmod=` deliberately does not, because
+indexing a bank files every sound into the content store and an upload is held in memory only.
 
 ### Updates (`updates:read`) - archived game files (latest version)
 

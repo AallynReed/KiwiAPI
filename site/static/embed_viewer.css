@@ -152,6 +152,185 @@ html, body {
 .kv-stage.bpv-stage,
 .kv-stage.mv-stage { background: none; }
 
+/* ── audio player ───────────────────────────────────────────────────────── */
+
+/* The one stage that isn't a canvas: a transport docked at the top, the bank's
+   sounds scrolling underneath. Nothing to drag, so the grab cursor goes away
+   and the 3D gradient gives way to a flat surface a list can sit on. */
+.kv-stage.kv-audio {
+  display: flex;
+  flex-direction: column;
+  background: var(--kv-bg);
+  cursor: default;
+  overflow: hidden;
+}
+
+.kv-ap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  background: var(--kv-surface);
+  border-bottom: 1px solid var(--kv-line);
+}
+
+/* A pinned single sound: no list to head, so the transport becomes a card in the
+   middle of the frame rather than a bar stranded at the top of an empty one. */
+.kv-audio.kv-audio-solo { justify-content: center; }
+.kv-audio-solo .kv-ap {
+  margin: 0 12px;
+  border: 1px solid var(--kv-line);
+  border-radius: var(--kv-radius);
+}
+
+.kv-ap-play {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--kv-accent);
+  color: #04121f;
+  cursor: pointer;
+}
+.kv-ap-play:hover { background: color-mix(in oklab, var(--kv-accent) 82%, white); }
+.kv-ap-play:disabled { opacity: .45; cursor: not-allowed; }
+.kv-ap-play svg { width: 18px; height: 18px; fill: currentColor; }
+
+.kv-ap-id { flex: 0 1 170px; min-width: 0; display: grid; }
+.kv-ap-name,
+.kv-ap-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kv-ap-name { font-size: .85rem; font-weight: 600; }
+.kv-ap-sub { font-size: .72rem; color: var(--kv-mute); }
+
+.kv-ap-seek {
+  position: relative;
+  flex: 1 1 160px;
+  min-width: 80px;
+  height: 38px;
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: none;
+}
+.kv-ap-wave { display: block; width: 100%; height: 38px; }
+/* The played portion tints the waveform rather than covering it. */
+.kv-ap-played {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: 8px 0 0 8px;
+  background: color-mix(in oklab, var(--kv-accent) 20%, transparent);
+  border-right: 1px solid var(--kv-accent);
+  pointer-events: none;
+}
+
+.kv-ap-time {
+  flex: 0 0 auto;
+  font-family: var(--kv-mono);
+  font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--kv-mute);
+}
+
+.kv-ap-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--kv-mute);
+  cursor: pointer;
+}
+.kv-ap-icon svg { width: 15px; height: 15px; }
+.kv-ap-icon:hover { color: var(--kv-ink); background: color-mix(in oklab, var(--kv-ink) 8%, transparent); }
+.kv-ap-icon.active { color: var(--kv-accent); }
+.kv-ap-icon[hidden] { display: none; }
+
+.kv-ap-vol { display: flex; align-items: center; gap: 6px; color: var(--kv-mute); }
+.kv-ap-vol svg { width: 15px; height: 15px; }
+.kv-ap-vol input { width: 64px; accent-color: var(--kv-accent); cursor: pointer; }
+
+.kv-ap-search { flex: 0 0 auto; padding: 8px 12px 4px; }
+.kv-ap-filter {
+  width: 100%;
+  background: var(--kv-surface);
+  color: var(--kv-ink);
+  border: 1px solid var(--kv-line);
+  border-radius: var(--kv-radius);
+  padding: 5px 9px;
+  font: inherit;
+  font-size: .8rem;
+}
+.kv-ap-filter:hover { border-color: var(--kv-accent); }
+.kv-ap-filter::placeholder { color: var(--kv-soft); }
+
+.kv-ap-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 8px 8px;
+}
+
+.kv-ap-empty {
+  margin: 18px 0;
+  text-align: center;
+  color: var(--kv-mute);
+  font-size: .85rem;
+}
+
+.kv-snd {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--kv-ink);
+  font: inherit;
+  font-size: .82rem;
+  text-align: left;
+  cursor: pointer;
+}
+.kv-snd:hover { background: color-mix(in oklab, var(--kv-ink) 7%, transparent); }
+.kv-snd.active { background: color-mix(in oklab, var(--kv-accent) 14%, transparent); }
+.kv-snd:disabled { cursor: not-allowed; color: var(--kv-soft); }
+
+.kv-snd-glyph { display: grid; place-items: center; color: var(--kv-mute); }
+.kv-snd-glyph svg { width: 13px; height: 13px; fill: currentColor; }
+.kv-snd.playing .kv-snd-glyph { color: var(--kv-accent); }
+
+.kv-snd-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.kv-snd-codec,
+.kv-snd-bad {
+  font-family: var(--kv-mono);
+  font-size: .66rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--kv-mute);
+}
+.kv-snd-bad { color: var(--kv-danger); text-transform: none; }
+
+.kv-snd-dur {
+  font-family: var(--kv-mono);
+  font-size: .7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--kv-mute);
+}
+
 /* ── animation bar (assembled-creature clips) + footer ───────────────────── */
 
 .kv-bar {
@@ -196,7 +375,13 @@ html, body {
 .kv-tab:focus-visible,
 .kv-select:focus-visible,
 .kv-brand:focus-visible,
-.kv-bar button:focus-visible {
+.kv-bar button:focus-visible,
+.kv-ap-play:focus-visible,
+.kv-ap-seek:focus-visible,
+.kv-ap-icon:focus-visible,
+.kv-ap-vol input:focus-visible,
+.kv-ap-filter:focus-visible,
+.kv-snd:focus-visible {
   outline: 2px solid var(--kv-accent);
   outline-offset: 2px;
 }
@@ -220,4 +405,9 @@ html, body {
 @media (max-width: 520px) {
   .kv-meta { display: none; }
   .kv-select { max-width: 18ch; }
+  /* Narrow embeds keep the transport: play, waveform, download. The rest goes. */
+  .kv-ap { gap: 8px; padding: 8px 10px; }
+  .kv-ap-id { flex-basis: 90px; }
+  .kv-ap-vol, .kv-ap-time { display: none; }
+  .kv-snd-codec { display: none; }
 }

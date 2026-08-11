@@ -7,11 +7,15 @@
      blueprint  -> BlueprintViewer.mount   one .blueprint model
      assembled  -> ModelViewer.mount       the whole creature on its rig, with clips
      vfx        -> PkfxViewer.mount        a .pkfx particle effect
+     audio      -> EmbedAudio.mount        the sounds inside a .bnk bank
 
    The source is whatever the page was opened with - a Mods Hub release, an uploaded
    .tmod token, a path in the game files, a game creature prefab, or a dressed character -
    and is passed through as the query string, so this file never needs to know which one
-   it is. */
+   it is.
+
+   The first three are 3D and share the stage's look and its drag-to-rotate hint; the
+   audio player is a list, so it brings its own chrome and its own hint. */
 (function () {
   'use strict';
 
@@ -31,6 +35,7 @@
 
   var cfg = {
     path: shell.dataset.path || '',
+    sound: shell.dataset.sound || '',
     mode: shell.dataset.mode || 'auto',
     // The data plane's origin. This page is served from the WEBSITE host (the only
     // one allowed to be framed), while every byte it needs lives on the API - so the
@@ -49,8 +54,11 @@
     blueprint: 'Drag to rotate · scroll to zoom · right-drag to pan',
     assembled: 'Drag to rotate · scroll to zoom · pick a clip below',
     vfx: 'Drag to orbit · scroll to zoom',
+    audio: 'Pick a sound to play',
   };
-  var LABELS = { blueprint: 'Model', assembled: 'Creature', vfx: 'Effect' };
+  var LABELS = {
+    blueprint: 'Model', assembled: 'Creature', vfx: 'Effect', audio: 'Sounds',
+  };
 
   var state = { manifest: null, mode: null, path: null, viewer: null };
 
@@ -109,14 +117,18 @@
     if (man.blueprints && man.blueprints.rig) modes.push('assembled');
     if (modelItems(man).length) modes.push('blueprint');
     if (man.vfx && man.vfx.items.length) modes.push('vfx');
+    if (man.audio && man.audio.items.length) modes.push('audio');
     return modes;
   }
 
   function initialMode(man, modes) {
     if (cfg.mode !== 'auto' && modes.indexOf(cfg.mode) >= 0) return cfg.mode;
+    // A pinned sound says what the embedder wanted as plainly as a path does.
+    if (cfg.sound && modes.indexOf('audio') >= 0) return 'audio';
     // An explicit ?path= tells us what the embedder actually wanted to show.
     if (cfg.path) {
-      var wanted = /\.pkfx$/i.test(cfg.path) ? 'vfx' : 'blueprint';
+      var wanted = /\.pkfx$/i.test(cfg.path) ? 'vfx'
+        : /\.bnk$/i.test(cfg.path) ? 'audio' : 'blueprint';
       if (modes.indexOf(wanted) >= 0) return wanted;
     }
     return modes[0] || null;
@@ -124,6 +136,7 @@
 
   function itemsFor(mode) {
     if (mode === 'vfx') return state.manifest.vfx.items;
+    if (mode === 'audio') return (state.manifest.audio || { items: [] }).items;
     if (mode === 'blueprint') return modelItems(state.manifest);
     return [];
   }
@@ -242,6 +255,21 @@
       state.viewer = window.BlueprintViewer.mount(els.stage, {
         url: api('blueprint', 'path=' + encodeURIComponent(state.path || '')),
         onMeta: onMeta,
+      });
+      return;
+    }
+
+    if (mode === 'audio') {
+      if (!window.EmbedAudio) return message('The audio player could not start.', true);
+      var bank = encodeURIComponent(state.path || '');
+      state.viewer = window.EmbedAudio.mount(els.stage, {
+        bankUrl: api('audio/bank', 'path=' + bank),
+        soundUrl: function (id) { return api('audio/sound', 'path=' + bank + '&id=' + id); },
+        pin: cfg.sound,
+        onMeta: onMeta,
+        // A pinned single sound has nothing to pick, so the player says which
+        // hint is true rather than the shell guessing from the mode alone.
+        onHint: function (text) { els.hint.textContent = text; },
       });
       return;
     }

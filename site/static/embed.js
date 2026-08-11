@@ -11,9 +11,10 @@
      data-release / data-tmod / data-game / data-prefab / data-dress
                     the source — exactly one
      data-path      which file inside the source to show
-     data-mode      blueprint | assembled | vfx   (default: auto)
-     data-theme     dark | light                  (default: dark)
-     data-height    CSS height                    (default: 420px)
+     data-sound     a sound id or name inside a .bnk — pins the player to that one
+     data-mode      blueprint | assembled | vfx | audio   (default: auto)
+     data-theme     dark | light                          (default: dark)
+     data-height    CSS height                            (default: 420px)
      data-title     iframe accessible name
 
    Writing the iframe is all this does — no cookies, no globals, no tracking, and
@@ -27,7 +28,7 @@
   })();
 
   var SOURCES = ['release', 'tmod', 'game', 'prefab', 'dress'];
-  var PASS = ['path', 'mode', 'theme'];
+  var PASS = ['path', 'sound', 'mode', 'theme'];
 
   function build(el) {
     if (el.getAttribute('data-kiwi-mounted')) return;

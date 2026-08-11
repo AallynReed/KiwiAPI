@@ -72,6 +72,7 @@ async def embed_viewer(
     prefab: str | None = None,
     dress: str | None = None,
     path: str | None = None,
+    sound: str | None = None,
     mode: str = "auto",
     theme: str = "dark",
 ) -> HTMLResponse:
@@ -89,8 +90,9 @@ async def embed_viewer(
     return _TEMPLATES.TemplateResponse(request, "embed_viewer.html", {
         "release": release or "", "tmod": tmod or "", "game": game or "",
         "prefab": prefab or "", "dress": dress or "",
-        "path": path or "", "mode": mode if mode in
-        ("auto", "blueprint", "assembled", "vfx") else "auto",
+        "path": path or "", "sound": sound or "",
+        "mode": mode if mode in
+        ("auto", "blueprint", "assembled", "vfx", "audio") else "auto",
         "theme": theme if theme in ("dark", "light") else "dark",
         "api_base": _API,
         "app_url": _APP,

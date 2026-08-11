@@ -113,7 +113,8 @@ async def embed_viewer(
     prefab: str | None = Query(default=None, max_length=400),
     dress: str | None = Query(default=None, max_length=700),
     path: str | None = Query(default=None, max_length=400),
-    mode: str = Query(default="auto", pattern="^(auto|blueprint|assembled|vfx)$"),
+    sound: str | None = Query(default=None, max_length=200),
+    mode: str = Query(default="auto", pattern="^(auto|blueprint|assembled|vfx|audio)$"),
     theme: str = Query(default="dark", pattern="^(dark|light)$"),
 ) -> HTMLResponse:
     """The embeddable viewer page.
@@ -126,7 +127,7 @@ async def embed_viewer(
     return _TEMPLATES.TemplateResponse(request, "embed_viewer.html", {
         "release": release or "", "tmod": tmod or "", "game": game or "",
         "prefab": prefab or "", "dress": dress or "",
-        "path": path or "", "mode": mode, "theme": theme,
+        "path": path or "", "sound": sound or "", "mode": mode, "theme": theme,
         # Same origin here (this process serves both), so no prefix is needed.
         "api_base": "",
         "app_url": settings.app_url.rstrip("/"),
@@ -172,6 +173,36 @@ async def embed_vfx_manifest(
     src: service.Source = _SRC, _t: None = _LIMIT,
 ) -> JSONResponse:
     return JSONResponse(await service.vfx_manifest(src, path), headers=_MED)
+
+
+@embed_page_router.get("/site/embed/audio/bank", response_class=JSONResponse)
+async def embed_audio_bank(
+    path: str = Query(default="", max_length=400),
+    src: service.Source = _SRC, _t: None = _LIMIT,
+) -> JSONResponse:
+    """Every sound in one ``.bnk`` - names, codecs, durations. Nothing is decoded
+    here, so opening a bank of 1,600 effects costs one small JSON body."""
+    return JSONResponse(await service.audio_bank(src, path), headers=_MED)
+
+
+@embed_page_router.get("/site/embed/audio/sound", response_class=Response)
+async def embed_audio_sound(
+    request: Request,
+    path: str = Query(default="", max_length=400),
+    id: int = Query(..., ge=0, le=0xFFFFFFFF),
+    raw: bool = Query(default=False),
+    src: service.Source = _SRC, _t: None = _LIMIT,
+) -> Response:
+    """One sound, decoded to Ogg or WAV. ETag'd on the media's own hash, so a
+    visitor replaying a sound - or a second page embedding it - costs a 304."""
+    data, media, filename, etag = await service.audio_sound(src, path, id, raw)
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers={"ETag": etag})
+    return Response(content=data, media_type=media, headers={
+        "ETag": etag,
+        "Cache-Control": "public, max-age=86400",
+        "Content-Disposition": f'inline; filename="{filename}"',
+    })
 
 
 @embed_page_router.get("/site/embed/allowed-origins", response_class=JSONResponse)

@@ -382,6 +382,46 @@ def _stub_pack_detail(handle, slug):
     }
 
 
+# A stand-in sound bank for /embed/viewer's audio player. Shaped exactly like the
+# real index (app/trove/audio), including one media object that cannot be decoded -
+# the list has to keep showing those rather than silently dropping them.
+_DEV_SOUNDS = [
+    {"id": 1099092, "name": "ui_gems_upgrade_sm_01", "group": "ui_gems", "path": "",
+     "source": "", "notes": "", "bytes": 18240, "codec": "vorbis", "channels": 2,
+     "sample_rate": 44100, "duration": 1.4, "object_id": 1, "error": None},
+    {"id": 1099093, "name": "ui_gems_upgrade_sm_02", "group": "ui_gems", "path": "",
+     "source": "", "notes": "", "bytes": 17980, "codec": "vorbis", "channels": 2,
+     "sample_rate": 44100, "duration": 2.1, "object_id": 2, "error": None},
+    {"id": 2200417, "name": "wpn_sword_swing_heavy", "group": "combat", "path": "",
+     "source": "", "notes": "", "bytes": 9120, "codec": "pcm", "channels": 1,
+     "sample_rate": 22050, "duration": 0.8, "object_id": 3, "error": None},
+    {"id": 3300512, "name": "mus_hub_loop", "group": "music", "path": "",
+     "source": "", "notes": "", "bytes": 812000, "codec": "vorbis", "channels": 2,
+     "sample_rate": 44100, "duration": 96.0, "object_id": 4, "error": None},
+    {"id": 4400001, "name": None, "group": "", "path": "", "source": "", "notes": "",
+     "bytes": 640, "codec": None, "channels": 0, "sample_rate": 0, "duration": 0.0,
+     "object_id": None, "error": "unsupported codec 0x0401"},
+]
+
+
+def _dev_tone_wav(seconds: float, hz: int) -> bytes:
+    """A plain 16-bit mono WAV. Real audio, so the transport, the seek bar and the
+    browser-side waveform decode all exercise for real without a game archive."""
+    import math
+    import struct
+
+    rate = 22050
+    frames = max(1, int(rate * min(float(seconds) or 1.0, 8.0)))
+    body = bytearray()
+    for i in range(frames):
+        fade = min(1.0, (frames - i) / (rate * 0.15))          # avoid an end-click
+        body += struct.pack("<h", int(12000 * fade * math.sin(2 * math.pi * hz * i / rate)))
+    header = (b"RIFF" + struct.pack("<I", 36 + len(body)) + b"WAVEfmt "
+              + struct.pack("<IHHIIHH", 16, 1, 1, rate, rate * 2, 2, 16)
+              + b"data" + struct.pack("<I", len(body)))
+    return header + bytes(body)
+
+
 def _stub_blueprint():
     """A small solid voxel cube in the web viewer's payload shape - enough for the
     3D stages (/updates, mod pages, /embed/viewer) to actually render in dev.
@@ -1210,6 +1250,7 @@ class Handler(SimpleHTTPRequestHandler):
                 "prefab": _q("prefab"),
                 "dress": _q("dress"),
                 "path": _q("path"),
+                "sound": _q("sound"),
                 "mode": _q("mode", "auto"),
                 "theme": _q("theme", "dark"),
                 "app_url": "http://localhost:8913",
@@ -1233,6 +1274,8 @@ class Handler(SimpleHTTPRequestHandler):
                     {"path": "blueprints/dev_cube_alt.blueprint", "size": 512, "assembled": False},
                 ], "rig": None, "animations": []},
                 "vfx": {"items": []},
+                # One bank, so the Sounds tab and the audio player mount in dev.
+                "audio": {"items": [{"path": "audio/dev_bank.bnk", "size": 4096}]},
             })
         if path == "/site/render/brdf-map.png":
             png = _brdf_map_png()
@@ -1266,6 +1309,28 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_json({"error": {"message": "No assemblable creature here."}}, 404)
         if path.startswith("/site/embed/vfx/"):
             return self._send_json({"error": {"message": "No VFX in this dev stub."}}, 404)
+        if path == "/site/embed/audio/bank":
+            return self._send_json({
+                "path": "audio/dev_bank.bnk",
+                "bank": {"version": 128, "bank_id": 1, "sections": ["BKHD", "DIDX", "DATA"],
+                         "objects": len(_DEV_SOUNDS), "events": 0},
+                "sounds": _DEV_SOUNDS,
+                "count": len(_DEV_SOUNDS),
+                "playable": sum(1 for s in _DEV_SOUNDS if not s["error"]),
+                "total_duration": round(sum(s["duration"] for s in _DEV_SOUNDS), 1),
+            })
+        if path == "/site/embed/audio/sound":
+            want = (parse_qs(url.query).get("id") or ["0"])[0]
+            sound = next((s for s in _DEV_SOUNDS if str(s["id"]) == want), None)
+            if sound is None or sound["error"]:
+                return self._send_json({"error": {"message": "No such sound."}}, 404)
+            wav = _dev_tone_wav(sound["duration"], 180 + (sound["id"] % 7) * 90)
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/wav")
+            self.send_header("Content-Length", str(len(wav)))
+            self.send_header("Cache-Control", "public, max-age=60")
+            self.end_headers()
+            return self.wfile.write(wav)
 
         # Gem tool proxies (real service layer).
         if path == "/site/gems/lookups":
