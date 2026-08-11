@@ -119,6 +119,9 @@ async def read_file_text(branch: str, path: str, max_bytes: int = VIEW_MAX_BYTES
         return {**base, "viewable": False, "kind": "dds", "reason": "dds"}
     if ext == "blueprint":
         return {**base, "viewable": False, "kind": "blueprint", "reason": "blueprint"}
+    # Flash movies are an art bundle - the client opens the extracted-asset gallery.
+    if ext == "swf":
+        return {**base, "viewable": False, "kind": "swf", "reason": "swf"}
     if meta["size"] > max_bytes:
         return {**base, "viewable": False, "kind": "too_large", "reason": "too_large"}
     blob = ContentStore(settings.trove_update_store_dir).path_for(meta["content_sha256"])

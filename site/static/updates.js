@@ -131,6 +131,28 @@
   const $preview3d = $('up-preview-3d');
   const $previewHex = $('up-preview-hex');
   const $previewNote = $('up-preview-note');
+  const $previewSwf = $('up-preview-swf');
+  const $previewSwfBtn = $('up-preview-swfbtn');
+  const $previewSwfNote = $('up-preview-swfnote');
+
+  const $swfModal = $('up-swf-modal');
+  const $swfCard = $('up-swf-card');
+  const $swfClose = $('up-swf-close');
+  const $swfBackdrop = $('up-swf-backdrop');
+  const $swfTitle = $('up-swf-title');
+  const $swfMeta = $('up-swf-meta');
+  const $swfFilter = $('up-swf-filter');
+  const $swfZip = $('up-swf-zip');
+  const $swfBody = $('up-swf-body');
+
+  const $assetModal = $('up-asset-modal');
+  const $assetCard = $('up-asset-card');
+  const $assetClose = $('up-asset-close');
+  const $assetBackdrop = $('up-asset-backdrop');
+  const $assetTitle = $('up-asset-title');
+  const $assetImg = $('up-asset-img');
+  const $assetMeta = $('up-asset-meta');
+  const $assetDl = $('up-asset-dl');
 
   // Hard cap on the bytes a hex viewer will render client-side. Matches the
   // server's VIEW_MAX_BYTES so anything it flags as "binary" fits in one dump.
@@ -777,6 +799,12 @@
       $previewModel.hidden = false;
       return;
     }
+    if (kind === 'swf') {
+      $previewSwfBtn.onclick = () => openSwfGallery(path);
+      $previewSwfNote.textContent = t('Flash movie — every image inside it, extracted.');
+      $previewSwf.hidden = false;
+      return;
+    }
     if (kind === 'binary') {
       renderHexPreview(path, data.size, token);
       return;
@@ -800,6 +828,8 @@
     $previewPng.onclick = null;
     $previewModel.hidden = true;
     $preview3d.onclick = null;
+    $previewSwf.hidden = true;
+    $previewSwfBtn.onclick = null;
     $previewHex.hidden = true;
     $previewHex.textContent = '';
     $previewNote.hidden = true;
@@ -964,6 +994,9 @@
   }
 
   function onDetailModalKey(e) {
+    // The asset gallery stacks on top of this dialog; while it's up it owns the
+    // keyboard, or one Escape would close both.
+    if (!$swfModal.hidden || !$assetModal.hidden) return;
     if (e.key === 'Escape') { e.preventDefault(); dismissDetail(); return; }
     if (e.key !== 'Tab') return;
     // Keep focus inside the dialog (WCAG dialog pattern).
@@ -986,6 +1019,150 @@
     renderTree();
     renderDetail();      // syncDetailPresentation() here tears the modal down
     scheduleHash(true);
+  }
+
+  // ─── SWF asset gallery ─────────────────────────────────────────────
+  // A Flash movie is really an art bundle: every icon and panel in a Trove
+  // interface screen is a bitmap tag inside the .swf. The server extracts them
+  // (/file/swf) and serves each one on its own (/file/swf/asset); this renders
+  // the grid, filters it, and opens a picked image full size.
+  let _swfPath = null;
+  let _swfAssets = [];
+  let _swfToken = 0;
+  let _swfPrevFocus = null;
+  let _assetPrevFocus = null;
+
+  function swfAssetUrl(path, id, thumb) {
+    const q = `path=${encodeURIComponent(path)}&id=${id}${thumb ? '&thumb=1' : ''}`;
+    return `/site/updates/${state.branch}/file/swf/asset?${q}`;
+  }
+
+  async function openSwfGallery(path) {
+    const token = ++_swfToken;
+    _swfPath = path;
+    _swfAssets = [];
+    _swfPrevFocus = document.activeElement;
+    $swfTitle.textContent = path.slice(path.lastIndexOf('/') + 1);
+    $swfMeta.textContent = '';
+    $swfFilter.value = '';
+    $swfZip.disabled = true;
+    $swfBody.innerHTML = `<p class="up-loading">${esc(t('Loading…'))}</p>`;
+    $swfModal.hidden = false;
+    document.body.classList.add('up-modal-open');
+    document.addEventListener('keydown', onSwfKey, true);
+    ($swfCard || $swfModal).focus();
+
+    let data;
+    try {
+      data = await fetchJSON(
+        `/site/updates/${state.branch}/file/swf?path=${encodeURIComponent(path)}`,
+      );
+    } catch (err) {
+      if (token !== _swfToken) return;
+      $swfBody.innerHTML = errorHTML(err);
+      return;
+    }
+    if (token !== _swfToken) return;
+    _swfAssets = data.assets || [];
+    const m = data.swf || {};
+    $swfMeta.textContent = [
+      `${formatInt(_swfAssets.length)} ${t('images')}`,
+      m.version ? `SWF v${m.version}` : '',
+      (m.width && m.height) ? `${m.width}×${m.height}` : '',
+    ].filter(Boolean).join(' · ');
+    $swfZip.disabled = !_swfAssets.length;
+    renderSwfGrid();
+  }
+
+  function renderSwfGrid() {
+    const needle = ($swfFilter.value || '').trim().toLowerCase();
+    const shown = needle
+      ? _swfAssets.filter((a) => (a.name || '').toLowerCase().includes(needle)
+          || String(a.id).includes(needle))
+      : _swfAssets;
+    if (!_swfAssets.length) {
+      $swfBody.innerHTML =
+        `<p class="up-tree-empty">${esc(t('No images are embedded in this movie.'))}</p>`;
+      return;
+    }
+    if (!shown.length) {
+      $swfBody.innerHTML = `<p class="up-tree-empty">${esc(t('Nothing matches that filter.'))}</p>`;
+      return;
+    }
+    $swfBody.innerHTML = `<div class="up-swf-grid">${shown.map((a) => `
+      <button type="button" class="up-swf-tile" data-asset-id="${a.id}"
+              title="${esc(a.name || '#' + a.id)}">
+        <span class="up-swf-thumb up-checker">
+          <img src="${esc(swfAssetUrl(_swfPath, a.id, a.thumb))}" alt="${esc(a.name || '')}"
+               loading="lazy" decoding="async">
+        </span>
+        <span class="up-swf-name">${esc(a.name || '#' + a.id)}</span>
+        <span class="up-swf-dims">${a.width}×${a.height} · ${esc(formatBytes(a.bytes))}</span>
+      </button>`).join('')}</div>`;
+  }
+
+  function closeSwfGallery() {
+    _swfToken++;
+    $swfModal.hidden = true;
+    document.removeEventListener('keydown', onSwfKey, true);
+    if ($assetModal.hidden) document.body.classList.remove('up-modal-open');
+    $swfBody.innerHTML = '';
+    if (_swfPrevFocus && typeof _swfPrevFocus.focus === 'function') {
+      try { _swfPrevFocus.focus(); } catch (_) {}
+    }
+    _swfPrevFocus = null;
+  }
+
+  function onSwfKey(e) {
+    if (!$assetModal.hidden) return;          // the full-size view is on top
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeSwfGallery(); return; }
+    if (e.key === 'Tab') trapFocus(e, $swfModal);
+  }
+
+  function openAssetView(id) {
+    const asset = _swfAssets.find((a) => a.id === id);
+    if (!asset) return;
+    _assetPrevFocus = document.activeElement;
+    const label = asset.name || `#${asset.id}`;
+    $assetTitle.textContent = label;
+    $assetImg.alt = label;
+    $assetImg.src = swfAssetUrl(_swfPath, asset.id, false);
+    $assetMeta.textContent =
+      `${asset.width}×${asset.height} · ${formatBytes(asset.bytes)} · ${asset.source} (${asset.codec})`;
+    $assetDl.href = swfAssetUrl(_swfPath, asset.id, false);
+    $assetDl.download = `${asset.id}_${(asset.name || 'asset').replace(/[^\w.-]+/g, '_')}`
+      + (asset.mime === 'image/jpeg' ? '.jpg' : asset.mime === 'image/gif' ? '.gif' : '.png');
+    $assetModal.hidden = false;
+    document.body.classList.add('up-modal-open');
+    document.addEventListener('keydown', onAssetKey, true);
+    ($assetCard || $assetModal).focus();
+  }
+
+  function closeAssetView() {
+    $assetModal.hidden = true;
+    document.removeEventListener('keydown', onAssetKey, true);
+    $assetImg.removeAttribute('src');
+    if ($swfModal.hidden) document.body.classList.remove('up-modal-open');
+    if (_assetPrevFocus && typeof _assetPrevFocus.focus === 'function') {
+      try { _assetPrevFocus.focus(); } catch (_) {}
+    }
+    _assetPrevFocus = null;
+  }
+
+  function onAssetKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeAssetView(); return; }
+    if (e.key === 'Tab') trapFocus(e, $assetModal);
+  }
+
+  // Keep Tab inside a dialog (WCAG dialog pattern).
+  function trapFocus(e, root) {
+    const nodes = [...root.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )].filter((el) => el.offsetParent !== null && !el.hidden);
+    if (!nodes.length) return;
+    const first = nodes[0], last = nodes[nodes.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
 
   function renderDetail() {
@@ -1485,6 +1662,23 @@
       state.treeFilter = $treeSearch.value || '';
       scheduleSearch();
     });
+
+    // SWF asset gallery: close affordances, live filter, tile picks, and the
+    // whole-movie .zip (a plain navigation - the browser handles the download).
+    $swfClose.addEventListener('click', closeSwfGallery);
+    $swfBackdrop.addEventListener('click', closeSwfGallery);
+    $swfFilter.addEventListener('input', renderSwfGrid);
+    $swfZip.addEventListener('click', () => {
+      if (!_swfPath) return;
+      window.location.href =
+        `/site/updates/${state.branch}/file/swf/zip?path=${encodeURIComponent(_swfPath)}`;
+    });
+    $swfBody.addEventListener('click', (e) => {
+      const tile = e.target.closest('[data-asset-id]');
+      if (tile) openAssetView(Number(tile.dataset.assetId));
+    });
+    $assetClose.addEventListener('click', closeAssetView);
+    $assetBackdrop.addEventListener('click', closeAssetView);
 
     // View toggle (list ↔ grid gallery).
     if ($viewToggle) {

@@ -409,6 +409,85 @@ _BRDF_SRC = Path(os.environ.get(
 _brdf_png_cache: bytes | None = None
 
 
+# The .swf asset gallery runs the REAL extractor (app.trove.swf) so the dev
+# preview exercises the same decode prod does. Point TROVE_DEV_SWF at a game
+# interface file for real artwork; otherwise a synthetic movie is built below,
+# which is enough to drive the gallery, the filter and the download paths.
+_SWF_SRC = os.environ.get("TROVE_DEV_SWF") or str(
+    Path(os.environ.get("TROVE_LIVE_DIR",
+                        r"C:/Program Files (x86)/Glyph/Games/Trove/Live"))
+    / "extracted/ui/settings.swf"
+)
+_swf_manifest_cache: dict | None = None
+
+
+def _synthetic_swf() -> bytes:
+    """A minimal CWS movie holding a handful of DefineBitsLossless2 bitmaps."""
+    import struct
+    import zlib
+
+    def tag(code: int, body: bytes) -> bytes:
+        if len(body) < 0x3F:
+            return struct.pack("<H", (code << 6) | len(body)) + body
+        return struct.pack("<HI", (code << 6) | 0x3F, len(body)) + body
+
+    swatches = [
+        ("HealthBarFill", 64, 16, (214, 69, 80)),
+        ("ManaBarFill", 64, 16, (76, 130, 240)),
+        ("ScrollThumb", 24, 96, (120, 132, 148)),
+        ("PanelBackdrop", 256, 160, (28, 36, 48)),
+        ("IconCoin", 32, 32, (240, 196, 84)),
+        ("IconGem", 32, 32, (156, 96, 232)),
+    ]
+    body = b""
+    symbols = []
+    for i, (name, w, h, (r, g, b)) in enumerate(swatches):
+        char_id = i + 1
+        # ARGB, premultiplied, with a soft alpha ramp so transparency is visible.
+        px = bytearray()
+        for y in range(h):
+            for x in range(w):
+                a = max(0, min(255, int(255 * min(x, y, w - 1 - x, h - 1 - y) / 6 + 40)))
+                px += bytes((a, r * a // 255, g * a // 255, b * a // 255))
+        payload = struct.pack("<HBHH", char_id, 5, w, h) + zlib.compress(bytes(px), 6)
+        body += tag(36, payload)
+        symbols.append((char_id, name))
+    sym = struct.pack("<H", len(symbols))
+    for char_id, name in symbols:
+        sym += struct.pack("<H", char_id) + name.encode() + b"\0"
+    body += tag(76, sym) + tag(1, b"") + tag(0, b"")
+
+    # RECT(nbits=15) covering 800x600 px, then 24fps / 1 frame.
+    rect = b"\x78\x00\x05\x00\x00\x0f\xa0\x00"
+    payload = rect + struct.pack("<BBH", 0, 24, 1) + body
+    head = b"CWS\x0a" + struct.pack("<I", 8 + len(payload))
+    return head + zlib.compress(payload, 6)
+
+
+def _swf_manifest() -> dict:
+    """Extract once, cache. Mirrors what app.trove.swf.service stores in prod."""
+    global _swf_manifest_cache
+    if _swf_manifest_cache is None:
+        import sys
+        sys.path.insert(0, str(ROOT))
+        from app.trove.swf.extract import extract_images
+
+        try:
+            raw = Path(_SWF_SRC).read_bytes()
+        except OSError:
+            raw = _synthetic_swf()
+        header, images, inventory = extract_images(raw)
+        _swf_manifest_cache = {
+            "swf": {"version": header.version, "compression": header.compression,
+                    "width": header.width, "height": header.height,
+                    "frame_rate": round(header.frame_rate, 2),
+                    "frame_count": header.frame_count},
+            "inventory": inventory,
+            "images": images,
+        }
+    return _swf_manifest_cache
+
+
 def _brdf_map_png() -> bytes | None:
     global _brdf_png_cache
     if _brdf_png_cache is None:
@@ -436,6 +515,7 @@ _UPDATE_PATHS = [
     "textures/blocks/stone_diffuse.dds",
     "ui/hud/health_bar.png",
     "ui/hud/mana_bar.png",
+    "ui/settings.swf",
     "scripts/combat/damage.lua",
     "scripts/combat/healing.lua",
     "languages/en/strings.json",
@@ -1722,12 +1802,43 @@ class Handler(SimpleHTTPRequestHandler):
                 if ext == "blueprint":
                     return self._send_json({**base, "size": 2048, "viewable": False,
                                             "kind": "blueprint", "reason": "blueprint"})
+                if ext == "swf":
+                    return self._send_json({**base, "size": 262144, "viewable": False,
+                                            "kind": "swf", "reason": "swf"})
                 if ext in ("binfab", "tfa", "tex"):
                     return self._send_json({**base, "size": 512, "viewable": False,
                                             "kind": "binary", "reason": "binary"})
                 return self._send_json({**base, "size": 42, "viewable": True,
                     "kind": "text", "reason": None,
                     "text": f"-- stub contents of {p}\nprint('hello')\n"})
+            if sub == "file/swf":
+                m = _swf_manifest()
+                assets = [{"id": i.char_id, "name": i.name, "source": i.source,
+                           "codec": i.codec, "width": i.width, "height": i.height,
+                           "mime": i.mime, "bytes": len(i.data),
+                           "thumb": i.thumb is not None} for i in m["images"]]
+                return self._send_json({"branch": branch, "path": qs.get("path", [""])[0],
+                    "content_sha256": "stub", "swf": m["swf"],
+                    "inventory": m["inventory"], "assets": assets, "count": len(assets)})
+            if sub == "file/swf/asset":
+                m = _swf_manifest()
+                want = int(qs.get("id", ["-1"])[0])
+                img = next((i for i in m["images"] if i.char_id == want), None)
+                if img is None:
+                    return self._send_json({"detail": "no such asset"}, status=404)
+                use_thumb = qs.get("thumb", ["0"])[0] in ("1", "true") and img.thumb
+                data = img.thumb if use_thumb else img.data
+                return self._send_bytes(data, "image/png" if use_thumb else img.mime)
+            if sub == "file/swf/zip":
+                import io as _io
+                import zipfile as _zip
+                m = _swf_manifest()
+                buf = _io.BytesIO()
+                with _zip.ZipFile(buf, "w", _zip.ZIP_STORED) as zf:
+                    for i in m["images"]:
+                        ext = {"image/jpeg": "jpg", "image/gif": "gif"}.get(i.mime, "png")
+                        zf.writestr(f"{i.char_id:04d}_{i.name or 'asset'}.{ext}", i.data)
+                return self._send_bytes(buf.getvalue(), "application/zip")
             if sub == "file/compare":
                 # Synthetic diff so the compare-tab renderer (intra-line
                 # highlighting + shareable from/to restore) is exercisable

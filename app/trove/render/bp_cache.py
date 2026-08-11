@@ -1,4 +1,5 @@
-"""Cache of decoded ``.blueprint`` voxel payloads.
+"""Cache of decoded payloads - ``.blueprint`` voxels, and the asset manifest of a
+``.swf`` (same shape of problem: an expensive decode of immutable bytes).
 
 Decoding is the expensive half of every 3D preview: read the whole ``.tmod`` out
 of the store, parse the archive, decode the voxels, then serialise a payload that
@@ -56,6 +57,10 @@ PACK_VERSION = "v2"
 # key (see ``key_for_assembly``); this covers what ships in the repo.
 ASSEMBLY_VERSION = "a18"     # a18: head scale follows the rig - character half, animal 1.0
 
+# Bump when ``app.trove.swf.extract`` changes what a manifest holds or how a
+# bitmap is decoded. Namespaces the SWF keys only.
+SWF_VERSION = "s1"
+
 # Derived payloads share the mods content store: same sharded, atomic, dedupe-by-
 # content primitive, already bind-mounted, and a cache blob that goes missing is
 # simply rebuilt on the next hit.
@@ -84,6 +89,15 @@ def key_for_tmod(tmod_sha: str, path: str) -> str:
 def key_for_file(content_sha: str, path: str) -> str:
     """Key for a standalone ``.blueprint`` blob (the updates archive / game tree)."""
     return f"{PACK_VERSION}:file:{content_sha}:{_norm(path)}"
+
+
+def key_for_swf(content_sha: str) -> str:
+    """Key for the extracted-asset manifest of one ``.swf`` (see ``app.trove.swf``).
+
+    The path is deliberately not in the key: unlike a blueprint, the manifest is a
+    function of the movie's bytes alone, so the same interface file shipped on
+    several branches is extracted once."""
+    return f"{SWF_VERSION}:swf:{content_sha}"
 
 
 def key_for_assembly(rig_sig: str, ident: str) -> str:

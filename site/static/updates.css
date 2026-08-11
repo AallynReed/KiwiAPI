@@ -796,6 +796,155 @@ body.up-modal-open { overflow: hidden; }
   .up-modal-backdrop, .up-modal-card { animation: none; }
 }
 
+/* ── SWF asset gallery ───────────────────────────────────────────────────
+   The images pulled out of a Flash movie. Most are transparent UI art, so
+   tiles sit on a checkerboard - on a flat dark panel a soft alpha edge is
+   indistinguishable from an opaque one. */
+.up-swf-card { width: min(1080px, 100%); }
+.up-asset-modal { z-index: 210; }        /* stacks above the gallery */
+.up-swf-title,
+.up-asset-title {
+  margin: 0 44px 4px 0;
+  font-size: 1.06rem;
+  font-weight: 650;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.up-swf-meta,
+.up-asset-meta {
+  margin: 0 0 14px;
+  font-size: .82rem;
+  color: var(--text-mute);
+}
+.up-swf-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.up-swf-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 200px;
+}
+.up-swf-search > i {
+  position: absolute;
+  left: 11px;
+  font-size: .8rem;
+  color: var(--text-soft);
+  pointer-events: none;
+}
+.up-swf-search input {
+  width: 100%;
+  padding: 8px 12px 8px 30px;
+  border: 1px solid var(--bg-line, #1f2733);
+  border-radius: 9px;
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  font: inherit;
+  font-size: .86rem;
+}
+.up-swf-search input:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 1px;
+}
+.up-swf-zip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid rgba(76,201,240,.30);
+  border-radius: 9px;
+  background: rgba(76,201,240,.12);
+  color: var(--accent-blue);
+  font-size: .84rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.up-swf-zip:hover:not(:disabled) { background: rgba(76,201,240,.20); }
+.up-swf-zip:disabled { opacity: .45; cursor: default; }
+.up-swf-zip:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+.up-swf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 12px;
+}
+.up-swf-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 10px 11px;
+  border: 1px solid var(--bg-line, #1f2733);
+  border-radius: 12px;
+  background: rgba(255,255,255,.02);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.up-swf-tile:hover {
+  border-color: rgba(76,201,240,.40);
+  background: rgba(76,201,240,.07);
+}
+.up-swf-tile:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.up-swf-thumb {
+  display: grid;
+  place-items: center;
+  height: 108px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.up-swf-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;   /* UI art is small and hard-edged */
+}
+.up-swf-name {
+  font-size: .78rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.up-swf-dims {
+  font-size: .72rem;
+  color: var(--text-mute);
+}
+
+.up-asset-card { width: min(760px, 100%); }
+.up-asset-stage {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  max-height: 62vh;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: auto;
+}
+.up-asset-stage img {
+  max-width: 100%;
+  max-height: 58vh;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* Alpha checkerboard, drawn with gradients so it needs no image asset. */
+.up-checker {
+  background-color: #1a1f27;
+  background-image:
+    linear-gradient(45deg, rgba(255,255,255,.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.05) 75%),
+    linear-gradient(45deg, rgba(255,255,255,.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.05) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+
 /* In-browser preview of a small text file (updates.js loadPreview). */
 .up-preview {
   margin: 0 0 22px;

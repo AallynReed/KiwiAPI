@@ -2680,6 +2680,101 @@ async def site_up_file_blueprint(
     return bp_cache.respond(request, cached)
 
 
+async def _swf_manifest(branch: str, path: str) -> tuple[dict, str]:
+    """The cached asset manifest for a ``.swf`` in the latest tree, plus its sha."""
+    from app.trove.swf import service as swf_service
+
+    _site_check_branch(branch)
+    if not path.lower().endswith(".swf"):
+        raise HTTPException(status_code=400, detail="Not a .swf file")
+    meta = await updates_read.get_file_meta(branch, path)
+    if meta is None:
+        raise HTTPException(status_code=404, detail=f"No file '{path}'")
+    sha = meta["content_sha256"]
+    raw = await asyncio.to_thread(ContentStore(settings.trove_update_store_dir).get, sha)
+    if raw is None:
+        raise HTTPException(status_code=404, detail="Blob missing from the store")
+    return await swf_service.manifest(raw, sha), sha
+
+
+@router.get("/site/updates/{branch}/file/swf", response_class=JSONResponse)
+async def site_up_file_swf(
+    branch: str, path: str = Query(...),
+) -> JSONResponse:
+    """Every image embedded in one Flash movie, for the asset gallery.
+
+    Lists the artwork only - ids, recovered symbol names and dimensions. The bytes
+    come from ``/file/swf/asset`` per image, so opening the gallery costs one small
+    JSON body however heavy the movie is."""
+    payload, sha = await _swf_manifest(branch, path)
+    # Drop the store hashes: they are an internal handle, and the asset endpoint
+    # resolves ids against this same manifest anyway.
+    assets = [{k: v for k, v in a.items() if k not in ("sha", "thumb_sha")}
+              | {"thumb": a.get("thumb_sha") is not None}
+              for a in payload.get("assets", [])]
+    return JSONResponse(
+        {"branch": branch, "path": path, "content_sha256": sha,
+         "swf": payload.get("swf"), "inventory": payload.get("inventory"),
+         "assets": assets, "count": len(assets)},
+        headers={"Cache-Control": "public, max-age=300"},
+    )
+
+
+@router.get("/site/updates/{branch}/file/swf/asset", response_class=Response)
+async def site_up_file_swf_asset(
+    request: Request,
+    branch: str,
+    path: str = Query(...),
+    id: int = Query(..., ge=0, le=65535),
+    thumb: bool = Query(default=False),
+) -> Response:
+    """One extracted image, by character id. ``thumb=1`` serves the gallery-sized
+    copy when there is one (small images have no separate thumbnail)."""
+    from app.trove.swf import service as swf_service
+
+    payload, _sha = await _swf_manifest(branch, path)
+    asset = next((a for a in payload.get("assets", []) if a["id"] == id), None)
+    if asset is None:
+        raise HTTPException(status_code=404, detail=f"No asset {id} in '{path}'")
+    use_thumb = thumb and asset.get("thumb_sha")
+    blob_sha = asset["thumb_sha"] if use_thumb else asset["sha"]
+    etag = f'"{blob_sha}"'
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers={"ETag": etag})
+    data = await swf_service.asset_bytes(blob_sha)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Asset blob missing from the store")
+    return Response(
+        content=data,
+        media_type="image/png" if use_thumb else asset["mime"],
+        headers={"ETag": etag, "Cache-Control": "public, max-age=86400"},
+    )
+
+
+@router.get("/site/updates/{branch}/file/swf/zip", response_class=Response)
+async def site_up_file_swf_zip(
+    branch: str, path: str = Query(...),
+) -> Response:
+    """Every extracted image from one movie, as a single .zip."""
+    from app.trove.swf import service as swf_service
+
+    payload, sha = await _swf_manifest(branch, path)
+    assets = payload.get("assets", [])
+    if not assets:
+        raise HTTPException(status_code=404, detail="This movie has no extractable images")
+    blob = await asyncio.to_thread(swf_service.build_zip, assets)
+    stem = path.rsplit("/", 1)[-1].rsplit(".", 1)[0] or "assets"
+    return Response(
+        content=blob,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{stem}-assets.zip"',
+            "ETag": f'"{sha}-zip"',
+            "Cache-Control": "public, max-age=3600",
+        },
+    )
+
+
 @router.get("/site/updates/{branch}/file/history", response_class=JSONResponse)
 async def site_up_file_history(
     branch: str, path: str = Query(...),

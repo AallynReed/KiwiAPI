@@ -218,6 +218,15 @@
                                 </button>
                                 <span class="up-preview-note" data-i18n>Voxel model — drag to rotate, scroll to zoom.</span>
                             </div>
+                            <!-- .swf interface files: a Flash movie is an art bundle,
+                                 so offer the extracted-image gallery. -->
+                            <div class="up-preview-model" id="up-preview-swf" hidden>
+                                <button type="button" class="up-preview-3dbtn" id="up-preview-swfbtn">
+                                    <i class="fa-solid fa-images" aria-hidden="true"></i>
+                                    <span data-i18n>View embedded assets</span>
+                                </button>
+                                <span class="up-preview-note" id="up-preview-swfnote"></span>
+                            </div>
                             <pre class="up-preview-hex" id="up-preview-hex" hidden></pre>
                             <p class="up-preview-note" id="up-preview-note" hidden></p>
                         </div>
@@ -244,6 +253,60 @@
                         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                     </button>
                     <div class="up-modal-slot" id="up-detail-modal-slot"></div>
+                </div>
+            </div>
+
+            <!-- Gallery of the images extracted from a .swf. Populated by
+                 updates.js from /site/updates/<branch>/file/swf; each tile's
+                 bytes come from .../file/swf/asset. -->
+            <div class="up-modal up-swf-modal" id="up-swf-modal" hidden>
+                <div class="up-modal-backdrop" id="up-swf-backdrop"></div>
+                <div class="up-modal-card up-swf-card" id="up-swf-card"
+                     role="dialog" aria-modal="true"
+                     aria-labelledby="up-swf-title" tabindex="-1">
+                    <button type="button" class="up-modal-close" id="up-swf-close"
+                            title="Close" aria-label="Close" data-i18n-title>
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                    <h2 class="up-swf-title" id="up-swf-title"></h2>
+                    <p class="up-swf-meta" id="up-swf-meta"></p>
+                    <div class="up-swf-tools">
+                        <label class="up-swf-search" for="up-swf-filter">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <span class="sr-only" data-i18n>Filter assets</span>
+                            <input type="search" id="up-swf-filter" autocomplete="off"
+                                   placeholder="Filter assets…" data-i18n-placeholder>
+                        </label>
+                        <button type="button" class="up-swf-zip" id="up-swf-zip">
+                            <i class="fa-solid fa-file-zipper" aria-hidden="true"></i>
+                            <span data-i18n>Download all</span>
+                        </button>
+                    </div>
+                    <div class="up-swf-body" id="up-swf-body" aria-live="polite">
+                        <p class="up-loading" data-i18n>Loading…</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full-size view of a single extracted asset, opened from a tile. -->
+            <div class="up-modal up-asset-modal" id="up-asset-modal" hidden>
+                <div class="up-modal-backdrop" id="up-asset-backdrop"></div>
+                <div class="up-modal-card up-asset-card" id="up-asset-card"
+                     role="dialog" aria-modal="true"
+                     aria-labelledby="up-asset-title" tabindex="-1">
+                    <button type="button" class="up-modal-close" id="up-asset-close"
+                            title="Close" aria-label="Close" data-i18n-title>
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                    <h2 class="up-asset-title" id="up-asset-title"></h2>
+                    <div class="up-asset-stage up-checker">
+                        <img id="up-asset-img" alt="" decoding="async">
+                    </div>
+                    <p class="up-asset-meta" id="up-asset-meta"></p>
+                    <a class="up-swf-zip" id="up-asset-dl" download>
+                        <i class="fa-solid fa-download" aria-hidden="true"></i>
+                        <span data-i18n>Download image</span>
+                    </a>
                 </div>
             </div>
         </section>
