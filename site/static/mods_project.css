@@ -619,7 +619,7 @@
 
 /* File browser */
 .mp-fb-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
-.mp-fb-bar select { background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius); color: var(--text); padding: 8px 11px; font-size: .88rem; }
+.mp-fb-bar select, .mp-fb-bar .btt-dd-trigger { background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius); color: var(--text); padding: 8px 11px; font-size: .88rem; }
 .mp-tree { border: 1px solid var(--bg-line); border-radius: var(--radius); overflow: hidden; }
 .mp-tree-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 13px; border-top: 1px solid var(--bg-line); font-size: .88rem; }
 .mp-tree-row:first-child { border-top: 0; }
@@ -683,12 +683,12 @@
 .mp-form { display: grid; gap: 14px; }
 .mp-form-field { display: grid; gap: 6px; }
 .mp-form-field > span { font: 600 .8rem 'Inter', system-ui, sans-serif; color: var(--text-mute); }
-.mp-form-field input, .mp-form-field textarea, .mp-form-field select {
+.mp-form-field input, .mp-form-field textarea, .mp-form-field select, .mp-form-field .btt-dd-trigger {
   background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius);
   color: var(--text); padding: 10px 12px; font-size: .92rem; font-family: inherit; width: 100%;
 }
 .mp-form-field textarea { resize: vertical; min-height: 110px; font-family: 'JetBrains Mono', monospace; font-size: .86rem; }
-.mp-form-field input:focus, .mp-form-field textarea:focus, .mp-form-field select:focus { border-color: var(--accent-blue); }
+.mp-form-field input:focus, .mp-form-field textarea:focus, .mp-form-field select:focus, .mp-form-field .btt-dd-trigger:focus-visible { border-color: var(--accent-blue); }
 .mp-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 .mp-form-error { color: var(--accent-red); font-size: .85rem; margin: 0; }
 .mp-form-hint { color: var(--text-mute); font-size: .8rem; margin: 0; }

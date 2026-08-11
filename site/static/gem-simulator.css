@@ -299,7 +299,7 @@
 .gem-sim .augment-field.disabled { opacity: 0.45; }
 .gem-sim .augment-field.disabled .slider-input { pointer-events: none; }
 
-.gem-sim select {
+.gem-sim select, .gem-sim .btt-dd-trigger {
   margin-top: 5px;
   padding: 8px;
   background: var(--bg-base, #06080d);
@@ -310,8 +310,8 @@
   font: inherit;
   cursor: pointer;
 }
-.gem-sim select:focus { border-color: var(--accent-blue, #58a6ff); }
-.gem-sim select:disabled { opacity: 0.5; cursor: not-allowed; }
+.gem-sim select:focus, .gem-sim .btt-dd-trigger:focus-visible { border-color: var(--accent-blue, #58a6ff); }
+.gem-sim select:disabled, .gem-sim .btt-dd-trigger:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Selected-gem detail panel ───────────────────────────────────────────── */
 .gem-sim .selected-name {

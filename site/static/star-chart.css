@@ -328,7 +328,7 @@
 .sc-btn.wide { flex: 1; justify-content: center; }
 
 .sc-filters { display: flex; gap: 8px; margin-bottom: 8px; }
-.sc-filters input, .sc-filters select {
+.sc-filters input, .sc-filters select, .sc-filters .btt-dd-trigger {
   flex: 1;
   min-width: 0;
   background: var(--bg-deep);
@@ -339,7 +339,7 @@
   outline: none;
   font-size: 12px;
 }
-.sc-filters input:focus, .sc-filters select:focus { border-color: var(--accent-blue); }
+.sc-filters input:focus, .sc-filters select:focus, .sc-filters .btt-dd-trigger:focus-visible { border-color: var(--accent-blue); }
 .sc-filter-meta { margin: -2px 0 10px; font-size: 12px; color: var(--text-mute); }
 
 .sc-divider { border: 0; border-top: 1px dashed var(--bg-line); margin: 6px 0 14px; }

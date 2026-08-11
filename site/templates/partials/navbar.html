@@ -122,3 +122,8 @@
             </nav>
         </div>
     </header>
+
+    <!-- The shared <select> replacement. Loaded here rather than per page: the
+         navbar is on every page that has a dropdown, so this is the one include
+         that guarantees a new page gets it without anyone remembering to. -->
+    <script src="/static/dropdown.min.js" defer></script>

@@ -633,11 +633,11 @@
   display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 6px;
 }
 .dash-mod-form input[name="title"] { flex: 1 1 200px; }
-.dash-mod-form input, .dash-mod-form select {
+.dash-mod-form input, .dash-mod-form select, .dash-mod-form .btt-dd-trigger {
   background: var(--bg-deep, #0d1117); border: 1px solid var(--border, #222b36);
   border-radius: 9px; color: var(--text, #e6edf3); padding: 10px 12px; font: inherit; font-size: .92rem;
 }
-.dash-mod-form input:focus, .dash-mod-form select:focus { outline: none; border-color: var(--accent-blue, #4cc9f0); }
+.dash-mod-form input:focus, .dash-mod-form select:focus, .dash-mod-form .btt-dd-trigger:focus-visible { outline: none; border-color: var(--accent-blue, #4cc9f0); }
 /* "This mod was made by someone else" row (uploaded-on-behalf) - the checkbox
    must escape the generic .dash-mod-form input padding above. */
 .dash-mod-check { display: flex; align-items: center; gap: 8px; color: var(--text-mute); font-size: .9rem; cursor: pointer; }
@@ -963,7 +963,7 @@
   text-transform: uppercase;
   letter-spacing: .04em;
 }
-.dash-discord-field select {
+.dash-discord-field select, .dash-discord-field .btt-dd-trigger {
   padding: 9px 12px;
   background: rgba(0,0,0,.30);
   border: 1px solid rgba(255,255,255,.08);
@@ -972,7 +972,7 @@
   font: inherit;
   font-size: .9rem;
 }
-.dash-discord-field select:focus {
+.dash-discord-field select:focus, .dash-discord-field .btt-dd-trigger:focus-visible {
   outline: none;
   border-color: var(--accent-blue, #4cc9f0);
 }

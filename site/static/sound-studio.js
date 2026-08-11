@@ -215,7 +215,7 @@
     }
     return `<div class="ss-row${edit ? ' edited' : ''}" data-id="${s.id}">
       <button type="button" class="ss-icon ss-play" data-act="play" data-id="${s.id}"
-              aria-label="${esc(t('Play'))} ${esc(label)}"${s.error ? ' disabled' : ''}>
+              aria-label="${esc(t('Play')) + ' ' + esc(label)}"${s.error ? ' disabled' : ''}>
         <i class="fa-solid fa-play" aria-hidden="true"></i>
       </button>
       <span class="ss-row-id">
