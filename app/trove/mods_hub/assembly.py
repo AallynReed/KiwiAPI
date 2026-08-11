@@ -34,23 +34,50 @@ _RIG_NAME_RE = re.compile(r"^[a-z0-9_]+$")   # skeleton / animation names; also 
 # voxels long, the Boomeranger's example sword 30) are the same size as the real weapon
 # styles, ~19-21.
 #
-# **A CREATURE'S OWN HEAD IS NOT ONE OF THEM.** It used to be listed here, which drew
-# every mount, dragon and mob at half the head it should have. Measured against the game's
-# own art-source meshes (granny_re/rig_mesh_bbox.json, which ARE the volumes these parts
-# fill): every part the rig map binds comes out at body resolution - head 1.00x over 329
-# creatures, jaw 1.00x over 219, body 1.00x, neck 1.00x. Nothing bound through a prefab is
-# double-resolution; only the equipment styles are, and those never arrive at `head`.
+# **`head` DEPENDS ON THE RIG**, and it is the one point that does. On a character - a
+# class, or a humanoid NPC - the head point carries character/equipment art, authored at
+# double resolution like the hat and face styles that sit on it. On a CREATURE it carries
+# the animal's own head, authored at body resolution like the rest of it: measured against
+# the game's art-source meshes (granny_re/rig_mesh_bbox.json, which ARE the volumes these
+# parts fill), a creature's head comes out at 1.00x over 319 samples, its jaw 1.00x over
+# 219, its body and neck 1.00x. Halving it drew every mount, dragon and ally at half the
+# head it should have - with a correctly-sized jaw beside it, which is what made the jaw
+# look like the broken one.
 #
-# So the resolution follows where the art came FROM, not what it is attached to - the same
-# reason the dressing room keeps its own table for character-creation art (a face style and
-# an eye mesh share the `face` point and disagree about resolution).
+# The two are told apart by the SKELETON, not by a name list: a rig that wears equipment
+# declares the sockets for it. 48 rigs carry a `hat`/`face` attach point (every player
+# class, plus the humanoid NPCs and the few companions the game lets wear a hat); the other
+# 150 head-bearing rigs are animals and carry none.
+#
+# So resolution follows where the art came FROM, not merely what it is attached to - the
+# same reason the dressing room keeps its own table for character-creation art (a face
+# style and an eye mesh share the `face` point and disagree about resolution).
 HALF_SCALE = 0.5
 HALF_SCALE_APS = frozenset({"hat", "hair", "face"})
+# Half only on a rig that wears equipment; body resolution on an animal.
+CHARACTER_HALF_SCALE_APS = frozenset({"head"})
+# The sockets whose presence says "this skeleton wears equipment styles".
+_EQUIPMENT_SOCKETS = frozenset({"hat", "face"})
 
 
-def scale_for(ap_key: str) -> float:
-    """The voxel-size multiplier for a part at this attach point (see above)."""
-    return HALF_SCALE if ap_key in HALF_SCALE_APS else 1.0
+def wears_equipment(rig_name: str | None) -> bool:
+    """Whether this skeleton has equipment sockets - i.e. is a character rather than an
+    animal. Read off the baked rig, so it comes from the game's own skeleton."""
+    rig = _rigs().get(rig_name or "")
+    return bool(rig) and bool(_EQUIPMENT_SOCKETS & set(rig["rest"]))
+
+
+def scale_for(ap_key: str, rig_name: str | None = None) -> float:
+    """The voxel-size multiplier for a part at this attach point (see above).
+
+    Without a rig, `head` is left at body resolution: an unknown skeleton is far more
+    likely to be one of the 150 animals than one of the 48 characters, and this is the
+    direction that fails visibly rather than silently."""
+    if ap_key in HALF_SCALE_APS:
+        return HALF_SCALE
+    if ap_key in CHARACTER_HALF_SCALE_APS and wears_equipment(rig_name):
+        return HALF_SCALE
+    return 1.0
 
 
 @lru_cache(maxsize=1)
@@ -187,7 +214,7 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
         key = ap_overrides.get(p.split("/")[-1][:-len(".blueprint")])   # exact AP, or None
         if not key or key not in rig["rest"]:
             continue                             # not a known part of this rig -> skip
-        part = _part_at(key, base64.b64decode(f["content_base64"]), scale_for(key))
+        part = _part_at(key, base64.b64decode(f["content_base64"]), scale_for(key, rig_name))
         if part:
             parts.append(part)
     if not parts:
@@ -356,7 +383,7 @@ def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
         # An equipment style is authored at double resolution (see scale_for). On this
         # shared integer grid that resamples it to body resolution - the right size at
         # the size it's drawn.
-        ps = scale * scale_for(ap_key)
+        ps = scale * scale_for(ap_key, rig_name)
         m = np.array(mat).reshape(4, 4).T @ np.diag([ps] * 3 + [1.0])
         n = len(voxels)
         local = np.array([[v[0] for v in voxels], [v[1] for v in voxels],

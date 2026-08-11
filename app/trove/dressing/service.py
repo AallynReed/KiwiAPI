@@ -323,7 +323,8 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         # decides the scale: hat/face art is authored at double the body's resolution,
         # a weapon's is not (see assembly.scale_for).
         for socket in sockets_mod.sockets_for_slot(outfit.cls.sockets, opt.slot_id):
-            out.append((socket["ap"], raw, assembly.scale_for(socket["ap"]), None))
+            out.append((socket["ap"], raw,
+                        assembly.scale_for(socket["ap"], outfit.cls.skeleton), None))
 
     for slot, opt in outfit.styles.items():
         if slot not in RACE_SLOTS:
@@ -356,7 +357,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
             continue
         tint = outfit.tint_for(slot)
         scale = (outfit.piece_scale(slot) if slot in RACE_SLOTS
-                 else assembly.scale_for(aps[0]))
+                 else assembly.scale_for(aps[0], outfit.cls.skeleton))
         for ap in aps:
             out.append((ap, data, scale, tint))
     return out
