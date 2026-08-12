@@ -439,15 +439,14 @@ export function mount(container, { releaseId, path, endpoint }) {
     }
     if (cnt && measuring) autofit.scale = Math.max(autofit.scale, Math.sqrt(maxR2));
 
-    /* Ground sits at the LOWEST point the effect reaches during the opening window,
-       not at world zero: plenty of effects (auras, wings) are authored centred on the
-       origin, and a floor at y=0 would saw them in half. Frozen once measuring ends so
-       it stops drifting, and skipped entirely until we have seen something. */
-    if (cnt && measuring) {
-      autofit.floor = Math.min(autofit.floor ?? Infinity, minY);
-      const span = Math.max(autofit.scale || Math.sqrt(maxR2), 0.5);
-      renderer.ground = { y: autofit.floor - span * 0.02, centre: [0, 0, 0], size: span * 8 };
-    }
+    /* No ground. It was added to give soft particles something to fade against, but
+       an effect is authored to be seen against the world, not against a slab we
+       invented - side by side with the game the plane read as a hard-edged wedge cut
+       through the portal. Soft particles keep working; with nothing opaque in the
+       depth pass the fade is simply a no-op, which is the honest result for a preview
+       that has no scene. `autofit.floor` stays measured in case a real backdrop is
+       ever added. */
+    if (cnt && measuring) autofit.floor = Math.min(autofit.floor ?? Infinity, minY);
 
     // Camera centres on the particle centroid; auto-distance only until the user interacts.
     if (cnt && autofit.active) {
