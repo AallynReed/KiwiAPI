@@ -210,9 +210,20 @@
       sph.theta -= dx * 0.01;
       sph.phi = Math.max(0.04, Math.min(Math.PI - 0.04, sph.phi - dy * 0.01));
     }
+    /* A pixel of drag has to move the world by exactly one pixel's worth AT THE
+       DISTANCE BEING ORBITED, or the spot you grabbed slides out from under the
+       cursor as you go. That factor is the viewport's world height at the target
+       plane over the canvas height in CSS pixels - and the same number applies
+       horizontally, because the world width and the pixel width both scale by the
+       aspect ratio. The old constant ignored the field of view and the canvas size
+       alike, so it only ever agreed with the cursor at one particular zoom.
+       Exact for anything sitting at the target's depth; something much nearer or
+       further still drifts, which no single-plane pan can help. */
     function pan(dx, dy) {
-      var s = sph.radius * 0.0016;
-      camera.matrix.extractBasis(right, up, fwd);
+      var s = 2 * sph.radius * Math.tan(camera.fov * Math.PI / 360) /
+              (stage.clientHeight || 1);
+      camera.updateMatrixWorld();
+      camera.matrixWorld.extractBasis(right, up, fwd);
       target.addScaledVector(right, -dx * s);
       target.addScaledVector(up, dy * s);
     }

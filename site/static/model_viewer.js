@@ -488,7 +488,21 @@
     var el = renderer.domElement, drag = 0, lx = 0, ly = 0, pinch = 0;
     var right = new THREE.Vector3(), up = new THREE.Vector3(), fwd = new THREE.Vector3();
     function rot(dx, dy) { sph.t -= dx * 0.01; sph.p = Math.max(0.05, Math.min(Math.PI - 0.05, sph.p - dy * 0.01)); }
-    function pan(dx, dy) { var k = sph.r * 0.0016; camera.matrix.extractBasis(right, up, fwd); target.addScaledVector(right, -dx * k); target.addScaledVector(up, dy * k); }
+    /* A pixel of drag has to move the world by exactly one pixel's worth AT THE
+       DISTANCE BEING ORBITED, or the spot you grabbed slides out from under the
+       cursor as you go. That factor is the viewport's world height at the target
+       plane over the canvas height in CSS pixels - and the same number applies
+       horizontally, because the world width and the pixel width both scale by the
+       aspect ratio. The old constant ignored the field of view and the canvas size
+       alike, so it only ever agreed with the cursor at one particular zoom.
+       Exact for anything sitting at the target's depth; something much nearer or
+       further still drifts, which no single-plane pan can help. */
+    function pan(dx, dy) {
+      var k = 2 * sph.r * Math.tan(camera.fov * Math.PI / 360) / (stage.clientHeight || 1);
+      camera.updateMatrixWorld();
+      camera.matrixWorld.extractBasis(right, up, fwd);
+      target.addScaledVector(right, -dx * k); target.addScaledVector(up, dy * k);
+    }
     function zoom(f) { sph.r = Math.max(modelR * 0.4, Math.min(modelR * 9, sph.r * f)); }
     /* Pointer events WITH CAPTURE, not window-level mouse listeners. Framed into
        another site, letting go of the button outside the frame delivers the mouseup
