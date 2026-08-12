@@ -196,8 +196,9 @@ def extract_rig_refs(data: bytes) -> dict | None:
     later forms' meshes were read as the first creature's, landing a werewolf head and
     an ultimate torso on the same attach points as the character's own.
 
-    Returns ``{"skeleton": "<stem>", "parts": {"<blueprint basename>": "<ap key>"}}``
-    (all lowercased), or None for non-creatures (no skeleton / no mesh bindings).
+    Returns ``{"skeleton": "<stem>", "parts": {"<blueprint basename>": "<ap key>"},
+    "refs": {"<blueprint basename>": "<mesh reference as written>"}}`` (all lowercased),
+    or None for non-creatures (no skeleton / no mesh bindings).
     """
     rows = _real_fields(data)
     skeleton: str | None = None
@@ -217,14 +218,24 @@ def extract_rig_refs(data: bytes) -> dict | None:
     end = min(ends) if ends else len(data)
 
     parts: dict[str, str] = {}
+    refs: dict[str, str] = {}
     for (off, field, s), (_n_off, n_field, n_s) in zip(rows, rows[1:], strict=False):
         if not (skel_off < off < end):
             continue                       # only the model component's mesh list
         if field == 0 and n_field == 1 and n_s.startswith("AP_"):
-            parts[s.rsplit("/", 1)[-1].lower()] = n_s[3:].lower()
+            ref = s.replace("\\", "/").lower()
+            base = ref.rsplit("/", 1)[-1]
+            parts[base] = n_s[3:].lower()
+            refs[base] = ref              # same last-one-wins rule as `parts`
     if not parts:
         return None
-    return {"skeleton": skeleton, "parts": parts}
+    # `refs` keeps each mesh reference AS THE PREFAB WROTE IT, relative to `blueprints/`.
+    # Trove reuses a basename across skins - the Candy Barbarian starter asks for a bare
+    # `c_p_candybarbarian_torso` while Demonic Inferno asks for its own
+    # `2019/ugc_adventure_box/costumes/candybarbarian_demonicinferno/c_p_candybarbarian_torso`
+    # - so the folder is the only thing telling the two apart. `parts` stays keyed on the
+    # basename, which is what a mod's file is named and what every other caller matches on.
+    return {"skeleton": skeleton, "parts": parts, "refs": refs}
 
 
 def parse_collection_table(data: bytes) -> list[dict]:

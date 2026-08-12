@@ -286,31 +286,47 @@ async def resolve(
                   dropped=dropped)
 
 
-async def blueprint_path(basename: str, hint: str, branch: str | None = None) -> str | None:
-    """Where a part's blueprint actually lives. The catalogue stores basenames, but the
-    archive keys on full logical paths (``2025/equipment/…``), so a bare name resolves to
-    nothing without this - and a basename Trove reuses across skins and NPC sets is
-    absent from the unambiguous index, so fall back to every archived path and take the
-    one closest to the prefab that asked for it (the creature renderer's rule)."""
+async def blueprint_path(basename: str, hint: str, branch: str | None = None,
+                         ref: str = "") -> str | None:
+    """Where a part's blueprint actually lives. The archive keys on full logical paths
+    (``2025/equipment/…``), so a bare name resolves to nothing without this.
+
+    ``ref`` is the reference the prefab itself wrote, relative to ``blueprints/``, and it
+    is the answer whenever the archive holds that exact file - the game is telling us
+    which copy it means. It matters because a basename does NOT identify a blueprint:
+    Candy Barbarian's starter and its Demonic Inferno costume both list a part called
+    `c_p_candybarbarian_torso`, one at the root of `blueprints/` and one under the
+    costume's own folder. Guessing between them by name dressed the starter in Demonic
+    Inferno, byte for byte.
+
+    Without a usable ref - a mod's part, a raw blueprint a caller passed in - fall back
+    to the unambiguous basename index, then to the archived copy closest to the prefab
+    that asked for it (the creature renderer's rule)."""
     branch = branch or settings.trove_render_branch
+    all_paths = await game_file_paths(branch)
+    candidates = all_paths.get(f"{basename}.blueprint", [])
+    if ref:
+        exact = f"blueprints/{ref}.blueprint"
+        if exact in candidates:
+            return exact
     index = await blueprint_by_basename(branch)
     found = index.get(basename)
     if found:
         return found
-    all_paths = await game_file_paths(branch)
-    return nearest_path(all_paths.get(f"{basename}.blueprint", []), hint)
+    return nearest_path(candidates, hint)
 
 
 async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
     """``[(AP key, blueprint bytes, scale, tint|None)]`` for everything on the rig."""
 
-    async def read(basename: str, hint: str) -> bytes | None:
-        path = await blueprint_path(basename, hint, branch)
+    async def read(basename: str, hint: str, ref: str = "") -> bytes | None:
+        path = await blueprint_path(basename, hint, branch, ref)
         return await get_blueprint_bytes(path, branch) if path else None
 
     out: list[tuple] = []
     for basename, ap_key in outfit.costume.parts.items():
-        raw = await read(basename, outfit.costume.prefab)
+        raw = await read(basename, outfit.costume.prefab,
+                         outfit.costume.refs.get(basename, ""))
         if raw:
             out.append((ap_key, raw, 1.0, None))
 
@@ -318,7 +334,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         opt = outfit.styles.get(slot)
         if not opt:
             continue
-        raw = await read(opt.blueprint, opt.prefab)
+        raw = await read(opt.blueprint, opt.prefab, opt.ref)
         if not raw:
             continue
         # One equipped style, drawn once per socket the class declares for its family -
@@ -353,9 +369,9 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
                 outfit.cls.sockets, outfit.weapon_family)]
         if not aps:
             continue
-        # A bare basename is looked up in the archive index; a full path resolves as
-        # given. The hint disambiguates a name Trove reuses across skins.
-        data = await read(ref.rsplit("/", 1)[-1], ref)
+        # A caller who names a full path gets that exact file; a bare basename falls
+        # through to the archive index, with the hint disambiguating a name Trove reuses.
+        data = await read(ref.rsplit("/", 1)[-1], ref, ref if "/" in ref else "")
         if not data:
             continue
         tint = outfit.tint_for(slot)

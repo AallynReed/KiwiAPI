@@ -75,6 +75,13 @@ class Option:
     covers_head: bool = False             # a full helmet rather than a hat
     credit: str = ""                      # community author, from a `[name]` suffix
     parts: dict[str, str] = field(default_factory=dict)   # costume: basename -> AP key
+    # Where the prefab actually pointed, relative to `blueprints/`. A basename alone does
+    # not identify a file - Trove ships several `c_p_candybarbarian_torso.blueprint`, one
+    # per costume that reuses the name - so this is what makes a part resolvable to the
+    # right one instead of the alphabetically-first one. Empty when the prefab named no
+    # folder, which is itself the answer: the copy at the root of `blueprints/`.
+    refs: dict[str, str] = field(default_factory=dict)    # costume: basename -> reference
+    ref: str = ""                                         # style: its own reference
 
 
 @dataclass(frozen=True)
@@ -207,9 +214,12 @@ def _build_classes(files: list[tuple[str, bytes]], loc: dict[str, str]) -> dict[
 
 def _build_costumes(
     rig_map: rig_index.RigMap, names: dict[str, str], by_skeleton: dict[str, str],
+    refs: dict[str, dict[str, str]],
 ) -> dict[str, list[Option]]:
     """Group the rig map's ``skins/`` rows into one option per costume prefab, filed
-    under the class whose skeleton it binds."""
+    under the class whose skeleton it binds. ``refs`` carries each costume's mesh
+    references read straight from its prefab (see Option.refs); a costume missing from it
+    keeps the old basename-only resolution."""
     out: dict[str, list[Option]] = {}
     for prefab, (skeleton, parts) in rig_map.creatures.items():
         if not prefab.startswith(SKIN_ROOT):
@@ -221,6 +231,7 @@ def _build_costumes(
         out.setdefault(class_key, []).append(Option(
             key=stem, name=names.get(stem) or _humanize(stem), slot="costume",
             prefab=prefab, skeleton=skeleton, parts=dict(parts),
+            refs=refs.get(prefab, {}),
         ))
     for options in out.values():
         options.sort(key=lambda o: o.name.lower())
@@ -237,7 +248,8 @@ def _build_styles(files: list[tuple[str, bytes]], loc: dict[str, str]) -> dict[s
         slot_id = sockets_mod.style_slot(ident.get("flags"))
         if slot_id is None or slot_id == 40:      # banners hang off a pole, not a socket
             continue
-        blueprint = _blueprint_of(data)
+        ref = _blueprint_ref(data)
+        blueprint = ref.rsplit("/", 1)[-1]
         if not blueprint:
             continue
         if slot_id == sockets_mod.HAT_SLOT:
@@ -251,7 +263,7 @@ def _build_styles(files: list[tuple[str, bytes]], loc: dict[str, str]) -> dict[s
         out[slot].append(Option(
             key=stem, name=name or _humanize(stem), slot=slot,
             family=sockets_mod.SLOTS[slot_id], slot_id=slot_id,
-            blueprint=blueprint, prefab=path,
+            blueprint=blueprint, ref=ref, prefab=path,
             covers_head=slot == "hat" and bool(_HELMET_RE.search(blueprint)),
         ))
     for options in out.values():
@@ -259,12 +271,14 @@ def _build_styles(files: list[tuple[str, bytes]], loc: dict[str, str]) -> dict[s
     return out
 
 
-def _blueprint_of(data: bytes) -> str:
-    """The style's model blueprint basename (no folder, no extension)."""
+def _blueprint_ref(data: bytes) -> str:
+    """The style's model blueprint as the prefab names it, relative to ``blueprints/``
+    and without the extension - folder included when it has one, because that folder is
+    what tells two same-named blueprints apart (see Option.refs)."""
     for _off, _f, s in binfab.harvest_strings(data):
         low = s.lower()
         if low.endswith(".blueprint"):
-            return low.replace("\\", "/").rsplit("/", 1)[-1][: -len(".blueprint")]
+            return low.replace("\\", "/")[: -len(".blueprint")]
     return ""
 
 
@@ -314,14 +328,18 @@ async def _build(branch: str) -> Catalogue:
 
     skins = await _load(branch, SKIN_ROOT)
     names: dict[str, str] = {}
+    refs: dict[str, dict[str, str]] = {}
     for path, data in skins:
         key = _name_key(data)
         text = binfab.clean_localized_text(loc.get(key or "", "")) if key else ""
         if text:
             names[_stem(path)] = text
+        found = binfab.extract_rig_refs(data)
+        if found and found.get("refs"):
+            refs[path] = found["refs"]
 
     rig_map = await rig_index.rig_map(branch)
-    costumes = _build_costumes(rig_map, names, by_skeleton)
+    costumes = _build_costumes(rig_map, names, by_skeleton, refs)
     styles = _build_styles(await _load(branch, EQUIP_ROOT), loc)
 
     heads_raw = await _load_one(branch, CUSTOM_HEADS)
