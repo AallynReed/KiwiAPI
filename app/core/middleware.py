@@ -175,7 +175,8 @@ class PublicAssetCorsMiddleware:
     would be two of them, which every browser treats as no CORS at all.
     """
 
-    _STRIP = frozenset({b"access-control-allow-origin", b"access-control-allow-credentials"})
+    _STRIP = frozenset({b"access-control-allow-origin", b"access-control-allow-credentials",
+                        b"access-control-expose-headers"})
     _PREFLIGHT = (
         (b"access-control-allow-origin", b"*"),
         (b"access-control-allow-methods", b"GET, HEAD, OPTIONS"),
