@@ -209,9 +209,23 @@
     }
     function zoom(f) { sph.radius = Math.max(modelR * 0.35, Math.min(modelR * 9, sph.radius * f)); }
 
-    function onDown(e) { drag = (e.button === 2 || e.shiftKey) ? 2 : 1; lx = e.clientX; ly = e.clientY; stage.classList.add('bpv-grabbing'); e.preventDefault(); }
+    /* Pointer events WITH CAPTURE, not window-level mouse listeners. Framed into
+       another site, letting go of the button outside the frame delivers the mouseup
+       to the parent document - this window never sees it, so the drag never ends and
+       the model keeps spinning with the cursor. `setPointerCapture` routes every
+       later event for that pointer to this element wherever it travels, which is the
+       only thing that survives the frame boundary. Touch keeps its own handlers below
+       (pinch needs the whole touch list), so touch pointers are ignored here rather
+       than handling the same gesture twice. */
+    function onDown(e) {
+      if (e.pointerType === 'touch') return;
+      drag = (e.button === 2 || e.shiftKey) ? 2 : 1; lx = e.clientX; ly = e.clientY;
+      stage.classList.add('bpv-grabbing');
+      try { el.setPointerCapture(e.pointerId); } catch (err) { /* pointer already released */ }
+      e.preventDefault();
+    }
     function onMove(e) {
-      if (!drag) return;
+      if (!drag || e.pointerType === 'touch') return;
       var dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY;
       if (drag === 2) pan(dx, dy); else rotate(dx, dy);
       applyCamera(); request();
@@ -228,9 +242,13 @@
     function onTEnd() { drag = 0; pinch = 0; }
     function onResize() { var w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h); request(); }
 
-    el.addEventListener('mousedown', onDown);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    // capture can be lost without a pointerup (another element grabs it, the tab
+    // hides, the gesture is cancelled) - each one has to end the drag too
+    el.addEventListener('pointercancel', onUp);
+    el.addEventListener('lostpointercapture', onUp);
     el.addEventListener('wheel', onWheel, { passive: false });
     el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     el.addEventListener('touchstart', onTStart, { passive: false });
@@ -255,9 +273,11 @@
       dispose: function () {
         alive = false; cancelAnimationFrame(raf);
         if (tools) tools.dispose();
-        el.removeEventListener('mousedown', onDown);
-        window.removeEventListener('mousemove', onMove);
-        window.removeEventListener('mouseup', onUp);
+        el.removeEventListener('pointerdown', onDown);
+        el.removeEventListener('pointermove', onMove);
+        el.removeEventListener('pointerup', onUp);
+        el.removeEventListener('pointercancel', onUp);
+        el.removeEventListener('lostpointercapture', onUp);
         el.removeEventListener('wheel', onWheel);
         el.removeEventListener('touchstart', onTStart);
         el.removeEventListener('touchmove', onTMove);

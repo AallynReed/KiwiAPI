@@ -479,15 +479,32 @@
     function rot(dx, dy) { sph.t -= dx * 0.01; sph.p = Math.max(0.05, Math.min(Math.PI - 0.05, sph.p - dy * 0.01)); }
     function pan(dx, dy) { var k = sph.r * 0.0016; camera.matrix.extractBasis(right, up, fwd); target.addScaledVector(right, -dx * k); target.addScaledVector(up, dy * k); }
     function zoom(f) { sph.r = Math.max(modelR * 0.4, Math.min(modelR * 9, sph.r * f)); }
-    function down(e) { drag = (e.button === 2 || e.shiftKey) ? 2 : 1; lx = e.clientX; ly = e.clientY; stage.classList.add('grab'); e.preventDefault(); }
-    function move(e) { if (!drag) return; var dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY; if (drag === 2) pan(dx, dy); else rot(dx, dy); cam(); request(); }
+    /* Pointer events WITH CAPTURE, not window-level mouse listeners. Framed into
+       another site, letting go of the button outside the frame delivers the mouseup
+       to the parent document - this window never sees it, so the drag never ends and
+       the model keeps spinning with the cursor. `setPointerCapture` routes every
+       later event for that pointer to this element wherever it travels, which is the
+       only thing that survives the frame boundary. Touch keeps its own handlers below
+       (pinch needs the whole touch list), so touch pointers are ignored here rather
+       than handling the same gesture twice. */
+    function down(e) {
+      if (e.pointerType === 'touch') return;
+      drag = (e.button === 2 || e.shiftKey) ? 2 : 1; lx = e.clientX; ly = e.clientY;
+      stage.classList.add('grab');
+      try { el.setPointerCapture(e.pointerId); } catch (err) { /* pointer already released */ }
+      e.preventDefault();
+    }
+    function move(e) { if (!drag || e.pointerType === 'touch') return; var dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY; if (drag === 2) pan(dx, dy); else rot(dx, dy); cam(); request(); }
     function upE() { drag = 0; stage.classList.remove('grab'); }
     function wheel(e) { e.preventDefault(); zoom(e.deltaY > 0 ? 1.12 : 0.89); cam(); request(); }
     function tdist(e) { var a = e.touches[0], b = e.touches[1]; return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
     function ts(e) { if (e.touches.length === 1) { drag = 1; lx = e.touches[0].clientX; ly = e.touches[0].clientY; } else if (e.touches.length === 2) { drag = 0; pinch = tdist(e); } }
     function tm(e) { if (e.touches.length === 1 && drag === 1) { var t = e.touches[0]; rot(t.clientX - lx, t.clientY - ly); lx = t.clientX; ly = t.clientY; cam(); request(); } else if (e.touches.length === 2) { var d = tdist(e); if (pinch) { zoom(pinch / d); cam(); request(); } pinch = d; } e.preventDefault(); }
     function te() { drag = 0; pinch = 0; }
-    el.addEventListener('mousedown', down); window.addEventListener('mousemove', move); window.addEventListener('mouseup', upE);
+    el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', upE);
+    // capture can be lost without a pointerup (another element grabs it, the tab
+    // hides, the gesture is cancelled) - each one has to end the drag too
+    el.addEventListener('pointercancel', upE); el.addEventListener('lostpointercapture', upE);
     el.addEventListener('wheel', wheel, { passive: false }); el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     el.addEventListener('touchstart', ts, { passive: false }); el.addEventListener('touchmove', tm, { passive: false }); el.addEventListener('touchend', te);
     function onResize() { var w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h); request(); }
@@ -756,7 +773,8 @@
       dispose: function () {
       alive = false; cancelAnimationFrame(raf);
       if (tools) tools.dispose();
-      el.removeEventListener('mousedown', down); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', upE);
+      el.removeEventListener('pointerdown', down); el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', upE);
+      el.removeEventListener('pointercancel', upE); el.removeEventListener('lostpointercapture', upE);
       el.removeEventListener('wheel', wheel); el.removeEventListener('touchstart', ts); el.removeEventListener('touchmove', tm); el.removeEventListener('touchend', te);
       window.removeEventListener('resize', onResize);
       if (ro) { ro.disconnect(); ro = null; }
