@@ -41,48 +41,132 @@
 
   function isOpaque(kind) { return kind === 0 || kind === 2; }   // solid / glow
 
-  /* --- The specular map -----------------------------------------------------
+  /* --- The lighting model ---------------------------------------------------
 
-     A solid voxel carries a specular value (rough · metal · water · iridescent ·
-     waxy) that the previews used to ignore, so a knight's steel and a gold badge
-     shaded exactly like painted wood. Trove doesn't derive a highlight from a
-     roughness number: the value indexes a 4x2 atlas of pre-baked lobes
-     (textures/brdfmap.dds) that its shader samples by (N·H, L·H) - the rainbow
-     sheen of "iridescent" is literally a tile of that image. So we sample the
-     same atlas the same way rather than inventing per-material shininess:
+     The previews used to shade with three.js' own Phong material under an ambient
+     plus two directional lights. That is a different lighting model from the
+     game's, and it shows: flat midtones, crushed shadow sides, and a white
+     highlight on everything. Trove's object pass is a plain forward shader whose
+     source ships with the client, so we run its arithmetic instead of
+     approximating it:
 
-       Lighting_BRDFSpecular(), programs/fragment/library_specularlighting.fragment
+       programs/fragment/terrain.fragment                    CalcTerrainColor
+       programs/fragment/library_diffuselighting.fragment    Lighting_LightingSS
+       programs/fragment/library_specularlighting.fragment   Lighting_BRDFSpecular
 
-     The lobe multiplies the voxel's own colour (the game's tintColor), which is
-     why gold shimmers gold instead of white. Until the atlas arrives - or if the
-     server can't serve it - the uniform holds an empty texture, which samples
-     black, so every solid falls back to a flat diffuse shade. */
+     Fed the inputs a lone model actually has - no world lightmap, no fog, no
+     point lights, no normal map - every term of CalcTerrainColor that depends on
+     world state falls out (blockColor 0, darkness 1, fog 0, subsurface 0) and
+     what remains is:
+
+       lighting = sunColor * pow(max(N·L * 0.7 + 0.3, 0.0), 0.65)   // wrap diffuse
+                + brdfLobe * sunSpecular                            // baked lobe
+                + ambientColor
+       colour   = voxelColour * mix(lighting, vec3(1.2), glow)
+
+     The `* 0.7 + 0.3` wrap and the 0.65 curve are the whole Trove look: a face
+     turned away from the sun settles at 0.3 instead of black, and the curve lifts
+     the midtones, so voxels read as softly lit rather than half in shadow.
+
+     The highlight is not derived from a roughness number. A solid voxel's
+     specular value (rough · metal · water · iridescent · waxy) indexes a 4x2
+     atlas of pre-baked lobes (textures/brdfmap.dds) sampled by (N·H, L·H) - the
+     rainbow sheen of "iridescent" is literally a tile of that image. The lobe is
+     summed into the lighting BEFORE the voxel's own colour multiplies it, which
+     is why gold shimmers gold rather than white. Until the atlas arrives - or if
+     the server can't serve it - the sampler holds an empty texture and reads
+     black, so a model still draws, just without highlights.
+
+     Everything is in VIEW space, as the game's is: its `viewNormal` is the
+     normal matrix applied to the vertex normal, and its `worldPos` is really the
+     view-space position (the shader takes the eye vector as `normalize(-worldPos)`,
+     which only holds with the eye at the origin). */
   var BRDF_MAP = { value: null };          // shared by every material; filled once
-  var BRDF_LIGHT = { value: null };        // key-light direction, world space
-  // The game feeds its lobes a tuned sunLightSpecular; the viewers' own rig is
-  // already bright, so the strongest lobe (metal, near-white) is scaled to add
-  // about a third of the voxel's colour instead of doubling it and clipping.
-  var BRDF_GAIN = { value: 0.35 };
   var _brdfLoad = null, _brdfWaiters = [];
 
-  var BRDF_UNIFORMS =
-    'uniform sampler2D kBrdfMap;\nuniform vec3 kBrdfLight;\nuniform float kBrdfGain;\n' +
-    'uniform float kBrdfTile;\n';
+  /* The engine feeds sun/ambient per biome and time of day; a viewer has no world
+     to read them from, so it runs one neutral white sun. Sun + ambient reach just
+     past 1.0 on a face pointed at the light and leave 0.36 on one pointed away -
+     the game's contrast range, rather than three.js' flatter default rig. */
+  var LIGHT = null;
+  function ensureLight(THREE) {
+    if (LIGHT) return LIGHT;
+    LIGHT = {
+      kBrdfMap: BRDF_MAP,
+      kSun: { value: new THREE.Vector3(0.66, 0.66, 0.66) },       // sunLightColor
+      kSunSpec: { value: new THREE.Vector3(0.85, 0.85, 0.85) },   // sunLightSpecular
+      kAmbient: { value: new THREE.Vector3(0.36, 0.36, 0.36) },   // ambientLightColor
+      kSunDir: { value: new THREE.Vector3(0.7, 1.0, 0.55).normalize() },
+    };
+    return LIGHT;
+  }
 
-  // index.y picks the atlas row (tiles 0-3 bottom, 4-7 top); the clamps are the
-  // game's own half-texel inset, which keeps a lobe from bleeding into its neighbour.
-  var BRDF_LOBE = [
-    'vec3 kN = normalize(vNormal);',
-    'vec3 kE = normalize(vViewPosition);',
-    'vec3 kL = normalize((viewMatrix * vec4(kBrdfLight, 0.0)).xyz);',
-    'vec3 kH = normalize(kE + kL);',
-    'vec2 kTx = vec2(clamp(dot(kN, kH), 0.0078125, 0.9921875),',
-    '                clamp(dot(kL, kH), 0.00390625, 0.99609375));',
-    'vec2 kCell = vec2(mod(kBrdfTile, 4.0), kBrdfTile < 4.0 ? 1.0 : 0.0);',
-    'vec3 kLobe = texture2D(kBrdfMap, (kCell + kTx) * vec2(0.25, 0.5)).rgb;',
-    'outgoingLight += diffuseColor.rgb * kLobe *',
-    '                 clamp(dot(kN, kL) * 2.0 + 1.0, 0.0, 1.0) * kBrdfGain;',
-    '#include <output_fragment>'
+  /* Move the sun or retint it. Every material shares these uniform objects, so one
+     call relights the whole scene; the host still has to ask for a redraw. */
+  function setLighting(THREE, opts) {
+    var L = ensureLight(THREE);
+    if (opts.lightDir) L.kSunDir.value.fromArray(opts.lightDir).normalize();
+    if (opts.sun) L.kSun.value.fromArray(opts.sun);
+    if (opts.specular) L.kSunSpec.value.fromArray(opts.specular);
+    if (opts.ambient) L.kAmbient.value.fromArray(opts.ambient);
+  }
+
+  // `color` is declared here rather than via `vertexColors`, so the attribute is
+  // named once whatever three.js decides to inject for a ShaderMaterial.
+  var VERT = [
+    'attribute vec3 color;',
+    'varying vec3 vCol;',
+    'varying vec3 vNor;',
+    'varying vec3 vEye;',
+    'void main() {',
+    '  vCol = color;',
+    '  vNor = normalize(normalMatrix * normal);',
+    '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
+    '  vEye = -mv.xyz;',                  // view space: the eye sits at the origin
+    '  gl_Position = projectionMatrix * mv;',
+    '}'
+  ].join('\n');
+
+  var FRAG = [
+    'uniform sampler2D kBrdfMap;',
+    'uniform vec3 kSun;',
+    'uniform vec3 kSunSpec;',
+    'uniform vec3 kAmbient;',
+    'uniform vec3 kSunDir;',              // world space; the sun follows the model, not the camera
+    'uniform float kTile;',               // effectColor.x * 8.0 - which lobe of the atlas
+    'uniform float kGlow;',               // effectColor.y
+    'uniform float kOpacity;',
+    'varying vec3 vCol;',
+    'varying vec3 vNor;',
+    'varying vec3 vEye;',
+    '',
+    // Lighting_BRDFSpecular. cell.y picks the atlas row (tiles 0-3 bottom, 4-7
+    // top); the clamps are the game's half-texel inset, which stops one lobe
+    // bleeding into its neighbour. `bias` is the fractional part of the index,
+    // always 0 for the whole-number values a voxel carries.
+    'vec3 kBrdf(vec3 N, vec3 L, vec3 E) {',
+    '  float sel = floor(kTile + 0.01);',
+    '  float bias = kTile - sel;',
+    '  vec2 cell = vec2(mod(sel, 4.0), step((kTile + 0.01) / 4.0, 1.0));',
+    '  vec3 H = normalize(E + L);',
+    '  vec2 tx;',
+    '  tx.x = clamp((dot(N, H) / (1.0 - bias)) - bias / (1.0 - bias), 0.0078125, 0.9921875);',
+    '  tx.y = clamp(dot(L, H), 0.00390625, 0.99609375);',
+    '  return texture2D(kBrdfMap, (cell + tx) * vec2(0.25, 0.5)).rgb',
+    '         * clamp(dot(N, L) * 2.0 + 1.0, 0.0, 1.0) * 1.5;',
+    '}',
+    '',
+    'void main() {',
+    '  vec3 N = normalize(vNor);',
+    '  vec3 E = normalize(vEye);',
+    '  vec3 L = normalize((viewMatrix * vec4(kSunDir, 0.0)).xyz);',
+    '  vec3 spec = kBrdf(N, L, E) * kSunSpec;',
+    '  vec3 lighting = kSun * pow(max(dot(N, L) * 0.7 + 0.3, 0.0), 0.65) + spec + kAmbient;',
+    '  vec3 lit = vCol * mix(lighting, vec3(1.2), kGlow);',
+    // The game widens a translucent voxel's alpha wherever the highlight lands, so
+    // a specular streak across glass reads as solid rather than see-through.
+    '  gl_FragColor = vec4(lit, max(max(spec.r, spec.g), max(kOpacity, spec.b)));',
+    '}'
   ].join('\n');
 
   /* Fetch the atlas once per page. Failure is not an error - the model still
@@ -103,28 +187,23 @@
 
   /* 0 solid · 1 glass · 2 glow · 3 glow-glass. Glass opacity = (level/255)^2
      (level = 16+32*w), matching the game/catalog. Colour rides on the vertices.
-     Solids take their highlight from the specular atlas above, so their own Phong
-     specular is off - one lighting model, not two fighting each other. */
+     All four kinds run the one shader above - glow is the shader's own glow term,
+     not a second unlit material - so there is a single lighting model on screen. */
   function makeMaterial(THREE, kind, level, spec) {
-    var opacity = Math.pow((level || 255) / 255, 2);
-    if (kind === 2) return new THREE.MeshBasicMaterial({ vertexColors: true });
-    if (kind === 3) return new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: opacity, depthWrite: false });
-    if (kind === 1) return new THREE.MeshPhongMaterial({ vertexColors: true, transparent: true, opacity: opacity, depthWrite: false, shininess: 70, specular: 0x4d4d4d });
-
-    var mat = new THREE.MeshPhongMaterial({ vertexColors: true, shininess: 0, specular: 0x000000 });
-    if (!BRDF_LIGHT.value) BRDF_LIGHT.value = new THREE.Vector3(0.7, 1.0, 0.55);
-    var tile = { value: spec || 0 };
-    mat.onBeforeCompile = function (shader) {
-      shader.uniforms.kBrdfMap = BRDF_MAP;
-      shader.uniforms.kBrdfLight = BRDF_LIGHT;
-      shader.uniforms.kBrdfGain = BRDF_GAIN;
-      shader.uniforms.kBrdfTile = tile;
-      shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', '#include <common>\n' + BRDF_UNIFORMS)
-        .replace('#include <output_fragment>', BRDF_LOBE);
-    };
-    mat.customProgramCacheKey = function () { return 'kbrdf'; };
-    return mat;
+    var L = ensureLight(THREE), glass = (kind === 1 || kind === 3);
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        kBrdfMap: L.kBrdfMap, kSun: L.kSun, kSunSpec: L.kSunSpec,
+        kAmbient: L.kAmbient, kSunDir: L.kSunDir,
+        kTile: { value: kind === 0 ? (spec || 0) : 0 },
+        kGlow: { value: (kind === 2 || kind === 3) ? 1 : 0 },
+        kOpacity: { value: glass ? Math.pow((level || 255) / 255, 2) : 1 },
+      },
+      vertexShader: VERT,
+      fragmentShader: FRAG,
+      transparent: glass,
+      depthWrite: !glass,
+    });
   }
 
   /* Which voxel (if any) sits at each cell, so a face can ask its neighbour's kind. */
@@ -151,9 +230,10 @@
     return function (x, y, z) { return map.get(x + ',' + y + ',' + z) || 0; };
   }
 
-  /* `opts`: { brdfUrl, lightDir:[x,y,z], onReady } - where to fetch the specular
-     atlas, which light its lobes answer to, and a redraw hook (the viewers render
-     on demand, so a texture that lands after the first frame needs one). */
+  /* `opts`: { brdfUrl, lightDir:[x,y,z], sun, ambient, specular, onReady } - where
+     to fetch the specular atlas, where the sun sits and what colour it is, and a
+     redraw hook (the viewers render on demand, so a texture that lands after the
+     first frame needs one). */
   function build(THREE, part, opts) {
     var X = part.x, Y = part.y, Z = part.z, RGB = part.rgb;
     var KIND = part.kind, LVL = part.level, SPEC = part.spec;
@@ -161,9 +241,7 @@
     if (!n) return [];
 
     opts = opts || {};
-    if (opts.lightDir) {
-      BRDF_LIGHT.value = new THREE.Vector3(opts.lightDir[0], opts.lightDir[1], opts.lightDir[2]);
-    }
+    setLighting(THREE, opts);
     if (opts.brdfUrl) loadBrdf(THREE, opts.brdfUrl, opts.onReady);
 
     var at = occupancy(X, Y, Z, n);
@@ -238,5 +316,5 @@
     });
   }
 
-  window.VoxelMesh = { build: build, makeMaterial: makeMaterial };
+  window.VoxelMesh = { build: build, makeMaterial: makeMaterial, setLighting: setLighting };
 })();

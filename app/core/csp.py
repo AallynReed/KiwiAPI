@@ -43,7 +43,10 @@ SITE_CSP = (
     # Allow any https image so user-content READMEs render badges + screenshots
     # (shields.io, github, imgur, …) like GitHub. Images can't execute, so this is
     # low-risk; `data:` covers inline, `cdn.discordapp.com` is already https.
-    "img-src 'self' data: https:; "
+    # `blob:` is the 3D viewers' backdrop: a file the user picks off their own disk
+    # never leaves the browser, and a blob keeps the export canvas untainted where a
+    # remote URL would taint it (site/static/viewer_stage.js).
+    "img-src 'self' data: blob: https:; "
     # Data-plane binary (mod artifacts, textures, blueprints, VFX assets) is
     # served from the API origin cross-origin; viewers fetch() it (connect-src),
     # but declare media-src too so any <audio>/<video> from the API isn't blocked

@@ -120,15 +120,22 @@ html, body {
 
 /* ── stage ──────────────────────────────────────────────────────────────── */
 
+/* The two stops are custom properties because viewer_stage.js reads them back to
+   paint the same gradient into a saved PNG. Restating the gradient here (rather
+   than leaning on .vs-bg alone) keeps the .pkfx and audio modes, which never load
+   that script, looking like the rest. */
 .kv-stage {
+  --vs-bg-a: #1b2531;
+  --vs-bg-b: #0c1118;
   position: relative;
   flex: 1;
   min-height: 0;
-  background: radial-gradient(circle at 50% 40%, #1b2531, #0c1118 78%);
+  background: radial-gradient(circle at 50% 40%, var(--vs-bg-a), var(--vs-bg-b) 78%);
   cursor: grab;
 }
 [data-theme="light"] .kv-stage {
-  background: radial-gradient(circle at 50% 40%, #ffffff, #e4eaf2 78%);
+  --vs-bg-a: #ffffff;
+  --vs-bg-b: #e4eaf2;
 }
 .kv-stage canvas { display: block; width: 100%; height: 100%; }
 
@@ -147,10 +154,9 @@ html, body {
 .kv-msg.kv-error { color: var(--kv-danger); }
 
 /* The mounted viewers bring their own stage classes (.bpv-stage / .mv-stage /
-   .pkfx-*). They set their own background, so neutralise it and let the shell's
-   gradient show through — one stage look across all three. */
-.kv-stage.bpv-stage,
-.kv-stage.mv-stage { background: none; }
+   .pkfx-*); none of them paints a background any more, so the shell's gradient
+   shows through — one stage look across all three. A backdrop picked in the
+   viewer lands as an inline style, which outranks the rule above. */
 
 /* ── animation bar (assembled-creature clips) + footer ───────────────────── */
 

@@ -263,7 +263,13 @@
       '.mv-title{font-weight:700;color:#e6edf3;font-size:.98rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.mv-meta{color:#6b7480;font-size:.75rem}' +
       '.mv-close{background:transparent;border:0;color:#9aa4b2;font-size:1.5rem;line-height:1;cursor:pointer;padding:0 4px}.mv-close:hover{color:#e6edf3}' +
-      '.mv-stage{position:relative;flex:1;min-height:0;background:radial-gradient(circle at 50% 42%,#1b2531,#0c1118 80%);cursor:grab}.mv-stage.grab{cursor:grabbing}' +
+      // The two stops are custom properties, and the gradient is spelled exactly as
+      // viewer_stage.js documents, because that script redraws it by hand when
+      // saving a PNG (and can replace it with a colour or an image).
+      '.mv-stage{position:relative;flex:1;min-height:0;cursor:grab;' +
+        '--vs-bg-a:#1b2531;--vs-bg-b:#0c1118;' +
+        'background:radial-gradient(circle at 50% 40%,var(--vs-bg-a),var(--vs-bg-b) 78%)}' +
+      '.mv-stage.grab{cursor:grabbing}' +
       '.mv-stage canvas{display:block;width:100%;height:100%}' +
       '.mv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa4b2;font-size:.9rem}.mv-msg.err{color:#f0997b}' +
       '.mv-bar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:10px 12px;border-top:1px solid #232a33}' +
@@ -345,7 +351,7 @@
           msg.remove();
           var nv = data.parts.reduce(function (a, p) { return a + p.x.length; }, 0);
           if (opts.onMeta) opts.onMeta(data.parts.length + ' parts · ' + nv.toLocaleString() + ' voxels');
-          viewer = build(THREE, container, bar, data, graph);
+          viewer = build(THREE, container, bar, data, graph, opts.title);
         });
       });
     }).catch(function (e) {
@@ -396,12 +402,12 @@
     }
 
     viewer = mount(stage, {
-      url: opts.url, bar: bar,
+      url: opts.url, bar: bar, title: opts.title,
       onMeta: function (text) { meta.textContent = text; },
     });
   }
 
-  function build(THREE, stage, bar, data, graph) {
+  function build(THREE, stage, bar, data, graph, title) {
     var W = stage.clientWidth || 900, H = stage.clientHeight || 560, s = data.voxel_scale;
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -410,10 +416,9 @@
     renderer.domElement.setAttribute('aria-label', 'Interactive 3D creature model. Drag to rotate, scroll to zoom.');
     renderer.domElement.appendChild(document.createTextNode('3D model preview (requires a WebGL-capable browser).'));
     stage.appendChild(renderer.domElement);
+    // No scene lights: the voxel materials run Trove's own object shader, which
+    // carries its sun and ambient as uniforms (voxel_mesh.js).
     var scene = new THREE.Scene();
-    scene.add(new THREE.AmbientLight(0xffffff, 0.68));
-    var key = new THREE.DirectionalLight(0xffffff, 0.85); key.position.set(0.6, 1, 0.5); scene.add(key);
-    var fill = new THREE.DirectionalLight(0xffffff, 0.32); fill.position.set(-0.5, 0.4, -0.6); scene.add(fill);
     var camera = new THREE.PerspectiveCamera(42, W / H, 0.001, 1000);
 
     var scaleM = new THREE.Matrix4().makeScale(s, s, s);
@@ -509,6 +514,12 @@
     var _p3 = new THREE.Vector3(), _q3 = new THREE.Quaternion();
     function renderOnce() { renderer.render(scene, camera); }
     function request() { if (anim) return; if (!pending) { pending = true; requestAnimationFrame(function () { pending = false; renderOnce(); }); } }
+    // Backdrop picker + "Save PNG". Optional, so a page that hasn't loaded the
+    // script yet still gets a working viewer. A snapshot taken mid-animation
+    // catches whatever pose is on screen, which is the point.
+    var tools = window.ViewerStage ? window.ViewerStage.attach({
+      stage: stage, canvas: renderer.domElement, render: renderOnce, name: title,
+    }) : null;
     /* Pose the parts at `f`, a FRACTIONAL frame index into a decoded clip: rebuild each
        attach point's matrix from its position+quaternion instead of reading a stored 4x4.
        Clips bake at the game's rate (30fps) but the display runs at 60/120/144, so the
@@ -744,6 +755,7 @@
       },
       dispose: function () {
       alive = false; cancelAnimationFrame(raf);
+      if (tools) tools.dispose();
       el.removeEventListener('mousedown', down); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', upE);
       el.removeEventListener('wheel', wheel); el.removeEventListener('touchstart', ts); el.removeEventListener('touchmove', tm); el.removeEventListener('touchend', te);
       window.removeEventListener('resize', onResize);

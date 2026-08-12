@@ -30,7 +30,12 @@
       '.bpv-meta{color:#6b7480;font-size:.75rem;flex:0 0 auto}' +
       '.bpv-close{flex:0 0 auto;background:transparent;border:0;color:#9aa4b2;font-size:1.5rem;line-height:1;cursor:pointer;padding:0 4px}' +
       '.bpv-close:hover{color:#e6edf3}' +
-      '.bpv-stage{position:relative;flex:1;min-height:0;background:radial-gradient(circle at 50% 40%,#1b2531,#0c1118 78%);cursor:grab}' +
+      // The two stops are custom properties, and the gradient is spelled exactly as
+      // viewer_stage.js documents, because that script redraws it by hand when
+      // saving a PNG (and can replace it with a colour or an image).
+      '.bpv-stage{position:relative;flex:1;min-height:0;cursor:grab;' +
+        '--vs-bg-a:#1b2531;--vs-bg-b:#0c1118;' +
+        'background:radial-gradient(circle at 50% 40%,var(--vs-bg-a),var(--vs-bg-b) 78%)}' +
       '.bpv-stage.bpv-grabbing{cursor:grabbing}' +
       '.bpv-stage canvas{display:block;width:100%;height:100%}' +
       '.bpv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
@@ -70,7 +75,8 @@
 
   /* Load a model into an existing element (no modal). This is what the modal below
      uses, and what the embeddable viewer (/embed/viewer) mounts directly into its
-     page. `onMeta` reports the voxel count so each host can label it its own way.
+     page. `onMeta` reports the voxel count so each host can label it its own way;
+     `title` only names the file a snapshot saves as.
      Returns { dispose } - safe to call while the fetch is still in flight. */
   function mount(container, opts) {
     injectStyles();
@@ -86,7 +92,7 @@
         if (!alive) return;                     // disposed while loading
         msg.remove();
         if (opts.onMeta) opts.onMeta(data.count.toLocaleString() + ' voxels');
-        viewer = buildViewer(THREE, container, data, opts.url);
+        viewer = buildViewer(THREE, container, data, opts.url, opts.title);
       });
     }).catch(function (err) {
       if (!alive) return;
@@ -139,7 +145,7 @@
     }
 
     viewer = mount(stage, {
-      url: opts.url,
+      url: opts.url, title: opts.title,
       onMeta: function (text) { meta.textContent = text; },
     });
   }
@@ -151,7 +157,7 @@
     catch (e) { return '/site/render/brdf-map.png'; }
   }
 
-  function buildViewer(THREE, stage, data, modelUrl) {
+  function buildViewer(THREE, stage, data, modelUrl, title) {
     var W = stage.clientWidth || 800, H = stage.clientHeight || 560;
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -161,10 +167,9 @@
     renderer.domElement.appendChild(document.createTextNode('3D model preview (requires a WebGL-capable browser).'));
     stage.appendChild(renderer.domElement);
 
+    // No scene lights: the voxel materials run Trove's own object shader, which
+    // carries its sun and ambient as uniforms (voxel_mesh.js).
     var scene = new THREE.Scene();
-    scene.add(new THREE.AmbientLight(0xffffff, 0.66));
-    var key = new THREE.DirectionalLight(0xffffff, 0.85); key.position.set(0.7, 1.0, 0.55); scene.add(key);
-    var fill = new THREE.DirectionalLight(0xffffff, 0.32); fill.position.set(-0.6, 0.35, -0.7); scene.add(fill);
 
     var camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 8000);
     var meshes = window.VoxelMesh.build(THREE, data, {
@@ -240,9 +245,16 @@
     function request() { if (pending) return; pending = true; raf = requestAnimationFrame(function () { pending = false; renderOnce(); }); }
     request();
 
+    // Backdrop picker + "Save PNG". Optional, so a page that hasn't loaded the
+    // script yet still gets a working viewer.
+    var tools = window.ViewerStage ? window.ViewerStage.attach({
+      stage: stage, canvas: el, render: renderOnce, name: title,
+    }) : null;
+
     return {
       dispose: function () {
         alive = false; cancelAnimationFrame(raf);
+        if (tools) tools.dispose();
         el.removeEventListener('mousedown', onDown);
         window.removeEventListener('mousemove', onMove);
         window.removeEventListener('mouseup', onUp);

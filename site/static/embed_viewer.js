@@ -244,6 +244,7 @@
       els.bar.hidden = false;
       state.viewer = window.ModelViewer.mount(els.stage, {
         url: api('assembled'), bar: els.bar, onMeta: onMeta,
+        title: els.title.textContent,           // names a saved snapshot
         // Animation clips are fetched lazily from /site/rigs/* - same origin swap.
         apiBase: cfg.apiBase,
       });
@@ -254,6 +255,7 @@
       if (!window.BlueprintViewer) return message('The 3D viewer could not start.', true);
       state.viewer = window.BlueprintViewer.mount(els.stage, {
         url: api('blueprint', 'path=' + encodeURIComponent(state.path || '')),
+        title: (state.path || '').split('/').pop() || els.title.textContent,
         onMeta: onMeta,
       });
       return;

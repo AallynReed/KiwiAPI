@@ -330,6 +330,8 @@
         viewer = window.ModelViewer.mount(els.stage, {
             url: U.apiUrl ? U.apiUrl(modelUrl()) : modelUrl(),
             bar: els.bar,
+            // names a saved snapshot after whatever is being worn
+            title: [state.cls, state.costume].filter(Boolean).join("-") || "dressing-room",
             onMeta: function (text) { if (seq === renderSeq) els.meta.textContent = text; }
         });
     }
