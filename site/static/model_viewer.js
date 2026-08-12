@@ -122,10 +122,18 @@
      those as three unrelated buttons asks the viewer to reassemble a move the game
      already knows how to assemble, so we read it out of `<rig>.graph.json` instead.
 
-     Two edge kinds carry the structure, and neither is inferred from clip names:
-       onloop     the clip ended and the machine moves on BY ITSELF - a hard chain
-       onrequest  gameplay asked for that state - a branch, e.g. how landing chooses
+     The edge kinds carry the structure, and none of it is inferred from clip names.
+     Granny's own state-machine source decides which trigger each answers to:
+       onloop      the clip ended and the machine moves on BY ITSELF - a hard chain
+       onrequest   gameplay asked for that state - a branch, e.g. how landing chooses
      A state with an outgoing onloop edge therefore FINISHES; one without it HOLDS.
+
+     The others are deliberately not chained. onconditional fires whenever a gameplay
+     condition holds and dynamic is driven from game code, so neither is a clip ending.
+     lastresort shares onloop's trigger a pass later, and reading it as a continuation
+     is tempting - but all 20 in the game are idle variation, six mounts alternating
+     happy_idle with happy_idle_alternate and back. Chaining them builds a cycle where
+     a state should simply hold, which cost the dog its "sad" and "happy" moves.
 
      A move is: a start state, the states its onloop edges run through, and one ending
      picked from the branches out of the state it comes to rest on. A state whose chain
@@ -204,11 +212,16 @@
         if (enter || e.when !== 'onrequest' || clipOf(e.to) !== first) return;
         if (isHub(e.from) || !enter) enter = e.blend || 0;
       });
-      /* An ending belongs to THIS move; a state the rest of the rig asks for just as
-         often is a destination the move happens to allow, not part of it. Landing into
-         a backward run is real, but run_backward is asked for from idle, from running,
-         from taking a hit - it is its own state. jump_end is asked for from inside the
-         jump and almost nowhere else. */
+      /* Which branch ENDS the move is the one thing the file does not answer. Granny has
+         a field for exactly this - a transition's PreferredExit, "leaving that state,
+         prefer this way out" - and Trove sets it on none of its 9,016 transitions, so
+         the choice is ours to make and worth naming as such.
+
+         The rule: an ending belongs to THIS move; a state the rest of the rig asks for
+         just as often is a destination the move happens to allow, not part of it.
+         Landing into a backward run is real, but run_backward is asked for from idle,
+         from running, from taking a hit - it is its own state. jump_end is asked for
+         from inside the jump and almost nowhere else. */
       var endKeys = {};
       var endings = (req[ch.park] || []).filter(function (e) {
         var k = clipOf(e.to);
