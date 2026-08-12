@@ -475,18 +475,40 @@
     });
     var center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
     var modelR = Math.max(size.x, size.y, size.z) || 1;
-    var target = center.clone(), sph = { r: modelR * 2.2, t: Math.PI * 0.25, p: Math.PI * 0.42 };
+    /* The model spins around ITSELF, wherever you have dragged it to.
+
+       Panning used to move the orbit centre through the world, so once you slid the
+       model over to one side the camera was circling a point out in empty space
+       beside it and a rotation threw the model clean out of frame. The pivot is the
+       model's own centre and stays there; the pan is kept as an offset in CAMERA
+       space (`panX`/`panY`, along the view's right and up axes) instead of being
+       baked into a world position. Because that offset is rebuilt from the current
+       angles on every frame, the model holds its place on screen while you orbit -
+       it turns where it sits rather than swinging around the middle of the stage. */
+    var pivot = center.clone();                    // the model's own centre
+    var target = new THREE.Vector3();              // pivot + the pan offset
+    var panX = 0, panY = 0;
+    var sph = { r: modelR * 2.2, t: Math.PI * 0.25, p: Math.PI * 0.42 };
+
+    // The orbit basis for the current angles. `dir` runs target -> camera; right and
+    // up are what three's lookAt builds from it against a world +Y, so a pan offset
+    // measured along them lands exactly where the cursor moved.
+    var dir = new THREE.Vector3(), bRight = new THREE.Vector3(), bUp = new THREE.Vector3();
+    var WORLD_UP = new THREE.Vector3(0, 1, 0);
+
     function cam() {
-      camera.position.set(target.x + sph.r * Math.sin(sph.p) * Math.sin(sph.t),
-                          target.y + sph.r * Math.cos(sph.p),
-                          target.z + sph.r * Math.sin(sph.p) * Math.cos(sph.t));
+      dir.set(Math.sin(sph.p) * Math.sin(sph.t), Math.cos(sph.p),
+              Math.sin(sph.p) * Math.cos(sph.t));
+      bRight.crossVectors(WORLD_UP, dir).normalize();        // p is clamped off the poles
+      bUp.crossVectors(dir, bRight);
+      target.copy(pivot).addScaledVector(bRight, panX).addScaledVector(bUp, panY);
+      camera.position.copy(target).addScaledVector(dir, sph.r);
       camera.lookAt(target);
     }
     cam();
 
     // orbit controls
     var el = renderer.domElement, drag = 0, lx = 0, ly = 0, pinch = 0;
-    var right = new THREE.Vector3(), up = new THREE.Vector3(), fwd = new THREE.Vector3();
     function rot(dx, dy) { sph.t -= dx * 0.01; sph.p = Math.max(0.05, Math.min(Math.PI - 0.05, sph.p - dy * 0.01)); }
     /* Panning drags the model by the point you grabbed, so that point has to stay
        under the cursor. Two things decide whether it does.
@@ -533,8 +555,7 @@
     function pan(dx, dy) {
       camera.updateMatrixWorld();
       var k = 2 * panDepth() * Math.tan(camera.fov * Math.PI / 360) / (stage.clientHeight || 1);
-      camera.matrixWorld.extractBasis(right, up, fwd);
-      target.addScaledVector(right, -dx * k); target.addScaledVector(up, dy * k);
+      panX -= dx * k; panY += dy * k;
     }
     function zoom(f) { sph.r = Math.max(modelR * 0.4, Math.min(modelR * 9, sph.r * f)); }
     /* Pointer events WITH CAPTURE, not window-level mouse listeners. Framed into

@@ -188,24 +188,55 @@
     });
     meshes.forEach(function (m) { scene.add(m); });
 
-    var sx = data.size[0], sy = data.size[1], sz = data.size[2];
-    var modelR = Math.max(sx, sy, sz) || 1;
-    var target = new THREE.Vector3(sx / 2, sy / 2, sz / 2);
+    /* Frame and orbit the VOXELS, not the size the payload declares. A voxel sits on
+       its integer coordinate and reaches half a unit either side, so a model N wide
+       occupies [-0.5, N-0.5] and its middle is (N-1)/2 - half a voxel off from N/2,
+       which is enough to visibly swing a small model when you rotate it. A payload
+       whose voxels don't fill the box it declares would be off by however much of it
+       is empty. Measuring the built geometry gets both right, and is what the
+       assembled viewer already does. */
+    var bounds = new THREE.Box3();
+    meshes.forEach(function (m) { bounds.expandByObject(m); });
+    if (bounds.isEmpty()) {
+      bounds.set(new THREE.Vector3(0, 0, 0),
+                 new THREE.Vector3(data.size[0], data.size[1], data.size[2]));
+    }
+    var bSize = bounds.getSize(new THREE.Vector3());
+    var modelR = Math.max(bSize.x, bSize.y, bSize.z) || 1;
+    /* The model spins around ITSELF, wherever you have dragged it to.
+
+       Panning used to move the orbit centre through the world, so once you slid the
+       model over to one side the camera was circling a point out in empty space
+       beside it and a rotation threw the model clean out of frame. The pivot is the
+       model's own centre and stays there; the pan is kept as an offset in CAMERA
+       space (`panX`/`panY`, along the view's right and up axes) instead of being
+       baked into a world position. Because that offset is rebuilt from the current
+       angles on every frame, the model holds its place on screen while you orbit -
+       it turns where it sits rather than swinging around the middle of the stage. */
+    var pivot = bounds.getCenter(new THREE.Vector3());       // the model's own centre
+    var target = new THREE.Vector3();                        // pivot + the pan offset
+    var panX = 0, panY = 0;
     var sph = { radius: modelR * 2.1, theta: Math.PI * 0.27, phi: Math.PI * 0.36 };
 
+    // The orbit basis for the current angles. `dir` runs target -> camera; right and
+    // up are what three's lookAt builds from it against a world +Y, so a pan offset
+    // measured along them lands exactly where the cursor moved.
+    var dir = new THREE.Vector3(), bRight = new THREE.Vector3(), bUp = new THREE.Vector3();
+    var WORLD_UP = new THREE.Vector3(0, 1, 0);
+
     function applyCamera() {
-      var r = sph.radius, t = sph.theta, p = sph.phi;
-      camera.position.set(
-        target.x + r * Math.sin(p) * Math.sin(t),
-        target.y + r * Math.cos(p),
-        target.z + r * Math.sin(p) * Math.cos(t));
+      var t = sph.theta, p = sph.phi;
+      dir.set(Math.sin(p) * Math.sin(t), Math.cos(p), Math.sin(p) * Math.cos(t));
+      bRight.crossVectors(WORLD_UP, dir).normalize();        // phi is clamped off the poles
+      bUp.crossVectors(dir, bRight);
+      target.copy(pivot).addScaledVector(bRight, panX).addScaledVector(bUp, panY);
+      camera.position.copy(target).addScaledVector(dir, sph.radius);
       camera.lookAt(target);
     }
     applyCamera();
 
     var el = renderer.domElement;
     var drag = 0, lx = 0, ly = 0, pinch = 0;
-    var right = new THREE.Vector3(), up = new THREE.Vector3(), fwd = new THREE.Vector3();
     function rotate(dx, dy) {
       sph.theta -= dx * 0.01;
       sph.phi = Math.max(0.04, Math.min(Math.PI - 0.04, sph.phi - dy * 0.01));
@@ -253,9 +284,8 @@
       camera.updateMatrixWorld();
       var s = 2 * panDepth() * Math.tan(camera.fov * Math.PI / 360) /
               (stage.clientHeight || 1);
-      camera.matrixWorld.extractBasis(right, up, fwd);
-      target.addScaledVector(right, -dx * s);
-      target.addScaledVector(up, dy * s);
+      panX -= dx * s;
+      panY += dy * s;
     }
     function zoom(f) { sph.radius = Math.max(modelR * 0.35, Math.min(modelR * 9, sph.radius * f)); }
 
