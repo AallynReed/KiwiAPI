@@ -1,3 +1,5 @@
+import re
+
 from fastapi import FastAPI, Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -155,6 +157,17 @@ def _is_public_asset(path: str) -> bool:
     return path.startswith(_PUBLIC_ASSET_PREFIXES) or path in _PUBLIC_ASSET_PATHS
 
 
+# Same test the credentialed CORS layer applies (Starlette matches the regex with
+# fullmatch), so the two layers cannot disagree about who owns an origin.
+_ORIGIN_RE = re.compile(settings.cors_origin_regex) if settings.cors_origin_regex else None
+
+
+def _is_own_origin(origin: str) -> bool:
+    if not origin:
+        return False
+    return origin in settings.cors_origins or bool(_ORIGIN_RE and _ORIGIN_RE.fullmatch(origin))
+
+
 class PublicAssetCorsMiddleware:
     """Let ANY origin read the viewer's assets, without credentials.
 
@@ -173,6 +186,16 @@ class PublicAssetCorsMiddleware:
     Registered LAST in main.py so it sits outside the credentialed CORS middleware and
     can replace what that one decided. Both layers emitting an allow-origin header
     would be two of them, which every browser treats as no CORS at all.
+
+    OUR OWN origins are handed straight through instead. The site's fetch wrapper
+    (`_site_util.js`) rewrites every `/site/*` call to the API host and sets
+    `credentials: 'include'` so the session cookie survives the hop - and a browser
+    rejects a wildcard allow-origin outright on a credentialed request. Substituting
+    `*` here therefore took the dressing room down on our own front-end while working
+    perfectly for the partner it was written for. A partner is, by definition, an
+    origin the credentialed allowlist does NOT cover, so deciding on that one test
+    serves both: allowlisted origins keep the credentialed answer, everyone else gets
+    the wildcard.
     """
 
     _STRIP = frozenset({b"access-control-allow-origin", b"access-control-allow-credentials",
@@ -190,6 +213,10 @@ class PublicAssetCorsMiddleware:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http" or not _is_public_asset(scope.get("path", "")):
             await self.app(scope, receive, send)
+            return
+        origin = next((v for k, v in scope.get("headers", ()) if k == b"origin"), b"")
+        if _is_own_origin(origin.decode("latin-1")):
+            await self.app(scope, receive, send)       # credentialed layer owns this one
             return
         if scope["method"] == "OPTIONS":
             # a plain GET is never preflighted; this is for a partner that adds a
