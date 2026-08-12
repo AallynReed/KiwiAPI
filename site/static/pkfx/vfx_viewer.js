@@ -180,6 +180,8 @@ export function mount(container, { releaseId, path, endpoint }) {
           r._atlas = await loadAtlas(r.atlas);
           r._remap = r.alphaRemap ? await loadTexture(r.alphaRemap) : null;
           r._kind = kindFor(r.material);
+          // a _Soft material fades where it meets the ground; anything else is hard-edged
+          r._soft = /_Soft/i.test(r.material) ? Math.max(r.softness, 1e-3) : 0;
         } else if (r.kind === 'ribbon') {
           r._tex = await loadTexture(r.diffuse);
           r._atlas = await loadAtlas(r.atlas);
@@ -206,7 +208,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     note.textContent = partials.length ? 'Partial preview — ' + partials.join(' · ') : '';
     note.style.display = partials.length ? 'block' : 'none';
 
-    autofit.active = true; autofit.scale = 0; autofit.t = 0;
+    autofit.active = true; autofit.scale = 0; autofit.t = 0; autofit.floor = null;
     loading.style.display = 'none';
     raf = requestAnimationFrame(frame);
   }
@@ -280,7 +282,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     }
     const count = o / FLOATS_PER_INSTANCE;
     if (!count) return;
-    items.push({ type: 'billboard', texture: r._tex, remapTexture: r._remap, kind: r._kind, mode, instances: inst.slice(0, o), count, drawOrder: r.drawOrder });
+    items.push({ type: 'billboard', texture: r._tex, remapTexture: r._remap, kind: r._kind, mode, instances: inst.slice(0, o), count, drawOrder: r.drawOrder, soft: r._soft });
   }
 
   function packLight(ls, r, items) {
@@ -397,7 +399,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     items.push({ type: 'ribbon', texture: r._tex, kind: r._kind, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder });
   }
 
-  const autofit = { active: true, scale: 0, t: 0 };
+  const autofit = { active: true, scale: 0, t: 0, floor: null };
   function frame() {
     if (disposed) return;
     tick();
@@ -419,11 +421,12 @@ export function mount(container, { releaseId, path, endpoint }) {
 
     const items = [];
     const eye = renderer.eyePosition();
-    let sumY = 0, cnt = 0, maxR2 = 0;
+    let sumY = 0, cnt = 0, maxR2 = 0, minY = Infinity;
     if (system) {
       for (const ls of system.layers) {
         for (let i = 0; i < ls.count; i++) {
           const p = ls.getAt(i, 'Position'); sumY += p[1]; cnt++;
+          if (p[1] < minY && isFinite(p[1])) minY = p[1];
           const r2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2]; if (r2 > maxR2 && isFinite(r2)) maxR2 = r2;
         }
         for (const r of ls.L.renderers) {
@@ -435,6 +438,16 @@ export function mount(container, { releaseId, path, endpoint }) {
       }
     }
     if (cnt && measuring) autofit.scale = Math.max(autofit.scale, Math.sqrt(maxR2));
+
+    /* Ground sits at the LOWEST point the effect reaches during the opening window,
+       not at world zero: plenty of effects (auras, wings) are authored centred on the
+       origin, and a floor at y=0 would saw them in half. Frozen once measuring ends so
+       it stops drifting, and skipped entirely until we have seen something. */
+    if (cnt && measuring) {
+      autofit.floor = Math.min(autofit.floor ?? Infinity, minY);
+      const span = Math.max(autofit.scale || Math.sqrt(maxR2), 0.5);
+      renderer.ground = { y: autofit.floor - span * 0.02, centre: [0, 0, 0], size: span * 8 };
+    }
 
     // Camera centres on the particle centroid; auto-distance only until the user interacts.
     if (cnt && autofit.active) {

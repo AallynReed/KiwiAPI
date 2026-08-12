@@ -146,9 +146,16 @@ export class AnimTrackSampler {
 // writes Volume/Vertex overrides); EulerOrientation/NonUniformScale/Hemisphere
 // re-shape the sample; Position offsets it.
 export class ShapeSampler {
-  constructor(shape, rng) {
+  constructor(shape, rng, doc) {
     this.rng = rng;
-    const p = shape ? shape.props : {};
+    // A CShapeDescriptorCollection emits from several shapes at once - a campfire's
+    // base is the four edges of a square, each a flattened box. The collection object
+    // carries no dimensions of its own, so without this it read as the default unit
+    // sphere and the emitter changed shape entirely.
+    this.subs = shape && shape.className === 'CShapeDescriptorCollection'
+      ? (shape.props.SubShapes || []).map((ref) => new ShapeSampler(deref(doc, ref), rng, doc))
+      : null;
+    const p = shape && !this.subs ? shape.props : {};
     this.dim = toNums(p.BoxDimensions || p.Dimensions) || null;
     // ShapeType is often omitted; infer BOX from BoxDimensions, else default to a sphere
     this.type = toSym(p.ShapeType) || (p.BoxDimensions ? 'BOX' : 'SPHERE');
@@ -165,6 +172,13 @@ export class ShapeSampler {
     this.lastNormal = [0, 1, 0];
   }
   samplePosition() {
+    if (this.subs && this.subs.length) {
+      const s = this.subs[Math.min(this.subs.length - 1, Math.floor(this.rng() * this.subs.length))];
+      s.volume = this.volume;
+      const q = s.samplePosition();
+      this.lastNormal = s.lastNormal;
+      return q;
+    }
     const r = this.rng; let p, n;
     switch (this.type) {
       case 'CYLINDER': case 'CAPSULE': {
@@ -215,7 +229,14 @@ export class ShapeSampler {
   }
   sampleNormal() { return this.lastNormal; }
   samplePCoords() { return [this.rng(), this.rng()]; }
-  position() { return [this.pos[0], this.pos[1], this.pos[2]]; }      // shape centre
+  position() {                                                        // shape centre
+    if (this.subs && this.subs.length) {
+      const c = [0, 0, 0];
+      for (const s of this.subs) { const q = s.position(); c[0] += q[0]; c[1] += q[1]; c[2] += q[2]; }
+      return c.map((v) => v / this.subs.length);
+    }
+    return [this.pos[0], this.pos[1], this.pos[2]];
+  }
   direction() { const d = this.rot ? mat3mul(this.rot, [0, 1, 0]) : [0, 1, 0]; return d; }
 }
 

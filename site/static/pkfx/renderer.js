@@ -87,9 +87,14 @@ precision highp float;
 in vec2 vUV; in vec2 vUV2; in vec4 vColor; in float vBlend; in float vCursor;
 uniform sampler2D uTex;
 uniform sampler2D uRemap;
+uniform sampler2D uDepth;
 uniform int uHasRemap;
 uniform int uKind;   // 0 alpha, 1 additive, 2 alphablend_additive, 3 additive_noalpha
+uniform float uSoft; // SoftnessDistance in world units; 0 = not a _Soft material
+uniform vec2 uInvRes;
+uniform vec2 uClip;  // near, far
 out vec4 frag;
+float linearZ(float z){ float n = uClip.x, f = uClip.y; return (2.0*n*f) / (f + n - (z*2.0 - 1.0)*(f - n)); }
 void main(){
   vec4 t = mix(texture(uTex, vUV), texture(uTex, vUV2), vBlend);
   vec4 c = t * vColor;
@@ -97,10 +102,43 @@ void main(){
     // remap ramp lives in the R channel: out_alpha = remap(in_alpha, cursor)
     c.a = texture(uRemap, vec2(clamp(t.a, 0.0, 1.0), clamp(vCursor, 0.0, 1.0))).r * vColor.a;
   }
-  if (uKind == 3) { frag = vec4(t.rgb * vColor.rgb * vColor.a, 1.0); return; }
+  // Soft particles fade out as the quad nears the opaque surface behind it, so smoke
+  // and fire sink into the ground instead of showing a hard intersection seam.
+  float soft = 1.0;
+  if (uSoft > 0.0) {
+    float behind = linearZ(texture(uDepth, gl_FragCoord.xy * uInvRes).r);
+    soft = clamp((behind - linearZ(gl_FragCoord.z)) / uSoft, 0.0, 1.0);
+  }
+  if (uKind == 3) { frag = vec4(t.rgb * vColor.rgb * vColor.a * soft, 1.0); return; }
+  c.a *= soft;
   if (uKind == 2) { if (c.a < 0.003 && dot(c.rgb, vec3(1.0)) < 0.01) discard; frag = vec4(c.rgb * vColor.a, c.a); return; }
   if (c.a < 0.003) discard;
   frag = c;
+}`;
+
+/* Ground: one quad under the effect. It is what gives soft particles an opaque
+   surface to fade against, and it stops fire and smoke floating in a void. Dark and
+   vignetted so it reads as a stage rather than a slab, and it sits at the bottom of
+   the effect's own footprint so it can never slice through a centred aura. */
+const GVERT = `#version 300 es
+precision highp float;
+layout(location=0) in vec2 aCorner;
+uniform mat4 uView, uProj;
+uniform vec3 uCentre;
+uniform float uSize;
+out vec2 vXZ;
+void main(){
+  vXZ = aCorner * 2.0;
+  gl_Position = uProj * uView * vec4(uCentre.x + aCorner.x*uSize, uCentre.y, uCentre.z + aCorner.y*uSize, 1.0);
+}`;
+
+const GFRAG = `#version 300 es
+precision highp float;
+in vec2 vXZ;
+out vec4 frag;
+void main(){
+  float d = clamp(1.0 - length(vXZ), 0.0, 1.0);
+  frag = vec4(mix(vec3(0.05,0.05,0.07), vec3(0.115,0.115,0.145), d*d), 1.0);
 }`;
 
 // Ribbon program: generic textured triangles in world space.
@@ -177,7 +215,7 @@ export class Renderer {
     // billboard program
     this.prog = makeProgram(gl, VERT, FRAG);
     const u = (n) => gl.getUniformLocation(this.prog, n);
-    this.u = { view: u('uView'), proj: u('uProj'), eye: u('uEye'), mode: u('uMode'), tex: u('uTex'), remap: u('uRemap'), hasRemap: u('uHasRemap'), kind: u('uKind') };
+    this.u = { view: u('uView'), proj: u('uProj'), eye: u('uEye'), mode: u('uMode'), tex: u('uTex'), remap: u('uRemap'), hasRemap: u('uHasRemap'), kind: u('uKind'), depth: u('uDepth'), soft: u('uSoft'), invRes: u('uInvRes'), clip: u('uClip') };
     this.vao = gl.createVertexArray();
     gl.bindVertexArray(this.vao);
     this.quadBuf = gl.createBuffer();
@@ -224,8 +262,49 @@ export class Renderer {
     this.muLit = gl.getUniformLocation(this.mprog, 'uLit');
     this.cubeGeom = this.makeMeshGeometry(buildCubeMesh());
 
+    // ground program (reuses the billboard quad buffer, corner attribute only)
+    this.gprog = makeProgram(gl, GVERT, GFRAG);
+    this.gu = {
+      view: gl.getUniformLocation(this.gprog, 'uView'), proj: gl.getUniformLocation(this.gprog, 'uProj'),
+      centre: gl.getUniformLocation(this.gprog, 'uCentre'), size: gl.getUniformLocation(this.gprog, 'uSize'),
+    };
+    this.gvao = gl.createVertexArray();
+    gl.bindVertexArray(this.gvao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.quadBuf);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+    gl.bindVertexArray(null);
+
+    // Opaque pass target. Particles cannot sample the depth buffer they are drawing
+    // into, so the ground and solid meshes render here first; the result is blitted
+    // to the screen and the depth texture is handed to the particle shader.
+    this.fbo = gl.createFramebuffer();
+    this.colorTex = gl.createTexture();
+    this.depthTex = gl.createTexture();
+    this.fboW = 0; this.fboH = 0;
+
     this.white = makeTexture(gl, 1, 1, new Uint8ClampedArray([255, 255, 255, 255]));
     this.cam = { az: 0.6, el: 0.3, dist: 14, target: [0, 1.5, 0] };
+    // set by the viewer once it has measured the effect; null = no ground
+    this.ground = null;
+  }
+
+  _ensureTargets(w, h) {
+    const gl = this.gl;
+    if (this.fboW === w && this.fboH === h) return;
+    gl.bindTexture(gl.TEXTURE_2D, this.colorTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST],
+      [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+    gl.bindTexture(gl.TEXTURE_2D, this.depthTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, w, h, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST],
+      [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.colorTex, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTex, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    this.fboW = w; this.fboH = h;
   }
 
   // Upload an indexed mesh {positions, normals, uvs, indices} -> instanced geometry.
@@ -284,29 +363,65 @@ export class Renderer {
   //   mesh:      { geom, texture, lit, kind, instances, count }
   draw(items) {
     const gl = this.gl; this.resize();
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    gl.clearColor(0.05, 0.05, 0.07, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.DEPTH_TEST);
+    const W = this.canvas.width, H = this.canvas.height;
+    this._ensureTargets(W, H);
+    const NEAR = 0.1, FAR = 1000;
 
-    const aspect = this.canvas.width / this.canvas.height;
-    const proj = perspective(60 * Math.PI / 180, aspect, 0.1, 1000);
+    const aspect = W / H;
+    const proj = perspective(60 * Math.PI / 180, aspect, NEAR, FAR);
     const eye = this.eyePosition();
     const view = lookAt(eye, this.cam.target, [0, 1, 0]);
-    gl.activeTexture(gl.TEXTURE0);
 
     // opaque (lit solid) meshes first with depth write, then everything else sorted
     const solid = items.filter((d) => d.type === 'mesh' && d.lit);
     const trans = items.filter((d) => !(d.type === 'mesh' && d.lit)).sort((a, b) => (a.drawOrder || 0) - (b.drawOrder || 0));
 
-    if (solid.length) {
-      gl.depthMask(true); gl.disable(gl.BLEND);
-      gl.useProgram(this.mprog);
-      gl.uniformMatrix4fv(this.muView, false, view);
-      gl.uniformMatrix4fv(this.muProj, false, proj);
-      gl.uniform1i(this.muTex, 0);
-      gl.uniform1i(this.muLit, 1);
-      for (const d of solid) this._drawMesh(d);
-    }
+    /* The opaque geometry is drawn twice: once into the offscreen target purely to
+       fill a depth texture the particle shader can sample, then again on screen for
+       the visible pixels. That is cheaper and far more portable than blitting depth
+       between framebuffers, which needs the two depth formats to agree - and it is
+       one quad plus the rare solid mesh. */
+    const drawOpaque = () => {
+      gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.BLEND);
+      gl.activeTexture(gl.TEXTURE0);
+      if (this.ground) {
+        gl.useProgram(this.gprog);
+        gl.uniformMatrix4fv(this.gu.view, false, view);
+        gl.uniformMatrix4fv(this.gu.proj, false, proj);
+        gl.uniform3f(this.gu.centre, this.ground.centre[0], this.ground.y, this.ground.centre[2]);
+        gl.uniform1f(this.gu.size, this.ground.size);
+        gl.bindVertexArray(this.gvao);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl.bindVertexArray(null);
+      }
+      if (solid.length) {
+        gl.useProgram(this.mprog);
+        gl.uniformMatrix4fv(this.muView, false, view);
+        gl.uniformMatrix4fv(this.muProj, false, proj);
+        gl.uniform1i(this.muTex, 0);
+        gl.uniform1i(this.muLit, 1);
+        for (const d of solid) this._drawMesh(d);
+      }
+    };
+
+    /* The depth pass runs every frame even with nothing opaque in it: an uncleared
+       depth texture reads as ZERO, which is the near plane, and every soft particle
+       would fade to nothing. Clearing to 1.0 makes "no ground" mean "infinitely far"
+       and the fade a no-op, which is the behaviour we want. */
+    const opaque = this.ground || solid.length;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
+    gl.viewport(0, 0, W, H);
+    gl.clearColor(0.05, 0.05, 0.07, 1); gl.clearDepth(1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    if (opaque) drawOpaque();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    gl.viewport(0, 0, W, H);
+    gl.clearColor(0.05, 0.05, 0.07, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    if (opaque) drawOpaque();
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, this.depthTex);
+    gl.activeTexture(gl.TEXTURE0);
 
     gl.depthMask(false); gl.enable(gl.BLEND);
     let prog = null;
@@ -321,10 +436,14 @@ export class Renderer {
           gl.uniform3f(this.u.eye, eye[0], eye[1], eye[2]);
           gl.uniform1i(this.u.tex, 0);
           gl.uniform1i(this.u.remap, 1);
+          gl.uniform1i(this.u.depth, 2);
+          gl.uniform2f(this.u.invRes, 1 / W, 1 / H);
+          gl.uniform2f(this.u.clip, NEAR, FAR);
           gl.bindVertexArray(this.vao);
         }
         gl.uniform1i(this.u.mode, d.mode || 0);
         gl.uniform1i(this.u.kind, d.kind || 0);
+        gl.uniform1f(this.u.soft, d.soft || 0);
         gl.uniform1i(this.u.hasRemap, d.remapTexture ? 1 : 0);
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, d.remapTexture || this.white);

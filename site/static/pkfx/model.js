@@ -212,7 +212,7 @@ function makeSampler(doc, obj, rng) {
     case 'CParticleSamplerCurve': return new CurveSampler(obj);
     case 'CParticleSamplerDoubleCurve': return new DoubleCurveSampler(obj);
     case 'CParticleSamplerShape': {
-      const s = new ShapeSampler(deref(doc, obj.props.Shape), rng);
+      const s = new ShapeSampler(deref(doc, obj.props.Shape), rng, doc);
       s.volume = toSym(obj.props.SampleDimensionality) === 'Volume';
       return s;
     }
@@ -369,7 +369,8 @@ function collectRenderers(doc, node, out, fieldIndex, depth = 0) {
       sortMode: toSym(node.props.SortMode) || 'CameraDistance',
       sortField: fieldName(node.props.SortField, null),
       axisScale: num(node.props.AxisScale, 1),
-      softness: num(node.props.SoftnessDistance, 0),
+      // only meaningful on a _Soft material; the editor shows 1 as its default
+      softness: num(node.props.SoftnessDistance, 1),
       softAnim: node.props.SoftAnimationBlending === true,
       alphaRemap: node.props.AlphaRemapper || null,
       alphaCursorField: fieldName(node.props.AlphaCursorField, null),
