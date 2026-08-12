@@ -36,6 +36,14 @@ from app.trove.render.source import blueprint_by_basename, get_blueprint_bytes
 
 logger = logging.getLogger("kiwi.dressing")
 
+# Why a slot the caller asked for is not on the model. Reported per slot rather than
+# left to be inferred from a part count - a component that vanishes without a word is
+# indistinguishable from one we drew wrong.
+DROP_UNKNOWN = "unknown"        # neither a style we know nor a blueprint the game ships
+DROP_NO_SOCKET = "no_socket"    # this class has no attach point for that family
+DROP_MISSING = "missing_asset"  # a name we know, whose blueprint the archive lacks
+DROP_COVERED = "covered"        # deliberate: a full helmet replaces the hair and face
+
 STYLE_SLOTS = ("hat", "face", "weapon")
 # The character-creation slots (see customhead.py): a catalogue backs them, and each
 # attaches at the point the game's own prefabs bind that mesh to.
@@ -108,6 +116,16 @@ class Outfit:
     colors: dict[str, tuple[int, int, int]] = field(default_factory=dict)   # slot -> rgb
     hair_scale: float = 0.5                                       # calibration knob
     dropped: list[str] = field(default_factory=list)              # slots we couldn't honour
+    # Why each one is missing, so a caller is never left comparing voxel counts to work
+    # out that the hat it asked for is not there: [{slot, value, reason}], reason being
+    # one of DROP_UNKNOWN / DROP_NO_SOCKET / DROP_MISSING / DROP_COVERED.
+    issues: list[dict] = field(default_factory=list)
+
+    @property
+    def issue_header(self) -> str:
+        """``hat=unknown,face=covered`` - the same list on one response header, for a
+        caller that renders the model and never asks /outfit."""
+        return ",".join(f"{i['slot']}={i['reason']}" for i in self.issues)
 
     @property
     def ident(self) -> str:
@@ -206,7 +224,11 @@ async def resolve(
 
     styles: dict[str, cat.Option] = {}
     raw: dict[str, str] = {}
-    dropped: list[str] = []
+    issues: list[dict] = []
+
+    def drop(slot: str, value: str, reason: str) -> None:
+        issues.append({"slot": slot, "value": value, "reason": reason})
+
     for slot in BLUEPRINT_SLOTS:
         key = (picks.get(slot) or "").strip().lower()
         if not key:
@@ -220,15 +242,22 @@ async def resolve(
             # attach point every rig has, so there is no compatibility to check.
             if slot not in RACE_SLOTS and not sockets_mod.sockets_for_slot(
                     cls.sockets, opt.slot_id):
-                dropped.append(slot)          # this class has no socket for that family
+                drop(slot, key, DROP_NO_SOCKET)
+                continue
+            # A catalogue entry is a promise the game names this appearance, not that the
+            # archive still carries its blueprint. Checking here is what turns "the hat
+            # silently isn't there" into an answer.
+            if not await blueprint_path(opt.blueprint, opt.prefab, branch, opt.ref):
+                drop(slot, key, DROP_MISSING)
                 continue
             styles[slot] = opt
             continue
         ref = blueprint_ref(key)
         # Check it EXISTS here rather than at placement time, so /outfit answers "is this
         # name usable" - which is the question a partner wiring up an embed is asking.
-        if ref is None or not await blueprint_path(ref.rsplit("/", 1)[-1], ref, branch):
-            dropped.append(slot)              # neither a style we know nor a name we have
+        if ref is None or not await blueprint_path(ref.rsplit("/", 1)[-1], ref, branch,
+                                                   ref if "/" in ref else ""):
+            drop(slot, key, DROP_UNKNOWN)
             continue
         raw[slot] = ref
 
@@ -247,8 +276,11 @@ async def resolve(
     hat = styles.get("hat")
     if hat is not None and hat.covers_head:
         for slot in ("hair", "face"):
-            styles.pop(slot, None)
-            raw.pop(slot, None)
+            asked = styles.pop(slot, None) or raw.pop(slot, None)
+            if asked is not None:
+                drop(slot, picks.get(slot) or "", DROP_COVERED)
+            else:
+                raw.pop(slot, None)
 
     # Nothing chosen for a character-creation slot -> the race's own default, so the
     # model matches what the game shows a player who never opened the customizer. Hair
@@ -270,8 +302,8 @@ async def resolve(
         if (slot in styles or slot in raw) and not attach_point(slot, cls.skeleton):
             styles.pop(slot, None)
             raw.pop(slot, None)
-            if slot not in dropped:
-                dropped.append(slot)
+            if not any(i["slot"] == slot for i in issues):
+                drop(slot, picks.get(slot) or "", DROP_NO_SOCKET)
 
     tints = {}
     for slot, param in SLOT_COLOR.items():
@@ -283,7 +315,7 @@ async def resolve(
         hs = round(float(hair_scale), 4)
     return Outfit(cls=cls, costume=chosen, race=chosen_race, styles=styles,
                   blueprints=raw, weapon_family=fam, colors=tints, hair_scale=hs,
-                  dropped=dropped)
+                  dropped=[i["slot"] for i in issues], issues=issues)
 
 
 async def blueprint_path(basename: str, hint: str, branch: str | None = None,

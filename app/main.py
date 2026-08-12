@@ -321,7 +321,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining",
-                    "X-RateLimit-Reset", "Retry-After"],
+                    "X-RateLimit-Reset", "Retry-After", "X-Dressing-Dropped"],
 )
 
 # Outside that, and therefore the last word: the 3D viewers' public assets answer any

@@ -1998,7 +1998,7 @@ async def site_dressing_model(
     ``/v1/dressing/model``), so ``model_viewer.js`` can draw it exactly as it draws an
     assembled mod."""
     from app.trove.dressing import service as dressing_service
-    from app.trove.dressing.router import resolve_query
+    from app.trove.dressing.router import _with_issues, resolve_query
 
     outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
                                  weapon_family, eyes, race,
@@ -2006,7 +2006,7 @@ async def site_dressing_model(
     built = await dressing_service.model(outfit, fmt)
     if built is None:
         raise HTTPException(status_code=404, detail="That outfit has nothing to draw.")
-    return bp_cache.respond(request, built)
+    return _with_issues(bp_cache.respond(request, built), outfit)
 
 
 @router.get("/site/dressing/render")

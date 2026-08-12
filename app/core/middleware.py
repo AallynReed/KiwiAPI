@@ -202,6 +202,10 @@ class PublicAssetCorsMiddleware:
                 headers = [(k, v) for k, v in message["headers"]
                            if k.lower() not in self._STRIP]
                 headers.append((b"access-control-allow-origin", b"*"))
+                # a cross-origin caller cannot read a header it is not handed: without
+                # this the dressing room's "your hat isn't on this model" is invisible
+                # to exactly the partner it was written for
+                headers.append((b"access-control-expose-headers", b"X-Dressing-Dropped"))
                 message = {**message, "headers": headers}
             await send(message)
 

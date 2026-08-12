@@ -66,7 +66,16 @@ class DressOutfit(BaseModel):
     eye_color: str | None = None
     dropped: list[str] = Field(
         default_factory=list,
-        description="Slots the request asked for that this class has no socket for.")
+        description="Slots the request asked for that are not on the model.")
+    issues: list[dict] = Field(
+        default_factory=list,
+        description="Why each dropped slot is missing: `{slot, value, reason}`. `reason` "
+                    "is `unknown` (neither a style we know nor a blueprint the game "
+                    "ships), `no_socket` (this class has no attach point for that "
+                    "family), `missing_asset` (a name we know whose blueprint the archive "
+                    "lacks) or `covered` (deliberate - a full helmet replaces the hair "
+                    "and face style). The model endpoints report the same list on the "
+                    "`X-Dressing-Dropped` header.")
 
     model_config = {"populate_by_name": True}
 

@@ -150,6 +150,18 @@ async def list_options(
     )
 
 
+def _with_issues(response: Response, outfit: service.Outfit) -> Response:
+    """Name every slot that did not make it onto the model, on the model's own response.
+
+    A caller that renders the payload never asks /outfit, so without this the only sign
+    that its hat was unresolvable is a part count it has nothing to compare against - the
+    failure Trovesaurus hit and could only diagnose by eye. Header rather than body: the
+    payload is content-addressed and shared between outfits, this is per request."""
+    if outfit.issues:
+        response.headers["X-Dressing-Dropped"] = outfit.issue_header
+    return response
+
+
 async def resolve_query(
     class_key: str, costume: str | None, hat: str | None,
     face: str | None, weapon: str | None, head: str | None = None,
@@ -203,7 +215,7 @@ async def get_outfit(
     outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
                                  weapon_family, eyes, race,
                                  hair_color, eye_color, hair_scale)
-    return DressOutfit(**outfit.as_dict(), dropped=outfit.dropped)
+    return DressOutfit(**outfit.as_dict(), dropped=outfit.dropped, issues=outfit.issues)
 
 
 @dressing_router.get(
@@ -250,4 +262,4 @@ async def get_model(
     if built is None:
         raise APIError(404, ErrorCode.not_found,
                        "That outfit has nothing to draw on this instance.")
-    return bp_cache.respond(request, built)
+    return _with_issues(bp_cache.respond(request, built), outfit)
