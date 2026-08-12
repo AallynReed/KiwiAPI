@@ -90,17 +90,34 @@ uniform sampler2D uRemap;
 uniform sampler2D uDepth;
 uniform int uHasRemap;
 uniform int uKind;   // 0 alpha, 1 additive, 2 alphablend_additive, 3 additive_noalpha
-uniform float uSoft; // SoftnessDistance in world units; 0 = not a _Soft material
+uniform float uSoft;     // SoftnessDistance in world units; 0 = not a _Soft material
+uniform float uDissolve; // DissolveWidth from the renderer's UserData; 0 = plain alpha
 uniform vec2 uInvRes;
 uniform vec2 uClip;  // near, far
 out vec4 frag;
 float linearZ(float z){ float n = uClip.x, f = uClip.y; return (2.0*n*f) / (f + n - (z*2.0 - 1.0)*(f - n)); }
 void main(){
   vec4 t = mix(texture(uTex, vUV), texture(uTex, vUV2), vBlend);
-  vec4 c = t * vColor;
-  if (uHasRemap == 1) {
-    // remap ramp lives in the R channel: out_alpha = remap(in_alpha, cursor)
-    c.a = texture(uRemap, vec2(clamp(t.a, 0.0, 1.0), clamp(vCursor, 0.0, 1.0))).r * vColor.a;
+  // the remapper REPLACES the sampled alpha before anything else consumes it
+  float texA = t.a;
+  if (uHasRemap == 1) texA = texture(uRemap, vec2(clamp(t.a, 0.0, 1.0), clamp(vCursor, 0.0, 1.0))).r;
+
+  /* Dissolve, transcribed from Trove's own particle shader. A renderer tagged
+     UserData "dissolve <width>" stops treating the particle's alpha as opacity and
+     uses it to sweep an erosion threshold through the texture instead, so the sprite
+     burns away from its faintest pixels inward rather than fading uniformly. */
+  vec4 c;
+  if (uDissolve > 0.0) {
+    float ta = (uKind == 3) ? sqrt(dot(t.rgb, vec3(0.299, 0.387, 0.314))) : texA;
+    ta = clamp((ta - 0.1) / (0.2 - 0.1), 0.0, 1.0);
+    float upper = (1.0 - vColor.a) * (1.0 + uDissolve);
+    float lower = max(0.0, upper - uDissolve);
+    // the engine divides by (upper-lower), which is 0 at full alpha; take the limit
+    // rather than the NaN, which is what that case converges to anyway
+    float strength = clamp((texA - lower) / max(upper - lower, 1e-5), 0.0, 1.0);
+    c = vec4(t.rgb * vColor.rgb, ta * strength);
+  } else {
+    c = vec4(t.rgb * vColor.rgb, texA * vColor.a);
   }
   // Soft particles fade out as the quad nears the opaque surface behind it, so smoke
   // and fire sink into the ground instead of showing a hard intersection seam.
@@ -116,7 +133,8 @@ void main(){
          if (IsAdditive)      diffuse.w  = 0            // add, via the same blend state
      Additive_NoAlpha is the IsAdditive && !IsAlphaMultiply case, so it carries NO
      alpha term at all, and the engine applies no alpha test on additive materials. */
-  if (uKind == 3) { frag = vec4(t.rgb * vColor.rgb * soft, 1.0); return; }
+  // Additive_NoAlpha zeroes alpha outright, so dissolve cannot reach the output here
+  if (uKind == 3) { frag = vec4(c.rgb * soft, 1.0); return; }
   c.a *= soft;
   if (uKind == 2) { frag = vec4(c.rgb * soft, c.a); return; }
   if (uKind == 1) { frag = c; return; }
@@ -223,7 +241,7 @@ export class Renderer {
     // billboard program
     this.prog = makeProgram(gl, VERT, FRAG);
     const u = (n) => gl.getUniformLocation(this.prog, n);
-    this.u = { view: u('uView'), proj: u('uProj'), eye: u('uEye'), mode: u('uMode'), tex: u('uTex'), remap: u('uRemap'), hasRemap: u('uHasRemap'), kind: u('uKind'), depth: u('uDepth'), soft: u('uSoft'), invRes: u('uInvRes'), clip: u('uClip') };
+    this.u = { view: u('uView'), proj: u('uProj'), eye: u('uEye'), mode: u('uMode'), tex: u('uTex'), remap: u('uRemap'), hasRemap: u('uHasRemap'), kind: u('uKind'), depth: u('uDepth'), soft: u('uSoft'), dissolve: u('uDissolve'), invRes: u('uInvRes'), clip: u('uClip') };
     this.vao = gl.createVertexArray();
     gl.bindVertexArray(this.vao);
     this.quadBuf = gl.createBuffer();
@@ -452,6 +470,7 @@ export class Renderer {
         gl.uniform1i(this.u.mode, d.mode || 0);
         gl.uniform1i(this.u.kind, d.kind || 0);
         gl.uniform1f(this.u.soft, d.soft || 0);
+        gl.uniform1f(this.u.dissolve, d.dissolve || 0);
         gl.uniform1i(this.u.hasRemap, d.remapTexture ? 1 : 0);
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, d.remapTexture || this.white);

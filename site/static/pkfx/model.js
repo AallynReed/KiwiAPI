@@ -337,6 +337,16 @@ function fieldName(v, fallback) {
   return typeof v === 'string' && v ? v : fallback;
 }
 
+/* Trove reads a free-text `UserData` hint off the renderer, and the only one its
+   shader acts on is `dissolve <width>` - the DissolveWidth uniform. 1,406 effects
+   set it. Matched as the engine does, on the leading token, so the corpus's one
+   "disssolve 0.1" typo stays off exactly as it does in game (its author's mistake
+   is not ours to correct); the stray double space in ten others still parses. */
+function dissolveWidth(v) {
+  const m = typeof v === 'string' ? /^\s*dissolve\s+([0-9]*\.?[0-9]+)/i.exec(v) : null;
+  return m ? parseFloat(m[1]) : 0;
+}
+
 function collectRenderers(doc, node, out, fieldIndex, depth = 0) {
   if (!node || depth > 8) return;
   if (node.className === 'CParticleRenderer_List') {
@@ -371,6 +381,7 @@ function collectRenderers(doc, node, out, fieldIndex, depth = 0) {
       axisScale: num(node.props.AxisScale, 1),
       // only meaningful on a _Soft material; the editor shows 1 as its default
       softness: num(node.props.SoftnessDistance, 1),
+      dissolve: dissolveWidth(node.props.UserData),
       softAnim: node.props.SoftAnimationBlending === true,
       alphaRemap: node.props.AlphaRemapper || null,
       alphaCursorField: fieldName(node.props.AlphaCursorField, null),

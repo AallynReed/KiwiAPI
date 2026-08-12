@@ -282,7 +282,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     }
     const count = o / FLOATS_PER_INSTANCE;
     if (!count) return;
-    items.push({ type: 'billboard', texture: r._tex, remapTexture: r._remap, kind: r._kind, mode, instances: inst.slice(0, o), count, drawOrder: r.drawOrder, soft: r._soft });
+    items.push({ type: 'billboard', texture: r._tex, remapTexture: r._remap, kind: r._kind, mode, instances: inst.slice(0, o), count, drawOrder: r.drawOrder, soft: r._soft, dissolve: r.dissolve });
   }
 
   function packLight(ls, r, items) {
