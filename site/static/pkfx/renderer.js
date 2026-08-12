@@ -28,7 +28,26 @@ void main(){
   float s = sin(aRot), c = cos(aRot);
   vec2 rot = vec2(aCorner.x*c - aCorner.y*s, aCorner.x*s + aCorner.y*c);
   vec3 world;
-  if (uMode == 2 || uMode == 3) {
+  if (uMode == 3) {
+    // Spheroidal: the particle is a prolate spheroid (semi-axis a along the
+    // velocity, radius b across), and we draw its silhouette. Projecting that
+    // ellipsoid gives an ellipse whose semi-major shrinks as the axis tilts toward
+    // the camera and bottoms out at b - so head-on it is a round blob, never the
+    // degenerate sliver an axis-aligned quad collapses to. Verified against
+    // PopcornFX 1.13.5 by looking straight down a flame's velocity axis.
+    float L = length(aAxis);
+    vec3 toEye = normalize(uEye - aCenter);
+    vec3 dir = L > 1e-5 ? aAxis / L : vec3(uView[0][1], uView[1][1], uView[2][1]);
+    float a = 0.5*L + 0.5*aSize.y;
+    float b = 0.5*aSize.x;
+    float cosT = clamp(dot(dir, toEye), -1.0, 1.0);
+    float sinT = sqrt(max(0.0, 1.0 - cosT*cosT));
+    float major = sqrt(a*a*sinT*sinT + b*b*cosT*cosT);
+    vec3 t = dir - toEye*cosT;                 // the axis, flattened into the screen plane
+    vec3 T = length(t) > 1e-4 ? normalize(t) : vec3(uView[0][0], uView[1][0], uView[2][0]);
+    vec3 B = normalize(cross(toEye, T));
+    world = aCenter + T*(aCorner.y*2.0*major) + B*(aCorner.x*2.0*b);
+  } else if (uMode == 2) {
     float L = length(aAxis);
     vec3 toEye = normalize(uEye - aCenter);
     vec3 dir = L > 1e-5 ? aAxis / L : vec3(uView[0][1], uView[1][1], uView[2][1]);

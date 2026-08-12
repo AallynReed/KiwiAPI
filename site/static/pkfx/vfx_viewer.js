@@ -16,6 +16,7 @@ import { buildEffect } from './model.js';
 import { System } from './sim.js';
 import { decodeDDS } from './dds.js';
 import { decodePkmm } from './pkmm.js';
+import { AnimTrackSampler } from './curves.js';
 import { Renderer, makeTexture, FLOATS_PER_INSTANCE, RIBBON_FLOATS_PER_VERT, MESH_FLOATS_PER_INSTANCE } from './renderer.js';
 
 const SITE = (id) => `/site/mods/releases/${encodeURIComponent(id)}/vfx`;
@@ -32,6 +33,39 @@ function endpointsFor({ releaseId, endpoint }) {
     manifest: (p) => `${base}/manifest?path=${encodeURIComponent(p)}${extra}`,
     asset: (ref) => `${base}/asset?path=${encodeURIComponent(ref)}${extra}`,
   };
+}
+
+/* Draw order within one billboard batch. Particles composite in the order they are
+   written, so an alpha-blended layer has to run back-to-front or nearer particles
+   wrongly occlude the ones behind them; additive blending is commutative and needs
+   no sort at all. Returns null to keep simulation order. The scratch buffers are
+   module-level because this runs per layer per frame over every live particle.
+   Exported for tests. */
+let sortIdx = new Int32Array(0), sortKey = new Float32Array(0);
+export function billboardOrder(ls, r, n, eye) {
+  if (r._kind === 1 || r._kind === 3) return null;            // additive: order-free
+  // Every field-sort in the corpus keys on LifeRatio, which is virtual (Age/Life)
+  // rather than a stored field, so resolve it the way the script context does. A
+  // field we cannot resolve falls back to camera distance, not to no sort at all.
+  let field = /^Field/.test(r.sortMode) ? r.sortField : null;
+  if (field && field !== 'LifeRatio' && !ls.field(field)) field = null;
+  if (!field && r.sortMode !== 'CameraDistance' && !/^Field/.test(r.sortMode)) return null;
+  if (sortIdx.length < n) { sortIdx = new Int32Array(n); sortKey = new Float32Array(n); }
+  for (let i = 0; i < n; i++) {
+    sortIdx[i] = i;
+    if (field === 'LifeRatio') sortKey[i] = ls.getAt(i, 'Age')[0] / (ls.getAt(i, 'Life')[0] || 1);
+    else if (field) sortKey[i] = ls.getAt(i, field)[0] || 0;
+    else {
+      const p = ls.getAt(i, r.positionField);
+      const dx = p[0] - eye[0], dy = p[1] - eye[1], dz = p[2] - eye[2];
+      sortKey[i] = dx * dx + dy * dy + dz * dz;
+    }
+  }
+  const order = sortIdx.subarray(0, n);
+  // camera distance draws farthest first; an explicit field sort follows its name
+  if (field && r.sortMode === 'FieldAscending') order.sort((a, b) => sortKey[a] - sortKey[b]);
+  else order.sort((a, b) => sortKey[b] - sortKey[a]);
+  return order;
 }
 
 // BillboardingMaterial -> blend kind (0 alpha, 1 additive, 2 alphablend+additive, 3 additive-noalpha)
@@ -107,6 +141,29 @@ export function mount(container, { releaseId, path, endpoint }) {
     const g = await p; meshCache.set(ref, g); return g;
   }
 
+  /* AnimTrack samplers hold a motion path that lives in a separate .pkan, so they
+     are inert until it is fetched and parsed. Do that once per sampler object -
+     the same instance can be shared by several layers via the global sampler list. */
+  async function loadAnimTracks(effect) {
+    const seen = new Set();
+    const jobs = [];
+    for (const layer of effect.layers) {
+      for (const s of Object.values(layer.samplers)) {
+        if (!(s instanceof AnimTrackSampler) || seen.has(s)) continue;
+        seen.add(s);
+        const ref = s.resourceRef();
+        if (!ref) continue;
+        jobs.push((async () => {
+          try {
+            const res = await fetch(assetUrl(ref));
+            if (res.ok) s.load(parsePkfx(await res.text()));
+          } catch { /* leave the path inert; the effect still plays */ }
+        })());
+      }
+    }
+    await Promise.all(jobs);
+  }
+
   async function load() {
     renderer = new Renderer(canvas);
     glowTex = makeGlowTexture(renderer.gl);
@@ -137,6 +194,7 @@ export function mount(container, { releaseId, path, endpoint }) {
         } else if (r.cls) unsupported.add(r.cls.replace('CParticleRenderer_', ''));
       }
     }
+    await loadAnimTracks(effect);
     if (disposed) return;
     system = new System(effect, Math.random);
     current = { effect, unsupported: [...unsupported], missing: man.missing || [] };
@@ -166,11 +224,13 @@ export function mount(container, { releaseId, path, endpoint }) {
     return [rc[0], rc[1], rc[2] - rc[0], rc[3] - rc[1]];
   }
 
-  function packBillboards(ls, r, items) {
+  function packBillboards(ls, r, eye, items) {
     const n = ls.count; if (!n) return;
     let o = 0; const alen = r._atlas ? r._atlas.length : 0;
     const mode = r.mode;
-    for (let i = 0; i < n; i++) {
+    const order = billboardOrder(ls, r, n, eye);
+    for (let k = 0; k < n; k++) {
+      const i = order ? order[k] : k;
       const p = ls.getAt(i, r.positionField);
       if (!isFinite(p[0]) || !isFinite(p[1]) || !isFinite(p[2])) continue;
       const sz = ls.getAt(i, r.sizeField), col = ls.getAt(i, r.colorField);
@@ -367,7 +427,7 @@ export function mount(container, { releaseId, path, endpoint }) {
           const r2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2]; if (r2 > maxR2 && isFinite(r2)) maxR2 = r2;
         }
         for (const r of ls.L.renderers) {
-          if (r.kind === 'billboard') packBillboards(ls, r, items);
+          if (r.kind === 'billboard') packBillboards(ls, r, eye, items);
           else if (r.kind === 'ribbon') packRibbon(ls, r, eye, items);
           else if (r.kind === 'mesh') packMesh(ls, r, items);
           else if (r.kind === 'light') packLight(ls, r, items);

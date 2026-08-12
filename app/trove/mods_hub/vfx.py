@@ -21,12 +21,16 @@ import re
 # Render-relevant asset types a .pkfx can reference. (.pkfx itself = a nested child
 # effect, whose own dependencies we resolve recursively.)
 ASSET_EXTS: tuple[str, ...] = (
-    "dds", "png", "tga", "pkat", "pkmm", "fbx", "pkfx", "pkma", "pkml", "pkcf",
+    "dds", "png", "tga", "pkat", "pkmm", "fbx", "pkfx", "pkma", "pkml", "pkcf", "pkan",
 )
 
 _REF_RE = re.compile(
     r'"([^"\n]+\.(?:' + "|".join(ASSET_EXTS) + r'))"', re.IGNORECASE,
 )
+# A motion-path sampler names a mesh, but the baker writes the animation to the
+# sibling ``.pkan`` (spline sources set ``Geometry = false``, so the ``.pkmm`` it
+# points at may not exist at all). Resolve both so the viewer can fetch the path.
+_ANIM_RE = re.compile(r"\bAnimResource\b")
 # An object header sits at column 0: ``ClassName<ws>$LOCAL$/id``. Property lines are
 # indented, and script bodies never contain ``$LOCAL$``, so this won't false-match them.
 _HEADER_RE = re.compile(r'^(C[A-Za-z0-9_]+)[ \t]+\$LOCAL\$')
@@ -50,13 +54,18 @@ def extract_refs(pkfx_text: str) -> list[str]:
             continue
         if current and current.startswith("CNEdEditor"):
             continue
+        is_anim = _ANIM_RE.search(line) is not None
         for m in _REF_RE.finditer(line):
             ref = m.group(1)
             if ref.startswith("$LOCAL$"):
                 continue
-            key = ref.lower()
+            # An AnimResource's own path is mesh data, never the animation, so the
+            # .pkan replaces it rather than joining it (most spline .pkmm files were
+            # never baked, and listing them only reports phantom missing assets).
+            r = re.sub(r"\.[^.\\/]+$", ".pkan", ref) if is_anim else ref
+            key = r.lower()
             if key not in seen:
-                seen[key] = ref
+                seen[key] = r
     return list(seen.values())
 
 
@@ -70,6 +79,7 @@ _MEDIA = {
     "tga": "image/x-tga",
     "pkat": "text/plain; charset=utf-8",
     "pkfx": "text/plain; charset=utf-8",
+    "pkan": "text/plain; charset=utf-8",
 }
 
 

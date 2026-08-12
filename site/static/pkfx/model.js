@@ -12,7 +12,7 @@
 //   BillboardMode absent       -> ScreenAlignedQuad
 import { deref, toNums, toSym } from './parser.js';
 import { compileScript } from './script.js';
-import { CurveSampler, DoubleCurveSampler, ShapeSampler, TurbulenceSampler } from './curves.js';
+import { AnimTrackSampler, CurveSampler, DoubleCurveSampler, ShapeSampler, TurbulenceSampler } from './curves.js';
 
 const FIELD_COMP = { float: 1, float2: 2, float3: 3, float4: 4, int: 1, int2: 2, int3: 3, int4: 4 };
 // Built-in fields every layer has, with default component counts. The __ fields are
@@ -217,6 +217,7 @@ function makeSampler(doc, obj, rng) {
       return s;
     }
     case 'CParticleSamplerProceduralTurbulence': return new TurbulenceSampler(obj);
+    case 'CParticleSamplerAnimTrack': return new AnimTrackSampler(obj);
     default: return { sample: () => [0] };
   }
 }
@@ -361,6 +362,12 @@ function collectRenderers(doc, node, out, fieldIndex, depth = 0) {
       positionField: fieldName(node.props.PositionField, 'Position'),
       textureIDField: fieldName(node.props.TextureIDField, 'TextureID'),
       drawOrder: num(node.props.DrawOrder, 0),
+      // Particles within one batch composite in draw order, so alpha-blended layers
+      // must go back-to-front. The corpus writes SortMode in 37 of 9,369 effects
+      // (FieldAscending/FieldDescending over SortField); everything else takes the
+      // editor's default, CameraDistance.
+      sortMode: toSym(node.props.SortMode) || 'CameraDistance',
+      sortField: fieldName(node.props.SortField, null),
       axisScale: num(node.props.AxisScale, 1),
       softness: num(node.props.SoftnessDistance, 0),
       softAnim: node.props.SoftAnimationBlending === true,

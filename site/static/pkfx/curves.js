@@ -3,7 +3,8 @@
 //  - CParticleSamplerDoubleCurve          two curves blended by a 0..1 selector (.sample(t, sel))
 //  - CParticleSamplerShape                emission shape (.samplePosition()/.sampleNormal())
 //  - CParticleSamplerProceduralTurbulence animated vector-noise velocity field (.sampleCurl(pos))
-import { toNums, toSym } from './parser.js';
+//  - CParticleSamplerAnimTrack            baked motion path (.samplePosition(cursor)) — a .pkan
+import { deref, toNums, toSym } from './parser.js';
 
 const COMP = { Float: 1, Float2: 2, Float3: 3, Float4: 4 };
 
@@ -79,6 +80,66 @@ export class DoubleCurveSampler {
     const o = new Array(this.comp); for (let k = 0; k < this.comp; k++) o[k] = a[k] + (b[k] - a[k]) * s;
     return o;
   }
+}
+
+// A baked motion path: `AnimResource` names a mesh, but what the baker actually
+// wrote is the sibling `.pkan` (the corpus's spline .hcf configs say
+// `Geometry = false; Animation = true;`, so several have no .pkmm at all).
+//
+// A .pkan is the same text HBO format as a .pkfx, so the effect parser reads it:
+//   CAnimationClip { EntityStreams -> CAnimationTrack { Channels -> CSamplerCurve } }
+// with one curve per BindingSemantic (Translation / Rotation / Scale).
+//
+// The resource arrives over the network, so construction only records the path;
+// the viewer parses the .pkan and calls `load()`. Until then every channel reads
+// zero, which is what the sampler did before it was implemented.
+export class AnimTrackSampler {
+  constructor(obj) {
+    this.resource = typeof obj.props.AnimResource === 'string' ? obj.props.AnimResource : null;
+    this.length = 1;      // clip duration in seconds
+    this.channels = null;
+  }
+  // The animation always lives in the .pkan beside the named mesh.
+  resourceRef() {
+    return this.resource ? this.resource.replace(/\.[^.\\/]+$/, '.pkan') : null;
+  }
+  load(doc) {
+    let clip = null;
+    for (const id of doc.order) if (doc.objects[id].className === 'CAnimationClip') { clip = doc.objects[id]; break; }
+    if (!clip) return false;
+    this.length = Math.max(num(clip.props.LengthInSeconds, 1), 1e-6);
+    const channels = {};
+    for (const tref of clip.props.EntityStreams || []) {
+      const track = deref(doc, tref);
+      if (!track) continue;
+      for (const cref of track.props.Channels || []) {
+        const ch = deref(doc, cref);
+        if (!ch) continue;
+        const sem = typeof ch.props.BindingSemantic === 'string' ? ch.props.BindingSemantic : '';
+        const times = toNums(ch.props.Times) || [];
+        if (!sem || !times.length || channels[sem]) continue;   // first track to define a channel wins
+        const values = toNums(ch.props.FloatValues) || [];
+        const tangents = toNums(ch.props.FloatTangents) || [];
+        const comp = compCount(ch.props.ValueType, times, values);
+        channels[sem] = new Curve(times, values, tangents, comp, toSym(ch.props.Interpolator) === 'Linear');
+      }
+    }
+    this.channels = channels;
+    return Object.keys(channels).length > 0;
+  }
+  // Scripts pass a 0..1 cursor (`samplePosition(LifeRatio)`) — traverse the whole
+  // clip over that range rather than treating the argument as seconds.
+  _sample(sem, cursor, absent) {
+    const c = this.channels && this.channels[sem];
+    if (!c) return absent.slice();
+    const u = cursor == null ? 0 : (cursor[0] ?? cursor);
+    return c.sample(u * this.length);
+  }
+  samplePosition(cursor) { return this._sample('Translation', cursor, [0, 0, 0]); }
+  sampleRotation(cursor) { return this._sample('Rotation', cursor, [0, 0, 0]); }
+  sampleScale(cursor) { return this._sample('Scale', cursor, [1, 1, 1]); }
+  sampleNormal() { return [0, 1, 0]; }
+  sample(cursor) { return this.samplePosition(cursor); }
 }
 
 // Emission shape. Default SampleDimensionality is Surface (the corpus only ever
