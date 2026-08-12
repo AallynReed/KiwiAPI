@@ -210,19 +210,49 @@
       sph.theta -= dx * 0.01;
       sph.phi = Math.max(0.04, Math.min(Math.PI - 0.04, sph.phi - dy * 0.01));
     }
-    /* A pixel of drag has to move the world by exactly one pixel's worth AT THE
-       DISTANCE BEING ORBITED, or the spot you grabbed slides out from under the
-       cursor as you go. That factor is the viewport's world height at the target
-       plane over the canvas height in CSS pixels - and the same number applies
-       horizontally, because the world width and the pixel width both scale by the
-       aspect ratio. The old constant ignored the field of view and the canvas size
-       alike, so it only ever agreed with the cursor at one particular zoom.
-       Exact for anything sitting at the target's depth; something much nearer or
-       further still drifts, which no single-plane pan can help. */
-    function pan(dx, dy) {
-      var s = 2 * sph.radius * Math.tan(camera.fov * Math.PI / 360) /
-              (stage.clientHeight || 1);
+    /* Panning drags the model by the point you grabbed, so that point has to stay
+       under the cursor. Two things decide whether it does.
+
+       The SCALE: a pixel of drag must move the world by one pixel's worth, which is
+       the viewport's world height at the panning depth over the canvas height in CSS
+       pixels. The same number serves horizontally, because world width and pixel
+       width both scale by the aspect ratio.
+
+       The DEPTH: that height is a function of how far away the grabbed thing is, and
+       a voxel in front of or behind the orbit target is not at the target's distance.
+       So one raycast on pointerdown finds what is actually under the cursor and keeps
+       it as the anchor; grabbing empty space leaves no anchor and falls back to the
+       target, which is the best guess available. Depth is measured perpendicular to
+       the image plane rather than along the ray - the ray is longer off-axis, and it
+       is the perpendicular distance the pixel scale depends on. It is recomputed per
+       move so zooming mid-drag stays honest; a pure pan never changes it. */
+    var caster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+    var viewDir = new THREE.Vector3(), scratch = new THREE.Vector3();
+    var anchor = null;                      // world point grabbed, or null
+
+    function grabAnchor(e) {
+      anchor = null;
+      var box = el.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      ndc.set(((e.clientX - box.left) / box.width) * 2 - 1,
+              -((e.clientY - box.top) / box.height) * 2 + 1);
       camera.updateMatrixWorld();
+      scene.updateMatrixWorld();
+      caster.setFromCamera(ndc, camera);
+      var hit = caster.intersectObjects(meshes, false)[0];
+      if (hit && hit.point) anchor = hit.point.clone();
+    }
+
+    function panDepth() {
+      if (!anchor) return sph.radius;
+      camera.getWorldDirection(viewDir);
+      return Math.max(1e-6, scratch.copy(anchor).sub(camera.position).dot(viewDir));
+    }
+
+    function pan(dx, dy) {
+      camera.updateMatrixWorld();
+      var s = 2 * panDepth() * Math.tan(camera.fov * Math.PI / 360) /
+              (stage.clientHeight || 1);
       camera.matrixWorld.extractBasis(right, up, fwd);
       target.addScaledVector(right, -dx * s);
       target.addScaledVector(up, dy * s);
@@ -240,6 +270,7 @@
     function onDown(e) {
       if (e.pointerType === 'touch') return;
       drag = (e.button === 2 || e.shiftKey) ? 2 : 1; lx = e.clientX; ly = e.clientY;
+      if (drag === 2) grabAnchor(e);        // pan: pin the point under the cursor
       stage.classList.add('bpv-grabbing');
       try { el.setPointerCapture(e.pointerId); } catch (err) { /* pointer already released */ }
       e.preventDefault();
@@ -250,7 +281,7 @@
       if (drag === 2) pan(dx, dy); else rotate(dx, dy);
       applyCamera(); request();
     }
-    function onUp() { drag = 0; stage.classList.remove('bpv-grabbing'); }
+    function onUp() { drag = 0; anchor = null; stage.classList.remove('bpv-grabbing'); }
     function onWheel(e) { e.preventDefault(); zoom(e.deltaY > 0 ? 1.12 : 0.89); applyCamera(); request(); }
     function dist(e) { var a = e.touches[0], b = e.touches[1]; return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
     function onTStart(e) { if (e.touches.length === 1) { drag = 1; lx = e.touches[0].clientX; ly = e.touches[0].clientY; } else if (e.touches.length === 2) { drag = 0; pinch = dist(e); } }
