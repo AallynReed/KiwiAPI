@@ -55,7 +55,8 @@ PACK_VERSION = "v2"
 # Bump when the baked rigs (``mods_hub/rigs``) or ``mods_hub/assembly.py`` change
 # the shape of an assembled creature. The live rig map has its own signature in the
 # key (see ``key_for_assembly``); this covers what ships in the repo.
-ASSEMBLY_VERSION = "a18"     # a18: head scale follows the rig - character half, animal 1.0
+ASSEMBLY_VERSION = "a19"     # a19: a costume part resolves to the blueprint its prefab
+                             # named, not the alphabetically-first file of that name
 
 # Bump when ``app.trove.swf.extract`` changes what a manifest holds or how a
 # bitmap is decoded. Namespaces the SWF keys only.
