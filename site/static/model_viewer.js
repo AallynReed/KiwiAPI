@@ -339,18 +339,30 @@
     var alive = true, anim = null, want = null, animStart = 0, raf = 0, pending = false;
     var loaded = {};   // animation name -> decodeAnim() result
     var _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _one = new THREE.Vector3(1, 1, 1);
+    var _p2 = new THREE.Vector3(), _q2 = new THREE.Quaternion();
     function renderOnce() { renderer.render(scene, camera); }
     function request() { if (anim) return; if (!pending) { pending = true; requestAnimationFrame(function () { pending = false; renderOnce(); }); } }
-    /* Pose the parts from frame `fi` of a decoded clip: rebuild each attach point's
-       matrix from its position+quaternion instead of reading a stored 4x4. */
-    function applyFrame(A, fi) {
-      var base = fi * A.apCount * 7, d = A.data;
+    /* Pose the parts at `f`, a FRACTIONAL frame index into a decoded clip: rebuild each
+       attach point's matrix from its position+quaternion instead of reading a stored 4x4.
+       Clips bake at the game's rate (30fps) but the display runs at 60/120/144, so the
+       pose blends between the two neighbouring frames rather than snapping to one - the
+       transforms are rigid, so that's a lerp on position and a slerp on rotation. The
+       next frame wraps to 0 because playback loops. */
+    function applyFrame(A, f) {
+      var n = A.frameCount, f0 = Math.floor(f), a = f - f0, d = A.data;
+      var b0 = (f0 % n) * A.apCount * 7, b1 = ((f0 + 1) % n) * A.apCount * 7;
       data.parts.forEach(function (p) {
         var ai = A.apIndex[p.name], meshes = meshByPart[p.name];
         if (ai === undefined || !meshes) return;
-        var o = base + ai * 7;
+        var o = b0 + ai * 7;
         _p.set(d[o], d[o + 1], d[o + 2]);
         _q.set(d[o + 3], d[o + 4], d[o + 5], d[o + 6]);
+        if (a) {
+          var o2 = b1 + ai * 7;
+          _p2.set(d[o2], d[o2 + 1], d[o2 + 2]);
+          _q2.set(d[o2 + 3], d[o2 + 4], d[o2 + 5], d[o2 + 6]);
+          _p.lerp(_p2, a); _q.slerp(_q2, a);
+        }
         var sm = scaleOf[p.name] || scaleM;
         for (var i = 0; i < meshes.length; i++) meshes[i].matrix.compose(_p, _q, _one).multiply(sm);
       });
@@ -361,8 +373,7 @@
       raf = requestAnimationFrame(loop);
       var dur = A.frameCount / A.fps;
       var t = ((ts2 - animStart) / 1000) % dur;
-      var fi = Math.floor(t * A.fps) % A.frameCount;
-      applyFrame(A, fi); renderOnce();
+      applyFrame(A, t * A.fps); renderOnce();
     }
     function setActive(name) { Array.prototype.forEach.call(bar.querySelectorAll('.mv-btn'), function (b) { b.classList.toggle('on', b.dataset.anim === (name || 'rest')); }); }
     function startAnim(name) { anim = name; animStart = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
