@@ -22,6 +22,17 @@
   // website host while its data lives on the API, so it passes that origin in.
   var _apiBase = '';
 
+  /* Where a /site/* asset actually answers. The embed is told its apiBase outright.
+     On the site, /site/* moves to the API origin once the site is split off it, and
+     `_site_util.js` rewrites fetch/XHR for you - but NOT an <img>, which is how the
+     specular atlas is loaded, so that one has to ask `apiUrl` itself or 404 and
+     leave every solid shaded as rough. */
+  function assetUrl(path) {
+    if (_apiBase) return _apiBase + path;
+    var U = window.BTTUtil;
+    return (U && U.apiUrl) ? U.apiUrl(path) : path;
+  }
+
   /* Decode one baked animation clip (TANIM1). Layout, little-endian:
        8s  magic "TANIM1\0\0"
        u32 ap_count, u32 frame_count, u32 fps, u32 name_blob_len
@@ -437,7 +448,7 @@
     var meshByPart = {};
     data.parts.forEach(function (p) {
       var partMeshes = window.VoxelMesh.build(THREE, p, {
-        brdfUrl: _apiBase + '/site/render/brdf-map.png',
+        brdfUrl: assetUrl('/site/render/brdf-map.png'),
         lightDir: [0.6, 1.0, 0.5],                   // the key light, in world space
         onReady: function () { request(); },         // redraw when the atlas lands
       });

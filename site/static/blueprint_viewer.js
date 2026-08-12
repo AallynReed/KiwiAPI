@@ -150,11 +150,20 @@
     });
   }
 
-  /* The specular atlas lives beside the model data, wherever that is served from
-     (same origin on the site, the API's origin for a partner's embed). */
+  /* The specular atlas lives beside the model data, wherever that is served from.
+     An ABSOLUTE model URL (the embed, told its apiBase outright) names the host
+     itself. A RELATIVE one belongs to the site, where /site/* answers on the API
+     origin once the site is split off it - and this texture is loaded through an
+     <img>, which the global fetch rewriter in _site_util.js never sees, so it has
+     to ask `apiUrl` directly or 404 and shade every solid as rough. */
   function brdfUrl(modelUrl) {
-    try { return new URL(modelUrl, window.location.href).origin + '/site/render/brdf-map.png'; }
-    catch (e) { return '/site/render/brdf-map.png'; }
+    var path = '/site/render/brdf-map.png';
+    try {
+      var u = new URL(modelUrl, window.location.href);
+      if (u.origin !== window.location.origin) return u.origin + path;
+    } catch (e) { /* unparseable - treat it as ours */ }
+    var U = window.BTTUtil;
+    return (U && U.apiUrl) ? U.apiUrl(path) : path;
   }
 
   function buildViewer(THREE, stage, data, modelUrl, title) {
