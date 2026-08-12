@@ -28,15 +28,32 @@ void main(){
   float s = sin(aRot), c = cos(aRot);
   vec2 rot = vec2(aCorner.x*c - aCorner.y*s, aCorner.x*s + aCorner.y*c);
   vec3 world;
-  if (uMode == 2 || uMode == 3) {
-    /* Axis-stretched, and spheroidal riding along with it.
-       Spheroidal is NOT the same shape - the decompiled engine gives it its own
-       position generator (FUN_1808a25a0/FUN_1808a2900 vs the quad's
-       FUN_1808a1730/FUN_1808a1a40 in HH-Bridge_r.dll) with extra vector maths. But
-       that construction has not been ported yet, and an earlier attempt at deriving
-       it by eye - a per-particle ellipse silhouette - was demonstrably not what the
-       engine computes. Sharing the axial path is the long-standing behaviour and an
-       honest placeholder; it is not claimed to be correct. */
+  if (uMode == 3) {
+    /* Spheroidal, transcribed from CAxialBillboarderSpheroidal's position generator
+       (FUN_1808a25a0 in HH-Bridge_r.dll). The engine computes, per particle:
+
+           N = normalize(particlePos - cameraPos)
+           S = normalize(cross(axis, N)) * halfWidth
+           U = k*axis + cross(N, S)
+           corners = particlePos +- U +- S
+
+       The cross(N, S) term is what separates this from the plain axial quad, which
+       has no such term. S is perpendicular to both the axis and the view, so it lies
+       in the screen plane - and so does cross(N, S), with the same magnitude. When
+       the axis swings toward the camera and k*axis stops contributing any screen
+       extent, the quad still spans |S| both ways and settles into a round blob
+       instead of collapsing to a sliver. */
+    float L = length(aAxis);
+    vec3 N = normalize(aCenter - uEye);
+    vec3 dir = L > 1e-5 ? aAxis / L : vec3(uView[0][1], uView[1][1], uView[2][1]);
+    vec3 S = cross(dir, N);
+    float sl = length(S);
+    // engine builds a fallback perpendicular when the axis is parallel to the view
+    S = sl > 1e-5 ? S / sl : normalize(cross(N, vec3(uView[0][0], uView[1][0], uView[2][0])));
+    S *= 0.5 * aSize.x;
+    vec3 U = dir * (0.5*L + 0.5*aSize.y) + cross(N, S);
+    world = aCenter + U*(aCorner.y*2.0) + S*(aCorner.x*2.0);
+  } else if (uMode == 2) {
     float L = length(aAxis);
     vec3 toEye = normalize(uEye - aCenter);
     vec3 dir = L > 1e-5 ? aAxis / L : vec3(uView[0][1], uView[1][1], uView[2][1]);
