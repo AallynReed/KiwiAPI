@@ -156,7 +156,7 @@
           <span class="mh-card-author"><i class="fa-solid fa-user" aria-hidden="true"></i> ${esc(p.owner_username)}</span>
           <span class="mh-card-stats">
             <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}</span>
-            ${Number(p.star_count) > 0 ? `<span class="mh-card-dl" title="${esc(t('Favourites'))}"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(p.star_count).toLocaleString()}<span class="sr-only">${esc(t('favourites'))}</span></span>` : ''}
+            ${Number(p.star_count) > 0 ? `<span class="mh-card-dl" title="${esc(t('Favorites'))}"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(p.star_count).toLocaleString()}<span class="sr-only">${esc(t('favorites'))}</span></span>` : ''}
           </span>
         </div>
       </div>

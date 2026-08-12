@@ -150,11 +150,11 @@
         '<div class="vs-opts">' +
           '<button class="vs-opt" type="button" data-mode="default" aria-pressed="false">Default</button>' +
           '<button class="vs-opt" type="button" data-mode="none" aria-pressed="false">None</button>' +
-          '<button class="vs-opt" type="button" data-mode="color" aria-pressed="false">Colour</button>' +
+          '<button class="vs-opt" type="button" data-mode="color" aria-pressed="false">Color</button>' +
           '<button class="vs-opt" type="button" data-mode="image" aria-pressed="false">Image</button>' +
         '</div>' +
         '<div class="vs-row vs-color-row" hidden>' +
-          '<label for="" class="vs-color-label">Colour</label>' +
+          '<label for="" class="vs-color-label">Color</label>' +
           '<input type="color" class="vs-color">' +
         '</div>' +
         '<div class="vs-row vs-image-row" hidden>' +

@@ -241,7 +241,7 @@
         <div class="mh-card-foot">
           <span class="mh-card-stats">
             <span class="mh-card-dl"><i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(m.download_count || 0).toLocaleString()}</span>
-            ${Number(m.star_count) > 0 ? `<span class="mh-card-dl" title="${esc(t('Favourites'))}"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(m.star_count).toLocaleString()}<span class="sr-only">${esc(t('favourites'))}</span></span>` : ''}
+            ${Number(m.star_count) > 0 ? `<span class="mh-card-dl" title="${esc(t('Favorites'))}"><i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(m.star_count).toLocaleString()}<span class="sr-only">${esc(t('favorites'))}</span></span>` : ''}
           </span>
         </div>
       </div>
@@ -366,7 +366,7 @@
       ${ModsI18n.editorHTML('mpf-readme')}
       <label class="mp-form-field"><span id="mpf-readme-label">${esc(t('About you (Markdown)'))}</span><textarea name="readme" rows="14" maxlength="40000"></textarea></label>
       <p class="mp-form-hint">${esc(t('Markdown + safe HTML (badges, images, tables) supported - make it yours.'))}
-        ${esc(t('Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}
+        ${esc(t('Color text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}
         ${esc(t('Leave a translation empty to remove it.'))}</p>
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">

@@ -127,7 +127,7 @@
     const likeCls = d.starred ? 'mpk-like active' : 'mpk-like';
     const stats = `<div class="mpk-head-stats">
         <span class="mpk-stat" title="${esc(t('Downloads'))}"><i class="fa-solid fa-download"></i> ${Number(d.download_count || 0).toLocaleString()}</span>
-        <button type="button" class="${likeCls}" id="mpk-like" aria-pressed="${d.starred ? 'true' : 'false'}" aria-label="${esc(t('Favourite'))}" title="${esc(t('Favourite'))}">
+        <button type="button" class="${likeCls}" id="mpk-like" aria-pressed="${d.starred ? 'true' : 'false'}" aria-label="${esc(t('Favorite'))}" title="${esc(t('Favorite'))}">
           <i class="fa-${d.starred ? 'solid' : 'regular'} fa-star"></i> <span id="mpk-like-count"${Number(d.star_count) ? '' : ' hidden'}>${Number(d.star_count || 0).toLocaleString()}</span>
         </button>
       </div>`;
@@ -548,7 +548,7 @@
         cnt.hidden = !n;                     // bare star at zero, same as the mods hub
       }
     } else {
-      toast(errMsg(r, t('Could not update your favourite.')), 'error');
+      toast(errMsg(r, t('Could not update your favorite.')), 'error');
     }
   }
 

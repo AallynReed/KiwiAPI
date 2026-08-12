@@ -915,7 +915,7 @@
           : t('Scanned {b} board(s) from the capture at {when} - nothing anomalous.')
             .replace('{b}', boards).replace('{when}', when);
     } else {
-      $cheatersMeta.textContent = t('No capture available yet to analyse.');
+      $cheatersMeta.textContent = t('No capture available yet to analyze.');
     }
 
     // Coverage section - list which boards the analysis touched. Always
@@ -1336,7 +1336,7 @@
             : t('Scanned {b} board(s) from the capture at {when} - no alt clusters.')
               .replace('{b}', boards).replace('{when}', when);
       } else {
-        $clustersMeta.textContent = t('No capture available yet to analyse.');
+        $clustersMeta.textContent = t('No capture available yet to analyze.');
       }
     }
 

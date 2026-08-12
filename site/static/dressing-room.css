@@ -278,7 +278,7 @@
 }
 
 /* Colour swatches - the game's own palette, laid out in its grid. */
-.dr-colours { display: flex; flex-wrap: wrap; gap: .85rem; }
+.dr-colors { display: flex; flex-wrap: wrap; gap: .85rem; }
 .dr-colgroup { display: flex; flex-direction: column; gap: .3rem; }
 .dr-colhead {
     display: flex;
@@ -328,7 +328,7 @@
     background: none;
     cursor: pointer;
 }
-.dr-colour-x {
+.dr-color-x {
     border: 0;
     background: none;
     color: var(--text-mute);
@@ -337,5 +337,5 @@
     line-height: 1;
     padding: 0 .15rem;
 }
-.dr-colour-x:hover { color: var(--text); }
+.dr-color-x:hover { color: var(--text); }
 .dr-tab-off { opacity: .5; }

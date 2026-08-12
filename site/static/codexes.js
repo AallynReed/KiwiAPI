@@ -347,8 +347,8 @@
       }
       // Source-only recipes (not part of the current catalogue lane) get a small note.
       if (rec.in_catalogue === false) {
-        parts.push(section(t('Catalogue'),
-          `<p class="cdx-modal-cat">${esc(t('Not in the current recipe catalogue'))}</p>`));
+        parts.push(section(t('Catalog'),
+          `<p class="cdx-modal-cat">${esc(t('Not in the current recipe catalog'))}</p>`));
       }
     }
 

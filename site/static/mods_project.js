@@ -332,7 +332,7 @@
     // A lone "0" beside a star reads as a rating, not a count - so it only shows
     // once someone has actually favourited the mod.
     const starN = Number(d.star_count || 0);
-    const starBtn = `<button type="button" class="mp-btn mp-btn-sm ${starred ? 'mp-starred' : ''}" id="mp-star" aria-pressed="${starred}" aria-label="${esc(t('Favourite'))}" title="${esc(t('Favourite'))}">
+    const starBtn = `<button type="button" class="mp-btn mp-btn-sm ${starred ? 'mp-starred' : ''}" id="mp-star" aria-pressed="${starred}" aria-label="${esc(t('Favorite'))}" title="${esc(t('Favorite'))}">
         <i class="fa-${starred ? 'solid' : 'regular'} fa-star"></i> <span id="mp-star-count"${starN ? '' : ' hidden'}>${starN.toLocaleString()}</span>
       </button>`;
     // Fork copies the source, so it's only offered when the source is visible.
@@ -722,7 +722,7 @@
       ${ModsI18n.editorHTML('mp-readme')}
       <label class="mp-form-field"><span id="mp-readme-label">${esc(t('README (Markdown)'))}</span><textarea name="readme" rows="14" maxlength="60000"></textarea></label>
       <p class="mp-form-hint">${esc(t('Shown as the main content for releases-only mods. Markdown + safe HTML (badges, alignment, tables) supported.'))}
-        ${esc(t('Colour text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}
+        ${esc(t('Color text with [text]{#ff8a3d}, [text]{gold} or [text]{#fff on #1f2733}.'))}
         ${esc(t('Leave a translation empty to remove it.'))}</p>
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">

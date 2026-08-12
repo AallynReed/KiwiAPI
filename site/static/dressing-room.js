@@ -32,8 +32,8 @@
     var DEFAULTED = ["costume", "head", "eyes"];
     // Slots whose art is a colour mask, and the URL param that tints each.
     var COLORS = [
-        { slot: "hair", param: "hair_color", label: "Hair colour", fallback: "#c81400" },
-        { slot: "eyes", param: "eye_color", label: "Eye colour", fallback: "#ea0000" }
+        { slot: "hair", param: "hair_color", label: "Hair color", fallback: "#c81400" },
+        { slot: "eyes", param: "eye_color", label: "Eye color", fallback: "#ea0000" }
     ];
     var PAGE = 60;
     var RENDER_DEBOUNCE = 220;
@@ -289,7 +289,7 @@
             }).join("");
             return '<div class="dr-colgroup' + (supports(c.slot) ? "" : " dr-chip-off") + '">'
                 + '<div class="dr-colhead"><span>' + esc(c.label) + "</span>"
-                + (cur ? '<button type="button" class="dr-colour-x" data-clear="' + c.param
+                + (cur ? '<button type="button" class="dr-color-x" data-clear="' + c.param
                          + '">Reset</button>' : "")
                 + "</div>"
                 + '<div class="dr-swatches" style="--dr-cols:' + (palette.columns || 6) + '">'
