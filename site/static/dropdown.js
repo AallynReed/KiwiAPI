@@ -37,7 +37,12 @@
       && !instances.has(select)
       && !select.multiple
       && select.size <= 1
-      && !select.hidden                       // the language picker hides its own
+      // Only a select that is already hidden when we get here. Note this can't
+      // be relied on to protect a control that hides itself from script: this
+      // file is deferred, so it runs BEFORE DOMContentLoaded and therefore
+      // before most page setup. Anything with its own enhancer (the language
+      // picker) opts out with data-no-dropdown instead.
+      && !select.hidden
       && !select.closest('[data-no-dropdown]');
   }
 

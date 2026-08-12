@@ -14,19 +14,6 @@
    =========================================================================== #}
 {% set _p = request.url.path %}
 {% set _pages_active = _p == '/mods' or _p.startswith('/mods/') or _p == '/modpacks' or _p.startswith('/modpacks/') or _p in ['/commands', '/leaderboards', '/activity', '/class-activity', '/updates', '/market', '/store', '/codexes', '/codexes/crafting', '/status', '/clubs', '/server-time', '/calendar', '/streams', '/releases', '/classes', '/star-chart', '/gem-simulator', '/gems-guide', '/dressing-room', '/sound-studio'] %}
-<style>
-    /* Compact flag language picker: flag-only trigger, full names in the panel. */
-    .lang-dd { position: relative; display: inline-flex; }
-    .lang-dd-trigger { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; color: var(--text); cursor: pointer; font: inherit; padding: 0; }
-    .lang-dd-flag { font-size: 1.05rem; line-height: 1; }
-    .lang-dd-caret { font-size: .65rem; color: var(--text-soft); transition: transform .15s; }
-    .lang-dd-trigger[aria-expanded="true"] .lang-dd-caret { transform: rotate(180deg); }
-    .lang-dd-panel { position: absolute; top: calc(100% + 12px); right: 0; min-width: 168px; background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: 12px; box-shadow: var(--shadow-soft); padding: 6px; z-index: 60; display: grid; gap: 2px; }
-    .lang-dd-panel[hidden] { display: none; }
-    .lang-dd-item { display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--text-mute); cursor: pointer; font: inherit; font-size: .9rem; padding: 8px 10px; border-radius: 8px; white-space: nowrap; }
-    .lang-dd-item:hover { background: var(--bg-deep); color: var(--text); }
-    .lang-dd-item.active { background: var(--bg-deep); color: var(--text); }
-</style>
 <header class="navbar" role="banner">
         <div class="nav-container">
             <a class="nav-logo" href="{{ '#hero' if _p == '/' else '/' }}" aria-label="Better Trove Tools home">
@@ -115,8 +102,10 @@
                     <a class="nav-support {{ 'active' if _p == '/support' else '' }}" href="/support" aria-label="Support" data-i18n-title title="Support the project"><i class="fa-solid fa-heart"></i></a>
                     <span id="nav-account" class="nav-account" data-state="loading"></span>
 
+                    {# data-no-dropdown: i18n.js builds its own compact switcher
+                       here, so the shared select enhancer has to keep off. #}
                     <span class="lang-picker">
-                        <select id="langSelect" class="lang-select" aria-label="Language"></select>
+                        <select id="langSelect" class="lang-select" aria-label="Language" data-no-dropdown></select>
                     </span>
                 </div>
             </nav>

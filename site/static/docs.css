@@ -104,6 +104,50 @@ a:hover { text-decoration: underline; }
 .lang-select:focus-visible { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(94,198,255,0.25); }
 .lang-picker:hover .lang-picker-icon { color: #7ad2ff; }
 .lang-select option { background: var(--bg-panel); color: #fff; }
+/* The native select above is the no-JS view. Once i18n.js swaps in its own
+   switcher that carries the globe itself, so this one would double up. */
+.lang-picker:has(.lang-dd) .lang-picker-icon { display: none; }
+
+/* i18n.js's compact switcher (see style.css for the main site's copy). The
+   docs page runs its own chrome and does not include the site navbar, so
+   these rules have to exist here too. */
+.lang-dd { position: relative; display: inline-flex; }
+.lang-dd-trigger {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border-radius: 8px;
+    border: 1px solid var(--border-color); background: var(--bg-panel);
+    color: var(--text-main); font: inherit; font-weight: 600; cursor: pointer;
+    transition: 0.2s;
+}
+.lang-dd-trigger:hover,
+.lang-dd-trigger[aria-expanded="true"] { background: var(--bg-elev); border-color: var(--accent-blue); }
+.lang-dd-trigger:focus-visible { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(94,198,255,0.25); }
+.lang-dd-globe { font-size: 0.85rem; color: var(--accent-blue); }
+.lang-dd-code { font-size: 0.85rem; letter-spacing: 0.04em; }
+.lang-dd-caret { font-size: 0.6rem; opacity: 0.7; transition: transform 0.15s ease; }
+.lang-dd-trigger[aria-expanded="true"] .lang-dd-caret { transform: rotate(180deg); }
+.lang-dd-panel {
+    position: absolute; top: calc(100% + 8px); right: 0; z-index: 60;
+    min-width: 190px; padding: 6px; display: grid; gap: 2px;
+    border: 1px solid var(--border-color); border-radius: 10px;
+    background: var(--bg-panel); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+.lang-dd-panel[hidden] { display: none; }
+.lang-dd-item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 8px 10px; border: 0; border-radius: 7px; background: none;
+    color: var(--text-muted); font: inherit; font-size: 0.9rem;
+    text-align: left; white-space: nowrap; cursor: pointer;
+}
+.lang-dd-item:hover,
+.lang-dd-item.active { background: var(--bg-elev); color: #fff; }
+.lang-dd-tag {
+    flex: 0 0 auto; min-width: 26px; text-align: center;
+    padding: 2px 5px; border-radius: 5px;
+    background: var(--bg-elev); color: var(--text-muted);
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em;
+}
+.lang-dd-item.active .lang-dd-tag { background: rgba(94, 198, 255, 0.16); color: var(--accent-blue); }
 
 /* ----------------------------------------------------------- Page layout */
 .docs-layout {
@@ -444,6 +488,13 @@ code {
     .sidebar-mobile-nav .sidebar-lang .lang-select {
         width: 100%; padding: 10px 32px 10px 34px; font-size: 0.9rem;
     }
+    /* Full-width in the drawer, same as the links above it. */
+    .sidebar-mobile-nav .sidebar-lang,
+    .sidebar-mobile-nav .sidebar-lang .lang-dd { display: flex; }
+    .sidebar-mobile-nav .sidebar-lang .lang-dd { flex: 1; }
+    .sidebar-mobile-nav .sidebar-lang .lang-dd-trigger { flex: 1; padding: 10px 12px; }
+    .sidebar-mobile-nav .sidebar-lang .lang-dd-code { margin-right: auto; }
+    .sidebar-mobile-nav .sidebar-lang .lang-dd-panel { left: 0; right: 0; }
 }
 
 /* Slide-down nav panel for the unlock_* pages - same shape as the home page's

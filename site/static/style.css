@@ -1748,19 +1748,18 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 
 /* ─── 14. Language picker (used in nav) ──────────────────────────────── */
 
+/* The wrapper is only a positioning anchor - the pill is drawn on the
+   trigger inside it, so the control keeps its shape whether i18n.js has
+   built the custom switcher yet or the native <select> is still showing. */
 .lang-picker {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+}
+.lang-select {
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid var(--bg-line);
   background: var(--bg-card);
-  color: var(--text-mute);
-}
-.lang-select {
-  background: transparent;
-  border: 0;
   color: var(--text);
   font: inherit;
   font-size: .88rem;
@@ -1768,6 +1767,80 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   cursor: pointer;
 }
 .lang-select option { background: var(--bg-card); color: var(--text); }
+
+/* Compact language switcher built by i18n.js over the (hidden) select:
+   globe + locale code on the trigger, full endonyms in the panel. Sized to
+   the 36px social icons it sits beside so the utility cluster stays one
+   straight line. */
+.lang-dd { position: relative; display: inline-flex; }
+.lang-dd-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-mute);
+  font: inherit;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.lang-dd-trigger:hover,
+.lang-dd-trigger[aria-expanded="true"] { background: var(--bg-card); color: var(--text); }
+.lang-dd-globe { font-size: .95rem; }
+.lang-dd-code { font-size: .82rem; font-weight: 600; letter-spacing: .04em; }
+.lang-dd-caret { font-size: .6rem; opacity: .7; transition: transform .15s ease; }
+.lang-dd-trigger[aria-expanded="true"] .lang-dd-caret { transform: rotate(180deg); }
+.lang-dd-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 190px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--bg-line);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-soft);
+  z-index: 60;
+  display: grid;
+  gap: 2px;
+}
+.lang-dd-panel[hidden] { display: none; }
+.lang-dd-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-mute);
+  font: inherit;
+  font-size: .9rem;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.lang-dd-item:hover,
+.lang-dd-item.active { background: var(--bg-deep); color: var(--text); }
+/* Monospaced-width code chip so the endonyms all start on one line. */
+.lang-dd-tag {
+  flex: 0 0 auto;
+  min-width: 26px;
+  text-align: center;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: var(--bg-deep);
+  color: var(--text-mute);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.lang-dd-item.active .lang-dd-tag { background: rgba(76,201,240,.16); color: var(--accent-blue, #4cc9f0); }
 
 
 /* ─── 15. Image fallback placeholder ─────────────────────────────────── */
