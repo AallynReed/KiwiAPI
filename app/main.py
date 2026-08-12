@@ -41,6 +41,7 @@ from app.core.maintenance import maintenance_loop
 from app.core.middleware import (
     add_api_host_redirect_middleware,
     add_head_method_middleware,
+    add_public_asset_cors_middleware,
     add_security_middleware,
 )
 from app.core.observability import add_request_context_middleware, configure_logging
@@ -322,6 +323,12 @@ app.add_middleware(
     expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining",
                     "X-RateLimit-Reset", "Retry-After"],
 )
+
+# Outside that, and therefore the last word: the 3D viewers' public assets answer any
+# origin without credentials, so a partner site can point the viewer at the API
+# instead of proxying it. Deliberately NOT done by adding partners to the allowlist
+# above - that one carries credentials.
+add_public_asset_cors_middleware(app)
 
 # One router per endpoint-path group (feature module).
 #

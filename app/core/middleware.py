@@ -142,6 +142,80 @@ def add_security_middleware(app: FastAPI) -> None:
         return response
 
 
+# The assets the 3D viewers fetch while they run: baked rigs (clips + animation
+# graph), the dressing-room catalogue and assembled models, and the BRDF lighting
+# map. Every one is public, tokenless and takes no viewer identity - no cookie, no
+# Authorization header, pure query params - which is what makes them safe to hand to
+# any origin.
+_PUBLIC_ASSET_PREFIXES = ("/site/rigs/", "/site/dressing/")
+_PUBLIC_ASSET_PATHS = frozenset({"/site/render/brdf-map.png"})
+
+
+def _is_public_asset(path: str) -> bool:
+    return path.startswith(_PUBLIC_ASSET_PREFIXES) or path in _PUBLIC_ASSET_PATHS
+
+
+class PublicAssetCorsMiddleware:
+    """Let ANY origin read the viewer's assets, without credentials.
+
+    The ordinary CORS layer runs ``allow_credentials=True`` against an allowlist, so
+    everything it permits can also make cookie-bearing calls and read a signed-in
+    user's responses. That is the right policy for our own front-ends and the wrong
+    one to hand a partner site that only needs geometry: a page on their domain would
+    inherit the visitor's session.
+
+    So these paths get their own answer - ``Access-Control-Allow-Origin: *`` with no
+    credentials. A partner points the viewer's ``apiBase`` at the API and it works,
+    with no per-partner allowlist to maintain and nothing new exposed: the browser
+    refuses to attach cookies to a wildcard origin, and these routes never read them
+    anyway. They are rate-limited per IP as tokenless endpoints either way.
+
+    Registered LAST in main.py so it sits outside the credentialed CORS middleware and
+    can replace what that one decided. Both layers emitting an allow-origin header
+    would be two of them, which every browser treats as no CORS at all.
+    """
+
+    _STRIP = frozenset({b"access-control-allow-origin", b"access-control-allow-credentials"})
+    _PREFLIGHT = (
+        (b"access-control-allow-origin", b"*"),
+        (b"access-control-allow-methods", b"GET, HEAD, OPTIONS"),
+        (b"access-control-allow-headers", b"*"),
+        (b"access-control-max-age", b"86400"),
+    )
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or not _is_public_asset(scope.get("path", "")):
+            await self.app(scope, receive, send)
+            return
+        if scope["method"] == "OPTIONS":
+            # a plain GET is never preflighted; this is for a partner that adds a
+            # header of its own and turns it into one
+            headers = {k.decode(): v.decode() for k, v in self._PREFLIGHT}
+            await Response(status_code=204, headers=headers)(scope, receive, send)
+            return
+
+        async def send_wrapper(message: dict) -> None:
+            if message["type"] == "http.response.start":
+                headers = [(k, v) for k, v in message["headers"]
+                           if k.lower() not in self._STRIP]
+                headers.append((b"access-control-allow-origin", b"*"))
+                message = {**message, "headers": headers}
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+
+def add_public_asset_cors_middleware(app: FastAPI) -> None:
+    """Open the viewer's public assets to every origin (see PublicAssetCorsMiddleware).
+
+    Register LAST in main.py, so it is the outermost layer and its answer is the one
+    that reaches the browser."""
+    app.add_middleware(PublicAssetCorsMiddleware)
+
+
 class HeadMethodMiddleware:
     """Serve ``HEAD`` by running the matching ``GET`` route, body suppressed.
 
