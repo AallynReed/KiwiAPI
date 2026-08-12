@@ -1707,6 +1707,16 @@ async def load_rig_animation(skeleton: str, name: str) -> bytes:
     return anim
 
 
+async def load_rig_animation_graph(skeleton: str) -> bytes:
+    """The rig's animation state machine as JSON (see assembly.load_animation_graph).
+    404s for a rig that has none, which the viewer treats as "just list the clips"."""
+    from app.trove.mods_hub import assembly
+    graph = await asyncio.to_thread(assembly.load_animation_graph, skeleton)
+    if graph is None:
+        raise _not_found("No such rig animation graph")
+    return graph
+
+
 def _preview_path(properties: dict) -> str:
     """The release's preview image path inside the .tmod (excluded from the file list),
     lowercased; '' if none."""

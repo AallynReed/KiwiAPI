@@ -1684,6 +1684,16 @@ class Handler(SimpleHTTPRequestHandler):
             if mp.exists():
                 return self._send_file(mp, "application/json")
             return self._send_json({"error": {"message": "no model"}})
+        # The rig's animation state machine: /site/rigs/<skeleton>/graph
+        if path.startswith("/site/rigs/") and path.endswith("/graph"):
+            import re as _re
+            m = _re.match(r"^/site/rigs/([a-z0-9_]+)/graph$", path)
+            if m:
+                gp = _under(ROOT / "app" / "trove" / "mods_hub" / "rigs" / "graph",
+                            m.group(1) + ".graph.json")
+                if gp is not None and gp.exists():
+                    return self._send_file(gp, "application/json")
+            return self._send_json({"error": {"message": "no graph"}}, 404)
         # Lazily-loaded rig animation clip (TANIM1 binary): /site/rigs/<skeleton>/anim/<name>
         if path.startswith("/site/rigs/") and "/anim/" in path:
             import re as _re

@@ -109,6 +109,24 @@ def load_animation(skeleton: str, name: str) -> bytes | None:
         return f.read()
 
 
+def load_animation_graph(skeleton: str) -> bytes | None:
+    """The creature's animation state machine - ``rigs/graph/<skeleton>.graph.json`` - or
+    None for a rig that has none (props and chests carry no graph).
+
+    Read out of the game's own ``models/<rig>.gsf`` by granny_re/build_anim_graph.py: the
+    states, which clip each one plays, the edges between them and the cross-fade on every
+    edge. It is what lets the viewer offer "Jump" instead of jump_begin/jump_cycle/
+    jump_end as three unrelated buttons - the chaining is the game's, not a guess made
+    from clip names."""
+    if not _RIG_NAME_RE.match(skeleton or ""):
+        return None
+    path = os.path.join(_RIG_DIR, "graph", skeleton + ".graph.json")
+    if not os.path.isfile(path):
+        return None
+    with open(path, "rb") as f:
+        return f.read()
+
+
 def _decode_grid(raw: bytes) -> list[tuple]:
     """Decode ANY .blueprint version to grid voxels, in the same un-mirrored, absolute
     grid space ``_decode_v5_grid`` produces.

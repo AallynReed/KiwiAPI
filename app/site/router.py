@@ -3369,6 +3369,17 @@ async def site_rig_animation(skeleton: str, name: str) -> Response:
                     headers={"Cache-Control": "public, max-age=3600"})
 
 
+@router.get("/site/rigs/{skeleton}/graph", response_class=Response)
+async def site_rig_animation_graph(skeleton: str) -> Response:
+    """The rig's animation state machine, read out of the game's own model files: which
+    clip each state plays, which states lead to which, and the cross-fade on every edge.
+    The viewer uses it to offer whole moves ("Jump") instead of the raw clips they are
+    assembled from. Public and shared across mods on the rig, like the clips themselves."""
+    graph = await mods_hub_service.load_rig_animation_graph(skeleton)
+    return Response(content=graph, media_type="application/json",
+                    headers={"Cache-Control": "public, max-age=3600"})
+
+
 @router.get("/site/mods/releases/{release_id}/blueprint", response_class=Response)
 async def site_mods_blueprint(
     request: Request, release_id: str,

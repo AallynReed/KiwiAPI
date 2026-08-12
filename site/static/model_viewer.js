@@ -105,6 +105,155 @@
     return b;
   }
 
+  /* --- moves, from the rig's own state machine -----------------------------------
+     A jump is not one clip: the game plays jump_begin, lets jump_cycle hold while you
+     are in the air, then jump_end (or jump_end_run_forward if you land moving). Listing
+     those as three unrelated buttons asks the viewer to reassemble a move the game
+     already knows how to assemble, so we read it out of `<rig>.graph.json` instead.
+
+     Two edge kinds carry the structure, and neither is inferred from clip names:
+       onloop     the clip ended and the machine moves on BY ITSELF - a hard chain
+       onrequest  gameplay asked for that state - a branch, e.g. how landing chooses
+     A state with an outgoing onloop edge therefore FINISHES; one without it HOLDS.
+
+     A move is: a start state, the states its onloop edges run through, and one ending
+     picked from the branches out of the state it comes to rest on. A state whose chain
+     ends at a hub - somewhere many moves return to, i.e. idle - is an ending, not a
+     start, which is what keeps every emote a plain button instead of its own "move". */
+  var STEP_WORDS = { begin: 1, cycle: 1, end: 1, start: 1, stop: 1, loop: 1,
+                     enter: 1, exit: 1, idle: 1 };
+
+  function buildMoves(graph, have) {
+    var nodes = graph && graph.nodes, edges = graph && graph.edges;
+    if (!nodes || !edges) return [];
+    function clipOf(id) {
+      var n = nodes[id];
+      if (!n) return null;
+      var c = n.clip || (n.clips && n.clips.length === 1 ? n.clips[0] : null);
+      return c && have[c] ? c : null;
+    }
+    /* A rig nests state machines (Movement, Ability, ...) and each one carries its own
+       "idle", so several distinct nodes share a name. Identity therefore keys on the
+       CLIP a state plays, not on the node id, or the same clip walks into a move twice
+       and the real rest state never looks like one. */
+    function key(id) { return clipOf(id) || ('#' + id); }
+    var auto = {}, autoIn = {}, req = {}, reqFrom = {};
+    edges.forEach(function (e) {
+      if (e.from == null || e.to == null || e.from === e.to) return;
+      if (e.when === 'onloop') {
+        if (!auto[e.from]) auto[e.from] = e;         // one automatic successor per state
+        var k = key(e.to);
+        autoIn[k] = (autoIn[k] || 0) + 1;
+      } else if (e.when === 'onrequest') {
+        (req[e.from] = req[e.from] || []).push(e);
+        var t = key(e.to), f = key(e.from);
+        if (!reqFrom[t]) reqFrom[t] = {};
+        reqFrom[t][f] = 1;
+      }
+    });
+    // a state that many other states fall back into by themselves is where moves END -
+    // idle, and whatever else a rig rests in
+    function isHub(id) { return !auto[id] && (autoIn[key(id)] || 0) >= 2; }
+
+    var chains = [];
+    Object.keys(nodes).forEach(function (id) {
+      if (!auto[id] || autoIn[key(id)]) return;      // must finish, and must start a chain
+      var seen = {}, path = [], cur = id;
+      while (cur != null) {
+        var k = key(cur);
+        if (seen[k]) { cur = null; break; }
+        seen[k] = 1;
+        var e = auto[cur];
+        path.push({ id: cur, next: e ? (e.blend || 0) : 0 });
+        if (!e) break;                               // nothing automatic follows: it holds
+        if (isHub(e.to) || seen[key(e.to)]) { cur = null; break; }   // back to rest
+        cur = e.to;
+      }
+      if (cur == null || path.length < 2) return;    // ran back to rest -> a clip, not a move
+      chains.push({ park: cur, path: path, keys: seen });
+    });
+    chains.sort(function (a, b) { return b.path.length - a.path.length; });
+
+    var used = {}, moves = [];
+    chains.forEach(function (ch) {
+      var clips = [], blends = [];
+      for (var i = 0; i < ch.path.length; i++) {
+        var c = clipOf(ch.path[i].id);
+        if (!c) return;                              // a clip we do not ship - skip the move
+        if (used[ch.path[i].id]) return;
+        clips.push(c);
+        blends.push(i ? (ch.path[i - 1].next || 0) : 0);
+      }
+      // how the move is entered, so looping the preview can cross-fade the way the
+      // game does rather than cutting
+      var first = clipOf(ch.path[0].id), enter = 0;
+      edges.forEach(function (e) {
+        // compare on the clip: ids arrive as strings from the node map and as numbers on
+        // the edges, so identity has to go through the same key as everywhere else
+        if (enter || e.when !== 'onrequest' || clipOf(e.to) !== first) return;
+        if (isHub(e.from) || !enter) enter = e.blend || 0;
+      });
+      /* An ending belongs to THIS move; a state the rest of the rig asks for just as
+         often is a destination the move happens to allow, not part of it. Landing into
+         a backward run is real, but run_backward is asked for from idle, from running,
+         from taking a hit - it is its own state. jump_end is asked for from inside the
+         jump and almost nowhere else. */
+      var endKeys = {};
+      var endings = (req[ch.park] || []).filter(function (e) {
+        var k = clipOf(e.to);
+        if (!k || ch.keys[k] || endKeys[k] || used[e.to] || isHub(e.to)) return false;
+        var from = Object.keys(reqFrom[k] || {}), inside = 0;
+        from.forEach(function (f) { if (ch.keys[f]) inside++; });
+        if (inside * 2 <= from.length) return false;      // more of the rig wants it than this move
+        endKeys[k] = 1;
+        return true;
+      });
+      var made = [];
+      if (!endings.length) {
+        made.push({ clips: clips.slice(), blends: blends.slice(), enter: enter, ids: [] });
+      } else {
+        endings.forEach(function (e) {
+          made.push({ clips: clips.concat([clipOf(e.to)]),
+                      blends: blends.concat([e.blend || 0]), enter: enter, ids: [e.to] });
+        });
+      }
+      made.forEach(function (m) {
+        m.label = moveLabel(m.clips);
+        moves.push(m);
+      });
+      ch.path.forEach(function (s) { used[s.id] = 1; });
+      made.forEach(function (m) { m.ids.forEach(function (i) { used[i] = 1; }); });
+    });
+    // two moves that came out with the same clips and the same name are one move
+    var seenKey = {};
+    return moves.filter(function (m) {
+      var k = m.clips.join('|');
+      if (seenKey[k]) return false;
+      seenKey[k] = 1;
+      return true;
+    });
+  }
+
+  /* "jump_begin + jump_cycle + jump_end_run_forward" -> "jump & run forward": the shared
+     leading words name the move, and whatever the ending adds on top names the variant.
+     The step words themselves (begin/cycle/end) never reach the label. */
+  function moveLabel(clips) {
+    var toks = clips.map(function (c) { return stripStance(c).split('_'); });
+    var stem = [];
+    for (var i = 0; ; i++) {
+      var t = toks[0][i];
+      if (t === undefined || STEP_WORDS[t]) break;
+      var shared = toks.every(function (x) { return x[i] === t; });
+      if (!shared) break;
+      stem.push(t);
+    }
+    if (!stem.length) stem = toks[0].slice(0, 1);
+    var tail = toks[toks.length - 1].slice(stem.length).filter(function (t) {
+      return !STEP_WORDS[t];
+    });
+    return stem.join(' ') + (tail.length ? ' & ' + tail.join(' ') : '');
+  }
+
   function injectStyles() {
     if (_styles) return; _styles = true;
     var css =
@@ -162,6 +311,16 @@
     });
   }
 
+  /* The rig's animation state machine, or null. A rig without one (props, chests) just
+     lists its clips, so a miss here is a normal outcome and never an error. */
+  function loadGraph(rig) {
+    if (!rig) return Promise.resolve(null);
+    return fetch(_apiBase + '/site/rigs/' + encodeURIComponent(rig) + '/graph',
+                 { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+
   /* Load an assembled model into an existing element (no modal) - used by the modal
      below and by the embeddable viewer (/embed/viewer). `bar` is where the animation
      buttons go; pass one so the host controls where they sit. Returns { dispose }. */
@@ -178,11 +337,16 @@
     var viewer = null, alive = true;
     ensureThree().then(function (THREE) {
       return loadModel(opts.url).then(function (data) {
-        if (!alive) return;
-        msg.remove();
-        var nv = data.parts.reduce(function (a, p) { return a + p.x.length; }, 0);
-        if (opts.onMeta) opts.onMeta(data.parts.length + ' parts · ' + nv.toLocaleString() + ' voxels');
-        viewer = build(THREE, container, bar, data);
+        if (!alive) return null;
+        // the graph only decides which BUTTONS there are, so it is fetched alongside the
+        // model rather than blocking on it
+        return loadGraph(data.rig).then(function (graph) {
+          if (!alive) return;
+          msg.remove();
+          var nv = data.parts.reduce(function (a, p) { return a + p.x.length; }, 0);
+          if (opts.onMeta) opts.onMeta(data.parts.length + ' parts · ' + nv.toLocaleString() + ' voxels');
+          viewer = build(THREE, container, bar, data, graph);
+        });
       });
     }).catch(function (e) {
       if (!alive) return;
@@ -237,7 +401,7 @@
     });
   }
 
-  function build(THREE, stage, bar, data) {
+  function build(THREE, stage, bar, data, graph) {
     var W = stage.clientWidth || 900, H = stage.clientHeight || 560, s = data.voxel_scale;
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -337,9 +501,12 @@
     // render-on-demand; a rAF loop runs only while an animation plays. Animation CLIPS
     // are fetched lazily (the payload only carries metadata) and cached.
     var alive = true, anim = null, want = null, animStart = 0, raf = 0, pending = false;
-    var loaded = {};   // animation name -> decodeAnim() result
+    var loaded = {};     // animation name -> decodeAnim() result
+    var programs = {};   // button key -> { clips:[name], blends:[seconds] } (see below)
+    var prog = null;     // the compiled timeline currently playing
     var _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _one = new THREE.Vector3(1, 1, 1);
     var _p2 = new THREE.Vector3(), _q2 = new THREE.Quaternion();
+    var _p3 = new THREE.Vector3(), _q3 = new THREE.Quaternion();
     function renderOnce() { renderer.render(scene, camera); }
     function request() { if (anim) return; if (!pending) { pending = true; requestAnimationFrame(function () { pending = false; renderOnce(); }); } }
     /* Pose the parts at `f`, a FRACTIONAL frame index into a decoded clip: rebuild each
@@ -348,53 +515,110 @@
        pose blends between the two neighbouring frames rather than snapping to one - the
        transforms are rigid, so that's a lerp on position and a slerp on rotation. The
        next frame wraps to 0 because playback loops. */
-    function applyFrame(A, f) {
+    function sample(A, f, ai, p, q) {
       var n = A.frameCount, f0 = Math.floor(f), a = f - f0, d = A.data;
-      var b0 = (f0 % n) * A.apCount * 7, b1 = ((f0 + 1) % n) * A.apCount * 7;
+      var o = ((f0 % n) * A.apCount + ai) * 7;
+      p.set(d[o], d[o + 1], d[o + 2]);
+      q.set(d[o + 3], d[o + 4], d[o + 5], d[o + 6]);
+      if (a) {
+        var o2 = (((f0 + 1) % n) * A.apCount + ai) * 7;
+        _p3.set(d[o2], d[o2 + 1], d[o2 + 2]);
+        _q3.set(d[o2 + 3], d[o2 + 4], d[o2 + 5], d[o2 + 6]);
+        p.lerp(_p3, a); q.slerp(_q3, a);
+      }
+    }
+    /* Pose from clip A at frame `f`, and when a second clip is given, `u` of the way
+       across to clip B at frame `g` - the cross-fade between two states of a move, run
+       for exactly as long as the game's own edge says. */
+    function applyFrame(A, f, B, g, u) {
       data.parts.forEach(function (p) {
         var ai = A.apIndex[p.name], meshes = meshByPart[p.name];
         if (ai === undefined || !meshes) return;
-        var o = b0 + ai * 7;
-        _p.set(d[o], d[o + 1], d[o + 2]);
-        _q.set(d[o + 3], d[o + 4], d[o + 5], d[o + 6]);
-        if (a) {
-          var o2 = b1 + ai * 7;
-          _p2.set(d[o2], d[o2 + 1], d[o2 + 2]);
-          _q2.set(d[o2 + 3], d[o2 + 4], d[o2 + 5], d[o2 + 6]);
-          _p.lerp(_p2, a); _q.slerp(_q2, a);
+        sample(A, f, ai, _p, _q);
+        if (B) {
+          var bi = B.apIndex[p.name];
+          if (bi !== undefined) {
+            sample(B, g, bi, _p2, _q2);
+            _p.lerp(_p2, u); _q.slerp(_q2, u);
+          }
         }
         var sm = scaleOf[p.name] || scaleM;
         for (var i = 0; i < meshes.length; i++) meshes[i].matrix.compose(_p, _q, _one).multiply(sm);
       });
     }
+    /* Lay a program's clips on one looping timeline. Each clip starts before the one
+       ahead of it has finished, overlapping by that edge's cross-fade, and `blends[0]`
+       is the fade that carries the last clip back into the first so a repeat does not
+       cut. A cross-fade is capped at half of either clip it joins - a 250ms fade across
+       a 200ms clip would otherwise never show the clip at all. */
+    function compile(spec) {
+      var A = [], i;
+      for (i = 0; i < spec.clips.length; i++) {
+        var c = loaded[spec.clips[i]];
+        if (!c || !c.frameCount) return null;
+        A.push(c);
+      }
+      var n = A.length, dur = A.map(function (x) { return x.frameCount / x.fps; });
+      var blends = [], starts = [0];
+      for (i = 0; i < n; i++) {
+        var prev = dur[(i - 1 + n) % n];
+        blends.push(n < 2 ? 0 : Math.max(0, Math.min(spec.blends[i] || 0,
+                                                     dur[i] / 2, prev / 2)));
+      }
+      for (i = 1; i < n; i++) starts[i] = starts[i - 1] + dur[i - 1] - blends[i];
+      return { A: A, dur: dur, blends: blends, starts: starts,
+               total: starts[n - 1] + dur[n - 1] - blends[0] };
+    }
     function loop(ts2) {
-      if (!alive || !anim) return;
-      var A = loaded[anim]; if (!A || !A.frameCount) return;
+      if (!alive || !prog) return;
       raf = requestAnimationFrame(loop);
-      var dur = A.frameCount / A.fps;
-      var t = ((ts2 - animStart) / 1000) % dur;
-      applyFrame(A, t * A.fps); renderOnce();
+      var n = prog.A.length, t = ((ts2 - animStart) / 1000) % prog.total, i = n - 1;
+      while (i > 0 && t < prog.starts[i]) i--;
+      var cur = prog.A[i], local = t - prog.starts[i], b = prog.blends[i];
+      if (n > 1 && b > 0 && local < b) {
+        var p = (i - 1 + n) % n;
+        // coming out of the last clip into the first, the previous step started before
+        // this lap did
+        var ps = i === 0 ? prog.starts[p] - prog.total : prog.starts[p];
+        applyFrame(prog.A[p], (t - ps) * prog.A[p].fps, cur, local * cur.fps, local / b);
+      } else {
+        applyFrame(cur, local * cur.fps);
+      }
+      renderOnce();
     }
     function setActive(name) { Array.prototype.forEach.call(bar.querySelectorAll('.mv-btn'), function (b) { b.classList.toggle('on', b.dataset.anim === (name || 'rest')); }); }
-    function startAnim(name) { anim = name; animStart = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
-    function play(name) {
-      cancelAnimationFrame(raf); anim = null; want = name;
-      if (!name) { applyPose(data.rest); renderOnce(); setActive(null); return; }
-      setActive(name);
-      if (loaded[name]) { startAnim(name); return; }
+    function startProgram(key) {
+      var p = compile(programs[key]);
+      if (!p) return;
+      prog = p; anim = key; animStart = performance.now();
+      cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
+    }
+    function fetchClip(name) {
+      return fetch(_apiBase + '/site/rigs/' + encodeURIComponent(data.rig) + '/anim/' +
+                   encodeURIComponent(name), { credentials: 'same-origin' })
+        .then(function (r) { if (!r.ok) throw new Error(name); return r.arrayBuffer(); })
+        .then(function (buf) { loaded[name] = decodeAnim(buf); });
+    }
+    /* `key` names a program: one clip, or the several a move is made of. */
+    function play(key) {
+      cancelAnimationFrame(raf); anim = null; prog = null; want = key;
+      if (!key) { applyPose(data.rest); renderOnce(); setActive(null); return; }
+      var spec = programs[key];
+      if (!spec) return;
+      setActive(key);
+      var need = spec.clips.filter(function (n) { return !loaded[n]; });
+      if (!need.length) { startProgram(key); return; }
       if (!data.rig) return;                                  // no skeleton -> can't fetch frames
-      var btn = bar.querySelector('.mv-btn[data-anim="' + name + '"]');
+      var btn = bar.querySelector('.mv-btn[data-anim="' + key + '"]');
       if (btn) btn.classList.add('mv-loading');
-      fetch(_apiBase + '/site/rigs/' + encodeURIComponent(data.rig) + '/anim/' + encodeURIComponent(name), { credentials: 'same-origin' })
-        .then(function (r) { if (!r.ok) throw new Error(); return r.arrayBuffer(); })
-        .then(function (buf) {
-          loaded[name] = decodeAnim(buf);
+      Promise.all(need.map(fetchClip))
+        .then(function () {
           if (btn) btn.classList.remove('mv-loading');
-          if (want === name) startAnim(name);
+          if (want === key) startProgram(key);
         })
         .catch(function (e) {
           if (btn) btn.classList.remove('mv-loading');
-          if (window.console) console.error('model viewer: animation "' + name + '":', e);
+          if (window.console) console.error('model viewer: animation "' + key + '":', e);
         });
     }
 
@@ -408,17 +632,37 @@
       b.addEventListener('click', function () { play(an === 'rest' ? null : an); });
       parent.appendChild(b); return b;
     }
-    var clipNames = Object.keys(data.animations || {});
+    /* One button = one program. The rig's state machine (when it has one) folds the
+       clips that only ever play as part of a move - jump_begin, jump_cycle, jump_end -
+       into that single move, and whatever it does not claim stays its own button. */
+    var have = data.animations || {};
+    var entries = [];
+    var covered = {};
+    (graph ? buildMoves(graph, have) : []).forEach(function (m) {
+      var key = 'move:' + m.clips.join('+');
+      var blends = m.blends.slice();
+      blends[0] = m.enter || 0;                   // the fade that loops it back round
+      programs[key] = { clips: m.clips, blends: blends };
+      entries.push({ key: key, name: m.clips[0], label: m.label });
+      m.clips.forEach(function (c) { covered[c] = 1; });
+    });
+    Object.keys(have).forEach(function (c) {
+      if (covered[c]) return;
+      programs[c] = { clips: [c], blends: [0] };
+      entries.push({ key: c, name: c, label: null });
+    });
+    function entryLabel(e, token) { return e.label || clipLabel(e.name, token); }
+
     var hintHost = bar;
-    if (clipNames.length <= FLAT_MAX) {
+    if (entries.length <= FLAT_MAX) {
       mkBtn(bar, 'Rest pose', 'rest');
-      clipNames.forEach(function (k) { mkBtn(bar, clipLabel(k, null), k); });
+      entries.forEach(function (e) { mkBtn(bar, entryLabel(e, null), e.key); });
     } else {
       var buckets = {}, groups = [];
-      clipNames.forEach(function (k) {
-        var g = clipInfo(k).group;
+      entries.forEach(function (e) {
+        var g = clipInfo(e.name).group;
         if (!buckets[g]) { buckets[g] = []; groups.push(g); }
-        buckets[g].push(k);
+        buckets[g].push(e);
       });
       groups.sort(function (a, b) { return groupRank(a) - groupRank(b); });
 
@@ -437,7 +681,9 @@
 
       function showGroup(g) {
         clips.textContent = '';
-        buckets[g].forEach(function (k) { mkBtn(clips, clipLabel(k, clipInfo(k).token), k); });
+        buckets[g].forEach(function (e) {
+          mkBtn(clips, entryLabel(e, clipInfo(e.name).token), e.key);
+        });
         onResize();                               // bucket sizes differ -> bar height changed
         Array.prototype.forEach.call(cats.querySelectorAll('.mv-cat'), function (b) {
           var on = b.dataset.cat === g;
@@ -471,10 +717,15 @@
     return {
       // test hook: what the playback loop currently sees
       state: function () {
-        var A = anim ? loaded[anim] : null;
+        var spec = anim ? programs[anim] : null;
         return { anim: anim, want: want, alive: alive, cached: Object.keys(loaded),
-                 clip: A ? { fps: A.fps, frameCount: A.frameCount, apCount: A.apCount,
-                             dataLen: A.data && A.data.length } : null };
+                 buttons: Object.keys(programs),
+                 program: spec ? { clips: spec.clips.slice(), blends: spec.blends.slice() } : null,
+                 timeline: prog ? { starts: prog.starts.slice(), blends: prog.blends.slice(),
+                                    total: prog.total } : null,
+                 clip: prog ? { fps: prog.A[0].fps, frameCount: prog.A[0].frameCount,
+                                apCount: prog.A[0].apCount,
+                                dataLen: prog.A[0].data && prog.A[0].data.length } : null };
       },
       /* test hook: pose one specific frame of a loaded clip and report the resulting
          attach-point matrices. Playback itself is rAF-driven, which never runs in a
