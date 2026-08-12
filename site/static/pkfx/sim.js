@@ -366,7 +366,10 @@ class LayerSim {
           this.setAt(i, ev.accField, [acc - n * ev.interval]);
         }
         if (n > 0) {
-          n = Math.min(n, 8);
+          // No per-frame clamp. CParticleKernelCPU_Evolver_Spawner::Run spawns
+          // (int)accAfter - (int)accBefore children and nothing caps it; the invented
+          // ceiling here silently thinned every trail. The pool limit in spawnAt is
+          // the only backstop, which is where the engine's is too.
           const pos = this.getAt(i, 'Position');
           const child = this.sys.layers[ev.child];
           if (child) for (let k = 0; k < n; k++) child.spawnAt(pos, this, i, k, lifeRatio);
