@@ -109,10 +109,18 @@ void main(){
     float behind = linearZ(texture(uDepth, gl_FragCoord.xy * uInvRes).r);
     soft = clamp((behind - linearZ(gl_FragCoord.z)) / uSoft, 0.0, 1.0);
   }
-  if (uKind == 3) { frag = vec4(t.rgb * vColor.rgb * vColor.a * soft, 1.0); return; }
+  /* Blend maths transcribed from Trove's own particle pixel shader (embedded HLSL in
+     Trove_x64.exe), whose base permutation is:
+         diffuse = lerp(frameA, frameB, FrameLerp) * In.Color
+         if (IsAlphaMultiply) diffuse *= diffuse.w      // premultiply
+         if (IsAdditive)      diffuse.w  = 0            // add, via the same blend state
+     Additive_NoAlpha is the IsAdditive && !IsAlphaMultiply case, so it carries NO
+     alpha term at all, and the engine applies no alpha test on additive materials. */
+  if (uKind == 3) { frag = vec4(t.rgb * vColor.rgb * soft, 1.0); return; }
   c.a *= soft;
-  if (uKind == 2) { if (c.a < 0.003 && dot(c.rgb, vec3(1.0)) < 0.01) discard; frag = vec4(c.rgb * vColor.a, c.a); return; }
-  if (c.a < 0.003) discard;
+  if (uKind == 2) { frag = vec4(c.rgb * soft, c.a); return; }
+  if (uKind == 1) { frag = c; return; }
+  if (c.a < 0.002) discard;   // AlphaTestMode GreaterOrEqual, AlphaTestValue 0.002
   frag = c;
 }`;
 
