@@ -26,7 +26,10 @@
     title: shell.querySelector('.kv-title'),
     tabs: shell.querySelector('.kv-tabs'),
     pick: shell.querySelector('.kv-pick'),
-    select: shell.querySelector('.kv-select'),
+    // Tag name included on purpose: the shared dropdown copies the select's
+    // classes onto its trigger <button> and inserts it BEFORE the select, so a
+    // bare '.kv-select' matches the button and every option lands in nothing.
+    select: shell.querySelector('select.kv-select'),
     meta: shell.querySelector('.kv-meta'),
     stage: shell.querySelector('.kv-stage'),
     bar: shell.querySelector('.kv-bar'),
