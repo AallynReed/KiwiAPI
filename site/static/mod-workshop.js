@@ -513,7 +513,9 @@
     const off = rows.filter((r) => r.status === 'misplaced').length;
 
     $anHint.textContent = off
-      ? t('%n of these sit somewhere the game will never look.').replace('%n', formatInt(off))
+      ? (off === 1
+          ? t('One file sits somewhere the game will never look.')
+          : t('%n files sit somewhere the game will never look.').replace('%n', formatInt(off)))
       : t('Every file in here sits where the game will read it.');
 
     $anMeta.innerHTML =
@@ -597,12 +599,21 @@
       const row = byPath.get(path) || {};
       const role = d.preview_path && low === d.preview_path ? t('Preview image')
         : d.config_path && low === d.config_path ? t('Settings') : '';
-      const badge = row.status === 'misplaced'
-        ? `<span class="mw-file-warn" title="${esc(t('the game keeps it at'))} ${esc(row.expected || '')}">
-             <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> ${esc(t('wrong place'))}</span>`
-        : row.status === 'skipped'
-          ? `<span class="mw-file-mute">${esc(row.reason || t('the game ignores this'))}</span>`
-          : '';
+
+      // One question per file, answered before its name: will the game read this?
+      // A tick means yes. A cross means no - and where we know the path the game
+      // uses instead, it's spelled out rather than hidden in a tooltip.
+      const ok = row.status === 'ready';
+      const verdict = ok ? t('The game will read this file')
+        : row.expected ? t("The game won't read it here")
+          : (row.reason || t('The game ignores this file'));
+      const mark = `<i class="fa-solid ${ok ? 'fa-circle-check mw-ok' : 'fa-circle-xmark mw-bad'}"
+                       title="${esc(verdict)}" aria-hidden="true"></i>
+                    <span class="sr-only">${esc(verdict)}. </span>`;
+      const detail = row.expected
+        ? `<span class="mw-file-warn">${esc(t('should be'))} <code>${esc(row.expected)}</code></span>`
+        : (!ok && row.reason ? `<span class="mw-file-mute">${esc(row.reason)}</span>` : '');
+
       const kind = previewKind(path);
       const preview = kind
         ? `<button type="button" class="mw-icon-btn" data-preview="${esc(path)}"
@@ -610,10 +621,12 @@
              <i class="fa-solid ${kind === 'model' ? 'fa-cube' : kind === 'text' ? 'fa-file-lines' : 'fa-image'}" aria-hidden="true"></i></button>`
         : '';
       return `<div class="mw-file ${esc(row.status || '')}">
-        <i class="fa-regular fa-file" aria-hidden="true"></i>
-        <span class="mw-file-name" title="${esc(path)}">${esc(path.split('/').pop())}</span>
-        ${role ? `<span class="mw-file-role">${esc(role)}</span>` : ''}
-        ${badge}
+        ${mark}
+        <span class="mw-file-id">
+          <span class="mw-file-name" title="${esc(path)}">${esc(path.split('/').pop())}</span>
+          ${role ? `<span class="mw-file-role">${esc(role)}</span>` : ''}
+          ${detail}
+        </span>
         <span class="mw-file-size">${esc(formatBytes(f.size))}</span>
         ${preview}
         <button type="button" class="mw-icon-btn" data-get="${esc(path)}"

@@ -17,6 +17,12 @@
   min-width: 0;
 }
 
+/* `[hidden]` is a UA rule, and ANY author `display` beats it - so a `.mw-btn`
+   (display: inline-flex) went on painting while `hidden` was perfectly set, which
+   is how the "fix the placement" button showed on a mod that had nothing to fix.
+   The page toggles a lot of things this way; make the attribute mean it. */
+.mod-workshop-page [hidden] { display: none !important; }
+
 /* ─── Hero ──────────────────────────────────────────────────────────── */
 
 .mw-hero { padding: 56px 0 22px; }
@@ -506,14 +512,24 @@
 .mw-file {
   display: flex;
   gap: 9px;
-  align-items: center;
+  align-items: baseline;
   padding: 5px 10px;
   border-radius: 8px;
   font-size: .84rem;
 }
 .mw-file:hover { background: rgba(255,255,255,.03); }
-.mw-file > i { color: var(--text-soft); font-size: .88em; }
-.mw-file-name { min-width: 0; overflow-wrap: anywhere; }
+/* The verdict, before the name: tick = the game reads it, cross = it doesn't. */
+.mw-file > i { flex: 0 0 auto; font-size: .88em; }
+.mw-file > i.mw-ok { color: var(--accent-green, #3fb950); }
+.mw-file > i.mw-bad { color: var(--accent-red, #f85149); }
+.mw-file-id {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 9px;
+  align-items: baseline;
+  min-width: 0;
+}
+.mw-file-name { overflow-wrap: anywhere; }
 .mw-file-role {
   padding: 2px 8px;
   border-radius: 999px;
@@ -522,9 +538,21 @@
   color: var(--accent-blue);
   white-space: nowrap;
 }
-.mw-file-warn { font-size: .74rem; color: var(--accent-yellow, #ffd166); white-space: nowrap; }
+.mw-file-warn { font-size: .74rem; color: var(--accent-yellow, #ffd166); }
+.mw-file-warn code {
+  font-family: var(--font-mono, monospace);
+  font-size: .95em;
+  overflow-wrap: anywhere;
+}
 .mw-file-mute { font-size: .74rem; color: var(--text-mute); }
-.mw-file-size { margin-left: auto; font-size: .76rem; color: var(--text-mute); white-space: nowrap; }
+.mw-file-size {
+  margin-left: auto;
+  align-self: center;
+  font-size: .76rem;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+.mw-file .mw-icon-btn { align-self: center; }
 
 /* ─── Asset preview modal ───────────────────────────────────────────── */
 
