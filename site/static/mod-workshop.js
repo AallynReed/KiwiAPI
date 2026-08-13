@@ -204,6 +204,7 @@
     const s = state.source;
     if (!s) return;
     $stepCheck.hidden = false;
+    $summary.hidden = false;
     $summary.innerHTML = `<p class="mw-loading">${esc(t('Checking your files…'))}</p>`;
     $files.innerHTML = '';
 
@@ -277,10 +278,13 @@
   function renderSummary(target, counts, packed, plan, mode) {
     const making = mode === 'make';
     const bits = [];
-    if (packed) {
+    // Building, the count going in IS the outcome. Reading, it isn't worth a
+    // headline - every file already wears a tick or a cross - so only the ones
+    // that need doing something about get called out, and a mod with nothing
+    // wrong says nothing at all.
+    if (packed && making) {
       bits.push(pill('good', 'fa-circle-check',
-        (making ? t('%n going in') : t('%n in the right place'))
-          .replace('%n', formatInt(packed))));
+        t('%n going in').replace('%n', formatInt(packed))));
     }
     if (counts.moved) {
       bits.push(pill('move', 'fa-arrow-right-arrow-left',
@@ -308,8 +312,9 @@
       notes.push(t('Nothing here would load in-game. Trove only reads files inside its own folders — blueprints, ui, prefabs, textures and the rest.'));
     }
 
+    target.hidden = !bits.length && !notes.length;   // nothing to say, no empty box
     target.innerHTML =
-      `<div class="mw-pills">${bits.join('')}</div>` +
+      (bits.length ? `<div class="mw-pills">${bits.join('')}</div>` : '') +
       notes.map((n) => `<p class="mw-note">${esc(n)}</p>`).join('');
   }
 
@@ -447,6 +452,7 @@
     $openFiles.innerHTML = `<p class="mw-loading">${esc(t('Opening…'))}</p>`;
     $anMeta.innerHTML = '';
     $anFiles.innerHTML = '';
+    $anSummary.hidden = false;
     $anSummary.innerHTML = `<p class="mw-loading">${esc(t('Opening…'))}</p>`;
     setOpenStatus('');
     setAnStatus('');
