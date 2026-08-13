@@ -33,16 +33,21 @@ void main(){
        (FUN_1808a25a0 in HH-Bridge_r.dll). The engine computes, per particle:
 
            N = normalize(particlePos - cameraPos)
-           S = normalize(cross(axis, N)) * halfWidth
-           U = k*axis + cross(N, S)
+           S = normalize(cross(axis, N)) * Size.x
+           U = 0.5*AxisScale*axis + cross(N, S)
            corners = particlePos +- U +- S
 
        The cross(N, S) term is what separates this from the plain axial quad, which
        has no such term. S is perpendicular to both the axis and the view, so it lies
        in the screen plane - and so does cross(N, S), with the same magnitude. When
-       the axis swings toward the camera and k*axis stops contributing any screen
-       extent, the quad still spans |S| both ways and settles into a round blob
-       instead of collapsing to a sliver. */
+       the axis swings toward the camera and the axis term stops contributing any
+       screen extent, the quad still spans |S| both ways and settles into a round blob
+       instead of collapsing to a sliver.
+
+       Size.x is the HALF width here, not the full one - the axial family is the
+       exception to the 0.5 the screen and planar billboarders apply. Size.y is not
+       read at all, and the length comes purely from the axis vector, which already
+       carries AxisScale (see packBillboards). */
     float L = length(aAxis);
     vec3 N = normalize(aCenter - uEye);
     vec3 dir = L > 1e-5 ? aAxis / L : vec3(uView[0][1], uView[1][1], uView[2][1]);
@@ -50,18 +55,19 @@ void main(){
     float sl = length(S);
     // engine builds a fallback perpendicular when the axis is parallel to the view
     S = sl > 1e-5 ? S / sl : normalize(cross(N, vec3(uView[0][0], uView[1][0], uView[2][0])));
-    S *= 0.5 * aSize.x;
-    vec3 U = dir * (0.5*L + 0.5*aSize.y) + cross(N, S);
+    S *= aSize.x;
+    vec3 U = dir * (0.5*L) + cross(N, S);
     world = aCenter + U*(aCorner.y*2.0) + S*(aCorner.x*2.0);
   } else if (uMode == 2) {
+    // CAxialBillboarderQuad: S = normalize(cross(axis, viewDir)) * Size.x, T = 0.5*AxisScale*axis,
+    // corners = P +- S +- T. Same half-width-is-Size.x convention as the spheroidal above.
     float L = length(aAxis);
     vec3 toEye = normalize(uEye - aCenter);
     vec3 dir = L > 1e-5 ? aAxis / L : vec3(uView[0][1], uView[1][1], uView[2][1]);
     vec3 side = cross(dir, toEye);
     float sl = length(side);
     side = sl > 1e-5 ? side / sl : vec3(uView[0][0], uView[1][0], uView[2][0]);
-    float halfLen = 0.5*L + 0.5*aSize.y;
-    world = aCenter + side*(aCorner.x*aSize.x) + dir*(aCorner.y*2.0*halfLen);
+    world = aCenter + side*(aCorner.x*2.0*aSize.x) + dir*(aCorner.y*L);
   } else if (uMode == 4) {
     /* CPlanarBillboarderQuad builds X = normalize(cross(Axis, Axis2)) and
        Y = cross(X, Axis2), then spends Size.x on X and Size.y on Y. So the width runs

@@ -250,13 +250,14 @@ export function mount(container, { releaseId, path, endpoint }) {
           blend = tid - Math.floor(tid);
         } else { u02 = u0; v02 = v0; du2 = du; dv2 = dv; }
       }
-      // stretch axis: velocity modes use Velocity*AxisScale; planar uses the axis fields
+      // stretch axis: the axis-aligned modes stretch along AxisField, planar uses both axis fields
       let ax = 0, ay = 0, az = 0, bx = 0, by = 1, bz = 0, sxScale = 1;
       if (mode === 2 || mode === 3) {
-        // Velocity* modes stretch along the particle velocity; other axis-aligned
-        // modes read the axis field
-        const useVel = /^Velocity/.test(r.modeName || '');
-        const src = !useVel && r.axisField && ls.field(r.axisField) ? ls.getAt(i, r.axisField) : ls.getAt(i, 'Velocity');
+        /* BillboardMode picks the billboarder; AxisField picks the data it stretches along,
+           and Velocity is only its default. Forcing Velocity whenever the mode name started
+           with "Velocity" threw away 2,307 authored AxisFields - and those layers usually have
+           no velocity at all, so the axis came out zero. */
+        const src = r.axisField && ls.field(r.axisField) ? ls.getAt(i, r.axisField) : ls.getAt(i, 'Velocity');
         ax = (src[0] || 0) * r.axisScale; ay = (src[1] || 0) * r.axisScale; az = (src[2] || 0) * r.axisScale;
       } else if (mode === 4) {
         const a1 = r.axisField && ls.field(r.axisField) ? ls.getAt(i, r.axisField) : [1, 0, 0];
