@@ -1542,8 +1542,10 @@
     slice.filter = '';
     $swfFilter2.value = '';
     $swfZip2.disabled = true;
-    $swfTitle2.textContent = path.slice(path.lastIndexOf('/') + 1);
-    $swfMeta2.textContent = '';
+    // setPlainText, not textContent: both carry data-i18n, so a language switch
+    // would otherwise paint the "pick a file" placeholder back over the open file.
+    setPlainText($swfTitle2, path.slice(path.lastIndexOf('/') + 1));
+    setPlainText($swfMeta2, '');
     $swfBody2.innerHTML = `<p class="up-loading">${esc(t('Loading…'))}</p>`;
     renderBundleList('iface');
     scheduleHash(true);
@@ -1604,8 +1606,8 @@
     slice.filter = '';
     $audioFilter.value = '';
     $audioZip.disabled = true;
-    $audioTitle.textContent = path.slice(path.lastIndexOf('/') + 1);
-    $audioMeta.textContent = '';
+    setPlainText($audioTitle, path.slice(path.lastIndexOf('/') + 1));   // see openInterfaceFile
+    setPlainText($audioMeta, '');
     $audioBody.innerHTML = `<p class="up-loading">${esc(t('Loading…'))}</p>`;
     renderBundleList('audio');
     scheduleHash(true);
