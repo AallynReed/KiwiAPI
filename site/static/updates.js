@@ -81,10 +81,12 @@
     // Interface + Audio tabs. Both browse a *bundle* format the file tree can
     // only hand you as a blob - a .swf full of artwork, a .bnk full of sounds -
     // so each keeps the list of bundles in the branch plus whichever one is open.
-    iface: { files: null, path: null, assets: [], filter: '', fileFilter: '',
+    // `swf` / `count` / `duration` are the open bundle's own numbers, kept so the
+    // meta line can be rebuilt when the locale changes under it.
+    iface: { files: null, path: null, assets: [], swf: null, filter: '', fileFilter: '',
              loading: false, token: 0 },
-    audio: { files: null, path: null, sounds: [], bank: null, filter: '',
-             codec: 'all', grouped: true, loading: false, token: 0 },
+    audio: { files: null, path: null, sounds: [], bank: null, count: 0, duration: 0,
+             filter: '', codec: 'all', grouped: true, loading: false, token: 0 },
     // VFX tab. Same shape, but a branch ships ~9k effects, so the list is paged
     // and filtered server-side instead of held whole in the page. `viewer` is the
     // live WebGL player - it holds a GL context, so it is disposed the moment the
@@ -347,11 +349,12 @@
     // The bundle tabs are per-branch too: a bank open on Live is not the bank at
     // the same path on PTS, and anything playing belongs to the old branch.
     closePlayer();
-    state.iface = { files: null, path: null, assets: [], filter: '', fileFilter: '',
-                    loading: false, token: state.iface.token + 1 };
-    state.audio = { files: null, path: null, sounds: [], bank: null, filter: '',
-                    codec: state.audio.codec, grouped: state.audio.grouped,
-                    loading: false, token: state.audio.token + 1 };
+    state.iface = { files: null, path: null, assets: [], swf: null, filter: '',
+                    fileFilter: '', loading: false, token: state.iface.token + 1 };
+    state.audio = { files: null, path: null, sounds: [], bank: null, count: 0,
+                    duration: 0, filter: '', codec: state.audio.codec,
+                    grouped: state.audio.grouped, loading: false,
+                    token: state.audio.token + 1 };
     disposeVfx();
     disposePreviewVfx();
     state.vfx = { items: null, path: null, total: 0, filter: state.vfx.filter,
@@ -1561,14 +1564,23 @@
     }
     if (token !== slice.token) return;
     slice.assets = data.assets || [];
-    const m = data.swf || {};
+    slice.swf = data.swf || {};
+    renderInterfaceMeta();
+    $swfZip2.disabled = !slice.assets.length;
+    renderInterfaceGrid();
+  }
+
+  // Built from stored state rather than inline, so a language switch can repaint
+  // it - the counts run through t(), which has no opinion after the fact.
+  function renderInterfaceMeta() {
+    const slice = state.iface;
+    if (!slice.path) return;
+    const m = slice.swf || {};
     $swfMeta2.textContent = [
       `${formatInt(slice.assets.length)} ${t('images')}`,
       m.version ? `SWF v${m.version}` : '',
       (m.width && m.height) ? `${m.width}×${m.height}` : '',
     ].filter(Boolean).join(' · ');
-    $swfZip2.disabled = !slice.assets.length;
-    renderInterfaceGrid();
   }
 
   function renderInterfaceGrid() {
@@ -1624,13 +1636,22 @@
     if (token !== slice.token) return;
     slice.sounds = data.sounds || [];
     slice.bank = data.bank || {};
-    $audioMeta.textContent = [
-      `${formatInt(data.count || 0)} ${t('sounds')}`,
-      data.total_duration ? formatClock(data.total_duration) : '',
-      slice.bank.events ? `${formatInt(slice.bank.events)} ${t('events')}` : '',
-    ].filter(Boolean).join(' · ');
+    slice.count = data.count || 0;
+    slice.duration = data.total_duration || 0;
+    renderAudioMeta();
     $audioZip.disabled = !(data.playable > 0);
     renderSoundList();
+  }
+
+  function renderAudioMeta() {
+    const slice = state.audio;
+    if (!slice.path) return;
+    $audioMeta.textContent = [
+      `${formatInt(slice.count || 0)} ${t('sounds')}`,
+      slice.duration ? formatClock(slice.duration) : '',
+      slice.bank && slice.bank.events
+        ? `${formatInt(slice.bank.events)} ${t('events')}` : '',
+    ].filter(Boolean).join(' · ');
   }
 
   function visibleSounds() {
@@ -2687,6 +2708,11 @@
     // Browser Back/Forward (and manual hash edits) → re-apply the hash to state.
     window.addEventListener('hashchange', () => { reconcileFromHash(); });
 
+    // i18n.js fires this once the locale JSON lands, which on a slow connection is
+    // AFTER the bundle tabs have painted - so this is not just the language picker,
+    // it is how t()-built content (counts, channel labels, empty states) gets its
+    // translation at all. Each branch is guarded: re-rendering a tab nobody has
+    // opened would replace its "Loading…" with an empty state.
     document.addEventListener('btt-lang-changed', () => {
       renderBranchTabs();
       renderBranchMeta();
@@ -2695,6 +2721,11 @@
       renderDetail();
       renderChanges();
       if (state.compare.payload) renderCompare();
+      if (state.iface.files) renderBundleList('iface');
+      if (state.iface.path) { renderInterfaceMeta(); renderInterfaceGrid(); }
+      if (state.audio.files) renderBundleList('audio');
+      if (state.audio.path) { renderAudioMeta(); renderSoundList(); }
+      if (state.vfx.items) renderVfxList();
     });
   }
 
