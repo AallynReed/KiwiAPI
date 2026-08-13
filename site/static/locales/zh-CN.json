@@ -2532,5 +2532,13 @@
   "Browse the artwork inside": "浏览其中的美术资源",
   "Browse the sounds inside": "浏览其中的音效",
   "Flash movie — every image inside it, extracted.": "Flash 影片 — 其中的每一张图片，均已提取。",
-  "Sound bank — every sound inside it, playable.": "音效库 — 其中的每个音效，均可播放。"
+  "Sound bank — every sound inside it, playable.": "音效库 — 其中的每个音效，均可播放。",
+  "Tree": "目录树",
+  "Breadcrumbs": "面包屑导航",
+  "Updates view": "更新视图",
+  "View mode": "视图模式",
+  "Sort files": "文件排序",
+  "Filter by change type": "按更改类型筛选",
+  "Filter by audio format": "按音频格式筛选",
+  "Seek": "播放位置"
 }

@@ -2532,5 +2532,13 @@
   "Browse the artwork inside": "Посмотреть графику внутри",
   "Browse the sounds inside": "Послушать звуки внутри",
   "Flash movie — every image inside it, extracted.": "Flash-ролик — все изображения внутри, извлечённые.",
-  "Sound bank — every sound inside it, playable.": "Банк звуков — все звуки внутри, с воспроизведением."
+  "Sound bank — every sound inside it, playable.": "Банк звуков — все звуки внутри, с воспроизведением.",
+  "Tree": "Дерево",
+  "Breadcrumbs": "Хлебные крошки",
+  "Updates view": "Вид обновлений",
+  "View mode": "Режим просмотра",
+  "Sort files": "Сортировка файлов",
+  "Filter by change type": "Фильтр по типу изменения",
+  "Filter by audio format": "Фильтр по формату аудио",
+  "Seek": "Перемотка"
 }

@@ -46,7 +46,7 @@
                      `branch=…` so a refresh keeps the selection. -->
                 <!-- Server-rendered first paint (see app/site/ssr.py); updates.js
                      clears and refills the branch tabs + version strip on load. -->
-                <div class="up-branches" id="up-branches" role="tablist" aria-label="Branch">
+                <div class="up-branches" id="up-branches" role="tablist" aria-label="Branch" data-i18n-aria-label>
                     {%- if ssr and ssr.branches %}{% for b in ssr.branches %}
                     <button type="button" class="up-branch" role="tab" aria-selected="{{ 'true' if loop.first else 'false' }}">
                         <span class="up-branch-dot"></span>{{ b.branch }}
@@ -67,7 +67,7 @@
                 <h2 class="up-section-title" data-i18n>Recent versions</h2>
                 <span class="up-section-hint" id="up-versions-hint"></span>
             </div>
-            <div class="up-versions" id="up-versions" role="group" aria-label="Versions">
+            <div class="up-versions" id="up-versions" role="group" aria-label="Versions" data-i18n-aria-label>
                 {%- if ssr and ssr.versions %}{% for v in ssr.versions %}
                 <button type="button" class="up-version{{ ' up-version-latest' if loop.first }}">
                     <span class="up-version-tag">{{ v.tag }}</span>
@@ -85,7 +85,7 @@
         <!-- ═══════════════ TABS: EXPLORER vs CHANGES vs COMPARE ═══════════════
              Three tabs for the same underlying data. Default = explorer.
              URL hash: tab=explorer | tab=changes | tab=compare. -->
-        <nav class="up-tabs" role="tablist" aria-label="Updates view">
+        <nav class="up-tabs" role="tablist" aria-label="Updates view" data-i18n-aria-label>
             <button type="button" class="up-tab active" role="tab"
                     id="up-tab-explorer" data-tab="explorer"
                     aria-selected="true" aria-controls="up-pane-explorer">
@@ -147,19 +147,19 @@
             <div class="up-view-bar">
                 <label class="up-sort">
                     <span class="up-sort-label" data-i18n>Sort</span>
-                    <select id="up-sort-select" class="up-sort-select" aria-label="Sort files">
+                    <select id="up-sort-select" class="up-sort-select" aria-label="Sort files" data-i18n-aria-label>
                         <option value="name" data-i18n>Name</option>
                         <option value="modified" data-i18n>Last modified</option>
                     </select>
                 </label>
-                <div class="up-view-toggle" id="up-view-toggle" role="group" aria-label="View mode">
+                <div class="up-view-toggle" id="up-view-toggle" role="group" aria-label="View mode" data-i18n-aria-label>
                     <button type="button" class="up-view-btn active" data-view="list"
-                            data-i18n-title title="List view" aria-label="List view" aria-pressed="true">
+                            data-i18n-title title="List view" aria-label="List view" data-i18n-aria-label aria-pressed="true">
                         <i class="fa-solid fa-list" aria-hidden="true"></i>
                         <span class="up-view-btn-label" data-i18n>List</span>
                     </button>
                     <button type="button" class="up-view-btn" data-view="grid"
-                            data-i18n-title title="Grid view" aria-label="Grid view" aria-pressed="false">
+                            data-i18n-title title="Grid view" aria-label="Grid view" data-i18n-aria-label aria-pressed="false">
                         <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>
                         <span class="up-view-btn-label" data-i18n>Grid</span>
                     </button>
@@ -167,7 +167,7 @@
             </div>
 
             <section class="up-layout">
-                <aside class="up-sidebar" id="up-sidebar" aria-label="Tree">
+                <aside class="up-sidebar" id="up-sidebar" aria-label="Tree" data-i18n-aria-label>
                     <div class="up-sidebar-head">
                         <span class="up-search-wrap">
                             <label for="up-tree-search" class="sr-only" data-i18n>Search files in this branch</label>
@@ -178,9 +178,9 @@
                                    autocomplete="off" spellcheck="false">
                         </span>
                     </div>
-                    <nav class="up-breadcrumbs" id="up-breadcrumbs" aria-label="Breadcrumbs">
+                    <nav class="up-breadcrumbs" id="up-breadcrumbs" aria-label="Breadcrumbs" data-i18n-aria-label>
                     </nav>
-                    <nav class="up-tree" id="up-tree" aria-label="Tree">
+                    <nav class="up-tree" id="up-tree" aria-label="Tree" data-i18n-aria-label>
                         <p class="up-loading" data-i18n>Loading…</p>
                     </nav>
                 </aside>
@@ -277,7 +277,7 @@
                      role="dialog" aria-modal="true"
                      aria-labelledby="up-detail-title" tabindex="-1">
                     <button type="button" class="up-modal-close" id="up-detail-modal-close"
-                            title="Close" aria-label="Close" data-i18n-title>
+                            title="Close" aria-label="Close" data-i18n-aria-label data-i18n-title>
                         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                     </button>
                     <div class="up-modal-slot" id="up-detail-modal-slot"></div>
@@ -293,7 +293,7 @@
                      role="dialog" aria-modal="true"
                      aria-labelledby="up-swf-title" tabindex="-1">
                     <button type="button" class="up-modal-close" id="up-swf-close"
-                            title="Close" aria-label="Close" data-i18n-title>
+                            title="Close" aria-label="Close" data-i18n-aria-label data-i18n-title>
                         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                     </button>
                     <h2 class="up-swf-title" id="up-swf-title"></h2>
@@ -323,7 +323,7 @@
                      role="dialog" aria-modal="true"
                      aria-labelledby="up-asset-title" tabindex="-1">
                     <button type="button" class="up-modal-close" id="up-asset-close"
-                            title="Close" aria-label="Close" data-i18n-title>
+                            title="Close" aria-label="Close" data-i18n-aria-label data-i18n-title>
                         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                     </button>
                     <h2 class="up-asset-title" id="up-asset-title"></h2>
@@ -344,7 +344,7 @@
                  role="tabpanel" aria-labelledby="up-tab-changes" hidden>
             <div class="up-changes-head">
                 <p class="up-changes-meta" id="up-changes-meta" data-i18n>Pick a version above to see its change-list.</p>
-                <div class="up-changes-filter" role="group" aria-label="Filter by change type">
+                <div class="up-changes-filter" role="group" aria-label="Filter by change type" data-i18n-aria-label>
                     <button type="button" class="up-chip active" data-filter="all" data-i18n>All</button>
                     <button type="button" class="up-chip up-chip-add" data-filter="added">
                         <i class="fa-solid fa-circle-plus" aria-hidden="true"></i>
@@ -410,7 +410,7 @@
         <section class="up-tab-pane" id="up-pane-interface"
                  role="tabpanel" aria-labelledby="up-tab-interface" hidden>
             <div class="up-bundle-layout">
-                <aside class="up-bundle-side" aria-label="Interface files">
+                <aside class="up-bundle-side" aria-label="Interface files" data-i18n-aria-label>
                     <div class="up-bundle-side-head">
                         <h3 class="up-bundle-subhead" data-i18n>Interface files</h3>
                         <span class="up-bundle-count" id="up-swf-filecount"></span>
@@ -457,7 +457,7 @@
         <section class="up-tab-pane" id="up-pane-audio"
                  role="tabpanel" aria-labelledby="up-tab-audio" hidden>
             <div class="up-bundle-layout">
-                <aside class="up-bundle-side" aria-label="Sound banks">
+                <aside class="up-bundle-side" aria-label="Sound banks" data-i18n-aria-label>
                     <div class="up-bundle-side-head">
                         <h3 class="up-bundle-subhead" data-i18n>Sound banks</h3>
                         <span class="up-bundle-count" id="up-audio-bankcount"></span>
@@ -479,7 +479,7 @@
                                    placeholder="Filter sounds…" data-i18n-placeholder>
                         </label>
                         <select id="up-audio-codec" class="up-select up-audio-codec"
-                                aria-label="Filter by audio format">
+                                aria-label="Filter by audio format" data-i18n-aria-label>
                             <option value="all" data-i18n>All formats</option>
                             <option value="vorbis">Vorbis</option>
                             <option value="adpcm">ADPCM</option>
@@ -504,7 +504,7 @@
                  pane so the list stays scrollable while a sound runs. -->
             <div class="up-player" id="up-player" hidden>
                 <button type="button" class="up-player-play" id="up-player-play"
-                        title="Play/pause" aria-label="Play/pause" data-i18n-title>
+                        title="Play/pause" aria-label="Play/pause" data-i18n-aria-label data-i18n-title>
                     <i class="fa-solid fa-play" aria-hidden="true"></i>
                 </button>
                 <div class="up-player-id">
@@ -512,14 +512,14 @@
                     <span class="up-player-sub" id="up-player-sub"></span>
                 </div>
                 <div class="up-player-seek" id="up-player-seek"
-                     role="slider" tabindex="0" aria-label="Seek"
+                     role="slider" tabindex="0" aria-label="Seek" data-i18n-aria-label
                      aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                     <canvas class="up-player-wave" id="up-player-wave"></canvas>
                     <span class="up-player-played" id="up-player-played"></span>
                 </div>
                 <span class="up-player-time" id="up-player-time">0:00 / 0:00</span>
                 <button type="button" class="up-player-icon" id="up-player-loop"
-                        title="Loop" aria-label="Loop" aria-pressed="false" data-i18n-title>
+                        title="Loop" aria-label="Loop" data-i18n-aria-label aria-pressed="false" data-i18n-title>
                     <i class="fa-solid fa-repeat" aria-hidden="true"></i>
                 </button>
                 <label class="up-player-vol">
@@ -528,11 +528,11 @@
                     <input type="range" id="up-player-vol" min="0" max="1" step="0.01" value="1">
                 </label>
                 <a class="up-player-icon" id="up-player-dl" download
-                   title="Download" aria-label="Download" data-i18n-title>
+                   title="Download" aria-label="Download" data-i18n-aria-label data-i18n-title>
                     <i class="fa-solid fa-download" aria-hidden="true"></i>
                 </a>
                 <button type="button" class="up-player-icon" id="up-player-close"
-                        title="Close" aria-label="Close" data-i18n-title>
+                        title="Close" aria-label="Close" data-i18n-aria-label data-i18n-title>
                     <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
@@ -546,7 +546,7 @@
         <section class="up-tab-pane" id="up-pane-vfx"
                  role="tabpanel" aria-labelledby="up-tab-vfx" hidden>
             <div class="up-bundle-layout">
-                <aside class="up-bundle-side" aria-label="Effects">
+                <aside class="up-bundle-side" aria-label="Effects" data-i18n-aria-label>
                     <div class="up-bundle-side-head">
                         <h3 class="up-bundle-subhead" data-i18n>Effects</h3>
                         <span class="up-bundle-count" id="up-vfx-count"></span>

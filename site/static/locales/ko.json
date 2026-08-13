@@ -2532,5 +2532,13 @@
   "Browse the artwork inside": "내부 아트워크 살펴보기",
   "Browse the sounds inside": "내부 사운드 살펴보기",
   "Flash movie — every image inside it, extracted.": "Flash 무비 — 내부의 모든 이미지를 추출합니다.",
-  "Sound bank — every sound inside it, playable.": "사운드 뱅크 — 내부의 모든 사운드를 재생할 수 있습니다."
+  "Sound bank — every sound inside it, playable.": "사운드 뱅크 — 내부의 모든 사운드를 재생할 수 있습니다.",
+  "Tree": "트리",
+  "Breadcrumbs": "탐색 경로",
+  "Updates view": "업데이트 보기",
+  "View mode": "보기 모드",
+  "Sort files": "파일 정렬",
+  "Filter by change type": "변경 유형으로 필터",
+  "Filter by audio format": "오디오 형식으로 필터",
+  "Seek": "재생 위치"
 }

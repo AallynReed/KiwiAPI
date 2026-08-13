@@ -2532,5 +2532,13 @@
   "Browse the artwork inside": "Parcourir les images qu’il contient",
   "Browse the sounds inside": "Parcourir les sons qu’il contient",
   "Flash movie — every image inside it, extracted.": "Animation Flash — toutes les images qu’elle contient, extraites.",
-  "Sound bank — every sound inside it, playable.": "Banque de sons — tous les sons qu’elle contient, jouables."
+  "Sound bank — every sound inside it, playable.": "Banque de sons — tous les sons qu’elle contient, jouables.",
+  "Tree": "Arborescence",
+  "Breadcrumbs": "Fil d’Ariane",
+  "Updates view": "Vue des mises à jour",
+  "View mode": "Mode d’affichage",
+  "Sort files": "Trier les fichiers",
+  "Filter by change type": "Filtrer par type de modification",
+  "Filter by audio format": "Filtrer par format audio",
+  "Seek": "Position de lecture"
 }

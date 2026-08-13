@@ -2532,5 +2532,13 @@
   "Browse the artwork inside": "Enthaltene Grafiken durchsehen",
   "Browse the sounds inside": "Enthaltene Sounds durchsehen",
   "Flash movie — every image inside it, extracted.": "Flash-Film – jedes Bild darin, extrahiert.",
-  "Sound bank — every sound inside it, playable.": "Soundbank – jeder Sound darin, abspielbar."
+  "Sound bank — every sound inside it, playable.": "Soundbank – jeder Sound darin, abspielbar.",
+  "Tree": "Dateibaum",
+  "Breadcrumbs": "Navigationspfad",
+  "Updates view": "Updates-Ansicht",
+  "View mode": "Ansichtsmodus",
+  "Sort files": "Dateien sortieren",
+  "Filter by change type": "Nach Änderungstyp filtern",
+  "Filter by audio format": "Nach Audioformat filtern",
+  "Seek": "Wiedergabeposition"
 }

@@ -2532,5 +2532,13 @@
   "Browse the artwork inside": "中のアートワークを見る",
   "Browse the sounds inside": "中のサウンドを聴く",
   "Flash movie — every image inside it, extracted.": "Flash ムービー — 中のすべての画像を抽出します。",
-  "Sound bank — every sound inside it, playable.": "サウンドバンク — 中のすべてのサウンドを再生できます。"
+  "Sound bank — every sound inside it, playable.": "サウンドバンク — 中のすべてのサウンドを再生できます。",
+  "Tree": "ツリー",
+  "Breadcrumbs": "パンくずリスト",
+  "Updates view": "アップデート表示",
+  "View mode": "表示モード",
+  "Sort files": "ファイルを並べ替え",
+  "Filter by change type": "変更の種類で絞り込む",
+  "Filter by audio format": "オーディオ形式で絞り込む",
+  "Seek": "再生位置"
 }

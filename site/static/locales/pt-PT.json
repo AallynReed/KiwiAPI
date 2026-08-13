@@ -2532,5 +2532,13 @@
   "Browse the artwork inside": "Explorar as imagens lá dentro",
   "Browse the sounds inside": "Explorar os sons lá dentro",
   "Flash movie — every image inside it, extracted.": "Filme Flash — todas as imagens lá dentro, extraídas.",
-  "Sound bank — every sound inside it, playable.": "Banco de sons — todos os sons lá dentro, reproduzíveis."
+  "Sound bank — every sound inside it, playable.": "Banco de sons — todos os sons lá dentro, reproduzíveis.",
+  "Tree": "Árvore",
+  "Breadcrumbs": "Trilho de navegação",
+  "Updates view": "Vista de atualizações",
+  "View mode": "Modo de visualização",
+  "Sort files": "Ordenar ficheiros",
+  "Filter by change type": "Filtrar por tipo de alteração",
+  "Filter by audio format": "Filtrar por formato de áudio",
+  "Seek": "Posição de reprodução"
 }

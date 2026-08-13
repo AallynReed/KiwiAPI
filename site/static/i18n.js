@@ -4,6 +4,18 @@
    locale ships a JSON map of { normalizedEnglishHTML: translatedHTML }.
    Only strings present in the locale map are swapped, so anything not
    translated (buttons, menus, headings) gracefully stays English.
+
+   Mark a string for translation with one of:
+     data-i18n              the element's innerHTML
+     data-i18n-placeholder  its placeholder attribute
+     data-i18n-title        its title attribute
+     data-i18n-aria-label   its aria-label - a control whose tooltip
+                            translates while its accessible name does not
+                            is localised for everyone except the people
+                            reading it with a screen reader
+   Content built in JS has no element to mark, so it calls BTTi18n.t()
+   instead - and, since t() is a one-shot substitution, re-renders itself
+   on the `btt-lang-changed` event.
    ========================================================================= */
 (function () {
     "use strict";
@@ -30,21 +42,34 @@
 
     const norm = (s) => s.replace(/\s+/g, " ").trim();
 
-    const phOriginals = new WeakMap(); // element -> original placeholder
-    const phChanged = new Set();
+    // Attributes that carry a translatable string, as [marker, attribute]. One
+    // table rather than a block per attribute: every one behaves identically -
+    // cache the English, swap it when a translation exists, put it back on the
+    // way out - so a new one is a line here, not another copy of the machinery.
+    //
+    // aria-label is the reason this is a table: a control whose visible tooltip
+    // translated while its accessible name stayed English left screen-reader
+    // users on the only copy of the label that never got localised.
+    const ATTRS = [
+        ["data-i18n-placeholder", "placeholder"],
+        ["data-i18n-title", "title"],
+        ["data-i18n-aria-label", "aria-label"],
+    ];
 
-    const titleOriginals = new WeakMap(); // element -> original title
-    const titleChanged = new Set();
+    const attrOriginals = new WeakMap(); // element -> { attribute: original English }
+    const attrChanged = new Set();       // elements currently showing a translation
 
     function cacheOriginals() {
         document.querySelectorAll("[data-i18n]").forEach((el) => {
             if (!originals.has(el)) originals.set(el, el.innerHTML);
         });
-        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
-            if (!phOriginals.has(el)) phOriginals.set(el, el.getAttribute("placeholder") || "");
-        });
-        document.querySelectorAll("[data-i18n-title]").forEach((el) => {
-            if (!titleOriginals.has(el)) titleOriginals.set(el, el.getAttribute("title") || "");
+        ATTRS.forEach(([marker, attr]) => {
+            document.querySelectorAll(`[${marker}]`).forEach((el) => {
+                const seen = attrOriginals.get(el) || {};
+                if (seen[attr] != null) return;          // already cached
+                seen[attr] = el.getAttribute(attr) || "";
+                attrOriginals.set(el, seen);
+            });
         });
     }
 
@@ -55,16 +80,14 @@
             if (orig != null) el.innerHTML = orig;
         });
         changed.clear();
-        phChanged.forEach((el) => {
-            const orig = phOriginals.get(el);
-            if (orig != null) el.setAttribute("placeholder", orig);
+        attrChanged.forEach((el) => {
+            const seen = attrOriginals.get(el);
+            if (!seen) return;
+            Object.keys(seen).forEach((attr) => {
+                if (seen[attr] != null) el.setAttribute(attr, seen[attr]);
+            });
         });
-        phChanged.clear();
-        titleChanged.forEach((el) => {
-            const orig = titleOriginals.get(el);
-            if (orig != null) el.setAttribute("title", orig);
-        });
-        titleChanged.clear();
+        attrChanged.clear();
     }
 
     // Apply the active dictionary. CRUCIAL: only elements that actually have a
@@ -82,23 +105,16 @@
                 changed.add(el);
             }
         });
-        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
-            const orig = phOriginals.get(el);
-            if (orig == null) return;
-            const translated = dict[norm(orig)];
-            if (translated != null && translated !== "") {
-                el.setAttribute("placeholder", translated);
-                phChanged.add(el);
-            }
-        });
-        document.querySelectorAll("[data-i18n-title]").forEach((el) => {
-            const orig = titleOriginals.get(el);
-            if (orig == null) return;
-            const translated = dict[norm(orig)];
-            if (translated != null && translated !== "") {
-                el.setAttribute("title", translated);
-                titleChanged.add(el);
-            }
+        ATTRS.forEach(([marker, attr]) => {
+            document.querySelectorAll(`[${marker}]`).forEach((el) => {
+                const orig = (attrOriginals.get(el) || {})[attr];
+                if (orig == null) return;
+                const translated = dict[norm(orig)];
+                if (translated != null && translated !== "") {
+                    el.setAttribute(attr, translated);
+                    attrChanged.add(el);
+                }
+            });
         });
     }
 
@@ -272,9 +288,10 @@
         return (hit != null && hit !== "") ? hit : s;
     }
 
-    // Re-cache + re-apply translations. Call this after injecting markup
-    // with [data-i18n] / [data-i18n-placeholder] nodes so they pick up the
-    // active language without a full reload.
+    // Re-cache + re-apply translations. Call this after injecting markup with
+    // [data-i18n] / [data-i18n-placeholder] / [data-i18n-title] /
+    // [data-i18n-aria-label] nodes so they pick up the active language without
+    // a full reload.
     function refresh() {
         cacheOriginals();
         applyDict();
@@ -290,10 +307,8 @@
         if (!el) return;
         originals.delete(el);
         changed.delete(el);
-        phOriginals.delete(el);
-        phChanged.delete(el);
-        titleOriginals.delete(el);
-        titleChanged.delete(el);
+        attrOriginals.delete(el);
+        attrChanged.delete(el);
     }
 
     // expose for debugging / external triggers. `langs` is the canonical
