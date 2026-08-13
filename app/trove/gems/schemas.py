@@ -191,6 +191,7 @@ class BuildConfigRequest(BaseModel):
     subclass_active: bool = False
     litany: bool = False
     star_chart: str | None = None    # optional star-chart build code
+    high_precision: bool = False     # round results to 8 decimals instead of 1-2
 
 
 class BuildResult(BaseModel):

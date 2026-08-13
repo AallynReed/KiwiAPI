@@ -115,6 +115,8 @@
 
 .gb-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .gb-metrics { display: flex; gap: 8px; flex-wrap: wrap; }
+.gb-toolbar-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.gb-toggle-inline { margin-top: 0; font-size: .82rem; }
 .gb-chip { font-size: .78rem; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 20px; padding: 4px 11px; color: var(--text-mute); }
 .gb-chip i { color: var(--accent-blue); }
 .gb-state { font-size: .82rem; color: var(--accent-green); }

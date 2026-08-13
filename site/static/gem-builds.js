@@ -14,8 +14,17 @@
   const PER_PAGE = 25;
   const STORAGE_KEY = "troveapi.gemBuilds.v1";
 
-  const num = (v) => (Number(v) || 0).toLocaleString();
-  const round = (v) => Math.round(Number(v) || 0).toLocaleString();
+  // High precision widens every number to at most 8 decimals and trims the
+  // trailing zeros, so 78.93800000 still reads as 78.938. Off, the columns keep
+  // their fixed widths - a table of ragged decimals is unreadable at a glance.
+  const HP_DIGITS = 8;
+  const hp = () => !!config.high_precision;
+  const num = (v) => (Number(v) || 0).toLocaleString(undefined, { maximumFractionDigits: hp() ? HP_DIGITS : 3 });
+  const round = (v) => (hp() ? num(v) : Math.round(Number(v) || 0).toLocaleString());
+  // Fixed-width in normal mode (matching the old toFixed), trimmed in high precision.
+  const dec = (v, digits) => (Number(v) || 0).toLocaleString(undefined, hp()
+    ? { maximumFractionDigits: HP_DIGITS, useGrouping: false }
+    : { minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: false });
 
   // Class display name -> icon token (Trove's internal class name, which is what
   // /static/class-icons/*.png are keyed by - not the qualified_name). Same tokens
@@ -36,7 +45,7 @@
     build_type: "Light", character: "Bard", subclass: "Boomeranger",
     food: "", ally: "boot_clown", ally_buff: true, critical_damage_count: 3, no_face: false,
     light: 0, subclass_active: false, litany: false, berserker_battler: false,
-    star_chart: "",
+    star_chart: "", high_precision: false,
   };
   let builds = [];
   let page = 0;
@@ -101,11 +110,11 @@
       h("span", { class: "gb-field-label" }, t(label)),
       h("div", { class: "gb-select-with-icon" }, img, sel));
   }
-  function toggleRow(label, value, onChange, title) {
+  function toggleRow(label, value, onChange, title, cls) {
     const c = h("input", { type: "checkbox" });
     c.checked = value;
     c.addEventListener("change", (e) => onChange(e.target.checked));
-    return h("label", { class: "gb-toggle", title: title ? t(title) : null },
+    return h("label", { class: "gb-toggle" + (cls ? " " + cls : ""), title: title ? t(title) : null },
       c, h("span", { class: "gb-toggle-mark" }), h("span", {}, t(label)));
   }
 
@@ -350,7 +359,8 @@
   function exportCsv() {
     if (!builds.length) return;
     const head = ["Rank", "Layout", "Light", "BaseDamage", "BonusDamage%", "TotalDamage", "CritDamage%", "Coefficient"];
-    const rows = builds.map((b) => [b.rank, b.layout, b.light, Math.round(b.base_dmg), b.bonus_dmg, Math.round(b.total_dmg), b.crit_dmg, b.coefficient]);
+    const cell = (v) => (hp() ? v : Math.round(v));
+    const rows = builds.map((b) => [b.rank, b.layout, b.light, cell(b.base_dmg), b.bonus_dmg, cell(b.total_dmg), b.crit_dmg, b.coefficient]);
     const csv = [head, ...rows].map((r) => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const a = h("a", { href: URL.createObjectURL(blob), download: `gem-build-${config.character}-${config.build_type}.csv` });
@@ -375,8 +385,8 @@
         h("div", { class: "gb-top-stats" },
           statBox("Coefficient", num(top.coefficient)),
           statBox("Light", num(top.light)),
-          statBox("Crit dmg", top.crit_dmg.toFixed(1) + "%"),
-          builds[1] ? statBox("Lead vs #2", "+" + (((top.coefficient - builds[1].coefficient) / builds[1].coefficient) * 100).toFixed(3) + "%") : null));
+          statBox("Crit dmg", dec(top.crit_dmg, 1) + "%"),
+          builds[1] ? statBox("Lead vs #2", "+" + dec(((top.coefficient - builds[1].coefficient) / builds[1].coefficient) * 100, 3) + "%") : null));
       elResults.appendChild(card);
     }
 
@@ -386,9 +396,12 @@
         h("span", { class: "gb-chip" }, h("i", { class: "fa-solid fa-list-ol" }), " " + t("Builds") + ": " + builds.length),
         builds.length ? h("span", { class: "gb-chip" }, h("i", { class: "fa-solid fa-trophy" }), " " + t("Best") + ": " + num(bestCoeff)) : null,
         h("span", { class: "gb-chip" }, h("i", { class: "fa-solid fa-gem" }), " " + t(config.build_type))),
-      h("div", { class: "gb-state" + (calculating ? " busy" : "") },
-        h("i", { class: "fa-solid " + (calculating ? "fa-spinner fa-spin" : "fa-circle-check") }),
-        " " + (calculating ? t("Calculating...") : t("Ready"))));
+      h("div", { class: "gb-toolbar-right" },
+        toggleRow("High precision decimals", config.high_precision, (v) => { config.high_precision = v; onConfigChange(); },
+          "Shows up to 8 decimals on every number instead of rounding to 1-2.", "gb-toggle-inline"),
+        h("div", { class: "gb-state" + (calculating ? " busy" : "") },
+          h("i", { class: "fa-solid " + (calculating ? "fa-spinner fa-spin" : "fa-circle-check") }),
+          " " + (calculating ? t("Calculating...") : t("Ready")))));
     elResults.appendChild(toolbar);
 
     // Table
@@ -417,13 +430,13 @@
           h("td", { class: "l layout", title: t("Click to copy"), onClick: () => copyLayout(fmtLayout(b.layout)) }, fmtLayout(b.layout)),
           h("td", { class: "r" }, num(b.light)),
           h("td", { class: "r" }, round(b.base_dmg)),
-          h("td", { class: "r" }, b.bonus_dmg.toFixed(2) + "%", b.class_bonus ? h("span", { class: "gb-bonus-extra" }, " + " + b.class_bonus + "%") : null),
+          h("td", { class: "r" }, dec(b.bonus_dmg, 2) + "%", b.class_bonus ? h("span", { class: "gb-bonus-extra" }, " + " + b.class_bonus + "%") : null),
           h("td", { class: "r" }, round(b.total_dmg)),
-          h("td", { class: "r" }, b.crit_dmg.toFixed(1) + "%"),
+          h("td", { class: "r" }, dec(b.crit_dmg, 1) + "%"),
           h("td", { class: "r sort strong" }, num(b.coefficient)),
           h("td", { class: "r" }, b.rank === 1
             ? h("span", { class: "gb-best-tag" }, t("Best"))
-            : h("span", { class: "gb-diff" }, "-" + (((bestCoeff - b.coefficient) / bestCoeff) * 100).toFixed(3) + "%"))));
+            : h("span", { class: "gb-diff" }, "-" + dec(((bestCoeff - b.coefficient) / bestCoeff) * 100, 3) + "%"))));
       });
     }
     table.appendChild(tbody);

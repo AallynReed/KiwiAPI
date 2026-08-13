@@ -21,7 +21,9 @@
   // structural change (tab switch, data load).
   let liveUpdaters = [];
 
-  const num = (v) => (Number(v) || 0).toLocaleString();
+  // 4 decimals, not the locale default of 3: the buffed ally lands on 130.9375
+  // PR, and cutting that to 130.938 loses a real quarter-point.
+  const num = (v) => (Number(v) || 0).toLocaleString(undefined, { maximumFractionDigits: 4 });
   const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const sliderFill = (v, lo, hi) => (hi <= lo ? "0%" : clampN(((v - lo) / (hi - lo)) * 100, 0, 100) + "%");
 
@@ -152,7 +154,7 @@
     const raw = Number(item.value || 0);
     const display = withLilypad(item, item.type === "switch" ? raw : (isLightGeodeMastery(item) ? getLightApplied(item) : Number(item.currentValue || 0)), "Light");
     if (isPercentBonusValue(raw)) return "+" + (Math.abs(display) * 100).toFixed(0) + "% Light";
-    return "+" + num(Math.round(display * 100) / 100) + " Light";
+    return "+" + num(display) + " Light";
   }
 
   // ── Compute: Mastery ─────────────────────────────────────────────────────

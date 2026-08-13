@@ -320,6 +320,13 @@ class GemOptimizerEngine:
 
         class_bonus = next((b["value"] for b in selected_class["bonuses"] if b["name"] == damage_type), None)
 
+        # Rankings are decided several decimals below the display rounding, so
+        # high precision widens every field to 8 places rather than 1-2.
+        precise = bool(config.get("high_precision"))
+
+        def rd(value: float, digits: int) -> float:
+            return round(value, 8 if precise else digits)
+
         raw_builds = []
         for build_tuple in self.generate_combinations(farm=build_type == "Farm"):
             build = list(build_tuple)
@@ -330,8 +337,8 @@ class GemOptimizerEngine:
             final = cfirst * (1 + fourth / 100)
             if class_bonus is not None:
                 final *= 1 + (class_bonus / 100)
-            coefficient = round(final * (1 + (csecond * (fifth / 100)) / 100), 2)
-            raw_builds.append([build, cfirst, csecond, round(cthird * (sixth / 100), 2), fourth, fifth, final, class_bonus, coefficient])
+            coefficient = rd(final * (1 + (csecond * (fifth / 100)) / 100), 2)
+            raw_builds.append([build, cfirst, csecond, rd(cthird * (sixth / 100), 2), fourth, fifth, final, class_bonus, coefficient])
 
         raw_builds.sort(key=lambda x: ([abs(x[3] - light_target), -x[-1]] if light_target else -x[-1]))
 
@@ -349,9 +356,9 @@ class GemOptimizerEngine:
             if len(boosts) > 4:
                 build_text += " + " + "/".join(str(x) for x in boosts[4:])
             results.append({
-                "rank": i + 1, "layout": build_text, "base_dmg": round(build_data[1], 2),
-                "crit_dmg": round(build_data[2], 1), "light": build_data[3], "bonus_dmg": build_data[4],
-                "total_dmg": round(build_data[6], 2), "class_bonus": build_data[7], "coefficient": build_data[8],
+                "rank": i + 1, "layout": build_text, "base_dmg": rd(build_data[1], 2),
+                "crit_dmg": rd(build_data[2], 1), "light": build_data[3], "bonus_dmg": rd(build_data[4], 8),
+                "total_dmg": rd(build_data[6], 2), "class_bonus": build_data[7], "coefficient": build_data[8],
             })
         return results
 
@@ -393,7 +400,7 @@ def build_options() -> dict:
         "ally": allies,
         "food": foods,
         "critical_damage_count": {"min": 0, "max": 3, "default": 3},
-        "flags": ["berserker_battler", "no_face", "subclass_active", "litany", "ally_buff"],
+        "flags": ["berserker_battler", "no_face", "subclass_active", "litany", "ally_buff", "high_precision"],
         "notes": {
             "subclass": "Same options as character.",
             "ally": "Use 'boot_clown' for no ally. Ally stats are the level-30 values.",
@@ -402,6 +409,7 @@ def build_options() -> dict:
                 "Light by 1.0775 and its Physical/Magic/Critical Damage by 1.155. Ally stats only."
             ),
             "food": "Use \"\" for none.",
+            "high_precision": "Round every result field to 8 decimals instead of 1-2.",
             "light": "Farm builds only - target base light; 0 disables light targeting.",
             "star_chart": "Optional star-chart build code (SC:/v2: compact, or base64).",
         },
