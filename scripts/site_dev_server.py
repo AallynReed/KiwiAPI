@@ -625,6 +625,9 @@ _UPDATE_PATHS = [
     "ui/hud/health_bar.png",
     "ui/hud/mana_bar.png",
     "ui/settings.swf",
+    # A real effect path, so picking a .pkfx in the explorer exercises the inline
+    # VFX preview (it resolves against the local pack, like the API's does).
+    "particles/VFX/Particles/character_ally_dancepad_lights_01.pkfx",
     "audio/ui.bnk",
     "audio/ui.txt",
     "audio/foley.bnk",
@@ -649,6 +652,78 @@ _UPDATE_TOUCHED_V2 = {
 
 def _last_ordinal_for(path: str) -> int:
     return 2 if path in _UPDATE_TOUCHED_V2 else 1
+
+
+# ── VFX previewer: the one surface a synthetic tree can't fake ────────────
+# A particle effect only means anything when it plays, and it only plays with the
+# game's own textures and meshes - so this tab reads an extracted PopcornFX pack
+# off disk (the folder holding popcornproject.xml) instead of stubbing anything.
+# Point SITE_DEV_VFX_DIR at one; without it the tab renders its empty state.
+def _vfx_dir() -> str:
+    """Where the extracted pack lives: $SITE_DEV_VFX_DIR, else the project's own
+    ``PKFX_DEV_VFX_DIR`` (the same .env knob the Mods Hub's dev resolver reads)."""
+    if os.environ.get("SITE_DEV_VFX_DIR"):
+        return os.environ["SITE_DEV_VFX_DIR"]
+    if os.environ.get("PKFX_DEV_VFX_DIR"):
+        return os.environ["PKFX_DEV_VFX_DIR"]
+    env = ROOT / ".env"
+    if env.is_file():
+        for line in env.read_text("utf-8", "replace").splitlines():
+            key, _, val = line.partition("=")
+            if key.strip().upper() == "PKFX_DEV_VFX_DIR":
+                return val.strip().strip('"').strip("'")
+    return ""
+
+
+_VFX_DIR = _vfx_dir()
+_VFX_PACK_ROOT = "particles/vfx/"
+_vfx_index_cache: dict | None = None
+
+
+def _vfx_index():
+    """``{lowercased archive path: real file}`` for the local pack, plus the list of
+    effects - the same two things app/trove/updates/vfx.py builds from the archive."""
+    global _vfx_index_cache
+    if _vfx_index_cache is not None:
+        return _vfx_index_cache
+    paths: dict[str, Path] = {}
+    effects: list[dict] = []
+    root = Path(_VFX_DIR) if _VFX_DIR else None
+    if root and root.is_dir():
+        for f in root.rglob("*"):
+            if not f.is_file():
+                continue
+            rel = f.relative_to(root).as_posix()
+            paths[_VFX_PACK_ROOT + rel.lower()] = f
+            if rel.lower().endswith(".pkfx"):
+                effects.append({"path": "particles/VFX/" + rel,
+                                "size": f.stat().st_size, "thumb": None})
+        for e in effects:
+            name = e["path"].rsplit("/", 1)[-1].lower()
+            thumb = _VFX_PACK_ROOT + "editor/thumbnails/particles/" + name + ".png"
+            if thumb in paths:
+                e["thumb"] = thumb
+        effects.sort(key=lambda e: (e["path"].rsplit("/", 1)[-1].lower(), e["path"].lower()))
+    _vfx_index_cache = {"paths": paths, "effects": effects}
+    return _vfx_index_cache
+
+
+def _vfx_resolve(ref: str):
+    idx = _vfx_index()
+    r = (ref or "").replace("\\", "/").lstrip("/").lower()
+    if not r:
+        return None
+    return idx["paths"].get(r) or idx["paths"].get(_VFX_PACK_ROOT + r)
+
+
+def _vfx_helpers():
+    """The production reference parser, so dev classifies deps exactly as the API
+    does (it imports nothing but ``re``). None if run outside the project venv."""
+    try:
+        from app.trove.mods_hub.vfx import extract_refs, media_type_for
+    except Exception:      # noqa: BLE001 - bare interpreter: fall back to no deps
+        return None, None
+    return extract_refs, media_type_for
 
 
 def _stub_dds(w=16, h=16):
@@ -1868,6 +1943,13 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/v1/updates/") and path.endswith("/file"):
             p = parse_qs(url.query).get("path", [""])[0]
             ext = p.rsplit(".", 1)[-1].lower() if "." in p.rsplit("/", 1)[-1] else ""
+            # Anything inside the local PopcornFX pack is real (the VFX picker's
+            # thumbnails come through here), so serve the actual bytes.
+            local = _vfx_resolve(p)
+            if local is not None:
+                return self._send_bytes(
+                    local.read_bytes(),
+                    "image/png" if ext == "png" else "application/octet-stream")
             if ext in ("png", "jpg", "jpeg", "gif", "webp", "bmp", "ico"):
                 fav = STATIC / "assets" / "favicon.png"
                 if fav.exists():
@@ -1888,6 +1970,37 @@ class Handler(SimpleHTTPRequestHandler):
             rest = path[len("/site/updates/"):]
             branch, _, sub = rest.partition("/")
             qs = parse_qs(url.query)
+            if sub == "vfx":
+                idx = _vfx_index()
+                needle = (qs.get("q", [""])[0] or "").strip().lower()
+                items = [e for e in idx["effects"] if needle in e["path"].lower()]
+                off = int(qs.get("offset", ["0"])[0] or 0)
+                lim = int(qs.get("limit", ["300"])[0] or 300)
+                page = items[off:off + lim]
+                return self._send_json({"branch": branch, "items": page,
+                                        "count": len(page), "total": len(items)})
+            if sub == "vfx/manifest":
+                target = qs.get("path", [""])[0]
+                f = _vfx_resolve(target)
+                if f is None:
+                    return self._send_json({"detail": f"No effect '{target}'"}, 404)
+                text = f.read_text("utf-8", "replace")
+                extract_refs, _mime = _vfx_helpers()
+                refs = extract_refs(text) if extract_refs else []
+                deps = [{"ref": r, "basename": r.rsplit("/", 1)[-1],
+                         "source": "game" if _vfx_resolve(r) else "missing"} for r in refs]
+                return self._send_json({
+                    "branch": branch, "path": target, "pkfx": text, "deps": deps,
+                    "missing": [d["basename"] for d in deps if d["source"] == "missing"],
+                    "game_available": True})
+            if sub == "vfx/asset":
+                ref = qs.get("path", [""])[0]
+                f = _vfx_resolve(ref)
+                if f is None:
+                    return self.send_error(404)
+                _refs, media_type_for = _vfx_helpers()
+                media = media_type_for(ref) if media_type_for else "application/octet-stream"
+                return self._send_bytes(f.read_bytes(), media)
             if sub == "versions":
                 return self._send_json({"items": [
                     {"branch": branch, "ordinal": 2, "version_tag": "1.0.stub",
@@ -1986,6 +2099,9 @@ class Handler(SimpleHTTPRequestHandler):
                 if ext == "bnk":
                     return self._send_json({**base, "size": 4567829, "viewable": False,
                                             "kind": "bnk", "reason": "bnk"})
+                if ext == "pkfx":
+                    return self._send_json({**base, "size": 50969, "viewable": False,
+                                            "kind": "pkfx", "reason": "pkfx"})
                 if ext in ("binfab", "tfa", "tex"):
                     return self._send_json({**base, "size": 512, "viewable": False,
                                             "kind": "binary", "reason": "binary"})

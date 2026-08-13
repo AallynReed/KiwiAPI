@@ -2898,6 +2898,65 @@ async def site_up_file_bnk_zip(
     )
 
 
+@router.get("/site/updates/{branch}/vfx", response_class=JSONResponse)
+async def site_up_vfx_list(
+    branch: str,
+    q: str = Query(default="", max_length=200),
+    limit: int = Query(default=300, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+) -> JSONResponse:
+    """The branch's PopcornFX effects, for the VFX previewer's picker.
+
+    Paged and substring-filtered server-side: Trove ships ~9k effects, and the
+    whole list is a megabyte of JSON nobody needs in one go."""
+    from app.trove.updates import vfx as updates_vfx
+
+    _site_check_branch(branch)
+    return JSONResponse(
+        await updates_vfx.list_effects(branch, q, limit, offset),
+        headers={"Cache-Control": "public, max-age=120"},
+    )
+
+
+@router.get("/site/updates/{branch}/vfx/manifest", response_class=JSONResponse)
+async def site_up_vfx_manifest(
+    branch: str, path: str = Query(...),
+) -> JSONResponse:
+    """One effect's ``.pkfx`` source plus the assets it references, for the web
+    viewer (site/static/pkfx). Same body shape as the Mods Hub's VFX manifest, so
+    both surfaces drive the same player."""
+    from app.trove.updates import vfx as updates_vfx
+
+    _site_check_branch(branch)
+    payload = await updates_vfx.manifest(branch, path)
+    if payload is None:
+        raise HTTPException(status_code=404, detail=f"No effect '{path}'")
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=300"})
+
+
+@router.get("/site/updates/{branch}/vfx/asset", response_class=Response)
+async def site_up_vfx_asset(
+    request: Request, branch: str, path: str = Query(...),
+) -> Response:
+    """One texture/mesh/atlas an effect references, resolved against the pack root
+    (the viewer asks by the reference it read out of the ``.pkfx``, not by archive
+    path)."""
+    from app.trove.updates import vfx as updates_vfx
+
+    _site_check_branch(branch)
+    found = await updates_vfx.asset(branch, path)
+    if found is None:
+        raise HTTPException(status_code=404, detail=f"No asset '{path}'")
+    data, media, sha = found
+    etag = f'"{sha}"'
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers={"ETag": etag})
+    return Response(
+        content=data, media_type=media,
+        headers={"ETag": etag, "Cache-Control": "public, max-age=86400"},
+    )
+
+
 @router.post("/site/sound-studio/build", response_class=Response)
 async def site_sound_studio_build(
     spec: str = Form(...),

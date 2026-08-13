@@ -85,6 +85,12 @@
              loading: false, token: 0 },
     audio: { files: null, path: null, sounds: [], bank: null, filter: '',
              codec: 'all', grouped: true, loading: false, token: 0 },
+    // VFX tab. Same shape, but a branch ships ~9k effects, so the list is paged
+    // and filtered server-side instead of held whole in the page. `viewer` is the
+    // live WebGL player - it holds a GL context, so it is disposed the moment the
+    // tab, the branch or the effect changes.
+    vfx: { items: null, path: null, total: 0, filter: '', offset: 0,
+           loading: false, error: null, listToken: 0, token: 0, viewer: null },
   };
 
   // ─── DOM refs ──────────────────────────────────────────────────────
@@ -142,6 +148,9 @@
   const $previewSwf = $('up-preview-swf');
   const $previewSwfBtn = $('up-preview-swfbtn');
   const $previewSwfNote = $('up-preview-swfnote');
+  const $previewVfx = $('up-preview-vfx');
+  const $previewVfxStage = $('up-preview-vfx-stage');
+  const $previewVfxBtn = $('up-preview-vfxbtn');
 
   const $swfModal = $('up-swf-modal');
   const $swfCard = $('up-swf-card');
@@ -166,6 +175,7 @@
   // server's VIEW_MAX_BYTES so anything it flags as "binary" fits in one dump.
   const HEX_MAX_BYTES = 1024 * 1024;
   let _previewToken = 0;   // guards against out-of-order image/hex fetches
+  let _previewVfxViewer = null;   // the WebGL player mounted in a .pkfx preview
 
   const $changesMeta = $('up-changes-meta');
   const $changesBody = $('up-changes-body');
@@ -184,8 +194,10 @@
 
   const $tabInterface = $('up-tab-interface');
   const $tabAudio = $('up-tab-audio');
+  const $tabVfx = $('up-tab-vfx');
   const $paneInterface = $('up-pane-interface');
   const $paneAudio = $('up-pane-audio');
+  const $paneVfx = $('up-pane-vfx');
 
   const $swfFiles = $('up-swf-files');
   const $swfFileCount = $('up-swf-filecount');
@@ -205,6 +217,16 @@
   const $audioGroup = $('up-audio-group');
   const $audioZip = $('up-audio-zip');
   const $audioBody = $('up-audio-body');
+
+  const $vfxFiles = $('up-vfx-files');
+  const $vfxCount = $('up-vfx-count');
+  const $vfxFilter = $('up-vfx-filter');
+  const $vfxMore = $('up-vfx-more');
+  const $vfxTitle = $('up-vfx-title');
+  const $vfxMeta = $('up-vfx-meta');
+  const $vfxStage = $('up-vfx-stage');
+  const $vfxReplay = $('up-vfx-replay');
+  const $vfxSource = $('up-vfx-source');
 
   const $player = $('up-player');
   const $playerPlay = $('up-player-play');
@@ -330,8 +352,16 @@
     state.audio = { files: null, path: null, sounds: [], bank: null, filter: '',
                     codec: state.audio.codec, grouped: state.audio.grouped,
                     loading: false, token: state.audio.token + 1 };
+    disposeVfx();
+    disposePreviewVfx();
+    state.vfx = { items: null, path: null, total: 0, filter: state.vfx.filter,
+                  offset: 0, loading: false, error: null,
+                  listToken: state.vfx.listToken + 1, token: state.vfx.token + 1,
+                  viewer: null };
+    resetVfxPane();
     if (state.activeTab === 'interface') ensureBundleList('iface');
     if (state.activeTab === 'audio') ensureBundleList('audio');
+    if (state.activeTab === 'vfx') ensureVfxTab();
 
     renderBranchTabs();
 
@@ -462,17 +492,23 @@
   }
 
   // ─── Tab strip ─────────────────────────────────────────────────────
-  const TABS = ['explorer', 'changes', 'compare', 'interface', 'audio'];
+  const TABS = ['explorer', 'changes', 'compare', 'interface', 'audio', 'vfx'];
 
   function switchTab(name) {
     if (!TABS.includes(name)) name = 'explorer';
     if (state.activeTab === name) return;
     state.activeTab = name;
     renderTab();
-    // Both bundle tabs need their list of bundles before they can show anything,
-    // and neither is worth fetching until someone actually opens the tab.
+    // A WebGL player left running in a hidden pane still burns a frame budget, so
+    // whichever effect is playing stops when its pane goes away (both remount from
+    // the remembered path when you come back).
+    if (name !== 'vfx') disposeVfx();
+    if (name !== 'explorer') disposePreviewVfx();
+    // The bundle tabs each need their list before they can show anything, and none
+    // is worth fetching until someone actually opens the tab.
     if (name === 'interface') ensureBundleList('iface');
     if (name === 'audio') ensureBundleList('audio');
+    if (name === 'vfx') ensureVfxTab();
     scheduleHash(true);
   }
   function renderTab() {
@@ -482,6 +518,7 @@
       compare:   { btn: $tabCompare,   pane: $paneCompare },
       interface: { btn: $tabInterface, pane: $paneInterface },
       audio:     { btn: $tabAudio,     pane: $paneAudio },
+      vfx:       { btn: $tabVfx,       pane: $paneVfx },
     };
     for (const [name, { btn, pane }] of Object.entries(map)) {
       const isActive = state.activeTab === name;
@@ -883,6 +920,12 @@
       $previewSwf.hidden = false;
       return;
     }
+    // A particle effect IS its motion - the .pkfx text describes emitters and
+    // curves and reads like nothing at all - so it plays right here instead.
+    if (kind === 'pkfx') {
+      renderVfxPreview(path, token);
+      return;
+    }
     if (kind === 'binary') {
       renderHexPreview(path, data.size, token);
       return;
@@ -908,6 +951,10 @@
     $preview3d.onclick = null;
     $previewSwf.hidden = true;
     $previewSwfBtn.onclick = null;
+    disposePreviewVfx();
+    $previewVfx.hidden = true;
+    $previewVfxBtn.onclick = null;
+    $previewVfxStage.innerHTML = '';
     $previewHex.hidden = true;
     $previewHex.textContent = '';
     $previewNote.hidden = true;
@@ -1823,6 +1870,205 @@
     return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
   }
 
+  // ─── VFX previewer tab ─────────────────────────────────────────────
+  // A .pkfx is a text file describing a particle system - reading it tells you
+  // nothing about what it looks like, so this tab plays it instead: the shared
+  // PopcornFX player (site/static/pkfx) simulates the effect in WebGL and pulls
+  // its textures and meshes straight out of the archive.
+  //
+  // Trove ships ~9k effects, so the picker is paged and filtered server-side
+  // rather than handed to the browser whole.
+
+  const VFX_PAGE = 200;
+  let _vfxFilterTimer = null;
+
+  // Absolute: _site_util only rewrites fetch()/XHR onto the API origin, and a
+  // thumbnail <img> is a plain resource load.
+  function gameFileUrl(path) {
+    return apiUrl(`/v1/updates/${state.branch}/file?path=${encodeURIComponent(path)}`);
+  }
+
+  /* The player is an ES module, so it can land after this deferred script. Wait a
+     beat for it rather than declaring the effect unplayable. */
+  function whenPkfxReady() {
+    if (window.PkfxViewer) return Promise.resolve(window.PkfxViewer);
+    return new Promise((resolve, reject) => {
+      let tries = 0;
+      const timer = setInterval(() => {
+        if (window.PkfxViewer) { clearInterval(timer); resolve(window.PkfxViewer); }
+        else if (++tries > 60) { clearInterval(timer); reject(new Error('viewer')); }
+      }, 50);
+    });
+  }
+
+  function disposeVfx() {
+    const v = state.vfx.viewer;
+    state.vfx.viewer = null;
+    if (v) { try { v.dispose(); } catch (err) { /* context already gone */ } }
+  }
+
+  function resetVfxPane() {
+    setPlainText($vfxTitle, t('VFX previewer'));
+    setPlainText($vfxMeta, t('Pick an effect to watch it play.'));
+    $vfxReplay.disabled = true;
+    $vfxSource.disabled = true;
+    $vfxStage.innerHTML =
+      `<p class="up-hint">${esc(t('Pick an effect on the left to watch it play here.'))}</p>`;
+    renderVfxList();
+  }
+
+  async function ensureVfxTab() {
+    const slice = state.vfx;
+    if (slice.items === null && !slice.loading) await loadVfxPage(false);
+    // Coming back to the tab (or to the branch) remounts whatever was playing.
+    if (slice.path && !slice.viewer) await openEffect(slice.path);
+  }
+
+  async function loadVfxPage(more) {
+    const slice = state.vfx;
+    if (more && slice.loading) return;
+    const token = ++slice.listToken;
+    slice.loading = true;
+    slice.error = null;
+    if (!more) { slice.items = null; slice.offset = 0; }
+    renderVfxList();
+    const q = slice.filter.trim();
+    try {
+      const data = await fetchJSON(
+        `/site/updates/${state.branch}/vfx?limit=${VFX_PAGE}&offset=${slice.offset}`
+        + (q ? `&q=${encodeURIComponent(q)}` : ''),
+      );
+      if (token !== slice.listToken) return;      // a newer filter owns the list
+      slice.items = (more && slice.items ? slice.items : []).concat(data.items || []);
+      slice.offset = slice.items.length;
+      slice.total = data.total || 0;
+    } catch (err) {
+      if (token !== slice.listToken) return;
+      slice.items = slice.items || [];
+      slice.error = (err && err.message) || String(err);
+    } finally {
+      if (token === slice.listToken) slice.loading = false;
+    }
+    renderVfxList();
+    // Land on something playing rather than on an instruction to click - and on
+    // one the game's own editor bothered to render a still of, since the first
+    // effect alphabetically can be a sound-only stub with nothing to draw.
+    if (!more && !slice.path && slice.items.length) {
+      openEffect((slice.items.find((f) => f.thumb) || slice.items[0]).path);
+    }
+  }
+
+  function renderVfxList() {
+    const slice = state.vfx;
+    if (slice.items === null) {
+      $vfxFiles.innerHTML = `<p class="up-loading">${esc(t('Loading…'))}</p>`;
+      $vfxCount.textContent = '';
+      $vfxMore.hidden = true;
+      return;
+    }
+    if (slice.error) {
+      $vfxFiles.innerHTML = errorHTML(new Error(slice.error));
+      $vfxMore.hidden = true;
+      return;
+    }
+    $vfxCount.textContent = formatInt(slice.total);
+    if (!slice.items.length) {
+      $vfxFiles.innerHTML = `<p class="up-tree-empty">${esc(slice.filter.trim()
+        ? t('Nothing matches that filter.')
+        : t('This branch ships no particle effects.'))}</p>`;
+      $vfxMore.hidden = true;
+      return;
+    }
+    // The game's own editor renders a still of some effects; where one exists it
+    // beats an icon for finding an effect by eye. The rest keep the icon - the
+    // server only reports a thumbnail it actually has.
+    $vfxFiles.innerHTML = slice.items.map((f) => {
+      const name = f.path.slice(f.path.lastIndexOf('/') + 1);
+      const art = f.thumb
+        ? `<img class="up-vfx-thumb" src="${esc(gameFileUrl(f.thumb))}" alt=""
+                loading="lazy" decoding="async">`
+        : '<i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>';
+      return `<button type="button" class="up-bundle-row up-vfx-row${
+        f.path === slice.path ? ' active' : ''}" data-bundle-path="${esc(f.path)}"
+              title="${esc(f.path)}">${art}<span class="up-bundle-name">${esc(name)}</span>
+        <span class="up-bundle-size">${esc(formatBytes(f.size))}</span></button>`;
+    }).join('');
+    $vfxMore.hidden = slice.items.length >= slice.total;
+  }
+
+  async function openEffect(path) {
+    const slice = state.vfx;
+    const token = ++slice.token;
+    slice.path = path;
+    renderVfxList();
+    scheduleHash(true);
+    setPlainText($vfxTitle, path.slice(path.lastIndexOf('/') + 1));
+    setPlainText($vfxMeta, path);
+    $vfxReplay.disabled = false;
+    $vfxSource.disabled = false;
+    disposeVfx();
+    $vfxStage.innerHTML = '';
+    let Pkfx;
+    try {
+      Pkfx = await whenPkfxReady();
+    } catch (err) {
+      if (token !== slice.token) return;
+      $vfxStage.innerHTML = `<p class="up-hint">${esc(
+        t('The VFX player could not start — it needs WebGL2.'))}</p>`;
+      return;
+    }
+    if (token !== slice.token) return;   // clicked another effect while we waited
+    slice.viewer = mountEffect($vfxStage, path);
+  }
+
+  // One place that knows how this page addresses the player: the endpoint pair the
+  // viewer speaks (<base>/manifest?path=, <base>/asset?path=) is the branch's VFX
+  // resolver, so an effect renders with the game's own textures and meshes.
+  function mountEffect(host, path) {
+    return window.PkfxViewer.mount(host, {
+      endpoint: { base: `/site/updates/${state.branch}/vfx` },
+      path,
+    });
+  }
+
+  // ── Explorer: the same player, inline in a file's preview ──────────
+  // Picking a .pkfx in the tree plays it where the file's text would have been.
+  // (The handle itself is declared up with the other preview state - a `let`
+  // down here sits in the temporal dead zone for anything that runs during
+  // boot, which is the trap the VIEW_KEY comment at the top of this file
+  // records.)
+
+  function disposePreviewVfx() {
+    const v = _previewVfxViewer;
+    _previewVfxViewer = null;
+    if (v) { try { v.dispose(); } catch (err) { /* context already gone */ } }
+  }
+
+  async function renderVfxPreview(path, token) {
+    $previewVfx.hidden = false;
+    $previewVfxBtn.onclick = () => { dismissDetail(); switchTab('vfx'); openEffect(path); };
+    $previewVfxStage.innerHTML = '';
+    try {
+      await whenPkfxReady();
+    } catch (err) {
+      if (token !== _previewToken) return;
+      $previewVfxStage.innerHTML = `<p class="up-hint">${esc(
+        t('The VFX player could not start — it needs WebGL2.'))}</p>`;
+      return;
+    }
+    if (token !== _previewToken || state.selectedPath !== path) return;  // clicked away
+    _previewVfxViewer = mountEffect($previewVfxStage, path);
+  }
+
+  // Set text on an element the translator owns: drop the marker first, or the next
+  // locale pass would put the placeholder copy back over the effect's name.
+  function setPlainText(el, text) {
+    if (!el) return;
+    el.removeAttribute('data-i18n');
+    el.textContent = text;
+    if (window.BTTi18n && window.BTTi18n.untrack) window.BTTi18n.untrack(el);
+  }
+
   // ─── Changes tab ───────────────────────────────────────────────────
   function renderChanges() {
     const { entries, total, ordinal, version_tag, counts, filter } = state.changes;
@@ -2185,7 +2431,8 @@
   function wireEvents() {
     // Explorer/Changes/Compare tablist: click, plus arrow/Home/End roving per
     // the WAI-ARIA tabs pattern (panels carry role=tabpanel in the template).
-    const tabBtns = [$tabExplorer, $tabChanges, $tabCompare, $tabInterface, $tabAudio];
+    const tabBtns = [$tabExplorer, $tabChanges, $tabCompare, $tabInterface,
+                     $tabAudio, $tabVfx];
     for (const btn of tabBtns) {
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));
       btn.addEventListener('keydown', (e) => {
@@ -2283,6 +2530,29 @@
       if (e.target.closest('.up-snd-dl')) return;        // let the download be a link
       const row = e.target.closest('[data-sound-id]');
       if (row) playSound(Number(row.dataset.soundId));
+    });
+
+    // ── VFX tab ──
+    $vfxFiles.addEventListener('click', (e) => {
+      const row = e.target.closest('[data-bundle-path]');
+      if (row) openEffect(row.dataset.bundlePath);
+    });
+    $vfxFilter.addEventListener('input', () => {
+      state.vfx.filter = $vfxFilter.value || '';
+      // Server-side filter over ~9k effects: one request per pause in typing.
+      clearTimeout(_vfxFilterTimer);
+      _vfxFilterTimer = setTimeout(() => loadVfxPage(false), 250);
+    });
+    $vfxMore.addEventListener('click', () => loadVfxPage(true));
+    // Replay remounts: the player runs an effect from its spawn, so a fresh mount
+    // IS "play it again".
+    $vfxReplay.addEventListener('click', () => {
+      if (state.vfx.path) openEffect(state.vfx.path);
+    });
+    $vfxSource.addEventListener('click', () => {
+      if (!state.vfx.path) return;
+      switchTab('explorer');
+      openTreePath(state.vfx.path);
     });
 
     // ── Player transport ──
@@ -2473,7 +2743,8 @@
     // The bundle tabs own their own selection, so it rides in its own key rather
     // than fighting the explorer for `path=`.
     const bundle = state.activeTab === 'audio' ? state.audio.path
-      : state.activeTab === 'interface' ? state.iface.path : null;
+      : state.activeTab === 'interface' ? state.iface.path
+      : state.activeTab === 'vfx' ? state.vfx.path : null;
     if (bundle) parts.push(`bundle=${encodeURIComponent(bundle)}`);
     // On the compare tab a run diff owns the path (its own field, which may
     // differ from the open file) plus the two version ordinals, so the diff is
@@ -2547,6 +2818,15 @@
         if (targetTab === 'audio') await openBank(h.bundle);
         else await openInterfaceFile(h.bundle);
       }
+    }
+    if (targetTab === 'vfx') {
+      // Claim the shared link's effect before the list loads, so the picker
+      // doesn't spin up a WebGL context for its first row and then throw it away.
+      if (h.bundle && h.bundle !== state.vfx.path) {
+        disposeVfx();
+        state.vfx.path = h.bundle;
+      }
+      await ensureVfxTab();
     }
     await restoreCompareFromHash(h);
     // View + sort follow the hash too (a plain entry means the app default). Set

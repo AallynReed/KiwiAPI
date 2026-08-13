@@ -99,6 +99,7 @@ async def read_file_text(branch: str, path: str, max_bytes: int = VIEW_MAX_BYTES
       renders a hex viewer.
     * ``swf``       - Flash movie; the client opens the extracted-asset gallery.
     * ``bnk``       - Wwise sound bank; the client opens the sound browser.
+    * ``pkfx``      - PopcornFX effect; the client opens the VFX previewer.
     * ``too_large`` - non-image file above ``max_bytes``; download to inspect.
     * ``missing``   - blob absent from the store.
 
@@ -127,6 +128,10 @@ async def read_file_text(branch: str, path: str, max_bytes: int = VIEW_MAX_BYTES
     # A sound bank is an audio bundle - the client opens the sound browser.
     if ext == "bnk":
         return {**base, "viewable": False, "kind": "bnk", "reason": "bnk"}
+    # A .pkfx is text, but reading the text tells you nothing about the effect -
+    # the client plays it in the VFX previewer instead.
+    if ext == "pkfx":
+        return {**base, "viewable": False, "kind": "pkfx", "reason": "pkfx"}
     if meta["size"] > max_bytes:
         return {**base, "viewable": False, "kind": "too_large", "reason": "too_large"}
     blob = ContentStore(settings.trove_update_store_dir).path_for(meta["content_sha256"])

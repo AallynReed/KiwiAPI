@@ -1786,16 +1786,108 @@ body.up-modal-open { overflow: hidden; }
 .up-player-vol input { width: 74px; accent-color: var(--accent-blue); cursor: pointer; }
 
 
+/* ─── VFX previewer ─────────────────────────────────────────────────── */
+/* The picker reuses the bundle sidebar; the stage is the one surface on the page
+   that is deliberately dark and empty, so the effect is the only thing lit. */
+
+.up-vfx-list { max-height: 62vh; }
+.up-vfx-row { grid-template-columns: 34px minmax(0, 1fr) auto; }
+.up-vfx-row > i { justify-self: center; }
+.up-vfx-thumb {
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  object-fit: cover;
+  background: #05070b;
+}
+.up-vfx-stage {
+  position: relative;
+  min-height: 0;
+  height: min(560px, 60vh);
+  border: 1px solid var(--bg-line, #1f2733);
+  border-radius: 12px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 38%, #141a24, #06080d 78%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.up-vfx-stage-inline { height: min(340px, 46vh); margin-bottom: 10px; }
+.up-vfx-stage .up-hint { margin: 0; padding: 0 18px; text-align: center; }
+
+/* The player builds these three itself (site/static/pkfx/vfx_viewer.js) and only
+   ships styles for them in its modal wrapper, so an inline mount paints them here. */
+.up-vfx-stage .pkfx-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+.up-vfx-stage .pkfx-canvas:active { cursor: grabbing; }
+.up-vfx-stage .pkfx-note {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: rgba(6,8,13,.72);
+  color: var(--accent-yellow);
+  font-size: .74rem;
+  pointer-events: none;
+  display: none;
+}
+.up-vfx-stage .pkfx-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(6,8,13,.6);
+  color: var(--text-mute);
+  font-size: .85rem;
+}
+.up-vfx-stage .pkfx-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--bg-line, #1f2733);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: up-vfx-spin .7s linear infinite;
+}
+@keyframes up-vfx-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .up-vfx-stage .pkfx-spinner { animation-duration: 2.4s; }
+}
+
+.up-vfx-legend {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: .78rem;
+  color: var(--text-mute);
+}
+.up-vfx-legend i { margin-top: 2px; color: var(--accent-yellow); }
+
 /* ─── Mobile ────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
   /* The bundle picker stops being a sidebar and becomes a scrolling shelf
      above the content, so the artwork/sound list keeps the full width. */
-  .up-bundle-layout { grid-template-columns: 1fr; }
+  /* minmax(0,…) not 1fr: a bare `1fr` floors at the content's min-content width,
+     and a shelf of a few hundred effect rows is wider than the phone - the column
+     grew instead of the list scrolling, taking the whole page sideways with it. */
+  .up-bundle-layout { grid-template-columns: minmax(0, 1fr); }
   .up-bundle-side { position: static; }
   .up-bundle-list { flex-direction: row; overflow-x: auto; max-height: none; }
   .up-bundle-row { flex: 0 0 auto; grid-template-columns: 16px auto; }
+  .up-vfx-row { grid-template-columns: 34px auto; }
   .up-bundle-row .up-bundle-size { display: none; }
+  .up-vfx-list { max-height: none; }
+  .up-vfx-stage { height: min(420px, 56vh); }
   .up-layout {
     grid-template-columns: 1fr;
   }

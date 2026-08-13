@@ -117,6 +117,12 @@
                 <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
                 <span data-i18n>Audio</span>
             </button>
+            <button type="button" class="up-tab" role="tab"
+                    id="up-tab-vfx" data-tab="vfx"
+                    aria-selected="false" aria-controls="up-pane-vfx">
+                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                <span data-i18n>VFX previewer</span>
+            </button>
         </nav>
 
         <!-- ═══════════════ TAB: EXPLORER ═══════════════ -->
@@ -238,6 +244,16 @@
                                     <span data-i18n>View embedded assets</span>
                                 </button>
                                 <span class="up-preview-note" id="up-preview-swfnote"></span>
+                            </div>
+                            <!-- .pkfx particle effects: the source text says nothing
+                                 about what the effect looks like, so it plays here
+                                 instead, with a jump to the full-size previewer. -->
+                            <div class="up-preview-vfx" id="up-preview-vfx" hidden>
+                                <div class="up-vfx-stage up-vfx-stage-inline" id="up-preview-vfx-stage"></div>
+                                <button type="button" class="up-preview-3dbtn" id="up-preview-vfxbtn">
+                                    <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                                    <span data-i18n>Open in the VFX previewer</span>
+                                </button>
                             </div>
                             <pre class="up-preview-hex" id="up-preview-hex" hidden></pre>
                             <p class="up-preview-note" id="up-preview-note" hidden></p>
@@ -522,6 +538,57 @@
             </div>
         </section>
 
+        <!-- ═══════════════ TAB: VFX PREVIEWER ═══════════════
+             The game's particle effects, played rather than read: pick an effect
+             on the left and it runs in WebGL on the right, simulated from the
+             same .pkfx source the game ships. Textures and meshes are resolved
+             out of the archive, so an effect looks like it does in game. -->
+        <section class="up-tab-pane" id="up-pane-vfx"
+                 role="tabpanel" aria-labelledby="up-tab-vfx" hidden>
+            <div class="up-bundle-layout">
+                <aside class="up-bundle-side" aria-label="Effects">
+                    <div class="up-bundle-side-head">
+                        <h3 class="up-bundle-subhead" data-i18n>Effects</h3>
+                        <span class="up-bundle-count" id="up-vfx-count"></span>
+                    </div>
+                    <label class="up-swf-search" for="up-vfx-filter">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <span class="sr-only" data-i18n>Filter effects</span>
+                        <input type="search" id="up-vfx-filter" autocomplete="off"
+                               placeholder="Filter effects…" data-i18n-placeholder>
+                    </label>
+                    <div class="up-bundle-list up-vfx-list" id="up-vfx-files">
+                        <p class="up-loading" data-i18n>Loading…</p>
+                    </div>
+                    <button type="button" class="up-load-more" id="up-vfx-more"
+                            data-i18n hidden>Load more</button>
+                </aside>
+                <div class="up-bundle-main">
+                    <div class="up-bundle-bar">
+                        <div class="up-bundle-titles">
+                            <h3 class="up-bundle-title" id="up-vfx-title" data-i18n>VFX previewer</h3>
+                            <p class="up-bundle-meta" id="up-vfx-meta" data-i18n>Pick an effect to watch it play.</p>
+                        </div>
+                        <button type="button" class="up-swf-zip" id="up-vfx-replay" disabled>
+                            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                            <span data-i18n>Replay</span>
+                        </button>
+                        <button type="button" class="up-swf-zip" id="up-vfx-source" disabled>
+                            <i class="fa-solid fa-folder-tree" aria-hidden="true"></i>
+                            <span data-i18n>Show the file</span>
+                        </button>
+                    </div>
+                    <div class="up-vfx-stage" id="up-vfx-stage">
+                        <p class="up-hint" data-i18n>Pick an effect on the left to watch it play here.</p>
+                    </div>
+                    <p class="up-vfx-legend">
+                        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                        <span data-i18n>Drag to orbit, scroll to zoom, shift-drag to move the effect. Previews are close but not exact — check anything important in game.</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
         <p class="up-source" data-i18n>
             Every Trove patch is archived here the moment it goes live, so you can browse and compare exactly what changed.
         </p>
@@ -532,6 +599,9 @@
     <!-- DDS decoder (ES module) exposed as a global so the classic updates.js
          can decode .dds textures to a canvas + export them as PNG. -->
     <script type="module" src="/static/dds_ready.min.js"></script>
+    <!-- PopcornFX player (ES module, exposes window.PkfxViewer) - the VFX tab
+         mounts it inline and the explorer hands .pkfx files over to it. -->
+    <script type="module" src="/static/pkfx/vfx_viewer.js"></script>
     <script src="/static/app.min.js"></script>
     <script src="/static/_site_util.min.js"></script>
     <script src="/static/i18n.min.js"></script>
