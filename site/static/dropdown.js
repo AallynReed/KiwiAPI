@@ -368,8 +368,11 @@
     close();
   }
 
-  function reposition() {
-    if (open) place(open);
+  function reposition(e) {
+    if (!open) return;
+    // Scrolling the list itself is not the page moving under the panel.
+    if (e && e.target && (e.target === open.panel || open.panel.contains(e.target))) return;
+    place(open);
   }
 
   /** Pin the panel under (or over) its trigger, in viewport coordinates. */
@@ -378,6 +381,10 @@
     const panel = self.panel;
     const margin = 8;
     panel.style.minWidth = `${box.width}px`;
+    // Measuring the natural height means dropping the cap, and an uncapped
+    // panel has nothing to scroll - the browser clamps scrollTop to 0 on the
+    // way past. Carry it over, or every measure scrolls the list back to top.
+    const scrolled = panel.scrollTop;
     panel.style.maxHeight = '';
     const height = panel.offsetHeight;
     const below = window.innerHeight - box.bottom - margin;
@@ -389,6 +396,7 @@
     panel.style.left = `${Math.max(margin, Math.min(box.left, window.innerWidth - panel.offsetWidth - margin))}px`;
     panel.style.top = up ? `${Math.max(margin, box.top - Math.min(height, room) - 4)}px`
                          : `${box.bottom + 4}px`;
+    panel.scrollTop = scrolled;
   }
 
   // ─── Boot ──────────────────────────────────────────────────────────
