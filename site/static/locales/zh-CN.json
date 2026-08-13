@@ -2475,5 +2475,18 @@
   "You'll pick the mods, editions and versions on the next screen.": "模组、版本与具体版本号将在下一步选择。",
   "Could not update your favorite.": "无法更新你的收藏。",
   "Open in app": "在应用中打开",
-  "Requires the Better Trove Tools desktop app": "需要 Better Trove Tools 桌面应用"
+  "Requires the Better Trove Tools desktop app": "需要 Better Trove Tools 桌面应用",
+  "VFX previewer": "VFX 预览",
+  "Effects": "特效",
+  "Filter effects": "筛选特效",
+  "Filter effects…": "筛选特效…",
+  "Pick an effect to watch it play.": "选择一个特效即可播放。",
+  "Pick an effect on the left to watch it play here.": "在左侧选择一个特效，即可在此播放。",
+  "Replay": "重新播放",
+  "Show the file": "显示文件",
+  "Open in the VFX previewer": "在 VFX 预览中打开",
+  "Drag to orbit, scroll to zoom, shift-drag to move the effect. Previews are close but not exact — check anything important in game.": "拖动旋转，滚轮缩放，Shift+拖动移动特效。预览接近实际效果但并不精确，重要内容请在游戏中确认。",
+  "This branch ships no particle effects.": "该分支不包含粒子特效。",
+  "The VFX player could not start — it needs WebGL2.": "VFX 播放器无法启动，需要 WebGL2。",
+  "Nothing matches that filter.": "没有匹配该筛选的内容。"
 }

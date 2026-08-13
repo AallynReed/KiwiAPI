@@ -63,13 +63,17 @@ void main(){
     float halfLen = 0.5*L + 0.5*aSize.y;
     world = aCenter + side*(aCorner.x*aSize.x) + dir*(aCorner.y*2.0*halfLen);
   } else if (uMode == 4) {
+    /* CPlanarBillboarderQuad builds X = normalize(cross(Axis, Axis2)) and
+       Y = cross(X, Axis2), then spends Size.x on X and Size.y on Y. So the width runs
+       ACROSS the axis field and the height along it - the opposite of the obvious
+       reading, and invisible while Size.x == Size.y. */
     vec3 n = length(aAxis2) > 1e-5 ? normalize(aAxis2) : vec3(0.0, 1.0, 0.0);
-    vec3 t = aAxis - n*dot(aAxis, n);
-    vec3 T = length(t) > 1e-5 ? normalize(t)
+    vec3 x = cross(aAxis, n);
+    vec3 X = length(x) > 1e-5 ? normalize(x)
            : normalize(abs(n.y) < 0.99 ? cross(n, vec3(0.0, 1.0, 0.0)) : vec3(1.0, 0.0, 0.0));
-    vec3 B = cross(n, T);
+    vec3 Y = cross(X, n);
     // rotate the in-plane basis around the normal
-    vec3 Tr = T*c + B*s, Br = -T*s + B*c;
+    vec3 Tr = X*c + Y*s, Br = -X*s + Y*c;
     world = aCenter + Tr*(aCorner.x*aSize.x) + Br*(aCorner.y*aSize.y);
   } else if (uMode == 1) {
     vec3 fwd = normalize(uEye - aCenter);

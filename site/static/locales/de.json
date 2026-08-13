@@ -2475,5 +2475,18 @@
   "You'll pick the mods, editions and versions on the next screen.": "Mods, Editionen und Versionen wählst du im nächsten Schritt.",
   "Could not update your favorite.": "Favorit konnte nicht aktualisiert werden.",
   "Open in app": "In der App öffnen",
-  "Requires the Better Trove Tools desktop app": "Erfordert die Better-Trove-Tools-Desktop-App"
+  "Requires the Better Trove Tools desktop app": "Erfordert die Better-Trove-Tools-Desktop-App",
+  "VFX previewer": "VFX-Vorschau",
+  "Effects": "Effekte",
+  "Filter effects": "Effekte filtern",
+  "Filter effects…": "Effekte filtern…",
+  "Pick an effect to watch it play.": "Wähle einen Effekt, um ihn abzuspielen.",
+  "Pick an effect on the left to watch it play here.": "Wähle links einen Effekt, um ihn hier abzuspielen.",
+  "Replay": "Erneut abspielen",
+  "Show the file": "Datei anzeigen",
+  "Open in the VFX previewer": "In der VFX-Vorschau öffnen",
+  "Drag to orbit, scroll to zoom, shift-drag to move the effect. Previews are close but not exact — check anything important in game.": "Ziehen zum Drehen, Scrollen zum Zoomen, Umschalt+Ziehen zum Verschieben des Effekts. Die Vorschau kommt nah heran, ist aber nicht exakt – prüfe alles Wichtige im Spiel.",
+  "This branch ships no particle effects.": "Dieser Branch enthält keine Partikeleffekte.",
+  "The VFX player could not start — it needs WebGL2.": "Der VFX-Player konnte nicht starten – er benötigt WebGL2.",
+  "Nothing matches that filter.": "Nichts entspricht diesem Filter."
 }

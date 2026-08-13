@@ -265,11 +265,11 @@ export function mount(container, { releaseId, path, endpoint }) {
         bx = a2[0] || 0; by = a2[1] || 0; bz = a2[2] || 0;
         if (!ax && !ay && !az) ax = 1;
         if (!bx && !by && !bz) by = 1;
-        /* CPlanarBillboarderQuad's worker builds corners = P +- axis1*Size.x*sx +- axis2*Size.y*sy,
-           and the renderer hands it sx = 0.5*AxisScale against a flat sy = 0.5 (billboarding
-           request +0xac/+0xb0; AxisScale is the property at renderer+0x150). So AxisScale is the
-           quad's width-to-height ratio here, not a stretch of the axis vector the way the velocity
-           modes use it - 459 corpus effects set it, including the portal ring at 0.5. */
+        /* The planar worker scales its X basis by 0.5*AxisScale and its Y by a flat 0.5
+           (billboarding request +0xac/+0xb0; AxisScale is the property at renderer+0x150), so
+           AxisScale is the quad's width-to-height ratio here, not a stretch of the axis vector
+           the way the velocity modes use it. 459 corpus effects set it, the portal ring at 0.5.
+           X is the cross-axis direction - see the mode 4 branch in renderer.js. */
         sxScale = r.axisScale;
       }
       let cursor = 0;

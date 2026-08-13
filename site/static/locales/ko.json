@@ -2475,5 +2475,18 @@
   "You'll pick the mods, editions and versions on the next screen.": "모드와 에디션, 버전은 다음 화면에서 고릅니다.",
   "Could not update your favorite.": "즐겨찾기를 변경하지 못했습니다.",
   "Open in app": "앱에서 열기",
-  "Requires the Better Trove Tools desktop app": "Better Trove Tools 데스크톱 앱이 필요합니다"
+  "Requires the Better Trove Tools desktop app": "Better Trove Tools 데스크톱 앱이 필요합니다",
+  "VFX previewer": "VFX 미리보기",
+  "Effects": "이펙트",
+  "Filter effects": "이펙트 필터",
+  "Filter effects…": "이펙트 필터…",
+  "Pick an effect to watch it play.": "이펙트를 선택하면 재생됩니다.",
+  "Pick an effect on the left to watch it play here.": "왼쪽에서 이펙트를 선택하면 여기에서 재생됩니다.",
+  "Replay": "다시 재생",
+  "Show the file": "파일 보기",
+  "Open in the VFX previewer": "VFX 미리보기에서 열기",
+  "Drag to orbit, scroll to zoom, shift-drag to move the effect. Previews are close but not exact — check anything important in game.": "드래그로 회전, 스크롤로 확대·축소, Shift+드래그로 이펙트 이동. 미리보기는 실제와 가깝지만 정확하지는 않으니 중요한 것은 게임에서 확인하세요.",
+  "This branch ships no particle effects.": "이 브랜치에는 파티클 이펙트가 없습니다.",
+  "The VFX player could not start — it needs WebGL2.": "VFX 플레이어를 시작할 수 없습니다. WebGL2가 필요합니다.",
+  "Nothing matches that filter.": "이 필터와 일치하는 항목이 없습니다."
 }
