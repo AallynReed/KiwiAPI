@@ -68,6 +68,9 @@ export function billboardOrder(ls, r, n, eye) {
   return order;
 }
 
+// the engine stores vertex colours as RGBA8, so every channel saturates at 0..1
+const sat = (x) => (x > 1 ? 1 : x < 0 ? 0 : x);
+
 // BillboardingMaterial -> blend kind (0 alpha, 1 additive, 2 alphablend+additive, 3 additive-noalpha)
 function kindFor(material) {
   if (/Additive_NoAlpha/i.test(material)) return 3;
@@ -271,7 +274,12 @@ export function mount(container, { releaseId, path, endpoint }) {
       }
       inst[o++] = p[0]; inst[o++] = p[1]; inst[o++] = p[2];
       inst[o++] = sz[0] ?? 1; inst[o++] = (sz[1] ?? sz[0] ?? 1) * r.aspect;
-      inst[o++] = col[0] ?? 1; inst[o++] = col[1] ?? 1; inst[o++] = col[2] ?? 1; inst[o++] = col[3] ?? 1;
+      /* Saturate to 0..1. CBillboarder::FillColors packs the vertex colour to RGBA8
+         with a saturating byte pack, so the engine can never see a channel above 1.
+         Scripts and curves routinely produce more - the portals carry alpha 1.26 and
+         red 1.44 - and passing that through float attributes multiplied every texel's
+         alpha by 1.26, turning soft sprites into hard discs. */
+      inst[o++] = sat(col[0] ?? 1); inst[o++] = sat(col[1] ?? 1); inst[o++] = sat(col[2] ?? 1); inst[o++] = sat(col[3] ?? 1);
       inst[o++] = rot;
       inst[o++] = u0; inst[o++] = v0; inst[o++] = du; inst[o++] = dv;
       inst[o++] = u02; inst[o++] = v02; inst[o++] = du2; inst[o++] = dv2;
@@ -294,7 +302,7 @@ export function mount(container, { releaseId, path, endpoint }) {
       const sz = (r.radius || 1) * 0.5;
       inst[o++] = p[0]; inst[o++] = p[1]; inst[o++] = p[2];
       inst[o++] = sz; inst[o++] = sz;
-      inst[o++] = col[0] ?? 1; inst[o++] = col[1] ?? 1; inst[o++] = col[2] ?? 1; inst[o++] = Math.min(1, (col[3] ?? 1));
+      inst[o++] = sat(col[0] ?? 1); inst[o++] = sat(col[1] ?? 1); inst[o++] = sat(col[2] ?? 1); inst[o++] = sat(col[3] ?? 1);
       inst[o++] = 0;
       inst[o++] = 0; inst[o++] = 0; inst[o++] = 1; inst[o++] = 1;
       inst[o++] = 0; inst[o++] = 0; inst[o++] = 1; inst[o++] = 1;
@@ -362,7 +370,7 @@ export function mount(container, { releaseId, path, endpoint }) {
       for (let k = 0; k < 9; k++) mbuf[o++] = BASIS[k];
       mbuf[o++] = px; mbuf[o++] = py; mbuf[o++] = pz;
       mbuf[o++] = (col[0] ?? 1) * r.diffuseColor[0]; mbuf[o++] = (col[1] ?? 1) * r.diffuseColor[1];
-      mbuf[o++] = (col[2] ?? 1) * r.diffuseColor[2]; mbuf[o++] = col[3] ?? 1;
+      mbuf[o++] = (col[2] ?? 1) * r.diffuseColor[2]; mbuf[o++] = sat(col[3] ?? 1);
     }
     const count = o / MESH_FLOATS_PER_INSTANCE;
     if (!count) return;
@@ -375,7 +383,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => ls.getAt(b, 'Age')[0] - ls.getAt(a, 'Age')[0]);
     const C = order.map((i) => ls.getAt(i, r.positionField));
     let o = 0;
-    const push = (p, u, v, c) => { rib[o++] = p[0]; rib[o++] = p[1]; rib[o++] = p[2]; rib[o++] = u; rib[o++] = v; rib[o++] = c[0] ?? 1; rib[o++] = c[1] ?? 1; rib[o++] = c[2] ?? 1; rib[o++] = c[3] ?? 1; };
+    const push = (p, u, v, c) => { rib[o++] = p[0]; rib[o++] = p[1]; rib[o++] = p[2]; rib[o++] = u; rib[o++] = v; rib[o++] = sat(c[0] ?? 1); rib[o++] = sat(c[1] ?? 1); rib[o++] = sat(c[2] ?? 1); rib[o++] = sat(c[3] ?? 1); };
     const edge = (k) => {
       const i = order[k], c = C[k];
       const prev = C[k - 1] || c, next = C[k + 1] || c;
