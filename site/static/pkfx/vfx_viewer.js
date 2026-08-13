@@ -251,7 +251,7 @@ export function mount(container, { releaseId, path, endpoint }) {
         } else { u02 = u0; v02 = v0; du2 = du; dv2 = dv; }
       }
       // stretch axis: velocity modes use Velocity*AxisScale; planar uses the axis fields
-      let ax = 0, ay = 0, az = 0, bx = 0, by = 1, bz = 0;
+      let ax = 0, ay = 0, az = 0, bx = 0, by = 1, bz = 0, sxScale = 1;
       if (mode === 2 || mode === 3) {
         // Velocity* modes stretch along the particle velocity; other axis-aligned
         // modes read the axis field
@@ -265,6 +265,12 @@ export function mount(container, { releaseId, path, endpoint }) {
         bx = a2[0] || 0; by = a2[1] || 0; bz = a2[2] || 0;
         if (!ax && !ay && !az) ax = 1;
         if (!bx && !by && !bz) by = 1;
+        /* CPlanarBillboarderQuad's worker builds corners = P +- axis1*Size.x*sx +- axis2*Size.y*sy,
+           and the renderer hands it sx = 0.5*AxisScale against a flat sy = 0.5 (billboarding
+           request +0xac/+0xb0; AxisScale is the property at renderer+0x150). So AxisScale is the
+           quad's width-to-height ratio here, not a stretch of the axis vector the way the velocity
+           modes use it - 459 corpus effects set it, including the portal ring at 0.5. */
+        sxScale = r.axisScale;
       }
       let cursor = 0;
       if (r._remap) {
@@ -273,7 +279,7 @@ export function mount(container, { releaseId, path, endpoint }) {
           : (ls.getAt(i, 'Age')[0] / (ls.getAt(i, 'Life')[0] || 1));
       }
       inst[o++] = p[0]; inst[o++] = p[1]; inst[o++] = p[2];
-      inst[o++] = sz[0] ?? 1; inst[o++] = (sz[1] ?? sz[0] ?? 1) * r.aspect;
+      inst[o++] = (sz[0] ?? 1) * sxScale; inst[o++] = (sz[1] ?? sz[0] ?? 1) * r.aspect;
       /* Saturate to 0..1. CBillboarder::FillColors packs the vertex colour to RGBA8
          with a saturating byte pack, so the engine can never see a channel above 1.
          Scripts and curves routinely produce more - the portals carry alpha 1.26 and
