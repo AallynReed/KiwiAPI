@@ -28,23 +28,32 @@
   const MAX_FILES = 4000;
 
   const state = {
+    tab: 'make',
     source: null,      // {kind:'files'|'zip'|'tmod', files:[File], paths:[], archive:File, header:{}}
     plan: null,
     fix: true,
     keep: new Set(),   // original paths to leave exactly where they are
     filter: 'all',
     busy: false,
-    open: null,        // {file, data} for the "Open a mod" tab
+    open: null,        // {file, data} - shared by the Open and Analyze tabs
+    openFilter: '',
   };
 
   const $ = (id) => document.getElementById(id);
 
-  const $tabMake = $('mw-tab-make');
-  const $tabOpen = $('mw-tab-open');
-  const $panelMake = $('mw-panel-make');
-  const $panelOpen = $('mw-panel-open');
+  // The four tabs, in order: two that build a mod (sharing everything after their
+  // own file picker) and two that read one (sharing the mod they loaded).
+  const TABS = [
+    { name: 'make', tab: $('mw-tab-make'), panel: $('mw-panel-make') },
+    { name: 'zip', tab: $('mw-tab-zip'), panel: $('mw-panel-zip') },
+    { name: 'open', tab: $('mw-tab-open'), panel: $('mw-panel-open') },
+    { name: 'analyze', tab: $('mw-tab-analyze'), panel: $('mw-panel-analyze') },
+  ];
+  const BUILD_TABS = ['make', 'zip'];
 
+  const $flow = $('mw-flow');
   const $drop = $('mw-drop');
+  const $zipDrop = $('mw-zip-drop');
   const $source = $('mw-source');
   const $sourceName = $('mw-source-name');
   const $sourceMeta = $('mw-source-meta');
@@ -60,19 +69,27 @@
   const $build = $('mw-build');
   const $status = $('mw-status');
 
-  const $openDrop = $('mw-open-drop');
   const $openError = $('mw-open-error');
+  const $openDrop = $('mw-open-drop');
   const $openResult = $('mw-open-result');
   const $openHint = $('mw-open-hint');
-  const $openMeta = $('mw-open-meta');
-  const $openSummary = $('mw-open-summary');
   const $openFiles = $('mw-open-files');
+  const $openFilter = $('mw-open-filter');
   const $openZip = $('mw-open-zip');
-  const $openRepair = $('mw-open-repair');
   const $openStatus = $('mw-open-status');
+
+  const $anDrop = $('mw-an-drop');
+  const $anResult = $('mw-an-result');
+  const $anHint = $('mw-an-hint');
+  const $anMeta = $('mw-an-meta');
+  const $anSummary = $('mw-an-summary');
+  const $anFiles = $('mw-an-files');
+  const $anRepair = $('mw-an-repair');
+  const $anStatus = $('mw-an-status');
 
   const $inputFiles = $('mw-input-files');
   const $inputFolder = $('mw-input-folder');
+  const $inputZip = $('mw-input-zip');
   const $inputOpen = $('mw-input-open');
 
   wire();
@@ -80,15 +97,22 @@
   // ─── Tabs ──────────────────────────────────────────────────────────
 
   function showTab(which) {
-    const make = which === 'make';
-    $tabMake.classList.toggle('active', make);
-    $tabOpen.classList.toggle('active', !make);
-    $tabMake.setAttribute('aria-selected', String(make));
-    $tabOpen.setAttribute('aria-selected', String(!make));
-    $tabMake.tabIndex = make ? 0 : -1;
-    $tabOpen.tabIndex = make ? -1 : 0;
-    $panelMake.hidden = !make;
-    $panelOpen.hidden = make;
+    state.tab = which;
+    for (const entry of TABS) {
+      const on = entry.name === which;
+      entry.tab.classList.toggle('active', on);
+      entry.tab.setAttribute('aria-selected', String(on));
+      entry.tab.tabIndex = on ? 0 : -1;
+      entry.panel.hidden = !on;
+    }
+    // The build steps are identical whichever way the files arrived, so one copy
+    // follows the active picker instead of a second set going quietly out of sync.
+    if (BUILD_TABS.includes(which)) {
+      TABS.find((e) => e.name === which).panel.appendChild($flow);
+      $flow.hidden = !state.source;
+    } else {
+      $flow.hidden = true;
+    }
   }
 
   // ─── Picking files ─────────────────────────────────────────────────
@@ -99,6 +123,7 @@
     const picked = Array.from(list || []).filter((f) => f && f.size >= 0);
     if (!picked.length) return;
     reset();
+    $flow.hidden = false;
 
     const total = picked.reduce((sum, f) => sum + f.size, 0);
     if (total > MAX_BYTES) {
@@ -113,6 +138,12 @@
 
     const only = picked.length === 1 ? picked[0] : null;
     const ext = only ? only.name.toLowerCase().slice(only.name.lastIndexOf('.')) : '';
+    // The zip tab asks one question, so it only takes one kind of answer - saying
+    // so beats letting a folder through and reporting nothing useful afterwards.
+    if (state.tab === 'zip' && ext !== '.zip') {
+      showSourceError(t('That isn’t a zip. Use “Make a mod” for loose files, or “Open a mod” for a finished one.'));
+      return;
+    }
     if (only && (ext === '.zip' || ext === '.tmod')) {
       state.source = { kind: ext === '.zip' ? 'zip' : 'tmod', archive: only,
                        files: [only], paths: [], header: {} };
@@ -150,6 +181,7 @@
     state.plan = null;
     state.keep.clear();
     state.filter = 'all';
+    $flow.hidden = true;
     $source.hidden = true;
     $sourceError.hidden = true;
     $stepCheck.hidden = true;
@@ -161,6 +193,7 @@
   }
 
   function showSourceError(message) {
+    $flow.hidden = false;
     $sourceError.textContent = message;
     $sourceError.hidden = false;
   }
@@ -401,16 +434,22 @@
     }
   }
 
-  // ─── Open a mod ────────────────────────────────────────────────────
+  // ─── Reading a mod (the Open and Analyze tabs) ─────────────────────
+  // One mod, two questions. Open answers "give me the files"; Analyze answers
+  // "tell me what this is". Both come off the SAME read, so a mod dropped on
+  // either tab is already loaded when you switch to the other.
 
   async function openMod(file) {
     if (!file) return;
     $openError.hidden = true;
     $openResult.hidden = false;
-    $openMeta.innerHTML = '';
-    $openFiles.innerHTML = '';
-    $openSummary.innerHTML = `<p class="mw-loading">${esc(t('Opening…'))}</p>`;
+    $anResult.hidden = false;
+    $openFiles.innerHTML = `<p class="mw-loading">${esc(t('Opening…'))}</p>`;
+    $anMeta.innerHTML = '';
+    $anFiles.innerHTML = '';
+    $anSummary.innerHTML = `<p class="mw-loading">${esc(t('Opening…'))}</p>`;
     setOpenStatus('');
+    setAnStatus('');
 
     const form = new FormData();
     form.append('file', file, file.name);
@@ -419,16 +458,51 @@
                               { method: 'POST', body: form });
       const data = await readJSON(res);
       state.open = { file, data };
-      renderOpen(data, file);
+      state.openFilter = '';
+      $openFilter.value = '';
+      renderExtract();
+      renderAnalysis();
     } catch (err) {
       state.open = null;
       $openResult.hidden = true;
+      $anResult.hidden = true;
       $openError.textContent = message(err);
       $openError.hidden = false;
     }
   }
 
-  function renderOpen(data, file) {
+  /** Open: a flat list of everything packed inside, each one savable. */
+  function renderExtract() {
+    const { file, data } = state.open;
+    const files = data.files || [];
+    const title = (data.properties || {}).title || file.name;
+    $openHint.textContent =
+      t('%s — %n files, %z. Save the lot, or just the one you came for.')
+        .replace('%s', title)
+        .replace('%n', formatInt(data.file_count))
+        .replace('%z', formatBytes(data.total_size || data.size));
+
+    const needle = state.openFilter.toLowerCase();
+    const shown = needle
+      ? files.filter((f) => String(f.path).toLowerCase().includes(needle))
+      : files;
+    if (!shown.length) {
+      $openFiles.innerHTML = `<p class="mw-empty">${esc(t('Nothing matches that.'))}</p>`;
+      return;
+    }
+    $openFiles.innerHTML = shown.map((f) => `<div class="mw-row plain">
+      <span class="mw-row-path"><span class="mw-row-name">${esc(f.path)}</span></span>
+      <span class="mw-row-size">${esc(formatBytes(f.size))}</span>
+      <button type="button" class="mw-icon-btn" data-get="${esc(f.path)}"
+              title="${esc(t('Save this file'))}" aria-label="${esc(t('Save this file'))} ${esc(f.path)}">
+        <i class="fa-solid fa-download" aria-hidden="true"></i></button>
+    </div>`).join('');
+  }
+
+  /** Analyze: what the mod IS - its header, whether the game will read it, and a
+      browsable tree you can look inside without installing anything. */
+  function renderAnalysis() {
+    const { file, data } = state.open;
     const props = data.properties || {};
     const rows = (data.entries || []).map((e) => ({
       index: e.index, path: e.path, name: e.name, size: e.size,
@@ -438,21 +512,21 @@
     const byPath = new Map(rows.map((r) => [r.path, r]));
     const off = rows.filter((r) => r.status === 'misplaced').length;
 
-    $openHint.textContent = off
+    $anHint.textContent = off
       ? t('%n of these sit somewhere the game will never look.').replace('%n', formatInt(off))
       : t('Every file in here sits where the game will read it.');
 
-    $openMeta.innerHTML =
+    $anMeta.innerHTML =
       `<h3 class="mw-open-name">${esc(props.title || file.name)}</h3>` +
       chipsHTML(data) + headerHTML(data);
 
     const counts = { ready: 0, moved: 0, misplaced: 0, skipped: 0 };
     for (const r of rows) counts[r.status] = (counts[r.status] || 0) + 1;
-    renderSummary($openSummary, counts, counts.ready, data, 'open');
+    renderSummary($anSummary, counts, counts.ready, data, 'open');
 
-    $openFiles.innerHTML = `<h3 class="mw-h">${esc(t('Files'))}</h3>` +
+    $anFiles.innerHTML = `<h3 class="mw-h">${esc(t('Files'))}</h3>` +
       `<div class="mw-tree">${treeHTML(fileTree(data.files || []), data, byPath, 0)}</div>`;
-    $openRepair.hidden = !off || !data.game_index_available;
+    $anRepair.hidden = !off || !data.game_index_available;
   }
 
   /* ── The contents breakdown ──────────────────────────────────────────
@@ -683,9 +757,11 @@
     return overlay.querySelector('.mw-preview-body');
   }
 
+  /** Saving a file out reports on whichever tab asked for it. */
   async function openDownload(path) {
     if (!state.open) return;
-    setOpenStatus(path ? t('Saving…') : t('Packing it up…'));
+    const report = state.tab === 'analyze' ? setAnStatus : setOpenStatus;
+    report(path ? t('Saving…') : t('Packing it up…'));
     const form = new FormData();
     form.append('file', state.open.file, state.open.file.name);
     if (path) form.append('path', path);
@@ -697,54 +773,64 @@
       const fallback = path ? path.split('/').pop()
         : `${state.open.file.name.replace(/\.tmod$/i, '')}.zip`;
       save(blob, filenameFrom(res, fallback));
-      setOpenStatus(t('Done — check your downloads.'));
+      report(t('Done — check your downloads.'));
     } catch (err) {
-      setOpenStatus(message(err), true);
+      report(message(err), true);
     }
   }
 
-  /** Hand the opened mod to the build side, files, header and all. */
+  /** Hand the analyzed mod to the build side, files, header and all. */
   function repair() {
     if (!state.open) return;
     const file = state.open.file;
     showTab('make');
     reset();
     for (const id of ['mw-title', 'mw-author', 'mw-version', 'mw-notes']) $(id).value = '';
+    $flow.hidden = false;
     state.source = { kind: 'tmod', archive: file, files: [file], paths: [], header: {} };
     state.fix = true;
     $fix.checked = true;
     describeSource();
     refresh();
-    $panelMake.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    TABS[0].panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   // ─── Wiring ────────────────────────────────────────────────────────
 
   function wire() {
-    $tabMake.addEventListener('click', () => showTab('make'));
-    $tabOpen.addEventListener('click', () => showTab('open'));
-    for (const tab of [$tabMake, $tabOpen]) {
-      tab.addEventListener('keydown', (e) => {
-        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    TABS.forEach((entry, i) => {
+      entry.tab.addEventListener('click', () => showTab(entry.name));
+      entry.tab.addEventListener('keydown', (e) => {
+        const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
         e.preventDefault();
-        const next = tab === $tabMake ? $tabOpen : $tabMake;
-        showTab(next === $tabMake ? 'make' : 'open');
-        next.focus();
+        const next = TABS[(i + step + TABS.length) % TABS.length];
+        showTab(next.name);
+        next.tab.focus();
       });
-    }
+    });
 
     $('mw-pick-files').addEventListener('click', () => $inputFiles.click());
     $('mw-pick-folder').addEventListener('click', () => $inputFolder.click());
+    $('mw-zip-pick').addEventListener('click', () => $inputZip.click());
     $('mw-open-pick').addEventListener('click', () => $inputOpen.click());
+    $('mw-an-pick').addEventListener('click', () => $inputOpen.click());
     $inputFiles.addEventListener('change', () => { setSource($inputFiles.files); $inputFiles.value = ''; });
     $inputFolder.addEventListener('change', () => { setSource($inputFolder.files); $inputFolder.value = ''; });
+    $inputZip.addEventListener('change', () => { setSource($inputZip.files); $inputZip.value = ''; });
     $inputOpen.addEventListener('change', () => {
       openMod($inputOpen.files && $inputOpen.files[0]);
       $inputOpen.value = '';
     });
+    $openFilter.addEventListener('input', () => {
+      state.openFilter = $openFilter.value.trim();
+      if (state.open) renderExtract();
+    });
 
     dropTarget($drop, (files) => setSource(files));
+    dropTarget($zipDrop, (files) => setSource(files));
     dropTarget($openDrop, (files) => openMod(files[0]));
+    dropTarget($anDrop, (files) => openMod(files[0]));
 
     $('mw-clear').addEventListener('click', () => {
       reset();
@@ -781,7 +867,9 @@
 
     $build.addEventListener('click', build);
     $openZip.addEventListener('click', () => openDownload(''));
-    $openRepair.addEventListener('click', repair);
+    $anRepair.addEventListener('click', repair);
+
+    showTab('make');     // also parks the shared build steps in the first panel
   }
 
   /** Drag and drop, including a dropped folder - the natural gesture for this
@@ -883,6 +971,11 @@
   function setOpenStatus(text, bad) {
     $openStatus.textContent = text || '';
     $openStatus.classList.toggle('bad', !!bad);
+  }
+
+  function setAnStatus(text, bad) {
+    $anStatus.textContent = text || '';
+    $anStatus.classList.toggle('bad', !!bad);
   }
 
   function message(err) {

@@ -573,14 +573,24 @@ img.nav-account-avatar {
   left: auto;
   right: max(16px, calc((100vw - 1320px) / 2 + 24px));
   width: max-content;
-  max-width: min(940px, calc(100vw - 32px));
+  /* Room for five content-sized columns. The old 940px was 100px short of what
+     the entries actually measure, and the columns only "fit" because their links
+     were overflowing into each other. */
+  max-width: min(1080px, calc(100vw - 32px));
   transform: translateY(-6px) scale(.96);
 }
 .nav-dropdown.open .nav-dropdown-panel.nav-mega {
   transform: translateY(0) scale(1);
 }
+/* Columns size to their own widest link (`flex-basis: auto`) and never shrink
+   below it. With a fixed 160px basis a group could be squeezed narrower than its
+   content - and since the links are `white-space: nowrap`, the overflow spilled
+   sideways INTO the next column: the long entries carrying a Beta pill
+   (Dressing Room, Mod Workshop) ran straight over Reference. The panel is
+   `width: max-content` and wraps, so letting a column be as wide as it needs
+   costs a wrap at narrow widths rather than a collision. */
 .nav-dropdown-panel.nav-mega .nav-mega-group {
-  flex: 1 1 160px;
+  flex: 0 0 auto;
   min-width: 158px;
 }
 .nav-mega-group { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -608,6 +618,17 @@ img.nav-account-avatar {
 .nav-pill-beta {
   background: linear-gradient(135deg, #f8961e, #ff5e7e);
   color: #1a0c0c;
+}
+/* In a menu the pill is a trailing marker, not part of the label: it parks at the
+   column's right edge (so every pill in a group lines up), never gives up width to
+   the link text, and stays small - five columns of destinations shouldn't have to
+   widen to make room for the word BETA. */
+.nav-dropdown-panel a .nav-pill {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 1px 5px;
+  font-size: .56rem;
+  letter-spacing: .06em;
 }
 
 

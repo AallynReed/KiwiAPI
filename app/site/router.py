@@ -24,7 +24,8 @@ from app.admin import runtime_config
 from app.core import features as feature_flags
 from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
-from app.core.utils import iso
+from app.core.ratelimit import check_rate_limit
+from app.core.utils import client_ip, iso
 from app.site import classes_page, commands_page, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS as _SITE_FEATURE_FLAGS
 from app.site.feature_map import SITEMAP_PAGES as _SITEMAP_PAGES
@@ -3106,6 +3107,22 @@ async def site_up_file_compare(
 # reader/builder pointed at loose files instead of a repo.
 
 
+async def _workshop_throttle(request: Request) -> None:
+    """Per-IP budget for the Mod Workshop's endpoints.
+
+    These are tokenless *and* login-free, and every one of them unpacks a ``.zip``,
+    parses a ``.tmod`` or builds one - so they get their own bucket instead of riding
+    the shared anonymous budget, where a build storm would crowd out the read-side
+    proxies the rest of the site runs on (and vice versa). Tuned by
+    ``mod_workshop_rate_limit_*``; one person's session is a placement check, a build
+    and a request per file they look at, so the default sits well above that."""
+    max_, window = await runtime_config.get_rate_limit("mod_workshop_rate_limit")
+    await check_rate_limit(f"modworkshop:{client_ip(request) or 'unknown'}", max_, window)
+
+
+_WORKSHOP_LIMIT = Depends(_workshop_throttle)
+
+
 def _workshop_spec(raw: str) -> dict:
     try:
         parsed = json.loads(raw or "{}")
@@ -3172,6 +3189,7 @@ async def _workshop_source(
 async def site_workshop_inspect(
     paths: str = Form(default="[]"),
     archive: UploadFile | None = File(default=None),
+    _limit: None = _WORKSHOP_LIMIT,
 ) -> JSONResponse:
     """Where every selected file would land in a build, before anything is built.
 
@@ -3198,6 +3216,7 @@ async def site_workshop_build(
     files: list[UploadFile] = File(default=[]),
     archive: UploadFile | None = File(default=None),
     config: UploadFile | None = File(default=None),
+    _limit: None = _WORKSHOP_LIMIT,
 ) -> Response:
     """Compile the selected files into a ``.tmod`` and hand it straight back.
 
@@ -3261,7 +3280,9 @@ async def site_workshop_build(
 
 
 @router.post("/site/mod-workshop/extract", response_class=JSONResponse)
-async def site_workshop_extract(file: UploadFile = File(...)) -> JSONResponse:
+async def site_workshop_extract(
+    file: UploadFile = File(...), _limit: None = _WORKSHOP_LIMIT,
+) -> JSONResponse:
     """Open a ``.tmod`` and describe it: the header the game reads off it, every file
     packed inside, and whether those files sit where the game would actually look.
 
@@ -3287,6 +3308,7 @@ async def site_workshop_blueprint(
     request: Request,
     file: UploadFile = File(...), path: str = Form(...),
     fmt: str = Query(default="json", pattern="^(json|bin)$"),
+    _limit: None = _WORKSHOP_LIMIT,
 ) -> Response:
     """Decoded voxel data for one ``.blueprint`` inside an uploaded ``.tmod``, for the
     in-page 3D preview - the same payload (and the same payload cache) the Mods Hub's
@@ -3307,6 +3329,7 @@ async def site_workshop_blueprint(
 @router.post("/site/mod-workshop/extract/download", response_class=Response)
 async def site_workshop_extract_download(
     file: UploadFile = File(...), path: str = Form(default=""),
+    _limit: None = _WORKSHOP_LIMIT,
 ) -> Response:
     """Unpack a ``.tmod``: the whole thing as a ``.zip``, or one file on its own
     when ``path`` names one."""

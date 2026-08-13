@@ -501,6 +501,29 @@ REGISTRY: dict[str, TunableSetting] = {
         min_value=10, max_value=86400,
         description="Sliding-window length for the per-IP embed bucket, in seconds.",
     ),
+    "mod_workshop_rate_limit_max": _t(
+        key="mod_workshop_rate_limit_max",
+        default=60,
+        type="int",
+        category="api_rate_limits",
+        min_value=1, max_value=100000,
+        description=(
+            "Per-IP cap on the Mod Workshop's endpoints (/site/mod-workshop/*). "
+            "They are tokenless and login-free, and each one unpacks a .zip, parses "
+            "a .tmod or builds one, so they get their own bucket rather than sharing "
+            "the anonymous API budget. One person's session spends a placement check, "
+            "a build, and one request per file they preview or save out - so keep "
+            "this comfortably above a mod's worth of clicks."
+        ),
+    ),
+    "mod_workshop_rate_limit_window_seconds": _t(
+        key="mod_workshop_rate_limit_window_seconds",
+        default=60,
+        type="int",
+        category="api_rate_limits",
+        min_value=10, max_value=86400,
+        description="Sliding-window length for the per-IP Mod Workshop bucket, in seconds.",
+    ),
     "embed.upload_ttl_minutes": _t(
         key="embed.upload_ttl_minutes",
         default=30,

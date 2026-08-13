@@ -6,9 +6,15 @@
    ═══════════════════════════════════════════════════════════════════════ */
 
 .mw-main {
+  width: 100%;
   max-width: 1180px;
   margin: 0 auto;
   padding: 0 28px 90px;
+  /* `body.landing` is a flex column, so main is a flex item sized from its own
+     content - which on a phone is the four tabs laid end to end, dragging the whole
+     page sideways. Pinning the width to the container makes the tab strip scroll
+     inside itself (it is `overflow-x: auto`) instead of stretching the page. */
+  min-width: 0;
 }
 
 /* ─── Hero ──────────────────────────────────────────────────────────── */
@@ -42,7 +48,11 @@
   gap: 8px;
   margin: 26px 0 4px;
   border-bottom: 1px solid var(--bg-line, #1f2733);
+  overflow-x: auto;            /* four tabs; scroll the strip, never the page */
+  scrollbar-width: none;
 }
+.mw-tabs::-webkit-scrollbar { display: none; }
+.mw-tab { flex: 0 0 auto; }
 .mw-tab {
   display: inline-flex;
   gap: 9px;
@@ -340,6 +350,34 @@
 .mw-row-why { color: var(--text-mute); }
 .mw-row-size { color: var(--text-mute); font-size: .78rem; white-space: nowrap; }
 .mw-row-keep { font-size: .76rem; white-space: nowrap; }
+/* The extract list has no verdict column - just what's in there and a way to
+   take it out. */
+.mw-row.plain { grid-template-columns: minmax(0, 1fr) auto auto; }
+
+/* ─── Filter ────────────────────────────────────────────────────────── */
+
+.mw-search {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 14px;
+  border: 1px solid var(--bg-line, #1f2733);
+  border-radius: 999px;
+  background: var(--bg-deep, #0a0e14);
+}
+.mw-search > i { color: var(--text-soft); font-size: .86rem; }
+.mw-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: .88rem;
+}
+.mw-search input:focus { outline: none; }
+.mw-search:focus-within { border-color: var(--accent-blue); }
 
 /* ─── Build form ────────────────────────────────────────────────────── */
 
@@ -576,6 +614,8 @@
   .mw-form { grid-template-columns: minmax(0, 1fr); }
   .mw-form-fields { grid-template-columns: minmax(0, 1fr); }
   .mw-row { grid-template-columns: 88px minmax(0, 1fr); }
+  .mw-row.plain { grid-template-columns: minmax(0, 1fr) auto; }
   .mw-row-size, .mw-row-keep { grid-column: 2; }
+  .mw-row.plain .mw-row-size { grid-column: 1; }
   .mw-props th { width: 130px; }
 }

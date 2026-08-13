@@ -46,23 +46,31 @@
                 <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
                 <span data-i18n>Make a mod</span>
             </button>
+            <button type="button" class="mw-tab" id="mw-tab-zip" role="tab"
+                    aria-selected="false" aria-controls="mw-panel-zip" tabindex="-1">
+                <i class="fa-solid fa-file-zipper" aria-hidden="true"></i>
+                <span data-i18n>Convert a zip</span>
+            </button>
             <button type="button" class="mw-tab" id="mw-tab-open" role="tab"
                     aria-selected="false" aria-controls="mw-panel-open" tabindex="-1">
                 <i class="fa-solid fa-box-open" aria-hidden="true"></i>
                 <span data-i18n>Open a mod</span>
             </button>
+            <button type="button" class="mw-tab" id="mw-tab-analyze" role="tab"
+                    aria-selected="false" aria-controls="mw-panel-analyze" tabindex="-1">
+                <i class="fa-solid fa-magnifying-glass-chart" aria-hidden="true"></i>
+                <span data-i18n>Analyze a mod</span>
+            </button>
         </div>
 
         <!-- ═══════════ MAKE A MOD ═══════════ -->
         <section id="mw-panel-make" role="tabpanel" aria-labelledby="mw-tab-make" tabindex="-1">
-
-            <!-- Step 1 — the files -->
             <section class="mw-step">
                 <div class="mw-step-head">
                     <span class="mw-step-num">1</span>
                     <div>
                         <h2 class="mw-step-title" data-i18n>Add your files</h2>
-                        <p class="mw-step-hint" data-i18n>A whole mod folder, a handful of loose files, or a mod someone zipped up. You can also open a finished mod here to fix it and build it again.</p>
+                        <p class="mw-step-hint" data-i18n>A whole mod folder or a handful of loose files. You can also open a finished mod here to fix it and build it again.</p>
                     </div>
                 </div>
 
@@ -81,19 +89,48 @@
                     </div>
                     <p class="mw-drop-note" data-i18n>Nothing is saved. Your files are checked, packed and handed straight back.</p>
                 </div>
+            </section>
+        </section>
 
-                <div class="mw-source" id="mw-source" hidden>
-                    <i class="fa-solid fa-box" aria-hidden="true"></i>
-                    <span class="mw-source-name" id="mw-source-name"></span>
-                    <span class="mw-source-meta" id="mw-source-meta"></span>
-                    <button type="button" class="mw-btn mw-btn-ghost" id="mw-clear">
-                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                        <span data-i18n>Start over</span>
-                    </button>
+        <!-- ═══════════ CONVERT A ZIP ═══════════ -->
+        <section id="mw-panel-zip" role="tabpanel" aria-labelledby="mw-tab-zip" tabindex="-1" hidden>
+            <section class="mw-step">
+                <div class="mw-step-head">
+                    <span class="mw-step-num">1</span>
+                    <div>
+                        <h2 class="mw-step-title" data-i18n>Pick the zip</h2>
+                        <p class="mw-step-hint" data-i18n>Mods get passed around as zips, and Trove can't read one. Drop it here and it comes back as a file the game will load — with every file checked against the game on the way.</p>
+                    </div>
                 </div>
 
-                <p class="mw-alert bad" id="mw-source-error" hidden role="alert"></p>
+                <div class="mw-drop" id="mw-zip-drop">
+                    <i class="fa-solid fa-file-zipper mw-drop-icon" aria-hidden="true"></i>
+                    <p class="mw-drop-lead" data-i18n>Drop a zip here</p>
+                    <div class="mw-drop-actions">
+                        <button type="button" class="mw-btn mw-btn-quiet" id="mw-zip-pick">
+                            <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
+                            <span data-i18n>Choose a zip</span>
+                        </button>
+                    </div>
+                    <p class="mw-drop-note" data-i18n>A wrapper folder around the mod is fine — it gets ignored.</p>
+                </div>
             </section>
+        </section>
+
+        <!-- The rest of the build is the same whichever way the files arrived, so it
+             lives once and moves into whichever of the two panels is showing. -->
+        <div id="mw-flow" hidden>
+            <div class="mw-source" id="mw-source" hidden>
+                <i class="fa-solid fa-box" aria-hidden="true"></i>
+                <span class="mw-source-name" id="mw-source-name"></span>
+                <span class="mw-source-meta" id="mw-source-meta"></span>
+                <button type="button" class="mw-btn mw-btn-ghost" id="mw-clear">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    <span data-i18n>Start over</span>
+                </button>
+            </div>
+
+            <p class="mw-alert bad" id="mw-source-error" hidden role="alert"></p>
 
             <!-- Step 2 — placement -->
             <section class="mw-step" id="mw-step-check" hidden>
@@ -175,7 +212,7 @@
             </section>
         </section>
 
-        <!-- ═══════════ OPEN A MOD ═══════════ -->
+        <!-- ═══════════ OPEN A MOD — get the files back out ═══════════ -->
         <section id="mw-panel-open" role="tabpanel" aria-labelledby="mw-tab-open" tabindex="-1" hidden>
 
             <section class="mw-step">
@@ -183,7 +220,7 @@
                     <span class="mw-step-num">1</span>
                     <div>
                         <h2 class="mw-step-title" data-i18n>Open a mod</h2>
-                        <p class="mw-step-hint" data-i18n>See who made it, what's packed inside, and whether the game will actually read any of it. Save the whole thing as a folder, or pull out a single file.</p>
+                        <p class="mw-step-hint" data-i18n>Get the files back out of a finished mod — the whole thing as a folder, or one file on its own.</p>
                     </div>
                 </div>
 
@@ -196,39 +233,88 @@
                             <span data-i18n>Choose a mod</span>
                         </button>
                     </div>
-                    <p class="mw-drop-note" data-i18n>Nothing is saved. The mod is opened, described and forgotten.</p>
+                    <p class="mw-drop-note" data-i18n>Nothing is saved. The mod is opened, unpacked and forgotten.</p>
                 </div>
-
-                <p class="mw-alert bad" id="mw-open-error" hidden role="alert"></p>
             </section>
 
             <section class="mw-step" id="mw-open-result" hidden>
                 <div class="mw-step-head">
                     <span class="mw-step-num">2</span>
                     <div>
-                        <h2 class="mw-step-title" data-i18n>What's inside</h2>
+                        <h2 class="mw-step-title" data-i18n>Take it apart</h2>
                         <p class="mw-step-hint" id="mw-open-hint"></p>
                     </div>
                 </div>
-
-                <div class="mw-open-meta" id="mw-open-meta"></div>
-                <div class="mw-summary" id="mw-open-summary" aria-live="polite"></div>
 
                 <div class="mw-open-actions">
                     <button type="button" class="mw-btn mw-btn-go" id="mw-open-zip">
                         <i class="fa-solid fa-file-zipper" aria-hidden="true"></i>
                         <span data-i18n>Save everything as a folder</span>
                     </button>
-                    <button type="button" class="mw-btn mw-btn-quiet" id="mw-open-repair" hidden>
-                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
-                        <span data-i18n>Fix the placement and rebuild</span>
-                    </button>
                     <p class="mw-status" id="mw-open-status" role="status"></p>
                 </div>
+
+                <label class="mw-search" for="mw-open-filter">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <span class="sr-only" data-i18n>Filter files</span>
+                    <input type="search" id="mw-open-filter" autocomplete="off"
+                           placeholder="Filter files…" data-i18n-placeholder>
+                </label>
 
                 <div class="mw-files" id="mw-open-files"></div>
             </section>
         </section>
+
+        <!-- ═══════════ ANALYZE A MOD — what's inside ═══════════ -->
+        <section id="mw-panel-analyze" role="tabpanel" aria-labelledby="mw-tab-analyze" tabindex="-1" hidden>
+
+            <section class="mw-step">
+                <div class="mw-step-head">
+                    <span class="mw-step-num">1</span>
+                    <div>
+                        <h2 class="mw-step-title" data-i18n>Analyze a mod</h2>
+                        <p class="mw-step-hint" data-i18n>See who made it, everything packed inside, and whether the game will actually read any of it. Look at the models and pictures without installing anything.</p>
+                    </div>
+                </div>
+
+                <div class="mw-drop" id="mw-an-drop">
+                    <i class="fa-solid fa-magnifying-glass-chart mw-drop-icon" aria-hidden="true"></i>
+                    <p class="mw-drop-lead" data-i18n>Drop a mod file here</p>
+                    <div class="mw-drop-actions">
+                        <button type="button" class="mw-btn mw-btn-quiet" id="mw-an-pick">
+                            <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
+                            <span data-i18n>Choose a mod</span>
+                        </button>
+                    </div>
+                    <p class="mw-drop-note" data-i18n>Nothing is saved. The mod is read, described and forgotten.</p>
+                </div>
+            </section>
+
+            <section class="mw-step" id="mw-an-result" hidden>
+                <div class="mw-step-head">
+                    <span class="mw-step-num">2</span>
+                    <div>
+                        <h2 class="mw-step-title" data-i18n>What's inside</h2>
+                        <p class="mw-step-hint" id="mw-an-hint"></p>
+                    </div>
+                </div>
+
+                <div class="mw-open-meta" id="mw-an-meta"></div>
+                <div class="mw-summary" id="mw-an-summary" aria-live="polite"></div>
+
+                <div class="mw-open-actions">
+                    <button type="button" class="mw-btn mw-btn-quiet" id="mw-an-repair" hidden>
+                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                        <span data-i18n>Fix the placement and rebuild</span>
+                    </button>
+                    <p class="mw-status" id="mw-an-status" role="status"></p>
+                </div>
+
+                <div id="mw-an-files"></div>
+            </section>
+        </section>
+
+        <p class="mw-alert bad" id="mw-open-error" hidden role="alert"></p>
 
         <p class="mw-source-note">
             <span data-i18n>Built with the same tools the Mods Hub uses, so a mod made here is the same as one released there.</span>
@@ -239,6 +325,7 @@
     <!-- The file inputs the page retargets as needed. -->
     <input type="file" id="mw-input-files" multiple hidden>
     <input type="file" id="mw-input-folder" webkitdirectory directory multiple hidden>
+    <input type="file" id="mw-input-zip" accept=".zip" hidden>
     <input type="file" id="mw-input-open" accept=".tmod" hidden>
 
     {% include "partials/footer.html" %}
