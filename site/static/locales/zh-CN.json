@@ -2540,5 +2540,10 @@
   "Sort files": "文件排序",
   "Filter by change type": "按更改类型筛选",
   "Filter by audio format": "按音频格式筛选",
-  "Seek": "播放位置"
+  "Seek": "播放位置",
+  "Economy": "经济",
+  "Plan": "规划",
+  "Learn": "学习",
+  "Search pages": "搜索页面",
+  "No pages match": "没有匹配的页面"
 }

@@ -2540,5 +2540,10 @@
   "Sort files": "파일 정렬",
   "Filter by change type": "변경 유형으로 필터",
   "Filter by audio format": "오디오 형식으로 필터",
-  "Seek": "재생 위치"
+  "Seek": "재생 위치",
+  "Economy": "경제",
+  "Plan": "계획",
+  "Learn": "학습",
+  "Search pages": "페이지 검색",
+  "No pages match": "일치하는 페이지가 없습니다"
 }

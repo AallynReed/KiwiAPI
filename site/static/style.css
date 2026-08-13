@@ -279,6 +279,26 @@ canvas.bg-fx {
   background: linear-gradient(135deg, color-mix(in oklab, var(--accent-blue) 80%, white), var(--accent-orange));
 }
 
+/* Promoted destinations (Leaderboards / Market / Mods Hub) - one per audience,
+   so the common tasks are a click rather than a dropdown plus a scan of 27
+   rows. Deliberately icon-free: three more glyphs on the bar would add the
+   same texture the mega-menu is trying to shed.
+
+   Hidden below 1280px. .nav-links wraps rather than overflows, so once the bar
+   can't fit them it silently grows to two rows instead of clipping - measured,
+   the full bar needs ~1230px with a signed-in account chip on it, so 1180 was
+   inside the wrap. Everything here is still one level down in Pages. The mobile
+   drawer keeps them hidden too - in a single column they'd just be duplicates
+   of menu entries. */
+.nav-links a.nav-quick { display: none; }
+@media (min-width: 1280px) {
+  .nav-links a.nav-quick { display: inline-flex; }
+}
+.nav-links a.nav-quick.active {
+  color: var(--accent-blue);
+  background: var(--bg-card);
+}
+
 /* Utility cluster (socials + support + account + language). ``display:
    contents`` makes the wrapper vanish from layout so its children remain
    direct flex items of .nav-links - the desktop navbar is byte-identical to
@@ -602,6 +622,95 @@ img.nav-account-avatar {
   text-transform: uppercase;
   color: var(--text-mute);
 }
+
+/* ── Pages search ────────────────────────────────────────────────────────
+   A full-width row above the columns (flex-basis 100% forces the wrap).
+   The menu grows by one row per feature; this is the one control that
+   doesn't, so it gets the top slot. */
+.nav-mega-search {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -4px 0 10px;
+  padding: 0 12px;
+  height: 40px;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  transition: border-color .15s;
+}
+.nav-mega-search:focus-within { border-color: var(--accent-blue); }
+.nav-mega-search > i { color: var(--text-mute); font-size: .85rem; }
+.nav-mega-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font: 400 .92rem 'Inter', system-ui, sans-serif;
+}
+/* Pointer focus is carried by the wrapper's border shift alone, but the global
+   keyboard ring stays - :focus-visible is declared after :focus at the same
+   specificity, so it wins back the outline for keyboard users. */
+.nav-mega-search-input:focus { outline: none; }
+.nav-mega-search-input:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.nav-mega-search-input::placeholder { color: var(--text-mute); }
+/* The UA's own clear button paints light-on-dark; the Escape key and the
+   panel closing both reset the field, so it isn't carrying any weight. */
+.nav-mega-search-input::-webkit-search-cancel-button { display: none; }
+.nav-mega-kbd {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border: 1px solid var(--bg-line);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-mute);
+  font: 500 .66rem 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: .04em;
+}
+.nav-mega-empty {
+  flex: 1 0 100%;
+  margin: 2px 0 6px;
+  padding: 0 12px;
+  color: var(--text-mute);
+  font-size: .9rem;
+}
+
+/* Filtering collapses the five columns into one result list. Doing it as a
+   single mode-switch beats hiding rows in place: with `width: max-content`
+   the panel would re-measure and jump sideways on every keystroke. */
+.nav-dropdown-panel.nav-mega.filtering {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  /* In a column container `flex-basis: 100%` resolves against HEIGHT, so the
+     full-width rows have to go back to auto or they claim the whole panel. */
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.nav-dropdown-panel.nav-mega.filtering .nav-mega-group { width: 100%; }
+/* align-self: stretch because the panel is align-items: flex-start - without it
+   a `flex: 0 0 auto` row in the column layout shrinks to its own text width. */
+.nav-dropdown-panel.nav-mega.filtering .nav-mega-search,
+.nav-dropdown-panel.nav-mega.filtering .nav-mega-empty { flex: 0 0 auto; align-self: stretch; }
+/* Group titles stay as result headers, so a hit still says which part of the
+   site it belongs to - but a group whose every row is filtered out goes. */
+.nav-mega-group[hidden], .nav-dropdown-panel.nav-mega a[hidden] { display: none; }
+
+/* Keyboard cursor for arrow-key traversal of the results. Distinct from
+   :hover so mousing over the panel doesn't fight the arrow keys. */
+.nav-dropdown-panel.nav-mega a.nav-mega-cursor {
+  background: var(--bg-card-hi);
+  color: var(--accent-blue);
+}
+.nav-dropdown-panel.nav-mega a.nav-mega-cursor i { color: var(--accent-blue); }
 
 /* Beta pill - lives in the nav dropdown (Market link), so it belongs in the
    SHARED stylesheet to render its background on every page, not just /market. */
@@ -2008,6 +2117,19 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
     gap: 2px;
   }
   .nav-dropdown-panel.nav-mega .nav-mega-group { flex: none; min-width: 0; }
+  /* The drawer's mega-panel is already a single column, so the desktop
+     "filtering" mode-switch has nothing to switch: neutralise its fixed width
+     and its own scroller (the drawer scrolls) and keep the full-width rows
+     from resolving flex-basis against the panel's height. */
+  .nav-mega-search, .nav-mega-empty { flex: 0 0 auto; align-self: stretch; }
+  .nav-mega-search { margin: 4px 12px 10px 0; }
+  .nav-mega-kbd { display: none; }
+  .nav-dropdown-panel.nav-mega.filtering {
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+  }
   /* Generous cap: the max-height has to be a number for the transition, and
      the full five-group list already measures ~1350px. The drawer scrolls, so
      over-shooting costs nothing - under-shooting silently clips the bottom

@@ -2540,5 +2540,10 @@
   "Sort files": "ファイルを並べ替え",
   "Filter by change type": "変更の種類で絞り込む",
   "Filter by audio format": "オーディオ形式で絞り込む",
-  "Seek": "再生位置"
+  "Seek": "再生位置",
+  "Economy": "経済",
+  "Plan": "計画",
+  "Learn": "学ぶ",
+  "Search pages": "ページを検索",
+  "No pages match": "一致するページはありません"
 }

@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const trig = dd.querySelector('.nav-dropdown-trigger');
             if (trig) trig.setAttribute('aria-expanded', 'false');
         });
+        resetPagesFilter();
     }
     document.querySelectorAll('.nav-dropdown').forEach((dd) => {
         const trigger = dd.querySelector('.nav-dropdown-trigger');
@@ -87,6 +88,127 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
+
+    // ── Pages menu: type-to-filter + Ctrl/Cmd+K ──────────────────────────
+    // The menu carries ~27 destinations and grows by one row per feature, so
+    // the columns alone stopped scaling. Filtering reuses the rendered links
+    // rather than a parallel index: labels are swapped in place by i18n.js, so
+    // reading textContent at match time means search works in every language
+    // for free and can never drift out of sync with what's on screen.
+    const pagesPanel   = document.getElementById('nav-pages-panel');
+    const pagesSearch  = document.getElementById('nav-pages-search');
+    const pagesEmpty   = document.getElementById('nav-pages-empty');
+    const pagesTrigger = document.getElementById('nav-pages-trigger');
+
+    // Declared as a hoisted function so closeAllDropdowns above can call it
+    // regardless of which block runs first.
+    function resetPagesFilter() {
+        if (!pagesPanel || !pagesSearch) return;
+        pagesSearch.value = '';
+        pagesPanel.classList.remove('filtering');
+        pagesPanel.querySelectorAll('a[hidden]').forEach((a) => { a.hidden = false; });
+        pagesPanel.querySelectorAll('.nav-mega-group[hidden]').forEach((g) => { g.hidden = false; });
+        pagesPanel.querySelectorAll('.nav-mega-cursor').forEach((a) => a.classList.remove('nav-mega-cursor'));
+        if (pagesEmpty) pagesEmpty.hidden = true;
+    }
+
+    if (pagesPanel && pagesSearch) {
+        const pageLinks = Array.from(pagesPanel.querySelectorAll('.nav-mega-group a'));
+        const groups    = Array.from(pagesPanel.querySelectorAll('.nav-mega-group'));
+
+        // The hint ships as "Ctrl K" so it's right without JS; Mac gets the key
+        // it actually presses. Not translated - these are key names, not words.
+        const kbdHint = pagesPanel.querySelector('.nav-mega-kbd');
+        if (kbdHint && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+            kbdHint.textContent = '⌘ K';
+        }
+
+        // Fold case and strip diacritics so "activite" finds "Activité" - the
+        // localised labels are what a non-English visitor is typing against.
+        const fold = (s) => s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+
+        const visibleLinks = () => pageLinks.filter((a) => !a.hidden);
+
+        function moveCursor(step) {
+            const links = visibleLinks();
+            if (!links.length) return;
+            const current = links.findIndex((a) => a.classList.contains('nav-mega-cursor'));
+            const next = current < 0
+                ? (step > 0 ? 0 : links.length - 1)
+                : (current + step + links.length) % links.length;
+            links.forEach((a) => a.classList.remove('nav-mega-cursor'));
+            links[next].classList.add('nav-mega-cursor');
+            links[next].scrollIntoView({ block: 'nearest' });
+        }
+
+        function applyFilter() {
+            const q = fold(pagesSearch.value.trim());
+            if (!q) { resetPagesFilter(); return; }
+            pagesPanel.classList.add('filtering');
+            let hits = 0;
+            pageLinks.forEach((a) => {
+                // The href catches route-shaped queries ("/store", "gem-") that
+                // the visible label doesn't contain.
+                const hay = fold(a.textContent + ' ' + a.getAttribute('href'));
+                const match = hay.includes(q);
+                a.hidden = !match;
+                a.classList.remove('nav-mega-cursor');
+                if (match) hits++;
+            });
+            groups.forEach((g) => {
+                g.hidden = !g.querySelector('a:not([hidden])');
+            });
+            if (pagesEmpty) pagesEmpty.hidden = hits > 0;
+            const first = visibleLinks()[0];
+            if (first) first.classList.add('nav-mega-cursor');
+        }
+
+        pagesSearch.addEventListener('input', applyFilter);
+        // Clicks inside the field must not reach the document handler that
+        // closes every dropdown.
+        pagesSearch.addEventListener('click', (e) => e.stopPropagation());
+
+        pagesSearch.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                moveCursor(e.key === 'ArrowDown' ? 1 : -1);
+            } else if (e.key === 'Enter') {
+                const target = pagesPanel.querySelector('.nav-mega-cursor') || visibleLinks()[0];
+                if (target) { e.preventDefault(); window.location.href = target.href; }
+            } else if (e.key === 'Escape' && pagesSearch.value) {
+                // First Escape clears the query, second closes the menu (the
+                // document-level handler above). Stop it here so one keypress
+                // doesn't do both.
+                e.stopPropagation();
+                resetPagesFilter();
+            }
+        });
+
+        // Focus the field when the menu opens. This listener is registered
+        // after the one that toggles .open, so the class is already correct.
+        // Desktop only - autofocusing in the mobile drawer throws up the
+        // on-screen keyboard over the menu the user just asked to see.
+        pagesTrigger?.addEventListener('click', () => {
+            if (window.innerWidth > 768 && pagesTrigger.closest('.nav-dropdown')?.classList.contains('open')) {
+                pagesSearch.focus();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'k' && e.key !== 'K') return;
+            if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+            const dd = pagesTrigger?.closest('.nav-dropdown');
+            if (!dd) return;
+            e.preventDefault();
+            if (!dd.classList.contains('open')) {
+                closeAllDropdowns();
+                dd.classList.add('open');
+                pagesTrigger.setAttribute('aria-expanded', 'true');
+            }
+            pagesSearch.focus();
+            pagesSearch.select();
+        });
+    }
 
     // Per-platform release fetch + render. Hits the Kiwi API instead of GitHub
     // directly: one call returns every platform's latest build (with walk-back

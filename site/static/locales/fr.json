@@ -2540,5 +2540,10 @@
   "Sort files": "Trier les fichiers",
   "Filter by change type": "Filtrer par type de modification",
   "Filter by audio format": "Filtrer par format audio",
-  "Seek": "Position de lecture"
+  "Seek": "Position de lecture",
+  "Economy": "Économie",
+  "Plan": "Planifier",
+  "Learn": "Apprendre",
+  "Search pages": "Rechercher des pages",
+  "No pages match": "Aucune page correspondante"
 }
