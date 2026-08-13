@@ -235,6 +235,20 @@ REGISTRY: dict[str, TunableSetting] = {
             "stays available when this is off."
         ),
     ),
+    "feature_mod_workshop_enabled": _t(
+        key="feature_mod_workshop_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Mod Workshop. OFF hides the /mod-workshop page + "
+            "navbar link (404) and 404s its /site/mod-workshop/* endpoints. It is a "
+            "stateless compiler/unpacker (nothing is stored, no login), independent "
+            "of the Mods Hub toggle. Its 'is this file in the right place' check "
+            "reads the game tree from the updates archive and degrades to plain path "
+            "rules without it, so it does NOT need feature_updates_enabled."
+        ),
+    ),
     "feature_webhooks_enabled": _t(
         key="feature_webhooks_enabled",
         default=True,

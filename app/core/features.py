@@ -55,6 +55,7 @@ STORE_FLAG = "feature_store_enabled"
 EMBED_FLAG = "feature_embed_viewer_enabled"
 DRESSING_ROOM_FLAG = "feature_dressing_room_enabled"
 SOUND_STUDIO_FLAG = "feature_sound_studio_enabled"
+MOD_WORKSHOP_FLAG = "feature_mod_workshop_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"

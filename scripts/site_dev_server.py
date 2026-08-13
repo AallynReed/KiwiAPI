@@ -1272,6 +1272,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "updates.html", "text/html")
         if path == "/sound-studio":
             return self._send_file(TEMPLATES / "sound-studio.html", "text/html")
+        if path == "/mod-workshop":
+            return self._send_file(TEMPLATES / "mod-workshop.html", "text/html")
         if path == "/codexes":
             return self._send_file(TEMPLATES / "codexes.html", "text/html")
         if path == "/codexes/crafting":
@@ -3436,6 +3438,120 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(blob)
 
+    def _send_binary(self, blob, filename, media_type, extra=None):
+        self.send_response(200)
+        self.send_header("Content-Type", media_type)
+        self.send_header("Content-Length", str(len(blob)))
+        self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+        for key, value in (extra or {}).items():
+            self.send_header(key, str(value))
+        self.end_headers()
+        self.wfile.write(blob)
+
+    def _read_multipart(self):
+        """``(fields, files)`` from a multipart body - files as ``[(name, filename,
+        bytes)]`` in the order they arrived, which is what the workshop's paths list
+        is aligned to."""
+        import email
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        raw = self.rfile.read(length) if length else b""
+        head = "\n".join(["Content-Type: " + (self.headers.get("Content-Type") or ""),
+                          "MIME-Version: 1.0", "", ""]).encode()
+        message = email.message_from_bytes(head + raw)
+        fields, files = {}, []
+        for part in message.walk():
+            if part.get_content_maintype() == "multipart":
+                continue
+            name = part.get_param("name", header="content-disposition") or ""
+            payload = part.get_payload(decode=True) or b""
+            filename = part.get_filename()
+            if filename:
+                files.append((name, filename, payload))
+            else:
+                fields[name] = payload.decode("utf-8", "replace")
+        return fields, files
+
+    def _mod_workshop(self, path):
+        """Run the REAL Mod Workshop engine (app.trove.mods_hub.workshop) so the dev
+        preview compiles and unpacks exactly what production does. The one thing it
+        can't do here is the game-file lookup that says where a misplaced file
+        belongs - that needs the updates archive - so placement degrades to Trove's
+        folder rules, the same as it does on a server whose archive is empty."""
+        import asyncio
+        import sys
+        sys.path.insert(0, str(ROOT))
+        from app.trove.mods_hub import workshop
+
+        fields, files = self._read_multipart()
+        blobs = {name: (filename, data) for name, filename, data in files}
+        try:
+            if path == "/site/mod-workshop/inspect":
+                if "archive" in blobs:
+                    name, data = blobs["archive"]
+                    kind, header, entries = workshop.read_archive(data, name)
+                    names = [p for p, _ in entries]
+                    sizes = {i: len(b) for i, (_, b) in enumerate(entries)}
+                else:
+                    kind, header, entries, sizes = "files", {}, None, {}
+                    names = json.loads(fields.get("paths") or "[]")
+                plan = asyncio.run(workshop.preview(names))
+                plan.pop("mapping", None)
+                if entries is not None:
+                    for entry in plan["entries"]:
+                        entry["size"] = sizes.get(entry["index"], 0)
+                    plan["config_candidates"] = workshop.config_candidates(entries)
+                return self._send_json({**plan, "source": kind, "properties": header})
+
+            if path == "/site/mod-workshop/build":
+                spec = json.loads(fields.get("spec") or "{}")
+                if "archive" in blobs:
+                    name, data = blobs["archive"]
+                    _, header, source = workshop.read_archive(data, name)
+                    props = {**header,
+                             **{k: v for k, v in (spec.get("properties") or {}).items() if v}}
+                else:
+                    names = json.loads(fields.get("paths") or "[]")
+                    source = [(str(n), d) for n, (_, _, d)
+                              in zip(names, [f for f in files if f[0] == "files"],
+                                     strict=True)]
+                    props = spec.get("properties") or {}
+                artifact, plan = asyncio.run(workshop.build_mod(
+                    source, props, fix=bool(spec.get("fix", True)),
+                    keep=spec.get("keep") or [], config_path=spec.get("config_path") or ""))
+                return self._send_binary(
+                    artifact, f"{workshop.safe_title(props.get('title'))}.tmod",
+                    "application/octet-stream",
+                    {"X-Kiwi-Packed": plan["packed"],
+                     "X-Kiwi-Moved": plan["counts"]["moved"],
+                     "X-Kiwi-Skipped": plan["counts"]["skipped"]})
+
+            if path == "/site/mod-workshop/extract":
+                info = workshop.describe(blobs["file"][1])
+                plan = asyncio.run(workshop.plan([f["path"] for f in info["files"]], fix=False))
+                sizes = {i: f["size"] for i, f in enumerate(info["files"])}
+                for entry in plan["entries"]:
+                    entry["size"] = sizes.get(entry["index"], 0)
+                plan.pop("mapping", None)
+                return self._send_json({**plan, **info})
+
+            if path == "/site/mod-workshop/extract/download":
+                _, entries = workshop.read_mod(blobs["file"][1])
+                wanted = workshop.norm_path(fields.get("path") or "")
+                if wanted:
+                    match = next((b for p, b in entries if p == wanted), None)
+                    if match is None:
+                        return self._send_json({"detail": "no such file"}, 404)
+                    return self._send_binary(match, wanted.rsplit("/", 1)[-1],
+                                             "application/octet-stream")
+                stem = blobs["file"][0].rsplit(".", 1)[0]
+                return self._send_binary(workshop.to_zip(entries), f"{stem}.zip",
+                                         "application/zip")
+        except workshop.WorkshopError as e:
+            return self._send_json({"error": {"code": "bad_request", "message": str(e)}}, 400)
+        except Exception as e:      # noqa: BLE001 - dev server: surface, never crash
+            return self._send_json({"error": {"code": "bad_request", "message": str(e)}}, 400)
+        return self._send_json({"detail": "not found"}, 404)
+
     def do_POST(self):
         url = urlparse(self.path)
         path = url.path
@@ -3445,6 +3561,9 @@ class Handler(SimpleHTTPRequestHandler):
 
         if path == "/site/sound-studio/build":
             return self._sound_studio_build()
+
+        if path.startswith("/site/mod-workshop/"):
+            return self._mod_workshop(path)
 
         length = int(self.headers.get("Content-Length", 0) or 0)
         raw = self.rfile.read(length) if length else b"{}"

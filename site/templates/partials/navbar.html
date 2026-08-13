@@ -56,7 +56,7 @@
                             {% if store_enabled %}<a href="/store" role="menuitem" class="{{ 'active' if _p == '/store' else '' }}"><i class="fa-solid fa-store"></i> <span data-i18n>Store History</span></a>{% endif %}
                         </div>
                         {% endif %}
-                        {% if star_chart_enabled or gem_simulator_enabled or gem_evaluator_enabled or gem_builds_enabled or calculators_enabled or dressing_room_enabled or sound_studio_enabled %}
+                        {% if star_chart_enabled or gem_simulator_enabled or gem_evaluator_enabled or gem_builds_enabled or calculators_enabled or dressing_room_enabled or sound_studio_enabled or mod_workshop_enabled %}
                         <div class="nav-mega-group" role="group" aria-label="Tools">
                             <p class="nav-mega-title" data-i18n>Tools</p>
                             {% if dressing_room_enabled %}<a href="/dressing-room" role="menuitem" class="{{ 'active' if _p == '/dressing-room' else '' }}"><i class="fa-solid fa-shirt"></i> <span data-i18n>Dressing Room</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
@@ -66,6 +66,7 @@
                             {% if gem_builds_enabled %}<a href="/gem-builds" role="menuitem" class="{{ 'active' if _p == '/gem-builds' else '' }}"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n>Gem Builds</span></a>{% endif %}
                             {% if calculators_enabled %}<a href="/calculators" role="menuitem" class="{{ 'active' if _p == '/calculators' else '' }}"><i class="fa-solid fa-calculator"></i> <span data-i18n>Calculators</span></a>{% endif %}
                             {% if sound_studio_enabled %}<a href="/sound-studio" role="menuitem" class="{{ 'active' if _p == '/sound-studio' else '' }}"><i class="fa-solid fa-sliders"></i> <span data-i18n>Sound Studio</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
+                            {% if mod_workshop_enabled %}<a href="/mod-workshop" role="menuitem" class="{{ 'active' if _p == '/mod-workshop' else '' }}"><i class="fa-solid fa-screwdriver-wrench"></i> <span data-i18n>Mod Workshop</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
                         </div>
                         {% endif %}
                         {% if gems_guide_enabled or classes_enabled or commands_enabled or codexes_enabled or updates_enabled or btt_releases_enabled %}

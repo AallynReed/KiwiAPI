@@ -34,7 +34,7 @@ _PAGE_PATHS = frozenset({
     "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/accessibility", "/changelog", "/mods", "/modpacks",
     "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
     "/star-chart", "/gem-simulator", "/gem-evaluator", "/gem-builds", "/calculators",
-    "/gems-guide", "/dressing-room", "/sound-studio",
+    "/gems-guide", "/dressing-room", "/sound-studio", "/mod-workshop",
 })
 
 # Dynamic site page subtrees (parameterised routes like /mods/{slug},
@@ -90,6 +90,10 @@ def add_security_middleware(app: FastAPI) -> None:
             # the user picked and sends samples), which is bulky by nature. The
             # endpoint caps each clip and the total itself.
             max_body = settings.sound_studio_max_request_body_bytes
+        elif path.startswith("/site/mod-workshop/"):
+            # A whole mod is uploaded in one request (loose files, a .zip, or a
+            # .tmod being repaired). The unpacked-size cap lives in workshop.py.
+            max_body = settings.mod_workshop_max_request_body_bytes
         elif path == "/v1/misc/feedback":
             # 4 attachments × 5 MB + form fields. The endpoint also caps
             # per-file size + count itself, so this is a generous gate

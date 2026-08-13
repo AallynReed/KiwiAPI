@@ -327,6 +327,12 @@ class Settings(BaseSettings):
     # are enforced by the endpoint itself.
     sound_studio_max_request_body_bytes: int = 32 * 1024 * 1024  # 32 MB
 
+    # Mod Workshop builds: the whole mod is uploaded at once (a folder of files, a
+    # .zip, or an existing .tmod to repair), so this matches the /v1/mods/* cap
+    # rather than the 8 MB default. What an archive is allowed to UNPACK to is
+    # capped separately in mods_hub/workshop.py.
+    mod_workshop_max_request_body_bytes: int = 32 * 1024 * 1024  # 32 MB
+
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
     # Bind-mounted into the api container from `./site` in the project root.
     site_root: str = "site"

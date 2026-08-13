@@ -49,6 +49,7 @@ SITE_FEATURE_FLAGS = {
     "gems_guide_enabled": feature_flags.GEMS_GUIDE_FLAG,
     "dressing_room_enabled": feature_flags.DRESSING_ROOM_FLAG,
     "sound_studio_enabled": feature_flags.SOUND_STUDIO_FLAG,
+    "mod_workshop_enabled": feature_flags.MOD_WORKSHOP_FLAG,
 }
 
 
@@ -134,6 +135,13 @@ def feature_blocks(p: str, f: dict) -> bool:
         p == "/sound-studio" or p.startswith("/site/sound-studio")
     ):
         return True
+    # Mod Workshop: the page plus its stateless compile/unpack endpoints. Its
+    # placement check reads the game's file tree from the updates archive, but it
+    # degrades to the pure path rules without it, so it doesn't ride /updates.
+    if not f["mod_workshop_enabled"] and (
+        p == "/mod-workshop" or p.startswith("/site/mod-workshop")
+    ):
+        return True
     # Gem Simulator is likewise fully client-rendered (static /static/gem-engine.js,
     # no /site proxy, no /v1 API), so only the page route needs blocking.
     if not f["gem_simulator_enabled"] and p == "/gem-simulator":
@@ -192,6 +200,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/gems-guide", "gems_guide_enabled"),
     ("/dressing-room", "dressing_room_enabled"),
     ("/sound-studio", "sound_studio_enabled"),
+    ("/mod-workshop", "mod_workshop_enabled"),
     ("/leaderboards", "leaderboards_enabled"),
     ("/activity", "player_activity_enabled"),
     ("/class-activity", "class_activity_enabled"),

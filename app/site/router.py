@@ -7,12 +7,13 @@ nothing. Every ``/site/<feature>/*`` proxy is feature-gated in ``_feature_blocks
 """
 
 import asyncio
+import hashlib
 import json
 import logging
 import re
 import time
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.encoders import jsonable_encoder
@@ -22,6 +23,7 @@ from fastapi.templating import Jinja2Templates
 from app.admin import runtime_config
 from app.core import features as feature_flags
 from app.core.config import settings
+from app.core.errors import APIError, ErrorCode
 from app.core.utils import iso
 from app.site import classes_page, commands_page, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS as _SITE_FEATURE_FLAGS
@@ -59,6 +61,7 @@ from app.trove.models import TroveEvent
 from app.trove.modpacks import service as modpacks_service
 from app.trove.mods_hub import creators as mods_hub_creators
 from app.trove.mods_hub import service as mods_hub_service
+from app.trove.mods_hub import workshop as mods_workshop
 from app.trove.mods_hub.schemas import CreatorScopeRequest
 from app.trove.render import bp_cache
 from app.trove.render.service import render_blueprint_cached, render_creature_cached
@@ -3094,6 +3097,238 @@ async def site_up_file_compare(
     hunks = updates_compare.make_hunks(a_dec.lines, b_dec.lines)
     payload.update({"identical": False, "is_text": True, "hunks": hunks})
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=60"})
+
+
+# --- /site/mod-workshop/* - the /mod-workshop page's tools ------------------
+# Stateless mod compiler + unpacker. Files arrive with the request, the answer goes
+# back with the response, nothing is stored and no account is needed. The engine is
+# ``mods_hub/workshop.py``, which is the hub's own placement rules and .tmod
+# reader/builder pointed at loose files instead of a repo.
+
+
+def _workshop_spec(raw: str) -> dict:
+    try:
+        parsed = json.loads(raw or "{}")
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "The request wasn't understood.") from None
+    if not isinstance(parsed, dict):
+        raise APIError(400, ErrorCode.bad_request, "The request wasn't understood.")
+    return parsed
+
+
+def _workshop_error(exc: mods_workshop.WorkshopError) -> APIError:
+    return APIError(400, ErrorCode.bad_request, str(exc))
+
+
+def _workshop_download(data: bytes, filename: str, media_type: str,
+                       plan: dict | None = None) -> Response:
+    # A mod title may be non-ASCII, which a bare ``filename=`` can't carry - so the
+    # header gives every browser a plain fallback and the real name in RFC 5987 form.
+    fallback = re.sub(r'[^\x20-\x7e]', "_", filename).replace('"', "") or "mod"
+    headers = {
+        "Content-Disposition": (f'attachment; filename="{fallback}"; '
+                                f"filename*=UTF-8''{quote(filename)}"),
+        "Cache-Control": "no-store",
+    }
+    if plan is not None:
+        headers["X-Kiwi-Packed"] = str(plan["packed"])
+        headers["X-Kiwi-Moved"] = str(plan["counts"]["moved"])
+        headers["X-Kiwi-Skipped"] = str(plan["counts"]["skipped"])
+    return Response(content=data, media_type=media_type, headers=headers)
+
+
+async def _workshop_source(
+    paths: str, archive: UploadFile | None,
+) -> tuple[str, dict[str, str], list[tuple[str, bytes]] | None, list[str]]:
+    """Resolve what the page is asking about into ``(kind, header, files, paths)``.
+
+    Two shapes reach every workshop route. Loose files picked in a browser are
+    described by their paths alone - the bytes stay in the tab until there is
+    something worth building, so a placement check costs a few hundred bytes rather
+    than the whole mod. A ``.zip`` or an existing ``.tmod`` has to be unpacked here
+    to know what is inside it at all, and then ``files`` comes back too."""
+    if archive is not None and archive.filename:
+        data = await archive.read()
+        try:
+            kind, header, files = mods_workshop.read_archive(data, archive.filename)
+        except mods_workshop.WorkshopError as e:
+            raise _workshop_error(e) from e
+        return kind, header, files, [p for p, _ in files]
+    try:
+        names = json.loads(paths or "[]")
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "The file list wasn't understood.") from None
+    if not isinstance(names, list) or not names:
+        raise APIError(400, ErrorCode.bad_request, "No files were selected.")
+    if len(names) > mods_workshop.MAX_FILES:
+        raise APIError(400, ErrorCode.bad_request,
+                       f"That's more than {mods_workshop.MAX_FILES} files - too many for one mod.")
+    return "files", {}, None, [str(p) for p in names]
+
+
+@router.post("/site/mod-workshop/inspect", response_class=JSONResponse)
+async def site_workshop_inspect(
+    paths: str = Form(default="[]"),
+    archive: UploadFile | None = File(default=None),
+) -> JSONResponse:
+    """Where every selected file would land in a build, before anything is built.
+
+    Send ``paths`` (a JSON array - the browser's own relative paths) for loose files,
+    or an ``archive`` part holding a ``.zip`` or a ``.tmod``. Each file that automatic
+    placement would move also carries what happens if it's left alone (``alt``), so
+    the page can answer that without asking again."""
+    kind, header, files, names = await _workshop_source(paths, archive)
+    plan = await mods_workshop.preview(names)
+    payload = {**plan, "source": kind, "properties": header}
+    payload.pop("mapping", None)     # server-side detail; every entry carries its own `final`
+    if files is not None:
+        sizes = {i: len(data) for i, (_, data) in enumerate(files)}
+        for entry in payload["entries"]:
+            entry["size"] = sizes.get(entry["index"], 0)
+        payload["config_candidates"] = mods_workshop.config_candidates(files)
+    return JSONResponse(payload, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/site/mod-workshop/build", response_class=Response)
+async def site_workshop_build(
+    spec: str = Form(...),
+    paths: str = Form(default="[]"),
+    files: list[UploadFile] = File(default=[]),
+    archive: UploadFile | None = File(default=None),
+    config: UploadFile | None = File(default=None),
+) -> Response:
+    """Compile the selected files into a ``.tmod`` and hand it straight back.
+
+    ``spec`` is JSON: the header to stamp (``title`` / ``author`` / ``modVersion`` /
+    ``notes``) plus the same ``fix`` / ``keep`` placement choices the preview was
+    made with. Sources are either an ``archive`` (``.zip`` or ``.tmod``) or ``files``
+    parts aligned with the ``paths`` array. The placement plan is recomputed here, so
+    the build always matches what the page described - it never trusts a mapping sent
+    back to it. Nothing is stored: the mod is built in memory and discarded once the
+    response is written."""
+    parsed = _workshop_spec(spec)
+    if archive is not None and archive.filename:
+        data = await archive.read()
+        try:
+            _, header, source = mods_workshop.read_archive(data, archive.filename)
+        except mods_workshop.WorkshopError as e:
+            raise _workshop_error(e) from e
+        # An existing .tmod carries its own header; the page's fields win where set
+        # (it prefills them from exactly this), the rest of the original survives.
+        properties = {**header, **{k: v for k, v in (parsed.get("properties") or {}).items() if v}}
+    else:
+        try:
+            names = json.loads(paths or "[]")
+        except ValueError:
+            raise APIError(400, ErrorCode.bad_request, "The file list wasn't understood.") from None
+        if not isinstance(names, list) or len(names) != len(files):
+            raise APIError(400, ErrorCode.bad_request,
+                           "The file list didn't match the files that arrived.")
+        if not files:
+            raise APIError(400, ErrorCode.bad_request, "No files were selected.")
+        if len(files) > mods_workshop.MAX_FILES:
+            raise APIError(400, ErrorCode.bad_request,
+                           f"That's more than {mods_workshop.MAX_FILES} files - too many for one mod.")
+        source = [(str(name), await part.read())
+                  for name, part in zip(names, files, strict=True)]
+        properties = parsed.get("properties") or {}
+
+    config_path = str(parsed.get("config_path") or "")
+    if config is not None and config.filename:
+        # A config attached from the picker isn't one of the mod's own files, so it
+        # joins the list under a path the placement rules skip - exactly like a .cfg
+        # that came in the zip - and is then packed by name.
+        config_path = mods_workshop.norm_path(config.filename)
+        source = [(p, b) for p, b in source if p != config_path]
+        source.append((config_path, await config.read()))
+
+    keep = parsed.get("keep")
+    try:
+        artifact, plan = await mods_workshop.build_mod(
+            source, properties,
+            fix=bool(parsed.get("fix", True)),
+            keep=keep if isinstance(keep, list) else [],
+            config_path=config_path,
+        )
+    except mods_workshop.WorkshopError as e:
+        raise _workshop_error(e) from e
+    title = mods_workshop.safe_title(
+        (properties or {}).get("title") if isinstance(properties, dict) else None)
+    return _workshop_download(artifact, f"{title}.tmod",
+                              "application/octet-stream", plan)
+
+
+@router.post("/site/mod-workshop/extract", response_class=JSONResponse)
+async def site_workshop_extract(file: UploadFile = File(...)) -> JSONResponse:
+    """Open a ``.tmod`` and describe it: the header the game reads off it, every file
+    packed inside, and whether those files sit where the game would actually look.
+
+    The same breakdown a Mods Hub release shows under Contents, for a file that was
+    never uploaded anywhere - it is read in memory and forgotten."""
+    data = await file.read()
+    try:
+        info = await asyncio.to_thread(mods_workshop.describe, data)
+    except mods_workshop.WorkshopError as e:
+        raise _workshop_error(e) from e
+    if not info["files"]:
+        raise APIError(400, ErrorCode.bad_request, "That .tmod has no files packed in it.")
+    plan = await mods_workshop.plan([f["path"] for f in info["files"]], fix=False)
+    sizes = {i: f["size"] for i, f in enumerate(info["files"])}
+    for entry in plan["entries"]:
+        entry["size"] = sizes.get(entry["index"], 0)
+    plan.pop("mapping", None)
+    return JSONResponse({**plan, **info}, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/site/mod-workshop/preview/blueprint", response_class=Response)
+async def site_workshop_blueprint(
+    request: Request,
+    file: UploadFile = File(...), path: str = Form(...),
+    fmt: str = Query(default="json", pattern="^(json|bin)$"),
+) -> Response:
+    """Decoded voxel data for one ``.blueprint`` inside an uploaded ``.tmod``, for the
+    in-page 3D preview - the same payload (and the same payload cache) the Mods Hub's
+    viewer reads, keyed on the artifact's own hash rather than on a stored release."""
+    data = await file.read()
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "That file is empty.")
+
+    async def build() -> dict:
+        return await asyncio.to_thread(
+            mods_hub_service._decode_blueprint_payload, data, path)
+
+    cached = await bp_cache.get_or_build(
+        bp_cache.key_for_tmod(hashlib.sha256(data).hexdigest(), path), build, fmt)
+    return bp_cache.respond(request, cached)
+
+
+@router.post("/site/mod-workshop/extract/download", response_class=Response)
+async def site_workshop_extract_download(
+    file: UploadFile = File(...), path: str = Form(default=""),
+) -> Response:
+    """Unpack a ``.tmod``: the whole thing as a ``.zip``, or one file on its own
+    when ``path`` names one."""
+    data = await file.read()
+    try:
+        _, files = mods_workshop.read_mod(data)
+    except mods_workshop.WorkshopError as e:
+        raise _workshop_error(e) from e
+    if not files:
+        raise APIError(400, ErrorCode.bad_request, "That .tmod has no files packed in it.")
+    wanted = mods_workshop.norm_path(path)
+    if wanted:
+        match = next((b for p, b in files if p == wanted), None)
+        if match is None:
+            raise HTTPException(status_code=404, detail=f"No file '{wanted}' in that mod.")
+        return _workshop_download(match, wanted.rsplit("/", 1)[-1],
+                                  "application/octet-stream")
+    stem = (file.filename or "mod").rsplit("/", 1)[-1]
+    stem = stem[:-5] if stem.lower().endswith(".tmod") else stem
+    archive = await asyncio.to_thread(mods_workshop.to_zip, files)
+    return _workshop_download(archive, f"{mods_workshop.safe_title(stem)}.zip",
+                              "application/zip")
 
 
 # --- /site/mods/* proxies for the Mods Hub pages ---------------------------

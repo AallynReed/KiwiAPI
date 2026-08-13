@@ -277,6 +277,21 @@ async def sound_studio_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "sound-studio.html", {})
 
 
+@router.get("/mod-workshop", response_class=HTMLResponse)
+async def mod_workshop_page(request: Request) -> HTMLResponse:
+    """Mod Workshop - turn a folder of files into an installable mod, and open one
+    back up again.
+
+    Pick files (or a ``.zip``, or an existing ``.tmod``) and the page reports where
+    each one would land in-game *before* anything is built: Trove only reads an
+    override sitting at the exact path the base game keeps it at, so a file at the
+    wrong path is silently dead. Anything the game knows by name is placed
+    automatically. Stateless and login-free - see ``app/trove/mods_hub/workshop.py``,
+    which is the Mods Hub's own placement rules and .tmod builder pointed at loose
+    files instead of a repo."""
+    return _TEMPLATES.TemplateResponse(request, "mod-workshop.html", {})
+
+
 @router.get("/gems-guide", response_class=HTMLResponse)
 async def gems_guide_page(request: Request) -> HTMLResponse:
     """How Gems Work - an interactive, animated explainer of Trove's gem system

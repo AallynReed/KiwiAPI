@@ -8,8 +8,10 @@
      { count, size:[sx,sy,sz], x:[], y:[], z:[], rgb:[], kind:[], level:[] }
    kind: 0 solid · 1 glass · 2 glow · 3 glow-glass
 
-   Public API: window.BlueprintViewer.open({ url, title })      -- modal
-               window.BlueprintViewer.mount(el, { url, onMeta })  -- inline (embed page) */
+   Public API: window.BlueprintViewer.open({ url, title, fetchInit })      -- modal
+               window.BlueprintViewer.mount(el, { url, onMeta, fetchInit }) -- inline (embed page)
+   `fetchInit` is optional fetch options for a host whose payload isn't a plain GET
+   (the Mod Workshop posts an unstored .tmod); every other caller omits it. */
 (function () {
   'use strict';
 
@@ -61,9 +63,12 @@
      back either way, typed arrays instead of parsed numbers. If that script isn't on
      the page we fetch JSON exactly as before, so a template that hasn't been updated
      still works. */
-  function loadModel(url) {
-    if (window.VoxelBinary) return window.VoxelBinary.fetchModel(url);
-    return fetch(url, { credentials: 'same-origin' }).then(function (r) {
+  /* `init` is the fetch options, for a host whose model isn't reachable by a plain
+     GET - the Mod Workshop posts the .tmod the person just opened, since it was
+     never stored anywhere to have a URL of its own. Omitted everywhere else. */
+  function loadModel(url, init) {
+    if (window.VoxelBinary) return window.VoxelBinary.fetchModel(url, init);
+    return fetch(url, init || { credentials: 'same-origin' }).then(function (r) {
       if (!r.ok) {
         return r.json().then(function (j) {
           throw new Error((j && j.error && j.error.message) || ('Could not load model (HTTP ' + r.status + ').'));
@@ -88,7 +93,7 @@
 
     var viewer = null, alive = true;
     ensureThree().then(function (THREE) {
-      return loadModel(opts.url).then(function (data) {
+      return loadModel(opts.url, opts.fetchInit).then(function (data) {
         if (!alive) return;                     // disposed while loading
         msg.remove();
         if (opts.onMeta) opts.onMeta(data.count.toLocaleString() + ' voxels');
@@ -145,7 +150,7 @@
     }
 
     viewer = mount(stage, {
-      url: opts.url, title: opts.title,
+      url: opts.url, title: opts.title, fetchInit: opts.fetchInit,
       onMeta: function (text) { meta.textContent = text; },
     });
   }
