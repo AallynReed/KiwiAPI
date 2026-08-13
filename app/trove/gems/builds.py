@@ -22,6 +22,25 @@ BUILD_TYPES = ("Light", "Farm", "Health")
 # damage_type display name -> the builds/ subfolder name for dragons_damage.
 _DMG_FOLDER = {"Physical Damage": "physical_damage", "Magic Damage": "magic_damage"}
 
+# Blessing of the Lilypad - the ally buff. Ally stat values in builds/ally.json
+# are already the level-30 numbers (Scorpius 500 Light / 28.75% PD = its base
+# 400/25% scaled by the L30 multipliers), so the buff multiplies those directly.
+# Measured per stat class, not per ally: two allies gave identical ratios.
+# Damage, Critical Damage and Power Rank share one 15.5% class; Light is its
+# own. Stability and Movement Speed have no measured multiplier yet, so an
+# ally granting those keeps them unbuffed rather than guessed.
+LILYPAD_MULTIPLIERS = {
+    "Light": 1.0775,
+    "Physical Damage": 1.155,
+    "Magic Damage": 1.155,
+    "Critical Damage": 1.155,
+}
+
+
+def _lilypad(name: str, value: float, active: bool) -> float:
+    """An ally's L30 stat value, with the Lilypad buff applied when active."""
+    return value * LILYPAD_MULTIPLIERS.get(name, 1.0) if active else value
+
 
 @cache
 def _load(relative: str) -> Any:
@@ -253,15 +272,17 @@ class GemOptimizerEngine:
                         third += stat["value"]
 
             if ally and ally in self.allies:
+                lilypad = bool(config.get("ally_buff", True))
                 for stat in self.allies[ally].get("stats", []):
+                    value = _lilypad(stat["name"], stat["value"], lilypad)
                     if stat["name"] == damage_type:
-                        fourth += stat["value"] if stat["percentage"] else 0
-                        first += 0 if stat["percentage"] else stat["value"]
+                        fourth += value if stat["percentage"] else 0
+                        first += 0 if stat["percentage"] else value
                     if stat["name"] == "Critical Damage":
-                        fifth += stat["value"] if stat["percentage"] else 0
-                        second += 0 if stat["percentage"] else stat["value"]
+                        fifth += value if stat["percentage"] else 0
+                        second += 0 if stat["percentage"] else value
                     if stat["name"] == "Light":
-                        third += stat["value"]
+                        third += value
 
             second -= 48.1 * (3 - critical_damage_count)
             if "Solarion" in (character, subclass):
@@ -372,10 +393,14 @@ def build_options() -> dict:
         "ally": allies,
         "food": foods,
         "critical_damage_count": {"min": 0, "max": 3, "default": 3},
-        "flags": ["berserker_battler", "no_face", "subclass_active", "litany"],
+        "flags": ["berserker_battler", "no_face", "subclass_active", "litany", "ally_buff"],
         "notes": {
             "subclass": "Same options as character.",
-            "ally": "Use 'boot_clown' for no ally.",
+            "ally": "Use 'boot_clown' for no ally. Ally stats are the level-30 values.",
+            "ally_buff": (
+                "Blessing of the Lilypad, on by default: multiplies the ally's level-30 "
+                "Light by 1.0775 and its Physical/Magic/Critical Damage by 1.155. Ally stats only."
+            ),
             "food": "Use \"\" for none.",
             "light": "Farm builds only - target base light; 0 disables light targeting.",
             "star_chart": "Optional star-chart build code (SC:/v2: compact, or base64).",

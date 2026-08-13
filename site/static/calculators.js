@@ -25,6 +25,12 @@
   const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const sliderFill = (v, lo, hi) => (hi <= lo ? "0%" : clampN(((v - lo) / (hi - lo)) * 100, 0, 100) + "%");
 
+  // Blessing of the Lilypad - the ally buff. The stat tables already hold the
+  // level-30 ally values (112.5 PR, 562.5 light), so the buff multiplies those.
+  // Magic Find has no confirmed buff component, so its Ally row is left alone.
+  const LILYPAD = { "Power Rank": 1.155, Light: 1.0775 };
+  const isAlly = (item) => String(item && item.name).trim() === "Ally";
+
   const TABS = [
     { key: "pr", label: "Power Rank", icon: "fa-star", color: "#fbc02d" },
     { key: "mastery", label: "Mastery", icon: "fa-crown", color: "#ff9800" },
@@ -41,6 +47,12 @@
   let geodeMastery = 100;
   let starChartCode = "";
   let starChartMf = { flat: 0, pct: 0, pathsCount: 0, error: false };
+  let lilypad = true;
+
+  // An ally row's value with the Lilypad buff folded in; every other row is
+  // returned untouched - the buff only ever scales the ally's own stats.
+  const withLilypad = (item, value, statClass) =>
+    (lilypad && isAlly(item) ? value * LILYPAD[statClass] : value);
 
   let elTabs, elBody;
 
@@ -48,7 +60,7 @@
   function keyOf(item) { return item.name || item.type; }
   function save() {
     const snap = {
-      activeTab, troveMastery, geodeMastery, starChartCode,
+      activeTab, troveMastery, geodeMastery, starChartCode, lilypad,
       pr: prData.reduce((o, i) => (o[keyOf(i)] = i.currentValue, o), {}),
       mf: mfData.reduce((o, i) => (o[keyOf(i)] = i.currentValue, o), {}),
       light: lightData.reduce((o, i) => (o[keyOf(i)] = i.currentValue, o), {}),
@@ -82,7 +94,7 @@
   function totalPR() {
     let total = 0;
     prData.forEach((item) => {
-      if (item.type === "switch") total += item.currentValue ? item.value : 0;
+      if (item.type === "switch") total += item.currentValue ? withLilypad(item, item.value, "Power Rank") : 0;
       else if (item.type === "pr_mastery") { const c = Math.min(item.currentValue || 0, 1000); total += Math.min(c, 500) * 4 + Math.max(0, c - 500) * 1; }
       else if (item.type === "pr_geode_mastery") total += Math.min(item.currentValue || 0, 100) * 5;
       else total += item.currentValue || 0;
@@ -93,7 +105,7 @@
     let v = 0;
     if (item.type === "pr_mastery") { const c = Math.min(item.currentValue || 0, 1000); v = Math.min(c, 500) * 4 + Math.max(0, c - 500) * 1; }
     else if (item.type === "pr_geode_mastery") v = Math.min(item.currentValue || 0, 100) * 5;
-    else if (item.type === "switch") v = item.currentValue ? item.value : 0;
+    else if (item.type === "switch") v = item.currentValue ? withLilypad(item, item.value, "Power Rank") : 0;
     else v = item.currentValue || 0;
     return "+" + num(v) + " PR";
   }
@@ -130,7 +142,7 @@
     let flat = 0, bonusMult = 1;
     lightData.forEach((item) => {
       const raw = Number(item.value || 0);
-      const applied = item.type === "switch" ? (item.currentValue ? raw : 0) : getLightApplied(item);
+      const applied = withLilypad(item, item.type === "switch" ? (item.currentValue ? raw : 0) : getLightApplied(item), "Light");
       if (isPercentBonusValue(raw)) bonusMult += applied;
       else flat += applied;
     });
@@ -138,9 +150,9 @@
   }
   function lightBadge(item) {
     const raw = Number(item.value || 0);
-    const display = item.type === "switch" ? raw : (isLightGeodeMastery(item) ? getLightApplied(item) : Number(item.currentValue || 0));
+    const display = withLilypad(item, item.type === "switch" ? raw : (isLightGeodeMastery(item) ? getLightApplied(item) : Number(item.currentValue || 0)), "Light");
     if (isPercentBonusValue(raw)) return "+" + (Math.abs(display) * 100).toFixed(0) + "% Light";
-    return "+" + num(display) + " Light";
+    return "+" + num(Math.round(display * 100) / 100) + " Light";
   }
 
   // ── Compute: Mastery ─────────────────────────────────────────────────────
@@ -262,6 +274,16 @@
     return h("div", { class: "calc-item" + (cfg.accentClass || "") }, header, control);
   }
 
+  // The ally buff toggle, rendered right under the Ally row of whichever tab it
+  // affects. One shared flag, so switching it on either tab moves both.
+  function lilypadItem(gain, unit) {
+    const item = { name: "Blessing of the Lilypad", type: "switch", currentValue: lilypad };
+    return calcItem(item, {
+      badge: () => "+" + gain + "% " + unit,
+      onInput: () => { lilypad = item.currentValue; refresh(); },
+    });
+  }
+
   // `value` and `summaryChildren` are thunks so the header can refresh its own
   // derived text in place - see `liveUpdaters`.
   function header(label, value, accent, summaryChildren) {
@@ -310,6 +332,7 @@
         numberMax: item.type === "pr_mastery" ? 2000 : (item.type === "pr_geode_mastery" ? 200 : item.value),
         step: 1, badge: () => prBadge(item), onInput: refresh,
       }));
+      if (isAlly(item)) grid.appendChild(lilypadItem("15.5", "PR"));
     });
     elBody.appendChild(grid);
   }
@@ -440,6 +463,7 @@
         min: 0, sliderMax: getLightSliderMax(item), numberMax: getLightNumberMax(item),
         step: getLightStep(item), badge: () => lightBadge(item), onInput: refresh,
       }));
+      if (isAlly(item)) grid.appendChild(lilypadItem("7.75", t("Light")));
     });
     elBody.appendChild(grid);
   }
@@ -503,6 +527,7 @@
       if (saved.troveMastery !== undefined) troveMastery = Number(saved.troveMastery) || 0;
       if (saved.geodeMastery !== undefined) geodeMastery = Number(saved.geodeMastery) || 0;
       if (typeof saved.starChartCode === "string") starChartCode = saved.starChartCode;
+      if (typeof saved.lilypad === "boolean") lilypad = saved.lilypad;
       restore(prData, saved.pr); restore(mfData, saved.mf); restore(lightData, saved.light);
     }
 

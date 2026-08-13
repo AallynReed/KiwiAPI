@@ -182,7 +182,8 @@ class BuildConfigRequest(BaseModel):
     character: str = "Bard"          # class display name
     subclass: str = "Boomeranger"
     food: str = ""                   # food key (see /builds/options) or ""
-    ally: str = "boot_clown"         # ally key, or "boot_clown" for no ally
+    ally: str = "boot_clown"         # ally key, or "boot_clown" for no ally (stats are level 30)
+    ally_buff: bool = True           # Blessing of the Lilypad, applied to the ally's stats
     berserker_battler: bool = False
     critical_damage_count: int = Field(default=3, ge=0, le=3)
     no_face: bool = False

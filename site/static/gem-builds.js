@@ -34,7 +34,7 @@
   let options = null;
   const config = {
     build_type: "Light", character: "Bard", subclass: "Boomeranger",
-    food: "", ally: "boot_clown", critical_damage_count: 3, no_face: false,
+    food: "", ally: "boot_clown", ally_buff: true, critical_damage_count: 3, no_face: false,
     light: 0, subclass_active: false, litany: false, berserker_battler: false,
     star_chart: "",
   };
@@ -130,7 +130,14 @@
       h("div", { class: "gb-row-2" },
         selectRow("Build goal", config.build_type, buildTypeEntries, (v) => { config.build_type = v; onConfigChange(true); }),
         selectRow("Food", config.food, foodEntries, (v) => { config.food = v; onConfigChange(); })),
-      selectRow("Ally", config.ally, allyEntries, (v) => { config.ally = v; onConfigChange(); }));
+      selectRow("Ally", config.ally, allyEntries, (v) => { config.ally = v; onConfigChange(true); }));
+
+    // Ally stats are the level-30 values; the Lilypad buff scales them further.
+    if (config.ally !== "boot_clown") {
+      gearSection.appendChild(toggleRow("Blessing of the Lilypad", config.ally_buff,
+        (v) => { config.ally_buff = v; onConfigChange(); },
+        "The ally buff, on top of level 30: +7.75% to the ally's light and +15.5% to its damage bonus."));
+    }
 
     // Farm-only light target
     if (config.build_type === "Farm") {
