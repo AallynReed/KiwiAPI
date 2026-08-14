@@ -22,7 +22,11 @@ import json
 from pathlib import Path
 
 from app.trove import server_time as trove_server_time
+from app.trove.codexes import read as codexes_read
 from app.trove.market import service as market_service
+
+# The branch the site renders item art from, matching /site/market/item-images.
+_ICON_BRANCH = "live-us"
 
 _DATA_FILE = Path(__file__).resolve().parent.parent / "gamedata" / "tomes.json"
 
@@ -116,6 +120,45 @@ def _price_tome(tome: dict, medians: dict) -> dict:
     }
 
 
+def _icon_candidates(tome: dict) -> list[str]:
+    """In-game names to try for this tome's art, best first.
+
+    The prefix depends on tier and is not consistent: regular tomes are
+    ``Tome: X``, legendary ones ``Legendary Tome: X``, and a few carry no prefix
+    at all. Trying the tiered form first means the bare name is only reached
+    when nothing better matched.
+    """
+    name = tome["name"]
+    forms = ["Legendary Tome: " + name] if tome["type"] == "legendary" else []
+    return [*forms, "Tome: " + name, name]
+
+
+async def _icons(tomes: list[dict]) -> dict[str, str]:
+    """``tome name -> blueprint`` for the art the page can render.
+
+    One query for every candidate form, then first-match-wins per tome. Every
+    hit must have ``tome`` in its blueprint path: bare names collide with real
+    items (``Jade Clover`` is a gem booster, not the Jade Clover Journal), and a
+    confidently wrong icon is worse than none. Best-effort throughout - art is
+    decoration, and a codex outage must not cost the page its numbers.
+    """
+    try:
+        wanted = {form for t in tomes for form in _icon_candidates(t)}
+        resolved = await codexes_read.blueprints_for_names(
+            _ICON_BRANCH, sorted(wanted))
+    except Exception:  # noqa: BLE001 - cosmetic; never break the valuation
+        return {}
+
+    out: dict[str, str] = {}
+    for tome in tomes:
+        for form in _icon_candidates(tome):
+            bp = resolved.get(form.lower())
+            if bp and "tome" in bp.lower():
+                out[tome["name"]] = bp
+                break
+    return out
+
+
 async def valued_tomes() -> dict:
     """Every tome with its payout priced at current medians.
 
@@ -123,8 +166,12 @@ async def valued_tomes() -> dict:
     legendary worth less than the best repeatable tome is a poor use of a weekly
     slot, since the regular one can simply be farmed again.
     """
+    raw = _table()["tomes"]
     medians = await market_service.medians_for_names(market_names())
-    tomes = [_price_tome(t, medians) for t in _table()["tomes"]]
+    icons = await _icons(raw)
+    tomes = [_price_tome(t, medians) for t in raw]
+    for t in tomes:
+        t["blueprint"] = icons.get(t["name"])
 
     regular_values = [t["value"] for t in tomes
                       if t["type"] == "regular" and t["value"] is not None]
@@ -133,5 +180,6 @@ async def valued_tomes() -> dict:
         "tomes": tomes,
         "best_regular": max(regular_values) if regular_values else None,
         "priced_items": len(medians),
+        "icon_branch": _ICON_BRANCH,
         "weekly_reset_at": trove_server_time.server_time()["weekly_reset_at"],
     }

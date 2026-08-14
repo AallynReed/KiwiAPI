@@ -101,59 +101,104 @@
 .tm-clear:hover { color: var(--text); border-color: var(--accent-blue); }
 .tm-progress { font-size: .82rem; color: var(--text-mute); }
 
-/* ─── Tables ────────────────────────────────────────────────────────── */
-.tm-tablewrap { overflow-x: auto; }
-.tm-tbl { width: 100%; border-collapse: collapse; font-size: .88rem; }
-.tm-tbl th,
-.tm-tbl td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--bg-line);
-  text-align: left;
-  vertical-align: top;
-}
-.tm-tbl thead th {
-  font-size: .72rem;
+
+/* ─── Rows ──────────────────────────────────────────────────────────────
+   Icon, then name over payout, then value over unit price. Three columns
+   rather than a table: the payout line wraps freely and the icon gives
+   each row something to recognise at a glance. */
+.tm-listhead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px 8px;
+  font-size: .7rem;
   color: var(--text-mute);
   text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: .07em;
   font-weight: 600;
-  white-space: nowrap;
 }
-.tm-tbl tbody th { font-weight: 600; color: var(--text); }
-.tm-tbl .num {
-  text-align: right;
+.tm-rows { display: grid; gap: 8px; }
+
+.tm-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 12px;
+  min-width: 0;
+}
+.tm-row > * { min-width: 0; }
+.tm-row.is-done { opacity: .45; }
+
+.tm-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.tm-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Game icons are pixel art - smoothing them turns crisp voxels to mush. */
+  image-rendering: pixelated;
+}
+.tm-icon.is-fallback { color: var(--text-soft); font-size: 1.05rem; }
+
+.tm-info { display: grid; gap: 2px; }
+.tm-name {
+  font-weight: 600;
+  font-size: .95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tm-payout { font-size: .82rem; color: var(--text-mute); line-height: 1.45; }
+.tm-note { font-size: .76rem; color: var(--text-mute); font-style: italic; }
+
+.tm-value { text-align: right; display: grid; gap: 1px; justify-items: end; }
+.tm-total {
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--accent-green);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
-.tm-tbl tbody tr:last-child th,
-.tm-tbl tbody tr:last-child td { border-bottom: 0; }
-.tm-gives { color: var(--text-mute); line-height: 1.5; }
-
-.tm-c-tick { width: 34px; }
-.tm-tick { width: 17px; height: 17px; accent-color: var(--accent-green); cursor: pointer; }
-.tm-tbl tr.is-done th,
-.tm-tbl tr.is-done td { opacity: .45; }
-
-.tm-note {
-  display: block;
-  margin-top: 3px;
-  font-weight: 400;
-  font-size: .78rem;
+.tm-each {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .74rem;
   color: var(--text-mute);
 }
+/* The reason is prose, so it wraps and gives up the tabular alignment. */
+.tm-value .tm-reason {
+  text-align: left;
+  justify-self: start;
+  font-size: .78rem;
+  color: var(--text-mute);
+  line-height: 1.4;
+  max-width: 34ch;
+}
+
 .tm-flag {
-  display: inline-block;
-  margin-left: 6px;
   padding: 1px 7px;
   border-radius: 999px;
   background: rgba(240, 173, 78, .16);
   color: var(--accent-yellow);
-  font-size: .68rem;
+  font-size: .66rem;
   font-weight: 600;
   white-space: nowrap;
 }
-.tm-reason { color: var(--text-mute); font-size: .8rem; }
+.tm-tick { width: 17px; height: 17px; accent-color: var(--accent-green); cursor: pointer; }
+.tm-row:has(.tm-tick) { grid-template-columns: auto auto 1fr auto; }
 
 .tm-loading, .tm-empty { color: var(--text-mute); font-size: .88rem; margin: 0; }
 .tm-error { color: var(--accent-red); font-size: .88rem; margin: 0; }
@@ -167,20 +212,14 @@
   line-height: 1.6;
 }
 
-/* The "why not" column carries sentences, not numbers, so it gets its own
-   treatment rather than .num's right-aligned tabular nowrap - which stretched
-   the table past 700px on a phone because the reasons could never wrap. */
-.tm-tbl .tm-why { text-align: left; white-space: normal; min-width: 160px; }
-@media (min-width: 720px) {
-  .tm-tbl .tm-why { min-width: 260px; }
-}
-
-/* Below this the four columns cannot share 375px honestly. The payout line is
-   the one a reader can reconstruct from the tome name, so it is what folds. */
+/* On a phone the value drops under the text rather than fighting it for
+   width - three columns of real content do not fit 375px honestly. */
 @media (max-width: 560px) {
-  .tm-tbl th, .tm-tbl td { padding: 8px 9px; }
-  .tm-tbl .tm-gives { font-size: .8rem; }
   .tm-block { padding: 14px 12px; }
-  .tm-head { gap: 10px; }
   .tm-reset { justify-items: start; text-align: left; }
+  .tm-row { grid-template-columns: auto 1fr; row-gap: 8px; padding: 10px; }
+  .tm-row:has(.tm-tick) { grid-template-columns: auto auto 1fr; }
+  .tm-value { grid-column: 1 / -1; text-align: left; justify-items: start; }
+  .tm-value .tm-reason { max-width: none; }
+  .tm-listhead span:last-child { display: none; }
 }

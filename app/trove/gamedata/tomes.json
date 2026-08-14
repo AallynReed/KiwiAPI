@@ -26,6 +26,7 @@
     {"name": "Ghom Flooring Catalog", "type": "regular", "rewards": [{"item": "Ghom Carpet Section", "amount": 16, "price": {"source": "market", "item": "Ghom Carpet Samplebook", "per": 2}}]},
     {"name": "Lava Flooring Catalog", "type": "regular", "rewards": [{"item": "Lava Quilt Section", "amount": 16, "price": {"source": "market", "item": "Lava Quilt Samplebook", "per": 2}}]},
 
+    {"name": "Ashfern Sporeling Album", "type": "regular", "rewards": [{"item": "Ashfern Sporeling", "amount": 13, "price": {"source": "market"}}]},
     {"name": "Book of Bones", "type": "regular", "rewards": [{"item": "Bleached Bone", "amount": 10, "price": {"source": "market"}}]},
     {"name": "Meteoric Manual", "type": "regular", "rewards": [{"item": "Meteorite Fragment", "amount": 3, "price": {"source": "market"}}]},
     {"name": "Mana Manual", "type": "regular", "note": "Also gives 50 of each elemental mana type, which this table does not price.", "rewards": [{"item": "Crystalized Mana Fragments", "amount": 200, "price": {"source": "none"}}]},
@@ -66,6 +67,10 @@
     {"name": "Manahunting: Master Edition", "type": "legendary", "note": "Payout unknown - not recorded in the source sheet.", "rewards": []},
     {"name": "Deep Sea Lore", "type": "legendary", "rewards": [{"item": "Rune Fragments", "amount": 35, "price": {"source": "none"}}]},
     {"name": "Runic Vault Codex", "type": "legendary", "rewards": [{"item": "Runic Vault Keys", "amount": 5, "price": {"source": "none"}}]},
+    {"name": "Depths Key Codex", "type": "legendary", "note": "Both keys are flagged untradeable in the game's own item data.", "rewards": [
+      {"item": "Key: Surfaced Depths Cache", "amount": 3, "price": {"source": "none"}},
+      {"item": "Key: Runic Depths Vault", "amount": 3, "price": {"source": "none"}}
+    ]},
 
     {"name": "Dragon Hoard Deposition", "type": "legendary", "note": "Two-part payout - the sheet split it across two rows.", "rewards": [
       {"item": "Dragon Coin", "amount": 15, "price": {"source": "none"}},

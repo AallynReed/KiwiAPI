@@ -16,7 +16,7 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON } = window.BTTUtil;
+  const { esc, fetchJSON, apiUrl } = window.BTTUtil;
 
   const TICK_KEY = 'btt.tomes.ticked';
 
@@ -134,11 +134,12 @@
     const unpriced = all.filter((x) => !priced(x)).sort((a, b) =>
       a.type === b.type ? a.name.localeCompare(b.name) : (a.type === 'regular' ? -1 : 1));
 
-    $regular.innerHTML = table(regular, { rank: true });
-    $legendary.innerHTML = table(legendary, { rank: true, tick: true });
-    $unpriced.innerHTML = table(unpriced, { reason: true });
+    $regular.innerHTML = list(regular, { rank: true });
+    $legendary.innerHTML = list(legendary, { rank: true, tick: true });
+    $unpriced.innerHTML = list(unpriced, { reason: true });
 
     wireTicks();
+    wireIcons();
     renderProgress(legendary);
     rerunI18n();
   }
@@ -170,51 +171,74 @@
     return '';
   }
 
-  function table(rows, opts) {
+  /* ─── Rows ──────────────────────────────────────────────────────────
+     Icon | name over payout | value over unit price. A tome is a thing
+     you recognise by its art long before you read its name, so the icon
+     leads. Tomes we could not pin to game art get a book glyph rather
+     than a borrowed icon - a confidently wrong one reads as fact. */
+  function iconHTML(x) {
+    if (!x.blueprint) {
+      return '<span class="tm-icon is-fallback" aria-hidden="true">'
+        + '<i class="fa-solid fa-book"></i></span>';
+    }
+    const src = apiUrl('/site/codexes/render?blueprint='
+      + encodeURIComponent(x.blueprint)
+      + '&branch=' + encodeURIComponent(state.data.icon_branch || 'live-us')
+      + '&dim=96');
+    return '<span class="tm-icon"><img loading="lazy" decoding="async" alt=""'
+      + ' src="' + esc(src) + '"></span>';
+  }
+
+  function list(rows, opts) {
     if (!rows.length) {
       return '<p class="tm-empty">' + esc(t('Nothing to show here.')) + '</p>';
     }
     const best = state.data.best_regular;
-    const head = '<tr>'
-      + (opts.tick ? '<th scope="col" class="tm-c-tick"><span class="sr-only">'
-                     + esc(t('Done')) + '</span></th>' : '')
-      + '<th scope="col">' + esc(t('Tome')) + '</th>'
-      + '<th scope="col">' + esc(t('Gives you')) + '</th>'
-      + (opts.reason
-          ? '<th scope="col" class="tm-why">' + esc(t('Why not')) + '</th></tr>'
-          : '<th scope="col" class="num">' + esc(t('Worth')) + '</th></tr>');
-
     const set = opts.tick ? ticks() : null;
+
+    const head = '<div class="tm-listhead">'
+      + '<span>' + esc(t('Tome')) + '</span>'
+      + '<span>' + esc(opts.reason ? t('Why not') : t('Sell value')) + '</span>'
+      + '</div>';
 
     const body = rows.map((x) => {
       const done = set && set.has(x.name);
-      const weak = opts.rank && best != null && x.value != null && x.value < best
-        && x.type === 'legendary';
-      const gives = x.rewards.map(rewardText).join('<br>') || '-';
-      // The reason column carries sentences, so it must never inherit .num's
-      // tabular/nowrap treatment - that stretched the table to 750px on a phone.
-      const lastCell = opts.reason
-        ? '<td class="tm-why"><span class="tm-reason">'
-          + esc(reasonFor(x)) + '</span></td>'
-        : '<td class="num">' + fmt(Math.round(x.value)) + '</td>';
+      const weak = opts.rank && best != null && x.value != null
+        && x.value < best && x.type === 'legendary';
+      const payout = x.rewards.map(rewardText).join('<br>') || '-';
 
-      return '<tr class="' + (done ? 'is-done' : '') + '">'
+      // Per-unit only where it is unambiguous: with two rewards there is no
+      // single "each" to quote, so it is left off rather than picked from one.
+      const one = x.rewards.length === 1 ? x.rewards[0] : null;
+      const each = one && one.unit_price != null
+        ? '<span class="tm-each">(' + esc(fmt(round2(one.unit_price))) + ' '
+          + esc(t('ea')) + ')</span>'
+        : '';
+
+      const value = opts.reason
+        ? '<span class="tm-reason">' + esc(reasonFor(x)) + '</span>'
+        : '<span class="tm-total">' + esc(fmt(Math.round(x.value))) + '</span>' + each;
+
+      return '<article class="tm-row' + (done ? ' is-done' : '') + '">'
         + (opts.tick
-            ? '<td class="tm-c-tick"><input type="checkbox" class="tm-tick"'
-              + ' data-tome="' + esc(x.name) + '"' + (done ? ' checked' : '')
-              + ' aria-label="' + esc(x.name) + '"></td>'
+            ? '<input type="checkbox" class="tm-tick" data-tome="' + esc(x.name) + '"'
+              + (done ? ' checked' : '') + ' aria-label="' + esc(x.name) + '">'
             : '')
-        + '<th scope="row">' + esc(x.name)
-        + (weak ? ' <span class="tm-flag" title="' + esc(t('Worth less than the best regular tome, which you can farm as often as you like')) + '">'
-                  + esc(t('below a regular tome')) + '</span>' : '')
+        + iconHTML(x)
+        + '<div class="tm-info">'
+        + '<span class="tm-name">' + esc(x.name)
+        + (weak ? '<span class="tm-flag" title="'
+                  + esc(t('Worth less than the best regular tome, which you can farm as often as you like'))
+                  + '">' + esc(t('below a regular tome')) + '</span>' : '')
+        + '</span>'
+        + '<span class="tm-payout">' + payout + '</span>'
         + (x.note ? '<span class="tm-note">' + esc(x.note) + '</span>' : '')
-        + '</th>'
-        + '<td class="tm-gives">' + gives + '</td>'
-        + lastCell + '</tr>';
+        + '</div>'
+        + '<div class="tm-value">' + value + '</div>'
+        + '</article>';
     }).join('');
 
-    return '<table class="tm-tbl"><thead>' + head + '</thead><tbody>'
-      + body + '</tbody></table>';
+    return head + '<div class="tm-rows">' + body + '</div>';
   }
 
   function wireTicks() {
@@ -223,7 +247,23 @@
     }
   }
 
+  // A blueprint that no longer renders would leave a broken-image box, so the
+  // icon falls back to the glyph instead. Bound here rather than with an inline
+  // onerror so nothing depends on the CSP allowing inline handlers.
+  function wireIcons() {
+    for (const img of document.querySelectorAll('.tm-icon img')) {
+      img.addEventListener('error', () => {
+        const wrap = img.closest('.tm-icon');
+        if (!wrap) return;
+        wrap.classList.add('is-fallback');
+        wrap.innerHTML = '<i class="fa-solid fa-book" aria-hidden="true"></i>';
+      }, { once: true });
+    }
+  }
+
   /* ─── Helpers ───────────────────────────────────────────────────────*/
+  function round2(n) { return Math.round(n * 100) / 100; }
+
   function fmt(n) {
     if (n == null || !isFinite(n)) return '-';
     return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
