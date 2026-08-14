@@ -67,7 +67,8 @@ logger = logging.getLogger("kiwi.trove.codexes")
 # resolved strings, …). On the next sync the indexer force-rebuilds any branch whose
 # stored version is behind, so a parser change reaches the data WITHOUT a game update
 # or a manual rebuild - the steady-state delta only re-touches changed game files.
-CODEX_PARSER_VERSION = 20  # v20: the codex is relational - stats, abilities and typed relationship edges (crafts / ingredient / craftable_at / unlocks / upgrade_cost / member_of) get their own tables, plus badge requirements and progression-tree costs. Forces one rebuild to populate them
+CODEX_PARSER_VERSION = 21  # v21: geode companion level bonuses actually load - the tree lookup matched a filename pattern no file has, and pointed at trees/ (structure + costs) rather than upgrades/ (the per-level effects), so every companion has been served an empty levels list
+# v20: the codex is relational - stats, abilities and typed relationship edges (crafts / ingredient / craftable_at / unlocks / upgrade_cost / member_of) get their own tables, plus badge requirements and progression-tree costs. Forces one rebuild to populate them
 # v19: recipe product detection covers three more shapes it read as absent - a product path on a field the ingredients also use (banners, geode abilities), a product that IS a crafting material (conversion + gardening recipes), and the bare token costume/skin recipes name theirs with, resolved only against a prefab that exists
 # v18: placeable models come from the game's OWN table (blocks/blocks.binfab) instead of the name convention, which cannot tell mirrored siblings apart and had every deco_arrow_*_left pointing at its right-facing twin; the convention stays only for the placeables that table omits
 # v17: a blueprint that decodes to nothing no longer ends the search - the warhorse/bull mounts ship no whole model at all, only parts, and the parts their prefab names first are the empty banner slots, so they rendered blank; falls through to the largest part the same prefab names
@@ -239,18 +240,37 @@ async def _load_file(branch: str, store: ContentStore, path: str) -> bytes | Non
 
 
 async def _load_upgrade_trees(branch: str, store: ContentStore) -> dict[str, bytes]:
-    """Geode companion upgrade-tree binfabs, keyed by stem (e.g.
-    `gleemur_common_upgrade_tree`). Empty when the archive carries none."""
+    """Geode companion level BONUSES, keyed by the ref a companion prefab names
+    (`gleemur_common_upgrade_tree`). Empty when the archive carries none.
+
+    Two things were wrong here, and together they meant every geode companion has been
+    served with an empty `levels` list for as long as this existed:
+
+    - the path filter matched `*_upgrade_tree*.binfab`, but no file is named that. A
+      companion prefab REFERENCES `<base>_upgrade_tree`; the files themselves are
+      `prefabs/upgrade/{trees,upgrades}/<base>.binfab`. Nothing ever matched, so the
+      map was always empty and `parse_upgrade_tree` was never called with anything.
+    - even given the right directory, `trees/` is the wrong one. It holds a system's
+      structure and its material costs (which `_index_upgrades` reads); the per-level
+      stat and ability effects live in `upgrades/`. Pointing this at `trees/` returns
+      zero levels for every companion.
+
+    Keyed by `<stem>_upgrade_tree` so it joins directly to `find_upgrade_tree_ref`.
+    """
     coll = UpdateState.get_pymongo_collection()
     rows = await coll.find(
-        {"branch": branch, "path": {"$regex": r"_upgrade_tree[^/]*\.binfab$"}},
+        _prefix_query(branch, upgrades.UPGRADES_ROOT),
         {"path": 1, "content_sha256": 1, "_id": 0},
     ).to_list(length=None)
     trees: dict[str, bytes] = {}
     for row in rows:
+        path = row["path"]
+        if not path.endswith(".binfab"):
+            continue
         content = await asyncio.to_thread(store.get, row["content_sha256"])
         if content:
-            trees[row["path"].rsplit("/", 1)[-1].removesuffix(".binfab")] = content
+            stem = path.rsplit("/", 1)[-1].removesuffix(".binfab")
+            trees[f"{stem}_upgrade_tree"] = content
     return trees
 
 
