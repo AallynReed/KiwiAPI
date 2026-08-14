@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Tome values - Better Trove Tools</title>
+    <meta name="description" content="What every Trove tome pays out, priced at live marketplace rates. Regular tomes ranked by value, legendary tomes as a weekly checklist.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://trove.aallyn.net/tomes">
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Tome values">
+    <meta property="og:description" content="What every Trove tome pays out, priced at live marketplace rates.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/tomes.min.css">
+</head>
+<body class="landing tomes-page">
+
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="tm-main">
+
+        <section class="tm-hero">
+            <div class="tm-hero-inner">
+                <p class="tm-eyebrow"><span>/tomes</span></p>
+                <h1 class="tm-title" data-i18n>What your tomes are worth</h1>
+                <p class="tm-subtitle" data-i18n>Tomes fill as you clear dungeons and pay out a fixed bundle of items. Here is what that bundle sells for right now, so you know which ones are worth your runs.</p>
+            </div>
+        </section>
+
+        <section class="tm-block">
+            <header class="tm-head">
+                <div>
+                    <h2 class="tm-h2" data-i18n>Regular tomes</h2>
+                    <p class="tm-sub" data-i18n>No limit on these - fill the same one as often as you like. The top of this list is the best flux per dungeon run you can get from a tome.</p>
+                </div>
+            </header>
+            <div class="tm-tablewrap" id="tm-regular"></div>
+        </section>
+
+        <section class="tm-block">
+            <header class="tm-head">
+                <div>
+                    <h2 class="tm-h2" data-i18n>Legendary tomes</h2>
+                    <p class="tm-sub" data-i18n>One of each per week. Tick them off as you go - the list is yours alone and stays in this browser.</p>
+                </div>
+                <div class="tm-reset" id="tm-reset" role="status"></div>
+            </header>
+            <div class="tm-legend-bar">
+                <button type="button" class="tm-clear" id="tm-clear" data-i18n>Clear my ticks</button>
+                <span class="tm-progress" id="tm-progress"></span>
+            </div>
+            <div class="tm-tablewrap" id="tm-legendary"></div>
+        </section>
+
+        <section class="tm-block">
+            <header class="tm-head">
+                <div>
+                    <h2 class="tm-h2" data-i18n>Tomes we cannot put a price on</h2>
+                    <p class="tm-sub" data-i18n>These pay out in things that cannot be sold, so there is no market price to read. They are not worthless - we just have no honest way to value them.</p>
+                </div>
+            </header>
+            <div class="tm-tablewrap" id="tm-unpriced"></div>
+        </section>
+
+        <p class="tm-source" data-i18n>Prices are the median of active marketplace listings, refreshed by the hourly scrape. A tome only shows a total when every item it gives has a price - a partial total would make a tome look cheaper than it is.</p>
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/_site_util.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/tomes.min.js" defer></script>
+</body>
+</html>

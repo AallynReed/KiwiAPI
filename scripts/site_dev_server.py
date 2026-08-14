@@ -1282,6 +1282,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "status.html", "text/html")
         if path == "/server-time":
             return self._send_file(TEMPLATES / "server-time.html", "text/html")
+        if path == "/tomes":
+            return self._send_file(TEMPLATES / "tomes.html", "text/html")
         if path == "/calendar":
             return self._send_file(TEMPLATES / "calendar.html", "text/html")
         if path == "/streams":
@@ -2299,6 +2301,14 @@ class Handler(SimpleHTTPRequestHandler):
             # the local preview (prod would normally serve 3 from the
             # runtime_config default).
             return self._send_json({"hot_retention_days": 5})
+        if path == "/site/tomes":
+            # Real service, not a stub - it needs no DB to answer. Without
+            # Postgres every median comes back empty, so dev shows the
+            # "nothing listed" path, which is worth seeing.
+            import asyncio
+
+            from app.trove.tomes import service as _tomes
+            return self._send_json(asyncio.run(_tomes.valued_tomes()))
         if path == "/site/server-time":
             # Authoritative Trove time for the /server-time clock. Trove's day
             # rolls at 11:00 UTC (UTC-11), so daily reset = next 11:00 UTC.

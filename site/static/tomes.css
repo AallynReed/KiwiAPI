@@ -1,0 +1,174 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /tomes - tome payout values
+   ───────────────────────────────────────────────────────────────────────
+   Same block/table vocabulary as the market tabs so the two pages read as
+   one instrument set.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.tm-main { padding-bottom: 60px; }
+
+/* ─── Hero ──────────────────────────────────────────────────────────── */
+.tm-hero { padding: clamp(28px, 6vw, 56px) 0 clamp(18px, 3vw, 28px); }
+.tm-hero-inner {
+  max-width: var(--content-max, 1100px);
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px);
+}
+.tm-eyebrow {
+  margin: 0 0 8px;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .78rem;
+  color: var(--accent-blue);
+}
+.tm-title { margin: 0; font-size: clamp(1.7rem, 4vw, 2.4rem); }
+.tm-subtitle {
+  margin: 10px 0 0;
+  color: var(--text-mute);
+  font-size: .95rem;
+  max-width: 68ch;
+  line-height: 1.6;
+}
+
+/* ─── Blocks ────────────────────────────────────────────────────────── */
+.tm-block {
+  max-width: var(--content-max, 1100px);
+  margin: 0 auto 24px;
+  padding: clamp(16px, 2.6vw, 22px);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-lg, 16px);
+}
+@media (max-width: 1180px) {
+  .tm-block { margin-left: clamp(16px, 4vw, 40px); margin-right: clamp(16px, 4vw, 40px); }
+}
+.tm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.tm-h2 { margin: 0; font-size: 1.15rem; }
+.tm-sub {
+  margin: 3px 0 0;
+  color: var(--text-mute);
+  font-size: .86rem;
+  max-width: 72ch;
+  line-height: 1.5;
+}
+
+/* ─── Weekly reset ──────────────────────────────────────────────────── */
+.tm-reset {
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+  text-align: right;
+  flex: 0 0 auto;
+}
+.tm-reset-label {
+  font-size: .7rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+}
+.tm-reset-clock {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.tm-legend-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.tm-clear {
+  border: 1px solid var(--bg-line);
+  background: var(--bg-deep);
+  color: var(--text-mute);
+  font: inherit;
+  font-size: .78rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.tm-clear:hover { color: var(--text); border-color: var(--accent-blue); }
+.tm-progress { font-size: .82rem; color: var(--text-mute); }
+
+/* ─── Tables ────────────────────────────────────────────────────────── */
+.tm-tablewrap { overflow-x: auto; }
+.tm-tbl { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.tm-tbl th,
+.tm-tbl td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bg-line);
+  text-align: left;
+  vertical-align: top;
+}
+.tm-tbl thead th {
+  font-size: .72rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tm-tbl tbody th { font-weight: 600; color: var(--text); }
+.tm-tbl .num {
+  text-align: right;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tm-tbl tbody tr:last-child th,
+.tm-tbl tbody tr:last-child td { border-bottom: 0; }
+.tm-gives { color: var(--text-mute); line-height: 1.5; }
+
+.tm-c-tick { width: 34px; }
+.tm-tick { width: 17px; height: 17px; accent-color: var(--accent-green); cursor: pointer; }
+.tm-tbl tr.is-done th,
+.tm-tbl tr.is-done td { opacity: .45; }
+
+.tm-note {
+  display: block;
+  margin-top: 3px;
+  font-weight: 400;
+  font-size: .78rem;
+  color: var(--text-mute);
+}
+.tm-flag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(240, 173, 78, .16);
+  color: var(--accent-yellow);
+  font-size: .68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tm-reason { color: var(--text-mute); font-size: .8rem; }
+
+.tm-loading, .tm-empty { color: var(--text-mute); font-size: .88rem; margin: 0; }
+.tm-error { color: var(--accent-red); font-size: .88rem; margin: 0; }
+
+.tm-source {
+  max-width: var(--content-max, 1100px);
+  margin: 6px auto 0;
+  padding: 0 clamp(16px, 4vw, 40px);
+  color: var(--text-mute);
+  font-size: .8rem;
+  line-height: 1.6;
+}
+
+/* The "why not" column carries sentences, not numbers - let it breathe and
+   stop the reason text from squeezing the tome name into two characters. */
+@media (min-width: 720px) {
+  .tm-tbl td.num:has(.tm-reason) { text-align: left; min-width: 260px; }
+}

@@ -50,6 +50,7 @@ SITE_FEATURE_FLAGS = {
     "dressing_room_enabled": feature_flags.DRESSING_ROOM_FLAG,
     "sound_studio_enabled": feature_flags.SOUND_STUDIO_FLAG,
     "mod_workshop_enabled": feature_flags.MOD_WORKSHOP_FLAG,
+    "tomes_enabled": feature_flags.TOMES_FLAG,
 }
 
 
@@ -168,6 +169,11 @@ def feature_blocks(p: str, f: dict) -> bool:
     # /v1 API), so only the page route needs blocking.
     if not f["gems_guide_enabled"] and p == "/gems-guide":
         return True
+    # Tomes: the page plus its valuation proxy. It prices payouts from market
+    # medians, but degrades to "not evaluated" without them, so it does not ride
+    # the /market toggle.
+    if not f["tomes_enabled"] and (p == "/tomes" or p == "/site/tomes"):
+        return True
     # The star-chart preview proxy feeds both Builds and Calculators; only hide it
     # when both of those features are OFF.
     if (not f["calculators_enabled"] and not f["gem_builds_enabled"]
@@ -206,6 +212,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/class-activity", "class_activity_enabled"),
     ("/updates", "updates_enabled"),
     ("/market", "market_enabled"),
+    ("/tomes", "tomes_enabled"),
     ("/store", "store_enabled"),
     ("/codexes", "codexes_enabled"),
     ("/codexes/crafting", "codexes_enabled"),

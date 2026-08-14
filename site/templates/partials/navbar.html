@@ -15,7 +15,7 @@
 {% set _p = request.url.path %}
 {# Every path the Pages menu can reach. Keep in sync when a page is added, or
    the trigger silently stops highlighting on that route. #}
-{% set _pages_active = _p == '/mods' or _p.startswith('/mods/') or _p == '/modpacks' or _p.startswith('/modpacks/') or _p in ['/commands', '/leaderboards', '/activity', '/class-activity', '/updates', '/market', '/store', '/codexes', '/codexes/crafting', '/status', '/clubs', '/server-time', '/calendar', '/streams', '/releases', '/classes', '/star-chart', '/gem-simulator', '/gem-evaluator', '/gem-builds', '/gems-guide', '/calculators', '/dressing-room', '/sound-studio', '/mod-workshop', '/giveaways'] %}
+{% set _pages_active = _p == '/mods' or _p.startswith('/mods/') or _p == '/modpacks' or _p.startswith('/modpacks/') or _p in ['/commands', '/leaderboards', '/activity', '/class-activity', '/updates', '/market', '/tomes', '/store', '/codexes', '/codexes/crafting', '/status', '/clubs', '/server-time', '/calendar', '/streams', '/releases', '/classes', '/star-chart', '/gem-simulator', '/gem-evaluator', '/gem-builds', '/gems-guide', '/calculators', '/dressing-room', '/sound-studio', '/mod-workshop', '/giveaways'] %}
 <header class="navbar" role="banner">
         <div class="nav-container">
             <a class="nav-logo" href="{{ '#hero' if _p == '/' else '/' }}" aria-label="Better Trove Tools home">
@@ -74,10 +74,11 @@
                             {% if calendar_enabled %}<a href="/calendar" class="{{ 'active' if _p == '/calendar' else '' }}"><i class="fa-solid fa-calendar-days"></i> <span data-i18n>Calendar</span></a>{% endif %}
                         </div>
                         {% endif %}
-                        {% if market_enabled or store_enabled or calculators_enabled %}
+                        {% if market_enabled or store_enabled or calculators_enabled or tomes_enabled %}
                         <div class="nav-mega-group" role="group" aria-label="Economy">
                             <p class="nav-mega-title" data-i18n>Economy</p>
                             {% if market_enabled %}<a href="/market" class="{{ 'active' if _p == '/market' else '' }}"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span></a>{% endif %}
+                            {% if tomes_enabled %}<a href="/tomes" class="{{ 'active' if _p == '/tomes' else '' }}"><i class="fa-solid fa-book"></i> <span data-i18n>Tome Values</span></a>{% endif %}
                             {% if store_enabled %}<a href="/store" class="{{ 'active' if _p == '/store' else '' }}"><i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n>Store History</span></a>{% endif %}
                             {% if calculators_enabled %}<a href="/calculators" class="{{ 'active' if _p == '/calculators' else '' }}"><i class="fa-solid fa-calculator"></i> <span data-i18n>Calculators</span></a>{% endif %}
                         </div>

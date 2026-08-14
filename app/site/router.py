@@ -66,6 +66,7 @@ from app.trove.mods_hub import workshop as mods_workshop
 from app.trove.mods_hub.schemas import CreatorScopeRequest
 from app.trove.render import bp_cache
 from app.trove.render.service import render_blueprint_cached, render_creature_cached
+from app.trove.tomes import service as trove_tomes
 from app.trove.updates import compare as updates_compare
 from app.trove.updates import read as updates_read
 from app.trove.updates.cas import ContentStore
@@ -509,6 +510,14 @@ async def status_page(request: Request) -> HTMLResponse:
         request, "status.html", {"ssr": await ssr.status_view(_ssr_fetch)})
 
 
+@router.get("/tomes", response_class=HTMLResponse)
+async def tomes_page(request: Request) -> HTMLResponse:
+    """Tome payout values - what each tome gives you, priced at live market
+    medians. Regular tomes rank as a repeatable farm; legendary tomes are a
+    weekly checklist. Page shell + JS; data comes from ``/site/tomes``."""
+    return _TEMPLATES.TemplateResponse(request, "tomes.html", {})
+
+
 @router.get("/server-time", response_class=HTMLResponse)
 async def server_time_page(request: Request) -> HTMLResponse:
     """Dedicated server-time page - a big live Trove server clock (UTC-11), the
@@ -727,6 +736,16 @@ async def site_stats_classes() -> JSONResponse:
     return JSONResponse(
         jsonable_encoder(trove_stats.all_classes()),
         headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@router.get("/site/tomes", response_class=JSONResponse)
+async def site_tomes() -> JSONResponse:
+    """Tome payouts priced at current marketplace medians for the /tomes page.
+    Short cache - the underlying medians only move when the hourly scrape lands."""
+    return JSONResponse(
+        await trove_tomes.valued_tomes(),
+        headers={"Cache-Control": "public, max-age=120"},
     )
 
 
