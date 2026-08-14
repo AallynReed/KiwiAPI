@@ -127,7 +127,12 @@
       }
     }
 
+    // Only categories that actually hit. A row reading "Styles 0" is not an offer,
+    // it's noise - and with eight subjects the zeros crowd out the ones with answers.
+    // The active subject stays listed even at zero so the sidebar doesn't drop the
+    // row you're currently looking at out from under you.
     $('srch-subjects').innerHTML = subjects
+      .filter((s) => s.count > 0 || s.key === state.subject)
       .map((s) => subjectHTML(s, s.key === state.subject)).join('');
 
     const items = data.items || [];
