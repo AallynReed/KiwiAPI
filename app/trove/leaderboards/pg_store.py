@@ -568,15 +568,18 @@ async def search_players(query: str, *, limit: int = 25) -> tuple[list[str], int
     like = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_").lower()
     async with acquire() as con:
         rows = await con.fetch(
+            # Each UNION branch is parenthesised: a branch carrying its own ORDER BY /
+            # LIMIT is a syntax error otherwise, because they would bind to the union
+            # rather than the branch.
             "SELECT name FROM ("
-            "  SELECT name, name_lower, 0 AS tier FROM player "
-            "   WHERE name_lower LIKE $1 || '%' ESCAPE '\\' "
-            "   ORDER BY name_lower LIMIT $3"
+            "  (SELECT name, name_lower, 0 AS tier FROM player "
+            "    WHERE name_lower LIKE $1 || '%' ESCAPE '\\' "
+            "    ORDER BY name_lower LIMIT $3)"
             "  UNION ALL "
-            "  SELECT name, name_lower, 1 AS tier FROM player "
-            "   WHERE name_lower LIKE '%' || $1 || '%' ESCAPE '\\' "
-            "     AND name_lower NOT LIKE $1 || '%' ESCAPE '\\' "
-            "   LIMIT $3"
+            "  (SELECT name, name_lower, 1 AS tier FROM player "
+            "    WHERE name_lower LIKE '%' || $1 || '%' ESCAPE '\\' "
+            "      AND name_lower NOT LIKE $1 || '%' ESCAPE '\\' "
+            "    LIMIT $3)"
             ") s ORDER BY tier, length(name_lower), name_lower LIMIT $2",
             like, limit, max(limit * 4, 100),
         )
