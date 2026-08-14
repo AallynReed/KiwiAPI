@@ -159,15 +159,13 @@
     return fmt(r.amount) + ' x ' + r.item + via;
   }
 
+  // Deliberately does not name the item: it is already on the payout line
+  // immediately to the left, and repeating it there was wrapping the reason
+  // onto a second line and making those rows the tallest on the page.
   function reasonFor(x) {
     if (x.status === 'no_payout_data') return t('Payout not recorded');
-    if (x.status === 'untradeable') {
-      return t('Not evaluated') + ' - ' + x.untradeable.join(', ')
-        + ' ' + t('cannot be traded');
-    }
-    if (x.status === 'unlisted') {
-      return t('Nothing listed right now') + ' - ' + x.unlisted.join(', ');
-    }
+    if (x.status === 'untradeable') return t('Cannot be traded');
+    if (x.status === 'unlisted') return t('None listed right now');
     return '';
   }
 
@@ -215,19 +213,24 @@
       // Per-unit only where it is unambiguous: with two rewards there is no
       // single "each" to quote, so it is left off rather than picked from one.
       const one = x.rewards.length === 1 ? x.rewards[0] : null;
-      const each = one && one.unit_price != null
-        ? '<span class="tm-each">(' + esc(fmt(round2(one.unit_price))) + ' '
-          + esc(t('ea')) + ')</span>'
+      const eachText = one && one.unit_price != null
+        ? fmt(round2(one.unit_price)) + ' ' + t('ea')
         : '';
 
       const pct = (!opts.reason && top > 0 && x.value != null)
         ? (x.value / top) * 100 : null;
+      // Whole percents: a decimal place here bought nothing but width, and
+      // anything under 1% is better said as "under" than as 0%.
+      const pctText = pct == null ? ''
+        : (pct >= 1 ? Math.round(pct) + '%' : '<1%');
 
+      // One sub-line, not two. The right column was running three deep
+      // against the left's two, so it alone set how tall every row was.
+      const sub = [eachText, pctText].filter(Boolean).join(' · ');
       const value = opts.reason
         ? '<span class="tm-reason">' + esc(reasonFor(x)) + '</span>'
-        : '<span class="tm-total">' + esc(fmt(Math.round(x.value))) + '</span>' + each
-          + (pct == null ? '' :
-             '<span class="tm-pct">' + esc(pct.toFixed(1) + '%') + '</span>');
+        : '<span class="tm-total">' + esc(fmt(Math.round(x.value))) + '</span>'
+          + (sub ? '<span class="tm-sub-value">' + esc(sub) + '</span>' : '');
 
       // The fill sits behind the row rather than beside it - a value bar that
       // took its own column would crowd out the payout line on a phone.

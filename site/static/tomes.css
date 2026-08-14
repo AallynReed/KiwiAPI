@@ -30,7 +30,7 @@
 .tm-subtitle {
   margin: 10px 0 0;
   color: var(--text-mute);
-  font-size: .95rem;
+  font-size: .92rem;
   max-width: 68ch;
   line-height: 1.6;
 }
@@ -107,7 +107,6 @@
 .tm-clear:hover { color: var(--text); border-color: var(--accent-blue); }
 .tm-progress { font-size: .82rem; color: var(--text-mute); }
 
-
 /* ─── Rows ──────────────────────────────────────────────────────────────
    Icon, then name over payout, then value over unit price. Three columns
    rather than a table: the payout line wraps freely and the icon gives
@@ -123,14 +122,14 @@
   letter-spacing: .07em;
   font-weight: 600;
 }
-.tm-rows { display: grid; gap: 8px; }
+.tm-rows { display: grid; gap: 6px; }
 
 .tm-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 14px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 7px 12px;
   background: var(--bg-deep);
   border: 1px solid var(--bg-line);
   border-radius: 12px;
@@ -140,8 +139,8 @@
 .tm-row.is-done { opacity: .45; }
 
 .tm-icon {
-  width: 46px;
-  height: 46px;
+  width: 38px;
+  height: 38px;
   flex: 0 0 auto;
   display: grid;
   place-items: center;
@@ -159,39 +158,39 @@
 }
 .tm-icon.is-fallback { color: var(--text-soft); font-size: 1.05rem; }
 
-.tm-info { display: grid; gap: 2px; }
+.tm-info { display: grid; gap: 0; line-height: 1.3; }
 .tm-name {
   font-weight: 600;
-  font-size: .95rem;
+  font-size: .92rem;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
-.tm-payout { font-size: .82rem; color: var(--text-mute); line-height: 1.45; }
+.tm-payout { font-size: .8rem; color: var(--text-mute); line-height: 1.35; }
 .tm-note { font-size: .76rem; color: var(--text-mute); font-style: italic; }
 
-.tm-value { text-align: right; display: grid; gap: 1px; justify-items: end; }
+.tm-value { text-align: right; display: grid; gap: 0; justify-items: end; line-height: 1.25; }
 .tm-total {
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
-  font-size: 1.12rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--accent-green);
   font-variant-numeric: tabular-nums;
 }
-.tm-each {
+.tm-sub-value {
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
-  font-size: .74rem;
+  font-size: .72rem;
   color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-/* The reason is prose, so it wraps and gives up the tabular alignment. */
+/* Short enough now to stay on one line and keep the right-hand alignment. */
 .tm-value .tm-reason {
-  text-align: left;
-  justify-self: start;
-  font-size: .78rem;
+  font-size: .76rem;
   color: var(--text-mute);
-  line-height: 1.4;
-  max-width: 34ch;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 .tm-flag {
@@ -226,7 +225,7 @@
   .tm-row { grid-template-columns: auto 1fr; row-gap: 8px; padding: 10px; }
   .tm-row:has(.tm-tick) { grid-template-columns: auto auto 1fr; }
   .tm-value { grid-column: 1 / -1; text-align: left; justify-items: start; }
-  .tm-value .tm-reason { max-width: none; }
+  .tm-value .tm-reason { white-space: normal; }
   .tm-listhead span:last-child { display: none; }
 }
 
@@ -247,12 +246,7 @@
   z-index: 0;
 }
 .tm-row > *:not(.tm-fill) { position: relative; z-index: 1; }
-.tm-pct {
-  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
-  font-size: .7rem;
-  color: var(--text-mute);
-  font-variant-numeric: tabular-nums;
-}
+
 @media (prefers-reduced-motion: no-preference) {
   .tm-fill { transition: width .25s var(--ease-out, ease-out); }
 }
