@@ -238,9 +238,11 @@
 .tm-fill {
   position: absolute;
   inset: 0 auto 0 0;
+  /* Brightest at the bar's leading edge, so the eye is drawn to where the
+     value actually reaches rather than to the left margin every row shares. */
   background: linear-gradient(90deg,
-    color-mix(in srgb, var(--accent-green) 16%, transparent),
-    color-mix(in srgb, var(--accent-green) 5%, transparent));
+    color-mix(in srgb, var(--accent-green) 4%, transparent),
+    color-mix(in srgb, var(--accent-green) 20%, transparent));
   pointer-events: none;
   z-index: 0;
 }
