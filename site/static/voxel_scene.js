@@ -129,6 +129,60 @@
       camera.lookAt(target);
     }
 
+    /* ---- overlays: wireframe boxes drawn over the model --------------------
+       Used for the attachment point (which is usually NOT a voxel - on a hat it
+       floats below the model) and to point at voxels a check complained about.
+       One merged LineSegments per overlay rather than a mesh each: a finding can
+       cover thousands of voxels, and that has to stay one draw call. */
+    var overlays = {};
+    var CUBE_EDGES = [
+      [0, 0, 0, 1, 0, 0], [1, 0, 0, 1, 1, 0], [1, 1, 0, 0, 1, 0], [0, 1, 0, 0, 0, 0],
+      [0, 0, 1, 1, 0, 1], [1, 0, 1, 1, 1, 1], [1, 1, 1, 0, 1, 1], [0, 1, 1, 0, 0, 1],
+      [0, 0, 0, 0, 0, 1], [1, 0, 0, 1, 0, 1], [1, 1, 0, 1, 1, 1], [0, 1, 0, 0, 1, 1],
+    ];
+
+    function clearOverlay(key) {
+      var o = overlays[key];
+      if (!o) return;
+      scene.remove(o);
+      o.geometry.dispose();
+      o.material.dispose();
+      delete overlays[key];
+    }
+
+    /* `points` is [[x,y,z], ...]; `scale` grows the box past the voxel so the
+       wireframe reads as a highlight around it rather than z-fighting its faces. */
+    function setOverlay(key, points, colour, scale) {
+      clearOverlay(key);
+      if (!points || !points.length) { request(); return; }
+      scale = scale || 1.06;
+      var half = scale / 2;
+      var pos = new Float32Array(points.length * CUBE_EDGES.length * 6);
+      var p = 0;
+      for (var i = 0; i < points.length; i++) {
+        var cx = points[i][0], cy = points[i][1], cz = points[i][2];
+        for (var e = 0; e < CUBE_EDGES.length; e++) {
+          var E = CUBE_EDGES[e];
+          pos[p++] = cx + (E[0] ? half : -half);
+          pos[p++] = cy + (E[1] ? half : -half);
+          pos[p++] = cz + (E[2] ? half : -half);
+          pos[p++] = cx + (E[3] ? half : -half);
+          pos[p++] = cy + (E[4] ? half : -half);
+          pos[p++] = cz + (E[5] ? half : -half);
+        }
+      }
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      var mat = new THREE.LineBasicMaterial({
+        color: colour, transparent: true, opacity: 0.95, depthTest: false,
+      });
+      var lines = new THREE.LineSegments(geo, mat);
+      lines.renderOrder = 5;          // always on top: a highlight you can't see is useless
+      scene.add(lines);
+      overlays[key] = lines;
+      request();
+    }
+
     var caster = new THREE.Raycaster(), ndc = new THREE.Vector2();
     var viewDir = new THREE.Vector3(), scratch = new THREE.Vector3();
     var anchor = null;
@@ -289,8 +343,11 @@
       reframe: function () { rebuild(data, false); applyCamera(); request(); },
       pick: pick,
       request: request,
+      setOverlay: setOverlay,
+      clearOverlay: clearOverlay,
       dispose: function () {
         alive = false; cancelAnimationFrame(raf);
+        Object.keys(overlays).forEach(clearOverlay);
         if (tools) tools.dispose();
         el.removeEventListener('pointerdown', onDown);
         el.removeEventListener('pointermove', onMove);

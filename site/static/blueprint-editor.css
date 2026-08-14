@@ -21,10 +21,25 @@
 .bpe-hero { padding: 56px 0 22px; }
 .bpe-eyebrow {
   margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-family: var(--font-mono, monospace);
   font-size: .76rem;
   letter-spacing: .12em;
   color: var(--accent-blue);
+}
+/* Same pill the Codexes hero uses, so "Beta" reads identically across the site. */
+.bpe-beta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f8961e, #ff5e7e);
+  color: #1a0c0c;
+  font: 700 .68rem 'Inter', system-ui, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 .bpe-title {
   margin: 0 0 10px;
@@ -233,6 +248,80 @@
 /* Only half the paint will land on these (colour but not material, or the reverse). */
 .bpe-applyall.bpe-partial { border-style: dashed; }
 .bpe-applyall:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+/* ─── Checks (Trove Creations guidelines) ───────────────────────────── */
+
+.bpe-toggle { display: flex; align-items: center; gap: 8px; color: var(--text-mute); font-size: .82rem; }
+.bpe-toggle input { accent-color: var(--accent-blue); }
+
+.bpe-checkrow { display: flex; gap: 8px; margin-top: 10px; }
+.bpe-checkrow select {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-card-hi);
+  border: 1px solid var(--bg-line);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: .82rem;
+}
+.bpe-checkrow select:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+.bpe-report { margin-top: 12px; }
+.bpe-r-head { display: flex; align-items: baseline; gap: 10px; font-size: .85rem; margin-bottom: 10px; }
+.bpe-r-head span { color: var(--text-mute); font-size: .8rem; }
+.bpe-r-error { color: var(--accent-red); }
+.bpe-r-ok { color: var(--accent-green); }
+
+.bpe-findings { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.bpe-finding {
+  border: 1px solid var(--bg-line);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+.bpe-finding p { margin: 4px 0 0; color: var(--text-mute); font-size: .79rem; line-height: 1.5; }
+.bpe-f-head { display: flex; align-items: center; gap: 7px; font-size: .82rem; }
+.bpe-f-head strong { flex: 1; min-width: 0; font-weight: 600; }
+.bpe-f-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.bpe-f-error { border-left-color: var(--accent-red); }
+.bpe-f-error .bpe-f-dot { background: var(--accent-red); }
+.bpe-f-warning { border-left-color: var(--accent-yellow); }
+.bpe-f-warning .bpe-f-dot { background: var(--accent-yellow); }
+.bpe-f-info { border-left-color: var(--accent-blue); }
+.bpe-f-info .bpe-f-dot { background: var(--accent-blue); }
+
+.bpe-f-show {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: .72rem;
+  cursor: pointer;
+}
+.bpe-f-show:hover { border-color: var(--accent-blue); color: var(--text); }
+.bpe-f-show:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.bpe-f-show.active {
+  background: color-mix(in oklab, var(--accent-blue) 18%, transparent);
+  border-color: var(--accent-blue);
+  color: var(--text);
+}
+
+.bpe-satisfied {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+  color: var(--text-mute);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+.bpe-satisfied i { color: var(--accent-green); margin-right: 5px; }
 
 /* ─── Notes + actions ───────────────────────────────────────────────── */
 

@@ -35,7 +35,10 @@
     <main id="main" class="bpe-main">
 
         <section class="bpe-hero">
-            <p class="bpe-eyebrow">/blueprint-editor</p>
+            <p class="bpe-eyebrow">
+                <span>/blueprint-editor</span>
+                <span class="bpe-beta-pill">Beta</span>
+            </p>
             <h1 class="bpe-title" data-i18n>Blueprint Editor</h1>
             <p class="bpe-subtitle" data-i18n>Open a Trove model, give it new colours and materials, and download it ready to use. Turn a wall to glass, make the trim glow, or repaint the whole thing — you'll see every change in 3D as you make it.</p>
         </section>
@@ -80,6 +83,12 @@
                     <button type="button" data-scope="voxel" aria-pressed="true" data-i18n>That voxel</button>
                     <button type="button" data-scope="material" aria-pressed="false" data-i18n>Everything like it</button>
                 </div>
+
+                <h3 data-i18n>Show</h3>
+                <label class="bpe-toggle">
+                    <input type="checkbox" id="bpe-show-attach" checked>
+                    <span data-i18n>Attachment point</span>
+                </label>
             </aside>
 
             <!-- The model -->
@@ -104,6 +113,18 @@
                 <ul class="bpe-materials" id="bpe-materials"></ul>
 
                 <ul class="bpe-notes" id="bpe-notes" hidden></ul>
+
+                <h3 data-i18n>Check it over</h3>
+                <p class="bpe-hint" data-i18n>Trove has size, orientation and attachment rules per item type. Tell it what you're making and it'll check.</p>
+                <div class="bpe-checkrow">
+                    <label class="sr-only" for="bpe-kind" data-i18n>What are you making?</label>
+                    <select id="bpe-kind"></select>
+                    <button type="button" class="bpe-btn" id="bpe-check">
+                        <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+                        <span data-i18n>Check</span>
+                    </button>
+                </div>
+                <div id="bpe-report" class="bpe-report" aria-live="polite" hidden></div>
 
                 <p class="bpe-dirty" id="bpe-dirty" aria-live="polite" data-i18n>No changes yet</p>
                 <div class="bpe-actions">

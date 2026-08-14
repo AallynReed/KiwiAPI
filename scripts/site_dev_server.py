@@ -3535,6 +3535,10 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             if path == "/site/blueprint-editor/inspect":
                 return self._send_json(bp_editor.inspect(data, name=name or "blueprint"))
+            if path == "/site/blueprint-editor/check":
+                return self._send_json(bp_editor.check(
+                    data, json.loads(fields.get("edits") or "[]"),
+                    fields.get("kind") or "other"))
             if path == "/site/blueprint-editor/save":
                 out, summary = bp_editor.apply_edits(
                     data, json.loads(fields.get("edits") or "[]"))

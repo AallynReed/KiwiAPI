@@ -12,7 +12,7 @@ encoder is handed the original ``(type, w)`` it decoded.
 """
 from __future__ import annotations
 
-from app.trove.blueprint import codec, materials
+from app.trove.blueprint import codec, lint, materials
 from app.trove.render.voxel import KIND_CODE, material_for
 
 # The editor holds every voxel's material in browser memory and re-meshes on each
@@ -87,11 +87,16 @@ def inspect(raw: bytes, *, name: str = "blueprint") -> dict:
         seen[(vt, w)] = seen.get((vt, w), 0) + 1
 
     entities = codec.parse_entity_section(decoded.entity_blob)
+    attach = codec.attachment_point(decoded)
     return {
         "name": name,
         "count": len(voxels),
         "size": list(decoded.size),
         "version": decoded.version,
+        # Where the game grips or seats this model. Outside the box for a hat or mask
+        # (the gap is the head), inside the handle for a weapon, absent on v3/v4.
+        "attachment": list(attach) if attach else None,
+        "creation_types": list(lint.CREATION_TYPES),
         "x": xs, "y": ys, "z": zs, "rgb": rgb,
         "kind": kind, "level": level, "spec": spec,
         "type": types, "w": ws, "edit": editable, "paint": paintable,
@@ -154,6 +159,16 @@ def _coerce_edits(edits, total: int) -> dict[int, dict]:
         if change:
             out[idx] = {**out.get(idx, {}), **change}
     return out
+
+
+def check(raw: bytes, edits, kind: str = "other") -> dict:
+    """Run the Trove Creations checks against the model *as it would be saved*.
+
+    Edits are applied first on purpose: linting the file that arrived would grade work
+    the user has already moved on from, and the question they're asking is "is what I'm
+    about to download acceptable". CPU-bound - call via ``asyncio.to_thread``."""
+    edited, _ = apply_edits(raw, edits)
+    return lint.check(codec.decode_full(edited), kind)
 
 
 def apply_edits(raw: bytes, edits) -> tuple[bytes, dict]:

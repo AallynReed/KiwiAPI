@@ -3558,6 +3558,39 @@ async def site_blueprint_editor_inspect(
     return JSONResponse(payload, headers={"Cache-Control": "no-store"})
 
 
+@router.post("/site/blueprint-editor/check", response_class=JSONResponse)
+async def site_blueprint_editor_check(
+    file: UploadFile = File(...),
+    edits: str = Form(default="[]"),
+    kind: str = Form(default="other"),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> JSONResponse:
+    """Check a model against the Trove Creations guidelines.
+
+    Same inputs as ``save`` plus a creation type (``melee``, ``hat``, ``deco``, ...),
+    because the rules are per type: a spear must be exactly 45 long, a hat must hang
+    at least 6 voxels above its attachment point, a bow may not be more than 3 thick.
+    The edits are applied before checking, so the answer describes the file that would
+    be downloaded rather than the one that was uploaded.
+
+    Findings carry the voxel indices they refer to where a rule can point at specific
+    offenders (near-black voxels, disconnected geometry, a crowded grip), so the page
+    can highlight them in the 3D view."""
+    data = await file.read()
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "That file is empty.")
+    try:
+        parsed = json.loads(edits or "[]")
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "The edit list wasn't understood.") from None
+    try:
+        report = await asyncio.to_thread(bp_editor.check, data, parsed, kind)
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    return JSONResponse(report, headers={"Cache-Control": "no-store"})
+
+
 @router.post("/site/blueprint-editor/save", response_class=Response)
 async def site_blueprint_editor_save(
     file: UploadFile = File(...),

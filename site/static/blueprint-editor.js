@@ -33,7 +33,13 @@
     paint: { rgb: 0xff6b6b, type: 21, w: 0 },
     mode: 'both',        // what a click applies: colour, material, or both
     scope: 'voxel',      // one voxel, or every voxel sharing its material
+    kind: 'other',       // creation type the checks are run against
+    report: null,        // last check result
+    showAttach: true,
   };
+
+  var ATTACH_COLOUR = 0xff3fd5;   // the pink Trove modders mark attachment points in
+  var FINDING_COLOUR = { error: 0xff5555, warning: 0xffc857, info: 0x58a6ff };
 
   function $(id) { return document.getElementById(id); }
 
@@ -93,8 +99,11 @@
       state.index.set(payload.x[i] + ',' + payload.y[i] + ',' + payload.z[i], i);
     }
 
+    state.report = null;
+    $('bpe-report').hidden = true;
     $('bpe-empty').hidden = true;
     $('bpe-workspace').hidden = false;
+    renderKinds();
     renderPalette();
     renderMaterialList();
     renderMeta();
@@ -111,9 +120,100 @@
       onHover: onHover,
     }).then(function (scene) {
       state.scene = scene;
+      drawAttachment();
     }).catch(function (err) {
       setStatus(err.message || 'The 3D view couldn’t start.', 'error');
     });
+  }
+
+  // ---- attachment point + check highlights -------------------------------- //
+
+  function drawAttachment() {
+    if (!state.scene) return;
+    var a = state.data && state.data.attachment;
+    state.scene.setOverlay('attach',
+      (a && state.showAttach) ? [a] : [], ATTACH_COLOUR, 1.25);
+  }
+
+  function highlightFinding(finding) {
+    if (!state.scene || !state.data) return;
+    var d = state.data;
+    var pts = (finding && finding.voxels || []).map(function (i) {
+      return [d.x[i], d.y[i], d.z[i]];
+    });
+    state.scene.setOverlay('lint', pts, FINDING_COLOUR[finding && finding.level] || 0xff5555, 1.1);
+  }
+
+  function runCheck() {
+    if (!state.file) return;
+    var list = [];
+    state.edits.forEach(function (e) { list.push(e); });
+    var btn = $('bpe-check');
+    btn.disabled = true;
+    setStatus('Checking…');
+    var fd = new FormData();
+    fd.append('file', state.file, state.file.name);
+    fd.append('edits', JSON.stringify(list));
+    fd.append('kind', state.kind);
+    fetch(apiUrl('/site/blueprint-editor/check'), { method: 'POST', body: fd })
+      .then(function (res) {
+        return res.json().then(function (b) {
+          if (!res.ok) throw new Error((b && b.detail) || 'The check couldn’t run.');
+          return b;
+        });
+      })
+      .then(function (report) {
+        state.report = report;
+        renderReport();
+        setStatus('');
+      })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); })
+      .finally(function () { btn.disabled = false; });
+  }
+
+  /* An edit invalidates the last check. Rather than silently leaving a stale verdict
+     on screen - the one thing a checker must never do - drop it and say why. */
+  function staleReport() {
+    if (!state.report) return;
+    state.report = null;
+    if (state.scene) state.scene.clearOverlay('lint');
+    var box = $('bpe-report');
+    box.hidden = false;
+    box.innerHTML = '<p class="bpe-hint">You’ve changed the model since the last check. '
+      + 'Run it again to see where it stands.</p>';
+  }
+
+  function renderReport() {
+    var box = $('bpe-report');
+    var r = state.report;
+    if (!r) { box.innerHTML = ''; box.hidden = true; return; }
+    box.hidden = false;
+    var c = r.counts;
+    var head = c.error
+      ? '<strong class="bpe-r-error">' + c.error + ' to fix</strong>'
+      : '<strong class="bpe-r-ok"><i class="fa-solid fa-check" aria-hidden="true"></i> Nothing blocking</strong>';
+    if (c.warning) head += '<span>' + c.warning + ' to look at</span>';
+
+    var items = r.findings.map(function (f, i) {
+      return '<li class="bpe-finding bpe-f-' + f.level + '">'
+        + '<div class="bpe-f-head"><span class="bpe-f-dot"></span><strong>' + esc(f.title) + '</strong>'
+        + (f.voxels.length
+            ? '<button type="button" class="bpe-f-show" data-finding="' + i + '">Show '
+              + f.voxels.length.toLocaleString() + '</button>'
+            : '')
+        + '</div><p>' + esc(f.body) + '</p></li>';
+    }).join('');
+
+    box.innerHTML = '<div class="bpe-r-head">' + head + '</div>'
+      + (items ? '<ul class="bpe-findings">' + items + '</ul>' : '')
+      + '<ul class="bpe-satisfied">'
+      + r.satisfied.map(function (s) {
+          return '<li><i class="fa-solid fa-check" aria-hidden="true"></i> ' + esc(s) + '</li>';
+        }).join('')
+      + '</ul>'
+      + '<p class="bpe-hint">These are the Trove Creations submission guidelines. '
+      + 'Plenty of official game items bend them — they describe what gets accepted, '
+      + 'not what the game can load.</p>';
   }
 
   // ---- editing ------------------------------------------------------------ //
@@ -177,6 +277,7 @@
       if (state.scene) state.scene.rebuild(state.data);
       renderMaterialList();
       updateDirty();
+      staleReport();
     }
     if (refused) {
       setStatus(refused + (refused === 1 ? ' voxel is' : ' voxels are')
@@ -311,6 +412,25 @@
     return pal.label + (opt ? ' · ' + opt.label : '');
   }
 
+  var KIND_LABELS = {
+    other: 'Not sure / something else', melee: 'Melee weapon', gun: 'Gun',
+    staff: 'Staff', bow: 'Bow', spear: 'Spear', mask: 'Mask / face',
+    hat: 'Hat', hair: 'Hair', deco: 'Decoration',
+  };
+
+  function renderKinds() {
+    var types = state.data.creation_types || ['other'];
+    // "Not sure" first: it's the honest default, and it runs only the checks that
+    // don't depend on knowing what the model is.
+    types = types.slice().sort(function (a, b) {
+      return (a === 'other' ? -1 : b === 'other' ? 1 : a.localeCompare(b));
+    });
+    $('bpe-kind').innerHTML = types.map(function (t) {
+      return '<option value="' + t + '"' + (t === state.kind ? ' selected' : '') + '>'
+        + esc(KIND_LABELS[t] || t) + '</option>';
+    }).join('');
+  }
+
   function renderPalette() {
     var pal = state.data.palette;
     var html = (pal.types || []).map(function (p) {
@@ -395,6 +515,20 @@
     if (s.entities) {
       notes.push(s.entities.toLocaleString() + ' placed object'
         + (s.entities === 1 ? '' : 's') + ' travel with the model untouched.');
+    }
+    // The attachment point is where the game grips or seats the model. It is usually
+    // OUTSIDE the model for a hat or mask (that gap is the head), which looks wrong
+    // until it's explained, so explain it rather than just printing coordinates.
+    var a = state.data.attachment;
+    if (a) {
+      var outside = a[0] < 0 || a[1] < 0 || a[2] < 0
+        || a[0] >= state.data.size[0] || a[1] >= state.data.size[1] || a[2] >= state.data.size[2];
+      notes.push('Attaches at ' + a.join(', ') + (outside
+        ? ' — outside the model, which is right for a hat or mask: the gap is where the head goes.'
+        : ' — the pink marker in the view, where the game grips it.'));
+    } else if (state.data.version !== 5) {
+      notes.push('This is an older blueprint (v' + state.data.version + '), which stores no '
+        + 'attachment point, so there is none to show.');
     }
     var box = $('bpe-notes');
     box.innerHTML = notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('');
@@ -513,6 +647,31 @@
         if (!applyTo(i, c, batch)) refused++;
       }
       commit(batch, refused);
+    });
+
+    $('bpe-kind').addEventListener('change', function (e) {
+      state.kind = e.target.value;
+      staleReport();
+    });
+    $('bpe-check').addEventListener('click', runCheck);
+    $('bpe-report').addEventListener('click', function (e) {
+      var b = e.target.closest('.bpe-f-show');
+      if (!b || !state.report) return;
+      var f = state.report.findings[parseInt(b.dataset.finding, 10)];
+      var already = b.classList.contains('active');
+      [...document.querySelectorAll('.bpe-f-show')].forEach(function (o) {
+        o.classList.remove('active');
+      });
+      if (already) {
+        state.scene && state.scene.clearOverlay('lint');
+      } else {
+        b.classList.add('active');
+        highlightFinding(f);
+      }
+    });
+    $('bpe-show-attach').addEventListener('change', function (e) {
+      state.showAttach = e.target.checked;
+      drawAttachment();
     });
 
     $('bpe-undo').addEventListener('click', undo);
