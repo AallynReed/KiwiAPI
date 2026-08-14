@@ -520,12 +520,22 @@ async def entries_with_stat(branch: str, stat_key: str, *, codex_type: str | Non
 
 
 async def requirements_for(branch: str, collection: str) -> list[dict]:
-    """A badge's rank ladder, bronze first."""
+    """The full rank ladder the given badge belongs to, bronze first.
+
+    Each RANK is its own collection (`…/blocks_bronze`, `…/blocks_silver`, …), so
+    filtering on the collection alone returns exactly one row - a "ranks" list with
+    one entry in it. The ladder is keyed by `badge_id`, so this resolves the badge
+    from whichever rank was asked about and returns all of its ranks, which is what
+    makes the section worth showing."""
     async with acquire() as con:
         rows = await con.fetch(
-            "SELECT rank, rank_name, badge_id, completion_kind, requirement_key, label, "
-            "       amount, difficulty, status, context FROM codex_requirement "
-            "WHERE branch = $1 AND collection = $2 ORDER BY rank",
+            "SELECT rank, rank_name, badge_id, collection, completion_kind, "
+            "       requirement_key, label, amount, difficulty, status, context "
+            "FROM codex_requirement "
+            "WHERE branch = $1 AND badge_id = ("
+            "    SELECT badge_id FROM codex_requirement "
+            "    WHERE branch = $1 AND collection = $2 LIMIT 1) "
+            "ORDER BY rank",
             branch, collection)
     return [dict(r) for r in rows]
 

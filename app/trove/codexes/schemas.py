@@ -91,6 +91,7 @@ class CodexStatPage(BaseModel):
 class CodexRequirementOut(BaseModel):
     rank: int
     rank_name: str                    # bronze … trovium
+    collection: str = ""              # this rank's own collection path
     badge_id: str = ""
     completion_kind: str = ""         # metric | dragonsouls | STBossKilled | …
     requirement_key: str = ""
