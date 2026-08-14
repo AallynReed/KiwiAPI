@@ -2098,6 +2098,76 @@ async def site_codex_entry(
     return JSONResponse(_codex_row(doc), headers={"Cache-Control": "public, max-age=60"})
 
 
+@router.get("/site/codexes/related", response_class=JSONResponse)
+async def site_codex_related(
+    path: str = Query(..., description="Source prefab path of the entry"),
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> JSONResponse:
+    """Everything the codex knows that CONNECTS to one entry, in one call.
+
+    The detail panel needs all of it at once, and issuing four requests per card
+    open would be four round-trips for a panel that is mostly empty on most entries.
+    Each section is omitted when empty so the client renders only what exists.
+    """
+    _site_codex_branch(branch)
+    out: dict = {"path": path}
+
+    outgoing = await codexes_read.links_for(branch, path, direction="out", limit=300)
+    incoming = await codexes_read.links_for(branch, path, direction="in", limit=300)
+
+    def rows(items, rel):
+        return [
+            {"path": r["path"], "type": r.get("codex_type"), "name": r.get("name") or "",
+             "qty": r.get("qty"), "blueprint": r.get("blueprint"),
+             "data": r.get("data") or {}}
+            for r in items if r["rel"] == rel
+        ]
+
+    # Outgoing: what this thing produces / consumes / is made at.
+    for rel in ("crafts", "ingredient", "craftable_at", "unlocks", "member_of"):
+        found = rows(outgoing, rel)
+        if found:
+            out[rel] = found
+    # Incoming - the reverse questions, which are the interesting half.
+    made_by = rows(incoming, "crafts")
+    if made_by:
+        out["made_by"] = made_by
+    used_in = rows(incoming, "ingredient")
+    if used_in:
+        out["used_in"] = used_in
+    unlocked_by = rows(incoming, "unlocks")
+    if unlocked_by:
+        out["unlocked_by"] = unlocked_by
+    upgrade_cost_of = rows(incoming, "upgrade_cost")
+    if upgrade_cost_of:
+        out["upgrade_cost_of"] = upgrade_cost_of
+
+    # Badges carry a rank ladder keyed on the collection path, not the prefab path.
+    rel_path = path[len("prefabs/"):].removesuffix(".binfab") if path.startswith("prefabs/") else path
+    requirements = await codexes_read.requirements_for(branch, rel_path)
+    if requirements:
+        out["requirements"] = requirements
+
+    return JSONResponse(out, headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/codexes/upgrades", response_class=JSONResponse)
+async def site_codex_upgrades(
+    system: str | None = Query(default=None, description="One system key; omit to list them all"),
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> JSONResponse:
+    """Progression trees: the system list, or one system's nodes in rank order."""
+    _site_codex_branch(branch)
+    if system:
+        nodes = await codexes_read.upgrade_system(branch, system)
+        if not nodes:
+            raise HTTPException(status_code=404, detail=f"No upgrade system '{system}'")
+        return JSONResponse({"system_key": system, "items": nodes},
+                            headers={"Cache-Control": "public, max-age=300"})
+    systems = await codexes_read.upgrade_systems(branch)
+    return JSONResponse({"items": systems}, headers={"Cache-Control": "public, max-age=300"})
+
+
 @router.get("/site/codexes/crafting", response_class=JSONResponse)
 async def site_codex_crafting(
     path: str = Query(..., description="Source prefab path of the recipe to expand"),

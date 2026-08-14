@@ -250,6 +250,7 @@
     $modal.hidden = false;
     document.body.classList.add('cdx-modal-open');
     rerunI18n();
+    loadRelated(e);
     const card = $modal.querySelector('.cdx-modal-card');
     if (card && window.BTTUtil && window.BTTUtil.trapFocus) {
       modalRelease = window.BTTUtil.trapFocus(card, { onEscape: closeModal });
@@ -305,11 +306,16 @@
     // Visible ability bonuses (name + resolved description; hidden refs are filtered)
     const abilities = (data.abilities || []).filter((a) => a && !a.hidden);
     if (abilities.length) {
+      // No name fallback. Most abilities carry no display name in the game data, and
+      // prettifying the ref produced internal ids wearing title case ("Enemydeath
+      // Damagebuff"). When there is no name, the description stands alone.
       const rows = abilities.map((a) => {
         const desc = a.description ? `<span class="cdx-ability-desc">${esc(a.description)}</span>` : '';
+        const name = a.name ? `<span class="cdx-ability-name">${esc(a.name)}</span>` : '';
+        if (!name && !desc) return '';
         return `<li class="cdx-ability"><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
-          <span class="cdx-ability-main"><span class="cdx-ability-name">${esc(a.name || prettyAbility(a.ref))}</span>${desc}</span></li>`;
-      }).join('');
+          <span class="cdx-ability-main">${name}${desc}</span></li>`;
+      }).filter(Boolean).join('');
       parts.push(section(t('Ability bonuses'), `<ul class="cdx-abilities">${rows}</ul>`));
     }
 
@@ -369,7 +375,10 @@
           bits.push(`${esc(statValue(s))} ${esc(statName(s))}`);
         }
         for (const ab of (lv.abilities || [])) {
-          if (ab && ab.ref) bits.push(esc(prettyAbility(ab.ref)));
+          // Same rule as the ability list: show what the game names, never a
+          // prettified ref standing in for a name it doesn't have.
+          const label = (ab && (ab.description || ab.name)) || '';
+          if (label) bits.push(esc(label));
         }
         return `<li class="cdx-level"><span class="cdx-level-n">${t('Lvl {n}').replace('{n}', esc(lv.level))}</span>
           <span class="cdx-level-bits">${bits.join(' · ') || '—'}</span></li>`;
@@ -383,6 +392,71 @@
     if (e.blueprint) ref.push(`<span class="cdx-ref-row"><span class="cdx-ref-k" data-i18n>Blueprint</span><code>${esc(e.blueprint)}</code></span>`);
     parts.push(section(t('Reference'), `<div class="cdx-ref">${ref.join('')}</div>`));
 
+    return parts.join('');
+  }
+
+  // ─── Related data (links, badge ranks) ──────────────────────────────
+  // Fetched after the modal paints rather than inlined into the search row: it is a
+  // per-entry join, and most entries have none of it. A failure here leaves the modal
+  // exactly as it was - the panel is additive, never load-bearing.
+  let relatedToken = 0;
+  async function loadRelated(entry) {
+    const token = ++relatedToken;
+    let data;
+    try {
+      data = await fetchJSON('/site/codexes/related?branch=' + enc(state.branch)
+        + '&path=' + enc(entry.path));
+    } catch (_err) {
+      return;
+    }
+    if (token !== relatedToken || $modal.hidden) return;   // modal moved on
+    const html = relatedHTML(data);
+    if (!html) return;
+    const anchor = $modalBody.querySelector('.cdx-sec:last-of-type');
+    if (anchor) anchor.insertAdjacentHTML('beforebegin', html);
+    else $modalBody.insertAdjacentHTML('beforeend', html);
+    rerunI18n();
+  }
+
+  function linkRows(items) {
+    return items.map((r) => {
+      const qty = (r.qty !== null && r.qty !== undefined && r.qty !== 1)
+        ? `<span class="cdx-craft-amt">${esc(formatInt(r.qty))}×</span>` : '';
+      const name = r.name || String(r.path || '').split('/').pop().replace(/\.binfab$/, '');
+      const tag = (r.data && r.data.category)
+        ? `<span class="cdx-stat-slot">${esc(String(r.data.category).replace(/^\$|_name$/g, ''))}</span>` : '';
+      return `<li class="cdx-craft">${qty}<span class="cdx-craft-name">${esc(name)}</span>${tag}</li>`;
+    }).join('');
+  }
+
+  function relatedHTML(d) {
+    const parts = [];
+    // The reverse lookups first - they are the ones you cannot get any other way.
+    if ((d.made_by || []).length) {
+      parts.push(section(t('Made by'), `<ul class="cdx-craft-list">${linkRows(d.made_by)}</ul>`));
+    }
+    if ((d.used_in || []).length) {
+      parts.push(section(t('Used in'), `<ul class="cdx-craft-list">${linkRows(d.used_in)}</ul>`));
+    }
+    if ((d.unlocked_by || []).length) {
+      parts.push(section(t('Unlocked by'), `<ul class="cdx-craft-list">${linkRows(d.unlocked_by)}</ul>`));
+    }
+    if ((d.unlocks || []).length) {
+      parts.push(section(t('Unlocks'), `<ul class="cdx-craft-list">${linkRows(d.unlocks)}</ul>`));
+    }
+    if ((d.upgrade_cost_of || []).length) {
+      parts.push(section(t('Spent on'), `<ul class="cdx-craft-list">${linkRows(d.upgrade_cost_of)}</ul>`));
+    }
+    if ((d.requirements || []).length) {
+      const rows = d.requirements.map((r) => {
+        const amt = (r.amount !== null && r.amount !== undefined && r.amount !== 0)
+          ? `<span class="cdx-craft-amt">${esc(formatInt(r.amount))}</span>` : '';
+        return `<li class="cdx-craft">
+          <span class="cdx-level-n">${esc(r.rank_name || ('#' + r.rank))}</span>
+          <span class="cdx-craft-name">${esc(r.label || r.completion_kind)}</span>${amt}</li>`;
+      }).join('');
+      parts.push(section(t('Ranks'), `<ul class="cdx-craft-list">${rows}</ul>`));
+    }
     return parts.join('');
   }
 

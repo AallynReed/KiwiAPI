@@ -48,6 +48,95 @@ class CodexSearchPage(BaseModel):
     total: int                        # all matching entries (for paging)
 
 
+class CodexLinkOut(BaseModel):
+    rel: str                          # crafts | ingredient | craftable_at | unlocks | upgrade_cost | member_of
+    path: str                         # the FAR end of the edge
+    type: str | None = None           # the far end's codex type (None if it isn't an indexed prefab)
+    name: str = ""
+    category: str = ""
+    blueprint: str | None = None
+    qty: float | None = None          # output/ingredient amount, where the relation carries one
+    data: dict = {}                   # relation extras (bench lane + crafting tab, member group)
+
+
+class CodexLinkList(BaseModel):
+    branch: str
+    path: str                         # the entry the links were asked about
+    direction: str                    # "out" (this -> others) or "in" (others -> this)
+    items: list[CodexLinkOut]
+    count: int
+
+
+class CodexStatHolder(BaseModel):
+    path: str
+    type: str
+    name: str
+    category: str = ""
+    blueprint: str | None = None
+    stat: str                         # $Stat_… key
+    stat_name: str = ""
+    value: float | None = None        # normalized for display
+    is_percent: bool = False
+    slot: str | None = None           # $EquipmentSlot_… when the bonus is slot-conditional
+
+
+class CodexStatPage(BaseModel):
+    branch: str
+    stat: str
+    items: list[CodexStatHolder]      # strongest first; one row per entry
+    count: int
+    total: int
+
+
+class CodexRequirementOut(BaseModel):
+    rank: int
+    rank_name: str                    # bronze … trovium
+    badge_id: str = ""
+    completion_kind: str = ""         # metric | dragonsouls | STBossKilled | …
+    requirement_key: str = ""
+    label: str = ""                   # human-readable requirement
+    amount: int | None = None
+    difficulty: int = 0
+    status: str = ""                  # decoded | blocked
+    context: dict = {}
+
+
+class CodexRequirementList(BaseModel):
+    branch: str
+    collection: str                   # collections/badge/<id>
+    items: list[CodexRequirementOut]  # bronze first
+    count: int
+
+
+class CodexUpgradeNode(BaseModel):
+    system_kind: str                  # geode_module | geode_companion | class_prestige
+    system_key: str
+    node_key: str
+    rank: int | None = None
+    costs: list[dict] = []            # [{item, quantity}, …]
+    requires: list[str] = []          # other node keys named as prerequisites
+    effects: dict = {}                # {name, description, abilities: [ref, …]}
+
+
+class CodexUpgradeSystemInfo(BaseModel):
+    system_kind: str
+    system_key: str
+    nodes: int
+
+
+class CodexUpgradeSystemList(BaseModel):
+    branch: str
+    items: list[CodexUpgradeSystemInfo]
+    count: int
+
+
+class CodexUpgradeNodeList(BaseModel):
+    branch: str
+    system_key: str
+    items: list[CodexUpgradeNode]     # rank order
+    count: int
+
+
 class CodexCategoryInfo(BaseModel):
     category: str
     count: int

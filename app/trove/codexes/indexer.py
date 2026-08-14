@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from app.core.config import settings
 from app.core.utils import utcnow
 from app.trove.codexes import (
+    abilities,
     badges,
     binfab,
     blocks,
@@ -124,6 +125,7 @@ class _Maps:
     store: ContentStore | None = None
     prefab_shas: dict[str, str] = field(default_factory=dict)
     _item_meta: dict[str, dict] = field(default_factory=dict)
+    _ability_meta: dict[str, dict] = field(default_factory=dict)
     valid_blueprints: set[str] = field(default_factory=set)
     # `blueprint basename without its [author] credit` -> blueprints carrying it, for the
     # placeable naming convention (see `extract.conventional_blueprint`).
@@ -156,6 +158,22 @@ class _Maps:
         key = rel.replace("\\", "/").removesuffix(".binfab")
         full = (key if key.startswith(PREFABS_ROOT) else PREFABS_ROOT + key) + ".binfab"
         return full in self.prefab_shas
+
+    def ability_meta(self, ref: str) -> dict:
+        """Display text for an ability ref, read from ITS OWN prefab (memoized).
+
+        Empty when the prefab isn't in the archive - the caller then shows no name,
+        rather than a title-cased internal id."""
+        norm = abilities.normalize_ref(ref)
+        if not norm:
+            return {}
+        cached = self._ability_meta.get(norm)
+        if cached is not None:
+            return cached
+        content = self._read(norm)
+        meta = abilities.display(abilities.extract_keys(content), self.loc) if content else {}
+        self._ability_meta[norm] = meta
+        return meta
 
     def model_size(self, name: str) -> int:
         """Voxel count of a blueprint, 0 when it's an empty placeholder / unreadable.
@@ -511,7 +529,8 @@ def _parse_entry(branch: str, path: str, sha: str, ctype: str, maps: _Maps, now)
                           valid_blueprints=maps.valid_blueprints, model_size=maps.model_size,
                           prefab_exists=maps.prefab_exists,
                           power_rank_table=maps.power_rank_table,
-                          style_rows=maps.style_rows)
+                          style_rows=maps.style_rows,
+                          resolve_ability=maps.ability_meta)
     rel = path[len(PREFABS_ROOT):].removesuffix(".binfab")
     if ctype == "mount":  # split dragons out by their collection category
         refine_mount(entry, rel, maps.mount_categories)
