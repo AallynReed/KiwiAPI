@@ -13,9 +13,12 @@
    NOT include this partial.
    =========================================================================== #}
 {% set _p = request.url.path %}
-{# Every path the Pages menu can reach. Keep in sync when a page is added, or
-   the trigger silently stops highlighting on that route. #}
-{% set _pages_active = _p == '/mods' or _p.startswith('/mods/') or _p == '/modpacks' or _p.startswith('/modpacks/') or _p in ['/commands', '/leaderboards', '/activity', '/class-activity', '/updates', '/market', '/tomes', '/store', '/codexes', '/codexes/crafting', '/status', '/clubs', '/server-time', '/calendar', '/streams', '/releases', '/classes', '/star-chart', '/gem-simulator', '/gem-evaluator', '/gem-builds', '/gems-guide', '/calculators', '/dressing-room', '/sound-studio', '/mod-workshop', '/giveaways'] %}
+{# Active when the current path is anything the Pages menu can reach. Derived from
+   the same registry the menu renders from, so it can never drift out of sync -
+   this used to be a hand-written list that silently stopped highlighting a route
+   whenever someone added a page and missed it. Sub-paths count: /mods/<author>/<mod>
+   still belongs to Mods Hub. #}
+{% set _pages_active = nav_active | default(false) %}
 <header class="navbar" role="banner">
         <div class="nav-container">
             <a class="nav-logo" href="{{ '#hero' if _p == '/' else '/' }}" aria-label="Better Trove Tools home">
@@ -92,68 +95,27 @@
                         </div>
                         <p class="nav-mega-empty" id="nav-pages-empty" role="status" hidden data-i18n>No pages match</p>
 
-                        {# Everything happening right now, including the standings. Leaderboards
-                           and Clubs used to sit in a separate "Competitive" column even though
-                           they're the same kind of live player data as Activity. #}
-                        {% if leaderboards_enabled or clubs_enabled or player_activity_enabled or class_activity_enabled or server_status_enabled or server_time_enabled or calendar_enabled %}
-                        <div class="nav-mega-group" role="group" aria-label="Live">
-                            <p class="nav-mega-title" data-i18n>Live</p>
-                            {% if leaderboards_enabled %}<a href="/leaderboards" class="{{ 'active' if _p == '/leaderboards' else '' }}"><i class="fa-solid fa-ranking-star"></i> <span data-i18n>Leaderboards</span></a>{% endif %}
-                            {% if clubs_enabled %}<a href="/clubs" class="{{ 'active' if _p == '/clubs' else '' }}"><i class="fa-solid fa-shield-halved"></i> <span data-i18n>Clubs</span></a>{% endif %}
-                            {% if player_activity_enabled %}<a href="/activity" class="{{ 'active' if _p == '/activity' else '' }}"><i class="fa-solid fa-chart-line"></i> <span data-i18n>Player Activity</span></a>{% endif %}
-                            {% if class_activity_enabled %}<a href="/class-activity" class="{{ 'active' if _p == '/class-activity' else '' }}"><i class="fa-solid fa-users"></i> <span data-i18n>Class Activity</span></a>{% endif %}
-                            {% if server_status_enabled %}<a href="/status" class="{{ 'active' if _p == '/status' else '' }}"><i class="fa-solid fa-signal"></i> <span data-i18n>Server Status</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
-                            {% if server_time_enabled %}<a href="/server-time" class="{{ 'active' if _p == '/server-time' else '' }}"><i class="fa-solid fa-clock"></i> <span data-i18n>Server Time</span></a>{% endif %}
-                            {% if calendar_enabled %}<a href="/calendar" class="{{ 'active' if _p == '/calendar' else '' }}"><i class="fa-solid fa-calendar-days"></i> <span data-i18n>Calendar</span></a>{% endif %}
+                        {# Columns render from the search registry (app/site/search_index.py),
+                           so a page is declared ONCE and appears in both this menu and
+                           site-wide search. This used to be hand-written markup whose
+                           shadow copy lived in the registry - adding a page meant editing
+                           both, and forgetting one was invisible until someone went
+                           looking for a link that had never been there.
+
+                           A group with no enabled pages isn't emitted at all, which is
+                           what the old per-group `{% if a or b or c %}` guards did by
+                           hand, one condition per page. #}
+                        {% for section in nav_menu %}
+                        <div class="nav-mega-group" role="group" aria-label="{{ section.group }}">
+                            <p class="nav-mega-title" data-i18n>{{ section.group }}</p>
+                            {% for item in section['items'] %}
+                            <a href="{{ item.path }}" class="{{ 'active' if _p == item.path else '' }}">
+                                <i class="{{ item.icon }}"></i> <span data-i18n>{{ item.name }}</span>
+                                {%- if item.badge %} <span class="nav-pill nav-pill-beta" data-i18n>{{ item.badge }}</span>{% endif %}
+                            </a>
+                            {% endfor %}
                         </div>
-                        {% endif %}
-                        {% if market_enabled or store_enabled or calculators_enabled or tomes_enabled %}
-                        <div class="nav-mega-group" role="group" aria-label="Economy">
-                            <p class="nav-mega-title" data-i18n>Economy</p>
-                            {% if market_enabled %}<a href="/market" class="{{ 'active' if _p == '/market' else '' }}"><i class="fa-solid fa-shop"></i> <span data-i18n>Market</span></a>{% endif %}
-                            {% if tomes_enabled %}<a href="/tomes" class="{{ 'active' if _p == '/tomes' else '' }}"><i class="fa-solid fa-book"></i> <span data-i18n>Tome Values</span></a>{% endif %}
-                            {% if store_enabled %}<a href="/store" class="{{ 'active' if _p == '/store' else '' }}"><i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n>Store History</span></a>{% endif %}
-                            {% if calculators_enabled %}<a href="/calculators" class="{{ 'active' if _p == '/calculators' else '' }}"><i class="fa-solid fa-calculator"></i> <span data-i18n>Calculators</span></a>{% endif %}
-                        </div>
-                        {% endif %}
-                        {# All four gem surfaces sit together here - they used to straddle
-                           "Tools" and "Reference", so half the gem answers were in a column
-                           you had to already know about. #}
-                        {% if star_chart_enabled or dressing_room_enabled or gem_simulator_enabled or gem_evaluator_enabled or gem_builds_enabled or gems_guide_enabled %}
-                        <div class="nav-mega-group" role="group" aria-label="Plan">
-                            <p class="nav-mega-title" data-i18n>Plan</p>
-                            {% if star_chart_enabled %}<a href="/star-chart" class="{{ 'active' if _p == '/star-chart' else '' }}"><i class="fa-solid fa-star"></i> <span data-i18n>Star Chart</span></a>{% endif %}
-                            {% if dressing_room_enabled %}<a href="/dressing-room" class="{{ 'active' if _p == '/dressing-room' else '' }}"><i class="fa-solid fa-shirt"></i> <span data-i18n>Dressing Room</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
-                            {% if gem_simulator_enabled %}<a href="/gem-simulator" class="{{ 'active' if _p == '/gem-simulator' else '' }}"><i class="fa-solid fa-gem"></i> <span data-i18n>Gem Simulator</span></a>{% endif %}
-                            {% if gem_evaluator_enabled %}<a href="/gem-evaluator" class="{{ 'active' if _p == '/gem-evaluator' else '' }}"><i class="fa-solid fa-magnifying-glass-chart"></i> <span data-i18n>Gem Evaluator</span></a>{% endif %}
-                            {% if gem_builds_enabled %}<a href="/gem-builds" class="{{ 'active' if _p == '/gem-builds' else '' }}"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n>Gem Builds</span></a>{% endif %}
-                            {% if gems_guide_enabled %}<a href="/gems-guide" class="{{ 'active' if _p == '/gems-guide' else '' }}"><i class="fa-solid fa-circle-question"></i> <span data-i18n>How Gems Work</span></a>{% endif %}
-                        </div>
-                        {% endif %}
-                        {# The whole creator platform in one column. Mod Workshop and Sound
-                           Studio used to sit under "Tools", two columns away from the hub
-                           they feed - creators had to learn the split. #}
-                        {% if mods_hub_enabled or mod_workshop_enabled or sound_studio_enabled %}
-                        <div class="nav-mega-group" role="group" aria-label="Create">
-                            <p class="nav-mega-title" data-i18n>Create</p>
-                            {% if mods_hub_enabled %}<a href="/mods" class="{{ 'active' if _p == '/mods' or _p.startswith('/mods/') else '' }}"><i class="fa-solid fa-cubes"></i> <span data-i18n>Mods Hub</span></a>{% endif %}
-                            {% if mods_hub_enabled %}<a href="/modpacks" class="{{ 'active' if _p == '/modpacks' or _p.startswith('/modpacks/') else '' }}"><i class="fa-solid fa-box-open"></i> <span data-i18n>Modpacks</span></a>{% endif %}
-                            {% if mod_workshop_enabled %}<a href="/mod-workshop" class="{{ 'active' if _p == '/mod-workshop' else '' }}"><i class="fa-solid fa-screwdriver-wrench"></i> <span data-i18n>Mod Workshop</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
-                            {% if sound_studio_enabled %}<a href="/sound-studio" class="{{ 'active' if _p == '/sound-studio' else '' }}"><i class="fa-solid fa-sliders"></i> <span data-i18n>Sound Studio</span></a>{% endif %}
-                        </div>
-                        {% endif %}
-                        {% if classes_enabled or commands_enabled or codexes_enabled or updates_enabled or streams_enabled or giveaways_enabled or btt_releases_enabled %}
-                        <div class="nav-mega-group" role="group" aria-label="Learn">
-                            <p class="nav-mega-title" data-i18n>Learn</p>
-                            {% if classes_enabled %}<a href="/classes" class="{{ 'active' if _p == '/classes' else '' }}"><i class="fa-solid fa-hat-wizard"></i> <span data-i18n>Classes</span></a>{% endif %}
-                            {% if commands_enabled %}<a href="/commands" class="{{ 'active' if _p == '/commands' else '' }}"><i class="fa-solid fa-keyboard"></i> <span data-i18n>Trove Commands</span></a>{% endif %}
-                            {% if codexes_enabled %}<a href="/codexes" class="{{ 'active' if _p == '/codexes' else '' }}"><i class="fa-solid fa-book-atlas"></i> <span data-i18n>Codexes</span> <span class="nav-pill nav-pill-beta" data-i18n>Beta</span></a>{% endif %}
-                            {% if updates_enabled %}<a href="/updates" class="{{ 'active' if _p == '/updates' else '' }}"><i class="fa-solid fa-code-branch"></i> <span data-i18n>Updates</span></a>{% endif %}
-                            {% if streams_enabled %}<a href="/streams" class="{{ 'active' if _p == '/streams' else '' }}"><i class="fa-solid fa-video"></i> <span data-i18n>Streams</span></a>{% endif %}
-                            {% if giveaways_enabled %}<a href="/giveaways" class="{{ 'active' if _p == '/giveaways' else '' }}"><i class="fa-solid fa-gift"></i> <span data-i18n>Giveaways</span></a>{% endif %}
-                            {% if btt_releases_enabled %}<a href="/releases" class="{{ 'active' if _p == '/releases' else '' }}"><i class="fa-solid fa-cloud-arrow-down"></i> <span data-i18n>App Releases</span></a>{% endif %}
-                        </div>
-                        {% endif %}
+                        {% endfor %}
                     </div>
                 </div>
 

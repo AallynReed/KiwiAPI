@@ -103,3 +103,17 @@
   .srch-subjects { flex-direction: row; flex-wrap: wrap; }
   .srch-subject { width: auto; }
 }
+
+/* Result thumbnail - icon underneath, image over it, so a failed load reveals the
+   icon instead of leaving a hole. `pixelated` because these are voxel renders and
+   smoothing them just makes them muddy at 64px. */
+.srch-res-thumb {
+  position: relative; flex: 0 0 auto;
+  width: 44px; height: 44px; display: grid; place-items: center;
+  border-radius: 10px; background: var(--bg-deep); overflow: hidden;
+}
+.srch-res-thumb .srch-res-icon { position: absolute; }
+.srch-res-thumb img {
+  position: relative; width: 100%; height: 100%;
+  object-fit: contain; image-rendering: pixelated;
+}

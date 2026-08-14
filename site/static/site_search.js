@@ -33,21 +33,52 @@
     return (window.BTTi18n && window.BTTi18n.t) ? window.BTTi18n.t(s) : s;
   }
 
-  function rowHTML(item, active) {
+  /* A result's picture, when it has one. Codex rows render their voxel model and mod
+     rows their banner; pages and players have no image and keep the icon.
+
+     The <img> is layered OVER the icon rather than replacing it, and removes itself
+     on error - the render endpoint legitimately 422s for a blueprint that decodes to
+     an empty placeholder, and a broken-image glyph is worse than the icon we already
+     had. */
+  function thumbHTML(item, cls) {
     const icon = item.icon || SUBJECT_ICON[item.subject] || 'fa-solid fa-circle';
+    const fallback = `<i class="${esc(icon)} ${cls}-icon" aria-hidden="true"></i>`;
+    if (!item.image) return fallback;
+    // No inline onerror: the site ships a strict CSP, which blocks inline
+    // handlers. Failures are caught by a capture-phase listener instead
+    // (see `dropBrokenImages`) - `error` does not bubble from <img>.
+    return `<span class="${cls}-thumb">${fallback}` +
+      `<img src="${esc(item.image)}" alt="" loading="lazy" decoding="async"></span>`;
+  }
+
+  function rowHTML(item, active) {
     // `kind` is the precise thing (mount, recipe, mod); `subject` is the column it
     // was found under. Showing the precise one matches how people describe results.
     const badge = esc(String(item.kind || item.subject || '').toUpperCase());
     const detail = item.detail ? `<span class="ss-row-detail">${esc(item.detail)}</span>` : '';
     return `<li class="ss-row${active ? ' is-active' : ''}" role="option"
                 aria-selected="${active ? 'true' : 'false'}" data-path="${esc(item.path)}">
-      <i class="${esc(icon)} ss-row-icon" aria-hidden="true"></i>
+      ${thumbHTML(item, 'ss-row')}
       <span class="ss-row-main">
         <span class="ss-row-name">${esc(item.name)}</span>
         ${detail}
       </span>
       <span class="ss-row-badge">${badge}</span>
     </li>`;
+  }
+
+
+  /* The render endpoint legitimately 422s for a blueprint that decodes to an empty
+     placeholder, and a mod banner can 404. Drop the <img> so the icon underneath
+     shows through, rather than leaving a broken-image glyph.
+
+     Capture phase: `error` does not bubble from <img>, so a plain listener on the
+     container never sees it. */
+  function dropBrokenImages(container) {
+    if (!container) return;
+    container.addEventListener('error', (e) => {
+      if (e.target && e.target.tagName === 'IMG') e.target.remove();
+    }, true);
   }
 
   /* Wire one input + panel into a live search. Returns a small controller so the
@@ -63,6 +94,7 @@
     let items = [];
     let cursor = -1;
     let token = 0;
+    dropBrokenImages(list);
 
     function close() {
       panel.hidden = true;

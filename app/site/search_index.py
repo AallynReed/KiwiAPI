@@ -83,20 +83,23 @@ class Destination:
     group: str = ""                 # the navbar column it lives under
     parent: str = ""                # the page a tab belongs to ("" for a page)
     keywords: tuple[str, ...] = ()  # extra terms that should find it
+    badge: str = ""                 # pill shown beside the nav label (e.g. "Beta")
+    in_nav: bool = True             # listed in the Pages mega-menu
 
     @property
     def is_tab(self) -> bool:
         return bool(self.parent)
 
 
-def _p(name, path, flag, icon, group, *keywords) -> Destination:
+def _p(name, path, flag, icon, group, *keywords, badge="", in_nav=True) -> Destination:
     return Destination(name=name, path=path, flag=flag, icon=icon, group=group,
-                       keywords=tuple(keywords))
+                       keywords=tuple(keywords), badge=badge, in_nav=in_nav)
 
 
 def _tab(name, path, flag, parent, *keywords) -> Destination:
+    # Tabs are searchable but never listed in the menu - the menu is pages.
     return Destination(name=name, path=path, flag=flag, icon="fa-solid fa-table-columns",
-                       group=parent, parent=parent, keywords=tuple(keywords))
+                       group=parent, parent=parent, keywords=tuple(keywords), in_nav=False)
 
 
 # --- pages -------------------------------------------------------------------
@@ -106,7 +109,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Clubs", "/clubs", "clubs_enabled", "fa-solid fa-shield-halved", "Live", "guild"),
     _p("Player Activity", "/activity", "player_activity_enabled", "fa-solid fa-chart-line", "Live", "online", "population"),
     _p("Class Activity", "/class-activity", "class_activity_enabled", "fa-solid fa-users", "Live", "classes played"),
-    _p("Server Status", "/status", "server_status_enabled", "fa-solid fa-signal", "Live", "uptime", "down", "maintenance"),
+    _p("Server Status", "/status", "server_status_enabled", "fa-solid fa-signal", "Live", "uptime", "down", "maintenance", badge="Beta"),
     _p("Server Time", "/server-time", "server_time_enabled", "fa-solid fa-clock", "Live", "clock", "timezone", "utc"),
     _p("Calendar", "/calendar", "calendar_enabled", "fa-solid fa-calendar-days", "Live", "events", "schedule"),
 
@@ -116,7 +119,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Calculators", "/calculators", "calculators_enabled", "fa-solid fa-calculator", "Economy", "math"),
 
     _p("Star Chart", "/star-chart", "star_chart_enabled", "fa-solid fa-star", "Plan", "constellation", "build planner"),
-    _p("Dressing Room", "/dressing-room", "dressing_room_enabled", "fa-solid fa-shirt", "Plan", "costume", "outfit", "preview"),
+    _p("Dressing Room", "/dressing-room", "dressing_room_enabled", "fa-solid fa-shirt", "Plan", "costume", "outfit", "preview", badge="Beta"),
     _p("Gem Simulator", "/gem-simulator", "gem_simulator_enabled", "fa-solid fa-gem", "Plan", "gems", "rolling"),
     _p("Gem Evaluator", "/gem-evaluator", "gem_evaluator_enabled", "fa-solid fa-magnifying-glass-chart", "Plan", "gems", "rate my gem"),
     _p("Gem Builds", "/gem-builds", "gem_builds_enabled", "fa-solid fa-wand-magic-sparkles", "Plan", "gems", "optimizer"),
@@ -124,23 +127,23 @@ PAGES: tuple[Destination, ...] = (
 
     _p("Mods Hub", "/mods", "mods_hub_enabled", "fa-solid fa-cubes", "Create", "modding", "addons"),
     _p("Modpacks", "/modpacks", "mods_hub_enabled", "fa-solid fa-box-open", "Create", "bundles"),
-    _p("Mod Workshop", "/mod-workshop", "mod_workshop_enabled", "fa-solid fa-screwdriver-wrench", "Create", "tmod", "compiler", "build a mod"),
+    _p("Mod Workshop", "/mod-workshop", "mod_workshop_enabled", "fa-solid fa-screwdriver-wrench", "Create", "tmod", "compiler", "build a mod", badge="Beta"),
     _p("Sound Studio", "/sound-studio", "sound_studio_enabled", "fa-solid fa-sliders", "Create", "audio", "music", "bnk"),
 
     _p("Classes", "/classes", "classes_enabled", "fa-solid fa-hat-wizard", "Learn", "class list"),
     _p("Trove Commands", "/commands", "commands_enabled", "fa-solid fa-keyboard", "Learn", "slash commands", "chat"),
-    _p("Codexes", "/codexes", "codexes_enabled", "fa-solid fa-book-atlas", "Learn", "database", "catalog", "game data"),
-    _p("Recipe Cost Calculator", "/codexes/crafting", "codexes_enabled", "fa-solid fa-flask", "Learn", "crafting", "cost"),
+    _p("Codexes", "/codexes", "codexes_enabled", "fa-solid fa-book-atlas", "Learn", "database", "catalog", "game data", badge="Beta"),
+    _p("Recipe Cost Calculator", "/codexes/crafting", "codexes_enabled", "fa-solid fa-flask", "Learn", "crafting", "cost", in_nav=False),
     _p("Updates", "/updates", "updates_enabled", "fa-solid fa-code-branch", "Learn", "patch notes", "changes", "datamining"),
     _p("Streams", "/streams", "streams_enabled", "fa-solid fa-video", "Learn", "twitch", "live"),
     _p("Giveaways", "/giveaways", "giveaways_enabled", "fa-solid fa-gift", "Learn", "free"),
-    _p("Releases", "/releases", "btt_releases_enabled", "fa-solid fa-tag", "Learn", "app", "download", "versions"),
+    _p("App Releases", "/releases", "btt_releases_enabled", "fa-solid fa-cloud-arrow-down", "Learn", "app", "download", "versions"),
 
-    _p("Get the App", "/app", None, "fa-solid fa-download", "About", "desktop", "install"),
-    _p("Dashboard", "/dashboard", None, "fa-solid fa-gauge", "About", "account", "settings", "profile"),
-    _p("Changelog", "/changelog", None, "fa-solid fa-list-check", "About", "site updates"),
-    _p("Accessibility", "/accessibility", None, "fa-solid fa-universal-access", "About", "a11y"),
-    _p("Support", "/support", None, "fa-solid fa-heart", "About", "donate", "tip"),
+    _p("Get the App", "/app", None, "fa-solid fa-download", "About", "desktop", "install", in_nav=False),
+    _p("Dashboard", "/dashboard", None, "fa-solid fa-gauge", "About", "account", "settings", "profile", in_nav=False),
+    _p("Changelog", "/changelog", None, "fa-solid fa-list-check", "About", "site updates", in_nav=False),
+    _p("Accessibility", "/accessibility", None, "fa-solid fa-universal-access", "About", "a11y", in_nav=False),
+    _p("Support", "/support", None, "fa-solid fa-heart", "About", "donate", "tip", in_nav=False),
 )
 
 # --- tabs inside pages -------------------------------------------------------
@@ -250,3 +253,55 @@ def to_row(destination: Destination) -> dict:
         "parent": destination.parent,
         "kind": "tab" if destination.is_tab else "page",
     }
+
+
+# --- the navbar's Pages menu -------------------------------------------------
+#
+# The mega-menu renders FROM this registry, so a page is declared once and appears in
+# both the menu and search. Previously the menu was hand-written markup and this list
+# was its shadow: adding a page meant editing both, and forgetting one was invisible
+# until someone went looking for a link that was never there.
+
+# Column order in the menu. A group absent here isn't rendered as a column - "About"
+# holds destinations reached from the CTA and the utility cluster instead.
+NAV_GROUPS: tuple[str, ...] = ("Live", "Economy", "Plan", "Create", "Learn")
+
+
+def nav_menu(enabled: dict[str, bool]) -> list[dict]:
+    """`[{group, items: [Destination, …]}, …]` for the Pages menu, in column order.
+
+    Only enabled, nav-listed PAGES (never tabs). A group whose every page is switched
+    off is omitted entirely, so the menu can't render an empty column - which is what
+    the old markup's `{% if a or b or c %}` guards were doing by hand, one per group.
+    """
+    out: list[dict] = []
+    for group in NAV_GROUPS:
+        items = [
+            d for d in PAGES
+            if d.group == group and d.in_nav
+            and (d.flag is None or enabled.get(d.flag, False))
+        ]
+        if items:
+            out.append({"group": group, "items": items})
+    return out
+
+
+def nav_paths(enabled: dict[str, bool]) -> list[str]:
+    """Every path the Pages menu can reach - what the trigger's active state keys on."""
+    return [d.path for section in nav_menu(enabled) for d in section["items"]]
+
+
+def nav_is_active(path: str, enabled: dict[str, bool]) -> bool:
+    """Does `path` belong to something the Pages menu can reach?
+
+    Sub-paths count: `/mods/<author>/<mod>` is still Mods Hub. `/` is excluded from
+    prefix matching or every page on the site would match it.
+    """
+    current = (path or "/").rstrip("/") or "/"
+    for known in nav_paths(enabled):
+        base = known.split("?", 1)[0].rstrip("/") or "/"
+        if base == "/":
+            continue
+        if current == base or current.startswith(base + "/"):
+            return True
+    return False

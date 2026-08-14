@@ -107,7 +107,11 @@ async def _codex(query: str, subject: str, branch: str, limit: int, offset: int)
                     + "&q=" + quote(r.get("name") or "", safe=""),
             "detail": r.get("category") or "",
             "kind": r.get("codex_type") or "",
-            "blueprint": r.get("blueprint"),
+            # A ready-made thumbnail URL rather than the raw blueprint: the dropdown
+            # and the results page then render one row shape for every subject and
+            # neither has to know how a codex model becomes an image.
+            "image": ("/site/codexes/render?dim=64&blueprint="
+                      + quote(r["blueprint"], safe="")) if r.get("blueprint") else None,
         }
         for r in rows
     ], total
@@ -130,6 +134,8 @@ async def _players(query: str, limit: int, offset: int):
 
 
 async def _mods(query: str, limit: int, offset: int, *, modpacks: bool):
+    from urllib.parse import quote
+
     # Imported here, not at module scope: the site router imports this module, so a
     # top-level import of anything that reaches back would be circular.
     if modpacks:
@@ -148,12 +154,13 @@ async def _mods(query: str, limit: int, offset: int, *, modpacks: bool):
         handle, slug = r.get("handle"), r.get("slug")
         if not handle or not slug:
             continue
+        sha = r.get("banner_sha") or r.get("preview_sha")
         out.append({
             "name": r.get("title") or slug,
             "path": f"{root}/{handle}/{slug}",
             "detail": r.get("owner_username") or handle,
             "kind": kind,
-            "blueprint": None,
+            "image": ("/site/mods/image/" + quote(str(sha), safe="")) if sha else None,
         })
     return out, total
 

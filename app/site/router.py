@@ -26,7 +26,7 @@ from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
 from app.core.ratelimit import check_rate_limit
 from app.core.utils import client_ip, iso
-from app.site import classes_page, commands_page, ssr
+from app.site import classes_page, commands_page, search_index, ssr
 from app.site import search as site_search_mod
 from app.site.feature_map import SITE_FEATURE_FLAGS as _SITE_FEATURE_FLAGS
 from app.site.feature_map import SITEMAP_PAGES as _SITEMAP_PAGES
@@ -105,10 +105,13 @@ def _flag_map(request: Request) -> dict[str, bool]:
 def _feature_context(request: Request) -> dict:
     """Inject the feature flags into EVERY template (the navbar + dashboard read
     them). Resolved by ``_resolve_feature_flags`` above; default to enabled."""
-    return {
-        attr: getattr(request.state, attr, True)
-        for attr in _SITE_FEATURE_FLAGS
-    }
+    flags = {attr: getattr(request.state, attr, True) for attr in _SITE_FEATURE_FLAGS}
+    # The navbar's Pages menu renders from the search registry, so a page is declared
+    # once (app/site/search_index.py) and shows up in both the menu and search.
+    return {**flags,
+            "nav_menu": search_index.nav_menu(flags),
+            "nav_active": search_index.nav_is_active(request.url.path, flags)}
+
 
 
 _TEMPLATES = Jinja2Templates(

@@ -2659,3 +2659,17 @@ summary:active { scale: .99; transition-duration: 0s; }
   color: var(--text-soft); font-size: .68rem; font-family: inherit;
 }
 @media (max-width: 900px) { .nav-search-kbd { display: none; } }
+
+/* Result thumbnails. The icon sits underneath and the image on top, so an image
+   that fails to load simply reveals the icon again (see `dropBrokenImages`)
+   rather than leaving a gap that reflows the row. */
+.ss-row-thumb {
+  position: relative; flex: 0 0 auto;
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border-radius: 8px; background: var(--bg-deep); overflow: hidden;
+}
+.ss-row-thumb .ss-row-icon { position: absolute; }
+.ss-row-thumb img {
+  position: relative; width: 100%; height: 100%;
+  object-fit: contain; image-rendering: pixelated;
+}

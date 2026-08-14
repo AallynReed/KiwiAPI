@@ -17,6 +17,7 @@ import time
 from fastapi import HTTPException, Request
 
 from app.core.internal_api import internal_get
+from app.site import search_index
 from app.site.feature_map import SITE_FEATURE_FLAGS, feature_blocks
 
 _TTL = 5.0
@@ -59,4 +60,10 @@ async def resolve(request: Request) -> None:
 def context(request: Request) -> dict:
     """Inject the feature flags into every template (navbar + dashboard read them);
     default to enabled if a flag wasn't resolved."""
-    return {attr: getattr(request.state, attr, True) for attr in SITE_FEATURE_FLAGS}
+    flags = {attr: getattr(request.state, attr, True) for attr in SITE_FEATURE_FLAGS}
+    # The navbar's Pages menu renders from the search registry, so a page is declared
+    # once (app/site/search_index.py) and shows up in both the menu and search.
+    return {**flags,
+            "nav_menu": search_index.nav_menu(flags),
+            "nav_active": search_index.nav_is_active(request.url.path, flags)}
+
