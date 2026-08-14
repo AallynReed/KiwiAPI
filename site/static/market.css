@@ -57,11 +57,15 @@
 
 .mkt-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 18px;
   align-items: start;
   margin-top: 18px;
 }
+/* Grid items default to min-width:auto, so the detail pane refused to shrink
+   below its widest content and pushed the track - and the whole document -
+   past a phone viewport. The listings table keeps its own scroll container. */
+.mkt-layout > * { min-width: 0; }
 .mkt-mobile-trigger { display: none; }
 
 .mkt-sidebar {
@@ -645,7 +649,7 @@
 
 @media (max-width: 900px) {
   .mkt-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .mkt-sidebar {
     position: static;
