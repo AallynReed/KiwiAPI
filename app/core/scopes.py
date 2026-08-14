@@ -44,7 +44,8 @@ _REGISTRY: tuple[Scope, ...] = (
     Scope("updates:read", 1 << 6, "updates",
           "Browse archived game files - versions, directory structure, and single-file download"),
     Scope("codexes:read", 1 << 7, "codexes",
-          "Read parsed game codexes - allies, mounts, dragons, mementos, recipes, items, fish, badges"),
+          "Read parsed game codexes - collectibles, styles, recipes and items, the "
+          "relationships between them, badge requirements and progression trees"),
     Scope("btt:read", 1 << 8, "btt",
           "Read BetterTroveTools releases - latest version per platform and channel"),
     Scope("leaderboards:read", 1 << 9, "leaderboards",
