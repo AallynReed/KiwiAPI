@@ -97,6 +97,35 @@
 .mkt-viewtab:hover { color: var(--text); }
 .mkt-viewtab.active { background: var(--accent-blue); color: #06121f; }
 
+/* On a phone four tabs no longer fit, and an inline-flex strip neither wraps
+   nor scrolls - it just pushed the whole document wider than the viewport and
+   made every page scroll sideways. The strip scrolls within itself instead, so
+   the overflow stays where it belongs. Icons go and padding tightens first, so
+   in most languages there is nothing left to scroll; the scrolling is the
+   safety net for locales whose labels run longer than English. */
+@media (max-width: 560px) {
+  .mkt-viewtabs {
+    display: flex;
+    max-width: 100%;
+    /* No side margin: .mkt-main already supplies the 16px gutter, and adding
+       one here squeezed the strip 30px narrower than the space it had. */
+    margin-inline: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mkt-viewtabs::-webkit-scrollbar { display: none; }
+  /* Horizontal padding is what gets cut, not vertical - the row has to stay a
+     comfortable thumb target even when the labels are squeezed. */
+  .mkt-viewtab {
+    flex: 0 0 auto;
+    gap: 0;
+    padding: 10px 11px;
+    font-size: .82rem;
+  }
+  .mkt-viewtab > i { display: none; }
+}
+
 /* Every tab panel sets its own `display` from an #id rule (1,0,0), which
    outranks the UA's `[hidden] { display: none }` at (0,0,1). Without this
    the panels never actually hide: switching tabs only toggles the active

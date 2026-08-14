@@ -167,8 +167,20 @@
   line-height: 1.6;
 }
 
-/* The "why not" column carries sentences, not numbers - let it breathe and
-   stop the reason text from squeezing the tome name into two characters. */
+/* The "why not" column carries sentences, not numbers, so it gets its own
+   treatment rather than .num's right-aligned tabular nowrap - which stretched
+   the table past 700px on a phone because the reasons could never wrap. */
+.tm-tbl .tm-why { text-align: left; white-space: normal; min-width: 160px; }
 @media (min-width: 720px) {
-  .tm-tbl td.num:has(.tm-reason) { text-align: left; min-width: 260px; }
+  .tm-tbl .tm-why { min-width: 260px; }
+}
+
+/* Below this the four columns cannot share 375px honestly. The payout line is
+   the one a reader can reconstruct from the tome name, so it is what folds. */
+@media (max-width: 560px) {
+  .tm-tbl th, .tm-tbl td { padding: 8px 9px; }
+  .tm-tbl .tm-gives { font-size: .8rem; }
+  .tm-block { padding: 14px 12px; }
+  .tm-head { gap: 10px; }
+  .tm-reset { justify-items: start; text-align: left; }
 }

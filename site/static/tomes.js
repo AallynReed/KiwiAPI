@@ -180,8 +180,9 @@
                      + esc(t('Done')) + '</span></th>' : '')
       + '<th scope="col">' + esc(t('Tome')) + '</th>'
       + '<th scope="col">' + esc(t('Gives you')) + '</th>'
-      + '<th scope="col" class="num">'
-      + esc(opts.reason ? t('Why not') : t('Worth')) + '</th></tr>';
+      + (opts.reason
+          ? '<th scope="col" class="tm-why">' + esc(t('Why not')) + '</th></tr>'
+          : '<th scope="col" class="num">' + esc(t('Worth')) + '</th></tr>');
 
     const set = opts.tick ? ticks() : null;
 
@@ -190,9 +191,12 @@
       const weak = opts.rank && best != null && x.value != null && x.value < best
         && x.type === 'legendary';
       const gives = x.rewards.map(rewardText).join('<br>') || '-';
-      const last = opts.reason
-        ? '<span class="tm-reason">' + esc(reasonFor(x)) + '</span>'
-        : fmt(Math.round(x.value));
+      // The reason column carries sentences, so it must never inherit .num's
+      // tabular/nowrap treatment - that stretched the table to 750px on a phone.
+      const lastCell = opts.reason
+        ? '<td class="tm-why"><span class="tm-reason">'
+          + esc(reasonFor(x)) + '</span></td>'
+        : '<td class="num">' + fmt(Math.round(x.value)) + '</td>';
 
       return '<tr class="' + (done ? 'is-done' : '') + '">'
         + (opts.tick
@@ -206,7 +210,7 @@
         + (x.note ? '<span class="tm-note">' + esc(x.note) + '</span>' : '')
         + '</th>'
         + '<td class="tm-gives">' + gives + '</td>'
-        + '<td class="num">' + last + '</td></tr>';
+        + lastCell + '</tr>';
     }).join('');
 
     return '<table class="tm-tbl"><thead>' + head + '</thead><tbody>'

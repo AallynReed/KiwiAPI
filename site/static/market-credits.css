@@ -11,8 +11,14 @@
   margin: 0 auto;
   padding: 0 clamp(16px, 4vw, 40px);
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
 }
+/* Grid items default to min-width:auto, so a block refuses to shrink below its
+   widest content and drags the whole track - and every sibling - past the
+   viewport. The explicit minmax(0,1fr) track plus this is what lets the inner
+   scroll containers actually do their job on a phone. */
+#mkt-view-credits > * { min-width: 0; }
 
 /* ─── Blocks ────────────────────────────────────────────────────────── */
 .mkt-cr-block {
