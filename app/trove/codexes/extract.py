@@ -19,7 +19,14 @@ from app.trove.codexes import binfab, bonuses, localize, powerrank, recipe, styl
 
 # Types whose prefabs carry displayed stat/ability/Power-Rank bonuses (the handoff's
 # "collection prefabs"). `mount` covers dragons too (split out after extraction).
-_BONUS_TYPES = frozenset({"ally", "mount", "badge"})
+#
+# The ride/wear families were absent while they were also unclassified, so their stats
+# were never looked for; boats in particular carry three slot blocks (mount, wings,
+# boat) and every one of them was going unread.
+_BONUS_TYPES = frozenset({
+    "ally", "mount", "badge", "wings", "aura", "boat", "sail", "flask",
+    "tome", "magrider", "fishingpole", "skin",
+})
 
 _PATH = re.compile(rb"[A-Za-z0-9_][A-Za-z0-9_\-/\[\].]*")
 _BLUEPRINT_REF = re.compile(rb"[A-Za-z0-9_][A-Za-z0-9_\-/\[\].]*\.blueprint")
@@ -253,7 +260,9 @@ def _recipe_entry(path: str, content: bytes, loc_map: dict[str, str], resolve_me
 
 def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str, str],
                   *, resolve_meta=None, valid_blueprints: set[str] | None = None,
-                  model_size=None, prefab_exists=None) -> dict:
+                  model_size=None, prefab_exists=None,
+                  power_rank_table: dict[int, int] | None = None,
+                  style_rows: dict[str, dict] | None = None) -> dict:
     """Codex entry from a prefab's bytes + the resolved locale map.
 
     `resolve_meta(item_path) -> {"name","desc"}` resolves referenced item prefabs
@@ -282,7 +291,7 @@ def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str,
         if abilities:
             data["abilities"] = abilities
         _enrich_bonuses(data, loc_map)
-        power_rank = powerrank.decode_power_rank(content)
+        power_rank = powerrank.decode_power_rank(content, power_rank_table)
 
     category = ident.get("category") or ""
 
@@ -292,8 +301,21 @@ def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str,
     # useful display category when we can detect a slot.
     if codex_type == "style":
         rel = path[len("prefabs/"):].removesuffix(".binfab") if path.startswith("prefabs/") else path.removesuffix(".binfab")
-        family = styles.style_family(rel)
+        # The loot catalogue STATES the slot family and (for hats) the appearance base;
+        # `style_family` only guesses it from stem tokens and returns "" for anything
+        # unconventionally named. Prefer the catalogue and keep the guess as a fallback
+        # for a style no catalogue lists.
+        row = (style_rows or {}).get(styles.equipment_id(rel))
+        family = (row or {}).get("family") or styles.style_family(rel)
         data["style"] = {**styles.style_identity(rel), "family": family}
+        if row:
+            data["style"]["catalogue"] = row.get("source", "")
+            data["style"]["raw_category"] = row.get("raw_category")
+            if row.get("base_mastery") is not None:
+                data["style"]["base_mastery"] = row["base_mastery"]
+            if row.get("name_key") and not name_key:
+                name_key = row["name_key"]
+                name = loc_map.get(name_key) or name
         category = family or category
 
     return {

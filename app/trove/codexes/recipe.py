@@ -355,6 +355,20 @@ def resolve_recipe_mastery(rel: str, content: bytes, multipliers: dict[str, dict
     return {"value": None, "source": "review", "prefab_byte": None}
 
 
+# NOT IMPLEMENTED: the recipe "availability flag".
+#
+# Field 19 (`98 01`) is walked past as the terminator of the mastery pattern above, and
+# a scalar payload after it looked like a gating/availability condition. Reading it
+# positionally decodes real strings - but on the live archive those strings are things
+# like `AP_saddle` and `AP_boat_01`, which are creature attach-point names. The marker
+# means different things in different record contexts, and no recipe in the sample
+# yields a payload that is plausibly an availability condition.
+#
+# So there is no evidence for what a real flag looks like, and a positional read here
+# produces a confident wrong answer rather than no answer. Left undecoded until a
+# positive example exists to validate against.
+
+
 def parse_recipe(content: bytes, *, resolve_meta=None, prefab_exists=None) -> dict:
     """Decode a recipe prefab into ``{name, description, category, output,
     ingredients, requirements}``.

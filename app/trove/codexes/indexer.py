@@ -33,8 +33,10 @@ from app.trove.codexes import (
     geode,
     links,
     localize,
+    loot,
     mastery,
     pg_store,
+    powerrank,
     providers,
     recipe,
     unlocks,
@@ -95,6 +97,8 @@ _GEODE_TABLE = PREFABS_ROOT + "collections/collection_geodecompanion.binfab"
 _RECIPE_TABLE = PREFABS_ROOT + "collections/collection_recipe.binfab"
 # The placeable/block -> model table: where the game states what a placeable looks like.
 _BLOCKS_TABLE = PREFABS_ROOT + "blocks/blocks.binfab"
+# The Power Rank tier -> rank join table.
+_POWERRANK_TABLE = PREFABS_ROOT + "meta/powerrank.binfab"
 
 
 @dataclass
@@ -127,6 +131,12 @@ class _Maps:
     _model_size: dict[str, int] = field(default_factory=dict)
     # `placeable/block prefab path -> model name`, from `blocks/blocks.binfab`.
     block_models: dict[str, str] = field(default_factory=dict)
+    # `tier marker -> Power Rank`, from `meta/powerrank.binfab` (the real join table
+    # rather than the six tiers that were reverse-engineered by hand).
+    power_rank_table: dict[int, int] = field(default_factory=dict)
+    # `equipment id -> catalogue row`, from `loot/{hat,face,weapon_*,pvpbanner}.binfab`.
+    # This is where a style's slot family and hat appearance base are STATED.
+    style_rows: dict[str, dict] = field(default_factory=dict)
 
     def _read(self, rel: str) -> bytes | None:
         """Bytes of a referenced prefab by its logical path (rel to prefabs/, no ext)."""
@@ -274,6 +284,23 @@ async def _load_recipe_providers(branch: str, store: ContentStore,
     return providers.build_provider_map(prefabs, known_ids)
 
 
+async def _load_style_catalogues(branch: str, store: ContentStore) -> dict[str, dict]:
+    """`equipment id -> catalogue row` from every `prefabs/loot/` style catalogue."""
+    coll = UpdateState.get_pymongo_collection()
+    docs = await coll.find(
+        _prefix_query(branch, loot.LOOT_ROOT), {"path": 1, "content_sha256": 1, "_id": 0}
+    ).to_list(length=None)
+    catalogues: dict[str, bytes] = {}
+    for doc in docs:
+        path = doc["path"]
+        if not loot.is_style_catalogue(path):
+            continue
+        content = await asyncio.to_thread(store.get, doc["content_sha256"])
+        if content:
+            catalogues[path] = content
+    return await asyncio.to_thread(loot.style_index, catalogues) if catalogues else {}
+
+
 async def _load_prefab_shas(branch: str) -> dict[str, str]:
     """Full `prefab path -> source sha` map for the branch (the recipe resolver's
     index into the archive). Projected (path+sha only), so it's a cheap scan."""
@@ -341,6 +368,8 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
         for p in prefab_shas if p.startswith(recipes_root) and p.endswith(".binfab")
     }
     blocks_table = await _load_file(branch, store, _BLOCKS_TABLE)
+    pr_table = await _load_file(branch, store, _POWERRANK_TABLE)
+    style_rows = await _load_style_catalogues(branch, store)
     bp_shas: dict[str, str] = {}
     valid = await _load_valid_blueprints(branch, bp_shas)
     maps = _Maps(
@@ -358,6 +387,8 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
         blueprint_stems=blueprint_stems(valid),
         blueprint_shas=bp_shas,
         block_models=blocks.parse_block_models(blocks_table) if blocks_table else {},
+        power_rank_table=powerrank.parse_power_rank_table(pr_table) if pr_table else {},
+        style_rows=style_rows,
     )
     logger.info("codexes[%s]: %d mount categories, %d mastery rows, %d geode rows, "
                 "%d geode members, %d upgrade trees, %d prefab refs, %d blueprints, "
@@ -456,7 +487,9 @@ def _parse_entry(branch: str, path: str, sha: str, ctype: str, maps: _Maps, now)
         return None
     entry = extract_entry(ctype, path, content, maps.loc, resolve_meta=maps.item_meta,
                           valid_blueprints=maps.valid_blueprints, model_size=maps.model_size,
-                          prefab_exists=maps.prefab_exists)
+                          prefab_exists=maps.prefab_exists,
+                          power_rank_table=maps.power_rank_table,
+                          style_rows=maps.style_rows)
     rel = path[len(PREFABS_ROOT):].removesuffix(".binfab")
     if ctype == "mount":  # split dragons out by their collection category
         refine_mount(entry, rel, maps.mount_categories)

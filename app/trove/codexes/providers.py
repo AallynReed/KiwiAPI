@@ -77,6 +77,68 @@ def extract_provider_refs(content: bytes, known_ids: set[str]) -> list[str]:
     return list(seen)
 
 
+# A bench states its crafting TABS structurally: `BE 0E AE <count>` then one slot per
+# category. Each slot is `<1E|00> <16*i+4> [01 past i>7] 08 <len><category loc key>`,
+# and the recipes between one slot and the next belong to that tab. This is the only
+# source for the in-game grouping and ordering; without it every recipe on a bench is
+# one flat list.
+_CATEGORY_COUNT_MARKER = b"\xbe\x0e\xae"
+
+
+def _slot_pattern(index: int) -> bytes:
+    pattern = bytes([(16 * index) + 4])
+    if index > 7:
+        pattern += b"\x01"
+    return (b"\x00" if index == 0 else b"\x1e") + pattern + b"\x08"
+
+
+def extract_categories(content: bytes, known_ids: set[str]) -> list[dict]:
+    """`[{category, order, recipes: [id, …]}, …]` - a bench's tabs in display order.
+
+    Empty when the prefab carries no category block (a profession or a single-tab
+    station), which is not an error - the caller then keeps the flat recipe list."""
+    at = content.find(_CATEGORY_COUNT_MARKER)
+    if at < 0 or at + 3 >= len(content):
+        return []
+    count = content[at + 3]
+    if not 0 < count <= 80:
+        return []
+
+    groups: list[dict] = []
+    cursor = 0
+    for index in range(count):
+        pattern = _slot_pattern(index)
+        found = content.find(pattern, cursor)
+        if found < 0:
+            continue
+        name_at = found + len(pattern)
+        if name_at >= len(content):
+            continue
+        length = content[name_at]
+        if length <= 0 or name_at + 1 + length > len(content):
+            continue
+        category = content[name_at + 1:name_at + 1 + length].decode("latin1")
+        # The NEXT slot is the real bound. When there isn't one this is the last
+        # category and it runs to the end of the file.
+        end = content.find(_slot_pattern(index + 1), name_at)
+        if end < 0:
+            end = len(content)
+        recipes: list[str] = []
+        seen: set[str] = set()
+        for match in _RECIPE_TOKEN_RE.finditer(
+                content[name_at + 1 + length:end].decode("latin1", "ignore").lower()):
+            token = match.group(0)
+            while token and token not in known_ids:
+                token = token[:-1]
+            if token and token not in seen:
+                seen.add(token)
+                recipes.append(token)
+        if recipes:
+            groups.append({"category": category, "order": len(groups), "recipes": recipes})
+        cursor = end
+    return groups
+
+
 def build_provider_map(prefabs: list[tuple[str, bytes]], known_ids: set[str]) -> dict[str, list[dict]]:
     """`recipe_id -> [provider row, ...]` from `(path, content)` provider prefabs.
 
@@ -90,8 +152,16 @@ def build_provider_map(prefabs: list[tuple[str, bytes]], known_ids: set[str]) ->
             continue
         pid = provider_id_from_path(path)
         lane = lane_for(path)
+        # Which tab of this bench each recipe sits in, when the bench states tabs.
+        category_of: dict[str, tuple[str, int]] = {}
+        for group in extract_categories(content, known_ids):
+            for rid in group["recipes"]:
+                category_of.setdefault(rid, (group["category"], group["order"]))
         for rid in refs:
             rows = out.setdefault(rid, [])
-            if not any(r["provider"] == pid for r in rows):
-                rows.append({"provider": pid, "provider_path": path, "lane": lane})
+            if any(r["provider"] == pid for r in rows):
+                continue
+            category, order = category_of.get(rid, ("", None))
+            rows.append({"provider": pid, "provider_path": path, "lane": lane,
+                         "category": category, "category_order": order})
     return out

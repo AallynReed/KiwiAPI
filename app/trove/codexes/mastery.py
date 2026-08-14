@@ -31,7 +31,12 @@ _BASE_RULES: tuple[tuple[str, int], ...] = (
     ("collections/flask", 25),
     ("collections/badge", 20),
     ("collections/tome", 20),
+    # The archive's directory is `collections/fishing`; `collections/fishingpole` is the
+    # identifier form the multipliers table uses. Both are listed - matching only the
+    # latter meant every fishing pole prefab fell through to base 0 and reported no
+    # mastery at all.
     ("collections/fishingpole", 20),
+    ("collections/fishing", 20),
     ("collections/pet", 10),
     ("collections/geodecompanion", 10),
     ("item/companion", 10),          # 50 in geode mode (see infer_mastery_base)
@@ -66,6 +71,10 @@ def infer_mastery_base(identifier: str, *, geode: bool = False) -> tuple[str, in
     `geode=True` applies the geode-mode base overrides (item/companion -> 50).
     """
     normalized = identifier.replace("\\", "/")
+    # Costume prefabs live at `skins/<name>` but the multipliers table lists them under
+    # the collection form, so normalize before the lookup or the join always misses.
+    if normalized.startswith("skins/"):
+        normalized = "collections/skin/" + normalized[len("skins/"):]
     if geode:
         for fragment, base in _GEODE_BASE_OVERRIDES:
             if fragment in normalized:

@@ -81,6 +81,39 @@ STAT_KEYS: dict[int, str] = {
 OPERATIONS: dict[int, str] = {0: "MultiplySum", 2: "Add", 4: "Set", 8: "Multiply"}
 
 _LABEL_RE = re.compile(r"^[A-Za-z0-9_/.$\-]+$")
+
+# Designer-label suffix -> stat key, used ONLY when the numeric id is unknown. The id
+# stays authoritative wherever it decodes; this recovers records that would otherwise
+# be discarded as noise.
+_LABEL_STATS: tuple[tuple[str, str], ...] = (
+    ("physicaldamage", "$Stat_PhysicalDamage"),
+    ("spelldamage", "$Stat_SpellDamage"),
+    ("maxhealth", "$Stat_MaxHealth"),
+    ("maxenergy", "$Stat_MaxEnergy"),
+    ("healthregen", "$Stat_HealthRegen_controller"),
+    ("energyregen", "$Stat_EnergyRegen_controller"),
+    ("criticalhitchance", "$Stat_CriticalHitChance"),
+    ("criticalhitdamage", "$Stat_CriticalHitDamage"),
+    ("critdamage", "$Stat_CriticalHitDamage"),
+    ("attackspeed", "$Stat_AttackSpeed"),
+    ("magicfind", "$Stat_MagicFind"),
+    ("jump", "$Stat_Jump"),
+    ("mining", "$Stat_Mining"),
+)
+
+
+def _stat_from_label(label: str) -> str | None:
+    """The stat a designer label names, or None. Matched on a trailing token so
+    `ground_movespeed` doesn't collide with `movespeed`-suffixed neighbours."""
+    lowered = label.lower()
+    if lowered.endswith(("ground_movespeed", "wing_movespeed")):
+        return "$Stat_MovementSpeed"
+    if lowered.endswith("glide_movespeed"):
+        return "$Stat_Glide"
+    for suffix, key in _LABEL_STATS:
+        if lowered == suffix or lowered.endswith("_" + suffix):
+            return key
+    return None
 _ABILITY_RE = re.compile(rb"abilities/[A-Za-z0-9_/.\\]+")
 
 # Ability refs that are hidden/mechanical, never displayed as a collection bonus.
@@ -127,15 +160,64 @@ def _slot_for_label(label: str) -> str | None:
     return None
 
 
+# --- structural slot context -------------------------------------------------
+#
+# A collectible can grant DIFFERENT stats depending on which slot it is equipped in -
+# the same prefab carries a mount block, a wings block and a boat block. The slot is
+# stated structurally by a context byte, not by the label, so reading it off the label
+# (which is what we did) filed every unlabelled record under no slot at all.
+
+# `1E [14|24] 00 <type> BE 01 AE` opens a slot block; <type> selects the slot.
+_CONTEXT_OPEN_RE = re.compile(rb"\x1e[\x14\x24]\x00([\x00\x02\x04\x06])\xbe\x01\xae", re.DOTALL)
+# The mount block has its own opening shape.
+_CONTEXT_MOUNT_RE = re.compile(rb"\xbe\x01\xae\x01\x00\x04\x00\x10\x10\x04\x24$", re.DOTALL)
+# A continuation record inside an already-open block; group 1 is its own stat id.
+_CONTEXT_CONT_RE = re.compile(rb"\x1e[\x14\x24]\x00([\x00-\x7f])\x10[\x02\x04]\x24$", re.DOTALL)
+
+_SLOT_BY_CONTEXT: dict[int, str] = {
+    0x00: "$EquipmentSlot_Mount",
+    0x02: "$EquipmentSlot_Cart",
+    0x04: "$EquipmentSlot_Wings",
+    0x06: "$EquipmentSlot_Boat",
+}
+
+
+def _slot_context(prefix: bytes, current: str | None) -> tuple[str | None, bool, int | None]:
+    """`(slot key, opened a new block, continuation stat id)` for one record.
+
+    `prefix` is the bytes leading up to the record's float. A block opener sets the
+    slot for itself and every record after it until the next opener; a continuation
+    inherits the open slot and, critically, carries its OWN stat id - the header byte
+    a continuation record would otherwise be read from belongs to the block, so
+    without this every record after the first in a block reports the first one's stat.
+    """
+    before_float = prefix[:-4] if len(prefix) >= 4 else prefix
+    match = _CONTEXT_OPEN_RE.search(before_float)
+    if match:
+        return _SLOT_BY_CONTEXT.get(match.group(1)[0]), True, None
+    if _CONTEXT_MOUNT_RE.search(before_float):
+        return "$EquipmentSlot_Mount", True, None
+    cont = _CONTEXT_CONT_RE.search(before_float)
+    if cont:
+        return current, False, unzig(cont.group(1)[0])
+    return None, False, None
+
+
 def _stat_window(data: bytes) -> tuple[int, int]:
-    """Scan window: end of the `_description` string -> the `.blueprint` string,
-    with a conservative fallback. (0, len) means "scan everything"."""
+    """Scan window around the stat block. (0, len) means "scan everything".
+
+    Starts slightly BEFORE the `_description` key rather than after it: the first
+    record's slot-context bytes sit ahead of the key, and starting after it cut them
+    off, so the opening block of every prefab lost its slot. Ends at the LAST model
+    reference rather than the first - a prefab that names several blueprints had its
+    later stat records clipped off entirely."""
     desc = data.find(b"_description")
     if desc < 0:
         return 0, len(data)
-    start = desc + len(b"_description")
-    blueprint = data.find(b".blueprint", start)
-    end = blueprint if blueprint > start else min(len(data), start + 4096)
+    start = max(0, desc - 96)
+    end = data.rfind(b".blueprint")
+    if end <= start:
+        end = min(len(data), desc + 4096)
     return start, end
 
 
@@ -144,6 +226,7 @@ def _detect(data: bytes, start: int, end: int) -> list[dict]:
     n = len(data)
     end = min(end, n)
     component: int | None = None
+    current_slot: str | None = None
     i = max(start, 8)
     while i < end:
         # Component / slot separator: `BE 01 AE <group> 00 04`.
@@ -174,11 +257,24 @@ def _detect(data: bytes, start: int, end: int) -> list[dict]:
             i += 1
             continue
 
-        stat_id = unzig(data[i - 8])
+        # A "…mods" record packs its header two bytes tighter than a normal one.
+        prefix = data[max(0, i - 32):i]
+        slot, opened, continuation_id = _slot_context(prefix, current_slot)
+        if opened:
+            current_slot = slot
+
+        stat_id = continuation_id if continuation_id is not None else unzig(data[i - 8])
         stat_key = STAT_KEYS.get(stat_id)
-        if stat_key is None:                     # unknown stat => treat as noise
-            i += 1
-            continue
+        if stat_key is None:
+            # The numeric id is authoritative, but a few records carry an id we don't
+            # know while their designer label names the stat unambiguously. Recovering
+            # those is better than dropping a real bonus; a label that names nothing
+            # still drops.
+            label_stat = _stat_from_label(label)
+            if label_stat is None:
+                i += 1
+                continue
+            stat_key, stat_id = label_stat, None
 
         operation = data[i - 6]
         display, is_percent = _normalize(stat_key, operation, value)
@@ -190,7 +286,7 @@ def _detect(data: bytes, start: int, end: int) -> list[dict]:
             "value": display,
             "is_percent": is_percent,
             "label": label,
-            "slot": _slot_for_label(label),
+            "slot": _slot_for_label(label) or (slot if opened else current_slot),
             "component": component,
             "level": 0,
             "offset": i,
