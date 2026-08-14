@@ -2635,7 +2635,10 @@ summary:active { scale: .99; transition-duration: 0s; }
 
 /* Home-page search box. Wider and always expanded - on the landing page search is
    a primary action, not a utility tucked into the chrome. */
-.home-search { position: relative; max-width: 640px; margin: 1.75rem auto 0; }
+/* Full width of the dashboard column. It was capped at 640px and centred, which
+   left it floating in the middle of a much wider hero while every tile below ran
+   the full width - the odd one out. */
+.home-search { position: relative; width: 100%; margin: 1.75rem 0 0; }
 .home-search-field { display: flex; align-items: center; gap: .6rem;
   padding: .1rem .1rem .1rem .9rem;
   background: var(--bg-card); border: 1px solid var(--bg-line);

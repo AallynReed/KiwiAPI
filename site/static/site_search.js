@@ -15,7 +15,7 @@
      field). The listbox/option roles are real, so it is operable without sight. */
 (function () {
   'use strict';
-  const { esc, fetchJSON, debounce } = window.BTTUtil;
+  const { esc, fetchJSON, debounce, apiUrl } = window.BTTUtil;
 
   const MIN_QUERY = 2;
   const SUBJECT_ICON = {
@@ -44,11 +44,18 @@
     const icon = item.icon || SUBJECT_ICON[item.subject] || 'fa-solid fa-circle';
     const fallback = `<i class="${esc(icon)} ${cls}-icon" aria-hidden="true"></i>`;
     if (!item.image) return fallback;
-    // No inline onerror: the site ships a strict CSP, which blocks inline
-    // handlers. Failures are caught by a capture-phase listener instead
-    // (see `dropBrokenImages`) - `error` does not bubble from <img>.
+    // `apiUrl` because /site/* has to be rewritten onto window.API_BASE - production
+    // serves pages from the website container, which has no data plane, so a raw
+    // relative src would request an image from a host that cannot render one.
+    //
+    // Eager, not lazy: these are the point of the row, they are small, and a lazy
+    // image inside a dropdown that starts hidden may never enter a viewport at all.
+    //
+    // No inline onerror - strict CSP blocks inline handlers; failures are caught by
+    // the capture-phase listener in `dropBrokenImages` (`error` does not bubble
+    // from <img>).
     return `<span class="${cls}-thumb">${fallback}` +
-      `<img src="${esc(item.image)}" alt="" loading="lazy" decoding="async"></span>`;
+      `<img src="${esc(apiUrl(item.image))}" alt="" decoding="async"></span>`;
   }
 
   function rowHTML(item, active) {

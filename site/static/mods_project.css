@@ -692,6 +692,7 @@
 .mp-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 .mp-form-error { color: var(--accent-red); font-size: .85rem; margin: 0; }
 .mp-form-hint { color: var(--text-mute); font-size: .8rem; margin: 0; }
+.mp-form-hint.is-warn { color: var(--accent-yellow); }
 .mp-radio-row { display: flex; gap: 16px; flex-wrap: wrap; }
 .mp-radio-row label { display: inline-flex; align-items: center; gap: 7px; color: var(--text-mute); font-size: .9rem; cursor: pointer; }
 
