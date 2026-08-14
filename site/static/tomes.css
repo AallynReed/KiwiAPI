@@ -5,12 +5,18 @@
    one instrument set.
    ═══════════════════════════════════════════════════════════════════════ */
 
-.tm-main { padding-bottom: 60px; }
+.tm-main {
+  padding-bottom: 60px;
+  /* Narrower than the site default: a row is an icon, a short name and a
+     number, and stretching that to 1100px parks the value so far from the
+     name that the eye has to travel to pair them up. */
+  --tm-max: 860px;
+}
 
 /* ─── Hero ──────────────────────────────────────────────────────────── */
 .tm-hero { padding: clamp(28px, 6vw, 56px) 0 clamp(18px, 3vw, 28px); }
 .tm-hero-inner {
-  max-width: var(--content-max, 1100px);
+  max-width: var(--tm-max);
   margin: 0 auto;
   padding: 0 clamp(16px, 4vw, 40px);
 }
@@ -31,7 +37,7 @@
 
 /* ─── Blocks ────────────────────────────────────────────────────────── */
 .tm-block {
-  max-width: var(--content-max, 1100px);
+  max-width: var(--tm-max);
   margin: 0 auto 24px;
   padding: clamp(16px, 2.6vw, 22px);
   background: var(--bg-card);
@@ -204,7 +210,7 @@
 .tm-error { color: var(--accent-red); font-size: .88rem; margin: 0; }
 
 .tm-source {
-  max-width: var(--content-max, 1100px);
+  max-width: var(--tm-max);
   margin: 6px auto 0;
   padding: 0 clamp(16px, 4vw, 40px);
   color: var(--text-mute);
@@ -222,4 +228,29 @@
   .tm-value { grid-column: 1 / -1; text-align: left; justify-items: start; }
   .tm-value .tm-reason { max-width: none; }
   .tm-listhead span:last-child { display: none; }
+}
+
+/* ─── Value bar + share ─────────────────────────────────────────────────
+   Each tome as a share of the best one in its own list, so the number is
+   bounded 0-100% and answers "how close to the best option here" - the
+   same question the gem evaluator's quality % answers. */
+.tm-row { position: relative; overflow: hidden; }
+.tm-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent-green) 16%, transparent),
+    color-mix(in srgb, var(--accent-green) 5%, transparent));
+  pointer-events: none;
+  z-index: 0;
+}
+.tm-row > *:not(.tm-fill) { position: relative; z-index: 1; }
+.tm-pct {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .7rem;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tm-fill { transition: width .25s var(--ease-out, ease-out); }
 }

@@ -195,6 +195,11 @@
     }
     const best = state.data.best_regular;
     const set = opts.tick ? ticks() : null;
+    // Scored against the best tome in THIS list, so the number stays 0-100%
+    // and reads as "how close to the best option here" - the same question
+    // the gem evaluator's quality % answers. Comparing legendaries to the best
+    // regular instead would put good ones in the thousands of percent.
+    const top = rows.reduce((m, x) => Math.max(m, x.value || 0), 0);
 
     const head = '<div class="tm-listhead">'
       + '<span>' + esc(t('Tome')) + '</span>'
@@ -215,11 +220,21 @@
           + esc(t('ea')) + ')</span>'
         : '';
 
+      const pct = (!opts.reason && top > 0 && x.value != null)
+        ? (x.value / top) * 100 : null;
+
       const value = opts.reason
         ? '<span class="tm-reason">' + esc(reasonFor(x)) + '</span>'
-        : '<span class="tm-total">' + esc(fmt(Math.round(x.value))) + '</span>' + each;
+        : '<span class="tm-total">' + esc(fmt(Math.round(x.value))) + '</span>' + each
+          + (pct == null ? '' :
+             '<span class="tm-pct">' + esc(pct.toFixed(1) + '%') + '</span>');
 
-      return '<article class="tm-row' + (done ? ' is-done' : '') + '">'
+      // The fill sits behind the row rather than beside it - a value bar that
+      // took its own column would crowd out the payout line on a phone.
+      const fill = pct == null ? ''
+        : '<span class="tm-fill" style="width:' + pct.toFixed(2) + '%"></span>';
+
+      return '<article class="tm-row' + (done ? ' is-done' : '') + '">' + fill
         + (opts.tick
             ? '<input type="checkbox" class="tm-tick" data-tome="' + esc(x.name) + '"'
               + (done ? ' checked' : '') + ' aria-label="' + esc(x.name) + '">'
