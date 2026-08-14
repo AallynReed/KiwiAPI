@@ -2572,7 +2572,10 @@ summary:active { scale: .99; transition-duration: 0s; }
   transition: width .22s var(--ease-out), opacity .18s var(--ease-out);
 }
 .nav-search.is-open .nav-search-form {
-  width: min(340px, 60vw); opacity: 1; pointer-events: auto;
+  /* width + max-width rather than min(): the pair is equivalent and has no
+     support floor, and it keeps the collapsed->expanded transition on a single
+     plain length. */
+  width: 340px; max-width: 60vw; opacity: 1; pointer-events: auto;
 }
 .nav-search.is-open .nav-search-toggle { color: var(--accent); }
 
@@ -2648,7 +2651,7 @@ summary:active { scale: .99; transition-duration: 0s; }
 .home-search-submit:hover { filter: brightness(1.08); }
 
 @media (max-width: 640px) {
-  .nav-search.is-open .nav-search-form { width: min(240px, 58vw); }
+  .nav-search.is-open .nav-search-form { width: 240px; max-width: 58vw; }
 }
 .nav-search-kbd {
   flex: 0 0 auto; padding: .12rem .4rem; border-radius: 6px;
