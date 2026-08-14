@@ -13,6 +13,7 @@ encoder is handed the original ``(type, w)`` it decoded.
 from __future__ import annotations
 
 from app.trove.blueprint import codec, lint, materials, qb
+from app.trove.blueprint import transform as bp_transform
 from app.trove.mods_hub import workshop as mods_workshop
 from app.trove.render.voxel import KIND_CODE, material_for
 
@@ -102,6 +103,8 @@ def inspect(raw: bytes, *, name: str = "blueprint") -> dict:
         # (the gap is the head), inside the handle for a weapon, absent on v3/v4.
         "attachment": list(attach) if attach else None,
         "creation_types": list(lint.CREATION_TYPES),
+        "transforms": [{"op": op, "label": bp_transform.OPERATION_LABELS[op]}
+                       for op in bp_transform.OPERATIONS],
         "x": xs, "y": ys, "z": zs, "rgb": rgb,
         "kind": kind, "level": level, "spec": spec,
         "type": types, "w": ws, "edit": editable, "paint": paintable,
@@ -164,6 +167,33 @@ def _coerce_edits(edits, total: int) -> dict[int, dict]:
         if change:
             out[idx] = {**out.get(idx, {}), **change}
     return out
+
+
+def transform(raw: bytes, edits, ops) -> tuple[bytes, dict]:
+    """Rotate and/or mirror the edited model, returning a new blueprint.
+
+    Edits are baked in first, so the result is one file the page can reopen - which it
+    must, because a transform renumbers every voxel and the caller's edit indices stop
+    meaning anything the moment the axes move. CPU-bound - call via
+    ``asyncio.to_thread``."""
+    edited, _ = apply_edits(raw, edits)
+    decoded = codec.decode_full(edited)
+    before = decoded.size
+    try:
+        moved = bp_transform.apply(decoded, ops)
+        data = codec.encode(moved.voxels, version=moved.version, pos=moved.pos,
+                            entity_blob=moved.entity_blob, offset=moved.offset,
+                            size=moved.size)
+    except (bp_transform.TransformError, codec.BlueprintError) as exc:
+        raise EditorError(str(exc)) from exc
+    attach = codec.attachment_point(moved)
+    return data, {
+        "applied": list(ops),
+        "size_before": list(before),
+        "size_after": list(moved.size),
+        "attachment": list(attach) if attach else None,
+        "entities": codec.parse_entity_section(moved.entity_blob)["count"],
+    }
 
 
 def export_qb(raw: bytes, edits, *, stem: str = "model") -> tuple[bytes, dict]:

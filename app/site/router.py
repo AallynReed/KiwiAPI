@@ -3421,20 +3421,19 @@ async def site_workshop_build(
         properties = parsed.get("properties") or {}
 
     # A settings file or preview image chosen from disk isn't one of the mod's own
-    # files, so it joins the list under a path the placement rules skip - exactly
-    # like one that came in the zip - and is then packed by name.
+    # files, so it is kept out of the placement pass entirely and packed by name.
     config_path = str(parsed.get("config_path") or "")
     preview_path = str(parsed.get("preview_path") or "")
-    for part, chosen in ((config, "config"), (preview, "preview")):
+    attached: list[tuple[str, bytes]] = []
+    for part, is_config in ((config, True), (preview, False)):
         if part is None or not part.filename:
             continue
-        attached = mods_workshop.norm_path(part.filename)
-        source = [(p, b) for p, b in source if p != attached]
-        source.append((attached, await part.read()))
-        if chosen == "config":
-            config_path = attached
+        name = mods_workshop.norm_path(part.filename)
+        attached.append((name, await part.read()))
+        if is_config:
+            config_path = name
         else:
-            preview_path = attached
+            preview_path = name
 
     keep = parsed.get("keep")
     try:
@@ -3444,6 +3443,7 @@ async def site_workshop_build(
             keep=keep if isinstance(keep, list) else [],
             config_path=config_path,
             preview_path=preview_path,
+            attached=attached,
         )
     except mods_workshop.WorkshopError as e:
         raise _workshop_error(e) from e
@@ -3576,6 +3576,48 @@ async def site_blueprint_editor_inspect(
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     return JSONResponse(payload, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/site/blueprint-editor/transform", response_class=Response)
+async def site_blueprint_editor_transform(
+    file: UploadFile = File(...),
+    edits: str = Form(default="[]"),
+    ops: str = Form(...),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> Response:
+    """Rotate and/or mirror the model, and hand back the turned blueprint.
+
+    ``ops`` is a JSON array of ``rotate_x`` / ``rotate_y`` / ``rotate_z`` /
+    ``mirror_x`` / ``mirror_y`` / ``mirror_z``, applied in order. Rotations are 90
+    degrees clockwise looking down that axis.
+
+    Turning a model moves three things that don't move on their own: the bounding box,
+    the attachment point (which lives in the origin, so a rotated sword would otherwise
+    be held by a point out in the air), and the positions of any placed decos. All
+    three are handled, and a model whose entity section can't be read exactly is
+    refused rather than turned half-way.
+
+    The response is the new blueprint, because a transform renumbers every voxel and
+    the page has to reopen it - edit indices stop meaning anything once the axes move."""
+    data = await file.read()
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "That file is empty.")
+    try:
+        parsed_edits = json.loads(edits or "[]")
+        parsed_ops = json.loads(ops or "[]")
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "The request wasn't understood.") from None
+    try:
+        out, summary = await asyncio.to_thread(
+            bp_editor.transform, data, parsed_edits, parsed_ops)
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    return Response(
+        content=out,
+        media_type="application/octet-stream",
+        headers={"Cache-Control": "no-store", "X-Kiwi-Summary": json.dumps(summary)},
+    )
 
 
 @router.post("/site/blueprint-editor/export-qb", response_class=Response)

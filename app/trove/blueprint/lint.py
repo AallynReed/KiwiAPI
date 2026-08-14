@@ -75,8 +75,8 @@ def _check_dimensions(kind: str, size: tuple[int, int, int]) -> list[dict]:
         return [_finding(
             "error", "The model is facing the wrong way",
             f"A {kind} should fit within {lx}x{ly}x{lz}, and yours ({sx}x{sy}x{sz}) would "
-            f"if it were turned. Rotate it so it points the way the game expects - "
-            f"weapons point forward along the long axis, hats point up.")]
+            f"if it were turned. Use the rotate buttons under 'Turn it' - weapons point "
+            f"forward along the long axis, hats point up.")]
     return [_finding(
         "error", "The model is too big",
         f"A {kind} should not exceed {lx}x{ly}x{lz} voxels, but yours is {sx}x{sy}x{sz}.")]

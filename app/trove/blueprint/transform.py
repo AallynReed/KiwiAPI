@@ -1,0 +1,137 @@
+"""Rotate and mirror a blueprint.
+
+Turning a model is the fix for the commonest thing the Trove Creations checks report -
+"the model is facing the wrong way" - so the two belong together. Three things have to
+move with the geometry, and getting any of them wrong breaks the model quietly:
+
+* **The bounding box.** A quarter turn swaps two axes, and v5 addresses voxels by a
+  linear index computed from that box, so the box has to be rebuilt before encoding.
+
+* **The attachment point.** It lives in the model's origin, not in a voxel, so nothing
+  about it moves on its own. Rotate a sword without rotating its grip and the game keeps
+  holding it by a point that is now somewhere out in the air. It transforms by the same
+  formula as a voxel, including when it sits outside the box (a hat's does).
+
+* **Placed decos.** A cornerstone's entity section stores model-local positions that line
+  up with the type-39 placeholder voxels. Rotating the voxels and leaving the entities
+  put would slide every piece of furniture out of its socket. Their coordinates are
+  rewritten too, and if the entity section can't be parsed exactly the transform is
+  refused rather than performed half-way.
+
+Materials are scalars, so they simply travel with their voxel. Rotations are 90 degrees
+clockwise looking down the named axis; apply one twice for 180.
+"""
+from __future__ import annotations
+
+import struct
+
+from app.trove.blueprint import codec
+
+OPERATIONS = ("rotate_x", "rotate_y", "rotate_z", "mirror_x", "mirror_y", "mirror_z")
+
+OPERATION_LABELS = {
+    "rotate_x": "Rotate on X", "rotate_y": "Rotate on Y", "rotate_z": "Rotate on Z",
+    "mirror_x": "Flip left-right", "mirror_y": "Flip upside-down", "mirror_z": "Flip front-back",
+}
+
+
+class TransformError(ValueError):
+    """A transform that can't be applied without corrupting the model."""
+
+
+def _mapper(op: str, size: tuple[int, int, int]):
+    """``(point -> point, new size)`` for one operation.
+
+    The point function is deliberately total: it is applied to the attachment point as
+    well as to voxels, and that can legitimately sit outside the box."""
+    sx, sy, sz = size
+    if op == "rotate_x":
+        return (lambda x, y, z: (x, z, (sy - 1) - y)), (sx, sz, sy)
+    if op == "rotate_y":
+        return (lambda x, y, z: (z, y, (sx - 1) - x)), (sz, sy, sx)
+    if op == "rotate_z":
+        return (lambda x, y, z: (y, (sx - 1) - x, z)), (sy, sx, sz)
+    if op == "mirror_x":
+        return (lambda x, y, z: ((sx - 1) - x, y, z)), (sx, sy, sz)
+    if op == "mirror_y":
+        return (lambda x, y, z: (x, (sy - 1) - y, z)), (sx, sy, sz)
+    if op == "mirror_z":
+        return (lambda x, y, z: (x, y, (sz - 1) - z)), (sx, sy, sz)
+    raise TransformError(f"Unknown transform: {op}.")
+
+
+def _rewrite_entities(blob: bytes, point) -> bytes:
+    """Move every placed entity by ``point``, keeping its sub-message verbatim.
+
+    The sub-message holds the prefab path and whatever else the engine wrote; only the
+    coordinates in front of it are ours to touch."""
+    if len(blob) < 4:
+        return blob
+    count = struct.unpack_from("<I", blob, 0)[0]
+    if count == 0:
+        return blob
+    out = bytearray(struct.pack("<I", count))
+    i = 4
+    try:
+        for _ in range(count):
+            x, i = codec.read_svarint(blob, i)
+            y, i = codec.read_svarint(blob, i)
+            z, i = codec.read_svarint(blob, i)
+            sublen, i = codec.read_uleb128(blob, i)
+            if i + sublen > len(blob):
+                raise codec.BlueprintError("entity sub-message runs past the section")
+            sub = blob[i:i + sublen]
+            i += sublen
+            nx, ny, nz = point(x, y, z)
+            out += codec.write_svarint(nx)
+            out += codec.write_svarint(ny)
+            out += codec.write_svarint(nz)
+            out += codec.write_uleb128(sublen)
+            out += sub
+    except codec.BlueprintError as exc:
+        raise TransformError(
+            "This model has placed objects whose data can't be read, so it can't be "
+            "turned without leaving them behind.") from exc
+    out += blob[i:]        # anything after the records travels along untouched
+    return bytes(out)
+
+
+def apply(decoded: codec.DecodedBlueprint, ops) -> codec.DecodedBlueprint:
+    """Apply operations in order, returning a new decoded blueprint.
+
+    CPU-bound - call via ``asyncio.to_thread``."""
+    if not isinstance(ops, list) or not ops:
+        raise TransformError("No transform was given.")
+    if len(ops) > 16:
+        raise TransformError("That's more transforms than one step should carry.")
+
+    voxels = [dict(v) for v in decoded.voxels]
+    size = decoded.size
+    attach = codec.attachment_point(decoded)
+    entity_blob = decoded.entity_blob
+
+    for op in ops:
+        if op not in OPERATIONS:
+            raise TransformError(f"Unknown transform: {op}.")
+        point, size = _mapper(op, size)
+        for v in voxels:
+            v["x"], v["y"], v["z"] = point(v["x"], v["y"], v["z"])
+        if attach is not None:
+            attach = point(*attach)
+        entity_blob = _rewrite_entities(entity_blob, point)
+
+    if attach is not None:
+        # Inverse of codec.attachment_point: put the origin back where the grip is.
+        pos = (attach[0] - (size[0] - 1), -attach[1], -attach[2])
+    elif decoded.version == 5:
+        pos = (-(size[0] // 2), decoded.pos[1], -(size[2] // 2))
+    else:
+        pos = (-(size[0] // 2), -(size[1] // 2), -(size[2] // 2))
+
+    # v3/v4 store signed coordinates around a centred box rather than an origin, and the
+    # old min corner means nothing once the axes have moved - so re-centre it, which is
+    # how Trove writes those files in the first place.
+    offset = ((-(size[0] // 2), -(size[1] // 2), -(size[2] // 2))
+              if decoded.version in (3, 4) else decoded.offset)
+
+    return codec.DecodedBlueprint(decoded.version, size, pos, voxels, entity_blob, offset)

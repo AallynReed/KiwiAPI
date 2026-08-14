@@ -391,3 +391,19 @@
   padding: 1px 5px;
   font-size: .95em;
 }
+
+.bpe-xforms { margin-top: 8px; }
+.bpe-xform {
+  background: transparent;
+  border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font: inherit;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: border-color .15s var(--ease-out), color .15s var(--ease-out);
+}
+.bpe-xform:hover { border-color: var(--accent-blue); color: var(--text); }
+.bpe-xform:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .bpe-xform { transition: none; } }

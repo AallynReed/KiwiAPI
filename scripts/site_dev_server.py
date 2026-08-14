@@ -3557,6 +3557,18 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json(bp_editor.check(
                     data, json.loads(fields.get("edits") or "[]"),
                     fields.get("kind") or "other"))
+            if path == "/site/blueprint-editor/transform":
+                out, summary = bp_editor.transform(
+                    data, json.loads(fields.get("edits") or "[]"),
+                    json.loads(fields.get("ops") or "[]"))
+                self.send_response(200)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Length", str(len(out)))
+                self.send_header("X-Kiwi-Summary", json.dumps(summary))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(out)
+                return None
             if path == "/site/blueprint-editor/export-qb":
                 stem = name[:-len(".blueprint")] if name.lower().endswith(".blueprint") else name
                 archive, summary = bp_editor.export_qb(
@@ -3614,10 +3626,11 @@ class Handler(SimpleHTTPRequestHandler):
                     names = json.loads(fields.get("paths") or "[]")
                 plan = asyncio.run(workshop.preview(names))
                 plan.pop("mapping", None)
+                plan["config_candidates"] = workshop.config_candidates(names)
+                plan["preview_candidates"] = workshop.preview_candidates(names)
                 if entries is not None:
                     for entry in plan["entries"]:
                         entry["size"] = sizes.get(entry["index"], 0)
-                    plan["config_candidates"] = workshop.config_candidates(entries)
                 return self._send_json({**plan, "source": kind, "properties": header})
 
             if path == "/site/mod-workshop/build":
@@ -3625,17 +3638,31 @@ class Handler(SimpleHTTPRequestHandler):
                 if "archive" in blobs:
                     name, data = blobs["archive"]
                     _, header, source = workshop.read_archive(data, name)
+                    page = spec.get("properties") or {}
                     props = {**header,
-                             **{k: v for k, v in (spec.get("properties") or {}).items() if v}}
+                             **{k: v for k, v in page.items() if v or k == "tags"}}
                 else:
                     names = json.loads(fields.get("paths") or "[]")
                     source = [(str(n), d) for n, (_, _, d)
                               in zip(names, [f for f in files if f[0] == "files"],
                                      strict=True)]
                     props = spec.get("properties") or {}
+                config_path = spec.get("config_path") or ""
+                preview_path = spec.get("preview_path") or ""
+                attached = []
+                for part, is_config in (("config", True), ("preview", False)):
+                    if part not in blobs:
+                        continue
+                    name = workshop.norm_path(blobs[part][0])
+                    attached.append((name, blobs[part][1]))
+                    if is_config:
+                        config_path = name
+                    else:
+                        preview_path = name
                 artifact, plan = asyncio.run(workshop.build_mod(
                     source, props, fix=bool(spec.get("fix", True)),
-                    keep=spec.get("keep") or [], config_path=spec.get("config_path") or ""))
+                    keep=spec.get("keep") or [], config_path=config_path,
+                    preview_path=preview_path, attached=attached))
                 return self._send_binary(
                     artifact, f"{workshop.safe_title(props.get('title'))}.tmod",
                     "application/octet-stream",

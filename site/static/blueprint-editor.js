@@ -106,6 +106,7 @@
     $('bpe-empty').hidden = true;
     $('bpe-workspace').hidden = false;
     renderKinds();
+    renderTransforms();
     renderPalette();
     renderMaterialList();
     renderMeta();
@@ -399,6 +400,56 @@
           : 'Saved — check your downloads.', 'ok');
       })
       .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  // ---- transforms --------------------------------------------------------- //
+
+  /* A rotation renumbers every voxel, so it can't be an entry in the edit map the way a
+     recolour is. It goes to the server, comes back as a new blueprint, and the page
+     reopens it - which also folds in whatever was pending, so nothing is lost. */
+  function runTransform(op) {
+    if (!state.file) return;
+    var list = [];
+    state.edits.forEach(function (e) { list.push(e); });
+    setStatus('Turning the model…');
+    var fd = new FormData();
+    fd.append('file', state.file, state.file.name);
+    fd.append('edits', JSON.stringify(list));
+    fd.append('ops', JSON.stringify([op]));
+    fetch(apiUrl('/site/blueprint-editor/transform'), { method: 'POST', body: fd })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().then(function (b) {
+            throw new Error((b && b.detail) || 'The model couldn’t be turned.');
+          });
+        }
+        var summary = {};
+        try { summary = JSON.parse(res.headers.get('X-Kiwi-Summary') || '{}'); } catch (e) { /* optional */ }
+        return res.blob().then(function (blob) { return { blob: blob, summary: summary }; });
+      })
+      .then(function (out) {
+        var s = out.summary;
+        var label = (state.data.transforms || []).reduce(function (acc, t) {
+          return t.op === op ? t.label : acc;
+        }, op);
+        var bits = [label.toLowerCase()];
+        if (s.size_before && s.size_after && s.size_before.join() !== s.size_after.join()) {
+          bits.push('now ' + s.size_after.join('×'));
+        }
+        if (s.attachment) bits.push('attachment point moved with it');
+        if (s.entities) bits.push(s.entities.toLocaleString() + ' placed object'
+          + (s.entities === 1 ? '' : 's') + ' moved too');
+        openFile(new File([out.blob], state.file.name), 'Applied ' + bits.join(' · ') + '.');
+      })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  function renderTransforms() {
+    var ops = state.data.transforms || [];
+    $('bpe-transforms').innerHTML = ops.map(function (t) {
+      return '<button type="button" class="bpe-xform" data-op="' + t.op + '">'
+        + esc(t.label) + '</button>';
+    }).join('');
   }
 
   // ---- Qubicle interop ---------------------------------------------------- //
@@ -790,6 +841,10 @@
     qbInput.addEventListener('change', function () {
       if (qbInput.files && qbInput.files.length) importQb(qbInput.files);
       qbInput.value = '';
+    });
+    $('bpe-transforms').addEventListener('click', function (e) {
+      var b = e.target.closest('.bpe-xform');
+      if (b) runTransform(b.dataset.op);
     });
     $('bpe-export-qb').addEventListener('click', exportQb);
 
