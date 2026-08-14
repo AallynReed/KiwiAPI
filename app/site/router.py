@@ -272,7 +272,9 @@ def _badge_svg(label: str, value: str, color: str) -> str:
         return int(len(s) * 6.5) + 12
     lw, vw = w(label), w(value)
     total = lw + vw
-    lx, vx = lw * 5, (lw + vw // 2) * 10  # text anchors at *10 (scaled coords)
+    # The <text> nodes are drawn in 10x space and scaled back down, so every
+    # value inside that group - anchors, baseline, font-size - is *10 too.
+    lx, vx = lw * 5, (lw * 2 + vw) * 5
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{total}" height="20" '
         f'role="img" aria-label="{label}: {value}">'
@@ -285,9 +287,9 @@ def _badge_svg(label: str, value: str, color: str) -> str:
         f'<rect x="{lw}" width="{vw}" height="20" fill="{color}"/>'
         f'<rect width="{total}" height="20" fill="url(#s)"/></g>'
         f'<g fill="#fff" text-anchor="middle" '
-        f'font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">'
-        f'<text x="{lx}" y="15" transform="scale(.1)" textLength="{(lw - 12) * 10}">{label}</text>'
-        f'<text x="{vx}" y="15" transform="scale(.1)" textLength="{(vw - 12) * 10}">{value}</text>'
+        f'font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="110">'
+        f'<text x="{lx}" y="140" transform="scale(.1)" textLength="{(lw - 12) * 10}">{label}</text>'
+        f'<text x="{vx}" y="140" transform="scale(.1)" textLength="{(vw - 12) * 10}">{value}</text>'
         f'</g></svg>'
     )
 
