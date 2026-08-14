@@ -67,7 +67,7 @@ logger = logging.getLogger("kiwi.trove.codexes")
 # resolved strings, …). On the next sync the indexer force-rebuilds any branch whose
 # stored version is behind, so a parser change reaches the data WITHOUT a game update
 # or a manual rebuild - the steady-state delta only re-touches changed game files.
-CODEX_PARSER_VERSION = 22  # v22: progression nodes carry their EFFECTS (the $name key + ability refs from upgrade/upgrades/<key>.binfab, locale-resolved) alongside their costs, so a node row states what it gives as well as what it takes
+CODEX_PARSER_VERSION = 22  # v22: progression nodes carry their EFFECTS (name + description + ability refs from upgrade/upgrades/<key>.binfab, locale-resolved) alongside their costs, so a node row states what it gives as well as what it takes
 # v21: geode companion level bonuses actually load - the tree lookup matched a filename pattern no file has, and pointed at trees/ (structure + costs) rather than upgrades/ (the per-level effects), so every companion has been served an empty levels list
 # v20: the codex is relational - stats, abilities and typed relationship edges (crafts / ingredient / craftable_at / unlocks / upgrade_cost / member_of) get their own tables, plus badge requirements and progression-tree costs. Forces one rebuild to populate them
 # v19: recipe product detection covers three more shapes it read as absent - a product path on a field the ingredients also use (banners, geode abilities), a product that IS a crafting material (conversion + gardening recipes), and the bare token costume/skin recipes name theirs with, resolved only against a prefab that exists
@@ -596,9 +596,12 @@ def _resolve_effects(effects: dict[str, dict], loc: dict[str, str]) -> dict[str,
     out: dict[str, dict] = {}
     for node_key, effect in effects.items():
         name_key = effect.get("name_key") or ""
+        desc_key = effect.get("desc_key") or ""
         out[node_key] = {
             "name_key": name_key,
             "name": localize.resolve_text(loc, name_key) if name_key else "",
+            "desc_key": desc_key,
+            "description": localize.resolve_text(loc, desc_key) if desc_key else "",
             "abilities": list(effect.get("abilities") or []),
         }
     return out
@@ -637,8 +640,9 @@ async def _index_upgrades(branch: str, store: ContentStore, loc: dict[str, str])
         if sha:
             raw = await asyncio.to_thread(store.get, sha)
             if raw:
+                node_keys = [n["node_key"] for n in parsed["nodes"]]
                 effects = _resolve_effects(
-                    await asyncio.to_thread(upgrades.parse_upgrade_effects, raw, key), loc)
+                    await asyncio.to_thread(upgrades.parse_upgrade_effects, raw, node_keys), loc)
         nodes.extend(upgrade_rows(parsed, branch, path, effects))
         edges.extend(links.upgrade_links(parsed, branch, path))
     await pg_store.replace_upgrades(branch, nodes)

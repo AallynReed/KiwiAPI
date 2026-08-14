@@ -176,33 +176,35 @@ def parse_upgrade_costs(data: bytes, path: str) -> dict:
 
 _ABILITY_REF_RE = re.compile(rb"abilities/[A-Za-z0-9_/.\-]+")
 _NAME_KEY_RE = re.compile(rb"\$[A-Za-z0-9_]+_name")
+_DESC_KEY_RE = re.compile(rb"\$[A-Za-z0-9_]+_description")
 
 
-def parse_upgrade_effects(data: bytes, system_key: str) -> dict[str, dict]:
-    """`{node_key: {"name_key": str, "abilities": [ref, …]}}` for one upgrades file.
+def parse_upgrade_effects(data: bytes, node_keys: list[str]) -> dict[str, dict]:
+    """`{node_key: {name_key, desc_key, abilities}}` for one `upgrades/` file.
 
-    Node keys are matched against the system key so a material or ability name that
-    happens to end in two digits can't open a phantom node. A node with neither a name
-    key nor an ability ref is omitted rather than stored empty.
+    Chunked on the node keys the TREE parse already found, rather than on a pattern
+    derived from the filename. The two are not related: the class prestige trees are
+    stored as `prestige_bard.binfab` but name their nodes `01_bard_root_01`, so
+    anything anchored on the system key finds nothing at all for 90 of the 360 nodes.
+    Taking the keys as input removes the guess and works for all three systems.
+
+    A node with no name, description or ability is omitted rather than stored empty, so
+    "grants nothing" and "the file didn't say" stay distinguishable.
     """
-    key = re.escape(system_key.encode())
-    pattern = re.compile(key + rb"(?:_level)?_\d{2}")
-    hits = [(m.start(), m.group(0).decode("ascii")) for m in pattern.finditer(data)]
-    if not hits:
-        return {}
-
-    # First occurrence of each key opens its chunk; the chunk ends where the next
-    # DISTINCT key starts, so a key repeated as a prerequisite doesn't split it.
     starts: dict[str, int] = {}
-    for offset, node_key in hits:
-        starts.setdefault(node_key, offset)
+    for node_key in node_keys:
+        at = data.find(node_key.encode())
+        if at >= 0:
+            starts.setdefault(node_key, at)
+    if not starts:
+        return {}
     ordered = sorted(starts.items(), key=lambda kv: kv[1])
 
     out: dict[str, dict] = {}
     for index, (node_key, start) in enumerate(ordered):
         end = ordered[index + 1][1] if index + 1 < len(ordered) else len(data)
         chunk = data[start:end]
-        abilities = []
+        abilities: list[str] = []
         seen: set[str] = set()
         for match in _ABILITY_REF_RE.finditer(chunk):
             ref = match.group(0).decode("ascii").rstrip("./")
@@ -210,9 +212,12 @@ def parse_upgrade_effects(data: bytes, system_key: str) -> dict[str, dict]:
                 seen.add(ref)
                 abilities.append(ref)
         name_match = _NAME_KEY_RE.search(chunk)
+        desc_match = _DESC_KEY_RE.search(chunk)
         name_key = name_match.group(0).decode("ascii") if name_match else ""
-        if name_key or abilities:
-            out[node_key] = {"name_key": name_key, "abilities": abilities}
+        desc_key = desc_match.group(0).decode("ascii") if desc_match else ""
+        if name_key or desc_key or abilities:
+            out[node_key] = {"name_key": name_key, "desc_key": desc_key,
+                             "abilities": abilities}
     return out
 
 
