@@ -82,8 +82,11 @@
 .mkt-an-volcell > span { position: relative; z-index: 1; }
 
 /* ─── View tabs (Browse | Analytics) ────────────────────────────────── */
+/* flex + fit-content rather than inline-flex: `margin: 0 auto` only centres
+   block-level boxes, so as an inline-flex box the auto margins did nothing and
+   the strip sat left-aligned. fit-content keeps the pill hugging its tabs. */
 .mkt-viewtabs {
-  display: inline-flex; gap: 4px; margin: 0 auto 18px;
+  display: flex; width: fit-content; gap: 4px; margin: 0 auto 18px;
   background: var(--bg-deep); border: 1px solid var(--bg-line);
   border-radius: 999px; padding: 4px;
 }
@@ -107,9 +110,10 @@
   .mkt-viewtabs {
     display: flex;
     max-width: 100%;
-    /* No side margin: .mkt-main already supplies the 16px gutter, and adding
-       one here squeezed the strip 30px narrower than the space it had. */
-    margin-inline: 0;
+    /* auto, not a fixed value: .mkt-main already supplies the 16px gutter, so a
+       px margin here squeezed the strip 30px narrower than the space it had -
+       while auto still centres it whenever the tabs do fit. */
+    margin-inline: auto;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
