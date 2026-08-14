@@ -422,6 +422,40 @@
 }
 .mw-config-title { margin: 0 0 4px; font-size: .84rem; font-weight: 700; }
 .mw-config-hint { margin: 0 0 9px; font-size: .78rem; line-height: 1.5; color: var(--text-mute); }
+.mw-pick-row { margin-top: 9px; }
+.mw-btn-small { width: 100%; justify-content: center; padding: 7px 12px; font-size: .8rem; }
+.mw-preview-thumb {
+  display: block;
+  width: 100%;
+  max-height: 150px;
+  margin-top: 10px;
+  border: 1px solid var(--bg-line, #1f2733);
+  border-radius: 9px;
+  background: rgba(255,255,255,.03);
+  object-fit: contain;
+}
+
+/* Categories: the same fixed vocabulary the Mods Hub tags a mod with. */
+.mw-field-hint { margin: 0; font-size: .78rem; line-height: 1.5; color: var(--text-mute); }
+.mw-cats-pick { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 2px; }
+.mw-catchip {
+  padding: 5px 12px;
+  border: 1px solid var(--bg-line, #1f2733);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-mute);
+  font: inherit;
+  font-size: .79rem;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.mw-catchip:hover { color: var(--text); border-color: rgba(88,166,255,.4); }
+.mw-catchip.is-sel {
+  border-color: var(--accent-blue);
+  background: rgba(88,166,255,.12);
+  color: var(--accent-blue);
+}
+.mw-catchip:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 
 /* ─── Open a mod: the contents breakdown ────────────────────────────── */
 

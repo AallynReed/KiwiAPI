@@ -192,14 +192,45 @@
                             <textarea id="mw-notes" class="mw-input mw-textarea" rows="3"
                                       maxlength="4000" placeholder="Optional"></textarea>
                         </label>
+                        <div class="mw-field mw-field-wide">
+                            <span class="mw-field-label" id="mw-cats-label" data-i18n>What kind of mod is it</span>
+                            <div class="mw-cats-pick" id="mw-cats" role="group" aria-labelledby="mw-cats-label"></div>
+                            <p class="mw-field-hint" data-i18n>Pick any that fit. Mod sites use these to sort it.</p>
+                        </div>
+                        <label class="mw-field mw-field-wide">
+                            <span class="mw-field-label" data-i18n>Your own tags</span>
+                            <input type="text" id="mw-tags" class="mw-input" maxlength="400"
+                                   placeholder="Optional, separated by commas" data-i18n-placeholder
+                                   autocomplete="off">
+                        </label>
                     </div>
 
                     <aside class="mw-go">
                         <div class="mw-go-count" id="mw-go-count"></div>
+
+                        <div class="mw-config">
+                            <p class="mw-config-title" data-i18n>Preview picture</p>
+                            <p class="mw-config-hint" data-i18n>The picture shown next to your mod. A PNG, JPG or GIF — it gets packed in under the name the game looks for.</p>
+                            <select id="mw-preview" class="mw-select" aria-label="Preview picture"></select>
+                            <div class="mw-pick-row">
+                                <button type="button" class="mw-btn mw-btn-quiet mw-btn-small" id="mw-preview-pick">
+                                    <i class="fa-solid fa-image" aria-hidden="true"></i>
+                                    <span data-i18n>Use a picture from your computer</span>
+                                </button>
+                            </div>
+                            <img class="mw-preview-thumb" id="mw-preview-thumb" alt="" hidden>
+                        </div>
+
                         <div class="mw-config" id="mw-config-box" hidden>
                             <p class="mw-config-title" data-i18n>Settings file</p>
                             <p class="mw-config-hint" data-i18n>This mod has an interface that can be configured. Pick the settings file to pack with it.</p>
                             <select id="mw-config" class="mw-select" aria-label="Settings file to include"></select>
+                            <div class="mw-pick-row">
+                                <button type="button" class="mw-btn mw-btn-quiet mw-btn-small" id="mw-config-pick">
+                                    <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+                                    <span data-i18n>Use a file from your computer</span>
+                                </button>
+                            </div>
                         </div>
                         <button type="button" class="mw-btn mw-btn-go" id="mw-build">
                             <i class="fa-solid fa-download" aria-hidden="true"></i>
@@ -327,6 +358,8 @@
     <input type="file" id="mw-input-folder" webkitdirectory directory multiple hidden>
     <input type="file" id="mw-input-zip" accept=".zip" hidden>
     <input type="file" id="mw-input-open" accept=".tmod" hidden>
+    <input type="file" id="mw-input-preview" accept=".png,.jpg,.jpeg,.gif" hidden>
+    <input type="file" id="mw-input-config" accept=".cfg" hidden>
 
     {% include "partials/footer.html" %}
 

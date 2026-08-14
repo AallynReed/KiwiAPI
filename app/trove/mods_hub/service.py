@@ -1073,6 +1073,22 @@ def _release_properties(project: ModProject, tag: str, changelog: str,
 _PREVIEW_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/gif": "gif"}
 
 
+def pack_preview(
+    files: list[tuple[str, bytes]], props: dict[str, str],
+    data: bytes, ext: str, stem: str,
+) -> str:
+    """Pack ``data`` as the build's preview image at ``ui/<stem>.<ext>``, replacing
+    anything already sitting there, and stamp the ``previewPath`` header property -
+    the Trove convention the game + mod sites read a preview from. Returns the packed
+    path. Shared with the Mod Workshop, so a preview means the same thing either way."""
+    path = f"ui/{_safe_filename(stem)}.{ext}".lower()
+    files[:] = [(p, b) for (p, b) in files
+                if p.replace("\\", "/").lstrip("/").lower() != path]
+    files.append((path, data))
+    props["previewPath"] = path
+    return path
+
+
 async def _inject_preview(
     project: ModProject, preview_sha: str,
     files: list[tuple[str, bytes]], props: dict[str, str],
@@ -1091,11 +1107,7 @@ async def _inject_preview(
     if content_type not in _PREVIEW_EXT:
         raise APIError(400, ErrorCode.bad_request,
                        "The .tmod preview must be a PNG, JPEG, or GIF image (Trove can't render WebP).")
-    path = f"ui/{project.slug}.{_PREVIEW_EXT[content_type]}"
-    files[:] = [(p, b) for (p, b) in files
-                if p.replace("\\", "/").lstrip("/").lower() != path]
-    files.append((path, data))
-    props["previewPath"] = path
+    pack_preview(files, props, data, _PREVIEW_EXT[content_type], project.slug)
 
 
 # --- Attached config (.cfg) injection --------------------------------------

@@ -27,6 +27,18 @@
   const MAX_BYTES = 32 * 1024 * 1024;
   const MAX_FILES = 4000;
 
+  // Mod categories (mirrors app/trove/mod_categories.py). The chosen ones are packed
+  // as the mod's `tags`; the server also encodes them as a numeric `flags` bitmask.
+  const MOD_CATEGORIES = ['Allies', 'Banners', 'Boats and Sails', 'Cosmetics', 'Costumes',
+    'Dragons', 'Fishing', 'GUI', 'Helmets', 'Language', 'Mag Riders', 'Mounts', 'NPCs',
+    'Wings', 'Automation', 'Optimization', 'Reskin', 'Waypoint', 'Radar'];
+  const _CAT_LOWER = new Set(MOD_CATEGORIES.map((c) => c.toLowerCase()));
+  const isCategory = (tag) => _CAT_LOWER.has(String(tag).trim().toLowerCase());
+
+  // The select value standing for "the file I picked off my computer", as opposed
+  // to one of the mod's own files (which are named by their path).
+  const ATTACHED = '/attached';
+
   const state = {
     tab: 'make',
     source: null,      // {kind:'files'|'zip'|'tmod', files:[File], paths:[], archive:File, header:{}}
@@ -35,11 +47,19 @@
     keep: new Set(),   // original paths to leave exactly where they are
     filter: 'all',
     busy: false,
+    cats: new Set(),   // lowercased category names
+    previewFile: null, // an image picked off the computer, not out of the mod
+    configFile: null,  // likewise, a settings file
+    thumbUrl: '',      // object URL behind the preview thumbnail
     open: null,        // {file, data} - shared by the Open and Analyze tabs
     openFilter: '',
   };
 
   const $ = (id) => document.getElementById(id);
+  // The server's own path normalising (app/trove/mods_hub/workshop.norm_path), so a
+  // path chosen here matches the one it answered with.
+  const norm = (p) => String(p || '').replace(/\\/g, '/').split('/')
+    .filter((x) => x && x !== '.' && x !== '..').join('/');
 
   // The four tabs, in order: two that build a mod (sharing everything after their
   // own file picker) and two that read one (sharing the mod they loaded).
@@ -64,8 +84,12 @@
   const $fix = $('mw-fix');
   const $files = $('mw-files');
   const $goCount = $('mw-go-count');
+  const $cats = $('mw-cats');
+  const $tags = $('mw-tags');
   const $configBox = $('mw-config-box');
   const $config = $('mw-config');
+  const $preview = $('mw-preview');
+  const $previewThumb = $('mw-preview-thumb');
   const $build = $('mw-build');
   const $status = $('mw-status');
 
@@ -91,6 +115,8 @@
   const $inputFolder = $('mw-input-folder');
   const $inputZip = $('mw-input-zip');
   const $inputOpen = $('mw-input-open');
+  const $inputPreview = $('mw-input-preview');
+  const $inputConfig = $('mw-input-config');
 
   wire();
 
@@ -181,6 +207,10 @@
     state.plan = null;
     state.keep.clear();
     state.filter = 'all';
+    // A file picked off the computer belongs to the mod that was open, not to the
+    // next one - the paths it was chosen against are gone.
+    state.previewFile = null;
+    state.configFile = null;
     $flow.hidden = true;
     $source.hidden = true;
     $sourceError.hidden = true;
@@ -219,6 +249,7 @@
       state.plan = data;
       s.header = data.properties || {};
       s.configCandidates = data.config_candidates || [];
+      s.previewCandidates = data.preview_candidates || [];
       prefillDetails(s.header);
       render();
     } catch (err) {
@@ -272,7 +303,7 @@
     $goCount.innerHTML = packed
       ? `<strong>${esc(formatInt(packed))}</strong> ${esc(packed === 1 ? t('file goes in') : t('files go in'))}`
       : '';
-    renderConfigPicker(rows);
+    renderExtraPickers(rows);
   }
 
   function renderSummary(target, counts, packed, plan, mode) {
@@ -377,18 +408,102 @@
     if (!$('mw-title').value && state.source && state.source.kind === 'files') {
       $('mw-title').value = rootFolder(state.source.paths) || '';
     }
+    // Its tags come back as one comma-separated string; the known categories light
+    // up their chips, anything else stays text in the free-tags box.
+    const tags = String(header.tags || '').split(',').map((x) => x.trim()).filter(Boolean);
+    if (tags.length && !state.cats.size && !$tags.value) {
+      for (const tag of tags.filter(isCategory)) state.cats.add(tag.toLowerCase());
+      $tags.value = tags.filter((tag) => !isCategory(tag)).join(', ');
+    }
+    renderCategories();
   }
 
-  /** A settings file only means anything to a mod with a Flash interface, and the
-      server enforces that too - this just stops the question being asked otherwise. */
-  function renderConfigPicker(rows) {
-    const candidates = (state.source && state.source.configCandidates) || [];
-    const usable = candidates.filter((p) => rows.some((r) => r.path === p));
-    $configBox.hidden = !usable.length;
-    if (!usable.length) { $config.innerHTML = ''; return; }
-    $config.innerHTML = [`<option value="">${esc(t("Don't include one"))}</option>`]
-      .concat(usable.map((p) => `<option value="${esc(p)}">${esc(p)}</option>`)).join('');
-    $config.value = usable[0];
+  function renderCategories() {
+    $cats.innerHTML = MOD_CATEGORIES.map((c) =>
+      `<button type="button" class="mw-catchip${state.cats.has(c.toLowerCase()) ? ' is-sel' : ''}"
+               data-cat="${esc(c)}" aria-pressed="${state.cats.has(c.toLowerCase())}"
+               >${esc(c)}</button>`).join('');
+  }
+
+  /** The tags the build carries: the chosen categories under their canonical names
+      (that is what makes them recognisable as categories), then anything typed. */
+  function chosenTags() {
+    return MOD_CATEGORIES.filter((c) => state.cats.has(c.toLowerCase()))
+      .concat($tags.value.split(',').map((x) => x.trim()).filter(Boolean));
+  }
+
+  /** The two "which file is it" pickers. Both offer the mod's own files and take
+      one off the computer instead; a preview is packed at the name Trove reads a
+      picture from, so where it sits now doesn't matter and a file the build skips
+      (a `preview.png` at the root, the usual case) is still a fair answer. */
+  function renderExtraPickers(rows) {
+    const s = state.source || {};
+    const packed = rows.filter((r) => r.status !== 'skipped');
+
+    fillPicker($preview, (s.previewCandidates || []).filter((p) => rows.some((r) => r.path === p)),
+               state.previewFile, t('No picture'), (s.header || {}).previewPath);
+    renderThumb();
+
+    // Only a mod with a Flash interface has anything that would read a settings
+    // file, and the server refuses one otherwise - so don't ask otherwise either.
+    const hasUI = packed.some((r) => /\.swf$/i.test(r.final || ''));
+    $configBox.hidden = !hasUI;
+    if (!hasUI) { state.configFile = null; return; }
+    fillPicker($config, (s.configCandidates || []).filter((p) => rows.some((r) => r.path === p)),
+               state.configFile, t("Don't include one"), (s.header || {}).configPath);
+  }
+
+  function fillPicker(select, candidates, attached, noneLabel, declared) {
+    const previous = select.value;
+    const options = [`<option value="">${esc(noneLabel)}</option>`]
+      .concat(candidates.map((p) => `<option value="${esc(p)}">${esc(p)}</option>`));
+    if (attached) {
+      options.push(`<option value="${esc(ATTACHED)}">${esc(attached.name)}</option>`);
+    }
+    select.innerHTML = options.join('');
+    // Keep whatever was already chosen - including a deliberate "none" - and
+    // otherwise fall back to what an opened mod already declared. Nothing is ever
+    // picked on someone's behalf: a mod gets a preview because it was asked for.
+    select.value = (previous === ATTACHED && attached) ? ATTACHED
+      : (previous && candidates.includes(previous)) ? previous
+        : (declared && candidates.includes(declared)) ? declared : '';
+  }
+
+  /** What the packed picture will look like - but only when the bytes are already
+      in the tab (files picked here, or one off the computer). Inside a .zip or a
+      .tmod they aren't, and fetching them back to draw a thumbnail isn't worth a
+      round trip. */
+  function renderThumb() {
+    if (state.thumbUrl) { URL.revokeObjectURL(state.thumbUrl); state.thumbUrl = ''; }
+    const s = state.source || {};
+    const chosen = $preview.value;
+    const at = chosen && s.kind === 'files'
+      ? (s.paths || []).findIndex((p) => norm(p) === chosen) : -1;
+    const file = chosen === ATTACHED ? state.previewFile
+      : (at >= 0 ? (s.files || [])[at] : null);
+    $previewThumb.hidden = !file;
+    if (!file) { $previewThumb.removeAttribute('src'); return; }
+    state.thumbUrl = URL.createObjectURL(file);
+    $previewThumb.src = state.thumbUrl;
+  }
+
+  /** Take a file off the computer for one of the pickers and select it. */
+  function attach(input, slot, select) {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    const s = state.source;
+    const already = s ? (s.files || []).reduce((sum, f) => sum + f.size, 0) : 0;
+    if (already + file.size > MAX_BYTES) {
+      setStatus(t('That is bigger than this page can take in one go') +
+        ` (${formatBytes(already + file.size)} / ${formatBytes(MAX_BYTES)}).`, true);
+      return;
+    }
+    state[slot] = file;
+    setStatus('');
+    render();
+    select.value = ATTACHED;
+    renderThumb();
   }
 
   async function build() {
@@ -403,12 +518,23 @@
       author: $('mw-author').value.trim(),
       modVersion: $('mw-version').value.trim(),
       notes: $('mw-notes').value.trim(),
+      tags: chosenTags(),
     };
+    // A file chosen off the computer rides along as its own part; one of the mod's
+    // own files is named by its path and is already in the upload.
+    const configPick = $configBox.hidden ? '' : ($config.value || '');
     const form = new FormData();
     form.append('spec', JSON.stringify({
       properties, fix: state.fix, keep: Array.from(state.keep),
-      config_path: $configBox.hidden ? '' : ($config.value || ''),
+      config_path: configPick === ATTACHED ? '' : configPick,
+      preview_path: $preview.value === ATTACHED ? '' : ($preview.value || ''),
     }));
+    if (configPick === ATTACHED && state.configFile) {
+      form.append('config', state.configFile, state.configFile.name);
+    }
+    if ($preview.value === ATTACHED && state.previewFile) {
+      form.append('preview', state.previewFile, state.previewFile.name);
+    }
     if (s.archive) {
       form.append('archive', s.archive, s.archive.name);
     } else {
@@ -804,7 +930,8 @@
     const file = state.open.file;
     showTab('make');
     reset();
-    for (const id of ['mw-title', 'mw-author', 'mw-version', 'mw-notes']) $(id).value = '';
+    for (const id of ['mw-title', 'mw-author', 'mw-version', 'mw-notes', 'mw-tags']) $(id).value = '';
+    state.cats.clear();
     $flow.hidden = false;
     state.source = { kind: 'tmod', archive: file, files: [file], paths: [], header: {} };
     state.fix = true;
@@ -853,8 +980,26 @@
 
     $('mw-clear').addEventListener('click', () => {
       reset();
-      for (const id of ['mw-title', 'mw-author', 'mw-version', 'mw-notes']) $(id).value = '';
+      for (const id of ['mw-title', 'mw-author', 'mw-version', 'mw-notes', 'mw-tags']) $(id).value = '';
+      state.cats.clear();
+      renderCategories();
     });
+
+    $cats.addEventListener('click', (e) => {
+      const chip = e.target.closest('.mw-catchip');
+      if (!chip) return;
+      const key = chip.getAttribute('data-cat').toLowerCase();
+      if (state.cats.has(key)) state.cats.delete(key); else state.cats.add(key);
+      renderCategories();
+    });
+
+    // The two "use my own file" pickers. Both go straight into the build's own
+    // budget, so an oversized one is refused here rather than by a 413.
+    $('mw-preview-pick').addEventListener('click', () => $inputPreview.click());
+    $('mw-config-pick').addEventListener('click', () => $inputConfig.click());
+    $inputPreview.addEventListener('change', () => attach($inputPreview, 'previewFile', $preview));
+    $inputConfig.addEventListener('change', () => attach($inputConfig, 'configFile', $config));
+    $preview.addEventListener('change', renderThumb);
 
     $fix.addEventListener('change', () => {
       state.fix = $fix.checked;
@@ -888,6 +1033,7 @@
     $openZip.addEventListener('click', () => openDownload(''));
     $anRepair.addEventListener('click', repair);
 
+    renderCategories();
     showTab('make');     // also parks the shared build steps in the first panel
   }
 

@@ -54,6 +54,14 @@ _JUNK_DIRS = ("__macosx/", ".git/", ".svn/")
 _TITLE_ILLEGAL = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
+# What a mod's preview image may be. WebP is deliberately absent: Trove can't render
+# one, so it must never be baked into a .tmod (the Mods Hub refuses it for the same
+# reason). A preview is a thumbnail; anything bigger than this is the wrong file.
+PREVIEW_EXTENSIONS: dict[str, str] = {
+    ".png": "png", ".jpg": "jpg", ".jpeg": "jpg", ".gif": "gif",
+}
+MAX_PREVIEW_BYTES = 8 * 1024 * 1024
+
 
 class WorkshopError(ValueError):
     """Bad input from the page (the router maps it to a 400)."""
@@ -67,6 +75,11 @@ def norm_path(path: str) -> str:
     hands over backslashes and a zip's entry names are attacker-controlled text."""
     parts = [p for p in str(path or "").replace("\\", "/").split("/") if p and p != "."]
     return "/".join(p for p in parts if p != "..")
+
+
+def _ext(path: str) -> str:
+    name = path.rsplit("/", 1)[-1]
+    return ("." + name.rsplit(".", 1)[1].lower()) if "." in name else ""
 
 
 def is_junk(path: str) -> bool:
@@ -328,33 +341,75 @@ def clean_properties(raw: dict | None) -> dict[str, str]:
     notes = _clean(raw.get("notes"), 4000, multiline=True)
     if notes:
         props["notes"] = notes
-    tags = ", ".join(
-        t for t in (_clean(x, 40) for x in (raw.get("tags") or [])) if t)[:400]
+    raw_tags = raw.get("tags") or []
+    # A .tmod opened for rebuild carries its tags as one comma-separated string; the
+    # page sends a list. `flags` is deliberately NOT carried over - build_tmod derives
+    # it from these tags, so an edited category set can't leave a stale bitmask behind.
+    if isinstance(raw_tags, str):
+        raw_tags = raw_tags.split(",")
+    tags = ", ".join(t for t in (_clean(x, 40) for x in raw_tags) if t)[:400]
     if tags:
-        props["tags"] = tags          # build_tmod derives the `flags` bitmask
+        props["tags"] = tags
+    # Which packed file IS the preview / the config. Carried over from an opened
+    # .tmod so a rebuild doesn't quietly lose them; build_mod drops either one whose
+    # file didn't survive the build, and overwrites it when a new one is attached.
+    for key in ("previewPath", "configPath"):
+        declared = norm_path(_clean(raw.get(key), 260)).lower()
+        if declared:
+            props[key] = declared
     return props
 
 
-def config_candidates(files: Sequence[tuple[str, bytes]]) -> list[str]:
-    """The ``.cfg`` files in a build that could be ITS config, newest rules first.
+def config_candidates(paths: Sequence[str]) -> list[str]:
+    """The ``.cfg`` files among ``paths`` that could be the build's config.
 
     A ``.cfg`` is stripped by the ordinary placement rules (a repo is full of
     unrelated ones), so packing one is always a deliberate choice - and only a mod
-    with a Flash UI has anything that would read it."""
-    if not any(p.lower().endswith(".swf") for p, _ in files):
+    with a Flash UI has anything that would read it, which is why an answer at all
+    depends on a ``.swf`` being in the same pile."""
+    names = [norm_path(p) for p in paths]
+    if not any(p.lower().endswith(".swf") for p in names):
         return []
-    return [p for p, _ in files if p.lower().endswith(".cfg")]
+    return [p for p in names if p.lower().endswith(".cfg")]
+
+
+def preview_candidates(paths: Sequence[str]) -> list[str]:
+    """The images among ``paths`` that could be the mod's preview.
+
+    Any image will do wherever it sits - a ``preview.png`` at the root is the usual
+    one, and the placement rules skip it - because the chosen file is re-packed at
+    the path Trove reads a preview from rather than the one it arrived at."""
+    return [p for p in (norm_path(x) for x in paths) if _ext(p) in PREVIEW_EXTENSIONS]
+
+
+def _pick(files: Sequence[tuple[str, bytes]], path: str, what: str) -> bytes:
+    """One named file out of the pile, by the path it arrived at."""
+    data = next((d for p, d in files if p == path), None)
+    if data is None:
+        raise WorkshopError(f"No file '{path}' to pack as the {what}.")
+    return data
 
 
 async def build_mod(
     files: Sequence[tuple[str, bytes]], properties: dict | None, *,
     fix: bool = True, keep: Iterable[str] = (), config_path: str = "",
+    preview_path: str = "", attached: Sequence[tuple[str, bytes]] = (),
 ) -> tuple[bytes, dict]:
     """Place, filter and pack ``files`` into a ``.tmod``. Returns ``(bytes, plan)``.
 
     The plan is recomputed here from the paths themselves rather than trusting one
-    the page sends back, so what gets built is always what the preview described."""
-    from app.trove.mods_hub.service import _inject_config
+    the page sends back, so what gets built is always what the preview described.
+
+    ``config_path`` and ``preview_path`` name the mod's settings file and its preview
+    image. Neither is placed by the ordinary rules - both are re-packed at the path
+    Trove reads them from, named after the mod - so either one can be a file the
+    build would otherwise skip, like a ``preview.png`` sitting at the root.
+
+    ``attached`` holds files that came from outside the mod (picked off a computer
+    rather than out of the folder). They take no part in placement at all: a loose
+    file dropped in beside a mod that lives under one wrapper folder would otherwise
+    look like a second root, and the wrapper would stop being one."""
+    from app.trove.mods_hub.service import _inject_config, pack_preview
 
     result = await plan([p for p, _ in files], fix=fix, keep=keep)
     if not result["buildable"]:
@@ -366,13 +421,42 @@ async def build_mod(
               for i, (_, data) in enumerate(files) if i in result["mapping"]]
     props = clean_properties(properties)
 
-    config_path = norm_path(config_path)
+    # A mod opened for rebuild re-attaches what it already carried, unless something
+    # else was picked. A .cfg is stripped by the ordinary placement rules, so without
+    # this a mod would lose its settings file just by passing through here again -
+    # and a renamed mod gets both files renamed with it.
+    available = {p for p, _ in files}
+    config_path = norm_path(config_path) or (
+        props["configPath"] if props.get("configPath") in available else "")
+    preview_path = norm_path(preview_path) or (
+        props["previewPath"] if props.get("previewPath") in available else "")
+    # A file picked off a computer wins a name it shares with one of the mod's own.
+    pickable = list(attached) + list(files)
+
     if config_path:
-        source = next((d for p, d in files if p == config_path), None)
-        if source is None:
-            raise WorkshopError(f"No file '{config_path}' to pack as the config.")
         # Same rule and same packed path as a Mods Hub release, so a mod that moves
         # between the two carries its config identically.
-        _inject_config(packed, props, source)
+        _inject_config(packed, props, _pick(pickable, config_path, "config"))
+
+    if preview_path:
+        ext = PREVIEW_EXTENSIONS.get(_ext(preview_path))
+        if not ext:
+            raise WorkshopError(
+                "A preview image has to be a PNG, JPG or GIF - Trove can't show anything else.")
+        image = _pick(pickable, preview_path, "preview")
+        if not image:
+            raise WorkshopError("That preview image is empty.")
+        if len(image) > MAX_PREVIEW_BYTES:
+            raise WorkshopError(
+                f"A preview image can be at most {MAX_PREVIEW_BYTES // (1024 * 1024)} MB.")
+        pack_preview(packed, props, image, ext, props["title"])
+
+    # A declaration carried over from an opened .tmod outlives its file if placement
+    # dropped it, and a header pointing at a file that isn't there reads as a broken
+    # mod. Paths are lowercased on the way into the archive, so compare that way.
+    final_paths = {p.lower() for p, _ in packed}
+    for key in ("previewPath", "configPath"):
+        if props.get(key) and props[key].lower() not in final_paths:
+            props.pop(key)
 
     return tmod.build_tmod(1, props, packed), result
