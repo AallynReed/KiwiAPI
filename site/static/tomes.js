@@ -225,9 +225,7 @@
 
       const value = opts.reason
         ? '<span class="tm-reason">' + esc(reasonFor(x)) + '</span>'
-        : '<span class="tm-total">' + esc(fmt(Math.round(x.value))) + '</span>' + each
-          + (pct == null ? '' :
-             '<span class="tm-pct">' + esc(pct.toFixed(1) + '%') + '</span>');
+        : '<span class="tm-total">' + esc(fmt(Math.round(x.value))) + '</span>' + each;
 
       // The fill sits behind the row rather than beside it - a value bar that
       // took its own column would crowd out the payout line on a phone.
