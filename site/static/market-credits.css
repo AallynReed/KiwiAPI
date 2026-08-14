@@ -84,29 +84,6 @@
 }
 .mkt-cr-source.is-live { color: var(--accent-green); }
 
-/* ─── Basis toggle ──────────────────────────────────────────────────── */
-.mkt-cr-modes {
-  display: inline-flex;
-  gap: 4px;
-  background: var(--bg-deep);
-  border: 1px solid var(--bg-line);
-  border-radius: 999px;
-  padding: 3px;
-}
-.mkt-cr-mode {
-  border: 0;
-  background: transparent;
-  color: var(--text-mute);
-  font: inherit;
-  font-size: .8rem;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-.mkt-cr-mode:hover { color: var(--text); }
-.mkt-cr-mode.active { background: var(--accent-blue); color: #06121f; }
-
 /* ─── Rate cards ────────────────────────────────────────────────────── */
 .mkt-cr-cards {
   display: grid;

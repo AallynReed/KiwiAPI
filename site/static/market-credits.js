@@ -5,16 +5,11 @@
    off one observable number - what a Credit Pouch trades for - which is
    prefilled from our own market median and stays editable.
 
-   Two credit bases, because a pouch's face value and what it costs to
-   acquire are different numbers:
+   One chain the whole page hangs off:
 
-     face      250 credits    what opening a pouch actually gives you
-     purchase  308.33 credits what a pouch effectively costs once the
-                              $99.99 pack's bonus credits are spread over
-                              the 60 pouches it contains
+     $99.99  =  60 pouches  =  15,000 credits
 
-   They disagree by ~23%, so the basis is a visible toggle rather than a
-   silent constant. Client-only apart from the one median lookup.
+   Client-only apart from the one median lookup.
    ═══════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -22,14 +17,13 @@
 
   const { esc, fetchJSON } = window.BTTUtil;
 
-  // Published pack facts - the anchor the whole page is derived from.
+  // Published pack facts - the anchor everything else is derived from.
   const PACK_USD = 99.99;
-  const PACK_CREDITS = 18500;
   const POUCHES_PER_PACK = 60;
-  const POUCH_FACE_CREDITS = 250;
+  const CREDITS_PER_POUCH = 250;
 
-  const USD_PER_POUCH = PACK_USD / POUCHES_PER_PACK;                    // 1.6665
-  const PURCHASE_CREDITS_PER_POUCH = PACK_CREDITS / POUCHES_PER_PACK;   // 308.33
+  const PACK_CREDITS = POUCHES_PER_PACK * CREDITS_PER_POUCH;   // 15,000
+  const USD_PER_POUCH = PACK_USD / POUCHES_PER_PACK;           // 1.6665
 
   const $ = (id) => document.getElementById(id);
   const $view = $('mkt-view-credits');
@@ -37,7 +31,6 @@
 
   const $pouch = $('mkt-cr-pouch');
   const $source = $('mkt-cr-source');
-  const $basis = $('mkt-cr-basis');
   const $rates = $('mkt-cr-rates');
   const $flux = $('mkt-cr-flux');
   const $credits = $('mkt-cr-credits');
@@ -53,7 +46,6 @@
     // A plausible-looking default would be indistinguishable from real data
     // and goes stale silently - pouch prices have swung 3M -> 12M -> 50M.
     pouchFlux: null,
-    basis: 'purchase',   // 'face' | 'purchase'
     live: null,          // latest median_each, else null
     liveCount: 0,
     manual: false,       // reader typed over the live price
@@ -77,20 +69,6 @@
         state.pouchFlux = v && v > 0 ? v : null;
         state.manual = true;
         renderSource();
-        render();
-      });
-    }
-
-    if ($basis) {
-      $basis.addEventListener('click', (e) => {
-        const btn = e.target.closest('.mkt-cr-mode');
-        if (!btn || btn.dataset.basis === state.basis) return;
-        state.basis = btn.dataset.basis;
-        for (const b of $basis.querySelectorAll('.mkt-cr-mode')) {
-          const on = b.dataset.basis === state.basis;
-          b.classList.toggle('active', on);
-          b.setAttribute('aria-pressed', String(on));
-        }
         render();
       });
     }
@@ -139,18 +117,13 @@
     render();
   }
 
-  /* ─── The rate ──────────────────────────────────────────────────────
-     flux/credit follows the chosen basis; flux/dollar never does - a
-     dollar buys a pouch regardless of how you value what's inside it. */
+  /* ─── The rate ─────────────────────────────────────────────────────*/
   function rates() {
     const pouch = state.pouchFlux;
     if (!pouch) return null;
-    const creditsPerPouch = state.basis === 'face'
-      ? POUCH_FACE_CREDITS
-      : PURCHASE_CREDITS_PER_POUCH;
     return {
-      creditsPerPouch,
-      fluxPerCredit: pouch / creditsPerPouch,
+      creditsPerPouch: CREDITS_PER_POUCH,
+      fluxPerCredit: pouch / CREDITS_PER_POUCH,
       fluxPerDollar: pouch / USD_PER_POUCH,
     };
   }
@@ -292,10 +265,8 @@
            t('What one credit is worth in flux.')) +
       card('Flux per dollar', fmt(Math.round(r.fluxPerDollar)),
            t('What a dollar spent on pouches turns into.')) +
-      card('Credits per pouch', fmt(round2(r.creditsPerPouch)),
-           state.basis === 'face'
-             ? t('Face value - what opening one gives you.')
-             : t('What one effectively costs from the pack.')) +
+      card('Credits per pouch', fmt(r.creditsPerPouch),
+           t('What opening one gives you.')) +
       card('Dollars per pouch', '$' + USD_PER_POUCH.toFixed(2),
            t('The $99.99 pack split across its 60 pouches.'));
   }
@@ -308,10 +279,7 @@
     const rows = [
       [t('One Credit Pouch'), state.pouchFlux],
       [t('One million flux'), 1000000],
-      // Labelled by the credits, not the price: on the face basis this row
-      // lands well above $99.99, and that gap IS the point - buying credits
-      // as flux costs more than buying them from the store.
-      [t("The pack's 18,500 credits"), PACK_CREDITS * r.fluxPerCredit],
+      [t('The $99.99 pack'), PACK_CREDITS * r.fluxPerCredit],
     ];
 
     $table.innerHTML = `
@@ -348,9 +316,9 @@
 
   /* ─── 30-day evolution ──────────────────────────────────────────────
      Same daily buckets the Analytics timeline uses, divided through by
-     credits-per-pouch so the axis reads in flux per credit and follows
-     the basis toggle. The p25-p75 band comes along because a median on
-     its own hides how wide the spread got.                             */
+     credits-per-pouch so the axis reads in flux per credit. The p25-p75
+     band comes along because a median on its own hides how wide the
+     spread got.                                                        */
   async function loadHistory() {
     if (state.history) return;
     try {
