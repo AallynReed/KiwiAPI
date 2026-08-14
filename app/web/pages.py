@@ -18,7 +18,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
@@ -202,6 +202,21 @@ async def status_page(request: Request) -> HTMLResponse:
     ``/site/trove-status`` + ``/site/trove-status/history``."""
     return _TEMPLATES.TemplateResponse(
         request, "status.html", {"ssr": await ssr.status_view(_ssr_fetch)})
+
+
+# The status badge and OG render are API-served (they read the prober's state),
+# so they only exist on the api host. Both were published under the brand host
+# long before the split - the badge especially, which is pasted into third-party
+# READMEs and wikis we can't edit - so keep those URLs alive as redirects rather
+# than rewriting the snippets and breaking every embed already in the wild.
+@router.get("/embed/status.svg", include_in_schema=False)
+async def embed_status_badge() -> RedirectResponse:
+    return RedirectResponse(f"{_API}/embed/status.svg", status_code=302)
+
+
+@router.get("/status/og.png", include_in_schema=False)
+async def status_og_image() -> RedirectResponse:
+    return RedirectResponse(f"{_API}/status/og.png", status_code=302)
 
 
 @router.get("/tomes", response_class=HTMLResponse)
@@ -653,6 +668,16 @@ async def activity_page(request: Request, period: str | None = None) -> HTMLResp
         "og_page_url": f"{_APP}/activity{qs}",
         "ssr": await ssr.activity_view(_ssr_fetch),
     })
+
+
+# Same deal as the status badge: the render is API-served, but cards shared before
+# the split point their og:image at this host. ``?period=`` rides along so a shared
+# period link keeps previewing its own chart.
+@router.get("/activity/og.png", include_in_schema=False)
+async def activity_og_image(period: str | None = None) -> RedirectResponse:
+    p = (period or "").lower()
+    qs = f"?period={p}" if p in _OG_PERIODS else ""
+    return RedirectResponse(f"{_API}/activity/og.png{qs}", status_code=302)
 
 
 @router.get("/class-activity", response_class=HTMLResponse)
