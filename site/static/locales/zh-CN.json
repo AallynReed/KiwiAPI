@@ -2568,5 +2568,18 @@
   "No results for \"{query}\"": "没有找到“{query}”的结果",
   "Live calendar": "实时日历",
   "Yearly calendar": "年度日历",
-  "Yearly rotation calendar": "年度轮换日历"
+  "Yearly rotation calendar": "年度轮换日历",
+  "Download as original": "下载原始格式",
+  "Download as MP3": "下载为 MP3",
+  "Download single sounds as": "单个音效下载格式",
+  "Download every sound in its original format": "以原始格式下载所有音效",
+  "Only applies to audio we convert. A .wem is already in the game's format and goes in exactly as you supplied it.": "仅适用于我们转换的音频。.wem 已经是游戏格式，会原样放入。",
+  "Converting": "转换中",
+  "Could not convert to MP3": "无法转换为 MP3",
+  "{name} goes in untouched ({codec}, {dur}).": "{name} 将原样放入（{codec}，{dur}）。",
+  "That is not a Wwise .wem file.": "这不是 Wwise 的 .wem 文件。",
+  "That .wem is missing its format or its audio.": "该 .wem 缺少格式信息或音频数据。",
+  "That .wem uses an audio format Trove cannot play.": "该 .wem 使用了 Trove 无法播放的音频格式。",
+  "That .wem came from a different version of Wwise.": "该 .wem 来自其他版本的 Wwise。",
+  "A .wem is already in the game’s own format, so it cannot be played back here.": ".wem 已经是游戏自有格式，因此无法在这里播放。"
 }

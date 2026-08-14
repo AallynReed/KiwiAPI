@@ -8,6 +8,11 @@
    never needs an audio decoder of its own. It only writes Wwise's own
    encoding, which is the half a browser can't do.
 
+   A .wem is the exception: it is already a finished Wwise media object, so
+   it is read only far enough to describe and sanity-check, then sent whole.
+   That is also the only way to get Wwise Vorbis into a bank, since nothing
+   outside Audiokinetic's own encoder can write it.
+
    Nothing is uploaded until Build is pressed, and nothing is stored after
    the response is handed back.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -308,9 +313,12 @@
     setStatus(t('Reading {file}…').replace('{file}', file.name));
     let clip;
     try {
-      clip = await decodeToPcm(file, rate, channels);
+      clip = isWem(file) ? await readWem(file) : await decodeToPcm(file, rate, channels);
     } catch (err) {
-      setStatus(t('That file could not be read as audio.'), true);
+      // A .wem is rejected for a specific, sayable reason; anything else is just
+      // a file the browser could not decode.
+      setStatus((isWem(file) && err && err.message)
+        || t('That file could not be read as audio.'), true);
       return;
     }
     clip.name = file.name;
@@ -326,8 +334,85 @@
         .replace('{code}', `<code>POST_SOUND_EVENT "${esc(target.event)}"</code>`);
     }
     renderChanges();
-    setStatus(t('{name} is ready ({dur}).')
-      .replace('{name}', clip.name).replace('{dur}', formatClock(clip.duration)));
+    setStatus(clip.wem
+      ? t('{name} goes in untouched ({codec}, {dur}).')
+        .replace('{name}', clip.name).replace('{codec}', clip.codec)
+        .replace('{dur}', formatClock(clip.duration))
+      : t('{name} is ready ({dur}).')
+        .replace('{name}', clip.name).replace('{dur}', formatClock(clip.duration)));
+  }
+
+  // ─── .wem straight through ─────────────────────────────────────────
+
+  const WEM_CODECS = { 0xFFFE: 'PCM', 0x0002: 'ADPCM', 0xFFFF: 'Vorbis' };
+  // The one Vorbis header layout Trove ships. Anything else came from a
+  // different Wwise and would load as noise, or not at all.
+  const WEM_VORBIS_FMT = 0x42;
+  const WEM_ADPCM_PER_BLOCK = 64;
+
+  function isWem(file) {
+    return /\.wem$/i.test((file && file.name) || '');
+  }
+
+  /** Keep a finished Wwise media object as-is, described well enough to show. */
+  async function readWem(file) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    return Object.assign({ wem: true, bytes }, wemInfo(bytes));
+  }
+
+  /** Read a .wem header. A trimmed mirror of app/trove/audio/wem.py - enough to
+   * describe the file and refuse an obvious mistake before the user builds a
+   * whole mod around it. The server parses it properly before writing anything. */
+  function wemInfo(bytes) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const tag = (at) => String.fromCharCode(bytes[at], bytes[at + 1], bytes[at + 2], bytes[at + 3]);
+    if (bytes.length < 12 || tag(0) !== 'RIFF' || tag(8) !== 'WAVE') {
+      throw new Error(t('That is not a Wwise .wem file.'));
+    }
+
+    let fmt = null;
+    let data = null;
+    for (let off = 12; off + 8 <= bytes.length;) {
+      const size = view.getUint32(off + 4, true);
+      if (off + 8 + size > bytes.length) break;
+      if (tag(off) === 'fmt ') fmt = { at: off + 8, size };
+      else if (tag(off) === 'data') data = { at: off + 8, size };
+      off += 8 + size + (size & 1);
+    }
+    if (!fmt || !data) throw new Error(t('That .wem is missing its format or its audio.'));
+
+    const codec = WEM_CODECS[view.getUint16(fmt.at, true)];
+    if (!codec) throw new Error(t('That .wem uses an audio format Trove cannot play.'));
+    const channels = view.getUint16(fmt.at + 2, true);
+    const rate = view.getUint32(fmt.at + 4, true);
+    const align = view.getUint16(fmt.at + 12, true);
+    const bits = view.getUint16(fmt.at + 14, true);
+
+    let frames = 0;
+    if (codec === 'Vorbis') {
+      if (fmt.size !== WEM_VORBIS_FMT) {
+        throw new Error(t('That .wem came from a different version of Wwise.'));
+      }
+      frames = view.getUint32(fmt.at + 0x18, true);
+    } else if (codec === 'ADPCM') {
+      frames = align ? Math.floor(data.size / align) * WEM_ADPCM_PER_BLOCK : 0;
+    } else {
+      const frame = channels * Math.max(bits >> 3, 1);
+      frames = frame ? Math.floor(data.size / frame) : 0;
+    }
+    return { codec, channels, rate, duration: rate ? frames / rate : 0 };
+  }
+
+  /** How a clip is described in the change list. A .wem carries no shape of its
+   * own here - the server reads that back out of the file itself. */
+  function clipSpec(clip, key) {
+    return clip.wem
+      ? { clip: key, wem: true }
+      : { clip: key, channels: clip.channels, rate: clip.rate };
+  }
+
+  function clipBlob(clip) {
+    return new Blob([clip.wem ? clip.bytes : clip.pcm.buffer]);
   }
 
   /** Decode any browser-readable audio file, resample it, and interleave to 16-bit. */
@@ -417,6 +502,13 @@
   }
 
   function playClip(clip, label) {
+    // A .wem is in Wwise's own encoding, which is exactly what no browser can
+    // decode - that is the whole reason the game's sounds are converted on the
+    // way out. Nothing to play here without a round trip we don't need.
+    if (clip.wem) {
+      setStatus(t('A .wem is already in the game’s own format, so it cannot be played back here.'));
+      return;
+    }
     const element = audio();
     revoke();
     element.dataset.id = '';
@@ -470,15 +562,13 @@
     for (const [id, edit] of state.edits) {
       if (edit.kind === 'mute') { edits.push({ kind: 'mute', id }); continue; }
       const key = `clip_${n++}`;
-      edits.push({ kind: 'replace', id, clip: key,
-                   channels: edit.clip.channels, rate: edit.clip.rate });
-      form.append('clips', new Blob([edit.clip.pcm.buffer]), key);
+      edits.push(Object.assign({ kind: 'replace', id }, clipSpec(edit.clip, key)));
+      form.append('clips', clipBlob(edit.clip), key);
     }
     for (const add of state.adds) {
       const key = `clip_${n++}`;
-      edits.push({ kind: 'add', event: add.event, clip: key,
-                   channels: add.clip.channels, rate: add.clip.rate });
-      form.append('clips', new Blob([add.clip.pcm.buffer]), key);
+      edits.push(Object.assign({ kind: 'add', event: add.event }, clipSpec(add.clip, key)));
+      form.append('clips', clipBlob(add.clip), key);
     }
 
     // Must match app/trove/audio/studio.safe_title exactly: Trove checks a

@@ -3124,7 +3124,8 @@ async def site_sound_studio_build(
     ``replace``, ``add``). Replacement audio rides alongside as file parts named
     by each change's ``clip`` key, and is **raw interleaved 16-bit PCM**: the
     browser already decodes and resamples whatever the user picked, which is why
-    nothing here needs an audio decoder.
+    nothing here needs an audio decoder. A change flagged ``"wem": true`` instead
+    carries a finished Wwise media object, which is validated and passed through.
 
     Nothing is stored. The bank comes out of the archive, the edits are applied in
     memory, and the result streams straight back as a ``.bnk`` or a ``.tmod``."""

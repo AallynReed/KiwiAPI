@@ -2568,5 +2568,18 @@
   "No results for \"{query}\"": "Sem resultados para «{query}»",
   "Live calendar": "Calendário em direto",
   "Yearly calendar": "Calendário anual",
-  "Yearly rotation calendar": "Calendário de rotação anual"
+  "Yearly rotation calendar": "Calendário de rotação anual",
+  "Download as original": "Transferir no formato original",
+  "Download as MP3": "Transferir como MP3",
+  "Download single sounds as": "Transferir sons individuais como",
+  "Download every sound in its original format": "Transferir todos os sons no formato original",
+  "Only applies to audio we convert. A .wem is already in the game's format and goes in exactly as you supplied it.": "Aplica-se apenas ao áudio que convertemos. Um .wem já está no formato do jogo e entra exatamente como o forneceste.",
+  "Converting": "A converter",
+  "Could not convert to MP3": "Não foi possível converter para MP3",
+  "{name} goes in untouched ({codec}, {dur}).": "{name} entra sem alterações ({codec}, {dur}).",
+  "That is not a Wwise .wem file.": "Esse não é um ficheiro .wem do Wwise.",
+  "That .wem is missing its format or its audio.": "Falta o formato ou o áudio a esse .wem.",
+  "That .wem uses an audio format Trove cannot play.": "Esse .wem usa um formato de áudio que o Trove não consegue reproduzir.",
+  "That .wem came from a different version of Wwise.": "Esse .wem veio de uma versão diferente do Wwise.",
+  "A .wem is already in the game’s own format, so it cannot be played back here.": "Um .wem já está no formato próprio do jogo, por isso não pode ser reproduzido aqui."
 }

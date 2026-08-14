@@ -166,6 +166,7 @@
                                     </span>
                                 </label>
                             </div>
+                            <p class="ss-card-hint" data-i18n>Only applies to audio we convert. A .wem is already in the game's format and goes in exactly as you supplied it.</p>
                         </details>
                         <button type="button" class="ss-btn ss-btn-go" id="ss-build" disabled>
                             <i class="fa-solid fa-download" aria-hidden="true"></i>
@@ -182,8 +183,9 @@
         </p>
     </main>
 
-    <!-- The one file input the whole page shares; the JS retargets it. -->
-    <input type="file" id="ss-file" accept="audio/*" hidden>
+    <!-- The one file input the whole page shares; the JS retargets it. A .wem
+         has no MIME type of its own, so it is named by extension. -->
+    <input type="file" id="ss-file" accept="audio/*,.wem" hidden>
 
     <!-- Preview transport for both the game's sounds and your replacements. -->
     <div class="ss-player" id="ss-player" hidden>

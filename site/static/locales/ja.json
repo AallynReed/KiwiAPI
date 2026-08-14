@@ -2568,5 +2568,18 @@
   "No results for \"{query}\"": "「{query}」に一致する結果はありません",
   "Live calendar": "ライブカレンダー",
   "Yearly calendar": "年間カレンダー",
-  "Yearly rotation calendar": "年間ローテーションカレンダー"
+  "Yearly rotation calendar": "年間ローテーションカレンダー",
+  "Download as original": "元の形式でダウンロード",
+  "Download as MP3": "MP3 でダウンロード",
+  "Download single sounds as": "個別のサウンドの保存形式",
+  "Download every sound in its original format": "すべてのサウンドを元の形式でダウンロード",
+  "Only applies to audio we convert. A .wem is already in the game's format and goes in exactly as you supplied it.": "変換する音声にのみ適用されます。.wem はすでにゲームの形式なので、渡したそのままの状態で組み込まれます。",
+  "Converting": "変換中",
+  "Could not convert to MP3": "MP3 に変換できませんでした",
+  "{name} goes in untouched ({codec}, {dur}).": "{name} はそのまま組み込まれます（{codec}、{dur}）。",
+  "That is not a Wwise .wem file.": "これは Wwise の .wem ファイルではありません。",
+  "That .wem is missing its format or its audio.": "この .wem には形式情報か音声データがありません。",
+  "That .wem uses an audio format Trove cannot play.": "この .wem は Trove が再生できない音声形式です。",
+  "That .wem came from a different version of Wwise.": "この .wem は別のバージョンの Wwise で作られています。",
+  "A .wem is already in the game’s own format, so it cannot be played back here.": ".wem はすでにゲーム独自の形式なので、ここでは再生できません。"
 }

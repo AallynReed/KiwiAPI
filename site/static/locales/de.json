@@ -2568,5 +2568,18 @@
   "No results for \"{query}\"": "Keine Ergebnisse für „{query}“",
   "Live calendar": "Live-Kalender",
   "Yearly calendar": "Jahreskalender",
-  "Yearly rotation calendar": "Jährlicher Rotationskalender"
+  "Yearly rotation calendar": "Jährlicher Rotationskalender",
+  "Download as original": "Als Original herunterladen",
+  "Download as MP3": "Als MP3 herunterladen",
+  "Download single sounds as": "Einzelne Sounds herunterladen als",
+  "Download every sound in its original format": "Alle Sounds im Originalformat herunterladen",
+  "Only applies to audio we convert. A .wem is already in the game's format and goes in exactly as you supplied it.": "Gilt nur für Audio, das wir umwandeln. Eine .wem liegt bereits im Format des Spiels vor und wird genau so übernommen, wie du sie bereitgestellt hast.",
+  "Converting": "Wird umgewandelt",
+  "Could not convert to MP3": "Umwandlung in MP3 fehlgeschlagen",
+  "{name} goes in untouched ({codec}, {dur}).": "{name} wird unverändert übernommen ({codec}, {dur}).",
+  "That is not a Wwise .wem file.": "Das ist keine Wwise-.wem-Datei.",
+  "That .wem is missing its format or its audio.": "Dieser .wem fehlt das Format oder das Audio.",
+  "That .wem uses an audio format Trove cannot play.": "Dieser .wem verwendet ein Audioformat, das Trove nicht abspielen kann.",
+  "That .wem came from a different version of Wwise.": "Dieser .wem stammt aus einer anderen Wwise-Version.",
+  "A .wem is already in the game’s own format, so it cannot be played back here.": "Eine .wem liegt bereits im spieleigenen Format vor und kann hier nicht abgespielt werden."
 }

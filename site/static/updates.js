@@ -86,7 +86,8 @@
     iface: { files: null, path: null, assets: [], swf: null, filter: '', fileFilter: '',
              loading: false, token: 0 },
     audio: { files: null, path: null, sounds: [], bank: null, count: 0, duration: 0,
-             filter: '', codec: 'all', grouped: true, loading: false, token: 0 },
+             filter: '', codec: 'all', grouped: true, format: 'original',
+             loading: false, token: 0 },
     // VFX tab. Same shape, but a branch ships ~9k effects, so the list is paged
     // and filtered server-side instead of held whole in the page. `viewer` is the
     // live WebGL player - it holds a GL context, so it is disposed the moment the
@@ -218,6 +219,7 @@
   const $audioCodec = $('up-audio-codec');
   const $audioGroup = $('up-audio-group');
   const $audioZip = $('up-audio-zip');
+  const $audioFormat = $('up-audio-format');
   const $audioBody = $('up-audio-body');
 
   const $vfxFiles = $('up-vfx-files');
@@ -1068,15 +1070,7 @@
   function downloadCanvasPng(canvas, path) {
     const base = path.slice(path.lastIndexOf('/') + 1).replace(/\.dds$/i, '') || 'texture';
     canvas.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${base}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (blob) saveBlob(blob, `${base}.png`);
     }, 'image/png');
   }
 
@@ -1314,6 +1308,18 @@
     if (e.key === 'Tab') trapFocus(e, $assetModal);
   }
 
+  // Hand the browser bytes to save under a name of our choosing.
+  function saveBlob(blob, filename) {
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = filename || 'asset';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 1000);
+  }
+
   // Save a cross-origin file under a chosen name. `<a download>` only honours the
   // name same-origin, so pull the bytes down and hand the browser a blob instead.
   async function saveCrossOrigin(url, filename) {
@@ -1326,14 +1332,7 @@
       window.open(url, '_blank', 'noopener');    // fall back to just showing it
       return;
     }
-    const href = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = href;
-    a.download = filename || 'asset';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(href), 1000);
+    saveBlob(blob, filename || 'asset');
   }
 
   // Keep Tab inside a dialog (WCAG dialog pattern).
@@ -1607,6 +1606,46 @@
     // Absolute: _site_util only rewrites fetch()/XHR onto the API origin, and an
     // <audio src> / <a href> is a plain resource load.
     return apiUrl(`/site/updates/${state.branch}/file/bnk/audio?${q}`);
+  }
+
+  // Sounds already being converted, so a double-click doesn't encode twice.
+  const _mp3Busy = new Set();
+
+  /** Download one sound as MP3, converted in the browser.
+   *
+   * The server has neither an MP3 encoder nor a Vorbis decoder - it serves .ogg
+   * (Vorbis, remuxed untouched) and .wav (ADPCM/PCM, decoded). Both are formats
+   * the browser reads natively, so this is the one place the conversion can
+   * happen at all, and it costs the server nothing. */
+  async function downloadMp3(sound, anchor) {
+    if (_mp3Busy.has(sound.id)) return;
+    _mp3Busy.add(sound.id);
+    const icon = anchor && anchor.querySelector('i');
+    const held = icon ? icon.className : '';
+    const title = anchor ? anchor.title : '';
+    if (icon) icon.className = 'fa-solid fa-spinner fa-spin';
+
+    try {
+      const blob = await window.KiwiMp3.encodeUrl(
+        bankAudioUrl(state.audio.path, sound.id),
+        {
+          rate: sound.sample_rate,
+          onProgress: (done) => {
+            if (anchor) anchor.title = `${t('Converting')} ${Math.round(done * 100)}%`;
+          },
+        });
+      saveBlob(blob, window.KiwiMp3.name(sound.name || `sound_${sound.id}`));
+    } catch (err) {
+      // A tooltip nobody hovers is a silent failure, so it goes on the meta line
+      // above the list, where the rest of this tab's status already lives.
+      setPlainText($audioMeta,
+        `${t('Could not convert to MP3')}: ${(err && err.message) || err}`);
+      setTimeout(renderAudioMeta, 6000);
+    } finally {
+      if (icon) icon.className = held;
+      if (anchor) anchor.title = title;
+      _mp3Busy.delete(sound.id);
+    }
   }
 
   async function openBank(path) {
@@ -2549,8 +2588,21 @@
       window.location.href = apiUrl(`/site/updates/${state.branch}/file/bnk/zip`
         + `?path=${encodeURIComponent(state.audio.path)}`);
     });
+    $audioFormat.addEventListener('change', () => {
+      state.audio.format = $audioFormat.value || 'original';
+    });
     $audioBody.addEventListener('click', (e) => {
-      if (e.target.closest('.up-snd-dl')) return;        // let the download be a link
+      const dl = e.target.closest('.up-snd-dl');
+      if (dl) {
+        // In its own format the download is just a link; MP3 has to be built here.
+        if (state.audio.format !== 'mp3') return;
+        e.preventDefault();
+        const row = e.target.closest('[data-sound-id]');
+        const sound = row && state.audio.sounds.find(
+          (s) => s.id === Number(row.dataset.soundId));
+        if (sound) downloadMp3(sound, dl);
+        return;
+      }
       const row = e.target.closest('[data-sound-id]');
       if (row) playSound(Number(row.dataset.soundId));
     });

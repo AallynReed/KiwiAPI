@@ -6,6 +6,12 @@ it and sends plain 16-bit samples. That means this side needs no audio decoder,
 no ffmpeg, and no opinion about container formats; it only has to write Wwise's
 own encoding, which is the part a browser cannot do.
 
+A ``.wem`` is the exception, and goes in untouched. Someone who converted their
+audio in Wwise itself has already produced exactly what the bank wants, and
+re-encoding it here would only throw quality away - worse, it would be the one
+way to *lose* Wwise Vorbis, which :mod:`app.trove.audio.encode` cannot write. So
+those bytes are validated and passed straight through.
+
 What comes back is either the rebuilt ``.bnk`` or that bank wrapped in a ``.tmod``
 ready to drop into the game's mods folder.
 
@@ -21,6 +27,7 @@ import re
 from app.core.errors import APIError, ErrorCode
 from app.trove import tmod
 from app.trove.audio import edit, encode
+from app.trove.audio import wem as wem_reader
 
 logger = logging.getLogger("kiwi.audio")
 
@@ -64,6 +71,27 @@ def _clip(clips: dict[str, bytes], edit_spec: dict) -> tuple[bytes, int, int]:
     return samples, channels, rate
 
 
+def _media(clips: dict[str, bytes], edit_spec: dict, codec: str) -> bytes:
+    """The media object for one change - encoded from samples, or passed through.
+
+    A ``.wem`` is only accepted if it parses, which is what stops a mislabelled
+    file, an unreadable codec or an older Wwise header layout from being written
+    into a bank that would then fail to load in game.
+    """
+    if not edit_spec.get("wem"):
+        samples, channels, rate = _clip(clips, edit_spec)
+        return encode.encode(samples, channels, rate, codec)
+
+    data = clips.get(str(edit_spec.get("clip") or ""))
+    if data is None:
+        raise _fail("A replacement is missing its audio.")
+    try:
+        wem_reader.parse(data)
+    except wem_reader.WemError as exc:
+        raise _fail(f"That .wem is not one the game can load: {exc}") from None
+    return data
+
+
 def apply_edits(raw: bytes, spec: dict, clips: dict[str, bytes]) -> edit.Result:
     """Build the edited bank. Pure and CPU-bound - call it in a thread."""
     edits = spec.get("edits") or []
@@ -92,17 +120,15 @@ def apply_edits(raw: bytes, spec: dict, clips: dict[str, bytes]) -> edit.Result:
             if kind == "mute":
                 replacements[int(item["id"])] = edit.mute()
             elif kind == "replace":
-                samples, channels, rate = _clip(clips, item)
-                replacements[int(item["id"])] = encode.encode(samples, channels, rate, codec)
+                replacements[int(item["id"])] = _media(clips, item, codec)
             elif kind == "add":
                 name = str(item.get("event") or "").strip()
                 if not _EVENT_NAME.match(name):
                     raise _fail("An event name must be 3-96 letters, digits or underscores.")
-                samples, channels, rate = _clip(clips, item)
                 clone = item.get("clone_from")
                 additions.append(edit.Addition(
                     event_name=name,
-                    media=encode.encode(samples, channels, rate, codec),
+                    media=_media(clips, item, codec),
                     clone_from=int(clone) if clone is not None else None,
                 ))
             else:

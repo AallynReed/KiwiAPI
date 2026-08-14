@@ -489,7 +489,14 @@
                             <input type="checkbox" id="up-audio-group" checked>
                             <span data-i18n>Group variations</span>
                         </label>
-                        <button type="button" class="up-swf-zip" id="up-audio-zip" disabled>
+                        <select id="up-audio-format" class="up-select up-audio-codec"
+                                aria-label="Download single sounds as" data-i18n-aria-label>
+                            <option value="original" data-i18n>Download as original</option>
+                            <option value="mp3" data-i18n>Download as MP3</option>
+                        </select>
+                        <button type="button" class="up-swf-zip" id="up-audio-zip" disabled
+                                title="Download every sound in its original format"
+                                data-i18n-title>
                             <i class="fa-solid fa-file-zipper" aria-hidden="true"></i>
                             <span data-i18n>Download all</span>
                         </button>
@@ -610,6 +617,8 @@
     <script src="/static/voxel_mesh.min.js" defer></script>
     <script src="/static/viewer_stage.min.js" defer></script>
     <script src="/static/blueprint_viewer.min.js" defer></script>
+    <!-- The encoder itself (vendor/lame.min.js) is pulled in on first use. -->
+    <script src="/static/mp3.min.js" defer></script>
     <script src="/static/updates.min.js" defer></script>
 </body>
 </html>
