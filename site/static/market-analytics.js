@@ -95,6 +95,15 @@
     });
     wireItemPicker($itemInput, $itemSuggest, (name) => { loadTimeline(name); });
     wireItemPicker($cmpInput, $cmpSuggest, (name) => { loadCompare(name); });
+
+    // Land on the tab named in the URL, and follow back/forward between tabs.
+    const initial = hashView();
+    if (initial) switchView(initial);
+    window.addEventListener('hashchange', () => {
+      const v = hashView() || 'browse';
+      if (v !== state.view) switchView(v);
+    });
+
     window.addEventListener('resize', debounce(() => {
       if (state.view === 'analytics' && state.timelineItem && state._lastTimeline) {
         renderTimeline();
@@ -102,9 +111,28 @@
     }, 200));
   }
 
+  /* ─── Tab in the URL ────────────────────────────────────────────────
+     `#view=<tab>` alongside market.js's `#item=`, so a tab can be linked
+     to directly. Browse is the default and stays out of the hash to keep
+     ordinary URLs clean. replaceState does not fire hashchange, so
+     writing the tab back cannot loop with the listener below. */
+  function hashView() {
+    const v = new URLSearchParams(location.hash.replace(/^#/, '')).get('view');
+    return v && PANELS[v] ? v : null;
+  }
+
+  function writeViewHash(view) {
+    const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+    if (view === 'browse') params.delete('view');
+    else params.set('view', view);
+    const q = params.toString();
+    history.replaceState(null, '', q ? '#' + q : location.pathname);
+  }
+
   function switchView(view) {
     if (view === state.view || !PANELS[view]) return;
     state.view = view;
+    writeViewHash(view);
     for (const key of Object.keys(PANELS)) {
       if (PANELS[key]) PANELS[key].hidden = key !== view;
     }

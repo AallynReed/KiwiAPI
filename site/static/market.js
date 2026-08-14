@@ -810,11 +810,14 @@
     if (params.has('item')) out.item = params.get('item');
     return out;
   }
+  // Merges `item` into whatever is already in the hash instead of replacing
+  // it - market-analytics.js keeps the active tab in `view`, and rebuilding
+  // the hash from scratch here would drop it on every item selection.
   function updateHash() {
-    if (state.selected) {
-      const next = '#item=' + encodeURIComponent(state.selected);
-      history.replaceState(null, '', next);
-    }
+    if (!state.selected) return;
+    const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+    params.set('item', state.selected);
+    history.replaceState(null, '', '#' + params.toString());
   }
 
   // ─── Fetch + util ──────────────────────────────────────────────────
