@@ -128,6 +128,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Mods Hub", "/mods", "mods_hub_enabled", "fa-solid fa-cubes", "Create", "modding", "addons"),
     _p("Modpacks", "/modpacks", "mods_hub_enabled", "fa-solid fa-box-open", "Create", "bundles"),
     _p("Mod Workshop", "/mod-workshop", "mod_workshop_enabled", "fa-solid fa-screwdriver-wrench", "Create", "tmod", "compiler", "build a mod", badge="Beta"),
+    _p("Blueprint Editor", "/blueprint-editor", "blueprint_editor_enabled", "fa-solid fa-cube", "Create", "voxel", "blueprint", "recolour", "recolor", "materials", "glass", badge="Beta"),
     _p("Sound Studio", "/sound-studio", "sound_studio_enabled", "fa-solid fa-sliders", "Create", "audio", "music", "bnk"),
 
     _p("Classes", "/classes", "classes_enabled", "fa-solid fa-hat-wizard", "Learn", "class list"),

@@ -17,11 +17,11 @@ Public API: ``render_blueprint_png(data: bytes, dim=256) -> bytes`` (PNG).
 from __future__ import annotations
 
 import io
-import struct
-import zlib
 
 import numpy as np
 from PIL import Image
+
+from app.trove.blueprint import codec as _codec
 
 try:                                   # numba is optional: absence falls back to the
     from numba import njit  # pure-numpy per-triangle raster (same pixels).
@@ -29,11 +29,18 @@ try:                                   # numba is optional: absence falls back t
 except Exception:  # pragma: no cover
     _HAVE_NUMBA = False
 
-MAGIC = b"kiwib"
+MAGIC = _codec.MAGIC
 
-
-class BlueprintError(ValueError):
-    """Raised when bytes are not a decodable kiwib blueprint."""
+# The kiwib parser lives in ``app.trove.blueprint.codec``, which also encodes (the
+# editor needs to write blueprints back, this module only ever read them). These are
+# re-exported rather than reimplemented so there is one parser, not two that can
+# drift: ``BlueprintError`` IS the codec's, so existing ``except`` clauses here catch
+# what the codec raises.
+BlueprintError = _codec.BlueprintError
+decode = _codec.decode
+is_empty_blueprint = _codec.is_empty_blueprint
+_uleb = _codec.read_uleb128
+_svar = _codec.read_svarint
 
 
 class BlueprintEmpty(BlueprintError):
@@ -42,107 +49,6 @@ class BlueprintEmpty(BlueprintError):
 
 class BlueprintTooLarge(BlueprintError):
     """Blueprint has more voxels than the preview cap allows."""
-
-
-# --------------------------------------------------------------------------- #
-# kiwib decode (v3 / v4 / v5)  -- ground truth from TROVE_BLUEPRINT_FORMAT.md
-# --------------------------------------------------------------------------- #
-def _uleb(data: bytes, pos: int) -> tuple[int, int]:
-    r = s = 0
-    while True:
-        if pos >= len(data):
-            raise BlueprintError("truncated LEB128")
-        b = data[pos]; pos += 1
-        r |= (b & 0x7F) << s
-        if not (b & 0x80):
-            return r, pos
-        s += 7
-
-
-def _svar(data: bytes, pos: int) -> tuple[int, int]:
-    v, pos = _uleb(data, pos)
-    return (v >> 1) ^ -(v & 1), pos
-
-
-def decode(data: bytes) -> list[dict]:
-    """Decode a blueprint into voxel dicts ``{x,y,z,r,g,b,w,type}`` in a 0-based,
-    X-mirrored (Qubicle) grid -- exactly what the game's QB export shows."""
-    if data[:5] != MAGIC:
-        raise BlueprintError("not a kiwib blueprint")
-    version = struct.unpack_from("<I", data, 5)[0]
-    if version in (3, 4):
-        count, pos = _uleb(data, 9)
-        raw = []
-        for _ in range(count):
-            x, pos = _svar(data, pos)
-            y, pos = _svar(data, pos)
-            z, pos = _svar(data, pos)
-            if pos + 6 > len(data):
-                raise BlueprintError("truncated v3/v4 voxel")
-            vtype = struct.unpack_from("<H", data, pos)[0]
-            b, g, r, w = data[pos + 2], data[pos + 3], data[pos + 4], data[pos + 5]
-            pos += 6
-            raw.append((x, y, z, r, g, b, w, vtype))
-        if not raw:
-            raise BlueprintError("empty blueprint")
-        mnx = min(v[0] for v in raw); mny = min(v[1] for v in raw); mnz = min(v[2] for v in raw)
-        mxx = max(v[0] for v in raw); sx = mxx - mnx + 1
-        return [{"x": (sx - 1) - (x - mnx), "y": y - mny, "z": z - mnz,
-                 "r": r, "g": g, "b": b, "w": w, "type": t}
-                for (x, y, z, r, g, b, w, t) in raw]
-    if version == 5:
-        try:
-            d = zlib.decompressobj()
-            body = d.decompress(data[9:]) + d.flush()   # flush: don't truncate large models
-        except zlib.error as e:
-            raise BlueprintError(f"bad v5 zlib: {e}") from e
-        if len(body) < 32:
-            raise BlueprintError("v5 payload too small")
-        px, py, pz, sx, sy, sz, count, start = struct.unpack_from("<8i", body, 0)
-        if count <= 0 or sx <= 0 or sy <= 0 or sz <= 0:
-            raise BlueprintError("v5 empty/invalid bounds")
-        off = 32
-        deltas = struct.unpack_from(f"<{count - 1}i", body, off) if count > 1 else ()
-        off += 4 * (count - 1)
-        types = struct.unpack_from(f"<{count}H", body, off); off += 2 * count
-        colors = struct.unpack_from(f"<{count}I", body, off); off += 4 * count
-        idx = [start]
-        for d in deltas:
-            idx.append(idx[-1] + d)
-        plane = sx * sz
-        out = []
-        for L, t, c in zip(idx, types, colors, strict=False):
-            y = L // plane; rem = L % plane; z = rem // sx; x = rem % sx
-            out.append({"x": sx - 1 - x, "y": y, "z": z,
-                        "r": (c >> 16) & 0xFF, "g": (c >> 8) & 0xFF, "b": c & 0xFF,
-                        "w": (c >> 24) & 0xFF, "type": t})
-        return out
-    raise BlueprintError(f"unsupported kiwib version {version}")
-
-
-def is_empty_blueprint(data: bytes) -> bool:
-    """True if a blueprint has zero voxels (a placeholder for an unused part) or is
-    unreadable - i.e. nothing a viewer could show. Cheap: reads only the count, not
-    the whole model. Mirrors BetterTroveTools' ``is_empty_blueprint``."""
-    if len(data) < 9 or data[:5] != MAGIC:
-        return True
-    version = struct.unpack_from("<I", data, 5)[0]
-    if version in (3, 4):
-        try:
-            count, _ = _uleb(data, 9)
-        except BlueprintError:
-            return True
-        return count == 0
-    if version == 5:
-        try:
-            d = zlib.decompressobj()
-            body = d.decompress(data[9:]) + d.flush()
-        except zlib.error:
-            return True
-        if len(body) < 28:
-            return True
-        return struct.unpack_from("<i", body, 24)[0] <= 0
-    return True
 
 
 # --------------------------------------------------------------------------- #

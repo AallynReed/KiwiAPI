@@ -56,6 +56,7 @@ EMBED_FLAG = "feature_embed_viewer_enabled"
 DRESSING_ROOM_FLAG = "feature_dressing_room_enabled"
 SOUND_STUDIO_FLAG = "feature_sound_studio_enabled"
 MOD_WORKSHOP_FLAG = "feature_mod_workshop_enabled"
+BLUEPRINT_EDITOR_FLAG = "feature_blueprint_editor_enabled"
 TOMES_FLAG = "feature_tomes_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────

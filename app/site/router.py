@@ -45,6 +45,7 @@ from app.trove import rotations as trove_rotations
 from app.trove import server_time as trove_server_time
 from app.trove import stats as trove_stats
 from app.trove import status as trove_status
+from app.trove.blueprint import editor as bp_editor
 from app.trove.codexes import crafting as codexes_crafting
 from app.trove.codexes import read as codexes_read
 from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
@@ -3505,6 +3506,100 @@ async def site_workshop_extract_download(
     archive = await asyncio.to_thread(mods_workshop.to_zip, files)
     return _workshop_download(archive, f"{mods_workshop.safe_title(stem)}.zip",
                               "application/zip")
+
+
+# --- /site/blueprint-editor/* - the /blueprint-editor page's tools ----------
+# Stateless voxel editor. A .blueprint arrives with the request and the answer goes
+# back with the response; nothing is stored and no account is needed. On save the
+# page posts the ORIGINAL file back alongside its edit list, so the server never has
+# to hold the model between opening it and writing it. The engine is
+# ``app/trove/blueprint/editor.py``.
+
+
+async def _blueprint_editor_throttle(request: Request) -> None:
+    """Per-IP budget for the Blueprint Editor's endpoints.
+
+    Tokenless and login-free, and each call decodes or re-encodes a voxel model, so
+    it gets its own bucket instead of riding the shared anonymous budget - a save
+    storm shouldn't crowd out the read-side proxies the rest of the site runs on.
+    Tuned by ``blueprint_editor_rate_limit_*``."""
+    max_, window = await runtime_config.get_rate_limit("blueprint_editor_rate_limit")
+    await check_rate_limit(f"bpeditor:{client_ip(request) or 'unknown'}", max_, window)
+
+
+_BP_EDITOR_LIMIT = Depends(_blueprint_editor_throttle)
+
+
+def _blueprint_editor_error(exc: bp_editor.EditorError) -> APIError:
+    return APIError(400, ErrorCode.bad_request, str(exc))
+
+
+@router.post("/site/blueprint-editor/inspect", response_class=JSONResponse)
+async def site_blueprint_editor_inspect(
+    file: UploadFile = File(...),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> JSONResponse:
+    """Open a ``.blueprint`` for editing: the voxel payload plus each voxel's real
+    material.
+
+    On top of the ``x/y/z/rgb/kind/level/spec`` arrays the 3D viewers already read,
+    this carries the raw ``type`` and ``w`` per voxel and an ``edit`` flag marking
+    which ones the material palette may rewrite. Voxels the editor can't safely
+    reinterpret - deco placeholders, terrain, anything unrecognised - come back
+    flagged read-only rather than quietly treated as plain solid blocks."""
+    data = await file.read()
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "That file is empty.")
+    name = (file.filename or "blueprint").rsplit("/", 1)[-1]
+    try:
+        payload = await asyncio.to_thread(bp_editor.inspect, data, name=name)
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    return JSONResponse(payload, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/site/blueprint-editor/save", response_class=Response)
+async def site_blueprint_editor_save(
+    file: UploadFile = File(...),
+    edits: str = Form(default="[]"),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> Response:
+    """Apply the page's edits to the posted ``.blueprint`` and hand the result back.
+
+    ``edits`` is a JSON array of ``{"i": voxel index, "type": .., "w": .., "rgb": ..}``,
+    indexed against the order ``inspect`` returned. Everything structural - version,
+    origin, bounding box, entity section - is carried over from the file that arrived,
+    so the saved model sits exactly where the original did and its decos survive
+    untouched. Nothing is stored: the blueprint is rebuilt in memory and discarded
+    once the response is written."""
+    data = await file.read()
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "That file is empty.")
+    try:
+        parsed = json.loads(edits or "[]")
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "The edit list wasn't understood.") from None
+    try:
+        out, summary = await asyncio.to_thread(bp_editor.apply_edits, data, parsed)
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    name = (file.filename or "blueprint.blueprint").rsplit("/", 1)[-1]
+    if not name.lower().endswith(".blueprint"):
+        name += ".blueprint"
+    fallback = re.sub(r"[^\x20-\x7e]", "_", name).replace('"', "") or "edited.blueprint"
+    return Response(
+        content=out,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": (f'attachment; filename="{fallback}"; '
+                                    f"filename*=UTF-8''{quote(name)}"),
+            "Cache-Control": "no-store",
+            "X-Kiwi-Recoloured": str(summary["recoloured"]),
+            "X-Kiwi-Rematerialised": str(summary["rematerialised"]),
+            "X-Kiwi-Ignored": str(summary["ignored"]),
+        },
+    )
 
 
 # --- /site/mods/* proxies for the Mods Hub pages ---------------------------

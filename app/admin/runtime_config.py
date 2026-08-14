@@ -249,6 +249,19 @@ REGISTRY: dict[str, TunableSetting] = {
             "rules without it, so it does NOT need feature_updates_enabled."
         ),
     ),
+    "feature_blueprint_editor_enabled": _t(
+        key="feature_blueprint_editor_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Blueprint Editor. OFF hides the /blueprint-editor "
+            "page + navbar link (404) and 404s its /site/blueprint-editor/* endpoints. "
+            "Stateless: a .blueprint is opened, recoloured/re-materialled and handed "
+            "straight back, nothing is stored and no login is needed. Independent of "
+            "the Mod Workshop and Mods Hub toggles."
+        ),
+    ),
     "feature_webhooks_enabled": _t(
         key="feature_webhooks_enabled",
         default=True,
@@ -537,6 +550,28 @@ REGISTRY: dict[str, TunableSetting] = {
         category="api_rate_limits",
         min_value=10, max_value=86400,
         description="Sliding-window length for the per-IP Mod Workshop bucket, in seconds.",
+    ),
+    "blueprint_editor_rate_limit_max": _t(
+        key="blueprint_editor_rate_limit_max",
+        default=90,
+        type="int",
+        category="api_rate_limits",
+        min_value=1, max_value=100000,
+        description=(
+            "Per-IP cap on the Blueprint Editor's endpoints (/site/blueprint-editor/*). "
+            "Tokenless and login-free, and each call decodes or re-encodes a voxel "
+            "model, so it gets its own bucket rather than sharing the anonymous API "
+            "budget. A session is one open plus one save per download, so this sits "
+            "well above normal use."
+        ),
+    ),
+    "blueprint_editor_rate_limit_window_seconds": _t(
+        key="blueprint_editor_rate_limit_window_seconds",
+        default=60,
+        type="int",
+        category="api_rate_limits",
+        min_value=10, max_value=86400,
+        description="Sliding-window length for the per-IP Blueprint Editor bucket, in seconds.",
     ),
     "embed.upload_ttl_minutes": _t(
         key="embed.upload_ttl_minutes",

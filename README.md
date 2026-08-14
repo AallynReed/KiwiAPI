@@ -112,8 +112,9 @@ All services bind to `127.0.0.1`; the proxy routes `api.aallyn.net` → `:15546`
 are correct for rate limiting. Bodies are capped at 8 MB, except the `.tmod` tools and bot
 cfg ingests (`/v1/mods/*`, `/v1/leaderboards/insert`, `/v1/market/insert`) at 20 MB, and the
 Sound Studio + Mod Workshop builds (`/site/sound-studio/build`, `/site/mod-workshop/*`,
-which upload a whole bank or a whole mod at once) at 32 MB — allow at least as much at the
-proxy.
+which upload a whole bank or a whole mod at once) at 32 MB, and the Blueprint Editor
+(`/site/blueprint-editor/*`, whose save carries a per-voxel edit list) at 16 MB — allow at
+least as much at the proxy.
 
 ## Project layout
 

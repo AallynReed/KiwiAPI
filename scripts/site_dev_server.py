@@ -1274,6 +1274,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "sound-studio.html", "text/html")
         if path == "/mod-workshop":
             return self._send_file(TEMPLATES / "mod-workshop.html", "text/html")
+        if path == "/blueprint-editor":
+            return self._send_file(TEMPLATES / "blueprint-editor.html", "text/html")
         if path == "/codexes":
             return self._send_file(TEMPLATES / "codexes.html", "text/html")
         if path == "/codexes/crafting":
@@ -3517,6 +3519,42 @@ class Handler(SimpleHTTPRequestHandler):
                 fields[name] = payload.decode("utf-8", "replace")
         return fields, files
 
+    def _blueprint_editor(self, path):
+        """Run the REAL blueprint editor engine (app.trove.blueprint.editor), which is
+        pure Python with no database behind it - so the dev preview decodes and writes
+        exactly what production does."""
+        import sys
+        sys.path.insert(0, str(ROOT))
+        from app.trove.blueprint import editor as bp_editor
+
+        fields, files = self._read_multipart()
+        blobs = {name: (filename, data) for name, filename, data in files}
+        if "file" not in blobs:
+            return self._send_json({"detail": "No file was sent."}, 400)
+        name, data = blobs["file"]
+        try:
+            if path == "/site/blueprint-editor/inspect":
+                return self._send_json(bp_editor.inspect(data, name=name or "blueprint"))
+            if path == "/site/blueprint-editor/save":
+                out, summary = bp_editor.apply_edits(
+                    data, json.loads(fields.get("edits") or "[]"))
+                self.send_response(200)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Length", str(len(out)))
+                self.send_header("Content-Disposition", f'attachment; filename="{name}"')
+                self.send_header("X-Kiwi-Recoloured", str(summary["recoloured"]))
+                self.send_header("X-Kiwi-Rematerialised", str(summary["rematerialised"]))
+                self.send_header("X-Kiwi-Ignored", str(summary["ignored"]))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(out)
+                return None
+        except bp_editor.EditorError as e:
+            return self._send_json({"detail": str(e)}, 400)
+        except (ValueError, KeyError) as e:
+            return self._send_json({"detail": f"{type(e).__name__}: {e}"}, 400)
+        return self._send_json({"detail": "unknown endpoint"}, 404)
+
     def _mod_workshop(self, path):
         """Run the REAL Mod Workshop engine (app.trove.mods_hub.workshop) so the dev
         preview compiles and unpacks exactly what production does. The one thing it
@@ -3610,6 +3648,9 @@ class Handler(SimpleHTTPRequestHandler):
 
         if path.startswith("/site/mod-workshop/"):
             return self._mod_workshop(path)
+
+        if path.startswith("/site/blueprint-editor/"):
+            return self._blueprint_editor(path)
 
         length = int(self.headers.get("Content-Length", 0) or 0)
         raw = self.rfile.read(length) if length else b"{}"

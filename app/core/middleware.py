@@ -35,6 +35,7 @@ _PAGE_PATHS = frozenset({
     "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
     "/star-chart", "/gem-simulator", "/gem-evaluator", "/gem-builds", "/calculators",
     "/gems-guide", "/dressing-room", "/sound-studio", "/mod-workshop", "/tomes",
+    "/blueprint-editor",
     "/search",
 })
 
@@ -91,6 +92,11 @@ def add_security_middleware(app: FastAPI) -> None:
             # the user picked and sends samples), which is bulky by nature. The
             # endpoint caps each clip and the total itself.
             max_body = settings.sound_studio_max_request_body_bytes
+        elif path.startswith("/site/blueprint-editor/"):
+            # The blueprint itself is small (the biggest in the game is 515 KB), but a
+            # save also carries the edit list, and repainting every voxel of a large
+            # model is one JSON entry each - which outgrows the default cap on its own.
+            max_body = 16 * 1024 * 1024
         elif path.startswith("/site/mod-workshop/"):
             # A whole mod is uploaded in one request (loose files, a .zip, or a
             # .tmod being repaired). The unpacked-size cap lives in workshop.py.

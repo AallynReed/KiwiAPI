@@ -308,6 +308,20 @@ async def sound_studio_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "sound-studio.html", {})
 
 
+@router.get("/blueprint-editor", response_class=HTMLResponse)
+async def blueprint_editor_page(request: Request) -> HTMLResponse:
+    """Blueprint Editor - open a Trove ``.blueprint`` model and change how it looks.
+
+    Recolour voxels and switch their material (solid, glass and its opacity, glowing,
+    metal/waxy/iridescent finishes) in a live 3D view, then download the model back
+    as a ``.blueprint`` the game reads directly. The editor works on Trove's real
+    per-voxel ``(type, w)`` rather than the derived ``_t``/``_a``/``_s`` colour maps,
+    so a save can't quietly turn a deco placeholder or a terrain voxel into a plain
+    block - anything it can't safely reinterpret is shown read-only and copied
+    through untouched. Stateless and login-free; see ``app/trove/blueprint/``."""
+    return _TEMPLATES.TemplateResponse(request, "blueprint-editor.html", {})
+
+
 @router.get("/mod-workshop", response_class=HTMLResponse)
 async def mod_workshop_page(request: Request) -> HTMLResponse:
     """Mod Workshop - turn a folder of files into an installable mod, and open one

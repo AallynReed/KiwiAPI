@@ -1,0 +1,293 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /blueprint-editor - recolour and re-material a Trove voxel model
+   A 3D stage with the controls beside it: what to paint on the left, what
+   the model is made of on the right. Locked materials read differently
+   everywhere they appear, because "you can't change this" is the one thing
+   the page has to say clearly.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.bpe-main {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 28px 90px;
+  min-width: 0;
+}
+
+.blueprint-editor-page [hidden] { display: none !important; }
+
+/* ─── Hero ──────────────────────────────────────────────────────────── */
+
+.bpe-hero { padding: 56px 0 22px; }
+.bpe-eyebrow {
+  margin: 0 0 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: .76rem;
+  letter-spacing: .12em;
+  color: var(--accent-blue);
+}
+.bpe-title {
+  margin: 0 0 10px;
+  font-size: clamp(2rem, 4.5vw, 2.9rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.bpe-subtitle {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--text-mute);
+  font-size: var(--type-body);
+  line-height: 1.6;
+}
+
+/* ─── Empty state ───────────────────────────────────────────────────── */
+
+.bpe-empty {
+  margin: 26px 0 0;
+  padding: 54px 28px;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px dashed var(--bg-line);
+  border-radius: var(--radius);
+}
+.bpe-empty i { font-size: 2.2rem; color: var(--text-soft); }
+.bpe-empty h2 { margin: 14px 0 6px; font-size: 1.25rem; }
+.bpe-empty p { margin: 0 auto 18px; max-width: 52ch; color: var(--text-mute); line-height: 1.6; }
+.bpe-dragging .bpe-empty { border-color: var(--accent-blue); background: var(--bg-card-hi); }
+
+/* ─── Layout ────────────────────────────────────────────────────────── */
+
+.bpe-workspace {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .bpe-workspace { grid-template-columns: minmax(0, 1fr); }
+}
+
+.bpe-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.bpe-panel h2 {
+  margin: 0 0 12px;
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-mute);
+}
+.bpe-panel h3 {
+  margin: 16px 0 8px;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-mute);
+}
+.bpe-panel h3:first-of-type { margin-top: 0; }
+
+/* ─── Stage ─────────────────────────────────────────────────────────── */
+
+.bpe-stagecard { padding: 0; overflow: hidden; }
+.bpe-stagebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--bg-line);
+}
+.bpe-stagebar strong { font-size: .95rem; }
+.bpe-metaline { color: var(--text-mute); font-size: .8rem; }
+.bpe-hoverline {
+  margin-left: auto;
+  color: var(--text-mute);
+  font-family: var(--font-mono, monospace);
+  font-size: .76rem;
+  min-height: 1em;
+}
+.bpe-stage {
+  position: relative;
+  height: min(64vh, 620px);
+  cursor: crosshair;
+  --vs-bg-a: #1b2531;
+  --vs-bg-b: #0c1118;
+  background: radial-gradient(circle at 50% 40%, var(--vs-bg-a), var(--vs-bg-b) 78%);
+}
+.bpe-stage.vsc-grabbing { cursor: grabbing; }
+.bpe-stage canvas { display: block; width: 100%; height: 100%; }
+.bpe-stagehint {
+  padding: 9px 14px;
+  border-top: 1px solid var(--bg-line);
+  color: var(--text-mute);
+  font-size: .78rem;
+}
+
+/* ─── Paint controls ────────────────────────────────────────────────── */
+
+.bpe-colourrow { display: flex; align-items: center; gap: 10px; }
+.bpe-colourrow input[type=color] {
+  width: 46px; height: 32px; padding: 0;
+  background: none;
+  border: 1px solid var(--bg-line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.bpe-colourhex {
+  font-family: var(--font-mono, monospace);
+  font-size: .82rem;
+  color: var(--text-mute);
+}
+
+.bpe-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bpe-chips button,
+.bpe-mat,
+.bpe-w {
+  background: transparent;
+  border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: .8rem;
+  cursor: pointer;
+  transition: border-color .15s var(--ease-out), color .15s var(--ease-out);
+}
+.bpe-chips button:hover,
+.bpe-mat:hover,
+.bpe-w:hover { border-color: var(--accent-blue); color: var(--text); }
+.bpe-chips button:focus-visible,
+.bpe-mat:focus-visible,
+.bpe-w:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.bpe-chips button[aria-pressed="true"],
+.bpe-mat[aria-pressed="true"],
+.bpe-w[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--accent-blue) 16%, transparent);
+  border-color: var(--accent-blue);
+  color: var(--text);
+}
+
+/* ─── Selection readout ─────────────────────────────────────────────── */
+
+.bpe-selrow { display: flex; align-items: center; gap: 10px; }
+.bpe-selrow strong { display: block; font-size: .9rem; }
+.bpe-selcoords {
+  display: block;
+  color: var(--text-mute);
+  font-family: var(--font-mono, monospace);
+  font-size: .75rem;
+  margin-top: 2px;
+}
+.bpe-swatch {
+  width: 26px; height: 26px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  border: 1px solid var(--bg-line);
+}
+.bpe-hint { margin: 0; color: var(--text-mute); font-size: .82rem; line-height: 1.55; }
+.bpe-hint.bpe-warn { color: var(--accent-yellow); margin-top: 10px; }
+
+/* ─── Material list ─────────────────────────────────────────────────── */
+
+.bpe-materials { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.bpe-matrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+}
+.bpe-matrow .bpe-swatch { width: 20px; height: 20px; }
+.bpe-matname {
+  flex: 1;
+  min-width: 0;
+  font-size: .82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bpe-matcount {
+  color: var(--text-mute);
+  font-family: var(--font-mono, monospace);
+  font-size: .74rem;
+}
+.bpe-locked { border-style: dashed; }
+.bpe-locked .bpe-matname { color: var(--text-mute); }
+.bpe-lock { color: var(--accent-yellow); font-size: .74rem; }
+.bpe-applyall {
+  background: transparent;
+  border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+  border-radius: 6px;
+  padding: 3px 9px;
+  font: inherit;
+  font-size: .74rem;
+  cursor: pointer;
+}
+.bpe-applyall:hover { border-color: var(--accent-blue); color: var(--text); }
+/* Only half the paint will land on these (colour but not material, or the reverse). */
+.bpe-applyall.bpe-partial { border-style: dashed; }
+.bpe-applyall:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+/* ─── Notes + actions ───────────────────────────────────────────────── */
+
+.bpe-notes {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--text-mute);
+  font-size: .8rem;
+  line-height: 1.6;
+  display: grid;
+  gap: 6px;
+}
+
+.bpe-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.bpe-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg-card-hi);
+  border: 1px solid var(--bg-line);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: border-color .15s var(--ease-out);
+}
+.bpe-btn:hover:not(:disabled) { border-color: var(--accent-blue); }
+.bpe-btn:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.bpe-btn:disabled { opacity: .45; cursor: not-allowed; }
+.bpe-btn.bpe-primary {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #06080d;
+  font-weight: 600;
+}
+.bpe-btn.bpe-primary:hover:not(:disabled) { filter: brightness(1.08); }
+
+.bpe-dirty { color: var(--text-mute); font-size: .8rem; margin: 10px 0 0; }
+
+.bpe-status {
+  margin: 14px 0 0;
+  padding: 10px 13px;
+  border-radius: var(--radius-sm);
+  font-size: .84rem;
+  line-height: 1.55;
+  background: var(--bg-card-hi);
+  border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+}
+.bpe-status.bpe-error { border-color: var(--accent-red); color: var(--accent-red); }
+.bpe-status.bpe-warn { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+.bpe-status.bpe-ok { border-color: var(--accent-green); color: var(--accent-green); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bpe-btn, .bpe-mat, .bpe-w, .bpe-chips button { transition: none; }
+}
