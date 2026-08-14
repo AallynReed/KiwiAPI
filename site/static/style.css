@@ -650,14 +650,14 @@ img.nav-account-avatar {
   color: var(--text);
   font: 400 .92rem 'Inter', system-ui, sans-serif;
 }
-/* Pointer focus is carried by the wrapper's border shift alone, but the global
-   keyboard ring stays - :focus-visible is declared after :focus at the same
-   specificity, so it wins back the outline for keyboard users. */
+/* The keyboard ring lives on the WRAPPER, not the input. Drawn on the input it
+   was a second 4px-radius rectangle sitting inside the pill - two focus borders
+   at once. On the wrapper it follows the pill, so there is one indicator.
+   Still :focus-visible, so pointer focus keeps the quieter border shift alone. */
 .nav-mega-search-input:focus { outline: none; }
-.nav-mega-search-input:focus-visible {
+.nav-mega-search:has(.nav-mega-search-input:focus-visible) {
   outline: 2px solid var(--accent-blue);
-  outline-offset: 3px;
-  border-radius: 4px;
+  outline-offset: 2px;
 }
 .nav-mega-search-input::placeholder { color: var(--text-mute); }
 /* The UA's own clear button paints light-on-dark; the Escape key and the
