@@ -217,20 +217,15 @@
         ? fmt(round2(one.unit_price)) + ' ' + t('ea')
         : '';
 
+      // Still computed - the fill behind the row is drawn from it - but not
+      // printed. The bar carries the comparison on its own.
       const pct = (!opts.reason && top > 0 && x.value != null)
         ? (x.value / top) * 100 : null;
-      // Whole percents: a decimal place here bought nothing but width, and
-      // anything under 1% is better said as "under" than as 0%.
-      const pctText = pct == null ? ''
-        : (pct >= 1 ? Math.round(pct) + '%' : '<1%');
 
-      // One sub-line, not two. The right column was running three deep
-      // against the left's two, so it alone set how tall every row was.
-      const sub = [eachText, pctText].filter(Boolean).join(' · ');
       const value = opts.reason
         ? '<span class="tm-reason">' + esc(reasonFor(x)) + '</span>'
         : '<span class="tm-total">' + esc(fmt(Math.round(x.value))) + '</span>'
-          + (sub ? '<span class="tm-sub-value">' + esc(sub) + '</span>' : '');
+          + (eachText ? '<span class="tm-sub-value">' + esc(eachText) + '</span>' : '');
 
       // The fill sits behind the row rather than beside it - a value bar that
       // took its own column would crowd out the payout line on a phone.
