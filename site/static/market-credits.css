@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /market - Credits tab
+   ───────────────────────────────────────────────────────────────────────
+   Same card shell as the Fees tab, duplicated under its own prefix for
+   the reason stated there: the tabs must be able to diverge without one
+   breaking the other.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+#mkt-view-credits {
+  max-width: var(--content-max, 1100px);
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px);
+  display: grid;
+  gap: 24px;
+}
+
+/* ─── Blocks ────────────────────────────────────────────────────────── */
+.mkt-cr-block {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-lg, 16px);
+  padding: clamp(16px, 2.6vw, 22px);
+}
+.mkt-cr-head { margin-bottom: 16px; }
+.mkt-cr-title { margin: 0; font-size: 1.15rem; }
+.mkt-cr-sub {
+  margin: 3px 0 0;
+  color: var(--text-mute);
+  font-size: .86rem;
+  max-width: 72ch;
+}
+
+/* ─── Inputs ────────────────────────────────────────────────────────── */
+.mkt-cr-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.mkt-cr-field { display: grid; gap: 6px; }
+.mkt-cr-field-label {
+  font-size: .72rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+}
+.mkt-cr-input-wrap { position: relative; display: inline-flex; align-items: center; }
+.mkt-cr-input {
+  width: 220px;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 10px 52px 10px 13px;
+}
+.mkt-cr-input:focus { border-color: var(--accent-blue); }
+.mkt-cr-unit {
+  position: absolute;
+  right: 13px;
+  pointer-events: none;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .78rem;
+  color: var(--text-mute);
+}
+
+/* Provenance line under the pouch price. The live state is called out in
+   green because "this is real data" is the whole claim of the page; the
+   manual state stays muted so editing never looks like an error. */
+.mkt-cr-source {
+  font-size: .78rem;
+  color: var(--text-mute);
+  margin: 6px 0 0;
+}
+.mkt-cr-source.is-live { color: var(--accent-green); }
+
+/* ─── Basis toggle ──────────────────────────────────────────────────── */
+.mkt-cr-modes {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  padding: 3px;
+}
+.mkt-cr-mode {
+  border: 0;
+  background: transparent;
+  color: var(--text-mute);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.mkt-cr-mode:hover { color: var(--text); }
+.mkt-cr-mode.active { background: var(--accent-blue); color: #06121f; }
+
+/* ─── Rate cards ────────────────────────────────────────────────────── */
+.mkt-cr-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+.mkt-cr-card {
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 5px;
+  align-content: start;
+}
+.mkt-cr-card-label {
+  font-size: .72rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+}
+.mkt-cr-card-value {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+.mkt-cr-card-sub { font-size: .76rem; color: var(--text-mute); line-height: 1.35; }
+
+/* ─── Converter ─────────────────────────────────────────────────────── */
+.mkt-cr-convert {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+.mkt-cr-convert .mkt-cr-input { width: 100%; }
+
+/* ─── Reference table ───────────────────────────────────────────────── */
+.mkt-cr-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+}
+.mkt-cr-tbl th,
+.mkt-cr-tbl td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--bg-line);
+  text-align: left;
+}
+.mkt-cr-tbl thead th {
+  font-size: .72rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+}
+.mkt-cr-tbl tbody th { font-weight: 600; color: var(--text); }
+.mkt-cr-tbl .num {
+  text-align: right;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.mkt-cr-tbl tbody tr:last-child th,
+.mkt-cr-tbl tbody tr:last-child td { border-bottom: 0; }
+.mkt-cr-tblwrap { overflow-x: auto; }
+
+/* ─── Hourly rate ───────────────────────────────────────────────────── */
+.mkt-cr-hour-out {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.mkt-cr-hour-part {
+  font-size: .9rem;
+  color: var(--text-mute);
+}
+.mkt-cr-hour-part strong {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 1.2rem;
+  color: var(--accent-green);
+  margin-right: 4px;
+}
+
+/* ─── 30-day chart ──────────────────────────────────────────────────── */
+.mkt-cr-chart { width: 100%; height: 240px; }
+.mkt-cr-chart svg { width: 100%; height: 100%; display: block; }
+.mkt-cr-chart-meta { margin: 8px 0 0; font-size: .8rem; color: var(--text-mute); }
+.mkt-cr-grid { stroke: var(--bg-line); stroke-width: 1; }
+.mkt-cr-axis {
+  fill: var(--text-mute);
+  font-size: 10px;
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+}
+.mkt-cr-band { fill: var(--accent-blue); opacity: .16; stroke: none; }
+.mkt-cr-line {
+  fill: none;
+  stroke: var(--accent-blue);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.mkt-cr-dot { fill: var(--accent-blue); stroke: var(--bg-card); stroke-width: 2; }
+
+/* ─── Re-sync to live ───────────────────────────────────────────────── */
+.mkt-cr-resync {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin-left: 6px;
+  font: inherit;
+  color: var(--accent-blue);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ─── Explainer ─────────────────────────────────────────────────────── */
+.mkt-cr-rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin: 0;
+}
+.mkt-cr-rule { display: grid; gap: 5px; align-content: start; }
+.mkt-cr-rule dt {
+  font-weight: 600;
+  font-size: .9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mkt-cr-rule dd { margin: 0; font-size: .86rem; color: var(--text-mute); line-height: 1.5; }
+.mkt-cr-rule i { color: var(--accent-blue); font-size: .85em; }

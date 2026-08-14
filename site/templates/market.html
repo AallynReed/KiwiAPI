@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="/static/market.min.css">
     <link rel="stylesheet" href="/static/market-analytics.min.css">
     <link rel="stylesheet" href="/static/market-fees.min.css">
+    <link rel="stylesheet" href="/static/market-credits.min.css">
 </head>
 <body class="landing market-page">
 
@@ -59,6 +60,11 @@
                     id="mkt-viewtab-fees" role="tab" aria-selected="false"
                     aria-controls="mkt-view-fees" tabindex="-1">
                 <i class="fa-solid fa-coins" aria-hidden="true"></i> <span data-i18n>Fees</span>
+            </button>
+            <button type="button" class="mkt-viewtab" data-view="credits"
+                    id="mkt-viewtab-credits" role="tab" aria-selected="false"
+                    aria-controls="mkt-view-credits" tabindex="-1">
+                <i class="fa-solid fa-right-left" aria-hidden="true"></i> <span data-i18n>Credits</span>
             </button>
         </div>
 
@@ -388,6 +394,122 @@
         </section>
       </div><!-- /#mkt-view-fees -->
 
+      <div id="mkt-view-credits" role="tabpanel" aria-labelledby="mkt-viewtab-credits" hidden>
+
+        <section class="mkt-cr-block">
+            <header class="mkt-cr-head">
+                <h2 class="mkt-cr-title" data-i18n>What credits are worth</h2>
+                <p class="mkt-cr-sub" data-i18n>Everything here hangs off one number: what a Credit Pouch is selling for. We fill that in from live listings, and you can overwrite it with whatever you are actually seeing.</p>
+            </header>
+
+            <div class="mkt-cr-controls">
+                <div class="mkt-cr-field">
+                    <label class="mkt-cr-field-label" for="mkt-cr-pouch" data-i18n>Credit Pouch price</label>
+                    <span class="mkt-cr-input-wrap">
+                        <input type="text" inputmode="numeric" id="mkt-cr-pouch"
+                               class="mkt-cr-input" autocomplete="off" spellcheck="false">
+                        <span class="mkt-cr-unit" aria-hidden="true">flux</span>
+                    </span>
+                    <p class="mkt-cr-source" id="mkt-cr-source" role="status"></p>
+                </div>
+                <div class="mkt-cr-field">
+                    <span class="mkt-cr-field-label" id="mkt-cr-basis-label" data-i18n>Count a pouch as</span>
+                    <div class="mkt-cr-modes" id="mkt-cr-basis"
+                         role="group" aria-labelledby="mkt-cr-basis-label">
+                        <button type="button" class="mkt-cr-mode active" data-basis="face"
+                                aria-pressed="true" data-i18n>250 credits</button>
+                        <button type="button" class="mkt-cr-mode" data-basis="purchase"
+                                aria-pressed="false" data-i18n>308.33 credits</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mkt-cr-cards" id="mkt-cr-rates"></div>
+        </section>
+
+        <section class="mkt-cr-block">
+            <header class="mkt-cr-head">
+                <h2 class="mkt-cr-title" data-i18n>Convert anything</h2>
+                <p class="mkt-cr-sub" data-i18n>Type into any box and the other two follow.</p>
+            </header>
+            <div class="mkt-cr-convert">
+                <div class="mkt-cr-field">
+                    <label class="mkt-cr-field-label" for="mkt-cr-flux" data-i18n>Flux</label>
+                    <span class="mkt-cr-input-wrap">
+                        <input type="text" inputmode="numeric" id="mkt-cr-flux"
+                               class="mkt-cr-input" autocomplete="off" spellcheck="false">
+                    </span>
+                </div>
+                <div class="mkt-cr-field">
+                    <label class="mkt-cr-field-label" for="mkt-cr-credits" data-i18n>Credits</label>
+                    <span class="mkt-cr-input-wrap">
+                        <input type="text" inputmode="numeric" id="mkt-cr-credits"
+                               class="mkt-cr-input" autocomplete="off" spellcheck="false">
+                    </span>
+                </div>
+                <div class="mkt-cr-field">
+                    <label class="mkt-cr-field-label" for="mkt-cr-usd" data-i18n>US Dollars</label>
+                    <span class="mkt-cr-input-wrap">
+                        <input type="text" inputmode="decimal" id="mkt-cr-usd"
+                               class="mkt-cr-input" autocomplete="off" spellcheck="false">
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <section class="mkt-cr-block">
+            <header class="mkt-cr-head">
+                <h2 class="mkt-cr-title" data-i18n>What your farming time is worth</h2>
+                <p class="mkt-cr-sub" data-i18n>Put in roughly how much flux you make in an hour.</p>
+            </header>
+            <div class="mkt-cr-field">
+                <label class="mkt-cr-field-label" for="mkt-cr-hour" data-i18n>Flux per hour</label>
+                <span class="mkt-cr-input-wrap">
+                    <input type="text" inputmode="numeric" id="mkt-cr-hour"
+                           class="mkt-cr-input" autocomplete="off" spellcheck="false">
+                    <span class="mkt-cr-unit" aria-hidden="true">flux</span>
+                </span>
+            </div>
+            <div class="mkt-cr-hour-out" id="mkt-cr-hour-out"></div>
+        </section>
+
+        <section class="mkt-cr-block">
+            <header class="mkt-cr-head">
+                <h2 class="mkt-cr-title" data-i18n>How the value has moved</h2>
+                <p class="mkt-cr-sub" data-i18n>Flux per credit over the last 30 days, from Credit Pouch listings. The shaded band is the middle half of the market, so a wide band means prices were all over the place that day.</p>
+            </header>
+            <div class="mkt-cr-chart" id="mkt-cr-chart"></div>
+            <p class="mkt-cr-chart-meta" id="mkt-cr-chart-meta"></p>
+        </section>
+
+        <section class="mkt-cr-block">
+            <header class="mkt-cr-head">
+                <h2 class="mkt-cr-title" data-i18n>At a glance</h2>
+            </header>
+            <div class="mkt-cr-tblwrap" id="mkt-cr-table"></div>
+        </section>
+
+        <section class="mkt-cr-block">
+            <header class="mkt-cr-head">
+                <h2 class="mkt-cr-title" data-i18n>Why a pouch counts as two different numbers</h2>
+            </header>
+            <dl class="mkt-cr-rules">
+                <div class="mkt-cr-rule">
+                    <dt><i class="fa-solid fa-box-open" aria-hidden="true"></i> <span data-i18n>250 credits</span></dt>
+                    <dd data-i18n>What you get when you open one. Use this to work out what the credits you already own are worth.</dd>
+                </div>
+                <div class="mkt-cr-rule">
+                    <dt><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> <span data-i18n>308.33 credits</span></dt>
+                    <dd data-i18n>What a pouch really costs you. The $99.99 pack pays out 18,500 credits but only 60 pouches, so each one sets you back more than its face value.</dd>
+                </div>
+                <div class="mkt-cr-rule">
+                    <dt><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> <span data-i18n>Which to pick</span></dt>
+                    <dd data-i18n>Valuing what you hold, use 250. Deciding whether buying is worth it, use 308.33. The two disagree by about a quarter, so it is worth getting right.</dd>
+                </div>
+            </dl>
+        </section>
+      </div><!-- /#mkt-view-credits -->
+
         <p class="mkt-source" data-i18n>Captures come from an in-game marketplace scraper. Listings live 7 days in-game; expired ones disappear automatically. Prices are flux per item (stack price ÷ stack size).</p>
     </main>
 
@@ -401,6 +523,7 @@
          uses to price the Fee / Seller nets columns on every listing row. -->
     <script src="/static/market-fees.min.js" defer></script>
     <script src="/static/market.min.js" defer></script>
+    <script src="/static/market-credits.min.js" defer></script>
     <script src="/static/market-analytics.min.js" defer></script>
 </body>
 </html>

@@ -46,6 +46,7 @@
     browse: $browse,
     analytics: $analytics,
     fees: $('mkt-view-fees'),
+    credits: $('mkt-view-credits'),
   };
   const $days = $('mkt-an-days');
   const $discount = $('mkt-an-discount');
