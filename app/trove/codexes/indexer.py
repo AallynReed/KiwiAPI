@@ -67,7 +67,8 @@ logger = logging.getLogger("kiwi.trove.codexes")
 # resolved strings, …). On the next sync the indexer force-rebuilds any branch whose
 # stored version is behind, so a parser change reaches the data WITHOUT a game update
 # or a manual rebuild - the steady-state delta only re-touches changed game files.
-CODEX_PARSER_VERSION = 22  # v22: progression nodes carry their EFFECTS (name + description + ability refs from upgrade/upgrades/<key>.binfab, locale-resolved) alongside their costs, so a node row states what it gives as well as what it takes
+CODEX_PARSER_VERSION = 23  # v23: node effects chunk on the tree's own node keys instead of the filename stem, which found nothing for the class prestige trees (stored as prestige_bard.binfab, nodes named 01_bard_root_01) - all 90 prestige nodes had no effects. Also picks up the $..._description key those nodes carry
+# v22: progression nodes carry their EFFECTS (name + description + ability refs from upgrade/upgrades/<key>.binfab, locale-resolved) alongside their costs, so a node row states what it gives as well as what it takes
 # v21: geode companion level bonuses actually load - the tree lookup matched a filename pattern no file has, and pointed at trees/ (structure + costs) rather than upgrades/ (the per-level effects), so every companion has been served an empty levels list
 # v20: the codex is relational - stats, abilities and typed relationship edges (crafts / ingredient / craftable_at / unlocks / upgrade_cost / member_of) get their own tables, plus badge requirements and progression-tree costs. Forces one rebuild to populate them
 # v19: recipe product detection covers three more shapes it read as absent - a product path on a field the ingredients also use (banners, geode abilities), a product that IS a crafting material (conversion + gardening recipes), and the bare token costume/skin recipes name theirs with, resolved only against a prefab that exists
