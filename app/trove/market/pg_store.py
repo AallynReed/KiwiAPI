@@ -197,6 +197,36 @@ async def price_volume_timeline(
     ]
 
 
+async def daily_series_all(
+    *, created_at_floor: int, bucket_seconds: int = 86400,
+) -> list[dict]:
+    """Daily median / new-listing count / total stack for EVERY item in one pass.
+
+    The anomaly pass needs each item's whole recent history to know what normal
+    looks like for it, and it needs every item at once to tell an item-specific
+    move apart from the entire market drifting. Per-item queries would be ~300
+    round trips for the same rows, so this is one grouped scan instead.
+    """
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT name, (created_at / $2) * $2 AS bucket, "
+            "count(*) AS listings, sum(stack) AS stack, "
+            "percentile_cont(0.5) WITHIN GROUP (ORDER BY price_each) AS p50, "
+            "percentile_cont(0.5) WITHIN GROUP (ORDER BY stack) AS stack_med, "
+            "max(stack) AS stack_max "
+            "FROM market_listing WHERE created_at >= $1 "
+            "GROUP BY name, bucket ORDER BY name, bucket",
+            created_at_floor, bucket_seconds,
+        )
+    return [
+        {"name": r["name"], "bucket": int(r["bucket"]),
+         "listings": int(r["listings"]), "stack": int(r["stack"] or 0),
+         "p50": float(r["p50"]), "stack_med": float(r["stack_med"] or 0),
+         "stack_max": int(r["stack_max"] or 0)}
+        for r in rows
+    ]
+
+
 async def underpriced_deals(
     *, last_seen_floor: int, created_at_floor: int,
     min_discount: float, min_samples: int, limit: int,

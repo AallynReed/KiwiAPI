@@ -245,3 +245,123 @@
   .mkt-an-head-row { flex-direction: column; }
   .mkt-an-kpi-value { font-size: 1.15rem; }
 }
+
+/* ─── Unusual activity (anomaly scan) ─────────────────────────────────
+   Deliberately restrained: this section describes what looks odd, it does
+   not accuse anyone, and styling it like a security alert would say more
+   than the data can support. Alarm colouring is reserved for the
+   market-wide reading, which is the only one with real weight behind it. */
+.mkt-sig-market-card {
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-left: 3px solid var(--bg-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.mkt-sig-market-card.is-alarm {
+  border-left-color: var(--accent-yellow);
+  background: rgba(240, 173, 78, .07);
+}
+.mkt-sig-market-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .72rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+}
+.mkt-sig-market-card.is-alarm .mkt-sig-market-label { color: var(--accent-yellow); }
+.mkt-sig-market-read {
+  margin: 7px 0 0;
+  font-size: .9rem;
+  line-height: 1.55;
+  max-width: 78ch;
+}
+.mkt-sig-market-stats {
+  margin: 7px 0 0;
+  font-size: .78rem;
+  color: var(--text-mute);
+}
+.mkt-sig-market-stats strong {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  color: var(--text);
+}
+
+.mkt-sig-list { display: grid; gap: 8px; }
+.mkt-sig-row {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 11px 13px;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 10px;
+}
+.mkt-sig-row.is-extreme { border-color: rgba(240, 173, 78, .4); }
+.mkt-sig-icon {
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-mute);
+  font-size: .8rem;
+}
+.mkt-sig-row.is-extreme .mkt-sig-icon { color: var(--accent-yellow); }
+.mkt-sig-name {
+  border: 0; background: none; padding: 0;
+  font: inherit; font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.mkt-sig-name:hover { color: var(--accent-blue); text-decoration: underline; }
+.mkt-sig-read {
+  margin: 2px 0 0;
+  font-size: .82rem;
+  color: var(--text-mute);
+  line-height: 1.45;
+}
+.mkt-sig-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.mkt-sig-chip {
+  font-size: .68rem;
+  color: var(--text-mute);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.mkt-sig-chip strong {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  color: var(--text);
+  margin-left: 3px;
+}
+.mkt-sig-num { text-align: right; display: grid; gap: 2px; }
+.mkt-sig-pct {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.mkt-sig-pct.up { color: var(--accent-green); }
+.mkt-sig-pct.down { color: var(--accent-red); }
+.mkt-sig-base { font-size: .7rem; color: var(--text-mute); white-space: nowrap; }
+
+.mkt-sig-none {
+  margin: 0;
+  font-size: .88rem;
+  color: var(--text-mute);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mkt-sig-none i { color: var(--accent-green); }
+.mkt-sig-scanned { font-size: .76rem; opacity: .8; }
+
+@media (max-width: 620px) {
+  .mkt-sig-row { grid-template-columns: 24px 1fr; }
+  .mkt-sig-num { grid-column: 2; text-align: left; margin-top: 4px; }
+}

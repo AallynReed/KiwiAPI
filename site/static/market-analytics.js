@@ -152,11 +152,107 @@
   }
 
   function loadAll() {
+    loadSignals();
     loadOverview();
     loadMovers();
     loadLiquidity();
     loadVolume();
     loadDeals();
+  }
+
+  /* ─── Unusual activity ───────────────────────────────────────────────
+     Two readings that answer different questions. The market line asks
+     whether flux itself moved - only visible across the whole basket at
+     once. The list asks which individual items broke out of their own
+     normal range. Wording stays descriptive: the data cannot identify a
+     player or prove intent, so nothing here is phrased as an accusation. */
+  const SIG_ICON = {
+    supply_flood: 'fa-water',
+    oversupply: 'fa-arrow-trend-down',
+    squeeze: 'fa-compress',
+    odd_stacks: 'fa-layer-group',
+    spike: 'fa-arrow-trend-up',
+    slump: 'fa-arrow-trend-down',
+    supply_surge: 'fa-boxes-stacked',
+    unusual: 'fa-circle-question',
+  };
+
+  async function loadSignals() {
+    const $list = $('mkt-sig-list');
+    const $mkt = $('mkt-sig-market');
+    if (!$list) return;
+    $list.innerHTML = `<p class="mkt-loading" data-i18n>Loading…</p>`;
+    rerunI18n();
+    try {
+      renderSignals(await fetchJSON('/site/market/analytics/signals'), $list, $mkt);
+    } catch (err) {
+      $list.innerHTML = errorHTML(err);
+      if ($mkt) $mkt.innerHTML = '';
+      rerunI18n();
+    }
+  }
+
+  function renderSignals(d, $list, $mkt) {
+    const m = d.market;
+    if ($mkt) {
+      if (!m || m.verdict === 'no_data') {
+        $mkt.innerHTML = '';
+      } else {
+        const alarm = m.verdict === 'flux_weaker' || m.verdict === 'flux_stronger';
+        const pct = (v) => (v == null ? '-' : (v * 100).toFixed(1) + '%');
+        $mkt.innerHTML = `
+          <div class="mkt-sig-market-card ${alarm ? 'is-alarm' : ''}">
+            <span class="mkt-sig-market-label">
+              <i class="fa-solid ${alarm ? 'fa-triangle-exclamation' : 'fa-scale-balanced'}"
+                 aria-hidden="true"></i> ${esc(t('Market-wide'))}
+            </span>
+            <p class="mkt-sig-market-read">${esc(t(m.reading))}</p>
+            <p class="mkt-sig-market-stats">
+              ${esc(t('Typical item moved'))} <strong>${esc(pct(m.median_move))}</strong>
+              &middot; ${esc(pct(m.share_up) + ' ' + t('rose'))}
+              &middot; ${esc(pct(m.share_down) + ' ' + t('fell'))}
+              &middot; ${esc(m.items + ' ' + t('items with enough history'))}
+            </p>
+          </div>`;
+      }
+    }
+
+    if (!d.signals.length) {
+      $list.innerHTML = `<p class="mkt-sig-none"><i class="fa-solid fa-check"
+        aria-hidden="true"></i> ${esc(t('Nothing is behaving strangely right now.'))}
+        <span class="mkt-sig-scanned">${esc(d.scanned_items + ' ' + t('items checked'))}</span></p>`;
+      rerunI18n();
+      return;
+    }
+
+    $list.innerHTML = d.signals.map((s) => {
+      const pct = s.change == null ? '' :
+        (s.change >= 0 ? '+' : '') + (s.change * 100).toFixed(0) + '%';
+      const chip = (label, z) => (z == null || Math.abs(z) < 3.5) ? '' :
+        `<span class="mkt-sig-chip">${esc(t(label))}
+           <strong>${esc((z >= 0 ? '+' : '') + z.toFixed(1))}σ</strong></span>`;
+      return `
+        <article class="mkt-sig-row is-${esc(s.severity)}">
+          <span class="mkt-sig-icon"><i class="fa-solid ${SIG_ICON[s.pattern] || SIG_ICON.unusual}"
+            aria-hidden="true"></i></span>
+          <div class="mkt-sig-body">
+            <button type="button" class="mkt-sig-name" data-item="${esc(s.name)}">${esc(s.name)}</button>
+            <p class="mkt-sig-read">${esc(t(s.reading))}</p>
+            <div class="mkt-sig-chips">
+              ${chip('price', s.price_z)}${chip('supply', s.supply_z)}${chip('stacks', s.stack_z)}
+            </div>
+          </div>
+          <div class="mkt-sig-num">
+            <span class="mkt-sig-pct ${s.change >= 0 ? 'up' : 'down'}">${esc(pct)}</span>
+            <span class="mkt-sig-base">${esc(t('vs') + ' ' + fmtNum(s.baseline))}</span>
+          </div>
+        </article>`;
+    }).join('');
+
+    for (const btn of $list.querySelectorAll('.mkt-sig-name')) {
+      btn.addEventListener('click', () => loadTimeline(btn.dataset.item));
+    }
+    rerunI18n();
   }
 
   // ─── Market pulse (KPI strip) ──────────────────────────────────────

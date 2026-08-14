@@ -1795,6 +1795,20 @@ async def site_market_analytics_overview(
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=120"})
 
 
+@router.get("/site/market/analytics/signals", response_class=JSONResponse)
+async def site_market_analytics_signals(
+    days: int = Query(default=21, ge=10, le=60),
+) -> JSONResponse:
+    """Unusual market activity: per-item price / supply / stack anomalies scored
+    against each item's own history, plus a market-wide breadth reading that
+    separates "this item moved" from "flux moved". Longer cache than the other
+    analytics reads - it scans every item's full series, and the answer only
+    changes when a new day of listings lands."""
+    from app.trove.market import signals as market_signals
+    payload = await market_signals.scan(days=days)
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=600"})
+
+
 @router.get("/site/market/analytics/liquidity", response_class=JSONResponse)
 async def site_market_analytics_liquidity(
     days: int = Query(default=14, ge=1, le=30),

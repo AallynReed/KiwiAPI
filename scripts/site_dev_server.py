@@ -2253,6 +2253,42 @@ class Handler(SimpleHTTPRequestHandler):
             except ValueError:
                 days = 7
             return self._send_json(_market_item_history(name, days))
+        if path == "/site/market/analytics/signals":
+            # Synthetic anomalies so the Unusual-activity UI can be worked on
+            # without Postgres. Covers each severity and the market-wide alarm.
+            return self._send_json({
+                "days": 21, "generated_for": 0, "scanned_items": 312,
+                "market": {
+                    "items": 118, "median_move": 0.41, "share_up": 0.71,
+                    "share_down": 0.02, "verdict": "flux_weaker",
+                    "reading": (
+                        "Most of the market got more expensive at once. When "
+                        "unrelated items all rise together it is usually flux "
+                        "losing value rather than the items gaining it - which is "
+                        "what a flux duplication looks like from the outside."),
+                },
+                "signals": [
+                    {"name": "Bleached Bone", "pattern": "supply_flood",
+                     "reading": ("Price collapsed while supply and stack sizes both "
+                                 "spiked - the shape a duplicated item makes."),
+                     "severity": "extreme", "day": 0, "price": 310.0,
+                     "baseline": 2700.0, "change": -0.885, "listings": 194,
+                     "stack_med": 99.0, "stack_max": 999,
+                     "price_z": -11.9, "supply_z": 42.3, "stack_z": 61.0},
+                    {"name": "Credit Pouch", "pattern": "spike",
+                     "reading": "Priced well above its own recent range.",
+                     "severity": "extreme", "day": 0, "price": 50000000.0,
+                     "baseline": 9500000.0, "change": 4.26, "listings": 12,
+                     "stack_med": 1.0, "stack_max": 3,
+                     "price_z": 18.4, "supply_z": 0.4, "stack_z": 0.0},
+                    {"name": "Golden Seashell", "pattern": "squeeze",
+                     "reading": "Supply dried up and the price ran up behind it.",
+                     "severity": "elevated", "day": 0, "price": 8800.0,
+                     "baseline": 4100.0, "change": 1.146, "listings": 6,
+                     "stack_med": 20.0, "stack_max": 40,
+                     "price_z": 5.2, "supply_z": -4.1, "stack_z": 0.2},
+                ],
+            })
         if path == "/site/market/analytics/movers":
             return self._send_json(_market_movers())
         if path == "/site/market/analytics/deals":
