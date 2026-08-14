@@ -42,6 +42,119 @@ CREATE INDEX IF NOT EXISTS codex_entry_sha       ON codex_entry (content_sha256)
 -- reversing a listing's display name back to its codex model).
 CREATE INDEX IF NOT EXISTS codex_entry_lname_bp  ON codex_entry (branch, lower(name)) INCLUDE (blueprint);
 
+-- Full-text search over the display name + description. A generated column so it can
+-- never drift from the row it describes, and `simple` (not `english`) because item
+-- names are proper nouns - stemming "Wings" to "wing" makes an exact title miss.
+ALTER TABLE codex_entry ADD COLUMN IF NOT EXISTS search tsvector
+    GENERATED ALWAYS AS (
+        to_tsvector('simple', name || ' ' || category || ' ' || description)
+    ) STORED;
+CREATE INDEX IF NOT EXISTS codex_entry_search ON codex_entry USING GIN (search);
+
+-- One row per numeric stat bonus a prefab grants. Lifted out of the `data` JSONB so a
+-- stat is queryable in its own right ("every mount with Magic Find, best first") instead
+-- of only readable once you already have the entry.
+CREATE TABLE IF NOT EXISTS codex_stat (
+    branch      TEXT    NOT NULL,
+    path        TEXT    NOT NULL,
+    ord         INTEGER NOT NULL,          -- source order within the prefab
+    stat_key    TEXT    NOT NULL,          -- $Stat_MagicFind
+    stat_id     INTEGER,
+    stat_name   TEXT    NOT NULL DEFAULT '',
+    operation   TEXT    NOT NULL DEFAULT '',
+    amount      DOUBLE PRECISION,          -- raw decoded float
+    value       DOUBLE PRECISION,          -- normalized for display
+    is_percent  BOOLEAN NOT NULL DEFAULT false,
+    slot_key    TEXT,                      -- $EquipmentSlot_Mount|Wings|Boat|Cart
+    label       TEXT NOT NULL DEFAULT '',
+    level       INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (branch, path, ord)
+);
+CREATE INDEX IF NOT EXISTS codex_stat_lookup ON codex_stat (branch, stat_key, value DESC);
+CREATE INDEX IF NOT EXISTS codex_stat_path   ON codex_stat (branch, path);
+
+-- One row per ability bonus reference. `hidden` rows are mechanical refs kept as
+-- evidence, not displayed.
+CREATE TABLE IF NOT EXISTS codex_ability (
+    branch      TEXT    NOT NULL,
+    path        TEXT    NOT NULL,
+    ord         INTEGER NOT NULL,
+    ref         TEXT    NOT NULL,
+    hidden      BOOLEAN NOT NULL DEFAULT false,
+    loc_key     TEXT,
+    name        TEXT    NOT NULL DEFAULT '',
+    description TEXT    NOT NULL DEFAULT '',
+    PRIMARY KEY (branch, path, ord)
+);
+CREATE INDEX IF NOT EXISTS codex_ability_ref ON codex_ability (branch, ref);
+
+-- The relationship edge table: every typed link between two codex entries.
+--
+-- One table rather than one per relation, because the questions are symmetric and the
+-- interesting ones are REVERSE lookups: "what recipes produce this item" and "what is
+-- this item used to craft" are the same query with src/dst swapped, so both directions
+-- get an index and neither needs its own schema.
+--
+-- `rel` values in use:
+--   crafts        recipe        -> the item prefab it produces        (qty = output amount)
+--   ingredient    recipe        -> an item prefab it consumes         (qty = amount needed)
+--   craftable_at  recipe        -> a bench/profession prefab          (data = lane, category)
+--   unlocks       any prefab    -> what owning/using it grants
+--   upgrade_cost  upgrade node  -> an item prefab                     (qty = amount)
+--   member_of     collectible   -> its collection catalogue           (data = group label)
+--   awards        badge rank    -> the collectible it grants
+--
+-- `dst_path` is stored in `codex_entry.path` form (prefabs/<rel>.binfab) so a link
+-- joins straight to an entry; a link whose target isn't an indexed prefab is still
+-- stored - the edge is real even when the far end isn't a codex row.
+CREATE TABLE IF NOT EXISTS codex_link (
+    branch    TEXT    NOT NULL,
+    src_path  TEXT    NOT NULL,
+    rel       TEXT    NOT NULL,
+    dst_path  TEXT    NOT NULL,
+    ord       INTEGER NOT NULL DEFAULT 0,
+    qty       DOUBLE PRECISION,
+    data      JSONB   NOT NULL DEFAULT '{}'::jsonb,
+    PRIMARY KEY (branch, src_path, rel, dst_path, ord)
+);
+CREATE INDEX IF NOT EXISTS codex_link_fwd ON codex_link (branch, src_path, rel);
+CREATE INDEX IF NOT EXISTS codex_link_rev ON codex_link (branch, dst_path, rel);
+
+-- Badge requirements: one row per (badge collection, rank). Branch-scoped rather than
+-- prefab-scoped - they all come from the single `prefabs/meta/badges.binfab`.
+CREATE TABLE IF NOT EXISTS codex_requirement (
+    branch          TEXT    NOT NULL,
+    collection      TEXT    NOT NULL,      -- collections/badge/<id>
+    rank            INTEGER NOT NULL,
+    rank_name       TEXT    NOT NULL DEFAULT '',
+    badge_id        TEXT    NOT NULL DEFAULT '',
+    completion_kind TEXT    NOT NULL DEFAULT '',
+    requirement_key TEXT    NOT NULL DEFAULT '',
+    label           TEXT    NOT NULL DEFAULT '',
+    amount          BIGINT,
+    difficulty      INTEGER NOT NULL DEFAULT 0,
+    status          TEXT    NOT NULL DEFAULT '',
+    context         JSONB   NOT NULL DEFAULT '{}'::jsonb,
+    PRIMARY KEY (branch, collection, rank)
+);
+CREATE INDEX IF NOT EXISTS codex_requirement_kind ON codex_requirement (branch, completion_kind);
+
+-- Progression-tree nodes (geode modules, geode companions, class prestige). Costs stay
+-- as JSONB for display AND are mirrored into codex_link as `upgrade_cost` edges, so
+-- "what is bardium spent on" is answerable without opening every tree.
+CREATE TABLE IF NOT EXISTS codex_upgrade (
+    branch      TEXT    NOT NULL,
+    system_kind TEXT    NOT NULL,          -- geode_module | geode_companion | class_prestige
+    system_key  TEXT    NOT NULL,          -- barrier | gleemur_common | prestige_bard
+    node_key    TEXT    NOT NULL,
+    rank        INTEGER,
+    source_path TEXT    NOT NULL DEFAULT '',
+    costs       JSONB   NOT NULL DEFAULT '[]'::jsonb,
+    requires    JSONB   NOT NULL DEFAULT '[]'::jsonb,
+    PRIMARY KEY (branch, system_key, node_key)
+);
+CREATE INDEX IF NOT EXISTS codex_upgrade_system ON codex_upgrade (branch, system_kind, system_key);
+
 -- Tracks which parser version last (re)built each branch. When the deployed parser
 -- is newer than this, the indexer force-rebuilds the branch on the next sync - so a
 -- parser change reaches the data without a game update or a manual rebuild.

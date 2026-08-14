@@ -8,7 +8,14 @@ the API process (which has Postgres).
 from __future__ import annotations
 
 from app.core.postgres import acquire
-from app.trove.codexes.models import COLUMNS
+from app.trove.codexes.models import (
+    ABILITY_COLUMNS,
+    COLUMNS,
+    LINK_COLUMNS,
+    REQUIREMENT_COLUMNS,
+    STAT_COLUMNS,
+    UPGRADE_COLUMNS,
+)
 
 DEFAULT_SORT = "name"
 
@@ -88,12 +95,108 @@ async def upsert_entries(rows: list[tuple]) -> int:
     return len(rows)
 
 
+# --- child tables (stats / abilities / links) --------------------------------
+#
+# All three are OWNED by a source prefab, so they are replaced scoped by path rather
+# than upserted: a prefab that LOSES a stat in a game update has to actually lose the
+# row, and an upsert can only ever add or overwrite. `paths` is the full set that was
+# re-parsed - including prefabs that now yield nothing - so their rows are cleared too.
+
+def _insert(table: str, columns: tuple[str, ...]) -> str:
+    return (f"INSERT INTO {table} ({', '.join(columns)}) "
+            f"VALUES ({', '.join(f'${i + 1}' for i in range(len(columns)))}) "
+            "ON CONFLICT DO NOTHING")
+
+
+_STAT_INSERT = _insert("codex_stat", STAT_COLUMNS)
+_ABILITY_INSERT = _insert("codex_ability", ABILITY_COLUMNS)
+_LINK_INSERT = _insert("codex_link", LINK_COLUMNS)
+_REQUIREMENT_INSERT = _insert("codex_requirement", REQUIREMENT_COLUMNS)
+_UPGRADE_INSERT = _insert("codex_upgrade", UPGRADE_COLUMNS)
+
+
+async def replace_children(branch: str, paths: list[str], *, stats: list[tuple],
+                           abilities: list[tuple], links: list[tuple]) -> None:
+    """Re-state the stat/ability/link rows of specific prefabs, in one transaction."""
+    if not paths:
+        return
+    async with acquire() as con:
+        async with con.transaction():
+            await con.execute(
+                "DELETE FROM codex_stat WHERE branch = $1 AND path = ANY($2::text[])",
+                branch, paths)
+            await con.execute(
+                "DELETE FROM codex_ability WHERE branch = $1 AND path = ANY($2::text[])",
+                branch, paths)
+            await con.execute(
+                "DELETE FROM codex_link WHERE branch = $1 AND src_path = ANY($2::text[])",
+                branch, paths)
+            if stats:
+                await con.executemany(_STAT_INSERT, stats)
+            if abilities:
+                await con.executemany(_ABILITY_INSERT, abilities)
+            if links:
+                await con.executemany(_LINK_INSERT, links)
+
+
+async def replace_links_for(branch: str, relation: str, rows: list[tuple]) -> int:
+    """Atomically replace every edge of one relation for a branch.
+
+    Used for the relations that come from a single shared table rather than from a
+    per-prefab parse (`unlocks`, `upgrade_cost`, `member_of`) - those have no owning
+    prefab to scope a delete by, so the relation itself is the scope."""
+    async with acquire() as con:
+        async with con.transaction():
+            await con.execute(
+                "DELETE FROM codex_link WHERE branch = $1 AND rel = $2", branch, relation)
+            if rows:
+                await con.executemany(_LINK_INSERT, rows)
+    return len(rows)
+
+
+async def replace_requirements(branch: str, rows: list[tuple]) -> int:
+    """Atomically replace a branch's badge requirements (one source file, so the whole
+    branch is the right scope)."""
+    async with acquire() as con:
+        async with con.transaction():
+            await con.execute("DELETE FROM codex_requirement WHERE branch = $1", branch)
+            if rows:
+                await con.executemany(_REQUIREMENT_INSERT, rows)
+    return len(rows)
+
+
+async def replace_upgrades(branch: str, rows: list[tuple]) -> int:
+    """Atomically replace a branch's progression-tree nodes."""
+    async with acquire() as con:
+        async with con.transaction():
+            await con.execute("DELETE FROM codex_upgrade WHERE branch = $1", branch)
+            if rows:
+                await con.executemany(_UPGRADE_INSERT, rows)
+    return len(rows)
+
+
 async def delete_entries(branch: str, paths: list[str]) -> int:
-    """Delete the given source paths for a branch (removed/stale prefabs)."""
+    """Delete the given source paths for a branch (removed/stale prefabs).
+
+    Cascades to the child tables by hand - there is no FK, because a link's target is
+    allowed to be a path that was never indexed as an entry, and an FK would forbid
+    exactly the edges that are most worth keeping."""
     if not paths:
         return 0
     async with acquire() as con:
-        await con.execute("DELETE FROM codex_entry WHERE branch = $1 AND path = ANY($2)", branch, paths)
+        async with con.transaction():
+            await con.execute(
+                "DELETE FROM codex_entry WHERE branch = $1 AND path = ANY($2::text[])",
+                branch, paths)
+            await con.execute(
+                "DELETE FROM codex_stat WHERE branch = $1 AND path = ANY($2::text[])",
+                branch, paths)
+            await con.execute(
+                "DELETE FROM codex_ability WHERE branch = $1 AND path = ANY($2::text[])",
+                branch, paths)
+            await con.execute(
+                "DELETE FROM codex_link WHERE branch = $1 AND src_path = ANY($2::text[])",
+                branch, paths)
     return len(paths)
 
 
@@ -357,14 +460,129 @@ async def get_entry(branch: str, codex_type: str, path: str) -> dict | None:
     return dict(row) if row else None
 
 
-async def reset(branch: str | None = None) -> int:
-    """Wipe a branch's entries (or all). Returns the prior row count - for a clean
-    rebuild from the archive."""
+async def links_for(branch: str, path: str, *, direction: str = "out",
+                    relation: str | None = None, limit: int = 200) -> list[dict]:
+    """Edges touching `path`, joined to the far end's entry so a caller gets a usable
+    row (name, type, blueprint) rather than a bare path.
+
+    ``direction="out"`` reads `path` as the source ("what does this recipe use");
+    ``"in"`` reads it as the target ("what recipes produce this item"). The far end is
+    LEFT-joined - a link whose target isn't an indexed prefab is still a real edge and
+    is returned with empty display fields rather than dropped.
+    """
+    outward = direction != "in"
+    near, far = ("src_path", "dst_path") if outward else ("dst_path", "src_path")
+    conds = ["l.branch = $1", f"l.{near} = $2"]
+    args: list = [branch, path]
+    if relation:
+        args.append(relation)
+        conds.append(f"l.rel = ${len(args)}")
+    args.append(limit)
     async with acquire() as con:
-        if branch is None:
-            n = await con.fetchval("SELECT count(*) FROM codex_entry")
-            await con.execute("TRUNCATE codex_entry")
-        else:
-            n = await con.fetchval("SELECT count(*) FROM codex_entry WHERE branch = $1", branch)
-            await con.execute("DELETE FROM codex_entry WHERE branch = $1", branch)
+        rows = await con.fetch(
+            f"SELECT l.rel, l.{far} AS path, l.ord, l.qty, l.data, "
+            f"       e.codex_type, e.name, e.category, e.blueprint "
+            f"FROM codex_link l "
+            f"LEFT JOIN codex_entry e ON e.branch = l.branch AND e.path = l.{far} "
+            f"WHERE {' AND '.join(conds)} "
+            f"ORDER BY l.rel, l.ord LIMIT ${len(args)}",
+            *args,
+        )
+    return [dict(r) for r in rows]
+
+
+async def entries_with_stat(branch: str, stat_key: str, *, codex_type: str | None = None,
+                            limit: int = 50, offset: int = 0) -> tuple[list[dict], int]:
+    """Entries granting a stat, strongest first - the query the JSONB blob couldn't
+    serve. A prefab granting the stat more than once contributes its BEST row, so an
+    entry appears once and sorts by what it actually gives."""
+    conds = ["s.branch = $1", "s.stat_key = $2"]
+    args: list = [branch, stat_key]
+    if codex_type:
+        args.append(codex_type)
+        conds.append(f"e.codex_type = ${len(args)}")
+    where = " AND ".join(conds)
+    async with acquire() as con:
+        total = await con.fetchval(
+            f"SELECT count(DISTINCT s.path) FROM codex_stat s "
+            f"JOIN codex_entry e ON e.branch = s.branch AND e.path = s.path WHERE {where}",
+            *args)
+        rows = await con.fetch(
+            f"SELECT DISTINCT ON (s.path) s.path, s.stat_key, s.stat_name, s.value, "
+            f"       s.is_percent, s.slot_key, e.codex_type, e.name, e.category, e.blueprint "
+            f"FROM codex_stat s "
+            f"JOIN codex_entry e ON e.branch = s.branch AND e.path = s.path "
+            f"WHERE {where} ORDER BY s.path, s.value DESC NULLS LAST",
+            *args)
+    ordered = sorted([dict(r) for r in rows],
+                     key=lambda r: (r["value"] is None, -(r["value"] or 0), r["name"]))
+    return ordered[offset:offset + limit], int(total or 0)
+
+
+async def requirements_for(branch: str, collection: str) -> list[dict]:
+    """A badge's rank ladder, bronze first."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT rank, rank_name, badge_id, completion_kind, requirement_key, label, "
+            "       amount, difficulty, status, context FROM codex_requirement "
+            "WHERE branch = $1 AND collection = $2 ORDER BY rank",
+            branch, collection)
+    return [dict(r) for r in rows]
+
+
+async def upgrade_system(branch: str, system_key: str) -> list[dict]:
+    """Every node of one progression tree, in rank then key order."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT system_kind, system_key, node_key, rank, source_path, costs, requires "
+            "FROM codex_upgrade WHERE branch = $1 AND system_key = $2 "
+            "ORDER BY rank NULLS LAST, node_key",
+            branch, system_key)
+    return [dict(r) for r in rows]
+
+
+async def upgrade_systems(branch: str) -> list[dict]:
+    """The progression systems present in a branch, with node counts."""
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT system_kind, system_key, count(*) AS nodes FROM codex_upgrade "
+            "WHERE branch = $1 GROUP BY system_kind, system_key "
+            "ORDER BY system_kind, system_key", branch)
+    return [{"system_kind": r["system_kind"], "system_key": r["system_key"],
+             "nodes": int(r["nodes"])} for r in rows]
+
+
+async def child_counts(branch: str) -> dict[str, int]:
+    """Row counts of every codex table for a branch - the admin/status readout."""
+    async with acquire() as con:
+        row = await con.fetchrow(
+            "SELECT (SELECT count(*) FROM codex_entry WHERE branch = $1) AS entries, "
+            "       (SELECT count(*) FROM codex_stat WHERE branch = $1) AS stats, "
+            "       (SELECT count(*) FROM codex_ability WHERE branch = $1) AS abilities, "
+            "       (SELECT count(*) FROM codex_link WHERE branch = $1) AS links, "
+            "       (SELECT count(*) FROM codex_requirement WHERE branch = $1) AS requirements, "
+            "       (SELECT count(*) FROM codex_upgrade WHERE branch = $1) AS upgrades",
+            branch)
+    return {k: int(v or 0) for k, v in dict(row).items()} if row else {}
+
+
+# Every codex table, so a reset clears the whole set rather than leaving orphaned
+# stats/links behind pointing at entries that no longer exist.
+_ALL_TABLES = ("codex_stat", "codex_ability", "codex_link", "codex_requirement",
+               "codex_upgrade", "codex_entry")
+
+
+async def reset(branch: str | None = None) -> int:
+    """Wipe a branch's codex (or all of it). Returns the prior entry count - for a
+    clean rebuild from the archive."""
+    async with acquire() as con:
+        async with con.transaction():
+            if branch is None:
+                n = await con.fetchval("SELECT count(*) FROM codex_entry")
+                await con.execute("TRUNCATE " + ", ".join(_ALL_TABLES))
+            else:
+                n = await con.fetchval(
+                    "SELECT count(*) FROM codex_entry WHERE branch = $1", branch)
+                for table in _ALL_TABLES:
+                    await con.execute(f"DELETE FROM {table} WHERE branch = $1", branch)
     return int(n or 0)
