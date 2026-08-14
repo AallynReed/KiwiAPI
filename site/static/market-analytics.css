@@ -136,8 +136,14 @@
 
 #mkt-view-analytics {
   max-width: var(--content-max, 1100px); margin: 0 auto;
-  padding: 0 clamp(16px, 4vw, 40px); display: grid; gap: 24px;
+  padding: 0 clamp(16px, 4vw, 40px); display: grid;
+  grid-template-columns: minmax(0, 1fr); gap: 24px;
 }
+/* Grid items default to min-width:auto, so one wide table refuses to shrink,
+   drags the track past the viewport, and every sibling stretches with it - the
+   whole panel ends up 736px on a 375px phone. The tables keep their own
+   scroll containers; this just stops them widening the page. */
+#mkt-view-analytics > * { min-width: 0; }
 
 /* ─── Controls + block scaffolding ──────────────────────────────────── */
 .mkt-an-controls { display: flex; justify-content: flex-end; }
@@ -160,7 +166,22 @@
 
 /* ─── Movers ────────────────────────────────────────────────────────── */
 .mkt-an-movers { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.mkt-an-mcol { display: grid; gap: 4px; align-content: start; }
+/* Each column is itself a grid, so its rows are grid items with min-width:auto
+   and refuse to shrink below a long item name - one 458px row was widening the
+   entire page on a phone. The name span already truncates with an ellipsis; it
+   just needed to be allowed to. */
+.mkt-an-mcol { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; align-content: start; }
+.mkt-an-mcol > * { min-width: 0; }
+
+/* The analytics tables are far wider than a phone and had no scroll container,
+   so they pushed the page sideways instead of scrolling themselves. */
+#mkt-an-deals, #mkt-an-liquidity, #mkt-an-volume { overflow-x: auto; }
+
+/* Risers and fallers side by side stop being readable well before they stop
+   fitting, so they stack before that point. */
+@media (max-width: 700px) {
+  .mkt-an-movers { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+}
 .mkt-an-mcol-title {
   margin: 0 0 6px; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase;
   display: inline-flex; align-items: center; gap: 7px;
