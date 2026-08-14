@@ -51,7 +51,12 @@ SITE_CSP = (
     # served from the API origin cross-origin; viewers fetch() it (connect-src),
     # but declare media-src too so any <audio>/<video> from the API isn't blocked
     # by the default-src fallback.
-    "media-src 'self' https://api.aallyn.net; "
+    # `blob:` is the Sound Studio previewing the replacement you just picked
+    # (site/static/sound-studio.js): the clip is decoded in the page and played
+    # from memory, so it never leaves the browser - same reasoning as img-src
+    # above. Without it the preview fails with MEDIA_ERR_SRC_NOT_SUPPORTED, and
+    # only in a real browser - curl sees a perfectly good page.
+    "media-src 'self' blob: https://api.aallyn.net; "
     "connect-src 'self' https://api.aallyn.net "
         "https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
     "frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; "
