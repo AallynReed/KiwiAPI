@@ -27,6 +27,7 @@ from app.core.errors import APIError, ErrorCode
 from app.core.ratelimit import check_rate_limit
 from app.core.utils import client_ip, iso
 from app.site import classes_page, commands_page, ssr
+from app.site import search as site_search_mod
 from app.site.feature_map import SITE_FEATURE_FLAGS as _SITE_FEATURE_FLAGS
 from app.site.feature_map import SITEMAP_PAGES as _SITEMAP_PAGES
 from app.site.feature_map import feature_blocks as _feature_blocks
@@ -2096,6 +2097,49 @@ async def site_codex_entry(
     if doc is None:
         raise HTTPException(status_code=404, detail=f"No {type} entry '{path}'")
     return JSONResponse(_codex_row(doc), headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/search", response_class=HTMLResponse)
+async def search_page(request: Request) -> HTMLResponse:
+    """Site-wide search results: a subject sidebar with hit counts, and the selected
+    subject's results beside it. Reads ``/site/search``; the query comes from ``?q=``
+    so a result page is a shareable link."""
+    return _TEMPLATES.TemplateResponse(request, "search.html", {})
+
+
+@router.get("/site/search", response_class=JSONResponse)
+async def site_search(
+    request: Request,
+    q: str = Query(default="", description="What to search for"),
+    subject: str | None = Query(default=None, description="One subject; omit for the cross-subject preview"),
+    limit: int = Query(default=site_search_mod.PAGE_SIZE, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> JSONResponse:
+    """Search pages, codex entries, players and mods at once.
+
+    Without ``subject`` this is the type-ahead preview (a few rows from each);
+    with one, that subject is paged and the rest contribute their counts for the
+    sidebar. Disabled features are absent from both - search never offers a page
+    the site isn't serving."""
+    _site_codex_branch(branch)
+    # The leaderboards analysis tabs are gated by flags that govern a CALCULATION, not
+    # a page, so they're deliberately absent from SITE_FEATURE_FLAGS. Search still has
+    # to honour them - the tabs aren't rendered when the analysis is off - so they're
+    # resolved here rather than widening the shared map for everyone.
+    flags = dict(_flag_map(request))
+    flags.update({
+        "cheater_detection_enabled": await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG),
+        "alt_clusters_enabled": await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG),
+        "leaderboard_renames_enabled": await feature_flags.is_enabled(feature_flags.RENAMES_FLAG),
+    })
+    payload = await site_search_mod.search(
+        q, flags, branch=branch, subject=subject, limit=limit, offset=offset,
+    )
+    # Short cache: results move with the codex and the mod hub, and the dropdown
+    # re-asks on every keystroke, so a few seconds absorbs the repeats without
+    # showing a stale answer after someone uploads a mod.
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=15"})
 
 
 @router.get("/site/codexes/related", response_class=JSONResponse)

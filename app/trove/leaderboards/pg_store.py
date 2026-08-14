@@ -553,6 +553,39 @@ async def player_canonical_name(name: str) -> str | None:
         )
 
 
+async def search_players(query: str, *, limit: int = 25) -> tuple[list[str], int]:
+    """`(names, total)` for a player name search - prefix matches first.
+
+    The unique index on ``name_lower`` serves ``LIKE 'x%'`` directly, so the prefix
+    pass is an index range scan. A contains-pass follows for names where the query is
+    in the middle, bounded by ``limit`` so it can't turn into a full table scan on a
+    one-character query; the count is likewise capped rather than a full ``count(*)``,
+    which on this table is millions of rows and would make the search feel broken.
+    """
+    term = (query or "").strip()
+    if len(term) < 2:
+        return [], 0
+    like = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_").lower()
+    async with acquire() as con:
+        rows = await con.fetch(
+            "SELECT name FROM ("
+            "  SELECT name, name_lower, 0 AS tier FROM player "
+            "   WHERE name_lower LIKE $1 || '%' ESCAPE '\\' "
+            "   ORDER BY name_lower LIMIT $3"
+            "  UNION ALL "
+            "  SELECT name, name_lower, 1 AS tier FROM player "
+            "   WHERE name_lower LIKE '%' || $1 || '%' ESCAPE '\\' "
+            "     AND name_lower NOT LIKE $1 || '%' ESCAPE '\\' "
+            "   LIMIT $3"
+            ") s ORDER BY tier, length(name_lower), name_lower LIMIT $2",
+            like, limit, max(limit * 4, 100),
+        )
+    names = [r["name"] for r in rows]
+    # "How many" is only ever used to size a badge, so an exact count past the page is
+    # not worth a scan: report what we can see.
+    return names, len(names)
+
+
 async def player_rows_window(
     name: str, window_start: int, window_end: int | None = None,
 ) -> list[dict]:

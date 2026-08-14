@@ -27,6 +27,40 @@
                     aria-controls="nav-links">
                 <i class="fa-solid fa-bars" aria-hidden="true"></i>
             </button>
+            {# Site-wide search. Collapsed to an icon by default so it costs no room in
+               the bar; clicking (or Ctrl/Cmd+K) expands it in place. The dropdown shows
+               live results across pages, the codex, players and mods; Enter goes to the
+               /search page for the full, browsable answer. #}
+            <div class="nav-search" id="nav-search">
+                <button type="button" class="nav-search-toggle" id="nav-search-toggle"
+                        aria-label="Search" data-i18n-aria-label
+                        aria-expanded="false" aria-controls="nav-search-field">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                </button>
+                <form class="nav-search-form" id="nav-search-form" action="/search" method="get"
+                      role="search" autocomplete="off">
+                    <input type="search" name="q" id="nav-search-field" class="nav-search-input"
+                           placeholder="Search Trove" data-i18n-placeholder
+                           aria-label="Search the site" data-i18n-aria-label
+                           spellcheck="false" autocomplete="off"
+                           role="combobox" aria-expanded="false" aria-autocomplete="list"
+                           aria-controls="nav-search-results">
+                    <kbd class="nav-search-kbd" aria-hidden="true">Ctrl K</kbd>
+                    <button type="button" class="nav-search-close" id="nav-search-close"
+                            aria-label="Close search" data-i18n-aria-label>
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </form>
+                <div class="nav-search-panel" id="nav-search-panel" hidden>
+                    <ul class="nav-search-results" id="nav-search-results" role="listbox"
+                        aria-label="Search results" data-i18n-aria-label></ul>
+                    <p class="nav-search-empty" id="nav-search-empty" role="status" hidden
+                       data-i18n>No matches</p>
+                    <a class="nav-search-all" id="nav-search-all" href="/search"><span data-i18n>See all results</span>
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                </div>
+            </div>
+
             <nav class="nav-links" id="nav-links" aria-label="Primary">
                 {# The three most-reached destinations get a first-class slot so the
                    common tasks aren't a dropdown away. Hidden below 1280px (see the
@@ -55,7 +89,6 @@
                                    autocomplete="off" spellcheck="false"
                                    placeholder="Search pages" data-i18n-placeholder
                                    aria-label="Search pages" data-i18n-aria-label>
-                            <kbd class="nav-mega-kbd" aria-hidden="true">Ctrl K</kbd>
                         </div>
                         <p class="nav-mega-empty" id="nav-pages-empty" role="status" hidden data-i18n>No pages match</p>
 
@@ -151,3 +184,9 @@
          embeddable viewer has no navbar and pulls both files in itself. -->
     <link rel="stylesheet" href="/static/dropdown.min.css">
     <script src="/static/dropdown.min.js" defer></script>
+
+    <!-- Site-wide search. Same reasoning as the dropdown above: the search field is
+         part of the navbar, so its script ships with the navbar and every page gets
+         it without anyone remembering to add a tag. `defer` runs it after the
+         bottom-of-body `_site_util`, which it depends on for BTTUtil. -->
+    <script src="/static/site_search.min.js" defer></script>
