@@ -53,7 +53,7 @@
     // A plausible-looking default would be indistinguishable from real data
     // and goes stale silently - pouch prices have swung 3M -> 12M -> 50M.
     pouchFlux: null,
-    basis: 'face',       // 'face' | 'purchase'
+    basis: 'purchase',   // 'face' | 'purchase'
     live: null,          // latest median_each, else null
     liveCount: 0,
     manual: false,       // reader typed over the live price
