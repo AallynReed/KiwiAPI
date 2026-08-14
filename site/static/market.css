@@ -647,6 +647,16 @@
 
 /* ─── Mobile ────────────────────────────────────────────────────────── */
 
+/* The first-paint "Recently listed" table has a min-content wide enough to push
+   the whole page sideways on a phone, and its fourth column is a date nobody
+   reads. Folding it is cheaper than a scroll container on a placeholder that
+   real JS replaces seconds later. Scoped to this page on purpose: .ssr-table is
+   shared, and the same column is Score on /player and Event on /calendar. */
+@media (max-width: 560px) {
+  .market-page .ssr-table th:nth-child(4),
+  .market-page .ssr-table td:nth-child(4) { display: none; }
+}
+
 @media (max-width: 900px) {
   .mkt-layout {
     grid-template-columns: minmax(0, 1fr);
