@@ -67,7 +67,8 @@ logger = logging.getLogger("kiwi.trove.codexes")
 # resolved strings, …). On the next sync the indexer force-rebuilds any branch whose
 # stored version is behind, so a parser change reaches the data WITHOUT a game update
 # or a manual rebuild - the steady-state delta only re-touches changed game files.
-CODEX_PARSER_VERSION = 21  # v21: geode companion level bonuses actually load - the tree lookup matched a filename pattern no file has, and pointed at trees/ (structure + costs) rather than upgrades/ (the per-level effects), so every companion has been served an empty levels list
+CODEX_PARSER_VERSION = 22  # v22: progression nodes carry their EFFECTS (the $name key + ability refs from upgrade/upgrades/<key>.binfab, locale-resolved) alongside their costs, so a node row states what it gives as well as what it takes
+# v21: geode companion level bonuses actually load - the tree lookup matched a filename pattern no file has, and pointed at trees/ (structure + costs) rather than upgrades/ (the per-level effects), so every companion has been served an empty levels list
 # v20: the codex is relational - stats, abilities and typed relationship edges (crafts / ingredient / craftable_at / unlocks / upgrade_cost / member_of) get their own tables, plus badge requirements and progression-tree costs. Forces one rebuild to populate them
 # v19: recipe product detection covers three more shapes it read as absent - a product path on a field the ingredients also use (banners, geode abilities), a product that IS a crafting material (conversion + gardening recipes), and the bare token costume/skin recipes name theirs with, resolved only against a prefab that exists
 # v18: placeable models come from the game's OWN table (blocks/blocks.binfab) instead of the name convention, which cannot tell mirrored siblings apart and had every deco_arrow_*_left pointing at its right-facing twin; the convention stays only for the placeables that table omits
@@ -584,12 +585,40 @@ async def _index_badges(branch: str, store: ContentStore) -> int:
         branch, requirement_rows(parsed["rows"], branch))
 
 
-async def _index_upgrades(branch: str, store: ContentStore) -> tuple[int, int]:
-    """`(node count, cost-edge count)` for every progression tree in the branch."""
+def _resolve_effects(effects: dict[str, dict], loc: dict[str, str]) -> dict[str, dict]:
+    """Resolve each node's `$…_name` key to its display text.
+
+    Only the name is resolved. The ability refs are kept as refs: the `$…_description`
+    key shape that works for collection bonuses is a convention of the combat/inventory
+    spawners, and there is no evidence it applies to `abilities/discovery/*`. Deriving a
+    key here would resolve to nothing on every row while looking like it had tried, so
+    the refs are stored as the evidence they are."""
+    out: dict[str, dict] = {}
+    for node_key, effect in effects.items():
+        name_key = effect.get("name_key") or ""
+        out[node_key] = {
+            "name_key": name_key,
+            "name": localize.resolve_text(loc, name_key) if name_key else "",
+            "abilities": list(effect.get("abilities") or []),
+        }
+    return out
+
+
+async def _index_upgrades(branch: str, store: ContentStore, loc: dict[str, str]) -> tuple[int, int]:
+    """`(node count, cost-edge count)` for every progression tree in the branch.
+
+    A system is described by TWO files: `trees/<key>.binfab` (structure + material
+    costs) and `upgrades/<key>.binfab` (what each node grants). Both are read here so a
+    node row can say what it takes and what it gives."""
     coll = UpdateState.get_pymongo_collection()
     docs = await coll.find(
         _prefix_query(branch, upgrades.TREES_ROOT), {"path": 1, "content_sha256": 1, "_id": 0}
     ).to_list(length=None)
+    effect_docs = await coll.find(
+        _prefix_query(branch, upgrades.UPGRADES_ROOT), {"path": 1, "content_sha256": 1, "_id": 0}
+    ).to_list(length=None)
+    effect_shas = {d["path"]: d["content_sha256"] for d in effect_docs}
+
     nodes: list[tuple] = []
     edges: list[tuple] = []
     for doc in docs:
@@ -602,7 +631,15 @@ async def _index_upgrades(branch: str, store: ContentStore) -> tuple[int, int]:
         parsed = await asyncio.to_thread(upgrades.parse_upgrade_costs, content, path)
         if not parsed["nodes"]:
             continue
-        nodes.extend(upgrade_rows(parsed, branch, path))
+        key = parsed["system_key"]
+        effects: dict[str, dict] = {}
+        sha = effect_shas.get(f"{upgrades.UPGRADES_ROOT}{key}.binfab")
+        if sha:
+            raw = await asyncio.to_thread(store.get, sha)
+            if raw:
+                effects = _resolve_effects(
+                    await asyncio.to_thread(upgrades.parse_upgrade_effects, raw, key), loc)
+        nodes.extend(upgrade_rows(parsed, branch, path, effects))
         edges.extend(links.upgrade_links(parsed, branch, path))
     await pg_store.replace_upgrades(branch, nodes)
     await pg_store.replace_links_for(branch, links.UPGRADE_COST, edges)
@@ -644,7 +681,7 @@ async def _index_shared_tables(branch: str, store: ContentStore, maps: _Maps) ->
     Each is independent, so one failing source (a file the archive doesn't carry yet)
     leaves the others intact rather than aborting the whole index."""
     requirements = await _index_badges(branch, store)
-    nodes, cost_edges = await _index_upgrades(branch, store)
+    nodes, cost_edges = await _index_upgrades(branch, store, maps.loc)
     unlock_edges = await _index_unlocks(branch, store)
     member_edges = await _index_membership(branch, store)
     logger.info(

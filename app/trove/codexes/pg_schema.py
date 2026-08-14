@@ -154,6 +154,11 @@ CREATE TABLE IF NOT EXISTS codex_upgrade (
     PRIMARY KEY (branch, system_key, node_key)
 );
 CREATE INDEX IF NOT EXISTS codex_upgrade_system ON codex_upgrade (branch, system_kind, system_key);
+-- What a node DOES, from the sibling `upgrade/upgrades/<key>.binfab`: the `$…_name`
+-- key and the ability refs it grants, with the name/description resolved through the
+-- locale map. `costs` says what a node takes; without this the table couldn't say what
+-- it gives.
+ALTER TABLE codex_upgrade ADD COLUMN IF NOT EXISTS effects JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 -- Tracks which parser version last (re)built each branch. When the deployed parser
 -- is newer than this, the indexer force-rebuilds the branch on the next sync - so a

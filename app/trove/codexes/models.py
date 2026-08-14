@@ -55,7 +55,7 @@ REQUIREMENT_COLUMNS: tuple[str, ...] = (
 
 UPGRADE_COLUMNS: tuple[str, ...] = (
     "branch", "system_kind", "system_key", "node_key", "rank", "source_path",
-    "costs", "requires",
+    "costs", "requires", "effects",
 )
 
 
@@ -128,11 +128,17 @@ def requirement_rows(rows: list[dict], branch: str) -> list[tuple]:
     return out
 
 
-def upgrade_rows(parsed: dict, branch: str, source_path: str) -> list[tuple]:
-    """A `upgrades.parse_upgrade_costs` result -> `codex_upgrade` tuples."""
+def upgrade_rows(parsed: dict, branch: str, source_path: str,
+                 effects: dict[str, dict] | None = None) -> list[tuple]:
+    """A `upgrades.parse_upgrade_costs` result -> `codex_upgrade` tuples.
+
+    ``effects`` is the node_key -> effect map from the sibling `upgrades/` file; a node
+    with no entry stores `{}` rather than a placeholder, so "we know it grants nothing"
+    and "the file didn't say" stay distinguishable from the row alone."""
+    effects = effects or {}
     return [
         (branch, parsed["system_kind"], parsed["system_key"], node["node_key"],
          node.get("rank"), source_path, node.get("costs") or [],
-         node.get("requires") or [])
+         node.get("requires") or [], effects.get(node["node_key"]) or {})
         for node in parsed.get("nodes") or []
     ]
