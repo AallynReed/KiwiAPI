@@ -204,6 +204,14 @@ async def status_page(request: Request) -> HTMLResponse:
         request, "status.html", {"ssr": await ssr.status_view(_ssr_fetch)})
 
 
+@router.get("/tomes", response_class=HTMLResponse)
+async def tomes(request: Request) -> HTMLResponse:
+    """Tome payout values - what each tome gives you, priced at live market
+    medians. Regular tomes rank as a repeatable farm; legendary tomes are a
+    weekly checklist. Page shell + JS; data comes from the API's ``/site/tomes``."""
+    return _TEMPLATES.TemplateResponse(request, "tomes.html", {})
+
+
 @router.get("/server-time", response_class=HTMLResponse)
 async def server_time_page(request: Request) -> HTMLResponse:
     """Dedicated server-time page - a big live Trove server clock (UTC-11), the
