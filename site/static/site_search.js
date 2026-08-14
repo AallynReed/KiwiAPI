@@ -75,14 +75,26 @@
   }
 
 
-  /* The render endpoint legitimately 422s for a blueprint that decodes to an empty
-     placeholder, and a mod banner can 404. Drop the <img> so the icon underneath
-     shows through, rather than leaving a broken-image glyph.
+  /* Thumbnail lifecycle, for a whole list at once.
 
-     Capture phase: `error` does not bubble from <img>, so a plain listener on the
-     container never sees it. */
-  function dropBrokenImages(container) {
+     The icon sits UNDER the image as a fallback, so it has to disappear the moment a
+     real render arrives - these PNGs are transparent, so an icon left underneath
+     shows straight through the model. Marking the wrapper on `load` is what hides it.
+
+     The mirror case: the render endpoint legitimately 422s for a blueprint that
+     decodes to an empty placeholder, and a mod banner can 404. Then the <img> is
+     removed, the wrapper never gets marked, and the icon stays as intended.
+
+     Both listeners are capture phase - neither `load` nor `error` bubbles from
+     <img>, so a plain listener on the container would never see them. */
+  function wireThumbnails(container) {
     if (!container) return;
+    container.addEventListener('load', (e) => {
+      const img = e.target;
+      if (img && img.tagName === 'IMG' && img.parentElement) {
+        img.parentElement.classList.add('has-image');
+      }
+    }, true);
     container.addEventListener('error', (e) => {
       if (e.target && e.target.tagName === 'IMG') e.target.remove();
     }, true);
@@ -101,7 +113,7 @@
     let items = [];
     let cursor = -1;
     let token = 0;
-    dropBrokenImages(list);
+    wireThumbnails(list);
 
     function close() {
       panel.hidden = true;

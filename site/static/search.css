@@ -113,6 +113,11 @@
   border-radius: 10px; background: var(--bg-deep); overflow: hidden;
 }
 .srch-res-thumb .srch-res-icon { position: absolute; }
+/* The icon is a FALLBACK. Once a render loads it has to go: these PNGs are
+   transparent, so an icon left underneath shows through the model. `.has-image` is
+   set on load, so an image that 422s (an empty-placeholder blueprint) never sets it
+   and the icon correctly stays. */
+.srch-res-thumb.has-image .srch-res-icon { display: none; }
 .srch-res-thumb img {
   position: relative; width: 100%; height: 100%;
   object-fit: contain; image-rendering: pixelated;
