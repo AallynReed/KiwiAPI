@@ -225,7 +225,16 @@
     });
   }
 
-  function init() { initNavbar(); initHome(); }
+  function init() {
+    // The navbar partial ships this script on every page, so a template that also
+    // includes it would bind every handler twice - and two toggle handlers cancel
+    // out exactly: the first opens the field, the second sees it open and collapses
+    // it, so the button looks dead. Bind once, whatever the page asks for.
+    if (window.__bttSiteSearchReady) return;
+    window.__bttSiteSearchReady = true;
+    initNavbar();
+    initHome();
+  }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
