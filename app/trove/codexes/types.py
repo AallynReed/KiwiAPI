@@ -21,6 +21,21 @@ CODEX_TYPES: list[tuple[str, str, tuple[str, ...]]] = [
     ("ally", "collections/pet/", ("_npc",)),
     ("mount", "collections/mount/", ()),
     ("badge", "collections/badge/", ()),
+    # The rest of the collection tree. These were never classified, so the game's
+    # wings, auras, boats, sails, flasks, tomes, mag riders and fishing poles - ~660
+    # collectibles the mastery table already knew the base for - were parsed by nothing
+    # and served by nothing. Directory names are the archive's own (`collections/fishing`
+    # holds fishing poles; there is no `collections/fishingpole`).
+    ("wings", "collections/wings/", ()),
+    ("aura", "collections/aura/", ()),
+    ("boat", "collections/boat/", ()),
+    ("sail", "collections/sail/", ()),
+    ("flask", "collections/flask/", ()),
+    ("tome", "collections/tome/", ()),
+    ("magrider", "collections/magrider/", ()),
+    ("fishingpole", "collections/fishing/", ()),
+    # Costumes live in their own root, not under collections/.
+    ("skin", "skins/", ()),
     # Styles (hats/faces/hair/weapons/banners) are the `equipment/` appearance prefabs
     # (verified against the live archive; catalogue = collection_equipmentappearance).
     # Must precede `item/` - both are item-ish, but equipment/ is its own root.
@@ -28,6 +43,13 @@ CODEX_TYPES: list[tuple[str, str, tuple[str, ...]]] = [
     ("recipe", "recipes/", ()),
     ("item", "item/", ()),  # catch-all for remaining item/* prefabs
 ]
+
+# Types whose entries are collectibles with a mastery base (used by the read layer to
+# group the codex browser). `dragon` is derived from mounts, so it inherits mount's.
+COLLECTIBLE_TYPES: frozenset[str] = frozenset({
+    "ally", "mount", "dragon", "badge", "wings", "aura", "boat", "sail",
+    "flask", "tome", "magrider", "fishingpole", "skin", "fish", "memento",
+})
 # Every codex type the API serves - the path-classified ones plus `dragon`
 # (derived from mounts). Used to validate `/v1/codexes/{type}`.
 ALL_TYPES: list[str] = [t[0] for t in CODEX_TYPES] + ["dragon"]

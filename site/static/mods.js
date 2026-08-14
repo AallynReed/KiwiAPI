@@ -357,6 +357,8 @@
       const creditedInput = credited && credited.querySelector('input[name=credited_author]');
       if (creditedInput) creditedInput.required = on;
     });
+    window.BTTUtil.modeHint(document.querySelector('#mh-create-mode select[name=mode]'),
+                            $('mh-create-mode-hint'));
   }
 
   let releaseCreateFocus = null;

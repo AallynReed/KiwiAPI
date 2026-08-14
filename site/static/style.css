@@ -2537,3 +2537,145 @@ summary:active { scale: .99; transition-duration: 0s; }
    dark rather than in system light. (The embeddable viewer sets its own, per
    theme, so this deliberately lives here and not in dropdown.css.) */
 :root { color-scheme: dark; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Site-wide search (navbar + home box)
+
+   Collapsed to an icon by default: the bar is already dense, and search only
+   needs room while it's in use. Expanding animates the field's width rather
+   than inserting it, so nothing around it jumps.
+   ═══════════════════════════════════════════════════════════════════ */
+.nav-search { position: relative; display: flex; align-items: center; margin-left: auto; }
+
+.nav-search-toggle {
+  display: grid; place-items: center;
+  width: 38px; height: 38px; padding: 0;
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm);
+  color: var(--text-mute); cursor: pointer;
+  transition: color .18s var(--ease-out), background .18s var(--ease-out),
+              border-color .18s var(--ease-out);
+}
+.nav-search-toggle:hover { color: var(--text); background: var(--bg-card-hi); }
+.nav-search-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* The expanded field FLOATS over the bar rather than taking part in its flex row.
+   In flow it competed for space with the nav links, and because `overflow: hidden`
+   removes a flex item's automatic minimum size it simply shrank to 0 - the field
+   opened, focused, and was invisible. Floating it also means expanding can't reflow
+   or wrap the rest of the bar at any width. */
+.nav-search-form {
+  position: absolute; top: 50%; right: 0; transform: translateY(-50%);
+  display: flex; align-items: center; gap: .25rem;
+  width: 0; overflow: hidden; opacity: 0; pointer-events: none;
+  padding: .2rem; border-radius: var(--radius-sm);
+  background: var(--bg-deep); box-shadow: var(--shadow-soft);
+  transition: width .22s var(--ease-out), opacity .18s var(--ease-out);
+}
+.nav-search.is-open .nav-search-form {
+  /* width + max-width rather than min(): the pair is equivalent and has no
+     support floor, and it keeps the collapsed->expanded transition on a single
+     plain length. */
+  width: 340px; max-width: 60vw; opacity: 1; pointer-events: auto;
+}
+.nav-search.is-open .nav-search-toggle { color: var(--accent); }
+
+.nav-search-input {
+  flex: 1 1 auto; min-width: 0;
+  padding: .5rem .7rem;
+  background: var(--bg-card); color: var(--text);
+  border: 1px solid var(--bg-line); border-radius: var(--radius-sm);
+  font: inherit; font-size: .95rem;
+}
+.nav-search-input:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--shadow-glow); }
+.nav-search-close {
+  display: grid; place-items: center; width: 30px; height: 30px;
+  background: transparent; border: 0; color: var(--text-soft); cursor: pointer;
+}
+.nav-search-close:hover { color: var(--text); }
+
+/* The dropdown is the same component on the navbar and the home box, so the
+   inner row styles below are shared (.ss-*). */
+.nav-search-panel,
+.home-search-panel {
+  position: absolute; top: calc(100% + .5rem); right: 0; z-index: 60;
+  width: min(460px, 92vw);
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: var(--radius); box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.home-search-panel { left: 0; right: auto; width: 100%; }
+
+.nav-search-results,
+.home-search-results { list-style: none; margin: 0; padding: .35rem; max-height: min(60vh, 420px); overflow-y: auto; }
+
+.ss-row {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .55rem .65rem; border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--text);
+}
+.ss-row:hover, .ss-row.is-active { background: var(--bg-card-hi); }
+.ss-row.is-active { box-shadow: inset 0 0 0 1px var(--accent-soft); }
+.ss-row-icon { width: 1.1rem; text-align: center; color: var(--text-mute); flex: 0 0 auto; }
+.ss-row-main { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+.ss-row-name { font-weight: 600; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* --text-mute, not --text-soft: this is reading copy and has to clear AA. */
+.ss-row-detail { font-size: .78rem; color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ss-row-badge {
+  flex: 0 0 auto; font-size: .66rem; letter-spacing: .08em; font-weight: 700;
+  color: var(--text-mute); text-transform: uppercase;
+}
+
+.nav-search-empty, .home-search-empty { margin: 0; padding: .9rem 1rem; color: var(--text-mute); font-size: .9rem; }
+.nav-search-all, .home-search-all {
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .6rem .9rem; border-top: 1px solid var(--bg-line);
+  color: var(--accent); font-size: .88rem; font-weight: 600; text-decoration: none;
+}
+.nav-search-all:hover, .home-search-all:hover { background: var(--bg-card-hi); }
+
+/* Home-page search box. Wider and always expanded - on the landing page search is
+   a primary action, not a utility tucked into the chrome. */
+/* Full width of the dashboard column. It was capped at 640px and centred, which
+   left it floating in the middle of a much wider hero while every tile below ran
+   the full width - the odd one out. */
+.home-search { position: relative; width: 100%; margin: 1.75rem 0 0; }
+.home-search-field { display: flex; align-items: center; gap: .6rem;
+  padding: .1rem .1rem .1rem .9rem;
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: var(--radius); box-shadow: var(--shadow-soft); }
+.home-search-field:focus-within { border-color: var(--accent); box-shadow: var(--shadow-glow); }
+.home-search-field > i { color: var(--text-mute); }
+.home-search-input { flex: 1 1 auto; min-width: 0; padding: .85rem .2rem;
+  background: transparent; border: 0; color: var(--text); font: inherit; font-size: 1rem; }
+.home-search-input:focus-visible { outline: none; }
+.home-search-submit { flex: 0 0 auto; padding: .7rem 1.1rem; margin: .25rem;
+  background: var(--accent); color: #06080d; border: 0; border-radius: var(--radius-sm);
+  font-weight: 700; cursor: pointer; }
+.home-search-submit:hover { filter: brightness(1.08); }
+
+@media (max-width: 640px) {
+  .nav-search.is-open .nav-search-form { width: 240px; max-width: 58vw; }
+}
+.nav-search-kbd {
+  flex: 0 0 auto; padding: .12rem .4rem; border-radius: 6px;
+  border: 1px solid var(--bg-line); background: var(--bg-deep);
+  color: var(--text-soft); font-size: .68rem; font-family: inherit;
+}
+@media (max-width: 900px) { .nav-search-kbd { display: none; } }
+
+/* Result thumbnails. The icon sits underneath and the image on top, so an image
+   that fails to load simply reveals the icon again (see `dropBrokenImages`)
+   rather than leaving a gap that reflows the row. */
+.ss-row-thumb {
+  position: relative; flex: 0 0 auto;
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border-radius: 8px; background: var(--bg-deep); overflow: hidden;
+}
+.ss-row-thumb .ss-row-icon { position: absolute; }
+/* Same rule as the results page: the icon only exists until a real render arrives,
+   and these PNGs are transparent so it cannot be left sitting behind one. */
+.ss-row-thumb.has-image .ss-row-icon { display: none; }
+.ss-row-thumb img {
+  position: relative; width: 100%; height: 100%;
+  object-fit: contain; image-rendering: pixelated;
+}

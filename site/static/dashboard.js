@@ -520,13 +520,16 @@
       // "Made by someone else" reveals the creator field + forces releases-only mode
       // (you can't own the source of a mod you're just sharing on the author's behalf).
       const onBehalfBox = $('dash-mod-onbehalf');
+      const modeHintEl = $('dash-mod-mode-hint');
       if (onBehalfBox) onBehalfBox.addEventListener('change', () => {
         const on = onBehalfBox.checked;
         const credited = $('dash-mod-credited');
         const modeSel = $('dash-mod-mode');
         if (credited) { credited.hidden = !on; credited.required = on; }
         if (modeSel) { modeSel.hidden = on; if (on) modeSel.value = 'releases'; }
+        if (modeHintEl) modeHintEl.hidden = on;
       });
+      window.BTTUtil.modeHint($('dash-mod-mode'), modeHintEl);
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (err) err.hidden = true;

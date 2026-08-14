@@ -26,15 +26,22 @@ from dataclasses import dataclass, field
 from app.core.config import settings
 from app.core.utils import utcnow
 from app.trove.codexes import (
+    abilities,
+    badges,
     binfab,
     blocks,
     catalogue,
     geode,
+    links,
     localize,
+    loot,
     mastery,
     pg_store,
+    powerrank,
     providers,
     recipe,
+    unlocks,
+    upgrades,
 )
 from app.trove.codexes.extract import (
     blueprint_ref,
@@ -44,7 +51,13 @@ from app.trove.codexes.extract import (
     model_blueprint,
     refine_mount,
 )
-from app.trove.codexes.models import to_row
+from app.trove.codexes.models import (
+    ability_rows,
+    requirement_rows,
+    stat_rows,
+    to_row,
+    upgrade_rows,
+)
 from app.trove.codexes.types import LOCALE_ROOT, PREFABS_ROOT, classify
 from app.trove.updates.cas import ContentStore
 from app.trove.updates.models import UpdateChange, UpdateState
@@ -55,7 +68,12 @@ logger = logging.getLogger("kiwi.trove.codexes")
 # resolved strings, …). On the next sync the indexer force-rebuilds any branch whose
 # stored version is behind, so a parser change reaches the data WITHOUT a game update
 # or a manual rebuild - the steady-state delta only re-touches changed game files.
-CODEX_PARSER_VERSION = 19  # v19: recipe product detection covers three more shapes it read as absent - a product path on a field the ingredients also use (banners, geode abilities), a product that IS a crafting material (conversion + gardening recipes), and the bare token costume/skin recipes name theirs with, resolved only against a prefab that exists
+CODEX_PARSER_VERSION = 24  # v24: ability names and descriptions come from the referenced ability prefab instead of being derived from the ref - the derived description key had the wrong shape for part of the archive, and the derived NAME was an internal id in title case ("Enemydeath Damagebuff"), shown where the game names nothing at all
+# v23: node effects chunk on the tree's own node keys instead of the filename stem, which found nothing for the class prestige trees (stored as prestige_bard.binfab, nodes named 01_bard_root_01) - all 90 prestige nodes had no effects. Also picks up the $..._description key those nodes carry
+# v22: progression nodes carry their EFFECTS (name + description + ability refs from upgrade/upgrades/<key>.binfab, locale-resolved) alongside their costs, so a node row states what it gives as well as what it takes
+# v21: geode companion level bonuses actually load - the tree lookup matched a filename pattern no file has, and pointed at trees/ (structure + costs) rather than upgrades/ (the per-level effects), so every companion has been served an empty levels list
+# v20: the codex is relational - stats, abilities and typed relationship edges (crafts / ingredient / craftable_at / unlocks / upgrade_cost / member_of) get their own tables, plus badge requirements and progression-tree costs. Forces one rebuild to populate them
+# v19: recipe product detection covers three more shapes it read as absent - a product path on a field the ingredients also use (banners, geode abilities), a product that IS a crafting material (conversion + gardening recipes), and the bare token costume/skin recipes name theirs with, resolved only against a prefab that exists
 # v18: placeable models come from the game's OWN table (blocks/blocks.binfab) instead of the name convention, which cannot tell mirrored siblings apart and had every deco_arrow_*_left pointing at its right-facing twin; the convention stays only for the placeables that table omits
 # v17: a blueprint that decodes to nothing no longer ends the search - the warhorse/bull mounts ship no whole model at all, only parts, and the parts their prefab names first are the empty banner slots, so they rendered blank; falls through to the largest part the same prefab names
 # v16: placeable products resolve their model by the blueprint naming convention (placeable/deco/<stem> -> deco_<stem>, frameworks -> fw_<stem>), since a placeable prefab references no model at all - gated on the name matching EXACTLY ONE blueprint in the branch
@@ -84,6 +102,8 @@ _GEODE_TABLE = PREFABS_ROOT + "collections/collection_geodecompanion.binfab"
 _RECIPE_TABLE = PREFABS_ROOT + "collections/collection_recipe.binfab"
 # The placeable/block -> model table: where the game states what a placeable looks like.
 _BLOCKS_TABLE = PREFABS_ROOT + "blocks/blocks.binfab"
+# The Power Rank tier -> rank join table.
+_POWERRANK_TABLE = PREFABS_ROOT + "meta/powerrank.binfab"
 
 
 @dataclass
@@ -106,6 +126,7 @@ class _Maps:
     store: ContentStore | None = None
     prefab_shas: dict[str, str] = field(default_factory=dict)
     _item_meta: dict[str, dict] = field(default_factory=dict)
+    _ability_meta: dict[str, dict] = field(default_factory=dict)
     valid_blueprints: set[str] = field(default_factory=set)
     # `blueprint basename without its [author] credit` -> blueprints carrying it, for the
     # placeable naming convention (see `extract.conventional_blueprint`).
@@ -116,6 +137,12 @@ class _Maps:
     _model_size: dict[str, int] = field(default_factory=dict)
     # `placeable/block prefab path -> model name`, from `blocks/blocks.binfab`.
     block_models: dict[str, str] = field(default_factory=dict)
+    # `tier marker -> Power Rank`, from `meta/powerrank.binfab` (the real join table
+    # rather than the six tiers that were reverse-engineered by hand).
+    power_rank_table: dict[int, int] = field(default_factory=dict)
+    # `equipment id -> catalogue row`, from `loot/{hat,face,weapon_*,pvpbanner}.binfab`.
+    # This is where a style's slot family and hat appearance base are STATED.
+    style_rows: dict[str, dict] = field(default_factory=dict)
 
     def _read(self, rel: str) -> bytes | None:
         """Bytes of a referenced prefab by its logical path (rel to prefabs/, no ext)."""
@@ -132,6 +159,22 @@ class _Maps:
         key = rel.replace("\\", "/").removesuffix(".binfab")
         full = (key if key.startswith(PREFABS_ROOT) else PREFABS_ROOT + key) + ".binfab"
         return full in self.prefab_shas
+
+    def ability_meta(self, ref: str) -> dict:
+        """Display text for an ability ref, read from ITS OWN prefab (memoized).
+
+        Empty when the prefab isn't in the archive - the caller then shows no name,
+        rather than a title-cased internal id."""
+        norm = abilities.normalize_ref(ref)
+        if not norm:
+            return {}
+        cached = self._ability_meta.get(norm)
+        if cached is not None:
+            return cached
+        content = self._read(norm)
+        meta = abilities.display(abilities.extract_keys(content), self.loc) if content else {}
+        self._ability_meta[norm] = meta
+        return meta
 
     def model_size(self, name: str) -> int:
         """Voxel count of a blueprint, 0 when it's an empty placeholder / unreadable.
@@ -218,18 +261,37 @@ async def _load_file(branch: str, store: ContentStore, path: str) -> bytes | Non
 
 
 async def _load_upgrade_trees(branch: str, store: ContentStore) -> dict[str, bytes]:
-    """Geode companion upgrade-tree binfabs, keyed by stem (e.g.
-    `gleemur_common_upgrade_tree`). Empty when the archive carries none."""
+    """Geode companion level BONUSES, keyed by the ref a companion prefab names
+    (`gleemur_common_upgrade_tree`). Empty when the archive carries none.
+
+    Two things were wrong here, and together they meant every geode companion has been
+    served with an empty `levels` list for as long as this existed:
+
+    - the path filter matched `*_upgrade_tree*.binfab`, but no file is named that. A
+      companion prefab REFERENCES `<base>_upgrade_tree`; the files themselves are
+      `prefabs/upgrade/{trees,upgrades}/<base>.binfab`. Nothing ever matched, so the
+      map was always empty and `parse_upgrade_tree` was never called with anything.
+    - even given the right directory, `trees/` is the wrong one. It holds a system's
+      structure and its material costs (which `_index_upgrades` reads); the per-level
+      stat and ability effects live in `upgrades/`. Pointing this at `trees/` returns
+      zero levels for every companion.
+
+    Keyed by `<stem>_upgrade_tree` so it joins directly to `find_upgrade_tree_ref`.
+    """
     coll = UpdateState.get_pymongo_collection()
     rows = await coll.find(
-        {"branch": branch, "path": {"$regex": r"_upgrade_tree[^/]*\.binfab$"}},
+        _prefix_query(branch, upgrades.UPGRADES_ROOT),
         {"path": 1, "content_sha256": 1, "_id": 0},
     ).to_list(length=None)
     trees: dict[str, bytes] = {}
     for row in rows:
+        path = row["path"]
+        if not path.endswith(".binfab"):
+            continue
         content = await asyncio.to_thread(store.get, row["content_sha256"])
         if content:
-            trees[row["path"].rsplit("/", 1)[-1].removesuffix(".binfab")] = content
+            stem = path.rsplit("/", 1)[-1].removesuffix(".binfab")
+            trees[f"{stem}_upgrade_tree"] = content
     return trees
 
 
@@ -261,6 +323,23 @@ async def _load_recipe_providers(branch: str, store: ContentStore,
         if content:
             prefabs.append((path, content))
     return providers.build_provider_map(prefabs, known_ids)
+
+
+async def _load_style_catalogues(branch: str, store: ContentStore) -> dict[str, dict]:
+    """`equipment id -> catalogue row` from every `prefabs/loot/` style catalogue."""
+    coll = UpdateState.get_pymongo_collection()
+    docs = await coll.find(
+        _prefix_query(branch, loot.LOOT_ROOT), {"path": 1, "content_sha256": 1, "_id": 0}
+    ).to_list(length=None)
+    catalogues: dict[str, bytes] = {}
+    for doc in docs:
+        path = doc["path"]
+        if not loot.is_style_catalogue(path):
+            continue
+        content = await asyncio.to_thread(store.get, doc["content_sha256"])
+        if content:
+            catalogues[path] = content
+    return await asyncio.to_thread(loot.style_index, catalogues) if catalogues else {}
 
 
 async def _load_prefab_shas(branch: str) -> dict[str, str]:
@@ -330,6 +409,8 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
         for p in prefab_shas if p.startswith(recipes_root) and p.endswith(".binfab")
     }
     blocks_table = await _load_file(branch, store, _BLOCKS_TABLE)
+    pr_table = await _load_file(branch, store, _POWERRANK_TABLE)
+    style_rows = await _load_style_catalogues(branch, store)
     bp_shas: dict[str, str] = {}
     valid = await _load_valid_blueprints(branch, bp_shas)
     maps = _Maps(
@@ -347,6 +428,8 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
         blueprint_stems=blueprint_stems(valid),
         blueprint_shas=bp_shas,
         block_models=blocks.parse_block_models(blocks_table) if blocks_table else {},
+        power_rank_table=powerrank.parse_power_rank_table(pr_table) if pr_table else {},
+        style_rows=style_rows,
     )
     logger.info("codexes[%s]: %d mount categories, %d mastery rows, %d geode rows, "
                 "%d geode members, %d upgrade trees, %d prefab refs, %d blueprints, "
@@ -358,9 +441,40 @@ async def _load_maps(branch: str, store: ContentStore, *, with_resolver: bool = 
     return maps
 
 
-async def _flush(rows: list[tuple]) -> None:
-    if rows:
-        await pg_store.upsert_entries(rows)
+class _Batch:
+    """One flush unit: entry rows plus the child rows they own.
+
+    The children are replaced SCOPED BY PATH rather than upserted, so a prefab that
+    stops granting a stat actually loses the row. `paths` therefore has to include
+    every prefab that was re-parsed - including ones that now yield no children at
+    all - or their stale rows would survive forever."""
+
+    def __init__(self) -> None:
+        self.entries: list[tuple] = []
+        self.paths: list[str] = []
+        self.stats: list[tuple] = []
+        self.abilities: list[tuple] = []
+        self.links: list[tuple] = []
+
+    def add(self, parsed: tuple) -> None:
+        entry_row, stats, abilities, link_rows = parsed
+        self.entries.append(entry_row)
+        self.paths.append(entry_row[1])          # COLUMNS[1] == path
+        self.stats.extend(stats)
+        self.abilities.extend(abilities)
+        self.links.extend(link_rows)
+
+    def __len__(self) -> int:
+        return len(self.entries)
+
+
+async def _flush(batch: _Batch) -> None:
+    if not batch.entries:
+        return
+    branch = batch.entries[0][0]                 # COLUMNS[0] == branch
+    await pg_store.upsert_entries(batch.entries)
+    await pg_store.replace_children(branch, batch.paths, stats=batch.stats,
+                                    abilities=batch.abilities, links=batch.links)
 
 
 def _attach_geode_companion(entry: dict, rel: str, content: bytes, maps: _Maps) -> None:
@@ -403,15 +517,21 @@ def _attach_recipe_catalogue_and_providers(rdata: dict, rel: str, maps: _Maps) -
 
 
 def _parse_entry(branch: str, path: str, sha: str, ctype: str, maps: _Maps, now) -> tuple | None:
-    """Read + parse one prefab into a `codex_entry` row tuple (None if the blob is
-    missing). Runs inside ``to_thread`` - all the blocking reads (the prefab itself
-    plus recipe/companion cross-references) happen off the event loop."""
+    """Read + parse one prefab into a `(entry row, stat rows, ability rows, link rows)`
+    bundle (None if the blob is missing).
+
+    Runs inside ``to_thread`` - all the blocking reads (the prefab itself plus
+    recipe/companion cross-references) happen off the event loop. The child rows are a
+    projection of the SAME decode that fills `data`, never a second parse."""
     content = maps.store.get(sha) if maps.store is not None else None
     if content is None:
         return None
     entry = extract_entry(ctype, path, content, maps.loc, resolve_meta=maps.item_meta,
                           valid_blueprints=maps.valid_blueprints, model_size=maps.model_size,
-                          prefab_exists=maps.prefab_exists)
+                          prefab_exists=maps.prefab_exists,
+                          power_rank_table=maps.power_rank_table,
+                          style_rows=maps.style_rows,
+                          resolve_ability=maps.ability_meta)
     rel = path[len(PREFABS_ROOT):].removesuffix(".binfab")
     if ctype == "mount":  # split dragons out by their collection category
         refine_mount(entry, rel, maps.mount_categories)
@@ -434,7 +554,168 @@ def _parse_entry(branch: str, path: str, sha: str, ctype: str, maps: _Maps, now)
         entry["mastery_geode"] = mastery.geode_mastery_for(rel, maps.geode_multipliers)
     if rel.lower().startswith("item/companion/"):
         _attach_geode_companion(entry, rel, content, maps)
-    return to_row(entry, branch, sha, now)
+    return (
+        to_row(entry, branch, sha, now),
+        stat_rows(entry, branch),
+        ability_rows(entry, branch),
+        links.recipe_links(entry, branch) if ctype == "recipe" else [],
+    )
+
+
+# The single files (and one directory) that feed the branch-scoped tables. A delta
+# only rebuilds those tables when it actually touched one of these.
+_BADGES_TABLE = PREFABS_ROOT + "meta/badges.binfab"
+_UNLOCKS_TABLE = PREFABS_ROOT + "collections/unlocks.binfab"
+
+
+def _shared_sources_touched(changes: list[dict]) -> bool:
+    """Did this version's change list include a shared-table source?"""
+    for change in changes:
+        path = change.get("path") or ""
+        if path in (_BADGES_TABLE, _UNLOCKS_TABLE, badges.EXE_PATH):
+            return True
+        if path.startswith(upgrades.TREES_ROOT):
+            return True
+    return False
+
+
+async def _load_metric_names(branch: str, store: ContentStore) -> list[str]:
+    """The `PlayerMetric` enum from the client executable, indexed by ordinal.
+
+    The archive mirrors the exe, so this stays current instead of drifting like a
+    hardcoded table would. It's ~20MB read once per rebuild; without it the metric
+    badges still decode their amount and are stored `blocked`, never guessed."""
+    exe = await _load_file(branch, store, badges.EXE_PATH)
+    if not exe:
+        logger.warning("codexes[%s]: %s absent - badge metric names unresolved",
+                       branch, badges.EXE_PATH)
+        return []
+    return await asyncio.to_thread(badges.parse_metric_names, exe)
+
+
+async def _index_badges(branch: str, store: ContentStore) -> int:
+    data = await _load_file(branch, store, _BADGES_TABLE)
+    if not data:
+        return 0
+    metric_names = await _load_metric_names(branch, store)
+    parsed = await asyncio.to_thread(badges.parse_badges, data, metric_names)
+    if parsed["errors"]:
+        logger.warning("codexes[%s]: badge decode reported %d issue(s): %s",
+                       branch, len(parsed["errors"]), parsed["errors"][:3])
+    return await pg_store.replace_requirements(
+        branch, requirement_rows(parsed["rows"], branch))
+
+
+def _resolve_effects(effects: dict[str, dict], loc: dict[str, str]) -> dict[str, dict]:
+    """Resolve each node's `$…_name` key to its display text.
+
+    Only the name is resolved. The ability refs are kept as refs: the `$…_description`
+    key shape that works for collection bonuses is a convention of the combat/inventory
+    spawners, and there is no evidence it applies to `abilities/discovery/*`. Deriving a
+    key here would resolve to nothing on every row while looking like it had tried, so
+    the refs are stored as the evidence they are."""
+    out: dict[str, dict] = {}
+    for node_key, effect in effects.items():
+        name_key = effect.get("name_key") or ""
+        desc_key = effect.get("desc_key") or ""
+        out[node_key] = {
+            "name_key": name_key,
+            "name": localize.resolve_text(loc, name_key) if name_key else "",
+            "desc_key": desc_key,
+            "description": localize.resolve_text(loc, desc_key) if desc_key else "",
+            "abilities": list(effect.get("abilities") or []),
+        }
+    return out
+
+
+async def _index_upgrades(branch: str, store: ContentStore, loc: dict[str, str]) -> tuple[int, int]:
+    """`(node count, cost-edge count)` for every progression tree in the branch.
+
+    A system is described by TWO files: `trees/<key>.binfab` (structure + material
+    costs) and `upgrades/<key>.binfab` (what each node grants). Both are read here so a
+    node row can say what it takes and what it gives."""
+    coll = UpdateState.get_pymongo_collection()
+    docs = await coll.find(
+        _prefix_query(branch, upgrades.TREES_ROOT), {"path": 1, "content_sha256": 1, "_id": 0}
+    ).to_list(length=None)
+    effect_docs = await coll.find(
+        _prefix_query(branch, upgrades.UPGRADES_ROOT), {"path": 1, "content_sha256": 1, "_id": 0}
+    ).to_list(length=None)
+    effect_shas = {d["path"]: d["content_sha256"] for d in effect_docs}
+
+    nodes: list[tuple] = []
+    edges: list[tuple] = []
+    for doc in docs:
+        path = doc["path"]
+        if not path.endswith(".binfab"):
+            continue
+        content = await asyncio.to_thread(store.get, doc["content_sha256"])
+        if not content:
+            continue
+        parsed = await asyncio.to_thread(upgrades.parse_upgrade_costs, content, path)
+        if not parsed["nodes"]:
+            continue
+        key = parsed["system_key"]
+        effects: dict[str, dict] = {}
+        sha = effect_shas.get(f"{upgrades.UPGRADES_ROOT}{key}.binfab")
+        if sha:
+            raw = await asyncio.to_thread(store.get, sha)
+            if raw:
+                node_keys = [n["node_key"] for n in parsed["nodes"]]
+                effects = _resolve_effects(
+                    await asyncio.to_thread(upgrades.parse_upgrade_effects, raw, node_keys), loc)
+        nodes.extend(upgrade_rows(parsed, branch, path, effects))
+        edges.extend(links.upgrade_links(parsed, branch, path))
+    await pg_store.replace_upgrades(branch, nodes)
+    await pg_store.replace_links_for(branch, links.UPGRADE_COST, edges)
+    return len(nodes), len(edges)
+
+
+async def _index_unlocks(branch: str, store: ContentStore) -> int:
+    data = await _load_file(branch, store, _UNLOCKS_TABLE)
+    if not data:
+        return 0
+    pairs = await asyncio.to_thread(unlocks.parse_unlocks, data)
+    return await pg_store.replace_links_for(
+        branch, links.UNLOCKS, links.unlock_links(pairs, branch))
+
+
+async def _index_membership(branch: str, store: ContentStore) -> int:
+    """`member_of` edges from every `collections/collection_*.binfab` catalogue."""
+    coll = UpdateState.get_pymongo_collection()
+    docs = await coll.find(
+        _prefix_query(branch, PREFABS_ROOT + "collections/collection_"),
+        {"path": 1, "content_sha256": 1, "_id": 0},
+    ).to_list(length=None)
+    edges: list[tuple] = []
+    for doc in docs:
+        path = doc["path"]
+        if not path.endswith(".binfab"):
+            continue
+        content = await asyncio.to_thread(store.get, doc["content_sha256"])
+        if not content:
+            continue
+        members = await asyncio.to_thread(binfab.collection_category_map, content)
+        edges.extend(links.membership_links(members, path, branch))
+    return await pg_store.replace_links_for(branch, links.MEMBER_OF, edges)
+
+
+async def _index_shared_tables(branch: str, store: ContentStore, maps: _Maps) -> dict:
+    """Rebuild the branch-scoped tables that come from single source files.
+
+    Each is independent, so one failing source (a file the archive doesn't carry yet)
+    leaves the others intact rather than aborting the whole index."""
+    requirements = await _index_badges(branch, store)
+    nodes, cost_edges = await _index_upgrades(branch, store, maps.loc)
+    unlock_edges = await _index_unlocks(branch, store)
+    member_edges = await _index_membership(branch, store)
+    logger.info(
+        "codexes[%s]: shared tables - %d badge requirements, %d upgrade nodes, "
+        "%d cost edges, %d unlock edges, %d membership edges",
+        branch, requirements, nodes, cost_edges, unlock_edges, member_edges,
+    )
+    return {"requirements": requirements, "upgrade_nodes": nodes,
+            "link_edges": cost_edges + unlock_edges + member_edges}
 
 
 async def reindex(branch: str, store: ContentStore, *, force: bool = False) -> dict:
@@ -451,7 +732,7 @@ async def reindex(branch: str, store: ContentStore, *, force: bool = False) -> d
         _prefix_query(branch, PREFABS_ROOT), {"path": 1, "content_sha256": 1, "_id": 0}
     )
 
-    rows: list[tuple] = []
+    batch = _Batch()
     counts = {"indexed": 0, "unchanged": 0, "missing_blob": 0, "removed": 0}
     seen: set[str] = set()
     now = utcnow()
@@ -469,17 +750,22 @@ async def reindex(branch: str, store: ContentStore, *, force: bool = False) -> d
         if parsed is None:
             counts["missing_blob"] += 1
             continue
-        rows.append(parsed)
+        batch.add(parsed)
         counts["indexed"] += 1
-        if len(rows) >= _FLUSH_AT:
-            await _flush(rows)
-            rows = []
-    await _flush(rows)
+        if len(batch) >= _FLUSH_AT:
+            await _flush(batch)
+            batch = _Batch()
+    await _flush(batch)
 
     stale = [p for p in existing if p not in seen]
     if stale:
         await pg_store.delete_entries(branch, stale)
         counts["removed"] = len(stale)
+
+    # The shared tables (badge requirements, progression trees, unlock edges) come from
+    # single source files rather than from the per-prefab walk, so they are rebuilt
+    # wholesale here - cheap, and it keeps them consistent with the entries just written.
+    counts.update(await _index_shared_tables(branch, store, maps))
 
     # The branch is now built by the current parser - record it so a later parser
     # bump (not a game update) can tell this branch is stale and rebuild it.
@@ -501,7 +787,16 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
     ).to_list(length=None)
     touched = [r for r in rows if classify(r["path"]) is not None]
     counts = {"indexed": 0, "removed": 0, "missing_blob": 0}
+    # The shared-table sources are NOT codex-classified paths, so a patch that changes
+    # only `meta/badges.binfab` has an empty `touched` and would otherwise return here
+    # with the requirements left at their previous version.
+    shared_touched = _shared_sources_touched(rows)
+    if not touched and not shared_touched:
+        return counts
     if not touched:
+        counts.update(await _index_shared_tables(branch, store, await _load_maps(
+            branch, store, with_resolver=False)))
+        await pg_store.touch_meta(branch)
         return counts
 
     # The lookup tables are only needed to (re)parse prefabs - skip the loads for a
@@ -512,7 +807,7 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
     needs_resolver = any(classify(r["path"]) == "recipe" for r in parse_rows)
     maps = await _load_maps(branch, store, with_resolver=needs_resolver) if needs_parse else _Maps()
     now = utcnow()
-    rows: list[tuple] = []
+    batch = _Batch()
     removed: list[str] = []
 
     for r in touched:
@@ -529,13 +824,19 @@ async def reindex_changes(branch: str, store: ContentStore, ordinal: int) -> dic
         if parsed is None:
             counts["missing_blob"] += 1
             continue
-        rows.append(parsed)
+        batch.add(parsed)
         counts["indexed"] += 1
-        if len(rows) >= _FLUSH_AT:
-            await _flush(rows)
-            rows = []
-    await _flush(rows)
+        if len(batch) >= _FLUSH_AT:
+            await _flush(batch)
+            batch = _Batch()
+    await _flush(batch)
     await pg_store.delete_entries(branch, removed)
+
+    # Rebuild a shared table only when THIS delta touched one of its source files - a
+    # routine patch usually touches none of them, and rebuilding all three on every
+    # version would undo the point of the delta path.
+    if shared_touched:
+        counts.update(await _index_shared_tables(branch, store, maps))
     # Bump the branch's indexed-at so consumers keyed on it (e.g. the Mods Hub rig-map
     # cache) refresh after a game patch, even though a delta leaves parser_version put.
     await pg_store.touch_meta(branch)

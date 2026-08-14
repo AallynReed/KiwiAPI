@@ -236,6 +236,14 @@ async def server_time_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "server-time.html", {})
 
 
+@router.get("/search", response_class=HTMLResponse)
+async def search_page(request: Request) -> HTMLResponse:
+    """Site-wide search results: a subject sidebar with hit counts and the selected
+    subject's results. Page shell only - the results come from ``/site/search``,
+    which is answered by the API side."""
+    return _TEMPLATES.TemplateResponse(request, "search.html", {})
+
+
 @router.get("/calendar", response_class=HTMLResponse)
 async def calendar_page(request: Request) -> HTMLResponse:
     """Live Trove calendar - every rotation and event on one board: the daily +

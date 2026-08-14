@@ -364,9 +364,42 @@
         return lang ? versions[lang] : "";
     }
 
+    // ─── Mod mode hint ─────────────────────────────────────────────────
+    // The files/releases choice is offered in three places (hub create modal,
+    // dashboard create row, project settings) and people were picking "files"
+    // for mods they only ever wanted to upload - the labels alone don't say
+    // which is which. "releases" now leads every select (it's what most people
+    // want); wire the select to a hint element and the choice explains itself,
+    // with the same words everywhere.
+    const MODE_HINTS = {
+        files: "Build the mod here from its source files and keep every version. Already have a finished .tmod? Pick Releases only - that one is just an upload.",
+        releases: "Upload your finished .tmod and you're done. No source files to manage.",
+    };
+
+    function modeHint(select, hint) {
+        if (!select || !hint) return;
+        const t = (s) => (window.BTTi18n ? window.BTTi18n.t(s) : s);
+        const paint = () => {
+            const text = MODE_HINTS[select.value] || "";
+            hint.textContent = t(text);
+            // "releases" is the default and just gets described; "files" is the
+            // deliberate step up, so it reads as a nudge to be sure.
+            hint.classList.toggle("is-warn", select.value === "files");
+        };
+        select.addEventListener("change", paint);
+        // The settings modal builds a fresh hint each time it opens, so the
+        // language listener drops itself once its element is gone.
+        const onLang = () => {
+            if (hint.isConnected) paint();
+            else document.removeEventListener("btt-lang-changed", onLang);
+        };
+        document.addEventListener("btt-lang-changed", onLang);
+        paint();
+    }
+
     window.BTTUtil = {
         esc, apiUrl, getJSON, fetchJSON, debounce, timeAgo, getFocusable, trapFocus,
         segmentGaps, boardIconName, boardIconImg, crownHtml,
-        siteLang, textVersions, pickLang, localized,
+        siteLang, textVersions, pickLang, localized, modeHint,
     };
 })();

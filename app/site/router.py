@@ -26,7 +26,8 @@ from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
 from app.core.ratelimit import check_rate_limit
 from app.core.utils import client_ip, iso
-from app.site import classes_page, commands_page, ssr
+from app.site import classes_page, commands_page, search_index, ssr
+from app.site import search as site_search_mod
 from app.site.feature_map import SITE_FEATURE_FLAGS as _SITE_FEATURE_FLAGS
 from app.site.feature_map import SITEMAP_PAGES as _SITEMAP_PAGES
 from app.site.feature_map import feature_blocks as _feature_blocks
@@ -104,10 +105,13 @@ def _flag_map(request: Request) -> dict[str, bool]:
 def _feature_context(request: Request) -> dict:
     """Inject the feature flags into EVERY template (the navbar + dashboard read
     them). Resolved by ``_resolve_feature_flags`` above; default to enabled."""
-    return {
-        attr: getattr(request.state, attr, True)
-        for attr in _SITE_FEATURE_FLAGS
-    }
+    flags = {attr: getattr(request.state, attr, True) for attr in _SITE_FEATURE_FLAGS}
+    # The navbar's Pages menu renders from the search registry, so a page is declared
+    # once (app/site/search_index.py) and shows up in both the menu and search.
+    return {**flags,
+            "nav_menu": search_index.nav_menu(flags),
+            "nav_active": search_index.nav_is_active(request.url.path, flags)}
+
 
 
 _TEMPLATES = Jinja2Templates(
@@ -2096,6 +2100,119 @@ async def site_codex_entry(
     if doc is None:
         raise HTTPException(status_code=404, detail=f"No {type} entry '{path}'")
     return JSONResponse(_codex_row(doc), headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/search", response_class=HTMLResponse)
+async def search_page(request: Request) -> HTMLResponse:
+    """Site-wide search results: a subject sidebar with hit counts, and the selected
+    subject's results beside it. Reads ``/site/search``; the query comes from ``?q=``
+    so a result page is a shareable link."""
+    return _TEMPLATES.TemplateResponse(request, "search.html", {})
+
+
+@router.get("/site/search", response_class=JSONResponse)
+async def site_search(
+    request: Request,
+    q: str = Query(default="", description="What to search for"),
+    subject: str | None = Query(default=None, description="One subject; omit for the cross-subject preview"),
+    limit: int = Query(default=site_search_mod.PAGE_SIZE, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> JSONResponse:
+    """Search pages, codex entries, players and mods at once.
+
+    Without ``subject`` this is the type-ahead preview (a few rows from each);
+    with one, that subject is paged and the rest contribute their counts for the
+    sidebar. Disabled features are absent from both - search never offers a page
+    the site isn't serving."""
+    _site_codex_branch(branch)
+    # The leaderboards analysis tabs are gated by flags that govern a CALCULATION, not
+    # a page, so they're deliberately absent from SITE_FEATURE_FLAGS. Search still has
+    # to honour them - the tabs aren't rendered when the analysis is off - so they're
+    # resolved here rather than widening the shared map for everyone.
+    flags = dict(_flag_map(request))
+    flags.update({
+        "cheater_detection_enabled": await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG),
+        "alt_clusters_enabled": await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG),
+        "leaderboard_renames_enabled": await feature_flags.is_enabled(feature_flags.RENAMES_FLAG),
+    })
+    payload = await site_search_mod.search(
+        q, flags, branch=branch, subject=subject, limit=limit, offset=offset,
+    )
+    # Short cache: results move with the codex and the mod hub, and the dropdown
+    # re-asks on every keystroke, so a few seconds absorbs the repeats without
+    # showing a stale answer after someone uploads a mod.
+    return JSONResponse(payload, headers={"Cache-Control": "public, max-age=15"})
+
+
+@router.get("/site/codexes/related", response_class=JSONResponse)
+async def site_codex_related(
+    path: str = Query(..., description="Source prefab path of the entry"),
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> JSONResponse:
+    """Everything the codex knows that CONNECTS to one entry, in one call.
+
+    The detail panel needs all of it at once, and issuing four requests per card
+    open would be four round-trips for a panel that is mostly empty on most entries.
+    Each section is omitted when empty so the client renders only what exists.
+    """
+    _site_codex_branch(branch)
+    out: dict = {"path": path}
+
+    outgoing = await codexes_read.links_for(branch, path, direction="out", limit=300)
+    incoming = await codexes_read.links_for(branch, path, direction="in", limit=300)
+
+    def rows(items, rel):
+        return [
+            {"path": r["path"], "type": r.get("codex_type"), "name": r.get("name") or "",
+             "qty": r.get("qty"), "blueprint": r.get("blueprint"),
+             "data": r.get("data") or {}}
+            for r in items if r["rel"] == rel
+        ]
+
+    # Outgoing: what this thing produces / consumes / is made at.
+    for rel in ("crafts", "ingredient", "craftable_at", "unlocks", "member_of"):
+        found = rows(outgoing, rel)
+        if found:
+            out[rel] = found
+    # Incoming - the reverse questions, which are the interesting half.
+    made_by = rows(incoming, "crafts")
+    if made_by:
+        out["made_by"] = made_by
+    used_in = rows(incoming, "ingredient")
+    if used_in:
+        out["used_in"] = used_in
+    unlocked_by = rows(incoming, "unlocks")
+    if unlocked_by:
+        out["unlocked_by"] = unlocked_by
+    upgrade_cost_of = rows(incoming, "upgrade_cost")
+    if upgrade_cost_of:
+        out["upgrade_cost_of"] = upgrade_cost_of
+
+    # Badges carry a rank ladder keyed on the collection path, not the prefab path.
+    rel_path = path[len("prefabs/"):].removesuffix(".binfab") if path.startswith("prefabs/") else path
+    requirements = await codexes_read.requirements_for(branch, rel_path)
+    if requirements:
+        out["requirements"] = requirements
+
+    return JSONResponse(out, headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/codexes/upgrades", response_class=JSONResponse)
+async def site_codex_upgrades(
+    system: str | None = Query(default=None, description="One system key; omit to list them all"),
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> JSONResponse:
+    """Progression trees: the system list, or one system's nodes in rank order."""
+    _site_codex_branch(branch)
+    if system:
+        nodes = await codexes_read.upgrade_system(branch, system)
+        if not nodes:
+            raise HTTPException(status_code=404, detail=f"No upgrade system '{system}'")
+        return JSONResponse({"system_key": system, "items": nodes},
+                            headers={"Cache-Control": "public, max-age=300"})
+    systems = await codexes_read.upgrade_systems(branch)
+    return JSONResponse({"items": systems}, headers={"Cache-Control": "public, max-age=300"})
 
 
 @router.get("/site/codexes/crafting", response_class=JSONResponse)

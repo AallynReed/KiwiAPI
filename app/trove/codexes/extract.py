@@ -19,7 +19,14 @@ from app.trove.codexes import binfab, bonuses, localize, powerrank, recipe, styl
 
 # Types whose prefabs carry displayed stat/ability/Power-Rank bonuses (the handoff's
 # "collection prefabs"). `mount` covers dragons too (split out after extraction).
-_BONUS_TYPES = frozenset({"ally", "mount", "badge"})
+#
+# The ride/wear families were absent while they were also unclassified, so their stats
+# were never looked for; boats in particular carry three slot blocks (mount, wings,
+# boat) and every one of them was going unread.
+_BONUS_TYPES = frozenset({
+    "ally", "mount", "badge", "wings", "aura", "boat", "sail", "flask",
+    "tome", "magrider", "fishingpole", "skin",
+})
 
 _PATH = re.compile(rb"[A-Za-z0-9_][A-Za-z0-9_\-/\[\].]*")
 _BLUEPRINT_REF = re.compile(rb"[A-Za-z0-9_][A-Za-z0-9_\-/\[\].]*\.blueprint")
@@ -192,8 +199,16 @@ def refine_mount(entry: dict, rel_path: str, mount_categories: dict[str, str]) -
     return entry
 
 
-def _enrich_bonuses(data: dict, loc_map: dict[str, str]) -> None:
-    """Resolve the `$…` keys the bonus decoders left in `data` to real text."""
+def _enrich_bonuses(data: dict, loc_map: dict[str, str], resolve_ability=None) -> None:
+    """Resolve the `$…` keys the bonus decoders left in `data` to real text.
+
+    ``resolve_ability(ref) -> {"name", "description", …}`` reads the referenced ability
+    prefab and returns what IT names, which is the only reliable source: the locale key
+    has more than one shape in the archive, and most abilities carry no display name at
+    all. Without the resolver (dev / no archive) the derived key is still tried for the
+    description, but no name is invented - a bonus shows its description alone rather
+    than a title-cased internal id like "Enemydeath Damagebuff".
+    """
     for s in data.get("stats", []):
         s["stat_name"] = localize.resolve_stat_name(loc_map, s.get("stat"))
         if s.get("slot"):
@@ -201,15 +216,20 @@ def _enrich_bonuses(data: dict, loc_map: dict[str, str]) -> None:
     for a in data.get("abilities", []):
         if a.get("hidden"):
             continue
-        a["name"] = _ability_name(a.get("ref", ""))
-        text = localize.resolve_text(loc_map, a.get("key"))
-        if text:
-            a["description"] = text
-
-
-def _ability_name(ref: str) -> str:
-    seg = str(ref or "").rstrip("/").rsplit("/", 1)[-1]
-    return seg.replace("_", " ").strip().title()
+        resolved = resolve_ability(a["ref"]) if (resolve_ability and a.get("ref")) else None
+        if resolved:
+            if resolved.get("name"):
+                a["name"] = resolved["name"]
+            if resolved.get("desc_key"):
+                a["key"] = resolved["desc_key"]
+            if resolved.get("description"):
+                a["description"] = resolved["description"]
+        if not a.get("description"):
+            # Fall back to the derived key only for the description; a miss here just
+            # leaves the row without one.
+            text = localize.resolve_text(loc_map, a.get("key"))
+            if text:
+                a["description"] = text
 
 
 def _output_blueprint(output: dict | None, resolve_meta) -> str | None:
@@ -253,7 +273,10 @@ def _recipe_entry(path: str, content: bytes, loc_map: dict[str, str], resolve_me
 
 def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str, str],
                   *, resolve_meta=None, valid_blueprints: set[str] | None = None,
-                  model_size=None, prefab_exists=None) -> dict:
+                  model_size=None, prefab_exists=None,
+                  power_rank_table: dict[int, int] | None = None,
+                  style_rows: dict[str, dict] | None = None,
+                  resolve_ability=None) -> dict:
     """Codex entry from a prefab's bytes + the resolved locale map.
 
     `resolve_meta(item_path) -> {"name","desc"}` resolves referenced item prefabs
@@ -281,8 +304,8 @@ def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str,
             data["stats"] = stats
         if abilities:
             data["abilities"] = abilities
-        _enrich_bonuses(data, loc_map)
-        power_rank = powerrank.decode_power_rank(content)
+        _enrich_bonuses(data, loc_map, resolve_ability)
+        power_rank = powerrank.decode_power_rank(content, power_rank_table)
 
     category = ident.get("category") or ""
 
@@ -292,8 +315,21 @@ def extract_entry(codex_type: str, path: str, content: bytes, loc_map: dict[str,
     # useful display category when we can detect a slot.
     if codex_type == "style":
         rel = path[len("prefabs/"):].removesuffix(".binfab") if path.startswith("prefabs/") else path.removesuffix(".binfab")
-        family = styles.style_family(rel)
+        # The loot catalogue STATES the slot family and (for hats) the appearance base;
+        # `style_family` only guesses it from stem tokens and returns "" for anything
+        # unconventionally named. Prefer the catalogue and keep the guess as a fallback
+        # for a style no catalogue lists.
+        row = (style_rows or {}).get(styles.equipment_id(rel))
+        family = (row or {}).get("family") or styles.style_family(rel)
         data["style"] = {**styles.style_identity(rel), "family": family}
+        if row:
+            data["style"]["catalogue"] = row.get("source", "")
+            data["style"]["raw_category"] = row.get("raw_category")
+            if row.get("base_mastery") is not None:
+                data["style"]["base_mastery"] = row["base_mastery"]
+            if row.get("name_key") and not name_key:
+                name_key = row["name_key"]
+                name = loc_map.get(name_key) or name
         category = family or category
 
     return {

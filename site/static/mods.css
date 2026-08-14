@@ -280,6 +280,7 @@
 .mh-form-error { color: #ff6b81; font-size: .85rem; margin: 0; }
 .mh-form-hint { color: var(--text-mute); font-size: .82rem; line-height: 1.5; margin: 0; }
 .mh-form-hint strong { color: var(--text-mute); }
+.mh-form-hint.is-warn { color: var(--accent-yellow); }
 
 /* The filter toggle only exists on phones; desktop shows everything at once. */
 .mh-filter-toggle { display: none; }

@@ -54,15 +54,26 @@ from app.trove import calendar as trove_calendar
 from app.trove import (
     luxion as luxion_mod,
 )
+from app.trove.codexes import links
 from app.trove.codexes import read as codexes_read
 from app.trove.codexes.schemas import (
     CodexCategoryInfo,
     CodexCategoryList,
     CodexEntryOut,
     CodexEntryPage,
+    CodexLinkList,
+    CodexLinkOut,
+    CodexRequirementList,
+    CodexRequirementOut,
     CodexSearchPage,
+    CodexStatHolder,
+    CodexStatPage,
     CodexTypeInfo,
     CodexTypeList,
+    CodexUpgradeNode,
+    CodexUpgradeNodeList,
+    CodexUpgradeSystemInfo,
+    CodexUpgradeSystemList,
 )
 from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
 from app.trove.gems import builds as gem_builds
@@ -1999,6 +2010,122 @@ async def search_codexes(
         branch=branch, type=type, query=q,
         items=[_codex_out(d) for d in docs], count=len(docs), total=total,
     )
+
+
+# NOTE: every fixed path below must stay ABOVE `/{codex_type}` - that route is a
+# catch-all and would otherwise swallow `/links`, `/stats`, … as a type name.
+
+@codexes_router.get("/links", response_model=CodexLinkList)
+async def list_codex_links(
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    path: str = Query(..., description="Source prefab path of the entry to walk from"),
+    direction: str = Query(default="out", description="'out' = what this points at, 'in' = what points at this"),
+    rel: str | None = Query(default=None, description="Restrict to one relation"),
+    limit: int = Query(default=200, ge=1, le=500),
+) -> CodexLinkList:
+    """Typed relationships for one entry, joined to the far end.
+
+    The same rows read from either side, which is what makes the reverse questions
+    cheap: `direction=out&rel=ingredient` on a recipe lists what it consumes, and
+    `direction=in&rel=ingredient` on an item lists every recipe that consumes it.
+    """
+    _check_branch(branch)
+    if direction not in ("out", "in"):
+        raise APIError(status_code=400, code=ErrorCode.invalid_request,
+                       message="direction must be 'out' or 'in'")
+    if rel is not None and rel not in links.ALL_RELATIONS:
+        raise APIError(status_code=400, code=ErrorCode.invalid_request,
+                       message=f"rel must be one of {', '.join(links.ALL_RELATIONS)}")
+    rows = await codexes_read.links_for(branch, path, direction=direction,
+                                        relation=rel, limit=limit)
+    items = [
+        CodexLinkOut(
+            rel=r["rel"], path=r["path"], type=r.get("codex_type"),
+            name=r.get("name") or "", category=r.get("category") or "",
+            blueprint=r.get("blueprint"), qty=r.get("qty"), data=r.get("data") or {},
+        )
+        for r in rows
+    ]
+    return CodexLinkList(branch=branch, path=path, direction=direction,
+                         items=items, count=len(items))
+
+
+@codexes_router.get("/stats", response_model=CodexStatPage)
+async def list_codex_stat_holders(
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    stat: str = Query(..., description="Stat key, e.g. '$Stat_MagicFind'"),
+    type: str | None = Query(default=None, description="Restrict to one codex type"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> CodexStatPage:
+    """Everything that grants a stat, strongest first.
+
+    One row per entry: a prefab granting the stat in several equip slots contributes
+    its best, so the list ranks by what an entry actually gives."""
+    _check_branch(branch)
+    if type is not None:
+        _check_codex_type(type)
+    key = stat if stat.startswith("$") else f"$Stat_{stat}"
+    rows, total = await codexes_read.entries_with_stat(
+        branch, key, codex_type=type, limit=limit, offset=offset)
+    items = [
+        CodexStatHolder(
+            path=r["path"], type=r["codex_type"], name=r["name"],
+            category=r.get("category") or "", blueprint=r.get("blueprint"),
+            stat=r["stat_key"], stat_name=r.get("stat_name") or "",
+            value=r.get("value"), is_percent=bool(r.get("is_percent")),
+            slot=r.get("slot_key"),
+        )
+        for r in rows
+    ]
+    return CodexStatPage(branch=branch, stat=key, items=items,
+                         count=len(items), total=total)
+
+
+@codexes_router.get("/requirements", response_model=CodexRequirementList)
+async def list_codex_requirements(
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    collection: str = Query(..., description="Badge collection path, e.g. 'collections/badge/blocks_bronze'"),
+) -> CodexRequirementList:
+    """A badge's rank ladder: what each rank asks for, bronze first."""
+    _check_branch(branch)
+    rows = await codexes_read.requirements_for(branch, collection)
+    items = [CodexRequirementOut(**r) for r in rows]
+    return CodexRequirementList(branch=branch, collection=collection,
+                                items=items, count=len(items))
+
+
+@codexes_router.get("/upgrades", response_model=CodexUpgradeSystemList)
+async def list_codex_upgrade_systems(
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> CodexUpgradeSystemList:
+    """The progression systems in a branch: geode modules, geode companions and the
+    per-class prestige trees, each with its node count."""
+    _check_branch(branch)
+    rows = await codexes_read.upgrade_systems(branch)
+    return CodexUpgradeSystemList(
+        branch=branch, items=[CodexUpgradeSystemInfo(**r) for r in rows], count=len(rows))
+
+
+@codexes_router.get("/upgrades/{system_key}", response_model=CodexUpgradeNodeList)
+async def get_codex_upgrade_system(
+    system_key: str,
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> CodexUpgradeNodeList:
+    """One progression tree's nodes in rank order - what each costs and what it grants."""
+    _check_branch(branch)
+    rows = await codexes_read.upgrade_system(branch, system_key)
+    if not rows:
+        raise APIError(status_code=404, code=ErrorCode.not_found,
+                       message=f"No upgrade system '{system_key}'")
+    return CodexUpgradeNodeList(
+        branch=branch, system_key=system_key,
+        items=[CodexUpgradeNode(**r) for r in rows], count=len(rows))
 
 
 @codexes_router.get(

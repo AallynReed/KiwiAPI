@@ -197,6 +197,12 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener('keydown', (e) => {
             if (e.key !== 'k' && e.key !== 'K') return;
             if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+            // Site-wide search owns Ctrl/Cmd+K when it's present: it searches pages
+            // too, plus the codex, players and mods, so it's the superset of what
+            // this filter does. Guarded on the element rather than removed outright,
+            // so if site_search.js ever fails to load the shortcut still does
+            // something useful instead of nothing.
+            if (document.getElementById('nav-search')) return;
             const dd = pagesTrigger?.closest('.nav-dropdown');
             if (!dd) return;
             e.preventDefault();

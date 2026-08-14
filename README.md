@@ -56,7 +56,7 @@ the full per-token limit. See the [API reference](https://docs.aallyn.net) for e
 | `leaderboards` · `activity` | hourly in-game boards (with cheat detection) and player/class activity estimates |
 | `market` | in-game marketplace listings and price history |
 | `store` | the in-game cash-shop catalog — products, prices, sales, deals, lootbox odds |
-| `codexes` | decoded game catalogs — allies, mounts, dragons, recipes, items, fish, badges |
+| `codexes` | decoded game catalogs — 18 collectible types, plus the relationships between them (what crafts what, what unlocks what), badge requirements and progression trees |
 | `updates` | archived game-update files, browsable and diffable per patch |
 | `mods` · `modpacks` | `.tmod` tooling plus a hub for sharing and bundling mods |
 | `embed` | short-lived preview tokens for the embeddable 3D/VFX viewer other sites can iframe |

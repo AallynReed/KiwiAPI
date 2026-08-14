@@ -1695,9 +1695,10 @@
     const m = openModal(t('Settings'), `<form class="mp-form" id="mp-settings-form">
       <label class="mp-form-field"><span>${esc(t('Mode'))}</span>
         <select name="mode">
-          <option value="files" ${d.mode === 'files' ? 'selected' : ''}>${esc(t('Files + releases (versioned)'))}</option>
           <option value="releases" ${d.mode === 'releases' ? 'selected' : ''}>${esc(t('Releases only'))}</option>
-        </select></label>
+          <option value="files" ${d.mode === 'files' ? 'selected' : ''}>${esc(t('Files + releases'))}</option>
+        </select>
+        <small class="mp-form-hint" id="mp-settings-mode-hint"></small></label>
       <label class="mp-form-field"><span>${esc(t('Source visibility'))}</span>
         <select name="source_visibility">
           <option value="public" ${d.source_visibility === 'public' ? 'selected' : ''}>${esc(t('Public — show files & allow cloning'))}</option>
@@ -1714,6 +1715,8 @@
         <p class="mp-muted">${esc(t('Permanently removes the project, its files, history and releases. This cannot be undone.'))}</p>
         <button type="button" class="mp-btn mp-btn-sm mp-btn-danger" id="mp-delete-go"><i class="fa-solid fa-trash"></i> ${esc(t('Delete this mod'))}</button>
       </div>` : ''}</form>`);
+    window.BTTUtil.modeHint(m.wrap.querySelector('#mp-settings-form select[name=mode]'),
+                            m.wrap.querySelector('#mp-settings-mode-hint'));
     m.wrap.querySelector('#mp-settings-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.target;

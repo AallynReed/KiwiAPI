@@ -117,14 +117,32 @@
                 <!-- Visually hidden so the page keeps a single semantic h1 for
                      screen readers / SEO without the marketing hero text. -->
                 <h1 class="sr-only">Better Trove Tools - live Trove dashboard</h1>
-                {% if leaderboards_enabled %}
-                <form class="dash-search" id="home-player-search" role="search" aria-label="Look up a Trove player">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <input type="text" id="home-player-input" autocomplete="off"
-                           data-i18n-placeholder placeholder="Look up a player…" aria-label="Trove player name">
-                    <button type="submit" class="btn btn-primary" data-i18n>Search</button>
-                </form>
-                {% endif %}
+                {# Site-wide search, replacing the player-only lookup that used to sit
+                   here. Players are still one of its subjects (with live results now,
+                   rather than having to type the name exactly), and the same box also
+                   reaches pages, the codex and mods - so this is strictly more than
+                   the box it replaces, not a different one competing with it. #}
+                <div class="home-search" id="home-search">
+                    <form class="home-search-field" id="home-search-form" action="/search" method="get"
+                          role="search" aria-label="Search Better Trove Tools" autocomplete="off">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <input type="search" name="q" id="home-search-input" class="home-search-input"
+                               autocomplete="off" spellcheck="false"
+                               data-i18n-placeholder placeholder="Search pages, collections, items, players, mods"
+                               aria-label="Search" data-i18n-aria-label
+                               role="combobox" aria-expanded="false" aria-autocomplete="list"
+                               aria-controls="home-search-results">
+                        <button type="submit" class="home-search-submit" data-i18n>Search</button>
+                    </form>
+                    <div class="home-search-panel" id="home-search-panel" hidden>
+                        <ul class="home-search-results" id="home-search-results" role="listbox"
+                            aria-label="Search results" data-i18n-aria-label></ul>
+                        <p class="home-search-empty" id="home-search-empty" role="status" hidden
+                           data-i18n>No matches</p>
+                        <a class="home-search-all" id="home-search-all" href="/search"><span data-i18n>See all results</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                    </div>
+                </div>
             </div>
 
             <!-- Server status (the glanceable "is Trove up"); players-active +

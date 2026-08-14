@@ -619,6 +619,7 @@
   color: #fed1d1;
 }
 .dash-hint { margin: 8px 0 0; font-size: .8rem; line-height: 1.5; color: var(--text-mute); }
+.dash-hint.is-warn { color: var(--accent-yellow); }
 .dash-loading,
 .dash-empty {
   text-align: center;
