@@ -166,21 +166,35 @@ def _classify(price_up: bool, price_down: bool, supply_up: bool,
     return ("unusual", "Moving outside its normal range.")
 
 
-def _scan_item(name: str, series: list[dict]) -> dict | None:
-    """Score the most recent complete day against everything before it."""
+def _scan_item(name: str, series: list[dict], market_move: float = 0.0) -> dict | None:
+    """Score the most recent complete day against everything before it.
+
+    Prices are scored AFTER dividing out ``market_move``, the whole basket's
+    median move. Without that, a currency event drowns the list: when flux loses
+    a third of its value every single item reads as a spike, and the one item
+    that actually did something unusual is buried among a hundred that merely
+    got re-denominated. Deflating first asks the question worth asking - did
+    this move beyond what the whole market did? The raw move is still reported.
+
+    Supply and stack counts are NOT deflated. They are counts of listings and
+    items, not amounts of flux, so a currency move does not touch them.
+    """
     if len(series) < MIN_BASELINE_DAYS + 1:
         return None
     latest, history = series[-1], series[:-1]
     if latest["listings"] < MIN_SAMPLES:
         return None
 
-    price_z, base, change = _score(latest["p50"], [d["p50"] for d in history])
+    factor = 1.0 + (market_move or 0.0)
+    deflated = latest["p50"] / factor if factor > 0 else latest["p50"]
+    price_z, base, excess = _score(deflated, [d["p50"] for d in history])
+    _, _, change = _score(latest["p50"], [d["p50"] for d in history])
     supply_z, _, supply_rel = _score(
         latest["listings"], [d["listings"] for d in history])
     stack_z, _, stack_rel = _score(
         latest["stack_med"], [d["stack_med"] for d in history])
 
-    price_hit = _flagged(price_z, change, MIN_PRICE_MOVE)
+    price_hit = _flagged(price_z, excess, MIN_PRICE_MOVE)
     supply_hit = _flagged(supply_z, supply_rel, MIN_COUNT_MOVE)
     stack_hit = _flagged(stack_z, stack_rel, MIN_COUNT_MOVE)
     if not (price_hit or supply_hit or stack_hit):
@@ -205,7 +219,11 @@ def _scan_item(name: str, series: list[dict]) -> dict | None:
         "day": latest["bucket"],
         "price": round(latest["p50"], 2),
         "baseline": round(base, 2),
+        # change = what it actually did. excess = what it did beyond the market.
+        # During a currency event these diverge sharply, and `excess` is the one
+        # that says something about this item rather than about flux.
         "change": round(change, 4) if change is not None else None,
+        "excess": round(excess, 4) if excess is not None else None,
         "listings": latest["listings"],
         "stack_med": round(latest["stack_med"], 1),
         "stack_max": latest["stack_max"],
@@ -276,8 +294,12 @@ async def scan(days: int = 21) -> dict:
     rows = await pg_store.daily_series_all(created_at_floor=floor)
     by_item = _series_by_item(rows)
 
+    # Breadth first: the per-item pass needs the market factor to divide out.
+    market = _breadth(by_item)
+    market_move = market["median_move"] or 0.0
+
     signals = [s for name, series in by_item.items()
-               if (s := _scan_item(name, series)) is not None]
+               if (s := _scan_item(name, series, market_move)) is not None]
     # Loudest first, and a tie on severity goes to the bigger price dislocation.
     signals.sort(key=lambda s: (
         s["severity"] == "extreme",
@@ -290,7 +312,7 @@ async def scan(days: int = 21) -> dict:
     return {
         "days": days,
         "generated_for": latest_day,
-        "market": _breadth(by_item),
+        "market": market,
         "signals": signals,
         "scanned_items": len(by_item),
     }

@@ -245,6 +245,7 @@
           <div class="mkt-sig-num">
             <span class="mkt-sig-pct ${s.change >= 0 ? 'up' : 'down'}">${esc(pct)}</span>
             <span class="mkt-sig-base">${esc(t('vs') + ' ' + fmtNum(s.baseline))}</span>
+            ${excessNote(s)}
           </div>
         </article>`;
     }).join('');
@@ -253,6 +254,17 @@
       btn.addEventListener('click', () => loadTimeline(btn.dataset.item));
     }
     rerunI18n();
+  }
+
+  // The headline % is what the item actually did, because that is what a player
+  // sees in game. But when flux itself is moving, most of that is the currency,
+  // not the item - so the part that ISN'T explained by the market is spelled out
+  // separately. Only shown once the two meaningfully disagree.
+  function excessNote(s) {
+    if (s.excess == null || s.change == null) return '';
+    if (Math.abs(s.excess - s.change) < 0.1) return '';
+    const v = (s.excess >= 0 ? '+' : '') + (s.excess * 100).toFixed(0) + '%';
+    return `<span class="mkt-sig-excess">${esc(v + ' ' + t('beyond the market'))}</span>`;
   }
 
   // ─── Market pulse (KPI strip) ──────────────────────────────────────

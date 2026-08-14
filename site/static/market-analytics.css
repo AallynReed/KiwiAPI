@@ -365,3 +365,8 @@
   .mkt-sig-row { grid-template-columns: 24px 1fr; }
   .mkt-sig-num { grid-column: 2; text-align: left; margin-top: 4px; }
 }
+.mkt-sig-excess {
+  font-size: .68rem;
+  color: var(--accent-yellow);
+  white-space: nowrap;
+}
