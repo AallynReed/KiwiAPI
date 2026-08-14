@@ -197,10 +197,17 @@
 
     $('srch-empty').hidden = state.offset > 0;
     $('srch-more').hidden = state.offset >= state.total;
+    // ONE key with placeholders, not concatenated fragments. Gluing t('results in')
+    // and t('for') around the values only reads correctly in English - Japanese,
+    // Korean and Russian put the count, the category and the query in a different
+    // order entirely, and a translator handed three fragments cannot fix that.
     const label = (subjects.find((s) => s.key === state.subject) || {}).label || '';
     $('srch-summary').textContent = state.total
-      ? `${fmt(state.total)} ${t('results in')} ${t(label)} ${t('for')} "${state.q}"`
-      : `${t('No results for')} "${state.q}"`;
+      ? t('{count} results in {category} for "{query}"')
+          .replace('{count}', fmt(state.total))
+          .replace('{category}', t(label))
+          .replace('{query}', state.q)
+      : t('No results for "{query}"').replace('{query}', state.q);
     rerunI18n($('srch-sidebar'));
   }
 
