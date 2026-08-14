@@ -107,6 +107,7 @@
 .tm-clear:hover { color: var(--text); border-color: var(--accent-blue); }
 .tm-progress { font-size: .82rem; color: var(--text-mute); }
 
+
 /* ─── Rows ──────────────────────────────────────────────────────────────
    Icon, then name over payout, then value over unit price. Three columns
    rather than a table: the payout line wraps freely and the icon gives
@@ -229,10 +230,10 @@
   .tm-listhead span:last-child { display: none; }
 }
 
-/* ─── Value bar ─────────────────────────────────────────────────
-   The fill is each tome's value as a share of the best one in its own
-   list. Kept as a bar rather than a figure: it gives the eye something to
-   scan down the column without adding a third number to every row. */
+/* ─── Value bar + share ─────────────────────────────────────────────────
+   Each tome as a share of the best one in its own list, so the number is
+   bounded 0-100% and answers "how close to the best option here" - the
+   same question the gem evaluator's quality % answers. */
 .tm-row { position: relative; overflow: hidden; }
 .tm-fill {
   position: absolute;
@@ -244,7 +245,12 @@
   z-index: 0;
 }
 .tm-row > *:not(.tm-fill) { position: relative; z-index: 1; }
-
+.tm-pct {
+  font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  font-size: .7rem;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
 @media (prefers-reduced-motion: no-preference) {
   .tm-fill { transition: width .25s var(--ease-out, ease-out); }
 }
