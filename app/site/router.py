@@ -3355,11 +3355,15 @@ async def site_workshop_inspect(
     plan = await mods_workshop.preview(names)
     payload = {**plan, "source": kind, "properties": header}
     payload.pop("mapping", None)     # server-side detail; every entry carries its own `final`
+    # Which of these files could be the mod's settings file / preview image. Both
+    # answers come off the paths alone, so loose files get them without their bytes
+    # ever leaving the tab.
+    payload["config_candidates"] = mods_workshop.config_candidates(names)
+    payload["preview_candidates"] = mods_workshop.preview_candidates(names)
     if files is not None:
         sizes = {i: len(data) for i, (_, data) in enumerate(files)}
         for entry in payload["entries"]:
             entry["size"] = sizes.get(entry["index"], 0)
-        payload["config_candidates"] = mods_workshop.config_candidates(files)
     return JSONResponse(payload, headers={"Cache-Control": "no-store"})
 
 
@@ -3370,14 +3374,18 @@ async def site_workshop_build(
     files: list[UploadFile] = File(default=[]),
     archive: UploadFile | None = File(default=None),
     config: UploadFile | None = File(default=None),
+    preview: UploadFile | None = File(default=None),
     _limit: None = _WORKSHOP_LIMIT,
 ) -> Response:
     """Compile the selected files into a ``.tmod`` and hand it straight back.
 
     ``spec`` is JSON: the header to stamp (``title`` / ``author`` / ``modVersion`` /
-    ``notes``) plus the same ``fix`` / ``keep`` placement choices the preview was
-    made with. Sources are either an ``archive`` (``.zip`` or ``.tmod``) or ``files``
-    parts aligned with the ``paths`` array. The placement plan is recomputed here, so
+    ``notes`` / ``tags``) plus the same ``fix`` / ``keep`` placement choices the
+    preview was made with, and which file is the mod's settings file
+    (``config_path``) and preview image (``preview_path``). Sources are either an
+    ``archive`` (``.zip`` or ``.tmod``) or ``files`` parts aligned with the ``paths``
+    array; a settings file or preview image picked from disk instead of from the mod
+    arrives as its own part. The placement plan is recomputed here, so
     the build always matches what the page described - it never trusts a mapping sent
     back to it. Nothing is stored: the mod is built in memory and discarded once the
     response is written."""
@@ -3390,7 +3398,11 @@ async def site_workshop_build(
             raise _workshop_error(e) from e
         # An existing .tmod carries its own header; the page's fields win where set
         # (it prefills them from exactly this), the rest of the original survives.
-        properties = {**header, **{k: v for k, v in (parsed.get("properties") or {}).items() if v}}
+        # Categories are the exception: the page always sends the full set, so an
+        # empty one has to mean "cleared" rather than "leave the old tags alone".
+        page = parsed.get("properties") or {}
+        properties = {**header,
+                      **{k: v for k, v in page.items() if v or k == "tags"}}
     else:
         try:
             names = json.loads(paths or "[]")
@@ -3408,14 +3420,21 @@ async def site_workshop_build(
                   for name, part in zip(names, files, strict=True)]
         properties = parsed.get("properties") or {}
 
+    # A settings file or preview image chosen from disk isn't one of the mod's own
+    # files, so it joins the list under a path the placement rules skip - exactly
+    # like one that came in the zip - and is then packed by name.
     config_path = str(parsed.get("config_path") or "")
-    if config is not None and config.filename:
-        # A config attached from the picker isn't one of the mod's own files, so it
-        # joins the list under a path the placement rules skip - exactly like a .cfg
-        # that came in the zip - and is then packed by name.
-        config_path = mods_workshop.norm_path(config.filename)
-        source = [(p, b) for p, b in source if p != config_path]
-        source.append((config_path, await config.read()))
+    preview_path = str(parsed.get("preview_path") or "")
+    for part, chosen in ((config, "config"), (preview, "preview")):
+        if part is None or not part.filename:
+            continue
+        attached = mods_workshop.norm_path(part.filename)
+        source = [(p, b) for p, b in source if p != attached]
+        source.append((attached, await part.read()))
+        if chosen == "config":
+            config_path = attached
+        else:
+            preview_path = attached
 
     keep = parsed.get("keep")
     try:
@@ -3424,6 +3443,7 @@ async def site_workshop_build(
             fix=bool(parsed.get("fix", True)),
             keep=keep if isinstance(keep, list) else [],
             config_path=config_path,
+            preview_path=preview_path,
         )
     except mods_workshop.WorkshopError as e:
         raise _workshop_error(e) from e
@@ -3556,6 +3576,91 @@ async def site_blueprint_editor_inspect(
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     return JSONResponse(payload, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/site/blueprint-editor/export-qb", response_class=Response)
+async def site_blueprint_editor_export_qb(
+    file: UploadFile = File(...),
+    edits: str = Form(default="[]"),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> Response:
+    """Export the model as Trove's four authoring ``.qb`` files, zipped.
+
+    A blueprint is compiled; the ``.qb`` set is what a modder actually works in - the
+    base model plus the ``_a`` / ``_s`` / ``_t`` material maps - so this is the way out
+    of the editor and into Qubicle or MagicaVoxel. The attachment point is written back
+    as a magenta voxel and as the matrix offset, which is how both Trove and Troxel
+    expect to find it.
+
+    The zip's ``X-Kiwi-Notes`` header carries anything the conversion had to flatten
+    (a specular finish the map palette can't express, a game-internal material), so the
+    page can say what changed rather than letting the user discover it later."""
+    data = await file.read()
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "That file is empty.")
+    try:
+        parsed = json.loads(edits or "[]")
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "The edit list wasn't understood.") from None
+    stem = (file.filename or "model").rsplit("/", 1)[-1]
+    if stem.lower().endswith(".blueprint"):
+        stem = stem[: -len(".blueprint")]
+    stem = re.sub(r"[^A-Za-z0-9._-]", "_", stem) or "model"
+    try:
+        archive, summary = await asyncio.to_thread(
+            bp_editor.export_qb, data, parsed, stem=stem)
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    return Response(
+        content=archive,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{stem}_qb.zip"',
+            "Cache-Control": "no-store",
+            "X-Kiwi-Notes": json.dumps(summary["notes"]),
+        },
+    )
+
+
+@router.post("/site/blueprint-editor/import-qb", response_class=Response)
+async def site_blueprint_editor_import_qb(
+    files: list[UploadFile] = File(...),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> Response:
+    """Compile ``.qb`` files into a ``.blueprint`` and hand the bytes straight back.
+
+    Send the base model and, optionally, its ``_a`` / ``_s`` / ``_t`` maps - they are
+    matched by filename suffix, the same way Trove's own pipeline matches them. A
+    missing map means its default (opaque, rough, solid), which is what the game
+    assumes too. The attachment point comes from the magenta voxel if there is one,
+    otherwise from a negative matrix offset.
+
+    The response is the blueprint itself so the page can open it in the editor; what
+    the conversion made of it rides along in ``X-Kiwi-Summary``."""
+    parts: dict[str, bytes] = {}
+    for part in files:
+        if not part.filename:
+            continue
+        name = part.filename.rsplit("/", 1)[-1]
+        if not name.lower().endswith(".qb"):
+            raise APIError(400, ErrorCode.bad_request,
+                           f"'{name}' isn't a .qb file.")
+        parts[name] = await part.read()
+    if not parts:
+        raise APIError(400, ErrorCode.bad_request, "No .qb files were sent.")
+    if len(parts) > 4:
+        raise APIError(400, ErrorCode.bad_request,
+                       "Send the model and up to three material maps.")
+    try:
+        data, summary = await asyncio.to_thread(bp_editor.import_qb, parts)
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    return Response(
+        content=data,
+        media_type="application/octet-stream",
+        headers={"Cache-Control": "no-store", "X-Kiwi-Summary": json.dumps(summary)},
+    )
 
 
 @router.post("/site/blueprint-editor/check", response_class=JSONResponse)

@@ -47,10 +47,17 @@
             <i class="fa-solid fa-cube" aria-hidden="true"></i>
             <h2 data-i18n>Open a blueprint</h2>
             <p data-i18n>Drop a <code>.blueprint</code> file anywhere on this page, or pick one below. It's opened in your browser and never stored anywhere.</p>
-            <button type="button" class="bpe-btn bpe-primary" id="bpe-open">
-                <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
-                <span data-i18n>Choose a file</span>
-            </button>
+            <div class="bpe-openrow">
+                <button type="button" class="bpe-btn bpe-primary" id="bpe-open">
+                    <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
+                    <span data-i18n>Choose a file</span>
+                </button>
+                <button type="button" class="bpe-btn" id="bpe-import-qb">
+                    <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+                    <span data-i18n>Open Qubicle files</span>
+                </button>
+            </div>
+            <p class="bpe-hint bpe-openhint" data-i18n>Working in Qubicle or MagicaVoxel? Pick your <code>.qb</code> along with its <code>_a</code>, <code>_s</code> and <code>_t</code> material maps and they'll be compiled into a blueprint.</p>
         </div>
 
         <div id="bpe-workspace" class="bpe-workspace" hidden>
@@ -137,6 +144,19 @@
                         <span data-i18n>Undo</span>
                     </button>
                     <button type="button" class="bpe-btn" id="bpe-revert" disabled data-i18n>Revert all</button>
+                </div>
+
+                <h3 data-i18n>Qubicle</h3>
+                <p class="bpe-hint" data-i18n>The four-file format Qubicle and MagicaVoxel use: the model plus its alpha, specular and type maps.</p>
+                <div class="bpe-actions">
+                    <button type="button" class="bpe-btn" id="bpe-export-qb">
+                        <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+                        <span data-i18n>Export .qb set</span>
+                    </button>
+                    <button type="button" class="bpe-btn" id="bpe-import-qb2">
+                        <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+                        <span data-i18n>Import .qb</span>
+                    </button>
                     <button type="button" class="bpe-btn" id="bpe-open2">
                         <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
                         <span data-i18n>Open another</span>
@@ -150,6 +170,7 @@
     </main>
 
     <input type="file" id="bpe-input" accept=".blueprint" hidden>
+    <input type="file" id="bpe-qb-input" accept=".qb" multiple hidden>
 
     {% include "partials/footer.html" %}
 

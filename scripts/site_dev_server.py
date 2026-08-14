@@ -3529,6 +3529,24 @@ class Handler(SimpleHTTPRequestHandler):
 
         fields, files = self._read_multipart()
         blobs = {name: (filename, data) for name, filename, data in files}
+
+        if path == "/site/blueprint-editor/import-qb":
+            parts = {fn: d for nm, fn, d in files if nm == "files" and fn}
+            if not parts:
+                return self._send_json({"detail": "No .qb files were sent."}, 400)
+            try:
+                out, summary = bp_editor.import_qb(parts)
+            except bp_editor.EditorError as e:
+                return self._send_json({"detail": str(e)}, 400)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            self.send_header("Content-Length", str(len(out)))
+            self.send_header("X-Kiwi-Summary", json.dumps(summary))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(out)
+            return None
+
         if "file" not in blobs:
             return self._send_json({"detail": "No file was sent."}, 400)
         name, data = blobs["file"]
@@ -3539,6 +3557,18 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json(bp_editor.check(
                     data, json.loads(fields.get("edits") or "[]"),
                     fields.get("kind") or "other"))
+            if path == "/site/blueprint-editor/export-qb":
+                stem = name[:-len(".blueprint")] if name.lower().endswith(".blueprint") else name
+                archive, summary = bp_editor.export_qb(
+                    data, json.loads(fields.get("edits") or "[]"), stem=stem or "model")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/zip")
+                self.send_header("Content-Length", str(len(archive)))
+                self.send_header("X-Kiwi-Notes", json.dumps(summary["notes"]))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(archive)
+                return None
             if path == "/site/blueprint-editor/save":
                 out, summary = bp_editor.apply_edits(
                     data, json.loads(fields.get("edits") or "[]"))

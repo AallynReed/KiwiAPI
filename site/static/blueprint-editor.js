@@ -60,7 +60,9 @@
 
   // ---- opening ------------------------------------------------------------ //
 
-  function openFile(file) {
+  /* `note` survives the open: a .qb import has something to say about the conversion,
+     and loading the result would otherwise clear the status line out from under it. */
+  function openFile(file, note) {
     if (!file) return;
     if (!/\.blueprint$/i.test(file.name)) {
       setStatus('That isn’t a .blueprint file.', 'error');
@@ -76,11 +78,11 @@
           return body;
         });
       })
-      .then(function (payload) { loaded(file, payload); })
+      .then(function (payload) { loaded(file, payload, note); })
       .catch(function (err) { setStatus(err.message || String(err), 'error'); });
   }
 
-  function loaded(file, payload) {
+  function loaded(file, payload, note) {
     state.file = file;
     state.data = payload;
     // Only colour and material can change, so those are the only arrays worth
@@ -109,7 +111,7 @@
     renderMeta();
     renderSelection();
     updateDirty();
-    setStatus('');
+    setStatus(note || '', note ? 'ok' : '');
 
     if (state.scene) { state.scene.dispose(); state.scene = null; }
     window.VoxelScene.create({
@@ -399,6 +401,106 @@
       .catch(function (err) { setStatus(err.message || String(err), 'error'); });
   }
 
+  // ---- Qubicle interop ---------------------------------------------------- //
+
+  function download(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+
+  /* Out to the authoring format: the base model plus the _a / _s / _t material maps,
+     which is what Qubicle and MagicaVoxel users actually work in. */
+  function exportQb() {
+    if (!state.file) return;
+    var list = [];
+    state.edits.forEach(function (e) { list.push(e); });
+    setStatus('Building the .qb files…');
+    var fd = new FormData();
+    fd.append('file', state.file, state.file.name);
+    fd.append('edits', JSON.stringify(list));
+    fetch(apiUrl('/site/blueprint-editor/export-qb'), { method: 'POST', body: fd })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().then(function (b) {
+            throw new Error((b && b.detail) || 'The export failed.');
+          });
+        }
+        var notes = [];
+        try { notes = JSON.parse(res.headers.get('X-Kiwi-Notes') || '[]'); } catch (e) { /* header is optional */ }
+        return res.blob().then(function (blob) { return { blob: blob, notes: notes }; });
+      })
+      .then(function (out) {
+        var stem = state.file.name.replace(/\.blueprint$/i, '') || 'model';
+        download(out.blob, stem + '_qb.zip');
+        // Anything the conversion had to flatten is said out loud here rather than
+        // left for the user to notice in Qubicle.
+        setStatus(out.notes.length
+          ? 'Exported four .qb files. ' + out.notes.join(' ')
+          : 'Exported four .qb files — model, alpha, specular and type.', 'ok');
+      })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  /* In from the authoring format: compile the .qb set to a blueprint on the server,
+     then open the result through the ordinary path so everything downstream - editing,
+     checks, saving - behaves exactly as it does for a file that arrived as a blueprint. */
+  function importQb(fileList) {
+    var picked = Array.prototype.slice.call(fileList).filter(function (f) {
+      return /\.qb$/i.test(f.name);
+    });
+    if (!picked.length) {
+      setStatus('Pick a .qb file — and its _a / _s / _t maps too, if you have them.', 'error');
+      return;
+    }
+    if (picked.length > 4) {
+      setStatus('Send the model and up to three material maps.', 'error');
+      return;
+    }
+    setStatus('Compiling ' + picked.length + ' .qb file' + (picked.length === 1 ? '' : 's') + '…');
+    var fd = new FormData();
+    picked.forEach(function (f) { fd.append('files', f, f.name); });
+    fetch(apiUrl('/site/blueprint-editor/import-qb'), { method: 'POST', body: fd })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().then(function (b) {
+            throw new Error((b && b.detail) || 'Those .qb files couldn’t be compiled.');
+          });
+        }
+        var summary = {};
+        try { summary = JSON.parse(res.headers.get('X-Kiwi-Summary') || '{}'); } catch (e) { /* optional */ }
+        return res.blob().then(function (blob) { return { blob: blob, summary: summary }; });
+      })
+      .then(function (out) {
+        var base = picked.find(function (f) { return !/_[ast]\.qb$/i.test(f.name); }) || picked[0];
+        var stem = base.name.replace(/\.qb$/i, '');
+        var file = new File([out.blob], stem + '.blueprint');
+        var s = out.summary;
+        var bits = [];
+        if (s.maps && s.maps.length) {
+          bits.push('read the ' + s.maps.join(', ') + ' map' + (s.maps.length === 1 ? '' : 's'));
+        } else {
+          bits.push('no material maps were supplied, so everything is a rough solid');
+        }
+        if (s.attachment_source === 'marker') bits.push('found the attachment point');
+        else if (s.attachment_source === 'offset') bits.push('took the attachment point from the matrix offset');
+        // No marker means the model was centred, the same as a decoration. Say that
+        // rather than "no attachment point", because one is shown either way - the
+        // format always stores an origin, and a centred one is a real answer for a deco.
+        else bits.push('no attachment marker, so it was centred — add a magenta '
+          + '(255, 0, 255) voxel if it needs a specific grip point');
+        var lossy = (s.unknown_type || 0) + (s.unknown_alpha || 0) + (s.unknown_specular || 0);
+        if (lossy) bits.push(lossy.toLocaleString() + ' voxels had map colours outside the palette and fell back to defaults');
+        openFile(file, 'Compiled — ' + bits.join('; ') + '.');
+      })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
   // ---- rendering ---------------------------------------------------------- //
 
   function label(i) {
@@ -593,8 +695,16 @@
     ['dragleave', 'drop'].forEach(function (t) {
       drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove('bpe-dragging'); });
     });
+    // Dropping .qb files compiles them; dropping a .blueprint opens it. Sorting by
+    // extension rather than asking is the whole point of a drop target.
     drop.addEventListener('drop', function (e) {
-      if (e.dataTransfer && e.dataTransfer.files[0]) openFile(e.dataTransfer.files[0]);
+      var dropped = e.dataTransfer && e.dataTransfer.files;
+      if (!dropped || !dropped.length) return;
+      var qbs = Array.prototype.slice.call(dropped).filter(function (f) {
+        return /\.qb$/i.test(f.name);
+      });
+      if (qbs.length) importQb(qbs);
+      else openFile(dropped[0]);
     });
 
     $('bpe-colour').addEventListener('input', function (e) {
@@ -673,6 +783,15 @@
       state.showAttach = e.target.checked;
       drawAttachment();
     });
+
+    var qbInput = $('bpe-qb-input');
+    $('bpe-import-qb').addEventListener('click', function () { qbInput.click(); });
+    $('bpe-import-qb2').addEventListener('click', function () { qbInput.click(); });
+    qbInput.addEventListener('change', function () {
+      if (qbInput.files && qbInput.files.length) importQb(qbInput.files);
+      qbInput.value = '';
+    });
+    $('bpe-export-qb').addEventListener('click', exportQb);
 
     $('bpe-undo').addEventListener('click', undo);
     $('bpe-revert').addEventListener('click', revertAll);

@@ -12,7 +12,8 @@ encoder is handed the original ``(type, w)`` it decoded.
 """
 from __future__ import annotations
 
-from app.trove.blueprint import codec, lint, materials
+from app.trove.blueprint import codec, lint, materials, qb
+from app.trove.mods_hub import workshop as mods_workshop
 from app.trove.render.voxel import KIND_CODE, material_for
 
 # The editor holds every voxel's material in browser memory and re-meshes on each
@@ -23,6 +24,10 @@ EDITOR_VOXEL_CAP = 150_000
 # 515 KB. 4 MB is eight times that - room for anything a modder builds, while still
 # rejecting a mis-picked archive early instead of inflating it.
 MAX_BLUEPRINT_BYTES = 4 * 1024 * 1024
+
+# A .qb set is four uncompressed-ish grids rather than one packed model, so it is much
+# bulkier than the blueprint it compiles to.
+MAX_QB_BYTES = 48 * 1024 * 1024
 
 
 class EditorError(ValueError):
@@ -159,6 +164,35 @@ def _coerce_edits(edits, total: int) -> dict[int, dict]:
         if change:
             out[idx] = {**out.get(idx, {}), **change}
     return out
+
+
+def export_qb(raw: bytes, edits, *, stem: str = "model") -> tuple[bytes, dict]:
+    """Export the edited model as the four authoring ``.qb`` files, zipped.
+
+    Edits are applied first, for the same reason ``check`` applies them: the export is
+    of the model as it stands, not as it was opened. CPU-bound - call via
+    ``asyncio.to_thread``."""
+    edited, _ = apply_edits(raw, edits)
+    try:
+        built = qb.from_blueprint(codec.decode_full(edited), stem=stem)
+    except (qb.QbError, codec.BlueprintError) as exc:
+        raise EditorError(str(exc)) from exc
+    archive = mods_workshop.to_zip(list(built["files"].items()))
+    return archive, {"notes": built["notes"], "attachment": built["attachment"],
+                     "size": built["size"], "files": sorted(built["files"])}
+
+
+def import_qb(files: dict[str, bytes]) -> tuple[bytes, dict]:
+    """Compile a ``.qb`` (plus any material maps supplied with it) into a blueprint.
+
+    CPU-bound - call via ``asyncio.to_thread``."""
+    total = sum(len(v) for v in files.values())
+    if total > MAX_QB_BYTES:
+        raise EditorError("Those .qb files are too large to compile.")
+    try:
+        return qb.to_blueprint(files)
+    except (qb.QbError, codec.BlueprintError) as exc:
+        raise EditorError(str(exc)) from exc
 
 
 def check(raw: bytes, edits, kind: str = "other") -> dict:

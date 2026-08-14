@@ -96,7 +96,8 @@ def add_security_middleware(app: FastAPI) -> None:
             # The blueprint itself is small (the biggest in the game is 515 KB), but a
             # save also carries the edit list, and repainting every voxel of a large
             # model is one JSON entry each - which outgrows the default cap on its own.
-            max_body = 16 * 1024 * 1024
+            # A .qb import is bulkier still: four grids rather than one packed model.
+            max_body = 64 * 1024 * 1024
         elif path.startswith("/site/mod-workshop/"):
             # A whole mod is uploaded in one request (loose files, a .zip, or a
             # .tmod being repaired). The unpacked-size cap lives in workshop.py.
