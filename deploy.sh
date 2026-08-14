@@ -170,9 +170,12 @@ if [ "$PRUNE" -eq 1 ]; then
   # Safe: nothing references them once the new image is tagged + running.
   docker image prune -f >/dev/null 2>&1 || true
   # Cap the BuildKit cache so it can't balloon over time, but KEEP recent layers
-  # so the next rebuild stays fast (we don't nuke all cache every deploy). If the
-  # docker version predates --keep-storage, this no-ops (cache untouched).
-  docker builder prune -f --keep-storage=5GB >/dev/null 2>&1 || true
+  # so the next rebuild stays fast. --keep-storage was RENAMED to --max-used-space
+  # in buildkit 0.32: the old flag still ran but pruned the cache to nothing, so
+  # every deploy left the next one re-exporting the whole image (~60s of "exporting
+  # layers" on a build with zero changes). Try the current flag first.
+  docker builder prune -f --max-used-space=10GB >/dev/null 2>&1 \
+    || docker builder prune -f --keep-storage=10GB >/dev/null 2>&1 || true
 fi
 
 echo

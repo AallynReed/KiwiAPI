@@ -7,7 +7,8 @@
 services:
   api:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
-              "--proxy-headers", "--forwarded-allow-ips", "*", "--workers", "${API_WORKERS:-8}"]
+              "--proxy-headers", "--forwarded-allow-ips", "*", "--workers", "${API_WORKERS:-8}",
+              "--timeout-graceful-shutdown", "3"]
 
   # Website (presentation only) - a few workers is plenty; it does no heavy CPU,
   # just template rendering + thin internal_get fan-out to the api.

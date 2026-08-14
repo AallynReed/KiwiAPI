@@ -33,5 +33,8 @@ EXPOSE 8000
 
 # --proxy-headers / --forwarded-allow-ips: trust the reverse proxy in front of us
 # so request.client.host and the URL scheme reflect the real client, not the proxy.
+# --timeout-graceful-shutdown: the endless SSE streams would otherwise hold the
+# graceful shutdown open until docker's stop timeout SIGKILLs us (see compose).
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
-     "--proxy-headers", "--forwarded-allow-ips", "*"]
+     "--proxy-headers", "--forwarded-allow-ips", "*", \
+     "--timeout-graceful-shutdown", "3"]

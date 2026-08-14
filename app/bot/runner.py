@@ -23,6 +23,7 @@ Run: ``python -m app.bot.runner`` (the compose ``bot`` service).
 import asyncio
 import json
 import logging
+import signal
 from datetime import timedelta
 
 import discord
@@ -239,6 +240,30 @@ class KiwiBot(discord.Client):
             logger.exception("reconcile failed for guild %s", guild.id)
 
 
+async def _run(bot: KiwiBot) -> None:
+    """Run ``bot`` until it stops on its own or the container is asked to exit.
+
+    The bot is PID 1 in its container, and the kernel gives PID 1 no default
+    signal disposition: without an explicit handler a deploy's SIGTERM is simply
+    ignored and docker SIGKILLs the container 10s later - 10s added to every
+    deploy, with Mongo/Redis never closed cleanly.
+    """
+    loop = asyncio.get_running_loop()
+    stop = asyncio.Event()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, stop.set)
+    started = asyncio.create_task(bot.start(settings.discord_bot_token))
+    stopping = asyncio.create_task(stop.wait())
+    done, _ = await asyncio.wait(
+        {started, stopping}, return_when=asyncio.FIRST_COMPLETED
+    )
+    stopping.cancel()
+    if started not in done:
+        logger.info("shutdown signal received - closing the gateway connection")
+        await bot.close()
+    await started  # returns after close(); re-raises a real startup failure
+
+
 async def main() -> None:
     logging.basicConfig(
         level=logging.INFO,
@@ -250,7 +275,7 @@ async def main() -> None:
     await init_redis()
     try:
         try:
-            await KiwiBot().start(settings.discord_bot_token)
+            await _run(KiwiBot())
         except discord.PrivilegedIntentsRequired:
             # The members intent (for avatar auto-sync) isn't granted in the Discord
             # Developer Portal. Don't take the whole bot down for it - restart WITHOUT
@@ -263,7 +288,7 @@ async def main() -> None:
                 "off; avatars still refresh on the user's next login). Enable the "
                 "intent to turn it on, or set BOT_MEMBERS_INTENT=false to silence this."
             )
-            await KiwiBot(members_intent=False).start(settings.discord_bot_token)
+            await _run(KiwiBot(members_intent=False))
     finally:
         await close_redis()
         await close_db()

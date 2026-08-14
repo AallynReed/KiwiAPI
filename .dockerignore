@@ -5,7 +5,11 @@ __pycache__/
 .venv/
 venv/
 data/
+# Runtime stores that live in the deploy checkout - many GB the build never needs.
 .game_updates/
+.backlog/
+.mods/
+.embed/
 site/static/assets/
 .env
 README.md

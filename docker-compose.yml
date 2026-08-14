@@ -93,7 +93,13 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   api:
+    # ONE image for api + bot + web (they're the same build, different commands).
+    # Only this service builds it; bot/web just reference the tag below. Compose
+    # runs the whole build phase before creating any container, so the tag always
+    # exists by the time they start. Building it three times cost ~3x the image
+    # export on every deploy for three byte-identical 1.8 GB images.
     build: .
+    image: trove-app:latest
     restart: unless-stopped
     # One container fronted by two hostnames at the reverse proxy, both -> :15546:
     #   api.aallyn.net -> only /v1 + /health   (production API)
@@ -197,8 +203,14 @@ services:
     # .py change (deploys touch those constantly), which kills in-flight
     # leaderboard ingests + the cache warmer mid-pass. Use ./deploy.sh (it
     # recreates the container) to pick up code changes instead.
+    #
+    # --timeout-graceful-shutdown: the SSE event streams (/v1/events/stream) are
+    # endless generators, so uvicorn's graceful shutdown waits for them forever and
+    # docker SIGKILLs the container at the 10s stop timeout - 10s on every deploy.
+    # Force those connections closed after 3s and exit; clients auto-reconnect.
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
-              "--proxy-headers", "--forwarded-allow-ips", "*"]
+              "--proxy-headers", "--forwarded-allow-ips", "*",
+              "--timeout-graceful-shutdown", "3"]
     # Headroom for the update archiver: it decompresses several .tfa archives
     # concurrently (each held whole in RAM), which the old 512m couldn't fit.
     # If a single giant archive still OOMs, lower TROVE_UPDATE_CONCURRENCY instead.
@@ -212,7 +224,7 @@ services:
   # announcements now; guild/role events later). Slash commands still go to the
   # api's HTTP interactions endpoint - this is the gateway side only.
   bot:
-    build: .
+    image: trove-app:latest   # built by the api service (same image, different command)
     restart: unless-stopped
     environment:
       MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
@@ -253,7 +265,7 @@ services:
   # browser, the page JS calls api.aallyn.net directly for /site/* + /v1/* data.
   # See app/web/. Reverse-proxied: trove.aallyn.net -> host :15547 -> container :8000.
   web:
-    build: .
+    image: trove-app:latest   # built by the api service (same image, different command)
     restart: unless-stopped
     ports:
       - "15547:8000"
