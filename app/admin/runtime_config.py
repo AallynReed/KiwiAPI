@@ -461,6 +461,20 @@ REGISTRY: dict[str, TunableSetting] = {
             "updates archive and the rig map, so it needs the game index built."
         ),
     ),
+    "feature_tomes_enabled": _t(
+        key="feature_tomes_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for Tome values (/tomes + /site/tomes), which prices "
+            "each tome's payout against live marketplace medians - regular tomes "
+            "ranked as a repeatable farm, legendary tomes as a weekly checklist. "
+            "OFF hides the page + navbar link and 404s its endpoint. It reads "
+            "market medians but degrades to 'not evaluated' without them, so it "
+            "does NOT need feature_market_enabled."
+        ),
+    ),
 
     # ── Embeddable viewer (partner iframes; see app/embed) ────────────
     "embed.allowed_origins": _t(
