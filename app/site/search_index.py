@@ -109,7 +109,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Clubs", "/clubs", "clubs_enabled", "fa-solid fa-shield-halved", "Live", "guild"),
     _p("Player Activity", "/activity", "player_activity_enabled", "fa-solid fa-chart-line", "Live", "online", "population"),
     _p("Class Activity", "/class-activity", "class_activity_enabled", "fa-solid fa-users", "Live", "classes played"),
-    _p("Server Status", "/status", "server_status_enabled", "fa-solid fa-signal", "Live", "uptime", "down", "maintenance", badge="Beta"),
+    _p("Server Status", "/status", "server_status_enabled", "fa-solid fa-signal", "Live", "uptime", "down", "maintenance"),
     _p("Server Time", "/server-time", "server_time_enabled", "fa-solid fa-clock", "Live", "clock", "timezone", "utc"),
     _p("Calendar", "/calendar", "calendar_enabled", "fa-solid fa-calendar-days", "Live", "events", "schedule"),
 
@@ -127,7 +127,7 @@ PAGES: tuple[Destination, ...] = (
 
     _p("Mods Hub", "/mods", "mods_hub_enabled", "fa-solid fa-cubes", "Create", "modding", "addons"),
     _p("Modpacks", "/modpacks", "mods_hub_enabled", "fa-solid fa-box-open", "Create", "bundles"),
-    _p("Mod Workshop", "/mod-workshop", "mod_workshop_enabled", "fa-solid fa-screwdriver-wrench", "Create", "tmod", "compiler", "build a mod", badge="Beta"),
+    _p("Mod Workshop", "/mod-workshop", "mod_workshop_enabled", "fa-solid fa-screwdriver-wrench", "Create", "tmod", "compiler", "build a mod"),
     _p("Blueprint Editor", "/blueprint-editor", "blueprint_editor_enabled", "fa-solid fa-cube", "Create", "voxel", "blueprint", "recolour", "recolor", "materials", "glass", "model", "mount", "creature", "parts"),
     _p("Sound Studio", "/sound-studio", "sound_studio_enabled", "fa-solid fa-sliders", "Create", "audio", "music", "bnk"),
 
