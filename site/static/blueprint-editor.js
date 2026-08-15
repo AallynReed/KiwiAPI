@@ -167,6 +167,9 @@
     setStatus(note || '', note ? 'ok' : '');
 
     if (state.scene) { state.scene.dispose(); state.scene = null; }
+    // Whose geometry the scene is about to be built with. `create` is async - it
+    // loads three.js - and the active part can move before it resolves.
+    var seededId = d0.id;
     window.VoxelScene.create({
       stage: $('bpe-stage'),
       data: liveView(),
@@ -186,6 +189,15 @@
     }).then(function (scene) {
       state.scene = scene;
       scene.setDragMode(dragModeFor(state.tool));
+      /* `data` above was snapshotted from the part that was active when mount() ran.
+         Anything that selects another part before this promise resolves - a restored
+         session picks its own the moment the model is open - gets no re-mesh from
+         setActive, because setActive skips its scene work while there is no scene
+         yet. The stage would then draw part 0's voxels at the selected part's socket,
+         with the picker, the parts list and the outline all naming the right part and
+         only the geometry wrong - until you clicked something else and it rebuilt. */
+      var now = active();
+      if (now && now.id !== seededId) scene.rebuild(viewOf(now));
       drawStack();
       drawAttachment();
       drawSelection();
