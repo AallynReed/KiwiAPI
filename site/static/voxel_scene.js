@@ -98,6 +98,9 @@
         onReady: function () { request(); },
       });
       meshes.forEach(function (m) { modelGroup.add(m); });
+      // The box belongs to the geometry, so an edit that changes the model's extent
+      // has to redraw it - it is stale the moment the mesh is replaced.
+      if (outlineColour != null) setModelOutline(outlineColour);
 
       if (!keepCamera) {
         /* Frame the VOXELS, not the size the payload declares. A voxel sits on its
@@ -215,36 +218,119 @@
       Object.keys(layers).forEach(clearLayer);
     }
 
-    function setLayer(id, payload, colour) {
+    /* Every layer gets a wireframe box around it, and that box is what makes a model of
+       many parts readable: without it a creature is one lump of voxels and there is no
+       telling where the leg stops and the foot starts. `opts2.opacity` dims the boxes of
+       the parts you are NOT editing - sixteen boxes at full strength is a cage, sixteen
+       faint ones with a bright one around the active part reads at a glance.
+       `opts2.outline: false` drops it entirely. */
+    function setLayer(id, payload, colour, opts2) {
       clearLayer(id);
       if (!payload || !payload.count) { request(); return; }
+      opts2 = opts2 || {};
       var group = new THREE.Group();
-      window.VoxelMesh.build(THREE, payload, {
+      var built = window.VoxelMesh.build(THREE, payload, {
         brdfUrl: opts.brdfUrl,
         lightDir: [0.7, 1.0, 0.55],
         onReady: function () { request(); },
-      }).forEach(function (m) { group.add(m); });
+      });
+      built.forEach(function (m) { group.add(m); });
 
-      var box = new THREE.Box3().setFromObject(group);
-      if (!box.isEmpty()) {
-        var helper = new THREE.Box3Helper(box, colour || 0x58a6ff);
-        if (helper.material) {
-          helper.material.depthTest = false;
-          helper.material.transparent = true;
-          helper.material.opacity = 0.9;
+      if (opts2.outline !== false) {
+        var box = new THREE.Box3().setFromObject(group);
+        if (!box.isEmpty()) {
+          var helper = new THREE.Box3Helper(box, colour || 0x58a6ff);
+          if (helper.material) {
+            helper.material.depthTest = false;
+            helper.material.transparent = true;
+            helper.material.opacity = opts2.opacity == null ? 0.9 : opts2.opacity;
+          }
+          helper.renderOrder = 4;
+          group.add(helper);
         }
-        helper.renderOrder = 4;
-        group.add(helper);
       }
       scene.add(group);
-      layers[id] = { group: group };
+      layers[id] = { group: group, meshes: built };
       request();
     }
 
     function moveLayer(id, x, y, z) {
       var L = layers[id];
       if (!L) return;
+      L.group.matrixAutoUpdate = true;
       L.group.position.set(x, y, z);
+      request();
+    }
+
+    /* Place a layer by MATRIX rather than by offset: a part of a creature sits where
+       its bone puts it, which is a rotation and a scale as well as a position. `m` is
+       16 numbers, column-major (the same layout the baked rigs store). */
+    function setLayerMatrix(id, m) {
+      var L = layers[id];
+      if (!L) return;
+      L.group.matrixAutoUpdate = false;
+      L.group.matrix.fromArray(m);
+      L.group.matrixWorldNeedsUpdate = true;
+      request();
+    }
+
+    function setModelMatrix(m) {
+      if (!m) {
+        modelGroup.matrixAutoUpdate = true;
+        modelGroup.position.set(0, 0, 0);
+        modelGroup.scale.set(1, 1, 1);
+        modelGroup.quaternion.identity();
+      } else {
+        modelGroup.matrixAutoUpdate = false;
+        modelGroup.matrix.fromArray(m);
+        modelGroup.matrixWorldNeedsUpdate = true;
+      }
+      request();
+    }
+
+    /* A box around the model being edited. With one model on screen it is noise; with a
+       creature's worth of parts around it, it is the only thing saying which one a click
+       will land on. Pass null to drop it. */
+    var modelOutline = null, outlineColour = null;
+    function setModelOutline(colour) {
+      outlineColour = colour == null ? null : colour;
+      if (modelOutline) {
+        modelGroup.remove(modelOutline);
+        modelOutline.geometry.dispose();
+        modelOutline.material.dispose();
+        modelOutline = null;
+      }
+      if (colour == null || !meshes.length) { request(); return; }
+      var box = new THREE.Box3();
+      meshes.forEach(function (m) { box.expandByObject(m); });
+      if (box.isEmpty()) { request(); return; }
+      modelOutline = new THREE.Box3Helper(box, colour);
+      if (modelOutline.material) {
+        modelOutline.material.depthTest = false;
+        modelOutline.material.transparent = true;
+        modelOutline.material.opacity = 0.75;
+      }
+      modelOutline.renderOrder = 4;
+      modelGroup.add(modelOutline);
+      request();
+    }
+
+    /* Frame everything on screen rather than the active model alone - opening a whole
+       creature should show the creature, not its left foot filling the stage. */
+    function frameAll() {
+      scene.updateMatrixWorld(true);
+      var box = new THREE.Box3();
+      meshes.forEach(function (m) { box.expandByObject(m); });
+      Object.keys(layers).forEach(function (k) {
+        (layers[k].meshes || []).forEach(function (m) { box.expandByObject(m); });
+      });
+      if (box.isEmpty()) return;
+      var size = box.getSize(new THREE.Vector3());
+      modelR = Math.max(size.x, size.y, size.z) || 1;
+      box.getCenter(pivot);
+      sph.radius = modelR * 2.1;
+      panX = 0; panY = 0;
+      applyCamera();
       request();
     }
 
@@ -267,20 +353,53 @@
        unit from the voxel centre along the face normal, so nudging back along -n by
        a quarter unit and rounding is unambiguous (a quarter avoids landing on the
        .5 boundary where rounding could go either way). `n` is handed back too, so a
-       caller that wants the empty cell in FRONT of the face can just add it. */
+       caller that wants the empty cell in FRONT of the face can just add it.
+
+       Both steps happen in the MODEL's own space, not the world's. A part placed on a
+       rig carries a rotation and a voxel size of 1/12, so a quarter of a world unit is
+       three voxels in the wrong direction - the offset-only correction this used to do
+       silently painted a different voxel than the one under the cursor. `face.normal`
+       is already model-space (the meshes carry no transform of their own). */
+    var _lp = new THREE.Vector3();
     function pick(e) {
       var hit = castAt(e.clientX, e.clientY);
       if (!hit || !hit.face) return null;
       var n = hit.face.normal;
-      // Undo the model's own offset: the ray hits world space, but a voxel coordinate
-      // only means anything in the model's own grid.
-      var o = modelGroup.position;
+      modelGroup.updateMatrixWorld();
+      _lp.copy(hit.point);
+      modelGroup.worldToLocal(_lp);
       return {
-        x: Math.round(hit.point.x - n.x * 0.25 - o.x),
-        y: Math.round(hit.point.y - n.y * 0.25 - o.y),
-        z: Math.round(hit.point.z - n.z * 0.25 - o.z),
+        x: Math.round(_lp.x - n.x * 0.25),
+        y: Math.round(_lp.y - n.y * 0.25),
+        z: Math.round(_lp.z - n.z * 0.25),
         nx: Math.round(n.x), ny: Math.round(n.y), nz: Math.round(n.z),
       };
+    }
+
+    /* Which OTHER model is under the cursor - the id passed to setLayer, or null.
+       A creature's parts are layers, so this is how double-clicking a leg makes the leg
+       the thing being edited. The active model is deliberately not in the answer: it is
+       already what a click acts on. */
+    function pickLayer(e) {
+      var all = [];
+      Object.keys(layers).forEach(function (id) {
+        (layers[id].meshes || []).forEach(function (m) { all.push(m); });
+      });
+      if (!all.length) return null;
+      var box = el.getBoundingClientRect();
+      if (!box.width || !box.height) return null;
+      ndc.set(((e.clientX - box.left) / box.width) * 2 - 1,
+              -((e.clientY - box.top) / box.height) * 2 + 1);
+      camera.updateMatrixWorld();
+      scene.updateMatrixWorld();
+      caster.setFromCamera(ndc, camera);
+      var hit = caster.intersectObjects(all, false)[0];
+      if (!hit) return null;
+      var found = null;
+      Object.keys(layers).forEach(function (id) {
+        if ((layers[id].meshes || []).indexOf(hit.object) >= 0) found = id;
+      });
+      return found;
     }
 
     var drag = 0, lx = 0, ly = 0, pinch = 0, moved = 0;
@@ -492,19 +611,29 @@
     return {
       rebuild: function (next) { rebuild(next, true); },
       reframe: function () { rebuild(data, false); applyCamera(); request(); },
+      frameAll: frameAll,
       pick: pick,
+      pickLayer: pickLayer,
       request: request,
       setOverlay: setOverlay,
       setLayer: setLayer,
       moveLayer: moveLayer,
+      setLayerMatrix: setLayerMatrix,
+      setModelMatrix: setModelMatrix,
+      setModelOutline: setModelOutline,
       clearLayer: clearLayer,
       clearLayers: clearLayers,
       setDragMode: function (mode) { dragMode = mode || ''; },
-      setModelOffset: function (x, y, z) { modelGroup.position.set(x, y, z); request(); },
+      setModelOffset: function (x, y, z) {
+        modelGroup.matrixAutoUpdate = true;
+        modelGroup.position.set(x, y, z);
+        request();
+      },
       clearOverlay: clearOverlay,
       dispose: function () {
         alive = false; cancelAnimationFrame(raf);
         Object.keys(overlays).forEach(clearOverlay);
+        setModelOutline(null);
         clearLayers();
         if (tools) tools.dispose();
         el.removeEventListener('pointerdown', onDown);

@@ -690,3 +690,138 @@
    which layer is on top, so it gets its own marker rather than a position in the list. */
 .bpe-layerrow.anchored { border-left: 3px solid var(--accent-yellow); }
 .bpe-anchorbtn.on { color: var(--accent-yellow); }
+
+/* ─── Model parts ───────────────────────────────────────────────────── */
+/* A part row is a layer row with a second line: the socket it hangs off. The select
+   spans the full width underneath rather than squeezing in beside the buttons - it
+   carries bone names, which are long, and it is the control that matters most here. */
+
+.bpe-partrow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  padding: 3px 4px 5px 0;
+}
+.bpe-partrow.active {
+  border-color: var(--accent-blue);
+  background: color-mix(in oklab, var(--accent-blue) 10%, transparent);
+}
+/* Placed on a bone or not is the difference between a part of the model and a part
+   sitting beside it, so it is on the row rather than only in the 3D view. */
+.bpe-partrow.unplaced { border-left: 3px solid var(--accent-yellow); }
+/* Just added, nobody has said where it goes: this row IS the question. */
+.bpe-partrow.asking {
+  border-color: var(--accent-yellow);
+  background: color-mix(in oklab, var(--accent-yellow) 10%, transparent);
+}
+.bpe-aprow { grid-column: 1 / -1; padding: 0 6px; min-width: 0; }
+.bpe-apsel {
+  width: 100%;
+  background: var(--bg-card-hi);
+  color: var(--text);
+  border: 1px solid var(--bg-line);
+  border-radius: 5px;
+  font: inherit;
+  font-size: .72rem;
+  padding: 3px 5px;
+}
+.bpe-apsel:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+.bpe-apsel:disabled { opacity: .5; }
+.bpe-partrow.asking .bpe-apsel { border-color: var(--accent-yellow); }
+
+/* Buttons that only mean anything with a whole model open. */
+.bpe-projectonly { display: none; }
+body.bpe-project-mode .bpe-projectonly { display: inline-flex; }
+
+/* ─── Starting from a game model ────────────────────────────────────── */
+/* The codex search, on the opening screen. The picture is the point: you are picking
+   the creature you are about to edit, so you should be looking at it. */
+
+.bpe-browse {
+  width: min(720px, 100%);
+  margin: 22px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--bg-line);
+  text-align: left;
+}
+.bpe-browse h3 { margin: 0 0 4px; font-size: .95rem; }
+.bpe-browse .bpe-hint { margin: 0 0 10px; }
+.bpe-browserow { display: flex; gap: 8px; flex-wrap: wrap; }
+.bpe-browserow input[type="search"] {
+  flex: 1 1 220px;
+  min-width: 0;
+  background: var(--bg-card-hi);
+  color: var(--text);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: .85rem;
+  padding: 8px 11px;
+}
+.bpe-browserow select {
+  flex: 0 0 auto;
+  background: var(--bg-card-hi);
+  color: var(--text);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: .85rem;
+  padding: 8px 10px;
+}
+.bpe-browserow input:focus-visible, .bpe-browserow select:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 1px;
+}
+.bpe-results {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.bpe-result {
+  width: 100%;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  padding: 8px 6px;
+  cursor: pointer;
+}
+.bpe-result:hover { border-color: var(--accent-blue); background: var(--bg-card-hi); }
+.bpe-result:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+.bpe-result-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 62px;
+}
+.bpe-result-img img { max-width: 100%; max-height: 62px; image-rendering: pixelated; }
+.bpe-result-name {
+  display: block;
+  width: 100%;
+  font-size: .74rem;
+  line-height: 1.25;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bpe-result-name small {
+  display: block;
+  color: var(--text-mute);
+  font-size: .66rem;
+  text-transform: capitalize;
+}

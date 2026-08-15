@@ -42,6 +42,9 @@
     active: 0,           // which one the tools edit
     anchor: 0,           // which one everything else is positioned against
     docSeq: 1,
+    project: null,       // a whole model open at once: the archive + its rig
+    ask: -1,             // a part just added that nobody has placed yet
+    drawn: {},           // doc id -> its geometry is currently in the scene as a layer
     isolate: false,      // show only the layer being edited
     stroke: null,        // in-progress drag-edit: one batch, one undo entry
     strokeNormal: null,  // the face an 'add' stroke started on
@@ -51,6 +54,9 @@
 
   var ATTACH_COLOUR = 0xff3fd5;   // the pink Trove modders mark attachment points in
   var FINDING_COLOUR = { error: 0xff5555, warning: 0xffc857, info: 0x58a6ff };
+  // A model's parts each get a box, the one being edited gets a brighter one - which is
+  // the only thing telling you where the leg ends and the foot begins.
+  var PART_BOX = 0x8b95a5, ACTIVE_BOX = 0x58a6ff, PART_BOX_OPACITY = 0.3;
 
   function $(id) { return document.getElementById(id); }
 
@@ -97,17 +103,26 @@
      needs in order to be edited independently - its pristine copy, its live flags, its
      own undo stack - is built by makeDoc and swapped in by setActive. */
   function loaded(file, payload, note) {
-    state.file = file;
+    state.project = null;
     state.docs = [makeDoc(file, payload)];
     state.active = 0;
     state.anchor = 0;
+    mount(note);
+  }
+
+  /* Everything that has to happen once a fresh set of documents is in place, however
+     they got there - one opened file, or a whole model's worth of parts. */
+  function mount(note) {
     state.isolate = false;
     state.report = null;
+    state.drawn = {};            // a fresh scene holds none of the old geometry
     $('bpe-report').hidden = true;
     $('bpe-empty').hidden = true;
     $('bpe-workspace').hidden = false;
+    document.body.classList.toggle('bpe-project-mode', !!state.project);
 
-    var d0 = state.docs[0];
+    var d0 = state.docs[state.active];
+    state.file = d0.file;
     state.data = d0.payload;
     state.base = d0.base;
     state.origin = d0.origin;
@@ -115,6 +130,7 @@
     state.selection = -1;
     rebuildIndex();
 
+    renderMode();
     renderKinds();
     renderTransforms();
     renderToolHint();
@@ -130,7 +146,7 @@
     window.VoxelScene.create({
       stage: $('bpe-stage'),
       data: liveView(),
-      name: payload.name,
+      name: d0.payload.name,
       /* The specular atlas. Without it every solid shades as rough, so metal, water,
          iridescent, waxy and wave all look identical and the Finish control appears
          to do nothing. Loaded through an <img>, which the global fetch rewriter never
@@ -145,6 +161,8 @@
       scene.setDragMode(dragModeFor(state.tool));
       drawStack();
       drawAttachment();
+      // A creature opens on the creature, not on whichever part happens to be first.
+      if (state.project) scene.frameAll();
     }).catch(function (err) {
       setStatus(err.message || 'The 3D view could not start.', 'error');
     });
@@ -647,7 +665,37 @@
         if (s.attachment) bits.push('attachment point moved with it');
         if (s.entities) bits.push(s.entities.toLocaleString() + ' placed object'
           + (s.entities === 1 ? '' : 's') + ' moved too');
-        openFile(new File([out.blob], state.file.name), 'Applied ' + bits.join(' · ') + '.');
+        var file = new File([out.blob], state.file.name);
+        var note = 'Applied ' + bits.join(' · ') + '.';
+        // In a project only THIS part turned; reopening would throw the model away.
+        if (inProject()) replaceActive(file, note);
+        else openFile(file, note);
+      })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  /* Swap the part being edited for a new version of itself - what a rotation produces,
+     since a transform renumbers every voxel and no edit index survives it. The part
+     keeps its place on the rig, and is marked as carrying its own bytes so the save
+     posts them: the archive's copy is the un-rotated one. */
+  function replaceActive(file, note) {
+    var old = active();
+    var fd = new FormData();
+    fd.append('file', file, file.name);
+    fetch(apiUrl('/site/blueprint-editor/inspect'), { method: 'POST', body: fd })
+      .then(function (res) {
+        return res.json().then(function (b) {
+          if (!res.ok) throw new Error((b && b.detail) || 'That part couldn’t be reopened.');
+          return b;
+        });
+      })
+      .then(function (payload) {
+        state.docs[state.active] = makeDoc(file, payload, {
+          path: old.path, ap: old.ap, added: old.added, row: old.row, replaced: true,
+        });
+        if (state.scene) state.scene.clearLayer(old.id);
+        setActive(state.active);
+        setStatus(note || '', note ? 'ok' : '');
       })
       .catch(function (err) { setStatus(err.message || String(err), 'error'); });
   }
@@ -725,6 +773,7 @@
      impossible to read, and this is how you get at the one you mean. */
   function drawStack() {
     if (!state.scene || !state.docs.length) return;
+    if (inProject()) return drawProject();
     var a = active();
     var at = placement(a) || [0, 0, 0];
     state.scene.setModelOffset(at[0], at[1], at[2]);
@@ -758,11 +807,11 @@
     return { total: cells.size, hidden: hidden };
   }
 
-  function makeDoc(file, payload) {
+  function makeDoc(file, payload, extra) {
     payload.live = [];
     var origin = [];
     for (var i = 0; i < payload.count; i++) { payload.live.push(1); origin.push(i); }
-    return {
+    var d = {
       id: 'D' + (state.docSeq++),
       file: file,
       payload: payload,
@@ -772,7 +821,14 @@
       mode: 'attachment',
       offset: [0, 0, 0],
       visible: true,
+      // Model projects: where this part lives in the mod, which bone it hangs off, and
+      // where it sits in the row when it hangs off none.
+      path: '',
+      ap: null,
+      added: false,
+      row: [0, 0, 0],
     };
+    return Object.assign(d, extra || {});
   }
 
   /* Switching which document is being edited swaps the whole working set - the arrays
@@ -780,8 +836,12 @@
      stack, which belongs to the document rather than to the session. */
   function setActive(i) {
     if (i < 0 || i >= state.docs.length) return;
+    // Whatever we're leaving may have been painted on, so its cached layer geometry is
+    // stale from here on. One re-mesh on the way out; nothing else is touched.
+    if (state.docs[state.active]) state.docs[state.active].dirtyMesh = true;
     state.active = i;
     var d = state.docs[i];
+    state.file = d.file;
     state.data = d.payload;
     state.base = d.base;
     state.origin = d.origin;
@@ -887,8 +947,80 @@
     drawStack();
   }
 
+  /* The parts of a model, with the socket each one hangs off. This is the layer list's
+     job done for a creature: the same documents, listed by where they attach rather than
+     by what covers what, because a model's parts don't stack - they sit on bones. */
+  function renderParts() {
+    var r = rig();
+    var opts = sockets();
+    var rows = state.docs.map(function (d, i) {
+      var placed = !!(r && d.ap && r.rest[d.ap]);
+      var asking = (state.ask === i && !placed);
+      var pick = '<label class="sr-only" for="bpe-ap-' + d.id + '">Where '
+        + esc(d.payload.name) + ' attaches</label>'
+        + '<select class="bpe-apsel" id="bpe-ap-' + d.id + '" data-ap="' + i + '"'
+        + (opts.length ? '' : ' disabled') + '>'
+        + '<option value="">' + (opts.length ? 'Not placed — pick a socket'
+                                             : 'No rig for this model') + '</option>'
+        + opts.map(function (k) {
+            return '<option value="' + esc(k) + '"' + (d.ap === k ? ' selected' : '') + '>'
+              + esc(k.replace(/_/g, ' ')) + '</option>';
+          }).join('')
+        + '</select>';
+      return '<li class="bpe-partrow' + (i === state.active ? ' active' : '')
+        + (asking ? ' asking' : '') + (placed ? '' : ' unplaced') + '">'
+        + '<button type="button" class="bpe-layerpick" data-pick="' + i + '">'
+        + '<strong>' + esc(d.payload.name) + '</strong><span>'
+        + liveCountOf(d).toLocaleString() + ' voxels'
+        + (d.added ? ' · added' : '') + '</span></button>'
+        + '<button type="button" class="bpe-layerbtn" data-vis="' + i
+        + '" aria-label="Show or hide" aria-pressed="' + (!d.visible)
+        + '"><i class="fa-solid fa-eye' + (d.visible ? '' : '-slash')
+        + '" aria-hidden="true"></i></button>'
+        + '<button type="button" class="bpe-layerbtn" data-drop="' + i
+        + '" aria-label="Remove this part"' + (state.docs.length < 2 ? ' disabled' : '')
+        + '><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>'
+        + '<div class="bpe-aprow">' + pick + '</div>'
+        + '</li>';
+    });
+    $('bpe-layerlist').innerHTML = rows.join('');
+    $('bpe-isolate').disabled = state.docs.length < 2;
+    $('bpe-isolate').setAttribute('aria-pressed', String(!!state.isolate));
+    $('bpe-flatten').disabled = true;
+    $('bpe-layerctl').hidden = true;
+
+    var unplaced = state.docs.filter(function (d) {
+      return !(r && d.ap && r.rest[d.ap]);
+    }).length;
+    var p = state.project;
+    $('bpe-layerinfo').textContent = r
+      ? (r.name.replace(/_/g, ' ') + ' rig · ' + state.docs.length + ' parts'
+         + (unplaced ? ' · ' + unplaced + ' waiting to be placed' : '')
+         + (p.extras ? ' · ' + p.extras + ' other file'
+            + (p.extras === 1 ? '' : 's') + ' carried through' : ''))
+      : ('No matching creature in the game data, so the parts are laid out side by '
+         + 'side. They still save back exactly where they came from.');
+    /* Focus the question rather than only colouring it: a part was just added and the
+       next thing to do is say where it goes.
+
+       On a timeout, and aimed at the TRIGGER. The site's shared dropdown swaps every
+       native <select> for a button and hides the select behind it, and it does that from
+       a MutationObserver - so the button doesn't exist yet at the end of this function,
+       and focusing the select we just wrote loses the focus the moment it is hidden. */
+    if (state.ask >= 0 && opts.length) {
+      setTimeout(function () {
+        var sel = document.querySelector('.bpe-partrow.asking select.bpe-apsel');
+        var dd = sel && sel.closest('.btt-dd');
+        var target = dd ? dd.querySelector('.btt-dd-trigger') : sel;
+        if (target) target.focus();
+      }, 0);
+    }
+    renderToolHint();
+  }
+
   function renderLayers() {
     if (!state.docs.length) return;
+    if (inProject()) return renderParts();
     var multi = state.docs.length > 1;
     $('bpe-flatten').disabled = !multi;
     $('bpe-isolate').disabled = !multi;
@@ -966,7 +1098,9 @@
      as `layers` bottom to top with a spec each - placement AND their own edits, since
      every layer is a blueprint someone may have painted on. */
   function stackParts(fd) {
-    if (state.docs.length < 2) return;
+    // A model's parts aren't a stack - they sit on bones, and every per-part tool
+    // (the checks, the .qb export) runs on the one part you're editing.
+    if (inProject() || state.docs.length < 2) return;
     var others = state.docs.filter(function (_, i) { return i !== state.anchor; });
     others.forEach(function (d) { fd.append('layers', d.file, d.file.name); });
     fd.append('stack', JSON.stringify(others.map(function (d) {
@@ -977,7 +1111,7 @@
   }
 
   function anchorParts(fd) {
-    var a = anchorDoc();
+    var a = inProject() ? active() : anchorDoc();
     fd.append('file', a.file, a.file.name);
     fd.append('edits', JSON.stringify(editListOf(a)));
   }
@@ -1010,6 +1144,413 @@
                  'Flattened into one blueprint - ' + bits.join(' - ') + '.');
       })
       .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  // ---- model projects ----------------------------------------------------- //
+
+  /* A Trove model is not one file. A mount is a head, a jaw, four legs, a body and a
+     tail, each its own .blueprint, assembled onto a skeleton by the game. Opening them
+     one at a time meant recolouring a dragon sixteen times over without once seeing the
+     dragon, so a project opens the whole set.
+
+     Each part is one of the same documents the layer stack uses - its own voxels, its
+     own edits, its own undo - and the ONLY difference is how it is placed: by the bone
+     it attaches to rather than by a grid offset. `matrixFor` is that difference.
+
+     WHERE A PART GOES IS NEVER GUESSED. The rig and each part's attach point come from
+     the game's own prefab bindings, and a part the game doesn't place sits beside the
+     model until somebody says where it goes. A part dropped in later is somebody
+     saying: they pick the socket, we place it. */
+
+  function b64bytes(s) {
+    var bin = atob(s), n = bin.length, out = new Uint8Array(n);
+    for (var i = 0; i < n; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  /* Open a .tmod / .zip, or a pile of loose .blueprint files, as one model. */
+  function openModel(input) {
+    var many = !(input instanceof File);
+    var fd = new FormData();
+    if (many) {
+      Array.prototype.forEach.call(input, function (f) { fd.append('files', f, f.name); });
+    } else {
+      fd.append('file', input, input.name);
+    }
+    setStatus('Opening ' + (many ? input.length + ' parts' : input.name) + '…');
+    fetch(apiUrl('/site/blueprint-editor/model'), { method: 'POST', body: fd })
+      .then(function (res) {
+        return res.json().then(function (b) {
+          if (!res.ok) throw new Error((b && b.detail) || 'That model couldn’t be opened.');
+          return b;
+        });
+      })
+      .then(function (payload) { loadProject(payload, many ? null : input); })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  function loadProject(payload, archive) {
+    state.project = {
+      file: archive || null,          // null for a project of loose files
+      name: payload.name,
+      source: payload.source,
+      rig: payload.rig || null,
+      skipped: payload.skipped || [],
+      extras: payload.extras || 0,
+    };
+    state.docs = payload.parts.map(function (p) {
+      // Each part carries its own bytes, so every single-file tool - the checks, the
+      // .qb export, a rotation - keeps working on one part of a project unchanged.
+      var file = new File([b64bytes(p.blueprint)], p.name);
+      return makeDoc(file, p.model, { path: p.path, ap: p.ap || null });
+    });
+    state.active = 0;
+    state.anchor = 0;
+    mount(projectNote(payload));
+  }
+
+  function projectNote(payload) {
+    var bits = [payload.parts.length + ' part' + (payload.parts.length === 1 ? '' : 's')];
+    var placed = payload.parts.filter(function (p) { return p.ap; }).length;
+    if (payload.rig) {
+      bits.push(placed + ' of them on the ' + payload.rig.name.replace(/_/g, ' ') + ' rig');
+    } else {
+      bits.push('no matching creature in the game data, so they’re laid out side by side');
+    }
+    if (payload.skipped.length) {
+      bits.push(payload.skipped.length + ' couldn’t be opened');
+    }
+    return 'Opened ' + payload.name + ' — ' + bits.join(', ') + '.';
+  }
+
+  /* The panel says "Layers" for a stack and "Parts" for a model, because they are not
+     the same idea: layers cover each other and flatten into one file, parts sit on
+     different bones and stay separate files for ever. Same controls, different truth. */
+  function renderMode() {
+    var on = inProject();
+    var set = function (id, text) { var el = $(id); if (el) el.textContent = text; };
+    set('bpe-save-label', on ? 'Download the model' : 'Download');
+    set('bpe-layers-title', on ? 'Parts' : 'Layers');
+    set('bpe-layer-open-label', on ? 'Add a part' : 'Add a layer');
+    set('bpe-layers-hint', on
+      ? 'Every part is its own blueprint on its own bone. Double-click one in the view '
+        + 'to work on it, or pick it here — and tell a part you have added where it goes.'
+      : 'Each layer is its own blueprint. Pick one to edit it, drag it about with the '
+        + 'Move tool, and reorder them — on download the top layer wins wherever two '
+        + 'overlap.');
+    // Nothing to drag when a bone decides where a part sits.
+    var move = document.querySelector('[data-tool="move"]');
+    if (move) {
+      move.disabled = on;
+      if (on && state.tool === 'move') {
+        state.tool = 'paint';
+        document.querySelectorAll('[data-tool]').forEach(function (o) {
+          o.setAttribute('aria-pressed', String(o.dataset.tool === 'paint'));
+        });
+      }
+    }
+  }
+
+  function inProject() { return !!state.project; }
+  function rig() { return state.project && state.project.rig; }
+
+  /* Every socket this skeleton has, whether or not the mod fills it - the list you pick
+     from when you add a part. A rig that carries no `hat` point can't be given a hat,
+     and that is exactly the thing to say rather than let someone place one nowhere. */
+  function sockets() {
+    var r = rig();
+    return r ? Object.keys(r.rest).sort() : [];
+  }
+
+  // 4x4 matrices, column-major like the baked rigs and three.js both store them.
+  function matMul(a, b) {
+    var o = new Array(16);
+    for (var c = 0; c < 4; c++) {
+      for (var r = 0; r < 4; r++) {
+        var v = 0;
+        for (var k = 0; k < 4; k++) v += a[k * 4 + r] * b[c * 4 + k];
+        o[c * 4 + r] = v;
+      }
+    }
+    return o;
+  }
+  function matScale(s) { return [s,0,0,0, 0,s,0,0, 0,0,s,0, 0,0,0,1]; }
+  function matTrans(x, y, z) { return [1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]; }
+  function matPoint(m, x, y, z) {
+    return [m[0]*x + m[4]*y + m[8]*z + m[12],
+            m[1]*x + m[5]*y + m[9]*z + m[13],
+            m[2]*x + m[6]*y + m[10]*z + m[14]];
+  }
+
+  /* Where a part sits. On its bone if it has one - the rig's rest matrix times the voxel
+     size, which is what the 3D viewers do with the same numbers - and otherwise in the
+     row `layoutUnplaced` works out, off to one side of the model. */
+  function matrixFor(d) {
+    var r = rig();
+    var vs = r ? r.voxel_scale : 1;
+    if (r && d.ap && r.rest[d.ap]) {
+      return matMul(r.rest[d.ap], matScale(vs * (r.scales[d.ap] || 1)));
+    }
+    return matMul(matTrans(d.row[0], d.row[1], d.row[2]), matScale(vs));
+  }
+
+  /* Unplaced parts go in a row beside the model rather than all at the origin on top of
+     each other. Measured off whatever IS placed, so the row clears the creature however
+     big it is, and each part gets its own width of space. */
+  function layoutUnplaced() {
+    var r = rig();
+    var vs = r ? r.voxel_scale : 1;
+    var lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+    state.docs.forEach(function (d) {
+      if (!(r && d.ap && r.rest[d.ap])) return;
+      var m = matrixFor(d), s = d.payload.size;
+      [[0,0,0],[s[0],0,0],[0,s[1],0],[0,0,s[2]],[s[0],s[1],0],[s[0],0,s[2]],
+       [0,s[1],s[2]],[s[0],s[1],s[2]]].forEach(function (c) {
+        var p = matPoint(m, c[0], c[1], c[2]);
+        for (var i = 0; i < 3; i++) {
+          if (p[i] < lo[i]) lo[i] = p[i];
+          if (p[i] > hi[i]) hi[i] = p[i];
+        }
+      });
+    });
+    var placed = isFinite(lo[0]);
+    var gap = placed ? (hi[0] - lo[0]) * 0.12 + vs * 2 : vs * 2;
+    var x = placed ? hi[0] + gap : 0;
+    var y = placed ? lo[1] : 0;
+    var z = placed ? (lo[2] + hi[2]) / 2 : 0;
+    state.docs.forEach(function (d) {
+      if (r && d.ap && r.rest[d.ap]) { d.row = [0, 0, 0]; return; }
+      var s = d.payload.size;
+      d.row = [x / vs, y / vs, (z - s[2] * vs / 2) / vs];   // row is in the part's own units
+      x += s[0] * vs + gap;
+    });
+  }
+
+  /* Draw the model. Only the parts that CHANGED are re-meshed: switching to another
+     part redraws two of them, not sixteen, which is the difference between an instant
+     switch and a visible stall on a creature. A part's geometry can only change while
+     it is the one being edited, so `dirtyMesh` is set as it stops being that. */
+  function drawProject() {
+    layoutUnplaced();
+    var a = active();
+    state.scene.setModelMatrix(matrixFor(a));
+    state.scene.setModelOutline(ACTIVE_BOX);
+
+    var want = {};
+    state.docs.forEach(function (d, i) {
+      if (i !== state.active && d.visible && !state.isolate) want[d.id] = d;
+    });
+    Object.keys(state.drawn).forEach(function (id) {
+      if (!want[id]) { state.scene.clearLayer(id); delete state.drawn[id]; }
+    });
+    Object.keys(want).forEach(function (id) {
+      var d = want[id];
+      if (!state.drawn[id] || d.dirtyMesh) {
+        // Qubicle draws a box around every part of a multi-part model, and it is right:
+        // without them a creature is one lump of voxels with no seams.
+        state.scene.setLayer(d.id, viewOf(d), PART_BOX, { opacity: PART_BOX_OPACITY });
+        d.dirtyMesh = false;
+        state.drawn[id] = 1;
+      }
+      state.scene.setLayerMatrix(d.id, matrixFor(d));
+    });
+  }
+
+  /* Add blueprints to an open model. They are decoded through the ordinary single-file
+     path, so anything the editor can open can be added, and then we ASK where each one
+     goes: the game's map places the parts a mod already had, but a file someone just
+     dropped in is by definition not in it yet. */
+  function addParts(fileList) {
+    var picked = Array.prototype.slice.call(fileList).filter(function (f) {
+      return /\.blueprint$/i.test(f.name);
+    });
+    if (!picked.length) return;
+    if (state.docs.length + picked.length > 48) {
+      setStatus('That is as many parts as one model holds.', 'error');
+      return;
+    }
+    setStatus('Reading ' + picked.length + ' part' + (picked.length === 1 ? '' : 's') + '…');
+    Promise.all(picked.map(function (f) {
+      var fd = new FormData();
+      fd.append('file', f, f.name);
+      return fetch(apiUrl('/site/blueprint-editor/inspect'), { method: 'POST', body: fd })
+        .then(function (res) {
+          return res.json().then(function (b) {
+            if (!res.ok) throw new Error((b && b.detail) || (f.name + ' couldn’t be opened.'));
+            return { file: f, payload: b };
+          });
+        });
+    })).then(function (opened) {
+      opened.forEach(function (o) {
+        state.docs.push(makeDoc(o.file, o.payload, { path: '', ap: null, added: true }));
+      });
+      // The first one we need an answer about. setActive redraws the list, and that is
+      // also what puts the cursor in its socket picker - so nothing may redraw after it,
+      // or the focus lands on an element that has already been replaced.
+      state.ask = state.docs.length - opened.length;
+      setActive(state.ask);
+      var one = opened.length === 1;
+      setStatus((one ? opened[0].payload.name + ' is in' : opened.length + ' parts are in')
+        + '. ' + (rig()
+            ? 'Tell me where ' + (one ? 'it' : 'each one') + ' attaches and '
+              + (one ? 'it' : 'they') + ' will snap onto the model.'
+            : 'There’s no rig for this model, so ' + (one ? 'it sits' : 'they sit')
+              + ' beside the others.'), 'ok');
+    }).catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  /* Somebody answering "where does this go". The socket list is the rig's own, so the
+     only thing that can be chosen is a bone the skeleton actually has. */
+  function setPartAp(i, ap) {
+    var d = doc(i);
+    if (!d) return;
+    d.ap = ap || null;
+    if (state.ask === i) state.ask = -1;
+    renderLayers();
+    drawStack();
+    if (state.scene && ap) state.scene.request();
+  }
+
+  function removePart(i) {
+    if (!state.docs[i] || state.docs.length < 2) return;
+    if (state.scene) state.scene.clearLayer(state.docs[i].id);
+    delete state.drawn[state.docs[i].id];
+    state.docs.splice(i, 1);
+    if (state.ask >= i) state.ask = -1;
+    setActive(Math.min(state.active, state.docs.length - 1));
+  }
+
+  /* The whole model back out as the file it came in as. The archive is posted again
+     alongside the per-part edits - the server holds nothing between opening a model and
+     writing it - and any part added since rides along with the path it should be packed
+     at, so a mod comes back complete rather than as a folder of loose blueprints. */
+  function saveModel() {
+    var p = state.project;
+    if (!p) return;
+    var fd = new FormData();
+    var edits = {};
+    /* Where each part lives inside the mod. One already in it keeps its path; a part
+       added since goes to blueprints/, which is the only folder Trove reads models out
+       of. A project of loose files has no archive to keep anything else in, so every
+       part is posted and the server names them by their own filenames. */
+    var pathOf = new Map();
+    state.docs.forEach(function (d) {
+      pathOf.set(d, d.path || (p.file ? 'blueprints/' + d.file.name : d.file.name));
+    });
+    if (p.file) fd.append('file', p.file, p.file.name);
+    var posted = [];
+    state.docs.forEach(function (d) {
+      // Already in the archive and still the bytes that came out of it -> nothing to
+      // post; the server edits its own copy. A rotated part is NOT that, so it goes.
+      if (p.file && d.path && !d.replaced) return;
+      fd.append('files', d.file, d.file.name);
+      posted.push(pathOf.get(d));
+    });
+    // ONE field holding the whole list, lined up with the files - a repeated form field
+    // would arrive as whichever copy the server kept.
+    fd.append('paths', JSON.stringify(posted));
+    state.docs.forEach(function (d) {
+      var list = editListOf(d);
+      if (list.length) edits[pathOf.get(d)] = list;
+    });
+    fd.append('edits', JSON.stringify(edits));
+    fd.append('name', p.name);
+    setStatus('Building ' + p.name + '…');
+    fetch(apiUrl('/site/blueprint-editor/model-save'), { method: 'POST', body: fd })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().then(function (b) {
+            throw new Error((b && b.detail) || 'The model couldn’t be saved.');
+          });
+        }
+        var summary = {};
+        try { summary = JSON.parse(res.headers.get('X-Kiwi-Summary') || '{}'); } catch (e) { /* optional */ }
+        var name = (res.headers.get('Content-Disposition') || '').match(/filename="([^"]+)"/);
+        return res.blob().then(function (blob) {
+          return { blob: blob, summary: summary, name: name ? name[1] : p.name };
+        });
+      })
+      .then(function (out) {
+        download(out.blob, out.name);
+        var s = out.summary;
+        var bits = [];
+        if (s.parts) bits.push(s.parts + ' part' + (s.parts === 1 ? '' : 's') + ' changed');
+        if (s.added_parts) bits.push(s.added_parts + ' added');
+        if (s.ignored) bits.push(s.ignored + ' protected voxels left as they were');
+        setStatus('Saved' + (bits.length ? ' — ' + bits.join(', ') : '') + '.', 'ok');
+      })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  // ---- starting from a model that's already in the game -------------------- //
+
+  /* Most mods start from something the game already has: a mount recoloured, a dragon
+     restyled. The codex knows every one of those by name, and the prefab behind the name
+     is exactly what binds its blueprints to its bones - so a search of the codex IS a
+     search of the editable models, and the card's picture is the creature itself. */
+
+  var searchTimer = 0, searchSeq = 0;
+
+  function runSearch() {
+    var q = $('bpe-search').value.trim();
+    var type = $('bpe-searchtype').value;
+    var note = $('bpe-resultnote');
+    if (q.length < 2 && !type) {
+      $('bpe-results').innerHTML = '';
+      note.hidden = true;
+      return;
+    }
+    var seq = ++searchSeq;
+    var url = '/site/codexes/search?limit=24&q=' + encodeURIComponent(q)
+      + (type ? '&type=' + encodeURIComponent(type) : '');
+    U.getJSON(url).then(function (body) {
+      if (seq !== searchSeq) return;      // a later keystroke already answered
+      renderResults((body && body.items) || [], body && body.total);
+    }).catch(function () {
+      if (seq !== searchSeq) return;
+      note.hidden = false;
+      note.textContent = 'The game data couldn’t be searched just now.';
+    });
+  }
+
+  function renderResults(items, total) {
+    var note = $('bpe-resultnote');
+    // Only a creature the game binds to a skeleton can be opened as a model, and that
+    // is not knowable from a codex row - so everything is offered and the one that
+    // isn't bound says so when you pick it, rather than being silently missing.
+    $('bpe-results').innerHTML = items.map(function (e) {
+      var img = e.blueprint
+        ? '<img loading="lazy" decoding="async" alt="" src="' + esc(apiUrl(
+            '/site/codexes/render?dim=96&blueprint=' + encodeURIComponent(e.blueprint)
+            + (e.path ? '&prefab=' + encodeURIComponent(e.path) : ''))) + '">'
+        : '';
+      return '<li><button type="button" class="bpe-result" data-prefab="' + esc(e.path || '')
+        + '"><span class="bpe-result-img">' + img + '</span>'
+        + '<span class="bpe-result-name">' + esc(e.name || e.path || 'Unnamed')
+        + '<small>' + esc(e.codex_type || '') + '</small></span></button></li>';
+    }).join('');
+    note.hidden = !items.length && !total;
+    note.textContent = items.length
+      ? (total > items.length ? 'Showing ' + items.length + ' of ' + total.toLocaleString()
+         + ' — keep typing to narrow it down.' : '')
+      : 'Nothing in the game data matches that.';
+    if (items.length && !note.textContent) note.hidden = true;
+  }
+
+  function openGameModel(prefab, label) {
+    setStatus('Opening ' + (label || prefab) + '…');
+    U.fetchJSON('/site/blueprint-editor/game-model?prefab=' + encodeURIComponent(prefab))
+      .then(function (payload) { loadProject(payload, null); })
+      .catch(function (err) {
+        // A bare status code says nothing to whoever clicked a picture of a dragon, and
+        // the one thing that goes wrong here has a real explanation: plenty of codex
+        // entries aren't creatures at all.
+        var msg = (err && err.message) || '';
+        setStatus(/^HTTP \d+$/.test(msg) || !msg
+          ? (label || 'That one') + ' isn’t a model the game builds from blueprint parts,'
+            + ' so there’s nothing to open in the editor.'
+          : msg, 'error');
+      });
   }
 
   // ---- Qubicle interop ---------------------------------------------------- //
@@ -1106,6 +1647,8 @@
           + '(255, 0, 255) voxel if it needs a specific grip point');
         var lossy = (s.unknown_type || 0) + (s.unknown_alpha || 0) + (s.unknown_specular || 0);
         if (lossy) bits.push(lossy.toLocaleString() + ' voxels had map colours outside the palette and fell back to defaults');
+        // With a model open, a compiled .qb joins it as a part rather than replacing it.
+        if (inProject()) { addParts([file]); return; }
         openFile(file, 'Compiled — ' + bits.join('; ') + '.');
       })
       .catch(function (err) { setStatus(err.message || String(err), 'error'); });
@@ -1200,7 +1743,13 @@
     if (state.docs.length > 1 && active()) {
       hint += ' Working on ' + active().payload.name + '.';
     }
-    if (state.tool === 'move' && active() === anchorDoc()) {
+    if (inProject() && state.docs.length > 1) {
+      hint += ' Double-click another part to switch to it.';
+    }
+    if (inProject() && state.tool === 'move') {
+      hint = 'A part of a model sits where its bone puts it, so there is nothing to '
+        + 'drag. Change where it attaches in the Parts list instead.';
+    } else if (state.tool === 'move' && active() === anchorDoc()) {
       hint = 'This layer is the anchor - the frame the others are placed against, so it '
         + 'does not move. Pick another layer, or pin a different one as the anchor.';
     }
@@ -1329,7 +1878,11 @@
       state.data.size.join('×'),
     ];
     $('bpe-meta').textContent = bits.join(' · ');
-    $('bpe-filename').textContent = state.data.name;
+    // In a model the part's name alone is half an answer - which model it belongs to is
+    // the other half, and it is what the download is named after.
+    $('bpe-filename').textContent = inProject()
+      ? state.project.name + ' · ' + state.data.name
+      : state.data.name;
 
     var notes = [];
     if (s.placeholders) {
@@ -1406,6 +1959,20 @@
     $('bpe-save').disabled = false;
     $('bpe-undo').disabled = !state.history.length;
     $('bpe-revert').disabled = !n;
+    if (inProject()) {
+      // Across the whole model, not just the part in front of you - the download
+      // carries all of it, so the count has to describe all of it.
+      var total = 0, parts = 0;
+      state.docs.forEach(function (d) {
+        var c = editListOf(d).length;
+        if (c) { total += c; parts++; }
+      });
+      $('bpe-dirty').textContent = total
+        ? total.toLocaleString() + ' voxel' + (total === 1 ? '' : 's') + ' changed across '
+          + parts + ' part' + (parts === 1 ? '' : 's')
+        : 'No changes yet';
+      return;
+    }
     $('bpe-dirty').textContent = n
       ? n.toLocaleString() + ' voxel' + (n === 1 ? '' : 's') + ' changed'
       : 'No changes yet';
@@ -1429,21 +1996,27 @@
     ['dragleave', 'drop'].forEach(function (t) {
       drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove('bpe-dragging'); });
     });
-    // Dropping .qb files compiles them; dropping a .blueprint opens it. Sorting by
-    // extension rather than asking is the whole point of a drop target.
+    /* Sorting the drop by extension rather than asking is the whole point of a drop
+       target, and with model projects there is more to sort: a .tmod or .zip is a whole
+       model, several blueprints at once are a model too, and one blueprint dropped onto
+       an open model joins it as a part. */
     drop.addEventListener('drop', function (e) {
       var dropped = e.dataTransfer && e.dataTransfer.files;
       if (!dropped || !dropped.length) return;
-      var qbs = Array.prototype.slice.call(dropped).filter(function (f) {
-        return /\.qb$/i.test(f.name);
-      });
+      var all = Array.prototype.slice.call(dropped);
+      var qbs = all.filter(function (f) { return /\.qb$/i.test(f.name); });
+      var bps = all.filter(function (f) { return /\.blueprint$/i.test(f.name); });
+      var mod = all.find(function (f) { return /\.(tmod|zip)$/i.test(f.name); });
       if (qbs.length) importQb(qbs);
+      else if (mod) openModel(mod);
+      else if (bps.length && inProject()) addParts(bps);
+      else if (bps.length > 1) openModel(bps);
       // A .qbcl is a Qubicle project holding several models, not one grid, so it has
       // nothing to compile from - say that rather than failing as a bad blueprint.
-      else if (/\.qbcl$/i.test(dropped[0].name)) {
+      else if (/\.qbcl$/i.test(all[0].name)) {
         setStatus('That’s a Qubicle project file, which holds several models at once. '
           + 'Export the model as .qb and drop that instead.', 'error');
-      } else openFile(dropped[0]);
+      } else openFile(all[0]);
     });
 
     $('bpe-colour').addEventListener('input', function (e) {
@@ -1549,8 +2122,61 @@
     var layerInput = $('bpe-layer-input');
     $('bpe-layer-open').addEventListener('click', function () { layerInput.click(); });
     layerInput.addEventListener('change', function () {
-      if (layerInput.files && layerInput.files[0]) addLayer(layerInput.files[0]);
+      if (layerInput.files && layerInput.files.length) {
+        // The same button adds a layer to a stack and a part to a model - which of
+        // those you are doing is decided by what is open, not by picking the right one.
+        if (inProject()) addParts(layerInput.files);
+        else addLayer(layerInput.files[0]);
+      }
       layerInput.value = '';
+    });
+
+    var search = $('bpe-search');
+    if (search) {
+      var go = U.debounce(runSearch, 250);
+      search.addEventListener('input', go);
+      search.addEventListener('search', runSearch);
+      $('bpe-searchtype').addEventListener('change', runSearch);
+      $('bpe-results').addEventListener('click', function (e) {
+        var b = e.target.closest('.bpe-result');
+        if (!b || !b.dataset.prefab) return;
+        openGameModel(b.dataset.prefab, b.querySelector('.bpe-result-name').textContent);
+      });
+      // A codex row can name a blueprint the renderer has nothing to draw for, and a
+      // broken-image box is worse than none. Captured, because `error` doesn't bubble.
+      $('bpe-results').addEventListener('error', function (e) {
+        if (e.target && e.target.tagName === 'IMG') e.target.remove();
+      }, true);
+    }
+
+    var modelInput = $('bpe-model-input');
+    ['bpe-open-model', 'bpe-open-model2'].forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener('click', function () { modelInput.click(); });
+    });
+    modelInput.addEventListener('change', function () {
+      var picked = Array.prototype.slice.call(modelInput.files || []);
+      if (picked.length) {
+        var mod = picked.find(function (f) { return /\.(tmod|zip)$/i.test(f.name); });
+        openModel(mod || picked);
+      }
+      modelInput.value = '';
+    });
+    $('bpe-save-part').addEventListener('click', save);
+
+    // Double-click another part to work on it - Qubicle's gesture, and the one that
+    // makes a sixteen-part creature a single workspace rather than sixteen files.
+    $('bpe-stage').addEventListener('dblclick', function (e) {
+      if (!inProject() || !state.scene) return;
+      var id = state.scene.pickLayer(e);
+      if (!id) return;
+      for (var i = 0; i < state.docs.length; i++) {
+        if (state.docs[i].id === id) {
+          setActive(i);
+          setStatus('Editing ' + state.docs[i].payload.name + '.', 'ok');
+          return;
+        }
+      }
     });
     $('bpe-flatten').addEventListener('click', flattenStack);
     $('bpe-isolate').addEventListener('click', function () {
@@ -1572,7 +2198,17 @@
       }
       if (ds.up !== undefined) return reorderLayer(+ds.up, 1);
       if (ds.down !== undefined) return reorderLayer(+ds.down, -1);
-      if (ds.drop !== undefined) return removeLayer(+ds.drop);
+      if (ds.drop !== undefined) {
+        return inProject() ? removePart(+ds.drop) : removeLayer(+ds.drop);
+      }
+    });
+    // Answering "where does this part attach". The options are the rig's own sockets,
+    // so the only thing that can be picked is a bone the skeleton actually has.
+    // The shared dropdown copies the select's classes onto its trigger button, so match
+    // the element that actually carries the value and the index.
+    $('bpe-layerlist').addEventListener('change', function (e) {
+      var sel = e.target.closest('select.bpe-apsel');
+      if (sel) setPartAp(+sel.dataset.ap, sel.value);
     });
     $('bpe-align').addEventListener('change', function (e) {
       var d = active();
@@ -1592,7 +2228,9 @@
 
     $('bpe-undo').addEventListener('click', undo);
     $('bpe-revert').addEventListener('click', revertAll);
-    $('bpe-save').addEventListener('click', save);
+    $('bpe-save').addEventListener('click', function () {
+      if (inProject()) saveModel(); else save();
+    });
 
     document.addEventListener('keydown', function (e) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && state.data) {

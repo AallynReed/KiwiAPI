@@ -52,11 +52,39 @@
                     <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
                     <span data-i18n>Choose a file</span>
                 </button>
+                <button type="button" class="bpe-btn" id="bpe-open-model">
+                    <i class="fa-solid fa-dragon" aria-hidden="true"></i>
+                    <span data-i18n>Open a whole model</span>
+                </button>
                 <button type="button" class="bpe-btn" id="bpe-import-qb">
                     <i class="fa-solid fa-file-import" aria-hidden="true"></i>
                     <span data-i18n>Open .qb files</span>
                 </button>
             </div>
+            <p class="bpe-hint bpe-openhint" data-i18n>A creature is never one file — a mount is a head, a jaw, four legs and a tail. Open its <code>.tmod</code> (or the blueprints together) and you get the whole thing assembled on its skeleton, with every part editable in place.</p>
+            <div class="bpe-browse">
+                <h3 data-i18n>Or start from something already in the game</h3>
+                <p class="bpe-hint" data-i18n>Search Trove's mounts, dragons, allies and costumes. Pick one and the whole thing opens on its skeleton, every part ready to edit.</p>
+                <div class="bpe-browserow">
+                    <label class="sr-only" for="bpe-search" data-i18n>Search game models</label>
+                    <input type="search" id="bpe-search" placeholder="Search mounts, dragons, allies…" autocomplete="off">
+                    <label class="sr-only" for="bpe-searchtype" data-i18n>Kind of model</label>
+                    <select id="bpe-searchtype">
+                        <option value="" data-i18n>Anything</option>
+                        <option value="mount" data-i18n>Mounts</option>
+                        <option value="dragon" data-i18n>Dragons</option>
+                        <option value="ally" data-i18n>Allies</option>
+                        <option value="skin" data-i18n>Costumes</option>
+                        <option value="style" data-i18n>Styles</option>
+                        <option value="wings" data-i18n>Wings</option>
+                        <option value="boat" data-i18n>Boats</option>
+                        <option value="magrider" data-i18n>Magriders</option>
+                    </select>
+                </div>
+                <ul class="bpe-results" id="bpe-results"></ul>
+                <p class="bpe-hint" id="bpe-resultnote" aria-live="polite" hidden></p>
+            </div>
+
             <p class="bpe-hint bpe-openhint" data-i18n>Working in Qubicle or MagicaVoxel? Save as <code>.qb</code>, then pick it along with its <code>_a</code>, <code>_s</code> and <code>_t</code> material maps and they'll be compiled into a blueprint. Qubicle's own <code>.qbcl</code> holds several models at once and can't be read.</p>
         </div>
 
@@ -162,7 +190,11 @@
                 <div class="bpe-actions">
                     <button type="button" class="bpe-btn bpe-primary" id="bpe-save">
                         <i class="fa-solid fa-download" aria-hidden="true"></i>
-                        <span data-i18n>Download</span>
+                        <span id="bpe-save-label" data-i18n>Download</span>
+                    </button>
+                    <button type="button" class="bpe-btn bpe-projectonly" id="bpe-save-part">
+                        <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+                        <span data-i18n>This part only</span>
                     </button>
                     <button type="button" class="bpe-btn" id="bpe-undo" disabled>
                         <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
@@ -175,13 +207,13 @@
                 <p class="bpe-hint" data-i18n>The attachment point and any placed objects turn with the model.</p>
                 <div class="bpe-chips bpe-xforms" id="bpe-transforms"></div>
 
-                <h3 data-i18n>Layers</h3>
-                <p class="bpe-hint" data-i18n>Each layer is its own blueprint. Pick one to edit it, drag it about with the Move tool, and reorder them — on download the top layer wins wherever two overlap.</p>
+                <h3 id="bpe-layers-title" data-i18n>Layers</h3>
+                <p class="bpe-hint" id="bpe-layers-hint" data-i18n>Each layer is its own blueprint. Pick one to edit it, drag it about with the Move tool, and reorder them — on download the top layer wins wherever two overlap.</p>
                 <ul class="bpe-layers" id="bpe-layerlist"></ul>
                 <div class="bpe-actions">
                     <button type="button" class="bpe-btn" id="bpe-layer-open">
                         <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
-                        <span data-i18n>Add a layer</span>
+                        <span id="bpe-layer-open-label" data-i18n>Add a layer</span>
                     </button>
                     <button type="button" class="bpe-btn" id="bpe-isolate" aria-pressed="false" disabled>
                         <i class="fa-solid fa-eye" aria-hidden="true"></i>
@@ -229,6 +261,10 @@
                         <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
                         <span data-i18n>Open another</span>
                     </button>
+                    <button type="button" class="bpe-btn" id="bpe-open-model2">
+                        <i class="fa-solid fa-dragon" aria-hidden="true"></i>
+                        <span data-i18n>Open a model</span>
+                    </button>
                 </div>
             </aside>
         </div>
@@ -239,7 +275,8 @@
 
     <input type="file" id="bpe-input" accept=".blueprint" hidden>
     <input type="file" id="bpe-qb-input" accept=".qb" multiple hidden>
-    <input type="file" id="bpe-layer-input" accept=".blueprint" hidden>
+    <input type="file" id="bpe-layer-input" accept=".blueprint" multiple hidden>
+    <input type="file" id="bpe-model-input" accept=".tmod,.zip,.blueprint" multiple hidden>
 
     {% include "partials/footer.html" %}
 

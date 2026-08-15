@@ -203,6 +203,19 @@ def has_ap(rig_name: str, ap_key: str) -> bool:
     return bool(rig) and ap_key in rig["rest"]
 
 
+def rig_pose(name: str) -> dict | None:
+    """A baked rig's rest pose: ``{"voxel_scale": float, "rest": {AP: [16 floats]}}``,
+    or None for a skeleton that isn't baked.
+
+    The matrices only - no animation metadata and no clips. It is what a caller needs in
+    order to PLACE parts (the Blueprint Editor's model projects), where ``assemble``
+    answers the different question of decoding them as well."""
+    rig = _rigs().get(name or "")
+    if not rig:
+        return None
+    return {"voxel_scale": rig["voxel_scale"], "rest": rig["rest"]}
+
+
 def animations_for(name: str) -> list[str]:
     """Animation names baked for a rig (empty if rest-pose-only / unknown)."""
     rig = _rigs().get(name)

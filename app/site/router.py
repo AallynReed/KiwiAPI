@@ -46,6 +46,7 @@ from app.trove import server_time as trove_server_time
 from app.trove import stats as trove_stats
 from app.trove import status as trove_status
 from app.trove.blueprint import editor as bp_editor
+from app.trove.blueprint import model as bp_model
 from app.trove.codexes import crafting as codexes_crafting
 from app.trove.codexes import read as codexes_read
 from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
@@ -3851,6 +3852,198 @@ async def site_blueprint_editor_save(
             "X-Kiwi-Recoloured": str(summary["recoloured"]),
             "X-Kiwi-Rematerialised": str(summary["rematerialised"]),
             "X-Kiwi-Ignored": str(summary["ignored"]),
+        },
+    )
+
+
+# --- model projects: a whole creature open at once --------------------------
+# A mount is sixteen .blueprint files that only mean something together. These two
+# endpoints open the set and write it back; ``app/trove/blueprint/model.py`` is the
+# engine and every per-part tool above still works on one part of a project, because
+# each part's own bytes go back to the browser with it.
+
+
+async def _bp_model_files(file: UploadFile | None,
+                          files: list[UploadFile]) -> tuple[str, dict, list, str]:
+    """The project's source, however it was picked: a ``.tmod``/``.zip``, or loose
+    ``.blueprint`` files straight off a computer. Returns ``(kind, header, files,
+    name)``."""
+    if file is not None and file.filename:
+        data = await file.read()
+        if not data:
+            raise APIError(400, ErrorCode.bad_request, "That file is empty.")
+        name = file.filename.rsplit("/", 1)[-1]
+        try:
+            kind, props, unpacked = await asyncio.to_thread(bp_model.unpack, data, name)
+        except bp_editor.EditorError as e:
+            raise _blueprint_editor_error(e) from e
+        return kind, props, unpacked, name
+
+    loose: list[tuple[str, bytes]] = []
+    for part in files or []:
+        if not part.filename:
+            continue
+        path = part.filename.replace("\\", "/").rsplit("/", 1)[-1]
+        if not path.lower().endswith(".blueprint"):
+            raise APIError(400, ErrorCode.bad_request, f"'{path}' isn't a .blueprint.")
+        loose.append((path, await part.read()))
+    if not loose:
+        raise APIError(400, ErrorCode.bad_request,
+                       "Send a .tmod or .zip, or the .blueprint files themselves.")
+    return "files", {}, loose, "model"
+
+
+@router.post("/site/blueprint-editor/model", response_class=JSONResponse)
+async def site_blueprint_editor_model(
+    file: UploadFile | None = File(default=None),
+    files: list[UploadFile] = File(default=[]),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> JSONResponse:
+    """Open every ``.blueprint`` in a mod as one editable model.
+
+    Send a ``.tmod`` or ``.zip`` as ``file``, or the loose blueprints as ``files``.
+    Each part comes back as the payload ``inspect`` returns plus its own bytes and the
+    attach point it sits at, alongside the rig's rest pose - which is what lets the page
+    draw the assembled creature and edit any part of it in place.
+
+    The rig and the per-part attach points are resolved from the game's own prefab
+    bindings (``rig_index.resolve``), the same authoritative map the 3D viewers use.
+    There is no name-overlap fallback: a part the map doesn't place comes back with
+    ``ap: null`` and is laid out beside the model rather than guessed onto a bone."""
+    from app.trove.mods_hub import assembly, rig_index
+
+    kind, _props, unpacked, name = await _bp_model_files(file, files)
+    blueprints = bp_model.parts_of(unpacked)
+    if not blueprints:
+        raise APIError(400, ErrorCode.bad_request,
+                       "There are no .blueprint files in there.")
+    skeleton, attach = await rig_index.resolve(
+        [bp_model.basename_of(p) for p, _ in blueprints])
+    if skeleton and not assembly.has_baked_rig(skeleton):
+        skeleton = None                    # known creature, no baked pose -> lay it out
+    try:
+        payload = await asyncio.to_thread(
+            bp_model.open_project, unpacked, rig_name=skeleton, attach=attach, name=name)
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    payload["source"] = kind
+    return JSONResponse(payload, headers={"Cache-Control": "no-store"})
+
+
+@router.get("/site/blueprint-editor/game-model", response_class=JSONResponse)
+async def site_blueprint_editor_game_model(
+    prefab: str = Query(..., min_length=1, description="Codex entry path (the creature's prefab)"),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> JSONResponse:
+    """Open one of the GAME's own creatures as a model project.
+
+    The codex knows a mount, ally, dragon or costume by its prefab path, and the prefab
+    binds every blueprint the creature is made of to the bone it hangs off. So the page
+    can search the codex, show the creature's render, and open the real thing to edit -
+    which is where most mods start: an existing model, recoloured.
+
+    Its parts are read out of the archived game files, and the same no-guess rule
+    applies as everywhere else - a prefab the bindings don't know returns 404 rather
+    than a plausible-looking creature made of parts that aren't its own."""
+    from app.embed.service import _read_game_file
+    from app.trove.mods_hub import assembly, rig_index
+    from app.trove.mods_hub.trove_layout import LIVE_BRANCH, game_file_paths, nearest_path
+
+    canonical, candidates = await rig_index.prefab_path(prefab)
+    if not canonical:
+        if candidates:
+            raise APIError(400, ErrorCode.bad_request,
+                           f"'{prefab}' names {len(candidates)} different creatures. "
+                           f"Use the full path: {candidates[0]}")
+        raise APIError(404, ErrorCode.not_found,
+                       f"The game data has no creature at '{prefab}'.")
+    skeleton, parts = await rig_index.creature_by_prefab(canonical)
+    if not skeleton or not parts:
+        raise APIError(404, ErrorCode.not_found, "That prefab binds no blueprint parts.")
+
+    # Same resolution the embeddable viewer uses: Trove reuses part filenames across
+    # skins and NPC sets, so each one is taken from the copy nearest this creature.
+    paths = await game_file_paths(LIVE_BRANCH)
+    files: list[tuple[str, bytes]] = []
+    for basename in parts:
+        game_path = nearest_path(paths.get(f"{basename}.blueprint", []), canonical)
+        raw = await _read_game_file(game_path) if game_path else None
+        if raw:
+            files.append((f"{basename}.blueprint", raw))
+    if not files:
+        raise APIError(404, ErrorCode.not_found,
+                       "None of that creature's parts are in the game archive.")
+    rig_name = skeleton if assembly.has_baked_rig(skeleton) else None
+    try:
+        payload = await asyncio.to_thread(
+            bp_model.open_project, files, rig_name=rig_name, attach=parts,
+            name=rig_index.prefab_stem(canonical) + ".zip")
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    payload["source"] = "game"
+    payload["prefab"] = canonical
+    return JSONResponse(payload, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/site/blueprint-editor/model-save", response_class=Response)
+async def site_blueprint_editor_model_save(
+    file: UploadFile | None = File(default=None),
+    files: list[UploadFile] = File(default=[]),
+    paths: str = Form(default="[]"),
+    edits: str = Form(default="{}"),
+    name: str = Form(default=""),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> Response:
+    """Write a project's edits back and hand the whole mod back.
+
+    ``edits`` is ``{"<path in the mod>": [edit list], ...}`` - the same per-voxel edit
+    entries ``save`` takes, one list per part, indexed against the order that part's
+    payload came back in. The archive is posted again alongside them, so the server
+    still holds nothing between opening a model and writing it.
+
+    ``files`` + ``paths`` carry parts that weren't in the mod when it was opened - a
+    blueprint dropped onto an open model - with the path each should be packed at. A
+    path already in the mod is replaced; the rest are added.
+
+    Everything that isn't an edited blueprint is carried through byte for byte: the
+    config, the preview image, the textures, and any part that wasn't touched. A
+    ``.tmod`` comes back as a ``.tmod``, anything else as a ``.zip``."""
+    kind, props, unpacked, source_name = await _bp_model_files(file, [] if file else files)
+    # A project of loose parts has no archive to take a name from - a game creature
+    # opened by prefab, for instance - so the page says what it should be called.
+    name = name.rsplit("/", 1)[-1] or source_name
+    try:
+        parsed = json.loads(edits or "{}")
+        extra_paths = json.loads(paths or "[]")
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "The edit list wasn't understood.") from None
+    if not isinstance(parsed, dict) or not isinstance(extra_paths, list):
+        raise APIError(400, ErrorCode.bad_request, "The edit list wasn't understood.")
+    extra: list[tuple[str, bytes]] = []
+    if file:                          # loose-file projects post everything as `files`
+        if len(extra_paths) != len(files or []):
+            raise APIError(400, ErrorCode.bad_request,
+                           "The added parts didn't match the paths that arrived.")
+        for part, want in zip(files or [], extra_paths, strict=True):
+            extra.append((bp_model.pack_path(str(want) or part.filename or ""),
+                          await part.read()))
+    try:
+        edited, summary = await asyncio.to_thread(
+            bp_model.apply_project, unpacked, parsed, extra)
+        out, ext = await asyncio.to_thread(bp_model.repack, kind, props, edited)
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    stem = re.sub(r"\.(tmod|zip)$", "", name, flags=re.I) or "model"
+    fallback = re.sub(r'[^\x20-\x7e]', "_", f"{stem}.{ext}").replace('"', "")
+    return Response(
+        content=out,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": (f'attachment; filename="{fallback}"; '
+                                    f"filename*=UTF-8''{quote(stem + '.' + ext)}"),
+            "Cache-Control": "no-store",
+            "X-Kiwi-Summary": json.dumps(summary),
         },
     )
 

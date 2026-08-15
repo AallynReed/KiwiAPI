@@ -3547,6 +3547,9 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.write(out)
             return None
 
+        if path in ("/site/blueprint-editor/model", "/site/blueprint-editor/model-save"):
+            return self._blueprint_model(path, fields, files, blobs)
+
         if "file" not in blobs:
             return self._send_json({"detail": "No file was sent."}, 400)
         name, data = blobs["file"]
@@ -3623,6 +3626,81 @@ class Handler(SimpleHTTPRequestHandler):
         except (ValueError, KeyError) as e:
             return self._send_json({"detail": f"{type(e).__name__}: {e}"}, 400)
         return self._send_json({"detail": "unknown endpoint"}, 404)
+
+    def _blueprint_model(self, path, fields, files, blobs):
+        """Model projects - a whole creature open at once - on the real engine
+        (app.trove.blueprint.model).
+
+        One thing differs from production and it matters: WHERE THE PARTS GO. The API
+        resolves the rig from the game's own prefab bindings, which live in Postgres;
+        there is none here, so the preview falls back to matching part names against the
+        baked rigs by suffix. That is a GUESS, and the real resolver refuses to make it.
+        It exists so the assembled view can be looked at locally - nothing under app/
+        ever calls it."""
+        import sys
+        sys.path.insert(0, str(ROOT))
+        from app.trove.blueprint import editor as bp_editor
+        from app.trove.blueprint import model as bp_model
+
+        def dev_match(basenames):
+            from app.trove.mods_hub import assembly
+            best, best_hits = None, {}
+            for rig_name, rig in assembly._rigs().items():
+                aps = sorted(rig["rest"], key=len, reverse=True)   # longest suffix wins
+                hits = {}
+                for b in basenames:
+                    for ap in aps:
+                        if b == ap or b.endswith("_" + ap):
+                            hits[b] = ap
+                            break
+                if len(hits) > len(best_hits):
+                    best, best_hits = rig_name, hits
+            return (best, best_hits) if best_hits else (None, {})
+
+        try:
+            if "file" in blobs:
+                name, data = blobs["file"]
+                kind, props, unpacked = bp_model.unpack(data, name)
+            else:
+                loose = [(fn.replace("\\", "/").rsplit("/", 1)[-1], d)
+                         for nm, fn, d in files if nm == "files" and fn]
+                if not loose:
+                    return self._send_json({"detail": "Send a .tmod, .zip or blueprints."}, 400)
+                kind, props, unpacked, name = "files", {}, loose, "model"
+
+            if path == "/site/blueprint-editor/model":
+                blueprints = bp_model.parts_of(unpacked)
+                skeleton, attach = dev_match(
+                    [bp_model.basename_of(p) for p, _ in blueprints])
+                payload = bp_model.open_project(unpacked, rig_name=skeleton,
+                                                attach=attach, name=name)
+                payload["source"] = kind
+                return self._send_json(payload)
+
+            extra = []
+            if "file" in blobs:
+                paths = json.loads(fields.get("paths") or "[]")
+                posted = [(fn, d) for nm, fn, d in files if nm == "files" and fn]
+                for (fn, d), want in zip(posted, paths, strict=False):
+                    extra.append((bp_model.pack_path(str(want) or fn), d))
+            edited, summary = bp_model.apply_project(
+                unpacked, json.loads(fields.get("edits") or "{}"), extra)
+            out, ext = bp_model.repack(kind, props, edited)
+        except bp_editor.EditorError as e:
+            return self._send_json({"detail": str(e)}, 400)
+        except (ValueError, KeyError) as e:
+            return self._send_json({"detail": f"{type(e).__name__}: {e}"}, 400)
+
+        stem = re.sub(r"\.(tmod|zip)$", "", name, flags=re.I) or "model"
+        self.send_response(200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Length", str(len(out)))
+        self.send_header("Content-Disposition", f'attachment; filename="{stem}.{ext}"')
+        self.send_header("X-Kiwi-Summary", json.dumps(summary))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(out)
+        return None
 
     def _mod_workshop(self, path):
         """Run the REAL Mod Workshop engine (app.trove.mods_hub.workshop) so the dev
