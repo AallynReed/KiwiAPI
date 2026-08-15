@@ -347,16 +347,27 @@ async def _warmup_loop() -> None:
     # Tiny initial delay so Beanie's Document init has time to land
     # before the first scan touches the collections.
     await asyncio.sleep(2.0)
+    first_pass = True
     while True:
         start = time.time()
-        try:
-            await _warm_all()
-            elapsed = time.time() - start
-            logger.info("leaderboards warmer: caches refreshed in %.2fs", elapsed)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.exception("leaderboards warmer: iteration failed")
+        # A restart is not a new capture, so the boot pass is usually redundant.
+        resumed = await _persisted_pass_age() if first_pass else None
+        first_pass = False
+        if resumed is not None:
+            logger.info(
+                "leaderboards warmer: resuming - the published anchor's persisted "
+                "pass is %.0fs old, nothing has landed since (boot pass skipped)",
+                resumed,
+            )
+        else:
+            try:
+                await _warm_all()
+                elapsed = time.time() - start
+                logger.info("leaderboards warmer: caches refreshed in %.2fs", elapsed)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception("leaderboards warmer: iteration failed")
 
         # Re-read TTL each loop so a runtime-config edit immediately
         # adjusts the cadence on the next sleep.
@@ -367,8 +378,9 @@ async def _warmup_loop() -> None:
             ttl = 1800.0  # fall back to the default if config lookup fails
         # Subtract the work time so the effective period is ~TTL, not
         # TTL + work_time. Floor at 30s so a flurry of post-ingest
-        # triggers doesn't peg the worker on a tight loop.
-        next_sleep = max(30.0, ttl - (time.time() - start))
+        # triggers doesn't peg the worker on a tight loop. A resumed pass
+        # subtracts its age too, so a restart doesn't reset the cadence.
+        next_sleep = max(30.0, ttl - (time.time() - start) - (resumed or 0.0))
         # Sleep with an early-wake escape hatch - trigger_warmer() sets
         # the event when a new ingest lands so the new anchor's caches
         # start filling immediately instead of after a full TTL.
@@ -379,6 +391,45 @@ async def _warmup_loop() -> None:
         except asyncio.CancelledError:
             raise
         _wake_event.clear()
+
+
+async def _persisted_pass_age() -> float | None:
+    """Age (seconds) of the published anchor's persisted pass, or None if there
+    isn't one still inside the cache TTL.
+
+    Only consulted on the FIRST iteration, to decide whether a restart needs to
+    redo the work. It usually doesn't: ingests arrive through this app, so no new
+    capture can have landed while it was down, and every derived snapshot is
+    persisted in Redis. Recomputing then costs minutes of CPU (the entries +
+    board-history warm dominates - ~210s of a ~250s pass) to rewrite caches that
+    already hold the same answer, right when a deploy is also paying for a cold
+    process. Resume instead and let the TTL / ingest trigger drive the next real
+    pass. Any doubt (no Redis, no published anchor, stale or unreadable payload)
+    falls through to the full pass."""
+    try:
+        from app.admin import runtime_config
+        from app.trove.leaderboards import cache as lb_cache
+        anchor = await lb_cache.get_ready_anchor()
+        if anchor is None:
+            return None
+        persisted = await lb_cache.get_cheaters(anchor)
+        if not persisted:
+            return None
+        # ...unless a capture landed that this anchor doesn't cover - an ingest
+        # during the previous process's pass, cut short before it published.
+        # That one MUST be processed now, not at the next TTL wake.
+        latest = await lb_service.list_timestamps(limit=1, include_archive=False)
+        if latest and latest[0] > anchor:
+            return None
+        ttl = float(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
+        age = time.time() - float(persisted.get("computed_at") or 0.0)
+        return age if 0.0 <= age < ttl else None
+    except Exception:
+        logger.warning(
+            "leaderboards warmer: freshness probe failed - running the full pass",
+            exc_info=True,
+        )
+        return None
 
 
 async def _warm_all() -> None:

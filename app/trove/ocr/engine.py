@@ -19,15 +19,29 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-try:  # optional dependency - guarded so a missing wheel/libGL doesn't break boot
-    from rapidocr import RapidOCR
-    _IMPORT_ERROR: Exception | None = None
-except Exception as exc:  # noqa: BLE001 - ImportError or libGL OSError both land here
-    RapidOCR = None  # type: ignore[assignment,misc]
-    _IMPORT_ERROR = exc
+_RapidOCR = None
+_IMPORT_ERROR: Exception | None = None
+_imported = False
 
 _engine = None
 _engine_lock = threading.Lock()
+
+
+def _load() -> None:
+    """Import RapidOCR once, on first use. Guarded so a missing wheel (or its
+    libGL system lib) yields a clear 503 rather than breaking import - and
+    DEFERRED, because pulling in onnxruntime costs ~0.25s of every boot for a
+    dependency only the OCR endpoint touches. The endpoint pays it on its first
+    call, where it already waits on the (much heavier) lazy model load."""
+    global _RapidOCR, _IMPORT_ERROR, _imported
+    if _imported:
+        return
+    _imported = True
+    try:
+        from rapidocr import RapidOCR
+        _RapidOCR = RapidOCR
+    except Exception as exc:  # noqa: BLE001 - ImportError or libGL OSError both land here
+        _IMPORT_ERROR = exc
 
 
 class OcrUnavailable(RuntimeError):
@@ -35,17 +49,19 @@ class OcrUnavailable(RuntimeError):
 
 
 def available() -> bool:
-    return RapidOCR is not None
+    _load()
+    return _RapidOCR is not None
 
 
 def _get_engine():
     global _engine
-    if RapidOCR is None:
+    _load()
+    if _RapidOCR is None:
         raise OcrUnavailable(f"OCR engine unavailable: {_IMPORT_ERROR}")
     if _engine is None:
         with _engine_lock:                # first call loads the ONNX models once
             if _engine is None:
-                _engine = RapidOCR()
+                _engine = _RapidOCR()
     return _engine
 
 
