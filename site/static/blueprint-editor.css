@@ -61,6 +61,22 @@
   line-height: 1.6;
 }
 
+/* What is left of the footer: one quiet line, because the page still has to say who
+   made it and that it isn't Gamigo's. */
+.bpe-footnote {
+  margin: 0;
+  padding: 14px clamp(16px, 2.2vw, 40px) 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  color: var(--text-mute);
+  font-size: .74rem;
+}
+.bpe-footnote a { color: var(--text-mute); }
+.bpe-footnote a:hover { color: var(--text); }
+.bpe-footnote .sep { opacity: .5; }
+
 /* ─── Empty state ───────────────────────────────────────────────────── */
 
 .bpe-empty {
@@ -268,18 +284,59 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
 }
 .bpe-footacts { display: flex; gap: 6px; flex-wrap: wrap; min-width: 0; }
 .bpe-footacts .bpe-btn { padding: 4px 10px; font-size: .74rem; }
-/* The hint gives way rather than pushing the buttons onto a second row: it is a
-   reminder, and the controls are the reason the strip exists. */
-.bpe-stagefoot .bpe-stagehint {
-  flex: 1 1 0;
-  min-width: 0;
-  margin-left: auto;
-  padding: 0;
-  border: 0;
-  text-align: right;
-  white-space: nowrap;
+.bpe-keysbtn { margin-left: auto; }
+
+/* ─── Controls dialog ───────────────────────────────────────────────── */
+/* A native <dialog>: the focus trap, Escape and the backdrop come from the browser
+   rather than from us re-implementing three things that are easy to get wrong. */
+
+.bpe-dlg {
+  width: min(460px, calc(100vw - 32px));
+  padding: 18px 20px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-lg, 22px);
+  color: var(--text);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
 }
-@media (max-width: 560px) { .bpe-stagefoot .bpe-stagehint { display: none; } }
+.bpe-dlg::backdrop { background: rgba(4, 7, 12, .72); }
+.bpe-dlg-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.bpe-dlg-head h2 { margin: 0; flex: 1; font-size: 1.05rem; }
+.bpe-dlg-x {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: 1px solid var(--bg-line);
+  border-radius: 8px;
+  color: var(--text-mute);
+  font: inherit;
+  cursor: pointer;
+}
+.bpe-dlg-x:hover { color: var(--text); border-color: var(--accent-blue); }
+.bpe-dlg-x:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+.bpe-keys {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px 16px;
+  margin: 0 0 12px;
+  align-items: baseline;
+}
+.bpe-keys dt { color: var(--text-mute); font-size: .82rem; }
+.bpe-keys dd { margin: 0; text-align: right; font-size: .82rem; white-space: nowrap; }
+.bpe-keys kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--bg-card-hi);
+  border: 1px solid var(--bg-line);
+  border-radius: 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: .74rem;
+}
+/* The part gestures only exist once a whole model is open. */
+.bpe-keys-model { display: none; }
+.bpe-dlg.bpe-has-model .bpe-keys-model { display: block; }
 .bpe-stagehint {
   margin: 0;
   padding: 9px 14px;

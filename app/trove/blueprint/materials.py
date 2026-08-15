@@ -38,6 +38,13 @@ SPECULAR_NAMES = {
     0: "Rough", 1: "Metal", 2: "Water", 3: "Iridescent", 4: "Waxy", 5: "Wave",
 }
 
+# ...but NOT on a glowing one. A glow voxel is emissive, and the specular index is only
+# read for a shaded solid (``render/voxel.material_for``: `spec = 0 if kind != "S"`, and
+# a glowing solid is kind "E"). So a finish on type 55 is a number the game never looks
+# at and neither does any renderer here - offering the choice was offering a control
+# that could not do anything, and writing one put a value in the file that means nothing.
+NO_SPECULAR_TYPES = frozenset({55})
+
 # w on a GLASS voxel = opacity level; the alpha the game renders is 16 + 32*w.
 GLASS_LEVELS = 8
 
@@ -90,6 +97,10 @@ def describe(vtype: int, w: int) -> str:
         label, cls = entry
         if cls == GLASS:
             return f"{label} - {round(alpha_for_w(w) / 255 * 100)}% opacity"
+        # An emissive type has no finish to name. A file that carries one anyway still
+        # says so rather than being quietly tidied up in the readout.
+        if vtype in NO_SPECULAR_TYPES:
+            return label if w == 0 else f"{label} - unused finish {w}"
         return f"{label} - {SPECULAR_NAMES.get(w, f'finish {w}')}"
     name = INTERNAL_NAMES.get(vtype)
     return f"{name} (type {vtype})" if name else f"Unknown type {vtype}"
@@ -107,14 +118,16 @@ def is_editable(vtype: int) -> bool:
 def palette() -> dict:
     """The editable material options, for the UI. ``w`` options depend on the class:
     a specular finish for solids, an opacity level for glass."""
+    def options_for(t: int, cls: str) -> list[dict]:
+        if cls == GLASS:
+            return [{"w": w, "label": f"{round(alpha_for_w(w) / 255 * 100)}%",
+                     "alpha": alpha_for_w(w)} for w in range(GLASS_LEVELS)]
+        if t in NO_SPECULAR_TYPES:
+            return [{"w": 0, "label": SPECULAR_NAMES[0]}]      # emissive: no finish
+        return [{"w": w, "label": name} for w, name in sorted(SPECULAR_NAMES.items())]
+
     types = [
-        {"type": t, "label": label, "class": cls,
-         "options": (
-             [{"w": w, "label": f"{round(alpha_for_w(w) / 255 * 100)}%",
-               "alpha": alpha_for_w(w)} for w in range(GLASS_LEVELS)]
-             if cls == GLASS else
-             [{"w": w, "label": name} for w, name in sorted(SPECULAR_NAMES.items())]
-         )}
+        {"type": t, "label": label, "class": cls, "options": options_for(t, cls)}
         for t, (label, cls) in PALETTE_TYPES.items()
     ]
     return {"types": types, "glass_levels": GLASS_LEVELS}
@@ -131,6 +144,8 @@ def validate_material(vtype: int, w: int) -> tuple[int, int]:
         raise ValueError(f"Type {vtype} is not an editable material.")
     if material_class(vtype) == GLASS:
         w = max(0, min(w, GLASS_LEVELS - 1))
+    elif vtype in NO_SPECULAR_TYPES:
+        w = 0                     # emissive: the finish is read by nothing (see above)
     else:
         w = max(0, min(w, max(SPECULAR_NAMES)))
     return vtype, w

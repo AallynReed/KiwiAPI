@@ -209,7 +209,10 @@
                             <span data-i18n>Export .qb</span>
                         </button>
                     </div>
-                    <p class="bpe-stagehint" data-i18n>Ctrl-drag to turn the view, right-drag to pan, scroll to zoom.</p>
+                    <button type="button" class="bpe-btn bpe-keysbtn" id="bpe-keys">
+                        <i class="fa-solid fa-keyboard" aria-hidden="true"></i>
+                        <span data-i18n>Controls</span>
+                    </button>
                 </div>
             </section>
 
@@ -324,12 +327,54 @@
 
     </main>
 
+    <!-- Every gesture in one place. A native <dialog> so the focus trap, the Escape
+         key and the backdrop are the browser's rather than ours. -->
+    <dialog id="bpe-keysdlg" class="bpe-dlg" aria-labelledby="bpe-keys-title">
+        <div class="bpe-dlg-head">
+            <h2 id="bpe-keys-title" data-i18n>Controls</h2>
+            <button type="button" class="bpe-dlg-x" id="bpe-keys-close" aria-label="Close">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <dl class="bpe-keys">
+            <dt data-i18n>Turn the view</dt><dd><kbd>Ctrl</kbd> + drag</dd>
+            <dt data-i18n>Pan</dt><dd><span data-i18n>Right-drag</span></dd>
+            <dt data-i18n>Zoom</dt><dd><span data-i18n>Scroll</span></dd>
+
+            <dt data-i18n>Use the current tool</dt><dd><span data-i18n>Click, or drag across voxels</span></dd>
+            <dt data-i18n>Pick up a colour and material</dt><dd><kbd>Alt</kbd> + click</dd>
+            <dt data-i18n>Undo</dt><dd><kbd>Ctrl</kbd> + <kbd>Z</kbd></dd>
+
+            <dt class="bpe-keys-model" data-i18n>Work on another part</dt>
+            <dd class="bpe-keys-model"><span data-i18n>Middle-click, or</span> <kbd>Shift</kbd> + <span data-i18n>click</span></dd>
+            <dt class="bpe-keys-model" data-i18n>Work on a part on its own</dt>
+            <dd class="bpe-keys-model" data-i18n>Double-click it</dd>
+            <dt class="bpe-keys-model" data-i18n>Move a part along its bone</dt>
+            <dd class="bpe-keys-model" data-i18n>Unlock it, pick Move, then drag</dd>
+        </dl>
+        <p class="bpe-hint" data-i18n>Undo keeps a separate history for each part and for the whole model, so undoing a move never takes back your painting.</p>
+    </dialog>
+
     <input type="file" id="bpe-input" accept=".blueprint" hidden>
     <input type="file" id="bpe-qb-input" accept=".qb" multiple hidden>
     <input type="file" id="bpe-layer-input" accept=".blueprint" multiple hidden>
     <input type="file" id="bpe-model-input" accept=".tmod,.zip,.blueprint" multiple hidden>
 
-    {% include "partials/footer.html" %}
+    {# No site footer. This is a full-screen tool with a sticky workspace, so six
+       columns of links are what you scroll INTO when a panel runs out - the one place
+       on the page where the answer is "nothing here is for you right now". The legal
+       line lives on every other page, and the support pill (normally carried by the
+       footer) is included directly so it still rides along. #}
+    <p class="bpe-footnote">
+        <a href="/" data-i18n>Better Trove Tools</a>
+        <span class="sep">·</span>
+        <a href="/terms" data-i18n>Terms</a>
+        <span class="sep">·</span>
+        <a href="/privacy" data-i18n>Privacy</a>
+        <span class="sep">·</span>
+        <span data-nosnippet data-i18n>An independent fan project. Not endorsed by Gamigo.</span>
+    </p>
+    {% include "partials/support_widget.html" %}
 
     <script src="/static/app.min.js"></script>
     <script src="/static/_site_util.min.js"></script>

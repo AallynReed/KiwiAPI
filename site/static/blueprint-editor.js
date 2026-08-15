@@ -2315,9 +2315,16 @@
   function renderWOptions() {
     var pal = state.data.palette;
     var p = (pal.types || []).find(function (t) { return t.type === state.paint.type; });
+    var opts = (p && p.options) || [];
+    /* A material with one option has no choice to offer - a glowing solid is emissive,
+       and nothing reads a specular finish off one. Six buttons where five did nothing
+       is worse than no buttons, so the whole row goes. */
+    var single = opts.length < 2;
+    $('bpe-finish-label').hidden = single;
+    $('bpe-finish').hidden = single;
     if (!p) { $('bpe-finish').innerHTML = ''; return; }
     $('bpe-finish-label').textContent = p['class'] === 'glass' ? 'Opacity' : 'Finish';
-    $('bpe-finish').innerHTML = (p.options || []).map(function (o) {
+    $('bpe-finish').innerHTML = opts.map(function (o) {
       return '<button type="button" class="bpe-w" data-w="' + o.w + '"'
         + ' aria-pressed="' + (state.paint.w === o.w) + '">' + esc(o.label) + '</button>';
     }).join('');
@@ -2728,6 +2735,20 @@
     $('bpe-stage').addEventListener('auxclick', function (e) {
       if (e.button === 1) grabPart(e);
     });
+    /* Every gesture in one dialog, rather than the one line of hint text that fitted
+       under the stage. `showModal` brings the focus trap and Escape with it; the extra
+       click handler closes on the backdrop, which a <dialog> does not do by itself. */
+    var keysDlg = $('bpe-keysdlg');
+    $('bpe-keys').addEventListener('click', function () {
+      // The model-only rows are meaningless with a single blueprint open.
+      keysDlg.classList.toggle('bpe-has-model', inProject());
+      if (keysDlg.showModal) keysDlg.showModal(); else keysDlg.setAttribute('open', '');
+    });
+    $('bpe-keys-close').addEventListener('click', function () { keysDlg.close(); });
+    keysDlg.addEventListener('click', function (e) {
+      if (e.target === keysDlg) keysDlg.close();      // the backdrop, not the card
+    });
+
     // The stage's own controls.
     $('bpe-stagepart').addEventListener('change', function (e) {
       setActive(+e.target.value);
