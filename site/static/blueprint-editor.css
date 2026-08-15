@@ -83,6 +83,14 @@
   align-items: start;
 }
 
+/* A model's panel grows with the model - twenty parts, every material it uses - and
+   scrolling those must not take the thing being edited off screen. The stage sticks
+   under the navbar while the panels run past it. Wide layouts only: stacked, the stage
+   is already first and there is nothing beside it to scroll. */
+@media (min-width: 1181px) {
+  .bpe-stagecard { position: sticky; top: 76px; }
+}
+
 /* Two columns first: the model keeps a usable width while the two panels sit side by
    side under it, rather than the stage being squeezed to a third of a tablet. */
 @media (max-width: 1180px) {
@@ -140,11 +148,43 @@
   white-space: nowrap;
 }
 .bpe-metaline {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   margin-left: auto;
   color: var(--text-mute);
   font-size: .8rem;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The stage bar is the model's own control strip: which part you are in, whether the
+   rest of it is showing, whether it is moving. These are the things you reach for while
+   WATCHING the model, so they sit on it rather than down a panel you have to scroll to. */
+.bpe-partpick {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 40%;
+  background: var(--bg-card-hi);
+  color: var(--text);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  align-self: center;
+}
+.bpe-partpick:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+.bpe-stageacts {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+  align-self: center;
+}
+.bpe-stageacts .bpe-btn { padding: 4px 10px; font-size: .74rem; }
+.bpe-stageacts .bpe-btn[aria-pressed="true"] {
+  border-color: var(--accent-blue);
+  color: var(--text);
 }
 
 /* The hover readout is an OVERLAY on the model, not a row in a bar.
@@ -239,6 +279,20 @@
   background: color-mix(in oklab, var(--accent-blue) 16%, transparent);
   border-color: var(--accent-blue);
   color: var(--text);
+}
+
+/* The tools are icons alone: five labelled pills wrapped to two rows of a panel that
+   also has to hold the colour, the material, the finish and two modifier rows. The name
+   is in the tooltip, and the hint line under them names the tool you are on - so it is
+   readable without being read twice. 34px keeps them comfortably tappable. */
+.bpe-tools button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .84rem;
 }
 
 /* ─── Selection readout ─────────────────────────────────────────────── */
@@ -692,66 +746,73 @@
 .bpe-anchorbtn.on { color: var(--accent-yellow); }
 
 /* ─── Model parts ───────────────────────────────────────────────────── */
-/* A part row is a layer row with a second line: the socket it hangs off. The select
-   spans the full width underneath rather than squeezing in beside the buttons - it
-   carries bone names, which are long, and it is the control that matters most here. */
+/* ONE LINE per part. A creature is twenty of these, so the row carries the name, where
+   it attaches, and two icon buttons - and nothing else. Which socket a part hangs off is
+   changed in a single picker below the list, not in twenty dropdowns. */
 
 .bpe-partrow {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+  display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
-  border: 1px solid var(--bg-line);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 3px 4px 5px 0;
+  padding-right: 3px;
 }
+.bpe-partrow + .bpe-partrow { margin-top: 1px; }
+.bpe-partrow:hover { background: var(--bg-card-hi); }
 .bpe-partrow.active {
   border-color: var(--accent-blue);
   background: color-mix(in oklab, var(--accent-blue) 10%, transparent);
 }
-/* Placed on a bone or not is the difference between a part of the model and a part
-   sitting beside it, so it is on the row rather than only in the 3D view. */
-.bpe-partrow.unplaced { border-left: 3px solid var(--accent-yellow); }
-/* Just added, nobody has said where it goes: this row IS the question. */
+/* Just added, nobody has said where it goes: a same-hue tint, and the picker below
+   asks the question outright. */
 .bpe-partrow.asking {
   border-color: var(--accent-yellow);
   background: color-mix(in oklab, var(--accent-yellow) 10%, transparent);
 }
-.bpe-aprow { grid-column: 1 / -1; padding: 0 6px; min-width: 0; }
-.bpe-apsel {
-  width: 100%;
-  background: var(--bg-card-hi);
-  color: var(--text);
-  border: 1px solid var(--bg-line);
-  border-radius: 5px;
-  font: inherit;
-  font-size: .72rem;
-  padding: 3px 5px;
+.bpe-partrow .bpe-layerpick {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 7px;
 }
-.bpe-apsel:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
-.bpe-apsel:disabled { opacity: .5; }
-.bpe-partrow.asking .bpe-apsel { border-color: var(--accent-yellow); }
+.bpe-partrow .bpe-layerpick strong {
+  display: block;
+  flex: 0 1 auto;
+  font-size: .78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Where it attaches, on the same line as the name - it is the part's identity on a rig,
+   not a footnote. */
+.bpe-partap {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--text-mute);
+  font-size: .7rem;
+  white-space: nowrap;
+}
+/* A leading mark rather than a coloured edge stripe: it reads as "this one needs you"
+   at any row height, and survives the row being tinted for another reason. */
+.bpe-unplacedmark { flex: 0 0 auto; color: var(--accent-yellow); font-size: .72rem; }
+.bpe-partrow .bpe-layerbtn { width: 22px; height: 22px; font-size: .72rem; }
+/* Locked is the resting state, so it is drawn quietly - the OPEN padlock is the one
+   worth noticing, because that part can now be dragged. */
+.bpe-lockbtn.on { color: var(--text-soft); }
+.bpe-lockbtn:not(.on) { color: var(--accent-yellow); }
+.bpe-nudge.bpe-locked-move { opacity: .45; }
 
-/* Buttons that only mean anything with a whole model open. */
-.bpe-projectonly { display: none; }
-body.bpe-project-mode .bpe-projectonly { display: inline-flex; }
-
-/* Going into one part hides the rest, so the way back has to be where you are already
-   looking - on the stage, not down a panel. */
-.bpe-backfull { margin-left: auto; padding: 4px 10px; font-size: .74rem; }
-
-/* A model project has nothing to align against - the bone decides - so the alignment
-   picker goes and the nudge arrows stay, sliding the part along that bone. */
-#bpe-layerctl.bpe-noalign > select, #bpe-layerctl.bpe-noalign > .btt-dd { display: none; }
-
-/* ─── Animation preview ─────────────────────────────────────────────── */
-
-#bpe-anim { margin-bottom: 14px; }
-#bpe-anim h3 { margin: 14px 0 4px; }
-#bpe-anim-mode[aria-pressed="true"] { border-color: var(--accent-blue); color: var(--text); }
-#bpe-anim-controls { display: grid; gap: 6px; margin-top: 8px; }
-#bpe-anim-clip {
+#bpe-apctl { margin: 8px 0 10px; }
+.bpe-aplabel {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-mute);
+  font-size: .72rem;
+}
+#bpe-apctl.asking .bpe-aplabel { color: var(--accent-yellow); }
+.bpe-apsel {
   width: 100%;
   background: var(--bg-card-hi);
   color: var(--text);
@@ -761,6 +822,23 @@ body.bpe-project-mode .bpe-projectonly { display: inline-flex; }
   font-size: .76rem;
   padding: 5px 7px;
 }
+.bpe-apsel:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+.bpe-apsel:disabled { opacity: .5; }
+#bpe-apctl.asking .bpe-apsel { border-color: var(--accent-yellow); }
+
+/* Buttons that only mean anything with a whole model open. */
+.bpe-projectonly { display: none; }
+body.bpe-project-mode .bpe-projectonly { display: inline-flex; }
+
+/* A model project has nothing to align against - the bone decides - so the alignment
+   picker goes and the nudge arrows stay, sliding the part along that bone. */
+#bpe-layerctl.bpe-noalign > select, #bpe-layerctl.bpe-noalign > .btt-dd { display: none; }
+
+/* ─── Animation preview ─────────────────────────────────────────────── */
+/* The bar itself is anim_clips.js, the same control the model viewer carries; it brings
+   its own paint. All this does is sit it under the stage and match the card's edge. */
+
+#bpe-animbar { border-top: 1px solid var(--bg-line); }
 /* While it plays, the tools are inert - say so by making them look it rather than
    leaving controls that quietly do nothing. */
 body.bpe-animating .bpe-tools,

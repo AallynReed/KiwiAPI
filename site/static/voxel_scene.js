@@ -444,6 +444,9 @@
         drag = (dragMode === 'stroke') ? 4 : 3;
         lx = e.clientX; ly = e.clientY; moved = 0;
         dragAccum.set(0, 0, 0);
+        // A move-drag is one action too - a host that offers undo needs to know where it
+        // started and stopped, or dragging a part twenty voxels is twenty undos.
+        if (drag === 3 && opts.onStroke) opts.onStroke('start');
         if (drag === 4) {
           // One stroke is one action: the host is told where it starts and ends so a
           // drag across fifty voxels undoes in one go rather than fifty.

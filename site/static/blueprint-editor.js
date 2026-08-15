@@ -46,7 +46,9 @@
     ask: -1,             // a part just added that nobody has placed yet
     drawn: {},           // doc id -> its geometry is currently in the scene as a layer
     moveAccum: [0, 0, 0],   // sub-voxel remainder of a part drag
-    anim: { on: false, clip: null, data: null, raf: 0 },   // animation preview
+    moveStroke: null,       // one drag of the Move tool = one entry in the model's undo
+    // Animation preview: the shared bar + player (anim_clips.js), rebuilt per model.
+    anim: { on: false, prog: null, want: null, raf: 0, loaded: {}, kit: null, bar: null },
     isolate: false,      // show only the layer being edited
     stroke: null,        // in-progress drag-edit: one batch, one undo entry
     strokeNormal: null,  // the face an 'add' stroke started on
@@ -330,8 +332,8 @@
   /* Recompute the render arrays for one voxel from its current (type, w, rgb).
      This mirrors `material_for` on the server: the viewer needs to know a voxel is
      glass at 50% before the file is ever saved, or the preview would lie. */
-  function reshade(i) {
-    var d = state.data;
+  function reshade(i, payload) {
+    var d = payload || state.data;
     var t = d.type[i], w = d.w[i];
     var glass = (t === 18 || t === 54 || t === 56);
     var glow = (t === 55 || t === 56);
@@ -415,6 +417,7 @@
         state.stroke.push.apply(state.stroke, batch);
       } else {
         state.history.push(batch);
+        noteEditInModelView();
         renderMaterialList();
         renderMeta();
         renderLayers();
@@ -550,9 +553,18 @@
   }
 
   function undo() {
-    var batch = state.history.pop();
+    // In the model view Ctrl-Z belongs to the model - see undoModel.
+    if (inModelView()) return undoModel();
+    undoDoc(active());
+  }
+
+  /* Take back one action on ONE part - the active one, or any other, since the model
+     view can undo an edit made on a part you have since switched away from. */
+  function undoDoc(docu) {
+    if (!docu) return;
+    var batch = docu.history.pop();
     if (!batch) return;
-    var d = state.data;
+    var d = docu.payload;
     /* BACKWARDS. A stroke can touch the same voxel more than once - a drag across a
        corner crosses two of its faces, and an add can place a cell and then paint it -
        so a batch may hold several records for one row, each holding the state at the
@@ -570,13 +582,23 @@
         continue;
       }
       d.rgb[i] = rec.rgb; d.type[i] = rec.type; d.w[i] = rec.w; d.live[i] = rec.live;
-      reshade(i);
+      reshade(i, d);
+    }
+    // Undoing a part you are not looking at still has to redraw it - it is on screen as
+    // a layer, and its cached geometry is now a frame out of date.
+    if (docu !== active()) {
+      docu.dirtyMesh = true;
+      renderLayers();
+      drawStack();
+      updateDirty();
+      return;
     }
     rebuildIndex();
     if (state.scene) state.scene.rebuild(liveView());
     renderMaterialList();
     renderMeta();
     renderSelection();
+    renderLayers();
     updateDirty();
     setStatus('');
   }
@@ -833,6 +855,7 @@
       path: '',
       ap: null,
       added: false,
+      locked: false,
       move: [0, 0, 0],
       row: [0, 0, 0],
     };
@@ -959,83 +982,138 @@
     drawStack();
   }
 
-  /* The parts of a model, with the socket each one hangs off. This is the layer list's
-     job done for a creature: the same documents, listed by where they attach rather than
-     by what covers what, because a model's parts don't stack - they sit on bones. */
+  /* The parts of a model. One LINE each - a creature has twenty of them, and a row that
+     carries its own dropdown is a panel you scroll past rather than read. The socket
+     picker is a single control below the list, for the part that's selected. */
   function renderParts() {
     var r = rig();
-    var opts = sockets();
     var rows = state.docs.map(function (d, i) {
-      var placed = !!(r && d.ap && r.rest[d.ap]);
-      var asking = (state.ask === i && !placed);
-      var pick = '<label class="sr-only" for="bpe-ap-' + d.id + '">Where '
-        + esc(d.payload.name) + ' attaches</label>'
-        + '<select class="bpe-apsel" id="bpe-ap-' + d.id + '" data-ap="' + i + '"'
-        + (opts.length ? '' : ' disabled') + '>'
-        + '<option value="">' + (opts.length ? 'Not placed — pick a socket'
-                                             : 'No rig for this model') + '</option>'
-        + opts.map(function (k) {
-            return '<option value="' + esc(k) + '"' + (d.ap === k ? ' selected' : '') + '>'
-              + esc(k.replace(/_/g, ' ')) + '</option>';
-          }).join('')
-        + '</select>';
+      var placed = placedOn(d);
       var moved = d.move[0] || d.move[1] || d.move[2];
+      var where = placed ? d.ap.replace(/_/g, ' ')
+        : (r ? 'not placed' : liveCountOf(d).toLocaleString() + ' voxels');
       return '<li class="bpe-partrow' + (i === state.active ? ' active' : '')
-        + (asking ? ' asking' : '') + (placed ? '' : ' unplaced') + '">'
+        + (state.ask === i && !placed ? ' asking' : '') + (placed ? '' : ' unplaced') + '">'
         + '<button type="button" class="bpe-layerpick" data-pick="' + i + '">'
-        + '<strong>' + esc(d.payload.name) + '</strong><span>'
-        + liveCountOf(d).toLocaleString() + ' voxels'
-        + (d.added ? ' · added' : '')
-        + (moved ? ' · moved ' + d.move.join(', ') : '') + '</span></button>'
-        + '<button type="button" class="bpe-layerbtn" data-vis="' + i
-        + '" aria-label="Show or hide" aria-pressed="' + (!d.visible)
-        + '"><i class="fa-solid fa-eye' + (d.visible ? '' : '-slash')
+        + (placed ? '' : '<i class="fa-solid fa-circle-question bpe-unplacedmark"'
+                       + ' aria-hidden="true"></i>')
+        + '<strong>' + esc(d.payload.name.replace(/\.blueprint$/i, '')) + '</strong>'
+        + '<span class="bpe-partap">' + esc(where)
+        + (d.added ? ' · new' : '') + (moved ? ' · moved' : '') + '</span></button>'
+        + '<button type="button" class="bpe-layerbtn bpe-lockbtn' + (d.locked ? ' on' : '')
+        + '" data-lock="' + i + '" aria-pressed="' + !!d.locked
+        + '" aria-label="' + (d.locked ? 'Unlock ' : 'Lock ') + esc(d.payload.name)
+        + '" title="' + (d.locked ? 'Locked in place — click to allow moving it'
+                                  : 'Can be moved — click to lock it')
+        + '"><i class="fa-solid fa-lock' + (d.locked ? '' : '-open')
         + '" aria-hidden="true"></i></button>'
+        + '<button type="button" class="bpe-layerbtn" data-vis="' + i
+        + '" aria-label="Show or hide ' + esc(d.payload.name) + '" aria-pressed="'
+        + (!d.visible) + '" title="Show or hide"><i class="fa-solid fa-eye'
+        + (d.visible ? '' : '-slash') + '" aria-hidden="true"></i></button>'
         + '<button type="button" class="bpe-layerbtn" data-drop="' + i
-        + '" aria-label="Remove this part"' + (state.docs.length < 2 ? ' disabled' : '')
+        + '" aria-label="Remove ' + esc(d.payload.name) + '" title="Remove this part"'
+        + (state.docs.length < 2 ? ' disabled' : '')
         + '><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>'
-        + '<div class="bpe-aprow">' + pick + '</div>'
         + '</li>';
     });
     $('bpe-layerlist').innerHTML = rows.join('');
-    $('bpe-isolate').disabled = state.docs.length < 2;
-    $('bpe-isolate').setAttribute('aria-pressed', String(!!state.isolate));
     $('bpe-flatten').disabled = true;
     // The nudge buttons stay - they slide the part along its bone here - but there is
     // nothing to align against, so the alignment picker goes.
     var a = active();
     $('bpe-layerctl').hidden = false;
-    $('bpe-align').closest('#bpe-layerctl').classList.add('bpe-noalign');
+    $('bpe-layerctl').classList.add('bpe-noalign');
     if (a) renderMoveNudge(a);
-    $('bpe-backfull').hidden = !state.isolate;
+    renderApPicker();
+    renderStageBar();
 
-    var unplaced = state.docs.filter(function (d) {
-      return !(r && d.ap && r.rest[d.ap]);
-    }).length;
+    var unplaced = state.docs.filter(function (d) { return !placedOn(d); }).length;
     var p = state.project;
     $('bpe-layerinfo').textContent = r
-      ? (r.name.replace(/_/g, ' ') + ' rig · ' + state.docs.length + ' parts'
-         + (unplaced ? ' · ' + unplaced + ' waiting to be placed' : '')
+      ? (state.docs.length + ' parts on the ' + r.name.replace(/_/g, ' ') + ' rig'
+         + (unplaced ? ' · ' + unplaced + ' to place' : '')
          + (p.extras ? ' · ' + p.extras + ' other file'
-            + (p.extras === 1 ? '' : 's') + ' carried through' : ''))
+            + (p.extras === 1 ? '' : 's') + ' kept' : ''))
       : ('No matching creature in the game data, so the parts are laid out side by '
          + 'side. They still save back exactly where they came from.');
-    /* Focus the question rather than only colouring it: a part was just added and the
-       next thing to do is say where it goes.
+    renderToolHint();
+  }
 
-       On a timeout, and aimed at the TRIGGER. The site's shared dropdown swaps every
-       native <select> for a button and hides the select behind it, and it does that from
-       a MutationObserver - so the button doesn't exist yet at the end of this function,
-       and focusing the select we just wrote loses the focus the moment it is hidden. */
-    if (state.ask >= 0 && opts.length) {
+  /* Where the selected part attaches. One control, always in the same place, so it is
+     both the answer to "what is this part" and the question asked of a part just added. */
+  function renderApPicker() {
+    var box = $('bpe-apctl'), sel = $('bpe-apsel'), d = active();
+    var opts = sockets();
+    box.hidden = !d;
+    if (!d) return;
+    var asking = state.ask === state.active && !placedOn(d);
+    box.classList.toggle('asking', asking);
+    $('bpe-aplabel').textContent = asking
+      ? 'Where does ' + d.payload.name.replace(/\.blueprint$/i, '') + ' go?'
+      : 'Attaches at';
+    var want = d.id + ':' + opts.length;
+    if (sel.dataset.built !== want) {
+      sel.dataset.built = want;
+      sel.innerHTML = '<option value="">'
+        + (opts.length ? 'Not placed' : 'No rig for this model') + '</option>'
+        + opts.map(function (k) {
+            return '<option value="' + esc(k) + '">' + esc(k.replace(/_/g, ' ')) + '</option>';
+          }).join('');
+      sel.disabled = !opts.length;
+    }
+    if (sel.value !== (d.ap || '')) {
+      sel.value = d.ap || '';
+      syncDropdown(sel);
+    }
+    /* Focus the question rather than only colouring it - and on a timeout, aimed at the
+       TRIGGER: the site's shared dropdown swaps every <select> for a button from a
+       MutationObserver, so focusing the select we just wrote would lose the focus the
+       moment it is hidden behind one. */
+    if (asking && opts.length) {
       setTimeout(function () {
-        var sel = document.querySelector('.bpe-partrow.asking select.bpe-apsel');
-        var dd = sel && sel.closest('.btt-dd');
+        var dd = sel.closest('.btt-dd');
         var target = dd ? dd.querySelector('.btt-dd-trigger') : sel;
         if (target) target.focus();
       }, 0);
     }
-    renderToolHint();
+  }
+
+  /* The stage's own controls: which part, whether the rest of the model is showing, and
+     whether it is animating. They belong here rather than in a panel because they are
+     what you reach for WHILE looking at the model. */
+  function renderStageBar() {
+    var on = inProject();
+    var pick = $('bpe-stagepart');
+    pick.hidden = !on;
+    $('bpe-filename').hidden = on;
+    if (on) {
+      var want = state.docs.map(function (d) { return d.id; }).join(',');
+      if (pick.dataset.built !== want) {
+        pick.dataset.built = want;
+        pick.innerHTML = state.docs.map(function (d, i) {
+          return '<option value="' + i + '">'
+            + esc(d.payload.name.replace(/\.blueprint$/i, ''))
+            + (placedOn(d) ? ' — ' + esc(d.ap.replace(/_/g, ' ')) : '') + '</option>';
+        }).join('');
+      }
+      if (pick.value !== String(state.active)) {
+        pick.value = String(state.active);
+        syncDropdown(pick);
+      }
+    }
+    var iso = $('bpe-isolate');
+    iso.disabled = !on || state.docs.length < 2 || state.anim.on;
+    iso.setAttribute('aria-pressed', String(!!state.isolate));
+    $('bpe-isolate-label').textContent = state.isolate ? 'Show the whole model'
+                                                       : 'This part only';
+    iso.querySelector('i').className = state.isolate
+      ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+    var play = $('bpe-animate');
+    play.setAttribute('aria-pressed', String(!!state.anim.on));
+    $('bpe-animate-label').textContent = state.anim.on ? 'Back to editing' : 'Animate';
+    play.querySelector('i').className = state.anim.on
+      ? 'fa-solid fa-pen' : 'fa-solid fa-play';
   }
 
   function renderLayers() {
@@ -1115,6 +1193,9 @@
   }
 
   function renderMoveNudge(d) {
+    var box = $('bpe-nudge');
+    box.classList.toggle('bpe-locked-move', !!d.locked);
+    box.querySelectorAll('button').forEach(function (b) { b.disabled = !!d.locked; });
     ['x', 'y', 'z'].forEach(function (a, i) {
       var v = d.move[i];
       $('bpe-nudge-' + a).textContent = (v > 0 ? '+' : '') + v;
@@ -1224,12 +1305,13 @@
       rig: payload.rig || null,
       skipped: payload.skipped || [],
       extras: payload.extras || 0,
+      history: [],          // model-level undo: parts moved, parts re-socketed
     };
     state.docs = payload.parts.map(function (p) {
       // Each part carries its own bytes, so every single-file tool - the checks, the
       // .qb export, a rotation - keeps working on one part of a project unchanged.
       var file = new File([b64bytes(p.blueprint)], p.name);
-      return makeDoc(file, p.model, { path: p.path, ap: p.ap || null });
+      return makeDoc(file, p.model, { path: p.path, ap: p.ap || null, locked: true });
     });
     state.active = 0;
     state.anchor = 0;
@@ -1260,12 +1342,24 @@
     set('bpe-layers-title', on ? 'Parts' : 'Layers');
     set('bpe-layer-open-label', on ? 'Add a part' : 'Add a layer');
     set('bpe-layers-hint', on
-      ? 'Every part is its own blueprint on its own bone. Double-click one in the view '
-        + 'to work on it, or pick it here — and tell a part you have added where it goes.'
+      ? 'Double-click a part in the view to work on it on its own.'
       : 'Each layer is its own blueprint. Pick one to edit it, drag it about with the '
         + 'Move tool, and reorder them — on download the top layer wins wherever two '
         + 'overlap.');
-    renderAnim();
+    document.body.classList.toggle('bpe-animating', false);
+    if (on) buildAnimBar();
+    else {
+      $('bpe-animbar').hidden = true;
+      $('bpe-animate').hidden = true;
+    }
+    renderStageBar();
+  }
+
+  /* The site replaces every <select> with its own combobox and keeps the real one
+     hidden as the value - so code that sets `.value` has to tell the control to
+     repaint, or the button still shows what was selected before. */
+  function syncDropdown(sel) {
+    if (window.BTTDropdown) window.BTTDropdown.refresh(sel);
   }
 
   function inProject() { return !!state.project; }
@@ -1409,7 +1503,7 @@
 
   function dragPart(wx, wy, wz) {
     var d = active();
-    if (!d) return;
+    if (!d || !canMove(d)) return;
     var inv = invert3(basisOf(d));
     if (!inv) return;
     var l = mul3(inv, [wx, wy, wz]);
@@ -1421,10 +1515,88 @@
     movePart(d, step);
   }
 
+  /* Parts arrive LOCKED. A model is opened to be painted far more often than to be
+     re-rigged, and the cost of the two mistakes is not symmetric: a stray brush stroke
+     is one Ctrl-Z, a part nudged off its bone without noticing is a model that looks
+     right here and sits wrong in game. Unlocking is one click, on the part. */
+  function canMove(d) {
+    if (!d || !d.locked) return true;
+    setStatus(d.payload.name + ' is locked so it can’t be nudged out of place by '
+      + 'accident. Unlock it in the Parts list to move it.', 'warn');
+    return false;
+  }
+
   function movePart(d, step) {
+    if (!canMove(d)) return;
     d.move = [d.move[0] + step[0], d.move[1] + step[1], d.move[2] + step[2]];
+    // Mid-drag the whole streak is one undo entry; a click on the arrows is its own.
+    if (state.moveStroke) {
+      state.moveStroke.delta = [state.moveStroke.delta[0] + step[0],
+                                state.moveStroke.delta[1] + step[1],
+                                state.moveStroke.delta[2] + step[2]];
+    } else {
+      pushModelUndo({ kind: 'move', id: d.id, delta: step });
+    }
     renderLayers();
     drawStack();
+  }
+
+  /* ---- undo: one history per part, one for the model view --------------------
+
+     TWO PLACES YOU CAN BE, so two histories. Inside a part (you double-clicked into it,
+     the rest of the model is hidden) Ctrl-Z walks that part's own edits. Looking at the
+     whole model, it walks what you did TO THE MODEL - a part slid along its bone, a part
+     put on a different socket - so reaching for undo after nudging a leg can never start
+     peeling back paint you put on it half an hour ago.
+
+     A voxel edit made while the whole model is showing is still that part's edit; the
+     model view records a REFERENCE to it, so undoing from out here takes back the last
+     thing you did either way, and the part's own stack stays the single copy of what
+     changed. A reference whose part has since been undone from the inside is stale and
+     skipped rather than double-applied. */
+
+  function pushModelUndo(entry) {
+    if (!state.project) return;
+    state.project.history.push(entry);
+    updateDirty();
+  }
+
+  // Which history Ctrl-Z is walking: the model's while the whole model is on screen.
+  function inModelView() { return inProject() && !state.isolate; }
+
+  /* Painting a part while the whole model is showing is that part's edit AND the model
+     view's last action, so the model's history keeps a pointer to it. */
+  function noteEditInModelView() {
+    if (inModelView() && active()) pushModelUndo({ kind: 'edit', id: active().id });
+  }
+
+  function undoModel() {
+    var h = state.project && state.project.history;
+    if (!h) return;
+    while (h.length) {
+      var entry = h.pop();
+      var d = state.docs.filter(function (x) { return x.id === entry.id; })[0];
+      if (!d) continue;                       // the part was removed - nothing to undo
+      if (entry.kind === 'edit') {
+        if (!d.history.length) continue;      // already undone from inside the part
+        undoDoc(d);
+        setStatus('Undone on ' + d.payload.name + '.', 'ok');
+      } else if (entry.kind === 'move') {
+        d.move = [d.move[0] - entry.delta[0], d.move[1] - entry.delta[1],
+                  d.move[2] - entry.delta[2]];
+        setStatus('Move undone.', 'ok');
+      } else if (entry.kind === 'ap') {
+        d.ap = entry.from;
+        setStatus('Put ' + d.payload.name.replace(/\.blueprint$/i, '') + ' back '
+          + (entry.from ? 'on ' + entry.from.replace(/_/g, ' ') : 'beside the model')
+          + '.', 'ok');
+      }
+      renderLayers();
+      drawStack();
+      updateDirty();
+      return;
+    }
+    updateDirty();
   }
 
   /* Draw the model. Only the parts that CHANGED are re-meshed: switching to another
@@ -1469,26 +1641,7 @@
      part halfway through a stride would edit a voxel at coordinates that mean nothing in
      the pose you can see. */
 
-  /* One baked clip. Layout, little-endian:
-       8s  magic "TANIM1\0\0"
-       u32 ap_count, u32 frame_count, u32 fps, u32 name_blob_len
-       ..  name_blob: NUL-separated attach-point keys, padded to 4 bytes
-       ..  frame_count * ap_count * 7 float32: position xyz then quaternion xyzw
-     Ported from model_viewer.js, which reads the same bytes. */
-  function decodeAnim(buf) {
-    var dv = new DataView(buf);
-    var head = new Uint8Array(buf, 0, 6), magic = '';
-    for (var i = 0; i < 6; i++) magic += String.fromCharCode(head[i]);
-    if (magic !== 'TANIM1') throw new Error('That animation could not be read.');
-    var apCount = dv.getUint32(8, true), frameCount = dv.getUint32(12, true);
-    var fps = dv.getUint32(16, true), nb = dv.getUint32(20, true);
-    var raw = new Uint8Array(buf, 24, nb), s = '';
-    for (var j = 0; j < nb; j++) s += String.fromCharCode(raw[j]);
-    var apIndex = {};
-    s.split('\0').filter(Boolean).forEach(function (k, i2) { apIndex[k] = i2; });
-    return { fps: fps || 30, frameCount: frameCount, apCount: apCount, apIndex: apIndex,
-             data: new Float32Array(buf, 24 + nb, frameCount * apCount * 7) };
-  }
+  var AC = function () { return window.AnimClips; };
 
   /* position + quaternion -> a column-major 4x4, the same composition three.js does. */
   function compose(px, py, pz, x, y, z, w) {
@@ -1502,118 +1655,117 @@
             px, py, pz, 1];
   }
 
-  /* The pose of one attach point at a FRACTIONAL frame. Clips bake at the game's 30fps
-     and the screen runs faster, so neighbouring frames are blended rather than snapped
-     to - a lerp on position, and on rotation a normalised lerp with the sign corrected
-     (adjacent frames are close enough that it and a true slerp agree to the pixel). */
-  function samplePose(A, ai, f) {
-    var n = A.frameCount, f0 = Math.floor(f) % n, a = f - Math.floor(f), d = A.data;
-    var o = (f0 * A.apCount + ai) * 7;
-    var p = [d[o], d[o + 1], d[o + 2]];
-    var q = [d[o + 3], d[o + 4], d[o + 5], d[o + 6]];
-    if (a) {
-      var o2 = (((f0 + 1) % n) * A.apCount + ai) * 7;
-      var dot = q[0]*d[o2+3] + q[1]*d[o2+4] + q[2]*d[o2+5] + q[3]*d[o2+6];
-      var sgn = dot < 0 ? -1 : 1;
-      for (var i = 0; i < 3; i++) p[i] += (d[o2 + i] - p[i]) * a;
-      for (var k = 0; k < 4; k++) q[k] += (sgn * d[o2 + 3 + k] - q[k]) * a;
-      var len = Math.hypot(q[0], q[1], q[2], q[3]) || 1;
-      for (var j = 0; j < 4; j++) q[j] /= len;
-    }
-    return compose(p[0], p[1], p[2], q[0], q[1], q[2], q[3]);
-  }
-
-  function poseAt(A, f) {
+  /* Pose every part at the moment the shared player describes. A part with no bone - or
+     one this clip does not drive - stays where it rests. */
+  function poseAt(at) {
     var r = rig(), vs = r.voxel_scale;
     state.docs.forEach(function (d, i) {
-      var ai = placedOn(d) ? A.apIndex[d.ap] : undefined;
-      // A part with no bone - or one this clip doesn't move - stays where it rests.
-      var m = ai === undefined
-        ? matrixFor(d)
-        : matMul(matMul(samplePose(A, ai, f),
-                        matScale(vs * (r.scales[d.ap] || 1))), frameOf(d));
+      var pose = placedOn(d) ? AC().sample(at, d.ap) : null;
+      var m = pose
+        ? matMul(matMul(compose(pose.p[0], pose.p[1], pose.p[2],
+                                pose.q[0], pose.q[1], pose.q[2], pose.q[3]),
+                        matScale(vs * (r.scales[d.ap] || 1))), frameOf(d))
+        : matrixFor(d);
       if (i === state.active) state.scene.setModelMatrix(m);
       else if (state.drawn[d.id]) state.scene.setLayerMatrix(d.id, m);
     });
     state.scene.request();
   }
 
-  function playClip(name) {
+  /* One button on the bar = one program: a clip, or the several a move is made of once
+     the rig's state machine has said which belong together. */
+  function playProgram(key) {
     var r = rig();
-    if (!r || !name) return;
-    stopClip();
-    setStatus('Loading ' + name.replace(/_/g, ' ') + '…');
-    fetch(apiUrl('/site/rigs/' + encodeURIComponent(r.name) + '/anim/'
-                 + encodeURIComponent(name)))
-      .then(function (res) {
-        if (!res.ok) throw new Error('That animation isn’t available for this rig.');
-        return res.arrayBuffer();
-      })
-      .then(function (buf) {
-        var A = decodeAnim(buf);
-        state.anim.clip = name;
-        state.anim.data = A;
-        setStatus('Playing ' + name.replace(/_/g, ' ') + '.', 'ok');
-        renderAnim();
-        var t0 = performance.now();
-        var tick = function (ts) {
-          if (state.anim.data !== A) return;              // stopped, or another clip
-          state.anim.raf = requestAnimationFrame(tick);
-          poseAt(A, ((ts - t0) / 1000) * A.fps % A.frameCount);
-        };
+    if (!key || !r) { stopClip(); return; }
+    var spec = state.anim.kit.programs[key];
+    if (!spec) return;
+    setAnimating(true);
+    state.anim.want = key;
+    state.anim.bar.setLoading(key, true);
+    Promise.all(spec.clips.map(function (name) {
+      if (state.anim.loaded[name]) return null;
+      return fetch(apiUrl('/site/rigs/' + encodeURIComponent(r.name) + '/anim/'
+                          + encodeURIComponent(name)))
+        .then(function (res) {
+          if (!res.ok) throw new Error('That animation isn’t available for this rig.');
+          return res.arrayBuffer();
+        })
+        .then(function (buf) { state.anim.loaded[name] = AC().decode(buf); });
+    })).then(function () {
+      state.anim.bar.setLoading(key, false);
+      if (state.anim.want !== key) return;             // another button won the race
+      var prog = AC().timeline(spec, state.anim.loaded);
+      if (!prog) return;
+      state.anim.prog = prog;
+      var t0 = performance.now();
+      var tick = function (ts) {
+        if (state.anim.prog !== prog) return;          // stopped, or a different program
         state.anim.raf = requestAnimationFrame(tick);
-      })
-      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+        poseAt(AC().frameAt(prog, (ts - t0) / 1000));
+      };
+      cancelAnimationFrame(state.anim.raf);
+      state.anim.raf = requestAnimationFrame(tick);
+      setStatus('');
+    }).catch(function (err) {
+      state.anim.bar.setLoading(key, false);
+      setStatus(err.message || String(err), 'error');
+    });
   }
 
   function stopClip() {
     if (state.anim.raf) cancelAnimationFrame(state.anim.raf);
     state.anim.raf = 0;
-    state.anim.data = null;
-    state.anim.clip = null;
+    state.anim.prog = null;
+    state.anim.want = null;
     if (state.scene) drawStack();                        // back to the rest pose
-    renderAnim();
   }
 
   /* Editing and playing are exclusive. Leaving Animate puts the model back in its rest
      pose, which is the only pose the voxel coordinates on screen agree with. */
   function setAnimating(on) {
     if (!inProject()) return;
-    state.anim.on = !!on && !!(rig() && rig().animations && rig().animations.length);
-    if (!state.anim.on) stopClip();
+    var clips = (rig() && rig().animations) || [];
+    on = !!on && !!clips.length;
+    if (state.anim.on === on) return;
+    state.anim.on = on;
+    if (!on) { stopClip(); if (state.anim.bar) state.anim.bar.setActive(null); }
     if (state.scene) {
-      state.scene.setDragMode(state.anim.on ? '' : dragModeFor(state.tool));
-      state.scene.setModelOutline(state.anim.on ? null : ACTIVE_BOX);
+      state.scene.setDragMode(on ? '' : dragModeFor(state.tool));
+      state.scene.setModelOutline(on ? null : ACTIVE_BOX);
     }
-    if (state.anim.on && state.isolate) { state.isolate = false; renderLayers(); }
-    document.body.classList.toggle('bpe-animating', state.anim.on);
-    var hover = $('bpe-hover');
-    if (hover) hover.hidden = true;
-    renderAnim();
+    // Watching a creature move is watching the WHOLE creature.
+    if (on && state.isolate) { state.isolate = false; renderLayers(); drawStack(); }
+    document.body.classList.toggle('bpe-animating', on);
+    $('bpe-animbar').hidden = !on;
+    $('bpe-hover').hidden = true;
+    renderStageBar();
     renderToolHint();
-    if (!state.anim.on && state.scene) drawStack();
+    if (state.scene) state.scene.request();
   }
 
-  function renderAnim() {
+  /* The bar is built once per model, from the rig's clip list and its state machine -
+     the same control the model viewer carries, so a clip sits under the same heading in
+     both. The graph is fetched alongside and is allowed to be missing: a rig without one
+     (props, chests) just lists its clips. */
+  function buildAnimBar() {
     var r = rig();
-    var clips = (r && r.animations) || [];
-    var box = $('bpe-anim');
-    if (!box) return;
-    box.hidden = !(inProject() && clips.length);
-    if (box.hidden) return;
-    $('bpe-anim-mode').setAttribute('aria-pressed', String(!!state.anim.on));
-    $('bpe-anim-mode').querySelector('span').textContent =
-      state.anim.on ? 'Back to editing' : 'Preview animations';
-    $('bpe-anim-controls').hidden = !state.anim.on;
-    var sel = $('bpe-anim-clip');
-    if (sel.dataset.rig !== r.name) {
-      sel.dataset.rig = r.name;
-      sel.innerHTML = '<option value="">Pick an animation…</option>'
-        + clips.slice().sort().map(function (c) {
-            return '<option value="' + esc(c) + '">' + esc(c.replace(/_/g, ' ')) + '</option>';
-          }).join('');
-    }
-    $('bpe-anim-stop').disabled = !state.anim.data;
+    var host = $('bpe-animbar');
+    state.anim = { on: false, prog: null, want: null, raf: 0, loaded: {},
+                   kit: null, bar: null };
+    host.hidden = true;
+    host.textContent = '';
+    $('bpe-animate').hidden = !(r && r.animations && r.animations.length);
+    if (!r || !r.animations || !r.animations.length || !window.AnimClips) return;
+    U.getJSON('/site/rigs/' + encodeURIComponent(r.name) + '/graph')
+      .catch(function () { return null; })
+      .then(function (graph) {
+        if (rig() !== r) return;                       // a different model got opened
+        state.anim.kit = AC().programs(r.animations, graph);
+        state.anim.bar = AC().bar({
+          host: host, kit: state.anim.kit, onPick: playProgram,
+          restLabel: 'Rest pose', hint: 'editing is off while it plays',
+        });
+      });
   }
 
   /* Add blueprints to an open model. They are decoded through the ordinary single-file
@@ -1663,7 +1815,8 @@
      only thing that can be chosen is a bone the skeleton actually has. */
   function setPartAp(i, ap) {
     var d = doc(i);
-    if (!d) return;
+    if (!d || (ap || null) === d.ap) return;
+    pushModelUndo({ kind: 'ap', id: d.id, from: d.ap, to: ap || null });
     d.ap = ap || null;
     if (state.ask === i) state.ask = -1;
     renderLayers();
@@ -1974,6 +2127,20 @@
      undoes in one step, and the expensive panel redraws wait for the end rather than
      running per voxel. */
   function onStroke(phase) {
+    // A move-drag is one action as well, and its undo entry is the model's, not the
+    // part's - so it closes here rather than sharing the voxel batch below.
+    if (state.tool === 'move') {
+      if (phase === 'start') {
+        state.moveStroke = { id: (active() || {}).id, delta: [0, 0, 0] };
+        return;
+      }
+      var m = state.moveStroke;
+      state.moveStroke = null;
+      if (m && (m.delta[0] || m.delta[1] || m.delta[2]) && inProject()) {
+        pushModelUndo({ kind: 'move', id: m.id, delta: m.delta });
+      }
+      return;
+    }
     if (phase === 'start') {
       state.stroke = [];
       state.strokeNormal = null;
@@ -1984,6 +2151,7 @@
     state.strokeNormal = null;
     if (batch && batch.length) {
       state.history.push(batch);
+      noteEditInModelView();
       renderMaterialList();
       renderMeta();
       renderLayers();
@@ -2017,8 +2185,12 @@
       hint += ' Double-click another part to work on it on its own.';
     }
     if (inProject() && state.tool === 'move') {
-      hint = 'Drag to slide this part along its bone, or use the arrows under Parts. '
-        + 'It moves in whole voxels, and moves its attachment point with it.';
+      var a2 = active();
+      hint = a2 && a2.locked
+        ? 'Parts are locked when a model opens, so nothing slides out of place by '
+          + 'accident. Click the padlock beside a part to move it.'
+        : 'Drag to slide this part along its bone, or use the arrows under Parts. It '
+          + 'moves in whole voxels and takes its attachment point with it.';
     } else if (state.tool === 'move' && active() === anchorDoc()) {
       hint = 'This layer is the anchor - the frame the others are placed against, so it '
         + 'does not move. Pick another layer, or pin a different one as the anchor.';
@@ -2227,7 +2399,16 @@
   function updateDirty() {
     var n = editList().length;
     $('bpe-save').disabled = false;
-    $('bpe-undo').disabled = !state.history.length;
+    var undoBtn = $('bpe-undo');
+    if (inModelView()) {
+      // Say which history the button walks, so it is never a surprise which of the two
+      // it takes back.
+      undoBtn.disabled = !state.project.history.length;
+      undoBtn.title = 'Undo the last change to the model';
+    } else {
+      undoBtn.disabled = !state.history.length;
+      undoBtn.title = inProject() ? 'Undo the last change to this part' : 'Undo';
+    }
     $('bpe-revert').disabled = !n;
     if (inProject()) {
       // Across the whole model, not just the part in front of you - the download
@@ -2446,41 +2627,41 @@
       for (var i = 0; i < state.docs.length; i++) {
         if (state.docs[i].id === id) {
           state.isolate = true;
-          setActive(i);
+          setActive(i);                      // ends by calling updateDirty
+          state.scene.frameAll();
           setStatus('Editing ' + state.docs[i].payload.name
             + ' on its own — “Show the whole model” brings the rest back.', 'ok');
           return;
         }
       }
     });
-    $('bpe-backfull').addEventListener('click', function () {
-      state.isolate = false;
-      renderLayers();
-      drawStack();
-      if (state.scene) state.scene.frameAll();
-      setStatus('');
+    // The stage's own controls.
+    $('bpe-stagepart').addEventListener('change', function (e) {
+      setActive(+e.target.value);
     });
-
-    $('bpe-anim-mode').addEventListener('click', function () {
+    $('bpe-animate').addEventListener('click', function () {
       setAnimating(!state.anim.on);
     });
-    $('bpe-anim-clip').addEventListener('change', function (e) {
-      if (e.target.value) playClip(e.target.value); else stopClip();
-    });
-    $('bpe-anim-stop').addEventListener('click', function () {
-      $('bpe-anim-clip').value = '';
-      stopClip();
+    $('bpe-apsel').addEventListener('change', function (e) {
+      setPartAp(state.active, e.target.value);
     });
     $('bpe-flatten').addEventListener('click', flattenStack);
+    /* One control for both directions: going into a part and coming back out. Two
+       buttons for that is how you end up hunting for the one that undoes the other. */
     $('bpe-isolate').addEventListener('click', function () {
       state.isolate = !state.isolate;
       renderLayers();
       drawStack();
+      // Stepping in or out changes WHICH history undo walks, so the button has to say
+      // so in the same breath.
+      updateDirty();
       if (!state.isolate && inProject() && state.scene) state.scene.frameAll();
+      setStatus('');
     });
     $('bpe-layerlist').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-pick],button[data-vis],button[data-up],' +
-                               'button[data-down],button[data-drop],button[data-anchor]');
+                               'button[data-down],button[data-drop],button[data-anchor],' +
+                               'button[data-lock]');
       if (!b) return;
       var ds = b.dataset;
       if (ds.pick !== undefined) return setActive(+ds.pick);
@@ -2488,6 +2669,15 @@
       if (ds.vis !== undefined) {
         var d = doc(+ds.vis);
         if (d) { d.visible = !d.visible; renderLayers(); drawStack(); }
+        return;
+      }
+      if (ds.lock !== undefined) {
+        var ld = doc(+ds.lock);
+        if (ld) {
+          ld.locked = !ld.locked;
+          renderLayers();
+          setStatus(ld.locked ? '' : ld.payload.name + ' can be moved now.', 'ok');
+        }
         return;
       }
       if (ds.up !== undefined) return reorderLayer(+ds.up, 1);

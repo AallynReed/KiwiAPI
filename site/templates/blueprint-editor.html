@@ -94,41 +94,27 @@
             <aside class="bpe-panel">
                 <h2 data-i18n>Tools</h2>
 
+                <!-- Icon-only, with the name in the tooltip and on the hint line below:
+                     five labelled buttons cost two rows of a panel that has to hold the
+                     whole palette above the fold. -->
                 <div class="bpe-chips bpe-tools">
-                    <button type="button" data-tool="paint" aria-pressed="true">
-                        <i class="fa-solid fa-brush" aria-hidden="true"></i> <span data-i18n>Paint</span>
+                    <button type="button" data-tool="paint" aria-pressed="true" title="Paint" aria-label="Paint">
+                        <i class="fa-solid fa-brush" aria-hidden="true"></i>
                     </button>
-                    <button type="button" data-tool="pick" aria-pressed="false">
-                        <i class="fa-solid fa-eye-dropper" aria-hidden="true"></i> <span data-i18n>Pick</span>
+                    <button type="button" data-tool="pick" aria-pressed="false" title="Pick up a colour" aria-label="Pick up a colour">
+                        <i class="fa-solid fa-eye-dropper" aria-hidden="true"></i>
                     </button>
-                    <button type="button" data-tool="add" aria-pressed="false">
-                        <i class="fa-solid fa-cube" aria-hidden="true"></i> <span data-i18n>Add</span>
+                    <button type="button" data-tool="add" aria-pressed="false" title="Add voxels" aria-label="Add voxels">
+                        <i class="fa-solid fa-cube" aria-hidden="true"></i>
                     </button>
-                    <button type="button" data-tool="erase" aria-pressed="false">
-                        <i class="fa-solid fa-eraser" aria-hidden="true"></i> <span data-i18n>Erase</span>
+                    <button type="button" data-tool="erase" aria-pressed="false" title="Erase" aria-label="Erase">
+                        <i class="fa-solid fa-eraser" aria-hidden="true"></i>
                     </button>
-                    <button type="button" data-tool="move" aria-pressed="false">
-                        <i class="fa-solid fa-up-down-left-right" aria-hidden="true"></i> <span data-i18n>Move</span>
+                    <button type="button" data-tool="move" aria-pressed="false" title="Move" aria-label="Move">
+                        <i class="fa-solid fa-up-down-left-right" aria-hidden="true"></i>
                     </button>
                 </div>
                 <p class="bpe-hint bpe-toolhint" id="bpe-toolhint" data-i18n>Click a voxel to paint it.</p>
-
-                <div id="bpe-anim" hidden>
-                    <h3 data-i18n>Watch it move</h3>
-                    <p class="bpe-hint" data-i18n>Play the creature's own animations to see where the parts actually go. Editing is off while it plays.</p>
-                    <button type="button" class="bpe-btn" id="bpe-anim-mode" aria-pressed="false">
-                        <i class="fa-solid fa-play" aria-hidden="true"></i>
-                        <span data-i18n>Preview animations</span>
-                    </button>
-                    <div id="bpe-anim-controls" hidden>
-                        <label class="sr-only" for="bpe-anim-clip" data-i18n>Animation</label>
-                        <select id="bpe-anim-clip"></select>
-                        <button type="button" class="bpe-btn" id="bpe-anim-stop" disabled>
-                            <i class="fa-solid fa-stop" aria-hidden="true"></i>
-                            <span data-i18n>Stop</span>
-                        </button>
-                    </div>
-                </div>
 
                 <h3 id="bpe-paint-colour" data-i18n>Colour</h3>
                 <div class="bpe-colourrow">
@@ -166,13 +152,25 @@
 
             <!-- The model -->
             <section class="bpe-panel bpe-stagecard">
+                <!-- Everything about WHAT you are looking at lives on the stage: which
+                     part, whether the rest of the model is showing, and whether it is
+                     animating. Those are the controls you reach for while watching the
+                     model, so they must not be a scroll away in a side panel. -->
                 <div class="bpe-stagebar">
+                    <label class="sr-only" for="bpe-stagepart" data-i18n>Part being edited</label>
+                    <select id="bpe-stagepart" class="bpe-partpick" hidden></select>
                     <strong id="bpe-filename">blueprint</strong>
                     <span class="bpe-metaline" id="bpe-meta"></span>
-                    <button type="button" class="bpe-btn bpe-backfull" id="bpe-backfull" hidden>
-                        <i class="fa-solid fa-arrow-left-long" aria-hidden="true"></i>
-                        <span data-i18n>Show the whole model</span>
-                    </button>
+                    <div class="bpe-stageacts">
+                        <button type="button" class="bpe-btn bpe-projectonly" id="bpe-isolate" aria-pressed="false" disabled>
+                            <i class="fa-solid fa-expand" aria-hidden="true"></i>
+                            <span id="bpe-isolate-label" data-i18n>This part only</span>
+                        </button>
+                        <button type="button" class="bpe-btn bpe-projectonly" id="bpe-animate" aria-pressed="false" hidden>
+                            <i class="fa-solid fa-play" aria-hidden="true"></i>
+                            <span id="bpe-animate-label" data-i18n>Animate</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="bpe-stage" id="bpe-stage">
                     <!-- Readout overlays the model rather than sitting in a bar. It
@@ -180,6 +178,9 @@
                          does that reflows its neighbours. -->
                     <span class="bpe-hoverline" id="bpe-hover" aria-live="off" hidden></span>
                 </div>
+                <!-- The animation control bar, built by anim_clips.js - the same one the
+                     model viewer carries, so the clips group the same way in both. -->
+                <div id="bpe-animbar" hidden></div>
                 <p class="bpe-stagehint" data-i18n>Ctrl-drag to turn the view, right-drag to pan, scroll to zoom.</p>
             </section>
 
@@ -231,14 +232,17 @@
                 <h3 id="bpe-layers-title" data-i18n>Layers</h3>
                 <p class="bpe-hint" id="bpe-layers-hint" data-i18n>Each layer is its own blueprint. Pick one to edit it, drag it about with the Move tool, and reorder them — on download the top layer wins wherever two overlap.</p>
                 <ul class="bpe-layers" id="bpe-layerlist"></ul>
+                <!-- One socket picker for the part that's selected, not one per row: a
+                     creature has twenty parts and twenty dropdowns is a panel you scroll
+                     past rather than read. -->
+                <div id="bpe-apctl" hidden>
+                    <label class="bpe-aplabel" for="bpe-apsel" id="bpe-aplabel" data-i18n>Attaches at</label>
+                    <select id="bpe-apsel" class="bpe-apsel"></select>
+                </div>
                 <div class="bpe-actions">
                     <button type="button" class="bpe-btn" id="bpe-layer-open">
                         <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
                         <span id="bpe-layer-open-label" data-i18n>Add a layer</span>
-                    </button>
-                    <button type="button" class="bpe-btn" id="bpe-isolate" aria-pressed="false" disabled>
-                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
-                        <span data-i18n>Isolate</span>
                     </button>
                 </div>
                 <div id="bpe-layerctl" hidden>
@@ -311,6 +315,9 @@
     <script src="/static/voxel_mesh.min.js" defer></script>
     <script src="/static/viewer_stage.min.js" defer></script>
     <script src="/static/voxel_scene.min.js" defer></script>
+    <!-- The rig-animation layer the model viewer also uses: clip grouping, the control
+         bar, and the maths that plays one. -->
+    <script src="/static/anim_clips.min.js" defer></script>
     <script src="/static/blueprint-editor.min.js" defer></script>
 </body>
 </html>
