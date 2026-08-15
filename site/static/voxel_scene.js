@@ -381,6 +381,11 @@
        the thing being edited. The active model is deliberately not in the answer: it is
        already what a click acts on. */
     function pickLayer(e) {
+      var hit = castLayers(e);
+      return hit ? hit.id : null;
+    }
+
+    function castLayers(e) {
       var all = [];
       Object.keys(layers).forEach(function (id) {
         (layers[id].meshes || []).forEach(function (m) { all.push(m); });
@@ -399,7 +404,21 @@
       Object.keys(layers).forEach(function (id) {
         if ((layers[id].meshes || []).indexOf(hit.object) >= 0) found = id;
       });
-      return found;
+      return found ? { id: found, distance: hit.distance } : null;
+    }
+
+    /* What is TOPMOST under the cursor, across the model being edited and the ones
+       beside it: `{ layer, voxel }` with at most one set. Resolved by distance, because
+       "is this click on another part or on mine" cannot be answered by asking each in
+       turn - a leg drawn in front of the body is nearer even though the body is the
+       model a click would normally act on. */
+    function pickTop(e) {
+      var near = castLayers(e);
+      var mine = castAt(e.clientX, e.clientY);
+      if (near && (!mine || near.distance < mine.distance)) {
+        return { layer: near.id, voxel: null };
+      }
+      return { layer: null, voxel: mine ? pick(e) : null };
     }
 
     var drag = 0, lx = 0, ly = 0, pinch = 0, moved = 0;
@@ -434,6 +453,12 @@
        the pointerup somewhere this window never sees, and the drag never ends. */
     function onDown(e) {
       if (e.pointerType === 'touch') return;
+      /* The MIDDLE button starts nothing. It used to fall through as a left press,
+         which meant a middle click painted a voxel - and a host that wants the button
+         for something of its own (the Blueprint Editor picks a part with it) could not
+         have it without undoing that first. preventDefault also stops the browser's
+         autoscroll cursor appearing over the model. */
+      if (e.button === 1) { e.preventDefault(); return; }
       // A plain left click is the edit gesture, so it must not also start a rotate
       // until the pointer actually travels - `moved` decides that on pointerup.
       // In drag mode a left-drag moves the thing being positioned instead; rotating
@@ -626,6 +651,7 @@
       frameAll: frameAll,
       pick: pick,
       pickLayer: pickLayer,
+      pickTop: pickTop,
       request: request,
       setOverlay: setOverlay,
       setLayer: setLayer,

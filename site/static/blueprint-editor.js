@@ -47,6 +47,7 @@
     drawn: {},           // doc id -> its geometry is currently in the scene as a layer
     moveAccum: [0, 0, 0],   // sub-voxel remainder of a part drag
     moveStroke: null,       // one drag of the Move tool = one entry in the model's undo
+    partPrefix: 0,          // chars of creature-name prefix every part shares (see partLabel)
     // Animation preview: the shared bar + player (anim_clips.js), rebuilt per model.
     anim: { on: false, prog: null, want: null, raf: 0, loaded: {}, kit: null, bar: null },
     isolate: false,      // show only the layer being edited
@@ -124,6 +125,10 @@
     $('bpe-empty').hidden = true;
     $('bpe-workspace').hidden = false;
     document.body.classList.toggle('bpe-project-mode', !!state.project);
+    // The hero introduces the page to somebody who has just arrived. Once a model is
+    // open it is a title and a paragraph between you and the thing you came to edit,
+    // so the workspace takes the space back.
+    document.body.classList.add('bpe-working');
 
     var d0 = state.docs[state.active];
     state.file = d0.file;
@@ -987,6 +992,7 @@
      picker is a single control below the list, for the part that's selected. */
   function renderParts() {
     var r = rig();
+    computePartPrefix();
     var rows = state.docs.map(function (d, i) {
       var placed = placedOn(d);
       var moved = d.move[0] || d.move[1] || d.move[2];
@@ -997,7 +1003,7 @@
         + '<button type="button" class="bpe-layerpick" data-pick="' + i + '">'
         + (placed ? '' : '<i class="fa-solid fa-circle-question bpe-unplacedmark"'
                        + ' aria-hidden="true"></i>')
-        + '<strong>' + esc(d.payload.name.replace(/\.blueprint$/i, '')) + '</strong>'
+        + '<strong>' + esc(partLabel(d)) + '</strong>'
         + '<span class="bpe-partap">' + esc(where)
         + (d.added ? ' · new' : '') + (moved ? ' · moved' : '') + '</span></button>'
         + '<button type="button" class="bpe-layerbtn bpe-lockbtn' + (d.locked ? ' on' : '')
@@ -1049,9 +1055,8 @@
     if (!d) return;
     var asking = state.ask === state.active && !placedOn(d);
     box.classList.toggle('asking', asking);
-    $('bpe-aplabel').textContent = asking
-      ? 'Where does ' + d.payload.name.replace(/\.blueprint$/i, '') + ' go?'
-      : 'Attaches at';
+    $('bpe-aplabel').textContent = asking ? 'Where does ' + partLabel(d) + ' go?'
+                                          : 'Attaches at';
     var want = d.id + ':' + opts.length;
     if (sel.dataset.built !== want) {
       sel.dataset.built = want;
@@ -1092,8 +1097,7 @@
       if (pick.dataset.built !== want) {
         pick.dataset.built = want;
         pick.innerHTML = state.docs.map(function (d, i) {
-          return '<option value="' + i + '">'
-            + esc(d.payload.name.replace(/\.blueprint$/i, ''))
+          return '<option value="' + i + '">' + esc(partLabel(d))
             + (placedOn(d) ? ' — ' + esc(d.ap.replace(/_/g, ' ')) : '') + '</option>';
         }).join('');
       }
@@ -1341,8 +1345,12 @@
     set('bpe-save-label', on ? 'Download the model' : 'Download');
     set('bpe-layers-title', on ? 'Parts' : 'Layers');
     set('bpe-layer-open-label', on ? 'Add a part' : 'Add a layer');
+    // The Creations checks grade one submitted item against its type's rules; a part of
+    // a creature isn't one, so the whole block goes rather than sitting there inert.
+    $('bpe-checkblock').hidden = on;
     set('bpe-layers-hint', on
-      ? 'Double-click a part in the view to work on it on its own.'
+      ? 'Middle-click (or shift-click) a part in the view to work on it; double-click '
+        + 'to work on it on its own.'
       : 'Each layer is its own blueprint. Pick one to edit it, drag it about with the '
         + 'Move tool, and reorder them — on download the top layer wins wherever two '
         + 'overlap.');
@@ -1364,6 +1372,42 @@
 
   function inProject() { return !!state.project; }
   function rig() { return state.project && state.project.rig; }
+
+  /* What to CALL a part in a list of them. Trove names every part of a creature after
+     the creature - `c_mt_raptor_birdgold_body`, `c_mt_raptor_birdgold_l_foot` - so a
+     column of them truncates to twelve identical rows reading "c_mt_raptor_birdgol…".
+     The shared opening is dropped (at an underscore, so nothing is cut mid-word), which
+     leaves exactly the part that differs: body, l foot, r foot. One part keeps its whole
+     name, since there is nothing to tell it apart from. */
+  function indexOfDoc(id) {
+    for (var i = 0; i < state.docs.length; i++) if (state.docs[i].id === id) return i;
+    return -1;
+  }
+
+  function partLabel(d) {
+    var name = d.payload.name.replace(/\.blueprint$/i, '');
+    // computePartPrefix has already checked every part shares it and keeps something.
+    return state.partPrefix ? name.slice(state.partPrefix) : name;
+  }
+
+  function computePartPrefix() {
+    state.partPrefix = 0;
+    if (!inProject() || state.docs.length < 2) return;
+    var names = state.docs.map(function (d) {
+      return d.payload.name.replace(/\.blueprint$/i, '');
+    });
+    var first = names[0], i = 0;
+    while (i < first.length) {
+      var ch = first[i];
+      if (!names.every(function (n) { return n[i] === ch; })) break;
+      i++;
+    }
+    // back off to the last underscore inside the shared run, and only bother when it
+    // actually buys something
+    var cut = first.lastIndexOf('_', i - 1) + 1;
+    state.partPrefix = (cut > 3 && names.every(function (n) { return n.length > cut; }))
+      ? cut : 0;
+  }
 
   /* Every socket this skeleton has, whether or not the mod fills it - the list you pick
      from when you add a part. A rig that carries no `hat` point can't be given a hat,
@@ -2170,9 +2214,11 @@
       move: 'Drag to slide this layer around. Ctrl-drag turns the view.',
     };
     var hint = hints[state.tool] || hints.paint;
-    // Which layer a click lands on is the thing to be unambiguous about once there is
-    // more than one model on screen.
-    if (state.docs.length > 1 && active()) {
+    /* Which layer a click lands on is the thing to be unambiguous about once there is
+       more than one model on screen - but in a MODEL the stage bar names the part you
+       are in, directly above the model, so saying it again here is a third line of a
+       panel with better uses for the room. */
+    if (!inProject() && state.docs.length > 1 && active()) {
       hint += ' Working on ' + active().payload.name + '.';
     }
     if (inProject() && state.anim.on) {
@@ -2180,9 +2226,6 @@
         + 'the voxel under the cursor isn’t where it will be a frame later. Come back to '
         + 'editing to make changes.';
       return;
-    }
-    if (inProject() && state.docs.length > 1) {
-      hint += ' Double-click another part to work on it on its own.';
     }
     if (inProject() && state.tool === 'move') {
       var a2 = active();
@@ -2622,18 +2665,46 @@
        is one button, on the stage where you are already looking. */
     $('bpe-stage').addEventListener('dblclick', function (e) {
       if (!inProject() || !state.scene || state.anim.on) return;
-      var id = state.scene.pickLayer(e);
-      if (!id) return;
-      for (var i = 0; i < state.docs.length; i++) {
-        if (state.docs[i].id === id) {
-          state.isolate = true;
-          setActive(i);                      // ends by calling updateDirty
-          state.scene.frameAll();
-          setStatus('Editing ' + state.docs[i].payload.name
-            + ' on its own — “Show the whole model” brings the rest back.', 'ok');
-          return;
-        }
-      }
+      var top = state.scene.pickTop(e);
+      if (!top.layer) return;
+      var i = indexOfDoc(top.layer);
+      if (i < 0) return;
+      state.isolate = true;
+      setActive(i);                          // ends by calling updateDirty
+      state.scene.frameAll();
+      setStatus('Editing ' + partLabel(state.docs[i])
+        + ' on its own — “Show the whole model” brings the rest back.', 'ok');
+    });
+
+    /* Point at a part and take it - reaching for the picker every time you want the
+       other wing is the tedious way round. TWO gestures, because neither costs anything
+       and people have different mice:
+
+       MIDDLE-CLICK, which nothing else on the stage uses (it used to fall through and
+       paint, which is fixed in voxel_scene.js), and SHIFT-CLICK for a trackpad with no
+       middle button - shift only means anything while DRAGGING, where it pans, so a
+       shift-click that never travelled was free. Alt-click is the eyedropper and stays
+       exactly that. */
+    var downAt = null;
+    $('bpe-stage').addEventListener('pointerdown', function (e) {
+      downAt = [e.clientX, e.clientY];
+    }, true);
+    function grabPart(e) {
+      if (!inProject() || !state.scene || state.anim.on) return;
+      // a drag was a pan or an orbit, not a pick
+      if (downAt && Math.abs(e.clientX - downAt[0]) + Math.abs(e.clientY - downAt[1]) > 4) return;
+      var top = state.scene.pickTop(e);
+      var i = top.layer ? indexOfDoc(top.layer) : -1;
+      if (i < 0) return;
+      e.preventDefault();
+      setActive(i);
+      setStatus('Now editing ' + partLabel(state.docs[i]) + '.', 'ok');
+    }
+    $('bpe-stage').addEventListener('click', function (e) {
+      if (e.shiftKey) grabPart(e);
+    });
+    $('bpe-stage').addEventListener('auxclick', function (e) {
+      if (e.button === 1) grabPart(e);
     });
     // The stage's own controls.
     $('bpe-stagepart').addEventListener('change', function (e) {

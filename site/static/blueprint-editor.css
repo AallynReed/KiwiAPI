@@ -75,6 +75,11 @@
 
 /* ─── Layout ────────────────────────────────────────────────────────── */
 
+/* The hero is for arriving, not for working: with a model open it is a title and a
+   paragraph between you and the model. It stays on the opening screen. */
+body.bpe-working .bpe-hero { display: none; }
+body.bpe-working .bpe-workspace { margin-top: 6px; }
+
 .bpe-workspace {
   margin-top: 22px;
   display: grid;
@@ -226,6 +231,30 @@
 }
 .bpe-stage.vsc-grabbing { cursor: grabbing; }
 .bpe-stage canvas { display: block; width: 100%; height: 100%; }
+/* The stage's footer: what you can do to the FILE on it, plus the gesture hint. Under
+   the model rather than in a panel, because that is what they act on. */
+.bpe-stagefoot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  border-top: 1px solid var(--bg-line);
+}
+.bpe-footacts { display: flex; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.bpe-footacts .bpe-btn { padding: 4px 10px; font-size: .74rem; }
+/* The hint gives way rather than pushing the buttons onto a second row: it is a
+   reminder, and the controls are the reason the strip exists. */
+.bpe-stagefoot .bpe-stagehint {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+@media (max-width: 560px) { .bpe-stagefoot .bpe-stagehint { display: none; } }
 .bpe-stagehint {
   margin: 0;
   padding: 9px 14px;
@@ -281,19 +310,64 @@
   color: var(--text);
 }
 
-/* The tools are icons alone: five labelled pills wrapped to two rows of a panel that
-   also has to hold the colour, the material, the finish and two modifier rows. The name
-   is in the tooltip, and the hint line under them names the tool you are on - so it is
-   readable without being read twice. 34px keeps them comfortably tappable. */
+/* The tools are ONE segmented control, not five pills adrift in a column: they are a
+   pick-one-of-five, and five separate wrapping chips read as five unrelated buttons and
+   land wherever the panel width leaves them. A single hairline holds the row together,
+   the divider between segments carries the grouping, and the chosen one is filled.
+   Icons alone - the name is in the tooltip and on the hint line under it, so it is
+   legible without being read twice. 36px keeps every segment comfortably tappable. */
+.bpe-tools {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
 .bpe-tools button {
-  width: 34px;
-  height: 34px;
+  height: 36px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: .84rem;
+  border: 0;
+  border-radius: 0;
+  font-size: .86rem;
 }
+.bpe-tools button + button { box-shadow: inset 1px 0 0 var(--bg-line); }
+.bpe-tools button:hover:not(:disabled) { background: var(--bg-card-hi); color: var(--text); }
+.bpe-tools button:focus-visible { outline-offset: -2px; }
+.bpe-tools button[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--accent-blue) 18%, transparent);
+  color: var(--text);
+}
+
+/* A panel section that folds. Native <details>, so it is keyboard-operable and open to
+   Ctrl-F without any script; the summary is styled as the h3 it replaces. */
+.bpe-fold { margin-top: 16px; }
+.bpe-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-mute);
+}
+.bpe-fold > summary::-webkit-details-marker { display: none; }
+.bpe-fold > summary::before {
+  content: "\f105";                      /* chevron-right */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  font-size: .8rem;
+  transition: transform .15s var(--ease-out);
+}
+.bpe-fold[open] > summary::before { transform: rotate(90deg); }
+.bpe-fold > summary:hover { color: var(--text); }
+.bpe-fold > summary:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.bpe-fold > *:not(summary) { margin-top: 8px; }
 
 /* ─── Selection readout ─────────────────────────────────────────────── */
 
@@ -535,8 +609,6 @@
 .bpe-faded { opacity: .4; }
 .bpe-faded + .bpe-chips, .bpe-faded + .bpe-colourrow { opacity: .4; pointer-events: none; }
 #bpe-modes.bpe-faded { pointer-events: none; }
-.bpe-tools button { flex: 1; justify-content: center; }
-.bpe-tools i { margin-right: 5px; }
 .bpe-toolhint { margin-top: 8px; }
 
 /* ─── Small screens ─────────────────────────────────────────────────── */
@@ -610,16 +682,6 @@
 
 .bpe-scopehint { margin-top: 7px; font-size: .76rem; }
 .bpe-colnote { color: var(--text-mute); font-size: .92em; }
-/* Four tools wrapped 3-then-1 and left a stretched orphan. A 2x2 grid is tidier and
-   gives each one a bigger target. */
-.bpe-tools {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-.bpe-tools button { min-width: 0; padding-left: 9px; padding-right: 9px; }
-.bpe-tools button span { overflow: hidden; text-overflow: ellipsis; }
-
 /* ─── Combine ───────────────────────────────────────────────────────── */
 
 #bpe-layerbox { margin-top: 10px; display: grid; gap: 9px; }
