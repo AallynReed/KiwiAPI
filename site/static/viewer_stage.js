@@ -95,10 +95,22 @@
       '.vs-clear{background:none;border:0;color:#8a93a3;font:inherit;font-size:.72rem;' +
         'text-decoration:underline;cursor:pointer;padding:0;margin-left:auto;flex:0 0 auto}' +
       '.vs-clear:hover{color:#e6edf3}' +
-      '.vs-slide{display:grid;grid-template-columns:1fr auto;align-items:center;gap:1px 8px;margin:0 0 9px}' +
+      /* The lighting controls dock along the BOTTOM EDGE of the stage rather than
+         dropping out of their button: you are watching the model while you move
+         them, and a panel hanging over it is in the way of the one thing it is
+         for. It sits outside `.vs-tools` in the DOM for the same reason - that
+         toolbar is the containing block its own dropdown is positioned in. */
+      '.vs-light-panel{position:absolute;left:10px;right:10px;bottom:10px;z-index:4;' +
+        'display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;align-items:center;' +
+        'gap:2px 14px;padding:8px 12px;background:rgba(16,21,28,.9);border:1px solid #2a323d;' +
+        'border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.5)}' +
+      '.vs-light-panel[hidden]{display:none}' +
+      '.vs-light-panel .vs-clear{margin:0;justify-self:end}' +
+      '@media (max-width:620px){.vs-light-panel{grid-template-columns:1fr 1fr}}' +
+      '.vs-slide{display:grid;grid-template-columns:1fr auto;align-items:center;gap:1px 8px}' +
       '.vs-slide label{color:#9aa4b2;font-size:.76rem}' +
       '.vs-slide output{color:#cdd6e0;font-size:.76rem;font-variant-numeric:tabular-nums}' +
-      '.vs-slide input{grid-column:1/-1;width:100%;margin:3px 0 0;accent-color:#4cc9f0;cursor:pointer}' +
+      '.vs-slide input{grid-column:1/-1;width:100%;margin:2px 0 0;accent-color:#4cc9f0;cursor:pointer}' +
       '.vs-slide input:focus-visible{outline:2px solid #4cc9f0;outline-offset:3px}' +
       // Three buttons don't fit across a phone-width stage. The labels go to
       // screen readers only rather than away, so the buttons keep their names.
@@ -149,6 +161,67 @@
     { k: 'elevation', label: 'Height', min: -90, max: 90, unit: '°' },
   ];
 
+  /* --- the guide rays -------------------------------------------------------
+
+     Numbers alone make you guess which way you just dragged the sun, so while the
+     panel is open five red beams come in from where it is: four parallel ones to
+     read the angle off, a fifth down the middle with a head on it for which way it
+     travels, and a diamond at the far end marking the source. It is a guide, not
+     part of the model - it appears with the panel, is gone the moment that closes,
+     and hides itself for a snapshot so it can never end up in a saved PNG.
+
+     Depth testing is off and it draws last, so the beams stay visible when the sun
+     is round the back of the model - the case you most need to see. They stop short
+     of the model's bounding sphere so nothing is buried inside the voxels, and they
+     fade with the intensity, so a sun turned off looks turned off. */
+  var GUIDE_SEGMENTS = 11;                 // 5 beams + 2 head barbs + 4 marker sides
+
+  function makeGuide(THREE) {
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(GUIDE_SEGMENTS * 6), 3));
+    var lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
+      color: 0xff2f2f, transparent: true, opacity: 0.9,
+      depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    lines.renderOrder = 999;
+    lines.frustumCulled = false;            // the beams reach well outside the model
+    return lines;
+  }
+
+  function aimGuide(THREE, lines, dir, center, radius, intensity) {
+    var d = new THREE.Vector3().fromArray(dir).normalize();
+    // any axis that isn't the beam itself, for the plane the four rays spread in
+    var up = Math.abs(d.y) > 0.98 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+    var u = new THREE.Vector3().crossVectors(up, d).normalize();
+    var v = new THREE.Vector3().crossVectors(d, u);
+    var far = radius * 2.4, near = radius * 0.95;
+    var off = radius * 0.42, head = radius * 0.16, mark = radius * 0.17;
+
+    var p = lines.geometry.getAttribute('position').array, i = 0;
+    var a = new THREE.Vector3(), b = new THREE.Vector3();
+    function seg(from, to) {
+      p[i++] = from.x; p[i++] = from.y; p[i++] = from.z;
+      p[i++] = to.x; p[i++] = to.y; p[i++] = to.z;
+    }
+    function at(t, ou, ov) {
+      return new THREE.Vector3().copy(center).addScaledVector(d, t)
+        .addScaledVector(u, ou || 0).addScaledVector(v, ov || 0);
+    }
+
+    [[0, 0], [off, 0], [-off, 0], [0, off], [0, -off]].forEach(function (o) {
+      seg(at(far, o[0], o[1]), at(near, o[0], o[1]));
+    });
+    a.copy(at(near));                                     // the head, pointing at the model
+    seg(a, b.copy(a).addScaledVector(d, head).addScaledVector(u, head * 0.6));
+    seg(a, b.copy(a).addScaledVector(d, head).addScaledVector(v, head * 0.6));
+    var m = [at(far, mark, 0), at(far, 0, mark), at(far, -mark, 0), at(far, 0, -mark)];
+    for (var k = 0; k < 4; k++) seg(m[k], m[(k + 1) % 4]);
+
+    lines.geometry.getAttribute('position').needsUpdate = true;
+    lines.geometry.computeBoundingSphere();
+    lines.material.opacity = 0.3 + 0.65 * Math.max(0, Math.min(1, intensity));
+  }
+
   /* The default backdrop, painted into a 2D context. `radial-gradient(circle at
      50% 40%, A, B 78%)` with no explicit size means a farthest-corner circle, so
      the radius is the distance to whichever corner is furthest from the centre
@@ -187,21 +260,8 @@
     tools.className = 'vs-tools';
     tools.innerHTML =
       (lightable ?
-      '<div class="vs-slot">' +
-        '<button class="vs-tool vs-light-btn" type="button" aria-expanded="false">' +
-          icon(ICON_LIGHT) + '<span>Lighting</span></button>' +
-        '<div class="vs-panel vs-light-panel" hidden>' +
-          '<span class="vs-legend">Light</span>' +
-          SLIDERS.map(function (s, i) {
-            return '<div class="vs-slide">' +
-              '<label for="">' + s.label + '</label>' +
-              '<output></output>' +
-              '<input type="range" data-i="' + i + '" min="' + s.min + '" max="' + s.max + '" step="1">' +
-            '</div>';
-          }).join('') +
-          '<div class="vs-row"><button class="vs-clear vs-light-reset" type="button">Reset</button></div>' +
-        '</div>' +
-      '</div>' : '') +
+      '<button class="vs-tool vs-light-btn" type="button" aria-expanded="false">' +
+        icon(ICON_LIGHT) + '<span>Lighting</span></button>' : '') +
       '<div class="vs-slot">' +
         '<button class="vs-tool vs-bg-btn" type="button" aria-expanded="false">' +
           icon(ICON_IMAGE) + '<span>Background</span></button>' +
@@ -228,6 +288,23 @@
         icon(ICON_SAVE) + '<span>Save PNG</span></button>';
     stage.appendChild(tools);
 
+    var lightPanel = null;
+    if (lightable) {
+      lightPanel = document.createElement('div');
+      lightPanel.className = 'vs-light-panel';
+      lightPanel.hidden = true;
+      lightPanel.innerHTML =
+        SLIDERS.map(function (s, i) {
+          return '<div class="vs-slide">' +
+            '<label for="">' + s.label + '</label>' +
+            '<output></output>' +
+            '<input type="range" data-i="' + i + '" min="' + s.min + '" max="' + s.max + '" step="1">' +
+          '</div>';
+        }).join('') +
+        '<button class="vs-clear vs-light-reset" type="button">Reset</button>';
+      stage.appendChild(lightPanel);
+    }
+
     var bgBtn = tools.querySelector('.vs-bg-btn'),
         saveBtn = tools.querySelector('.vs-save-btn'),
         panel = tools.querySelector('.vs-bg-panel'),
@@ -239,8 +316,10 @@
         fileName = tools.querySelector('.vs-file'),
         fileIn = tools.querySelector('.vs-input');
 
-    var lightBtn = tools.querySelector('.vs-light-btn'),
-        lightPanel = tools.querySelector('.vs-light-panel');
+    var lightBtn = tools.querySelector('.vs-light-btn');
+    // every button that opens something, with the thing it opens
+    var pairs = [{ btn: bgBtn, el: panel }];
+    if (lightPanel) pairs.push({ btn: lightBtn, el: lightPanel });
 
     // `for` and `aria-controls` need unique ids, and a page can hold more than one viewer
     var uid = Math.random().toString(36).slice(2, 8);
@@ -275,14 +354,16 @@
 
     function setMode(m) { state.mode = m; store(STORE_KEY, state); apply(); }
 
-    /* One panel at a time - they drop out of neighbouring buttons and would
-       otherwise overlap each other. */
+    /* One at a time - the backdrop dropdown would otherwise sit on top of the
+       lighting bar. Opening or closing the lighting one is also what puts the
+       guide rays in the scene and takes them out again. */
     function openPanel(p, on) {
-      Array.prototype.forEach.call(tools.querySelectorAll('.vs-panel'), function (q) {
-        var show = q === p && on;
-        q.hidden = !show;
-        q.previousElementSibling.setAttribute('aria-expanded', String(show));
+      pairs.forEach(function (q) {
+        var show = q.el === p && on;
+        q.el.hidden = !show;
+        q.btn.setAttribute('aria-expanded', String(show));
       });
+      syncGuide();
     }
     function anyOpen() { return !panel.hidden || !!(lightPanel && !lightPanel.hidden); }
     function closeAll() { openPanel(null, false); }
@@ -322,7 +403,9 @@
       closeAll(); open.focus();
     }
     function onDocDown(e) {
-      if (anyOpen() && !tools.contains(e.target)) closeAll();
+      if (!anyOpen()) return;
+      if (tools.contains(e.target) || (lightPanel && lightPanel.contains(e.target))) return;
+      closeAll();
     }
 
     /* --- the sun ------------------------------------------------------------
@@ -362,19 +445,43 @@
       light = lightValues();
       light[s.k] = +r.value;
       store(LIGHT_KEY, light);
-      showLight(); applyLight();
+      showLight(); applyLight(); syncGuide();
     }
     function onLightReset() {
       light = null;
       store(LIGHT_KEY, null);
       window.VoxelMesh.setLightControl(window.THREE, null);
-      showLight(); render();
+      showLight(); syncGuide(); render();
+    }
+
+    /* The rays live exactly as long as the panel is open. A host that didn't hand
+       over its scene simply doesn't get them - the sliders work the same. */
+    var guide = null;
+    function dropGuide() {
+      if (!guide) return false;
+      opts.scene.remove(guide);
+      guide.geometry.dispose(); guide.material.dispose();
+      guide = null;
+      return true;
+    }
+    function syncGuide() {
+      if (!lightPanel || !opts.scene || !opts.focus) return;
+      if (lightPanel.hidden) { if (dropGuide()) render(); return; }
+      var THREE = window.THREE, f = opts.focus();
+      if (!guide) { guide = makeGuide(THREE); opts.scene.add(guide); }
+      aimGuide(THREE, guide, window.VoxelMesh.sunDirection(THREE),
+               f.center, f.radius || 1, lightValues().intensity / 100);
+      render();
     }
 
     /* The renderer runs without `preserveDrawingBuffer`, so the GL canvas is only
        readable in the same task as the draw that filled it - hence render, then
        composite, with nothing awaited in between. */
     function snapshot() {
+      // The guide is UI, not the model - "Save PNG" is reachable with the lighting
+      // panel still open, and nobody wants red beams baked into their render.
+      var shown = guide && guide.visible;
+      if (shown) guide.visible = false;
       render();
       var w = canvas.width, h = canvas.height;
       var out = document.createElement('canvas');
@@ -391,6 +498,8 @@
         rasterCover(ctx, IMG.el, w, h);
       }
       ctx.drawImage(canvas, 0, 0, w, h);     // "none" leaves the PNG transparent behind the model
+      // the composite is taken, so the beams can come back to the screen
+      if (shown) { guide.visible = true; render(); }
       save(out);
     }
 
@@ -422,6 +531,7 @@
     if (lightPanel) {
       lightBtn.addEventListener('click', function () { openPanel(lightPanel, lightPanel.hidden); });
       lightPanel.addEventListener('input', onRange);
+      lightPanel.addEventListener('keydown', onKey);
       lightPanel.querySelector('.vs-light-reset').addEventListener('click', onLightReset);
       showLight();
       /* Re-applied on every attach, not only when the sliders move: the dressing
@@ -436,6 +546,7 @@
       snapshot: snapshot,
       dispose: function () {
         document.removeEventListener('mousedown', onDocDown);
+        if (lightPanel) { dropGuide(); lightPanel.remove(); }   // no redraw: the host is going away
         // IMG is deliberately left alone - see the note on its declaration.
         stage.style.background = '';
         if (tools.parentNode) tools.parentNode.removeChild(tools);

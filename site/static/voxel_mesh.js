@@ -149,6 +149,12 @@
     L.kSunDir.value.set(Math.cos(e) * Math.sin(a), Math.sin(e), Math.cos(e) * Math.cos(a));
   }
 
+  // Where the sun is now, whoever last set it - the guide rays draw along this
+  // rather than recomputing the angles, so the two can't disagree.
+  function sunDirection(THREE) {
+    return ensureLight(THREE).kSunDir.value.toArray();
+  }
+
   /* The settings that reproduce the host's own sun, so the control opens showing
      the viewer as it already looks and "Reset" has somewhere to go back to. */
   function lightControlDefaults() {
@@ -369,5 +375,6 @@
   window.VoxelMesh = {
     build: build, makeMaterial: makeMaterial, setLighting: setLighting,
     setLightControl: setLightControl, lightControlDefaults: lightControlDefaults,
+    sunDirection: sunDirection,
   };
 })();

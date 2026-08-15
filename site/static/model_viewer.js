@@ -629,6 +629,8 @@
     // catches whatever pose is on screen, which is the point.
     var tools = window.ViewerStage ? window.ViewerStage.attach({
       stage: stage, canvas: renderer.domElement, render: renderOnce, name: title,
+      // for the lighting guide: where to hang the rays, and how big to draw them
+      scene: scene, focus: function () { return { center: pivot, radius: modelR }; },
     }) : null;
     /* Pose the parts at `f`, a FRACTIONAL frame index into a decoded clip: rebuild each
        attach point's matrix from its position+quaternion instead of reading a stored 4x4.

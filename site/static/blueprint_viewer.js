@@ -353,6 +353,8 @@
     // script yet still gets a working viewer.
     var tools = window.ViewerStage ? window.ViewerStage.attach({
       stage: stage, canvas: el, render: renderOnce, name: title,
+      // for the lighting guide: where to hang the rays, and how big to draw them
+      scene: scene, focus: function () { return { center: pivot, radius: modelR }; },
     }) : null;
 
     return {
