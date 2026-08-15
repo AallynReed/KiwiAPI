@@ -896,6 +896,9 @@
       state.scene.rebuild(viewOf(d));
       drawStack();
       drawAttachment();
+      // Working on one part at a time, switching to another has to bring it into view -
+      // the last one framed the camera, and the new one can be anywhere on the creature.
+      if (inProject() && state.isolate) state.scene.frameAll();
     }
   }
 
@@ -2726,7 +2729,10 @@
       // Stepping in or out changes WHICH history undo walks, so the button has to say
       // so in the same breath.
       updateDirty();
-      if (!state.isolate && inProject() && state.scene) state.scene.frameAll();
+      // Re-frame either way. `frameAll` frames what is DRAWN, so on the way in that is
+      // the part by itself - which is the whole point of going in - and on the way out
+      // it is the creature again.
+      if (inProject() && state.scene) state.scene.frameAll();
       setStatus('');
     });
     $('bpe-layerlist').addEventListener('click', function (e) {

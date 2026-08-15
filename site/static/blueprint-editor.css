@@ -14,8 +14,11 @@
   padding: 0 clamp(16px, 2.2vw, 40px) 90px;
   min-width: 0;
 }
-/* The hero is prose and still wants a measure, so it keeps one inside the wide main. */
-.bpe-hero, .bpe-empty { max-width: 1320px; }
+/* The hero is prose and still wants a measure, so it keeps one inside the wide main -
+   CENTRED in it. Left-aligned, the page went full-bleed for the stage's sake and left
+   the opening screen pinned to one edge of a wide monitor with a screen's worth of
+   nothing beside it. Only the workspace wants every pixel; prose does not. */
+.bpe-hero, .bpe-empty { max-width: 1320px; margin-inline: auto; }
 
 .blueprint-editor-page [hidden] { display: none !important; }
 
@@ -61,7 +64,7 @@
 /* ─── Empty state ───────────────────────────────────────────────────── */
 
 .bpe-empty {
-  margin: 26px 0 0;
+  margin: 26px auto 0;      /* auto, or the shorthand undoes the centring above */
   padding: 54px 28px;
   text-align: center;
   background: var(--bg-card);
