@@ -19,6 +19,13 @@
      var hit = scene.pick(event);   // { x, y, z, nx, ny, nz } | null
      scene.dispose();
 
+   CONTROLS DEFAULT TO THE VIEWERS'. A plain left-drag orbits unless a host calls
+   `setDragMode`, and only the Blueprint Editor does - so the editor's "left-drag works,
+   Ctrl-drag turns the view" scheme is its own. Nothing here changes how
+   `blueprint_viewer.js` or `model_viewer.js` behave; they carry their own copies of the
+   camera and this file is not loaded on their pages. Keep it that way: a viewer where
+   dragging suddenly painted would be a bad surprise.
+
    Requires three.js plus voxel_mesh.js, and uses viewer_stage.js when present. */
 (function () {
   'use strict';
@@ -277,10 +284,13 @@
     }
 
     var drag = 0, lx = 0, ly = 0, pinch = 0, moved = 0;
-    // Drag mode: a left-drag repositions what the host is placing instead of
-    // orbiting. Rotating moves to right-drag while it is on.
-    var dragMode = false;
+    /* What a plain left-drag does: '' orbits (the viewer default), 'move' repositions
+       what the host is placing, 'stroke' runs the host's tool along everything the
+       cursor passes over. Ctrl (or a right-drag) always orbits, so the two gestures
+       never compete for the same button. */
+    var dragMode = '';
     var dragAccum = new THREE.Vector3();
+    var strokeSeen = null;
 
     function rotate(dx, dy) {
       sph.theta -= dx * 0.01;
@@ -312,9 +322,16 @@
       // Ctrl (or a right-drag) turns the view even while positioning, so the two
       // gestures never fight over the same button.
       if (dragMode && e.button !== 2 && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        drag = 3;
+        drag = (dragMode === 'stroke') ? 4 : 3;
         lx = e.clientX; ly = e.clientY; moved = 0;
         dragAccum.set(0, 0, 0);
+        if (drag === 4) {
+          // One stroke is one action: the host is told where it starts and ends so a
+          // drag across fifty voxels undoes in one go rather than fifty.
+          strokeSeen = Object.create(null);
+          if (opts.onStroke) opts.onStroke('start');
+          strokeAt(e);
+        }
         stage.classList.add('vsc-grabbing');
         try { el.setPointerCapture(e.pointerId); } catch (err) { /* already released */ }
         e.preventDefault();
@@ -339,6 +356,17 @@
       var dx = e.clientX - lx, dy = e.clientY - ly;
       lx = e.clientX; ly = e.clientY;
       moved += Math.abs(dx) + Math.abs(dy);
+      if (drag === 4) {
+        /* Coalesced events, not just the one that woke us: a fast drag delivers a
+           single pointermove covering a lot of ground, and sampling only its endpoint
+           would leave gaps in the stroke. The list can come back EMPTY (a synthetic
+           event, or a browser that doesn't fill it), and an empty array is truthy -
+           so fall back on length, not existence, or the stroke silently stops. */
+        var pts = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
+        if (!pts.length) pts = [e];
+        for (var pi = 0; pi < pts.length; pi++) strokeAt(pts[pi]);
+        return;
+      }
       if (drag === 3) { dragLayer(dx, dy); return; }
       if (drag === 2) pan(dx, dy); else rotate(dx, dy);
       applyCamera(); request();
@@ -363,7 +391,23 @@
         if (opts.onDrag) opts.onDrag(step.x, step.y, step.z);
       }
     }
+    /* One sample of a stroke. Each distinct cell+face is reported once - dragging back
+       over ground already covered must not re-fire, or an "add" would climb its own
+       output and an undo entry would fill with no-ops. */
+    function strokeAt(e) {
+      var hit = pick(e);
+      if (!hit) return;
+      var key = hit.x + ',' + hit.y + ',' + hit.z + ':' + hit.nx + ',' + hit.ny + ',' + hit.nz;
+      if (strokeSeen[key]) return;
+      strokeSeen[key] = 1;
+      if (opts.onPick) opts.onPick(hit, e);
+    }
+
     function onUp(e) {
+      if (drag === 4) {
+        strokeSeen = null;
+        if (opts.onStroke) opts.onStroke('end');
+      }
       // Under the drag threshold this was a click, not a rotation - report the voxel.
       if (drag === 1 && moved < 4 && opts.onPick && e && e.clientX !== undefined) {
         opts.onPick(pick(e), e);
@@ -455,7 +499,7 @@
       moveLayer: moveLayer,
       clearLayer: clearLayer,
       clearLayers: clearLayers,
-      setDragMode: function (on) { dragMode = !!on; },
+      setDragMode: function (mode) { dragMode = mode || ''; },
       setModelOffset: function (x, y, z) { modelGroup.position.set(x, y, z); request(); },
       clearOverlay: clearOverlay,
       dispose: function () {

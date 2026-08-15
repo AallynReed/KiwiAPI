@@ -43,6 +43,8 @@
     anchor: 0,           // which one everything else is positioned against
     docSeq: 1,
     isolate: false,      // show only the layer being edited
+    stroke: null,        // in-progress drag-edit: one batch, one undo entry
+    strokeNormal: null,  // the face an 'add' stroke started on
     report: null,        // last check result
     showAttach: true,
   };
@@ -132,9 +134,10 @@
       onPick: onPick,
       onHover: onHover,
       onDrag: function (dx, dy, dz) { nudgeActive(dx, dy, dz); },
+      onStroke: onStroke,
     }).then(function (scene) {
       state.scene = scene;
-      scene.setDragMode(state.tool === 'move');
+      scene.setDragMode(dragModeFor(state.tool));
       drawStack();
       drawAttachment();
     }).catch(function (err) {
@@ -376,14 +379,20 @@
 
   function commit(batch, refused) {
     if (batch.length) {
-      state.history.push(batch);
       rebuildIndex();
       if (state.scene) state.scene.rebuild(liveView());
-      renderMaterialList();
-      renderMeta();
-      renderLayers();
-      updateDirty();
-      staleReport();
+      if (state.stroke) {
+        // Mid-drag: fold into the stroke's single undo entry and skip the panel work
+        // until it ends - re-rendering the material list per voxel would crawl.
+        state.stroke.push.apply(state.stroke, batch);
+      } else {
+        state.history.push(batch);
+        renderMaterialList();
+        renderMeta();
+        renderLayers();
+        updateDirty();
+        staleReport();
+      }
     }
     if (refused) {
       setStatus(refused + (refused === 1 ? ' voxel is' : ' voxels are')
@@ -452,8 +461,18 @@
     }
 
     if (state.tool === 'add') {
-      // The face normal says which side was clicked, so the new voxel goes on the
-      // outside of it - the gesture every voxel editor uses.
+      /* The face normal says which side was clicked, so the new voxel goes on the
+         outside of it - the gesture every voxel editor uses.
+
+         Across a DRAG the normal is locked to the face the stroke began on. Without
+         that, each voxel added becomes new geometry for the next raycast to hit, and
+         the stroke climbs its own output into a wall coming at the camera instead of
+         running along the surface you were tracing. */
+      if (state.stroke) {
+        if (!state.strokeNormal) state.strokeNormal = [hit.nx, hit.ny, hit.nz];
+        var n = state.strokeNormal;
+        if (n[0] !== hit.nx || n[1] !== hit.ny || n[2] !== hit.nz) return;
+      }
       addVoxel(hit.x + hit.nx, hit.y + hit.ny, hit.z + hit.nz, batch);
       commit(batch, 0);
       state.selection = state.index.get(
@@ -1122,13 +1141,45 @@
   /* The paint controls only govern a paint click, and Add uses them for the new voxel -
      so Erase and Pick grey them out rather than leaving a colour picker that does
      nothing. */
+  /* Paint, add and erase run along the drag; move repositions; pick stays a click.
+     Ctrl-drag turns the view in every one of them, so the gesture is the same
+     everywhere in the editor. */
+  function dragModeFor(tool) {
+    if (tool === 'move') return 'move';
+    if (tool === 'paint' || tool === 'add' || tool === 'erase') return 'stroke';
+    return '';
+  }
+
+  /* A drag is ONE action. Edits accumulate into a single batch so the whole streak
+     undoes in one step, and the expensive panel redraws wait for the end rather than
+     running per voxel. */
+  function onStroke(phase) {
+    if (phase === 'start') {
+      state.stroke = [];
+      state.strokeNormal = null;
+      return;
+    }
+    var batch = state.stroke;
+    state.stroke = null;
+    state.strokeNormal = null;
+    if (batch && batch.length) {
+      state.history.push(batch);
+      renderMaterialList();
+      renderMeta();
+      renderLayers();
+      renderSelection();
+      updateDirty();
+      staleReport();
+    }
+  }
+
   function renderToolHint() {
     var hints = {
-      paint: 'Click a voxel to paint it.',
+      paint: 'Click or drag across voxels to paint them. Ctrl-drag turns the view.',
       pick: 'Click a voxel to copy its colour and material into the settings below.',
-      add: 'Click a face to put a new voxel against it, in the colour and material below.',
-      erase: 'Click a voxel to delete it.',
-      move: 'Drag to slide this layer around. Ctrl-drag (or right-drag) turns the view.',
+      add: 'Drag along a face to lay voxels against it. Ctrl-drag turns the view.',
+      erase: 'Click or drag across voxels to delete them. Ctrl-drag turns the view.',
+      move: 'Drag to slide this layer around. Ctrl-drag turns the view.',
     };
     var hint = hints[state.tool] || hints.paint;
     // Which layer a click lands on is the thing to be unambiguous about once there is
@@ -1402,7 +1453,7 @@
         document.querySelectorAll('[data-tool]').forEach(function (o) {
           o.setAttribute('aria-pressed', String(o.dataset.tool === state.tool));
         });
-        if (state.scene) state.scene.setDragMode(state.tool === 'move');
+        if (state.scene) state.scene.setDragMode(dragModeFor(state.tool));
         renderToolHint();
       });
     });
