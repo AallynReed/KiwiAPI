@@ -272,6 +272,11 @@
       drag = 0; anchor = null; moved = 0;
       stage.classList.remove('vsc-grabbing');
     }
+    /* Leaving the canvas ends the hover. Without this the last move wins and a host
+       showing a readout keeps displaying whatever was under the cursor on the way out. */
+    function onLeave() {
+      if (!drag && opts.onHover) opts.onHover(null);
+    }
     function onWheel(e) { e.preventDefault(); zoom(e.deltaY > 0 ? 1.12 : 0.89); applyCamera(); request(); }
     function dist(e) {
       var a = e.touches[0], b = e.touches[1];
@@ -311,6 +316,7 @@
     el.addEventListener('pointerdown', onDown);
     el.addEventListener('pointermove', onMove);
     el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointerleave', onLeave);
     el.addEventListener('pointercancel', onUp);
     el.addEventListener('lostpointercapture', onUp);
     el.addEventListener('wheel', onWheel, { passive: false });
@@ -352,6 +358,7 @@
         el.removeEventListener('pointerdown', onDown);
         el.removeEventListener('pointermove', onMove);
         el.removeEventListener('pointerup', onUp);
+        el.removeEventListener('pointerleave', onLeave);
         el.removeEventListener('pointercancel', onUp);
         el.removeEventListener('lostpointercapture', onUp);
         el.removeEventListener('wheel', onWheel);

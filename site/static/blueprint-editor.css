@@ -118,22 +118,60 @@
 /* ─── Stage ─────────────────────────────────────────────────────────── */
 
 .bpe-stagecard { padding: 0; overflow: hidden; }
+/* Never wraps. A second line here changes the card's height, which resizes the stage
+   below it - so anything that can grow has to truncate instead. */
 .bpe-stagebar {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   padding: 11px 14px;
   border-bottom: 1px solid var(--bg-line);
+  min-height: 41px;
 }
-.bpe-stagebar strong { font-size: .95rem; }
-.bpe-metaline { color: var(--text-mute); font-size: .8rem; }
-.bpe-hoverline {
+.bpe-stagebar strong {
+  font-size: .95rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bpe-metaline {
+  flex: 0 0 auto;
   margin-left: auto;
   color: var(--text-mute);
+  font-size: .8rem;
+  white-space: nowrap;
+}
+
+/* The hover readout is an OVERLAY on the model, not a row in a bar.
+   It changes on every mouse move, and "12, 11, 2 · Glowing Solid · Rough" is a lot
+   wider than "8, 9, 8 · Solid · Rough" - so in normal flow it pushed its neighbours
+   around and, once it got long enough, wrapped the bar to a second line. That changed
+   the card's height, which resized the stage, so the whole viewport twitched as the
+   cursor crossed the model. Taking it out of flow removes the failure rather than
+   tuning around it: absolutely positioned, its text can be any length at all and not
+   one pixel of layout moves. Tabular figures stop the digits jittering as they count.
+   `pointer-events: none` so it can never intercept a click meant for a voxel. */
+.bpe-hoverline {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 2;                       /* over the canvas, under viewer_stage's tools (3) */
+  max-width: calc(100% - 24px);
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(10, 14, 20, .82);
+  border: 1px solid var(--bg-line);
+  color: var(--text);
   font-family: var(--font-mono, monospace);
-  font-size: .76rem;
-  min-height: 1em;
+  font-size: .75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
 }
 .bpe-stage {
   position: relative;
@@ -146,10 +184,14 @@
 .bpe-stage.vsc-grabbing { cursor: grabbing; }
 .bpe-stage canvas { display: block; width: 100%; height: 100%; }
 .bpe-stagehint {
+  margin: 0;
   padding: 9px 14px;
   border-top: 1px solid var(--bg-line);
   color: var(--text-mute);
   font-size: .78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ─── Paint controls ────────────────────────────────────────────────── */
@@ -464,7 +506,6 @@
 
   /* The hover readout is a mouse affordance; a touch device never sees it, and it was
      eating a line of the header. */
-  .bpe-hoverline { display: none; }
   .bpe-stagebar { gap: 8px; padding: 10px 12px; }
   .bpe-stagehint { font-size: .74rem; padding: 8px 12px; }
 }
@@ -488,4 +529,11 @@
      size; they're part of this page's touch surface, so they get sized here. */
   .bpe-stage .vs-tool { min-height: 38px; padding: 8px 11px; }
   .bpe-stage .vs-opt { min-height: 34px; }
+}
+
+/* A hover readout needs a pointer that can hover. Gated on the capability rather
+   than on screen width, so a tablet with a mouse still gets it and a large touch
+   screen doesn't carry a chip that can never populate. */
+@media (hover: none) {
+  .bpe-hoverline { display: none; }
 }

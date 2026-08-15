@@ -452,13 +452,21 @@
     renderSelection();
   }
 
+  /* The readout is hidden outright when the cursor isn't over a voxel, rather than
+     blanked - an empty chip floating on the model reads as a rendering glitch. */
   function onHover(hit) {
     var el = $('bpe-hover');
     if (!el) return;
-    if (!hit || !state.data) { el.textContent = ''; return; }
-    var i = state.index.get(hit.x + ',' + hit.y + ',' + hit.z);
-    if (i === undefined) { el.textContent = ''; return; }
-    el.textContent = hit.x + ', ' + hit.y + ', ' + hit.z + ' · ' + label(i);
+    var i = (hit && state.data)
+      ? state.index.get(hit.x + ',' + hit.y + ',' + hit.z)
+      : undefined;
+    if (i === undefined) {
+      if (!el.hidden) { el.hidden = true; el.textContent = ''; }
+      return;
+    }
+    var text = hit.x + ', ' + hit.y + ', ' + hit.z + ' · ' + label(i);
+    if (el.textContent !== text) el.textContent = text;
+    el.hidden = false;
   }
 
   function undo() {
