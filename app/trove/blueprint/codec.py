@@ -311,6 +311,46 @@ def _extract_sub_paths(sub: bytes) -> list[str]:
     return paths
 
 
+def read_entity_records(blob: bytes) -> tuple[list[tuple[int, int, int, bytes]], bytes] | None:
+    """``([(x, y, z, sub_message)], trailing_bytes)``, or ``None`` if the section can't
+    be read exactly.
+
+    The low-level form of the entity section, for the callers that need to REWRITE it -
+    moving a model moves its placed objects, and merging two models has to concatenate
+    both lists. The sub-message is opaque: it holds the prefab path and whatever else
+    the engine wrote, and only the coordinates in front of it are ours to touch."""
+    if len(blob) < 4:
+        return [], b""
+    count = struct.unpack_from("<I", blob, 0)[0]
+    records: list[tuple[int, int, int, bytes]] = []
+    i = 4
+    try:
+        for _ in range(count):
+            x, i = read_svarint(blob, i)
+            y, i = read_svarint(blob, i)
+            z, i = read_svarint(blob, i)
+            sublen, i = read_uleb128(blob, i)
+            if i + sublen > len(blob):
+                return None
+            records.append((x, y, z, blob[i:i + sublen]))
+            i += sublen
+    except BlueprintError:
+        return None
+    return records, blob[i:]
+
+
+def write_entity_records(records, tail: bytes = b"") -> bytes:
+    """Rebuild an entity section from records produced by :func:`read_entity_records`."""
+    out = bytearray(struct.pack("<I", len(records)))
+    for x, y, z, sub in records:
+        out += write_svarint(x)
+        out += write_svarint(y)
+        out += write_svarint(z)
+        out += write_uleb128(len(sub))
+        out += sub
+    return bytes(out + tail)
+
+
 def parse_entity_section(entity_blob: bytes) -> dict:
     """Decode the entity section: ``u32 count``, then per entity a zigzag-LEB128
     ``x, y, z`` (model-local, aligned with the voxel grid), a uleb128 sub-message

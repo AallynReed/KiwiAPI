@@ -64,13 +64,15 @@
     var el = renderer.domElement;
 
     var meshes = [];
+    var modelGroup = new THREE.Group();
+    scene.add(modelGroup);
     var data = null;
     var pivot = new THREE.Vector3();
     var modelR = 1;
 
     function disposeMeshes() {
       meshes.forEach(function (m) {
-        scene.remove(m);
+        modelGroup.remove(m);
         if (m.geometry) m.geometry.dispose();
         if (m.material) m.material.dispose();
       });
@@ -88,7 +90,7 @@
         lightDir: [0.7, 1.0, 0.55],
         onReady: function () { request(); },
       });
-      meshes.forEach(function (m) { scene.add(m); });
+      meshes.forEach(function (m) { modelGroup.add(m); });
 
       if (!keepCamera) {
         /* Frame the VOXELS, not the size the payload declares. A voxel sits on its
@@ -144,7 +146,7 @@
     function clearOverlay(key) {
       var o = overlays[key];
       if (!o) return;
-      scene.remove(o);
+      modelGroup.remove(o);
       o.geometry.dispose();
       o.material.dispose();
       delete overlays[key];
@@ -178,8 +180,64 @@
       });
       var lines = new THREE.LineSegments(geo, mat);
       lines.renderOrder = 5;          // always on top: a highlight you can't see is useless
-      scene.add(lines);
+      modelGroup.add(lines);
       overlays[key] = lines;
+      request();
+    }
+
+    /* ---- layers: further models shown alongside the first -----------------
+       For lining models up before flattening them together. Each lives in its own
+       Group, so nudging one is a position change rather than a re-mesh - which is
+       what makes dragging it around a voxel at a time feel instant on a big model.
+       A wireframe box says which is which. */
+    var layers = {};
+
+    function clearLayer(id) {
+      var L = layers[id];
+      if (!L) return;
+      scene.remove(L.group);
+      L.group.traverse(function (o) {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) o.material.dispose();
+      });
+      delete layers[id];
+      request();
+    }
+
+    function clearLayers() {
+      Object.keys(layers).forEach(clearLayer);
+    }
+
+    function setLayer(id, payload, colour) {
+      clearLayer(id);
+      if (!payload || !payload.count) { request(); return; }
+      var group = new THREE.Group();
+      window.VoxelMesh.build(THREE, payload, {
+        brdfUrl: opts.brdfUrl,
+        lightDir: [0.7, 1.0, 0.55],
+        onReady: function () { request(); },
+      }).forEach(function (m) { group.add(m); });
+
+      var box = new THREE.Box3().setFromObject(group);
+      if (!box.isEmpty()) {
+        var helper = new THREE.Box3Helper(box, colour || 0x58a6ff);
+        if (helper.material) {
+          helper.material.depthTest = false;
+          helper.material.transparent = true;
+          helper.material.opacity = 0.9;
+        }
+        helper.renderOrder = 4;
+        group.add(helper);
+      }
+      scene.add(group);
+      layers[id] = { group: group };
+      request();
+    }
+
+    function moveLayer(id, x, y, z) {
+      var L = layers[id];
+      if (!L) return;
+      L.group.position.set(x, y, z);
       request();
     }
 
@@ -207,15 +265,22 @@
       var hit = castAt(e.clientX, e.clientY);
       if (!hit || !hit.face) return null;
       var n = hit.face.normal;
+      // Undo the model's own offset: the ray hits world space, but a voxel coordinate
+      // only means anything in the model's own grid.
+      var o = modelGroup.position;
       return {
-        x: Math.round(hit.point.x - n.x * 0.25),
-        y: Math.round(hit.point.y - n.y * 0.25),
-        z: Math.round(hit.point.z - n.z * 0.25),
+        x: Math.round(hit.point.x - n.x * 0.25 - o.x),
+        y: Math.round(hit.point.y - n.y * 0.25 - o.y),
+        z: Math.round(hit.point.z - n.z * 0.25 - o.z),
         nx: Math.round(n.x), ny: Math.round(n.y), nz: Math.round(n.z),
       };
     }
 
     var drag = 0, lx = 0, ly = 0, pinch = 0, moved = 0;
+    // Drag mode: a left-drag repositions what the host is placing instead of
+    // orbiting. Rotating moves to right-drag while it is on.
+    var dragMode = false;
+    var dragAccum = new THREE.Vector3();
 
     function rotate(dx, dy) {
       sph.theta -= dx * 0.01;
@@ -242,6 +307,17 @@
       if (e.pointerType === 'touch') return;
       // A plain left click is the edit gesture, so it must not also start a rotate
       // until the pointer actually travels - `moved` decides that on pointerup.
+      // In drag mode a left-drag moves the thing being positioned instead; rotating
+      // stays available on right-drag, which would otherwise be pan.
+      if (dragMode && e.button !== 2 && !e.shiftKey) {
+        drag = 3;
+        lx = e.clientX; ly = e.clientY; moved = 0;
+        dragAccum.set(0, 0, 0);
+        stage.classList.add('vsc-grabbing');
+        try { el.setPointerCapture(e.pointerId); } catch (err) { /* already released */ }
+        e.preventDefault();
+        return;
+      }
       drag = (e.button === 2 || e.shiftKey) ? 2 : 1;
       lx = e.clientX; ly = e.clientY; moved = 0;
       if (drag === 2) {
@@ -261,8 +337,29 @@
       var dx = e.clientX - lx, dy = e.clientY - ly;
       lx = e.clientX; ly = e.clientY;
       moved += Math.abs(dx) + Math.abs(dy);
+      if (drag === 3) { dragLayer(dx, dy); return; }
       if (drag === 2) pan(dx, dy); else rotate(dx, dy);
       applyCamera(); request();
+    }
+
+    /* Turn a screen drag into whole-voxel movement.
+       The drag is measured along the camera's own right and up axes so the model
+       follows the cursor whichever way the view is turned, then accumulated in world
+       space and handed over only when it crosses a whole voxel - a model that slid
+       by fractions would never sit on the grid it has to be saved on. The leftover
+       fraction is kept, so a slow drag still moves smoothly rather than sticking. */
+    function dragLayer(dx, dy) {
+      camera.updateMatrixWorld();
+      var s = 2 * sph.radius * Math.tan(camera.fov * Math.PI / 360) / (stage.clientHeight || 1);
+      // Signs so the model FOLLOWS the cursor. (Pan uses the opposite, because there
+      // it is the camera's target that moves, not the thing being looked at.)
+      dragAccum.addScaledVector(bRight, dx * s).addScaledVector(bUp, -dy * s);
+      var step = new THREE.Vector3(
+        Math.round(dragAccum.x), Math.round(dragAccum.y), Math.round(dragAccum.z));
+      if (step.x || step.y || step.z) {
+        dragAccum.sub(step);
+        if (opts.onDrag) opts.onDrag(step.x, step.y, step.z);
+      }
     }
     function onUp(e) {
       // Under the drag threshold this was a click, not a rotation - report the voxel.
@@ -352,10 +449,17 @@
       pick: pick,
       request: request,
       setOverlay: setOverlay,
+      setLayer: setLayer,
+      moveLayer: moveLayer,
+      clearLayer: clearLayer,
+      clearLayers: clearLayers,
+      setDragMode: function (on) { dragMode = !!on; },
+      setModelOffset: function (x, y, z) { modelGroup.position.set(x, y, z); request(); },
       clearOverlay: clearOverlay,
       dispose: function () {
         alive = false; cancelAnimationFrame(raf);
         Object.keys(overlays).forEach(clearOverlay);
+        clearLayers();
         if (tools) tools.dispose();
         el.removeEventListener('pointerdown', onDown);
         el.removeEventListener('pointermove', onMove);

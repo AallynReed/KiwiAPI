@@ -38,6 +38,10 @@
     mode: 'both',        // what a paint click applies: colour, material, or both
     scope: 'voxel',      // one voxel, or every voxel sharing its material
     kind: 'other',       // creation type the checks are run against
+    docs: [],            // the stack, bottom to top; each is its own blueprint
+    active: 0,           // which one the tools edit
+    docSeq: 1,
+    isolate: false,      // show only the layer being edited
     report: null,        // last check result
     showAttach: true,
   };
@@ -86,33 +90,27 @@
       .catch(function (err) { setStatus(err.message || String(err), 'error'); });
   }
 
+  /* Opening a file starts a FRESH stack with it at the bottom. Everything a document
+     needs in order to be edited independently - its pristine copy, its live flags, its
+     own undo stack - is built by makeDoc and swapped in by setActive. */
   function loaded(file, payload, note) {
     state.file = file;
-    state.data = payload;
-    // Only colour and material can change on an existing voxel, so those are the only
-    // arrays worth a pristine copy - the edit list is DERIVED by diffing against it,
-    // which means a voxel painted back to how it started stops counting as an edit
-    // without anyone having to notice.
-    state.base = {
-      rgb: payload.rgb.slice(), type: payload.type.slice(), w: payload.w.slice(),
-    };
-    // `live` is how erase works: a voxel is dropped from the render and the save
-    // rather than spliced out of a dozen parallel arrays. `origin` maps each row back
-    // to its index in the file, or -1 for one the user placed.
-    payload.live = [];
-    state.origin = [];
-    for (var i = 0; i < payload.count; i++) {
-      payload.live.push(1);
-      state.origin.push(i);
-    }
-    state.history = [];
-    state.selection = -1;
-    rebuildIndex();
-
+    state.docs = [makeDoc(file, payload)];
+    state.active = 0;
+    state.isolate = false;
     state.report = null;
     $('bpe-report').hidden = true;
     $('bpe-empty').hidden = true;
     $('bpe-workspace').hidden = false;
+
+    var d0 = state.docs[0];
+    state.data = d0.payload;
+    state.base = d0.base;
+    state.origin = d0.origin;
+    state.history = d0.history;
+    state.selection = -1;
+    rebuildIndex();
+
     renderKinds();
     renderTransforms();
     renderToolHint();
@@ -120,6 +118,7 @@
     renderMaterialList();
     renderMeta();
     renderSelection();
+    renderLayers();
     updateDirty();
     setStatus(note || '', note ? 'ok' : '');
 
@@ -130,11 +129,14 @@
       name: payload.name,
       onPick: onPick,
       onHover: onHover,
+      onDrag: function (dx, dy, dz) { nudgeActive(dx, dy, dz); },
     }).then(function (scene) {
       state.scene = scene;
+      scene.setDragMode(state.tool === 'move');
+      drawStack();
       drawAttachment();
     }).catch(function (err) {
-      setStatus(err.message || 'The 3D view couldn’t start.', 'error');
+      setStatus(err.message || 'The 3D view could not start.', 'error');
     });
   }
 
@@ -174,10 +176,12 @@
      file it came from. An original voxel that changed emits an edit, one that was
      erased emits a delete, and a row the user placed emits an add. Nothing to keep in
      sync, and painting a voxel back to its starting colour simply stops appearing. */
-  function editList() {
-    var d = state.data, b = state.base, out = [];
+  function editList() { return editListOf(state.docs[state.active]); }
+
+  function editListOf(docu) {
+    var d = docu.payload, b = docu.base, out = [];
     for (var i = 0; i < d.count; i++) {
-      var orig = state.origin[i];
+      var orig = docu.origin[i];
       if (orig < 0) {
         if (d.live[i]) {
           out.push({ add: [d.x[i], d.y[i], d.z[i]],
@@ -227,6 +231,7 @@
     fd.append('file', state.file, state.file.name);
     fd.append('edits', JSON.stringify(list));
     fd.append('kind', state.kind);
+    stackParts(fd);
     fetch(apiUrl('/site/blueprint-editor/check'), { method: 'POST', body: fd })
       .then(function (res) {
         return res.json().then(function (b) {
@@ -375,6 +380,7 @@
       if (state.scene) state.scene.rebuild(liveView());
       renderMaterialList();
       renderMeta();
+      renderLayers();
       updateDirty();
       staleReport();
     }
@@ -544,8 +550,9 @@
     var list = editList();
     setStatus('Saving…');
     var fd = new FormData();
-    fd.append('file', state.file, state.file.name);
-    fd.append('edits', JSON.stringify(list));
+    fd.append('file', state.docs[0].file, state.docs[0].file.name);
+    fd.append('edits', JSON.stringify(editListOf(state.docs[0])));
+    stackParts(fd);
     fetch(apiUrl('/site/blueprint-editor/save'), { method: 'POST', body: fd })
       .then(function (res) {
         if (!res.ok) {
@@ -621,6 +628,317 @@
     }).join('');
   }
 
+  // ---- the layer stack ------------------------------------------------------ //
+
+  /* Every layer is its own blueprint, with its own voxels, its own edits and its own
+     position. One of them is ACTIVE: that is the one you paint, add to and erase from,
+     and the only one a click can hit. The rest are drawn alongside it so you can line
+     things up against them.
+
+     Layering is NON-DESTRUCTIVE. A layer sitting over another hides what is underneath
+     rather than replacing it, so sliding it back off brings the covered voxels straight
+     back. The stack is resolved only when something is OUTPUT - download, the checks,
+     the .qb export - and that is where the order decides which voxel wins a shared
+     cell: the topmost layer that has one. Index 0 is the bottom of the stack.
+
+     The alignment maths is mirrored from merge.py so the live preview and the server
+     agree on where a layer sits; merge.py is the authority. */
+
+  function doc(i) { return state.docs[i] || null; }
+  function active() { return state.docs[state.active] || null; }
+
+  function alignOffset(d, mode) {
+    var b = state.docs[0];
+    if (!b || !d || d === b) return [0, 0, 0];
+    if (mode === 'corner') return [0, 0, 0];
+    if (mode === 'centre') {
+      return [0, 1, 2].map(function (i) {
+        return Math.round((b.payload.size[i] - 1) / 2 - (d.payload.size[i] - 1) / 2);
+      });
+    }
+    if (!b.payload.attachment || !d.payload.attachment) return null;
+    return [0, 1, 2].map(function (i) {
+      return b.payload.attachment[i] - d.payload.attachment[i];
+    });
+  }
+
+  /* Where a layer's grid sits in the stack's shared space. The bottom layer defines
+     that space, so it is always at zero. */
+  function placement(d) {
+    if (!d || d === state.docs[0]) return [0, 0, 0];
+    var base = alignOffset(d, d.mode);
+    if (!base) return null;
+    return [base[0] + d.offset[0], base[1] + d.offset[1], base[2] + d.offset[2]];
+  }
+
+  /* Compact a document's live voxels for the mesher. */
+  function viewOf(d) {
+    var p = d.payload;
+    var v = { count: 0, size: p.size, x: [], y: [], z: [], rgb: [],
+              kind: [], level: [], spec: [] };
+    for (var i = 0; i < p.count; i++) {
+      if (!p.live[i]) continue;
+      v.x.push(p.x[i]); v.y.push(p.y[i]); v.z.push(p.z[i]); v.rgb.push(p.rgb[i]);
+      v.kind.push(p.kind[i]); v.level.push(p.level[i]); v.spec.push(p.spec[i]);
+      v.count++;
+    }
+    return v;
+  }
+
+  /* Draw the stack: the active document as the main (pickable) model at its own
+     offset, every other visible one as a layer beside it. Isolate hides the rest
+     without changing what any of them are - overlapping voxels make a model
+     impossible to read, and this is how you get at the one you mean. */
+  function drawStack() {
+    if (!state.scene || !state.docs.length) return;
+    var a = active();
+    var at = placement(a) || [0, 0, 0];
+    state.scene.setModelOffset(at[0], at[1], at[2]);
+    state.scene.clearLayers();
+    state.docs.forEach(function (d, i) {
+      if (i === state.active) return;
+      if (!d.visible || state.isolate) return;
+      var t = placement(d);
+      if (!t) return;
+      state.scene.setLayer(d.id, viewOf(d), 0x6e7785);
+      state.scene.moveLayer(d.id, t[0], t[1], t[2]);
+    });
+  }
+
+  /* What the flattened output would contain, so the numbers are honest before anything
+     is downloaded. Bottom to top, last writer wins - the rule the server applies. */
+  function stackStats() {
+    var cells = new Set();
+    var hidden = 0;
+    state.docs.forEach(function (d) {
+      var t = placement(d);
+      if (!t) return;
+      var p = d.payload;
+      for (var i = 0; i < p.count; i++) {
+        if (!p.live[i]) continue;
+        var k = (p.x[i] + t[0]) + ',' + (p.y[i] + t[1]) + ',' + (p.z[i] + t[2]);
+        if (cells.has(k)) hidden++;
+        cells.add(k);
+      }
+    });
+    return { total: cells.size, hidden: hidden };
+  }
+
+  function makeDoc(file, payload) {
+    payload.live = [];
+    var origin = [];
+    for (var i = 0; i < payload.count; i++) { payload.live.push(1); origin.push(i); }
+    return {
+      id: 'D' + (state.docSeq++),
+      file: file,
+      payload: payload,
+      base: { rgb: payload.rgb.slice(), type: payload.type.slice(), w: payload.w.slice() },
+      origin: origin,
+      history: [],
+      mode: 'attachment',
+      offset: [0, 0, 0],
+      visible: true,
+    };
+  }
+
+  /* Switching which document is being edited swaps the whole working set - the arrays
+     the tools read, the pristine copy the save diff is taken against, and the undo
+     stack, which belongs to the document rather than to the session. */
+  function setActive(i) {
+    if (i < 0 || i >= state.docs.length) return;
+    state.active = i;
+    var d = state.docs[i];
+    state.data = d.payload;
+    state.base = d.base;
+    state.origin = d.origin;
+    state.history = d.history;
+    state.selection = -1;
+    rebuildIndex();
+    renderKinds();
+    renderTransforms();
+    renderPalette();
+    renderMaterialList();
+    renderMeta();
+    renderSelection();
+    renderLayers();
+    updateDirty();
+    if (state.scene) {
+      state.scene.rebuild(viewOf(d));
+      drawStack();
+      drawAttachment();
+    }
+  }
+
+  function addLayer(file) {
+    if (!file) return;
+    if (state.docs.length >= 8) {
+      setStatus('That is as many layers as one stack takes.', 'error');
+      return;
+    }
+    setStatus('Reading ' + file.name + '...');
+    var fd = new FormData();
+    fd.append('file', file, file.name);
+    fetch(apiUrl('/site/blueprint-editor/inspect'), { method: 'POST', body: fd })
+      .then(function (res) {
+        return res.json().then(function (b) {
+          if (!res.ok) throw new Error((b && b.detail) || 'That blueprint could not be opened.');
+          return b;
+        });
+      })
+      .then(function (payload) {
+        var d = makeDoc(file, payload);
+        // Line the grips up by default; fall back when one side hasn't got one.
+        d.mode = (state.docs[0].payload.attachment && payload.attachment)
+          ? 'attachment' : 'centre';
+        state.docs.push(d);
+        setActive(state.docs.length - 1);
+        setStatus('Layered in ' + payload.name
+          + '. It is the layer you are editing - use Move to drag it about.', 'ok');
+      })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  function removeLayer(i) {
+    if (i === 0 || !state.docs[i]) return;      // the bottom layer is the model itself
+    if (state.scene) state.scene.clearLayer(state.docs[i].id);
+    state.docs.splice(i, 1);
+    setActive(Math.min(state.active, state.docs.length - 1));
+  }
+
+  function reorderLayer(i, dir) {
+    var j = i + dir;
+    if (i < 0 || j < 0 || i >= state.docs.length || j >= state.docs.length) return;
+    var tmp = state.docs[i];
+    state.docs[i] = state.docs[j];
+    state.docs[j] = tmp;
+    // Offsets are relative to the bottom layer, so swapping it changes the frame.
+    setActive(state.active === i ? j : (state.active === j ? i : state.active));
+  }
+
+  function nudgeActive(dx, dy, dz) {
+    var d = active();
+    if (!d || d === state.docs[0]) return;
+    d.offset = [d.offset[0] + dx, d.offset[1] + dy, d.offset[2] + dz];
+    renderLayers();
+    drawStack();
+  }
+
+  function renderLayers() {
+    if (!state.docs.length) return;
+    var multi = state.docs.length > 1;
+    $('bpe-flatten').disabled = !multi;
+    $('bpe-isolate').disabled = !multi;
+    $('bpe-isolate').setAttribute('aria-pressed', String(!!state.isolate));
+
+    // Topmost first, because that is the one that wins.
+    var rows = [];
+    for (var i = state.docs.length - 1; i >= 0; i--) {
+      var d = state.docs[i];
+      var t = placement(d);
+      var bottom = (i === 0);
+      rows.push('<li class="bpe-layerrow' + (i === state.active ? ' active' : '') + '">'
+        + '<button type="button" class="bpe-layerpick" data-pick="' + i + '">'
+        + '<strong>' + esc(d.payload.name) + '</strong><span>'
+        + liveCountOf(d).toLocaleString() + ' voxels'
+        + (bottom ? ' - bottom layer'
+                  : (t ? ' at ' + t.join(', ') : ' - cannot line up this way'))
+        + '</span></button>'
+        + (bottom ? '<span class="bpe-layerbtn bpe-layerlock"></span>'
+                  : '<button type="button" class="bpe-layerbtn" data-vis="' + i
+                    + '" aria-label="Show or hide"><i class="fa-solid fa-eye'
+                    + (d.visible ? '' : '-slash') + '" aria-hidden="true"></i></button>')
+        + '<button type="button" class="bpe-layerbtn" data-up="' + i + '" aria-label="Move up"'
+        + (i === state.docs.length - 1 ? ' disabled' : '') + '>&uarr;</button>'
+        + '<button type="button" class="bpe-layerbtn" data-down="' + i + '" aria-label="Move down"'
+        + (i === 0 ? ' disabled' : '') + '>&darr;</button>'
+        + (bottom ? '<span class="bpe-layerbtn bpe-layerlock"></span>'
+                  : '<button type="button" class="bpe-layerbtn" data-drop="' + i
+                    + '" aria-label="Remove layer"><i class="fa-solid fa-xmark"'
+                    + ' aria-hidden="true"></i></button>')
+        + '</li>');
+    }
+    $('bpe-layerlist').innerHTML = rows.join('');
+
+    var a = active();
+    var movable = a && a !== state.docs[0];
+    $('bpe-layerctl').hidden = !movable;
+    if (movable) { renderAlignModes(a); renderNudge(a); }
+
+    var st = stackStats();
+    $('bpe-layerinfo').textContent = multi
+      ? ('Flattens to ' + st.total.toLocaleString() + ' voxels'
+         + (st.hidden ? ' - ' + st.hidden.toLocaleString()
+            + ' hidden underneath, still there until you download' : ''))
+      : '';
+    renderToolHint();
+  }
+
+  function liveCountOf(d) {
+    var n = 0;
+    for (var i = 0; i < d.payload.count; i++) if (d.payload.live[i]) n++;
+    return n;
+  }
+
+  function renderAlignModes(d) {
+    var modes = state.docs[0].payload.align_modes || [];
+    $('bpe-align').innerHTML = modes.map(function (m) {
+      return '<option value="' + m.mode + '"' + (m.mode === d.mode ? ' selected' : '')
+        + '>' + esc(m.label) + '</option>';
+    }).join('');
+  }
+
+  function renderNudge(d) {
+    ['x', 'y', 'z'].forEach(function (a, i) {
+      var v = d.offset[i];
+      $('bpe-nudge-' + a).textContent = (v > 0 ? '+' : '') + v;
+    });
+  }
+
+  /* The stack as the output endpoints want it: layer 0 is the base file, the rest ride
+     as `layers` bottom to top with a spec each - placement AND their own edits, since
+     every layer is a blueprint someone may have painted on. */
+  function stackParts(fd) {
+    state.docs.slice(1).forEach(function (d) {
+      fd.append('layers', d.file, d.file.name);
+    });
+    if (state.docs.length > 1) {
+      fd.append('stack', JSON.stringify(state.docs.slice(1).map(function (d) {
+        return { mode: d.mode, offset: d.offset, edits: editListOf(d) };
+      })));
+    }
+  }
+
+  function flattenStack() {
+    if (state.docs.length < 2) return;
+    setStatus('Flattening...');
+    var fd = new FormData();
+    fd.append('file', state.docs[0].file, state.docs[0].file.name);
+    fd.append('edits', JSON.stringify(editListOf(state.docs[0])));
+    stackParts(fd);
+    fetch(apiUrl('/site/blueprint-editor/flatten'), { method: 'POST', body: fd })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().then(function (b) {
+            throw new Error((b && b.detail) || 'The stack could not be flattened.');
+          });
+        }
+        var summary = {};
+        try { summary = JSON.parse(res.headers.get('X-Kiwi-Summary') || '{}'); } catch (e) { /* optional */ }
+        return res.blob().then(function (blob) { return { blob: blob, summary: summary }; });
+      })
+      .then(function (out) {
+        var s = out.summary;
+        var bits = [s.voxels.toLocaleString() + ' voxels from ' + ((s.layers || 0) + 1) + ' models'];
+        if (s.hidden) bits.push(s.hidden.toLocaleString() + ' overlapping cell'
+          + (s.hidden === 1 ? '' : 's') + ' went to the layer above');
+        if (s.entities) bits.push(s.entities);
+        var name = state.docs[0].file.name;
+        openFile(new File([out.blob], name),
+                 'Flattened into one blueprint - ' + bits.join(' - ') + '.');
+      })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
   // ---- Qubicle interop ---------------------------------------------------- //
 
   function download(blob, filename) {
@@ -641,8 +959,9 @@
     var list = editList();
     setStatus('Building the .qb files…');
     var fd = new FormData();
-    fd.append('file', state.file, state.file.name);
-    fd.append('edits', JSON.stringify(list));
+    fd.append('file', state.docs[0].file, state.docs[0].file.name);
+    fd.append('edits', JSON.stringify(editListOf(state.docs[0])));
+    stackParts(fd);
     fetch(apiUrl('/site/blueprint-editor/export-qb'), { method: 'POST', body: fd })
       .then(function (res) {
         if (!res.ok) {
@@ -769,9 +1088,20 @@
       pick: 'Click a voxel to copy its colour and material into the settings below.',
       add: 'Click a face to put a new voxel against it, in the colour and material below.',
       erase: 'Click a voxel to delete it.',
+      move: 'Drag to slide this layer around. Right-drag still turns the view.',
     };
-    $('bpe-toolhint').textContent = hints[state.tool] || hints.paint;
-    var faded = state.tool === 'erase' || state.tool === 'pick';
+    var hint = hints[state.tool] || hints.paint;
+    // Which layer a click lands on is the thing to be unambiguous about once there is
+    // more than one model on screen.
+    if (state.docs.length > 1 && active()) {
+      hint += ' Working on ' + active().payload.name + '.';
+    }
+    if (state.tool === 'move' && active() === state.docs[0]) {
+      hint = 'The bottom layer is the frame everything else is placed against, so it '
+        + 'does not move. Pick a layer above it.';
+    }
+    $('bpe-toolhint').textContent = hint;
+    var faded = state.tool === 'erase' || state.tool === 'pick' || state.tool === 'move';
     ['bpe-paint-colour', 'bpe-paint-material'].forEach(function (id) {
       var el = $(id);
       if (el) el.classList.toggle('bpe-faded', faded);
@@ -781,7 +1111,7 @@
     if (modes) modes.classList.toggle('bpe-faded', state.tool !== 'paint');
     // Scope governs paint and erase; pick and add are always a single voxel.
     var scopes = $('bpe-scopes');
-    var single = state.tool === 'pick' || state.tool === 'add';
+    var single = state.tool === 'pick' || state.tool === 'add' || state.tool === 'move';
     if (scopes) scopes.classList.toggle('bpe-faded', single);
     var lbl = $('bpe-scope-label');
     if (lbl) lbl.classList.toggle('bpe-faded', single);
@@ -1032,6 +1362,7 @@
         document.querySelectorAll('[data-tool]').forEach(function (o) {
           o.setAttribute('aria-pressed', String(o.dataset.tool === state.tool));
         });
+        if (state.scene) state.scene.setDragMode(state.tool === 'move');
         renderToolHint();
       });
     });
@@ -1105,6 +1436,47 @@
     $('bpe-transforms').addEventListener('click', function (e) {
       var b = e.target.closest('.bpe-xform');
       if (b) runTransform(b.dataset.op);
+    });
+    var layerInput = $('bpe-layer-input');
+    $('bpe-layer-open').addEventListener('click', function () { layerInput.click(); });
+    layerInput.addEventListener('change', function () {
+      if (layerInput.files && layerInput.files[0]) addLayer(layerInput.files[0]);
+      layerInput.value = '';
+    });
+    $('bpe-flatten').addEventListener('click', flattenStack);
+    $('bpe-isolate').addEventListener('click', function () {
+      state.isolate = !state.isolate;
+      renderLayers();
+      drawStack();
+    });
+    $('bpe-layerlist').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-pick],button[data-vis],button[data-up],' +
+                               'button[data-down],button[data-drop]');
+      if (!b) return;
+      var ds = b.dataset;
+      if (ds.pick !== undefined) return setActive(+ds.pick);
+      if (ds.vis !== undefined) {
+        var d = doc(+ds.vis);
+        if (d) { d.visible = !d.visible; renderLayers(); drawStack(); }
+        return;
+      }
+      if (ds.up !== undefined) return reorderLayer(+ds.up, 1);
+      if (ds.down !== undefined) return reorderLayer(+ds.down, -1);
+      if (ds.drop !== undefined) return removeLayer(+ds.drop);
+    });
+    $('bpe-align').addEventListener('change', function (e) {
+      var d = active();
+      if (!d) return;
+      d.mode = e.target.value;
+      d.offset = [0, 0, 0];
+      renderLayers();
+      drawStack();
+    });
+    $('bpe-nudge').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-nudge]');
+      if (!b) return;
+      var v = b.dataset.nudge.split(',').map(Number);
+      nudgeActive(v[0], v[1], v[2]);
     });
     $('bpe-export-qb').addEventListener('click', exportQb);
 

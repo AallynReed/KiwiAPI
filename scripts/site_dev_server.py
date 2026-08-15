@@ -3556,7 +3556,22 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/site/blueprint-editor/check":
                 return self._send_json(bp_editor.check(
                     data, json.loads(fields.get("edits") or "[]"),
-                    fields.get("kind") or "other"))
+                    fields.get("kind") or "other",
+                    [d for nm, fn, d in files if nm == "layers"],
+                    json.loads(fields.get("stack") or "[]")))
+            if path == "/site/blueprint-editor/flatten":
+                out, summary = bp_editor.composite(
+                    data, json.loads(fields.get("edits") or "[]"),
+                    [d for nm, fn, d in files if nm == "layers"],
+                    json.loads(fields.get("stack") or "[]"))
+                self.send_response(200)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Length", str(len(out)))
+                self.send_header("X-Kiwi-Summary", json.dumps(summary))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(out)
+                return None
             if path == "/site/blueprint-editor/transform":
                 out, summary = bp_editor.transform(
                     data, json.loads(fields.get("edits") or "[]"),
@@ -3572,7 +3587,9 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/site/blueprint-editor/export-qb":
                 stem = name[:-len(".blueprint")] if name.lower().endswith(".blueprint") else name
                 archive, summary = bp_editor.export_qb(
-                    data, json.loads(fields.get("edits") or "[]"), stem=stem or "model")
+                    data, json.loads(fields.get("edits") or "[]"),
+                    [d for nm, fn, d in files if nm == "layers"],
+                    json.loads(fields.get("stack") or "[]"), stem=stem or "model")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/zip")
                 self.send_header("Content-Length", str(len(archive)))
@@ -3582,8 +3599,10 @@ class Handler(SimpleHTTPRequestHandler):
                 self.wfile.write(archive)
                 return None
             if path == "/site/blueprint-editor/save":
-                out, summary = bp_editor.apply_edits(
-                    data, json.loads(fields.get("edits") or "[]"))
+                out, summary = bp_editor.composite(
+                    data, json.loads(fields.get("edits") or "[]"),
+                    [d for nm, fn, d in files if nm == "layers"],
+                    json.loads(fields.get("stack") or "[]"))
                 self.send_response(200)
                 self.send_header("Content-Type", "application/octet-stream")
                 self.send_header("Content-Length", str(len(out)))

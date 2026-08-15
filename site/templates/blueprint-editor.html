@@ -79,6 +79,9 @@
                     <button type="button" data-tool="erase" aria-pressed="false">
                         <i class="fa-solid fa-eraser" aria-hidden="true"></i> <span data-i18n>Erase</span>
                     </button>
+                    <button type="button" data-tool="move" aria-pressed="false">
+                        <i class="fa-solid fa-up-down-left-right" aria-hidden="true"></i> <span data-i18n>Move</span>
+                    </button>
                 </div>
                 <p class="bpe-hint bpe-toolhint" id="bpe-toolhint" data-i18n>Click a voxel to paint it.</p>
 
@@ -172,6 +175,45 @@
                 <p class="bpe-hint" data-i18n>The attachment point and any placed objects turn with the model.</p>
                 <div class="bpe-chips bpe-xforms" id="bpe-transforms"></div>
 
+                <h3 data-i18n>Layers</h3>
+                <p class="bpe-hint" data-i18n>Each layer is its own blueprint. Pick one to edit it, drag it about with the Move tool, and reorder them — on download the top layer wins wherever two overlap.</p>
+                <ul class="bpe-layers" id="bpe-layerlist"></ul>
+                <div class="bpe-actions">
+                    <button type="button" class="bpe-btn" id="bpe-layer-open">
+                        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                        <span data-i18n>Add a layer</span>
+                    </button>
+                    <button type="button" class="bpe-btn" id="bpe-isolate" aria-pressed="false" disabled>
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                        <span data-i18n>Isolate</span>
+                    </button>
+                </div>
+                <div id="bpe-layerctl" hidden>
+                    <label class="sr-only" for="bpe-align" data-i18n>How should this layer line up?</label>
+                    <select id="bpe-align"></select>
+                    <div class="bpe-nudge" id="bpe-nudge">
+                        <span class="bpe-nudge-axis">X</span>
+                        <button type="button" class="bpe-xform" data-nudge="-1,0,0">&minus;</button>
+                        <span class="bpe-nudge-val" id="bpe-nudge-x">0</span>
+                        <button type="button" class="bpe-xform" data-nudge="1,0,0">+</button>
+                        <span class="bpe-nudge-axis">Y</span>
+                        <button type="button" class="bpe-xform" data-nudge="0,-1,0">&minus;</button>
+                        <span class="bpe-nudge-val" id="bpe-nudge-y">0</span>
+                        <button type="button" class="bpe-xform" data-nudge="0,1,0">+</button>
+                        <span class="bpe-nudge-axis">Z</span>
+                        <button type="button" class="bpe-xform" data-nudge="0,0,-1">&minus;</button>
+                        <span class="bpe-nudge-val" id="bpe-nudge-z">0</span>
+                        <button type="button" class="bpe-xform" data-nudge="0,0,1">+</button>
+                    </div>
+                </div>
+                <p class="bpe-hint" id="bpe-layerinfo"></p>
+                <div class="bpe-actions">
+                    <button type="button" class="bpe-btn" id="bpe-flatten" disabled>
+                        <i class="fa-solid fa-object-group" aria-hidden="true"></i>
+                        <span data-i18n>Flatten into one</span>
+                    </button>
+                </div>
+
                 <h3 data-i18n>Qubicle</h3>
                 <p class="bpe-hint" data-i18n>The four-file format Qubicle and MagicaVoxel use: the model plus its alpha, specular and type maps.</p>
                 <div class="bpe-actions">
@@ -197,6 +239,7 @@
 
     <input type="file" id="bpe-input" accept=".blueprint" hidden>
     <input type="file" id="bpe-qb-input" accept=".qb" multiple hidden>
+    <input type="file" id="bpe-layer-input" accept=".blueprint" hidden>
 
     {% include "partials/footer.html" %}
 

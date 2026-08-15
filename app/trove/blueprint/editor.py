@@ -13,6 +13,7 @@ encoder is handed the original ``(type, w)`` it decoded.
 from __future__ import annotations
 
 from app.trove.blueprint import codec, lint, materials, qb
+from app.trove.blueprint import merge as bp_merge
 from app.trove.blueprint import transform as bp_transform
 from app.trove.mods_hub import workshop as mods_workshop
 from app.trove.render.voxel import KIND_CODE, material_for
@@ -114,6 +115,8 @@ def inspect(raw: bytes, *, name: str = "blueprint") -> dict:
         "creation_types": list(lint.CREATION_TYPES),
         "transforms": [{"op": op, "label": bp_transform.OPERATION_LABELS[op]}
                        for op in bp_transform.OPERATIONS],
+        "align_modes": [{"mode": m, "label": bp_merge.ALIGN_LABELS[m]}
+                        for m in bp_merge.ALIGN_MODES],
         "x": xs, "y": ys, "z": zs, "rgb": rgb,
         "kind": kind, "level": level, "spec": spec,
         "type": types, "w": ws, "edit": editable, "paint": paintable,
@@ -264,14 +267,14 @@ def _reframe(voxels: list[dict], decoded: codec.DecodedBlueprint) -> tuple:
     return voxels, size, pos, offset, entity_blob
 
 
-def transform(raw: bytes, edits, ops) -> tuple[bytes, dict]:
+def transform(raw: bytes, edits, ops, layers=None, specs=None) -> tuple[bytes, dict]:
     """Rotate and/or mirror the edited model, returning a new blueprint.
 
     Edits are baked in first, so the result is one file the page can reopen - which it
     must, because a transform renumbers every voxel and the caller's edit indices stop
     meaning anything the moment the axes move. CPU-bound - call via
     ``asyncio.to_thread``."""
-    edited, _ = apply_edits(raw, edits)
+    edited, _ = composite(raw, edits, layers, specs)
     decoded = codec.decode_full(edited)
     before = decoded.size
     try:
@@ -291,13 +294,71 @@ def transform(raw: bytes, edits, ops) -> tuple[bytes, dict]:
     }
 
 
-def export_qb(raw: bytes, edits, *, stem: str = "model") -> tuple[bytes, dict]:
+MAX_LAYERS = 8
+
+
+def _layer_specs(specs, count: int):
+    """Validate the per-layer placement list that rides alongside the layer files."""
+    if not isinstance(specs, list) or len(specs) != count:
+        raise EditorError("The layer list didn't match the files that arrived.")
+    if count > MAX_LAYERS:
+        raise EditorError(f"That's more than {MAX_LAYERS} layers in one stack.")
+    out = []
+    for spec in specs:
+        if not isinstance(spec, dict):
+            raise EditorError("A layer's placement wasn't understood.")
+        mode = str(spec.get("mode") or "attachment")
+        try:
+            off = tuple(int(v) for v in (spec.get("offset") or (0, 0, 0)))
+        except (TypeError, ValueError):
+            raise EditorError("A layer has an invalid offset.") from None
+        if len(off) != 3 or any(abs(v) > COORD_LIMIT for v in off):
+            raise EditorError("A layer has an invalid offset.")
+        # Every layer is a blueprint in its own right, so every layer can have been
+        # painted on - its edits ride along with its placement.
+        out.append((mode, off, spec.get("edits") or []))
+    return out
+
+
+def composite(raw: bytes, edits, layers: list[bytes] | None = None,
+              specs=None) -> tuple[bytes, dict]:
+    """The model as it would be OUTPUT: edits applied, then the layer stack flattened.
+
+    This is the one place a stack turns into a single blueprint, and every output path
+    goes through it - download, the Trove Creations checks, the ``.qb`` export. Layering
+    is non-destructive right up to here: a layer hides what is under it rather than
+    replacing it, so moving it back off brings the covered voxels straight back, and
+    only at this point does the stacking order decide which voxel wins a shared cell.
+
+    With no layers this is exactly ``apply_edits``, byte-identical output included.
+    CPU-bound - call via ``asyncio.to_thread``."""
+    edited, summary = apply_edits(raw, edits)
+    if not layers:
+        return edited, {**summary, "layers": 0}
+    placements = _layer_specs(specs if specs is not None else [], len(layers))
+    try:
+        base = codec.decode_full(edited)
+        stack = []
+        for data, (mode, off, layer_edits) in zip(layers, placements, strict=True):
+            painted, _ = apply_edits(data, layer_edits) if layer_edits else (data, None)
+            stack.append((_decode_or_raise(painted), mode, off))
+        merged, msum = bp_merge.flatten(base, stack)
+        data = codec.encode(merged.voxels, version=merged.version, pos=merged.pos,
+                            entity_blob=merged.entity_blob, offset=merged.offset,
+                            size=merged.size)
+    except (bp_merge.MergeError, codec.BlueprintError) as exc:
+        raise EditorError(str(exc)) from exc
+    return data, {**summary, **msum}
+
+
+def export_qb(raw: bytes, edits, layers=None, specs=None, *,
+              stem: str = "model") -> tuple[bytes, dict]:
     """Export the edited model as the four authoring ``.qb`` files, zipped.
 
     Edits are applied first, for the same reason ``check`` applies them: the export is
     of the model as it stands, not as it was opened. CPU-bound - call via
     ``asyncio.to_thread``."""
-    edited, _ = apply_edits(raw, edits)
+    edited, _ = composite(raw, edits, layers, specs)
     try:
         built = qb.from_blueprint(codec.decode_full(edited), stem=stem)
     except (qb.QbError, codec.BlueprintError) as exc:
@@ -320,13 +381,13 @@ def import_qb(files: dict[str, bytes]) -> tuple[bytes, dict]:
         raise EditorError(str(exc)) from exc
 
 
-def check(raw: bytes, edits, kind: str = "other") -> dict:
+def check(raw: bytes, edits, kind: str = "other", layers=None, specs=None) -> dict:
     """Run the Trove Creations checks against the model *as it would be saved*.
 
     Edits are applied first on purpose: linting the file that arrived would grade work
     the user has already moved on from, and the question they're asking is "is what I'm
     about to download acceptable". CPU-bound - call via ``asyncio.to_thread``."""
-    edited, _ = apply_edits(raw, edits)
+    edited, _ = composite(raw, edits, layers, specs)
     return lint.check(codec.decode_full(edited), kind)
 
 

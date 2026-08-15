@@ -3578,6 +3578,64 @@ async def site_blueprint_editor_inspect(
     return JSONResponse(payload, headers={"Cache-Control": "no-store"})
 
 
+async def _bp_stack(layers, stack) -> tuple[list[bytes], list]:
+    """The layer files plus their placements, as posted alongside a base blueprint.
+
+    Layering stays non-destructive while editing: a layer hides what is under it rather
+    than replacing it. Every OUTPUT path takes the stack so that the flattening - and
+    therefore which voxel wins a shared cell - happens once, at output, in
+    ``editor.composite``."""
+    data = [await part.read() for part in (layers or []) if part and part.filename]
+    if not data:
+        return [], []
+    try:
+        specs = json.loads(stack or "[]")
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "The layer list wasn't understood.") from None
+    if not isinstance(specs, list):
+        raise APIError(400, ErrorCode.bad_request, "The layer list wasn't understood.")
+    return data, specs
+
+
+@router.post("/site/blueprint-editor/flatten", response_class=Response)
+async def site_blueprint_editor_flatten(
+    file: UploadFile = File(...),
+    layers: list[UploadFile] = File(default=[]),
+    edits: str = Form(default="[]"),
+    stack: str = Form(default="[]"),
+    _limit: None = _BP_EDITOR_LIMIT,
+) -> Response:
+    """Collapse the layer stack into the base and hand back the single blueprint.
+
+    The same resolution ``save`` does, offered on its own so a stack can be turned into
+    one model and carried on with - painting across a seam needs the seam to exist.
+
+    ``layers`` are the stacked blueprints bottom to top; ``stack`` is a JSON array of
+    ``{"mode": "attachment"|"centre"|"corner", "offset": [x, y, z]}`` aligned with them.
+    A cell claimed by more than one model goes to the highest layer that has it."""
+    data = await file.read()
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "That file is empty.")
+    parts, specs = await _bp_stack(layers, stack)
+    if not parts:
+        raise APIError(400, ErrorCode.bad_request, "There are no layers to flatten.")
+    try:
+        parsed = json.loads(edits or "[]")
+    except ValueError:
+        raise APIError(400, ErrorCode.bad_request, "The edit list wasn't understood.") from None
+    try:
+        out, summary = await asyncio.to_thread(
+            bp_editor.composite, data, parsed, parts, specs)
+    except bp_editor.EditorError as e:
+        raise _blueprint_editor_error(e) from e
+    return Response(
+        content=out,
+        media_type="application/octet-stream",
+        headers={"Cache-Control": "no-store", "X-Kiwi-Summary": json.dumps(summary)},
+    )
+
+
 @router.post("/site/blueprint-editor/transform", response_class=Response)
 async def site_blueprint_editor_transform(
     file: UploadFile = File(...),
@@ -3623,7 +3681,9 @@ async def site_blueprint_editor_transform(
 @router.post("/site/blueprint-editor/export-qb", response_class=Response)
 async def site_blueprint_editor_export_qb(
     file: UploadFile = File(...),
+    layers: list[UploadFile] = File(default=[]),
     edits: str = Form(default="[]"),
+    stack: str = Form(default="[]"),
     _limit: None = _BP_EDITOR_LIMIT,
 ) -> Response:
     """Export the model as Trove's four authoring ``.qb`` files, zipped.
@@ -3650,8 +3710,9 @@ async def site_blueprint_editor_export_qb(
         stem = stem[: -len(".blueprint")]
     stem = re.sub(r"[^A-Za-z0-9._-]", "_", stem) or "model"
     try:
+        parts, specs = await _bp_stack(layers, stack)
         archive, summary = await asyncio.to_thread(
-            bp_editor.export_qb, data, parsed, stem=stem)
+            bp_editor.export_qb, data, parsed, parts, specs, stem=stem)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     return Response(
@@ -3708,7 +3769,9 @@ async def site_blueprint_editor_import_qb(
 @router.post("/site/blueprint-editor/check", response_class=JSONResponse)
 async def site_blueprint_editor_check(
     file: UploadFile = File(...),
+    layers: list[UploadFile] = File(default=[]),
     edits: str = Form(default="[]"),
+    stack: str = Form(default="[]"),
     kind: str = Form(default="other"),
     _limit: None = _BP_EDITOR_LIMIT,
 ) -> JSONResponse:
@@ -3732,7 +3795,8 @@ async def site_blueprint_editor_check(
         raise APIError(400, ErrorCode.bad_request,
                        "The edit list wasn't understood.") from None
     try:
-        report = await asyncio.to_thread(bp_editor.check, data, parsed, kind)
+        parts, specs = await _bp_stack(layers, stack)
+        report = await asyncio.to_thread(bp_editor.check, data, parsed, kind, parts, specs)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     return JSONResponse(report, headers={"Cache-Control": "no-store"})
@@ -3741,7 +3805,9 @@ async def site_blueprint_editor_check(
 @router.post("/site/blueprint-editor/save", response_class=Response)
 async def site_blueprint_editor_save(
     file: UploadFile = File(...),
+    layers: list[UploadFile] = File(default=[]),
     edits: str = Form(default="[]"),
+    stack: str = Form(default="[]"),
     _limit: None = _BP_EDITOR_LIMIT,
 ) -> Response:
     """Apply the page's edits to the posted ``.blueprint`` and hand the result back.
@@ -3760,8 +3826,10 @@ async def site_blueprint_editor_save(
     except ValueError:
         raise APIError(400, ErrorCode.bad_request,
                        "The edit list wasn't understood.") from None
+    parts, specs = await _bp_stack(layers, stack)
     try:
-        out, summary = await asyncio.to_thread(bp_editor.apply_edits, data, parsed)
+        out, summary = await asyncio.to_thread(
+            bp_editor.composite, data, parsed, parts, specs)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     name = (file.filename or "blueprint.blueprint").rsplit("/", 1)[-1]

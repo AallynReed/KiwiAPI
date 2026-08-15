@@ -23,8 +23,6 @@ clockwise looking down the named axis; apply one twice for 180.
 """
 from __future__ import annotations
 
-import struct
-
 from app.trove.blueprint import codec
 
 OPERATIONS = ("rotate_x", "rotate_y", "rotate_z", "mirror_x", "mirror_y", "mirror_z")
@@ -61,39 +59,19 @@ def _mapper(op: str, size: tuple[int, int, int]):
 
 
 def _rewrite_entities(blob: bytes, point) -> bytes:
-    """Move every placed entity by ``point``, keeping its sub-message verbatim.
-
-    The sub-message holds the prefab path and whatever else the engine wrote; only the
-    coordinates in front of it are ours to touch."""
+    """Move every placed entity by ``point``, keeping its sub-message verbatim."""
     if len(blob) < 4:
         return blob
-    count = struct.unpack_from("<I", blob, 0)[0]
-    if count == 0:
-        return blob
-    out = bytearray(struct.pack("<I", count))
-    i = 4
-    try:
-        for _ in range(count):
-            x, i = codec.read_svarint(blob, i)
-            y, i = codec.read_svarint(blob, i)
-            z, i = codec.read_svarint(blob, i)
-            sublen, i = codec.read_uleb128(blob, i)
-            if i + sublen > len(blob):
-                raise codec.BlueprintError("entity sub-message runs past the section")
-            sub = blob[i:i + sublen]
-            i += sublen
-            nx, ny, nz = point(x, y, z)
-            out += codec.write_svarint(nx)
-            out += codec.write_svarint(ny)
-            out += codec.write_svarint(nz)
-            out += codec.write_uleb128(sublen)
-            out += sub
-    except codec.BlueprintError as exc:
+    read = codec.read_entity_records(blob)
+    if read is None:
         raise TransformError(
             "This model has placed objects whose data can't be read, so it can't be "
-            "turned without leaving them behind.") from exc
-    out += blob[i:]        # anything after the records travels along untouched
-    return bytes(out)
+            "moved without leaving them behind.")
+    records, tail = read
+    if not records:
+        return blob
+    return codec.write_entity_records(
+        [(*point(x, y, z), sub) for (x, y, z, sub) in records], tail)
 
 
 def translate_entities(blob: bytes, shift: tuple[int, int, int]) -> bytes:
