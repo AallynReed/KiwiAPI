@@ -91,12 +91,34 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
   align-items: start;
 }
 
-/* A model's panel grows with the model - twenty parts, every material it uses - and
-   scrolling those must not take the thing being edited off screen. The stage sticks
-   under the navbar while the panels run past it. Wide layouts only: stacked, the stage
-   is already first and there is nothing beside it to scroll. */
+/* THE WHOLE WORKSPACE STAYS ON SCREEN. A model's panel grows with the model - twenty
+   parts, every material it uses - and scrolling to reach the bottom of one must not take
+   the model, or the other panel, away with it.
+
+   So all three columns stick under the navbar, and a panel taller than the screen
+   SCROLLS INSIDE ITSELF rather than pushing the page. That is the part a plain
+   `position: sticky` cannot do: a sticky element taller than the viewport just parks its
+   top and hides its own bottom for ever. Each panel gets the height that is actually
+   available and its own scrollbar, so the page barely scrolls at all and everything is
+   reachable without anything leaving.
+
+   Wide layouts only: stacked, the stage is already first and there is nothing beside it
+   to scroll past. `--bpe-top` is the navbar plus a hairline of breathing room. */
 @media (min-width: 1181px) {
-  .bpe-stagecard { position: sticky; top: 76px; }
+  .bpe-workspace { --bpe-top: 76px; }
+  .bpe-stagecard,
+  .bpe-workspace > .bpe-panel {
+    position: sticky;
+    top: var(--bpe-top);
+  }
+  .bpe-workspace > .bpe-panel {
+    max-height: calc(100vh - var(--bpe-top) - 16px);
+    overflow-y: auto;
+    overscroll-behavior: contain;      /* reaching the end doesn't start scrolling the page */
+    scrollbar-width: thin;
+  }
+  /* Breathing room for the scrollbar so a chip never sits under it. */
+  .bpe-workspace > .bpe-panel { padding-right: 12px; }
 }
 
 /* Two columns first: the model keeps a usable width while the two panels sit side by
