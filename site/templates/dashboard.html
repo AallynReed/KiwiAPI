@@ -139,9 +139,9 @@
                             <h2 class="dash-card-title" data-i18n>Create a mod</h2>
                             <form id="dash-mod-create" class="dash-mod-form">
                                 <input type="text" name="title" maxlength="120" required data-i18n-placeholder placeholder="Mod title">
-                                <select name="mode" id="dash-mod-mode" aria-label="Mode">
-                                    <option value="files" data-i18n>Files + releases</option>
+                                <select name="mode" id="dash-mod-mode" aria-label="Mode" aria-describedby="dash-mod-mode-hint">
                                     <option value="releases" data-i18n>Releases only</option>
+                                    <option value="files" data-i18n>Files + releases</option>
                                 </select>
                                 <select name="visibility" aria-label="Visibility">
                                     <option value="draft" data-i18n>Draft</option>
@@ -153,6 +153,7 @@
                                     <span data-i18n>This mod was made by someone else</span>
                                 </label>
                                 <input type="text" name="credited_author" id="dash-mod-credited" maxlength="120" style="flex:1 1 100%" hidden data-i18n-placeholder placeholder="Creator's name">
+                                <p class="dash-hint" id="dash-mod-mode-hint" style="flex:1 1 100%;margin:0"></p>
                                 <button type="submit" class="dash-btn"><i class="fa-solid fa-plus" aria-hidden="true"></i> <span data-i18n>Create</span></button>
                             </form>
                             <p class="dash-hint" data-i18n>Your mod link uses your username (/mods/&lt;you&gt;/&lt;slug&gt;); renaming your Discord changes your mod links.</p>
