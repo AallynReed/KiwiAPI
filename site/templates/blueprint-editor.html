@@ -113,6 +113,23 @@
                 </div>
                 <p class="bpe-hint bpe-toolhint" id="bpe-toolhint" data-i18n>Click a voxel to paint it.</p>
 
+                <div id="bpe-anim" hidden>
+                    <h3 data-i18n>Watch it move</h3>
+                    <p class="bpe-hint" data-i18n>Play the creature's own animations to see where the parts actually go. Editing is off while it plays.</p>
+                    <button type="button" class="bpe-btn" id="bpe-anim-mode" aria-pressed="false">
+                        <i class="fa-solid fa-play" aria-hidden="true"></i>
+                        <span data-i18n>Preview animations</span>
+                    </button>
+                    <div id="bpe-anim-controls" hidden>
+                        <label class="sr-only" for="bpe-anim-clip" data-i18n>Animation</label>
+                        <select id="bpe-anim-clip"></select>
+                        <button type="button" class="bpe-btn" id="bpe-anim-stop" disabled>
+                            <i class="fa-solid fa-stop" aria-hidden="true"></i>
+                            <span data-i18n>Stop</span>
+                        </button>
+                    </div>
+                </div>
+
                 <h3 id="bpe-paint-colour" data-i18n>Colour</h3>
                 <div class="bpe-colourrow">
                     <input type="color" id="bpe-colour" value="#ff6b6b" aria-label="Paint colour">
@@ -152,6 +169,10 @@
                 <div class="bpe-stagebar">
                     <strong id="bpe-filename">blueprint</strong>
                     <span class="bpe-metaline" id="bpe-meta"></span>
+                    <button type="button" class="bpe-btn bpe-backfull" id="bpe-backfull" hidden>
+                        <i class="fa-solid fa-arrow-left-long" aria-hidden="true"></i>
+                        <span data-i18n>Show the whole model</span>
+                    </button>
                 </div>
                 <div class="bpe-stage" id="bpe-stage">
                     <!-- Readout overlays the model rather than sitting in a bar. It

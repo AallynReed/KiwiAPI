@@ -25,7 +25,8 @@ from __future__ import annotations
 import base64
 
 from app.trove import tmod
-from app.trove.blueprint import editor
+from app.trove.blueprint import codec, editor
+from app.trove.blueprint import transform as bp_transform
 from app.trove.mods_hub import assembly
 from app.trove.mods_hub import workshop as mods_workshop
 
@@ -161,11 +162,16 @@ def rig_payload(rig_name: str) -> dict | None:
         "voxel_scale": pose["voxel_scale"],
         "rest": pose["rest"],
         "scales": {ap: assembly.scale_for(ap, rig_name) for ap in pose["rest"]},
+        # Names + frame counts only. A clip is fetched from /site/rigs/<rig>/anim/<name>
+        # when it is played, the same way the model viewer does it - a rig ships up to
+        # 80 of them and the payload is already the heaviest thing this page asks for.
+        "animations": assembly.animations_for(rig_name),
     }
 
 
 def apply_project(files: list[tuple[str, bytes]], edits: dict[str, list],
                   extra: list[tuple[str, bytes]] | None = None,
+                  moves: dict[str, list] | None = None,
                   ) -> tuple[list[tuple[str, bytes]], dict]:
     """Write each part's edits back into the mod's file list.
 
@@ -173,6 +179,9 @@ def apply_project(files: list[tuple[str, bytes]], edits: dict[str, list],
     ``extra`` is parts that weren't in the mod when it was opened - a blueprint dropped
     onto an open model - each at the path it should be packed at; one whose path is
     already taken replaces that file, which is how you swap a part out for a new one.
+    ``moves`` is ``{path: [dx, dy, dz]}``, the part slid along its bone - applied AFTER
+    its edits, because adding a voxel past an edge can refit the box and recompute the
+    origin, and the move is relative to wherever the part ends up sitting.
 
     Everything else in the archive is carried through byte for byte, so a mod comes out
     of the editor with its config, preview and textures exactly as they went in.
@@ -183,8 +192,9 @@ def apply_project(files: list[tuple[str, bytes]], edits: dict[str, list],
     merged: list[tuple[str, bytes]] = [(p, incoming.pop(p, d)) for p, d in files]
     merged += list(incoming.items())
 
+    moves = {k: v for k, v in (moves or {}).items() if tuple(v or ()) != (0, 0, 0)}
     known = {p for p, _ in merged}
-    unknown = [p for p in edits if p not in known]
+    unknown = [p for p in list(edits) + list(moves) if p not in known]
     if unknown:
         raise editor.EditorError(
             f"'{unknown[0]}' isn't a file in that mod - reopen the model and try again.")
@@ -193,19 +203,44 @@ def apply_project(files: list[tuple[str, bytes]], edits: dict[str, list],
             f"That's more than the {MAX_PARTS} parts a project holds.")
 
     out: list[tuple[str, bytes]] = []
-    summary = {"parts": 0, "added_parts": len(incoming), "recoloured": 0,
-               "rematerialised": 0, "added": 0, "erased": 0, "ignored": 0}
+    summary = {"parts": 0, "added_parts": len(incoming), "moved": len(moves),
+               "recoloured": 0, "rematerialised": 0, "added": 0, "erased": 0,
+               "ignored": 0}
     for path, raw in merged:
-        entries = edits.get(path)
-        if not entries:
+        entries, delta = edits.get(path), moves.get(path)
+        if not entries and not delta:
             out.append((path, raw))
             continue
-        data, part_summary = editor.apply_edits(raw, entries)
+        data = raw
+        if entries:
+            data, part_summary = editor.apply_edits(raw, entries)
+            for key in ("recoloured", "rematerialised", "added", "erased", "ignored"):
+                summary[key] += part_summary[key]
+        if delta:
+            data = _moved(data, delta)
         out.append((path, data))
         summary["parts"] += 1
-        for key in ("recoloured", "rematerialised", "added", "erased", "ignored"):
-            summary[key] += part_summary[key]
     return out, summary
+
+
+def _moved(raw: bytes, delta) -> bytes:
+    """One part slid along its bone, re-encoded. See ``transform.move_on_rig`` - it is
+    the origin that moves, so the voxels come back out of the encoder untouched."""
+    try:
+        moved = bp_transform.move_on_rig(codec.decode_full(raw), _delta(delta))
+        return codec.encode(moved.voxels, version=moved.version, pos=moved.pos,
+                            entity_blob=moved.entity_blob, offset=moved.offset,
+                            size=moved.size)
+    except (bp_transform.TransformError, codec.BlueprintError) as exc:
+        raise editor.EditorError(str(exc)) from exc
+
+
+def _delta(value) -> tuple[int, int, int]:
+    try:
+        dx, dy, dz = (int(v) for v in value)
+    except (TypeError, ValueError):
+        raise editor.EditorError("A part's move wasn't understood.") from None
+    return dx, dy, dz
 
 
 BLUEPRINT_DIR = "blueprints/"

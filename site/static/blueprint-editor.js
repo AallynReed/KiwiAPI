@@ -45,6 +45,8 @@
     project: null,       // a whole model open at once: the archive + its rig
     ask: -1,             // a part just added that nobody has placed yet
     drawn: {},           // doc id -> its geometry is currently in the scene as a layer
+    moveAccum: [0, 0, 0],   // sub-voxel remainder of a part drag
+    anim: { on: false, clip: null, data: null, raf: 0 },   // animation preview
     isolate: false,      // show only the layer being edited
     stroke: null,        // in-progress drag-edit: one batch, one undo entry
     strokeNormal: null,  // the face an 'add' stroke started on
@@ -155,6 +157,9 @@
       onPick: onPick,
       onHover: onHover,
       onDrag: function (dx, dy, dz) { nudgeActive(dx, dy, dz); },
+      // A part is moved in ITS OWN frame, which the bone has rotated, so the editor
+      // takes the raw world-space drag and quantises it there (see dragPart).
+      onDragWorld: inProject() ? dragPart : null,
       onStroke: onStroke,
     }).then(function (scene) {
       state.scene = scene;
@@ -459,7 +464,7 @@
   }
 
   function onPick(hit, ev) {
-    if (!hit || !state.data) return;
+    if (!hit || !state.data || state.anim.on) return;
     var i = state.index.get(hit.x + ',' + hit.y + ',' + hit.z);
     if (i === undefined) return;
     var batch = [], refused = 0;
@@ -531,6 +536,7 @@
   function onHover(hit) {
     var el = $('bpe-hover');
     if (!el) return;
+    if (state.anim.on) { el.hidden = true; return; }
     var i = (hit && state.data)
       ? state.index.get(hit.x + ',' + hit.y + ',' + hit.z)
       : undefined;
@@ -821,11 +827,13 @@
       mode: 'attachment',
       offset: [0, 0, 0],
       visible: true,
-      // Model projects: where this part lives in the mod, which bone it hangs off, and
-      // where it sits in the row when it hangs off none.
+      // Model projects: where this part lives in the mod, which bone it hangs off, how
+      // far it has been slid along that bone, and where it sits in the row when it
+      // hangs off no bone at all.
       path: '',
       ap: null,
       added: false,
+      move: [0, 0, 0],
       row: [0, 0, 0],
     };
     return Object.assign(d, extra || {});
@@ -941,7 +949,11 @@
 
   function nudgeActive(dx, dy, dz) {
     var d = active();
-    if (!d || d === anchorDoc()) return;
+    if (!d) return;
+    // In a model the same buttons slide the part along its bone instead of moving a
+    // layer around a shared grid - a different thing to store, the same gesture.
+    if (inProject()) return movePart(d, [dx, dy, dz]);
+    if (d === anchorDoc()) return;
     d.offset = [d.offset[0] + dx, d.offset[1] + dy, d.offset[2] + dz];
     renderLayers();
     drawStack();
@@ -967,12 +979,14 @@
               + esc(k.replace(/_/g, ' ')) + '</option>';
           }).join('')
         + '</select>';
+      var moved = d.move[0] || d.move[1] || d.move[2];
       return '<li class="bpe-partrow' + (i === state.active ? ' active' : '')
         + (asking ? ' asking' : '') + (placed ? '' : ' unplaced') + '">'
         + '<button type="button" class="bpe-layerpick" data-pick="' + i + '">'
         + '<strong>' + esc(d.payload.name) + '</strong><span>'
         + liveCountOf(d).toLocaleString() + ' voxels'
-        + (d.added ? ' · added' : '') + '</span></button>'
+        + (d.added ? ' · added' : '')
+        + (moved ? ' · moved ' + d.move.join(', ') : '') + '</span></button>'
         + '<button type="button" class="bpe-layerbtn" data-vis="' + i
         + '" aria-label="Show or hide" aria-pressed="' + (!d.visible)
         + '"><i class="fa-solid fa-eye' + (d.visible ? '' : '-slash')
@@ -987,7 +1001,13 @@
     $('bpe-isolate').disabled = state.docs.length < 2;
     $('bpe-isolate').setAttribute('aria-pressed', String(!!state.isolate));
     $('bpe-flatten').disabled = true;
-    $('bpe-layerctl').hidden = true;
+    // The nudge buttons stay - they slide the part along its bone here - but there is
+    // nothing to align against, so the alignment picker goes.
+    var a = active();
+    $('bpe-layerctl').hidden = false;
+    $('bpe-align').closest('#bpe-layerctl').classList.add('bpe-noalign');
+    if (a) renderMoveNudge(a);
+    $('bpe-backfull').hidden = !state.isolate;
 
     var unplaced = state.docs.filter(function (d) {
       return !(r && d.ap && r.rest[d.ap]);
@@ -1090,6 +1110,13 @@
   function renderNudge(d) {
     ['x', 'y', 'z'].forEach(function (a, i) {
       var v = d.offset[i];
+      $('bpe-nudge-' + a).textContent = (v > 0 ? '+' : '') + v;
+    });
+  }
+
+  function renderMoveNudge(d) {
+    ['x', 'y', 'z'].forEach(function (a, i) {
+      var v = d.move[i];
       $('bpe-nudge-' + a).textContent = (v > 0 ? '+' : '') + v;
     });
   }
@@ -1238,17 +1265,7 @@
       : 'Each layer is its own blueprint. Pick one to edit it, drag it about with the '
         + 'Move tool, and reorder them — on download the top layer wins wherever two '
         + 'overlap.');
-    // Nothing to drag when a bone decides where a part sits.
-    var move = document.querySelector('[data-tool="move"]');
-    if (move) {
-      move.disabled = on;
-      if (on && state.tool === 'move') {
-        state.tool = 'paint';
-        document.querySelectorAll('[data-tool]').forEach(function (o) {
-          o.setAttribute('aria-pressed', String(o.dataset.tool === 'paint'));
-        });
-      }
-    }
+    renderAnim();
   }
 
   function inProject() { return !!state.project; }
@@ -1282,31 +1299,63 @@
             m[2]*x + m[6]*y + m[10]*z + m[14]];
   }
 
+  /* THE FRAME CHANGE, and it is not optional: the editor and the rig read the same file
+     in two different spaces.
+
+     A blueprint decodes to box-local coordinates with X MIRRORED (Qubicle's convention,
+     which is what every tool on this page edits in), while the assembled-creature
+     pipeline reads it un-mirrored and adds the model's ORIGIN - the v5 header's `pos`,
+     or for v3/v4 the corner its absolute coordinates are written around. So:
+
+         rig = (origin.x + size.x - 1 - x,  origin.y + y,  origin.z + z)
+
+     Skip it and every part lands mirrored and offset by its own origin, which looks
+     exactly like a creature that has come apart at the joints. `origin` arrives with
+     each part's payload; the same arithmetic covers both versions.
+
+     `move` rides in the same place, because sliding a part along its bone IS a change of
+     origin - see `transform.move_on_rig`, which is what the server does on save. */
+  function frameOf(d) {
+    var o = d.payload.origin || [0, 0, 0];
+    var m = d.move;
+    return [-1,0,0,0, 0,1,0,0, 0,0,1,0,
+            o[0] + d.payload.size[0] - 1 + m[0], o[1] + m[1], o[2] + m[2], 1];
+  }
+
+  function placedOn(d) {
+    var r = rig();
+    return !!(r && d.ap && r.rest[d.ap]);
+  }
+
   /* Where a part sits. On its bone if it has one - the rig's rest matrix times the voxel
      size, which is what the 3D viewers do with the same numbers - and otherwise in the
      row `layoutUnplaced` works out, off to one side of the model. */
-  function matrixFor(d) {
+  function placeMatrix(d) {
     var r = rig();
     var vs = r ? r.voxel_scale : 1;
-    if (r && d.ap && r.rest[d.ap]) {
-      return matMul(r.rest[d.ap], matScale(vs * (r.scales[d.ap] || 1)));
-    }
-    return matMul(matTrans(d.row[0], d.row[1], d.row[2]), matScale(vs));
+    return placedOn(d)
+      ? matMul(r.rest[d.ap], matScale(vs * (r.scales[d.ap] || 1)))
+      : matMul(matTrans(d.row[0], d.row[1], d.row[2]), matScale(vs));
   }
+
+  function matrixFor(d) { return matMul(placeMatrix(d), frameOf(d)); }
+
+  var BOX_CORNERS = [[0,0,0],[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1],[1,1,1]];
 
   /* Unplaced parts go in a row beside the model rather than all at the origin on top of
      each other. Measured off whatever IS placed, so the row clears the creature however
-     big it is, and each part gets its own width of space. */
+     big it is, and each part gets its own width of space. Each one's own origin is
+     subtracted back out, so the row lines up on the models rather than on wherever their
+     bones would have put them. */
   function layoutUnplaced() {
     var r = rig();
     var vs = r ? r.voxel_scale : 1;
     var lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
     state.docs.forEach(function (d) {
-      if (!(r && d.ap && r.rest[d.ap])) return;
+      if (!placedOn(d)) return;
       var m = matrixFor(d), s = d.payload.size;
-      [[0,0,0],[s[0],0,0],[0,s[1],0],[0,0,s[2]],[s[0],s[1],0],[s[0],0,s[2]],
-       [0,s[1],s[2]],[s[0],s[1],s[2]]].forEach(function (c) {
-        var p = matPoint(m, c[0], c[1], c[2]);
+      BOX_CORNERS.forEach(function (c) {
+        var p = matPoint(m, c[0] * (s[0] - 1), c[1] * (s[1] - 1), c[2] * (s[2] - 1));
         for (var i = 0; i < 3; i++) {
           if (p[i] < lo[i]) lo[i] = p[i];
           if (p[i] > hi[i]) hi[i] = p[i];
@@ -1314,16 +1363,68 @@
       });
     });
     var placed = isFinite(lo[0]);
-    var gap = placed ? (hi[0] - lo[0]) * 0.12 + vs * 2 : vs * 2;
+    var gap = (placed ? (hi[0] - lo[0]) * 0.12 : 0) + vs * 2;
     var x = placed ? hi[0] + gap : 0;
     var y = placed ? lo[1] : 0;
     var z = placed ? (lo[2] + hi[2]) / 2 : 0;
     state.docs.forEach(function (d) {
-      if (r && d.ap && r.rest[d.ap]) { d.row = [0, 0, 0]; return; }
-      var s = d.payload.size;
-      d.row = [x / vs, y / vs, (z - s[2] * vs / 2) / vs];   // row is in the part's own units
+      if (placedOn(d)) { d.row = [0, 0, 0]; return; }
+      var s = d.payload.size, o = d.payload.origin || [0, 0, 0];
+      d.row = [x - o[0] * vs, y - o[1] * vs, z - (s[2] * vs) / 2 - o[2] * vs];
       x += s[0] * vs + gap;
     });
+  }
+
+  /* ---- moving a part along its bone ------------------------------------------
+     The drag arrives in WORLD space and the move has to be whole voxels in the part's
+     own frame, which is rotated (and mirrored) by whatever bone it hangs off. So the
+     world delta is pushed back through the part's own basis, accumulated, and handed
+     over a voxel at a time - the leftover fraction is kept, so a slow drag still moves
+     smoothly instead of sticking. */
+
+  /* The basis a MOVE lives in - the placement alone, without the frame change.
+     `move` is added to the origin, which is a translation applied after the mirror, so
+     the mirror does not act on it: including it would make a part slide left when the
+     cursor went right, and would write the opposite sign into the file. */
+  function basisOf(d) {
+    var m = placeMatrix(d);
+    return [m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10]];
+  }
+
+  function invert3(a) {
+    var c0 = a[4]*a[8] - a[5]*a[7], c1 = a[5]*a[6] - a[3]*a[8], c2 = a[3]*a[7] - a[4]*a[6];
+    var det = a[0]*c0 + a[1]*c1 + a[2]*c2;
+    if (!det) return null;
+    var i = 1 / det;
+    return [c0*i, (a[2]*a[7] - a[1]*a[8])*i, (a[1]*a[5] - a[2]*a[4])*i,
+            c1*i, (a[0]*a[8] - a[2]*a[6])*i, (a[2]*a[3] - a[0]*a[5])*i,
+            c2*i, (a[1]*a[6] - a[0]*a[7])*i, (a[0]*a[4] - a[1]*a[3])*i];
+  }
+
+  function mul3(m, v) {
+    return [m[0]*v[0] + m[3]*v[1] + m[6]*v[2],
+            m[1]*v[0] + m[4]*v[1] + m[7]*v[2],
+            m[2]*v[0] + m[5]*v[1] + m[8]*v[2]];
+  }
+
+  function dragPart(wx, wy, wz) {
+    var d = active();
+    if (!d) return;
+    var inv = invert3(basisOf(d));
+    if (!inv) return;
+    var l = mul3(inv, [wx, wy, wz]);
+    var acc = state.moveAccum;
+    acc[0] += l[0]; acc[1] += l[1]; acc[2] += l[2];
+    var step = [Math.round(acc[0]), Math.round(acc[1]), Math.round(acc[2])];
+    if (!step[0] && !step[1] && !step[2]) return;
+    acc[0] -= step[0]; acc[1] -= step[1]; acc[2] -= step[2];
+    movePart(d, step);
+  }
+
+  function movePart(d, step) {
+    d.move = [d.move[0] + step[0], d.move[1] + step[1], d.move[2] + step[2]];
+    renderLayers();
+    drawStack();
   }
 
   /* Draw the model. Only the parts that CHANGED are re-meshed: switching to another
@@ -1354,6 +1455,165 @@
       }
       state.scene.setLayerMatrix(d.id, matrixFor(d));
     });
+  }
+
+  // ---- animation preview --------------------------------------------------- //
+
+  /* The rest pose is where you edit; it is not where the model LIVES. A horn that looks
+     right standing still can swing through the jaw the moment the creature opens its
+     mouth, and until now the only way to find that out was to build the mod and load the
+     game. So the editor plays the creature's own baked clips - the same TANIM1 binaries
+     the model viewer fetches, from the same endpoint.
+
+     Playing is a MODE, not an overlay: the tools go quiet, because a click landing on a
+     part halfway through a stride would edit a voxel at coordinates that mean nothing in
+     the pose you can see. */
+
+  /* One baked clip. Layout, little-endian:
+       8s  magic "TANIM1\0\0"
+       u32 ap_count, u32 frame_count, u32 fps, u32 name_blob_len
+       ..  name_blob: NUL-separated attach-point keys, padded to 4 bytes
+       ..  frame_count * ap_count * 7 float32: position xyz then quaternion xyzw
+     Ported from model_viewer.js, which reads the same bytes. */
+  function decodeAnim(buf) {
+    var dv = new DataView(buf);
+    var head = new Uint8Array(buf, 0, 6), magic = '';
+    for (var i = 0; i < 6; i++) magic += String.fromCharCode(head[i]);
+    if (magic !== 'TANIM1') throw new Error('That animation could not be read.');
+    var apCount = dv.getUint32(8, true), frameCount = dv.getUint32(12, true);
+    var fps = dv.getUint32(16, true), nb = dv.getUint32(20, true);
+    var raw = new Uint8Array(buf, 24, nb), s = '';
+    for (var j = 0; j < nb; j++) s += String.fromCharCode(raw[j]);
+    var apIndex = {};
+    s.split('\0').filter(Boolean).forEach(function (k, i2) { apIndex[k] = i2; });
+    return { fps: fps || 30, frameCount: frameCount, apCount: apCount, apIndex: apIndex,
+             data: new Float32Array(buf, 24 + nb, frameCount * apCount * 7) };
+  }
+
+  /* position + quaternion -> a column-major 4x4, the same composition three.js does. */
+  function compose(px, py, pz, x, y, z, w) {
+    var x2 = x + x, y2 = y + y, z2 = z + z;
+    var xx = x * x2, xy = x * y2, xz = x * z2;
+    var yy = y * y2, yz = y * z2, zz = z * z2;
+    var wx = w * x2, wy = w * y2, wz = w * z2;
+    return [1 - (yy + zz), xy + wz, xz - wy, 0,
+            xy - wz, 1 - (xx + zz), yz + wx, 0,
+            xz + wy, yz - wx, 1 - (xx + yy), 0,
+            px, py, pz, 1];
+  }
+
+  /* The pose of one attach point at a FRACTIONAL frame. Clips bake at the game's 30fps
+     and the screen runs faster, so neighbouring frames are blended rather than snapped
+     to - a lerp on position, and on rotation a normalised lerp with the sign corrected
+     (adjacent frames are close enough that it and a true slerp agree to the pixel). */
+  function samplePose(A, ai, f) {
+    var n = A.frameCount, f0 = Math.floor(f) % n, a = f - Math.floor(f), d = A.data;
+    var o = (f0 * A.apCount + ai) * 7;
+    var p = [d[o], d[o + 1], d[o + 2]];
+    var q = [d[o + 3], d[o + 4], d[o + 5], d[o + 6]];
+    if (a) {
+      var o2 = (((f0 + 1) % n) * A.apCount + ai) * 7;
+      var dot = q[0]*d[o2+3] + q[1]*d[o2+4] + q[2]*d[o2+5] + q[3]*d[o2+6];
+      var sgn = dot < 0 ? -1 : 1;
+      for (var i = 0; i < 3; i++) p[i] += (d[o2 + i] - p[i]) * a;
+      for (var k = 0; k < 4; k++) q[k] += (sgn * d[o2 + 3 + k] - q[k]) * a;
+      var len = Math.hypot(q[0], q[1], q[2], q[3]) || 1;
+      for (var j = 0; j < 4; j++) q[j] /= len;
+    }
+    return compose(p[0], p[1], p[2], q[0], q[1], q[2], q[3]);
+  }
+
+  function poseAt(A, f) {
+    var r = rig(), vs = r.voxel_scale;
+    state.docs.forEach(function (d, i) {
+      var ai = placedOn(d) ? A.apIndex[d.ap] : undefined;
+      // A part with no bone - or one this clip doesn't move - stays where it rests.
+      var m = ai === undefined
+        ? matrixFor(d)
+        : matMul(matMul(samplePose(A, ai, f),
+                        matScale(vs * (r.scales[d.ap] || 1))), frameOf(d));
+      if (i === state.active) state.scene.setModelMatrix(m);
+      else if (state.drawn[d.id]) state.scene.setLayerMatrix(d.id, m);
+    });
+    state.scene.request();
+  }
+
+  function playClip(name) {
+    var r = rig();
+    if (!r || !name) return;
+    stopClip();
+    setStatus('Loading ' + name.replace(/_/g, ' ') + '…');
+    fetch(apiUrl('/site/rigs/' + encodeURIComponent(r.name) + '/anim/'
+                 + encodeURIComponent(name)))
+      .then(function (res) {
+        if (!res.ok) throw new Error('That animation isn’t available for this rig.');
+        return res.arrayBuffer();
+      })
+      .then(function (buf) {
+        var A = decodeAnim(buf);
+        state.anim.clip = name;
+        state.anim.data = A;
+        setStatus('Playing ' + name.replace(/_/g, ' ') + '.', 'ok');
+        renderAnim();
+        var t0 = performance.now();
+        var tick = function (ts) {
+          if (state.anim.data !== A) return;              // stopped, or another clip
+          state.anim.raf = requestAnimationFrame(tick);
+          poseAt(A, ((ts - t0) / 1000) * A.fps % A.frameCount);
+        };
+        state.anim.raf = requestAnimationFrame(tick);
+      })
+      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+  }
+
+  function stopClip() {
+    if (state.anim.raf) cancelAnimationFrame(state.anim.raf);
+    state.anim.raf = 0;
+    state.anim.data = null;
+    state.anim.clip = null;
+    if (state.scene) drawStack();                        // back to the rest pose
+    renderAnim();
+  }
+
+  /* Editing and playing are exclusive. Leaving Animate puts the model back in its rest
+     pose, which is the only pose the voxel coordinates on screen agree with. */
+  function setAnimating(on) {
+    if (!inProject()) return;
+    state.anim.on = !!on && !!(rig() && rig().animations && rig().animations.length);
+    if (!state.anim.on) stopClip();
+    if (state.scene) {
+      state.scene.setDragMode(state.anim.on ? '' : dragModeFor(state.tool));
+      state.scene.setModelOutline(state.anim.on ? null : ACTIVE_BOX);
+    }
+    if (state.anim.on && state.isolate) { state.isolate = false; renderLayers(); }
+    document.body.classList.toggle('bpe-animating', state.anim.on);
+    var hover = $('bpe-hover');
+    if (hover) hover.hidden = true;
+    renderAnim();
+    renderToolHint();
+    if (!state.anim.on && state.scene) drawStack();
+  }
+
+  function renderAnim() {
+    var r = rig();
+    var clips = (r && r.animations) || [];
+    var box = $('bpe-anim');
+    if (!box) return;
+    box.hidden = !(inProject() && clips.length);
+    if (box.hidden) return;
+    $('bpe-anim-mode').setAttribute('aria-pressed', String(!!state.anim.on));
+    $('bpe-anim-mode').querySelector('span').textContent =
+      state.anim.on ? 'Back to editing' : 'Preview animations';
+    $('bpe-anim-controls').hidden = !state.anim.on;
+    var sel = $('bpe-anim-clip');
+    if (sel.dataset.rig !== r.name) {
+      sel.dataset.rig = r.name;
+      sel.innerHTML = '<option value="">Pick an animation…</option>'
+        + clips.slice().sort().map(function (c) {
+            return '<option value="' + esc(c) + '">' + esc(c.replace(/_/g, ' ')) + '</option>';
+          }).join('');
+    }
+    $('bpe-anim-stop').disabled = !state.anim.data;
   }
 
   /* Add blueprints to an open model. They are decoded through the ordinary single-file
@@ -1449,11 +1709,14 @@
     // ONE field holding the whole list, lined up with the files - a repeated form field
     // would arrive as whichever copy the server kept.
     fd.append('paths', JSON.stringify(posted));
+    var moves = {};
     state.docs.forEach(function (d) {
       var list = editListOf(d);
       if (list.length) edits[pathOf.get(d)] = list;
+      if (d.move[0] || d.move[1] || d.move[2]) moves[pathOf.get(d)] = d.move;
     });
     fd.append('edits', JSON.stringify(edits));
+    fd.append('moves', JSON.stringify(moves));
     fd.append('name', p.name);
     setStatus('Building ' + p.name + '…');
     fetch(apiUrl('/site/blueprint-editor/model-save'), { method: 'POST', body: fd })
@@ -1476,6 +1739,7 @@
         var bits = [];
         if (s.parts) bits.push(s.parts + ' part' + (s.parts === 1 ? '' : 's') + ' changed');
         if (s.added_parts) bits.push(s.added_parts + ' added');
+        if (s.moved) bits.push(s.moved + ' moved on the rig');
         if (s.ignored) bits.push(s.ignored + ' protected voxels left as they were');
         setStatus('Saved' + (bits.length ? ' — ' + bits.join(', ') : '') + '.', 'ok');
       })
@@ -1743,12 +2007,18 @@
     if (state.docs.length > 1 && active()) {
       hint += ' Working on ' + active().payload.name + '.';
     }
+    if (inProject() && state.anim.on) {
+      $('bpe-toolhint').textContent = 'The model is animating, so the tools are off — '
+        + 'the voxel under the cursor isn’t where it will be a frame later. Come back to '
+        + 'editing to make changes.';
+      return;
+    }
     if (inProject() && state.docs.length > 1) {
-      hint += ' Double-click another part to switch to it.';
+      hint += ' Double-click another part to work on it on its own.';
     }
     if (inProject() && state.tool === 'move') {
-      hint = 'A part of a model sits where its bone puts it, so there is nothing to '
-        + 'drag. Change where it attaches in the Parts list instead.';
+      hint = 'Drag to slide this part along its bone, or use the arrows under Parts. '
+        + 'It moves in whole voxels, and moves its attachment point with it.';
     } else if (state.tool === 'move' && active() === anchorDoc()) {
       hint = 'This layer is the anchor - the frame the others are placed against, so it '
         + 'does not move. Pick another layer, or pin a different one as the anchor.';
@@ -2164,25 +2434,49 @@
     });
     $('bpe-save-part').addEventListener('click', save);
 
-    // Double-click another part to work on it - Qubicle's gesture, and the one that
-    // makes a sixteen-part creature a single workspace rather than sixteen files.
+    /* Double-click a part to go INTO it - Qubicle's gesture, and the one that makes a
+       sixteen-part creature a single workspace rather than sixteen files. It isolates
+       too: you went in to work on that part, and the rest of the creature standing
+       around it is what made the part hard to see in the first place. The way back out
+       is one button, on the stage where you are already looking. */
     $('bpe-stage').addEventListener('dblclick', function (e) {
-      if (!inProject() || !state.scene) return;
+      if (!inProject() || !state.scene || state.anim.on) return;
       var id = state.scene.pickLayer(e);
       if (!id) return;
       for (var i = 0; i < state.docs.length; i++) {
         if (state.docs[i].id === id) {
+          state.isolate = true;
           setActive(i);
-          setStatus('Editing ' + state.docs[i].payload.name + '.', 'ok');
+          setStatus('Editing ' + state.docs[i].payload.name
+            + ' on its own — “Show the whole model” brings the rest back.', 'ok');
           return;
         }
       }
+    });
+    $('bpe-backfull').addEventListener('click', function () {
+      state.isolate = false;
+      renderLayers();
+      drawStack();
+      if (state.scene) state.scene.frameAll();
+      setStatus('');
+    });
+
+    $('bpe-anim-mode').addEventListener('click', function () {
+      setAnimating(!state.anim.on);
+    });
+    $('bpe-anim-clip').addEventListener('change', function (e) {
+      if (e.target.value) playClip(e.target.value); else stopClip();
+    });
+    $('bpe-anim-stop').addEventListener('click', function () {
+      $('bpe-anim-clip').value = '';
+      stopClip();
     });
     $('bpe-flatten').addEventListener('click', flattenStack);
     $('bpe-isolate').addEventListener('click', function () {
       state.isolate = !state.isolate;
       renderLayers();
       drawStack();
+      if (!state.isolate && inProject() && state.scene) state.scene.frameAll();
     });
     $('bpe-layerlist').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-pick],button[data-vis],button[data-up],' +

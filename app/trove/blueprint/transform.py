@@ -85,6 +85,45 @@ def translate_entities(blob: bytes, shift: tuple[int, int, int]) -> bytes:
         blob, lambda x, y, z: (x + shift[0], y + shift[1], z + shift[2]))
 
 
+MAX_MOVE = 512
+
+
+def move_on_rig(decoded: codec.DecodedBlueprint,
+                delta: tuple[int, int, int]) -> codec.DecodedBlueprint:
+    """Move the model within the space that HOLDS it, by ``delta`` voxels.
+
+    For a part of a creature that means sliding it along its bone - the leg down, the
+    horn forward. **Nothing about the geometry changes**: a blueprint's voxels are
+    box-local and the box says nothing about where the box goes. Where it goes is the
+    ORIGIN, which is exactly what this moves (the v5 header's ``pos``, or for v3/v4 the
+    min corner their absolute coordinates are written around), and the assembled-
+    creature pipeline adds that origin to every voxel it places.
+
+    So this is also, and equivalently, a move of the ATTACHMENT POINT relative to the
+    model - the two are the same number read from opposite ends (``codec.attachment_
+    point``). A weapon whose grip sits half a voxel too low is fixed by the same
+    operation as a horn that sits too far back.
+
+    Placed decos are NOT moved, and that is not an oversight: their coordinates are
+    model-local and the model has not moved inside its own box, so they stay on the
+    placeholder voxels they belong to - unlike a translation from ``_reframe``, which
+    shifts the grid itself and must carry them along."""
+    dx, dy, dz = (int(v) for v in delta)
+    if max(abs(dx), abs(dy), abs(dz)) > MAX_MOVE:
+        raise TransformError("That's further than a part can be moved on its rig.")
+    if (dx, dy, dz) == (0, 0, 0):
+        return decoded
+    if decoded.version == 5:
+        px, py, pz = decoded.pos
+        return codec.DecodedBlueprint(
+            decoded.version, decoded.size, (px + dx, py + dy, pz + dz),
+            decoded.voxels, decoded.entity_blob, decoded.offset)
+    ox, oy, oz = decoded.offset
+    return codec.DecodedBlueprint(
+        decoded.version, decoded.size, decoded.pos, decoded.voxels,
+        decoded.entity_blob, (ox + dx, oy + dy, oz + dz))
+
+
 def apply(decoded: codec.DecodedBlueprint, ops) -> codec.DecodedBlueprint:
     """Apply operations in order, returning a new decoded blueprint.
 

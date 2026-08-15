@@ -502,6 +502,15 @@
       var s = 2 * sph.radius * Math.tan(camera.fov * Math.PI / 360) / (stage.clientHeight || 1);
       // Signs so the model FOLLOWS the cursor. (Pan uses the opposite, because there
       // it is the camera's target that moves, not the thing being looked at.)
+      /* A host whose grid ISN'T the world's - a creature's part, which its bone has
+         rotated and scaled to 1/12 - takes the raw world-space movement and does its own
+         quantising, because a whole world unit is twelve voxels there and rounding here
+         would move it a foot at a time. */
+      if (opts.onDragWorld) {
+        dragAccum.set(0, 0, 0).addScaledVector(bRight, dx * s).addScaledVector(bUp, -dy * s);
+        opts.onDragWorld(dragAccum.x, dragAccum.y, dragAccum.z);
+        return;
+      }
       dragAccum.addScaledVector(bRight, dx * s).addScaledVector(bUp, -dy * s);
       var step = new THREE.Vector3(
         Math.round(dragAccum.x), Math.round(dragAccum.y), Math.round(dragAccum.z));

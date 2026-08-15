@@ -3991,6 +3991,7 @@ async def site_blueprint_editor_model_save(
     files: list[UploadFile] = File(default=[]),
     paths: str = Form(default="[]"),
     edits: str = Form(default="{}"),
+    moves: str = Form(default="{}"),
     name: str = Form(default=""),
     _limit: None = _BP_EDITOR_LIMIT,
 ) -> Response:
@@ -4005,6 +4006,10 @@ async def site_blueprint_editor_model_save(
     blueprint dropped onto an open model - with the path each should be packed at. A
     path already in the mod is replaced; the rest are added.
 
+    ``moves`` is ``{"<path>": [dx, dy, dz]}`` - a part slid along its bone. That moves
+    the model's ORIGIN, not its voxels (``transform.move_on_rig``), which is the same
+    number as moving its attachment point relative to the model.
+
     Everything that isn't an edited blueprint is carried through byte for byte: the
     config, the preview image, the textures, and any part that wasn't touched. A
     ``.tmod`` comes back as a ``.tmod``, anything else as a ``.zip``."""
@@ -4014,11 +4019,13 @@ async def site_blueprint_editor_model_save(
     name = name.rsplit("/", 1)[-1] or source_name
     try:
         parsed = json.loads(edits or "{}")
+        parsed_moves = json.loads(moves or "{}")
         extra_paths = json.loads(paths or "[]")
     except ValueError:
         raise APIError(400, ErrorCode.bad_request,
                        "The edit list wasn't understood.") from None
-    if not isinstance(parsed, dict) or not isinstance(extra_paths, list):
+    if not isinstance(parsed, dict) or not isinstance(extra_paths, list) \
+            or not isinstance(parsed_moves, dict):
         raise APIError(400, ErrorCode.bad_request, "The edit list wasn't understood.")
     extra: list[tuple[str, bytes]] = []
     if file:                          # loose-file projects post everything as `files`
@@ -4030,7 +4037,7 @@ async def site_blueprint_editor_model_save(
                           await part.read()))
     try:
         edited, summary = await asyncio.to_thread(
-            bp_model.apply_project, unpacked, parsed, extra)
+            bp_model.apply_project, unpacked, parsed, extra, parsed_moves)
         out, ext = await asyncio.to_thread(bp_model.repack, kind, props, edited)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e

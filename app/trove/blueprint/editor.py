@@ -112,6 +112,14 @@ def inspect(raw: bytes, *, name: str = "blueprint") -> dict:
         # Where the game grips or seats this model. Outside the box for a hat or mask
         # (the gap is the head), inside the handle for a weapon, absent on v3/v4.
         "attachment": list(attach) if attach else None,
+        # Where this model sits in the space that HOLDS it - a creature's rig, for a
+        # part of one. The decoded voxels are box-local and x-mirrored, and the
+        # assembled-creature pipeline reads the same file un-mirrored with the origin
+        # added, so a consumer that wants to place a part the way the game does needs
+        # both: `rig = (origin.x + size.x - 1 - x, origin.y + y, origin.z + z)`.
+        # v5 keeps it in the header; v3/v4 store absolute coordinates and no header, so
+        # it is the box's min corner. Same arithmetic either way.
+        "origin": list(decoded.pos if decoded.version == 5 else decoded.offset),
         "creation_types": list(lint.CREATION_TYPES),
         "transforms": [{"op": op, "label": bp_transform.OPERATION_LABELS[op]}
                        for op in bp_transform.OPERATIONS],

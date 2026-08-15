@@ -3684,7 +3684,8 @@ class Handler(SimpleHTTPRequestHandler):
                 for (fn, d), want in zip(posted, paths, strict=False):
                     extra.append((bp_model.pack_path(str(want) or fn), d))
             edited, summary = bp_model.apply_project(
-                unpacked, json.loads(fields.get("edits") or "{}"), extra)
+                unpacked, json.loads(fields.get("edits") or "{}"), extra,
+                json.loads(fields.get("moves") or "{}"))
             out, ext = bp_model.repack(kind, props, edited)
         except bp_editor.EditorError as e:
             return self._send_json({"detail": str(e)}, 400)

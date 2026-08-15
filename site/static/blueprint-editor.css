@@ -737,6 +737,36 @@
 .bpe-projectonly { display: none; }
 body.bpe-project-mode .bpe-projectonly { display: inline-flex; }
 
+/* Going into one part hides the rest, so the way back has to be where you are already
+   looking - on the stage, not down a panel. */
+.bpe-backfull { margin-left: auto; padding: 4px 10px; font-size: .74rem; }
+
+/* A model project has nothing to align against - the bone decides - so the alignment
+   picker goes and the nudge arrows stay, sliding the part along that bone. */
+#bpe-layerctl.bpe-noalign > select, #bpe-layerctl.bpe-noalign > .btt-dd { display: none; }
+
+/* ─── Animation preview ─────────────────────────────────────────────── */
+
+#bpe-anim { margin-bottom: 14px; }
+#bpe-anim h3 { margin: 14px 0 4px; }
+#bpe-anim-mode[aria-pressed="true"] { border-color: var(--accent-blue); color: var(--text); }
+#bpe-anim-controls { display: grid; gap: 6px; margin-top: 8px; }
+#bpe-anim-clip {
+  width: 100%;
+  background: var(--bg-card-hi);
+  color: var(--text);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: .76rem;
+  padding: 5px 7px;
+}
+/* While it plays, the tools are inert - say so by making them look it rather than
+   leaving controls that quietly do nothing. */
+body.bpe-animating .bpe-tools,
+body.bpe-animating #bpe-modes,
+body.bpe-animating #bpe-scopes { opacity: .4; pointer-events: none; }
+
 /* ─── Starting from a game model ────────────────────────────────────── */
 /* The codex search, on the opening screen. The picture is the point: you are picking
    the creature you are about to edit, so you should be looking at it. */
