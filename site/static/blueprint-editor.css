@@ -35,18 +35,6 @@
   letter-spacing: .12em;
   color: var(--accent-blue);
 }
-/* Same pill the Codexes hero uses, so "Beta" reads identically across the site. */
-.bpe-beta-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #f8961e, #ff5e7e);
-  color: #1a0c0c;
-  font: 700 .68rem 'Inter', system-ui, sans-serif;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
 .bpe-title {
   margin: 0 0 10px;
   font-size: clamp(2rem, 4.5vw, 2.9rem);
