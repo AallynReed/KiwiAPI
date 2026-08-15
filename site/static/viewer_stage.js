@@ -60,6 +60,7 @@
      localStorage though - a photo is megabytes, and that is the user's file to
      keep, not ours to stash. */
   var IMG = { url: '', name: '', el: null };
+  var _uid = 0;                             // one counter per page = ids that cannot collide
 
   function injectStyles() {
     if (_styles) return; _styles = true;
@@ -322,7 +323,7 @@
     if (lightPanel) pairs.push({ btn: lightBtn, el: lightPanel });
 
     // `for` and `aria-controls` need unique ids, and a page can hold more than one viewer
-    var uid = Math.random().toString(36).slice(2, 8);
+    var uid = String(++_uid);
     colorIn.id = 'vs-c-' + uid; colorLabel.setAttribute('for', colorIn.id);
     panel.id = 'vs-p-' + uid; bgBtn.setAttribute('aria-controls', panel.id);
     colorIn.value = state.color;

@@ -15,7 +15,13 @@
     "use strict";
 
     var U = window.BTTUtil || {};
-    var esc = U.esc || function (s) { return String(s == null ? "" : s); };
+    // The fallback has to escape for real: everything below builds HTML strings,
+    // so a passthrough would turn a missing util script into an XSS hole.
+    var esc = U.esc || function (s) {
+        return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    };
 
     var SLOTS = [
         { id: "costume", label: "Costume", icon: "fa-shirt" },

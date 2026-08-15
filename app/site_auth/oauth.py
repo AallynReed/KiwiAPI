@@ -14,7 +14,7 @@ import json
 import logging
 import re
 import secrets
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode, urlsplit, urlunsplit
 
 import httpx
 from fastapi import APIRouter, Request, Response
@@ -119,14 +119,19 @@ def _redirect_uri() -> str:
 def _safe_next(raw: str | None) -> str:
     """The post-sign-in destination, or "" if it isn't one we may bounce to.
 
-    Only a site-relative path survives: an absolute URL, a protocol-relative
-    "//evil.com" or anything not starting with "/" is dropped, so a crafted
-    ?next= can never turn sign-in into an open redirect. The client re-checks
-    this against its own origin before navigating (site_auth.js).
+    Only a site-relative path survives, and it is rebuilt from its parsed parts
+    rather than passed through: anything naming a scheme or a host is dropped,
+    so a crafted ?next= can never turn sign-in into an open redirect. Backslashes
+    are folded to "/" first because browsers treat "/\\evil.com" as "//evil.com"
+    while a plain startswith() check does not. The client re-checks the result
+    against its own origin before navigating (site_auth.js).
     """
-    if not raw or not raw.startswith("/") or raw.startswith("//"):
+    if not raw:
         return ""
-    return raw
+    parts = urlsplit(raw.replace("\\", "/"))
+    if parts.scheme or parts.netloc or not parts.path.startswith("/"):
+        return ""
+    return urlunsplit(("", "", parts.path, parts.query, parts.fragment))
 
 
 def _back(fragment: str, next_: str = "") -> RedirectResponse:
