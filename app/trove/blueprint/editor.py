@@ -30,6 +30,15 @@ MAX_BLUEPRINT_BYTES = 4 * 1024 * 1024
 # bulkier than the blueprint it compiles to.
 MAX_QB_BYTES = 48 * 1024 * 1024
 
+# Building is voxel-at-a-time in a browser, so a save carrying tens of thousands of new
+# cells is a runaway client rather than a person. The total still has to clear
+# EDITOR_VOXEL_CAP afterwards.
+MAX_ADDED_VOXELS = 20_000
+
+# Blueprints are small models, not worlds; this bounds the grid a stray coordinate can
+# ask us to allocate before the box is even fitted.
+COORD_LIMIT = 4096
+
 
 class EditorError(ValueError):
     """A blueprint the editor can't open, or an edit it won't apply."""
@@ -124,49 +133,135 @@ def inspect(raw: bytes, *, name: str = "blueprint") -> dict:
     }
 
 
-def _coerce_edits(edits, total: int) -> dict[int, dict]:
-    """Validate the incoming edit list into ``{voxel index: change}``.
+def _material_of(entry) -> tuple[int, int]:
+    """The ``(type, w)`` in an edit entry. Both or neither: ``w`` means a different
+    thing per type (specular finish on a solid, opacity on glass), so half a material
+    is not a material."""
+    try:
+        raw_type, raw_w = int(entry["type"]), int(entry["w"])
+    except (KeyError, TypeError, ValueError):
+        raise EditorError("A material edit needs both a type and a w.") from None
+    try:
+        return materials.validate_material(raw_type, raw_w)
+    except ValueError as exc:
+        raise EditorError(str(exc)) from None
+
+
+def _colour_of(entry) -> int:
+    try:
+        packed = int(entry["rgb"])
+    except (TypeError, ValueError):
+        raise EditorError("An edit has an invalid colour.") from None
+    if not 0 <= packed <= 0xFFFFFF:
+        raise EditorError("An edit has an invalid colour.")
+    return packed
+
+
+def _coerce_edits(edits, total: int) -> tuple[dict[int, dict], set[int], list[dict]]:
+    """Validate the incoming edit list into ``(changes, deletes, adds)``.
+
+    Three shapes, all indexed against the order ``inspect`` returned:
+      ``{"i": n, "type"/"w"/"rgb": ...}``  recolour or re-material voxel n
+      ``{"i": n, "del": true}``            erase voxel n
+      ``{"add": [x, y, z], "type", "w", "rgb"}``   place a new voxel
 
     Rejects rather than clamps anything structural: an out-of-range index or a
     non-palette type means the client is out of step with the file it posted, and
     applying a best guess would write a model the user never saw."""
     if not isinstance(edits, list):
         raise EditorError("The edit list wasn't understood.")
-    if len(edits) > total:
-        raise EditorError("More edits than the blueprint has voxels.")
-    out: dict[int, dict] = {}
+    if len(edits) > total + MAX_ADDED_VOXELS:
+        raise EditorError("That's more edits than one save should carry.")
+
+    changes: dict[int, dict] = {}
+    deletes: set[int] = set()
+    adds: list[dict] = []
+
     for entry in edits:
         if not isinstance(entry, dict):
             raise EditorError("The edit list wasn't understood.")
+
+        if "add" in entry:
+            coords = entry["add"]
+            if not isinstance(coords, (list, tuple)) or len(coords) != 3:
+                raise EditorError("A new voxel needs an x, y and z.")
+            try:
+                x, y, z = (int(c) for c in coords)
+            except (TypeError, ValueError):
+                raise EditorError("A new voxel has invalid coordinates.") from None
+            if not all(-COORD_LIMIT <= c <= COORD_LIMIT for c in (x, y, z)):
+                raise EditorError("A new voxel is outside the buildable area.")
+            vtype, w = _material_of(entry)
+            adds.append({"x": x, "y": y, "z": z, "rgb": _colour_of(entry),
+                         "type": vtype, "w": w})
+            if len(adds) > MAX_ADDED_VOXELS:
+                raise EditorError(
+                    f"That's more than {MAX_ADDED_VOXELS:,} new voxels in one save.")
+            continue
+
         try:
             idx = int(entry["i"])
         except (KeyError, TypeError, ValueError):
             raise EditorError("An edit is missing its voxel index.") from None
         if not 0 <= idx < total:
             raise EditorError("An edit points outside the blueprint.")
+
+        if entry.get("del"):
+            deletes.add(idx)
+            continue
+
         change: dict = {}
         if "type" in entry or "w" in entry:
-            # Both or neither: ``w`` means a different thing per type (specular finish
-            # on a solid, opacity on glass), so half a material is not a material.
-            try:
-                raw_type, raw_w = int(entry["type"]), int(entry["w"])
-            except (KeyError, TypeError, ValueError):
-                raise EditorError("A material edit needs both a type and a w.") from None
-            try:
-                change["type"], change["w"] = materials.validate_material(raw_type, raw_w)
-            except ValueError as exc:
-                raise EditorError(str(exc)) from None
+            change["type"], change["w"] = _material_of(entry)
         if "rgb" in entry:
-            try:
-                packed = int(entry["rgb"])
-            except (TypeError, ValueError):
-                raise EditorError("An edit has an invalid colour.") from None
-            if not 0 <= packed <= 0xFFFFFF:
-                raise EditorError("An edit has an invalid colour.")
-            change["rgb"] = packed
+            change["rgb"] = _colour_of(entry)
         if change:
-            out[idx] = {**out.get(idx, {}), **change}
-    return out
+            changes[idx] = {**changes.get(idx, {}), **change}
+    return changes, deletes, adds
+
+
+def _reframe(voxels: list[dict], decoded: codec.DecodedBlueprint) -> tuple:
+    """Fit the box around voxels that may now sit outside it, and keep the model
+    anchored where it was.
+
+    Adding a voxel past an edge grows the box; adding one at a negative coordinate also
+    shifts everything, because a blueprint's grid starts at zero. The shift has to carry
+    the attachment point and any placed decos with it, or the model would keep its shape
+    and lose its grip and its furniture - the same failure a rotation would cause.
+
+    Returns ``(voxels, size, pos, offset, entity_blob)``."""
+    sx, sy, sz = decoded.size
+    mnx = min(0, min(v["x"] for v in voxels))
+    mny = min(0, min(v["y"] for v in voxels))
+    mnz = min(0, min(v["z"] for v in voxels))
+    # Never shrink: a delete at the edge leaves the box as it was, which keeps the
+    # origin - and so the attachment point - exactly where the user left it.
+    size = (max(sx, max(v["x"] for v in voxels) + 1) - mnx,
+            max(sy, max(v["y"] for v in voxels) + 1) - mny,
+            max(sz, max(v["z"] for v in voxels) + 1) - mnz)
+
+    shift = (-mnx, -mny, -mnz)
+    entity_blob = decoded.entity_blob
+    attach = codec.attachment_point(decoded)
+    if shift != (0, 0, 0):
+        for v in voxels:
+            v["x"] += shift[0]; v["y"] += shift[1]; v["z"] += shift[2]
+        if attach is not None:
+            attach = (attach[0] + shift[0], attach[1] + shift[1], attach[2] + shift[2])
+        entity_blob = bp_transform.translate_entities(entity_blob, shift)
+
+    if attach is not None:
+        pos = (attach[0] - (size[0] - 1), -attach[1], -attach[2])
+    elif decoded.version == 5:
+        pos = (-(size[0] // 2), decoded.pos[1], -(size[2] // 2))
+    else:
+        pos = (-(size[0] // 2), -(size[1] // 2), -(size[2] // 2))
+
+    # v3/v4 store signed coordinates around a centred box; once the box changes the old
+    # min corner means nothing, so re-centre it the way Trove writes those files.
+    offset = ((-(size[0] // 2), -(size[1] // 2), -(size[2] // 2))
+              if decoded.version in (3, 4) else decoded.offset)
+    return voxels, size, pos, offset, entity_blob
 
 
 def transform(raw: bytes, edits, ops) -> tuple[bytes, dict]:
@@ -236,20 +331,26 @@ def check(raw: bytes, edits, kind: str = "other") -> dict:
 
 
 def apply_edits(raw: bytes, edits) -> tuple[bytes, dict]:
-    """Apply material/colour edits to a blueprint and re-encode it.
+    """Apply edits to a blueprint and re-encode it.
 
-    Returns ``(bytes, summary)``. The version, origin, bounding box and entity section
-    all come straight off the decode, so the saved file sits exactly where the original
-    did and its decos are untouched. With an empty edit list the output is byte-identical
-    to the input for v3/v4, and payload-identical for v5 (only the zlib container differs).
+    Handles recolour, re-material, erase and add. Returns ``(bytes, summary)``. With an
+    empty edit list the version, origin, box and entity section all come straight off
+    the decode, so the output is byte-identical to the input for v3/v4 and
+    payload-identical for v5 (only the zlib container differs).
+
+    Adding or erasing changes the shape of the model, so the box is refitted and - if a
+    new voxel sits at a negative coordinate - the whole grid shifts, carrying the
+    attachment point and the placed decos with it. See :func:`_reframe`.
 
     CPU-bound - call via ``asyncio.to_thread``."""
     decoded = _decode_or_raise(raw)
-    changes = _coerce_edits(edits, len(decoded.voxels))
+    changes, deletes, adds = _coerce_edits(edits, len(decoded.voxels))
 
     out: list[dict] = []
     recoloured = rematerialised = ignored = 0
     for i, v in enumerate(decoded.voxels):
+        if i in deletes:
+            continue
         change = changes.get(i)
         if not change:
             out.append(v)
@@ -279,16 +380,46 @@ def apply_edits(raw: bytes, edits) -> tuple[bytes, dict]:
                 recoloured += 1
         out.append(nv)
 
+    # A new voxel on a cell that already has one replaces it rather than doubling up:
+    # v5 would silently collapse the pair anyway, and v3/v4 would write both.
+    if adds:
+        occupied = {(v["x"], v["y"], v["z"]): i for i, v in enumerate(out)}
+        for a in adds:
+            cell = (a["x"], a["y"], a["z"])
+            nv = {"x": a["x"], "y": a["y"], "z": a["z"],
+                  "r": (a["rgb"] >> 16) & 0xFF, "g": (a["rgb"] >> 8) & 0xFF,
+                  "b": a["rgb"] & 0xFF, "w": a["w"], "type": a["type"]}
+            if cell in occupied:
+                out[occupied[cell]] = nv
+            else:
+                occupied[cell] = len(out)
+                out.append(nv)
+
+    if not out:
+        raise EditorError("That would erase the whole model - a blueprint needs at "
+                          "least one voxel.")
+    if len(out) > EDITOR_VOXEL_CAP:
+        raise EditorError(f"That would take the model past the editor's "
+                          f"{EDITOR_VOXEL_CAP:,} voxel limit.")
+
+    if adds or deletes:
+        out, size, pos, offset, entity_blob = _reframe(out, decoded)
+    else:
+        size, pos = decoded.size, decoded.pos
+        offset, entity_blob = decoded.offset, decoded.entity_blob
+
     try:
-        data = codec.encode(out, version=decoded.version, pos=decoded.pos,
-                            entity_blob=decoded.entity_blob, offset=decoded.offset,
-                            size=decoded.size)
-    except codec.BlueprintError as exc:
+        data = codec.encode(out, version=decoded.version, pos=pos,
+                            entity_blob=entity_blob, offset=offset, size=size)
+    except (codec.BlueprintError, bp_transform.TransformError) as exc:
         raise EditorError(str(exc)) from exc
     return data, {
         "voxels": len(out),
         "recoloured": recoloured,
         "rematerialised": rematerialised,
+        "added": len(adds),
+        "erased": len(deletes),
+        "size": list(size),
         "ignored": ignored,
         "version": decoded.version,
         "bytes": len(data),

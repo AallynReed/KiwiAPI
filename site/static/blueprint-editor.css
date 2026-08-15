@@ -79,7 +79,17 @@
   gap: 16px;
   align-items: start;
 }
-@media (max-width: 1080px) {
+
+/* Two columns first: the model keeps a usable width while the two panels sit side by
+   side under it, rather than the stage being squeezed to a third of a tablet. */
+@media (max-width: 1180px) {
+  .bpe-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .bpe-stagecard { grid-column: 1 / -1; order: -1; }
+}
+
+/* One column, model FIRST. Stacked, the controls would otherwise push the thing being
+   edited below the fold, and on a phone that is the whole point of the page. */
+@media (max-width: 720px) {
   .bpe-workspace { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -407,3 +417,75 @@
 .bpe-xform:hover { border-color: var(--accent-blue); color: var(--text); }
 .bpe-xform:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .bpe-xform { transition: none; } }
+
+/* A control that does nothing for the current tool is dimmed rather than removed -
+   the panel keeps its shape, so switching tools doesn't make it jump. */
+.bpe-faded { opacity: .4; }
+.bpe-faded + .bpe-chips, .bpe-faded + .bpe-colourrow { opacity: .4; pointer-events: none; }
+#bpe-modes.bpe-faded { pointer-events: none; }
+.bpe-tools button { flex: 1; justify-content: center; }
+.bpe-tools i { margin-right: 5px; }
+.bpe-toolhint { margin-top: 8px; }
+
+/* ─── Small screens ─────────────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .bpe-main { padding: 0 14px 64px; }
+  .bpe-hero { padding: 30px 0 16px; }
+  .bpe-title { font-size: clamp(1.6rem, 7vw, 2.1rem); }
+  .bpe-subtitle { font-size: .95rem; }
+
+  .bpe-empty { padding: 34px 16px; margin-top: 18px; }
+  .bpe-openrow { flex-direction: column; }
+  .bpe-openrow .bpe-btn { width: 100%; justify-content: center; }
+
+  .bpe-panel { padding: 13px; }
+  .bpe-workspace { gap: 12px; }
+
+  /* A phone screen is mostly vertical, and a tall stage leaves no room for the panel
+     you are reaching for. Landscape gets a shorter one still, or the model fills the
+     entire viewport and the controls are a scroll away. */
+  .bpe-stage { height: 58vh; max-height: 420px; min-height: 260px; }
+
+  /* Tap targets. Chips are the main offender - at .78rem they were ~26px tall. */
+  .bpe-chips button,
+  .bpe-mat,
+  .bpe-w,
+  .bpe-xform { min-height: 40px; padding: 8px 14px; font-size: .84rem; }
+  .bpe-btn { min-height: 44px; padding: 10px 16px; }
+  .bpe-applyall { min-height: 36px; padding: 7px 12px; }
+  .bpe-f-show { min-height: 32px; padding: 5px 11px; }
+  .bpe-checkrow select { min-height: 44px; }
+  .bpe-colourrow input[type=color] { width: 56px; height: 40px; }
+  .bpe-toggle { min-height: 40px; }
+  .bpe-matrow { padding: 9px 10px; }
+
+  .bpe-actions .bpe-btn { flex: 1 1 auto; justify-content: center; }
+
+  /* The hover readout is a mouse affordance; a touch device never sees it, and it was
+     eating a line of the header. */
+  .bpe-hoverline { display: none; }
+  .bpe-stagebar { gap: 8px; padding: 10px 12px; }
+  .bpe-stagehint { font-size: .74rem; padding: 8px 12px; }
+}
+
+@media (max-width: 720px) and (orientation: landscape) {
+  .bpe-stage { height: 72vh; max-height: 320px; }
+}
+
+@media (max-width: 720px) {
+  /* Five lines of hero pushed the model most of a screen down. The subtitle keeps its
+     first sentence - the one that says what the page does - and drops the examples,
+     which the tool panel demonstrates anyway. */
+  .bpe-subtitle {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* viewer_stage.js injects its backdrop/snapshot buttons over the stage at a desktop
+     size; they're part of this page's touch surface, so they get sized here. */
+  .bpe-stage .vs-tool { min-height: 38px; padding: 8px 11px; }
+  .bpe-stage .vs-opt { min-height: 34px; }
+}

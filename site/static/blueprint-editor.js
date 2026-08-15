@@ -5,15 +5,18 @@
    list to be written. Nothing is stored server-side, so the original bytes have to
    stay here - `state.file` is the same File object the visitor picked.
 
-   Edits are recorded as a sparse map of voxel index -> change, NOT by rewriting the
-   payload in place, because the index is what the save endpoint understands and a
-   voxel with no entry is written back byte-for-byte from the original. The rendered
-   payload is a separate, derived copy that gets patched so the 3D view keeps up.
+   The model is held as the inspect payload's parallel arrays and edited in place. Two
+   extra arrays make that work: `live`, so an erase can drop a voxel without renumbering
+   every row after it, and `origin`, mapping each row back to its index in the file (-1
+   for one the user placed). The save payload is then DERIVED by diffing against the
+   pristine copy rather than journalled as it goes - so a voxel painted back to how it
+   started stops counting as an edit, with nothing to keep in sync.
 
    Voxels the server marked `edit: 0` are Trove's own - deco placeholders, terrain,
    anything the material palette can't safely reinterpret. They are rendered, they can
-   be inspected, and they are refused as edit targets rather than being converted into
-   plain blocks behind the user's back. */
+   be inspected, and they are refused as material targets rather than being converted
+   into plain blocks behind the user's back. Erasing one is allowed: deleting a voxel
+   is not the same as claiming to know what it was. */
 (function () {
   'use strict';
 
@@ -24,14 +27,15 @@
   var state = {
     file: null,          // the File the visitor opened; posted back on save
     data: null,          // inspect payload (arrays are the render source of truth)
-    base: null,          // pristine copies of the arrays an edit can touch
-    edits: new Map(),    // voxel index -> { type, w, rgb }
-    history: [],         // [{ index, prev }] one entry per applied change, for undo
+    base: null,          // pristine rgb/type/w, straight from the file
+    origin: [],          // row -> index in the file, or -1 if the user placed it
+    history: [],         // one array of before-states per action, for undo
     scene: null,
     selection: -1,
-    index: null,         // "x,y,z" -> voxel index
+    index: null,         // "x,y,z" -> row, live rows only
     paint: { rgb: 0xff6b6b, type: 21, w: 0 },
-    mode: 'both',        // what a click applies: colour, material, or both
+    tool: 'paint',       // paint | add | erase
+    mode: 'both',        // what a paint click applies: colour, material, or both
     scope: 'voxel',      // one voxel, or every voxel sharing its material
     kind: 'other',       // creation type the checks are run against
     report: null,        // last check result
@@ -85,21 +89,25 @@
   function loaded(file, payload, note) {
     state.file = file;
     state.data = payload;
-    // Only colour and material can change, so those are the only arrays worth
-    // keeping a pristine copy of - undo and "revert all" restore from here.
+    // Only colour and material can change on an existing voxel, so those are the only
+    // arrays worth a pristine copy - the edit list is DERIVED by diffing against it,
+    // which means a voxel painted back to how it started stops counting as an edit
+    // without anyone having to notice.
     state.base = {
-      rgb: payload.rgb.slice(), type: payload.type.slice(),
-      w: payload.w.slice(), kind: payload.kind.slice(), level: payload.level.slice(),
-      spec: payload.spec.slice(),
+      rgb: payload.rgb.slice(), type: payload.type.slice(), w: payload.w.slice(),
     };
-    state.edits = new Map();
+    // `live` is how erase works: a voxel is dropped from the render and the save
+    // rather than spliced out of a dozen parallel arrays. `origin` maps each row back
+    // to its index in the file, or -1 for one the user placed.
+    payload.live = [];
+    state.origin = [];
+    for (var i = 0; i < payload.count; i++) {
+      payload.live.push(1);
+      state.origin.push(i);
+    }
     state.history = [];
     state.selection = -1;
-
-    state.index = new Map();
-    for (var i = 0; i < payload.count; i++) {
-      state.index.set(payload.x[i] + ',' + payload.y[i] + ',' + payload.z[i], i);
-    }
+    rebuildIndex();
 
     state.report = null;
     $('bpe-report').hidden = true;
@@ -107,6 +115,7 @@
     $('bpe-workspace').hidden = false;
     renderKinds();
     renderTransforms();
+    renderToolHint();
     renderPalette();
     renderMaterialList();
     renderMeta();
@@ -117,7 +126,7 @@
     if (state.scene) { state.scene.dispose(); state.scene = null; }
     window.VoxelScene.create({
       stage: $('bpe-stage'),
-      data: payload,
+      data: liveView(),
       name: payload.name,
       onPick: onPick,
       onHover: onHover,
@@ -127,6 +136,67 @@
     }).catch(function (err) {
       setStatus(err.message || 'The 3D view couldn’t start.', 'error');
     });
+  }
+
+  // ---- the live model ----------------------------------------------------- //
+
+  /* The mesher wants dense arrays, and erased voxels are still sitting in ours, so
+     compact them out on the way through. One O(n) pass per rebuild, which the re-mesh
+     costs anyway. */
+  function liveView() {
+    var d = state.data;
+    var v = { count: 0, size: d.size, x: [], y: [], z: [], rgb: [],
+              kind: [], level: [], spec: [] };
+    for (var i = 0; i < d.count; i++) {
+      if (!d.live[i]) continue;
+      v.x.push(d.x[i]); v.y.push(d.y[i]); v.z.push(d.z[i]); v.rgb.push(d.rgb[i]);
+      v.kind.push(d.kind[i]); v.level.push(d.level[i]); v.spec.push(d.spec[i]);
+      v.count++;
+    }
+    return v;
+  }
+
+  function rebuildIndex() {
+    var d = state.data;
+    state.index = new Map();
+    for (var i = 0; i < d.count; i++) {
+      if (d.live[i]) state.index.set(d.x[i] + ',' + d.y[i] + ',' + d.z[i], i);
+    }
+  }
+
+  function liveCount() {
+    var d = state.data, n = 0;
+    for (var i = 0; i < d.count; i++) if (d.live[i]) n++;
+    return n;
+  }
+
+  /* The save payload, derived rather than journalled: every row is compared with the
+     file it came from. An original voxel that changed emits an edit, one that was
+     erased emits a delete, and a row the user placed emits an add. Nothing to keep in
+     sync, and painting a voxel back to its starting colour simply stops appearing. */
+  function editList() {
+    var d = state.data, b = state.base, out = [];
+    for (var i = 0; i < d.count; i++) {
+      var orig = state.origin[i];
+      if (orig < 0) {
+        if (d.live[i]) {
+          out.push({ add: [d.x[i], d.y[i], d.z[i]],
+                     type: d.type[i], w: d.w[i], rgb: d.rgb[i] });
+        }
+        continue;
+      }
+      if (!d.live[i]) { out.push({ i: orig, del: true }); continue; }
+      var e = null;
+      if (d.type[i] !== b.type[orig] || d.w[i] !== b.w[orig]) {
+        e = { i: orig, type: d.type[i], w: d.w[i] };
+      }
+      if (d.rgb[i] !== b.rgb[orig]) {
+        e = e || { i: orig };
+        e.rgb = d.rgb[i];
+      }
+      if (e) out.push(e);
+    }
+    return out;
   }
 
   // ---- attachment point + check highlights -------------------------------- //
@@ -149,8 +219,7 @@
 
   function runCheck() {
     if (!state.file) return;
-    var list = [];
-    state.edits.forEach(function (e) { list.push(e); });
+    var list = editList();
     var btn = $('bpe-check');
     btn.disabled = true;
     setStatus('Checking…');
@@ -251,34 +320,61 @@
     var canMaterial = wantsMaterial && d.edit[i];
     if (!canColour && !canMaterial) return false;
 
-    var prev = { rgb: d.rgb[i], type: d.type[i], w: d.w[i],
-                 edit: state.edits.has(i) ? Object.assign({}, state.edits.get(i)) : null };
-    var entry = state.edits.get(i) || { i: i };
-
-    if (canColour) { d.rgb[i] = change.rgb; entry.rgb = change.rgb; }
-    if (canMaterial) {
-      d.type[i] = change.type; d.w[i] = change.w;
-      entry.type = change.type; entry.w = change.w;
-    }
+    batch.push({ index: i, rgb: d.rgb[i], type: d.type[i], w: d.w[i], live: d.live[i] });
+    if (canColour) d.rgb[i] = change.rgb;
+    if (canMaterial) { d.type[i] = change.type; d.w[i] = change.w; }
     reshade(i);
+    return true;
+  }
 
-    // Back to exactly what the file said? Then it isn't an edit any more - dropping
-    // it keeps the save payload honest and lets the no-op case stay byte-identical.
-    var b = state.base;
-    if (d.rgb[i] === b.rgb[i] && d.type[i] === b.type[i] && d.w[i] === b.w[i]) {
-      state.edits.delete(i);
-    } else {
-      state.edits.set(i, entry);
+  /* Erase: the row stays put and stops being live, which keeps every other index
+     stable. Nothing is refused here - a placeholder or a terrain voxel may be deleted
+     outright; what the editor won't do is reinterpret one as something else. */
+  function eraseVoxel(i, batch) {
+    var d = state.data;
+    if (!d.live[i]) return false;
+    batch.push({ index: i, rgb: d.rgb[i], type: d.type[i], w: d.w[i], live: 1 });
+    d.live[i] = 0;
+    return true;
+  }
+
+  /* Add: a new row appended with origin -1, or an erased row at that cell brought back
+     to life. Re-using the row matters - two live rows on one cell would draw twice and
+     save twice. */
+  function addVoxel(x, y, z, batch) {
+    var d = state.data;
+    for (var i = 0; i < d.count; i++) {
+      if (d.x[i] === x && d.y[i] === y && d.z[i] === z) {
+        batch.push({ index: i, rgb: d.rgb[i], type: d.type[i], w: d.w[i], live: d.live[i] });
+        d.live[i] = 1;
+        d.rgb[i] = state.paint.rgb;
+        d.type[i] = state.paint.type;
+        d.w[i] = state.paint.w;
+        reshade(i);
+        return true;
+      }
     }
-    batch.push({ index: i, prev: prev });
+    var n = d.count;
+    d.x.push(x); d.y.push(y); d.z.push(z);
+    d.rgb.push(state.paint.rgb);
+    d.type.push(state.paint.type); d.w.push(state.paint.w);
+    d.kind.push(0); d.level.push(255); d.spec.push(0);
+    d.edit.push(1); d.paint.push(1);      // a voxel the user placed is always theirs
+    d.live.push(1);
+    state.origin.push(-1);
+    d.count = n + 1;
+    reshade(n);
+    batch.push({ index: n, added: true });
     return true;
   }
 
   function commit(batch, refused) {
     if (batch.length) {
       state.history.push(batch);
-      if (state.scene) state.scene.rebuild(state.data);
+      rebuildIndex();
+      if (state.scene) state.scene.rebuild(liveView());
       renderMaterialList();
+      renderMeta();
       updateDirty();
       staleReport();
     }
@@ -305,16 +401,47 @@
     if (!hit || !state.data) return;
     var i = state.index.get(hit.x + ',' + hit.y + ',' + hit.z);
     if (i === undefined) return;
+    var batch = [], refused = 0;
+
+    if (state.tool === 'add') {
+      // The face normal says which side was clicked, so the new voxel goes on the
+      // outside of it - the gesture every voxel editor uses.
+      addVoxel(hit.x + hit.nx, hit.y + hit.ny, hit.z + hit.nz, batch);
+      commit(batch, 0);
+      state.selection = state.index.get(
+        (hit.x + hit.nx) + ',' + (hit.y + hit.ny) + ',' + (hit.z + hit.nz));
+      if (state.selection === undefined) state.selection = -1;
+      renderSelection();
+      return;
+    }
+
+    if (state.tool === 'erase') {
+      if (state.scope === 'material') {
+        var et = state.data.type[i], ew = state.data.w[i];
+        for (var k = 0; k < state.data.count; k++) {
+          if (state.data.live[k] && state.data.type[k] === et && state.data.w[k] === ew) {
+            eraseVoxel(k, batch);
+          }
+        }
+      } else {
+        eraseVoxel(i, batch);
+      }
+      commit(batch, 0);
+      state.selection = -1;
+      renderSelection();
+      return;
+    }
+
     state.selection = i;
     renderSelection();
 
     var c = change();
     if (!Object.keys(c).length) return;
 
-    var batch = [], refused = 0;
     if (state.scope === 'material') {
       var t = state.data.type[i], w = state.data.w[i];
       for (var j = 0; j < state.data.count; j++) {
+        if (!state.data.live[j]) continue;
         if (state.data.type[j] !== t || state.data.w[j] !== w) continue;
         if (!applyTo(j, c, batch)) refused++;
       }
@@ -340,12 +467,19 @@
     var d = state.data;
     batch.forEach(function (rec) {
       var i = rec.index;
-      d.rgb[i] = rec.prev.rgb; d.type[i] = rec.prev.type; d.w[i] = rec.prev.w;
+      if (rec.added) {
+        // A row the user placed is retired rather than spliced out: removing it would
+        // renumber every row after it, and a dead row costs nothing.
+        d.live[i] = 0;
+        return;
+      }
+      d.rgb[i] = rec.rgb; d.type[i] = rec.type; d.w[i] = rec.w; d.live[i] = rec.live;
       reshade(i);
-      if (rec.prev.edit) state.edits.set(i, rec.prev.edit); else state.edits.delete(i);
     });
-    if (state.scene) state.scene.rebuild(state.data);
+    rebuildIndex();
+    if (state.scene) state.scene.rebuild(liveView());
     renderMaterialList();
+    renderMeta();
     renderSelection();
     updateDirty();
     setStatus('');
@@ -354,13 +488,17 @@
   function revertAll() {
     var d = state.data, b = state.base;
     for (var i = 0; i < d.count; i++) {
-      d.rgb[i] = b.rgb[i]; d.type[i] = b.type[i]; d.w[i] = b.w[i];
-      d.kind[i] = b.kind[i]; d.level[i] = b.level[i]; d.spec[i] = b.spec[i];
+      var orig = state.origin[i];
+      if (orig < 0) { d.live[i] = 0; continue; }     // drop everything user-placed
+      d.rgb[i] = b.rgb[orig]; d.type[i] = b.type[orig]; d.w[i] = b.w[orig];
+      d.live[i] = 1;
+      reshade(i);
     }
-    state.edits = new Map();
     state.history = [];
-    if (state.scene) state.scene.rebuild(state.data);
+    rebuildIndex();
+    if (state.scene) state.scene.rebuild(liveView());
     renderMaterialList();
+    renderMeta();
     renderSelection();
     updateDirty();
     setStatus('');
@@ -370,8 +508,7 @@
 
   function save() {
     if (!state.file) return;
-    var list = [];
-    state.edits.forEach(function (e) { list.push(e); });
+    var list = editList();
     setStatus('Saving…');
     var fd = new FormData();
     fd.append('file', state.file, state.file.name);
@@ -409,8 +546,7 @@
      reopens it - which also folds in whatever was pending, so nothing is lost. */
   function runTransform(op) {
     if (!state.file) return;
-    var list = [];
-    state.edits.forEach(function (e) { list.push(e); });
+    var list = editList();
     setStatus('Turning the model…');
     var fd = new FormData();
     fd.append('file', state.file, state.file.name);
@@ -469,8 +605,7 @@
      which is what Qubicle and MagicaVoxel users actually work in. */
   function exportQb() {
     if (!state.file) return;
-    var list = [];
-    state.edits.forEach(function (e) { list.push(e); });
+    var list = editList();
     setStatus('Building the .qb files…');
     var fd = new FormData();
     fd.append('file', state.file, state.file.name);
@@ -584,6 +719,25 @@
     }).join('');
   }
 
+  /* The paint controls only govern a paint click, and Add uses them for the new voxel -
+     so Erase greys them out rather than leaving a colour picker that does nothing. */
+  function renderToolHint() {
+    var hints = {
+      paint: 'Click a voxel to paint it.',
+      add: 'Click a face to put a new voxel against it, in the colour and material above.',
+      erase: 'Click a voxel to delete it.',
+    };
+    $('bpe-toolhint').textContent = hints[state.tool] || hints.paint;
+    var faded = state.tool === 'erase';
+    ['bpe-paint-colour', 'bpe-paint-material'].forEach(function (id) {
+      var el = $(id);
+      if (el) el.classList.toggle('bpe-faded', faded);
+    });
+    // "A click changes" only means anything while painting.
+    var modes = $('bpe-modes');
+    if (modes) modes.classList.toggle('bpe-faded', state.tool !== 'paint');
+  }
+
   function renderPalette() {
     var pal = state.data.palette;
     var html = (pal.types || []).map(function (p) {
@@ -612,6 +766,7 @@
     var d = state.data;
     var seen = new Map();
     for (var i = 0; i < d.count; i++) {
+      if (!d.live[i]) continue;
       var key = d.type[i] + ':' + d.w[i];
       var e = seen.get(key);
       if (e) { e.count++; } else { seen.set(key, { type: d.type[i], w: d.w[i], count: 1, i: i }); }
@@ -641,8 +796,10 @@
 
   function renderMeta() {
     var s = state.data.stats;
+    var live = liveCount();
     var bits = [
-      state.data.count.toLocaleString() + ' voxels',
+      live.toLocaleString() + ' voxels'
+        + (live !== s.voxels ? ' (was ' + s.voxels.toLocaleString() + ')' : ''),
       'v' + state.data.version,
       state.data.size.join('×'),
     ];
@@ -719,7 +876,7 @@
   }
 
   function updateDirty() {
-    var n = state.edits.size;
+    var n = editList().length;
     $('bpe-save').disabled = false;
     $('bpe-undo').disabled = !state.history.length;
     $('bpe-revert').disabled = !n;
@@ -775,6 +932,16 @@
       if (!b) return;
       state.paint.w = parseInt(b.dataset.w, 10);
       renderWOptions();
+    });
+
+    document.querySelectorAll('[data-tool]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.tool = b.dataset.tool;
+        document.querySelectorAll('[data-tool]').forEach(function (o) {
+          o.setAttribute('aria-pressed', String(o.dataset.tool === state.tool));
+        });
+        renderToolHint();
+      });
     });
 
     document.querySelectorAll('[data-mode]').forEach(function (b) {

@@ -96,6 +96,17 @@ def _rewrite_entities(blob: bytes, point) -> bytes:
     return bytes(out)
 
 
+def translate_entities(blob: bytes, shift: tuple[int, int, int]) -> bytes:
+    """Move every placed entity by a fixed offset.
+
+    Adding a voxel at a negative coordinate shifts the whole grid (a blueprint starts at
+    zero), and the decos have to come along or they end up one socket over."""
+    if shift == (0, 0, 0):
+        return blob
+    return _rewrite_entities(
+        blob, lambda x, y, z: (x + shift[0], y + shift[1], z + shift[2]))
+
+
 def apply(decoded: codec.DecodedBlueprint, ops) -> codec.DecodedBlueprint:
     """Apply operations in order, returning a new decoded blueprint.
 

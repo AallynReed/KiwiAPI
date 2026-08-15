@@ -64,22 +64,35 @@
 
             <!-- What a click paints -->
             <aside class="bpe-panel">
-                <h2 data-i18n>Paint</h2>
+                <h2 data-i18n>Tools</h2>
 
-                <h3 data-i18n>Colour</h3>
+                <div class="bpe-chips bpe-tools">
+                    <button type="button" data-tool="paint" aria-pressed="true">
+                        <i class="fa-solid fa-brush" aria-hidden="true"></i> <span data-i18n>Paint</span>
+                    </button>
+                    <button type="button" data-tool="add" aria-pressed="false">
+                        <i class="fa-solid fa-cube" aria-hidden="true"></i> <span data-i18n>Add</span>
+                    </button>
+                    <button type="button" data-tool="erase" aria-pressed="false">
+                        <i class="fa-solid fa-eraser" aria-hidden="true"></i> <span data-i18n>Erase</span>
+                    </button>
+                </div>
+                <p class="bpe-hint bpe-toolhint" id="bpe-toolhint" data-i18n>Click a voxel to paint it.</p>
+
+                <h3 id="bpe-paint-colour" data-i18n>Colour</h3>
                 <div class="bpe-colourrow">
                     <input type="color" id="bpe-colour" value="#ff6b6b" aria-label="Paint colour">
                     <span class="bpe-colourhex" id="bpe-colour-hex">#FF6B6B</span>
                 </div>
 
-                <h3 data-i18n>Material</h3>
+                <h3 id="bpe-paint-material" data-i18n>Material</h3>
                 <div class="bpe-chips" id="bpe-types"></div>
 
                 <h3 id="bpe-finish-label" data-i18n>Finish</h3>
                 <div class="bpe-chips" id="bpe-finish"></div>
 
-                <h3 data-i18n>A click changes</h3>
-                <div class="bpe-chips">
+                <h3 id="bpe-modes-label" data-i18n>A click changes</h3>
+                <div class="bpe-chips" id="bpe-modes">
                     <button type="button" data-mode="both" aria-pressed="true" data-i18n>Both</button>
                     <button type="button" data-mode="colour" aria-pressed="false" data-i18n>Colour only</button>
                     <button type="button" data-mode="material" aria-pressed="false" data-i18n>Material only</button>
