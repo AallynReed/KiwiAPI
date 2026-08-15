@@ -56,6 +56,9 @@
     report: null,        // last check result
     showAttach: true,
     swatches: [],        // saved colours, browser-local (see loadSwatches)
+    sessionId: '',       // this open model's row in the local autosave store
+    restoring: false,    // replaying a saved session; don't autosave over it
+    openWith: null,      // how this model was opened, so it can be opened again
     sel: null,           // Set of rows the tools are confined to, or null for all
     selOut: false,       // true = work on everything EXCEPT the selection
     grab: 'connected',   // what a Select click gathers
@@ -88,12 +91,13 @@
 
   /* `note` survives the open: a .qb import has something to say about the conversion,
      and loading the result would otherwise clear the status line out from under it. */
-  function openFile(file, note) {
+  function openFile(file, note, done, fail) {
     if (!file) return;
     if (!/\.blueprint$/i.test(file.name)) {
       setStatus('That isn’t a .blueprint file.', 'error');
       return;
     }
+    state.openWith = { kind: 'file', file: file };
     setStatus('Opening ' + file.name + '…');
     var fd = new FormData();
     fd.append('file', file, file.name);
@@ -104,8 +108,10 @@
           return body;
         });
       })
-      .then(function (payload) { loaded(file, payload, note); })
-      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+      .then(function (payload) { loaded(file, payload, note); if (done) done(); })
+      .catch(function (err) {
+        if (fail) fail(err); else setStatus(err.message || String(err), 'error');
+      });
   }
 
   /* Opening a file starts a FRESH stack with it at the bottom. Everything a document
@@ -122,6 +128,8 @@
   /* Everything that has to happen once a fresh set of documents is in place, however
      they got there - one opened file, or a whole model's worth of parts. */
   function mount(note) {
+    // A fresh open is a fresh row; a restore keeps the row it came from (set after).
+    if (!state.restoring) state.sessionId = 'S' + Date.now() + '-' + (state.docSeq);
     state.isolate = false;
     state.report = null;
     state.drawn = {};            // a fresh scene holds none of the old geometry
@@ -1528,8 +1536,11 @@
   }
 
   /* Open a .tmod / .zip, or a pile of loose .blueprint files, as one model. */
-  function openModel(input) {
+  function openModel(input, done, fail) {
     var many = !(input instanceof File);
+    state.openWith = many
+      ? { kind: 'files', files: Array.prototype.slice.call(input) }
+      : { kind: 'archive', file: input };
     var fd = new FormData();
     if (many) {
       Array.prototype.forEach.call(input, function (f) { fd.append('files', f, f.name); });
@@ -1544,8 +1555,13 @@
           return b;
         });
       })
-      .then(function (payload) { loadProject(payload, many ? null : input); })
-      .catch(function (err) { setStatus(err.message || String(err), 'error'); });
+      .then(function (payload) {
+        loadProject(payload, many ? null : input);
+        if (done) done();
+      })
+      .catch(function (err) {
+        if (fail) fail(err); else setStatus(err.message || String(err), 'error');
+      });
   }
 
   function loadProject(payload, archive) {
@@ -2335,15 +2351,17 @@
     note.hidden = !msg;
   }
 
-  function openGameModel(prefab, label) {
+  function openGameModel(prefab, label, done, fail) {
+    state.openWith = { kind: 'game', prefab: prefab, label: label };
     setStatus('Opening ' + (label || prefab) + '…');
     U.fetchJSON('/site/blueprint-editor/game-model?prefab=' + encodeURIComponent(prefab))
-      .then(function (payload) { loadProject(payload, null); })
+      .then(function (payload) { loadProject(payload, null); if (done) done(); })
       .catch(function (err) {
         // A bare status code says nothing to whoever clicked a picture of a dragon, and
         // the one thing that goes wrong here has a real explanation: plenty of codex
         // entries aren't creatures at all.
         var msg = (err && err.message) || '';
+        if (fail) { fail(err); return; }
         setStatus(/^HTTP \d+$/.test(msg) || !msg
           ? (label || 'That one') + ' isn’t a model the game builds from blueprint parts,'
             + ' so there’s nothing to open in the editor.'
@@ -2855,6 +2873,7 @@
   }
 
   function updateDirty() {
+    scheduleSave();
     var n = editList().length;
     $('bpe-save').disabled = false;
     var undoBtn = $('bpe-undo');
@@ -2888,6 +2907,272 @@
   }
 
   // ---- wiring ------------------------------------------------------------- //
+
+  // ---- keeping your work through a refresh --------------------------------- //
+
+  /* Everything above this line lives in memory, which meant a refresh, a closed tab or
+     a crash threw away an afternoon. This keeps it in the browser instead - IndexedDB,
+     never the server, because a half-finished model is the author's business and the
+     rest of this page is built on not holding their work.
+
+     What is stored is the ORIGINAL bytes plus the edit list - the same sparse,
+     index-keyed diff a save already posts - and not the decoded model. A creature's
+     payload is a dozen parallel arrays per part and megabytes of them; the file it came
+     from is a few hundred kilobytes, and reopening it is a request the page already
+     knows how to make. So a restore is: open it again exactly as you first did, then
+     replay the diff.
+
+     Replay lands on the right rows for free. A fresh inspect gives `origin[i] === i`, so
+     an edit's `i` IS its row, and adds append in list order because that is the order
+     `editListOf` walked them out in. */
+
+  var DB_NAME = 'btt-bpe', DB_STORE = 'sessions', DB_VERSION = 1;
+  var MAX_SESSIONS = 6;            // a working set, not an archive
+  var saveTimer = 0, dbPromise = null;
+
+  function idb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
+      if (!window.indexedDB) { reject(new Error('no indexedDB')); return; }
+      var req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function () {
+        if (!req.result.objectStoreNames.contains(DB_STORE)) {
+          req.result.createObjectStore(DB_STORE, { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    }).catch(function (e) { dbPromise = null; throw e; });
+    return dbPromise;
+  }
+
+  function idbDo(mode, fn) {
+    return idb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(DB_STORE, mode);
+        var req = fn(tx.objectStore(DB_STORE));
+        tx.oncomplete = function () { resolve(req && req.result); };
+        tx.onerror = function () { reject(tx.error); };
+        tx.onabort = function () { reject(tx.error); };
+      });
+    });
+  }
+
+  /* Bytes are read once per file and kept: autosave runs on every edit, and re-reading
+     a .tmod off disk each time would be the slowest thing on the page. */
+  function bytesOf(file) {
+    if (!file) return Promise.resolve(null);
+    if (file._bytes) return Promise.resolve(file._bytes);
+    return file.arrayBuffer().then(function (buf) {
+      try { file._bytes = buf; } catch (e) { /* frozen File - just don't cache */ }
+      return buf;
+    });
+  }
+
+  /* How to open this again. Captured when it IS opened rather than reconstructed later,
+     so a restore takes the same route the original did and there is no second code path
+     to drift from the first. */
+  function reopenSpec() {
+    var o = state.openWith;
+    if (!o) return Promise.resolve(null);
+    if (o.kind === 'game') {
+      return Promise.resolve({ kind: 'game', prefab: o.prefab, label: o.label });
+    }
+    if (o.kind === 'files') {
+      return Promise.all(o.files.map(function (f) {
+        return bytesOf(f).then(function (b) { return { name: f.name, bytes: b }; });
+      })).then(function (parts) { return { kind: 'files', parts: parts }; });
+    }
+    return bytesOf(o.file).then(function (b) {
+      return { kind: o.kind, name: o.file.name, bytes: b };
+    });
+  }
+
+  function docSnapshot(d) {
+    return {
+      path: d.path || '', name: d.file ? d.file.name : '',
+      edits: editListOf(d),
+      move: d.move.slice(), row: d.row.slice(), offset: d.offset.slice(),
+      ap: d.ap, locked: !!d.locked, visible: d.visible !== false,
+      added: !!d.added, mode: d.mode,
+    };
+  }
+
+  function editedCount() {
+    return state.docs.reduce(function (n, d) { return n + editListOf(d).length; }, 0);
+  }
+
+  function scheduleSave() {
+    if (!state.docs.length || state.restoring) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveSession, 900);
+  }
+
+  function saveSession() {
+    if (!state.docs.length || state.restoring) return Promise.resolve();
+    return reopenSpec().then(function (open) {
+      if (!open) return null;
+      var rec = {
+        id: state.sessionId,
+        savedAt: Date.now(),
+        name: state.project ? state.project.name
+                            : ((state.docs[0].file || {}).name || 'blueprint'),
+        parts: state.docs.length,
+        edited: editedCount(),
+        open: open,
+        project: state.project ? {
+          name: state.project.name, source: state.project.source,
+        } : null,
+        docs: state.docs.map(docSnapshot),
+        active: state.active, anchor: state.anchor,
+      };
+      return idbDo('readwrite', function (st) { st.put(rec); }).then(trimSessions);
+    }).then(markSaved, function () { /* quota, private mode, no IDB - never fatal */ });
+  }
+
+  function trimSessions() {
+    return listSessions().then(function (all) {
+      var extra = all.slice(MAX_SESSIONS);
+      if (!extra.length) return null;
+      return idbDo('readwrite', function (st) {
+        extra.forEach(function (r) { st.delete(r.id); });
+      });
+    });
+  }
+
+  function listSessions() {
+    return idbDo('readonly', function (st) { return st.getAll(); })
+      .then(function (all) {
+        return (all || []).sort(function (a, b) { return b.savedAt - a.savedAt; });
+      })
+      .catch(function () { return []; });
+  }
+
+  function dropSession(id) {
+    return idbDo('readwrite', function (st) { st.delete(id); }).catch(function () {});
+  }
+
+  function markSaved() {
+    var el = $('bpe-saved');
+    if (!el) return;
+    el.hidden = false;
+    el.textContent = 'Saved in this browser';
+  }
+
+  /* Put the edits back onto a freshly opened part. Deliberately not through `applyTo`:
+     this is not an action the user is taking now, so it makes no undo entry and refuses
+     nothing - the permissions were enforced when each edit was first made, and this is
+     the same file they were made against. */
+  function replayEdits(docu, edits) {
+    var d = docu.payload;
+    var cells = new Map();
+    for (var i = 0; i < d.count; i++) cells.set(d.x[i] + ',' + d.y[i] + ',' + d.z[i], i);
+    (edits || []).forEach(function (e) {
+      var j;
+      if (e.add) {
+        var key = e.add.join(',');
+        j = cells.get(key);
+        if (j === undefined) {
+          j = d.count;
+          d.x.push(e.add[0]); d.y.push(e.add[1]); d.z.push(e.add[2]);
+          d.rgb.push(0); d.type.push(21); d.w.push(0);
+          d.kind.push(0); d.level.push(255); d.spec.push(0);
+          d.edit.push(1); d.paint.push(1); d.live.push(1);
+          docu.origin.push(-1);
+          d.count = j + 1;
+          cells.set(key, j);
+        }
+        d.live[j] = 1;
+      } else {
+        j = e.i;
+        // A save that no longer fits its file is dropped rather than applied to whatever
+        // row happens to sit at that index now.
+        if (!(j >= 0 && j < d.count)) return;
+        if (e.del) { d.live[j] = 0; return; }
+      }
+      if (e.rgb !== undefined) d.rgb[j] = e.rgb;
+      if (e.type !== undefined) { d.type[j] = e.type; d.w[j] = e.w; }
+      reshade(j, d);
+    });
+  }
+
+  function applySnapshot(snaps) {
+    var byKey = {};
+    snaps.forEach(function (sn) { byKey[sn.path || sn.name] = sn; });
+    state.docs.forEach(function (d) {
+      var sn = byKey[d.path || (d.file && d.file.name)]
+            || (snaps.length === 1 && state.docs.length === 1 ? snaps[0] : null);
+      if (!sn) return;
+      d.move = sn.move.slice(); d.row = sn.row.slice(); d.offset = sn.offset.slice();
+      if (sn.ap !== undefined) d.ap = sn.ap;
+      d.locked = sn.locked; d.visible = sn.visible; d.mode = sn.mode || d.mode;
+      replayEdits(d, sn.edits);
+    });
+  }
+
+  function restoreSession(rec) {
+    var open = rec.open;
+    if (!open) return;
+    state.restoring = true;
+
+    var done = function () {
+      // Every reopen path ends in mount(); the saved edits go on after it, and then the
+      // page is redrawn as though it had been edited to this point.
+      applySnapshot(rec.docs);
+      state.active = Math.min(rec.active || 0, state.docs.length - 1);
+      state.anchor = Math.min(rec.anchor || 0, state.docs.length - 1);
+      state.sessionId = rec.id;
+      state.restoring = false;
+      setActive(state.active);
+      if (state.scene) state.scene.rebuild(liveView());
+      drawStack();
+      setStatus('Picked up where you left off — ' + rec.edited.toLocaleString()
+        + ' change' + (rec.edited === 1 ? '' : 's') + ' restored. Undo starts fresh.', 'ok');
+    };
+    var fail = function (err) {
+      state.restoring = false;
+      setStatus((err && err.message) || 'That saved model could not be reopened.', 'error');
+    };
+
+    if (open.kind === 'game') { openGameModel(open.prefab, open.label, done, fail); return; }
+    if (open.kind === 'files') {
+      openModel(open.parts.map(function (p) { return new File([p.bytes], p.name); }), done, fail);
+      return;
+    }
+    var file = new File([open.bytes], open.name);
+    if (open.kind === 'archive') { openModel(file, done, fail); return; }
+    openFile(file, null, done, fail);
+  }
+
+  /* The list on the opening screen. Drawn only when there is something in it, so a
+     first visit looks exactly as it did before any of this existed. */
+  function renderSessions() {
+    var box = $('bpe-resume'), list = $('bpe-resumelist');
+    if (!box || !list) return;
+    listSessions().then(function (all) {
+      box.hidden = !all.length;
+      if (!all.length) return;
+      list.innerHTML = all.map(function (r) {
+        return '<li class="bpe-resumerow">'
+          + '<button type="button" class="bpe-resumeopen" data-resume="' + esc(r.id) + '">'
+          + '<span class="bpe-resumename">' + esc(r.name) + '</span>'
+          + '<span class="bpe-resumemeta">' + esc(agoText(r.savedAt))
+          + ' · ' + r.edited.toLocaleString() + ' change' + (r.edited === 1 ? '' : 's')
+          + (r.parts > 1 ? ' · ' + r.parts + ' parts' : '') + '</span></button>'
+          + '<button type="button" class="bpe-resumex" data-forget="' + esc(r.id) + '"'
+          + ' title="Forget this" aria-label="Forget ' + esc(r.name) + '">&times;</button>'
+          + '</li>';
+      }).join('');
+    });
+  }
+
+  function agoText(t) {
+    var s = Math.max(0, Math.round((Date.now() - t) / 1000));
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.round(s / 60) + ' min ago';
+    if (s < 86400) return Math.round(s / 3600) + 'h ago';
+    return Math.round(s / 86400) + 'd ago';
+  }
 
   function ready() {
     var input = $('bpe-input');
@@ -2987,6 +3272,21 @@
         if (state.scene) state.scene.setDragMode(dragModeFor(state.tool));
         $('bpe-grabblock').hidden = state.tool !== 'select';
         renderToolHint();
+      });
+    });
+
+    renderSessions();
+    $('bpe-resumelist').addEventListener('click', function (e) {
+      var x = e.target.closest('[data-forget]');
+      if (x) {
+        dropSession(x.dataset.forget).then(renderSessions);
+        return;
+      }
+      var b = e.target.closest('[data-resume]');
+      if (!b) return;
+      listSessions().then(function (all) {
+        var rec = all.find(function (r) { return r.id === b.dataset.resume; });
+        if (rec) restoreSession(rec);
       });
     });
 

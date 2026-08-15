@@ -62,6 +62,15 @@
                 </button>
             </div>
             <p class="bpe-hint bpe-openhint" data-i18n>A creature is never one file — a mount is a head, a jaw, four legs and a tail. Open its <code>.tmod</code> (or the blueprints together) and you get the whole thing assembled on its skeleton, with every part editable in place.</p>
+            <!-- Work in progress comes first: someone who left a model half-edited
+                 came back for it, not to open another one. Hidden entirely until
+                 there is something to show, so a first visit is unchanged. -->
+            <div class="bpe-resume" id="bpe-resume" hidden>
+                <h3 data-i18n>Pick up where you left off</h3>
+                <p class="bpe-hint" data-i18n>Saved in this browser as you work — never uploaded. Clearing your browser data clears these too.</p>
+                <ul class="bpe-resumelist" id="bpe-resumelist"></ul>
+            </div>
+
             <div class="bpe-browse">
                 <h3 data-i18n>Or start from something already in the game</h3>
                 <p class="bpe-hint" data-i18n>Search Trove's mounts, dragons, allies and costumes. Pick one and the whole thing opens on its skeleton, every part ready to edit.</p>
@@ -322,6 +331,7 @@
                 <h2 data-i18n>Save</h2>
                 <div class="bpe-saveblock">
                     <p class="bpe-dirty" id="bpe-dirty" aria-live="polite" data-i18n>No changes yet</p>
+                    <p class="bpe-saved" id="bpe-saved" hidden></p>
                     <div class="bpe-actions">
                         <button type="button" class="bpe-btn bpe-primary" id="bpe-save">
                             <i class="fa-solid fa-download" aria-hidden="true"></i>

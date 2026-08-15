@@ -417,6 +417,77 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
   color: var(--text-mute);
 }
 
+/* ─── Pick up where you left off ────────────────────────────────────── */
+
+.bpe-resume {
+  margin: 26px auto 0;
+  max-width: 640px;
+  padding: 18px;
+  text-align: left;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius);
+}
+.bpe-resume h3 {
+  margin: 0 0 6px;
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-mute);
+}
+.bpe-resume .bpe-hint { margin: 0 0 12px; }
+.bpe-resumelist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.bpe-resumerow { display: flex; align-items: stretch; gap: 8px; }
+/* The row IS the button - a card you click, not a card with a link in it. */
+.bpe-resumeopen {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .15s var(--ease-out);
+}
+.bpe-resumeopen:hover { border-color: var(--accent-blue); }
+.bpe-resumeopen:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.bpe-resumename {
+  font-size: .92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bpe-resumemeta {
+  color: var(--text-mute);
+  font-family: var(--font-mono, monospace);
+  font-size: .72rem;
+}
+.bpe-resumex {
+  flex: 0 0 auto;
+  width: 36px;
+  background: transparent;
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  color: var(--text-mute);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.bpe-resumex:hover { border-color: var(--accent-red, #f85149); color: var(--accent-red, #f85149); }
+.bpe-resumex:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+/* Quiet by design: reassurance, not an announcement. */
+.bpe-saved {
+  margin: 6px 0 0;
+  color: var(--text-mute);
+  font-size: .72rem;
+}
+
 /* ─── Selection ─────────────────────────────────────────────────────── */
 
 /* Reads as a state the editor is IN, not another group of controls - it changes what
