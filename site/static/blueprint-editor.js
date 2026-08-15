@@ -397,11 +397,52 @@
     return c;
   }
 
-  function onPick(hit) {
+  /* Which rows a click acts on.
+
+     `material` matches (type, w) - which on a typical model is nearly every voxel,
+     because most of a model is plain solid rough. That was the only bulk option, and
+     it made "everything like it" mean "almost everything". `colour` matches the exact
+     stored RGB, which is what you want when the intent is "recolour all the grey". */
+  function targetsFor(i) {
+    var d = state.data;
+    if (state.scope === 'voxel') return [i];
+    var out = [];
+    if (state.scope === 'colour') {
+      var rgb = d.rgb[i];
+      for (var j = 0; j < d.count; j++) if (d.live[j] && d.rgb[j] === rgb) out.push(j);
+      return out;
+    }
+    var t = d.type[i], w = d.w[i];
+    for (var k = 0; k < d.count; k++) {
+      if (d.live[k] && d.type[k] === t && d.w[k] === w) out.push(k);
+    }
+    return out;
+  }
+
+  function onPick(hit, ev) {
     if (!hit || !state.data) return;
     var i = state.index.get(hit.x + ',' + hit.y + ',' + hit.z);
     if (i === undefined) return;
     var batch = [], refused = 0;
+
+    // Eyedropper: take the colour AND the material, so the next paint reproduces the
+    // voxel you sampled rather than half of it. Alt-click does it from any tool, which
+    // is the gesture every other editor uses.
+    if (state.tool === 'pick' || (ev && ev.altKey)) {
+      state.paint.rgb = state.data.rgb[i];
+      if (state.data.edit[i]) {
+        state.paint.type = state.data.type[i];
+        state.paint.w = state.data.w[i];
+      }
+      state.selection = i;
+      syncPaintUI();
+      renderSelection();
+      setStatus('Picked up ' + hex(state.paint.rgb).toUpperCase()
+        + (state.data.edit[i] ? ' · ' + label(i) : '')
+        + (state.data.edit[i] ? '' : ' (its material is one the game manages, so only the colour was taken)'),
+        'ok');
+      return;
+    }
 
     if (state.tool === 'add') {
       // The face normal says which side was clicked, so the new voxel goes on the
@@ -415,17 +456,10 @@
       return;
     }
 
+    var targets = targetsFor(i);
+
     if (state.tool === 'erase') {
-      if (state.scope === 'material') {
-        var et = state.data.type[i], ew = state.data.w[i];
-        for (var k = 0; k < state.data.count; k++) {
-          if (state.data.live[k] && state.data.type[k] === et && state.data.w[k] === ew) {
-            eraseVoxel(k, batch);
-          }
-        }
-      } else {
-        eraseVoxel(i, batch);
-      }
+      targets.forEach(function (j) { eraseVoxel(j, batch); });
       commit(batch, 0);
       state.selection = -1;
       renderSelection();
@@ -438,16 +472,7 @@
     var c = change();
     if (!Object.keys(c).length) return;
 
-    if (state.scope === 'material') {
-      var t = state.data.type[i], w = state.data.w[i];
-      for (var j = 0; j < state.data.count; j++) {
-        if (!state.data.live[j]) continue;
-        if (state.data.type[j] !== t || state.data.w[j] !== w) continue;
-        if (!applyTo(j, c, batch)) refused++;
-      }
-    } else if (!applyTo(i, c, batch)) {
-      refused = 1;
-    }
+    targets.forEach(function (j) { if (!applyTo(j, c, batch)) refused++; });
     commit(batch, refused);
     renderSelection();
   }
@@ -727,16 +752,26 @@
     }).join('');
   }
 
+  /* Push the current paint settings back into the controls. The eyedropper changes them
+     from outside the panel, and a swatch that didn't follow would be lying. */
+  function syncPaintUI() {
+    $('bpe-colour').value = hex(state.paint.rgb);
+    $('bpe-colour-hex').textContent = hex(state.paint.rgb).toUpperCase();
+    renderPalette();
+  }
+
   /* The paint controls only govern a paint click, and Add uses them for the new voxel -
-     so Erase greys them out rather than leaving a colour picker that does nothing. */
+     so Erase and Pick grey them out rather than leaving a colour picker that does
+     nothing. */
   function renderToolHint() {
     var hints = {
       paint: 'Click a voxel to paint it.',
-      add: 'Click a face to put a new voxel against it, in the colour and material above.',
+      pick: 'Click a voxel to copy its colour and material into the settings below.',
+      add: 'Click a face to put a new voxel against it, in the colour and material below.',
       erase: 'Click a voxel to delete it.',
     };
     $('bpe-toolhint').textContent = hints[state.tool] || hints.paint;
-    var faded = state.tool === 'erase';
+    var faded = state.tool === 'erase' || state.tool === 'pick';
     ['bpe-paint-colour', 'bpe-paint-material'].forEach(function (id) {
       var el = $(id);
       if (el) el.classList.toggle('bpe-faded', faded);
@@ -744,6 +779,36 @@
     // "A click changes" only means anything while painting.
     var modes = $('bpe-modes');
     if (modes) modes.classList.toggle('bpe-faded', state.tool !== 'paint');
+    // Scope governs paint and erase; pick and add are always a single voxel.
+    var scopes = $('bpe-scopes');
+    var single = state.tool === 'pick' || state.tool === 'add';
+    if (scopes) scopes.classList.toggle('bpe-faded', single);
+    var lbl = $('bpe-scope-label');
+    if (lbl) lbl.classList.toggle('bpe-faded', single);
+    renderScopeHint();
+  }
+
+  /* Say how many voxels the current scope would hit BEFORE the click, using whatever is
+     selected as the sample. "Every voxel of that material" on a plain model can mean
+     hundreds, and finding that out by doing it is the wrong order. */
+  function renderScopeHint() {
+    var el = $('bpe-scopehint');
+    if (!el || !state.data) return;
+    if (state.tool === 'pick' || state.tool === 'add' || state.scope === 'voxel') {
+      el.textContent = '';
+      el.hidden = true;
+      return;
+    }
+    el.hidden = false;
+    if (state.selection < 0) {
+      el.textContent = state.scope === 'colour'
+        ? 'Matches on the exact colour of whichever voxel you click.'
+        : 'Matches on material — on a plain model that can be most of it.';
+      return;
+    }
+    var n = targetsFor(state.selection).length;
+    el.textContent = 'The selected voxel matches ' + n.toLocaleString()
+      + (n === 1 ? ' voxel' : ' voxels') + '.';
   }
 
   function renderPalette() {
@@ -777,7 +842,11 @@
       if (!d.live[i]) continue;
       var key = d.type[i] + ':' + d.w[i];
       var e = seen.get(key);
-      if (e) { e.count++; } else { seen.set(key, { type: d.type[i], w: d.w[i], count: 1, i: i }); }
+      if (e) { e.count++; e.colours.add(d.rgb[i]); }
+      else {
+        seen.set(key, { type: d.type[i], w: d.w[i], count: 1, i: i,
+                        colours: new Set([d.rgb[i]]) });
+      }
     }
     var rows = Array.from(seen.values()).sort(function (a, b) { return b.count - a.count; });
     $('bpe-materials').innerHTML = rows.map(function (r) {
@@ -789,9 +858,23 @@
       var title = canMaterial && canColour ? 'Apply the current paint to all of these'
         : canColour ? 'These can be recoloured, but their material is fixed'
         : 'Their material can change, but Trove colours these itself';
+      // A material group can span many colours, and a single swatch implied it didn't -
+      // which is half of why "everything of that material" surprised people. Show up to
+      // three of the colours actually in the group, and say how many there are.
+      var cols = Array.from(r.colours);
+      var swatch = cols.length === 1
+        ? 'background:' + hex(cols[0])
+        : 'background:linear-gradient(135deg,' + cols.slice(0, 3).map(function (c, k, a) {
+            var from = Math.round(k / a.length * 100), to = Math.round((k + 1) / a.length * 100);
+            return hex(c) + ' ' + from + '%,' + hex(c) + ' ' + to + '%';
+          }).join(',') + ')';
+      var colnote = cols.length > 1 ? ' · ' + cols.length + ' colours' : '';
       return '<li class="bpe-matrow' + (locked ? ' bpe-locked' : '') + '">'
-        + '<span class="bpe-swatch" style="background:' + hex(d.rgb[r.i]) + '"></span>'
-        + '<span class="bpe-matname">' + esc(label(r.i)) + '</span>'
+        + '<span class="bpe-swatch" style="' + swatch + '" title="'
+        + esc(cols.length === 1 ? hex(cols[0]).toUpperCase() : cols.length + ' different colours')
+        + '"></span>'
+        + '<span class="bpe-matname" title="' + esc(label(r.i) + colnote) + '">'
+        + esc(label(r.i)) + '<small class="bpe-colnote">' + esc(colnote) + '</small></span>'
         + '<span class="bpe-matcount">' + r.count.toLocaleString() + '</span>'
         + (locked
             ? '<span class="bpe-lock" title="Controlled by the game — preserved on save">'
@@ -856,6 +939,7 @@
   function renderSelection() {
     var box = $('bpe-selection');
     var i = state.selection;
+    renderScopeHint();
     if (i < 0 || !state.data) {
       box.innerHTML = '<p class="bpe-hint">Click a voxel to select it.</p>';
       return;
@@ -966,6 +1050,7 @@
         document.querySelectorAll('[data-scope]').forEach(function (o) {
           o.setAttribute('aria-pressed', String(o.dataset.scope === state.scope));
         });
+        renderScopeHint();
       });
     });
 

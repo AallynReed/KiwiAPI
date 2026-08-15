@@ -70,6 +70,9 @@
                     <button type="button" data-tool="paint" aria-pressed="true">
                         <i class="fa-solid fa-brush" aria-hidden="true"></i> <span data-i18n>Paint</span>
                     </button>
+                    <button type="button" data-tool="pick" aria-pressed="false">
+                        <i class="fa-solid fa-eye-dropper" aria-hidden="true"></i> <span data-i18n>Pick</span>
+                    </button>
                     <button type="button" data-tool="add" aria-pressed="false">
                         <i class="fa-solid fa-cube" aria-hidden="true"></i> <span data-i18n>Add</span>
                     </button>
@@ -98,11 +101,13 @@
                     <button type="button" data-mode="material" aria-pressed="false" data-i18n>Material only</button>
                 </div>
 
-                <h3 data-i18n>And affects</h3>
-                <div class="bpe-chips">
-                    <button type="button" data-scope="voxel" aria-pressed="true" data-i18n>That voxel</button>
-                    <button type="button" data-scope="material" aria-pressed="false" data-i18n>Everything like it</button>
+                <h3 id="bpe-scope-label" data-i18n>And affects</h3>
+                <div class="bpe-chips" id="bpe-scopes">
+                    <button type="button" data-scope="voxel" aria-pressed="true" data-i18n>Just that voxel</button>
+                    <button type="button" data-scope="colour" aria-pressed="false" data-i18n>Every voxel of that colour</button>
+                    <button type="button" data-scope="material" aria-pressed="false" data-i18n>Every voxel of that material</button>
                 </div>
+                <p class="bpe-hint bpe-scopehint" id="bpe-scopehint"></p>
 
                 <h3 data-i18n>Show</h3>
                 <label class="bpe-toggle">

@@ -268,6 +268,10 @@
   padding: 6px 8px;
   border: 1px solid var(--bg-line);
   border-radius: var(--radius-sm);
+  /* A grid item defaults to `min-width: auto`, i.e. min-content - so a long material
+     name plus the count and the Apply button made the row refuse to shrink and it
+     spilled out of the panel. */
+  min-width: 0;
 }
 .bpe-matrow .bpe-swatch { width: 20px; height: 20px; }
 .bpe-matname {
@@ -306,9 +310,17 @@
 .bpe-toggle { display: flex; align-items: center; gap: 8px; color: var(--text-mute); font-size: .82rem; }
 .bpe-toggle input { accent-color: var(--accent-blue); }
 
-.bpe-checkrow { display: flex; gap: 8px; margin-top: 10px; }
-.bpe-checkrow select {
-  flex: 1;
+/* dropdown.js swaps the <select> for a .btt-dd-trigger button and hides the native one
+   off-screen, so both have to be styled together - that's the convention every other
+   page here follows. The trigger defaults to `flex: 0 1 auto; min-width: auto`, which
+   means it will not shrink below "Not sure / something else" and pushed the Check
+   button clean out of the panel. A real basis plus `min-width: 0` lets it truncate
+   (.btt-dd-value already ellipsises), and wrapping stacks the two if it still can't fit. */
+.bpe-checkrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.bpe-checkrow .bpe-btn { flex: 0 0 auto; }
+.bpe-checkrow select,
+.bpe-checkrow .btt-dd-trigger {
+  flex: 1 1 150px;
   min-width: 0;
   background: var(--bg-card-hi);
   border: 1px solid var(--bg-line);
@@ -318,7 +330,8 @@
   font: inherit;
   font-size: .82rem;
 }
-.bpe-checkrow select:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.bpe-checkrow select:focus-visible,
+.bpe-checkrow .btt-dd-trigger:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 
 .bpe-report { margin-top: 12px; }
 .bpe-r-head { display: flex; align-items: baseline; gap: 10px; font-size: .85rem; margin-bottom: 10px; }
@@ -537,3 +550,15 @@
 @media (hover: none) {
   .bpe-hoverline { display: none; }
 }
+
+.bpe-scopehint { margin-top: 7px; font-size: .76rem; }
+.bpe-colnote { color: var(--text-mute); font-size: .92em; }
+/* Four tools wrapped 3-then-1 and left a stretched orphan. A 2x2 grid is tidier and
+   gives each one a bigger target. */
+.bpe-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.bpe-tools button { min-width: 0; padding-left: 9px; padding-right: 9px; }
+.bpe-tools button span { overflow: hidden; text-overflow: ellipsis; }
