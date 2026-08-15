@@ -3107,6 +3107,14 @@
       if (sn.ap !== undefined) d.ap = sn.ap;
       d.locked = sn.locked; d.visible = sn.visible; d.mode = sn.mode || d.mode;
       replayEdits(d, sn.edits);
+      /* mount() has already run by this point: it drew the stack and built each part's
+         list thumbnail from the payload as it came off the wire, and BOTH are cached -
+         `state.drawn` for the geometry, `d.thumb` for the picture. Replaying the edits
+         changes the payload underneath both caches, so anything derived from it has to
+         be dropped here or the part keeps showing its unedited self: the 3D layer until
+         you click it, and the thumbnail for as long as the model stays open. */
+      d.dirtyMesh = true;
+      clearThumb(d);
     });
   }
 
@@ -3119,11 +3127,11 @@
       // Every reopen path ends in mount(); the saved edits go on after it, and then the
       // page is redrawn as though it had been edited to this point.
       applySnapshot(rec.docs);
-      state.active = Math.min(rec.active || 0, state.docs.length - 1);
+      var want = Math.min(rec.active || 0, state.docs.length - 1);
       state.anchor = Math.min(rec.anchor || 0, state.docs.length - 1);
       state.sessionId = rec.id;
       state.restoring = false;
-      setActive(state.active);
+      setActive(want);
       if (state.scene) state.scene.rebuild(liveView());
       drawStack();
       setStatus('Picked up where you left off — ' + rec.edited.toLocaleString()
