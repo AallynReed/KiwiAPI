@@ -917,13 +917,23 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
 }
 .bpe-partrow .bpe-layerpick {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 4px 7px;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 7px;
+}
+/* The picture, drawn from the part's own voxels. `pixelated` because it IS pixels -
+   a 26px isometric thumbnail smoothed by the browser turns a voxel model into mush. */
+.bpe-partthumb {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  image-rendering: pixelated;
+  border-radius: 4px;
 }
 .bpe-partrow .bpe-layerpick strong {
   display: block;
   flex: 0 1 auto;
+  min-width: 0;
   font-size: .78rem;
   overflow: hidden;
   text-overflow: ellipsis;

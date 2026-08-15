@@ -422,6 +422,7 @@
         state.stroke.push.apply(state.stroke, batch);
       } else {
         state.history.push(batch);
+        clearThumb(active());
         noteEditInModelView();
         renderMaterialList();
         renderMeta();
@@ -589,6 +590,7 @@
       d.rgb[i] = rec.rgb; d.type[i] = rec.type; d.w[i] = rec.w; d.live[i] = rec.live;
       reshade(i, d);
     }
+    clearThumb(docu);
     // Undoing a part you are not looking at still has to redraw it - it is on screen as
     // a layer, and its cached geometry is now a frame out of date.
     if (docu !== active()) {
@@ -618,6 +620,7 @@
       reshade(i);
     }
     state.history = [];
+    clearThumb(active());
     rebuildIndex();
     if (state.scene) state.scene.rebuild(liveView());
     renderMaterialList();
@@ -1001,9 +1004,12 @@
       var moved = d.move[0] || d.move[1] || d.move[2];
       var where = placed ? d.ap.replace(/_/g, ' ')
         : (r ? 'not placed' : liveCountOf(d).toLocaleString() + ' voxels');
+      var thumb = partThumb(d);
       return '<li class="bpe-partrow' + (i === state.active ? ' active' : '')
         + (state.ask === i && !placed ? ' asking' : '') + (placed ? '' : ' unplaced') + '">'
         + '<button type="button" class="bpe-layerpick" data-pick="' + i + '">'
+        + (thumb ? '<img class="bpe-partthumb" alt="" src="' + thumb + '">'
+                 : '<span class="bpe-partthumb"></span>')
         + (placed ? '' : '<i class="fa-solid fa-circle-question bpe-unplacedmark"'
                        + ' aria-hidden="true"></i>')
         + '<strong>' + esc(partLabel(d)) + '</strong>'
@@ -1386,6 +1392,78 @@
      The shared opening is dropped (at an underscore, so nothing is cut mid-word), which
      leaves exactly the part that differs: body, l foot, r foot. One part keeps its whole
      name, since there is nothing to tell it apart from. */
+  /* ---- part thumbnails -------------------------------------------------------
+     A row that says "l_thigh" tells you the name of a part; a picture tells you which
+     part it is. Drawn HERE, from the voxels already in the page, rather than asked of
+     the renderer: the parts are not stored anywhere to ask about (the editor is
+     stateless), a part just added has never existed server-side at all, and one you
+     have painted would answer with its old colours.
+
+     Isometric, with a one-pixel z-buffer instead of sorting: every voxel projects to a
+     screen cell and only the nearest survives, which is O(n) and draws each pixel once.
+     Depth doubles as shading - nearer is lighter - so the silhouette reads as a shape
+     rather than a flat blob without needing face normals. */
+  var THUMB = 26;
+
+  function partThumb(d) {
+    if (d.thumb !== undefined) return d.thumb;
+    d.thumb = drawThumb(d.payload);
+    return d.thumb;
+  }
+
+  function drawThumb(p) {
+    var n = p.count, i, x, y, z;
+    var lo = [Infinity, Infinity], hi = [-Infinity, -Infinity], any = false;
+    for (i = 0; i < n; i++) {
+      if (!p.live[i]) continue;
+      any = true;
+      x = p.x[i] - p.z[i];
+      y = (p.x[i] + p.z[i]) * 0.5 - p.y[i];
+      if (x < lo[0]) lo[0] = x;
+      if (x > hi[0]) hi[0] = x;
+      if (y < lo[1]) lo[1] = y;
+      if (y > hi[1]) hi[1] = y;
+    }
+    if (!any) return null;
+
+    var S = THUMB * 2;                                  // backing pixels (for retina)
+    var span = Math.max(hi[0] - lo[0], hi[1] - lo[1], 1);
+    var k = (S - 2) / (span + 1);
+    var offX = (S - (hi[0] - lo[0]) * k) / 2 - lo[0] * k;
+    var offY = (S - (hi[1] - lo[1]) * k) / 2 - lo[1] * k;
+
+    var cells = new Map(), dmin = Infinity, dmax = -Infinity;
+    for (i = 0; i < n; i++) {
+      if (!p.live[i]) continue;
+      var depth = p.x[i] + p.y[i] + p.z[i];
+      if (depth < dmin) dmin = depth;
+      if (depth > dmax) dmax = depth;
+      var px = Math.round((p.x[i] - p.z[i]) * k + offX);
+      var py = Math.round(((p.x[i] + p.z[i]) * 0.5 - p.y[i]) * k + offY);
+      var key = px * 4096 + py;
+      var was = cells.get(key);
+      if (!was || depth > was[2]) cells.set(key, [px, py, depth, p.rgb[i]]);
+    }
+
+    var canvas = document.createElement('canvas');
+    canvas.width = S; canvas.height = S;
+    var g = canvas.getContext('2d');
+    var range = (dmax - dmin) || 1;
+    var size = Math.max(1, Math.ceil(k));
+    cells.forEach(function (c) {
+      var shade = 0.72 + 0.28 * ((c[2] - dmin) / range);
+      var r = Math.min(255, ((c[3] >> 16) & 255) * shade) | 0;
+      var gg = Math.min(255, ((c[3] >> 8) & 255) * shade) | 0;
+      var b = Math.min(255, (c[3] & 255) * shade) | 0;
+      g.fillStyle = 'rgb(' + r + ',' + gg + ',' + b + ')';
+      g.fillRect(c[0], c[1], size, size);
+    });
+    return canvas.toDataURL('image/png');
+  }
+
+  // A part that changed no longer looks like its picture.
+  function clearThumb(d) { if (d) d.thumb = undefined; }
+
   function indexOfDoc(id) {
     for (var i = 0; i < state.docs.length; i++) if (state.docs[i].id === id) return i;
     return -1;
@@ -2217,6 +2295,7 @@
     state.strokeNormal = null;
     if (batch && batch.length) {
       state.history.push(batch);
+      clearThumb(active());
       noteEditInModelView();
       renderMaterialList();
       renderMeta();
