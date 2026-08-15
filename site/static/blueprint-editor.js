@@ -40,6 +40,7 @@
     kind: 'other',       // creation type the checks are run against
     docs: [],            // the stack, bottom to top; each is its own blueprint
     active: 0,           // which one the tools edit
+    anchor: 0,           // which one everything else is positioned against
     docSeq: 1,
     isolate: false,      // show only the layer being edited
     report: null,        // last check result
@@ -97,6 +98,7 @@
     state.file = file;
     state.docs = [makeDoc(file, payload)];
     state.active = 0;
+    state.anchor = 0;
     state.isolate = false;
     state.report = null;
     $('bpe-report').hidden = true;
@@ -228,8 +230,7 @@
     btn.disabled = true;
     setStatus('Checking…');
     var fd = new FormData();
-    fd.append('file', state.file, state.file.name);
-    fd.append('edits', JSON.stringify(list));
+    anchorParts(fd);
     fd.append('kind', state.kind);
     stackParts(fd);
     fetch(apiUrl('/site/blueprint-editor/check'), { method: 'POST', body: fd })
@@ -550,8 +551,7 @@
     var list = editList();
     setStatus('Saving…');
     var fd = new FormData();
-    fd.append('file', state.docs[0].file, state.docs[0].file.name);
-    fd.append('edits', JSON.stringify(editListOf(state.docs[0])));
+    anchorParts(fd);
     stackParts(fd);
     fetch(apiUrl('/site/blueprint-editor/save'), { method: 'POST', body: fd })
       .then(function (res) {
@@ -647,8 +647,10 @@
   function doc(i) { return state.docs[i] || null; }
   function active() { return state.docs[state.active] || null; }
 
+  function anchorDoc() { return state.docs[state.anchor] || null; }
+
   function alignOffset(d, mode) {
-    var b = state.docs[0];
+    var b = anchorDoc();
     if (!b || !d || d === b) return [0, 0, 0];
     if (mode === 'corner') return [0, 0, 0];
     if (mode === 'centre') {
@@ -665,7 +667,7 @@
   /* Where a layer's grid sits in the stack's shared space. The bottom layer defines
      that space, so it is always at zero. */
   function placement(d) {
-    if (!d || d === state.docs[0]) return [0, 0, 0];
+    if (!d || d === anchorDoc()) return [0, 0, 0];
     var base = alignOffset(d, d.mode);
     if (!base) return null;
     return [base[0] + d.offset[0], base[1] + d.offset[1], base[2] + d.offset[2]];
@@ -788,7 +790,8 @@
       .then(function (payload) {
         var d = makeDoc(file, payload);
         // Line the grips up by default; fall back when one side hasn't got one.
-        d.mode = (state.docs[0].payload.attachment && payload.attachment)
+        var anc = anchorDoc();
+        d.mode = (anc && anc.payload.attachment && payload.attachment)
           ? 'attachment' : 'centre';
         state.docs.push(d);
         setActive(state.docs.length - 1);
@@ -799,25 +802,54 @@
   }
 
   function removeLayer(i) {
-    if (i === 0 || !state.docs[i]) return;      // the bottom layer is the model itself
+    if (!state.docs[i] || state.docs.length < 2) return;
+    if (i === state.anchor) {
+      setStatus('That layer is the anchor everything else is placed against. Make '
+        + 'another layer the anchor first.', 'error');
+      return;
+    }
     if (state.scene) state.scene.clearLayer(state.docs[i].id);
     state.docs.splice(i, 1);
+    if (state.anchor > i) state.anchor--;
     setActive(Math.min(state.active, state.docs.length - 1));
   }
 
+  /* Reordering only changes who wins a shared cell. The anchor is a separate idea, so
+     it follows its document rather than staying at an index. */
   function reorderLayer(i, dir) {
     var j = i + dir;
     if (i < 0 || j < 0 || i >= state.docs.length || j >= state.docs.length) return;
     var tmp = state.docs[i];
     state.docs[i] = state.docs[j];
     state.docs[j] = tmp;
-    // Offsets are relative to the bottom layer, so swapping it changes the frame.
+    if (state.anchor === i) state.anchor = j;
+    else if (state.anchor === j) state.anchor = i;
     setActive(state.active === i ? j : (state.active === j ? i : state.active));
+  }
+
+  /* Make a layer the frame. Everything else keeps the position it is SHOWN at, so
+     changing the anchor re-describes the arrangement rather than rearranging it -
+     otherwise picking a new anchor would scatter the models you had just lined up. */
+  function setAnchor(i) {
+    if (!state.docs[i] || i === state.anchor) return;
+    var world = state.docs.map(placement);
+    state.anchor = i;
+    state.docs.forEach(function (d, k) {
+      if (k === i) { d.offset = [0, 0, 0]; return; }
+      var here = world[k], there = world[i];
+      if (!here || !there) { d.offset = [0, 0, 0]; return; }
+      var base = alignOffset(d, d.mode) || [0, 0, 0];
+      d.offset = [here[0] - there[0] - base[0],
+                  here[1] - there[1] - base[1],
+                  here[2] - there[2] - base[2]];
+    });
+    renderLayers();
+    drawStack();
   }
 
   function nudgeActive(dx, dy, dz) {
     var d = active();
-    if (!d || d === state.docs[0]) return;
+    if (!d || d === anchorDoc()) return;
     d.offset = [d.offset[0] + dx, d.offset[1] + dy, d.offset[2] + dz];
     renderLayers();
     drawStack();
@@ -835,32 +867,36 @@
     for (var i = state.docs.length - 1; i >= 0; i--) {
       var d = state.docs[i];
       var t = placement(d);
-      var bottom = (i === 0);
-      rows.push('<li class="bpe-layerrow' + (i === state.active ? ' active' : '') + '">'
+      var isAnchor = (i === state.anchor);
+      rows.push('<li class="bpe-layerrow' + (i === state.active ? ' active' : '')
+        + (isAnchor ? ' anchored' : '') + '">'
         + '<button type="button" class="bpe-layerpick" data-pick="' + i + '">'
         + '<strong>' + esc(d.payload.name) + '</strong><span>'
         + liveCountOf(d).toLocaleString() + ' voxels'
-        + (bottom ? ' - bottom layer'
-                  : (t ? ' at ' + t.join(', ') : ' - cannot line up this way'))
+        + (isAnchor ? ' - anchor'
+                    : (t ? ' at ' + t.join(', ') : ' - cannot line up this way'))
         + '</span></button>'
-        + (bottom ? '<span class="bpe-layerbtn bpe-layerlock"></span>'
-                  : '<button type="button" class="bpe-layerbtn" data-vis="' + i
-                    + '" aria-label="Show or hide"><i class="fa-solid fa-eye'
-                    + (d.visible ? '' : '-slash') + '" aria-hidden="true"></i></button>')
+        + '<button type="button" class="bpe-layerbtn bpe-anchorbtn'
+        + (isAnchor ? ' on' : '') + '" data-anchor="' + i + '" aria-pressed="' + isAnchor
+        + '" aria-label="Use as the anchor"><i class="fa-solid fa-thumbtack"'
+        + ' aria-hidden="true"></i></button>'
+        + '<button type="button" class="bpe-layerbtn" data-vis="' + i
+        + '" aria-label="Show or hide"' + (isAnchor ? ' disabled' : '')
+        + '><i class="fa-solid fa-eye' + (d.visible ? '' : '-slash')
+        + '" aria-hidden="true"></i></button>'
         + '<button type="button" class="bpe-layerbtn" data-up="' + i + '" aria-label="Move up"'
         + (i === state.docs.length - 1 ? ' disabled' : '') + '>&uarr;</button>'
         + '<button type="button" class="bpe-layerbtn" data-down="' + i + '" aria-label="Move down"'
         + (i === 0 ? ' disabled' : '') + '>&darr;</button>'
-        + (bottom ? '<span class="bpe-layerbtn bpe-layerlock"></span>'
-                  : '<button type="button" class="bpe-layerbtn" data-drop="' + i
-                    + '" aria-label="Remove layer"><i class="fa-solid fa-xmark"'
-                    + ' aria-hidden="true"></i></button>')
+        + '<button type="button" class="bpe-layerbtn" data-drop="' + i
+        + '" aria-label="Remove layer"' + (isAnchor ? ' disabled' : '')
+        + '><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>'
         + '</li>');
     }
     $('bpe-layerlist').innerHTML = rows.join('');
 
     var a = active();
-    var movable = a && a !== state.docs[0];
+    var movable = a && a !== anchorDoc();
     $('bpe-layerctl').hidden = !movable;
     if (movable) { renderAlignModes(a); renderNudge(a); }
 
@@ -880,7 +916,7 @@
   }
 
   function renderAlignModes(d) {
-    var modes = state.docs[0].payload.align_modes || [];
+    var modes = (anchorDoc() || state.docs[0]).payload.align_modes || [];
     $('bpe-align').innerHTML = modes.map(function (m) {
       return '<option value="' + m.mode + '"' + (m.mode === d.mode ? ' selected' : '')
         + '>' + esc(m.label) + '</option>';
@@ -898,22 +934,27 @@
      as `layers` bottom to top with a spec each - placement AND their own edits, since
      every layer is a blueprint someone may have painted on. */
   function stackParts(fd) {
-    state.docs.slice(1).forEach(function (d) {
-      fd.append('layers', d.file, d.file.name);
-    });
-    if (state.docs.length > 1) {
-      fd.append('stack', JSON.stringify(state.docs.slice(1).map(function (d) {
-        return { mode: d.mode, offset: d.offset, edits: editListOf(d) };
-      })));
-    }
+    if (state.docs.length < 2) return;
+    var others = state.docs.filter(function (_, i) { return i !== state.anchor; });
+    others.forEach(function (d) { fd.append('layers', d.file, d.file.name); });
+    fd.append('stack', JSON.stringify(others.map(function (d) {
+      return { mode: d.mode, offset: d.offset, edits: editListOf(d) };
+    })));
+    // Where the anchor sits in the stacking order - separate from being the frame.
+    fd.append('anchor_at', String(state.anchor));
+  }
+
+  function anchorParts(fd) {
+    var a = anchorDoc();
+    fd.append('file', a.file, a.file.name);
+    fd.append('edits', JSON.stringify(editListOf(a)));
   }
 
   function flattenStack() {
     if (state.docs.length < 2) return;
     setStatus('Flattening...');
     var fd = new FormData();
-    fd.append('file', state.docs[0].file, state.docs[0].file.name);
-    fd.append('edits', JSON.stringify(editListOf(state.docs[0])));
+    anchorParts(fd);
     stackParts(fd);
     fetch(apiUrl('/site/blueprint-editor/flatten'), { method: 'POST', body: fd })
       .then(function (res) {
@@ -932,7 +973,7 @@
         if (s.hidden) bits.push(s.hidden.toLocaleString() + ' overlapping cell'
           + (s.hidden === 1 ? '' : 's') + ' went to the layer above');
         if (s.entities) bits.push(s.entities);
-        var name = state.docs[0].file.name;
+        var name = anchorDoc().file.name;
         openFile(new File([out.blob], name),
                  'Flattened into one blueprint - ' + bits.join(' - ') + '.');
       })
@@ -959,8 +1000,7 @@
     var list = editList();
     setStatus('Building the .qb files…');
     var fd = new FormData();
-    fd.append('file', state.docs[0].file, state.docs[0].file.name);
-    fd.append('edits', JSON.stringify(editListOf(state.docs[0])));
+    anchorParts(fd);
     stackParts(fd);
     fetch(apiUrl('/site/blueprint-editor/export-qb'), { method: 'POST', body: fd })
       .then(function (res) {
@@ -1088,7 +1128,7 @@
       pick: 'Click a voxel to copy its colour and material into the settings below.',
       add: 'Click a face to put a new voxel against it, in the colour and material below.',
       erase: 'Click a voxel to delete it.',
-      move: 'Drag to slide this layer around. Right-drag still turns the view.',
+      move: 'Drag to slide this layer around. Ctrl-drag (or right-drag) turns the view.',
     };
     var hint = hints[state.tool] || hints.paint;
     // Which layer a click lands on is the thing to be unambiguous about once there is
@@ -1096,9 +1136,9 @@
     if (state.docs.length > 1 && active()) {
       hint += ' Working on ' + active().payload.name + '.';
     }
-    if (state.tool === 'move' && active() === state.docs[0]) {
-      hint = 'The bottom layer is the frame everything else is placed against, so it '
-        + 'does not move. Pick a layer above it.';
+    if (state.tool === 'move' && active() === anchorDoc()) {
+      hint = 'This layer is the anchor - the frame the others are placed against, so it '
+        + 'does not move. Pick another layer, or pin a different one as the anchor.';
     }
     $('bpe-toolhint').textContent = hint;
     var faded = state.tool === 'erase' || state.tool === 'pick' || state.tool === 'move';
@@ -1451,10 +1491,11 @@
     });
     $('bpe-layerlist').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-pick],button[data-vis],button[data-up],' +
-                               'button[data-down],button[data-drop]');
+                               'button[data-down],button[data-drop],button[data-anchor]');
       if (!b) return;
       var ds = b.dataset;
       if (ds.pick !== undefined) return setActive(+ds.pick);
+      if (ds.anchor !== undefined) return setAnchor(+ds.anchor);
       if (ds.vis !== undefined) {
         var d = doc(+ds.vis);
         if (d) { d.visible = !d.visible; renderLayers(); drawStack(); }

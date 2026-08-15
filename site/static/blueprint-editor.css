@@ -682,3 +682,8 @@
 .bpe-layerlock { pointer-events: none; }
 #bpe-isolate[aria-pressed="true"] { border-color: var(--accent-blue); color: var(--text); }
 #bpe-layerctl { display: grid; gap: 9px; margin-bottom: 10px; }
+
+/* The anchor is the frame everything else is placed against - a different idea from
+   which layer is on top, so it gets its own marker rather than a position in the list. */
+.bpe-layerrow.anchored { border-left: 3px solid var(--accent-yellow); }
+.bpe-anchorbtn.on { color: var(--accent-yellow); }

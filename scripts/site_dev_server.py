@@ -3558,12 +3558,14 @@ class Handler(SimpleHTTPRequestHandler):
                     data, json.loads(fields.get("edits") or "[]"),
                     fields.get("kind") or "other",
                     [d for nm, fn, d in files if nm == "layers"],
-                    json.loads(fields.get("stack") or "[]")))
+                    json.loads(fields.get("stack") or "[]"),
+                    int(fields.get("anchor_at") or 0)))
             if path == "/site/blueprint-editor/flatten":
                 out, summary = bp_editor.composite(
                     data, json.loads(fields.get("edits") or "[]"),
                     [d for nm, fn, d in files if nm == "layers"],
-                    json.loads(fields.get("stack") or "[]"))
+                    json.loads(fields.get("stack") or "[]"),
+                    int(fields.get("anchor_at") or 0))
                 self.send_response(200)
                 self.send_header("Content-Type", "application/octet-stream")
                 self.send_header("Content-Length", str(len(out)))
@@ -3589,7 +3591,8 @@ class Handler(SimpleHTTPRequestHandler):
                 archive, summary = bp_editor.export_qb(
                     data, json.loads(fields.get("edits") or "[]"),
                     [d for nm, fn, d in files if nm == "layers"],
-                    json.loads(fields.get("stack") or "[]"), stem=stem or "model")
+                    json.loads(fields.get("stack") or "[]"),
+                    int(fields.get("anchor_at") or 0), stem=stem or "model")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/zip")
                 self.send_header("Content-Length", str(len(archive)))
@@ -3602,7 +3605,8 @@ class Handler(SimpleHTTPRequestHandler):
                 out, summary = bp_editor.composite(
                     data, json.loads(fields.get("edits") or "[]"),
                     [d for nm, fn, d in files if nm == "layers"],
-                    json.loads(fields.get("stack") or "[]"))
+                    json.loads(fields.get("stack") or "[]"),
+                    int(fields.get("anchor_at") or 0))
                 self.send_response(200)
                 self.send_header("Content-Type", "application/octet-stream")
                 self.send_header("Content-Length", str(len(out)))

@@ -309,7 +309,9 @@
       // until the pointer actually travels - `moved` decides that on pointerup.
       // In drag mode a left-drag moves the thing being positioned instead; rotating
       // stays available on right-drag, which would otherwise be pan.
-      if (dragMode && e.button !== 2 && !e.shiftKey) {
+      // Ctrl (or a right-drag) turns the view even while positioning, so the two
+      // gestures never fight over the same button.
+      if (dragMode && e.button !== 2 && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
         drag = 3;
         lx = e.clientX; ly = e.clientY; moved = 0;
         dragAccum.set(0, 0, 0);

@@ -68,19 +68,30 @@ def align_offset(base: codec.DecodedBlueprint, over: codec.DecodedBlueprint,
     return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
 
 
-def flatten(base: codec.DecodedBlueprint, layers) -> tuple[codec.DecodedBlueprint, dict]:
+def flatten(docs, anchor: int = 0) -> tuple[codec.DecodedBlueprint, dict]:
     """Resolve a stack into one blueprint.
 
-    ``layers`` is ``[(decoded, mode, offset)]`` in STACKING ORDER, bottom to top, with
-    the base beneath all of them. A cell claimed by more than one is taken by the
-    highest layer that has it - that ordering is the only thing that decides a conflict,
-    and it is decided here at output rather than by anything the editor did earlier.
+    ``docs`` is ``[(decoded, mode, offset)]`` in STACKING ORDER, bottom to top. A cell
+    claimed by more than one is taken by the highest layer that has it - that ordering
+    is the only thing that decides a conflict, and it is decided here at output rather
+    than by anything the editor did earlier.
+
+    ``anchor`` names the layer that defines the FRAME, which is a separate question from
+    who is on top. Its grid is the one everything else is positioned against, its offset
+    is by definition zero, and the output inherits its format version, its attachment
+    point and its entity tail. Any layer can be it - the model you are building around
+    is not always the one at the bottom of the pile.
 
     CPU-bound - call via ``asyncio.to_thread``."""
+    if not docs:
+        raise MergeError("There's nothing to flatten.")
+    if not 0 <= anchor < len(docs):
+        raise MergeError("The anchor layer isn't in the stack.")
+    base = docs[anchor][0]
     if not base.voxels:
-        raise MergeError("The base blueprint needs at least one voxel.")
+        raise MergeError("The anchor blueprint needs at least one voxel.")
 
-    total = len(base.voxels) + sum(len(d.voxels) for d, _, _ in layers)
+    total = sum(len(d.voxels) for d, _, _ in docs)
     if total > MAX_MERGED_VOXELS:
         raise MergeError(
             f"Together those are more than {MAX_MERGED_VOXELS:,} voxels, past what the "
@@ -88,18 +99,19 @@ def flatten(base: codec.DecodedBlueprint, layers) -> tuple[codec.DecodedBlueprin
 
     placements: list[tuple[int, int, int]] = []
     cells: dict[tuple[int, int, int], dict] = {}
-    for v in base.voxels:
-        cells[(v["x"], v["y"], v["z"])] = v
 
     # Bottom to top, so the last writer at a cell is the topmost layer that has one.
     hidden = 0
-    for decoded, mode, offset in layers:
-        if mode not in ALIGN_MODES:
-            raise MergeError(f"Unknown alignment: {mode}.")
+    for i, (decoded, mode, offset) in enumerate(docs):
         if not decoded.voxels:
             raise MergeError("A layer has no voxels.")
-        ax, ay, az = align_offset(base, decoded, mode)
-        t = (ax + offset[0], ay + offset[1], az + offset[2])
+        if i == anchor:
+            t = (0, 0, 0)                     # the frame sits at the origin by definition
+        else:
+            if mode not in ALIGN_MODES:
+                raise MergeError(f"Unknown alignment: {mode}.")
+            ax, ay, az = align_offset(base, decoded, mode)
+            t = (ax + offset[0], ay + offset[1], az + offset[2])
         placements.append(t)
         for v in decoded.voxels:
             key = (v["x"] + t[0], v["y"] + t[1], v["z"] + t[2])
@@ -124,7 +136,7 @@ def flatten(base: codec.DecodedBlueprint, layers) -> tuple[codec.DecodedBlueprin
             max(max(v["z"] for v in voxels) + 1, base.size[2] + shift[2]))
 
     entity_blob, entity_note = _merge_entities(
-        base, [(d, t) for (d, _, _), t in zip(layers, placements, strict=True)], shift)
+        anchor, [(d, t) for (d, _, _), t in zip(docs, placements, strict=True)], shift)
 
     # The result is the base with something added, so it keeps the base's grip.
     attach = codec.attachment_point(base)
@@ -143,8 +155,9 @@ def flatten(base: codec.DecodedBlueprint, layers) -> tuple[codec.DecodedBlueprin
     return merged, {
         "voxels": len(voxels),
         "from_base": len(base.voxels),
-        "from_layers": sum(len(d.voxels) for d, _, _ in layers),
-        "layers": len(layers),
+        "from_layers": total - len(base.voxels),
+        "layers": len(docs) - 1,
+        "anchor": anchor,
         "hidden": hidden,
         "placed_at": [list(t) for t in placements],
         "size": list(size),
@@ -153,27 +166,29 @@ def flatten(base: codec.DecodedBlueprint, layers) -> tuple[codec.DecodedBlueprin
     }
 
 
-def _merge_entities(base, placed, shift) -> tuple[bytes, str]:
+def _merge_entities(anchor_i, placed, shift) -> tuple[bytes, str]:
     """Concatenate every layer's entity list, each moved into the flattened grid.
 
-    If any section can't be read exactly we keep the base's untouched and say what was
-    left behind - quietly dropping someone's furniture is not an option, and neither is
+    The anchor's tail is the one kept, since the output inherits its format. If any
+    section can't be read exactly we keep the anchor's untouched and say what was left
+    behind - quietly dropping someone's furniture is not an option, and neither is
     writing a section we'd be guessing at."""
-    b = codec.read_entity_records(base.entity_blob)
+    anchor_blob = placed[anchor_i][0].entity_blob
     reads = [codec.read_entity_records(d.entity_blob) for d, _ in placed]
-    if b is None or any(r is None for r in reads):
-        return base.entity_blob, ("the placed objects couldn't be read on one of the "
-                                  "models, so only the base's were kept")
-    brec, tail = b
-    out = [(x + shift[0], y + shift[1], z + shift[2], sub) for (x, y, z, sub) in brec]
+    if any(r is None for r in reads):
+        return anchor_blob, ("the placed objects couldn't be read on one of the "
+                             "models, so only the anchor's were kept")
+    tail = reads[anchor_i][1]    # type: ignore[index]
+    out = []
     carried = 0
-    for (_, t), read in zip(placed, reads, strict=True):
+    for i, ((_, t), read) in enumerate(zip(placed, reads, strict=True)):
         recs, _ = read           # type: ignore[misc]
-        carried += len(recs)
+        if i != anchor_i:
+            carried += len(recs)
         out += [(x + t[0] + shift[0], y + t[1] + shift[1], z + t[2] + shift[2], sub)
                 for (x, y, z, sub) in recs]
     if not out:
-        return base.entity_blob, ""
+        return anchor_blob, ""
     note = (f"{carried} placed object{'s' if carried != 1 else ''} came across too"
             if carried else "")
     return codec.write_entity_records(out, tail), note

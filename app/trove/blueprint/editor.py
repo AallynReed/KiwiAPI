@@ -321,7 +321,7 @@ def _layer_specs(specs, count: int):
 
 
 def composite(raw: bytes, edits, layers: list[bytes] | None = None,
-              specs=None) -> tuple[bytes, dict]:
+              specs=None, anchor_at: int = 0) -> tuple[bytes, dict]:
     """The model as it would be OUTPUT: edits applied, then the layer stack flattened.
 
     This is the one place a stack turns into a single blueprint, and every output path
@@ -336,13 +336,18 @@ def composite(raw: bytes, edits, layers: list[bytes] | None = None,
     if not layers:
         return edited, {**summary, "layers": 0}
     placements = _layer_specs(specs if specs is not None else [], len(layers))
+    if not 0 <= anchor_at <= len(layers):
+        raise EditorError("The anchor layer isn't in the stack.")
     try:
-        base = codec.decode_full(edited)
         stack = []
         for data, (mode, off, layer_edits) in zip(layers, placements, strict=True):
             painted, _ = apply_edits(data, layer_edits) if layer_edits else (data, None)
             stack.append((_decode_or_raise(painted), mode, off))
-        merged, msum = bp_merge.flatten(base, stack)
+        # The anchor arrives as `file` rather than as one of the layers, so it is put
+        # back at the position it occupies in the stacking order. Which layer is the
+        # frame and which layer is on top are separate questions.
+        stack.insert(anchor_at, (codec.decode_full(edited), "corner", (0, 0, 0)))
+        merged, msum = bp_merge.flatten(stack, anchor_at)
         data = codec.encode(merged.voxels, version=merged.version, pos=merged.pos,
                             entity_blob=merged.entity_blob, offset=merged.offset,
                             size=merged.size)
@@ -351,14 +356,14 @@ def composite(raw: bytes, edits, layers: list[bytes] | None = None,
     return data, {**summary, **msum}
 
 
-def export_qb(raw: bytes, edits, layers=None, specs=None, *,
+def export_qb(raw: bytes, edits, layers=None, specs=None, anchor_at: int = 0, *,
               stem: str = "model") -> tuple[bytes, dict]:
     """Export the edited model as the four authoring ``.qb`` files, zipped.
 
     Edits are applied first, for the same reason ``check`` applies them: the export is
     of the model as it stands, not as it was opened. CPU-bound - call via
     ``asyncio.to_thread``."""
-    edited, _ = composite(raw, edits, layers, specs)
+    edited, _ = composite(raw, edits, layers, specs, anchor_at)
     try:
         built = qb.from_blueprint(codec.decode_full(edited), stem=stem)
     except (qb.QbError, codec.BlueprintError) as exc:
@@ -381,13 +386,14 @@ def import_qb(files: dict[str, bytes]) -> tuple[bytes, dict]:
         raise EditorError(str(exc)) from exc
 
 
-def check(raw: bytes, edits, kind: str = "other", layers=None, specs=None) -> dict:
+def check(raw: bytes, edits, kind: str = "other", layers=None, specs=None,
+          anchor_at: int = 0) -> dict:
     """Run the Trove Creations checks against the model *as it would be saved*.
 
     Edits are applied first on purpose: linting the file that arrived would grade work
     the user has already moved on from, and the question they're asking is "is what I'm
     about to download acceptable". CPU-bound - call via ``asyncio.to_thread``."""
-    edited, _ = composite(raw, edits, layers, specs)
+    edited, _ = composite(raw, edits, layers, specs, anchor_at)
     return lint.check(codec.decode_full(edited), kind)
 
 

@@ -3604,6 +3604,7 @@ async def site_blueprint_editor_flatten(
     layers: list[UploadFile] = File(default=[]),
     edits: str = Form(default="[]"),
     stack: str = Form(default="[]"),
+    anchor_at: int = Form(default=0),
     _limit: None = _BP_EDITOR_LIMIT,
 ) -> Response:
     """Collapse the layer stack into the base and hand back the single blueprint.
@@ -3626,7 +3627,7 @@ async def site_blueprint_editor_flatten(
         raise APIError(400, ErrorCode.bad_request, "The edit list wasn't understood.") from None
     try:
         out, summary = await asyncio.to_thread(
-            bp_editor.composite, data, parsed, parts, specs)
+            bp_editor.composite, data, parsed, parts, specs, anchor_at)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     return Response(
@@ -3684,6 +3685,7 @@ async def site_blueprint_editor_export_qb(
     layers: list[UploadFile] = File(default=[]),
     edits: str = Form(default="[]"),
     stack: str = Form(default="[]"),
+    anchor_at: int = Form(default=0),
     _limit: None = _BP_EDITOR_LIMIT,
 ) -> Response:
     """Export the model as Trove's four authoring ``.qb`` files, zipped.
@@ -3712,7 +3714,7 @@ async def site_blueprint_editor_export_qb(
     try:
         parts, specs = await _bp_stack(layers, stack)
         archive, summary = await asyncio.to_thread(
-            bp_editor.export_qb, data, parsed, parts, specs, stem=stem)
+            bp_editor.export_qb, data, parsed, parts, specs, anchor_at, stem=stem)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     return Response(
@@ -3772,6 +3774,7 @@ async def site_blueprint_editor_check(
     layers: list[UploadFile] = File(default=[]),
     edits: str = Form(default="[]"),
     stack: str = Form(default="[]"),
+    anchor_at: int = Form(default=0),
     kind: str = Form(default="other"),
     _limit: None = _BP_EDITOR_LIMIT,
 ) -> JSONResponse:
@@ -3796,7 +3799,8 @@ async def site_blueprint_editor_check(
                        "The edit list wasn't understood.") from None
     try:
         parts, specs = await _bp_stack(layers, stack)
-        report = await asyncio.to_thread(bp_editor.check, data, parsed, kind, parts, specs)
+        report = await asyncio.to_thread(
+            bp_editor.check, data, parsed, kind, parts, specs, anchor_at)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     return JSONResponse(report, headers={"Cache-Control": "no-store"})
@@ -3808,6 +3812,7 @@ async def site_blueprint_editor_save(
     layers: list[UploadFile] = File(default=[]),
     edits: str = Form(default="[]"),
     stack: str = Form(default="[]"),
+    anchor_at: int = Form(default=0),
     _limit: None = _BP_EDITOR_LIMIT,
 ) -> Response:
     """Apply the page's edits to the posted ``.blueprint`` and hand the result back.
@@ -3829,7 +3834,7 @@ async def site_blueprint_editor_save(
     parts, specs = await _bp_stack(layers, stack)
     try:
         out, summary = await asyncio.to_thread(
-            bp_editor.composite, data, parsed, parts, specs)
+            bp_editor.composite, data, parsed, parts, specs, anchor_at)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     name = (file.filename or "blueprint.blueprint").rsplit("/", 1)[-1]
