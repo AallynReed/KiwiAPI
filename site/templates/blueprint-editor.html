@@ -236,24 +236,6 @@
                         <span id="bpe-layer-open-label" data-i18n>Add a layer</span>
                     </button>
                 </div>
-                <div id="bpe-layerctl" hidden>
-                    <label class="sr-only" for="bpe-align" data-i18n>How should this layer line up?</label>
-                    <select id="bpe-align"></select>
-                    <div class="bpe-nudge" id="bpe-nudge">
-                        <span class="bpe-nudge-axis">X</span>
-                        <button type="button" class="bpe-xform" data-nudge="-1,0,0">&minus;</button>
-                        <span class="bpe-nudge-val" id="bpe-nudge-x">0</span>
-                        <button type="button" class="bpe-xform" data-nudge="1,0,0">+</button>
-                        <span class="bpe-nudge-axis">Y</span>
-                        <button type="button" class="bpe-xform" data-nudge="0,-1,0">&minus;</button>
-                        <span class="bpe-nudge-val" id="bpe-nudge-y">0</span>
-                        <button type="button" class="bpe-xform" data-nudge="0,1,0">+</button>
-                        <span class="bpe-nudge-axis">Z</span>
-                        <button type="button" class="bpe-xform" data-nudge="0,0,-1">&minus;</button>
-                        <span class="bpe-nudge-val" id="bpe-nudge-z">0</span>
-                        <button type="button" class="bpe-xform" data-nudge="0,0,1">+</button>
-                    </div>
-                </div>
                 <p class="bpe-hint" id="bpe-layerinfo"></p>
                 <div class="bpe-actions">
                     <button type="button" class="bpe-btn" id="bpe-flatten" disabled>
@@ -306,6 +288,29 @@
                 <!-- Rotating a model is a thing you do once, if ever - so it folds away
                      and the panel is shorter by six buttons and a paragraph until you
                      want it. -->
+                <!-- Sliding a part along its bone is occasional and locked by
+                     default, so it folds away next to the other one. -->
+                <details class="bpe-fold" id="bpe-movefold" hidden>
+                    <summary><span id="bpe-movefold-label" data-i18n>Move on the rig</span></summary>
+                    <div id="bpe-layerctl">
+                        <label class="sr-only" for="bpe-align" data-i18n>How should this layer line up?</label>
+                        <select id="bpe-align"></select>
+                        <div class="bpe-nudge" id="bpe-nudge">
+                            <span class="bpe-nudge-axis">X</span>
+                            <button type="button" class="bpe-xform" data-nudge="-1,0,0">&minus;</button>
+                            <span class="bpe-nudge-val" id="bpe-nudge-x">0</span>
+                            <button type="button" class="bpe-xform" data-nudge="1,0,0">+</button>
+                            <span class="bpe-nudge-axis">Y</span>
+                            <button type="button" class="bpe-xform" data-nudge="0,-1,0">&minus;</button>
+                            <span class="bpe-nudge-val" id="bpe-nudge-y">0</span>
+                            <button type="button" class="bpe-xform" data-nudge="0,1,0">+</button>
+                            <span class="bpe-nudge-axis">Z</span>
+                            <button type="button" class="bpe-xform" data-nudge="0,0,-1">&minus;</button>
+                            <span class="bpe-nudge-val" id="bpe-nudge-z">0</span>
+                            <button type="button" class="bpe-xform" data-nudge="0,0,1">+</button>
+                        </div>
+                    </div>
+                </details>
                 <details class="bpe-fold">
                     <summary><span data-i18n>Turn it</span></summary>
                     <p class="bpe-hint" data-i18n>Rotating or flipping takes the attachment point and any placed objects with it.</p>

@@ -1031,7 +1031,10 @@
     // The nudge buttons stay - they slide the part along its bone here - but there is
     // nothing to align against, so the alignment picker goes.
     var a = active();
-    $('bpe-layerctl').hidden = false;
+    // The nudge control folds away with the rest of the occasional ones; a part is
+    // locked on arrival, so it is not the first thing anybody reaches for.
+    $('bpe-movefold').hidden = false;
+    $('bpe-movefold-label').textContent = 'Move on the rig';
     $('bpe-layerctl').classList.add('bpe-noalign');
     if (a) renderMoveNudge(a);
     renderApPicker();
@@ -1166,7 +1169,8 @@
 
     var a = active();
     var movable = a && a !== anchorDoc();
-    $('bpe-layerctl').hidden = !movable;
+    $('bpe-movefold').hidden = !movable;
+    $('bpe-movefold-label').textContent = 'Line it up';
     if (movable) { renderAlignModes(a); renderNudge(a); }
 
     var st = stackStats();
@@ -1955,6 +1959,11 @@
 
   var searchTimer = 0, searchSeq = 0;
 
+  /* A recipe is an instruction and an item is a thing in a bag - neither is built from
+     blueprint parts on a skeleton, so neither can be opened here. They are dropped from
+     the results rather than left to be clicked and refused. */
+  var NOT_A_MODEL = { recipe: 1, item: 1 };
+
   function runSearch() {
     var q = $('bpe-search').value.trim();
     var type = $('bpe-searchtype').value;
@@ -1965,11 +1974,16 @@
       return;
     }
     var seq = ++searchSeq;
-    var url = '/site/codexes/search?limit=24&q=' + encodeURIComponent(q)
+    // Ask for more than fits, because the types that are never models are dropped
+    // below and a page of recipes would otherwise come back as an empty grid.
+    var url = '/site/codexes/search?limit=60&q=' + encodeURIComponent(q)
       + (type ? '&type=' + encodeURIComponent(type) : '');
     U.getJSON(url).then(function (body) {
       if (seq !== searchSeq) return;      // a later keystroke already answered
-      renderResults((body && body.items) || [], body && body.total);
+      var items = ((body && body.items) || []).filter(function (e) {
+        return !NOT_A_MODEL[e.codex_type || e.type];
+      });
+      renderResults(items.slice(0, 24), items.length);
     }).catch(function () {
       if (seq !== searchSeq) return;
       note.hidden = false;
@@ -1993,12 +2007,17 @@
         + '<span class="bpe-result-name">' + esc(e.name || e.path || 'Unnamed')
         + '<small>' + esc(e.codex_type || '') + '</small></span></button></li>';
     }).join('');
-    note.hidden = !items.length && !total;
-    note.textContent = items.length
-      ? (total > items.length ? 'Showing ' + items.length + ' of ' + total.toLocaleString()
-         + ' — keep typing to narrow it down.' : '')
-      : 'Nothing in the game data matches that.';
-    if (items.length && !note.textContent) note.hidden = true;
+    // Say something only when there is something to say: nothing found, or more found
+    // than fits. (It used to hide the "nothing found" line in exactly the case that
+    // produced it.)
+    var msg = !items.length
+      ? 'Nothing in the game data matches that.'
+      : (total > items.length
+          ? 'Showing ' + items.length + ' of ' + total.toLocaleString()
+            + ' — keep typing to narrow it down.'
+          : '');
+    note.textContent = msg;
+    note.hidden = !msg;
   }
 
   function openGameModel(prefab, label) {
