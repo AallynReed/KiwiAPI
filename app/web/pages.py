@@ -698,8 +698,9 @@ async def activity_page(request: Request, period: str | None = None) -> HTMLResp
 @router.get("/activity/og.png", include_in_schema=False)
 async def activity_og_image(period: str | None = None) -> RedirectResponse:
     p = (period or "").lower()
-    p = p if p in _OG_PERIODS else ""         # same allowlist the page itself uses
-    qs = f"?period={p}" if p else ""
+    # Echo the allowlist's own copy of the period, never the caller's string, so
+    # nothing the caller typed can reach the redirect target at all.
+    qs = next((f"?period={known}" for known in _OG_PERIODS if known == p), "")
     return RedirectResponse(f"{_API}/activity/og.png{qs}", status_code=302)
 
 
