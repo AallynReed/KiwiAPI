@@ -55,6 +55,10 @@
     strokeNormal: null,  // the face an 'add' stroke started on
     report: null,        // last check result
     showAttach: true,
+    swatches: [],        // saved colours, browser-local (see loadSwatches)
+    sel: null,           // Set of rows the tools are confined to, or null for all
+    selOut: false,       // true = work on everything EXCEPT the selection
+    grab: 'connected',   // what a Select click gathers
   };
 
   var ATTACH_COLOUR = 0xff3fd5;   // the pink Trove modders mark attachment points in
@@ -137,6 +141,9 @@
     state.origin = d0.origin;
     state.history = d0.history;
     state.selection = -1;
+    // Rows are indices into THIS document's arrays; carried into another file they
+    // would silently name different voxels.
+    state.sel = null;
     rebuildIndex();
 
     renderMode();
@@ -173,6 +180,7 @@
       scene.setDragMode(dragModeFor(state.tool));
       drawStack();
       drawAttachment();
+      drawSelection();
       // A creature opens on the creature, not on whichever part happens to be first.
       if (state.project) scene.frameAll();
     }).catch(function (err) {
@@ -241,6 +249,181 @@
       if (e) out.push(e);
     }
     return out;
+  }
+
+  // ---- selection + masking ------------------------------------------------ //
+
+  /* A selection is a MASK: the set of voxels the tools are allowed to touch (or,
+     inverted, the only ones they must leave alone). It is deliberately a different idea
+     from `scope`, which is how far one click SPREADS - you can select the left wing and
+     still say "every voxel of that colour", and get every voxel of that colour *in the
+     wing*.
+
+     The reason to have it at all is that a bulk edit was a leap of faith: "every voxel
+     of that material" on a typical model means almost the whole thing, and you found
+     out which voxels that meant by doing it and looking. Now you point at them first
+     and they light up. */
+
+  var GRABS = [
+    { id: 'voxel', label: 'Just that voxel' },
+    { id: 'connected', label: 'Everything joined to it' },
+    { id: 'colour', label: 'Every voxel of that colour' },
+    { id: 'colour-connected', label: 'That colour, joined up' },
+    { id: 'material', label: 'Every voxel of that material' },
+  ];
+
+  var SELECT_COLOUR = 0x58a6ff;
+
+  function renderGrabs() {
+    var el = $('bpe-grabs');
+    if (!el) return;
+    el.innerHTML = GRABS.map(function (g) {
+      return '<button type="button" data-grab="' + g.id + '"'
+        + ' aria-pressed="' + (state.grab === g.id) + '">' + esc(g.label) + '</button>';
+    }).join('');
+  }
+
+  /* Face-connected flood fill from `i`. `same` decides what counts as joined, which is
+     the whole difference between "this shape" and "this shape in this colour". Uses the
+     live index, so an erased voxel breaks the connection exactly as a gap does. */
+  function flood(i, same) {
+    var d = state.data, out = new Set([i]);
+    var queue = [i];
+    while (queue.length) {
+      var c = queue.pop();
+      var x = d.x[c], y = d.y[c], z = d.z[c];
+      var nb = [[x+1,y,z],[x-1,y,z],[x,y+1,z],[x,y-1,z],[x,y,z+1],[x,y,z-1]];
+      for (var n = 0; n < 6; n++) {
+        var j = state.index.get(nb[n][0] + ',' + nb[n][1] + ',' + nb[n][2]);
+        if (j === undefined || out.has(j) || !d.live[j]) continue;
+        if (!same(j, i)) continue;
+        out.add(j);
+        queue.push(j);
+      }
+    }
+    return out;
+  }
+
+  function grabFrom(i) {
+    var d = state.data, out;
+    if (state.grab === 'voxel') return new Set([i]);
+    if (state.grab === 'connected') return flood(i, function () { return true; });
+    if (state.grab === 'colour-connected') {
+      return flood(i, function (j) { return d.rgb[j] === d.rgb[i]; });
+    }
+    out = new Set();
+    if (state.grab === 'colour') {
+      for (var j = 0; j < d.count; j++) if (d.live[j] && d.rgb[j] === d.rgb[i]) out.add(j);
+      return out;
+    }
+    for (var k = 0; k < d.count; k++) {
+      if (d.live[k] && d.type[k] === d.type[i] && d.w[k] === d.w[i]) out.add(k);
+    }
+    return out;
+  }
+
+  /* The one question every edit asks. With no selection everything is fair game, which
+     is what makes this safe to call from every path rather than only the new ones. */
+  function allowed(i) {
+    if (!state.sel || !state.sel.size) return true;
+    return state.selOut ? !state.sel.has(i) : state.sel.has(i);
+  }
+
+  function selectAt(i, additive) {
+    var got = grabFrom(i);
+    if (additive && state.sel) got.forEach(function (j) { state.sel.add(j); });
+    else state.sel = got;
+    afterSelection();
+  }
+
+  function clearSelection() {
+    state.sel = null;
+    // The invert is only meaningful against a selection. Carrying it into the next
+    // one means the first click after a Clear does the opposite of what the panel
+    // no longer says.
+    state.selOut = false;
+    afterSelection();
+  }
+
+  function afterSelection() {
+    drawSelection();
+    renderSelectionBar();
+    renderToolHint();
+  }
+
+  function drawSelection() {
+    if (!state.scene) return;
+    var d = state.data;
+    if (!state.sel || !state.sel.size || !d) {
+      state.scene.setOverlay('sel', [], SELECT_COLOUR, 1.04);
+      return;
+    }
+    var pts = [];
+    state.sel.forEach(function (i) {
+      if (d.live[i]) pts.push([d.x[i], d.y[i], d.z[i]]);
+    });
+    state.scene.setOverlay('sel', pts, SELECT_COLOUR, 1.04);
+  }
+
+  /* Erased rows stay in the arrays, so a selection can outlive the voxels in it. Drop
+     them rather than reporting a count that includes holes. */
+  function pruneSelection() {
+    if (!state.sel) return;
+    var d = state.data, dead = [];
+    state.sel.forEach(function (i) { if (!d.live[i]) dead.push(i); });
+    dead.forEach(function (i) { state.sel.delete(i); });
+    if (!state.sel.size) state.sel = null;
+  }
+
+  function renderSelectionBar() {
+    var n = state.sel ? state.sel.size : 0;
+    var bar = $('bpe-selbar');
+    if (!bar) return;
+    bar.hidden = !n;
+    if (!n) return;
+    $('bpe-selcount').textContent = n.toLocaleString()
+      + (n === 1 ? ' voxel selected' : ' voxels selected');
+    var out = $('bpe-selout');
+    out.setAttribute('aria-pressed', String(state.selOut));
+    out.textContent = state.selOut ? 'Working outside it' : 'Working inside it';
+  }
+
+  /* Move or copy the selection by a whole voxel. Both are ordinary edits - a copy is
+     adds, a move is adds plus deletes - so they undo in one step and save through the
+     same protocol as everything else. Rotation is deliberately not here: the model-wide
+     Turn it carries the attachment point and the placed decos with it, and a selection
+     rotate that quietly left those behind would be the wrong kind of easy. */
+  function shiftSelection(dx, dy, dz, copy) {
+    if (!state.data || !state.sel || !state.sel.size) return;
+    var d = state.data, batch = [], rows = [];
+    state.sel.forEach(function (i) { if (d.live[i]) rows.push(i); });
+    if (!rows.length) return;
+
+    var moving = new Set(rows.map(function (i) {
+      return (d.x[i] + dx) + ',' + (d.y[i] + dy) + ',' + (d.z[i] + dz);
+    }));
+    var carried = rows.map(function (i) {
+      return { x: d.x[i] + dx, y: d.y[i] + dy, z: d.z[i] + dz,
+               rgb: d.rgb[i], type: d.type[i], w: d.w[i] };
+    });
+
+    if (!copy) {
+      // Vacate first, but only the cells nothing is landing on - erasing a cell that
+      // the shape is about to occupy would punch a hole through its own middle.
+      rows.forEach(function (i) {
+        if (!moving.has(d.x[i] + ',' + d.y[i] + ',' + d.z[i])) eraseVoxel(i, batch);
+      });
+    }
+    var next = new Set();
+    carried.forEach(function (v) {
+      var j = addVoxelAt(v, batch);
+      if (j >= 0) next.add(j);
+    });
+    state.sel = next;
+    commit(batch, 0);
+    afterSelection();
+    setStatus((copy ? 'Copied ' : 'Moved ') + carried.length.toLocaleString()
+      + ' voxel' + (carried.length === 1 ? '' : 's') + '.', 'ok');
   }
 
   // ---- attachment point + check highlights -------------------------------- //
@@ -412,6 +595,35 @@
     return true;
   }
 
+  /* `addVoxel` with the material carried in rather than taken from the paint controls,
+     and an O(1) occupancy test - a selection copy places thousands of voxels at once and
+     the linear scan above is fine for one click and quadratic for that. Returns the row.
+     Reviving an erased row rather than appending a duplicate is deliberate: the cell
+     already has an identity, and two rows on one cell is what v5 silently collapses. */
+  function addVoxelAt(v, batch) {
+    var d = state.data;
+    var key = v.x + ',' + v.y + ',' + v.z;
+    var i = state.index.get(key);
+    if (i !== undefined) {
+      batch.push({ index: i, rgb: d.rgb[i], type: d.type[i], w: d.w[i], live: d.live[i] });
+      d.live[i] = 1; d.rgb[i] = v.rgb; d.type[i] = v.type; d.w[i] = v.w;
+      reshade(i);
+      return i;
+    }
+    var n = d.count;
+    d.x.push(v.x); d.y.push(v.y); d.z.push(v.z);
+    d.rgb.push(v.rgb); d.type.push(v.type); d.w.push(v.w);
+    d.kind.push(0); d.level.push(255); d.spec.push(0);
+    d.edit.push(1); d.paint.push(1);
+    d.live.push(1);
+    state.origin.push(-1);
+    d.count = n + 1;
+    reshade(n);
+    state.index.set(key, n);          // kept live for the rest of this batch
+    batch.push({ index: n, added: true });
+    return n;
+  }
+
   function commit(batch, refused) {
     if (batch.length) {
       rebuildIndex();
@@ -497,6 +709,13 @@
       return;
     }
 
+    if (state.tool === 'select') {
+      selectAt(i, !!(ev && ev.shiftKey));
+      state.selection = i;
+      renderSelection();
+      return;
+    }
+
     if (state.tool === 'add') {
       /* The face normal says which side was clicked, so the new voxel goes on the
          outside of it - the gesture every voxel editor uses.
@@ -519,11 +738,22 @@
       return;
     }
 
-    var targets = targetsFor(i);
+    var targets = targetsFor(i).filter(allowed);
+    // Clicking outside the mask is not a silent no-op: say so, or the tool just
+    // looks broken until you remember there is a selection.
+    if (!targets.length) {
+      if (state.sel && state.sel.size) {
+        setStatus('That voxel is outside the selection. Clear it, or invert it with '
+          + '“Working inside it”.', 'warn');
+      }
+      return;
+    }
 
     if (state.tool === 'erase') {
       targets.forEach(function (j) { eraseVoxel(j, batch); });
       commit(batch, 0);
+      pruneSelection();
+      afterSelection();
       state.selection = -1;
       renderSelection();
       return;
@@ -560,8 +790,11 @@
 
   function undo() {
     // In the model view Ctrl-Z belongs to the model - see undoModel.
-    if (inModelView()) return undoModel();
-    undoDoc(active());
+    if (inModelView()) { undoModel(); } else { undoDoc(active()); }
+    // An undo can bring rows back or take them away, so the mask may now name
+    // voxels that aren't there - reconcile rather than draw a stale outline.
+    pruneSelection();
+    afterSelection();
   }
 
   /* Take back one action on ONE part - the active one, or any other, since the model
@@ -886,6 +1119,7 @@
     state.origin = d.origin;
     state.history = d.history;
     state.selection = -1;
+    state.sel = null;   // see openPayload: rows belong to one document
     rebuildIndex();
     renderKinds();
     renderTransforms();
@@ -1541,8 +1775,11 @@
   function frameOf(d) {
     var o = d.payload.origin || [0, 0, 0];
     var m = d.move;
-    return [-1,0,0,0, 0,1,0,0, 0,0,1,0,
-            o[0] + d.payload.size[0] - 1 + m[0], o[1] + m[1], o[2] + m[2], 1];
+    // Identity on X. This used to carry a -1 and a `+ size - 1` to undo the mirror
+    // the codec applied on decode; the codec no longer applies one, so neither does
+    // this - and a part frame that scales by -1 flips its own face winding too.
+    return [1,0,0,0, 0,1,0,0, 0,0,1,0,
+            o[0] + m[0], o[1] + m[1], o[2] + m[2], 1];
   }
 
   function placedOn(d) {
@@ -2247,12 +2484,56 @@
     }).join('');
   }
 
+  // ---- the saved colour palette ------------------------------------------- //
+
+  /* A palette that outlives the page. A model is built one part at a time, and the
+     colours have to agree across all of them - re-picking the same shade by eye on each
+     part is exactly where that fails. Kept in localStorage rather than on the server:
+     nothing about what someone is building needs to leave their browser. */
+  var SWATCH_KEY = 'btt.bpe.swatches';
+  var MAX_SWATCHES = 24;
+
+  function loadSwatches() {
+    try {
+      var v = JSON.parse(localStorage.getItem(SWATCH_KEY) || '[]');
+      if (!Array.isArray(v)) return [];
+      return v.filter(function (n) { return typeof n === 'number' && n >= 0 && n <= 0xFFFFFF; })
+              .slice(0, MAX_SWATCHES);
+    } catch (e) { return []; }        // private mode, or someone else's data in the key
+  }
+
+  function storeSwatches() {
+    try { localStorage.setItem(SWATCH_KEY, JSON.stringify(state.swatches)); } catch (e) { /* full or blocked */ }
+  }
+
+  function renderSwatches() {
+    var el = $('bpe-swatches');
+    if (!el) return;
+    if (!state.swatches.length) {
+      el.innerHTML = '<li class="bpe-swempty">'
+        + 'Press + to keep a colour here.</li>';
+      return;
+    }
+    el.innerHTML = state.swatches.map(function (rgb, i) {
+      var h = hex(rgb).toUpperCase();
+      // The current paint colour reads as selected, so the strip says which one is live.
+      var on = rgb === state.paint.rgb;
+      return '<li class="bpe-sw' + (on ? ' bpe-sw-on' : '') + '">'
+        + '<button type="button" class="bpe-swbtn" data-sw="' + i + '" style="background:' + h + '"'
+        + ' aria-pressed="' + on + '" title="Paint with ' + h + '">'
+        + '<span class="sr-only">' + h + '</span></button>'
+        + '<button type="button" class="bpe-swx" data-swx="' + i + '"'
+        + ' title="Remove ' + h + '" aria-label="Remove ' + h + '">&times;</button></li>';
+    }).join('');
+  }
+
   /* Push the current paint settings back into the controls. The eyedropper changes them
      from outside the panel, and a swatch that didn't follow would be lying. */
   function syncPaintUI() {
     $('bpe-colour').value = hex(state.paint.rgb);
     $('bpe-colour-hex').textContent = hex(state.paint.rgb).toUpperCase();
     renderPalette();
+    renderSwatches();
   }
 
   /* The paint controls only govern a paint click, and Add uses them for the new voxel -
@@ -2313,6 +2594,8 @@
       add: 'Drag along a face to lay voxels against it. Ctrl-drag turns the view.',
       erase: 'Click or drag across voxels to delete them. Ctrl-drag turns the view.',
       move: 'Drag to slide this layer around. Ctrl-drag turns the view.',
+      select: 'Click to select. Shift-click adds to the selection. '
+        + 'Everything else then works only where it lands.',
     };
     var hint = hints[state.tool] || hints.paint;
     /* Which layer a click lands on is the thing to be unambiguous about once there is
@@ -2340,7 +2623,8 @@
         + 'does not move. Pick another layer, or pin a different one as the anchor.';
     }
     $('bpe-toolhint').textContent = hint;
-    var faded = state.tool === 'erase' || state.tool === 'pick' || state.tool === 'move';
+    var faded = state.tool === 'erase' || state.tool === 'pick'
+             || state.tool === 'move' || state.tool === 'select';
     ['bpe-paint-colour', 'bpe-paint-material'].forEach(function (id) {
       var el = $(id);
       if (el) el.classList.toggle('bpe-faded', faded);
@@ -2380,18 +2664,40 @@
       + (n === 1 ? ' voxel' : ' voxels') + '.';
   }
 
+  /* The material palette is the server's answer about the OPEN file, so there is
+     nothing to draw before one is open - and the colour controls beside it work either
+     way. Returning quietly beats throwing halfway through `syncPaintUI` and leaving the
+     rest of the paint controls un-synced. */
+  /* Authoring in Qubicle, a material IS a colour: you paint the _t map white for
+     solid and the _s map green for metal. A modder coming from that workflow knows
+     these by their swatch, so each chip carries the map colour it is written as -
+     shown only. The editor writes Trove's real (type, w); going back through the map
+     colours is the lossy trip the whole material model exists to avoid. */
+  function qbDot(o) {
+    return o && o.qb
+      ? '<span class="bpe-qbdot" style="background:' + esc(o.qb) + '" aria-hidden="true"></span>'
+      : '';
+  }
+  function qbTitle(o) {
+    return o && o.qb
+      ? ' title="' + esc(o.qb.toUpperCase() + ' in the ' + (o.qb_map || '') + '.qb map') + '"'
+      : '';
+  }
+
   function renderPalette() {
+    if (!state.data) return;
     var pal = state.data.palette;
     var html = (pal.types || []).map(function (p) {
       return '<button type="button" class="bpe-mat" data-type="' + p.type + '"'
-        + ' aria-pressed="' + (state.paint.type === p.type) + '">'
-        + esc(p.label) + '</button>';
+        + ' aria-pressed="' + (state.paint.type === p.type) + '"'
+        + qbTitle(p) + '>' + qbDot(p) + esc(p.label) + '</button>';
     }).join('');
     $('bpe-types').innerHTML = html;
     renderWOptions();
   }
 
   function renderWOptions() {
+    if (!state.data) return;
     var pal = state.data.palette;
     var p = (pal.types || []).find(function (t) { return t.type === state.paint.type; });
     var opts = (p && p.options) || [];
@@ -2405,7 +2711,8 @@
     $('bpe-finish-label').textContent = p['class'] === 'glass' ? 'Opacity' : 'Finish';
     $('bpe-finish').innerHTML = opts.map(function (o) {
       return '<button type="button" class="bpe-w" data-w="' + o.w + '"'
-        + ' aria-pressed="' + (state.paint.w === o.w) + '">' + esc(o.label) + '</button>';
+        + ' aria-pressed="' + (state.paint.w === o.w) + '"'
+        + qbTitle(o) + '>' + qbDot(o) + esc(o.label) + '</button>';
     }).join('');
   }
 
@@ -2624,6 +2931,37 @@
     $('bpe-colour').addEventListener('input', function (e) {
       state.paint.rgb = unhex(e.target.value);
       $('bpe-colour-hex').textContent = hex(state.paint.rgb).toUpperCase();
+      renderSwatches();
+    });
+
+    state.swatches = loadSwatches();
+    renderSwatches();
+    $('bpe-swatch-add').addEventListener('click', function () {
+      var rgb = state.paint.rgb;
+      if (state.swatches.indexOf(rgb) >= 0) {
+        setStatus(hex(rgb).toUpperCase() + ' is already in the palette.');
+        return;
+      }
+      state.swatches.unshift(rgb);
+      state.swatches.length = Math.min(state.swatches.length, MAX_SWATCHES);
+      storeSwatches();
+      renderSwatches();
+    });
+    /* Clicking a swatch sets the COLOUR only. Material and finish are their own
+       controls, and a palette that quietly changed those too would repaint glass as
+       solid the first time someone reached for a shade they liked. */
+    $('bpe-swatches').addEventListener('click', function (e) {
+      var x = e.target.closest('[data-swx]');
+      if (x) {
+        state.swatches.splice(parseInt(x.dataset.swx, 10), 1);
+        storeSwatches();
+        renderSwatches();
+        return;
+      }
+      var b = e.target.closest('[data-sw]');
+      if (!b) return;
+      state.paint.rgb = state.swatches[parseInt(b.dataset.sw, 10)];
+      syncPaintUI();
     });
 
     $('bpe-types').addEventListener('click', function (e) {
@@ -2647,8 +2985,28 @@
           o.setAttribute('aria-pressed', String(o.dataset.tool === state.tool));
         });
         if (state.scene) state.scene.setDragMode(dragModeFor(state.tool));
+        $('bpe-grabblock').hidden = state.tool !== 'select';
         renderToolHint();
       });
+    });
+
+    renderGrabs();
+    $('bpe-grabs').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-grab]');
+      if (!b) return;
+      state.grab = b.dataset.grab;
+      renderGrabs();
+    });
+    $('bpe-selclear').addEventListener('click', clearSelection);
+    $('bpe-selout').addEventListener('click', function () {
+      state.selOut = !state.selOut;
+      renderSelectionBar();
+    });
+    $('bpe-selnudge').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-selnudge]');
+      if (!b) return;
+      var v = b.dataset.selnudge.split(',').map(Number);
+      shiftSelection(v[0], v[1], v[2], $('bpe-selcopy').checked);
     });
 
     document.querySelectorAll('[data-mode]').forEach(function (b) {
@@ -2677,12 +3035,17 @@
       var t = parseInt(b.dataset.type, 10), w = parseInt(b.dataset.w, 10);
       var c = change();
       if (!Object.keys(c).length) return;
-      var batch = [], refused = 0;
+      var batch = [], refused = 0, masked = 0;
       for (var i = 0; i < state.data.count; i++) {
         if (state.data.type[i] !== t || state.data.w[i] !== w) continue;
+        if (!allowed(i)) { masked++; continue; }
         if (!applyTo(i, c, batch)) refused++;
       }
       commit(batch, refused);
+      if (masked && !refused) {
+        setStatus(masked.toLocaleString() + ' voxel' + (masked === 1 ? ' was' : 's were')
+          + ' outside the selection and left alone.', 'ok');
+      }
     });
 
     $('bpe-kind').addEventListener('change', function (e) {

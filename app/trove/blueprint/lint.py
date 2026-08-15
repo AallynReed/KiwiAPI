@@ -234,7 +234,7 @@ def _check_attachment(kind: str, attach, size, cells) -> list[dict]:
             out.append(_finding(
                 "warning", "The model is off-centre over the head",
                 f"There shouldn't be more than ~10 voxels to any side of the attachment "
-                f"point; yours reaches {ax} left, {sx - ax - 1} right, {az} back, "
+                f"point; yours reaches {ax} right, {sx - ax - 1} left, {az} back, "
                 f"{sz - az - 1} front."))
 
     if kind == "mask":
@@ -247,7 +247,7 @@ def _check_attachment(kind: str, attach, size, cells) -> list[dict]:
             out.append(_finding(
                 "warning", "The mask is off-centre on the face",
                 f"There shouldn't be more than ~5 voxels to any side of the attachment "
-                f"point; yours reaches {ax} left, {sx - ax - 1} right, {sy - ay - 1} up, "
+                f"point; yours reaches {ax} right, {sx - ax - 1} left, {sy - ay - 1} up, "
                 f"{ay} down."))
     return out
 

@@ -262,7 +262,7 @@ def _reframe(voxels: list[dict], decoded: codec.DecodedBlueprint) -> tuple:
         entity_blob = bp_transform.translate_entities(entity_blob, shift)
 
     if attach is not None:
-        pos = (attach[0] - (size[0] - 1), -attach[1], -attach[2])
+        pos = (-attach[0], -attach[1], -attach[2])
     elif decoded.version == 5:
         pos = (-(size[0] // 2), decoded.pos[1], -(size[2] // 2))
     else:

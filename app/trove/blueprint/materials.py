@@ -115,19 +115,44 @@ def is_editable(vtype: int) -> bool:
     return int(vtype) in PALETTE_TYPES
 
 
+def _qb_hex(rgb) -> str | None:
+    if rgb is None:
+        return None
+    r, g, b = rgb
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
 def palette() -> dict:
     """The editable material options, for the UI. ``w`` options depend on the class:
-    a specular finish for solids, an opacity level for glass."""
+    a specular finish for solids, an opacity level for glass.
+
+    Every entry also carries the colour it is written as in a ``.qb`` material map
+    (``qb``, and which map it belongs to in ``qb_map``). Authoring in Qubicle a material
+    IS a colour -- you paint the ``_t`` map white for solid, the ``_s`` map green for
+    metal -- so a modder arriving from that workflow knows these by their swatch and not
+    by our name for them. Shown, never edited: this editor writes Trove's real
+    ``(type, w)``, and editing through the map colours is exactly the lossy round-trip
+    this module exists to avoid.
+    """
+    from app.trove.blueprint import qb
+
     def options_for(t: int, cls: str) -> list[dict]:
         if cls == GLASS:
+            # Opacity rides in the _a map as a grey, and the level IS the channel value.
             return [{"w": w, "label": f"{round(alpha_for_w(w) / 255 * 100)}%",
-                     "alpha": alpha_for_w(w)} for w in range(GLASS_LEVELS)]
+                     "alpha": alpha_for_w(w), "qb_map": "_a",
+                     "qb": _qb_hex((alpha_for_w(w),) * 3)} for w in range(GLASS_LEVELS)]
         if t in NO_SPECULAR_TYPES:
             return [{"w": 0, "label": SPECULAR_NAMES[0]}]      # emissive: no finish
-        return [{"w": w, "label": name} for w, name in sorted(SPECULAR_NAMES.items())]
+        return [{"w": w, "label": name, "qb_map": "_s",
+                 "qb": _qb_hex(qb.SPECULAR_MAP_RGB.get(w))}
+                for w, name in sorted(SPECULAR_NAMES.items())]
 
     types = [
-        {"type": t, "label": label, "class": cls, "options": options_for(t, cls)}
+        {"type": t, "label": label, "class": cls, "options": options_for(t, cls),
+         "qb_map": "_t",
+         "qb": _qb_hex(qb.TYPE_MAP_RGB.get(qb.TYPE_TO_INDEX[t]))
+         if t in qb.TYPE_TO_INDEX else None}
         for t, (label, cls) in PALETTE_TYPES.items()
     ]
     return {"types": types, "glass_levels": GLASS_LEVELS}

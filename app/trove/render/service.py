@@ -15,9 +15,16 @@ from app.trove.render.voxel import BlueprintError, render_blueprint_png
 logger = logging.getLogger("kiwi.render")
 
 
+# Bump when the rasterizer's OUTPUT changes. The creature key already carried a
+# version (see _creature_key); this one didn't, so a rendering fix stayed invisible
+# behind the cached image for the whole TTL. r2: the codec stopped mirroring X, and
+# the projection stopped cancelling that mirror - every cached PNG is a mirror image.
+_RENDER_VERSION = "r2"
+
+
 def _key(branch: str, name: str, dim: int) -> str:
     norm = name.replace("\\", "/").lower()
-    return f"render:bp:{branch}:{dim}:{norm}"
+    return f"render:bp:{_RENDER_VERSION}:{branch}:{dim}:{norm}"
 
 
 async def render_blueprint_cached(

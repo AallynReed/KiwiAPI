@@ -122,11 +122,22 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
    to scroll past. `--bpe-top` is the navbar plus a hairline of breathing room. */
 @media (min-width: 1181px) {
   .bpe-workspace { --bpe-top: 76px; }
-  .bpe-stagecard,
+  .bpe-centre,
   .bpe-workspace > .bpe-panel {
     position: sticky;
     top: var(--bpe-top);
   }
+  /* The centre column is height-bound like the panels beside it, and the STAGE takes
+     whatever the bars and the materials strip leave. A fixed `vh` on the stage would
+     push the strip under it off the bottom of the screen, which is the one thing this
+     whole sticky arrangement exists to prevent. */
+  /* A definite height, not a max: a flex child can only take "the rest" of a height
+     that is actually resolved, and with `max-height` the column sized to its content
+     and left the stage at its minimum. */
+  .bpe-centre { height: calc(100vh - var(--bpe-top) - 16px); }
+  .bpe-stagecard { flex: 1 1 auto; min-height: 0; }
+  .bpe-stagecard .bpe-stage { flex: 1 1 auto; height: auto; min-height: 240px; }
+  .bpe-underbar { flex: 0 0 auto; max-height: 32vh; overflow-y: auto; scrollbar-width: thin; }
   .bpe-workspace > .bpe-panel {
     max-height: calc(100vh - var(--bpe-top) - 16px);
     overflow-y: auto;
@@ -141,7 +152,7 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
    side under it, rather than the stage being squeezed to a third of a tablet. */
 @media (max-width: 1180px) {
   .bpe-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .bpe-stagecard { grid-column: 1 / -1; order: -1; }
+  .bpe-centre { grid-column: 1 / -1; order: -1; }
 }
 
 /* One column, model FIRST. Stacked, the controls would otherwise push the thing being
@@ -150,12 +161,54 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
   .bpe-workspace { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* The model and what it's made of, as one column. */
+.bpe-centre {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
 .bpe-panel {
   background: var(--bg-card);
   border: 1px solid var(--bg-line);
   border-radius: var(--radius);
   padding: 16px;
 }
+
+/* ─── Under the stage ───────────────────────────────────────────────── */
+
+/* Two readouts side by side across the stage's width: what you clicked, and what the
+   model is built from. In a 300px side column the material list was one name per row
+   for twenty rows; here it lays out in columns and is read at a glance. */
+.bpe-underbar {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(0, 2.4fr);
+  gap: 18px;
+  align-items: start;
+}
+.bpe-underbar h3 { margin-top: 0; }
+.bpe-underbar .bpe-materials {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+@media (max-width: 860px) {
+  .bpe-underbar { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ─── Save block ────────────────────────────────────────────────────── */
+
+/* Sits at the top of the panel and is the one thing on it that must never need a
+   scroll, so it keeps its own hairline and reads as a block rather than as four
+   buttons that happen to be first. */
+.bpe-saveblock {
+  padding: 12px;
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-deep);
+}
+.bpe-saveblock .bpe-dirty { margin-top: 0; }
+.bpe-saveblock .bpe-actions { margin-top: 10px; }
+.bpe-saveblock .bpe-btn { flex: 1 1 auto; justify-content: center; }
 .bpe-panel h2 {
   margin: 0 0 12px;
   font-size: .82rem;
@@ -174,7 +227,7 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
 
 /* ─── Stage ─────────────────────────────────────────────────────────── */
 
-.bpe-stagecard { padding: 0; overflow: hidden; }
+.bpe-stagecard { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
 /* Never wraps. A second line here changes the card's height, which resizes the stage
    below it - so anything that can grow has to truncate instead. */
 .bpe-stagebar {
@@ -364,6 +417,86 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
   color: var(--text-mute);
 }
 
+/* ─── Selection ─────────────────────────────────────────────────────── */
+
+/* Reads as a state the editor is IN, not another group of controls - it changes what
+   every other tool does, so it gets the accent hairline that says so. */
+.bpe-selbar {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line));
+  border-radius: var(--radius-sm);
+  background: var(--bg-deep);
+}
+.bpe-selcount {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-mono, monospace);
+  font-size: .78rem;
+}
+.bpe-selbar .bpe-actions { margin-top: 8px; }
+.bpe-selbar .bpe-nudge { margin-top: 10px; }
+.bpe-selbar .bpe-toggle { margin-top: 8px; }
+#bpe-selout[aria-pressed="true"] { border-color: var(--accent-blue); color: var(--text); }
+
+/* ─── Saved colours ─────────────────────────────────────────────────── */
+
+.bpe-swatchadd {
+  margin-left: auto;
+  width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 8px;
+  color: var(--text-mute);
+  cursor: pointer;
+}
+.bpe-swatchadd:hover { border-color: var(--accent-blue); color: var(--text); }
+.bpe-swatchadd:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+.bpe-swatches {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bpe-swempty { color: var(--text-mute); font-size: .76rem; }
+/* The remove button sits ON the swatch corner, so a saved colour is one square rather
+   than a square plus a control - twenty-four of those would be the whole panel. */
+.bpe-sw { position: relative; line-height: 0; }
+.bpe-swbtn {
+  width: 26px; height: 26px;
+  padding: 0;
+  border: 1px solid var(--bg-line);
+  border-radius: 7px;
+  cursor: pointer;
+}
+.bpe-swbtn:hover { border-color: var(--accent-blue); }
+.bpe-swbtn:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.bpe-sw-on .bpe-swbtn { border-color: var(--accent-blue); box-shadow: 0 0 0 1px var(--accent-blue); }
+.bpe-swx {
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 16px; height: 16px;
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 0;
+  background: var(--bg-card-hi, #1a212c);
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  color: var(--text-mute);
+  font-size: .7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.bpe-sw:hover .bpe-swx,
+.bpe-swx:focus-visible { display: inline-flex; }
+.bpe-swx:hover { color: var(--accent-red, #f85149); border-color: var(--accent-red, #f85149); }
+/* Touch has no hover, so the remove control has nowhere to appear from. */
+@media (hover: none) { .bpe-swx { display: inline-flex; } }
+
 .bpe-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .bpe-chips button,
 .bpe-mat,
@@ -381,6 +514,16 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
 .bpe-chips button:hover,
 .bpe-mat:hover,
 .bpe-w:hover { border-color: var(--accent-blue); color: var(--text); }
+/* The colour this material is written as in a .qb map. A hairline ring so a white
+   swatch (_t solid) still reads as a swatch against the chip. */
+.bpe-qbdot {
+  display: inline-block;
+  width: 9px; height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35);
+  vertical-align: baseline;
+}
 .bpe-chips button:focus-visible,
 .bpe-mat:focus-visible,
 .bpe-w:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
@@ -689,7 +832,8 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
 /* A control that does nothing for the current tool is dimmed rather than removed -
    the panel keeps its shape, so switching tools doesn't make it jump. */
 .bpe-faded { opacity: .4; }
-.bpe-faded + .bpe-chips, .bpe-faded + .bpe-colourrow { opacity: .4; pointer-events: none; }
+.bpe-faded + .bpe-chips, .bpe-faded + .bpe-colourrow,
+.bpe-faded + .bpe-colourrow + .bpe-swatches { opacity: .4; pointer-events: none; }
 #bpe-modes.bpe-faded { pointer-events: none; }
 .bpe-toolhint { margin-top: 8px; }
 

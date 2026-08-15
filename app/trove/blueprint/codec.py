@@ -22,8 +22,12 @@ Format (all versions open ``b"kiwib"`` + ``u32 version``)::
         entity section (u32 count + records)
 
 Geometry (v5): linear index ``L`` -> ``y = L // (sx*sz)``, ``z = (L % (sx*sz)) // sx``,
-``x = L % sx``. X is mirrored into Qubicle convention (``qb_x = sx - 1 - x``) on both
-sides; Y/Z are identity. v3/v4 store explicit signed coordinates and mirror the same way.
+``x = L % sx``, and all three axes are decoded as the format stores them. There is no
+mirror here: X used to be flipped into *Qubicle* convention on both sides, which made
+every 3D preview draw blueprints as their own mirror image (the model viewer, fed by
+``mods_hub/assembly.py``, never flipped and was the one drawing them right). The flip
+belongs at the ``.qb`` boundary, which is the only place Qubicle's frame is the
+question -- see ``qb.py``. v3/v4 store explicit signed coordinates, decoded the same way.
 
 ``type`` (u16) and ``w`` (u8) are the per-voxel material attributes. They are carried
 through decode/edit/encode untouched unless the caller changes them explicitly, so a
@@ -178,9 +182,8 @@ def _decode_v34(data: bytes, version: int) -> DecodedBlueprint:
     mny = min(v[1] for v in raw); mxy = max(v[1] for v in raw)
     mnz = min(v[2] for v in raw); mxz = max(v[2] for v in raw)
     size = (mxx - mnx + 1, mxy - mny + 1, mxz - mnz + 1)
-    sx = size[0]
     voxels = [
-        {"x": (sx - 1) - (x - mnx), "y": y - mny, "z": z - mnz,
+        {"x": x - mnx, "y": y - mny, "z": z - mnz,
          "r": r, "g": g, "b": b, "w": w, "type": vtype}
         for (x, y, z, r, g, b, w, vtype) in raw
     ]
@@ -218,7 +221,7 @@ def _decode_v5(data: bytes) -> DecodedBlueprint:
         y = L // plane
         rem = L % plane
         voxels.append({
-            "x": sx - 1 - (rem % sx), "y": y, "z": rem // sx,
+            "x": rem % sx, "y": y, "z": rem // sx,
             "r": (color >> 16) & 0xFF, "g": (color >> 8) & 0xFF, "b": color & 0xFF,
             "w": (color >> 24) & 0xFF, "type": vtype,
         })
@@ -255,9 +258,9 @@ def attachment_point(decoded: DecodedBlueprint) -> tuple[int, int, int] | None:
     Trove seats a wearable or a weapon by putting its attachment point there. So
     world-zero *is* the attachment point, and recovering it is arithmetic:
 
-        blueprint-local  x_bp = -pos_x     (world = pos + local, as the assembled-
-                                            creature pipeline places its parts)
-        mirrored frame   x    = sx - 1 - x_bp = sx - 1 + pos_x
+        blueprint-local  x = -pos_x, y = -pos_y, z = -pos_z
+                         (world = pos + local, as the assembled-creature pipeline
+                          places its parts -- the same frame this decoder emits)
 
     Verified three ways against the live catalogue: it agrees with the origin
     convention ``mods_hub/assembly.py`` already places creature parts by; it satisfies
@@ -277,7 +280,7 @@ def attachment_point(decoded: DecodedBlueprint) -> tuple[int, int, int] | None:
         return None
     sx, _, _ = decoded.size
     px, py, pz = decoded.pos
-    return (sx - 1 + px, -py, -pz)
+    return (-px, -py, -pz)
 
 
 # --------------------------------------------------------------------------- #
@@ -436,8 +439,8 @@ def _encode_v34(voxels, version, sx, entity_blob, offset) -> bytes:
     out += struct.pack("<I", version)
     out += write_uleb128(len(voxels))
     for v in voxels:
-        # restore the signed, origin-centred coords (un-mirror X, re-add the min corner)
-        out += write_svarint(mnx + (sx - 1 - int(v["x"])))
+        # restore the signed, origin-centred coords (re-add the min corner)
+        out += write_svarint(mnx + int(v["x"]))
         out += write_svarint(mny + int(v["y"]))
         out += write_svarint(mnz + int(v["z"]))
         out += struct.pack(
@@ -457,7 +460,7 @@ def _encode_v5(voxels, sx, sy, sz, pos, entity_blob) -> bytes:
     cells = {}
     for v in voxels:
         # un-mirror back to blueprint-local, then linearise
-        L = (sx - 1 - int(v["x"])) + int(v["z"]) * sx + int(v["y"]) * plane
+        L = int(v["x"]) + int(v["z"]) * sx + int(v["y"]) * plane
         cells[L] = (int(v.get("type", DEFAULT_TYPE)) & 0xFFFF,
                     int(v["r"]) & 0xFF, int(v["g"]) & 0xFF,
                     int(v["b"]) & 0xFF, int(v.get("w", DEFAULT_W)) & 0xFF)

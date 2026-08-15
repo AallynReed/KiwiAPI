@@ -173,7 +173,9 @@ def _project(verts, eye, R, fy, H, cx, cy):
     cam = (verts - eye) @ R.T
     z = -cam[:, 2]; z = np.where(z <= 1e-6, 1e-6, z)
     f = (H * 0.5) / np.tan(np.radians(fy) * 0.5)
-    u = cx - f * cam[:, 0] / z            # +X -> screen-left (tool handedness)
+    # +X to screen-RIGHT. This used to subtract, cancelling the X mirror the codec
+    # applied on decode; with the codec no longer mirroring, so does this.
+    u = cx + f * cam[:, 0] / z
     v = cy - f * cam[:, 1] / z
     return np.stack([u, v], axis=1), z
 

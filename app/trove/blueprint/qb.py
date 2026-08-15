@@ -275,8 +275,14 @@ def from_blueprint(decoded: codec.DecodedBlueprint, *, stem: str = "model") -> d
     dropped_spec = 0
     unmapped_types: dict[int, int] = {}
 
+    # THE mirror. A blueprint indexes X one way and Qubicle draws it the other, and
+    # this boundary is the only place that difference is anyone's business - the codec
+    # used to do it for every caller, which mirrored every 3D preview on the site.
+    def _qx(x):
+        return sx - 1 - (x - mnx)
+
     for v in voxels:
-        key = (v["x"] - mnx, v["y"] - mny, v["z"] - mnz)
+        key = (_qx(v["x"]), v["y"] - mny, v["z"] - mnz)
         vt, w = int(v["type"]), int(v["w"])
         rgb = (int(v["r"]), int(v["g"]), int(v["b"]))
         # A procedural voxel stores a near-black placeholder the game replaces at
@@ -310,7 +316,7 @@ def from_blueprint(decoded: codec.DecodedBlueprint, *, stem: str = "model") -> d
                 smap[key] = SPECULAR_MAP_RGB.get(w, SPECULAR_MAP_RGB[0])
 
     if attach is not None:
-        akey = (attach[0] - mnx, attach[1] - mny, attach[2] - mnz)
+        akey = (_qx(attach[0]), attach[1] - mny, attach[2] - mnz)
         for grid in (base, amap, smap, tmap):
             grid[akey] = ATTACHMENT_RGB
         # Negative offset: Qubicle stores where the matrix sits, and Troxel reads the
@@ -488,14 +494,16 @@ def to_blueprint(files: dict[str, bytes], *, version: int = 5) -> tuple[bytes, d
     mnx = min(v["x"] for v in voxels); mxx = max(v["x"] for v in voxels)
     mny = min(v["y"] for v in voxels); mxy = max(v["y"] for v in voxels)
     mnz = min(v["z"] for v in voxels); mxz = max(v["z"] for v in voxels)
-    for v in voxels:
-        v["x"] -= mnx; v["y"] -= mny; v["z"] -= mnz
     tight = (mxx - mnx + 1, mxy - mny + 1, mxz - mnz + 1)
+    # Out of Qubicle's frame and into the blueprint's - the inverse of `_qx` above.
+    for v in voxels:
+        v["x"] = tight[0] - 1 - (v["x"] - mnx); v["y"] -= mny; v["z"] -= mnz
 
     if attach is not None:
-        ax, ay, az = attach[0] - mnx, attach[1] - mny, attach[2] - mnz
+        ax = tight[0] - 1 - (attach[0] - mnx)
+        ay, az = attach[1] - mny, attach[2] - mnz
         # Inverse of codec.attachment_point.
-        pos = (ax - (tight[0] - 1), -ay, -az)
+        pos = (-ax, -ay, -az)
     else:
         pos = (-(tight[0] // 2), 0, -(tight[2] // 2))
 

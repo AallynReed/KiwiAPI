@@ -142,7 +142,7 @@ def flatten(docs, anchor: int = 0) -> tuple[codec.DecodedBlueprint, dict]:
     attach = codec.attachment_point(base)
     if attach is not None:
         attach = (attach[0] + shift[0], attach[1] + shift[1], attach[2] + shift[2])
-        pos = (attach[0] - (size[0] - 1), -attach[1], -attach[2])
+        pos = (-attach[0], -attach[1], -attach[2])
     elif base.version == 5:
         pos = (-(size[0] // 2), base.pos[1], -(size[2] // 2))
     else:

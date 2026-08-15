@@ -50,7 +50,8 @@ logger = logging.getLogger("kiwi.render")
 # Bump when ``pack_blueprint``'s output shape or the voxel/material mapping
 # changes - it namespaces every key, so a new generation is built from scratch
 # and the old rows fall out of use (delete by ``key`` prefix to reclaim).
-PACK_VERSION = "v2"
+PACK_VERSION = "v3"     # v3: the codec stopped mirroring X, so every cached payload
+                        # holds mirror-image coordinates and must be rebuilt.
 
 # Bump when the baked rigs (``mods_hub/rigs``) or ``mods_hub/assembly.py`` change
 # the shape of an assembled creature. The live rig map has its own signature in the

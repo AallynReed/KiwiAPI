@@ -113,14 +113,59 @@
                     <button type="button" data-tool="move" aria-pressed="false" title="Move" aria-label="Move">
                         <i class="fa-solid fa-up-down-left-right" aria-hidden="true"></i>
                     </button>
+                    <button type="button" data-tool="select" aria-pressed="false" title="Select" aria-label="Select">
+                        <i class="fa-solid fa-object-ungroup" aria-hidden="true"></i>
+                    </button>
                 </div>
                 <p class="bpe-hint bpe-toolhint" id="bpe-toolhint" data-i18n>Click a voxel to paint it.</p>
+
+                <!-- What a Select click gathers. Only shown for the tool it belongs
+                     to: five more chips on the panel at all times is the clutter the
+                     icon-only tool row was shortened to avoid. -->
+                <div id="bpe-grabblock" hidden>
+                    <h3 data-i18n>Select</h3>
+                    <div class="bpe-chips" id="bpe-grabs"></div>
+                </div>
+
+                <!-- The mask, and what you can do to it. Appears only once something
+                     is selected, because until then it has nothing to say. -->
+                <div class="bpe-selbar" id="bpe-selbar" hidden>
+                    <p class="bpe-selcount" id="bpe-selcount"></p>
+                    <div class="bpe-actions">
+                        <button type="button" class="bpe-btn" id="bpe-selout" aria-pressed="false">Working inside it</button>
+                        <button type="button" class="bpe-btn" id="bpe-selclear" data-i18n>Clear</button>
+                    </div>
+                    <div class="bpe-nudge" id="bpe-selnudge">
+                        <span class="bpe-nudge-axis">X</span>
+                        <button type="button" class="bpe-xform" data-selnudge="-1,0,0">&minus;</button>
+                        <button type="button" class="bpe-xform" data-selnudge="1,0,0">+</button>
+                        <span class="bpe-nudge-axis">Y</span>
+                        <button type="button" class="bpe-xform" data-selnudge="0,-1,0">&minus;</button>
+                        <button type="button" class="bpe-xform" data-selnudge="0,1,0">+</button>
+                        <span class="bpe-nudge-axis">Z</span>
+                        <button type="button" class="bpe-xform" data-selnudge="0,0,-1">&minus;</button>
+                        <button type="button" class="bpe-xform" data-selnudge="0,0,1">+</button>
+                    </div>
+                    <label class="bpe-toggle">
+                        <input type="checkbox" id="bpe-selcopy">
+                        <span data-i18n>Leave a copy behind</span>
+                    </label>
+                </div>
 
                 <h3 id="bpe-paint-colour" data-i18n>Colour</h3>
                 <div class="bpe-colourrow">
                     <input type="color" id="bpe-colour" value="#ff6b6b" aria-label="Paint colour">
                     <span class="bpe-colourhex" id="bpe-colour-hex">#FF6B6B</span>
+                    <!-- A model is built one part at a time and its colours have to match
+                         across all of them; re-picking the same shade by eye every time is
+                         where that goes wrong. Kept in this browser, never sent anywhere. -->
+                    <button type="button" class="bpe-swatchadd" id="bpe-swatch-add"
+                            title="Save this colour to the palette">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        <span class="sr-only" data-i18n>Save this colour</span>
+                    </button>
                 </div>
+                <ul class="bpe-swatches" id="bpe-swatches"></ul>
 
                 <h3 id="bpe-paint-material" data-i18n>Material</h3>
                 <div class="bpe-chips" id="bpe-types"></div>
@@ -148,9 +193,42 @@
                     <input type="checkbox" id="bpe-show-attach" checked>
                     <span data-i18n>Attachment point</span>
                 </label>
+
+                <!-- Moving and turning are things you DO to the model, like every other
+                     control in this panel - they were across the page in the panel that
+                     only describes it. Still folded: you rotate a model once, if ever. -->
+                <details class="bpe-fold" id="bpe-movefold" hidden>
+                    <summary><span id="bpe-movefold-label" data-i18n>Move on the rig</span></summary>
+                    <div id="bpe-layerctl">
+                        <label class="sr-only" for="bpe-align" data-i18n>How should this layer line up?</label>
+                        <select id="bpe-align"></select>
+                        <div class="bpe-nudge" id="bpe-nudge">
+                            <span class="bpe-nudge-axis">X</span>
+                            <button type="button" class="bpe-xform" data-nudge="-1,0,0">&minus;</button>
+                            <span class="bpe-nudge-val" id="bpe-nudge-x">0</span>
+                            <button type="button" class="bpe-xform" data-nudge="1,0,0">+</button>
+                            <span class="bpe-nudge-axis">Y</span>
+                            <button type="button" class="bpe-xform" data-nudge="0,-1,0">&minus;</button>
+                            <span class="bpe-nudge-val" id="bpe-nudge-y">0</span>
+                            <button type="button" class="bpe-xform" data-nudge="0,1,0">+</button>
+                            <span class="bpe-nudge-axis">Z</span>
+                            <button type="button" class="bpe-xform" data-nudge="0,0,-1">&minus;</button>
+                            <span class="bpe-nudge-val" id="bpe-nudge-z">0</span>
+                            <button type="button" class="bpe-xform" data-nudge="0,0,1">+</button>
+                        </div>
+                    </div>
+                </details>
+                <details class="bpe-fold">
+                    <summary><span data-i18n>Turn it</span></summary>
+                    <p class="bpe-hint" data-i18n>Rotating or flipping takes the attachment point and any placed objects with it.</p>
+                    <div class="bpe-chips bpe-xforms" id="bpe-transforms"></div>
+                </details>
             </aside>
 
-            <!-- The model -->
+            <!-- The model, and directly under it what the model is made of. Both are
+                 about the thing on screen rather than about an action, so they read as
+                 one column: look at the model, look at what it's built from. -->
+            <div class="bpe-centre">
             <section class="bpe-panel bpe-stagecard">
                 <!-- Everything about WHAT you are looking at lives on the stage: which
                      part, whether the rest of the model is showing, and whether it is
@@ -216,11 +294,49 @@
                 </div>
             </section>
 
+            <!-- Under the stage: what the voxel you clicked is, and every material the
+                 model uses. Both are a READOUT of the model in view, and both are read
+                 while looking at it - so they sit under it, laid out along the stage's
+                 width rather than stacked down a narrow column. -->
+            <section class="bpe-panel bpe-underbar">
+                <div class="bpe-under-sel">
+                    <h3 data-i18n>Selected</h3>
+                    <div id="bpe-selection">
+                        <p class="bpe-hint" data-i18n>Click a voxel to select it.</p>
+                    </div>
+                </div>
+                <div class="bpe-under-mats">
+                    <h3 data-i18n>Materials used</h3>
+                    <ul class="bpe-materials" id="bpe-materials"></ul>
+                    <ul class="bpe-notes" id="bpe-notes" hidden></ul>
+                </div>
+            </section>
+            </div>
+
             <!-- What the model is made of -->
             <aside class="bpe-panel">
-                <h2 data-i18n>This model</h2>
-                <div id="bpe-selection">
-                    <p class="bpe-hint" data-i18n>Click a voxel to select it.</p>
+                <!-- Getting the model back out is the point of the page, so it is the
+                     first thing in the panel and never below the fold. It used to sit
+                     under the parts list, which grows with the model - so the more
+                     parts you had, the further you scrolled to reach Download. -->
+                <h2 data-i18n>Save</h2>
+                <div class="bpe-saveblock">
+                    <p class="bpe-dirty" id="bpe-dirty" aria-live="polite" data-i18n>No changes yet</p>
+                    <div class="bpe-actions">
+                        <button type="button" class="bpe-btn bpe-primary" id="bpe-save">
+                            <i class="fa-solid fa-download" aria-hidden="true"></i>
+                            <span id="bpe-save-label" data-i18n>Download</span>
+                        </button>
+                        <button type="button" class="bpe-btn bpe-projectonly" id="bpe-save-part">
+                            <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+                            <span data-i18n>This part only</span>
+                        </button>
+                        <button type="button" class="bpe-btn" id="bpe-undo" disabled>
+                            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+                            <span data-i18n>Undo</span>
+                        </button>
+                        <button type="button" class="bpe-btn" id="bpe-revert" disabled data-i18n>Revert all</button>
+                    </div>
                 </div>
 
                 <h3 id="bpe-layers-title" data-i18n>Layers</h3>
@@ -247,12 +363,6 @@
                     </button>
                 </div>
 
-
-                <h3 data-i18n>Materials used</h3>
-                <ul class="bpe-materials" id="bpe-materials"></ul>
-
-                <ul class="bpe-notes" id="bpe-notes" hidden></ul>
-
                 <!-- The Trove Creations guidelines are per SUBMITTED ITEM - a hat, a
                      spear, a decoration. A creature's leg is not one of those, so this
                      whole block is hidden for a model project rather than offered as a
@@ -270,55 +380,6 @@
                     </div>
                     <div id="bpe-report" class="bpe-report" aria-live="polite" hidden></div>
                 </div>
-
-                <p class="bpe-dirty" id="bpe-dirty" aria-live="polite" data-i18n>No changes yet</p>
-                <div class="bpe-actions">
-                    <button type="button" class="bpe-btn bpe-primary" id="bpe-save">
-                        <i class="fa-solid fa-download" aria-hidden="true"></i>
-                        <span id="bpe-save-label" data-i18n>Download</span>
-                    </button>
-                    <button type="button" class="bpe-btn bpe-projectonly" id="bpe-save-part">
-                        <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
-                        <span data-i18n>This part only</span>
-                    </button>
-                    <button type="button" class="bpe-btn" id="bpe-undo" disabled>
-                        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-                        <span data-i18n>Undo</span>
-                    </button>
-                    <button type="button" class="bpe-btn" id="bpe-revert" disabled data-i18n>Revert all</button>
-                </div>
-
-                <!-- Rotating a model is a thing you do once, if ever - so it folds away
-                     and the panel is shorter by six buttons and a paragraph until you
-                     want it. -->
-                <!-- Sliding a part along its bone is occasional and locked by
-                     default, so it folds away next to the other one. -->
-                <details class="bpe-fold" id="bpe-movefold" hidden>
-                    <summary><span id="bpe-movefold-label" data-i18n>Move on the rig</span></summary>
-                    <div id="bpe-layerctl">
-                        <label class="sr-only" for="bpe-align" data-i18n>How should this layer line up?</label>
-                        <select id="bpe-align"></select>
-                        <div class="bpe-nudge" id="bpe-nudge">
-                            <span class="bpe-nudge-axis">X</span>
-                            <button type="button" class="bpe-xform" data-nudge="-1,0,0">&minus;</button>
-                            <span class="bpe-nudge-val" id="bpe-nudge-x">0</span>
-                            <button type="button" class="bpe-xform" data-nudge="1,0,0">+</button>
-                            <span class="bpe-nudge-axis">Y</span>
-                            <button type="button" class="bpe-xform" data-nudge="0,-1,0">&minus;</button>
-                            <span class="bpe-nudge-val" id="bpe-nudge-y">0</span>
-                            <button type="button" class="bpe-xform" data-nudge="0,1,0">+</button>
-                            <span class="bpe-nudge-axis">Z</span>
-                            <button type="button" class="bpe-xform" data-nudge="0,0,-1">&minus;</button>
-                            <span class="bpe-nudge-val" id="bpe-nudge-z">0</span>
-                            <button type="button" class="bpe-xform" data-nudge="0,0,1">+</button>
-                        </div>
-                    </div>
-                </details>
-                <details class="bpe-fold">
-                    <summary><span data-i18n>Turn it</span></summary>
-                    <p class="bpe-hint" data-i18n>Rotating or flipping takes the attachment point and any placed objects with it.</p>
-                    <div class="bpe-chips bpe-xforms" id="bpe-transforms"></div>
-                </details>
 
             </aside>
         </div>
