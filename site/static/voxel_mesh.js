@@ -88,27 +88,77 @@
      to read them from, so it runs one neutral white sun. Sun + ambient reach just
      past 1.0 on a face pointed at the light and leave 0.36 on one pointed away -
      the game's contrast range, rather than three.js' flatter default rig. */
+  var SUN = 0.66, SUN_SPEC = 0.85, AMBIENT = 0.36;   // the neutral rig, per channel
+  var FALLBACK_DIR = [0.7, 1.0, 0.55];
   var LIGHT = null;
+  var HOST_DIR = null;      // the first direction a host asked for = "normal" for the control
+  var CTL = null;           // the viewer's Lighting control, once someone has moved it
+
   function ensureLight(THREE) {
     if (LIGHT) return LIGHT;
     LIGHT = {
       kBrdfMap: BRDF_MAP,
-      kSun: { value: new THREE.Vector3(0.66, 0.66, 0.66) },       // sunLightColor
-      kSunSpec: { value: new THREE.Vector3(0.85, 0.85, 0.85) },   // sunLightSpecular
-      kAmbient: { value: new THREE.Vector3(0.36, 0.36, 0.36) },   // ambientLightColor
-      kSunDir: { value: new THREE.Vector3(0.7, 1.0, 0.55).normalize() },
+      kSun: { value: new THREE.Vector3(SUN, SUN, SUN) },                    // sunLightColor
+      kSunSpec: { value: new THREE.Vector3(SUN_SPEC, SUN_SPEC, SUN_SPEC) }, // sunLightSpecular
+      kAmbient: { value: new THREE.Vector3(AMBIENT, AMBIENT, AMBIENT) },    // ambientLightColor
+      kSunDir: { value: new THREE.Vector3().fromArray(FALLBACK_DIR).normalize() },
     };
     return LIGHT;
   }
 
   /* Move the sun or retint it. Every material shares these uniform objects, so one
-     call relights the whole scene; the host still has to ask for a redraw. */
+     call relights the whole scene; the host still has to ask for a redraw.
+
+     A host names its sun on every build - the Blueprint Editor rebuilds after each
+     edit - so a sun the user has set with the Lighting control has to OUTRANK the
+     host's rather than be overwritten by the next repaint. */
   function setLighting(THREE, opts) {
     var L = ensureLight(THREE);
+    if (opts.lightDir && !HOST_DIR) HOST_DIR = [opts.lightDir[0], opts.lightDir[1], opts.lightDir[2]];
+    if (CTL) return applyControl(THREE);
     if (opts.lightDir) L.kSunDir.value.fromArray(opts.lightDir).normalize();
     if (opts.sun) L.kSun.value.fromArray(opts.sun);
     if (opts.specular) L.kSunSpec.value.fromArray(opts.specular);
     if (opts.ambient) L.kAmbient.value.fromArray(opts.ambient);
+  }
+
+  /* --- The Lighting control (viewer_stage.js) -------------------------------
+
+     `intensity` 0..1, `azimuth` and `elevation` in degrees. Dimming the sun on its
+     own would just sink the model into the dark, so the light it gives up moves
+     into the ambient term: 0% is the model under a flat, even light - its true
+     colours, no shading at all - at the brightness 100% shows it at. Passing null
+     hands the sun back to whatever the host asked for. */
+  function setLightControl(THREE, ctl) {
+    CTL = ctl ? { intensity: ctl.intensity, azimuth: ctl.azimuth, elevation: ctl.elevation } : null;
+    if (CTL) return applyControl(THREE);
+    var L = ensureLight(THREE);
+    L.kSun.value.setScalar(SUN);
+    L.kSunSpec.value.setScalar(SUN_SPEC);
+    L.kAmbient.value.setScalar(AMBIENT);
+    L.kSunDir.value.fromArray(HOST_DIR || FALLBACK_DIR).normalize();
+  }
+
+  function applyControl(THREE) {
+    var L = ensureLight(THREE), t = Math.max(0, Math.min(1, CTL.intensity));
+    L.kSun.value.setScalar(SUN * t);
+    L.kSunSpec.value.setScalar(SUN_SPEC * t);
+    L.kAmbient.value.setScalar(AMBIENT + SUN * (1 - t));
+    var e = CTL.elevation * Math.PI / 180, a = CTL.azimuth * Math.PI / 180;
+    // already unit length, by construction
+    L.kSunDir.value.set(Math.cos(e) * Math.sin(a), Math.sin(e), Math.cos(e) * Math.cos(a));
+  }
+
+  /* The settings that reproduce the host's own sun, so the control opens showing
+     the viewer as it already looks and "Reset" has somewhere to go back to. */
+  function lightControlDefaults() {
+    var d = HOST_DIR || FALLBACK_DIR, DEG = 180 / Math.PI;
+    var len = Math.hypot(d[0], d[1], d[2]) || 1;
+    return {
+      intensity: 1,
+      azimuth: (Math.round(Math.atan2(d[0], d[2]) * DEG) + 360) % 360,
+      elevation: Math.round(Math.asin(d[1] / len) * DEG),
+    };
   }
 
   // `color` is declared here rather than via `vertexColors`, so the attribute is
@@ -316,5 +366,8 @@
     });
   }
 
-  window.VoxelMesh = { build: build, makeMaterial: makeMaterial, setLighting: setLighting };
+  window.VoxelMesh = {
+    build: build, makeMaterial: makeMaterial, setLighting: setLighting,
+    setLightControl: setLightControl, lightControlDefaults: lightControlDefaults,
+  };
 })();

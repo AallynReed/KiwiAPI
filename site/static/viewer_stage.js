@@ -1,12 +1,18 @@
-/* Kiwi viewer stage tools - the backdrop and the snapshot button that the
-   blueprint viewer and the assembled-model viewer both want.
+/* Kiwi viewer stage tools - the backdrop, the sun and the snapshot button that the
+   blueprint viewer, the Blueprint Editor and the assembled-model viewer all want.
 
-   Two jobs, one place so the two viewers cannot drift apart:
+   Three jobs, one place so the viewers cannot drift apart:
 
      * BACKGROUND. The stage used to be a fixed radial gradient baked into each
        viewer's CSS. That gradient is still the default and still looks the same;
        this adds "no background at all", a flat colour, and an image from disk to
        stand the model in front of.
+
+     * LIGHTING. Where the sun sits and how hard it shines. The shading is the
+       game's own (voxel_mesh.js), which is worth keeping as the default, but it
+       leaves one side of a model in its 30% shadow - so a face you want to look at
+       can end up the dark one. Turning the intensity down flattens the shading out
+       until, at 0%, the model shows its plain voxel colours with no sun at all.
 
      * SNAPSHOT. Saves exactly what is on screen as a PNG - backdrop composited
        under the model, at the canvas' real device-pixel size.
@@ -44,6 +50,7 @@
   'use strict';
 
   var STORE_KEY = 'kiwi.viewerBg';        // { mode, color } - never the image itself
+  var LIGHT_KEY = 'kiwi.viewerLight';     // { intensity, azimuth, elevation }; absent = the host's own
   var GRAD_A = '#1b2531', GRAD_B = '#0c1118';   // fallbacks; the CSS vars are the source
   var _styles = false;
 
@@ -58,7 +65,9 @@
     if (_styles) return; _styles = true;
     var css =
       '.vs-tools{position:absolute;top:8px;right:8px;z-index:3;display:flex;gap:6px}' +
-      '.vs-tool{display:flex;align-items:center;gap:6px;background:rgba(16,21,28,.82);' +
+      // each button owns the panel that drops out of it
+      '.vs-slot{position:relative}' +
+      '.vs-tool{position:relative;display:flex;align-items:center;gap:6px;background:rgba(16,21,28,.82);' +
         'border:1px solid #2a323d;color:#cdd6e0;border-radius:8px;padding:5px 9px;' +
         'font:inherit;font-size:.76rem;line-height:1.2;cursor:pointer}' +
       '.vs-tool:hover{border-color:#4cc9f0;color:#e6edf3}' +
@@ -66,7 +75,7 @@
       '.vs-tool[aria-expanded="true"]{border-color:#4cc9f0;color:#e6edf3}' +
       '.vs-tool svg{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:currentColor;' +
         'stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}' +
-      '.vs-panel{position:absolute;top:38px;right:0;z-index:4;width:212px;padding:11px;' +
+      '.vs-panel{position:absolute;top:calc(100% + 6px);right:0;z-index:4;width:212px;padding:11px;' +
         'background:#10151c;border:1px solid #2a323d;border-radius:10px;' +
         'box-shadow:0 14px 34px rgba(0,0,0,.5)}' +
       '.vs-panel[hidden]{display:none}' +
@@ -85,19 +94,41 @@
       '.vs-file{color:#9aa4b2;font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '.vs-clear{background:none;border:0;color:#8a93a3;font:inherit;font-size:.72rem;' +
         'text-decoration:underline;cursor:pointer;padding:0;margin-left:auto;flex:0 0 auto}' +
-      '.vs-clear:hover{color:#e6edf3}';
+      '.vs-clear:hover{color:#e6edf3}' +
+      '.vs-slide{display:grid;grid-template-columns:1fr auto;align-items:center;gap:1px 8px;margin:0 0 9px}' +
+      '.vs-slide label{color:#9aa4b2;font-size:.76rem}' +
+      '.vs-slide output{color:#cdd6e0;font-size:.76rem;font-variant-numeric:tabular-nums}' +
+      '.vs-slide input{grid-column:1/-1;width:100%;margin:3px 0 0;accent-color:#4cc9f0;cursor:pointer}' +
+      '.vs-slide input:focus-visible{outline:2px solid #4cc9f0;outline-offset:3px}' +
+      // Three buttons don't fit across a phone-width stage. The labels go to
+      // screen readers only rather than away, so the buttons keep their names.
+      '@media (max-width:560px){.vs-tool span{position:absolute;width:1px;height:1px;' +
+        'overflow:hidden;clip-path:inset(50%);white-space:nowrap}.vs-tool{padding:6px}}';
     var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
   }
 
-  function read() {
-    try {
-      var v = JSON.parse(window.localStorage.getItem(STORE_KEY) || 'null');
-      if (v && typeof v.mode === 'string') return v;
-    } catch (e) { /* private mode, or someone else's key - fall through */ }
-    return { mode: 'default', color: '#0c1118' };
+  function load(key) {
+    try { return JSON.parse(window.localStorage.getItem(key) || 'null'); }
+    catch (e) { return null; }               // private mode, or someone else's key
   }
-  function write(v) {
-    try { window.localStorage.setItem(STORE_KEY, JSON.stringify(v)); } catch (e) { /* not worth failing over */ }
+  function store(key, v) {                   // null clears it
+    try {
+      if (v) window.localStorage.setItem(key, JSON.stringify(v));
+      else window.localStorage.removeItem(key);
+    } catch (e) { /* not worth failing over */ }
+  }
+
+  function readBg() {
+    var v = load(STORE_KEY);
+    return (v && typeof v.mode === 'string') ? v : { mode: 'default', color: '#0c1118' };
+  }
+
+  /* The saved sun, or null for "whatever the host asked for". Nothing is written
+     until the control is actually moved, so a viewer nobody has relit keeps its own
+     lighting exactly - and a stored setting made on one viewer carries to the next. */
+  function readLight() {
+    var v = load(LIGHT_KEY), n = function (x) { return typeof x === 'number' && isFinite(x); };
+    return (v && n(v.intensity) && n(v.azimuth) && n(v.elevation)) ? v : null;
   }
 
   function icon(d) {
@@ -106,6 +137,17 @@
   var ICON_IMAGE = '<rect x="3" y="4" width="18" height="16" rx="2"/>' +
                    '<circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-2 4 4"/>';
   var ICON_SAVE = '<path d="M12 3v11"/><path d="M8 11l4 4 4-4"/><path d="M4 20h16"/>';
+  var ICON_LIGHT = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4' +
+                   'M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+
+  /* The three things the sun has. `intensity` is a percentage of the game's own
+     lighting - 100% is the shading Trove itself draws, 0% is no sun at all - and the
+     other two are where it shines from, in degrees. */
+  var SLIDERS = [
+    { k: 'intensity', label: 'Intensity', min: 0, max: 100, unit: '%' },
+    { k: 'azimuth', label: 'Direction', min: 0, max: 360, unit: '°' },
+    { k: 'elevation', label: 'Height', min: -90, max: 90, unit: '°' },
+  ];
 
   /* The default backdrop, painted into a 2D context. `radial-gradient(circle at
      50% 40%, A, B 78%)` with no explicit size means a farthest-corner circle, so
@@ -136,38 +178,59 @@
   function attach(opts) {
     injectStyles();
     var stage = opts.stage, canvas = opts.canvas, render = opts.render;
-    var state = read();
+    var state = readBg();
+    // Only a voxel viewer has a sun to move; a host without the mesher (which owns
+    // the shader's uniforms) gets the backdrop and the snapshot and no dead button.
+    var lightable = !!(window.VoxelMesh && window.VoxelMesh.setLightControl);
 
     var tools = document.createElement('div');
     tools.className = 'vs-tools';
     tools.innerHTML =
-      '<button class="vs-tool vs-bg-btn" type="button" aria-expanded="false">' +
-        icon(ICON_IMAGE) + '<span>Background</span></button>' +
+      (lightable ?
+      '<div class="vs-slot">' +
+        '<button class="vs-tool vs-light-btn" type="button" aria-expanded="false">' +
+          icon(ICON_LIGHT) + '<span>Lighting</span></button>' +
+        '<div class="vs-panel vs-light-panel" hidden>' +
+          '<span class="vs-legend">Light</span>' +
+          SLIDERS.map(function (s, i) {
+            return '<div class="vs-slide">' +
+              '<label for="">' + s.label + '</label>' +
+              '<output></output>' +
+              '<input type="range" data-i="' + i + '" min="' + s.min + '" max="' + s.max + '" step="1">' +
+            '</div>';
+          }).join('') +
+          '<div class="vs-row"><button class="vs-clear vs-light-reset" type="button">Reset</button></div>' +
+        '</div>' +
+      '</div>' : '') +
+      '<div class="vs-slot">' +
+        '<button class="vs-tool vs-bg-btn" type="button" aria-expanded="false">' +
+          icon(ICON_IMAGE) + '<span>Background</span></button>' +
+        '<div class="vs-panel vs-bg-panel" hidden>' +
+          '<span class="vs-legend">Backdrop</span>' +
+          '<div class="vs-opts">' +
+            '<button class="vs-opt" type="button" data-mode="default" aria-pressed="false">Default</button>' +
+            '<button class="vs-opt" type="button" data-mode="none" aria-pressed="false">None</button>' +
+            '<button class="vs-opt" type="button" data-mode="color" aria-pressed="false">Color</button>' +
+            '<button class="vs-opt" type="button" data-mode="image" aria-pressed="false">Image</button>' +
+          '</div>' +
+          '<div class="vs-row vs-color-row" hidden>' +
+            '<label for="" class="vs-color-label">Color</label>' +
+            '<input type="color" class="vs-color">' +
+          '</div>' +
+          '<div class="vs-row vs-image-row" hidden>' +
+            '<button class="vs-opt vs-pick" type="button">Choose file…</button>' +
+            '<span class="vs-file"></span>' +
+          '</div>' +
+          '<input type="file" class="vs-input" accept="image/*" hidden>' +
+        '</div>' +
+      '</div>' +
       '<button class="vs-tool vs-save-btn" type="button">' +
-        icon(ICON_SAVE) + '<span>Save PNG</span></button>' +
-      '<div class="vs-panel" hidden>' +
-        '<span class="vs-legend">Backdrop</span>' +
-        '<div class="vs-opts">' +
-          '<button class="vs-opt" type="button" data-mode="default" aria-pressed="false">Default</button>' +
-          '<button class="vs-opt" type="button" data-mode="none" aria-pressed="false">None</button>' +
-          '<button class="vs-opt" type="button" data-mode="color" aria-pressed="false">Color</button>' +
-          '<button class="vs-opt" type="button" data-mode="image" aria-pressed="false">Image</button>' +
-        '</div>' +
-        '<div class="vs-row vs-color-row" hidden>' +
-          '<label for="" class="vs-color-label">Color</label>' +
-          '<input type="color" class="vs-color">' +
-        '</div>' +
-        '<div class="vs-row vs-image-row" hidden>' +
-          '<button class="vs-opt vs-pick" type="button">Choose file…</button>' +
-          '<span class="vs-file"></span>' +
-        '</div>' +
-        '<input type="file" class="vs-input" accept="image/*" hidden>' +
-      '</div>';
+        icon(ICON_SAVE) + '<span>Save PNG</span></button>';
     stage.appendChild(tools);
 
     var bgBtn = tools.querySelector('.vs-bg-btn'),
         saveBtn = tools.querySelector('.vs-save-btn'),
-        panel = tools.querySelector('.vs-panel'),
+        panel = tools.querySelector('.vs-bg-panel'),
         colorRow = tools.querySelector('.vs-color-row'),
         colorIn = tools.querySelector('.vs-color'),
         colorLabel = tools.querySelector('.vs-color-label'),
@@ -176,11 +239,22 @@
         fileName = tools.querySelector('.vs-file'),
         fileIn = tools.querySelector('.vs-input');
 
+    var lightBtn = tools.querySelector('.vs-light-btn'),
+        lightPanel = tools.querySelector('.vs-light-panel');
+
     // `for` and `aria-controls` need unique ids, and a page can hold more than one viewer
     var uid = Math.random().toString(36).slice(2, 8);
     colorIn.id = 'vs-c-' + uid; colorLabel.setAttribute('for', colorIn.id);
     panel.id = 'vs-p-' + uid; bgBtn.setAttribute('aria-controls', panel.id);
     colorIn.value = state.color;
+    if (lightPanel) {
+      lightPanel.id = 'vs-l-' + uid;
+      lightBtn.setAttribute('aria-controls', lightPanel.id);
+      Array.prototype.forEach.call(lightPanel.querySelectorAll('input'), function (r, i) {
+        r.id = 'vs-r' + i + '-' + uid;
+        r.parentNode.querySelector('label').setAttribute('for', r.id);
+      });
+    }
 
     function apply() {
       var m = state.mode;
@@ -199,14 +273,21 @@
       fileName.textContent = IMG.name || 'No file chosen';
     }
 
-    function setMode(m) { state.mode = m; write(state); apply(); }
+    function setMode(m) { state.mode = m; store(STORE_KEY, state); apply(); }
 
-    function openPanel(on) {
-      panel.hidden = !on;
-      bgBtn.setAttribute('aria-expanded', String(on));
+    /* One panel at a time - they drop out of neighbouring buttons and would
+       otherwise overlap each other. */
+    function openPanel(p, on) {
+      Array.prototype.forEach.call(tools.querySelectorAll('.vs-panel'), function (q) {
+        var show = q === p && on;
+        q.hidden = !show;
+        q.previousElementSibling.setAttribute('aria-expanded', String(show));
+      });
     }
+    function anyOpen() { return !panel.hidden || !!(lightPanel && !lightPanel.hidden); }
+    function closeAll() { openPanel(null, false); }
 
-    function onBgClick() { openPanel(panel.hidden); }
+    function onBgClick() { openPanel(panel, panel.hidden); }
     function onOptClick(e) {
       var b = e.target.closest ? e.target.closest('.vs-opt[data-mode]') : null;
       if (!b) return;
@@ -214,7 +295,7 @@
       setMode(m);
       if (m === 'image' && !IMG.el) fileIn.click();
     }
-    function onColor() { state.color = colorIn.value; write(state); apply(); }
+    function onColor() { state.color = colorIn.value; store(STORE_KEY, state); apply(); }
     function onPick() { fileIn.click(); }
     function onFile() {
       var f = fileIn.files && fileIn.files[0];
@@ -235,12 +316,59 @@
     /* Escape must close the picker without also closing the viewer's modal, which
        listens for it on `document`. */
     function onKey(e) {
-      if (e.key !== 'Escape' || panel.hidden) return;
+      if (e.key !== 'Escape' || !anyOpen()) return;
       e.stopPropagation();
-      openPanel(false); bgBtn.focus();
+      var open = panel.hidden ? lightBtn : bgBtn;
+      closeAll(); open.focus();
     }
     function onDocDown(e) {
-      if (!panel.hidden && !tools.contains(e.target)) openPanel(false);
+      if (anyOpen() && !tools.contains(e.target)) closeAll();
+    }
+
+    /* --- the sun ------------------------------------------------------------
+       `light` is null until someone moves a slider: an untouched viewer keeps the
+       lighting its host asked for, rather than one this script decided on. The
+       sliders still have to show something, so they open on the settings that
+       reproduce that host's own sun. */
+    var lightDefaults = lightable ? window.VoxelMesh.lightControlDefaults() : null;
+    var light = lightable ? readLight() : null;
+    var ranges = lightPanel ? Array.prototype.slice.call(lightPanel.querySelectorAll('input')) : [];
+
+    function lightValues() {
+      return light || {
+        intensity: Math.round(lightDefaults.intensity * 100),
+        azimuth: lightDefaults.azimuth, elevation: lightDefaults.elevation,
+      };
+    }
+    function showLight() {
+      var v = lightValues();
+      ranges.forEach(function (r) {
+        var s = SLIDERS[+r.getAttribute('data-i')];
+        r.value = v[s.k];
+        r.parentNode.querySelector('output').textContent = v[s.k] + s.unit;
+      });
+    }
+    // Nothing to push while `light` is null - the host's own lighting is already up.
+    function applyLight() {
+      if (!light) return;
+      window.VoxelMesh.setLightControl(window.THREE, {
+        intensity: light.intensity / 100, azimuth: light.azimuth, elevation: light.elevation,
+      });
+      render();
+    }
+    function onRange(e) {
+      var r = e.target, s = SLIDERS[+r.getAttribute('data-i')];
+      if (!s) return;
+      light = lightValues();
+      light[s.k] = +r.value;
+      store(LIGHT_KEY, light);
+      showLight(); applyLight();
+    }
+    function onLightReset() {
+      light = null;
+      store(LIGHT_KEY, null);
+      window.VoxelMesh.setLightControl(window.THREE, null);
+      showLight(); render();
     }
 
     /* The renderer runs without `preserveDrawingBuffer`, so the GL canvas is only
@@ -291,6 +419,16 @@
     fileIn.addEventListener('change', onFile);
     tools.addEventListener('keydown', onKey);
     document.addEventListener('mousedown', onDocDown);
+    if (lightPanel) {
+      lightBtn.addEventListener('click', function () { openPanel(lightPanel, lightPanel.hidden); });
+      lightPanel.addEventListener('input', onRange);
+      lightPanel.querySelector('.vs-light-reset').addEventListener('click', onLightReset);
+      showLight();
+      /* Re-applied on every attach, not only when the sliders move: the dressing
+         room and the editor rebuild their meshes (and their tools) as you work,
+         and each rebuild hands the sun back to the host's default. */
+      applyLight();
+    }
 
     apply();
 
