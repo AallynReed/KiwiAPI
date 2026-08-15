@@ -36,6 +36,7 @@ DIMENSIONS = {
     "gun": (5, 12, 5),
     "staff": (12, 12, 35),
     "bow": (3, 9, 21),
+    "fist": (6, 9, 5),
     "spear": (11, 11, 45),
     "mask": (10, 10, 5),
     "hat": (20, 14, 20),
@@ -44,7 +45,7 @@ DIMENSIONS = {
 }
 
 # Types that must carry an attachment point (Troxel skips deco, lairs and dungeons).
-NEEDS_ATTACHMENT = frozenset({"melee", "gun", "staff", "bow", "spear", "mask", "hat", "hair"})
+NEEDS_ATTACHMENT = frozenset({"melee", "gun", "staff", "bow", "spear", "fist", "mask", "hat", "hair"})
 
 CREATION_TYPES = (*DIMENSIONS, "other")
 
@@ -175,7 +176,7 @@ def _check_attachment(kind: str, attach, size, cells) -> list[dict]:
     ax, ay, az = attach
     sx, sy, sz = size
 
-    if kind in ("melee", "staff", "bow", "spear", "gun"):
+    if kind in ("melee", "staff", "bow", "spear", "gun", "fist"):
         if (ax, ay, az) not in cells:
             out.append(_finding(
                 "warning", "The attachment point isn't on a voxel",
@@ -226,7 +227,7 @@ def _check_attachment(kind: str, attach, size, cells) -> list[dict]:
     if kind in ("hat", "hair"):
         if ay > -6:
             out.append(_finding(
-                "error", "The hat isn't high enough above its attachment point",
+                "error", "The model isn't high enough above its attachment point",
                 f"The attachment point should be at least 6 voxels below the model "
                 f"(the head fills that space); yours is {-ay if ay < 0 else 0}."))
         if ax > 10 or sx - ax > 10 or az > 9 or sz - az > 11:

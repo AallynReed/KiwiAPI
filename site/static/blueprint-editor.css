@@ -6,13 +6,16 @@
    the page has to say clearly.
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* Full-bleed, unlike the rest of the site. Reading pages want a measure; a 3D
+   editor wants pixels - every one the container gave back goes to the stage. */
 .bpe-main {
   width: 100%;
-  max-width: 1320px;
   margin: 0 auto;
-  padding: 0 28px 90px;
+  padding: 0 clamp(16px, 2.2vw, 40px) 90px;
   min-width: 0;
 }
+/* The hero is prose and still wants a measure, so it keeps one inside the wide main. */
+.bpe-hero, .bpe-empty { max-width: 1320px; }
 
 .blueprint-editor-page [hidden] { display: none !important; }
 
@@ -175,7 +178,7 @@
 }
 .bpe-stage {
   position: relative;
-  height: min(64vh, 620px);
+  height: min(74vh, 900px);
   cursor: crosshair;
   --vs-bg-a: #1b2531;
   --vs-bg-b: #0c1118;

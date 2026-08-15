@@ -131,6 +131,11 @@
       stage: $('bpe-stage'),
       data: liveView(),
       name: payload.name,
+      /* The specular atlas. Without it every solid shades as rough, so metal, water,
+         iridescent, waxy and wave all look identical and the Finish control appears
+         to do nothing. Loaded through an <img>, which the global fetch rewriter never
+         sees, so it asks apiUrl itself. */
+      brdfUrl: apiUrl('/site/render/brdf-map.png'),
       onPick: onPick,
       onHover: onHover,
       onDrag: function (dx, dy, dz) { nudgeActive(dx, dy, dz); },
@@ -1121,8 +1126,8 @@
 
   var KIND_LABELS = {
     other: 'Not sure / something else', melee: 'Melee weapon', gun: 'Gun',
-    staff: 'Staff', bow: 'Bow', spear: 'Spear', mask: 'Mask / face',
-    hat: 'Hat', hair: 'Hair', deco: 'Decoration',
+    staff: 'Staff', bow: 'Bow', spear: 'Spear', fist: 'Fist weapon',
+    mask: 'Mask / face', hat: 'Hat', hair: 'Hair / helmet', deco: 'Decoration',
   };
 
   function renderKinds() {
@@ -1433,7 +1438,12 @@
         return /\.qb$/i.test(f.name);
       });
       if (qbs.length) importQb(qbs);
-      else openFile(dropped[0]);
+      // A .qbcl is a Qubicle project holding several models, not one grid, so it has
+      // nothing to compile from - say that rather than failing as a bad blueprint.
+      else if (/\.qbcl$/i.test(dropped[0].name)) {
+        setStatus('That’s a Qubicle project file, which holds several models at once. '
+          + 'Export the model as .qb and drop that instead.', 'error');
+      } else openFile(dropped[0]);
     });
 
     $('bpe-colour').addEventListener('input', function (e) {
