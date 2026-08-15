@@ -524,17 +524,25 @@
     var batch = state.history.pop();
     if (!batch) return;
     var d = state.data;
-    batch.forEach(function (rec) {
+    /* BACKWARDS. A stroke can touch the same voxel more than once - a drag across a
+       corner crosses two of its faces, and an add can place a cell and then paint it -
+       so a batch may hold several records for one row, each holding the state at the
+       moment it was touched. Replaying forwards leaves the LAST one applied, which is a
+       mid-stroke state, not the original: the undo appears to do nothing and the model
+       stays dirty with no history left to fix it. Going backwards ends on the earliest
+       record, which is the one that was true before the stroke began. */
+    for (var k = batch.length - 1; k >= 0; k--) {
+      var rec = batch[k];
       var i = rec.index;
       if (rec.added) {
         // A row the user placed is retired rather than spliced out: removing it would
         // renumber every row after it, and a dead row costs nothing.
         d.live[i] = 0;
-        return;
+        continue;
       }
       d.rgb[i] = rec.rgb; d.type[i] = rec.type; d.w[i] = rec.w; d.live[i] = rec.live;
       reshade(i);
-    });
+    }
     rebuildIndex();
     if (state.scene) state.scene.rebuild(liveView());
     renderMaterialList();
