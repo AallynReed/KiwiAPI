@@ -845,7 +845,10 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
 }
 
 .bpe-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.bpe-btnpair { display: flex; gap: 8px; }
+/* Undo and Redo wrap as a unit rather than landing either side of a line break -
+   but the pair itself still wraps, because "Rückgängig" + "Wiederholen" is wider
+   than this column and a pair pinned to one line would just overflow it. */
+.bpe-btnpair { display: flex; flex-wrap: wrap; gap: 8px; max-width: 100%; }
 .bpe-btn {
   display: inline-flex;
   align-items: center;
