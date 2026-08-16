@@ -630,7 +630,10 @@ async def get_wild_mana(ctx: AccessContext = _ROT) -> BiomeRotationFeed:
 
 @rotations_router.get("/stampy", response_model=BiomeRotationFeed)
 async def get_stampy(ctx: AccessContext = _ROT) -> BiomeRotationFeed:
-    """The weekly Stampy event biome (48-hour window): current + upcoming."""
+    """The fortnightly Stampy event biome (48-hour window): current + upcoming.
+
+    Anchored to a Monday, so in server time it always falls on Monday and
+    Tuesday and never on a weekend."""
     return BiomeRotationFeed(**rotations.stampy())
 
 

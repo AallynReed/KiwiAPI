@@ -5,7 +5,7 @@ gamedata/biomes.json:
 
 - d15 ("normal"): the 3-hour adventure-world biome rotation (3 biomes at a time).
 - wild mana: a weekly rotation (this week + the two prior, 3 biomes shown).
-- stampy: a weekly 48-hour event biome.
+- stampy: a fortnightly 48-hour event biome, anchored to a Monday.
 
 All anchors/lists are copied verbatim from the source so the indices line up.
 Timestamps are real-UTC unix seconds.
@@ -44,7 +44,11 @@ _MANA_BIOMES = [
     "Desert Frontier", "Fae Forest", "Candoria",
 ]
 
-_STAMPY_BASE = datetime(2023, 9, 30, 11, 0, 0, tzinfo=UTC)
+# Stampy runs fortnightly from a Monday for 48 hours, so in server time (the day
+# rolls at 11:00 UTC) it always covers Monday and Tuesday and never a weekend.
+# The biome list and its order are unchanged.
+_STAMPY_BASE = datetime(2023, 9, 25, 11, 0, 0, tzinfo=UTC)
+_STAMPY_PERIOD = timedelta(days=14)
 _STAMPY_DURATION = timedelta(hours=48)
 _STAMPY_BIOMES = [
     "Desert Frontier", "The Lost Isles", "Geode Topside", "Neon City", "Dragonfire Peaks",
@@ -131,12 +135,12 @@ def wild_mana(now: datetime | None = None, count: int = 8) -> dict:
 
 
 def stampy(now: datetime | None = None, count: int = 8) -> dict:
-    """The weekly Stampy event (48-hour window): current + upcoming."""
+    """The fortnightly Stampy event (48-hour window): current + upcoming."""
     real = now or real_utc_now()
-    weeks_offset = int((real - _STAMPY_BASE).total_seconds() // (7 * DAY))
+    weeks_offset = int((real - _STAMPY_BASE).total_seconds() // (14 * DAY))
     events = []
     for w in range(weeks_offset - 1, weeks_offset + 10):
-        s = _STAMPY_BASE + timedelta(weeks=w)
+        s = _STAMPY_BASE + w * _STAMPY_PERIOD
         e = s + _STAMPY_DURATION
         if e > real:
             events.append({

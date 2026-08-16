@@ -114,7 +114,7 @@ def _gardening(ws: datetime, we: datetime) -> list[dict]:
 def _stampy(ws: datetime, we: datetime) -> list[dict]:
     biomes = rotations._STAMPY_BIOMES
     out = []
-    for w, s in _occurrences(rotations._STAMPY_BASE, WEEK, ws, we):
+    for w, s in _occurrences(rotations._STAMPY_BASE, rotations._STAMPY_PERIOD, ws, we):
         e = s + rotations._STAMPY_DURATION
         if _overlaps(s, e, ws, we):
             out.append(_ev("stampy", "Stampy", s, e, biomes=[_biome(biomes[w % len(biomes)])]))
