@@ -124,8 +124,20 @@
                     <button type="button" data-tool="select" aria-pressed="false" title="Select" aria-label="Select">
                         <i class="fa-solid fa-object-ungroup" aria-hidden="true"></i>
                     </button>
+                    <button type="button" data-tool="box" aria-pressed="false" title="Box fill" aria-label="Box fill">
+                        <i class="fa-solid fa-vector-square" aria-hidden="true"></i>
+                    </button>
                 </div>
                 <p class="bpe-hint bpe-toolhint" id="bpe-toolhint" data-i18n>Click a voxel to paint it.</p>
+
+                <!-- Turning used to be a collapsed fold at the foot of the panel, on the
+                     theory that you rotate a model once, if ever. Modellers coming from
+                     Qubicle reach for it constantly and didn't find it, so it sits with
+                     the tools now - two rows of three, tight enough not to push the
+                     palette off the screen. -->
+                <h3 id="bpe-xform-label" data-i18n>Turn it</h3>
+                <div class="bpe-xforms" id="bpe-transforms"></div>
+                <p class="bpe-hint" data-i18n>The attachment point and any placed objects come with it.</p>
 
                 <!-- What a Select click gathers. Only shown for the tool it belongs
                      to: five more chips on the panel at all times is the clutter the
@@ -133,6 +145,50 @@
                 <div id="bpe-grabblock" hidden>
                     <h3 data-i18n>Select</h3>
                     <div class="bpe-chips" id="bpe-grabs"></div>
+                </div>
+
+                <!-- Shown only for the Box tool, the way the grab modes are shown only
+                     for Select: two more chips on the panel at all times is the clutter
+                     the icon-only tool row exists to avoid. -->
+                <div id="bpe-boxblock" hidden>
+                    <h3 data-i18n>The box</h3>
+                    <div class="bpe-chips" id="bpe-boxmodes">
+                        <button type="button" data-boxmode="fill" aria-pressed="true" data-i18n>Fills it</button>
+                        <button type="button" data-boxmode="clear" aria-pressed="false" data-i18n>Clears it</button>
+                    </div>
+                </div>
+
+                <!-- Slice: a VIEW of the part being edited, never an edit. Sits with the
+                     tools because it is the thing you turn on to reach the inside, and
+                     the tools are what you reach in with. -->
+                <h3 id="bpe-slice-label" data-i18n>Slice</h3>
+                <div class="bpe-chips" id="bpe-slice-axes">
+                    <button type="button" data-slice="off" aria-pressed="true" data-i18n>Off</button>
+                    <button type="button" data-slice="x" aria-pressed="false" title="Slice across X">X</button>
+                    <button type="button" data-slice="y" aria-pressed="false" title="Slice across Y">Y</button>
+                    <button type="button" data-slice="z" aria-pressed="false" title="Slice across Z">Z</button>
+                </div>
+                <div class="bpe-slicebar" id="bpe-slicebar" hidden>
+                    <button type="button" class="bpe-xform" data-slicestep="-1" aria-label="Previous layer">&minus;</button>
+                    <input type="range" id="bpe-slice-at" min="0" max="0" value="0" aria-label="Which layer">
+                    <button type="button" class="bpe-xform" data-slicestep="1" aria-label="Next layer">+</button>
+                    <span class="bpe-nudge-val" id="bpe-slice-read">0</span>
+                </div>
+                <p class="bpe-hint" id="bpe-slicehint" hidden data-i18n>Only this layer is drawn, so clicks reach the voxels inside. Use the bracket keys to step through it.</p>
+
+                <!-- Was "Flatten into one", down under the layer stack. It IS Qubicle's
+                     union, and a modeller looking for union didn't find it there. The
+                     hint carries what the old label said, so the name can be the one
+                     people search for without the button becoming jargon on its own. -->
+                <div id="bpe-unionblock">
+                    <h3 id="bpe-union-label" data-i18n>Union</h3>
+                    <div class="bpe-actions">
+                        <button type="button" class="bpe-btn" id="bpe-flatten" disabled>
+                            <i class="fa-solid fa-object-group" aria-hidden="true"></i>
+                            <span data-i18n>Union the layers</span>
+                        </button>
+                    </div>
+                    <p class="bpe-hint" id="bpe-unionhint" data-i18n>Merges every layer into a single blueprint. Where two overlap, the top one wins.</p>
                 </div>
 
                 <!-- The mask, and what you can do to it. Appears only once something
@@ -225,11 +281,6 @@
                             <button type="button" class="bpe-xform" data-nudge="0,0,1">+</button>
                         </div>
                     </div>
-                </details>
-                <details class="bpe-fold">
-                    <summary><span data-i18n>Turn it</span></summary>
-                    <p class="bpe-hint" data-i18n>Rotating or flipping takes the attachment point and any placed objects with it.</p>
-                    <div class="bpe-chips bpe-xforms" id="bpe-transforms"></div>
                 </details>
             </aside>
 
@@ -340,10 +391,18 @@
                             <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                             <span data-i18n>This part only</span>
                         </button>
-                        <button type="button" class="bpe-btn" id="bpe-undo" disabled>
-                            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-                            <span data-i18n>Undo</span>
-                        </button>
+                        <!-- One flex item, so the pair wraps together rather than
+                             ending up on either side of a line break. -->
+                        <span class="bpe-btnpair">
+                            <button type="button" class="bpe-btn" id="bpe-undo" disabled>
+                                <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+                                <span data-i18n>Undo</span>
+                            </button>
+                            <button type="button" class="bpe-btn" id="bpe-redo" disabled>
+                                <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                                <span data-i18n>Redo</span>
+                            </button>
+                        </span>
                         <button type="button" class="bpe-btn" id="bpe-revert" disabled data-i18n>Revert all</button>
                     </div>
                 </div>
@@ -365,12 +424,6 @@
                     </button>
                 </div>
                 <p class="bpe-hint" id="bpe-layerinfo"></p>
-                <div class="bpe-actions">
-                    <button type="button" class="bpe-btn" id="bpe-flatten" disabled>
-                        <i class="fa-solid fa-object-group" aria-hidden="true"></i>
-                        <span data-i18n>Flatten into one</span>
-                    </button>
-                </div>
 
                 <!-- The Trove Creations guidelines are per SUBMITTED ITEM - a hat, a
                      spear, a decoration. A creature's leg is not one of those, so this
@@ -414,6 +467,9 @@
             <dt data-i18n>Use the current tool</dt><dd><span data-i18n>Click, or drag across voxels</span></dd>
             <dt data-i18n>Pick up a colour and material</dt><dd><kbd>Alt</kbd> + click</dd>
             <dt data-i18n>Undo</dt><dd><kbd>Ctrl</kbd> + <kbd>Z</kbd></dd>
+            <dt data-i18n>Redo</dt>
+            <dd><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd>, <span data-i18n>or</span> <kbd>Ctrl</kbd> + <kbd>Y</kbd></dd>
+            <dt data-i18n>Step through a slice</dt><dd><kbd>[</kbd> <span data-i18n>and</span> <kbd>]</kbd></dd>
 
             <dt class="bpe-keys-model" data-i18n>Work on another part</dt>
             <dd class="bpe-keys-model"><span data-i18n>Middle-click, or</span> <kbd>Shift</kbd> + <span data-i18n>click</span></dd>

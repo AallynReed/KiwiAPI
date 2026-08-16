@@ -361,9 +361,50 @@
        silently painted a different voxel than the one under the cursor. `face.normal`
        is already model-space (the meshes carry no transform of their own). */
     var _lp = new THREE.Vector3();
+    /* An OPTIONAL bare plane to pick against, in model space: `{axis, at}`. A host
+       showing one layer of a model needs the empty cells of that layer to be clickable,
+       and there is no geometry in an empty cell to raycast - so the ray is intersected
+       with the plane itself and the cell it lands in is reported. Geometry always wins;
+       this only answers where nothing was hit. */
+    var pickPlane = null;
+    var _pray = new THREE.Ray(), _ppt = new THREE.Vector3();
+    var _pn = new THREE.Vector3(), _plane = new THREE.Plane();
+
+    function castPlane(clientX, clientY) {
+      if (!pickPlane) return null;
+      var box = el.getBoundingClientRect();
+      if (!box.width || !box.height) return null;
+      ndc.set(((clientX - box.left) / box.width) * 2 - 1,
+              -((clientY - box.top) / box.height) * 2 + 1);
+      camera.updateMatrixWorld();
+      modelGroup.updateMatrixWorld();
+      caster.setFromCamera(ndc, camera);
+      // Into the MODEL's space, where the plane is axis-aligned and a unit is a voxel -
+      // a part on a rig is rotated and scaled, so the world-space ray means nothing here.
+      _pray.copy(caster.ray).applyMatrix4(_inv.copy(modelGroup.matrixWorld).invert());
+      _pn.set(pickPlane.axis === 'x' ? 1 : 0,
+              pickPlane.axis === 'y' ? 1 : 0,
+              pickPlane.axis === 'z' ? 1 : 0);
+      _plane.setFromNormalAndCoplanarPoint(_pn, _ppt.copy(_pn).multiplyScalar(pickPlane.at));
+      if (!_pray.intersectPlane(_plane, _ppt)) return null;
+      // Face the camera: which way "out of the plane" is decides where an add would go.
+      var away = _pray.direction.dot(_pn) > 0 ? -1 : 1;
+      return {
+        x: pickPlane.axis === 'x' ? pickPlane.at : Math.round(_ppt.x),
+        y: pickPlane.axis === 'y' ? pickPlane.at : Math.round(_ppt.y),
+        z: pickPlane.axis === 'z' ? pickPlane.at : Math.round(_ppt.z),
+        nx: pickPlane.axis === 'x' ? away : 0,
+        ny: pickPlane.axis === 'y' ? away : 0,
+        nz: pickPlane.axis === 'z' ? away : 0,
+        onPlane: true,
+      };
+    }
+
+    var _inv = new THREE.Matrix4();
+
     function pick(e) {
       var hit = castAt(e.clientX, e.clientY);
-      if (!hit || !hit.face) return null;
+      if (!hit || !hit.face) return castPlane(e.clientX, e.clientY);
       var n = hit.face.normal;
       modelGroup.updateMatrixWorld();
       _lp.copy(hit.point);
@@ -662,6 +703,9 @@
       clearLayer: clearLayer,
       clearLayers: clearLayers,
       setDragMode: function (mode) { dragMode = mode || ''; },
+      // `{axis:'x'|'y'|'z', at:n}` to make one bare plane clickable where no geometry
+      // is; null to go back to picking geometry only.
+      setPickPlane: function (p) { pickPlane = p || null; },
       setModelOffset: function (x, y, z) {
         modelGroup.matrixAutoUpdate = true;
         modelGroup.position.set(x, y, z);

@@ -816,6 +816,7 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
 }
 
 .bpe-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.bpe-btnpair { display: flex; gap: 8px; }
 .bpe-btn {
   display: inline-flex;
   align-items: center;
@@ -872,7 +873,27 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
   font-size: .95em;
 }
 
-.bpe-xforms { margin-top: 8px; }
+/* Step, scrub, read-out. The slider takes the room the two buttons leave. */
+.bpe-slicebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.bpe-slicebar input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent-blue); }
+.bpe-slicebar .bpe-xform { padding: 4px 0; min-width: 30px; text-align: center; }
+.bpe-slicebar .bpe-nudge-val { min-width: 44px; text-align: right; }
+
+/* Caption, then its three axes - same shape as the nudge pad below it. */
+.bpe-xforms {
+  display: grid;
+  grid-template-columns: auto repeat(3, 1fr);
+  align-items: center;
+  gap: 5px 6px;
+  margin-top: 8px;
+}
+.bpe-xform-cap { font-size: .78rem; color: var(--text-mute); padding-right: 2px; }
+.bpe-xforms .bpe-xform { padding: 4px 0; min-width: 30px; text-align: center; }
 .bpe-xform {
   background: transparent;
   border: 1px solid var(--bg-line);
@@ -921,6 +942,8 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
   .bpe-mat,
   .bpe-w,
   .bpe-xform { min-height: 40px; padding: 8px 14px; font-size: .84rem; }
+  /* The track stays thin; the box around it is what a thumb has to land on. */
+  .bpe-slicebar input[type=range] { height: 40px; }
   .bpe-btn { min-height: 44px; padding: 10px 16px; }
   .bpe-applyall { min-height: 36px; padding: 7px 12px; }
   .bpe-f-show { min-height: 32px; padding: 5px 11px; }

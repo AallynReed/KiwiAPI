@@ -30,6 +30,7 @@
     base: null,          // pristine rgb/type/w, straight from the file
     origin: [],          // row -> index in the file, or -1 if the user placed it
     history: [],         // one array of before-states per action, for undo
+    redo: [],            // undone actions, same shape, waiting to be put back
     scene: null,
     selection: -1,
     index: null,         // "x,y,z" -> row, live rows only
@@ -53,6 +54,12 @@
     isolate: false,      // show only the layer being edited
     stroke: null,        // in-progress drag-edit: one batch, one undo entry
     strokeNormal: null,  // the face an 'add' stroke started on
+    // Slice view: show one layer of the part being edited, so its inside can be
+    // reached. A VIEW, never an edit - nothing here changes a voxel.
+    slice: { on: false, axis: 'y', at: 0 },
+    // The Box tool's drag: the two corners, which axis the rectangle is flat against,
+    // and where a fill lands relative to it (off the face, or in the slice).
+    box: { fill: true, from: null, to: null, plane: null, lift: [0, 0, 0] },
     report: null,        // last check result
     showAttach: true,
     swatches: [],        // saved colours, browser-local (see loadSwatches)
@@ -148,12 +155,18 @@
     state.base = d0.base;
     state.origin = d0.origin;
     state.history = d0.history;
+    state.redo = d0.redo;
     state.selection = -1;
     // Rows are indices into THIS document's arrays; carried into another file they
     // would silently name different voxels.
     state.sel = null;
+    // A slice index describes one model's grid, so a fresh open starts unsliced.
+    state.slice.on = false;
+    state.slice.at = 0;
+    cancelBox();
     rebuildIndex();
 
+    renderSlice();
     renderMode();
     renderKinds();
     renderTransforms();
@@ -215,15 +228,65 @@
      costs anyway. */
   function liveView() {
     var d = state.data;
+    var s = state.slice;
     var v = { count: 0, size: d.size, x: [], y: [], z: [], rgb: [],
               kind: [], level: [], spec: [] };
     for (var i = 0; i < d.count; i++) {
       if (!d.live[i]) continue;
+      // The slice filters what is DRAWN, and so also what a raycast can hit - which is
+      // the whole point: with the shell out of the way the cursor reaches the inside.
+      if (s.on && d[s.axis][i] !== s.at) continue;
       v.x.push(d.x[i]); v.y.push(d.y[i]); v.z.push(d.z[i]); v.rgb.push(d.rgb[i]);
       v.kind.push(d.kind[i]); v.level.push(d.level[i]); v.spec.push(d.spec[i]);
       v.count++;
     }
     return v;
+  }
+
+  /* How far the slice can travel: the part's own bounding box on that axis. Read off
+     `size` rather than the voxels, so an empty layer in the middle of a model is still
+     a layer you can step onto and build into. */
+  function sliceMax() {
+    var d = state.data;
+    if (!d || !d.size) return 0;
+    return Math.max(0, d.size[{ x: 0, y: 1, z: 2 }[state.slice.axis]] - 1);
+  }
+
+  function setSlice(next) {
+    var s = state.slice;
+    var axisChanged = next.axis !== undefined && next.axis !== s.axis;
+    var turnedOn = next.on === true && !s.on;
+    if (next.axis !== undefined) s.axis = next.axis;
+    if (next.on !== undefined) s.on = next.on;
+    // Land MID-MODEL when the slice is switched on or moved to another axis: the old
+    // index means nothing on a new axis, and layer 0 is the outer face - the one thing
+    // you could already see without slicing at all.
+    if (axisChanged || turnedOn) s.at = Math.floor(sliceMax() / 2);
+    if (next.at !== undefined) s.at = next.at;
+    s.at = Math.max(0, Math.min(s.at, sliceMax()));
+    cancelBox();
+    renderSlice();
+    if (state.scene) state.scene.rebuild(liveView());
+    drawStack();
+  }
+
+  function renderSlice() {
+    var s = state.slice, max = sliceMax();
+    /* The empty cells of the layer have to be clickable or you could clear a slice and
+       never fill it back in - an empty cell has no geometry to raycast. Synced here
+       rather than in setSlice so every path that changes the slice (a fresh open, a
+       switch of part) keeps the scene in step with the panel. */
+    if (state.scene) state.scene.setPickPlane(s.on ? { axis: s.axis, at: s.at } : null);
+    Array.prototype.forEach.call($('bpe-slice-axes').children, function (b) {
+      b.setAttribute('aria-pressed',
+        String(s.on ? b.dataset.slice === s.axis : b.dataset.slice === 'off'));
+    });
+    $('bpe-slicebar').hidden = !s.on;
+    $('bpe-slicehint').hidden = !s.on;
+    var at = $('bpe-slice-at');
+    at.max = String(max);
+    at.value = String(s.at);
+    $('bpe-slice-read').textContent = s.at + ' / ' + max;
   }
 
   function rebuildIndex() {
@@ -293,6 +356,9 @@
   ];
 
   var SELECT_COLOUR = 0x58a6ff;
+  // Not the selection's blue: a box preview and a selection can be on screen together,
+  // and two blue wireframes over each other say nothing about which is which.
+  var BOX_COLOUR = 0x6ee7a8;
 
   function renderGrabs() {
     var el = $('bpe-grabs');
@@ -654,6 +720,7 @@
         state.stroke.push.apply(state.stroke, batch);
       } else {
         state.history.push(batch);
+        state.redo.length = 0;      // a fresh action forks the timeline
         clearThumb(active());
         noteEditInModelView();
         renderMaterialList();
@@ -704,8 +771,168 @@
     return out;
   }
 
+  /* ---- the Box tool ---------------------------------------------------------
+
+     Drag out a rectangle and fill or clear it in one action, instead of one click per
+     voxel. Two endpoints in 3D from a 2D drag is ambiguous, so the rectangle is pinned
+     to the PLANE OF THE FACE THE DRAG STARTED ON - the same trick the Add tool already
+     uses to stop a stroke climbing its own output. Every later hit on that plane just
+     moves the far corner.
+
+     Sliced, this is the Qubicle gesture: the visible faces of a slice all point at the
+     camera, so the plane is the slice and the rectangle is drawn across it. */
+
+  var AXES = ['x', 'y', 'z'];
+
+  function normalAxis(hit) {
+    return hit.nx ? 'x' : (hit.ny ? 'y' : 'z');
+  }
+
+  function inGrid(c) {
+    var s = state.data.size;
+    return c.x >= 0 && c.y >= 0 && c.z >= 0
+        && c.x < s[0] && c.y < s[1] && c.z < s[2];
+  }
+
+  // The two axes the fixed one leaves free - the rectangle's own two dimensions.
+  function planeAxes(fixed) {
+    return AXES.filter(function (a) { return a !== fixed; });
+  }
+
+  function boxCells() {
+    var b = state.box;
+    if (!b.from || !b.to) return [];
+    var free = planeAxes(b.plane);
+    var a0 = free[0], a1 = free[1];
+    /* CLAMPED to the grid. Dragging past the edge of the model means "out to the edge",
+       not "and a hundred cells into thin air" - and on an empty slice the far corner is
+       a point on a bare plane, which has no edges of its own to stop at. */
+    var lo0 = Math.min(b.from[a0], b.to[a0]), hi0 = Math.max(b.from[a0], b.to[a0]);
+    var lo1 = Math.min(b.from[a1], b.to[a1]), hi1 = Math.max(b.from[a1], b.to[a1]);
+    var lim = { x: state.data.size[0] - 1, y: state.data.size[1] - 1, z: state.data.size[2] - 1 };
+    lo0 = Math.max(0, lo0); hi0 = Math.min(lim[a0], hi0);
+    lo1 = Math.max(0, lo1); hi1 = Math.min(lim[a1], hi1);
+    var out = [];
+    for (var p = lo0; p <= hi0; p++) {
+      for (var q = lo1; q <= hi1; q++) {
+        var cell = { x: b.from.x, y: b.from.y, z: b.from.z };
+        cell[a0] = p; cell[a1] = q;
+        out.push(cell);
+      }
+    }
+    return out;
+  }
+
+  /* Preview. Unsliced, fill draws where the voxels will LAND - one step off the face,
+     which is where they go - so the outline is never mistaken for the row it rests on.
+     In a slice they land in the slice, so `lift` is zero and it draws on the cells. */
+  function drawBox() {
+    if (!state.scene) return;
+    var b = state.box;
+    if (!b.from || !b.to) { state.scene.setOverlay('box', [], BOX_COLOUR, 1.02); return; }
+    var n = b.fill ? b.lift : [0, 0, 0];
+    var pts = boxCells().map(function (c) {
+      return [c.x + n[0], c.y + n[1], c.z + n[2]];
+    });
+    state.scene.setOverlay('box', pts, BOX_COLOUR, b.fill && b.lift[0] + b.lift[1] + b.lift[2] ? 1.02 : 1.08);
+  }
+
+  function cancelBox() {
+    state.box.from = state.box.to = state.box.plane = null;
+    state.box.lift = [0, 0, 0];
+    drawBox();
+  }
+
+  /* Apply on release, as ONE batch: a box over four hundred cells is one thing you did
+     and has to be one thing you undo. */
+  function commitBox() {
+    var b = state.box;
+    if (!b.from || !b.to) return;
+    var cells = boxCells();
+    var n = b.lift;
+    var batch = [], refused = 0, done = 0;
+    cells.forEach(function (c) {
+      if (b.fill) {
+        var v = { x: c.x + n[0], y: c.y + n[1], z: c.z + n[2],
+                  rgb: state.paint.rgb, type: state.paint.type, w: state.paint.w };
+        // Outside the grid an add would have to shift every voxel and the attachment
+        // point with it; that is the transform endpoint's job, not a brush stroke's.
+        if (v.x < 0 || v.y < 0 || v.z < 0) { refused++; return; }
+        addVoxelAt(v, batch);
+        done++;
+      } else {
+        var i = state.index.get(c.x + ',' + c.y + ',' + c.z);
+        if (i === undefined) return;
+        if (!allowed(i)) { refused++; return; }
+        if (eraseVoxel(i, batch)) done++;
+      }
+    });
+    cancelBox();
+    if (!batch.length) {
+      setStatus(b.fill ? 'Nothing could be placed there.'
+                       : 'No voxels of this part in that box.', 'warn');
+      return;
+    }
+    commit(batch, 0);
+    pruneSelection();
+    afterSelection();
+    setStatus(done.toLocaleString() + ' voxel' + (done === 1 ? '' : 's')
+      + (b.fill ? ' placed' : ' cleared')
+      + (refused ? ' · ' + refused + ' skipped (outside the selection or the grid)' : '')
+      + '.', 'ok');
+  }
+
   function onPick(hit, ev) {
     if (!hit || !state.data || state.anim.on) return;
+
+    /* Box records the drag and paints nothing until it ends. The anchor is the first
+       hit; every later one on the same face moves the far corner and a hit on a
+       different face is ignored, exactly as an Add stroke ignores it. */
+    if (state.tool === 'box') {
+      var b = state.box;
+      /* SLICED, the plane is the slice, not the face under the cursor. A slice of a
+         hollow model is a RING of separate cubes and each presents whichever face
+         happens to point at you, so locking to the first one would reject almost every
+         later hit and the rectangle would never grow past its own corner. Every hit is
+         in the slice by construction, so there is nothing left to check - and a fill
+         lands IN the layer you are looking at rather than one step out of it, which is
+         what filling a slice means. */
+      if (state.slice.on) {
+        b.plane = state.slice.axis;
+        b.lift = [0, 0, 0];
+      } else if (!b.plane) {
+        b.plane = normalAxis(hit);
+        b.lift = [hit.nx, hit.ny, hit.nz];
+      } else if (b.plane !== normalAxis(hit)
+                 || b.lift[0] !== hit.nx || b.lift[1] !== hit.ny || b.lift[2] !== hit.nz) {
+        // Unsliced there is no plane but the face you started on, so a hit on another
+        // one is ignored - the same rule an Add stroke follows.
+        return;
+      }
+      if (!b.from) b.from = { x: hit.x, y: hit.y, z: hit.z };
+      b.to = { x: hit.x, y: hit.y, z: hit.z };
+      drawBox();
+      return;
+    }
+
+    /* A hit on the bare slice plane names an EMPTY cell, so there is no row to look up
+       and nothing but Add has anything to do with it. Add builds right there - the cell
+       IS the gap you clicked - rather than one step off a face that isn't there. */
+    if (hit.onPlane) {
+      if (state.tool !== 'add') return;
+      /* The plane is infinite where the model is not. Adding against a FACE can only
+         ever land one cell beyond an existing voxel, but a click far out on the plane
+         would drag the bounding box out with it - so the grid is the limit here. */
+      if (!inGrid(hit)) return;
+      var planeBatch = [];
+      addVoxel(hit.x, hit.y, hit.z, planeBatch);
+      commit(planeBatch, 0);
+      state.selection = state.index.get(hit.x + ',' + hit.y + ',' + hit.z);
+      if (state.selection === undefined) state.selection = -1;
+      renderSelection();
+      return;
+    }
+
     var i = state.index.get(hit.x + ',' + hit.y + ',' + hit.z);
     if (i === undefined) return;
     var batch = [], refused = 0;
@@ -748,6 +975,15 @@
         if (!state.strokeNormal) state.strokeNormal = [hit.nx, hit.ny, hit.nz];
         var n = state.strokeNormal;
         if (n[0] !== hit.nx || n[1] !== hit.ny || n[2] !== hit.nz) return;
+      }
+      /* Sliced, the faces pointing at you are the ones ALONG the slice axis, so the
+         obvious click would drop the voxel into the next layer - off screen, and
+         apparently nowhere. Refuse it and say so rather than build somewhere invisible;
+         in-plane faces still work, which is how you fill a slice out. */
+      if (state.slice.on && normalAxis(hit) === state.slice.axis) {
+        setStatus('That face points out of the slice, so a voxel there would land in '
+          + 'the layer behind it. Step the slice, or build from a side face.', 'warn');
+        return;
       }
       addVoxel(hit.x + hit.nx, hit.y + hit.ny, hit.z + hit.nz, batch);
       commit(batch, 0);
@@ -800,6 +1036,17 @@
       ? state.index.get(hit.x + ',' + hit.y + ',' + hit.z)
       : undefined;
     if (i === undefined) {
+      /* An empty cell of the slice still has a coordinate, and while you are building
+         into a cleared layer that coordinate is the only thing on screen telling you
+         where the cursor is. */
+      // The plane runs on past the model, and a coordinate you cannot build on is worse
+      // than none - the box clamps to the grid, so read out only what it would keep.
+      if (hit && hit.onPlane && state.data && inGrid(hit)) {
+        var where = hit.x + ', ' + hit.y + ', ' + hit.z + ' · empty';
+        if (el.textContent !== where) el.textContent = where;
+        el.hidden = false;
+        return;
+      }
       if (!el.hidden) { el.hidden = true; el.textContent = ''; }
       return;
     }
@@ -817,12 +1064,47 @@
     afterSelection();
   }
 
+  function redo() {
+    if (inModelView()) { redoModel(); } else { redoDoc(active()); }
+    pruneSelection();
+    afterSelection();
+  }
+
+  /* What the rows a batch touches look like RIGHT NOW - the exact inverse of applying
+     that batch, so undo and redo are the same operation pointed opposite ways. Taken
+     before anything is restored, so every record for a given row holds the same values
+     and the backwards walk below is order-independent for them.
+
+     `added` needs no counterpart: the row is never spliced out, so once it exists the
+     plain (rgb, type, w, live) form describes both its presence and its absence. */
+  function snapshot(docu, batch) {
+    var d = docu.payload;
+    return batch.map(function (rec) {
+      var i = rec.index;
+      return { index: i, rgb: d.rgb[i], type: d.type[i], w: d.w[i], live: d.live[i] };
+    });
+  }
+
   /* Take back one action on ONE part - the active one, or any other, since the model
      view can undo an edit made on a part you have since switched away from. */
   function undoDoc(docu) {
     if (!docu) return;
     var batch = docu.history.pop();
     if (!batch) return;
+    docu.redo.push(snapshot(docu, batch));
+    applyBatch(docu, batch);
+  }
+
+  // The mirror image: put back the last thing undone, and make it undoable again.
+  function redoDoc(docu) {
+    if (!docu) return;
+    var batch = docu.redo.pop();
+    if (!batch) return;
+    docu.history.push(snapshot(docu, batch));
+    applyBatch(docu, batch);
+  }
+
+  function applyBatch(docu, batch) {
     var d = docu.payload;
     /* BACKWARDS. A stroke can touch the same voxel more than once - a drag across a
        corner crosses two of its faces, and an add can place a cell and then paint it -
@@ -872,7 +1154,10 @@
       d.live[i] = 1;
       reshade(i);
     }
-    state.history = [];
+    // In place: the document owns these arrays and `state` only aliases them, so
+    // reassigning here would leave the part holding the stack we just threw away.
+    state.history.length = 0;
+    state.redo.length = 0;
     clearThumb(active());
     rebuildIndex();
     if (state.scene) state.scene.rebuild(liveView());
@@ -989,11 +1274,24 @@
       .catch(function (err) { setStatus(err.message || String(err), 'error'); });
   }
 
+  /* Two labelled rows of three axis buttons rather than six buttons carrying their full
+     names. The full name is still the tooltip and the accessible name - "Flip left-right"
+     says what happens where "Flip X" makes you work it out - but six long chips took four
+     rows of a panel this now sits at the top of, which is what kept the palette on screen
+     when turning was folded away at the bottom. Grouped off the op prefix, so the server
+     stays the one place the operation list is defined. */
   function renderTransforms() {
     var ops = state.data.transforms || [];
-    $('bpe-transforms').innerHTML = ops.map(function (t) {
-      return '<button type="button" class="bpe-xform" data-op="' + t.op + '">'
-        + esc(t.label) + '</button>';
+    var groups = [{ key: 'rotate_', caption: 'Rotate' }, { key: 'mirror_', caption: 'Flip' }];
+    $('bpe-transforms').innerHTML = groups.map(function (g) {
+      var row = ops.filter(function (t) { return t.op.indexOf(g.key) === 0; });
+      if (!row.length) return '';
+      return '<span class="bpe-xform-cap">' + esc(g.caption) + '</span>'
+        + row.map(function (t) {
+          return '<button type="button" class="bpe-xform" data-op="' + t.op + '"'
+            + ' title="' + esc(t.label) + '" aria-label="' + esc(t.label) + '">'
+            + t.op.slice(-1).toUpperCase() + '</button>';
+        }).join('');
     }).join('');
   }
 
@@ -1107,6 +1405,7 @@
       base: { rgb: payload.rgb.slice(), type: payload.type.slice(), w: payload.w.slice() },
       origin: origin,
       history: [],
+      redo: [],
       mode: 'attachment',
       offset: [0, 0, 0],
       visible: true,
@@ -1138,9 +1437,15 @@
     state.base = d.base;
     state.origin = d.origin;
     state.history = d.history;
+    state.redo = d.redo;
     state.selection = -1;
     state.sel = null;   // see openPayload: rows belong to one document
+    // Parts differ in size, so the layer you were on may not exist on this one. The
+    // axis is kept - you are still slicing the same way - and the index is clamped.
+    state.slice.at = Math.min(state.slice.at, sliceMax());
+    cancelBox();
     rebuildIndex();
+    renderSlice();
     renderKinds();
     renderTransforms();
     renderPalette();
@@ -1150,7 +1455,7 @@
     renderLayers();
     updateDirty();
     if (state.scene) {
-      state.scene.rebuild(viewOf(d));
+      state.scene.rebuild(liveView());   // liveView, not viewOf: it applies the slice
       drawStack();
       drawAttachment();
       // Working on one part at a time, switching to another has to bring it into view -
@@ -1287,6 +1592,9 @@
         + '</li>';
     });
     $('bpe-layerlist').innerHTML = rows.join('');
+    // A model's parts are not a layer stack - they sit on bones and are saved apart -
+    // so union has nothing to mean here and goes rather than sitting dead.
+    $('bpe-unionblock').hidden = true;
     $('bpe-flatten').disabled = true;
     // The nudge buttons stay - they slide the part along its bone here - but there is
     // nothing to align against, so the alignment picker goes.
@@ -1390,6 +1698,9 @@
     if (!state.docs.length) return;
     if (inProject()) return renderParts();
     var multi = state.docs.length > 1;
+    // Kept on screen with one layer, disabled: that is how somebody finds out union is
+    // there before they have a second layer to use it on.
+    $('bpe-unionblock').hidden = false;
     $('bpe-flatten').disabled = !multi;
     $('bpe-isolate').disabled = !multi;
     $('bpe-isolate').setAttribute('aria-pressed', String(!!state.isolate));
@@ -1497,7 +1808,7 @@
 
   function flattenStack() {
     if (state.docs.length < 2) return;
-    setStatus('Flattening...');
+    setStatus('Unioning the layers...');
     var fd = new FormData();
     anchorParts(fd);
     stackParts(fd);
@@ -1505,7 +1816,7 @@
       .then(function (res) {
         if (!res.ok) {
           return res.json().then(function (b) {
-            throw new Error((b && b.detail) || 'The stack could not be flattened.');
+            throw new Error((b && b.detail) || 'The layers could not be unioned.');
           });
         }
         var summary = {};
@@ -1520,7 +1831,7 @@
         if (s.entities) bits.push(s.entities);
         var name = anchorDoc().file.name;
         openFile(new File([out.blob], name),
-                 'Flattened into one blueprint - ' + bits.join(' - ') + '.');
+                 'Unioned into one blueprint - ' + bits.join(' - ') + '.');
       })
       .catch(function (err) { setStatus(err.message || String(err), 'error'); });
   }
@@ -1585,6 +1896,7 @@
       skipped: payload.skipped || [],
       extras: payload.extras || 0,
       history: [],          // model-level undo: parts moved, parts re-socketed
+      redo: [],
     };
     state.docs = payload.parts.map(function (p) {
       // Each part carries its own bytes, so every single-file tool - the checks, the
@@ -1952,6 +2264,7 @@
   function pushModelUndo(entry) {
     if (!state.project) return;
     state.project.history.push(entry);
+    state.project.redo.length = 0;
     updateDirty();
   }
 
@@ -1985,6 +2298,40 @@
           + (entry.from ? 'on ' + entry.from.replace(/_/g, ' ') : 'beside the model')
           + '.', 'ok');
       }
+      state.project.redo.push(entry);
+      renderLayers();
+      drawStack();
+      updateDirty();
+      return;
+    }
+    updateDirty();
+  }
+
+  /* Put back the last thing undone out here. Same skip-the-stale rule as undoModel,
+     read the other way: an `edit` reference whose part has had a fresh edit since has
+     had its redo stack cleared, and there is nothing left out here to put back. */
+  function redoModel() {
+    var r = state.project && state.project.redo;
+    if (!r) return;
+    while (r.length) {
+      var entry = r.pop();
+      var d = state.docs.filter(function (x) { return x.id === entry.id; })[0];
+      if (!d) continue;
+      if (entry.kind === 'edit') {
+        if (!d.redo.length) continue;
+        redoDoc(d);
+        setStatus('Redone on ' + d.payload.name + '.', 'ok');
+      } else if (entry.kind === 'move') {
+        d.move = [d.move[0] + entry.delta[0], d.move[1] + entry.delta[1],
+                  d.move[2] + entry.delta[2]];
+        setStatus('Move redone.', 'ok');
+      } else if (entry.kind === 'ap') {
+        d.ap = entry.to;
+        setStatus('Put ' + d.payload.name.replace(/\.blueprint$/i, '') + ' back '
+          + (entry.to ? 'on ' + entry.to.replace(/_/g, ' ') : 'beside the model')
+          + '.', 'ok');
+      }
+      state.project.history.push(entry);
       renderLayers();
       drawStack();
       updateDirty();
@@ -2574,7 +2921,7 @@
      everywhere in the editor. */
   function dragModeFor(tool) {
     if (tool === 'move') return 'move';
-    if (tool === 'paint' || tool === 'add' || tool === 'erase') return 'stroke';
+    if (tool === 'paint' || tool === 'add' || tool === 'erase' || tool === 'box') return 'stroke';
     return '';
   }
 
@@ -2596,6 +2943,12 @@
       }
       return;
     }
+    /* Box paints nothing as it drags, so it has no stroke batch to fold into - the
+       whole rectangle is applied here, on release, as one action of its own. */
+    if (state.tool === 'box') {
+      if (phase === 'start') cancelBox(); else commitBox();
+      return;
+    }
     if (phase === 'start') {
       state.stroke = [];
       state.strokeNormal = null;
@@ -2606,6 +2959,7 @@
     state.strokeNormal = null;
     if (batch && batch.length) {
       state.history.push(batch);
+      state.redo.length = 0;
       clearThumb(active());
       noteEditInModelView();
       renderMaterialList();
@@ -2626,6 +2980,8 @@
       move: 'Drag to slide this layer around. Ctrl-drag turns the view.',
       select: 'Click to select. Shift-click adds to the selection. '
         + 'Everything else then works only where it lands.',
+      box: 'Drag out a rectangle across one face to fill or clear it in one go. '
+        + 'Turn on a slice first to work inside the model.',
     };
     var hint = hints[state.tool] || hints.paint;
     /* Which layer a click lands on is the thing to be unambiguous about once there is
@@ -2888,15 +3244,19 @@
     scheduleSave();
     var n = editList().length;
     $('bpe-save').disabled = false;
-    var undoBtn = $('bpe-undo');
+    var undoBtn = $('bpe-undo'), redoBtn = $('bpe-redo');
     if (inModelView()) {
-      // Say which history the button walks, so it is never a surprise which of the two
-      // it takes back.
+      // Say which history the buttons walk, so it is never a surprise which of the two
+      // they take back.
       undoBtn.disabled = !state.project.history.length;
       undoBtn.title = 'Undo the last change to the model';
+      redoBtn.disabled = !state.project.redo.length;
+      redoBtn.title = 'Redo the last change to the model';
     } else {
       undoBtn.disabled = !state.history.length;
       undoBtn.title = inProject() ? 'Undo the last change to this part' : 'Undo';
+      redoBtn.disabled = !state.redo.length;
+      redoBtn.title = inProject() ? 'Redo the last change to this part' : 'Redo';
     }
     $('bpe-revert').disabled = !n;
     if (inProject()) {
@@ -3291,8 +3651,37 @@
         });
         if (state.scene) state.scene.setDragMode(dragModeFor(state.tool));
         $('bpe-grabblock').hidden = state.tool !== 'select';
+        $('bpe-boxblock').hidden = state.tool !== 'box';
+        // Switching away mid-drag would leave a preview floating over the model with
+        // nothing left to apply it.
+        cancelBox();
         renderToolHint();
       });
+    });
+
+    $('bpe-boxmodes').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-boxmode]');
+      if (!b) return;
+      state.box.fill = b.dataset.boxmode === 'fill';
+      Array.prototype.forEach.call(e.currentTarget.children, function (o) {
+        o.setAttribute('aria-pressed', String(o.dataset.boxmode === b.dataset.boxmode));
+      });
+      drawBox();
+    });
+
+    $('bpe-slice-axes').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-slice]');
+      if (!b || !state.data) return;
+      var v = b.dataset.slice;
+      setSlice(v === 'off' ? { on: false } : { on: true, axis: v });
+    });
+    $('bpe-slicebar').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-slicestep]');
+      if (!b) return;
+      setSlice({ at: state.slice.at + parseInt(b.dataset.slicestep, 10) });
+    });
+    $('bpe-slice-at').addEventListener('input', function (e) {
+      setSlice({ at: parseInt(e.target.value, 10) || 0 });
     });
 
     renderSessions();
@@ -3590,15 +3979,28 @@
     $('bpe-export-qb').addEventListener('click', exportQb);
 
     $('bpe-undo').addEventListener('click', undo);
+    $('bpe-redo').addEventListener('click', redo);
     $('bpe-revert').addEventListener('click', revertAll);
     $('bpe-save').addEventListener('click', function () {
       if (inProject()) saveModel(); else save();
     });
 
     document.addEventListener('keydown', function (e) {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && state.data) {
-        e.preventDefault(); undo();
+      // Stepping the slice: the bracket keys, as in every other voxel editor. Only
+      // while a slice is on, so they stay free the rest of the time.
+      if (state.slice.on && state.data && !e.ctrlKey && !e.metaKey && !e.altKey
+          && (e.key === '[' || e.key === ']')
+          && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) {
+        e.preventDefault();
+        setSlice({ at: state.slice.at + (e.key === ']' ? 1 : -1) });
+        return;
       }
+      if (!(e.ctrlKey || e.metaKey) || !state.data) return;
+      var k = e.key.toLowerCase();
+      // Both spellings of redo: Ctrl-Shift-Z everywhere, Ctrl-Y for the Windows habit.
+      if (k === 'z' && e.shiftKey) { e.preventDefault(); redo(); }
+      else if (k === 'y') { e.preventDefault(); redo(); }
+      else if (k === 'z') { e.preventDefault(); undo(); }
     });
   }
 
