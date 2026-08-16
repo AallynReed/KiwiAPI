@@ -18,7 +18,11 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.errors import register_error_handlers
-from app.core.middleware import add_head_method_middleware, add_security_middleware
+from app.core.middleware import (
+    add_head_method_middleware,
+    add_security_middleware,
+    add_static_compression_middleware,
+)
 from app.core.observability import add_request_context_middleware, configure_logging
 from app.web.meta import router as meta_router
 from app.web.pages import router as pages_router
@@ -56,9 +60,12 @@ register_error_handlers(app)   # themed HTML 404 for pages (branches on Accept +
 # Omitted vs the API: CORS (pages are same-origin), pageview/usage/idempotency
 # accounting (no DB here), and the api-host redirect (the website IS the
 # canonical host).
+# Compression sits outermost: the edge proxy only gzips text/html, so /static
+# CSS, JS and locale JSON are compressed here or not at all.
 add_head_method_middleware(app)
 add_security_middleware(app)
 add_request_context_middleware(app)
+add_static_compression_middleware(app)
 
 # Static assets (CSS/JS/fonts/screenshots), served straight from the bind-mounted
 # ./site/static - same directory the API used to mount.

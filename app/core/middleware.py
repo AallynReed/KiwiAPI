@@ -1,6 +1,7 @@
 import re
 
 from fastapi import FastAPI, Request
+from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -305,6 +306,42 @@ def add_head_method_middleware(app: FastAPI) -> None:
     inside the analytics middleware, which gate on the real (HEAD) method.
     """
     app.add_middleware(HeadMethodMiddleware)
+
+
+class StaticCompressionMiddleware:
+    """gzip the text assets under ``/static``, which nothing else compresses.
+
+    The edge proxy runs nginx's stock ``gzip_types``, i.e. ``text/html`` only, so
+    pages arrived compressed while every stylesheet, script and locale file went
+    out raw - 53 KB of ``style.min.css`` and a ~300 KB locale JSON per non-English
+    page load, all of it on the render-blocking path.
+
+    Scoped by extension rather than handed the whole app: woff2, png and webp are
+    already compressed (gzipping them burns CPU to add bytes), and range requests
+    on them would break under a body rewrite. Streaming endpoints - ``/v1/events``
+    above all - never match, so nothing here can stall an SSE connection.
+    """
+
+    _SUFFIXES = (".css", ".js", ".json", ".svg", ".txt", ".map", ".md")
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+        self.gzip = GZipMiddleware(app, minimum_size=1024)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http" and scope["path"].endswith(self._SUFFIXES):
+            await self.gzip(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
+
+
+def add_static_compression_middleware(app: FastAPI) -> None:
+    """gzip served text assets (see StaticCompressionMiddleware).
+
+    Register LAST in main.py so it sits outermost and compresses the finished
+    response, security headers and all.
+    """
+    app.add_middleware(StaticCompressionMiddleware)
 
 
 def _api_side_hosts() -> frozenset[str]:
