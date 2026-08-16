@@ -42,8 +42,8 @@ class CreateProjectRequest(BaseModel):
 # Every `*_i18n` field is a {language code: text} map of the creator's own
 # translations of the field it names. English lives in the base field and is the
 # fallback; an empty value drops that language, and sending the map replaces it
-# wholesale. Codes: fr, de, pt-PT, es, ru, ja, ko, zh-CN.
-_I18N = "Translations of `{0}`, keyed by language code (fr, de, pt-PT, es, ru, ja, ko, zh-CN)."
+# wholesale. Codes: fr, de, pt-PT, es, ru, ja, ko, zh-CN, th.
+_I18N = "Translations of `{0}`, keyed by language code (fr, de, pt-PT, es, ru, ja, ko, zh-CN, th)."
 
 
 class UpdateProjectRequest(BaseModel):

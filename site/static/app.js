@@ -255,6 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
         'ko':    { latest: '최신 릴리스', updated: '업데이트됨',            all: 'GitHub에서 모든 릴리스 보기', locale: 'ko' },
         'zh-CN': { latest: '最新版本', updated: '更新于',                   all: '在 GitHub 上查看所有版本', locale: 'zh-CN' },
         'es':    { latest: 'Última versión', updated: 'actualizado',        all: 'Ver todas las versiones en GitHub', locale: 'es' },
+        'th':    { latest: 'รุ่นล่าสุด', updated: 'อัปเดตเมื่อ',                   all: 'ดูรุ่นทั้งหมดบน GitHub', locale: 'th' },
     };
 
     function currentLang() {

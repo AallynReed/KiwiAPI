@@ -6,7 +6,7 @@
 
   const { esc: escapeHtml } = window.BTTUtil;
 
-  const SUPPORTED_LANGS = new Set(['en', 'fr', 'de', 'pt-PT', 'ru', 'ja', 'ko', 'zh-CN', 'es']);
+  const SUPPORTED_LANGS = new Set(['en', 'fr', 'de', 'pt-PT', 'ru', 'ja', 'ko', 'zh-CN', 'es', 'th']);
   const STORAGE_KEY = 'btt_docs_lang';  // shared with i18n.js for consistency
 
   let data = null;     // commands.json, lazy-loaded (see loadData)
@@ -61,6 +61,7 @@
     if (nav.startsWith('fr')) return 'fr';
     if (nav.startsWith('de')) return 'de';
     if (nav.startsWith('es')) return 'es';
+    if (nav.startsWith('th')) return 'th';
     return 'en';
   }
 

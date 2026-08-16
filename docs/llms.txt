@@ -266,7 +266,7 @@ is_stray, uploaded_on_behalf, banner_url, preview_urls[], download_count, downlo
 discord_url, website_url, donation_urls[], page_url, created_at, updated_at, forked_from, inspired_by, fork_count}`
 plus a **`<field>_i18n`** map beside each prose field (`title_i18n`, `summary_i18n`, `description_i18n`,
 `readme_i18n` for `readme_text`, `warnings_i18n`): the creator's OWN translations, `{lang: text}` over the site's
-language codes (`fr`, `de`, `pt-PT`, `es`, `ru`, `ja`, `ko`, `zh-CN`). Show the reader's language when it's there,
+language codes (`fr`, `de`, `pt-PT`, `es`, `ru`, `ja`, `ko`, `zh-CN`, `th`). Show the reader's language when it's there,
 else the base field - which is always the English one and always present, so a partially translated mod still reads.
 `title_i18n` is display only: the slug, the `.tmod`'s internal title and every release filename stay on the base
 title. Files-mode mods keep their README translations in the repo instead: `README.md` plus `README.<lang>.md`

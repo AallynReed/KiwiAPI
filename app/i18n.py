@@ -39,6 +39,7 @@ LANGS: list[tuple[str, str]] = [
     ("ja", "日本語"),
     ("ko", "한국어"),
     ("zh-CN", "简体中文"),
+    ("th", "ไทย"),
 ]
 SUPPORTED: frozenset[str] = frozenset(c for c, _ in LANGS)
 DEFAULT_LANG = "en"
@@ -134,7 +135,7 @@ _DISCORD_LOCALE: dict[str, str] = {
     "en-US": "en", "en-GB": "en", "fr": "fr", "de": "de",
     "pt-BR": "pt-PT", "pt-PT": "pt-PT", "ru": "ru",
     "ja": "ja", "zh-CN": "zh-CN", "zh-TW": "zh-CN",
-    "ko": "ko", "es-ES": "es", "es-419": "es",
+    "ko": "ko", "es-ES": "es", "es-419": "es", "th": "th",
 }
 
 

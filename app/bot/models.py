@@ -84,7 +84,7 @@ class GuildConfig(Document):
     market_watch: MarketWatch = Field(default_factory=MarketWatch)
 
     # --- Bot output language ---
-    # BCP-ish code from app.i18n.SUPPORTED (en/fr/de/pt-PT/ru/ja/zh-CN). The bot
+    # BCP-ish code from app.i18n.SUPPORTED (en/fr/de/pt-PT/ru/ja/zh-CN/th). The bot
     # speaks this language in THIS server: announcements, the live board, and slash
     # replies invoked here. Default English; validated against SUPPORTED on save.
     language: str = "en"

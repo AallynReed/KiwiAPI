@@ -8,14 +8,15 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 # Fonts for the server-rendered images (Pillow ships no bundled font): DejaVu for
-# Latin + Cyrillic, Noto Sans CJK for Japanese/Chinese (localized board/announcement
-# banners). Without the CJK font, JA/ZH glyphs render as tofu boxes.
+# Latin + Cyrillic, Noto Sans CJK for Japanese/Chinese and Noto Sans Thai (in
+# fonts-noto-core) for Thai (localized board/announcement banners). Without them,
+# JA/ZH/TH glyphs render as tofu boxes.
 # Fonts (above) plus the OpenCV runtime libs RapidOCR/onnxruntime need for the
 # self-hosted character-stat OCR (libGL + glib); without them the import fails with
 # "libGL.so.1: cannot open shared object file".
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        fonts-dejavu-core fonts-noto-cjk libgl1 libglib2.0-0 \
+        fonts-dejavu-core fonts-noto-cjk fonts-noto-core libgl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies first so they cache independently of source changes.

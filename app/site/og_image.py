@@ -98,6 +98,18 @@ _CJK_BOLD = [
 # Noto Sans CJK (fonts-noto-cjk) is a unified JP/KR/SC/TC font, so Korean is
 # already covered by the same file - no Dockerfile change needed.
 _CJK_LANGS = {"ja", "ko", "zh-CN"}
+# Thai is in neither DejaVu nor Noto Sans CJK; it needs its own face (Noto Sans
+# Thai, installed via the Dockerfile - fonts-noto-core).
+_THAI_REG = [
+    "/usr/share/fonts/truetype/noto/NotoSansThai-Regular.ttf",
+    "C:/Windows/Fonts/leelawui.ttf",   # Leelawadee UI (Windows dev)
+    "C:/Windows/Fonts/tahoma.ttf",
+]
+_THAI_BOLD = [
+    "/usr/share/fonts/truetype/noto/NotoSansThai-Bold.ttf",
+    "C:/Windows/Fonts/leelawub.ttf",
+    "C:/Windows/Fonts/tahomabd.ttf",
+]
 
 
 def _font(size: int, bold: bool = False, lang: str | None = None):
@@ -107,6 +119,8 @@ def _font(size: int, bold: bool = False, lang: str | None = None):
     candidates = list(_BOLD if bold else _REG)
     if lang in _CJK_LANGS:
         candidates = list(_CJK_BOLD if bold else _CJK_REG) + candidates
+    elif lang == "th":
+        candidates = list(_THAI_BOLD if bold else _THAI_REG) + candidates
     for path in candidates:
         try:
             return ImageFont.truetype(path, size)
