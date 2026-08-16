@@ -1,9 +1,17 @@
-"""Routes for the BetterTroveTools showcase site (`trove.aallyn.net`).
+"""Data plane for the BetterTroveTools showcase site (`trove.aallyn.net`).
 
-HTML page routes plus a JSON surface under ``/site/*`` that mirrors the read-side
-of ``/v1/*`` but tokenless + same-origin, so the page-side JS isn't throttled by
-the public API's per-token caps. The data is already public, so the bypass costs
-nothing. Every ``/site/<feature>/*`` proxy is feature-gated in ``_feature_blocks``.
+A JSON + binary surface under ``/site/*`` that mirrors the read-side of ``/v1/*``
+but tokenless + same-origin, so the page-side JS isn't throttled by the public
+API's per-token caps. The data is already public, so the bypass costs nothing.
+Every ``/site/<feature>/*`` proxy is feature-gated in ``_feature_blocks``. Also
+serves the OG PNG renders, the embeddable status badge, robots.txt and sitemap.xml.
+
+**The HTML pages are NOT here** - they belong to the website container
+(``app/web/pages.py``), which is what the proxy points trove.aallyn.net at. This
+module used to carry a duplicate copy of all ~44 of them for the api host; those
+were deleted once every api-side host (api, apex and www) started 301ing page
+paths to ``app_url`` - see ``add_api_host_redirect_middleware``. Server-rendered
+first paint lives in ``app/site/ssr.py`` and is driven from the web tier alone.
 """
 
 import asyncio
@@ -13,12 +21,11 @@ import logging
 import re
 import time
 from pathlib import Path
-from urllib.parse import quote, unquote
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from app.admin import runtime_config
 from app.core import features as feature_flags
@@ -26,7 +33,6 @@ from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
 from app.core.ratelimit import check_rate_limit
 from app.core.utils import client_ip, iso
-from app.site import classes_page, commands_page, search_index, ssr
 from app.site import search as site_search_mod
 from app.site.feature_map import SITE_FEATURE_FLAGS as _SITE_FEATURE_FLAGS
 from app.site.feature_map import SITEMAP_PAGES as _SITEMAP_PAGES
@@ -104,160 +110,11 @@ def _flag_map(request: Request) -> dict[str, bool]:
             for attr in _SITE_FEATURE_FLAGS}
 
 
-def _feature_context(request: Request) -> dict:
-    """Inject the feature flags into EVERY template (the navbar + dashboard read
-    them). Resolved by ``_resolve_feature_flags`` above; default to enabled."""
-    flags = {attr: getattr(request.state, attr, True) for attr in _SITE_FEATURE_FLAGS}
-    # The navbar's Pages menu renders from the search registry, so a page is declared
-    # once (app/site/search_index.py) and shows up in both the menu and search.
-    return {**flags,
-            "nav_menu": search_index.nav_menu(flags),
-            "nav_active": search_index.nav_is_active(request.url.path, flags)}
-
-
-
-_TEMPLATES = Jinja2Templates(
-    directory=str(Path(settings.site_root) / "templates"),
-    context_processors=[_feature_context],
-)
 
 router = APIRouter(
     tags=["site"], include_in_schema=False,
     dependencies=[Depends(_resolve_feature_flags)],
 )
-
-
-# ── server-rendered first paint ────────────────────────────────────────────
-# The page routes below pre-render their above-the-fold content so crawlers get
-# real HTML instead of an empty shell (see ``app/site/ssr.py``). The builders
-# there are transport-agnostic: they ask for the SAME payloads the ``/site/*``
-# proxies emit. In THIS container those proxies are local coroutines, so we
-# dispatch straight to them - no HTTP, no self-request. (The website container
-# fetches the same paths over the compose network instead; see
-# ``app/web/pages.py``.)
-#
-# Only the paths the SSR builders actually ask for are routed; anything else
-# returns None, which the builders treat as "no data" and the template falls
-# back to its JS-only placeholder. The auth-gated leaderboard proxies are called
-# anonymously (``user=None``) - the same view a crawler would get.
-async def _ssr_fetch(path: str, params: dict | None = None) -> object | None:
-    """Call this container's own ``/site/*`` handler and return its parsed JSON.
-
-    Never raises: a handler that 404s / errors resolves to ``None`` so a single
-    broken data source can't take a page render down with it."""
-    p = params or {}
-    try:
-        resp = await _ssr_dispatch(path, p)
-    except HTTPException:
-        return None                       # e.g. an empty archive 404ing
-    except Exception:
-        logger.warning("ssr dispatch %s failed", path, exc_info=True)
-        return None
-    if resp is None:
-        return None
-    body = getattr(resp, "body", None)
-    return json.loads(body) if body else None
-
-
-_PLAYER_PREFIX = "/site/leaderboards/players/"
-_PLAYER_SUFFIX = "/profile"
-
-
-async def _ssr_dispatch(path: str, p: dict) -> JSONResponse | None:
-    """Path -> local handler. Explicit rather than reflective: the SSR surface is
-    a small fixed set, and an explicit table can't accidentally expose a proxy
-    the builders never meant to call."""
-    match path:
-        case "/site/rotations":
-            return await site_rotations()
-        case "/site/feeds/news":
-            return await site_feeds_news(limit=int(p.get("limit", 16)))
-        case "/site/feeds/videos":
-            return await site_feeds_videos(platform=str(p.get("platform", "youtube")))
-        case "/site/calendar/events":
-            return await site_calendar_events()
-        case "/site/trove-status":
-            return await site_trove_status()
-        case "/site/giveaways":
-            return await site_giveaways()
-        case "/site/btt/releases":
-            return await site_btt_releases(channel=None, limit=int(p.get("limit", 30)),
-                                           offset=0)
-        case "/site/mods/projects":
-            return await site_mods_projects(
-                q=None, tag=None, author=None, sort=str(p.get("sort", "recent")),
-                limit=int(p.get("limit", 30)), offset=0)
-        case "/site/modpacks/projects":
-            return await site_modpacks_projects(
-                q=None, tag=None, author=None, sort="recent",
-                limit=int(p.get("limit", 30)), offset=0)
-        case "/site/updates/branches":
-            return await site_up_branches()
-        case "/site/codexes/types":
-            return await site_codex_types(branch=_DEFAULT_CODEX_BRANCH)
-        case "/site/codexes/search":
-            return await site_codex_search(
-                branch=_DEFAULT_CODEX_BRANCH, q=None, type=None, category=None,
-                tradable=None, sort=str(p.get("sort", "name")),
-                limit=int(p.get("limit", 60)), offset=0)
-        case "/site/market/items":
-            return await site_market_items()
-        case "/site/market/listings":
-            return await site_market_listings(
-                name=None, price_min=None, price_max=None, last_seen_after=None,
-                hide_expired=True, sort=str(p.get("sort", "-last_seen")),
-                limit=int(p.get("limit", 100)), offset=0)
-        case "/site/store/categories":
-            return await site_store_categories()
-        case "/site/store/products":
-            return await site_store_products(
-                category=None, kind=None, currency=None, q=None, active=True,
-                on_sale=False, limit=int(p.get("limit", 500)), offset=0)
-        case "/site/leaderboards/records":
-            return await site_lb_records()
-        case "/site/leaderboards/activity":
-            return await site_lb_activity()
-        case "/site/leaderboards/class-activity/current":
-            return await site_lb_class_activity_current()
-        case "/site/leaderboards/timestamps":
-            return await site_lb_timestamps(limit=int(p.get("limit", 60)))
-        case "/site/leaderboards/boards":
-            return await site_lb_boards(created_at=int(p["created_at"]), user=None)
-    # Parameterised paths.
-    if (m := re.fullmatch(r"/site/updates/([\w-]+)/versions", path)):
-        return await site_up_versions(branch=m.group(1),
-                                      limit=int(p.get("limit", 50)), offset=0)
-    if (m := re.fullmatch(r"/site/leaderboards/(\d+)/entries", path)):
-        return await site_lb_entries(uuid=int(m.group(1)),
-                                     created_at=int(p["created_at"]),
-                                     limit=int(p.get("limit", 100)), offset=0, user=None)
-    # Sliced rather than matched: a player name is "anything", and `(.+)` before a
-    # literal suffix is a backtracking pattern (CodeQL py/polynomial-redos).
-    if path.startswith(_PLAYER_PREFIX) and path.endswith(_PLAYER_SUFFIX):
-        name = path[len(_PLAYER_PREFIX):-len(_PLAYER_SUFFIX)]
-        if name:
-            return await site_lb_player_profile(player_name=unquote(name))
-    return None
-
-
-@router.get("/", response_class=HTMLResponse)
-async def home(request: Request) -> HTMLResponse:
-    """The content-hub homepage - a live front door (server status, leaderboard
-    movers, latest mods, newest update, featured codex, reference). The app
-    *showcase* lives at ``/app``."""
-    return _TEMPLATES.TemplateResponse(request, "index.html", {
-        "discord_install_url": settings.discord_install_link,
-        "ssr": await ssr.home_view(_ssr_fetch, flags=_flag_map(request)),
-    })
-
-
-@router.get("/app", response_class=HTMLResponse)
-async def app_showcase(request: Request) -> HTMLResponse:
-    """The BetterTroveTools app showcase + downloads. Moved off ``/`` (now the
-    content front door) but still linked from the navbar and the homepage CTA."""
-    return _TEMPLATES.TemplateResponse(
-        request, "app.html", {"discord_install_url": settings.discord_install_link},
-    )
 
 
 # --- Embeddable status badge ("backlink magnet") ---------------------------
@@ -313,22 +170,6 @@ async def embed_status_badge() -> Response:
         svg, media_type="image/svg+xml",
         headers={"Cache-Control": "public, max-age=60", "Access-Control-Allow-Origin": "*"},
     )
-
-
-@router.get("/browse", response_class=HTMLResponse)
-async def browse_index(request: Request) -> HTMLResponse:
-    """Human-readable site index ("HTML sitemap"): real ``<a>`` links to every
-    public modpack page. The catalog grids render client-side, so mod/modpack pages
-    otherwise have no crawlable internal links - only the XML sitemap. Linked from
-    the footer so it's reachable everywhere."""
-    # Modpacks only: the full mod list (thousands of entries) was excessive for a
-    # human index, and the XML sitemap already gives search engines every mod URL.
-    packs: list[dict] = []
-    if getattr(request.state, "mods_hub_enabled", True):
-        packs = await _all_public_cards(
-            modpacks_service.list_public, _SITEMAP_MAX_PER_SECTION, "browse-modpacks")
-    packs.sort(key=lambda c: (c.get("title") or c.get("slug") or "").lower())
-    return _TEMPLATES.TemplateResponse(request, "browse.html", {"modpacks": packs})
 
 
 @router.get("/robots.txt", include_in_schema=False)
@@ -470,172 +311,6 @@ async def sitemap_xml() -> Response:
         _SITEMAP_CACHE["body"], media_type="application/xml",
         headers={"Cache-Control": "public, max-age=3600"},
     )
-
-
-@router.get("/documentation", response_class=HTMLResponse)
-async def documentation(request: Request) -> HTMLResponse:
-    """The user manual."""
-    return _TEMPLATES.TemplateResponse(request, "docs.html", {})
-
-
-@router.get("/swf-docs", response_class=HTMLResponse)
-async def swf_docs(request: Request) -> HTMLResponse:
-    """Hidden, unlisted reference: a markdown viewer with a grouped, searchable
-    sidebar over the decompiled Trove Flash UI (``.swf``) docs. No nav/footer
-    link and ``noindex``; the page shell loads its index + markdown from
-    ``/static/swf-docs/*`` and renders client-side via the shared md renderer."""
-    return _TEMPLATES.TemplateResponse(request, "swf-docs.html", {})
-
-
-@router.get("/commands", response_class=HTMLResponse)
-async def commands(request: Request) -> HTMLResponse:
-    """In-game Trove slash-command reference. The command list is server-rendered
-    from ``site/static/commands.json`` (English - the crawlable default) so the
-    page is complete without JS; ``commands.js`` then hydrates and re-renders on
-    language switch. See ``app/site/commands_page.py``."""
-    return _TEMPLATES.TemplateResponse(
-        request, "commands.html", {"cmd": commands_page.commands_view()},
-    )
-
-
-@router.get("/support", response_class=HTMLResponse)
-async def support(request: Request) -> HTMLResponse:
-    """'Support the project' page - landing for the red-heart navbar link (the
-    floating widget is on every page). Renders the supporters credits list
-    (managed via /admin/supporters)."""
-    from app.supporters import service as supporters_service
-    return _TEMPLATES.TemplateResponse(
-        request, "support.html", {"supporters": await supporters_service.list_public()},
-    )
-
-
-@router.get("/status", response_class=HTMLResponse)
-async def status_page(request: Request) -> HTMLResponse:
-    """Dedicated Trove server-status page - live Live/PTS state plus a
-    downtime-history timeline. Page shell + JS; data comes from
-    ``/site/trove-status`` + ``/site/trove-status/history``."""
-    return _TEMPLATES.TemplateResponse(
-        request, "status.html", {"ssr": await ssr.status_view(_ssr_fetch)})
-
-
-@router.get("/tomes", response_class=HTMLResponse)
-async def tomes_page(request: Request) -> HTMLResponse:
-    """Tome payout values - what each tome gives you, priced at live market
-    medians. Regular tomes rank as a repeatable farm; legendary tomes are a
-    weekly checklist. Page shell + JS; data comes from ``/site/tomes``."""
-    return _TEMPLATES.TemplateResponse(request, "tomes.html", {})
-
-
-@router.get("/server-time", response_class=HTMLResponse)
-async def server_time_page(request: Request) -> HTMLResponse:
-    """Dedicated server-time page - a big live Trove server clock (UTC-11), the
-    same instant across common player time zones, daily/weekly reset countdowns,
-    and a Discord-timestamp maker. Page shell + JS; the clock anchors to
-    ``/site/server-time`` (falling back to the local clock)."""
-    return _TEMPLATES.TemplateResponse(request, "server-time.html", {})
-
-
-@router.get("/calendar", response_class=HTMLResponse)
-async def calendar_page(request: Request) -> HTMLResponse:
-    """Live Trove calendar - every rotation and event on one board: the daily +
-    weekly bonus, the Chaos Chest, the merchant/biome cycles (Corruxion, Fluxion,
-    Wild Mana, Stampy, Shadow), and the ongoing/upcoming Trovesaurus events, each
-    with a live countdown. Page shell + JS; data comes from ``/site/rotations``
-    (shared with the homepage) + ``/site/calendar/events``."""
-    return _TEMPLATES.TemplateResponse(
-        request, "calendar.html", {"ssr": await ssr.calendar_view(_ssr_fetch)})
-
-
-@router.get("/streams", response_class=HTMLResponse)
-async def streams_page(request: Request) -> HTMLResponse:
-    """Community hub - live Trove Twitch streams, recent YouTube videos, and the
-    latest official news, all on one page. Page shell + JS; data comes from the
-    shared ``/site/feeds/videos`` + ``/site/feeds/news`` proxies."""
-    return _TEMPLATES.TemplateResponse(
-        request, "streams.html", {"ssr": await ssr.streams_view(_ssr_fetch)})
-
-
-@router.get("/releases", response_class=HTMLResponse)
-async def releases_page(request: Request) -> HTMLResponse:
-    """BetterTroveTools app releases + changelog. Latest build per platform
-    (Windows/Linux/Android) with download links, the full release history, and the
-    commit-grouped changelog. Page shell + JS; data comes from ``/site/btt/*``."""
-    return _TEMPLATES.TemplateResponse(
-        request, "releases.html", {"ssr": await ssr.releases_view(_ssr_fetch)})
-
-
-@router.get("/classes", response_class=HTMLResponse)
-async def classes(request: Request) -> HTMLResponse:
-    """Trove class reference - a browsable codex of every class: base stats,
-    weapons, damage type, its signature subclass (with the 1→30 level-scaling
-    bonuses) and abilities. The picker + the first class's detail are
-    server-rendered (English) so the page is complete without JS; classes.js
-    fetches ``/site/stats/classes`` to power switching. See classes_page.py."""
-    return _TEMPLATES.TemplateResponse(
-        request, "classes.html", {"cls": classes_page.classes_view()},
-    )
-
-
-@router.get("/star-chart", response_class=HTMLResponse)
-async def star_chart_page(request: Request) -> HTMLResponse:
-    """Star Chart planner - an interactive radial builder for Trove's constellation
-    star chart. Click through the nodes and the combined stats, abilities and
-    rewards tally live; builds share by URL (``?b=<code>``) and by an ``SC:`` code
-    that's byte-compatible with the desktop app. Fully client-rendered from the
-    static ``/static/star_chart.json`` (no proxy, no /v1 API)."""
-    return _TEMPLATES.TemplateResponse(request, "star-chart.html", {})
-
-
-@router.get("/gems-guide", response_class=HTMLResponse)
-async def gems_guide_page(request: Request) -> HTMLResponse:
-    """How Gems Work - an interactive, animated explainer of Trove's gem system
-    (tiers, elements incl. Cosmic/Light, Lesser vs Empowered, stat rolls,
-    leveling/Power Rank and focusing). Fully client-rendered from the static
-    ``/static/gems-guide.js`` - no proxy, no /v1 API."""
-    return _TEMPLATES.TemplateResponse(request, "gems-guide.html", {})
-
-
-@router.get("/dressing-room", response_class=HTMLResponse)
-async def dressing_room_page(request: Request) -> HTMLResponse:
-    """Dressing Room - build a Trove character out of the game's own parts: pick a
-    class, a costume, a hat, a face and a weapon style and see the result assembled on
-    that class's rig, with its animations. Client-rendered from the
-    ``/site/dressing/*`` proxies; the whole outfit lives in the query string, so a look
-    is shared by copying the URL and nothing is stored."""
-    return _TEMPLATES.TemplateResponse(request, "dressing-room.html", {})
-
-
-@router.get("/gem-simulator", response_class=HTMLResponse)
-async def gem_simulator_page(request: Request) -> HTMLResponse:
-    """Gem Simulator page. Fully client-rendered by the static
-    ``/static/gem-engine.js`` (a JS port of the gem model), state in
-    ``localStorage`` - no proxy, no /v1 API."""
-    return _TEMPLATES.TemplateResponse(request, "gem-simulator.html", {})
-
-
-@router.get("/gem-evaluator", response_class=HTMLResponse)
-async def gem_evaluator_page(request: Request) -> HTMLResponse:
-    """Gem Evaluator - type in a gem's tier / type / level and its three stats and
-    get back the quality %, estimated Power Rank, a per-stat breakdown and the
-    focus-material plan (Rough / Precise / Superior) to perfect it. Posts to the
-    ``/site/gems/*`` proxies below."""
-    return _TEMPLATES.TemplateResponse(request, "gem-evaluator.html", {})
-
-
-@router.get("/gem-builds", response_class=HTMLResponse)
-async def gem_builds_page(request: Request) -> HTMLResponse:
-    """Gem Builds - pick a class / subclass / food / ally (plus optional star-chart
-    code and buff toggles) and the optimizer ranks the top gem proc layouts by damage
-    coefficient. Posts to the same-origin ``/site/gems/builds/*`` proxies."""
-    return _TEMPLATES.TemplateResponse(request, "gem-builds.html", {})
-
-
-@router.get("/calculators", response_class=HTMLResponse)
-async def calculators_page(request: Request) -> HTMLResponse:
-    """Calculators - Power Rank, Mastery, Magic Find and Light tabs. Client-rendered
-    from static stat tables (``/static/assets/data/stats/*.json``); the Magic Find
-    tab's optional star-chart preview uses the ``/site/gems/parse-star-chart`` proxy."""
-    return _TEMPLATES.TemplateResponse(request, "calculators.html", {})
 
 
 # /site/gems/* JSON proxies: mirror the read-side of /v1/gems/* (stateless compute).
@@ -1061,24 +736,6 @@ async def site_btt_changelog() -> JSONResponse:
         jsonable_encoder(payload), headers={"Cache-Control": "public, max-age=180"})
 
 
-@router.get("/terms", response_class=HTMLResponse)
-async def terms(request: Request) -> HTMLResponse:
-    """Terms of Service - reachable from the footer fine print (no navbar link)."""
-    return _TEMPLATES.TemplateResponse(request, "terms.html", {})
-
-
-@router.get("/privacy", response_class=HTMLResponse)
-async def privacy(request: Request) -> HTMLResponse:
-    """Privacy Policy - reachable from the footer fine print (no navbar link)."""
-    return _TEMPLATES.TemplateResponse(request, "privacy.html", {})
-
-
-@router.get("/accessibility", response_class=HTMLResponse)
-async def accessibility(request: Request) -> HTMLResponse:
-    """Accessibility statement - reachable from the footer fine print."""
-    return _TEMPLATES.TemplateResponse(request, "accessibility.html", {})
-
-
 @router.get("/status/og.png")
 async def status_og_image(lang: str = "en") -> Response:
     """OG / Twitter card image: the live EU/US/PTS server-status card as a
@@ -1133,79 +790,6 @@ async def announcement_image(kind: str, v: str | None = None, lang: str = "en") 
     )
 
 
-@router.get("/login", response_class=HTMLResponse)
-async def login(request: Request) -> HTMLResponse:
-    """Public-facing sign-in page. Discord-only - the page just hosts the
-    "Sign in with Discord" button and finishes the OAuth round-trip. Auth
-    backend lives at /v1/site-auth/* - see app/site_auth/."""
-    return _TEMPLATES.TemplateResponse(
-        request, "login.html",
-        {"discord_oauth_enabled": settings.discord_oauth_enabled},
-    )
-
-
-@router.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request) -> HTMLResponse:
-    """Logged-in user dashboard. Client-side checks for a stored token
-    and redirects to /login if absent - no server-side gate so the
-    page can serve same-origin caches without varying on auth."""
-    return _TEMPLATES.TemplateResponse(request, "dashboard.html", {})
-
-
-@router.get("/market", response_class=HTMLResponse)
-async def market(request: Request) -> HTMLResponse:
-    """In-game marketplace browser (Beta). Reads the ``market_listings``
-    collection via the /site/market/* proxies below."""
-    return _TEMPLATES.TemplateResponse(
-        request, "market.html", {"ssr": await ssr.market_view(_ssr_fetch)})
-
-
-@router.get("/store", response_class=HTMLResponse)
-async def store(request: Request) -> HTMLResponse:
-    """Trove Store History (Beta): the in-game cash-shop catalog with per-pack
-    availability timelines, price history and in-game art. Reads the store
-    collections via the /site/store/* proxies below."""
-    return _TEMPLATES.TemplateResponse(
-        request, "store.html", {"ssr": await ssr.store_view(_ssr_fetch)})
-
-
-@router.get("/codexes", response_class=HTMLResponse)
-async def codexes(request: Request) -> HTMLResponse:
-    """Codexes browser - parsed Trove game data (allies, mounts, dragons, mementos,
-    recipes, items, fish, badges) with mastery / power rank / stat & ability bonuses.
-    Reads ``/v1/codexes/*`` via the ``/site/codexes/*`` proxies below."""
-    return _TEMPLATES.TemplateResponse(
-        request, "codexes.html", {"ssr": await ssr.codexes_view(_ssr_fetch)})
-
-
-@router.get("/codexes/crafting", response_class=HTMLResponse)
-async def codexes_crafting_page(request: Request) -> HTMLResponse:
-    """Recipe Cost Calculator - pick a craftable item and see its full crafting
-    dependency tree with market prices rolled up from the leaves, plus a
-    craft-vs-buy recommendation. Data comes from the codex recipe index joined to
-    the market scope via ``/site/codexes/crafting`` below."""
-    return _TEMPLATES.TemplateResponse(request, "codexes-crafting.html", {})
-
-
-@router.get("/mods", response_class=HTMLResponse)
-async def mods_hub(request: Request) -> HTMLResponse:
-    """Mods Hub - browse + download shared Trove mods (public, no login). The
-    grid + search are painted client-side from the ``/site/mods/*`` proxies
-    below; creating/developing a mod needs a signed-in site user."""
-    return _TEMPLATES.TemplateResponse(
-        request, "mods.html", {"ssr": await ssr.mods_view(_ssr_fetch)})
-
-
-# NOTE: must stay ABOVE the ``/mods/{handle}`` routes below - Starlette matches in
-# definition order, so this static path has to win over the handle param. "why" is
-# also a RESERVED_USERNAME so no modder's profile can ever shadow it.
-@router.get("/mods/why", response_class=HTMLResponse)
-async def mods_why(request: Request) -> HTMLResponse:
-    """"Why Mods Hub" - a hidden explainer page (not in the nav) linked from the
-    ``/mods`` hero. Sells what the hub offers players + modders. Static content."""
-    return _TEMPLATES.TemplateResponse(request, "mods_why.html", {})
-
-
 def _plain_excerpt(md: str | None, limit: int = 280) -> str:
     """Crude markdown/HTML → plain text for a meta description."""
     t = re.sub(r"<[^>]+>", " ", md or "")            # strip HTML tags
@@ -1213,156 +797,6 @@ def _plain_excerpt(md: str | None, limit: int = 280) -> str:
     t = re.sub(r"[#*`_>~|]", "", t)                   # strip md markers
     t = re.sub(r"\s+", " ", t).strip()
     return t[:limit]
-
-
-@router.get("/mods/{handle}/{slug}", response_class=HTMLResponse)
-async def mods_project_page(request: Request, handle: str, slug: str) -> HTMLResponse:
-    """A single mod's page: banner, previews, description, releases (with
-    download) and the file/commit browser. The owner (when logged in) also
-    gets the inline studio controls. Addressed as ``/mods/<owner_handle>/<slug>``;
-    all data comes from ``/site/mods/*``.
-
-    The page is client-rendered, but we fetch the mod here (anonymously) to emit
-    real Open Graph / Twitter-card tags, so link unfurls (Discord, Twitter, …) show
-    the actual mod - title, summary and banner. Drafts / unlisted-but-private /
-    not-found fall back to generic tags so nothing private leaks into an embed; the
-    page itself still renders (the client reveals owner-only content when logged in)."""
-    base = settings.app_url.rstrip("/")
-    page_url = f"{base}/mods/{handle}/{slug}"
-    ctx: dict = {
-        "slug": slug, "handle": handle, "og_page_url": page_url,
-        "page_title": f"{slug} · Trove mod · Better Trove Tools",
-        "og_title": f"{slug} · Trove mod",
-        "og_desc": "A Trove mod shared on the Better Trove Tools Mods Hub.",
-        "og_image": f"{base}/static/assets/favicon.png",
-        "og_image_alt": "Better Trove Tools",
-        "og_author": "",
-        "twitter_card": "summary",
-    }
-    project = await mods_hub_service.get_project(handle, slug)
-    if project is not None and mods_hub_service.can_view(project, None):
-        desc = (project.summary or "").strip() or _plain_excerpt(project.description) \
-            or f"A Trove mod by {project.owner_username}."
-        img_sha = project.banner_sha or (project.preview_shas[0] if project.preview_shas else None)
-        ctx.update({
-            "page_title": f"{project.title} · Trove mod · Better Trove Tools",
-            "og_title": f"{project.title} · Trove mod",
-            "og_desc": desc[:300],
-            "og_image": f"{base}/site/mods/image/{img_sha}" if img_sha else ctx["og_image"],
-            "og_image_alt": project.title,
-            "og_author": project.owner_username,
-            "twitter_card": "summary_large_image" if img_sha else "summary",
-        })
-        # Same document, no extra query: the mod's title, description, tags and
-        # stats become server-rendered body copy, not just meta tags.
-        ctx["ssr"] = ssr.mod_project_view(
-            await mods_hub_service.project_detail(project, None))
-    return _TEMPLATES.TemplateResponse(request, "mods_project.html", ctx)
-
-
-@router.get("/mods/{handle}", response_class=HTMLResponse)
-async def mods_profile_page(request: Request, handle: str) -> HTMLResponse:
-    """A modder's profile page (`/mods/<handle>`): avatar, banner, README, socials
-    and their mods. Client-rendered from ``/site/mods/profile/<handle>``; this route
-    fills per-modder Open Graph tags so a shared profile link unfurls properly.
-
-    A profile only exists once the modder has ≥1 public mod, so this 404s otherwise
-    (the front-facing 404 handler serves the themed HTML page)."""
-    base = settings.app_url.rstrip("/")
-    page_url = f"{base}/mods/{handle}"
-    data = await mods_hub_service.profile_view(handle, None)
-    if data is None:
-        raise HTTPException(status_code=404, detail="No such modder.")
-    ctx: dict = {
-        "handle": handle, "og_page_url": page_url,
-        "page_title": f"{handle} · Trove modder · Better Trove Tools",
-        "og_title": f"{handle} · Trove modder",
-        "og_desc": f"{handle}'s mods on the Better Trove Tools Mods Hub.",
-        "og_image": f"{base}/static/assets/favicon.png",
-        "og_image_alt": handle,
-        "og_author": "",
-        "twitter_card": "summary",
-    }
-    name = data["display_name"]
-    desc = (data["tagline"] or "").strip() or _plain_excerpt(data["readme"]) \
-        or f"{name}'s mods on the Better Trove Tools Mods Hub."
-    img = data["banner_url"] or data["avatar_url"]
-    ctx.update({
-        "page_title": f"{name} · Trove modder · Better Trove Tools",
-        "og_title": f"{name} · Trove modder",
-        "og_desc": desc[:300],
-        "og_image": img or ctx["og_image"],
-        "og_image_alt": name,
-        "og_author": name,
-        "twitter_card": "summary_large_image" if data["banner_url"] else "summary",
-        "ssr": ssr.mod_profile_view(data),
-    })
-    return _TEMPLATES.TemplateResponse(request, "mods_profile.html", ctx)
-
-
-@router.get("/modpacks", response_class=HTMLResponse)
-async def modpacks_hub(request: Request) -> HTMLResponse:
-    """Modpacks - browse + download user-curated bundles of hub mods (public, no
-    login). Grid painted client-side from ``/site/modpacks/*``; creating one needs
-    a signed-in site user."""
-    return _TEMPLATES.TemplateResponse(
-        request, "modpacks.html", {"ssr": await ssr.modpacks_view(_ssr_fetch)})
-
-
-@router.get("/modpacks/{handle}/{slug}", response_class=HTMLResponse)
-async def modpack_project_page(request: Request, handle: str, slug: str) -> HTMLResponse:
-    """A single modpack's page: banner, description, variants and the mods each
-    bundles (with version per mod), plus download. Owner gets the inline editor.
-    Client-rendered from ``/site/modpacks/*``; we fetch it here (anonymously) to
-    emit real Open Graph / Twitter-card tags for link unfurls. Drafts / private /
-    not-found fall back to generic tags so nothing private leaks into an embed."""
-    base = settings.app_url.rstrip("/")
-    page_url = f"{base}/modpacks/{handle}/{slug}"
-    ctx: dict = {
-        "slug": slug, "handle": handle, "og_page_url": page_url,
-        "page_title": f"{slug} · Trove modpack · Better Trove Tools",
-        "og_title": f"{slug} · Trove modpack",
-        "og_desc": "A Trove modpack shared on Better Trove Tools.",
-        "og_image": f"{base}/static/assets/favicon.png",
-        "og_image_alt": "Better Trove Tools",
-        "og_author": "",
-        "twitter_card": "summary",
-    }
-    pack = await modpacks_service.get_pack(handle, slug)
-    if pack is not None and modpacks_service.can_view(pack, None):
-        desc = (pack.summary or "").strip() or _plain_excerpt(pack.description) \
-            or f"A Trove modpack by {pack.owner_username}."
-        img_sha = pack.banner_sha or (pack.preview_shas[0] if pack.preview_shas else None)
-        ctx.update({
-            "page_title": f"{pack.title} · Trove modpack · Better Trove Tools",
-            "og_title": f"{pack.title} · Trove modpack",
-            "og_desc": desc[:300],
-            "og_image": f"{base}/site/mods/image/{img_sha}" if img_sha else ctx["og_image"],
-            "og_image_alt": pack.title,
-            "og_author": pack.owner_username,
-            "twitter_card": "summary_large_image" if img_sha else "summary",
-        })
-        ctx["ssr"] = ssr.modpack_project_view(
-            await modpacks_service.pack_detail(pack, None))
-    return _TEMPLATES.TemplateResponse(request, "modpacks_project.html", ctx)
-
-
-@router.get("/giveaways", response_class=HTMLResponse)
-async def giveaways(request: Request) -> HTMLResponse:
-    """Public giveaways page. Lists open / upcoming / past draws (data from
-    the /site/giveaways proxy); entering needs a signed-in site user."""
-    return _TEMPLATES.TemplateResponse(
-        request, "giveaways.html", {"ssr": await ssr.giveaways_view(_ssr_fetch)})
-
-
-@router.get("/clubs", response_class=HTMLResponse)
-async def clubs_page_view(request: Request) -> HTMLResponse:
-    """Public clubs directory - clubs marked public in the Discord dashboard,
-    ordered by their rank on the in-game club leaderboard (board 1100)."""
-    from app.site import clubs_page
-    return _TEMPLATES.TemplateResponse(
-        request, "clubs.html", {"clubs": await clubs_page.public_clubs_ordered()},
-    )
 
 
 # Period-keyed social cards: a shared `/activity?period=1y` link previews the
@@ -1374,53 +808,6 @@ _OG_PERIOD_LABEL = {
     "3m": "Last 3 months", "6m": "Last 6 months", "1y": "Last 12 months",
     "all": "All time",
 }
-
-
-@router.get("/activity", response_class=HTMLResponse)
-async def activity_page(request: Request, period: str | None = None) -> HTMLResponse:
-    """Player Activity page - the live active-player pulse plus multi-period
-    trend charts (1D … all-time). An optional ``?period=`` selects the graph
-    AND drives the OG/Twitter card so each period previews its own chart."""
-    p = (period or "").lower()
-    p = p if p in _OG_PERIODS else ""        # "" = default (bare URL → 1d card)
-    qs = f"?period={p}" if p else ""
-    label = _OG_PERIOD_LABEL.get(p)
-    title = f"Trove Player Activity · {label}" if label else "Trove Player Activity"
-    desc = (f"Live active-player count over {label.lower()}, from the leaderboard "
-            "captures." if label
-            else "Live active-player estimate and trend charts (1D to all-time), "
-                 "from the leaderboard captures.")
-    return _TEMPLATES.TemplateResponse(request, "activity.html", {
-        "og_title": title,
-        "og_desc": desc,
-        "og_image_url": f"https://trove.aallyn.net/activity/og.png{qs}",
-        "og_page_url": f"https://trove.aallyn.net/activity{qs}",
-        "ssr": await ssr.activity_view(_ssr_fetch),
-    })
-
-
-@router.get("/class-activity", response_class=HTMLResponse)
-async def class_activity_page(request: Request) -> HTMLResponse:
-    """Class Activity page - per-class active players over time (multi-line) plus
-    a class player-share donut, derived from the Effort/Paragon leaderboards."""
-    return _TEMPLATES.TemplateResponse(
-        request, "class-activity.html",
-        {"ssr": await ssr.class_activity_view(_ssr_fetch)})
-
-
-@router.get("/player/{name}", response_class=HTMLResponse)
-async def player_page(request: Request, name: str) -> HTMLResponse:
-    """Public player profile - leaderboard appearances + a verified-claim badge.
-    Shareable; the Discord bot's rank command can deep-link here. The page fetches
-    /site/leaderboards/players/<name>/profile client-side."""
-    title = f"{name} · Trove player profile"
-    return _TEMPLATES.TemplateResponse(request, "player.html", {
-        "player_name": name,
-        "og_title": title,
-        "og_desc": f"{name}'s Trove leaderboard ranks and recent appearances.",
-        "og_page_url": f"https://trove.aallyn.net/player/{name}",
-        "ssr": await ssr.player_view(_ssr_fetch, name),
-    })
 
 
 @router.get("/activity/og.png")
@@ -2104,14 +1491,6 @@ async def site_codex_entry(
     return JSONResponse(_codex_row(doc), headers={"Cache-Control": "public, max-age=60"})
 
 
-@router.get("/search", response_class=HTMLResponse)
-async def search_page(request: Request) -> HTMLResponse:
-    """Site-wide search results: a subject sidebar with hit counts, and the selected
-    subject's results beside it. Reads ``/site/search``; the query comes from ``?q=``
-    so a result page is a shareable link."""
-    return _TEMPLATES.TemplateResponse(request, "search.html", {})
-
-
 @router.get("/site/search", response_class=JSONResponse)
 async def site_search(
     request: Request,
@@ -2231,26 +1610,6 @@ async def site_codex_crafting(
     if tree is None:
         raise HTTPException(status_code=404, detail=f"No recipe '{path}' on branch '{branch}'")
     return JSONResponse(tree, headers={"Cache-Control": "public, max-age=30"})
-
-
-@router.get("/leaderboards", response_class=HTMLResponse)
-async def leaderboards(request: Request) -> HTMLResponse:
-    """Trove leaderboards browser (reads via ``/site/leaderboards/*``).
-
-    The two anti-cheat tabs are gated on the cheater/alt-cluster calculation
-    switches and rendered (or not) server-side, so a disabled tab is gone on
-    first paint - no dependency on JS / the minified bundle."""
-    cheaters_on = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
-    clusters_on = await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG)
-    renames_on = await feature_flags.is_enabled(feature_flags.RENAMES_FLAG)
-    duplicates_on = await feature_flags.is_enabled(feature_flags.DUPLICATES_FLAG)
-    return _TEMPLATES.TemplateResponse(request, "leaderboards.html", {
-        "cheater_detection_enabled": cheaters_on,
-        "alt_clusters_enabled": clusters_on,
-        "renames_enabled": renames_on,
-        "duplicates_enabled": duplicates_on,
-        "ssr": await ssr.leaderboards_view(_ssr_fetch),
-    })
 
 
 # /site/leaderboards/* JSON endpoints: mirror the read-side helpers from
@@ -2641,14 +2000,6 @@ async def site_lb_player_series(
         player_name, days=days,
     )
     return JSONResponse(payload, headers={"Cache-Control": "public, max-age=30"})
-
-
-@router.get("/updates", response_class=HTMLResponse)
-async def updates(request: Request) -> HTMLResponse:
-    """Trove updates browser - public site read of the ``/v1/updates/*`` archive,
-    via the ``/site/updates/*`` helpers below."""
-    return _TEMPLATES.TemplateResponse(
-        request, "updates.html", {"ssr": await ssr.updates_view(_ssr_fetch)})
 
 
 # /site/updates/* JSON endpoints: mirror the public /v1/updates/* surface.
