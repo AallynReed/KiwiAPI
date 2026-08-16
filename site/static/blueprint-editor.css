@@ -1126,6 +1126,10 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
   color: var(--text);
 }
 .bpe-nudge .bpe-xform { padding: 4px 0; min-width: 30px; text-align: center; }
+/* The SELECTION's nudge is three per axis, not four: a layer sits at one offset and can
+   show it, a selection of 300 voxels has no single number to put in that column. Left on
+   the four-track grid its nine children wrapped mid-axis (X - + Y / - + Z - / +). */
+#bpe-selnudge { grid-template-columns: auto 1fr 1fr; }
 
 /* ─── Layer stack ───────────────────────────────────────────────────── */
 
