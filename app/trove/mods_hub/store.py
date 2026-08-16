@@ -12,7 +12,11 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import io
 import struct
+
+import numpy as np
+from PIL import Image
 
 from app.core.config import settings
 from app.trove.updates.cas import ContentStore
@@ -98,6 +102,70 @@ def _jpeg_dims(data: bytes) -> tuple[int | None, int | None]:
             return None, None
         i += 2 + seg_len
     return None, None
+
+
+# --- thumbnails ------------------------------------------------------------
+# Creator uploads are stored exactly as sent (up to `mods_image_max_bytes`) and
+# the hub draws them into 354px cards, so a listing page was shipping ~10 MB of
+# full-resolution PNG to paint 18 thumbnails. A width variant is rendered on
+# first request and stored in the SAME content-addressed store, so it dedupes
+# against everything else and inherits the immutable cache headers.
+#
+# The widths are an allowlist, not a free parameter: sha+width IS the cache key,
+# and an open `?w=` would let anyone mint unbounded derivatives of every image in
+# the store. 708 = the 354px card at 2x; 400 the preview tiles; 1416 the hero.
+THUMB_WIDTHS = (400, 708, 1416)
+
+
+def render_thumbnail(data: bytes, width: int) -> bytes | None:
+    """Downscale to ``width`` and encode WebP. ``None`` means serve the original.
+
+    Sync and CPU-bound - call it through ``asyncio.to_thread``.
+
+    Returning None rather than raising is deliberate: every reason to decline is
+    a case where the original IS the right answer (already small enough, an
+    animated GIF a resize would freeze on its first frame, a file Pillow won't
+    open), so the caller has nothing to handle.
+
+    Resampling runs on premultiplied alpha. Pillow's LANCZOS averages the colour
+    channels without weighting them by opacity, so a logo on transparency picks
+    up a dark halo where fully transparent black pixels bleed into the edge.
+    """
+    try:
+        img = Image.open(io.BytesIO(data))
+        img.load()
+    except Exception:
+        return None
+    if img.width <= width or getattr(img, "n_frames", 1) > 1:
+        return None
+    height = max(1, round(img.height * width / img.width))
+    has_alpha = img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info)
+    try:
+        if has_alpha:
+            small = _resize_straight_alpha(img, (width, height))
+        else:
+            small = img.convert("RGB").resize((width, height), Image.LANCZOS)
+        buf = io.BytesIO()
+        small.save(buf, "WEBP", quality=82, method=4)
+    except Exception:
+        return None
+    return buf.getvalue()
+
+
+def _resize_straight_alpha(img: Image.Image, size: tuple[int, int]) -> Image.Image:
+    arr = np.asarray(img.convert("RGBA"), dtype=np.float32)
+    arr[:, :, :3] *= arr[:, :, 3:4] / 255.0
+    # No `mode=` on fromarray - deprecated in Pillow 12, gone in 13; a 4-channel
+    # uint8 array infers RGBA anyway.
+    small = np.asarray(
+        Image.fromarray(arr.astype(np.uint8)).resize(size, Image.LANCZOS),
+        dtype=np.float32,
+    )
+    alpha = small[:, :, 3:4]
+    rgb = np.divide(small[:, :, :3] * 255.0, alpha,
+                    out=np.zeros_like(small[:, :, :3]), where=alpha > 0)
+    small[:, :, :3] = np.clip(rgb, 0, 255)
+    return Image.fromarray(small.astype(np.uint8))
 
 
 def _webp_dims(data: bytes) -> tuple[int | None, int | None]:

@@ -49,7 +49,10 @@
   const $tagbar = $('mh-tagbar');
   const $tags = $('mh-tags');
 
-  const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
+  // `w` picks a server-rendered WebP downscale (store.THUMB_WIDTHS: 400/708/1416).
+  // Omit it for the full-resolution upload - the lightbox, and nothing else.
+  const imageUrl = (sha, w) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha)
+    + (w ? '?w=' + w : ''));
   // Mods are addressed as /mods/<owner_handle>/<slug>.
   const modUrl = (m) => '/mods/' + encodeURIComponent(m.handle) + '/' + encodeURIComponent(m.slug);
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
@@ -299,7 +302,7 @@
     // No banner? Fall back to the first preview image for the card thumbnail.
     const cardSha = p.banner_sha || p.preview_sha || null;
     const banner = cardSha
-      ? `<img class="mh-card-banner" src="${imageUrl(cardSha)}" alt="" loading="lazy">`
+      ? `<img class="mh-card-banner" src="${imageUrl(cardSha, 708)}" alt="" loading="lazy" decoding="async">`
       : `<div class="mh-card-banner placeholder"><i class="fa-solid fa-cube" aria-hidden="true"></i></div>`;
     const tags = (p.tags || []).slice(0, 4)
       .map((tg) => `<span class="mh-card-tag">${esc(tg)}</span>`).join('');
@@ -314,7 +317,7 @@
     // muted secondary line; otherwise the owner is the author.
     // The owner's own picture, falling back to the generic person icon.
     const face = p.owner_avatar_url
-      ? `<img class="mh-card-av" src="${esc(p.owner_avatar_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+      ? `<img class="mh-card-av" src="${esc(p.owner_avatar_url)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
       : `<i class="fa-solid fa-user" aria-hidden="true"></i>`;
     const authorLine = p.uploaded_on_behalf
       ? `<span class="mh-card-author">${face}${esc(p.author || '')}<small class="mh-card-uploader">${esc(t('Uploaded by'))} ${esc(p.owner_username)}</small></span>`

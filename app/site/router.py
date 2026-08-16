@@ -71,6 +71,7 @@ from app.trove.models import TroveEvent
 from app.trove.modpacks import service as modpacks_service
 from app.trove.mods_hub import creators as mods_hub_creators
 from app.trove.mods_hub import service as mods_hub_service
+from app.trove.mods_hub import store as mods_store
 from app.trove.mods_hub import workshop as mods_workshop
 from app.trove.mods_hub.schemas import CreatorScopeRequest
 from app.trove.render import bp_cache
@@ -3843,8 +3844,11 @@ async def site_mods_audio_sound(
 
 
 @router.get("/site/mods/image/{sha}", response_class=Response)
-async def site_mods_image(sha: str) -> Response:
-    got = await mods_hub_service.get_image(sha)
+async def site_mods_image(sha: str, w: int | None = Query(default=None)) -> Response:
+    if w is not None and w not in mods_store.THUMB_WIDTHS:
+        raise HTTPException(status_code=400,
+                            detail=f"w must be one of {', '.join(map(str, mods_store.THUMB_WIDTHS))}")
+    got = await mods_hub_service.get_image(sha, w)
     if got is None:
         raise HTTPException(status_code=404, detail="Image not found")
     data, content_type = got

@@ -36,7 +36,10 @@
   }
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
-  const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
+  // `w` picks a server-rendered WebP downscale (store.THUMB_WIDTHS: 400/708/1416).
+  // Omit it for the full-resolution upload - the lightbox, and nothing else.
+  const imageUrl = (sha, w) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha)
+    + (w ? '?w=' + w : ''));
   const md = (s) => (window.BTTMarkdown ? window.BTTMarkdown.render(s) : esc(s));
   const modUrl = (m) => '/mods/' + encodeURIComponent(m.handle) + '/' + encodeURIComponent(m.slug);
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
@@ -136,13 +139,13 @@
 
   function headerHTML(p) {
     const bannerInner = p.banner_url
-      ? `<img class="mpf-banner" src="${esc(p.banner_url)}" alt="">`
+      ? `<img class="mpf-banner" src="${p.banner_sha ? imageUrl(p.banner_sha, 1416) : esc(p.banner_url)}" alt="" decoding="async">`
       : `<div class="mpf-banner placeholder"></div>`;
     const banner = p.is_owner
       ? `<div class="mpf-banner-wrap" id="mpf-banner-btn" role="button" tabindex="0" title="${esc(t('Change banner'))}">${bannerInner}<span class="mp-banner-edit"><i class="fa-solid fa-camera"></i> ${esc(p.banner_sha ? t('Change banner') : t('Add banner'))}</span></div>`
       : bannerInner;
     const avatarInner = p.avatar_url
-      ? `<img class="mpf-avatar" src="${esc(p.avatar_url)}" alt="">`
+      ? `<img class="mpf-avatar" src="${p.avatar_sha ? imageUrl(p.avatar_sha, 400) : esc(p.avatar_url)}" alt="" decoding="async">`
       : `<div class="mpf-avatar placeholder"><i class="fa-solid fa-user"></i></div>`;
     const avatar = p.is_owner
       ? `<div class="mpf-avatar-wrap" id="mpf-avatar-btn" role="button" tabindex="0" title="${esc(t('Change picture'))}">${avatarInner}<span class="mpf-avatar-edit"><i class="fa-solid fa-camera"></i></span></div>`
@@ -227,7 +230,7 @@
     opts = opts || {};
     const cardSha = m.banner_sha || m.preview_sha || null;   // banner, else first preview
     const banner = cardSha
-      ? `<img class="mh-card-banner" src="${imageUrl(cardSha)}" alt="" loading="lazy">`
+      ? `<img class="mh-card-banner" src="${imageUrl(cardSha, 708)}" alt="" loading="lazy" decoding="async">`
       : `<div class="mh-card-banner placeholder"><i class="fa-solid fa-cube" aria-hidden="true"></i></div>`;
     const tags = (m.tags || []).slice(0, 4).map((tg) => `<span class="mh-card-tag">${esc(tg)}</span>`).join('');
     const badge = m.visibility === 'draft' ? `<span class="mh-badge mh-badge-draft">${esc(t('Draft'))}</span>`

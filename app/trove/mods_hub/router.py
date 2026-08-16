@@ -27,7 +27,7 @@ from app.core.dependencies import AccessContext, get_current_user, public_scope
 from app.core.errors import COMMON_ERROR_RESPONSES, APIError, ErrorCode
 from app.site_auth.models import SiteUser
 from app.trove import mod_categories
-from app.trove.mods_hub import creators, service
+from app.trove.mods_hub import creators, service, store
 from app.trove.mods_hub.schemas import (
     ClaimRequest,
     CollaboratorRequest,
@@ -332,8 +332,12 @@ async def get_release_cfg(
 
 
 @mods_hub_router.get("/image/{sha}")
-async def get_image(sha: str, ctx: AccessContext = _PUB) -> Response:
-    got = await service.get_image(sha)
+async def get_image(sha: str, w: int | None = Query(default=None, description="Downscale to this width (WebP)"),
+                    ctx: AccessContext = _PUB) -> Response:
+    if w is not None and w not in store.THUMB_WIDTHS:
+        raise APIError(400, ErrorCode.bad_request,
+                       f"w must be one of {', '.join(map(str, store.THUMB_WIDTHS))}")
+    got = await service.get_image(sha, w)
     if got is None:
         raise APIError(404, ErrorCode.not_found, "Image not found")
     data, content_type = got

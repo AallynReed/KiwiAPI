@@ -2408,14 +2408,36 @@ async def store_image(actor: SiteUser, data: bytes, declared_ct: str | None) -> 
     return asset
 
 
-async def get_image(sha: str) -> tuple[bytes, str] | None:
+async def get_image(sha: str, width: int | None = None) -> tuple[bytes, str] | None:
+    """The stored image, or a WebP downscaled to ``width`` (see store.THUMB_WIDTHS).
+
+    A width the image can't usefully serve - already narrower, animated, or one
+    Pillow declines to open - falls back to the original rather than erroring, so
+    a caller asking for a thumbnail always gets a usable picture.
+    """
     asset = await ModImageAsset.find_one(ModImageAsset.sha == sha)
     if asset is None:
         return None
+    if width is not None:
+        variant = asset.variants.get(str(width))
+        if variant is not None:
+            cached = await store.get_blob(variant)
+            if cached is not None:
+                return cached, "image/webp"
     data = await store.get_blob(sha)
     if data is None:
         return None
-    return data, asset.content_type
+    if width is None:
+        return data, asset.content_type
+    thumb = await asyncio.to_thread(store.render_thumbnail, data, width)
+    if thumb is None:
+        return data, asset.content_type
+    thumb_sha, _ = await store.put_blob(thumb)
+    # Set the one key rather than saving the document: two requests can race for
+    # the same variant, and they'd otherwise write back each other's stale copy
+    # of the whole map.
+    await asset.set({f"variants.{width}": thumb_sha})
+    return thumb, "image/webp"
 
 
 async def set_banner(project: ModProject, actor: SiteUser, sha: str) -> ModProject:

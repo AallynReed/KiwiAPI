@@ -33,7 +33,10 @@
   const $root = document.getElementById('mp-root');
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
-  const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
+  // `w` picks a server-rendered WebP downscale (store.THUMB_WIDTHS: 400/708/1416).
+  // Omit it for the full-resolution upload - the lightbox, and nothing else.
+  const imageUrl = (sha, w) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha)
+    + (w ? '?w=' + w : ''));
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
 
   // Mod categories (mirrors app/trove/mod_categories.py). Selected ones are saved
@@ -252,7 +255,7 @@
     // The banner is the hero's backdrop (it fills the header behind the title
     // and fades into the page), not a framed image sitting inside a card.
     const bannerInner = d.banner_sha
-      ? `<img class="mp-banner" src="${imageUrl(d.banner_sha)}" alt="">`
+      ? `<img class="mp-banner" src="${imageUrl(d.banner_sha, 1416)}" alt="" decoding="async">`
       : `<div class="mp-banner placeholder"><i class="fa-solid fa-cube"></i></div>`;
     // The owner edits the banner by clicking it (no separate toolbar button).
     const banner = `<div class="mp-banner-wrap${d.is_owner ? ' is-editable' : ''}"${d.is_owner
@@ -385,7 +388,7 @@
     </details>` : '';
     // The owner's own picture on the byline; strays and owners without one keep an icon.
     const ownerFace = d.owner_avatar_url
-      ? `<img class="mp-author-av" src="${esc(d.owner_avatar_url)}" alt="" referrerpolicy="no-referrer">`
+      ? `<img class="mp-author-av" src="${esc(d.owner_avatar_url)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
       : `<i class="fa-solid fa-${isUploaded ? 'share-from-square' : 'user'}"></i>`;
     return `<header class="mp-header${d.source_visible ? '' : ' is-doc'}">
       ${banner}
@@ -481,7 +484,7 @@
   function previewsHTML(d) {
     const shas = d.preview_shas || [];
     const cells = shas.map((sha) => `<div class="mp-preview">
-      <img src="${imageUrl(sha)}" alt="" data-zoom="${imageUrl(sha)}" loading="lazy">
+      <img src="${imageUrl(sha, 708)}" alt="" data-zoom="${imageUrl(sha)}" loading="lazy" decoding="async">
       ${d.is_owner ? `<button type="button" class="mp-preview-del" data-prev-del="${esc(sha)}" aria-label="${esc(t('Remove'))}"><i class="fa-solid fa-xmark"></i></button>` : ''}
     </div>`).join('');
     const addBtn = d.is_owner
@@ -2076,7 +2079,7 @@
       const box = f.querySelector('#mp-prevpick');
       if (!box) return;
       const shas = state.detail.preview_shas || [];
-      const tile = (sha) => `<button type="button" class="mp-prevtile ${sha === selectedPreview ? 'is-sel' : ''}" data-sha="${esc(sha)}"><img src="${imageUrl(sha)}" alt="" loading="lazy"></button>`;
+      const tile = (sha) => `<button type="button" class="mp-prevtile ${sha === selectedPreview ? 'is-sel' : ''}" data-sha="${esc(sha)}"><img src="${imageUrl(sha, 400)}" alt="" loading="lazy" decoding="async"></button>`;
       box.innerHTML =
         `<button type="button" class="mp-prevtile mp-prevtile-none ${selectedPreview === null ? 'is-sel' : ''}" data-sha=""><i class="fa-solid fa-ban"></i><span>${esc(t('None'))}</span></button>`
         + shas.map(tile).join('')
@@ -2244,7 +2247,7 @@
   function lightbox(url) {
     const box = document.createElement('div');
     box.className = 'mp-lightbox';
-    box.innerHTML = `<img src="${esc(url)}" alt="">`;
+    box.innerHTML = `<img src="${esc(url)}" alt="" decoding="async">`;
     box.addEventListener('click', () => box.remove());
     document.body.appendChild(box);
   }

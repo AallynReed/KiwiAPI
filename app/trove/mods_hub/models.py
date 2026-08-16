@@ -262,6 +262,9 @@ class ModImageAsset(Document):
     owner_id: PydanticObjectId | None = None    # uploader (None for images mirrored during a stray import)
     width: int | None = None                    # best-effort (None if not parsed)
     height: int | None = None
+    # Rendered-on-demand downscales, `str(width) -> ContentStore key` (WebP).
+    # The variant is itself a CAS blob, so this only records which one to serve.
+    variants: dict[str, str] = Field(default_factory=dict)
 
     created_at: datetime = Field(default_factory=utcnow)
 

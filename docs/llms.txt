@@ -264,6 +264,9 @@ username; slugs are unique per owner, not globally). Returns **absolute** image 
 object carries `{slug, handle, title, summary, description, readme_text, warnings, tags, categories[], flags, author,
 is_stray, uploaded_on_behalf, banner_url, preview_urls[], download_count, downloads_7d, star_count, popularity_score,
 discord_url, website_url, donation_urls[], page_url, created_at, updated_at, forked_from, inspired_by, fork_count}`
+(`banner_url` / `preview_urls[]` are the creator's upload at full resolution - up to 5 MB. Append **`?w=400`,
+`?w=708` or `?w=1416`** for a WebP downscaled to that width, rendered once and cached forever; any other width
+is a 400, and an image already narrower than the one you asked for comes back untouched.)
 plus a **`<field>_i18n`** map beside each prose field (`title_i18n`, `summary_i18n`, `description_i18n`,
 `readme_i18n` for `readme_text`, `warnings_i18n`): the creator's OWN translations, `{lang: text}` over the site's
 language codes (`fr`, `de`, `pt-PT`, `es`, `ru`, `ja`, `ko`, `zh-CN`, `th`). Show the reader's language when it's there,

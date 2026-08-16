@@ -32,7 +32,10 @@
   let _modal = null;   // current { wrap, close } handle from window.BTTModal.open
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
-  const imageUrl = (sha) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha));
+  // `w` picks a server-rendered WebP downscale (store.THUMB_WIDTHS: 400/708/1416).
+  // Omit it for the full-resolution upload - the lightbox, and nothing else.
+  const imageUrl = (sha, w) => BTTUtil.apiUrl('/site/mods/image/' + encodeURIComponent(sha)
+    + (w ? '?w=' + w : ''));
   const modUrl = (h, s) => '/mods/' + encodeURIComponent(h) + '/' + encodeURIComponent(s);
   const renderMd = (s) => (window.BTTMarkdown ? window.BTTMarkdown.render(s || '') : esc(s || ''));
   function rerunI18n() { if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh(); }
@@ -114,7 +117,7 @@
     // Same hero as a mod page (mods_project.css): the banner is the backdrop
     // behind the title, bleeding to the viewport edges, not a framed image.
     const bannerInner = d.banner_sha
-      ? `<img class="mp-banner" src="${imageUrl(d.banner_sha)}" alt="">`
+      ? `<img class="mp-banner" src="${imageUrl(d.banner_sha, 1416)}" alt="" decoding="async">`
       : `<div class="mp-banner placeholder"><i class="fa-solid fa-box-open"></i></div>`;
     const banner = `<div class="mp-banner-wrap">${bannerInner}`
       + '<span class="mp-banner-scrim" aria-hidden="true"></span></div>';
