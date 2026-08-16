@@ -14,6 +14,7 @@ DB read) stays out of this module: the API resolves them in-process
 
 from app.core import features as feature_flags
 from app.core.config import settings
+from app.core.middleware import API_SIDE_HOSTS
 
 # Site features surfaced to templates: template context key (also the
 # ``request.state`` attr) → runtime-config flag. Each is a master switch the
@@ -248,8 +249,6 @@ _ROBOTS_BLOCKED_HOSTS = frozenset(
     url.split("://", 1)[-1].split("/", 1)[0].lower()
     for url in (settings.api_url, settings.dev_url, settings.docs_url)
 )
-_API_HOST = settings.api_url.split("://", 1)[-1].split("/", 1)[0].lower()
-
 
 def robots_body(host: str) -> str:
     """Host-aware robots.txt body. The public site is fully crawlable and
@@ -257,16 +256,16 @@ def robots_body(host: str) -> str:
     indexes endpoint payloads. ``/static/`` is intentionally NOT blocked - Google
     needs the CSS/JS to render the pages.
 
-    The api host is a special case: the one app answers there too, so showcase
-    pages leak onto it (api.aallyn.net/login) and some already got indexed. Those
-    now 301 to app_url (see ``add_api_host_redirect_middleware``) - but a blanket
-    ``Disallow: /`` would FREEZE the stale entries, because Google must be allowed
-    to crawl a URL to see its redirect and drop it. So the api host allows page
-    crawling (the pages just 301 away) while still blocking the JSON API subtrees
-    (/v1, /site, /git) so payloads are never indexed. dev./docs. keep the blanket
-    disallow - they have no such redirect."""
+    The api-side hosts are a special case: the one app answers on the api host, the
+    apex and its www, so showcase pages leak onto all three (api.aallyn.net/login,
+    aallyn.net/login) and some already got indexed. Those now 301 to app_url (see
+    ``add_api_host_redirect_middleware``) - but a blanket ``Disallow: /`` would FREEZE
+    the stale entries, because Google must be allowed to crawl a URL to see its
+    redirect and drop it. So they allow page crawling (the pages just 301 away) while
+    still blocking the JSON API subtrees (/v1, /site, /git) so payloads are never
+    indexed. dev./docs. keep the blanket disallow - they have no such redirect."""
     host = (host or "").lower()
-    if host == _API_HOST:
+    if host in API_SIDE_HOSTS:
         return (
             "User-agent: *\n"
             "Allow: /\n"

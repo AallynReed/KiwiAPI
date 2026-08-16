@@ -307,11 +307,32 @@ def add_head_method_middleware(app: FastAPI) -> None:
     app.add_middleware(HeadMethodMiddleware)
 
 
-# The bare API host (api.aallyn.net) derived from settings, lower-cased for the
-# Host-header compare. The one FastAPI app answers on every hostname, so a
-# showcase page is reachable at api.aallyn.net/<page> as well as its real home on
-# app_url - see add_api_host_redirect_middleware.
-_API_HOST = settings.api_url.split("://", 1)[-1].split("/", 1)[0].lower()
+def _api_side_hosts() -> frozenset[str]:
+    """Hosts on which a showcase page is a DUPLICATE of its canonical ``app_url`` copy.
+
+    The one FastAPI app answers on every hostname the proxy sends it, and the proxy
+    points the API host, the apex AND its ``www`` at this same container - so
+    api.aallyn.net/login, aallyn.net/login and www.aallyn.net/login all serve the page
+    whose real home is trove.aallyn.net/login. All three redirect (see
+    ``add_api_host_redirect_middleware``) and all three must stay crawlable (see
+    ``robots_body``) so Google can follow the 301 and drop the stale entry.
+
+    The apex is derived rather than configured: a host with a subdomain to strip
+    (``api.example.net``) yields ``example.net`` + ``www.example.net``; a bare host
+    (``localhost``) yields nothing extra. The app host is always excluded - including
+    it would point the canonical page at itself and loop.
+    """
+    host = settings.api_url.split("://", 1)[-1].split("/", 1)[0].lower()
+    app_host = settings.app_url.split("://", 1)[-1].split("/", 1)[0].lower()
+    hosts = {host}
+    labels = host.split(".")
+    if len(labels) > 2:
+        apex = ".".join(labels[1:])
+        hosts |= {apex, f"www.{apex}"}
+    return frozenset(hosts - {app_host})
+
+
+API_SIDE_HOSTS = _api_side_hosts()
 
 
 def _is_site_page(path: str) -> bool:
@@ -326,7 +347,7 @@ def _is_site_page(path: str) -> bool:
 
 
 def add_api_host_redirect_middleware(app: FastAPI) -> None:
-    """301 showcase-site pages served on the API host to their canonical app_url home.
+    """301 showcase-site pages served on an api-side host to their canonical app_url home.
 
     api.aallyn.net/login serves the same page as trove.aallyn.net/login, and Google
     indexed the api copy. robots.txt ``Disallow: /`` on the api host does NOT deindex
@@ -334,9 +355,13 @@ def add_api_host_redirect_middleware(app: FastAPI) -> None:
     canonical/noindex - so the already-indexed URL is frozen there. A hard 301 to the
     app host is what actually drops it and consolidates the signal onto one URL.
 
+    Applies to every host in ``API_SIDE_HOSTS`` - the api host AND the apex/www, which
+    the proxy also points at this container. Until the apex was included it kept
+    serving the page routes for real, which is why the duplicate handlers in
+    ``app/site/router.py`` could not be deleted.
+
     GET/HEAD only: page routes are GET, and a 301 must never silently turn a POST into
-    a GET. Scoped to the API host; the JSON API, /api-info, robots.txt and static
-    assets are untouched.
+    a GET. The JSON API, /api-info, robots.txt and static assets are untouched.
     """
     app_url = settings.app_url.rstrip("/")
 
@@ -344,7 +369,7 @@ def add_api_host_redirect_middleware(app: FastAPI) -> None:
     async def api_host_redirect(request: Request, call_next):
         if (
             request.method in ("GET", "HEAD")
-            and (request.url.hostname or "").lower() == _API_HOST
+            and (request.url.hostname or "").lower() in API_SIDE_HOSTS
             and _is_site_page(request.url.path)
         ):
             target = app_url + request.url.path
