@@ -2971,6 +2971,56 @@
     }
   }
 
+  /* ---- tools and their keys -------------------------------------------------
+
+     Two ways to reach every tool, because they suit different hands: the DIGITS run
+     left to right along the row exactly as it is drawn, which needs nothing memorised,
+     and the LETTERS are the ones these tools carry in the software people arrive from
+     (B brush, I eyedropper, E eraser, V move, M marquee - Photoshop's, which Qubicle
+     and every voxel editor since inherited). S and R are ours: the buttons say Select
+     and the box is a rectangle, and a name you can see beats a convention you can't. */
+  var TOOL_ORDER = ['paint', 'pick', 'add', 'erase', 'move', 'select', 'box'];
+  var TOOL_KEYS = {
+    paint: 'B', pick: 'I', add: 'A', erase: 'E', move: 'V', select: 'S', box: 'R',
+  };
+  var KEY_TOOL = (function () {
+    var m = {};
+    TOOL_ORDER.forEach(function (t, i) {
+      m[TOOL_KEYS[t].toLowerCase()] = t;
+      m[String(i + 1)] = t;          // 1-7, in the order the row is drawn
+      m['m'] = 'select';             // the marquee key, for hands that already know it
+    });
+    return m;
+  })();
+
+  function setTool(name) {
+    if (!name || TOOL_ORDER.indexOf(name) < 0) return;
+    state.tool = name;
+    document.querySelectorAll('[data-tool]').forEach(function (o) {
+      o.setAttribute('aria-pressed', String(o.dataset.tool === state.tool));
+    });
+    if (state.scene) state.scene.setDragMode(dragModeFor(state.tool));
+    $('bpe-grabblock').hidden = state.tool !== 'select';
+    $('bpe-boxblock').hidden = state.tool !== 'box';
+    // Switching away mid-drag would leave a preview floating over the model with
+    // nothing left to apply it.
+    cancelBox();
+    renderToolHint();
+  }
+
+  /* The key belongs ON the button. These are icon-only, so the tooltip is already the
+     only place the tool is named, and a shortcut nobody can see is a shortcut nobody
+     uses. Written once at startup off the same table the keys are read from, so the
+     two can't drift. */
+  function labelToolKeys() {
+    document.querySelectorAll('[data-tool]').forEach(function (b) {
+      var key = TOOL_KEYS[b.dataset.tool];
+      if (!key) return;
+      var name = b.getAttribute('aria-label') || b.title;
+      b.title = name + ' (' + key + ')';
+    });
+  }
+
   function renderToolHint() {
     var hints = {
       paint: 'Click or drag across voxels to paint them. Ctrl-drag turns the view.',
@@ -3643,20 +3693,9 @@
       renderWOptions();
     });
 
+    labelToolKeys();
     document.querySelectorAll('[data-tool]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        state.tool = b.dataset.tool;
-        document.querySelectorAll('[data-tool]').forEach(function (o) {
-          o.setAttribute('aria-pressed', String(o.dataset.tool === state.tool));
-        });
-        if (state.scene) state.scene.setDragMode(dragModeFor(state.tool));
-        $('bpe-grabblock').hidden = state.tool !== 'select';
-        $('bpe-boxblock').hidden = state.tool !== 'box';
-        // Switching away mid-drag would leave a preview floating over the model with
-        // nothing left to apply it.
-        cancelBox();
-        renderToolHint();
-      });
+      b.addEventListener('click', function () { setTool(b.dataset.tool); });
     });
 
     $('bpe-boxmodes').addEventListener('click', function (e) {
@@ -3985,16 +4024,39 @@
       if (inProject()) saveModel(); else save();
     });
 
+    /* A field has first claim on every key it can take: the search box, the colour hex,
+       a filename. Without this, typing "brush" into the model search would switch tools
+       five times and never reach the box. */
+    function typing(e) {
+      var t = e.target || {};
+      return /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || '') || t.isContentEditable;
+    }
+
     document.addEventListener('keydown', function (e) {
+      var bare = !e.ctrlKey && !e.metaKey && !e.altKey;
+
       // Stepping the slice: the bracket keys, as in every other voxel editor. Only
       // while a slice is on, so they stay free the rest of the time.
-      if (state.slice.on && state.data && !e.ctrlKey && !e.metaKey && !e.altKey
-          && (e.key === '[' || e.key === ']')
-          && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) {
+      if (state.slice.on && state.data && bare && (e.key === '[' || e.key === ']')
+          && !typing(e)) {
         e.preventDefault();
         setSlice({ at: state.slice.at + (e.key === ']' ? 1 : -1) });
         return;
       }
+
+      /* One key per tool. Shift is allowed through - it is held for a shift-click and
+         letting go of it a frame late should not swallow the next tool press - but a
+         modifier that means something else here (Ctrl-Z, Alt-click) is not. */
+      if (state.data && bare && !typing(e)) {
+        var want = KEY_TOOL[e.key.toLowerCase()];
+        if (want) {
+          e.preventDefault();
+          setTool(want);
+          setStatus('');
+          return;
+        }
+      }
+
       if (!(e.ctrlKey || e.metaKey) || !state.data) return;
       var k = e.key.toLowerCase();
       // Both spellings of redo: Ctrl-Shift-Z everywhere, Ctrl-Y for the Windows habit.
