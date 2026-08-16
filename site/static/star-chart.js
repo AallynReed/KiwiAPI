@@ -759,7 +759,7 @@
   // Clipboard
   function copy(text, okMsg) {
     if (!text) { toast(t("Nothing selected to copy."), true); return; }
-    navigator.clipboard.writeText(text).then(() => toast(okMsg)).catch(() => toast(t("Copy failed."), true));
+    window.BTTUtil.copy(text).then((ok) => (ok ? toast(okMsg) : toast(t("Copy failed."), true)));
   }
 
   // Stat-filter dropdown options

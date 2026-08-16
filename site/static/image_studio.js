@@ -385,7 +385,7 @@
   }
 
   function setMsg(m) { const e = document.getElementById('is-msg'); if (e) e.textContent = m; }
-  function copyText(s) { (navigator.clipboard ? navigator.clipboard.writeText(s) : Promise.reject()).then(() => toast(t('Copied!'))).catch(() => toast(s)); }
+  function copyText(s) { window.BTTUtil.copy(s).then((ok) => toast(ok ? t('Copied!') : s)); }
   function toast(m, bad) { const e = document.getElementById('is-msg'); if (e) { e.textContent = m; e.style.color = bad ? '#e0795a' : ''; } }
 
   window.ImageStudio = { mount };

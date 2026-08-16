@@ -350,11 +350,7 @@
       h("span", { class: "gb-help-tip" }, txt));
   }
   function copyLayout(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => toast(t("Layout copied") + ": " + text), () => toast(text));
-    } else {
-      toast(text);
-    }
+    window.BTTUtil.copy(text).then((ok) => toast(ok ? t("Layout copied") + ": " + text : text));
   }
   function exportCsv() {
     if (!builds.length) return;

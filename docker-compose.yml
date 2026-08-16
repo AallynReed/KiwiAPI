@@ -141,8 +141,6 @@ services:
       DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
       DISCORD_PUBLIC_KEY: ${DISCORD_PUBLIC_KEY:-}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
-      DISCORD_OAUTH_SCOPE: ${DISCORD_OAUTH_SCOPE:-identify email guilds}
-      DISCORD_OAUTH_INTEGRATION_TYPE: ${DISCORD_OAUTH_INTEGRATION_TYPE:-}
       DISCORD_INSTALL_URL: ${DISCORD_INSTALL_URL:-}
       # Game-file version archiver. OFF by default - set to true ONLY when the
       # blob disk (./.game_updates) has room; the first sync pulls multi-GB.

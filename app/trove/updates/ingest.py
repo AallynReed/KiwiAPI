@@ -18,7 +18,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import defaultdict
-from typing import Protocol
 
 from app.trove.updates import archive
 from app.trove.updates.cas import ContentStore
@@ -32,31 +31,6 @@ from app.trove.updates.diff import (
 logger = logging.getLogger("kiwi.trove.updates")
 
 
-class CdnLike(Protocol):
-    async def fetch_pointer(self, pointer_file: str) -> dict: ...
-    async def fetch_manifest(self, content_path: str, version: str) -> tuple[str, list[dict]]: ...
-    async def download_file(self, content_path: str, path: str, sha1: str,
-                            expected_size: int | None = None) -> bytes: ...
-
-
-class UpdateRepo(Protocol):
-    async def get_manifest_sidecar(self, branch: str) -> dict[str, dict]: ...
-    async def begin_version(self, branch: str, version_tag: str, pointer: dict) -> tuple[int, bool]: ...
-    async def state_get(self, branch: str, path: str) -> dict | None: ...
-    async def get_archive_state(self, branch: str, directory: str) -> dict[str, dict]: ...
-    async def record_change(self, branch: str, ordinal: int, path: str, change_type: str,
-                            content_sha256: str | None, fnv_hash: int | None, size: int) -> None: ...
-    async def upsert_state(self, branch: str, path: str, content_sha256: str, fnv_hash: int | None,
-                           size: int, archive: str | None, archive_index: int | None,
-                           last_ordinal: int) -> None: ...
-    async def remove_state(self, branch: str, path: str) -> None: ...
-    async def set_manifest_entry(self, branch: str, path: str, sha1: str, size: int) -> None: ...
-    async def remove_manifest_entry(self, branch: str, path: str) -> None: ...
-    async def finish_version(self, branch: str, ordinal: int, version_tag: str,
-                             pointer: dict, counts: dict) -> None: ...
-    async def touch_probe(self, branch: str, content_path: str, version_tag: str) -> None: ...
-
-
 async def _gather_bounded(sem, fn, items) -> None:
     """Run `fn(item)` for each item, at most `sem` of them in flight at once."""
     async def _wrap(item) -> None:
@@ -65,8 +39,8 @@ async def _gather_bounded(sem, fn, items) -> None:
     await asyncio.gather(*[_wrap(it) for it in items])
 
 
-async def sync_branch(branch: str, pointer_file: str, cdn: CdnLike, store: ContentStore,
-                      repo: UpdateRepo, *, download_concurrency: int = 6) -> dict:
+async def sync_branch(branch: str, pointer_file: str, cdn, store: ContentStore,
+                      repo, *, download_concurrency: int = 6) -> dict:
     """Run one probe/sync for a branch (its bootstrap pointer is `pointer_file`)."""
     pointer = await cdn.fetch_pointer(pointer_file)
     content_path = pointer["content_path"]

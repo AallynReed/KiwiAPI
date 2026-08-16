@@ -829,7 +829,7 @@
     const copy = document.getElementById('mp-clone-copy');
     if (copy) copy.addEventListener('click', () => {
       const txt = (document.getElementById('mp-clone-url') || {}).textContent || '';
-      navigator.clipboard.writeText(txt).then(() => toast(t('Copied.'))).catch(() => {});
+      window.BTTUtil.copy(txt).then((ok) => { if (ok) toast(t('Copied.')); });
     });
     const tk = document.getElementById('mp-git-tokens');
     if (tk) tk.addEventListener('click', openGitTokens);
@@ -886,7 +886,7 @@
     note.innerHTML = `<p>${esc(t('Your new token (copied to clipboard, shown once):'))}</p>
       <code class="mp-gt-token">${esc(token)}</code>`;
     m.wrap.querySelector('#mp-gt-body').prepend(note);
-    navigator.clipboard.writeText(token).catch(() => {});
+    window.BTTUtil.copy(token);
   }
 
   // ─── Branch-scoped views (tree + commits) ──────────────────────────
@@ -2193,7 +2193,7 @@
         </div></form>`);
     const copyBtn = m.wrap.querySelector('#mp-del-copy');
     if (copyBtn) copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(name).then(() => toast(t('Copied.'))).catch(() => {});
+      window.BTTUtil.copy(name).then((ok) => { if (ok) toast(t('Copied.')); });
     });
     m.wrap.querySelector('#mp-del-form').addEventListener('submit', async (e) => {
       e.preventDefault();

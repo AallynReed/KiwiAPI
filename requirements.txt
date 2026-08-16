@@ -20,9 +20,8 @@ beautifulsoup4==4.12.3
 pillow==12.3.0
 # Blueprint→image voxel rasterizer (app/trove/render) - CPU-only, no GPU.
 numpy==2.4.6
-# JIT-compiles the per-triangle rasterizer hot loop (~11x faster, pixel-identical to
-# the numpy path - see test_render_parity). Optional at runtime: render falls back to
-# pure numpy if numba is absent, so it never hard-blocks a build.
+# JIT-compiles the per-triangle rasterizer hot loop (~20-40x faster than the numpy
+# equivalent). Required: app/trove/render/voxel.py imports it unconditionally.
 numba==0.65.1
 # Self-hosted OCR engine for the character-stat extractor (/v1/ocr/character).
 # RapidOCR (PaddleOCR models) - accurate on stylized game fonts + multilingual,

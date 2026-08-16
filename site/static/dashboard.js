@@ -626,8 +626,8 @@
 
     const copyBtn = box.querySelector('[data-act="copy-creator-token"]');
     if (copyBtn) copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(reveal).then(() => {
-        copyBtn.querySelector('span').textContent = t('Copied');
+      window.BTTUtil.copy(reveal).then((ok) => {
+        if (ok) copyBtn.querySelector('span').textContent = t('Copied');
       });
     });
 
@@ -770,7 +770,7 @@
     $gwList.innerHTML = items.map(gwCard).join('');
     $gwList.querySelectorAll('[data-copy]').forEach((b) =>
       b.addEventListener('click', () => {
-        if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy);
+        window.BTTUtil.copy(b.dataset.copy);
         const prev = b.textContent;
         b.textContent = t('Copied!');
         setTimeout(() => { b.textContent = prev; }, 1500);

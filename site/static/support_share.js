@@ -17,17 +17,6 @@
                 label.textContent = old;
             }, 1400);
         };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(done).catch(function () { fallback(url, done); });
-        } else {
-            fallback(url, done);
-        }
+        window.BTTUtil.copy(url).then(function (ok) { if (ok) done(); });
     });
-    function fallback(text, cb) {
-        var ta = document.createElement('textarea');
-        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta); ta.focus(); ta.select();
-        try { document.execCommand('copy'); cb(); } catch (e) { /* clipboard unavailable */ }
-        document.body.removeChild(ta);
-    }
 })();

@@ -105,6 +105,14 @@
         return res.json();
     }
 
+    // Copy `text` to the clipboard. Resolves true on success, false if the browser
+    // refused (denied permission, or an insecure origin where the API is absent) so
+    // callers can fall back to showing the raw text for manual selection.
+    function copy(text) {
+        if (!navigator.clipboard) return Promise.resolve(false);
+        return navigator.clipboard.writeText(text).then(() => true, () => false);
+    }
+
     // Trailing-edge debounce: returns a wrapper that runs `fn` only once `ms`
     // have passed with no further call. Preserves `this` for method call sites.
     function debounce(fn, ms) {
@@ -398,7 +406,7 @@
     }
 
     window.BTTUtil = {
-        esc, apiUrl, getJSON, fetchJSON, debounce, timeAgo, getFocusable, trapFocus,
+        esc, apiUrl, getJSON, fetchJSON, copy, debounce, timeAgo, getFocusable, trapFocus,
         segmentGaps, boardIconName, boardIconImg, crownHtml,
         siteLang, textVersions, pickLang, localized, modeHint,
     };

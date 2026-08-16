@@ -224,9 +224,8 @@
   document.querySelectorAll('.st-embed [data-copy]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const inp = btn.parentElement.querySelector('input');
-      inp.select();
-      if (navigator.clipboard) navigator.clipboard.writeText(inp.value).catch(() => {});
-      else document.execCommand('copy');
+      inp.select();   // also leaves it hand-copyable if the clipboard API refuses
+      window.BTTUtil.copy(inp.value);
       const prev = btn.textContent;
       btn.textContent = 'Copied!';
       setTimeout(() => { btn.textContent = prev; }, 1200);

@@ -419,12 +419,7 @@
                 els.share.querySelector("span").textContent = "Copy link";
             }, 2000);
         };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(function () { done(true); },
-                function () { done(false); });
-        } else {
-            done(false);
-        }
+        window.BTTUtil.copy(url).then(done);
     }
 
     function wire() {

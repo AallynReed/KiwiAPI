@@ -471,19 +471,7 @@
       btn.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>';
       setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = old; }, 1200);
     };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(flash).catch(() => fallbackCopy(text, flash));
-    } else {
-      fallbackCopy(text, flash);
-    }
-  }
-
-  function fallbackCopy(text, done) {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.focus(); ta.select();
-    try { document.execCommand('copy'); done(); } catch (e) { /* clipboard unavailable */ }
-    document.body.removeChild(ta);
+    window.BTTUtil.copy(text).then((ok) => { if (ok) flash(); });
   }
 
   // Re-localize the JS-built text (zone names, labels) on a language switch.

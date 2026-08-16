@@ -315,10 +315,6 @@ class Settings(BaseSettings):
     # bucket on top of the standard cap.
     market_archive_rate_limit_max: int = 10
     market_archive_rate_limit_window_seconds: int = 60
-    # Historical: governed the /unlock_* byte-patcher uploads (routes removed
-    # 2026-06). Kept defined so a stale override referencing it doesn't crash
-    # settings parsing. Free to delete after one full release.
-    site_max_request_body_bytes: int = 110 * 1024 * 1024  # 110 MB (unused)
 
     # Sound Studio builds: replacement audio is uploaded as raw 16-bit PCM (the
     # browser decodes whatever file the user picked, so the server needs no audio
@@ -425,12 +421,6 @@ class Settings(BaseSettings):
     # isn't granted the bot starts WITHOUT the intent and this feature stays off
     # (avatars still refresh at login). Set false to opt out entirely.
     bot_members_intent: bool = True
-    # Vestigial for login: app/site_auth/oauth.py requests its scopes directly.
-    discord_oauth_scope: str = "identify email guilds"
-    # Optional authorize ``integration_type`` ("1" = user-install). Empty/unset =
-    # plain login. applications.commands needs "1" to install cleanly (no guild
-    # picker). String (not int) so an empty compose value doesn't fail to parse.
-    discord_oauth_integration_type: str | None = None
     # "Add to Discord" install link for the home page (separate from login). Set
     # to the exact Install Link from discord.dev, or leave blank to auto-build the
     # Discord-provided link from the client_id (which offers user- AND guild-
