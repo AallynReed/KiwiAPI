@@ -2988,5 +2988,15 @@
   "Optimization": "Optimisation",
   "Radar": "Radar",
   "Reskin": "Retexture",
-  "Waypoint": "Point de repère"
+  "Waypoint": "Point de repère",
+  "Mouse controls": "Commandes de la souris",
+  "Middle-drag": "Glisser avec le bouton du milieu",
+  "middle-drag": "glisser avec le bouton du milieu",
+  "right-drag": "glisser avec le bouton droit",
+  "drag": "glisser",
+  "click or drag": "cliquer ou glisser",
+  "Select a region": "Sélectionner une zone",
+  "Drag a box with the Select tool": "Tracez un cadre avec l’outil Sélection",
+  "Add to / take from a selection": "Ajouter à la sélection / en retirer",
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Pas de bouton du milieu ? Ctrl + glisser fait pivoter la vue et Maj + glisser la déplace, dans tous les préréglages."
 }

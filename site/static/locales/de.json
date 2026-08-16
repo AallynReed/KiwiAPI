@@ -2988,5 +2988,15 @@
   "Optimization": "Optimierung",
   "Radar": "Radar",
   "Reskin": "Umtexturierung",
-  "Waypoint": "Wegpunkt"
+  "Waypoint": "Wegpunkt",
+  "Mouse controls": "Maussteuerung",
+  "Middle-drag": "Mit der mittleren Taste ziehen",
+  "middle-drag": "mit der mittleren Taste ziehen",
+  "right-drag": "mit der rechten Taste ziehen",
+  "drag": "ziehen",
+  "click or drag": "klicken oder ziehen",
+  "Select a region": "Einen Bereich auswählen",
+  "Drag a box with the Select tool": "Mit dem Auswahlwerkzeug einen Rahmen ziehen",
+  "Add to / take from a selection": "Zur Auswahl hinzufügen / daraus entfernen",
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Keine mittlere Maustaste? Strg + Ziehen dreht die Ansicht, Umschalt + Ziehen verschiebt sie – in jeder Voreinstellung."
 }

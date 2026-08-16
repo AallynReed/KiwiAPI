@@ -2988,5 +2988,15 @@
   "Optimization": "Otimização",
   "Radar": "Radar",
   "Reskin": "Retextura",
-  "Waypoint": "Ponto de rota"
+  "Waypoint": "Ponto de rota",
+  "Mouse controls": "Controlos do rato",
+  "Middle-drag": "Arrastar com o botão do meio",
+  "middle-drag": "arrastar com o botão do meio",
+  "right-drag": "arrastar com o botão direito",
+  "drag": "arrastar",
+  "click or drag": "clicar ou arrastar",
+  "Select a region": "Selecionar uma região",
+  "Drag a box with the Select tool": "Arrasta uma caixa com a ferramenta Selecionar",
+  "Add to / take from a selection": "Adicionar à seleção / remover dela",
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Sem botão do meio? Ctrl + arrastar roda a vista e Shift + arrastar desloca-a, em todas as predefinições."
 }

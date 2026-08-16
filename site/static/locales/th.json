@@ -2760,5 +2760,15 @@
   "— none —": "— ไม่มี —",
   "⚠ The bot is missing permissions here: {x}.": "⚠ บอทไม่มีสิทธิ์ที่นี่: {x}",
   "✓ The bot can post here.": "✓ บอทโพสต์ที่นี่ได้",
-  "🎉 You won!": "🎉 คุณได้รางวัล!"
+  "🎉 You won!": "🎉 คุณได้รางวัล!",
+  "Mouse controls": "การควบคุมด้วยเมาส์",
+  "Middle-drag": "ลากด้วยปุ่มกลาง",
+  "middle-drag": "ลากด้วยปุ่มกลาง",
+  "right-drag": "ลากด้วยปุ่มขวา",
+  "drag": "ลาก",
+  "click or drag": "คลิกหรือลาก",
+  "Select a region": "เลือกพื้นที่",
+  "Drag a box with the Select tool": "ลากกรอบด้วยเครื่องมือเลือก",
+  "Add to / take from a selection": "เพิ่มเข้า / เอาออกจากการเลือก",
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "ไม่มีปุ่มกลางเมาส์ใช่ไหม ทุกชุดค่าที่ตั้งไว้ใช้ Ctrl + ลาก เพื่อหมุนมุมมอง และ Shift + ลาก เพื่อเลื่อนมุมมอง"
 }

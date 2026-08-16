@@ -69,6 +69,7 @@
     sel: null,           // Set of rows the tools are confined to, or null for all
     selOut: false,       // true = work on everything EXCEPT the selection
     grab: 'connected',   // what a Select click gathers
+    nav: 'magicavoxel',  // which mouse gestures drive the camera (see NAV_INFO)
   };
 
   var ATTACH_COLOUR = 0xff3fd5;   // the pink Trove modders mark attachment points in
@@ -199,9 +200,11 @@
       // takes the raw world-space drag and quantises it there (see dragPart).
       onDragWorld: inProject() ? dragPart : null,
       onStroke: onStroke,
+      onRect: onRect,
     }).then(function (scene) {
       state.scene = scene;
       scene.setDragMode(dragModeFor(state.tool));
+      scene.setNavScheme(state.nav);
       /* `data` above was snapshotted from the part that was active when mount() ran.
          Anything that selects another part before this promise resolves - a restored
          session picks its own the moment the model is open - gets no re-mesh from
@@ -2916,13 +2919,118 @@
   /* The paint controls only govern a paint click, and Add uses them for the new voxel -
      so Erase and Pick grey them out rather than leaving a colour picker that does
      nothing. */
+  // ---- how the mouse drives the camera ------------------------------------ //
+
+  /* There is no one standard to adopt: MagicaVoxel, Blender and Maya each bind the view
+     to a different set of buttons, and the right one is whichever the person was using
+     an hour ago. So all three ship. The choice is remembered browser-side next to the
+     palette and for the same reason - it belongs to the person, not to the file.
+
+     This table is the ONLY source for both the dialog rows and the one-line tool hint,
+     so the editor cannot end up naming a gesture the scene doesn't listen for. What each
+     preset actually binds lives in voxel_scene.js; these are its captions. */
+  var NAV_KEY = 'btt.bpe.nav';
+  var NAV_DEFAULT = 'magicavoxel';
+  var NAV_INFO = {
+    magicavoxel: {
+      orbit: '<span data-i18n>Right-drag</span>',
+      pan: '<span data-i18n>Middle-drag</span>',
+      zoom: '<span data-i18n>Scroll</span>',
+      turn: 'Right-drag turns the view.',
+    },
+    blender: {
+      orbit: '<span data-i18n>Middle-drag</span>',
+      pan: '<kbd>Shift</kbd> + <span data-i18n>middle-drag</span>',
+      zoom: '<span data-i18n>Scroll</span>, <span data-i18n>or</span> <kbd>Ctrl</kbd> + <span data-i18n>middle-drag</span>',
+      turn: 'Middle-drag turns the view.',
+    },
+    maya: {
+      orbit: '<kbd>Alt</kbd> + <span data-i18n>drag</span>',
+      pan: '<kbd>Alt</kbd> + <span data-i18n>middle-drag</span>',
+      zoom: '<span data-i18n>Scroll</span>, <span data-i18n>or</span> <kbd>Alt</kbd> + <span data-i18n>right-drag</span>',
+      turn: 'Alt-drag turns the view.',
+    },
+  };
+
+  function loadNav() {
+    try {
+      var v = localStorage.getItem(NAV_KEY);
+      return NAV_INFO[v] ? v : NAV_DEFAULT;
+    } catch (e) { return NAV_DEFAULT; }   // private mode, or someone else's data
+  }
+
+  function setNav(name) {
+    state.nav = NAV_INFO[name] ? name : NAV_DEFAULT;
+    try { localStorage.setItem(NAV_KEY, state.nav); } catch (e) { /* full or blocked */ }
+    if (state.scene) state.scene.setNavScheme(state.nav);
+    renderNav();
+    renderToolHint();          // it names the turn gesture, so it changes with the preset
+  }
+
+  function renderNav() {
+    var info = NAV_INFO[state.nav] || NAV_INFO[NAV_DEFAULT];
+    ['orbit', 'pan', 'zoom'].forEach(function (k) {
+      var el = $('bpe-nav-' + k);
+      if (el) el.innerHTML = info[k];
+    });
+    /* Roving tabindex, which is what a radiogroup owes the keyboard: Tab reaches the
+       group once and lands on the chosen option, and the arrows move within it. */
+    document.querySelectorAll('[data-nav]').forEach(function (b) {
+      var on = b.dataset.nav === state.nav;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+    // Those rows were just rewritten, so the language sweep has to run over them again
+    // or a non-English page shows them in English until the next reload.
+    if (window.BTTi18n && window.BTTi18n.refresh) window.BTTi18n.refresh();
+  }
+
   /* Paint, add and erase run along the drag; move repositions; pick stays a click.
-     Ctrl-drag turns the view in every one of them, so the gesture is the same
-     everywhere in the editor. */
+     The left button is the TOOL in all of them - the view is turned with whatever the
+     chosen navigation preset binds it to, which is why no tool has to give a button
+     back. */
   function dragModeFor(tool) {
     if (tool === 'move') return 'move';
+    if (tool === 'select') return 'marquee';
     if (tool === 'paint' || tool === 'add' || tool === 'erase' || tool === 'box') return 'stroke';
     return '';
+  }
+
+  /* A marquee released. The scene hands back COORDINATES, so they are resolved against
+     the live index here rather than there - the scene draws a compacted view of the
+     part and its own row numbers are not ours.
+
+     Shift adds and Ctrl subtracts, which is what a selection rectangle does in every
+     editor that has one. An empty box with no modifier CLEARS: dragging over nothing is
+     how people deselect, and leaving the old selection standing after an explicit empty
+     drag reads as the tool having missed. */
+  function onRect(cells, ev) {
+    if (!state.data || state.anim.on || state.tool !== 'select') return;
+    var d = state.data, rows = [];
+    cells.forEach(function (c) {
+      var i = state.index.get(c.x + ',' + c.y + ',' + c.z);
+      if (i !== undefined && d.live[i]) rows.push(i);
+    });
+    var add = !!(ev && ev.shiftKey);
+    var sub = !!(ev && (ev.ctrlKey || ev.metaKey));
+    if (!rows.length) {
+      if (!add && !sub) clearSelection();
+      setStatus('Nothing in that box.' + (state.slice.on ? ' The slice is on, so only its layer can be caught.' : ''));
+      return;
+    }
+    if (sub) {
+      if (state.sel) rows.forEach(function (i) { state.sel.delete(i); });
+    } else if (add && state.sel) {
+      rows.forEach(function (i) { state.sel.add(i); });
+    } else {
+      state.sel = new Set(rows);
+    }
+    if (state.sel && !state.sel.size) state.sel = null;
+    afterSelection();
+    var n = state.sel ? state.sel.size : 0;
+    setStatus(rows.length.toLocaleString() + ' voxel' + (rows.length === 1 ? '' : 's')
+      + (sub ? ' removed · ' : (add ? ' added · ' : ' caught · '))
+      + n.toLocaleString() + ' selected.', 'ok');
   }
 
   /* A drag is ONE action. Edits accumulate into a single batch so the whole streak
@@ -3022,14 +3130,18 @@
   }
 
   function renderToolHint() {
+    // Every tool that owns the left button has to say how to turn the model instead,
+    // and which gesture that is depends on the preset - so it comes from NAV_INFO
+    // rather than being spelled out four times.
+    var turn = ' ' + (NAV_INFO[state.nav] || NAV_INFO[NAV_DEFAULT]).turn;
     var hints = {
-      paint: 'Click or drag across voxels to paint them. Ctrl-drag turns the view.',
+      paint: 'Click or drag across voxels to paint them.' + turn,
       pick: 'Click a voxel to copy its colour and material into the settings below.',
-      add: 'Drag along a face to lay voxels against it. Ctrl-drag turns the view.',
-      erase: 'Click or drag across voxels to delete them. Ctrl-drag turns the view.',
-      move: 'Drag to slide this layer around. Ctrl-drag turns the view.',
-      select: 'Click to select. Shift-click adds to the selection. '
-        + 'Everything else then works only where it lands.',
+      add: 'Drag along a face to lay voxels against it.' + turn,
+      erase: 'Click or drag across voxels to delete them.' + turn,
+      move: 'Drag to slide this layer around.' + turn,
+      select: 'Click a voxel, or drag a box across the model. Shift adds to the '
+        + 'selection and Ctrl takes away. Everything else then works only where it lands.',
       box: 'Drag out a rectangle across one face to fill or clear it in one go. '
         + 'Turn on a slice first to work inside the model.',
     };
@@ -3651,6 +3763,9 @@
 
     state.swatches = loadSwatches();
     renderSwatches();
+    // Before the first renderToolHint, so the hint opens naming the right gesture.
+    state.nav = loadNav();
+    renderNav();
     $('bpe-swatch-add').addEventListener('click', function () {
       var rgb = state.paint.rgb;
       if (state.swatches.indexOf(rgb) >= 0) {
@@ -3929,6 +4044,24 @@
        under the stage. `showModal` brings the focus trap and Escape with it; the extra
        click handler closes on the backdrop, which a <dialog> does not do by itself. */
     var keysDlg = $('bpe-keysdlg');
+    keysDlg.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-nav]');
+      if (b) setNav(b.dataset.nav);
+    });
+    /* Arrows move within the group and pick as they go, which is how a radiogroup is
+       expected to behave - Tab is for leaving it, not for walking three options. */
+    keysDlg.addEventListener('keydown', function (e) {
+      var b = e.target.closest && e.target.closest('[data-nav]');
+      if (!b) return;
+      var step = /Right|Down/.test(e.key) ? 1 : (/Left|Up/.test(e.key) ? -1 : 0);
+      if (!step) return;
+      e.preventDefault();
+      var order = window.VoxelScene ? window.VoxelScene.SCHEMES : Object.keys(NAV_INFO);
+      var at = order.indexOf(state.nav);
+      setNav(order[(at + step + order.length) % order.length]);
+      var next = keysDlg.querySelector('[data-nav="' + state.nav + '"]');
+      if (next) next.focus();
+    });
     $('bpe-keys').addEventListener('click', function () {
       // The model-only rows are meaningless with a single blueprint open.
       keysDlg.classList.toggle('bpe-has-model', inProject());

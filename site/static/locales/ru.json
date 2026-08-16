@@ -2988,5 +2988,15 @@
   "Optimization": "Оптимизация",
   "Radar": "Радар",
   "Reskin": "Ретекстур",
-  "Waypoint": "Путевая точка"
+  "Waypoint": "Путевая точка",
+  "Mouse controls": "Управление мышью",
+  "Middle-drag": "Перетаскивание средней кнопкой",
+  "middle-drag": "перетаскивание средней кнопкой",
+  "right-drag": "перетаскивание правой кнопкой",
+  "drag": "перетаскивание",
+  "click or drag": "щелчок или перетаскивание",
+  "Select a region": "Выделить область",
+  "Drag a box with the Select tool": "Растяните рамку инструментом «Выделение»",
+  "Add to / take from a selection": "Добавить к выделению / убрать из него",
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Нет средней кнопки мыши? В любом наборе Ctrl + перетаскивание вращает вид, а Shift + перетаскивание сдвигает его."
 }

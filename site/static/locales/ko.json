@@ -2988,5 +2988,15 @@
   "Optimization": "최적화",
   "Radar": "레이더",
   "Reskin": "리스킨",
-  "Waypoint": "경유지"
+  "Waypoint": "경유지",
+  "Mouse controls": "마우스 조작",
+  "Middle-drag": "가운데 버튼 드래그",
+  "middle-drag": "가운데 버튼 드래그",
+  "right-drag": "오른쪽 버튼 드래그",
+  "drag": "드래그",
+  "click or drag": "클릭 또는 드래그",
+  "Select a region": "영역 선택",
+  "Drag a box with the Select tool": "선택 도구로 상자를 드래그",
+  "Add to / take from a selection": "선택에 추가 / 선택에서 제외",
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "가운데 버튼이 없나요? 모든 프리셋에서 Ctrl + 드래그로 시점을 돌리고 Shift + 드래그로 이동합니다."
 }

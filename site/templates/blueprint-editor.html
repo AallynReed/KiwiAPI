@@ -459,10 +459,22 @@
                 <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
         </div>
+        <!-- Which mouse gestures drive the camera. There is no one standard - the apps
+             people arrive from bind it three different ways - so all three ship and the
+             rows underneath rewrite themselves to match whichever is picked. -->
+        <div class="bpe-navpick">
+            <span class="bpe-navpick-label" id="bpe-navlabel" data-i18n>Mouse controls</span>
+            <div class="bpe-navbtns" role="radiogroup" aria-labelledby="bpe-navlabel">
+                <button type="button" class="bpe-navbtn" data-nav="magicavoxel" role="radio" aria-checked="false">MagicaVoxel</button>
+                <button type="button" class="bpe-navbtn" data-nav="blender" role="radio" aria-checked="false">Blender</button>
+                <button type="button" class="bpe-navbtn" data-nav="maya" role="radio" aria-checked="false">Maya</button>
+            </div>
+        </div>
+
         <dl class="bpe-keys">
-            <dt data-i18n>Turn the view</dt><dd><kbd>Ctrl</kbd> + drag</dd>
-            <dt data-i18n>Pan</dt><dd><span data-i18n>Right-drag</span></dd>
-            <dt data-i18n>Zoom</dt><dd><span data-i18n>Scroll</span></dd>
+            <dt data-i18n>Turn the view</dt><dd id="bpe-nav-orbit"></dd>
+            <dt data-i18n>Pan</dt><dd id="bpe-nav-pan"></dd>
+            <dt data-i18n>Zoom</dt><dd id="bpe-nav-zoom"></dd>
 
             <dt data-i18n>Use the current tool</dt><dd><span data-i18n>Click, or drag across voxels</span></dd>
             <!-- Both spellings, because they suit different hands: the digits run along
@@ -479,6 +491,10 @@
                 <span class="bpe-keycombo"><kbd>S</kbd> <span data-i18n>select</span></span>
                 <span class="bpe-keycombo"><kbd>R</kbd> <span data-i18n>box</span></span>
             </dd>
+            <dt data-i18n>Select a region</dt>
+            <dd><span data-i18n>Drag a box with the Select tool</span></dd>
+            <dt data-i18n>Add to / take from a selection</dt>
+            <dd><kbd>Shift</kbd> / <kbd>Ctrl</kbd> + <span data-i18n>click or drag</span></dd>
             <dt data-i18n>Pick up a colour and material</dt><dd><kbd>Alt</kbd> + click</dd>
             <dt data-i18n>Undo</dt><dd><kbd>Ctrl</kbd> + <kbd>Z</kbd></dd>
             <dt data-i18n>Redo</dt>
@@ -492,6 +508,7 @@
             <dt class="bpe-keys-model" data-i18n>Move a part along its bone</dt>
             <dd class="bpe-keys-model" data-i18n>Unlock it, pick Move, then drag</dd>
         </dl>
+        <p class="bpe-hint" data-i18n>No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.</p>
         <p class="bpe-hint" data-i18n>Undo keeps a separate history for each part and for the whole model, so undoing a move never takes back your painting.</p>
     </dialog>
 

@@ -20,11 +20,15 @@
      scene.dispose();
 
    CONTROLS DEFAULT TO THE VIEWERS'. A plain left-drag orbits unless a host calls
-   `setDragMode`, and only the Blueprint Editor does - so the editor's "left-drag works,
-   Ctrl-drag turns the view" scheme is its own. Nothing here changes how
-   `blueprint_viewer.js` or `model_viewer.js` behave; they carry their own copies of the
-   camera and this file is not loaded on their pages. Keep it that way: a viewer where
-   dragging suddenly painted would be a bad surprise.
+   `setDragMode`, and only the Blueprint Editor does - so the scheme where the left
+   button belongs to a tool and the view is turned some other way is its own. Nothing
+   here changes how `blueprint_viewer.js` or `model_viewer.js` behave; they carry their
+   own copies of the camera and this file is not loaded on their pages. Keep it that
+   way: a viewer where dragging suddenly painted would be a bad surprise.
+
+   WHICH gesture turns the view is a preset - `setNavScheme`, one of the three names in
+   `VoxelScene.SCHEMES`. See NAV_SCHEMES below for what each one binds and why there is
+   a choice at all rather than one right answer.
 
    Requires three.js plus voxel_mesh.js, and uses viewer_stage.js when present. */
 (function () {
@@ -462,11 +466,63 @@
       return { layer: null, voxel: mine ? pick(e) : null };
     }
 
-    var drag = 0, lx = 0, ly = 0, pinch = 0, moved = 0;
+    /* ---- marquee ----------------------------------------------------------
+
+       Which voxels a screen rectangle covers. Every voxel is PROJECTED and tested
+       rather than raycast, for two reasons: a rubber band is a 2D question, and the
+       answer people expect from one is everything the box was drawn over - through the
+       model, not only the shell facing the camera. Pulling a leg out of a creature
+       would otherwise take one drag per side you can see it from.
+
+       O(count), once on release. Next to the re-mesh an edit already pays for, that is
+       nothing - and it costs nothing at all until somebody draws a box. */
+    var _rp = new THREE.Vector3();
+    function rectPick(x0, y0, x1, y1) {
+      if (!data || !data.count) return [];
+      var box = el.getBoundingClientRect();
+      if (!box.width || !box.height) return [];
+      camera.updateMatrixWorld();
+      modelGroup.updateMatrixWorld();
+      var lox = Math.min(x0, x1), hix = Math.max(x0, x1);
+      var loy = Math.min(y0, y1), hiy = Math.max(y0, y1);
+      var out = [];
+      for (var i = 0; i < data.count; i++) {
+        _rp.set(data.x[i], data.y[i], data.z[i])
+           .applyMatrix4(modelGroup.matrixWorld).project(camera);
+        if (_rp.z < -1 || _rp.z > 1) continue;          // behind the camera, or clipped
+        var sx = box.left + (_rp.x + 1) * 0.5 * box.width;
+        var sy = box.top + (1 - _rp.y) * 0.5 * box.height;
+        if (sx >= lox && sx <= hix && sy >= loy && sy <= hiy) {
+          out.push({ x: data.x[i], y: data.y[i], z: data.z[i] });
+        }
+      }
+      return out;
+    }
+
+    // The band itself is a plain div over the stage - a 2D rectangle drawn in the 3D
+    // canvas would have to fight the depth buffer for no gain. The host styles it.
+    var band = null, mx0 = 0, my0 = 0;
+    function showBand(x1, y1) {
+      if (!band) {
+        band = document.createElement('div');
+        band.className = 'vsc-marquee';
+        stage.appendChild(band);
+      }
+      var box = stage.getBoundingClientRect();
+      band.style.left = (Math.min(mx0, x1) - box.left) + 'px';
+      band.style.top = (Math.min(my0, y1) - box.top) + 'px';
+      band.style.width = Math.abs(x1 - mx0) + 'px';
+      band.style.height = Math.abs(y1 - my0) + 'px';
+      band.hidden = false;
+    }
+    function hideBand() { if (band) band.hidden = true; }
+
+    var drag = 0, downBtn = 0, lx = 0, ly = 0, pinch = 0, moved = 0;
     /* What a plain left-drag does: '' orbits (the viewer default), 'move' repositions
        what the host is placing, 'stroke' runs the host's tool along everything the
-       cursor passes over. Ctrl (or a right-drag) always orbits, so the two gestures
-       never compete for the same button. */
+       cursor passes over, 'marquee' drags out a selection rectangle. Whatever it is,
+       the navigation scheme below still gets first claim on the gesture, so turning the
+       view never competes with the tool. */
     var dragMode = '';
     var dragAccum = new THREE.Vector3();
     var strokeSeen = null;
@@ -489,27 +545,118 @@
     function zoom(f) {
       sph.radius = Math.max(modelR * 0.2, Math.min(modelR * 9, sph.radius * f));
     }
+    /* Dolly by dragging rather than by the wheel - the third gesture in the Maya-family
+       schemes. Rightwards and upwards pull the model closer, which is the direction
+       those apps have used for twenty years. Exponential so a long drag scales the same
+       amount per pixel wherever it started. */
+    function dolly(dx, dy) { zoom(Math.exp((dy - dx) * 0.005)); }
+
+    /* ---- navigation schemes --------------------------------------------------
+
+       There is no single "standard" here: the 3D apps people arrive from bind the view
+       to three different sets of buttons, and which one is right depends entirely on
+       what someone used yesterday. So all three ship, and the host picks.
+
+       Each entry answers ONE question - what does this press do to the CAMERA? - and
+       returns 'orbit', 'pan', 'dolly', or '' to mean "not mine, let the tool have it".
+       That is deliberately the only thing they decide: the left button belongs to the
+       tool in every scheme, and the picking, stroke and part-drag paths below are
+       untouched by which one is active. */
+    var NAV_SCHEMES = {
+      /* MagicaVoxel / Qubicle - the voxel-editor lineage, and the default here because
+         it is the software this editor's users most often come from. */
+      magicavoxel: function (e) {
+        if (e.button === 2) return 'orbit';
+        if (e.button === 1) return 'pan';
+        return '';
+      },
+      /* Blender / Godot - everything hangs off the middle button. */
+      blender: function (e) {
+        if (e.button !== 1) return '';
+        if (e.shiftKey) return 'pan';
+        if (e.ctrlKey || e.metaKey) return 'dolly';
+        return 'orbit';
+      },
+      /* Maya / Unity / 3ds Max - Alt plus a button, all three of them.
+         Alt+left CLICK still reaches the host as a pick, because a click that never
+         travelled isn't an orbit (see onUp) - so the editor's eyedropper survives. */
+      maya: function (e) {
+        if (!e.altKey) return '';
+        if (e.button === 0) return 'orbit';
+        if (e.button === 1) return 'pan';
+        if (e.button === 2) return 'dolly';
+        return '';
+      },
+    };
+    var navScheme = 'magicavoxel';
+
+    function navFor(e) {
+      var act = (NAV_SCHEMES[navScheme] || NAV_SCHEMES.magicavoxel)(e);
+      if (act) return act;
+      /* Fallbacks every scheme keeps. A trackpad has one button and no middle one, so
+         without these two the Blender and MagicaVoxel presets would leave a laptop with
+         no way to turn the model at all. A bare right-drag pans wherever the scheme
+         hasn't already spoken for the button.
+
+         A MARQUEE is the one thing that takes the left-button pair back: Shift and Ctrl
+         are how every selection tool in every editor adds to and subtracts from what is
+         already picked, and a rectangle you cannot extend is half a tool. Every preset
+         still leaves a dedicated camera button free while one is being drawn - right in
+         MagicaVoxel, middle in Blender, Alt in Maya. */
+      if (e.button === 0 && dragMode !== 'marquee') {
+        if (e.ctrlKey || e.metaKey) return 'orbit';
+        if (e.shiftKey) return 'pan';
+      }
+      if (e.button === 2) return 'pan';
+      return '';
+    }
+
+    function beginDrag(e) {
+      downBtn = e.button;
+      lx = e.clientX; ly = e.clientY; moved = 0;
+      stage.classList.add('vsc-grabbing');
+      try { el.setPointerCapture(e.pointerId); } catch (err) { /* already released */ }
+      e.preventDefault();
+    }
 
     /* Pointer events WITH CAPTURE: letting go outside the frame otherwise delivers
        the pointerup somewhere this window never sees, and the drag never ends. */
     function onDown(e) {
       if (e.pointerType === 'touch') return;
-      /* The MIDDLE button starts nothing. It used to fall through as a left press,
+      /* preventDefault on the MIDDLE button whatever happens to it next, or the browser
+         drops its autoscroll cursor over the model. */
+      if (e.button === 1) e.preventDefault();
+
+      // The camera gets first refusal on every press, so turning the view and using the
+      // tool can never end up fighting over the same button.
+      var nav = navFor(e);
+      if (nav) {
+        drag = nav === 'orbit' ? 1 : (nav === 'pan' ? 2 : 5);
+        if (drag === 2) {
+          var h = castAt(e.clientX, e.clientY);
+          anchor = h && h.point ? h.point.clone() : null;
+        }
+        beginDrag(e);
+        return;
+      }
+      /* The middle button starts nothing else. It used to fall through as a left press,
          which meant a middle click painted a voxel - and a host that wants the button
          for something of its own (the Blueprint Editor picks a part with it) could not
-         have it without undoing that first. preventDefault also stops the browser's
-         autoscroll cursor appearing over the model. */
-      if (e.button === 1) { e.preventDefault(); return; }
+         have it without undoing that first. */
+      if (e.button === 1) return;
       // A plain left click is the edit gesture, so it must not also start a rotate
       // until the pointer actually travels - `moved` decides that on pointerup.
-      // In drag mode a left-drag moves the thing being positioned instead; rotating
-      // stays available on right-drag, which would otherwise be pan.
-      // Ctrl (or a right-drag) turns the view even while positioning, so the two
-      // gestures never fight over the same button.
-      if (dragMode && e.button !== 2 && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      // In drag mode a left-drag moves the thing being positioned instead.
+      if (dragMode === 'marquee' && e.button === 0) {
+        drag = 6;
+        mx0 = e.clientX; my0 = e.clientY;
+        beginDrag(e);
+        return;
+      }
+      if (dragMode && e.button === 0) {
         drag = (dragMode === 'stroke') ? 4 : 3;
-        lx = e.clientX; ly = e.clientY; moved = 0;
         dragAccum.set(0, 0, 0);
+        beginDrag(e);
         // A move-drag is one action too - a host that offers undo needs to know where it
         // started and stopped, or dragging a part twenty voxels is twenty undos.
         if (drag === 3 && opts.onStroke) opts.onStroke('start');
@@ -520,20 +667,12 @@
           if (opts.onStroke) opts.onStroke('start');
           strokeAt(e);
         }
-        stage.classList.add('vsc-grabbing');
-        try { el.setPointerCapture(e.pointerId); } catch (err) { /* already released */ }
-        e.preventDefault();
         return;
       }
-      drag = (e.button === 2 || e.shiftKey) ? 2 : 1;
-      lx = e.clientX; ly = e.clientY; moved = 0;
-      if (drag === 2) {
-        var h = castAt(e.clientX, e.clientY);
-        anchor = h && h.point ? h.point.clone() : null;
-      }
-      stage.classList.add('vsc-grabbing');
-      try { el.setPointerCapture(e.pointerId); } catch (err) { /* already released */ }
-      e.preventDefault();
+      // Nothing claimed it: with no tool running, a left-drag turns the view the way
+      // every other 3D preview on the site does.
+      drag = 1;
+      beginDrag(e);
     }
     function onMove(e) {
       if (e.pointerType === 'touch') return;
@@ -556,7 +695,11 @@
         return;
       }
       if (drag === 3) { dragLayer(dx, dy); return; }
-      if (drag === 2) pan(dx, dy); else rotate(dx, dy);
+      // The band is the whole of a marquee drag - nothing is selected until it is let go.
+      if (drag === 6) { showBand(e.clientX, e.clientY); return; }
+      if (drag === 5) dolly(dx, dy);
+      else if (drag === 2) pan(dx, dy);
+      else rotate(dx, dy);
       applyCamera(); request();
     }
 
@@ -605,11 +748,29 @@
         strokeSeen = null;
         if (opts.onStroke) opts.onStroke('end');
       }
-      // Under the drag threshold this was a click, not a rotation - report the voxel.
-      if (drag === 1 && moved < 4 && opts.onPick && e && e.clientX !== undefined) {
+      /* A rectangle that was never dragged out is a CLICK, and a click still picks the
+         one voxel under it - so a band under the threshold falls through to the pick
+         below rather than reporting an empty selection and wiping what was there. */
+      if (drag === 6) {
+        hideBand();
+        if (moved >= 4 && e && e.clientX !== undefined) {
+          if (opts.onRect) opts.onRect(rectPick(mx0, my0, e.clientX, e.clientY), e);
+          drag = 0; downBtn = 0; anchor = null; moved = 0;
+          stage.classList.remove('vsc-grabbing');
+          return;
+        }
+      }
+      /* Under the drag threshold this was a click, not a camera move - report the voxel.
+         Keyed on the BUTTON rather than on what the press was routed to, for two
+         reasons. A scheme where the right button orbits (MagicaVoxel) must not let a
+         right-click paint. And Shift+click has to keep reaching the host even though
+         Shift+DRAG pans: shift-click is how the Select tool adds to a selection, and
+         gating this on the pan/orbit split is what used to swallow it. */
+      if (downBtn === 0 && drag !== 3 && drag !== 4 && moved < 4
+          && opts.onPick && e && e.clientX !== undefined) {
         opts.onPick(pick(e), e);
       }
-      drag = 0; anchor = null; moved = 0;
+      drag = 0; downBtn = 0; anchor = null; moved = 0;
       stage.classList.remove('vsc-grabbing');
     }
     /* Leaving the canvas ends the hover. Without this the last move wins and a host
@@ -703,6 +864,11 @@
       clearLayer: clearLayer,
       clearLayers: clearLayers,
       setDragMode: function (mode) { dragMode = mode || ''; },
+      // Which mouse gestures drive the camera. One of VoxelScene.SCHEMES; anything
+      // else falls back to the default rather than leaving the view unturnable.
+      setNavScheme: function (name) {
+        navScheme = NAV_SCHEMES[name] ? name : 'magicavoxel';
+      },
       // `{axis:'x'|'y'|'z', at:n}` to make one bare plane clickable where no geometry
       // is; null to go back to picking geometry only.
       setPickPlane: function (p) { pickPlane = p || null; },
@@ -731,10 +897,14 @@
         window.removeEventListener('resize', onResize);
         disposeMeshes();
         renderer.dispose();
+        if (band && band.parentNode) band.parentNode.removeChild(band);
+        band = null;
         if (el.parentNode) el.parentNode.removeChild(el);
       },
     };
   }
 
-  window.VoxelScene = { create: create };
+  // SCHEMES is the canonical order the presets are offered in, so a host building a
+  // picker doesn't re-list them and drift from what setNavScheme accepts.
+  window.VoxelScene = { create: create, SCHEMES: ['magicavoxel', 'blender', 'maya'] };
 })();
