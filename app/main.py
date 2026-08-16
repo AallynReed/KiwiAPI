@@ -6,7 +6,6 @@ from pathlib import Path
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 from app.admin.router import router as admin_router
 from app.auth.account import router as account_router
@@ -428,16 +427,18 @@ app.include_router(class_activity_router, dependencies=[Depends(require_class_ac
 app.include_router(events_router)  # live SSE event stream (events:read)
 app.include_router(ocr_router)     # self-hosted character-stat OCR (ocr:read)
 
-# BetterTroveTools showcase site (trove.aallyn.net). The site router owns
-# "/", "/documentation", "/commands", "/leaderboards", "/updates",
-# "/support" plus the same-origin "/site/*" JSON proxies. The proxy can
-# put this container on both api.aallyn.net (filtering to /v1 + /health)
-# and trove.aallyn.net (everything else). Templates + assets live in
-# ./site (bind-mounted, so 19 MB of screenshots don't bake into the image).
+# BetterTroveTools showcase site - this container serves its DATA plane only: the
+# same-origin "/site/*" JSON + binary proxies, the OG PNG renders, the status badge,
+# robots.txt and sitemap.xml. The HTML pages and the "/static" mount belong to the
+# website container (app/web/main.py); a page path arriving on an api-side host is
+# 301'd there instead (see add_api_host_redirect_middleware).
+#
+# ./site stays bind-mounted (19 MB of screenshots don't bake into the image) because
+# the router still READS it off disk - the screenshots proxy walks
+# ./site/static/trove-screens. It just isn't served over HTTP from here any more,
+# which is why the include is gated on that directory rather than ./site/templates.
 _SITE_ROOT = Path(settings.site_root)
 if (_SITE_ROOT / "static").is_dir():
-    app.mount("/static", StaticFiles(directory=str(_SITE_ROOT / "static")), name="site_static")
-if (_SITE_ROOT / "templates").is_dir():
     app.include_router(site_router)
 
 
