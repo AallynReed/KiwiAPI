@@ -181,19 +181,41 @@ _REGEX_KEYWORD = re.compile(r"\b(return|typeof|case|in|of|delete|void|do|else|yi
 _HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
 
 
+def _markers_in(text: str) -> set[str]:
+    """Every `data-i18n` marker in a blob of markup.
+
+    Used on templates AND on scripts, because a page's empty states and its dynamic
+    rows are built as HTML strings in JS - `innerHTML = '<p data-i18n>No renames
+    flagged.</p>'` is as much a marked string as anything in a template, and
+    `rerunI18n()` translates it the same way. Scanning only for `t()` in scripts
+    misses every one of them."""
+    keys = set()
+    for m in _OPEN.finditer(text):
+        if m.group("selfclose"):
+            continue
+        inner = _inner_html(text, m.group("tag"), m.end())
+        if inner is not None:
+            keys.add(norm(inner))
+    keys |= {norm(m.group(1)) for m in _ATTR.finditer(text)}
+    return {k for k in keys if k and not k.startswith("{") and not _is_expression(k)}
+
+
+# A marker whose body is BUILT rather than written - `'<span data-i18n>' + esc(x) +
+# '</span>'` - captures a fragment of source, not a string. At runtime the element
+# holds whatever the expression produced, so the fragment is a key nothing looks up.
+# The t() call inside such a fragment is collected separately, as itself.
+_EXPRESSION = re.compile(r"""\$\{|['"]\s*\+|\+\s*['"]""")
+
+
+def _is_expression(key: str) -> bool:
+    return bool(_EXPRESSION.search(key))
+
+
 def keys_from_templates() -> dict[str, set[str]]:
     found: dict[str, set[str]] = {}
     for path in sorted(TEMPLATES.rglob("*.html")):
         text = _HTML_COMMENT.sub("", path.read_text(encoding="utf-8"))
-        keys = set()
-        for m in _OPEN.finditer(text):
-            if m.group("selfclose"):
-                continue
-            inner = _inner_html(text, m.group("tag"), m.end())
-            if inner is not None:
-                keys.add(norm(inner))
-        keys |= {norm(m.group(1)) for m in _ATTR.finditer(text)}
-        keys = {k for k in keys if k and not k.startswith("{")}
+        keys = _markers_in(text)
         if keys:
             found[str(path.relative_to(ROOT))] = keys
     return found
@@ -207,6 +229,7 @@ def keys_from_js() -> tuple[dict[str, set[str]], dict[str, int]]:
             continue
         text = strip_js_comments(path.read_text(encoding="utf-8"))
         keys = {norm(_unescape_js(m.group(2))) for m in _T_CALL.finditer(text)}
+        keys |= _markers_in(text)
         keys = {k for k in keys if k}
         if keys:
             found[str(path.relative_to(ROOT))] = keys
@@ -227,6 +250,40 @@ def all_keys() -> tuple[set[str], dict[str, set[str]], dict[str, int]]:
     return every, per_file, dynamic
 
 
+def _source_blobs() -> list[str]:
+    """Every file that could name a translatable string, read once."""
+    blobs = []
+    for path in sorted(TEMPLATES.rglob("*.html")):
+        blobs.append(path.read_text(encoding="utf-8"))
+    for path in sorted(STATIC.rglob("*.js")):
+        if ".min." in path.name or "vendor" in path.parts:
+            continue
+        blobs.append(path.read_text(encoding="utf-8"))
+    return blobs
+
+
+def classify_stale(every: set[str], locs: dict[str, dict[str, str]]):
+    """Split the keys no scan found into `(safe to delete, spared)`.
+
+    THE SCAN IS NOT THE WHOLE TRUTH, and deleting a translation is not reversible by
+    re-running anything. 166 call sites pass a VARIABLE to `t()` - `t(label)`, where
+    the label came out of a list defined somewhere else - so their strings are live
+    keys that no amount of pattern-matching on `t('...')` will ever see.
+
+    So a key is only deleted when its exact text appears NOWHERE in any template or
+    script. If the words are still in the source at all, something may still reach
+    them at runtime, and the entry stays. That spares some genuinely dead keys, which
+    is the right way to be wrong here."""
+    candidates = set()
+    for d in locs.values():
+        candidates |= set(d) - every
+    blobs = _source_blobs()
+    dead, spared = [], []
+    for key in sorted(candidates):
+        (spared if any(key in b for b in blobs) else dead).append(key)
+    return dead, spared
+
+
 def locales() -> dict[str, dict[str, str]]:
     return {
         p.stem: json.loads(p.read_text(encoding="utf-8"))
@@ -239,6 +296,9 @@ def main() -> None:
     ap.add_argument("--missing", metavar="LOCALE", help="list what this locale lacks")
     ap.add_argument("--by-file", action="store_true", help="group missing by source file")
     ap.add_argument("--stale", action="store_true", help="keys no source mentions")
+    ap.add_argument("--prune", action="store_true",
+                    help="delete stale keys from every locale (see --dry-run)")
+    ap.add_argument("--dry-run", action="store_true", help="with --prune, write nothing")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     args = ap.parse_args()
 
@@ -261,6 +321,26 @@ def main() -> None:
             return
         for k in missing:
             print(k)
+        return
+
+    if args.prune:
+        dead, spared = classify_stale(every, locs)
+        print(f"{len(dead)} key(s) to remove, {len(spared)} spared by the literal check")
+        for k in spared[:30]:
+            print(f"  SPARED  {k[:90]}")
+        removed = 0
+        for path in sorted(LOCALES.glob("*.json")):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            gone = [k for k in dead if k in data]
+            for k in gone:
+                del data[k]
+            removed += len(gone)
+            if not args.dry_run:
+                path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                                encoding="utf-8")
+            print(f"  {path.stem:>6}  -{len(gone)}")
+        print(f"\n{removed} entries removed across {len(locs)} locales"
+              + ("  (dry run - nothing written)" if args.dry_run else ""))
         return
 
     if args.stale:
