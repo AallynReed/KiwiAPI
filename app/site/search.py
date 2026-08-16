@@ -160,7 +160,9 @@ async def _mods(query: str, limit: int, offset: int, *, modpacks: bool):
             "path": f"{root}/{handle}/{slug}",
             "detail": r.get("owner_username") or handle,
             "kind": kind,
-            "image": ("/site/mods/image/" + quote(str(sha), safe="")) if sha else None,
+            # ?w=200 for a 44px result thumbnail (.srch-res-thumb) - unsized, a mod
+            # banner arrives at whatever resolution its creator uploaded.
+            "image": ("/site/mods/image/" + quote(str(sha), safe="") + "?w=200") if sha else None,
         })
     return out, total
 

@@ -113,8 +113,9 @@ def _jpeg_dims(data: bytes) -> tuple[int | None, int | None]:
 #
 # The widths are an allowlist, not a free parameter: sha+width IS the cache key,
 # and an open `?w=` would let anyone mint unbounded derivatives of every image in
-# the store. 708 = the 354px card at 2x; 400 the preview tiles; 1416 the hero.
-THUMB_WIDTHS = (400, 708, 1416)
+# the store. 200 = the dashboard's 64px mod rows and the 44px search thumbnails;
+# 400 the preview tiles; 708 the 354px card at 2x; 1416 the hero.
+THUMB_WIDTHS = (200, 400, 708, 1416)
 
 
 def render_thumbnail(data: bytes, width: int) -> bytes | None:

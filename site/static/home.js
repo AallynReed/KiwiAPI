@@ -598,7 +598,9 @@
         row.href = "/mods/" + encodeURIComponent(m.handle) + "/" + encodeURIComponent(m.slug);
         var thumb = el("div", "dash-modrow-thumb");
         var sha = m.banner_sha || m.preview_sha;
-        if (sha) thumb.style.backgroundImage = "url('" + BTTUtil.apiUrl("/site/mods/image/" + encodeURIComponent(sha)) + "')";
+        // ?w=200 for a 64x40 row (.dash-modrow-thumb) - the raw upload behind one
+        // of these is routinely a couple of megabytes.
+        if (sha) thumb.style.backgroundImage = "url('" + BTTUtil.apiUrl("/site/mods/image/" + encodeURIComponent(sha) + "?w=200") + "')";
         else thumb.appendChild(el("i", "fa-solid fa-cube"));
         row.appendChild(thumb);
         var body = el("div", "dash-modrow-body");
