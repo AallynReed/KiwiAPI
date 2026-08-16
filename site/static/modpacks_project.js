@@ -95,6 +95,11 @@
     || (state.detail.variants || [])[0] || null;
 
   // ─── Render ────────────────────────────────────────────────────────
+  /* `t()` substitutes once and the locale file loads asynchronously, so a cold load
+     usually builds this page before the dictionary exists. Re-render on the event or
+     it stays English whatever language is picked. */
+  document.addEventListener('btt-lang-changed', () => { if (state.detail) render(); });
+
   function render() {
     const d = state.detail;
     if (!d) return;

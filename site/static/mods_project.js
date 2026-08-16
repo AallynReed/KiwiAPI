@@ -43,6 +43,9 @@
     'Wings', 'Automation', 'Optimization', 'Reskin', 'Waypoint', 'Radar'];
   const _CAT_LOWER = new Set(MOD_CATEGORIES.map((c) => c.toLowerCase()));
   const isCategory = (tag) => _CAT_LOWER.has(String(tag).trim().toLowerCase());
+  /* Fixed vocabulary reads in the visitor's language; a creator's own tag is content
+     and stays exactly as they wrote it. Display only - the stored value is English. */
+  const catName = (tag) => (isCategory(tag) ? t(String(tag).trim()) : tag);
 
   // ─── Content languages ───────────────────────────────────────────────
   // Every piece of prose on a mod - title, summary, About, warnings, README and
@@ -269,7 +272,7 @@
       ? `<span class="mp-badge mp-badge-unlisted">${esc(t('Releases only'))}</span>` : '';
     const privBadge = (d.is_owner && d.source_visibility === 'private')
       ? `<span class="mp-badge mp-badge-draft">${esc(t('Private source'))}</span>` : '';
-    const tags = (d.tags || []).map((x) => `<span class="mp-tag">${esc(x)}</span>`).join('');
+    const tags = (d.tags || []).map((x) => `<span class="mp-tag">${esc(catName(x))}</span>`).join('');
     const taken = d.taken_down
       ? `<div class="mp-takedown"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('This mod has been removed by a moderator.'))} ${d.takedown_reason ? esc(d.takedown_reason) : ''}</div>` : '';
     // Header download: a direct link for a single release, but a dropdown to pick
@@ -713,8 +716,20 @@
     state.contentLang = btn.getAttribute('data-content-lang');
     repaintTranslations();
   });
-  // A reader who hasn't picked a language follows the site's.
-  document.addEventListener('btt-lang-changed', () => { if (!state.contentLang) repaintTranslations(); });
+  /* The page is built by JS, and `t()` is a one-shot substitution: whatever the
+     dictionary said at first paint is what stays on screen. The locale file is
+     fetched asynchronously, so on a cold load this view is very often built BEFORE
+     the dictionary lands - which left every string on it in English no matter what
+     language was picked. Re-render on the event, the way the profile page and the
+     hub listing already do; `render()` rebuilds from `state.detail` and re-wires,
+     so it is the same work a fresh load does.
+
+     Creator-supplied text is a second layer on top: a reader who hasn't chosen a
+     content language follows the site's, so the repaint runs after the rebuild. */
+  document.addEventListener('btt-lang-changed', () => {
+    if (state.detail) render();
+    if (!state.contentLang) repaintTranslations();
+  });
 
   function openReadmeEdit() {
     const d = state.detail;
@@ -1285,7 +1300,7 @@
     const keys = Object.keys(props).sort((a, b) => a.toLowerCase() < b.toLowerCase() ? -1 : 1);
     const propRows = keys.map((k) => `<tr><th>${esc(k)}</th><td>${esc(props[k])}</td></tr>`).join('');
     const cats = (d.categories || []).length
-      ? `<p class="mp-insp-cats">${(d.categories).map((c) => `<span class="mp-tag">${esc(c)}</span>`).join('')}</p>` : '';
+      ? `<p class="mp-insp-cats">${(d.categories).map((c) => `<span class="mp-tag">${esc(catName(c))}</span>`).join('')}</p>` : '';
     const propsBlock = keys.length
       ? `<h3 class="mp-insp-h">${esc(t('Header'))}</h3>${cats}
          <table class="mp-insp-props"><tbody>${propRows}</tbody></table>`
@@ -1614,7 +1629,9 @@
     const selectedCats = new Set((d.tags || []).filter(isCategory).map((c) => c.toLowerCase()));
     const freeTags = (d.tags || []).filter((tg) => !isCategory(tg));
     const catChips = MOD_CATEGORIES.map((c) =>
-      `<button type="button" class="mp-catchip ${selectedCats.has(c.toLowerCase()) ? 'is-sel' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
+      // The chip reads in the visitor's language; `data-cat` stays English, because
+      // that is the value that gets saved on the mod and filtered on later.
+      `<button type="button" class="mp-catchip ${selectedCats.has(c.toLowerCase()) ? 'is-sel' : ''}" data-cat="${esc(c)}">${esc(t(c))}</button>`).join('');
     const m = openModal(t('Edit mod details'), `<form class="mp-form" id="mp-edit-form">
       ${ModsI18n.editorHTML('mp-text')}
       <label class="mp-form-field"><span id="mp-title-label">${esc(t('Title'))}</span><input name="title" maxlength="120" required></label>

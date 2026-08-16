@@ -2975,5 +2975,18 @@
   "Packs tracked": "追跡中のパック",
   "Price history": "価格の履歴",
   "Sale": "セール",
-  "No branches tracked yet.": "追跡中のブランチはまだありません。"
+  "No branches tracked yet.": "追跡中のブランチはまだありません。",
+  "Automation": "自動化",
+  "Banners": "バナー",
+  "Boats and Sails": "ボートと帆",
+  "Cosmetics": "見た目アイテム",
+  "Fishing": "釣り",
+  "GUI": "インターフェイス",
+  "Helmets": "ヘルメット",
+  "Mag Riders": "マグライダー",
+  "NPCs": "NPC",
+  "Optimization": "最適化",
+  "Radar": "レーダー",
+  "Reskin": "リスキン",
+  "Waypoint": "ウェイポイント"
 }

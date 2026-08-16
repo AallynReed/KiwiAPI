@@ -47,7 +47,15 @@
   const $statsMeta = $('dash-stats-meta');
   const $statsBody = $('dash-stats-body');
 
-  boot().catch((err) => {
+  /* Wait for the dictionary before painting anything. Every string on this page is
+     built in JS through `t()`, which substitutes ONCE - paint before the locale file
+     lands and the whole dashboard is English for the rest of the session. The other
+     pages re-render on `btt-lang-changed`; this one will not, because its boot
+     refetches the session and every section, and doing that again on each language
+     switch is a lot of work to fix a race. Waiting costs one already-in-flight
+     request, and `ready` never rejects. */
+  const i18nReady = (window.BTTi18n && window.BTTi18n.ready) || Promise.resolve();
+  i18nReady.then(boot).catch((err) => {
     console.error('[dashboard] boot failed', err);
     showError(err);
   });

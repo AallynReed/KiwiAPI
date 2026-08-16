@@ -48,6 +48,11 @@
     await loadPage(true);
   }
 
+  /* `t()` substitutes once, and the locale file arrives asynchronously - so a cold
+     load usually paints this list before the dictionary exists, and every string on
+     it stays English. Re-render on the language event, as the mods hub does. */
+  document.addEventListener('btt-lang-changed', () => { if (state.items.length) render(); });
+
   function wireEvents() {
     let timer = null;
     $search.addEventListener('input', () => {

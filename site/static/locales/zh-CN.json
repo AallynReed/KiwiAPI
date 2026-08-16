@@ -2975,5 +2975,18 @@
   "Packs tracked": "已跟踪礼包",
   "Price history": "价格历史",
   "Sale": "促销",
-  "No branches tracked yet.": "尚未跟踪任何分支。"
+  "No branches tracked yet.": "尚未跟踪任何分支。",
+  "Automation": "自动化",
+  "Banners": "旗帜",
+  "Boats and Sails": "船只与帆",
+  "Cosmetics": "装饰外观",
+  "Fishing": "钓鱼",
+  "GUI": "界面",
+  "Helmets": "头盔",
+  "Mag Riders": "磁浮板",
+  "NPCs": "NPC",
+  "Optimization": "性能优化",
+  "Radar": "雷达",
+  "Reskin": "重贴图",
+  "Waypoint": "路径点"
 }

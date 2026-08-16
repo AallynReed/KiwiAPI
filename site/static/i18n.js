@@ -31,6 +31,7 @@
         ["ja", "日本語"],
         ["ko", "한국어"],
         ["zh-CN", "简体中文"],
+        ["th", "ไทย"],
     ];
     const SUPPORTED = new Set(LANGS.map((l) => l[0]));
     const STORAGE_KEY = "btt_docs_lang";
@@ -160,6 +161,7 @@
         if (nav.startsWith("fr")) return "fr";
         if (nav.startsWith("de")) return "de";
         if (nav.startsWith("es")) return "es";
+        if (nav.startsWith("th")) return "th";
         return "en";
     }
 
@@ -267,10 +269,21 @@
         syncSwitchers();
     }
 
+    /* Resolves once the FIRST dictionary is in place. `t()` is a one-shot
+       substitution, so a page that builds itself in JS and paints before the locale
+       file has landed renders every string in English and has no idea it did - the
+       `btt-lang-changed` event comes too late for anything that already ran, and
+       re-rendering on it is only an option for a view cheap enough to rebuild. A
+       page whose boot is expensive (the dashboard refetches the session and every
+       section) awaits this instead and paints once, correctly. Never rejects: a
+       missing locale file leaves English on screen, which is the fallback anyway. */
+    let markReady;
+    const ready = new Promise((resolve) => { markReady = resolve; });
+
     function init() {
         cacheOriginals();
         buildSwitcher();
-        setLanguage(pickInitialLanguage());
+        setLanguage(pickInitialLanguage()).catch(() => {}).then(() => markReady());
     }
 
     if (document.readyState === "loading") {
@@ -314,5 +327,6 @@
     // expose for debugging / external triggers. `langs` is the canonical
     // [code, endonym, flag] table - page scripts that build their own language
     // UI (e.g. the Mods Hub translation switch) read it instead of re-listing.
-    window.BTTi18n = { setLanguage, t: translate, refresh, untrack, langs: LANGS, current: () => current };
+    window.BTTi18n = { setLanguage, t: translate, refresh, untrack, langs: LANGS,
+                       current: () => current, ready };
 })();

@@ -40,6 +40,7 @@ _FORBIDDEN = {
     "de": (_CJK, _CYRILLIC), "es": (_CJK, _CYRILLIC),
     "fr": (_CJK, _CYRILLIC), "pt-PT": (_CJK, _CYRILLIC),
     "ru": (_CJK,), "ja": (_CYRILLIC,), "ko": (_CYRILLIC,), "zh-CN": (_CYRILLIC,),
+    "th": (_CJK, _CYRILLIC),
 }
 
 
@@ -103,6 +104,7 @@ def main() -> None:
     for path in sorted(audit.LOCALES.glob("*.json")):
         name = path.stem
         data = json.loads(path.read_text(encoding="utf-8"))
+        before = len(data)
         for english, per_locale in batch.items():
             value = per_locale.get(name)
             if not value:
@@ -115,7 +117,12 @@ def main() -> None:
             else:
                 added[name] = added.get(name, 0) + 1
             data[key] = value
-        if not args.dry_run:
+        # ONLY write a file this batch actually changed. Rewriting a locale nothing
+        # was added to is pure churn in the diff, and worse than churn while somebody
+        # is filling that file in by hand - a read-modify-write over their editor's
+        # copy is how in-progress work gets clobbered.
+        touched = len(data) != before or replaced.get(name)
+        if touched and not args.dry_run:
             # A trailing newline and utf-8: these are read by humans in a diff as
             # much as by the browser.
             path.write_text(

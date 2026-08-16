@@ -2975,5 +2975,18 @@
   "Packs tracked": "Erfasste Pakete",
   "Price history": "Preisverlauf",
   "Sale": "Rabatt",
-  "No branches tracked yet.": "Noch keine Branches erfasst."
+  "No branches tracked yet.": "Noch keine Branches erfasst.",
+  "Automation": "Automatisierung",
+  "Banners": "Banner",
+  "Boats and Sails": "Boote und Segel",
+  "Cosmetics": "Kosmetik",
+  "Fishing": "Angeln",
+  "GUI": "Oberfläche",
+  "Helmets": "Helme",
+  "Mag Riders": "Magrider",
+  "NPCs": "NPCs",
+  "Optimization": "Optimierung",
+  "Radar": "Radar",
+  "Reskin": "Umtexturierung",
+  "Waypoint": "Wegpunkt"
 }

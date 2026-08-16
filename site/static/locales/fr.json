@@ -2975,5 +2975,18 @@
   "Packs tracked": "Packs suivis",
   "Price history": "Historique des prix",
   "Sale": "Solde",
-  "No branches tracked yet.": "Aucune branche suivie pour l'instant."
+  "No branches tracked yet.": "Aucune branche suivie pour l'instant.",
+  "Automation": "Automatisation",
+  "Banners": "Bannières",
+  "Boats and Sails": "Bateaux et voiles",
+  "Cosmetics": "Cosmétiques",
+  "Fishing": "Pêche",
+  "GUI": "Interface",
+  "Helmets": "Casques",
+  "Mag Riders": "Magriders",
+  "NPCs": "PNJ",
+  "Optimization": "Optimisation",
+  "Radar": "Radar",
+  "Reskin": "Retexture",
+  "Waypoint": "Point de repère"
 }

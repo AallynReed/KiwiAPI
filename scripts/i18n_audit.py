@@ -239,11 +239,34 @@ def keys_from_js() -> tuple[dict[str, set[str]], dict[str, int]]:
     return found, dynamic
 
 
+# A fixed vocabulary that reaches t() through a VARIABLE - `t(c)` over a list - so no
+# scan of `t('...')` can see it, yet every entry is a real key the site looks up. Read
+# out of the source array rather than copied here, so the two cannot drift apart.
+_VOCAB_LISTS = [("site/static/mods_project.js", "MOD_CATEGORIES")]
+
+
+def dynamic_vocab() -> dict[str, set[str]]:
+    found: dict[str, set[str]] = {}
+    for rel, name in _VOCAB_LISTS:
+        path = ROOT / rel
+        if not path.exists():
+            continue
+        m = re.search(rf"\b{name}\s*=\s*\[(.*?)\]", path.read_text(encoding="utf-8"), re.S)
+        if not m:
+            continue
+        items = {norm(s) for s in re.findall(r"['\"]([^'\"]+)['\"]", m.group(1))}
+        if items:
+            found.setdefault(rel, set()).update(items)
+    return found
+
+
 def all_keys() -> tuple[set[str], dict[str, set[str]], dict[str, int]]:
     per_file = {}
     per_file.update(keys_from_templates())
     js, dynamic = keys_from_js()
     per_file.update(js)
+    for rel, items in dynamic_vocab().items():
+        per_file.setdefault(str(Path(rel)), set()).update(items)
     every: set[str] = set()
     for keys in per_file.values():
         every |= keys

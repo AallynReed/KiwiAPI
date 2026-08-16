@@ -26,6 +26,13 @@
     Radar: 'fa-satellite-dish',
   };
 
+  /* A category is fixed UI vocabulary, not a creator's own tag, so it reads in the
+     visitor's language. Only the LABEL translates: `data-tag` keeps the English name
+     because that is what the API filters on, and a translated value would query for a
+     category the server has never heard of. Creator tags are free text and stay as
+     written - translating someone's "#minimal" would be inventing content. */
+  const catName = (tag) => (CAT_ICONS[tag] ? t(tag) : tag);
+
   const state = {
     q: '', tag: '', sort: 'recent',
     offset: 0, items: [], total: 0, loading: false,
@@ -208,7 +215,7 @@
     const suggestions = (state.facets.categories || []).slice(0, 3)
       .map((c) => `<button type="button" class="mh-cat" data-empty-tag="${esc(c.tag)}">`
         + `<i class="fa-solid ${CAT_ICONS[c.tag] || 'fa-tag'}" aria-hidden="true"></i>`
-        + `<span class="mh-cat-name">${esc(c.tag)}</span></button>`).join('');
+        + `<span class="mh-cat-name">${esc(catName(c.tag))}</span></button>`).join('');
     return `<div class="mh-empty">
       <p class="mh-empty-lead">${esc(t('Nothing matches')) + ' ' + what}</p>
       <p>${esc(t('Try another spelling, or browse a category.'))}</p>
@@ -253,7 +260,7 @@
       const on = cur === String(tg).toLowerCase();
       return `<button type="button" class="mh-cat${on ? ' active' : ''}" data-tag="${esc(tg)}" aria-pressed="${on}">`
         + `<i class="fa-solid ${CAT_ICONS[tg] || 'fa-tag'}" aria-hidden="true"></i>`
-        + `<span class="mh-cat-name">${esc(tg)}</span>`
+        + `<span class="mh-cat-name">${esc(catName(tg))}</span>`
         + `<span class="mh-cat-count">${Number(n).toLocaleString()}</span></button>`;
     };
     const allChip = `<button type="button" class="mh-cat mh-cat-all${state.tag ? '' : ' active'}" data-tag="" aria-pressed="${!state.tag}">`

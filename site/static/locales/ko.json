@@ -2975,5 +2975,18 @@
   "Packs tracked": "추적 중인 팩",
   "Price history": "가격 기록",
   "Sale": "세일",
-  "No branches tracked yet.": "아직 추적 중인 브랜치가 없습니다."
+  "No branches tracked yet.": "아직 추적 중인 브랜치가 없습니다.",
+  "Automation": "자동화",
+  "Banners": "배너",
+  "Boats and Sails": "보트와 돛",
+  "Cosmetics": "치장 아이템",
+  "Fishing": "낚시",
+  "GUI": "인터페이스",
+  "Helmets": "투구",
+  "Mag Riders": "매그라이더",
+  "NPCs": "NPC",
+  "Optimization": "최적화",
+  "Radar": "레이더",
+  "Reskin": "리스킨",
+  "Waypoint": "경유지"
 }
