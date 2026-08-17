@@ -198,26 +198,39 @@ def _build_candidate_with_distribution(gem_tier, gem_type, level, stats_payload,
     return _evaluate_gem_candidate(gem_tier, gem_type, level, normalized)
 
 
-def _distribution_score(candidate: dict) -> float:
-    score = 0.0
+def _distribution_score(candidate: dict, total: int) -> tuple[float, int, float]:
+    """Rank key for a proc spread: (out-of-range penalty, -total, stat spread).
+
+    The penalty is the real signal - only the true container count puts every
+    stat inside its possible [0,1] band. Ties break toward the larger total (a
+    gem short a boost is the exception), then the tightest spread.
+    """
+    penalty = 0.0
     for stat in candidate["stats"]:
         raw = stat["raw_progress"]
-        clamped = max(0.0, min(1.0, raw))
-        score += (raw - clamped) ** 2
+        penalty += (raw - max(0.0, min(1.0, raw))) ** 2
     progresses = [s["progress"] for s in candidate["stats"]]
-    score += (max(progresses) - min(progresses)) ** 2 * 0.25
-    return round(score, 9)
+    spread = (max(progresses) - min(progresses)) ** 2 * 0.25
+    return (round(penalty, 9), -total, round(spread, 9))
 
 
 def _guess_distribution(gem_tier, gem_type, level, stats_payload) -> list[int]:
+    """Best-fitting proc spread for the entered stat values.
+
+    A gem gains a boost at levels 5/10/15, so `available` is the usual total -
+    but it is an upper bound, not a rule: gems that come out short a boost do
+    exist (players scrap them, which makes them rare, not impossible). So every
+    total up to `available` is considered, and the entered values decide.
+    """
     available = min(level, 15) // 5
     best_distribution = None
     best_score = None
     for distribution in product(range(4), repeat=3):
-        if sum(distribution) != available:
+        total = sum(distribution)
+        if total > available:
             continue
         candidate = _build_candidate_with_distribution(gem_tier, gem_type, level, stats_payload, list(distribution))
-        score = _distribution_score(candidate)
+        score = _distribution_score(candidate, total)
         if best_score is None or score < best_score:
             best_score = score
             best_distribution = list(distribution)
@@ -255,7 +268,9 @@ def evaluate_gem(tier: int, type: int, level: int, stats: list[dict], auto_guess
     if GemStatType.PHYSICAL_DAMAGE in selected and GemStatType.MAGIC_DAMAGE in selected:
         raise GemEvaluatorError("Physical Damage and Magic Damage cannot be on the same gem.")
 
-    if auto_guess_procs or extra_total != available:
+    # A hand-entered spread below `available` is legal - a gem can come out short
+    # a boost - so only an impossible total (above `available`) forces a re-guess.
+    if auto_guess_procs or extra_total > available:
         guessed = _guess_distribution(gem_tier, gem_type, level, payload)
         for i, extra in enumerate(guessed):
             payload[i]["extra_containers"] = extra
@@ -282,22 +297,30 @@ def evaluate_gem_simple(tier: int, type: int, power_rank: int, level: int = 1) -
     if level > max_level:
         raise GemEvaluatorError(f"Level {level} is above the max ({max_level}) for this gem.")
 
-    container_count = min(level, 15) // 5 + 3
     thresholds = (
         get_lesser_gem_pr_threshold(gem_tier, GemElement.WATER) if gem_type == GemType.LESSER
         else get_empowered_gem_pr_threshold(gem_tier, GemElement.WATER)
     )
-    min_pr = thresholds[0] * container_count
-    max_pr = thresholds[1] * container_count
-    if gem_type == GemType.EMPOWERED:
-        min_pr += 100
-        max_pr += 100
     inc_fn = get_increment_power_rank_lesser if gem_type == GemType.LESSER else get_increment_power_rank_empowered
-    for lvl in range(1, level + 1):
-        inc = inc_fn(gem_tier, lvl)
-        min_pr += inc * 3
-        max_pr += inc * 3
-    min_pr, max_pr = round(min_pr), round(max_pr)
+    level_pr = sum(inc_fn(gem_tier, lvl) for lvl in range(1, level + 1)) * 3
+    base_pr = level_pr + (100 if gem_type == GemType.EMPOWERED else 0)
+
+    def _band(containers: int) -> tuple[int, int]:
+        return round(thresholds[0] * containers + base_pr), round(thresholds[1] * containers + base_pr)
+
+    # The boost at levels 5/10/15 is the norm, not a guarantee - a gem can come
+    # out short one. With only a Power Rank to go on, take the largest container
+    # count whose band actually contains it; a PR below the full-boost minimum is
+    # itself the evidence that the gem is short a boost. Falls back to the usual
+    # count when no band fits (then `is_within_range` reports the mismatch).
+    boosts = min(level, 15) // 5
+    container_count = boosts + 3
+    min_pr, max_pr = _band(container_count)
+    for candidate in range(container_count, 2, -1):
+        lo, hi = _band(candidate)
+        if lo <= power_rank <= hi:
+            container_count, min_pr, max_pr = candidate, lo, hi
+            break
 
     if power_rank < min_pr:
         raw_progress, distance = -1.0, min_pr - power_rank
@@ -318,6 +341,7 @@ def evaluate_gem_simple(tier: int, type: int, power_rank: int, level: int = 1) -
         "min_power_rank": min_pr, "max_power_rank": max_pr,
         "quality": round(progress, 4), "quality_percent": round(progress * 100, 2),
         "is_within_range": min_pr <= power_rank <= max_pr, "distance": distance,
+        "containers": container_count, "boosts": container_count - 3,
         "focus_totals": focus_totals, "headline_cost": headline,
     }
 

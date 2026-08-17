@@ -159,6 +159,8 @@ class SimpleEvaluationResult(BaseModel):
     quality_percent: float
     is_within_range: bool           # True when the entered PR sits in the plausible band
     distance: int                   # how far outside the band the PR is (0 when within)
+    containers: int                 # container count the band was read against
+    boosts: int                     # containers - 3; below the level's usual count on a short gem
     focus_totals: dict[str, FocusStrategyCost]
     headline_cost: FocusStrategyCost
 

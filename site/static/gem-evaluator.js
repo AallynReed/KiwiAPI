@@ -166,13 +166,11 @@
     elForm.appendChild(topRow);
 
     // Proc-spread summary + auto-guess toggle
-    const available = Math.floor(Math.min(form.level, 15) / 5);
-    const usedProcs = form.stats.reduce((a, s) => a + (Number(s.extra) || 0), 0);
+    const procs = procSummary();
     const procRow = h("div", { class: "ge-proc-row" },
       h("span", { class: "ge-proc-summary" },
         h("b", {}, t("Procs")), " ",
-        h("span", { class: usedProcs === available || form.autoGuess ? "" : "ge-proc-warn" },
-          `${form.autoGuess ? available : usedProcs} / ${available}`)),
+        h("span", { class: procs.warn ? "ge-proc-warn" : "" }, procs.text)),
       h("label", { class: "ge-toggle" },
         (() => {
           const c = h("input", { type: "checkbox" });
@@ -255,13 +253,25 @@
   }
 
   function clampLevel() { form.level = clamp(form.level, 1, tierMaxLevel(form.tier)); }
+
+  // A gem usually gains a boost at levels 5/10/15, but it can come out short one,
+  // so `available` is a cap - only going over it is an error. When auto-guessing,
+  // show the total the last evaluation actually landed on rather than assuming the cap.
+  function procSummary() {
+    const available = Math.floor(Math.min(form.level, 15) / 5);
+    const used = form.stats.reduce((a, s) => a + (Number(s.extra) || 0), 0);
+    const guessed = Array.isArray(result && result.guessed_distribution)
+      ? result.guessed_distribution.reduce((a, b) => a + b, 0) : null;
+    const shown = form.autoGuess ? (guessed === null ? available : guessed) : used;
+    return { text: `${shown} / ${available}`, warn: !form.autoGuess && used > available };
+  }
+
   function updateProcSummary() {
     const el = elForm.querySelector(".ge-proc-summary span:last-child");
     if (!el) return;
-    const available = Math.floor(Math.min(form.level, 15) / 5);
-    const usedProcs = form.stats.reduce((a, s) => a + (Number(s.extra) || 0), 0);
-    el.textContent = `${form.autoGuess ? available : usedProcs} / ${available}`;
-    el.className = usedProcs === available || form.autoGuess ? "" : "ge-proc-warn";
+    const procs = procSummary();
+    el.textContent = procs.text;
+    el.className = procs.warn ? "ge-proc-warn" : "";
   }
 
   function renderRangeHints() {
