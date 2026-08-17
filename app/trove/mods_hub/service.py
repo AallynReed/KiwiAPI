@@ -2972,6 +2972,9 @@ def public_mod_dto(p: ModProject, *, releases: list[ModRelease] | None = None) -
         "page_url": f"{settings.app_url.rstrip('/')}/mods/{p.owner_handle}/{p.slug}",
         "created_at": _iso(p.created_at),
         "updated_at": _iso(p.updated_at),
+        # When a build last landed - what `sort=recent` orders by. `updated_at`
+        # moves on any page edit, so it is NOT the "new version" signal.
+        "last_release_at": _iso(p.last_release_at) if p.last_release_at else None,
         **_lineage(p),
     }
     if releases is not None:
