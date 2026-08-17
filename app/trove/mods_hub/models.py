@@ -165,6 +165,12 @@ class ModProject(Document):
 
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
+    # When this mod last PUBLISHED a release - the public "updated" signal, and
+    # what the `recent` sort orders by. Distinct from `updated_at`, which moves on
+    # any edit: retitling a page or fixing a typo in the description is not news,
+    # and must not push a mod back to the top of the hub. Backfilled on startup
+    # (database.py) for projects that predate the field.
+    last_release_at: datetime | None = None
 
     class Settings:
         name = "mod_projects"
@@ -176,6 +182,8 @@ class ModProject(Document):
             IndexModel([("owner_id", ASCENDING), ("updated_at", DESCENDING)]),
             IndexModel([("collaborators.user_id", ASCENDING)]),   # "mods I collaborate on"
             IndexModel([("visibility", ASCENDING), ("updated_at", DESCENDING)]),
+            # Backs the public `recent` sort (newest release first).
+            IndexModel([("visibility", ASCENDING), ("last_release_at", DESCENDING)]),
             IndexModel([("visibility", ASCENDING), ("download_count", DESCENDING)]),
             IndexModel([("visibility", ASCENDING), ("star_count", DESCENDING)]),
             IndexModel([("visibility", ASCENDING), ("popularity_score", DESCENDING)]),

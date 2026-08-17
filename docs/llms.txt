@@ -287,7 +287,10 @@ keeps that exact name).
 
 - `GET /v1/mods` - list published mods (cards, no releases). Query `q` (case-insensitive substring over title/summary/tags/author), `tag`
   (filter by one tag/category), `author`, `sort` ∈ `recent|popular|downloads|stars|new|title`, `limit` (≤100),
-  `offset`. Returns `{items, count, total, limit, offset}`.
+  `offset`. Returns `{items, count, total, limit, offset}`. `recent` orders by `last_release_at` -
+  when a mod last PUBLISHED a release, not when its page was last edited, so retitling a mod or
+  fixing a typo never pushes it back to the top. Cards carry both `last_release_at` (null until a
+  first release) and `updated_at` (any edit).
 - `GET /v1/mods/{handle}/{slug}` - full metadata + published releases for one mod (404 if not public).
 - `GET /v1/mods/popular` - the **25 most popular** mods (`limit` ≤25). `popularity_score` is a 0.0-1.0 metric
   derived mainly from the **last 7 days** of downloads (with stars + lifetime downloads as a floor), top mod ≈ 1.0.

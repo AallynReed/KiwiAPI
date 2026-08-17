@@ -1,3 +1,4 @@
+import logging
 from typing import Any, TypeVar
 
 from beanie import Document, init_beanie
@@ -104,6 +105,8 @@ _db: AsyncDatabase | None = None
 # so we can do atomic upserts with $inc.
 RATE_LIMIT_COLLECTION = "rate_limit_buckets"
 
+logger = logging.getLogger("kiwi.database")
+
 
 async def init_db() -> None:
     """Open the Mongo connection, bind Beanie models, ensure extra indexes."""
@@ -151,6 +154,12 @@ async def init_db() -> None:
     # /mods/<owner_handle>/<slug>). Drop the old global slug_1 unique index; the
     # new (owner_id, slug) unique index is built by Beanie.
     await _drop_index_if_exists(_db["mod_projects"], "slug_1")
+
+    # The public "recent" sort moved off `updated_at` (which any page edit bumps)
+    # onto `last_release_at`. Backfill it once for projects that predate the field,
+    # from their newest published release - else `created_at`, so a mod with no
+    # release still sorts sensibly instead of falling off the end on a null key.
+    await _backfill_last_release_at()
 
     # Mods Hub download events feed the trailing-7-day "popular" metric; keep only
     # ~8 days so the collection stays tiny (lifetime totals live on download_count).
@@ -202,6 +211,35 @@ async def init_db() -> None:
         )
     except OperationFailure:
         pass
+
+
+async def _backfill_last_release_at() -> None:
+    """Fill ``mod_projects.last_release_at`` for documents written before the field
+    existed. Idempotent: only touches docs where it's missing or null, so it costs
+    one indexed count on every later boot and nothing else."""
+    projects = _db["mod_projects"]
+    releases = _db["mod_releases"]
+    missing = {"$or": [{"last_release_at": {"$exists": False}}, {"last_release_at": None}]}
+    try:
+        if await projects.count_documents(missing, limit=1) == 0:
+            return
+        filled = 0
+        async for p in projects.find(missing, {"created_at": 1}):
+            newest = await releases.find_one(
+                {"project_id": p["_id"], "status": "published"},
+                {"published_at": 1, "created_at": 1},
+                sort=[("published_at", -1), ("created_at", -1)],
+            )
+            stamp = None
+            if newest:
+                stamp = newest.get("published_at") or newest.get("created_at")
+            await projects.update_one(
+                {"_id": p["_id"]}, {"$set": {"last_release_at": stamp or p.get("created_at")}}
+            )
+            filled += 1
+        logger.info("mods_hub: backfilled last_release_at on %d project(s)", filled)
+    except OperationFailure:
+        logger.warning("mods_hub: last_release_at backfill skipped", exc_info=True)
 
 
 async def _drop_index_if_exists(collection, name: str) -> None:

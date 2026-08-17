@@ -66,7 +66,9 @@ BLOCKED_COMMIT_MESSAGE = (
 )
 
 _SORTS = {
-    "recent": "-updated_at",
+    # "Recently updated" means a new build landed, not that someone fixed a typo
+    # in the description - so it orders by the last PUBLISHED release.
+    "recent": "-last_release_at",
     "downloads": "-download_count",
     "stars": "-star_count",
     "popular": "-popularity_score",
@@ -276,6 +278,9 @@ def project_card(p: ModProject) -> dict:
         "uploaded_on_behalf": p.uploaded_on_behalf,
         "author": p.author or p.owner_username,
         "updated_at": _iso(p.updated_at),
+        # The public "updated" moment: when a build last landed. Null until a mod
+        # publishes its first release.
+        "last_release_at": _iso(p.last_release_at) if p.last_release_at else None,
         "created_at": _iso(p.created_at),
         **_lineage(p),
     }
@@ -1551,6 +1556,8 @@ async def _insert_release(
     })
     await release.insert()
     project.updated_at = utcnow()
+    if release.status == "published":
+        project.last_release_at = release.published_at or utcnow()
     await project.save()
     await _emit_release_event(project, release)   # SSE: announce if published
     return _release_dto(release)
@@ -2359,6 +2366,8 @@ async def update_release(
     release.updated_at = utcnow()
     await release.save()
     if became_published:                          # draft -> published: announce on SSE
+        project.last_release_at = release.published_at or utcnow()
+        await project.save()
         await _emit_release_event(project, release)
     return _release_dto(release)
 
