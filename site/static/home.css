@@ -70,6 +70,8 @@
   transition: background .15s, color .15s;
 }
 .dash-nav a:hover, .dash-side-links a:hover { background: var(--bg-card); color: var(--text); }
+/* display:flex above beats the UA [hidden] rule, so restate it. */
+.dash-nav a[hidden], .dash-side-links a[hidden] { display: none; }
 .dash-nav a i, .dash-side-links a i { width: 18px; text-align: center; color: var(--accent); }
 .dash-nav { padding-bottom: 0.5rem; border-bottom: 1px solid var(--bg-line); }
 .dash-side-h { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-soft); padding: 0 0.7rem; }

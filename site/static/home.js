@@ -625,11 +625,18 @@
     var section = box && box.closest(".dash-section");
     if (!box) return;
     var giveawaysData = null;
+    /* Hiding the section on its own left the sidebar jump-link pointing at an
+       anchor that is no longer on the page, so the link did nothing. */
+    function hideGiveaways() {
+      if (section) section.hidden = true;
+      var link = document.querySelector('.dash-nav a[href="#giveaways"]');
+      if (link) link.hidden = true;
+    }
     function renderGiveaways(d) {
       var items = ((d && d.items) || []).filter(function (g) {
         return !g.status || g.status === "open" || g.status === "ongoing" || g.status === "active";
       });
-      if (!items.length) { if (section) section.hidden = true; return; }
+      if (!items.length) { hideGiveaways(); return; }
       box.textContent = "";
       items.slice(0, 6).forEach(function (g) {
         var card = el("div", "dash-giveaway");
@@ -646,7 +653,7 @@
     getJSON("/site/giveaways").then(function (d) {
       giveawaysData = d;
       renderGiveaways(d);
-    }).catch(function () { if (section) section.hidden = true; });
+    }).catch(hideGiveaways);
     document.addEventListener("btt-lang-changed", function () {
       if (giveawaysData) renderGiveaways(giveawaysData);
     });
