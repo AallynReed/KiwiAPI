@@ -2770,5 +2770,6 @@
   "Select a region": "เลือกพื้นที่",
   "Drag a box with the Select tool": "ลากกรอบด้วยเครื่องมือเลือก",
   "Add to / take from a selection": "เพิ่มเข้า / เอาออกจากการเลือก",
-  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "ไม่มีปุ่มกลางเมาส์ใช่ไหม ทุกชุดค่าที่ตั้งไว้ใช้ Ctrl + ลาก เพื่อหมุนมุมมอง และ Shift + ลาก เพื่อเลื่อนมุมมอง"
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "ไม่มีปุ่มกลางเมาส์ใช่ไหม ทุกชุดค่าที่ตั้งไว้ใช้ Ctrl + ลาก เพื่อหมุนมุมมอง และ Shift + ลาก เพื่อเลื่อนมุมมอง",
+  "Manage version": "จัดการเวอร์ชัน"
 }

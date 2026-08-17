@@ -162,7 +162,7 @@
       if (ownerHasPreviews) mainCol.push(previewsHTML(d));
       mainCol.push(filesHTML(d));
       mainCol.push(readmeHTML());                 // populated from the tree's README.md, if any
-      const sideCol = [descriptionHTML(d), releasesHTML(d), modpacksHTML(), historyHTML(), cloneHTML(d)];
+      const sideCol = [descriptionHTML(d, true), releasesHTML(d), modpacksHTML(), historyHTML(), cloneHTML(d)];
       if (d.fork_count) sideCol.push(forksHTML());
       parts.push(`<div class="mp-layout">
         <div class="mp-col-main">${mainCol.join('')}</div>
@@ -455,9 +455,16 @@
       img.addEventListener('click', () => lightbox(img.getAttribute('data-zoom'))));
   }
 
-  function descriptionHTML(d) {
+  // `optional`: the files layout stacks About above the panels that actually do
+  // something, so an empty one is a card of nothing between the reader and the
+  // downloads. Written text (in any language) or a warning earns the panel.
+  function descriptionHTML(d, optional) {
+    if (optional && !hasVersions(d.description, d.description_i18n)
+        && !hasVersions(d.warnings, d.warnings_i18n)) return '';
     return `<section class="mp-section" id="mp-description-section">${descriptionInnerHTML(d)}</section>`;
   }
+
+  const hasVersions = (base, map) => Object.keys(textVersions(base, map)).length > 0;
 
   // Head + body of the About text, rebuilt on every language switch.
   function descriptionInnerHTML(d) {
@@ -576,13 +583,20 @@
   function releaseRow(r, owner) {
     const draft = r.status !== 'published'
       ? `<span class="mp-badge mp-badge-draft">${esc(t('Draft'))}</span>` : '';
-    const ownerBtns = owner ? `
-      <button type="button" class="mp-btn mp-btn-sm" data-rel-cfgset="${esc(r.id)}" hidden></button>
-      <button type="button" class="mp-btn mp-btn-sm" data-rel-toggle="${esc(r.id)}" data-status="${esc(r.status)}">
-        ${r.status === 'published' ? esc(t('Unpublish')) : esc(t('Publish'))}
-      </button>
-      <button type="button" class="mp-btn mp-btn-sm" data-rel-edit="${esc(r.id)}" aria-label="${esc(t('Edit release'))}" title="${esc(t('Edit release'))}"><i class="fa-solid fa-pen"></i></button>
-      <button type="button" class="mp-btn mp-btn-sm mp-btn-danger" data-rel-del="${esc(r.id)}"><i class="fa-solid fa-trash"></i></button>` : '';
+    // Everything only the creator can do folds into one “…” menu. Seven buttons
+    // wrapped over four lines and buried Download - the thing everyone came for.
+    const ownerMenu = owner ? `<details class="mp-relmenu">
+        <summary class="mp-btn mp-btn-sm mp-relmenu-btn" aria-label="${esc(t('Manage version'))}" title="${esc(t('Manage version'))}"><i class="fa-solid fa-ellipsis"></i></summary>
+        <div class="mp-relmenu-body">
+          <button type="button" class="mp-menu-item" data-rel-cfgset="${esc(r.id)}" hidden></button>
+          <button type="button" class="mp-menu-item" data-rel-toggle="${esc(r.id)}" data-status="${esc(r.status)}">
+            <i class="fa-solid fa-${r.status === 'published' ? 'eye-slash' : 'rocket'}"></i> ${r.status === 'published' ? esc(t('Unpublish')) : esc(t('Publish'))}
+          </button>
+          <button type="button" class="mp-menu-item" data-rel-edit="${esc(r.id)}"><i class="fa-solid fa-pen"></i> ${esc(t('Edit release'))}</button>
+          <button type="button" class="mp-menu-item mp-menu-item-danger" data-rel-del="${esc(r.id)}"><i class="fa-solid fa-trash"></i> ${esc(t('Delete'))}</button>
+        </div>
+      </details>` : '';
+    const log = local(r.changelog, r.changelog_i18n);
     return `<div class="mp-release">
       <div class="mp-release-top">
         <span class="mp-release-tag"><span class="mp-release-tagchip">${esc(r.tag)}</span> <span data-rel-title="${esc(r.id)}">${esc(local(r.title, r.title_i18n))}</span> ${draft}</span>
@@ -591,8 +605,8 @@
             ? `<a class="mp-btn mp-btn-sm mp-btn-primary" href="${BTTUtil.apiUrl('/site/mods/releases/' + r.id + '/download')}"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</a>`
             : `<button type="button" class="mp-btn mp-btn-sm mp-btn-primary" data-rel-dl="${esc(r.id)}" data-fn="${esc(r.tmod_filename)}"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</button>`}
           ${r.format !== 'zip' ? `<span data-rel-cfg="${esc(r.id)}"></span>` : ''}
-          <button type="button" class="mp-btn mp-btn-sm" data-rel-inspect="${esc(r.id)}"><i class="fa-solid fa-folder-tree"></i> ${esc(t('Contents'))}</button>
-          ${ownerBtns}
+          <button type="button" class="mp-btn mp-btn-sm mp-btn-icon" data-rel-inspect="${esc(r.id)}" aria-label="${esc(t('Contents'))}" title="${esc(t('Contents'))}"><i class="fa-solid fa-folder-tree"></i></button>
+          ${ownerMenu}
         </div>
       </div>
       <div class="mp-release-stats">
@@ -600,7 +614,10 @@
         <span><i class="fa-solid fa-file-zipper"></i> ${fmtBytes(r.tmod_size)}</span>
         ${r.published_at ? `<span><i class="fa-solid fa-clock"></i> ${fmtDate(r.published_at)}</span>` : ''}
       </div>
-      <div class="mp-release-changelog" data-rel-changelog="${esc(r.id)}"${local(r.changelog, r.changelog_i18n) ? '' : ' hidden'}>${esc(local(r.changelog, r.changelog_i18n))}</div>
+      <details class="mp-release-log" data-rel-log="${esc(r.id)}"${log ? '' : ' hidden'}>
+        <summary>${esc(t('Changelog'))}</summary>
+        <div class="mp-release-changelog" data-rel-changelog="${esc(r.id)}">${esc(log)}</div>
+      </details>
       ${r.format !== 'zip' ? `<div class="mp-release-3d" data-rel-bp="${esc(r.id)}" hidden></div>` : ''}
       ${r.format !== 'zip' ? `<div class="mp-release-vfx" data-rel-vfx="${esc(r.id)}" hidden></div>` : ''}
       ${r.format !== 'zip' ? `<div class="mp-release-audio" data-rel-audio="${esc(r.id)}" hidden></div>` : ''}
@@ -701,7 +718,8 @@
       if (log) {
         const text = local(r.changelog, r.changelog_i18n);
         log.textContent = text;
-        log.hidden = !text;
+        const box = log.closest('.mp-release-log');
+        if (box) { box.hidden = !text; if (!text) box.open = false; }
       }
     });
     rerunI18n();
@@ -719,6 +737,17 @@
     state.contentLang = btn.getAttribute('data-content-lang');
     repaintTranslations();
   });
+
+  // <details> stays open on its own; a menu shouldn't. Close on a click outside
+  // it, and on picking anything inside it.
+  const closeMenus = (keep) => document.querySelectorAll('.mp-relmenu[open]')
+    .forEach((m) => { if (m !== keep) m.open = false; });
+  document.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    const inside = el && el.closest('.mp-relmenu');
+    closeMenus(inside && !el.closest('.mp-menu-item') ? inside : null);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenus(null); });
   /* The page is built by JS, and `t()` is a one-shot substitution: whatever the
      dictionary said at first paint is what stays on screen. The locale file is
      fetched asynchronously, so on a cold load this view is very often built BEFORE
@@ -965,13 +994,15 @@
     }
     if (p.skipped && p.skipped.length) {
       const rows = p.skipped.map((s) => `<li><code>${esc(s.path)}</code> <span class="mp-muted">— ${esc(s.reason)}</span></li>`).join('');
-      blocks.push(`<div class="mp-warn">
-        <div class="mp-warn-head"><i class="fa-solid fa-circle-info"></i>
+      // Nothing here is broken - it's a note about how a build is packed. Folded
+      // shut it stays one line above the file list instead of half a screen.
+      blocks.push(`<details class="mp-warn mp-warn-fold">
+        <summary class="mp-warn-head"><i class="fa-solid fa-circle-info"></i>
           <strong>${p.skipped.length} ${esc(p.skipped.length === 1 ? t('file will be skipped at build') : t('files will be skipped at build'))}</strong>
-        </div>
+        </summary>
         <p class="mp-muted">${esc(t('Only files inside a Trove folder (blueprints/, ui/, prefabs/…) are compiled - root files and folders like bin/ are ignored.'))}</p>
         <ul class="mp-warn-list">${rows}</ul>
-      </div>`);
+      </details>`);
     }
     return blocks.join('');
   }
@@ -1419,10 +1450,13 @@
         const items = declared ? [declared] : all.slice(0, 5);
         const hidden = all.length - items.length;
         slots.forEach((slot) => {
-          const sm = slot.closest('.mp-release-actions') ? ' mp-btn-sm' : '';
+          // In a version row the note wraps the buttons onto a second line for a
+          // detail nobody acts on there; the header slot has the room for it.
+          const inRow = !!slot.closest('.mp-release-actions');
+          const sm = inRow ? ' mp-btn-sm' : '';
           slot.innerHTML = items.map((f) => `<button type="button" class="mp-btn${sm} mp-cfg-btn" data-cfg-rel="${esc(relId)}" data-cfg-path="${esc(f.path)}" title="${esc(f.filename)}">
             <i class="fa-solid fa-sliders"></i> ${esc(items.length === 1 ? t('Config') : f.filename)}</button>`).join('')
-            + (hidden > 0 ? `<span class="mp-muted mp-cfg-more">${esc(t('More under Files'))}</span>` : '');
+            + (hidden > 0 && !inRow ? `<span class="mp-muted mp-cfg-more">${esc(t('More under Files'))}</span>` : '');
           slot.querySelectorAll('.mp-cfg-btn').forEach((b) => b.addEventListener('click', () =>
             downloadReleaseCfg(b.getAttribute('data-cfg-rel'), b.getAttribute('data-cfg-path'))));
         });

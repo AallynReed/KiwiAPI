@@ -2998,5 +2998,6 @@
   "Select a region": "Seleccionar una región",
   "Drag a box with the Select tool": "Arrastra un recuadro con la herramienta Seleccionar",
   "Add to / take from a selection": "Añadir a la selección o quitar de ella",
-  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "¿No tienes botón central? Ctrl + arrastrar gira la vista y Mayús + arrastrar la desplaza, en todos los ajustes."
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "¿No tienes botón central? Ctrl + arrastrar gira la vista y Mayús + arrastrar la desplaza, en todos los ajustes.",
+  "Manage version": "Gestionar versión"
 }

@@ -2998,5 +2998,6 @@
   "Select a region": "Einen Bereich auswählen",
   "Drag a box with the Select tool": "Mit dem Auswahlwerkzeug einen Rahmen ziehen",
   "Add to / take from a selection": "Zur Auswahl hinzufügen / daraus entfernen",
-  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Keine mittlere Maustaste? Strg + Ziehen dreht die Ansicht, Umschalt + Ziehen verschiebt sie – in jeder Voreinstellung."
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Keine mittlere Maustaste? Strg + Ziehen dreht die Ansicht, Umschalt + Ziehen verschiebt sie – in jeder Voreinstellung.",
+  "Manage version": "Version verwalten"
 }

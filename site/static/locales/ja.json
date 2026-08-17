@@ -2998,5 +2998,6 @@
   "Select a region": "範囲を選択",
   "Drag a box with the Select tool": "選択ツールで枠をドラッグ",
   "Add to / take from a selection": "選択に追加・選択から除外",
-  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "マウスの中ボタンがない場合、どのプリセットでも Ctrl + ドラッグで視点が回り、Shift + ドラッグで視点が移動します。"
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "マウスの中ボタンがない場合、どのプリセットでも Ctrl + ドラッグで視点が回り、Shift + ドラッグで視点が移動します。",
+  "Manage version": "バージョンを管理"
 }

@@ -2998,5 +2998,6 @@
   "Select a region": "영역 선택",
   "Drag a box with the Select tool": "선택 도구로 상자를 드래그",
   "Add to / take from a selection": "선택에 추가 / 선택에서 제외",
-  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "가운데 버튼이 없나요? 모든 프리셋에서 Ctrl + 드래그로 시점을 돌리고 Shift + 드래그로 이동합니다."
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "가운데 버튼이 없나요? 모든 프리셋에서 Ctrl + 드래그로 시점을 돌리고 Shift + 드래그로 이동합니다.",
+  "Manage version": "버전 관리"
 }

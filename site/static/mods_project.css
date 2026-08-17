@@ -502,7 +502,46 @@
 .mp-release-tagchip { font: 600 .72rem 'JetBrains Mono', monospace; color: var(--accent-blue); background: rgba(86,156,255,.12); border-radius: 6px; padding: 2px 8px; }
 .mp-release-stats { color: var(--text-mute); font-size: .82rem; display: flex; gap: 14px; flex-wrap: wrap; }
 .mp-release-changelog { color: var(--text-mute); font-size: .9rem; line-height: 1.55; white-space: pre-wrap; }
-.mp-release-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* The changelog folds shut: a wordy one pushed every other version off screen,
+   and the rail is where people come to find a download. */
+.mp-release-log > summary {
+  cursor: pointer; user-select: none; list-style: none;
+  display: inline-flex; align-items: center; gap: 7px; padding: 3px 0;
+  color: var(--text-mute); font-size: .82rem;
+}
+.mp-release-log > summary::-webkit-details-marker { display: none; }
+.mp-release-log > summary::before {
+  content: ''; width: 0; height: 0;
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  border-left: 5px solid currentColor; transition: transform .15s var(--ease-out);
+}
+.mp-release-log[open] > summary::before { transform: rotate(90deg); }
+.mp-release-log > summary:hover { color: var(--accent-blue); }
+.mp-release-log[open] > summary { margin-bottom: 6px; }
+.mp-release-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Label-in-the-tooltip button, so a secondary action costs an icon's width. */
+.mp-btn-icon { padding: 6px 10px; }
+/* Owner actions live in one menu - seven buttons per row buried Download. */
+.mp-relmenu { position: relative; display: inline-block; }
+.mp-relmenu > summary { list-style: none; user-select: none; padding: 6px 10px; }
+.mp-relmenu > summary::-webkit-details-marker { display: none; }
+.mp-relmenu[open] > summary { border-color: var(--accent-blue); }
+.mp-relmenu-body {
+  position: absolute; z-index: 20; right: 0; top: calc(100% + 6px); min-width: 190px;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  box-shadow: 0 12px 34px rgba(0,0,0,.5); padding: 6px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.mp-menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 8px 10px; border: 0; border-radius: 8px; background: none; cursor: pointer;
+  color: var(--text); font: 600 .84rem 'Inter', system-ui, sans-serif; white-space: nowrap;
+}
+.mp-menu-item[hidden] { display: none; }
+.mp-menu-item:hover { background: var(--bg-deep); }
+.mp-menu-item i { width: 14px; text-align: center; color: var(--text-mute); }
+.mp-menu-item-danger, .mp-menu-item-danger i { color: var(--accent-red); }
+.mp-menu-item-danger:hover { background: rgba(255,107,129,.1); }
 .mp-release-3d { padding-top: 4px; }
 .mp-3d-details { width: 100%; }
 .mp-3d-summary {
@@ -616,6 +655,18 @@
   font-size: .84rem; max-height: 220px; overflow-y: auto;
 }
 .mp-warn-list code { font-family: 'JetBrains Mono', monospace; font-size: .82rem; color: var(--text-mute); word-break: break-all; }
+/* The skipped-files note isn't a problem to fix, so it sits folded: one line
+   above the file list until someone wants the detail. */
+.mp-warn-fold > summary { cursor: pointer; user-select: none; list-style: none; }
+.mp-warn-fold > summary::-webkit-details-marker { display: none; }
+.mp-warn-fold:not([open]) > summary { margin-bottom: 0; }
+.mp-warn-fold > summary::after {
+  content: ''; width: 0; height: 0; flex: none;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-mute); transition: transform .15s var(--ease-out);
+}
+.mp-warn-fold[open] > summary::after { transform: rotate(180deg); }
+.mp-warn-fold > summary:hover strong { color: var(--accent-blue); }
 
 /* File browser */
 .mp-fb-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }

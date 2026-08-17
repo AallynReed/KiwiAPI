@@ -2998,5 +2998,6 @@
   "Select a region": "选择一个区域",
   "Drag a box with the Select tool": "用选择工具拖出一个框",
   "Add to / take from a selection": "加入选区 / 从选区中移除",
-  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "没有鼠标中键？在所有预设中，Ctrl + 拖动可旋转视角，Shift + 拖动可平移视角。"
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "没有鼠标中键？在所有预设中，Ctrl + 拖动可旋转视角，Shift + 拖动可平移视角。",
+  "Manage version": "管理版本"
 }

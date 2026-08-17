@@ -2998,5 +2998,6 @@
   "Select a region": "Выделить область",
   "Drag a box with the Select tool": "Растяните рамку инструментом «Выделение»",
   "Add to / take from a selection": "Добавить к выделению / убрать из него",
-  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Нет средней кнопки мыши? В любом наборе Ctrl + перетаскивание вращает вид, а Shift + перетаскивание сдвигает его."
+  "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Нет средней кнопки мыши? В любом наборе Ctrl + перетаскивание вращает вид, а Shift + перетаскивание сдвигает его.",
+  "Manage version": "Управление версией"
 }
