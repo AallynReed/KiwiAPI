@@ -260,6 +260,9 @@ def project_card(p: ModProject) -> dict:
         "tags": p.tags,
         "owner_username": p.owner_username,
         "visibility": p.visibility,
+        # The creator's own "still in development" flag - a badge for players, not
+        # a visibility state (a beta mod is public and downloadable like any other).
+        "is_beta": p.is_beta,
         "mode": p.mode,
         "banner_sha": p.banner_sha,
         # First preview, so a card with no banner can fall back to it (cards only -
@@ -382,6 +385,7 @@ async def create_project(
     tags: list[str], visibility: Visibility, mode: str = "files",
     source_visibility: str = "public", inspired_by: str | None = None,
     on_behalf: bool = False, credited_author: str | None = None,
+    is_beta: bool = False,
 ) -> ModProject:
     slug = await _unique_slug(actor.id, title)
     # An "uploaded on behalf" mod credits a named third-party creator and is always
@@ -400,7 +404,7 @@ async def create_project(
     project = ModProject(
         slug=slug, title=title.strip(), summary=summary.strip(),
         description=description, tags=_clean_tags(tags), visibility=visibility,
-        mode=mode, source_visibility=source_visibility,
+        is_beta=is_beta, mode=mode, source_visibility=source_visibility,
         owner_id=actor.id, owner_username=actor.display_name or actor.username,
         owner_handle=actor.username,
         uploaded_on_behalf=on_behalf, author=author,
@@ -704,7 +708,7 @@ async def update_project(
     project: ModProject, actor: SiteUser, *, title=None, title_i18n=None,
     summary=None, summary_i18n=None, description=None, description_i18n=None,
     readme_text=None, readme_i18n=None, warnings=None, warnings_i18n=None,
-    tags=None, visibility=None,
+    tags=None, visibility=None, is_beta=None,
     mode=None, source_visibility=None, hidden_release_branches=None, branch_order=None,
     discord_url=None, website_url=None, donation_urls=None, inspired_by=None,
 ) -> ModProject:
@@ -730,6 +734,8 @@ async def update_project(
         project.tags = _clean_tags(tags)
     if visibility is not None:
         project.visibility = visibility
+    if is_beta is not None:
+        project.is_beta = is_beta
     if mode is not None:
         # An uploaded-on-behalf mod is release-only by definition (you can't own the
         # source of a mod you merely shared) - never let it flip into files mode.
@@ -2954,6 +2960,9 @@ def public_mod_dto(p: ModProject, *, releases: list[ModRelease] | None = None) -
         "categories": mod_categories.tags_from_flags(mod_categories.flags_from_tags(p.tags)),
         "flags": mod_categories.flags_from_tags(p.tags),
         "author": p.author or p.owner_username,
+        # The creator marked this one as still in development: expect changes and
+        # rough edges. It's a label only - a beta mod is served like any other.
+        "is_beta": p.is_beta,
         # "Stray" = an unclaimed mod uploaded via contributions (not tied to a user
         # yet). The origin/source is intentionally not exposed in the public API.
         "is_stray": p.is_stray,

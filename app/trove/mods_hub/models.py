@@ -117,6 +117,10 @@ class ModProject(Document):
     uploaded_on_behalf: bool = False
 
     visibility: Visibility = "draft"
+    # Beta = the creator says the mod is still in development. Purely a signal to
+    # players (badge + note); it changes nothing about how the mod is served, so a
+    # beta mod is still public, downloadable and listed like any other.
+    is_beta: bool = False
     mode: ProjectMode = "files"                 # files+releases vs releases-only
     source_visibility: SourceVisibility = "public"   # public source vs internal-tool
     default_branch: str = "main"

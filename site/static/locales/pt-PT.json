@@ -2999,5 +2999,8 @@
   "Drag a box with the Select tool": "Arrasta uma caixa com a ferramenta Selecionar",
   "Add to / take from a selection": "Adicionar à seleção / remover dela",
   "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Sem botão do meio? Ctrl + arrastar roda a vista e Shift + arrastar desloca-a, em todas as predefinições.",
-  "Manage version": "Gerir versão"
+  "Manage version": "Gerir versão",
+  "Still in development": "Ainda em desenvolvimento",
+  "Shows a Beta badge, so players know to expect changes.": "Mostra um emblema Beta, para os jogadores contarem com alterações.",
+  "This mod is still being worked on, so expect changes and the odd rough edge.": "Este mod ainda está a ser trabalhado, por isso conta com alterações e alguns detalhes por polir."
 }

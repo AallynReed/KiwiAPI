@@ -313,6 +313,10 @@
     // "Uploaded" = shared on the creator's behalf (uploader isn't the author).
     const uploadedBadge = p.uploaded_on_behalf
       ? `<span class="mh-badge mh-badge-uploaded">${esc(t('Uploaded'))}</span>` : '';
+    // "Beta" = the creator says it's still in development. Public-facing, unlike
+    // the visibility badges above, which only ever appear on your own mods.
+    const betaBadge = p.is_beta
+      ? `<span class="mh-badge mh-badge-beta">${esc(t('Beta'))}</span>` : '';
     // Attribution: an uploaded mod credits the named creator, with the uploader as a
     // muted secondary line; otherwise the owner is the author.
     // The owner's own picture, falling back to the generic person icon.
@@ -331,7 +335,7 @@
     return `<a class="mh-card" href="${modUrl(p)}">
       ${banner}
       <div class="mh-card-body">
-        <h3 class="mh-card-title">${esc(BTTUtil.localized(p.title, p.title_i18n))} ${badge}${uploadedBadge}</h3>
+        <h3 class="mh-card-title">${esc(BTTUtil.localized(p.title, p.title_i18n))} ${badge}${uploadedBadge}${betaBadge}</h3>
         ${lineage}
         ${localSummary ? `<p class="mh-card-summary">${esc(localSummary)}</p>` : ''}
         ${tags ? `<div class="mh-card-tags">${tags}</div>` : ''}

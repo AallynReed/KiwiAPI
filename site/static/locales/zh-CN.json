@@ -2999,5 +2999,8 @@
   "Drag a box with the Select tool": "用选择工具拖出一个框",
   "Add to / take from a selection": "加入选区 / 从选区中移除",
   "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "没有鼠标中键？在所有预设中，Ctrl + 拖动可旋转视角，Shift + 拖动可平移视角。",
-  "Manage version": "管理版本"
+  "Manage version": "管理版本",
+  "Still in development": "仍在开发中",
+  "Shows a Beta badge, so players know to expect changes.": "显示 Beta 标记，让玩家知道内容还会变动。",
+  "This mod is still being worked on, so expect changes and the odd rough edge.": "这个模组仍在开发中，可能会有改动和一些不完善的地方。"
 }

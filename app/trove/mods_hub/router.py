@@ -493,7 +493,7 @@ async def revoke_git_token(token_id: str, user: SiteUser = _USER) -> Response:
 async def create_project(req: CreateProjectRequest, user: SiteUser = _USER) -> dict:
     project = await service.create_project(
         user, title=req.title, summary=req.summary, description=req.description,
-        tags=req.tags, visibility=req.visibility, mode=req.mode,
+        tags=req.tags, visibility=req.visibility, is_beta=req.is_beta, mode=req.mode,
         source_visibility=req.source_visibility, inspired_by=req.inspired_by,
         on_behalf=req.on_behalf, credited_author=req.credited_author,
     )

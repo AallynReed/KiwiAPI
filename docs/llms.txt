@@ -107,7 +107,7 @@ website.
 - `GET /v1/mods/hub/creator-links` → your connections; `DELETE /v1/mods/hub/creator-links/{id}` drops one.
 - Write calls are the `/v1/mods/hub/projects/*` family, e.g.
   `POST /v1/mods/hub/projects/{handle}/{slug}/releases` (cut a release),
-  `PATCH /v1/mods/hub/projects/{handle}/{slug}` (edit, incl. `visibility`).
+  `PATCH /v1/mods/hub/projects/{handle}/{slug}` (edit, incl. `visibility` and `is_beta`).
 - **Release lifecycle**: `PATCH /v1/mods/hub/releases/{release_id}` with `{"status": "published"}` /
   `{"status": "draft"}` publishes or unpublishes a build (it also takes `title` / `changelog`);
   `DELETE /v1/mods/hub/releases/{release_id}` removes one build for good - the mod, its files and its
@@ -273,7 +273,7 @@ types 1-9, augments 1 Rough/2 Precise/3 Superior).
 App-facing read API for the Mods Hub (below). A mod is addressed by **`<handle>/<slug>`** (handle = the owner's
 username; slugs are unique per owner, not globally). Returns **absolute** image / download / page URLs. A *mod*
 object carries `{slug, handle, title, summary, description, readme_text, warnings, tags, categories[], flags, author,
-is_stray, uploaded_on_behalf, banner_url, preview_urls[], download_count, downloads_7d, star_count, popularity_score,
+is_beta, is_stray, uploaded_on_behalf, banner_url, preview_urls[], download_count, downloads_7d, star_count, popularity_score,
 discord_url, website_url, donation_urls[], page_url, created_at, updated_at, forked_from, inspired_by, fork_count}`
 (`banner_url` / `preview_urls[]` are the creator's upload at full resolution - up to 5 MB. Append **`?w=400`,
 `?w=708` or `?w=1416`** for a WebP downscaled to that width, rendered once and cached forever; any other width
@@ -285,6 +285,9 @@ else the base field - which is always the English one and always present, so a p
 `title_i18n` is display only: the slug, the `.tmod`'s internal title and every release filename stay on the base
 title. Files-mode mods keep their README translations in the repo instead: `README.md` plus `README.<lang>.md`
 beside it. (`readme_text` is the releases-only long-form README; `warnings` is `<br>`-split warning text;
+**`is_beta`** is the creator's own "still in
+development" flag - a label for players (badge + note on the page), nothing else: a beta mod is public,
+listed and downloadable like any other;
 **`is_stray`** marks an
 unclaimed "stray" mod - uploaded via contributions and not yet tied to a user account - addressed at `stray/<slug>`
 and claimable by its author; **`uploaded_on_behalf`** marks an *uploaded* mod - a user shared a mod someone else made:
@@ -365,6 +368,10 @@ file is read out of the `.tmod` on the fly (no second copy is stored) and served
 expects: the packed path with its casing restored from the artifact's own `title`/`configPath` property, never
 a guessed name. A build that packs more than one `.cfg` offers the one its `configPath` declares; with nothing
 declared, each is offered by name (guessing which of them matters would be worse than saying so).
+
+A mod can be marked **beta** (`is_beta`) - the creator saying it's still in development. It's a signal
+to players only (a Beta badge on the card and page, plus a short note); it changes nothing about how
+the mod is listed, served or downloaded, and it's independent of `visibility`.
 
 Files-mode projects can set **source private** (`source_visibility`) - keeps version history + git for the
 owner but exposes only the releases publicly (an internal-tool mode; hides the files view + blocks cloning).

@@ -2999,5 +2999,8 @@
   "Drag a box with the Select tool": "選択ツールで枠をドラッグ",
   "Add to / take from a selection": "選択に追加・選択から除外",
   "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "マウスの中ボタンがない場合、どのプリセットでも Ctrl + ドラッグで視点が回り、Shift + ドラッグで視点が移動します。",
-  "Manage version": "バージョンを管理"
+  "Manage version": "バージョンを管理",
+  "Still in development": "開発中",
+  "Shows a Beta badge, so players know to expect changes.": "ベータバッジを表示して、変更があることをプレイヤーに知らせます。",
+  "This mod is still being worked on, so expect changes and the odd rough edge.": "この Mod はまだ開発中です。変更や細かな不具合があるかもしれません。"
 }

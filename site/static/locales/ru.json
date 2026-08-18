@@ -2999,5 +2999,8 @@
   "Drag a box with the Select tool": "Растяните рамку инструментом «Выделение»",
   "Add to / take from a selection": "Добавить к выделению / убрать из него",
   "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "Нет средней кнопки мыши? В любом наборе Ctrl + перетаскивание вращает вид, а Shift + перетаскивание сдвигает его.",
-  "Manage version": "Управление версией"
+  "Manage version": "Управление версией",
+  "Still in development": "Ещё в разработке",
+  "Shows a Beta badge, so players know to expect changes.": "Показывает значок «Бета», чтобы игроки знали об изменениях.",
+  "This mod is still being worked on, so expect changes and the odd rough edge.": "Этот мод ещё в разработке, так что возможны изменения и мелкие недоработки."
 }

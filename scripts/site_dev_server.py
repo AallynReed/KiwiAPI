@@ -310,6 +310,7 @@ for _m in _STUB_MODS:
     _m.setdefault("uploaded_on_behalf", False)
     _m.setdefault("author", "")
     _m.setdefault("is_stray", False)
+    _m.setdefault("is_beta", False)
     _m.setdefault("owner_avatar_url", "/site/mods/image/avatarsha")
     _m.setdefault("handle", _m["owner_username"].lower())   # /mods/<handle>/<slug>
 _STUB_MODS[0]["preview_sha"] = "prevsha1"   # neon-hud: no banner -> card uses first preview
@@ -318,6 +319,7 @@ _STUB_MODS[0]["star_count"] = 87
 _STUB_MODS[1]["star_count"] = 34
 _STUB_MODS[2]["star_count"] = 12
 _STUB_MODS[0]["fork_count"] = 1   # neon-hud has one fork (quiet-ui)
+_STUB_MODS[1]["is_beta"] = True   # tiny-mounts is still in development
 
 # --- Modpack stubs (/site/modpacks/*) --------------------------------------
 _STUB_PACKS = [

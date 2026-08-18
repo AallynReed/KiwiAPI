@@ -235,10 +235,12 @@
     const tags = (m.tags || []).slice(0, 4).map((tg) => `<span class="mh-card-tag">${esc(tg)}</span>`).join('');
     const badge = m.visibility === 'draft' ? `<span class="mh-badge mh-badge-draft">${esc(t('Draft'))}</span>`
       : m.visibility === 'unlisted' ? `<span class="mh-badge mh-badge-unlisted">${esc(t('Unlisted'))}</span>` : '';
+    // "Beta" says the creator is still working on it - shown to every visitor.
+    const betaBadge = m.is_beta ? `<span class="mh-badge mh-badge-beta">${esc(t('Beta'))}</span>` : '';
     const card = `<a class="mh-card" href="${modUrl(m)}">
       ${banner}
       <div class="mh-card-body">
-        <h3 class="mh-card-title">${esc(local(m.title, m.title_i18n))} ${badge}</h3>
+        <h3 class="mh-card-title">${esc(local(m.title, m.title_i18n))} ${badge}${betaBadge}</h3>
         ${local(m.summary, m.summary_i18n) ? `<p class="mh-card-summary">${esc(local(m.summary, m.summary_i18n))}</p>` : ''}
         ${tags ? `<div class="mh-card-tags">${tags}</div>` : ''}
         <div class="mh-card-foot">

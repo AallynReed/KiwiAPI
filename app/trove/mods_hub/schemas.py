@@ -22,6 +22,11 @@ class CreateProjectRequest(BaseModel):
     description: str = Field(default="", max_length=40_000)
     tags: list[str] = Field(default_factory=list, max_length=12)
     visibility: Visibility = "draft"
+    is_beta: bool = Field(
+        default=False,
+        description="Mark the mod as still in development - shows a Beta badge and a "
+                    "note so players know to expect changes. Nothing else changes.",
+    )
     mode: ProjectMode = "files"
     source_visibility: SourceVisibility = "public"
     inspired_by: str | None = Field(
@@ -65,6 +70,11 @@ class UpdateProjectRequest(BaseModel):
     warnings_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("warnings"))
     tags: list[str] | None = Field(default=None, max_length=12)
     visibility: Visibility | None = None
+    is_beta: bool | None = Field(
+        default=None,
+        description="Mark the mod as still in development - shows a Beta badge and a "
+                    "note so players know to expect changes. Nothing else changes.",
+    )
     mode: ProjectMode | None = None
     source_visibility: SourceVisibility | None = None
     hidden_release_branches: list[str] | None = Field(

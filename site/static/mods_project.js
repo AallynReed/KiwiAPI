@@ -275,6 +275,11 @@
       ? `<span class="mp-badge mp-badge-unlisted">${esc(t('Releases only'))}</span>` : '';
     const privBadge = (d.is_owner && d.source_visibility === 'private')
       ? `<span class="mp-badge mp-badge-draft">${esc(t('Private source'))}</span>` : '';
+    // Beta is the one badge up here aimed at players, not the owner: the creator
+    // saying the mod is still being worked on. Everyone sees it.
+    const isBeta = !!d.is_beta;
+    const betaBadge = isBeta
+      ? `<span class="mp-badge mp-badge-beta"><i class="fa-solid fa-flask"></i> ${esc(t('Beta'))}</span>` : '';
     const tags = (d.tags || []).map((x) => `<span class="mp-tag">${esc(catName(x))}</span>`).join('');
     const taken = d.taken_down
       ? `<div class="mp-takedown"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('This mod has been removed by a moderator.'))} ${d.takedown_reason ? esc(d.takedown_reason) : ''}</div>` : '';
@@ -395,7 +400,7 @@
       <div class="mp-header-body">
         ${taken}
         <div class="mp-titlerow">
-          <h1 class="mp-title" id="mp-title">${esc(local(d.title, d.title_i18n))}</h1> ${strayBadge} ${uploadedBadge} ${badge} ${modeBadge} ${privBadge}
+          <h1 class="mp-title" id="mp-title">${esc(local(d.title, d.title_i18n))}</h1> ${betaBadge} ${strayBadge} ${uploadedBadge} ${badge} ${modeBadge} ${privBadge}
           ${ownerTitleActions}
         </div>
         <div id="mp-langswitch">${pageLangTabsHTML(d)}</div>
@@ -412,6 +417,7 @@
         </div>
         ${isStray ? `<p class="mp-stray-note"><i class="fa-solid fa-circle-info"></i> ${esc(t('This mod was uploaded via contributions and hasn\'t been claimed by its author yet. If it\'s yours, claim it to manage it here.'))}</p>` : ''}
         ${isUploaded ? `<p class="mp-stray-note"><i class="fa-solid fa-circle-info"></i> ${esc(t('This mod was uploaded by a community member on the creator\'s behalf. It isn\'t an official release by the author.'))}</p>` : ''}
+        ${isBeta ? `<p class="mp-stray-note mp-beta-note"><i class="fa-solid fa-flask"></i> ${esc(t('This mod is still being worked on, so expect changes and the odd rough edge.'))}</p>` : ''}
         <p class="mp-summary" id="mp-summary"${local(d.summary, d.summary_i18n) ? '' : ' hidden'}>${esc(local(d.summary, d.summary_i18n))}</p>
         ${tags ? `<div class="mp-tags">${tags}</div>` : ''}
         ${linksRow}
@@ -1685,6 +1691,8 @@
           <option value="unlisted" ${d.visibility === 'unlisted' ? 'selected' : ''}>${esc(t('Unlisted (link only)'))}</option>
           <option value="public" ${d.visibility === 'public' ? 'selected' : ''}>${esc(t('Public'))}</option>
         </select></label>
+      <label class="mp-form-check"><input type="checkbox" name="is_beta" ${d.is_beta ? 'checked' : ''}>
+        <span>${esc(t('Still in development'))}<small class="mp-form-hint">${esc(t('Shows a Beta badge, so players know to expect changes.'))}</small></span></label>
       ${isUploaded ? '' : `<label class="mp-form-field"><span><i class="fa-brands fa-discord"></i> ${esc(t('Discord invite'))}</span><input name="discord_url" maxlength="300" value="${esc(d.discord_url || '')}" placeholder="https://discord.gg/…"></label>
       <label class="mp-form-field"><span><i class="fa-solid fa-globe"></i> ${esc(t('Website'))}</span><input name="website_url" maxlength="300" value="${esc(d.website_url || '')}" placeholder="https://…"></label>
       <label class="mp-form-field"><span><i class="fa-solid fa-heart"></i> ${esc(t('Donation links (one per line, up to 5)'))}</span><textarea name="donation_urls" rows="3" placeholder="https://ko-fi.com/you">${esc((d.donation_urls || []).join('\n'))}</textarea></label>
@@ -1723,6 +1731,7 @@
         description: desc.base, description_i18n: desc.translations,
         warnings: warn.base, warnings_i18n: warn.translations,
         visibility: f.visibility.value,
+        is_beta: f.is_beta.checked,
         // Selected categories (canonical labels) + free tags from the input.
         tags: [
           ...MOD_CATEGORIES.filter((c) => chosen.has(c.toLowerCase())),

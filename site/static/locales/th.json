@@ -2771,5 +2771,8 @@
   "Drag a box with the Select tool": "ลากกรอบด้วยเครื่องมือเลือก",
   "Add to / take from a selection": "เพิ่มเข้า / เอาออกจากการเลือก",
   "No middle mouse button? Ctrl + drag turns the view and Shift + drag pans it, in every preset.": "ไม่มีปุ่มกลางเมาส์ใช่ไหม ทุกชุดค่าที่ตั้งไว้ใช้ Ctrl + ลาก เพื่อหมุนมุมมอง และ Shift + ลาก เพื่อเลื่อนมุมมอง",
-  "Manage version": "จัดการเวอร์ชัน"
+  "Manage version": "จัดการเวอร์ชัน",
+  "Still in development": "ยังอยู่ระหว่างพัฒนา",
+  "Shows a Beta badge, so players know to expect changes.": "แสดงป้าย Beta เพื่อให้ผู้เล่นรู้ว่าจะมีการเปลี่ยนแปลง",
+  "This mod is still being worked on, so expect changes and the odd rough edge.": "ม็อดนี้ยังพัฒนาอยู่ จึงอาจมีการเปลี่ยนแปลงและจุดที่ยังไม่สมบูรณ์"
 }

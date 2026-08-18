@@ -310,6 +310,7 @@
 .mp-badge-public { color: var(--accent-green); background: rgba(116,224,142,.12); }
 .mp-badge-stray { color: #9bb4ff; background: rgba(86,156,255,.14); display: inline-flex; align-items: center; gap: 5px; }
 .mp-badge-uploaded { color: #7fd4c8; background: rgba(127,212,200,.14); display: inline-flex; align-items: center; gap: 5px; }
+.mp-badge-beta { color: #c4a2ff; background: rgba(163,113,247,.16); display: inline-flex; align-items: center; gap: 5px; }
 /* Collaborators modal */
 .mp-collab-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .mp-collab-row {
@@ -330,6 +331,9 @@
   border: 1px solid rgba(86,156,255,.2); border-radius: var(--radius); padding: 9px 13px;
 }
 .mp-stray-note i { color: var(--accent-blue); margin-top: 2px; }
+/* The beta note is the same shape, in the badge's purple. */
+.mp-beta-note { background: rgba(163,113,247,.07); border-color: rgba(163,113,247,.24); }
+.mp-beta-note i { color: #c4a2ff; }
 
 .mp-takedown {
   border: 1px solid rgba(255,107,129,.4); background: rgba(255,107,129,.08);
@@ -742,6 +746,9 @@
 .mp-form-field input:focus, .mp-form-field textarea:focus, .mp-form-field select:focus, .mp-form-field .btt-dd-trigger:focus-visible { border-color: var(--accent-blue); }
 .mp-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 .mp-form-error { color: var(--accent-red); font-size: .85rem; margin: 0; }
+.mp-form-check { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.mp-form-check input { width: auto; margin-top: 3px; }
+.mp-form-check .mp-form-hint { display: block; margin-top: 2px; }
 .mp-form-hint { color: var(--text-mute); font-size: .8rem; margin: 0; }
 .mp-form-hint.is-warn { color: var(--accent-yellow); }
 .mp-radio-row { display: flex; gap: 16px; flex-wrap: wrap; }
