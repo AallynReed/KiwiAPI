@@ -393,7 +393,55 @@ async def remove_creator_link(link_id: str, user: User = _PORTAL) -> Response:
 
 @mods_creator_write_router.get("/me/projects")
 async def my_projects(user: SiteUser = _USER) -> dict:
+    """Every mod you own or collaborate on, drafts included."""
     return {"items": await service.list_owned(user)}
+
+
+# The public reads above always view as an anonymous visitor, so they can't show a
+# mod that isn't published yet, or a release still in draft. These mirror them for
+# the creator's own mods - the read half of everything the control surface writes.
+
+@mods_creator_write_router.get("/me/projects/{handle}/{slug}")
+async def my_project(handle: str, slug: str, user: SiteUser = _USER) -> dict:
+    """One of your own mods, seen as its creator: drafts included, with every
+    release (drafts and hidden variants too) and the branch list attached."""
+    project = await _require_owned(handle, slug, user)
+    return await service.project_detail(project, user)
+
+
+@mods_creator_write_router.get("/me/projects/{handle}/{slug}/releases")
+async def my_project_releases(handle: str, slug: str, user: SiteUser = _USER) -> dict:
+    """Every release of your mod - drafts and hidden variants included. This is
+    where a release ``id`` comes from, to publish, edit or delete it."""
+    project = await _require_owned(handle, slug, user)
+    return {"items": await service.list_releases(
+        project, include_drafts=True, include_hidden=True)}
+
+
+@mods_creator_write_router.get("/me/projects/{handle}/{slug}/commits")
+async def my_project_commits(
+    handle: str, slug: str,
+    branch: str | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    user: SiteUser = _USER,
+) -> dict:
+    """Your mod's commit history - the ``id`` of a commit is what a release's
+    ``ref`` compiles from."""
+    project = await _require_owned(handle, slug, user)
+    items, total = await service.list_commits(project, branch, limit, offset)
+    return {"items": items, "count": len(items), "total": total}
+
+
+@mods_creator_write_router.get("/me/projects/{handle}/{slug}/placement")
+async def my_project_placement(
+    handle: str, slug: str, ref: str = Query(default=""), user: SiteUser = _USER,
+) -> dict:
+    """Check a commit's files against Trove's placement rules before cutting a
+    release: what compiles, what's skipped, and what's misplaced (the misplaced
+    ones are what ``fix-placement`` moves)."""
+    project = await _require_owned(handle, slug, user)
+    return await service.placement_report(project, ref)
 
 
 @mods_hub_write_router.get("/me/starred")
@@ -641,8 +689,11 @@ async def update_release(
     )
 
 
-@mods_hub_write_router.delete("/releases/{release_id}", status_code=204)
+@mods_creator_write_router.delete("/releases/{release_id}", status_code=204)
 async def delete_release(release_id: str, user: SiteUser = _USER) -> Response:
+    """Delete a release. The build is gone from the mod's page and can no longer be
+    downloaded; the mod itself, its files and its other releases are untouched.
+    Unpublishing (``PATCH`` with ``status=draft``) is the reversible alternative."""
     release = await service.get_release(release_id)
     if release is None:
         raise APIError(404, ErrorCode.not_found, "Release not found")

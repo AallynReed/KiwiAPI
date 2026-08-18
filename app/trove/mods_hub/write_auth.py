@@ -20,8 +20,8 @@ goes to ``get_current_site_user``, which is what reads the session cookie.
 
 **API callers are default-denied.** ``_API_ROUTES`` is an explicit allowlist of
 (route template → methods); anything absent - including any route added later - is
-website-only until someone deliberately lists it. That's what keeps deleting mods
-and releases, minting git tokens, editing the creator's profile, and reassigning
+website-only until someone deliberately lists it. That's what keeps deleting a
+mod, minting git tokens, editing the creator's profile, and reassigning
 collaborators on the website, under the creator's own login.
 """
 from __future__ import annotations
@@ -59,6 +59,12 @@ _scheme = HTTPBearer(
 # Route template -> methods an API caller may use. Default-deny (see module docs).
 _API_ROUTES: dict[str, frozenset[str]] = {
     "/v1/mods/hub/me/projects": frozenset({"GET"}),
+    # Reading back the creator's OWN mods: the public reads view as an anonymous
+    # visitor, so a draft mod or an unpublished release is invisible to them.
+    "/v1/mods/hub/me/projects/{handle}/{slug}": frozenset({"GET"}),
+    "/v1/mods/hub/me/projects/{handle}/{slug}/releases": frozenset({"GET"}),
+    "/v1/mods/hub/me/projects/{handle}/{slug}/commits": frozenset({"GET"}),
+    "/v1/mods/hub/me/projects/{handle}/{slug}/placement": frozenset({"GET"}),
     "/v1/mods/hub/projects": frozenset({"POST"}),
     # No DELETE: removing a mod stays a website action.
     "/v1/mods/hub/projects/{handle}/{slug}": frozenset({"PATCH"}),
@@ -72,8 +78,10 @@ _API_ROUTES: dict[str, frozenset[str]] = {
     "/v1/mods/hub/projects/{handle}/{slug}/releases": frozenset({"POST"}),
     "/v1/mods/hub/projects/{handle}/{slug}/releases/upload": frozenset({"POST"}),
     "/v1/mods/hub/projects/{handle}/{slug}/fix-placement": frozenset({"POST"}),
-    # Publish / unpublish / retitle an existing release.
-    "/v1/mods/hub/releases/{release_id}": frozenset({"PATCH"}),
+    # Publish / unpublish / retitle an existing release, or drop one. Deleting a
+    # release removes one build; the mod, its files and its history stay - which is
+    # why it's here while deleting the mod itself is not.
+    "/v1/mods/hub/releases/{release_id}": frozenset({"PATCH", "DELETE"}),
     # Pack a config into an existing build (repacks the artifact - same trust level
     # as cutting a release, which is already allowed above).
     "/v1/mods/hub/releases/{release_id}/config": frozenset({"POST"}),
@@ -173,8 +181,8 @@ async def _authorize_api(
     if allowed is None or request.method not in allowed:
         raise _forbidden(
             "This action is only available to the creator on the website. A "
-            "connected API account can create mods, cut and publish releases, and "
-            "edit mod metadata, images and visibility.")
+            "connected API account can create mods, cut, publish and delete "
+            "releases, and edit mod metadata, images and visibility.")
 
     links = await creators.live_links(user)
     if not links:

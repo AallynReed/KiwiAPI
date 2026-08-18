@@ -98,15 +98,26 @@ creator narrows it to named mods from their Dashboard. They can also revoke one 
 rotate their creator token to cut every connection at once. You may hold connections to many
 creators, and a creator may connect many API accounts.
 
-What a connection allows: create mods, commit files, cut releases, publish/unpublish them, edit
-metadata, tags, images and **visibility** (so hiding a mod is an API call). What it never allows:
-deleting a mod or a release, minting git tokens, editing the creator's profile, or changing
-collaborators - those stay with the creator on the website.
+What a connection allows: create mods, commit files, cut releases, publish/unpublish/**delete** them,
+edit metadata, tags, images and **visibility** (so hiding a mod is an API call), and read the
+creator's own mods back including drafts. What it never allows: deleting a **mod**, minting git
+tokens, editing the creator's profile, or changing collaborators - those stay with the creator on the
+website.
 
 - `GET /v1/mods/hub/creator-links` → your connections; `DELETE /v1/mods/hub/creator-links/{id}` drops one.
 - Write calls are the `/v1/mods/hub/projects/*` family, e.g.
   `POST /v1/mods/hub/projects/{handle}/{slug}/releases` (cut a release),
   `PATCH /v1/mods/hub/projects/{handle}/{slug}` (edit, incl. `visibility`).
+- **Release lifecycle**: `PATCH /v1/mods/hub/releases/{release_id}` with `{"status": "published"}` /
+  `{"status": "draft"}` publishes or unpublishes a build (it also takes `title` / `changelog`);
+  `DELETE /v1/mods/hub/releases/{release_id}` removes one build for good - the mod, its files and its
+  other releases are untouched. Unpublishing is the reversible one; prefer it.
+- **Reading your own work back.** The `/v1/mods/hub/*` and `/v1/mods/*` reads all answer as an
+  anonymous visitor, so they can't see a draft mod or an unpublished release. The creator-scoped
+  mirrors do: `GET /v1/mods/hub/me/projects` (all mods you manage), and per mod
+  `GET /v1/mods/hub/me/projects/{handle}/{slug}` (detail, drafts included),
+  `…/releases` (every release, drafts and hidden variants included - this is where a `release_id`
+  comes from), `…/commits` and `…/placement`.
 - The mod in the URL decides which creator you're acting as. On the routes that name no mod
   (`POST /v1/mods/hub/projects`, `GET /v1/mods/hub/me/projects`) add `?creator=<handle>` or the
   `X-Kiwi-Creator` header - optional when you're connected to exactly one creator.
