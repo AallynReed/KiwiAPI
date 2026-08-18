@@ -829,6 +829,8 @@ body.up-modal-open { overflow: hidden; }
   align-items: center;
   flex: 1 1 200px;
 }
+/* The sidebars stack vertically, where that 200px basis would read as height. */
+.up-bundle-side .up-swf-search { flex: 0 0 auto; }
 .up-swf-search > i {
   position: absolute;
   left: 11px;
