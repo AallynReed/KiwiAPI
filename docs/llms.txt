@@ -160,12 +160,14 @@ endpoint that is **master-only** - it requires a superuser API token).
   `published_at`), `previous` is the same shape for the build it supersedes on that branch (`null` on a first
   release), and `change` summarizes the step (`kind`, `from_tag`, `to_tag`, `size_delta`, `days_since_previous`,
   `release_count`, `artifact_unchanged`). `image_url` is the one image to lead with (the build's preview, else
-  the mod banner). Drafts, unlisted and taken-down mods are never announced. **A build fires exactly once**, at
-  the first moment the public can open it: publishing a release on a mod that is still a draft announces
-  nothing, and the mod later **going public** announces its current build then - one event, since a mod
-  arriving with a back catalogue is one piece of news rather than one per historic version. Nothing
-  re-announces a build afterwards: not unpublishing and republishing it, not flipping the mod to draft and
-  back. Hook it to mirror/announce new mod
+  the mod banner). Drafts, unlisted and taken-down mods are never announced, and neither are releases on a
+  **hidden variant** - if the mod page won't list a build, the firehose doesn't either. **A build fires
+  exactly once**, at the first moment the public can see it: publishing a release on a mod that is still a
+  draft (or on a hidden variant) announces nothing, and whichever setting was holding it back being lifted -
+  the mod **going public**, the **variant being revealed** - announces the current build then. One event
+  either way: a mod arriving with a back catalogue is one piece of news rather than one per historic version.
+  Nothing re-announces a build afterwards: not unpublishing and republishing it, not flipping the mod to
+  draft and back, not re-hiding and re-revealing its variant. Hook it to mirror/announce new mod
   releases. A `: ping` keep-alive comment arrives ~every 20s;
   reconnect on disconnect and the snapshot re-primes you.
   Example: `curl -N https://api.aallyn.net/v1/events/stream`.
@@ -381,7 +383,8 @@ the mod is listed, served or downloaded, and it's independent of `visibility`.
 Files-mode projects can set **source private** (`source_visibility`) - keeps version history + git for the
 owner but exposes only the releases publicly (an internal-tool mode; hides the files view + blocks cloning).
 **Branches are variants**: each release carries its branch; the UI groups releases per branch (latest of
-each surfaced), and the owner can hide chosen variants' releases from the public. A **source-locked** mod
+each surfaced), and the owner can hide chosen variants' releases from the public - a hidden variant is
+hidden everywhere, the release event stream included, and revealing it announces its current build. A **source-locked** mod
 (private source / releases-only) can't be **forked** - it can only be credited as **inspiration**.
 
 The website-internal hub surface (`/v1/mods/hub/*` + the same-origin `/site/mods/*` proxies) is **intentionally

@@ -713,7 +713,9 @@ async def update_project(
     discord_url=None, website_url=None, donation_urls=None, inspired_by=None,
 ) -> ModProject:
     _require_owner(project, actor)
+    # Both halves of "can the public see this build" - see _announce_newly_visible.
     was_public = project.visibility == "public"
+    was_hidden = set(project.hidden_release_branches or [])
     if title is not None:
         project.title = title.strip()
     if summary is not None:
@@ -791,10 +793,16 @@ async def update_project(
     project.owner_handle = actor.username
     project.updated_at = utcnow()
     await project.save()
-    # Draft/unlisted -> public: the releases sitting on it were never announced,
-    # because a mod nobody can open isn't news. Now it is.
+    # Whatever was holding a build back from the public just lifted: the mod going
+    # public sweeps everything now visible (a variant revealed in the same edit is
+    # already out of hidden_release_branches, so that sweep covers it); otherwise
+    # only the variants that were hidden a moment ago and aren't now.
     if not was_public and project.visibility == "public":
-        await _announce_going_public(project)
+        await _announce_newly_visible(project)
+    elif project.visibility == "public":
+        revealed = sorted(was_hidden - set(project.hidden_release_branches or []))
+        if revealed:
+            await _announce_newly_visible(project, revealed)
     return project
 
 
@@ -1360,11 +1368,16 @@ async def _emit_release_event(project: ModProject, release: ModRelease) -> None:
     build's identity + ``.tmod`` header, and the release it supersedes - so a
     consumer can render or mirror it with no follow-up request.
 
-    PUBLIC + PUBLISHED only. A draft, unlisted or taken-down mod is never announced
-    on a public firehose: unlisted means link-only, and for a draft the event's own
-    download URL 404s for every subscriber anyway. A release published under those
-    conditions isn't lost, it's just not news yet - ``_announce_going_public``
-    picks it up when the mod becomes public.
+    VISIBLE + PUBLISHED only - and visible means the whole chain the mod page
+    already applies. A draft, unlisted or taken-down mod is never announced on a
+    public firehose: unlisted means link-only, and for a draft the event's own
+    download URL 404s for every subscriber anyway. Nor is a release on a **hidden
+    variant**: the owner took that branch out of the public listing, and a firehose
+    that announces what the mod page won't show is announcing on their behalf
+    against their setting.
+
+    A release blocked by any of those isn't lost, it's just not news *yet* -
+    ``_announce_newly_visible`` picks it up at whichever moment lifts the block.
 
     Idempotent per release: ``announced_at`` is stamped on the way out and checked
     on the way in, so a build announces once and only once no matter how many times
@@ -1375,6 +1388,8 @@ async def _emit_release_event(project: ModProject, release: ModRelease) -> None:
     if release.status != "published":
         return
     if project.visibility != "public" or project.taken_down:
+        return
+    if release.branch in (project.hidden_release_branches or []):
         return
     if release.announced_at is not None:
         return
@@ -1421,24 +1436,35 @@ async def _mark_releases_announced(project: ModProject) -> None:
     }).update(Set({ModRelease.announced_at: utcnow()}))
 
 
-async def _announce_going_public(project: ModProject) -> None:
-    """A mod that was built in private and has just become public: announce it.
+async def _announce_newly_visible(
+    project: ModProject, branches: list[str] | None = None,
+) -> None:
+    """Announce the build the public can now see and never heard about.
 
-    Releases cut while the mod was a draft (or unlisted) were deliberately not
-    announced - a firehose entry whose download URL 404s for every subscriber is
-    worse than silence. Becoming public is the moment that news is real, and it was
-    the one transition nothing was watching, so a mod developed the normal way
-    (build it as a draft, publish when it's ready) never announced at all.
+    A release only announces once the public can actually reach it, so the two
+    settings that hold it back - the mod being a draft/unlisted, and its variant
+    being hidden - each leave builds sitting unannounced behind them. Lifting
+    either one is the moment that news becomes real, and nothing was watching
+    those transitions: a mod developed the normal way (build it as a draft,
+    publish when it's ready, flip it public) announced nothing at all, and a
+    variant announced nothing when it was revealed.
 
-    **One event, not a back catalogue.** The newest published build is announced;
-    any older un-announced ones are stamped WITHOUT an event. A mod arriving with
-    five historic versions is one piece of news, not five - and leaving them
-    unstamped would fire all five the next time anything called the emitter."""
+    ``branches`` narrows the sweep to the variants that just became visible;
+    without it the whole mod is swept, minus the variants still hidden.
+
+    **One event, not a back catalogue.** The newest of those builds is announced;
+    the older ones are stamped WITHOUT an event. A mod arriving with five historic
+    versions is one piece of news, not five - and leaving them unstamped would fire
+    all five the next time anything called the emitter. Builds still behind a
+    block stay unstamped, because their moment hasn't come yet."""
     if project.visibility != "public" or project.taken_down:
         return
-    pending = await ModRelease.find({
-        "project_id": project.id, "status": "published", "announced_at": None,
-    }).sort("-published_at", "-created_at").to_list()
+    query: dict = {"project_id": project.id, "status": "published", "announced_at": None}
+    if branches is not None:
+        query["branch"] = {"$in": branches}
+    elif project.hidden_release_branches:
+        query["branch"] = {"$nin": project.hidden_release_branches}
+    pending = await ModRelease.find(query).sort("-published_at", "-created_at").to_list()
     if not pending:
         return
     await _emit_release_event(project, pending[0])
