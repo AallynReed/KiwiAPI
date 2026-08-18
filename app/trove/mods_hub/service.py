@@ -713,6 +713,7 @@ async def update_project(
     discord_url=None, website_url=None, donation_urls=None, inspired_by=None,
 ) -> ModProject:
     _require_owner(project, actor)
+    was_public = project.visibility == "public"
     if title is not None:
         project.title = title.strip()
     if summary is not None:
@@ -790,6 +791,10 @@ async def update_project(
     project.owner_handle = actor.username
     project.updated_at = utcnow()
     await project.save()
+    # Draft/unlisted -> public: the releases sitting on it were never announced,
+    # because a mod nobody can open isn't news. Now it is.
+    if not was_public and project.visibility == "public":
+        await _announce_going_public(project)
     return project
 
 
@@ -1357,12 +1362,21 @@ async def _emit_release_event(project: ModProject, release: ModRelease) -> None:
 
     PUBLIC + PUBLISHED only. A draft, unlisted or taken-down mod is never announced
     on a public firehose: unlisted means link-only, and for a draft the event's own
-    download URL 404s for every subscriber anyway. Best-effort - any failure here
-    leaves release creation untouched. Signature = the release id, so each release
-    announces exactly once."""
+    download URL 404s for every subscriber anyway. A release published under those
+    conditions isn't lost, it's just not news yet - ``_announce_going_public``
+    picks it up when the mod becomes public.
+
+    Idempotent per release: ``announced_at`` is stamped on the way out and checked
+    on the way in, so a build announces once and only once no matter how many times
+    it is unpublished, republished, or carried through a visibility change. (The
+    bus's own dedup can't do this - it holds one signature per event TYPE, so any
+    other release published in between re-opens the gate.) Best-effort: a failure
+    here leaves the release itself untouched, unstamped, and free to retry."""
     if release.status != "published":
         return
     if project.visibility != "public" or project.taken_down:
+        return
+    if release.announced_at is not None:
         return
     try:
         from app.events import bus
@@ -1391,8 +1405,46 @@ async def _emit_release_event(project: ModProject, release: ModRelease) -> None:
             "page_url": f"{site}/mods/{project.owner_handle}/{project.slug}",
         }
         await bus.publish("mod_release", str(release.id), data)
+        release.announced_at = utcnow()
+        await release.save()
     except Exception:
         logger.warning("mods_hub: failed to emit release event", exc_info=True)
+
+
+async def _mark_releases_announced(project: ModProject) -> None:
+    """Stamp a mod's published releases as announced WITHOUT emitting anything -
+    "these have had their moment, never fire them later". Used where a mod becomes
+    public but its builds aren't news: an imported stray going live is a catalogue
+    entry appearing, not a creator shipping a version."""
+    await ModRelease.find({
+        "project_id": project.id, "status": "published", "announced_at": None,
+    }).update(Set({ModRelease.announced_at: utcnow()}))
+
+
+async def _announce_going_public(project: ModProject) -> None:
+    """A mod that was built in private and has just become public: announce it.
+
+    Releases cut while the mod was a draft (or unlisted) were deliberately not
+    announced - a firehose entry whose download URL 404s for every subscriber is
+    worse than silence. Becoming public is the moment that news is real, and it was
+    the one transition nothing was watching, so a mod developed the normal way
+    (build it as a draft, publish when it's ready) never announced at all.
+
+    **One event, not a back catalogue.** The newest published build is announced;
+    any older un-announced ones are stamped WITHOUT an event. A mod arriving with
+    five historic versions is one piece of news, not five - and leaving them
+    unstamped would fire all five the next time anything called the emitter."""
+    if project.visibility != "public" or project.taken_down:
+        return
+    pending = await ModRelease.find({
+        "project_id": project.id, "status": "published", "announced_at": None,
+    }).sort("-published_at", "-created_at").to_list()
+    if not pending:
+        return
+    await _emit_release_event(project, pending[0])
+    for old in pending[1:]:
+        old.announced_at = utcnow()
+        await old.save()
 
 
 async def create_release_from_commit(
@@ -2680,6 +2732,10 @@ async def approve_stray(project_id: str) -> dict:
     project.visibility = "public"
     project.updated_at = utcnow()
     await project.save()
+    # An import going live is not a release announcement (see _mark_releases_announced),
+    # and stamping here is what keeps it from becoming one if the mod is later
+    # claimed and its new owner flips the visibility.
+    await _mark_releases_announced(project)
     return _stray_card(project)
 
 
@@ -2712,6 +2768,9 @@ async def handover_stray(project: ModProject, user: SiteUser) -> ModProject:
     # Reattach the mirrored release(s) to the new owner.
     await ModRelease.find(ModRelease.project_id == project.id).update(
         Set({ModRelease.owner_id: user.id}))
+    # The imported builds stay un-announceable in their new owner's hands too - the
+    # news would be a version that shipped elsewhere, months ago.
+    await _mark_releases_announced(project)
     return project
 
 

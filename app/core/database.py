@@ -161,6 +161,14 @@ async def init_db() -> None:
     # release still sorts sensibly instead of falling off the end on a null key.
     await _backfill_last_release_at()
 
+    # A release announces on the event stream exactly once, gated by
+    # `mod_releases.announced_at`. Releases written before that field existed have
+    # already had their moment IF their mod is public, so stamp those - otherwise
+    # a public mod flipped to draft and back would re-announce a months-old build.
+    # Releases on a mod that is still draft/unlisted are deliberately left unstamped:
+    # they were never announced, and going public is exactly when they should be.
+    await _backfill_release_announced_at()
+
     # Mods Hub download events feed the trailing-7-day "popular" metric; keep only
     # ~8 days so the collection stays tiny (lifetime totals live on download_count).
     await _ensure_ttl_index(_db["mod_download_events"], "created_at", 8 * 86400)
@@ -240,6 +248,38 @@ async def _backfill_last_release_at() -> None:
         logger.info("mods_hub: backfilled last_release_at on %d project(s)", filled)
     except OperationFailure:
         logger.warning("mods_hub: last_release_at backfill skipped", exc_info=True)
+
+
+async def _backfill_release_announced_at() -> None:
+    """Mark the published releases of already-PUBLIC mods as announced, once.
+
+    They are the ones whose announcement has already been and gone (or was never
+    going to come), so leaving them null would let a later visibility flip fire an
+    old build at every SSE subscriber, webhook and DM. Draft/unlisted mods are
+    skipped on purpose - their releases genuinely haven't announced yet, and that
+    is the case the going-public announcement exists to serve. Idempotent: after
+    the first boot the guard count matches nothing."""
+    projects = _db["mod_projects"]
+    releases = _db["mod_releases"]
+    missing = {"status": "published",
+               "$or": [{"announced_at": {"$exists": False}}, {"announced_at": None}]}
+    try:
+        if await releases.count_documents(missing, limit=1) == 0:
+            return
+        public_ids = [p["_id"] async for p in
+                      projects.find({"visibility": "public"}, {"_id": 1})]
+        if not public_ids:
+            return
+        result = await releases.update_many(
+            {**missing, "project_id": {"$in": public_ids}},
+            # Pipeline update: stamp each row from its OWN publish time rather than
+            # a single "now", so the marker keeps saying when the build landed.
+            [{"$set": {"announced_at": {"$ifNull": ["$published_at", "$created_at"]}}}],
+        )
+        logger.info("mods_hub: backfilled announced_at on %d release(s)",
+                    result.modified_count)
+    except OperationFailure:
+        logger.warning("mods_hub: announced_at backfill skipped", exc_info=True)
 
 
 async def _drop_index_if_exists(collection, name: str) -> None:

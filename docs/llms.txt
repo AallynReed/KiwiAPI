@@ -160,7 +160,12 @@ endpoint that is **master-only** - it requires a superuser API token).
   `published_at`), `previous` is the same shape for the build it supersedes on that branch (`null` on a first
   release), and `change` summarizes the step (`kind`, `from_tag`, `to_tag`, `size_delta`, `days_since_previous`,
   `release_count`, `artifact_unchanged`). `image_url` is the one image to lead with (the build's preview, else
-  the mod banner). Drafts, unlisted and taken-down mods are never announced. Hook it to mirror/announce new mod
+  the mod banner). Drafts, unlisted and taken-down mods are never announced. **A build fires exactly once**, at
+  the first moment the public can open it: publishing a release on a mod that is still a draft announces
+  nothing, and the mod later **going public** announces its current build then - one event, since a mod
+  arriving with a back catalogue is one piece of news rather than one per historic version. Nothing
+  re-announces a build afterwards: not unpublishing and republishing it, not flipping the mod to draft and
+  back. Hook it to mirror/announce new mod
   releases. A `: ping` keep-alive comment arrives ~every 20s;
   reconnect on disconnect and the snapshot re-primes you.
   Example: `curl -N https://api.aallyn.net/v1/events/stream`.

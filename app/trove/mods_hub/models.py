@@ -247,6 +247,13 @@ class ModRelease(Document):
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     published_at: datetime | None = None
+    # When this build was announced on the live event stream (and from there to
+    # webhooks + DM subscriptions). A release is news exactly ONCE, so this is the
+    # durable gate: publishing while the mod is a draft announces nothing, the mod
+    # going public announces it then, and neither an unpublish/republish nor a
+    # later visibility flip can announce it a second time. The event bus's own
+    # dedup only holds the LAST signature per event type, so it can't answer this.
+    announced_at: datetime | None = None
 
     class Settings:
         name = "mod_releases"
