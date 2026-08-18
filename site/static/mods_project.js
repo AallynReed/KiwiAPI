@@ -28,7 +28,8 @@
 
   // contentLang: the language the reader picked for this mod's own text (About +
   // README). null = follow the site language (and fall back to English).
-  const state = { detail: null, viewer: null, branch: null, contentLang: null, repoReadme: null };
+  const state = { detail: null, viewer: null, branch: null, contentLang: null, repoReadme: null,
+    treeOpen: null };
 
   const $root = document.getElementById('mp-root');
 
@@ -952,10 +953,7 @@
       if (tr.ok) {
         const data = await tr.json();
         state._treeCommit = data.commit ? data.commit.id : null;
-        treeBox.innerHTML = (data.entries && data.entries.length)
-          ? data.entries.map(treeRow).join('')
-          : `<div class="mp-tree-row"><span class="mp-muted">${esc(t('No files committed on this branch yet.'))}</span></div>`;
-        wireTreeRows();
+        renderTree(treeBox, data.entries || []);
         loadReadme(data.entries, state._treeCommit);
       } else {
         treeBox.innerHTML = `<div class="mp-tree-row"><span class="mp-muted">${esc(t('No files committed on this branch yet.'))}</span></div>`;
@@ -1026,14 +1024,115 @@
     }
   }
 
-  function treeRow(e) {
-    return `<div class="mp-tree-row">
-      <span class="mp-tree-path"><i class="fa-solid fa-file"></i> ${esc(e.path)}</span>
-      <span class="mp-tree-size">
-        ${fmtBytes(e.size)}
-        <button type="button" class="mp-btn mp-btn-sm" data-file="${esc(e.path)}" style="margin-left:8px"><i class="fa-solid fa-download"></i></button>
-      </span>
-    </div>`;
+  // ─── File tree ─────────────────────────────────────────────────────
+  // The API returns flat paths. A mod that keeps its sources in the repo runs to
+  // dozens of them, and one long column of `src/lib/ui/...` reads as noise, so
+  // fold the paths back into folders. A folder with a single child folder and no
+  // files of its own is merged into its parent row (`src/lib/ui`) - stepping
+  // through empty levels isn't navigation.
+  function buildTree(entries) {
+    const root = { dirs: new Map(), files: [] };
+    entries.forEach((e) => {
+      const parts = String(e.path).split('/');
+      const name = parts.pop();
+      let node = root;
+      parts.forEach((seg) => {
+        if (!node.dirs.has(seg)) node.dirs.set(seg, { dirs: new Map(), files: [] });
+        node = node.dirs.get(seg);
+      });
+      node.files.push({ name, path: e.path, size: e.size || 0 });
+    });
+    return root;
+  }
+
+  function dirStats(node) {
+    let count = node.files.length;
+    let size = node.files.reduce((a, f) => a + f.size, 0);
+    node.dirs.forEach((child) => {
+      const s = dirStats(child);
+      count += s.count;
+      size += s.size;
+    });
+    return { count, size };
+  }
+
+  function collectDirs(node, prefix, out) {
+    node.dirs.forEach((child, name) => {
+      let cur = child;
+      let path = prefix + name + '/';
+      while (cur.dirs.size === 1 && cur.files.length === 0) {
+        const [n, c] = cur.dirs.entries().next().value;
+        path += n + '/';
+        cur = c;
+      }
+      out.push(path);
+      collectDirs(cur, path, out);
+    });
+    return out;
+  }
+
+  const byName = (a, b) => a.name.localeCompare(b.name);
+
+  function treeRowsHTML(node, depth, prefix) {
+    const pad = (d) => `style="padding-left:${13 + d * 20}px"`;
+    let html = '';
+    const dirs = Array.from(node.dirs.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    dirs.forEach(([name, child]) => {
+      let label = name;
+      let path = prefix + name + '/';
+      let cur = child;
+      while (cur.dirs.size === 1 && cur.files.length === 0) {
+        const [n, c] = cur.dirs.entries().next().value;
+        label += '/' + n;
+        path += n + '/';
+        cur = c;
+      }
+      const st = dirStats(cur);
+      const open = state.treeOpen.has(path);
+      html += `<div class="mp-tree-row mp-tree-dir" data-dir="${esc(path)}" role="button" tabindex="0" aria-expanded="${open}" ${pad(depth)}>
+        <span class="mp-tree-path"><i class="fa-solid fa-caret-right mp-tree-caret${open ? ' is-open' : ''}"></i><i class="fa-solid fa-folder${open ? '-open' : ''}"></i> ${esc(label)}</span>
+        <span class="mp-tree-size">${st.count} ${esc(st.count === 1 ? t('file') : t('files'))} · ${fmtBytes(st.size)}</span>
+      </div>`;
+      if (open) html += treeRowsHTML(cur, depth + 1, path);
+    });
+    node.files.slice().sort(byName).forEach((f) => {
+      html += `<div class="mp-tree-row" ${pad(depth)}>
+        <span class="mp-tree-path"><i class="fa-solid fa-file"></i> ${esc(f.name)}</span>
+        <span class="mp-tree-size">
+          ${fmtBytes(f.size)}
+          <button type="button" class="mp-btn mp-btn-sm" data-file="${esc(f.path)}" style="margin-left:8px"><i class="fa-solid fa-download"></i></button>
+        </span>
+      </div>`;
+    });
+    return html;
+  }
+
+  function renderTree(box, entries) {
+    if (!entries.length) {
+      state._tree = null;
+      box.innerHTML = `<div class="mp-tree-row"><span class="mp-muted">${esc(t('No files committed on this branch yet.'))}</span></div>`;
+      return;
+    }
+    state._tree = buildTree(entries);
+    const all = collectDirs(state._tree, '', []);
+    // A small repo fits on screen either way, so open it; a big one stays folded
+    // until asked. Re-renders (a toggle, a new commit) keep whatever is open.
+    if (!state.treeOpen) state.treeOpen = new Set(entries.length <= 12 ? all : []);
+    paintTree(box);
+  }
+
+  function paintTree(box) {
+    const all = collectDirs(state._tree, '', []);
+    const allOpen = all.length > 0 && all.every((p) => state.treeOpen.has(p));
+    const bar = all.length
+      ? `<div class="mp-tree-bar">
+          <button type="button" class="mp-btn mp-btn-sm" id="mp-tree-toggle">
+            <i class="fa-solid fa-${allOpen ? 'compress' : 'expand'}"></i> ${esc(allOpen ? t('Collapse all') : t('Expand all'))}
+          </button>
+        </div>` : '';
+    box.innerHTML = bar + treeRowsHTML(state._tree, 0, '');
+    wireTreeRows(box, all, allOpen);
+    rerunI18n();
   }
 
   function commitRow(c) {
@@ -1232,9 +1331,27 @@
     });
   }
 
-  function wireTreeRows() {
-    document.querySelectorAll('#mp-tree [data-file]').forEach((b) =>
+  function wireTreeRows(box, allDirs, allOpen) {
+    box.querySelectorAll('[data-file]').forEach((b) =>
       b.addEventListener('click', () => downloadFile(b.getAttribute('data-file'))));
+    box.querySelectorAll('[data-dir]').forEach((row) => {
+      const toggle = () => {
+        const p = row.getAttribute('data-dir');
+        if (state.treeOpen.has(p)) state.treeOpen.delete(p); else state.treeOpen.add(p);
+        paintTree(box);
+      };
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+    });
+    const all = box.querySelector('#mp-tree-toggle');
+    if (all) {
+      all.addEventListener('click', () => {
+        state.treeOpen = new Set(allOpen ? [] : allDirs);
+        paintTree(box);
+      });
+    }
   }
 
   function wireReleases() {
