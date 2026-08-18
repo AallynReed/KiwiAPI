@@ -154,7 +154,38 @@ def add_security_middleware(app: FastAPI) -> None:
         # their own max-age and are intentionally excluded.
         if path.startswith("/static/") or path in _PAGE_PATHS or path.startswith(_PAGE_PREFIXES):
             h.setdefault("Cache-Control", "no-cache")
+        # A response produced for a CREDENTIAL is per-user and must never be
+        # stored by a shared cache. Enforced here, not per-route, for two
+        # reasons: a handler cannot forget it, and a handler cannot get it wrong
+        # (a viewer-dependent body was being returned as `public, max-age=30`).
+        # This deliberately OVERWRITES whatever the route set - the edge keys its
+        # cache on the URL and does not see the cookie, so "public" on any path
+        # that reads a session is a cross-user leak waiting to happen.
+        if _has_credential(request) and not _is_public_asset(path):
+            h["Cache-Control"] = "private, no-store"
+            _add_vary(h, "Cookie", "Authorization")
         return response
+
+
+def _has_credential(request: Request) -> bool:
+    """Whether the CALLER presented anything that could make this response
+    user-specific. Checked on the request, not the response, so it also covers a
+    route that reads the session and then happens to return an identical body."""
+    if request.headers.get("authorization"):
+        return True
+    # Named literally rather than imported: app.site_auth pulls in the Beanie
+    # models, and middleware is imported by everything. Kept in step with
+    # app/site_auth/cookies.py ACCESS_COOKIE.
+    return "kiwi_site_access" in request.cookies
+
+
+def _add_vary(headers, *fields: str) -> None:
+    """Merge into any existing Vary (GZipMiddleware sets Accept-Encoding)."""
+    have = {v.strip().lower() for v in headers.get("Vary", "").split(",") if v.strip()}
+    merged = [f for f in fields if f.lower() not in have]
+    if merged:
+        existing = headers.get("Vary")
+        headers["Vary"] = f"{existing}, {', '.join(merged)}" if existing else ", ".join(merged)
 
 
 # The assets the 3D viewers fetch while they run: baked rigs (clips + animation
