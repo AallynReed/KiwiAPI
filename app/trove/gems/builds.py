@@ -26,9 +26,9 @@ _DMG_FOLDER = {"Physical Damage": "physical_damage", "Magic Damage": "magic_dama
 # are already the level-30 numbers (Scorpius 700 Light / 36.25% PD = its base
 # 400/25% scaled by the L30 multipliers), so the buff multiplies those directly.
 # Measured per stat class, not per ally: two allies gave identical ratios.
-# Damage, Critical Damage and Power Rank share one 31% class; Light is its own
-# 15.5%. Stability and Movement Speed have no measured multiplier yet, so an
-# ally granting those keeps them unbuffed rather than guessed.
+# Damage and Critical Damage share one 31% class; Light is its own 15.5%.
+# Power Rank takes nothing from the buff. Stability and Movement Speed have no
+# measured multiplier yet, so an ally granting those stays unbuffed, not guessed.
 LILYPAD_MULTIPLIERS = {
     "Light": 1.155,
     "Physical Damage": 1.31,

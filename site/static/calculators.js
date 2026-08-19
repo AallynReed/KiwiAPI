@@ -22,15 +22,15 @@
   let liveUpdaters = [];
 
   // 4 decimals, not the locale default of 3: the buffed ally lands on a
-  // fraction (98.25 PR, 909.5625 light) the default would clip.
+  // fraction (909.5625 light) the default would clip.
   const num = (v) => (Number(v) || 0).toLocaleString(undefined, { maximumFractionDigits: 4 });
   const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const sliderFill = (v, lo, hi) => (hi <= lo ? "0%" : clampN(((v - lo) / (hi - lo)) * 100, 0, 100) + "%");
 
   // Blessing of the Lilypad - the ally buff. The stat tables already hold the
-  // level-30 ally values (75 PR, 787.5 light), so the buff multiplies those.
-  // Magic Find has no confirmed buff component, so its Ally row is left alone.
-  const LILYPAD = { "Power Rank": 1.31, Light: 1.155 };
+  // level-30 ally values (787.5 light), so the buff multiplies those. Light is
+  // the only tab it touches: power rank and magic find take nothing from it.
+  const LILYPAD = { Light: 1.155 };
   const isAlly = (item) => String(item && item.name).trim() === "Ally";
 
   const TABS = [
@@ -96,7 +96,7 @@
   function totalPR() {
     let total = 0;
     prData.forEach((item) => {
-      if (item.type === "switch") total += item.currentValue ? withLilypad(item, item.value, "Power Rank") : 0;
+      if (item.type === "switch") total += item.currentValue ? item.value : 0;
       else if (item.type === "pr_mastery") { const c = Math.min(item.currentValue || 0, 1000); total += Math.min(c, 500) * 4 + Math.max(0, c - 500) * 1; }
       else if (item.type === "pr_geode_mastery") total += Math.min(item.currentValue || 0, 100) * 5;
       else total += item.currentValue || 0;
@@ -107,7 +107,7 @@
     let v = 0;
     if (item.type === "pr_mastery") { const c = Math.min(item.currentValue || 0, 1000); v = Math.min(c, 500) * 4 + Math.max(0, c - 500) * 1; }
     else if (item.type === "pr_geode_mastery") v = Math.min(item.currentValue || 0, 100) * 5;
-    else if (item.type === "switch") v = item.currentValue ? withLilypad(item, item.value, "Power Rank") : 0;
+    else if (item.type === "switch") v = item.currentValue ? item.value : 0;
     else v = item.currentValue || 0;
     return "+" + num(v) + " PR";
   }
@@ -276,8 +276,8 @@
     return h("div", { class: "calc-item" + (cfg.accentClass || "") }, header, control);
   }
 
-  // The ally buff toggle, rendered right under the Ally row of whichever tab it
-  // affects. One shared flag, so switching it on either tab moves both.
+  // The ally buff toggle, rendered right under the Light tab's Ally row - the
+  // only place the buff lands now that power rank takes nothing from it.
   function lilypadItem(gain, unit) {
     const item = { name: "Blessing of the Lilypad", type: "switch", currentValue: lilypad };
     return calcItem(item, {
@@ -334,7 +334,6 @@
         numberMax: item.type === "pr_mastery" ? 2000 : (item.type === "pr_geode_mastery" ? 200 : item.value),
         step: 1, badge: () => prBadge(item), onInput: refresh,
       }));
-      if (isAlly(item)) grid.appendChild(lilypadItem("31", "PR"));
     });
     elBody.appendChild(grid);
   }
