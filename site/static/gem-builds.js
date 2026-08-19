@@ -460,8 +460,26 @@
     return t("Highest damage coefficient for your setup.");
   }
 
+  // ── Last updated ─────────────────────────────────────────────────────────
+  // The template stamps the UTC instant; this rewrites it in whatever timezone
+  // and locale the reader's browser is set to, so nobody has to convert from
+  // ours. Falls back to the raw ISO text if the date is unparseable.
+  function renderUpdated() {
+    const el = document.getElementById("gb-updated");
+    if (!el) return;
+    const when = new Date(el.getAttribute("datetime"));
+    if (isNaN(when)) return;
+    // Date format follows the site's language picker so it doesn't read as
+    // English inside a translated page; the timezone is always the reader's.
+    const lang = document.documentElement.lang || undefined;
+    el.textContent = when.toLocaleString(lang, { dateStyle: "medium", timeStyle: "short" });
+    el.title = when.toString();
+  }
+  document.addEventListener("btt-lang-changed", renderUpdated);
+
   // ── Init ─────────────────────────────────────────────────────────────────
   async function init() {
+    renderUpdated();
     elConfig = document.getElementById("gb-config");
     elResults = document.getElementById("gb-results");
     if (!elConfig) return;

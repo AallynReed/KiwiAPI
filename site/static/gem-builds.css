@@ -13,6 +13,10 @@
 .gb-eyebrow { font-family: monospace; color: var(--accent-blue); font-size: .85rem; letter-spacing: .04em; margin-bottom: 8px; }
 .gb-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: var(--type-h2, 2.6rem); font-weight: 700; line-height: 1.1; margin-bottom: 10px; }
 .gb-sub { color: var(--text-mute); font-size: var(--type-lead, 1.15rem); max-width: 780px; margin: 0 auto; line-height: 1.5; }
+/* Stamped in UTC by the template, rewritten into the reader's own timezone on
+   load - so "today" means today wherever they are, not on the server. */
+.gb-updated { color: var(--text-mute); font-size: .82rem; margin-top: 10px; }
+.gb-updated time { font-variant-numeric: tabular-nums; }
 
 /* ── Layout ──────────────────────────────────────────────────────────────── */
 .gb-layout {
