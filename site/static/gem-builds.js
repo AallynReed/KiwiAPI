@@ -145,7 +145,7 @@
     if (config.ally !== "boot_clown") {
       gearSection.appendChild(toggleRow("Blessing of the Lilypad", config.ally_buff,
         (v) => { config.ally_buff = v; onConfigChange(); },
-        "The ally buff, on top of level 30: +7.75% to the ally's light and +15.5% to its damage bonus."));
+        "The ally buff, on top of level 30: +15.5% to the ally's light and +31% to its damage bonus."));
     }
 
     // Farm-only light target

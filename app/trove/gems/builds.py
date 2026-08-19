@@ -23,17 +23,17 @@ BUILD_TYPES = ("Light", "Farm", "Health")
 _DMG_FOLDER = {"Physical Damage": "physical_damage", "Magic Damage": "magic_damage"}
 
 # Blessing of the Lilypad - the ally buff. Ally stat values in builds/ally.json
-# are already the level-30 numbers (Scorpius 500 Light / 28.75% PD = its base
+# are already the level-30 numbers (Scorpius 700 Light / 36.25% PD = its base
 # 400/25% scaled by the L30 multipliers), so the buff multiplies those directly.
 # Measured per stat class, not per ally: two allies gave identical ratios.
-# Damage, Critical Damage and Power Rank share one 15.5% class; Light is its
-# own. Stability and Movement Speed have no measured multiplier yet, so an
+# Damage, Critical Damage and Power Rank share one 31% class; Light is its own
+# 15.5%. Stability and Movement Speed have no measured multiplier yet, so an
 # ally granting those keeps them unbuffed rather than guessed.
 LILYPAD_MULTIPLIERS = {
-    "Light": 1.0775,
-    "Physical Damage": 1.155,
-    "Magic Damage": 1.155,
-    "Critical Damage": 1.155,
+    "Light": 1.155,
+    "Physical Damage": 1.31,
+    "Magic Damage": 1.31,
+    "Critical Damage": 1.31,
 }
 
 
@@ -406,7 +406,7 @@ def build_options() -> dict:
             "ally": "Use 'boot_clown' for no ally. Ally stats are the level-30 values.",
             "ally_buff": (
                 "Blessing of the Lilypad, on by default: multiplies the ally's level-30 "
-                "Light by 1.0775 and its Physical/Magic/Critical Damage by 1.155. Ally stats only."
+                "Light by 1.155 and its Physical/Magic/Critical Damage by 1.31. Ally stats only."
             ),
             "food": "Use \"\" for none.",
             "high_precision": "Round every result field to 8 decimals instead of 1-2.",

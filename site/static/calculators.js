@@ -21,16 +21,16 @@
   // structural change (tab switch, data load).
   let liveUpdaters = [];
 
-  // 4 decimals, not the locale default of 3: the buffed ally lands on 130.9375
-  // PR, and cutting that to 130.938 loses a real quarter-point.
+  // 4 decimals, not the locale default of 3: the buffed ally lands on a
+  // fraction (98.25 PR, 909.5625 light) the default would clip.
   const num = (v) => (Number(v) || 0).toLocaleString(undefined, { maximumFractionDigits: 4 });
   const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const sliderFill = (v, lo, hi) => (hi <= lo ? "0%" : clampN(((v - lo) / (hi - lo)) * 100, 0, 100) + "%");
 
   // Blessing of the Lilypad - the ally buff. The stat tables already hold the
-  // level-30 ally values (112.5 PR, 562.5 light), so the buff multiplies those.
+  // level-30 ally values (75 PR, 787.5 light), so the buff multiplies those.
   // Magic Find has no confirmed buff component, so its Ally row is left alone.
-  const LILYPAD = { "Power Rank": 1.155, Light: 1.0775 };
+  const LILYPAD = { "Power Rank": 1.31, Light: 1.155 };
   const isAlly = (item) => String(item && item.name).trim() === "Ally";
 
   const TABS = [
@@ -334,7 +334,7 @@
         numberMax: item.type === "pr_mastery" ? 2000 : (item.type === "pr_geode_mastery" ? 200 : item.value),
         step: 1, badge: () => prBadge(item), onInput: refresh,
       }));
-      if (isAlly(item)) grid.appendChild(lilypadItem("15.5", "PR"));
+      if (isAlly(item)) grid.appendChild(lilypadItem("31", "PR"));
     });
     elBody.appendChild(grid);
   }
@@ -465,7 +465,7 @@
         min: 0, sliderMax: getLightSliderMax(item), numberMax: getLightNumberMax(item),
         step: getLightStep(item), badge: () => lightBadge(item), onInput: refresh,
       }));
-      if (isAlly(item)) grid.appendChild(lilypadItem("7.75", t("Light")));
+      if (isAlly(item)) grid.appendChild(lilypadItem("15.5", t("Light")));
     });
     elBody.appendChild(grid);
   }
