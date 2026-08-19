@@ -14,9 +14,26 @@
 .gb-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: var(--type-h2, 2.6rem); font-weight: 700; line-height: 1.1; margin-bottom: 10px; }
 .gb-sub { color: var(--text-mute); font-size: var(--type-lead, 1.15rem); max-width: 780px; margin: 0 auto; line-height: 1.5; }
 /* Stamped in UTC by the template, rewritten into the reader's own timezone on
-   load - so "today" means today wherever they are, not on the server. */
-.gb-updated { color: var(--text-mute); font-size: .82rem; margin-top: 10px; }
-.gb-updated time { font-variant-numeric: tabular-nums; }
+   load - so "today" means today wherever they are, not on the server. Sits in a
+   status pill because the freshness of these numbers is the point: the green dot
+   is a state, not decoration, and the timestamp itself carries Ink weight. */
+.gb-updated { margin-top: 16px; display: flex; justify-content: center; }
+.gb-updated-pill {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: .88rem;
+  color: var(--text-mute);
+}
+.gb-updated-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent-green);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-green) 18%, transparent);
+}
+.gb-updated-label { letter-spacing: .01em; }
+.gb-updated time { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* ── Layout ──────────────────────────────────────────────────────────────── */
 .gb-layout {
@@ -26,6 +43,22 @@
   align-items: start;
 }
 @media (max-width: 960px) { .gb-layout { grid-template-columns: 1fr; } }
+
+/* The results table is long and the controls belong to it, so the panel rides the
+   scroll instead of being left at the top. A sticky element taller than the screen
+   parks its top and hides its own bottom for good, so the panel takes the height
+   actually available and scrolls inside itself - every control stays reachable
+   without the page moving. Two columns only: stacked, the controls are already
+   first and there is nothing beside them to scroll past. */
+@media (min-width: 961px) {
+  .gb-config-panel {
+    position: sticky;
+    top: calc(var(--nav-h) + 8px);
+    max-height: calc(100vh - var(--nav-h) - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
 
 .gb-panel {
   background: var(--bg-card);
