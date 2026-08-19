@@ -477,6 +477,10 @@
     if (!options.character.includes(config.character)) config.character = options.character[0];
     if (!options.character.includes(config.subclass)) config.subclass = options.character[0];
     if (!options.build_type.includes(config.build_type)) config.build_type = options.build_type[0];
+    // An ally can leave the list. Without this, a saved config pointing at a
+    // retired one silently contributes nothing while the picker shows the first
+    // option, so the ranking would not match what the page says is selected.
+    if (!options.ally.some((a) => a.key === config.ally)) config.ally = "boot_clown";
 
     renderConfig();
     renderResults();
