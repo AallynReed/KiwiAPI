@@ -826,6 +826,15 @@
     el.addEventListener('touchmove', onTMove, { passive: false });
     el.addEventListener('touchend', onTEnd);
     window.addEventListener('resize', onResize);
+    /* three.js writes the canvas size as an INLINE style, which outranks the host's
+       `height:100%` rule, so a canvas sized before the animation bar existed keeps its
+       old height, spills over the bar and swallows every click. Bars appear, grow and
+       go while the page never resizes, so watch the stage itself. */
+    var ro = null;
+    if (window.ResizeObserver) {
+      ro = new ResizeObserver(function () { onResize(); });
+      ro.observe(stage);
+    }
 
     // Render-on-demand: the scene is static between edits, so draw once and redraw
     // only on interaction rather than spinning a rAF loop forever.
@@ -878,6 +887,9 @@
         request();
       },
       clearOverlay: clearOverlay,
+      // For a host that changes the stage's size itself: the observer catches it a
+      // frame later, this catches it now.
+      resize: onResize,
       dispose: function () {
         alive = false; cancelAnimationFrame(raf);
         Object.keys(overlays).forEach(clearOverlay);
@@ -895,6 +907,7 @@
         el.removeEventListener('touchmove', onTMove);
         el.removeEventListener('touchend', onTEnd);
         window.removeEventListener('resize', onResize);
+        if (ro) { ro.disconnect(); ro = null; }
         disposeMeshes();
         renderer.dispose();
         if (band && band.parentNode) band.parentNode.removeChild(band);

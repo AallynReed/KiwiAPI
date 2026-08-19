@@ -2484,7 +2484,10 @@
     $('bpe-hover').hidden = true;
     renderStageBar();
     renderToolHint();
-    if (state.scene) state.scene.request();
+    // The bar takes its height out of the stage, and three.js writes the canvas size as
+    // an inline style - so a canvas left at its old height spills over the bar and eats
+    // every click on it.
+    if (state.scene) { state.scene.resize(); state.scene.request(); }
   }
 
   /* The bar is built once per model, from the rig's clip list and its state machine -
@@ -2508,6 +2511,7 @@
         state.anim.bar = AC().bar({
           host: host, kit: state.anim.kit, onPick: playProgram,
           restLabel: 'Rest pose', hint: 'editing is off while it plays',
+          onResize: function () { if (state.scene) state.scene.resize(); },
         });
       });
   }
