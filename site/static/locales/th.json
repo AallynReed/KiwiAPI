@@ -2775,5 +2775,10 @@
   "Still in development": "ยังอยู่ระหว่างพัฒนา",
   "Shows a Beta badge, so players know to expect changes.": "แสดงป้าย Beta เพื่อให้ผู้เล่นรู้ว่าจะมีการเปลี่ยนแปลง",
   "This mod is still being worked on, so expect changes and the odd rough edge.": "ม็อดนี้ยังพัฒนาอยู่ จึงอาจมีการเปลี่ยนแปลงและจุดที่ยังไม่สมบูรณ์",
-  "Last updated": "อัปเดตล่าสุด"
+  "Last updated": "อัปเดตล่าสุด",
+  "Depth": "ความลึก",
+  "Run time": "เวลาที่ใช้",
+  "Depth · run time": "ความลึก · เวลาที่ใช้",
+  "Run time (same depth)": "เวลาที่ใช้ (ความลึกเดียวกัน)",
+  "This board packs the depth and the run time into one score.": "กระดานนี้รวมความลึกและเวลาที่ใช้ไว้ในคะแนนเดียว"
 }

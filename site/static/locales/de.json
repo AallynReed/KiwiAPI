@@ -3003,5 +3003,10 @@
   "Still in development": "Noch in Entwicklung",
   "Shows a Beta badge, so players know to expect changes.": "Zeigt ein Beta-Abzeichen, damit Spieler mit Änderungen rechnen.",
   "This mod is still being worked on, so expect changes and the odd rough edge.": "An dieser Mod wird noch gearbeitet - rechne mit Änderungen und kleinen Ecken und Kanten.",
-  "Last updated": "Zuletzt aktualisiert"
+  "Last updated": "Zuletzt aktualisiert",
+  "Depth": "Tiefe",
+  "Run time": "Laufzeit",
+  "Depth · run time": "Tiefe · Laufzeit",
+  "Run time (same depth)": "Laufzeit (gleiche Tiefe)",
+  "This board packs the depth and the run time into one score.": "Diese Bestenliste packt die Tiefe und die Laufzeit in einen einzigen Wert."
 }

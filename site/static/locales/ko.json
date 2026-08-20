@@ -3003,5 +3003,10 @@
   "Still in development": "개발 중",
   "Shows a Beta badge, so players know to expect changes.": "베타 배지를 표시해 변경이 있을 수 있음을 플레이어에게 알립니다.",
   "This mod is still being worked on, so expect changes and the odd rough edge.": "이 모드는 아직 개발 중이라 변경 사항이나 다듬어지지 않은 부분이 있을 수 있습니다.",
-  "Last updated": "마지막 업데이트"
+  "Last updated": "마지막 업데이트",
+  "Depth": "깊이",
+  "Run time": "주파 시간",
+  "Depth · run time": "깊이 · 주파 시간",
+  "Run time (same depth)": "주파 시간 (같은 깊이)",
+  "This board packs the depth and the run time into one score.": "이 리더보드는 깊이와 주파 시간을 하나의 점수에 담습니다."
 }

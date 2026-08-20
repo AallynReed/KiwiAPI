@@ -629,6 +629,7 @@ async def player_boards(name: str) -> dict:
         {
             **b,
             "board_name": (meta.get(b["leaderboard"]) or {}).get("name"),
+            "board_name_id": (meta.get(b["leaderboard"]) or {}).get("name_id"),
             "category": (meta.get(b["leaderboard"]) or {}).get("category"),
         }
         for b in board_rows
@@ -701,6 +702,7 @@ async def player_profile(name: str, *, limit: int = 200, hot_only: bool = False)
         {
             **b,
             "board_name": (meta.get(b["leaderboard"]) or {}).get("name"),
+            "board_name_id": (meta.get(b["leaderboard"]) or {}).get("name_id"),
             "category": (meta.get(b["leaderboard"]) or {}).get("category"),
         }
         for b in board_rows

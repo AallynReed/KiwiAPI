@@ -20,6 +20,21 @@
   function score(n) {
     return (typeof n === 'number' && isFinite(n)) ? Math.round(n).toLocaleString() : '—';
   }
+  // A delve board's score is not a number to round - it packs a depth and a run
+  // time (see BTTUtil.delveKind), and rounding it would report depth 236 for a
+  // player who reached 235. Returns {value, note}: the headline and the muted
+  // second line, the latter empty for every ordinary board.
+  function boardScore(b) {
+    const n = b.latest_score;
+    if (typeof n !== 'number' || !isFinite(n)) return { value: '—', note: '' };
+    const kind = window.BTTUtil.delveKind(b.leaderboard, b.board_name_id);
+    if (kind === 'depth_time') {
+      const r = window.BTTUtil.delveReading(n);
+      return { value: r.depth.toLocaleString(), note: r.clock };
+    }
+    if (kind === 'minutes') return { value: window.BTTUtil.delveClock(n), note: '' };
+    return { value: score(n), note: '' };
+  }
   function when(unix) {
     if (!unix) return '—';
     try { return new Date(unix * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
@@ -110,6 +125,7 @@
     const cur = b.latest_rank != null ? '#' + num(b.latest_rank) : '—';
     // Crown reflects the current standing on this board (gold/silver/bronze = #1/2/3).
     const crown = window.BTTUtil.crownHtml(b.latest_rank);
+    const sc = boardScore(b);
     return `
       <div class="pl-tile">
         <div class="pl-tile-head">
@@ -118,7 +134,8 @@
         </div>
         <div class="pl-tile-stats">
           <span class="pl-tile-rank">${crown}${cur}</span>
-          <span class="pl-tile-score">${score(b.latest_score)}</span>
+          <span class="pl-tile-score">${esc(sc.value)}${
+            sc.note ? `<span class="pl-tile-score-note" title="${esc(tr('Run time'))}">${esc(sc.note)}</span>` : ''}</span>
         </div>
         <div class="pl-tile-meta">
           <span>${esc(tr('Best'))} #${num(b.best_rank)}</span>

@@ -1680,6 +1680,19 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   text-align: right;
   color: var(--text);
 }
+/* Delve boards pack a depth AND a run time into one score, so the cell carries
+   two readings: the depth on the headline, the run time under it. */
+.lb-td.lb-score-delve {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  line-height: 1.25;
+}
+.lb-score-note {
+  font-size: .76rem;
+  color: var(--text-mute);
+}
 
 /* Day-over-day movement chips next to rank + score. Positive = up = green,
    negative = down = red; "NEW" marks a player with no prior-day position. */
@@ -1693,6 +1706,9 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 }
 .lb-delta.up   { color: #4ade80; }
 .lb-delta.down { color: #f87171; }
+/* Movement whose direction carries no good/bad meaning (a board whose score IS
+   a run time - see scoreDeltaBadge). Shown, but not coloured as a win or loss. */
+.lb-delta.lb-delta-flat { color: var(--text-mute); }
 .lb-delta.new {
   color: var(--text-mute);
   background: rgba(255,255,255,.08);

@@ -224,6 +224,64 @@ STUB_ENTRIES = [
     {"player_name": "TestPlayer", "rank": 7, "score": 57000.0},
 ]
 
+# Boards 2004 / 2014 / 2024 pack a depth AND a run time into one float:
+#   score = depth + 1 - sqrt(minutes / 180)
+# The shared entry stub is mastery-sized, so those boards get their own scores -
+# otherwise the delve rendering can't be looked at locally. Real depths from a
+# capture, with run times spread across the curve (fast runs at the top).
+STUB_DELVE_ENTRIES = [
+    {"player_name": "Skill", "rank": 1, "score": 235.46743369687553},      # 235 in 51:03
+    {"player_name": "noa00__00", "rank": 1, "score": 235.46743369687553},
+    {"player_name": "MaxOG", "rank": 3, "score": 235.2},                   # 235, slower
+    {"player_name": "Bae", "rank": 4, "score": 234.85757003175073},
+    {"player_name": "VatsanT", "rank": 5, "score": 220.7643},              # 220 in 10:00
+    {"player_name": "Aallyn", "rank": 6, "score": 186.83141108746116},
+    {"player_name": "TestPlayer", "rank": 7, "score": 150.0},              # 150 at the 180:00 cap
+]
+# Packed by uuid, exactly as the site hardcodes it - nothing in a board's name
+# separates these three from the delve boards that carry a plain depth.
+STUB_DELVE_UUIDS = {2004, 2014, 2024}
+
+
+def _with_movement(rows, delve=False):
+    """Attach the day-over-day fields the real /entries response carries, so the
+    movement chips render locally. The prior scores are made up here, but their
+    SHAPE is what matters: on a packed delve board the pair has to cover both a
+    depth change and a same-depth run-time change, since the page reports those
+    two as different readings (never as the subtraction)."""
+    delve_prev = [
+        None,                       # no prior row -> NEW
+        lambda v: v - 2.0,          # two depths deeper
+        lambda v: v - 0.06,         # same depth, faster run
+        lambda v: v + 1.4,          # lost a depth
+        lambda v: v,                # unchanged
+        lambda v: v + 0.02,         # same depth, slower run
+        None,
+    ]
+    plain_prev = [
+        None,
+        lambda v: v - 240.0,
+        lambda v: v - 12.0,
+        lambda v: v + 95.0,
+        lambda v: v,
+        lambda v: v + 3.0,
+        None,
+    ]
+    prev = delve_prev if delve else plain_prev
+    out = []
+    for i, row in enumerate(rows):
+        row = dict(row)
+        fn = prev[i % len(prev)]
+        if fn is None:
+            row.update(is_new=True, prev_rank=None, prev_score=None,
+                       rank_delta=None, score_delta=None)
+        else:
+            p = fn(row["score"])
+            row.update(is_new=False, prev_rank=row["rank"] + 1, prev_score=p,
+                       rank_delta=1, score_delta=row["score"] - p)
+        out.append(row)
+    return out
+
 # The 18 Trove classes in the boards' class RELEASE order (= the Power
 # Rank/Effort/Paragon board offset order; matches stats._BOARD_CLASS_ORDER),
 # for the Class Activity page stubs.
@@ -3060,7 +3118,8 @@ class Handler(SimpleHTTPRequestHandler):
                             {
                                 "uuid": 2004, "name": "CHALLENGE: Deepest (WEEKLY)",
                                 "category": "CONTESTS", "contest_type": "weekly",
-                                "rank": 1, "score": 9999, "confidence": 0.94,
+                                # Packed: depth 999 in 03:58 (see STUB_DELVE_ENTRIES).
+                                "rank": 1, "score": 999.8517, "confidence": 0.94,
                                 "evidence": [
                                     {
                                         "type": "score_outlier",
@@ -3303,10 +3362,15 @@ class Handler(SimpleHTTPRequestHandler):
             created_at = int(qs.get("created_at", [str(STUB_ANCHOR)])[0])
             limit = int(qs.get("limit", ["100"])[0])
             offset = int(qs.get("offset", ["0"])[0])
-            page = STUB_ENTRIES[offset:offset + limit]
+            delve = uuid in STUB_DELVE_UUIDS
+            rows = _with_movement(
+                STUB_DELVE_ENTRIES if delve else STUB_ENTRIES, delve=delve)
+            page = rows[offset:offset + limit]
             return self._send_json({
                 "uuid": uuid, "created_at": created_at,
-                "items": page, "count": len(page), "total": len(STUB_ENTRIES),
+                "items": page, "count": len(page), "total": len(rows),
+                "comparison": {"comparable": True,
+                               "prev_anchor": STUB_TIMESTAMPS[1], "reason": "ok"},
             })
         if path.startswith("/site/leaderboards/players/") and path.endswith("/profile"):
             queried = unquote(path.split("/")[4])
@@ -3330,11 +3394,18 @@ class Handler(SimpleHTTPRequestHandler):
                 (2021, "Deepest Diggers of PUBLIC (RECENT)", "DELVES"),
             ]
             boards = []
+            _name_ids = {b["uuid"]: b["name_id"] for b in STUB_BOARDS}
             for i, (uuid, nm, cat) in enumerate(cat_boards):
                 boards.append({
-                    "leaderboard": uuid, "board_name": nm, "category": cat,
+                    "leaderboard": uuid, "board_name": nm,
+                    # The board's translation key - half of what the client
+                    # matches on to tell a run-time board from a plain one.
+                    "board_name_id": _name_ids.get(uuid),
+                    "category": cat,
                     "best_rank": (i % 5) + 1, "latest_rank": (i % 7) + 1,
-                    "latest_score": 59736.0 - i * 850, "appearances": 749 - i,
+                    "latest_score": (235.46743369687553 if uuid in STUB_DELVE_UUIDS
+                                     else 59736.0 - i * 850),
+                    "appearances": 749 - i,
                     "first_seen": STUB_TIMESTAMPS[-1], "last_seen": STUB_ANCHOR,
                 })
             # Rename chain + alt-cluster membership so the profile's username
@@ -3375,6 +3446,31 @@ class Handler(SimpleHTTPRequestHandler):
                 "renames": renames_out, "alt_clusters": alt_clusters,
             })
 
+        if (path.startswith("/site/leaderboards/")
+                and path.endswith("/history")
+                and not path.startswith("/site/leaderboards/players/")):
+            # Top-N trajectories for the per-board chart. Delve boards climb in
+            # depth AND drift in run time, so their lines exercise the packed
+            # reading in the tooltip and the depth-only y-axis.
+            uuid = int(path.split("/")[3])
+            _HR = 3600
+            hanchors = [STUB_ANCHOR - (11 - i) * _HR for i in range(12)]
+            delve = uuid in STUB_DELVE_UUIDS
+            rows = STUB_DELVE_ENTRIES if delve else STUB_ENTRIES
+            series = []
+            for e in rows[:5]:
+                pts, cur = [], e["score"] - (0.9 if delve else 900.0)
+                for a in hanchors:
+                    pts.append({"created_at": a, "rank": e["rank"],
+                                "score": round(cur, 6), "synthetic": False})
+                    cur += (0.09 if delve else 90.0)
+                series.append({"player_name": e["player_name"],
+                               "current_rank": e["rank"], "points": pts})
+            return self._send_json({
+                "uuid": uuid, "days": 7, "window_start": hanchors[0],
+                "window_end": STUB_ANCHOR, "anchors": hanchors, "series": series,
+            })
+
         if path.startswith("/site/leaderboards/players/") and path.endswith("/history"):
             queried = unquote(path.split("/")[4])
             # Mirror the prod case-insensitive match (service.py uses
@@ -3401,7 +3497,10 @@ class Handler(SimpleHTTPRequestHandler):
                     items.append({
                         "player_name": canonical,
                         "rank": i + 1,
-                        "score": 59731.0 - i * 1200 - (0 if anchor == STUB_ANCHOR else 300),
+                        "score": (235.46743369687553 - (0 if anchor == STUB_ANCHOR else 0.02)
+                                  if b["uuid"] in STUB_DELVE_UUIDS
+                                  else 59731.0 - i * 1200
+                                  - (0 if anchor == STUB_ANCHOR else 300)),
                         "leaderboard": b["uuid"],
                         "created_at": anchor,
                     })
@@ -3438,8 +3537,9 @@ class Handler(SimpleHTTPRequestHandler):
                 "series": [
                     {"uuid": 20, "name": "GEODE MASTERY POINTS",
                      "points": _pts(1_000_000_000 + seed * 1000, 48_500_000)},
-                    {"uuid": 4002, "name": "DELVE DEPTH",
-                     "points": _pts(1880 + (seed % 10), 1920, holes=(4, 5, 6))},
+                    {"uuid": 2004, "name": "CHALLENGE: Deepest (WEEKLY)",
+                     "points": _pts(230.4 + (seed % 10) * 0.01, 0.4,
+                                    holes=(4, 5, 6))},
                 ],
             })
 

@@ -335,6 +335,92 @@
         return `<i class="board-crown board-crown-${tier} fa-solid fa-crown" title="#${rank}" aria-hidden="true"></i>`;
     }
 
+    // ─── Delve scores ──────────────────────────────────────────────────
+    // A delve leaderboard sends one float per entry that carries TWO readings:
+    //
+    //     score = depth + 1 - sqrt(minutes / 180)
+    //
+    // The whole part is the depth; the `1 - sqrt(...)` fraction is the run time,
+    // inverted so a faster run leaves a larger fraction and one descending sort
+    // ranks depth first, time second. Inverting it is what the screen needs:
+    //
+    //     minutes = 180 * (1 - fraction)^2
+    //
+    // Which boards carry a time is hardcoded, exactly as the game hardcodes it:
+    // nothing in what the engine sends separates the three packed boards from the
+    // dozens of other delve boards that keep a plain depth, so a rule inferred
+    // from a board's name or float width would print a fabricated run time on
+    // every one of them.
+    const DELVE_PACKED_UUIDS = new Set([2004, 2014, 2024]);
+    // The `Fastest 3-Tier Clear` boards are separate: their score IS minutes,
+    // with nothing packed in. Matched on the game's translation key because their
+    // ids have not been read off the game.
+    const DELVE_MINUTES_KEYS = new Set([
+        "Leaderboard_DelveThreeTier_ChallengeFastest",
+        "Leaderboard_DelveThreeTier_PrivateFastest",
+        "Leaderboard_DelveThreeTier_PublicFastest",
+    ]);
+    const DELVE_MAX_MINUTES = 180;   // the run-time cap the fraction maps onto
+
+    // What a board's score means: "depth_time" (depth + packed run), "minutes"
+    // (the score is a run time), or null for everything else - which is written
+    // out exactly as it arrived. `nameId` is the board's translation key
+    // (`name_id` in the boards payload) and may be absent.
+    function delveKind(uuid, nameId) {
+        if (DELVE_PACKED_UUIDS.has(Number(uuid))) return "depth_time";
+        if (nameId && DELVE_MINUTES_KEYS.has(String(nameId))) return "minutes";
+        return null;
+    }
+
+    // Whole part of a packed score. Floor, not round - 235.9 is depth 235.
+    function delveDepth(score) {
+        return Math.floor(score);
+    }
+
+    // Run time in minutes packed into a score's fraction.
+    function delveRunMinutes(score) {
+        const fraction = score - Math.floor(score);
+        return DELVE_MAX_MINUTES * Math.pow(1 - fraction, 2);
+    }
+
+    // MM:SS, minutes uncapped (the 180-minute ceiling prints as "180:00" rather
+    // than as hours). Seconds are ROUNDED, not truncated: the minutes come back
+    // through a square root, so a run set at exactly ten minutes arrives as
+    // 9.9997 of them and truncating would print 09:59.
+    function delveClock(minutes) {
+        const total = Math.max(0, Math.round(minutes * 60));
+        return String(Math.floor(total / 60)).padStart(2, "0")
+            + ":" + String(total % 60).padStart(2, "0");
+    }
+
+    // Both readings of a packed score: {depth, minutes, clock}.
+    function delveReading(score) {
+        const minutes = delveRunMinutes(score);
+        return { depth: delveDepth(score), minutes, clock: delveClock(minutes) };
+    }
+
+    // The distance between two delve scores. Subtracting them is not a reading of
+    // anything, so this works from the PAIR:
+    //   • different depths -> the gap is the depths, and the two run times belong
+    //     to different depths so nothing is said about them.
+    //   • same depth -> the gap is entirely the difference in run time, as a clock.
+    // Returns {unit: "depth"|"time", text, up} - `up` = the score rose - or null
+    // when the two scores are identical.
+    function delveGap(score, other) {
+        const a = delveReading(score);
+        const b = delveReading(other);
+        if (a.depth !== b.depth) {
+            return {
+                unit: "depth",
+                text: Math.abs(a.depth - b.depth).toLocaleString(),
+                up: a.depth > b.depth,
+            };
+        }
+        const seconds = Math.abs(Math.round(a.minutes * 60) - Math.round(b.minutes * 60));
+        if (!seconds) return null;
+        return { unit: "time", text: delveClock(seconds / 60), up: a.minutes < b.minutes };
+    }
+
     // ─── Creator-written translations ──────────────────────────────────
     // A Mods Hub text field ships as an English base plus a {lang: text} map the
     // creator wrote (summary / description / README). These pick the version a
@@ -408,6 +494,7 @@
     window.BTTUtil = {
         esc, apiUrl, getJSON, fetchJSON, copy, debounce, timeAgo, getFocusable, trapFocus,
         segmentGaps, boardIconName, boardIconImg, crownHtml,
+        delveKind, delveDepth, delveRunMinutes, delveClock, delveReading, delveGap,
         siteLang, textVersions, pickLang, localized, modeHint,
     };
 })();

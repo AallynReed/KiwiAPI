@@ -3003,5 +3003,10 @@
   "Still in development": "仍在开发中",
   "Shows a Beta badge, so players know to expect changes.": "显示 Beta 标记，让玩家知道内容还会变动。",
   "This mod is still being worked on, so expect changes and the odd rough edge.": "这个模组仍在开发中，可能会有改动和一些不完善的地方。",
-  "Last updated": "最后更新"
+  "Last updated": "最后更新",
+  "Depth": "深度",
+  "Run time": "用时",
+  "Depth · run time": "深度 · 用时",
+  "Run time (same depth)": "用时（相同深度）",
+  "This board packs the depth and the run time into one score.": "该排行榜将深度与用时合并为一个分数。"
 }

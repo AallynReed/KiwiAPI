@@ -852,19 +852,23 @@ async def all_boards() -> list[dict]:
 
 
 async def board_meta(uuids: list[int]) -> dict[int, dict]:
-    """``{uuid: {name, category, reset_kind}}`` for a set of boards - for the
-    per-player / per-board history charts (name + cadence for the reset-zero
-    injection) and the profile page's category grouping."""
+    """``{uuid: {name, name_id, category, reset_kind}}`` for a set of boards - for
+    the per-player / per-board history charts (name + cadence for the reset-zero
+    injection) and the profile page's category grouping. ``name_id`` is the game's
+    translation key, which is how the client tells a board whose score is a run
+    time from one whose score is a plain number (see BTTUtil.delveKind)."""
     if not uuids:
         return {}
     async with acquire() as con:
         rows = await con.fetch(
-            "SELECT uuid, name, category, reset_kind_override FROM board WHERE uuid = ANY($1)",
+            "SELECT uuid, name, name_id, category, reset_kind_override "
+            "FROM board WHERE uuid = ANY($1)",
             uuids,
         )
     return {
         r["uuid"]: {
             "name": r["name"],
+            "name_id": r["name_id"],
             "category": r["category"],
             "reset_kind": _effective_reset_kind(r["reset_kind_override"], r["uuid"]),
         }

@@ -3003,5 +3003,10 @@
   "Still in development": "Encore en développement",
   "Shows a Beta badge, so players know to expect changes.": "Affiche un badge Beta pour prévenir les joueurs des changements à venir.",
   "This mod is still being worked on, so expect changes and the odd rough edge.": "Ce mod est encore en cours de développement : attendez-vous à des changements et à quelques imperfections.",
-  "Last updated": "Dernière mise à jour"
+  "Last updated": "Dernière mise à jour",
+  "Depth": "Profondeur",
+  "Run time": "Temps de parcours",
+  "Depth · run time": "Profondeur · temps de parcours",
+  "Run time (same depth)": "Temps de parcours (même profondeur)",
+  "This board packs the depth and the run time into one score.": "Ce classement condense la profondeur et le temps de parcours en un seul score."
 }

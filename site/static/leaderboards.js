@@ -6,7 +6,10 @@
 (function () {
   'use strict';
 
-  const { esc, fetchJSON, apiUrl, segmentGaps } = window.BTTUtil;
+  const {
+    esc, fetchJSON, apiUrl, segmentGaps,
+    delveKind, delveClock, delveReading, delveGap,
+  } = window.BTTUtil;
 
   // Signed-in Dashboard users can browse deeper leaderboard history (the extended
   // archive window) and pass the older-than-hot gate on boards/entries. The
@@ -564,7 +567,7 @@
     const boardRows = boards.map((b) => `
       <li class="lb-rename-board">
         <span class="lb-rename-board-name">${esc(b.name || String(b.uuid))}</span>
-        <span class="lb-rename-board-scores">${esc(fmtNum(b.score_from))} → ${esc(fmtNum(b.score_to))}</span>
+        <span class="lb-rename-board-scores">${esc(scoreText(b.uuid, b.score_from, fmtNum))} → ${esc(scoreText(b.uuid, b.score_to, fmtNum))}</span>
         <span class="lb-rename-board-drift">${b.drift_pct != null ? '+' + esc(String(b.drift_pct)) + '%' : ''}</span>
       </li>`).join('');
 
@@ -778,7 +781,7 @@
         const cls = sr.moved ? 'lb-dupe-line-live' : (sr.frozen ? 'lb-dupe-line-dead' : '');
         return '<span class="lb-dupe-line ' + cls + '">'
           + '<b>#' + esc(String(sr.slot + 1)) + '</b> '
-          + esc(fmtNum(sr.last_score)) + ' <i>' + esc(status) + '</i></span>';
+          + esc(scoreText(b.uuid, sr.last_score, fmtNum)) + ' <i>' + esc(status) + '</i></span>';
       }).join('');
       return '<li class="lb-dupe-board">'
         + '<span class="lb-dupe-board-name">' + esc(b.name || String(b.uuid)) + '</span>'
@@ -1200,7 +1203,7 @@
   function renderCheaterBoard(b) {
     const meta = [
       t('Rank') + ' #' + b.rank,
-      t('Score') + ' ' + formatScore(b.score),
+      scoreLabel(b.uuid) + ' ' + scoreText(b.uuid, b.score),
       b.contest_type ? t(b.contest_type === 'daily' ? 'Daily contest' : 'Weekly contest') : null,
     ].filter(Boolean).map((s) => `<span>${esc(s)}</span>`).join('');
     const evidence = (b.evidence || []).map(renderEvidence).join('');
@@ -1455,18 +1458,21 @@
       parts = [
         t('{n} account(s)').replace('{n}', b.members),
         t('{n} matching hour(s)').replace('{n}', b.matching_hours ?? 0),
-        (b.avg_hourly_gain != null) ? ('~' + formatScore(b.avg_hourly_gain) + '/hr') : null,
+        // A per-hour gain in packed delve score is not a reading of anything -
+        // the number mixes a depth with a run time - so it is left off there.
+        (b.avg_hourly_gain != null && !boardScoreKind(b.uuid))
+          ? ('~' + formatScore(b.avg_hourly_gain) + '/hr') : null,
       ];
     } else {
       // Name-stem board: score range + spread + rank range.
       const range = (b.score_min === b.score_max)
-        ? formatScore(b.score_min)
-        : `${formatScore(b.score_min)} – ${formatScore(b.score_max)}`;
+        ? scoreText(b.uuid, b.score_min)
+        : `${scoreText(b.uuid, b.score_min)} – ${scoreText(b.uuid, b.score_max)}`;
       const spreadPct = (typeof b.spread === 'number') ? b.spread * 100 : null;
       parts = [
         t('{n} account(s)').replace('{n}', b.members),
         t('Ranks') + ' ' + b.rank_min + '–' + b.rank_max,
-        t('Score') + ' ' + range,
+        scoreLabel(b.uuid) + ' ' + range,
         spreadPct != null
           ? 'Δ ' + (spreadPct < 0.01 ? spreadPct.toFixed(4) : spreadPct.toFixed(2)) + '%'
           : null,
@@ -1551,7 +1557,13 @@
       wrap.querySelector('.lb-cluster-chart-svg'),
       wrap.querySelector('.lb-cluster-chart-legend'),
       {
-        anchors, series, valueLabel: t('Score'),
+        anchors, series, valueLabel: scoreLabel(uuid),
+        // One board across several accounts, so the whole figure reads in that
+        // board's own units (a delve line is a depth plus a run time).
+        formatValue: (s, p) => scoreText(uuid, p.y),
+        abbrevValue: boardScoreKind(uuid) === 'depth_time'
+          ? (v) => String(Math.round(v))
+          : boardScoreKind(uuid) === 'minutes' ? (v) => delveClock(v) : null,
         tooltipNameSuffix: (s, p) => (p.rank ? ` · #${p.rank}` : ''),
       },
     );
@@ -2078,6 +2090,17 @@
     const cmp = state.entriesComparison;
     const showDelta = !!(cmp && cmp.comparable);
 
+    // What this board's score means decides both the cell layout and the column
+    // header (see boardScoreKind) - a delve score is two readings, not a number.
+    // Translated here rather than via [data-i18n] because the label is chosen at
+    // render time; renderEntries re-runs on 'btt-lang-changed' (see wireEvents).
+    const kind = boardScoreKind(state.selectedUuid);
+    const scoreHead = kind === 'depth_time' ? t('Depth · run time')
+      : kind === 'minutes' ? t('Run time') : t('Score');
+    const scoreHeadTitle = kind === 'depth_time'
+      ? t('This board packs the depth and the run time into one score.') : '';
+    const scoreCellCls = kind === 'depth_time' ? 'lb-score lb-score-delve' : 'lb-score';
+
     const rows = state.entries.map((e) => {
       let rankExtra = '';
       let scoreExtra = '';
@@ -2086,14 +2109,14 @@
           rankExtra = `<span class="lb-delta new">${t('NEW')}</span>`;
         } else {
           rankExtra = deltaBadge(e.rank_delta, null);
-          scoreExtra = deltaBadge(e.score_delta, formatScore);
+          scoreExtra = scoreDeltaBadge(state.selectedUuid, e);
         }
       }
       return `
       <div class="lb-tr" role="row">
         <div class="lb-td lb-rank ${rankClass(e.rank)}" role="cell">${rankExtra}${e.rank}</div>
         <div class="lb-td" role="cell"><span class="lb-player" data-player="${esc(e.player_name)}"><span class="lb-player-icon"></span>${esc(e.player_name)}</span></div>
-        <div class="lb-td lb-score" role="cell">${scoreExtra}${esc(formatScore(e.score))}</div>
+        <div class="lb-td ${scoreCellCls}" role="cell">${scoreCellHTML(state.selectedUuid, e.score, scoreExtra)}</div>
       </div>`;
     }).join('');
 
@@ -2104,7 +2127,8 @@
         <div class="lb-tr lb-tr-head" role="row">
           <div class="lb-th lb-rank" role="columnheader" data-i18n>Rank</div>
           <div class="lb-th" role="columnheader" data-i18n>Player</div>
-          <div class="lb-th lb-score" role="columnheader" data-i18n>Score</div>
+          <div class="lb-th lb-score" role="columnheader"${
+            scoreHeadTitle ? ` title="${esc(scoreHeadTitle)}"` : ''}>${esc(scoreHead)}</div>
         </div>
         ${rows}
       </div>`;
@@ -2161,6 +2185,89 @@
     return Number.isInteger(score)
       ? score.toLocaleString()
       : Number(score).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  // ── Delve readings ──────────────────────────────────────────────────
+  // Three delve boards pack a depth AND a run time into a single float, and the
+  // `Fastest 3-Tier Clear` boards send a run time as the score outright. Which
+  // boards those are is hardcoded in BTTUtil.delveKind, because nothing the game
+  // sends separates them from the dozens of delve boards that carry a plain
+  // depth. Every other board falls through to formatScore unchanged.
+
+  // The board's translation key, which is half of what delveKind matches on.
+  function boardNameId(uuid) {
+    const b = state.boards.find((x) => x.uuid === uuid);
+    return b ? b.name_id : null;
+  }
+
+  function boardScoreKind(uuid) {
+    return delveKind(uuid, boardNameId(uuid));
+  }
+
+  // What to call this board's score in an inline "<label> <value>" pair.
+  function scoreLabel(uuid) {
+    const kind = boardScoreKind(uuid);
+    return kind === 'depth_time' ? t('Depth') : kind === 'minutes' ? t('Run time') : t('Score');
+  }
+
+  // Plain-text reading of one score on one board: "235 · 51:03" where the score
+  // packs both, "51:03" where the score IS a run time, and ``fallback`` (default
+  // formatScore) otherwise. Used everywhere a score appears inline - cheaters,
+  // clusters, renames, duplicates, player tiles.
+  function scoreText(uuid, score, fallback) {
+    const kind = (score == null || !isFinite(score)) ? null : boardScoreKind(uuid);
+    if (kind === 'depth_time') {
+      const r = delveReading(score);
+      return r.depth.toLocaleString() + ' · ' + r.clock;
+    }
+    if (kind === 'minutes') return delveClock(score);
+    return (fallback || formatScore)(score);
+  }
+
+  // Entries-table score cell: depth on line one, run time on line two.
+  function scoreCellHTML(uuid, score, deltaHTML) {
+    const kind = (score == null || !isFinite(score)) ? null : boardScoreKind(uuid);
+    if (kind === 'depth_time') {
+      const r = delveReading(score);
+      return `<span class="lb-score-main">${deltaHTML}${esc(r.depth.toLocaleString())}</span>`
+        + `<span class="lb-score-note" title="${esc(t('Run time'))}">${esc(r.clock)}</span>`;
+    }
+    if (kind === 'minutes') {
+      return `<span class="lb-score-main">${deltaHTML}${esc(delveClock(score))}</span>`;
+    }
+    return deltaHTML + esc(formatScore(score));
+  }
+
+  // Day-over-day movement on a delve board. Subtracting two packed scores is not
+  // a reading of anything, so this works from the PAIR - this score and the one
+  // it moved from - and reports either depths or a clock, never the subtraction:
+  //   • different depths -> the gap is the depths (the two run times belong to
+  //     different depths, so nothing is said about them).
+  //   • same depth -> the gap is entirely the difference in run time.
+  function scoreDeltaBadge(uuid, e) {
+    const kind = boardScoreKind(uuid);
+    const delta = e.score_delta;
+    if (kind === 'depth_time') {
+      // The score it moved FROM. `prev_score` is what the server compared
+      // against; falling back to the subtraction only when it's absent.
+      const prev = (e.prev_score != null) ? e.prev_score
+        : (delta != null ? e.score - delta : null);
+      if (prev == null) return '';
+      const gap = delveGap(e.score, prev);
+      if (!gap) return '';
+      const title = gap.unit === 'depth' ? t('Depth') : t('Run time (same depth)');
+      return `<span class="lb-delta ${gap.up ? 'up' : 'down'}" title="${esc(title)}">`
+        + `${gap.up ? '▲' : '▼'}${esc(gap.text)}</span>`;
+    }
+    if (kind === 'minutes') {
+      // The score IS a run time. Whether a longer run is worse depends on how the
+      // game orders the board, which the capture does not say - so the movement
+      // is reported as a clock with no good/bad colour on it.
+      if (!delta) return '';
+      return `<span class="lb-delta lb-delta-flat" title="${esc(t('Run time'))}">`
+        + `${delta > 0 ? '▲' : '▼'}${esc(delveClock(Math.abs(delta)))}</span>`;
+    }
+    return deltaBadge(delta, formatScore);
   }
 
   // ``push`` forces a new history entry (explicit opens: a player-name click or
@@ -2325,7 +2432,7 @@
           </div>
           <div class="lb-ph-tile-stats">
             <span class="lb-ph-rank">${crownHtml(it.rank)}#${it.rank}</span>
-            <span class="lb-ph-score">${esc(formatScore(it.score))}</span>
+            <span class="lb-ph-score">${esc(scoreText(it.leaderboard, it.score))}</span>
           </div>
         </div>`;
     };
@@ -2686,10 +2793,17 @@
         x: p.created_at, y: p.score, rank: p.rank, synthetic: !!p.synthetic,
       })),
     }));
+    // One board per figure, so its score kind fixes both the tooltip reading and
+    // the y-axis ticks. A packed delve axis is a depth (the fraction is a run
+    // time and abbreviating it as ".5" would read as half a depth).
+    const kind = boardScoreKind(state.boardChart.uuid);
     drawLineChart($chart, $legend, {
       anchors: data.anchors,
       series,
-      valueLabel: t('Score'),
+      valueLabel: scoreLabel(state.boardChart.uuid),
+      formatValue: (s, p) => scoreText(state.boardChart.uuid, p.y),
+      abbrevValue: kind === 'depth_time' ? (v) => String(Math.round(v))
+        : kind === 'minutes' ? (v) => delveClock(v) : null,
       tooltipNameSuffix: (s, p) => (p.rank ? ` · #${p.rank}` : ''),
     });
   }
@@ -2751,6 +2865,7 @@
         : titleizeName(s.name),
       color: CHART_COLORS[i % CHART_COLORS.length],
       // See drawBoardChart for why ``synthetic`` is forwarded.
+      uuid: s.uuid,
       points: s.points.map((p) => ({
         x: p.created_at, y: p.score, rank: p.rank, synthetic: !!p.synthetic,
       })),
@@ -2759,6 +2874,10 @@
       anchors: data.anchors,
       series,
       valueLabel: t('Score'),
+      // Lines are different boards here, so the reading is resolved per series -
+      // a delve line reads "235 · 51:03" while a mastery line beside it stays a
+      // number. The shared y-axis keeps the plain abbreviation.
+      formatValue: (s, p) => scoreText(s.uuid, p.y),
       // Each line is one board, so the tooltip already shows board name.
       // Surface the player's rank-at-that-moment as a secondary detail.
       tooltipNameSuffix: (s, p) => (p.rank ? ` · #${p.rank}` : ''),
@@ -2777,6 +2896,10 @@
   //   opts.anchors            - all unix timestamps in window (defines x range)
   //   opts.series             - [{key, label, color, points:[{x, y, ...}]}]
   //   opts.valueLabel         - y-axis label (currently embedded in tooltip)
+  //   opts.formatValue        - fn(series, point) → tooltip value text
+  //                             (default formatScore; delve boards read as
+  //                             depth + run time, see scoreText)
+  //   opts.abbrevValue        - fn(v) → y-axis tick text (default abbrevScore)
   //   opts.tooltipNameSuffix  - fn(series, point) → extra text after label
   // Grid, axes, polylines + a single mouse-tracking overlay that snaps to the
   // nearest anchor on hover; legend chips highlight/dim series on hover.
@@ -2838,7 +2961,7 @@
       label.setAttribute('x', padL - 6);
       label.setAttribute('y', y + 3);
       label.setAttribute('text-anchor', 'end');
-      label.textContent = abbrevScore(v);
+      label.textContent = (opts.abbrevValue || abbrevScore)(v);
       svg.appendChild(label);
     }
 
@@ -3015,7 +3138,8 @@
           <div class="lb-chart-tooltip-row">
             <span class="lb-chart-tooltip-swatch" style="background:${s.color}"></span>
             <span class="lb-chart-tooltip-name">${esc(s.label)}${esc(suffix)}</span>
-            <span class="lb-chart-tooltip-value">${esc(formatScore(p.y))}</span>
+            <span class="lb-chart-tooltip-value">${esc(
+              opts.formatValue ? opts.formatValue(s, p) : formatScore(p.y))}</span>
           </div>`;
       }).join('');
       tooltip.innerHTML = `

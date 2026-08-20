@@ -306,6 +306,13 @@
   color: var(--text-mute);
   font-size: .9rem;
 }
+/* Second reading on a delve board: the run time packed into the same score. */
+.pl-tile-score-note {
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255,255,255,.14);
+  font-size: .82rem;
+}
 .pl-tile-meta {
   display: flex;
   justify-content: space-between;
