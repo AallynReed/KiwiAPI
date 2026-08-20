@@ -19,7 +19,9 @@
 
   // contentLang: the language the reader picked for this modder's own text.
   // null = follow the site language (and fall back to English).
-  const state = { profile: null, viewer: null, contentLang: null };
+  // allMods: false until the reader asks for the full grid (see MODS_PREVIEW).
+  const state = { profile: null, viewer: null, contentLang: null, allMods: false };
+  const MODS_PREVIEW = 6;
   const $root = document.getElementById('mpf-root');
 
   // The modder writes their tagline + About text (and each mod's card text) in
@@ -212,17 +214,28 @@
 
   function modsHTML(p) {
     const mods = p.mods || [];
+    // A prolific modder's grid runs to dozens of cards and buries everything
+    // below it. Show a few rows; the rest is one click away.
+    const shown = state.allMods ? mods : mods.slice(0, MODS_PREVIEW);
     const grid = mods.length
-      ? `<div class="mh-grid">${mods.map((m, i) => cardHTML(m, {
+      ? `<div class="mh-grid">${shown.map((m, i) => cardHTML(m, {
           owner: p.is_owner, first: i === 0, last: i === mods.length - 1,
           featured: p.featured_slug === m.slug,
         })).join('')}</div>`
       : `<p class="mp-muted">${p.is_owner ? esc(t('You have no mods yet.')) : esc(t('No public mods yet.'))}</p>`;
     const hint = (p.is_owner && mods.length > 1)
       ? `<p class="mp-muted" style="margin:0 0 12px">${esc(t('Use the arrows to set the order; the pin highlights one in the sidebar.'))}</p>` : '';
+    const count = t('Showing {n} of {total}')
+      .replace('{n}', String(shown.length)).replace('{total}', String(mods.length));
+    const more = shown.length < mods.length
+      ? `<div class="mh-foot">
+          <p class="mp-muted" style="margin:0 0 10px">${esc(count)}</p>
+          <button type="button" class="mh-btn mh-btn-ghost" id="mpf-more">${esc(t('Show more'))}</button>
+        </div>`
+      : '';
     return `<section class="mp-section mpf-section">
       <div class="mp-section-head"><h2 class="mp-section-title"><i class="fa-solid fa-cubes"></i> ${esc(t('Mods'))}</h2></div>
-      ${hint}${grid}
+      ${hint}${grid}${more}
     </section>`;
   }
 
@@ -279,6 +292,7 @@
     // Report is the one control shown to NON-owners, so it has to be wired before
     // the owner-only bail below - otherwise the button renders and does nothing.
     w('mpf-report', openReport);
+    w('mpf-more', () => { state.allMods = true; render(); });
     if (!p.is_owner) return;
     w('mpf-edit', openEditProfile);
     w('mpf-edit-readme', openEditReadme);
@@ -294,6 +308,7 @@
   }
 
   async function moveMod(slug, dir) {
+    state.allMods = true;   // reordering with half the grid folded away is guesswork
     const ord = (state.profile.mod_order || []).slice();
     const i = ord.indexOf(slug); const j = i + dir;
     if (i < 0 || j < 0 || j >= ord.length) return;

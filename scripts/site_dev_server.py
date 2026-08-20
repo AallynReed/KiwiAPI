@@ -1681,6 +1681,9 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/site/mods/profile/"):
             handle = path[len("/site/mods/profile/"):]
             mods = list(_STUB_MODS)   # several mods so reorder/highlight is testable
+            # Padded past the grid's fold so "Show more" is testable locally.
+            mods += [dict(m, slug=f"{m['slug']}-{i}", title=f"{m['title']} {i}")
+                     for i in (2, 3) for m in _STUB_MODS]
             return self._send_json({
                 "handle": handle or "aallyn",
                 "display_name": "Aallyn",

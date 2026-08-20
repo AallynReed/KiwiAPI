@@ -168,7 +168,7 @@ TABS: tuple[Destination, ...] = (
     _tab("Store Gallery", "/store?tab=gallery", "store_enabled", "Store History", "art", "textures"),
     _tab("Store Availability", "/store?tab=availability", "store_enabled", "Store History", "timeline", "history"),
 
-    _tab("My Mods", "/mods?tab=mine", "mods_hub_enabled", "Mods Hub", "my projects", "uploads"),
+    _tab("My Mods", "/dashboard#mods", "mods_hub_enabled", "Dashboard", "my projects", "uploads"),
     _tab("Stray Mods", "/mods/stray", "mods_hub_enabled", "Mods Hub", "unclaimed", "imported"),
 )
 

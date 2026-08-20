@@ -135,25 +135,11 @@
       $('mh-create').hidden = !authed;
       $('mh-mine').hidden = !authed;
       $('mh-signin').hidden = authed;
-      $('mh-mine').setAttribute('href', '#');   // click handler routes dynamically
     };
     apply(window.BTTAuth && window.BTTAuth.getCachedUser ? window.BTTAuth.getCachedUser() : null);
     if (window.BTTAuth && window.BTTAuth.getMe) {
       window.BTTAuth.getMe().then(apply).catch(() => {});
     }
-    // "My mods" routes to the user's most recent project (or the create modal).
-    $('mh-mine').addEventListener('click', async (e) => {
-      e.preventDefault();
-      try {
-        const r = await fetch('/site/mods/me/projects', { credentials: 'include' });
-        const data = r.ok ? await r.json() : { items: [] };
-        if (data.items && data.items.length) {
-          location.href = modUrl(data.items[0]);
-        } else {
-          openCreate();
-        }
-      } catch (_) { openCreate(); }
-    });
   }
 
   // ─── Data ──────────────────────────────────────────────────────────
