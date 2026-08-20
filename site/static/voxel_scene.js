@@ -145,57 +145,116 @@
       camera.lookAt(target);
     }
 
-    /* ---- overlays: wireframe boxes drawn over the model --------------------
+    /* ---- overlays: an outline drawn around a set of voxels ------------------
        Used for the attachment point (which is usually NOT a voxel - on a hat it
-       floats below the model) and to point at voxels a check complained about.
-       One merged LineSegments per overlay rather than a mesh each: a finding can
-       cover thousands of voxels, and that has to stay one draw call. */
+       floats below the model), for the selection, for the box preview and to point
+       at voxels a check complained about.
+
+       It outlines the SET, not each voxel in it. Wireframing every cube turns any
+       real selection into graph paper: on a flat face you see the grid, not the
+       shape, and a thousand-voxel wing is a solid haze of blue. So only the edges
+       that sit on a crease of the set's surface survive - which on a flat run is
+       one straight line down the far side of it, and over the whole set is the
+       outline of its volume. Two rules, and nothing else:
+
+         - an edge is a candidate only where it borders an EXPOSED face, one whose
+           neighbouring cell is outside the set. Everything buried inside is gone.
+         - a candidate is dropped when exactly two exposed faces meet along it and
+           they face the same way, because that is flat surface rather than an edge.
+           One face means a boundary, and two facing differently is a real 90° turn:
+           both are drawn, so bumps, holes and thin plates all keep their outline.
+
+       Still one merged LineSegments pair rather than a mesh per voxel: a finding can
+       cover thousands of voxels, and that has to stay a couple of draw calls. */
     var overlays = {};
-    var CUBE_EDGES = [
-      [0, 0, 0, 1, 0, 0], [1, 0, 0, 1, 1, 0], [1, 1, 0, 0, 1, 0], [0, 1, 0, 0, 0, 0],
-      [0, 0, 1, 1, 0, 1], [1, 0, 1, 1, 1, 1], [1, 1, 1, 0, 1, 1], [0, 1, 1, 0, 0, 1],
-      [0, 0, 0, 0, 0, 1], [1, 0, 0, 1, 0, 1], [1, 1, 0, 1, 1, 1], [0, 1, 0, 0, 1, 1],
+
+    /* Per face: its normal, then its four edges as pairs of cube-corner indices,
+       a corner being the bits x | y<<1 | z<<2. */
+    var FACES = [
+      { n: [ 1, 0, 0], e: [1, 3, 3, 7, 7, 5, 5, 1] },
+      { n: [-1, 0, 0], e: [0, 2, 2, 6, 6, 4, 4, 0] },
+      { n: [ 0, 1, 0], e: [2, 3, 3, 7, 7, 6, 6, 2] },
+      { n: [ 0,-1, 0], e: [0, 1, 1, 5, 5, 4, 4, 0] },
+      { n: [ 0, 0, 1], e: [4, 5, 5, 7, 7, 6, 6, 4] },
+      { n: [ 0, 0,-1], e: [0, 1, 1, 3, 3, 2, 2, 0] },
     ];
 
     function clearOverlay(key) {
       var o = overlays[key];
       if (!o) return;
       modelGroup.remove(o);
-      o.geometry.dispose();
-      o.material.dispose();
+      o.children.forEach(function (c) { c.material.dispose(); });
+      if (o.children[0]) o.children[0].geometry.dispose();
       delete overlays[key];
     }
 
-    /* `points` is [[x,y,z], ...]; `scale` grows the box past the voxel so the
-       wireframe reads as a highlight around it rather than z-fighting its faces. */
+    /* `points` is [[x,y,z], ...]; `scale` grows the outline past the voxels so it
+       reads as a highlight around them rather than z-fighting their faces. */
     function setOverlay(key, points, colour, scale) {
       clearOverlay(key);
       if (!points || !points.length) { request(); return; }
       scale = scale || 1.06;
       var half = scale / 2;
-      var pos = new Float32Array(points.length * CUBE_EDGES.length * 6);
-      var p = 0;
-      for (var i = 0; i < points.length; i++) {
-        var cx = points[i][0], cy = points[i][1], cz = points[i][2];
-        for (var e = 0; e < CUBE_EDGES.length; e++) {
-          var E = CUBE_EDGES[e];
-          pos[p++] = cx + (E[0] ? half : -half);
-          pos[p++] = cy + (E[1] ? half : -half);
-          pos[p++] = cz + (E[2] ? half : -half);
-          pos[p++] = cx + (E[3] ? half : -half);
-          pos[p++] = cy + (E[4] ? half : -half);
-          pos[p++] = cz + (E[5] ? half : -half);
+      // Deduped: the same voxel twice would leave an edge with a count of four and
+      // draw a stray line across an otherwise flat face.
+      var i, filled = new Set(), pts = [];
+      for (i = 0; i < points.length; i++) {
+        var pk = points[i][0] + ',' + points[i][1] + ',' + points[i][2];
+        if (filled.has(pk)) continue;
+        filled.add(pk);
+        pts.push(points[i]);
+      }
+
+      /* Keyed on the two INTEGER lattice corners, which are shared exactly between
+         neighbouring voxels, while the coordinates kept are the scaled ones of
+         whichever voxel raised the edge first. Any of them gives the same line. */
+      var edges = new Map();
+      for (i = 0; i < pts.length; i++) {
+        var vx = pts[i][0], vy = pts[i][1], vz = pts[i][2];
+        for (var f = 0; f < 6; f++) {
+          var F = FACES[f];
+          if (filled.has((vx + F.n[0]) + ',' + (vy + F.n[1]) + ',' + (vz + F.n[2]))) continue;
+          for (var e = 0; e < 8; e += 2) {
+            var ca = F.e[e], cb = F.e[e + 1];
+            var ax = vx + (ca & 1), ay = vy + (ca >> 1 & 1), az = vz + (ca >> 2 & 1);
+            var bx = vx + (cb & 1), by = vy + (cb >> 1 & 1), bz = vz + (cb >> 2 & 1);
+            var ka = ax + ',' + ay + ',' + az, kb = bx + ',' + by + ',' + bz;
+            var k = ka < kb ? ka + '|' + kb : kb + '|' + ka;
+            var rec = edges.get(k);
+            if (rec) { rec.n++; if (rec.f !== f) rec.f = -1; continue; }
+            edges.set(k, {
+              f: f, n: 1,
+              p: [vx + (ca & 1 ? half : -half), vy + (ca >> 1 & 1 ? half : -half),
+                  vz + (ca >> 2 & 1 ? half : -half),
+                  vx + (cb & 1 ? half : -half), vy + (cb >> 1 & 1 ? half : -half),
+                  vz + (cb >> 2 & 1 ? half : -half)],
+            });
+          }
         }
       }
+
+      var kept = [];
+      edges.forEach(function (r) { if (r.n !== 2 || r.f < 0) kept.push(r.p); });
+      if (!kept.length) { request(); return; }
+      var pos = new Float32Array(kept.length * 6);
+      for (i = 0; i < kept.length; i++) pos.set(kept[i], i * 6);
+
       var geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      var mat = new THREE.LineBasicMaterial({
-        color: colour, transparent: true, opacity: 0.95, depthTest: false,
+      /* Drawn twice: solid where it is in front of the model, ghosted where the model
+         is in front of it. One pass on top of everything showed the far side of the
+         outline over the near side and you could not tell which was which; one pass
+         behind hid a selection inside a solid model entirely. */
+      var group = new THREE.Group();
+      [[true, 0.95], [false, 0.22]].forEach(function (pass) {
+        var lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
+          color: colour, transparent: true, opacity: pass[1], depthTest: pass[0],
+        }));
+        lines.renderOrder = pass[0] ? 5 : 4;
+        group.add(lines);
       });
-      var lines = new THREE.LineSegments(geo, mat);
-      lines.renderOrder = 5;          // always on top: a highlight you can't see is useless
-      modelGroup.add(lines);
-      overlays[key] = lines;
+      modelGroup.add(group);
+      overlays[key] = group;
       request();
     }
 
