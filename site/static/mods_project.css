@@ -470,13 +470,18 @@
 /* Releases - grouped by branch = variant */
 .mp-variant { margin-bottom: 18px; }
 .mp-variant:last-child { margin-bottom: 0; }
-.mp-variant-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+/* Editions carry creator-chosen names, so a 40-character one has to survive a 360px
+   rail: the controls drop to their own line first, the name breaks only if it still
+   won't fit. The icon is out of flow so it can't be orphaned on a line of its own. */
+.mp-variant-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; margin-bottom: 8px; }
 .mp-variant-name {
-  display: inline-flex; align-items: center; gap: 8px;
-  font: 700 .95rem 'JetBrains Mono', monospace; color: var(--text);
+  position: relative; flex: 1 1 auto; min-width: 0; padding-left: 24px; line-height: 1.45;
+  font: 700 .9rem 'JetBrains Mono', monospace; color: var(--text);
 }
-.mp-variant-name i { color: var(--accent-blue); }
-.mp-variant-actions { display: inline-flex; align-items: center; gap: 8px; }
+.mp-variant-name i { position: absolute; left: 0; top: 0; line-height: inherit; color: var(--accent-blue); }
+.mp-variant-name .mp-badge { vertical-align: 1px; }
+.mp-variant-label { overflow-wrap: anywhere; }
+.mp-variant-actions { display: inline-flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }
 .mp-variant-move { display: inline-flex; gap: 2px; }
 .mp-iconbtn {
   display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0;
@@ -502,8 +507,9 @@
 .mp-release { border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 8px; }
 .mp-release + .mp-release { margin-top: 12px; }
 .mp-release-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
-.mp-release-tag { font: 700 1rem 'Inter', system-ui, sans-serif; display: inline-flex; align-items: center; gap: 8px; }
-.mp-release-tagchip { font: 600 .72rem 'JetBrains Mono', monospace; color: var(--accent-blue); background: rgba(86,156,255,.12); border-radius: 6px; padding: 2px 8px; }
+.mp-release-tag { font: 700 1rem 'Inter', system-ui, sans-serif; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.mp-release-tag [data-rel-title] { min-width: 0; overflow-wrap: anywhere; }
+.mp-release-tagchip { font: 600 .72rem 'JetBrains Mono', monospace; color: var(--accent-blue); background: rgba(86,156,255,.12); border-radius: 6px; padding: 2px 8px; flex: none; }
 .mp-release-stats { color: var(--text-mute); font-size: .82rem; display: flex; gap: 14px; flex-wrap: wrap; }
 .mp-release-changelog { color: var(--text-mute); font-size: .9rem; line-height: 1.55; white-space: pre-wrap; }
 /* The changelog folds shut: a wordy one pushed every other version off screen,

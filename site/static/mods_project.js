@@ -570,7 +570,7 @@
         const bareDefault = ordered.length === 1 && branch === 'main' && !d.is_owner;
         return `<div class="mp-variant">
           ${bareDefault ? '' : `<div class="mp-variant-head">
-            <span class="mp-variant-name"><i class="fa-solid fa-layer-group"></i> ${esc(variantLabel(branch))} ${hiddenTag}</span>
+            <span class="mp-variant-name"><i class="fa-solid fa-layer-group"></i><span class="mp-variant-label">${esc(variantLabel(branch))}</span> ${hiddenTag}</span>
             <span class="mp-variant-actions">${reorder}${toggle}</span>
           </div>`}
           ${releaseRow(rels[0], d.is_owner)}
