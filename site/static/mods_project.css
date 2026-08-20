@@ -25,6 +25,9 @@
 }
 .mp-col-main, .mp-col-side { min-width: 0; }
 .mp-col-side .mp-section { padding: 16px 18px; }
+/* That rail is narrow, so a release row stacks instead of wrapping its buttons. */
+.mp-col-side .mp-release-top { flex-direction: column; align-items: stretch; gap: 8px; }
+.mp-col-side .mp-release-actions { gap: 6px; }
 @media (max-width: 1040px) {
   .mp-layout { grid-template-columns: 1fr; }   /* stack on narrow screens */
 }
@@ -41,6 +44,12 @@
 .mp-doc-main, .mp-doc-side { min-width: 0; }
 @media (max-width: 1040px) {
   .mp-doc { grid-template-columns: 1fr; gap: 0; }   /* stack on narrow screens */
+  /* Stacked, the two columns interleave so the gallery still sits under the
+     summary instead of being pushed below the versions and the README. */
+  .mp-doc-main, .mp-doc-side { display: contents; }
+  #mp-description-section { order: -2; }
+  #mp-previews-section { order: -1; }
+  .mp-doc-side .mp-preview:first-child { max-width: 520px; }
 }
 /* The rail follows you down a long README. The max-height is what keeps a tall
    rail reachable: pinned by its top alone, anything past the viewport's bottom
@@ -53,37 +62,28 @@
   }
 }
 .mp-doc .mp-section { margin-bottom: 22px; }
-.mp-doc-main > #mp-previews-section,
 .mp-doc-main > #mp-description-section,
 .mp-doc-main > #mp-readme-text-section {
   border: 0; background: none; padding: 0; margin-bottom: 34px;
 }
-.mp-doc-main > #mp-previews-section .mp-section-head,
 .mp-doc-main > #mp-description-section .mp-section-head,
 .mp-doc-main > #mp-readme-text-section .mp-section-head {
   border-bottom: 1px solid var(--bg-line); padding-bottom: 9px; margin-bottom: 16px;
 }
 /* Quiet label captions, so three document headings don't read as three more
    cards competing with the panels in the rail. */
-.mp-doc-main > #mp-previews-section .mp-section-title,
 .mp-doc-main > #mp-description-section .mp-section-title,
 .mp-doc-main > #mp-readme-text-section .mp-section-title {
   font: 600 .78rem 'JetBrains Mono', ui-monospace, monospace;
   letter-spacing: .08em; text-transform: uppercase; color: var(--text-mute);
 }
-.mp-doc-main > #mp-previews-section .mp-section-title i,
 .mp-doc-main > #mp-description-section .mp-section-title i,
 .mp-doc-main > #mp-readme-text-section .mp-section-title i { color: var(--text-soft); font-size: .95em; }
 .mp-doc .mp-markdown { font-size: 1rem; }
-/* The lead preview gets its own row and the rest sit under it as a thumb strip.
-   Capped in width, not stretched to the column: a full-width 16:9 shot at this
-   measure is 630px tall and swallows the page. */
-.mp-doc .mp-previews { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-.mp-doc .mp-preview:first-child { grid-column: 1 / -1; max-width: 480px; aspect-ratio: 16 / 9; }
-/* The rail is narrow, so the release rows drop to a stacked layout. */
+/* In the rail the lead shot spans the width and the rest pair up beneath it. */
+.mp-doc-side .mp-previews { gap: 10px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.mp-doc-side .mp-preview:first-child { grid-column: 1 / -1; aspect-ratio: 16 / 9; }
 .mp-doc-side .mp-section { padding: 16px 18px; }
-.mp-doc-side .mp-release-top { flex-direction: column; align-items: stretch; gap: 8px; }
-.mp-doc-side .mp-release-actions { gap: 6px; }
 
 .mp-back {
   display: inline-flex; align-items: center; gap: 8px; color: var(--text-mute);
@@ -745,6 +745,26 @@
 .mp-commit-dot { color: var(--accent-blue); margin-top: 3px; }
 .mp-commit-body { display: grid; gap: 3px; }
 .mp-commit-msg { color: var(--text); font-size: .92rem; }
+/* Long or multi-line messages fold to their subject line, same disclosure as a
+   release changelog. */
+.mp-commit-more > summary {
+  cursor: pointer; user-select: none; list-style: none;
+  display: flex; align-items: center; gap: 7px;
+}
+.mp-commit-more > summary::-webkit-details-marker { display: none; }
+.mp-commit-more > summary::before {
+  content: ''; flex: none; width: 0; height: 0;
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  border-left: 5px solid var(--text-mute); transition: transform .15s var(--ease-out);
+}
+.mp-commit-more[open] > summary::before { transform: rotate(90deg); }
+.mp-commit-more > summary:hover { color: var(--accent-blue); }
+.mp-commit-subject { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-commit-more[open] .mp-commit-subject { white-space: normal; overflow-wrap: anywhere; }
+.mp-commit-full {
+  margin: 5px 0 0 12px; color: var(--text-mute); font-size: .86rem;
+  line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+}
 .mp-commit-meta { color: var(--text-mute); font-size: .78rem; display: flex; gap: 12px; flex-wrap: wrap; }
 .mp-commit-seq { font-family: 'JetBrains Mono', monospace; }
 

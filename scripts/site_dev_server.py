@@ -1938,6 +1938,13 @@ class Handler(SimpleHTTPRequestHandler):
                 })
             if sub == "commits":
                 return self._send_json({"items": [
+                    {"id": "c3", "seq": 3, "branch": "main", "author_username": "tester",
+                     # Multi-line + overlong subjects, so the history rail's
+                     # collapsed message state is previewable.
+                     "message": "Retexture every HUD panel\n\nThe old sheet was a 512 atlas "
+                                "shared with the map, so widening the health bar smeared the "
+                                "minimap frame.\n- split the atlas\n- redrew the frames at 2x",
+                     "file_count": 9, "created_at": None},
                     {"id": "c2", "seq": 2, "branch": "main", "author_username": "tester",
                      "message": "Add icon", "file_count": 2, "created_at": None},
                     {"id": "c1", "seq": 1, "branch": "main", "author_username": "tester",

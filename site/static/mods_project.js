@@ -170,15 +170,15 @@
         <aside class="mp-col-side">${sideCol.filter(Boolean).join('')}</aside>
       </div>`);
     } else {
-      // No file browser (releases-only / private source). Reads like a document
-      // rather than a stack of identical panels: prose and gallery run
-      // chrome-free down the left, and the panels that do something (releases,
-      // packs, forks) sit in a rail on the right - stacked, they pushed the
-      // download list a screen and a half below the fold.
-      const docMain = [descriptionHTML(d)];
-      if (ownerHasPreviews) docMain.push(previewsHTML(d));
-      docMain.push(readmeTextHTML(d));    // releases-only README (saved text)
-      const docSide = [releasesHTML(d), modpacksHTML()];
+      // No file browser (releases-only / private source). What you came for runs
+      // down the wide column - what the mod is, then how to get it - while the
+      // gallery and the smaller panels sit in the rail. Versions needs the width:
+      // an edition's name is the creator's own, and in a rail a long one wrapped
+      // over its controls.
+      const docMain = [descriptionHTML(d), releasesHTML(d), readmeTextHTML(d)];
+      const docSide = [];
+      if (ownerHasPreviews) docSide.push(previewsHTML(d));
+      docSide.push(modpacksHTML());
       if (d.fork_count) docSide.push(forksHTML());
       parts.push(`<div class="mp-doc">
         <div class="mp-doc-main">${docMain.filter(Boolean).join('')}</div>
@@ -1136,10 +1136,22 @@
   }
 
   function commitRow(c) {
+    // Commit messages are as long as their author felt like: the subject line
+    // shows, the rest waits behind the fold so one essay can't own the rail.
+    const msg = String(c.message || '');
+    const nl = msg.indexOf('\n');
+    const subject = (nl < 0 ? msg : msg.slice(0, nl)).trim();
+    const body = nl < 0 ? '' : msg.slice(nl + 1).trim();
+    const msgHTML = (body || subject.length > 90)
+      ? `<details class="mp-commit-msg mp-commit-more">
+          <summary><span class="mp-commit-subject">${esc(subject)}</span></summary>
+          ${body ? `<div class="mp-commit-full">${esc(body)}</div>` : ''}
+        </details>`
+      : `<div class="mp-commit-msg">${esc(subject)}</div>`;
     return `<div class="mp-commit">
       <span class="mp-commit-dot"><i class="fa-solid fa-code-commit"></i></span>
       <div class="mp-commit-body">
-        <div class="mp-commit-msg">${esc(c.message)}</div>
+        ${msgHTML}
         <div class="mp-commit-meta">
           <span class="mp-commit-seq">${esc(c.short || (c.id || '').slice(0, 7))}</span>
           <span>${esc(c.author_username)}</span>
