@@ -644,12 +644,17 @@ async def create_release(
     handle: str, slug: str, req: CreateReleaseRequest, user: SiteUser = _USER,
 ) -> dict:
     """Cut a release by compiling a commit's file tree server-side into the
-    chosen ``format`` (``tmod`` or ``zip``)."""
+    chosen ``format`` (``tmod`` or ``zip``).
+
+    Set ``silent`` to ship the build without announcing it - no live-stream event,
+    no webhook, no DM alert, and the mod keeps its existing place in the hub's
+    "recently updated" order."""
     project = await _require_owned(handle, slug, user)
     return await service.create_release_from_commit(
         project, user, tag=req.tag, title=req.title, changelog=req.changelog,
         ref=req.ref, status=req.status, fmt=req.format, preview_sha=req.preview_sha,
         author=req.author, config_data=_decode_config(req.config_base64),
+        silent=req.silent,
     )
 
 
@@ -661,6 +666,11 @@ async def upload_release(
     changelog: str = Form(default=""),
     status: str = Form(default="published"),
     branch: str = Form(default=""),
+    silent: bool = Form(
+        default=False,
+        description="Ship quietly: no live-stream event (so no webhook and no DM "
+                    "alert) and the mod's last-release time is left untouched.",
+    ),
     file: UploadFile = File(...),
     config: UploadFile | None = File(
         default=None,
@@ -677,6 +687,7 @@ async def upload_release(
         status=_valid_status(status), branch=branch,
         filename=file.filename or "mod.tmod", data=await file.read(),
         config_data=await config.read() if config is not None else None,
+        silent=silent,
     )
 
 

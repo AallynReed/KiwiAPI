@@ -254,6 +254,12 @@ class ModRelease(Document):
     # later visibility flip can announce it a second time. The event bus's own
     # dedup only holds the LAST signature per event type, so it can't answer this.
     announced_at: datetime | None = None
+    # Shipped quietly: no event on the live stream (so no webhook and no DM), and
+    # the mod's `last_release_at` is left where it was, so the hub's "recently
+    # updated" order doesn't move either. The build itself is a normal published
+    # release - downloadable, newest-wins - it just isn't news. Permanent: a silent
+    # build stays silent through unpublish/republish and any later visibility flip.
+    silent: bool = False
 
     class Settings:
         name = "mod_releases"

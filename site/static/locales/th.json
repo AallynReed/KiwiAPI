@@ -2824,5 +2824,9 @@
   "This movie is too large to show in full — some classes were left out.": "มูฟวี่นี้ใหญ่เกินกว่าจะแสดงทั้งหมด — บางคลาสถูกละไว้",
   "View code": "ดูโค้ด",
   "View the ActionScript inside this movie": "ดู ActionScript ภายในมูฟวี่นี้",
-  "source code": "ซอร์สโค้ด"
+  "source code": "ซอร์สโค้ด",
+  "Release quietly": "เผยแพร่แบบเงียบ",
+  "No announcement, and the mod keeps its place in Recently updated. People can still find and download this version.": "ไม่มีการประกาศ และม็อดจะยังคงอยู่ในตำแหน่งเดิมใน อัปเดตล่าสุด ผู้เล่นยังคงค้นหาและดาวน์โหลดเวอร์ชันนี้ได้",
+  "Quiet": "เงียบ",
+  "Released quietly - not announced.": "เผยแพร่แบบเงียบ - ไม่มีการประกาศ"
 }

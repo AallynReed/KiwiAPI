@@ -3052,5 +3052,9 @@
   "This movie is too large to show in full — some classes were left out.": "Этот ролик слишком велик, чтобы показать его целиком — часть классов пропущена.",
   "View code": "Посмотреть код",
   "View the ActionScript inside this movie": "Посмотреть ActionScript внутри этого ролика",
-  "source code": "исходный код"
+  "source code": "исходный код",
+  "Release quietly": "Тихая публикация",
+  "No announcement, and the mod keeps its place in Recently updated. People can still find and download this version.": "Без объявления, и мод сохраняет своё место в разделе «Недавно обновлённые». Эту версию по-прежнему можно найти и скачать.",
+  "Quiet": "Тихо",
+  "Released quietly - not announced.": "Опубликовано тихо — без объявления."
 }

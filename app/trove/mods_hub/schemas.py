@@ -136,6 +136,14 @@ class CreateReleaseRequest(BaseModel):
                     "(tmod format only; not committed to the repo). Allowed only when "
                     "the build ships a Flash UI (.swf) - nothing else reads a config.",
     )
+    silent: bool = Field(
+        default=False,
+        description="Ship this build quietly: no event on the live stream (so no "
+                    "webhook and no DM alert), and the mod's last-release time is "
+                    "left untouched, so it doesn't move in the hub's 'recently "
+                    "updated' order. The release is still published and "
+                    "downloadable - it just isn't announced.",
+    )
 
 
 class UpdateReleaseRequest(BaseModel):
@@ -144,6 +152,12 @@ class UpdateReleaseRequest(BaseModel):
     changelog: str | None = Field(default=None, max_length=20_000)
     changelog_i18n: dict[str, str] | None = Field(default=None, description=_I18N.format("changelog"))
     status: ReleaseStatus | None = None
+    silent: bool | None = Field(
+        default=None,
+        description="Change whether this build is silent. Set it before publishing a "
+                    "draft to publish without announcing; once a build has been "
+                    "announced, clearing it does not announce it again.",
+    )
 
 
 class ClaimRequest(BaseModel):

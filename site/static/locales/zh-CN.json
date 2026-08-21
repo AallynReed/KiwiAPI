@@ -3052,5 +3052,9 @@
   "This movie is too large to show in full — some classes were left out.": "此影片太大，无法完整显示 — 部分类已省略。",
   "View code": "查看代码",
   "View the ActionScript inside this movie": "查看此影片中的 ActionScript",
-  "source code": "源代码"
+  "source code": "源代码",
+  "Release quietly": "静默发布",
+  "No announcement, and the mod keeps its place in Recently updated. People can still find and download this version.": "不会发布公告，模组在“最近更新”中的位置也保持不变。玩家仍然可以找到并下载此版本。",
+  "Quiet": "静默",
+  "Released quietly - not announced.": "静默发布 — 未发布公告。"
 }

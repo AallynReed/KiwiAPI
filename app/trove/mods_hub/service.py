@@ -331,6 +331,7 @@ def _release_dto(r: ModRelease) -> dict:
         "changelog": r.changelog,
         "changelog_i18n": r.changelog_i18n,
         "status": r.status,
+        "silent": r.silent,
         "tmod_filename": release_download_filename(r),   # the .tmod's internal title
         "tmod_size": r.tmod_size,
         "download_count": r.download_count,
@@ -1379,6 +1380,10 @@ async def _emit_release_event(project: ModProject, release: ModRelease) -> None:
     A release blocked by any of those isn't lost, it's just not news *yet* -
     ``_announce_newly_visible`` picks it up at whichever moment lifts the block.
 
+    A **silent** release is the one case that is never news at all, at any later
+    moment: it's stamped as if announced and returns without publishing, so no
+    visibility change can resurrect it.
+
     Idempotent per release: ``announced_at`` is stamped on the way out and checked
     on the way in, so a build announces once and only once no matter how many times
     it is unpublished, republished, or carried through a visibility change. (The
@@ -1392,6 +1397,10 @@ async def _emit_release_event(project: ModProject, release: ModRelease) -> None:
     if release.branch in (project.hidden_release_branches or []):
         return
     if release.announced_at is not None:
+        return
+    if release.silent:
+        release.announced_at = utcnow()      # close the gate for good
+        await release.save()
         return
     try:
         from app.events import bus
@@ -1459,7 +1468,10 @@ async def _announce_newly_visible(
     block stay unstamped, because their moment hasn't come yet."""
     if project.visibility != "public" or project.taken_down:
         return
-    query: dict = {"project_id": project.id, "status": "published", "announced_at": None}
+    # Silent builds are skipped outright, not just left unannounced: picking one as
+    # "the" announcement would swallow the reveal for the build that IS news.
+    query: dict = {"project_id": project.id, "status": "published",
+                   "announced_at": None, "silent": {"$ne": True}}
     if branches is not None:
         query["branch"] = {"$in": branches}
     elif project.hidden_release_branches:
@@ -1479,6 +1491,7 @@ async def create_release_from_commit(
     preview_sha: str | None = None, author: str | None = None,
     config_data: bytes | None = None,
     title_i18n: dict | None = None, changelog_i18n: dict | None = None,
+    silent: bool = False,
 ) -> dict:
     _require_owner(project, actor)
     _require_files_mode(project)
@@ -1535,7 +1548,7 @@ async def create_release_from_commit(
         project, tag=tag, branch=branch_name, title=title, changelog=changelog,
         status=status, tmod_sha=sha, tmod_size=len(artifact), properties=props,
         source_commit_sha=commit_sha, release_format=fmt,
-        title_i18n=title_i18n, changelog_i18n=changelog_i18n,
+        title_i18n=title_i18n, changelog_i18n=changelog_i18n, silent=silent,
     )
 
 
@@ -1544,6 +1557,7 @@ async def create_release_from_upload(
     changelog: str, status: str, filename: str, data: bytes, branch: str = "",
     config_data: bytes | None = None,
     title_i18n: dict | None = None, changelog_i18n: dict | None = None,
+    silent: bool = False,
 ) -> dict:
     _require_owner(project, actor)
     _require_publish_ok(actor, status)
@@ -1590,7 +1604,7 @@ async def create_release_from_upload(
         tmod_sha=sha, tmod_size=len(data), properties=props,
         source_commit_sha=None, release_format=fmt,
         prior_tmod_shas=[base_sha] if base_sha else [],
-        title_i18n=title_i18n, changelog_i18n=changelog_i18n,
+        title_i18n=title_i18n, changelog_i18n=changelog_i18n, silent=silent,
     )
 
 
@@ -1617,6 +1631,7 @@ async def _insert_release(
     status: str, tmod_sha: str, tmod_size: int, properties: dict, source_commit_sha,
     release_format: str = "tmod", prior_tmod_shas: list[str] | None = None,
     title_i18n: dict | None = None, changelog_i18n: dict | None = None,
+    silent: bool = False,
 ) -> dict:
     # The download name is the .tmod's internal `title` (Trove matches on it),
     # falling back to slug-tag; zips keep the slug-tag name.
@@ -1633,6 +1648,7 @@ async def _insert_release(
         tmod_properties=properties,
         banner_sha=project.banner_sha, status=status,
         published_at=utcnow() if status == "published" else None,
+        silent=silent,
     )
     _set_i18n(release, {
         "title_i18n": (title_i18n, "title", 160),
@@ -1640,7 +1656,9 @@ async def _insert_release(
     })
     await release.insert()
     project.updated_at = utcnow()
-    if release.status == "published":
+    # A silent build leaves the public "updated" signal alone: the hub's `recent`
+    # order stays exactly where it was, as if this version hadn't shipped.
+    if release.status == "published" and not silent:
         project.last_release_at = release.published_at or utcnow()
     await project.save()
     await _emit_release_event(project, release)   # SSE: announce if published
@@ -2507,8 +2525,11 @@ async def decode_release_blueprint(
 async def update_release(
     release: ModRelease, project: ModProject, actor: SiteUser, *,
     title=None, title_i18n=None, changelog=None, changelog_i18n=None, status=None,
+    silent=None,
 ) -> dict:
     _require_owner(project, actor)
+    if silent is not None:
+        release.silent = bool(silent)
     if title is not None:
         release.title = title.strip()
     if changelog is not None:
@@ -2528,8 +2549,9 @@ async def update_release(
     release.updated_at = utcnow()
     await release.save()
     if became_published:                          # draft -> published: announce on SSE
-        project.last_release_at = release.published_at or utcnow()
-        await project.save()
+        if not release.silent:                    # ...unless it ships quietly
+            project.last_release_at = release.published_at or utcnow()
+            await project.save()
         await _emit_release_event(project, release)
     return _release_dto(release)
 

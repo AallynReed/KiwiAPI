@@ -112,6 +112,13 @@ website.
   `{"status": "draft"}` publishes or unpublishes a build (it also takes `title` / `changelog`);
   `DELETE /v1/mods/hub/releases/{release_id}` removes one build for good - the mod, its files and its
   other releases are untouched. Unpublishing is the reversible one; prefer it.
+- **Silent releases**: pass `silent: true` when cutting a release (`POST …/releases`, or the `silent`
+  form field on `POST …/releases/upload`) to ship a build without announcing it - no `mod_release`
+  event on the stream, so no webhook and no DM alert, and the mod's `last_release_at` is left where it
+  was, so it doesn't move in the `recent` sort. The build is otherwise a normal published release:
+  listed, downloadable, newest-wins for update checks. It stays silent permanently - no later
+  visibility change announces it. `PATCH …/releases/{id}` takes `silent` too, so a draft can be flipped
+  quiet before it is published.
 - **Reading your own work back.** The `/v1/mods/hub/*` and `/v1/mods/*` reads all answer as an
   anonymous visitor, so they can't see a draft mod or an unpublished release. The creator-scoped
   mirrors do: `GET /v1/mods/hub/me/projects` (all mods you manage), and per mod
@@ -167,7 +174,8 @@ endpoint that is **master-only** - it requires a superuser API token).
   the mod **going public**, the **variant being revealed** - announces the current build then. One event
   either way: a mod arriving with a back catalogue is one piece of news rather than one per historic version.
   Nothing re-announces a build afterwards: not unpublishing and republishing it, not flipping the mod to
-  draft and back, not re-hiding and re-revealing its variant. Hook it to mirror/announce new mod
+  draft and back, not re-hiding and re-revealing its variant. A build the creator cut as **silent** is
+  never announced at all, at any later moment. Hook it to mirror/announce new mod
   releases. A `: ping` keep-alive comment arrives ~every 20s;
   reconnect on disconnect and the snapshot re-primes you.
   Example: `curl -N https://api.aallyn.net/v1/events/stream`.
@@ -311,7 +319,8 @@ keeps that exact name).
   `offset`. Returns `{items, count, total, limit, offset}`. `recent` orders by `last_release_at` -
   when a mod last PUBLISHED a release, not when its page was last edited, so retitling a mod or
   fixing a typo never pushes it back to the top. Cards carry both `last_release_at` (null until a
-  first release) and `updated_at` (any edit).
+  first release) and `updated_at` (any edit). A build the creator cut as **silent** deliberately leaves
+  `last_release_at` alone, so a mod can carry a version newer than that timestamp.
 - `GET /v1/mods/{handle}/{slug}` - full metadata + published releases for one mod (404 if not public).
 - `GET /v1/mods/popular` - the **25 most popular** mods (`limit` ≤25). `popularity_score` is a 0.0-1.0 metric
   derived mainly from the **last 7 days** of downloads (with stars + lifetime downloads as a floor), top mod ≈ 1.0.

@@ -3052,5 +3052,9 @@
   "This movie is too large to show in full — some classes were left out.": "このムービーは大きすぎるため全体を表示できません — 一部のクラスは省略されました。",
   "View code": "コードを表示",
   "View the ActionScript inside this movie": "このムービー内の ActionScript を表示",
-  "source code": "ソースコード"
+  "source code": "ソースコード",
+  "Release quietly": "静かに公開",
+  "No announcement, and the mod keeps its place in Recently updated. People can still find and download this version.": "告知はされず、MOD は「最近の更新」での位置も変わりません。このバージョンは通常どおり見つけてダウンロードできます。",
+  "Quiet": "静か",
+  "Released quietly - not announced.": "静かに公開されました（告知なし）。"
 }

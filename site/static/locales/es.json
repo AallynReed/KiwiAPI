@@ -3052,5 +3052,9 @@
   "This movie is too large to show in full — some classes were left out.": "Esta película es demasiado grande para mostrarla completa: se omitieron algunas clases.",
   "View code": "Ver código",
   "View the ActionScript inside this movie": "Ver el ActionScript dentro de esta película",
-  "source code": "código fuente"
+  "source code": "código fuente",
+  "Release quietly": "Publicar en silencio",
+  "No announcement, and the mod keeps its place in Recently updated. People can still find and download this version.": "Sin anuncio, y el mod mantiene su lugar en Actualizados recientemente. Esta versión se sigue pudiendo encontrar y descargar.",
+  "Quiet": "Silencioso",
+  "Released quietly - not announced.": "Publicado en silencio: sin anuncio."
 }

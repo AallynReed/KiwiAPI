@@ -3052,5 +3052,9 @@
   "This movie is too large to show in full — some classes were left out.": "이 무비는 너무 커서 전체를 표시할 수 없습니다 — 일부 클래스가 생략되었습니다.",
   "View code": "코드 보기",
   "View the ActionScript inside this movie": "이 무비 안의 ActionScript 보기",
-  "source code": "소스 코드"
+  "source code": "소스 코드",
+  "Release quietly": "조용히 공개",
+  "No announcement, and the mod keeps its place in Recently updated. People can still find and download this version.": "공지가 나가지 않고, 모드는 '최근 업데이트' 순서에서 자리를 그대로 유지합니다. 이 버전은 평소처럼 찾고 내려받을 수 있습니다.",
+  "Quiet": "조용히",
+  "Released quietly - not announced.": "조용히 공개됨 - 공지 없음."
 }

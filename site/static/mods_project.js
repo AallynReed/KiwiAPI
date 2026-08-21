@@ -590,6 +590,9 @@
   function releaseRow(r, owner) {
     const draft = r.status !== 'published'
       ? `<span class="mp-badge mp-badge-draft">${esc(t('Draft'))}</span>` : '';
+    // Owner-only: this version shipped without an announcement.
+    const quiet = (owner && r.silent)
+      ? `<span class="mp-badge mp-badge-draft" title="${esc(t('Released quietly - not announced.'))}"><i class="fa-solid fa-volume-xmark"></i> ${esc(t('Quiet'))}</span>` : '';
     // Everything only the creator can do folds into one “…” menu. Seven buttons
     // wrapped over four lines and buried Download - the thing everyone came for.
     const ownerMenu = owner ? `<details class="mp-relmenu">
@@ -606,7 +609,7 @@
     const log = local(r.changelog, r.changelog_i18n);
     return `<div class="mp-release">
       <div class="mp-release-top">
-        <span class="mp-release-tag"><span class="mp-release-tagchip">${esc(r.tag)}</span> <span data-rel-title="${esc(r.id)}">${esc(local(r.title, r.title_i18n))}</span> ${draft}</span>
+        <span class="mp-release-tag"><span class="mp-release-tagchip">${esc(r.tag)}</span> <span data-rel-title="${esc(r.id)}">${esc(local(r.title, r.title_i18n))}</span> ${draft}${quiet}</span>
         <div class="mp-release-actions">
           ${r.status === 'published'
             ? `<a class="mp-btn mp-btn-sm mp-btn-primary" href="${BTTUtil.apiUrl('/site/mods/releases/' + r.id + '/download')}"><i class="fa-solid fa-download"></i> ${esc(t('Download'))}</a>`
@@ -2207,6 +2210,8 @@
       <label class="mp-form-field"><span>${esc(t('Changelog (Markdown)'))}</span><textarea name="changelog" maxlength="20000"></textarea></label>
       <label class="mp-form-field"><span>${esc(t('Status'))}</span>
         <select name="status"><option value="published">${esc(t('Published'))}</option><option value="draft">${esc(t('Draft'))}</option></select></label>
+      <label class="mp-form-check"><input type="checkbox" name="silent">
+        <span>${esc(t('Release quietly'))}<small class="mp-form-hint">${esc(t('No announcement, and the mod keeps its place in Recently updated. People can still find and download this version.'))}</small></span></label>
       <p class="mp-form-hint">${filesMode ? esc(t('Compiling builds the artifact server-side from the latest commit on the chosen branch.')) : esc(t('Upload an already-built .tmod or .zip.'))}</p>
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">
@@ -2329,6 +2334,7 @@
         fd.append('changelog', f.changelog.value);
         fd.append('status', f.status.value);
         fd.append('branch', f.upload_branch ? f.upload_branch.value.trim() : '');
+        fd.append('silent', f.silent.checked ? 'true' : 'false');
         fd.append('file', f.file.files[0]);
         // Only sent when the field is showing, i.e. the build has a Flash UI.
         if (!cfgField.hidden && cfgInput.files.length) fd.append('config', cfgInput.files[0]);
@@ -2341,6 +2347,7 @@
             tag: f.tag.value.trim(), title: f.title.value.trim(),
             changelog: f.changelog.value, ref: f.ref.value,
             format: f.format ? f.format.value : 'tmod', status: f.status.value,
+            silent: f.silent.checked,
             preview_sha: (f.format && f.format.value === 'tmod') ? selectedPreview : null,
             author: f.author ? f.author.value.trim() : null,
             config_base64: (f.format && f.format.value === 'tmod') ? cfg : null,
