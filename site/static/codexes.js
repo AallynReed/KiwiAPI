@@ -40,7 +40,6 @@
     $Stat_CraftingSpeed: 'Crafting Speed', $Stat_CooldownSpeed: 'Cooldown Speed',
     $Stat_Acceleration: 'Acceleration', $Stat_TurningRate: 'Turning Rate',
     $Stat_ExperienceBoost: 'Experience Boost', $Stat_CriticalHitDamage: 'Critical Damage',
-    $Stat_CriticalHitDamageBonus: 'Critical Damage Bonus',
     $Stat_Glide: 'Glide', $Stat_Light: 'Light', $Stat_MaxExploration: 'Maximum Exploration',
   };
 
@@ -479,7 +478,16 @@
   // Prefer the server-resolved name (real in-game / locale string); fall back to
   // the built-in label, then a derived one.
   function statName(s) {
-    return s.stat_name || STAT_LABELS[s.stat] || prettyStat(s.stat);
+    if (s.stat_name) return s.stat_name;
+    // A MultiplySum record carries the `…Bonus` twin of its stat key; name it off the
+    // stat it boosts so it reads the same way the server resolves it.
+    const base = bonusBase(s.stat);
+    if (base) return (STAT_LABELS[base] || prettyStat(base)) + ' Bonus';
+    return STAT_LABELS[s.stat] || prettyStat(s.stat);
+  }
+  function bonusBase(key) {
+    const m = /^(\$Stat_.+)Bonus(_controller)?$/.exec(String(key || ''));
+    return m && STAT_LABELS[m[1] + (m[2] || '')] ? m[1] + (m[2] || '') : null;
   }
   function prettyStat(key) {
     return String(key || '').replace(/^\$Stat_/, '').replace(/_controller$/, '')

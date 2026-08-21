@@ -36,7 +36,6 @@ STAT_NAMES: dict[str, str] = {
     "$Stat_TurningRate": "Turning Rate",
     "$Stat_ExperienceBoost": "Experience Boost",
     "$Stat_CriticalHitDamage": "Critical Damage",
-    "$Stat_CriticalHitDamageBonus": "Critical Damage Bonus",
     "$Stat_BattleFactor": "Battle Factor",
     "$Stat_ActionTimeMod": "Action Time Mod",
     "$Stat_PowerRank": "Power Rank",
@@ -89,8 +88,25 @@ def _humanize(key: str) -> str:
     return "".join(out).replace("_", " ").strip().title()
 
 
+def _bonus_base(key: str) -> str | None:
+    """The stat a `…Bonus` key is a bonus ON, or None if this isn't one. Guarded on the
+    base being a stat we know, so a real key that happened to end in `Bonus` is safe."""
+    base, sep, tail = str(key or "").partition("_controller")
+    if not base.endswith("Bonus"):
+        return None
+    base = base[:-len("Bonus")] + sep + tail
+    return base if base in STAT_NAMES else None
+
+
 def resolve_stat_name(loc_map: dict[str, str], key: str) -> str:
-    """Display name for a `$Stat_…` key: locale table, then built-in, then derived."""
+    """Display name for a `$Stat_…` key: locale table, then built-in, then derived.
+
+    A `MultiplySum` record carries the `…Bonus` twin of its stat key, which the game
+    names nowhere - so it takes the stat's own (localized) name plus "Bonus" rather
+    than a parallel table that would need an entry per stat and stay English anyway."""
+    base = _bonus_base(key)
+    if base is not None:
+        return f"{resolve_stat_name(loc_map, base)} Bonus"
     return _from_loc(loc_map, key) or STAT_NAMES.get(key) or _humanize(key)
 
 

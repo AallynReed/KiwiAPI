@@ -10,8 +10,8 @@ Two extractors, both grounded in the handoff's byte evidence:
   amount is normalized by the operation byte. A record is only kept when its
   decoded stat id is a known stat (the strongest false-positive filter, and what
   the handoff means by "numeric stat ID is more authoritative"). The operation byte
-  also splits stat id 0x16 into two keys - see ``CRIT_DAMAGE_BONUS`` - so `stat_id`
-  alone no longer determines `stat`.
+  then splits each id in two - see ``bonus_key`` - so `stat_id` alone no longer
+  determines `stat`.
 
 - ``extract_abilities`` harvests literal ``abilities/…`` refs and classifies each
   as a displayed bonus or a hidden/mechanical ref (kept as evidence, not emitted
@@ -79,16 +79,36 @@ STAT_KEYS: dict[int, str] = {
     0x2C: "$Stat_MaxArmor",
 }
 
-# Operation byte -> name (handoff's normalization table).
-OPERATIONS: dict[int, str] = {0: "MultiplySum", 2: "Add", 4: "Set", 8: "Multiply"}
+# Operation byte -> name. The game's own `KModType` reflection table (Trove_x64.exe,
+# listed right after `KStatType`) names all seven in order - MultiplySum, Add, Set,
+# Nullify, Multiply, Minimum, Maximum - and the wire byte is the zig-zag of the index,
+# so each is 2x its position. Every one of them occurs: a sweep of all 42,112 prefabs
+# finds Add 3,025, Set 2,619, MultiplySum 1,020, Multiply 685, Nullify 54, Maximum 7,
+# Minimum 2. The last three are movement restrictions and debuffs (the two Minimum
+# records sit in a file literally named `test_shout_minimum`), never collectible bonuses.
+OPERATIONS: dict[int, str] = {
+    0: "MultiplySum",     # scales the stat by the amount (0.30 = +30% of it)
+    2: "Add",             # flat amount on the stat, whether or not it displays as a percent
+    4: "Set",             # replaces the stat
+    6: "Nullify",         # zeroes it
+    8: "Multiply",        # multiplies the output (patron buffs and the like)
+    10: "Minimum",        # floors it
+    12: "Maximum",        # caps it
+}
 
-# Multiplicative crit damage gets its own key. Stat id 0x16 carries TWO different
-# in-game bonuses that both render as a percentage, so a shared name is a lie: under
-# `Add` the amount is percentage POINTS on the Critical Damage stat (+30 -> 150% becomes
-# 180%), while under the multiplicative ops it scales the stat itself (+30% of it).
-# Only 12 collectibles - all allies - use the multiplicative form.
-CRIT_DAMAGE_BONUS = "$Stat_CriticalHitDamageBonus"
-_MULTIPLICATIVE_OPS = (0, 8)          # MultiplySum, Multiply
+
+def bonus_key(stat_key: str) -> str:
+    """The `…Bonus` twin of a stat key. `MultiplySum` states a different thing from
+    `Add` on the SAME stat id - it scales the stat rather than adding to it - so the two
+    get separate keys rather than one name covering both. The gap is invisible wherever
+    both render as a percentage: `+30% Critical Damage` is 30 points under `Add` and 900
+    points under `MultiplySum` on a 3,000% sheet.
+
+    `_controller` stays on the end, where the game puts it.
+    """
+    base, sep, tail = stat_key.partition("_controller")
+    return f"{base}Bonus{sep}{tail}"
+
 
 _LABEL_RE = re.compile(r"^[A-Za-z0-9_/.$\-]+$")
 
@@ -151,9 +171,9 @@ def _normalize(stat_key: str, operation: int, amount: float) -> tuple[float, boo
         return amount * 100, True
     if operation == 8:                       # Multiply
         return (amount - 1) * 100, True
-    if operation == 4:                       # Set
-        return amount, False
-    # operation == 2 (Add) and anything else: additive family.
+    if operation != 2:                       # Set / Nullify / Minimum / Maximum
+        return amount, False                 # all state the stat itself, never a delta
+    # Add: a flat amount, which a few stats nonetheless display as a percent.
     if stat_key == "$Stat_CriticalHitChance":
         return amount / 10, False
     if stat_key in ("$Stat_CriticalHitDamage", "$Stat_AttackSpeed"):
@@ -287,9 +307,9 @@ def _detect(data: bytes, start: int, end: int) -> list[dict]:
             stat_key, stat_id = label_stat, None
 
         operation = data[i - 6]
-        if stat_key == "$Stat_CriticalHitDamage" and operation in _MULTIPLICATIVE_OPS:
-            stat_key = CRIT_DAMAGE_BONUS
         display, is_percent = _normalize(stat_key, operation, value)
+        if operation == 0:                   # MultiplySum: a bonus ON the stat, not the stat
+            stat_key = bonus_key(stat_key)
         records.append({
             "stat": stat_key,
             "stat_id": stat_id,
