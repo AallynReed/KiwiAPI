@@ -53,6 +53,7 @@ SITE_FEATURE_FLAGS = {
     "mod_workshop_enabled": feature_flags.MOD_WORKSHOP_FLAG,
     "blueprint_editor_enabled": feature_flags.BLUEPRINT_EDITOR_FLAG,
     "tomes_enabled": feature_flags.TOMES_FLAG,
+    "unlock_debug_enabled": feature_flags.UNLOCK_DEBUG_FLAG,
 }
 
 
@@ -182,6 +183,13 @@ def feature_blocks(p: str, f: dict) -> bool:
     # medians, but degrades to "not evaluated" without them, so it does not ride
     # the /market toggle.
     if not f["tomes_enabled"] and (p == "/tomes" or p == "/site/tomes"):
+        return True
+    # Unlock Debug: the page, its legacy underscore URL, and the patch endpoint.
+    # Ships OFF by default (see the runtime-config description), so this gate is
+    # what most deployments actually hit.
+    if not f["unlock_debug_enabled"] and (
+        p in ("/unlock-debug", "/unlock_debug", "/site/unlock-debug")
+    ):
         return True
     # The star-chart preview proxy feeds both Builds and Calculators; only hide it
     # when both of those features are OFF.

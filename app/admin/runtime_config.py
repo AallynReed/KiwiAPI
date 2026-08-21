@@ -262,6 +262,21 @@ REGISTRY: dict[str, TunableSetting] = {
             "the Mod Workshop and Mods Hub toggles."
         ),
     ),
+    "feature_unlock_debug_enabled": _t(
+        key="feature_unlock_debug_enabled",
+        default=False,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Unlock Debug patcher. OFF hides the /unlock-debug "
+            "page + navbar link (404) and 404s its /site/unlock-debug endpoint. It "
+            "byte-patches an uploaded Trove.exe to enable the in-client debug console "
+            "and hands it straight back - nothing is stored and no login is needed. "
+            "DEFAULTS OFF: the route was removed in 2026-06 because Trion shipped "
+            "anti-cheat and tampering with the client binary is grounds for a ban, so "
+            "turning this on is a deliberate act, not a fresh install's default."
+        ),
+    ),
     "feature_webhooks_enabled": _t(
         key="feature_webhooks_enabled",
         default=True,
@@ -550,6 +565,27 @@ REGISTRY: dict[str, TunableSetting] = {
         category="api_rate_limits",
         min_value=10, max_value=86400,
         description="Sliding-window length for the per-IP Mod Workshop bucket, in seconds.",
+    ),
+    "unlock_debug_rate_limit_max": _t(
+        key="unlock_debug_rate_limit_max",
+        default=6,
+        type="int",
+        category="api_rate_limits",
+        min_value=1, max_value=100000,
+        description=(
+            "Per-IP cap on the Unlock Debug patcher (/site/unlock-debug). Tokenless "
+            "and login-free, and each call streams a whole game executable in and back "
+            "out again, so it gets its own - deliberately tight - bucket rather than "
+            "sharing the anonymous API budget. One person patches their client once."
+        ),
+    ),
+    "unlock_debug_rate_limit_window_seconds": _t(
+        key="unlock_debug_rate_limit_window_seconds",
+        default=300,
+        type="int",
+        category="api_rate_limits",
+        min_value=10, max_value=86400,
+        description="Sliding-window length for the per-IP Unlock Debug bucket, in seconds.",
     ),
     "blueprint_editor_rate_limit_max": _t(
         key="blueprint_editor_rate_limit_max",

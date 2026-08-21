@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Unlock Debug - Better Trove Tools</title>
+    <meta name="description" content="Turn on Trove's built-in debug console: pick your Trove.exe and download it back with the console enabled.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    {# Deliberately out of the index and out of the sitemap. Editing the client
+       binary carries a ban risk, so this page is reachable on purpose - from the
+       menu, from site search, from a link someone was given - and never as a
+       search result somebody stumbled into. #}
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/unlock-debug.min.css">
+</head>
+<body class="landing udbg-page">
+
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="udbg-main">
+
+        <section class="udbg-hero">
+            <p class="udbg-eyebrow">/unlock-debug</p>
+            <h1 class="udbg-title" data-i18n>Unlock <span class="highlight-blue">Debug</span></h1>
+            <p class="udbg-sub" data-i18n>Trove has a debug console built into it that the retail client keeps switched off. Pick your game executable and you get the same file back with the console turned on.</p>
+        </section>
+
+        <section class="udbg-warn" role="note" aria-labelledby="udbg-warn-title">
+            <h2 id="udbg-warn-title"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> <span data-i18n>Read this first</span></h2>
+            <ul>
+                <li data-i18n><strong>Trove runs anti-cheat.</strong> This changes the game's executable, and changing it can get your account banned. Nobody but you can make that call.</li>
+                <li data-i18n>Keep a copy of the original <code>Trove.exe</code> somewhere safe before you replace it.</li>
+                <li data-i18n>Close the game completely first - Windows won't let you overwrite a running executable.</li>
+                <li data-i18n>Every game patch replaces the executable, so you'll need to do this again after one.</li>
+            </ul>
+        </section>
+
+        <form class="udbg-card" id="udbg-form" method="post" action="/site/unlock-debug"
+              enctype="multipart/form-data" novalidate>
+            <h2 class="udbg-card-title" data-i18n>Choose your game executable</h2>
+            <p class="udbg-card-hint" data-i18n>It's called <code>Trove.exe</code> and lives in your Trove install folder, under <code>Games/Trove/Live</code>.</p>
+
+            {# The label wraps the input, so clicking the zone, tabbing to it and
+               pressing Enter, or dropping a file on it all reach the same picker. #}
+            <label class="udbg-drop" id="udbg-drop" for="udbg-file">
+                <input type="file" id="udbg-file" name="trove_exe" accept=".exe,application/vnd.microsoft.portable-executable" required>
+                <span class="udbg-drop-empty" id="udbg-drop-empty">
+                    <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+                    <span class="udbg-drop-title" data-i18n>Drop Trove.exe here</span>
+                    <span class="udbg-drop-hint" data-i18n>or click to pick it</span>
+                </span>
+                <span class="udbg-drop-ready" id="udbg-drop-ready" hidden>
+                    <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
+                    <span class="udbg-drop-title" id="udbg-name"></span>
+                    <span class="udbg-drop-hint" id="udbg-size"></span>
+                </span>
+            </label>
+            <button type="button" class="udbg-clear" id="udbg-clear" hidden data-i18n>Pick a different file</button>
+
+            <p class="udbg-status" id="udbg-status" role="status" aria-live="polite" hidden></p>
+
+            <button type="submit" class="udbg-go" id="udbg-go" disabled>
+                <i class="fa-solid fa-terminal" aria-hidden="true"></i>
+                <span data-i18n>Turn the console on and download</span>
+            </button>
+            <p class="udbg-privacy" data-i18n>Your file is patched and handed straight back. It isn't saved, and no account is needed.</p>
+        </form>
+
+        <section class="udbg-after">
+            <h2 data-i18n>Once you've replaced the file</h2>
+            <p data-i18n>Start the game and press the backtick key (<code>`</code>, above Tab) to open the console. It's the same console the developers use, so it will happily accept a command that breaks your client - close and reopen the game if something goes wrong.</p>
+        </section>
+
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/_site_util.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/unlock-debug.min.js" defer></script>
+</body>
+</html>

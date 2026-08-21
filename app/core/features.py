@@ -58,6 +58,7 @@ SOUND_STUDIO_FLAG = "feature_sound_studio_enabled"
 MOD_WORKSHOP_FLAG = "feature_mod_workshop_enabled"
 BLUEPRINT_EDITOR_FLAG = "feature_blueprint_editor_enabled"
 TOMES_FLAG = "feature_tomes_enabled"
+UNLOCK_DEBUG_FLAG = "feature_unlock_debug_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
@@ -119,3 +120,4 @@ require_leaderboard_duplicates_enabled = _gate(
 require_embed_enabled = _gate(EMBED_FLAG, "embeddable viewer")
 require_dressing_room_enabled = _gate(DRESSING_ROOM_FLAG, "Dressing Room")
 require_tomes_enabled = _gate(TOMES_FLAG, "Tomes")
+require_unlock_debug_enabled = _gate(UNLOCK_DEBUG_FLAG, "Unlock Debug patcher")

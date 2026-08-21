@@ -2916,6 +2916,71 @@ async def site_workshop_extract_download(
                               "application/zip")
 
 
+# --- /site/unlock-debug - the /unlock-debug page's patcher ------------------
+# Restored 2026-08 (it was removed in 2026-06). Trove ships its debug console
+# behind a single conditional jump; this rewrites that jump and hands the binary
+# straight back. Nothing is stored, no account is needed, and the whole feature
+# hangs off ``feature_unlock_debug_enabled``, which DEFAULTS OFF - Trion runs
+# anti-cheat now and tampering with the client is grounds for a ban, so serving
+# this is a deliberate choice rather than something a fresh deploy does on its own.
+
+# The seven bytes the patch turns off. ``7C`` is JL (jump if less) followed by the
+# push of the branch it guards; NOPping the jump (``90 90``) makes the console path
+# unconditional. Everything else in the sequence is left alone so the match stays
+# specific to that one site rather than to a two-byte opcode that occurs everywhere.
+_DEBUG_FIND = bytes.fromhex("7C3968E0020000")
+_DEBUG_REPL = bytes.fromhex("909068E0020000")
+
+
+async def _unlock_debug_throttle(request: Request) -> None:
+    """Per-IP budget for the patcher.
+
+    Tokenless, login-free, and each call carries a whole game executable in and
+    back out, so it gets its own - deliberately tight - bucket rather than riding
+    the shared anonymous budget. Tuned by ``unlock_debug_rate_limit_*``; a person
+    patches their client once, not once a minute."""
+    max_, window = await runtime_config.get_rate_limit("unlock_debug_rate_limit")
+    await check_rate_limit(f"unlockdebug:{client_ip(request) or 'unknown'}", max_, window)
+
+
+@router.post("/site/unlock-debug", response_class=Response)
+async def site_unlock_debug(
+    trove_exe: UploadFile | None = File(default=None),
+    _limit: None = Depends(_unlock_debug_throttle),
+) -> Response:
+    """Byte-patch an uploaded ``Trove.exe`` to enable the in-client debug console.
+
+    The whole file comes in, seven bytes change, the whole file goes back out - the
+    upload is never written to disk and nothing about it is kept. A file that does
+    not contain the sequence is rejected rather than returned unchanged, because a
+    silent no-op is indistinguishable from a successful patch once it is downloaded:
+    the visitor replaces their client, the console still is not there, and there is
+    nothing to tell them why."""
+    if trove_exe is None or not trove_exe.filename:
+        raise APIError(400, ErrorCode.bad_request, "No file was uploaded.")
+    data = await trove_exe.read()
+    if not data:
+        raise APIError(400, ErrorCode.bad_request, "That file is empty.")
+    if data[:2] != b"MZ":
+        raise APIError(400, ErrorCode.bad_request,
+                       "That doesn't look like a Windows executable.")
+    if _DEBUG_FIND not in data:
+        raise APIError(
+            400, ErrorCode.bad_request,
+            "This build of Trove.exe doesn't contain the sequence this patch edits - "
+            "it may already be patched, or the game may have changed.",
+        )
+    patched = data.replace(_DEBUG_FIND, _DEBUG_REPL)
+    return Response(
+        content=patched,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": 'attachment; filename="Trove.exe"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
 # --- /site/blueprint-editor/* - the /blueprint-editor page's tools ----------
 # Stateless voxel editor. A .blueprint arrives with the request and the answer goes
 # back with the response; nothing is stored and no account is needed. On save the

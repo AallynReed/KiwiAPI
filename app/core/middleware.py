@@ -36,7 +36,7 @@ _PAGE_PATHS = frozenset({
     "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
     "/star-chart", "/gem-simulator", "/gem-evaluator", "/gem-builds", "/calculators",
     "/gems-guide", "/dressing-room", "/sound-studio", "/mod-workshop", "/tomes",
-    "/blueprint-editor",
+    "/blueprint-editor", "/unlock-debug", "/unlock_debug",
     "/search",
 })
 
@@ -99,6 +99,9 @@ def add_security_middleware(app: FastAPI) -> None:
             # model is one JSON entry each - which outgrows the default cap on its own.
             # A .qb import is bulkier still: four grids rather than one packed model.
             max_body = 64 * 1024 * 1024
+        elif path == "/site/unlock-debug":
+            # A whole game executable arrives so seven bytes of it can change.
+            max_body = settings.unlock_debug_max_request_body_bytes
         elif path.startswith("/site/mod-workshop/"):
             # A whole mod is uploaded in one request (loose files, a .zip, or a
             # .tmod being repaired). The unpacked-size cap lives in workshop.py.

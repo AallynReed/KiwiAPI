@@ -130,6 +130,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Mod Workshop", "/mod-workshop", "mod_workshop_enabled", "fa-solid fa-screwdriver-wrench", "Create", "tmod", "compiler", "build a mod"),
     _p("Blueprint Editor", "/blueprint-editor", "blueprint_editor_enabled", "fa-solid fa-cube", "Create", "voxel", "blueprint", "recolour", "recolor", "materials", "glass", "model", "mount", "creature", "parts"),
     _p("Sound Studio", "/sound-studio", "sound_studio_enabled", "fa-solid fa-sliders", "Create", "audio", "music", "bnk"),
+    _p("Unlock Debug", "/unlock-debug", "unlock_debug_enabled", "fa-solid fa-terminal", "Create", "debug console", "trove.exe", "patch", "byte patch", "console"),
 
     _p("Classes", "/classes", "classes_enabled", "fa-solid fa-hat-wizard", "Learn", "class list"),
     _p("Trove Commands", "/commands", "commands_enabled", "fa-solid fa-keyboard", "Learn", "slash commands", "chat"),

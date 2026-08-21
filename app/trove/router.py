@@ -2236,8 +2236,8 @@ async def list_codex_stat_keys(
     ctx: AccessContext = _CODEX,
     branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
 ) -> CodexStatKeyList:
-    """Distinct stats granted within a type (+ how many entries grant each), most
-    common first - the options for the `stat` filter."""
+    """Distinct stats granted within a type (+ how many entries grant each), A-Z by
+    display name - the options for the `stat` filter."""
     _check_branch(branch)
     _check_codex_type(codex_type)
     rows = await codexes_read.stat_keys(branch, codex_type)

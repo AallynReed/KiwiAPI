@@ -329,6 +329,11 @@ class Settings(BaseSettings):
     # capped separately in mods_hub/workshop.py.
     mod_workshop_max_request_body_bytes: int = 32 * 1024 * 1024  # 32 MB
 
+    # Unlock Debug: the whole Trove.exe is uploaded so seven bytes in it can be
+    # rewritten. The 64-bit client is ~60 MB today and has only ever grown, so
+    # this leaves headroom rather than tracking the current build.
+    unlock_debug_max_request_body_bytes: int = 160 * 1024 * 1024  # 160 MB
+
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
     # Bind-mounted into the api container from `./site` in the project root.
     site_root: str = "site"

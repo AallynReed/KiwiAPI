@@ -337,6 +337,26 @@ async def mod_workshop_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "mod-workshop.html", {})
 
 
+@router.get("/unlock-debug", response_class=HTMLResponse)
+async def unlock_debug_page(request: Request) -> HTMLResponse:
+    """Unlock Debug - turn on Trove's built-in debug console.
+
+    Pick your ``Trove.exe`` and get the same file back with the one branch that hides
+    the console rewritten (``POST /site/unlock-debug`` on the API). Nothing is stored
+    and no login is needed. The page is ``noindex`` and stays out of the sitemap, and
+    the whole feature ships behind ``feature_unlock_debug_enabled``, which defaults
+    OFF: Trion runs anti-cheat, so editing the client binary carries a real ban risk
+    and the page says so before it asks for a file."""
+    return _TEMPLATES.TemplateResponse(request, "unlock-debug.html", {})
+
+
+@router.get("/unlock_debug", include_in_schema=False)
+async def unlock_debug_legacy(request: Request) -> RedirectResponse:
+    """The URL this tool lived at before it was removed in 2026-06. Old forum posts
+    and Discord pins still point here, so it redirects rather than 404s."""
+    return RedirectResponse("/unlock-debug", status_code=301)
+
+
 @router.get("/gems-guide", response_class=HTMLResponse)
 async def gems_guide_page(request: Request) -> HTMLResponse:
     """How Gems Work - an interactive, animated explainer of Trove's gem system

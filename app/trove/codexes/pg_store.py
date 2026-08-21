@@ -400,8 +400,10 @@ async def query_entries(
 
 
 async def stat_keys(branch: str, codex_type: str | None = None) -> list[dict]:
-    """`{stat, stat_name, count}` for every stat granted by entries of a type, most
-    common first - the stat filter's options. Counts ENTRIES, not stat rows, so the
+    """`{stat, stat_name, count}` for every stat granted by entries of a type, A-Z by
+    display name - the stat filter's options. Sorted on the resolved name rather than
+    the key, because that is what the dropdown shows and the two disagree
+    (`$Stat_SpellDamage` reads "Magic Damage"). Counts ENTRIES, not stat rows, so the
     number matches what picking it returns."""
     conds = ["s.branch = $1"]
     args: list = [branch]
@@ -415,7 +417,8 @@ async def stat_keys(branch: str, codex_type: str | None = None) -> list[dict]:
             f"FROM codex_stat s "
             f"JOIN codex_entry e ON e.branch = s.branch AND e.path = s.path "
             f"WHERE {' AND '.join(conds)} "
-            f"GROUP BY s.stat_key ORDER BY count DESC, s.stat_key",
+            f"GROUP BY s.stat_key "
+            f"ORDER BY lower(coalesce(nullif(max(s.stat_name), ''), s.stat_key)), s.stat_key",
             *args)
     return [dict(r) for r in rows]
 

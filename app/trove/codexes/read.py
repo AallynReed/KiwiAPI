@@ -46,7 +46,7 @@ async def list_categories(branch: str, codex_type: str | None = None) -> list[di
 
 
 async def stat_keys(branch: str, codex_type: str | None = None) -> list[dict]:
-    """Stats granted by entries of a type, most common first (the filter's options)."""
+    """Stats granted by entries of a type, A-Z by display name (the filter's options)."""
     if not settings.postgres_enabled:
         return []
     return await pg_store.stat_keys(branch, codex_type)
