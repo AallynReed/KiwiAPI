@@ -354,9 +354,9 @@
   }
   function exportCsv() {
     if (!builds.length) return;
-    const head = ["Rank", "Layout", "Light", "BaseDamage", "BonusDamage%", "TotalDamage", "CritDamage%", "Coefficient"];
+    const head = ["Rank", "Layout", "Light", "BaseDamage", "BonusDamage%", "TotalDamage", "CritDamage%", "CritDamageBonus%", "Coefficient"];
     const cell = (v) => (hp() ? v : Math.round(v));
-    const rows = builds.map((b) => [b.rank, b.layout, b.light, cell(b.base_dmg), b.bonus_dmg, cell(b.total_dmg), b.crit_dmg, b.coefficient]);
+    const rows = builds.map((b) => [b.rank, b.layout, b.light, cell(b.base_dmg), b.bonus_dmg, cell(b.total_dmg), b.crit_dmg, b.crit_bonus || 0, b.coefficient]);
     const csv = [head, ...rows].map((r) => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const a = h("a", { href: URL.createObjectURL(blob), download: `gem-build-${config.character}-${config.build_type}.csv` });
@@ -428,7 +428,8 @@
           h("td", { class: "r" }, round(b.base_dmg)),
           h("td", { class: "r" }, dec(b.bonus_dmg, 2) + "%", b.class_bonus ? h("span", { class: "gb-bonus-extra" }, " + " + b.class_bonus + "%") : null),
           h("td", { class: "r" }, round(b.total_dmg)),
-          h("td", { class: "r" }, dec(b.crit_dmg, 1) + "%"),
+          h("td", { class: "r" }, dec(b.crit_dmg, 1) + "%",
+            b.crit_bonus ? h("span", { class: "gb-bonus-extra" }, " + " + dec(b.crit_bonus, 1) + "%") : null),
           h("td", { class: "r sort strong" }, num(b.coefficient)),
           h("td", { class: "r" }, b.rank === 1
             ? h("span", { class: "gb-best-tag" }, t("Best"))

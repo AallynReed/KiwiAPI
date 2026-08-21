@@ -203,6 +203,7 @@ class BuildResult(BaseModel):
     crit_dmg: float
     light: int
     bonus_dmg: float
+    crit_bonus: float = 0            # multiplies the crit damage total (0 = none)
     total_dmg: float
     class_bonus: float | None
     coefficient: float               # the ranking metric (higher = more damage)

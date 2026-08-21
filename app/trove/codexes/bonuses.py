@@ -9,7 +9,9 @@ Two extractors, both grounded in the handoff's byte evidence:
   (``stat = unzig(data[i-8])``, ``op = data[i-6]``, ``float = data[i-4:i]``); the
   amount is normalized by the operation byte. A record is only kept when its
   decoded stat id is a known stat (the strongest false-positive filter, and what
-  the handoff means by "numeric stat ID is more authoritative").
+  the handoff means by "numeric stat ID is more authoritative"). The operation byte
+  also splits stat id 0x16 into two keys - see ``CRIT_DAMAGE_BONUS`` - so `stat_id`
+  alone no longer determines `stat`.
 
 - ``extract_abilities`` harvests literal ``abilities/…`` refs and classifies each
   as a displayed bonus or a hidden/mechanical ref (kept as evidence, not emitted
@@ -79,6 +81,14 @@ STAT_KEYS: dict[int, str] = {
 
 # Operation byte -> name (handoff's normalization table).
 OPERATIONS: dict[int, str] = {0: "MultiplySum", 2: "Add", 4: "Set", 8: "Multiply"}
+
+# Multiplicative crit damage gets its own key. Stat id 0x16 carries TWO different
+# in-game bonuses that both render as a percentage, so a shared name is a lie: under
+# `Add` the amount is percentage POINTS on the Critical Damage stat (+30 -> 150% becomes
+# 180%), while under the multiplicative ops it scales the stat itself (+30% of it).
+# Only 12 collectibles - all allies - use the multiplicative form.
+CRIT_DAMAGE_BONUS = "$Stat_CriticalHitDamageBonus"
+_MULTIPLICATIVE_OPS = (0, 8)          # MultiplySum, Multiply
 
 _LABEL_RE = re.compile(r"^[A-Za-z0-9_/.$\-]+$")
 
@@ -277,6 +287,8 @@ def _detect(data: bytes, start: int, end: int) -> list[dict]:
             stat_key, stat_id = label_stat, None
 
         operation = data[i - 6]
+        if stat_key == "$Stat_CriticalHitDamage" and operation in _MULTIPLICATIVE_OPS:
+            stat_key = CRIT_DAMAGE_BONUS
         display, is_percent = _normalize(stat_key, operation, value)
         records.append({
             "stat": stat_key,

@@ -40,6 +40,7 @@
     $Stat_CraftingSpeed: 'Crafting Speed', $Stat_CooldownSpeed: 'Cooldown Speed',
     $Stat_Acceleration: 'Acceleration', $Stat_TurningRate: 'Turning Rate',
     $Stat_ExperienceBoost: 'Experience Boost', $Stat_CriticalHitDamage: 'Critical Damage',
+    $Stat_CriticalHitDamageBonus: 'Critical Damage Bonus',
     $Stat_Glide: 'Glide', $Stat_Light: 'Light', $Stat_MaxExploration: 'Maximum Exploration',
   };
 

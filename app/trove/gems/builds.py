@@ -358,6 +358,7 @@ class GemOptimizerEngine:
             results.append({
                 "rank": i + 1, "layout": build_text, "base_dmg": rd(build_data[1], 2),
                 "crit_dmg": rd(build_data[2], 1), "light": build_data[3], "bonus_dmg": rd(build_data[4], 8),
+                "crit_bonus": rd(build_data[5] - 100, 8),
                 "total_dmg": rd(build_data[6], 2), "class_bonus": build_data[7], "coefficient": build_data[8],
             })
         return results

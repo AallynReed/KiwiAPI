@@ -36,6 +36,7 @@ STAT_NAMES: dict[str, str] = {
     "$Stat_TurningRate": "Turning Rate",
     "$Stat_ExperienceBoost": "Experience Boost",
     "$Stat_CriticalHitDamage": "Critical Damage",
+    "$Stat_CriticalHitDamageBonus": "Critical Damage Bonus",
     "$Stat_BattleFactor": "Battle Factor",
     "$Stat_ActionTimeMod": "Action Time Mod",
     "$Stat_PowerRank": "Power Rank",
