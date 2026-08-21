@@ -34,7 +34,16 @@ SORTS: dict[str, str] = {
     "-power_rank": "power_rank DESC NULLS LAST, name ASC",
     "indexed_at": "indexed_at ASC, name ASC",
     "-indexed_at": "indexed_at DESC, name ASC",
+    # Only orderable while a `stat` filter is on - the column is a correlated subquery
+    # over that one stat, so without it there is nothing to sort by. `query_entries`
+    # falls back to the default rather than erroring on a sort the caller can't know
+    # went moot when they cleared the stat.
+    "stat_value": "stat_value ASC NULLS LAST, name ASC",
+    "-stat_value": "stat_value DESC NULLS LAST, name ASC",
 }
+
+# Sorts that need the `stat` filter to mean anything.
+STAT_SORTS = frozenset({"stat_value", "-stat_value"})
 
 _SELECT_COLS = ("codex_type", "path", "name", "category", "description", "tradable",
                 "mastery", "mastery_geode", "power_rank", "blueprint", "data", "indexed_at")
@@ -59,10 +68,15 @@ def _escape_like(term: str) -> str:
 def build_filter(
     branch: str, *, codex_type: str | None = None, search: str | None = None,
     category: str | None = None, tradable: bool | None = None,
+    stat: str | None = None, ability: str | None = None,
 ) -> tuple[str, list]:
     """Build the ``WHERE`` body (no leading WHERE) + positional args. Every filter
     is optional and ANDed; ``search`` is a case-insensitive name/description
-    substring. Pure - unit-tested without a DB."""
+    substring. Pure - unit-tested without a DB.
+
+    ``stat`` / ``ability`` test the child tables by EXISTS rather than joining them:
+    an entry can grant the same stat in several equip slots and can reference an
+    ability more than once, and a join would return it once per child row."""
     conds = ["branch = $1"]
     args: list = [branch]
 
@@ -80,6 +94,14 @@ def build_filter(
         args.append("%" + _escape_like(search) + "%")
         n = len(args)
         conds.append(f"(name ILIKE ${n} ESCAPE '\\' OR description ILIKE ${n} ESCAPE '\\')")
+    if stat:
+        add("EXISTS (SELECT 1 FROM codex_stat s WHERE s.branch = codex_entry.branch "
+            "AND s.path = codex_entry.path AND s.stat_key = ${n})", stat)
+    if ability:
+        # Hidden refs are mechanical plumbing the entry never displays - filtering on
+        # one would return entries that show no such bonus.
+        add("EXISTS (SELECT 1 FROM codex_ability a WHERE a.branch = codex_entry.branch "
+            "AND a.path = codex_entry.path AND a.ref = ${n} AND NOT a.hidden)", ability)
     return " AND ".join(conds), args
 
 
@@ -338,19 +360,85 @@ async def load_rig_bindings(branch: str) -> list[tuple[str, str, str, str]]:
 async def query_entries(
     branch: str, *, codex_type: str | None = None, search: str | None = None,
     category: str | None = None, tradable: bool | None = None,
+    stat: str | None = None, ability: str | None = None,
     sort: str = DEFAULT_SORT, limit: int = 50, offset: int = 0,
 ) -> tuple[list[dict], int]:
-    """Filtered, sorted, paged entries + the total match count."""
+    """Filtered, sorted, paged entries + the total match count.
+
+    With a ``stat`` filter each row also carries ``stat_value`` + ``stat_percent`` -
+    the BEST value that entry grants for it and how that one reads - which is what the
+    card shows and what the `stat_value` sorts order by. Best rather than first: a boat
+    carries a separate stat block per equip slot, so "first" would rank it on whichever
+    slot the prefab happened to list first. `is_percent` comes off that same winning row
+    rather than being folded across the stat, because it is a property of the record."""
     where, args = build_filter(branch, codex_type=codex_type, search=search,
-                               category=category, tradable=tradable)
+                               category=category, tradable=tradable,
+                               stat=stat, ability=ability)
+    count_args = list(args)
+    cols = list(_SELECT_COLS)
+    source = "codex_entry"
+    if stat:
+        args.append(stat)
+        source = (
+            f"codex_entry LEFT JOIN LATERAL ("
+            f"  SELECT s.value, s.is_percent FROM codex_stat s"
+            f"  WHERE s.branch = codex_entry.branch AND s.path = codex_entry.path"
+            f"    AND s.stat_key = ${len(args)}"
+            f"  ORDER BY s.value DESC NULLS LAST LIMIT 1) sv ON TRUE")
+        cols += ["sv.value AS stat_value", "sv.is_percent AS stat_percent"]
+    elif sort in STAT_SORTS:
+        sort = DEFAULT_SORT
     async with acquire() as con:
-        total = await con.fetchval(f"SELECT count(*) FROM codex_entry WHERE {where}", *args)
+        total = await con.fetchval(
+            f"SELECT count(*) FROM codex_entry WHERE {where}", *count_args)
         rows = await con.fetch(
-            f"SELECT {', '.join(_SELECT_COLS)} FROM codex_entry WHERE {where} "
+            f"SELECT {', '.join(cols)} FROM {source} WHERE {where} "
             f"ORDER BY {order_by(sort)} LIMIT ${len(args) + 1} OFFSET ${len(args) + 2}",
             *args, limit, offset,
         )
     return [dict(r) for r in rows], int(total or 0)
+
+
+async def stat_keys(branch: str, codex_type: str | None = None) -> list[dict]:
+    """`{stat, stat_name, count}` for every stat granted by entries of a type, most
+    common first - the stat filter's options. Counts ENTRIES, not stat rows, so the
+    number matches what picking it returns."""
+    conds = ["s.branch = $1"]
+    args: list = [branch]
+    if codex_type:
+        args.append(codex_type)
+        conds.append(f"e.codex_type = ${len(args)}")
+    async with acquire() as con:
+        rows = await con.fetch(
+            f"SELECT s.stat_key AS stat, max(s.stat_name) AS stat_name, "
+            f"       count(DISTINCT s.path) AS count "
+            f"FROM codex_stat s "
+            f"JOIN codex_entry e ON e.branch = s.branch AND e.path = s.path "
+            f"WHERE {' AND '.join(conds)} "
+            f"GROUP BY s.stat_key ORDER BY count DESC, s.stat_key",
+            *args)
+    return [dict(r) for r in rows]
+
+
+async def ability_refs(branch: str, codex_type: str | None = None) -> list[dict]:
+    """`{ref, name, description, count}` for every DISPLAYED ability referenced by
+    entries of a type, most common first - the ability filter's options. Hidden refs
+    are excluded for the same reason `build_filter` won't match them."""
+    conds = ["a.branch = $1", "NOT a.hidden"]
+    args: list = [branch]
+    if codex_type:
+        args.append(codex_type)
+        conds.append(f"e.codex_type = ${len(args)}")
+    async with acquire() as con:
+        rows = await con.fetch(
+            f"SELECT a.ref, max(a.name) AS name, max(a.description) AS description, "
+            f"       count(DISTINCT a.path) AS count "
+            f"FROM codex_ability a "
+            f"JOIN codex_entry e ON e.branch = a.branch AND e.path = a.path "
+            f"WHERE {' AND '.join(conds)} "
+            f"GROUP BY a.ref ORDER BY count DESC, a.ref",
+            *args)
+    return [dict(r) for r in rows]
 
 
 async def all_recipes(branch: str) -> list[dict]:

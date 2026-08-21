@@ -14,19 +14,22 @@ from app.trove.codexes import pg_store
 # Re-export the sort whitelist so the router validates against the same keys the
 # store knows how to translate to SQL.
 SORTS = pg_store.SORTS
+STAT_SORTS = pg_store.STAT_SORTS
 DEFAULT_SORT = pg_store.DEFAULT_SORT
 
 
 async def query_entries(
     branch: str, *, codex_type: str | None = None, search: str | None = None,
     category: str | None = None, tradable: bool | None = None,
+    stat: str | None = None, ability: str | None = None,
     sort: str = DEFAULT_SORT, limit: int = 50, offset: int = 0,
 ) -> tuple[list[dict], int]:
     if not settings.postgres_enabled:
         return [], 0
     return await pg_store.query_entries(
         branch, codex_type=codex_type, search=search, category=category,
-        tradable=tradable, sort=sort, limit=limit, offset=offset,
+        tradable=tradable, stat=stat, ability=ability,
+        sort=sort, limit=limit, offset=offset,
     )
 
 
@@ -40,6 +43,20 @@ async def list_categories(branch: str, codex_type: str | None = None) -> list[di
     if not settings.postgres_enabled:
         return []
     return await pg_store.list_categories(branch, codex_type)
+
+
+async def stat_keys(branch: str, codex_type: str | None = None) -> list[dict]:
+    """Stats granted by entries of a type, most common first (the filter's options)."""
+    if not settings.postgres_enabled:
+        return []
+    return await pg_store.stat_keys(branch, codex_type)
+
+
+async def ability_refs(branch: str, codex_type: str | None = None) -> list[dict]:
+    """Displayed abilities referenced by entries of a type, most common first."""
+    if not settings.postgres_enabled:
+        return []
+    return await pg_store.ability_refs(branch, codex_type)
 
 
 async def get_entry(branch: str, codex_type: str, path: str) -> dict | None:

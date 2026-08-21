@@ -3008,5 +3008,9 @@
   "Run time": "Tiempo de recorrido",
   "Depth · run time": "Profundidad · tiempo de recorrido",
   "Run time (same depth)": "Tiempo de recorrido (misma profundidad)",
-  "This board packs the depth and the run time into one score.": "Esta tabla comprime la profundidad y el tiempo de recorrido en una sola puntuación."
+  "This board packs the depth and the run time into one score.": "Esta tabla comprime la profundidad y el tiempo de recorrido en una sola puntuación.",
+  "Any stat": "Cualquier estadística",
+  "Any ability": "Cualquier habilidad",
+  "Stat value (high→low)": "Valor (mayor→menor)",
+  "Stat value (low→high)": "Valor (menor→mayor)"
 }

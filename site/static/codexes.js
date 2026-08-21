@@ -26,6 +26,10 @@
     ally: 'Ally', mount: 'Mount', dragon: 'Dragon', memento: 'Memento',
     style: 'Style', recipe: 'Recipe', item: 'Item', fish: 'Fish', badge: 'Badge',
   };
+  // Sort keys the page offers, for validating one restored from the URL hash.
+  const SORT_KEYS = new Set(['name', '-name', '-mastery', '-mastery_geode',
+    '-power_rank', 'stat_value', '-stat_value']);
+
   // Stable tab order (types not present are dropped after the /types fetch).
   const TYPE_ORDER = ['ally', 'mount', 'dragon', 'badge', 'memento', 'style', 'fish', 'recipe', 'item'];
 
@@ -49,6 +53,8 @@
     search: '',
     category: '',
     tradable: '',        // '' | 'true' | 'false'
+    stat: '',            // $Stat_… key; also unlocks the stat_value sorts
+    ability: '',         // abilities/… ref
     sort: 'name',
     offset: 0,
     items: [],           // accumulated rows (each carries its own full `data`)
@@ -65,6 +71,8 @@
   const $search = $('cdx-search');
   const $category = $('cdx-category');
   const $tradable = $('cdx-tradable');
+  const $stat = $('cdx-stat');
+  const $ability = $('cdx-ability');
   const $sort = $('cdx-sort');
   const $modal = $('cdx-modal');
   const $modalBody = $('cdx-modal-body');
@@ -80,7 +88,7 @@
     applyHash();
     wireEvents();
     await loadTypes();
-    await loadCategories();
+    await loadFilters();
     await loadPage(true);
   }
 
@@ -134,6 +142,73 @@
     rerunI18n();
   }
 
+  // ─── Stat + ability dropdowns (also type-dependent) ────────────────
+  //
+  // Both list what entries of the active type ACTUALLY grant, with the entry count
+  // beside each - a stat no mount carries would otherwise be an option that returns
+  // nothing. Loaded alongside the categories, and all three re-run on a type change.
+  async function loadFilters() {
+    await Promise.all([loadCategories(), loadStats(), loadAbilities()]);
+  }
+
+  async function loadStats() {
+    let rows = [];
+    try {
+      const data = await fetchJSON('/site/codexes/stat-keys' + filterScopeQS());
+      rows = data.items || [];
+    } catch (_) { /* leave just "Any stat" */ }
+
+    const keep = state.stat;
+    const opts = [`<option value="" data-i18n>Any stat</option>`];
+    for (const r of rows) {
+      const label = r.stat_name || statName({ stat: r.stat });
+      opts.push(`<option value="${esc(r.stat)}">${esc(label)} (${formatInt(r.count)})</option>`);
+    }
+    $stat.innerHTML = opts.join('');
+    $stat.value = rows.some((r) => r.stat === keep) ? keep : '';
+    state.stat = $stat.value;
+    syncStatSort();
+    rerunI18n();
+  }
+
+  async function loadAbilities() {
+    let rows = [];
+    try {
+      const data = await fetchJSON('/site/codexes/abilities' + filterScopeQS());
+      rows = data.items || [];
+    } catch (_) { /* leave just "Any ability" */ }
+
+    const keep = state.ability;
+    const opts = [`<option value="" data-i18n>Any ability</option>`];
+    for (const r of rows) {
+      const label = r.name || prettyAbility(r.ref);
+      opts.push(`<option value="${esc(r.ref)}" title="${esc(r.description || '')}">`
+        + `${esc(label)} (${formatInt(r.count)})</option>`);
+    }
+    $ability.innerHTML = opts.join('');
+    $ability.value = rows.some((r) => r.ref === keep) ? keep : '';
+    state.ability = $ability.value;
+    rerunI18n();
+  }
+
+  function filterScopeQS() {
+    return '?branch=' + enc(state.branch) + (state.type ? '&type=' + enc(state.type) : '');
+  }
+
+  // The stat_value sorts order by a column that only exists while a stat is picked,
+  // so they stay disabled until then - and a sort left selected when the stat clears
+  // falls back to name rather than silently ordering by nothing.
+  function syncStatSort() {
+    const on = !!state.stat;
+    Array.from($sort.options).forEach((o) => {
+      if (o.value === 'stat_value' || o.value === '-stat_value') o.disabled = !on;
+    });
+    if (!on && (state.sort === 'stat_value' || state.sort === '-stat_value')) {
+      state.sort = 'name';
+      $sort.value = state.sort;
+    }
+  }
+
   // ─── Results grid ──────────────────────────────────────────────────
   function buildQuery() {
     const p = new URLSearchParams();
@@ -142,6 +217,8 @@
     if (state.search) p.set('q', state.search);
     if (state.category) p.set('category', state.category);
     if (state.tradable !== '') p.set('tradable', state.tradable);
+    if (state.stat) p.set('stat', state.stat);
+    if (state.ability) p.set('ability', state.ability);
     p.set('sort', state.sort);
     p.set('limit', String(PAGE_SIZE));
     p.set('offset', String(state.offset));
@@ -203,6 +280,12 @@
     if (e.mastery != null) badges.push(badge('mastery', t('Mastery'), e.mastery, 'fa-star'));
     if (e.mastery_geode != null) badges.push(badge('geode', t('Geode'), e.mastery_geode, 'fa-gem'));
     if (e.power_rank != null) badges.push(badge('pr', t('PR'), e.power_rank, 'fa-bolt'));
+    // While filtering by a stat, lead with what this entry gives for it - that is the
+    // number the list is being read for, and what the stat_value sorts rank on.
+    if (state.stat && e.stat_value != null) {
+      badges.unshift(badge('stat', statLabel(state.stat),
+        statAmount(e.stat_value, e.stat_percent), 'fa-chart-simple'));
+    }
     const trade = e.tradable === true
       ? `<span class="cdx-trade cdx-trade-yes" title="${esc(t('Tradable'))}"><i class="fa-solid fa-right-left" aria-hidden="true"></i></span>`
       : e.tradable === false
@@ -239,8 +322,11 @@
   }
 
   function badge(kind, label, value, icon) {
+    // A pre-formatted string (a stat amount carries its sign and % already) passes
+    // through; a raw number still gets the thousands separators.
+    const text = typeof value === 'number' ? formatInt(value) : String(value);
     return `<span class="cdx-badge cdx-badge-${kind}" title="${esc(label)}">
-      <i class="fa-solid ${icon}" aria-hidden="true"></i>${esc(formatInt(value))}</span>`;
+      <i class="fa-solid ${icon}" aria-hidden="true"></i>${esc(text)}</span>`;
   }
 
   // ─── Detail modal ──────────────────────────────────────────────────
@@ -475,6 +561,16 @@
     const signed = v > 0 ? '+' + num : num;
     return s.is_percent ? signed + '%' : signed;
   }
+  function statLabel(key) {
+    const opt = $stat.options[$stat.selectedIndex];
+    return (opt && opt.value === key ? opt.textContent.replace(/\s*\(\d[\d,.]*\)$/, '') : '')
+      || statName({ stat: key });
+  }
+  function statAmount(v, isPercent) {
+    const n = Number(v || 0);
+    const num = formatNum(n);
+    return (n > 0 ? '+' + num : num) + (isPercent ? '%' : '');
+  }
   // Prefer the server-resolved name (real in-game / locale string); fall back to
   // the built-in label, then a derived one.
   function statName(s) {
@@ -515,7 +611,7 @@
       state.category = '';
       setActive($tabs, btn);
       updateHash();
-      loadCategories().then(() => loadPage(true));
+      loadFilters().then(() => loadPage(true));
     });
 
     document.querySelectorAll('.cdx-branch-btn').forEach((btn) => {
@@ -525,8 +621,8 @@
         state.branch = b;
         document.querySelectorAll('.cdx-branch-btn').forEach((x) =>
           x.classList.toggle('active', x === btn));
-        // a fresh branch can have a different type/category set
-        loadTypes().then(loadCategories).then(() => loadPage(true));
+        // a fresh branch can have a different type/category/stat/ability set
+        loadTypes().then(loadFilters).then(() => loadPage(true));
       });
     });
 
@@ -538,6 +634,19 @@
 
     $category.addEventListener('change', () => { state.category = $category.value; loadPage(true); });
     $tradable.addEventListener('change', () => { state.tradable = $tradable.value; loadPage(true); });
+    $stat.addEventListener('change', () => {
+      state.stat = $stat.value;
+      syncStatSort();
+      // Picking a stat is almost always a "who gives the most of this" question.
+      if (state.stat && state.sort === 'name') { state.sort = '-stat_value'; $sort.value = state.sort; }
+      updateHash();
+      loadPage(true);
+    });
+    $ability.addEventListener('change', () => {
+      state.ability = $ability.value;
+      updateHash();
+      loadPage(true);
+    });
     $sort.addEventListener('change', () => { state.sort = $sort.value; loadPage(true); });
 
     if ($loadMore) $loadMore.addEventListener('click', () => loadPage(false));
@@ -571,11 +680,16 @@
     const tp = p.get('type');
     if (tp && TYPE_TABS[tp]) state.type = tp;
     if (p.get('q')) { state.search = p.get('q'); $search.value = state.search; }
+    if (p.get('stat')) state.stat = p.get('stat');
+    if (p.get('ability')) state.ability = p.get('ability');
+    if (p.get('sort') && SORT_KEYS.has(p.get('sort'))) { state.sort = p.get('sort'); $sort.value = state.sort; }
   }
   function updateHash() {
     const p = new URLSearchParams();
     if (state.type) p.set('type', state.type);
     if (state.search) p.set('q', state.search);
+    if (state.stat) { p.set('stat', state.stat); p.set('sort', state.sort); }
+    if (state.ability) p.set('ability', state.ability);
     const s = p.toString();
     history.replaceState(null, '', s ? '#' + s : location.pathname);
   }

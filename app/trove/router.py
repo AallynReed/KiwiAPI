@@ -57,6 +57,8 @@ from app.trove import (
 from app.trove.codexes import links
 from app.trove.codexes import read as codexes_read
 from app.trove.codexes.schemas import (
+    CodexAbilityInfo,
+    CodexAbilityList,
     CodexCategoryInfo,
     CodexCategoryList,
     CodexEntryOut,
@@ -67,6 +69,8 @@ from app.trove.codexes.schemas import (
     CodexRequirementOut,
     CodexSearchPage,
     CodexStatHolder,
+    CodexStatKeyInfo,
+    CodexStatKeyList,
     CodexStatPage,
     CodexTypeInfo,
     CodexTypeList,
@@ -1960,10 +1964,22 @@ def _codex_out(d: dict) -> CodexEntryOut:
         description=d["description"], tradable=d["tradable"], mastery=d["mastery"],
         mastery_geode=d["mastery_geode"], power_rank=d["power_rank"],
         blueprint=d["blueprint"], data=d["data"], indexed_at=d["indexed_at"],
+        stat_value=d.get("stat_value"), stat_percent=d.get("stat_percent"),
     )
 
 
-_SORT_DESC = "Sort order: " + ", ".join(codexes_read.SORTS)
+_SORT_DESC = ("Sort order: " + ", ".join(codexes_read.SORTS)
+              + ". The stat_value sorts need `stat` set; without it they fall back to name.")
+_STAT_DESC = ("Only entries granting this stat ($Stat_… key or bare name, see "
+              "/{type}/stat-keys). Each row then carries its best `stat_value` for it.")
+_ABILITY_DESC = "Only entries referencing this ability ref (see /{type}/abilities)"
+
+
+def _stat_key(stat: str | None) -> str | None:
+    """Accept a bare stat name as well as the `$Stat_…` key, matching `/stats`."""
+    if not stat:
+        return None
+    return stat if stat.startswith("$") else f"$Stat_{stat}"
 
 
 def _check_sort(sort: str) -> None:
@@ -1995,6 +2011,8 @@ async def search_codexes(
     type: str | None = Query(default=None, description="Restrict to one codex type"),
     category: str | None = Query(default=None, description="Exact category match"),
     tradable: bool | None = Query(default=None, description="Filter by tradability"),
+    stat: str | None = Query(default=None, description=_STAT_DESC),
+    ability: str | None = Query(default=None, description=_ABILITY_DESC),
     sort: str = Query(default="name", description=_SORT_DESC),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
@@ -2007,7 +2025,7 @@ async def search_codexes(
     _check_sort(sort)
     docs, total = await codexes_read.query_entries(
         branch, codex_type=type, search=q, category=category, tradable=tradable,
-        sort=sort, limit=limit, offset=offset,
+        stat=_stat_key(stat), ability=ability, sort=sort, limit=limit, offset=offset,
     )
     return CodexSearchPage(
         branch=branch, type=type, query=q,
@@ -2174,17 +2192,21 @@ async def list_codex_entries(
     search: str | None = Query(default=None, description="Case-insensitive name/description substring"),
     category: str | None = Query(default=None, description="Exact category match (see /{type}/categories)"),
     tradable: bool | None = Query(default=None, description="Filter by tradability"),
+    stat: str | None = Query(default=None, description=_STAT_DESC),
+    ability: str | None = Query(default=None, description=_ABILITY_DESC),
     sort: str = Query(default="name", description=_SORT_DESC),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ) -> CodexEntryPage:
-    """Entries of one codex type - filterable (search/category/tradable), sortable, paged."""
+    """Entries of one codex type - filterable (search/category/tradable/stat/ability),
+    sortable, paged."""
     _check_branch(branch)
     _check_codex_type(codex_type)
     _check_sort(sort)
     docs, total = await codexes_read.query_entries(
         branch, codex_type=codex_type, search=search, category=category,
-        tradable=tradable, sort=sort, limit=limit, offset=offset,
+        tradable=tradable, stat=_stat_key(stat), ability=ability,
+        sort=sort, limit=limit, offset=offset,
     )
     return CodexEntryPage(
         branch=branch, type=codex_type,
@@ -2205,6 +2227,41 @@ async def list_codex_categories(
     return CodexCategoryList(
         branch=branch, type=codex_type,
         items=[CodexCategoryInfo(**r) for r in rows], count=len(rows),
+    )
+
+
+@codexes_router.get("/{codex_type}/stat-keys", response_model=CodexStatKeyList)
+async def list_codex_stat_keys(
+    codex_type: str,
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> CodexStatKeyList:
+    """Distinct stats granted within a type (+ how many entries grant each), most
+    common first - the options for the `stat` filter."""
+    _check_branch(branch)
+    _check_codex_type(codex_type)
+    rows = await codexes_read.stat_keys(branch, codex_type)
+    return CodexStatKeyList(
+        branch=branch, type=codex_type,
+        items=[CodexStatKeyInfo(**r) for r in rows], count=len(rows),
+    )
+
+
+@codexes_router.get("/{codex_type}/abilities", response_model=CodexAbilityList)
+async def list_codex_abilities(
+    codex_type: str,
+    ctx: AccessContext = _CODEX,
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+) -> CodexAbilityList:
+    """Distinct DISPLAYED abilities referenced within a type (+ entry counts), most
+    common first - the options for the `ability` filter. Hidden/mechanical refs are
+    excluded, since filtering on one would return entries that show no such bonus."""
+    _check_branch(branch)
+    _check_codex_type(codex_type)
+    rows = await codexes_read.ability_refs(branch, codex_type)
+    return CodexAbilityList(
+        branch=branch, type=codex_type,
+        items=[CodexAbilityInfo(**r) for r in rows], count=len(rows),
     )
 
 

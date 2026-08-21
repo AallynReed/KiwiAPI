@@ -3008,5 +3008,9 @@
   "Run time": "走破時間",
   "Depth · run time": "深度・走破時間",
   "Run time (same depth)": "走破時間（同じ深度）",
-  "This board packs the depth and the run time into one score.": "このリーダーボードは深度と走破時間を1つのスコアにまとめています。"
+  "This board packs the depth and the run time into one score.": "このリーダーボードは深度と走破時間を1つのスコアにまとめています。",
+  "Any stat": "すべてのステータス",
+  "Any ability": "すべてのアビリティ",
+  "Stat value (high→low)": "ステータス値（高→低）",
+  "Stat value (low→high)": "ステータス値（低→高）"
 }

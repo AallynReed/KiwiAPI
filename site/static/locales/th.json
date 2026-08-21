@@ -2780,5 +2780,9 @@
   "Run time": "เวลาที่ใช้",
   "Depth · run time": "ความลึก · เวลาที่ใช้",
   "Run time (same depth)": "เวลาที่ใช้ (ความลึกเดียวกัน)",
-  "This board packs the depth and the run time into one score.": "กระดานนี้รวมความลึกและเวลาที่ใช้ไว้ในคะแนนเดียว"
+  "This board packs the depth and the run time into one score.": "กระดานนี้รวมความลึกและเวลาที่ใช้ไว้ในคะแนนเดียว",
+  "Any stat": "สเตตัสใดก็ได้",
+  "Any ability": "ความสามารถใดก็ได้",
+  "Stat value (high→low)": "ค่าสเตตัส (มาก→น้อย)",
+  "Stat value (low→high)": "ค่าสเตตัส (น้อย→มาก)"
 }

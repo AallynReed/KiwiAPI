@@ -3008,5 +3008,9 @@
   "Run time": "Temps de parcours",
   "Depth · run time": "Profondeur · temps de parcours",
   "Run time (same depth)": "Temps de parcours (même profondeur)",
-  "This board packs the depth and the run time into one score.": "Ce classement condense la profondeur et le temps de parcours en un seul score."
+  "This board packs the depth and the run time into one score.": "Ce classement condense la profondeur et le temps de parcours en un seul score.",
+  "Any stat": "Toute statistique",
+  "Any ability": "Toute capacité",
+  "Stat value (high→low)": "Valeur (haut→bas)",
+  "Stat value (low→high)": "Valeur (bas→haut)"
 }

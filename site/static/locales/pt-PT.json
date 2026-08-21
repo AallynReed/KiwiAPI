@@ -3008,5 +3008,9 @@
   "Run time": "Tempo de percurso",
   "Depth · run time": "Profundidade · tempo de percurso",
   "Run time (same depth)": "Tempo de percurso (mesma profundidade)",
-  "This board packs the depth and the run time into one score.": "Esta tabela junta a profundidade e o tempo de percurso numa única pontuação."
+  "This board packs the depth and the run time into one score.": "Esta tabela junta a profundidade e o tempo de percurso numa única pontuação.",
+  "Any stat": "Qualquer estatística",
+  "Any ability": "Qualquer habilidade",
+  "Stat value (high→low)": "Valor (alto→baixo)",
+  "Stat value (low→high)": "Valor (baixo→alto)"
 }

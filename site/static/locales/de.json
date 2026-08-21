@@ -3008,5 +3008,9 @@
   "Run time": "Laufzeit",
   "Depth · run time": "Tiefe · Laufzeit",
   "Run time (same depth)": "Laufzeit (gleiche Tiefe)",
-  "This board packs the depth and the run time into one score.": "Diese Bestenliste packt die Tiefe und die Laufzeit in einen einzigen Wert."
+  "This board packs the depth and the run time into one score.": "Diese Bestenliste packt die Tiefe und die Laufzeit in einen einzigen Wert.",
+  "Any stat": "Beliebiger Wert",
+  "Any ability": "Beliebige Fähigkeit",
+  "Stat value (high→low)": "Wert (hoch→niedrig)",
+  "Stat value (low→high)": "Wert (niedrig→hoch)"
 }

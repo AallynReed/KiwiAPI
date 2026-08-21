@@ -3008,5 +3008,9 @@
   "Run time": "Время прохождения",
   "Depth · run time": "Глубина · время прохождения",
   "Run time (same depth)": "Время прохождения (та же глубина)",
-  "This board packs the depth and the run time into one score.": "Эта таблица упаковывает глубину и время прохождения в одно значение."
+  "This board packs the depth and the run time into one score.": "Эта таблица упаковывает глубину и время прохождения в одно значение.",
+  "Any stat": "Любая характеристика",
+  "Any ability": "Любая способность",
+  "Stat value (high→low)": "Значение (выс→низ)",
+  "Stat value (low→high)": "Значение (низ→выс)"
 }

@@ -110,6 +110,8 @@
   color: var(--text); padding: 9px 12px; font-size: .9rem; min-width: 150px; cursor: pointer;
 }
 .cdx-select:focus { outline: none; border-color: var(--accent-blue); }
+/* Ability names run long; cap the field so one doesn't stretch the filter row. */
+#cdx-ability { max-width: 260px; }
 
 /* ─── Results grid ──────────────────────────────────────────────────── */
 
@@ -176,6 +178,7 @@
 .cdx-badge-mastery { color: var(--accent-yellow); }
 .cdx-badge-geode   { color: var(--accent-purple); }
 .cdx-badge-pr      { color: var(--accent-blue); }
+.cdx-badge-stat    { color: var(--accent-green); }
 
 .cdx-trade { font-size: .82rem; }
 .cdx-trade-yes { color: var(--accent-green); }

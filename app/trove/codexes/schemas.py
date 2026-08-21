@@ -29,6 +29,8 @@ class CodexEntryOut(BaseModel):
     blueprint: str | None = None
     data: dict = {}                   # rich fields: stats, abilities, geode_companion levels
     indexed_at: datetime
+    stat_value: float | None = None   # best value for the `stat` filter (None without one)
+    stat_percent: bool | None = None  # whether that value reads as a percent
 
 
 class CodexEntryPage(BaseModel):
@@ -135,6 +137,33 @@ class CodexUpgradeNodeList(BaseModel):
     branch: str
     system_key: str
     items: list[CodexUpgradeNode]     # rank order
+    count: int
+
+
+class CodexStatKeyInfo(BaseModel):
+    stat: str                         # $Stat_… key
+    stat_name: str = ""               # resolved display name
+    count: int                        # entries granting it (not stat rows)
+
+
+class CodexStatKeyList(BaseModel):
+    branch: str
+    type: str | None = None
+    items: list[CodexStatKeyInfo]     # most common first
+    count: int
+
+
+class CodexAbilityInfo(BaseModel):
+    ref: str                          # abilities/… reference
+    name: str = ""
+    description: str = ""
+    count: int                        # entries referencing it
+
+
+class CodexAbilityList(BaseModel):
+    branch: str
+    type: str | None = None
+    items: list[CodexAbilityInfo]     # most common first
     count: int
 
 

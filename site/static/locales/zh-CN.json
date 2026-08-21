@@ -3008,5 +3008,9 @@
   "Run time": "用时",
   "Depth · run time": "深度 · 用时",
   "Run time (same depth)": "用时（相同深度）",
-  "This board packs the depth and the run time into one score.": "该排行榜将深度与用时合并为一个分数。"
+  "This board packs the depth and the run time into one score.": "该排行榜将深度与用时合并为一个分数。",
+  "Any stat": "任意属性",
+  "Any ability": "任意技能",
+  "Stat value (high→low)": "属性数值（高→低）",
+  "Stat value (low→high)": "属性数值（低→高）"
 }

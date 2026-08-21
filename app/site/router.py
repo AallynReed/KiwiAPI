@@ -1289,6 +1289,38 @@ async def site_codex_categories(
     )
 
 
+@router.get("/site/codexes/stat-keys", response_class=JSONResponse)
+async def site_codex_stat_keys(
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    type: str | None = Query(default=None),
+) -> JSONResponse:
+    """Options for the /codexes stat filter: what entries of a type actually grant."""
+    _site_codex_branch(branch)
+    if type is not None:
+        _site_codex_type(type)
+    rows = await codexes_read.stat_keys(branch, type)
+    return JSONResponse(
+        {"branch": branch, "type": type, "items": rows, "count": len(rows)},
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
+@router.get("/site/codexes/abilities", response_class=JSONResponse)
+async def site_codex_abilities(
+    branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
+    type: str | None = Query(default=None),
+) -> JSONResponse:
+    """Options for the /codexes ability filter (displayed refs only)."""
+    _site_codex_branch(branch)
+    if type is not None:
+        _site_codex_type(type)
+    rows = await codexes_read.ability_refs(branch, type)
+    return JSONResponse(
+        {"branch": branch, "type": type, "items": rows, "count": len(rows)},
+        headers={"Cache-Control": "public, max-age=60"},
+    )
+
+
 @router.get("/site/codexes/search", response_class=JSONResponse)
 async def site_codex_search(
     branch: str = Query(default=_DEFAULT_CODEX_BRANCH),
@@ -1296,12 +1328,15 @@ async def site_codex_search(
     type: str | None = Query(default=None),
     category: str | None = Query(default=None),
     tradable: bool | None = Query(default=None),
+    stat: str | None = Query(default=None),
+    ability: str | None = Query(default=None),
     sort: str = Query(default="name"),
     limit: int = Query(default=60, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ) -> JSONResponse:
     """Cross-type / per-type search for the /codexes grid. Every filter is optional
-    and ANDed; each result carries its own ``type``."""
+    and ANDed; each result carries its own ``type``. With ``stat`` set, each row also
+    carries its best ``stat_value`` for it, which the stat_value sorts order by."""
     _site_codex_branch(branch)
     if type is not None:
         _site_codex_type(type)
@@ -1309,7 +1344,7 @@ async def site_codex_search(
         raise HTTPException(status_code=400, detail=f"Invalid sort '{sort}'")
     docs, total = await codexes_read.query_entries(
         branch, codex_type=type, search=q, category=category, tradable=tradable,
-        sort=sort, limit=limit, offset=offset,
+        stat=stat, ability=ability, sort=sort, limit=limit, offset=offset,
     )
     return JSONResponse(
         {"branch": branch, "type": type, "query": q,

@@ -3008,5 +3008,9 @@
   "Run time": "주파 시간",
   "Depth · run time": "깊이 · 주파 시간",
   "Run time (same depth)": "주파 시간 (같은 깊이)",
-  "This board packs the depth and the run time into one score.": "이 리더보드는 깊이와 주파 시간을 하나의 점수에 담습니다."
+  "This board packs the depth and the run time into one score.": "이 리더보드는 깊이와 주파 시간을 하나의 점수에 담습니다.",
+  "Any stat": "모든 스탯",
+  "Any ability": "모든 능력",
+  "Stat value (high→low)": "스탯 수치(높은순→낮은순)",
+  "Stat value (low→high)": "스탯 수치(낮은순→높은순)"
 }
