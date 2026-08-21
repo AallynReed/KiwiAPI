@@ -17,7 +17,25 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         fonts-dejavu-core fonts-noto-cjk fonts-noto-core libgl1 libglib2.0-0 \
+        default-jre-headless \
     && rm -rf /var/lib/apt/lists/*
+
+# JPEXS FFDec, the ActionScript decompiler behind the Mods Hub code view (see
+# app/trove/swf/decompile.py). The JRE above is here for this and nothing else.
+#
+# Pinned by version AND checksum: this runs over .swf files strangers upload, so
+# what lands in the image has to be exactly the build that was reviewed, not
+# whatever the release page serves on the day of a rebuild. Bump both together -
+# and bump bp_cache.SCRIPT_VERSION with them if the new build's output is worth
+# rebuilding the cached source for.
+#
+# It ships as a jar plus a lib/ tree its manifest classpath points at, so the whole
+# archive is extracted, not just the jar.
+ARG FFDEC_VERSION=26.2.1
+ARG FFDEC_SHA256=0333b56998a55bd83f4e0deb678a811fcdc45607582b4f5dd438309c8c3ad5ce
+RUN python -c 'import hashlib,io,sys,urllib.request,zipfile;v=sys.argv[1];w=sys.argv[2];u="https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version"+v+"/ffdec_"+v+".zip";b=urllib.request.urlopen(u,timeout=300).read();g=hashlib.sha256(b).hexdigest();sys.exit("ffdec checksum mismatch: "+g) if g!=w else None;zipfile.ZipFile(io.BytesIO(b)).extractall("/opt/ffdec")' \
+        "$FFDEC_VERSION" "$FFDEC_SHA256" \
+    && test -f /opt/ffdec/ffdec.jar
 
 # Install dependencies first so they cache independently of source changes.
 COPY requirements.txt .

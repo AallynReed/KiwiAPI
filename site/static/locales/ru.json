@@ -3037,5 +3037,20 @@
   "The upload didn't get through. Check your connection and try again.": "Загрузка не прошла. Проверьте подключение и попробуйте снова.",
   "That didn't work. Try again in a moment.": "Не получилось. Попробуйте ещё раз через минуту.",
   "Start the game and press the backtick key (<code>`</code>, above Tab) to open the console. It's the same console the developers use, so it will happily accept a command that breaks your client - close and reopen the game if something goes wrong.": "Запустите игру и нажмите клавишу <code>`</code> (над Tab), чтобы открыть консоль. Это та же консоль, которой пользуются разработчики, так что она спокойно примет команду, ломающую клиент, — если что-то пойдёт не так, закройте и снова откройте игру.",
-  "Unlock Debug": "Разблокировка отладки"
+  "Unlock Debug": "Разблокировка отладки",
+  "%n classes": "классов: %n",
+  "1 class": "1 класс",
+  "Decompiled ActionScript": "Декомпилированный ActionScript",
+  "Decompiling…": "Декомпиляция…",
+  "Nothing matches.": "Ничего не найдено.",
+  "Save .as": "Сохранить .as",
+  "Search this movie": "Поиск в этом ролике",
+  "Search this movie…": "Поиск в этом ролике…",
+  "The code viewer is unavailable.": "Просмотр кода недоступен.",
+  "This movie carries no code — it is artwork only.": "В этом ролике нет кода — только графика.",
+  "This movie could not be decompiled.": "Не удалось декомпилировать этот ролик.",
+  "This movie is too large to show in full — some classes were left out.": "Этот ролик слишком велик, чтобы показать его целиком — часть классов пропущена.",
+  "View code": "Посмотреть код",
+  "View the ActionScript inside this movie": "Посмотреть ActionScript внутри этого ролика",
+  "source code": "исходный код"
 }

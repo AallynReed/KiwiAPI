@@ -3037,5 +3037,20 @@
   "The upload didn't get through. Check your connection and try again.": "アップロードが完了しませんでした。接続を確認してもう一度お試しください。",
   "That didn't work. Try again in a moment.": "うまくいきませんでした。少し時間をおいてお試しください。",
   "Start the game and press the backtick key (<code>`</code>, above Tab) to open the console. It's the same console the developers use, so it will happily accept a command that breaks your client - close and reopen the game if something goes wrong.": "ゲームを起動し、<code>`</code> キー（Tab の上）を押すとコンソールが開きます。開発者が使うものと同じコンソールなので、クライアントを壊すコマンドもそのまま受け付けます。おかしくなったらゲームを終了して開き直してください。",
-  "Unlock Debug": "デバッグ解放"
+  "Unlock Debug": "デバッグ解放",
+  "%n classes": "%n クラス",
+  "1 class": "1 クラス",
+  "Decompiled ActionScript": "逆コンパイルされた ActionScript",
+  "Decompiling…": "逆コンパイル中…",
+  "Nothing matches.": "一致するものがありません。",
+  "Save .as": ".as を保存",
+  "Search this movie": "このムービーを検索",
+  "Search this movie…": "このムービーを検索…",
+  "The code viewer is unavailable.": "コードビューアーを利用できません。",
+  "This movie carries no code — it is artwork only.": "このムービーにコードはありません — 画像のみです。",
+  "This movie could not be decompiled.": "このムービーは逆コンパイルできませんでした。",
+  "This movie is too large to show in full — some classes were left out.": "このムービーは大きすぎるため全体を表示できません — 一部のクラスは省略されました。",
+  "View code": "コードを表示",
+  "View the ActionScript inside this movie": "このムービー内の ActionScript を表示",
+  "source code": "ソースコード"
 }

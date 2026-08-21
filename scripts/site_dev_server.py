@@ -379,6 +379,108 @@ _STUB_MODS[2]["star_count"] = 12
 _STUB_MODS[0]["fork_count"] = 1   # neon-hud has one fork (quiet-ui)
 _STUB_MODS[1]["is_beta"] = True   # tiny-mounts is still in development
 
+# --- Flash code stub (/site/mods/releases/*/swf/scripts) --------------------
+# What FFDec hands back for a real interface mod, in miniature: a couple of
+# packages, one class per file, and the token shapes the viewer's highlighter has
+# to get right (block + line comments, escaped quotes, hex/exponent literals).
+_SWF_SCRIPTS_STUB = {
+    "path": "ui/samplemod.swf", "size": 262144, "decompiler": "ffdec 26.2.1",
+    "truncated": False, "count": 3,
+    "scripts": [
+        {"path": "SampleModUI.as", "source": """package
+{
+   import _kiwi.Core.UIComponent;
+   import flash.display.MovieClip;
+   import flash.external.ExternalInterface;
+   import flash.text.TextField;
+
+   public class SampleModUI extends UIComponent
+   {
+
+      public var label_txt:TextField;
+
+      private var lastValue:Number = 0;
+
+      public const MODE_ADVENTURE:String = "adventure";
+
+      public function SampleModUI()
+      {
+         super();
+         addFrameScript(0,this.frame1);
+      }
+
+      /* Called by the game every time the HUD refreshes. */
+      public function setValue(param1:Number) : void
+      {
+         if(param1 == this.lastValue)
+         {
+            return;
+         }
+         this.lastValue = param1;
+         this.label_txt.text = "Value: " + param1.toFixed(0x02);
+         ExternalInterface.call("Mod.log","it\\'s updated // not a comment");
+      }
+
+      internal function frame1() : *
+      {
+         // Nothing on the timeline; everything is driven from setValue.
+         this.stop();
+      }
+   }
+}
+"""},
+        {"path": "_kiwi/Core/UIComponent.as", "source": """package _kiwi.Core
+{
+   import flash.display.MovieClip;
+   import flash.events.Event;
+
+   public class UIComponent extends MovieClip
+   {
+
+      protected var invalidated:Boolean = false;
+
+      public function UIComponent()
+      {
+         super();
+         this.addEventListener(Event.ADDED_TO_STAGE,this.onAdded);
+      }
+
+      protected function onAdded(param1:Event) : void
+      {
+         this.removeEventListener(Event.ADDED_TO_STAGE,this.onAdded);
+         this.draw();
+      }
+
+      protected function draw() : void
+      {
+      }
+   }
+}
+"""},
+        {"path": "_kiwi/Constants/Colors.as", "source": """package _kiwi.Constants
+{
+   public class Colors
+   {
+
+      public static const WHITE:uint = 0xFFFFFF;
+
+      public static const ACCENT:uint = 0x58A6FF;
+
+      public static const FADE_SECONDS:Number = 1.5e-1;
+
+      public function Colors()
+      {
+         super();
+      }
+   }
+}
+"""},
+    ],
+}
+for _s in _SWF_SCRIPTS_STUB["scripts"]:
+    _s["size"] = len(_s["source"])
+
+
 # --- Modpack stubs (/site/modpacks/*) --------------------------------------
 _STUB_PACKS = [
     {"slug": "starter-pack", "title": "Aallyn's Starter Pack", "handle": "aallyn",
@@ -1780,6 +1882,14 @@ class Handler(SimpleHTTPRequestHandler):
                  "declared": False}]})
         if path.startswith("/site/mods/releases/") and path.endswith("/cfg"):
             return self._send_bytes(b"[Settings]\nstub = 1\n", "text/plain; charset=utf-8")
+        # The build's .swf, and whether code can be read out of it - the real thing
+        # needs FFDec and an actual movie, so dev answers yes and serves a small
+        # hand-written class tree below.
+        if path.startswith("/site/mods/releases/") and path.endswith("/swfs"):
+            return self._send_json({"decompiler": True, "items": [
+                {"path": "ui/samplemod.swf", "size": 262144}]})
+        if path.startswith("/site/mods/releases/") and path.endswith("/swf/scripts"):
+            return self._send_json(_SWF_SCRIPTS_STUB)
         # Stub the blueprint list so the page's collapsible "3D models" renders in dev
         # (the real decode endpoint needs an actual .tmod and isn't stubbed).
         if path.startswith("/site/mods/releases/") and path.endswith("/blueprints"):

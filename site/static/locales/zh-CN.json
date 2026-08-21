@@ -3037,5 +3037,20 @@
   "The upload didn't get through. Check your connection and try again.": "上传没有成功。请检查网络连接后重试。",
   "That didn't work. Try again in a moment.": "没有成功。请稍后再试。",
   "Start the game and press the backtick key (<code>`</code>, above Tab) to open the console. It's the same console the developers use, so it will happily accept a command that breaks your client - close and reopen the game if something goes wrong.": "启动游戏，按 <code>`</code> 键（Tab 上方）打开调试台。这和开发者用的是同一个调试台，所以它也会照单全收会弄坏客户端的指令 —— 出问题就关掉游戏重开。",
-  "Unlock Debug": "解锁调试台"
+  "Unlock Debug": "解锁调试台",
+  "%n classes": "%n 个类",
+  "1 class": "1 个类",
+  "Decompiled ActionScript": "反编译的 ActionScript",
+  "Decompiling…": "正在反编译…",
+  "Nothing matches.": "没有匹配项。",
+  "Save .as": "保存 .as",
+  "Search this movie": "搜索此影片",
+  "Search this movie…": "搜索此影片…",
+  "The code viewer is unavailable.": "代码查看器不可用。",
+  "This movie carries no code — it is artwork only.": "此影片不含代码 — 仅有美术资源。",
+  "This movie could not be decompiled.": "无法反编译此影片。",
+  "This movie is too large to show in full — some classes were left out.": "此影片太大，无法完整显示 — 部分类已省略。",
+  "View code": "查看代码",
+  "View the ActionScript inside this movie": "查看此影片中的 ActionScript",
+  "source code": "源代码"
 }

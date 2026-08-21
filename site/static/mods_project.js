@@ -1449,9 +1449,42 @@
       d = await r.json();
     } catch (_) { box.textContent = t('Could not read this build.'); return; }
     if (!d.readable) { box.textContent = t('This build could not be decoded.'); return; }
+    // Which .swf files can be read as code - answered alongside the inspect, so a
+    // build with no Flash UI (or a server with no decompiler) never grows a button
+    // that would only fail when pressed.
+    d.readable_swfs = await readableSwfs(id);
     box.innerHTML = inspectorHTML(d, id);
     box.querySelectorAll('[data-insp-file]').forEach((b) =>
       b.addEventListener('click', () => downloadReleaseFile(id, b.getAttribute('data-insp-file'))));
+    box.querySelectorAll('[data-insp-code]').forEach((b) =>
+      b.addEventListener('click', () => openSwfCode(id, b.getAttribute('data-insp-code'))));
+  }
+
+  // ─── Flash code ────────────────────────────────────────────────────────
+  // An interface mod's whole behaviour is compiled ActionScript inside its .swf,
+  // so a build page that only offers the file to download says nothing about what
+  // the mod does. The server decompiles it back to source; this opens the reader.
+
+  async function readableSwfs(id) {
+    try {
+      const r = await siteGET('/site/mods/releases/' + encodeURIComponent(id) + '/swfs');
+      if (!r.ok) return new Set();
+      const body = (await r.json()) || {};
+      // No decompiler on this server: offer nothing rather than a button that 503s.
+      if (!body.decompiler) return new Set();
+      return new Set((body.items || []).map((f) => String(f.path).toLowerCase()));
+    } catch (_) { return new Set(); }
+  }
+
+  function openSwfCode(id, path) {
+    if (!window.SwfCode) { toast(t('The code viewer is unavailable.'), true); return; }
+    window.SwfCode.open({
+      url: '/site/mods/releases/' + encodeURIComponent(id) + '/swf/scripts?path='
+           + encodeURIComponent(path),
+      title: String(path).split('/').pop(),
+      subtitle: t('Decompiled ActionScript'),
+      fetcher: siteGET,
+    });
   }
 
   function inspectorHTML(d, id) {
@@ -1519,10 +1552,13 @@
         : isConfig ? `<span class="mp-insp-role">${esc(t('Config'))}</span>` : '';
       const dl = isPreview ? ''
         : `<button type="button" class="mp-btn mp-btn-sm" data-insp-file="${esc(f.path)}" aria-label="${esc(t('Download'))}"><i class="fa-solid fa-download"></i></button>`;
+      // A .swf this server can decompile gets a second action: read its code.
+      const code = (d.readable_swfs && d.readable_swfs.has(low))
+        ? `<button type="button" class="mp-btn mp-btn-sm" data-insp-code="${esc(f.path)}" title="${esc(t('View the ActionScript inside this movie'))}" aria-label="${esc(t('View code'))}"><i class="fa-solid fa-code"></i></button>` : '';
       return `<div class="mp-insp-file">
         <i class="fa-regular fa-file"></i>
         <span class="mp-insp-name" title="${esc(f.path)}">${esc(String(f.path).split('/').pop())}</span>
-        ${role}<span class="mp-insp-meta">${fmtBytes(f.size)}</span>${dl}
+        ${role}<span class="mp-insp-meta">${fmtBytes(f.size)}</span>${code}${dl}
       </div>`;
     }).join('');
     return folders + files;

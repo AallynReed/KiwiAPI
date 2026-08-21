@@ -3037,5 +3037,20 @@
   "The upload didn't get through. Check your connection and try again.": "O envio não chegou. Verifica a tua ligação e tenta de novo.",
   "That didn't work. Try again in a moment.": "Não resultou. Tenta de novo daqui a pouco.",
   "Start the game and press the backtick key (<code>`</code>, above Tab) to open the console. It's the same console the developers use, so it will happily accept a command that breaks your client - close and reopen the game if something goes wrong.": "Inicia o jogo e carrega na tecla <code>`</code> (por cima do Tab) para abrir a consola. É a mesma consola que os programadores usam, por isso aceita sem hesitar um comando que parta o teu cliente - fecha e volta a abrir o jogo se algo correr mal.",
-  "Unlock Debug": "Ativar a consola"
+  "Unlock Debug": "Ativar a consola",
+  "%n classes": "%n classes",
+  "1 class": "1 classe",
+  "Decompiled ActionScript": "ActionScript descompilado",
+  "Decompiling…": "A descompilar…",
+  "Nothing matches.": "Sem correspondências.",
+  "Save .as": "Guardar .as",
+  "Search this movie": "Pesquisar neste filme",
+  "Search this movie…": "Pesquisar neste filme…",
+  "The code viewer is unavailable.": "O visualizador de código não está disponível.",
+  "This movie carries no code — it is artwork only.": "Este filme não contém código — são apenas gráficos.",
+  "This movie could not be decompiled.": "Não foi possível descompilar este filme.",
+  "This movie is too large to show in full — some classes were left out.": "Este filme é demasiado grande para ser mostrado na íntegra — algumas classes foram omitidas.",
+  "View code": "Ver código",
+  "View the ActionScript inside this movie": "Ver o ActionScript dentro deste filme",
+  "source code": "código-fonte"
 }

@@ -3037,5 +3037,20 @@
   "The upload didn't get through. Check your connection and try again.": "업로드가 전달되지 않았습니다. 연결을 확인하고 다시 시도하세요.",
   "That didn't work. Try again in a moment.": "실패했습니다. 잠시 후 다시 시도하세요.",
   "Start the game and press the backtick key (<code>`</code>, above Tab) to open the console. It's the same console the developers use, so it will happily accept a command that breaks your client - close and reopen the game if something goes wrong.": "게임을 실행하고 <code>`</code> 키(Tab 위)를 누르면 콘솔이 열립니다. 개발자가 쓰는 것과 같은 콘솔이라 클라이언트를 망가뜨리는 명령도 그대로 받습니다. 문제가 생기면 게임을 껐다 다시 켜세요.",
-  "Unlock Debug": "디버그 잠금 해제"
+  "Unlock Debug": "디버그 잠금 해제",
+  "%n classes": "%n개 클래스",
+  "1 class": "1개 클래스",
+  "Decompiled ActionScript": "역컴파일된 ActionScript",
+  "Decompiling…": "역컴파일 중…",
+  "Nothing matches.": "일치하는 항목이 없습니다.",
+  "Save .as": ".as 저장",
+  "Search this movie": "이 무비에서 검색",
+  "Search this movie…": "이 무비에서 검색…",
+  "The code viewer is unavailable.": "코드 뷰어를 사용할 수 없습니다.",
+  "This movie carries no code — it is artwork only.": "이 무비에는 코드가 없습니다 — 그래픽만 있습니다.",
+  "This movie could not be decompiled.": "이 무비를 역컴파일할 수 없습니다.",
+  "This movie is too large to show in full — some classes were left out.": "이 무비는 너무 커서 전체를 표시할 수 없습니다 — 일부 클래스가 생략되었습니다.",
+  "View code": "코드 보기",
+  "View the ActionScript inside this movie": "이 무비 안의 ActionScript 보기",
+  "source code": "소스 코드"
 }

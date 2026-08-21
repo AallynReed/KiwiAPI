@@ -566,6 +566,31 @@ REGISTRY: dict[str, TunableSetting] = {
         min_value=10, max_value=86400,
         description="Sliding-window length for the per-IP Mod Workshop bucket, in seconds.",
     ),
+    "swf_decompile_rate_limit_max": _t(
+        key="swf_decompile_rate_limit_max",
+        default=30,
+        type="int",
+        category="api_rate_limits",
+        min_value=1, max_value=100000,
+        description=(
+            "Per-IP cap on reading a mod's ActionScript (the .swf code view on a "
+            "Mods Hub build). A movie nobody has opened before costs a JVM - the "
+            "decompiler runs as a subprocess - so it gets its own bucket rather "
+            "than riding the shared anonymous budget. Only the FIRST open of a "
+            "given movie costs that: the result is cached against the movie's own "
+            "content hash, and every later open is a cache read. Someone reading "
+            "through one mod spends one request per .swf, so this sits well above "
+            "a normal session."
+        ),
+    ),
+    "swf_decompile_rate_limit_window_seconds": _t(
+        key="swf_decompile_rate_limit_window_seconds",
+        default=60,
+        type="int",
+        category="api_rate_limits",
+        min_value=10, max_value=86400,
+        description="Sliding-window length for the per-IP .swf decompile bucket, in seconds.",
+    ),
     "unlock_debug_rate_limit_max": _t(
         key="unlock_debug_rate_limit_max",
         default=6,

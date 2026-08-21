@@ -3037,5 +3037,20 @@
   "The upload didn't get through. Check your connection and try again.": "L'envoi n'est pas passé. Vérifie ta connexion et réessaie.",
   "That didn't work. Try again in a moment.": "Ça n'a pas fonctionné. Réessaie dans un instant.",
   "Start the game and press the backtick key (<code>`</code>, above Tab) to open the console. It's the same console the developers use, so it will happily accept a command that breaks your client - close and reopen the game if something goes wrong.": "Lance le jeu et appuie sur la touche <code>`</code> (au-dessus de Tab) pour ouvrir la console. C'est la console des développeurs : elle acceptera sans broncher une commande qui casse ton client - ferme et relance le jeu si ça tourne mal.",
-  "Unlock Debug": "Activer la console"
+  "Unlock Debug": "Activer la console",
+  "%n classes": "%n classes",
+  "1 class": "1 classe",
+  "Decompiled ActionScript": "ActionScript décompilé",
+  "Decompiling…": "Décompilation…",
+  "Nothing matches.": "Aucun résultat.",
+  "Save .as": "Enregistrer .as",
+  "Search this movie": "Rechercher dans cette animation",
+  "Search this movie…": "Rechercher dans cette animation…",
+  "The code viewer is unavailable.": "La visionneuse de code n'est pas disponible.",
+  "This movie carries no code — it is artwork only.": "Cette animation ne contient aucun code : ce ne sont que des graphismes.",
+  "This movie could not be decompiled.": "Cette animation n'a pas pu être décompilée.",
+  "This movie is too large to show in full — some classes were left out.": "Cette animation est trop volumineuse pour être affichée en entier : certaines classes ont été omises.",
+  "View code": "Voir le code",
+  "View the ActionScript inside this movie": "Voir l'ActionScript de cette animation",
+  "source code": "code source"
 }

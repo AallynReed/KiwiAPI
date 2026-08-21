@@ -43,6 +43,7 @@ from app.trove.mods_hub.schemas import (
 )
 from app.trove.mods_hub.write_auth import get_mod_write_user
 from app.trove.render import bp_cache
+from app.trove.swf import service as swf_service
 
 mods_hub_router = APIRouter(
     prefix="/v1/mods/hub", tags=["mods-hub"], responses=COMMON_ERROR_RESPONSES,
@@ -298,6 +299,33 @@ async def get_release_file(
     safe = filename.replace('"', '').replace("\r", "").replace("\n", "")
     return Response(content=data, media_type="application/octet-stream",
                     headers={"Content-Disposition": f'attachment; filename="{safe}"'})
+
+
+@mods_hub_router.get("/releases/{release_id}/swfs")
+async def get_release_swfs(release_id: str, ctx: AccessContext = _PUB) -> dict:
+    """The ``.swf`` Flash movies packed inside a release's .tmod (path + size), plus
+    ``decompiler``: whether this server can turn one back into ActionScript.
+    Header-only read; nothing is decompressed."""
+    release, _ = await service.release_with_project(release_id, None)
+    return await service.list_release_swfs(release)
+
+
+@mods_hub_router.get("/releases/{release_id}/swf/scripts")
+async def get_release_swf_scripts(
+    request: Request, release_id: str,
+    path: str = Query(..., min_length=1, max_length=400),
+    ctx: AccessContext = _PUB,
+) -> dict:
+    """One packed ``.swf`` decompiled: every ActionScript class in the movie as
+    source, keyed by the package path it came from.
+
+    An interface mod's behaviour lives entirely in this bytecode, so this is what
+    makes a mod readable before you install it. Decompilation is cached under the
+    movie's own content hash - the first call on a cold movie costs a second or
+    two, every later one is served from the cache."""
+    await swf_service.decompile_throttle(request)
+    release, _ = await service.release_with_project(release_id, None)
+    return await service.release_swf_scripts(release, path)
 
 
 @mods_hub_router.get("/releases/{release_id}/inspect")

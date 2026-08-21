@@ -45,7 +45,16 @@
         // Escape listener if the shared helper somehow isn't loaded.
         let release = null;
         let closing = false;
-        const onKeyFallback = (e) => { if (e.key === "Escape") handle.close(); };
+        // Escape belongs to the TOP layer. A viewer that stacks OVER this modal
+        // (the .swf code viewer) marks itself [data-overlay-layer] while it is
+        // open; ordering can't settle this on its own, because the trap listens on
+        // document in capture and this modal registered first, so it would always
+        // win the key. Checking for the marker instead means one Escape closes one
+        // layer, and the reader lands back in the modal they opened it from.
+        const onEscape = () => {
+            if (!document.querySelector("[data-overlay-layer]")) handle.close();
+        };
+        const onKeyFallback = (e) => { if (e.key === "Escape") onEscape(); };
         handle.close = () => {
             if (closing) return;
             closing = true;
@@ -60,7 +69,7 @@
             setTimeout(() => wrap.remove(), EXIT_MS);
         };
         if (window.BTTUtil && window.BTTUtil.trapFocus) {
-            release = window.BTTUtil.trapFocus(card, { onEscape: handle.close });
+            release = window.BTTUtil.trapFocus(card, { onEscape });
         } else {
             document.addEventListener("keydown", onKeyFallback);
         }

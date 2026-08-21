@@ -22,6 +22,7 @@ import zipfile
 from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
 from app.trove.render import bp_cache
+from app.trove.swf import decompile
 from app.trove.swf.extract import SwfError, extract_images
 from app.trove.updates.cas import ContentStore
 
@@ -30,6 +31,11 @@ logger = logging.getLogger("kiwi.swf")
 _store = ContentStore(settings.mods_store_dir)
 
 MAX_ZIP_BYTES = 256 * 1024 * 1024
+
+# Decompiling spawns a JVM with its own heap, so the cost of a code-view open is
+# nothing like that of an asset extraction. Bound how many can run at once - the
+# work is cached, so the queue behind this only ever forms on cold movies.
+_decompile_gate = asyncio.Semaphore(settings.ffdec_max_concurrent)
 
 
 def _build_sync(raw: bytes) -> dict:
@@ -78,6 +84,49 @@ async def manifest(raw: bytes, content_sha: str) -> dict:
                            "This file could not be read as a Flash movie.") from None
 
     cached = await bp_cache.get_or_build(bp_cache.key_for_swf(content_sha), build)
+    return await asyncio.to_thread(cached.payload)
+
+
+async def decompile_throttle(request) -> None:
+    """Per-IP bucket for the code view, shared by the ``/v1`` route and the
+    same-origin ``/site`` proxy so one visitor can't spend both budgets.
+
+    A movie nobody has opened yet costs a JVM, which is unlike every other read on
+    a release - hence its own bucket rather than the shared anonymous budget. Only
+    the first open of a given movie pays it; the rest are cache reads.
+    """
+    from app.admin import runtime_config
+    from app.core.ratelimit import check_rate_limit
+    from app.core.utils import client_ip
+
+    max_, window = await runtime_config.get_rate_limit("swf_decompile_rate_limit")
+    await check_rate_limit(f"swfcode:{client_ip(request) or 'unknown'}", max_, window)
+
+
+async def scripts(raw: bytes, content_sha: str) -> dict:
+    """The decompiled ActionScript of one movie, decompiling it on a miss.
+
+    Cached under the movie's own content hash, so the JVM runs once per distinct
+    ``.swf`` no matter how many releases ship it or how often it is opened.
+    """
+    if not decompile.available():
+        raise APIError(503, ErrorCode.service_unavailable,
+                       "The Flash decompiler is not available on this server.")
+
+    async def build() -> dict:
+        async with _decompile_gate:
+            try:
+                return await asyncio.to_thread(decompile.decompile_scripts, raw)
+            except decompile.DecompilerUnavailable as exc:
+                logger.warning("swf: decompiler unavailable: %s", exc)
+                raise APIError(503, ErrorCode.service_unavailable,
+                               "The Flash decompiler is not available on this "
+                               "server.") from None
+            except decompile.DecompileError as exc:
+                logger.info("swf: cannot decompile %s: %s", content_sha[:12], exc)
+                raise APIError(422, ErrorCode.bad_request, str(exc)) from None
+
+    cached = await bp_cache.get_or_build(bp_cache.key_for_swf_scripts(content_sha), build)
     return await asyncio.to_thread(cached.payload)
 
 

@@ -355,6 +355,16 @@ inspiration by others.
 preview image and declared config marked. Any file can be pulled out of it on its own. It's a header-only read,
 so nothing is decompressed to show it; a `.zip` release lists its entries the same way.
 
+**Reading a mod's code.** An interface mod is a Flash movie, and everything it does is compiled bytecode inside
+it - so listing the `.swf` says nothing about what the mod actually does. Every `.swf` in the Contents view has a
+**Code** button that decompiles it back to ActionScript (JPEXS FFDec, server-side) and opens it in a reader: the
+movie's packages down one side, one class at a time beside them, with a search that covers the whole movie rather
+than the open file. Any class can be copied or saved as its own `.as`. Decompiling is cached against the movie's
+own content hash, so the same interface shipped across twenty releases is decompiled once and every later open is
+instant. This is a **read** of what's already public - the build is downloadable either way; it just means you can
+see what a mod does before installing it. A movie carrying no code (pure artwork) says so, and the button is only
+offered where a build actually ships a `.swf`.
+
 **Attaching a config.** A Flash-UI mod reads its settings from a `.cfg` the game keeps in `ModCfgs/`, named after
 the mod's title. When cutting a release a modder can attach that file and it's packed into the build as
 `ui/<title>.cfg` (the mod's own header title) - compiled or uploaded alike; an uploaded `.tmod` is repacked with
@@ -599,6 +609,11 @@ Ingested from a scraper tmod (StoreLog) that replaces `ui/kiwistore.swf`: it rec
 
 Self-hosted OCR (RapidOCR / ONNX - **no external service, no LLM**) that reads the in-game character stat sheet from a screenshot. The UI is moddable (themes, fonts, columns, language), so this doesn't trust raw OCR text: every recognized label is fuzzy-matched against a CLOSED multilingual vocabulary (English + French) so a garbled or translated label still resolves to the right stat, and every value is sanity-checked against the stat's expected type (integer vs percent) + plausible range. **Token required** (not tokenless): the OCR model is CPU-heavy, so it's gated behind `ocr:read` rather than the per-IP anon budget. The image is processed in memory and never stored.
 - `POST /v1/ocr/character` (multipart `file`; PNG / JPEG / WebP / GIF / BMP, ≤12 MB) → `{ stats: { <key>: { value, unit, raw, confidence, in_range, type_match, derived } }, matched, total_known, lines }`. `stats` is keyed by canonical stat key (`physical_damage`, `magic_damage`, `maximum_health`, `critical_hit`, `critical_damage`, `power_rank`, …). `value` is an integer for count stats and a float for percent stats; `unit` ∈ `count`/`percent`; `raw` is the number exactly as OCR read it (empty when derived); `confidence` (0-1) folds label-match quality with the validation result; `in_range`/`type_match` flag a value that parsed but looks implausible for that stat (don't trust a stat with either `false`). `derived` is `true` when a value was COMPUTED rather than read: **`coefficient`** often isn't shown on the sheet, so it's derived as `floor(max(physical_damage, magic_damage) * (1 + critical_damage/100))` (the game's own formula) from those reads; when coefficient IS shown and agrees it's a confirmed read (`derived:false`), and a shown value that contradicts the formula is surfaced but flagged with low `confidence`. `matched` = how many known stats are present, `total_known` = vocabulary size, `lines` = the raw OCR text lines (transparency). Returns **503** (`service_unavailable`) if the OCR engine isn't installed on the server, **400** on an unreadable/empty image.
+
+### Unlock Debug (site-only helper, no token)
+
+Backs the **Unlock Debug** page (`trove.aallyn.net/unlock-debug`), which turns on Trove's built-in debug console. Trove ships the console behind one conditional jump; the endpoint rewrites it (`7C 39 68 E0 02 00 00` -> `90 90 68 E0 02 00 00`) and hands the executable straight back. **Nothing is stored** - the upload is never written to disk - and no account is needed. Gated by `feature_unlock_debug_enabled`, which **defaults OFF**: Trion runs anti-cheat and tampering with the client binary is grounds for a ban, so the whole surface 404s unless an operator deliberately turns it on. Own per-IP bucket (`unlock_debug_rate_limit_*`, 6 per 5 min).
+- `POST /site/unlock-debug` (multipart `trove_exe`) -> the patched binary as `application/octet-stream` (`Content-Disposition: attachment; filename="Trove.exe"`). **400** when no file is sent, the file is empty, it isn't a Windows executable (no `MZ`), or it doesn't contain the sequence - the last case covers an already-patched file and a build the game has since changed, and is rejected rather than returned untouched, because a silent no-op is indistinguishable from a successful patch once it's been downloaded. Body cap `unlock_debug_max_request_body_bytes` (160 MB). Legacy `GET /unlock_debug` 301s to the current page URL.
 
 ## Meta
 

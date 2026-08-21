@@ -63,6 +63,11 @@ ASSEMBLY_VERSION = "a19"     # a19: a costume part resolves to the blueprint its
 # bitmap is decoded. Namespaces the SWF keys only.
 SWF_VERSION = "s1"
 
+# Bump when the decompiled-script payload changes shape - or when the FFDec build
+# in the image is upgraded and its output is worth rebuilding. Namespaces the
+# script keys only, so the asset manifests above are untouched.
+SCRIPT_VERSION = "c1"
+
 # Bump when ``app.trove.audio`` changes what a bank's sound index holds. Decoded
 # audio is not cached here - it is rebuilt per sound from the stored .wem - so
 # this covers the index shape alone. Namespaces the bank keys only.
@@ -105,6 +110,16 @@ def key_for_swf(content_sha: str) -> str:
     function of the movie's bytes alone, so the same interface file shipped on
     several branches is extracted once."""
     return f"{SWF_VERSION}:swf:{content_sha}"
+
+
+def key_for_swf_scripts(content_sha: str) -> str:
+    """Key for the decompiled ActionScript of one ``.swf`` (see
+    ``app.trove.swf.decompile``).
+
+    Same reasoning as ``key_for_swf`` - the source is a function of the movie's
+    bytes alone - but its own generation, because decompiling costs a JVM and the
+    two payloads have no reason to be invalidated together."""
+    return f"{SCRIPT_VERSION}:swfsrc:{content_sha}"
 
 
 def key_for_bank(content_sha: str, sidecar_sha: str | None = None) -> str:

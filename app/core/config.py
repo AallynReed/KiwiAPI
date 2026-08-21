@@ -53,6 +53,23 @@ class Settings(BaseSettings):
     # One screenshot upload; the endpoint also caps per-file size itself.
     ocr_max_request_body_bytes: int = 12 * 1024 * 1024  # 12 MB
 
+    # --- Flash decompiler (see app/trove/swf/decompile.py) -------------------
+    # Reading a mod's ActionScript means running JPEXS FFDec, a Java program, over
+    # a file a stranger uploaded. The jar + a JVM are baked into the image; where
+    # neither is present the code view simply reports itself unavailable.
+    ffdec_jar: str = "/opt/ffdec/ffdec.jar"
+    ffdec_java: str = "java"
+    ffdec_max_heap_mb: int = 768
+    ffdec_timeout: int = 120            # whole export; the subprocess kill sits 30s past it
+    ffdec_file_timeout: int = 60        # FFDec's own per-script budget
+    ffdec_method_timeout: int = 15      # ...and per method: a knot degrades to P-code
+    ffdec_max_swf_bytes: int = 24 * 1024 * 1024
+    ffdec_max_source_bytes: int = 12 * 1024 * 1024   # decompiled source, per movie
+    ffdec_max_scripts: int = 4000                    # classes, per movie
+    # Concurrent JVMs. Each one costs its own heap, so this is what keeps a burst
+    # of code-view opens from crowding out the API itself.
+    ffdec_max_concurrent: int = 2
+
     # "Hot" window (days): the warmer pre-warms the latest capture of each of these
     # recent days and the leaderboards page date-picker surfaces this window. (All
     # entries live in one partitioned Postgres table now - this is a warm-cache / UI

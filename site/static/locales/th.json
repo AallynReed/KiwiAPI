@@ -2809,5 +2809,20 @@
   "The upload didn't get through. Check your connection and try again.": "อัปโหลดไม่สำเร็จ ตรวจสอบการเชื่อมต่อแล้วลองใหม่",
   "That didn't work. Try again in a moment.": "ไม่สำเร็จ ลองใหม่อีกครั้งในอีกสักครู่",
   "Start the game and press the backtick key (<code>`</code>, above Tab) to open the console. It's the same console the developers use, so it will happily accept a command that breaks your client - close and reopen the game if something goes wrong.": "เปิดเกมแล้วกดปุ่ม <code>`</code> (เหนือปุ่ม Tab) เพื่อเปิดคอนโซล นี่คือคอนโซลตัวเดียวกับที่นักพัฒนาใช้ จึงรับคำสั่งที่ทำให้ไคลเอนต์พังได้ด้วย ถ้ามีอะไรผิดพลาดให้ปิดแล้วเปิดเกมใหม่",
-  "Unlock Debug": "ปลดล็อกดีบัก"
+  "Unlock Debug": "ปลดล็อกดีบัก",
+  "%n classes": "%n คลาส",
+  "1 class": "1 คลาส",
+  "Decompiled ActionScript": "ActionScript ที่ดีคอมไพล์แล้ว",
+  "Decompiling…": "กำลังดีคอมไพล์…",
+  "Nothing matches.": "ไม่พบรายการที่ตรงกัน",
+  "Save .as": "บันทึก .as",
+  "Search this movie": "ค้นหาในมูฟวี่นี้",
+  "Search this movie…": "ค้นหาในมูฟวี่นี้…",
+  "The code viewer is unavailable.": "ไม่สามารถใช้ตัวดูโค้ดได้",
+  "This movie carries no code — it is artwork only.": "มูฟวี่นี้ไม่มีโค้ด — มีเพียงงานภาพเท่านั้น",
+  "This movie could not be decompiled.": "ไม่สามารถดีคอมไพล์มูฟวี่นี้ได้",
+  "This movie is too large to show in full — some classes were left out.": "มูฟวี่นี้ใหญ่เกินกว่าจะแสดงทั้งหมด — บางคลาสถูกละไว้",
+  "View code": "ดูโค้ด",
+  "View the ActionScript inside this movie": "ดู ActionScript ภายในมูฟวี่นี้",
+  "source code": "ซอร์สโค้ด"
 }

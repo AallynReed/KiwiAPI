@@ -3804,6 +3804,33 @@ async def site_mods_release_inspect(
     return JSONResponse(await mods_hub_service.inspect_release(release))
 
 
+@router.get("/site/mods/releases/{release_id}/swfs", response_class=JSONResponse)
+async def site_mods_release_swfs(
+    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The .swf movies in a release's build - drives the inspector's Code button
+    (only shown when the build ships one and this server can decompile)."""
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.list_release_swfs(release),
+                        headers={"Cache-Control": "public, max-age=60"})
+
+
+@router.get("/site/mods/releases/{release_id}/swf/scripts", response_class=JSONResponse)
+async def site_mods_release_swf_scripts(
+    request: Request, release_id: str,
+    path: str = Query(..., min_length=1, max_length=400),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """One movie decompiled back to ActionScript - the whole class tree in one body,
+    which is what the code viewer reads and searches client-side."""
+    from app.trove.swf import service as swf_service
+
+    await swf_service.decompile_throttle(request)
+    release, _ = await mods_hub_service.release_with_project(release_id, viewer)
+    return JSONResponse(await mods_hub_service.release_swf_scripts(release, path),
+                        headers={"Cache-Control": "public, max-age=300"})
+
+
 @router.get("/site/mods/releases/{release_id}/cfgs", response_class=JSONResponse)
 async def site_mods_release_cfgs(
     release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),

@@ -2240,6 +2240,84 @@ async def sound_from_index(
     return data, media, f"{stem}.{extension}", f'"{sound["sha"]}{"-raw" if raw else ""}"'
 
 
+# ── Flash code (.swf) ──────────────────────────────────────────────────────
+#
+# An interface mod's whole behaviour is compiled ActionScript inside a ``.swf``,
+# so a build page could list the file and hand it over without ever saying what it
+# does. ``app.trove.swf.decompile`` turns that bytecode back into readable source,
+# and these two helpers reach it the same way the sound banks above do: list the
+# candidates from the header (cheap), then decompile ONE movie when it's opened.
+#
+# The cache is keyed on the movie's own hash, not the release's - an interface mod
+# that reships the same .swf across ten versions decompiles once for all of them.
+
+
+def _tmod_swfs_sync(tmod_bytes: bytes) -> list[dict]:
+    """The ``.swf`` movies a mod bundles. Header-only: listing them must not
+    decompress a build that also ships tens of megabytes of models."""
+    parsed = tmod.read_tmod(tmod_bytes, metadata_only=True)
+    items = [{"path": f["path"], "size": f["size"]}
+             for f in parsed["files"] if f["path"].lower().endswith(".swf")]
+    items.sort(key=lambda f: f["path"].lower())
+    return items
+
+
+def _tmod_swf_bytes_sync(tmod_bytes: bytes, path: str) -> bytes | None:
+    """The bytes of one bundled ``.swf``, matched on its full packed path."""
+    want = (path or "").replace("\\", "/").strip().lower()
+    hit = next((f for f in tmod.read_tmod(tmod_bytes)["files"]
+                if f["path"].lower() == want and want.endswith(".swf")), None)
+    if hit is None or "content_base64" not in hit:
+        return None
+    return base64.b64decode(hit["content_base64"])
+
+
+async def list_release_swfs(release: ModRelease) -> dict:
+    """The ``.swf`` movies inside a release's .tmod, and whether this server can
+    decompile at all - the build inspector only offers a Code button when both are
+    true. ``{items:[{path,size}], decompiler: bool}``."""
+    from app.trove.swf import decompile as swf_decompile
+
+    out = {"items": [], "decompiler": swf_decompile.available()}
+    if release.release_format != "tmod":
+        return out
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        return out
+    try:
+        out["items"] = await asyncio.to_thread(_tmod_swfs_sync, data)
+    except tmod.TmodError:
+        return out
+    return out
+
+
+async def release_swf_scripts(release: ModRelease, path: str) -> dict:
+    """Every ActionScript class in one of a release's movies, decompiled to source.
+
+    The whole tree comes back in one body: it is a few hundred KB even for the
+    largest interface in the game, and having it all client-side is what lets the
+    viewer switch class and search the movie without another round trip."""
+    import hashlib
+
+    from app.trove.swf import service as swf_service
+
+    if release.release_format != "tmod":
+        raise APIError(404, ErrorCode.not_found, "That release has no Flash movies.")
+    data = await store.get_blob(release.tmod_sha)
+    if data is None:
+        raise APIError(404, ErrorCode.not_found, "Release artifact not found.")
+    try:
+        raw = await asyncio.to_thread(_tmod_swf_bytes_sync, data, path)
+    except tmod.TmodError:
+        raise APIError(400, ErrorCode.bad_request,
+                       "That file isn't a readable .tmod.") from None
+    if raw is None:
+        raise APIError(404, ErrorCode.not_found, "No such Flash movie in this mod.")
+
+    payload = await swf_service.scripts(raw, hashlib.sha256(raw).hexdigest())
+    return {"path": path, "size": len(raw), **payload}
+
+
 async def _release_tmod_or_404(release: ModRelease) -> bytes:
     if release.release_format != "tmod":
         raise APIError(404, ErrorCode.not_found, "That release has no sounds to play.")
