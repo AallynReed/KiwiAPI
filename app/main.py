@@ -323,8 +323,13 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Content-Disposition is NOT a CORS-safelisted response header: without it here
+    # the site's fetch-then-save-a-blob downloads (a mod's config, a modpack, a
+    # built .tmod) cannot read the name the server chose and fall back to the packed
+    # path, which is lowercased. Every /site/* call is cross-origin to the API host.
     expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining",
-                    "X-RateLimit-Reset", "Retry-After", "X-Dressing-Dropped"],
+                    "X-RateLimit-Reset", "Retry-After", "X-Dressing-Dropped",
+                    "Content-Disposition"],
 )
 
 # Outside that, and therefore the last word: the 3D viewers' public assets answer any

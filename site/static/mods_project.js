@@ -90,9 +90,11 @@
     return ModsI18n.tabsHTML(codes, pickLang(Object.fromEntries(codes.map((c) => [c, true]))));
   }
 
-  // Same-origin read with a one-shot token refresh, so an owner whose access
-  // token aged out still sees their drafts after the silent refresh. The
-  // HttpOnly session cookie is the credential - there is no header to add.
+  // Site read with a one-shot token refresh, so an owner whose access token aged
+  // out still sees their drafts after the silent refresh. The HttpOnly session
+  // cookie is the credential - there is no header to add. The path looks relative
+  // but _site_util.js rewrites every /site/* call to the API host, so the response
+  // is CROSS-ORIGIN: only the headers in the API's expose_headers are readable.
   async function siteGET(path) {
     const init = { credentials: 'include' };
     let r = await fetch(path, init);
@@ -1628,28 +1630,31 @@
           // detail nobody acts on there; the header slot has the room for it.
           const inRow = !!slot.closest('.mp-release-actions');
           const sm = inRow ? ' mp-btn-sm' : '';
-          slot.innerHTML = items.map((f) => `<button type="button" class="mp-btn${sm} mp-cfg-btn" data-cfg-rel="${esc(relId)}" data-cfg-path="${esc(f.path)}" title="${esc(f.filename)}">
+          slot.innerHTML = items.map((f) => `<button type="button" class="mp-btn${sm} mp-cfg-btn" data-cfg-rel="${esc(relId)}" data-cfg-path="${esc(f.path)}" data-cfg-name="${esc(f.filename)}" title="${esc(f.filename)}">
             <i class="fa-solid fa-sliders"></i> ${esc(items.length === 1 ? t('Config') : f.filename)}</button>`).join('')
             + (hidden > 0 && !inRow ? `<span class="mp-muted mp-cfg-more">${esc(t('More under Files'))}</span>` : '');
           slot.querySelectorAll('.mp-cfg-btn').forEach((b) => b.addEventListener('click', () =>
-            downloadReleaseCfg(b.getAttribute('data-cfg-rel'), b.getAttribute('data-cfg-path'))));
+            downloadReleaseCfg(b.getAttribute('data-cfg-rel'), b.getAttribute('data-cfg-path'),
+                               b.getAttribute('data-cfg-name'))));
         });
       } catch (_) { /* a release with no readable config just shows no button */ }
     });
   }
 
-  async function downloadReleaseCfg(id, path) {
+  async function downloadReleaseCfg(id, path, name) {
     try {
       const r = await siteGET('/site/mods/releases/' + encodeURIComponent(id) + '/cfg?path=' + encodeURIComponent(path));
       if (!r.ok) { toast(t('Could not download that file.'), true); return; }
       const blob = await r.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      // The server names the file (it restores the casing the game expects); fall
-      // back to the packed name if the header isn't readable.
+      // The server names the file - it restores the casing the game expects, which
+      // the packed path has lost (build_tmod lowercases inner paths). Prefer the
+      // name the listing already gave us over re-reading the header: the header
+      // only survives the cross-origin hop while it stays in expose_headers.
       const cd = r.headers.get('Content-Disposition') || '';
       const m = /filename="([^"]+)"/.exec(cd);
-      a.download = m ? m[1] : path.split('/').pop();
+      a.download = name || (m ? m[1] : path.split('/').pop());
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     } catch (_) { toast(t('Could not download that file.'), true); }
