@@ -1,0 +1,230 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /unlock-debug - patch Trove.exe to enable the in-client debug console.
+   A short page with one action, so the warning above it gets to be the
+   loudest thing on the screen: this edits the game's binary, and the page
+   should read that way before it reads as a download button.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.udbg-main {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 24px) 90px;
+}
+
+.udbg-page [hidden] { display: none !important; }
+
+/* ─── Hero ──────────────────────────────────────────────────────────── */
+
+.udbg-hero { padding: 56px 0 24px; }
+.udbg-eyebrow {
+  margin: 0 0 8px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .76rem;
+  letter-spacing: .12em;
+  color: var(--accent-blue);
+}
+.udbg-title {
+  margin: 0 0 10px;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.udbg-sub {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--text-mute);
+  font-size: var(--type-body);
+  line-height: 1.6;
+}
+
+/* ─── The warning ───────────────────────────────────────────────────── */
+
+/* Amber rather than red: red is what a failed action looks like everywhere else
+   on the site, and nothing has failed yet. The tint is the same hue throughout -
+   surface, border and heading - so it reads as one block rather than a grey card
+   someone dropped a coloured icon into. */
+.udbg-warn {
+  margin: 0 0 26px;
+  padding: 20px 22px;
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--accent-yellow) 8%, var(--bg-card));
+  border: 1px solid color-mix(in oklab, var(--accent-yellow) 30%, transparent);
+}
+.udbg-warn h2 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--accent-yellow);
+}
+.udbg-warn ul { margin: 0; padding-left: 1.15em; }
+.udbg-warn li {
+  margin: 0 0 8px;
+  color: var(--text-mute);
+  line-height: 1.6;
+}
+.udbg-warn li:last-child { margin-bottom: 0; }
+.udbg-warn strong { color: var(--text); }
+
+/* ─── The one card that does something ──────────────────────────────── */
+
+.udbg-card {
+  padding: 22px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+}
+.udbg-card-title { margin: 0 0 6px; font-size: 1.15rem; font-weight: 650; }
+.udbg-card-hint {
+  margin: 0 0 18px;
+  color: var(--text-mute);
+  line-height: 1.6;
+}
+.udbg-card code, .udbg-warn code, .udbg-after code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .9em;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+}
+
+/* ─── Drop zone ─────────────────────────────────────────────────────── */
+
+/* The <label> IS the target, so a click, a drop and Enter-while-focused all open
+   the picker without a keyboard handler of our own. */
+.udbg-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 38px 20px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--bg-line);
+  background: var(--bg-deep);
+  transition: border-color .18s var(--ease-out), background .18s var(--ease-out);
+}
+.udbg-drop:hover { border-color: var(--accent-blue); }
+.udbg-drop.dragover,
+.udbg-drop.has-file {
+  border-style: solid;
+  border-color: var(--accent-blue);
+  background: var(--bg-card-hi);
+}
+/* Visually hidden, not display:none - the input must stay focusable so the zone
+   is reachable by keyboard, and stay a real form control so the no-JS submit
+   still carries the file. */
+.udbg-drop input[type="file"] {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.udbg-drop:focus-within {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+}
+.udbg-drop-empty, .udbg-drop-ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.udbg-drop i { font-size: 1.9rem; color: var(--text-soft); margin-bottom: 4px; }
+.udbg-drop.has-file i { color: var(--accent-blue); }
+.udbg-drop-title { font-weight: 600; word-break: break-all; }
+.udbg-drop-hint { color: var(--text-mute); font-size: .9rem; }
+
+.udbg-clear {
+  display: block;
+  margin: 10px auto 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: .88rem;
+  color: var(--text-mute);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.udbg-clear:hover { color: var(--text); }
+
+/* ─── Status line ───────────────────────────────────────────────────── */
+
+.udbg-status {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: .94rem;
+  line-height: 1.5;
+  background: var(--bg-card-hi);
+  border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+}
+.udbg-status.is-good {
+  color: var(--accent-green);
+  border-color: color-mix(in oklab, var(--accent-green) 35%, transparent);
+  background: color-mix(in oklab, var(--accent-green) 10%, var(--bg-card));
+}
+.udbg-status.is-bad {
+  color: var(--accent-red);
+  border-color: color-mix(in oklab, var(--accent-red) 35%, transparent);
+  background: color-mix(in oklab, var(--accent-red) 10%, var(--bg-card));
+}
+
+/* ─── Submit ────────────────────────────────────────────────────────── */
+
+.udbg-go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px 20px;
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  color: #06080d;
+  background: var(--accent-blue);
+  box-shadow: 0 8px 26px color-mix(in oklab, var(--accent-blue) 22%, transparent);
+  transition: box-shadow .18s var(--ease-out), background .18s var(--ease-out);
+}
+.udbg-go:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--accent-blue) 88%, white);
+  box-shadow: 0 10px 34px color-mix(in oklab, var(--accent-blue) 32%, transparent);
+}
+.udbg-go:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+  box-shadow: none;
+}
+.udbg-card.is-busy .udbg-drop,
+.udbg-card.is-busy .udbg-clear { pointer-events: none; opacity: .6; }
+
+.udbg-privacy {
+  margin: 14px 0 0;
+  text-align: center;
+  color: var(--text-mute);
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+/* ─── Afterwards ────────────────────────────────────────────────────── */
+
+.udbg-after { margin-top: 32px; }
+.udbg-after h2 { margin: 0 0 8px; font-size: 1.05rem; font-weight: 650; }
+.udbg-after p { margin: 0; max-width: 62ch; color: var(--text-mute); line-height: 1.65; }
+
+@media (max-width: 560px) {
+  .udbg-hero { padding-top: 40px; }
+  .udbg-title { font-size: 1.85rem; }
+  .udbg-card, .udbg-warn { padding: 18px 16px; }
+  .udbg-drop { padding: 30px 14px; }
+}

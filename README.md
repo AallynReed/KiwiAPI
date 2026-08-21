@@ -114,7 +114,9 @@ cfg ingests (`/v1/mods/*`, `/v1/leaderboards/insert`, `/v1/market/insert`) at 20
 Sound Studio + Mod Workshop builds (`/site/sound-studio/build`, `/site/mod-workshop/*`,
 which upload a whole bank or a whole mod at once) at 32 MB, and the Blueprint Editor
 (`/site/blueprint-editor/*`, whose save carries a per-voxel edit list and whose `.qb`
-import carries four voxel grids) at 64 MB — allow at least as much at the proxy.
+import carries four voxel grids) at 64 MB, and the Unlock Debug patcher
+(`/site/unlock-debug`, which uploads a whole game executable so seven bytes of it can
+change) at 160 MB — allow at least as much at the proxy.
 
 ## Project layout
 

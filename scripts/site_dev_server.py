@@ -1336,6 +1336,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "mod-workshop.html", "text/html")
         if path == "/blueprint-editor":
             return self._send_file(TEMPLATES / "blueprint-editor.html", "text/html")
+        if path == "/unlock-debug":
+            return self._send_file(TEMPLATES / "unlock-debug.html", "text/html")
         if path == "/codexes":
             return self._send_file(TEMPLATES / "codexes.html", "text/html")
         if path == "/codexes/crafting":
@@ -3598,6 +3600,41 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(blob)
 
+    def _unlock_debug(self):
+        """The REAL patcher (the constants + rules from app.site.router), so the dev
+        preview rejects the same files production does instead of always succeeding."""
+        import email
+        import sys
+        sys.path.insert(0, str(ROOT))
+        from app.site.router import _DEBUG_FIND, _DEBUG_REPL
+
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        raw = self.rfile.read(length) if length else b""
+        header = "\n".join([
+            "Content-Type: " + (self.headers.get("Content-Type") or ""),
+            "MIME-Version: 1.0", "", "",
+        ]).encode()
+        message = email.message_from_bytes(header + raw)
+        data = b""
+        for part in message.walk():
+            if part.get_content_maintype() == "multipart":
+                continue
+            if part.get_param("name", header="content-disposition") == "trove_exe":
+                data = part.get_payload(decode=True) or b""
+
+        def bad(text):
+            return self._send_json({"error": {"code": "bad_request", "message": text}}, 400)
+
+        if not data:
+            return bad("No file was uploaded.")
+        if data[:2] != b"MZ":
+            return bad("That doesn't look like a Windows executable.")
+        if _DEBUG_FIND not in data:
+            return bad("This build of Trove.exe doesn't contain the sequence this patch "
+                       "edits - it may already be patched, or the game may have changed.")
+        return self._send_binary(data.replace(_DEBUG_FIND, _DEBUG_REPL),
+                                 "Trove.exe", "application/octet-stream")
+
     def _send_binary(self, blob, filename, media_type, extra=None):
         self.send_response(200)
         self.send_header("Content-Type", media_type)
@@ -3920,6 +3957,9 @@ class Handler(SimpleHTTPRequestHandler):
 
         if path == "/site/sound-studio/build":
             return self._sound_studio_build()
+
+        if path == "/site/unlock-debug":
+            return self._unlock_debug()
 
         if path.startswith("/site/mod-workshop/"):
             return self._mod_workshop(path)
