@@ -274,8 +274,16 @@ class PublicAssetCorsMiddleware:
 
         async def send_wrapper(message: dict) -> None:
             if message["type"] == "http.response.start":
+                vary = b", ".join(v for k, v in message["headers"] if k.lower() == b"vary")
+                if b"origin" not in vary.lower():
+                    vary = vary + b", Origin" if vary else b"Origin"
                 headers = [(k, v) for k, v in message["headers"]
-                           if k.lower() not in self._STRIP]
+                           if k.lower() not in self._STRIP and k.lower() != b"vary"]
+                # This layer answers our own origins and everybody else differently, so
+                # any shared cache in front of it (the edge proxy, Cloudflare) has to
+                # key on the origin or it hands one of them the other's answer - and a
+                # cached `*` breaks our own credentialed fetch of the very same file.
+                headers.append((b"vary", vary))
                 headers.append((b"access-control-allow-origin", b"*"))
                 # a cross-origin caller cannot read a header it is not handed: without
                 # this the dressing room's "your hat isn't on this model" is invisible

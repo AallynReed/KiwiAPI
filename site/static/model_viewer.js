@@ -15,8 +15,18 @@
         window.ModelViewer.mount(el, { url, bar, onMeta, apiBase })  -- inline (embed page) */
 (function () {
   'use strict';
-  var THREE_URL = '/static/vendor/three.min.js';  // self-hosted (GDPR: no cdnjs IP leak)
-  var _styles = false, _three = null;
+  /* Where THIS script was served from. Everything it pulls in - three.js, the shared
+     animation bar - is a sibling of it, so it resolves against that and not against
+     the page: a partner site running the viewer on its own page serves its own
+     `/static/`, where our files are a 404. Same answer as before on our own pages,
+     where the two origins are the same. */
+  var _src = (document.currentScript && document.currentScript.src) || '';
+  var _min = /\.min\.js(\?|$)/.test(_src);
+  function scriptUrl(name) {
+    try { return new URL(name, _src).href; } catch (e) { return '/static/' + name; }
+  }
+  var THREE_URL = scriptUrl('vendor/three.min.js');  // self-hosted (GDPR: no cdnjs IP leak)
+  var _styles = false, _three = null, _clips = null;
   // Origin serving /site/rigs/* (the lazily-fetched animation clips). Empty = same
   // origin, which is the Mods Hub case. The embeddable viewer is served from the
   // website host while its data lives on the API, so it passes that origin in.
@@ -38,6 +48,25 @@
      the same clips on the same bar, and two copies of the bucketing rules would mean
      two answers to "which button is this clip under". */
   var AC = function () { return window.AnimClips; };
+
+  /* ...which means a page that loads only this file is missing half the viewer. Every
+     page of ours carries its own `<script src=anim_clips>`; a partner site was written
+     against the version where all of it lived here, so pull it in ourselves rather
+     than crash in their page. It stays OPTIONAL either way: if it cannot be loaded the
+     model still renders, just with no animation bar - which is exactly what a rig with
+     no clips already looks like. Never rejects. */
+  function ensureAnimClips() {
+    if (window.AnimClips) return Promise.resolve(window.AnimClips);
+    if (_clips) return _clips;
+    _clips = new Promise(function (res) {
+      var s = document.createElement('script');
+      s.src = scriptUrl(_min ? 'anim_clips.min.js' : 'anim_clips.js');
+      s.onload = function () { res(window.AnimClips || null); };
+      s.onerror = function () { res(null); };
+      document.head.appendChild(s);
+    });
+    return _clips;
+  }
 
 
   function injectStyles() {
@@ -111,14 +140,15 @@
     ensureThree().then(function (THREE) {
       return loadModel(opts.url).then(function (data) {
         if (!alive) return null;
-        // the graph only decides which BUTTONS there are, so it is fetched alongside the
-        // model rather than blocking on it
-        return loadGraph(data.rig).then(function (graph) {
+        // the graph only decides which BUTTONS there are, and the animation bar only
+        // whether there is one, so both are fetched alongside the model rather than
+        // blocking on it
+        return Promise.all([loadGraph(data.rig), ensureAnimClips()]).then(function (r) {
           if (!alive) return;
           msg.remove();
           var nv = data.parts.reduce(function (a, p) { return a + p.x.length; }, 0);
           if (opts.onMeta) opts.onMeta(data.parts.length + ' parts · ' + nv.toLocaleString() + ' voxels');
-          viewer = build(THREE, container, bar, data, graph, opts.title);
+          viewer = build(THREE, container, bar, data, r[0], opts.title);
         });
       });
     }).catch(function (e) {
@@ -433,12 +463,13 @@
        Editor so a clip sits under the same heading in both. One button = one PROGRAM:
        the rig's state machine folds the clips that only ever play as part of a move
        (jump_begin, jump_cycle, jump_end) into one, and the rest stay their own. */
-    var kit = AC().programs(data.animations || {}, graph);
-    programs = kit.programs;
-    barCtl = AC().bar({
+    var AN = AC();   // null only if anim_clips.js could not be loaded at all
+    var kit = AN ? AN.programs(data.animations || {}, graph) : null;
+    programs = kit ? kit.programs : {};
+    barCtl = kit ? AN.bar({
       host: bar, kit: kit, onPick: play, onResize: onResize,
       hint: 'drag rotate · scroll zoom · right-drag pan',
-    });
+    }) : null;
     // The canvas was sized against a stage that had no control bar under it yet. Re-fit
     // now that the bar occupies its real height, or the canvas overhangs it and eats
     // every click. Done explicitly rather than left to the ResizeObserver above, which

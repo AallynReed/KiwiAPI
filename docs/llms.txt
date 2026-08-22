@@ -453,6 +453,17 @@ in this reference**; the documented app-facing API is the three endpoints above.
 Kiwi's 3D model / assembled-creature / `.pkfx` viewers **and its sound player** can be embedded on another
 site as an iframe (`trove.aallyn.net/embed/viewer`). Embedding itself needs no token - it's allowed
 per-origin by an admin.
+**Or drive the viewer directly**, without the iframe, the way a site with its own UI around it does:
+one `<script src="https://trove.aallyn.net/static/model_viewer.min.js" defer></script>`, then
+`ModelViewer.mount(el, { url, bar, apiBase: 'https://api.aallyn.net' })`. The script loads what else it
+needs (three.js, the shared animation bar `anim_clips.js`) from the host it was itself served from, so
+one tag stays enough as that list changes, and a piece it cannot load costs that piece rather than the
+model. `apiBase` says where `/site/*` answers - omit it and the animation clips, the rig's move graph and
+the specular atlas are requested as same-origin paths, which only works if your page proxies them (an
+`<img>` is invisible to a `fetch` wrapper, so the atlas is fetched too). The viewer's public assets
+(`/site/rigs/*`, `/site/dressing/*`, `/site/render/brdf-map.png`) answer **any** origin, wildcard and
+uncredentialed.
+
 Only the upload is an API call, and it exists so a partner can preview a mod **they** host:
 - `POST /v1/embed/tmod` - multipart `file=@Mod.tmod` (max 8 MB) → `{token, size, expires_in, reused, viewer_url}`.
   **The file is NOT stored**: it's held in Redis for `expires_in` seconds (default 30 min) and then dropped -

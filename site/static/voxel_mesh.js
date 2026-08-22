@@ -226,19 +226,42 @@
   ].join('\n');
 
   /* Fetch the atlas once per page. Failure is not an error - the model still
-     draws, just without highlights - so a missing texture costs fidelity, not a model. */
+     draws, just without highlights - so a missing texture costs fidelity, not a model.
+
+     It goes through `fetch` first, and only then into the loader, because a texture
+     asked for as an <img> is INVISIBLE to the fetch wrappers pages put in front of
+     /site/*: ours moves those calls to the API origin, and a partner framing the
+     viewer proxies them through its own server. Both were rewriting every other
+     request the viewer makes and silently missing this one, which 404s and leaves
+     every solid shaded rough. A fetch that never got an answer at all (blocked, or
+     an origin that serves the file but sends no CORS header) still falls back to the
+     plain loader, which needs neither - but a real HTTP error is taken at its word
+     rather than asked for a second time. */
   function loadBrdf(THREE, url, onReady) {
     if (BRDF_MAP.value) return;
     if (onReady) _brdfWaiters.push(onReady);
     if (_brdfLoad) return;
-    _brdfLoad = new THREE.TextureLoader().load(url, function (tex) {
-      tex.flipY = false;                   // atlas rows are top-down, as the game samples them
-      tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-      tex.minFilter = tex.magFilter = THREE.LinearFilter;
-      tex.generateMipmaps = false;         // a mip would smear one lobe into the next
-      BRDF_MAP.value = tex;
-      _brdfWaiters.splice(0).forEach(function (fn) { fn(); });
-    }, undefined, function () { _brdfWaiters.length = 0; });
+    function into(src, revoke) {
+      new THREE.TextureLoader().load(src, function (tex) {
+        tex.flipY = false;                 // atlas rows are top-down, as the game samples them
+        tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+        tex.minFilter = tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = false;       // a mip would smear one lobe into the next
+        BRDF_MAP.value = tex;
+        if (revoke) URL.revokeObjectURL(src);
+        _brdfWaiters.splice(0).forEach(function (fn) { fn(); });
+      }, undefined, function () {
+        if (revoke) URL.revokeObjectURL(src);
+        _brdfWaiters.length = 0;
+      });
+    }
+    _brdfLoad = fetch(url, { credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) throw new Error('brdf ' + r.status);   // answered, and said no
+      return r.blob().then(function (b) { into(URL.createObjectURL(b), true); });
+    }).catch(function (e) {
+      if (String(e && e.message).indexOf('brdf ') === 0) { _brdfWaiters.length = 0; return; }
+      into(url, false);                                 // never answered - try it as an <img>
+    });
   }
 
   /* 0 solid · 1 glass · 2 glow · 3 glow-glass. Glass opacity = (level/255)^2
