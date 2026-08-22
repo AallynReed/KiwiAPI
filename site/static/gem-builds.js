@@ -45,7 +45,7 @@
     build_type: "Light", character: "Bard", subclass: "Boomeranger",
     food: "", ally: "boot_clown", ally_buff: true, critical_damage_count: 3, no_face: false,
     light: 0, subclass_active: false, litany: false, berserker_battler: false,
-    bounty_hunt: false, star_chart: "", high_precision: false,
+    bounty_hunt: true, star_chart: "", high_precision: false,
   };
   let builds = [];
   let page = 0;
@@ -55,7 +55,6 @@
 
   let elConfig, elResults;
   let scInput = null;   // the star-chart code field, kept in sync by the editor
-  let bhRow = null;     // the Bounty Hunt toggle, enabled only by the star chart
 
   function saveConfig() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch (e) { /* non-fatal */ }
@@ -125,7 +124,6 @@
 
   function renderConfig() {
     elConfig.textContent = "";
-    bhRow = null;
     const classEntries = options.character.map((c) => ({ value: c, label: c }));
     const buildTypeEntries = options.build_type.map((b) => ({ value: b, label: b }));
     const foodEntries = [{ value: "", label: "None" }].concat(options.food.map((f) => ({ value: f.key, label: f.label })));
@@ -205,35 +203,24 @@
         toggleRow("Berserker Battler", config.berserker_battler, (v) => { config.berserker_battler = v; onConfigChange(); }, "Treats Berserker Battler as active (adds its light)."),
         toggleRow("Enlightened / Litany", config.litany, (v) => { config.litany = v; onConfigChange(); }, "Adds the light from the Enlightened (Litany) buff."),
         toggleRow("Subclass active", config.subclass_active, (v) => { config.subclass_active = v; onConfigChange(); }, "Includes the passive stats from your chosen subclass."));
-      bhRow = toggleRow("Bounty Hunt", config.bounty_hunt, (v) => { config.bounty_hunt = v; onConfigChange(); });
-      grid.appendChild(bhRow);
       advSection.appendChild(grid);
     }
     elConfig.appendChild(advSection);
 
-    syncBountyHunt();
     renderStarChartSummary();
   }
 
   // Bounty Hunt is a 4-hour buff from a Sundered Uplands 5-star boss, and only
-  // the star chart can unlock it - so the toggle stays locked until the pasted
-  // chart contains the node, and unlocking the Minor upgrade replaces the +10%
-  // with +15% rather than stacking. Updated in place instead of rebuilding the
-  // panel: this runs while the reader is still typing in the code field.
-  function syncBountyHunt() {
-    const bh = (starChartInfo && !starChartInfo.error && starChartInfo.bounty_hunt) || null;
-    const unlocked = !!(bh && bh.available);
-    if (!unlocked && config.bounty_hunt) { config.bounty_hunt = false; saveConfig(); }
-    if (!bhRow) return;
-    const pct = unlocked ? Math.max(bh.physical, bh.magic) : 0;
-    bhRow.input.disabled = !unlocked;
-    bhRow.input.checked = config.bounty_hunt;
-    bhRow.classList.toggle("is-locked", !unlocked);
-    bhRow.text.textContent = unlocked ? t("Bounty Hunt") + " (+" + pct + "%)" : t("Bounty Hunt");
-    bhRow.title = unlocked
-      ? t("Treats the boss buff as active") + ": +" + pct + "% " + t("Physical and Magic Damage") + " (" + bh.name + ")."
-      : t("Unlock Bounty Hunt Boon on your star chart to use this buff.");
+  // the star chart can unlock it - the Minor node upgrades the Major's +10% to
+  // +15% rather than stacking. `config.bounty_hunt` is the reader's preference
+  // (on by default, so a pasted chart brings the buff with it); it only counts
+  // once the chart actually contains the node, which is why the toggle lives in
+  // the chart summary and the preference is never cleared behind their back.
+  function bountyBuff() {
+    const bh = starChartInfo && !starChartInfo.error && starChartInfo.bounty_hunt;
+    return bh && bh.available ? bh : null;
   }
+  const bountyActive = () => !!bountyBuff() && !!config.bounty_hunt;
 
   function onConfigChange(rerender) {
     saveConfig();
@@ -296,14 +283,13 @@
   }
   async function fetchStarChart() {
     const code = config.star_chart;
-    if (!code) { starChartInfo = null; syncBountyHunt(); renderStarChartSummary(); calculate(); return; }
+    if (!code) { starChartInfo = null; renderStarChartSummary(); calculate(); return; }
     try {
       const r = await apiGet(`/site/gems/parse-star-chart?code=${encodeURIComponent(code)}`);
       starChartInfo = (r.paths_count > 0) ? r : { error: true };
     } catch (e) {
       starChartInfo = { error: true };
     }
-    syncBountyHunt();
     renderStarChartSummary();
     calculate();
   }
@@ -334,12 +320,16 @@
       });
       host.appendChild(ul);
     }
-    const bh = starChartInfo.bounty_hunt;
-    if (bh && bh.available) {
-      host.appendChild(h("div", { class: "gb-sc-buff" },
-        h("i", { class: "fa-solid fa-crosshairs" }), " ",
-        h("strong", {}, t("Bounty Hunt")), " ",
-        h("span", {}, "+" + Math.max(bh.physical, bh.magic) + "% " + t("Physical and Magic Damage"))));
+    const bh = bountyBuff();
+    if (bh) {
+      const row = toggleRow("Bounty Hunt", !!config.bounty_hunt,
+        (v) => { config.bounty_hunt = v; onConfigChange(); },
+        "The 4-hour buff from a Sundered Uplands 5-star boss. Untick it to rank your builds without it.",
+        "gb-sc-buff");
+      row.text.textContent = "";
+      row.text.append(h("strong", {}, t("Bounty Hunt")),
+        " +" + Math.max(bh.physical, bh.magic) + "% " + t("Physical and Magic Damage"));
+      host.appendChild(row);
     }
   }
 
@@ -354,7 +344,10 @@
     calculating = true;
     renderResults();
     try {
-      const resp = await apiPost("/site/gems/builds/calculate", config);
+      // The stored flag is only a preference - a chart without the node must not
+      // silently ship the buff to the optimizer.
+      const payload = Object.assign({}, config, { bounty_hunt: bountyActive() });
+      const resp = await apiPost("/site/gems/builds/calculate", payload);
       builds = resp.results || [];
       page = 0;
     } catch (e) {

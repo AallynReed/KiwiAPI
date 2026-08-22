@@ -119,9 +119,6 @@
 .gb-caret { color: var(--text-mute); transition: transform .15s; }
 .gb-advanced.open .gb-caret { transform: rotate(180deg); }
 .gb-toggle-grid { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
-/* Locked toggles stay readable - they explain a buff the reader can still unlock. */
-.gb-toggle.is-locked { cursor: not-allowed; }
-.gb-toggle.is-locked .gb-toggle-mark { opacity: .45; }
 
 .gb-sc-summary { margin-top: 10px; font-size: .82rem; }
 .gb-sc-summary.err { color: var(--accent-red); }
@@ -132,8 +129,9 @@
 .gb-sc-stats { display: flex; flex-direction: column; gap: 3px; }
 .gb-sc-stats strong { color: var(--text-mute); }
 .gb-sc-stats span { color: var(--accent-orange); }
-.gb-sc-buff { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--bg-line); color: var(--text-mute); }
-.gb-sc-buff i { color: var(--accent-orange); }
+/* The Bounty Hunt toggle rides inside the chart summary - only the chart can
+   unlock it, so it belongs with the chart rather than in the buff list. */
+.gb-sc-buff { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--bg-line); }
 .gb-sc-buff strong { color: var(--text); }
 
 .gb-error { color: var(--accent-red); font-size: .9rem; }
