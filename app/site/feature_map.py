@@ -49,12 +49,26 @@ SITE_FEATURE_FLAGS = {
     "calculators_enabled": feature_flags.CALCULATORS_FLAG,
     "gems_guide_enabled": feature_flags.GEMS_GUIDE_FLAG,
     "dressing_room_enabled": feature_flags.DRESSING_ROOM_FLAG,
+    "dressing_room_page_enabled": feature_flags.DRESSING_ROOM_PAGE_FLAG,
     "sound_studio_enabled": feature_flags.SOUND_STUDIO_FLAG,
     "mod_workshop_enabled": feature_flags.MOD_WORKSHOP_FLAG,
     "blueprint_editor_enabled": feature_flags.BLUEPRINT_EDITOR_FLAG,
     "tomes_enabled": feature_flags.TOMES_FLAG,
     "unlock_debug_enabled": feature_flags.UNLOCK_DEBUG_FLAG,
 }
+
+
+def apply_derived(flags: dict) -> dict:
+    """Fold the flags that depend on another flag, in place.
+
+    Only the Dressing Room needs this: its page has a switch of its own, but a page
+    whose system is off is off too. Applied where the map is RESOLVED, so the 404
+    gate, the navbar, search and the sitemap all read one honest value instead of
+    each re-deriving it."""
+    flags["dressing_room_page_enabled"] = bool(
+        flags.get("dressing_room_page_enabled", True)
+        and flags.get("dressing_room_enabled", True))
+    return flags
 
 
 def feature_blocks(p: str, f: dict) -> bool:
@@ -171,9 +185,14 @@ def feature_blocks(p: str, f: dict) -> bool:
         return True
     if not f["calculators_enabled"] and p == "/calculators":
         return True
-    if not f["dressing_room_enabled"] and (
-        p == "/dressing-room" or p.startswith("/site/dressing/")
-    ):
+    # Dressing Room, the one feature split in two: the master flag governs the
+    # SYSTEM (its /site + /v1 data, which partner sites call for their own dressing
+    # rooms), the page flag only our own page. Page OFF + master ON = we stop
+    # publishing /dressing-room and every partner keeps working. The page attr is
+    # already false whenever the master is (see ``apply_derived``).
+    if not f["dressing_room_page_enabled"] and p == "/dressing-room":
+        return True
+    if not f["dressing_room_enabled"] and p.startswith("/site/dressing/"):
         return True
     # Gems guide is a fully client-rendered explainer (static JS, no proxy or
     # /v1 API), so only the page route needs blocking.
@@ -221,7 +240,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/star-chart", "star_chart_enabled"),
     ("/gem-simulator", "gem_simulator_enabled"),
     ("/gems-guide", "gems_guide_enabled"),
-    ("/dressing-room", "dressing_room_enabled"),
+    ("/dressing-room", "dressing_room_page_enabled"),
     ("/sound-studio", "sound_studio_enabled"),
     ("/mod-workshop", "mod_workshop_enabled"),
     ("/blueprint-editor", "blueprint_editor_enabled"),

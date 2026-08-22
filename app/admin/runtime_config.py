@@ -485,8 +485,23 @@ REGISTRY: dict[str, TunableSetting] = {
             "Master switch for the Dressing Room (/dressing-room + /site/dressing/* "
             "+ /v1/dressing/*), which composes a character from the game's own "
             "costumes and equipment styles and renders it on the baked class rigs. "
-            "OFF hides the page + navbar link and 404s its endpoints. It reads the "
-            "updates archive and the rig map, so it needs the game index built."
+            "OFF hides the page + navbar link and 404s its endpoints - including the "
+            "ones partner sites call, so their dressing rooms break too (to unpublish "
+            "only our page, use the page switch below). It reads the updates archive "
+            "and the rig map, so it needs the game index built."
+        ),
+    ),
+    "feature_dressing_room_page_enabled": _t(
+        key="feature_dressing_room_page_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Our own Dressing Room PAGE (/dressing-room + its navbar link, search "
+            "entry and sitemap listing). OFF unpublishes the page while the system "
+            "keeps serving - /v1/dressing/*, /site/dressing/* and the embeddable "
+            "viewer stay up, so partner sites running their own dressing room on "
+            "this data are unaffected. Ignored while the master switch above is OFF."
         ),
     ),
     "feature_tomes_enabled": _t(

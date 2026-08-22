@@ -54,6 +54,13 @@ DELVES_FLAG = "feature_delves_enabled"
 STORE_FLAG = "feature_store_enabled"
 EMBED_FLAG = "feature_embed_viewer_enabled"
 DRESSING_ROOM_FLAG = "feature_dressing_room_enabled"
+# The Dressing Room is the one feature whose data plane is also a PARTNER API
+# (other sites call /v1/dressing/* and /site/dressing/render for their own
+# dressing rooms), so its website page has its own switch: page OFF + master ON
+# unpublishes /dressing-room while every partner keeps working. Gated in
+# app/site/feature_map.py (the page route + navbar + search + sitemap), not here -
+# there is no endpoint that belongs to the page alone.
+DRESSING_ROOM_PAGE_FLAG = "feature_dressing_room_page_enabled"
 SOUND_STUDIO_FLAG = "feature_sound_studio_enabled"
 MOD_WORKSHOP_FLAG = "feature_mod_workshop_enabled"
 BLUEPRINT_EDITOR_FLAG = "feature_blueprint_editor_enabled"

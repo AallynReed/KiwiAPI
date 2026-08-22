@@ -36,6 +36,7 @@ from app.core.utils import client_ip, iso
 from app.site import search as site_search_mod
 from app.site.feature_map import SITE_FEATURE_FLAGS as _SITE_FEATURE_FLAGS
 from app.site.feature_map import SITEMAP_PAGES as _SITEMAP_PAGES
+from app.site.feature_map import apply_derived as _apply_derived
 from app.site.feature_map import feature_blocks as _feature_blocks
 from app.site.feature_map import robots_body as _robots_body
 from app.site_auth.dependencies import get_current_site_user, get_optional_site_user
@@ -94,10 +95,10 @@ async def _resolve_feature_flags(request: Request) -> None:
     (so the navbar can hide a disabled feature's link), and (b) 404s the pages +
     ``/site/<feature>/*`` proxies of any disabled feature so it's hidden, not
     just unlinked. Cheap: the values are cached ~5s in runtime_config."""
-    flags = {
+    flags = _apply_derived({
         attr: await feature_flags.is_enabled(flag)
         for attr, flag in _SITE_FEATURE_FLAGS.items()
-    }
+    })
     for attr, value in flags.items():
         setattr(request.state, attr, value)
     if _feature_blocks(request.url.path, flags):
@@ -256,10 +257,10 @@ async def _render_sitemap() -> str:
     off. Approved strays are addressed as ``/mods/stray/<slug>`` - their card
     already carries ``handle='stray'``, so the generic URL shape is correct."""
     base = settings.app_url.rstrip("/")
-    flags = {
+    flags = _apply_derived({
         attr: await feature_flags.is_enabled(flag)
         for attr, flag in _SITE_FEATURE_FLAGS.items()
-    }
+    })
     # (loc, lastmod-iso-or-None)
     entries: list[tuple[str, str | None]] = [
         (base + path, None)
@@ -1723,10 +1724,10 @@ async def site_feature_flags() -> JSONResponse:
     ``{% if <feature>_enabled %}`` conditionals. On top of the master page
     toggles it carries the three leaderboard calc switches the /leaderboards page
     needs (cheater detection / alt clusters / renames)."""
-    flags = {
+    flags = _apply_derived({
         attr: await feature_flags.is_enabled(flag)
         for attr, flag in _SITE_FEATURE_FLAGS.items()
-    }
+    })
     flags["cheater_detection_enabled"] = await feature_flags.is_enabled(
         feature_flags.CHEATER_DETECTION_FLAG)
     flags["alt_clusters_enabled"] = await feature_flags.is_enabled(

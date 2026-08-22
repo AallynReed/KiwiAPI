@@ -73,7 +73,8 @@ _PREVIEW_FLAGS = {
     "gem_evaluator_enabled", "gem_builds_enabled", "calculators_enabled",
     "gems_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
     "renames_enabled", "duplicates_enabled", "discord_oauth_enabled",
-    "dressing_room_enabled", "sound_studio_enabled", "mod_workshop_enabled",
+    "dressing_room_enabled", "dressing_room_page_enabled",
+    "sound_studio_enabled", "mod_workshop_enabled",
 }
 
 
