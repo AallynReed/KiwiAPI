@@ -192,6 +192,7 @@ class BuildConfigRequest(BaseModel):
     light: int = 0                   # Farm only: target base light (0 disables targeting)
     subclass_active: bool = False
     litany: bool = False
+    bounty_hunt: bool = False        # ignored unless star_chart unlocks the node
     star_chart: str | None = None    # optional star-chart build code
     high_precision: bool = False     # round results to 8 decimals instead of 1-2
 

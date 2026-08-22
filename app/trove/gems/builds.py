@@ -37,6 +37,17 @@ LILYPAD_MULTIPLIERS = {
 }
 
 
+# Bounty Hunt - the Sundered Uplands boss buff, unlocked by the star chart but
+# only live while the player is actually holding it, so it needs its own toggle
+# rather than being folded into the chart's passive stats. Two nodes grant it and
+# the Minor one overwrites the Major, so at most one is ever active.
+BOUNTY_HUNT_NODES = ("Bounty Hunt Boon", "Bounty Hunt")
+
+
+def _no_bounty_hunt() -> dict:
+    return {"available": False, "name": None, "physical": 0.0, "magic": 0.0}
+
+
 def _lilypad(name: str, value: float, active: bool) -> float:
     """An ally's L30 stat value, with the Lilypad buff applied when active."""
     return value * LILYPAD_MULTIPLIERS.get(name, 1.0) if active else value
@@ -74,6 +85,10 @@ class StarChartParser:
         self.selectable_paths = sorted(
             path for path, node in self.node_map.items() if node.get("Type") != "Root"
         )
+        self.bounty_nodes = {
+            path: node for path, node in self.node_map.items()
+            if node.get("Name") in BOUNTY_HUNT_NODES and node.get("Ability_Values")
+        }
 
     def _flatten_tree(self, node: dict, parent_path: str | None = None) -> None:
         if "Path" in node:
@@ -132,7 +147,7 @@ class StarChartParser:
         return {p for p in decoded.split("$") if p in self.node_map}
 
     def parse_build_code(self, build_code: str) -> dict:
-        result = {"stats": {}, "abilities": [], "paths_count": 0}
+        result = {"stats": {}, "abilities": [], "paths_count": 0, "bounty_hunt": _no_bounty_hunt()}
         if not build_code or not self.node_map:
             return result
         try:
@@ -147,6 +162,8 @@ class StarChartParser:
             if node and "Overwrites" in node:
                 overwrites.update(node["Overwrites"])
         active_paths = selected_paths - overwrites
+
+        result["bounty_hunt"] = self._bounty_hunt(active_paths)
 
         abilities: set[str] = set()
         for path in active_paths:
@@ -167,6 +184,26 @@ class StarChartParser:
                 abilities.update(node["Abilities"])
         result["abilities"] = list(abilities)
         return result
+
+
+    def _bounty_hunt(self, active_paths: set[str]) -> dict:
+        """Which Bounty Hunt tier this chart unlocks, with the buff's own values.
+
+        The Minor upgrade overwrites the Major boon, so ``active_paths`` already
+        leaves at most one of them standing - no tie to break here.
+        """
+        for path in sorted(active_paths):
+            node = self.bounty_nodes.get(path)
+            if not node:
+                continue
+            values = node["Ability_Values"]
+            return {
+                "available": True,
+                "name": node.get("Name"),
+                "physical": _stat_value(values, "Physical Damage"),
+                "magic": _stat_value(values, "Magic Damage"),
+            }
+        return _no_bounty_hunt()
 
 
 class GemOptimizerEngine:
@@ -307,7 +344,8 @@ class GemOptimizerEngine:
                 sixth += 1
 
             if config.get("star_chart"):
-                chart_stats = self.star_parser.parse_build_code(config["star_chart"])["stats"]
+                chart = self.star_parser.parse_build_code(config["star_chart"])
+                chart_stats = chart["stats"]
                 dmg = chart_stats.get(damage_type, {})
                 crit = chart_stats.get("Critical Damage", {})
                 light = chart_stats.get("Light", {})
@@ -317,6 +355,12 @@ class GemOptimizerEngine:
                 fourth += dmg.get("pct", 0)
                 fifth += crit.get("pct", 0)
                 sixth += light.get("pct", 0)
+
+                # The chart only unlocks Bounty Hunt; the buff itself is a 4h drop
+                # from a boss, so it counts only when the player says it is up.
+                bounty = chart["bounty_hunt"]
+                if config.get("bounty_hunt") and bounty["available"]:
+                    fourth += bounty["magic" if damage_type == "Magic Damage" else "physical"]
 
         class_bonus = next((b["value"] for b in selected_class["bonuses"] if b["name"] == damage_type), None)
 
@@ -381,8 +425,8 @@ def calculate_builds(config: dict) -> list[dict]:
 def parse_star_chart(code: str) -> dict:
     """Decode a star-chart build code into aggregated passive stats (for UI previews).
 
-    Returns ``{"stats": {name: {"flat", "pct"}}, "abilities": [...], "paths_count": N}``;
-    ``paths_count == 0`` signals an unparseable / empty code.
+    Returns ``{"stats": {name: {"flat", "pct"}}, "abilities": [...], "paths_count": N,
+    "bounty_hunt": {...}}``; ``paths_count == 0`` signals an unparseable / empty code.
     """
     return _engine().star_parser.parse_build_code(code or "")
 
@@ -401,7 +445,8 @@ def build_options() -> dict:
         "ally": allies,
         "food": foods,
         "critical_damage_count": {"min": 0, "max": 3, "default": 3},
-        "flags": ["berserker_battler", "no_face", "subclass_active", "litany", "ally_buff", "high_precision"],
+        "flags": ["berserker_battler", "no_face", "subclass_active", "litany", "ally_buff",
+                  "bounty_hunt", "high_precision"],
         "notes": {
             "subclass": "Same options as character.",
             "ally": "Use 'boot_clown' for no ally. Ally stats are the level-30 values.",
@@ -413,5 +458,11 @@ def build_options() -> dict:
             "high_precision": "Round every result field to 8 decimals instead of 1-2.",
             "light": "Farm builds only - target base light; 0 disables light targeting.",
             "star_chart": "Optional star-chart build code (SC:/v2: compact, or base64).",
+            "bounty_hunt": (
+                "The Sundered Uplands boss buff. Ignored unless the star chart code "
+                "unlocks it: 'Bounty Hunt Boon' gives +10% Physical/Magic Damage, and "
+                "'Bounty Hunt' upgrades that same buff to +15%. Check "
+                "bounty_hunt.available on /parse-star-chart before offering the toggle."
+            ),
         },
     }

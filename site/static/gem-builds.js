@@ -45,7 +45,7 @@
     build_type: "Light", character: "Bard", subclass: "Boomeranger",
     food: "", ally: "boot_clown", ally_buff: true, critical_damage_count: 3, no_face: false,
     light: 0, subclass_active: false, litany: false, berserker_battler: false,
-    star_chart: "", high_precision: false,
+    bounty_hunt: false, star_chart: "", high_precision: false,
   };
   let builds = [];
   let page = 0;
@@ -55,6 +55,7 @@
 
   let elConfig, elResults;
   let scInput = null;   // the star-chart code field, kept in sync by the editor
+  let bhRow = null;     // the Bounty Hunt toggle, enabled only by the star chart
 
   function saveConfig() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch (e) { /* non-fatal */ }
@@ -114,12 +115,17 @@
     const c = h("input", { type: "checkbox" });
     c.checked = value;
     c.addEventListener("change", (e) => onChange(e.target.checked));
-    return h("label", { class: "gb-toggle" + (cls ? " " + cls : ""), title: title ? t(title) : null },
-      c, h("span", { class: "gb-toggle-mark" }), h("span", {}, t(label)));
+    const text = h("span", {}, t(label));
+    const row = h("label", { class: "gb-toggle" + (cls ? " " + cls : ""), title: title ? t(title) : null },
+      c, h("span", { class: "gb-toggle-mark" }), text);
+    row.input = c;
+    row.text = text;
+    return row;
   }
 
   function renderConfig() {
     elConfig.textContent = "";
+    bhRow = null;
     const classEntries = options.character.map((c) => ({ value: c, label: c }));
     const buildTypeEntries = options.build_type.map((b) => ({ value: b, label: b }));
     const foodEntries = [{ value: "", label: "None" }].concat(options.food.map((f) => ({ value: f.key, label: f.label })));
@@ -199,11 +205,34 @@
         toggleRow("Berserker Battler", config.berserker_battler, (v) => { config.berserker_battler = v; onConfigChange(); }, "Treats Berserker Battler as active (adds its light)."),
         toggleRow("Enlightened / Litany", config.litany, (v) => { config.litany = v; onConfigChange(); }, "Adds the light from the Enlightened (Litany) buff."),
         toggleRow("Subclass active", config.subclass_active, (v) => { config.subclass_active = v; onConfigChange(); }, "Includes the passive stats from your chosen subclass."));
+      bhRow = toggleRow("Bounty Hunt", config.bounty_hunt, (v) => { config.bounty_hunt = v; onConfigChange(); });
+      grid.appendChild(bhRow);
       advSection.appendChild(grid);
     }
     elConfig.appendChild(advSection);
 
+    syncBountyHunt();
     renderStarChartSummary();
+  }
+
+  // Bounty Hunt is a 4-hour buff from a Sundered Uplands 5-star boss, and only
+  // the star chart can unlock it - so the toggle stays locked until the pasted
+  // chart contains the node, and unlocking the Minor upgrade replaces the +10%
+  // with +15% rather than stacking. Updated in place instead of rebuilding the
+  // panel: this runs while the reader is still typing in the code field.
+  function syncBountyHunt() {
+    const bh = (starChartInfo && !starChartInfo.error && starChartInfo.bounty_hunt) || null;
+    const unlocked = !!(bh && bh.available);
+    if (!unlocked && config.bounty_hunt) { config.bounty_hunt = false; saveConfig(); }
+    if (!bhRow) return;
+    const pct = unlocked ? Math.max(bh.physical, bh.magic) : 0;
+    bhRow.input.disabled = !unlocked;
+    bhRow.input.checked = config.bounty_hunt;
+    bhRow.classList.toggle("is-locked", !unlocked);
+    bhRow.text.textContent = unlocked ? t("Bounty Hunt") + " (+" + pct + "%)" : t("Bounty Hunt");
+    bhRow.title = unlocked
+      ? t("Treats the boss buff as active") + ": +" + pct + "% " + t("Physical and Magic Damage") + " (" + bh.name + ")."
+      : t("Unlock Bounty Hunt Boon on your star chart to use this buff.");
   }
 
   function onConfigChange(rerender) {
@@ -267,13 +296,14 @@
   }
   async function fetchStarChart() {
     const code = config.star_chart;
-    if (!code) { starChartInfo = null; renderStarChartSummary(); calculate(); return; }
+    if (!code) { starChartInfo = null; syncBountyHunt(); renderStarChartSummary(); calculate(); return; }
     try {
       const r = await apiGet(`/site/gems/parse-star-chart?code=${encodeURIComponent(code)}`);
       starChartInfo = (r.paths_count > 0) ? r : { error: true };
     } catch (e) {
       starChartInfo = { error: true };
     }
+    syncBountyHunt();
     renderStarChartSummary();
     calculate();
   }
@@ -303,6 +333,13 @@
         ul.appendChild(h("div", {}, h("strong", {}, t(n) + ": "), h("span", {}, parts.join(" / "))));
       });
       host.appendChild(ul);
+    }
+    const bh = starChartInfo.bounty_hunt;
+    if (bh && bh.available) {
+      host.appendChild(h("div", { class: "gb-sc-buff" },
+        h("i", { class: "fa-solid fa-crosshairs" }), " ",
+        h("strong", {}, t("Bounty Hunt")), " ",
+        h("span", {}, "+" + Math.max(bh.physical, bh.magic) + "% " + t("Physical and Magic Damage"))));
     }
   }
 
