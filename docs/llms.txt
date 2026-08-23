@@ -406,6 +406,11 @@ each surfaced), and the owner can hide chosen variants' releases from the public
 hidden everywhere, the release event stream included, and revealing it announces its current build. A **source-locked** mod
 (private source / releases-only) can't be **forked** - it can only be credited as **inspiration**.
 
+Each mod can also take **issues and requests**: any signed-in site user opens a thread on the mod page, the
+creator replies and closes or reopens it, and both sides get a notification in the site navbar. It's the
+creator's call per mod (on by default for new mods; mods that predate the feature start off), and the threads
+live on the website - there is no public API for them.
+
 The website-internal hub surface (`/v1/mods/hub/*` + the same-origin `/site/mods/*` proxies) is **intentionally
 not in this public reference** - it's driven by the website. The documented, app-facing read API is the **Mods
 catalog** section above (`/v1/mods`, `/v1/mods/{slug}`, `/v1/mods/popular`, `/v1/mods/lookup`).

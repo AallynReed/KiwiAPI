@@ -46,6 +46,8 @@ from app.trove.mods_hub.models import (
     ModDownloadEvent,
     ModGitToken,
     ModImageAsset,
+    ModIssue,
+    ModIssueEvent,
     ModProfile,
     ModProject,
     ModRelease,
@@ -74,6 +76,7 @@ DOCUMENT_MODELS = [
     ModProject, ModRelease, ModImageAsset, ContentReport, ModGitToken, ModStar,  # mods hub (git store holds commits)
     ModDownloadEvent,                    # mods hub: 7-day download signal (TTL-pruned)
     ModProfile,                          # mods hub: modder profile pages
+    ModIssue, ModIssueEvent,             # mods hub: issues/requests + their timelines
     ModClaimRequest, StrayImportState,   # mods hub: stray (imported) mod claims + import job state
     ModCreatorLink,                      # mods hub: creator ↔ dev-portal account API access
     ModpackProject, ModpackStar,         # modpacks: user-curated bundles of mods (refs only) + likes
@@ -100,6 +103,11 @@ DOCUMENT_MODELS = [
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).
 _client: AsyncMongoClient | None = None
 _db: AsyncDatabase | None = None
+
+# The one mod owner whose existing mods keep issues ON through the rollout
+# backfill (their handle = SiteUser.username, canonical lowercase). Everyone
+# else's pre-existing mods are opted out until they say otherwise.
+ISSUES_OPTED_IN_HANDLE = "aallyn"
 
 # Collection backing the rate limiter - managed directly (not a Beanie Document)
 # so we can do atomic upserts with $inc.
@@ -160,6 +168,11 @@ async def init_db() -> None:
     # from their newest published release - else `created_at`, so a mod with no
     # release still sorts sensibly instead of falling off the end on a null key.
     await _backfill_last_release_at()
+
+    # Issues & requests shipped ON by default, which is a decision only a mod's
+    # own creator can make. Existing mods are therefore opted OUT once, except the
+    # site owner's own - they consented. See _backfill_issue_optin.
+    await _backfill_issue_optin()
 
     # A release announces on the event stream exactly once, gated by
     # `mod_releases.announced_at`. Releases written before that field existed have
@@ -248,6 +261,35 @@ async def _backfill_last_release_at() -> None:
         logger.info("mods_hub: backfilled last_release_at on %d project(s)", filled)
     except OperationFailure:
         logger.warning("mods_hub: last_release_at backfill skipped", exc_info=True)
+
+
+async def _backfill_issue_optin() -> None:
+    """Opt mods that predate the issues feature OUT of it, once.
+
+    ``ModProject.issues_enabled`` defaults to True, so every mod created from now
+    on accepts issues unless its creator turns them off. Mods that already existed
+    never got that choice, so they are switched off here - apart from
+    ``ISSUES_OPTED_IN_HANDLE``'s own, whose owner asked for the feature.
+
+    Idempotent WITHOUT a marker: the filter is "the field isn't there at all",
+    which is true only of documents written before the field existed. A creator who
+    later turns issues off (or on) has a stored value, so nothing re-flips it."""
+    projects = _db["mod_projects"]
+    absent = {"issues_enabled": {"$exists": False}}
+    try:
+        if await projects.count_documents(absent, limit=1) == 0:
+            return
+        # Order matters: stamping the opted-in owner first gives those docs the
+        # field, so the opt-out pass below no longer matches them.
+        opted_in = await projects.update_many(
+            {**absent, "owner_handle": ISSUES_OPTED_IN_HANDLE},
+            {"$set": {"issues_enabled": True}},
+        )
+        opted_out = await projects.update_many(absent, {"$set": {"issues_enabled": False}})
+        logger.info("mods_hub: issues on for %d existing mod(s), off for %d",
+                    opted_in.modified_count, opted_out.modified_count)
+    except OperationFailure:
+        logger.warning("mods_hub: issue opt-in backfill skipped", exc_info=True)
 
 
 async def _backfill_release_announced_at() -> None:

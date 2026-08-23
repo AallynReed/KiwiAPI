@@ -370,6 +370,8 @@ for _m in _STUB_MODS:
     _m.setdefault("author", "")
     _m.setdefault("is_stray", False)
     _m.setdefault("is_beta", False)
+    _m.setdefault("issues_enabled", True)
+    _m.setdefault("open_issue_count", 0)
     _m.setdefault("owner_avatar_url", "/site/mods/image/avatarsha")
     _m.setdefault("handle", _m["owner_username"].lower())   # /mods/<handle>/<slug>
 _STUB_MODS[0]["preview_sha"] = "prevsha1"   # neon-hud: no banner -> card uses first preview
@@ -379,6 +381,38 @@ _STUB_MODS[1]["star_count"] = 34
 _STUB_MODS[2]["star_count"] = 12
 _STUB_MODS[0]["fork_count"] = 1   # neon-hud has one fork (quiet-ui)
 _STUB_MODS[1]["is_beta"] = True   # tiny-mounts is still in development
+
+# --- Issues & requests stub (/site/mods/**/issues, /site/mods/notifications) --
+_STUB_ISSUES = [
+    {"number": 2, "kind": "request", "title": "Could the bars be thinner?",
+     "body": "Love it, but the health bar eats a third of the HUD on 1080p.",
+     "status": "open", "author": "player_two", "author_id": "u2",
+     "is_author": False, "can_moderate": True, "comment_count": 1,
+     "created_at": None, "updated_at": None, "last_activity_at": None,
+     "closed_at": None,
+     "events": [
+         {"id": "e1", "kind": "comment", "by_owner": True, "author": "Aallyn",
+          "author_id": "u1", "created_at": None,
+          "body": "Good call - **v1.3** ships a slim layout."},
+     ]},
+    {"number": 1, "kind": "issue", "title": "Minimap frame is offset by 2px",
+     "body": "Only at UI scale 90%.", "status": "closed", "author": "player_one",
+     "author_id": "u3", "is_author": False, "can_moderate": True,
+     "comment_count": 0, "created_at": None, "updated_at": None,
+     "last_activity_at": None, "closed_at": None,
+     "events": [
+         {"id": "e2", "kind": "closed", "by_owner": True, "author": "Aallyn",
+          "author_id": "u1", "created_at": None, "body": ""},
+     ]},
+]
+
+
+def _stub_issue_list(status):
+    rows = [i for i in _STUB_ISSUES if status == "all" or i["status"] == status]
+    return {"items": rows, "count": len(rows), "total": len(rows),
+            "open_count": sum(1 for i in _STUB_ISSUES if i["status"] == "open"),
+            "closed_count": None, "can_moderate": True}
+
 
 # --- Flash code stub (/site/mods/releases/*/swf/scripts) --------------------
 # What FFDec hands back for a real interface mod, in miniature: a couple of
@@ -1813,6 +1847,13 @@ class Handler(SimpleHTTPRequestHandler):
                 "featured": mods[0],
                 "mods": mods,
             })
+        if path == "/site/mods/notifications":
+            return self._send_json({"unread": 1, "seen_at": None, "items": [
+                {"number": 2, "kind": "request", "title": "Could the bars be thinner?",
+                 "status": "open", "mod_title": "Neon HUD", "handle": "aallyn",
+                 "slug": "neon-hud", "url": "/mods/aallyn/neon-hud#issue-2",
+                 "comment_count": 1, "last_activity_at": None, "unread": True},
+            ]})
         if path == "/site/mods/tags":
             return self._send_json({
                 "categories": [{"tag": "GUI", "count": 7}, {"tag": "Dragons", "count": 3},
@@ -2074,6 +2115,33 @@ class Handler(SimpleHTTPRequestHandler):
                 forks = [m for m in _STUB_MODS
                          if (m.get("forked_from") or {}).get("slug") == slug]
                 return self._send_json({"items": forks})
+            if sub == "issues":
+                want = (parse_qs(url.query).get("status") or ["open"])[0]
+                return self._send_json(_stub_issue_list(want))
+            if sub.startswith("issues/"):
+                want = sub.split("/", 1)[1]
+                row = next((i for i in _STUB_ISSUES if str(i["number"]) == want), None)
+                if row is None:
+                    return self._send_json(
+                        {"error": {"message": "No such issue on this mod."}}, 404)
+                return self._send_json(row)
+            if sub == "archive":
+                # The Files "Download ZIP" button - a real (empty) zip, so the
+                # browser save path is exercised rather than mocked.
+                import io as _io
+                import zipfile as _zipfile
+                buf = _io.BytesIO()
+                with _zipfile.ZipFile(buf, "w") as zf:
+                    zf.writestr("readme.md", "# Sample Mod\n")
+                blob = buf.getvalue()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/zip")
+                self.send_header("Content-Length", str(len(blob)))
+                self.send_header(
+                    "Content-Disposition",
+                    f'attachment; filename="{slug}-main-stub123.zip"')
+                self.end_headers()
+                return self.wfile.write(blob)
             if sub == "tree":
                 return self._send_json({"commit": {"id": "stub", "seq": 2}, "entries": [
                     {"path": "readme.md", "blob_sha": "stub", "size": 180},

@@ -25,18 +25,22 @@ from fastapi import APIRouter, Depends, File, Form, Query, Request, Response, Up
 from app.auth.models import User
 from app.core.dependencies import AccessContext, get_current_user, public_scope
 from app.core.errors import COMMON_ERROR_RESPONSES, APIError, ErrorCode
+from app.core.features import require_mod_issues_enabled
 from app.site_auth.models import SiteUser
 from app.trove import mod_categories
-from app.trove.mods_hub import creators, service, store
+from app.trove.mods_hub import creators, issues, service, store
 from app.trove.mods_hub.schemas import (
     ClaimRequest,
     CollaboratorRequest,
     CreateBranchRequest,
+    CreateIssueRequest,
     CreateProjectRequest,
     CreateReleaseRequest,
     CreatorLinkRequest,
     GitTokenRequest,
     HashLookupRequest,
+    IssueCommentRequest,
+    IssueStatusRequest,
     UpdateProfileRequest,
     UpdateProjectRequest,
     UpdateReleaseRequest,
@@ -160,6 +164,47 @@ async def get_raw_file(
     service.ensure_source_visible(project, None)
     data = await service.get_file_bytes(project, commit_ref, path)
     return Response(content=data, media_type="application/octet-stream")
+
+
+@mods_hub_router.get("/projects/{handle}/{slug}/archive")
+async def get_source_archive(
+    handle: str, slug: str, ctx: AccessContext = _PUB, ref: str = Query(default=""),
+) -> Response:
+    """Download a commit's whole file tree as a ``.zip`` (source, not a build)."""
+    project = await service.get_for_view(handle, slug, None)
+    service.ensure_source_visible(project, None)
+    filename, data = await service.source_archive(project, ref)
+    return Response(content=data, media_type="application/zip", headers={
+        "Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+# ── issues & requests ─────────────────────────────────────────────────────
+# Reads are public (the threads are part of the mod's page); writes need a
+# Dashboard session and live on the website-only write router below. Both sides
+# 404 when the site-wide switch is off OR the creator turned issues off for the
+# mod - "not taking issues" should look the same as "never had issues".
+
+_ISSUES = [Depends(require_mod_issues_enabled)]
+
+
+@mods_hub_router.get("/projects/{handle}/{slug}/issues", dependencies=_ISSUES)
+async def get_issues(
+    handle: str, slug: str, ctx: AccessContext = _PUB,
+    status: str = Query(default="open", pattern="^(open|closed|all)$"),
+    limit: int = Query(default=30, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> dict:
+    """The mod's issues + requests, newest activity first."""
+    project = await service.get_for_view(handle, slug, None)
+    return await issues.list_issues(
+        project, None, status=status, limit=limit, offset=offset)
+
+
+@mods_hub_router.get("/projects/{handle}/{slug}/issues/{number}", dependencies=_ISSUES)
+async def get_issue(handle: str, slug: str, number: int, ctx: AccessContext = _PUB) -> dict:
+    """One thread with its full timeline (replies + close/reopen records)."""
+    project = await service.get_for_view(handle, slug, None)
+    return await issues.get_issue(project, number, None)
 
 
 @mods_hub_router.get("/projects/{handle}/{slug}/compare")
@@ -763,6 +808,71 @@ async def star_project(handle: str, slug: str, user: SiteUser = _USER) -> dict:
 async def unstar_project(handle: str, slug: str, user: SiteUser = _USER) -> dict:
     project = await service.get_for_view(handle, slug, user)
     return await service.unstar_project(user, project)
+
+
+@mods_hub_write_router.post("/projects/{handle}/{slug}/issues", status_code=201,
+                            dependencies=_ISSUES)
+async def create_issue(
+    handle: str, slug: str, req: CreateIssueRequest, user: SiteUser = _USER,
+) -> dict:
+    """File an issue or a request on someone's mod. Any signed-in site user."""
+    project = await service.get_for_view(handle, slug, user)
+    return await issues.create_issue(
+        project, user, kind=req.kind, title=req.title, body=req.body)
+
+
+@mods_hub_write_router.post("/projects/{handle}/{slug}/issues/{number}/comments",
+                            status_code=201, dependencies=_ISSUES)
+async def comment_on_issue(
+    handle: str, slug: str, number: int, req: IssueCommentRequest,
+    user: SiteUser = _USER,
+) -> dict:
+    project = await service.get_for_view(handle, slug, user)
+    return await issues.add_comment(project, number, user, req.body)
+
+
+@mods_hub_write_router.patch("/projects/{handle}/{slug}/issues/{number}",
+                             dependencies=_ISSUES)
+async def set_issue_status(
+    handle: str, slug: str, number: int, req: IssueStatusRequest,
+    user: SiteUser = _USER,
+) -> dict:
+    """Close or reopen a thread - the mod's creator, or the person who opened it."""
+    project = await service.get_for_view(handle, slug, user)
+    return await issues.set_status(project, number, user, req.status, req.comment)
+
+
+@mods_hub_write_router.delete("/projects/{handle}/{slug}/issues/{number}",
+                              status_code=204, dependencies=_ISSUES)
+async def delete_issue(
+    handle: str, slug: str, number: int, user: SiteUser = _USER,
+) -> Response:
+    project = await service.get_for_view(handle, slug, user)
+    await issues.delete_issue(project, number, user)
+    return Response(status_code=204)
+
+
+@mods_hub_write_router.delete(
+    "/projects/{handle}/{slug}/issues/{number}/comments/{event_id}",
+    status_code=204, dependencies=_ISSUES)
+async def delete_issue_comment(
+    handle: str, slug: str, number: int, event_id: str, user: SiteUser = _USER,
+) -> Response:
+    project = await service.get_for_view(handle, slug, user)
+    await issues.delete_comment(project, number, event_id, user)
+    return Response(status_code=204)
+
+
+@mods_hub_write_router.get("/me/issue-notifications", dependencies=_ISSUES)
+async def my_issue_notifications(user: SiteUser = _USER) -> dict:
+    """Activity on every thread this user takes part in - the navbar bell."""
+    return await issues.notifications(user)
+
+
+@mods_hub_write_router.post("/me/issue-notifications/seen", dependencies=_ISSUES)
+async def mark_issue_notifications_seen(user: SiteUser = _USER) -> dict:
+    """Move the read watermark to now (the panel was opened)."""
+    return await issues.mark_seen(user)
 
 
 @mods_hub_write_router.post("/projects/{handle}/{slug}/collaborators")

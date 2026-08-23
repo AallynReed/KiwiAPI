@@ -484,6 +484,86 @@ img.nav-account-avatar {
 .nav-account-item-danger:hover { background: rgba(255,90,90,.10); }
 .nav-account-item-danger i { color: #ff8a8a; }
 
+/* Notification bell (mod issues). Sits left of the account pill and only
+   exists when there is something to show - an always-present empty bell is
+   furniture. Same panel geometry as .nav-account-panel, including the
+   [hidden] re-assert: an explicit display beats the user-agent default. */
+.nav-bell { position: relative; display: inline-flex; margin-right: 4px; }
+.nav-bell[hidden] { display: none; }
+.nav-bell-trigger {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text-mute);
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.nav-bell-trigger:hover {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(76,201,240,.30);
+  color: var(--text);
+}
+.nav-bell-count {
+  position: absolute;
+  top: -3px; right: -3px;
+  min-width: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent-blue, #4cc9f0);
+  color: #06080d;
+  font: 700 .68rem/17px 'Inter', sans-serif;
+  text-align: center;
+}
+.nav-bell-count[hidden] { display: none; }
+.nav-bell-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(340px, calc(100vw - 32px));
+  padding: 6px;
+  background: var(--bg-card, #161b22);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  display: block;
+  z-index: 100;
+}
+.nav-bell-panel[hidden] { display: none; }
+.nav-bell-head {
+  margin: 4px 8px 6px;
+  font: 700 .78rem 'Inter', sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.nav-bell-list { max-height: min(60vh, 420px); overflow-y: auto; }
+.nav-bell-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: var(--text, #e8ecf3);
+  text-decoration: none;
+  font-size: .88rem;
+}
+.nav-bell-item:hover { background: rgba(255,255,255,.06); }
+.nav-bell-item i { margin-top: 2px; color: var(--text-mute); }
+.nav-bell-item.is-new { background: rgba(76,201,240,.07); }
+.nav-bell-item.is-new i { color: var(--accent-blue, #4cc9f0); }
+.nav-bell-text { display: grid; gap: 2px; min-width: 0; }
+.nav-bell-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-bell-sub { color: var(--text-mute); font-size: .78rem; }
+
 .nav-toggle {
   display: none;
   background: transparent;

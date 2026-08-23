@@ -648,6 +648,8 @@ async def project_detail(project: ModProject, viewer: SiteUser | None) -> dict:
         "source_visible": src_visible,
         "hidden_release_branches": project.hidden_release_branches,
         "branch_order": project.branch_order,
+        "issues_enabled": project.issues_enabled,
+        "open_issue_count": project.open_issue_count,
         "commit_count": commit_count,
         "clone_url": clone_url,
         "branches": branches,
@@ -709,7 +711,7 @@ async def update_project(
     project: ModProject, actor: SiteUser, *, title=None, title_i18n=None,
     summary=None, summary_i18n=None, description=None, description_i18n=None,
     readme_text=None, readme_i18n=None, warnings=None, warnings_i18n=None,
-    tags=None, visibility=None, is_beta=None,
+    tags=None, visibility=None, is_beta=None, issues_enabled=None,
     mode=None, source_visibility=None, hidden_release_branches=None, branch_order=None,
     discord_url=None, website_url=None, donation_urls=None, inspired_by=None,
 ) -> ModProject:
@@ -740,6 +742,10 @@ async def update_project(
         project.visibility = visibility
     if is_beta is not None:
         project.is_beta = is_beta
+    if issues_enabled is not None:
+        # Turning issues off hides the section and 404s the writes; the threads
+        # already filed are kept and come back if it's turned on again.
+        project.issues_enabled = issues_enabled
     if mode is not None:
         # An uploaded-on-behalf mod is release-only by definition (you can't own the
         # source of a mod you merely shared) - never let it flip into files mode.
@@ -816,6 +822,9 @@ async def _purge_project(project: ModProject) -> None:
         ContentReport.target_type == "mod", ContentReport.target_id == project.id
     ).delete()
     await ModStar.find(ModStar.project_id == project.id).delete()
+    # Imported here, not at module scope: issues.py builds on this module.
+    from app.trove.mods_hub import issues as mod_issues
+    await mod_issues.purge_project(project.id)
     await gitstore.delete_repo(str(project.id))
     await project.delete()
 
@@ -964,6 +973,24 @@ async def get_file_bytes(project: ModProject, commit_ref: str, path: str) -> byt
     if data is None:
         raise _not_found(f"No file '{path}' in that commit")
     return data
+
+
+async def source_archive(project: ModProject, ref: str) -> tuple[str, bytes]:
+    """Zip a commit's whole tree for download - the source as committed, unlike a
+    release, which only packs what compiles. Returns (filename, zip bytes)."""
+    sha = await _resolve_ref(project, ref)
+    tr = await gitstore.read_tree(str(project.id), sha)
+    if tr is None or not tr[1]:
+        raise _not_found("That commit has no files to download.")
+    files = []
+    for e in tr[1]:
+        data = await gitstore.read_blob(str(project.id), sha, e["path"])
+        if data is None:
+            raise APIError(500, ErrorCode.internal_error, f"Missing blob for {e['path']}")
+        files.append((e["path"], data))
+    archive = await asyncio.to_thread(_build_zip, files)
+    name = f"{_safe_filename(project.slug)}-{(ref or project.default_branch)}-{sha[:7]}"
+    return f"{_safe_filename(name)}.zip", archive
 
 
 async def compare(project: ModProject, base_ref: str, head_ref: str) -> dict:

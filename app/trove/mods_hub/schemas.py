@@ -5,6 +5,8 @@ Read responses are returned as JSON-ready dicts straight from ``service.py``
 proxies and the ``/v1/mods/hub/*`` API share one serialization path.
 """
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.trove.mods_hub.models import (
@@ -74,6 +76,12 @@ class UpdateProjectRequest(BaseModel):
         default=None,
         description="Mark the mod as still in development - shows a Beta badge and a "
                     "note so players know to expect changes. Nothing else changes.",
+    )
+    issues_enabled: bool | None = Field(
+        default=None,
+        description="Whether players can file issues + requests on this mod and the "
+                    "creator can reply/close them. Off hides the section; threads "
+                    "already filed are kept.",
     )
     mode: ProjectMode | None = None
     source_visibility: SourceVisibility | None = None
@@ -231,3 +239,22 @@ class CreatorScopeRequest(BaseModel):
         default_factory=list, max_length=500,
         description="When all_projects is false, the mods the connection is limited to.",
     )
+
+
+class CreateIssueRequest(BaseModel):
+    """Open an issue or a request on a mod (any signed-in site user)."""
+
+    kind: Literal["issue", "request"] = "issue"
+    title: str = Field(min_length=1, max_length=140)
+    body: str = Field(default="", max_length=8000, description="Markdown.")
+
+
+class IssueCommentRequest(BaseModel):
+    body: str = Field(min_length=1, max_length=8000, description="Markdown.")
+
+
+class IssueStatusRequest(BaseModel):
+    """Close or reopen a thread, optionally with a parting reply."""
+
+    status: Literal["open", "closed"]
+    comment: str = Field(default="", max_length=8000)

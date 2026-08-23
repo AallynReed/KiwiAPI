@@ -738,6 +738,59 @@ REGISTRY: dict[str, TunableSetting] = {
             "category."
         ),
     ),
+    "feature_mod_issues_enabled": _t(
+        key="feature_mod_issues_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for mod issues + requests. OFF hides the Issues section "
+            "on every mod page, 404s the issue endpoints (/v1/mods/hub/**/issues, "
+            "/site/mods/**/issues) and empties the navbar notification bell. "
+            "Per-mod consent is separate and stays with the creator "
+            "(issues_enabled on the mod); this is the site-wide kill switch. "
+            "Filed threads are kept and reappear when toggled back ON."
+        ),
+    ),
+
+    # ── Mod issues: per-account write budget ─────────────────────────
+    # Issues are the one hub surface where a stranger writes onto someone else's
+    # page, so the flood guard buckets per ACCOUNT (see mods_hub/issues.py).
+    "mod_issue_create_max": _t(
+        key="mod_issue_create_max",
+        default=10,
+        type="int",
+        category="mod issues",
+        description=(
+            "How many issues/requests one account may open across the whole hub "
+            "within mod_issue_create_window_seconds. A separate per-mod cap "
+            "(10 open threads by one author) applies on top."
+        ),
+    ),
+    "mod_issue_create_window_seconds": _t(
+        key="mod_issue_create_window_seconds",
+        default=3600,
+        type="int",
+        category="mod issues",
+        description="Window for mod_issue_create_max.",
+    ),
+    "mod_issue_comment_max": _t(
+        key="mod_issue_comment_max",
+        default=60,
+        type="int",
+        category="mod issues",
+        description=(
+            "How many replies (and close/reopen actions) one account may post "
+            "within mod_issue_comment_window_seconds."
+        ),
+    ),
+    "mod_issue_comment_window_seconds": _t(
+        key="mod_issue_comment_window_seconds",
+        default=3600,
+        type="int",
+        category="mod issues",
+        description="Window for mod_issue_comment_max.",
+    ),
 
     # ── Feedback (/v1/misc/feedback) ─────────────────────────────────
     "feedback.discord_webhook": _t(

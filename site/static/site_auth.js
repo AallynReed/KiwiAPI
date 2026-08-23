@@ -201,6 +201,7 @@
       ? `<img class="nav-account-avatar" src="${esc(user.avatar_url)}" alt="" referrerpolicy="no-referrer">`
       : `<span class="nav-account-avatar">${esc(initials)}</span>`;
     $el.innerHTML = `
+      ${bellHTML()}
       <div class="nav-account-menu">
         <button type="button" class="nav-account-trigger" id="nav-account-trigger"
                 aria-haspopup="true" aria-expanded="false" aria-controls="nav-account-panel">
@@ -221,6 +222,8 @@
         </div>
       </div>`;
     rerunI18n();
+
+    wireBell();
 
     const $trigger = document.getElementById('nav-account-trigger');
     const $panel = document.getElementById('nav-account-panel');
@@ -246,6 +249,99 @@
       // stay on the current page and let the navbar refresh.
       if (location.pathname === '/dashboard') location.href = '/login';
     });
+  }
+
+  // ─── Mod-issue notifications (navbar bell) ─────────────────────────
+  // A creator has to hear that someone filed a bug on their mod, and the person
+  // who filed it has to hear the answer. The feed is derived server-side from
+  // the threads you take part in (app/trove/mods_hub/issues.py) - there is no
+  // per-user notification store to keep in sync, and nothing to clean up.
+  //
+  // Rendered inside the account widget, so it exists exactly when a session
+  // does. A 404 (feature switched off site-wide) simply leaves the bell empty.
+  let _notif = null;
+
+  function bellHTML() {
+    return `
+      <div class="nav-bell" id="nav-bell" hidden>
+        <button type="button" class="nav-bell-trigger" id="nav-bell-trigger"
+                aria-haspopup="true" aria-expanded="false" aria-controls="nav-bell-panel"
+                aria-label="${esc(t('Notifications'))}" title="${esc(t('Notifications'))}">
+          <i class="fa-solid fa-bell" aria-hidden="true"></i>
+          <span class="nav-bell-count" id="nav-bell-count" hidden></span>
+        </button>
+        <div class="nav-bell-panel" id="nav-bell-panel" role="menu" hidden>
+          <p class="nav-bell-head">${esc(t('Issues & requests'))}</p>
+          <div class="nav-bell-list" id="nav-bell-list"></div>
+        </div>
+      </div>`;
+  }
+
+  function wireBell() {
+    const $bell = document.getElementById('nav-bell');
+    const $trigger = document.getElementById('nav-bell-trigger');
+    const $panel = document.getElementById('nav-bell-panel');
+    if (!$bell || !$trigger || !$panel) return;
+    const setOpen = (open) => {
+      $trigger.setAttribute('aria-expanded', String(open));
+      $panel.hidden = !open;
+      // Opening the panel IS reading it: the server keeps one watermark per
+      // account rather than a read flag per row.
+      if (open && _notif && _notif.unread) markNotificationsSeen();
+    };
+    $trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen($panel.hidden);
+    });
+    document.addEventListener('click', (e) => {
+      if (!$bell.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !$panel.hidden) { setOpen(false); $trigger.focus(); }
+    });
+    loadNotifications();
+  }
+
+  async function loadNotifications() {
+    try {
+      const r = await fetch(API + '/site/mods/notifications', { credentials: 'include' });
+      if (!r.ok) return;                       // feature off, or no session - stay hidden
+      _notif = await r.json();
+      paintNotifications();
+    } catch (_) { /* the bell just stays hidden */ }
+  }
+
+  function paintNotifications() {
+    const $bell = document.getElementById('nav-bell');
+    const $count = document.getElementById('nav-bell-count');
+    const $list = document.getElementById('nav-bell-list');
+    if (!$bell || !$count || !$list || !_notif) return;
+    const items = _notif.items || [];
+    if (!items.length) { $bell.hidden = true; return; }
+    $bell.hidden = false;
+    $count.hidden = !_notif.unread;
+    $count.textContent = _notif.unread > 9 ? '9+' : String(_notif.unread || '');
+    $list.innerHTML = items.map((n) => `
+      <a class="nav-bell-item ${n.unread ? 'is-new' : ''}" href="${esc(n.url)}" role="menuitem">
+        <i class="fa-solid ${n.status === 'closed' ? 'fa-circle-check'
+          : (n.kind === 'request' ? 'fa-lightbulb' : 'fa-circle-dot')}" aria-hidden="true"></i>
+        <span class="nav-bell-text">
+          <span class="nav-bell-title">${esc(n.title)}</span>
+          <span class="nav-bell-sub">${esc(n.mod_title)} · #${esc(String(n.number))}</span>
+        </span>
+      </a>`).join('');
+    rerunI18n();
+  }
+
+  async function markNotificationsSeen() {
+    const $count = document.getElementById('nav-bell-count');
+    if ($count) $count.hidden = true;
+    if (_notif) {
+      _notif.unread = 0;
+      (_notif.items || []).forEach((n) => { n.unread = false; });
+    }
+    try { await call('/v1/mods/hub/me/issue-notifications/seen', { method: 'POST', json: {} }); }
+    catch (_) { /* the badge is already down; it comes back on the next load if not */ }
   }
 
   // ─── Discord sign-in button ────────────────────────────────────────

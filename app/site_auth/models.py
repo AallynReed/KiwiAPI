@@ -92,6 +92,13 @@ class SiteUser(Document):
     creator_token_prefix: str | None = None    # display slice, e.g. "kiwi_creator_ab12cd34"
     creator_token_at: datetime | None = None   # last mint\rotate
 
+    # --- Mod issue notifications ------------------------------------------
+    # Read watermark for the navbar's issue feed: everything that has happened on
+    # a thread this user takes part in AFTER this stamp is "new". One timestamp
+    # instead of a per-notification row - opening the panel is the act of reading
+    # it, so there is nothing else to track (see app/trove/mods_hub/issues.py).
+    mod_issues_seen_at: datetime | None = None
+
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     last_login_at: datetime | None = None

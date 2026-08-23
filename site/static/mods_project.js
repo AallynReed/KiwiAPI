@@ -29,7 +29,7 @@
   // contentLang: the language the reader picked for this mod's own text (About +
   // README). null = follow the site language (and fall back to English).
   const state = { detail: null, viewer: null, branch: null, contentLang: null, repoReadme: null,
-    treeOpen: null };
+    treeOpen: null, issueFilter: 'open' };
 
   const $root = document.getElementById('mp-root');
 
@@ -165,6 +165,7 @@
       if (ownerHasPreviews) mainCol.push(previewsHTML(d));
       mainCol.push(filesHTML(d));
       mainCol.push(readmeHTML());                 // populated from the tree's README.md, if any
+      mainCol.push(issuesHTML(d));
       const sideCol = [descriptionHTML(d, true), releasesHTML(d), modpacksHTML(), historyHTML(), cloneHTML(d)];
       if (d.fork_count) sideCol.push(forksHTML());
       parts.push(`<div class="mp-layout">
@@ -177,7 +178,7 @@
       // gallery and the smaller panels sit in the rail. Versions needs the width:
       // an edition's name is the creator's own, and in a rail a long one wrapped
       // over its controls.
-      const docMain = [descriptionHTML(d), releasesHTML(d), readmeTextHTML(d)];
+      const docMain = [descriptionHTML(d), releasesHTML(d), readmeTextHTML(d), issuesHTML(d)];
       const docSide = [];
       if (ownerHasPreviews) docSide.push(previewsHTML(d));
       docSide.push(modpacksHTML());
@@ -197,6 +198,8 @@
     wireReleases();
     wireClone();
     wireFiles();
+    wireIssues();
+    if (d.issues_enabled) loadIssues();
     if (d.source_visible) loadBranchViews();   // tree + commits (hidden if source private)
     if (d.fork_count) loadForks();
     loadModpacks();               // "Included in modpacks" backlink (hidden if none)
@@ -646,10 +649,13 @@
     // "Commit files" sits right-aligned in the Files header (owner, files mode).
     const commitBtn = (d.is_owner && d.mode === 'files')
       ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-primary" id="mp-commit"><i class="fa-solid fa-upload"></i> ${esc(t('Commit files'))}</button>` : '';
+    // Grab the whole branch as a .zip - the source as committed, which is not what
+    // a release ships (a release only packs what compiles).
+    const zipBtn = `<button type="button" class="mp-btn mp-btn-sm" id="mp-dl-zip"><i class="fa-solid fa-file-zipper"></i> ${esc(t('Download ZIP'))}</button>`;
     return `<section class="mp-section">
       <div class="mp-section-head">
         <h2 class="mp-section-title"><i class="fa-solid fa-folder-tree"></i> ${esc(t('Files'))}</h2>
-        ${commitBtn}
+        <div class="mp-section-tools">${zipBtn}${commitBtn}</div>
       </div>
       <div class="mp-fb-bar">
         <label class="mp-muted">${esc(t('Branch'))}</label>
@@ -658,6 +664,220 @@
       <div id="mp-placement"></div>
       <div id="mp-tree" class="mp-tree"></div>
     </section>`;
+  }
+
+  // ─── Issues & requests ─────────────────────────────────────────────
+  // Players report bugs and ask for things; the creator answers and closes the
+  // thread. Turned on per mod (`issues_enabled`) - off means no section at all.
+  function issuesHTML(d) {
+    if (!d.issues_enabled) return '';
+    const newBtn = state.viewer
+      ? `<button type="button" class="mp-btn mp-btn-sm mp-btn-primary" id="mp-issue-new"><i class="fa-solid fa-plus"></i> ${esc(t('New issue'))}</button>`
+      : `<a class="mp-btn mp-btn-sm" href="/login?next=${encodeURIComponent(location.pathname)}">${esc(t('Sign in to post'))}</a>`;
+    const tab = (key, label) => `<button type="button" class="mp-issue-tab ${state.issueFilter === key ? 'is-sel' : ''}" data-issue-tab="${key}" aria-pressed="${state.issueFilter === key}">${esc(label)}</button>`;
+    return `<section class="mp-section" id="mp-issues-section">
+      <div class="mp-section-head">
+        <h2 class="mp-section-title"><i class="fa-solid fa-circle-dot"></i> ${esc(t('Issues & requests'))}</h2>
+        <div class="mp-section-tools">${newBtn}</div>
+      </div>
+      <div class="mp-issue-tabs">
+        ${tab('open', t('Open'))}${tab('closed', t('Closed'))}${tab('all', t('All'))}
+      </div>
+      <div id="mp-issues" class="mp-issues"><p class="mp-muted" data-i18n>Loading…</p></div>
+    </section>`;
+  }
+
+  function wireIssues() {
+    const nb = document.getElementById('mp-issue-new');
+    if (nb) nb.addEventListener('click', openNewIssue);
+    document.querySelectorAll('[data-issue-tab]').forEach((b) =>
+      b.addEventListener('click', () => {
+        state.issueFilter = b.getAttribute('data-issue-tab');
+        document.querySelectorAll('[data-issue-tab]').forEach((o) => {
+          o.classList.toggle('is-sel', o === b);
+          o.setAttribute('aria-pressed', String(o === b));
+        });
+        loadIssues();
+      }));
+  }
+
+  async function loadIssues() {
+    const box = document.getElementById('mp-issues');
+    if (!box) return;
+    try {
+      const r = await siteGET(`/site/mods/projects/${PROJ_PATH}/issues?status=`
+        + encodeURIComponent(state.issueFilter) + '&limit=50');
+      if (!r.ok) { box.innerHTML = `<p class="mp-muted">${esc(t('Could not load the issues.'))}</p>`; return; }
+      const data = await r.json();
+      box.innerHTML = (data.items || []).length
+        ? data.items.map(issueRowHTML).join('')
+        : `<p class="mp-muted">${esc(state.issueFilter === 'closed'
+            ? t('Nothing closed yet.')
+            : t('No issues yet - if something is broken or missing, say so.'))}</p>`;
+      box.querySelectorAll('[data-issue]').forEach((row) =>
+        row.addEventListener('click', () => openIssue(Number(row.getAttribute('data-issue')))));
+      rerunI18n();
+      openIssueFromHash();
+    } catch (_) {
+      box.innerHTML = `<p class="mp-muted">${esc(t('Could not load the issues.'))}</p>`;
+    }
+  }
+
+  function issueRowHTML(i) {
+    const icon = i.status === 'closed' ? 'fa-circle-check mp-issue-closed'
+      : (i.kind === 'request' ? 'fa-lightbulb mp-issue-request' : 'fa-circle-dot mp-issue-open');
+    const replies = i.comment_count
+      ? `<span class="mp-issue-replies"><i class="fa-solid fa-comment"></i> ${i.comment_count}</span>` : '';
+    return `<button type="button" class="mp-issue-row" data-issue="${i.number}">
+      <i class="fa-solid ${icon}" aria-hidden="true"></i>
+      <span class="mp-issue-main">
+        <span class="mp-issue-title">${esc(i.title)}</span>
+        <span class="mp-issue-meta">${'#' + i.number} · ${esc(t(i.kind === 'request' ? 'Request' : 'Issue'))} · ${esc(t('by'))} ${esc(i.author)} · ${esc(fmtDate(i.created_at))}</span>
+      </span>
+      ${replies}
+    </button>`;
+  }
+
+  // Deep link from the navbar's notification feed: /mods/<h>/<s>#issue-12.
+  function openIssueFromHash() {
+    const m = /^#issue-(\d+)$/.exec(location.hash || '');
+    if (!m || state._hashOpened) return;
+    state._hashOpened = true;          // once per page load, not on every list refresh
+    openIssue(Number(m[1]));
+  }
+
+  function openNewIssue() {
+    const m = openModal(t('New issue'), `<form class="mp-form" id="mp-issue-form">
+      <label class="mp-form-field"><span>${esc(t('Type'))}</span>
+        <select name="kind">
+          <option value="issue">${esc(t('Something is broken'))}</option>
+          <option value="request">${esc(t('A request'))}</option>
+        </select></label>
+      <label class="mp-form-field"><span>${esc(t('Title'))}</span>
+        <input name="title" maxlength="140" required autofocus></label>
+      <label class="mp-form-field"><span>${esc(t('Details (Markdown)'))}</span>
+        <textarea name="body" rows="7" maxlength="8000" placeholder="${esc(t('What happened, and what you expected instead.'))}"></textarea></label>
+      <p class="mp-form-hint">${esc(t('The creator gets a notification and can reply here.'))}</p>
+      <p class="mp-form-error" hidden></p>
+      <div class="mp-form-actions">
+        <button type="button" class="mp-btn" data-close>${esc(t('Cancel'))}</button>
+        <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Post'))}</button>
+      </div>
+    </form>`);
+    m.wrap.querySelector('#mp-issue-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH + '/issues', {
+        method: 'POST',
+        json: { kind: f.kind.value, title: f.title.value, body: f.body.value },
+      });
+      if (!r.ok) { showFormError(f, errMsg(r, 'Could not post that.')); return; }
+      m.close();
+      toast(t('Posted.'));
+      state.issueFilter = 'open';
+      await loadIssues();
+      openIssue(r.data.number);
+    });
+  }
+
+  // One thread, as a modal: the opening post, then every reply and status change
+  // in order, then the reply box. Reloaded in place after each write so the
+  // conversation never shows a stale count.
+  async function openIssue(number) {
+    const r = await siteGET(`/site/mods/projects/${PROJ_PATH}/issues/${number}`);
+    if (!r.ok) { toast(t('That issue is gone.'), true); return; }
+    const issue = await r.json();
+    const m = openModal(`#${issue.number} · ${issue.title}`, issueThreadHTML(issue), { wide: true });
+    wireIssueThread(m, issue);
+  }
+
+  function issueThreadHTML(issue) {
+    const badge = issue.status === 'closed'
+      ? `<span class="mp-issue-badge is-closed"><i class="fa-solid fa-circle-check"></i> ${esc(t('Closed'))}</span>`
+      : `<span class="mp-issue-badge"><i class="fa-solid fa-circle-dot"></i> ${esc(t('Open'))}</span>`;
+    const kind = esc(t(issue.kind === 'request' ? 'Request' : 'Issue'));
+    const opening = `<article class="mp-issue-post">
+      <header class="mp-issue-post-head">
+        <strong>${esc(issue.author)}</strong>
+        <span class="mp-muted">${esc(fmtDate(issue.created_at))}</span>
+      </header>
+      <div class="mp-markdown">${issue.body ? renderMarkdown(issue.body) : `<p class="mp-muted">${esc(t('No details given.'))}</p>`}</div>
+    </article>`;
+    const timeline = (issue.events || []).map((e) => {
+      if (e.kind !== 'comment') {
+        return `<p class="mp-issue-event"><i class="fa-solid ${e.kind === 'closed' ? 'fa-circle-check' : 'fa-arrow-rotate-left'}"></i>
+          ${esc(e.author)} ${esc(e.kind === 'closed' ? t('closed this') : t('reopened this'))} · ${esc(fmtDate(e.created_at))}</p>`;
+      }
+      const own = e.by_owner ? `<span class="mp-issue-tag">${esc(t('Creator'))}</span>` : '';
+      const del = (issue.can_moderate || (state.viewer && state.viewer.id === e.author_id))
+        ? `<button type="button" class="mp-issue-del" data-del-event="${esc(e.id)}" aria-label="${esc(t('Delete reply'))}" title="${esc(t('Delete reply'))}"><i class="fa-solid fa-trash"></i></button>` : '';
+      return `<article class="mp-issue-post ${e.by_owner ? 'is-owner' : ''}">
+        <header class="mp-issue-post-head">
+          <strong>${esc(e.author)}</strong>${own}
+          <span class="mp-muted">${esc(fmtDate(e.created_at))}</span>${del}
+        </header>
+        <div class="mp-markdown">${renderMarkdown(e.body)}</div>
+      </article>`;
+    }).join('');
+    const canClose = issue.can_moderate || issue.is_author;
+    const reply = state.viewer ? `<form class="mp-form mp-issue-reply" id="mp-issue-reply">
+        <label class="mp-form-field"><span>${esc(t('Reply'))}</span>
+          <textarea name="body" rows="4" maxlength="8000"></textarea></label>
+        <p class="mp-form-error" hidden></p>
+        <div class="mp-form-actions">
+          ${canClose ? `<button type="button" class="mp-btn" id="mp-issue-toggle">${esc(issue.status === 'closed' ? t('Reopen') : t('Close issue'))}</button>` : ''}
+          ${canClose ? `<button type="button" class="mp-btn mp-btn-danger" id="mp-issue-delete"><i class="fa-solid fa-trash"></i> ${esc(t('Delete'))}</button>` : ''}
+          <button type="submit" class="mp-btn mp-btn-primary">${esc(t('Reply'))}</button>
+        </div>
+      </form>`
+      : `<p class="mp-muted"><a href="/login?next=${encodeURIComponent(location.pathname)}">${esc(t('Sign in'))}</a> ${esc(t('to reply.'))}</p>`;
+    return `<div class="mp-issue-thread">
+      <p class="mp-issue-sub">${badge} <span class="mp-muted">${kind} · ${esc(t('opened by'))} ${esc(issue.author)}</span></p>
+      ${opening}${timeline}${reply}</div>`;
+  }
+
+  function wireIssueThread(m, issue) {
+    const reload = async () => { m.close(); await loadIssues(); await openIssue(issue.number); };
+    const form = m.wrap.querySelector('#mp-issue-reply');
+    if (form) form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = form.body.value.trim();
+      if (!body) { showFormError(form, t('Write something first.')); return; }
+      const r = await apiJSON(`/v1/mods/hub/projects/${PROJ_PATH}/issues/${issue.number}/comments`,
+        { method: 'POST', json: { body } });
+      if (!r.ok) { showFormError(form, errMsg(r, 'Could not post that reply.')); return; }
+      await reload();
+    });
+    const toggle = m.wrap.querySelector('#mp-issue-toggle');
+    if (toggle) toggle.addEventListener('click', async () => {
+      const next = issue.status === 'closed' ? 'open' : 'closed';
+      // A reply typed before hitting Close is posted with it, so "here's the fix,
+      // closing" is one action rather than two.
+      const comment = form ? form.body.value.trim() : '';
+      const r = await apiJSON(`/v1/mods/hub/projects/${PROJ_PATH}/issues/${issue.number}`,
+        { method: 'PATCH', json: { status: next, comment } });
+      if (!r.ok) { toast(errMsg(r, 'Could not update that issue.'), true); return; }
+      toast(next === 'closed' ? t('Issue closed.') : t('Issue reopened.'));
+      await reload();
+    });
+    const del = m.wrap.querySelector('#mp-issue-delete');
+    if (del) del.addEventListener('click', async () => {
+      if (!confirm(t('Delete this thread and every reply on it?'))) return;
+      const r = await window.BTTAuth.call(
+        `/v1/mods/hub/projects/${PROJ_PATH}/issues/${issue.number}`, { method: 'DELETE' });
+      if (!r.ok) { toast(t('Could not delete that issue.'), true); return; }
+      m.close();
+      toast(t('Deleted.'));
+      await loadIssues();
+    });
+    m.wrap.querySelectorAll('[data-del-event]').forEach((b) =>
+      b.addEventListener('click', async () => {
+        const r = await window.BTTAuth.call(
+          `/v1/mods/hub/projects/${PROJ_PATH}/issues/${issue.number}/comments/`
+          + encodeURIComponent(b.getAttribute('data-del-event')), { method: 'DELETE' });
+        if (!r.ok) { toast(t('Could not delete that reply.'), true); return; }
+        await reload();
+      }));
   }
 
   function historyHTML() {
@@ -1336,6 +1556,8 @@
   }
 
   function wireFiles() {
+    const zip = document.getElementById('mp-dl-zip');
+    if (zip) zip.addEventListener('click', downloadSourceZip);
     const sel = document.getElementById('mp-branch-select');
     if (sel) sel.addEventListener('change', () => {
       if (sel.value === '__newbranch__') {   // the "+ New branch…" option
@@ -1817,6 +2039,27 @@
     } catch (_) { toast(t('Could not download that release.'), true); }
   }
 
+  // Whole-branch source zip. Same fetch-then-save dance as the other downloads:
+  // the call is cross-origin, so only a credentialed fetch carries the session.
+  async function downloadSourceZip() {
+    const btn = document.getElementById('mp-dl-zip');
+    if (btn) btn.disabled = true;
+    try {
+      const r = await siteGET(`/site/mods/projects/${PROJ_PATH}/archive?ref=`
+        + encodeURIComponent(state.branch));
+      if (!r.ok) { toast(t('Could not build that download.'), true); return; }
+      const blob = await r.blob();
+      const cd = r.headers.get('Content-Disposition') || '';
+      const m = /filename="([^"]+)"/.exec(cd);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = m ? m[1] : 'source.zip';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    } catch (_) { toast(t('Could not build that download.'), true); }
+    finally { if (btn) btn.disabled = false; }
+  }
+
   async function downloadFile(path) {
     if (!state._treeCommit) return;
     const url = `/site/mods/projects/${PROJ_PATH}/raw/${state._treeCommit}/${path.split('/').map(encodeURIComponent).join('/')}`;
@@ -1941,6 +2184,8 @@
           <option value="private" ${d.source_visibility === 'private' ? 'selected' : ''}>${esc(t('Private — hide files/clone, show only releases'))}</option>
         </select></label>
       <p class="mp-form-hint">${esc(t('Private source turns the hub into an internal tool: you keep version history + git, the public sees only releases.'))}</p>
+      <label class="mp-form-check"><input type="checkbox" name="issues_enabled" ${d.issues_enabled ? 'checked' : ''}>
+        <span>${esc(t('Let players post issues & requests'))}<small class="mp-form-hint">${esc(t('They report bugs and ask for things here; you reply and close threads, and get a notification for each. Turning this off hides the section - nothing already posted is lost.'))}</small></span></label>
       <p class="mp-form-error" hidden></p>
       <div class="mp-form-actions">
         <button type="button" class="mp-btn" data-close>${esc(t('Close'))}</button>
@@ -1957,7 +2202,8 @@
       e.preventDefault();
       const f = e.target;
       const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH,
-        { method: 'PATCH', json: { mode: f.mode.value, source_visibility: f.source_visibility.value } });
+        { method: 'PATCH', json: { mode: f.mode.value, source_visibility: f.source_visibility.value,
+                                   issues_enabled: f.issues_enabled.checked } });
       if (r.ok) { m.close(); toast(t('Saved.')); await loadDetail(); }
       else showFormError(f, errMsg(r, 'Could not save settings.'));
     });

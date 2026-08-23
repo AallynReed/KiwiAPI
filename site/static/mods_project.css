@@ -846,3 +846,96 @@
 @media (max-width: 640px) {
   .mp-section { padding: 16px; }
 }
+
+
+/* ── Issues & requests ────────────────────────────────────────────────
+   A list of threads on the mod, opened into a modal. Rows are buttons (the
+   whole row is the target), and the icon carries the state: open, closed,
+   or a request rather than a bug. */
+.mp-issue-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.mp-issue-tab {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--bg-line);
+  background: transparent;
+  color: var(--text-mute);
+  font: 600 .84rem 'Inter', sans-serif;
+  cursor: pointer;
+}
+.mp-issue-tab:hover { color: var(--text); }
+.mp-issue-tab.is-sel {
+  color: var(--text);
+  border-color: rgba(76,201,240,.45);
+  background: rgba(76,201,240,.10);
+}
+.mp-issues { display: grid; gap: 4px; }
+.mp-issue-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md, 10px);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mp-issue-row:hover { background: rgba(255,255,255,.04); border-color: var(--bg-line); }
+.mp-issue-main { display: grid; gap: 3px; min-width: 0; flex: 1; }
+.mp-issue-title { font-weight: 600; }
+.mp-issue-meta { color: var(--text-mute); font-size: .8rem; }
+.mp-issue-replies { color: var(--text-mute); font-size: .82rem; white-space: nowrap; }
+.mp-issue-open { color: #57d97f; }
+.mp-issue-closed { color: #a78bfa; }
+.mp-issue-request { color: var(--accent-blue); }
+
+.mp-issue-thread { display: grid; gap: 12px; }
+.mp-issue-sub { display: flex; align-items: center; gap: 10px; margin: 0; flex-wrap: wrap; }
+.mp-issue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: rgba(87,217,127,.12);
+  color: #57d97f;
+  font: 700 .78rem 'Inter', sans-serif;
+}
+.mp-issue-badge.is-closed { background: rgba(167,139,250,.14); color: #a78bfa; }
+.mp-issue-post {
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-md, 10px);
+  padding: 12px 14px;
+  background: rgba(255,255,255,.02);
+}
+/* The creator's own replies are the answer people scan for. */
+.mp-issue-post.is-owner { border-color: rgba(76,201,240,.35); }
+.mp-issue-post-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: .88rem;
+}
+.mp-issue-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(76,201,240,.14);
+  color: var(--accent-blue);
+  font: 700 .7rem 'Inter', sans-serif;
+}
+.mp-issue-del {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.mp-issue-del:hover { color: #ff8a8a; background: rgba(255,90,90,.10); }
+.mp-issue-event { margin: 0; color: var(--text-mute); font-size: .85rem; }
+.mp-issue-event i { margin-right: 6px; }

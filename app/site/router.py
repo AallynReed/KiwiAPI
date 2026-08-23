@@ -71,6 +71,7 @@ from app.trove.leaderboards import service as leaderboards_service
 from app.trove.models import TroveEvent
 from app.trove.modpacks import service as modpacks_service
 from app.trove.mods_hub import creators as mods_hub_creators
+from app.trove.mods_hub import issues as mods_hub_issues
 from app.trove.mods_hub import service as mods_hub_service
 from app.trove.mods_hub import store as mods_store
 from app.trove.mods_hub import workshop as mods_workshop
@@ -3723,6 +3724,75 @@ async def site_mods_raw(
     data = await mods_hub_service.get_file_bytes(project, commit_ref, path)
     return Response(content=data, media_type="application/octet-stream",
                     headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/archive", response_class=Response)
+async def site_mods_archive(
+    handle: str, slug: str, ref: str = Query(default=""),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> Response:
+    """A commit's whole file tree as a .zip - the Files section's download button."""
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    mods_hub_service.ensure_source_visible(project, viewer)
+    filename, data = await mods_hub_service.source_archive(project, ref)
+    return Response(content=data, media_type="application/zip", headers={
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Cache-Control": "no-cache",
+    })
+
+
+# --- issues & requests on a mod --------------------------------------------
+# Reads pass the site viewer so an owner sees threads on their own draft mod;
+# writes go straight to /v1/mods/hub/**/issues with the site session.
+
+async def _issues_on() -> None:
+    """404 the whole surface when the site-wide switch is off (the per-mod
+    ``issues_enabled`` check lives in the service, next to the data)."""
+    if not await feature_flags.is_enabled(feature_flags.MOD_ISSUES_FLAG):
+        raise APIError(404, ErrorCode.not_found, "Mod issues are currently disabled.")
+
+
+_ISSUES_ON = [Depends(_issues_on)]
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/issues", response_class=JSONResponse,
+            dependencies=_ISSUES_ON)
+async def site_mods_issues(
+    handle: str, slug: str,
+    status: str = Query(default="open", pattern="^(open|closed|all)$"),
+    limit: int = Query(default=30, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    data = await mods_hub_issues.list_issues(
+        project, viewer, status=status, limit=limit, offset=offset)
+    return JSONResponse(data, headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/projects/{handle}/{slug}/issues/{number}",
+            response_class=JSONResponse, dependencies=_ISSUES_ON)
+async def site_mods_issue(
+    handle: str, slug: str, number: int,
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    project = await mods_hub_service.get_for_view(handle, slug, viewer)
+    data = await mods_hub_issues.get_issue(project, number, viewer)
+    return JSONResponse(data, headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/notifications", response_class=JSONResponse,
+            dependencies=_ISSUES_ON)
+async def site_mods_notifications(
+    viewer: SiteUser | None = Depends(get_optional_site_user),
+) -> JSONResponse:
+    """The navbar bell. Anonymous visitors get an empty feed rather than a 401 -
+    the navbar asks on every page and a signed-out reader is not an error."""
+    if viewer is None:
+        return JSONResponse({"items": [], "unread": 0, "seen_at": None},
+                            headers={"Cache-Control": "no-store"})
+    data = await mods_hub_issues.notifications(viewer)
+    return JSONResponse(data, headers={"Cache-Control": "no-store"})
 
 
 @router.get("/site/mods/releases/{release_id}/download", response_class=Response)

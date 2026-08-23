@@ -116,6 +116,16 @@ class ModProject(Document):
     # Regular authored mods leave this False and `author` empty.
     uploaded_on_behalf: bool = False
 
+    # --- Issues & requests -------------------------------------------------
+    # Players can file bugs/requests on the mod page and the creator replies +
+    # closes them. Per-mod, and the creator's to turn off. New mods start ON;
+    # mods that predate the feature were switched OFF once at rollout (see
+    # app/core/database.py) - consent is the creator's to give, not ours to
+    # assume for a mod they uploaded before issues existed.
+    issues_enabled: bool = True
+    issue_seq: int = 0                          # per-project issue numbering (atomic $inc)
+    open_issue_count: int = 0                   # denormalized, for the section's badge
+
     visibility: Visibility = "draft"
     # Beta = the creator says the mod is still in development. Purely a signal to
     # players (badge + note); it changes nothing about how the mod is served, so a
@@ -275,6 +285,83 @@ class ModRelease(Document):
             IndexModel([("tmod_sha", ASCENDING)]),
             IndexModel([("prior_tmod_shas", ASCENDING)], sparse=True),   # multikey
         ]
+
+
+IssueKind = Literal["issue", "request"]
+IssueStatus = Literal["open", "closed"]
+# What a timeline entry is: a written reply, or the record of a status flip.
+IssueEventKind = Literal["comment", "closed", "reopened"]
+
+
+class ModIssue(Document):
+    """A bug report or a request filed against a mod, with a GitHub-ish life:
+    anyone signed in opens one, the creator (and the author) reply on it, and the
+    creator closes or reopens it.
+
+    ``number`` is per-project and human-facing (#1, #2 …), handed out by an atomic
+    ``$inc`` on ``ModProject.issue_seq`` so two simultaneous filings can't collide.
+    ``participant_ids`` is everyone who should hear about new activity - the mod's
+    owner + collaborators, the author, and anyone who has replied - and is what the
+    navbar's notification query indexes on."""
+
+    project_id: PydanticObjectId
+    # Denormalized for the notification list, which links straight to the mod page
+    # without loading every project it names.
+    project_slug: str = ""
+    project_handle: str = ""
+    project_title: str = ""
+
+    number: int                                 # per-project, 1-based
+    kind: IssueKind = "issue"
+    title: str
+    body: str = ""                               # markdown
+
+    author_id: PydanticObjectId                 # SiteUser.id
+    author_username: str = ""                    # denormalized for display
+
+    status: IssueStatus = "open"
+    closed_at: datetime | None = None
+    closed_by_id: PydanticObjectId | None = None
+
+    comment_count: int = 0
+    participant_ids: list[PydanticObjectId] = Field(default_factory=list)
+
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+    # Last time anything happened on the issue, and who did it. The notification
+    # feed reads both: activity you caused yourself is not news to you.
+    last_activity_at: datetime = Field(default_factory=utcnow)
+    last_activity_by: PydanticObjectId | None = None
+
+    class Settings:
+        name = "mod_issues"
+        indexes = [
+            IndexModel([("project_id", ASCENDING), ("number", ASCENDING)], unique=True),
+            IndexModel([("project_id", ASCENDING), ("status", ASCENDING),
+                        ("last_activity_at", DESCENDING)]),
+            # The navbar notification feed: "everything I take part in, newest first".
+            IndexModel([("participant_ids", ASCENDING), ("last_activity_at", DESCENDING)]),
+            IndexModel([("author_id", ASCENDING), ("created_at", DESCENDING)]),
+        ]
+
+
+class ModIssueEvent(Document):
+    """One entry on an issue's timeline: a reply (``kind="comment"``, with a body)
+    or a status flip (``closed``/``reopened``, body empty). Keeping both in one
+    collection is what makes the thread render as a single ordered conversation."""
+
+    issue_id: PydanticObjectId
+    project_id: PydanticObjectId
+    kind: IssueEventKind = "comment"
+    body: str = ""
+    author_id: PydanticObjectId
+    author_username: str = ""
+
+    created_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_issue_events"
+        indexes = [IndexModel([("issue_id", ASCENDING), ("created_at", ASCENDING)])]
 
 
 class ModImageAsset(Document):
