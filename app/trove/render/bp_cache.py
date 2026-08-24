@@ -343,7 +343,7 @@ def respond(request: Request, cached: Cached, *, max_age: int = 300) -> Response
     if cached.etag:                      # empty only when the payload wasn't cached
         etag = f'"{cached.etag}"'
         headers["ETag"] = etag
-        if _matches(request.headers.get("if-none-match"), etag):
+        if etag_matches(request.headers.get("if-none-match"), etag):
             return Response(status_code=304, headers=headers)
 
     if "gzip" in request.headers.get("accept-encoding", "").lower():
@@ -353,11 +353,14 @@ def respond(request: Request, cached: Cached, *, max_age: int = 300) -> Response
                     media_type=cached.media_type, headers=headers)
 
 
-def _matches(header: str | None, etag: str) -> bool:
+def etag_matches(header: str | None, etag: str) -> bool:
+    """Whether an ``If-None-Match`` header already holds this exact entity tag. Shared:
+    every cached-bytes endpoint answers 304 the same way, PNG stills included."""
     if not header:
         return False
     return any(t.strip().removeprefix("W/") == etag for t in header.split(","))
 
 
 __all__ = ["ASSEMBLY_VERSION", "PACK_VERSION", "Cached", "NoPayload", "build_uncached",
-           "get_or_build", "key_for_assembly", "key_for_file", "key_for_tmod", "respond"]
+           "etag_matches", "get_or_build", "key_for_assembly", "key_for_file",
+           "key_for_tmod", "respond"]

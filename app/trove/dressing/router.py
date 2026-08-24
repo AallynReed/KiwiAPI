@@ -8,6 +8,8 @@ travels in the query string and is resolved fresh on every request.
 
 from __future__ import annotations
 
+import hashlib
+
 from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.core.dependencies import AccessContext, public_scope
@@ -216,6 +218,75 @@ async def get_outfit(
                                  weapon_family, eyes, race,
                                  hair_color, eye_color, hair_scale)
     return DressOutfit(**outfit.as_dict(), dropped=outfit.dropped, issues=outfit.issues)
+
+
+# A still is a picture of a fixed selection: the same query string is the same image,
+# for as long as the game ships those parts. Partners cache it hard and permanently on
+# purpose - that is the point of the endpoint - so say so, rather than making every card
+# on their page revalidate.
+STILL_MAX_AGE = 31_536_000
+
+
+def still_response(request: Request, png: bytes, outfit: service.Outfit) -> Response:
+    """Serve a rendered still with an ``ETag`` and a year of cacheability."""
+    etag = f'"{hashlib.sha256(png).hexdigest()[:32]}"'
+    headers = {"Cache-Control": f"public, max-age={STILL_MAX_AGE}, immutable",
+               "ETag": etag}
+    if bp_cache.etag_matches(request.headers.get("if-none-match"), etag):
+        return _with_issues(Response(status_code=304, headers=headers), outfit)
+    return _with_issues(
+        Response(content=png, media_type="image/png", headers=headers), outfit)
+
+
+@dressing_router.get(
+    "/image",
+    responses={200: {"content": {"image/png": {}},
+                     "description": "The dressed character as a flat transparent PNG."}},
+)
+async def get_image(
+    request: Request,
+    class_key: str = Query(..., alias="class"),
+    costume: str | None = Query(default=None),
+    hat: str | None = Query(default=None),
+    face: str | None = Query(default=None),
+    weapon: str | None = Query(default=None),
+    head: str | None = Query(default=None),
+    hair: str | None = Query(default=None),
+    eyes: str | None = Query(default=None),
+    race: str | None = Query(default=None),
+    hair_color: str | None = Query(default=None),
+    hair_scale: float | None = Query(default=None, ge=0.05, le=1.0),
+    eye_color: str | None = Query(default=None),
+    weapon_family: str | None = Query(default=None),
+    size: int = Query(default=service.STILL_DIM, alias="size",
+                      ge=service.STILL_MIN_DIM, le=service.STILL_MAX_DIM,
+                      description="Side of the square PNG, in pixels."),
+    az: float = Query(default=service.STILL_CAMERA["az"], ge=-360.0, le=360.0,
+                      description="Camera azimuth in degrees; 0 is dead-on."),
+    el: float = Query(default=service.STILL_CAMERA["el"], ge=-89.0, le=89.0,
+                      description="Camera elevation in degrees; positive looks down."),
+    ctx: AccessContext = _PUB,
+) -> Response:
+    """The same character `/model` builds, rasterized here to a transparent PNG.
+
+    For a page that wants to *show* an outfit rather than let anyone turn it: a saved
+    appearance on a profile, a thumbnail in a list, an embed preview. No viewer, no
+    WebGL, no scripts - an ``<img>`` tag and this URL. It takes exactly the parameters
+    `/model` does, so a link that opens the viewer becomes a picture by swapping one path
+    segment.
+
+    Drawn in the rest pose the viewer itself opens on. **The URL is the cache key** and
+    the response is immutable for a year: the same selection is the same picture, so
+    cache it as hard as you like.
+    """
+    outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
+                                 weapon_family, eyes, race,
+                                 hair_color, eye_color, hair_scale)
+    png = await service.still(outfit, dim=size, camera={"az": az, "el": el})
+    if not png:
+        raise APIError(404, ErrorCode.not_found,
+                       "That outfit has nothing to draw on this instance.")
+    return still_response(request, png, outfit)
 
 
 @dressing_router.get(

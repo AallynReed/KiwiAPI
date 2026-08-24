@@ -60,13 +60,20 @@ async def render_blueprint_cached(
     return png
 
 
+# Bump when the BAKED STILL changes without the assembler itself changing - it buys the
+# same invalidation ASSEMBLY_VERSION gives, without throwing away every cached model
+# payload for a picture-only fix. s2: glass and glowing voxels reach the rasterizer as
+# the kind it reads, so they stop being drawn as flat shaded solids.
+_STILL_VERSION = "s2"
+
+
 def _creature_key(branch: str, prefab: str, dim: int) -> str:
     # Carries ASSEMBLY_VERSION: this PNG is a picture of the assembler's output, so a
     # change to how parts are placed or scaled has to invalidate it. Without it the
     # cache held the old image for its whole 24h TTL after a fix had shipped.
     from app.trove.render.bp_cache import ASSEMBLY_VERSION
 
-    return (f"render:rig:{ASSEMBLY_VERSION}:{branch}:{dim}:"
+    return (f"render:rig:{ASSEMBLY_VERSION}:{_STILL_VERSION}:{branch}:{dim}:"
             f"{prefab.replace(chr(92), '/').lower()}")
 
 
@@ -114,7 +121,7 @@ async def _build_creature_png(prefab: str, dim: int, branch: str) -> bytes | Non
     from app.trove.mods_hub import assembly, rig_index
     from app.trove.mods_hub.trove_layout import game_file_paths, nearest_path
     from app.trove.render.source import blueprint_by_basename
-    from app.trove.render.voxel import render_voxels
+    from app.trove.render.voxel import render_voxels_png
 
     skeleton, parts = await rig_index.creature_by_prefab(prefab, branch)
     if not skeleton or not parts or not assembly.has_baked_rig(skeleton):
@@ -141,21 +148,9 @@ async def _build_creature_png(prefab: str, dim: int, branch: str) -> bytes | Non
     if not voxels:
         return None
     try:
-        rgba = await asyncio.to_thread(render_voxels, voxels, dim, {"fit": "tight"})
+        return await asyncio.to_thread(render_voxels_png, voxels, dim)
     except BlueprintError:
         return None
-    return await asyncio.to_thread(_encode_png, rgba, dim)
-
-
-def _encode_png(rgba, dim: int) -> bytes:
-    import io
-
-    from PIL import Image
-
-    from app.trove.render.voxel import _contain_square
-    out = io.BytesIO()
-    Image.fromarray(_contain_square(rgba, dim), "RGBA").save(out, format="PNG", optimize=True)
-    return out.getvalue()
 
 
 __all__ = ["render_blueprint_cached", "render_creature_cached", "BlueprintError"]

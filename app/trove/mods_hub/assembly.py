@@ -386,46 +386,77 @@ def assemble_placements(placements: list[tuple], rig_name: str) -> dict | None:
             "rest": rig["rest"], "animations": rig["animations"]}
 
 
-def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
-    """``[(AP key, raw .blueprint bytes)]`` -> ``{(x,y,z): (r,g,b,kind,level,spec)}`` in
-    rig space, ready for ``render.voxel.render_voxels``.
+# The wire code ``_decode_grid`` emits, back to the kind letter the rasterizer reads.
+# The two viewers speak the code; ``render.voxel`` speaks S/G/E/GE, and a baked still
+# that hands it the code instead draws every glowing and every glass voxel as a flat
+# shaded solid - which is what the creature thumbnails did until this was shared.
+_KIND_NAME = {v: k for k, v in {"S": 0, "G": 1, "E": 2, "GE": 3}.items()}
+
+
+def _bake(parts: list[dict], rest: dict, voxel_scale: float) -> dict:
+    """Positioned parts -> ``{(x,y,z): (r,g,b,kind,level,spec)}`` in rig space, ready for
+    ``render.voxel.render_voxels``.
 
     The web viewer gets its parts in LOCAL space plus the rest-pose matrices and does the
     transform on the GPU; a server-side still image has to bake the rest pose in here.
-    Same matrices, same voxel scale, so the two agree. Returns ``{}`` for an unknown rig
-    or when nothing places - the caller then falls back to a single blueprint rather than
-    showing a half-creature.
+    Same matrices, same voxel scale, so the two agree. Parts are baked in order, so a
+    later one wins the cells it shares with an earlier - the draw order the caller chose.
     """
     import numpy as np
 
+    scale = voxel_scale or 1.0
+    out: dict = {}
+    for part in parts:
+        mat = rest.get(part["name"])
+        if mat is None:
+            continue
+        n = len(part["x"])
+        if not n:
+            continue
+        ps = scale * float(part.get("scale", 1.0))
+        m = np.array(mat).reshape(4, 4).T @ np.diag([ps] * 3 + [1.0])
+        local = np.array([part["x"], part["y"], part["z"], [1.0] * n], dtype=float)
+        # back into voxel units so the renderer's grid maths still applies
+        world = (m @ local)[:3].T / scale
+        spec = part.get("spec") or [0] * n
+        for (wx, wy, wz), rgb, kind, level, sp in zip(
+                world, part["rgb"], part["kind"], part["level"], spec, strict=False):
+            out[(int(round(wx)), int(round(wy)), int(round(wz)))] = (
+                (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255,
+                _KIND_NAME.get(kind, "S"), level, sp)
+    return out
+
+
+def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
+    """``[(AP key, raw .blueprint bytes)]`` -> baked rig-space voxels for a creature.
+
+    Returns ``{}`` for an unknown rig or when nothing places - the caller then falls back
+    to a single blueprint rather than showing a half-creature.
+    """
     rig = _rigs().get(rig_name)
     if not rig:
         return {}
-    scale = rig["voxel_scale"] or 1.0
-    rest = rig["rest"]
-    out: dict = {}
-    for ap_key, raw in parts:
-        mat = rest.get(ap_key)
-        if mat is None or not raw:
-            continue
-        voxels = _decode_grid(raw)
-        if not voxels:
-            continue
-        # An equipment style is authored at double resolution (see scale_for). On this
-        # shared integer grid that resamples it to body resolution - the right size at
-        # the size it's drawn.
-        ps = scale * scale_for(ap_key, rig_name)
-        m = np.array(mat).reshape(4, 4).T @ np.diag([ps] * 3 + [1.0])
-        n = len(voxels)
-        local = np.array([[v[0] for v in voxels], [v[1] for v in voxels],
-                          [v[2] for v in voxels], [1.0] * n], dtype=float)
-        # back into voxel units so the renderer's grid maths still applies
-        world = (m @ local)[:3].T / scale
-        for (wx, wy, wz), v in zip(world, voxels, strict=False):
-            rgb = v[3]
-            out[(int(round(wx)), int(round(wy)), int(round(wz)))] = (
-                (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255, v[4], v[5], v[6])
-    return out
+    # An equipment style is authored at double resolution (see scale_for). On the baked
+    # integer grid that resamples it to body resolution - the right size at the size it
+    # is drawn.
+    built = [p for p in (_part_at(ap, raw, scale_for(ap, rig_name))
+                         for ap, raw in parts if raw and ap in rig["rest"]) if p]
+    return _bake(built, rig["rest"], rig["voxel_scale"]) if built else {}
+
+
+def placement_voxels(placements: list[tuple], rig_name: str) -> dict:
+    """``[(AP key, raw .blueprint bytes, scale[, tint])]`` -> baked rig-space voxels.
+
+    ``assemble_voxels`` above bakes a creature, whose every part sits at its own point at
+    the scale its attach point implies. This bakes exactly what ``assemble_placements``
+    hands the web viewer - the caller's scales, its recolours, one style repeated across
+    two sockets - so a server-rendered still and the interactive viewer are the same
+    character built from one set of parts and one set of matrices, not two.
+    """
+    built = assemble_placements(placements, rig_name)
+    if not built:
+        return {}
+    return _bake(built["parts"], built["rest"], built["voxel_scale"])
 
 
 def _unbury_enclosed_emissive(parts: list[dict], rest: dict, voxel_scale: float) -> None:

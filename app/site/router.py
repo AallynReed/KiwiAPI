@@ -1479,6 +1479,41 @@ async def site_dressing_model(
     return _with_issues(bp_cache.respond(request, built), outfit)
 
 
+@router.get("/site/dressing/image")
+async def site_dressing_image(
+    request: Request,
+    class_key: str = Query(..., alias="class"),
+    costume: str | None = Query(default=None),
+    hat: str | None = Query(default=None),
+    face: str | None = Query(default=None),
+    weapon: str | None = Query(default=None),
+    head: str | None = Query(default=None),
+    hair: str | None = Query(default=None),
+    eyes: str | None = Query(default=None),
+    race: str | None = Query(default=None),
+    weapon_family: str | None = Query(default=None),
+    hair_color: str | None = Query(default=None, max_length=7),
+    eye_color: str | None = Query(default=None, max_length=7),
+    hair_scale: float | None = Query(default=None, ge=0.05, le=1.0),
+    size: int = Query(default=256, ge=32, le=512),
+    az: float = Query(default=30.0, ge=-360.0, le=360.0),
+    el: float = Query(default=8.0, ge=-89.0, le=89.0),
+) -> Response:
+    """The dressed character as a flat transparent PNG (same-origin mirror of
+    ``/v1/dressing/image``) - an ``<img>`` for a page that wants to show an outfit
+    rather than let anyone turn it. The URL is the cache key."""
+    from app.trove.dressing import service as dressing_service
+    from app.trove.dressing.router import resolve_query, still_response
+
+    outfit = await resolve_query(class_key, costume, hat, face, weapon, head, hair,
+                                 weapon_family, eyes, race,
+                                 hair_color, eye_color, hair_scale)
+    png = await dressing_service.still(outfit, dim=size, camera={"az": az, "el": el})
+    if not png:
+        raise HTTPException(status_code=404, detail="That outfit has nothing to draw.")
+    return still_response(request, png, outfit)
+
+
 @router.get("/site/dressing/render")
 async def site_dressing_render(
     blueprint: str | None = Query(default=None, min_length=1, max_length=200),

@@ -22,11 +22,14 @@ not a head: ``equipment_face_movember_01`` is a moustache and needs something to
 from __future__ import annotations
 
 import asyncio
+import base64
 import logging
 import re
 from dataclasses import dataclass, field
+from typing import Any
 
 from app.core.config import settings
+from app.core.redis import get_redis
 from app.trove.dressing import catalogue as cat
 from app.trove.dressing import sockets as sockets_mod
 from app.trove.mods_hub import assembly, rig_index
@@ -412,6 +415,79 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         for ap in aps:
             out.append((ap, data, scale, tint))
     return out
+
+
+# The still's camera. The rasterizer's own default looks DOWN at a blueprint from 29.7
+# degrees, which is right for an object on a workbench and wrong for a person: it
+# foreshortens the character into their own shoulders. A shallower eye line and a small
+# turn off dead-on is how the game frames a character in its own preview.
+STILL_CAMERA = {"az": 30.0, "el": 8.0}
+# Bump when the still's OUTPUT changes for reasons the assembler's own version doesn't
+# cover - the framing, the camera, the encoder. The key already carries ASSEMBLY_VERSION
+# (a placement fix) and the rig index signature (a game re-index).
+STILL_VERSION = "d1"
+# A still is a picture of a character, not a texture atlas: past a few hundred pixels the
+# extra cost is the partner's bandwidth, not fidelity anyone sees on a card.
+STILL_MIN_DIM, STILL_MAX_DIM, STILL_DIM = 32, 512, 256
+
+
+def _still_key(outfit: Outfit, sig: str, dim: int, camera: dict) -> str:
+    cam = ",".join(f"{k}={camera[k]:g}" for k in sorted(camera))
+    return (f"render:dress:{STILL_VERSION}:{bp_cache.ASSEMBLY_VERSION}:{sig}:"
+            f"{dim}:{cam}:{outfit.ident}")
+
+
+def _render_still(placements: list[tuple], skeleton: str, dim: int, camera: dict) -> bytes | None:
+    """CPU half of ``still`` - decode, bake the rest pose, rasterize. Runs in a thread."""
+    from app.trove.render.voxel import BlueprintError, render_voxels_png
+
+    voxels = assembly.placement_voxels(placements, skeleton)
+    if not voxels:
+        return None
+    try:
+        return render_voxels_png(voxels, dim, camera)
+    except BlueprintError:
+        return None
+
+
+async def still(outfit: Outfit, dim: int = STILL_DIM, branch: str | None = None,
+                camera: dict | None = None) -> bytes | None:
+    """The outfit as a flat transparent PNG, or None when there is nothing to draw.
+
+    The same character ``model`` builds, in the same rest pose the viewer opens on, drawn
+    here instead of on the visitor's GPU - so a partner listing saved appearances can put
+    one in an ``<img>`` and never load a viewer at all. Cached in Redis under the outfit's
+    own identity, which is what makes the URL itself the cache key: the same query string
+    is the same picture.
+    """
+    branch = branch or settings.trove_render_branch
+    dim = max(STILL_MIN_DIM, min(STILL_MAX_DIM, int(dim)))
+    cam = {**STILL_CAMERA, **(camera or {})}
+    sig = await rig_index.index_signature(branch) or "-"
+    key = _still_key(outfit, sig, dim, cam)
+
+    redis: Any = get_redis()
+    if redis is not None:
+        try:
+            cached = await redis.get(key)
+            if cached:
+                return base64.b64decode(cached) or None
+        except Exception:  # noqa: BLE001 - cache is best-effort
+            logger.warning("dressing: redis get failed for %s", key, exc_info=True)
+
+    placements = await _placements(outfit, branch)
+    png = (await asyncio.to_thread(_render_still, placements, outfit.cls.skeleton, dim, cam)
+           if placements else None)
+
+    if redis is not None:
+        try:
+            # The empty answer is cached too: "this outfit draws nothing" costs the same
+            # archive reads to re-derive and is stable until the next game index.
+            await redis.set(key, base64.b64encode(png or b"").decode("ascii"),
+                            ex=settings.trove_render_cache_ttl)
+        except Exception:  # noqa: BLE001
+            logger.warning("dressing: redis set failed for %s", key, exc_info=True)
+    return png
 
 
 async def model(outfit: Outfit, fmt: str = "json", branch: str | None = None) -> bp_cache.Cached | None:

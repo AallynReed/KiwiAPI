@@ -403,6 +403,21 @@ def _contain_square(rgba: np.ndarray, dim: int, pad_frac: float = 0.06) -> np.nd
     return np.asarray(canvas)
 
 
+def render_voxels_png(voxels: dict, dim: int = 256, params: dict | None = None) -> bytes:
+    """Baked rig-space voxels -> a transparent PNG, cropped to content and centred.
+
+    The tail of every "draw an assembled thing" path: a creature thumbnail and a dressed
+    character differ in how their voxels are gathered, not in how they are drawn, so the
+    framing rule lives here once instead of once per caller.
+    """
+    p = dict(params or {})
+    p.setdefault("fit", "tight")
+    rgba = _contain_square(render_voxels(voxels, dim, p), dim)
+    out = io.BytesIO()
+    Image.fromarray(rgba, "RGBA").save(out, format="PNG", optimize=True)
+    return out.getvalue()
+
+
 def render_blueprint_png(data: bytes, dim: int = 256, params: dict | None = None,
                          contain: bool = False) -> bytes:
     """Decode a ``.blueprint`` and render it to a transparent PNG (bytes).
