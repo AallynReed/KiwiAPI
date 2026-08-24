@@ -141,7 +141,8 @@ def _luxion(runs: list[int], ws: datetime, we: datetime) -> list[dict]:
     projected. The windows within a run are computed, off a global 27h grid, so we
     emit one short event per window (its own timeline row, rendered as bare
     coloured pills). ``runs`` are the captured start-DAY anchors from
-    ``LuxionAppearance.started_at``; ``schedule_for`` snaps each to the grid."""
+    ``LuxionAppearance.started_at``; ``schedule_for`` returns the grid slots that
+    fall inside each run."""
     from app.trove.luxion import schedule_for
 
     out = []

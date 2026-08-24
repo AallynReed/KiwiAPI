@@ -409,8 +409,9 @@ def fluxion_embed() -> dict:
 # ── /luxion ────────────────────────────────────────────────────────────────
 
 async def luxion_embed() -> dict:
-    """Luxion: here for a fixed 7-day visit, with a 3-hour merchant window that
-    shifts +3h each day. Captured from the game, so we only know the current run."""
+    """Luxion: here from the moment the bot sees him in-game until the run's end,
+    with a 3-hour merchant window that shifts +3h each day. Captured from the game,
+    so we only know the current run."""
     l = await get_luxion()
     now = int(time.time())
     if l.get("active"):
@@ -434,7 +435,7 @@ async def luxion_embed() -> dict:
         "color": 0xF5C542,
         "description": desc,
         "fields": fields,
-        "footer": {"text": t("Luxion merchant · 7-day visit, a 3-hour window each day")},
+        "footer": {"text": t("Luxion merchant · a 3-hour window each day")},
     }
     if l.get("active"):
         embed["image"] = {"url": f"{_ASSET}/announce.png?kind=luxion&v={l.get('starts_at') or 0}"}

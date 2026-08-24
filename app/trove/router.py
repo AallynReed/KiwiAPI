@@ -359,12 +359,14 @@ async def get_luxion(ctx: AccessContext = _ROT) -> Luxion:
     """Luxion merchant: live status + the daily 3-hour windows for the current run.
 
     Unlike Corruxion/Fluxion, *which* run is live is dev-set and unpredictable, so
-    the start day is CAPTURED from the game (welcome screen) rather than computed.
-    The windows themselves are deterministic: a 27-hour cycle (3h open, 24h away)
-    that has been running continuously since a fixed epoch, so a run's first
-    opening is the first grid slot on its start day - hours into the day, not at
-    reset. ``active`` is False with an empty schedule until Luxion has been seen
-    in-game at least once."""
+    the run is CAPTURED from the game (welcome screen) rather than computed.
+    ``active`` goes true at the first sighting and stays true until the run's end
+    (the daily reset ``LUXION_RUN_DAYS`` after the start day) - the sighting is a
+    direct read of the live game, so it is taken at face value. ``merchant_open``
+    is the separate, deterministic part: a 27-hour cycle (3h open, 24h away)
+    running continuously since a fixed epoch, so the run's first window normally
+    lands hours after the sighting. ``active`` is False with an empty schedule
+    until Luxion has been seen in-game at least once."""
     return Luxion(**await luxion_mod.get_luxion())
 
 
@@ -376,10 +378,10 @@ async def insert_luxion(
     """Record that the bot saw Luxion featured in-game right now.
 
     **Master only**: requires a superuser-owned API token. No body - the server
-    records a NEW appearance against the current trove-day (00:00 = 11:00 UTC) and
-    derives the run's openings from the 27h cycle grid. Idempotent within a live
-    7-day run: re-reporting just refreshes the sighting timestamp
-    (``refreshed=true``)."""
+    records a NEW appearance starting now, anchored to the current trove-day
+    (00:00 = 11:00 UTC), and derives the run's merchant windows from the 27h cycle
+    grid. Idempotent within a live run: re-reporting just refreshes the sighting
+    timestamp (``refreshed=true``)."""
     doc, was_new = await captures.insert_luxion()
     await ingest_log.record(
         endpoint="/v1/rotations/luxion/insert",
@@ -407,7 +409,7 @@ async def list_luxion_history(
     docs, total = await captures.list_luxion_history(limit=limit, offset=offset)
     items = []
     for d in docs:
-        starts_at, ends_at = luxion_mod.run_bounds(d.started_at)
+        starts_at, ends_at = luxion_mod.run_bounds(d.started_at, d.first_seen_at)
         items.append(LuxionAppearanceOut(
             started_at=starts_at, ends_at=ends_at,
             first_seen_at=d.first_seen_at, last_seen_at=d.last_seen_at,

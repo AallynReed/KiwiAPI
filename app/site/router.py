@@ -529,14 +529,16 @@ async def site_rotations() -> JSONResponse:
     d15 = trove_rotations.biome_rotation()
     corr = trove_server_time.corruxion()
     flux = trove_server_time.fluxion()
-    # Luxion is CAPTURED (not computed): a fixed 7-day run whose start is dev-set.
-    # Show it Here/Away at the event level - "Leaves in Nd" while the run is on;
-    # no countdown when Away (the next appearance is unpredictable until seen
-    # in-game). The daily 3-hour windows go in the schedule modal.
+    # Luxion is CAPTURED (not computed): a fixed-length run whose start is dev-set.
+    # He reads Here from the bot's first sighting onward - the signal is a direct
+    # read of the live welcome screen, so we never make the card say Away while the
+    # game is advertising him. "Leaves in Nd" while the run is on; no countdown
+    # when Away (the next appearance is unpredictable until seen in-game). The
+    # 3-hour merchant windows go in the schedule modal.
     lux = await trove_luxion.get_luxion()
-    # While Luxion is here, expose the FULL weekly rotation (all 7 daily windows,
-    # each labelled Day 1..7) so the dashboard/calendar modal shows the whole run
-    # with the current window highlighted; nothing when it's away.
+    # While Luxion is here, expose the full run rotation (every daily window,
+    # labelled Day 1..N) so the dashboard/calendar modal shows the whole run with
+    # the current window highlighted; nothing when it's away.
     lux_sched = _sched(lux.get("schedule"), n=7) if lux["active"] else []
     # The card also needs the daily 3-hour window: whether the merchant is open
     # right now (→ when it closes) or, between windows, when it next opens.

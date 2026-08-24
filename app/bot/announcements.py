@@ -275,7 +275,7 @@ ANNOUNCEMENT_TYPES: tuple[AnnouncementType, ...] = (
         auto_manage=True, expiry=_fluxion_expiry),
     AnnouncementType(
         "luxion", "Luxion merchant",
-        "Post when Luxion arrives for its weekly (7-day) visit.",
+        "Post when Luxion arrives for its visit.",
         "Rotations", embeds.luxion_embed, _luxion_anchor,
         auto_manage=True, expiry=_luxion_expiry),
     AnnouncementType(

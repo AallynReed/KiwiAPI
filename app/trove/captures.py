@@ -29,10 +29,10 @@ from app.trove.models import ChallengeCapture, ChaosChestCapture, LuxionAppearan
 
 logger = logging.getLogger("kiwi.trove.captures")
 
-# Luxion runs for a fixed 7-day window once it appears (run length + the 27h
-# cycle grid the windows sit on live in app.trove.luxion). A sighting inside a
-# live run refreshes it; a sighting after the run has elapsed is a brand-new
-# appearance (the next ~4-week cycle).
+# A Luxion run ends at the daily reset LUXION_RUN_DAYS after the day it started
+# on (run length + the 27h cycle grid the windows sit on live in app.trove.luxion).
+# A sighting inside a live run refreshes it; a sighting after the run has elapsed
+# is a brand-new appearance (the next ~4-week cycle).
 
 
 # --- Chaos chest -----------------------------------------------------------
@@ -88,13 +88,15 @@ async def insert_luxion(
     """Record a Luxion sighting → the current run, creating it only on the FIRST
     signal.
 
-    The bot re-reports every hour Luxion is up, so only the first sighting matters,
-    and all we take from it is the trove-DAY the run started on (00:00 = 11:00
-    UTC). The openings themselves come off the global 27h cycle grid, not off the
-    daily reset - see ``luxion.run_start``. The run is fixed at 7 days; every later
-    sighting *inside* it just refreshes ``last_seen_at`` on the SAME row - we never
-    start a second appearance while one is live. Only once the run has elapsed does
-    a new signal open the next one.
+    The bot re-reports every hour Luxion is up. The first sighting opens the run -
+    it is a direct read of the live welcome screen, so the run is live from that
+    instant (``first_seen_at``); ``started_at`` records the trove-DAY it fell on
+    (00:00 = 11:00 UTC), which is what the run's END is measured from. The 3-hour
+    merchant windows inside it come off the global 27h grid, not off the daily
+    reset - see ``luxion.next_grid_slot``. Every later sighting *inside* the run
+    just refreshes ``last_seen_at`` on the SAME row - we never start a second
+    appearance while one is live. Only once the run has elapsed does a new signal
+    open the next one.
 
     Returns ``(doc, was_new)``. The bot sends no body - the server infers the
     anchor from now."""
