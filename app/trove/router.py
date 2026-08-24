@@ -176,6 +176,7 @@ from app.trove.schemas import (
     Luxion,
     LuxionAppearanceOut,
     LuxionHistoryPage,
+    LuxionInsertRequest,
     MarketInsertResponse,
     MarketItemList,
     MarketItemSummary,
@@ -373,29 +374,42 @@ async def get_luxion(ctx: AccessContext = _ROT) -> Luxion:
 @rotations_router.post("/luxion/insert", response_model=CaptureInsertResponse,
                        summary="Insert Luxion sighting")
 async def insert_luxion(
+    body: LuxionInsertRequest | None = None,
     _auth = Depends(require_master_ingest),
 ) -> CaptureInsertResponse:
-    """Record that the bot saw Luxion featured in-game right now.
+    """Record what the bot just read off the in-game welcome screen.
 
-    **Master only**: requires a superuser-owned API token. No body - the server
-    records a NEW appearance starting now, anchored to the current trove-day
-    (00:00 = 11:00 UTC), and derives the run's merchant windows from the 27h cycle
-    grid. Idempotent within a live run: re-reporting just refreshes the sighting
-    timestamp (``refreshed=true``)."""
-    doc, was_new = await captures.insert_luxion()
+    **Master only**: requires a superuser-owned API token. The body is optional and
+    defaults to ``{"active": true}`` - a sighting. The first one opens a NEW
+    appearance starting now, anchored to the current trove-day (00:00 = 11:00 UTC),
+    and derives the run's merchant windows from the 27h cycle grid.
+
+    Post ``{"active": false}`` when the welcome screen no longer carries Luxion.
+    That is what ENDS the run, and the only thing that does - a gap in sightings
+    never ends one, because silence means the scraper is down rather than that the
+    merchant left.
+
+    Idempotent within a live run: re-reporting a sighting just refreshes the
+    timestamp (``refreshed=true``) and announces nothing, so one visit produces
+    exactly one announcement no matter how often the bot reports it."""
+    active = body.active if body is not None else True
+    doc, was_new = await captures.insert_luxion(active=active)
+    anchor = doc.started_at if doc is not None else 0
     await ingest_log.record(
         endpoint="/v1/rotations/luxion/insert",
         user=_auth.user, token=_auth.token,
-        summary={"started_at": doc.started_at, "refreshed": not was_new},
+        summary={"started_at": anchor, "active": active, "refreshed": not was_new},
     )
-    # Push to live SSE subscribers + the Discord announcer. Dedup on the run start
-    # makes this a no-op on the hourly re-sightings; only a new run emits.
+    # Push to live SSE subscribers + the Discord announcer. The signature is the
+    # run start, so the hourly re-sightings collapse and only a genuinely new run
+    # emits; once the run is closed the source goes quiet until the next one.
     try:
         await events_bus.publish_luxion()
     except Exception:
         logger.warning("luxion event publish failed", exc_info=True)
     return CaptureInsertResponse(
-        anchor=doc.started_at, name="luxion", refreshed=not was_new,
+        anchor=anchor, name="luxion" if active else "luxion:away",
+        refreshed=not was_new,
     )
 
 
@@ -409,10 +423,12 @@ async def list_luxion_history(
     docs, total = await captures.list_luxion_history(limit=limit, offset=offset)
     items = []
     for d in docs:
-        starts_at, ends_at = luxion_mod.run_bounds(d.started_at, d.first_seen_at)
+        starts_at, ends_at = luxion_mod.run_bounds(
+            d.started_at, d.first_seen_at, d.last_seen_at, d.ended_at)
         items.append(LuxionAppearanceOut(
             started_at=starts_at, ends_at=ends_at,
             first_seen_at=d.first_seen_at, last_seen_at=d.last_seen_at,
+            ended_at=d.ended_at,
         ))
     return LuxionHistoryPage(items=items, count=len(items), total=total)
 

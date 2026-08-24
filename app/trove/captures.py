@@ -29,10 +29,11 @@ from app.trove.models import ChallengeCapture, ChaosChestCapture, LuxionAppearan
 
 logger = logging.getLogger("kiwi.trove.captures")
 
-# A Luxion run ends at the daily reset LUXION_RUN_DAYS after the day it started
-# on (run length + the 27h cycle grid the windows sit on live in app.trove.luxion).
-# A sighting inside a live run refreshes it; a sighting after the run has elapsed
-# is a brand-new appearance (the next ~4-week cycle).
+# A Luxion run stays open until the bot reports him ABSENT from the welcome screen
+# (run length + the 27h cycle grid the windows sit on live in app.trove.luxion). A
+# sighting inside an open run refreshes it; only a sighting after a closed run is a
+# brand-new appearance (the next ~4-week cycle). That is what keeps one run to one
+# announcement.
 
 
 # --- Chaos chest -----------------------------------------------------------
@@ -83,23 +84,29 @@ async def list_chaos_chest_history(
 
 
 async def insert_luxion(
-    *, now: datetime | None = None,
-) -> tuple[LuxionAppearance, bool]:
-    """Record a Luxion sighting → the current run, creating it only on the FIRST
-    signal.
+    *, active: bool = True, now: datetime | None = None,
+) -> tuple[LuxionAppearance | None, bool]:
+    """Record what the bot just read off the welcome screen → the current run.
 
-    The bot re-reports every hour Luxion is up. The first sighting opens the run -
-    it is a direct read of the live welcome screen, so the run is live from that
-    instant (``first_seen_at``); ``started_at`` records the trove-DAY it fell on
-    (00:00 = 11:00 UTC), which is what the run's END is measured from. The 3-hour
-    merchant windows inside it come off the global 27h grid, not off the daily
-    reset - see ``luxion.next_grid_slot``. Every later sighting *inside* the run
-    just refreshes ``last_seen_at`` on the SAME row - we never start a second
-    appearance while one is live. Only once the run has elapsed does a new signal
-    open the next one.
+    ``active=True`` is a sighting. The first one OPENS the run: it is a direct read
+    of the live game, so the run is live from that instant (``first_seen_at``).
+    ``started_at`` records the trove-DAY it fell on (00:00 = 11:00 UTC), which is
+    what the projected end is measured from. The 3-hour merchant windows inside it
+    come off the global 27h grid, not off the daily reset - see
+    ``luxion.next_grid_slot``.
 
-    Returns ``(doc, was_new)``. The bot sends no body - the server infers the
-    anchor from now."""
+    ``active=False`` is the bot reporting Luxion ABSENT from the welcome screen.
+    That CLOSES the open run (stamps ``ended_at``) and is the only thing that does.
+    With no open run it is a no-op - there is nothing to announce about a merchant
+    who is still away.
+
+    Every later sighting inside an OPEN run just refreshes ``last_seen_at`` on the
+    SAME row, so the run keeps one identity and announces exactly once. Critically
+    that holds even past the projected end: if the game is still showing him, we
+    stretch the run rather than minting a second appearance that would re-announce
+    him mid-visit. Only after a real absence does the next sighting open a new run.
+
+    Returns ``(doc, was_new)``; ``doc`` is None for a no-op close."""
     from app.trove import luxion
 
     real = now or utcnow()
@@ -107,12 +114,34 @@ async def insert_luxion(
     anchor = server_time.current_daily_reset(real)
 
     latest = await LuxionAppearance.find_all().sort("-started_at").first_or_none()
-    if latest is not None and now_ts < luxion.run_bounds(latest.started_at)[1]:
-        # Still inside the live run - same appearance, just refresh last-seen.
-        latest.last_seen_at = real
-        await latest.save()
-        logger.info("luxion sighting: run start=%d (refreshed)", latest.started_at)
-        return latest, False
+    # Never told he left. Either the run is genuinely still going, or the bot is
+    # too old to report an absence and left this row dangling.
+    unclosed = latest if (latest is not None and latest.ended_at is None) else None
+    # ...and this is the one still live: run_bounds already stretches the end while
+    # we keep seeing him, so `live` stays set right through a long visit but lapses
+    # once the sightings stop. Without that lapse an un-closed row would swallow the
+    # NEXT run weeks later and never announce it.
+    live = unclosed if (unclosed is not None and now_ts < luxion.run_bounds(
+        unclosed.started_at, unclosed.first_seen_at, unclosed.last_seen_at)[1]) else None
+
+    if not active:
+        # The welcome screen no longer carries Luxion. Close the run if one is
+        # open; otherwise there is nothing to record.
+        if unclosed is None:
+            return None, False
+        unclosed.ended_at = real
+        await unclosed.save()
+        logger.info("luxion absent: run start=%d closed", unclosed.started_at)
+        return unclosed, False
+
+    if live is not None:
+        # The run is still going - same appearance, just refresh last-seen. This
+        # holds even past the projected end: while the game is still showing him
+        # the run is still his, and a second row here would re-announce mid-visit.
+        live.last_seen_at = real
+        await live.save()
+        logger.info("luxion sighting: run start=%d (refreshed)", live.started_at)
+        return live, False
 
     try:
         doc = await LuxionAppearance(
@@ -127,6 +156,10 @@ async def insert_luxion(
         )
         if existing is not None:
             existing.last_seen_at = real
+            # If that row was already closed, the merchant is back on the same
+            # trove-day - re-open it rather than leaving the site saying "Away"
+            # while the game is showing him.
+            existing.ended_at = None
             await existing.save()
             logger.info("luxion sighting: run start=%d (raced, refreshed)", anchor)
             return existing, False

@@ -191,11 +191,18 @@ class LuxionAppearance(Document):
     normally lands hours after the sighting. See ``app.trove.luxion``.
 
     Upsert by ``started_at``: re-sightings within the run just refresh
-    ``last_seen_at``; the next run (weeks later) is a new row."""
+    ``last_seen_at``; the next run (weeks later) is a new row. A run stays OPEN
+    (and keeps its identity, so nothing re-announces) until the bot reports Luxion
+    absent - see ``ended_at``."""
 
     started_at: int      # unix seconds at the daily reset (11:00 UTC) of run day 1
     first_seen_at: datetime = Field(default_factory=utcnow)
     last_seen_at: datetime = Field(default_factory=utcnow)
+    # When the bot read the welcome screen and Luxion was NOT on it - the only
+    # trustworthy "he's gone" signal we have. None while the run is still open.
+    # A gap in sightings is NOT this: the bot has gone 58h silent mid-run, so
+    # silence means the scraper is down, never that the merchant left.
+    ended_at: datetime | None = None
 
     class Settings:
         name = "luxion_appearances"

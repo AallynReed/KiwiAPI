@@ -70,8 +70,10 @@ async def _luxion_data() -> dict:
 
 
 def _luxion_sig(d: dict) -> str | None:
-    # Signature = the run start, so the event fires ONCE per new appearance and the
-    # hourly re-sightings within the 7-day run collapse. Away -> None (no event).
+    # Signature = the run start, which is the FIRST sighting and never moves while
+    # the run is open - so the event fires once per appearance and every hourly
+    # re-sighting collapses into it, even ones past the projected end. Away -> None
+    # (no event), so the next run has to actually begin before this fires again.
     return str(d["starts_at"]) if d.get("active") and d.get("starts_at") else None
 
 

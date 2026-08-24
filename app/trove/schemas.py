@@ -98,10 +98,11 @@ class Luxion(BaseModel):
 
 
 class LuxionAppearanceOut(BaseModel):
-    started_at: int      # first merchant opening of the run, unix seconds
-    ends_at: int         # started_at + 7 days
+    started_at: int      # the sighting that opened the run, unix seconds
+    ends_at: int         # when Luxion was seen to leave, else the projected end
     first_seen_at: datetime
     last_seen_at: datetime
+    ended_at: datetime | None = None   # set once the bot reported him absent
 
 
 class LuxionHistoryPage(BaseModel):
@@ -1470,6 +1471,15 @@ class CaptureInsertResponse(BaseModel):
     anchor: int      # the time anchor the server inferred from "now"
     name: str        # the value persisted (post-trim)
     refreshed: bool  # False on first sighting of this anchor, True on re-submit
+
+
+class LuxionInsertRequest(BaseModel):
+    """What the bot just read off the welcome screen.
+
+    ``active`` false means it read the screen and Luxion was NOT on it - the one
+    signal that ends a run. Defaults to true so the body stays optional and an
+    older bot that posts ``{}`` still reports a sighting."""
+    active: bool = True
 
 
 # --- Feedback (POST /v1/misc/feedback) -------------------------------------
