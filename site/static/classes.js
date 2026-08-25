@@ -24,6 +24,13 @@
     var num = (v % 1 === 0) ? v.toLocaleString() : v.toLocaleString(undefined, { maximumFractionDigits: 2 });
     return s.percentage ? num + "%" : num;
   }
+  function fmtBonus(s) {
+    // Same as fmtStat but signed, for values shown as a bonus. `absolute` stats
+    // (Fae Trickster's Flying Speed) name a resulting value, not a delta.
+    var out = fmtStat(s);
+    if (s.absolute) return out;
+    return out.charAt(0) === "-" ? out : "+" + out;
+  }
   function dmgClass(d) { return (d || "").toLowerCase() === "physical" ? "physical" : "magic"; }
   // Some classes carry placeholder subclass rows ({name:"", value:0}); a bonus is
   // only worth showing if it has a real stat name or a non-zero value.
@@ -176,7 +183,7 @@
       box.appendChild(section(tr("Class bonuses"), "fa-plus", (function () {
         var chips = el("div", "cls-chips");
         bonuses.forEach(function (b) {
-          chips.appendChild(el("span", "cls-chip", b.name + " +" + fmtStat(b)));
+          chips.appendChild(el("span", "cls-chip", b.name + " " + fmtBonus(b)));
         });
         return chips;
       })()));
@@ -202,7 +209,7 @@
             t.bonuses.forEach(function (b) {
               var line = el("div", "cls-level-bonus");
               if (b.name && b.name.trim()) line.appendChild(document.createTextNode(b.name + " "));
-              line.appendChild(el("strong", null, "+" + fmtStat(b)));
+              line.appendChild(el("strong", null, fmtBonus(b)));
               cell.appendChild(line);
             });
             grid.appendChild(cell);

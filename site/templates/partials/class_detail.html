@@ -22,7 +22,7 @@
 {% if d.bonuses %}
 <section class="cls-section">
     <h3 class="cls-section-title"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Class bonuses</span></h3>
-    <div class="cls-chips">{% for b in d.bonuses %}<span class="cls-chip">{{ b.name }} +{{ b.val }}</span>{% endfor %}</div>
+    <div class="cls-chips">{% for b in d.bonuses %}<span class="cls-chip">{{ b.name }} {{ b.val }}</span>{% endfor %}</div>
 </section>
 {% endif %}
 {% if d.subclass %}
@@ -31,7 +31,7 @@
     <div class="cls-subclass">
         {% if d.subclass.name %}<div class="cls-subclass-name">{{ d.subclass.name }}</div>{% endif %}
         {% if d.subclass.description %}<div class="cls-subclass-desc">{{ d.subclass.description }}</div>{% endif %}
-        {% if d.subclass.tiers %}<div class="cls-levels">{% for t in d.subclass.tiers %}<div class="cls-level"><div class="cls-level-tier">Level {{ t.tier }}</div>{% for b in t.bonuses %}<div class="cls-level-bonus">{% if b.name %}{{ b.name }} {% endif %}<strong>+{{ b.val }}</strong></div>{% endfor %}</div>{% endfor %}</div>{% endif %}
+        {% if d.subclass.tiers %}<div class="cls-levels">{% for t in d.subclass.tiers %}<div class="cls-level"><div class="cls-level-tier">Level {{ t.tier }}</div>{% for b in t.bonuses %}<div class="cls-level-bonus">{% if b.name %}{{ b.name }} {% endif %}<strong>{{ b.val }}</strong></div>{% endfor %}</div>{% endfor %}</div>{% endif %}
     </div>
 </section>
 {% endif %}

@@ -89,7 +89,8 @@ def compute_coefficient(
 
 
 def _clean_stat(s: dict) -> dict:
-    return {"name": s["name"], "value": s.get("value"), "percentage": s.get("percentage", False)}
+    return {"name": s["name"], "value": s.get("value"), "percentage": s.get("percentage", False),
+            "absolute": s.get("absolute", False)}
 
 
 def _clean_stage(st: dict) -> dict:

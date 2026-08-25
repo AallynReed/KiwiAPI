@@ -27,6 +27,16 @@ def _fmt_stat(s: dict) -> str:
     return f"{num}%" if s.get("percentage") else num
 
 
+def _fmt_bonus(s: dict) -> str:
+    """Same as ``_fmt_stat`` but signed, for values shown as a bonus - matches
+    classes.js fmtBonus. ``absolute`` stats (Fae Trickster's Flying Speed) name a
+    resulting value rather than a delta, so they carry no sign."""
+    out = _fmt_stat(s)
+    if s.get("absolute"):
+        return out
+    return out if out.startswith("-") else f"+{out}"
+
+
 def _dmg_class(damage_type: str | None) -> str:
     return "physical" if (damage_type or "").lower() == "physical" else "magic"
 
@@ -40,7 +50,7 @@ def _meaningful(rows: list | None) -> list:
 def _detail(c: dict) -> dict:
     stats = [{"name": s["name"], "val": _fmt_stat(s)}
              for s in (c.get("stats") or []) if s and s.get("name")]
-    bonuses = [{"name": b["name"], "val": _fmt_stat(b)}
+    bonuses = [{"name": b["name"], "val": _fmt_bonus(b)}
                for b in (c.get("bonuses") or []) if b and b.get("name") and b.get("value")]
 
     sc = c.get("subclass") or {}
@@ -52,7 +62,7 @@ def _detail(c: dict) -> dict:
             continue
         tiers.append({
             "tier": tier,
-            "bonuses": [{"name": (b.get("name") or "").strip(), "val": _fmt_stat(b)}
+            "bonuses": [{"name": (b.get("name") or "").strip(), "val": _fmt_bonus(b)}
                         for b in meaningful],
         })
     subclass = None

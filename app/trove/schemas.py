@@ -429,6 +429,7 @@ class ClassStat(BaseModel):
     name: str                     # e.g. "Physical Damage"
     value: float | None           # base value (null when the class lacks the stat)
     percentage: bool
+    absolute: bool = False        # value replaces the stat rather than adding to it
 
 
 class AbilityStage(BaseModel):
