@@ -695,6 +695,9 @@
 .mp-tree-caret { width: 9px; transition: transform .15s ease; }
 .mp-tree-caret.is-open { transform: rotate(90deg); }
 .mp-tree-dir:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: -2px; }
+/* A full-width row shrinking under the pointer reads as the list wobbling, not
+   as a press, so the folder rows sit out the global press-scale. */
+.mp-tree-dir:active, .mp-insp-dir > summary:active { scale: 1; }
 @media (prefers-reduced-motion: reduce) { .mp-tree-caret { transition: none; } }
 
 /* Clone with git (collapsible) */
