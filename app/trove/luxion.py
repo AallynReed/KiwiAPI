@@ -17,10 +17,12 @@ the game was already advertising him, so the dashboard read "Away" all day.
   the run's end.
 - The end is the bot reporting Luxion ABSENT from the welcome screen when it has
   one; otherwise the daily reset ``LUXION_RUN_DAYS`` after the start day, stretched
-  if we are still seeing him past it. Measured, not assumed: in the 2026-07 run the
-  welcome panel was absent at 07-21 14:40 and present at 15:06, then present at
-  07-27 10:40 and gone at 11:40 - i.e. it died exactly on the 07-27 reset, 6
-  trove-days after the 07-21 anchor.
+  if we are still seeing him past it. A run is a full trove week: the 2026-08 run
+  opened on the Monday reset and runs to the next one. The 2026-07 run died on the
+  07-27 reset - present at 10:40, gone at 11:40 - which is that same Monday
+  boundary reached early, because that run did not open until the Tuesday
+  afternoon (absent 07-21 14:40, present 15:06). The projection is what the bot
+  falls back on when it has gone quiet; an observed absence always wins.
 
 A run keeps its identity for as long as it is open, and that is deliberate: the
 SSE signature and the Discord announcer are both edge-triggered on ``starts_at``,
@@ -53,9 +55,10 @@ from datetime import datetime, timezone
 
 from app.trove import server_time
 
-# Trove-days from the start day's reset to the run's end reset. See the module
-# docstring for the capture data this is measured from.
-LUXION_RUN_DAYS = 6
+# Trove-days from the start day's reset to the run's end reset. A run opening on a
+# Monday reset therefore ends on the next one - a full trove week. See the module
+# docstring for the capture data behind this.
+LUXION_RUN_DAYS = 7
 _WINDOW = 3 * 3600          # 3-hour merchant window
 # How long a sighting keeps the run alive PAST its projected end. Only reached
 # when the projection was short and the game is still showing him, so it just has
