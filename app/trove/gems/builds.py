@@ -328,7 +328,9 @@ class GemOptimizerEngine:
                 first += 750
             if damage_type == "Magic Damage" and subclass in ("Ice Sage", "Shadow Hunter"):
                 first += 750
-            if subclass in ("Bard", "Boomeranger"):
+            if subclass == "Bard":
+                second += 15
+            if subclass == "Boomeranger":
                 second += 20
             if config.get("subclass_active"):
                 if subclass == "Bard":
