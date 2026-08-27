@@ -2293,14 +2293,22 @@ class Handler(SimpleHTTPRequestHandler):
                     ("scripts/combat/healing.lua", "added"),
                     ("languages/en/strings.json", "modified"),
                 ]
-                entries = [{"path": p, "type": ty, "content_sha256": "stub", "size": 512}
-                           for p, ty in ch]
                 counts = {"added": sum(1 for _, t in ch if t == "added"),
                           "modified": sum(1 for _, t in ch if t == "modified"),
                           "removed": sum(1 for _, t in ch if t == "removed")}
+                # Mirror prod: the type filter and paging happen HERE, so the
+                # page's chips exercise the same round-trip they do live.
+                ty_filter = qs.get("type", [""])[0] or ""
+                rows = sorted((r for r in ch if not ty_filter or r[1] == ty_filter),
+                              key=lambda r: (r[1], r[0]))
+                off = int(qs.get("offset", ["0"])[0] or 0)
+                lim = int(qs.get("limit", ["200"])[0] or 200)
+                page = rows[off:off + lim]
+                entries = [{"path": p, "type": ty, "content_sha256": "stub", "size": 512}
+                           for p, ty in page]
                 return self._send_json({"branch": branch, "ordinal": 2,
                     "version_tag": "1.0.stub", "entries": entries,
-                    "count": len(entries), "total": len(entries),
+                    "count": len(entries), "total": len(rows),
                     "files_added": counts["added"], "files_modified": counts["modified"],
                     "files_removed": counts["removed"]})
             if sub == "file/blueprint":

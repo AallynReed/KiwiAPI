@@ -20,7 +20,7 @@
 
   const { esc, fetchJSON, apiUrl } = window.BTTUtil;
 
-  const PAGE_SIZE_CHANGES = 200;
+  const CHANGES_PAGE = 2000;     // change rows per fetch (a big patch runs to 15k)
   const VERSIONS_VISIBLE = 12;   // recent version chips in the timeline strip
   const TREE_PAGE = 300;         // sidebar rows rendered per "load more" (some Trove
                                  // folders hold 50k+ files - never render them all)
@@ -69,7 +69,7 @@
     // Changes tab
     changes: { entries: [], total: 0, ordinal: null, version_tag: null,
                counts: {added: 0, modified: 0, removed: 0}, filter: 'all',
-               offset: 0, loading: false },
+               offset: 0, loading: false, token: 0 },
     // Which change-tree folders are collapsed, remembered PER VERSION (keyed by
     // ordinal) so it survives re-fetching the change-list, switching versions,
     // and the browser Back button. Lives outside `changes` (which gets rebuilt).
@@ -458,13 +458,11 @@
     scheduleHash(true);
 
     const v = state.versions.find((x) => x.ordinal === ordinal);
-    // Pull this version's change list - drives the changes tab + the
-    // touched-path overlay in the tree. Hard-cap at 5000 paths for
-    // overlay purposes: very large versions still render correctly,
-    // they just stop badging beyond that count.
-    const versionChanges = await fetchJSON(
-      `/site/updates/${state.branch}/changes?ordinal=${ordinal}&limit=2000`,
-    );
+    // Pull this version's change list UNFILTERED - it drives the touched-path
+    // overlay in the tree, which has to see every type. Capped at one page: a
+    // very large version still renders, it just stops badging past that count.
+    const filter = state.changes.filter || 'all';
+    const versionChanges = await fetchJSON(changesUrl(ordinal, 'all', 0));
     state.changes = {
       entries: versionChanges.entries || [],
       total: versionChanges.total || 0,
@@ -475,9 +473,10 @@
         modified: versionChanges.files_modified || 0,
         removed: versionChanges.files_removed || 0,
       },
-      filter: state.changes.filter || 'all',
-      offset: versionChanges.entries.length,
+      filter,
+      offset: (versionChanges.entries || []).length,
       loading: false,
+      token: state.changes.token || 0,
     };
     // Build the touched-overlay index. Same data we just fetched; we
     // index it once and the tree-render checks O(1) per row.
@@ -485,17 +484,55 @@
     for (const e of versionChanges.entries || []) byPath.set(e.path, e.type);
     state.versionTouched = { ordinal, byPath };
 
-    renderChanges();
     renderTree();
+    // The version's whole size, not the filtered slice - the badge counts the
+    // version, and the counts add up to it whatever chip is active.
     if ($tabChangesBadge) {
-      const total = state.changes.total || 0;
-      if (total > 0) {
-        $tabChangesBadge.hidden = false;
-        $tabChangesBadge.textContent = formatInt(total);
-      } else {
-        $tabChangesBadge.hidden = true;
-      }
+      const c = state.changes.counts;
+      const all = (c.added || 0) + (c.modified || 0) + (c.removed || 0);
+      $tabChangesBadge.hidden = all <= 0;
+      $tabChangesBadge.textContent = formatInt(all);
     }
+    // A chip left active from the previous version needs its own query - the
+    // page above is sorted by type, so it can be all-"added" and hold nothing
+    // of the type the user is looking at.
+    if (filter !== 'all') await loadChangeList(filter);
+    else renderChanges();
+  }
+
+  // The changes tab talks to the server for its filter instead of sifting the
+  // page it already has: entries come back sorted by type, so the first page of
+  // a 15k-change patch is entirely "added" and a local filter for "removed"
+  // renders nothing while the chip beside it says 43.
+  function changesUrl(ordinal, filter, offset) {
+    const type = filter && filter !== 'all' ? `&type=${encodeURIComponent(filter)}` : '';
+    return `/site/updates/${state.branch}/changes`
+      + `?ordinal=${ordinal}&limit=${CHANGES_PAGE}&offset=${offset}${type}`;
+  }
+
+  // Load page one for a change type. `total` comes back already scoped to the
+  // filter, so "load more" and the meta line need no separate bookkeeping.
+  async function loadChangeList(filter) {
+    const { ordinal } = state.changes;
+    if (ordinal == null) { renderChanges(); return; }
+    const token = ++state.changes.token;
+    state.changes.filter = filter;
+    $changesBody.innerHTML = `<p class="up-loading" data-i18n>Loading…</p>`;
+    $changesFoot.hidden = true;
+    rerunI18n();
+    let data;
+    try {
+      data = await fetchJSON(changesUrl(ordinal, filter, 0));
+    } catch (err) {
+      if (token !== state.changes.token) return;   // a newer chip won
+      $changesBody.innerHTML = errorHTML(err);
+      return;
+    }
+    if (token !== state.changes.token) return;
+    state.changes.entries = data.entries || [];
+    state.changes.total = data.total || 0;
+    state.changes.offset = state.changes.entries.length;
+    renderChanges();
   }
 
   // ─── Tab strip ─────────────────────────────────────────────────────
@@ -2158,7 +2195,7 @@
 
   // ─── Changes tab ───────────────────────────────────────────────────
   function renderChanges() {
-    const { entries, total, ordinal, version_tag, counts, filter } = state.changes;
+    const { entries, total, ordinal, version_tag, counts } = state.changes;
     $countAdd.textContent = formatInt(counts.added);
     $countMod.textContent = formatInt(counts.modified);
     $countRem.textContent = formatInt(counts.removed);
@@ -2172,17 +2209,11 @@
       return;
     }
     $changesMeta.removeAttribute('data-i18n');
-    const totalRender = filter === 'all'
-      ? total
-      : counts[filter] || 0;
+    // `total` is already scoped to the active chip - the server filtered it.
     $changesMeta.textContent = t('Version {tag} · {n} change(s)')
-      .replace('{tag}', version_tag || '-').replace('{n}', formatInt(totalRender));
+      .replace('{tag}', version_tag || '-').replace('{n}', formatInt(total));
 
-    const filtered = filter === 'all'
-      ? entries
-      : entries.filter((e) => e.type === filter);
-
-    if (!filtered.length) {
+    if (!entries.length) {
       $changesBody.innerHTML = `<p class="up-hint" data-i18n>No changes match this filter.</p>`;
       $changesFoot.hidden = true;
       rerunI18n();
@@ -2192,13 +2223,12 @@
     // Render the change-list as a collapsible folder tree instead of a flat
     // list, so a version touching hundreds of files is navigable. Clicks are
     // handled by one delegated listener wired in wireEvents().
-    const root = buildChangeTree(filtered);
+    const root = buildChangeTree(entries);
     $changesBody.innerHTML = `<div class="up-ctree">${renderChangeNodes(root, 0)}</div>`;
     rerunI18n();
 
-    // Pagination: backend gave us up to 2000 in one shot, and we
-    // filter client-side. If total > what we have, show load-more
-    // that fetches the next page.
+    // Pagination: one page arrives per fetch, filtered to the active chip. If
+    // the server's total outruns what we hold, offer the next page.
     $changesFoot.hidden = entries.length >= total;
   }
 
@@ -2282,15 +2312,12 @@
   }
 
   async function loadMoreChanges() {
-    const { ordinal, offset, total } = state.changes;
+    const { ordinal, offset, total, filter } = state.changes;
     if (state.changes.loading || ordinal == null || offset >= total) return;
     state.changes.loading = true;
     $changesMore.disabled = true;
     try {
-      const data = await fetchJSON(
-        `/site/updates/${state.branch}/changes?ordinal=${ordinal}`
-        + `&limit=${PAGE_SIZE_CHANGES * 5}&offset=${offset}`,
-      );
+      const data = await fetchJSON(changesUrl(ordinal, filter, offset));
       state.changes.entries = state.changes.entries.concat(data.entries || []);
       state.changes.offset = state.changes.entries.length;
       renderChanges();
@@ -2733,8 +2760,7 @@
         for (const c of document.querySelectorAll('.up-changes-filter [data-filter]')) {
           c.classList.toggle('active', c === chip);
         }
-        state.changes.filter = chip.dataset.filter;
-        renderChanges();
+        loadChangeList(chip.dataset.filter);
       });
     }
     if ($changesMore) $changesMore.addEventListener('click', () => loadMoreChanges());
