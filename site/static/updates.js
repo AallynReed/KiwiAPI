@@ -342,11 +342,15 @@
     state.selectedPath = null;
     state.fileHistory = null;
     state.versions = [];
+    // Ordinals are per-branch - PTS #8 is not Live #8 - so the selection can't
+    // carry over: leaving it set makes selectVersion() below early-return on a
+    // same-numbered version and strand the other branch's change-list on screen.
+    state.selectedVersion = null;
     state.versionTouched = null;
     state.changes = {
       entries: [], total: 0, ordinal: null, version_tag: null,
       counts: {added: 0, modified: 0, removed: 0}, filter: 'all',
-      offset: 0, loading: false,
+      offset: 0, loading: false, token: state.changes.token || 0,
     };
     state.changesCollapsed.clear();   // ordinals are per-branch
     state.compare = { from: null, to: null, path: '', payload: null, loading: false };
@@ -371,6 +375,10 @@
     if (state.activeTab === 'vfx') ensureVfxTab();
 
     renderBranchTabs();
+    // Clear the change-list NOW rather than after the fetches below: until the
+    // new branch's version lands, the pane would otherwise still show the old
+    // branch's rows under its own "load more".
+    renderChanges();
 
     // Three fetches in parallel - versions drive the strip + change-tab
     // default selection; tree drives the explorer.
