@@ -123,9 +123,17 @@ async def list_effects(branch: str, q: str = "", limit: int = 300, offset: int =
 
 async def manifest(branch: str, path: str) -> dict | None:
     """One effect's ``.pkfx`` text plus its references, each classified ``game`` or
-    ``missing``. None when the branch has no such effect."""
+    ``missing``. An effect the branch has since dropped resolves to its last
+    version; None when the path was never archived."""
     idx = await _index(branch)
     real = _resolve(idx, path)
+    if real is None and path.lower().endswith(".pkfx"):
+        # The index is built from the current tree, so an effect the game has
+        # dropped isn't in it. Take the path as given and let the archive answer
+        # with its last version - deps it took with it read as "missing", which
+        # is the truth about the branch today.
+        cand = (path or "").replace("\\", "/").lstrip("/")
+        real = cand if await updates_read.get_file_meta(branch, cand) else None
     if real is None or not real.lower().endswith(".pkfx"):
         return None
     raw = await _read(branch, real)
