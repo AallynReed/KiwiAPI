@@ -2673,7 +2673,6 @@
   "releases-only": "เฉพาะรีลีส",
   "remix": "รีมิกซ์",
   "remixes": "รีมิกซ์",
-  "removed in latest capture": "ถูกนำออกในข้อมูลชุดล่าสุด",
   "resell, sublicense, or commercially redistribute API access or bulk data without our permission;": "ขายต่อ ให้สิทธิ์ช่วง หรือแจกจ่ายการเข้าถึง API หรือข้อมูลจำนวนมากในเชิงพาณิชย์โดยไม่ได้รับอนุญาตจากเรา;",
   "root": "ราก",
   "rose": "เพิ่มขึ้น",
@@ -2866,5 +2865,8 @@
   "closed this": "ปิดรายการนี้",
   "opened by": "เปิดโดย",
   "reopened this": "เปิดรายการนี้อีกครั้ง",
-  "to reply.": "เพื่อตอบกลับ"
+  "to reply.": "เพื่อตอบกลับ",
+  "removed in {tag}": "ถูกลบใน {tag}",
+  "Last version": "เวอร์ชันสุดท้าย",
+  "Removed in {tag} — showing the last version of this file.": "ถูกลบใน {tag} — กำลังแสดงเวอร์ชันสุดท้ายของไฟล์นี้"
 }

@@ -134,6 +134,7 @@
   const $detailTitle = $('up-detail-title');
   const $detailMeta = $('up-detail-meta');
   const $detailDownload = $('up-detail-download');
+  const $detailDownloadLabel = $('up-detail-download-label');
   const $history = $('up-history');
   const $preview = $('up-preview');
   const $previewPre = $('up-preview-pre');
@@ -148,6 +149,7 @@
   const $preview3d = $('up-preview-3d');
   const $previewHex = $('up-preview-hex');
   const $previewNote = $('up-preview-note');
+  const $previewRemoved = $('up-preview-removed');
   const $previewSwf = $('up-preview-swf');
   const $previewSwfBtn = $('up-preview-swfbtn');
   const $previewSwfNote = $('up-preview-swfnote');
@@ -864,6 +866,17 @@
     }
     if (token !== _previewToken || state.selectedPath !== path) return;  // clicked away
     $preview.hidden = false;
+    // The file is gone from the tree and the server fell back to the capture
+    // before the removal - say so, or the content reads as still shipping.
+    if (data.removed && $previewRemoved) {
+      const gone = ((state.fileHistory && state.fileHistory.items) || [])[0];
+      const tag = gone && gone.type === 'removed' ? gone.version_tag : '';
+      if (tag) {
+        setPlainText($previewRemoved,
+          t('Removed in {tag} — showing the last version of this file.').replace('{tag}', tag));
+        $previewRemoved.hidden = false;
+      }
+    }
 
     // `kind` is authoritative; fall back to `reason`/`viewable` for older payloads.
     const kind = data.kind
@@ -963,6 +976,7 @@
     $previewHex.hidden = true;
     $previewHex.textContent = '';
     $previewNote.hidden = true;
+    if ($previewRemoved) { $previewRemoved.hidden = true; $previewRemoved.textContent = ''; }
   }
 
   // Fetch the raw bytes of a small binary file and render a classic hex dump
@@ -1381,16 +1395,27 @@
       return;
     }
     const latest = items[0];
+    // A removed file has no bytes of its own, so the header (and the download
+    // below it) speak for the capture before the removal instead.
+    const lastKnown = latest.type === 'removed'
+      ? items.find((it) => it.type !== 'removed')
+      : latest;
     const latestTouched = latest.type === 'removed'
-      ? t('removed in latest capture')
+      ? `${t('removed in {tag}').replace('{tag}', latest.version_tag)}`
+        + (lastKnown ? ` · ${formatBytes(lastKnown.size)}` : '')
       : `${formatBytes(latest.size)} · ${shortSha(latest.content_sha256)}`;
     $detailMeta.textContent = `${items.length} ${t('captures')} · ${latestTouched}`;
 
-    // Download link only when the file is currently present.
-    if (latest.type !== 'removed') {
+    // Download link: a present file serves the current bytes, a removed one its
+    // last version - hidden only when nothing was ever stored for the path.
+    if (lastKnown) {
       $detailDownload.hidden = false;
       $detailDownload.href =
         apiUrl(`/v1/updates/${state.branch}/file?path=${encodeURIComponent(state.selectedPath)}`);
+      if ($detailDownloadLabel) {
+        setPlainText($detailDownloadLabel,
+          latest.type === 'removed' ? t('Last version') : t('Latest'));
+      }
     } else {
       $detailDownload.hidden = true;
     }

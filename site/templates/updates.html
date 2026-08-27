@@ -203,7 +203,7 @@
                             <a class="up-detail-download" id="up-detail-download"
                                target="_blank" rel="noopener" hidden>
                                 <i class="fa-solid fa-download" aria-hidden="true"></i>
-                                <span data-i18n>Latest</span>
+                                <span id="up-detail-download-label" data-i18n>Latest</span>
                             </a>
                         </div>
                         <!-- In-browser preview (populated by updates.js from
@@ -211,6 +211,9 @@
                              images inline, small binaries in a hex viewer. -->
                         <div class="up-preview" id="up-preview" hidden>
                             <h3 class="up-detail-subhead" data-i18n>Preview</h3>
+                            <!-- Shown for a file the game no longer ships: what
+                                 follows is its last version before removal. -->
+                            <p class="up-preview-removed" id="up-preview-removed" hidden></p>
                             <pre class="up-preview-pre" id="up-preview-pre" hidden></pre>
                             <figure class="up-preview-image" id="up-preview-image" hidden>
                                 <img id="up-preview-img" alt="" decoding="async">

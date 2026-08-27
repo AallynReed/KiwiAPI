@@ -1792,7 +1792,9 @@ async def list_update_tree(
 async def get_update_file_meta(
     branch: str, path: str = Query(...), ctx: TokenContext = _UPD,
 ) -> FileMeta:
-    """Metadata for a single file in the latest tree (hash, size, source archive)."""
+    """Metadata for a single file (hash, size, source archive). A path that has since
+    been removed resolves to its last version, flagged ``removed`` with the version
+    that dropped it."""
     _check_branch(branch)
     meta = await updates_read.get_file_meta(branch, path)
     if meta is None:
@@ -1804,10 +1806,10 @@ async def get_update_file_meta(
 async def download_update_file(
     branch: str, path: str = Query(...), ctx: AccessContext = _UPD_FILE,
 ) -> FileResponse:
-    """Download a single file's bytes from the latest tree (streamed from the
-    blob store). Tokenless (public) so files can be linked directly, on a widened
-    ISOLATED bucket (``_UPD_FILE``) so a folder of textures doesn't trip the anon
-    cap. Served from the content-addressed store, so the bytes are immutable per
+    """Download a single file's bytes (streamed from the blob store); a path removed
+    from the tree serves its last version before the removal. Tokenless (public) so
+    files can be linked directly, on a widened ISOLATED bucket (``_UPD_FILE``) so a
+    folder of textures doesn't trip the anon cap. Served from the content-addressed store, so the bytes are immutable per
     blob - a strong ETag (the content sha) + a long cache let the CDN/browser
     serve repeat tiles without re-hitting the origin at all."""
     _check_branch(branch)

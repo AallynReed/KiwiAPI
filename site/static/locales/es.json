@@ -1236,7 +1236,6 @@
   "public": "público",
   "releases-only": "solo publicaciones",
   "removed": "eliminado",
-  "removed in latest capture": "eliminado en la última captura",
   "root": "raíz",
   "schedule": "horario",
   "this week's featured item": "el objeto destacado de esta semana",
@@ -3094,5 +3093,8 @@
   "closed this": "cerró esto",
   "opened by": "abierto por",
   "reopened this": "reabrió esto",
-  "to reply.": "para responder."
+  "to reply.": "para responder.",
+  "removed in {tag}": "eliminado en {tag}",
+  "Last version": "Última versión",
+  "Removed in {tag} — showing the last version of this file.": "Eliminado en {tag} — se muestra la última versión de este archivo."
 }

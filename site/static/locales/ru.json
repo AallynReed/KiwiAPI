@@ -448,7 +448,6 @@
   "Release this Trove name? You can re-claim later.": "Освободить это имя Trove? Можно заявить снова позже.",
   "Removed": "Удалено",
   "removed": "удалён",
-  "removed in latest capture": "удалён в последнем снимке",
   "Reorder dashboard sections by dragging them, collapse the ones you don't use, and pin your most-used tools to the <strong>Quick Tools</strong> tray (automatic \"most visited\" or fully manual). Toggle community/news sections off entirely in Settings for a calmer page.": "Меняйте порядок разделов панели перетаскиванием, сворачивайте ненужные и закрепляйте часто используемые инструменты в лотке <strong>Quick Tools</strong> (автоматически «самые посещаемые» или полностью вручную). Полностью отключите разделы контента/новостей в Settings для более спокойной страницы.",
   "Report bugs, request features, share builds. The fastest channel to me.": "Сообщайте об ошибках, предлагайте функции, делитесь сборками. Самый быстрый канал ко мне.",
   "Right-click any file to extract it to your computer.": "Щёлкните правой кнопкой по любому файлу, чтобы извлечь его на компьютер.",
@@ -3094,5 +3093,8 @@
   "closed this": "закрыл(а) это",
   "opened by": "открыл(а)",
   "reopened this": "снова открыл(а) это",
-  "to reply.": "чтобы ответить."
+  "to reply.": "чтобы ответить.",
+  "removed in {tag}": "удалён в {tag}",
+  "Last version": "Последняя версия",
+  "Removed in {tag} — showing the last version of this file.": "Удалён в {tag} — показана последняя версия этого файла."
 }

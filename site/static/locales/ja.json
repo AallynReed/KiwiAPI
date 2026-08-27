@@ -448,7 +448,6 @@
   "Release this Trove name? You can re-claim later.": "この Trove 名を解放しますか？後で再取得できます。",
   "Removed": "削除",
   "removed": "削除",
-  "removed in latest capture": "最新のキャプチャで削除されました",
   "Reorder dashboard sections by dragging them, collapse the ones you don't use, and pin your most-used tools to the <strong>Quick Tools</strong> tray (automatic \"most visited\" or fully manual). Toggle community/news sections off entirely in Settings for a calmer page.": "ダッシュボードのセクションはドラッグして並べ替え、使わないものは折りたたみ、よく使うツールは <strong>Quick Tools</strong> トレイにピン留めできます（自動の「よく訪れる」か完全な手動）。Settings でコミュニティ/ニュースのセクションを完全にオフにすると、より落ち着いたページになります。",
   "Report bugs, request features, share builds. The fastest channel to me.": "バグ報告、機能リクエスト、ビルド共有。最速の連絡手段です。",
   "Right-click any file to extract it to your computer.": "任意のファイルを右クリックすると、コンピューターに抽出できます。",
@@ -3094,5 +3093,8 @@
   "closed this": "がクローズしました",
   "opened by": "投稿者",
   "reopened this": "が再オープンしました",
-  "to reply.": "すると返信できます。"
+  "to reply.": "すると返信できます。",
+  "removed in {tag}": "{tag} で削除",
+  "Last version": "最後のバージョン",
+  "Removed in {tag} — showing the last version of this file.": "{tag} で削除されました — このファイルの最後のバージョンを表示しています。"
 }

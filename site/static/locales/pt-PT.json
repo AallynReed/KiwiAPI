@@ -448,7 +448,6 @@
   "Release this Trove name? You can re-claim later.": "Libertar este nome Trove? Pode reivindicar mais tarde.",
   "Removed": "Removido",
   "removed": "removido",
-  "removed in latest capture": "removido na captura mais recente",
   "Reorder dashboard sections by dragging them, collapse the ones you don't use, and pin your most-used tools to the <strong>Quick Tools</strong> tray (automatic \"most visited\" or fully manual). Toggle community/news sections off entirely in Settings for a calmer page.": "Reordene as secções do painel arrastando-as, recolha as que não usa e fixe as suas ferramentas mais usadas no tabuleiro <strong>Quick Tools</strong> (automático «mais visitadas» ou totalmente manual). Desative por completo as secções de conteúdo/notícias nas Settings para uma página mais tranquila.",
   "Report bugs, request features, share builds. The fastest channel to me.": "Reportar bugs, pedir funcionalidades, partilhar builds. O canal mais rápido para me chegar.",
   "Right-click any file to extract it to your computer.": "Clique com o botão direito em qualquer ficheiro para o extrair para o seu computador.",
@@ -3094,5 +3093,8 @@
   "closed this": "fechou isto",
   "opened by": "aberto por",
   "reopened this": "reabriu isto",
-  "to reply.": "para responder."
+  "to reply.": "para responder.",
+  "removed in {tag}": "removido em {tag}",
+  "Last version": "Última versão",
+  "Removed in {tag} — showing the last version of this file.": "Removido em {tag} — a mostrar a última versão deste ficheiro."
 }

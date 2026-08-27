@@ -448,7 +448,6 @@
   "Release this Trove name? You can re-claim later.": "释放此 Trove 名？以后还可以重新认领。",
   "Removed": "删除",
   "removed": "删除",
-  "removed in latest capture": "已在最新捕获中移除",
   "Reorder dashboard sections by dragging them, collapse the ones you don't use, and pin your most-used tools to the <strong>Quick Tools</strong> tray (automatic \"most visited\" or fully manual). Toggle community/news sections off entirely in Settings for a calmer page.": "以拖曳重新排列仪表板区块、收合不使用的区块，并将最常用的工具钉选到 <strong>Quick Tools</strong> 列（自动「最常造访」或完全手动）。在 Settings 中可完全关闭社区／新闻区块，让页面更清爽。",
   "Report bugs, request features, share builds. The fastest channel to me.": "报告 bug、提建议、分享构筑。联系我最快的渠道。",
   "Right-click any file to extract it to your computer.": "对任何文件按右键，即可将其截取到你的电脑。",
@@ -3094,5 +3093,8 @@
   "closed this": "关闭了此条目",
   "opened by": "发起人",
   "reopened this": "重新开启了此条目",
-  "to reply.": "后即可回复。"
+  "to reply.": "后即可回复。",
+  "removed in {tag}": "在 {tag} 中移除",
+  "Last version": "最后一个版本",
+  "Removed in {tag} — showing the last version of this file.": "已在 {tag} 中移除 — 显示该文件的最后一个版本。"
 }

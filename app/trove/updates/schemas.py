@@ -80,6 +80,9 @@ class FileMeta(BaseModel):
     size: int
     archive: str | None = None        # source TFI directory (null for loose files)
     archive_index: int | None = None
+    removed: bool = False             # true when the file is gone from the tree and
+                                      #   this is its last version before removal
+    removed_ordinal: int | None = None  # the version that removed it
 
 
 class FileView(BaseModel):
@@ -96,6 +99,8 @@ class FileView(BaseModel):
     reason: str | None = None
     truncated: bool = False
     text: str | None = None
+    removed: bool = False             # this is the last version before removal
+    removed_ordinal: int | None = None
 
 
 class FileHistoryEntry(BaseModel):

@@ -1236,7 +1236,6 @@
   "public": "공개",
   "releases-only": "릴리스만",
   "removed": "삭제됨",
-  "removed in latest capture": "최신 캡처에서 삭제됨",
   "root": "루트",
   "schedule": "일정",
   "this week's featured item": "이번 주 추천 아이템",
@@ -3094,5 +3093,8 @@
   "closed this": "님이 닫았습니다",
   "opened by": "작성자",
   "reopened this": "님이 다시 열었습니다",
-  "to reply.": "하면 답글을 남길 수 있습니다."
+  "to reply.": "하면 답글을 남길 수 있습니다.",
+  "removed in {tag}": "{tag}에서 제거됨",
+  "Last version": "마지막 버전",
+  "Removed in {tag} — showing the last version of this file.": "{tag}에서 제거되었습니다 — 이 파일의 마지막 버전을 보여줍니다."
 }

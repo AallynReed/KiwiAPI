@@ -448,7 +448,6 @@
   "Release this Trove name? You can re-claim later.": "Diesen Trove-Namen freigeben? Du kannst ihn später erneut claimen.",
   "Removed": "Entfernt",
   "removed": "entfernt",
-  "removed in latest capture": "in letzter Aufnahme entfernt",
   "Reorder dashboard sections by dragging them, collapse the ones you don't use, and pin your most-used tools to the <strong>Quick Tools</strong> tray (automatic \"most visited\" or fully manual). Toggle community/news sections off entirely in Settings for a calmer page.": "Ordne Dashboard-Abschnitte per Drag-and-drop neu an, klappe ungenutzte ein und hefte deine meistgenutzten Tools an das <strong>Quick Tools</strong>-Fach (automatisch „meistbesucht“ oder vollständig manuell). Schalte Community-/News-Abschnitte in den Settings ganz ab für eine ruhigere Seite.",
   "Report bugs, request features, share builds. The fastest channel to me.": "Bugs melden, Features wünschen, Builds teilen. Der schnellste Kanal zu mir.",
   "Right-click any file to extract it to your computer.": "Rechtsklicke auf eine beliebige Datei, um sie auf deinen Computer zu extrahieren.",
@@ -3094,5 +3093,8 @@
   "closed this": "hat das geschlossen",
   "opened by": "gemeldet von",
   "reopened this": "hat das wieder geöffnet",
-  "to reply.": "um zu antworten."
+  "to reply.": "um zu antworten.",
+  "removed in {tag}": "entfernt in {tag}",
+  "Last version": "Letzte Version",
+  "Removed in {tag} — showing the last version of this file.": "In {tag} entfernt — hier siehst du die letzte Version dieser Datei."
 }

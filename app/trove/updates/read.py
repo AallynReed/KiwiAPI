@@ -104,13 +104,17 @@ async def read_file_text(branch: str, path: str, max_bytes: int = VIEW_MAX_BYTES
     * ``missing``   - blob absent from the store.
 
     ``reason`` mirrors ``kind`` for the non-text cases (kept for older clients).
-    None when the path isn't in the latest tree. Sync blob I/O runs in a thread."""
+    A path removed from the tree previews its last version, flagged ``removed``;
+    None only when it was never archived. Sync blob I/O runs in a thread."""
     meta = await get_file_meta(branch, path)
     if meta is None:
         return None
     base = {
         "branch": branch, "path": path, "size": meta["size"],
         "content_sha256": meta["content_sha256"], "truncated": False, "text": None,
+        # Set when the file is gone from the tree and this is its last version.
+        "removed": meta.get("removed", False),
+        "removed_ordinal": meta.get("removed_ordinal"),
     }
     ext = path.rsplit(".", 1)[-1].lower() if "." in path.rsplit("/", 1)[-1] else ""
     # Images render straight through an <img> tag - no size cap, no blob read here.
@@ -231,12 +235,39 @@ async def search_paths(branch: str, needle: str, limit: int = 200) -> tuple[list
     return entries, total
 
 
+async def last_known_meta(branch: str, path: str) -> dict | None:
+    """Blob coordinates for a path that has left the tree: its final version.
+
+    A deletion stores no bytes, so the removal row carries no hash - the content
+    comes from the newest non-removed change under the path. ``None`` when the
+    path was never archived on this branch (a genuine 404).
+    """
+    last = await UpdateChange.find(
+        {"branch": branch, "path": path},
+    ).sort("-ordinal").limit(1).to_list()
+    if not last or last[0].type != "removed":
+        return None
+    prev = await UpdateChange.find(
+        {"branch": branch, "path": path,
+         "ordinal": {"$lt": last[0].ordinal}, "content_sha256": {"$ne": None}},
+    ).sort("-ordinal").limit(1).to_list()
+    if not prev:
+        return None
+    return {"path": path, "content_sha256": prev[0].content_sha256, "size": prev[0].size,
+            "archive": None, "archive_index": None,
+            "removed": True, "removed_ordinal": last[0].ordinal}
+
+
 async def get_file_meta(branch: str, path: str) -> dict | None:
+    """Blob coordinates for one path, falling back to the last version before a
+    removal so a deleted file still opens (flagged ``removed``) rather than 404ing
+    into an empty page. ``None`` only when the path was never archived."""
     d = await UpdateState.find_one({"branch": branch, "path": path})
     if d is None:
-        return None
+        return await last_known_meta(branch, path)
     return {"path": d.path, "content_sha256": d.content_sha256, "size": d.size,
-            "archive": d.archive, "archive_index": d.archive_index}
+            "archive": d.archive, "archive_index": d.archive_index,
+            "removed": False, "removed_ordinal": None}
 
 
 # A file's history is a range scan on the (branch, path, ordinal) change-log

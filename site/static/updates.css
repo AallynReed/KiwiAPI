@@ -971,6 +971,16 @@ body.up-modal-open { overflow: hidden; }
   font-size: .85rem;
   color: var(--text-mute);
 }
+/* Banner over a deleted file's last-known content. */
+.up-preview-removed {
+  margin: 0 0 10px;
+  padding: 9px 12px;
+  border: 1px solid rgba(248,113,113,.28);
+  border-radius: 10px;
+  background: rgba(248,113,113,.10);
+  color: var(--text-mute);
+  font-size: .85rem;
+}
 
 /* Inline image preview (png/jpg/gif/webp/…). Checkerboard behind so
    transparency reads clearly; the image is capped so tall assets scroll. */
