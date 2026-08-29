@@ -1,9 +1,12 @@
+import gzip
 import re
+import zlib
 
 from fastapi import FastAPI, Request
+from starlette.datastructures import Headers, MutableHeaders
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import JSONResponse, RedirectResponse, Response
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.core.config import settings
 from app.core.csp import API_CSP as _API_CSP
@@ -456,3 +459,182 @@ def add_api_host_redirect_middleware(app: FastAPI) -> None:
                 target = f"{target}?{request.url.query}"
             return RedirectResponse(target, status_code=301)
         return await call_next(request)
+
+
+# ── response compression (JSON) ────────────────────────────────────────────
+# Content types worth gzipping. Chosen off the RESPONSE's content-type rather
+# than the request path because /v1 and /site serve JSON and raw game blobs out
+# of the same prefixes, and only the former compresses usefully. `text/event-stream`
+# is deliberately absent: the live event stream must reach the client unbuffered.
+_COMPRESSIBLE_TYPES = frozenset({
+    "application/javascript",
+    "application/json",
+    "application/manifest+json",
+    "application/x-ndjson",
+    "application/xml",
+    "image/svg+xml",
+    "text/css",
+    "text/csv",
+    "text/html",
+    "text/javascript",
+    "text/markdown",
+    "text/plain",
+    "text/xml",
+})
+# Below this a gzip frame costs more than it saves, and the CPU is pure waste.
+_COMPRESS_MIN_BYTES = 1024
+# Level 5, not gzip's default 9: these bodies are compressed on the event loop,
+# and on a multi-megabyte tree listing level 9 costs several times the CPU of
+# level 5 for a couple of percent of size. See the warmer's event-loop note.
+_COMPRESS_LEVEL = 5
+
+
+def _accepts_gzip(scope: Scope) -> bool:
+    for key, value in scope.get("headers", []):
+        if key == b"accept-encoding":
+            return b"gzip" in value.lower()
+    return False
+
+
+def _is_compressible(message: Message) -> bool:
+    """Whether this ``http.response.start`` describes a body we should gzip."""
+    status = message["status"]
+    # 204/304 have no body; 206 is a byte range whose offsets a re-encode
+    # would invalidate; errors are small enough not to bother.
+    if status < 200 or status in (204, 206, 304):
+        return False
+    headers = Headers(raw=message["headers"])
+    # Already encoded - notably the pre-gzipped blueprint/tmod cache, which
+    # hands out stored gzip bytes verbatim. Never double-compress.
+    if "content-encoding" in headers:
+        return False
+    if headers.get("content-range"):
+        return False
+    media_type = headers.get("content-type", "").split(";")[0].strip().lower()
+    if media_type not in _COMPRESSIBLE_TYPES:
+        return False
+    # A declared length under the floor settles it without buffering anything.
+    length = headers.get("content-length")
+    return not (length is not None and length.isdigit() and int(length) < _COMPRESS_MIN_BYTES)
+
+
+class ResponseCompressionMiddleware:
+    """gzip JSON (and other text) responses that leave the API.
+
+    The edge proxy runs nginx's stock ``gzip_types``, i.e. ``text/html`` only, so
+    every JSON body went out raw. One ``/updates`` folder listing is 8.6 MB of
+    extremely repetitive JSON - the wire time for it dwarfed the ~0.5 s the server
+    spent building it, and that is what "fetching updates is slow" was.
+
+    A fully-materialised response (the JSON case) is compressed in one shot and
+    keeps an exact ``Content-Length``, so the edge cache still stores a sized
+    entry. A response that arrives in several chunks is compressed incrementally
+    and goes out chunked - so nothing is ever buffered whole here, and a stream
+    cannot be stalled by this layer even if it does carry a compressible type.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or not _accepts_gzip(scope):
+            await self.app(scope, receive, send)
+            return
+        await _GzipResponder(self.app, send)(scope, receive)
+
+
+class _GzipResponder:
+    """Per-request state for ``ResponseCompressionMiddleware``.
+
+    ``http.response.start`` is held back until the first body chunk arrives: only
+    then do we know whether the body is complete (compress in one shot, exact
+    Content-Length) or streamed (compress incrementally, drop Content-Length).
+    """
+
+    def __init__(self, app: ASGIApp, send: Send) -> None:
+        self.app = app
+        self.send = send
+        self.start: Message | None = None
+        self.compress = False
+        self.stream = None  # zlib compressobj, set on the first of several chunks
+
+    async def __call__(self, scope: Scope, receive: Receive) -> None:
+        await self.app(scope, receive, self._send)
+
+    async def _send(self, message: Message) -> None:
+        if message["type"] == "http.response.start":
+            self.start = message
+            self.compress = _is_compressible(message)
+            if not self.compress:
+                await self._flush_start()
+            return
+
+        if message["type"] != "http.response.body" or not self.compress:
+            await self.send(message)
+            return
+
+        body = message.get("body", b"")
+        more = message.get("more_body", False)
+
+        if self.stream is not None:            # already streaming - keep going
+            await self._send_stream_chunk(body, more)
+            return
+
+        if more:                               # first of several chunks
+            self.stream = zlib.compressobj(
+                _COMPRESS_LEVEL, zlib.DEFLATED, zlib.MAX_WBITS | 16,
+            )
+            self._mark_encoded(chunked=True)
+            await self._flush_start()
+            await self._send_stream_chunk(body, more)
+            return
+
+        # The whole body in one message: the common JSON path.
+        if len(body) < _COMPRESS_MIN_BYTES:
+            self.compress = False
+            await self._flush_start()
+            await self.send(message)
+            return
+        packed = gzip.compress(body, compresslevel=_COMPRESS_LEVEL)
+        if len(packed) >= len(body):           # incompressible - ship the original
+            self.compress = False
+            await self._flush_start()
+            await self.send(message)
+            return
+        self._mark_encoded(length=len(packed))
+        await self._flush_start()
+        await self.send({"type": "http.response.body", "body": packed, "more_body": False})
+
+    def _mark_encoded(self, *, length: int | None = None, chunked: bool = False) -> None:
+        assert self.start is not None
+        headers = MutableHeaders(raw=self.start["headers"])
+        headers["Content-Encoding"] = "gzip"
+        _add_vary(headers, "Accept-Encoding")
+        if chunked:
+            del headers["Content-Length"]      # length is unknown until the end
+        else:
+            headers["Content-Length"] = str(length)
+
+    async def _flush_start(self) -> None:
+        if self.start is not None:
+            await self.send(self.start)
+            self.start = None
+
+    async def _send_stream_chunk(self, body: bytes, more: bool) -> None:
+        assert self.stream is not None
+        chunk = self.stream.compress(body)
+        if not more:
+            chunk += self.stream.flush(zlib.Z_FINISH)
+        # A zero-length chunk mid-stream is legal but pointless; the final one is
+        # sent regardless so the client sees more_body=False.
+        if chunk or not more:
+            await self.send({"type": "http.response.body", "body": chunk, "more_body": more})
+
+
+def add_response_compression_middleware(app: FastAPI) -> None:
+    """gzip compressible response bodies (see ResponseCompressionMiddleware).
+
+    Register LAST in main.py so it sits outermost and compresses the finished
+    response, security headers and all.
+    """
+    app.add_middleware(ResponseCompressionMiddleware)

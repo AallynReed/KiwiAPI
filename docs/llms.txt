@@ -44,6 +44,10 @@ There is no refresh, no session, no login round-trip - the token is the credenti
 - **Rate limits**: responses carry `X-RateLimit-Limit`, `X-RateLimit-Remaining`,
   `X-RateLimit-Reset` (unix seconds). A `429` adds `Retry-After` (seconds).
 - Default data-API limit: **120 requests / minute / token**.
+- **Compression**: send `Accept-Encoding: gzip`. JSON responses over 1 KB come back
+  gzipped (`Vary: Accept-Encoding`), which matters most on the bulky ones - a big
+  `/v1/updates/{branch}/tree` listing shrinks roughly 10×. Streaming responses
+  (`/v1/events/stream`) are never compressed, so SSE stays unbuffered.
 
 ## Error codes
 

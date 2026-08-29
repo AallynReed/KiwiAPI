@@ -162,6 +162,9 @@ Default limits: signup 5/h/IP · login 10/5min/IP · API 120/min/token · token 
 Fan-out surfaces (codexes, the mods hub, updates file serving) meter in their own widened
 buckets — see the `*_rate_limit_multiplier` settings in `app/core/config.py`.
 
+JSON responses over 1 KB are gzipped when the client offers it; streams are excluded
+by content type so SSE stays unbuffered (`ResponseCompressionMiddleware`).
+
 ## Development
 
 ```bash

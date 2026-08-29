@@ -41,6 +41,7 @@ from app.core.middleware import (
     add_api_host_redirect_middleware,
     add_head_method_middleware,
     add_public_asset_cors_middleware,
+    add_response_compression_middleware,
     add_security_middleware,
 )
 from app.core.observability import add_request_context_middleware, configure_logging
@@ -337,6 +338,13 @@ app.add_middleware(
 # instead of proxying it. Deliberately NOT done by adding partners to the allowlist
 # above - that one carries credentials.
 add_public_asset_cors_middleware(app)
+
+# Outermost of all, so it compresses the finished response - CORS and security
+# headers included. The edge proxy only gzips text/html, so a JSON body is
+# compressed here or not at all, and the /updates tree listings are megabytes of
+# highly repetitive JSON. Streams (the SSE event bus) are excluded by content
+# type; see ResponseCompressionMiddleware.
+add_response_compression_middleware(app)
 
 # One router per endpoint-path group (feature module).
 #
