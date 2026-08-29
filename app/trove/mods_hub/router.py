@@ -23,6 +23,7 @@ import binascii
 from fastapi import APIRouter, Depends, File, Form, Query, Request, Response, UploadFile
 
 from app.auth.models import User
+from app.core.config import settings
 from app.core.dependencies import AccessContext, get_current_user, public_scope
 from app.core.errors import COMMON_ERROR_RESPONSES, APIError, ErrorCode
 from app.core.features import require_mod_issues_enabled
@@ -76,7 +77,20 @@ mods_creator_router = APIRouter(
     responses=COMMON_ERROR_RESPONSES,
 )
 
-_PUB = Depends(public_scope("mods:read"))
+# Browsing the hub is a FAN-OUT, not one call: a page of cards, then per-card
+# detail / releases / file lists. At the shared 30/min anon cap page one already
+# 429'd, so the whole browse surface meters in its own widened bucket.
+_PUB = Depends(public_scope(
+    "mods:read", rate_multiplier=settings.mods_rate_limit_multiplier,
+    bucket="mods:browse",
+))
+# Images and downloads burst harder still (one <img> per card, one install pulling
+# a .tmod plus its previews) and are pure static blob serving, so they get a
+# wider bucket of their OWN - a thumbnail grid must not starve the browse calls.
+_ASSET = Depends(public_scope(
+    "mods:read", rate_multiplier=settings.mods_asset_rate_limit_multiplier,
+    bucket="mods:asset",
+))
 # Writes: the creator's Dashboard session, or a connected API account's token
 # carrying mods:write. Both resolve to the creator's SiteUser - see write_auth.py.
 _USER = Depends(get_mod_write_user)
@@ -158,7 +172,7 @@ async def get_tree(
 
 @mods_hub_router.get("/projects/{handle}/{slug}/raw/{commit_ref}/{path:path}")
 async def get_raw_file(
-    handle: str, slug: str, commit_ref: str, path: str, ctx: AccessContext = _PUB,
+    handle: str, slug: str, commit_ref: str, path: str, ctx: AccessContext = _ASSET,
 ) -> Response:
     project = await service.get_for_view(handle, slug, None)
     service.ensure_source_visible(project, None)
@@ -168,7 +182,7 @@ async def get_raw_file(
 
 @mods_hub_router.get("/projects/{handle}/{slug}/archive")
 async def get_source_archive(
-    handle: str, slug: str, ctx: AccessContext = _PUB, ref: str = Query(default=""),
+    handle: str, slug: str, ctx: AccessContext = _ASSET, ref: str = Query(default=""),
 ) -> Response:
     """Download a commit's whole file tree as a ``.zip`` (source, not a build)."""
     project = await service.get_for_view(handle, slug, None)
@@ -250,7 +264,7 @@ async def get_release(release_id: str, ctx: AccessContext = _PUB) -> dict:
 
 
 @mods_hub_router.get("/releases/{release_id}/download")
-async def download_release(release_id: str, ctx: AccessContext = _PUB) -> Response:
+async def download_release(release_id: str, ctx: AccessContext = _ASSET) -> Response:
     """Download a release's compiled ``.tmod``. Public; bumps the download count."""
     release, project = await service.release_with_project(release_id, None)
     data = await service.record_download(release, project)
@@ -278,7 +292,7 @@ async def get_release_assembled(
     request: Request, release_id: str,
     fmt: str = Query(default="json", pattern="^(json|bin)$",
                      description="`json` (default) or `bin` - the compact KVX1 binary container."),
-    ctx: AccessContext = _PUB,
+    ctx: AccessContext = _ASSET,
 ) -> Response:
     """The release's blueprint parts assembled onto their creature rig (rest pose +
     animations) as the web-viewer model payload.
@@ -303,7 +317,7 @@ async def get_release_blueprint(
     path: str = Query(..., min_length=1, max_length=400),
     fmt: str = Query(default="json", pattern="^(json|bin)$",
                      description="`json` (default) or `bin` - the compact KVX1 binary container."),
-    ctx: AccessContext = _PUB,
+    ctx: AccessContext = _ASSET,
 ) -> Response:
     """Decoded voxel data for one ``.blueprint`` in a release (web 3D viewer).
 
@@ -315,7 +329,7 @@ async def get_release_blueprint(
 
 
 @mods_hub_router.get("/rigs/{skeleton}/anim/{name}", response_class=Response)
-async def get_rig_animation(skeleton: str, name: str, ctx: AccessContext = _PUB) -> Response:
+async def get_rig_animation(skeleton: str, name: str, ctx: AccessContext = _ASSET) -> Response:
     """Baked animation clip for a creature rig, lazily (the assembled-model payload
     carries only animation metadata; the viewer fetches clips on demand). Binary
     ``TANIM1``: an 8-byte magic, then ``ap_count``/``frame_count``/``fps``/name-blob
@@ -336,7 +350,7 @@ async def get_release_files(release_id: str, ctx: AccessContext = _PUB) -> dict:
 @mods_hub_router.get("/releases/{release_id}/file")
 async def get_release_file(
     release_id: str, path: str = Query(..., min_length=1, max_length=400),
-    ctx: AccessContext = _PUB,
+    ctx: AccessContext = _ASSET,
 ) -> Response:
     """Download one file from inside a release's .tmod (preview excluded)."""
     release, _ = await service.release_with_project(release_id, None)
@@ -394,7 +408,7 @@ async def get_release_cfgs(release_id: str, ctx: AccessContext = _PUB) -> dict:
 @mods_hub_router.get("/releases/{release_id}/cfg")
 async def get_release_cfg(
     release_id: str, path: str = Query(..., min_length=1, max_length=400),
-    ctx: AccessContext = _PUB,
+    ctx: AccessContext = _ASSET,
 ) -> Response:
     """Download one packed ``.cfg``, extracted from the .tmod on the fly."""
     release, _ = await service.release_with_project(release_id, None)
@@ -406,7 +420,7 @@ async def get_release_cfg(
 
 @mods_hub_router.get("/image/{sha}")
 async def get_image(sha: str, w: int | None = Query(default=None, description="Downscale to this width (WebP)"),
-                    ctx: AccessContext = _PUB) -> Response:
+                    ctx: AccessContext = _ASSET) -> Response:
     if w is not None and w not in store.THUMB_WIDTHS:
         raise APIError(400, ErrorCode.bad_request,
                        f"w must be one of {', '.join(map(str, store.THUMB_WIDTHS))}")

@@ -138,8 +138,10 @@ the gem/misc tools add POST calculators. Full field schema in `/openapi.json`.
 
 **`/v1/rotations/*`, `/v1/feeds/*`, `/v1/codexes/*`, `/v1/btt/*`, `/v1/activity/*` and `/v1/events/*` are PUBLIC** - callable
 with no token at a stricter per-IP rate limit (30 req/min/IP by default). Send a token carrying the matching
-scope to get the full per-token limit (120 req/min). **`/v1/codexes/*` gets 5× both budgets** (150 req/min/IP
-anon, 600 req/min/token). A malformed/revoked token still 401s; a valid token without the scope is served on
+scope to get the full per-token limit (120 req/min). Surfaces that fan out - one page of browsing costing many
+calls - get widened budgets of their own: **`/v1/codexes/*` gets 5×** (150 req/min/IP anon, 600 req/min/token),
+**the `/v1/mods/hub/*` browse reads get 8×** (240 / 960) and **their images + downloads 30×** (900 / 3600) in a
+SEPARATE bucket, so a grid of thumbnails cannot starve the browse calls beside it. A malformed/revoked token still 401s; a valid token without the scope is served on
 the anonymous per-IP budget. A few individual endpoints are also tokenless (`POST /v1/stats/coefficient`,
 `/v1/misc/interest-items`, `/v1/misc/supporters`, `/v1/misc/feedback`, the `/v1/updates` file downloads).
 All other surfaces require a token with the matching scope:

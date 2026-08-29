@@ -513,6 +513,19 @@ class Settings(BaseSettings):
     # blobs, so it's also long-cached (see download_update_file) - repeat views
     # come from the CDN/browser and never re-hit this budget.
     updates_file_rate_limit_multiplier: int = 20
+    # Mods Hub browsing (/v1/mods/hub/*): the desktop app and the /mods grid both
+    # paginate a card grid and then fan out per card - project detail, releases,
+    # files - so a single page of browsing spends far more than 30 requests. That
+    # is what surfaced as "The mod hub returned HTTP 429" on page one. 8x = 240
+    # req/min/IP anon in its own bucket, 960 req/min for a token carrying mods:read.
+    mods_rate_limit_multiplier: int = 8
+    # Mod images + release downloads + release file reads: one grid paint fires an
+    # <img> burst and one install pulls the .tmod plus its previews, so assets meter
+    # in their OWN bucket - same shape as the updates raw-file bucket - and a big
+    # thumbnail grid can't starve the browse calls sharing the hub. 30x = 900
+    # req/min/IP anon. Images are immutable + long-cached, so repeat views never
+    # re-hit this budget.
+    mods_asset_rate_limit_multiplier: int = 30
     # Ingest cooldown: per-token, per-endpoint backstop against a bot resubmitting
     # the same dump on a loop. API-token (bot) path only - see require_master_ingest.
     ingest_cooldown_max: int = 1

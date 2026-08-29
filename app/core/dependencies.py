@@ -292,7 +292,7 @@ def require_scope(scope: str):
     return checker
 
 
-def public_scope(scope: str, *, rate_multiplier: int = 1):
+def public_scope(scope: str, *, rate_multiplier: int = 1, bucket: str | None = None):
     """Dependency factory: a scope that's readable WITHOUT a token, throttled.
 
     - No token → anonymous, allowed at the stricter per-IP budget.
@@ -305,10 +305,13 @@ def public_scope(scope: str, *, rate_multiplier: int = 1):
 
     `rate_multiplier` widens both budgets (anon + per-token) for this scope; when
     set, the scope is metered in its own bucket so the wider cap stays isolated.
+    `bucket` names that bucket explicitly - needed when ONE scope has two widened
+    surfaces that must not eat each other's budget (browsing the mods hub vs.
+    pulling its images and downloads).
     """
     # Wider scopes meter in their own bucket so the scaled limit isn't applied to
     # the shared bucket inconsistently. 1x scopes keep sharing the default bucket.
-    bucket = scope if rate_multiplier != 1 else None
+    bucket = bucket or (scope if rate_multiplier != 1 else None)
 
     async def checker(
         request: Request,

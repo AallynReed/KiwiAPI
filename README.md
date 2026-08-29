@@ -159,6 +159,8 @@ Every error uses one envelope (branch on `code`, not `message`); each carries a 
 ```
 
 Default limits: signup 5/h/IP · login 10/5min/IP · API 120/min/token · token creation 3/day.
+Fan-out surfaces (codexes, the mods hub, updates file serving) meter in their own widened
+buckets — see the `*_rate_limit_multiplier` settings in `app/core/config.py`.
 
 ## Development
 
