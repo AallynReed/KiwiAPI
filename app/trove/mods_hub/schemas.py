@@ -215,6 +215,16 @@ class HashLookupRequest(BaseModel):
         min_length=1, max_length=200,
         description="Artifact sha256 hex hashes (one .tmod/.zip per hash) to resolve. Max 200.",
     )
+    include_releases: bool = Field(
+        default=False,
+        description=(
+            "Attach each matched mod's full published release list to its `mod` object. "
+            "Set this when you are checking for updates: without it you need one "
+            "`GET /v1/mods/{handle}/{slug}` per match to see the newer builds, which is a "
+            "serial round trip per installed mod. Off by default - it is a large addition "
+            "to a batch response."
+        ),
+    )
 
 
 class CreatorLinkRequest(BaseModel):

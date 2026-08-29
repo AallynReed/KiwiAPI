@@ -957,8 +957,14 @@ async def popular_mods(
 async def lookup_mods(req: HashLookupRequest, ctx: AccessContext = _PUB) -> dict:
     """Resolve mod + release metadata from one or more artifact content hashes
     (sha256 hex). ``results`` is keyed by hash; ``unknown`` lists the hashes with
-    no public match. Useful for an app to identify installed .tmod files."""
-    return await service.lookup_by_hashes(req.hashes)
+    no public match. Useful for an app to identify installed .tmod files.
+
+    Pass ``include_releases: true`` to get each matched mod's published releases in
+    the same response - that is everything an update check needs, in one call
+    instead of one follow-up request per installed mod."""
+    return await service.lookup_by_hashes(
+        req.hashes, include_releases=req.include_releases,
+    )
 
 
 @mods_public_router.get("/categories")

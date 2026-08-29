@@ -3210,6 +3210,28 @@ async def _published_releases(project: ModProject) -> list[ModRelease]:
     return await ModRelease.find(query).sort("-published_at").to_list()
 
 
+async def _published_releases_for(
+    projects: list[ModProject],
+) -> dict[PydanticObjectId, list[ModRelease]]:
+    """``_published_releases`` for MANY projects in ONE query, keyed by project id.
+
+    Same selection - hidden branches dropped, newest first - but the hidden-branch
+    filter runs in Python because the branch list differs per project and Mongo
+    can't express "not in THIS document's list" across a batch."""
+    if not projects:
+        return {}
+    docs = await ModRelease.find(
+        {"project_id": {"$in": [p.id for p in projects]}, "status": "published"},
+    ).sort("-published_at").to_list()
+    hidden = {p.id: set(p.hidden_release_branches or []) for p in projects}
+    out: dict[PydanticObjectId, list[ModRelease]] = {p.id: [] for p in projects}
+    for r in docs:
+        if r.branch in hidden.get(r.project_id, ()) or r.project_id not in out:
+            continue
+        out[r.project_id].append(r)
+    return out
+
+
 async def public_list(
     *, q: str | None = None, tag: str | None = None, author: str | None = None,
     sort: str = "recent", limit: int = 30, offset: int = 0,
@@ -3246,7 +3268,9 @@ async def public_popular(limit: int = 25) -> list[dict]:
     return [public_mod_dto(p) for p in docs]
 
 
-async def lookup_by_hashes(hashes: list[str]) -> dict:
+async def lookup_by_hashes(
+    hashes: list[str], *, include_releases: bool = False,
+) -> dict:
     """Resolve mod metadata for one or more artifact content hashes (sha256 hex).
     Per known hash, returns the matching mod + the specific release (newest if the
     owner reused it); hashes with no public match are listed under ``unknown``.
@@ -3254,7 +3278,14 @@ async def lookup_by_hashes(hashes: list[str]) -> dict:
 
     A build that was repacked to carry an attached config answers to BOTH hashes -
     the release's own and the modder's pre-injection upload - so a copy installed
-    from anywhere still resolves to the right mod and update."""
+    from anywhere still resolves to the right mod and update.
+
+    ``include_releases`` attaches each matched mod's full published release list to
+    its ``mod`` object. Without it a client that wants to know whether the installed
+    build is OUTDATED has to follow up with one ``GET /v1/mods/{handle}/{slug}`` per
+    match - which is a serial round trip per installed mod, and was the reason
+    scanning a mods folder took seconds. Off by default: it is a large addition to
+    a batch response and only update-checkers need it."""
     seen: set[str] = set()
     uniq = [h for h in (x.strip().lower() for x in hashes if x and x.strip())
             if not (h in seen or seen.add(h))]
@@ -3264,18 +3295,32 @@ async def lookup_by_hashes(hashes: list[str]) -> dict:
         releases = await ModRelease.find(
             _hash_match(tuple(uniq)), ModRelease.status == "published",
         ).sort("-published_at").to_list()
-        proj_cache: dict = {}
+        # One query for every matched project, not one round trip per distinct mod:
+        # a 200-hash batch used to await 200 sequential ModProject.get calls.
+        projects: dict = {}
+        proj_ids = list({r.project_id for r in releases})
+        if proj_ids:
+            projects = {
+                p.id: p
+                for p in await ModProject.find({"_id": {"$in": proj_ids}}).to_list()
+            }
+        visible = [p for p in projects.values()
+                   if not p.taken_down and p.visibility != "draft"]
+        by_project = await _published_releases_for(visible) if include_releases else {}
         for r in releases:
             keys = [h for h in (r.tmod_sha, *(r.prior_tmod_shas or []))
                     if h in wanted and h not in results]
             if not keys:
                 continue  # newest already chosen (sorted desc)
-            if r.project_id not in proj_cache:
-                proj_cache[r.project_id] = await ModProject.get(r.project_id)
-            proj = proj_cache[r.project_id]
+            proj = projects.get(r.project_id)
             if proj is None or proj.taken_down or proj.visibility == "draft":
                 continue
-            hit = {"mod": public_mod_dto(proj), "release": public_release_dto(r)}
+            hit = {
+                "mod": public_mod_dto(
+                    proj, releases=by_project.get(proj.id) if include_releases else None,
+                ),
+                "release": public_release_dto(r),
+            }
             for key in keys:
                 results[key] = hit
     return {"results": results, "unknown": [h for h in uniq if h not in results]}

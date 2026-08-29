@@ -330,8 +330,13 @@ keeps that exact name).
 - `GET /v1/mods/{handle}/{slug}` - full metadata + published releases for one mod (404 if not public).
 - `GET /v1/mods/popular` - the **25 most popular** mods (`limit` ≤25). `popularity_score` is a 0.0-1.0 metric
   derived mainly from the **last 7 days** of downloads (with stars + lifetime downloads as a floor), top mod ≈ 1.0.
-- `POST /v1/mods/lookup` - JSON `{hashes: [sha256, …]}` (≤200). Resolves mod + release metadata from artifact
+- `POST /v1/mods/lookup` - JSON `{hashes: [sha256, …], include_releases?: bool}` (≤200 hashes). Resolves mod +
+  release metadata from artifact
   **content hashes** → `{results: {<hash>: {mod, release}}, unknown: [<hash>, …]}`. Identify installed `.tmod`s.
+  Add **`include_releases: true`** and each matched `mod` carries its full published `releases[]`, which is
+  everything an update check needs **in one call**. Without it you need a `GET /v1/mods/{handle}/{slug}` per
+  match to see the newer builds - a serial round trip per installed mod, and the reason scanning a mods folder
+  used to take seconds. Off by default because it is a large addition to a batch response.
   A release's `sha256` is exactly what its `download_url` serves, so comparing it against the hash of the file on
   disk is a reliable "installed / outdated" check. A build that was repacked to carry a **config** (below) also
   answers to **every hash it used to have**, so a copy installed before the repack still resolves to this release
