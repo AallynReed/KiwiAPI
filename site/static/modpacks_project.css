@@ -109,7 +109,7 @@
   background: var(--bg-deep); padding: 11px 14px;
 }
 .mpk-entry-warn { border-color: rgba(255,193,93,.35); background: rgba(255,193,93,.05); }
-.mpk-entry-main { min-width: 0; }
+.mpk-entry-main { min-width: 0; flex: 1 1 auto; }
 .mpk-entry-titlerow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
 .mpk-entry-title { font-weight: 600; color: var(--text); text-decoration: none; }
 .mpk-entry-title:hover { color: var(--accent-blue); text-decoration: underline; }
@@ -126,6 +126,23 @@
 .mpk-locked { color: #ffce5b; } .mpk-locked i { color: #ffce5b; }
 .mpk-warn { color: #ffb04d; border-color: rgba(255,176,77,.4); } .mpk-warn i { color: #ffb04d; }
 .mpk-entry-ctl { display: flex; gap: 4px; flex: none; }
+
+/* Drag to reorder: the handle is a button so Up/Down works from the keyboard. */
+.mpk-grip {
+  width: 26px; align-self: stretch; flex: none; display: grid; place-items: center;
+  margin: -11px 0 -11px -6px; padding: 0; cursor: grab; touch-action: none;
+  border: 0; background: none; color: var(--text-soft);
+  transition: color .15s;
+}
+.mpk-grip:hover { color: var(--text); }
+.mpk-grip:active { cursor: grabbing; }
+.mpk-entry { transition: transform .16s ease; }
+.mpk-entry.mpk-dragging {
+  transition: none; position: relative; z-index: 3; cursor: grabbing;
+  border-color: var(--accent-blue); box-shadow: 0 12px 28px rgba(0,0,0,.45);
+}
+.mpk-entries.mpk-reordering { user-select: none; }
+@media (prefers-reduced-motion: reduce) { .mpk-entry { transition: none; } }
 .mpk-icon {
   width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer;
   border: 1px solid var(--bg-line); border-radius: var(--radius); background: var(--bg-card);

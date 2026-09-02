@@ -3096,5 +3096,6 @@
   "to reply.": "para responder.",
   "removed in {tag}": "eliminado en {tag}",
   "Last version": "Última versión",
-  "Removed in {tag} — showing the last version of this file.": "Eliminado en {tag} — se muestra la última versión de este archivo."
+  "Removed in {tag} — showing the last version of this file.": "Eliminado en {tag} — se muestra la última versión de este archivo.",
+  "Drag to reorder": "Arrastra para reordenar"
 }

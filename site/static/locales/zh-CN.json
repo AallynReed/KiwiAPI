@@ -3096,5 +3096,6 @@
   "to reply.": "后即可回复。",
   "removed in {tag}": "在 {tag} 中移除",
   "Last version": "最后一个版本",
-  "Removed in {tag} — showing the last version of this file.": "已在 {tag} 中移除 — 显示该文件的最后一个版本。"
+  "Removed in {tag} — showing the last version of this file.": "已在 {tag} 中移除 — 显示该文件的最后一个版本。",
+  "Drag to reorder": "拖动以重新排序"
 }

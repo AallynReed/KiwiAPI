@@ -3096,5 +3096,6 @@
   "to reply.": "чтобы ответить.",
   "removed in {tag}": "удалён в {tag}",
   "Last version": "Последняя версия",
-  "Removed in {tag} — showing the last version of this file.": "Удалён в {tag} — показана последняя версия этого файла."
+  "Removed in {tag} — showing the last version of this file.": "Удалён в {tag} — показана последняя версия этого файла.",
+  "Drag to reorder": "Перетащите для изменения порядка"
 }

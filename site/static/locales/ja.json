@@ -3096,5 +3096,6 @@
   "to reply.": "すると返信できます。",
   "removed in {tag}": "{tag} で削除",
   "Last version": "最後のバージョン",
-  "Removed in {tag} — showing the last version of this file.": "{tag} で削除されました — このファイルの最後のバージョンを表示しています。"
+  "Removed in {tag} — showing the last version of this file.": "{tag} で削除されました — このファイルの最後のバージョンを表示しています。",
+  "Drag to reorder": "ドラッグして並べ替え"
 }

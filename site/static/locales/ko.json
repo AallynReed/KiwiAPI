@@ -3096,5 +3096,6 @@
   "to reply.": "하면 답글을 남길 수 있습니다.",
   "removed in {tag}": "{tag}에서 제거됨",
   "Last version": "마지막 버전",
-  "Removed in {tag} — showing the last version of this file.": "{tag}에서 제거되었습니다 — 이 파일의 마지막 버전을 보여줍니다."
+  "Removed in {tag} — showing the last version of this file.": "{tag}에서 제거되었습니다 — 이 파일의 마지막 버전을 보여줍니다.",
+  "Drag to reorder": "드래그하여 순서 변경"
 }

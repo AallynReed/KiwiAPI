@@ -259,11 +259,14 @@
       `<button type="button" class="mpk-icon" data-edit-entry="${i}" title="${esc(t('Version'))}"><i class="fa-solid fa-sliders"></i></button>`;
     const ctl = isOwner ? `
       <div class="mpk-entry-ctl">
-        <button type="button" class="mpk-icon" data-move="${i}" data-dir="-1" title="${esc(t('Move up'))}" ${i === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-up"></i></button>
-        <button type="button" class="mpk-icon" data-move="${i}" data-dir="1" title="${esc(t('Move down'))}"><i class="fa-solid fa-arrow-down"></i></button>
         ${editBtn}
         <button type="button" class="mpk-icon mpk-icon-danger" data-remove="${i}" title="${esc(t('Remove'))}"><i class="fa-solid fa-xmark"></i></button>
       </div>` : '';
+    // Reordering is drag-and-drop, but the handle is a real button so the list
+    // stays operable without a pointer: focus it and press Up/Down.
+    const grip = isOwner
+      ? `<button type="button" class="mpk-grip" data-drag="${i}" title="${esc(t('Drag to reorder'))}" aria-label="${esc(t('Drag to reorder'))}"><i class="fa-solid fa-grip-vertical"></i></button>`
+      : '';
     const titleEl = (e.custom || !e.handle)
       ? `<span class="mpk-entry-title">${esc(e.title || t('Uploaded mod'))}</span>`
       : `<a class="mpk-entry-title" href="${modUrl(e.handle, e.slug)}">${esc(e.title || e.slug)}</a>`;
@@ -273,6 +276,7 @@
         : `<span class="mpk-entry-by">${esc(t('by'))} <a href="/mods/${encodeURIComponent(e.handle)}">${esc(e.author)}</a></span>`)
       : '';
     return `<div class="mpk-entry ${e.available ? '' : 'mpk-entry-warn'}">
+      ${grip}
       <div class="mpk-entry-main">
         <div class="mpk-entry-titlerow">
           ${titleEl}
@@ -314,12 +318,108 @@
     const upInput = document.getElementById('mpk-upload-input');
     if (upInput) upInput.addEventListener('change', uploadMod);
 
-    $root.querySelectorAll('[data-move]').forEach((b) => b.addEventListener('click', () =>
-      moveEntry(+b.getAttribute('data-move'), +b.getAttribute('data-dir'))));
+    wireDrag();
     $root.querySelectorAll('[data-remove]').forEach((b) => b.addEventListener('click', () =>
       removeEntry(+b.getAttribute('data-remove'))));
     $root.querySelectorAll('[data-edit-entry]').forEach((b) => b.addEventListener('click', () =>
       openEntryEditor(+b.getAttribute('data-edit-entry'))));
+  }
+
+  // ─── Drag to reorder ───────────────────────────────────────────────
+  // Pointer events (so touch works too). Rows are never re-laid-out mid-drag:
+  // the one being dragged follows the finger on a transform and the ones it
+  // passes shift by its own height, so the geometry measured at pointerdown
+  // stays the reference. The new order is PUT once, on drop.
+  let _dragFocus = -1;   // handle to refocus after a keyboard move
+
+  function wireDrag() {
+    const list = $root.querySelector('.mpk-entries');
+    if (!list) return;
+    list.querySelectorAll('[data-drag]').forEach((h) => {
+      h.addEventListener('pointerdown', (ev) => startDrag(ev, list, h));
+      h.addEventListener('keydown', (ev) => {
+        const dir = ev.key === 'ArrowUp' ? -1 : (ev.key === 'ArrowDown' ? 1 : 0);
+        if (!dir) return;
+        const i = +h.getAttribute('data-drag');
+        const j = i + dir;
+        if (j < 0 || j >= ((activeVariant() || {}).entries || []).length) return;
+        ev.preventDefault();
+        _dragFocus = j;
+        moveEntry(i, dir);
+      });
+    });
+    if (_dragFocus >= 0) {
+      const h = list.querySelector('[data-drag="' + _dragFocus + '"]');
+      _dragFocus = -1;
+      if (h) h.focus();
+    }
+  }
+
+  function startDrag(ev, list, handle) {
+    if (ev.button) return;
+    const rows = Array.prototype.slice.call(list.querySelectorAll('.mpk-entry'));
+    const from = rows.indexOf(handle.closest('.mpk-entry'));
+    if (from < 0 || rows.length < 2) return;
+    ev.preventDefault();
+    try { handle.setPointerCapture(ev.pointerId); } catch (_) { /* not captureable */ }
+
+    const rects = rows.map((r) => r.getBoundingClientRect());
+    const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
+    const span = rects[from].height + gap;
+    const mid = rects.map((r) => r.top + r.height / 2);
+    const startY = ev.clientY;
+    let to = from;
+
+    rows[from].classList.add('mpk-dragging');
+    list.classList.add('mpk-reordering');
+
+    // Make room at `to` by pushing everything between it and `from` one slot.
+    const shift = () => rows.forEach((r, k) => {
+      if (k === from) return;
+      let dy = 0;
+      if (to < from && k >= to && k < from) dy = span;
+      else if (to > from && k > from && k <= to) dy = -span;
+      r.style.transform = dy ? 'translateY(' + dy + 'px)' : '';
+    });
+
+    const onMove = (e) => {
+      const dy = e.clientY - startY;
+      rows[from].style.transform = 'translateY(' + dy + 'px)';
+      const c = mid[from] + dy;
+      let next = from;
+      while (next > 0 && c < mid[next - 1]) next--;
+      while (next < rows.length - 1 && c > mid[next + 1]) next++;
+      if (next !== to) { to = next; shift(); }
+    };
+
+    const detach = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      rows[from].classList.remove('mpk-dragging');
+      list.classList.remove('mpk-reordering');
+    };
+    const clear = () => rows.forEach((r) => { r.style.transform = ''; });
+
+    async function onUp() {
+      detach();
+      if (to === from) { clear(); return; }
+      // Settle the dragged row into its slot and leave every row where the drag
+      // put it until the PUT comes back and re-renders - otherwise the list
+      // snaps to the old order for as long as the request takes.
+      let rest = 0;
+      if (to > from) for (let k = from + 1; k <= to; k++) rest += rects[k].height + gap;
+      else for (let k = to; k < from; k++) rest -= rects[k].height + gap;
+      rows[from].style.transform = 'translateY(' + rest + 'px)';
+      const entries = currentEntries();
+      entries.splice(to, 0, entries.splice(from, 1)[0]);
+      if (!await putEntries(entries)) { clear(); render(); }
+    }
+    function onCancel() { detach(); clear(); }
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
   }
 
   // ─── Download (fetch with auth so owners can pull their own drafts) ──

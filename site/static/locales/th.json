@@ -2868,5 +2868,6 @@
   "to reply.": "เพื่อตอบกลับ",
   "removed in {tag}": "ถูกลบใน {tag}",
   "Last version": "เวอร์ชันสุดท้าย",
-  "Removed in {tag} — showing the last version of this file.": "ถูกลบใน {tag} — กำลังแสดงเวอร์ชันสุดท้ายของไฟล์นี้"
+  "Removed in {tag} — showing the last version of this file.": "ถูกลบใน {tag} — กำลังแสดงเวอร์ชันสุดท้ายของไฟล์นี้",
+  "Drag to reorder": "ลากเพื่อจัดลำดับใหม่"
 }
