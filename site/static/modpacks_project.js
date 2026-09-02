@@ -827,24 +827,30 @@
       </div>`);
     const input = document.getElementById('mpk-mod-search');
     const results = document.getElementById('mpk-mod-results');
-    const existing = new Set((activeVariant().entries || []).map((e) => e.handle + '/' + e.slug));
+    const SHOW = 20;
     let timer = null;
     const run = async () => {
       const q = input.value.trim();
-      const r = await fetch('/site/mods/projects?limit=20&sort=downloads' + (q ? '&q=' + encodeURIComponent(q) : ''));
+      // Mods already in this variant are dropped from the results, browsing and
+      // searching alike, so over-fetch by however many could be filtered out -
+      // otherwise a pack with a lot of mods shows a near-empty list.
+      const existing = new Set((activeVariant().entries || [])
+        .filter((e) => !e.custom).map((e) => e.handle + '/' + e.slug));
+      const limit = Math.min(100, SHOW + existing.size);
+      const r = await fetch('/site/mods/projects?sort=downloads&limit=' + limit
+        + (q ? '&q=' + encodeURIComponent(q) : ''));
       const data = r.ok ? await r.json() : { items: [] };
-      results.innerHTML = (data.items || []).map((m) => {
-        const already = existing.has(m.handle + '/' + m.slug);
-        return `<div class="mpk-result">
+      const items = (data.items || [])
+        .filter((m) => !existing.has(m.handle + '/' + m.slug)).slice(0, SHOW);
+      results.innerHTML = items.map((m) => `<div class="mpk-result">
           <div class="mpk-result-main">
             <span class="mpk-result-title">${esc(m.title)}</span>
             <span class="mpk-result-by">${esc(m.owner_username)}</span>
           </div>
-          <button type="button" class="mp-btn mp-btn-sm ${already ? 'mp-btn-ghost' : 'mp-btn-primary'}"
-            data-add-handle="${esc(m.handle)}" data-add-slug="${esc(m.slug)}" data-add-title="${esc(m.title)}" ${already ? 'disabled' : ''}>
-            ${already ? esc(t('Added')) : esc(t('Choose'))}</button>
-        </div>`;
-      }).join('') || `<p class="mpk-empty">${esc(t('No mods found.'))}</p>`;
+          <button type="button" class="mp-btn mp-btn-sm mp-btn-primary"
+            data-add-handle="${esc(m.handle)}" data-add-slug="${esc(m.slug)}" data-add-title="${esc(m.title)}">
+            ${esc(t('Choose'))}</button>
+        </div>`).join('') || `<p class="mpk-empty">${esc(t('No mods found.'))}</p>`;
       results.querySelectorAll('[data-add-handle]').forEach((b) => b.addEventListener('click', async () => {
         const h = b.getAttribute('data-add-handle'), s = b.getAttribute('data-add-slug'), ti = b.getAttribute('data-add-title');
         const mod = await loadModDetail(h, s);
