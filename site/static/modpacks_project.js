@@ -270,6 +270,11 @@
     const titleEl = (e.custom || !e.handle)
       ? `<span class="mpk-entry-title">${esc(e.title || t('Uploaded mod'))}</span>`
       : `<a class="mpk-entry-title" href="${modUrl(e.handle, e.slug)}">${esc(e.title || e.slug)}</a>`;
+    // The mod's creator says it's still in development - worth flagging here too,
+    // since a pack bundles it without the mod page's beta note.
+    const beta = e.is_beta
+      ? `<span class="mpk-badge mpk-beta" title="${esc(t('This mod is still being worked on, so expect changes and the odd rough edge.'))}"><i class="fa-solid fa-flask"></i> ${esc(t('Beta'))}</span>`
+      : '';
     const by = e.author
       ? (e.custom
         ? `<span class="mpk-entry-by">${esc(t('by'))} ${esc(e.author)}</span>`
@@ -280,6 +285,7 @@
       <div class="mpk-entry-main">
         <div class="mpk-entry-titlerow">
           ${titleEl}
+          ${beta}
           ${by}
         </div>
         <div class="mpk-entry-meta">${meta}</div>

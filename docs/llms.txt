@@ -454,8 +454,9 @@ App-facing read API (absolute image / page / download URLs, like the Mods catalo
 - `GET /v1/modpacks/{handle}/{slug}` - full detail (404 if not public): the card fields plus `description`,
   `warnings`, `discord_url`, `website_url`, `donation_urls[]`, and `variants[]` =
   `{name, label, mod_count, available_count, download_url, zip_url, mods: [{handle, slug, title, author, variant,
-  version, version_locked, available, page_url, author_url}]}` (`version` is the build it resolves to - latest
-  unless locked; `available:false` flags a mod with no current build; `author_url` links to the mod author's page).
+  version, version_locked, is_beta, available, page_url, author_url}]}` (`version` is the build it resolves to - latest
+  unless locked; `is_beta:true` marks a mod its creator flags as still in development; `available:false` flags a mod
+  with no current build; `author_url` links to the mod author's page).
 - `GET /v1/modpacks/{handle}/{slug}/download?variant=&format=tpack|zip` - download a variant (defaults to the
   pack's default variant, `.tpack`). Built on the fly so unlocked mods resolve to their latest build.
 - `GET /v1/modpacks/for-mod/{handle}/{slug}` - the **reverse link**: public modpacks that include a given mod

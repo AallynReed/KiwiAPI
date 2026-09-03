@@ -125,6 +125,11 @@
 .mpk-badge i { font-size: .68rem; color: var(--accent-blue); }
 .mpk-locked { color: #ffce5b; } .mpk-locked i { color: #ffce5b; }
 .mpk-warn { color: #ffb04d; border-color: rgba(255,176,77,.4); } .mpk-warn i { color: #ffb04d; }
+/* Beta: same purple the Mods Hub uses for a still-in-development mod. */
+.mpk-beta {
+  color: #c4a2ff; background: rgba(163,113,247,.16); border-color: rgba(163,113,247,.3);
+}
+.mpk-beta i { color: #c4a2ff; }
 .mpk-entry-ctl { display: flex; gap: 4px; flex: none; }
 
 /* Drag to reorder: the handle is a button so Up/Down works from the keyboard. */

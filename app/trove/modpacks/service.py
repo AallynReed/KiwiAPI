@@ -166,6 +166,7 @@ async def _resolve_entry(entry: ModpackEntry) -> tuple[dict, ModRelease | None]:
             "custom_filename": entry.custom_filename, "handle": "", "slug": "",
             "title": entry.title or "Uploaded mod", "author": entry.author or "",
             "branch": "", "version_locked": False, "locked_tag": None, "version": None,
+            "is_beta": False,
             "available": True, "reason": None,
         }
         if not await mods_store.has_blob(entry.custom_sha):
@@ -177,7 +178,7 @@ async def _resolve_entry(entry: ModpackEntry) -> tuple[dict, ModRelease | None]:
         "custom": False,
         "handle": entry.handle, "slug": entry.slug, "title": entry.title,
         "author": "", "branch": entry.branch, "version_locked": entry.version_locked,
-        "locked_tag": entry.locked_tag, "version": None,
+        "locked_tag": entry.locked_tag, "version": None, "is_beta": False,
         "available": False, "reason": None,
     }
     mod = await ModProject.get(entry.project_id) if entry.project_id else None
@@ -187,6 +188,7 @@ async def _resolve_entry(entry: ModpackEntry) -> tuple[dict, ModRelease | None]:
     # Keep denormalized fields current (mod may have been renamed / re-handled).
     view["handle"], view["slug"], view["title"] = mod.owner_handle, mod.slug, mod.title
     view["author"] = mod.owner_username   # the mod's author, linkable to /mods/<handle>
+    view["is_beta"] = mod.is_beta         # creator says it's still in development
     if mod.taken_down or mod.visibility == "draft":
         view["reason"] = "unavailable"
         return view, None
@@ -959,6 +961,7 @@ async def _public_variant(p: ModpackProject, variant: ModpackVariant) -> dict:
             "author": view["author"],
             "variant": view["branch"], "version": view["version"],
             "version_locked": view["version_locked"], "available": view["available"],
+            "is_beta": view["is_beta"],
             "page_url": f"{settings.app_url.rstrip('/')}/mods/"
                         f"{view['handle']}/{view['slug']}",
             "author_url": f"{settings.app_url.rstrip('/')}/mods/{view['handle']}",
