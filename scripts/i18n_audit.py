@@ -72,7 +72,12 @@ _ATTR = re.compile(
 # this codebase actually uses, and `BTTi18n.t(...)` for anything calling it direct.
 # Only literals; a t(variable) has no key to collect and is reported separately so
 # it cannot hide.
-_T_NAMES = r"(?:t|tr|_t|i18n|translate|BTTi18n\.t)"
+# `tt`/`ttf` are the guide pages' local wrappers (lookup, and lookup-then-fill):
+# they read as ordinary calls but the old pattern's (?<![\w.]) guard skipped
+# them, so a whole page's script strings could be missing while the audit
+# reported the locale complete. Longest alternative first so `ttf` is not
+# shadowed by `tt`.
+_T_NAMES = r"(?:ttf|tt|tr|_t|t|i18n|translate|BTTi18n\.t)"
 _T_CALL = re.compile(rf"""(?<![\w.]){_T_NAMES}\(\s*(["'])((?:\\.|(?!\1).)*)\1""")
 _T_DYNAMIC = re.compile(rf"(?<![\w.]){_T_NAMES}\(\s*[^\"'\s)]")
 

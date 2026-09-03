@@ -366,6 +366,16 @@ async def gems_guide_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "gems-guide.html", {})
 
 
+@router.get("/fishing-guide", response_class=HTMLResponse)
+async def fishing_guide_page(request: Request) -> HTMLResponse:
+    """The fishing guide - lures, the fishing skill tree, daily quests, pools and
+    every fish in the four liquids with the condition each one needs. Rendered
+    from the static ``/static/fishing-guide.js``; the only read it makes is the
+    shared ``/site/codexes/render`` thumbnail endpoint, and the page still reads
+    correctly with no thumbnails at all."""
+    return _TEMPLATES.TemplateResponse(request, "fishing-guide.html", {})
+
+
 @router.get("/dressing-room", response_class=HTMLResponse)
 async def dressing_room_page(request: Request) -> HTMLResponse:
     """Dressing Room - build a Trove character out of the game's own parts: pick a

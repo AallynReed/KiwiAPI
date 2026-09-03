@@ -1,0 +1,577 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /fishing-guide - the Trove fishing guide.
+   Scoped under body.fishing-guide-page. Uses the shared tokens from
+   style.css (--bg-*, --text-*, --accent-*, --radius*, --ease-out).
+
+   Two things carry meaning in colour here and nothing else does: the liquid
+   (water / lava / chocolate / plasma) and the rarity ring the game itself
+   puts on a fish (grey / green / blue). Both are set as data-attributes so a
+   card picks its own hue without a class explosion.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.fishing-guide-page {
+  --liq: var(--accent-blue);          /* re-bound per liquid section */
+  --z-secnav: 20;
+}
+/* style.css sets `body.landing { overflow-x: hidden }`, which forces overflow-y
+   to auto and makes <body> the scroll container - that would break the sticky
+   section nav. `clip` hides the same overflow without creating a scroll box. */
+body.fishing-guide-page { overflow-x: clip; }
+
+.fg-main { width: min(1180px, 92vw); margin-inline: auto; padding-bottom: 5rem; }
+.fishing-guide-page .sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Liquid + rarity palettes. Every [data-liq] / [data-rar] element reads its
+   own hue from here, so the value lives in exactly one place. */
+.fishing-guide-page [data-liq="0"] { --lq: #58a6ff; }
+.fishing-guide-page [data-liq="1"] { --lq: #ff7a45; }
+.fishing-guide-page [data-liq="2"] { --lq: #d08c5a; }
+.fishing-guide-page [data-liq="3"] { --lq: #2fd4e6; }
+.fishing-guide-page [data-rar="0"] { --rc: #c6cfdb; }
+.fishing-guide-page [data-rar="1"] { --rc: #3fb950; }
+.fishing-guide-page [data-rar="2"] { --rc: #58a6ff; }
+
+/* ─── Shared section furniture ─────────────────────────────────────────── */
+.fg-section { padding: clamp(3rem, 7vw, 5.5rem) 0; border-top: 1px solid var(--bg-line); scroll-margin-top: 120px; }
+.fg-sec-head { max-width: 62ch; margin-bottom: 2.4rem; }
+.fg-sec-num {
+  display: inline-block; font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .8rem; letter-spacing: .14em; color: var(--liq);
+  padding: 2px 8px; border: 1px solid var(--bg-line); border-radius: 999px; margin-bottom: 1rem;
+}
+.fg-sec-head h2 { font-size: clamp(1.7rem, 3.2vw + .6rem, 2.6rem); margin-bottom: .7rem; text-wrap: balance; }
+.fg-sec-head p { color: var(--text-mute); font-size: var(--type-lead); text-wrap: pretty; }
+
+.fg-subhead { margin: 2.4rem 0 1rem; }
+.fg-subhead h3 { font-size: 1.15rem; margin-bottom: .3rem; }
+.fg-subhead p { color: var(--text-mute); font-size: .95rem; max-width: 68ch; }
+
+.fg-note {
+  display: flex; gap: .7rem; align-items: flex-start; margin-top: 1.8rem;
+  color: var(--text-mute); font-size: .95rem; line-height: 1.6;
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-left: 3px solid var(--accent-blue); border-radius: var(--radius-sm); padding: 1rem 1.2rem;
+}
+.fg-note i { color: var(--accent-blue); margin-top: .25rem; }
+.fg-note-warn { border-left-color: var(--accent-orange); }
+.fg-note-warn i { color: var(--accent-orange); }
+
+.fg-btn {
+  display: inline-flex; align-items: center; gap: .5rem; cursor: pointer; font: inherit;
+  font-weight: 600; font-size: .92rem; border-radius: var(--radius-sm); padding: 10px 18px;
+  border: 1px solid transparent;
+  transition: background .18s var(--ease-out), border-color .18s var(--ease-out), transform .12s var(--ease-out);
+}
+.fg-btn:active { transform: scale(.97); }
+.fg-btn:disabled { opacity: .45; cursor: not-allowed; }
+.fg-btn-primary { background: var(--accent-blue); color: var(--bg-base); }
+.fg-btn-primary:hover:not(:disabled) { background: color-mix(in oklab, var(--accent-blue) 88%, white); }
+.fg-btn-ghost { background: color-mix(in oklab, var(--bg-card) 60%, transparent); border-color: var(--bg-line); color: var(--text); }
+.fg-btn-ghost:hover { border-color: var(--accent-blue); }
+
+/* ─── Hero ─────────────────────────────────────────────────────────────── */
+.fg-hero {
+  display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center; padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(1.5rem, 4vw, 3rem);
+}
+.fg-eyebrow {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem;
+  letter-spacing: .06em; color: var(--accent-blue); margin-bottom: 1rem;
+}
+.fg-title { font-size: clamp(2.4rem, 5vw + 1rem, 4.2rem); line-height: 1.02; text-wrap: balance; margin-bottom: 1.1rem; }
+.fg-lead { color: var(--text-mute); font-size: var(--type-lead); max-width: 54ch; text-wrap: pretty; }
+.fg-hero-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.6rem 0 0; }
+.fg-chip {
+  display: inline-flex; align-items: center; gap: .45rem; font-size: .85rem; color: var(--text-mute);
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: 999px; padding: 6px 12px;
+}
+.fg-chip i { color: var(--accent-blue); font-size: .8rem; }
+
+/* The hero art is four concentric ripples, one per fishable liquid, with a
+   fish dropped in the middle by JS. Pure CSS + one thumbnail, so the page
+   ships no hero image of its own and reads fine if the render 404s. */
+.fg-hero-art {
+  position: relative; aspect-ratio: 1; width: 100%; max-width: 340px;
+  margin-inline: auto; display: grid; place-items: center;
+}
+.fg-ring {
+  position: absolute; border-radius: 50%;
+  border: 1.5px solid color-mix(in oklab, var(--lq) 60%, transparent);
+  box-shadow: 0 0 40px color-mix(in oklab, var(--lq) 14%, transparent) inset;
+}
+.fg-ring[data-liq="0"] { inset: 0%; }
+.fg-ring[data-liq="1"] { inset: 13%; }
+.fg-ring[data-liq="2"] { inset: 26%; }
+.fg-ring[data-liq="3"] { inset: 39%; }
+.fishing-guide-page:not(.fg-reduce) .fg-ring { animation: fg-ripple 6s var(--ease-out) infinite; }
+.fg-ring[data-liq="1"] { animation-delay: .5s; }
+.fg-ring[data-liq="2"] { animation-delay: 1s; }
+.fg-ring[data-liq="3"] { animation-delay: 1.5s; }
+@keyframes fg-ripple {
+  0%, 100% { transform: scale(1); opacity: .55; }
+  50% { transform: scale(1.035); opacity: 1; }
+}
+.fg-hero-fish {
+  position: relative; width: 34%; aspect-ratio: 1; object-fit: contain;
+  filter: drop-shadow(0 8px 26px color-mix(in oklab, var(--accent-blue) 45%, transparent));
+}
+.fishing-guide-page:not(.fg-reduce) .fg-hero-fish { animation: fg-float 5.5s var(--ease-out) infinite; }
+@keyframes fg-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7%); } }
+
+/* ─── Section nav ──────────────────────────────────────────────────────── */
+.fg-secnav {
+  position: sticky; top: calc(var(--nav-h) + 8px); z-index: var(--z-secnav);
+  display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem;
+  scrollbar-width: none;
+  padding: 6px; margin: 0 auto 1rem; width: fit-content; max-width: 100%;
+  background: color-mix(in oklab, var(--bg-card) 82%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid var(--bg-line); border-radius: 24px;
+}
+.fg-secnav::-webkit-scrollbar { display: none; }
+.fg-secnav a {
+  white-space: nowrap; font-size: .84rem; font-weight: 500; color: var(--text-mute);
+  padding: 7px 14px; border-radius: 999px;
+  transition: background .18s var(--ease-out), color .18s var(--ease-out);
+}
+.fg-secnav a:hover { color: var(--text); background: var(--bg-card-hi); }
+.fg-secnav a.active { color: var(--bg-base); background: var(--accent-blue); }
+
+/* ─── 1. Basics ────────────────────────────────────────────────────────── */
+.fg-basics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.fg-basic {
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  padding: 1.4rem 1.5rem;
+}
+.fg-basic > i { color: var(--accent-blue); font-size: 1.3rem; margin-bottom: .8rem; display: block; }
+.fg-basic h3 { font-size: 1.08rem; margin-bottom: .45rem; }
+.fg-basic p { color: var(--text-mute); font-size: .95rem; }
+.fg-basic-warn { border-color: color-mix(in oklab, var(--accent-orange) 40%, var(--bg-line)); }
+.fg-basic-warn > i { color: var(--accent-orange); }
+
+.fg-rods { margin-top: 3rem; }
+.fg-rods-head { max-width: 62ch; margin-bottom: 1.4rem; }
+.fg-rods-head h3 { font-size: 1.25rem; margin-bottom: .4rem; }
+.fg-rods-head p { color: var(--text-mute); font-size: .98rem; }
+.fg-rod-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.fg-rod-card {
+  --rt: var(--accent-green);
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  border-top: 2px solid var(--rt); padding: 1.2rem 1.3rem;
+}
+.fg-rod-warn { --rt: var(--accent-red); }
+.fg-rod-card > i { color: var(--rt); font-size: 1.1rem; margin-bottom: .7rem; display: block; }
+.fg-rod-card h4 { font-size: 1rem; margin-bottom: .4rem; }
+.fg-rod-card p { color: var(--text-mute); font-size: .92rem; }
+.fg-rod-count {
+  display: inline-block; margin-top: .8rem; font-size: .78rem; color: var(--text-mute);
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; padding: 3px 10px;
+}
+
+/* ─── 2. Lures ─────────────────────────────────────────────────────────── */
+.fg-lure-lab { display: grid; grid-template-columns: minmax(0, 340px) 1fr; gap: clamp(1.2rem, 3vw, 2.4rem); align-items: start; }
+.fg-lure-types { display: grid; gap: .5rem; }
+.fg-lure-type {
+  --lc: var(--accent-blue);
+  display: flex; align-items: center; gap: .7rem; cursor: pointer; font: inherit; font-weight: 500;
+  color: var(--text-mute); text-align: left;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius-sm);
+  padding: .8rem 1rem;
+  transition: border-color .18s var(--ease-out), color .18s var(--ease-out), background .18s var(--ease-out);
+}
+.fg-lure-type i { color: var(--lc); width: 1.1rem; text-align: center; }
+.fg-lure-type:hover { color: var(--text); border-color: color-mix(in oklab, var(--lc) 45%, var(--bg-line)); }
+.fg-lure-type.active { color: var(--text); border-color: var(--lc); background: color-mix(in oklab, var(--lc) 12%, var(--bg-card)); }
+.fg-lure-grades { display: flex; gap: .4rem; margin-top: .8rem; }
+.fg-lure-grade {
+  --lc: var(--accent-blue);
+  flex: 1; cursor: pointer; font: inherit; font-size: .85rem; font-weight: 600; color: var(--text-mute);
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; padding: .45rem .6rem;
+  transition: border-color .18s var(--ease-out), color .18s var(--ease-out);
+}
+.fg-lure-grade:hover { color: var(--text); }
+.fg-lure-grade.active { color: var(--bg-base); background: var(--lc); border-color: var(--lc); }
+
+.fg-lure-detail {
+  --lc: var(--accent-blue); --gc: var(--accent-blue);
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  padding: 1.6rem 1.7rem; min-height: 220px;
+}
+.fishing-guide-page:not(.fg-reduce) .fg-lure-detail { animation: fg-fade .3s var(--ease-out); }
+@keyframes fg-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fg-lure-head { display: flex; align-items: center; gap: .8rem; margin-bottom: .8rem; }
+.fg-lure-swatch {
+  width: 34px; height: 34px; border-radius: 10px; flex: none;
+  background: linear-gradient(135deg, var(--gc), var(--lc));
+  box-shadow: 0 4px 18px color-mix(in oklab, var(--lc) 35%, transparent);
+}
+.fg-lure-head h3 { font-size: 1.25rem; }
+.fg-lure-effect { color: var(--text); font-size: var(--type-lead); margin-bottom: 1.2rem; text-wrap: pretty; }
+.fg-lure-facts { display: grid; gap: .7rem; }
+.fg-lure-facts > div { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; align-items: baseline; }
+.fg-lure-facts dt { font-size: .82rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-mute); }
+.fg-lure-facts dd { color: var(--text-mute); font-size: .95rem; }
+
+/* ─── 3. Skill tree ────────────────────────────────────────────────────── */
+.fg-tree-lab { display: grid; grid-template-columns: minmax(0, 380px) 1fr; gap: clamp(1.2rem, 3vw, 2.6rem); align-items: center; }
+.fg-tree-svg { width: 100%; aspect-ratio: 1; display: block; }
+.fg-tree-rim { fill: color-mix(in oklab, var(--bg-card) 70%, transparent); stroke: var(--bg-line); stroke-width: 1; }
+.fg-tree-link { stroke: var(--bg-line); stroke-width: 1.6; }
+.fg-tree-link-blue { stroke: color-mix(in oklab, #58a6ff 60%, var(--bg-line)); stroke-width: 2.2; }
+.fg-tree-node { fill: var(--bg-deep); stroke: var(--text-soft); stroke-width: 1.4; transition: opacity .2s var(--ease-out); }
+.fg-tree-node-reward { fill: var(--bg-base); stroke-width: 2.6; }
+.fg-tree-node-reward[data-kind="blue"] { stroke: #58a6ff; }
+.fg-tree-node-reward[data-kind="pink"] { stroke: #f778ba; }
+.fg-tree-node-reward[data-kind="orange"] { stroke: #ff8a3d; }
+.fg-tree-node-reward[data-kind="white"] { stroke: #eaf1fa; }
+.fg-tree-hub { fill: var(--accent-yellow); stroke: color-mix(in oklab, var(--accent-yellow) 40%, transparent); stroke-width: 5; }
+/* Hovering a legend row dims everything that isn't that node type. */
+.fg-tree-svg[data-focus] .fg-tree-node, .fg-tree-svg[data-focus] .fg-tree-link { opacity: .22; }
+.fg-tree-svg[data-focus="blue"] .fg-tree-link-blue,
+.fg-tree-svg[data-focus="blue"] .fg-tree-node-reward[data-kind="blue"],
+.fg-tree-svg[data-focus="pink"] .fg-tree-node-reward[data-kind="pink"],
+.fg-tree-svg[data-focus="orange"] .fg-tree-node-reward[data-kind="orange"],
+.fg-tree-svg[data-focus="white"] .fg-tree-node-reward[data-kind="white"] { opacity: 1; }
+.fg-tree-cap { margin-top: .6rem; text-align: center; font-size: .8rem; color: var(--text-mute); }
+
+.fg-tree-legend { display: grid; gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.fg-tree-item {
+  --kc: var(--text-soft);
+  display: flex; gap: .8rem; align-items: flex-start; cursor: default;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius-sm);
+  padding: .8rem 1rem; transition: border-color .18s var(--ease-out);
+}
+.fg-tree-item:hover, .fg-tree-item:focus-visible { border-color: color-mix(in oklab, var(--kc) 60%, var(--bg-line)); outline: none; }
+.fg-tree-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; margin-top: .3rem; border: 2px solid var(--kc); }
+.fg-tree-dot-plain { border-color: var(--text-soft); }
+.fg-tree-item b { display: block; font-size: .95rem; margin-bottom: .15rem; }
+.fg-tree-item span:last-child { color: var(--text-mute); font-size: .9rem; }
+.fg-tree-keys { margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--bg-line); }
+.fg-tree-keys h4 { font-size: .82rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-mute); margin-bottom: .6rem; }
+.fg-tree-key { color: var(--text-mute); font-size: .92rem; margin-bottom: .3rem; }
+.fg-tree-key b { color: var(--text); }
+
+/* ─── 4. Daily quests ──────────────────────────────────────────────────── */
+.fg-quest-lab { display: grid; grid-template-columns: 1fr minmax(0, 280px); gap: clamp(1.2rem, 3vw, 2.4rem); align-items: start; }
+.fg-quest-board { display: grid; gap: 1.2rem; }
+.fg-quest-toggle, .fg-pool-rare { display: inline-flex; align-items: center; gap: .6rem; cursor: pointer; font-size: .9rem; color: var(--text-mute); }
+.fg-quest-toggle input, .fg-pool-rare input { position: absolute; opacity: 0; width: 0; height: 0; }
+.fg-quest-box, .fg-pool-rarebox {
+  width: 18px; height: 18px; border-radius: 5px; flex: none; display: grid; place-items: center;
+  border: 1px solid var(--bg-line); background: var(--bg-deep); color: transparent; font-size: .65rem;
+  transition: background .15s var(--ease-out), border-color .15s var(--ease-out), color .15s var(--ease-out);
+}
+.fg-quest-toggle input:checked + .fg-quest-box,
+.fg-pool-rare input:checked + .fg-pool-rarebox { background: var(--accent-blue); border-color: var(--accent-blue); color: var(--bg-base); }
+.fg-quest-toggle input:focus-visible + .fg-quest-box,
+.fg-pool-rare input:focus-visible + .fg-pool-rarebox { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.fg-quest-toggle-txt i { color: var(--accent-blue); margin-right: .3rem; }
+
+.fg-quest-col h4 { font-size: .95rem; margin-bottom: .6rem; }
+.fg-quest-sub { color: var(--text-mute); font-weight: 400; font-size: .82rem; margin-left: .4rem; }
+.fg-quest-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .6rem; }
+.fg-quest-slot {
+  --qc: var(--accent-blue);
+  display: grid; gap: .25rem; cursor: pointer; font: inherit; text-align: left;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-left: 3px solid var(--qc);
+  border-radius: var(--radius-sm); padding: .8rem 1rem;
+  transition: border-color .18s var(--ease-out), opacity .18s var(--ease-out), background .18s var(--ease-out);
+}
+.fg-quest-slot:hover { background: var(--bg-card-hi); }
+.fg-quest-slot.locked { opacity: .38; }
+.fg-quest-tier { font-weight: 700; color: var(--qc); font-size: .95rem; }
+.fg-quest-ask { color: var(--text-mute); font-size: .85rem; }
+/* The slot is a grid, so a chip would stretch to the full column without this. */
+.fg-quest-slot .fg-liq-chip { justify-self: start; margin-left: 0; margin-block: .15rem; }
+.fg-quest-marks { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .85rem; color: var(--text); }
+
+.fg-quest-payout {
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  padding: 1.4rem 1.5rem; position: sticky; top: calc(var(--nav-h) + 76px);
+}
+.fg-quest-total-lbl { font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; color: var(--text-mute); }
+.fg-quest-total {
+  display: block; font-size: 2.6rem; font-weight: 800; line-height: 1.1; color: var(--accent-yellow);
+  font-family: 'JetBrains Mono', ui-monospace, monospace; margin: .2rem 0 1rem;
+}
+.fg-quest-key { list-style: none; margin: 0 0 .9rem; padding: 0; display: grid; gap: .35rem; }
+.fg-quest-key li { --qc: var(--text-mute); color: var(--text-mute); font-size: .85rem; }
+.fg-quest-key b { color: var(--qc); }
+.fg-quest-hint { color: var(--text-mute); font-size: .85rem; border-top: 1px solid var(--bg-line); padding-top: .8rem; }
+
+/* ─── 5. Pools ─────────────────────────────────────────────────────────── */
+.fg-pool-lab { display: grid; grid-template-columns: minmax(0, 380px) 1fr; gap: clamp(1.2rem, 3vw, 2.4rem); align-items: start; }
+.fg-pool-liquids { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .9rem; }
+.fg-liq-btn {
+  --lq: var(--accent-blue);
+  display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; font: inherit;
+  font-size: .82rem; font-weight: 600; color: var(--text-mute);
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; padding: .35rem .8rem;
+  transition: color .16s var(--ease-out), border-color .16s var(--ease-out), background .16s var(--ease-out);
+}
+.fg-liq-btn i { color: var(--lq); }
+.fg-liq-btn:hover { color: var(--text); border-color: color-mix(in oklab, var(--lq) 50%, var(--bg-line)); }
+.fg-liq-btn.active { color: var(--bg-base); background: var(--lq); border-color: var(--lq); }
+.fg-liq-btn.active i { color: var(--bg-base); }
+
+.fg-pool-water {
+  --lq: var(--accent-blue);
+  position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 50% 45%, color-mix(in oklab, var(--lq) 30%, transparent), transparent 62%),
+    color-mix(in oklab, var(--lq) 12%, var(--bg-card));
+  border: 1px solid color-mix(in oklab, var(--lq) 32%, var(--bg-line));
+  overflow: hidden; display: grid; place-items: center;
+  transition: opacity .3s var(--ease-out), filter .3s var(--ease-out);
+}
+.fg-pool-water::before {
+  content: ""; position: absolute; width: 62%; aspect-ratio: 1; border-radius: 50%;
+  border: 1px dashed color-mix(in oklab, var(--lq) 55%, transparent);
+}
+.fg-pool-water.rare::before { border-style: solid; border-width: 2px; border-color: var(--accent-yellow); }
+.fg-pool-water.closed { filter: grayscale(.7) brightness(.7); }
+.fg-pool-fish { position: relative; width: 62%; aspect-ratio: 1; }
+/* Each fish orbits the pool's remaining-count. The offset is a length, not a
+   percentage: a percentage in `translateX` resolves against the dot's own 9px,
+   which parks every one of them on top of the number. */
+.fg-pool-dot {
+  --orbit: 74px;
+  position: absolute; top: calc(50% - 5px); left: calc(50% - 5px);
+  width: 10px; height: 10px; border-radius: 3px;
+  background: color-mix(in oklab, var(--lq) 65%, white);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--lq) 60%, transparent);
+  transform: rotate(calc(var(--d) * 47deg)) translateX(var(--orbit)) rotate(calc(var(--d) * -47deg));
+}
+.fishing-guide-page:not(.fg-reduce) .fg-pool-dot {
+  animation: fg-swim 9s linear infinite;
+  animation-delay: calc(var(--d) * -.75s);
+}
+@keyframes fg-swim {
+  from { transform: rotate(0deg) translateX(var(--orbit)) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(var(--orbit)) rotate(-360deg); }
+}
+@media (max-width: 420px) { .fg-pool-dot { --orbit: 56px; } }
+.fg-pool-count {
+  position: absolute; font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 2.4rem; font-weight: 700; color: color-mix(in oklab, var(--lq) 55%, white);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, .5);
+}
+.fg-pool-water.rare .fg-pool-count { color: var(--accent-yellow); }
+.fg-pool-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: .9rem; }
+
+.fg-pool-status {
+  color: var(--text-mute); font-size: .95rem; line-height: 1.6; min-height: 3.2em;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius-sm);
+  padding: .9rem 1.1rem; margin-bottom: .9rem;
+}
+.fg-pool-catches { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; max-height: 320px; overflow-y: auto; }
+.fg-pool-catch {
+  display: flex; align-items: center; gap: .7rem; font-size: .9rem;
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-left: 3px solid var(--rc); border-radius: var(--radius-sm); padding: .45rem .8rem;
+}
+.fishing-guide-page:not(.fg-reduce) .fg-pool-catch { animation: fg-slide .3s var(--ease-out); }
+@keyframes fg-slide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+.fg-pool-catch .fg-fish-ic { width: 30px; height: 30px; }
+.fg-pool-catch-n { flex: 1; }
+.fg-pool-catch-m { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .8rem; color: var(--text-mute); }
+
+.fg-pool-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 2.4rem; }
+.fg-fact { background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 1.2rem 1.3rem; }
+.fg-fact h4 { font-size: 1rem; margin-bottom: .45rem; }
+.fg-fact h4 i { color: var(--accent-blue); margin-right: .4rem; }
+.fg-fact p { color: var(--text-mute); font-size: .92rem; }
+.fg-fact-hot { border-color: color-mix(in oklab, var(--accent-yellow) 40%, var(--bg-line)); }
+.fg-fact-hot h4 i { color: var(--accent-yellow); }
+
+.fg-pool-find { margin-top: 2.4rem; }
+.fg-pool-find-head { max-width: 62ch; margin-bottom: 1.2rem; }
+.fg-pool-find-head h3 { font-size: 1.25rem; margin-bottom: .4rem; }
+.fg-pool-find-head p { color: var(--text-mute); font-size: .98rem; }
+.fg-pool-find-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.fg-pf-card { background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 1.2rem 1.3rem; }
+.fg-pf-k { font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-mute); }
+.fg-pf-code {
+  display: block; margin: .5rem 0 .7rem; font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .95rem; color: var(--accent-blue);
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius-sm); padding: .5rem .8rem;
+}
+.fg-pf-name { display: block; margin: .5rem 0 .7rem; font-size: 1.05rem; }
+.fg-pf-card p { color: var(--text-mute); font-size: .92rem; }
+
+/* ─── Fish cards (shared by every liquid section and the browser) ──────── */
+.fg-rar-legend { display: flex; flex-wrap: wrap; gap: .8rem; margin-bottom: .4rem; }
+.fg-rar-key { display: inline-flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--text-mute); }
+.fg-rar-dot { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--rc); }
+
+.fg-fish-grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: .55rem;
+}
+.fg-fish {
+  display: flex; align-items: center; gap: .8rem; min-width: 0;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius-sm);
+  padding: .6rem .9rem .6rem .6rem;
+  transition: border-color .18s var(--ease-out), background .18s var(--ease-out);
+}
+.fg-fish:hover { background: var(--bg-card-hi); border-color: color-mix(in oklab, var(--rc) 45%, var(--bg-line)); }
+.fg-fish-ic {
+  width: 42px; height: 42px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  background: var(--bg-deep); border: 2px solid var(--rc); overflow: hidden;
+}
+.fg-fish-ic img { width: 100%; height: 100%; object-fit: contain; }
+/* A blueprint that won't render leaves the ring, not a broken image. */
+.fg-fish-ic-none::after { content: "\f578"; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: .85rem; color: var(--text-soft); }
+.fg-fish-body { display: grid; gap: .15rem; min-width: 0; flex: 1; }
+.fg-fish-name { font-size: .93rem; font-weight: 600; }
+.fg-fish-cond { color: var(--text-mute); font-size: .82rem; line-height: 1.45; }
+.fg-fish-m {
+  flex: none; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .8rem;
+  color: var(--rc); background: color-mix(in oklab, var(--rc) 12%, transparent);
+  border-radius: 999px; padding: 2px 9px;
+}
+.fg-rod-chip, .fg-liq-chip {
+  display: inline-flex; align-items: center; gap: .3rem; margin-left: .45rem;
+  font-size: .72rem; color: var(--text-mute);
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; padding: 1px 7px;
+  vertical-align: middle;
+}
+.fg-liq-chip i { color: var(--lq); }
+.fg-rod-chip i { color: var(--accent-purple); }
+
+/* ─── Per-liquid sections ──────────────────────────────────────────────── */
+.fg-liquid .fg-sec-num { color: var(--liq); border-color: color-mix(in oklab, var(--liq) 35%, var(--bg-line)); }
+.fg-liquid .fg-sec-head h2::after {
+  content: ""; display: block; width: 46px; height: 3px; border-radius: 2px;
+  background: var(--liq); margin-top: .6rem;
+}
+.fg-groups { display: grid; gap: .6rem; }
+.fg-group {
+  display: grid; grid-template-columns: 7.5rem 1fr; gap: 1rem; align-items: center;
+  background: color-mix(in oklab, var(--bg-card) 45%, transparent);
+  border: 1px solid var(--bg-line); border-radius: var(--radius); padding: .6rem;
+}
+.fg-group-tag {
+  font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--liq); padding-left: .6rem;
+}
+.fg-group-any { border-color: color-mix(in oklab, var(--accent-yellow) 32%, var(--bg-line)); }
+.fg-group-any .fg-group-tag { color: var(--accent-yellow); }
+
+.fg-extra { margin-top: 1.6rem; border: 1px solid var(--bg-line); border-radius: var(--radius); background: var(--bg-card); }
+.fg-extra > summary {
+  display: flex; align-items: center; gap: .7rem; cursor: pointer; list-style: none;
+  padding: .9rem 1.2rem; color: var(--text-mute); font-size: .92rem;
+}
+.fg-extra > summary::-webkit-details-marker { display: none; }
+.fg-extra-badge {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--accent-orange); border: 1px solid color-mix(in oklab, var(--accent-orange) 45%, transparent);
+  border-radius: 999px; padding: 2px 8px;
+}
+.fg-extra-chev { margin-left: auto; transition: transform .2s var(--ease-out); }
+.fg-extra[open] .fg-extra-chev { transform: rotate(180deg); }
+.fg-extra-note { color: var(--text-mute); font-size: .88rem; padding: 0 1.2rem .8rem; }
+.fg-extra .fg-fish-grid { padding: 0 1.2rem 1.2rem; }
+
+/* ─── Turtles ──────────────────────────────────────────────────────────── */
+.fg-turtle-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.fg-turtle {
+  --lq: var(--accent-blue);
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-top: 2px solid var(--lq);
+  border-radius: var(--radius); padding: 1.3rem; text-align: center;
+}
+.fg-turtle .fg-fish-ic { width: 64px; height: 64px; margin: 0 auto .8rem; border-color: var(--lq); }
+.fg-turtle h3 { font-size: 1.05rem; margin-bottom: .5rem; }
+.fg-turtle .fg-liq-chip { margin: 0 0 .7rem; }
+.fg-turtle p { color: var(--text-mute); font-size: .9rem; }
+
+/* ─── Browse everything ────────────────────────────────────────────────── */
+.fg-browse-controls { display: grid; gap: .9rem; margin-bottom: 1rem; }
+.fg-search { position: relative; }
+.fg-search i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-soft); font-size: .9rem; }
+.fg-search input {
+  width: 100%; font: inherit; font-size: .95rem; color: var(--text);
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius-sm);
+  padding: .75rem 1rem .75rem 2.6rem;
+  transition: border-color .18s var(--ease-out);
+}
+.fg-search input:focus { outline: none; border-color: var(--accent-blue); }
+.fg-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.fg-chip-btn {
+  --lq: var(--accent-blue); --rc: var(--accent-blue);
+  cursor: pointer; font: inherit; font-size: .82rem; font-weight: 600; color: var(--text-mute);
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; padding: .35rem .85rem;
+  transition: color .16s var(--ease-out), border-color .16s var(--ease-out), background .16s var(--ease-out);
+}
+.fg-chip-btn:hover { color: var(--text); border-color: var(--text-soft); }
+.fg-chip-btn[data-liq].active { color: var(--bg-base); background: var(--lq); border-color: var(--lq); }
+.fg-chip-btn[data-rar].active { color: var(--bg-base); background: var(--rc); border-color: var(--rc); }
+.fg-chip-btn:not([data-liq]):not([data-rar]).active { color: var(--bg-base); background: var(--text-mute); border-color: var(--text-mute); }
+.fg-filter-sep { width: 1px; height: 20px; background: var(--bg-line); margin: 0 .3rem; }
+.fg-browse-count { color: var(--text-mute); font-size: .85rem; margin-bottom: .8rem; }
+
+/* ─── Recap ────────────────────────────────────────────────────────────── */
+.fg-recap { padding: clamp(3rem, 7vw, 5rem) 0 1rem; text-align: center; border-top: 1px solid var(--bg-line); }
+.fg-recap h2 { font-size: clamp(1.7rem, 3vw + .6rem, 2.4rem); margin-bottom: .7rem; }
+.fg-recap > p { color: var(--text-mute); font-size: var(--type-lead); max-width: 56ch; margin: 0 auto 2.2rem; text-wrap: pretty; }
+.fg-recap-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.fg-recap-card {
+  display: grid; gap: .35rem; justify-items: center; text-align: center;
+  background: var(--bg-card); border: 1px solid var(--bg-line); border-radius: var(--radius);
+  padding: 1.6rem 1.4rem; color: var(--text);
+  transition: border-color .2s var(--ease-out), transform .2s var(--ease-out);
+}
+.fg-recap-card:hover { border-color: var(--accent-blue); transform: translateY(-3px); }
+.fg-recap-card > i { color: var(--accent-blue); font-size: 1.4rem; margin-bottom: .5rem; }
+.fg-recap-t { font-weight: 600; }
+.fg-recap-d { color: var(--text-mute); font-size: .88rem; }
+
+/* ─── Reveal on scroll ─────────────────────────────────────────────────── */
+.fg-js [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .6s var(--ease-out), transform .6s var(--ease-out); }
+.fg-js [data-reveal].in { opacity: 1; transform: none; }
+.fg-js [data-reveal].in [data-reveal] { transition-delay: calc(var(--i, 0) * 70ms); }
+.fg-reduce [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+
+/* ─── Guide / Wiki view toggle ─────────────────────────────────────────── */
+.fg-view-toggle { display: flex; align-items: center; justify-content: flex-end; gap: .55rem; padding-top: .8rem; }
+.fg-view-toggle-lbl { font-size: .78rem; color: var(--text-mute); }
+.fg-view-seg { display: inline-flex; gap: .2rem; padding: .22rem; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 999px; }
+.fg-view-seg button {
+  border: 0; background: transparent; color: var(--text-mute); font: inherit; font-size: .82rem; font-weight: 600;
+  padding: .32rem .85rem; border-radius: 999px; cursor: pointer;
+  transition: background .15s var(--ease-out), color .15s var(--ease-out);
+}
+.fg-view-seg button:hover { color: var(--text); }
+.fg-view-seg button.active { background: var(--accent-blue); color: var(--bg-base); }
+
+.fg-wiki .fg-hero { min-height: auto; padding-block: 1.4rem .2rem; display: block; }
+.fg-wiki .fg-hero-art, .fg-wiki .fg-lead, .fg-wiki .fg-hero-chips, .fg-wiki .fg-eyebrow { display: none; }
+.fg-wiki .fg-title { font-size: clamp(1.55rem, 4vw, 2.15rem); margin: 0; }
+.fg-wiki .fg-recap { display: none; }
+.fg-wiki [data-reveal] { opacity: 1 !important; transform: none !important; }
+.fg-wiki .fg-sec-head p { display: none; }         /* drop the narrative lead prose */
+.fg-wiki .fg-secnav a { cursor: pointer; }
+.fg-wiki .fg-section { display: none; padding: 1.4rem 0 2.8rem; border-top: 0; scroll-margin-top: 116px; }
+.fg-wiki .fg-section.fg-wiki-active { display: block; }
+.fg-wiki .fg-sec-head { margin-bottom: 1.3rem; max-width: 80ch; }
+
+/* ─── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 980px) {
+  .fg-hero { grid-template-columns: 1fr; }
+  .fg-hero-art { display: none; }
+  .fg-lure-lab, .fg-tree-lab, .fg-quest-lab, .fg-pool-lab { grid-template-columns: 1fr; }
+  .fg-quest-payout { position: static; }
+  .fg-basics { grid-template-columns: 1fr; }
+  .fg-tree-viz { max-width: 380px; margin-inline: auto; }
+}
+@media (max-width: 860px) {
+  .fg-secnav { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; }
+  .fg-group { grid-template-columns: 1fr; gap: .5rem; }
+  .fg-group-tag { padding-left: .3rem; }
+  .fg-fish-grid { grid-template-columns: 1fr; }
+  .fg-lure-facts > div { grid-template-columns: 1fr; gap: .2rem; }
+}

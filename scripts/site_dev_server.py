@@ -33,6 +33,28 @@ _PLACEHOLDER_PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR42mOwcYrCihiGlgQAEoM2AX8snL0AAAAASUVORK5CYII="
 )
 
+_RENDER_CACHE: dict[str, bytes] = {}
+
+
+def _codex_render(path_qs: str) -> bytes:
+    """Fetch a real blueprint render from the API, falling back to the placeholder.
+
+    Cached per URL for the life of the process: a fish table asks for ~155 of
+    these and the upstream render is not free.
+    """
+    if path_qs in _RENDER_CACHE:
+        return _RENDER_CACHE[path_qs]
+    png = _PLACEHOLDER_PNG
+    try:
+        with _urlreq.urlopen(_API_ORIGIN + path_qs, timeout=10) as resp:
+            if resp.status == 200:
+                png = resp.read()
+    except Exception:  # noqa: BLE001 - dev preview: a miss is a placeholder, never a crash
+        pass
+    _RENDER_CACHE[path_qs] = png
+    return png
+
+
 ROOT = Path(__file__).resolve().parent.parent
 SITE_DIR = ROOT / "site"
 TEMPLATES = SITE_DIR / "templates"
@@ -71,7 +93,7 @@ _PREVIEW_FLAGS = {
     "calendar_enabled", "streams_enabled", "btt_releases_enabled",
     "classes_enabled", "star_chart_enabled", "gem_simulator_enabled",
     "gem_evaluator_enabled", "gem_builds_enabled", "calculators_enabled",
-    "gems_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
+    "gems_guide_enabled", "fishing_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
     "renames_enabled", "duplicates_enabled", "discord_oauth_enabled",
     "dressing_room_enabled", "dressing_room_page_enabled",
     "sound_studio_enabled", "mod_workshop_enabled",
@@ -533,11 +555,11 @@ _STUB_PACKS = [
 
 
 def _stub_entry(handle, slug, title, branch="main", version=None, locked=False,
-                available=True, reason=None, author=None):
+                available=True, reason=None, author=None, beta=False):
     return {"handle": handle, "slug": slug, "title": title, "custom": False,
             "author": author or handle.title(), "branch": branch,
             "version": version, "version_locked": locked,
-            "locked_tag": version if locked else None,
+            "locked_tag": version if locked else None, "is_beta": beta,
             "available": available, "reason": reason}
 
 
@@ -545,7 +567,7 @@ def _stub_custom_entry(title, author):
     return {"custom": True, "custom_sha": "deadbeef", "custom_filename": f"{title}.tmod",
             "handle": "", "slug": "", "title": title, "author": author, "branch": "",
             "version": None, "version_locked": False, "locked_tag": None,
-            "available": True, "reason": None}
+            "is_beta": False, "available": True, "reason": None}
 
 
 def _stub_pack_detail(handle, slug):
@@ -554,7 +576,7 @@ def _stub_pack_detail(handle, slug):
         {"name": "default", "label": "Default", "mod_count": 4, "available_count": 3,
          "entries": [
              _stub_entry("aallyn", "neon-hud", "Neon HUD Overhaul", "main", "v1.2.0", author="Aallyn"),
-             _stub_entry("skill", "tiny-mounts", "Tiny Mounts", "main", "v0.9", locked=True, author="Skill"),
+             _stub_entry("skill", "tiny-mounts", "Tiny Mounts", "main", "v0.9", locked=True, author="Skill", beta=True),
              _stub_entry("bae", "quiet-ui", "Quiet UI", "main", available=False, reason="no build", author="Bae"),
              _stub_custom_entry("My Custom HUD", "LocalArtist"),
          ]},
@@ -1495,6 +1517,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "classes.html", "text/html")
         if path == "/gems-guide":
             return self._send_file(TEMPLATES / "gems-guide.html", "text/html")
+        if path == "/fishing-guide":
+            return self._send_file(TEMPLATES / "fishing-guide.html", "text/html")
         if path == "/gem-simulator":
             return self._send_file(TEMPLATES / "gem-simulator.html", "text/html")
         if path == "/gem-evaluator":
@@ -2577,9 +2601,11 @@ class Handler(SimpleHTTPRequestHandler):
 
         # ── /codexes/crafting Recipe Cost Calculator ──────────────────────
         if path == "/site/codexes/render":
-            # Blueprint→PNG render (real rasterizer in prod). Serve a placeholder
-            # so codex/market thumbnails have something to show in local preview.
-            return self._send_bytes(_PLACEHOLDER_PNG, "image/png")
+            # Blueprint→PNG render. The rasterizer needs the game archive, which
+            # dev doesn't have, so borrow the real one and keep the placeholder
+            # as the offline fallback - thumbnails are how you tell a wrong
+            # blueprint name from a right one.
+            return self._send_bytes(_codex_render(self.path), "image/png")
         if path == "/site/codexes/search":
             qs = parse_qs(url.query)
             q = (qs.get("q", [""])[0] or "").strip().lower()

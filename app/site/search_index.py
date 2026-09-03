@@ -135,6 +135,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Classes", "/classes", "classes_enabled", "fa-solid fa-hat-wizard", "Learn", "class list"),
     _p("Trove Commands", "/commands", "commands_enabled", "fa-solid fa-keyboard", "Learn", "slash commands", "chat"),
     _p("Codexes", "/codexes", "codexes_enabled", "fa-solid fa-book-atlas", "Learn", "database", "catalog", "game data", badge="Beta"),
+    _p("Fishing Guide", "/fishing-guide", "fishing_guide_enabled", "fa-solid fa-fish", "Learn", "fish", "pools", "lures", "bait", "turtles", "guide"),
     _p("Recipe Cost Calculator", "/codexes/crafting", "codexes_enabled", "fa-solid fa-flask", "Learn", "crafting", "cost", in_nav=False),
     _p("Updates", "/updates", "updates_enabled", "fa-solid fa-code-branch", "Learn", "patch notes", "changes", "datamining"),
     _p("Streams", "/streams", "streams_enabled", "fa-solid fa-video", "Learn", "twitch", "live"),

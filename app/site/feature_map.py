@@ -48,6 +48,7 @@ SITE_FEATURE_FLAGS = {
     "gem_builds_enabled": feature_flags.GEM_BUILDS_FLAG,
     "calculators_enabled": feature_flags.CALCULATORS_FLAG,
     "gems_guide_enabled": feature_flags.GEMS_GUIDE_FLAG,
+    "fishing_guide_enabled": feature_flags.FISHING_GUIDE_FLAG,
     "dressing_room_enabled": feature_flags.DRESSING_ROOM_FLAG,
     "dressing_room_page_enabled": feature_flags.DRESSING_ROOM_PAGE_FLAG,
     "sound_studio_enabled": feature_flags.SOUND_STUDIO_FLAG,
@@ -198,6 +199,10 @@ def feature_blocks(p: str, f: dict) -> bool:
     # /v1 API), so only the page route needs blocking.
     if not f["gems_guide_enabled"] and p == "/gems-guide":
         return True
+    # Same shape as the gems guide: a client-rendered explainer whose only read
+    # is the shared codex render endpoint, so only the page route is blocked.
+    if not f["fishing_guide_enabled"] and p == "/fishing-guide":
+        return True
     # Tomes: the page plus its valuation proxy. It prices payouts from market
     # medians, but degrades to "not evaluated" without them, so it does not ride
     # the /market toggle.
@@ -240,6 +245,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/star-chart", "star_chart_enabled"),
     ("/gem-simulator", "gem_simulator_enabled"),
     ("/gems-guide", "gems_guide_enabled"),
+    ("/fishing-guide", "fishing_guide_enabled"),
     ("/dressing-room", "dressing_room_page_enabled"),
     ("/sound-studio", "sound_studio_enabled"),
     ("/mod-workshop", "mod_workshop_enabled"),

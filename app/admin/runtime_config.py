@@ -436,6 +436,19 @@ REGISTRY: dict[str, TunableSetting] = {
             "so only the page route is hidden."
         ),
     ),
+    "feature_fishing_guide_enabled": _t(
+        key="feature_fishing_guide_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Fishing guide (/fishing-guide). OFF hides the "
+            "page + navbar link. It's a client-rendered guide to lures, the fishing "
+            "skill tree, daily quests, pools and every fish (static "
+            "/static/fishing-guide.js); its only read is the shared "
+            "/site/codexes/render thumbnail endpoint, so only the page route is hidden."
+        ),
+    ),
     "feature_delves_enabled": _t(
         key="feature_delves_enabled",
         default=False,
