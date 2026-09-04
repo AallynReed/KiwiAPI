@@ -220,7 +220,7 @@ async def _claim_slot(drop: FileDrop) -> bool:
     The guard is the whole open-ness test, so the claim and the check can't drift
     apart under concurrency: the update only applies to a document that is still
     un-revoked, unexpired and under budget."""
-    result = await FileDrop.get_motor_collection().find_one_and_update(
+    result = await FileDrop.get_pymongo_collection().find_one_and_update(
         {
             "_id": drop.id,
             "revoked": False,
@@ -233,7 +233,7 @@ async def _claim_slot(drop: FileDrop) -> bool:
 
 
 async def _release_slot(drop: FileDrop) -> None:
-    await FileDrop.get_motor_collection().update_one(
+    await FileDrop.get_pymongo_collection().update_one(
         {"_id": drop.id}, {"$inc": {"upload_count": -1}})
 
 
