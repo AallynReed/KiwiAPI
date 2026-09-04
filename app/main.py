@@ -25,6 +25,7 @@ from app.core.features import (
     require_dm_subs_enabled,
     require_dressing_room_enabled,
     require_embed_enabled,
+    require_file_drops_enabled,
     require_giveaways_enabled,
     require_image_studio_enabled,
     require_leaderboards_enabled,
@@ -51,6 +52,8 @@ from app.core.scopes import catalog as scope_catalog
 from app.discord.router import router as discord_router
 from app.dm_subs.delivery import start_dm_delivery, stop_dm_delivery
 from app.dm_subs.router import router as dm_subs_router
+from app.drops.admin import router as drops_admin_router
+from app.drops.router import router as drops_router
 from app.embed.router import embed_api_router, embed_page_router
 from app.events.bus import start_event_bus, stop_event_bus
 from app.events.router import router as events_router
@@ -373,6 +376,12 @@ app.include_router(giveaways_admin_router, include_in_schema=False)
 _GIVEAWAYS_GATE = [Depends(require_giveaways_enabled)]
 app.include_router(giveaways_router, include_in_schema=False, dependencies=_GIVEAWAYS_GATE)
 app.include_router(giveaways_public_router, dependencies=_GIVEAWAYS_GATE)   # public giveaways:read - in schema
+# File drops: master-minted, PIN-protected upload links. The management router
+# stays reachable while the feature is off (so live links can be revoked or their
+# files fetched); only the uploader-facing surface rides the toggle.
+app.include_router(drops_admin_router, include_in_schema=False)
+app.include_router(drops_router, include_in_schema=False,
+                   dependencies=[Depends(require_file_drops_enabled)])
 app.include_router(supporters_public_router)  # public misc:read (tokenless) - in schema
 app.include_router(discord_bot_router, include_in_schema=False)  # User Dashboard "Discord Bot" tab (site_auth)
 app.include_router(  # User Dashboard "DM Alerts" tab (site_auth); inbound Discord DM subscriptions

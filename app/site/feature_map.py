@@ -56,6 +56,7 @@ SITE_FEATURE_FLAGS = {
     "blueprint_editor_enabled": feature_flags.BLUEPRINT_EDITOR_FLAG,
     "tomes_enabled": feature_flags.TOMES_FLAG,
     "unlock_debug_enabled": feature_flags.UNLOCK_DEBUG_FLAG,
+    "file_drops_enabled": feature_flags.FILE_DROPS_FLAG,
 }
 
 
@@ -213,6 +214,13 @@ def feature_blocks(p: str, f: dict) -> bool:
     # what most deployments actually hit.
     if not f["unlock_debug_enabled"] and (
         p in ("/unlock-debug", "/unlock_debug", "/site/unlock-debug")
+    ):
+        return True
+    # File drops: the uploader's page and its endpoints. Unlisted by nature (no
+    # navbar entry, no sitemap, no search) - the switch is how a live link is
+    # closed off without deleting it.
+    if not f["file_drops_enabled"] and (
+        p.startswith("/drop/") or p.startswith("/site/drops/")
     ):
         return True
     # The star-chart preview proxy feeds both Builds and Calculators; only hide it

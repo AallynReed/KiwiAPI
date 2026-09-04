@@ -9,6 +9,7 @@ data/
 .game_updates/
 .backlog/
 .mods/
+.drops/
 .embed/
 site/static/assets/
 .env

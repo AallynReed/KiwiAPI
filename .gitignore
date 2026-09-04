@@ -22,6 +22,9 @@ data/
 # Mods Hub store - shared mods' git repos, images + compiled .tmod (bind mount target, user content)
 .mods/
 
+# File drops - whatever people upload through a one-off PIN link (bind mount target, user content)
+.drops/
+
 # BetterTroveTools showcase site - binary assets are ~20 MB of screenshots,
 # copied to the server by hand rather than git. Templates + CSS + JS are tracked.
 # assets/data/ is the exception: hand-maintained stat tables the /calculators

@@ -1,0 +1,235 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /drop/<slug> - a private, PIN-protected upload link.
+
+   Someone who has never used this site lands here from a link a friend sent
+   them, so the page is one card and nothing else: what it's for, a PIN, a
+   file, a button. The site chrome stays around it on purpose - a stranger
+   being asked to upload a file should be able to see whose site they are on.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.drop-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: clamp(36px, 8vw, 72px) clamp(16px, 4vw, 24px) 90px;
+}
+
+.drop-page [hidden] { display: none !important; }
+
+.drop-card {
+  padding: clamp(22px, 5vw, 32px);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+}
+
+/* ─── Shared bits ───────────────────────────────────────────────────── */
+
+.drop-eyebrow {
+  margin: 0 0 10px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .74rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent-blue);
+}
+.drop-eyebrow i { margin-right: 6px; }
+
+.drop-title {
+  margin: 0 0 8px;
+  font-size: clamp(1.4rem, 4vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -.015em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;   /* the label is someone's free text */
+}
+
+.drop-muted {
+  margin: 0;
+  color: var(--text-mute);
+  line-height: 1.6;
+}
+
+.drop-terms {
+  margin: 0 0 26px;
+  font-size: .92rem;
+}
+
+/* ─── Loading / dead / done ─────────────────────────────────────────── */
+
+#drop-loading, #drop-dead, #drop-done { text-align: center; padding: 22px 0; }
+
+.drop-spinner { font-size: 1.4rem; color: var(--text-soft); margin-bottom: 14px; }
+
+.drop-icon {
+  font-size: 2.2rem;
+  margin-bottom: 16px;
+  display: block;
+}
+.drop-icon.is-dead { color: var(--accent-red); }
+.drop-icon.is-good { color: var(--accent-green); }
+
+/* ─── Fields ────────────────────────────────────────────────────────── */
+
+.drop-field { margin-bottom: 20px; }
+
+.drop-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: .95rem;
+  font-weight: 650;
+}
+.drop-optional { font-weight: 400; color: var(--text-mute); }
+
+.drop-hint {
+  margin: 0 0 10px;
+  font-size: .88rem;
+  color: var(--text-mute);
+}
+
+.drop-pin, .drop-note {
+  width: 100%;
+  padding: 12px 14px;
+  color: var(--text);
+  background: var(--bg-deep);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  transition: border-color .18s var(--ease-out), box-shadow .18s var(--ease-out);
+}
+.drop-pin {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 1.4rem;
+  letter-spacing: .35em;
+  text-align: center;
+}
+.drop-pin::placeholder, .drop-note::placeholder { color: var(--text-soft); }
+.drop-pin:focus-visible, .drop-note:focus-visible {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ─── Drop zone ─────────────────────────────────────────────────────── */
+
+/* The <label> IS the target, so a click, a drop and Enter-while-focused all
+   open the picker without a keyboard handler of our own. */
+.drop-zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 34px 20px;
+  margin-bottom: 12px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--bg-line);
+  background: var(--bg-deep);
+  transition: border-color .18s var(--ease-out), background .18s var(--ease-out);
+}
+.drop-zone:hover { border-color: var(--accent-blue); }
+.drop-zone.dragover,
+.drop-zone.has-file {
+  border-style: solid;
+  border-color: var(--accent-blue);
+  background: var(--bg-card-hi);
+}
+/* Visually hidden, not display:none - the input must stay focusable so the
+   zone is reachable by keyboard. */
+.drop-zone input[type="file"] {
+  position: absolute;
+  width: 1px; height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.drop-zone:focus-within {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.drop-zone i { font-size: 1.5rem; color: var(--text-soft); }
+.drop-zone.has-file i { color: var(--accent-blue); }
+.drop-zone-empty, .drop-zone-ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.drop-zone-title {
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.drop-zone-hint { font-size: .88rem; color: var(--text-mute); }
+
+.drop-clear {
+  display: block;
+  margin: 0 auto 20px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: .88rem;
+  color: var(--text-mute);
+  background: none;
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color .18s var(--ease-out), border-color .18s var(--ease-out);
+}
+.drop-clear:hover { color: var(--text); border-color: var(--text-soft); }
+
+/* ─── Progress + status ─────────────────────────────────────────────── */
+
+.drop-progress {
+  height: 6px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  background: var(--bg-deep);
+  overflow: hidden;
+}
+.drop-progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--accent-blue);
+  transition: width .2s var(--ease-out);
+}
+
+.drop-status {
+  margin: 0 0 14px;
+  font-size: .92rem;
+  line-height: 1.5;
+  color: var(--text-mute);
+}
+.drop-status.is-bad { color: var(--accent-red); }
+.drop-status.is-good { color: var(--accent-green); }
+
+/* ─── The button ────────────────────────────────────────────────────── */
+
+.drop-go {
+  width: 100%;
+  padding: 14px 18px;
+  font: inherit;
+  font-weight: 650;
+  color: #06080d;
+  background: var(--accent-blue);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: filter .18s var(--ease-out), transform .12s var(--ease-out);
+}
+.drop-go i { margin-right: 8px; }
+.drop-go:hover:not(:disabled) { filter: brightness(1.08); }
+.drop-go:active:not(:disabled) { transform: translateY(1px); }
+.drop-go:disabled { opacity: .55; cursor: default; }
+
+.drop-privacy {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: .85rem;
+  color: var(--text-mute);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop-progress-bar, .drop-go, .drop-zone, .drop-pin, .drop-note, .drop-clear {
+    transition: none;
+  }
+}

@@ -14,6 +14,7 @@ from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
 from app.core.utils import utcnow
 from app.dm_subs.models import DmSubscription
+from app.drops.models import DropUpload, FileDrop
 from app.giveaways.models import Giveaway, GiveawayEntry, PrizeCode, VaultItem
 from app.images.models import ImageDesign
 from app.pageviews.models import PageView
@@ -98,6 +99,7 @@ DOCUMENT_MODELS = [
     SiteWebhook,                         # outbound (Discord) webhooks
     DmSubscription,                      # inbound (Discord) DM alert subscriptions
     ImageDesign,                         # user-designed images (image studio)
+    FileDrop, DropUpload,                # one-off PIN upload links + what arrived on them
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).

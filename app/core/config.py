@@ -351,6 +351,16 @@ class Settings(BaseSettings):
     # this leaves headroom rather than tracking the current build.
     unlock_debug_max_request_body_bytes: int = 160 * 1024 * 1024  # 160 MB
 
+    # File drops: a friend uploads whatever was asked for through a one-off PIN
+    # link, so the cap is the ceiling on "a file someone sends you" rather than a
+    # known format's size. Each drop also carries its own, tighter, per-file limit
+    # (chosen when the link is made) and can never exceed this.
+    drops_max_request_body_bytes: int = 512 * 1024 * 1024  # 512 MB
+
+    # Where files received through a drop are written. Bind-mounted into the api
+    # container from `./.drops` (user content, kept out of git and the image).
+    drops_store_dir: str = "data/drops"
+
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
     # Bind-mounted into the api container from `./site` in the project root.
     site_root: str = "site"

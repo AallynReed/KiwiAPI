@@ -70,6 +70,10 @@ UNLOCK_DEBUG_FLAG = "feature_unlock_debug_enabled"
 # Mod issues + requests. Site-wide kill switch; per-mod consent is a field on the
 # project (ModProject.issues_enabled) and stays the creator's call.
 MOD_ISSUES_FLAG = "feature_mod_issues_enabled"
+# File drops: master-minted one-off upload links (/drop/<slug>). Nothing here is
+# linked from the site - the switch exists so the upload surface can be closed
+# outright without deleting the links that are already out there.
+FILE_DROPS_FLAG = "feature_file_drops_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
@@ -133,3 +137,4 @@ require_dressing_room_enabled = _gate(DRESSING_ROOM_FLAG, "Dressing Room")
 require_tomes_enabled = _gate(TOMES_FLAG, "Tomes")
 require_unlock_debug_enabled = _gate(UNLOCK_DEBUG_FLAG, "Unlock Debug patcher")
 require_mod_issues_enabled = _gate(MOD_ISSUES_FLAG, "mod issues")
+require_file_drops_enabled = _gate(FILE_DROPS_FLAG, "file drops")

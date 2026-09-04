@@ -46,7 +46,7 @@ _PAGE_PATHS = frozenset({
 # Dynamic site page subtrees (parameterised routes like /mods/{slug},
 # /modpacks/{handle}/{slug} and /player/{name}). Matched by prefix so the slug/name
 # page gets the relaxed site CSP + no-cache, same as the bare listing pages above.
-_PAGE_PREFIXES = ("/mods/", "/modpacks/", "/player/")
+_PAGE_PREFIXES = ("/mods/", "/modpacks/", "/player/", "/drop/")
 
 
 def _is_site_path(path: str) -> bool:
@@ -109,6 +109,12 @@ def add_security_middleware(app: FastAPI) -> None:
             # A whole mod is uploaded in one request (loose files, a .zip, or a
             # .tmod being repaired). The unpacked-size cap lives in workshop.py.
             max_body = settings.mod_workshop_max_request_body_bytes
+        elif path.startswith("/site/drops/"):
+            # Someone sends whatever they were asked for - a log, a video, a
+            # crash dump. Each link carries its own, tighter, per-file limit
+            # (enforced while streaming in app/drops/service.py); this is the
+            # ceiling that limit can be set to.
+            max_body = settings.drops_max_request_body_bytes
         elif path == "/v1/misc/feedback":
             # 4 attachments × 5 MB + form fields. The endpoint also caps
             # per-file size + count itself, so this is a generous gate

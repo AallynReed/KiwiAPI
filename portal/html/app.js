@@ -335,8 +335,8 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "creators", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"];
-const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"]);
+const TABS = ["tokens", "creators", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"];
+const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"]);
 
 // Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
 const ICONS = {
@@ -352,6 +352,7 @@ const ICONS = {
   modules:      '<path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>',
   leaderboards: '<rect x="3" y="11" width="5" height="9" rx="1"/><rect x="9.5" y="5" width="5" height="15" rx="1"/><rect x="16" y="14" width="5" height="6" rx="1"/>',
   ingest:       '<path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
+  drops:        '<path d="M12 3v9m0 0 3.5-3.5M12 12 8.5 8.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
   giveaways:    '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8S11 4 8.5 4a2 2 0 1 0 0 4H12zM12 8s1-4 3.5-4a2 2 0 1 1 0 4H12z"/>',
   discord:      '<path d="M4 6h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/><circle cx="9.5" cy="11.5" r="1"/><circle cx="14.5" cy="11.5" r="1"/>',
   supporters:   '<path d="M12 20.3 4.6 12.9a4.4 4.4 0 0 1 6.2-6.2l1.2 1.2 1.2-1.2a4.4 4.4 0 0 1 6.2 6.2L12 20.3Z"/>',
@@ -385,6 +386,7 @@ const TAB_META = {
   ingest:       { group: "Admin panel · Modules", label: "Ingest" },
   marketitems:  { group: "Admin panel · Modules", label: "Market items" },
   giveaways:    { group: "Admin panel · Modules", label: "Giveaways" },
+  drops:        { group: "Admin panel · Modules", label: "File drops" },
   discord:      { group: "Admin panel · Modules", label: "Discord" },
   supporters:   { group: "Admin panel · Modules", label: "Supporters" },
   claims:       { group: "Admin panel · Modules", label: "Trove claims" },
@@ -433,6 +435,7 @@ function renderDashboard() {
           ${navItem("ingest", true)}
           ${navItem("marketitems", true)}
           ${navItem("giveaways", true)}
+          ${navItem("drops", true)}
           ${navItem("discord", true)}
           ${navItem("supporters", true)}
           ${navItem("claims", true)}
@@ -507,6 +510,7 @@ function selectTab() {
   else if (state.tab === "ingest") renderIngest();
   else if (state.tab === "marketitems") renderMarketItems();
   else if (state.tab === "giveaways") renderGiveaways();
+  else if (state.tab === "drops") renderDrops();
   else if (state.tab === "discord") renderDiscord();
   else if (state.tab === "supporters") renderSupporters();
   else if (state.tab === "claims") renderClaims();
@@ -2263,6 +2267,192 @@ function openAddCodes(itemId) {
     toast(`Added ${r.added} code${r.added === 1 ? "" : "s"}${r.skipped ? ` (${r.skipped} duplicate/blank skipped)` : ""}.`, "ok");
     renderVaultPane();
   }, "Add codes");
+}
+
+
+// ── Admin · Modules · File drops ────────────────────────────────────────────
+// One-off upload links: mint one, hand out the URL + PIN, collect what lands on
+// it. Backed by /admin/drops/*. The PIN is argon2-hashed server-side, so the
+// create response is the only place it is ever readable - it gets its own dialog
+// rather than a toast, because closing it means minting a new link.
+
+function dropBadge(d) {
+  if (d.revoked) return `<span class="badge muted">Turned off</span>`;
+  if (new Date(d.expires_at) <= new Date()) return `<span class="badge warn">Expired</span>`;
+  if (d.upload_count >= d.max_uploads) return `<span class="badge muted">Used up</span>`;
+  return `<span class="badge ok">Open</span>`;
+}
+
+function dropSize(bytes) {
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0, n = bytes;
+  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+  return `${n.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+async function renderDrops() {
+  const pane = document.getElementById("tabpane");
+  pane.innerHTML = `<p class="muted">Loading…</p>`;
+  let drops;
+  try { drops = await API.call("/admin/drops"); }
+  catch (ex) { pane.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+
+  const fileRow = (f) => `
+    <tr>
+      <td style="word-break:break-all">${esc(f.filename)}</td>
+      <td class="muted">${dropSize(f.size)}</td>
+      <td class="muted" style="font-size:.84rem">${new Date(f.uploaded_at).toLocaleString()}</td>
+      <td class="muted" style="font-size:.84rem">${f.note ? esc(f.note) : "-"}</td>
+      <td style="white-space:nowrap">
+        <button class="btn small" data-dl="${f.id}" data-name="${esc(f.filename)}">Download</button>
+        <button class="btn small danger" data-delfile="${f.id}">Delete</button>
+      </td>
+    </tr>`;
+
+  const card = (d) => `
+    <div class="card" style="margin-bottom:12px">
+      <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <h3 style="margin:0">${esc(d.label)}</h3>
+          <div class="mono" style="font-size:.8rem;word-break:break-all;opacity:.75">${esc(d.url)}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          ${dropBadge(d)}
+          <span class="badge muted">${d.upload_count}/${d.max_uploads} used</span>
+          <span class="badge muted">${dropSize(d.max_file_bytes)} max</span>
+          <button class="btn small" data-copy="${esc(d.url)}">Copy link</button>
+          <button class="btn small" data-extend="${d.id}">Extend</button>
+          <button class="btn small" data-toggle="${d.id}" data-on="${d.revoked ? "1" : "0"}">${d.revoked ? "Turn back on" : "Turn off"}</button>
+          <button class="btn small danger" data-deldrop="${d.id}">Delete</button>
+        </div>
+      </div>
+      <div class="muted" style="font-size:.84rem;margin-top:6px">
+        ${new Date(d.expires_at) <= new Date() ? "Expired" : "Expires"} ${new Date(d.expires_at).toLocaleString()}
+      </div>
+      ${d.uploads.length ? `
+        <table style="margin-top:12px">
+          <thead><tr><th>File</th><th>Size</th><th>Received</th><th>Message</th><th></th></tr></thead>
+          <tbody>${d.uploads.map(fileRow).join("")}</tbody>
+        </table>` : `<p class="muted" style="margin:12px 0 0;font-size:.88rem">Nothing uploaded yet.</p>`}
+    </div>`;
+
+  pane.innerHTML = `
+    <div class="row" style="align-items:center;margin-bottom:10px">
+      <h2 style="flex:1;margin:0">File drops (${drops.length})</h2>
+      <button class="btn primary small" id="drop-new">+ New drop</button>
+    </div>
+    <p class="hint">A drop is a link plus a PIN that someone can upload a file to - no account, nothing else on the page. It stops working when it expires or runs out of uploads, whichever comes first. What lands on it is downloadable from here and nowhere else.</p>
+    ${drops.length ? drops.map(card).join("") : `<p class="muted">No drops yet. Make one when you need a file from someone.</p>`}`;
+
+  document.getElementById("drop-new").addEventListener("click", openDropForm);
+  pane.querySelectorAll("[data-copy]").forEach((b) =>
+    b.addEventListener("click", () =>
+      navigator.clipboard.writeText(b.dataset.copy).then(() => toast("Link copied.", "ok"))));
+  pane.querySelectorAll("[data-extend]").forEach((b) =>
+    b.addEventListener("click", () => openDropExtend(b.dataset.extend)));
+  pane.querySelectorAll("[data-toggle]").forEach((b) =>
+    b.addEventListener("click", async () => {
+      const on = b.dataset.on === "1";
+      try {
+        await API.call(`/admin/drops/${b.dataset.toggle}`, { method: "PATCH", body: { revoked: !on } });
+        toast(on ? "Link turned back on." : "Link turned off.", "ok");
+        renderDrops();
+      } catch (ex) { toast(ex.message, "err"); }
+    }));
+  pane.querySelectorAll("[data-deldrop]").forEach((b) =>
+    b.addEventListener("click", () => modal("Delete this drop?",
+      "<p>The link stops working and every file uploaded through it is deleted from the server. This can't be undone.</p>",
+      async () => {
+        await API.call(`/admin/drops/${b.dataset.deldrop}`, { method: "DELETE" });
+        toast("Drop deleted.", "ok"); renderDrops();
+      }, "Delete")));
+  pane.querySelectorAll("[data-delfile]").forEach((b) =>
+    b.addEventListener("click", () => modal("Delete this file?",
+      "<p>Removes the file from the server. The link's used-up count stays as it is.</p>",
+      async () => {
+        await API.call(`/admin/drops/uploads/${b.dataset.delfile}`, { method: "DELETE" });
+        toast("File deleted.", "ok"); renderDrops();
+      }, "Delete")));
+  pane.querySelectorAll("[data-dl]").forEach((b) =>
+    b.addEventListener("click", () => downloadDropFile(b.dataset.dl, b.dataset.name)));
+}
+
+// The download is bearer-authenticated, so it can't be a plain <a href> - fetch
+// it with the token and hand the browser a blob.
+async function downloadDropFile(uploadId, filename) {
+  const path = `/admin/drops/uploads/${uploadId}/download`;
+  const get = () => fetch(API_BASE + path, { headers: { Authorization: "Bearer " + API.token } });
+  try {
+    let res = await get();
+    if (res.status === 401 && await API._tryRefresh()) res = await get();
+    if (!res.ok) throw new Error("That file couldn't be fetched.");
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (ex) { toast(ex.message || "Download failed.", "err"); }
+}
+
+function openDropForm() {
+  const pin = String(Math.floor(Math.random() * 900000) + 100000);   // 6 digits
+  modal("New drop", `
+    <label>What's it for <span class="muted">(shown to whoever opens the link)</span></label>
+    <input id="nd-label" maxlength="120" placeholder="Send me your Trove log">
+    <label>PIN <span class="muted">(digits only - they'll need this too)</span></label>
+    <input id="nd-pin" class="mono" value="${pin}" maxlength="12" inputmode="numeric">
+    <label>Uploads allowed <span class="muted">(1 = single use)</span></label>
+    <input id="nd-uses" type="number" min="1" max="100" value="1">
+    <label>Expires in (hours)</label>
+    <input id="nd-hours" type="number" min="1" max="2160" value="24">
+    <label>Largest file (MB)</label>
+    <input id="nd-mb" type="number" min="1" max="2048" value="256">
+  `, async () => {
+    const body = {
+      label: document.getElementById("nd-label").value.trim(),
+      pin: document.getElementById("nd-pin").value.trim(),
+      max_uploads: Number(document.getElementById("nd-uses").value),
+      expires_in_hours: Number(document.getElementById("nd-hours").value),
+      max_file_mb: Number(document.getElementById("nd-mb").value),
+    };
+    if (!body.label) throw new Error("Say what the drop is for.");
+    if (!/^[0-9]{4,12}$/.test(body.pin)) throw new Error("The PIN must be 4-12 digits.");
+    const created = await API.call("/admin/drops", { method: "POST", body });
+    renderDrops();
+    showDropSecret(created);
+  }, "Create");
+}
+
+// Shown once, right after creation: the PIN is hashed the moment it is stored,
+// so this dialog is the only place it can be read.
+function showDropSecret(d) {
+  modal("Send these two things", `
+    <p class="hint">The PIN isn't stored in a readable form - this is the only time it's shown. If it's lost, make a new drop.</p>
+    <label>Link</label>
+    <input id="ds-url" class="mono" readonly value="${esc(d.url)}">
+    <label>PIN</label>
+    <input id="ds-pin" class="mono" readonly value="${esc(d.pin)}">
+    <button class="btn small" id="ds-copy" type="button" style="margin-top:10px">Copy both</button>
+  `, async () => {}, "Done");
+  document.getElementById("ds-copy").addEventListener("click", () =>
+    navigator.clipboard.writeText(d.url + "\nPIN: " + d.pin)
+      .then(() => toast("Link + PIN copied.", "ok")));
+}
+
+function openDropExtend(dropId) {
+  modal("Extend this drop", `
+    <label>Add hours <span class="muted">(from now if it has already expired)</span></label>
+    <input id="de-hours" type="number" min="1" max="2160" value="24">
+  `, async () => {
+    const hours = Number(document.getElementById("de-hours").value);
+    if (!hours || hours < 1) throw new Error("Enter a number of hours.");
+    await API.call(`/admin/drops/${dropId}`, { method: "PATCH", body: { extend_hours: hours } });
+    toast("Deadline extended.", "ok");
+    renderDrops();
+  }, "Extend");
 }
 
 

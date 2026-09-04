@@ -357,6 +357,19 @@ async def unlock_debug_legacy(request: Request) -> RedirectResponse:
     return RedirectResponse("/unlock-debug", status_code=301)
 
 
+@router.get("/drop/{slug}", response_class=HTMLResponse)
+async def file_drop_page(request: Request, slug: str) -> HTMLResponse:
+    """A one-off upload link: someone was given this URL and a PIN, and sends a
+    file back through it.
+
+    The shell only - whether the link is still alive, what it's for and how big a
+    file it takes all come from ``/site/drops/{slug}`` on the API, so an expired
+    or spent link is answered by the data plane rather than guessed at here. The
+    page is ``noindex`` and is in no menu, no sitemap and no search index: the only
+    way to it is the link itself."""
+    return _TEMPLATES.TemplateResponse(request, "drop.html", {"slug": slug})
+
+
 @router.get("/gems-guide", response_class=HTMLResponse)
 async def gems_guide_page(request: Request) -> HTMLResponse:
     """How Gems Work - an interactive, animated explainer of Trove's gem system

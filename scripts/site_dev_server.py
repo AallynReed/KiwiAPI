@@ -1535,6 +1535,12 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "star-chart.html", "text/html")
         if path == "/login":
             return self._send_file(TEMPLATES / "login.html", "text/html")
+        if path.startswith("/drop/"):
+            # One-off upload link. The slug is the URL's last segment in
+            # production too, so the shell renders the same here; whether the
+            # link is alive is the API's answer, not this server's.
+            return self._send_file(TEMPLATES / "drop.html", "text/html",
+                                   {"slug": path.rsplit("/", 1)[-1]})
         if path.startswith("/player/"):
             # Public player profile shell. data-player is stripped to empty by the
             # {{ }} emulation, but player.js falls back to the URL path segment.
@@ -1729,6 +1735,18 @@ class Handler(SimpleHTTPRequestHandler):
 
         # Stub JSON endpoints.
         # --- Website changelog (/site/changelog) ---------------------------
+        if path.startswith("/site/drops/"):
+            # A one-off upload link, always alive in the preview. Production
+            # answers 404 for a slug that has expired or been used up; there is
+            # no way to reach that state here, so the shell renders the form.
+            import time as _t
+            return self._send_json({
+                "label": "Send me your Trove log",
+                "max_file_bytes": 256 * 1024 * 1024,
+                "uploads_left": 1,
+                "expires_at": _t.strftime("%Y-%m-%dT%H:%M:%SZ",
+                                          _t.gmtime(_t.time() + 86400)),
+            })
         if path == "/site/changelog":
             return self._send_json({
                 "repo": "AallynReed/KiwiAPI",
@@ -4173,6 +4191,26 @@ class Handler(SimpleHTTPRequestHandler):
 
         if path == "/site/unlock-debug":
             return self._unlock_debug()
+
+        if path.startswith("/site/drops/"):
+            # Accept whatever the form sends so the PIN step + the upload can be
+            # walked through locally. Nothing is stored and no PIN is checked -
+            # that is the API's job, and this server has no drops to check against.
+            length = int(self.headers.get("Content-Length", 0) or 0)
+            if length:
+                self.rfile.read(length)
+            if path.endswith("/upload"):
+                return self._send_json({
+                    "id": "preview", "filename": "preview.bin", "size": length,
+                    "content_type": None, "sha256": "0" * 64, "note": None,
+                    "uploaded_at": "1970-01-01T00:00:00Z",
+                })
+            return self._send_json({
+                "label": "Send me your Trove log",
+                "max_file_bytes": 256 * 1024 * 1024,
+                "uploads_left": 1,
+                "expires_at": "2099-01-01T00:00:00Z",
+            })
 
         if path.startswith("/site/mod-workshop/"):
             return self._mod_workshop(path)

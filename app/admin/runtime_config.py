@@ -449,6 +449,20 @@ REGISTRY: dict[str, TunableSetting] = {
             "/site/codexes/render thumbnail endpoint, so only the page route is hidden."
         ),
     ),
+    "feature_file_drops_enabled": _t(
+        key="feature_file_drops_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for file drops - the one-off, PIN-protected upload links "
+            "minted in Admin panel -> Modules -> File drops (/drop/<slug>). OFF 404s "
+            "every live link and the upload endpoints; the links, their PINs and the "
+            "files already received are untouched and work again when it goes back ON. "
+            "Nothing about this feature is linked from the site: a link only exists "
+            "for whoever it was handed to."
+        ),
+    ),
     "feature_delves_enabled": _t(
         key="feature_delves_enabled",
         default=False,
@@ -639,6 +653,28 @@ REGISTRY: dict[str, TunableSetting] = {
         category="api_rate_limits",
         min_value=10, max_value=86400,
         description="Sliding-window length for the per-IP Unlock Debug bucket, in seconds.",
+    ),
+    "file_drop_rate_limit_max": _t(
+        key="file_drop_rate_limit_max",
+        default=12,
+        type="int",
+        category="api_rate_limits",
+        min_value=1, max_value=100000,
+        description=(
+            "Per-IP-per-link cap on a file drop (/site/drops/*). This is what makes a "
+            "short PIN safe: guessing needs attempts, and there are only this many per "
+            "window. The whole LINK gets four times this budget, so several honest "
+            "people sharing one link don't collide while a distributed guessing run "
+            "still runs out."
+        ),
+    ),
+    "file_drop_rate_limit_window_seconds": _t(
+        key="file_drop_rate_limit_window_seconds",
+        default=600,
+        type="int",
+        category="api_rate_limits",
+        min_value=10, max_value=86400,
+        description="Sliding-window length for the file-drop buckets, in seconds.",
     ),
     "blueprint_editor_rate_limit_max": _t(
         key="blueprint_editor_rate_limit_max",
