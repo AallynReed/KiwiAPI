@@ -280,7 +280,10 @@ types 1-9, augments 1 Rough/2 Precise/3 Superior).
 
 - `POST /v1/mods/read` - body is the **raw .tmod bytes** (`application/octet-stream`), query `?metadata_only=true|false`.
   Returns `{version, header_size, properties:{modLoader, title, author, flags?, …}, file_count, files:[{path,
-  index, offset, size, checksum, content_base64?}], metadata_only, flags, categories[]}`. `metadata_only` omits
+  index, offset, size, checksum, content_base64?}], metadata_only, flags, categories[], header_repaired}`.
+  `header_repaired` is `true` when the mod's header string lengths counted characters instead of UTF-8 bytes
+  (a BetterTroveTools writer bug that makes Trove refuse the mod) and the reader recovered it - rebuilding the
+  mod through `/v1/mods/build` writes correct lengths. `metadata_only` omits
   `content_base64`. `checksum` is Trove's FNV-1a-variant (32-bit). Files/paths are lowercase posix. `flags` is the
   category bitmask decoded into `categories` (labels) for convenience (see `/v1/mods/categories`).
 - `POST /v1/mods/build` - JSON `{version?: 1, properties: {title, author, modVersion, notes, tags, …},

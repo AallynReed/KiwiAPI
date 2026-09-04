@@ -9,6 +9,7 @@ Format (all multi-byte ints little-endian, strings UTF-8):
   [u64 header_size][u16 version][u16 prop_count]
   prop_count × ( leb128 name_len, name, leb128 val_len, value )
   files × ( u8 path_len, path, leb128 index, leb128 offset, leb128 size, leb128 checksum )
+  (all three lengths count BYTES; some writers wrongly count characters - see ``_read_header``)
   ...header ends at header_size...
   zlib stream (level 0, 32 KiB chunks, Z_SYNC_FLUSH) of the 4-byte-padded file contents
 """
@@ -62,6 +63,7 @@ class TmodReadResponse(BaseModel):
     file_count: int
     files: list[TmodFileEntry]
     metadata_only: bool
+    header_repaired: bool = False   # header strings were length-counted in chars, not bytes
 
 
 class TmodBuildFile(BaseModel):
@@ -132,6 +134,84 @@ def _decompress_file_stream(compressed: bytes, entries: list[dict]) -> bytes:
     return primary if primary is not None else manual
 
 
+def _utf8_char_span(data: bytes, pos: int, chars: int) -> int:
+    """Byte length of the next ``chars`` UTF-8 characters starting at ``pos``."""
+    end = pos
+    for _ in range(chars):
+        lead = data[end]
+        if lead < 0x80:
+            end += 1
+        elif 0xC2 <= lead <= 0xDF:
+            end += 2
+        elif 0xE0 <= lead <= 0xEF:
+            end += 3
+        elif 0xF0 <= lead <= 0xF4:
+            end += 4
+        else:
+            raise TmodError("not a UTF-8 lead byte")
+    if end > len(data):
+        raise TmodError("header string runs past the end of the file")
+    return end - pos
+
+
+def _parse_header(data: bytes, header_size: int, prop_count: int,
+                  char_lengths: bool) -> tuple[dict[str, str], list[dict], int]:
+    """Parse the properties + file table, reading every string length as a byte
+    count (the format) or a character count (the quirk ``_read_header`` handles).
+    Returns the properties, the file entries, and the position it stopped at."""
+    def read_string(pos: int, declared: int) -> tuple[str, int]:
+        span = _utf8_char_span(data, pos, declared) if char_lengths else declared
+        return data[pos:pos + span].decode("utf-8"), pos + span
+
+    pos = 12
+    properties: dict[str, str] = {}
+    for _ in range(prop_count):
+        name_size, pos = read_leb128(data, pos)
+        name, pos = read_string(pos, name_size)
+        value_size, pos = read_leb128(data, pos)
+        value, pos = read_string(pos, value_size)
+        properties[name] = value
+
+    entries: list[dict] = []
+    while pos < header_size:
+        path, pos = read_string(pos + 1, data[pos])
+        index, pos = read_leb128(data, pos)
+        offset, pos = read_leb128(data, pos)
+        size, pos = read_leb128(data, pos)
+        checksum, pos = read_leb128(data, pos)
+        entries.append({"path": path, "index": index, "offset": offset,
+                        "size": size, "checksum": checksum})
+    return properties, entries, pos
+
+
+def _read_header(data: bytes, header_size: int,
+                 prop_count: int) -> tuple[dict[str, str], list[dict], bool]:
+    """Parse the header, tolerating tmods whose string lengths count CHARACTERS
+    where the format wants UTF-8 BYTES. Returns (properties, entries, repaired).
+
+    BetterTroveTools - and so a large share of published mods - wrote ``len(str)``
+    for header strings while writing them as UTF-8, so a single non-ASCII character
+    anywhere in the header (an accented word in ``notes``, say) under-declares that
+    length and desyncs every field after it, taking the whole file table with it.
+    The reading isn't guessed: the file table has to end exactly on ``header_size``,
+    which only the correct interpretation does.
+    """
+    def attempt(char_lengths: bool) -> tuple[dict[str, str], list[dict]] | None:
+        try:
+            properties, entries, pos = _parse_header(data, header_size, prop_count, char_lengths)
+        except (IndexError, UnicodeDecodeError, ValueError):
+            return None
+        return (properties, entries) if pos == header_size else None
+
+    for char_lengths in (False, True):
+        parsed = attempt(char_lengths)
+        if parsed is not None:
+            return parsed[0], parsed[1], char_lengths
+    # Neither reading holds up - re-run the strict one so its own error surfaces.
+    _parse_header(data, header_size, prop_count, False)
+    raise TmodError("the file table does not end where the declared header size says")
+
+
 def read_tmod(data: bytes, metadata_only: bool = False) -> dict:
     """Parse a .tmod byte string. With metadata_only, file contents are not loaded/returned."""
     if len(data) < 12:
@@ -143,32 +223,10 @@ def read_tmod(data: bytes, metadata_only: bool = False) -> dict:
         if not 12 <= header_size <= len(data):
             raise TmodError("declared header size is outside the file")
 
-        pos = 12
-        properties: dict[str, str] = {}
-        for _ in range(prop_count):
-            name_size, pos = read_leb128(data, pos)
-            name = data[pos:pos + name_size].decode("utf-8")
-            pos += name_size
-            value_size, pos = read_leb128(data, pos)
-            value = data[pos:pos + value_size].decode("utf-8")
-            pos += value_size
-            properties[name] = value
-
         # The file table (path/offset/size/checksum) lives in the header. Parse it
         # FIRST so the decompressor can verify its output against the checksums
         # (needed to detect zlib's silent mis-decode of Trove's custom framing).
-        entries: list[dict] = []
-        while pos < header_size:
-            name_size = data[pos]
-            pos += 1
-            path = data[pos:pos + name_size].decode("utf-8")
-            pos += name_size
-            index, pos = read_leb128(data, pos)
-            offset, pos = read_leb128(data, pos)
-            size, pos = read_leb128(data, pos)
-            checksum, pos = read_leb128(data, pos)
-            entries.append({"path": path, "index": index, "offset": offset,
-                            "size": size, "checksum": checksum})
+        properties, entries, header_repaired = _read_header(data, header_size, prop_count)
 
         file_stream = b""
         if not metadata_only:
@@ -195,6 +253,7 @@ def read_tmod(data: bytes, metadata_only: bool = False) -> dict:
     return {
         "version": version, "header_size": header_size, "properties": properties,
         "files": files, "file_count": len(files), "metadata_only": metadata_only,
+        "header_repaired": header_repaired,
         "flags": flags_val, "categories": mod_categories.tags_from_flags(flags_val),
     }
 
