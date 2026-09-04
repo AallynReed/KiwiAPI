@@ -2287,12 +2287,14 @@ function dropSize(bytes) {
   const units = ["B", "KB", "MB", "GB"];
   let i = 0, n = bytes;
   while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
-  return `${n.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+  // A round number stays round: "256 MB", not "256.0 MB".
+  const shown = i === 0 || n % 1 === 0 ? n.toFixed(0) : n.toFixed(1);
+  return `${shown} ${units[i]}`;
 }
 
 async function renderDrops() {
-  const pane = document.getElementById("tabpane");
-  pane.innerHTML = `<p class="muted">Loading…</p>`;
+  const pane = document.getElementById("tab-body");
+  pane.innerHTML = `<div class="loading">Loading…</div>`;
   let drops;
   try { drops = await API.call("/admin/drops"); }
   catch (ex) { pane.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
