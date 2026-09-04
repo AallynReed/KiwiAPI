@@ -23,7 +23,17 @@ import time
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
@@ -3834,12 +3844,15 @@ async def site_mods_notifications(
 
 @router.get("/site/mods/releases/{release_id}/download", response_class=Response)
 async def site_mods_download(
-    release_id: str, viewer: SiteUser | None = Depends(get_optional_site_user),
+    release_id: str, background: BackgroundTasks,
+    viewer: SiteUser | None = Depends(get_optional_site_user),
 ) -> Response:
-    """Public download of a release's compiled .tmod (bumps the counter). The
-    owner can also pull their own *draft* releases (to test before publishing)."""
+    """Public download of a release's compiled .tmod (bumps the counter, after the
+    response). The owner can also pull their own *draft* releases (to test before
+    publishing)."""
     release, project = await mods_hub_service.release_with_project(release_id, viewer)
-    data = await mods_hub_service.record_download(release, project)
+    data = await mods_hub_service.read_release_bytes(release)
+    background.add_task(mods_hub_service.record_download, release, project)
     return Response(
         content=data, media_type=mods_hub_service.release_media_type(release),
         headers={
@@ -4146,16 +4159,17 @@ async def site_modpacks_for_mod(handle: str, slug: str) -> JSONResponse:
 
 @router.get("/site/modpacks/projects/{handle}/{slug}/download", response_class=Response)
 async def site_modpack_download(
-    handle: str, slug: str,
+    handle: str, slug: str, background: BackgroundTasks,
     variant: str | None = Query(default=None, max_length=80),
     format: str = Query(default="zip", pattern="^(tpack|zip)$"),
     viewer: SiteUser | None = Depends(get_optional_site_user),
 ) -> Response:
     """Download a modpack variant (the website defaults to a ``.zip``). Public; the
-    owner can also pull their own draft. Bumps the download count."""
+    owner can also pull their own draft. Bumps the download count (after the
+    response)."""
     pack = await modpacks_service.get_for_view(handle, slug, viewer)
     blob, filename, media = await modpacks_service.build_artifact(pack, variant, format)
-    await modpacks_service.record_download(pack)
+    background.add_task(modpacks_service.record_download, pack)
     return Response(
         content=blob, media_type=media,
         headers={

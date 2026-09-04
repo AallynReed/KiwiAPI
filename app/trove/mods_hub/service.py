@@ -2588,21 +2588,32 @@ async def delete_release(release: ModRelease, project: ModProject, actor: SiteUs
     await release.delete()
 
 
-async def record_download(release: ModRelease, project: ModProject) -> bytes:
+async def read_release_bytes(release: ModRelease) -> bytes:
+    """The artifact a download serves. Kept apart from ``record_download`` so the
+    counters are never in front of the bytes."""
     data = await store.get_blob(release.tmod_sha)
     if data is None:
         raise _not_found("Release file is missing from storage")
-    release.download_count += 1
-    project.download_count += 1
-    await release.save()
-    await project.save()
-    # Log the event for the trailing-7-day "popular" metric (best-effort - a
-    # logging hiccup must never block the actual download).
+    return data
+
+
+async def record_download(release: ModRelease, project: ModProject) -> None:
+    """Bump the download counters and log the event for the trailing-7-day "popular"
+    metric. Runs AFTER the response is sent (both download routes hand this to
+    BackgroundTasks): three writes ahead of the first byte cost every download a
+    fixed ~250 ms, which is most of the wall time for a small mod.
+
+    ``$inc`` rather than a read-modify-write ``save()``, so two downloads landing
+    together no longer overwrite each other's count. Best effort throughout - a
+    counter that misses a tick must never turn into a failed download."""
     try:
+        await ModRelease.find(ModRelease.id == release.id).update(
+            Inc({ModRelease.download_count: 1}))
+        await ModProject.find(ModProject.id == project.id).update(
+            Inc({ModProject.download_count: 1}))
         await ModDownloadEvent(project_id=project.id, release_id=release.id).insert()
     except Exception:
-        logger.warning("mods_hub: failed to record download event", exc_info=True)
-    return data
+        logger.warning("mods_hub: failed to record download", exc_info=True)
 
 
 # --- images ----------------------------------------------------------------
@@ -3211,13 +3222,17 @@ async def _published_releases(project: ModProject) -> list[ModRelease]:
 
 
 async def _published_releases_for(
-    projects: list[ModProject],
+    projects: list[ModProject], *, latest_per_branch: bool = False,
 ) -> dict[PydanticObjectId, list[ModRelease]]:
     """``_published_releases`` for MANY projects in ONE query, keyed by project id.
 
     Same selection - hidden branches dropped, newest first - but the hidden-branch
     filter runs in Python because the branch list differs per project and Mongo
-    can't express "not in THIS document's list" across a batch."""
+    can't express "not in THIS document's list" across a batch.
+
+    ``latest_per_branch`` keeps only the current build of each variant. That is what
+    an update check reads, and it drops ~86% of the release bytes at today's catalog
+    (544 published releases across 78 branches)."""
     if not projects:
         return {}
     docs = await ModRelease.find(
@@ -3225,9 +3240,15 @@ async def _published_releases_for(
     ).sort("-published_at").to_list()
     hidden = {p.id: set(p.hidden_release_branches or []) for p in projects}
     out: dict[PydanticObjectId, list[ModRelease]] = {p.id: [] for p in projects}
+    newest_branch: dict[PydanticObjectId, set[str | None]] = {p.id: set() for p in projects}
     for r in docs:
         if r.branch in hidden.get(r.project_id, ()) or r.project_id not in out:
             continue
+        if latest_per_branch:
+            # docs are newest-first, so the first release of a branch IS its current build
+            if r.branch in newest_branch[r.project_id]:
+                continue
+            newest_branch[r.project_id].add(r.branch)
         out[r.project_id].append(r)
     return out
 
@@ -3269,7 +3290,7 @@ async def public_popular(limit: int = 25) -> list[dict]:
 
 
 async def lookup_by_hashes(
-    hashes: list[str], *, include_releases: bool = False,
+    hashes: list[str], *, releases_mode: str = "none",
 ) -> dict:
     """Resolve mod metadata for one or more artifact content hashes (sha256 hex).
     Per known hash, returns the matching mod + the specific release (newest if the
@@ -3280,12 +3301,14 @@ async def lookup_by_hashes(
     the release's own and the modder's pre-injection upload - so a copy installed
     from anywhere still resolves to the right mod and update.
 
-    ``include_releases`` attaches each matched mod's full published release list to
-    its ``mod`` object. Without it a client that wants to know whether the installed
-    build is OUTDATED has to follow up with one ``GET /v1/mods/{handle}/{slug}`` per
-    match - which is a serial round trip per installed mod, and was the reason
-    scanning a mods folder took seconds. Off by default: it is a large addition to
-    a batch response and only update-checkers need it."""
+    ``releases_mode`` attaches release history to each matched ``mod`` object:
+    ``none`` (default), ``latest`` (the newest build of each branch) or ``all`` (the
+    full published history). Without any of it a client that wants to know whether the
+    installed build is OUTDATED has to follow up with one ``GET /v1/mods/{handle}/{slug}``
+    per match - which is a serial round trip per installed mod, and was the reason
+    scanning a mods folder took seconds. ``latest`` is what an update check reads and
+    is what the ``include_releases`` shorthand asks for; ``all`` is for a client that
+    genuinely wants the changelog, and a 200-hash batch of it decodes to megabytes."""
     seen: set[str] = set()
     uniq = [h for h in (x.strip().lower() for x in hashes if x and x.strip())
             if not (h in seen or seen.add(h))]
@@ -3306,7 +3329,10 @@ async def lookup_by_hashes(
             }
         visible = [p for p in projects.values()
                    if not p.taken_down and p.visibility != "draft"]
-        by_project = await _published_releases_for(visible) if include_releases else {}
+        want_releases = releases_mode in ("latest", "all")
+        by_project = await _published_releases_for(
+            visible, latest_per_branch=releases_mode == "latest",
+        ) if want_releases else {}
         for r in releases:
             keys = [h for h in (r.tmod_sha, *(r.prior_tmod_shas or []))
                     if h in wanted and h not in results]
@@ -3317,7 +3343,7 @@ async def lookup_by_hashes(
                 continue
             hit = {
                 "mod": public_mod_dto(
-                    proj, releases=by_project.get(proj.id) if include_releases else None,
+                    proj, releases=by_project.get(proj.id) if want_releases else None,
                 ),
                 "release": public_release_dto(r),
             }

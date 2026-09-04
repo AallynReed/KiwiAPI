@@ -9,7 +9,7 @@ through the same-origin ``/site/modpacks/*`` proxies (which pass the site user).
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, Query, Response, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Query, Response, UploadFile
 
 from app.core.dependencies import AccessContext, public_scope
 from app.core.errors import COMMON_ERROR_RESPONSES, APIError, ErrorCode
@@ -79,15 +79,16 @@ async def get_modpack(handle: str, slug: str, ctx: AccessContext = _PUB) -> dict
 
 @modpacks_hub_router.get("/projects/{handle}/{slug}/download")
 async def download_modpack(
-    handle: str, slug: str, ctx: AccessContext = _PUB,
+    handle: str, slug: str, background: BackgroundTasks, ctx: AccessContext = _PUB,
     variant: str | None = Query(default=None, max_length=80),
     format: str = Query(default="tpack", pattern="^(tpack|zip)$"),
 ) -> Response:
     """Download a modpack variant: a ``.tpack`` (default) or a ``.zip``. Public;
-    bumps the download count. Unlocked entries resolve to the latest build."""
+    bumps the download count (after the response). Unlocked entries resolve to the
+    latest build."""
     pack = await service.get_for_view(handle, slug, None)
     blob, filename, media = await service.build_artifact(pack, variant, format)
-    await service.record_download(pack)
+    background.add_task(service.record_download, pack)
     return Response(
         content=blob, media_type=media,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
@@ -255,17 +256,18 @@ async def get_modpack_public(handle: str, slug: str, ctx: AccessContext = _PUB) 
 
 @modpacks_public_router.get("/{handle}/{slug}/download")
 async def download_modpack_public(
-    handle: str, slug: str, ctx: AccessContext = _PUB,
+    handle: str, slug: str, background: BackgroundTasks, ctx: AccessContext = _PUB,
     variant: str | None = Query(default=None, max_length=80,
                                 description="Which variant to download; defaults to the pack's default."),
     format: str = Query(default="tpack", pattern="^(tpack|zip)$",
                         description="tpack (a .tmod-style bundle, default) or zip."),
 ) -> Response:
     """Download a modpack variant as a ``.tpack`` (default) or ``.zip``. Built on the
-    fly; unlocked mods resolve to their latest published build. Bumps the count."""
+    fly; unlocked mods resolve to their latest published build. Bumps the count
+    (after the response)."""
     pack = await service.get_for_view(handle, slug, None)
     blob, filename, media = await service.build_artifact(pack, variant, format)
-    await service.record_download(pack)
+    background.add_task(service.record_download, pack)
     return Response(
         content=blob, media_type=media,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},

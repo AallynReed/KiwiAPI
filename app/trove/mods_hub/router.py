@@ -20,7 +20,17 @@ from __future__ import annotations
 import base64
 import binascii
 
-from fastapi import APIRouter, Depends, File, Form, Query, Request, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+)
 
 from app.auth.models import User
 from app.core.config import settings
@@ -264,10 +274,14 @@ async def get_release(release_id: str, ctx: AccessContext = _PUB) -> dict:
 
 
 @mods_hub_router.get("/releases/{release_id}/download")
-async def download_release(release_id: str, ctx: AccessContext = _ASSET) -> Response:
-    """Download a release's compiled ``.tmod``. Public; bumps the download count."""
+async def download_release(
+    release_id: str, background: BackgroundTasks, ctx: AccessContext = _ASSET,
+) -> Response:
+    """Download a release's compiled ``.tmod``. Public; bumps the download count
+    (after the response - the counters never sit in front of the bytes)."""
     release, project = await service.release_with_project(release_id, None)
-    data = await service.record_download(release, project)
+    data = await service.read_release_bytes(release)
+    background.add_task(service.record_download, release, project)
     return Response(
         content=data, media_type=service.release_media_type(release),
         headers={"Content-Disposition":
@@ -959,11 +973,12 @@ async def lookup_mods(req: HashLookupRequest, ctx: AccessContext = _PUB) -> dict
     (sha256 hex). ``results`` is keyed by hash; ``unknown`` lists the hashes with
     no public match. Useful for an app to identify installed .tmod files.
 
-    Pass ``include_releases: true`` to get each matched mod's published releases in
-    the same response - that is everything an update check needs, in one call
-    instead of one follow-up request per installed mod."""
+    Pass ``include_releases: true`` (or ``releases: "latest"``) to get the current
+    build of each matched mod's every branch in the same response - that is everything
+    an update check needs, in one call instead of one follow-up request per installed
+    mod. ``releases: "all"`` returns the full published history instead."""
     return await service.lookup_by_hashes(
-        req.hashes, include_releases=req.include_releases,
+        req.hashes, releases_mode=req.release_mode,
     )
 
 

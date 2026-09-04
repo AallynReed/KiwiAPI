@@ -906,8 +906,15 @@ async def build_artifact(
 
 
 async def record_download(pack: ModpackProject) -> None:
-    pack.download_count += 1
-    await pack.save()
+    """Bump the pack's download counter. Runs AFTER the response (all three download
+    routes hand this to BackgroundTasks) so the write never delays the artifact, and
+    via ``$inc`` so two downloads landing together don't overwrite each other's
+    count. Best effort - a missed tick must never fail a download."""
+    try:
+        await ModpackProject.find(ModpackProject.id == pack.id).update(
+            Inc({ModpackProject.download_count: 1}))
+    except Exception:
+        logger.warning("modpacks: failed to record download", exc_info=True)
 
 
 # --- documented app-facing catalog API (/v1/modpacks/*) --------------------

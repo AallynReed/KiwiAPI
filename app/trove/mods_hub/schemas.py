@@ -215,16 +215,33 @@ class HashLookupRequest(BaseModel):
         min_length=1, max_length=200,
         description="Artifact sha256 hex hashes (one .tmod/.zip per hash) to resolve. Max 200.",
     )
+    releases: Literal["none", "latest", "all"] | None = Field(
+        default=None,
+        description=(
+            "How much release history to attach to each matched `mod`. `none` (default) "
+            "attaches nothing; `latest` attaches the newest release of each branch (variant), "
+            "which is everything an update check reads; `all` attaches the full published "
+            "history. Overrides `include_releases` when both are sent."
+        ),
+    )
     include_releases: bool = Field(
         default=False,
         description=(
-            "Attach each matched mod's full published release list to its `mod` object. "
-            "Set this when you are checking for updates: without it you need one "
-            "`GET /v1/mods/{handle}/{slug}` per match to see the newer builds, which is a "
-            "serial round trip per installed mod. Off by default - it is a large addition "
-            "to a batch response."
+            "Shorthand for `releases: \"latest\"` - attaches the newest release of each branch "
+            "to its `mod` object. Set this when you are checking for updates: without it you "
+            "need one `GET /v1/mods/{handle}/{slug}` per match to see the newer builds, which "
+            "is a serial round trip per installed mod. Ask for `releases: \"all\"` if you want "
+            "the full history rather than the current build per variant."
         ),
     )
+
+    @property
+    def release_mode(self) -> str:
+        """`releases` wins when sent; otherwise the older boolean picks between
+        `latest` and `none`."""
+        if self.releases is not None:
+            return self.releases
+        return "latest" if self.include_releases else "none"
 
 
 class CreatorLinkRequest(BaseModel):
