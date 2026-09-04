@@ -1027,6 +1027,28 @@
       }
     },
     {
+      "syntax": "/delvestart",
+      "category": "other",
+      "description": {
+        "en": "Teleport to the beginning of the current Delve depth.",
+        "fr": "Téléportation au début de la profondeur actuelle.",
+        "de": "Bringt dich zum Beginn der aktuellen Tiefe.",
+        "es": "Teletransporte al inicio de la profundidad actual.",
+        "zh-CN": "传送到当前深度的起点。"
+      }
+    },
+    {
+      "syntax": "/delveboss",
+      "category": "other",
+      "description": {
+        "en": "Teleport to the boss room of the current Delve depth.",
+        "fr": "Téléportation à la salle du boss de la profondeur actuelle.",
+        "de": "Bringt dich in den Boss-Raum der aktuellen Tiefe.",
+        "es": "Teletransporte a la sala del jefe de la profundidad actual.",
+        "zh-CN": "传送到当前深度的BOSS房。"
+      }
+    },
+    {
       "syntax": "/quit",
       "aliases": [
         "/q"
