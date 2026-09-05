@@ -107,24 +107,56 @@ def _label(aloc: dict[str, str], folder: str, stem: str) -> tuple[str | None, st
     return None, ""
 
 
-def _stages(rel: str, root: bytes, folder: str) -> list[dict]:
+def _stages(rel: str, root: bytes, folder: str, siblings: set[str]) -> list[dict]:
+    """Damage stages under one ability.
+
+    Abilities cross-reference each other - Lunar Lancer's passive names the leap
+    and the spear throw, which are abilities in their own right - so the walk stops
+    at any prefab that is another named ability of this class. Without that guard
+    one ability swallows the whole class's damage and the numbers double up.
+    """
     stages: list[dict] = []
     seen = {rel}
-    queue = [(rel, root)]
+    queue = [(rel, root, 0)]
     while queue:
-        cur, data = queue.pop(0)
+        cur, data, depth = queue.pop(0)
         for mult, base in damage_blocks(data):
             if mult == 0 and base == 0:
                 continue
-            stages.append({"name": stage_name(cur), "prefab": cur, "base": base, "multiplier": mult})
+            row = {"name": stage_name(cur), "prefab": cur, "base": base,
+                   "multiplier": mult, "_depth": depth}
+            if row not in stages:
+                stages.append(row)
         for child in refs(data, folder):
-            if child in seen or len(seen) > 60:
+            if child in seen or child in siblings or len(seen) > 60:
                 continue
             seen.add(child)
             child_data = prefab_bytes(child)
             if child_data is not None:
-                queue.append((child, child_data))
+                queue.append((child, child_data, depth + 1))
     return stages
+
+
+def _assign_owners(abilities: list[dict]) -> None:
+    """Give every damage prefab exactly one owning ability.
+
+    Trove abilities share sub-prefabs - Shadow Hunter's passive and Sun Snare both
+    reach the basic attack - so a plain walk lists the same damage under several
+    abilities and anything that sums them double-counts. The ability that reaches a
+    prefab most directly owns it; ties go to the order the class prefab names them.
+    """
+    best: dict[str, tuple[int, int]] = {}
+    for index, ability in enumerate(abilities):
+        for stage in ability["stages"]:
+            key = stage["prefab"]
+            rank = (stage["_depth"], index)
+            if key not in best or rank < best[key]:
+                best[key] = rank
+    for index, ability in enumerate(abilities):
+        kept = [s for s in ability["stages"] if best[s["prefab"]] == (s["_depth"], index)]
+        for stage in kept:
+            stage.pop("_depth", None)
+        ability["stages"] = kept
 
 
 def _icon_token(icon: str, folder: str) -> str:
@@ -177,9 +209,18 @@ def _overlay_curated(entry: dict, curated: list[dict], folder: str) -> list[dict
 
 
 def build() -> list[dict]:
-    curated_path = Path(__file__).resolve().parents[1] / "app" / "trove" / "gamedata" / "classes.json"
-    curated_by_class = {c["name"]: (c.get("abilities") or [])
-                        for c in json.loads(curated_path.read_text(encoding="utf-8"))}
+    # The curated `icon`/`type` now live in this script's OWN output - they were
+    # moved out of classes.json - so read them back from there and only fall back to
+    # classes.json on a first run. Reading classes.json unconditionally would wipe
+    # the curation the moment it was emptied, i.e. on the very next regeneration.
+    curated_by_class: dict[str, list[dict]] = {}
+    if OUT.exists():
+        curated_by_class = {c["name"]: c.get("abilities", [])
+                            for c in json.loads(OUT.read_text(encoding="utf-8"))}
+    if not any(a.get("icon") or a.get("type") for v in curated_by_class.values() for a in v):
+        legacy = OUT.parent / "classes.json"
+        curated_by_class = {c["name"]: (c.get("abilities") or [])
+                            for c in json.loads(legacy.read_text(encoding="utf-8"))}
     display: dict[str, str] = {}
     for name in ("prefabs_class.binfab", "ui.binfab", "new.binfab"):
         path = os.path.join(GAME, "languages", "en", name)
@@ -203,15 +244,21 @@ def build() -> list[dict]:
         locale_path = os.path.join(GAME, "languages", "en", f"prefabs_abilities_{afolder}.binfab")
         aloc = locale(locale_path) if os.path.exists(locale_path) else {}
 
+        # Everything the CLASS prefab points at is a top-level action of that class,
+        # named or not. Those are the walk's boundaries: without them one ability
+        # absorbs the others' damage (Lunar Lancer's passive reaches the leap, the
+        # spear throw and moon blessing, and reports all of it as its own).
+        class_refs = [r for r in refs(data, afolder) if prefab_bytes(r) is not None]
+        boundaries = set(class_refs)
+        named = [r for r in class_refs if _label(aloc, afolder, r.rsplit("/", 1)[-1])[0]]
+
         abilities = []
         seen_names: set[str] = set()
-        for rel in refs(data, afolder):
+        for rel in named:
             name, desc = _label(aloc, afolder, rel.rsplit("/", 1)[-1])
-            if not name or name in seen_names:
+            if name in seen_names:
                 continue
             root = prefab_bytes(rel)
-            if root is None:
-                continue
             seen_names.add(name)
             abilities.append({
                 "name": name,
@@ -219,13 +266,14 @@ def build() -> list[dict]:
                 "prefab": rel,
                 "icon": "",
                 "type": "",
-                "stages": _stages(rel, root, afolder),
+                "stages": _stages(rel, root, afolder, boundaries - {rel}),
             })
         entry = {
             "name": display.get(key, key.replace("$DisplayName_", "")),
             "game_folder": folder,
             "abilities": abilities,
         }
+        _assign_owners(entry["abilities"])
         entry["abilities"] = _overlay_curated(entry, curated_by_class.get(entry["name"], []), folder)
         out.append(entry)
     return out

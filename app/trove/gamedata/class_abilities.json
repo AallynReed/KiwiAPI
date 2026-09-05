@@ -15,15 +15,8 @@
                         "prefab": "abilities/adventurer/revamp/boomerang_bullet_bow",
                         "base": 10.0,
                         "multiplier": 6.5
-                    },
-                    {
-                        "name": "Boomerang Bullet Bow",
-                        "prefab": "abilities/adventurer/revamp/boomerang_bullet_bow",
-                        "base": 10.0,
-                        "multiplier": 6.5
                     }
-                ],
-                "matched_by": "icon"
+                ]
             },
             {
                 "name": "Boomerang of the Wind",
@@ -39,19 +32,12 @@
                         "multiplier": 0.0
                     },
                     {
-                        "name": "Boomerang Bullet Melee",
-                        "prefab": "abilities/adventurer/revamp/boomerang_bullet_melee",
-                        "base": 10.0,
-                        "multiplier": 0.0
-                    },
-                    {
                         "name": "Boomerang Damage Effect Melee",
                         "prefab": "abilities/adventurer/revamp/boomerang_damage_effect_melee",
                         "base": 0.0,
                         "multiplier": 10.0
                     }
-                ],
-                "matched_by": "icon"
+                ]
             },
             {
                 "name": "Final Fairy",
@@ -72,8 +58,7 @@
                         "base": 0.0,
                         "multiplier": 2.5
                     }
-                ],
-                "matched_by": "icon"
+                ]
             },
             {
                 "name": "Big Bomb",
@@ -115,8 +100,7 @@
                         "base": 10.0,
                         "multiplier": 3.5
                     }
-                ],
-                "matched_by": "icon"
+                ]
             },
             {
                 "name": "Mysterious Urn",
@@ -473,14 +457,7 @@
                 "prefab": "abilities/chloromancer/seedling_lasher",
                 "icon": "",
                 "type": "",
-                "stages": [
-                    {
-                        "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
-                        "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
-                        "base": 0.0,
-                        "multiplier": 1.0
-                    }
-                ]
+                "stages": []
             },
             {
                 "name": "Empowered Growth",
@@ -490,22 +467,10 @@
                 "type": "",
                 "stages": [
                     {
-                        "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
-                        "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
-                        "base": 0.0,
-                        "multiplier": 1.0
-                    },
-                    {
                         "name": "Big Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
                         "prefab": "abilities/chloromancer/ultimate/big_seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
                         "base": 0.0,
                         "multiplier": 2.0
-                    },
-                    {
-                        "name": "Chloromancer Gatling Bullet",
-                        "prefab": "abilities/chloromancer/chloromancer_gatling_bullet",
-                        "base": 0.0,
-                        "multiplier": 1.2
                     },
                     {
                         "name": "Big Chloromancer Gatling Bullet",
@@ -528,18 +493,6 @@
                 "icon": "",
                 "type": "",
                 "stages": [
-                    {
-                        "name": "Basic Attack Melee",
-                        "prefab": "abilities/crimefighter/basic_attack_melee",
-                        "base": 10.0,
-                        "multiplier": 4.5
-                    },
-                    {
-                        "name": "Fast Attack Melee",
-                        "prefab": "abilities/crimefighter/fast_attack_melee",
-                        "base": 10.0,
-                        "multiplier": 3.85
-                    },
                     {
                         "name": "Basic Attack Ranged Bullet",
                         "prefab": "abilities/crimefighter/basic_attack_ranged_bullet",
@@ -627,27 +580,21 @@
                 "stages": [
                     {
                         "name": "Basic Attack Bullet",
-                        "prefab": "abilities/dinotamer/basic_attack_bullet",
-                        "base": 10.0,
-                        "multiplier": 2.5
-                    },
-                    {
-                        "name": "Basic Attack Bullet",
                         "prefab": "abilities/dinotamer/ultimate/basic_attack_bullet",
                         "base": 10.0,
                         "multiplier": 2.75
+                    },
+                    {
+                        "name": "Basic Attack Bullet",
+                        "prefab": "abilities/dinotamer/basic_attack_bullet",
+                        "base": 10.0,
+                        "multiplier": 2.5
                     },
                     {
                         "name": "Basic Attack Effect Aoe",
                         "prefab": "abilities/dinotamer/ultimate/basic_attack_effect_aoe",
                         "base": 0.0,
                         "multiplier": 2.0
-                    },
-                    {
-                        "name": "Clever Snare Effect Dot",
-                        "prefab": "abilities/dinotamer/clever_snare_effect_dot",
-                        "base": 0.0,
-                        "multiplier": 3.5
                     },
                     {
                         "name": "Clever Snare Effect Dot",
@@ -1044,12 +991,6 @@
                 "type": "",
                 "stages": [
                     {
-                        "name": "Basic Melee",
-                        "prefab": "abilities/lunarlancer/revamp/basic_melee",
-                        "base": 10.0,
-                        "multiplier": 2.8
-                    },
-                    {
                         "name": "Two Hit Combo Transformed",
                         "prefab": "abilities/lunarlancer/revamp/two_hit_combo_transformed",
                         "base": 10.0,
@@ -1060,24 +1001,6 @@
                         "prefab": "abilities/lunarlancer/revamp/lunar_leap_transformed",
                         "base": 10.0,
                         "multiplier": 11.5
-                    },
-                    {
-                        "name": "Spear Throw Grapple Effect Explosion",
-                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion",
-                        "base": 10.0,
-                        "multiplier": 3.5
-                    },
-                    {
-                        "name": "Spear Throw Grapple Effect Explosion Buffed",
-                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion_buffed",
-                        "base": 10.0,
-                        "multiplier": 8.0
-                    },
-                    {
-                        "name": "Lunar Leap Explosion",
-                        "prefab": "abilities/lunarlancer/revamp/lunar_leap_explosion",
-                        "base": 10.0,
-                        "multiplier": 3.5
                     },
                     {
                         "name": "Moon Blessing Transformed Spear Explosion",
@@ -1104,10 +1027,16 @@
                         "multiplier": 1.5
                     },
                     {
-                        "name": "Moon Blessing Aoe Npc Effect",
-                        "prefab": "abilities/lunarlancer/revamp/moon_blessing_aoe_npc_effect",
+                        "name": "Moon Blessing Spawn Meteor Effect Trigger",
+                        "prefab": "abilities/lunarlancer/revamp/moon_blessing_spawn_meteor_effect_trigger",
                         "base": 0.0,
-                        "multiplier": 1.5
+                        "multiplier": 0.5
+                    },
+                    {
+                        "name": "Moon Blessing Spawn Meteor Effect Explosion",
+                        "prefab": "abilities/lunarlancer/revamp/moon_blessing_spawn_meteor_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
                     }
                 ]
             },
@@ -1121,12 +1050,6 @@
                     {
                         "name": "Lunar Leap Explosion",
                         "prefab": "abilities/lunarlancer/revamp/lunar_leap_explosion",
-                        "base": 10.0,
-                        "multiplier": 3.5
-                    },
-                    {
-                        "name": "Spear Throw Grapple Effect Explosion",
-                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion",
                         "base": 10.0,
                         "multiplier": 3.5
                     },
@@ -1301,24 +1224,6 @@
                         "prefab": "abilities/shadowhunter/revamp/sun_snare_effect_trigger",
                         "base": 0.0,
                         "multiplier": 0.5
-                    },
-                    {
-                        "name": "Basic Attack Bullet Damage",
-                        "prefab": "abilities/shadowhunter/revamp/basic_attack_bullet_damage",
-                        "base": 0.0,
-                        "multiplier": 3.75
-                    },
-                    {
-                        "name": "Basic Attack Fast Bullet Damage",
-                        "prefab": "abilities/shadowhunter/revamp/basic_attack_fast_bullet_damage",
-                        "base": 0.0,
-                        "multiplier": 2.0
-                    },
-                    {
-                        "name": "Shadowmark Basic Fast Explosion Explosion",
-                        "prefab": "abilities/shadowhunter/revamp/shadowmark_basic_fast_explosion_explosion",
-                        "base": 10.0,
-                        "multiplier": 1.0
                     }
                 ]
             }
