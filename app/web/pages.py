@@ -23,7 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.core.internal_api import internal_get
-from app.site import classes_page, commands_page, ssr
+from app.site import classes_page, commands_page, gem_abilities_page, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS
 from app.web import feature_flags as web_flags
 
@@ -377,6 +377,18 @@ async def gems_guide_page(request: Request) -> HTMLResponse:
     leveling/Power Rank and focusing). Fully client-rendered from the static
     ``/static/gems-guide.js`` - no proxy, no /v1 API."""
     return _TEMPLATES.TemplateResponse(request, "gems-guide.html", {})
+
+
+@router.get("/gem-abilities", response_class=HTMLResponse)
+async def gem_abilities(request: Request) -> HTMLResponse:
+    """Gem Abilities - every empowered gem ability and what it does.
+
+    Reference data, so the whole list is server-rendered from
+    ``gamedata/gem_abilities.json`` (decoded from the game files by
+    scripts/decode_gem_abilities.py) and ``/static/gem-abilities.js`` only
+    filters what is already on the page - no proxy, no /v1 API."""
+    return _TEMPLATES.TemplateResponse(
+        request, "gem-abilities.html", {"gems": gem_abilities_page.gem_abilities_view()})
 
 
 @router.get("/fishing-guide", response_class=HTMLResponse)

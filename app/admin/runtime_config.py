@@ -436,6 +436,17 @@ REGISTRY: dict[str, TunableSetting] = {
             "so only the page route is hidden."
         ),
     ),
+    "feature_gem_abilities_enabled": _t(
+        key="feature_gem_abilities_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Gem Abilities reference (/gem-abilities). OFF "
+            "hides the page + navbar link. The list is server-rendered from "
+            "gamedata/gem_abilities.json, so only the page route is hidden."
+        ),
+    ),
     "feature_fishing_guide_enabled": _t(
         key="feature_fishing_guide_enabled",
         default=True,
