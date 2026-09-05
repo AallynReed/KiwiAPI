@@ -53,6 +53,12 @@
     return out;
   };
 
+  // Trove's KModType: a row either adds to a stat or scales it. `percentage` only
+  // ever chose whether to draw a % sign, so two rows on the same stat with
+  // different ops must not be summed together. `op` comes from the game files;
+  // the few rows they cannot back fall back to the old flag.
+  const scales = (s) => (s.op ? s.op === "MultiplySum" || s.op === "Multiply" : !!s.percentage);
+
   // ── State ───────────────────────────────────────────────────────────────
   const nodeMap = {};          // path -> raw node (with parentPath/constellName)
   const nodeEls = [];          // { path, el, data } render records
@@ -432,7 +438,7 @@
       const n = nodeMap[p];
       if (!n) return;
       (n.Stats || []).forEach((s) => {
-        const k = s.name + (s.percentage ? "_pct" : "_flat");
+        const k = s.name + (scales(s) ? "_pct" : "_flat");
         if (!statsObj[k]) statsObj[k] = { name: s.name, percentage: s.percentage, value: 0 };
         statsObj[k].value += s.value;
       });

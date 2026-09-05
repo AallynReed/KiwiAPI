@@ -48,6 +48,19 @@ def _no_bounty_hunt() -> dict:
     return {"available": False, "name": None, "physical": 0.0, "magic": 0.0}
 
 
+# Trove's KModType decides whether a star-chart row adds to a stat or scales it -
+# `percentage` only ever said whether to draw a % sign, and the two disagree (an
+# `Add` on Critical Damage renders as a percentage; `Maximum Health %` carries the
+# sign in its name while being a MultiplySum). Rows carry `op` straight from the
+# binfab; the handful the game files cannot back fall back to the old flag.
+_SCALING_OPS = frozenset({"MultiplySum", "Multiply"})
+
+
+def _scales(stat: dict) -> bool:
+    op = stat.get("op")
+    return op in _SCALING_OPS if op else bool(stat.get("percentage", False))
+
+
 def _lilypad(name: str, value: float, active: bool) -> float:
     """An ally's L30 stat value, with the Lilypad buff applied when active."""
     return value * LILYPAD_MULTIPLIERS.get(name, 1.0) if active else value
@@ -179,7 +192,7 @@ class StarChartParser:
                 except (TypeError, ValueError):
                     val = 0.0
                 bucket = result["stats"].setdefault(name, {"flat": 0.0, "pct": 0.0})
-                bucket["pct" if stat.get("percentage", False) else "flat"] += val
+                bucket["pct" if _scales(stat) else "flat"] += val
             if "Abilities" in node:
                 abilities.update(node["Abilities"])
         result["abilities"] = list(abilities)

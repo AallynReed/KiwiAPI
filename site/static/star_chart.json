@@ -16,6 +16,8 @@
                     {
                         "name": "Physical Damage",
                         "percentage": true,
+                        "op": "MultiplySum",
+                        "stat": "$Stat_PhysicalDamageBonus",
                         "value": 3
                     }
                 ],
@@ -42,6 +44,8 @@
                                     {
                                         "name": "Attack Speed",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_AttackSpeed",
                                         "value": 15
                                     }
                                 ],
@@ -57,6 +61,8 @@
                                             {
                                                 "name": "Critical Hit",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_CriticalHitChance",
                                                 "value": 6
                                             }
                                         ],
@@ -75,11 +81,15 @@
                                             {
                                                 "name": "Jump",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_Jump",
                                                 "value": 5
                                             },
                                             {
                                                 "name": "Stability",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_Stability",
                                                 "value": 100
                                             }
                                         ],
@@ -95,6 +105,8 @@
                                                     {
                                                         "name": "Critical Hit",
                                                         "percentage": false,
+                                                        "op": "Add",
+                                                        "stat": "$Stat_CriticalHitChance",
                                                         "value": 6
                                                     }
                                                 ],
@@ -127,16 +139,22 @@
                                                             {
                                                                 "name": "Critical Hit",
                                                                 "percentage": false,
+                                                                "op": "Add",
+                                                                "stat": "$Stat_CriticalHitChance",
                                                                 "value": 5
                                                             },
                                                             {
                                                                 "name": "Magic Damage",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_SpellDamageBonus",
                                                                 "value": 5
                                                             },
                                                             {
                                                                 "name": "Physical Damage",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_PhysicalDamageBonus",
                                                                 "value": 5
                                                             }
                                                         ],
@@ -155,11 +173,15 @@
                                                             {
                                                                 "name": "Critical Hit",
                                                                 "percentage": false,
+                                                                "op": "Add",
+                                                                "stat": "$Stat_CriticalHitChance",
                                                                 "value": 5
                                                             },
                                                             {
                                                                 "name": "Maximum Health %",
                                                                 "percentage": false,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_MaxHealthBonus",
                                                                 "value": 10
                                                             }
                                                         ],
@@ -174,7 +196,16 @@
                                                 "Obtainables": [
                                                     "Grants a Balefire Dragon Egg Fragment when unlocked"
                                                 ],
-                                                "Acts": "Major"
+                                                "Acts": "Major",
+                                                "Ability_Values": [
+                                                    {
+                                                        "name": "Critical Hit",
+                                                        "percentage": false,
+                                                        "op": "Add",
+                                                        "stat": "$Stat_CriticalHitChance",
+                                                        "value": 30.0
+                                                    }
+                                                ]
                                             }
                                         ],
                                         "Obtainables": [],
@@ -194,6 +225,8 @@
                                     {
                                         "name": "Critical Hit",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_CriticalHitChance",
                                         "value": 6
                                     }
                                 ],
@@ -206,7 +239,16 @@
                         "Obtainables": [
                             "Grants a Balefire Dragon Egg Fragment when unlocked"
                         ],
-                        "Acts": "Major"
+                        "Acts": "Major",
+                        "Ability_Values": [
+                            {
+                                "name": "Critical Hit",
+                                "percentage": false,
+                                "op": "Add",
+                                "stat": "$Stat_CriticalHitChance",
+                                "value": 20.0
+                            }
+                        ]
                     },
                     {
                         "Path": "combat.a.1",
@@ -229,6 +271,8 @@
                                     {
                                         "name": "Physical Damage",
                                         "percentage": true,
+                                        "op": "MultiplySum",
+                                        "stat": "$Stat_PhysicalDamageBonus",
                                         "value": 3
                                     }
                                 ],
@@ -258,6 +302,8 @@
                                                     {
                                                         "name": "Damage Reduction",
                                                         "percentage": false,
+                                                        "op": "Multiply",
+                                                        "stat": "$Stat_IncomingDamageMod",
                                                         "value": 3
                                                     }
                                                 ],
@@ -276,6 +322,8 @@
                                                     {
                                                         "name": "Physical Damage",
                                                         "percentage": true,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_PhysicalDamageBonus",
                                                         "value": 6
                                                     }
                                                 ],
@@ -291,6 +339,8 @@
                                                             {
                                                                 "name": "Damage Reduction",
                                                                 "percentage": false,
+                                                                "op": "Multiply",
+                                                                "stat": "$Stat_IncomingDamageMod",
                                                                 "value": 3
                                                             }
                                                         ],
@@ -309,6 +359,8 @@
                                                             {
                                                                 "name": "Physical Damage",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_PhysicalDamageBonus",
                                                                 "value": 6
                                                             }
                                                         ],
@@ -332,7 +384,16 @@
                                                                 "Obtainables": [
                                                                     "Grants a Balefire Dragon Egg Fragment when unlocked"
                                                                 ],
-                                                                "Acts": "Major"
+                                                                "Acts": "Major",
+                                                                "Ability_Values": [
+                                                                    {
+                                                                        "name": "Damage Reduction",
+                                                                        "percentage": false,
+                                                                        "op": "Multiply",
+                                                                        "stat": "$Stat_IncomingDamageMod",
+                                                                        "value": 15.0
+                                                                    }
+                                                                ]
                                                             },
                                                             {
                                                                 "Path": "combat.a.1.a.0.b.1.b",
@@ -344,6 +405,8 @@
                                                                     {
                                                                         "name": "Physical Damage",
                                                                         "percentage": true,
+                                                                        "op": "MultiplySum",
+                                                                        "stat": "$Stat_PhysicalDamageBonus",
                                                                         "value": 15
                                                                     }
                                                                 ],
@@ -382,6 +445,8 @@
                                     {
                                         "name": "Stability",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_Stability",
                                         "value": 75
                                     }
                                 ],
@@ -410,6 +475,8 @@
                     {
                         "name": "Magic Damage",
                         "percentage": true,
+                        "op": "MultiplySum",
+                        "stat": "$Stat_SpellDamageBonus",
                         "value": 3
                     }
                 ],
@@ -436,6 +503,8 @@
                                     {
                                         "name": "Magic Damage",
                                         "percentage": true,
+                                        "op": "MultiplySum",
+                                        "stat": "$Stat_SpellDamageBonus",
                                         "value": 3
                                     }
                                 ],
@@ -451,6 +520,8 @@
                                             {
                                                 "name": "Maximum Health %",
                                                 "percentage": false,
+                                                "op": "MultiplySum",
+                                                "stat": "$Stat_MaxHealthBonus",
                                                 "value": 10
                                             }
                                         ],
@@ -469,6 +540,8 @@
                                             {
                                                 "name": "Magic Damage",
                                                 "percentage": true,
+                                                "op": "MultiplySum",
+                                                "stat": "$Stat_SpellDamageBonus",
                                                 "value": 3
                                             }
                                         ],
@@ -484,6 +557,8 @@
                                                     {
                                                         "name": "Maximum Health %",
                                                         "percentage": false,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_MaxHealthBonus",
                                                         "value": 10
                                                     }
                                                 ],
@@ -516,6 +591,8 @@
                                                             {
                                                                 "name": "Stability",
                                                                 "percentage": false,
+                                                                "op": "Add",
+                                                                "stat": "$Stat_Stability",
                                                                 "value": 75
                                                             }
                                                         ],
@@ -531,6 +608,8 @@
                                                                     {
                                                                         "name": "Movement Speed",
                                                                         "percentage": false,
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_MovementSpeed",
                                                                         "value": 8
                                                                     }
                                                                 ],
@@ -553,6 +632,8 @@
                                                             {
                                                                 "name": "Magic Damage",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_SpellDamageBonus",
                                                                 "value": 3
                                                             }
                                                         ],
@@ -568,6 +649,8 @@
                                                                     {
                                                                         "name": "Attack Speed",
                                                                         "percentage": false,
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_AttackSpeed",
                                                                         "value": 15
                                                                     }
                                                                 ],
@@ -601,6 +684,8 @@
                                                                             {
                                                                                 "name": "Maximum Health %",
                                                                                 "percentage": false,
+                                                                                "op": "MultiplySum",
+                                                                                "stat": "$Stat_MaxHealthBonus",
                                                                                 "value": 10
                                                                             }
                                                                         ],
@@ -619,6 +704,8 @@
                                                                             {
                                                                                 "name": "Magic Damage",
                                                                                 "percentage": true,
+                                                                                "op": "MultiplySum",
+                                                                                "stat": "$Stat_SpellDamageBonus",
                                                                                 "value": 15
                                                                             }
                                                                         ],
@@ -644,7 +731,23 @@
                                                                                     "Grants Ursa Major when upgrading",
                                                                                     "Grants a Balefire Dragon Egg Fragment when unlocked"
                                                                                 ],
-                                                                                "Acts": "Major"
+                                                                                "Acts": "Major",
+                                                                                "Ability_Values": [
+                                                                                    {
+                                                                                        "name": "Attack Speed",
+                                                                                        "percentage": false,
+                                                                                        "op": "MultiplySum",
+                                                                                        "stat": "$Stat_AttackSpeedBonus",
+                                                                                        "value": 10.0
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "Outgoing Damage",
+                                                                                        "percentage": false,
+                                                                                        "op": "Add",
+                                                                                        "stat": "$Stat_OutgoingDamageMod",
+                                                                                        "value": 12.0
+                                                                                    }
+                                                                                ]
                                                                             }
                                                                         ],
                                                                         "Obtainables": [],
@@ -654,7 +757,23 @@
                                                                 "Obtainables": [
                                                                     "Grants a Balefire Dragon Egg Fragment when unlocked"
                                                                 ],
-                                                                "Acts": "Major"
+                                                                "Acts": "Major",
+                                                                "Ability_Values": [
+                                                                    {
+                                                                        "name": "Attack Speed",
+                                                                        "percentage": false,
+                                                                        "op": "MultiplySum",
+                                                                        "stat": "$Stat_AttackSpeedBonus",
+                                                                        "value": 12.0
+                                                                    },
+                                                                    {
+                                                                        "name": "Outgoing Damage",
+                                                                        "percentage": false,
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_OutgoingDamageMod",
+                                                                        "value": 10.0
+                                                                    }
+                                                                ]
                                                             }
                                                         ],
                                                         "Obtainables": [],
@@ -664,7 +783,23 @@
                                                 "Obtainables": [
                                                     "Grants a Balefire Dragon Egg Fragment when unlocked"
                                                 ],
-                                                "Acts": "Major"
+                                                "Acts": "Major",
+                                                "Ability_Values": [
+                                                    {
+                                                        "name": "Attack Speed",
+                                                        "percentage": false,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_AttackSpeedBonus",
+                                                        "value": 10.0
+                                                    },
+                                                    {
+                                                        "name": "Outgoing Damage",
+                                                        "percentage": false,
+                                                        "op": "Add",
+                                                        "stat": "$Stat_OutgoingDamageMod",
+                                                        "value": 8.0
+                                                    }
+                                                ]
                                             }
                                         ],
                                         "Obtainables": [],
@@ -678,7 +813,23 @@
                         "Obtainables": [
                             "Grants a Balefire Dragon Egg Fragment when unlocked"
                         ],
-                        "Acts": "Major"
+                        "Acts": "Major",
+                        "Ability_Values": [
+                            {
+                                "name": "Attack Speed",
+                                "percentage": false,
+                                "op": "MultiplySum",
+                                "stat": "$Stat_AttackSpeedBonus",
+                                "value": 10.0
+                            },
+                            {
+                                "name": "Outgoing Damage",
+                                "percentage": false,
+                                "op": "Add",
+                                "stat": "$Stat_OutgoingDamageMod",
+                                "value": 6.0
+                            }
+                        ]
                     },
                     {
                         "Path": "combat.b.1",
@@ -694,7 +845,9 @@
                             {
                                 "name": "Critical Damage",
                                 "percentage": false,
-                                "value": 15
+                                "op": "Add",
+                                "stat": "$Stat_CriticalHitDamage",
+                                "value": 15.0
                             }
                         ],
                         "Stars": [
@@ -708,6 +861,8 @@
                                     {
                                         "name": "Critical Damage",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_CriticalHitDamage",
                                         "value": 5
                                     }
                                 ],
@@ -731,7 +886,9 @@
                                             {
                                                 "name": "Critical Damage",
                                                 "percentage": false,
-                                                "value": 25
+                                                "op": "Add",
+                                                "stat": "$Stat_CriticalHitDamage",
+                                                "value": 25.0
                                             }
                                         ],
                                         "Stars": [],
@@ -747,6 +904,8 @@
                                             {
                                                 "name": "Critical Damage",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_CriticalHitDamage",
                                                 "value": 10
                                             }
                                         ],
@@ -769,6 +928,8 @@
                                     {
                                         "name": "Critical Damage",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_CriticalHitDamage",
                                         "value": 10
                                     }
                                 ],
@@ -808,6 +969,8 @@
                     {
                         "name": "Magic Find",
                         "percentage": true,
+                        "op": "MultiplySum",
+                        "stat": "$Stat_MagicFindBonus",
                         "value": 3
                     }
                 ],
@@ -834,7 +997,9 @@
                                     {
                                         "name": "Lasermancy",
                                         "percentage": false,
-                                        "value": 20
+                                        "op": "Add",
+                                        "stat": "$Stat_Mining",
+                                        "value": 80
                                     }
                                 ],
                                 "Abilities": [],
@@ -860,11 +1025,15 @@
                                                     {
                                                         "name": "Experience Gain",
                                                         "percentage": true,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_ExperienceBoostBonus",
                                                         "value": 2.5
                                                     },
                                                     {
                                                         "name": "Magic Find",
                                                         "percentage": true,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_MagicFindBonus",
                                                         "value": 3
                                                     }
                                                 ],
@@ -880,11 +1049,15 @@
                                                             {
                                                                 "name": "Experience Gain",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_ExperienceBoostBonus",
                                                                 "value": 2.5
                                                             },
                                                             {
                                                                 "name": "Critical Hit",
                                                                 "percentage": false,
+                                                                "op": "Add",
+                                                                "stat": "$Stat_CriticalHitChance",
                                                                 "value": 15
                                                             }
                                                         ],
@@ -900,11 +1073,15 @@
                                                                     {
                                                                         "name": "Experience Gain",
                                                                         "percentage": true,
+                                                                        "op": "MultiplySum",
+                                                                        "stat": "$Stat_ExperienceBoostBonus",
                                                                         "value": 2.5
                                                                     },
                                                                     {
                                                                         "name": "Critical Damage",
                                                                         "percentage": false,
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_CriticalHitDamage",
                                                                         "value": 15
                                                                     }
                                                                 ],
@@ -929,7 +1106,9 @@
                                                             {
                                                                 "name": "Magic Find",
                                                                 "percentage": true,
-                                                                "value": 8
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_MagicFindBonus",
+                                                                "value": 8.88
                                                             }
                                                         ],
                                                         "Abilities": [],
@@ -951,12 +1130,16 @@
                                                     {
                                                         "name": "Magic Find",
                                                         "percentage": true,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_MagicFindBonus",
                                                         "value": 3
                                                     },
                                                     {
                                                         "name": "Crafting Speed",
                                                         "percentage": false,
-                                                        "value": null
+                                                        "op": "Add",
+                                                        "stat": "$Stat_CraftingSpeed",
+                                                        "value": 30.0
                                                     }
                                                 ],
                                                 "Abilities": [],
@@ -968,7 +1151,16 @@
                                         "Obtainables": [
                                             "Grants a Balefire Dragon Egg Fragment when unlocked"
                                         ],
-                                        "Acts": "Major"
+                                        "Acts": "Major",
+                                        "Ability_Values": [
+                                            {
+                                                "name": "Experience Gain",
+                                                "percentage": true,
+                                                "op": "MultiplySum",
+                                                "stat": "$Stat_ExperienceBoostBonus",
+                                                "value": 5.0
+                                            }
+                                        ]
                                     }
                                 ],
                                 "Obtainables": [],
@@ -984,16 +1176,22 @@
                                     {
                                         "name": "Flask Capacity",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_MaxFlasks",
                                         "value": 1
                                     },
                                     {
                                         "name": "Maximum Health %",
                                         "percentage": false,
+                                        "op": "MultiplySum",
+                                        "stat": "$Stat_MaxHealthBonus",
                                         "value": 5
                                     },
                                     {
                                         "name": "Jump",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_Jump",
                                         "value": 5
                                     }
                                 ],
@@ -1020,11 +1218,15 @@
                                                     {
                                                         "name": "Maximum Health %",
                                                         "percentage": false,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_MaxHealthBonus",
                                                         "value": 10
                                                     },
                                                     {
                                                         "name": "Health Regen",
                                                         "percentage": false,
+                                                        "op": "Add",
+                                                        "stat": "$Stat_HealthRegen_controller",
                                                         "value": 400
                                                     }
                                                 ],
@@ -1054,11 +1256,15 @@
                                                                     {
                                                                         "name": "Attack Speed",
                                                                         "percentage": false,
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_AttackSpeed",
                                                                         "value": 15
                                                                     },
                                                                     {
                                                                         "name": "Critical Damage",
                                                                         "percentage": false,
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_CriticalHitDamage",
                                                                         "value": 15
                                                                     }
                                                                 ],
@@ -1077,6 +1283,8 @@
                                                                     {
                                                                         "name": "Damage Reduction",
                                                                         "percentage": false,
+                                                                        "op": "Multiply",
+                                                                        "stat": "$Stat_IncomingDamageMod",
                                                                         "value": 15
                                                                     }
                                                                 ],
@@ -1105,6 +1313,8 @@
                                                     {
                                                         "name": "Outgoing Damage",
                                                         "percentage": false,
+                                                        "op": "Multiply",
+                                                        "stat": "$Stat_OutgoingDamageMod",
                                                         "value": 3
                                                     }
                                                 ],
@@ -1134,11 +1344,15 @@
                                                                     {
                                                                         "name": "Lasermancy",
                                                                         "percentage": false,
-                                                                        "value": 45
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_Mining",
+                                                                        "value": 100
                                                                     },
                                                                     {
                                                                         "name": "Maximum Health %",
                                                                         "percentage": false,
+                                                                        "op": "MultiplySum",
+                                                                        "stat": "$Stat_MaxHealthBonus",
                                                                         "value": 15
                                                                     }
                                                                 ],
@@ -1169,6 +1383,8 @@
                                                     {
                                                         "name": "Flask Capacity",
                                                         "percentage": false,
+                                                        "op": "Add",
+                                                        "stat": "$Stat_MaxFlasks",
                                                         "value": 1
                                                     }
                                                 ],
@@ -1184,11 +1400,15 @@
                                                             {
                                                                 "name": "Health Regen",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_HealthRegenBonus_controller",
                                                                 "value": 6
                                                             },
                                                             {
                                                                 "name": "Energy Regen",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_EnergyRegenBonus_controller",
                                                                 "value": 6
                                                             }
                                                         ],
@@ -1231,12 +1451,16 @@
                     {
                         "name": "Lasermancy",
                         "percentage": false,
-                        "value": 50
+                        "op": "Add",
+                        "stat": "$Stat_Mining",
+                        "value": 100
                     },
                     {
                         "name": "Jump",
                         "percentage": false,
-                        "value": 3
+                        "op": "Add",
+                        "stat": "$Stat_Jump",
+                        "value": 10
                     }
                 ],
                 "Abilities": [],
@@ -1262,11 +1486,15 @@
                                     {
                                         "name": "Flask Capacity",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_MaxFlasks",
                                         "value": 1
                                     },
                                     {
                                         "name": "Health Regen",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_HealthRegen_controller",
                                         "value": 300
                                     }
                                 ],
@@ -1341,12 +1569,16 @@
                                     {
                                         "name": "Lasermancy",
                                         "percentage": false,
-                                        "value": 25
+                                        "op": "Add",
+                                        "stat": "$Stat_Mining",
+                                        "value": 200
                                     },
                                     {
                                         "name": "Maximum Health %",
                                         "percentage": false,
-                                        "value": 5
+                                        "op": "MultiplySum",
+                                        "stat": "$Stat_MaxHealthBonus",
+                                        "value": 10
                                     }
                                 ],
                                 "Abilities": [],
@@ -1375,6 +1607,8 @@
                                                     {
                                                         "name": "Magic Damage",
                                                         "percentage": true,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_SpellDamageBonus",
                                                         "value": 5
                                                     }
                                                 ],
@@ -1393,6 +1627,8 @@
                                                     {
                                                         "name": "Maximum Health %",
                                                         "percentage": false,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_MaxHealthBonus",
                                                         "value": 5
                                                     }
                                                 ],
@@ -1421,8 +1657,10 @@
                                                                 "Description": "Exploring and armoring up.",
                                                                 "Stats": [
                                                                     {
-                                                                        "name": "Incoming Damage",
+                                                                        "name": "Damage Reduction",
                                                                         "percentage": false,
+                                                                        "op": "Multiply",
+                                                                        "stat": "$Stat_IncomingDamageMod",
                                                                         "value": -5
                                                                     }
                                                                 ],
@@ -1436,8 +1674,10 @@
                                                                         "Description": "Seeing the final frontier has left you tough.",
                                                                         "Stats": [
                                                                             {
-                                                                                "name": "Incoming Damage",
+                                                                                "name": "Damage Reduction",
                                                                                 "percentage": false,
+                                                                                "op": "Multiply",
+                                                                                "stat": "$Stat_IncomingDamageMod",
                                                                                 "value": -10
                                                                             }
                                                                         ],
@@ -1461,17 +1701,23 @@
                                                                     {
                                                                         "name": "Maximum Health %",
                                                                         "percentage": false,
+                                                                        "op": "MultiplySum",
+                                                                        "stat": "$Stat_MaxHealthBonus",
                                                                         "value": 10
                                                                     },
                                                                     {
                                                                         "name": "Attack Speed",
                                                                         "percentage": false,
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_AttackSpeed",
                                                                         "value": 20
                                                                     },
                                                                     {
                                                                         "name": "Lasermancy",
                                                                         "percentage": false,
-                                                                        "value": 15
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_Mining",
+                                                                        "value": 45
                                                                     }
                                                                 ],
                                                                 "Abilities": [],
@@ -1486,6 +1732,8 @@
                                                                             {
                                                                                 "name": "Flask Capacity",
                                                                                 "percentage": false,
+                                                                                "op": "Add",
+                                                                                "stat": "$Stat_MaxFlasks",
                                                                                 "value": 3
                                                                             }
                                                                         ],
@@ -1501,6 +1749,8 @@
                                                                                     {
                                                                                         "name": "Magic Damage",
                                                                                         "percentage": true,
+                                                                                        "op": "MultiplySum",
+                                                                                        "stat": "$Stat_SpellDamageBonus",
                                                                                         "value": 15
                                                                                     }
                                                                                 ],
@@ -1521,6 +1771,8 @@
                                                                                     {
                                                                                         "name": "Physical Damage",
                                                                                         "percentage": true,
+                                                                                        "op": "MultiplySum",
+                                                                                        "stat": "$Stat_PhysicalDamageBonus",
                                                                                         "value": 15
                                                                                     }
                                                                                 ],
@@ -1543,6 +1795,8 @@
                                                                             {
                                                                                 "name": "Experience Gain",
                                                                                 "percentage": true,
+                                                                                "op": "MultiplySum",
+                                                                                "stat": "$Stat_ExperienceBoostBonus",
                                                                                 "value": 5
                                                                             }
                                                                         ],
@@ -1561,6 +1815,8 @@
                                                                             {
                                                                                 "name": "Magic Find",
                                                                                 "percentage": false,
+                                                                                "op": "Add",
+                                                                                "stat": "$Stat_MagicFind",
                                                                                 "value": 50
                                                                             }
                                                                         ],
@@ -1592,6 +1848,8 @@
                                                     {
                                                         "name": "Physical Damage",
                                                         "percentage": true,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_PhysicalDamageBonus",
                                                         "value": 5
                                                     }
                                                 ],
@@ -1641,6 +1899,8 @@
                     {
                         "name": "Flask Capacity",
                         "percentage": false,
+                        "op": "Add",
+                        "stat": "$Stat_MaxFlasks",
                         "value": 1
                     }
                 ],
@@ -1660,12 +1920,16 @@
                             {
                                 "name": "Physical Damage",
                                 "percentage": true,
-                                "value": 25
+                                "value": 25.0,
+                                "op": "MultiplySum",
+                                "stat": "$Stat_PhysicalDamageBonus"
                             },
                             {
                                 "name": "Magic Damage",
                                 "percentage": true,
-                                "value": 25
+                                "value": 25.0,
+                                "op": "MultiplySum",
+                                "stat": "$Stat_SpellDamageBonus"
                             }
                         ],
                         "Stars": [
@@ -1679,11 +1943,15 @@
                                     {
                                         "name": "Critical Hit",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_CriticalHitChance",
                                         "value": 6
                                     },
                                     {
                                         "name": "Critical Damage",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_CriticalHitDamage",
                                         "value": 6
                                     }
                                 ],
@@ -1699,11 +1967,15 @@
                                             {
                                                 "name": "Jump",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_Jump",
                                                 "value": 5
                                             },
                                             {
                                                 "name": "Stability",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_Stability",
                                                 "value": 50
                                             }
                                         ],
@@ -1779,6 +2051,8 @@
                                             {
                                                 "name": "Attack Speed",
                                                 "percentage": true,
+                                                "op": "MultiplySum",
+                                                "stat": "$Stat_AttackSpeedBonus",
                                                 "value": 3
                                             }
                                         ],
@@ -1794,6 +2068,8 @@
                                                     {
                                                         "name": "Movement Speed",
                                                         "percentage": false,
+                                                        "op": "Add",
+                                                        "stat": "$Stat_MovementSpeed",
                                                         "value": 5
                                                     }
                                                 ],
@@ -1820,6 +2096,8 @@
                                                                     {
                                                                         "name": "Movement Speed",
                                                                         "percentage": false,
+                                                                        "op": "Add",
+                                                                        "stat": "$Stat_MovementSpeed",
                                                                         "value": 5
                                                                     }
                                                                 ],
@@ -1838,6 +2116,8 @@
                                                                     {
                                                                         "name": "Maximum Health %",
                                                                         "percentage": false,
+                                                                        "op": "MultiplySum",
+                                                                        "stat": "$Stat_MaxHealthBonus",
                                                                         "value": 15
                                                                     }
                                                                 ],
@@ -1853,6 +2133,8 @@
                                                                             {
                                                                                 "name": "Attack Speed",
                                                                                 "percentage": true,
+                                                                                "op": "MultiplySum",
+                                                                                "stat": "$Stat_AttackSpeedBonus",
                                                                                 "value": 6
                                                                             }
                                                                         ],
@@ -1885,6 +2167,8 @@
                                                                                     {
                                                                                         "name": "Flask Capacity",
                                                                                         "percentage": false,
+                                                                                        "op": "Add",
+                                                                                        "stat": "$Stat_MaxFlasks",
                                                                                         "value": 3
                                                                                     }
                                                                                 ],
@@ -1905,6 +2189,8 @@
                                                                                     {
                                                                                         "name": "Flask Capacity",
                                                                                         "percentage": false,
+                                                                                        "op": "Add",
+                                                                                        "stat": "$Stat_MaxFlasks",
                                                                                         "value": 3
                                                                                     }
                                                                                 ],
@@ -1958,12 +2244,16 @@
                                     {
                                         "name": "Physical Damage",
                                         "percentage": true,
-                                        "value": 25
+                                        "value": 25.0,
+                                        "op": "MultiplySum",
+                                        "stat": "$Stat_PhysicalDamageBonus"
                                     },
                                     {
                                         "name": "Magic Damage",
                                         "percentage": true,
-                                        "value": 25
+                                        "value": 25.0,
+                                        "op": "MultiplySum",
+                                        "stat": "$Stat_SpellDamageBonus"
                                     }
                                 ],
                                 "Stars": [
@@ -1977,11 +2267,15 @@
                                             {
                                                 "name": "Magic Damage",
                                                 "percentage": true,
+                                                "op": "MultiplySum",
+                                                "stat": "$Stat_SpellDamageBonus",
                                                 "value": 5
                                             },
                                             {
                                                 "name": "Physical Damage",
                                                 "percentage": true,
+                                                "op": "MultiplySum",
+                                                "stat": "$Stat_PhysicalDamageBonus",
                                                 "value": 5
                                             }
                                         ],
@@ -2000,6 +2294,8 @@
                                             {
                                                 "name": "Damage Reduction",
                                                 "percentage": false,
+                                                "op": "Multiply",
+                                                "stat": "$Stat_IncomingDamageMod",
                                                 "value": 8
                                             }
                                         ],
@@ -2018,6 +2314,8 @@
                                             {
                                                 "name": "Health Regen",
                                                 "percentage": true,
+                                                "op": "MultiplySum",
+                                                "stat": "$Stat_HealthRegenBonus_controller",
                                                 "value": 8
                                             }
                                         ],
@@ -2052,6 +2350,8 @@
                     {
                         "name": "Attack Speed",
                         "percentage": true,
+                        "op": "MultiplySum",
+                        "stat": "$Stat_AttackSpeedBonus",
                         "value": 3
                     }
                 ],
@@ -2078,6 +2378,8 @@
                                     {
                                         "name": "Attack Speed",
                                         "percentage": true,
+                                        "op": "MultiplySum",
+                                        "stat": "$Stat_AttackSpeedBonus",
                                         "value": 6
                                     }
                                 ],
@@ -2093,11 +2395,15 @@
                                             {
                                                 "name": "Health Regen",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_HealthRegen_controller",
                                                 "value": 175
                                             },
                                             {
                                                 "name": "Maximum Health %",
                                                 "percentage": false,
+                                                "op": "MultiplySum",
+                                                "stat": "$Stat_MaxHealthBonus",
                                                 "value": 14
                                             }
                                         ],
@@ -2127,11 +2433,15 @@
                                                             {
                                                                 "name": "Physical Damage",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_PhysicalDamageBonus",
                                                                 "value": 5
                                                             },
                                                             {
                                                                 "name": "Magic Damage",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_SpellDamageBonus",
                                                                 "value": 5
                                                             }
                                                         ],
@@ -2150,6 +2460,8 @@
                                                             {
                                                                 "name": "Attack Speed",
                                                                 "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_AttackSpeedBonus",
                                                                 "value": 10
                                                             }
                                                         ],
@@ -2168,6 +2480,8 @@
                                                             {
                                                                 "name": "Critical Hit",
                                                                 "percentage": false,
+                                                                "op": "Add",
+                                                                "stat": "$Stat_CriticalHitChance",
                                                                 "value": 10
                                                             }
                                                         ],
@@ -2196,6 +2510,8 @@
                                             {
                                                 "name": "Movement Speed",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_MovementSpeed",
                                                 "value": 5
                                             }
                                         ],
@@ -2213,14 +2529,18 @@
                                                 ],
                                                 "Ability_Values": [
                                                     {
-                                                        "name": "Physical Damage",
-                                                        "percentage": true,
-                                                        "value": 10
-                                                    },
-                                                    {
                                                         "name": "Magic Damage",
                                                         "percentage": true,
-                                                        "value": 10
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_SpellDamageBonus",
+                                                        "value": 10.0
+                                                    },
+                                                    {
+                                                        "name": "Physical Damage",
+                                                        "percentage": true,
+                                                        "op": "MultiplySum",
+                                                        "stat": "$Stat_PhysicalDamageBonus",
+                                                        "value": 10.0
                                                     }
                                                 ],
                                                 "Stars": [
@@ -2240,14 +2560,18 @@
                                                         ],
                                                         "Ability_Values": [
                                                             {
-                                                                "name": "Physical Damage",
-                                                                "percentage": true,
-                                                                "value": 15
-                                                            },
-                                                            {
                                                                 "name": "Magic Damage",
                                                                 "percentage": true,
-                                                                "value": 15
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_SpellDamageBonus",
+                                                                "value": 15.0
+                                                            },
+                                                            {
+                                                                "name": "Physical Damage",
+                                                                "percentage": true,
+                                                                "op": "MultiplySum",
+                                                                "stat": "$Stat_PhysicalDamageBonus",
+                                                                "value": 15.0
                                                             }
                                                         ],
                                                         "Stars": [],
@@ -2263,6 +2587,8 @@
                                                             {
                                                                 "name": "Light",
                                                                 "percentage": false,
+                                                                "op": "Add",
+                                                                "stat": "$Stat_Light",
                                                                 "value": 50
                                                             }
                                                         ],
@@ -2297,6 +2623,8 @@
                                     {
                                         "name": "Critical Hit",
                                         "percentage": false,
+                                        "op": "Add",
+                                        "stat": "$Stat_CriticalHitChance",
                                         "value": 10
                                     }
                                 ],
@@ -2312,11 +2640,15 @@
                                             {
                                                 "name": "Jump",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_Jump",
                                                 "value": 5
                                             },
                                             {
                                                 "name": "Stability",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_Stability",
                                                 "value": 50
                                             }
                                         ],
@@ -2332,6 +2664,8 @@
                                                     {
                                                         "name": "Critical Damage",
                                                         "percentage": false,
+                                                        "op": "Add",
+                                                        "stat": "$Stat_CriticalHitDamage",
                                                         "value": 10
                                                     }
                                                 ],
@@ -2348,6 +2682,8 @@
                                                             {
                                                                 "name": "Light",
                                                                 "percentage": false,
+                                                                "op": "Add",
+                                                                "stat": "$Stat_Light",
                                                                 "value": 150
                                                             }
                                                         ],
@@ -2375,6 +2711,8 @@
                                             {
                                                 "name": "Flask Capacity",
                                                 "percentage": false,
+                                                "op": "Add",
+                                                "stat": "$Stat_MaxFlasks",
                                                 "value": 1
                                             }
                                         ],
@@ -2406,7 +2744,16 @@
                                                             "Increases the Depths boon damage reduction to 25% and duration to 1 hour."
                                                         ],
                                                         "Stars": [],
-                                                        "Obtainables": []
+                                                        "Obtainables": [],
+                                                        "Ability_Values": [
+                                                            {
+                                                                "name": "Damage Reduction",
+                                                                "percentage": false,
+                                                                "op": "Multiply",
+                                                                "stat": "$Stat_IncomingDamageMod",
+                                                                "value": 25.0
+                                                            }
+                                                        ]
                                                     },
                                                     {
                                                         "Path": "pve.b.0.b.1.a.1",
@@ -2418,6 +2765,8 @@
                                                             {
                                                                 "name": "Light",
                                                                 "percentage": false,
+                                                                "op": "Add",
+                                                                "stat": "$Stat_Light",
                                                                 "value": 50
                                                             }
                                                         ],
@@ -2432,7 +2781,16 @@
                                                 "Obtainables": [
                                                     "Grants a Balefire Dragon Egg Fragment when unlocked"
                                                 ],
-                                                "Acts": "Major"
+                                                "Acts": "Major",
+                                                "Ability_Values": [
+                                                    {
+                                                        "name": "Damage Reduction",
+                                                        "percentage": false,
+                                                        "op": "Multiply",
+                                                        "stat": "$Stat_IncomingDamageMod",
+                                                        "value": 20.0
+                                                    }
+                                                ]
                                             }
                                         ],
                                         "Obtainables": [],
