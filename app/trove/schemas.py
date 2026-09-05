@@ -435,13 +435,16 @@ class ClassStat(BaseModel):
 class AbilityStage(BaseModel):
     name: str
     base: float
-    multiplier: float
+    multiplier: float             # scales weapon damage; `base` is a flat add
+    prefab: str = ""              # the game prefab this stage was decoded from
 
 
 class Ability(BaseModel):
     name: str
+    description: str = ""         # the in-game tooltip, empty for curated-only entries
     icon: str
-    type: str                     # "Passive" | "Active" | "Upgrade"
+    type: str                     # "Passive" | "Active" | "Upgrade" (blank when unknown)
+    prefab: str = ""              # empty when the decode never reached this ability
     stages: list[AbilityStage]
 
 

@@ -152,7 +152,8 @@
                 "35000": "Jubilant Song: movement speed and max energy 17.5%. Peaceful Song: 6.5% life gain when dealing damage. Battle Song: Attack Speed and Critical Damage 17.5%. Duration 3s. Cooldown 15s.",
                 "40000": "Jubilant Song: movement speed and max energy 20%. Peaceful Song: 7.5% life gain when dealing damage. Battle Song: Attack Speed and Critical Damage 20%. Duration 3s. Cooldown 15s."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Boomeranger",
@@ -310,94 +311,7 @@
                 "40000": "50% heal."
             }
         },
-        "abilities": [
-            {
-                "name": "Final Blow",
-                "icon": "icon_adventurer_passive",
-                "type": "Passive",
-                "stages": []
-            },
-            {
-                "name": "Basic Attack",
-                "icon": "icon_styles_gun",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Sword",
-                        "base": 300,
-                        "multiplier": 1.7
-                    },
-                    {
-                        "name": "Bow",
-                        "base": 250,
-                        "multiplier": 1.4
-                    }
-                ]
-            },
-            {
-                "name": "Boomerang",
-                "icon": "icon_adventurer_boomerang",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 0,
-                        "multiplier": 2.75
-                    }
-                ]
-            },
-            {
-                "name": "Big Bomb",
-                "icon": "icon_adventurer_bomb",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 0,
-                        "multiplier": 5
-                    }
-                ]
-            },
-            {
-                "name": "Mysterious Urn",
-                "icon": "icon_adventurer_urn",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 0,
-                        "multiplier": 6
-                    },
-                    {
-                        "name": "Bomb",
-                        "base": 0,
-                        "multiplier": 4
-                    },
-                    {
-                        "name": "Chicken",
-                        "base": 0,
-                        "multiplier": 2
-                    }
-                ]
-            },
-            {
-                "name": "Bawk Bomb",
-                "icon": "icon_adventurer_bomb",
-                "type": "Upgrade",
-                "stages": [
-                    {
-                        "name": "Explosion",
-                        "base": 0,
-                        "multiplier": 2.85
-                    },
-                    {
-                        "name": "Chicken",
-                        "base": 0,
-                        "multiplier": 0.65
-                    }
-                ]
-            }
-        ]
+        "abilities": []
     },
     {
         "name": "Candy Barbarian",
@@ -554,74 +468,7 @@
                 "40000": "50% Active chance on damage dealt."
             }
         },
-        "abilities": [
-            {
-                "name": "Gum Drop",
-                "icon": "ico_barbarian_passive_01",
-                "type": "Passive",
-                "stages": []
-            },
-            {
-                "name": "Basic Attack",
-                "icon": "icon_styles_gun",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 150,
-                        "multiplier": 1.85
-                    }
-                ]
-            },
-            {
-                "name": "Vanilla Swirlwind",
-                "icon": "ico_barbarian_whirlwind_01",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 0,
-                        "multiplier": 6.5
-                    }
-                ]
-            },
-            {
-                "name": "Sugar Crash",
-                "icon": "ico_barbarian_crash_01",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 50,
-                        "multiplier": 4.5
-                    }
-                ]
-            },
-            {
-                "name": "Eis-Crom Cone",
-                "icon": "ico_barbarian_cromcone_01",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 25,
-                        "multiplier": 15
-                    }
-                ]
-            },
-            {
-                "name": "Scoop n' Gloop",
-                "icon": "ico_barbarian_crash_01",
-                "type": "Upgrade",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 50,
-                        "multiplier": 4.5
-                    }
-                ]
-            }
-        ]
+        "abilities": []
     },
     {
         "name": "Chloromancer",
@@ -777,7 +624,8 @@
                 "35000": "65% chance on NPC damage received. 10s duration. 5000% reflect (NPC only - no Shadow Titans). 30s cooldown.",
                 "40000": "75% chance on NPC damage received. 12s duration. 5000% reflect (NPC only - no Shadow Titans). 30s cooldown."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Dino Tamer",
@@ -933,7 +781,8 @@
                 "35000": "40% chance on critical hit. 8s cooldown. 3s root.",
                 "40000": "45% chance on critical hit. 8s cooldown. 4s root."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Dracolyte",
@@ -1091,7 +940,8 @@
                 "35000": "25% Active chance on physical damage dealt. 30% Magic Damage.",
                 "40000": "30% Active chance on physical damage dealt. 40% Magic Damage."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Fae Trickster",
@@ -1253,7 +1103,8 @@
                 "35000": "30% Active chance on critical hit. 400% Magic Damage.",
                 "40000": "40% Active chance on critical hit. 450% Magic Damage."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Gunslinger",
@@ -1409,93 +1260,7 @@
                 "40000": "10% outgoing damage when not standing on a block."
             }
         },
-        "abilities": [
-            {
-                "name": "Basic Attack",
-                "icon": "icon_styles_gun",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 200,
-                        "multiplier": 1.33
-                    }
-                ]
-            },
-            {
-                "name": "Lucky Shot",
-                "icon": "ico_gunslinger_luckyshot_01",
-                "type": "Passive",
-                "stages": []
-            },
-            {
-                "name": "Charged Shot",
-                "icon": "ico_gunslinger_chargeshot_01",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Stage 1 Hit",
-                        "base": 5,
-                        "multiplier": 1.5
-                    },
-                    {
-                        "name": "Stage 2 Hit",
-                        "base": 0,
-                        "multiplier": 2
-                    },
-                    {
-                        "name": "Stage 2 AoE",
-                        "base": 25,
-                        "multiplier": 2
-                    },
-                    {
-                        "name": "Stage 3 Hit",
-                        "base": 0,
-                        "multiplier": 4
-                    },
-                    {
-                        "name": "Stage 3 AoE",
-                        "base": 25,
-                        "multiplier": 3.5
-                    }
-                ]
-            },
-            {
-                "name": "Blast Jump",
-                "icon": "ico_gunslinger_blastjump_01",
-                "type": "Active",
-                "stages": [
-                    {
-                        "name": "Damage",
-                        "base": 10,
-                        "multiplier": 6
-                    }
-                ]
-            },
-            {
-                "name": "Run and Gun",
-                "icon": "ico_gunslinger_runandgun_01",
-                "type": "Passive",
-                "stages": []
-            },
-            {
-                "name": "Overcharged",
-                "icon": "ico_gunslinger_runandgun_01",
-                "type": "Upgrade",
-                "stages": [
-                    {
-                        "name": "Hit",
-                        "base": 0,
-                        "multiplier": 4
-                    },
-                    {
-                        "name": "AoE",
-                        "base": 25,
-                        "multiplier": 3.5
-                    }
-                ]
-            }
-        ]
+        "abilities": []
     },
     {
         "name": "Ice Sage",
@@ -1650,7 +1415,8 @@
                 "35000": "30% chance on damage taken trigger absorb shield. Stats increased by 25%. 30s cooldown.",
                 "40000": "35% chance on damage taken trigger absorb shield. Stats increased by 35%. 30s cooldown."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Knight",
@@ -1805,7 +1571,8 @@
                 "35000": "125 ground based mounted movement speed. At low health gain a 75% damage reduction shield for a short time.",
                 "40000": "125 ground based mounted movement speed. At low health gain a 85% damage reduction shield for a short time."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Lunar Lancer",
@@ -1961,7 +1728,8 @@
                 "35000": "30% chance on damage dealt. Increases damage done by 15%.",
                 "40000": "35% chance on damage dealt. Increases damage done by 20%."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Neon Ninja",
@@ -2117,7 +1885,8 @@
                 "35000": "34% chance when target health is below 20%. 400% Physical Damage.",
                 "40000": "36% chance when target health is below 20%. 550% Physical Damage."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Pirate Captain",
@@ -2273,7 +2042,8 @@
                 "35000": "30% chance on damage dealt. 30s cooldown.",
                 "40000": "35% chance on damage dealt. 30s cooldown."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Revenant",
@@ -2429,7 +2199,8 @@
                 "35000": "Returns 6%.",
                 "40000": "Returns 8%."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Shadow Hunter",
@@ -2586,7 +2357,8 @@
                 "35000": "25% Active chance on magic damage dealt. 30% Physical Damage.",
                 "40000": "30% Active chance on magic damage dealt. 40% Physical Damage."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Solarion",
@@ -2742,7 +2514,8 @@
                 "35000": "33% Active chance on damage dealt. 300% Physical Damage. 85% Damage over time every 0.5s for 2.5s.",
                 "40000": "40% Active chance on damage dealt. 350% Physical Damage. 100% Damage over time every 0.5s for 2.5s."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Tomb Raiser",
@@ -2899,7 +2672,8 @@
                 "35000": "Fallen enemies have a chance to spawn a random minion. Increased chance to spawn Grave Goliaths. Reduced cooldown.",
                 "40000": "Fallen enemies have a chance to spawn a random minion. Increased chance to spawn Grave Goliaths. Reduced cooldown."
             }
-        }
+        },
+        "abilities": []
     },
     {
         "name": "Vanguardian",
@@ -3055,6 +2829,7 @@
                 "35000": "Shockwave deals 600% physical/magic damage.",
                 "40000": "Shockwave deals 800% physical/magic damage."
             }
-        }
+        },
+        "abilities": []
     }
 ]

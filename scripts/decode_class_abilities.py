@@ -127,7 +127,59 @@ def _stages(rel: str, root: bytes, folder: str) -> list[dict]:
     return stages
 
 
+def _icon_token(icon: str, folder: str) -> str:
+    """The ability-identifying part of a curated icon name.
+
+    `ico_gunslinger_chargeshot_01` -> `chargeshot`, which is what lets a curated
+    entry find its prefab after the ability was renamed in game.
+    """
+    parts = [p for p in icon.split("_") if p]
+    parts = [p for p in parts if p not in ("ico", "icon", folder) and not p.isdigit()]
+    return "".join(parts)
+
+
+def _overlay_curated(entry: dict, curated: list[dict], folder: str) -> list[dict]:
+    """Carry the hand-written `icon` and `type` onto the decoded abilities.
+
+    Names drift - Boomeranger's `Boomerang` is `Boomerang of the Wind` in game -
+    so an exact name match is tried first, then the curated icon token against the
+    prefab stem. The icon match only applies when exactly one unclaimed curated
+    entry fits, so an ambiguous one is left blank rather than guessed. Curated
+    abilities the decode never reached are kept as-is, without a `prefab`.
+    """
+    by_name = {a["name"]: a for a in curated}
+    claimed = set()
+    for ability in entry["abilities"]:
+        hit = by_name.get(ability["name"])
+        if hit:
+            claimed.add(hit["name"])
+            ability["icon"], ability["type"] = hit.get("icon", ""), hit.get("type", "")
+
+    for ability in entry["abilities"]:
+        if ability.get("type"):
+            continue
+        stem = re.sub(r"[^a-z0-9]", "", ability["prefab"].rsplit("/", 1)[-1].lower())
+        fits = [a for a in curated if a["name"] not in claimed
+                and (tok := _icon_token(a.get("icon", ""), folder)) and tok in stem]
+        if len(fits) == 1:
+            ability["icon"], ability["type"] = fits[0].get("icon", ""), fits[0].get("type", "")
+            ability["matched_by"] = "icon"
+
+    for a in curated:
+        if a["name"] in claimed or any(x.get("icon") == a.get("icon") and x.get("type") == a.get("type")
+                                       for x in entry["abilities"]):
+            continue
+        entry["abilities"].append({
+            "name": a["name"], "description": "", "icon": a.get("icon", ""),
+            "type": a.get("type", ""), "stages": a.get("stages", []),
+        })
+    return entry["abilities"]
+
+
 def build() -> list[dict]:
+    curated_path = Path(__file__).resolve().parents[1] / "app" / "trove" / "gamedata" / "classes.json"
+    curated_by_class = {c["name"]: (c.get("abilities") or [])
+                        for c in json.loads(curated_path.read_text(encoding="utf-8"))}
     display: dict[str, str] = {}
     for name in ("prefabs_class.binfab", "ui.binfab", "new.binfab"):
         path = os.path.join(GAME, "languages", "en", name)
@@ -165,13 +217,17 @@ def build() -> list[dict]:
                 "name": name,
                 "description": desc,
                 "prefab": rel,
+                "icon": "",
+                "type": "",
                 "stages": _stages(rel, root, afolder),
             })
-        out.append({
+        entry = {
             "name": display.get(key, key.replace("$DisplayName_", "")),
             "game_folder": folder,
             "abilities": abilities,
-        })
+        }
+        entry["abilities"] = _overlay_curated(entry, curated_by_class.get(entry["name"], []), folder)
+        out.append(entry)
     return out
 
 

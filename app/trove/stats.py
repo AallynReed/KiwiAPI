@@ -94,14 +94,17 @@ def _clean_stat(s: dict) -> dict:
 
 
 def _clean_stage(st: dict) -> dict:
-    return {"name": st.get("name", ""), "base": st.get("base", 0), "multiplier": st.get("multiplier", 0)}
+    return {"name": st.get("name", ""), "base": st.get("base", 0), "multiplier": st.get("multiplier", 0),
+            "prefab": st.get("prefab", "")}
 
 
 def _clean_ability(a: dict) -> dict:
     return {
         "name": a.get("name", ""),
+        "description": a.get("description", ""),
         "icon": a.get("icon", ""),
         "type": a.get("type", ""),
+        "prefab": a.get("prefab", ""),
         "stages": [_clean_stage(st) for st in a.get("stages", [])],
     }
 
@@ -133,10 +136,29 @@ def _clean_class(c: dict) -> dict:
 
 
 @lru_cache(maxsize=1)
+def _class_abilities() -> dict[str, list[dict]]:
+    """Display name -> abilities, decoded from the game prefabs.
+
+    Ability data lives in its own file because it is regenerated wholesale from
+    the game tree (scripts/decode_class_abilities.py) while the rest of a class
+    entry is hand-maintained. The curated `icon` and `type` ride along in there.
+    """
+    raw = _read_json(str(_DATA_DIR / "class_abilities.json")) or []
+    return {c["name"]: c.get("abilities", []) for c in raw}  # type: ignore[union-attr]
+
+
+@lru_cache(maxsize=1)
 def _classes_index() -> dict[str, dict]:
     """tech_name -> cleaned class object, in source order (preserved by dict)."""
     raw = _read_json(str(_DATA_DIR / "classes.json"))
-    return {c["qualified_name"]: _clean_class(c) for c in raw}  # type: ignore[union-attr]
+    abilities = _class_abilities()
+    out = {}
+    for c in raw:  # type: ignore[union-attr]
+        cleaned = _clean_class(c)
+        if not cleaned["abilities"]:
+            cleaned["abilities"] = [_clean_ability(a) for a in abilities.get(c["name"], [])]
+        out[c["qualified_name"]] = cleaned
+    return out
 
 
 def all_classes() -> dict:
