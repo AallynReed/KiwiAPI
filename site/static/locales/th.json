@@ -3082,5 +3082,7 @@
   "No abilities match that search.": "ไม่พบความสามารถที่ตรงกับการค้นหานี้",
   "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "ตัวเลขถอดมาจากไฟล์ความสามารถของเกมโดยตรง ความสามารถที่ไม่มีตัวเลขคือความสามารถที่ไฟล์อธิบายผลเป็นข้อความแทนที่จะเป็นค่า",
   "Still present in the game files, but the class no longer uses them.": "ยังอยู่ในไฟล์เกม แต่คลาสนี้ไม่ได้ใช้แล้ว",
-  "abilities": "ความสามารถ"
+  "abilities": "ความสามารถ",
+  "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "ทุกความสามารถของเจม แหวน และคลาส — เปลี่ยนอะไร ใช้กับใคร และตัวเลขเบื้องหลัง",
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">ความสามารถ</span>ใน Trove"
 }

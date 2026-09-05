@@ -23,7 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.core.internal_api import internal_get
-from app.site import classes_page, commands_page, gem_abilities_page, ssr
+from app.site import abilities_page, classes_page, commands_page, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS
 from app.web import feature_flags as web_flags
 
@@ -379,16 +379,23 @@ async def gems_guide_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "gems-guide.html", {})
 
 
-@router.get("/gem-abilities", response_class=HTMLResponse)
-async def gem_abilities(request: Request) -> HTMLResponse:
-    """Gem Abilities - every empowered gem ability and what it does.
+@router.get("/abilities", response_class=HTMLResponse)
+async def abilities(request: Request, tab: str = "gems") -> HTMLResponse:
+    """Abilities - every gem, ring and class ability and what it does.
 
-    Reference data, so the whole list is server-rendered from
-    ``gamedata/gem_abilities.json`` (decoded from the game files by
-    scripts/decode_gem_abilities.py) and ``/static/gem-abilities.js`` only
-    filters what is already on the page - no proxy, no /v1 API."""
+    Reference data, so all three tabs are server-rendered from
+    ``gamedata/{gem,ring,class}_abilities.json`` (decoded from the game files by
+    the matching scripts/decode_*_abilities.py) and ``/static/abilities.js`` only
+    switches and filters what is already on the page - no proxy, no /v1 API. The
+    ``?tab=`` is honoured server-side so each panel has a real URL."""
     return _TEMPLATES.TemplateResponse(
-        request, "gem-abilities.html", {"gems": gem_abilities_page.gem_abilities_view()})
+        request, "abilities.html", {"abilities": abilities_page.abilities_view(tab)})
+
+
+@router.get("/gem-abilities", include_in_schema=False)
+async def gem_abilities_redirect() -> RedirectResponse:
+    """The gems tab used to be its own page; keep the old link working."""
+    return RedirectResponse("/abilities?tab=gems", status_code=308)
 
 
 @router.get("/fishing-guide", response_class=HTMLResponse)

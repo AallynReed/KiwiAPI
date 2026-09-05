@@ -3261,5 +3261,7 @@
   "No abilities match that search.": "Нет способностей, соответствующих запросу.",
   "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "Числа взяты из игровых файлов способностей. Способность без чисел — та, чей эффект в файлах описан текстом, а не значением.",
   "Still present in the game files, but the class no longer uses them.": "Всё ещё есть в файлах игры, но класс их больше не использует.",
-  "abilities": "способностей"
+  "abilities": "способностей",
+  "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "Все способности самоцветов, колец и классов: что они меняют, для кого и с какими числами.",
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">Способности</span> Trove"
 }

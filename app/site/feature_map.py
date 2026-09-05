@@ -48,7 +48,7 @@ SITE_FEATURE_FLAGS = {
     "gem_builds_enabled": feature_flags.GEM_BUILDS_FLAG,
     "calculators_enabled": feature_flags.CALCULATORS_FLAG,
     "gems_guide_enabled": feature_flags.GEMS_GUIDE_FLAG,
-    "gem_abilities_enabled": feature_flags.GEM_ABILITIES_FLAG,
+    "abilities_enabled": feature_flags.ABILITIES_FLAG,
     "fishing_guide_enabled": feature_flags.FISHING_GUIDE_FLAG,
     "dressing_room_enabled": feature_flags.DRESSING_ROOM_FLAG,
     "dressing_room_page_enabled": feature_flags.DRESSING_ROOM_PAGE_FLAG,
@@ -199,7 +199,7 @@ def feature_blocks(p: str, f: dict) -> bool:
         return True
     # Gems guide is a fully client-rendered explainer (static JS, no proxy or
     # /v1 API), so only the page route needs blocking.
-    if not f["gem_abilities_enabled"] and p == "/gem-abilities":
+    if not f["abilities_enabled"] and p in ("/abilities", "/gem-abilities"):
         return False
     if not f["gems_guide_enabled"] and p == "/gems-guide":
         return True
@@ -256,7 +256,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/star-chart", "star_chart_enabled"),
     ("/gem-simulator", "gem_simulator_enabled"),
     ("/gems-guide", "gems_guide_enabled"),
-    ("/gem-abilities", "gem_abilities_enabled"),
+    ("/abilities", "abilities_enabled"),
     ("/fishing-guide", "fishing_guide_enabled"),
     ("/dressing-room", "dressing_room_page_enabled"),
     ("/sound-studio", "sound_studio_enabled"),

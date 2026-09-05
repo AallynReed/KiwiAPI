@@ -3261,5 +3261,7 @@
   "No abilities match that search.": "Ninguna habilidad coincide con esa búsqueda.",
   "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "Los números proceden de los propios archivos de habilidades del juego. Una habilidad sin números es aquella cuyo efecto los archivos describen con texto en lugar de con un valor.",
   "Still present in the game files, but the class no longer uses them.": "Siguen en los archivos del juego, pero la clase ya no las usa.",
-  "abilities": "habilidades"
+  "abilities": "habilidades",
+  "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "Todas las habilidades de gemas, anillos y clases: qué cambian, para quién son y los números que hay detrás.",
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">Habilidades</span> de Trove"
 }

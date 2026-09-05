@@ -3261,5 +3261,7 @@
   "No abilities match that search.": "Keine Fähigkeiten passen zu dieser Suche.",
   "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "Die Zahlen stammen aus den Fähigkeitsdateien des Spiels. Wird bei einer Fähigkeit keine Zahl angezeigt, beschreiben die Dateien ihre Wirkung als Text statt als Wert.",
   "Still present in the game files, but the class no longer uses them.": "Noch in den Spieldateien vorhanden, wird von der Klasse aber nicht mehr genutzt.",
-  "abilities": "Fähigkeiten"
+  "abilities": "Fähigkeiten",
+  "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "Jede Edelstein-, Ring- und Klassenfähigkeit – was sie verändert, für wen sie ist und die Zahlen dahinter.",
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove-<span class=\"highlight-blue\">Fähigkeiten</span>"
 }

@@ -3261,5 +3261,7 @@
   "No abilities match that search.": "その検索に一致するアビリティはありません。",
   "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "数値はゲーム自身のアビリティファイルから読み取っています。数値のないアビリティは、ファイルが効果を数値ではなく文章で記述しているものです。",
   "Still present in the game files, but the class no longer uses them.": "ゲームファイルには残っていますが、このクラスではもう使われていません。",
-  "abilities": "アビリティ"
+  "abilities": "アビリティ",
+  "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "ジェム・リング・クラスのアビリティ一覧 — 何が変わるか、誰向けか、そしてその数値。",
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove<span class=\"highlight-blue\">アビリティ</span>"
 }

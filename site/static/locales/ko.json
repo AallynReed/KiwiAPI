@@ -3261,5 +3261,7 @@
   "No abilities match that search.": "검색과 일치하는 능력이 없습니다.",
   "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "수치는 게임의 능력 파일에서 직접 읽어온 값입니다. 수치가 없는 능력은 파일이 그 효과를 값이 아닌 설명으로 기록한 경우입니다.",
   "Still present in the game files, but the class no longer uses them.": "게임 파일에는 남아 있지만 이 직업은 더 이상 사용하지 않습니다.",
-  "abilities": "능력"
+  "abilities": "능력",
+  "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "젬, 반지, 직업의 모든 능력 — 무엇이 바뀌는지, 누구를 위한 것인지, 그리고 그 수치까지.",
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove <span class=\"highlight-blue\">능력</span>"
 }

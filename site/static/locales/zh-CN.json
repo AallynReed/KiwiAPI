@@ -3261,5 +3261,7 @@
   "No abilities match that search.": "没有符合该搜索的技能。",
   "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "数值直接读取自游戏的技能文件。未列出数值的技能，是文件以文字而非数值描述其效果的技能。",
   "Still present in the game files, but the class no longer uses them.": "仍存在于游戏文件中，但该职业已不再使用。",
-  "abilities": "技能"
+  "abilities": "技能",
+  "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "每一个宝石、戒指与职业技能——它改变什么、适用于谁，以及背后的数值。",
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove<span class=\"highlight-blue\">技能</span>"
 }
