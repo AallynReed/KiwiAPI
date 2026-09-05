@@ -1,0 +1,966 @@
+[
+    {
+        "class": "Bard",
+        "game_folder": "bard",
+        "name": "Crystal-Teleport",
+        "description": "When using Crystal Pop teleport to your singing crystals location",
+        "slug": "test_bard_01",
+        "prefab": "abilities/mods_01/bard/ring_test_bard_01",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Bard",
+        "game_folder": "bard",
+        "name": "Melody Overload",
+        "description": "At max Melody gain a small damage boost.",
+        "slug": "melody_overload",
+        "prefab": "abilities/mods_01/bard/ring_melody_overload",
+        "prefabs": [
+            "abilities/mods_01/bard/melody_overload_buff"
+        ],
+        "stats": [
+            {
+                "name": "Magic Damage",
+                "stat": "$Stat_SpellDamageBonus",
+                "op": "MultiplySum",
+                "value": 20.0,
+                "amount": 0.2,
+                "prefab": "abilities/mods_01/bard/melody_overload_buff"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Bard",
+        "game_folder": "bard",
+        "name": "Musical-Master",
+        "description": "The Bard gains a Critical Damage Buff when all 3 bardsong buffs are active.",
+        "slug": "test_bard_musical_master",
+        "prefab": "abilities/mods_01/bard/ring_test_bard_musical_master",
+        "prefabs": [
+            "abilities/mods_01/bard/musical_master_buff_criticaldamage",
+            "abilities/mods_01/bard/musical_master_buff_criticaldamage_gem"
+        ],
+        "stats": [
+            {
+                "name": "Critical Damage",
+                "stat": "$Stat_CriticalHitDamageBonus",
+                "op": "MultiplySum",
+                "value": 35.0,
+                "amount": 0.35,
+                "prefab": "abilities/mods_01/bard/musical_master_buff_criticaldamage"
+            },
+            {
+                "name": "Critical Damage",
+                "stat": "$Stat_CriticalHitDamageBonus",
+                "op": "MultiplySum",
+                "value": 35.0,
+                "amount": 0.35,
+                "prefab": "abilities/mods_01/bard/musical_master_buff_criticaldamage_gem"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Bard",
+        "game_folder": "bard",
+        "name": "Peaceful-Moment",
+        "description": "Peaceful song buff reduces damage done to allies.",
+        "slug": "test_bard_02",
+        "prefab": "abilities/mods_01/bard/ring_test_bard_02",
+        "prefabs": [
+            "abilities/mods_01/bard/mod_02_buff_reducedamage"
+        ],
+        "stats": [
+            {
+                "name": "Damage Reduction",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Multiply",
+                "value": 25.0,
+                "amount": 0.75,
+                "prefab": "abilities/mods_01/bard/mod_02_buff_reducedamage"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Boomeranger",
+        "game_folder": "adventurer",
+        "name": "Blast Bow",
+        "description": "Triggers an explosion on each bow attack.",
+        "slug": "blast_bow",
+        "prefab": "abilities/mods_01/adventurer/ring_blast_bow",
+        "prefabs": [
+            "abilities/mods_01/adventurer/blast_bow_effect_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Blast Bow Effect Explosion",
+                "prefab": "abilities/mods_01/adventurer/blast_bow_effect_explosion",
+                "base": 10.0,
+                "multiplier": 1.0
+            }
+        ]
+    },
+    {
+        "class": "Boomeranger",
+        "game_folder": "adventurer",
+        "name": "Chicken Pack",
+        "description": "Chickens spawned from your ultimate or Bawk-Bomb class gem now explode after 6 seconds and spawn three more chickens.",
+        "slug": "chickenpack",
+        "prefab": "abilities/mods_01/adventurer/ring_chickenpack",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Boomeranger",
+        "game_folder": "adventurer",
+        "name": "Cyclone",
+        "description": "Your 3rd melee attack now pulls enemies in.",
+        "slug": "cyclone",
+        "prefab": "abilities/mods_01/adventurer/ring_cyclone",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Boomeranger",
+        "game_folder": "adventurer",
+        "name": "Overstuffed Urn",
+        "description": "Your Mysterious Urn triggers an additional effect.",
+        "slug": "overstuffed",
+        "prefab": "abilities/mods_01/adventurer/ring_overstuffed",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Candy Barbarian",
+        "game_folder": "candybarbarian",
+        "name": "Emergency Snack",
+        "description": "Spawns a Cupcake when you take damage below 50% hp that refills your energy bar resets your ability cooldowns.",
+        "slug": "emergency_snack",
+        "prefab": "abilities/mods_01/candybarbarian/ring_emergency_snack",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Candy Barbarian",
+        "game_folder": "candybarbarian",
+        "name": "Spin-To-Win",
+        "description": "Reduces the energy cost of Swirlwind and removes the Movement Speed reduction.",
+        "slug": "spin_to_win",
+        "prefab": "abilities/mods_01/candybarbarian/ring_spin_to_win",
+        "prefabs": [
+            "abilities/mods_01/candybarbarian/spin_to_win_swirlwind"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Multiply",
+                "value": 50.0,
+                "amount": 1.5,
+                "prefab": "abilities/mods_01/candybarbarian/spin_to_win_swirlwind"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Spin To Win Swirlwind",
+                "prefab": "abilities/mods_01/candybarbarian/spin_to_win_swirlwind",
+                "base": 10.0,
+                "multiplier": 6.5
+            }
+        ]
+    },
+    {
+        "class": "Chloromancer",
+        "game_folder": "chloromancer",
+        "name": "Gatling-Gatling-Gatling",
+        "description": "Basic attacks have a chance to spawn a Mini Green Gatling. Mini Green Gatlings have a chance to spawn Mini Mini Green Gatlings.",
+        "slug": "gatling_gatling",
+        "prefab": "abilities/mods_01/chloromancer/ring_gatling_gatling",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Chloromancer",
+        "game_folder": "chloromancer",
+        "name": "Phytobarrier",
+        "description": "Creates a shield at low health that reduces damage",
+        "slug": "test_chloromancer",
+        "prefab": "abilities/mods_01/chloromancer/ring_test_chloromancer",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Chloromancer",
+        "game_folder": "chloromancer",
+        "name": "Weird-Growth",
+        "description": "After you deal damage gain a buff that spawns plants randomly around you for a short time.",
+        "slug": "random_plants",
+        "prefab": "abilities/mods_01/chloromancer/ring_random_plants",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Dino Tamer",
+        "game_folder": "dinotamer",
+        "name": "Deep Wounds",
+        "description": "When both the Dino Tamer and their Dino summons are attacking the same target they apply a damage increase debuff. Dino Applies a damage increase debuff to enemies dealt damage by a Dino Tamer and their dino summons.",
+        "slug": "deep_wounds",
+        "prefab": "abilities/mods_01/dinotamer/ring_deep_wounds",
+        "prefabs": [
+            "abilities/mods_01/dinotamer/deep_wounds_damage_mult_effect"
+        ],
+        "stats": [
+            {
+                "name": "Damage Reduction",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Multiply",
+                "value": 5.0,
+                "amount": 1.05,
+                "prefab": "abilities/mods_01/dinotamer/deep_wounds_damage_mult_effect"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Dino Tamer",
+        "game_folder": "dinotamer",
+        "name": "MR. CHOMP CHOMP!",
+        "description": "Dino Mount also spawns a Tyrannosaurus Rex minion.",
+        "slug": "chomp_chomp",
+        "prefab": "abilities/mods_01/dinotamer/ring_chomp_chomp",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Dino Tamer",
+        "game_folder": "dinotamer",
+        "name": "Oh-my-Dinos!",
+        "description": "Dino Buddy now spawns two minions instead of one.",
+        "slug": "second_dino",
+        "prefab": "abilities/mods_01/dinotamer/ring_second_dino",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Dracolyte",
+        "game_folder": "dracolyte",
+        "name": "Dragon Force",
+        "description": "Summon two Dracolyte allies when using Avatar of Flame.",
+        "slug": "dragon_force",
+        "prefab": "abilities/mods_01/dracolyte/ring_dragon_force",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Dracolyte",
+        "game_folder": "dracolyte",
+        "name": "Dragonborn",
+        "description": "When dodging the Dracolyte leaves a Burnt Offering.",
+        "slug": "dragonborn",
+        "prefab": "abilities/mods_01/dracolyte/ring_dragonborn",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Fae Trickster",
+        "game_folder": "trickster",
+        "name": "Big Brain",
+        "description": "Ego Blast now allows for two hits within 2 seconds instead of just one.",
+        "slug": "big_brain",
+        "prefab": "abilities/mods_01/trickster/ring_big_brain",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Fae Trickster",
+        "game_folder": "trickster",
+        "name": "Dance Partner",
+        "description": "Faerie Dance summons a Fae Juggernaut that taunts enemies.",
+        "slug": "dance_partner",
+        "prefab": "abilities/mods_01/trickster/ring_dance_partner",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Fae Trickster",
+        "game_folder": "trickster",
+        "name": "Mobilize",
+        "description": "Faerie Dance summons one large enchanted Staff that follows the player.",
+        "slug": "test_faetrickster",
+        "prefab": "abilities/mods_01/trickster/ring_test_faetrickster",
+        "prefabs": [
+            "abilities/mods_01/trickster/mod_01_summon_turrets",
+            "abilities/mods_01/trickster/mod_01_summon_turrets_effect_turret_shoot",
+            "abilities/mods_01/trickster/mod_01_summon_turrets_effect_turret_bullet"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Set",
+                "value": 0.0,
+                "amount": 0.0,
+                "prefab": "abilities/mods_01/trickster/mod_01_summon_turrets"
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Multiply",
+                "value": 40.0,
+                "amount": 0.6,
+                "prefab": "abilities/mods_01/trickster/mod_01_summon_turrets_effect_turret_shoot"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Mod 01 Summon Turrets Effect Turret Bullet",
+                "prefab": "abilities/mods_01/trickster/mod_01_summon_turrets_effect_turret_bullet",
+                "base": 0.0,
+                "multiplier": 6.0
+            }
+        ]
+    },
+    {
+        "class": "Fae Trickster",
+        "game_folder": "trickster",
+        "name": "Trick Trick Boom",
+        "description": "When taking damage the Fae Trickster has a chance to spawn a Glittlerbomb at its location. This Gltterbomb has increased range and stun.",
+        "slug": "trick_trick",
+        "prefab": "abilities/mods_01/trickster/ring_trick_trick",
+        "prefabs": [
+            "abilities/mods_01/trickster/trick_trick_effect_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Trick Trick Effect Explosion",
+                "prefab": "abilities/mods_01/trickster/trick_trick_effect_explosion",
+                "base": 0.0,
+                "multiplier": 6.75
+            }
+        ]
+    },
+    {
+        "class": "Gunslinger",
+        "game_folder": "gunslinger",
+        "name": "Berserk Slinger",
+        "description": "When using Run and Gun gain berserk increasing damage and attack speed, but greatly reducing movement speed.",
+        "slug": "berserk_slinger",
+        "prefab": "abilities/mods_01/gunslinger/ring_berserk_slinger",
+        "prefabs": [
+            "abilities/mods_01/gunslinger/berserk_slinger_berserk_effect"
+        ],
+        "stats": [
+            {
+                "name": "Attack Speed",
+                "stat": "$Stat_AttackSpeed",
+                "op": "Multiply",
+                "value": 50.0,
+                "amount": 1.5,
+                "prefab": "abilities/mods_01/gunslinger/berserk_slinger_berserk_effect"
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Multiply",
+                "value": 90.0,
+                "amount": 0.1,
+                "prefab": "abilities/mods_01/gunslinger/berserk_slinger_berserk_effect"
+            },
+            {
+                "name": "Magic Damage",
+                "stat": "$Stat_SpellDamage",
+                "op": "Multiply",
+                "value": 55.0,
+                "amount": 1.55,
+                "prefab": "abilities/mods_01/gunslinger/berserk_slinger_berserk_effect"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Gunslinger",
+        "game_folder": "gunslinger",
+        "name": "Lock n Load",
+        "description": "Dodging gives you an instant Charged shot. Resets after a short cooldown.",
+        "slug": "lock_load",
+        "prefab": "abilities/mods_01/gunslinger/ring_lock_load",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Gunslinger",
+        "game_folder": "gunslinger",
+        "name": "Stunning-Ammo",
+        "description": "Your Charged Shot attacks have a chance to stun.",
+        "slug": "stunning_ammo",
+        "prefab": "abilities/mods_01/gunslinger/ring_stunning_ammo",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Ice Sage",
+        "game_folder": "icemage",
+        "name": "As Cold as Ice",
+        "description": "While on ice the Ice Sage gains additional critical hit chance and critical damage.",
+        "slug": "cold_ice",
+        "prefab": "abilities/mods_01/icemage/ring_cold_ice",
+        "prefabs": [
+            "abilities/mods_01/icemage/cold_ice_buff_crit"
+        ],
+        "stats": [
+            {
+                "name": "Critical Hit",
+                "stat": "$Stat_CriticalHitChanceBonus",
+                "op": "MultiplySum",
+                "value": 65.0,
+                "amount": 0.65,
+                "prefab": "abilities/mods_01/icemage/cold_ice_buff_crit"
+            },
+            {
+                "name": "Critical Damage",
+                "stat": "$Stat_CriticalHitDamageBonus",
+                "op": "MultiplySum",
+                "value": 40.0,
+                "amount": 0.4,
+                "prefab": "abilities/mods_01/icemage/cold_ice_buff_crit"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Ice Sage",
+        "game_folder": "icemage",
+        "name": "Chill Out",
+        "description": "Frozen Ward automatically triggers at low health.",
+        "slug": "chill_out",
+        "prefab": "abilities/mods_01/icemage/ring_chill_out",
+        "prefabs": [
+            "abilities/mods_01/icemage/chill_out_effect_shield"
+        ],
+        "stats": [
+            {
+                "name": "Damage Reduction",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Add",
+                "value": 0.5,
+                "amount": -0.5,
+                "prefab": "abilities/mods_01/icemage/chill_out_effect_shield"
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 50.0,
+                "amount": 50.0,
+                "prefab": "abilities/mods_01/icemage/chill_out_effect_shield"
+            },
+            {
+                "name": "Magic Damage",
+                "stat": "$Stat_SpellDamage",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 2.0,
+                "prefab": "abilities/mods_01/icemage/chill_out_effect_shield"
+            },
+            {
+                "name": "Attack Speed",
+                "stat": "$Stat_AttackSpeed",
+                "op": "Multiply",
+                "value": 400.0,
+                "amount": 5.0,
+                "prefab": "abilities/mods_01/icemage/chill_out_effect_shield"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Ice Sage",
+        "game_folder": "icemage",
+        "name": "Nice-Ice-Baby",
+        "description": "The Big Chill Summons an Ice Crash on your location. This Ice Crash changes the ground around you to ice.",
+        "slug": "ice_baby",
+        "prefab": "abilities/mods_01/icemage/ring_ice_baby",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Knight",
+        "game_folder": "knight",
+        "name": "Iron-er-Will",
+        "description": "Increases the damage redirecition done by Iron Will and the knight gains increased damage reduction.",
+        "slug": "ironer_will",
+        "prefab": "abilities/mods_01/knight/ring_ironer_will",
+        "prefabs": [
+            "abilities/mods_01/knight/ironer_will_effect_shield"
+        ],
+        "stats": [
+            {
+                "name": "Damage Reduction",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Add",
+                "value": 0.65,
+                "amount": -0.65,
+                "prefab": "abilities/mods_01/knight/ironer_will_effect_shield"
+            },
+            {
+                "name": "Stability",
+                "stat": "$Stat_StabilityBonus",
+                "op": "MultiplySum",
+                "value": 100.0,
+                "amount": 1.0,
+                "prefab": "abilities/mods_01/knight/ironer_will_effect_shield"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Knight",
+        "game_folder": "knight",
+        "name": "Over Charge",
+        "description": "Using Charge! gives you a movement speed increase temporarily.",
+        "slug": "over_charge",
+        "prefab": "abilities/mods_01/knight/ring_over_charge",
+        "prefabs": [
+            "abilities/mods_01/knight/over_charge_buff_stats"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 40.0,
+                "amount": 40.0,
+                "prefab": "abilities/mods_01/knight/over_charge_buff_stats"
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeedBonus",
+                "op": "MultiplySum",
+                "value": 20.0,
+                "amount": 0.2,
+                "prefab": "abilities/mods_01/knight/over_charge_buff_stats"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Lunar Lancer",
+        "game_folder": "lunarlancer",
+        "name": "Cliffhanger",
+        "description": "Dodging lowers the cooldown of your Grapple and Empowered Grapple. This ability has a short cooldown.",
+        "slug": "speed_grapple",
+        "prefab": "abilities/mods_01/lunarlancer/ring_speed_grapple",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Lunar Lancer",
+        "game_folder": "lunarlancer",
+        "name": "From the Moon",
+        "description": "When in Lunarform, basic attacks have a chance to spawn meteors from the sky.",
+        "slug": "meteors",
+        "prefab": "abilities/mods_01/lunarlancer/ring_meteors",
+        "prefabs": [
+            "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_trigger",
+            "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Meteors Spawn Meteor Effect Trigger",
+                "prefab": "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_trigger",
+                "base": 0.0,
+                "multiplier": 0.5
+            },
+            {
+                "name": "Meteors Spawn Meteor Effect Explosion",
+                "prefab": "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_explosion",
+                "base": 100.0,
+                "multiplier": 3.0
+            }
+        ]
+    },
+    {
+        "class": "Lunar Lancer",
+        "game_folder": "lunarlancer",
+        "name": "Need-For-Speed",
+        "description": "After using the buffed grapple gain a speed buff instead of attack",
+        "slug": "test_lunarlancer",
+        "prefab": "abilities/mods_01/lunarlancer/ring_test_lunarlancer",
+        "prefabs": [
+            "abilities/mods_01/lunarlancer/mod_01_buff_speed_stats"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeedBonus",
+                "op": "MultiplySum",
+                "value": 85.0,
+                "amount": 0.85,
+                "prefab": "abilities/mods_01/lunarlancer/mod_01_buff_speed_stats"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Neon Ninja",
+        "game_folder": "neonninja",
+        "name": "Clone Jutsu",
+        "description": "The clone created by your Shadow Flip explodes at the end of its duratoin.",
+        "slug": "clone_jutsu",
+        "prefab": "abilities/mods_01/neonninja/ring_clone_jutsu",
+        "prefabs": [
+            "abilities/mods_01/neonninja/clone_jutsu_bomb_effect_bomb_trigger",
+            "abilities/mods_01/neonninja/clone_jutsus_bomb_effect_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Clone Jutsu Bomb Effect Bomb Trigger",
+                "prefab": "abilities/mods_01/neonninja/clone_jutsu_bomb_effect_bomb_trigger",
+                "base": 0.0,
+                "multiplier": 0.5
+            },
+            {
+                "name": "Clone Jutsus Bomb Effect Explosion",
+                "prefab": "abilities/mods_01/neonninja/clone_jutsus_bomb_effect_explosion",
+                "base": 10.0,
+                "multiplier": 5.0
+            }
+        ]
+    },
+    {
+        "class": "Neon Ninja",
+        "game_folder": "neonninja",
+        "name": "Float Like A Butterfly",
+        "description": "Gain slowfall for the duration of Final Technique.",
+        "slug": "float_like",
+        "prefab": "abilities/mods_01/neonninja/ring_float_like",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Neon Ninja",
+        "game_folder": "neonninja",
+        "name": "Recharge",
+        "description": "Gain energy when you dodge.",
+        "slug": "recharge",
+        "prefab": "abilities/mods_01/neonninja/ring_recharge",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Neon Ninja",
+        "game_folder": "neonninja",
+        "name": "Three-Flip",
+        "description": "Using Shadow Flip now generates three shurrikens.",
+        "slug": "three_flip",
+        "prefab": "abilities/mods_01/neonninja/ring_three_flip",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Pirate Captain",
+        "game_folder": "piratelord",
+        "name": "AVAST YE!!!",
+        "description": "Basic Attacks cause your minions to attack your target, as well as applying a debuff increasing damage done to it.",
+        "slug": "avast_ye",
+        "prefab": "abilities/mods_01/piratelord/ring_avast_ye",
+        "prefabs": [
+            "abilities/mods_01/piratelord/avast_ye_damage_mult_effect"
+        ],
+        "stats": [
+            {
+                "name": "Damage Reduction",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Multiply",
+                "value": 15.0,
+                "amount": 1.15,
+                "prefab": "abilities/mods_01/piratelord/avast_ye_damage_mult_effect"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Pirate Captain",
+        "game_folder": "piratelord",
+        "name": "All Hands On Deck",
+        "description": "Using Man O War now summons a Pirrot Cannoneer as well.",
+        "slug": "all_hands",
+        "prefab": "abilities/mods_01/piratelord/ring_all_hands",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Pirate Captain",
+        "game_folder": "piratelord",
+        "name": "Raiders",
+        "description": "Your First Mate has a chance to spawn Doubloons when it hits enemies.",
+        "slug": "raiders",
+        "prefab": "abilities/mods_01/piratelord/ring_raiders",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Revenant",
+        "game_folder": "spirittank",
+        "name": "Speed Spears",
+        "description": "Spirit Spears no longer slows you.",
+        "slug": "speed_spears",
+        "prefab": "abilities/mods_01/spirittank/ring_speed_spears",
+        "prefabs": [
+            "abilities/mods_01/spirittank/speed_spears_active_spears_stat_mods"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Multiply",
+                "value": 0.0,
+                "amount": 1.0,
+                "prefab": "abilities/mods_01/spirittank/speed_spears_active_spears_stat_mods"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Revenant",
+        "game_folder": "spirittank",
+        "name": "Spirit Squad",
+        "description": "Spirit Storm summons a group of tiny Spirit Wraiths.",
+        "slug": "spirit_squad",
+        "prefab": "abilities/mods_01/spirittank/ring_spirit_squad",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Revenant",
+        "game_folder": "spirittank",
+        "name": "Vengeful Storm",
+        "description": "When at low health Spirit Storm is triggered automatically. Has a long cooldown.",
+        "slug": "vengeful_storm",
+        "prefab": "abilities/mods_01/spirittank/ring_vengeful_storm",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Shadow Hunter",
+        "game_folder": "shadowhunter",
+        "name": "Sneaky Traps",
+        "description": "When dodging the Shadow Hunter drops a Sun Snare.",
+        "slug": "sneaky_traps",
+        "prefab": "abilities/mods_01/shadowhunter/ring_sneaky_traps",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Shadow Hunter",
+        "game_folder": "shadowhunter",
+        "name": "Tactical Seekers",
+        "description": "When enemies take damage from the Shadow Hunter's Sacred Arrow a Shadow Seeker will fire from the Shadow Hunter and attack the closest target.",
+        "slug": "tactical_shot",
+        "prefab": "abilities/mods_01/shadowhunter/ring_tactical_shot",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Shadow Hunter",
+        "game_folder": "shadowhunter",
+        "name": "Unholy Heal",
+        "description": "When enemies with Shadowmark are defeated the Shadow Hunter is healed a small amount.",
+        "slug": "unholy_heal",
+        "prefab": "abilities/mods_01/shadowhunter/ring_unholy_heal",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Solarion",
+        "game_folder": "solarion",
+        "name": "Guiding Flight",
+        "description": "Guiding Light and Prismatic Blast now grant Solar Wings.",
+        "slug": "guiding_wings",
+        "prefab": "abilities/mods_01/solarion/ring_guiding_wings",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Solarion",
+        "game_folder": "solarion",
+        "name": "Prismatic Chain",
+        "description": "Prismatic Blast has a chance to trigger again on enemies.",
+        "slug": "prismatic_chain",
+        "prefab": "abilities/mods_01/solarion/ring_prismatic_chain",
+        "prefabs": [
+            "abilities/mods_01/solarion/prismatic_chain_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Prismatic Chain Explosion",
+                "prefab": "abilities/mods_01/solarion/prismatic_chain_explosion",
+                "base": 0.0,
+                "multiplier": 7.0
+            }
+        ]
+    },
+    {
+        "class": "Solarion",
+        "game_folder": "solarion",
+        "name": "Solar Stance",
+        "description": "Removes the Solar Wings effect and grants a damage reduction buff for a short time when using Solar Flare.",
+        "slug": "solar_stance",
+        "prefab": "abilities/mods_01/solarion/ring_solar_stance",
+        "prefabs": [
+            "abilities/mods_01/solarion/solar_stance_buff_stats"
+        ],
+        "stats": [
+            {
+                "name": "Damage Reduction",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Add",
+                "value": 0.15,
+                "amount": -0.15,
+                "prefab": "abilities/mods_01/solarion/solar_stance_buff_stats"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Tomb Raiser",
+        "game_folder": "tombraiser",
+        "name": "Banshee Blast",
+        "description": "Your basic attacks have a chance to summon Baby Banshees.",
+        "slug": "banshee_blast",
+        "prefab": "abilities/mods_01/tombraiser/ring_banshee_blast",
+        "prefabs": [
+            "abilities/mods_01/tombraiser/banshee_blast_minion_effect_minion_melee"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Multiply",
+                "value": 50.0,
+                "amount": 0.5,
+                "prefab": "abilities/mods_01/tombraiser/banshee_blast_minion_effect_minion_melee"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Banshee Blast Minion Effect Minion Melee",
+                "prefab": "abilities/mods_01/tombraiser/banshee_blast_minion_effect_minion_melee",
+                "base": 0.0,
+                "multiplier": 1.25
+            }
+        ]
+    },
+    {
+        "class": "Tomb Raiser",
+        "game_folder": "tombraiser",
+        "name": "Ghost More",
+        "description": "Reduces the energy drain from Banshee's Boon.",
+        "slug": "ghost_more",
+        "prefab": "abilities/mods_01/tombraiser/ring_ghost_more",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Tomb Raiser",
+        "game_folder": "tombraiser",
+        "name": "Skellbiggle-split",
+        "description": "Using Bonetourage has a chance to summon a larger skellittle. When this large skellittle dies it will spawn skellittles.",
+        "slug": "skellittles_split",
+        "prefab": "abilities/mods_01/tombraiser/ring_skellittles_split",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Vanguardian",
+        "game_folder": "crimefighter",
+        "name": "Champions! Congregate!",
+        "description": "Fired Up and Force Flash now apply to up to 2 nearby allies when used.",
+        "slug": "champions",
+        "prefab": "abilities/mods_01/crimefighter/ring_champions",
+        "prefabs": [
+            "abilities/mods_01/crimefighter/super_buff_melee_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Super Buff Melee Explosion",
+                "prefab": "abilities/mods_01/crimefighter/super_buff_melee_explosion",
+                "base": 10.0,
+                "multiplier": 2.0
+            }
+        ]
+    },
+    {
+        "class": "Vanguardian",
+        "game_folder": "crimefighter",
+        "name": "Combo",
+        "description": "Your Plasma Blast now applies the same damage increase that your Eyebeam applies.",
+        "slug": "combo",
+        "prefab": "abilities/mods_01/crimefighter/ring_combo",
+        "prefabs": [
+            "abilities/mods_01/crimefighter/combo_melee_damage_multiplier_effect"
+        ],
+        "stats": [
+            {
+                "name": "Damage Reduction",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Multiply",
+                "value": 5.0,
+                "amount": 1.05,
+                "prefab": "abilities/mods_01/crimefighter/combo_melee_damage_multiplier_effect"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "class": "Vanguardian",
+        "game_folder": "crimefighter",
+        "name": "Hero's Stand",
+        "description": "Your Laser Leap and Hero's Charge grant a buff that heals you while dealing damage for a short time.",
+        "slug": "heros_stand",
+        "prefab": "abilities/mods_01/crimefighter/ring_heros_stand",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    }
+]

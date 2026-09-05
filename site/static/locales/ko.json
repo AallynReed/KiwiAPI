@@ -3254,5 +3254,12 @@
   "{grade} {type}": "{grade} {type}",
   "{n} fish need it": "{n}종이 이 낚싯대를 요구합니다",
   "{n} more fish the codex lists in this liquid": "이 액체에서 코덱스가 나열하는 물고기 {n}종 더",
-  "{n} of {total} fish": "{total}종 중 {n}종"
+  "{n} of {total} fish": "{total}종 중 {n}종",
+  "Every empowered gem ability - what it changes, which class it is for, and the numbers behind it.": "모든 강화 젬 능력 — 무엇이 바뀌는지, 어떤 직업용인지, 그리고 그 수치까지.",
+  "Gem <span class=\"highlight-blue\">Abilities</span>": "젬 <span class=\"highlight-blue\">능력</span>",
+  "Legacy abilities": "구 능력",
+  "No abilities match that search.": "검색과 일치하는 능력이 없습니다.",
+  "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "수치는 게임의 능력 파일에서 직접 읽어온 값입니다. 수치가 없는 능력은 파일이 그 효과를 값이 아닌 설명으로 기록한 경우입니다.",
+  "Still present in the game files, but the class no longer uses them.": "게임 파일에는 남아 있지만 이 직업은 더 이상 사용하지 않습니다.",
+  "abilities": "능력"
 }

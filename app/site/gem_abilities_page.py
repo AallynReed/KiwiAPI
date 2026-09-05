@@ -17,6 +17,11 @@ from app.trove.gems.model import gem_lookups
 # Column order in the filter row; matches how the game groups them.
 ELEMENT_ORDER = ("Water", "Fire", "Air", "Cosmic", "Prismatic")
 
+# The Masterful Prismatic Gem is a wildcard that fits any empowered slot; it grants
+# no ability of its own, so it has no place on a page about what abilities do. It
+# stays in gem_abilities.json - it is a real gem - and is dropped only here.
+SKIP = {("Prismatic", "mastery")}
+
 
 # "Empowered Air Gem for the Revenant. …" and, for the Prismatic gem which
 # belongs to no class, "Empowered Prismatic Gem; can be socketed …".
@@ -87,7 +92,7 @@ def gem_abilities_view() -> dict[str, Any]:
     folded: dict[str, dict] = {}
     for gem in rows:
         name = gem.get("name") or gem.get("slug") or ""
-        if not name:
+        if not name or (gem.get("element"), gem.get("slug")) in SKIP:
             continue
         applies_to, body = _split_description(gem.get("description") or "")
         entry = folded.setdefault(name, {

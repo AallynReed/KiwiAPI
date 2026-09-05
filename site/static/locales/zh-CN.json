@@ -3254,5 +3254,12 @@
   "{grade} {type}": "{grade}{type}",
   "{n} fish need it": "有 {n} 种鱼需要它",
   "{n} more fish the codex lists in this liquid": "图鉴在该液体下还列了 {n} 种鱼",
-  "{n} of {total} fish": "{total} 种中的 {n} 种"
+  "{n} of {total} fish": "{total} 种中的 {n} 种",
+  "Every empowered gem ability - what it changes, which class it is for, and the numbers behind it.": "每一个强化宝石技能——它改变什么、适用哪个职业，以及背后的数值。",
+  "Gem <span class=\"highlight-blue\">Abilities</span>": "宝石<span class=\"highlight-blue\">技能</span>",
+  "Legacy abilities": "旧技能",
+  "No abilities match that search.": "没有符合该搜索的技能。",
+  "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "数值直接读取自游戏的技能文件。未列出数值的技能，是文件以文字而非数值描述其效果的技能。",
+  "Still present in the game files, but the class no longer uses them.": "仍存在于游戏文件中，但该职业已不再使用。",
+  "abilities": "技能"
 }

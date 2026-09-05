@@ -3254,5 +3254,12 @@
   "{grade} {type}": "{type}: {grade}",
   "{n} fish need it": "нужна для {n} рыб",
   "{n} more fish the codex lists in this liquid": "ещё {n} рыб, которых кодекс относит к этой жидкости",
-  "{n} of {total} fish": "{n} из {total} рыб"
+  "{n} of {total} fish": "{n} из {total} рыб",
+  "Every empowered gem ability - what it changes, which class it is for, and the numbers behind it.": "Все способности усиленных самоцветов: что они меняют, для какого класса и с какими числами.",
+  "Gem <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">Способности</span> самоцветов",
+  "Legacy abilities": "Устаревшие способности",
+  "No abilities match that search.": "Нет способностей, соответствующих запросу.",
+  "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "Числа взяты из игровых файлов способностей. Способность без чисел — та, чей эффект в файлах описан текстом, а не значением.",
+  "Still present in the game files, but the class no longer uses them.": "Всё ещё есть в файлах игры, но класс их больше не использует.",
+  "abilities": "способностей"
 }

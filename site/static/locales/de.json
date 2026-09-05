@@ -3254,5 +3254,12 @@
   "{grade} {type}": "{type}, {grade}",
   "{n} fish need it": "{n} Fische brauchen sie",
   "{n} more fish the codex lists in this liquid": "{n} weitere Fische führt der Kodex in dieser Flüssigkeit",
-  "{n} of {total} fish": "{n} von {total} Fischen"
+  "{n} of {total} fish": "{n} von {total} Fischen",
+  "Every empowered gem ability - what it changes, which class it is for, and the numbers behind it.": "Jede verstärkte Edelstein-Fähigkeit – was sie verändert, für welche Klasse sie ist und die Zahlen dahinter.",
+  "Gem <span class=\"highlight-blue\">Abilities</span>": "Edelstein-<span class=\"highlight-blue\">Fähigkeiten</span>",
+  "Legacy abilities": "Alte Fähigkeiten",
+  "No abilities match that search.": "Keine Fähigkeiten passen zu dieser Suche.",
+  "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "Die Zahlen stammen aus den Fähigkeitsdateien des Spiels. Wird bei einer Fähigkeit keine Zahl angezeigt, beschreiben die Dateien ihre Wirkung als Text statt als Wert.",
+  "Still present in the game files, but the class no longer uses them.": "Noch in den Spieldateien vorhanden, wird von der Klasse aber nicht mehr genutzt.",
+  "abilities": "Fähigkeiten"
 }

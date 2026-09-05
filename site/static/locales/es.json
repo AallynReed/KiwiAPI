@@ -3254,5 +3254,12 @@
   "{grade} {type}": "{type} {grade}",
   "{n} fish need it": "{n} peces la necesitan",
   "{n} more fish the codex lists in this liquid": "{n} peces más que el códice lista en este líquido",
-  "{n} of {total} fish": "{n} de {total} peces"
+  "{n} of {total} fish": "{n} de {total} peces",
+  "Every empowered gem ability - what it changes, which class it is for, and the numbers behind it.": "Todas las habilidades de gemas potenciadas: qué cambian, para qué clase son y los números que hay detrás.",
+  "Gem <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">Habilidades</span> de gemas",
+  "Legacy abilities": "Habilidades heredadas",
+  "No abilities match that search.": "Ninguna habilidad coincide con esa búsqueda.",
+  "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "Los números proceden de los propios archivos de habilidades del juego. Una habilidad sin números es aquella cuyo efecto los archivos describen con texto en lugar de con un valor.",
+  "Still present in the game files, but the class no longer uses them.": "Siguen en los archivos del juego, pero la clase ya no las usa.",
+  "abilities": "habilidades"
 }

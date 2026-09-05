@@ -3254,5 +3254,12 @@
   "{grade} {type}": "{grade}の{type}",
   "{n} fish need it": "{n} 種がこの竿を必要とします",
   "{n} more fish the codex lists in this liquid": "この液体でコーデックスが挙げている魚が他に {n} 種",
-  "{n} of {total} fish": "{total} 種中 {n} 種"
+  "{n} of {total} fish": "{total} 種中 {n} 種",
+  "Every empowered gem ability - what it changes, which class it is for, and the numbers behind it.": "強化ジェムのアビリティ一覧 — 何が変わるか、対象クラス、そしてその数値。",
+  "Gem <span class=\"highlight-blue\">Abilities</span>": "ジェム<span class=\"highlight-blue\">アビリティ</span>",
+  "Legacy abilities": "旧アビリティ",
+  "No abilities match that search.": "その検索に一致するアビリティはありません。",
+  "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "数値はゲーム自身のアビリティファイルから読み取っています。数値のないアビリティは、ファイルが効果を数値ではなく文章で記述しているものです。",
+  "Still present in the game files, but the class no longer uses them.": "ゲームファイルには残っていますが、このクラスではもう使われていません。",
+  "abilities": "アビリティ"
 }

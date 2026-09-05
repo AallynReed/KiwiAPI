@@ -3075,5 +3075,12 @@
   "{grade} {type}": "{type} {grade}",
   "{n} fish need it": "มีปลา {n} ตัวที่ต้องใช้คันนี้",
   "{n} more fish the codex lists in this liquid": "ปลาอีก {n} ตัวที่ Codex ระบุไว้ในของเหลวนี้",
-  "{n} of {total} fish": "{n} จาก {total} ตัว"
+  "{n} of {total} fish": "{n} จาก {total} ตัว",
+  "Every empowered gem ability - what it changes, which class it is for, and the numbers behind it.": "ทุกความสามารถของเจมเสริมพลัง — เปลี่ยนอะไร ใช้กับคลาสไหน และตัวเลขเบื้องหลัง",
+  "Gem <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">ความสามารถ</span>เจม",
+  "Legacy abilities": "ความสามารถเดิม",
+  "No abilities match that search.": "ไม่พบความสามารถที่ตรงกับการค้นหานี้",
+  "Numbers are decoded from the game's own ability files. An ability with no numbers listed is one whose effect the files describe in prose rather than as a stat.": "ตัวเลขถอดมาจากไฟล์ความสามารถของเกมโดยตรง ความสามารถที่ไม่มีตัวเลขคือความสามารถที่ไฟล์อธิบายผลเป็นข้อความแทนที่จะเป็นค่า",
+  "Still present in the game files, but the class no longer uses them.": "ยังอยู่ในไฟล์เกม แต่คลาสนี้ไม่ได้ใช้แล้ว",
+  "abilities": "ความสามารถ"
 }
