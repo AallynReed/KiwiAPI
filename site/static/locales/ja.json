@@ -3263,5 +3263,9 @@
   "Still present in the game files, but the class no longer uses them.": "ゲームファイルには残っていますが、このクラスではもう使われていません。",
   "abilities": "アビリティ",
   "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "ジェム・リング・クラスのアビリティ一覧 — 何が変わるか、誰向けか、そしてその数値。",
-  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove<span class=\"highlight-blue\">アビリティ</span>"
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove<span class=\"highlight-blue\">アビリティ</span>",
+  "Everything we have written up, in one place. More as we go.": "これまでにまとめた解説をひとまとめに。今後も追加していきます。",
+  "No guides are available right now.": "現在利用できるガイドはありません。",
+  "Trove <span class=\"highlight-blue\">Guides</span>": "Trove<span class=\"highlight-blue\">ガイド</span>",
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "ジェム・リング・クラス・スターチャート・アライのアビリティ一覧 — 何が変わるか、誰向けか、そしてその数値。"
 }

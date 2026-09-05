@@ -93,7 +93,7 @@ _PREVIEW_FLAGS = {
     "calendar_enabled", "streams_enabled", "btt_releases_enabled",
     "classes_enabled", "star_chart_enabled", "gem_simulator_enabled",
     "gem_evaluator_enabled", "gem_builds_enabled", "calculators_enabled",
-    "gems_guide_enabled", "abilities_enabled", "fishing_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
+    "gems_guide_enabled", "abilities_enabled", "guides_enabled", "fishing_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
     "renames_enabled", "duplicates_enabled", "discord_oauth_enabled",
     "dressing_room_enabled", "dressing_room_page_enabled",
     "sound_studio_enabled", "mod_workshop_enabled",
@@ -1517,6 +1517,13 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "classes.html", "text/html")
         if path == "/gems-guide":
             return self._send_file(TEMPLATES / "gems-guide.html", "text/html")
+        if path == "/guides":
+            try:
+                from app.site.guides_page import guides_view
+                ctx = {"guides": guides_view()}
+            except Exception:
+                ctx = None
+            return self._send_file(TEMPLATES / "guides.html", "text/html", ctx)
         if path == "/abilities":
             # Fully server-rendered, so the preview needs the real model or the
             # page comes out as an empty shell.

@@ -436,6 +436,17 @@ REGISTRY: dict[str, TunableSetting] = {
             "so only the page route is hidden."
         ),
     ),
+    "feature_guides_enabled": _t(
+        key="feature_guides_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Guides hub (/guides) - the page that lists our "
+            "written guides. OFF hides the hub and its navbar link; the individual "
+            "guides keep their own switches and stay reachable by their own URLs."
+        ),
+    ),
     "feature_abilities_enabled": _t(
         key="feature_abilities_enabled",
         default=True,

@@ -1,13 +1,13 @@
 """Server-side render model for /abilities.
 
-Three decoded datasets, one page: empowered gems, class rings and class
-abilities. They are reference data, so the whole thing is rendered rather than
-fetched and abilities.js only switches tabs and filters what is already there.
+Five decoded datasets, one page: empowered gems, class rings, class abilities,
+the star chart's and allies'. They are reference data, so the whole thing is rendered rather
+than fetched, and abilities.js only switches tabs and filters what is there.
 
-All three are regenerated from the game tree by scripts/decode_gem_abilities.py,
-scripts/decode_ring_abilities.py and scripts/decode_class_abilities.py. The shapes
-differ, so each is folded into one common card here: a name, some chips, the
-game's own description, and whatever numbers the files back.
+The first three are regenerated from the game tree by scripts/decode_*_abilities.py;
+the star chart's ride along in star_chart.json. The shapes differ, so each is folded
+into one common card here: a name, some chips, the game's own description, and
+whatever numbers the files back.
 """
 import json
 import re
@@ -35,7 +35,7 @@ _LEAD = re.compile(
 
 
 @cache
-def _load(name: str) -> list[dict]:
+def _load(name: str) -> Any:
     try:
         return json.loads((_DATA / name).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -170,11 +170,72 @@ def _class_cards() -> tuple[list[dict], list[str]]:
     return cards, sorted({c["filters"][0] for c in cards if c["filters"]})
 
 
+def _star_chart_cards() -> tuple[list[dict], list[str]]:
+    """Star-chart nodes that grant an ability, keyed by constellation.
+
+    A node's `Abilities` is prose and its `Ability_Values` the decoded numbers
+    behind it - the buff is conditional, which is why those numbers sit apart from
+    the node's passive `Stats` rather than being handed out permanently.
+    """
+    chart = _load("star_chart.json")
+    nodes: list[dict] = []
+    if not isinstance(chart, dict):
+        return [], []
+
+    def walk(node: dict) -> None:
+        nodes.append(node)
+        for child in node.get("Stars") or []:
+            walk(child)
+
+    for root in chart.values():
+        walk(root)
+
+    cards = []
+    for node in nodes:
+        text = " ".join(node.get("Abilities") or []).strip()
+        if not text:
+            continue
+        constellation = node.get("Constellation") or ""
+        chips = [{"label": constellation, "tone": "who"}]
+        if node.get("Type"):
+            chips.append({"label": node["Type"], "tone": "kind"})
+        cards.append(_card(node.get("Name") or node.get("Path") or "", chips, text, "",
+                           _effects({"stats": node.get("Ability_Values") or []}),
+                           [constellation] if constellation else []))
+    cards.sort(key=lambda c: (c["filters"][0] if c["filters"] else "", c["name"].lower()))
+    return cards, sorted({c["filters"][0] for c in cards if c["filters"]})
+
+
+def _ally_cards() -> tuple[list[dict], list[str]]:
+    """Allies that do something beyond granting stats.
+
+    1,200 of the 2,412 pet prefabs carry stats, but only 127 also carry an
+    ability - and this is a page about abilities, so the flat-stat-only allies are
+    left in ally_abilities.json rather than rendered. Filtering is by the stats an
+    ally grants, which is what you would be shopping for.
+    """
+    cards = []
+    stats_seen: set[str] = set()
+    for ally in _load("ally_abilities.json"):
+        if not ally.get("abilities"):
+            continue
+        granted = [s["name"] for s in ally.get("stats") or [] if not s["name"].startswith("$")]
+        chips = [{"label": n, "tone": "kind"} for n in dict.fromkeys(granted)]
+        stats_seen.update(granted)
+        text = " ".join(a["text"] for a in ally["abilities"] if a.get("text")).strip()
+        cards.append(_card(ally.get("name") or ally.get("slug") or "", chips, text, "",
+                           _effects(ally), sorted(set(granted))))
+    cards.sort(key=lambda c: c["name"].lower())
+    return cards, sorted(stats_seen)
+
+
 def abilities_view(active: str = "gems") -> dict[str, Any]:
     """`{tabs, active}` - every tab rendered, the client only switches them."""
     builders = (("gems", "Gems", "fa-solid fa-gem", _gem_cards),
                 ("rings", "Rings", "fa-solid fa-ring", _ring_cards),
-                ("classes", "Classes", "fa-solid fa-user", _class_cards))
+                ("classes", "Classes", "fa-solid fa-user", _class_cards),
+                ("star-chart", "Star Chart", "fa-solid fa-star", _star_chart_cards),
+                ("allies", "Allies", "fa-solid fa-paw", _ally_cards))
     tabs = []
     for key, label, icon, build in builders:
         cards, filters = build()

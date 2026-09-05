@@ -3263,5 +3263,9 @@
   "Still present in the game files, but the class no longer uses them.": "Toujours présentes dans les fichiers du jeu, mais la classe ne les utilise plus.",
   "abilities": "capacités",
   "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "Toutes les capacités de gemmes, d'anneaux et de classes : ce qu'elles changent, à qui elles servent et les chiffres derrière.",
-  "Trove <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">Capacités</span> de Trove"
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">Capacités</span> de Trove",
+  "Everything we have written up, in one place. More as we go.": "Tout ce que nous avons rédigé, au même endroit. Et d'autres à venir.",
+  "No guides are available right now.": "Aucun guide n'est disponible pour le moment.",
+  "Trove <span class=\"highlight-blue\">Guides</span>": "<span class=\"highlight-blue\">Guides</span> Trove",
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "Toutes les capacités de gemmes, d'anneaux, de classes, de carte stellaire et d'alliés : ce qu'elles changent, à qui elles servent et les chiffres derrière."
 }

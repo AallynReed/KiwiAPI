@@ -535,7 +535,7 @@
         ],
         "stats": [
             {
-                "name": "$Stat_ShootProjectileSpeedMultiplier",
+                "name": "Projectile Speed",
                 "stat": "$Stat_ShootProjectileSpeedMultiplier",
                 "op": "Multiply",
                 "value": 50.0,
@@ -1187,7 +1187,7 @@
         ],
         "stats": [
             {
-                "name": "$Stat_ShootProjectileSpeedMultiplier",
+                "name": "Projectile Speed",
                 "stat": "$Stat_ShootProjectileSpeedMultiplier",
                 "op": "Multiply",
                 "value": 50.0,
@@ -1746,7 +1746,7 @@
         ],
         "stats": [
             {
-                "name": "$Stat_ShootProjectileSpeedMultiplier",
+                "name": "Projectile Speed",
                 "stat": "$Stat_ShootProjectileSpeedMultiplier",
                 "op": "Multiply",
                 "value": 50.0,

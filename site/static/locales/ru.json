@@ -3263,5 +3263,9 @@
   "Still present in the game files, but the class no longer uses them.": "Всё ещё есть в файлах игры, но класс их больше не использует.",
   "abilities": "способностей",
   "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "Все способности самоцветов, колец и классов: что они меняют, для кого и с какими числами.",
-  "Trove <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">Способности</span> Trove"
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">Способности</span> Trove",
+  "Everything we have written up, in one place. More as we go.": "Всё, что мы написали, в одном месте. Дальше — больше.",
+  "No guides are available right now.": "Сейчас нет доступных руководств.",
+  "Trove <span class=\"highlight-blue\">Guides</span>": "<span class=\"highlight-blue\">Руководства</span> Trove",
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "Все способности самоцветов, колец, классов, звёздной карты и союзников: что они меняют, для кого и с какими числами."
 }

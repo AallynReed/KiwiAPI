@@ -23,7 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.core.internal_api import internal_get
-from app.site import abilities_page, classes_page, commands_page, ssr
+from app.site import abilities_page, classes_page, commands_page, guides_page, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS
 from app.web import feature_flags as web_flags
 
@@ -390,6 +390,20 @@ async def abilities(request: Request, tab: str = "gems") -> HTMLResponse:
     ``?tab=`` is honoured server-side so each panel has a real URL."""
     return _TEMPLATES.TemplateResponse(
         request, "abilities.html", {"abilities": abilities_page.abilities_view(tab)})
+
+
+@router.get("/guides", response_class=HTMLResponse)
+async def guides(request: Request) -> HTMLResponse:
+    """Guides hub - the explainers we have written, in one place.
+
+    A list of links rather than a guide itself, so the navbar carries one entry
+    instead of one per guide. Each row is gated on its own page's feature flag
+    (see app/site/guides_page.py), so a switched-off guide is not linked into a
+    404."""
+    flags = {attr: getattr(request.state, attr, True)
+             for attr in ("gems_guide_enabled", "fishing_guide_enabled")}
+    return _TEMPLATES.TemplateResponse(
+        request, "guides.html", {"guides": guides_page.guides_view(flags)})
 
 
 @router.get("/gem-abilities", include_in_schema=False)

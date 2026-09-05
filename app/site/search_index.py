@@ -135,8 +135,9 @@ PAGES: tuple[Destination, ...] = (
     _p("Classes", "/classes", "classes_enabled", "fa-solid fa-hat-wizard", "Learn", "class list"),
     _p("Trove Commands", "/commands", "commands_enabled", "fa-solid fa-keyboard", "Learn", "slash commands", "chat"),
     _p("Codexes", "/codexes", "codexes_enabled", "fa-solid fa-book-atlas", "Learn", "database", "catalog", "game data", badge="Beta"),
-    _p("How Gems Work", "/gems-guide", "gems_guide_enabled", "fa-solid fa-circle-question", "Guides", "gems", "guide", "explainer"),
-    _p("Fishing Guide", "/fishing-guide", "fishing_guide_enabled", "fa-solid fa-fish", "Guides", "fish", "pools", "lures", "bait", "turtles", "guide"),
+    _p("Guides", "/guides", "guides_enabled", "fa-solid fa-compass", "Learn", "how to", "explainer", "tutorial"),
+    _p("How Gems Work", "/gems-guide", "gems_guide_enabled", "fa-solid fa-circle-question", "Learn", "gems", "guide", "explainer", in_nav=False),
+    _p("Fishing Guide", "/fishing-guide", "fishing_guide_enabled", "fa-solid fa-fish", "Learn", "fish", "pools", "lures", "bait", "turtles", "guide", in_nav=False),
     _p("Recipe Cost Calculator", "/codexes/crafting", "codexes_enabled", "fa-solid fa-flask", "Learn", "crafting", "cost", in_nav=False),
     _p("Updates", "/updates", "updates_enabled", "fa-solid fa-code-branch", "Learn", "patch notes", "changes", "datamining"),
     _p("Streams", "/streams", "streams_enabled", "fa-solid fa-video", "Learn", "twitch", "live"),
@@ -160,6 +161,8 @@ TABS: tuple[Destination, ...] = (
     _tab("Gem Abilities", "/abilities?tab=gems", "abilities_enabled", "Abilities", "empowered", "gems"),
     _tab("Ring Abilities", "/abilities?tab=rings", "abilities_enabled", "Abilities", "rings", "mods"),
     _tab("Class Abilities", "/abilities?tab=classes", "abilities_enabled", "Abilities", "classes", "skills"),
+    _tab("Star Chart Abilities", "/abilities?tab=star-chart", "abilities_enabled", "Abilities", "constellation", "nodes"),
+    _tab("Ally Abilities", "/abilities?tab=allies", "abilities_enabled", "Abilities", "allies", "pets"),
 
     _tab("Market Analytics", "/market?tab=analytics", "market_enabled", "Market", "movers", "liquidity", "volume", "deals"),
     _tab("Market Listings", "/market?tab=listings", "market_enabled", "Market", "prices", "sell"),
@@ -272,7 +275,7 @@ def to_row(destination: Destination) -> dict:
 
 # Column order in the menu. A group absent here isn't rendered as a column - "About"
 # holds destinations reached from the CTA and the utility cluster instead.
-NAV_GROUPS: tuple[str, ...] = ("Live", "Economy", "Plan", "Create", "Guides", "Learn")
+NAV_GROUPS: tuple[str, ...] = ("Live", "Economy", "Plan", "Create", "Learn")
 
 
 def nav_menu(enabled: dict[str, bool]) -> list[dict]:

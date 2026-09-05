@@ -3263,5 +3263,9 @@
   "Still present in the game files, but the class no longer uses them.": "仍存在于游戏文件中，但该职业已不再使用。",
   "abilities": "技能",
   "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "每一个宝石、戒指与职业技能——它改变什么、适用于谁，以及背后的数值。",
-  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove<span class=\"highlight-blue\">技能</span>"
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove<span class=\"highlight-blue\">技能</span>",
+  "Everything we have written up, in one place. More as we go.": "我们写过的内容都在这里，之后还会继续补充。",
+  "No guides are available right now.": "目前没有可用的指南。",
+  "Trove <span class=\"highlight-blue\">Guides</span>": "Trove<span class=\"highlight-blue\">指南</span>",
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "每一个宝石、戒指、职业、星图与盟友技能——它改变什么、适用于谁，以及背后的数值。"
 }

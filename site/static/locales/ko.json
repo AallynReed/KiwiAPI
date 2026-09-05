@@ -3263,5 +3263,9 @@
   "Still present in the game files, but the class no longer uses them.": "게임 파일에는 남아 있지만 이 직업은 더 이상 사용하지 않습니다.",
   "abilities": "능력",
   "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "젬, 반지, 직업의 모든 능력 — 무엇이 바뀌는지, 누구를 위한 것인지, 그리고 그 수치까지.",
-  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove <span class=\"highlight-blue\">능력</span>"
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "Trove <span class=\"highlight-blue\">능력</span>",
+  "Everything we have written up, in one place. More as we go.": "지금까지 정리한 가이드를 한곳에 모았습니다. 앞으로도 계속 추가됩니다.",
+  "No guides are available right now.": "현재 이용할 수 있는 가이드가 없습니다.",
+  "Trove <span class=\"highlight-blue\">Guides</span>": "Trove <span class=\"highlight-blue\">가이드</span>",
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "젬, 반지, 직업, 스타 차트, 동료의 모든 능력 — 무엇이 바뀌는지, 누구를 위한 것인지, 그리고 그 수치까지."
 }

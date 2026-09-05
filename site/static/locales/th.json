@@ -3084,5 +3084,9 @@
   "Still present in the game files, but the class no longer uses them.": "ยังอยู่ในไฟล์เกม แต่คลาสนี้ไม่ได้ใช้แล้ว",
   "abilities": "ความสามารถ",
   "Every gem, ring and class ability - what it changes, who it is for, and the numbers behind it.": "ทุกความสามารถของเจม แหวน และคลาส — เปลี่ยนอะไร ใช้กับใคร และตัวเลขเบื้องหลัง",
-  "Trove <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">ความสามารถ</span>ใน Trove"
+  "Trove <span class=\"highlight-blue\">Abilities</span>": "<span class=\"highlight-blue\">ความสามารถ</span>ใน Trove",
+  "Everything we have written up, in one place. More as we go.": "ทุกอย่างที่เราเขียนไว้ รวมอยู่ในที่เดียว และจะมีเพิ่มอีก",
+  "No guides are available right now.": "ขณะนี้ยังไม่มีไกด์ให้ใช้งาน",
+  "Trove <span class=\"highlight-blue\">Guides</span>": "<span class=\"highlight-blue\">ไกด์</span> Trove",
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "ทุกความสามารถของเจม แหวน คลาส สตาร์ชาร์ต และพันธมิตร — เปลี่ยนอะไร ใช้กับใคร และตัวเลขเบื้องหลัง"
 }

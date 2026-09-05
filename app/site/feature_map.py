@@ -49,6 +49,7 @@ SITE_FEATURE_FLAGS = {
     "calculators_enabled": feature_flags.CALCULATORS_FLAG,
     "gems_guide_enabled": feature_flags.GEMS_GUIDE_FLAG,
     "abilities_enabled": feature_flags.ABILITIES_FLAG,
+    "guides_enabled": feature_flags.GUIDES_FLAG,
     "fishing_guide_enabled": feature_flags.FISHING_GUIDE_FLAG,
     "dressing_room_enabled": feature_flags.DRESSING_ROOM_FLAG,
     "dressing_room_page_enabled": feature_flags.DRESSING_ROOM_PAGE_FLAG,
@@ -201,6 +202,8 @@ def feature_blocks(p: str, f: dict) -> bool:
     # /v1 API), so only the page route needs blocking.
     if not f["abilities_enabled"] and p in ("/abilities", "/gem-abilities"):
         return False
+    if not f["guides_enabled"] and p == "/guides":
+        return False
     if not f["gems_guide_enabled"] and p == "/gems-guide":
         return True
     # Same shape as the gems guide: a client-rendered explainer whose only read
@@ -257,6 +260,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/gem-simulator", "gem_simulator_enabled"),
     ("/gems-guide", "gems_guide_enabled"),
     ("/abilities", "abilities_enabled"),
+    ("/guides", "guides_enabled"),
     ("/fishing-guide", "fishing_guide_enabled"),
     ("/dressing-room", "dressing_room_page_enabled"),
     ("/sound-studio", "sound_studio_enabled"),

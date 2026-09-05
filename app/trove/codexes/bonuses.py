@@ -91,6 +91,10 @@ STAT_LABELS: dict[int, str] = {
     0x0E: "Lasermancy", 0x0F: "Attack Speed", 0x10: "Flask Capacity",
     0x11: "Crafting Speed", 0x15: "Experience Gain", 0x16: "Critical Damage",
     0x27: "Light",
+    # Not named by any hand-written data file, but they turn up on allies and gems,
+    # where a raw `$Stat_…` key is what the reader would otherwise see.
+    0x03: "Maximum Energy", 0x0A: "Superstition",
+    0x1B: "Projectile Speed", 0x22: "Adventurine Gain",
 }
 
 # Operation byte -> name. The game's own `KModType` reflection table (Trove_x64.exe,
