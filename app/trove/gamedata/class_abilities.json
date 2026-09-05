@@ -1,0 +1,1298 @@
+[
+    {
+        "name": "Boomeranger",
+        "game_folder": "adventurer",
+        "abilities": [
+            {
+                "name": "Boomerangs!!!!",
+                "description": "Throws three boomerangs that returns after hitting an enemy or wall. If caught the player will gain increased attack and movement speed for a short time. Boomerangs have a chance to stun. This ability has a stock of 4.",
+                "prefab": "abilities/adventurer/revamp/boomerang_bow",
+                "stages": [
+                    {
+                        "name": "Boomerang Bullet Bow",
+                        "prefab": "abilities/adventurer/revamp/boomerang_bullet_bow",
+                        "base": 10.0,
+                        "multiplier": 6.5
+                    },
+                    {
+                        "name": "Boomerang Bullet Bow",
+                        "prefab": "abilities/adventurer/revamp/boomerang_bullet_bow",
+                        "base": 10.0,
+                        "multiplier": 6.5
+                    }
+                ]
+            },
+            {
+                "name": "Boomerang of the Wind",
+                "description": "Throws a large boomerang that deals damage to enemies it passes through. If caught the player will gain increased attack and movement speed for a short time. Additionally, catching the Boomerang will reduce cooldowns. The Boomerang has a chance to stun.",
+                "prefab": "abilities/adventurer/revamp/boomerang_melee",
+                "stages": [
+                    {
+                        "name": "Boomerang Bullet Melee",
+                        "prefab": "abilities/adventurer/revamp/boomerang_bullet_melee",
+                        "base": 10.0,
+                        "multiplier": 0.0
+                    },
+                    {
+                        "name": "Boomerang Bullet Melee",
+                        "prefab": "abilities/adventurer/revamp/boomerang_bullet_melee",
+                        "base": 10.0,
+                        "multiplier": 0.0
+                    },
+                    {
+                        "name": "Boomerang Damage Effect Melee",
+                        "prefab": "abilities/adventurer/revamp/boomerang_damage_effect_melee",
+                        "base": 0.0,
+                        "multiplier": 10.0
+                    }
+                ]
+            },
+            {
+                "name": "Final Fairy",
+                "description": "",
+                "prefab": "abilities/adventurer/revamp/passive_dummy",
+                "stages": [
+                    {
+                        "name": "Basic Attack Melee Third Combo",
+                        "prefab": "abilities/adventurer/revamp/basic_attack_melee_third_combo",
+                        "base": 10.0,
+                        "multiplier": 4.5
+                    },
+                    {
+                        "name": "Basic Melee Cyclone Damage",
+                        "prefab": "abilities/adventurer/revamp/basic_melee_cyclone_damage",
+                        "base": 0.0,
+                        "multiplier": 2.5
+                    }
+                ]
+            },
+            {
+                "name": "Big Bomb",
+                "description": "Throws a timed bomb for big damage and causes knockback to enemies damaged by it.",
+                "prefab": "abilities/adventurer/revamp/bomb_bow",
+                "stages": [
+                    {
+                        "name": "Bomb Effect Bomb Trigger Bow",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_bomb_trigger_bow",
+                        "base": 0.0,
+                        "multiplier": 0.5
+                    },
+                    {
+                        "name": "Bomb Effect Explosion Bow",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_explosion_bow",
+                        "base": 10.0,
+                        "multiplier": 8.5
+                    }
+                ]
+            },
+            {
+                "name": "Tiny Bombs",
+                "description": "Throws out small, timed bombs that explodes dealing damage to targets. This ability has a stock of 5.",
+                "prefab": "abilities/adventurer/revamp/bomb_melee",
+                "stages": [
+                    {
+                        "name": "Bomb Effect Bomb Trigger Melee",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_bomb_trigger_melee",
+                        "base": 0.0,
+                        "multiplier": 0.5
+                    },
+                    {
+                        "name": "Bomb Effect Explosion Melee",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_explosion_melee",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    }
+                ]
+            },
+            {
+                "name": "Mysterious Urn",
+                "description": "Throws a mysterious urn for area damage and a random bonus.",
+                "prefab": "abilities/adventurer/revamp/random_throw",
+                "stages": [
+                    {
+                        "name": "Random Throw Effect Explosion",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 8.0
+                    },
+                    {
+                        "name": "Random Throw Effect Bomb Explosion",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_bomb_explosion",
+                        "base": 10.0,
+                        "multiplier": 6.5
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Melee",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_melee",
+                        "base": 10.0,
+                        "multiplier": 1.0
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Melee Big Chicken",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_melee_big_chicken",
+                        "base": 10.0,
+                        "multiplier": 4.0
+                    },
+                    {
+                        "name": "Random Throw Effect Phoenix Strike",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_phoenix_strike",
+                        "base": 5.0,
+                        "multiplier": 1.75
+                    },
+                    {
+                        "name": "Random Throw Effect Multi Pot Explosion",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_multi_pot_explosion",
+                        "base": 10.0,
+                        "multiplier": 8.0
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Chuck Pinzo Attack Melee",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_chuck_pinzo_attack_melee",
+                        "base": 0.0,
+                        "multiplier": 1.0
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Chuck Pinzo Slam",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_chuck_pinzo_slam",
+                        "base": 50.0,
+                        "multiplier": 2.0
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Chuck Pinzo Winduppunch",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_chuck_pinzo_winduppunch",
+                        "base": 100.0,
+                        "multiplier": 12.0
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Luna Stars Sword Melee",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_luna_stars_sword_melee",
+                        "base": 100.0,
+                        "multiplier": 10.0
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Luna Stars Sword Melee 1",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_luna_stars_sword_melee_1",
+                        "base": 100.0,
+                        "multiplier": 10.0
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Jellyfish Melee 1",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_jellyfish_melee_1",
+                        "base": 10.0,
+                        "multiplier": 10.0
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Jellyfish Melee 2",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_jellyfish_melee_2",
+                        "base": 10.0,
+                        "multiplier": 10.0
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Jellyfish Spin",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_jellyfish_spin",
+                        "base": 100.0,
+                        "multiplier": 15.0
+                    },
+                    {
+                        "name": "Random Throw Effect Phoenix Phlame",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_phoenix_phlame",
+                        "base": 0.0,
+                        "multiplier": 1.5
+                    },
+                    {
+                        "name": "Random Throw Effect Phoenix Ondeath Explosion",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_phoenix_ondeath_explosion",
+                        "base": 10.0,
+                        "multiplier": 5.5
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Luna Stars Fling Star P1 Bullet",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_luna_stars_fling_star_p1_bullet",
+                        "base": 150.0,
+                        "multiplier": 15.0
+                    },
+                    {
+                        "name": "Random Throw Big Pot Effect Explosion",
+                        "prefab": "abilities/adventurer/revamp/random_throw_big_pot_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 35.0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Bard",
+        "game_folder": "bard",
+        "abilities": [
+            {
+                "name": "Basic attack",
+                "description": "",
+                "prefab": "abilities/bard/basic_attack",
+                "stages": []
+            },
+            {
+                "name": "Nimble Dance",
+                "description": "A parry attack dealing damage in a cone and grants the user an invulnerability bubble for a short time. Nimble Dance removes one Melody. If used correctly during Bardsong buff it will add one Melody.",
+                "prefab": "abilities/bard/nimble_dance",
+                "stages": [
+                    {
+                        "name": "Nimble Dance",
+                        "prefab": "abilities/bard/nimble_dance",
+                        "base": 0.0,
+                        "multiplier": 2.0
+                    }
+                ]
+            },
+            {
+                "name": "Singing Crystal",
+                "description": "Throw out a singing crystal onto the ground. Whenever a song is used to buff nearby players, the area of effect is around both the bard and crystal. After using the ability Singing Crystal swaps into Crystal Pop.",
+                "prefab": "abilities/bard/singing_crystal",
+                "stages": [
+                    {
+                        "name": "Singing Crystal Effect Explosion",
+                        "prefab": "abilities/bard/singing_crystal_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    }
+                ]
+            },
+            {
+                "name": "Epic Riff",
+                "description": "Starts the Bardsong buff and adds one to Melody. Bardsong periodically spawns icons above the bards head. If the player uses the ability that matches the icon while it is active, they will gain Melody. All Melody is lost when Bardsong buff ends.",
+                "prefab": "abilities/bard/epic_riff",
+                "stages": [
+                    {
+                        "name": "Epic Riff Buff",
+                        "prefab": "abilities/bard/epic_riff_buff",
+                        "base": 10.0,
+                        "multiplier": 4.0
+                    }
+                ]
+            },
+            {
+                "name": "Jubilant Song",
+                "description": "Causes nearby allies to dance and gain increased movement speed and max energy. Buffs allies with a chance to restore energy when dealing damage. Removes three Melody when used.",
+                "prefab": "abilities/bard/jubilant_song",
+                "stages": []
+            },
+            {
+                "name": "Peaceful Song",
+                "description": "Heals nearby allies and buffs them with life gain when dealing damage for a short time. Additionally applies stun to nearby enemies. Removes three Melody when used.",
+                "prefab": "abilities/bard/peaceful_song",
+                "stages": []
+            }
+        ]
+    },
+    {
+        "name": "Candy Barbarian",
+        "game_folder": "candybarbarian",
+        "abilities": [
+            {
+                "name": "Vanilla Swirlwind",
+                "description": "The Candy Barbarian spins around, attacking all nearby foes and creating Healing Candy for himself.",
+                "prefab": "abilities/candybarbarian/swirlwind",
+                "stages": [
+                    {
+                        "name": "Swirlwind",
+                        "prefab": "abilities/candybarbarian/swirlwind",
+                        "base": 10.0,
+                        "multiplier": 7.0
+                    }
+                ]
+            },
+            {
+                "name": "Gum Drop",
+                "description": "When attacked, the Candy Barbarian will sometimes drop rage-inducing Gum Drops, increasing attack speed, movement speed and physical damage.",
+                "prefab": "abilities/candybarbarian/passive_spawncandy",
+                "stages": []
+            },
+            {
+                "name": "Sugar Crash",
+                "description": "The Candy Barbarian leaps at enemies, dealing damage over an area and creating Gum Drops.",
+                "prefab": "abilities/candybarbarian/sugarcrash",
+                "stages": [
+                    {
+                        "name": "Sugarcrash",
+                        "prefab": "abilities/candybarbarian/sugarcrash",
+                        "base": 10.0,
+                        "multiplier": 6.5
+                    },
+                    {
+                        "name": "Sugarcrash",
+                        "prefab": "abilities/candybarbarian/sugarcrash",
+                        "base": 10.0,
+                        "multiplier": 0.0
+                    }
+                ]
+            },
+            {
+                "name": "Eis-Crom Cone",
+                "description": "The Candy Barbarian drops a large ice cream cone, dealing damage over an area, creating Gum Drops, and dropping Healing Candy for allies.",
+                "prefab": "abilities/candybarbarian/eiscromcone",
+                "stages": [
+                    {
+                        "name": "Eiscromcone Effect Explosion",
+                        "prefab": "abilities/candybarbarian/eiscromcone_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 16.75
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Chloromancer",
+        "game_folder": "chloromancer",
+        "abilities": [
+            {
+                "name": "Mini Bloom",
+                "description": "",
+                "prefab": "abilities/chloromancer/passive",
+                "stages": [
+                    {
+                        "name": "Seedling Effect Death",
+                        "prefab": "abilities/chloromancer/seedling_effect_death",
+                        "base": 0.0,
+                        "multiplier": 0.5
+                    },
+                    {
+                        "name": "Seedling Effect Flower Fullhealth Explosion",
+                        "prefab": "abilities/chloromancer/seedling_effect_flower_fullhealth_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.75
+                    }
+                ]
+            },
+            {
+                "name": "Green Gatling",
+                "description": "Throw a seed that grows into a plant. It will fire at a nearby target dealing damage. Healing your plants will make them grow faster.",
+                "prefab": "abilities/chloromancer/seedling",
+                "stages": [
+                    {
+                        "name": "Chloromancer Gatling Bullet",
+                        "prefab": "abilities/chloromancer/chloromancer_gatling_bullet",
+                        "base": 0.0,
+                        "multiplier": 1.2
+                    },
+                    {
+                        "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
+                        "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+                        "base": 0.0,
+                        "multiplier": 1.0
+                    }
+                ]
+            },
+            {
+                "name": "Leafy Lasher",
+                "description": "Lob a seed that grows into a plant that will damage and snare nearby enemies when fully grown. Healing your plants will make them grow faster.",
+                "prefab": "abilities/chloromancer/seedling_lasher",
+                "stages": [
+                    {
+                        "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
+                        "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+                        "base": 0.0,
+                        "multiplier": 1.0
+                    }
+                ]
+            },
+            {
+                "name": "Empowered Growth",
+                "description": "Empowers your Leafy Lasher and Green Gatling, allowing them to grow larger, faster! Green Gatling deals increased Damage. Leafy Lasher snare gains additional effectiveness.",
+                "prefab": "abilities/chloromancer/spawn_random_seedlings",
+                "stages": [
+                    {
+                        "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
+                        "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+                        "base": 0.0,
+                        "multiplier": 1.0
+                    },
+                    {
+                        "name": "Big Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
+                        "prefab": "abilities/chloromancer/ultimate/big_seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+                        "base": 0.0,
+                        "multiplier": 2.0
+                    },
+                    {
+                        "name": "Chloromancer Gatling Bullet",
+                        "prefab": "abilities/chloromancer/chloromancer_gatling_bullet",
+                        "base": 0.0,
+                        "multiplier": 1.2
+                    },
+                    {
+                        "name": "Big Chloromancer Gatling Bullet",
+                        "prefab": "abilities/chloromancer/ultimate/big_chloromancer_gatling_bullet",
+                        "base": 0.0,
+                        "multiplier": 2.5
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Vanguardian",
+        "game_folder": "crimefighter",
+        "abilities": [
+            {
+                "name": "Touchdown",
+                "description": "Become supercharged while gliding. When you land create a shockwave in front of your landing destination.",
+                "prefab": "abilities/crimefighter/passive",
+                "stages": [
+                    {
+                        "name": "Basic Attack Melee",
+                        "prefab": "abilities/crimefighter/basic_attack_melee",
+                        "base": 10.0,
+                        "multiplier": 4.5
+                    },
+                    {
+                        "name": "Fast Attack Melee",
+                        "prefab": "abilities/crimefighter/fast_attack_melee",
+                        "base": 10.0,
+                        "multiplier": 3.85
+                    },
+                    {
+                        "name": "Basic Attack Ranged Bullet",
+                        "prefab": "abilities/crimefighter/basic_attack_ranged_bullet",
+                        "base": 10.0,
+                        "multiplier": 2.8
+                    },
+                    {
+                        "name": "Basic Attack Ranged Bullet Burst",
+                        "prefab": "abilities/crimefighter/basic_attack_ranged_bullet_burst",
+                        "base": 10.0,
+                        "multiplier": 4.5
+                    },
+                    {
+                        "name": "Fast Attack Ranged Bullet Burst",
+                        "prefab": "abilities/crimefighter/fast_attack_ranged_bullet_burst",
+                        "base": 10.0,
+                        "multiplier": 4.5
+                    },
+                    {
+                        "name": "Divebomb Explosion Small",
+                        "prefab": "abilities/crimefighter/divebomb_explosion_small",
+                        "base": 10.0,
+                        "multiplier": 6.0
+                    }
+                ]
+            },
+            {
+                "name": "WIP Basic Attack",
+                "description": "",
+                "prefab": "abilities/crimefighter/basic_attack",
+                "stages": [
+                    {
+                        "name": "Basic Attack Melee Third Combo",
+                        "prefab": "abilities/crimefighter/basic_attack_melee_third_combo",
+                        "base": 10.0,
+                        "multiplier": 4.5
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Dino Tamer",
+        "game_folder": "dinotamer",
+        "abilities": [
+            {
+                "name": "Clever Snare",
+                "description": "Throws a sticky net which roots, energy drains, and damages enemies within its area over time. Hold button for larger nets that last longer and can be thrown farther. Dart attacks refresh the net.",
+                "prefab": "abilities/dinotamer/clever_snare",
+                "stages": [
+                    {
+                        "name": "Clever Snare Effect Dot",
+                        "prefab": "abilities/dinotamer/clever_snare_effect_dot",
+                        "base": 0.0,
+                        "multiplier": 3.5
+                    }
+                ]
+            },
+            {
+                "name": "Dino Buddy Food",
+                "description": "Killing an enemy caught in your Clever Snare will create meat that resets the cooldown on your Dino Buddy ability. Primary attack fires darts.",
+                "prefab": "abilities/dinotamer/passive_spawnmeatenergy",
+                "stages": []
+            },
+            {
+                "name": "Dino Buddy",
+                "description": "Throws a piece of meat on the ground which summons a random dinosaur to fight nearby enemies. Dino Buddies last 22 seconds.",
+                "prefab": "abilities/dinotamer/meat_summon",
+                "stages": []
+            },
+            {
+                "name": "Dino Mount",
+                "description": "Summons a special mount that increases Magic Damage and Movement Speed, adds splash damage to your dart attacks, stuns nearby foes when you call a Dino Buddy, and makes all Clever Snare nets max size!",
+                "prefab": "abilities/dinotamer/dinomount",
+                "stages": [
+                    {
+                        "name": "Basic Attack Bullet",
+                        "prefab": "abilities/dinotamer/basic_attack_bullet",
+                        "base": 10.0,
+                        "multiplier": 2.5
+                    },
+                    {
+                        "name": "Basic Attack Bullet",
+                        "prefab": "abilities/dinotamer/ultimate/basic_attack_bullet",
+                        "base": 10.0,
+                        "multiplier": 2.75
+                    },
+                    {
+                        "name": "Basic Attack Effect Aoe",
+                        "prefab": "abilities/dinotamer/ultimate/basic_attack_effect_aoe",
+                        "base": 0.0,
+                        "multiplier": 2.0
+                    },
+                    {
+                        "name": "Clever Snare Effect Dot",
+                        "prefab": "abilities/dinotamer/clever_snare_effect_dot",
+                        "base": 0.0,
+                        "multiplier": 3.5
+                    },
+                    {
+                        "name": "Clever Snare Effect Dot",
+                        "prefab": "abilities/dinotamer/ultimate/clever_snare_effect_dot",
+                        "base": 0.0,
+                        "multiplier": 4.75
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Dracolyte",
+        "game_folder": "dracolyte",
+        "abilities": [
+            {
+                "name": "Spit Fire",
+                "description": "If charged, your Familiar releases a fireball that deals damage over a small area. Damaging enemies with your basic attack will charge up your Familiar.",
+                "prefab": "abilities/dracolyte/dragon",
+                "stages": [
+                    {
+                        "name": "Dragon Effect Shot 2",
+                        "prefab": "abilities/dracolyte/dragon_effect_shot_2",
+                        "base": 10.0,
+                        "multiplier": 2.3
+                    },
+                    {
+                        "name": "Dragon Effect Explosion 2",
+                        "prefab": "abilities/dracolyte/dragon_effect_explosion_2",
+                        "base": 10.0,
+                        "multiplier": 4.15
+                    }
+                ]
+            },
+            {
+                "name": "Lil' Dragon",
+                "description": "A little dragon",
+                "prefab": "abilities/dracolyte/dragon_familiar",
+                "stages": []
+            },
+            {
+                "name": "Burnt Offering",
+                "description": "Throws a Dragon Idol on the ground that explodes after 3 seconds. The Dracolyte's attacks can detonate the Idol early, dealing damage over an area.",
+                "prefab": "abilities/dracolyte/idol_bomb",
+                "stages": [
+                    {
+                        "name": "Idol Bomb Effect Trigger",
+                        "prefab": "abilities/dracolyte/idol_bomb_effect_trigger",
+                        "base": 0.0,
+                        "multiplier": 0.5
+                    },
+                    {
+                        "name": "Idol Bomb Effect Explosion",
+                        "prefab": "abilities/dracolyte/idol_bomb_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 5.0
+                    }
+                ]
+            },
+            {
+                "name": "Avatar of Flame",
+                "description": "Transforms the Dracolyte into a dragon for 15 seconds, increasing movement speed, health regeneration, stability, and the damage done by the basic attack, while reducing damage taken to 50%.",
+                "prefab": "abilities/dracolyte/dragonman",
+                "stages": []
+            }
+        ]
+    },
+    {
+        "name": "Fae Trickster",
+        "game_folder": "faetrickster",
+        "abilities": [
+            {
+                "name": "Ego Blast",
+                "description": "If the Trickster has taken no damage for four seconds, their basic attack deals bonus damage.",
+                "prefab": "abilities/trickster/passive_attack_swap",
+                "stages": []
+            },
+            {
+                "name": "Blink",
+                "description": "Teleports the Trickster, leaving a decoy behind that enemies will attack.",
+                "prefab": "abilities/trickster/blink",
+                "stages": []
+            },
+            {
+                "name": "Glitterbomb",
+                "description": "Throws a shiny bomb which deals damage in an area and stuns enemies.",
+                "prefab": "abilities/trickster/glitterbomb",
+                "stages": [
+                    {
+                        "name": "Glitterbomb Effect Explosion",
+                        "prefab": "abilities/trickster/glitterbomb_effect_explosion",
+                        "base": 0.0,
+                        "multiplier": 6.75
+                    }
+                ]
+            },
+            {
+                "name": "Faerie Dance",
+                "description": "Summon 3 enchanted staves to attack the Trickster's enemies.",
+                "prefab": "abilities/trickster/summon_turrets",
+                "stages": [
+                    {
+                        "name": "Summon Turrets Effect Turret Bullet",
+                        "prefab": "abilities/trickster/summon_turrets_effect_turret_bullet",
+                        "base": 10.0,
+                        "multiplier": 4.5
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Gunslinger",
+        "game_folder": "gunslinger",
+        "abilities": [
+            {
+                "name": "Lucky Shot",
+                "description": "While in the air, damage dealt to enemies decreases the speed of the Gunslinger's descent. Dealing damage can cause the next Charged Sniper Shot to be full power without any charging time.",
+                "prefab": "abilities/gunslinger/revamp/passive_instant_charge_shot",
+                "stages": [
+                    {
+                        "name": "Charge Shot Snipe Effect Damage",
+                        "prefab": "abilities/gunslinger/revamp/charge_shot_snipe_effect_damage",
+                        "base": 0.0,
+                        "multiplier": 7.5
+                    }
+                ]
+            },
+            {
+                "name": "Charged Sniper Shot",
+                "description": "Hold Charged Shot for up to 0.85 seconds to increase its damage and radius. Applies a debuff that increases damage done to the target for 5 seconds. At max Charge when targets are below 35% health they take additional damage.",
+                "prefab": "abilities/gunslinger/revamp/charge_shot",
+                "stages": []
+            },
+            {
+                "name": "Charged Shot",
+                "description": "Good things come to those who wait.",
+                "prefab": "abilities/gunslinger/revamp/charge_shot_normal",
+                "stages": [
+                    {
+                        "name": "Charge Shot Nocharge Bullet",
+                        "prefab": "abilities/gunslinger/revamp/charge_shot_nocharge_bullet",
+                        "base": 10.0,
+                        "multiplier": 2.0
+                    },
+                    {
+                        "name": "Charge Shot Partialcharge Bullet",
+                        "prefab": "abilities/gunslinger/revamp/charge_shot_partialcharge_bullet",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    },
+                    {
+                        "name": "Charge Shot Fullcharge Bullet",
+                        "prefab": "abilities/gunslinger/revamp/charge_shot_fullcharge_bullet",
+                        "base": 0.0,
+                        "multiplier": 9.5
+                    },
+                    {
+                        "name": "Charge Shot Partialcharge Explosion",
+                        "prefab": "abilities/gunslinger/revamp/charge_shot_partialcharge_explosion",
+                        "base": 10.0,
+                        "multiplier": 1.75
+                    },
+                    {
+                        "name": "Charge Shot Fullcharge Explosion",
+                        "prefab": "abilities/gunslinger/revamp/charge_shot_fullcharge_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    }
+                ]
+            },
+            {
+                "name": "Blast Jump",
+                "description": "Launches the Gunslinger up into the air, damaging any nearby enemies.",
+                "prefab": "abilities/gunslinger/revamp/blast_jump",
+                "stages": [
+                    {
+                        "name": "Blast Jump Explosion",
+                        "prefab": "abilities/gunslinger/revamp/blast_jump_explosion",
+                        "base": 10.0,
+                        "multiplier": 6.0
+                    }
+                ]
+            },
+            {
+                "name": "Run and Gun",
+                "description": "Increases the Gunslinger's Movement Speed and Attack Speed, and allows the Gunslinger to run full speed while attacking.",
+                "prefab": "abilities/gunslinger/revamp/fast_attack",
+                "stages": []
+            }
+        ]
+    },
+    {
+        "name": "Ice Sage",
+        "game_folder": "icemage",
+        "abilities": [
+            {
+                "name": "Ice Crash",
+                "description": "Drops an icicle from the heavens, dealing damage over an area that chills enemies, slowing their movement speed. Also turns lava blocks into water blocks for a short time.",
+                "prefab": "abilities/icemage/icicledrop",
+                "stages": [
+                    {
+                        "name": "Icicledrop Effect Explosion",
+                        "prefab": "abilities/icemage/icicledrop_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 7.5
+                    }
+                ]
+            },
+            {
+                "name": "Coldhearted",
+                "description": "The Ice Sage's basic attack chills enemies, slowing their movement speed. Additionally, Ice Sages can walk across ice without slipping.",
+                "prefab": "abilities/icemage/passive_icewalking",
+                "stages": []
+            },
+            {
+                "name": "The Big Chill",
+                "description": "Freezes and damages all enemies around the Ice Sage for 3.5 seconds doing frostbite damage while frozen.",
+                "prefab": "abilities/icemage/freezeblast",
+                "stages": [
+                    {
+                        "name": "Freezeblast Effect Damage",
+                        "prefab": "abilities/icemage/freezeblast_effect_damage",
+                        "base": 0.0,
+                        "multiplier": 4.0
+                    },
+                    {
+                        "name": "Freezeblast Effect Damage",
+                        "prefab": "abilities/icemage/freezeblast_effect_damage",
+                        "base": 0.0,
+                        "multiplier": 0.69
+                    }
+                ]
+            },
+            {
+                "name": "Frozen Ward",
+                "description": "Increases the movement speed, damage, and attack speed of the Ice Sage while active. Reduces all incoming damage by 50% for a short time.",
+                "prefab": "abilities/icemage/iceward",
+                "stages": []
+            }
+        ]
+    },
+    {
+        "name": "Knight",
+        "game_folder": "knight",
+        "abilities": [
+            {
+                "name": "Retribution",
+                "description": "Every time the Knight takes damage, they will store up Retribution that increases the damage of their next attack. This can stack up to 3 times dealing additional damage for each stack. Basic attacks reduce targets outgoing damage by up to 10%. Additional attacks refresh this debuff.",
+                "prefab": "abilities/knight/passive_target_debuff",
+                "stages": [
+                    {
+                        "name": "Basic Melee Damage Override 1",
+                        "prefab": "abilities/knight/basic_melee_damage_override_1",
+                        "base": 10.0,
+                        "multiplier": 7.0
+                    },
+                    {
+                        "name": "Basic Melee Damage Override 2",
+                        "prefab": "abilities/knight/basic_melee_damage_override_2",
+                        "base": 10.0,
+                        "multiplier": 9.25
+                    },
+                    {
+                        "name": "Basic Melee Damage Override 3",
+                        "prefab": "abilities/knight/basic_melee_damage_override_3",
+                        "base": 10.0,
+                        "multiplier": 13.5
+                    }
+                ]
+            },
+            {
+                "name": "Smash",
+                "description": "Damages and briefly taunts all enemies in a cone in front of the Knight.",
+                "prefab": "abilities/knight/smash",
+                "stages": [
+                    {
+                        "name": "Smash",
+                        "prefab": "abilities/knight/smash",
+                        "base": 10.0,
+                        "multiplier": 8.5
+                    }
+                ]
+            },
+            {
+                "name": "Charge!",
+                "description": "Launches the Knight forward, taunting, stunning and damaging passing enemies.",
+                "prefab": "abilities/knight/charge",
+                "stages": [
+                    {
+                        "name": "Charge",
+                        "prefab": "abilities/knight/charge",
+                        "base": 10.0,
+                        "multiplier": 6.5
+                    },
+                    {
+                        "name": "Charge",
+                        "prefab": "abilities/knight/charge",
+                        "base": 10.0,
+                        "multiplier": 5.0
+                    }
+                ]
+            },
+            {
+                "name": "Iron Will",
+                "description": "Fully heals the Knight and reduces incoming damage by 50%. 7 nearby Trovians take 10% less damage and redirect 10% of incoming damage to the Knight for 10 seconds.",
+                "prefab": "abilities/knight/shield_heal",
+                "stages": []
+            }
+        ]
+    },
+    {
+        "name": "Lunar Lancer",
+        "game_folder": "lunarlancer",
+        "abilities": [
+            {
+                "name": "Lunacy",
+                "description": "Using abilities or attacking enemies gives Moon Power. Gather enough to become infused with the power of the moon. Lunar Lancers gain Moon Power instead of energy.",
+                "prefab": "abilities/lunarlancer/revamp/madness",
+                "stages": [
+                    {
+                        "name": "Basic Melee",
+                        "prefab": "abilities/lunarlancer/revamp/basic_melee",
+                        "base": 10.0,
+                        "multiplier": 2.8
+                    },
+                    {
+                        "name": "Two Hit Combo Transformed",
+                        "prefab": "abilities/lunarlancer/revamp/two_hit_combo_transformed",
+                        "base": 10.0,
+                        "multiplier": 6.8
+                    },
+                    {
+                        "name": "Lunar Leap Transformed",
+                        "prefab": "abilities/lunarlancer/revamp/lunar_leap_transformed",
+                        "base": 10.0,
+                        "multiplier": 11.5
+                    },
+                    {
+                        "name": "Spear Throw Grapple Effect Explosion",
+                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    },
+                    {
+                        "name": "Spear Throw Grapple Effect Explosion Buffed",
+                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion_buffed",
+                        "base": 10.0,
+                        "multiplier": 8.0
+                    },
+                    {
+                        "name": "Lunar Leap Explosion",
+                        "prefab": "abilities/lunarlancer/revamp/lunar_leap_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    },
+                    {
+                        "name": "Moon Blessing Transformed Spear Explosion",
+                        "prefab": "abilities/lunarlancer/revamp/moon_blessing_transformed_spear_explosion",
+                        "base": 10.0,
+                        "multiplier": 13.5
+                    },
+                    {
+                        "name": "Spear Throw Transformed Effect Spear",
+                        "prefab": "abilities/lunarlancer/revamp/spear_throw_transformed_effect_spear",
+                        "base": 10.0,
+                        "multiplier": 5.5
+                    },
+                    {
+                        "name": "Two Hit Combo Transformed Effect 2Nd Hit Override",
+                        "prefab": "abilities/lunarlancer/revamp/two_hit_combo_transformed_effect_2nd_hit_override",
+                        "base": 10.0,
+                        "multiplier": 7.5
+                    },
+                    {
+                        "name": "Moon Blessing Aoe Npc Effect",
+                        "prefab": "abilities/lunarlancer/revamp/moon_blessing_aoe_npc_effect",
+                        "base": 0.0,
+                        "multiplier": 1.5
+                    },
+                    {
+                        "name": "Moon Blessing Aoe Npc Effect",
+                        "prefab": "abilities/lunarlancer/revamp/moon_blessing_aoe_npc_effect",
+                        "base": 0.0,
+                        "multiplier": 1.5
+                    }
+                ]
+            },
+            {
+                "name": "Lunar Leap",
+                "description": "Jump up into the air and gain a slow fall. For a short time your grapple becomes Lunar Infused, dealing increased damage. After damaging enemies you gain an attack buff.",
+                "prefab": "abilities/lunarlancer/revamp/lunar_leap",
+                "stages": [
+                    {
+                        "name": "Lunar Leap Explosion",
+                        "prefab": "abilities/lunarlancer/revamp/lunar_leap_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    },
+                    {
+                        "name": "Spear Throw Grapple Effect Explosion",
+                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    },
+                    {
+                        "name": "Spear Throw Grapple Effect Explosion Buffed",
+                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion_buffed",
+                        "base": 10.0,
+                        "multiplier": 8.0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Neon Ninja",
+        "game_folder": "neonninja",
+        "abilities": [
+            {
+                "name": "Shadow Flip",
+                "description": "The Neon Ninja flips forward and enters Stealth Mode for 3 seconds, granting invisibility and a movement speed increase.",
+                "prefab": "abilities/neonninja/shadow_flip",
+                "stages": []
+            },
+            {
+                "name": "Shining Star",
+                "description": "The Neon Ninja's attacks can generate up to three Throwing Stars, which are thrown when using the basic attack while in Stealth Mode. This attack deals double critical damage when charges are at max.",
+                "prefab": "abilities/neonninja/shuriken",
+                "stages": []
+            },
+            {
+                "name": "Stasis Blade",
+                "description": "The Neon Ninja dashes forward. Enemies struck take damage and are rooted in place for 2 seconds.",
+                "prefab": "abilities/neonninja/stasis_blade",
+                "stages": [
+                    {
+                        "name": "Stasis Blade",
+                        "prefab": "abilities/neonninja/stasis_blade",
+                        "base": 10.0,
+                        "multiplier": 4.5
+                    }
+                ]
+            },
+            {
+                "name": "Final Technique",
+                "description": "The Neon Ninja's basic attacks hurl damaging energy swords which refresh the duration of Stasis Blade on enemies.",
+                "prefab": "abilities/neonninja/mark_for_death",
+                "stages": []
+            }
+        ]
+    },
+    {
+        "name": "Pirate Captain",
+        "game_folder": "piratelord",
+        "abilities": [
+            {
+                "name": "Plunderbuss",
+                "description": "Attacking enemies causes them to drop Doubloons, which generate energy and increase the damage of any active First Mate turret.",
+                "prefab": "abilities/piratelord/passive_spawndoubloon",
+                "stages": []
+            },
+            {
+                "name": "First Mate",
+                "description": "The Pirate's First Mate mans a turret that attacks enemies. Each time First Mate is used, it can be upgraded by picking up Doubloons.",
+                "prefab": "abilities/piratelord/cannon",
+                "stages": [
+                    {
+                        "name": "Cannon Bullet",
+                        "prefab": "abilities/piratelord/cannon_bullet",
+                        "base": 10.0,
+                        "multiplier": 3.0
+                    }
+                ]
+            },
+            {
+                "name": "Parrot",
+                "description": "Squawk",
+                "prefab": "abilities/piratelord/parrot_familiar",
+                "stages": []
+            },
+            {
+                "name": "Pretend Pirate",
+                "description": "Throws down a booby-trapped decoy that enemies will attack.",
+                "prefab": "abilities/piratelord/pirate_dummy",
+                "stages": [
+                    {
+                        "name": "Pirate Dummy Effect Explosion",
+                        "prefab": "abilities/piratelord/pirate_dummy_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    }
+                ]
+            },
+            {
+                "name": "Man o' War",
+                "description": "",
+                "prefab": "abilities/piratelord/man_o_war",
+                "stages": [
+                    {
+                        "name": "Man O War Explosion",
+                        "prefab": "abilities/piratelord/man_o_war_explosion",
+                        "base": 10.0,
+                        "multiplier": 6.5
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Shadow Hunter",
+        "game_folder": "shadowhunter",
+        "abilities": [
+            {
+                "name": "Dark Whispers",
+                "description": "Nearby enemies periodically receive a Shadow Mark, increasing damage done to them as well as making them visible through walls. When the Shadow Hunter uses a basic attack on Shadow Marked targets a small explosion is triggered at the target and the Shadow Hunter will gain one Seeker. Additionally, when dodging the Shadow Hunter gains a movement speed boost for a short time.",
+                "prefab": "abilities/shadowhunter/revamp/passive_shadowwhispers",
+                "stages": [
+                    {
+                        "name": "Basic Attack Bullet Damage",
+                        "prefab": "abilities/shadowhunter/revamp/basic_attack_bullet_damage",
+                        "base": 0.0,
+                        "multiplier": 3.75
+                    },
+                    {
+                        "name": "Basic Attack Fast Bullet Damage",
+                        "prefab": "abilities/shadowhunter/revamp/basic_attack_fast_bullet_damage",
+                        "base": 0.0,
+                        "multiplier": 2.0
+                    },
+                    {
+                        "name": "Shadowmark Basic Fast Explosion Explosion",
+                        "prefab": "abilities/shadowhunter/revamp/shadowmark_basic_fast_explosion_explosion",
+                        "base": 10.0,
+                        "multiplier": 1.0
+                    }
+                ]
+            },
+            {
+                "name": "Sun Snare",
+                "description": "Throws a blinding trap which stuns and damages all nearby enemies for 2 seconds when triggered. Enemies damaged by it will also gain Shadow Mark.",
+                "prefab": "abilities/shadowhunter/revamp/sun_snare",
+                "stages": [
+                    {
+                        "name": "Sun Snare Effect Explosion",
+                        "prefab": "abilities/shadowhunter/revamp/sun_snare_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    },
+                    {
+                        "name": "Sun Snare Effect Trigger",
+                        "prefab": "abilities/shadowhunter/revamp/sun_snare_effect_trigger",
+                        "base": 0.0,
+                        "multiplier": 0.5
+                    },
+                    {
+                        "name": "Basic Attack Bullet Damage",
+                        "prefab": "abilities/shadowhunter/revamp/basic_attack_bullet_damage",
+                        "base": 0.0,
+                        "multiplier": 3.75
+                    },
+                    {
+                        "name": "Basic Attack Fast Bullet Damage",
+                        "prefab": "abilities/shadowhunter/revamp/basic_attack_fast_bullet_damage",
+                        "base": 0.0,
+                        "multiplier": 2.0
+                    },
+                    {
+                        "name": "Shadowmark Basic Fast Explosion Explosion",
+                        "prefab": "abilities/shadowhunter/revamp/shadowmark_basic_fast_explosion_explosion",
+                        "base": 10.0,
+                        "multiplier": 1.0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Solarion",
+        "game_folder": "solarion",
+        "abilities": [
+            {
+                "name": "Solar Flare",
+                "description": "",
+                "prefab": "abilities/solarion/solar_flare",
+                "stages": [
+                    {
+                        "name": "Solar Flare Bullet Explosion 01",
+                        "prefab": "abilities/solarion/solar_flare_bullet_explosion_01",
+                        "base": 10.0,
+                        "multiplier": 0.5
+                    },
+                    {
+                        "name": "Solar Flare Bullet Explosion 02",
+                        "prefab": "abilities/solarion/solar_flare_bullet_explosion_02",
+                        "base": 10.0,
+                        "multiplier": 1.0
+                    },
+                    {
+                        "name": "Solar Flare Bullet Explosion 03",
+                        "prefab": "abilities/solarion/solar_flare_bullet_explosion_03",
+                        "base": 10.0,
+                        "multiplier": 1.5
+                    },
+                    {
+                        "name": "Solar Flare Sun Burn",
+                        "prefab": "abilities/solarion/solar_flare_sun_burn",
+                        "base": 0.0,
+                        "multiplier": 1.5
+                    }
+                ]
+            },
+            {
+                "name": "Guiding Light",
+                "description": "Summon a pillar of light at target location that expands over time and deals damage to enemies in the area. Applies a Damage over time effect that gives Divine Radiance and Energy to the Solarion. Additionally, friendly targets will be healed. If Phoenix is in egg form this will cause the egg to explode faster. This ability has a stock of 3 and can be cast in rapid succession.",
+                "prefab": "abilities/solarion/guiding_light",
+                "stages": [
+                    {
+                        "name": "Guiding Light Beacon",
+                        "prefab": "abilities/solarion/guiding_light_beacon",
+                        "base": 0.0,
+                        "multiplier": 1.0
+                    },
+                    {
+                        "name": "Guiding Light Searing Glare",
+                        "prefab": "abilities/solarion/guiding_light_searing_glare",
+                        "base": 0.0,
+                        "multiplier": 1.5
+                    }
+                ]
+            },
+            {
+                "name": "Prismatic Blast",
+                "description": "Continually creates a Blast of energy that deals damage to enemies in an area around The Solarion. Each Blast costs energy, and buffs your Damage, Damage Reduction, Stability, and Movement Speed which stacks up to 5 times lasting until Prismatic Blast ends. Toggles off at zero energy ",
+                "prefab": "abilities/solarion/prismatic_burst",
+                "stages": [
+                    {
+                        "name": "Prismatic Burst Explosion",
+                        "prefab": "abilities/solarion/prismatic_burst_explosion",
+                        "base": 25.0,
+                        "multiplier": 4.0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Revenant",
+        "game_folder": "spirittank",
+        "abilities": [
+            {
+                "name": "Vengeful Spirits",
+                "description": "Basic attacks and Bulwark Bash return 5% of damage dealt in health after the first attack. Basic attack applies a debuff to targets increasing damage from all sources by 5%. Lasts 5 seconds. A Spirit Wraith will spawn to protect you from death, empowering you until it can do so again.",
+                "prefab": "abilities/spirittank/passive_spiritcharge",
+                "stages": [
+                    {
+                        "name": "Passive Minion Melee",
+                        "prefab": "abilities/spirittank/passive_minion_melee",
+                        "base": 10.0,
+                        "multiplier": 1.5
+                    },
+                    {
+                        "name": "Passive Minion Slam",
+                        "prefab": "abilities/spirittank/passive_minion_slam",
+                        "base": 10.0,
+                        "multiplier": 5.5
+                    }
+                ]
+            },
+            {
+                "name": "Bulwark Bash",
+                "description": "Damages and briefly taunts all enemies in a cone in front of the Revenant.",
+                "prefab": "abilities/spirittank/active_smash",
+                "stages": [
+                    {
+                        "name": "Active Smash",
+                        "prefab": "abilities/spirittank/active_smash",
+                        "base": 10.0,
+                        "multiplier": 9.5
+                    }
+                ]
+            },
+            {
+                "name": "Spirit Spears",
+                "description": "Damages enemies in a cone in front of the Revenant when held. Costs health to use. Activation drains 3% and each tick thereafter drains 5%. Press again to cancel.",
+                "prefab": "abilities/spirittank/active_spears",
+                "stages": [
+                    {
+                        "name": "Active Spears Periodic Npc Effect",
+                        "prefab": "abilities/spirittank/active_spears_periodic_npc_effect",
+                        "base": 0.0,
+                        "multiplier": 4.0
+                    }
+                ]
+            },
+            {
+                "name": "Spirit Storm",
+                "description": "A cyclone pulls foes toward the Revenant and randomly fires exploding spirit blasts, which damage enemies and heal players for 5%. Costs 20% health to use.",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm",
+                "stages": [
+                    {
+                        "name": "Ultimate Spirit Storm Aoe Npc Damage",
+                        "prefab": "abilities/spirittank/ultimate_spirit_storm_aoe_npc_damage",
+                        "base": 0.0,
+                        "multiplier": 3.15
+                    },
+                    {
+                        "name": "Ultimate Spirit Storm Explosion",
+                        "prefab": "abilities/spirittank/ultimate_spirit_storm_explosion",
+                        "base": 0.0,
+                        "multiplier": 2.0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Tomb Raiser",
+        "game_folder": "tombraiser",
+        "abilities": [
+            {
+                "name": "Banshee's Boon",
+                "description": "Turns you into a ghost, which reduces damage taken by 90% and causes your primary attacks to affect all nearby enemies and Skellittles. Banshee's Boon rapidly depletes your energy and ends when energy reaches 0.",
+                "prefab": "abilities/tombraiser/ghost_form",
+                "stages": []
+            },
+            {
+                "name": "Grave Goliath",
+                "description": "Gather the Restless Souls possessing your Skellittles to summon a Grave Goliath! The more Skellittles that are possessed, the stronger the Grave Goliath is.",
+                "prefab": "abilities/tombraiser/ultimate_minion",
+                "stages": [
+                    {
+                        "name": "Ultimate Minion Effect Minion Melee",
+                        "prefab": "abilities/tombraiser/ultimate_minion_effect_minion_melee",
+                        "base": 10.0,
+                        "multiplier": 1.3
+                    },
+                    {
+                        "name": "Ultimate Minion Effect Minion Slam",
+                        "prefab": "abilities/tombraiser/ultimate_minion_effect_minion_slam",
+                        "base": 10.0,
+                        "multiplier": 3.6
+                    }
+                ]
+            }
+        ]
+    }
+]
