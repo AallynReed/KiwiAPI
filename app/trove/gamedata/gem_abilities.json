@@ -1,0 +1,1759 @@
+[
+    {
+        "element": "Air",
+        "slug": "spirittank",
+        "name": "Aegis Assault",
+        "description": "Empowered Air Gem for the Revenant. Bulwark Bash loses its cooldown and applies a stacking damage-over-time effect to damaged enemies. DoT effect does not leech health. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "adventurer_swap",
+        "name": "Bawk-Bomb",
+        "description": "Empowered Air Gem for the Boomeranger. Big and Tiny Bombs become a Bawk-Bombs. These spawns chickens that attack enemies for a brief duration. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "tombraiser_swap",
+        "name": "Beckon Banshee",
+        "description": "Empowered Air Gem for the Tomb Raiser. Spawns a banshee minion that heals all of your other nearby minions. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "dracolyte_swap",
+        "name": "Burning Ward",
+        "description": "Empowered Air Gem for the Dracolyte. When a Burnt Offering detonates, it spawns a mini Dracolyte minion that attacks enemies for a brief duration. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "shield",
+        "name": "Cubic Curtain",
+        "description": "Empowered Air Gem for any class. Avoiding damage grants a protective shield, absorbing the next attack and stunning the attacker. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "dinotamer_dinotime",
+        "name": "Dino Time",
+        "description": "Empowered Air Gem for the Dino Tamer. Increases the duration of the ultimate ability, 'Summon Dino Mount.' Increases the attack speed of the ultimate ability, 'Acid Spit Projectile.' Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "dinotamer_tripleshot",
+        "name": "Empowered Hunting Dart",
+        "description": "Empowered Air Gem for the Dino Tamer. Changes the Hunting Dart from one dart to three. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            11,
+            110
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "npcdeath_explosion",
+        "name": "Explosive Epilogue",
+        "description": "Empowered Air Gem for any class. Killing enemies causes them to explode. Only one such Gem may be socketed at a time.\\n\\nThis gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/npcdeath_explosion_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Npcdeath Explosion Explosion",
+                "prefab": "abilities/gems/npcdeath_explosion_explosion",
+                "base": 10.0,
+                "multiplier": 4.5
+            }
+        ]
+    },
+    {
+        "element": "Air",
+        "slug": "trickster_egobuff",
+        "name": "Fae-go my Ego",
+        "description": "Empowered Air Gem for the Fae Trickster. Ego Blast now requires an additional hit of damage to remove the bonus. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "trickster_swap",
+        "name": "Faerocious Facsimile",
+        "description": "Empowered Air Gem for the Fae Trickster. Blink decoys are no longer immobile; they close on enemies and explode on contact, dealing damage and stunning enemies. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "crimefighter_attackswap",
+        "name": "Hero's Mantle",
+        "description": "Empowered Air Gem for the Vanguardian. Connecting with the final hit of a combo reduces ability cooldowns slightly. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "neonninja_swap",
+        "name": "Heuristic Haxstar",
+        "description": "Empowered Air Gem for the Neon Ninja. Thrown shuriken are larger and have a wider effect area, pierce enemies, and apply the Stasis Blade effect.  Three ring shuriken deal additional damage and bonus critical damage. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "bard_attackswap",
+        "name": "Melody Master",
+        "description": "Empowered Air Gem for the Bard. The Bard has increased attack range and bard songs increased effectiveness. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "nova_snare",
+        "name": "Mired Mojo",
+        "description": "Empowered Air Gem for any class. Taking damage has a chance to spawn a ring of snaring projectiles, reducing enemy Movement Speed. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/nova_snare_bullet",
+            "abilities/gems/nova_snare_effect_snare"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/nova_snare_effect_snare"
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/nova_snare_effect_snare"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Nova Snare Bullet",
+                "prefab": "abilities/gems/nova_snare_bullet",
+                "base": 0.0,
+                "multiplier": 1.5
+            }
+        ]
+    },
+    {
+        "element": "Air",
+        "slug": "gunslinger_swap",
+        "name": "Overcharged",
+        "description": "Empowered Air Gem for the Gunslinger. Run and Gun now decreases your attack speed, but all shots fired are explosive dealing damage in an area of effect. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "icemage",
+        "name": "Pain Freeze",
+        "description": "Empowered Air Gem for the Ice Sage. Basic Attacks now freeze enemies for 1 second on the first hit, in addition to their existing chill. Hitting enemies three times in a row with Basic Attacks causes them to explode, taking additional damage.\\n\\nOnly one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "chloromancer",
+        "name": "Plant Power",
+        "description": "Empowered Air Gem for the Chloromancer. When Empowered Growth is active the chloromancer heals nearby plants and allies.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "solarion_swap",
+        "name": "Prismatic Link",
+        "description": "Empowered Air Gem for the Solarion. Prismatic blast will now pulse around the Phoenix as well as the Solarion, allowing the Solarion to maintain range while attacking, and deal AOE damage around their Phoenix. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "npcdeath_damage_aura",
+        "name": "Pyrodisc",
+        "description": "Empowered Air Gem for any class. Killing an enemy has a chance to generate a flaming disc that damages nearby enemies. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/npcdeath_damage_aura_aoe_effect",
+            "abilities/gems/npcdeath_damage_aura_stats"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 30.0,
+                "amount": 30.0,
+                "prefab": "abilities/gems/npcdeath_damage_aura_stats"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Npcdeath Damage Aura Aoe Effect",
+                "prefab": "abilities/gems/npcdeath_damage_aura_aoe_effect",
+                "base": 0.0,
+                "multiplier": 2.75
+            }
+        ]
+    },
+    {
+        "element": "Air",
+        "slug": "piratelord_swap",
+        "name": "Razing Tide",
+        "description": "Empowered Air Gem for the Pirate Captain. Throwing a First Mate or a Man o' War creates an explosion. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "candybarbarian_swap",
+        "name": "Scoop n' Gloop",
+        "description": "Empowered Air Gem for the Candy Barbarian. Sugar Crash now leaps straight up and crashes down, vacuuming enemies toward you and applying a brief snare. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "shadowhunter_swap",
+        "name": "Shadow Blitz",
+        "description": "Empowered Air Gem for Shadow Hunter. Basic attack becomes a rapid-fire stream of arrows. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "lunarlancer_swap",
+        "name": "Shadow Lancer",
+        "description": "Empowered Air Gem for the Lunar Lancer. Basic attacks have a chance to spawn a dark shadow version of you that attacks enemies. In Lunarform the chance is increased. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "knight",
+        "name": "Spirit Squire",
+        "description": "Empowered Air Gem for the Knight. Charge no longer propels you forward. Instead, a Spirit Squire charges forward through multiple enemies, dealing damage and stunning them. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "nova_dot",
+        "name": "Spirit Surge",
+        "description": "Empowered Water Gem for any class. Taking damage has a chance to spawn a ring of projectiles, applying damage-over-time to enemies based on your max health. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/nova_dot_bullet",
+            "abilities/gems/nova_dot_effect"
+        ],
+        "stats": [
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/nova_dot_effect"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Nova Dot Bullet",
+                "prefab": "abilities/gems/nova_dot_bullet",
+                "base": 0.0,
+                "multiplier": 1.5
+            },
+            {
+                "name": "Nova Dot Effect",
+                "prefab": "abilities/gems/nova_dot_effect",
+                "base": 0.0,
+                "multiplier": 0.025
+            }
+        ]
+    },
+    {
+        "element": "Air",
+        "slug": "basic_attack_dot",
+        "name": "Stinging Curse",
+        "description": "Empowered Air Gem for any class. Dealing damage applies damage-over-time effects to enemies. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/basic_attack_dot_effect",
+            "abilities/gems/basic_attack_dot_stackable_effect"
+        ],
+        "stats": [
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/basic_attack_dot_stackable_effect"
+            },
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/basic_attack_dot_effect"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Basic Attack Dot Stackable Effect",
+                "prefab": "abilities/gems/basic_attack_dot_stackable_effect",
+                "base": 0.0,
+                "multiplier": 0.1
+            },
+            {
+                "name": "Basic Attack Dot Effect",
+                "prefab": "abilities/gems/basic_attack_dot_effect",
+                "base": 0.0,
+                "multiplier": 0.05
+            }
+        ]
+    },
+    {
+        "element": "Air",
+        "slug": "nova_stun",
+        "name": "Stunburst",
+        "description": "Empowered Air Gem for any class. Taking damage has a chance to spawn a ring of stunning projectiles, briefly disabling affected enemies. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/nova_stun_bullet"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Nova Stun Bullet",
+                "prefab": "abilities/gems/nova_stun_bullet",
+                "base": 0.0,
+                "multiplier": 1.5
+            }
+        ]
+    },
+    {
+        "element": "Air",
+        "slug": "trickster_shield",
+        "name": "Tricky Fae-scape",
+        "description": "Empowered Air Gem for the Fae Trickster. For a short time the Fae becomes immune to damage, has increased movement speed and a free Blink decoy is spawned. This gem activates when the Fae Trickster is low on health. This gem has a cooldown. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Air",
+        "slug": "increase_shoot_speed",
+        "name": "Volatile Velocity",
+        "description": "Empowered Air Gem for any class. Increases the shot speed of any projectile. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/increase_shoot_speed"
+        ],
+        "stats": [
+            {
+                "name": "$Stat_ShootProjectileSpeedMultiplier",
+                "stat": "$Stat_ShootProjectileSpeedMultiplier",
+                "op": "Multiply",
+                "value": 50.0,
+                "amount": 1.5,
+                "prefab": "abilities/gems/increase_shoot_speed"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "element": "Cosmic",
+        "slug": "battle_frenzy",
+        "name": "Berserk Battler",
+        "description": "Empowered Cosmic Gem for any class. Damaging enemies causes a frenzied state, adding a small increase to attack speed and Light. Continued damage to enemies extends the frenzied state until it causes a berserk state, greatly increasing attack speed and Light. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/battle_frenzy_large",
+            "abilities/gems/battle_frenzy_small"
+        ],
+        "stats": [
+            {
+                "name": "Attack Speed",
+                "stat": "$Stat_AttackSpeed",
+                "op": "Add",
+                "value": 25.0,
+                "amount": 25.0,
+                "prefab": "abilities/gems/battle_frenzy_large"
+            },
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 500.0,
+                "amount": 500.0,
+                "prefab": "abilities/gems/battle_frenzy_large"
+            },
+            {
+                "name": "Attack Speed",
+                "stat": "$Stat_AttackSpeed",
+                "op": "Add",
+                "value": 15.0,
+                "amount": 15.0,
+                "prefab": "abilities/gems/battle_frenzy_small"
+            },
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 250.0,
+                "amount": 250.0,
+                "prefab": "abilities/gems/battle_frenzy_small"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "element": "Cosmic",
+        "slug": "empyrean_barrier",
+        "name": "Empyrean Barrier",
+        "description": "Empowered Cosmic Gem for any class. Periodically applies a shield that reduces incoming damage. When the shield is destroyed it will explode, damaging nearby enemies. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/empyrean_barrier_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Empyrean Barrier Explosion",
+                "prefab": "abilities/gems/empyrean_barrier_explosion",
+                "base": 10.0,
+                "multiplier": 0.25
+            }
+        ]
+    },
+    {
+        "element": "Cosmic",
+        "slug": "flower_power",
+        "name": "Flower Power",
+        "description": "Empowered Cosmic Gem for any class. Taking damage has a chance to spawn a blast flower, which will decay and explode, damaging nearby enemies. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Cosmic",
+        "slug": "vampiric",
+        "name": "Vampirian Vanquisher",
+        "description": "Empowered Cosmic Gem for any class. Dealing a critical hit to enemies has a chance to increase movement speed and cause the next hit to leech health. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "spirittank",
+        "name": "Aegis Assault",
+        "description": "Empowered Fire Gem for the Revenant. Bulwark Bash loses its cooldown and applies a stacking damage-over-time effect to damaged enemies. DoT effect does not leech health. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "adventurer_swap",
+        "name": "Bawk-Bomb",
+        "description": "Empowered Fire Gem for the Boomeranger. Big and Tiny Bombs become a Bawk-Bombs. These spawns chickens that attack enemies for a brief duration. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "tombraiser_swap",
+        "name": "Beckon Banshee",
+        "description": "Empowered Fire Gem for the Tomb Raiser. Spawns a banshee minion that heals all of your other nearby minions. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "dracolyte_swap",
+        "name": "Burning Ward",
+        "description": "Empowered Fire Gem for the Dracolyte. When a Burnt Offering detonates, it spawns a mini Dracolyte minion that attacks enemies for a brief duration. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "shield",
+        "name": "Cubic Curtain",
+        "description": "Empowered Fire Gem for any class. Avoiding damage grants a protective shield, absorbing the next attack and stunning the attacker. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "dinotamer_dinotime",
+        "name": "Dino Time",
+        "description": "Empowered Fire Gem for the Dino Tamer. Increases the duration of the ultimate ability, 'Summon Dino Mount.' Increases the attack speed of the ultimate ability, 'Acid Spit Projectile.' Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "dinotamer_tripleshot",
+        "name": "Empowered Hunting Dart",
+        "description": "Empowered Fire Gem for the Dino Tamer. Changes the Hunting Dart from one dart to three. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "npcdeath_explosion",
+        "name": "Explosive Epilogue",
+        "description": "Empowered Fire Gem for any class. Killing enemies causes them to explode. Only one such Gem may be socketed at a time.\\n\\nThis gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/npcdeath_explosion_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Npcdeath Explosion Explosion",
+                "prefab": "abilities/gems/npcdeath_explosion_explosion",
+                "base": 10.0,
+                "multiplier": 4.5
+            }
+        ]
+    },
+    {
+        "element": "Fire",
+        "slug": "trickster_egobuff",
+        "name": "Fae-go my Ego",
+        "description": "Empowered Fire Gem for the Fae Trickster. Ego Blast now requires an additional hit of damage to remove the bonus. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "trickster_swap",
+        "name": "Faerocious Facsimile",
+        "description": "Empowered Fire Gem for the Fae Trickster. Blink decoys are no longer immobile; they close on enemies and explode on contact, dealing damage and stunning enemies. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "crimefighter_attackswap",
+        "name": "Hero's Mantle",
+        "description": "Empowered Fire Gem for the Vanguardian. Connecting with the final hit of a combo reduces ability cooldowns slightly. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "neonninja_swap",
+        "name": "Heuristic Haxstar",
+        "description": "Empowered Fire Gem for the Neon Ninja. Thrown shuriken are larger and have a wider effect area, pierce enemies, and apply the Stasis Blade effect.  Three ring shuriken deal additional damage and bonus critical damage. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "bard_attackswap",
+        "name": "Melody Master",
+        "description": "Empowered Fire Gem for the Bard. The Bard has increased attack range and bard songs increased effectiveness. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "nova_snare",
+        "name": "Mired Mojo",
+        "description": "Empowered Fire Gem for any class. Taking damage has a chance to spawn a ring of snaring projectiles, reducing enemy Movement Speed. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/nova_snare_bullet",
+            "abilities/gems/nova_snare_effect_snare"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/nova_snare_effect_snare"
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/nova_snare_effect_snare"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Nova Snare Bullet",
+                "prefab": "abilities/gems/nova_snare_bullet",
+                "base": 0.0,
+                "multiplier": 1.5
+            }
+        ]
+    },
+    {
+        "element": "Fire",
+        "slug": "gunslinger_swap",
+        "name": "Overcharged",
+        "description": "Empowered Fire Gem for the Gunslinger. Run and Gun now decreases your attack speed, but all shots fired are explosive dealing damage in an area of effect. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "icemage",
+        "name": "Pain Freeze",
+        "description": "Empowered Fire Gem for the Ice Sage. Basic Attacks now freeze enemies for 1 second on the first hit, in addition to their existing chill. Hitting enemies three times in a row with Basic Attacks causes them to explode, taking additional damage.\\n\\nOnly one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "chloromancer",
+        "name": "Plant Power",
+        "description": "Empowered Fire Gem for the Chloromancer. When Empowered Growth is active the chloromancer heals nearby plants and allies.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "solarion_swap",
+        "name": "Prismatic Link",
+        "description": "Empowered Fire Gem for the Solarion. Prismatic blast will now pulse around the Phoenix as well as the Solarion, allowing the Solarion to maintain range while attacking, and deal AOE damage around their Phoenix. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "npcdeath_damage_aura",
+        "name": "Pyrodisc",
+        "description": "Empowered Fire Gem for any class. Killing an enemy has a chance to generate a flaming disc that damages nearby enemies. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/npcdeath_damage_aura_aoe_effect",
+            "abilities/gems/npcdeath_damage_aura_stats"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 30.0,
+                "amount": 30.0,
+                "prefab": "abilities/gems/npcdeath_damage_aura_stats"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Npcdeath Damage Aura Aoe Effect",
+                "prefab": "abilities/gems/npcdeath_damage_aura_aoe_effect",
+                "base": 0.0,
+                "multiplier": 2.75
+            }
+        ]
+    },
+    {
+        "element": "Fire",
+        "slug": "piratelord_swap",
+        "name": "Razing Tide",
+        "description": "Empowered Fire Gem for the Pirate Captain. Throwing a First Mate or a Man o' War creates an explosion. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "candybarbarian_swap",
+        "name": "Scoop n' Gloop",
+        "description": "Empowered Fire Gem for the Candy Barbarian. Sugar Crash now leaps straight up and crashes down, vacuuming enemies toward you and applying a brief snare. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "shadowhunter_swap",
+        "name": "Shadow Blitz",
+        "description": "Empowered Fire Gem for Shadow Hunter. Basic attack becomes a rapid-fire stream of arrows. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "lunarlancer_swap",
+        "name": "Shadow Lancer",
+        "description": "Empowered Fire Gem for the Lunar Lancer. Basic attacks have a chance to spawn a dark shadow version of you that attacks enemies. In Lunarform the chance is increased. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "knight",
+        "name": "Spirit Squire",
+        "description": "Empowered Fire Gem for the Knight. Charge no longer propels you forward.  Instead, a Spirit Squire charges forward through multiple enemies, dealing damage and stunning them. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "nova_dot",
+        "name": "Spirit Surge",
+        "description": "Empowered Fire Gem for any class. Taking damage has a chance to spawn a ring of projectiles, applying damage-over-time to enemies based on your max health. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/nova_dot_bullet",
+            "abilities/gems/nova_dot_effect"
+        ],
+        "stats": [
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/nova_dot_effect"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Nova Dot Bullet",
+                "prefab": "abilities/gems/nova_dot_bullet",
+                "base": 0.0,
+                "multiplier": 1.5
+            },
+            {
+                "name": "Nova Dot Effect",
+                "prefab": "abilities/gems/nova_dot_effect",
+                "base": 0.0,
+                "multiplier": 0.025
+            }
+        ]
+    },
+    {
+        "element": "Fire",
+        "slug": "basic_attack_dot",
+        "name": "Stinging Curse",
+        "description": "Empowered Fire Gem for any class. Dealing damage applies damage-over-time effects to enemies. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/basic_attack_dot_effect",
+            "abilities/gems/basic_attack_dot_stackable_effect"
+        ],
+        "stats": [
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/basic_attack_dot_stackable_effect"
+            },
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/basic_attack_dot_effect"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Basic Attack Dot Stackable Effect",
+                "prefab": "abilities/gems/basic_attack_dot_stackable_effect",
+                "base": 0.0,
+                "multiplier": 0.1
+            },
+            {
+                "name": "Basic Attack Dot Effect",
+                "prefab": "abilities/gems/basic_attack_dot_effect",
+                "base": 0.0,
+                "multiplier": 0.05
+            }
+        ]
+    },
+    {
+        "element": "Fire",
+        "slug": "nova_stun",
+        "name": "Stunburst",
+        "description": "Empowered Fire Gem for any class. Taking damage has a chance to spawn a ring of stunning projectiles, briefly disabling affected enemies. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/nova_stun_bullet"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Nova Stun Bullet",
+                "prefab": "abilities/gems/nova_stun_bullet",
+                "base": 0.0,
+                "multiplier": 1.5
+            }
+        ]
+    },
+    {
+        "element": "Fire",
+        "slug": "trickster_shield",
+        "name": "Tricky Fae-scape",
+        "description": "Empowered Fire Gem for the Fae Trickster. For a short time the Fae becomes immune to damage, has increased movement speed and a free Blink decoy is spawned. This gem activates when the Fae Trickster is low on health. This gem has a cooldown. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Fire",
+        "slug": "increase_shoot_speed",
+        "name": "Volatile Velocity",
+        "description": "Empowered Fire Gem for any class. Increases the shot speed of any projectile. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/increase_shoot_speed"
+        ],
+        "stats": [
+            {
+                "name": "$Stat_ShootProjectileSpeedMultiplier",
+                "stat": "$Stat_ShootProjectileSpeedMultiplier",
+                "op": "Multiply",
+                "value": 50.0,
+                "amount": 1.5,
+                "prefab": "abilities/gems/increase_shoot_speed"
+            }
+        ],
+        "stages": []
+    },
+    {
+        "element": "Prismatic",
+        "slug": "mastery",
+        "name": "Masterful Prismatic Gem",
+        "description": "Empowered Prismatic Gem; can be socketed into any Empowered Gem slot. All colors of light softly radiate from a center of inner calm.",
+        "tiers": [
+            150
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "spirittank",
+        "name": "Aegis Assault",
+        "description": "Empowered Fire Gem for the Revenant. Bulwark Bash loses its cooldown and applies a stacking damage-over-time effect to damaged enemies. DoT effect does not leech health. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "adventurer_swap",
+        "name": "Bawk-Bomb",
+        "description": "Empowered Water Gem for the Boomeranger. Big and Tiny Bombs become a Bawk-Bombs. These spawns chickens that attack enemies for a brief duration. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "tombraiser_swap",
+        "name": "Beckon Banshee",
+        "description": "Empowered Water Gem for the Tomb Raiser. Spawns a banshee minion that heals all of your other nearby minions. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "dracolyte_swap",
+        "name": "Burning Ward",
+        "description": "Empowered Water Gem for the Dracolyte. When a Burnt Offering detonates, it spawns a mini Dracolyte minion that attacks enemies for a brief duration. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "shield",
+        "name": "Cubic Curtain",
+        "description": "Empowered Water Gem for any class. Avoiding damage grants a protective shield, absorbing the next attack and stunning the attacker. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "dinotamer_dinotime",
+        "name": "Dino Time",
+        "description": "Empowered Water Gem for the Dino Tamer. Increases the duration of the ultimate ability, 'Summon Dino Mount.' Increases the attack speed of the ultimate ability, 'Acid Spit Projectile.' Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "dinotamer_tripleshot",
+        "name": "Empowered Hunting Dart",
+        "description": "Empowered Water Gem for the Dino Tamer. Changes the Hunting Dart from one dart to three. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "npcdeath_explosion",
+        "name": "Explosive Epilogue",
+        "description": "Empowered Water Gem for any class. Killing enemies causes them to explode. Only one such Gem may be socketed at a time.\\n\\nThis gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/npcdeath_explosion_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Npcdeath Explosion Explosion",
+                "prefab": "abilities/gems/npcdeath_explosion_explosion",
+                "base": 10.0,
+                "multiplier": 4.5
+            }
+        ]
+    },
+    {
+        "element": "Water",
+        "slug": "trickster_egobuff",
+        "name": "Fae-go my Ego",
+        "description": "Empowered Water Gem for the Fae Trickster. Ego Blast now requires an additional hit of damage to remove the bonus. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "trickster_swap",
+        "name": "Faerocious Facsimile",
+        "description": "Empowered Water Gem for the Fae Trickster. Blink decoys are no longer immobile; they close on enemies and explode on contact, dealing damage and stunning enemies. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "crimefighter_attackswap",
+        "name": "Hero's Mantle",
+        "description": "Empowered Water Gem for the Vanguardian. Connecting with the final hit of a combo reduces ability cooldowns slightly. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "neonninja_swap",
+        "name": "Heuristic Haxstar",
+        "description": "Empowered Water Gem for the Neon Ninja. Thrown shuriken are larger and have a wider effect area, pierce enemies, and apply the Stasis Blade effect.  Three ring shuriken deal additional damage and bonus critical damage. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "bard_attackswap",
+        "name": "Melody Master",
+        "description": "Empowered Water Gem for the Bard. The Bard has increased attack range and bard songs increased effectiveness. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "nova_snare",
+        "name": "Mired Mojo",
+        "description": "Empowered Fire Gem for any class. Taking damage has a chance to spawn a ring of snaring projectiles, reducing enemy Movement Speed. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/nova_snare_bullet",
+            "abilities/gems/nova_snare_effect_snare"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/nova_snare_effect_snare"
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/nova_snare_effect_snare"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Nova Snare Bullet",
+                "prefab": "abilities/gems/nova_snare_bullet",
+                "base": 0.0,
+                "multiplier": 1.5
+            }
+        ]
+    },
+    {
+        "element": "Water",
+        "slug": "gunslinger_swap",
+        "name": "Overcharged",
+        "description": "Empowered Water Gem for the Gunslinger. Run and Gun now decreases your attack speed, but all shots fired are explosive dealing damage in an area of effect. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "icemage",
+        "name": "Pain Freeze",
+        "description": "Empowered Water Gem for the Ice Sage. Basic Attacks now freeze enemies for 1 second on the first hit, in addition to their existing chill. Hitting enemies three times in a row with Basic Attacks causes them to explode, taking additional damage.\\n\\nOnly one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "chloromancer",
+        "name": "Plant Power",
+        "description": "Empowered Water Gem for the Chloromancer. When Empowered Growth is active the chloromancer heals nearby plants and allies.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "solarion_swap",
+        "name": "Prismatic Link",
+        "description": "Empowered Water Gem for the Solarion. Prismatic blast will now pulse around the Phoenix as well as the Solarion, allowing the Solarion to maintain range while attacking, and deal AOE damage around their Phoenix. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "npcdeath_damage_aura",
+        "name": "Pyrodisc",
+        "description": "Empowered Water Gem for any class. Killing an enemy has a chance to generate a flaming disc that damages nearby enemies. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/npcdeath_damage_aura_aoe_effect",
+            "abilities/gems/npcdeath_damage_aura_stats"
+        ],
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 30.0,
+                "amount": 30.0,
+                "prefab": "abilities/gems/npcdeath_damage_aura_stats"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Npcdeath Damage Aura Aoe Effect",
+                "prefab": "abilities/gems/npcdeath_damage_aura_aoe_effect",
+                "base": 0.0,
+                "multiplier": 2.75
+            }
+        ]
+    },
+    {
+        "element": "Water",
+        "slug": "piratelord_swap",
+        "name": "Razing Tide",
+        "description": "Empowered Water Gem for the Pirate Captain. Throwing a First Mate or a Man o' War creates an explosion. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "candybarbarian_swap",
+        "name": "Scoop n' Gloop",
+        "description": "Empowered Water Gem for the Candy Barbarian. Sugar Crash now leaps straight up and crashes down, vacuuming enemies toward you and applying a brief snare. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "shadowhunter_swap",
+        "name": "Shadow Blitz",
+        "description": "Empowered Water Gem for the Shadow Hunter. Basic attack becomes a rapid-fire stream of arrows. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "lunarlancer_swap",
+        "name": "Shadow Lancer",
+        "description": "Empowered Water Gem for the Lunar Lancer. Basic attacks have a chance to spawn a dark shadow version of you that attacks enemies. In Lunarform the chance is increased. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "knight",
+        "name": "Spirit Squire",
+        "description": "Empowered Water Gem for the Knight. Charge no longer propels you forward.  Instead, a Spirit Squire charges forward through multiple enemies, dealing damage and stunning them. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "nova_dot",
+        "name": "Spirit Surge",
+        "description": "Empowered Water Gem for any class. Taking damage has a chance to spawn a ring of projectiles, applying damage-over-time to enemies based on your max health. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/nova_dot_bullet",
+            "abilities/gems/nova_dot_effect"
+        ],
+        "stats": [
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/nova_dot_effect"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Nova Dot Bullet",
+                "prefab": "abilities/gems/nova_dot_bullet",
+                "base": 0.0,
+                "multiplier": 1.5
+            },
+            {
+                "name": "Nova Dot Effect",
+                "prefab": "abilities/gems/nova_dot_effect",
+                "base": 0.0,
+                "multiplier": 0.025
+            }
+        ]
+    },
+    {
+        "element": "Water",
+        "slug": "basic_attack_dot",
+        "name": "Stinging Curse",
+        "description": "Empowered Water Gem for any class. Dealing damage applies damage-over-time effects to enemies. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/basic_attack_dot_effect",
+            "abilities/gems/basic_attack_dot_stackable_effect"
+        ],
+        "stats": [
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/basic_attack_dot_stackable_effect"
+            },
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Multiply",
+                "value": 100.0,
+                "amount": 0.0,
+                "prefab": "abilities/gems/basic_attack_dot_effect"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Basic Attack Dot Stackable Effect",
+                "prefab": "abilities/gems/basic_attack_dot_stackable_effect",
+                "base": 0.0,
+                "multiplier": 0.1
+            },
+            {
+                "name": "Basic Attack Dot Effect",
+                "prefab": "abilities/gems/basic_attack_dot_effect",
+                "base": 0.0,
+                "multiplier": 0.05
+            }
+        ]
+    },
+    {
+        "element": "Water",
+        "slug": "nova_stun",
+        "name": "Stunburst",
+        "description": "Empowered Water Gem for any class. Taking damage has a chance to spawn a ring of stunning projectiles, briefly disabling affected enemies. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/nova_stun_bullet"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Nova Stun Bullet",
+                "prefab": "abilities/gems/nova_stun_bullet",
+                "base": 0.0,
+                "multiplier": 1.5
+            }
+        ]
+    },
+    {
+        "element": "Water",
+        "slug": "trickster_shield",
+        "name": "Tricky Fae-scape",
+        "description": "Empowered Water Gem for the Fae Trickster. For a short time the Fae becomes immune to damage, has increased movement speed and a free Blink decoy is spawned. This gem activates when the Fae Trickster is low on health. This gem has a cooldown. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "increase_shoot_speed",
+        "name": "Volatile Velocity",
+        "description": "Empowered Water Gem for any class. Increases the shot speed of any projectile. Only one such Gem may be socketed at a time.",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [
+            "abilities/gems/increase_shoot_speed"
+        ],
+        "stats": [
+            {
+                "name": "$Stat_ShootProjectileSpeedMultiplier",
+                "stat": "$Stat_ShootProjectileSpeedMultiplier",
+                "op": "Multiply",
+                "value": 50.0,
+                "amount": 1.5,
+                "prefab": "abilities/gems/increase_shoot_speed"
+            }
+        ],
+        "stages": []
+    }
+]

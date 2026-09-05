@@ -66,6 +66,39 @@ class AugmentLookup(BaseModel):
     increase_percent: float
 
 
+class EmpoweredGemStat(BaseModel):
+    name: str                     # display label, e.g. "Light"
+    stat: str                     # the `$Stat_…` key it decoded from
+    op: str                       # "Add" | "MultiplySum" | "Multiply"
+    value: float                  # normalised for display
+    amount: float                 # the raw wire figure, before normalising
+    prefab: str
+
+
+class EmpoweredGemStage(BaseModel):
+    name: str
+    prefab: str
+    base: float
+    multiplier: float             # scales weapon damage; 3.5 is 350%
+
+
+class EmpoweredGem(BaseModel):
+    """An empowered gem's ability, decoded from the game files.
+
+    Distinct from `GemAbility`, which is the simulator's own enum and stays as it
+    is - gem build codes round-trip through those ids. This is the full in-game
+    set, per-class gems included, and it is reference data rather than an input.
+    """
+    element: str
+    slug: str
+    name: str
+    description: str
+    tiers: list[int]
+    prefabs: list[str]
+    stats: list[EmpoweredGemStat]
+    stages: list[EmpoweredGemStage]
+
+
 class GemLookups(BaseModel):
     tiers: list[TierLookup]
     types: list[LookupItem]
@@ -75,6 +108,7 @@ class GemLookups(BaseModel):
     augment_types: list[AugmentLookup]
     abilities: list[LookupItem]
     abilities_by_element: dict[str, list[int]]
+    empowered_gems: list[EmpoweredGem] = []
 
 
 # --- Evaluator -------------------------------------------------------------
