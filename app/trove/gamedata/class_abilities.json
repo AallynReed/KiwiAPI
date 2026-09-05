@@ -226,6 +226,53 @@
                 ]
             },
             {
+                "name": "Doubloon",
+                "description": "",
+                "prefab": "abilities/adventurer/revamp/random_throw_effect_energy_powerup",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
+            },
+            {
+                "name": "Big Bawk Bomb",
+                "description": "Throws a timed bomb for big damage and causes knockback to enemies damaged by it. These spawn chickens that attack enemies for a brief duration.",
+                "prefab": "abilities/adventurer/revamp/bawk_bomb_bow",
+                "icon": "",
+                "type": "",
+                "active": false,
+                "stages": [
+                    {
+                        "name": "Bawk Bomb Effect Explosion Bow",
+                        "prefab": "abilities/adventurer/revamp/bawk_bomb_effect_explosion_bow",
+                        "base": 10.0,
+                        "multiplier": 9.5
+                    },
+                    {
+                        "name": "Bawk Bomb Effect Minion Attack Bow",
+                        "prefab": "abilities/adventurer/revamp/bawk_bomb_effect_minion_attack_bow",
+                        "base": 5.0,
+                        "multiplier": 4.5
+                    }
+                ]
+            },
+            {
+                "name": "Tiny Bawk Bombs",
+                "description": "Throws out small, timed bombs that explodes dealing damage to targets. These spawn chickens that attack enemies for a brief duration. This ability has a stock of 5.",
+                "prefab": "abilities/adventurer/revamp/bawk_bomb_melee",
+                "icon": "",
+                "type": "",
+                "active": false,
+                "stages": [
+                    {
+                        "name": "Bawk Bomb Effect Explosion Melee",
+                        "prefab": "abilities/adventurer/revamp/bawk_bomb_effect_explosion_melee",
+                        "base": 10.0,
+                        "multiplier": 4.5
+                    }
+                ]
+            },
+            {
                 "name": "Basic Attack",
                 "description": "",
                 "icon": "icon_styles_gun",
@@ -333,6 +380,15 @@
                 "type": "",
                 "active": true,
                 "stages": []
+            },
+            {
+                "name": "Bardsong",
+                "description": "Maintains Melody as long as the correct Abilities are used.",
+                "prefab": "abilities/bard/bardsong",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
             }
         ]
     },
@@ -402,6 +458,24 @@
                         "multiplier": 16.75
                     }
                 ]
+            },
+            {
+                "name": "Sweet Candy",
+                "description": "It's good for you!",
+                "prefab": "abilities/candybarbarian/healthcandy",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
+            },
+            {
+                "name": "Sour Candy",
+                "description": "Makes you run and attack more quickly.",
+                "prefab": "abilities/candybarbarian/ragecandy",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
             },
             {
                 "name": "Basic Attack",
@@ -478,6 +552,12 @@
                         "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
                         "base": 0.0,
                         "multiplier": 1.0
+                    },
+                    {
+                        "name": "Big Chloromancer Gatling Bullet",
+                        "prefab": "abilities/chloromancer/ultimate/big_chloromancer_gatling_bullet",
+                        "base": 0.0,
+                        "multiplier": 2.5
                     }
                 ]
             },
@@ -488,7 +568,14 @@
                 "icon": "",
                 "type": "",
                 "active": true,
-                "stages": []
+                "stages": [
+                    {
+                        "name": "Big Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
+                        "prefab": "abilities/chloromancer/ultimate/big_seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+                        "base": 0.0,
+                        "multiplier": 2.0
+                    }
+                ]
             },
             {
                 "name": "Empowered Growth",
@@ -497,20 +584,7 @@
                 "icon": "",
                 "type": "",
                 "active": true,
-                "stages": [
-                    {
-                        "name": "Big Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
-                        "prefab": "abilities/chloromancer/ultimate/big_seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
-                        "base": 0.0,
-                        "multiplier": 2.0
-                    },
-                    {
-                        "name": "Big Chloromancer Gatling Bullet",
-                        "prefab": "abilities/chloromancer/ultimate/big_chloromancer_gatling_bullet",
-                        "base": 0.0,
-                        "multiplier": 2.5
-                    }
-                ]
+                "stages": []
             }
         ]
     },
@@ -601,6 +675,47 @@
                 "type": "",
                 "active": true,
                 "stages": []
+            },
+            {
+                "name": "Plasma Blast",
+                "description": "Detonate pure energy, dealing damage directly around you.",
+                "prefab": "abilities/crimefighter/energy_blast_melee",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [
+                    {
+                        "name": "Energy Blast Ranged Explosion",
+                        "prefab": "abilities/crimefighter/energy_blast_ranged_explosion",
+                        "base": 10.0,
+                        "multiplier": 7.0
+                    }
+                ]
+            },
+            {
+                "name": "Eyebeam",
+                "description": "Deal damage to enemies in front of you, increasing their damage taken from all sources.",
+                "prefab": "abilities/crimefighter/eye_beam_ranged",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [
+                    {
+                        "name": "Eye Beam Ranged",
+                        "prefab": "abilities/crimefighter/eye_beam_ranged",
+                        "base": 0.0,
+                        "multiplier": 8.0
+                    }
+                ]
+            },
+            {
+                "name": "Hero's Charge",
+                "description": "Swap into melee mode and dash forward, healing yourself. Nearby enemies are pulled towards you.",
+                "prefab": "abilities/crimefighter/transform_charge",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
             }
         ]
     },
@@ -630,6 +745,12 @@
                         "prefab": "abilities/dinotamer/clever_snare_effect_dot",
                         "base": 0.0,
                         "multiplier": 3.5
+                    },
+                    {
+                        "name": "Clever Snare Effect Dot",
+                        "prefab": "abilities/dinotamer/ultimate/clever_snare_effect_dot",
+                        "base": 0.0,
+                        "multiplier": 4.75
                     }
                 ]
             },
@@ -667,12 +788,6 @@
                         "prefab": "abilities/dinotamer/ultimate/basic_attack_effect_aoe",
                         "base": 0.0,
                         "multiplier": 2.0
-                    },
-                    {
-                        "name": "Clever Snare Effect Dot",
-                        "prefab": "abilities/dinotamer/ultimate/clever_snare_effect_dot",
-                        "base": 0.0,
-                        "multiplier": 4.75
                     }
                 ]
             }
@@ -999,6 +1114,15 @@
                 "type": "",
                 "active": true,
                 "stages": []
+            },
+            {
+                "name": "Pain Freeze",
+                "description": "The Ice Sage's empowered basic attack freezes for 1 second on the first hit. It also chills enemies, slowing their movement speed. Enemies hit three times with Basic Attack while \"Pain Freeze\" is equipped explode taking additional damage. Ice Sages can still walk across ice without slipping.",
+                "prefab": "abilities/icemage/passive_icewalking_highlightslot",
+                "icon": "",
+                "type": "",
+                "active": false,
+                "stages": []
             }
         ]
     },
@@ -1110,6 +1234,31 @@
                 "icon": "",
                 "type": "",
                 "active": true,
+                "stages": []
+            },
+            {
+                "name": "Lunar Leap",
+                "description": "Jump up into the air and gain a slow fall. For a short time your grapple becomes Lunar Infused, dealing increased damage. After damaging enemies you gain an attack buff.",
+                "prefab": "abilities/lunarlancer/revamp/lunar_leap",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [
+                    {
+                        "name": "Lunar Leap Explosion",
+                        "prefab": "abilities/lunarlancer/revamp/lunar_leap_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    }
+                ]
+            },
+            {
+                "name": "Lunarform",
+                "description": "This ability can be used at max Moon Power. When used you transform gaining increased movement speed, 50% reduced damage, and 130% increased attack damage. Moon Power drains over time and at zero you revert to your basic form.",
+                "prefab": "abilities/lunarlancer/revamp/moon_blessing_delegate",
+                "icon": "",
+                "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Two Hit Combo Transformed",
@@ -1118,28 +1267,42 @@
                         "multiplier": 6.8
                     },
                     {
-                        "name": "Lunar Leap Transformed",
-                        "prefab": "abilities/lunarlancer/revamp/lunar_leap_transformed",
+                        "name": "Two Hit Combo Transformed Effect 2Nd Hit Override",
+                        "prefab": "abilities/lunarlancer/revamp/two_hit_combo_transformed_effect_2nd_hit_override",
                         "base": 10.0,
-                        "multiplier": 11.5
-                    },
+                        "multiplier": 7.5
+                    }
+                ]
+            },
+            {
+                "name": "Lunar Infused Grapple",
+                "description": "Pull yourself towards your target. On impact deals heavy damage to nearby enemies, triggering a physical damage buff.",
+                "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_buffed",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [
+                    {
+                        "name": "Spear Throw Grapple Effect Explosion Buffed",
+                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion_buffed",
+                        "base": 10.0,
+                        "multiplier": 8.0
+                    }
+                ]
+            },
+            {
+                "name": "Blessing of the Moon",
+                "description": "",
+                "prefab": "abilities/lunarlancer/revamp/moon_blessing_transformed",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [
                     {
                         "name": "Moon Blessing Transformed Spear Explosion",
                         "prefab": "abilities/lunarlancer/revamp/moon_blessing_transformed_spear_explosion",
                         "base": 10.0,
                         "multiplier": 13.5
-                    },
-                    {
-                        "name": "Spear Throw Transformed Effect Spear",
-                        "prefab": "abilities/lunarlancer/revamp/spear_throw_transformed_effect_spear",
-                        "base": 10.0,
-                        "multiplier": 5.5
-                    },
-                    {
-                        "name": "Two Hit Combo Transformed Effect 2Nd Hit Override",
-                        "prefab": "abilities/lunarlancer/revamp/two_hit_combo_transformed_effect_2nd_hit_override",
-                        "base": 10.0,
-                        "multiplier": 7.5
                     },
                     {
                         "name": "Moon Blessing Aoe Npc Effect",
@@ -1162,35 +1325,36 @@
                 ]
             },
             {
-                "name": "Lunar Leap",
-                "description": "Jump up into the air and gain a slow fall. For a short time your grapple becomes Lunar Infused, dealing increased damage. After damaging enemies you gain an attack buff.",
-                "prefab": "abilities/lunarlancer/revamp/lunar_leap",
+                "name": "Eclipse Spear",
+                "description": "Throw a spear that deals area damage. Costs Moon Power.",
+                "prefab": "abilities/lunarlancer/revamp/spear_throw_transformed_throw",
                 "icon": "",
                 "type": "",
                 "active": true,
                 "stages": [
                     {
-                        "name": "Lunar Leap Explosion",
-                        "prefab": "abilities/lunarlancer/revamp/lunar_leap_explosion",
+                        "name": "Spear Throw Transformed Effect Spear",
+                        "prefab": "abilities/lunarlancer/revamp/spear_throw_transformed_effect_spear",
                         "base": 10.0,
-                        "multiplier": 3.5
-                    },
-                    {
-                        "name": "Spear Throw Grapple Effect Explosion Buffed",
-                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion_buffed",
-                        "base": 10.0,
-                        "multiplier": 8.0
+                        "multiplier": 5.5
                     }
                 ]
             },
             {
-                "name": "Lunarform",
-                "description": "This ability can be used at max Moon Power. When used you transform gaining increased movement speed, 50% reduced damage, and 130% increased attack damage. Moon Power drains over time and at zero you revert to your basic form.",
-                "prefab": "abilities/lunarlancer/revamp/moon_blessing_delegate",
+                "name": "Lunar Slam",
+                "description": "Jump up high into the air and slam down dealing high damage and stunning enemies. Costs Moon Power.",
+                "prefab": "abilities/lunarlancer/revamp/lunar_leap_transformed",
                 "icon": "",
                 "type": "",
                 "active": true,
-                "stages": []
+                "stages": [
+                    {
+                        "name": "Lunar Leap Transformed",
+                        "prefab": "abilities/lunarlancer/revamp/lunar_leap_transformed",
+                        "base": 10.0,
+                        "multiplier": 11.5
+                    }
+                ]
             }
         ]
     },
@@ -1312,6 +1476,15 @@
                         "multiplier": 6.5
                     }
                 ]
+            },
+            {
+                "name": "Doubloon",
+                "description": "",
+                "prefab": "abilities/piratelord/doubloon",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
             }
         ]
     },
@@ -1326,7 +1499,44 @@
                 "icon": "",
                 "type": "",
                 "active": true,
-                "stages": []
+                "stages": [
+                    {
+                        "name": "Seeker Effect Explosion",
+                        "prefab": "abilities/shadowhunter/revamp/seeker_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    },
+                    {
+                        "name": "Seeker Effect Explosion",
+                        "prefab": "abilities/shadowhunter/revamp/seeker_02/seeker_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    },
+                    {
+                        "name": "Seeker Effect Explosion",
+                        "prefab": "abilities/shadowhunter/revamp/seeker_03/seeker_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 4.5
+                    },
+                    {
+                        "name": "Seeker Effect Explosion",
+                        "prefab": "abilities/shadowhunter/revamp/seeker_04/seeker_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 6.0
+                    },
+                    {
+                        "name": "Seeker Effect Explosion",
+                        "prefab": "abilities/shadowhunter/revamp/seeker_05/seeker_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 7.5
+                    },
+                    {
+                        "name": "Seeker Effect Explosion",
+                        "prefab": "abilities/shadowhunter/revamp/seeker_06/seeker_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 9.0
+                    }
+                ]
             },
             {
                 "name": "Dark Whispers",
@@ -1377,6 +1587,61 @@
                         "multiplier": 0.5
                     }
                 ]
+            },
+            {
+                "name": "Arrow of the Goddess",
+                "description": "Applies Shadowmark to all nearby enemies. Empowers the Shadow Hunter's next Radiant Arrow, increasing its damage, doubling critical damage, and causing it to knock enemies back.",
+                "prefab": "abilities/shadowhunter/arrowofthegoddess",
+                "icon": "",
+                "type": "",
+                "active": false,
+                "stages": [
+                    {
+                        "name": "Shadowmark Normal Effect Damage",
+                        "prefab": "abilities/shadowhunter/shadowmark_normal_effect_damage",
+                        "base": 10.0,
+                        "multiplier": 15.0
+                    },
+                    {
+                        "name": "Radiantarrow Normal Effect Charged Damage",
+                        "prefab": "abilities/shadowhunter/radiantarrow_normal_effect_charged_damage",
+                        "base": 10.0,
+                        "multiplier": 10.0
+                    },
+                    {
+                        "name": "Shadowmark Ultimate Effect Damage",
+                        "prefab": "abilities/shadowhunter/shadowmark_ultimate_effect_damage",
+                        "base": 10.0,
+                        "multiplier": 32.0
+                    },
+                    {
+                        "name": "Radiantarrow Ultimate Effect Charged Damage",
+                        "prefab": "abilities/shadowhunter/radiantarrow_ultimate_effect_charged_damage",
+                        "base": 10.0,
+                        "multiplier": 9.5
+                    },
+                    {
+                        "name": "Basic Attack Fast Bullet Damage",
+                        "prefab": "abilities/shadowhunter/basic_attack_fast_bullet_damage",
+                        "base": 0.0,
+                        "multiplier": 2.25
+                    },
+                    {
+                        "name": "Shadowmark Basic Fast Explosion Explosion",
+                        "prefab": "abilities/shadowhunter/shadowmark_basic_fast_explosion_explosion",
+                        "base": 10.0,
+                        "multiplier": 10.0
+                    }
+                ]
+            },
+            {
+                "name": "Radiant Arrow",
+                "description": "An attack that can pierce through enemies and walls. Hold for at least 1 second to charge, causing it to deal extra damage to Shadowmarked enemies.",
+                "prefab": "abilities/shadowhunter/radiantarrow",
+                "icon": "",
+                "type": "",
+                "active": false,
+                "stages": []
             }
         ]
     },
@@ -1443,6 +1708,12 @@
                         "prefab": "abilities/solarion/familiar_egg_effect_fullhealth_explosion",
                         "base": 10.0,
                         "multiplier": 5.5
+                    },
+                    {
+                        "name": "Familiar Egg Effect Death",
+                        "prefab": "abilities/solarion/familiar_egg_effect_death",
+                        "base": 10.0,
+                        "multiplier": 0.5
                     }
                 ]
             },

@@ -274,19 +274,57 @@ def build() -> list[dict]:
         # absorbs the others' damage (Lunar Lancer's passive reaches the leap, the
         # spear throw and moon blessing, and reports all of it as its own).
         class_refs = [r for r in refs(data, afolder) if prefab_bytes(r) is not None]
-        boundaries = set(class_refs)
-        named = [r for r in class_refs
-                 if _label(aloc, afolder, r.rsplit("/", 1)[-1], prefab_bytes(r))[0]]
+
+        # A prefab that carries its own locale name IS an ability, wherever it sits
+        # in the chain. Class-level refs are not the whole story: some are stance
+        # dispatchers with no name of their own (Vanguardian's `energy_blast` only
+        # points at Plasma Blast and Eyebeam), and a class's transformed kit hangs
+        # further down (Lunar Lancer's Eclipse Spear, Shadow Hunter's Radiant
+        # Arrow). So walk everything the class reaches and promote whatever is
+        # named, class refs first so the primary kit leads the list.
+        reachable: list[str] = []
+        seen_reach = set()
+        queue = list(class_refs)
+        while queue:
+            rel = queue.pop(0)
+            if rel in seen_reach or len(seen_reach) > 400:
+                continue
+            body = prefab_bytes(rel)
+            if body is None:
+                continue
+            seen_reach.add(rel)
+            reachable.append(rel)
+            queue.extend(refs(body, afolder))
+
+        ordered = class_refs + [r for r in reachable if r not in set(class_refs)]
+        entries: list[tuple[str, str, str]] = []
+        for rel in ordered:
+            name, desc = _label(aloc, afolder, rel.rsplit("/", 1)[-1], prefab_bytes(rel))
+            if name:
+                entries.append((rel, name, desc))
+
+        boundaries = set(class_refs) | {rel for rel, _, _ in entries}
+        named = [rel for rel, _, _ in entries]
+        labels = {rel: (name, desc) for rel, name, desc in entries}
 
         abilities = []
-        seen_names: set[str] = set()
+        by_name: dict[str, dict] = {}
         for rel in named:
             root = prefab_bytes(rel)
-            name, desc = _label(aloc, afolder, rel.rsplit("/", 1)[-1], root)
-            if name in seen_names:
+            name, desc = labels[rel]
+            if name in by_name:
+                # Several prefabs share a name (Shadow Hunter ships Radiant Arrow
+                # three times, normal/ultimate/base). They are one ability, so fold
+                # the extra prefabs' damage in rather than dropping it - they are
+                # boundaries now, so no parent would pick it up either.
+                merged = by_name[name]
+                for stage in _stages(rel, root, afolder, boundaries - {rel}):
+                    if stage not in merged["stages"]:
+                        merged["stages"].append(stage)
+                if not merged["description"]:
+                    merged["description"] = desc
                 continue
-            seen_names.add(name)
-            abilities.append({
+            by_name[name] = {
                 "name": name,
                 "description": desc,
                 "prefab": rel,
@@ -298,7 +336,29 @@ def build() -> list[dict]:
                 # that still load but are no longer wired to the class.
                 "active": True,
                 "stages": _stages(rel, root, afolder, boundaries - {rel}),
-            })
+            }
+            abilities.append(by_name[name])
+        # Named abilities that exist on disk but the class prefab cannot reach:
+        # Shadow Hunter's Radiant Arrow, Boomeranger's Bawk Bomb. Some are the
+        # pre-revamp copies and some sit in revamp/ unwired, so reachability - not
+        # the folder - is the test. They still load, so list them, flagged inactive.
+        folder_root = os.path.join(PREFABS, "abilities", afolder)
+        for path in sorted(glob.glob(os.path.join(folder_root, "**", "*.binfab"), recursive=True)):
+            rel = "abilities/{}/{}".format(
+                afolder, os.path.relpath(path, folder_root)[: -len(".binfab")].replace(os.sep, "/"))
+            if rel in seen_reach:
+                continue
+            body = prefab_bytes(rel)
+            name, desc = _label(aloc, afolder, rel.rsplit("/", 1)[-1], body)
+            if not name or name in by_name:
+                continue
+            by_name[name] = {
+                "name": name, "description": desc, "prefab": rel,
+                "icon": "", "type": "", "active": False,
+                "stages": _stages(rel, body, afolder, boundaries),
+            }
+            abilities.append(by_name[name])
+
         entry = {
             "name": display.get(key, key.replace("$DisplayName_", "")),
             "game_folder": folder,
