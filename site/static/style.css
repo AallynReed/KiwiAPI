@@ -673,10 +673,11 @@ img.nav-account-avatar {
   left: auto;
   right: max(16px, calc((100vw - 1320px) / 2 + 24px));
   width: max-content;
-  /* Room for five content-sized columns. The old 940px was 100px short of what
-     the entries actually measure, and the columns only "fit" because their links
-     were overflowing into each other. */
-  max-width: min(1080px, calc(100vw - 32px));
+  /* Room for six content-sized columns. Sized by measuring the rendered group
+     widths (152-171px) plus the gaps, not guessed: 1080px fitted five and left
+     the sixth (Learn) orphaned on a row of its own. Narrower viewports still fall
+     back to wrapping, which is the graceful end of this rather than a collision. */
+  max-width: min(1240px, calc(100vw - 32px));
   transform: translateY(-6px) scale(.96);
 }
 .nav-dropdown.open .nav-dropdown-panel.nav-mega {
