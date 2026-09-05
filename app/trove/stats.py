@@ -105,6 +105,9 @@ def _clean_ability(a: dict) -> dict:
         "icon": a.get("icon", ""),
         "type": a.get("type", ""),
         "prefab": a.get("prefab", ""),
+        # False = still in the game files but the live class prefab no longer
+        # reaches it. Absent in hand-written data, so default to active.
+        "active": a.get("active", True),
         "stages": [_clean_stage(st) for st in a.get("stages", [])],
     }
 

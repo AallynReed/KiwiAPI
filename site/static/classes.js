@@ -18,6 +18,11 @@
   }
   // Decorative Font Awesome icon — hidden from assistive tech.
   function iconEl(cls) { var e = el("i", cls); e.setAttribute("aria-hidden", "true"); return e; }
+  // Ability damage: `multiplier` scales the class's damage stat, so 3.5 reads as
+  // 350%. Mirrors _fmt_stages() in classes_page.py so SSR and the client agree.
+  function fmtNum(v) {
+    return (v % 1 === 0) ? v.toLocaleString() : v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
   function fmtStat(s) {
     // {name, value, percentage} -> "131%" / "2,376"
     var v = (typeof s.value === "number") ? s.value : 0;
@@ -220,20 +225,55 @@
       })()));
     }
 
-    // Abilities (if the class data carries any)
-    var abilities = (c.abilities || []).filter(function (a) { return a && (a.name || a.description); });
-    if (abilities.length) {
-      box.appendChild(section(tr("Abilities"), "fa-bolt", (function () {
-        var list = el("div", "cls-abilities");
-        abilities.forEach(function (a) {
-          var card = el("div", "cls-ability");
-          if (a.name) card.appendChild(el("div", "cls-ability-name", a.name));
-          if (a.description) card.appendChild(el("div", "cls-ability-desc", a.description));
-          list.appendChild(card);
-        });
-        return list;
-      })()));
+    // Abilities. The ones the live class prefab no longer reaches still load in
+    // game but are not what the class does now, so they fold away separately.
+    var all = (c.abilities || []).filter(function (a) { return a && (a.name || a.description); });
+    var abilities = all.filter(function (a) { return a.active !== false; });
+    var legacy = all.filter(function (a) { return a.active === false; });
+
+    if (abilities.length) box.appendChild(section(tr("Abilities"), "fa-bolt", abilityList(abilities)));
+    if (legacy.length) {
+      var det = el("details", "cls-legacy");
+      var sum = el("summary");
+      sum.appendChild(iconEl("fa-solid fa-clock-rotate-left"));
+      sum.appendChild(el("span", "", tr("Legacy abilities") + " (" + legacy.length + ")"));
+      det.appendChild(sum);
+      det.appendChild(el("p", "cls-legacy-note",
+        tr("Still present in the game files, but the class no longer uses them.")));
+      det.appendChild(abilityList(legacy));
+      var sec = el("section", "cls-section");
+      sec.appendChild(det);
+      box.appendChild(sec);
     }
+  }
+
+  // Mirrors the ability_card macro in partials/class_detail.html.
+  function abilityList(abilities) {
+    var list = el("div", "cls-abilities");
+    abilities.forEach(function (a) {
+      var card = el("div", "cls-ability");
+      if (a.name) {
+        var head = el("div", "cls-ability-name", a.name);
+        if (a.type) head.appendChild(el("span", "cls-ability-kind", tr(a.type)));
+        card.appendChild(head);
+      }
+      if (a.description) card.appendChild(el("div", "cls-ability-desc", a.description));
+      var stages = (a.stages || []).filter(function (s) { return s && (s.multiplier || s.base); });
+      if (stages.length) {
+        var ul = el("ul", "cls-stages");
+        stages.forEach(function (s) {
+          var li = el("li");
+          li.appendChild(el("span", "cls-stage-name", s.name || ""));
+          var val = el("span", "cls-stage-val", s.multiplier ? fmtNum(s.multiplier * 100) + "%" : "");
+          if (s.base) val.appendChild(el("span", "cls-stage-base", "+" + fmtNum(s.base)));
+          li.appendChild(val);
+          ul.appendChild(li);
+        });
+        card.appendChild(ul);
+      }
+      list.appendChild(card);
+    });
+    return list;
   }
 
   function section(titleText, icon, node) {

@@ -47,6 +47,26 @@ def _meaningful(rows: list | None) -> list:
     return [b for b in (rows or []) if b and ((b.get("name") or "").strip() or b.get("value"))]
 
 
+def _fmt_stages(stages: list) -> list[dict]:
+    """An ability's damage rows, ready to print.
+
+    `multiplier` scales the class's damage stat, so it reads as a percentage -
+    the wire's 3.5 is 350%. `base` is a flat add, shown only when it is there.
+    Mirrors fmtStage() in classes.js so SSR and the client agree.
+    """
+    out = []
+    for s in stages:
+        mult, base = s.get("multiplier") or 0, s.get("base") or 0
+        if not mult and not base:
+            continue
+        out.append({
+            "name": s.get("name") or "",
+            "damage": f"{mult * 100:g}%" if mult else "",
+            "base": f"+{base:g}" if base else "",
+        })
+    return out
+
+
 def _detail(c: dict) -> dict:
     stats = [{"name": s["name"], "val": _fmt_stat(s)}
              for s in (c.get("stats") or []) if s and s.get("name")]
@@ -73,8 +93,17 @@ def _detail(c: dict) -> dict:
             "tiers": tiers,
         }
 
-    abilities = [{"name": a.get("name") or "", "description": a.get("description") or ""}
-                 for a in (c.get("abilities") or []) if a and (a.get("name") or a.get("description"))]
+    rows = [{
+        "name": a.get("name") or "",
+        "description": a.get("description") or "",
+        "type": a.get("type") or "",
+        "inactive": a.get("active") is False,
+        "stages": _fmt_stages(a.get("stages") or []),
+    } for a in (c.get("abilities") or []) if a and (a.get("name") or a.get("description"))]
+    # Abilities the live class prefab no longer reaches still load in game, but
+    # they are not what the class does now - so they sit in their own fold.
+    abilities = [a for a in rows if not a["inactive"]]
+    legacy = [a for a in rows if a["inactive"]]
 
     return {
         "tech": c["tech_name"],
@@ -87,6 +116,7 @@ def _detail(c: dict) -> dict:
         "bonuses": bonuses,
         "subclass": subclass,
         "abilities": abilities,
+        "legacy": legacy,
     }
 
 

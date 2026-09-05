@@ -445,6 +445,7 @@ class Ability(BaseModel):
     icon: str
     type: str                     # "Passive" | "Active" | "Upgrade" (blank when unknown)
     prefab: str = ""              # empty when the decode never reached this ability
+    active: bool = True           # False = still loads in game, but the class no longer uses it
     stages: list[AbilityStage]
 
 

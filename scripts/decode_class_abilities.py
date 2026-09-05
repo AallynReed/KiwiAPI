@@ -97,14 +97,39 @@ def stage_name(rel: str) -> str:
     return rel.rsplit("/", 1)[-1].replace("_", " ").title()
 
 
-def _label(aloc: dict[str, str], folder: str, stem: str) -> tuple[str | None, str]:
-    """Ability name + description. Three key shapes ship side by side."""
+def _resolve(aloc: dict[str, str], key: str) -> tuple[str | None, str]:
+    """A `$prefabs_abilities_…` key -> (name, description). Three shapes ship."""
     for suffix in ("_item_name", "_name", ""):
-        name = aloc.get(f"$prefabs_abilities_{folder}_{stem}{suffix}")
+        name = aloc.get(key + suffix)
         if name:
-            desc_suffix = "_item_description" if suffix == "_item_name" else "_description"
-            return name, aloc.get(f"$prefabs_abilities_{folder}_{stem}{desc_suffix}", "")
+            desc = "_item_description" if suffix == "_item_name" else "_description"
+            return name, aloc.get(key + desc, "")
     return None, ""
+
+
+def _label(aloc: dict[str, str], folder: str, stem: str, data: bytes | None = None) -> tuple[str | None, str]:
+    """Ability name + description.
+
+    The prefab usually names its own locale key, and that key is NOT derivable
+    from the filename - Vanguardian's `super_buff_melee` is `…_shockwave`
+    ("Force Flash"). So read the embedded key first and only fall back to
+    guessing from the stem, which is all the prefabs that embed nothing have.
+    """
+    if data is not None:
+        for text in (s[2] for s in harvest_strings(data)):
+            if not text.startswith("$prefabs_abilities") or text.endswith("_description"):
+                continue
+            # A prefab may embed the base key or the full `…_item_name` one; strip
+            # the suffix so the description lookup does not land on `…_name_description`.
+            base = text
+            for suffix in ("_item_name", "_name"):
+                if base.endswith(suffix):
+                    base = base[: -len(suffix)]
+                    break
+            name, desc = _resolve(aloc, base)
+            if name:
+                return name, desc
+    return _resolve(aloc, f"$prefabs_abilities_{folder}_{stem}")
 
 
 def _stages(rel: str, root: bytes, folder: str, siblings: set[str]) -> list[dict]:
@@ -203,7 +228,7 @@ def _overlay_curated(entry: dict, curated: list[dict], folder: str) -> list[dict
             continue
         entry["abilities"].append({
             "name": a["name"], "description": "", "icon": a.get("icon", ""),
-            "type": a.get("type", ""), "stages": a.get("stages", []),
+            "type": a.get("type", ""), "stages": a.get("stages", []), "active": False,
         })
     return entry["abilities"]
 
@@ -250,15 +275,16 @@ def build() -> list[dict]:
         # spear throw and moon blessing, and reports all of it as its own).
         class_refs = [r for r in refs(data, afolder) if prefab_bytes(r) is not None]
         boundaries = set(class_refs)
-        named = [r for r in class_refs if _label(aloc, afolder, r.rsplit("/", 1)[-1])[0]]
+        named = [r for r in class_refs
+                 if _label(aloc, afolder, r.rsplit("/", 1)[-1], prefab_bytes(r))[0]]
 
         abilities = []
         seen_names: set[str] = set()
         for rel in named:
-            name, desc = _label(aloc, afolder, rel.rsplit("/", 1)[-1])
+            root = prefab_bytes(rel)
+            name, desc = _label(aloc, afolder, rel.rsplit("/", 1)[-1], root)
             if name in seen_names:
                 continue
-            root = prefab_bytes(rel)
             seen_names.add(name)
             abilities.append({
                 "name": name,
@@ -266,6 +292,11 @@ def build() -> list[dict]:
                 "prefab": rel,
                 "icon": "",
                 "type": "",
+                # Reachable from the live class prefab. The tree also keeps the
+                # pre-revamp copies of most abilities - Gunslinger has 60 ability
+                # prefabs but the class only reaches 28 - and those are the ones
+                # that still load but are no longer wired to the class.
+                "active": True,
                 "stages": _stages(rel, root, afolder, boundaries - {rel}),
             })
         entry = {

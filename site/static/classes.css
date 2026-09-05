@@ -97,6 +97,30 @@
 .cls-ability { padding: 12px 14px; border-radius: 12px; background: var(--bg-deep); border: 1px solid var(--bg-line); }
 .cls-ability-name { font-weight: 600; margin-bottom: 4px; }
 .cls-ability-desc { font-size: .86rem; color: var(--text-mute); line-height: 1.55; }
+.cls-ability-kind { margin-left: 8px; font-size: .68rem; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 999px; vertical-align: 2px;
+  background: var(--bg-card); border: 1px solid var(--bg-line); color: var(--text-mute); }
+
+/* Superseded abilities - folded away so they don't read as current. */
+.cls-legacy > summary { display: flex; align-items: center; gap: 8px; cursor: pointer;
+  list-style: none; font-weight: 600; color: var(--text-mute); padding: 4px 0; }
+.cls-legacy > summary::-webkit-details-marker { display: none; }
+.cls-legacy > summary::after { content: "\f078"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+  font-size: .7rem; margin-left: auto; transition: transform .18s ease; }
+.cls-legacy[open] > summary::after { transform: rotate(180deg); }
+.cls-legacy > summary:hover { color: var(--text); }
+.cls-legacy > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.cls-legacy-note { margin: 4px 0 10px; font-size: .8rem; color: var(--text-mute); }
+@media (prefers-reduced-motion: reduce) { .cls-legacy > summary::after { transition: none; } }
+
+/* Damage rows: the multiplier scales the class's damage stat, so it prints as a %. */
+.cls-stages { list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px solid var(--bg-line);
+  display: flex; flex-direction: column; gap: 4px; }
+.cls-stages li { display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  font-size: .82rem; }
+.cls-stage-name { color: var(--text-mute); min-width: 0; overflow-wrap: anywhere; }
+.cls-stage-val { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.cls-stage-base { margin-left: 6px; font-weight: 500; color: var(--text-mute); }
 
 .cls-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .cls-chip { font-size: .8rem; padding: 4px 10px; border-radius: 999px; background: var(--bg-deep); border: 1px solid var(--bg-line); color: var(--text-mute); }

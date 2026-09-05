@@ -9,6 +9,7 @@
                 "prefab": "abilities/adventurer/revamp/boomerang_bow",
                 "icon": "icon_adventurer_boomerang",
                 "type": "Active",
+                "active": true,
                 "stages": [
                     {
                         "name": "Boomerang Bullet Bow",
@@ -24,6 +25,7 @@
                 "prefab": "abilities/adventurer/revamp/boomerang_melee",
                 "icon": "icon_adventurer_boomerang",
                 "type": "Active",
+                "active": true,
                 "stages": [
                     {
                         "name": "Boomerang Bullet Melee",
@@ -45,6 +47,7 @@
                 "prefab": "abilities/adventurer/revamp/passive_dummy",
                 "icon": "icon_adventurer_passive",
                 "type": "Passive",
+                "active": true,
                 "stages": [
                     {
                         "name": "Basic Attack Melee Third Combo",
@@ -66,6 +69,7 @@
                 "prefab": "abilities/adventurer/revamp/bomb_bow",
                 "icon": "icon_adventurer_bomb",
                 "type": "Active",
+                "active": true,
                 "stages": [
                     {
                         "name": "Bomb Effect Bomb Trigger Bow",
@@ -87,6 +91,7 @@
                 "prefab": "abilities/adventurer/revamp/bomb_melee",
                 "icon": "icon_adventurer_bomb",
                 "type": "Upgrade",
+                "active": true,
                 "stages": [
                     {
                         "name": "Bomb Effect Bomb Trigger Melee",
@@ -108,6 +113,7 @@
                 "prefab": "abilities/adventurer/revamp/random_throw",
                 "icon": "icon_adventurer_urn",
                 "type": "Active",
+                "active": true,
                 "stages": [
                     {
                         "name": "Random Throw Effect Explosion",
@@ -235,7 +241,8 @@
                         "base": 250,
                         "multiplier": 1.4
                     }
-                ]
+                ],
+                "active": false
             }
         ]
     },
@@ -249,6 +256,7 @@
                 "prefab": "abilities/bard/basic_attack",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -257,6 +265,7 @@
                 "prefab": "abilities/bard/nimble_dance",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Nimble Dance",
@@ -267,11 +276,21 @@
                 ]
             },
             {
+                "name": "Melody",
+                "description": "Melody is used for bards abilities and is generated from the Bardsong buff. Gaining melody rotates through the bardsongs abilities. Having high melody will also increase the bards basic attack.",
+                "prefab": "abilities/bard/passive",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
+            },
+            {
                 "name": "Singing Crystal",
                 "description": "Throw out a singing crystal onto the ground. Whenever a song is used to buff nearby players, the area of effect is around both the bard and crystal. After using the ability Singing Crystal swaps into Crystal Pop.",
                 "prefab": "abilities/bard/singing_crystal",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Singing Crystal Effect Explosion",
@@ -287,6 +306,7 @@
                 "prefab": "abilities/bard/epic_riff",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Epic Riff Buff",
@@ -302,6 +322,7 @@
                 "prefab": "abilities/bard/jubilant_song",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -310,6 +331,7 @@
                 "prefab": "abilities/bard/peaceful_song",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             }
         ]
@@ -324,6 +346,7 @@
                 "prefab": "abilities/candybarbarian/swirlwind",
                 "icon": "ico_barbarian_whirlwind_01",
                 "type": "Active",
+                "active": true,
                 "stages": [
                     {
                         "name": "Swirlwind",
@@ -339,6 +362,7 @@
                 "prefab": "abilities/candybarbarian/passive_spawncandy",
                 "icon": "ico_barbarian_passive_01",
                 "type": "Passive",
+                "active": true,
                 "stages": []
             },
             {
@@ -347,6 +371,7 @@
                 "prefab": "abilities/candybarbarian/sugarcrash",
                 "icon": "ico_barbarian_crash_01",
                 "type": "Active",
+                "active": true,
                 "stages": [
                     {
                         "name": "Sugarcrash",
@@ -368,6 +393,7 @@
                 "prefab": "abilities/candybarbarian/eiscromcone",
                 "icon": "ico_barbarian_cromcone_01",
                 "type": "Active",
+                "active": true,
                 "stages": [
                     {
                         "name": "Eiscromcone Effect Explosion",
@@ -388,7 +414,8 @@
                         "base": 150,
                         "multiplier": 1.85
                     }
-                ]
+                ],
+                "active": false
             },
             {
                 "name": "Scoop n' Gloop",
@@ -401,7 +428,8 @@
                         "base": 50,
                         "multiplier": 4.5
                     }
-                ]
+                ],
+                "active": false
             }
         ]
     },
@@ -415,6 +443,7 @@
                 "prefab": "abilities/chloromancer/passive",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Seedling Effect Death",
@@ -436,6 +465,7 @@
                 "prefab": "abilities/chloromancer/seedling",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Chloromancer Gatling Bullet",
@@ -457,6 +487,7 @@
                 "prefab": "abilities/chloromancer/seedling_lasher",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -465,6 +496,7 @@
                 "prefab": "abilities/chloromancer/spawn_random_seedlings",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Big Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
@@ -492,6 +524,7 @@
                 "prefab": "abilities/crimefighter/passive",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Basic Attack Ranged Bullet",
@@ -525,6 +558,7 @@
                 "prefab": "abilities/crimefighter/basic_attack",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Basic Attack Melee Third Combo",
@@ -533,6 +567,40 @@
                         "multiplier": 4.5
                     }
                 ]
+            },
+            {
+                "name": "Force Flash",
+                "description": "Pulse kinetic energy that damages nearby enemies while increasing movement speed and damage resistance.",
+                "prefab": "abilities/crimefighter/super_buff_melee",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [
+                    {
+                        "name": "Super Buff Melee Explosion",
+                        "prefab": "abilities/crimefighter/super_buff_melee_explosion",
+                        "base": 10.0,
+                        "multiplier": 2.0
+                    }
+                ]
+            },
+            {
+                "name": "Fired Up",
+                "description": "Infuse yourself with energy, increasing Jump, Damage and Attack Speed.",
+                "prefab": "abilities/crimefighter/super_buff_ranged",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
+            },
+            {
+                "name": "Laser Leap",
+                "description": "Swap into ranged mode and leap backwards, gaining energy.",
+                "prefab": "abilities/crimefighter/transform",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
             }
         ]
     },
@@ -541,11 +609,21 @@
         "game_folder": "dinotamer",
         "abilities": [
             {
+                "name": "Dino Buddy Food",
+                "description": "Killing an enemy caught in your Clever Snare will create meat that resets the cooldown on your Dino Buddy ability. Primary attack fires darts.",
+                "prefab": "abilities/dinotamer/passive_spawnmeatenergy_inactive",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
+            },
+            {
                 "name": "Clever Snare",
                 "description": "Throws a sticky net which roots, energy drains, and damages enemies within its area over time. Hold button for larger nets that last longer and can be thrown farther. Dart attacks refresh the net.",
                 "prefab": "abilities/dinotamer/clever_snare",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Clever Snare Effect Dot",
@@ -556,19 +634,12 @@
                 ]
             },
             {
-                "name": "Dino Buddy Food",
-                "description": "Killing an enemy caught in your Clever Snare will create meat that resets the cooldown on your Dino Buddy ability. Primary attack fires darts.",
-                "prefab": "abilities/dinotamer/passive_spawnmeatenergy",
-                "icon": "",
-                "type": "",
-                "stages": []
-            },
-            {
                 "name": "Dino Buddy",
                 "description": "Throws a piece of meat on the ground which summons a random dinosaur to fight nearby enemies. Dino Buddies last 22 seconds.",
                 "prefab": "abilities/dinotamer/meat_summon",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -577,6 +648,7 @@
                 "prefab": "abilities/dinotamer/dinomount",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Basic Attack Bullet",
@@ -616,6 +688,7 @@
                 "prefab": "abilities/dracolyte/dragon",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Dragon Effect Shot 2",
@@ -632,11 +705,21 @@
                 ]
             },
             {
+                "name": "Fireborn",
+                "description": "The Dracolyte's attacks cause enemies to Burn, increasing their damage taken from all sources. The Dracolyte also moves much faster through lava, and takes less damage from it than other Trovians.",
+                "prefab": "abilities/dracolyte/passive_master_buff",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
+            },
+            {
                 "name": "Lil' Dragon",
                 "description": "A little dragon",
                 "prefab": "abilities/dracolyte/dragon_familiar",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -645,6 +728,7 @@
                 "prefab": "abilities/dracolyte/idol_bomb",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Idol Bomb Effect Trigger",
@@ -666,6 +750,7 @@
                 "prefab": "abilities/dracolyte/dragonman",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             }
         ]
@@ -680,6 +765,7 @@
                 "prefab": "abilities/trickster/passive_attack_swap",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -688,6 +774,7 @@
                 "prefab": "abilities/trickster/blink",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -696,6 +783,7 @@
                 "prefab": "abilities/trickster/glitterbomb",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Glitterbomb Effect Explosion",
@@ -711,6 +799,7 @@
                 "prefab": "abilities/trickster/summon_turrets",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Summon Turrets Effect Turret Bullet",
@@ -732,6 +821,7 @@
                 "prefab": "abilities/gunslinger/revamp/passive_instant_charge_shot",
                 "icon": "ico_gunslinger_luckyshot_01",
                 "type": "Passive",
+                "active": true,
                 "stages": [
                     {
                         "name": "Charge Shot Snipe Effect Damage",
@@ -747,6 +837,7 @@
                 "prefab": "abilities/gunslinger/revamp/charge_shot",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -755,6 +846,7 @@
                 "prefab": "abilities/gunslinger/revamp/charge_shot_normal",
                 "icon": "ico_gunslinger_chargeshot_01",
                 "type": "Active",
+                "active": true,
                 "stages": [
                     {
                         "name": "Charge Shot Nocharge Bullet",
@@ -794,6 +886,7 @@
                 "prefab": "abilities/gunslinger/revamp/blast_jump",
                 "icon": "ico_gunslinger_blastjump_01",
                 "type": "Active",
+                "active": true,
                 "stages": [
                     {
                         "name": "Blast Jump Explosion",
@@ -809,6 +902,7 @@
                 "prefab": "abilities/gunslinger/revamp/fast_attack",
                 "icon": "ico_gunslinger_runandgun_01",
                 "type": "Passive",
+                "active": true,
                 "stages": []
             },
             {
@@ -822,7 +916,8 @@
                         "base": 200,
                         "multiplier": 1.33
                     }
-                ]
+                ],
+                "active": false
             },
             {
                 "name": "Overcharged",
@@ -840,7 +935,8 @@
                         "base": 25,
                         "multiplier": 3.5
                     }
-                ]
+                ],
+                "active": false
             }
         ]
     },
@@ -854,6 +950,7 @@
                 "prefab": "abilities/icemage/icicledrop",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Icicledrop Effect Explosion",
@@ -869,6 +966,7 @@
                 "prefab": "abilities/icemage/passive_icewalking",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -877,6 +975,7 @@
                 "prefab": "abilities/icemage/freezeblast",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Freezeblast Effect Damage",
@@ -898,6 +997,7 @@
                 "prefab": "abilities/icemage/iceward",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             }
         ]
@@ -912,6 +1012,7 @@
                 "prefab": "abilities/knight/passive_target_debuff",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Basic Melee Damage Override 1",
@@ -939,6 +1040,7 @@
                 "prefab": "abilities/knight/smash",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Smash",
@@ -954,6 +1056,7 @@
                 "prefab": "abilities/knight/charge",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Charge",
@@ -975,6 +1078,7 @@
                 "prefab": "abilities/knight/shield_heal",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             }
         ]
@@ -984,11 +1088,28 @@
         "game_folder": "lunarlancer",
         "abilities": [
             {
+                "name": "Grapple",
+                "description": "Pull yourself towards your target. On impact deals light damage to nearby enemies.",
+                "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [
+                    {
+                        "name": "Spear Throw Grapple Effect Explosion",
+                        "prefab": "abilities/lunarlancer/revamp/spear_throw_grapple_effect_explosion",
+                        "base": 10.0,
+                        "multiplier": 3.5
+                    }
+                ]
+            },
+            {
                 "name": "Lunacy",
                 "description": "Using abilities or attacking enemies gives Moon Power. Gather enough to become infused with the power of the moon. Lunar Lancers gain Moon Power instead of energy.",
                 "prefab": "abilities/lunarlancer/revamp/madness",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Two Hit Combo Transformed",
@@ -1046,6 +1167,7 @@
                 "prefab": "abilities/lunarlancer/revamp/lunar_leap",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Lunar Leap Explosion",
@@ -1060,6 +1182,15 @@
                         "multiplier": 8.0
                     }
                 ]
+            },
+            {
+                "name": "Lunarform",
+                "description": "This ability can be used at max Moon Power. When used you transform gaining increased movement speed, 50% reduced damage, and 130% increased attack damage. Moon Power drains over time and at zero you revert to your basic form.",
+                "prefab": "abilities/lunarlancer/revamp/moon_blessing_delegate",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
             }
         ]
     },
@@ -1073,6 +1204,7 @@
                 "prefab": "abilities/neonninja/shadow_flip",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -1081,6 +1213,7 @@
                 "prefab": "abilities/neonninja/shuriken",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -1089,6 +1222,7 @@
                 "prefab": "abilities/neonninja/stasis_blade",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Stasis Blade",
@@ -1104,6 +1238,7 @@
                 "prefab": "abilities/neonninja/mark_for_death",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             }
         ]
@@ -1118,6 +1253,7 @@
                 "prefab": "abilities/piratelord/passive_spawndoubloon",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -1126,6 +1262,7 @@
                 "prefab": "abilities/piratelord/cannon",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Cannon Bullet",
@@ -1141,6 +1278,7 @@
                 "prefab": "abilities/piratelord/parrot_familiar",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -1149,6 +1287,7 @@
                 "prefab": "abilities/piratelord/pirate_dummy",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Pirate Dummy Effect Explosion",
@@ -1164,6 +1303,7 @@
                 "prefab": "abilities/piratelord/man_o_war",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Man O War Explosion",
@@ -1180,11 +1320,21 @@
         "game_folder": "shadowhunter",
         "abilities": [
             {
+                "name": "Shadow Seekers",
+                "description": "",
+                "prefab": "abilities/shadowhunter/revamp/seeker_minion_fuelmanager",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": []
+            },
+            {
                 "name": "Dark Whispers",
                 "description": "Nearby enemies periodically receive a Shadow Mark, increasing damage done to them as well as making them visible through walls. When the Shadow Hunter uses a basic attack on Shadow Marked targets a small explosion is triggered at the target and the Shadow Hunter will gain one Seeker. Additionally, when dodging the Shadow Hunter gains a movement speed boost for a short time.",
                 "prefab": "abilities/shadowhunter/revamp/passive_shadowwhispers",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Basic Attack Bullet Damage",
@@ -1212,6 +1362,7 @@
                 "prefab": "abilities/shadowhunter/revamp/sun_snare",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Sun Snare Effect Explosion",
@@ -1239,6 +1390,7 @@
                 "prefab": "abilities/solarion/solar_flare",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Solar Flare Bullet Explosion 01",
@@ -1267,11 +1419,40 @@
                 ]
             },
             {
+                "name": "Phoenix Radiance",
+                "description": "",
+                "prefab": "abilities/solarion/passive",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [
+                    {
+                        "name": "Familiar Phoenix Strike",
+                        "prefab": "abilities/solarion/familiar_phoenix_strike",
+                        "base": 5.0,
+                        "multiplier": 1.75
+                    },
+                    {
+                        "name": "Familiar Phoenix Phlame",
+                        "prefab": "abilities/solarion/familiar_phoenix_phlame",
+                        "base": 0.0,
+                        "multiplier": 1.5
+                    },
+                    {
+                        "name": "Familiar Egg Effect Fullhealth Explosion",
+                        "prefab": "abilities/solarion/familiar_egg_effect_fullhealth_explosion",
+                        "base": 10.0,
+                        "multiplier": 5.5
+                    }
+                ]
+            },
+            {
                 "name": "Guiding Light",
                 "description": "Summon a pillar of light at target location that expands over time and deals damage to enemies in the area. Applies a Damage over time effect that gives Divine Radiance and Energy to the Solarion. Additionally, friendly targets will be healed. If Phoenix is in egg form this will cause the egg to explode faster. This ability has a stock of 3 and can be cast in rapid succession.",
                 "prefab": "abilities/solarion/guiding_light",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Guiding Light Beacon",
@@ -1293,6 +1474,7 @@
                 "prefab": "abilities/solarion/prismatic_burst",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Prismatic Burst Explosion",
@@ -1314,6 +1496,7 @@
                 "prefab": "abilities/spirittank/passive_spiritcharge",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Passive Minion Melee",
@@ -1335,6 +1518,7 @@
                 "prefab": "abilities/spirittank/active_smash",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Active Smash",
@@ -1350,6 +1534,7 @@
                 "prefab": "abilities/spirittank/active_spears",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Active Spears Periodic Npc Effect",
@@ -1365,6 +1550,7 @@
                 "prefab": "abilities/spirittank/ultimate_spirit_storm",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Ultimate Spirit Storm Aoe Npc Damage",
@@ -1387,11 +1573,28 @@
         "game_folder": "tombraiser",
         "abilities": [
             {
+                "name": "Bonetourage",
+                "description": "Consume all Restless Souls to attract Skellittles to fight for you. If you already have 6 Skellittles your excess Restless Souls will instead choose a Skellittle to possess for 30 seconds, causing them to take and deal increased damage.",
+                "prefab": "abilities/tombraiser/primary_base",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [
+                    {
+                        "name": "Throw Minion Effect Minion Melee",
+                        "prefab": "abilities/tombraiser/throw_minion_effect_minion_melee",
+                        "base": 10.0,
+                        "multiplier": 2.6
+                    }
+                ]
+            },
+            {
                 "name": "Banshee's Boon",
                 "description": "Turns you into a ghost, which reduces damage taken by 90% and causes your primary attacks to affect all nearby enemies and Skellittles. Banshee's Boon rapidly depletes your energy and ends when energy reaches 0.",
                 "prefab": "abilities/tombraiser/ghost_form",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": []
             },
             {
@@ -1400,6 +1603,7 @@
                 "prefab": "abilities/tombraiser/ultimate_minion",
                 "icon": "",
                 "type": "",
+                "active": true,
                 "stages": [
                     {
                         "name": "Ultimate Minion Effect Minion Melee",

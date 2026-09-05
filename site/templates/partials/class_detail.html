@@ -35,9 +35,19 @@
     </div>
 </section>
 {% endif %}
+{% macro ability_card(a) %}<div class="cls-ability">{% if a.name %}<div class="cls-ability-name">{{ a.name }}{% if a.type %}<span class="cls-ability-kind">{{ a.type }}</span>{% endif %}</div>{% endif %}{% if a.description %}<div class="cls-ability-desc">{{ a.description }}</div>{% endif %}{% if a.stages %}<ul class="cls-stages">{% for s in a.stages %}<li><span class="cls-stage-name">{{ s.name }}</span><span class="cls-stage-val">{{ s.damage }}{% if s.base %}<span class="cls-stage-base">{{ s.base }}</span>{% endif %}</span></li>{% endfor %}</ul>{% endif %}</div>{% endmacro %}
 {% if d.abilities %}
 <section class="cls-section">
     <h3 class="cls-section-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span>Abilities</span></h3>
-    <div class="cls-abilities">{% for a in d.abilities %}<div class="cls-ability">{% if a.name %}<div class="cls-ability-name">{{ a.name }}</div>{% endif %}{% if a.description %}<div class="cls-ability-desc">{{ a.description }}</div>{% endif %}</div>{% endfor %}</div>
+    <div class="cls-abilities">{% for a in d.abilities %}{{ ability_card(a) }}{% endfor %}</div>
+</section>
+{% endif %}
+{% if d.legacy %}
+<section class="cls-section">
+    <details class="cls-legacy">
+        <summary><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>Legacy abilities ({{ d.legacy | length }})</span></summary>
+        <p class="cls-legacy-note">Still present in the game files, but the class no longer uses them.</p>
+        <div class="cls-abilities">{% for a in d.legacy %}{{ ability_card(a) }}{% endfor %}</div>
+    </details>
 </section>
 {% endif %}
