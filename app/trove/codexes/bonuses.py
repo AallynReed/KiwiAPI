@@ -79,24 +79,6 @@ STAT_KEYS: dict[int, str] = {
     0x2C: "$Stat_MaxArmor",
 }
 
-# Stat id -> the label the site's own data files use, so decoded rows read the same
-# as the hand-written ones they sit beside (star_chart.json calls `$Stat_Mining`
-# "Lasermancy"). Only the stats those files actually name are listed; anything else
-# keeps its `$Stat_…` key.
-STAT_LABELS: dict[int, str] = {
-    0x00: "Physical Damage", 0x01: "Magic Damage", 0x02: "Maximum Health %",
-    0x04: "Health Regen", 0x05: "Energy Regen", 0x06: "Stability",
-    0x07: "Critical Hit", 0x08: "Movement Speed", 0x09: "Jump",
-    0x0B: "Damage Reduction", 0x0C: "Outgoing Damage", 0x0D: "Magic Find",
-    0x0E: "Lasermancy", 0x0F: "Attack Speed", 0x10: "Flask Capacity",
-    0x11: "Crafting Speed", 0x15: "Experience Gain", 0x16: "Critical Damage",
-    0x27: "Light",
-    # Not named by any hand-written data file, but they turn up on allies and gems,
-    # where a raw `$Stat_…` key is what the reader would otherwise see.
-    0x03: "Maximum Energy", 0x0A: "Superstition",
-    0x1B: "Projectile Speed", 0x22: "Adventurine Gain",
-}
-
 # Operation byte -> name. The game's own `KModType` reflection table (Trove_x64.exe,
 # listed right after `KStatType`) names all seven in order - MultiplySum, Add, Set,
 # Nullify, Multiply, Minimum, Maximum - and the wire byte is the zig-zag of the index,

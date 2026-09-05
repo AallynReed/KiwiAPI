@@ -3267,5 +3267,13 @@
   "Everything we have written up, in one place. More as we go.": "Tout ce que nous avons rédigé, au même endroit. Et d'autres à venir.",
   "No guides are available right now.": "Aucun guide n'est disponible pour le moment.",
   "Trove <span class=\"highlight-blue\">Guides</span>": "<span class=\"highlight-blue\">Guides</span> Trove",
-  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "Toutes les capacités de gemmes, d'anneaux, de classes, de carte stellaire et d'alliés : ce qu'elles changent, à qui elles servent et les chiffres derrière."
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "Toutes les capacités de gemmes, d'anneaux, de classes, de carte stellaire et d'alliés : ce qu'elles changent, à qui elles servent et les chiffres derrière.",
+  "Ally": "Allié",
+  "Every ally that grants a stat, and what it grants. Sort by any stat to find the best one for a build.": "Chaque allié qui accorde une statistique, et ce qu'il accorde. Triez par n'importe quelle statistique pour trouver le meilleur pour un build.",
+  "Name (A-Z)": "Nom (A-Z)",
+  "No allies match that search.": "Aucun allié ne correspond à cette recherche.",
+  "Sort by": "Trier par",
+  "Stats are decoded from the game's own ally files. Sorting by a stat shows only the allies that grant it.": "Les statistiques proviennent des fichiers d'alliés du jeu. Trier par une statistique n'affiche que les alliés qui l'accordent.",
+  "Trove <span class=\"highlight-blue\">Allies</span>": "<span class=\"highlight-blue\">Alliés</span> de Trove",
+  "allies": "alliés"
 }

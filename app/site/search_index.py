@@ -124,6 +124,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Gem Evaluator", "/gem-evaluator", "gem_evaluator_enabled", "fa-solid fa-magnifying-glass-chart", "Plan", "gems", "rate my gem"),
     _p("Gem Builds", "/gem-builds", "gem_builds_enabled", "fa-solid fa-wand-magic-sparkles", "Plan", "gems", "optimizer"),
     _p("Abilities", "/abilities", "abilities_enabled", "fa-solid fa-bolt", "Plan", "gems", "rings", "empowered", "what does this do"),
+    _p("Allies", "/allies", "allies_enabled", "fa-solid fa-paw", "Plan", "pets", "companion", "light", "stats"),
 
     _p("Mods Hub", "/mods", "mods_hub_enabled", "fa-solid fa-cubes", "Create", "modding", "addons"),
     _p("Modpacks", "/modpacks", "mods_hub_enabled", "fa-solid fa-box-open", "Create", "bundles"),

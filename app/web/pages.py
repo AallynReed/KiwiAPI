@@ -23,7 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.core.internal_api import internal_get
-from app.site import abilities_page, classes_page, commands_page, guides_page, ssr
+from app.site import abilities_page, allies_page, classes_page, commands_page, guides_page, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS
 from app.web import feature_flags as web_flags
 
@@ -390,6 +390,19 @@ async def abilities(request: Request, tab: str = "gems") -> HTMLResponse:
     ``?tab=`` is honoured server-side so each panel has a real URL."""
     return _TEMPLATES.TemplateResponse(
         request, "abilities.html", {"abilities": abilities_page.abilities_view(tab)})
+
+
+@router.get("/allies", response_class=HTMLResponse)
+async def allies(request: Request) -> HTMLResponse:
+    """Allies - every ally that grants a stat, sortable by any of them.
+
+    The whole table is server-rendered from gamedata/ally_abilities.json (decoded
+    by scripts/decode_ally_abilities.py) and /static/allies.js sorts and filters
+    in place, so it is complete and name-sorted without JS. /abilities lists only
+    the allies that also carry an ability; this one is about the stats."""
+    return _TEMPLATES.TemplateResponse(
+        request, "allies.html",
+        {"allies": allies_page.allies_view()})
 
 
 @router.get("/guides", response_class=HTMLResponse)

@@ -110,6 +110,25 @@ def resolve_stat_name(loc_map: dict[str, str], key: str) -> str:
     return _from_loc(loc_map, key) or STAT_NAMES.get(key) or _humanize(key)
 
 
+def bonus_label(name: str, stat_key: str) -> str:
+    """A site label with the `Bonus` suffix a MultiplySum earns.
+
+    `resolve_stat_name` gives the game's own name for the whole key, which would
+    also replace the friendlier names the site's data files use - it calls
+    `$Stat_IncomingDamageMod` "Incoming Damage" where the site says "Damage
+    Reduction", and `$Stat_OutgoingDamageMod` just "Damage". So the base name is
+    kept and only the suffix is taken, which is the part that carries meaning:
+    an `Add` and a `MultiplySum` on one stat are different things.
+
+    A trailing "%" goes first - "Maximum Health %" was the site marking the bonus
+    form by hand, and "Maximum Health % Bonus" says it twice.
+    """
+    if _bonus_base(stat_key) is None:
+        return name
+    base = name.removesuffix(" %").strip()
+    return base if base.endswith(" Bonus") else f"{base} Bonus"
+
+
 def resolve_slot_name(loc_map: dict[str, str], key: str | None) -> str:
     if not key:
         return ""

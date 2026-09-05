@@ -61,6 +61,19 @@ def _scales(stat: dict) -> bool:
     return op in _SCALING_OPS if op else bool(stat.get("percentage", False))
 
 
+def _merged(stats: dict, name: str) -> dict:
+    """A stat plus its `… Bonus` twin, summed.
+
+    A MultiplySum row is labelled with the Bonus suffix, so the two operations on
+    one stat now sit under two keys - reading only the base name would silently
+    drop every scaling row the chart grants.
+    """
+    base = stats.get(name) or {}
+    bonus = stats.get(f"{name} Bonus") or {}
+    return {"flat": base.get("flat", 0) + bonus.get("flat", 0),
+            "pct": base.get("pct", 0) + bonus.get("pct", 0)}
+
+
 def _lilypad(name: str, value: float, active: bool) -> float:
     """An ally's L30 stat value, with the Lilypad buff applied when active."""
     return value * LILYPAD_MULTIPLIERS.get(name, 1.0) if active else value
@@ -76,10 +89,17 @@ def _load(relative: str) -> Any:
 
 
 def _stat_value(stats: list[dict], name: str) -> float:
+    """A named stat's value, counting its `… Bonus` twin as the same stat.
+
+    A MultiplySum row is labelled with the Bonus suffix, so looking up the bare
+    name alone would read 0 for a buff that only ever scales - which is every
+    Bounty Hunt row.
+    """
+    total = 0.0
     for stat in stats:
-        if stat.get("name") == name:
-            return stat.get("value") or 0.0
-    return 0.0
+        if stat.get("name") in (name, f"{name} Bonus"):
+            total += stat.get("value") or 0.0
+    return total
 
 
 class StarChartParser:
@@ -359,15 +379,15 @@ class GemOptimizerEngine:
             if config.get("star_chart"):
                 chart = self.star_parser.parse_build_code(config["star_chart"])
                 chart_stats = chart["stats"]
-                dmg = chart_stats.get(damage_type, {})
-                crit = chart_stats.get("Critical Damage", {})
-                light = chart_stats.get("Light", {})
-                first += dmg.get("flat", 0)
-                second += crit.get("flat", 0)
-                third += light.get("flat", 0)
-                fourth += dmg.get("pct", 0)
-                fifth += crit.get("pct", 0)
-                sixth += light.get("pct", 0)
+                dmg = _merged(chart_stats, damage_type)
+                crit = _merged(chart_stats, "Critical Damage")
+                light = _merged(chart_stats, "Light")
+                first += dmg["flat"]
+                second += crit["flat"]
+                third += light["flat"]
+                fourth += dmg["pct"]
+                fifth += crit["pct"]
+                sixth += light["pct"]
 
                 # The chart only unlocks Bounty Hunt; the buff itself is a 4h drop
                 # from a boss, so it counts only when the player says it is up.

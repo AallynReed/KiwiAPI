@@ -3267,5 +3267,13 @@
   "Everything we have written up, in one place. More as we go.": "我们写过的内容都在这里，之后还会继续补充。",
   "No guides are available right now.": "目前没有可用的指南。",
   "Trove <span class=\"highlight-blue\">Guides</span>": "Trove<span class=\"highlight-blue\">指南</span>",
-  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "每一个宝石、戒指、职业、星图与盟友技能——它改变什么、适用于谁，以及背后的数值。"
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "每一个宝石、戒指、职业、星图与盟友技能——它改变什么、适用于谁，以及背后的数值。",
+  "Ally": "盟友",
+  "Every ally that grants a stat, and what it grants. Sort by any stat to find the best one for a build.": "每一个提供属性的盟友，以及它提供什么。按任意属性排序，找出最适合某套配装的那一个。",
+  "Name (A-Z)": "名称 (A-Z)",
+  "No allies match that search.": "没有符合该搜索的盟友。",
+  "Sort by": "排序方式",
+  "Stats are decoded from the game's own ally files. Sorting by a stat shows only the allies that grant it.": "属性直接读取自游戏的盟友文件。按某项属性排序时，只会显示提供该属性的盟友。",
+  "Trove <span class=\"highlight-blue\">Allies</span>": "Trove<span class=\"highlight-blue\">盟友</span>",
+  "allies": "盟友"
 }

@@ -22,7 +22,7 @@
         ],
         "stats": [
             {
-                "name": "Magic Damage",
+                "name": "Magic Damage Bonus",
                 "stat": "$Stat_SpellDamageBonus",
                 "op": "MultiplySum",
                 "value": 20.0,
@@ -45,7 +45,7 @@
         ],
         "stats": [
             {
-                "name": "Critical Damage",
+                "name": "Critical Damage Bonus",
                 "stat": "$Stat_CriticalHitDamageBonus",
                 "op": "MultiplySum",
                 "value": 35.0,
@@ -53,7 +53,7 @@
                 "prefab": "abilities/mods_01/bard/musical_master_buff_criticaldamage"
             },
             {
-                "name": "Critical Damage",
+                "name": "Critical Damage Bonus",
                 "stat": "$Stat_CriticalHitDamageBonus",
                 "op": "MultiplySum",
                 "value": 35.0,
@@ -75,7 +75,7 @@
         ],
         "stats": [
             {
-                "name": "Damage Reduction",
+                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
                 "op": "Multiply",
                 "value": 25.0,
@@ -223,7 +223,7 @@
         ],
         "stats": [
             {
-                "name": "Damage Reduction",
+                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
                 "op": "Multiply",
                 "value": 5.0,
@@ -430,7 +430,7 @@
         ],
         "stats": [
             {
-                "name": "Critical Hit",
+                "name": "Critical Hit Bonus",
                 "stat": "$Stat_CriticalHitChanceBonus",
                 "op": "MultiplySum",
                 "value": 65.0,
@@ -438,7 +438,7 @@
                 "prefab": "abilities/mods_01/icemage/cold_ice_buff_crit"
             },
             {
-                "name": "Critical Damage",
+                "name": "Critical Damage Bonus",
                 "stat": "$Stat_CriticalHitDamageBonus",
                 "op": "MultiplySum",
                 "value": 40.0,
@@ -460,7 +460,7 @@
         ],
         "stats": [
             {
-                "name": "Damage Reduction",
+                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
                 "op": "Add",
                 "value": 0.5,
@@ -517,7 +517,7 @@
         ],
         "stats": [
             {
-                "name": "Damage Reduction",
+                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
                 "op": "Add",
                 "value": 0.65,
@@ -525,7 +525,7 @@
                 "prefab": "abilities/mods_01/knight/ironer_will_effect_shield"
             },
             {
-                "name": "Stability",
+                "name": "Stability Bonus",
                 "stat": "$Stat_StabilityBonus",
                 "op": "MultiplySum",
                 "value": 100.0,
@@ -555,7 +555,7 @@
                 "prefab": "abilities/mods_01/knight/over_charge_buff_stats"
             },
             {
-                "name": "Movement Speed",
+                "name": "Movement Speed Bonus",
                 "stat": "$Stat_MovementSpeedBonus",
                 "op": "MultiplySum",
                 "value": 20.0,
@@ -615,7 +615,7 @@
         ],
         "stats": [
             {
-                "name": "Movement Speed",
+                "name": "Movement Speed Bonus",
                 "stat": "$Stat_MovementSpeedBonus",
                 "op": "MultiplySum",
                 "value": 85.0,
@@ -697,7 +697,7 @@
         ],
         "stats": [
             {
-                "name": "Damage Reduction",
+                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
                 "op": "Multiply",
                 "value": 15.0,
@@ -849,7 +849,7 @@
         ],
         "stats": [
             {
-                "name": "Damage Reduction",
+                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
                 "op": "Add",
                 "value": 0.15,
@@ -942,7 +942,7 @@
         ],
         "stats": [
             {
-                "name": "Damage Reduction",
+                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
                 "op": "Multiply",
                 "value": 5.0,

@@ -32,7 +32,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.trove.codexes.binfab import harvest_strings  # noqa: E402
-from app.trove.codexes.bonuses import STAT_LABELS, extract_stat_bonuses  # noqa: E402
+from app.trove.codexes.bonuses import extract_stat_bonuses  # noqa: E402
+from app.trove.codexes.localize import resolve_stat_name  # noqa: E402
 
 GAME = os.environ.get("TROVE_GAME_DIR", r"E:\Trove")
 PREFABS = os.path.join(GAME, "prefabs")
@@ -86,7 +87,7 @@ def _stat_rows(data: bytes, prefab: str) -> list[dict]:
             value = raw * 100 if abs(raw) < 1 else raw
         elif sid == 0x0C and op == "Add":            # OutgoingDamageMod stores a fraction
             value = raw * 100
-        row = {"name": STAT_LABELS.get(sid, bonus["stat"]), "stat": bonus["stat"],
+        row = {"name": resolve_stat_name({}, bonus["stat"]), "stat": bonus["stat"],
                "op": op, "value": round(value, 4), "amount": round(raw, 4),
                "prefab": prefab}
         if row not in rows:

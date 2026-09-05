@@ -14,7 +14,7 @@
                 "Description": "Within the Strength side of the constellation we try to make Physical based classes tougher than the squishy magic ones.",
                 "Stats": [
                     {
-                        "name": "Physical Damage",
+                        "name": "Physical Damage Bonus",
                         "percentage": true,
                         "op": "MultiplySum",
                         "stat": "$Stat_PhysicalDamageBonus",
@@ -144,14 +144,14 @@
                                                                 "value": 5
                                                             },
                                                             {
-                                                                "name": "Magic Damage",
+                                                                "name": "Magic Damage Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_SpellDamageBonus",
                                                                 "value": 5
                                                             },
                                                             {
-                                                                "name": "Physical Damage",
+                                                                "name": "Physical Damage Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_PhysicalDamageBonus",
@@ -178,7 +178,7 @@
                                                                 "value": 5
                                                             },
                                                             {
-                                                                "name": "Maximum Health %",
+                                                                "name": "Maximum Health Bonus",
                                                                 "percentage": false,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_MaxHealthBonus",
@@ -269,7 +269,7 @@
                                 "Description": "Continue to grow your strength and prove Might is better then brains.",
                                 "Stats": [
                                     {
-                                        "name": "Physical Damage",
+                                        "name": "Physical Damage Bonus",
                                         "percentage": true,
                                         "op": "MultiplySum",
                                         "stat": "$Stat_PhysicalDamageBonus",
@@ -320,7 +320,7 @@
                                                 "Description": "YESSSS... MORE STRENGTH!!!!",
                                                 "Stats": [
                                                     {
-                                                        "name": "Physical Damage",
+                                                        "name": "Physical Damage Bonus",
                                                         "percentage": true,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_PhysicalDamageBonus",
@@ -357,7 +357,7 @@
                                                         "Description": "Will need to double check numbers to make sure this is not too much strength.",
                                                         "Stats": [
                                                             {
-                                                                "name": "Physical Damage",
+                                                                "name": "Physical Damage Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_PhysicalDamageBonus",
@@ -403,7 +403,7 @@
                                                                 "Description": "Ultimate Strength star is better than a Magic Star.",
                                                                 "Stats": [
                                                                     {
-                                                                        "name": "Physical Damage",
+                                                                        "name": "Physical Damage Bonus",
                                                                         "percentage": true,
                                                                         "op": "MultiplySum",
                                                                         "stat": "$Stat_PhysicalDamageBonus",
@@ -473,7 +473,7 @@
                 "Description": "Gain greater arcane knowledge to blast your foe down this path.",
                 "Stats": [
                     {
-                        "name": "Magic Damage",
+                        "name": "Magic Damage Bonus",
                         "percentage": true,
                         "op": "MultiplySum",
                         "stat": "$Stat_SpellDamageBonus",
@@ -501,7 +501,7 @@
                                 "Description": "This star come with a free library card. Somehow that's what increases your damage.",
                                 "Stats": [
                                     {
-                                        "name": "Magic Damage",
+                                        "name": "Magic Damage Bonus",
                                         "percentage": true,
                                         "op": "MultiplySum",
                                         "stat": "$Stat_SpellDamageBonus",
@@ -518,7 +518,7 @@
                                         "Description": "Look at this star trying to make you less squishy over here.",
                                         "Stats": [
                                             {
-                                                "name": "Maximum Health %",
+                                                "name": "Maximum Health Bonus",
                                                 "percentage": false,
                                                 "op": "MultiplySum",
                                                 "stat": "$Stat_MaxHealthBonus",
@@ -538,7 +538,7 @@
                                         "Description": "Wow, mind exploded.",
                                         "Stats": [
                                             {
-                                                "name": "Magic Damage",
+                                                "name": "Magic Damage Bonus",
                                                 "percentage": true,
                                                 "op": "MultiplySum",
                                                 "stat": "$Stat_SpellDamageBonus",
@@ -555,7 +555,7 @@
                                                 "Description": "This star's blessing hopes you live a long and healthy life.",
                                                 "Stats": [
                                                     {
-                                                        "name": "Maximum Health %",
+                                                        "name": "Maximum Health Bonus",
                                                         "percentage": false,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_MaxHealthBonus",
@@ -630,7 +630,7 @@
                                                         "Description": "Unlimited Magic... unless you run out of energy regen.",
                                                         "Stats": [
                                                             {
-                                                                "name": "Magic Damage",
+                                                                "name": "Magic Damage Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_SpellDamageBonus",
@@ -682,7 +682,7 @@
                                                                         "Description": "Ahhh this is where I put that Health Star.",
                                                                         "Stats": [
                                                                             {
-                                                                                "name": "Maximum Health %",
+                                                                                "name": "Maximum Health Bonus",
                                                                                 "percentage": false,
                                                                                 "op": "MultiplySum",
                                                                                 "stat": "$Stat_MaxHealthBonus",
@@ -702,7 +702,7 @@
                                                                         "Description": "The final star spell is ready. Are you ready to cast it?",
                                                                         "Stats": [
                                                                             {
-                                                                                "name": "Magic Damage",
+                                                                                "name": "Magic Damage Bonus",
                                                                                 "percentage": true,
                                                                                 "op": "MultiplySum",
                                                                                 "stat": "$Stat_SpellDamageBonus",
@@ -734,7 +734,7 @@
                                                                                 "Acts": "Major",
                                                                                 "Ability_Values": [
                                                                                     {
-                                                                                        "name": "Attack Speed",
+                                                                                        "name": "Attack Speed Bonus",
                                                                                         "percentage": false,
                                                                                         "op": "MultiplySum",
                                                                                         "stat": "$Stat_AttackSpeedBonus",
@@ -760,7 +760,7 @@
                                                                 "Acts": "Major",
                                                                 "Ability_Values": [
                                                                     {
-                                                                        "name": "Attack Speed",
+                                                                        "name": "Attack Speed Bonus",
                                                                         "percentage": false,
                                                                         "op": "MultiplySum",
                                                                         "stat": "$Stat_AttackSpeedBonus",
@@ -786,7 +786,7 @@
                                                 "Acts": "Major",
                                                 "Ability_Values": [
                                                     {
-                                                        "name": "Attack Speed",
+                                                        "name": "Attack Speed Bonus",
                                                         "percentage": false,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_AttackSpeedBonus",
@@ -816,7 +816,7 @@
                         "Acts": "Major",
                         "Ability_Values": [
                             {
-                                "name": "Attack Speed",
+                                "name": "Attack Speed Bonus",
                                 "percentage": false,
                                 "op": "MultiplySum",
                                 "stat": "$Stat_AttackSpeedBonus",
@@ -967,7 +967,7 @@
                 "Description": "Search the lands for greater goods.",
                 "Stats": [
                     {
-                        "name": "Magic Find",
+                        "name": "Magic Find Bonus",
                         "percentage": true,
                         "op": "MultiplySum",
                         "stat": "$Stat_MagicFindBonus",
@@ -1023,14 +1023,14 @@
                                                 "Description": "With a little luck and brains you can do anything.",
                                                 "Stats": [
                                                     {
-                                                        "name": "Experience Gain",
+                                                        "name": "Experience Gain Bonus",
                                                         "percentage": true,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_ExperienceBoostBonus",
                                                         "value": 2.5
                                                     },
                                                     {
-                                                        "name": "Magic Find",
+                                                        "name": "Magic Find Bonus",
                                                         "percentage": true,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_MagicFindBonus",
@@ -1047,7 +1047,7 @@
                                                         "Description": "See the weakness of your enemies and know how to exploit it.",
                                                         "Stats": [
                                                             {
-                                                                "name": "Experience Gain",
+                                                                "name": "Experience Gain Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_ExperienceBoostBonus",
@@ -1071,7 +1071,7 @@
                                                                 "Description": "A star too small to be a planet but hurts too much to accept the truth.",
                                                                 "Stats": [
                                                                     {
-                                                                        "name": "Experience Gain",
+                                                                        "name": "Experience Gain Bonus",
                                                                         "percentage": true,
                                                                         "op": "MultiplySum",
                                                                         "stat": "$Stat_ExperienceBoostBonus",
@@ -1104,7 +1104,7 @@
                                                         "Description": "So glad to see you all the way out here, the star focuses on finding better gear.",
                                                         "Stats": [
                                                             {
-                                                                "name": "Magic Find",
+                                                                "name": "Magic Find Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_MagicFindBonus",
@@ -1128,7 +1128,7 @@
                                                 "Description": "Speeds up crafting...I know I would love that.",
                                                 "Stats": [
                                                     {
-                                                        "name": "Magic Find",
+                                                        "name": "Magic Find Bonus",
                                                         "percentage": true,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_MagicFindBonus",
@@ -1154,7 +1154,7 @@
                                         "Acts": "Major",
                                         "Ability_Values": [
                                             {
-                                                "name": "Experience Gain",
+                                                "name": "Experience Gain Bonus",
                                                 "percentage": true,
                                                 "op": "MultiplySum",
                                                 "stat": "$Stat_ExperienceBoostBonus",
@@ -1181,7 +1181,7 @@
                                         "value": 1
                                     },
                                     {
-                                        "name": "Maximum Health %",
+                                        "name": "Maximum Health Bonus",
                                         "percentage": false,
                                         "op": "MultiplySum",
                                         "stat": "$Stat_MaxHealthBonus",
@@ -1216,7 +1216,7 @@
                                                 "Description": "Grants the feeling of vigor you get from eating a large meal.",
                                                 "Stats": [
                                                     {
-                                                        "name": "Maximum Health %",
+                                                        "name": "Maximum Health Bonus",
                                                         "percentage": false,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_MaxHealthBonus",
@@ -1349,7 +1349,7 @@
                                                                         "value": 100
                                                                     },
                                                                     {
-                                                                        "name": "Maximum Health %",
+                                                                        "name": "Maximum Health Bonus",
                                                                         "percentage": false,
                                                                         "op": "MultiplySum",
                                                                         "stat": "$Stat_MaxHealthBonus",
@@ -1398,14 +1398,14 @@
                                                         "Description": "A little bit of coffee will heal anyone.",
                                                         "Stats": [
                                                             {
-                                                                "name": "Health Regen",
+                                                                "name": "Health Regen Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_HealthRegenBonus_controller",
                                                                 "value": 6
                                                             },
                                                             {
-                                                                "name": "Energy Regen",
+                                                                "name": "Energy Regen Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_EnergyRegenBonus_controller",
@@ -1574,7 +1574,7 @@
                                         "value": 200
                                     },
                                     {
-                                        "name": "Maximum Health %",
+                                        "name": "Maximum Health Bonus",
                                         "percentage": false,
                                         "op": "MultiplySum",
                                         "stat": "$Stat_MaxHealthBonus",
@@ -1605,7 +1605,7 @@
                                                 "Description": "After searching the stars, you have gained increased magic.",
                                                 "Stats": [
                                                     {
-                                                        "name": "Magic Damage",
+                                                        "name": "Magic Damage Bonus",
                                                         "percentage": true,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_SpellDamageBonus",
@@ -1625,7 +1625,7 @@
                                                 "Description": "Hee Hee this star gives more health.",
                                                 "Stats": [
                                                     {
-                                                        "name": "Maximum Health %",
+                                                        "name": "Maximum Health Bonus",
                                                         "percentage": false,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_MaxHealthBonus",
@@ -1699,7 +1699,7 @@
                                                                 "Description": "Intense searching has led you to greater speed and adaptability.",
                                                                 "Stats": [
                                                                     {
-                                                                        "name": "Maximum Health %",
+                                                                        "name": "Maximum Health Bonus",
                                                                         "percentage": false,
                                                                         "op": "MultiplySum",
                                                                         "stat": "$Stat_MaxHealthBonus",
@@ -1747,7 +1747,7 @@
                                                                                 "Description": "Magic power from gathering so much knowledge.",
                                                                                 "Stats": [
                                                                                     {
-                                                                                        "name": "Magic Damage",
+                                                                                        "name": "Magic Damage Bonus",
                                                                                         "percentage": true,
                                                                                         "op": "MultiplySum",
                                                                                         "stat": "$Stat_SpellDamageBonus",
@@ -1769,7 +1769,7 @@
                                                                                 "Description": "You did so much Mining it improved your Physical Damage. Noice.",
                                                                                 "Stats": [
                                                                                     {
-                                                                                        "name": "Physical Damage",
+                                                                                        "name": "Physical Damage Bonus",
                                                                                         "percentage": true,
                                                                                         "op": "MultiplySum",
                                                                                         "stat": "$Stat_PhysicalDamageBonus",
@@ -1793,7 +1793,7 @@
                                                                         "Description": "Increased experience gain is always good.",
                                                                         "Stats": [
                                                                             {
-                                                                                "name": "Experience Gain",
+                                                                                "name": "Experience Gain Bonus",
                                                                                 "percentage": true,
                                                                                 "op": "MultiplySum",
                                                                                 "stat": "$Stat_ExperienceBoostBonus",
@@ -1846,7 +1846,7 @@
                                                 "Description": "Gathering stars together has increased your strength.",
                                                 "Stats": [
                                                     {
-                                                        "name": "Physical Damage",
+                                                        "name": "Physical Damage Bonus",
                                                         "percentage": true,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_PhysicalDamageBonus",
@@ -1918,14 +1918,14 @@
                         ],
                         "Ability_Values": [
                             {
-                                "name": "Physical Damage",
+                                "name": "Physical Damage Bonus",
                                 "percentage": true,
                                 "value": 25.0,
                                 "op": "MultiplySum",
                                 "stat": "$Stat_PhysicalDamageBonus"
                             },
                             {
-                                "name": "Magic Damage",
+                                "name": "Magic Damage Bonus",
                                 "percentage": true,
                                 "value": 25.0,
                                 "op": "MultiplySum",
@@ -2049,7 +2049,7 @@
                                         "Description": "This shooting star is so fast it teaches trovians to hit faster.",
                                         "Stats": [
                                             {
-                                                "name": "Attack Speed",
+                                                "name": "Attack Speed Bonus",
                                                 "percentage": true,
                                                 "op": "MultiplySum",
                                                 "stat": "$Stat_AttackSpeedBonus",
@@ -2114,7 +2114,7 @@
                                                                 "Description": "Star of health bless us with more health please.",
                                                                 "Stats": [
                                                                     {
-                                                                        "name": "Maximum Health %",
+                                                                        "name": "Maximum Health Bonus",
                                                                         "percentage": false,
                                                                         "op": "MultiplySum",
                                                                         "stat": "$Stat_MaxHealthBonus",
@@ -2131,7 +2131,7 @@
                                                                         "Description": "Attack speed is all some classes need.",
                                                                         "Stats": [
                                                                             {
-                                                                                "name": "Attack Speed",
+                                                                                "name": "Attack Speed Bonus",
                                                                                 "percentage": true,
                                                                                 "op": "MultiplySum",
                                                                                 "stat": "$Stat_AttackSpeedBonus",
@@ -2242,14 +2242,14 @@
                                 ],
                                 "Ability_Values": [
                                     {
-                                        "name": "Physical Damage",
+                                        "name": "Physical Damage Bonus",
                                         "percentage": true,
                                         "value": 25.0,
                                         "op": "MultiplySum",
                                         "stat": "$Stat_PhysicalDamageBonus"
                                     },
                                     {
-                                        "name": "Magic Damage",
+                                        "name": "Magic Damage Bonus",
                                         "percentage": true,
                                         "value": 25.0,
                                         "op": "MultiplySum",
@@ -2265,14 +2265,14 @@
                                         "Description": "Drinking too many flasks has made the random buffs gained from them stick.",
                                         "Stats": [
                                             {
-                                                "name": "Magic Damage",
+                                                "name": "Magic Damage Bonus",
                                                 "percentage": true,
                                                 "op": "MultiplySum",
                                                 "stat": "$Stat_SpellDamageBonus",
                                                 "value": 5
                                             },
                                             {
-                                                "name": "Physical Damage",
+                                                "name": "Physical Damage Bonus",
                                                 "percentage": true,
                                                 "op": "MultiplySum",
                                                 "stat": "$Stat_PhysicalDamageBonus",
@@ -2312,7 +2312,7 @@
                                         "Description": "Moooooooooooreeeeeeeee Healing PLEASE!!!",
                                         "Stats": [
                                             {
-                                                "name": "Health Regen",
+                                                "name": "Health Regen Bonus",
                                                 "percentage": true,
                                                 "op": "MultiplySum",
                                                 "stat": "$Stat_HealthRegenBonus_controller",
@@ -2348,7 +2348,7 @@
                 "Description": "Star of speed give me swiftness to strike my foes.",
                 "Stats": [
                     {
-                        "name": "Attack Speed",
+                        "name": "Attack Speed Bonus",
                         "percentage": true,
                         "op": "MultiplySum",
                         "stat": "$Stat_AttackSpeedBonus",
@@ -2376,7 +2376,7 @@
                                 "Description": "Attacks so fast you can not even animate fast enough.",
                                 "Stats": [
                                     {
-                                        "name": "Attack Speed",
+                                        "name": "Attack Speed Bonus",
                                         "percentage": true,
                                         "op": "MultiplySum",
                                         "stat": "$Stat_AttackSpeedBonus",
@@ -2400,7 +2400,7 @@
                                                 "value": 175
                                             },
                                             {
-                                                "name": "Maximum Health %",
+                                                "name": "Maximum Health Bonus",
                                                 "percentage": false,
                                                 "op": "MultiplySum",
                                                 "stat": "$Stat_MaxHealthBonus",
@@ -2431,14 +2431,14 @@
                                                         "Description": "Two damage types, maybe someday we will search the stars and find the 3rd one.",
                                                         "Stats": [
                                                             {
-                                                                "name": "Physical Damage",
+                                                                "name": "Physical Damage Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_PhysicalDamageBonus",
                                                                 "value": 5
                                                             },
                                                             {
-                                                                "name": "Magic Damage",
+                                                                "name": "Magic Damage Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_SpellDamageBonus",
@@ -2458,7 +2458,7 @@
                                                         "Description": "Speed through the stars for greater power.",
                                                         "Stats": [
                                                             {
-                                                                "name": "Attack Speed",
+                                                                "name": "Attack Speed Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_AttackSpeedBonus",
@@ -2529,14 +2529,14 @@
                                                 ],
                                                 "Ability_Values": [
                                                     {
-                                                        "name": "Magic Damage",
+                                                        "name": "Magic Damage Bonus",
                                                         "percentage": true,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_SpellDamageBonus",
                                                         "value": 10.0
                                                     },
                                                     {
-                                                        "name": "Physical Damage",
+                                                        "name": "Physical Damage Bonus",
                                                         "percentage": true,
                                                         "op": "MultiplySum",
                                                         "stat": "$Stat_PhysicalDamageBonus",
@@ -2560,14 +2560,14 @@
                                                         ],
                                                         "Ability_Values": [
                                                             {
-                                                                "name": "Magic Damage",
+                                                                "name": "Magic Damage Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_SpellDamageBonus",
                                                                 "value": 15.0
                                                             },
                                                             {
-                                                                "name": "Physical Damage",
+                                                                "name": "Physical Damage Bonus",
                                                                 "percentage": true,
                                                                 "op": "MultiplySum",
                                                                 "stat": "$Stat_PhysicalDamageBonus",

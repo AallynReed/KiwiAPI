@@ -3088,5 +3088,13 @@
   "Everything we have written up, in one place. More as we go.": "ทุกอย่างที่เราเขียนไว้ รวมอยู่ในที่เดียว และจะมีเพิ่มอีก",
   "No guides are available right now.": "ขณะนี้ยังไม่มีไกด์ให้ใช้งาน",
   "Trove <span class=\"highlight-blue\">Guides</span>": "<span class=\"highlight-blue\">ไกด์</span> Trove",
-  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "ทุกความสามารถของเจม แหวน คลาส สตาร์ชาร์ต และพันธมิตร — เปลี่ยนอะไร ใช้กับใคร และตัวเลขเบื้องหลัง"
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "ทุกความสามารถของเจม แหวน คลาส สตาร์ชาร์ต และพันธมิตร — เปลี่ยนอะไร ใช้กับใคร และตัวเลขเบื้องหลัง",
+  "Ally": "พันธมิตร",
+  "Every ally that grants a stat, and what it grants. Sort by any stat to find the best one for a build.": "พันธมิตรทุกตัวที่ให้ค่าสเตตัส และให้อะไรบ้าง เรียงตามสเตตัสใดก็ได้เพื่อหาตัวที่ดีที่สุดสำหรับบิลด์",
+  "Name (A-Z)": "ชื่อ (A-Z)",
+  "No allies match that search.": "ไม่พบพันธมิตรที่ตรงกับการค้นหานี้",
+  "Sort by": "เรียงตาม",
+  "Stats are decoded from the game's own ally files. Sorting by a stat shows only the allies that grant it.": "ค่าสเตตัสถอดมาจากไฟล์พันธมิตรของเกมโดยตรง การเรียงตามสเตตัสใดจะแสดงเฉพาะพันธมิตรที่ให้สเตตัสนั้น",
+  "Trove <span class=\"highlight-blue\">Allies</span>": "<span class=\"highlight-blue\">พันธมิตร</span>ใน Trove",
+  "allies": "พันธมิตร"
 }

@@ -26,10 +26,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.trove.codexes.binfab import decode_identity, harvest_strings  # noqa: E402
 from app.trove.codexes.bonuses import (  # noqa: E402
-    STAT_LABELS,
     extract_abilities,
     extract_stat_bonuses,
 )
+from app.trove.codexes.localize import resolve_stat_name  # noqa: E402
 
 GAME = os.environ.get("TROVE_GAME_DIR", r"E:\Trove")
 PETS = os.path.join(GAME, "prefabs", "collections", "pet")
@@ -61,7 +61,7 @@ def _stat_rows(data: bytes) -> list[dict]:
             value = raw * 100 if abs(raw) < 1 else raw
         elif sid == 0x0C and op == "Add":
             value = raw * 100
-        row = {"name": STAT_LABELS.get(sid, bonus["stat"]), "stat": bonus["stat"],
+        row = {"name": resolve_stat_name({}, bonus["stat"]), "stat": bonus["stat"],
                "op": op, "value": round(value, 4), "amount": round(raw, 4)}
         if row not in rows:
             rows.append(row)

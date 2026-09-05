@@ -436,6 +436,18 @@ REGISTRY: dict[str, TunableSetting] = {
             "so only the page route is hidden."
         ),
     ),
+    "feature_allies_enabled": _t(
+        key="feature_allies_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Allies table (/allies) - every ally and the "
+            "stats it grants, sortable. OFF hides the page + navbar link. The "
+            "table is server-rendered from gamedata/ally_abilities.json, so only "
+            "the page route is hidden."
+        ),
+    ),
     "feature_guides_enabled": _t(
         key="feature_guides_enabled",
         default=True,

@@ -3267,5 +3267,13 @@
   "Everything we have written up, in one place. More as we go.": "지금까지 정리한 가이드를 한곳에 모았습니다. 앞으로도 계속 추가됩니다.",
   "No guides are available right now.": "현재 이용할 수 있는 가이드가 없습니다.",
   "Trove <span class=\"highlight-blue\">Guides</span>": "Trove <span class=\"highlight-blue\">가이드</span>",
-  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "젬, 반지, 직업, 스타 차트, 동료의 모든 능력 — 무엇이 바뀌는지, 누구를 위한 것인지, 그리고 그 수치까지."
+  "Every gem, ring, class, star chart and ally ability - what it changes, who it is for, and the numbers behind it.": "젬, 반지, 직업, 스타 차트, 동료의 모든 능력 — 무엇이 바뀌는지, 누구를 위한 것인지, 그리고 그 수치까지.",
+  "Ally": "동료",
+  "Every ally that grants a stat, and what it grants. Sort by any stat to find the best one for a build.": "스탯을 부여하는 모든 동료와 그 수치. 원하는 스탯으로 정렬해 빌드에 가장 좋은 동료를 찾아보세요.",
+  "Name (A-Z)": "이름 (A-Z)",
+  "No allies match that search.": "검색과 일치하는 동료가 없습니다.",
+  "Sort by": "정렬 기준",
+  "Stats are decoded from the game's own ally files. Sorting by a stat shows only the allies that grant it.": "수치는 게임의 동료 파일에서 직접 읽어온 값입니다. 특정 스탯으로 정렬하면 그 스탯을 주는 동료만 표시됩니다.",
+  "Trove <span class=\"highlight-blue\">Allies</span>": "Trove <span class=\"highlight-blue\">동료</span>",
+  "allies": "동료"
 }
