@@ -51,6 +51,7 @@ SITE_FEATURE_FLAGS = {
     "abilities_enabled": feature_flags.ABILITIES_FLAG,
     "guides_enabled": feature_flags.GUIDES_FLAG,
     "allies_enabled": feature_flags.ALLIES_FLAG,
+    "gem_tools_enabled": feature_flags.GEM_TOOLS_FLAG,
     "fishing_guide_enabled": feature_flags.FISHING_GUIDE_FLAG,
     "dressing_room_enabled": feature_flags.DRESSING_ROOM_FLAG,
     "dressing_room_page_enabled": feature_flags.DRESSING_ROOM_PAGE_FLAG,
@@ -207,6 +208,8 @@ def feature_blocks(p: str, f: dict) -> bool:
         return False
     if not f["allies_enabled"] and p == "/allies":
         return False
+    if not f["gem_tools_enabled"] and p == "/gem-tools":
+        return False
     if not f["gems_guide_enabled"] and p == "/gems-guide":
         return True
     # Same shape as the gems guide: a client-rendered explainer whose only read
@@ -265,6 +268,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/abilities", "abilities_enabled"),
     ("/guides", "guides_enabled"),
     ("/allies", "allies_enabled"),
+    ("/gem-tools", "gem_tools_enabled"),
     ("/fishing-guide", "fishing_guide_enabled"),
     ("/dressing-room", "dressing_room_page_enabled"),
     ("/sound-studio", "sound_studio_enabled"),

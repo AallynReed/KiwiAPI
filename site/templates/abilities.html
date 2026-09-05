@@ -94,11 +94,16 @@
                     {% if c.description %}<p class="ab-desc">{{ c.description }}</p>{% endif %}
                     {% if c.effects %}
                     <ul class="ab-effects">
-                        {% for e in c.effects %}
+                        {% for p in c.phases %}
+                        {# An ability that applies in stacking stages gets one labelled
+                           group per stage; the prefab it decoded from IS the stage. #}
+                        {% if p.label %}<li class="ab-phase" title="{{ p.prefab }}">{{ p.label }}</li>{% endif %}
+                        {% for e in p.rows %}
                         <li class="ab-effect ab-effect-{{ e.kind }}">
                             <span class="ab-effect-label">{{ e.label }}</span>
                             <span class="ab-effect-val">{{ e.value }}{% if e.base %}<span class="ab-effect-base">{{ e.base }}</span>{% endif %}</span>
                         </li>
+                        {% endfor %}
                         {% endfor %}
                     </ul>
                     {% endif %}

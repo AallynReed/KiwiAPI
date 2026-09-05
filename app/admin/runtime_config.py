@@ -448,6 +448,17 @@ REGISTRY: dict[str, TunableSetting] = {
             "the page route is hidden."
         ),
     ),
+    "feature_gem_tools_enabled": _t(
+        key="feature_gem_tools_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Gem Tools hub (/gem-tools) - the page that lists "
+            "the simulator, evaluator and build optimizer. OFF hides the hub and its "
+            "navbar link; the three tools keep their own switches and URLs."
+        ),
+    ),
     "feature_guides_enabled": _t(
         key="feature_guides_enabled",
         default=True,

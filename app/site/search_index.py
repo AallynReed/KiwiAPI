@@ -119,10 +119,11 @@ PAGES: tuple[Destination, ...] = (
     _p("Calculators", "/calculators", "calculators_enabled", "fa-solid fa-calculator", "Economy", "math"),
 
     _p("Star Chart", "/star-chart", "star_chart_enabled", "fa-solid fa-star", "Plan", "constellation", "build planner"),
+    _p("Gem Tools", "/gem-tools", "gem_tools_enabled", "fa-solid fa-gem", "Plan", "simulator", "evaluator", "builds", "optimizer"),
     _p("Dressing Room", "/dressing-room", "dressing_room_page_enabled", "fa-solid fa-shirt", "Plan", "costume", "outfit", "preview", badge="Beta"),
-    _p("Gem Simulator", "/gem-simulator", "gem_simulator_enabled", "fa-solid fa-gem", "Plan", "gems", "rolling"),
-    _p("Gem Evaluator", "/gem-evaluator", "gem_evaluator_enabled", "fa-solid fa-magnifying-glass-chart", "Plan", "gems", "rate my gem"),
-    _p("Gem Builds", "/gem-builds", "gem_builds_enabled", "fa-solid fa-wand-magic-sparkles", "Plan", "gems", "optimizer"),
+    _p("Gem Simulator", "/gem-simulator", "gem_simulator_enabled", "fa-solid fa-gem", "Plan", "gems", "rolling", in_nav=False),
+    _p("Gem Evaluator", "/gem-evaluator", "gem_evaluator_enabled", "fa-solid fa-magnifying-glass-chart", "Plan", "gems", "rate my gem", in_nav=False),
+    _p("Gem Builds", "/gem-builds", "gem_builds_enabled", "fa-solid fa-wand-magic-sparkles", "Plan", "gems", "optimizer", in_nav=False),
     _p("Abilities", "/abilities", "abilities_enabled", "fa-solid fa-bolt", "Plan", "gems", "rings", "empowered", "what does this do"),
     _p("Allies", "/allies", "allies_enabled", "fa-solid fa-paw", "Plan", "pets", "companion", "light", "stats"),
 

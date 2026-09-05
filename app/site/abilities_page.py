@@ -64,6 +64,11 @@ def _num(value: float) -> str:
     return f"{value:g}"
 
 
+def _phase_label(prefab: str) -> str:
+    """`abilities/gems/battle_frenzy_large` -> `Battle Frenzy Large`."""
+    return prefab.rsplit("/", 1)[-1].replace("_", " ").title()
+
+
 def _effects(entry: dict) -> list[dict]:
     """The decoded numbers as printable rows.
 
@@ -82,7 +87,8 @@ def _effects(entry: dict) -> list[dict]:
             shown = f"x{_num(amount)}" if amount else f"{_num(value)}%"
         else:
             shown = f"+{_num(value)}%"
-        row = {"label": stat.get("name", ""), "value": shown, "base": "", "kind": "stat"}
+        row = {"label": stat.get("name", ""), "value": shown, "base": "", "kind": "stat",
+               "prefab": stat.get("prefab", "")}
         if row not in rows:
             rows.append(row)
     for stage in entry.get("stages") or []:
@@ -91,17 +97,42 @@ def _effects(entry: dict) -> list[dict]:
             continue
         row = {"label": stage.get("name", ""),
                "value": f"{_num(mult * 100)}%" if mult else "",
-               "base": f"+{_num(base)}" if base else "", "kind": "damage"}
+               "base": f"+{_num(base)}" if base else "", "kind": "damage",
+               "prefab": stage.get("prefab", "")}
         if row not in rows:
             rows.append(row)
     return rows
+
+
+def _phases(rows: list[dict]) -> list[dict]:
+    """Group effect rows by the prefab they came from.
+
+    An ability can apply in stages that stack - Berserk Battler's frenzied state
+    is `battle_frenzy_small` and the berserk state it escalates into is
+    `battle_frenzy_large` - and flattening them reads as one ability granting
+    Attack Speed twice. The prefab IS the phase, so it is what the grouping keys
+    on; a single-prefab ability gets one unlabelled group and looks unchanged.
+
+    Ordered weakest-first, which is the order they escalate in.
+    """
+    groups: dict[str, list[dict]] = {}
+    for row in rows:
+        groups.setdefault(row.get("prefab") or "", []).append(row)
+    if len(groups) < 2:
+        return [{"label": "", "prefab": "", "rows": rows}]
+
+    def weight(item: tuple[str, list[dict]]) -> float:
+        return sum(abs(float(re.sub(r"[^0-9.\-]", "", r["value"]) or 0)) for r in item[1])
+
+    return [{"label": _phase_label(prefab), "prefab": prefab, "rows": items}
+            for prefab, items in sorted(groups.items(), key=weight)]
 
 
 def _card(name: str, chips: list[dict], description: str, badge: str,
           effects: list[dict], filters: list[str]) -> dict:
     return {
         "name": name, "chips": chips, "description": description, "badge": badge,
-        "effects": effects, "filters": filters,
+        "effects": effects, "phases": _phases(effects), "filters": filters,
         # The client filter matches on this, so keep it lowercase and pre-joined.
         "search": " ".join([name, description, *(c["label"] for c in chips)]).lower(),
     }
