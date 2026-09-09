@@ -316,7 +316,7 @@
     // A mod's config file goes in the game's ModCfgs folder, not the mods folder,
     // so it gets its own button - filled in after we've looked inside the .tmod.
     const headRel = published.find((r) => r.format !== 'zip');
-    const cfgSlot = headRel ? `<span data-rel-cfg="${esc(headRel.id)}"></span>` : '';
+    const cfgSlot = headRel ? `<span class="mp-cfg-hero" data-rel-cfg="${esc(headRel.id)}"></span>` : '';
     // Hand off to the desktop app's Mods Hub tab over the btt:// protocol it
     // registers on install. Only for mods the app can actually find: the hub
     // browses published, public mods.
@@ -1613,10 +1613,73 @@
       b.addEventListener('click', () => openReleaseContents(b.getAttribute('data-rel-inspect'))));
     document.querySelectorAll('[data-rel-cfgset]').forEach((b) =>
       b.addEventListener('click', () => openAttachConfig(b.getAttribute('data-rel-cfgset'))));
-    loadReleaseBlueprints();
-    loadReleaseVfx();
-    loadReleaseAudio();
-    loadReleaseCfgs();
+    // The hero's Config button is not in a version row, so the row pass never
+    // reaches it - load it on its own.
+    const heroCfg = document.querySelector('.mp-cfg-hero');
+    if (heroCfg) loadReleaseCfgs(heroCfg);
+    probeReleaseRows();
+  }
+
+  // Everything a version row can reveal - 3D models, VFX, sound banks, config - is
+  // found by looking INSIDE the .tmod, one request per row each, and two of those
+  // unpack the whole archive server-side. A mod with fifty versions folds all but
+  // the latest of each edition away behind "older versions", so probing every row on
+  // load meant ~200 requests for rows nobody had opened: they saturated the
+  // connection pool and the page took half a minute to settle.
+  //
+  // So: the rows on show (the latest of each edition) probe immediately, and a fold
+  // probes its rows when it is opened - through a queue, because a fold can hold
+  // forty of them and re-creating the stampede on click would only move it.
+  function probeReleaseRows() {
+    document.querySelectorAll('.mp-release').forEach((row) => {
+      if (!row.closest('.mp-variant-older')) probeRelease(row);
+    });
+    document.querySelectorAll('.mp-variant-older').forEach((fold) => {
+      fold.addEventListener('toggle', () => {
+        if (!fold.open) return;
+        fold.querySelectorAll('.mp-release').forEach(queueProbe);
+      });
+    });
+  }
+
+  // At most four releases are looked inside at once; the rest wait their turn.
+  const probeQueue = [];
+  let probesInFlight = 0;
+
+  function queueProbe(row) {
+    if (row.dataset.probed) return;
+    probeQueue.push(row);
+    pumpProbes();
+  }
+
+  function pumpProbes() {
+    while (probesInFlight < 4 && probeQueue.length) {
+      const row = probeQueue.shift();
+      probesInFlight += 1;
+      Promise.all(probeRelease(row)).catch(() => {}).then(() => {
+        probesInFlight -= 1;
+        pumpProbes();
+      });
+    }
+  }
+
+  function probeRelease(row) {
+    if (row.dataset.probed) return [];
+    row.dataset.probed = '1';
+    return [
+      loadReleaseBlueprints(row),
+      loadReleaseVfx(row),
+      loadReleaseAudio(row),
+      loadReleaseCfgs(row),
+    ];
+  }
+
+  // The slots matching `sel` within `root` - `root` itself counts, so a single slot
+  // (the hero's Config span) can be passed straight in.
+  function slotsIn(root, sel) {
+    const out = Array.from(root.querySelectorAll(sel));
+    if (root.matches && root.matches(sel)) out.unshift(root);
+    return out;
   }
 
   // Owner action: pack a config into a release that's ALREADY out. This rewrites a
@@ -1814,20 +1877,29 @@
   // installing the .tmod alone isn't enough. When a release packs one we surface it
   // as its own button next to Download; the file is pulled out of the .tmod on the
   // fly (nothing is stored server-side).
-  function loadReleaseCfgs() {
-    // The header button and the release row can point at the SAME release - group
-    // the slots so that release is only looked inside once.
+  // The header button and a version row can point at the SAME release, and they are
+  // now loaded at different moments - so the answer is remembered per release and
+  // that release is only ever looked inside once.
+  const cfgAnswers = new Map();
+
+  function cfgsFor(relId) {
+    if (!cfgAnswers.has(relId)) {
+      cfgAnswers.set(relId, siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/cfgs')
+        .then((r) => (r.ok ? r.json() : null)).catch(() => null));
+    }
+    return cfgAnswers.get(relId);
+  }
+
+  function loadReleaseCfgs(root) {
     const byRelease = new Map();
-    document.querySelectorAll('[data-rel-cfg]').forEach((slot) => {
+    slotsIn(root, '[data-rel-cfg]').forEach((slot) => {
       const relId = slot.getAttribute('data-rel-cfg');
       if (!byRelease.has(relId)) byRelease.set(relId, []);
       byRelease.get(relId).push(slot);
     });
-    byRelease.forEach(async (slots, relId) => {
+    return Promise.all(Array.from(byRelease, async ([relId, slots]) => {
       try {
-        const r = await siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/cfgs');
-        if (!r.ok) return;
-        const body = (await r.json()) || {};
+        const body = (await cfgsFor(relId)) || {};
         const all = body.items || [];
         // The owner's "attach a config" action rides on the same answer this call
         // already gives: only a build with a Flash UI can carry one, so a mod that
@@ -1860,7 +1932,7 @@
                                b.getAttribute('data-cfg-name'))));
         });
       } catch (_) { /* a release with no readable config just shows no button */ }
-    });
+    }));
   }
 
   async function downloadReleaseCfg(id, path, name) {
@@ -1884,8 +1956,8 @@
 
   // For each .tmod release, lazily check whether it ships .blueprint models and,
   // if so, reveal a "3D view" button per model that opens the WebGL viewer.
-  function loadReleaseBlueprints() {
-    document.querySelectorAll('[data-rel-bp]').forEach(async (box) => {
+  function loadReleaseBlueprints(root) {
+    return Promise.all(slotsIn(root, '[data-rel-bp]').map(async (box) => {
       const relId = box.getAttribute('data-rel-bp');
       try {
         const r = await siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/blueprints');
@@ -1940,14 +2012,14 @@
           });
         }));
       } catch (e) { /* a release without parseable blueprints just stays hidden */ }
-    });
+    }));
   }
 
   // For each .tmod release, lazily check whether it ships .pkfx particle effects
   // and, if so, reveal a click-to-load WebGL preview per effect. Missing textures /
   // meshes are pulled from the live game tree server-side.
-  function loadReleaseVfx() {
-    document.querySelectorAll('[data-rel-vfx]').forEach(async (box) => {
+  function loadReleaseVfx(root) {
+    return Promise.all(slotsIn(root, '[data-rel-vfx]').map(async (box) => {
       const relId = box.getAttribute('data-rel-vfx');
       try {
         const r = await siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/vfx');
@@ -1974,7 +2046,7 @@
           });
         }));
       } catch (e) { /* a release without parseable VFX just stays hidden */ }
-    });
+    }));
   }
 
   // For each .tmod release, lazily check whether it ships Wwise .bnk sound banks
@@ -1982,8 +2054,8 @@
   // of hundreds of sounds, so the button opens a browser rather than playing
   // something: the index is fetched on open, and only what the visitor presses
   // play on is ever decoded.
-  function loadReleaseAudio() {
-    document.querySelectorAll('[data-rel-audio]').forEach(async (box) => {
+  function loadReleaseAudio(root) {
+    return Promise.all(slotsIn(root, '[data-rel-audio]').map(async (box) => {
       const relId = box.getAttribute('data-rel-audio');
       try {
         const r = await siteGET('/site/mods/releases/' + encodeURIComponent(relId) + '/audio');
@@ -2013,7 +2085,7 @@
           });
         }));
       } catch (e) { /* a release without readable banks just stays hidden */ }
-    });
+    }));
   }
 
   async function toggleHiddenBranch(branch) {
