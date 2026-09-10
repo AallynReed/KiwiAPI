@@ -1517,6 +1517,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "classes.html", "text/html")
         if path == "/gems-guide":
             return self._send_file(TEMPLATES / "gems-guide.html", "text/html")
+        if path == "/loot-collector-guide":
+            return self._send_file(TEMPLATES / "loot-collector-guide.html", "text/html")
         if path == "/allies":
             try:
                 from app.site.allies_page import allies_view

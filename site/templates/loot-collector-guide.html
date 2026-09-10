@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Loot Collector Rules - a guide - Better Trove Tools</title>
+    <meta name="description" content="How to write rules for the Zakros UI Loot Collector mod: the four actions, the eight conditions, the rarity ladder, names with a star, and, or and blocks, why order decides - and a worked read of the example on the mod's own page.">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="canonical" href="https://trove.aallyn.net/loot-collector-guide">
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:url" content="https://trove.aallyn.net/loot-collector-guide">
+    <meta property="og:title" content="Loot Collector Rules - a guide">
+    <meta property="og:description" content="Write rules that decide what the Loot Collector takes, keeps, unlocks or hides - with worked examples.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/favicon.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Loot Collector Rules">
+    <meta name="twitter:description" content="Every part of a rule, taken apart, with examples you can copy.">
+
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+
+    <link rel="stylesheet" href="/static/style.min.css">
+
+    <style>
+        /* Scoped to .lcg-page. Everything reads from the global tokens in
+           style.css, except the mod-mock block, which deliberately carries the
+           mod's own palette so a card on this page looks like the card in game. */
+        .lcg-main { max-width: 1080px; margin: 0 auto; padding: 0 20px 96px; }
+
+        .lcg-hero { padding: 64px 0 36px; }
+        .lcg-eyebrow {
+            font-family: "JetBrains Mono", ui-monospace, monospace;
+            font-size: .8rem; letter-spacing: .06em; color: var(--text-mute);
+            margin: 0 0 14px;
+        }
+        .lcg-title {
+            font-family: "Space Grotesk", Inter, sans-serif; font-weight: 700;
+            font-size: var(--type-h2); line-height: 1.05; letter-spacing: -.02em;
+            margin: 0 0 18px;
+        }
+        .lcg-title span { color: var(--accent-blue); }
+        .lcg-lead {
+            max-width: 68ch; margin: 0 0 22px; color: var(--text-mute);
+            font-size: var(--type-lead); line-height: 1.6;
+        }
+        .lcg-hero-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+        .lcg-chip {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 6px 12px; border-radius: 999px;
+            border: 1px solid var(--bg-line); background: var(--bg-card);
+            color: var(--text-mute); font-size: .82rem;
+        }
+        .lcg-chip i { color: var(--accent-blue); }
+
+        .lcg-secnav {
+            position: sticky; top: 64px; z-index: 5;
+            display: flex; gap: 6px; flex-wrap: wrap;
+            padding: 10px 0; margin-bottom: 8px;
+            background: color-mix(in oklab, var(--bg-base) 88%, transparent);
+            border-bottom: 1px solid var(--bg-line);
+        }
+        .lcg-secnav a {
+            padding: 6px 11px; border-radius: 999px; font-size: .82rem;
+            color: var(--text-mute); border: 1px solid transparent;
+        }
+        .lcg-secnav a:hover { color: var(--text); border-color: var(--bg-line); }
+
+        .lcg-section { padding: 46px 0 6px; scroll-margin-top: 130px; }
+        .lcg-h2 {
+            font-family: "Space Grotesk", Inter, sans-serif; font-weight: 700;
+            font-size: var(--type-h3); letter-spacing: -.01em; margin: 0 0 8px;
+        }
+        .lcg-h3 {
+            font-family: "Space Grotesk", Inter, sans-serif; font-weight: 700;
+            font-size: 1.05rem; margin: 30px 0 8px;
+        }
+        .lcg-p { max-width: 72ch; color: var(--text-mute); line-height: 1.65; margin: 0 0 14px; }
+        .lcg-p strong { color: var(--text); font-weight: 600; }
+
+        code {
+            font-family: "JetBrains Mono", ui-monospace, monospace;
+            font-size: .875em; background: var(--bg-deep);
+            border: 1px solid var(--bg-line); border-radius: 6px;
+            padding: 1px 6px; white-space: nowrap; color: var(--text);
+        }
+        .lcg-rule {
+            display: block; white-space: pre-wrap; word-break: break-word;
+            padding: 12px 14px; border-radius: var(--radius-sm);
+            line-height: 1.55; font-size: .9rem; margin: 0 0 14px;
+        }
+
+        .lcg-list { max-width: 72ch; color: var(--text-mute); line-height: 1.65; padding-left: 20px; margin: 0 0 16px; }
+        .lcg-list li { margin-bottom: 8px; }
+        .lcg-list strong { color: var(--text); font-weight: 600; }
+
+        .lcg-table-wrap { overflow-x: auto; margin: 0 0 18px; }
+        .lcg-table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 560px; }
+        .lcg-table th, .lcg-table td {
+            text-align: left; padding: 10px 12px;
+            border-bottom: 1px solid var(--bg-line); vertical-align: top;
+        }
+        .lcg-table th {
+            font-family: "JetBrains Mono", ui-monospace, monospace;
+            font-size: .74rem; letter-spacing: .06em; text-transform: uppercase;
+            color: var(--text-mute); font-weight: 500;
+        }
+        .lcg-table td { color: var(--text-mute); line-height: 1.55; }
+        .lcg-table td:first-child { color: var(--text); white-space: nowrap; }
+
+        .lcg-cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); margin: 0 0 18px; }
+        .lcg-act-card {
+            border: 1px solid var(--bg-line); border-radius: var(--radius);
+            background: var(--bg-card); padding: 18px;
+        }
+        .lcg-act-card h3 {
+            font-family: "JetBrains Mono", ui-monospace, monospace;
+            font-size: .95rem; margin: 0 0 8px; display: flex; align-items: center; gap: 9px;
+        }
+        .lcg-act-card h3 code {
+            background: none; border: 0; padding: 0;
+            font-size: inherit; color: inherit;
+        }
+        .lcg-act-card p { color: var(--text-mute); font-size: .9rem; line-height: 1.6; margin: 0; }
+        .lcg-dot { width: 9px; height: 9px; border-radius: 999px; flex: none; }
+
+        .lcg-note {
+            border: 1px solid var(--bg-line); border-radius: var(--radius);
+            background: var(--bg-card); padding: 16px 18px; margin: 0 0 18px;
+            color: var(--text-mute); line-height: 1.6; max-width: 72ch;
+        }
+        .lcg-note p { margin: 0; }
+        .lcg-note strong { color: var(--text); }
+        .lcg-note i { color: var(--accent-blue); margin-right: 7px; }
+
+        /* The rarity ladder: one strip, in the order the game ranks them. */
+        .lcg-ladder { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
+        .lcg-rank {
+            font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .78rem;
+            padding: 5px 9px; border-radius: 7px;
+            border: 1px solid var(--bg-line); background: var(--bg-deep); color: var(--text-mute);
+        }
+        .lcg-rank b { color: var(--text-mute); font-weight: 400; margin-right: 6px; opacity: .65; }
+        .lcg-rank.is-rad { border-color: color-mix(in oklab, var(--accent-yellow) 45%, var(--bg-line)); color: var(--accent-yellow); }
+        .lcg-rank.is-ste { border-color: color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); color: var(--accent-blue); }
+        .lcg-rank.is-rad b, .lcg-rank.is-ste b { color: inherit; }
+
+        /* The in-game card, redrawn from the mod's own palette and geometry
+           rather than pasted as a screenshot, so it stays sharp at any width. */
+        .lcg-mock {
+            --m-panel: #0B0C0E; --m-raised: #101216; --m-head: #15171A;
+            --m-line: #3A3F46; --m-value: #E8ECF1; --m-label: #8A929C;
+            --m-cyan: #5FD3E8; --m-red: #E5484D; --m-green: #4CC38A; --m-orange: #F2870D;
+            background: var(--m-panel); border: 1px solid var(--m-line);
+            border-radius: 10px; padding: 14px; margin: 0 0 16px; overflow-x: auto;
+        }
+        .lcg-mock-head {
+            display: flex; align-items: center; gap: 10px;
+            padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--m-line);
+            font-family: "Space Grotesk", Inter, sans-serif; font-weight: 700;
+            color: var(--m-value); letter-spacing: .04em; font-size: .95rem;
+        }
+        .lcg-mcard {
+            position: relative; background: var(--m-raised);
+            border: 1px solid var(--m-line); border-radius: 4px;
+            padding: 12px 12px 12px 16px; margin-bottom: 10px; min-width: 520px;
+        }
+        .lcg-mcard::before {
+            content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+            background: var(--tone, var(--m-red));
+        }
+        .lcg-mcard[data-act="collect"] { --tone: var(--m-red); }
+        .lcg-mcard[data-act="keep"]    { --tone: var(--m-green); }
+        .lcg-mcard[data-act="unlock"]  { --tone: var(--m-orange); }
+        .lcg-mcard[data-act="hide"]    { --tone: var(--m-label); }
+        .lcg-mrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+        .lcg-mrow:last-child { margin-bottom: 0; }
+        .lcg-mrow.is-indent { padding-left: 34px; }
+        .lcg-mgrip { width: 14px; height: 12px; flex: none;
+            background: repeating-linear-gradient(to bottom, var(--m-label) 0 2px, transparent 2px 4px); opacity: .6; }
+        .lcg-mpill {
+            font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .78rem;
+            color: var(--m-value); background: var(--m-head);
+            border: 1px solid var(--m-line); border-radius: 3px; padding: 5px 9px;
+            white-space: nowrap;
+        }
+        .lcg-mpill.is-act { color: var(--tone); border-color: var(--tone); min-width: 74px; }
+        .lcg-mpill.is-field { min-width: 74px; }
+        .lcg-mpill.is-op { min-width: 40px; text-align: center; }
+        .lcg-mpill.is-value { flex: 1; min-width: 120px; }
+        .lcg-mpill.is-join { color: var(--m-label); min-width: 48px; }
+        .lcg-mverdict {
+            margin-left: auto; font-family: "JetBrains Mono", ui-monospace, monospace;
+            font-size: .78rem; color: var(--tone); border: 1px solid var(--m-line);
+            border-radius: 3px; padding: 5px 10px; white-space: nowrap;
+        }
+        .lcg-mterse {
+            font-family: "JetBrains Mono", ui-monospace, monospace;
+            font-size: .78rem; color: var(--m-label);
+        }
+        .lcg-mfoot {
+            border-top: 1px solid var(--m-line); margin-top: 12px; padding-top: 11px;
+            color: var(--m-label); font-size: .82rem;
+        }
+
+        .lcg-anno { display: grid; gap: 10px; margin: 0 0 18px; }
+        .lcg-anno-row {
+            display: grid; grid-template-columns: minmax(190px, 260px) 1fr; gap: 16px;
+            padding: 13px 16px; border: 1px solid var(--bg-line);
+            border-radius: var(--radius-sm); background: var(--bg-card);
+        }
+        .lcg-anno-key { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .82rem; color: var(--text); line-height: 1.5; }
+        .lcg-anno-val { color: var(--text-mute); line-height: 1.6; font-size: .92rem; }
+        @media (max-width: 640px) { .lcg-anno-row { grid-template-columns: 1fr; gap: 6px; } }
+
+        .lcg-recipe {
+            border: 1px solid var(--bg-line); border-radius: var(--radius);
+            background: var(--bg-card); padding: 16px 18px; margin: 0 0 12px;
+        }
+        .lcg-recipe h3 {
+            font-family: "Space Grotesk", Inter, sans-serif; font-weight: 700;
+            font-size: 1rem; margin: 0 0 10px; color: var(--text);
+        }
+        .lcg-recipe p { color: var(--text-mute); line-height: 1.6; font-size: .92rem; margin: 10px 0 0; max-width: 72ch; }
+        .lcg-recipe .lcg-rule { background: var(--bg-deep); margin: 0; }
+
+        .lcg-cta {
+            text-align: center; padding: 54px 0 8px;
+            border-top: 1px solid var(--bg-line); margin-top: 46px;
+        }
+        .lcg-cta h2 { font-family: "Space Grotesk", Inter, sans-serif; font-size: var(--type-h3); margin: 0 0 18px; }
+        .lcg-cta-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    </style>
+</head>
+<body class="landing lcg-page">
+
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main" class="lcg-main">
+
+        <section class="lcg-hero">
+            <p class="lcg-eyebrow">/loot-collector-guide</p>
+            <h1 class="lcg-title" data-i18n>Loot Collector <span>Rules</span></h1>
+            <p class="lcg-lead" data-i18n>The Loot Collector mod judges every item in the collector against a list of rules you write, and decides what goes, what stays and what you never see. This is the whole grammar - four actions, eight conditions, and the two words that join them - with the example from the mod's own page taken apart line by line.</p>
+            <div class="lcg-hero-chips" aria-hidden="true">
+                <span class="lcg-chip"><i class="fa-solid fa-gavel"></i> <span data-i18n>4 actions</span></span>
+                <span class="lcg-chip"><i class="fa-solid fa-sliders"></i> <span data-i18n>8 conditions</span></span>
+                <span class="lcg-chip"><i class="fa-solid fa-code-branch"></i> <span data-i18n>and / or / blocks</span></span>
+                <span class="lcg-chip"><i class="fa-solid fa-list-ol"></i> <span data-i18n>first match wins</span></span>
+            </div>
+            <a class="btn btn-ghost" href="/mods/aallyn/zakros-ui-loot-collector"><i class="fa-solid fa-cube"></i> <span data-i18n>Get the mod</span></a>
+        </section>
+
+        <nav class="lcg-secnav" aria-label="Guide sections">
+            <a href="#shape" data-i18n>The shape of a rule</a>
+            <a href="#actions" data-i18n>Actions</a>
+            <a href="#conditions" data-i18n>Conditions</a>
+            <a href="#rarity" data-i18n>The rarity ladder</a>
+            <a href="#names" data-i18n>Names</a>
+            <a href="#blocks" data-i18n>and, or, blocks</a>
+            <a href="#order" data-i18n>Order decides</a>
+            <a href="#worked" data-i18n>The example, read</a>
+            <a href="#recipes" data-i18n>Recipes</a>
+        </nav>
+
+        <section class="lcg-section" id="shape">
+            <h2 class="lcg-h2" data-i18n>The shape of a rule</h2>
+            <p class="lcg-p" data-i18n>A rule is an <strong>action</strong> and the <strong>conditions</strong> that decide it. Nothing else. It reads as one line, and that line is exactly what the editor draws as a card:</p>
+            <code class="lcg-rule">collect: rarity&lt;=radiant5 &amp; type=gem</code>
+            <p class="lcg-p" data-i18n>Collect is what happens. The two conditions are what has to be true, and the <code>&amp;</code> between them is <strong>and</strong>, so both have to hold. Read aloud: collect any gem that is Radiant 5 or below.</p>
+            <p class="lcg-p" data-i18n>You never have to type that line. <strong>Rules</strong> in the window's header opens an editor where every part is a control you press, and a keypad opens under any value box - the game holds on to the keyboard while the window is open, so rules are written with the mouse. The written form matters because it is what this guide can show you, and what the mod stores.</p>
+            <div class="lcg-note">
+                <p><i class="fa-solid fa-circle-info"></i><strong data-i18n>Nothing happens while the editor is open.</strong> <span data-i18n>No item is locked, unlocked or collected until you close it, so a half-written rule can never take anything. The one exception is hide, which filters the list as you write it.</span></p>
+            </div>
+        </section>
+
+        <section class="lcg-section" id="actions">
+            <h2 class="lcg-h2" data-i18n>The four actions</h2>
+            <p class="lcg-p" data-i18n>Every rule starts with one of these. Three are verdicts about an item; the fourth builds the list itself.</p>
+            <div class="lcg-cards">
+                <div class="lcg-act-card">
+                    <h3><span class="lcg-dot" style="background:#E5484D"></span> <code>collect</code></h3>
+                    <p data-i18n>Unlocks the item, and - only if Auto Collect is on - collects it there and then. With Auto Collect off it just unlocks, and Collect All takes it when you press the button.</p>
+                </div>
+                <div class="lcg-act-card">
+                    <h3><span class="lcg-dot" style="background:#4CC38A"></span> <code>keep</code></h3>
+                    <p data-i18n>Locks the item. A locked row is dimmed, carries a no-entry mark, and Collect All walks past it. This is how something survives the sweep.</p>
+                </div>
+                <div class="lcg-act-card">
+                    <h3><span class="lcg-dot" style="background:#F2870D"></span> <code>unlock</code></h3>
+                    <p data-i18n>Unlocks and stops there. Collect All will take the item when you press it, and Auto Collect leaves it alone - the one way to hand something to the button without it being swept up automatically.</p>
+                </div>
+                <div class="lcg-act-card">
+                    <h3><span class="lcg-dot" style="background:#8A929C"></span> <code>hide</code></h3>
+                    <p data-i18n>Takes the item out of the list entirely. It gets no lock, no collect and no row. Use it to stop looking at things you do not care about.</p>
+                </div>
+            </div>
+            <h3 class="lcg-h3" data-i18n>collect versus unlock</h3>
+            <p class="lcg-p" data-i18n>These two differ in exactly one way, and only when Auto Collect is on. Collect sends the item the moment it lands in the collector. Unlock only clears the lock, so the item waits for you to press Collect All. If you like Auto Collect for gems but want to eyeball your gear before it goes, that is a <code>collect</code> rule for the gems and an <code>unlock</code> rule for the gear.</p>
+            <p class="lcg-p" data-i18n>Unlock is also the only rule that undoes a lock you put on by hand. An item you left-clicked stays locked until something unlocks it, and nothing else in the list will.</p>
+        </section>
+
+        <section class="lcg-section" id="conditions">
+            <h2 class="lcg-h2" data-i18n>The eight conditions</h2>
+            <p class="lcg-p" data-i18n>A condition is a field, an operator and a value. Most fields take all six operators; the two that hold words take only <code>=</code> and <code>!=</code>.</p>
+            <div class="lcg-table-wrap">
+                <table class="lcg-table">
+                    <thead><tr>
+                        <th data-i18n>field</th><th data-i18n>what it is</th><th data-i18n>operators</th><th data-i18n>example</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr><td><code>name</code></td><td data-i18n>The item's name. A star anywhere loosens it.</td><td><code>=</code> <code>!=</code></td><td><code>name=*Dragonsoul</code></td></tr>
+                        <tr><td><code>type</code></td><td data-i18n>What kind of thing it is: gem, hat, ring, banner, weapon, ally, tome, flask, block, food and the rest.</td><td><code>=</code> <code>!=</code></td><td><code>type=gem</code></td></tr>
+                        <tr><td><code>rarity</code></td><td data-i18n>Written as a name, never a number. The whole ladder is below.</td><td data-i18n>all six</td><td><code>rarity&gt;=radiant1</code></td></tr>
+                        <tr><td><code>power</code></td><td data-i18n>The Power Rank the game prints on the item. Shortened in the file; it is the same number.</td><td data-i18n>all six</td><td><code>power&gt;=3000</code></td></tr>
+                        <tr><td><code>stats</code></td><td data-i18n>How many stats the item rolled - a count, not a value.</td><td data-i18n>all six</td><td><code>stats&lt;=2</code></td></tr>
+                        <tr><td><code>stars</code></td><td data-i18n>The star count on a piece of gear, 1 to 5.</td><td data-i18n>all six</td><td><code>stars&gt;=4</code></td></tr>
+                        <tr><td><code>quality</code></td><td data-i18n>A gem's roll quality as a percent, 0 to 100. Gems only.</td><td data-i18n>all six</td><td><code>quality&lt;20</code></td></tr>
+                        <tr><td><code>qty</code></td><td data-i18n>How many of the item are stacked on that row.</td><td data-i18n>all six</td><td><code>qty&gt;=100</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="lcg-p" data-i18n>The six operators are <code>=</code>, <code>!=</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code> and <code>&gt;=</code>. On rarity they mean what they look like on the ladder: <code>&lt;=</code> is this or worse, <code>&gt;=</code> is this or better.</p>
+            <h3 class="lcg-h3" data-i18n>Four of these arrive late</h3>
+            <p class="lcg-p" data-i18n>Name, rarity and quantity are known the moment a row appears. Type, power, stats and quality have to be read off the item itself, so a rule using any of them waits until the window has read the whole list - a few seconds after it opens. Nothing is lost by it; it is only why a rule on <code>power</code> does not decide instantly and a rule on <code>rarity</code> does.</p>
+            <p class="lcg-p" data-i18n>Two gaps are worth knowing about. A few items carry no type at all - crafting materials, placeables and unlockers have no equipment slot for the game to name - so a <code>type</code> rule leaves them alone rather than guessing. And a gem carrying a retired stat has no quality worked out, so a <code>quality</code> rule passes over it too. In both cases the item is not judged false; it is simply not judged.</p>
+        </section>
+
+        <section class="lcg-section" id="rarity">
+            <h2 class="lcg-h2" data-i18n>The rarity ladder</h2>
+            <p class="lcg-p" data-i18n>Rarity values are written as names. There are 32 of them and they sit in one ordered ladder, which is what makes <code>&lt;=</code> and <code>&gt;=</code> useful:</p>
+            <div class="lcg-ladder">
+                <code class="lcg-rank"><b>1</b>common</code>
+                <code class="lcg-rank"><b>2</b>uncommon</code>
+                <code class="lcg-rank"><b>3</b>rare</code>
+                <code class="lcg-rank"><b>4</b>epic</code>
+                <code class="lcg-rank"><b>5</b>legendary</code>
+                <code class="lcg-rank"><b>6</b>relic</code>
+                <code class="lcg-rank"><b>7</b>resplendent</code>
+                <code class="lcg-rank"><b>8</b>shadow1</code>
+                <code class="lcg-rank"><b>9</b>shadow2</code>
+                <code class="lcg-rank"><b>10</b>shadow3</code>
+                <code class="lcg-rank"><b>11</b>shadow4</code>
+                <code class="lcg-rank"><b>12</b>shadow5</code>
+                <code class="lcg-rank is-rad"><b>13</b>radiant1</code>
+                <code class="lcg-rank is-ste"><b>14</b>stellar1</code>
+                <code class="lcg-rank is-rad"><b>15</b>radiant2</code>
+                <code class="lcg-rank is-ste"><b>16</b>stellar2</code>
+                <code class="lcg-rank is-rad"><b>17</b>radiant3</code>
+                <code class="lcg-rank is-ste"><b>18</b>stellar3</code>
+                <code class="lcg-rank is-rad"><b>19</b>radiant4</code>
+                <code class="lcg-rank is-ste"><b>20</b>stellar4</code>
+                <code class="lcg-rank is-rad"><b>21</b>radiant5</code>
+                <code class="lcg-rank is-ste"><b>22</b>stellar5</code>
+                <code class="lcg-rank"><b>23</b>crystal1</code>
+                <code class="lcg-rank"><b>24</b>crystal2</code>
+                <code class="lcg-rank"><b>25</b>crystal3</code>
+                <code class="lcg-rank"><b>26</b>crystal4</code>
+                <code class="lcg-rank"><b>27</b>crystal5</code>
+                <code class="lcg-rank"><b>28</b>mystic1</code>
+                <code class="lcg-rank"><b>29</b>mystic2</code>
+                <code class="lcg-rank"><b>30</b>mystic3</code>
+                <code class="lcg-rank"><b>31</b>mystic4</code>
+                <code class="lcg-rank"><b>32</b>mystic5</code>
+            </div>
+            <div class="lcg-note">
+                <p><i class="fa-solid fa-triangle-exclamation"></i><strong data-i18n>Radiant and Stellar interleave.</strong> <span data-i18n>They are not two tiers stacked one above the other - each Radiant sits directly below the Stellar of the same number. So <code>rarity&lt;=stellar3</code> also catches Radiant 1, 2 and 3, but not Radiant 4. If you mean everything below Crystal, write <code>rarity&lt;=stellar5</code>, which is the top of that run.</span></p>
+            </div>
+            <p class="lcg-p" data-i18n>This is the game's own ordering, read out of the client rather than a list somebody typed. Write the name in lowercase with no space: <code>crystal5</code>, <code>radiant1</code>, <code>resplendent</code>.</p>
+        </section>
+
+        <section class="lcg-section" id="names">
+            <h2 class="lcg-h2" data-i18n>Names, and the star</h2>
+            <p class="lcg-p" data-i18n>A name matches exactly unless it carries a star. <code>name=Glim</code> is only an item called precisely that. Put a star anywhere and the whole pattern loosens: the pieces either side of it then have to appear in that order, anywhere in the name.</p>
+            <ul class="lcg-list">
+                <li data-i18n><code>name=*Dragonsoul</code> - anything with Dragonsoul in it, wherever it sits.</li>
+                <li data-i18n><code>name=radiant*helmet</code> - a Radiant helmet, whatever the game puts between the two words.</li>
+                <li data-i18n><code>name=*Gem Box</code> - every kind of gem box.</li>
+                <li data-i18n><code>name=*</code> - anything at all. Useful as the last rule in a list.</li>
+                <li data-i18n><code>name!=*standard*</code> - anything without standard in the name.</li>
+            </ul>
+            <p class="lcg-p" data-i18n>Case is ignored, so <code>*dragonsoul</code> and <code>*Dragonsoul</code> are the same pattern.</p>
+        </section>
+
+        <section class="lcg-section" id="blocks">
+            <h2 class="lcg-h2" data-i18n>and, or, and blocks</h2>
+            <p class="lcg-p" data-i18n>The word between two conditions is a control - press it to swap <strong>and</strong> for <strong>or</strong>. Every condition inside one block shares that single word, so a block asks for either all of its conditions or any of them, never a mixture.</p>
+            <p class="lcg-p" data-i18n>To mix them you add a second block with <strong>+ block</strong>, which gets its own word between the two groups. That is one level of grouping, and it is the whole of it:</p>
+            <code class="lcg-rule">keep: (type=banner , name!=*standard) &amp; rarity&gt;=radiant1</code>
+            <p class="lcg-p" data-i18n>Read: keep anything that is a banner or is not named standard, as long as it is Radiant 1 or better. In the written form <code>&amp;</code> is and, <code>,</code> is or, and the brackets are what say a rule has blocks at all. A rule with no brackets is one block, however many conditions it carries.</p>
+            <div class="lcg-note">
+                <p><i class="fa-solid fa-lightbulb"></i><strong data-i18n>There is no second level.</strong> <span data-i18n>You cannot nest a group inside a group. When a condition needs to apply to several alternatives at once, you repeat it in each block - which is exactly what the worked example below does with <code>type=gem</code>.</span></p>
+            </div>
+            <p class="lcg-p" data-i18n>A rule with no conditions is ignored rather than matching everything, so a half-built card sitting in your list is harmless.</p>
+        </section>
+
+        <section class="lcg-section" id="order">
+            <h2 class="lcg-h2" data-i18n>Order decides</h2>
+            <p class="lcg-p" data-i18n>The first rule that matches an item decides it, and the rest are never read for that item. So an exception goes above the sweep it is an exception to. Drag a rule by the handle on its left to move it.</p>
+            <div class="lcg-table-wrap">
+                <table class="lcg-table">
+                    <thead><tr><th data-i18n>your list</th><th data-i18n>a Stellar 3 Dragonsoul Helmet</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>collect: rarity&lt;=stellar5</code><br><code>keep: name=*Dragonsoul</code></td><td data-i18n>Collected. The sweep matched first, so the keep rule never got a say.</td></tr>
+                        <tr><td><code>keep: name=*Dragonsoul</code><br><code>collect: rarity&lt;=stellar5</code></td><td data-i18n>Kept. The exception matched first and the sweep was never read.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="lcg-p" data-i18n>Hide is not in that race. It builds the list rather than deciding an item, so a hide rule takes something out wherever it sits - top, bottom, anywhere.</p>
+            <p class="lcg-p" data-i18n>Each card tells you what it decides - will collect 4 items - counted off the list in front of you. A rule sitting below one that already decided an item counts none of it, so those two lists above report their totals differently even though the rules are identical. Click the count and the rule names the items.</p>
+        </section>
+
+        <section class="lcg-section" id="worked">
+            <h2 class="lcg-h2" data-i18n>The example on the mod's page, read line by line</h2>
+            <p class="lcg-p" data-i18n>This is the screenshot on the mod's own page, redrawn. Two rules: a three-block gem sweep, and a folded keep rule underneath it.</p>
+
+            <div class="lcg-mock">
+                <div class="lcg-mock-head"><span>RULES</span></div>
+
+                <div class="lcg-mcard" data-act="collect">
+                    <div class="lcg-mrow">
+                        <span class="lcg-mgrip" aria-hidden="true"></span>
+                        <span class="lcg-mpill is-act">Collect</span>
+                        <span class="lcg-mverdict">will collect 33 items</span>
+                    </div>
+                    <div class="lcg-mrow is-indent"><code class="lcg-mpill is-field">rarity</code><code class="lcg-mpill is-op">&lt;=</code><code class="lcg-mpill is-value">Crystal Level 5</code></div>
+                    <div class="lcg-mrow is-indent"><code class="lcg-mpill is-join">and</code><code class="lcg-mpill is-field">type</code><code class="lcg-mpill is-op">=</code><code class="lcg-mpill is-value">gem</code></div>
+                    <div class="lcg-mrow"><code class="lcg-mpill is-join">or</code></div>
+                    <div class="lcg-mrow is-indent"><code class="lcg-mpill is-field">type</code><code class="lcg-mpill is-op">=</code><code class="lcg-mpill is-value">gem</code></div>
+                    <div class="lcg-mrow is-indent"><code class="lcg-mpill is-join">and</code><code class="lcg-mpill is-field">stats</code><code class="lcg-mpill is-op">&lt;=</code><code class="lcg-mpill is-value">2</code></div>
+                    <div class="lcg-mrow"><code class="lcg-mpill is-join">or</code></div>
+                    <div class="lcg-mrow is-indent"><code class="lcg-mpill is-field">type</code><code class="lcg-mpill is-op">=</code><code class="lcg-mpill is-value">gem</code></div>
+                    <div class="lcg-mrow is-indent"><code class="lcg-mpill is-join">and</code><code class="lcg-mpill is-field">quality</code><code class="lcg-mpill is-op">&lt;=</code><code class="lcg-mpill is-value">20</code></div>
+                </div>
+
+                <div class="lcg-mcard" data-act="keep">
+                    <div class="lcg-mrow">
+                        <span class="lcg-mgrip" aria-hidden="true"></span>
+                        <span class="lcg-mpill is-act">Keep</span>
+                        <code class="lcg-mterse">name != *standard*&nbsp; and &nbsp;type = banner&nbsp; and &nbsp;rarity &lt;= Epic</code>
+                        <span class="lcg-mverdict">nothing to keep</span>
+                    </div>
+                </div>
+
+                <div class="lcg-mfoot" data-i18n>First match wins, so put exceptions above sweeps. A rule with no conditions is ignored.</div>
+            </div>
+
+            <p class="lcg-p" data-i18n>Written out, those two cards are these two lines:</p>
+            <code class="lcg-rule">collect: (rarity&lt;=crystal5 &amp; type=gem) , (type=gem &amp; stats&lt;=2) , (type=gem &amp; quality&lt;=20)
+keep: name!=*standard* &amp; type=banner &amp; rarity&lt;=epic</code>
+
+            <h3 class="lcg-h3" data-i18n>The collect rule, block by block</h3>
+            <p class="lcg-p" data-i18n>Three blocks joined by or, so an item only has to satisfy one of them. Every block also says <code>type=gem</code>, which means the whole rule only ever touches gems.</p>
+            <div class="lcg-anno">
+                <div class="lcg-anno-row">
+                    <div class="lcg-anno-key"><code>rarity &lt;= crystal5</code><br><code>and type = gem</code></div>
+                    <div class="lcg-anno-val" data-i18n>Any gem up to and including Crystal 5. Crystal 5 sits fifth from the top of the ladder, so this is every gem that is not Mystic - the bread-and-butter sweep.</div>
+                </div>
+                <div class="lcg-anno-row">
+                    <div class="lcg-anno-key"><code>type = gem</code><br><code>and stats &lt;= 2</code></div>
+                    <div class="lcg-anno-val" data-i18n>A gem that rolled two stats or fewer. This catches a Mystic gem the first block deliberately spared - if it only came up with two stats, its rarity does not save it.</div>
+                </div>
+                <div class="lcg-anno-row">
+                    <div class="lcg-anno-key"><code>type = gem</code><br><code>and quality &lt;= 20</code></div>
+                    <div class="lcg-anno-val" data-i18n>A gem whose stats rolled at 20% quality or worse. The same idea from the other direction: a high-rarity gem with three stats that all rolled badly is still not worth keeping.</div>
+                </div>
+            </div>
+            <p class="lcg-p" data-i18n>So the rule reads: collect any gem that is Crystal 5 or below, or has two stats or fewer, or rolled at 20% quality or worse. A Mystic gem with three well-rolled stats matches none of the three blocks and is left alone. The card says it will collect 33 items, which is what it would take off the list in front of it the moment the editor closes.</p>
+
+            <div class="lcg-note">
+                <p><i class="fa-solid fa-lightbulb"></i><strong data-i18n>Why type=gem is written three times.</strong> <span data-i18n>Because grouping stops at one level. You cannot write gem and (A or B or C), so instead you write (gem and A) or (gem and B) or (gem and C), which is the same thing said the long way. Any time you find yourself repeating a condition in every block, that is why.</span></p>
+            </div>
+
+            <h3 class="lcg-h3" data-i18n>The keep rule</h3>
+            <p class="lcg-p" data-i18n>One block, three conditions, all joined by and - so all three have to hold. It is shown folded to a single line, which is what the minus button beside a card does.</p>
+            <div class="lcg-anno">
+                <div class="lcg-anno-row">
+                    <div class="lcg-anno-key"><code>name != *standard*</code></div>
+                    <div class="lcg-anno-val" data-i18n>Not the standard banners. The stars on both sides make it a contains test, so anything with standard anywhere in its name is excluded.</div>
+                </div>
+                <div class="lcg-anno-row">
+                    <div class="lcg-anno-key"><code>type = banner</code></div>
+                    <div class="lcg-anno-val" data-i18n>Banners only. Nothing else can match this rule at all.</div>
+                </div>
+                <div class="lcg-anno-row">
+                    <div class="lcg-anno-key"><code>rarity &lt;= epic</code></div>
+                    <div class="lcg-anno-val" data-i18n>Epic or below - fourth from the bottom of the ladder, so the low end.</div>
+                </div>
+            </div>
+            <p class="lcg-p" data-i18n>Together: lock any low-rarity banner that is not a standard one, so Collect All walks past it. The card reads nothing to keep because no such banner was in the list at the time. A count of zero is a fact about your loot, not a fault in the rule.</p>
+            <p class="lcg-p" data-i18n>The two rules never argue. The first only matches gems and the second only banners, so their order makes no difference here. That is worth noticing precisely because it is the exception - the moment two rules can match the same item, the one on top wins and the other is never read.</p>
+        </section>
+
+        <section class="lcg-section" id="recipes">
+            <h2 class="lcg-h2" data-i18n>More examples</h2>
+            <p class="lcg-p" data-i18n>Each of these is a complete list. Rules are read top to bottom, so the order shown is part of the recipe.</p>
+
+            <div class="lcg-recipe">
+                <h3 data-i18n>Clear the junk, keep everything else</h3>
+                <code class="lcg-rule">collect: rarity&lt;=relic</code>
+                <p data-i18n>The simplest useful list. Anything Relic or below is unlocked and swept; everything above it is left exactly as you found it. One rule, one condition.</p>
+            </div>
+
+            <div class="lcg-recipe">
+                <h3 data-i18n>Sweep, but never these</h3>
+                <code class="lcg-rule">keep: name=*Dragonsoul
+collect: rarity&lt;=stellar5</code>
+                <p data-i18n>The exception sits above the sweep, so a Dragonsoul is locked before the sweep ever sees it. Flip the two lines and the Dragonsoul goes with everything else - this is the single mistake that catches people out.</p>
+            </div>
+
+            <div class="lcg-recipe">
+                <h3 data-i18n>Only look at gear</h3>
+                <code class="lcg-rule">hide: type=block
+hide: type=food
+hide: type=compostable</code>
+                <p data-i18n>Three hide rules and no verdicts at all. Nothing is locked or collected; the list simply stops showing you crafting stock. Hide runs wherever it sits, so these work just as well at the bottom.</p>
+            </div>
+
+            <div class="lcg-recipe">
+                <h3 data-i18n>Auto Collect for gems, by hand for gear</h3>
+                <code class="lcg-rule">collect: type=gem &amp; rarity&lt;=stellar5
+unlock: rarity&lt;=relic</code>
+                <p data-i18n>With Auto Collect on, the gems go on their own as they land. The gear is only unlocked - it sits there until you press Collect All, so you get a look at it first. This is the pairing unlock exists for.</p>
+            </div>
+
+            <div class="lcg-recipe">
+                <h3 data-i18n>Keep anything with real stats on it</h3>
+                <code class="lcg-rule">keep: stars&gt;=4 &amp; rarity&gt;=radiant1
+collect: rarity&lt;=stellar5</code>
+                <p data-i18n>Four or five stars and Radiant 1 or better survives; everything else up to Stellar 5 goes. Both conditions sit in one block sharing the same and, so a four-star Relic is not spared.</p>
+            </div>
+
+            <div class="lcg-recipe">
+                <h3 data-i18n>Keep the good gems, take the rest</h3>
+                <code class="lcg-rule">keep: type=gem &amp; quality&gt;=70
+collect: type=gem</code>
+                <p data-i18n>Quality is the gem's roll as a percent. Anything at 70% or better is locked and every other gem is swept, regardless of rarity - which is the point: a badly rolled Mystic is worth less than a well rolled Stellar.</p>
+            </div>
+
+            <div class="lcg-recipe">
+                <h3 data-i18n>One rule, two ways in</h3>
+                <code class="lcg-rule">keep: (stars=5) , (type=gem &amp; quality&gt;=90)</code>
+                <p data-i18n>Two blocks joined by or: a five-star piece of gear, or a near-perfect gem. Either one is enough. This is the shape to reach for when one rule should cover two unrelated things instead of writing two rules.</p>
+            </div>
+
+            <div class="lcg-recipe">
+                <h3 data-i18n>Hoard a stack</h3>
+                <code class="lcg-rule">keep: qty&gt;=100
+collect: rarity&lt;=resplendent</code>
+                <p data-i18n>Qty is how many sit on the row. Anything you have a hundred or more of gets locked, and the rest of the low-rarity pile goes.</p>
+            </div>
+
+            <div class="lcg-recipe">
+                <h3 data-i18n>The full sweep, with a floor</h3>
+                <code class="lcg-rule">keep: rarity&gt;=crystal1
+hide: type=block
+collect: name=*</code>
+                <p data-i18n>Read top to bottom: lock anything Crystal 1 or better, stop showing blocks, and collect everything that is left - <code>name=*</code> matches any name at all. The keep rule above it is what stops the sweep being total, so the order here is doing all the work.</p>
+            </div>
+        </section>
+
+        <section class="lcg-section" id="where">
+            <h2 class="lcg-h2" data-i18n>Where the rules live</h2>
+            <p class="lcg-p" data-i18n>They are stored with the mod's other settings, on the <code>rules</code> line, with a <code>|</code> between one rule and the next - which is why every example above can be shown as text. Writing them in the window's editor is the normal way in, and the editor keeps that line in step for you.</p>
+            <code class="lcg-rule">rules = keep: name=*Dragonsoul | collect: rarity&lt;=stellar5</code>
+            <p class="lcg-p" data-i18n>Rules are re-read the moment you close the editor and every item is judged again from the top, so a change never leaves half the list decided under the old rules and half under the new ones.</p>
+        </section>
+
+        <section class="lcg-cta">
+            <h2 data-i18n>That is the whole grammar.</h2>
+            <div class="lcg-cta-actions">
+                <a class="btn btn-primary" href="/mods/aallyn/zakros-ui-loot-collector"><i class="fa-solid fa-cube"></i> <span data-i18n>Zakros UI - Loot Collector</span></a>
+                <a class="btn btn-ghost" href="/guides"><i class="fa-solid fa-book"></i> <span data-i18n>More guides</span></a>
+            </div>
+        </section>
+
+    </main>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/_site_util.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+</body>
+</html>

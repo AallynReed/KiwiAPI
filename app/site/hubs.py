@@ -35,6 +35,16 @@ HUBS: dict[str, dict[str, Any]] = {
                          "conditions each one needs and what it is worth.",
                 "kind": "Reference",
             },
+            {
+                "name": "Loot Collector Rules",
+                "path": "/loot-collector-guide",
+                "flag": "loot_collector_guide_enabled",
+                "icon": "fa-solid fa-filter",
+                "blurb": "Write rules that decide what the Loot Collector mod takes, "
+                         "keeps, unlocks or hides - the whole grammar, worked through "
+                         "with examples.",
+                "kind": "Mod guide",
+            },
         ),
     },
     "gem-tools": {

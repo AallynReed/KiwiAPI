@@ -496,6 +496,18 @@ REGISTRY: dict[str, TunableSetting] = {
             "/site/codexes/render thumbnail endpoint, so only the page route is hidden."
         ),
     ),
+    "feature_loot_collector_guide_enabled": _t(
+        key="feature_loot_collector_guide_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Loot Collector rules guide "
+            "(/loot-collector-guide). OFF hides the page and drops it off the "
+            "Guides hub. It is a written page - no scripts of its own, no proxy "
+            "and no /v1 API - so only the page route is hidden."
+        ),
+    ),
     "feature_file_drops_enabled": _t(
         key="feature_file_drops_enabled",
         default=True,

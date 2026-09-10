@@ -140,6 +140,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Guides", "/guides", "guides_enabled", "fa-solid fa-compass", "Learn", "how to", "explainer", "tutorial"),
     _p("How Gems Work", "/gems-guide", "gems_guide_enabled", "fa-solid fa-circle-question", "Learn", "gems", "guide", "explainer", in_nav=False),
     _p("Fishing Guide", "/fishing-guide", "fishing_guide_enabled", "fa-solid fa-fish", "Learn", "fish", "pools", "lures", "bait", "turtles", "guide", in_nav=False),
+    _p("Loot Collector Rules", "/loot-collector-guide", "loot_collector_guide_enabled", "fa-solid fa-filter", "Learn", "loot", "collector", "rules", "mod", "zakros", "deconstruct", "guide", in_nav=False),
     _p("Recipe Cost Calculator", "/codexes/crafting", "codexes_enabled", "fa-solid fa-flask", "Learn", "crafting", "cost", in_nav=False),
     _p("Updates", "/updates", "updates_enabled", "fa-solid fa-code-branch", "Learn", "patch notes", "changes", "datamining"),
     _p("Streams", "/streams", "streams_enabled", "fa-solid fa-video", "Learn", "twitch", "live"),

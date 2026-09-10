@@ -446,6 +446,15 @@ async def fishing_guide_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "fishing-guide.html", {})
 
 
+@router.get("/loot-collector-guide", response_class=HTMLResponse)
+async def loot_collector_guide_page(request: Request) -> HTMLResponse:
+    """The Loot Collector mod's rule grammar - the four actions, the eight
+    conditions, blocks and ordering, with the example from the mod's own page
+    read line by line. A written page: no scripts of its own and no reads, so it
+    renders the same whether anything else on the site is up or not."""
+    return _TEMPLATES.TemplateResponse(request, "loot-collector-guide.html", {})
+
+
 @router.get("/dressing-room", response_class=HTMLResponse)
 async def dressing_room_page(request: Request) -> HTMLResponse:
     """Dressing Room - build a Trove character out of the game's own parts: pick a
