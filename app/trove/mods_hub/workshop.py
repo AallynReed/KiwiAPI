@@ -353,10 +353,14 @@ def clean_properties(raw: dict | None) -> dict[str, str]:
     # Which packed file IS the preview / the config. Carried over from an opened
     # .tmod so a rebuild doesn't quietly lose them; build_mod drops either one whose
     # file didn't survive the build, and overwrites it when a new one is attached.
-    for key in ("previewPath", "configPath"):
-        declared = norm_path(_clean(raw.get(key), 260)).lower()
-        if declared:
-            props[key] = declared
+    # A preview is lowercased with every other packed game path. A config is not: it
+    # is extracted as `ModCfgs/<Mod Title>.cfg`, so its case is the title's own.
+    preview = norm_path(_clean(raw.get("previewPath"), 260)).lower()
+    if preview:
+        props["previewPath"] = preview
+    config = norm_path(_clean(raw.get("configPath"), 260))
+    if config:
+        props["configPath"] = config
     return props
 
 
@@ -453,7 +457,8 @@ async def build_mod(
 
     # A declaration carried over from an opened .tmod outlives its file if placement
     # dropped it, and a header pointing at a file that isn't there reads as a broken
-    # mod. Paths are lowercased on the way into the archive, so compare that way.
+    # mod. A game path is lowercased on the way into the archive and a config is not,
+    # so the comparison ignores case either way.
     final_paths = {p.lower() for p, _ in packed}
     for key in ("previewPath", "configPath"):
         if props.get(key) and props[key].lower() not in final_paths:

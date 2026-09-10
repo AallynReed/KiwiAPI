@@ -270,6 +270,10 @@ def build_tmod(version: int, properties: dict[str, str], files: list[tuple[str, 
     (the default, for real Trove game files - the engine stores them lowercase) they
     are also lowercased. A `.tpack` packs each mod's `.tmod` under its exact
     title-cased filename, so it passes `lowercase_paths=False` to preserve case.
+
+    A `.cfg` keeps its case either way. It is not a game file and is never resolved
+    as one: it is extracted to `ModCfgs/<Mod Title>.cfg`, and a lowercased packed
+    path is the wrong name for it.
     """
     if not files:
         raise TmodError("a .tmod needs at least one file")
@@ -289,7 +293,7 @@ def build_tmod(version: int, properties: dict[str, str], files: list[tuple[str, 
     offset = 0
     for raw_path, content in files:
         path = raw_path.replace("\\", "/").lstrip("/")
-        if lowercase_paths:
+        if lowercase_paths and not path.lower().endswith(".cfg"):
             path = path.lower()
         path_bytes = path.encode("utf-8")
         if len(path_bytes) > 255:

@@ -1177,13 +1177,15 @@ _CONFIG_MAX_BYTES = 256 * 1024          # a .cfg is text; anything bigger isn't 
 
 def _config_packed_path(props: dict[str, str]) -> str:
     """Where an attached config is packed: ``ui/<title>.cfg`` - the mod's own header
-    title, lowercased like every other packed game path (the download endpoint
-    restores the title's casing when serving it)."""
+    title, with its case kept. Every other packed path is lowercased because the
+    engine resolves game files that way, but a config is never resolved as a game
+    file: it is extracted to ``ModCfgs/<Mod Title>.cfg``, and only the title's own
+    spelling is the right name for it."""
     title = str(props.get("title", "")).strip()
     if not title:
         raise APIError(400, ErrorCode.bad_request,
                        "This build has no title in its header to name the config after.")
-    return f"ui/{_safe_filename(title)}.cfg".lower()
+    return f"ui/{_safe_filename(title)}.cfg"
 
 
 def _inject_config(
@@ -1209,7 +1211,7 @@ def _inject_config(
                        "Only a mod with a Flash UI (.swf) can carry a config file.")
     path = _config_packed_path(props)
     files[:] = [(p, b) for (p, b) in files
-                if p.replace("\\", "/").lstrip("/").lower() != path]
+                if p.replace("\\", "/").lstrip("/").lower() != path.lower()]
     files.append((path, data))
     props["configPath"] = path
     return path
@@ -1985,11 +1987,12 @@ def _declared_config_path(props: dict) -> str:
 
 def _cfg_download_name(release: ModRelease, path: str) -> str:
     """The name to save one packed .cfg under. The packed path is authoritative,
-    except for CASE: ``build_tmod`` lowercases inner paths, while the game names the
-    live cfg after the mod's title. So restore the case we KNOW - from the artifact's
-    ``title`` when the packed name is that title, else from a ``configPath`` that
-    names this same file - and otherwise serve the packed name verbatim (a guess is
-    worse than the name that's actually in the archive)."""
+    except for CASE: a build made before configs kept theirs carries a lowercased
+    inner path, while the game names the live cfg after the mod's title. So restore
+    the case we KNOW - from the artifact's ``title`` when the packed name is that
+    title, else from a ``configPath`` that names this same file - and otherwise serve
+    the packed name verbatim (a guess is worse than the name that's actually in the
+    archive)."""
     base = path.rsplit("/", 1)[-1]
     props = release.tmod_properties or {}
     title = str(props.get("title", "")).strip()
