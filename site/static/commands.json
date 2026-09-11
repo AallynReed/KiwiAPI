@@ -1199,6 +1199,22 @@
       }
     },
     {
+      "syntax": "/mapautoclose [on|off]",
+      "category": "other",
+      "description": {
+        "en": "Default: on. Enables or disables map closure when walking - this is used for minimap functionality. No argument shows the current state.",
+        "fr": "Par défaut : on. Active ou désactive la fermeture de la carte quand on marche - c'est ce dont un minimap a besoin. Sans argument, l'état actuel est affiché.",
+        "de": "Standard: on. Schaltet das Schließen der Karte beim Laufen ein oder aus - das ist es, was eine Minimap braucht. Ohne Argument wird der aktuelle Zustand angezeigt.",
+        "pt-PT": "Predefinição: on. Ativa ou desativa o fecho do mapa ao andar - é disso que um minimapa precisa. Sem argumento mostra o estado atual.",
+        "ru": "По умолчанию: on. Включает или отключает закрытие карты при ходьбе - это нужно для работы мини-карты. Без аргумента показывает текущее состояние.",
+        "ja": "初期値はon。移動したときにマップを閉じるかどうかを切り替える。ミニマップを使うにはこれが必要。引数を入力しなかった場合は現在の状態を表示する。",
+        "zh-CN": "默认：on。开启或关闭移动时自动关闭地图 - 小地图功能需要它。不带参数 = 显示当前状态。",
+        "ko": "기본값: on. 이동할 때 지도가 닫히는지 여부를 켜거나 끕니다. 미니맵 기능에 필요합니다. 인자 없음 = 현재 상태 표시.",
+        "es": "Predeterminado: on. Activa o desactiva el cierre del mapa al caminar: es lo que necesita un minimapa. Sin argumento muestra el estado actual.",
+        "th": "ค่าเริ่มต้น: on เปิดหรือปิดการปิดแผนที่เมื่อเดิน - จำเป็นสำหรับการใช้มินิแมป ไม่ใส่ค่า = แสดงสถานะปัจจุบัน"
+      }
+    },
+    {
       "syntax": "/dnd",
       "category": "other",
       "description": {
