@@ -579,8 +579,14 @@ async def site_rotations() -> JSONResponse:
                   schedule=_sched(d15.get("upcoming"))),
     ]
     if stampy_cur:
+        # Unlike the mana/d15 rotations, Stampy has gaps: ``current`` is the live
+        # window if one is open and otherwise the next one, so the card's Here/Away
+        # has to be read off the window rather than assumed.
+        _now = int(time.time())
         merchants.append(_merchant(
-            "stampy", "Stampy", True, stampy_cur.get("starts_at"), stampy_cur.get("ends_at"),
+            "stampy", "Stampy",
+            stampy_cur["starts_at"] <= _now < stampy_cur["ends_at"],
+            stampy_cur.get("starts_at"), stampy_cur.get("ends_at"),
             biomes=_biome_list(stampy_cur.get("biomes")),
             schedule=_sched(stampy.get("upcoming"))))
     # Chaos Chest: window + the current featured item (name, identifier and the
