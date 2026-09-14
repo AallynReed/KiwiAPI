@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 
 from app.core.config import settings
 from app.trove.codexes import pg_store
+from app.trove.mods_hub import assembly
 
 # branch -> (codex signature, RigMap)
 _cache: dict[str, tuple] = {}
@@ -61,9 +62,22 @@ class RigMap:
     # ``npc/delve/path/`` and two 2023 event folders), so it holds a list.
     by_path: dict[str, str] = field(default_factory=dict)
     by_stem: dict[str, list[str]] = field(default_factory=dict)
+    # prefab -> the head scale it declares; (prefab, blueprint) -> a part's own scale,
+    # kept only where it isn't 1.0 (see binfab.extract_rig_refs).
+    head_scale: dict[str, float] = field(default_factory=dict)
+    mesh_scale: dict[tuple[str, str], float] = field(default_factory=dict)
 
     def __bool__(self) -> bool:
         return bool(self.by_blueprint)
+
+
+@dataclass(frozen=True)
+class Scales:
+    """How big a creature's parts draw: the head scale for its head-area sockets, and
+    each known part's final multiplier."""
+
+    head: float = 1.0
+    parts: dict[str, float] = field(default_factory=dict)
 
 
 def prefab_stem(prefab: str) -> str:
@@ -73,32 +87,38 @@ def prefab_stem(prefab: str) -> str:
     return name[: -len(".binfab")] if name.lower().endswith(".binfab") else name
 
 
-def _build(rows: list[tuple[str, str, str, str]]) -> RigMap:
+def _build(rows: list[tuple]) -> RigMap:
     """One pass over the store's (prefab, blueprint)-ordered rows. ``setdefault`` makes
     "first row wins" the rule for the two basename-keyed indexes, which that ordering
-    then makes deterministic."""
+    then makes deterministic. Rows without the two scale columns read as 1.0."""
     by_blueprint: dict[str, tuple[str, str]] = {}
     creatures: dict[str, tuple[str, dict[str, str]]] = {}
     owner: dict[str, str] = {}
     by_path: dict[str, str] = {}
     by_stem: dict[str, list[str]] = {}
-    for prefab, blueprint, skeleton, ap in rows:
+    head_scale: dict[str, float] = {}
+    mesh_scale: dict[tuple[str, str], float] = {}
+    for prefab, blueprint, skeleton, ap, *scales in rows:
         by_blueprint.setdefault(blueprint, (skeleton, ap))
         owner.setdefault(blueprint, prefab)
         if prefab not in creatures:
             creatures[prefab] = (skeleton, {})
             by_path[prefab.replace("\\", "/").lower()] = prefab
             by_stem.setdefault(prefab_stem(prefab).lower(), []).append(prefab)
+            head_scale[prefab] = float(scales[1]) if len(scales) > 1 else 1.0
         creatures[prefab][1][blueprint] = ap
+        if scales and float(scales[0]) != 1.0:
+            mesh_scale[(prefab, blueprint)] = float(scales[0])
     return RigMap(by_blueprint=by_blueprint, creatures=creatures, owner=owner,
-                  by_path=by_path, by_stem=by_stem)
+                  by_path=by_path, by_stem=by_stem, head_scale=head_scale,
+                  mesh_scale=mesh_scale)
 
 
 _STYLE_RE = re.compile(r"\[[^\]]*\]")          # a Trove style suffix: name[stylename]
 _TIER_RE = re.compile(r"_lvl\d+")
 
 
-def _match_variant(basename: str, rig_map: RigMap) -> tuple[str, str] | None:
+def _match_variant(basename: str, rig_map: RigMap) -> str | None:
     """A styled or tiered spelling of a part the map does know.
 
     Trove writes a cosmetic variant as ``<base>[style]`` and a tier as ``<base>_lvlN``,
@@ -114,10 +134,14 @@ def _match_variant(basename: str, rig_map: RigMap) -> tuple[str, str] | None:
         if not cand or cand in seen:
             continue
         seen.add(cand)
-        found = rig_map.by_blueprint.get(cand)
-        if found is not None:
-            return found
+        if cand in rig_map.by_blueprint:
+            return cand
     return None
+
+
+def _known(basename: str, rig_map: RigMap) -> str | None:
+    """The map's own name for a part: itself, or the styled/tiered base it spells."""
+    return basename if basename in rig_map.by_blueprint else _match_variant(basename, rig_map)
 
 
 async def _rig_map(branch: str) -> RigMap:
@@ -158,11 +182,9 @@ async def resolve(
         return None, {}
     hits = {}
     for b in part_basenames:
-        found = rig_map.by_blueprint.get(b)
-        if found is None:
-            found = _match_variant(b, rig_map)
-        if found is not None:
-            hits[b] = found
+        key = _known(b, rig_map)
+        if key is not None:
+            hits[b] = rig_map.by_blueprint[key]
     if not hits:
         return None, {}
     skeleton = Counter(skel for skel, _ap in hits.values()).most_common(1)[0][0]
@@ -183,6 +205,44 @@ async def creature_by_prefab(
         return None, {}
     skeleton, parts = found
     return skeleton, dict(parts)
+
+
+def _scales(rig_map: RigMap, skeleton: str | None, attach: dict[str, str],
+            owners: dict[str, tuple[str, str]]) -> Scales:
+    """Each part at ITS OWN prefab's scales - a mod can mix a costume's body with an NPC's
+    helm, and the two declare different things. The head scale for empty sockets is the
+    one most of those parts' prefabs declare."""
+    heads = Counter(rig_map.head_scale.get(prefab, 1.0) for prefab, _key in owners.values())
+    parts = {}
+    for b, (prefab, key) in owners.items():
+        ap = attach.get(b)
+        if ap is not None:
+            parts[b] = assembly.scale_for(ap, skeleton, rig_map.head_scale.get(prefab, 1.0),
+                                          rig_map.mesh_scale.get((prefab, key), 1.0))
+    return Scales(head=heads.most_common(1)[0][0] if heads else 1.0, parts=parts)
+
+
+async def scales_for(attach: dict[str, str], skeleton: str | None,
+                     branch: str | None = None) -> Scales:
+    """Scales for the parts ``resolve`` placed, read from the prefabs that own them."""
+    rig_map = await _rig_map(branch or settings.trove_render_branch)
+    owners = {}
+    for b in attach:
+        key = _known(b, rig_map)
+        if key is not None:
+            owners[b] = (rig_map.owner[key], key)
+    return _scales(rig_map, skeleton, attach, owners)
+
+
+async def creature_scales(prefab: str, branch: str | None = None) -> Scales:
+    """Scales for ONE creature prefab's own parts."""
+    rig_map = await _rig_map(branch or settings.trove_render_branch)
+    prefab = prefab.replace("\\", "/")
+    found = rig_map.creatures.get(prefab)
+    if not found:
+        return Scales()
+    skeleton, parts = found
+    return _scales(rig_map, skeleton, parts, {b: (prefab, b) for b in parts})
 
 
 async def prefab_path(

@@ -84,7 +84,7 @@ CODEX_PARSER_VERSION = 26  # v26: the `…Bonus` split generalized from crit dam
 
 # Bumped when the rig extractor or its coverage changes - forces a rig-only rebuild on
 # the next sync WITHOUT a (heavier) full codex re-parse.
-RIG_PARSER_VERSION = 3  # v2: carry the source PREFAB onto every row - the creature's identity, which a shared skeleton + a flat blueprints/ folder cannot reconstruct
+RIG_PARSER_VERSION = 4  # v4: carry each part's scale + the creature's declared head scale; v2: carry the source PREFAB onto every row - the creature's identity, which a shared skeleton + a flat blueprints/ folder cannot reconstruct
 # v3: end a creature's mesh list at the NEXT .skeleton.gr2, not just the .gsf - a costume
 # bundles the character with its transformed form and its pets, and 272 of 603 costumes were
 # handing all of them to the character's own attach points (a werewolf head on the Lunar Lancer)
@@ -922,8 +922,9 @@ def _rig_rows(branch: str, store: ContentStore, candidates: list[tuple[str, str]
         rig = binfab.extract_rig_refs(content)
         if not rig:
             continue
-        skeleton = rig["skeleton"]
-        rows.extend((branch, path, bp, skeleton, ap) for bp, ap in rig["parts"].items())
+        skeleton, head, scales = rig["skeleton"], rig["head_scale"], rig["scales"]
+        rows.extend((branch, path, bp, skeleton, ap, scales.get(bp, 1.0), head)
+                    for bp, ap in rig["parts"].items())
     return rows
 
 

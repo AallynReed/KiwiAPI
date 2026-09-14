@@ -205,6 +205,9 @@ CREATE TABLE IF NOT EXISTS rig_binding (
     ap_key     TEXT NOT NULL,
     PRIMARY KEY (branch, prefab, blueprint)
 );
+-- The part's own scale, and the head scale its creature declares (see binfab.extract_rig_refs).
+ALTER TABLE rig_binding ADD COLUMN IF NOT EXISTS mesh_scale REAL NOT NULL DEFAULT 1;
+ALTER TABLE rig_binding ADD COLUMN IF NOT EXISTS head_scale REAL NOT NULL DEFAULT 1;
 -- "Which creature owns this part" - the embed's lookup, and the mod resolver's scan.
 CREATE INDEX IF NOT EXISTS rig_binding_bp ON rig_binding (branch, blueprint);
 """

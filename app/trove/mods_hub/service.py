@@ -1826,10 +1826,12 @@ async def assemble_release_model(
             return files, basenames
         files, basenames = await asyncio.to_thread(_read, data)
         skeleton, attach = await rig_index.resolve(basenames)
+        scales = await rig_index.scales_for(attach, skeleton)
 
         def _work():
             from app.trove.mods_hub import assembly
-            return assembly.assemble(files, rig_name=skeleton, ap_overrides=attach)
+            return assembly.assemble(files, rig_name=skeleton, ap_overrides=attach,
+                                     part_scales=scales.parts)
         model = await asyncio.to_thread(_work)
         if model is None:
             raise bp_cache.NoPayload

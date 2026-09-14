@@ -510,8 +510,10 @@ async def assembled(src: Source, fmt: str = "json") -> bp_cache.Cached | None:
 
         files, names = await asyncio.to_thread(_read, data)
         skeleton, attach = await rig_index.resolve(names)
+        scales = await rig_index.scales_for(attach, skeleton)
         model = await asyncio.to_thread(
-            lambda: assembly.assemble(files, rig_name=skeleton, ap_overrides=attach))
+            lambda: assembly.assemble(files, rig_name=skeleton, ap_overrides=attach,
+                                      part_scales=scales.parts))
         if model is None:
             raise bp_cache.NoPayload
         return model
@@ -592,8 +594,10 @@ async def _assemble_creature(
                           "content_base64": base64.b64encode(raw).decode()})
         if not files:
             raise bp_cache.NoPayload
+        scales = await rig_index.creature_scales(prefab)
         model = await asyncio.to_thread(
-            lambda: assembly.assemble(files, rig_name=skeleton, ap_overrides=parts))
+            lambda: assembly.assemble(files, rig_name=skeleton, ap_overrides=parts,
+                                      part_scales=scales.parts))
         if model is None:
             raise bp_cache.NoPayload
         return model

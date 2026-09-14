@@ -28,7 +28,7 @@ from app.core.config import settings
 from app.trove.codexes import binfab, pg_store
 from app.trove.dressing import customhead
 from app.trove.dressing import sockets as sockets_mod
-from app.trove.mods_hub import rig_index
+from app.trove.mods_hub import assembly, rig_index
 
 logger = logging.getLogger("kiwi.dressing")
 
@@ -82,6 +82,8 @@ class Option:
     # folder, which is itself the answer: the copy at the root of `blueprints/`.
     refs: dict[str, str] = field(default_factory=dict)    # costume: basename -> reference
     ref: str = ""                                         # style: its own reference
+    head_scale: float = 1.0                               # costume: the head scale it declares
+    scales: dict[str, float] = field(default_factory=dict)   # costume: basename -> part scale
 
 
 @dataclass(frozen=True)
@@ -228,10 +230,14 @@ def _build_costumes(
         if not class_key:
             continue                       # a costume for a form we don't offer
         stem = _stem(prefab)
+        head = rig_map.head_scale.get(prefab, 1.0)
         out.setdefault(class_key, []).append(Option(
             key=stem, name=names.get(stem) or _humanize(stem), slot="costume",
             prefab=prefab, skeleton=skeleton, parts=dict(parts),
-            refs=refs.get(prefab, {}),
+            refs=refs.get(prefab, {}), head_scale=head,
+            scales={b: assembly.scale_for(ap, skeleton, head,
+                                          rig_map.mesh_scale.get((prefab, b), 1.0))
+                    for b, ap in parts.items()},
         ))
     for options in out.values():
         options.sort(key=lambda o: o.name.lower())

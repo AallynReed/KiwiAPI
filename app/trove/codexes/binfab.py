@@ -219,7 +219,9 @@ def extract_rig_refs(data: bytes) -> dict | None:
 
     parts: dict[str, str] = {}
     refs: dict[str, str] = {}
-    for (off, field, s), (_n_off, n_field, n_s) in zip(rows, rows[1:], strict=False):
+    scales: dict[str, float] = {}
+    last_ap_end = skel_off
+    for (off, field, s), (n_off, n_field, n_s) in zip(rows, rows[1:], strict=False):
         if not (skel_off < off < end):
             continue                       # only the model component's mesh list
         if field == 0 and n_field == 1 and n_s.startswith("AP_"):
@@ -227,15 +229,84 @@ def extract_rig_refs(data: bytes) -> dict | None:
             base = ref.rsplit("/", 1)[-1]
             parts[base] = n_s[3:].lower()
             refs[base] = ref              # same last-one-wins rule as `parts`
+            last_ap_end = _field_end(data, n_off)
+            scales[base] = _mesh_scale(data, last_ap_end)
     if not parts:
         return None
+    head_scale = _head_scale(data, last_ap_end, next_skel_off or len(data))
     # `refs` keeps each mesh reference AS THE PREFAB WROTE IT, relative to `blueprints/`.
     # Trove reuses a basename across skins - the Candy Barbarian starter asks for a bare
     # `c_p_candybarbarian_torso` while Demonic Inferno asks for its own
     # `2019/ugc_adventure_box/costumes/candybarbarian_demonicinferno/c_p_candybarbarian_torso`
     # - so the folder is the only thing telling the two apart. `parts` stays keyed on the
     # basename, which is what a mod's file is named and what every other caller matches on.
-    return {"skeleton": skeleton, "parts": parts, "refs": refs}
+    return {"skeleton": skeleton, "parts": parts, "refs": refs,
+            "scales": {b: v for b, v in scales.items() if v != 1.0}, "head_scale": head_scale}
+
+
+# The model component's scale fields, read off the wire rather than inferred:
+#
+#   per mesh   ``<path> AP_<key> 28 <str> 34 <f32 scale>`` - 1.0 almost everywhere; NPC
+#              prefabs set it on head-area meshes (a knight NPC's head is 0.588).
+#   per model  ``1e 1e 08 24 <f32 head scale>`` right after the creature's mesh list.
+#              Costumes only: 0.5 for most classes, 0.588 for Knight / Candy Barbarian /
+#              Lunar Lancer / Revenant, 1.0 for bundled pets. Absent means 1.0.
+#
+# The head scale applies to every attach point under the skeleton's ``head_JNT``
+# (``assembly.scale_for``). The exe stores these field names hashed, so the layout is
+# all there is to go on.
+_HEAD_SCALE_RE = re.compile(rb"\x1e\x1e\x08\x24(.{4})", re.S)
+_HEAD_SCALE_WINDOW = 96
+
+
+def _field_end(data: bytes, off: int) -> int:
+    _key, j = read_uleb(data, off)
+    length, k = read_uleb(data, j)
+    return k + length
+
+
+def _f32_scale(raw: bytes) -> float:
+    v = struct.unpack("<f", raw)[0]
+    return v if 0.0 < v <= 16.0 else 1.0       # NaN fails both comparisons
+
+
+def _mesh_scale(data: bytes, pos: int) -> float:
+    """Field 3 (a float) among the fields that follow a mesh's ``AP_`` name, or 1.0.
+    Fields must keep ascending, so the next mesh's path (field 0) ends the search."""
+    prev = 1
+    for _ in range(4):
+        key, nxt = read_varint(data, pos)
+        if key is None:
+            break
+        fld, wire = key >> 4, key & 0xF
+        if fld <= prev:
+            break
+        prev = fld
+        if wire == 4:
+            if nxt + 4 > len(data):
+                break
+            if fld == 3:
+                return _f32_scale(data[nxt:nxt + 4])
+            pos = nxt + 4
+        elif wire == 8:
+            length, nxt = read_varint(data, nxt)
+            if length is None:
+                break
+            pos = nxt + length
+        elif wire == 0:
+            value, nxt = read_varint(data, nxt)
+            if value is None:
+                break
+            pos = nxt
+        else:
+            break
+    return 1.0
+
+
+def _head_scale(data: bytes, start: int, stop: int) -> float:
+    """The head scale that closes a creature's mesh list, or 1.0 when it declares none."""
+    m = _HEAD_SCALE_RE.search(data, start, min(stop, start + _HEAD_SCALE_WINDOW))
+    return _f32_scale(m.group(1)) if m else 1.0
 
 
 def parse_collection_table(data: bytes) -> list[dict]:

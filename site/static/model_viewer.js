@@ -219,10 +219,9 @@
     var camera = new THREE.PerspectiveCamera(42, W / H, 0.001, 1000);
 
     var scaleM = new THREE.Matrix4().makeScale(s, s, s);
-    /* Head slots (head/hat/hair/face) are modelled at DOUBLE resolution so a face can
-       carry detail the body never needs, so they carry their own `scale` and are drawn
-       at half the voxel size. Every voxel is kept - only the size of each one changes -
-       and without it the head comes out twice the size of the character wearing it. */
+    /* A part carries its own `scale` when the game declares one (a class's head-area
+       parts draw at its head scale, 0.5 or 0.588). Every voxel is kept - only the size
+       of each one changes. */
     var scaleOf = {};
     data.parts.forEach(function (p) {
       var ps = s * (typeof p.scale === 'number' ? p.scale : 1);

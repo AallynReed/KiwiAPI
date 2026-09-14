@@ -16,7 +16,7 @@ import os
 import re
 import struct
 import zlib
-from functools import lru_cache
+from functools import cache, lru_cache
 
 _RIG_DIR = os.path.join(os.path.dirname(__file__), "rigs")
 _RIG_NAME_RE = re.compile(r"^[a-z0-9_]+$")   # skeleton / animation names; also blocks path traversal
@@ -26,58 +26,41 @@ _RIG_NAME_RE = re.compile(r"^[a-z0-9_]+$")   # skeleton / animation names; also 
 # of 1/12 exactly as ``c_p_knight_lvl3_torso``'s .blueprint is 9x8x9 voxels. Body parts
 # and weapons are drawn at it directly.
 #
-# EQUIPMENT STYLES are the one exception, and it is a real one: hat and face art is
-# authored at DOUBLE the body's resolution, so it must be drawn at half the voxel size or
-# it comes out twice the size of the character wearing it. A Trove hat/face style
-# blueprint measures 15-21 voxels against the 5-13 of the head mesh it has to fit.
-# Weapons need no such correction: the rigs' weapon meshes (the Candy Barbarian's is 26
-# voxels long, the Boomeranger's example sword 30) are the same size as the real weapon
-# styles, ~19-21.
-#
-# **`head` DEPENDS ON THE RIG**, and it is the one point that does. On a character - a
-# class, or a humanoid NPC - the head point carries character/equipment art, authored at
-# double resolution like the hat and face styles that sit on it. On a CREATURE it carries
-# the animal's own head, authored at body resolution like the rest of it: measured against
-# the game's art-source meshes (granny_re/rig_mesh_bbox.json, which ARE the volumes these
-# parts fill), a creature's head comes out at 1.00x over 319 samples, its jaw 1.00x over
-# 219, its body and neck 1.00x. Halving it drew every mount, dragon and ally at half the
-# head it should have - with a correctly-sized jaw beside it, which is what made the jaw
-# look like the broken one.
-#
-# The two are told apart by the SKELETON, not by a name list: a rig that wears equipment
-# declares the sockets for it. 48 rigs carry a `hat`/`face` attach point (every player
-# class, plus the humanoid NPCs and the few companions the game lets wear a hat); the other
-# 150 head-bearing rigs are animals and carry none.
-#
-# So resolution follows where the art came FROM, not merely what it is attached to - the
-# same reason the dressing room keeps its own table for character-creation art (a face
-# style and an eye mesh share the `face` point and disagree about resolution).
-HALF_SCALE = 0.5
-HALF_SCALE_APS = frozenset({"hat", "hair", "face"})
-# Half only on a rig that wears equipment; body resolution on an animal.
-CHARACTER_HALF_SCALE_APS = frozenset({"head"})
-# The sockets whose presence says "this skeleton wears equipment styles".
-_EQUIPMENT_SOCKETS = frozenset({"hat", "face"})
-
-
-def wears_equipment(rig_name: str | None) -> bool:
-    """Whether this skeleton has equipment sockets - i.e. is a character rather than an
-    animal. Read off the baked rig, so it comes from the game's own skeleton."""
+# HEAD-AREA SCALE is declared by the game, per prefab (``binfab.extract_rig_refs``): a
+# costume states a head scale for its creature (0.5 for most classes, 0.588 for Knight,
+# Candy Barbarian, Lunar Lancer and Revenant, nothing for animals), and NPC prefabs set a
+# per-mesh scale on their head parts instead. The head scale covers every attach point
+# under the skeleton's ``head_JNT`` - head, hat, face, hair - so a hat on a Knight draws
+# at 0.588 and one on an NPC that declares nothing at 1.0.
+@cache
+def head_aps(rig_name: str | None) -> frozenset[str]:
+    """Attach points that hang under the skeleton's ``head_JNT`` (head, hat, face,
+    hair on a class rig), read off the baked bone hierarchy."""
     rig = _rigs().get(rig_name or "")
-    return bool(rig) and bool(_EQUIPMENT_SOCKETS & set(rig["rest"]))
+    bones = (rig or {}).get("bones") or {}
+    names, parents = bones.get("names") or [], bones.get("parents") or []
+    heads = {i for i, n in enumerate(names) if n.lower() == "head_jnt"}
+    out = set()
+    for i, name in enumerate(names):
+        if not name.lower().startswith("ap_"):
+            continue
+        j = parents[i]
+        while j is not None and 0 <= j < len(names):
+            if j in heads:
+                out.add(name[3:].lower())
+                break
+            j = parents[j]
+    return frozenset(out)
 
 
-def scale_for(ap_key: str, rig_name: str | None = None) -> float:
-    """The voxel-size multiplier for a part at this attach point (see above).
+def scale_for(ap_key: str, rig_name: str | None = None,
+              head_scale: float = 1.0, part_scale: float = 1.0) -> float:
+    """The voxel-size multiplier for a part at this attach point.
 
-    Without a rig, `head` is left at body resolution: an unknown skeleton is far more
-    likely to be one of the 150 animals than one of the 48 characters, and this is the
-    direction that fails visibly rather than silently."""
-    if ap_key in HALF_SCALE_APS:
-        return HALF_SCALE
-    if ap_key in CHARACTER_HALF_SCALE_APS and wears_equipment(rig_name):
-        return HALF_SCALE
-    return 1.0
+    ``head_scale`` is what the creature's prefab declares and ``part_scale`` the mesh's
+    own field (``binfab.extract_rig_refs``); both default to 1.0, which is also what the
+    game uses for any prefab that declares nothing."""
+    return part_scale * (head_scale if ap_key in head_aps(rig_name) else 1.0)
 
 
 @lru_cache(maxsize=1)
@@ -222,7 +205,8 @@ def animations_for(name: str) -> list[str]:
     return list(rig.get("animations", {}).keys()) if rig else []
 
 
-def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[str, str]) -> dict | None:
+def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[str, str],
+             part_scales: dict[str, float] | None = None) -> dict | None:
     """tmod_files = ``read_tmod(...)["files"]`` (with content_base64). Returns the
     web-viewer model payload, or None if the rig isn't known/baked or nothing places.
 
@@ -242,10 +226,14 @@ def assemble(tmod_files: list[dict], rig_name: str | None, ap_overrides: dict[st
         p = f["path"].lower()
         if not p.endswith(".blueprint") or "content_base64" not in f:
             continue
-        key = ap_overrides.get(p.split("/")[-1][:-len(".blueprint")])   # exact AP, or None
+        basename = p.split("/")[-1][:-len(".blueprint")]
+        key = ap_overrides.get(basename)         # exact AP, or None
         if not key or key not in rig["rest"]:
             continue                             # not a known part of this rig -> skip
-        part = _part_at(key, base64.b64decode(f["content_base64"]), scale_for(key, rig_name))
+        scale = (part_scales or {}).get(basename)
+        if scale is None:
+            scale = scale_for(key, rig_name)
+        part = _part_at(key, base64.b64decode(f["content_base64"]), scale)
         if part:
             parts.append(part)
     if not parts:
@@ -427,8 +415,8 @@ def _bake(parts: list[dict], rest: dict, voxel_scale: float) -> dict:
     return out
 
 
-def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
-    """``[(AP key, raw .blueprint bytes)]`` -> baked rig-space voxels for a creature.
+def assemble_voxels(parts: list[tuple], rig_name: str) -> dict:
+    """``[(AP key, raw .blueprint bytes[, scale])]`` -> baked rig-space voxels for a creature.
 
     Returns ``{}`` for an unknown rig or when nothing places - the caller then falls back
     to a single blueprint rather than showing a half-creature.
@@ -436,11 +424,9 @@ def assemble_voxels(parts: list[tuple[str, bytes]], rig_name: str) -> dict:
     rig = _rigs().get(rig_name)
     if not rig:
         return {}
-    # An equipment style is authored at double resolution (see scale_for). On the baked
-    # integer grid that resamples it to body resolution - the right size at the size it
-    # is drawn.
-    built = [p for p in (_part_at(ap, raw, scale_for(ap, rig_name))
-                         for ap, raw in parts if raw and ap in rig["rest"]) if p]
+    # A scaled part resamples onto the baked integer grid at the size it is drawn.
+    built = [p for p in (_part_at(ap, raw, rest[0] if rest else scale_for(ap, rig_name))
+                         for ap, raw, *rest in parts if raw and ap in rig["rest"]) if p]
     return _bake(built, rig["rest"], rig["voxel_scale"]) if built else {}
 
 

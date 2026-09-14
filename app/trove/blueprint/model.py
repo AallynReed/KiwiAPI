@@ -78,7 +78,8 @@ def basename_of(path: str) -> str:
 
 
 def open_project(files: list[tuple[str, bytes]], *, rig_name: str | None,
-                 attach: dict[str, str], name: str = "model") -> dict:
+                 attach: dict[str, str], name: str = "model", head_scale: float = 1.0,
+                 part_scales: dict[str, float] | None = None) -> dict:
     """Decode every blueprint in an unpacked mod into an editable project.
 
     ``rig_name`` + ``attach`` (basename -> AP key) come from ``rig_index.resolve`` and
@@ -120,11 +121,14 @@ def open_project(files: list[tuple[str, bytes]], *, rig_name: str | None,
         ap = attach.get(basename_of(path))
         if pose is not None and ap not in pose["rest"]:
             ap = None                      # a socket this skeleton hasn't got: unplaced
+        scale = (part_scales or {}).get(basename_of(path))
+        if scale is None:
+            scale = assembly.scale_for(ap, rig_name, head_scale) if ap else 1.0
         parts.append({
             "path": path,
             "name": payload["name"],
             "ap": ap,
-            "scale": assembly.scale_for(ap, rig_name) if ap else 1.0,
+            "scale": scale if ap else 1.0,
             "blueprint": base64.b64encode(raw).decode("ascii"),
             "model": payload,
         })
@@ -135,7 +139,7 @@ def open_project(files: list[tuple[str, bytes]], *, rig_name: str | None,
 
     return {
         "name": name,
-        "rig": rig_payload(rig_name) if pose else None,
+        "rig": rig_payload(rig_name, head_scale) if pose else None,
         "parts": parts,
         "skipped": skipped,
         # Everything that isn't a blueprint - the config, the preview image, textures -
@@ -144,16 +148,16 @@ def open_project(files: list[tuple[str, bytes]], *, rig_name: str | None,
     }
 
 
-def rig_payload(rig_name: str) -> dict | None:
+def rig_payload(rig_name: str, head_scale: float = 1.0) -> dict | None:
     """The whole skeleton as the editor needs it: the rest matrices, the voxel size and
     the resolution multiplier of EVERY socket - not just the ones this mod fills.
 
     All of them, because a part added to an open project is placed by the person adding
     it. They pick the socket off this list, so the list has to hold the empty ones too -
     a mod that ships no hat is exactly the mod someone is about to add a hat to. The
-    scale comes from here rather than being re-derived in the browser: whether a socket
-    carries double-resolution equipment art depends on the skeleton (``scale_for``), and
-    that rule lives in one place."""
+    scale comes from here rather than being re-derived in the browser: a head-area socket
+    takes the creature's declared ``head_scale`` (``scale_for``), and that rule lives in
+    one place."""
     pose = assembly.rig_pose(rig_name) if rig_name else None
     if pose is None:
         return None
@@ -161,7 +165,7 @@ def rig_payload(rig_name: str) -> dict | None:
         "name": rig_name,
         "voxel_scale": pose["voxel_scale"],
         "rest": pose["rest"],
-        "scales": {ap: assembly.scale_for(ap, rig_name) for ap in pose["rest"]},
+        "scales": {ap: assembly.scale_for(ap, rig_name, head_scale) for ap in pose["rest"]},
         # Names + frame counts only. A clip is fetched from /site/rigs/<rig>/anim/<name>
         # when it is played, the same way the model viewer does it - a rig ships up to
         # 80 of them and the payload is already the heaviest thing this page asks for.

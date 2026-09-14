@@ -126,6 +126,7 @@ async def _build_creature_png(prefab: str, dim: int, branch: str) -> bytes | Non
     skeleton, parts = await rig_index.creature_by_prefab(prefab, branch)
     if not skeleton or not parts or not assembly.has_baked_rig(skeleton):
         return None
+    scales = await rig_index.creature_scales(prefab, branch)
     index = await blueprint_by_basename(branch)
     # A name Trove reuses across skins/NPC sets is absent from `index` (it only keeps
     # unambiguous ones), so fall back to every archived path and take the one living
@@ -133,7 +134,7 @@ async def _build_creature_png(prefab: str, dim: int, branch: str) -> bytes | Non
     # creature, or worse, resolved to somebody else's file.
     all_paths = await game_file_paths(branch)
 
-    wanted: list[tuple[str, bytes]] = []
+    wanted: list[tuple] = []
     for basename, ap_key in parts.items():
         path = index.get(basename.lower()) or nearest_path(
             all_paths.get(f"{basename.lower()}.blueprint", []), prefab)
@@ -142,7 +143,7 @@ async def _build_creature_png(prefab: str, dim: int, branch: str) -> bytes | Non
         data = await get_blueprint_bytes(path, branch)
         if data is None:
             return None
-        wanted.append((ap_key, data))
+        wanted.append((ap_key, data, scales.parts.get(basename, 1.0)))
 
     voxels = await asyncio.to_thread(assembly.assemble_voxels, wanted, skeleton)
     if not voxels:

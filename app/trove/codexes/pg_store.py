@@ -277,16 +277,17 @@ async def meta_signature(branch: str) -> tuple:
 # --- rig map (rig_binding table) --------------------------------------------
 
 _RIG_INSERT = (
-    "INSERT INTO rig_binding (branch, prefab, blueprint, skeleton, ap_key) "
-    "VALUES ($1, $2, $3, $4, $5) ON CONFLICT (branch, prefab, blueprint) DO UPDATE "
-    "SET skeleton = EXCLUDED.skeleton, ap_key = EXCLUDED.ap_key"
+    "INSERT INTO rig_binding (branch, prefab, blueprint, skeleton, ap_key, mesh_scale, head_scale) "
+    "VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (branch, prefab, blueprint) DO UPDATE "
+    "SET skeleton = EXCLUDED.skeleton, ap_key = EXCLUDED.ap_key, "
+    "mesh_scale = EXCLUDED.mesh_scale, head_scale = EXCLUDED.head_scale"
 )
 
 
 async def replace_rig_bindings(branch: str, rows: list[tuple]) -> int:
     """Atomically replace a branch's rig bindings. ``rows`` = ``(branch, prefab,
-    blueprint, skeleton, ap_key)`` tuples (built by ``reindex_rigs`` from the prefab
-    binfabs)."""
+    blueprint, skeleton, ap_key, mesh_scale, head_scale)`` tuples (built by
+    ``reindex_rigs`` from the prefab binfabs)."""
     async with acquire() as con:
         async with con.transaction():
             await con.execute("DELETE FROM rig_binding WHERE branch = $1", branch)
@@ -340,19 +341,20 @@ async def set_rig_version(branch: str, version: int) -> None:
         )
 
 
-async def load_rig_bindings(branch: str) -> list[tuple[str, str, str, str]]:
-    """Every ``(prefab, blueprint basename, skeleton stem, AP key)`` binding in a branch
-    - the authoritative map the Mods Hub viewer resolves a mod's blueprints against, and
-    the embed groups a native creature's parts by.
+async def load_rig_bindings(branch: str) -> list[tuple]:
+    """Every ``(prefab, blueprint basename, skeleton stem, AP key, mesh scale, head
+    scale)`` binding in a branch - the authoritative map the Mods Hub viewer resolves a
+    mod's blueprints against, and the embed groups a native creature's parts by.
 
     Returned flat and ORDERED (prefab, blueprint): ``rig_index`` builds both of its
     indexes from one pass, and a stable order makes the "which creature owns this part"
     answer stable across processes when a part is shared by more than one prefab."""
     async with acquire() as con:
         rows = await con.fetch(
-            "SELECT prefab, blueprint, skeleton, ap_key FROM rig_binding "
+            "SELECT prefab, blueprint, skeleton, ap_key, mesh_scale, head_scale FROM rig_binding "
             "WHERE branch = $1 ORDER BY prefab, blueprint", branch)
-    return [(r["prefab"], r["blueprint"], r["skeleton"], r["ap_key"]) for r in rows]
+    return [(r["prefab"], r["blueprint"], r["skeleton"], r["ap_key"],
+             float(r["mesh_scale"]), float(r["head_scale"])) for r in rows]
 
 
 # --- reads (router via read.py) ---------------------------------------------

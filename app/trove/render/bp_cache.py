@@ -56,8 +56,8 @@ PACK_VERSION = "v3"     # v3: the codec stopped mirroring X, so every cached pay
 # Bump when the baked rigs (``mods_hub/rigs``) or ``mods_hub/assembly.py`` change
 # the shape of an assembled creature. The live rig map has its own signature in the
 # key (see ``key_for_assembly``); this covers what ships in the repo.
-ASSEMBLY_VERSION = "a19"     # a19: a costume part resolves to the blueprint its prefab
-                             # named, not the alphabetically-first file of that name
+ASSEMBLY_VERSION = "a20"     # a20: head-area scale comes from the prefab's declared head
+                             # scale and per-part scale, not the hat/face-socket rule
 
 # Bump when ``app.trove.swf.extract`` changes what a manifest holds or how a
 # bitmap is decoded. Namespaces the SWF keys only.

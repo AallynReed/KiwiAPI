@@ -75,13 +75,8 @@ def attach_point(slot: str, skeleton: str) -> str | None:
 # "I want nothing here" - distinct from "I didn't choose", which takes the race default.
 NONE = "none"
 
-# The head and eyes are drawn at the same half scale as everything else on the head - the
-# size that was confirmed correct by eye. DO NOT "derive" this from voxel counts: doing
-# that once put the head back to double size while fixing something else entirely.
-#
-# Hair is the one that is still wrong (too big), and it gets its own number so it can be
-# corrected WITHOUT touching the head again.
-PIECE_SCALE = {"head": 0.5, "eyes": 0.5, "hair": 0.5}
+# Head, eyes, hair and hat/face styles all draw at the head scale the chosen costume
+# declares (see assembly.scale_for). ``hair_scale`` stays as a manual override.
 # Eyebrows live in the head blueprint but take the HAIR colour, as they do in game.
 # They are the only near-pure-red voxels a human head carries (4 of 992: two shades,
 # mirrored), and the strict threshold keeps a lizard's or ghost's saturated skin out
@@ -117,7 +112,7 @@ class Outfit:
     blueprints: dict[str, str] = field(default_factory=dict)      # slot -> raw blueprint ref
     weapon_family: str = ""                                       # for a raw weapon blueprint
     colors: dict[str, tuple[int, int, int]] = field(default_factory=dict)   # slot -> rgb
-    hair_scale: float = 0.5                                       # calibration knob
+    hair_scale: float | None = None                               # override; None follows the costume
     dropped: list[str] = field(default_factory=list)              # slots we couldn't honour
     # Why each one is missing, so a caller is never left comparing voxel counts to work
     # out that the hat it asked for is not there: [{slot, value, reason}], reason being
@@ -145,7 +140,7 @@ class Outfit:
                          f"{self.colors[s][2]:02x}" for s in sorted(self.colors))
         fam = f"{fam}({tints})" if tints else fam
         race = self.race.key if self.race else ""
-        if self.hair_scale != PIECE_SCALE["hair"]:
+        if self.hair_scale is not None:
             fam = f"{fam}~h{self.hair_scale}"
         return f"{self.cls.key}/{self.costume.key}/{race}/{picks}/{raw}{fam}"
 
@@ -159,9 +154,15 @@ class Outfit:
             return (self.colors["hair"], BROW_MAX_OFF)
         return None
 
-    def piece_scale(self, slot: str) -> float:
-        """Voxel-size multiplier for a character-creation piece."""
-        return self.hair_scale if slot == "hair" else PIECE_SCALE[slot]
+    def piece_scale(self, slot: str, ap: str) -> float:
+        """Voxel-size multiplier for a character-creation piece at ``ap``."""
+        if slot == "hair" and self.hair_scale is not None:
+            return self.hair_scale
+        return self.head_scaled(ap)
+
+    def head_scaled(self, ap: str) -> float:
+        """The costume's declared head scale at ``ap``, or 1.0 off the head."""
+        return assembly.scale_for(ap, self.cls.skeleton, self.costume.head_scale)
 
     def as_dict(self) -> dict:
         out = {"class": self.cls.key, "costume": self.costume.key,
@@ -313,7 +314,7 @@ async def resolve(
         rgb = color_ref((colors or {}).get(param))
         if rgb:
             tints[slot] = rgb
-    hs = PIECE_SCALE["hair"]
+    hs = None
     if hair_scale is not None and 0.05 <= hair_scale <= 1.0:
         hs = round(float(hair_scale), 4)
     return Outfit(cls=cls, costume=chosen, race=chosen_race, styles=styles,
@@ -363,7 +364,7 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         raw = await read(basename, outfit.costume.prefab,
                          outfit.costume.refs.get(basename, ""))
         if raw:
-            out.append((ap_key, raw, 1.0, None))
+            out.append((ap_key, raw, outfit.costume.scales.get(basename, 1.0), None))
 
     for slot in STYLE_SLOTS:
         opt = outfit.styles.get(slot)
@@ -373,20 +374,18 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         if not raw:
             continue
         # One equipped style, drawn once per socket the class declares for its family -
-        # which is what makes the Candy Barbarian hold two identical swords. The socket
-        # decides the scale: hat/face art is authored at double the body's resolution,
-        # a weapon's is not (see assembly.scale_for).
+        # which is what makes the Candy Barbarian hold two identical swords. A hat/face
+        # socket sits under the head and takes the costume's head scale; a weapon doesn't.
         for socket in sockets_mod.sockets_for_slot(outfit.cls.sockets, opt.slot_id):
-            out.append((socket["ap"], raw,
-                        assembly.scale_for(socket["ap"], outfit.cls.skeleton), None))
+            out.append((socket["ap"], raw, outfit.head_scaled(socket["ap"]), None))
 
     for slot, opt in outfit.styles.items():
         if slot not in RACE_SLOTS:
             continue                          # equipment styles are placed above
         ap = attach_point(slot, outfit.cls.skeleton)
         data = await read(opt.blueprint, opt.prefab) if ap else None
-        if data:
-            out.append((ap, data, outfit.piece_scale(slot), outfit.tint_for(slot)))
+        if data and ap:
+            out.append((ap, data, outfit.piece_scale(slot, ap), outfit.tint_for(slot)))
 
     for slot, ref in outfit.blueprints.items():
         if ref == NONE:
@@ -410,8 +409,8 @@ async def _placements(outfit: Outfit, branch: str) -> list[tuple]:
         if not data:
             continue
         tint = outfit.tint_for(slot)
-        scale = (outfit.piece_scale(slot) if slot in RACE_SLOTS
-                 else assembly.scale_for(aps[0], outfit.cls.skeleton))
+        scale = (outfit.piece_scale(slot, aps[0]) if slot in RACE_SLOTS
+                 else outfit.head_scaled(aps[0]))
         for ap in aps:
             out.append((ap, data, scale, tint))
     return out

@@ -3428,9 +3428,11 @@ async def site_blueprint_editor_model(
         [bp_model.basename_of(p) for p, _ in blueprints])
     if skeleton and not assembly.has_baked_rig(skeleton):
         skeleton = None                    # known creature, no baked pose -> lay it out
+    scales = await rig_index.scales_for(attach, skeleton)
     try:
         payload = await asyncio.to_thread(
-            bp_model.open_project, unpacked, rig_name=skeleton, attach=attach, name=name)
+            bp_model.open_project, unpacked, rig_name=skeleton, attach=attach, name=name,
+            head_scale=scales.head, part_scales=scales.parts)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     payload["source"] = kind
@@ -3481,10 +3483,12 @@ async def site_blueprint_editor_game_model(
         raise APIError(404, ErrorCode.not_found,
                        "None of that creature's parts are in the game archive.")
     rig_name = skeleton if assembly.has_baked_rig(skeleton) else None
+    scales = await rig_index.creature_scales(canonical)
     try:
         payload = await asyncio.to_thread(
             bp_model.open_project, files, rig_name=rig_name, attach=parts,
-            name=rig_index.prefab_stem(canonical) + ".zip")
+            name=rig_index.prefab_stem(canonical) + ".zip",
+            head_scale=scales.head, part_scales=scales.parts)
     except bp_editor.EditorError as e:
         raise _blueprint_editor_error(e) from e
     payload["source"] = "game"
