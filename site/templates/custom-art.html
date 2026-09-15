@@ -21,7 +21,7 @@
 </head>
 <body class="landing drop-page art-page">
 
-    <a class="skip-link" href="#main">Skip to main content</a>
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
 
     {% include "partials/navbar.html" %}
 
@@ -31,95 +31,108 @@
 
             <form class="drop-form" id="art-form" novalidate>
                 <p class="drop-eyebrow"><i class="fa-solid fa-image" aria-hidden="true"></i> Zakros UI</p>
-                <h1 class="drop-title">Request custom art</h1>
-                <p class="drop-muted drop-terms">Ask for a picture to be added to the Zakros UI Chat and Nameplate mods. Every request is looked at by hand. We email you if it's turned down, with the reason, and again when it's in the mod.</p>
+                <h1 class="drop-title" data-i18n>Request custom art</h1>
+                <p class="drop-muted drop-terms" data-i18n>Ask for a picture to be added to the Zakros UI Chat and Nameplate mods. Every request is looked at by hand. We email you if it's turned down, with the reason, and again when it's in the mod.</p>
 
                 <fieldset class="art-modes">
-                    <legend class="drop-label">Who is it for</legend>
-                    <label class="art-mode"><input type="radio" name="kind" value="player" checked><span>A player</span></label>
-                    <label class="art-mode"><input type="radio" name="kind" value="club"><span>A club</span></label>
+                    <legend class="drop-label" data-i18n>Who is it for</legend>
+                    <label class="art-mode"><input type="radio" name="kind" value="player" checked><span data-i18n>A player</span></label>
+                    <label class="art-mode"><input type="radio" name="kind" value="club"><span data-i18n>A club</span></label>
                 </fieldset>
 
                 <div class="drop-field">
-                    <label class="drop-label" for="art-name" id="art-name-label">Player name</label>
-                    <p class="drop-hint" id="art-name-hint">Exactly as it reads in game.</p>
+                    <label class="drop-label" for="art-name">
+                        <span class="art-if-player" data-i18n>Player name</span>
+                        <span class="art-if-club" hidden data-i18n>Club name</span>
+                    </label>
+                    <p class="drop-hint" id="art-name-hint">
+                        <span class="art-if-player" data-i18n>Exactly as it reads in game.</span>
+                        <span class="art-if-club" hidden data-i18n>Exactly as the club spells it, spaces and capitals included.</span>
+                    </p>
                     <input class="drop-note" id="art-name" name="name" type="text" maxlength="64"
                            autocomplete="off" aria-describedby="art-name-hint" required>
                 </div>
 
-                <p class="drop-hint art-club-note" id="art-club-note" hidden>Send a club picture, a club banner, or both.</p>
+                <p class="drop-hint art-club-note art-if-club" hidden data-i18n>Send a club picture, a club banner, or both.</p>
 
                 <div class="art-slot" id="art-slot-pfp">
-                    <p class="drop-label"><span id="art-pfp-title">Profile picture</span> <span class="drop-optional" id="art-pfp-optional" hidden>(optional)</span></p>
-                    <p class="drop-hint" id="art-pfp-hint">Square. Shows on the whisper tab for a conversation with that player, in Chat.</p>
+                    <p class="drop-label">
+                        <span class="art-if-player" data-i18n>Profile picture</span>
+                        <span class="art-if-club" hidden data-i18n>Club picture</span>
+                        <span class="drop-optional art-if-club" hidden data-i18n>(optional)</span>
+                    </p>
+                    <p class="drop-hint">
+                        <span class="art-if-player" data-i18n>Square, at least 128px tall. Shows on the whisper tab for a conversation with that player, in Chat.</span>
+                        <span class="art-if-club" hidden data-i18n>Square, at least 128px tall. Shows on the club's channel tab, in Chat.</span>
+                    </p>
                     <label class="drop-zone" for="art-pfp-file">
                         <input type="file" id="art-pfp-file" accept="image/png,image/jpeg,image/webp,image/gif">
                         <span class="drop-zone-empty">
                             <i class="fa-solid fa-file-image" aria-hidden="true"></i>
-                            <span class="drop-zone-title">Drop the picture here</span>
-                            <span class="drop-zone-hint">or click to pick one. A picture that isn't square can be cropped here.</span>
+                            <span class="drop-zone-title" data-i18n>Drop the picture here</span>
+                            <span class="drop-zone-hint" data-i18n>or click to pick one. A picture that isn't square can be cropped here.</span>
                         </span>
                     </label>
                     <div class="art-crop" hidden>
-                        <canvas class="art-crop-canvas" tabindex="0" aria-label="Crop area. Arrow keys move it; Shift with arrow keys resizes it."></canvas>
-                        <p class="drop-hint art-crop-help">Drag the box to move it, drag a corner to resize it.</p>
+                        <canvas class="art-crop-canvas" tabindex="0" aria-label="Crop area. Arrow keys move it; Shift with arrow keys resizes it." data-i18n-aria-label></canvas>
+                        <p class="drop-hint art-crop-help" data-i18n>Drag the box to move it, drag a corner to resize it.</p>
                         <div class="art-actions">
-                            <button type="button" class="drop-go art-crop-use">Use this crop</button>
-                            <button type="button" class="drop-clear art-crop-cancel">Cancel</button>
+                            <button type="button" class="drop-go art-crop-use" data-i18n>Use this crop</button>
+                            <button type="button" class="drop-clear art-crop-cancel" data-i18n>Cancel</button>
                         </div>
                     </div>
                     <div class="art-ready" hidden>
-                        <img class="art-preview" alt="The picture that will be sent">
+                        <img class="art-preview" alt="">
                         <span class="art-ready-info"></span>
                         <div class="art-actions">
-                            <button type="button" class="drop-clear art-recrop">Crop</button>
-                            <button type="button" class="drop-clear art-remove">Remove</button>
+                            <button type="button" class="drop-clear art-recrop" data-i18n>Crop</button>
+                            <button type="button" class="drop-clear art-remove" data-i18n>Remove</button>
                         </div>
                     </div>
                     <p class="drop-status art-slot-status" role="status" aria-live="polite" hidden></p>
                 </div>
 
-                <div class="art-slot" id="art-slot-banner" hidden>
-                    <p class="drop-label">Club banner <span class="drop-optional">(optional)</span></p>
-                    <p class="drop-hint">The club's wordmark, from square up to five times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.</p>
+                <div class="art-slot art-if-club" id="art-slot-banner" hidden>
+                    <p class="drop-label"><span data-i18n>Club banner</span> <span class="drop-optional" data-i18n>(optional)</span></p>
+                    <p class="drop-hint" data-i18n>The club's wordmark, from square up to five times as wide as it is tall, and at least 128px tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.</p>
                     <label class="drop-zone" for="art-banner-file">
                         <input type="file" id="art-banner-file" accept="image/png,image/jpeg,image/webp,image/gif">
                         <span class="drop-zone-empty">
                             <i class="fa-solid fa-file-image" aria-hidden="true"></i>
-                            <span class="drop-zone-title">Drop the banner here</span>
-                            <span class="drop-zone-hint">or click to pick one. A banner outside that shape can be cropped here.</span>
+                            <span class="drop-zone-title" data-i18n>Drop the banner here</span>
+                            <span class="drop-zone-hint" data-i18n>or click to pick one. A banner outside that shape can be cropped here.</span>
                         </span>
                     </label>
                     <div class="art-crop" hidden>
-                        <canvas class="art-crop-canvas" tabindex="0" aria-label="Crop area. Arrow keys move it; Shift with arrow keys resizes it."></canvas>
-                        <p class="drop-hint art-crop-help">Drag the box to move it, drag a corner to resize it.</p>
+                        <canvas class="art-crop-canvas" tabindex="0" aria-label="Crop area. Arrow keys move it; Shift with arrow keys resizes it." data-i18n-aria-label></canvas>
+                        <p class="drop-hint art-crop-help" data-i18n>Drag the box to move it, drag a corner to resize it.</p>
                         <div class="art-actions">
-                            <button type="button" class="drop-go art-crop-use">Use this crop</button>
-                            <button type="button" class="drop-clear art-crop-cancel">Cancel</button>
+                            <button type="button" class="drop-go art-crop-use" data-i18n>Use this crop</button>
+                            <button type="button" class="drop-clear art-crop-cancel" data-i18n>Cancel</button>
                         </div>
                     </div>
                     <div class="art-ready" hidden>
-                        <img class="art-preview" alt="The banner that will be sent">
+                        <img class="art-preview" alt="">
                         <span class="art-ready-info"></span>
                         <div class="art-actions">
-                            <button type="button" class="drop-clear art-recrop">Crop</button>
-                            <button type="button" class="drop-clear art-remove">Remove</button>
+                            <button type="button" class="drop-clear art-recrop" data-i18n>Crop</button>
+                            <button type="button" class="drop-clear art-remove" data-i18n>Remove</button>
                         </div>
                     </div>
                     <p class="drop-status art-slot-status" role="status" aria-live="polite" hidden></p>
                 </div>
 
                 <div class="drop-field">
-                    <label class="drop-label" for="art-email">Email</label>
-                    <p class="drop-hint" id="art-email-hint">Only used to answer this request.</p>
+                    <label class="drop-label" for="art-email" data-i18n>Email</label>
+                    <p class="drop-hint" id="art-email-hint" data-i18n>Only used to answer this request.</p>
                     <input class="drop-note" id="art-email" name="email" type="email" maxlength="254"
                            autocomplete="email" aria-describedby="art-email-hint" required>
                 </div>
 
                 <div class="drop-field">
-                    <label class="drop-label" for="art-note">Message <span class="drop-optional">(optional)</span></label>
+                    <label class="drop-label" for="art-note"><span data-i18n>Message</span> <span class="drop-optional" data-i18n>(optional)</span></label>
                     <input class="drop-note" id="art-note" name="note" type="text" maxlength="500"
-                           placeholder="Anything worth knowing about the request">
+                           placeholder="Anything worth knowing about the request" data-i18n-placeholder>
                 </div>
 
                 <div class="art-captcha" id="art-captcha"></div>
@@ -128,13 +141,13 @@
 
                 <button type="submit" class="drop-go" id="art-go">
                     <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                    <span>Send the request</span>
+                    <span data-i18n>Send the request</span>
                 </button>
             </form>
 
             <div class="drop-state" id="art-done" hidden>
                 <i class="fa-solid fa-circle-check drop-icon is-good" aria-hidden="true"></i>
-                <h1 class="drop-title">Request sent</h1>
+                <h1 class="drop-title" data-i18n>Request sent</h1>
                 <p class="drop-muted" id="art-done-msg"></p>
             </div>
 
@@ -146,6 +159,8 @@
 
     <script src="/static/app.min.js"></script>
     <script src="/static/_site_util.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
     <script src="/static/custom-art.min.js" defer></script>
 </body>
 </html>

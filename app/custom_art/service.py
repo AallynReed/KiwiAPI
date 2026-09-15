@@ -2,7 +2,7 @@
 
 A player request carries a profile picture. A club request carries a club picture,
 a club banner, or both. A profile or club picture is square; a banner is from
-square up to five times as wide as it is tall. The page crops to those shapes and
+square up to five times as wide as it is tall; every picture is at least 128px tall. The page crops to those shapes and
 this checks them again, so nothing of the wrong shape reaches the queue.
 
 Nothing is kept but what was asked for, the pictures, and the address the answer
@@ -37,6 +37,7 @@ LANES = {("player", "pfp"): "pfp", ("club", "pfp"): "club", ("club", "banner"): 
 LANE_MODS = {"pfp": (CHAT,), "club": (CHAT,), "banner": (CHAT, NAMEPLATE)}
 LANE_LABELS = {"pfp": "profile picture", "club": "club picture", "banner": "club banner"}
 WIDEST = 5
+MIN_HEIGHT = 128
 CHANGELOG_MAX = 240
 
 _BANNED = set('\t\n\r",\\/:*?<>|')
@@ -65,6 +66,9 @@ def clean_email(email: str | None) -> str:
 
 def check_shape(kind: str, slot: str, width: int, height: int) -> None:
     label = LANE_LABELS[LANES[(kind, slot)]]
+    if height < MIN_HEIGHT:
+        raise APIError(400, ErrorCode.validation_error,
+                       f"A {label} has to be at least {MIN_HEIGHT}px tall - that one is {width}×{height}.")
     if slot == "pfp" and width != height:
         raise APIError(400, ErrorCode.validation_error,
                        f"A {label} has to be square - that one is {width}×{height}.")
@@ -265,7 +269,7 @@ async def _notify_denied(request: ArtRequest) -> None:
         f"Your request for a {asked} in Zakros UI wasn't added.", "",
         f"Reason: {request.reason}", "",
         "You're welcome to send a new request with that sorted out.",
-        f"{settings.app_url.rstrip('/')}/custom-art", "",
+        f"{settings.app_url.rstrip('/')}/zakros-ui-requests", "",
         "- Better Trove Tools",
     ])
     body = (f"<p>Your request for a {html.escape(asked)} in Zakros UI wasn't added.</p>"

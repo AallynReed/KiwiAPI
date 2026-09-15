@@ -2463,7 +2463,7 @@ function openDropExtend(dropId) {
 
 
 // ── Admin · Modules · Custom art ────────────────────────────────────────────
-// Requests from trove.aallyn.net/custom-art for Zakros UI Chat + Nameplate. Approve
+// Requests from trove.aallyn.net/zakros-ui-requests for Zakros UI Chat + Nameplate. Approve
 // or deny each one (a denial emails its reason), then Release hands every approved
 // request to the worker on the server, which builds and publishes silently. Steam
 // is pushed by hand, so released requests stay listed until marked done.
@@ -2522,7 +2522,7 @@ async function renderCustomArt() {
 
   pane.innerHTML = `
     <h2 style="margin:0 0 6px">Custom art</h2>
-    <p class="hint">Requests from <a href="https://trove.aallyn.net/custom-art" target="_blank" rel="noopener">/custom-art</a>. Approve or deny each one - a denial emails the reason. <b>Release</b> hands every approved request to the worker, which adds the pictures, rebuilds Chat (and Nameplate for banners) and publishes silently to the hub and Trovesaurus. Steam stays with you.</p>
+    <p class="hint">Requests from <a href="https://trove.aallyn.net/zakros-ui-requests" target="_blank" rel="noopener">/zakros-ui-requests</a>. Approve or deny each one - a denial emails the reason. <b>Release</b> hands every approved request to the worker, which adds the pictures, rebuilds Chat (and Nameplate for banners) and publishes silently to the hub and Trovesaurus. Steam stays with you.</p>
     ${steam.length ? `
       <div class="card" style="margin:12px 0">
         <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">

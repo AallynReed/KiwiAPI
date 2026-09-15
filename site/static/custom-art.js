@@ -1,11 +1,17 @@
-/* /custom-art - ask for a picture in the Zakros UI Chat and Nameplate mods.
+/* /zakros-ui-requests - ask for a picture in the Zakros UI Chat and Nameplate mods.
 
    A player request carries a profile picture; a club request carries a club
    picture, a club banner, or both. A profile or club picture is square and a
-   banner is from square up to five times as wide as it is tall. A picture that
-   doesn't fit that shape, or is too big to send, opens a cropper in place and is
+   banner is from square up to five times as wide as it is tall, and every picture
+   is at least 128px tall. A picture too small for that is refused. A picture that
+   doesn't fit the shape, or is too big to send, opens a cropper in place and is
    sent as the cropped PNG, no bigger than 768px on its long side. The API checks
-   the same shapes again.
+   the same rules again.
+
+   Every static string is marked in the template; the player/club wording is two
+   marked elements toggled by `hidden` rather than text swapped in here, so i18n.js
+   keeps hold of both. Messages built here go through t(), and ttf() for the ones
+   with a number in them - translate first, then fill.
 
    A captcha token is spent the moment the server verifies it, so every failed
    send resets the widget. */
@@ -13,23 +19,20 @@
     "use strict";
 
     var OUTPUT_MAX = 768;
-    var MIN_SIDE = 8;
 
-    var config = { max_bytes: 3 * 1024 * 1024, widest: 5, captcha_sitekey: null, captcha_provider: "turnstile" };
+    var config = { max_bytes: 3 * 1024 * 1024, widest: 5, min_height: 128, captcha_sitekey: null, captcha_provider: "turnstile" };
     var captcha = { lib: null, id: null, token: null };
     var busy = false;
+
+    function t(s) { return window.BTTi18n ? window.BTTi18n.t(s) : s; }
+    function ttf(s, values) {
+        return t(s).replace(/\{(\w+)\}/g, function (m, key) { return key in values ? values[key] : m; });
+    }
 
     var form = document.getElementById("art-form");
     var doneEl = document.getElementById("art-done");
     var doneMsg = document.getElementById("art-done-msg");
     var nameEl = document.getElementById("art-name");
-    var nameLabel = document.getElementById("art-name-label");
-    var nameHint = document.getElementById("art-name-hint");
-    var clubNote = document.getElementById("art-club-note");
-    var pfpTitle = document.getElementById("art-pfp-title");
-    var pfpOptional = document.getElementById("art-pfp-optional");
-    var pfpHint = document.getElementById("art-pfp-hint");
-    var bannerRoot = document.getElementById("art-slot-banner");
     var emailEl = document.getElementById("art-email");
     var noteEl = document.getElementById("art-note");
     var captchaEl = document.getElementById("art-captcha");
@@ -37,7 +40,6 @@
     var goBtn = document.getElementById("art-go");
 
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-    function megabytes(bytes) { return Math.round(bytes / 1048576); }
     function humanSize(bytes) {
         return bytes >= 1048576 ? (bytes / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(bytes / 1024)) + " KB";
     }
@@ -72,8 +74,8 @@
             status.hidden = !message;
         }
 
-        function fits(w, h) { return square ? w === h : h <= w && w <= config.widest * h; }
-        function shapeWords() { return square ? "square" : "from square up to " + config.widest + " times as wide as it is tall"; }
+        function fits(w, h) { return h >= config.min_height && (square ? w === h : h <= w && w <= config.widest * h); }
+        function croppable(w, h) { return Math.min(w, h) >= config.min_height; }
 
         function show(which) {
             zone.hidden = which !== "zone";
@@ -107,7 +109,7 @@
         function load(file) {
             if (!file) return;
             if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) {
-                note("Pick a PNG, JPEG, WebP or GIF picture.", "bad");
+                note(t("Pick a PNG, JPEG, WebP or GIF picture."), "bad");
                 input.value = "";
                 return;
             }
@@ -117,18 +119,31 @@
                 reset();
                 sourceUrl = url; image = img; sourceName = file.name;
                 var w = img.naturalWidth, h = img.naturalHeight;
+                var size = w + " × " + h;
                 if (fits(w, h) && file.size <= config.max_bytes) {
                     accept(file, w, h, url);
                     return;
                 }
+                if (!croppable(w, h)) {
+                    var small = square
+                        ? ttf("This picture is {size}. It has to be at least {min}px tall and wide, so pick a bigger one.", { size: size, min: config.min_height })
+                        : ttf("This picture is {size}. It has to be at least {min}px tall, so pick a bigger one.", { size: size, min: config.min_height });
+                    reset();
+                    note(small, "bad");
+                    return;
+                }
                 openCrop();
-                note(fits(w, h)
-                    ? "This picture is over the " + megabytes(config.max_bytes) + " MB limit. Crop it here and it's sent smaller."
-                    : "This picture is " + w + " × " + h + ", and it has to be " + shapeWords() + ". Crop it here.", "bad");
+                if (fits(w, h)) {
+                    note(ttf("This picture is over the {mb} MB limit. Crop it here and it's sent smaller.", { mb: Math.round(config.max_bytes / 1048576) }), "bad");
+                } else if (square) {
+                    note(ttf("This picture is {size}, and it has to be square. Crop it here.", { size: size }), "bad");
+                } else {
+                    note(ttf("This picture is {size}, and it has to be from square up to {widest} times as wide as it is tall. Crop it here.", { size: size, widest: config.widest }), "bad");
+                }
             };
             img.onerror = function () {
                 URL.revokeObjectURL(url);
-                note("That file couldn't be read as a picture.", "bad");
+                note(t("That file couldn't be read as a picture."), "bad");
                 input.value = "";
             };
             img.src = url;
@@ -219,10 +234,11 @@
                     if (w < h) { if (h <= roomW) w = h; else h = w; }
                     if (w > config.widest * h) { if (w / config.widest <= roomH) h = w / config.widest; else w = config.widest * h; }
                 }
-                w = Math.max(w, MIN_SIDE); h = Math.max(h, square ? w : MIN_SIDE);
+                h = Math.max(h, config.min_height);
+                w = square ? h : Math.max(w, h);
                 rect.w = w; rect.h = h;
-                rect.x = px >= drag.ax ? drag.ax : drag.ax - w;
-                rect.y = py >= drag.ay ? drag.ay : drag.ay - h;
+                rect.x = clamp(px >= drag.ax ? drag.ax : drag.ax - w, 0, W - w);
+                rect.y = clamp(py >= drag.ay ? drag.ay : drag.ay - h, 0, H - h);
             }
             draw();
         });
@@ -244,11 +260,11 @@
             } else {
                 var grow = d[0] > 0 || d[1] < 0 ? step : -step;
                 if (square) {
-                    rect.w = rect.h = clamp(rect.w + grow, MIN_SIDE, Math.min(W - rect.x, H - rect.y));
+                    rect.w = rect.h = clamp(rect.w + grow, config.min_height, Math.min(W - rect.x, H - rect.y));
                 } else if (d[0] !== 0) {
-                    rect.w = clamp(rect.w + grow, Math.max(MIN_SIDE, rect.h), Math.min(W - rect.x, config.widest * rect.h));
+                    rect.w = clamp(rect.w + grow, rect.h, Math.min(W - rect.x, config.widest * rect.h));
                 } else {
-                    rect.h = clamp(rect.h + grow, Math.max(MIN_SIDE, Math.ceil(rect.w / config.widest)), Math.min(H - rect.y, rect.w));
+                    rect.h = clamp(rect.h + grow, Math.max(config.min_height, Math.ceil(rect.w / config.widest)), Math.min(H - rect.y, rect.w));
                 }
             }
             draw();
@@ -265,7 +281,7 @@
 
         function useCrop() {
             var r = whole();
-            var k = Math.min(1, OUTPUT_MAX / Math.max(r.w, r.h));
+            var k = Math.min(1, Math.max(OUTPUT_MAX / Math.max(r.w, r.h), config.min_height / r.h));
             var ow = Math.max(1, Math.round(r.w * k)), oh = Math.max(1, Math.round(r.h * k));
             if (square) ow = oh = Math.min(ow, oh);
             else { if (ow < oh) oh = ow; if (ow > config.widest * oh) ow = config.widest * oh; }
@@ -274,8 +290,8 @@
             out.height = oh;
             out.getContext("2d").drawImage(image, r.x, r.y, r.w, r.h, 0, 0, ow, oh);
             out.toBlob(function (blob) {
-                if (!blob) { note("That crop couldn't be made. Try another picture.", "bad"); return; }
-                if (blob.size > config.max_bytes) { note("That crop is still over the limit. Pick a smaller area.", "bad"); return; }
+                if (!blob) { note(t("That crop couldn't be made. Try another picture."), "bad"); return; }
+                if (blob.size > config.max_bytes) { note(t("That crop is still over the limit. Pick a smaller area."), "bad"); return; }
                 var stem = sourceName.replace(/\.[^.]*$/, "") || "picture";
                 accept(new File([blob], stem + "-crop.png", { type: "image/png" }), ow, oh, URL.createObjectURL(blob));
                 note("");
@@ -306,13 +322,12 @@
         q(".art-recrop").addEventListener("click", function () { if (image) { openCrop(); note(""); } });
         q(".art-remove").addEventListener("click", reset);
 
-        slot.root = root;
         slot.cropping = function () { return !crop.hidden; };
         return slot;
     }
 
     var pfp = makeSlot(document.getElementById("art-slot-pfp"), true);
-    var banner = makeSlot(bannerRoot, false);
+    var banner = makeSlot(document.getElementById("art-slot-banner"), false);
 
     // ── Player or club ───────────────────────────────────────────────────────
 
@@ -323,15 +338,8 @@
 
     function syncKind() {
         var club = kind() === "club";
-        nameLabel.textContent = club ? "Club name" : "Player name";
-        nameHint.textContent = club ? "Exactly as the club spells it, spaces and capitals included." : "Exactly as it reads in game.";
-        pfpTitle.textContent = club ? "Club picture" : "Profile picture";
-        pfpOptional.hidden = !club;
-        pfpHint.textContent = club
-            ? "Square. Shows on the club's channel tab, in Chat."
-            : "Square. Shows on the whisper tab for a conversation with that player, in Chat.";
-        bannerRoot.hidden = !club;
-        clubNote.hidden = !club;
+        form.querySelectorAll(".art-if-player").forEach(function (el) { el.hidden = club; });
+        form.querySelectorAll(".art-if-club").forEach(function (el) { el.hidden = !club; });
         say("");
     }
 
@@ -359,7 +367,7 @@
             });
         };
         script.onerror = function () {
-            say("The captcha couldn't load. Turn off anything blocking it and reload the page.", "bad");
+            say(t("The captcha couldn't load. Turn off anything blocking it and reload the page."), "bad");
         };
         document.head.appendChild(script);
     }
@@ -389,19 +397,19 @@
         var slots = club ? [pfp, banner] : [pfp];
         var name = nameEl.value.trim();
         var email = emailEl.value.trim();
-        if (!name) { say("Enter the name the picture is for.", "bad"); nameEl.focus(); return; }
+        if (!name) { say(t("Enter the name the picture is for."), "bad"); nameEl.focus(); return; }
         if (/[,"\\/:*?<>|]/.test(name) || /\.$/.test(name)) {
-            say('A name can\'t end in a full stop or contain , " \\ / : * ? < > or |.', "bad");
+            say(t('A name can\'t end in a full stop or contain , " \\ / : * ? < > or |.'), "bad");
             nameEl.focus();
             return;
         }
-        if (slots.some(function (s) { return s.cropping(); })) { say("Finish cropping first - use the crop or cancel it.", "bad"); return; }
+        if (slots.some(function (s) { return s.cropping(); })) { say(t("Finish cropping first - use the crop or cancel it."), "bad"); return; }
         if (!slots.some(function (s) { return s.file; })) {
-            say(club ? "Add a club picture, a club banner, or both." : "Add the profile picture.", "bad");
+            say(club ? t("Add a club picture, a club banner, or both.") : t("Add the profile picture."), "bad");
             return;
         }
-        if (!email || !emailEl.checkValidity()) { say("Enter an email address we can answer.", "bad"); emailEl.focus(); return; }
-        if (config.captcha_sitekey && !captcha.token) { say("Complete the captcha first.", "bad"); return; }
+        if (!email || !emailEl.checkValidity()) { say(t("Enter an email address we can answer."), "bad"); emailEl.focus(); return; }
+        if (config.captcha_sitekey && !captcha.token) { say(t("Complete the captcha first."), "bad"); return; }
 
         var data = new FormData();
         data.append("kind", kind());
@@ -415,29 +423,29 @@
         busy = true;
         goBtn.disabled = true;
         form.classList.add("is-busy");
-        say("Sending...", "busy");
+        say(t("Sending..."), "busy");
 
         fetch("/site/custom-art", { method: "POST", body: data })
             .then(function (res) {
                 if (res.ok) {
-                    doneMsg.textContent = "We'll write to " + email + " if it's turned down, and when it's in the mod.";
+                    doneMsg.textContent = ttf("We'll write to {email} if it's turned down, and when it's in the mod.", { email: email });
                     form.hidden = true;
                     doneEl.hidden = false;
                     busy = false;
                     return;
                 }
                 if (res.status === 429) {
-                    finish("That's a lot of requests from here. Wait an hour and try again.");
+                    finish(t("That's a lot of requests from here. Wait an hour and try again."));
                     return;
                 }
                 return res.json().then(function (body) {
-                    finish((body && body.error && body.error.message) || "That didn't go through. Try again in a moment.");
+                    finish((body && body.error && body.error.message) || t("That didn't go through. Try again in a moment."));
                 }, function () {
-                    finish("That didn't go through. Try again in a moment.");
+                    finish(t("That didn't go through. Try again in a moment."));
                 });
             })
             .catch(function () {
-                finish("Couldn't reach the server. Check your connection and try again.");
+                finish(t("Couldn't reach the server. Check your connection and try again."));
             });
     });
 

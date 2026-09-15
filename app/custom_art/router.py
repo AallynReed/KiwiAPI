@@ -1,7 +1,7 @@
 """The request form's data plane: ``/site/custom-art``.
 
 Tokenless and login-free - anyone can ask. The page itself is rendered by the
-website container (``app/web/pages.py`` -> ``/custom-art``).
+website container (``app/web/pages.py`` -> ``/zakros-ui-requests``).
 """
 from typing import Literal
 
@@ -24,6 +24,7 @@ async def form_config(response: Response) -> dict:
         "captcha_sitekey": settings.captcha_sitekey,
         "max_bytes": settings.custom_art_image_max_bytes,
         "widest": service.WIDEST,
+        "min_height": service.MIN_HEIGHT,
     }
 
 
