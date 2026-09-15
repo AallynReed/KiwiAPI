@@ -65,6 +65,8 @@ from app.giveaways.router import public_router as giveaways_public_router
 from app.giveaways.router import router as giveaways_router
 from app.giveaways.worker import start_giveaway_worker, stop_giveaway_worker
 from app.images.router import router as images_router
+from app.mod_stats.router import router as mod_stats_router
+from app.mod_stats.service import start_mod_stats_refresher, stop_mod_stats_refresher
 from app.pageviews.middleware import add_pageview_middleware
 from app.pageviews.recorder import recorder as pageview_recorder
 from app.scanning.router import router as scanning_router
@@ -164,6 +166,7 @@ async def lifespan(app: FastAPI):
     start_news_refresher()
     start_feeds_refresher()
     start_events_refresher()
+    start_mod_stats_refresher()
     start_chaos_refresher()
     start_status_prober()  # Trove server status (auth + optional game socket), every 60s
     start_delve_refresher()
@@ -192,6 +195,7 @@ async def lifespan(app: FastAPI):
     await stop_delve_refresher()
     await stop_chaos_refresher()
     await stop_status_prober()
+    await stop_mod_stats_refresher()
     await stop_events_refresher()
     await stop_feeds_refresher()
     await stop_news_refresher()
@@ -388,6 +392,7 @@ app.include_router(drops_router, include_in_schema=False,
 # master's review queue (released by app/custom_art/builder.py in its own container).
 app.include_router(custom_art_router, include_in_schema=False)
 app.include_router(custom_art_admin_router, include_in_schema=False)
+app.include_router(mod_stats_router, include_in_schema=False)
 app.include_router(supporters_public_router)  # public misc:read (tokenless) - in schema
 app.include_router(discord_bot_router, include_in_schema=False)  # User Dashboard "Discord Bot" tab (site_auth)
 app.include_router(  # User Dashboard "DM Alerts" tab (site_auth); inbound Discord DM subscriptions

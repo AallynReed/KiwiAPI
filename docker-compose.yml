@@ -154,6 +154,8 @@ services:
       MODS_STORE_DIR: ${MODS_STORE_DIR:-/data/mods}
       # Files received through a one-off PIN upload link (see app/drops).
       DROPS_STORE_DIR: ${DROPS_STORE_DIR:-/data/drops}
+      # TroveUI bare repo: the daily mod statistics read its Trovesaurus and Steam ids.
+      CUSTOM_ART_REMOTE: /data/troveui.git
       # Delve-rotation source (week-based). Refresher stays off until the URL is set.
       TROVE_DELVE_SOURCE_URL: ${TROVE_DELVE_SOURCE_URL:-}
       TROVE_DELVE_SOURCE_REFERER: ${TROVE_DELVE_SOURCE_REFERER:-}
@@ -198,6 +200,7 @@ services:
       # File drops: whatever people send through a one-off upload link.
       # Kept out of git (arbitrary user files).
       - ./.drops:/data/drops
+      - ./.troveui.git:/data/troveui.git:ro
       # BetterTroveTools showcase site (templates + static + ~20 MB of screenshots).
       # Bind-mounted so the heavy binary assets don't bake into the image; the
       # api container serves trove.aallyn.net out of this directory.

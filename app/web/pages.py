@@ -378,6 +378,13 @@ async def custom_art_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "custom-art.html", {})
 
 
+@router.get("/zakros-ui-stats", response_class=HTMLResponse)
+async def mod_stats_page(request: Request) -> HTMLResponse:
+    """Daily downloads and subscribers for every mod of ``mod_stats_handle`` on the
+    Mods Hub, Trovesaurus and Steam Workshop. The data comes from ``/site/mod-stats``."""
+    return _TEMPLATES.TemplateResponse(request, "mod-stats.html", {})
+
+
 @router.get("/gems-guide", response_class=HTMLResponse)
 async def gems_guide_page(request: Request) -> HTMLResponse:
     """How Gems Work - an interactive, animated explainer of Trove's gem system

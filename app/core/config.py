@@ -373,6 +373,10 @@ class Settings(BaseSettings):
     # Per picture. A club request carries two, and both fit under max_request_body_bytes.
     custom_art_image_max_bytes: int = 3 * 1024 * 1024
 
+    # Daily statistics page (/zakros-ui-stats): whose public hub mods it counts. The
+    # Trovesaurus and Steam ids are read from custom_art_remote.
+    mod_stats_handle: str = "aallyn"
+
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
     # Bind-mounted into the api container from `./site` in the project root.
     site_root: str = "site"

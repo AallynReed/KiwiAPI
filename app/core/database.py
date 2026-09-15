@@ -18,6 +18,7 @@ from app.dm_subs.models import DmSubscription
 from app.drops.models import DropUpload, FileDrop
 from app.giveaways.models import Giveaway, GiveawayEntry, PrizeCode, VaultItem
 from app.images.models import ImageDesign
+from app.mod_stats.models import ModStatsSnapshot
 from app.pageviews.models import PageView
 from app.site_auth.models import SiteSession, SiteUser, UsernameChangeRequest
 from app.supporters.models import Supporter
@@ -102,6 +103,7 @@ DOCUMENT_MODELS = [
     ImageDesign,                         # user-designed images (image studio)
     FileDrop, DropUpload,                # one-off PIN upload links + what arrived on them
     ArtRequest,                          # custom art requests for Zakros UI Chat + Nameplate
+    ModStatsSnapshot,                    # daily mod counts across hub, Trovesaurus, Steam
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).

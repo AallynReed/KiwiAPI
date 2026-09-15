@@ -1,0 +1,129 @@
+/* Mod statistics page (/zakros-ui-stats). Builds on style.css tokens. */
+
+.ms-main {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 110px clamp(20px, 3vw, 48px) 80px;
+}
+
+.ms-hero { text-align: center; margin-bottom: 28px; }
+.ms-eyebrow {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--accent);
+  font-size: .85rem;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+.ms-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.6rem;
+  margin: 0 0 12px;
+  line-height: 1.05;
+}
+.ms-sub {
+  color: var(--text-mute);
+  max-width: 620px;
+  margin: 0 auto;
+  line-height: 1.6;
+  font-size: .95rem;
+}
+.ms-updated { color: var(--text-mute); font-size: .85rem; margin: 10px 0 0; }
+
+.ms-totals {
+  display: flex;
+  flex-wrap: wrap;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius);
+  margin-bottom: 22px;
+}
+.ms-totals[hidden] { display: none; }
+.ms-total {
+  flex: 1 1 180px;
+  padding: 16px 20px;
+  border-right: 1px solid var(--bg-line);
+}
+.ms-total:last-child { border-right: 0; }
+.ms-total-label {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin: 0 0 6px;
+}
+.ms-total-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.ms-total-value.is-all { color: var(--accent); }
+
+.ms-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 22px;
+}
+.ms-panel[hidden] { display: none; }
+.ms-h2 { font-size: 1.15rem; margin: 0 0 14px; }
+
+.ms-chart svg { display: block; width: 100%; height: auto; }
+.ms-chart .ms-axis { stroke: var(--bg-line); }
+.ms-chart .ms-tick { fill: var(--text-mute); font-size: 11px; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.ms-chart .ms-line { fill: none; stroke: var(--accent); stroke-width: 2; }
+.ms-chart .ms-dot { fill: var(--accent); }
+
+.ms-scroll { overflow-x: auto; }
+.ms-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.ms-table th,
+.ms-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--bg-line);
+  white-space: nowrap;
+}
+.ms-table th { text-align: right; vertical-align: bottom; }
+.ms-table td { text-align: right; font-variant-numeric: tabular-nums; }
+.ms-table th:first-child,
+.ms-table td:first-child { text-align: left; }
+.ms-table thead tr:first-child th { border-bottom: 0; padding-bottom: 0; }
+.ms-group {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  font-weight: 500;
+  text-align: center !important;
+}
+.ms-sort {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text-mute);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ms-sort:hover,
+.ms-sort[aria-pressed="true"] { color: var(--text); }
+.ms-sort i { margin-left: 4px; font-size: .7rem; }
+.ms-table td a { color: var(--text); text-decoration: none; }
+.ms-table td a:hover { color: var(--accent); }
+.ms-table td.is-total { color: var(--accent); font-weight: 600; }
+.ms-table td.is-none { color: var(--text-mute); }
+.ms-table tbody tr:hover td { background: var(--bg-card-hi); }
+
+.ms-loading,
+.ms-note { color: var(--text-mute); font-size: .85rem; }
+.ms-note { margin: 12px 0 0; }
+
+@media (max-width: 560px) {
+  .ms-title { font-size: 2rem; }
+  .ms-total { border-right: 0; border-bottom: 1px solid var(--bg-line); }
+  .ms-total:last-child { border-bottom: 0; }
+}
