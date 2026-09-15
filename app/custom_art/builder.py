@@ -123,12 +123,14 @@ async def _game_files(tree: Path, run: Run) -> None:
         raise BuildFailed(f"no English language files archived on {branch}")
     for row in rows:
         copy(row.content_sha256, lang / Path(row.path).name)
-    for mod, (path, name) in VANILLA.items():
+    wanted = [(path, tree / mod / name) for mod, (path, name) in VANILLA.items()]
+    wanted.append(("Trove_x64.exe", _root() / "trove" / "Trove_x64.exe"))
+    for path, dest in wanted:
         row = await UpdateState.find_one({"branch": branch, "path": path})
         if row is None:
             raise BuildFailed(f"{path} is not archived on {branch}")
-        copy(row.content_sha256, tree / mod / name)
-    run.say(f"{len(rows)} language files and {len(VANILLA)} vanilla SWFs from {branch}")
+        copy(row.content_sha256, dest)
+    run.say(f"{len(rows)} language files, the client and {len(VANILLA)} vanilla SWFs from {branch}")
 
 
 async def _place(tree: Path, requests: list[ArtRequest], run: Run) -> None:
