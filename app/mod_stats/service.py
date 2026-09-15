@@ -7,12 +7,14 @@ Trovesaurus's come from its ``/api/mods-all``
 catalog and Steam's from ``GetPublishedFileDetails``, which needs no key for public
 items. Neither platform can be searched by our title, so the ids are TroveUI's own
 ``trovesaurus_ids.json`` and ``steam_ids.json``, keyed by mod title and read out of
-the bare repo the custom art worker also pulls from. One snapshot is kept per UTC day;
-the refresher checks hourly and only collects when today has none yet.
+the bare repo the custom art worker also pulls from. One snapshot is kept per UTC day
+and rewritten every hour, so the page is at most an hour old and the history keeps
+each day's last numbers.
 """
 import asyncio
 import json
 import logging
+from datetime import timedelta
 
 import httpx
 
@@ -28,6 +30,7 @@ logger = logging.getLogger("kiwi.mod_stats")
 TROVESAURUS_CATALOG_URL = "https://trovesaurus.com/api/mods-all"
 STEAM_DETAILS_URL = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
 HISTORY_DAYS = 365
+FRESH = timedelta(minutes=50)
 
 
 def _int(value) -> int:
@@ -137,9 +140,12 @@ async def collect() -> list[dict]:
 
 
 async def refresh() -> int:
-    """Take today's snapshot unless it already exists. Returns the mods recorded."""
-    day = utcnow().date().isoformat()
-    if await ModStatsSnapshot.find_one(ModStatsSnapshot.day == day):
+    """Rewrite today's snapshot unless another worker did within ``FRESH``. Returns the
+    mods recorded."""
+    now = utcnow()
+    day = now.date().isoformat()
+    if await ModStatsSnapshot.find_one(ModStatsSnapshot.day == day,
+                                       ModStatsSnapshot.taken_at > now - FRESH):
         return 0
     rows = await collect()
     await ModStatsSnapshot.get_pymongo_collection().update_one(
@@ -165,7 +171,7 @@ _refresher = PeriodicRefresher(
     refresh,
     name="Mod statistics snapshot",
     delay=3600,
-    log_result=lambda count: f"{count} mod(s)" if count else "today already taken",
+    log_result=lambda count: f"{count} mod(s)" if count else "taken by another worker",
 )
 
 
